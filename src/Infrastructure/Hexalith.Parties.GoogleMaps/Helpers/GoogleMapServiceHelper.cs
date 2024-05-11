@@ -14,13 +14,13 @@
 // <summary></summary>
 // ***********************************************************************
 
-namespace Hexalith.Infrastructure.GoogleMaps.Helpers;
+namespace Hexalith.Parties.GoogleMaps.Helpers;
 
 using GoogleApi.Extensions;
 
-using Hexalith.Application.Geolocations.Services;
 using Hexalith.Extensions.Configuration;
 using Hexalith.Infrastructure.GoogleMaps.Abstractions.Configurations;
+using Hexalith.Parties.Application.Services;
 using Hexalith.Parties.GoogleMaps.Services;
 
 using Microsoft.Extensions.Configuration;

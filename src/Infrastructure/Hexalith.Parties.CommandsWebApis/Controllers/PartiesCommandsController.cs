@@ -21,7 +21,6 @@ using Dapr;
 using Hexalith.Application.Commands;
 using Hexalith.Application.States;
 using Hexalith.Infrastructure.WebApis.Controllers;
-using Hexalith.Infrastructure.WebApis.PartiesCommands.Controllers;
 using Hexalith.Parties.Domain.Helpers;
 
 using Microsoft.AspNetCore.Mvc;

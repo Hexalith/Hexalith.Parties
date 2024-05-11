@@ -2,8 +2,14 @@
 	<PropertyGroup>
 		<TargetFramework>$(CommonTargetFrameworks)</TargetFramework>
 	</PropertyGroup>
+	<ItemGroup Condition="'$(BuildingInsideVisualStudio)' == 'true' or '$(BuildingByReSharper)' == 'true'">
+		<ProjectReference Include="$(HexalithPath)\src\Core\UI\Hexalith.UI.Components\Hexalith.UI.Components.csproj" />
+	</ItemGroup>
+	<ItemGroup Condition="'$(BuildingInsideVisualStudio)' != 'true' and '$(BuildingByReSharper)' != 'true'">
+		<PackageReference Include="Hexalith.UI.Components" Version="$(HexalithVersion)" />
+	</ItemGroup>
 	<ItemGroup>
-	  <ProjectReference Include="..\..\Application\Hexalith.Application.Geolocations\Hexalith.Application.Geolocations.csproj" />
+	  <ProjectReference Include="..\..\Application\Hexalith.Parties.Application\Hexalith.Parties.Application.csproj" />
 	</ItemGroup>
 	<ItemGroup>
 	  <Folder Include="wwwroot\" />

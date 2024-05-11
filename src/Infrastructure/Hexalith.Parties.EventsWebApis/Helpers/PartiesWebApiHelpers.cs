@@ -1,28 +1,12 @@
-﻿// ***********************************************************************
-// Assembly         : Hexalith.Infrastructure.WebApis.Parties
-// Author           : Jérôme Piquot
-// Created          : 10-27-2023
-//
-// Last Modified By : Jérôme Piquot
-// Last Modified On : 10-27-2023
-// ***********************************************************************
-// <copyright file="PartiesWebApiHelpers.cs" company="Fiveforty SAS Paris France">
-//     Copyright (c) Fiveforty SAS Paris France. All rights reserved.
-//     Licensed under the MIT license.
-//     See LICENSE file in the project root for full license information.
-// </copyright>
-// <summary></summary>
-// ***********************************************************************
-
-namespace Hexalith.Parties.EventsWebApis.Helpers;
+﻿namespace Hexalith.Parties.EventsWebApis.Helpers;
 
 using Hexalith.Application.Projections;
 using Hexalith.Domain.Events;
 using Hexalith.Infrastructure.DaprRuntime.Helpers;
-using Hexalith.Infrastructure.WebApis.PartiesEvents.Controllers;
 using Hexalith.Infrastructure.WebApis.PartiesEvents.Projections;
 using Hexalith.Parties.Domain.Aggregates;
 using Hexalith.Parties.Events;
+using Hexalith.Parties.EventsWebApis.Controllers;
 using Hexalith.Parties.EventsWebApis.Projections;
 
 using Microsoft.Extensions.DependencyInjection;

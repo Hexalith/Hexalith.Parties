@@ -11,5 +11,6 @@
 	</ItemGroup>
 	<ItemGroup>
 	  <ProjectReference Include="..\..\Infrastructure\Hexalith.Parties.CommandsWebApis\Hexalith.Parties.CommandsWebApis.csproj" />
+	  <ProjectReference Include="..\..\Infrastructure\Hexalith.Parties.DaprRuntime\Hexalith.Parties.DaprRuntime.csproj" />
 	</ItemGroup>
 </Project>

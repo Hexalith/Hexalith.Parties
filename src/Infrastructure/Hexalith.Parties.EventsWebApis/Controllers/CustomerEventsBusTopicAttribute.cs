@@ -14,10 +14,10 @@
 // <summary></summary>
 // ***********************************************************************
 
-namespace Hexalith.Infrastructure.WebApis.PartiesEvents.Controllers;
+namespace Hexalith.Parties.EventsWebApis.Controllers;
 
-using Hexalith.Domain.Aggregates;
 using Hexalith.Infrastructure.WebApis.Buses;
+using Hexalith.Parties.Domain.Helpers;
 
 /// <summary>
 /// Class CustomerEventsBusTopicAttribute. This class cannot be inherited.
@@ -31,7 +31,7 @@ public sealed class CustomerEventsBusTopicAttribute : EventBusTopicAttribute
     /// Initializes a new instance of the <see cref="CustomerEventsBusTopicAttribute"/> class.
     /// </summary>
     public CustomerEventsBusTopicAttribute()
-        : base(Customer.GetAggregateName())
+        : base(PartiesDomainHelper.CustomerAggregateName)
     {
     }
 }

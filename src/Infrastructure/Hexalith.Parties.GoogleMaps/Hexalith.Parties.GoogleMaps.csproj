@@ -8,13 +8,7 @@
 		<PackageReference Include="Microsoft.Extensions.Caching.Abstractions" Version="$(MicrosoftExtensionsPackagesVersion)" />
 		<PackageReference Include="Microsoft.Extensions.Http" Version="$(MicrosoftExtensionsPackagesVersion)" />
 	</ItemGroup>
-	<ItemGroup Condition="'$(BuildingInsideVisualStudio)' == 'true' or '$(BuildingByReSharper)' == 'true'">
-		<ProjectReference Include="$(HexalithPath)\src\Core\Application\Hexalith.Application.Abstractions\Hexalith.Application.Abstractions.csproj" />
-	</ItemGroup>
-	<ItemGroup Condition="'$(BuildingInsideVisualStudio)' != 'true' and '$(BuildingByReSharper)' != 'true'">
-		<PackageReference Include="Hexalith.Application.Abstractions" Version="$(HexalithVersion)" />
-	</ItemGroup>
 	<ItemGroup>
-		<ProjectReference Include="..\..\Domain\Hexalith.Parties.Domain.Abstractions\Hexalith.Parties.Domain.Abstractions.csproj" />
+		<ProjectReference Include="..\..\Application\Hexalith.Parties.Application\Hexalith.Parties.Application.csproj" />
 	</ItemGroup>
 </Project>

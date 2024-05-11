@@ -4,11 +4,11 @@
 //     See LICENSE file in the project root for full license information.
 // </copyright>
 
-namespace Hexalith.UI.PostalAddresses.Models;
+namespace Hexalith.PostalAddresses.UI.Models;
 
 using System.ComponentModel.DataAnnotations;
 
-using Hexalith.Domain.ValueObjets;
+using Hexalith.Parties.Domain.ValueObjets;
 
 /// <summary>
 /// Postal address model.

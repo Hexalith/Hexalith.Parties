@@ -17,8 +17,8 @@ using GoogleApi.Entities.Maps.Geocoding.Place.Request;
 using GoogleApi.Entities.Places.AutoComplete.Request;
 using GoogleApi.Entities.Places.AutoComplete.Response;
 
-using Hexalith.Application.Geolocations.Services;
 using Hexalith.Infrastructure.GoogleMaps.Abstractions.Configurations;
+using Hexalith.Parties.Application.Services;
 using Hexalith.Parties.Domain.ValueObjets;
 
 using Microsoft.Extensions.Caching.Memory;
@@ -130,7 +130,7 @@ public class GooglePlaceService : IPlaceService
             ?? throw new InvalidOperationException("The postal address was not found by Google services.");
 
         string? iso2 = address.AddressComponents.FirstOrDefault(p => p.Types.Contains(AddressComponentType.Country))?.ShortName;
-        postalAddress = new Hexalith.Domain.ValueObjets.PostalAddress(
+        postalAddress = new Hexalith.Parties.Domain.ValueObjets.PostalAddress(
             null,
             null,
             address.AddressComponents.FirstOrDefault(p => p.Types.Contains(AddressComponentType.Street_Number))?.LongName,
@@ -150,14 +150,6 @@ public class GooglePlaceService : IPlaceService
             address.FormattedAddress);
         return _cache.Set(placeId, postalAddress, TimeSpan.FromDays(1));
     }
-
-    Task<IEnumerable<PlaceDescription>> IPlaceService.GetAutocompleteOptionsAsync(string search, string cultureCode, int maxResultCount, double? latitude, double? longitude, CancellationToken cancellationToken) => throw new NotImplementedException();
-
-    Task<IEnumerable<PlaceDescription>> IPlaceService.GetAutocompleteOptionsAsync(string search, string cultureCode, int maxResultCount, double? latitude, double? longitude, CancellationToken cancellationToken) => throw new NotImplementedException();
-
-    Task<PostalAddress> IPlaceService.GetPostalAddressAsync(string placeId, CancellationToken cancellationToken) => throw new NotImplementedException();
-
-    Task<PostalAddress> IPlaceService.GetPostalAddressAsync(string placeId, CancellationToken cancellationToken) => throw new NotImplementedException();
 
     private static string? ConvertToIso3(string? countryIso2)
     {

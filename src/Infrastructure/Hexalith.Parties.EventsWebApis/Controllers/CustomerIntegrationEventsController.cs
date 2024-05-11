@@ -14,15 +14,15 @@
 // <summary></summary>
 // ***********************************************************************
 
-namespace Hexalith.Infrastructure.WebApis.PartiesEvents.Controllers;
+namespace Hexalith.Parties.EventsWebApis.Controllers;
 
 using Dapr;
 
 using Hexalith.Application.Events;
 using Hexalith.Application.Projections;
 using Hexalith.Application.States;
-using Hexalith.Domain.Aggregates;
 using Hexalith.Infrastructure.WebApis.Controllers;
+using Hexalith.Parties.Domain.Helpers;
 
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Hosting;
@@ -60,7 +60,7 @@ public abstract class CustomerIntegrationEventsController(
     public async Task<ActionResult> HandleCustomerEventsAsync(EventState eventState)
          => await HandleEventAsync(
                 eventState,
-                Customer.GetAggregateName(),
+                PartiesDomainHelper.CustomerAggregateName,
                 CancellationToken.None)
              .ConfigureAwait(false);
 }

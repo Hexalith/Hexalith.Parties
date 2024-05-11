@@ -47,8 +47,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Hexalith.Application.Conver
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Hexalith.Infrastructure.AzureDevOps", "Hexalith\src\Core\Infrastructure\Hexalith.Infrastructure.AzureDevOps\Hexalith.Infrastructure.AzureDevOps.csproj", "{AABC96A7-2B2C-4F92-A4CC-D76596DCF0D6}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Hexalith.Application.Parties", "Hexalith\src\Core\Application\Hexalith.Application.Parties\Hexalith.Application.Parties.csproj", "{370F3C51-4C98-4A2E-BCBE-6DD63DFC3FD7}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Hexalith.Application.Organizations", "Hexalith\src\Core\Application\Hexalith.Application.Organizations\Hexalith.Application.Organizations.csproj", "{4BFB8526-A11F-4946-9905-7F00EECEF7FF}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Hexalith.Domain.Organizations", "Hexalith\src\Core\Domain\Hexalith.Domain.Organizations\Hexalith.Domain.Organizations.csproj", "{71564D94-DA05-4FCA-985F-E5574EFF2723}"
@@ -136,8 +134,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{8B5B1376-6
 		test\Directory.Build.props = test\Directory.Build.props
 	EndProjectSection
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Hexalith.Parties.UnitTests", "test\Hexalith.Parties.UnitTests\Hexalith.Parties.UnitTests.csproj", "{E0978773-3865-4786-940C-D302A5B23F5D}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Hexalith.UI.Components.Abstractions", "Hexalith\src\Core\UI\Hexalith.UI.Components.Abstractions\Hexalith.UI.Components.Abstractions.csproj", "{3C8A2FE5-7E6B-4932-AF11-71F859F3B87F}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Hexalith.UI.Components", "Hexalith\src\Core\UI\Hexalith.UI.Components\Hexalith.UI.Components.csproj", "{6A210437-68DA-4468-AF3C-4887406BD03B}"
@@ -167,6 +163,8 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Hexalith.Parties.DaprRuntime.Abstractions", "src\Infrastructure\Hexalith.Parties.DaprRuntime.Abstractions\Hexalith.Parties.DaprRuntime.Abstractions.csproj", "{7320A1A7-7CFC-472F-B280-00B3F2511F18}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Hexalith.Parties.CommandsWebApis", "src\Infrastructure\Hexalith.Parties.CommandsWebApis\Hexalith.Parties.CommandsWebApis.csproj", "{D4B2DB60-8A29-4524-872F-18564A602F68}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Hexalith.Parties.UnitTests", "test\Hexalith.Parties.UnitTests\Hexalith.Parties.UnitTests.csproj", "{0FB784CA-270E-423F-9002-2B16A692C461}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -238,10 +236,6 @@ Global
 		{AABC96A7-2B2C-4F92-A4CC-D76596DCF0D6}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AABC96A7-2B2C-4F92-A4CC-D76596DCF0D6}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AABC96A7-2B2C-4F92-A4CC-D76596DCF0D6}.Release|Any CPU.Build.0 = Release|Any CPU
-		{370F3C51-4C98-4A2E-BCBE-6DD63DFC3FD7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{370F3C51-4C98-4A2E-BCBE-6DD63DFC3FD7}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{370F3C51-4C98-4A2E-BCBE-6DD63DFC3FD7}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{370F3C51-4C98-4A2E-BCBE-6DD63DFC3FD7}.Release|Any CPU.Build.0 = Release|Any CPU
 		{4BFB8526-A11F-4946-9905-7F00EECEF7FF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{4BFB8526-A11F-4946-9905-7F00EECEF7FF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4BFB8526-A11F-4946-9905-7F00EECEF7FF}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -346,10 +340,6 @@ Global
 		{87A78320-56AC-44E5-BC30-04AD1AE1F40F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{87A78320-56AC-44E5-BC30-04AD1AE1F40F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{87A78320-56AC-44E5-BC30-04AD1AE1F40F}.Release|Any CPU.Build.0 = Release|Any CPU
-		{E0978773-3865-4786-940C-D302A5B23F5D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{E0978773-3865-4786-940C-D302A5B23F5D}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{E0978773-3865-4786-940C-D302A5B23F5D}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{E0978773-3865-4786-940C-D302A5B23F5D}.Release|Any CPU.Build.0 = Release|Any CPU
 		{3C8A2FE5-7E6B-4932-AF11-71F859F3B87F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{3C8A2FE5-7E6B-4932-AF11-71F859F3B87F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3C8A2FE5-7E6B-4932-AF11-71F859F3B87F}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -398,6 +388,10 @@ Global
 		{D4B2DB60-8A29-4524-872F-18564A602F68}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D4B2DB60-8A29-4524-872F-18564A602F68}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D4B2DB60-8A29-4524-872F-18564A602F68}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0FB784CA-270E-423F-9002-2B16A692C461}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0FB784CA-270E-423F-9002-2B16A692C461}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0FB784CA-270E-423F-9002-2B16A692C461}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0FB784CA-270E-423F-9002-2B16A692C461}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -424,7 +418,6 @@ Global
 		{2F11D0F4-35B2-45D7-8966-DF5248DB82D4} = {5A9735A3-CEE9-4E50-B2FD-54F0BF402002}
 		{C29D4822-A879-49FA-9025-880D716782FF} = {AA983AFF-9CBC-4F2A-98E3-3CACA5039C61}
 		{AABC96A7-2B2C-4F92-A4CC-D76596DCF0D6} = {FA933B2A-DC9F-44A0-94C7-C5D2D49C550B}
-		{370F3C51-4C98-4A2E-BCBE-6DD63DFC3FD7} = {AA983AFF-9CBC-4F2A-98E3-3CACA5039C61}
 		{4BFB8526-A11F-4946-9905-7F00EECEF7FF} = {AA983AFF-9CBC-4F2A-98E3-3CACA5039C61}
 		{71564D94-DA05-4FCA-985F-E5574EFF2723} = {5A9735A3-CEE9-4E50-B2FD-54F0BF402002}
 		{29551DAF-21B8-4C4D-A765-4F75D1758CB9} = {3D11F14C-AF25-4D09-8182-568B18EB78FC}
@@ -458,7 +451,6 @@ Global
 		{3A505FC6-CBD6-4D4F-BF48-329C3148282B} = {6DCC825D-02D0-4F25-9A3D-A530736AB837}
 		{E0E8D9A4-0B77-4F2D-BD6E-7931FEE42ACB} = {6DCC825D-02D0-4F25-9A3D-A530736AB837}
 		{87A78320-56AC-44E5-BC30-04AD1AE1F40F} = {E0E8D9A4-0B77-4F2D-BD6E-7931FEE42ACB}
-		{E0978773-3865-4786-940C-D302A5B23F5D} = {8B5B1376-6E74-4BE2-8688-5F4B604B0370}
 		{3C8A2FE5-7E6B-4932-AF11-71F859F3B87F} = {3D11F14C-AF25-4D09-8182-568B18EB78FC}
 		{6A210437-68DA-4468-AF3C-4887406BD03B} = {3D11F14C-AF25-4D09-8182-568B18EB78FC}
 		{9A85438A-48CC-404E-9B1C-A29269FE78B9} = {3D11F14C-AF25-4D09-8182-568B18EB78FC}
@@ -471,6 +463,7 @@ Global
 		{431CBB2C-3D05-4010-8931-8265009339D1} = {971DE0DA-285B-4912-BA93-E74411400F87}
 		{7320A1A7-7CFC-472F-B280-00B3F2511F18} = {971DE0DA-285B-4912-BA93-E74411400F87}
 		{D4B2DB60-8A29-4524-872F-18564A602F68} = {971DE0DA-285B-4912-BA93-E74411400F87}
+		{0FB784CA-270E-423F-9002-2B16A692C461} = {8B5B1376-6E74-4BE2-8688-5F4B604B0370}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {09CBB595-8996-4C7F-9C48-4C58AD9293AC}
