@@ -1,0 +1,8 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFramework>$(CommonTargetFrameworks)</TargetFramework>
+	</PropertyGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\Hexalith.Parties.Domain.Abstractions\Hexalith.Parties.Domain.Abstractions.csproj" />
+	</ItemGroup>
+</Project>

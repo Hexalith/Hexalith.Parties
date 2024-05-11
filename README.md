@@ -1,2 +1,2 @@
-# Hexalith.Parties
-Hexalith Parties microservice
+# Hexalith.ExternalSystems
+Hexalith External Systems microservice

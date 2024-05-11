@@ -21,7 +21,7 @@ using GoogleApi.Extensions;
 using Hexalith.Application.Geolocations.Services;
 using Hexalith.Extensions.Configuration;
 using Hexalith.Infrastructure.GoogleMaps.Abstractions.Configurations;
-using Hexalith.Infrastructure.GoogleMaps.Services;
+using Hexalith.Parties.GoogleMaps.Services;
 
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;

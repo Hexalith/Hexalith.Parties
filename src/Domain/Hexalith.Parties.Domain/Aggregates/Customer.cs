@@ -17,26 +17,27 @@
 /// <summary>
 /// The Aggregates namespace.
 /// </summary>
-namespace Hexalith.Domain.Aggregates;
+namespace Hexalith.Parties.Domain.Aggregates;
 
-using System.Diagnostics.CodeAnalysis;
-using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
 
+using Hexalith.Domain.Aggregates;
 using Hexalith.Domain.Events;
-using Hexalith.Domain.ValueObjets;
+using Hexalith.Parties.Domain.Helpers;
+using Hexalith.Parties.Domain.ValueObjets;
+using Hexalith.Parties.Events;
 
 /// <summary>
 /// Class Customer.
-/// Implements the <see cref="Hexalith.Domain.Aggregates.Aggregate" />
-/// Implements the <see cref="Hexalith.Domain.Aggregates.IAggregate" />
-/// Implements the <see cref="System.IEquatable{Hexalith.Domain.Aggregates.Aggregate}" />
-/// Implements the <see cref="System.IEquatable{Hexalith.Domain.Aggregates.Customer}" />.
+/// Implements the <see cref="Aggregates.Aggregate" />
+/// Implements the <see cref="Aggregates.IAggregate" />
+/// Implements the <see cref="IEquatable{Aggregates.Aggregate}" />
+/// Implements the <see cref="IEquatable{Customer}" />.
 /// </summary>
-/// <seealso cref="Hexalith.Domain.Aggregates.Aggregate" />
-/// <seealso cref="Hexalith.Domain.Aggregates.IAggregate" />
-/// <seealso cref="System.IEquatable{Hexalith.Domain.Aggregates.Aggregate}" />
-/// <seealso cref="System.IEquatable{Hexalith.Domain.Aggregates.Customer}" />
+/// <seealso cref="Aggregates.Aggregate" />
+/// <seealso cref="Aggregates.IAggregate" />
+/// <seealso cref="IEquatable{Aggregates.Aggregate}" />
+/// <seealso cref="IEquatable{Customer}" />
 [DataContract]
 public record Customer(
     string PartitionId,
@@ -127,31 +128,8 @@ public record Customer(
         };
     }
 
-    /// <summary>
-    /// Gets the aggregate identifier.
-    /// </summary>
-    /// <param name="partitionId">The partition identifier.</param>
-    /// <param name="companyId">The company identifier.</param>
-    /// <param name="originId">The origin identifier.</param>
-    /// <param name="id">The identifier.</param>
-    /// <returns>System.String.</returns>
-    public static string GetAggregateId([NotNull] string partitionId, [NotNull] string companyId, [NotNull] string originId, [NotNull] string id)
-    {
-        ArgumentException.ThrowIfNullOrWhiteSpace(partitionId);
-        ArgumentException.ThrowIfNullOrWhiteSpace(companyId);
-        ArgumentException.ThrowIfNullOrWhiteSpace(originId);
-        ArgumentException.ThrowIfNullOrWhiteSpace(id);
-
-        return Normalize(GetAggregateName() + Separator + partitionId + Separator + companyId + Separator + originId + Separator + id);
-    }
-
-    /// <summary>
-    /// Gets the name of the aggregate.
-    /// </summary>
-    /// <returns>System.String.</returns>
-#pragma warning disable CA1024 // Use properties where appropriate
-    public static string GetAggregateName() => nameof(Customer);
-#pragma warning restore CA1024 // Use properties where appropriate
+    /// <inheritdoc/>
+    public override string AggregateName => PartiesDomainHelper.CustomerAggregateName;
 
     /// <summary>
     /// Converts to change customer information event.
@@ -199,18 +177,6 @@ public record Customer(
     public override bool IsInitialized() => !string.IsNullOrWhiteSpace(Id);
 
     /// <inheritdoc/>
-    protected override string DefaultAggregateId() => GetAggregateId(PartitionId, CompanyId, OriginId, Id);
-
-    private void CheckEvent(CustomerEvent customerEvent, [CallerArgumentExpression(nameof(customerEvent))] string? paramName = null)
-    {
-        if (AggregateName != customerEvent.AggregateName)
-        {
-            throw new ArgumentException($"{customerEvent.TypeName} can not be applied to aggregate {AggregateName}.", paramName);
-        }
-
-        if (AggregateId != customerEvent.AggregateId)
-        {
-            throw new ArgumentException($"{customerEvent.TypeName} aggregate aggregate Id '{customerEvent.AggregateId}' is invalid. Expected : '{AggregateId}'.", paramName);
-        }
-    }
+    protected override string DefaultAggregateId()
+        => PartiesDomainHelper.GetCustomerAggregateId(PartitionId, CompanyId, OriginId, Id);
 }

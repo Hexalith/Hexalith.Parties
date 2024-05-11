@@ -19,8 +19,8 @@ using System.Threading.Tasks;
 
 using Dapr.Actors;
 
-using Hexalith.Application.Parties.Commands;
-using Hexalith.Domain.Events;
+using Hexalith.Parties.Commands;
+using Hexalith.Parties.Events;
 
 /// <summary>
 /// Interface ICustomerAggregateActor

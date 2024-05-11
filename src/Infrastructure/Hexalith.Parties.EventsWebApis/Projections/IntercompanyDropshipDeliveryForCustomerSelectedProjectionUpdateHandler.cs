@@ -14,11 +14,12 @@
 // <summary></summary>
 // ***********************************************************************
 
-namespace Hexalith.Infrastructure.WebApis.PartiesEvents.Projections;
+namespace Hexalith.Parties.EventsWebApis.Projections;
 
-using Hexalith.Domain.Aggregates;
-using Hexalith.Domain.Events;
 using Hexalith.Infrastructure.DaprRuntime.Projections;
+using Hexalith.Infrastructure.WebApis.PartiesEvents.Projections;
+using Hexalith.Parties.Domain.Aggregates;
+using Hexalith.Parties.Events;
 
 using Microsoft.Extensions.Logging;
 
@@ -31,6 +32,9 @@ using Microsoft.Extensions.Logging;
 /// Initializes a new instance of the <see cref="IntercompanyDropshipDeliveryForCustomerSelectedProjectionUpdateHandler" /> class.
 /// </remarks>
 /// <param name="stateStoreProvider">The state store provider.</param>
-public class IntercompanyDropshipDeliveryForCustomerSelectedProjectionUpdateHandler(IActorProjectionFactory<Customer> factory, ILogger<IntercompanyDropshipDeliveryForCustomerSelectedProjectionUpdateHandler> logger) : CustomerProjectionUpdateHandler<IntercompanyDropshipDeliveryForCustomerSelected>(factory, logger)
+public class IntercompanyDropshipDeliveryForCustomerSelectedProjectionUpdateHandler(
+    IActorProjectionFactory<Customer> factory,
+    ILogger<IntercompanyDropshipDeliveryForCustomerSelectedProjectionUpdateHandler> logger)
+    : CustomerProjectionUpdateHandler<IntercompanyDropshipDeliveryForCustomerSelected>(factory, logger)
 {
 }

@@ -18,11 +18,11 @@ namespace Hexalith.Infrastructure.DaprRuntime.Parties.Helpers;
 
 using System.Diagnostics.CodeAnalysis;
 
-using Hexalith.Application.Parties.Helpers;
-using Hexalith.Application.Parties.Services;
 using Hexalith.Extensions.Configuration;
 using Hexalith.Infrastructure.DaprRuntime.Parties.Configurations;
 using Hexalith.Infrastructure.DaprRuntime.Parties.Services;
+using Hexalith.Parties.Application.Helpers;
+using Hexalith.Parties.Application.Services;
 
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;

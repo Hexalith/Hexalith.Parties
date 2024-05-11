@@ -14,11 +14,12 @@
 // <summary></summary>
 // ***********************************************************************
 
-namespace Hexalith.Infrastructure.WebApis.PartiesEvents.Projections;
+namespace Hexalith.Parties.EventsWebApis.Projections;
 
-using Hexalith.Domain.Aggregates;
-using Hexalith.Domain.Events;
 using Hexalith.Infrastructure.DaprRuntime.Projections;
+using Hexalith.Infrastructure.WebApis.PartiesEvents.Projections;
+using Hexalith.Parties.Domain.Aggregates;
+using Hexalith.Parties.Events;
 
 using Microsoft.Extensions.Logging;
 
@@ -27,13 +28,16 @@ using Microsoft.Extensions.Logging;
 /// Implements the <see cref="Application.Events.IntegrationEventProjectionUpdateHandler{CustomerRegistered}" />.
 /// </summary>
 /// <seealso cref="Application.Events.IntegrationEventProjectionUpdateHandler{CustomerRegistered}" />
-public class IntercompanyDropshipDeliveryForCustomerDeselectedProjectionUpdateHandler : CustomerProjectionUpdateHandler<IntercompanyDropshipDeliveryForCustomerDeselected>
+public class IntercompanyDropshipDeliveryForCustomerDeselectedProjectionUpdateHandler
+    : CustomerProjectionUpdateHandler<IntercompanyDropshipDeliveryForCustomerDeselected>
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="IntercompanyDropshipDeliveryForCustomerDeselectedProjectionUpdateHandler" /> class.
     /// </summary>
     /// <param name="stateStoreProvider">The state store provider.</param>
-    public IntercompanyDropshipDeliveryForCustomerDeselectedProjectionUpdateHandler(IActorProjectionFactory<Customer> factory, ILogger<IntercompanyDropshipDeliveryForCustomerDeselectedProjectionUpdateHandler> logger)
+    public IntercompanyDropshipDeliveryForCustomerDeselectedProjectionUpdateHandler(
+        IActorProjectionFactory<Customer> factory,
+        ILogger<IntercompanyDropshipDeliveryForCustomerDeselectedProjectionUpdateHandler> logger)
         : base(factory, logger)
     {
     }

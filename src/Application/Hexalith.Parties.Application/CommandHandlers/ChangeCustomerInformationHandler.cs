@@ -23,12 +23,13 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using Hexalith.Application.Commands;
-using Hexalith.Application.Parties.Commands;
-using Hexalith.Application.Parties.Helpers;
 using Hexalith.Domain.Aggregates;
-using Hexalith.Domain.Events;
 using Hexalith.Domain.Messages;
-using Hexalith.Domain.ValueObjets;
+using Hexalith.Parties.Application.Helpers;
+using Hexalith.Parties.Commands;
+using Hexalith.Parties.Domain.Aggregates;
+using Hexalith.Parties.Domain.ValueObjets;
+using Hexalith.Parties.Events;
 
 using KellermanSoftware.CompareNetObjects;
 
@@ -75,7 +76,7 @@ public partial class ChangeCustomerInformationHandler : CommandHandler<ChangeCus
                 command.SalesCurrencyId,
                 command.Date);
 
-        if (aggregate is null || aggregate is not Customer customer || !customer.IsInitialized())
+        if (aggregate is not Customer customer || !customer.IsInitialized())
         {
             LogFailedToUpdateCustomerError(command.AggregateId);
 
@@ -83,7 +84,7 @@ public partial class ChangeCustomerInformationHandler : CommandHandler<ChangeCus
             return await Task.FromResult<IEnumerable<BaseMessage>>([command.ToCustomer(false).ToCustomerRegistered()]).ConfigureAwait(false);
         }
 
-        return HasChanges(customer.ToCustomerInformationChanged(), changed)
+        return HasChanges(customer.ToCustomerInformationChanged(), changed, _logger)
             ? await Task.FromResult<IEnumerable<BaseMessage>>([changed]).ConfigureAwait(false)
             : await Task.FromResult<IEnumerable<BaseMessage>>([]).ConfigureAwait(false);
     }
@@ -104,7 +105,7 @@ public partial class ChangeCustomerInformationHandler : CommandHandler<ChangeCus
     /// <param name="current">The current.</param>
     /// <param name="changed">The changed.</param>
     /// <returns><c>true</c> if the specified current has changes; otherwise, <c>false</c>.</returns>
-    private bool HasChanges(CustomerInformationChanged current, CustomerInformationChanged changed)
+    private static bool HasChanges(CustomerInformationChanged current, CustomerInformationChanged changed, ILogger logger)
     {
         CompareLogic compareLogic = new();
 
@@ -114,11 +115,11 @@ public partial class ChangeCustomerInformationHandler : CommandHandler<ChangeCus
 
         if (result.AreEqual)
         {
-            LogNoChangeToApplyInformation(current.AggregateId);
+            LogNoChangeToApplyInformation(logger, current.AggregateId);
             return false;
         }
 
-        LogChangesToApplyFoundInformation(current.AggregateId, result.DifferencesString);
+        LogChangesToApplyFoundInformation(logger, current.AggregateId, result.DifferencesString);
         return true;
     }
 
@@ -128,12 +129,12 @@ public partial class ChangeCustomerInformationHandler : CommandHandler<ChangeCus
     /// <param name="aggregateId">The aggregate identifier.</param>
     /// <param name="changes">The changes.</param>
     [LoggerMessage(EventId = 1, Level = LogLevel.Information, Message = "Changes to apply found for customer '{AggregateId}' :\n{Changes}")]
-    private partial void LogChangesToApplyFoundInformation(string aggregateId, string changes);
+    private static partial void LogChangesToApplyFoundInformation(ILogger logger, string aggregateId, string changes);
 
     /// <summary>
     /// Logs the no change to apply information.
     /// </summary>
     /// <param name="aggregateId">The aggregate identifier.</param>
     [LoggerMessage(EventId = 2, Level = LogLevel.Information, Message = "No change to apply found for customer '{AggregateId}'")]
-    private partial void LogNoChangeToApplyInformation(string aggregateId);
+    private static partial void LogNoChangeToApplyInformation(ILogger logger, string aggregateId);
 }

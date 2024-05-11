@@ -14,14 +14,15 @@
 // <summary></summary>
 // ***********************************************************************
 
-namespace Hexalith.Infrastructure.WebApis.PartiesCommands.Controllers;
+namespace Hexalith.Parties.CommandsWebApis.Controllers;
 
 using Dapr;
 
 using Hexalith.Application.Commands;
 using Hexalith.Application.States;
-using Hexalith.Domain.Aggregates;
 using Hexalith.Infrastructure.WebApis.Controllers;
+using Hexalith.Infrastructure.WebApis.PartiesCommands.Controllers;
+using Hexalith.Parties.Domain.Helpers;
 
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Hosting;
@@ -57,7 +58,7 @@ public class PartiesCommandsController(
     public async Task<ActionResult> SubmitCustomerCommandsAsync(CommandState commandState)
         => await HandleCommandAsync(
                 commandState,
-                Customer.GetAggregateName(),
+                PartiesDomainHelper.CustomerAggregateName,
                 CancellationToken.None)
             .ConfigureAwait(false);
 }

@@ -2,10 +2,13 @@
   <PropertyGroup>
 	  <TargetFramework>$(CommonTargetFrameworks)</TargetFramework>
   </PropertyGroup>
-  <ItemGroup>
-    <PackageReference Include="Dapr.Actors" Version="$(DaprVersion)" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\Hexalith.Infrastructure.DaprRuntime.Parties.Abstractions\Hexalith.Infrastructure.DaprRuntime.Parties.Abstractions.csproj" />
-  </ItemGroup>
+	<ItemGroup Condition="'$(BuildingInsideVisualStudio)' == 'true' or '$(BuildingByReSharper)' == 'true'">
+		<ProjectReference Include="$(HexalithPath)\src\Core\Infrastructure\Hexalith.Infrastructure.DaprRuntime\Hexalith.Infrastructure.DaprRuntime.csproj" />
+	</ItemGroup>
+	<ItemGroup Condition="'$(BuildingInsideVisualStudio)' != 'true' and '$(BuildingByReSharper)' != 'true'">
+		<PackageReference Include="Hexalith.Infrastructure.DaprRuntime" Version="$(HexalithVersion)" />
+	</ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\..\Application\Hexalith.Parties.Application\Hexalith.Parties.Application.csproj" />
+	</ItemGroup>
 </Project>

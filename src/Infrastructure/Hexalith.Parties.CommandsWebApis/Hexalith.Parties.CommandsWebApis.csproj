@@ -3,13 +3,15 @@
 		<TargetFramework>$(CommonTargetFrameworks)</TargetFramework>
 	</PropertyGroup>
 
-	<ItemGroup>
-		<FrameworkReference Include="Microsoft.AspNetCore.App" />
+	<ItemGroup Condition="'$(BuildingInsideVisualStudio)' == 'true' or '$(BuildingByReSharper)' == 'true'">
+		<ProjectReference Include="$(HexalithPath)\src\Core\Infrastructure\Hexalith.Infrastructure.WebApis\Hexalith.Infrastructure.WebApis.csproj" />
+		<ProjectReference Include="$(HexalithPath)\src\Core\Infrastructure\Hexalith.Infrastructure.DaprRuntime.CosmosDatabases\Hexalith.Infrastructure.DaprRuntime.CosmosDatabases.csproj" />
 	</ItemGroup>
-
+	<ItemGroup Condition="'$(BuildingInsideVisualStudio)' != 'true' and '$(BuildingByReSharper)' != 'true'">
+		<PackageReference Include="Hexalith.Infrastructure.WebApis" Version="$(HexalithVersion)" />
+		<PackageReference Include="Hexalith.Infrastructure.DaprRuntime.CosmosDatabases" Version="$(HexalithVersion)" />
+	</ItemGroup>
 	<ItemGroup>
-	  <ProjectReference Include="..\Hexalith.Infrastructure.DaprRuntime.CosmosDatabases\Hexalith.Infrastructure.DaprRuntime.CosmosDatabases.csproj" />
-	  <ProjectReference Include="..\Hexalith.Infrastructure.DaprRuntime.Parties\Hexalith.Infrastructure.DaprRuntime.Parties.csproj" />
-	  <ProjectReference Include="..\Hexalith.Infrastructure.WebApis\Hexalith.Infrastructure.WebApis.csproj" />
+		<ProjectReference Include="..\..\Application\Hexalith.Parties.Application\Hexalith.Parties.Application.csproj" />
 	</ItemGroup>
 </Project>

@@ -22,9 +22,10 @@ using System.Threading.Tasks;
 
 using Hexalith.Application.Metadatas;
 using Hexalith.Domain.Aggregates;
-using Hexalith.Domain.Events;
-using Hexalith.Domain.Helpers;
 using Hexalith.Infrastructure.DaprRuntime.Projections;
+using Hexalith.Parties.Domain.Aggregates;
+using Hexalith.Parties.Domain.Helpers;
+using Hexalith.Parties.Events;
 
 using Microsoft.Extensions.Logging;
 

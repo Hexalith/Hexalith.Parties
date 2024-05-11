@@ -4,7 +4,7 @@
 //     See LICENSE file in the project root for full license information.
 // </copyright>
 
-namespace Hexalith.Infrastructure.GoogleMaps.Services;
+namespace Hexalith.Parties.GoogleMaps.Services;
 
 using System.Threading.Tasks;
 
@@ -18,9 +18,8 @@ using GoogleApi.Entities.Places.AutoComplete.Request;
 using GoogleApi.Entities.Places.AutoComplete.Response;
 
 using Hexalith.Application.Geolocations.Services;
-using Hexalith.Domain.ValueObjets;
-using Hexalith.Extensions.Configuration;
 using Hexalith.Infrastructure.GoogleMaps.Abstractions.Configurations;
+using Hexalith.Parties.Domain.ValueObjets;
 
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
@@ -48,7 +47,7 @@ public class GooglePlaceService : IPlaceService
     /// <param name="autoCompleteService">The automatic complete service.</param>
     /// <param name="geocodeService">The geocode service.</param>
     /// <param name="settings">The settings.</param>
-    /// <exception cref="System.ArgumentNullException">null.</exception>
+    /// <exception cref="ArgumentNullException">null.</exception>
     public GooglePlaceService(
         IMemoryCache cache,
         GooglePlaces.AutoCompleteApi autoCompleteService,
@@ -59,7 +58,7 @@ public class GooglePlaceService : IPlaceService
         ArgumentNullException.ThrowIfNull(autoCompleteService);
         ArgumentNullException.ThrowIfNull(geocodeService);
         ArgumentNullException.ThrowIfNull(settings);
-        SettingsException<GoogleSettings>.ThrowIfNullOrEmpty(settings.Value.ApiKey);
+        ArgumentException.ThrowIfNullOrEmpty(settings.Value.ApiKey);
         _apiKey = settings.Value.ApiKey;
         _cache = cache;
         _autoCompleteService = autoCompleteService;
@@ -105,8 +104,8 @@ public class GooglePlaceService : IPlaceService
     /// <param name="placeId">The place identifier.</param>
     /// <param name="cancellationToken">The cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
     /// <returns>A Task&lt;PostalAddress&gt; representing the asynchronous operation.</returns>
-    /// <exception cref="System.InvalidOperationException">The postal address cannot be retrieved from Google services : " + result.ErrorMessage.</exception>
-    /// <exception cref="System.InvalidOperationException">The postal address was not found by Google services.</exception>
+    /// <exception cref="InvalidOperationException">The postal address cannot be retrieved from Google services : " + result.ErrorMessage.</exception>
+    /// <exception cref="InvalidOperationException">The postal address was not found by Google services.</exception>
     public async Task<Domain.ValueObjets.PostalAddress> GetPostalAddressAsync(string placeId, CancellationToken cancellationToken)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(placeId);
@@ -131,7 +130,7 @@ public class GooglePlaceService : IPlaceService
             ?? throw new InvalidOperationException("The postal address was not found by Google services.");
 
         string? iso2 = address.AddressComponents.FirstOrDefault(p => p.Types.Contains(AddressComponentType.Country))?.ShortName;
-        postalAddress = new Domain.ValueObjets.PostalAddress(
+        postalAddress = new Hexalith.Domain.ValueObjets.PostalAddress(
             null,
             null,
             address.AddressComponents.FirstOrDefault(p => p.Types.Contains(AddressComponentType.Street_Number))?.LongName,
@@ -151,6 +150,14 @@ public class GooglePlaceService : IPlaceService
             address.FormattedAddress);
         return _cache.Set(placeId, postalAddress, TimeSpan.FromDays(1));
     }
+
+    Task<IEnumerable<PlaceDescription>> IPlaceService.GetAutocompleteOptionsAsync(string search, string cultureCode, int maxResultCount, double? latitude, double? longitude, CancellationToken cancellationToken) => throw new NotImplementedException();
+
+    Task<IEnumerable<PlaceDescription>> IPlaceService.GetAutocompleteOptionsAsync(string search, string cultureCode, int maxResultCount, double? latitude, double? longitude, CancellationToken cancellationToken) => throw new NotImplementedException();
+
+    Task<PostalAddress> IPlaceService.GetPostalAddressAsync(string placeId, CancellationToken cancellationToken) => throw new NotImplementedException();
+
+    Task<PostalAddress> IPlaceService.GetPostalAddressAsync(string placeId, CancellationToken cancellationToken) => throw new NotImplementedException();
 
     private static string? ConvertToIso3(string? countryIso2)
     {

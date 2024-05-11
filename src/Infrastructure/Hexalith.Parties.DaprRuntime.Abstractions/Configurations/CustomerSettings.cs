@@ -17,8 +17,8 @@
 namespace Hexalith.Infrastructure.DaprRuntime.Parties.Configurations;
 
 using Hexalith.Application.Configurations;
-using Hexalith.Domain.Aggregates;
 using Hexalith.Extensions.Configuration;
+using Hexalith.Parties.Domain.Aggregates;
 
 /// <summary>
 /// Class InvoiceSettings.

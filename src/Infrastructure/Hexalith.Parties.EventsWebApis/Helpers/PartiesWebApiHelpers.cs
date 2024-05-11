@@ -14,14 +14,16 @@
 // <summary></summary>
 // ***********************************************************************
 
-namespace Hexalith.Infrastructure.WebApis.PartiesEvents.Helpers;
+namespace Hexalith.Parties.EventsWebApis.Helpers;
 
 using Hexalith.Application.Projections;
-using Hexalith.Domain.Aggregates;
 using Hexalith.Domain.Events;
 using Hexalith.Infrastructure.DaprRuntime.Helpers;
 using Hexalith.Infrastructure.WebApis.PartiesEvents.Controllers;
 using Hexalith.Infrastructure.WebApis.PartiesEvents.Projections;
+using Hexalith.Parties.Domain.Aggregates;
+using Hexalith.Parties.Events;
+using Hexalith.Parties.EventsWebApis.Projections;
 
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -37,7 +39,7 @@ public static class PartiesWebApiHelpers
     /// <param name="services">The services.</param>
     /// <param name="applicationId">Name of the application.</param>
     /// <returns>IServiceCollection.</returns>
-    /// <exception cref="System.ArgumentNullException">null.</exception>
+    /// <exception cref="ArgumentNullException">null.</exception>
     public static IServiceCollection AddCustomerProjections(this IServiceCollection services, string applicationId)
     {
         ArgumentNullException.ThrowIfNull(services);

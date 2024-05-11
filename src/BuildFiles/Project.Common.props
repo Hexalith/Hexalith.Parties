@@ -1,0 +1,76 @@
+<Project>
+	<!-- Default values to use when building and packaging -->
+	<PropertyGroup>
+		<DNVersion>8</DNVersion>
+		<!-- Framework version used when coding in Visual Studio and when creating templates -->
+		<DefaultTargetFramework>net$(DNVersion).0</DefaultTargetFramework>
+
+		<!-- TFMs used to build the abstractions and modules-->
+		<CommonTargetFrameworks Condition="'$(CommonTargetFrameworks)' == ''">net$(DNVersion).0</CommonTargetFrameworks>
+	</PropertyGroup>
+
+	<!-- Enable Deterministic Builds for github actions -->
+	<PropertyGroup Condition="'$(GITHUB_ACTIONS)' == 'true' or '$(TF_BUILD)' == 'true'">
+		<ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
+	</PropertyGroup>
+
+	<!-- Detect if the solution is opened in VS to limit the versions that are analyzed by Roslyn for performance reasons and set a local repository for packages -->
+	<PropertyGroup Condition="'$(BuildingInsideVisualStudio)' == 'true' or '$(BuildingByReSharper)' == 'true'">
+		<CommonTargetFrameworks>$(DefaultTargetFramework)</CommonTargetFrameworks>
+	</PropertyGroup>
+
+	<!-- These versions are used for the NuGet packages that are dependent on the current .NET version -->
+	<PropertyGroup>
+		<AspNetCorePackagesVersion>$(DNVersion).*</AspNetCorePackagesVersion>
+		<MicrosoftExtensionsPackagesVersion>$(DNVersion).*</MicrosoftExtensionsPackagesVersion>
+	</PropertyGroup>
+
+	<PropertyGroup>
+		<Authors>Jérôme Piquot</Authors>
+		<Company>Fiveforty</Company>
+		<Product>Hexalith External Systems</Product>
+		<RepositoryUrl>https://github.com/Hexalith/Hexalith.ExternalSystems.git</RepositoryUrl>
+		<RepositoryType>git</RepositoryType>
+	</PropertyGroup>
+	<PropertyGroup>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<LangVersion>preview</LangVersion>
+		<EnableNETAnalyzers>true</EnableNETAnalyzers>
+		<AnalysisMode>AllEnabledByDefault</AnalysisMode>
+		<EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+		<NoWarn>MA0101;S112;CA2201;S1451;SA1609;S4055;SA1633;SA1627;S113;</NoWarn>
+	</PropertyGroup>
+	<PropertyGroup>
+		<CodeAnalysisRuleSet>$(MSBuildThisFileDirectory).stylecop.ruleset</CodeAnalysisRuleSet>
+	</PropertyGroup>
+	<ItemGroup>
+		<AdditionalFiles Include="$(MSBuildThisFileDirectory).stylecop.json" Link="Properties\.stylecop.json" />
+	</ItemGroup>
+
+	<PropertyGroup>
+		<CoverletCollectorVersion>6.0.2</CoverletCollectorVersion>
+		<FluentAssertionsVersion>6.12.0</FluentAssertionsVersion>
+		<GitHubActionsTestLoggerVersion>2.3.3</GitHubActionsTestLoggerVersion>
+		<GoogleApiVersion>5.4.3</GoogleApiVersion>
+		<MicrosoftNETTestSdkVersion>17.9.0</MicrosoftNETTestSdkVersion>
+		<MicrosoftVisualStudioThreadingAnalyzersVersion>17.10.48</MicrosoftVisualStudioThreadingAnalyzersVersion>
+		<MinverVersion>5.0.0</MinverVersion>
+		<MoqVersion>4.20.70</MoqVersion>
+		<MoqContribHttpClientVersion>1.4.0</MoqContribHttpClientVersion>
+		<StyleCopAnalyzersVersion>1.2.0-beta.556</StyleCopAnalyzersVersion>
+		<XUnitRunnerVisualStudioVersion>2.8.0</XUnitRunnerVisualStudioVersion>
+		<XUnitVersion>2.8.0</XUnitVersion>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.VisualStudio.Threading.Analyzers" Version="$(MicrosoftVisualStudioThreadingAnalyzersVersion)">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+		</PackageReference>
+		<PackageReference Include="StyleCop.Analyzers" Version="$(StyleCopAnalyzersVersion)">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+	</ItemGroup>
+</Project>

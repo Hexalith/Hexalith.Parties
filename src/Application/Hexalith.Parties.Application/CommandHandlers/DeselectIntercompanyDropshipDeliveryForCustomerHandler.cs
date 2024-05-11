@@ -14,7 +14,7 @@
 // <summary></summary>
 // ***********************************************************************
 
-namespace Hexalith.Application.Parties.CommandHandlers;
+namespace Hexalith.Parties.Application.CommandHandlers;
 
 using System;
 using System.Collections.Generic;
@@ -23,18 +23,19 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using Hexalith.Application.Commands;
-using Hexalith.Application.Parties.Commands;
-using Hexalith.Application.Parties.Errors;
 using Hexalith.Domain.Aggregates;
-using Hexalith.Domain.Events;
 using Hexalith.Domain.Messages;
 using Hexalith.Extensions.Errors;
+using Hexalith.Parties.Application.Errors;
+using Hexalith.Parties.Commands;
+using Hexalith.Parties.Domain.Aggregates;
+using Hexalith.Parties.Events;
 
 /// <summary>
 /// Class SetCustomerIntercompanyDeliveryToIndirectHandler.
-/// Implements the <see cref="Hexalith.Application.Commands.CommandHandler{Hexalith.Application.Parties.Commands.DeselectIntercompanyDropshipDeliveryForCustomer}" />.
+/// Implements the <see cref="CommandHandler{Hexalith.Application.Parties.Commands.DeselectIntercompanyDropshipDeliveryForCustomer}" />.
 /// </summary>
-/// <seealso cref="Hexalith.Application.Commands.CommandHandler{Hexalith.Application.Parties.Commands.DeselectIntercompanyDropshipDeliveryForCustomer}" />
+/// <seealso cref="CommandHandler{Hexalith.Application.Parties.Commands.DeselectIntercompanyDropshipDeliveryForCustomer}" />
 public class DeselectIntercompanyDropshipDeliveryForCustomerHandler : CommandHandler<DeselectIntercompanyDropshipDeliveryForCustomer>
 {
     /// <inheritdoc/>
@@ -46,7 +47,7 @@ public class DeselectIntercompanyDropshipDeliveryForCustomerHandler : CommandHan
             command.CompanyId,
             command.OriginId,
             command.Id);
-        return aggregate is null || aggregate is not Customer customer
+        return aggregate is not Customer customer
            ? throw new ApplicationErrorException(CustomerNotRegisteredError.Create(command.TypeName, command.AggregateId))
            : customer.IntercompanyDropship
            ? await Task.FromResult<IEnumerable<BaseMessage>>([deselected]).ConfigureAwait(false)

@@ -22,10 +22,10 @@ using System.Threading.Tasks;
 using Dapr.Actors;
 using Dapr.Actors.Client;
 
-using Hexalith.Application.Parties.Commands;
-using Hexalith.Application.Parties.Services;
-using Hexalith.Domain.Events;
 using Hexalith.Infrastructure.DaprRuntime.Parties.Actors;
+using Hexalith.Parties.Application.Services;
+using Hexalith.Parties.Commands;
+using Hexalith.Parties.Events;
 
 /// <summary>
 /// Class CustomerQueryService.

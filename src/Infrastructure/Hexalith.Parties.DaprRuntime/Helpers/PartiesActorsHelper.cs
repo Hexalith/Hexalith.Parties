@@ -14,15 +14,16 @@
 // <summary></summary>
 // ***********************************************************************
 
-namespace Hexalith.Infrastructure.DaprRuntime.Parties.Helpers;
+namespace Hexalith.Parties.DaprRuntime.Helpers;
 
 using System.Diagnostics.CodeAnalysis;
 
 using Dapr.Actors.Runtime;
 
-using Hexalith.Domain.Aggregates;
 using Hexalith.Infrastructure.DaprRuntime.Helpers;
 using Hexalith.Infrastructure.DaprRuntime.Sales.Actors;
+using Hexalith.Parties.Domain.Aggregates;
+using Hexalith.Parties.Domain.Helpers;
 
 /// <summary>
 /// Class PartiesHelper.
@@ -34,11 +35,11 @@ public static class PartiesActorsHelper
     /// </summary>
     /// <param name="actors">The actors.</param>
     /// <returns>ActorRegistrationCollection.</returns>
-    /// <exception cref="System.ArgumentNullException">null.</exception>
+    /// <exception cref="ArgumentNullException">null.</exception>
     public static ActorRegistrationCollection AddPartiesAggregates([NotNull] this ActorRegistrationCollection actors)
     {
         ArgumentNullException.ThrowIfNull(actors);
-        actors.RegisterActor<AggregateActor>(AggregateActor.GetAggregateActorName(Customer.GetAggregateName()));
+        actors.RegisterActor<AggregateActor>(AggregateActorBase.GetAggregateActorName(PartiesDomainHelper.CustomerAggregateName));
         return actors;
     }
 
@@ -48,7 +49,7 @@ public static class PartiesActorsHelper
     /// <param name="actors">The actors.</param>
     /// <param name="applicationId">Name of the application.</param>
     /// <returns>ActorRegistrationCollection.</returns>
-    /// <exception cref="System.ArgumentNullException">null.</exception>
+    /// <exception cref="ArgumentNullException">null.</exception>
     public static ActorRegistrationCollection AddPartiesProjections([NotNull] this ActorRegistrationCollection actors, string applicationId)
     {
         ArgumentNullException.ThrowIfNull(actors);

@@ -4,7 +4,6 @@
 	</PropertyGroup>
 	<ItemGroup>
 	  <ProjectReference Include="..\..\Application\Hexalith.Application.Geolocations\Hexalith.Application.Geolocations.csproj" />
-	  <ProjectReference Include="..\..\Domain\Hexalith.Domain.Geolocations\Hexalith.Domain.Geolocations.csproj" />
 	</ItemGroup>
 	<ItemGroup>
 	  <Folder Include="wwwroot\" />

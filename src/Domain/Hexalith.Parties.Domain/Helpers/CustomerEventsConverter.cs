@@ -14,14 +14,14 @@
 // <summary></summary>
 // ***********************************************************************
 
-namespace Hexalith.Domain.Helpers;
+namespace Hexalith.Parties.Domain.Helpers;
 
 using System;
 using System.Diagnostics.CodeAnalysis;
 
-using Hexalith.Domain.Aggregates;
-using Hexalith.Domain.Events;
-using Hexalith.Domain.ValueObjets;
+using Hexalith.Parties.Domain.Aggregates;
+using Hexalith.Parties.Domain.ValueObjets;
+using Hexalith.Parties.Events;
 
 /// <summary>
 /// Class CustomerEventsConverter.
@@ -34,7 +34,7 @@ public static class CustomerEventsConverter
     /// <param name="change">The event.</param>
     /// <param name="intercompanyDropship">if set to <c>true</c> [intercompany dropship].</param>
     /// <returns>Customer.</returns>
-    /// <exception cref="System.ArgumentNullException">null.</exception>
+    /// <exception cref="ArgumentNullException">null.</exception>
     public static Customer ToCustomer([NotNull] this CustomerInformationChanged change, bool intercompanyDropship)
     {
         ArgumentNullException.ThrowIfNull(change);
@@ -59,7 +59,7 @@ public static class CustomerEventsConverter
     /// </summary>
     /// <param name="customer">The customer.</param>
     /// <returns>ChangeCustomerInformation.</returns>
-    /// <exception cref="System.ArgumentNullException"></exception>
+    /// <exception cref="ArgumentNullException"></exception>
     public static CustomerInformationChanged ToCustomerInformationChanged([NotNull] this Customer customer)
     {
         ArgumentNullException.ThrowIfNull(customer);
@@ -83,7 +83,7 @@ public static class CustomerEventsConverter
     /// </summary>
     /// <param name="customer">The customer.</param>
     /// <returns>RegisterCustomer.</returns>
-    /// <exception cref="System.ArgumentNullException"></exception>
+    /// <exception cref="ArgumentNullException"></exception>
     public static CustomerRegistered ToCustomerRegistered([NotNull] this Customer customer)
     {
         ArgumentNullException.ThrowIfNull(customer);

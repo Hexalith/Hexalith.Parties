@@ -14,12 +14,13 @@
 // <summary></summary>
 // ***********************************************************************
 
-namespace Hexalith.Infrastructure.WebApis.PartiesEvents.Projections;
+namespace Hexalith.Parties.EventsWebApis.Projections;
 
 using Hexalith.Application.Events;
-using Hexalith.Domain.Aggregates;
-using Hexalith.Domain.Events;
 using Hexalith.Infrastructure.DaprRuntime.Projections;
+using Hexalith.Infrastructure.WebApis.PartiesEvents.Projections;
+using Hexalith.Parties.Domain.Aggregates;
+using Hexalith.Parties.Events;
 
 using Microsoft.Extensions.Logging;
 

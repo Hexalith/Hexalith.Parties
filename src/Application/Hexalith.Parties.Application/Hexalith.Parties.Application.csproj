@@ -1,10 +1,15 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>$(CommonTargetFrameworks)</TargetFramework>
   </PropertyGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\..\Domain\Hexalith.Domain.Parties\Hexalith.Domain.Parties.csproj" />
-    <ProjectReference Include="..\Hexalith.Application.Abstractions\Hexalith.Application.Abstractions.csproj" />
-    <ProjectReference Include="..\Hexalith.Application.Organizations\Hexalith.Application.Organizations.csproj" />
-  </ItemGroup>
+    <ItemGroup Condition="'$(BuildingInsideVisualStudio)' == 'true' or '$(BuildingByReSharper)' == 'true'">
+        <ProjectReference Include="$(HexalithPath)\src\Core\Application\Hexalith.Application.Organizations\Hexalith.Application.Organizations.csproj" />
+    </ItemGroup>
+    <ItemGroup Condition="'$(BuildingInsideVisualStudio)' != 'true' and '$(BuildingByReSharper)' != 'true'">
+        <PackageReference Include="Hexalith.Application.Organizations" Version="$(HexalithVersion)" />
+    </ItemGroup>
+    <ItemGroup>
+      <ProjectReference Include="..\..\Domain\Hexalith.Parties.Domain\Hexalith.Parties.Domain.csproj" />
+      <ProjectReference Include="..\Hexalith.Parties.Commands\Hexalith.Parties.Commands.csproj" />
+    </ItemGroup>
 </Project>

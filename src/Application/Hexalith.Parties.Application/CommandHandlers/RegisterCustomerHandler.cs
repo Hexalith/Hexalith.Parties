@@ -14,7 +14,7 @@
 // <summary></summary>
 // ***********************************************************************
 
-namespace Hexalith.Application.Parties.CommandHandlers;
+namespace Hexalith.Parties.Application.CommandHandlers;
 
 using System;
 using System.Collections.Generic;
@@ -23,18 +23,20 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using Hexalith.Application.Commands;
-using Hexalith.Application.Parties.Commands;
 using Hexalith.Domain.Aggregates;
 using Hexalith.Domain.Events;
 using Hexalith.Domain.Messages;
-using Hexalith.Domain.ValueObjets;
+using Hexalith.Parties.Commands;
+using Hexalith.Parties.Domain.Aggregates;
+using Hexalith.Parties.Domain.ValueObjets;
+using Hexalith.Parties.Events;
 
 /// <summary>
 /// Class RegisterCustomerHandler.
-/// Implements the <see cref="Hexalith.Application.Commands.CommandHandler{Hexalith.Application.Parties.Commands.RegisterCustomer}" />.
+/// Implements the <see cref="CommandHandler{Hexalith.Application.Parties.Commands.RegisterCustomer}" />.
 /// </summary>
-/// <seealso cref="Hexalith.Application.Commands.CommandHandler{Hexalith.Application.Parties.Commands.RegisterCustomer}" />
-public partial class RegisterCustomerHandler : CommandHandler<RegisterCustomer>
+/// <seealso cref="CommandHandler{Hexalith.Application.Parties.Commands.RegisterCustomer}" />
+public class RegisterCustomerHandler : CommandHandler<RegisterCustomer>
 {
     /// <inheritdoc/>
     public override async Task<IEnumerable<BaseMessage>> DoAsync([NotNull] RegisterCustomer command, IAggregate? aggregate, CancellationToken cancellationToken)

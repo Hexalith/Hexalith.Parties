@@ -4,11 +4,11 @@
 //     See LICENSE file in the project root for full license information.
 // </copyright>
 
-namespace Hexalith.Infrastructure.WebApis.PartiesCommands.Controllers;
+namespace Hexalith.Parties.CommandsWebApis.Controllers;
 
 using Hexalith.Application.Aggregates;
-using Hexalith.Domain.Aggregates;
 using Hexalith.Infrastructure.WebApis.Controllers;
+using Hexalith.Parties.Domain.Aggregates;
 
 using Microsoft.AspNetCore.Mvc;
 

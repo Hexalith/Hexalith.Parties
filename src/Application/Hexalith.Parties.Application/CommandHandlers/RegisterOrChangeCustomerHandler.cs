@@ -23,11 +23,12 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using Hexalith.Application.Commands;
-using Hexalith.Application.Parties.Commands;
 using Hexalith.Domain.Aggregates;
-using Hexalith.Domain.Events;
 using Hexalith.Domain.Messages;
-using Hexalith.Domain.ValueObjets;
+using Hexalith.Parties.Commands;
+using Hexalith.Parties.Domain.Aggregates;
+using Hexalith.Parties.Domain.ValueObjets;
+using Hexalith.Parties.Events;
 
 using KellermanSoftware.CompareNetObjects;
 

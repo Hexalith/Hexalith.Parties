@@ -14,10 +14,10 @@
 // <summary></summary>
 // ***********************************************************************
 
-namespace Hexalith.Infrastructure.WebApis.PartiesCommands.Controllers;
+namespace Hexalith.Parties.CommandsWebApis.Controllers;
 
-using Hexalith.Domain.Aggregates;
 using Hexalith.Infrastructure.WebApis.Buses;
+using Hexalith.Parties.Domain.Helpers;
 
 /// <summary>
 /// Class CustomerCommandsBusTopicAttribute. This class cannot be inherited.
@@ -31,7 +31,7 @@ public sealed class CustomerCommandsBusTopicAttribute : CommandBusTopicAttribute
     /// Initializes a new instance of the <see cref="CustomerCommandsBusTopicAttribute"/> class.
     /// </summary>
     public CustomerCommandsBusTopicAttribute()
-        : base(Customer.GetAggregateName())
+        : base(PartiesDomainHelper.CustomerAggregateName)
     {
     }
 }

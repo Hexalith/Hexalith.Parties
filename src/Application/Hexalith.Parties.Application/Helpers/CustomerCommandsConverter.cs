@@ -14,15 +14,15 @@
 // <summary></summary>
 // ***********************************************************************
 
-namespace Hexalith.Application.Parties.Helpers;
+namespace Hexalith.Parties.Application.Helpers;
 
 using System;
 using System.Diagnostics.CodeAnalysis;
 
-using Hexalith.Application.Parties.Commands;
-using Hexalith.Domain.Aggregates;
-using Hexalith.Domain.Events;
-using Hexalith.Domain.ValueObjets;
+using Hexalith.Parties.Commands;
+using Hexalith.Parties.Domain.Aggregates;
+using Hexalith.Parties.Domain.ValueObjets;
+using Hexalith.Parties.Events;
 
 using KellermanSoftware.CompareNetObjects;
 
@@ -37,7 +37,7 @@ public static class CustomerCommandsConverter
     /// <param name="changed">The changed.</param>
     /// <param name="registered">The registered.</param>
     /// <returns>System.Nullable&lt;System.String&gt;.</returns>
-    /// <exception cref="System.ArgumentNullException">null.</exception>
+    /// <exception cref="ArgumentNullException">null.</exception>
     public static string? HasChanges(this ChangeCustomerInformation changed, CustomerRegistered registered)
     {
         ArgumentNullException.ThrowIfNull(changed);
@@ -56,7 +56,7 @@ public static class CustomerCommandsConverter
     /// <param name="changed">The changed.</param>
     /// <param name="registered">The registered.</param>
     /// <returns>System.Nullable&lt;System.String&gt;.</returns>
-    /// <exception cref="System.ArgumentNullException">null.</exception>
+    /// <exception cref="ArgumentNullException">null.</exception>
     public static string? HasChanges(this RegisterOrChangeCustomer changed, CustomerRegistered registered)
     {
         ArgumentNullException.ThrowIfNull(changed);
@@ -74,7 +74,7 @@ public static class CustomerCommandsConverter
     /// </summary>
     /// <param name="customer">The customer.</param>
     /// <returns>ChangeCustomerInformation.</returns>
-    /// <exception cref="System.ArgumentNullException">null.</exception>
+    /// <exception cref="ArgumentNullException">null.</exception>
     public static ChangeCustomerInformation ToChangeCustomerInformation([NotNull] this Customer customer)
     {
         ArgumentNullException.ThrowIfNull(customer);
@@ -98,7 +98,7 @@ public static class CustomerCommandsConverter
     /// </summary>
     /// <param name="customer">The customer.</param>
     /// <returns>ChangeCustomerInformation.</returns>
-    /// <exception cref="System.ArgumentNullException">null.</exception>
+    /// <exception cref="ArgumentNullException">null.</exception>
     public static ChangeCustomerInformation ToCommand([NotNull] this CustomerInformationChanged customer)
     {
         ArgumentNullException.ThrowIfNull(customer);
@@ -172,7 +172,7 @@ public static class CustomerCommandsConverter
     /// </summary>
     /// <param name="customer">The customer.</param>
     /// <returns>RegisterCustomer.</returns>
-    /// <exception cref="System.ArgumentNullException">null.</exception>
+    /// <exception cref="ArgumentNullException">null.</exception>
     public static RegisterCustomer ToRegisterCustomer([NotNull] this Customer customer)
     {
         ArgumentNullException.ThrowIfNull(customer);
@@ -196,7 +196,7 @@ public static class CustomerCommandsConverter
     /// </summary>
     /// <param name="customer">The customer.</param>
     /// <returns>RegisterOrChangeCustomer.</returns>
-    /// <exception cref="System.ArgumentNullException">nill.</exception>
+    /// <exception cref="ArgumentNullException">nill.</exception>
     public static RegisterOrChangeCustomer ToRegisterOrChangeCustomer([NotNull] this Customer customer)
     {
         ArgumentNullException.ThrowIfNull(customer);

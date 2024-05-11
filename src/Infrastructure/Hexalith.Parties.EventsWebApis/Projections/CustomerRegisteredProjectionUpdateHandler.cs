@@ -14,11 +14,12 @@
 // <summary></summary>
 // ***********************************************************************
 
-namespace Hexalith.Infrastructure.WebApis.PartiesEvents.Projections;
+namespace Hexalith.Parties.EventsWebApis.Projections;
 
-using Hexalith.Domain.Aggregates;
-using Hexalith.Domain.Events;
 using Hexalith.Infrastructure.DaprRuntime.Projections;
+using Hexalith.Infrastructure.WebApis.PartiesEvents.Projections;
+using Hexalith.Parties.Domain.Aggregates;
+using Hexalith.Parties.Events;
 
 using Microsoft.Extensions.Logging;
 
@@ -32,6 +33,9 @@ using Microsoft.Extensions.Logging;
 /// </remarks>
 /// <param name="factory">The factory.</param>
 /// <param name="logger">The logger.</param>
-public class CustomerRegisteredProjectionUpdateHandler(IActorProjectionFactory<Customer> factory, ILogger<CustomerRegisteredProjectionUpdateHandler> logger) : CustomerProjectionUpdateHandler<CustomerRegistered>(factory, logger)
+public class CustomerRegisteredProjectionUpdateHandler(
+    IActorProjectionFactory<Customer> factory,
+    ILogger<CustomerRegisteredProjectionUpdateHandler> logger)
+    : CustomerProjectionUpdateHandler<CustomerRegistered>(factory, logger)
 {
 }

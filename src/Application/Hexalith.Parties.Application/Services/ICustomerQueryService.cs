@@ -14,10 +14,10 @@
 // <summary></summary>
 // ***********************************************************************
 
-namespace Hexalith.Application.Parties.Services;
+namespace Hexalith.Parties.Application.Services;
 
-using Hexalith.Application.Parties.Commands;
-using Hexalith.Domain.Events;
+using Hexalith.Parties.Commands;
+using Hexalith.Parties.Events;
 
 /// <summary>
 /// Interface ICustomerQueryService.

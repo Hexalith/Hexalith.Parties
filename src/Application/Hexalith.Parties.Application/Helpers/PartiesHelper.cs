@@ -14,14 +14,15 @@
 // <summary></summary>
 // ***********************************************************************
 
-namespace Hexalith.Application.Parties.Helpers;
+namespace Hexalith.Parties.Application.Helpers;
 
 using FluentValidation;
 
 using Hexalith.Application.Commands;
 using Hexalith.Application.Parties.CommandHandlers;
-using Hexalith.Application.Parties.Commands;
-using Hexalith.Domain.Events;
+using Hexalith.Parties.Application.CommandHandlers;
+using Hexalith.Parties.Commands;
+using Hexalith.Parties.Events;
 
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;

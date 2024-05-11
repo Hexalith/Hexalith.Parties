@@ -21,9 +21,10 @@ using System.Threading.Tasks;
 
 using Hexalith.Application.Metadatas;
 using Hexalith.Application.Projections;
-using Hexalith.Domain.Aggregates;
 using Hexalith.Domain.Events;
 using Hexalith.Infrastructure.DaprRuntime.Projections;
+using Hexalith.Parties.Domain.Aggregates;
+using Hexalith.Parties.Domain.Helpers;
 
 using Microsoft.Extensions.Logging;
 
@@ -43,7 +44,7 @@ public partial class PartiesSnapshotHandler(
     /// <inheritdoc/>
     public async Task ApplyAsync(SnapshotEvent baseEvent, IMetadata metadata, CancellationToken cancellationToken)
     {
-        if (baseEvent is null || baseEvent.AggregateName != Customer.GetAggregateName() || string.IsNullOrWhiteSpace(baseEvent.SourceAggregateId))
+        if (baseEvent is null || baseEvent.AggregateName != PartiesDomainHelper.CustomerAggregateName || string.IsNullOrWhiteSpace(baseEvent.SourceAggregateId))
         {
             LogProjectionEventIgnoredWarning(logger, baseEvent?.TypeName, baseEvent?.AggregateName, baseEvent?.AggregateId);
             return;
