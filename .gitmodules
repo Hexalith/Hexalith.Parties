@@ -1,0 +1,3 @@
+[submodule "Hexalith"]
+	path = Hexalith
+	url = https://github.com/Hexalith/Hexalith.git
