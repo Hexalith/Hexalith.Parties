@@ -154,6 +154,13 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Hexalith.Parties.CommandsWe
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Hexalith.Parties.UnitTests", "test\Hexalith.Parties.UnitTests\Hexalith.Parties.UnitTests.csproj", "{0FB784CA-270E-423F-9002-2B16A692C461}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "_global", "_global", "{1E9B2907-372E-4D83-96E0-F09636AF1E6A}"
+	ProjectSection(SolutionItems) = preProject
+		.gitignore = .gitignore
+		LICENSE = LICENSE
+		README.md = README.md
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -426,6 +433,7 @@ Global
 		{7320A1A7-7CFC-472F-B280-00B3F2511F18} = {971DE0DA-285B-4912-BA93-E74411400F87}
 		{D4B2DB60-8A29-4524-872F-18564A602F68} = {971DE0DA-285B-4912-BA93-E74411400F87}
 		{0FB784CA-270E-423F-9002-2B16A692C461} = {8B5B1376-6E74-4BE2-8688-5F4B604B0370}
+		{1E9B2907-372E-4D83-96E0-F09636AF1E6A} = {6DCC825D-02D0-4F25-9A3D-A530736AB837}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {09CBB595-8996-4C7F-9C48-4C58AD9293AC}
