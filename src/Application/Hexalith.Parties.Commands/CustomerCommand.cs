@@ -19,7 +19,7 @@ namespace Hexalith.Parties.Commands;
 using System.Runtime.Serialization;
 using System.Text.Json.Serialization;
 
-using Hexalith.Application.Organizations.Commands;
+using Hexalith.Application.Commands;
 using Hexalith.Domain.Events;
 using Hexalith.Extensions;
 using Hexalith.Parties.Domain.Helpers;
@@ -31,7 +31,7 @@ using Hexalith.Parties.Domain.Helpers;
 /// <seealso cref="BaseEvent" />
 [DataContract]
 [Serializable]
-public abstract class CustomerCommand : CompanyEntityCommand
+public class CustomerCommand : CompanyEntityCommand
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="CustomerCommand"/> class.
