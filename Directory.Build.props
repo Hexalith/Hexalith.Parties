@@ -5,7 +5,7 @@
 	<Import Project="$(HexalithProps)" Condition=" '$(HexalithProps)' != '' " />
 	<Import Project="src\BuildFiles\Project.Common.props" />
 	<PropertyGroup>
-		<HexalithPath Condition="'$(HexalithPath)' == ''">$(MSBuildThisFileDirectory)Hexalith</HexalithPath>
+		<HexalithPath Condition="'$(HexalithPath)' == ''">$(MSBuildThisFileDirectory)Hexalith\</HexalithPath>
 		<HexalithVersion Condition="'$(HexalithVersion)' == ''">*</HexalithVersion>
 	</PropertyGroup>
 </Project>
