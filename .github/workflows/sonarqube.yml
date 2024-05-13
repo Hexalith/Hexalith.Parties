@@ -11,22 +11,23 @@ jobs:
     name: Build and analyze
     runs-on: windows-latest
     steps:
-      - name: Set up JDK 21
-        uses: actions/setup-java@v1
+      - name: Set up JDK
+        uses: actions/setup-java@v3
         with:
-          java-version: 1.21
-      - uses: actions/checkout@v2
+          java-version: 17
+          distribution: 'zulu' # Alternative distribution options are available.
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
       - name: Cache SonarCloud packages
-        uses: actions/cache@v1
+        uses: actions/cache@v3
         with:
           path: ~\sonar\cache
           key: ${{ runner.os }}-sonar
           restore-keys: ${{ runner.os }}-sonar
       - name: Cache SonarCloud scanner
         id: cache-sonar-scanner
-        uses: actions/cache@v1
+        uses: actions/cache@v3
         with:
           path: .\.sonar\scanner
           key: ${{ runner.os }}-sonar-scanner
@@ -43,6 +44,16 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         shell: powershell
         run: |
-          .\.sonar\scanner\dotnet-sonarscanner begin /k:"Hexalith_Hexalith" /o:"hexalith" /d:sonar.login="${{ secrets.SONAR_TOKEN }}" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.exclusions="docs/**"
-          dotnet build
-          .\.sonar\scanner\dotnet-sonarscanner end /d:sonar.login="${{ secrets.SONAR_TOKEN }}"
+          .\.sonar\scanner\dotnet-sonarscanner begin /k:"Hexalith_Hexalith.Parties" /o:"hexalith" /d:sonar.token="${{ secrets.SONAR_TOKEN }}" /d:sonar.host.url="https://sonarcloud.io"
+          dotnet build './src/Domain/Hexalith.Parties.Domain.Abstractions/Hexalith.Parties.Domain.Abstractions.csproj' --configuration Release -p:Version=${{ env.VERSION }}
+          dotnet build './src/Domain/Hexalith.Parties.Events/Hexalith.Parties.Events.csproj' --configuration Release -p:Version=${{ env.VERSION }}
+          dotnet build './src/Domain/Hexalith.Parties.Domain/Hexalith.Parties.Domain.csproj' --configuration Release -p:Version=${{ env.VERSION }}
+          dotnet build './src/Application/Hexalith.Parties.Commands/Hexalith.Parties.Commands.csproj' --configuration Release -p:Version=${{ env.VERSION }}
+          dotnet build './src/Application/Hexalith.Parties.Application/Hexalith.Parties.Application.csproj' --configuration Release -p:Version=${{ env.VERSION }}
+          dotnet build './src/Infrastructure/Hexalith.Parties.CommandsWebApis/Hexalith.Parties.CommandsWebApis.csproj' --configuration Release -p:Version=${{ env.VERSION }}
+          dotnet build './src/Infrastructure/Hexalith.Parties.DaprRuntime/Hexalith.Parties.DaprRuntime.csproj' --configuration Release -p:Version=${{ env.VERSION }}
+          dotnet build './src/Infrastructure/Hexalith.Parties.DaprRuntime.Abstractions/Hexalith.Parties.DaprRuntime.Abstractions.csproj' --configuration Release -p:Version=${{ env.VERSION }}
+          dotnet build './src/Infrastructure/Hexalith.Parties.EventsWebApis/Hexalith.Parties.EventsWebApis.csproj' --configuration Release -p:Version=${{ env.VERSION }}
+          dotnet build './src/Infrastructure/Hexalith.Parties.GoogleMaps/Hexalith.Parties.GoogleMaps.csproj' --configuration Release -p:Version=${{ env.VERSION }}
+          dotnet build './src/UI/Hexalith.PostalAddresses.UI/Hexalith.PostalAddresses.UI.csproj' --configuration Release -p:Version=${{ env.VERSION }}
+          .\.sonar\scanner\dotnet-sonarscanner end /d:sonar.token="${{ secrets.SONAR_TOKEN }}"

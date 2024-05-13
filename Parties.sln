@@ -134,6 +134,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 	ProjectSection(SolutionItems) = preProject
 		.github\workflows\hexalith_build.yml = .github\workflows\hexalith_build.yml
 		.github\workflows\semgrep.yml = .github\workflows\semgrep.yml
+		.github\workflows\sonarqube.yml = .github\workflows\sonarqube.yml
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Hexalith.Parties.Domain.Abstractions", "src\Domain\Hexalith.Parties.Domain.Abstractions\Hexalith.Parties.Domain.Abstractions.csproj", "{9DBF6D44-791A-4B17-9604-BA92B02552E6}"
