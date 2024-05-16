@@ -11,19 +11,18 @@ using System.Runtime.Serialization;
 /// <summary>
 /// Represents a geographic location with latitude and longitude coordinates.
 /// </summary>
-[Serializable]
 [DataContract]
-public class GeoLocation
-{
+public record GeoLocation(
     /// <summary>
     /// Gets or sets the latitude coordinate of the location.
     /// </summary>
-    [DataMember]
-    public double Latitude { get; set; }
+    [property:DataMember(Order = 1)]
+    double Latitude,
 
     /// <summary>
     /// Gets or sets the longitude coordinate of the location.
     /// </summary>
-    [DataMember]
-    public double Longitude { get; set; }
+    [property : DataMember(Order = 2)]
+    double Longitude)
+{
 }
