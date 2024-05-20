@@ -24,7 +24,6 @@ using System.Threading.Tasks;
 
 using Hexalith.Application.Commands;
 using Hexalith.Domain.Aggregates;
-using Hexalith.Domain.Events;
 using Hexalith.Domain.Messages;
 using Hexalith.Parties.Commands;
 using Hexalith.Parties.Domain.Aggregates;
@@ -56,7 +55,7 @@ public class RegisterCustomerHandler : CommandHandler<RegisterCustomer>
                 command.GroupId,
                 command.SalesCurrencyId,
                 command.Date);
-        (_, IEnumerable<BaseEvent>? events) = (aggregate ?? new Customer()).Apply(registered);
+        (_, IEnumerable<BaseMessage>? events) = (aggregate ?? new Customer()).Apply(registered);
         return await Task.FromResult(events).ConfigureAwait(false);
     }
 

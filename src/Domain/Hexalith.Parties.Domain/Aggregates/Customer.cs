@@ -23,6 +23,7 @@ using System.Runtime.Serialization;
 
 using Hexalith.Domain.Aggregates;
 using Hexalith.Domain.Events;
+using Hexalith.Domain.Messages;
 using Hexalith.Parties.Domain.Helpers;
 using Hexalith.Parties.Domain.ValueObjets;
 using Hexalith.Parties.Events;
@@ -106,7 +107,7 @@ public record Customer(
         : this(customer) => IntercompanyDropship = intercompanyDropship;
 
     /// <inheritdoc/>
-    public override (IAggregate Aggregate, IEnumerable<BaseEvent> Events) Apply(BaseEvent domainEvent)
+    public override (IAggregate Aggregate, IEnumerable<BaseMessage> Messages) Apply(BaseEvent domainEvent)
     {
         return domainEvent switch
         {
