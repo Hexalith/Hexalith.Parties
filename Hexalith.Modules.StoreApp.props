@@ -1,0 +1,10 @@
+<Project>
+	<PropertyGroup>
+		<HexalithModulesStoreAppProps>$([MSBuild]::GetPathOfFileAbove('Hexalith.Modules.StoreApp.props', '$(MSBuildThisFileDirectory)..'))</HexalithModulesStoreAppProps>
+	</PropertyGroup>
+	<Import Project="$(HexalithModulesStoreAppProps)" Condition=" '$(HexalithModulesStoreAppProps)' != '' " />
+	<PropertyGroup>
+	</PropertyGroup>
+	<ItemGroup>
+	</ItemGroup>
+</Project>

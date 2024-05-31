@@ -1,0 +1,12 @@
+<Project>
+	<PropertyGroup>
+		<HexalithModulesSharedProps>$([MSBuild]::GetPathOfFileAbove('Hexalith.Modules.Shared.props', '$(MSBuildThisFileDirectory)..'))</HexalithModulesSharedProps>
+	</PropertyGroup>
+	<Import Project="$(HexalithModulesSharedProps)" Condition=" '$(HexalithModulesSharedProps)' != '' " />
+	<ItemGroup Condition="'$(UseProjectReference)' == 'true'">
+		<ProjectReference Include="$(HexalithPartiesPath)\src\UI\Hexalith.PostalAddresses.UI\Hexalith.PostalAddresses.UI.csproj" />
+	</ItemGroup>
+	<ItemGroup Condition="'$(UseProjectReference)' != 'true'">
+		<PackageReference Include="Hexalith.PostalAddresses.UI" Version="$(HexalithPartiesVersion)" />
+	</ItemGroup>
+</Project>

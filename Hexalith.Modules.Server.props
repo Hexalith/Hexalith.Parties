@@ -1,0 +1,10 @@
+<Project>
+	<PropertyGroup>
+		<HexalithModulesServerProps>$([MSBuild]::GetPathOfFileAbove('Hexalith.Modules.Server.props', '$(MSBuildThisFileDirectory)..'))</HexalithModulesServerProps>
+	</PropertyGroup>
+	<Import Project="$(HexalithModulesServerProps)" Condition=" '$(HexalithModulesServerProps)' != '' " />
+	<PropertyGroup>
+	</PropertyGroup>
+	<ItemGroup>
+	</ItemGroup>
+</Project>

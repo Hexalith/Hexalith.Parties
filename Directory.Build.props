@@ -1,5 +1,7 @@
 <Project>
 	<PropertyGroup>
+		<UseProjectReference Condition="'$(UseProjectReference)' == '' and '$(BuildingByReSharper)' == 'true'">true</UseProjectReference>
+		<UseProjectReference Condition="'$(UseProjectReference)' == '' and '$(BuildingInsideVisualStudio)' == 'true'">true</UseProjectReference>
 		<HexalithProps>$([MSBuild]::GetPathOfFileAbove('Hexalith.props', '$(MSBuildThisFileDirectory)..'))</HexalithProps>
 	</PropertyGroup>
 	<Import Project="$(HexalithProps)" Condition=" '$(HexalithProps)' != '' " />
@@ -7,5 +9,9 @@
 	<PropertyGroup>
 		<HexalithPath Condition="'$(HexalithPath)' == ''">$(MSBuildThisFileDirectory)Hexalith\</HexalithPath>
 		<HexalithVersion Condition="'$(HexalithVersion)' == ''">*</HexalithVersion>
+		<HexalithAppPath Condition="'$(HexalithAppPath)' == ''">$(MSBuildThisFileDirectory)Hexalith.App\</HexalithAppPath>
+		<HexalithAppVersion Condition="'$(HexalithAppVersion)' == ''">*</HexalithAppVersion>
+		<HexalithPartiesPath Condition="'$(HexalithPartiesPath)' == ''">$(MSBuildThisFileDirectory)</HexalithPartiesPath>
+		<HexalithPartiesVersion Condition="'$(HexalithPartiesVersion)' == ''">*</HexalithPartiesVersion>
 	</PropertyGroup>
 </Project>
