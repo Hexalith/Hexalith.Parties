@@ -160,7 +160,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Hexalith.Parties.UnitTests"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "_global", "_global", "{1E9B2907-372E-4D83-96E0-F09636AF1E6A}"
 	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
 		.gitignore = .gitignore
+		.stylecop.json = .stylecop.json
+		.stylecop.ruleset = .stylecop.ruleset
 		LICENSE = LICENSE
 		README.md = README.md
 	EndProjectSection
