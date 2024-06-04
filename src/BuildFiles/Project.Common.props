@@ -49,6 +49,7 @@
 	</ItemGroup>
 
 	<PropertyGroup>
+		<BlazorGeolocationVersion>8.0.0</BlazorGeolocationVersion>
 		<CoverletCollectorVersion>6.0.2</CoverletCollectorVersion>
 		<FluentAssertionsVersion>6.12.0</FluentAssertionsVersion>
 		<GitHubActionsTestLoggerVersion>2.3.3</GitHubActionsTestLoggerVersion>
