@@ -13,10 +13,10 @@ public static class PartiesConstants
     /// <summary>
     /// The name of the Parties application identifier.
     /// </summary>
-    public const string ApplicationId = "Parties";
+    public static readonly string ApplicationId = "Parties";
 
     /// <summary>
     /// The name of the Parties application.
     /// </summary>
-    public const string ApplicationName = "Hexalith parties server";
+    public static readonly string ApplicationName = "Hexalith parties server";
 }
