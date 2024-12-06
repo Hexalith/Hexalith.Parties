@@ -1,0 +1,12 @@
+[submodule "Hexalith"]
+	path = Hexalith
+	url = https://github.com/Hexalith/Hexalith.git
+[submodule "HexalithApp"]
+	path = HexalithApp
+	url = https://github.com/Hexalith/HexalithApp.git
+[submodule "Hexalith.DaprIdentityStore"]
+	path = Hexalith.DaprIdentityStore
+	url = https://github.com/Hexalith/Hexalith.DaprIdentityStore.git
+[submodule "Hexalith.Security"]
+	path = Hexalith.Security
+	url = https://github.com/Hexalith/Hexalith.Security.git
