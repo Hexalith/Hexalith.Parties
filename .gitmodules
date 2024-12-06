@@ -1,6 +1,3 @@
-[submodule "Hexalith"]
-	path = Hexalith
-	url = https://github.com/Hexalith/Hexalith.git
 [submodule "HexalithApp"]
 	path = HexalithApp
 	url = https://github.com/Hexalith/HexalithApp.git
