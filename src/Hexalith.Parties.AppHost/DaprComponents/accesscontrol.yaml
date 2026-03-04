@@ -1,0 +1,33 @@
+# DAPR Access Control Configuration
+# =====================================================
+# Defines service-to-service invocation policies for the Hexalith Parties service.
+# Each DAPR sidecar loads this Configuration to evaluate INCOMING service invocation requests.
+#
+# App-ID Topology (1 service):
+#   - commandapi: REST API host + DAPR actor host + event publisher (all in-process).
+#     The ONLY app-id that needs infrastructure access (state store, pub/sub).
+#
+# Security Posture:
+#   defaultAction: allow (self-hosted mode without mTLS).
+#   For PRODUCTION (Kubernetes with mTLS + Sentry):
+#     1. Change defaultAction to "deny"
+#     2. Set trustDomain to your SPIFFE domain
+#     3. Update each policy trustDomain + namespace to match the caller's K8s identity
+apiVersion: dapr.io/v1alpha1
+kind: Configuration
+metadata:
+  name: accesscontrol
+spec:
+  accessControl:
+    defaultAction: allow
+    trustDomain: "public"
+    policies:
+      # commandapi: Trusted caller -- REST API + actor host + event publisher
+      - appId: commandapi
+        defaultAction: deny
+        trustDomain: "public"
+        namespace: "default"
+        operations:
+          - name: /**
+            httpVerb: ['POST']
+            action: allow

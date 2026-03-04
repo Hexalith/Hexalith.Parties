@@ -9,6 +9,7 @@
     <ProjectReference Include="..\Hexalith.Parties.Contracts\Hexalith.Parties.Contracts.csproj" />
     <ProjectReference Include="..\Hexalith.Parties.Server\Hexalith.Parties.Server.csproj" />
     <ProjectReference Include="..\Hexalith.Parties.Projections\Hexalith.Parties.Projections.csproj" />
+    <ProjectReference Include="..\Hexalith.Parties.ServiceDefaults\Hexalith.Parties.ServiceDefaults.csproj" />
     <ProjectReference Include="..\..\Hexalith.EventStore\src\Hexalith.EventStore.Server\Hexalith.EventStore.Server.csproj" />
   </ItemGroup>
 
