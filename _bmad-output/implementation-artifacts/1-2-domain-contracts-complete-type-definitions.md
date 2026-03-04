@@ -1,6 +1,6 @@
 # Story 1.2: Domain Contracts — Complete Type Definitions
 
-Status: ready-for-dev
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -45,76 +45,76 @@ so that the domain model contracts are stable before aggregate and projection im
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Add EventStore.Contracts ProjectReference to Contracts .csproj (AC: #13)
-    - [ ] 1.1: Verify EventStore.Contracts TargetFramework — run `dotnet build Hexalith.EventStore/src/Hexalith.EventStore.Contracts/` and confirm it compiles to a TFM compatible with net10.0 (net10.0 or netstandard2.0/2.1 are both compatible)
-    - [ ] 1.2: Add ProjectReference to `../../Hexalith.EventStore/src/Hexalith.EventStore.Contracts/Hexalith.EventStore.Contracts.csproj`
-    - [ ] 1.3: Verify `dotnet restore` succeeds with the new reference
-- [ ] Task 2: Create custom `[PersonalData]` attribute (AC: #11, #13)
-    - [ ] 2.1: Create `src/Hexalith.Parties.Contracts/PersonalDataAttribute.cs` — custom attribute to avoid ASP.NET Core Identity dependency
-- [ ] Task 3: Create enums in `ValueObjects/` folder (AC: #7)
-    - [ ] 3.1: `PartyType.cs` — Person, Organization
-    - [ ] 3.2: `ContactChannelType.cs` — Email, Phone, PostalAddress, SocialMedia (extensible)
-    - [ ] 3.3: `IdentifierType.cs` — VAT, SIRET, NationalId, etc. (extensible)
-- [ ] Task 4: Create value objects in `ValueObjects/` folder (AC: #6)
-    - [ ] 4.1: `PostalAddress.cs` — sealed record (Street, City, Region, PostalCode, Country)
-    - [ ] 4.2: `EmailAddress.cs` — sealed record (Address)
-    - [ ] 4.3: `PhoneNumber.cs` — sealed record (Number, CountryCode?)
-    - [ ] 4.4: `SocialMediaHandle.cs` — sealed record (Platform, Handle)
-    - [ ] 4.5: `PersonDetails.cs` — sealed record (FirstName, LastName, DateOfBirth?, Prefix?, Suffix?) with `[PersonalData]`
-    - [ ] 4.6: `OrganizationDetails.cs` — sealed record (LegalName, TradingName?, LegalForm?, RegistrationNumber?, IsNaturalPerson)
-    - [ ] 4.7: `ContactChannel.cs` — sealed record (Id, Type, Value, IsPreferred) with `[PersonalData]` on Value
-    - [ ] 4.8: `PartyIdentifier.cs` — sealed record (Id, Type, Value, Jurisdiction?) with `[PersonalData]` on Value
-- [ ] Task 5: Create command types in `Commands/` folder (AC: #1, #2, #3, #14)
-    - [ ] 5.1: `CreateParty.cs` — PartyId, PartyType, PersonDetails?, OrganizationDetails?
-    - [ ] 5.2: `CreatePartyComposite.cs` — PartyId, PartyType, PersonDetails?, OrganizationDetails?, ContactChannels[], Identifiers[]
-    - [ ] 5.3: `UpdatePartyComposite.cs` — PartyId + explicit add/update/remove lists per D9
-    - [ ] 5.4: `UpdatePersonDetails.cs` — PartyId, PersonDetails
-    - [ ] 5.5: `UpdateOrganizationDetails.cs` — PartyId, OrganizationDetails
-    - [ ] 5.6: `SetIsNaturalPerson.cs` — PartyId, IsNaturalPerson
-    - [ ] 5.7: `AddContactChannel.cs` — PartyId, ContactChannelId, Type, Value
-    - [ ] 5.8: `UpdateContactChannel.cs` — PartyId, ContactChannelId, Type?, Value?
-    - [ ] 5.9: `RemoveContactChannel.cs` — PartyId, ContactChannelId
-    - [ ] 5.10: `AddIdentifier.cs` — PartyId, IdentifierId, Type, Value
-    - [ ] 5.11: `RemoveIdentifier.cs` — PartyId, IdentifierId
-    - [ ] 5.12: `DeactivateParty.cs` — PartyId
-    - [ ] 5.13: `ReactivateParty.cs` — PartyId
-- [ ] Task 6: Create event types in `Events/` folder (AC: #4, #14)
-    - [ ] 6.1: `PartyCreated.cs` : IEventPayload — PartyType, PersonDetails?, OrganizationDetails?
-    - [ ] 6.2: `PersonDetailsUpdated.cs` : IEventPayload — PersonDetails
-    - [ ] 6.3: `OrganizationDetailsUpdated.cs` : IEventPayload — OrganizationDetails
-    - [ ] 6.4: `ContactChannelAdded.cs` : IEventPayload — ContactChannelId, Type, Value
-    - [ ] 6.5: `ContactChannelUpdated.cs` : IEventPayload — ContactChannelId, Type?, Value?
-    - [ ] 6.6: `ContactChannelRemoved.cs` : IEventPayload — ContactChannelId
-    - [ ] 6.7: `PreferredContactChannelChanged.cs` : IEventPayload — ContactChannelId
-    - [ ] 6.8: `IdentifierAdded.cs` : IEventPayload — IdentifierId, Type, Value
-    - [ ] 6.9: `IdentifierRemoved.cs` : IEventPayload — IdentifierId
-    - [ ] 6.10: `IsNaturalPersonChanged.cs` : IEventPayload — IsNaturalPerson
-    - [ ] 6.11: `PartyDeactivated.cs` : IEventPayload
-    - [ ] 6.12: `PartyReactivated.cs` : IEventPayload
-    - [ ] 6.13: `PartyDisplayNameDerived.cs` : IEventPayload — DisplayName, SortName
-    - [ ] 6.14: `PartyMerged.cs` : IEventPayload — v2 placeholder (SurvivorPartyId, MergedPartyId)
-- [ ] Task 7: Create rejection events in `Events/` folder (AC: #5)
-    - [ ] 7.1: `PartyCannotBeCreatedWithoutType.cs` : IRejectionEvent
-    - [ ] 7.2: `PartyCannotAddDuplicateChannel.cs` : IRejectionEvent
-    - [ ] 7.3: `PartyCannotAddDuplicateIdentifier.cs` : IRejectionEvent
-    - [ ] 7.4: `PartyNotFound.cs` : IRejectionEvent
-    - [ ] 7.5: `PartyTypeMismatch.cs` : IRejectionEvent
-    - [ ] 7.6: `PartyCannotBeDeactivatedWhenInactive.cs` : IRejectionEvent
-    - [ ] 7.7: `PartyCannotBeReactivatedWhenActive.cs` : IRejectionEvent
-    - [ ] 7.8: `ContactChannelNotFound.cs` : IRejectionEvent
-    - [ ] 7.9: `IdentifierNotFound.cs` : IRejectionEvent
-    - [ ] 7.10: `CompositeOperationConflict.cs` : IRejectionEvent
-- [ ] Task 8: Create `PartyState` in `State/` folder (AC: #8)
-    - [ ] 8.1: `PartyState.cs` — sealed class with all properties and Apply methods for ALL event types
-- [ ] Task 9: Create query models in `Models/` folder (AC: #9)
-    - [ ] 9.1: `PartyDetail.cs` — full party view query result
-    - [ ] 9.2: `PartyIndexEntry.cs` — lightweight summary with CreatedAt, LastModifiedAt
-- [ ] Task 10: Create `CompositeCommandResult` in `Results/` folder (AC: #10)
-    - [ ] 10.1: `CompositeCommandResult.cs` — extends DomainResult with Applied/Skipped/Rejected
-- [ ] Task 11: Verify build and tests (AC: #13, #15)
-    - [ ] 11.1: Run `dotnet restore Hexalith.Parties.slnx` — zero errors
-    - [ ] 11.2: Run `dotnet build Hexalith.Parties.slnx` — zero errors
-    - [ ] 11.3: Run `dotnet test` on all test projects — zero failures (adding ProjectReference must not break existing test resolution)
+- [x] Task 1: Add EventStore.Contracts ProjectReference to Contracts .csproj (AC: #13)
+    - [x] 1.1: Verify EventStore.Contracts TargetFramework — run `dotnet build Hexalith.EventStore/src/Hexalith.EventStore.Contracts/` and confirm it compiles to a TFM compatible with net10.0 (net10.0 or netstandard2.0/2.1 are both compatible)
+    - [x] 1.2: Add ProjectReference to `../../Hexalith.EventStore/src/Hexalith.EventStore.Contracts/Hexalith.EventStore.Contracts.csproj`
+    - [x] 1.3: Verify `dotnet restore` succeeds with the new reference
+- [x] Task 2: Create custom `[PersonalData]` attribute (AC: #11, #13)
+    - [x] 2.1: Create `src/Hexalith.Parties.Contracts/PersonalDataAttribute.cs` — custom attribute to avoid ASP.NET Core Identity dependency
+- [x] Task 3: Create enums in `ValueObjects/` folder (AC: #7)
+    - [x] 3.1: `PartyType.cs` — Person, Organization
+    - [x] 3.2: `ContactChannelType.cs` — Email, Phone, PostalAddress, SocialMedia (extensible)
+    - [x] 3.3: `IdentifierType.cs` — VAT, SIRET, NationalId, etc. (extensible)
+- [x] Task 4: Create value objects in `ValueObjects/` folder (AC: #6)
+    - [x] 4.1: `PostalAddress.cs` — sealed record (Street, City, Region, PostalCode, Country)
+    - [x] 4.2: `EmailAddress.cs` — sealed record (Address)
+    - [x] 4.3: `PhoneNumber.cs` — sealed record (Number, CountryCode?)
+    - [x] 4.4: `SocialMediaHandle.cs` — sealed record (Platform, Handle)
+    - [x] 4.5: `PersonDetails.cs` — sealed record (FirstName, LastName, DateOfBirth?, Prefix?, Suffix?) with `[PersonalData]`
+    - [x] 4.6: `OrganizationDetails.cs` — sealed record (LegalName, TradingName?, LegalForm?, RegistrationNumber?, IsNaturalPerson)
+    - [x] 4.7: `ContactChannel.cs` — sealed record (Id, Type, Value, IsPreferred) with `[PersonalData]` on Value
+    - [x] 4.8: `PartyIdentifier.cs` — sealed record (Id, Type, Value, Jurisdiction?) with `[PersonalData]` on Value
+- [x] Task 5: Create command types in `Commands/` folder (AC: #1, #2, #3, #14)
+    - [x] 5.1: `CreateParty.cs` — PartyId, PartyType, PersonDetails?, OrganizationDetails?
+    - [x] 5.2: `CreatePartyComposite.cs` — PartyId, PartyType, PersonDetails?, OrganizationDetails?, ContactChannels[], Identifiers[]
+    - [x] 5.3: `UpdatePartyComposite.cs` — PartyId + explicit add/update/remove lists per D9
+    - [x] 5.4: `UpdatePersonDetails.cs` — PartyId, PersonDetails
+    - [x] 5.5: `UpdateOrganizationDetails.cs` — PartyId, OrganizationDetails
+    - [x] 5.6: `SetIsNaturalPerson.cs` — PartyId, IsNaturalPerson
+    - [x] 5.7: `AddContactChannel.cs` — PartyId, ContactChannelId, Type, Value
+    - [x] 5.8: `UpdateContactChannel.cs` — PartyId, ContactChannelId, Type?, Value?
+    - [x] 5.9: `RemoveContactChannel.cs` — PartyId, ContactChannelId
+    - [x] 5.10: `AddIdentifier.cs` — PartyId, IdentifierId, Type, Value
+    - [x] 5.11: `RemoveIdentifier.cs` — PartyId, IdentifierId
+    - [x] 5.12: `DeactivateParty.cs` — PartyId
+    - [x] 5.13: `ReactivateParty.cs` — PartyId
+- [x] Task 6: Create event types in `Events/` folder (AC: #4, #14)
+    - [x] 6.1: `PartyCreated.cs` : IEventPayload — PartyType, PersonDetails?, OrganizationDetails?
+    - [x] 6.2: `PersonDetailsUpdated.cs` : IEventPayload — PersonDetails
+    - [x] 6.3: `OrganizationDetailsUpdated.cs` : IEventPayload — OrganizationDetails
+    - [x] 6.4: `ContactChannelAdded.cs` : IEventPayload — ContactChannelId, Type, Value
+    - [x] 6.5: `ContactChannelUpdated.cs` : IEventPayload — ContactChannelId, Type?, Value?
+    - [x] 6.6: `ContactChannelRemoved.cs` : IEventPayload — ContactChannelId
+    - [x] 6.7: `PreferredContactChannelChanged.cs` : IEventPayload — ContactChannelId
+    - [x] 6.8: `IdentifierAdded.cs` : IEventPayload — IdentifierId, Type, Value
+    - [x] 6.9: `IdentifierRemoved.cs` : IEventPayload — IdentifierId
+    - [x] 6.10: `IsNaturalPersonChanged.cs` : IEventPayload — IsNaturalPerson
+    - [x] 6.11: `PartyDeactivated.cs` : IEventPayload
+    - [x] 6.12: `PartyReactivated.cs` : IEventPayload
+    - [x] 6.13: `PartyDisplayNameDerived.cs` : IEventPayload — DisplayName, SortName
+    - [x] 6.14: `PartyMerged.cs` : IEventPayload — v2 placeholder (SurvivorPartyId, MergedPartyId)
+- [x] Task 7: Create rejection events in `Events/` folder (AC: #5)
+    - [x] 7.1: `PartyCannotBeCreatedWithoutType.cs` : IRejectionEvent
+    - [x] 7.2: `PartyCannotAddDuplicateChannel.cs` : IRejectionEvent
+    - [x] 7.3: `PartyCannotAddDuplicateIdentifier.cs` : IRejectionEvent
+    - [x] 7.4: `PartyNotFound.cs` : IRejectionEvent
+    - [x] 7.5: `PartyTypeMismatch.cs` : IRejectionEvent
+    - [x] 7.6: `PartyCannotBeDeactivatedWhenInactive.cs` : IRejectionEvent
+    - [x] 7.7: `PartyCannotBeReactivatedWhenActive.cs` : IRejectionEvent
+    - [x] 7.8: `ContactChannelNotFound.cs` : IRejectionEvent
+    - [x] 7.9: `IdentifierNotFound.cs` : IRejectionEvent
+    - [x] 7.10: `CompositeOperationConflict.cs` : IRejectionEvent
+- [x] Task 8: Create `PartyState` in `State/` folder (AC: #8)
+    - [x] 8.1: `PartyState.cs` — sealed class with all properties and Apply methods for ALL event types
+- [x] Task 9: Create query models in `Models/` folder (AC: #9)
+    - [x] 9.1: `PartyDetail.cs` — full party view query result
+    - [x] 9.2: `PartyIndexEntry.cs` — lightweight summary with CreatedAt, LastModifiedAt
+- [x] Task 10: Create `CompositeCommandResult` in `Results/` folder (AC: #10)
+    - [x] 10.1: `CompositeCommandResult.cs` — extends DomainResult with Applied/Skipped/Rejected
+- [x] Task 11: Verify build and tests (AC: #13, #15)
+    - [x] 11.1: Run `dotnet restore Hexalith.Parties.slnx` — zero errors
+    - [x] 11.2: Run `dotnet build Hexalith.Parties.slnx` — zero errors
+    - [x] 11.3: Run `dotnet test` on all test projects — zero failures (adding ProjectReference must not break existing test resolution)
 
 ## Dev Notes
 
@@ -818,10 +818,115 @@ src/Hexalith.Parties.Contracts/
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4.6
 
 ### Debug Log References
 
+- CA1062 errors (null parameter checks) on PartyState Apply methods — fixed by adding `ArgumentNullException.ThrowIfNull(e)` to all Apply methods
+- CA1822 error on `Apply(PartyMerged)` no-op method — suppressed with pragma since method must be instance for EventStore convention discovery
+
 ### Completion Notes List
 
+- Task 1: Added ProjectReference to `Hexalith.EventStore.Contracts` in Contracts .csproj; verified TFM compatibility (net10.0) and restore
+- Task 2: Created custom `[PersonalData]` attribute at project root to avoid ASP.NET Core Identity dependency
+- Task 3: Created 3 enums (`PartyType`, `ContactChannelType`, `IdentifierType`) in `ValueObjects/`
+- Task 4: Created 8 value objects (`PostalAddress`, `EmailAddress`, `PhoneNumber`, `SocialMediaHandle`, `PersonDetails`, `OrganizationDetails`, `ContactChannel`, `PartyIdentifier`) with `[PersonalData]` attributes per D6 spec
+- Task 5: Created 13 command types in `Commands/` — all sealed records with `{ get; init; }`, no positional params, no TenantId
+- Task 6: Created 14 event types in `Events/` implementing `IEventPayload` — no PartyId on events per convention
+- Task 7: Created 10 rejection events in `Events/` implementing `IRejectionEvent` — parameterless for state-guards, with optional Message for diagnostic rejections
+- Task 8: Created `PartyState` sealed class with `{ get; private set; }` properties and Apply methods for all 14 event types
+- Task 9: Created 2 query models (`PartyDetail`, `PartyIndexEntry`) in `Models/`
+- Task 10: Created `CompositeCommandResult` extending `DomainResult` with Applied/Skipped/Rejected collections
+- Task 11: Full solution builds with 0 errors; 21 unit tests pass (PartyState Apply methods + CompositeCommandResult)
+- Code review fixes: Added `[PersonalData]` markers on command/event payload `Value` fields for contact channels and identifiers to align with AC #11
+- Code review fixes: Corrected checklist markdown formatting and synchronized story metadata/status artifacts
+
 ### File List
+
+**New files:**
+- src/Hexalith.Parties.Contracts/PersonalDataAttribute.cs
+- src/Hexalith.Parties.Contracts/Commands/CreateParty.cs
+- src/Hexalith.Parties.Contracts/Commands/CreatePartyComposite.cs
+- src/Hexalith.Parties.Contracts/Commands/UpdatePartyComposite.cs
+- src/Hexalith.Parties.Contracts/Commands/UpdatePersonDetails.cs
+- src/Hexalith.Parties.Contracts/Commands/UpdateOrganizationDetails.cs
+- src/Hexalith.Parties.Contracts/Commands/SetIsNaturalPerson.cs
+- src/Hexalith.Parties.Contracts/Commands/AddContactChannel.cs
+- src/Hexalith.Parties.Contracts/Commands/UpdateContactChannel.cs
+- src/Hexalith.Parties.Contracts/Commands/RemoveContactChannel.cs
+- src/Hexalith.Parties.Contracts/Commands/AddIdentifier.cs
+- src/Hexalith.Parties.Contracts/Commands/RemoveIdentifier.cs
+- src/Hexalith.Parties.Contracts/Commands/DeactivateParty.cs
+- src/Hexalith.Parties.Contracts/Commands/ReactivateParty.cs
+- src/Hexalith.Parties.Contracts/Events/PartyCreated.cs
+- src/Hexalith.Parties.Contracts/Events/PersonDetailsUpdated.cs
+- src/Hexalith.Parties.Contracts/Events/OrganizationDetailsUpdated.cs
+- src/Hexalith.Parties.Contracts/Events/ContactChannelAdded.cs
+- src/Hexalith.Parties.Contracts/Events/ContactChannelUpdated.cs
+- src/Hexalith.Parties.Contracts/Events/ContactChannelRemoved.cs
+- src/Hexalith.Parties.Contracts/Events/PreferredContactChannelChanged.cs
+- src/Hexalith.Parties.Contracts/Events/IdentifierAdded.cs
+- src/Hexalith.Parties.Contracts/Events/IdentifierRemoved.cs
+- src/Hexalith.Parties.Contracts/Events/IsNaturalPersonChanged.cs
+- src/Hexalith.Parties.Contracts/Events/PartyDeactivated.cs
+- src/Hexalith.Parties.Contracts/Events/PartyReactivated.cs
+- src/Hexalith.Parties.Contracts/Events/PartyDisplayNameDerived.cs
+- src/Hexalith.Parties.Contracts/Events/PartyMerged.cs
+- src/Hexalith.Parties.Contracts/Events/PartyCannotBeCreatedWithoutType.cs
+- src/Hexalith.Parties.Contracts/Events/PartyCannotAddDuplicateChannel.cs
+- src/Hexalith.Parties.Contracts/Events/PartyCannotAddDuplicateIdentifier.cs
+- src/Hexalith.Parties.Contracts/Events/PartyNotFound.cs
+- src/Hexalith.Parties.Contracts/Events/PartyTypeMismatch.cs
+- src/Hexalith.Parties.Contracts/Events/PartyCannotBeDeactivatedWhenInactive.cs
+- src/Hexalith.Parties.Contracts/Events/PartyCannotBeReactivatedWhenActive.cs
+- src/Hexalith.Parties.Contracts/Events/ContactChannelNotFound.cs
+- src/Hexalith.Parties.Contracts/Events/IdentifierNotFound.cs
+- src/Hexalith.Parties.Contracts/Events/CompositeOperationConflict.cs
+- src/Hexalith.Parties.Contracts/ValueObjects/PartyType.cs
+- src/Hexalith.Parties.Contracts/ValueObjects/ContactChannelType.cs
+- src/Hexalith.Parties.Contracts/ValueObjects/IdentifierType.cs
+- src/Hexalith.Parties.Contracts/ValueObjects/PostalAddress.cs
+- src/Hexalith.Parties.Contracts/ValueObjects/EmailAddress.cs
+- src/Hexalith.Parties.Contracts/ValueObjects/PhoneNumber.cs
+- src/Hexalith.Parties.Contracts/ValueObjects/SocialMediaHandle.cs
+- src/Hexalith.Parties.Contracts/ValueObjects/PersonDetails.cs
+- src/Hexalith.Parties.Contracts/ValueObjects/OrganizationDetails.cs
+- src/Hexalith.Parties.Contracts/ValueObjects/ContactChannel.cs
+- src/Hexalith.Parties.Contracts/ValueObjects/PartyIdentifier.cs
+- src/Hexalith.Parties.Contracts/State/PartyState.cs
+- src/Hexalith.Parties.Contracts/Models/PartyDetail.cs
+- src/Hexalith.Parties.Contracts/Models/PartyIndexEntry.cs
+- src/Hexalith.Parties.Contracts/Results/CompositeCommandResult.cs
+- tests/Hexalith.Parties.Contracts.Tests/State/PartyStateTests.cs
+- tests/Hexalith.Parties.Contracts.Tests/Results/CompositeCommandResultTests.cs
+
+**Modified files:**
+- src/Hexalith.Parties.Contracts/Hexalith.Parties.Contracts.csproj
+- _bmad-output/implementation-artifacts/1-2-domain-contracts-complete-type-definitions.md
+- _bmad-output/implementation-artifacts/sprint-status.yaml
+
+### Change Log
+
+- 2026-03-04: Implemented all domain contract types for the Parties bounded context — 13 commands, 14 events, 10 rejection events, 8 value objects, 3 enums, PartyState sealed class, 2 query models, CompositeCommandResult. Added 21 unit tests for PartyState Apply methods and CompositeCommandResult.
+- 2026-03-04: Senior review remediation — added missing `[PersonalData]` markers on command/event payload value fields, corrected Tasks/Subtasks markdown formatting, and synchronized story/sprint status to `done`.
+
+## Senior Developer Review (AI)
+
+### Reviewer
+
+GitHub Copilot (GPT-5.3-Codex)
+
+### Date
+
+2026-03-04
+
+### Outcome
+
+Approved after fixes
+
+### Findings Resolved
+
+- High: AC #11 alignment fixed by marking contact channel/identifier payload value fields with `[PersonalData]` in command/event contracts.
+- Medium: Story task checklist formatting corrected for markdown-compliant checkboxes.
+- Medium: Story file list updated to include artifact files modified during implementation/review.
+- Medium: Review record appended to story and status synchronized.
