@@ -416,3 +416,27 @@ FodyWeavers.xsd
 *.msix
 *.msm
 *.msp
+
+
+# Windows NUL device artifact
+NUL
+
+#Ignore vscode AI rules
+.github\instructions\codacy.instructions.md
+
+# Test debug output
+test_debug_output.txt
+test_output.txt
+
+# Aspire publisher output
+publish-output/
+
+# Added by ggshield
+.cache_ggshield
+
+
+#Ignore cursor AI rules
+.cursor\rules\codacy.mdc
+
+# Lychee link checker cache
+.lycheecache

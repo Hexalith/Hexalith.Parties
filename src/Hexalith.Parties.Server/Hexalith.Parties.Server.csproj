@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\Hexalith.Parties.Contracts\Hexalith.Parties.Contracts.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Dapr.Client" />
+    <PackageReference Include="Dapr.Actors" />
+    <PackageReference Include="MediatR" />
+  </ItemGroup>
+
+</Project>

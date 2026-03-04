@@ -1,0 +1,39 @@
+<Project>
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+
+    <!-- NuGet Package Defaults (overridden by host/test projects) -->
+    <IsPackable>true</IsPackable>
+    <IsPublishable>false</IsPublishable>
+
+    <!-- NuGet Metadata -->
+    <Authors>Hexalith Contributors</Authors>
+    <Company>Hexalith</Company>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/Hexalith/Hexalith.Parties</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/Hexalith/Hexalith.Parties</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <Description>DAPR-native party management microservice for .NET</Description>
+    <PackageTags>parties;crm;dapr;eventsourcing;cqrs;dotnet</PackageTags>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
+
+  <!-- MinVer: Git tag-based SemVer versioning -->
+  <PropertyGroup>
+    <MinVerTagPrefix>v</MinVerTagPrefix>
+    <MinVerDefaultPreReleaseIdentifiers>preview.0</MinVerDefaultPreReleaseIdentifiers>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MinVer" PrivateAssets="All" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(IsPackable)' == 'true'">
+    <None Include="$(MSBuildThisFileDirectory)README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+</Project>
