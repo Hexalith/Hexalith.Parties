@@ -1,0 +1,3 @@
+[submodule "Hexalith.EventStore"]
+	path = Hexalith.EventStore
+	url = https://github.com/Hexalith/Hexalith.EventStore.git
