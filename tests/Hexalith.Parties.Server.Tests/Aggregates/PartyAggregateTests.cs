@@ -159,7 +159,7 @@ public class PartyAggregateTests
     [Fact]
     public void Handle_NullCommand_ThrowsArgumentNullException()
     {
-        Should.Throw<ArgumentNullException>(() => PartyAggregate.Handle(null!, null));
+        Should.Throw<ArgumentNullException>(() => PartyAggregate.Handle((CreateParty)null!, null));
     }
 
     [Theory]
@@ -180,5 +180,145 @@ public class PartyAggregateTests
         result.IsRejection.ShouldBeTrue();
         result.Events.Count.ShouldBe(1);
         result.Events[0].ShouldBeOfType<PartyCannotBeCreatedWithInvalidId>();
+    }
+
+    [Fact]
+    public void Handle_UpdatePersonDetails_ValidState_ReturnsUpdatedAndDisplayNameEvents()
+    {
+        UpdatePersonDetails command = new()
+        {
+            PartyId = Guid.NewGuid().ToString(),
+            PersonDetails = new PersonDetails
+            {
+                FirstName = "John",
+                LastName = "Smith",
+            },
+        };
+
+        PartyState state = new();
+        state.Apply(new PartyCreated
+        {
+            Type = PartyType.Person,
+            PersonDetails = new PersonDetails { FirstName = "Old", LastName = "Name" },
+        });
+
+        var result = PartyAggregate.Handle(command, state);
+
+        result.IsSuccess.ShouldBeTrue();
+        result.Events.Count.ShouldBe(2);
+        result.Events[0].ShouldBeOfType<PersonDetailsUpdated>();
+        PartyDisplayNameDerived derived = result.Events[1].ShouldBeOfType<PartyDisplayNameDerived>();
+        derived.DisplayName.ShouldBe("John Smith");
+        derived.SortName.ShouldBe("Smith, John");
+    }
+
+    [Fact]
+    public void Handle_UpdatePersonDetails_NullPayload_ReturnsRejection()
+    {
+        UpdatePersonDetails command = new()
+        {
+            PartyId = Guid.NewGuid().ToString(),
+            PersonDetails = null!,
+        };
+
+        PartyState state = new();
+        state.Apply(new PartyCreated
+        {
+            Type = PartyType.Person,
+            PersonDetails = new PersonDetails { FirstName = "A", LastName = "B" },
+        });
+
+        var result = PartyAggregate.Handle(command, state);
+
+        result.IsRejection.ShouldBeTrue();
+        PartyTypeMismatch rejection = result.Events[0].ShouldBeOfType<PartyTypeMismatch>();
+        rejection.Message.ShouldBe("Person details are required.");
+    }
+
+    [Fact]
+    public void Handle_UpdateOrganizationDetails_NullPayload_ReturnsRejection()
+    {
+        UpdateOrganizationDetails command = new()
+        {
+            PartyId = Guid.NewGuid().ToString(),
+            OrganizationDetails = null!,
+        };
+
+        PartyState state = new();
+        state.Apply(new PartyCreated
+        {
+            Type = PartyType.Organization,
+            OrganizationDetails = new OrganizationDetails { LegalName = "Legal" },
+        });
+
+        var result = PartyAggregate.Handle(command, state);
+
+        result.IsRejection.ShouldBeTrue();
+        PartyTypeMismatch rejection = result.Events[0].ShouldBeOfType<PartyTypeMismatch>();
+        rejection.Message.ShouldBe("Organization details are required.");
+    }
+
+    [Fact]
+    public void Handle_UpdateOrganizationDetails_OnPerson_ReturnsTypeMismatch()
+    {
+        UpdateOrganizationDetails command = new()
+        {
+            PartyId = Guid.NewGuid().ToString(),
+            OrganizationDetails = new OrganizationDetails { LegalName = "New Legal" },
+        };
+
+        PartyState state = new();
+        state.Apply(new PartyCreated
+        {
+            Type = PartyType.Person,
+            PersonDetails = new PersonDetails { FirstName = "A", LastName = "B" },
+        });
+
+        var result = PartyAggregate.Handle(command, state);
+
+        result.IsRejection.ShouldBeTrue();
+        result.Events[0].ShouldBeOfType<PartyTypeMismatch>();
+    }
+
+    [Fact]
+    public void Handle_DeactivateParty_AlreadyInactive_ReturnsNoOp()
+    {
+        DeactivateParty command = new()
+        {
+            PartyId = Guid.NewGuid().ToString(),
+        };
+
+        PartyState state = new();
+        state.Apply(new PartyCreated
+        {
+            Type = PartyType.Organization,
+            OrganizationDetails = new OrganizationDetails { LegalName = "Legal" },
+        });
+        state.Apply(new PartyDeactivated());
+
+        var result = PartyAggregate.Handle(command, state);
+
+        result.IsNoOp.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void Handle_SetIsNaturalPerson_SameValue_ReturnsNoOp()
+    {
+        SetIsNaturalPerson command = new()
+        {
+            PartyId = Guid.NewGuid().ToString(),
+            IsNaturalPerson = true,
+        };
+
+        PartyState state = new();
+        state.Apply(new PartyCreated
+        {
+            Type = PartyType.Organization,
+            OrganizationDetails = new OrganizationDetails { LegalName = "Legal", IsNaturalPerson = true },
+        });
+
+        var result = PartyAggregate.Handle(command, state);
+
+        result.IsNoOp.ShouldBeTrue();
     }
 }
