@@ -5,7 +5,10 @@
       "Bash(test:*)",
       "Bash(git:*)",
       "WebSearch",
-      "Bash(dotnet:*)"
+      "Bash(dotnet:*)",
+      "mcp__MCP_DOCKER__list_directory",
+      "Bash(xargs wc:*)",
+      "Bash(gh pr:*)"
     ]
   }
 }
