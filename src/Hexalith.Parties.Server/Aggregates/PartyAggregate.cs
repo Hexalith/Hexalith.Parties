@@ -194,6 +194,109 @@ public sealed class PartyAggregate : EventStoreAggregate<PartyState>
         return DomainResult.Success([new PartyReactivated()]);
     }
 
+    public static DomainResult Handle(AddContactChannel command, PartyState? state)
+    {
+        ArgumentNullException.ThrowIfNull(command);
+
+        if (state is null)
+        {
+            return DomainResult.Rejection([new PartyNotFound()]);
+        }
+
+        // Idempotent: skip if channel already exists (D10 — safe for MCP retries)
+        if (state.ContactChannels.Any(c => c.Id == command.ContactChannelId))
+        {
+            return DomainResult.NoOp();
+        }
+
+        ContactChannelAdded added = new()
+        {
+            ContactChannelId = command.ContactChannelId,
+            Type = command.Type,
+            Value = command.Value,
+            IsPreferred = command.IsPreferred,
+        };
+
+        // If marked as preferred, emit PreferredContactChannelChanged to clear others of same type
+        if (command.IsPreferred)
+        {
+            return DomainResult.Success([added, new PreferredContactChannelChanged
+            {
+                ContactChannelId = command.ContactChannelId,
+            }]);
+        }
+
+        return DomainResult.Success([added]);
+    }
+
+    public static DomainResult Handle(UpdateContactChannel command, PartyState? state)
+    {
+        ArgumentNullException.ThrowIfNull(command);
+
+        if (state is null)
+        {
+            return DomainResult.Rejection([new PartyNotFound()]);
+        }
+
+        // Channel not found check — use FindIndex to avoid exceptions (no LINQ First/Single)
+        int channelIdx = -1;
+        for (int i = 0; i < state.ContactChannels.Count; i++)
+        {
+            if (state.ContactChannels[i].Id == command.ContactChannelId)
+            {
+                channelIdx = i;
+                break;
+            }
+        }
+
+        if (channelIdx < 0)
+        {
+            return DomainResult.Rejection([new ContactChannelNotFound { Message = $"Contact channel '{command.ContactChannelId}' not found." }]);
+        }
+
+        ContactChannelUpdated updated = new()
+        {
+            ContactChannelId = command.ContactChannelId,
+            Type = command.Type,
+            Value = command.Value,
+            IsPreferred = command.IsPreferred,
+        };
+
+        ContactChannel existingChannel = state.ContactChannels[channelIdx];
+        ContactChannelType targetType = command.Type ?? existingChannel.Type;
+
+        // Emit preferred change when explicitly marking preferred and either:
+        // 1) channel was not already preferred, or
+        // 2) channel type changes (must clear preferred on the new type)
+        if (command.IsPreferred == true && (!existingChannel.IsPreferred || targetType != existingChannel.Type))
+        {
+            return DomainResult.Success([updated, new PreferredContactChannelChanged
+            {
+                ContactChannelId = command.ContactChannelId,
+            }]);
+        }
+
+        return DomainResult.Success([updated]);
+    }
+
+    public static DomainResult Handle(RemoveContactChannel command, PartyState? state)
+    {
+        ArgumentNullException.ThrowIfNull(command);
+
+        if (state is null)
+        {
+            return DomainResult.Rejection([new PartyNotFound()]);
+        }
+
+        // Channel not found check
+        if (!state.ContactChannels.Any(c => c.Id == command.ContactChannelId))
+        {
+            return DomainResult.Rejection([new ContactChannelNotFound { Message = $"Contact channel '{command.ContactChannelId}' not found." }]);
+        }
+
+        return DomainResult.Success([new ContactChannelRemoved { ContactChannelId = command.ContactChannelId }]);
+    }
+
     private static (string DisplayName, string SortName) DeriveDisplayName(
         PartyType type,
         PersonDetails? person,
