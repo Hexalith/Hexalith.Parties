@@ -86,12 +86,22 @@ public sealed class PartyState
     public void Apply(PreferredContactChannelChanged e)
     {
         ArgumentNullException.ThrowIfNull(e);
+        int targetIdx = _contactChannels.FindIndex(c => c.Id == e.ContactChannelId);
+        if (targetIdx < 0)
+        {
+            return; // Channel not found — defensive; aggregate Handle should prevent this
+        }
+
+        ContactChannelType targetType = _contactChannels[targetIdx].Type;
         for (int i = 0; i < _contactChannels.Count; i++)
         {
-            _contactChannels[i] = _contactChannels[i] with
+            if (_contactChannels[i].Type == targetType)
             {
-                IsPreferred = _contactChannels[i].Id == e.ContactChannelId,
-            };
+                _contactChannels[i] = _contactChannels[i] with
+                {
+                    IsPreferred = _contactChannels[i].Id == e.ContactChannelId,
+                };
+            }
         }
     }
 

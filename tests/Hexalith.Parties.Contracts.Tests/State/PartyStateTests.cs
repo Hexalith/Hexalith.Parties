@@ -129,16 +129,21 @@ public class PartyStateTests
     }
 
     [Fact]
-    public void Apply_PreferredContactChannelChanged_SetsPreferredAndClearsOthers()
+    public void Apply_PreferredContactChannelChanged_SetsPreferredAndClearsOthersOfSameType()
     {
         var state = new PartyState();
         state.Apply(new ContactChannelAdded { ContactChannelId = "ch-1", Type = ContactChannelType.Email, Value = "a@b.com", IsPreferred = true });
-        state.Apply(new ContactChannelAdded { ContactChannelId = "ch-2", Type = ContactChannelType.Phone, Value = "123" });
+        state.Apply(new ContactChannelAdded { ContactChannelId = "ch-2", Type = ContactChannelType.Email, Value = "b@b.com" });
+        state.Apply(new ContactChannelAdded { ContactChannelId = "ch-3", Type = ContactChannelType.Phone, Value = "123", IsPreferred = true });
 
         state.Apply(new PreferredContactChannelChanged { ContactChannelId = "ch-2" });
 
+        // ch-1 (Email) — cleared because same type as target
         state.ContactChannels[0].IsPreferred.ShouldBeFalse();
+        // ch-2 (Email) — now preferred
         state.ContactChannels[1].IsPreferred.ShouldBeTrue();
+        // ch-3 (Phone) — unchanged, different type
+        state.ContactChannels[2].IsPreferred.ShouldBeTrue();
     }
 
     [Fact]
