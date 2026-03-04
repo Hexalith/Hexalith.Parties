@@ -43,7 +43,7 @@ development_status:
   # Epic 1: Domain Foundation & Party Lifecycle (7 stories)
   epic-1: in-progress
   1-1-project-scaffolding-and-solution-structure: done
-  1-2-domain-contracts-complete-type-definitions: backlog
+  1-2-domain-contracts-complete-type-definitions: ready-for-dev
   1-3-party-aggregate-party-creation: backlog
   1-4-party-aggregate-update-details-and-lifecycle-management: backlog
   1-5-party-aggregate-tier-1-unit-tests: backlog
