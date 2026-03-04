@@ -48,7 +48,7 @@ development_status:
   1-4-party-aggregate-update-details-and-lifecycle-management: done
   1-5-party-aggregate-tier-1-unit-tests: done
   1-6-rest-api-error-handling-and-party-retrieval: done
-  1-7-apphost-local-development-and-gdpr-warning: backlog
+  1-7-apphost-local-development-and-gdpr-warning: done
   epic-1-retrospective: optional
 
   # Epic 2: Contact Channels & Identifiers (4 stories)

@@ -1,0 +1,20 @@
+# DAPR Pub/Sub Component -- Local Development
+# ================================================================
+# Redis-backed pub/sub for event distribution with per-tenant-per-domain topics.
+# Topic pattern: {tenant}.{domain}.events
+#
+# Scoping:
+#   commandapi is NOT listed in publishingScopes = unrestricted publishing.
+#   This supports dynamic tenant provisioning without restart.
+apiVersion: dapr.io/v1alpha1
+kind: Component
+metadata:
+  name: pubsub
+spec:
+  type: pubsub.redis
+  version: v1
+  metadata:
+    - name: redisHost
+      value: "localhost:6379"
+scopes:
+  - commandapi
