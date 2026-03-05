@@ -55,7 +55,7 @@ development_status:
   epic-2: in-progress
   2-1-party-aggregate-contact-channel-management: done
   2-2-party-aggregate-identifier-management: done
-  2-3-contact-channel-and-identifier-unit-tests: ready-for-dev
+  2-3-contact-channel-and-identifier-unit-tests: done
   2-4-rest-api-contact-channel-and-identifier-endpoints: backlog
   epic-2-retrospective: optional
 

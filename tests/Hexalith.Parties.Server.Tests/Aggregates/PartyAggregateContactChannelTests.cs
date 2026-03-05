@@ -264,4 +264,139 @@ public class PartyAggregateContactChannelTests
         result.Events.Count.ShouldBe(1);
         result.Events[0].ShouldBeOfType<ContactChannelRemoved>();
     }
+
+    [Fact]
+    public void Handle_AddContactChannel_With50ExistingChannels_StillSucceeds()
+    {
+        PartyState state = PartyTestData.CreatePersonState();
+        for (int i = 0; i < 50; i++)
+        {
+            state.Apply(new ContactChannelAdded
+            {
+                ContactChannelId = $"ch-{i}",
+                Type = ContactChannelType.Email,
+                Value = $"user{i}@example.com",
+            });
+        }
+
+        AddContactChannel command = new()
+        {
+            PartyId = PartyTestData.DefaultPartyId,
+            ContactChannelId = "ch-51",
+            Type = ContactChannelType.Phone,
+            Value = "+33600000051",
+            IsPreferred = false,
+        };
+
+        var result = PartyAggregate.Handle(command, state);
+
+        result.IsSuccess.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void Handle_UpdateContactChannel_With50ExistingChannels_StillSucceeds()
+    {
+        PartyState state = PartyTestData.CreatePersonState();
+        for (int i = 0; i < 50; i++)
+        {
+            state.Apply(new ContactChannelAdded
+            {
+                ContactChannelId = $"ch-{i}",
+                Type = ContactChannelType.Email,
+                Value = $"user{i}@example.com",
+            });
+        }
+
+        UpdateContactChannel command = new()
+        {
+            PartyId = PartyTestData.DefaultPartyId,
+            ContactChannelId = "ch-0",
+            Value = "updated@example.com",
+        };
+
+        var result = PartyAggregate.Handle(command, state);
+
+        result.IsSuccess.ShouldBeTrue();
+        result.Events.Count.ShouldBe(1);
+        result.Events[0].ShouldBeOfType<ContactChannelUpdated>();
+    }
+
+    [Fact]
+    public void Handle_RemoveContactChannel_With50ExistingChannels_StillSucceeds()
+    {
+        PartyState state = PartyTestData.CreatePersonState();
+        for (int i = 0; i < 50; i++)
+        {
+            state.Apply(new ContactChannelAdded
+            {
+                ContactChannelId = $"ch-{i}",
+                Type = ContactChannelType.Email,
+                Value = $"user{i}@example.com",
+            });
+        }
+
+        RemoveContactChannel command = new()
+        {
+            PartyId = PartyTestData.DefaultPartyId,
+            ContactChannelId = "ch-25",
+        };
+
+        var result = PartyAggregate.Handle(command, state);
+
+        result.IsSuccess.ShouldBeTrue();
+        result.Events.Count.ShouldBe(1);
+        result.Events[0].ShouldBeOfType<ContactChannelRemoved>();
+    }
+
+    [Fact]
+    public void Handle_AddContactChannel_With50ExistingChannels_AndPreferred_StillSucceeds()
+    {
+        PartyState state = PartyTestData.CreatePersonState();
+        state.Apply(new ContactChannelAdded
+        {
+            ContactChannelId = "phone-existing",
+            Type = ContactChannelType.Phone,
+            Value = "+33600000000",
+            IsPreferred = true,
+        });
+
+        for (int i = 0; i < 50; i++)
+        {
+            state.Apply(new ContactChannelAdded
+            {
+                ContactChannelId = $"ch-{i}",
+                Type = ContactChannelType.Email,
+                Value = $"user{i}@example.com",
+            });
+        }
+
+        AddContactChannel command = new()
+        {
+            PartyId = PartyTestData.DefaultPartyId,
+            ContactChannelId = "phone-new-preferred",
+            Type = ContactChannelType.Phone,
+            Value = "+33600000051",
+            IsPreferred = true,
+        };
+
+        var result = PartyAggregate.Handle(command, state);
+
+        result.IsSuccess.ShouldBeTrue();
+        result.Events.Count.ShouldBe(2);
+
+        ContactChannelAdded added = result.Events[0].ShouldBeOfType<ContactChannelAdded>();
+        added.ContactChannelId.ShouldBe("phone-new-preferred");
+        added.IsPreferred.ShouldBeTrue();
+
+        PreferredContactChannelChanged preferredChanged = result.Events[1].ShouldBeOfType<PreferredContactChannelChanged>();
+        preferredChanged.ContactChannelId.ShouldBe("phone-new-preferred");
+
+        state.Apply(added);
+        state.Apply(preferredChanged);
+
+        ContactChannel existingPhone = state.ContactChannels.Single(c => c.Id == "phone-existing");
+        ContactChannel newPhone = state.ContactChannels.Single(c => c.Id == "phone-new-preferred");
+        existingPhone.IsPreferred.ShouldBeFalse();
+        newPhone.IsPreferred.ShouldBeTrue();
+    }
 }
