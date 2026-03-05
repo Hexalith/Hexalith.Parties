@@ -1,6 +1,6 @@
 # Story 2.3: Contact Channel & Identifier Unit Tests
 
-Status: ready-for-dev
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 <!-- Key Context: This story adds Tier 1 aggregate-level unit tests for Handle(AddIdentifier), Handle(RemoveIdentifier). Contact channel aggregate tests already exist in PartyAggregateContactChannelTests.cs (11 tests). The acceptance criteria also require extending PartyTestData with identifier builders and verifying aggregate-size behavior at 50 contact channels. -->
@@ -29,31 +29,38 @@ So that domain logic correctness is verified for the full party enrichment model
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Extend `PartyTestData` with identifier builders (AC: #4)
-  - [ ] 1.1: Add `ValidAddVatIdentifier()` → `AddIdentifier` with `Type = IdentifierType.VAT`, `Value = "FR12345678901"`
-  - [ ] 1.2: Add `ValidAddSiretIdentifier()` → `AddIdentifier` with `Type = IdentifierType.SIRET`, `Value = "12345678901234"`
-  - [ ] 1.3: Add `ValidAddNationalIdIdentifier()` → `AddIdentifier` with `Type = IdentifierType.NationalId`, `Value = "850101123456789"`
-  - [ ] 1.4: Add `ValidRemoveIdentifier()` → `RemoveIdentifier` with default `IdentifierId`
-  - [ ] 1.5: Add `CreatePersonStateWithIdentifier()` → `PartyState` with one pre-added VAT identifier
+- [x] Task 1: Extend `PartyTestData` with identifier builders (AC: #4)
+  - [x] 1.1: Add `ValidAddVatIdentifier()` → `AddIdentifier` with `Type = IdentifierType.VAT`, `Value = "FR12345678901"`
+  - [x] 1.2: Add `ValidAddSiretIdentifier()` → `AddIdentifier` with `Type = IdentifierType.SIRET`, `Value = "12345678901234"`
+  - [x] 1.3: Add `ValidAddNationalIdIdentifier()` → `AddIdentifier` with `Type = IdentifierType.NationalId`, `Value = "850101123456789"`
+  - [x] 1.4: Add `ValidRemoveIdentifier()` → `RemoveIdentifier` with default `IdentifierId`
+  - [x] 1.5: Add `CreatePersonStateWithIdentifier()` → `PartyState` with one pre-added VAT identifier
 
-- [ ] Task 2: Create `PartyAggregateIdentifierTests.cs` (AC: #1, #2, #3, #7)
-  - [ ] 2.1: `Handle_AddIdentifier_NullState_ReturnsPartyNotFound` — null state → `PartyNotFound` rejection
-  - [ ] 2.2: `Handle_AddIdentifier_ValidVat_EmitsIdentifierAdded` — happy path, verify event properties (IdentifierId, Type=VAT, Value)
-  - [ ] 2.3: `Handle_AddIdentifier_ValidSiret_EmitsIdentifierAdded` — SIRET type variant
-  - [ ] 2.4: `Handle_AddIdentifier_ValidNationalId_EmitsIdentifierAdded` — NationalId type variant
-  - [ ] 2.5: `Handle_AddIdentifier_DuplicateId_ReturnsNoOp` — idempotent add (D10)
-  - [ ] 2.6: `Handle_RemoveIdentifier_NullState_ReturnsPartyNotFound` — null state → `PartyNotFound` rejection
-  - [ ] 2.7: `Handle_RemoveIdentifier_NotFound_ReturnsIdentifierNotFound` — non-existent ID → `IdentifierNotFound` rejection
-  - [ ] 2.8: `Handle_RemoveIdentifier_Existing_EmitsIdentifierRemoved` — happy path, verify event properties (IdentifierId)
+- [x] Task 2: Create `PartyAggregateIdentifierTests.cs` (AC: #1, #2, #3, #7)
+  - [x] 2.1: `Handle_AddIdentifier_NullState_ReturnsPartyNotFound` — null state → `PartyNotFound` rejection
+  - [x] 2.2: `Handle_AddIdentifier_ValidVat_EmitsIdentifierAdded` — happy path, verify event properties (IdentifierId, Type=VAT, Value)
+  - [x] 2.3: `Handle_AddIdentifier_ValidSiret_EmitsIdentifierAdded` — SIRET type variant
+  - [x] 2.4: `Handle_AddIdentifier_ValidNationalId_EmitsIdentifierAdded` — NationalId type variant
+  - [x] 2.5: `Handle_AddIdentifier_DuplicateId_ReturnsNoOp` — idempotent add (D10)
+  - [x] 2.6: `Handle_RemoveIdentifier_NullState_ReturnsPartyNotFound` — null state → `PartyNotFound` rejection
+  - [x] 2.7: `Handle_RemoveIdentifier_NotFound_ReturnsIdentifierNotFound` — non-existent ID → `IdentifierNotFound` rejection
+  - [x] 2.8: `Handle_RemoveIdentifier_Existing_EmitsIdentifierRemoved` — happy path, verify event properties (IdentifierId)
 
-- [ ] Task 3: Add aggregate-size contact channel test (AC: #5)
-  - [ ] 3.1: Add test to `PartyAggregateContactChannelTests.cs`: `Handle_AddContactChannel_With50ExistingChannels_StillSucceeds` — add 50 channels via state.Apply, then add 51st, verify success
-  - [ ] 3.2: Add test: `Handle_UpdateContactChannel_With50ExistingChannels_StillSucceeds` — update one of 50 channels
-  - [ ] 3.3: Add test: `Handle_RemoveContactChannel_With50ExistingChannels_StillSucceeds` — remove one of 50 channels
+- [x] Task 3: Add aggregate-size contact channel test (AC: #5)
+  - [x] 3.1: Add test to `PartyAggregateContactChannelTests.cs`: `Handle_AddContactChannel_With50ExistingChannels_StillSucceeds` — add 50 channels via state.Apply, then add 51st, verify success
+  - [x] 3.2: Add test: `Handle_UpdateContactChannel_With50ExistingChannels_StillSucceeds` — update one of 50 channels
+  - [x] 3.3: Add test: `Handle_RemoveContactChannel_With50ExistingChannels_StillSucceeds` — remove one of 50 channels
+    - [x] 3.4: Add test: `Handle_AddContactChannel_With50ExistingChannels_AndPreferred_StillSucceeds` — preferred operation with 50 existing channels
 
-- [ ] Task 4: Build and regression verification (AC: #6)
-  - [ ] 4.1: `dotnet build Hexalith.Parties.slnx` — zero errors, zero new warnings
-  - [ ] 4.2: `dotnet test` — all tests pass (86 existing + ~11 new = ~97 total), zero regressions
+- [x] Task 4: Build and regression verification (AC: #6)
+  - [x] 4.1: `dotnet build Hexalith.Parties.slnx` — zero errors, zero new warnings
+    - [x] 4.2: `dotnet test` — all tests pass (98 total), zero regressions
+
+#### Review Follow-ups (AI)
+
+- [x] [AI-Review][HIGH] Add missing 50-channel preferred-operation coverage required by AC #5 (e.g., mark preferred with 50 existing channels and verify `PreferredContactChannelChanged`) [`_bmad-output/implementation-artifacts/2-3-contact-channel-and-identifier-unit-tests.md:24`, `tests/Hexalith.Parties.Server.Tests/Aggregates/PartyAggregateContactChannelTests.cs:269`]
+- [x] [AI-Review][MEDIUM] Update Task 4.2 evidence/count to reflect actual latest run output (`dotnet test Hexalith.Parties.slnx` currently reports 98 tests) [`_bmad-output/implementation-artifacts/2-3-contact-channel-and-identifier-unit-tests.md:56`]
+- [x] [AI-Review][LOW] Align identifier test coding style with existing suite by replacing `var command` with explicit command types for consistency/readability [`tests/Hexalith.Parties.Server.Tests/Aggregates/PartyAggregateIdentifierTests.cs:16`]
 
 ## Dev Notes
 
@@ -344,12 +351,50 @@ ac072e7 Merge pull request #8 — Story 1.7: AppHost Local Development & GDPR Wa
 
 ## Dev Agent Record
 
+### Senior Developer Review (AI)
+
+Reviewer: Jérôme
+Date: 2026-03-05
+Outcome: Approved
+
+Summary:
+- Git vs Story File List discrepancies: 0
+- Scope reviewed: `src/` and `tests/` changes only (excluded `_bmad/` and `_bmad-output/` from code-quality review scope)
+
+Findings:
+1. [RESOLVED][HIGH] Added missing preferred-operation coverage at 50-channel aggregate size.
+2. [RESOLVED][MEDIUM] Updated test-count evidence in Task 4.2 to match latest run.
+3. [RESOLVED][LOW] Replaced `var command` with explicit command types in identifier tests.
+
+Validation Performed:
+- `dotnet test tests/Hexalith.Parties.Server.Tests/Hexalith.Parties.Server.Tests.csproj --nologo` → Passed (68/68)
+- `dotnet test Hexalith.Parties.slnx --nologo` → Passed (98/98)
+
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4.6 (claude-opus-4-6)
 
 ### Debug Log References
 
+- Git submodule `Hexalith.EventStore` required initialization (`git submodule update --init`) before the solution could build.
+
 ### Completion Notes List
 
+- **Task 1:** Added 5 identifier test data builders to `PartyTestData.cs`: `ValidAddVatIdentifier()`, `ValidAddSiretIdentifier()`, `ValidAddNationalIdIdentifier()`, `ValidRemoveIdentifier()`, `CreatePersonStateWithIdentifier()`.
+- **Task 2:** Created `PartyAggregateIdentifierTests.cs` with 8 tests covering all `Handle(AddIdentifier)` and `Handle(RemoveIdentifier)` scenarios: null-state rejection, happy paths for VAT/SIRET/NationalId, idempotent duplicate detection (NoOp), not-found rejection, and successful removal with event property verification.
+- **Task 3:** Added 4 aggregate-size tests to `PartyAggregateContactChannelTests.cs` verifying add, update, remove, and preferred operations work correctly with 50 existing contact channels.
+- **Task 4:** Build passes with zero errors and zero warnings. All 98 tests pass, zero regressions.
+
+### Change Log
+
+- 2026-03-05: Implemented Story 2.3 — Added 11 new Tier 1 unit tests (8 identifier aggregate + 3 aggregate-size contact channel), extended PartyTestData with 5 identifier builders.
+- 2026-03-05: Senior Developer Review (AI) completed — 1 HIGH, 1 MEDIUM, 1 LOW issue identified; story moved back to `in-progress` and follow-up tasks added.
+- 2026-03-05: Review remediation applied — added missing preferred-operation aggregate-size test, aligned identifier test command typing style, revalidated with 98/98 passing tests, and marked story `done`.
+
 ### File List
+
+- `src/Hexalith.Parties.Testing/PartyTestData.cs` — MODIFIED: Added identifier test data builders
+- `tests/Hexalith.Parties.Server.Tests/Aggregates/PartyAggregateIdentifierTests.cs` — NEW: 8 identifier Handle tests
+- `tests/Hexalith.Parties.Server.Tests/Aggregates/PartyAggregateContactChannelTests.cs` — MODIFIED: Added 4 aggregate-size tests
+- `_bmad-output/implementation-artifacts/sprint-status.yaml` — MODIFIED: Story status updated
+- `_bmad-output/implementation-artifacts/2-3-contact-channel-and-identifier-unit-tests.md` — MODIFIED: Story file updated

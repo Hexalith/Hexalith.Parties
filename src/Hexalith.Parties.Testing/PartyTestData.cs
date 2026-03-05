@@ -116,4 +116,46 @@ public static class PartyTestData
         state.Apply(new PartyDeactivated());
         return state;
     }
+
+    public static AddIdentifier ValidAddVatIdentifier() => new()
+    {
+        PartyId = DefaultPartyId,
+        IdentifierId = "id-vat-1",
+        Type = IdentifierType.VAT,
+        Value = "FR12345678901",
+    };
+
+    public static AddIdentifier ValidAddSiretIdentifier() => new()
+    {
+        PartyId = DefaultPartyId,
+        IdentifierId = "id-siret-1",
+        Type = IdentifierType.SIRET,
+        Value = "12345678901234",
+    };
+
+    public static AddIdentifier ValidAddNationalIdIdentifier() => new()
+    {
+        PartyId = DefaultPartyId,
+        IdentifierId = "id-natid-1",
+        Type = IdentifierType.NationalId,
+        Value = "850101123456789",
+    };
+
+    public static RemoveIdentifier ValidRemoveIdentifier() => new()
+    {
+        PartyId = DefaultPartyId,
+        IdentifierId = "id-vat-1",
+    };
+
+    public static PartyState CreatePersonStateWithIdentifier()
+    {
+        PartyState state = CreatePersonState();
+        state.Apply(new IdentifierAdded
+        {
+            IdentifierId = "id-vat-1",
+            Type = IdentifierType.VAT,
+            Value = "FR12345678901",
+        });
+        return state;
+    }
 }
