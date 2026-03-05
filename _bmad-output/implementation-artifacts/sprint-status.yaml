@@ -56,7 +56,7 @@ development_status:
   2-1-party-aggregate-contact-channel-management: done
   2-2-party-aggregate-identifier-management: done
   2-3-contact-channel-and-identifier-unit-tests: done
-  2-4-rest-api-contact-channel-and-identifier-endpoints: backlog
+  2-4-rest-api-contact-channel-and-identifier-endpoints: done
   epic-2-retrospective: optional
 
   # Epic 3: Party Discovery & Search - Read Projections (4 stories)
