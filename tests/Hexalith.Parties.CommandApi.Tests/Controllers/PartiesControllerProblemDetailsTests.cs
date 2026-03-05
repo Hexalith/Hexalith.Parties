@@ -259,6 +259,278 @@ public sealed class PartiesControllerProblemDetailsTests : IClassFixture<Parties
         problem.RootElement.GetProperty("title").GetString().ShouldBe("Party Not Found");
     }
 
+    [Theory]
+    [MemberData(nameof(CommandEndpointSuccessCases))]
+    public async Task CommandEndpoint_ValidPayload_ReturnsAcceptedWithCorrelationIdAsync(string endpoint, object payload)
+    {
+        _factory.Router.ClearReceivedCalls();
+
+        _factory.Router
+            .RouteCommandAsync(Arg.Any<SubmitCommand>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult(new CommandProcessingResult(true)));
+
+        using HttpClient client = _factory.CreateClient();
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", JwtTokenHelper.CreateToken(includeTenantClaim: true));
+
+        using HttpContent body = JsonContent.Create(payload);
+
+        HttpResponseMessage response = await client.PostAsync(endpoint, body);
+
+        response.StatusCode.ShouldBe(HttpStatusCode.Accepted);
+        response.Content.Headers.ContentType?.MediaType.ShouldBe("application/json");
+
+        using JsonDocument document = await ReadJsonAsync(response);
+        document.RootElement.TryGetProperty("correlationId", out JsonElement correlationId).ShouldBeTrue();
+        Guid.TryParse(correlationId.GetString(), out _).ShouldBeTrue();
+    }
+
+    [Theory]
+    [MemberData(nameof(CommandEndpointValidationCases))]
+    public async Task CommandEndpoint_InvalidPayload_ReturnsBadRequestProblemDetailsAsync(string endpoint, object payload)
+    {
+        _factory.Router.ClearReceivedCalls();
+
+        _factory.Router
+            .RouteCommandAsync(Arg.Any<SubmitCommand>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult(new CommandProcessingResult(true)));
+
+        using HttpClient client = _factory.CreateClient();
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", JwtTokenHelper.CreateToken(includeTenantClaim: true));
+
+        using HttpContent body = JsonContent.Create(payload);
+
+        HttpResponseMessage response = await client.PostAsync(endpoint, body);
+
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        response.Content.Headers.ContentType?.MediaType.ShouldBe("application/problem+json");
+
+        using JsonDocument problem = await ReadJsonAsync(response);
+        problem.RootElement.GetProperty("status").GetInt32().ShouldBe(400);
+        problem.RootElement.GetProperty("title").GetString().ShouldBe("Validation Failed");
+        problem.RootElement.TryGetProperty("validationErrors", out _).ShouldBeTrue();
+
+        await _factory.Router.DidNotReceive().RouteCommandAsync(Arg.Any<SubmitCommand>(), Arg.Any<CancellationToken>());
+    }
+
+    [Theory]
+    [MemberData(nameof(CommandEndpointDomainRejectionCases))]
+    public async Task CommandEndpoint_DomainRejected_ReturnsUnprocessableEntityProblemDetailsAsync(string endpoint, object payload)
+    {
+        _factory.Router.ClearReceivedCalls();
+
+        _factory.Router
+            .RouteCommandAsync(Arg.Any<SubmitCommand>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult(new CommandProcessingResult(
+                Accepted: false,
+                ErrorMessage: "Domain rejection: Hexalith.Parties.Contracts.Events.PartyNotFound")));
+
+        using HttpClient client = _factory.CreateClient();
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", JwtTokenHelper.CreateToken(includeTenantClaim: true));
+
+        using HttpContent body = JsonContent.Create(payload);
+
+        HttpResponseMessage response = await client.PostAsync(endpoint, body);
+
+        response.StatusCode.ShouldBe(HttpStatusCode.UnprocessableEntity);
+        response.Content.Headers.ContentType?.MediaType.ShouldBe("application/problem+json");
+
+        using JsonDocument problem = await ReadJsonAsync(response);
+        problem.RootElement.GetProperty("status").GetInt32().ShouldBe(422);
+        problem.RootElement.GetProperty("title").GetString().ShouldBe("Domain Rejection");
+        problem.RootElement.GetProperty("type").GetString().ShouldBe("urn:hexalith:parties:rejection:PartyNotFound");
+        problem.RootElement.TryGetProperty("correctiveAction", out JsonElement correctiveAction).ShouldBeTrue();
+        correctiveAction.GetString().ShouldBe("Adjust the request to satisfy domain rules and retry.");
+    }
+
+    public static IEnumerable<object[]> CommandEndpointSuccessCases()
+    {
+        const string partyId = "bdb5b021-c3a1-4eb5-93e2-0498878ecabd";
+
+        yield return
+        [
+            $"/api/v1/parties/{partyId}/add-contact-channel",
+            new
+            {
+                partyId = string.Empty,
+                contactChannelId = "d920f763-b05e-4c9d-b5ea-6159a3f7a916",
+                type = "Email",
+                value = "ada@example.org",
+                isPreferred = true,
+            },
+        ];
+
+        yield return
+        [
+            $"/api/v1/parties/{partyId}/update-contact-channel",
+            new
+            {
+                partyId = string.Empty,
+                contactChannelId = "7e8ab4d0-28ca-4f47-a6f0-cd7f921f0f7f",
+                type = "Phone",
+                value = "+33123456789",
+                isPreferred = false,
+            },
+        ];
+
+        yield return
+        [
+            $"/api/v1/parties/{partyId}/remove-contact-channel",
+            new
+            {
+                partyId = string.Empty,
+                contactChannelId = "3bcfbd6a-00be-46ef-9188-3089f89cfc78",
+            },
+        ];
+
+        yield return
+        [
+            $"/api/v1/parties/{partyId}/add-identifier",
+            new
+            {
+                partyId = string.Empty,
+                identifierId = "5bc75d05-c785-4d9c-9930-36f8f51885b9",
+                type = "VAT",
+                value = "FR40303265045",
+            },
+        ];
+
+        yield return
+        [
+            $"/api/v1/parties/{partyId}/remove-identifier",
+            new
+            {
+                partyId = string.Empty,
+                identifierId = "f6ee6338-d5ac-4b4e-8589-0e67e67f7768",
+            },
+        ];
+    }
+
+    public static IEnumerable<object[]> CommandEndpointValidationCases()
+    {
+        const string partyId = "6fd53a2b-aec5-444e-aaf2-2cb2fdf9a968";
+
+        yield return
+        [
+            $"/api/v1/parties/{partyId}/add-contact-channel",
+            new
+            {
+                partyId,
+                contactChannelId = string.Empty,
+                type = "Email",
+                value = "ada@example.org",
+                isPreferred = false,
+            },
+        ];
+
+        yield return
+        [
+            $"/api/v1/parties/{partyId}/update-contact-channel",
+            new
+            {
+                partyId,
+                contactChannelId = string.Empty,
+                type = "Email",
+                value = "new@example.org",
+                isPreferred = true,
+            },
+        ];
+
+        yield return
+        [
+            $"/api/v1/parties/{partyId}/remove-contact-channel",
+            new
+            {
+                partyId,
+                contactChannelId = string.Empty,
+            },
+        ];
+
+        yield return
+        [
+            $"/api/v1/parties/{partyId}/add-identifier",
+            new
+            {
+                partyId,
+                identifierId = "f86cb7df-8c9e-46f5-bf2d-743d0fe65b3b",
+                type = "VAT",
+                value = string.Empty,
+            },
+        ];
+
+        yield return
+        [
+            $"/api/v1/parties/{partyId}/remove-identifier",
+            new
+            {
+                partyId,
+                identifierId = string.Empty,
+            },
+        ];
+    }
+
+    public static IEnumerable<object[]> CommandEndpointDomainRejectionCases()
+    {
+        const string partyId = "c718ba26-8a2e-4f8c-af4f-f89d145f4e97";
+
+        yield return
+        [
+            $"/api/v1/parties/{partyId}/add-contact-channel",
+            new
+            {
+                partyId,
+                contactChannelId = "4b504558-26a4-4ca0-a2df-f7f11bb44ae4",
+                type = "Email",
+                value = "ada@example.org",
+                isPreferred = false,
+            },
+        ];
+
+        yield return
+        [
+            $"/api/v1/parties/{partyId}/update-contact-channel",
+            new
+            {
+                partyId,
+                contactChannelId = "fef236f0-8d12-4666-adfe-c64ce5f5e9f3",
+                type = "Phone",
+                value = "+33987654321",
+                isPreferred = true,
+            },
+        ];
+
+        yield return
+        [
+            $"/api/v1/parties/{partyId}/remove-contact-channel",
+            new
+            {
+                partyId,
+                contactChannelId = "dd16f0d9-a263-4daa-a95e-d68b4e3f4861",
+            },
+        ];
+
+        yield return
+        [
+            $"/api/v1/parties/{partyId}/add-identifier",
+            new
+            {
+                partyId,
+                identifierId = "af4a6fba-5aa5-46f9-b8fd-dd7ac91c1030",
+                type = "VAT",
+                value = "FR40303265045",
+            },
+        ];
+
+        yield return
+        [
+            $"/api/v1/parties/{partyId}/remove-identifier",
+            new
+            {
+                partyId,
+                identifierId = "f0dbf73a-3a0f-4d2a-8c2e-f98744c2a3a9",
+            },
+        ];
+    }
+
     private static async Task<JsonDocument> ReadJsonAsync(HttpResponseMessage response)
     {
         string payload = await response.Content.ReadAsStringAsync().ConfigureAwait(false);

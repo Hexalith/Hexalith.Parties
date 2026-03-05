@@ -206,6 +206,66 @@ public sealed class PartiesController(
     public Task<IActionResult> ReactivateParty(string id, CancellationToken cancellationToken)
         => DispatchCommandAsync(id, nameof(Contracts.Commands.ReactivateParty), new ReactivateParty { PartyId = id }, cancellationToken);
 
+    [HttpPost("{id}/add-contact-channel")]
+    [ProducesResponseType(StatusCodes.Status202Accepted)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest, "application/problem+json")]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status422UnprocessableEntity, "application/problem+json")]
+    public Task<IActionResult> AddContactChannel(string id, [FromBody] AddContactChannel command, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(command);
+        EnsureRouteMatchesBodyPartyId(id, command.PartyId, nameof(Contracts.Commands.AddContactChannel.PartyId));
+        return DispatchCommandAsync(id, nameof(AddContactChannel), command with { PartyId = id }, cancellationToken);
+    }
+
+    [HttpPost("{id}/update-contact-channel")]
+    [ProducesResponseType(StatusCodes.Status202Accepted)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest, "application/problem+json")]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status422UnprocessableEntity, "application/problem+json")]
+    public Task<IActionResult> UpdateContactChannel(string id, [FromBody] UpdateContactChannel command, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(command);
+        EnsureRouteMatchesBodyPartyId(id, command.PartyId, nameof(Contracts.Commands.UpdateContactChannel.PartyId));
+        return DispatchCommandAsync(id, nameof(UpdateContactChannel), command with { PartyId = id }, cancellationToken);
+    }
+
+    [HttpPost("{id}/remove-contact-channel")]
+    [ProducesResponseType(StatusCodes.Status202Accepted)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest, "application/problem+json")]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status422UnprocessableEntity, "application/problem+json")]
+    public Task<IActionResult> RemoveContactChannel(string id, [FromBody] RemoveContactChannel command, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(command);
+        EnsureRouteMatchesBodyPartyId(id, command.PartyId, nameof(Contracts.Commands.RemoveContactChannel.PartyId));
+        return DispatchCommandAsync(id, nameof(RemoveContactChannel), command with { PartyId = id }, cancellationToken);
+    }
+
+    [HttpPost("{id}/add-identifier")]
+    [ProducesResponseType(StatusCodes.Status202Accepted)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest, "application/problem+json")]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status422UnprocessableEntity, "application/problem+json")]
+    public Task<IActionResult> AddIdentifier(string id, [FromBody] AddIdentifier command, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(command);
+        EnsureRouteMatchesBodyPartyId(id, command.PartyId, nameof(Contracts.Commands.AddIdentifier.PartyId));
+        return DispatchCommandAsync(id, nameof(AddIdentifier), command with { PartyId = id }, cancellationToken);
+    }
+
+    [HttpPost("{id}/remove-identifier")]
+    [ProducesResponseType(StatusCodes.Status202Accepted)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest, "application/problem+json")]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status422UnprocessableEntity, "application/problem+json")]
+    public Task<IActionResult> RemoveIdentifier(string id, [FromBody] RemoveIdentifier command, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(command);
+        EnsureRouteMatchesBodyPartyId(id, command.PartyId, nameof(Contracts.Commands.RemoveIdentifier.PartyId));
+        return DispatchCommandAsync(id, nameof(RemoveIdentifier), command with { PartyId = id }, cancellationToken);
+    }
+
     private async Task<IActionResult> DispatchCommandAsync<TCommand>(
         string aggregateId,
         string commandType,
