@@ -7,6 +7,10 @@ using Hexalith.EventStore.Server.Configuration;
 using Hexalith.Parties.CommandApi.Authentication;
 using Hexalith.Parties.CommandApi.ErrorHandling;
 using Hexalith.Parties.CommandApi.Validation;
+using Hexalith.Parties.Projections.Abstractions;
+using Hexalith.Parties.Projections.Actors;
+using Hexalith.Parties.Projections.Configuration;
+using Hexalith.Parties.Projections.Strategies;
 
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -49,6 +53,20 @@ public static class PartiesServiceCollectionExtensions
 
         // EventStore server infrastructure (command routing, actors)
         _ = services.AddEventStoreServer(configuration);
+
+        // Projection infrastructure (Epic 3)
+        _ = services.AddSingleton<IIndexPartitionStrategy, SingleKeyPartitionStrategy>();
+        _ = services.AddOptions<ProjectionOptions>()
+            .Bind(configuration.GetSection(ProjectionOptions.ConfigurationSection))
+            .Validate(o => o.BatchSize > 0, "ProjectionOptions.BatchSize must be greater than 0.")
+            .Validate(o => o.BatchTimeWindowMs > 0, "ProjectionOptions.BatchTimeWindowMs must be greater than 0.")
+            .ValidateOnStart();
+
+        services.AddActors(options =>
+        {
+            options.Actors.RegisterActor<PartyDetailProjectionActor>();
+            options.Actors.RegisterActor<PartyIndexProjectionActor>();
+        });
 
         // FluentValidation (assembly scanning — no explicit validator registration)
         _ = services.AddValidatorsFromAssemblyContaining<CreatePartyValidator>();
