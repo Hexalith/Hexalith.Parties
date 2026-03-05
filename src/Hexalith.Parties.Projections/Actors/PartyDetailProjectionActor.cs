@@ -2,11 +2,12 @@ using Dapr.Actors.Runtime;
 
 using Hexalith.EventStore.Contracts.Events;
 using Hexalith.Parties.Contracts.Models;
+using Hexalith.Parties.Projections.Abstractions;
 using Hexalith.Parties.Projections.Handlers;
 
 namespace Hexalith.Parties.Projections.Actors;
 
-public sealed class PartyDetailProjectionActor : Actor
+public sealed class PartyDetailProjectionActor : Actor, IPartyDetailProjectionActor
 {
     private const string ProjectionName = "party-detail";
 
