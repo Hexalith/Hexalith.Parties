@@ -1,6 +1,8 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
+using Dapr.Actors.Client;
+
 using FluentValidation;
 
 using Hexalith.EventStore.Server.Configuration;
@@ -54,6 +56,9 @@ public static class PartiesServiceCollectionExtensions
         // EventStore server infrastructure (command routing, actors)
         _ = services.AddEventStoreServer(configuration);
 
+        // OpenAPI document generation
+        _ = services.AddOpenApi();
+
         // Projection infrastructure (Epic 3)
         _ = services.AddSingleton<IIndexPartitionStrategy, SingleKeyPartitionStrategy>();
         _ = services.AddOptions<ProjectionOptions>()
@@ -68,21 +73,11 @@ public static class PartiesServiceCollectionExtensions
             options.Actors.RegisterActor<PartyIndexProjectionActor>();
         });
 
+        // Actor proxy factory for querying projection actors
+        _ = services.AddSingleton<IActorProxyFactory>(_ => new ActorProxyFactory());
+
         // FluentValidation (assembly scanning — no explicit validator registration)
         _ = services.AddValidatorsFromAssemblyContaining<CreatePartyValidator>();
-
-        // HttpClient for DAPR sidecar actor state queries (temporary until projections — Epic 3)
-        _ = services.AddHttpClient("DaprSidecar", client =>
-        {
-            string? endpoint = Environment.GetEnvironmentVariable("DAPR_HTTP_ENDPOINT");
-            if (string.IsNullOrEmpty(endpoint))
-            {
-                string port = Environment.GetEnvironmentVariable("DAPR_HTTP_PORT") ?? "3500";
-                endpoint = $"http://127.0.0.1:{port}";
-            }
-
-            client.BaseAddress = new Uri(endpoint);
-        });
 
         // JSON serialization: camelCase, ISO 8601, string enums, omit nulls
         _ = services.AddControllers()

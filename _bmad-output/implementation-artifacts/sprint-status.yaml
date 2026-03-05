@@ -63,7 +63,7 @@ development_status:
   epic-3: in-progress
   3-1-party-detail-projection-handler-and-actor: done
   3-2-party-index-projection-handler-and-actor: done
-  3-3-search-match-metadata-and-query-endpoints: backlog
+  3-3-search-match-metadata-and-query-endpoints: done
   3-4-projection-unit-and-integration-tests: backlog
   epic-3-retrospective: optional
 
