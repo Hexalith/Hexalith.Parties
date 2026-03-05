@@ -3,6 +3,7 @@ using Hexalith.EventStore.Contracts.Events;
 using Hexalith.EventStore.Contracts.Results;
 using Hexalith.Parties.Contracts.Commands;
 using Hexalith.Parties.Contracts.Events;
+using Hexalith.Parties.Contracts.Results;
 using Hexalith.Parties.Contracts.State;
 using Hexalith.Parties.Contracts.ValueObjects;
 
@@ -10,6 +11,182 @@ namespace Hexalith.Parties.Server.Aggregates;
 
 public sealed class PartyAggregate : EventStoreAggregate<PartyState>
 {
+    private const int DefaultMaxSubOperations = 100;
+
+    public static int MaxSubOperations { get; set; } = DefaultMaxSubOperations;
+
+    public static CompositeCommandResult Handle(CreatePartyComposite command, PartyState? state)
+    {
+        ArgumentNullException.ThrowIfNull(command);
+
+        if (MaxSubOperations <= 0)
+        {
+            MaxSubOperations = DefaultMaxSubOperations;
+        }
+
+        // D17: Payload size guard
+        int subOps = 1 + command.ContactChannels.Count + command.Identifiers.Count;
+        if (subOps > MaxSubOperations)
+        {
+            return new CompositeCommandResult(
+                [new CompositeOperationConflict { Message = $"Payload size exceeded: {subOps} sub-operations (maximum {MaxSubOperations})." }],
+                applied: [],
+                skipped: [],
+                rejected: [$"Payload size exceeded: {subOps} sub-operations (maximum {MaxSubOperations})."]);
+        }
+
+        // PartyId validation
+        if (string.IsNullOrWhiteSpace(command.PartyId) || !Guid.TryParse(command.PartyId, out _))
+        {
+            return new CompositeCommandResult(
+                [new PartyCannotBeCreatedWithInvalidId()],
+                applied: [],
+                skipped: [],
+                rejected: ["Party ID is invalid."]);
+        }
+
+        // Idempotency: party already exists
+        if (state is not null)
+        {
+            return new CompositeCommandResult(
+                events: [],
+                applied: [],
+                skipped: [],
+                rejected: []);
+        }
+
+        // Type validation
+        if (command.Type == default)
+        {
+            return new CompositeCommandResult(
+                [new PartyCannotBeCreatedWithoutType()],
+                applied: [],
+                skipped: [],
+                rejected: ["Party type is required."]);
+        }
+
+        // PersonDetails/OrganizationDetails validation
+        if (command.Type == PartyType.Person && command.PersonDetails is null)
+        {
+            return new CompositeCommandResult(
+                [new PartyCannotBeCreatedWithoutPersonDetails()],
+                applied: [],
+                skipped: [],
+                rejected: ["Person details are required for person party type."]);
+        }
+
+        if (command.Type == PartyType.Organization && command.OrganizationDetails is null)
+        {
+            return new CompositeCommandResult(
+                [new PartyCannotBeCreatedWithoutOrganizationDetails()],
+                applied: [],
+                skipped: [],
+                rejected: ["Organization details are required for organization party type."]);
+        }
+
+        for (int i = 0; i < command.ContactChannels.Count; i++)
+        {
+            if (string.IsNullOrWhiteSpace(command.ContactChannels[i].ContactChannelId))
+            {
+                return new CompositeCommandResult(
+                    [new CompositeOperationConflict { Message = "Contact channel ID is required." }],
+                    applied: [],
+                    skipped: [],
+                    rejected: ["Contact channel ID is required."]);
+            }
+        }
+
+        for (int i = 0; i < command.Identifiers.Count; i++)
+        {
+            if (string.IsNullOrWhiteSpace(command.Identifiers[i].IdentifierId))
+            {
+                return new CompositeCommandResult(
+                    [new CompositeOperationConflict { Message = "Identifier ID is required." }],
+                    applied: [],
+                    skipped: [],
+                    rejected: ["Identifier ID is required."]);
+            }
+        }
+
+        // Emit PartyCreated + PartyDisplayNameDerived
+        List<IEventPayload> events = [];
+        List<string> applied = [];
+        List<string> skipped = [];
+
+        PartyCreated created = new()
+        {
+            Type = command.Type,
+            PersonDetails = command.PersonDetails,
+            OrganizationDetails = command.OrganizationDetails,
+        };
+        events.Add(created);
+        applied.Add($"Created {command.Type.ToString().ToLowerInvariant()} party");
+
+        (string displayName, string sortName) = DeriveDisplayName(command.Type, command.PersonDetails, command.OrganizationDetails);
+
+        PartyDisplayNameDerived nameDerived = new()
+        {
+            DisplayName = displayName,
+            SortName = sortName,
+        };
+        events.Add(nameDerived);
+        applied.Add("Derived display name");
+
+        // Process contact channels with duplicate ID detection
+        HashSet<string> seenChannelIds = new(StringComparer.Ordinal);
+        for (int i = 0; i < command.ContactChannels.Count; i++)
+        {
+            AddContactChannel channel = command.ContactChannels[i];
+            if (!seenChannelIds.Add(channel.ContactChannelId))
+            {
+                skipped.Add($"Duplicate contact channel: {channel.ContactChannelId}");
+                continue;
+            }
+
+            ContactChannelAdded channelAdded = new()
+            {
+                ContactChannelId = channel.ContactChannelId,
+                Type = channel.Type,
+                Value = channel.Value,
+                IsPreferred = channel.IsPreferred,
+            };
+            events.Add(channelAdded);
+            applied.Add($"Added contact channel: {channel.ContactChannelId} ({channel.Type})");
+
+            if (channel.IsPreferred)
+            {
+                events.Add(new PreferredContactChannelChanged
+                {
+                    ContactChannelId = channel.ContactChannelId,
+                });
+                applied.Add($"Set preferred contact channel: {channel.ContactChannelId}");
+            }
+        }
+
+        // Process identifiers with duplicate ID detection
+        HashSet<string> seenIdentifierIds = new(StringComparer.Ordinal);
+        for (int i = 0; i < command.Identifiers.Count; i++)
+        {
+            AddIdentifier identifier = command.Identifiers[i];
+            if (!seenIdentifierIds.Add(identifier.IdentifierId))
+            {
+                skipped.Add($"Duplicate identifier: {identifier.IdentifierId}");
+                continue;
+            }
+
+            IdentifierAdded identifierAdded = new()
+            {
+                IdentifierId = identifier.IdentifierId,
+                Type = identifier.Type,
+                Value = identifier.Value,
+            };
+            events.Add(identifierAdded);
+            applied.Add($"Added identifier: {identifier.IdentifierId} ({identifier.Type})");
+        }
+
+        return new CompositeCommandResult(events, applied, skipped, []);
+    }
+
     public static DomainResult Handle(CreateParty command, PartyState? state)
     {
         ArgumentNullException.ThrowIfNull(command);
