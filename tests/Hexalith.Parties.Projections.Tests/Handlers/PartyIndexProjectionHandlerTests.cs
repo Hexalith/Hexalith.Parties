@@ -270,6 +270,7 @@ public class PartyIndexProjectionHandlerTests
         };
         state = PartyIndexProjectionHandler.Apply(PartyId, email, state);
         state.ShouldNotBeNull();
+        state.DisplayName.ShouldBe("Johnathan Doe");
 
         ContactChannelAdded phone = new()
         {
@@ -279,6 +280,7 @@ public class PartyIndexProjectionHandlerTests
         };
         state = PartyIndexProjectionHandler.Apply(PartyId, phone, state);
         state.ShouldNotBeNull();
+        state.DisplayName.ShouldBe("Johnathan Doe");
 
         // IdentifierAdded
         IdentifierAdded vat = new()
@@ -289,6 +291,7 @@ public class PartyIndexProjectionHandlerTests
         };
         state = PartyIndexProjectionHandler.Apply(PartyId, vat, state);
         state.ShouldNotBeNull();
+        state.DisplayName.ShouldBe("Johnathan Doe");
 
         // PartyDeactivated
         state = PartyIndexProjectionHandler.Apply(PartyId, new PartyDeactivated(), state);

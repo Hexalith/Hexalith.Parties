@@ -400,6 +400,79 @@ public class PartyDetailProjectionHandlerTests
         state.Identifiers[1].Id.ShouldBe("id-siret");
     }
 
+    // --- Task 3.4 AC #1: Full event sequence with intermediate state verification ---
+
+    [Fact]
+    public void Apply_EventSequence_PartyCreatedThroughDeactivated_VerifiesStateAtEachStep()
+    {
+        // Step 1: PartyCreated
+        PartyCreated created = new()
+        {
+            Type = PartyType.Person,
+            PersonDetails = PartyTestData.ValidPersonDetails(),
+        };
+        PartyDetail? state = PartyDetailProjectionHandler.Apply(PartyId, created, null);
+        state.ShouldNotBeNull();
+        state.Id.ShouldBe(PartyId);
+        state.Type.ShouldBe(PartyType.Person);
+        state.IsActive.ShouldBeTrue();
+        state.ContactChannels.ShouldBeEmpty();
+        state.Identifiers.ShouldBeEmpty();
+        DateTimeOffset createdAt = state.CreatedAt;
+
+        // Step 2: ContactChannelAdded
+        ContactChannelAdded channelAdded = new()
+        {
+            ContactChannelId = "cc-1",
+            Type = ContactChannelType.Email,
+            Value = "john@example.com",
+            IsPreferred = true,
+        };
+        state = PartyDetailProjectionHandler.Apply(PartyId, channelAdded, state);
+        state.ShouldNotBeNull();
+        state.ContactChannels.Count.ShouldBe(1);
+        state.ContactChannels[0].Id.ShouldBe("cc-1");
+        state.ContactChannels[0].Value.ShouldBe("john@example.com");
+        state.Identifiers.ShouldBeEmpty();
+        state.IsActive.ShouldBeTrue();
+        state.CreatedAt.ShouldBe(createdAt);
+
+        // Step 3: ContactChannelUpdated
+        ContactChannelUpdated channelUpdated = new()
+        {
+            ContactChannelId = "cc-1",
+            Value = "updated@example.com",
+        };
+        state = PartyDetailProjectionHandler.Apply(PartyId, channelUpdated, state);
+        state.ShouldNotBeNull();
+        state.ContactChannels.Count.ShouldBe(1);
+        state.ContactChannels[0].Value.ShouldBe("updated@example.com");
+        state.ContactChannels[0].Type.ShouldBe(ContactChannelType.Email);
+
+        // Step 4: IdentifierAdded
+        IdentifierAdded identifierAdded = new()
+        {
+            IdentifierId = "id-vat-1",
+            Type = IdentifierType.VAT,
+            Value = "FR12345678901",
+        };
+        state = PartyDetailProjectionHandler.Apply(PartyId, identifierAdded, state);
+        state.ShouldNotBeNull();
+        state.ContactChannels.Count.ShouldBe(1);
+        state.Identifiers.Count.ShouldBe(1);
+        state.Identifiers[0].Id.ShouldBe("id-vat-1");
+        state.IsActive.ShouldBeTrue();
+        state.CreatedAt.ShouldBe(createdAt);
+
+        // Step 5: PartyDeactivated
+        state = PartyDetailProjectionHandler.Apply(PartyId, new PartyDeactivated(), state);
+        state.ShouldNotBeNull();
+        state.IsActive.ShouldBeFalse();
+        state.ContactChannels.Count.ShouldBe(1);
+        state.Identifiers.Count.ShouldBe(1);
+        state.CreatedAt.ShouldBe(createdAt);
+    }
+
     // --- Task 3.15: Unrecognized event ---
 
     [Fact]
