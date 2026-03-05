@@ -19,6 +19,16 @@ startupLogger.LogWarning(
     + "(crypto-shredding, consent, erasure). Do not store regulated EU personal data. "
     + "See v1.1 roadmap.");
 
+// OpenAPI/Swagger UI (development mode only)
+if (app.Environment.IsDevelopment())
+{
+    _ = app.MapOpenApi();
+    _ = app.UseSwaggerUI(options =>
+    {
+        options.SwaggerEndpoint("/openapi/v1.json", "Hexalith.Parties API v1");
+    });
+}
+
 // Middleware pipeline (order matters)
 app.UseMiddleware<GdprWarningMiddleware>();  // FIRST — every response gets GDPR header
 app.UseMiddleware<CorrelationIdMiddleware>();

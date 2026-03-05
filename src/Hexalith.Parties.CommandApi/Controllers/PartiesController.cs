@@ -1,5 +1,8 @@
 using System.Text.Json;
 
+using Dapr.Actors;
+using Dapr.Actors.Client;
+
 using FluentValidation;
 using FluentValidation.Results;
 
@@ -7,9 +10,11 @@ using Hexalith.EventStore.Server.Actors;
 using Hexalith.EventStore.Server.Commands;
 using Hexalith.EventStore.Server.Pipeline.Commands;
 using Hexalith.Parties.CommandApi.Middleware;
-using Hexalith.Parties.CommandApi.Models;
 using Hexalith.Parties.Contracts.Commands;
 using Hexalith.Parties.Contracts.Models;
+using Hexalith.Parties.Contracts.ValueObjects;
+using Hexalith.Parties.Projections.Abstractions;
+using Hexalith.Parties.Projections.Actors;
 
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -21,30 +26,213 @@ namespace Hexalith.Parties.CommandApi.Controllers;
 [Route("api/v1/parties")]
 public sealed class PartiesController(
     ICommandRouter commandRouter,
-    IHttpClientFactory httpClientFactory,
+    IActorProxyFactory actorProxyFactory,
     ILogger<PartiesController> logger) : ControllerBase
 {
-    private const string _actorType = "AggregateActor";
     private const string _domain = "party";
 
-    private static readonly JsonSerializerOptions _actorStateJsonOptions = new()
+    [HttpGet]
+    [ProducesResponseType(typeof(PagedResult<PartyIndexEntry>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> ListPartiesAsync(
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 20,
+        [FromQuery] string? type = null,
+        [FromQuery] bool? active = null,
+        [FromQuery] DateTimeOffset? createdAfter = null,
+        [FromQuery] DateTimeOffset? createdBefore = null,
+        [FromQuery] DateTimeOffset? modifiedAfter = null,
+        [FromQuery] DateTimeOffset? modifiedBefore = null)
     {
-        PropertyNameCaseInsensitive = true,
-    };
+        string correlationId = HttpContext.Items[CorrelationIdMiddleware.HttpContextKey]?.ToString()
+            ?? Guid.NewGuid().ToString();
 
-    // Cross-tenant authorization for opaque IDs (AC #8):
-    // Tenant-qualified IDs (e.g., "tenant-b:party:{id}") return 403 when the tenant segment
-    // does not match the JWT tenant. For opaque IDs (plain GUIDs), the DAPR actor lookup is
-    // always scoped to the JWT tenant, so a foreign-tenant party returns 404—this is intentional
-    // to prevent cross-tenant enumeration attacks (disclosing party existence in other tenants).
-    // When read-model projections are available (Epic 3), a tenant-aware index can enable 403
-    // for opaque IDs without information leakage.
+        string? tenant = ExtractTenant();
+        if (tenant is null)
+        {
+            return CreateUnauthorizedProblemDetails("A valid tenant claim is required to access this resource.", correlationId);
+        }
+
+        if (page < 1)
+        {
+            page = 1;
+        }
+
+        if (pageSize < 1)
+        {
+            pageSize = 1;
+        }
+        else if (pageSize > 100)
+        {
+            pageSize = 100;
+        }
+
+        PartyType? typeFilter = null;
+        if (!string.IsNullOrWhiteSpace(type) && Enum.TryParse<PartyType>(type, ignoreCase: true, out PartyType parsed))
+        {
+            typeFilter = parsed;
+        }
+
+        var actorId = new ActorId($"{tenant}:party-index");
+        IPartyIndexProjectionActor proxy = actorProxyFactory.CreateActorProxy<IPartyIndexProjectionActor>(
+            actorId, nameof(PartyIndexProjectionActor));
+        IReadOnlyDictionary<string, PartyIndexEntry> entries = await proxy.GetEntriesAsync().ConfigureAwait(false);
+
+        IEnumerable<PartyIndexEntry> filtered = entries.Values;
+
+        if (typeFilter is not null)
+        {
+            filtered = filtered.Where(e => e.Type == typeFilter.Value);
+        }
+
+        if (active is not null)
+        {
+            filtered = filtered.Where(e => e.IsActive == active.Value);
+        }
+
+        if (createdAfter is not null)
+        {
+            filtered = filtered.Where(e => e.CreatedAt >= createdAfter.Value);
+        }
+
+        if (createdBefore is not null)
+        {
+            filtered = filtered.Where(e => e.CreatedAt <= createdBefore.Value);
+        }
+
+        if (modifiedAfter is not null)
+        {
+            filtered = filtered.Where(e => e.LastModifiedAt >= modifiedAfter.Value);
+        }
+
+        if (modifiedBefore is not null)
+        {
+            filtered = filtered.Where(e => e.LastModifiedAt <= modifiedBefore.Value);
+        }
+
+        List<PartyIndexEntry> sorted = [.. filtered.OrderBy(e => e.DisplayName, StringComparer.OrdinalIgnoreCase)];
+        int totalCount = sorted.Count;
+        int totalPages = totalCount == 0 ? 1 : (int)Math.Ceiling((double)totalCount / pageSize);
+        List<PartyIndexEntry> items = [.. sorted.Skip((page - 1) * pageSize).Take(pageSize)];
+
+        var result = new PagedResult<PartyIndexEntry>
+        {
+            Items = items,
+            Page = page,
+            PageSize = pageSize,
+            TotalCount = totalCount,
+            TotalPages = totalPages,
+        };
+
+        return Ok(result);
+    }
+
+    [HttpGet("search")]
+    [ProducesResponseType(typeof(PagedResult<PartySearchResult>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> SearchPartiesAsync(
+        [FromQuery] string? q = null,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 20)
+    {
+        string correlationId = HttpContext.Items[CorrelationIdMiddleware.HttpContextKey]?.ToString()
+            ?? Guid.NewGuid().ToString();
+
+        string? tenant = ExtractTenant();
+        if (tenant is null)
+        {
+            return CreateUnauthorizedProblemDetails("A valid tenant claim is required to access this resource.", correlationId);
+        }
+
+        if (page < 1)
+        {
+            page = 1;
+        }
+
+        if (pageSize < 1)
+        {
+            pageSize = 1;
+        }
+        else if (pageSize > 100)
+        {
+            pageSize = 100;
+        }
+
+        if (string.IsNullOrWhiteSpace(q))
+        {
+            var emptyResult = new PagedResult<PartySearchResult>
+            {
+                Items = [],
+                Page = page,
+                PageSize = pageSize,
+                TotalCount = 0,
+                TotalPages = 1,
+            };
+            return Ok(emptyResult);
+        }
+
+        var actorId = new ActorId($"{tenant}:party-index");
+        IPartyIndexProjectionActor proxy = actorProxyFactory.CreateActorProxy<IPartyIndexProjectionActor>(
+            actorId, nameof(PartyIndexProjectionActor));
+        IReadOnlyDictionary<string, PartyIndexEntry> entries = await proxy.GetEntriesAsync().ConfigureAwait(false);
+
+        List<(PartySearchResult Result, int Priority)> matches = [];
+
+        foreach (PartyIndexEntry entry in entries.Values)
+        {
+            if (string.Equals(entry.DisplayName, q, StringComparison.OrdinalIgnoreCase))
+            {
+                matches.Add((new PartySearchResult
+                {
+                    Party = entry,
+                    Matches = [new MatchMetadata { MatchedField = "displayName", MatchType = "exact" }],
+                }, 0));
+            }
+            else if (entry.DisplayName.StartsWith(q, StringComparison.OrdinalIgnoreCase))
+            {
+                matches.Add((new PartySearchResult
+                {
+                    Party = entry,
+                    Matches = [new MatchMetadata { MatchedField = "displayName", MatchType = "prefix" }],
+                }, 1));
+            }
+            else if (entry.DisplayName.Contains(q, StringComparison.OrdinalIgnoreCase))
+            {
+                matches.Add((new PartySearchResult
+                {
+                    Party = entry,
+                    Matches = [new MatchMetadata { MatchedField = "displayName", MatchType = "contains" }],
+                }, 2));
+            }
+        }
+
+        List<PartySearchResult> sorted = [.. matches
+            .OrderBy(m => m.Priority)
+            .ThenBy(m => m.Result.Party.DisplayName, StringComparer.OrdinalIgnoreCase)
+            .Select(m => m.Result)];
+
+        int totalCount = sorted.Count;
+        int totalPages = totalCount == 0 ? 1 : (int)Math.Ceiling((double)totalCount / pageSize);
+        List<PartySearchResult> items = [.. sorted.Skip((page - 1) * pageSize).Take(pageSize)];
+
+        var result = new PagedResult<PartySearchResult>
+        {
+            Items = items,
+            Page = page,
+            PageSize = pageSize,
+            TotalCount = totalCount,
+            TotalPages = totalPages,
+        };
+
+        return Ok(result);
+    }
+
     [HttpGet("{id}")]
     [ProducesResponseType(typeof(PartyDetail), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden, "application/problem+json")]
-    public async Task<IActionResult> GetPartyAsync(string id, CancellationToken cancellationToken)
+    public async Task<IActionResult> GetPartyAsync(string id)
     {
         string correlationId = HttpContext.Items[CorrelationIdMiddleware.HttpContextKey]?.ToString()
             ?? Guid.NewGuid().ToString();
@@ -70,75 +258,21 @@ public sealed class PartiesController(
             id = scopedAggregateId;
         }
 
-        string actorId = $"{tenant}:{_domain}:{id}";
-        string snapshotKey = $"{tenant}:{_domain}:{id}:snapshot";
-
         logger.LogInformation(
             "Retrieving party: AggregateId={AggregateId}, CorrelationId={CorrelationId}, Tenant={Tenant}",
             id,
             correlationId,
             tenant);
 
-        HttpClient client = httpClientFactory.CreateClient("DaprSidecar");
+        var actorId = new ActorId($"{tenant}:party-detail:{id}");
+        IPartyDetailProjectionActor proxy = actorProxyFactory.CreateActorProxy<IPartyDetailProjectionActor>(
+            actorId, nameof(PartyDetailProjectionActor));
+        PartyDetail? detail = await proxy.GetDetailAsync().ConfigureAwait(false);
 
-        HttpResponseMessage response;
-        try
-        {
-            response = await client
-                .GetAsync(
-                    $"/v1.0/actors/{_actorType}/{Uri.EscapeDataString(actorId)}/state/{Uri.EscapeDataString(snapshotKey)}",
-                    cancellationToken)
-                .ConfigureAwait(false);
-        }
-        catch (HttpRequestException ex)
-        {
-            logger.LogWarning(ex, "Failed to read actor state: AggregateId={AggregateId}, Tenant={Tenant}", id, tenant);
-            return CreateNotFoundProblemDetails(id, correlationId);
-        }
-
-        if (!response.IsSuccessStatusCode)
+        if (detail is null)
         {
             return CreateNotFoundProblemDetails(id, correlationId);
         }
-
-        using Stream stream = await response.Content
-            .ReadAsStreamAsync(cancellationToken)
-            .ConfigureAwait(false);
-
-        using JsonDocument doc = await JsonDocument
-            .ParseAsync(stream, cancellationToken: cancellationToken)
-            .ConfigureAwait(false);
-
-        if (!doc.RootElement.TryGetProperty("State", out JsonElement stateElement)
-            || stateElement.ValueKind == JsonValueKind.Null)
-        {
-            return CreateNotFoundProblemDetails(id, correlationId);
-        }
-
-        PartyStateSnapshot? state = stateElement.Deserialize<PartyStateSnapshot>(_actorStateJsonOptions);
-        if (state is null)
-        {
-            return CreateNotFoundProblemDetails(id, correlationId);
-        }
-
-        DateTimeOffset snapshotTime = doc.RootElement.TryGetProperty("CreatedAt", out JsonElement createdAtEl)
-            ? createdAtEl.Deserialize<DateTimeOffset>()
-            : DateTimeOffset.UtcNow;
-
-        var detail = new PartyDetail
-        {
-            Id = id,
-            Type = state.Type,
-            IsActive = state.IsActive,
-            DisplayName = state.DisplayName,
-            SortName = state.SortName,
-            PersonDetails = state.Person,
-            OrganizationDetails = state.Organization,
-            ContactChannels = state.ContactChannels,
-            Identifiers = state.Identifiers,
-            CreatedAt = snapshotTime,
-            LastModifiedAt = snapshotTime,
-        };
 
         return Ok(detail);
     }

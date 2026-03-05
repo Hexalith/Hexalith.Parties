@@ -70,6 +70,31 @@ public sealed class PartyIndexProjectionActor : Actor, IPartyIndexProjectionActo
         }
     }
 
+    public async Task<IReadOnlyDictionary<string, PartyIndexEntry>> GetEntriesAsync()
+    {
+        await FlushAsync().ConfigureAwait(false);
+
+        if (_entries is not null)
+        {
+            return _entries;
+        }
+
+        string actorId = Host.Id.GetId();
+        string[] segments = actorId.Split(':', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        if (segments.Length != 2)
+        {
+            return new Dictionary<string, PartyIndexEntry>();
+        }
+
+        string tenant = segments[0];
+        string partitionKey = _partitionStrategy.GetPartitionKey(string.Empty);
+        string stateKey = $"{tenant}:{ProjectionName}:{partitionKey}";
+
+        _entries = await LoadStateAsync(stateKey).ConfigureAwait(false);
+        _activeStateKey = stateKey;
+        return _entries;
+    }
+
     public async Task ReceiveReminderAsync(string reminderName, byte[] state, TimeSpan dueTime, TimeSpan period)
     {
         if (reminderName == FlushReminderName)

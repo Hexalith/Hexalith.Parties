@@ -7,10 +7,16 @@ using System.Security.Claims;
 using System.Text;
 using System.Text.Json;
 
+using Dapr.Actors;
+using Dapr.Actors.Client;
+
 using Hexalith.EventStore.Server.Actors;
 using Hexalith.EventStore.Server.Commands;
 using Hexalith.EventStore.Server.Pipeline.Commands;
 using Hexalith.Parties.CommandApi;
+using Hexalith.Parties.Contracts.Models;
+using Hexalith.Parties.Contracts.ValueObjects;
+using Hexalith.Parties.Projections.Abstractions;
 
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -19,6 +25,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.IdentityModel.Tokens;
+
+using NSubstitute;
 
 using Shouldly;
 
@@ -88,7 +96,7 @@ public sealed class PartyApiRoundTripTestFactory : WebApplicationFactory<Program
     {
         ArgumentNullException.ThrowIfNull(builder);
 
-        var daprState = new ConcurrentDictionary<string, StoredPartyState>(StringComparer.Ordinal);
+        var partyStore = new ConcurrentDictionary<string, PartyDetail>(StringComparer.Ordinal);
 
         builder.UseEnvironment("Development");
 
@@ -103,24 +111,47 @@ public sealed class PartyApiRoundTripTestFactory : WebApplicationFactory<Program
             });
         });
 
+        IActorProxyFactory proxyFactory = Substitute.For<IActorProxyFactory>();
+        proxyFactory.CreateActorProxy<IPartyDetailProjectionActor>(
+            Arg.Any<ActorId>(), Arg.Any<string>(), Arg.Any<ActorProxyOptions?>())
+            .Returns(callInfo =>
+            {
+                string actorIdStr = callInfo.Arg<ActorId>().GetId();
+                string[] segments = actorIdStr.Split(':', StringSplitOptions.RemoveEmptyEntries);
+                string partyId = segments.Length >= 3 ? segments[^1] : string.Empty;
+
+                IPartyDetailProjectionActor detailProxy = Substitute.For<IPartyDetailProjectionActor>();
+                detailProxy.GetDetailAsync().Returns(_ =>
+                    partyStore.TryGetValue(partyId, out PartyDetail? detail)
+                        ? Task.FromResult<PartyDetail?>(detail)
+                        : Task.FromResult<PartyDetail?>(null));
+                return detailProxy;
+            });
+
+        IPartyIndexProjectionActor indexProxy = Substitute.For<IPartyIndexProjectionActor>();
+        indexProxy.GetEntriesAsync().Returns(Task.FromResult<IReadOnlyDictionary<string, PartyIndexEntry>>(
+            new Dictionary<string, PartyIndexEntry>()));
+        proxyFactory.CreateActorProxy<IPartyIndexProjectionActor>(
+            Arg.Any<ActorId>(), Arg.Any<string>(), Arg.Any<ActorProxyOptions?>())
+            .Returns(indexProxy);
+
         builder.ConfigureTestServices(services =>
         {
             services.RemoveAll<ICommandRouter>();
-            services.AddSingleton<ICommandRouter>(_ => new RecordingCommandRouter(daprState));
-
-            services.RemoveAll<IHttpClientFactory>();
-            services.AddSingleton<IHttpClientFactory>(_ => new FakeDaprHttpClientFactory(daprState));
+            services.AddSingleton<ICommandRouter>(_ => new RecordingCommandRouter(partyStore));
+            services.RemoveAll<IActorProxyFactory>();
+            services.AddSingleton(proxyFactory);
         });
     }
 }
 
 internal sealed class RecordingCommandRouter : ICommandRouter
 {
-    private readonly ConcurrentDictionary<string, StoredPartyState> _state;
+    private readonly ConcurrentDictionary<string, PartyDetail> _partyStore;
 
-    public RecordingCommandRouter(ConcurrentDictionary<string, StoredPartyState> state)
+    public RecordingCommandRouter(ConcurrentDictionary<string, PartyDetail> partyStore)
     {
-        _state = state;
+        _partyStore = partyStore;
     }
 
     public Task<CommandProcessingResult> RouteCommandAsync(SubmitCommand command, CancellationToken cancellationToken = default)
@@ -129,61 +160,77 @@ internal sealed class RecordingCommandRouter : ICommandRouter
         {
             using JsonDocument payload = JsonDocument.Parse(command.Payload);
             JsonElement root = payload.RootElement;
-            int type = ResolvePartyType(root);
+            PartyType type = ResolvePartyType(root);
 
             string firstName = string.Empty;
             string lastName = string.Empty;
             string legalName = string.Empty;
+            PersonDetails? personDetails = null;
+            OrganizationDetails? organizationDetails = null;
 
-            if (TryGetProperty(root, "PersonDetails", out JsonElement personDetails))
+            if (TryGetProperty(root, "PersonDetails", out JsonElement personEl))
             {
-                firstName = GetStringProperty(personDetails, "FirstName");
-                lastName = GetStringProperty(personDetails, "LastName");
+                firstName = GetStringProperty(personEl, "FirstName");
+                lastName = GetStringProperty(personEl, "LastName");
+                personDetails = new PersonDetails
+                {
+                    FirstName = firstName,
+                    LastName = lastName,
+                };
             }
 
-            if (TryGetProperty(root, "OrganizationDetails", out JsonElement organizationDetails))
+            if (TryGetProperty(root, "OrganizationDetails", out JsonElement orgEl))
             {
-                legalName = GetStringProperty(organizationDetails, "LegalName");
+                legalName = GetStringProperty(orgEl, "LegalName");
+                organizationDetails = new OrganizationDetails
+                {
+                    LegalName = legalName,
+                };
             }
 
             (string displayName, string sortName) = DeriveNames(type, firstName, lastName, legalName);
+            DateTimeOffset now = DateTimeOffset.UtcNow;
 
-            _state[command.AggregateId] = new StoredPartyState(
-                Type: type,
-                IsNaturalPerson: type == 1,
-                DisplayName: displayName,
-                SortName: sortName,
-                FirstName: firstName,
-                LastName: lastName,
-                LegalName: legalName);
+            _partyStore[command.AggregateId] = new PartyDetail
+            {
+                Id = command.AggregateId,
+                Type = type,
+                IsActive = true,
+                DisplayName = displayName,
+                SortName = sortName,
+                PersonDetails = personDetails,
+                OrganizationDetails = organizationDetails,
+                CreatedAt = now,
+                LastModifiedAt = now,
+            };
         }
 
         return Task.FromResult(new CommandProcessingResult(true));
     }
 
-    private static int ResolvePartyType(JsonElement root)
+    private static PartyType ResolvePartyType(JsonElement root)
     {
         if (!TryGetProperty(root, "Type", out JsonElement typeElement))
         {
-            return 1;
+            return PartyType.Person;
         }
 
         return typeElement.ValueKind switch
         {
-            JsonValueKind.Number when typeElement.TryGetInt32(out int value) => value,
+            JsonValueKind.Number when typeElement.TryGetInt32(out int value) => (PartyType)value,
             JsonValueKind.String => typeElement.GetString() switch
             {
-                "Organization" => 2,
-                "Person" => 1,
-                _ => 1,
+                "Organization" => PartyType.Organization,
+                "Person" => PartyType.Person,
+                _ => PartyType.Person,
             },
-            _ => 1,
+            _ => PartyType.Person,
         };
     }
 
-    private static (string DisplayName, string SortName) DeriveNames(int type, string firstName, string lastName, string legalName)
+    private static (string DisplayName, string SortName) DeriveNames(PartyType type, string firstName, string lastName, string legalName)
     {
-        if (type == 2)
+        if (type == PartyType.Organization)
         {
             string orgName = legalName.Trim();
             return (orgName, orgName);
@@ -225,103 +272,6 @@ internal sealed class RecordingCommandRouter : ICommandRouter
         return false;
     }
 }
-
-internal sealed class FakeDaprHttpClientFactory : IHttpClientFactory
-{
-    private readonly ConcurrentDictionary<string, StoredPartyState> _state;
-
-    public FakeDaprHttpClientFactory(ConcurrentDictionary<string, StoredPartyState> state)
-    {
-        _state = state;
-    }
-
-    public HttpClient CreateClient(string name)
-    {
-        var handler = new FakeDaprHandler(_state);
-        return new HttpClient(handler)
-        {
-            BaseAddress = new Uri("http://localhost"),
-        };
-    }
-}
-
-internal sealed class FakeDaprHandler : HttpMessageHandler
-{
-    private readonly ConcurrentDictionary<string, StoredPartyState> _state;
-
-    public FakeDaprHandler(ConcurrentDictionary<string, StoredPartyState> state)
-    {
-        _state = state;
-    }
-
-    protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
-    {
-        string path = request.RequestUri?.AbsolutePath ?? string.Empty;
-        string[] segments = path.Split('/', StringSplitOptions.RemoveEmptyEntries);
-
-        if (segments.Length >= 6
-            && string.Equals(segments[0], "v1.0", StringComparison.OrdinalIgnoreCase)
-            && string.Equals(segments[1], "actors", StringComparison.OrdinalIgnoreCase)
-            && string.Equals(segments[2], "AggregateActor", StringComparison.OrdinalIgnoreCase)
-            && string.Equals(segments[4], "state", StringComparison.OrdinalIgnoreCase))
-        {
-            string actorId = Uri.UnescapeDataString(segments[3]);
-            string[] actorParts = actorId.Split(':', StringSplitOptions.RemoveEmptyEntries);
-            if (actorParts.Length == 3)
-            {
-                string aggregateId = actorParts[2];
-                if (_state.TryGetValue(aggregateId, out StoredPartyState? party))
-                {
-                    object responsePayload = new
-                    {
-                        State = new
-                        {
-                            Type = party.Type,
-                            IsActive = true,
-                            IsNaturalPerson = party.IsNaturalPerson,
-                            DisplayName = party.DisplayName,
-                            SortName = party.SortName,
-                            Person = party.Type == 1
-                                ? new
-                                {
-                                    FirstName = party.FirstName,
-                                    LastName = party.LastName,
-                                }
-                                : null,
-                            Organization = party.Type == 2
-                                ? new
-                                {
-                                    LegalName = party.LegalName,
-                                }
-                                : null,
-                            ContactChannels = Array.Empty<object>(),
-                            Identifiers = Array.Empty<object>(),
-                        },
-                        CreatedAt = "2026-03-04T00:00:00Z",
-                    };
-
-                    string json = JsonSerializer.Serialize(responsePayload);
-
-                    return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
-                    {
-                        Content = new StringContent(json, Encoding.UTF8, "application/json"),
-                    });
-                }
-            }
-        }
-
-        return Task.FromResult(new HttpResponseMessage(HttpStatusCode.NotFound));
-    }
-}
-
-internal sealed record StoredPartyState(
-    int Type,
-    bool IsNaturalPerson,
-    string DisplayName,
-    string SortName,
-    string FirstName,
-    string LastName,
-    string LegalName);
 
 internal static class JwtTokenHelper
 {

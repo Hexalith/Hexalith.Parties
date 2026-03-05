@@ -6,10 +6,16 @@ using System.Security.Claims;
 using System.Text;
 using System.Text.Json;
 
+using Dapr.Actors;
+using Dapr.Actors.Client;
+
 using Hexalith.EventStore.Server.Actors;
 using Hexalith.EventStore.Server.Commands;
 using Hexalith.EventStore.Server.Pipeline.Commands;
 using Hexalith.Parties.CommandApi;
+using Hexalith.Parties.Contracts.Models;
+using Hexalith.Parties.Contracts.ValueObjects;
+using Hexalith.Parties.Projections.Abstractions;
 
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -257,6 +263,217 @@ public sealed class PartiesControllerProblemDetailsTests : IClassFixture<Parties
         using JsonDocument problem = await ReadJsonAsync(response);
         problem.RootElement.GetProperty("status").GetInt32().ShouldBe(404);
         problem.RootElement.GetProperty("title").GetString().ShouldBe("Party Not Found");
+    }
+
+    [Fact]
+    public async Task ListParties_WithFiltersAndDateRange_ReturnsExpectedSubsetAsync()
+    {
+        _factory.SetIndexEntries(
+            new PartyIndexEntry
+            {
+                Id = "p1",
+                Type = PartyType.Person,
+                IsActive = true,
+                DisplayName = "Alice Dupont",
+                CreatedAt = new DateTimeOffset(2026, 1, 10, 0, 0, 0, TimeSpan.Zero),
+                LastModifiedAt = new DateTimeOffset(2026, 1, 20, 0, 0, 0, TimeSpan.Zero),
+            },
+            new PartyIndexEntry
+            {
+                Id = "p2",
+                Type = PartyType.Organization,
+                IsActive = true,
+                DisplayName = "Beta Corp",
+                CreatedAt = new DateTimeOffset(2026, 1, 12, 0, 0, 0, TimeSpan.Zero),
+                LastModifiedAt = new DateTimeOffset(2026, 1, 21, 0, 0, 0, TimeSpan.Zero),
+            },
+            new PartyIndexEntry
+            {
+                Id = "p3",
+                Type = PartyType.Person,
+                IsActive = false,
+                DisplayName = "Charles Martin",
+                CreatedAt = new DateTimeOffset(2026, 1, 15, 0, 0, 0, TimeSpan.Zero),
+                LastModifiedAt = new DateTimeOffset(2026, 1, 22, 0, 0, 0, TimeSpan.Zero),
+            },
+            new PartyIndexEntry
+            {
+                Id = "p4",
+                Type = PartyType.Person,
+                IsActive = true,
+                DisplayName = "Zoey Outside",
+                CreatedAt = new DateTimeOffset(2026, 3, 10, 0, 0, 0, TimeSpan.Zero),
+                LastModifiedAt = new DateTimeOffset(2026, 3, 12, 0, 0, 0, TimeSpan.Zero),
+            });
+
+        using HttpClient client = _factory.CreateClient();
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", JwtTokenHelper.CreateToken(includeTenantClaim: true));
+
+        HttpResponseMessage response = await client.GetAsync(
+            "/api/v1/parties?type=person&active=true&createdAfter=2026-01-01&createdBefore=2026-02-01&modifiedAfter=2026-01-01&modifiedBefore=2026-02-01");
+
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        using JsonDocument payload = await ReadJsonAsync(response);
+
+        payload.RootElement.GetProperty("totalCount").GetInt32().ShouldBe(1);
+        payload.RootElement.GetProperty("totalPages").GetInt32().ShouldBe(1);
+
+        JsonElement items = payload.RootElement.GetProperty("items");
+        items.GetArrayLength().ShouldBe(1);
+        items[0].GetProperty("id").GetString().ShouldBe("p1");
+        items[0].GetProperty("displayName").GetString().ShouldBe("Alice Dupont");
+    }
+
+    [Fact]
+    public async Task ListParties_InvalidPaginationBounds_AreClampedAsync()
+    {
+        var entries = new List<PartyIndexEntry>();
+        for (int index = 0; index < 150; index++)
+        {
+            entries.Add(new PartyIndexEntry
+            {
+                Id = $"p-{index:D3}",
+                Type = PartyType.Person,
+                IsActive = true,
+                DisplayName = $"Name {index:D3}",
+                CreatedAt = new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero).AddDays(index),
+                LastModifiedAt = new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero).AddDays(index),
+            });
+        }
+
+        _factory.SetIndexEntries(entries.ToArray());
+
+        using HttpClient client = _factory.CreateClient();
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", JwtTokenHelper.CreateToken(includeTenantClaim: true));
+
+        HttpResponseMessage response = await client.GetAsync("/api/v1/parties?page=0&pageSize=500");
+
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        using JsonDocument payload = await ReadJsonAsync(response);
+
+        payload.RootElement.GetProperty("page").GetInt32().ShouldBe(1);
+        payload.RootElement.GetProperty("pageSize").GetInt32().ShouldBe(100);
+        payload.RootElement.GetProperty("totalCount").GetInt32().ShouldBe(150);
+        payload.RootElement.GetProperty("totalPages").GetInt32().ShouldBe(2);
+        payload.RootElement.GetProperty("items").GetArrayLength().ShouldBe(100);
+    }
+
+    [Fact]
+    public async Task SearchParties_WithDisplayNameMatches_ReturnsRankedMatchesWithMetadataAsync()
+    {
+        _factory.SetIndexEntries(
+            new PartyIndexEntry
+            {
+                Id = "exact",
+                Type = PartyType.Person,
+                IsActive = true,
+                DisplayName = "Dupont",
+                CreatedAt = new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero),
+                LastModifiedAt = new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero),
+            },
+            new PartyIndexEntry
+            {
+                Id = "prefix",
+                Type = PartyType.Organization,
+                IsActive = true,
+                DisplayName = "Dupont Group",
+                CreatedAt = new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero),
+                LastModifiedAt = new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero),
+            },
+            new PartyIndexEntry
+            {
+                Id = "contains",
+                Type = PartyType.Person,
+                IsActive = true,
+                DisplayName = "Jean Dupont",
+                CreatedAt = new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero),
+                LastModifiedAt = new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero),
+            },
+            new PartyIndexEntry
+            {
+                Id = "none",
+                Type = PartyType.Person,
+                IsActive = true,
+                DisplayName = "Martin",
+                CreatedAt = new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero),
+                LastModifiedAt = new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero),
+            });
+
+        using HttpClient client = _factory.CreateClient();
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", JwtTokenHelper.CreateToken(includeTenantClaim: true));
+
+        HttpResponseMessage response = await client.GetAsync("/api/v1/parties/search?q=Dupont&page=1&pageSize=20");
+
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        using JsonDocument payload = await ReadJsonAsync(response);
+
+        payload.RootElement.GetProperty("totalCount").GetInt32().ShouldBe(3);
+        JsonElement items = payload.RootElement.GetProperty("items");
+        items.GetArrayLength().ShouldBe(3);
+
+        items[0].GetProperty("party").GetProperty("id").GetString().ShouldBe("exact");
+        items[0].GetProperty("matches")[0].GetProperty("matchedField").GetString().ShouldBe("displayName");
+        items[0].GetProperty("matches")[0].GetProperty("matchType").GetString().ShouldBe("exact");
+
+        items[1].GetProperty("party").GetProperty("id").GetString().ShouldBe("prefix");
+        items[1].GetProperty("matches")[0].GetProperty("matchType").GetString().ShouldBe("prefix");
+
+        items[2].GetProperty("party").GetProperty("id").GetString().ShouldBe("contains");
+        items[2].GetProperty("matches")[0].GetProperty("matchType").GetString().ShouldBe("contains");
+    }
+
+    [Fact]
+    public async Task SearchParties_EmptyQuery_ReturnsEmptyPagedResultAsync()
+    {
+        _factory.SetIndexEntries(
+            new PartyIndexEntry
+            {
+                Id = "p1",
+                Type = PartyType.Person,
+                IsActive = true,
+                DisplayName = "Someone",
+                CreatedAt = new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero),
+                LastModifiedAt = new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero),
+            });
+
+        using HttpClient client = _factory.CreateClient();
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", JwtTokenHelper.CreateToken(includeTenantClaim: true));
+
+        HttpResponseMessage response = await client.GetAsync("/api/v1/parties/search");
+
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        using JsonDocument payload = await ReadJsonAsync(response);
+
+        payload.RootElement.GetProperty("totalCount").GetInt32().ShouldBe(0);
+        payload.RootElement.GetProperty("totalPages").GetInt32().ShouldBe(1);
+        payload.RootElement.GetProperty("items").GetArrayLength().ShouldBe(0);
+    }
+
+    [Fact]
+    public async Task ListParties_UsesTenantScopedIndexActorIdAsync()
+    {
+        _factory.ActorProxyFactory.ClearReceivedCalls();
+        _factory.SetIndexEntries(
+            new PartyIndexEntry
+            {
+                Id = "tenant-entry",
+                Type = PartyType.Person,
+                IsActive = true,
+                DisplayName = "Tenant Scoped",
+                CreatedAt = new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero),
+                LastModifiedAt = new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero),
+            });
+
+        using HttpClient client = _factory.CreateClient();
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", JwtTokenHelper.CreateToken(includeTenantClaim: true));
+
+        HttpResponseMessage response = await client.GetAsync("/api/v1/parties");
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+
+        _factory.ActorProxyFactory.Received().CreateActorProxy<IPartyIndexProjectionActor>(
+            Arg.Is<ActorId>(id => string.Equals(id.GetId(), "tenant-a:party-index", StringComparison.Ordinal)),
+            Arg.Any<string>(),
+            Arg.Any<ActorProxyOptions?>());
     }
 
     [Theory]
@@ -542,6 +759,16 @@ public sealed class PartiesApiTestFactory : WebApplicationFactory<Program>
 {
     internal ICommandRouter Router { get; } = Substitute.For<ICommandRouter>();
 
+    internal IActorProxyFactory ActorProxyFactory { get; } = Substitute.For<IActorProxyFactory>();
+
+    private IReadOnlyDictionary<string, PartyIndexEntry> _indexEntries =
+        new Dictionary<string, PartyIndexEntry>(StringComparer.Ordinal);
+
+    internal void SetIndexEntries(params PartyIndexEntry[] entries)
+    {
+        _indexEntries = entries.ToDictionary(entry => entry.Id, StringComparer.Ordinal);
+    }
+
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         ArgumentNullException.ThrowIfNull(builder);
@@ -559,10 +786,26 @@ public sealed class PartiesApiTestFactory : WebApplicationFactory<Program>
             });
         });
 
+        // Mock IPartyDetailProjectionActor to return null (party not found)
+        IPartyDetailProjectionActor detailProxy = Substitute.For<IPartyDetailProjectionActor>();
+        detailProxy.GetDetailAsync().Returns(Task.FromResult<PartyDetail?>(null));
+        ActorProxyFactory.CreateActorProxy<IPartyDetailProjectionActor>(
+            Arg.Any<ActorId>(), Arg.Any<string>(), Arg.Any<ActorProxyOptions?>())
+            .Returns(detailProxy);
+
+        // Mock IPartyIndexProjectionActor to return empty entries
+        IPartyIndexProjectionActor indexProxy = Substitute.For<IPartyIndexProjectionActor>();
+        indexProxy.GetEntriesAsync().Returns(_ => Task.FromResult(_indexEntries));
+        ActorProxyFactory.CreateActorProxy<IPartyIndexProjectionActor>(
+            Arg.Any<ActorId>(), Arg.Any<string>(), Arg.Any<ActorProxyOptions?>())
+            .Returns(indexProxy);
+
         builder.ConfigureTestServices(services =>
         {
             services.RemoveAll<ICommandRouter>();
             services.AddSingleton(Router);
+            services.RemoveAll<IActorProxyFactory>();
+            services.AddSingleton(ActorProxyFactory);
         });
     }
 }
