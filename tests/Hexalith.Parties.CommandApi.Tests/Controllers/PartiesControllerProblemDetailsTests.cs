@@ -476,6 +476,332 @@ public sealed class PartiesControllerProblemDetailsTests : IClassFixture<Parties
             Arg.Any<ActorProxyOptions?>());
     }
 
+    // --- 5-party search scenario tests (AC #3) ---
+
+    [Fact]
+    public async Task SearchParties_FivePartyScenario_ReturnsDupontMatchesWithMetadataAsync()
+    {
+        SetFivePartyScenario();
+
+        using HttpClient client = _factory.CreateClient();
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", JwtTokenHelper.CreateToken(includeTenantClaim: true));
+
+        HttpResponseMessage response = await client.GetAsync("/api/v1/parties/search?q=Dupont");
+
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        using JsonDocument payload = await ReadJsonAsync(response);
+
+        // 3 matches: Dupont Alice, Dupont Bernard, Dupont Industries (all prefix)
+        payload.RootElement.GetProperty("totalCount").GetInt32().ShouldBe(3);
+        JsonElement items = payload.RootElement.GetProperty("items");
+        items.GetArrayLength().ShouldBe(3);
+
+        // Sorted by priority (all prefix=1) then by displayName alphabetically
+        items[0].GetProperty("party").GetProperty("id").GetString().ShouldBe("p1");
+        items[0].GetProperty("party").GetProperty("displayName").GetString().ShouldBe("Dupont Alice");
+        items[0].GetProperty("matches")[0].GetProperty("matchedField").GetString().ShouldBe("displayName");
+        items[0].GetProperty("matches")[0].GetProperty("matchType").GetString().ShouldBe("prefix");
+
+        items[1].GetProperty("party").GetProperty("id").GetString().ShouldBe("p2");
+        items[1].GetProperty("matches")[0].GetProperty("matchType").GetString().ShouldBe("prefix");
+
+        items[2].GetProperty("party").GetProperty("id").GetString().ShouldBe("p4");
+        items[2].GetProperty("party").GetProperty("displayName").GetString().ShouldBe("Dupont Industries");
+        items[2].GetProperty("matches")[0].GetProperty("matchType").GetString().ShouldBe("prefix");
+    }
+
+    [Fact]
+    public async Task ListParties_FivePartyScenario_TypeFilterPerson_ReturnsOnlyPersonsAsync()
+    {
+        SetFivePartyScenario();
+
+        using HttpClient client = _factory.CreateClient();
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", JwtTokenHelper.CreateToken(includeTenantClaim: true));
+
+        HttpResponseMessage response = await client.GetAsync("/api/v1/parties?type=person");
+
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        using JsonDocument payload = await ReadJsonAsync(response);
+
+        payload.RootElement.GetProperty("totalCount").GetInt32().ShouldBe(3);
+        JsonElement items = payload.RootElement.GetProperty("items");
+        items.GetArrayLength().ShouldBe(3);
+
+        for (int i = 0; i < items.GetArrayLength(); i++)
+        {
+            items[i].GetProperty("type").GetString().ShouldBe("Person");
+        }
+    }
+
+    [Fact]
+    public async Task ListParties_FivePartyScenario_TypeFilterOrganization_ReturnsOnlyOrganizationsAsync()
+    {
+        SetFivePartyScenario();
+
+        using HttpClient client = _factory.CreateClient();
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", JwtTokenHelper.CreateToken(includeTenantClaim: true));
+
+        HttpResponseMessage response = await client.GetAsync("/api/v1/parties?type=organization");
+
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        using JsonDocument payload = await ReadJsonAsync(response);
+
+        payload.RootElement.GetProperty("totalCount").GetInt32().ShouldBe(2);
+        JsonElement items = payload.RootElement.GetProperty("items");
+        items.GetArrayLength().ShouldBe(2);
+
+        for (int i = 0; i < items.GetArrayLength(); i++)
+        {
+            items[i].GetProperty("type").GetString().ShouldBe("Organization");
+        }
+    }
+
+    [Fact]
+    public async Task ListParties_FivePartyScenario_ActiveFilter_WorksCorrectlyAsync()
+    {
+        SetFivePartyScenario(deactivateSecond: true);
+
+        using HttpClient client = _factory.CreateClient();
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", JwtTokenHelper.CreateToken(includeTenantClaim: true));
+
+        // active=true excludes deactivated p2
+        using HttpResponseMessage activeResponse = await client.GetAsync("/api/v1/parties?active=true");
+        activeResponse.StatusCode.ShouldBe(HttpStatusCode.OK);
+        using JsonDocument activePayload = await ReadJsonAsync(activeResponse);
+        activePayload.RootElement.GetProperty("totalCount").GetInt32().ShouldBe(4);
+
+        // active=false returns only deactivated p2
+        using HttpResponseMessage inactiveResponse = await client.GetAsync("/api/v1/parties?active=false");
+        inactiveResponse.StatusCode.ShouldBe(HttpStatusCode.OK);
+        using JsonDocument inactivePayload = await ReadJsonAsync(inactiveResponse);
+        inactivePayload.RootElement.GetProperty("totalCount").GetInt32().ShouldBe(1);
+        inactivePayload.RootElement.GetProperty("items")[0].GetProperty("id").GetString().ShouldBe("p2");
+    }
+
+    [Fact]
+    public async Task ListParties_FivePartyScenario_DateRangeFilters_ReturnCorrectSubsetsAsync()
+    {
+        SetFivePartyScenario();
+
+        using HttpClient client = _factory.CreateClient();
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", JwtTokenHelper.CreateToken(includeTenantClaim: true));
+
+        // createdAfter=2026-01-14 -> 3 parties (p2 Jan 15, p3 Feb 01, p5 Feb 15)
+        using HttpResponseMessage createdAfterResponse = await client.GetAsync("/api/v1/parties?createdAfter=2026-01-14");
+        createdAfterResponse.StatusCode.ShouldBe(HttpStatusCode.OK);
+        using JsonDocument createdAfterPayload = await ReadJsonAsync(createdAfterResponse);
+        createdAfterPayload.RootElement.GetProperty("totalCount").GetInt32().ShouldBe(3);
+        List<string?> createdAfterIds = ExtractItemIds(createdAfterPayload);
+        createdAfterIds.ShouldContain("p2");
+        createdAfterIds.ShouldContain("p3");
+        createdAfterIds.ShouldContain("p5");
+
+        // createdBefore=2026-01-13 -> 2 parties (p1 Jan 10, p4 Jan 12)
+        using HttpResponseMessage createdBeforeResponse = await client.GetAsync("/api/v1/parties?createdBefore=2026-01-13");
+        createdBeforeResponse.StatusCode.ShouldBe(HttpStatusCode.OK);
+        using JsonDocument createdBeforePayload = await ReadJsonAsync(createdBeforeResponse);
+        createdBeforePayload.RootElement.GetProperty("totalCount").GetInt32().ShouldBe(2);
+        List<string?> createdBeforeIds = ExtractItemIds(createdBeforePayload);
+        createdBeforeIds.ShouldContain("p1");
+        createdBeforeIds.ShouldContain("p4");
+
+        // modifiedAfter=2026-02-01 -> 2 parties (p3 Feb 10, p5 Feb 20)
+        using HttpResponseMessage modifiedAfterResponse = await client.GetAsync("/api/v1/parties?modifiedAfter=2026-02-01");
+        modifiedAfterResponse.StatusCode.ShouldBe(HttpStatusCode.OK);
+        using JsonDocument modifiedAfterPayload = await ReadJsonAsync(modifiedAfterResponse);
+        modifiedAfterPayload.RootElement.GetProperty("totalCount").GetInt32().ShouldBe(2);
+        List<string?> modifiedAfterIds = ExtractItemIds(modifiedAfterPayload);
+        modifiedAfterIds.ShouldContain("p3");
+        modifiedAfterIds.ShouldContain("p5");
+
+        // modifiedBefore=2026-01-23 -> 2 parties (p1 Jan 20, p4 Jan 22)
+        using HttpResponseMessage modifiedBeforeResponse = await client.GetAsync("/api/v1/parties?modifiedBefore=2026-01-23");
+        modifiedBeforeResponse.StatusCode.ShouldBe(HttpStatusCode.OK);
+        using JsonDocument modifiedBeforePayload = await ReadJsonAsync(modifiedBeforeResponse);
+        modifiedBeforePayload.RootElement.GetProperty("totalCount").GetInt32().ShouldBe(2);
+        List<string?> modifiedBeforeIds = ExtractItemIds(modifiedBeforePayload);
+        modifiedBeforeIds.ShouldContain("p1");
+        modifiedBeforeIds.ShouldContain("p4");
+    }
+
+    [Fact]
+    public async Task SearchParties_FivePartyScenario_EmailQuery_ReturnsNoMatchesAsync()
+    {
+        SetFivePartyScenario();
+
+        using HttpClient client = _factory.CreateClient();
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", JwtTokenHelper.CreateToken(includeTenantClaim: true));
+
+        // Current search matches displayName only; email/identifier fields are not in PartyIndexEntry
+        HttpResponseMessage response = await client.GetAsync("/api/v1/parties/search?q=alice%40example.com");
+
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        using JsonDocument payload = await ReadJsonAsync(response);
+        payload.RootElement.GetProperty("totalCount").GetInt32().ShouldBe(0);
+    }
+
+    // --- Tenant isolation tests (AC #4) ---
+
+    [Fact]
+    public async Task TenantIsolation_ListAndSearch_TenantsOnlySeeOwnPartiesAsync()
+    {
+        // Arrange: set up tenant-specific proxies with different data
+        var tenantAEntries = new Dictionary<string, PartyIndexEntry>(StringComparer.Ordinal)
+        {
+            ["a1"] = new() { Id = "a1", Type = PartyType.Person, IsActive = true, DisplayName = "Alice", CreatedAt = DateTimeOffset.UtcNow, LastModifiedAt = DateTimeOffset.UtcNow },
+            ["a2"] = new() { Id = "a2", Type = PartyType.Person, IsActive = true, DisplayName = "Bob", CreatedAt = DateTimeOffset.UtcNow, LastModifiedAt = DateTimeOffset.UtcNow },
+            ["a3"] = new() { Id = "a3", Type = PartyType.Organization, IsActive = true, DisplayName = "Corp A", CreatedAt = DateTimeOffset.UtcNow, LastModifiedAt = DateTimeOffset.UtcNow },
+        };
+
+        var tenantBEntries = new Dictionary<string, PartyIndexEntry>(StringComparer.Ordinal)
+        {
+            ["b1"] = new() { Id = "b1", Type = PartyType.Person, IsActive = true, DisplayName = "Xavier", CreatedAt = DateTimeOffset.UtcNow, LastModifiedAt = DateTimeOffset.UtcNow },
+            ["b2"] = new() { Id = "b2", Type = PartyType.Organization, IsActive = true, DisplayName = "Corp B", CreatedAt = DateTimeOffset.UtcNow, LastModifiedAt = DateTimeOffset.UtcNow },
+        };
+
+        IPartyIndexProjectionActor tenantAProxy = Substitute.For<IPartyIndexProjectionActor>();
+        tenantAProxy.GetEntriesAsync().Returns(Task.FromResult<IReadOnlyDictionary<string, PartyIndexEntry>>(tenantAEntries));
+
+        IPartyIndexProjectionActor tenantBProxy = Substitute.For<IPartyIndexProjectionActor>();
+        tenantBProxy.GetEntriesAsync().Returns(Task.FromResult<IReadOnlyDictionary<string, PartyIndexEntry>>(tenantBEntries));
+
+        _factory.ActorProxyFactory.CreateActorProxy<IPartyIndexProjectionActor>(
+            Arg.Is<ActorId>(id => string.Equals(id.GetId(), "tenant-a:party-index", StringComparison.Ordinal)),
+            Arg.Any<string>(), Arg.Any<ActorProxyOptions?>())
+            .Returns(tenantAProxy);
+
+        _factory.ActorProxyFactory.CreateActorProxy<IPartyIndexProjectionActor>(
+            Arg.Is<ActorId>(id => string.Equals(id.GetId(), "tenant-b:party-index", StringComparison.Ordinal)),
+            Arg.Any<string>(), Arg.Any<ActorProxyOptions?>())
+            .Returns(tenantBProxy);
+
+        try
+        {
+            // List as Tenant A -> only 3 parties
+            using HttpClient clientA = _factory.CreateClient();
+            clientA.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", JwtTokenHelper.CreateToken("tenant-a"));
+
+            using HttpResponseMessage listA = await clientA.GetAsync("/api/v1/parties");
+            listA.StatusCode.ShouldBe(HttpStatusCode.OK);
+            using JsonDocument listAPayload = await ReadJsonAsync(listA);
+            listAPayload.RootElement.GetProperty("totalCount").GetInt32().ShouldBe(3);
+            List<string?> listAIds = ExtractItemIds(listAPayload);
+            listAIds.ShouldContain("a1");
+            listAIds.ShouldContain("a2");
+            listAIds.ShouldContain("a3");
+            listAIds.ShouldNotContain("b1");
+            listAIds.ShouldNotContain("b2");
+
+            // List as Tenant B -> only 2 parties (zero Tenant A leakage)
+            using HttpClient clientB = _factory.CreateClient();
+            clientB.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", JwtTokenHelper.CreateToken("tenant-b"));
+
+            using HttpResponseMessage listB = await clientB.GetAsync("/api/v1/parties");
+            listB.StatusCode.ShouldBe(HttpStatusCode.OK);
+            using JsonDocument listBPayload = await ReadJsonAsync(listB);
+            listBPayload.RootElement.GetProperty("totalCount").GetInt32().ShouldBe(2);
+            List<string?> listBIds = ExtractItemIds(listBPayload);
+            listBIds.ShouldContain("b1");
+            listBIds.ShouldContain("b2");
+            listBIds.ShouldNotContain("a1");
+            listBIds.ShouldNotContain("a2");
+            listBIds.ShouldNotContain("a3");
+
+            // Search "Alice" as Tenant A -> 1 match
+            using HttpResponseMessage searchA = await clientA.GetAsync("/api/v1/parties/search?q=Alice");
+            searchA.StatusCode.ShouldBe(HttpStatusCode.OK);
+            using JsonDocument searchAPayload = await ReadJsonAsync(searchA);
+            searchAPayload.RootElement.GetProperty("totalCount").GetInt32().ShouldBe(1);
+            List<string?> searchAIds = ExtractSearchItemIds(searchAPayload);
+            searchAIds.ShouldContain("a1");
+
+            // Search "Alice" as Tenant B -> 0 matches (Alice belongs to Tenant A)
+            using HttpResponseMessage searchB = await clientB.GetAsync("/api/v1/parties/search?q=Alice");
+            searchB.StatusCode.ShouldBe(HttpStatusCode.OK);
+            using JsonDocument searchBPayload = await ReadJsonAsync(searchB);
+            searchBPayload.RootElement.GetProperty("totalCount").GetInt32().ShouldBe(0);
+        }
+        finally
+        {
+            _factory.ResetIndexProxy();
+        }
+    }
+
+    [Fact]
+    public async Task GetParty_TenantIsolation_VerifiesActorIdIsTenantScopedAsync()
+    {
+        _factory.ActorProxyFactory.ClearReceivedCalls();
+
+        using HttpClient client = _factory.CreateClient();
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", JwtTokenHelper.CreateToken("tenant-a"));
+
+        string partyId = Guid.NewGuid().ToString();
+        await client.GetAsync($"/api/v1/parties/{partyId}");
+
+        _factory.ActorProxyFactory.Received().CreateActorProxy<IPartyDetailProjectionActor>(
+            Arg.Is<ActorId>(id => string.Equals(id.GetId(), $"tenant-a:party-detail:{partyId}", StringComparison.Ordinal)),
+            Arg.Any<string>(),
+            Arg.Any<ActorProxyOptions?>());
+    }
+
+    // --- Query endpoint edge cases (AC #5) ---
+
+    [Fact]
+    public async Task ListParties_PageBeyondTotal_ReturnsEmptyItemsWithCorrectTotalAsync()
+    {
+        SetFivePartyScenario();
+
+        using HttpClient client = _factory.CreateClient();
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", JwtTokenHelper.CreateToken(includeTenantClaim: true));
+
+        // 5 parties with pageSize=2 -> 3 pages. Request page 4 (beyond total).
+        HttpResponseMessage response = await client.GetAsync("/api/v1/parties?page=4&pageSize=2");
+
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        using JsonDocument payload = await ReadJsonAsync(response);
+
+        payload.RootElement.GetProperty("totalCount").GetInt32().ShouldBe(5);
+        payload.RootElement.GetProperty("totalPages").GetInt32().ShouldBe(3);
+        payload.RootElement.GetProperty("page").GetInt32().ShouldBe(4);
+        payload.RootElement.GetProperty("items").GetArrayLength().ShouldBe(0);
+    }
+
+    [Fact]
+    public async Task ListParties_EmptyIndex_ReturnsEmptyPagedResultAsync()
+    {
+        _factory.SetIndexEntries();
+
+        using HttpClient client = _factory.CreateClient();
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", JwtTokenHelper.CreateToken(includeTenantClaim: true));
+
+        HttpResponseMessage response = await client.GetAsync("/api/v1/parties");
+
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        using JsonDocument payload = await ReadJsonAsync(response);
+
+        payload.RootElement.GetProperty("totalCount").GetInt32().ShouldBe(0);
+        payload.RootElement.GetProperty("totalPages").GetInt32().ShouldBe(1);
+        payload.RootElement.GetProperty("items").GetArrayLength().ShouldBe(0);
+    }
+
+    [Fact]
+    public async Task SearchParties_EmptyIndex_WithQuery_ReturnsEmptyPagedResultAsync()
+    {
+        _factory.SetIndexEntries();
+
+        using HttpClient client = _factory.CreateClient();
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", JwtTokenHelper.CreateToken(includeTenantClaim: true));
+
+        HttpResponseMessage response = await client.GetAsync("/api/v1/parties/search?q=Dupont");
+
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        using JsonDocument payload = await ReadJsonAsync(response);
+
+        payload.RootElement.GetProperty("totalCount").GetInt32().ShouldBe(0);
+        payload.RootElement.GetProperty("totalPages").GetInt32().ShouldBe(1);
+        payload.RootElement.GetProperty("items").GetArrayLength().ShouldBe(0);
+    }
+
     [Theory]
     [MemberData(nameof(CommandEndpointSuccessCases))]
     public async Task CommandEndpoint_ValidPayload_ReturnsAcceptedWithCorrelationIdAsync(string endpoint, object payload)
@@ -748,6 +1074,80 @@ public sealed class PartiesControllerProblemDetailsTests : IClassFixture<Parties
         ];
     }
 
+    private void SetFivePartyScenario(bool deactivateSecond = false)
+    {
+        _factory.SetIndexEntries(
+            new PartyIndexEntry
+            {
+                Id = "p1",
+                Type = PartyType.Person,
+                IsActive = true,
+                DisplayName = "Dupont Alice",
+                CreatedAt = new DateTimeOffset(2026, 1, 10, 0, 0, 0, TimeSpan.Zero),
+                LastModifiedAt = new DateTimeOffset(2026, 1, 20, 0, 0, 0, TimeSpan.Zero),
+            },
+            new PartyIndexEntry
+            {
+                Id = "p2",
+                Type = PartyType.Person,
+                IsActive = !deactivateSecond,
+                DisplayName = "Dupont Bernard",
+                CreatedAt = new DateTimeOffset(2026, 1, 15, 0, 0, 0, TimeSpan.Zero),
+                LastModifiedAt = new DateTimeOffset(2026, 1, 25, 0, 0, 0, TimeSpan.Zero),
+            },
+            new PartyIndexEntry
+            {
+                Id = "p3",
+                Type = PartyType.Person,
+                IsActive = true,
+                DisplayName = "Martin Claire",
+                CreatedAt = new DateTimeOffset(2026, 2, 1, 0, 0, 0, TimeSpan.Zero),
+                LastModifiedAt = new DateTimeOffset(2026, 2, 10, 0, 0, 0, TimeSpan.Zero),
+            },
+            new PartyIndexEntry
+            {
+                Id = "p4",
+                Type = PartyType.Organization,
+                IsActive = true,
+                DisplayName = "Dupont Industries",
+                CreatedAt = new DateTimeOffset(2026, 1, 12, 0, 0, 0, TimeSpan.Zero),
+                LastModifiedAt = new DateTimeOffset(2026, 1, 22, 0, 0, 0, TimeSpan.Zero),
+            },
+            new PartyIndexEntry
+            {
+                Id = "p5",
+                Type = PartyType.Organization,
+                IsActive = true,
+                DisplayName = "Global Tech",
+                CreatedAt = new DateTimeOffset(2026, 2, 15, 0, 0, 0, TimeSpan.Zero),
+                LastModifiedAt = new DateTimeOffset(2026, 2, 20, 0, 0, 0, TimeSpan.Zero),
+            });
+    }
+
+    private static List<string?> ExtractItemIds(JsonDocument payload)
+    {
+        JsonElement items = payload.RootElement.GetProperty("items");
+        List<string?> ids = [];
+        for (int i = 0; i < items.GetArrayLength(); i++)
+        {
+            ids.Add(items[i].GetProperty("id").GetString());
+        }
+
+        return ids;
+    }
+
+    private static List<string?> ExtractSearchItemIds(JsonDocument payload)
+    {
+        JsonElement items = payload.RootElement.GetProperty("items");
+        List<string?> ids = [];
+        for (int i = 0; i < items.GetArrayLength(); i++)
+        {
+            ids.Add(items[i].GetProperty("party").GetProperty("id").GetString());
+        }
+
+        return ids;
+    }
+
     private static async Task<JsonDocument> ReadJsonAsync(HttpResponseMessage response)
     {
         string payload = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
@@ -767,6 +1167,15 @@ public sealed class PartiesApiTestFactory : WebApplicationFactory<Program>
     internal void SetIndexEntries(params PartyIndexEntry[] entries)
     {
         _indexEntries = entries.ToDictionary(entry => entry.Id, StringComparer.Ordinal);
+    }
+
+    internal void ResetIndexProxy()
+    {
+        IPartyIndexProjectionActor indexProxy = Substitute.For<IPartyIndexProjectionActor>();
+        indexProxy.GetEntriesAsync().Returns(_ => Task.FromResult(_indexEntries));
+        ActorProxyFactory.CreateActorProxy<IPartyIndexProjectionActor>(
+            Arg.Any<ActorId>(), Arg.Any<string>(), Arg.Any<ActorProxyOptions?>())
+            .Returns(indexProxy);
     }
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
@@ -817,6 +1226,12 @@ internal static class JwtTokenHelper
     internal const string SigningKey = "DevOnlySigningKey-AtLeast32Chars-MustBeSecure!";
 
     internal static string CreateToken(bool includeTenantClaim)
+        => includeTenantClaim ? CreateToken("tenant-a") : CreateTokenCore(null);
+
+    internal static string CreateToken(string tenantId)
+        => CreateTokenCore(tenantId);
+
+    private static string CreateTokenCore(string? tenantId)
     {
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(SigningKey));
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
@@ -826,9 +1241,9 @@ internal static class JwtTokenHelper
             new("sub", "test-user"),
         };
 
-        if (includeTenantClaim)
+        if (tenantId is not null)
         {
-            claims.Add(new Claim("eventstore:tenant", "tenant-a"));
+            claims.Add(new Claim("eventstore:tenant", tenantId));
         }
 
         var token = new JwtSecurityToken(

@@ -64,7 +64,7 @@ development_status:
   3-1-party-detail-projection-handler-and-actor: done
   3-2-party-index-projection-handler-and-actor: done
   3-3-search-match-metadata-and-query-endpoints: done
-  3-4-projection-unit-and-integration-tests: backlog
+  3-4-projection-unit-and-integration-tests: done
   epic-3-retrospective: optional
 
   # Epic 4: Composite Commands & Advanced Aggregate Logic (4 stories)
