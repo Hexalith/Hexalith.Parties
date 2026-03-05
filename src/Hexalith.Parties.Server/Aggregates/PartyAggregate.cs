@@ -297,6 +297,49 @@ public sealed class PartyAggregate : EventStoreAggregate<PartyState>
         return DomainResult.Success([new ContactChannelRemoved { ContactChannelId = command.ContactChannelId }]);
     }
 
+    public static DomainResult Handle(AddIdentifier command, PartyState? state)
+    {
+        ArgumentNullException.ThrowIfNull(command);
+
+        if (state is null)
+        {
+            return DomainResult.Rejection([new PartyNotFound()]);
+        }
+
+        // Idempotent: skip if identifier already exists (D10 — safe for MCP retries)
+        if (state.Identifiers.Any(i => i.Id == command.IdentifierId))
+        {
+            return DomainResult.NoOp();
+        }
+
+        IdentifierAdded added = new()
+        {
+            IdentifierId = command.IdentifierId,
+            Type = command.Type,
+            Value = command.Value,
+        };
+
+        return DomainResult.Success([added]);
+    }
+
+    public static DomainResult Handle(RemoveIdentifier command, PartyState? state)
+    {
+        ArgumentNullException.ThrowIfNull(command);
+
+        if (state is null)
+        {
+            return DomainResult.Rejection([new PartyNotFound()]);
+        }
+
+        // Identifier not found check
+        if (!state.Identifiers.Any(i => i.Id == command.IdentifierId))
+        {
+            return DomainResult.Rejection([new IdentifierNotFound { Message = $"Identifier '{command.IdentifierId}' not found." }]);
+        }
+
+        return DomainResult.Success([new IdentifierRemoved { IdentifierId = command.IdentifierId }]);
+    }
+
     private static (string DisplayName, string SortName) DeriveDisplayName(
         PartyType type,
         PersonDetails? person,

@@ -128,23 +128,101 @@ internal sealed class RecordingCommandRouter : ICommandRouter
         if (string.Equals(command.CommandType, "CreateParty", StringComparison.Ordinal))
         {
             using JsonDocument payload = JsonDocument.Parse(command.Payload);
-            string firstName = payload.RootElement
-                .GetProperty("PersonDetails")
-                .GetProperty("FirstName")
-                .GetString() ?? string.Empty;
-            string lastName = payload.RootElement
-                .GetProperty("PersonDetails")
-                .GetProperty("LastName")
-                .GetString() ?? string.Empty;
+            JsonElement root = payload.RootElement;
+            int type = ResolvePartyType(root);
+
+            string firstName = string.Empty;
+            string lastName = string.Empty;
+            string legalName = string.Empty;
+
+            if (TryGetProperty(root, "PersonDetails", out JsonElement personDetails))
+            {
+                firstName = GetStringProperty(personDetails, "FirstName");
+                lastName = GetStringProperty(personDetails, "LastName");
+            }
+
+            if (TryGetProperty(root, "OrganizationDetails", out JsonElement organizationDetails))
+            {
+                legalName = GetStringProperty(organizationDetails, "LegalName");
+            }
+
+            (string displayName, string sortName) = DeriveNames(type, firstName, lastName, legalName);
 
             _state[command.AggregateId] = new StoredPartyState(
-                DisplayName: $"{firstName} {lastName}".Trim(),
-                SortName: $"{lastName}, {firstName}".Trim().Trim(',').Trim(),
+                Type: type,
+                IsNaturalPerson: type == 1,
+                DisplayName: displayName,
+                SortName: sortName,
                 FirstName: firstName,
-                LastName: lastName);
+                LastName: lastName,
+                LegalName: legalName);
         }
 
         return Task.FromResult(new CommandProcessingResult(true));
+    }
+
+    private static int ResolvePartyType(JsonElement root)
+    {
+        if (!TryGetProperty(root, "Type", out JsonElement typeElement))
+        {
+            return 1;
+        }
+
+        return typeElement.ValueKind switch
+        {
+            JsonValueKind.Number when typeElement.TryGetInt32(out int value) => value,
+            JsonValueKind.String => typeElement.GetString() switch
+            {
+                "Organization" => 2,
+                "Person" => 1,
+                _ => 1,
+            },
+            _ => 1,
+        };
+    }
+
+    private static (string DisplayName, string SortName) DeriveNames(int type, string firstName, string lastName, string legalName)
+    {
+        if (type == 2)
+        {
+            string orgName = legalName.Trim();
+            return (orgName, orgName);
+        }
+
+        string displayName = $"{firstName} {lastName}".Trim();
+        string sortName = $"{lastName}, {firstName}".Trim().Trim(',').Trim();
+        return (displayName, sortName);
+    }
+
+    private static string GetStringProperty(JsonElement parent, string propertyName)
+        => TryGetProperty(parent, propertyName, out JsonElement value) && value.ValueKind == JsonValueKind.String
+            ? value.GetString() ?? string.Empty
+            : string.Empty;
+
+    private static bool TryGetProperty(JsonElement parent, string propertyName, out JsonElement value)
+    {
+        if (parent.ValueKind != JsonValueKind.Object)
+        {
+            value = default;
+            return false;
+        }
+
+        if (parent.TryGetProperty(propertyName, out value))
+        {
+            return true;
+        }
+
+        if (propertyName.Length > 0)
+        {
+            string camelCase = char.ToLowerInvariant(propertyName[0]) + propertyName[1..];
+            if (parent.TryGetProperty(camelCase, out value))
+            {
+                return true;
+            }
+        }
+
+        value = default;
+        return false;
     }
 }
 
@@ -181,7 +259,7 @@ internal sealed class FakeDaprHandler : HttpMessageHandler
         string path = request.RequestUri?.AbsolutePath ?? string.Empty;
         string[] segments = path.Split('/', StringSplitOptions.RemoveEmptyEntries);
 
-        if (segments.Length >= 7
+        if (segments.Length >= 6
             && string.Equals(segments[0], "v1.0", StringComparison.OrdinalIgnoreCase)
             && string.Equals(segments[1], "actors", StringComparison.OrdinalIgnoreCase)
             && string.Equals(segments[2], "AggregateActor", StringComparison.OrdinalIgnoreCase)
@@ -194,25 +272,35 @@ internal sealed class FakeDaprHandler : HttpMessageHandler
                 string aggregateId = actorParts[2];
                 if (_state.TryGetValue(aggregateId, out StoredPartyState? party))
                 {
-                    string json = $$"""
+                    object responsePayload = new
                     {
-                      "State": {
-                        "Type": 1,
-                        "IsActive": true,
-                        "IsNaturalPerson": true,
-                        "DisplayName": "{{party.DisplayName}}",
-                        "SortName": "{{party.SortName}}",
-                        "Person": {
-                          "FirstName": "{{party.FirstName}}",
-                          "LastName": "{{party.LastName}}"
+                        State = new
+                        {
+                            Type = party.Type,
+                            IsActive = true,
+                            IsNaturalPerson = party.IsNaturalPerson,
+                            DisplayName = party.DisplayName,
+                            SortName = party.SortName,
+                            Person = party.Type == 1
+                                ? new
+                                {
+                                    FirstName = party.FirstName,
+                                    LastName = party.LastName,
+                                }
+                                : null,
+                            Organization = party.Type == 2
+                                ? new
+                                {
+                                    LegalName = party.LegalName,
+                                }
+                                : null,
+                            ContactChannels = Array.Empty<object>(),
+                            Identifiers = Array.Empty<object>(),
                         },
-                        "Organization": null,
-                        "ContactChannels": [],
-                        "Identifiers": []
-                      },
-                      "CreatedAt": "2026-03-04T00:00:00Z"
-                    }
-                    """;
+                        CreatedAt = "2026-03-04T00:00:00Z",
+                    };
+
+                    string json = JsonSerializer.Serialize(responsePayload);
 
                     return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
                     {
@@ -226,7 +314,14 @@ internal sealed class FakeDaprHandler : HttpMessageHandler
     }
 }
 
-internal sealed record StoredPartyState(string DisplayName, string SortName, string FirstName, string LastName);
+internal sealed record StoredPartyState(
+    int Type,
+    bool IsNaturalPerson,
+    string DisplayName,
+    string SortName,
+    string FirstName,
+    string LastName,
+    string LegalName);
 
 internal static class JwtTokenHelper
 {
