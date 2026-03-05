@@ -8,7 +8,8 @@
       "Bash(dotnet:*)",
       "mcp__MCP_DOCKER__list_directory",
       "Bash(xargs wc:*)",
-      "Bash(gh pr:*)"
+      "Bash(gh pr:*)",
+      "Bash(grep:*)"
     ]
   }
 }
