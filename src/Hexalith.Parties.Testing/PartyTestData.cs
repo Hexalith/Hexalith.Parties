@@ -35,6 +35,40 @@ public static class PartyTestData
         OrganizationDetails = ValidOrganizationDetails(),
     };
 
+    public static CreatePartyComposite ValidCreatePersonComposite() => new()
+    {
+        PartyId = DefaultPartyId,
+        Type = PartyType.Person,
+        PersonDetails = ValidPersonDetails(),
+        ContactChannels =
+        [
+            new AddContactChannel
+            {
+                PartyId = DefaultPartyId,
+                ContactChannelId = "ch-email-1",
+                Type = ContactChannelType.Email,
+                Value = "john@example.com",
+            },
+            new AddContactChannel
+            {
+                PartyId = DefaultPartyId,
+                ContactChannelId = "ch-email-2",
+                Type = ContactChannelType.Email,
+                Value = "john.alt@example.com",
+            },
+        ],
+        Identifiers =
+        [
+            new AddIdentifier
+            {
+                PartyId = DefaultPartyId,
+                IdentifierId = "id-vat-1",
+                Type = IdentifierType.VAT,
+                Value = "FR12345678901",
+            },
+        ],
+    };
+
     public static UpdatePersonDetails ValidUpdatePersonDetails() => new()
     {
         PartyId = DefaultPartyId,
@@ -158,4 +192,134 @@ public static class PartyTestData
         });
         return state;
     }
+
+    public static PartyState CreatePersonStateWithChannelsAndIdentifiers()
+    {
+        PartyState state = CreatePersonState();
+        state.Apply(new ContactChannelAdded
+        {
+            ContactChannelId = "ch-email-1",
+            Type = ContactChannelType.Email,
+            Value = "john@example.com",
+            IsPreferred = true,
+        });
+        state.Apply(new PreferredContactChannelChanged { ContactChannelId = "ch-email-1" });
+        state.Apply(new ContactChannelAdded
+        {
+            ContactChannelId = "ch-email-2",
+            Type = ContactChannelType.Email,
+            Value = "john.alt@example.com",
+            IsPreferred = false,
+        });
+        state.Apply(new IdentifierAdded
+        {
+            IdentifierId = "id-vat-1",
+            Type = IdentifierType.VAT,
+            Value = "FR12345678901",
+        });
+        return state;
+    }
+
+    public static PartyState CreateOrganizationStateWithChannelsAndIdentifiers()
+    {
+        PartyState state = CreateOrganizationState();
+        state.Apply(new ContactChannelAdded
+        {
+            ContactChannelId = "ch-email-1",
+            Type = ContactChannelType.Email,
+            Value = "info@acme.com",
+            IsPreferred = true,
+        });
+        state.Apply(new PreferredContactChannelChanged { ContactChannelId = "ch-email-1" });
+        state.Apply(new IdentifierAdded
+        {
+            IdentifierId = "id-vat-1",
+            Type = IdentifierType.VAT,
+            Value = "FR98765432100",
+        });
+        return state;
+    }
+
+    public static CreatePartyComposite ValidCreateOrganizationComposite() => new()
+    {
+        PartyId = DefaultPartyId,
+        Type = PartyType.Organization,
+        OrganizationDetails = ValidOrganizationDetails(),
+        ContactChannels =
+        [
+            new AddContactChannel
+            {
+                PartyId = DefaultPartyId,
+                ContactChannelId = "ch-email-1",
+                Type = ContactChannelType.Email,
+                Value = "info@acme.com",
+            },
+        ],
+        Identifiers =
+        [
+            new AddIdentifier
+            {
+                PartyId = DefaultPartyId,
+                IdentifierId = "id-vat-1",
+                Type = IdentifierType.VAT,
+                Value = "FR98765432100",
+            },
+        ],
+    };
+
+    public static UpdatePartyComposite ValidUpdatePersonComposite() => new()
+    {
+        PartyId = DefaultPartyId,
+        PersonDetails = new PersonDetails { FirstName = "Jane", LastName = "Smith" },
+        AddContactChannels =
+        [
+            new AddContactChannel
+            {
+                PartyId = DefaultPartyId,
+                ContactChannelId = "ch-phone-1",
+                Type = ContactChannelType.Phone,
+                Value = "+33111111111",
+            },
+        ],
+        UpdateContactChannels =
+        [
+            new UpdateContactChannel
+            {
+                PartyId = DefaultPartyId,
+                ContactChannelId = "ch-email-1",
+                Value = "john.updated@example.com",
+            },
+        ],
+        RemoveContactChannelIds = ["ch-email-2"],
+        AddIdentifiers =
+        [
+            new AddIdentifier
+            {
+                PartyId = DefaultPartyId,
+                IdentifierId = "id-siret-1",
+                Type = IdentifierType.SIRET,
+                Value = "12345678901234",
+            },
+        ],
+    };
+
+    public static UpdatePartyComposite ValidUpdateOrganizationComposite() => new()
+    {
+        PartyId = DefaultPartyId,
+        OrganizationDetails = new OrganizationDetails
+        {
+            LegalName = "New Legal Name",
+            TradingName = "New Trading Name",
+        },
+        AddContactChannels =
+        [
+            new AddContactChannel
+            {
+                PartyId = DefaultPartyId,
+                ContactChannelId = "ch-phone-1",
+                Type = ContactChannelType.Phone,
+                Value = "+33222222222",
+            },
+        ],
+    };
 }

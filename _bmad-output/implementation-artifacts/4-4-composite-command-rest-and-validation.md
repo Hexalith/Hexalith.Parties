@@ -1,6 +1,6 @@
 # Story 4.4: Composite Command REST & Validation
 
-Status: ready-for-dev
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -40,35 +40,35 @@ so that API consumers can create and update full parties in single HTTP requests
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Add composite endpoint response plumbing for payload-bearing `202 Accepted` responses (AC: #2, #3, #8)
-    - [ ] 1.1: Decide and implement the response path for composite commands so the API can return more than `correlationId`; the current `DispatchCommandAsync` helper and `CommandProcessingResult` are insufficient.
-    - [ ] 1.2: Keep existing simple-command endpoints behavior unchanged while introducing a composite-specific path.
-    - [ ] 1.3: Return a create-composite success payload containing `correlationId` plus composite outcome details (`applied`, `skipped`, `rejected`, and optionally `eventCount`).
-    - [ ] 1.4: Return an update-composite success payload containing `correlationId` plus the updated `PartyDetail`.
-    - [ ] 1.5: Avoid building the update response via projection read-after-write in the same request; use write-side data or a deterministic in-process mapping path.
+- [x] Task 1: Add composite endpoint response plumbing for payload-bearing `202 Accepted` responses (AC: #2, #3, #8)
+    - [x] 1.1: Decide and implement the response path for composite commands so the API can return more than `correlationId`; the current `DispatchCommandAsync` helper and `CommandProcessingResult` are insufficient.
+    - [x] 1.2: Keep existing simple-command endpoints behavior unchanged while introducing a composite-specific path.
+    - [x] 1.3: Return a create-composite success payload containing `correlationId` plus composite outcome details (`applied`, `skipped`, `rejected`, and optionally `eventCount`).
+    - [x] 1.4: Return an update-composite success payload containing `correlationId` plus the updated `PartyDetail`.
+    - [x] 1.5: Avoid building the update response via projection read-after-write in the same request; use write-side data or a deterministic in-process mapping path.
 
-- [ ] Task 2: Add composite REST endpoints to `PartiesController` (AC: #1, #2, #3)
-    - [ ] 2.1: Add an explicit create-composite route that does not conflict with the existing root `POST /api/v1/parties` create endpoint.
-    - [ ] 2.2: Add an explicit update-composite route under the party resource, following the controller's existing verb-based route style.
-    - [ ] 2.3: Enforce route/body `PartyId` consistency for the update endpoint using the same validation approach as existing command endpoints.
-    - [ ] 2.4: Reuse existing unauthorized / forbidden / domain-rejection `ProblemDetails` conventions.
+- [x] Task 2: Add composite REST endpoints to `PartiesController` (AC: #1, #2, #3)
+    - [x] 2.1: Add an explicit create-composite route that does not conflict with the existing root `POST /api/v1/parties` create endpoint.
+    - [x] 2.2: Add an explicit update-composite route under the party resource, following the controller's existing verb-based route style.
+    - [x] 2.3: Enforce route/body `PartyId` consistency for the update endpoint using the same validation approach as existing command endpoints.
+    - [x] 2.4: Reuse existing unauthorized / forbidden / domain-rejection `ProblemDetails` conventions.
 
-- [ ] Task 3: Add `FluentValidation` validators for composite commands (AC: #4, #5, #6)
-    - [ ] 3.1: Create `src/Hexalith.Parties.CommandApi/Validation/CreatePartyCompositeValidator.cs`.
-    - [ ] 3.2: Create `src/Hexalith.Parties.CommandApi/Validation/UpdatePartyCompositeValidator.cs`.
-    - [ ] 3.3: Reuse existing validator patterns and child-command rules where practical; keep registration via assembly scanning only.
-    - [ ] 3.4: Introduce a single configurable max-sub-operations option for API validation that aligns with aggregate `MaxSubOperations` behavior.
+- [x] Task 3: Add `FluentValidation` validators for composite commands (AC: #4, #5, #6)
+    - [x] 3.1: Create `src/Hexalith.Parties.CommandApi/Validation/CreatePartyCompositeValidator.cs`.
+    - [x] 3.2: Create `src/Hexalith.Parties.CommandApi/Validation/UpdatePartyCompositeValidator.cs`.
+    - [x] 3.3: Reuse existing validator patterns and child-command rules where practical; keep registration via assembly scanning only.
+    - [x] 3.4: Introduce a single configurable max-sub-operations option for API validation that aligns with aggregate `MaxSubOperations` behavior.
 
-- [ ] Task 4: Add focused controller and validation tests (AC: #2, #3, #6, #7, #8)
-    - [ ] 4.1: Extend `PartiesControllerProblemDetailsTests` with valid composite create/update request cases.
-    - [ ] 4.2: Add invalid composite payload cases verifying `400 Bad Request` and no router dispatch.
-    - [ ] 4.3: Add domain rejection cases verifying `422 Unprocessable Entity` for composite endpoints.
-    - [ ] 4.4: Add assertions for the accepted response body shape: create returns composite summary; update returns full `PartyDetail`.
-    - [ ] 4.5: Update or extend test doubles for the composite payload-return path introduced in Task 1.
+- [x] Task 4: Add focused controller and validation tests (AC: #2, #3, #6, #7, #8)
+    - [x] 4.1: Extend `PartiesControllerProblemDetailsTests` with valid composite create/update request cases.
+    - [x] 4.2: Add invalid composite payload cases verifying `400 Bad Request` and no router dispatch.
+    - [x] 4.3: Add domain rejection cases verifying `422 Unprocessable Entity` for composite endpoints.
+    - [x] 4.4: Add assertions for the accepted response body shape: create returns composite summary; update returns full `PartyDetail`.
+    - [x] 4.5: Update or extend test doubles for the composite payload-return path introduced in Task 1.
 
-- [ ] Task 5: Build and regression verification (AC: #1-#8)
-    - [ ] 5.1: `dotnet build Hexalith.Parties.slnx`
-    - [ ] 5.2: `dotnet test Hexalith.Parties.slnx`
+- [x] Task 5: Build and regression verification (AC: #1-#8)
+    - [x] 5.1: `dotnet build Hexalith.Parties.slnx`
+    - [x] 5.2: `dotnet test Hexalith.Parties.slnx`
 
 ## Dev Notes
 
@@ -288,10 +288,69 @@ That pattern suggests keeping changes focused, additive, and accompanied by test
 
 ### Agent Model Used
 
-GPT-5.4
+Claude Opus 4.6
 
 ### Debug Log References
 
+- Build error: `PartyState.Apply()` returns void (class with mutative methods), not a new state. Fixed by building `PartyDetail` directly from state properties + event-driven changes in `BuildPartyDetailFromState` without mutating the original state.
+
+### Implementation Plan
+
+Extended the EventStore command pipeline with an optional `ResultPayload` string that flows from `DomainResult` through `AggregateActor` to `CommandProcessingResult`. `CompositeCommandResult` overrides `ResultPayload` to serialize composite outcome data (applied/skipped/rejected) and optionally the resulting `PartyDetail` for update operations. The update-composite `PartyDetail` is built deterministically from write-side state + events in the aggregate, avoiding projection read-after-write.
+
 ### Completion Notes List
 
+- Task 1: Extended `DomainResult` with virtual `ResultPayload`, `CommandProcessingResult` with optional `ResultPayload` parameter, and `AggregateActor.CompleteTerminalAsync` to pass it through. `CompositeCommandResult` overrides `ResultPayload` with JSON serialization. `PartyAggregate.Handle(UpdatePartyComposite)` now computes resulting `PartyDetail` from write-side state via `BuildPartyDetailFromState` helper.
+- Task 2: Added `POST /api/v1/parties/create-composite` and `POST /api/v1/parties/{id}/update-composite` endpoints with `DispatchCompositeCommandAsync` helper. Uses `JsonNode` to merge `correlationId` into the `ResultPayload`.
+- Task 3: Created `CreatePartyCompositeValidator` (GUID validation, type validation, max sub-operations, child validators for contact channels and identifiers) and `UpdatePartyCompositeValidator` (GUID validation for PartyId and all sub-operation IDs, max sub-operations). Both reference `PartyAggregate.MaxSubOperations` for configurable threshold.
+- Task 4: Added 10 integration tests covering: valid create/update with response payload, invalid GUID, missing tenant, domain rejection, route/body PartyId mismatch, invalid nested IDs, and fallback when no ResultPayload.
+- Task 5: Full build and 223 tests pass with zero warnings and zero regressions.
+
+### Review Remediation Files
+
+- `Hexalith.EventStore/src/Hexalith.EventStore.Contracts/Results/DomainResult.cs` (modified - added virtual ResultPayload property)
+- `Hexalith.EventStore/src/Hexalith.EventStore.Server/Actors/CommandProcessingResult.cs` (modified - added ResultPayload parameter)
+- `Hexalith.EventStore/src/Hexalith.EventStore.Server/Actors/AggregateActor.cs` (modified - pass-through ResultPayload in CompleteTerminalAsync)
+- `src/Hexalith.Parties.Contracts/Results/CompositeCommandResult.cs` (modified - added UpdatedPartyDetail, overridden ResultPayload with JSON serialization)
+- `src/Hexalith.Parties.Server/Aggregates/PartyAggregate.cs` (modified - BuildPartyDetailFromState helper, update-composite returns PartyDetail)
+- `src/Hexalith.Parties.CommandApi/Controllers/PartiesController.cs` (modified - create-composite and update-composite endpoints, DispatchCompositeCommandAsync)
+- `src/Hexalith.Parties.CommandApi/Validation/CreatePartyCompositeValidator.cs` (new)
+- `src/Hexalith.Parties.CommandApi/Validation/UpdatePartyCompositeValidator.cs` (new)
+- `tests/Hexalith.Parties.CommandApi.Tests/Controllers/PartiesControllerProblemDetailsTests.cs` (modified - 10 new composite endpoint tests)
+
+### Change Log
+
+- 2026-03-06: Implemented Story 4.4 - Composite Command REST endpoints with structural FluentValidation and write-side response payloads. Extended EventStore pipeline with ResultPayload pass-through.
+- 2026-03-06: Senior review fixes applied — restored `CreatedAt` in update composite `PartyDetail`, preserved composite `ResultPayload` across `EventsStored` crash recovery, aligned composite validators with contract requirements and aggregate max-sub-operation fallback, added targeted regression coverage, and synchronized story metadata/status.
+
 ### File List
+
+- `_bmad-output/implementation-artifacts/4-4-composite-command-rest-and-validation.md` (modified) — Updated story status, review notes, verification log, and file inventory
+- `_bmad-output/implementation-artifacts/sprint-status.yaml` (modified) — Synced Story 4.4 sprint tracking to done
+- `src/Hexalith.Parties.Contracts/State/PartyState.cs` (modified) — Added `CreatedAt` to write-side state and initialize it on `PartyCreated`
+- `src/Hexalith.Parties.Server/Aggregates/PartyAggregate.cs` (modified) — Mapped `CreatedAt` into write-side `PartyDetail` and exposed effective max-sub-operation helper
+- `src/Hexalith.Parties.CommandApi/Validation/CreatePartyCompositeValidator.cs` (modified) — Added type-specific detail requirements, nested GUID validation, and aggregate-aligned max-sub-operation enforcement
+- `src/Hexalith.Parties.CommandApi/Validation/UpdatePartyCompositeValidator.cs` (modified) — Added nested GUID/value/type validation and aggregate-aligned max-sub-operation enforcement
+- `Hexalith.EventStore/src/Hexalith.EventStore.Server/Actors/PipelineState.cs` (modified) — Added persisted `ResultPayload` checkpoint field
+- `Hexalith.EventStore/src/Hexalith.EventStore.Server/Actors/AggregateActor.cs` (modified) — Preserved `ResultPayload` through checkpointing, publish-failure handling, and `EventsStored` resume
+- `tests/Hexalith.Parties.Contracts.Tests/State/PartyStateTests.cs` (modified) — Asserted `CreatedAt` is set for newly created parties
+- `tests/Hexalith.Parties.Server.Tests/Aggregates/PartyAggregateCompositeTests.cs` (modified) — Asserted update-composite returns complete `PartyDetail`, including timestamps
+- `tests/Hexalith.Parties.CommandApi.Tests/Controllers/PartiesControllerProblemDetailsTests.cs` (modified) — Added invalid composite payload regression cases for missing type-specific details and missing add-operation values
+- `Hexalith.EventStore/tests/Hexalith.EventStore.Server.Tests/Actors/StateMachineIntegrationTests.cs` (modified) — Added crash/recovery regression covering `ResultPayload` preservation
+
+### Senior Developer Review (AI)
+
+- 2026-03-06: Fixed all High/Medium review findings.
+- Restored `CreatedAt` propagation from write-side state into the update-composite `PartyDetail` response so FR69 returns a complete party view.
+- Preserved composite `ResultPayload` across persisted pipeline checkpoints so resuming from `EventsStored` no longer drops the enriched response body.
+- Tightened `CreatePartyComposite` and `UpdatePartyComposite` validation to enforce the current contract shape while still leaving aggregate-domain conflict checks in the domain layer.
+- Aligned API max-sub-operation enforcement with the aggregate fallback behavior via `PartyAggregate.GetEffectiveMaxSubOperations()`.
+- Added focused regression coverage for validator gaps, timestamp mapping, and crash/recovery payload preservation.
+- Reconciled the story status, change log, verification notes, and file list with the actual repository changes.
+
+### Verification
+
+- `dotnet test tests/Hexalith.Parties.CommandApi.Tests/Hexalith.Parties.CommandApi.Tests.csproj --filter "FullyQualifiedName~PartiesControllerProblemDetailsTests"`
+- `dotnet test tests/Hexalith.Parties.Contracts.Tests/Hexalith.Parties.Contracts.Tests.csproj --filter "FullyQualifiedName~PartyStateTests"`
+- `dotnet test tests/Hexalith.Parties.Server.Tests/Hexalith.Parties.Server.Tests.csproj --filter "FullyQualifiedName~PartyAggregateCompositeTests"`
+- `dotnet test Hexalith.EventStore/tests/Hexalith.EventStore.Server.Tests/Hexalith.EventStore.Server.Tests.csproj --filter "FullyQualifiedName~StateMachineIntegrationTests.ProcessCommand_CrashAtEventsStored_Resume_PreservesResultPayload"`

@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.Json.Nodes;
 
 using Dapr.Actors;
 using Dapr.Actors.Client;
@@ -400,6 +401,29 @@ public sealed class PartiesController(
         return DispatchCommandAsync(id, nameof(RemoveIdentifier), command with { PartyId = id }, cancellationToken);
     }
 
+    [HttpPost("create-composite")]
+    [ProducesResponseType(StatusCodes.Status202Accepted)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest, "application/problem+json")]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status422UnprocessableEntity, "application/problem+json")]
+    public Task<IActionResult> CreatePartyComposite([FromBody] CreatePartyComposite command, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(command);
+        return DispatchCompositeCommandAsync(command.PartyId, nameof(CreatePartyComposite), command, cancellationToken);
+    }
+
+    [HttpPost("{id}/update-composite")]
+    [ProducesResponseType(StatusCodes.Status202Accepted)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest, "application/problem+json")]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status422UnprocessableEntity, "application/problem+json")]
+    public Task<IActionResult> UpdatePartyComposite(string id, [FromBody] UpdatePartyComposite command, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(command);
+        EnsureRouteMatchesBodyPartyId(id, command.PartyId, nameof(Contracts.Commands.UpdatePartyComposite.PartyId));
+        return DispatchCompositeCommandAsync(id, nameof(UpdatePartyComposite), command with { PartyId = id }, cancellationToken);
+    }
+
     private async Task<IActionResult> DispatchCommandAsync<TCommand>(
         string aggregateId,
         string commandType,
@@ -442,6 +466,63 @@ public sealed class PartiesController(
         if (!result.Accepted)
         {
             return CreateDomainRejectionProblemDetails(result.ErrorMessage, correlationId, tenant);
+        }
+
+        return Accepted(new { correlationId });
+    }
+
+    private async Task<IActionResult> DispatchCompositeCommandAsync<TCommand>(
+        string aggregateId,
+        string commandType,
+        TCommand command,
+        CancellationToken cancellationToken)
+    {
+        await ValidateCommandAsync(command, cancellationToken).ConfigureAwait(false);
+
+        string correlationId = HttpContext.Items[CorrelationIdMiddleware.HttpContextKey]?.ToString()
+            ?? Guid.NewGuid().ToString();
+
+        string? tenant = ExtractTenant();
+        if (tenant is null)
+        {
+            return CreateUnauthorizedProblemDetails("A valid tenant claim is required to access this resource.", correlationId);
+        }
+
+        string userId = User.FindFirst("sub")?.Value ?? "unknown";
+
+        var submitCommand = new SubmitCommand(
+            Tenant: tenant,
+            Domain: _domain,
+            AggregateId: aggregateId,
+            CommandType: commandType,
+            Payload: JsonSerializer.SerializeToUtf8Bytes(command),
+            CorrelationId: correlationId,
+            UserId: userId);
+
+        logger.LogInformation(
+            "Dispatching composite command: CommandType={CommandType}, AggregateId={AggregateId}, CorrelationId={CorrelationId}, Tenant={Tenant}",
+            commandType,
+            aggregateId,
+            correlationId,
+            tenant);
+
+        CommandProcessingResult result = await commandRouter
+            .RouteCommandAsync(submitCommand, cancellationToken)
+            .ConfigureAwait(false);
+
+        if (!result.Accepted)
+        {
+            return CreateDomainRejectionProblemDetails(result.ErrorMessage, correlationId, tenant);
+        }
+
+        if (!string.IsNullOrEmpty(result.ResultPayload))
+        {
+            JsonNode? payload = JsonNode.Parse(result.ResultPayload);
+            if (payload is not null)
+            {
+                payload["correlationId"] = correlationId;
+                return new ObjectResult(payload) { StatusCode = StatusCodes.Status202Accepted };
+            }
         }
 
         return Accepted(new { correlationId });

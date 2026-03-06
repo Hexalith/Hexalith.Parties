@@ -1124,6 +1124,464 @@ public sealed class PartiesControllerProblemDetailsTests : IClassFixture<Parties
             });
     }
 
+    [Fact]
+    public async Task CreatePartyComposite_ValidPayload_ReturnsAcceptedWithCompositeResultAsync()
+    {
+        _factory.Router.ClearReceivedCalls();
+
+        string resultPayload = JsonSerializer.Serialize(new
+        {
+            result = new
+            {
+                applied = new[] { "Created party", "Derived display name", "Added contact channel: cc-1 (Email)" },
+                skipped = Array.Empty<string>(),
+                rejected = Array.Empty<string>(),
+            },
+        }, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
+
+        _factory.Router
+            .RouteCommandAsync(Arg.Any<SubmitCommand>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult(new CommandProcessingResult(
+                Accepted: true,
+                EventCount: 4,
+                ResultPayload: resultPayload)));
+
+        using HttpClient client = _factory.CreateClient();
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", JwtTokenHelper.CreateToken(includeTenantClaim: true));
+
+        using HttpContent body = JsonContent.Create(new
+        {
+            partyId = Guid.NewGuid().ToString(),
+            type = "person",
+            personDetails = new { firstName = "Ada", lastName = "Lovelace" },
+            contactChannels = new[]
+            {
+                new
+                {
+                    partyId = Guid.NewGuid().ToString(),
+                    contactChannelId = Guid.NewGuid().ToString(),
+                    type = "email",
+                    value = "ada@example.com",
+                },
+            },
+        });
+
+        HttpResponseMessage response = await client.PostAsync("/api/v1/parties/create-composite", body);
+
+        response.StatusCode.ShouldBe(HttpStatusCode.Accepted);
+
+        using JsonDocument payload = await ReadJsonAsync(response);
+        payload.RootElement.TryGetProperty("correlationId", out JsonElement correlationId).ShouldBeTrue();
+        Guid.TryParse(correlationId.GetString(), out _).ShouldBeTrue();
+
+        JsonElement result = payload.RootElement.GetProperty("result");
+        result.GetProperty("applied").GetArrayLength().ShouldBeGreaterThan(0);
+        result.TryGetProperty("skipped", out _).ShouldBeTrue();
+        result.TryGetProperty("rejected", out _).ShouldBeTrue();
+    }
+
+    [Fact]
+    public async Task CreatePartyComposite_InvalidPartyId_ReturnsBadRequestAsync()
+    {
+        _factory.Router.ClearReceivedCalls();
+
+        using HttpClient client = _factory.CreateClient();
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", JwtTokenHelper.CreateToken(includeTenantClaim: true));
+
+        using HttpContent body = JsonContent.Create(new
+        {
+            partyId = "not-a-guid",
+            type = "person",
+            personDetails = new { firstName = "Ada", lastName = "Lovelace" },
+        });
+
+        HttpResponseMessage response = await client.PostAsync("/api/v1/parties/create-composite", body);
+
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        response.Content.Headers.ContentType?.MediaType.ShouldBe("application/problem+json");
+
+        await _factory.Router.DidNotReceive().RouteCommandAsync(Arg.Any<SubmitCommand>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task CreatePartyComposite_MissingPersonDetails_ReturnsBadRequestAsync()
+    {
+        _factory.Router.ClearReceivedCalls();
+
+        using HttpClient client = _factory.CreateClient();
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", JwtTokenHelper.CreateToken(includeTenantClaim: true));
+
+        using HttpContent body = JsonContent.Create(new
+        {
+            partyId = Guid.NewGuid().ToString(),
+            type = "person",
+        });
+
+        HttpResponseMessage response = await client.PostAsync("/api/v1/parties/create-composite", body);
+
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        response.Content.Headers.ContentType?.MediaType.ShouldBe("application/problem+json");
+
+        await _factory.Router.DidNotReceive().RouteCommandAsync(Arg.Any<SubmitCommand>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task CreatePartyComposite_MissingOrganizationDetails_ReturnsBadRequestAsync()
+    {
+        _factory.Router.ClearReceivedCalls();
+
+        using HttpClient client = _factory.CreateClient();
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", JwtTokenHelper.CreateToken(includeTenantClaim: true));
+
+        using HttpContent body = JsonContent.Create(new
+        {
+            partyId = Guid.NewGuid().ToString(),
+            type = "organization",
+        });
+
+        HttpResponseMessage response = await client.PostAsync("/api/v1/parties/create-composite", body);
+
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        response.Content.Headers.ContentType?.MediaType.ShouldBe("application/problem+json");
+
+        await _factory.Router.DidNotReceive().RouteCommandAsync(Arg.Any<SubmitCommand>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task CreatePartyComposite_DomainRejection_ReturnsUnprocessableEntityAsync()
+    {
+        _factory.Router.ClearReceivedCalls();
+
+        _factory.Router
+            .RouteCommandAsync(Arg.Any<SubmitCommand>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult(new CommandProcessingResult(
+                Accepted: false,
+                ErrorMessage: "Domain rejection: Hexalith.Parties.Contracts.Events.CompositeOperationConflict")));
+
+        using HttpClient client = _factory.CreateClient();
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", JwtTokenHelper.CreateToken(includeTenantClaim: true));
+
+        using HttpContent body = JsonContent.Create(new
+        {
+            partyId = Guid.NewGuid().ToString(),
+            type = "person",
+            personDetails = new { firstName = "Ada", lastName = "Lovelace" },
+        });
+
+        HttpResponseMessage response = await client.PostAsync("/api/v1/parties/create-composite", body);
+
+        response.StatusCode.ShouldBe(HttpStatusCode.UnprocessableEntity);
+        response.Content.Headers.ContentType?.MediaType.ShouldBe("application/problem+json");
+
+        using JsonDocument problem = await ReadJsonAsync(response);
+        problem.RootElement.GetProperty("status").GetInt32().ShouldBe(422);
+        problem.RootElement.GetProperty("type").GetString()
+            .ShouldBe("urn:hexalith:parties:rejection:CompositeOperationConflict");
+    }
+
+    [Fact]
+    public async Task CreatePartyComposite_TenantMissing_ReturnsUnauthorizedAsync()
+    {
+        _factory.Router.ClearReceivedCalls();
+
+        using HttpClient client = _factory.CreateClient();
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", JwtTokenHelper.CreateToken(includeTenantClaim: false));
+
+        using HttpContent body = JsonContent.Create(new
+        {
+            partyId = Guid.NewGuid().ToString(),
+            type = "person",
+            personDetails = new { firstName = "Ada", lastName = "Lovelace" },
+        });
+
+        HttpResponseMessage response = await client.PostAsync("/api/v1/parties/create-composite", body);
+
+        response.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
+    }
+
+    [Fact]
+    public async Task UpdatePartyComposite_ValidPayload_ReturnsAcceptedWithPartyDetailAsync()
+    {
+        _factory.Router.ClearReceivedCalls();
+
+        string partyId = Guid.NewGuid().ToString();
+        string resultPayload = JsonSerializer.Serialize(new
+        {
+            result = new
+            {
+                applied = new[] { "Updated person details", "Derived display name" },
+                skipped = Array.Empty<string>(),
+                rejected = Array.Empty<string>(),
+            },
+            party = new
+            {
+                id = partyId,
+                type = "Person",
+                isActive = true,
+                displayName = "Ada Lovelace",
+                sortName = "Lovelace, Ada",
+                contactChannels = Array.Empty<object>(),
+                identifiers = Array.Empty<object>(),
+            },
+        }, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
+
+        _factory.Router
+            .RouteCommandAsync(Arg.Any<SubmitCommand>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult(new CommandProcessingResult(
+                Accepted: true,
+                EventCount: 2,
+                ResultPayload: resultPayload)));
+
+        using HttpClient client = _factory.CreateClient();
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", JwtTokenHelper.CreateToken(includeTenantClaim: true));
+
+        using HttpContent body = JsonContent.Create(new
+        {
+            partyId,
+            personDetails = new { firstName = "Ada", lastName = "Lovelace" },
+        });
+
+        HttpResponseMessage response = await client.PostAsync($"/api/v1/parties/{partyId}/update-composite", body);
+
+        response.StatusCode.ShouldBe(HttpStatusCode.Accepted);
+
+        using JsonDocument payload = await ReadJsonAsync(response);
+        payload.RootElement.TryGetProperty("correlationId", out JsonElement correlationId).ShouldBeTrue();
+        Guid.TryParse(correlationId.GetString(), out _).ShouldBeTrue();
+
+        JsonElement result = payload.RootElement.GetProperty("result");
+        result.GetProperty("applied").GetArrayLength().ShouldBeGreaterThan(0);
+
+        JsonElement party = payload.RootElement.GetProperty("party");
+        party.GetProperty("id").GetString().ShouldBe(partyId);
+        party.GetProperty("displayName").GetString().ShouldBe("Ada Lovelace");
+    }
+
+    [Fact]
+    public async Task UpdatePartyComposite_InvalidPartyId_ReturnsBadRequestAsync()
+    {
+        _factory.Router.ClearReceivedCalls();
+
+        using HttpClient client = _factory.CreateClient();
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", JwtTokenHelper.CreateToken(includeTenantClaim: true));
+
+        string routeId = Guid.NewGuid().ToString();
+        using HttpContent body = JsonContent.Create(new
+        {
+            partyId = "not-a-guid",
+            personDetails = new { firstName = "Ada", lastName = "Lovelace" },
+        });
+
+        HttpResponseMessage response = await client.PostAsync($"/api/v1/parties/{routeId}/update-composite", body);
+
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        response.Content.Headers.ContentType?.MediaType.ShouldBe("application/problem+json");
+
+        await _factory.Router.DidNotReceive().RouteCommandAsync(Arg.Any<SubmitCommand>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task UpdatePartyComposite_RouteBodyPartyIdMismatch_ReturnsBadRequestAsync()
+    {
+        _factory.Router.ClearReceivedCalls();
+
+        using HttpClient client = _factory.CreateClient();
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", JwtTokenHelper.CreateToken(includeTenantClaim: true));
+
+        string routeId = Guid.NewGuid().ToString();
+        string bodyId = Guid.NewGuid().ToString();
+        using HttpContent body = JsonContent.Create(new
+        {
+            partyId = bodyId,
+            personDetails = new { firstName = "Ada", lastName = "Lovelace" },
+        });
+
+        HttpResponseMessage response = await client.PostAsync($"/api/v1/parties/{routeId}/update-composite", body);
+
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+
+        await _factory.Router.DidNotReceive().RouteCommandAsync(Arg.Any<SubmitCommand>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task UpdatePartyComposite_DomainRejection_ReturnsUnprocessableEntityAsync()
+    {
+        _factory.Router.ClearReceivedCalls();
+
+        string partyId = Guid.NewGuid().ToString();
+
+        _factory.Router
+            .RouteCommandAsync(Arg.Any<SubmitCommand>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult(new CommandProcessingResult(
+                Accepted: false,
+                ErrorMessage: "Domain rejection: Hexalith.Parties.Contracts.Events.ContactChannelNotFound")));
+
+        using HttpClient client = _factory.CreateClient();
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", JwtTokenHelper.CreateToken(includeTenantClaim: true));
+
+        using HttpContent body = JsonContent.Create(new
+        {
+            partyId,
+            removeContactChannelIds = new[] { Guid.NewGuid().ToString() },
+        });
+
+        HttpResponseMessage response = await client.PostAsync($"/api/v1/parties/{partyId}/update-composite", body);
+
+        response.StatusCode.ShouldBe(HttpStatusCode.UnprocessableEntity);
+        response.Content.Headers.ContentType?.MediaType.ShouldBe("application/problem+json");
+
+        using JsonDocument problem = await ReadJsonAsync(response);
+        problem.RootElement.GetProperty("status").GetInt32().ShouldBe(422);
+        problem.RootElement.GetProperty("type").GetString()
+            .ShouldBe("urn:hexalith:parties:rejection:ContactChannelNotFound");
+    }
+
+    [Fact]
+    public async Task CreatePartyComposite_InvalidContactChannelId_ReturnsBadRequestAsync()
+    {
+        _factory.Router.ClearReceivedCalls();
+
+        using HttpClient client = _factory.CreateClient();
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", JwtTokenHelper.CreateToken(includeTenantClaim: true));
+
+        using HttpContent body = JsonContent.Create(new
+        {
+            partyId = Guid.NewGuid().ToString(),
+            type = "person",
+            personDetails = new { firstName = "Ada", lastName = "Lovelace" },
+            contactChannels = new[]
+            {
+                new
+                {
+                    partyId = Guid.NewGuid().ToString(),
+                    contactChannelId = "not-a-guid",
+                    type = "email",
+                    value = "ada@example.com",
+                },
+            },
+        });
+
+        HttpResponseMessage response = await client.PostAsync("/api/v1/parties/create-composite", body);
+
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+
+        await _factory.Router.DidNotReceive().RouteCommandAsync(Arg.Any<SubmitCommand>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task UpdatePartyComposite_InvalidRemoveContactChannelId_ReturnsBadRequestAsync()
+    {
+        _factory.Router.ClearReceivedCalls();
+
+        using HttpClient client = _factory.CreateClient();
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", JwtTokenHelper.CreateToken(includeTenantClaim: true));
+
+        string partyId = Guid.NewGuid().ToString();
+        using HttpContent body = JsonContent.Create(new
+        {
+            partyId,
+            removeContactChannelIds = new[] { "not-a-guid" },
+        });
+
+        HttpResponseMessage response = await client.PostAsync($"/api/v1/parties/{partyId}/update-composite", body);
+
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+
+        await _factory.Router.DidNotReceive().RouteCommandAsync(Arg.Any<SubmitCommand>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task UpdatePartyComposite_AddContactChannelMissingValue_ReturnsBadRequestAsync()
+    {
+        _factory.Router.ClearReceivedCalls();
+
+        using HttpClient client = _factory.CreateClient();
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", JwtTokenHelper.CreateToken(includeTenantClaim: true));
+
+        string partyId = Guid.NewGuid().ToString();
+        using HttpContent body = JsonContent.Create(new
+        {
+            partyId,
+            addContactChannels = new[]
+            {
+                new
+                {
+                    partyId,
+                    contactChannelId = Guid.NewGuid().ToString(),
+                    type = "email",
+                    value = "",
+                },
+            },
+        });
+
+        HttpResponseMessage response = await client.PostAsync($"/api/v1/parties/{partyId}/update-composite", body);
+
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        response.Content.Headers.ContentType?.MediaType.ShouldBe("application/problem+json");
+
+        await _factory.Router.DidNotReceive().RouteCommandAsync(Arg.Any<SubmitCommand>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task UpdatePartyComposite_AddIdentifierMissingValue_ReturnsBadRequestAsync()
+    {
+        _factory.Router.ClearReceivedCalls();
+
+        using HttpClient client = _factory.CreateClient();
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", JwtTokenHelper.CreateToken(includeTenantClaim: true));
+
+        string partyId = Guid.NewGuid().ToString();
+        using HttpContent body = JsonContent.Create(new
+        {
+            partyId,
+            addIdentifiers = new[]
+            {
+                new
+                {
+                    partyId,
+                    identifierId = Guid.NewGuid().ToString(),
+                    type = "vat",
+                    value = "",
+                },
+            },
+        });
+
+        HttpResponseMessage response = await client.PostAsync($"/api/v1/parties/{partyId}/update-composite", body);
+
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        response.Content.Headers.ContentType?.MediaType.ShouldBe("application/problem+json");
+
+        await _factory.Router.DidNotReceive().RouteCommandAsync(Arg.Any<SubmitCommand>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task CreatePartyComposite_NoResultPayload_ReturnsAcceptedWithCorrelationIdOnlyAsync()
+    {
+        _factory.Router.ClearReceivedCalls();
+
+        _factory.Router
+            .RouteCommandAsync(Arg.Any<SubmitCommand>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult(new CommandProcessingResult(Accepted: true)));
+
+        using HttpClient client = _factory.CreateClient();
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", JwtTokenHelper.CreateToken(includeTenantClaim: true));
+
+        using HttpContent body = JsonContent.Create(new
+        {
+            partyId = Guid.NewGuid().ToString(),
+            type = "person",
+            personDetails = new { firstName = "Ada", lastName = "Lovelace" },
+        });
+
+        HttpResponseMessage response = await client.PostAsync("/api/v1/parties/create-composite", body);
+
+        response.StatusCode.ShouldBe(HttpStatusCode.Accepted);
+
+        using JsonDocument payload = await ReadJsonAsync(response);
+        payload.RootElement.TryGetProperty("correlationId", out JsonElement correlationId).ShouldBeTrue();
+        Guid.TryParse(correlationId.GetString(), out _).ShouldBeTrue();
+    }
+
     private static List<string?> ExtractItemIds(JsonDocument payload)
     {
         JsonElement items = payload.RootElement.GetProperty("items");
