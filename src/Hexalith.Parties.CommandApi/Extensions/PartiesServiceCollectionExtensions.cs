@@ -8,6 +8,7 @@ using FluentValidation;
 using Hexalith.EventStore.Server.Configuration;
 using Hexalith.Parties.CommandApi.Authentication;
 using Hexalith.Parties.CommandApi.ErrorHandling;
+using Hexalith.Parties.CommandApi.Mcp;
 using Hexalith.Parties.CommandApi.Validation;
 using Hexalith.Parties.Projections.Abstractions;
 using Hexalith.Parties.Projections.Actors;
@@ -94,6 +95,24 @@ public static class PartiesServiceCollectionExtensions
             options.SerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
             options.SerializerOptions.Converters.Add(new JsonStringEnumConverter());
         });
+
+        // MCP Server (Model Context Protocol) — AI agent tool interface
+#pragma warning disable MCPEXP002 // RunSessionHandler is experimental; required to capture tenant from HttpContext
+        _ = services
+            .AddMcpServer()
+            .WithHttpTransport(options =>
+            {
+                options.RunSessionHandler = async (httpContext, mcpServer, ct) =>
+                {
+                    string? tenant = httpContext.User.FindAll("eventstore:tenant")
+                        .Select(c => c.Value)
+                        .FirstOrDefault(v => !string.IsNullOrWhiteSpace(v));
+                    McpSessionContext.Tenant.Value = tenant;
+                    await mcpServer.RunAsync(ct).ConfigureAwait(false);
+                };
+            })
+            .WithToolsFromAssembly();
+#pragma warning restore MCPEXP002
 
         return services;
     }
