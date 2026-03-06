@@ -1,5 +1,8 @@
+using System.Text.Json;
+
 using Hexalith.EventStore.Contracts.Events;
 using Hexalith.EventStore.Contracts.Results;
+using Hexalith.Parties.Contracts.Models;
 
 namespace Hexalith.Parties.Contracts.Results;
 
@@ -9,16 +12,24 @@ namespace Hexalith.Parties.Contracts.Results;
 /// </summary>
 public sealed record CompositeCommandResult : DomainResult
 {
+    private static readonly JsonSerializerOptions _serializerOptions = new()
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+        DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull,
+    };
+
     public CompositeCommandResult(
         IReadOnlyList<IEventPayload> events,
         IReadOnlyList<string> applied,
         IReadOnlyList<string> skipped,
-        IReadOnlyList<string> rejected)
+        IReadOnlyList<string> rejected,
+        PartyDetail? updatedPartyDetail = null)
         : base(events)
     {
         Applied = applied;
         Skipped = skipped;
         Rejected = rejected;
+        UpdatedPartyDetail = updatedPartyDetail;
     }
 
     /// <summary>Gets descriptions of sub-operations that were successfully applied.</summary>
@@ -29,4 +40,30 @@ public sealed record CompositeCommandResult : DomainResult
 
     /// <summary>Gets descriptions of sub-operations that were rejected (e.g., invalid IDs).</summary>
     public IReadOnlyList<string> Rejected { get; }
+
+    /// <summary>Gets the updated party detail for update-composite responses (null for create-composite).</summary>
+    public PartyDetail? UpdatedPartyDetail { get; }
+
+    /// <inheritdoc/>
+    public override string? ResultPayload
+    {
+        get
+        {
+            if (IsRejection || IsNoOp)
+            {
+                return null;
+            }
+
+            if (UpdatedPartyDetail is not null)
+            {
+                return JsonSerializer.Serialize(
+                    new { result = new { applied = Applied, skipped = Skipped, rejected = Rejected }, party = UpdatedPartyDetail },
+                    _serializerOptions);
+            }
+
+            return JsonSerializer.Serialize(
+                new { result = new { applied = Applied, skipped = Skipped, rejected = Rejected } },
+                _serializerOptions);
+        }
+    }
 }

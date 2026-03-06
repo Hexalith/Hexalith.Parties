@@ -9,7 +9,8 @@
       "mcp__MCP_DOCKER__list_directory",
       "Bash(xargs wc:*)",
       "Bash(gh pr:*)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "mcp__MCP_DOCKER__get_file_info"
     ]
   }
 }

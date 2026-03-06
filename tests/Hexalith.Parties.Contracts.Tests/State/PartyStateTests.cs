@@ -16,6 +16,7 @@ public class PartyStateTests
 
         state.Apply(new PartyCreated { Type = PartyType.Person, PersonDetails = person });
 
+        state.CreatedAt.ShouldNotBe(default);
         state.Type.ShouldBe(PartyType.Person);
         state.Person.ShouldBe(person);
         state.Organization.ShouldBeNull();

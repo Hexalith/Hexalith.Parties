@@ -3,6 +3,7 @@ using Hexalith.EventStore.Contracts.Events;
 using Hexalith.EventStore.Contracts.Results;
 using Hexalith.Parties.Contracts.Commands;
 using Hexalith.Parties.Contracts.Events;
+using Hexalith.Parties.Contracts.Models;
 using Hexalith.Parties.Contracts.Results;
 using Hexalith.Parties.Contracts.State;
 using Hexalith.Parties.Contracts.ValueObjects;
@@ -14,6 +15,8 @@ public sealed class PartyAggregate : EventStoreAggregate<PartyState>
     private const int DefaultMaxSubOperations = 100;
 
     public static int MaxSubOperations { get; set; } = DefaultMaxSubOperations;
+
+    public static int GetEffectiveMaxSubOperations() => MaxSubOperations <= 0 ? DefaultMaxSubOperations : MaxSubOperations;
 
     public static CompositeCommandResult Handle(CreatePartyComposite command, PartyState? state)
     {
@@ -590,7 +593,8 @@ public sealed class PartyAggregate : EventStoreAggregate<PartyState>
             applied.Add($"Removed identifier: {id}");
         }
 
-        return new CompositeCommandResult(events, applied, skipped, []);
+        PartyDetail updatedDetail = BuildPartyDetailFromState(command.PartyId, state, events);
+        return new CompositeCommandResult(events, applied, skipped, [], updatedDetail);
     }
 
     public static DomainResult Handle(CreateParty command, PartyState? state)
@@ -935,6 +939,105 @@ public sealed class PartyAggregate : EventStoreAggregate<PartyState>
             PartyType.Organization when organization is not null =>
                 (organization.LegalName, organization.LegalName),
             _ => throw new InvalidOperationException($"Unsupported party type: {type}"),
+        };
+    }
+
+    private static PartyDetail BuildPartyDetailFromState(
+        string partyId,
+        PartyState state,
+        IReadOnlyList<IEventPayload> events)
+    {
+        string displayName = state.DisplayName;
+        string sortName = state.SortName;
+        PersonDetails? person = state.Person;
+        OrganizationDetails? org = state.Organization;
+        bool isActive = state.IsActive;
+        List<ContactChannel> channels = [.. state.ContactChannels];
+        List<PartyIdentifier> identifiers = [.. state.Identifiers];
+
+        foreach (IEventPayload evt in events)
+        {
+            switch (evt)
+            {
+                case PersonDetailsUpdated e:
+                    person = e.PersonDetails;
+                    break;
+                case OrganizationDetailsUpdated e:
+                    org = e.OrganizationDetails;
+                    break;
+                case PartyDisplayNameDerived e:
+                    displayName = e.DisplayName;
+                    sortName = e.SortName;
+                    break;
+                case ContactChannelAdded e:
+                    channels.Add(new ContactChannel { Id = e.ContactChannelId, Type = e.Type, Value = e.Value, IsPreferred = e.IsPreferred });
+                    break;
+                case ContactChannelUpdated e:
+                    {
+                        int idx = channels.FindIndex(c => c.Id == e.ContactChannelId);
+                        if (idx >= 0)
+                        {
+                            ContactChannel existing = channels[idx];
+                            channels[idx] = existing with
+                            {
+                                Type = e.Type ?? existing.Type,
+                                Value = e.Value ?? existing.Value,
+                                IsPreferred = e.IsPreferred ?? existing.IsPreferred,
+                            };
+                        }
+
+                        break;
+                    }
+
+                case ContactChannelRemoved e:
+                    channels.RemoveAll(c => c.Id == e.ContactChannelId);
+                    break;
+                case PreferredContactChannelChanged e:
+                    {
+                        int targetIdx = channels.FindIndex(c => c.Id == e.ContactChannelId);
+                        if (targetIdx >= 0)
+                        {
+                            ContactChannelType targetType = channels[targetIdx].Type;
+                            for (int i = 0; i < channels.Count; i++)
+                            {
+                                if (channels[i].Type == targetType)
+                                {
+                                    channels[i] = channels[i] with { IsPreferred = channels[i].Id == e.ContactChannelId };
+                                }
+                            }
+                        }
+
+                        break;
+                    }
+
+                case IdentifierAdded e:
+                    identifiers.Add(new PartyIdentifier { Id = e.IdentifierId, Type = e.Type, Value = e.Value });
+                    break;
+                case IdentifierRemoved e:
+                    identifiers.RemoveAll(i => i.Id == e.IdentifierId);
+                    break;
+                case PartyDeactivated:
+                    isActive = false;
+                    break;
+                case PartyReactivated:
+                    isActive = true;
+                    break;
+            }
+        }
+
+        return new PartyDetail
+        {
+            Id = partyId,
+            Type = state.Type,
+            IsActive = isActive,
+            DisplayName = displayName,
+            SortName = sortName,
+            PersonDetails = person,
+            OrganizationDetails = org,
+            ContactChannels = channels,
+            Identifiers = identifiers,
+            CreatedAt = state.CreatedAt,
+            LastModifiedAt = DateTimeOffset.UtcNow,
         };
     }
 }

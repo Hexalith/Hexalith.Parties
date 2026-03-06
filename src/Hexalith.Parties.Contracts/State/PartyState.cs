@@ -8,6 +8,8 @@ public sealed class PartyState
     private readonly List<ContactChannel> _contactChannels = [];
     private readonly List<PartyIdentifier> _identifiers = [];
 
+    public DateTimeOffset CreatedAt { get; private set; }
+
     public PartyType Type { get; private set; }
 
     public bool IsActive { get; private set; } = true;
@@ -31,6 +33,7 @@ public sealed class PartyState
     public void Apply(PartyCreated e)
     {
         ArgumentNullException.ThrowIfNull(e);
+        CreatedAt = DateTimeOffset.UtcNow;
         Type = e.Type;
         Person = e.PersonDetails;
         Organization = e.OrganizationDetails;
