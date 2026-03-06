@@ -11,7 +11,7 @@ Events are wrapped in CloudEvents 1.0 format by the EventStore publisher with th
 
 | Attribute | Value |
 |-----------|-------|
-| `cloudevent.type` | Event type name (e.g., `PartyCreated`) |
+| `cloudevent.type` | Event type name carried by the persisted envelope (typically a fully qualified .NET event type) |
 | `cloudevent.source` | `hexalith-eventstore/{tenantId}/parties` |
 | `cloudevent.id` | `{correlationId}:{sequenceNumber}` |
 
@@ -29,6 +29,8 @@ Production DAPR component templates are in `deploy/dapr/`. Choose one broker per
 | `OPS_MONITOR_APP_ID` | Operations monitoring tool's DAPR app-id |
 
 **Ordering guarantee (FR73):** Causal ordering per partition. Use aggregate-ID-based key routing to ensure all events for the same aggregate are processed in order.
+
+The checked-in template documents scoping and dead-letter topology. Add the Kafka partition-routing metadata required by your DAPR component when rendering deployment-specific manifests so aggregate events stay on the same partition.
 
 ### RabbitMQ (`pubsub-rabbitmq.yaml`)
 
@@ -49,6 +51,8 @@ Production DAPR component templates are in `deploy/dapr/`. Choose one broker per
 | `OPS_MONITOR_APP_ID` | Operations monitoring tool's DAPR app-id |
 
 **Ordering guarantee (FR73):** Causal ordering per session. Use aggregate-ID as the session key.
+
+The checked-in template assumes session-enabled entities are pre-created. Add the Service Bus session metadata required by your DAPR component when rendering deployment-specific manifests so aggregate events stay in a single ordered session.
 
 **Note:** Topics must be pre-created in Azure Service Bus (no auto-creation).
 

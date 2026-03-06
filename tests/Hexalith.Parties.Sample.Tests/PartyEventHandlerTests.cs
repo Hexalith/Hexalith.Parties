@@ -11,7 +11,8 @@ using Shouldly;
 
 namespace Hexalith.Parties.Sample.Tests;
 
-public sealed class PartyEventHandlerTests : IClassFixture<WebApplicationFactory<Program>>, IDisposable
+[Collection("PartyEventHandler")]
+public sealed class PartyEventHandlerTests : IDisposable
 {
     private static readonly JsonSerializerOptions _jsonOptions = new()
     {
@@ -25,6 +26,7 @@ public sealed class PartyEventHandlerTests : IClassFixture<WebApplicationFactory
     {
         ArgumentNullException.ThrowIfNull(factory);
         CustomerSummaryStore.Customers.Clear();
+        PartyEventHandler.ClearProcessedEventIds();
         _client = factory.CreateClient();
     }
 
@@ -210,6 +212,295 @@ public sealed class PartyEventHandlerTests : IClassFixture<WebApplicationFactory
         secondResponse.StatusCode.ShouldBe(HttpStatusCode.OK);
 
         CustomerSummaryStore.Customers["p-800"].DisplayName.ShouldBe("Jean Replay");
+    }
+
+    [Fact]
+    public async Task HandlePersonDetailsUpdated_ShouldUpdateDisplayNameAsync()
+    {
+        CustomerSummaryStore.Customers["p-900"] = new CustomerSummary
+        {
+            Id = "p-900",
+            DisplayName = "Old Name",
+        };
+
+        EventEnvelope envelope = CreateEnvelope(
+            "tenant-a:parties:p-900",
+            "PersonDetailsUpdated",
+            new { personDetails = new { firstName = "Marie", lastName = "Martin" } },
+            correlationId: "corr-pdu",
+            sequenceNumber: 2);
+
+        HttpResponseMessage response = await PostEventAsync("corr-pdu:2", envelope);
+
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        CustomerSummaryStore.Customers["p-900"].DisplayName.ShouldBe("Marie Martin");
+        CustomerSummaryStore.Customers["p-900"].LastUpdated.ShouldNotBeNull();
+    }
+
+    [Fact]
+    public async Task HandleOrganizationDetailsUpdated_ShouldUpdateDisplayNameAsync()
+    {
+        CustomerSummaryStore.Customers["p-901"] = new CustomerSummary
+        {
+            Id = "p-901",
+            DisplayName = "Old Org",
+        };
+
+        EventEnvelope envelope = CreateEnvelope(
+            "tenant-a:parties:p-901",
+            "OrganizationDetailsUpdated",
+            new { organizationDetails = new { legalName = "New Corp Ltd" } },
+            correlationId: "corr-odu",
+            sequenceNumber: 2);
+
+        HttpResponseMessage response = await PostEventAsync("corr-odu:2", envelope);
+
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        CustomerSummaryStore.Customers["p-901"].DisplayName.ShouldBe("New Corp Ltd");
+        CustomerSummaryStore.Customers["p-901"].LastUpdated.ShouldNotBeNull();
+    }
+
+    [Fact]
+    public async Task HandleContactChannelUpdated_Email_ShouldUpdateEmailAsync()
+    {
+        CustomerSummaryStore.Customers["p-902"] = new CustomerSummary
+        {
+            Id = "p-902",
+            DisplayName = "Test Party",
+            Email = "old@example.com",
+        };
+
+        EventEnvelope envelope = CreateEnvelope(
+            "tenant-a:parties:p-902",
+            "ContactChannelUpdated",
+            new { contactChannelId = "cc-1", type = "Email", value = "new@example.com" },
+            correlationId: "corr-ccu",
+            sequenceNumber: 3);
+
+        HttpResponseMessage response = await PostEventAsync("corr-ccu:3", envelope);
+
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        CustomerSummaryStore.Customers["p-902"].Email.ShouldBe("new@example.com");
+    }
+
+    [Fact]
+    public async Task HandleContactChannelUpdated_Phone_ShouldUpdatePhoneAsync()
+    {
+        CustomerSummaryStore.Customers["p-903"] = new CustomerSummary
+        {
+            Id = "p-903",
+            DisplayName = "Test Party",
+        };
+
+        EventEnvelope envelope = CreateEnvelope(
+            "tenant-a:parties:p-903",
+            "ContactChannelUpdated",
+            new { contactChannelId = "cc-2", type = "Phone", value = "+33612345678" },
+            correlationId: "corr-ccu-ph",
+            sequenceNumber: 3);
+
+        HttpResponseMessage response = await PostEventAsync("corr-ccu-ph:3", envelope);
+
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        CustomerSummaryStore.Customers["p-903"].Phone.ShouldBe("+33612345678");
+    }
+
+    [Fact]
+    public async Task HandleContactChannelRemoved_ShouldReturnOkAsync()
+    {
+        CustomerSummaryStore.Customers["p-904"] = new CustomerSummary
+        {
+            Id = "p-904",
+            DisplayName = "Test Party",
+            Email = "removed@example.com",
+        };
+        CustomerSummaryStore.Customers["p-904"].ContactChannels["cc-1"] = new CustomerContactChannel("Email", "removed@example.com", true);
+
+        EventEnvelope envelope = CreateEnvelope(
+            "tenant-a:parties:p-904",
+            "ContactChannelRemoved",
+            new { contactChannelId = "cc-1" },
+            correlationId: "corr-ccr",
+            sequenceNumber: 4);
+
+        HttpResponseMessage response = await PostEventAsync("corr-ccr:4", envelope);
+
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        CustomerSummaryStore.Customers["p-904"].Email.ShouldBeNull();
+        CustomerSummaryStore.Customers["p-904"].LastUpdated.ShouldNotBeNull();
+    }
+
+    [Fact]
+    public async Task HandlePreferredContactChannelChanged_ShouldPromoteRequestedChannelAsync()
+    {
+        CustomerSummaryStore.Customers["p-905"] = new CustomerSummary
+        {
+            Id = "p-905",
+            DisplayName = "Test Party",
+            Email = "old@example.com",
+        };
+        CustomerSummaryStore.Customers["p-905"].ContactChannels["cc-1"] = new CustomerContactChannel("Email", "old@example.com", true);
+        CustomerSummaryStore.Customers["p-905"].ContactChannels["cc-2"] = new CustomerContactChannel("Email", "new@example.com", false);
+
+        EventEnvelope envelope = CreateEnvelope(
+            "tenant-a:parties:p-905",
+            "PreferredContactChannelChanged",
+            new { contactChannelId = "cc-2" },
+            correlationId: "corr-pcc",
+            sequenceNumber: 5);
+
+        HttpResponseMessage response = await PostEventAsync("corr-pcc:5", envelope);
+
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        CustomerSummaryStore.Customers["p-905"].Email.ShouldBe("new@example.com");
+        CustomerSummaryStore.Customers["p-905"].LastUpdated.ShouldNotBeNull();
+    }
+
+    [Fact]
+    public async Task HandleIdentifierAdded_ShouldIncrementIdentifierCountAsync()
+    {
+        CustomerSummaryStore.Customers["p-906"] = new CustomerSummary
+        {
+            Id = "p-906",
+            DisplayName = "Test Party",
+        };
+
+        EventEnvelope envelope = CreateEnvelope(
+            "tenant-a:parties:p-906",
+            "IdentifierAdded",
+            new { identifierId = "id-1", type = "VAT", value = "FR12345678901" },
+            correlationId: "corr-ia",
+            sequenceNumber: 3);
+
+        HttpResponseMessage response = await PostEventAsync("corr-ia:3", envelope);
+
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        CustomerSummaryStore.Customers["p-906"].IdentifierCount.ShouldBe(1);
+        CustomerSummaryStore.Customers["p-906"].LastUpdated.ShouldNotBeNull();
+    }
+
+    [Fact]
+    public async Task HandleIdentifierRemoved_ShouldDecrementIdentifierCountAsync()
+    {
+        CustomerSummaryStore.Customers["p-907"] = new CustomerSummary
+        {
+            Id = "p-907",
+            DisplayName = "Test Party",
+        };
+        CustomerSummaryStore.Customers["p-907"].Identifiers["id-1"] = new CustomerIdentifier("VAT", "FR12345678901");
+        CustomerSummaryStore.Customers["p-907"].Identifiers["id-2"] = new CustomerIdentifier("SIRET", "12345678901234");
+        CustomerSummaryStore.Customers["p-907"].IdentifierCount = CustomerSummaryStore.Customers["p-907"].Identifiers.Count;
+
+        EventEnvelope envelope = CreateEnvelope(
+            "tenant-a:parties:p-907",
+            "IdentifierRemoved",
+            new { identifierId = "id-1" },
+            correlationId: "corr-ir",
+            sequenceNumber: 4);
+
+        HttpResponseMessage response = await PostEventAsync("corr-ir:4", envelope);
+
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        CustomerSummaryStore.Customers["p-907"].IdentifierCount.ShouldBe(1);
+    }
+
+    [Fact]
+    public async Task HandlePartyCreated_WithFullyQualifiedEventTypeName_ShouldProcessAsync()
+    {
+        EventEnvelope envelope = CreateEnvelope(
+            "tenant-a:parties:p-fully-qualified",
+            "Hexalith.Parties.Contracts.Events.PartyCreated",
+            new { type = "Person", personDetails = new { firstName = "Qualified", lastName = "Name" } },
+            correlationId: "corr-fq",
+            sequenceNumber: 1);
+
+        HttpResponseMessage response = await PostEventAsync("corr-fq:1", envelope);
+
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        CustomerSummaryStore.Customers["p-fully-qualified"].DisplayName.ShouldBe("Qualified Name");
+    }
+
+    [Fact]
+    public async Task HandlePartyReactivated_ShouldMarkActiveAsync()
+    {
+        CustomerSummaryStore.Customers["p-908"] = new CustomerSummary
+        {
+            Id = "p-908",
+            DisplayName = "Inactive Party",
+            IsActive = false,
+        };
+
+        EventEnvelope envelope = CreateEnvelope(
+            "tenant-a:parties:p-908",
+            "PartyReactivated",
+            new { },
+            correlationId: "corr-pr",
+            sequenceNumber: 5);
+
+        HttpResponseMessage response = await PostEventAsync("corr-pr:5", envelope);
+
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        CustomerSummaryStore.Customers["p-908"].IsActive.ShouldBeTrue();
+        CustomerSummaryStore.Customers["p-908"].LastUpdated.ShouldNotBeNull();
+    }
+
+    [Fact]
+    public async Task HandlePartyDisplayNameDerived_ShouldUpdateDisplayNameAsync()
+    {
+        CustomerSummaryStore.Customers["p-909"] = new CustomerSummary
+        {
+            Id = "p-909",
+            DisplayName = "Old Name",
+        };
+
+        EventEnvelope envelope = CreateEnvelope(
+            "tenant-a:parties:p-909",
+            "PartyDisplayNameDerived",
+            new { displayName = "Derived Display Name", sortName = "Display Name, Derived" },
+            correlationId: "corr-pdnd",
+            sequenceNumber: 3);
+
+        HttpResponseMessage response = await PostEventAsync("corr-pdnd:3", envelope);
+
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        CustomerSummaryStore.Customers["p-909"].DisplayName.ShouldBe("Derived Display Name");
+    }
+
+    [Fact]
+    public async Task HandleIsNaturalPersonChanged_ShouldReturnOkAsync()
+    {
+        CustomerSummaryStore.Customers["p-910"] = new CustomerSummary
+        {
+            Id = "p-910",
+            DisplayName = "Test Party",
+        };
+
+        EventEnvelope envelope = CreateEnvelope(
+            "tenant-a:parties:p-910",
+            "IsNaturalPersonChanged",
+            new { isNaturalPerson = true },
+            correlationId: "corr-inp",
+            sequenceNumber: 2);
+
+        HttpResponseMessage response = await PostEventAsync("corr-inp:2", envelope);
+
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        CustomerSummaryStore.Customers["p-910"].LastUpdated.ShouldNotBeNull();
+    }
+
+    [Fact]
+    public async Task HandlePartyMerged_ShouldReturnOkWithoutErrorAsync()
+    {
+        EventEnvelope envelope = CreateEnvelope(
+            "tenant-a:parties:p-911",
+            "PartyMerged",
+            new { survivorPartyId = "p-survivor", mergedPartyId = "p-911" },
+            correlationId: "corr-pm",
+            sequenceNumber: 10);
+
+        HttpResponseMessage response = await PostEventAsync("corr-pm:10", envelope);
+
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
     }
 
     private static EventEnvelope CreateEnvelope(
