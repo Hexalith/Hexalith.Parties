@@ -36,6 +36,7 @@ app.UseExceptionHandler();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+app.MapMcp();
 app.MapActorsHandlers();
 app.MapDefaultEndpoints();                    // Health checks: /health, /alive, /ready
 
