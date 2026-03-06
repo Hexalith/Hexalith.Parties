@@ -20,7 +20,7 @@ Events arrive as CloudEvents 1.0 wrapping an EventStore flat envelope:
 ```json
 {
   "specversion": "1.0",
-  "type": "PartyCreated",
+  "type": "Hexalith.Parties.Contracts.Events.PartyCreated",
   "source": "hexalith-eventstore/tenant-a/parties",
   "id": "{correlationId}:{sequenceNumber}",
   "datacontenttype": "application/json",
@@ -34,7 +34,7 @@ Events arrive as CloudEvents 1.0 wrapping an EventStore flat envelope:
     "causationId": "...",
     "userId": "user@example.com",
     "domainServiceVersion": "1.0.0",
-    "eventTypeName": "PartyCreated",
+    "eventTypeName": "Hexalith.Parties.Contracts.Events.PartyCreated",
     "serializationFormat": "json",
     "payload": "<base64-encoded JSON>",
     "extensions": {}
@@ -43,6 +43,7 @@ Events arrive as CloudEvents 1.0 wrapping an EventStore flat envelope:
 ```
 
 - **`data.payload`**: Base64-encoded JSON of the event-specific payload
+- **`type` / `data.eventTypeName`**: Typically fully qualified .NET event type names; normalize them before dispatch if you switch on short names like `PartyCreated`
 - **Serialization**: camelCase property names, ISO 8601 dates, string enums, nulls omitted (`System.Text.Json` defaults)
 
 ## Available Event Types
@@ -73,7 +74,9 @@ Plus 13 rejection events (implementing `IRejectionEvent`) published when command
 Subscribers do not need to handle every event type. Handle only the events relevant to your domain-specific projection:
 
 ```csharp
-switch (envelope.EventTypeName)
+string eventType = NormalizeEventTypeName(envelope.EventTypeName);
+
+switch (eventType)
 {
     case "PartyCreated":
         // Build your local record
@@ -88,11 +91,20 @@ switch (envelope.EventTypeName)
 
     default:
         // Always acknowledge unknown/unhandled events
-        logger.LogInformation("Unhandled event type '{EventType}'", envelope.EventTypeName);
+      logger.LogInformation(
+        "Unhandled event type '{EventType}' (normalized as '{NormalizedEventType}')",
+        envelope.EventTypeName,
+        eventType);
         break;
 }
 
 return Results.Ok(); // ALWAYS return 200 OK
+
+  private static string NormalizeEventTypeName(string eventTypeName)
+  {
+    int separator = eventTypeName.LastIndexOf('.');
+    return separator >= 0 ? eventTypeName[(separator + 1)..] : eventTypeName;
+  }
 ```
 
 This pattern allows subscribers to:
@@ -280,4 +292,4 @@ case "PartyMerged":
 
 ### PartyErased (v1.1 GDPR)
 
-`PartyErased` will be introduced in v1.1 for GDPR crypto-shredding. See the dangling reference guidance documentation (Epic 9) for handling crypto-shredded data and read model cleanup.
+`PartyErased` will be introduced in v1.1 for GDPR crypto-shredding. See the [Event Handler Patterns](event-handler-patterns.md#partyerased-handler-mandatory) guide for the mandatory handler implementation, dangling reference guidance, and read model cleanup strategies.

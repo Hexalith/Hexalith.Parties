@@ -94,7 +94,7 @@ development_status:
   epic-7: in-progress
   7-1-event-publishing-verification-and-configuration: done
   7-2-subscriber-experience-and-at-least-once-delivery: done
-  7-3-handler-patterns-documentation-and-dangling-reference-guidance: backlog
+  7-3-handler-patterns-documentation-and-dangling-reference-guidance: done
   epic-7-retrospective: optional
 
   # Epic 8: Operational Readiness & Production Hardening (3 stories)
