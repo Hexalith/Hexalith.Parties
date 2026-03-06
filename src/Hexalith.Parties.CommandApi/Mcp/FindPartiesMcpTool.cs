@@ -4,6 +4,7 @@ using System.Text.Json;
 using Dapr.Actors;
 using Dapr.Actors.Client;
 
+using Hexalith.Parties.CommandApi.Search;
 using Hexalith.Parties.Contracts.Models;
 using Hexalith.Parties.Contracts.ValueObjects;
 using Hexalith.Parties.Projections.Abstractions;
@@ -60,118 +61,17 @@ public static class FindPartiesMcpTool
 
         IReadOnlyDictionary<string, PartyIndexEntry> entries = await proxy.GetEntriesAsync().ConfigureAwait(false);
 
+        bool? activeFilter = activeOnly ? true : null;
+
         if (string.IsNullOrWhiteSpace(query))
         {
             return JsonSerializer.Serialize(
-                BuildPagedList(entries.Values, typeFilter, activeOnly, page, pageSize),
+                PartySearchResultsBuilder.BuildPagedList(entries.Values, typeFilter, activeFilter, page, pageSize),
                 McpSessionContext.JsonOptions);
         }
 
         return JsonSerializer.Serialize(
-            BuildSearchResults(entries.Values, query, typeFilter, activeOnly, page, pageSize),
+            PartySearchResultsBuilder.BuildSearchResults(entries.Values, query, typeFilter, activeFilter, page, pageSize),
             McpSessionContext.JsonOptions);
-    }
-
-    private static PagedResult<PartyIndexEntry> BuildPagedList(
-        IEnumerable<PartyIndexEntry> entries,
-        PartyType? typeFilter,
-        bool activeOnly,
-        int page,
-        int pageSize)
-    {
-        IEnumerable<PartyIndexEntry> filtered = entries;
-
-        if (typeFilter is not null)
-        {
-            filtered = filtered.Where(e => e.Type == typeFilter.Value);
-        }
-
-        if (activeOnly)
-        {
-            filtered = filtered.Where(e => e.IsActive);
-        }
-
-        List<PartyIndexEntry> sorted = [.. filtered.OrderBy(e => e.DisplayName, StringComparer.OrdinalIgnoreCase)];
-        int totalCount = sorted.Count;
-        int totalPages = totalCount == 0 ? 1 : (int)Math.Ceiling((double)totalCount / pageSize);
-        List<PartyIndexEntry> items = [.. sorted.Skip((page - 1) * pageSize).Take(pageSize)];
-
-        return new PagedResult<PartyIndexEntry>
-        {
-            Items = items,
-            Page = page,
-            PageSize = pageSize,
-            TotalCount = totalCount,
-            TotalPages = totalPages,
-        };
-    }
-
-    private static PagedResult<PartySearchResult> BuildSearchResults(
-        IEnumerable<PartyIndexEntry> entries,
-        string query,
-        PartyType? typeFilter,
-        bool activeOnly,
-        int page,
-        int pageSize)
-    {
-        IEnumerable<PartyIndexEntry> filtered = entries;
-
-        if (typeFilter is not null)
-        {
-            filtered = filtered.Where(e => e.Type == typeFilter.Value);
-        }
-
-        if (activeOnly)
-        {
-            filtered = filtered.Where(e => e.IsActive);
-        }
-
-        List<(PartySearchResult Result, int Priority)> matches = [];
-
-        foreach (PartyIndexEntry entry in filtered)
-        {
-            if (string.Equals(entry.DisplayName, query, StringComparison.OrdinalIgnoreCase))
-            {
-                matches.Add((new PartySearchResult
-                {
-                    Party = entry,
-                    Matches = [new MatchMetadata { MatchedField = "displayName", MatchType = "exact" }],
-                }, 0));
-            }
-            else if (entry.DisplayName.StartsWith(query, StringComparison.OrdinalIgnoreCase))
-            {
-                matches.Add((new PartySearchResult
-                {
-                    Party = entry,
-                    Matches = [new MatchMetadata { MatchedField = "displayName", MatchType = "prefix" }],
-                }, 1));
-            }
-            else if (entry.DisplayName.Contains(query, StringComparison.OrdinalIgnoreCase))
-            {
-                matches.Add((new PartySearchResult
-                {
-                    Party = entry,
-                    Matches = [new MatchMetadata { MatchedField = "displayName", MatchType = "contains" }],
-                }, 2));
-            }
-        }
-
-        List<PartySearchResult> sorted = [.. matches
-            .OrderBy(m => m.Priority)
-            .ThenBy(m => m.Result.Party.DisplayName, StringComparer.OrdinalIgnoreCase)
-            .Select(m => m.Result)];
-
-        int totalCount = sorted.Count;
-        int totalPages = totalCount == 0 ? 1 : (int)Math.Ceiling((double)totalCount / pageSize);
-        List<PartySearchResult> items = [.. sorted.Skip((page - 1) * pageSize).Take(pageSize)];
-
-        return new PagedResult<PartySearchResult>
-        {
-            Items = items,
-            Page = page,
-            PageSize = pageSize,
-            TotalCount = totalCount,
-            TotalPages = totalPages,
-        };
     }
 }

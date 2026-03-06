@@ -108,7 +108,14 @@ public static class PartiesServiceCollectionExtensions
                         .Select(c => c.Value)
                         .FirstOrDefault(v => !string.IsNullOrWhiteSpace(v));
                     McpSessionContext.Tenant.Value = tenant;
-                    await mcpServer.RunAsync(ct).ConfigureAwait(false);
+                    try
+                    {
+                        await mcpServer.RunAsync(ct).ConfigureAwait(false);
+                    }
+                    finally
+                    {
+                        McpSessionContext.Tenant.Value = null;
+                    }
                 };
             })
             .WithToolsFromAssembly();

@@ -1,5 +1,4 @@
 using System.Text.Json;
-using System.Text.Json.Nodes;
 
 using Dapr.Actors;
 using Dapr.Actors.Client;
@@ -11,6 +10,7 @@ using Hexalith.EventStore.Server.Actors;
 using Hexalith.EventStore.Server.Commands;
 using Hexalith.EventStore.Server.Pipeline.Commands;
 using Hexalith.Parties.CommandApi.Middleware;
+using Hexalith.Parties.CommandApi.Search;
 using Hexalith.Parties.Contracts.Commands;
 using Hexalith.Parties.Contracts.Models;
 using Hexalith.Parties.Contracts.ValueObjects;
@@ -111,21 +111,7 @@ public sealed class PartiesController(
             filtered = filtered.Where(e => e.LastModifiedAt <= modifiedBefore.Value);
         }
 
-        List<PartyIndexEntry> sorted = [.. filtered.OrderBy(e => e.DisplayName, StringComparer.OrdinalIgnoreCase)];
-        int totalCount = sorted.Count;
-        int totalPages = totalCount == 0 ? 1 : (int)Math.Ceiling((double)totalCount / pageSize);
-        List<PartyIndexEntry> items = [.. sorted.Skip((page - 1) * pageSize).Take(pageSize)];
-
-        var result = new PagedResult<PartyIndexEntry>
-        {
-            Items = items,
-            Page = page,
-            PageSize = pageSize,
-            TotalCount = totalCount,
-            TotalPages = totalPages,
-        };
-
-        return Ok(result);
+        return Ok(PartySearchResultsBuilder.BuildPagedList(filtered, null, null, page, pageSize));
     }
 
     [HttpGet("search")]
@@ -177,55 +163,7 @@ public sealed class PartiesController(
             actorId, nameof(PartyIndexProjectionActor));
         IReadOnlyDictionary<string, PartyIndexEntry> entries = await proxy.GetEntriesAsync().ConfigureAwait(false);
 
-        List<(PartySearchResult Result, int Priority)> matches = [];
-
-        foreach (PartyIndexEntry entry in entries.Values)
-        {
-            if (string.Equals(entry.DisplayName, q, StringComparison.OrdinalIgnoreCase))
-            {
-                matches.Add((new PartySearchResult
-                {
-                    Party = entry,
-                    Matches = [new MatchMetadata { MatchedField = "displayName", MatchType = "exact" }],
-                }, 0));
-            }
-            else if (entry.DisplayName.StartsWith(q, StringComparison.OrdinalIgnoreCase))
-            {
-                matches.Add((new PartySearchResult
-                {
-                    Party = entry,
-                    Matches = [new MatchMetadata { MatchedField = "displayName", MatchType = "prefix" }],
-                }, 1));
-            }
-            else if (entry.DisplayName.Contains(q, StringComparison.OrdinalIgnoreCase))
-            {
-                matches.Add((new PartySearchResult
-                {
-                    Party = entry,
-                    Matches = [new MatchMetadata { MatchedField = "displayName", MatchType = "contains" }],
-                }, 2));
-            }
-        }
-
-        List<PartySearchResult> sorted = [.. matches
-            .OrderBy(m => m.Priority)
-            .ThenBy(m => m.Result.Party.DisplayName, StringComparer.OrdinalIgnoreCase)
-            .Select(m => m.Result)];
-
-        int totalCount = sorted.Count;
-        int totalPages = totalCount == 0 ? 1 : (int)Math.Ceiling((double)totalCount / pageSize);
-        List<PartySearchResult> items = [.. sorted.Skip((page - 1) * pageSize).Take(pageSize)];
-
-        var result = new PagedResult<PartySearchResult>
-        {
-            Items = items,
-            Page = page,
-            PageSize = pageSize,
-            TotalCount = totalCount,
-            TotalPages = totalPages,
-        };
-
-        return Ok(result);
+        return Ok(PartySearchResultsBuilder.BuildSearchResults(entries.Values, q, null, null, page, pageSize));
     }
 
     [HttpGet("{id}")]
@@ -515,17 +453,7 @@ public sealed class PartiesController(
             return CreateDomainRejectionProblemDetails(result.ErrorMessage, correlationId, tenant);
         }
 
-        if (!string.IsNullOrEmpty(result.ResultPayload))
-        {
-            JsonNode? payload = JsonNode.Parse(result.ResultPayload);
-            if (payload is not null)
-            {
-                payload["correlationId"] = correlationId;
-                return new ObjectResult(payload) { StatusCode = StatusCodes.Status202Accepted };
-            }
-        }
-
-        return Accepted(new { correlationId });
+        return Accepted(new { correlationId = result.CorrelationId ?? correlationId });
     }
 
     private string? ExtractTenant()
