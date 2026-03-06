@@ -86,7 +86,7 @@ development_status:
   # Epic 6: Developer Integration & Documentation (3 stories)
   epic-6: in-progress
   6-1-client-package-command-and-query-abstractions: done
-  6-2-getting-started-guide-and-readme: backlog
+  6-2-getting-started-guide-and-readme: done
   6-3-sample-integration-project: backlog
   epic-6-retrospective: optional
 
