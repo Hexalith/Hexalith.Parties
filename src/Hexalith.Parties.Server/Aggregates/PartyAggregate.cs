@@ -187,6 +187,412 @@ public sealed class PartyAggregate : EventStoreAggregate<PartyState>
         return new CompositeCommandResult(events, applied, skipped, []);
     }
 
+    public static CompositeCommandResult Handle(UpdatePartyComposite command, PartyState? state)
+    {
+        ArgumentNullException.ThrowIfNull(command);
+
+        if (MaxSubOperations <= 0)
+        {
+            MaxSubOperations = DefaultMaxSubOperations;
+        }
+
+        // D17: Payload size guard — count all sub-operation lists
+        int subOps = (command.PersonDetails is not null ? 1 : 0)
+            + (command.OrganizationDetails is not null ? 1 : 0)
+            + command.AddContactChannels.Count
+            + command.UpdateContactChannels.Count
+            + command.RemoveContactChannelIds.Count
+            + command.AddIdentifiers.Count
+            + command.RemoveIdentifierIds.Count;
+
+        if (subOps > MaxSubOperations)
+        {
+            return new CompositeCommandResult(
+                [new CompositeOperationConflict { Message = $"Payload size exceeded: {subOps} sub-operations (maximum {MaxSubOperations})." }],
+                applied: [],
+                skipped: [],
+                rejected: [$"Payload size exceeded: {subOps} sub-operations (maximum {MaxSubOperations})."]);
+        }
+
+        // State null check — party must exist for update
+        if (state is null)
+        {
+            return new CompositeCommandResult(
+                [new PartyNotFound { Message = "Party does not exist." }],
+                applied: [],
+                skipped: [],
+                rejected: ["Party does not exist."]);
+        }
+
+        // No-op check — all lists empty and no details
+        if (subOps == 0)
+        {
+            return new CompositeCommandResult(
+                events: [],
+                applied: [],
+                skipped: [],
+                rejected: []);
+        }
+
+        // Build lookup structures from state for O(1) lookups
+        Dictionary<string, ContactChannel> existingChannelsById = new(StringComparer.Ordinal);
+        for (int i = 0; i < state.ContactChannels.Count; i++)
+        {
+            existingChannelsById[state.ContactChannels[i].Id] = state.ContactChannels[i];
+        }
+
+        HashSet<string> existingIdentifierIds = new(StringComparer.Ordinal);
+        for (int i = 0; i < state.Identifiers.Count; i++)
+        {
+            existingIdentifierIds.Add(state.Identifiers[i].Id);
+        }
+
+        // Conflict detection — channel operations
+        HashSet<string> addChannelIds = new(StringComparer.Ordinal);
+        for (int i = 0; i < command.AddContactChannels.Count; i++)
+        {
+            addChannelIds.Add(command.AddContactChannels[i].ContactChannelId);
+        }
+
+        HashSet<string> updateChannelIds = new(StringComparer.Ordinal);
+        for (int i = 0; i < command.UpdateContactChannels.Count; i++)
+        {
+            updateChannelIds.Add(command.UpdateContactChannels[i].ContactChannelId);
+        }
+
+        HashSet<string> removeChannelIds = new(StringComparer.Ordinal);
+        List<string> orderedRemoveChannelIds = [];
+        List<string> duplicateRemoveChannelIds = [];
+        for (int i = 0; i < command.RemoveContactChannelIds.Count; i++)
+        {
+            string id = command.RemoveContactChannelIds[i];
+            if (removeChannelIds.Add(id))
+            {
+                orderedRemoveChannelIds.Add(id);
+            }
+            else
+            {
+                duplicateRemoveChannelIds.Add(id);
+            }
+        }
+
+        for (int i = 0; i < command.RemoveContactChannelIds.Count; i++)
+        {
+            string id = command.RemoveContactChannelIds[i];
+            if (addChannelIds.Contains(id))
+            {
+                return new CompositeCommandResult(
+                    [new CompositeOperationConflict { Message = $"Conflicting operations on same channel ID: {id}." }],
+                    applied: [],
+                    skipped: [],
+                    rejected: [$"Conflicting operations on same channel ID: {id}."]);
+            }
+
+            if (updateChannelIds.Contains(id))
+            {
+                return new CompositeCommandResult(
+                    [new CompositeOperationConflict { Message = $"Conflicting operations on same channel ID: {id}." }],
+                    applied: [],
+                    skipped: [],
+                    rejected: [$"Conflicting operations on same channel ID: {id}."]);
+            }
+        }
+
+        // Conflict detection — identifier operations
+        HashSet<string> addIdentifierIds = new(StringComparer.Ordinal);
+        for (int i = 0; i < command.AddIdentifiers.Count; i++)
+        {
+            addIdentifierIds.Add(command.AddIdentifiers[i].IdentifierId);
+        }
+
+        HashSet<string> removeIdentifierIds = new(StringComparer.Ordinal);
+        List<string> orderedRemoveIdentifierIds = [];
+        List<string> duplicateRemoveIdentifierIds = [];
+        for (int i = 0; i < command.RemoveIdentifierIds.Count; i++)
+        {
+            string id = command.RemoveIdentifierIds[i];
+            if (removeIdentifierIds.Add(id))
+            {
+                orderedRemoveIdentifierIds.Add(id);
+            }
+            else
+            {
+                duplicateRemoveIdentifierIds.Add(id);
+            }
+
+            if (addIdentifierIds.Contains(id))
+            {
+                return new CompositeCommandResult(
+                    [new CompositeOperationConflict { Message = $"Conflicting operations on same identifier ID: {id}." }],
+                    applied: [],
+                    skipped: [],
+                    rejected: [$"Conflicting operations on same identifier ID: {id}."]);
+            }
+        }
+
+        // ID validation — blank IDs in all operation lists
+        for (int i = 0; i < command.AddContactChannels.Count; i++)
+        {
+            if (string.IsNullOrWhiteSpace(command.AddContactChannels[i].ContactChannelId))
+            {
+                return new CompositeCommandResult(
+                    [new CompositeOperationConflict { Message = "Contact channel ID is required." }],
+                    applied: [],
+                    skipped: [],
+                    rejected: ["Contact channel ID is required."]);
+            }
+        }
+
+        for (int i = 0; i < command.UpdateContactChannels.Count; i++)
+        {
+            if (string.IsNullOrWhiteSpace(command.UpdateContactChannels[i].ContactChannelId))
+            {
+                return new CompositeCommandResult(
+                    [new CompositeOperationConflict { Message = "Contact channel ID is required." }],
+                    applied: [],
+                    skipped: [],
+                    rejected: ["Contact channel ID is required."]);
+            }
+        }
+
+        for (int i = 0; i < command.RemoveContactChannelIds.Count; i++)
+        {
+            if (string.IsNullOrWhiteSpace(command.RemoveContactChannelIds[i]))
+            {
+                return new CompositeCommandResult(
+                    [new CompositeOperationConflict { Message = "Contact channel ID is required." }],
+                    applied: [],
+                    skipped: [],
+                    rejected: ["Contact channel ID is required."]);
+            }
+        }
+
+        for (int i = 0; i < command.AddIdentifiers.Count; i++)
+        {
+            if (string.IsNullOrWhiteSpace(command.AddIdentifiers[i].IdentifierId))
+            {
+                return new CompositeCommandResult(
+                    [new CompositeOperationConflict { Message = "Identifier ID is required." }],
+                    applied: [],
+                    skipped: [],
+                    rejected: ["Identifier ID is required."]);
+            }
+        }
+
+        for (int i = 0; i < command.RemoveIdentifierIds.Count; i++)
+        {
+            if (string.IsNullOrWhiteSpace(command.RemoveIdentifierIds[i]))
+            {
+                return new CompositeCommandResult(
+                    [new CompositeOperationConflict { Message = "Identifier ID is required." }],
+                    applied: [],
+                    skipped: [],
+                    rejected: ["Identifier ID is required."]);
+            }
+        }
+
+        // Validate UpdateContactChannels IDs exist in state (D12 all-or-nothing)
+        for (int i = 0; i < command.UpdateContactChannels.Count; i++)
+        {
+            if (!existingChannelsById.ContainsKey(command.UpdateContactChannels[i].ContactChannelId))
+            {
+                return new CompositeCommandResult(
+                    [new ContactChannelNotFound { Message = $"Contact channel '{command.UpdateContactChannels[i].ContactChannelId}' not found." }],
+                    applied: [],
+                    skipped: [],
+                    rejected: [$"Contact channel '{command.UpdateContactChannels[i].ContactChannelId}' not found."]);
+            }
+        }
+
+        // Validate RemoveContactChannelIds exist in state (D12 all-or-nothing)
+        for (int i = 0; i < command.RemoveContactChannelIds.Count; i++)
+        {
+            if (!existingChannelsById.ContainsKey(command.RemoveContactChannelIds[i]))
+            {
+                return new CompositeCommandResult(
+                    [new ContactChannelNotFound { Message = $"Contact channel '{command.RemoveContactChannelIds[i]}' not found." }],
+                    applied: [],
+                    skipped: [],
+                    rejected: [$"Contact channel '{command.RemoveContactChannelIds[i]}' not found."]);
+            }
+        }
+
+        // Validate RemoveIdentifierIds exist in state (D12 all-or-nothing)
+        for (int i = 0; i < command.RemoveIdentifierIds.Count; i++)
+        {
+            if (!existingIdentifierIds.Contains(command.RemoveIdentifierIds[i]))
+            {
+                return new CompositeCommandResult(
+                    [new IdentifierNotFound { Message = $"Identifier '{command.RemoveIdentifierIds[i]}' not found." }],
+                    applied: [],
+                    skipped: [],
+                    rejected: [$"Identifier '{command.RemoveIdentifierIds[i]}' not found."]);
+            }
+        }
+
+        // PersonDetails type check
+        if (command.PersonDetails is not null && state.Type != PartyType.Person)
+        {
+            return new CompositeCommandResult(
+                [new PartyTypeMismatch { Message = $"Cannot update person details on a {state.Type} party." }],
+                applied: [],
+                skipped: [],
+                rejected: [$"Cannot update person details on a {state.Type} party."]);
+        }
+
+        // OrganizationDetails type check
+        if (command.OrganizationDetails is not null && state.Type != PartyType.Organization)
+        {
+            return new CompositeCommandResult(
+                [new PartyTypeMismatch { Message = $"Cannot update organization details on a {state.Type} party." }],
+                applied: [],
+                skipped: [],
+                rejected: [$"Cannot update organization details on a {state.Type} party."]);
+        }
+
+        // Phase 2 — Event emission (all validation passed)
+        List<IEventPayload> events = [];
+        List<string> applied = [];
+        List<string> skipped = [];
+
+        // PersonDetails update
+        if (command.PersonDetails is not null)
+        {
+            events.Add(new PersonDetailsUpdated { PersonDetails = command.PersonDetails });
+            applied.Add("Updated person details");
+
+            (string displayName, string sortName) = DeriveDisplayName(state.Type, command.PersonDetails, null);
+            events.Add(new PartyDisplayNameDerived { DisplayName = displayName, SortName = sortName });
+            applied.Add("Derived display name");
+        }
+
+        // OrganizationDetails update
+        if (command.OrganizationDetails is not null)
+        {
+            events.Add(new OrganizationDetailsUpdated { OrganizationDetails = command.OrganizationDetails });
+            applied.Add("Updated organization details");
+
+            (string displayName, string sortName) = DeriveDisplayName(state.Type, null, command.OrganizationDetails);
+            events.Add(new PartyDisplayNameDerived { DisplayName = displayName, SortName = sortName });
+            applied.Add("Derived display name");
+        }
+
+        // AddContactChannels processing with state-duplicate and payload-duplicate detection
+        HashSet<string> seenChannelIds = new(StringComparer.Ordinal);
+        for (int i = 0; i < command.AddContactChannels.Count; i++)
+        {
+            AddContactChannel channel = command.AddContactChannels[i];
+            if (existingChannelsById.ContainsKey(channel.ContactChannelId))
+            {
+                skipped.Add($"Duplicate contact channel: {channel.ContactChannelId}");
+                continue;
+            }
+
+            if (!seenChannelIds.Add(channel.ContactChannelId))
+            {
+                skipped.Add($"Duplicate contact channel: {channel.ContactChannelId}");
+                continue;
+            }
+
+            events.Add(new ContactChannelAdded
+            {
+                ContactChannelId = channel.ContactChannelId,
+                Type = channel.Type,
+                Value = channel.Value,
+                IsPreferred = channel.IsPreferred,
+            });
+            applied.Add($"Added contact channel: {channel.ContactChannelId} ({channel.Type})");
+
+            if (channel.IsPreferred)
+            {
+                events.Add(new PreferredContactChannelChanged { ContactChannelId = channel.ContactChannelId });
+                applied.Add($"Set preferred contact channel: {channel.ContactChannelId}");
+            }
+        }
+
+        // UpdateContactChannels processing with within-list dedup and preferred channel logic
+        HashSet<string> seenUpdateChannelIds = new(StringComparer.Ordinal);
+        for (int i = 0; i < command.UpdateContactChannels.Count; i++)
+        {
+            UpdateContactChannel channel = command.UpdateContactChannels[i];
+            if (!seenUpdateChannelIds.Add(channel.ContactChannelId))
+            {
+                skipped.Add($"Duplicate contact channel update: {channel.ContactChannelId}");
+                continue;
+            }
+
+            ContactChannel existingChannel = existingChannelsById[channel.ContactChannelId];
+
+            events.Add(new ContactChannelUpdated
+            {
+                ContactChannelId = channel.ContactChannelId,
+                Type = channel.Type,
+                Value = channel.Value,
+                IsPreferred = channel.IsPreferred,
+            });
+            applied.Add($"Updated contact channel: {channel.ContactChannelId}");
+
+            ContactChannelType targetType = channel.Type ?? existingChannel.Type;
+            if (channel.IsPreferred == true && (!existingChannel.IsPreferred || targetType != existingChannel.Type))
+            {
+                events.Add(new PreferredContactChannelChanged { ContactChannelId = channel.ContactChannelId });
+                applied.Add($"Set preferred contact channel: {channel.ContactChannelId}");
+            }
+        }
+
+        // RemoveContactChannelIds processing (using deduplicated order-preserving list from validation)
+        for (int i = 0; i < duplicateRemoveChannelIds.Count; i++)
+        {
+            skipped.Add($"Duplicate contact channel removal: {duplicateRemoveChannelIds[i]}");
+        }
+
+        foreach (string id in orderedRemoveChannelIds)
+        {
+            events.Add(new ContactChannelRemoved { ContactChannelId = id });
+            applied.Add($"Removed contact channel: {id}");
+        }
+
+        // AddIdentifiers processing with state-duplicate and payload-duplicate detection
+        HashSet<string> seenIdentifierIds = new(StringComparer.Ordinal);
+        for (int i = 0; i < command.AddIdentifiers.Count; i++)
+        {
+            AddIdentifier identifier = command.AddIdentifiers[i];
+            if (existingIdentifierIds.Contains(identifier.IdentifierId))
+            {
+                skipped.Add($"Duplicate identifier: {identifier.IdentifierId}");
+                continue;
+            }
+
+            if (!seenIdentifierIds.Add(identifier.IdentifierId))
+            {
+                skipped.Add($"Duplicate identifier: {identifier.IdentifierId}");
+                continue;
+            }
+
+            events.Add(new IdentifierAdded
+            {
+                IdentifierId = identifier.IdentifierId,
+                Type = identifier.Type,
+                Value = identifier.Value,
+            });
+            applied.Add($"Added identifier: {identifier.IdentifierId} ({identifier.Type})");
+        }
+
+        // RemoveIdentifierIds processing (using deduplicated order-preserving list from validation)
+        for (int i = 0; i < duplicateRemoveIdentifierIds.Count; i++)
+        {
+            skipped.Add($"Duplicate identifier removal: {duplicateRemoveIdentifierIds[i]}");
+        }
+
+        foreach (string id in orderedRemoveIdentifierIds)
+        {
+            events.Add(new IdentifierRemoved { IdentifierId = id });
+            applied.Add($"Removed identifier: {id}");
+        }
+
+        return new CompositeCommandResult(events, applied, skipped, []);
+    }
+
     public static DomainResult Handle(CreateParty command, PartyState? state)
     {
         ArgumentNullException.ThrowIfNull(command);
