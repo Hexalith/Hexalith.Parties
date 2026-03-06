@@ -1,0 +1,39 @@
+# DAPR State Store Component -- Production PostgreSQL
+# ===========================================================================
+# PostgreSQL-backed state store for actor state, snapshots, and command status tracking.
+# Composite key pattern: {tenant}||{domain}||{aggregateId}
+#
+# Command Status TTL:
+#   The 24-hour default TTL for command status entries is set at the APPLICATION level
+#   via DaprClient.SaveStateAsync metadata (ttlInSeconds: 86400), NOT at the component level.
+#   PostgreSQL state store supports TTL via the cleanupInterval metadata field.
+#
+# Component Scoping:
+#   Only commandapi can access this state store. Actors run in-process under the
+#   commandapi app-id, so no other app-id needs state store access.
+#
+# PREREQUISITES:
+#   1. Create a PostgreSQL database for DAPR state storage.
+#   2. DAPR will auto-create the required table schema on first use.
+#   3. Provide the connection string via environment variable.
+#   4. Ensure the database user has CREATE TABLE and CRUD permissions.
+apiVersion: dapr.io/v1alpha1
+kind: Component
+metadata:
+  name: statestore
+spec:
+  type: state.postgresql
+  version: v1
+  metadata:
+    - name: connectionString
+      # PostgreSQL connection string. Format: host=<host> user=<user> password=<pass> port=5432 dbname=<db> sslmode=require
+      # Provide via environment variable -- NEVER hardcode secrets.
+      value: "{env:POSTGRESQL_CONNECTION_STRING}"
+    - name: actorStateStore
+      value: "true"
+    - name: cleanupInterval
+      # Interval for cleaning up expired state entries (TTL support).
+      # Default: 3600 seconds (1 hour).
+      value: "3600"
+scopes:
+  - commandapi

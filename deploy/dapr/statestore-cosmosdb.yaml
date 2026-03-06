@@ -1,0 +1,52 @@
+# DAPR State Store Component -- Production Azure CosmosDB
+# ===========================================================================
+# CosmosDB-backed state store for actor state, snapshots, and command status tracking.
+# Composite key pattern: {tenant}||{domain}||{aggregateId}
+#
+# ENTRY SIZE LIMITS (D5):
+#   CosmosDB has a 2 MB maximum document size. If aggregate state approaches
+#   this limit, consider partitioning strategies (the partition interface
+#   in the domain model keeps the door open for scale).
+#   Monitor document sizes in production to detect growth trends early.
+#
+# Command Status TTL:
+#   The 24-hour default TTL for command status entries is set at the APPLICATION level
+#   via DaprClient.SaveStateAsync metadata (ttlInSeconds: 86400), NOT at the component level.
+#   CosmosDB supports per-item TTL natively when the container has DefaultTimeToLive set.
+#
+# Component Scoping:
+#   Only commandapi can access this state store. Actors run in-process under the
+#   commandapi app-id, so no other app-id needs state store access.
+#
+# PREREQUISITES:
+#   1. Create a CosmosDB account with SQL API.
+#   2. Create a database (default name: "dapr") and container (default name: "state").
+#   3. Set the partition key to "/partitionKey".
+#   4. Configure DefaultTimeToLive on the container if using command status TTL.
+#   5. Provide the connection URL and master key via environment variables.
+apiVersion: dapr.io/v1alpha1
+kind: Component
+metadata:
+  name: statestore
+spec:
+  type: state.azure.cosmosdb
+  version: v1
+  metadata:
+    - name: url
+      # CosmosDB account endpoint URL. Format: https://<account>.documents.azure.com:443/
+      # Provide via environment variable -- NEVER hardcode in this file.
+      value: "{env:COSMOSDB_URL}"
+    - name: masterKey
+      # CosmosDB account master key or read-write key.
+      # Provide via environment variable -- NEVER hardcode secrets.
+      value: "{env:COSMOSDB_MASTER_KEY}"
+    - name: database
+      # CosmosDB database name. Default: "dapr".
+      value: "{env:COSMOSDB_DATABASE|dapr}"
+    - name: collection
+      # CosmosDB container name. Default: "state".
+      value: "{env:COSMOSDB_COLLECTION|state}"
+    - name: actorStateStore
+      value: "true"
+scopes:
+  - commandapi

@@ -21,5 +21,6 @@
     <Project Path="tests/Hexalith.Parties.Projections.Tests/Hexalith.Parties.Projections.Tests.csproj" />
     <Project Path="tests/Hexalith.Parties.Server.Tests/Hexalith.Parties.Server.Tests.csproj" />
     <Project Path="tests/Hexalith.Parties.Sample.Tests/Hexalith.Parties.Sample.Tests.csproj" />
+    <Project Path="tests/Hexalith.Parties.DeployValidation.Tests/Hexalith.Parties.DeployValidation.Tests.csproj" />
   </Folder>
 </Solution>
