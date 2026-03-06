@@ -1,0 +1,57 @@
+# DAPR Pub/Sub Component -- Production RabbitMQ
+# ==================================================================
+# RabbitMQ-backed pub/sub for party event distribution.
+# Topic pattern: {tenant}.parties.events
+# Dead-letter topic pattern: deadletter.{tenant}.parties.events
+#
+# SCOPING ARCHITECTURE (Three Layers)
+# ====================================
+#
+# Layer 1 -- Component Scoping (scopes field):
+#   Controls which app-ids can USE this pub/sub component at all.
+#
+# Layer 2 -- Publishing Scoping (publishingScopes metadata):
+#   Apps NOT listed have unrestricted publish access.
+#   NOTE: DAPR does NOT support wildcards (*) -- strict string match only.
+#
+# Layer 3 -- Subscription Scoping (subscriptionScopes metadata):
+#   Apps NOT listed have unrestricted subscribe access.
+#
+# ORDERING GUARANTEES (FR73):
+#   RabbitMQ provides causal ordering per queue. Each subscriber gets ordered
+#   delivery within its queue binding.
+#
+# ADDING A NEW SUBSCRIBER SERVICE:
+# Step 1: Add app-id to 'scopes'.
+# Step 2: Add to 'subscriptionScopes' with authorized tenant topics.
+# Step 3: Do NOT add to 'publishingScopes'.
+apiVersion: dapr.io/v1alpha1
+kind: Component
+metadata:
+  name: pubsub
+spec:
+  type: pubsub.rabbitmq
+  version: v1
+  metadata:
+    - name: connectionString
+      # RabbitMQ connection string. Format: amqp://<user>:<pass>@<host>:5672/
+      # Provide via environment variable -- NEVER hardcode secrets.
+      value: "{env:RABBITMQ_CONNECTION_STRING}"
+    - name: durable
+      value: "true"
+    - name: deletedWhenUnused
+      value: "false"
+    - name: enableDeadLetter
+      value: "true"
+    - name: deadLetterTopic
+      value: "deadletter"
+    # commandapi is NOT listed = unrestricted publishing.
+    - name: publishingScopes
+      value: "{env:SUBSCRIBER_APP_ID}=;{env:OPS_MONITOR_APP_ID}="
+    # MUST CUSTOMIZE: Replace example topic names with actual tenant.parties.events topics.
+    - name: subscriptionScopes
+      value: "{env:SUBSCRIBER_APP_ID}=acme.parties.events;{env:OPS_MONITOR_APP_ID}=deadletter.acme.parties.events"
+scopes:
+  - commandapi
+  - "{env:SUBSCRIBER_APP_ID}"
+  - "{env:OPS_MONITOR_APP_ID}"

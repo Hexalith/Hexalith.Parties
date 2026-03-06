@@ -1,3 +1,11 @@
+# Local development subscription for the sample subscriber.
+#
+# commandapi publishes party events but does NOT expose /events/parties.
+# The sample application is the local reference subscriber and maps that
+# endpoint, so the subscription scope must target app-id "sample".
+#
+# When running the sample outside the AppHost, use the matching file under
+# samples/Hexalith.Parties.Sample/DaprComponents/.
 apiVersion: dapr.io/v2alpha1
 kind: Subscription
 metadata:
@@ -9,4 +17,4 @@ spec:
     default: /events/parties
   deadLetterTopic: deadletter.tenant-a.parties.events
 scopes:
-  - commandapi
+  - sample
