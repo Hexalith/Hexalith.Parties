@@ -625,19 +625,57 @@ public sealed class PartiesControllerProblemDetailsTests : IClassFixture<Parties
     }
 
     [Fact]
-    public async Task SearchParties_FivePartyScenario_EmailQuery_ReturnsNoMatchesAsync()
+    public async Task SearchParties_FivePartyScenario_EmailQuery_ReturnsEmailMatchMetadataAsync()
     {
         SetFivePartyScenario();
 
         using HttpClient client = _factory.CreateClient();
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", JwtTokenHelper.CreateToken(includeTenantClaim: true));
 
-        // Current search matches displayName only; email/identifier fields are not in PartyIndexEntry
         HttpResponseMessage response = await client.GetAsync("/api/v1/parties/search?q=alice%40example.com");
 
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
         using JsonDocument payload = await ReadJsonAsync(response);
-        payload.RootElement.GetProperty("totalCount").GetInt32().ShouldBe(0);
+        payload.RootElement.GetProperty("totalCount").GetInt32().ShouldBe(1);
+        JsonElement first = payload.RootElement.GetProperty("items")[0];
+        first.GetProperty("party").GetProperty("id").GetString().ShouldBe("p1");
+        first.GetProperty("matches")[0].GetProperty("matchedField").GetString().ShouldBe("email");
+    }
+
+    [Fact]
+    public async Task SearchParties_MultiTermQuery_ReturnsNameAndOrganizationMatchesAsync()
+    {
+        _factory.SetIndexEntries(
+            new PartyIndexEntry
+            {
+                Id = "person-match",
+                Type = PartyType.Person,
+                IsActive = true,
+                DisplayName = "Jean Dupont",
+                CreatedAt = DateTimeOffset.UtcNow,
+                LastModifiedAt = DateTimeOffset.UtcNow,
+            },
+            new PartyIndexEntry
+            {
+                Id = "org-match",
+                Type = PartyType.Organization,
+                IsActive = true,
+                DisplayName = "Acme Corp",
+                CreatedAt = DateTimeOffset.UtcNow,
+                LastModifiedAt = DateTimeOffset.UtcNow,
+            });
+
+        using HttpClient client = _factory.CreateClient();
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", JwtTokenHelper.CreateToken(includeTenantClaim: true));
+
+        HttpResponseMessage response = await client.GetAsync("/api/v1/parties/search?q=Dupont%20Acme");
+
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        using JsonDocument payload = await ReadJsonAsync(response);
+        payload.RootElement.GetProperty("totalCount").GetInt32().ShouldBe(2);
+        List<string?> ids = ExtractSearchItemIds(payload);
+        ids.ShouldContain("person-match");
+        ids.ShouldContain("org-match");
     }
 
     // --- Tenant isolation tests (AC #4) ---
@@ -1083,6 +1121,25 @@ public sealed class PartiesControllerProblemDetailsTests : IClassFixture<Parties
                 Type = PartyType.Person,
                 IsActive = true,
                 DisplayName = "Dupont Alice",
+                SearchableContactChannels =
+                [
+                    new ContactChannel
+                    {
+                        Id = "cc-p1-email",
+                        Type = ContactChannelType.Email,
+                        Value = "alice@example.com",
+                        IsPreferred = true,
+                    },
+                ],
+                SearchableIdentifiers =
+                [
+                    new PartyIdentifier
+                    {
+                        Id = "id-p1-vat",
+                        Type = IdentifierType.VAT,
+                        Value = "FR12345678901",
+                    },
+                ],
                 CreatedAt = new DateTimeOffset(2026, 1, 10, 0, 0, 0, TimeSpan.Zero),
                 LastModifiedAt = new DateTimeOffset(2026, 1, 20, 0, 0, 0, TimeSpan.Zero),
             },
@@ -1092,6 +1149,16 @@ public sealed class PartiesControllerProblemDetailsTests : IClassFixture<Parties
                 Type = PartyType.Person,
                 IsActive = !deactivateSecond,
                 DisplayName = "Dupont Bernard",
+                SearchableContactChannels = [],
+                SearchableIdentifiers =
+                [
+                    new PartyIdentifier
+                    {
+                        Id = "id-p2-national",
+                        Type = IdentifierType.NationalId,
+                        Value = "BNR-2026-42",
+                    },
+                ],
                 CreatedAt = new DateTimeOffset(2026, 1, 15, 0, 0, 0, TimeSpan.Zero),
                 LastModifiedAt = new DateTimeOffset(2026, 1, 25, 0, 0, 0, TimeSpan.Zero),
             },
@@ -1101,6 +1168,17 @@ public sealed class PartiesControllerProblemDetailsTests : IClassFixture<Parties
                 Type = PartyType.Person,
                 IsActive = true,
                 DisplayName = "Martin Claire",
+                SearchableContactChannels =
+                [
+                    new ContactChannel
+                    {
+                        Id = "cc-p3-email",
+                        Type = ContactChannelType.Email,
+                        Value = "claire@example.com",
+                        IsPreferred = true,
+                    },
+                ],
+                SearchableIdentifiers = [],
                 CreatedAt = new DateTimeOffset(2026, 2, 1, 0, 0, 0, TimeSpan.Zero),
                 LastModifiedAt = new DateTimeOffset(2026, 2, 10, 0, 0, 0, TimeSpan.Zero),
             },
@@ -1110,6 +1188,25 @@ public sealed class PartiesControllerProblemDetailsTests : IClassFixture<Parties
                 Type = PartyType.Organization,
                 IsActive = true,
                 DisplayName = "Dupont Industries",
+                SearchableContactChannels =
+                [
+                    new ContactChannel
+                    {
+                        Id = "cc-p4-email",
+                        Type = ContactChannelType.Email,
+                        Value = "contact@example.com",
+                        IsPreferred = true,
+                    },
+                ],
+                SearchableIdentifiers =
+                [
+                    new PartyIdentifier
+                    {
+                        Id = "id-p4-org",
+                        Type = IdentifierType.Other,
+                        Value = "ACME-42",
+                    },
+                ],
                 CreatedAt = new DateTimeOffset(2026, 1, 12, 0, 0, 0, TimeSpan.Zero),
                 LastModifiedAt = new DateTimeOffset(2026, 1, 22, 0, 0, 0, TimeSpan.Zero),
             },
@@ -1119,32 +1216,31 @@ public sealed class PartiesControllerProblemDetailsTests : IClassFixture<Parties
                 Type = PartyType.Organization,
                 IsActive = true,
                 DisplayName = "Global Tech",
+                SearchableContactChannels = [],
+                SearchableIdentifiers =
+                [
+                    new PartyIdentifier
+                    {
+                        Id = "id-p5-org",
+                        Type = IdentifierType.Other,
+                        Value = "ACME-GLOBAL",
+                    },
+                ],
                 CreatedAt = new DateTimeOffset(2026, 2, 15, 0, 0, 0, TimeSpan.Zero),
                 LastModifiedAt = new DateTimeOffset(2026, 2, 20, 0, 0, 0, TimeSpan.Zero),
             });
     }
 
     [Fact]
-    public async Task CreatePartyComposite_ValidPayload_ReturnsAcceptedWithCompositeResultAsync()
+    public async Task CreatePartyComposite_ValidPayload_ReturnsAcceptedWithCorrelationIdAsync()
     {
         _factory.Router.ClearReceivedCalls();
-
-        string resultPayload = JsonSerializer.Serialize(new
-        {
-            result = new
-            {
-                applied = new[] { "Created party", "Derived display name", "Added contact channel: cc-1 (Email)" },
-                skipped = Array.Empty<string>(),
-                rejected = Array.Empty<string>(),
-            },
-        }, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
 
         _factory.Router
             .RouteCommandAsync(Arg.Any<SubmitCommand>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(new CommandProcessingResult(
                 Accepted: true,
-                EventCount: 4,
-                ResultPayload: resultPayload)));
+                EventCount: 4)));
 
         using HttpClient client = _factory.CreateClient();
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", JwtTokenHelper.CreateToken(includeTenantClaim: true));
@@ -1173,11 +1269,6 @@ public sealed class PartiesControllerProblemDetailsTests : IClassFixture<Parties
         using JsonDocument payload = await ReadJsonAsync(response);
         payload.RootElement.TryGetProperty("correlationId", out JsonElement correlationId).ShouldBeTrue();
         Guid.TryParse(correlationId.GetString(), out _).ShouldBeTrue();
-
-        JsonElement result = payload.RootElement.GetProperty("result");
-        result.GetProperty("applied").GetArrayLength().ShouldBeGreaterThan(0);
-        result.TryGetProperty("skipped", out _).ShouldBeTrue();
-        result.TryGetProperty("rejected", out _).ShouldBeTrue();
     }
 
     [Fact]
@@ -1300,37 +1391,17 @@ public sealed class PartiesControllerProblemDetailsTests : IClassFixture<Parties
     }
 
     [Fact]
-    public async Task UpdatePartyComposite_ValidPayload_ReturnsAcceptedWithPartyDetailAsync()
+    public async Task UpdatePartyComposite_ValidPayload_ReturnsAcceptedWithCorrelationIdAsync()
     {
         _factory.Router.ClearReceivedCalls();
 
         string partyId = Guid.NewGuid().ToString();
-        string resultPayload = JsonSerializer.Serialize(new
-        {
-            result = new
-            {
-                applied = new[] { "Updated person details", "Derived display name" },
-                skipped = Array.Empty<string>(),
-                rejected = Array.Empty<string>(),
-            },
-            party = new
-            {
-                id = partyId,
-                type = "Person",
-                isActive = true,
-                displayName = "Ada Lovelace",
-                sortName = "Lovelace, Ada",
-                contactChannels = Array.Empty<object>(),
-                identifiers = Array.Empty<object>(),
-            },
-        }, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
 
         _factory.Router
             .RouteCommandAsync(Arg.Any<SubmitCommand>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(new CommandProcessingResult(
                 Accepted: true,
-                EventCount: 2,
-                ResultPayload: resultPayload)));
+                EventCount: 2)));
 
         using HttpClient client = _factory.CreateClient();
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", JwtTokenHelper.CreateToken(includeTenantClaim: true));
@@ -1348,13 +1419,6 @@ public sealed class PartiesControllerProblemDetailsTests : IClassFixture<Parties
         using JsonDocument payload = await ReadJsonAsync(response);
         payload.RootElement.TryGetProperty("correlationId", out JsonElement correlationId).ShouldBeTrue();
         Guid.TryParse(correlationId.GetString(), out _).ShouldBeTrue();
-
-        JsonElement result = payload.RootElement.GetProperty("result");
-        result.GetProperty("applied").GetArrayLength().ShouldBeGreaterThan(0);
-
-        JsonElement party = payload.RootElement.GetProperty("party");
-        party.GetProperty("id").GetString().ShouldBe(partyId);
-        party.GetProperty("displayName").GetString().ShouldBe("Ada Lovelace");
     }
 
     [Fact]
@@ -1555,7 +1619,7 @@ public sealed class PartiesControllerProblemDetailsTests : IClassFixture<Parties
     }
 
     [Fact]
-    public async Task CreatePartyComposite_NoResultPayload_ReturnsAcceptedWithCorrelationIdOnlyAsync()
+    public async Task CreatePartyComposite_AcceptedWithoutRouterCorrelationId_ReturnsGeneratedCorrelationIdOnlyAsync()
     {
         _factory.Router.ClearReceivedCalls();
 

@@ -1,6 +1,6 @@
 # Story 5.1: MCP Server Setup & get_party / find_parties Tools
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -348,24 +348,71 @@ Claude Opus 4.6
 ### Completion Notes List
 
 - Added `ModelContextProtocol.AspNetCore` 1.0.0 package to central package management and CommandApi project
-- MCP server registered with HTTP transport and assembly scanning via `AddMcpServer().WithHttpTransport().WithToolsFromAssembly()` + `app.MapMcp()`
+- MCP server registered with HTTP transport and assembly scanning via `AddMcpServer().WithHttpTransport().WithToolsFromAssembly()` + `app.MapMcp().RequireAuthorization()`
 - Tenant extraction uses `AsyncLocal<string?>` populated by `RunSessionHandler` from the session's `HttpContext.User` JWT claims — identical extraction logic to `PartiesController.ExtractTenant()`
 - `GetPartyMcpTool` (MCP name: `get_party`) queries `IPartyDetailProjectionActor` using the same actor ID pattern as REST `GET /api/v1/parties/{id}`
-- `FindPartiesMcpTool` (MCP name: `find_parties`) supports both search mode (exact > prefix > contains on DisplayName) and list mode (paginated with type/active filters), matching REST endpoint behavior
+- `FindPartiesMcpTool` (MCP name: `find_parties`) now shares the REST search/list pipeline and supports display name, email, identifier, and multi-term matching with match metadata
 - JSON serialization uses camelCase, omit-nulls, string enums — same as REST API
 - All error paths throw `InvalidOperationException` with AI-friendly messages; MCP SDK converts these to `CallToolResult` with `IsError = true`
-- Zero build errors, zero warnings; 229 existing tests pass (zero regressions)
+- Review follow-up aligned composite command responses with the current EventStore contract by removing obsolete `ResultPayload` handling from the REST/API result path
+- Review follow-up extended `PartyIndexEntry`/`PartyIndexProjectionHandler` so search indexes track contact channels and identifiers needed by MCP and REST discovery flows
+- `dotnet build Hexalith.Parties.slnx /warnaserror` passes; `dotnet test Hexalith.Parties.slnx --no-build` passes with 231 tests (zero regressions)
 
 ### File List
 
 - `Directory.Packages.props` (modified — added ModelContextProtocol.AspNetCore 1.0.0)
 - `src/Hexalith.Parties.CommandApi/Hexalith.Parties.CommandApi.csproj` (modified — added ModelContextProtocol.AspNetCore package reference)
 - `src/Hexalith.Parties.CommandApi/Extensions/PartiesServiceCollectionExtensions.cs` (modified — added MCP server registration with RunSessionHandler)
-- `src/Hexalith.Parties.CommandApi/Program.cs` (modified — added app.MapMcp())
+- `src/Hexalith.Parties.CommandApi/Program.cs` (modified — added `app.MapMcp().RequireAuthorization()`)
 - `src/Hexalith.Parties.CommandApi/Mcp/McpSessionContext.cs` (new — AsyncLocal tenant + shared JSON options)
 - `src/Hexalith.Parties.CommandApi/Mcp/GetPartyMcpTool.cs` (new — get_party MCP tool)
 - `src/Hexalith.Parties.CommandApi/Mcp/FindPartiesMcpTool.cs` (new — find_parties MCP tool)
+- `src/Hexalith.Parties.CommandApi/Search/PartySearchResultsBuilder.cs` (new — shared REST/MCP list and search result builder)
+- `src/Hexalith.Parties.CommandApi/Controllers/PartiesController.cs` (modified — reused shared search builder and removed obsolete composite payload handling)
+- `src/Hexalith.Parties.Contracts/Models/PartyIndexEntry.cs` (modified — added internal searchable email/identifier state)
+- `src/Hexalith.Parties.Contracts/Results/CompositeCommandResult.cs` (modified — removed obsolete `ResultPayload` override)
+- `src/Hexalith.Parties.Projections/Handlers/PartyIndexProjectionHandler.cs` (modified — keeps searchable contact channel and identifier indexes in sync)
+- `tests/Hexalith.Parties.CommandApi.Tests/Controllers/PartiesControllerProblemDetailsTests.cs` (modified — updated composite acceptance assertions and added richer search coverage)
+- `tests/Hexalith.Parties.Projections.Tests/Handlers/PartyIndexProjectionHandlerTests.cs` (modified — verifies searchable contact/identifier indexing behavior)
+- `_bmad-output/implementation-artifacts/sprint-status.yaml` (modified — synced story status after review completion)
+- `_bmad-output/implementation-artifacts/5-1-mcp-server-setup-and-get-party-find-parties-tools.md` (modified — review closure and validation evidence)
+
+### Senior Developer Review (AI)
+
+#### Reviewer
+
+Jérôme (AI code review workflow) on 2026-03-06
+
+#### Outcome
+
+Approved
+
+#### Summary
+
+- Executed the BMAD code-review workflow for Story 5.1, then applied the selected automatic fixes.
+- Re-validated the implementation with `dotnet build Hexalith.Parties.slnx /warnaserror` and `dotnet test Hexalith.Parties.slnx --no-build`.
+- Final validation status: build clean, 231 tests passed, no remaining high/medium review findings.
+
+#### Findings Resolved
+
+1. **[HIGH] Obsolete EventStore `ResultPayload` contract usage** -- RESOLVED
+  - Removed stale `CommandProcessingResult.ResultPayload` assumptions from composite REST handling.
+  - Removed the obsolete `CompositeCommandResult.ResultPayload` override to match the current `DomainResult` contract.
+
+2. **[HIGH] MCP endpoint authorization not enforced explicitly at route mapping** -- RESOLVED
+  - Updated the MCP route to require authorization with `app.MapMcp().RequireAuthorization()`.
+
+3. **[MEDIUM] `find_parties` only searched `DisplayName` and could not satisfy richer MCP matching scenarios** -- RESOLVED
+  - Added a shared search builder used by both REST and MCP.
+  - Search now covers display name, email, identifier, and multi-term queries with match metadata.
+
+4. **[MEDIUM] Projection index shape could not support the required search behavior** -- RESOLVED
+  - Extended `PartyIndexEntry` with internal searchable contact-channel and identifier collections.
+  - Updated `PartyIndexProjectionHandler` to maintain those values across add/update/remove events.
 
 ## Change Log
 
 - 2026-03-06: Implemented Story 5.1 — MCP server infrastructure with get_party and find_parties read-only tools
+- 2026-03-06: Senior Developer Review (AI) completed. Identified 2 HIGH and 2 MEDIUM issues in MCP auth, search coverage, projection indexing, and EventStore contract alignment.
+- 2026-03-06: Applied automatic review fixes: enforced MCP authorization, aligned composite command results with the current EventStore API, added shared REST/MCP search logic, and extended projection indexing for email/identifier discovery.
+- 2026-03-06: Re-validated with `dotnet build Hexalith.Parties.slnx /warnaserror` and `dotnet test Hexalith.Parties.slnx --no-build`; story marked done.

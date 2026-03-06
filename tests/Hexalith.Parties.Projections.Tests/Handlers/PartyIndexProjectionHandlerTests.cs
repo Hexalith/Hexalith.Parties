@@ -107,7 +107,7 @@ public class PartyIndexProjectionHandlerTests
     // --- 5.7: ContactChannelAdded ---
 
     [Fact]
-    public void Apply_ContactChannelAdded_UpdatesLastModifiedAtOnly()
+    public void Apply_ContactChannelAdded_AddsSearchableEmailAndUpdatesLastModifiedAt()
     {
         PartyIndexEntry state = CreatePersonIndexEntry();
         ContactChannelAdded @event = new()
@@ -122,33 +122,76 @@ public class PartyIndexProjectionHandlerTests
 
         result.ShouldNotBeNull();
         result.Id.ShouldBe(state.Id);
-        result.Type.ShouldBe(state.Type);
-        result.IsActive.ShouldBe(state.IsActive);
-        result.DisplayName.ShouldBe(state.DisplayName);
-        result.CreatedAt.ShouldBe(state.CreatedAt);
+        result.SearchableContactChannels.Count.ShouldBe(1);
+        result.SearchableContactChannels[0].Id.ShouldBe("cc-1");
+        result.SearchableContactChannels[0].Type.ShouldBe(ContactChannelType.Email);
+        result.SearchableContactChannels[0].Value.ShouldBe("john@example.com");
         result.LastModifiedAt.ShouldBeGreaterThan(state.LastModifiedAt);
+    }
+
+    [Fact]
+    public void Apply_ContactChannelUpdated_UpdatesSearchableEmailValue()
+    {
+        PartyIndexEntry state = CreatePersonIndexEntry() with
+        {
+            SearchableContactChannels =
+            [
+                new ContactChannel
+                {
+                    Id = "cc-1",
+                    Type = ContactChannelType.Email,
+                    Value = "old@example.com",
+                    IsPreferred = false,
+                },
+            ],
+        };
+
+        ContactChannelUpdated @event = new()
+        {
+            ContactChannelId = "cc-1",
+            Value = "new@example.com",
+            IsPreferred = true,
+        };
+
+        PartyIndexEntry? result = PartyIndexProjectionHandler.Apply(PartyId, @event, state);
+
+        result.ShouldNotBeNull();
+        result.SearchableContactChannels.Count.ShouldBe(1);
+        result.SearchableContactChannels[0].Value.ShouldBe("new@example.com");
+        result.SearchableContactChannels[0].IsPreferred.ShouldBeTrue();
     }
 
     // --- 5.8: ContactChannelRemoved ---
 
     [Fact]
-    public void Apply_ContactChannelRemoved_UpdatesLastModifiedAtOnly()
+    public void Apply_ContactChannelRemoved_RemovesSearchableEmail()
     {
-        PartyIndexEntry state = CreatePersonIndexEntry();
+        PartyIndexEntry state = CreatePersonIndexEntry() with
+        {
+            SearchableContactChannels =
+            [
+                new ContactChannel
+                {
+                    Id = "cc-1",
+                    Type = ContactChannelType.Email,
+                    Value = "john@example.com",
+                    IsPreferred = true,
+                },
+            ],
+        };
         ContactChannelRemoved @event = new() { ContactChannelId = "cc-1" };
 
         PartyIndexEntry? result = PartyIndexProjectionHandler.Apply(PartyId, @event, state);
 
         result.ShouldNotBeNull();
-        result.Id.ShouldBe(state.Id);
-        result.DisplayName.ShouldBe(state.DisplayName);
+        result.SearchableContactChannels.ShouldBeEmpty();
         result.LastModifiedAt.ShouldBeGreaterThan(state.LastModifiedAt);
     }
 
     // --- 5.9: IdentifierAdded ---
 
     [Fact]
-    public void Apply_IdentifierAdded_UpdatesLastModifiedAtOnly()
+    public void Apply_IdentifierAdded_AddsSearchableIdentifierAndUpdatesLastModifiedAt()
     {
         PartyIndexEntry state = CreatePersonIndexEntry();
         IdentifierAdded @event = new()
@@ -161,24 +204,35 @@ public class PartyIndexProjectionHandlerTests
         PartyIndexEntry? result = PartyIndexProjectionHandler.Apply(PartyId, @event, state);
 
         result.ShouldNotBeNull();
-        result.Id.ShouldBe(state.Id);
-        result.DisplayName.ShouldBe(state.DisplayName);
+        result.SearchableIdentifiers.Count.ShouldBe(1);
+        result.SearchableIdentifiers[0].Id.ShouldBe("id-vat-1");
+        result.SearchableIdentifiers[0].Value.ShouldBe("FR12345678901");
         result.LastModifiedAt.ShouldBeGreaterThan(state.LastModifiedAt);
     }
 
     // --- 5.10: IdentifierRemoved ---
 
     [Fact]
-    public void Apply_IdentifierRemoved_UpdatesLastModifiedAtOnly()
+    public void Apply_IdentifierRemoved_RemovesSearchableIdentifier()
     {
-        PartyIndexEntry state = CreatePersonIndexEntry();
+        PartyIndexEntry state = CreatePersonIndexEntry() with
+        {
+            SearchableIdentifiers =
+            [
+                new PartyIdentifier
+                {
+                    Id = "id-vat-1",
+                    Type = IdentifierType.VAT,
+                    Value = "FR12345678901",
+                },
+            ],
+        };
         IdentifierRemoved @event = new() { IdentifierId = "id-vat-1" };
 
         PartyIndexEntry? result = PartyIndexProjectionHandler.Apply(PartyId, @event, state);
 
         result.ShouldNotBeNull();
-        result.Id.ShouldBe(state.Id);
-        result.DisplayName.ShouldBe(state.DisplayName);
+        result.SearchableIdentifiers.ShouldBeEmpty();
         result.LastModifiedAt.ShouldBeGreaterThan(state.LastModifiedAt);
     }
 
@@ -271,6 +325,7 @@ public class PartyIndexProjectionHandlerTests
         state = PartyIndexProjectionHandler.Apply(PartyId, email, state);
         state.ShouldNotBeNull();
         state.DisplayName.ShouldBe("Johnathan Doe");
+        state.SearchableContactChannels.Count.ShouldBe(1);
 
         ContactChannelAdded phone = new()
         {
@@ -281,6 +336,7 @@ public class PartyIndexProjectionHandlerTests
         state = PartyIndexProjectionHandler.Apply(PartyId, phone, state);
         state.ShouldNotBeNull();
         state.DisplayName.ShouldBe("Johnathan Doe");
+        state.SearchableContactChannels.Count.ShouldBe(2);
 
         // IdentifierAdded
         IdentifierAdded vat = new()
@@ -292,6 +348,7 @@ public class PartyIndexProjectionHandlerTests
         state = PartyIndexProjectionHandler.Apply(PartyId, vat, state);
         state.ShouldNotBeNull();
         state.DisplayName.ShouldBe("Johnathan Doe");
+        state.SearchableIdentifiers.Count.ShouldBe(1);
 
         // PartyDeactivated
         state = PartyIndexProjectionHandler.Apply(PartyId, new PartyDeactivated(), state);
@@ -317,6 +374,8 @@ public class PartyIndexProjectionHandlerTests
             Type = PartyType.Person,
             IsActive = true,
             DisplayName = "John Doe",
+            SearchableContactChannels = [],
+            SearchableIdentifiers = [],
             CreatedAt = DateTimeOffset.UtcNow.AddMinutes(-5),
             LastModifiedAt = DateTimeOffset.UtcNow.AddMinutes(-5),
         };

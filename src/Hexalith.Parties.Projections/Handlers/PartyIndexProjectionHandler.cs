@@ -27,22 +27,11 @@ public sealed class PartyIndexProjectionHandler
                 IsActive = true,
                 LastModifiedAt = DateTimeOffset.UtcNow,
             },
-            ContactChannelAdded when state is not null => state with
-            {
-                LastModifiedAt = DateTimeOffset.UtcNow,
-            },
-            ContactChannelRemoved when state is not null => state with
-            {
-                LastModifiedAt = DateTimeOffset.UtcNow,
-            },
-            IdentifierAdded when state is not null => state with
-            {
-                LastModifiedAt = DateTimeOffset.UtcNow,
-            },
-            IdentifierRemoved when state is not null => state with
-            {
-                LastModifiedAt = DateTimeOffset.UtcNow,
-            },
+            ContactChannelAdded e when state is not null => HandleContactChannelAdded(state, e),
+            ContactChannelUpdated e when state is not null => HandleContactChannelUpdated(state, e),
+            ContactChannelRemoved e when state is not null => HandleContactChannelRemoved(state, e),
+            IdentifierAdded e when state is not null => HandleIdentifierAdded(state, e),
+            IdentifierRemoved e when state is not null => HandleIdentifierRemoved(state, e),
             _ => null,
         };
     }
@@ -56,7 +45,90 @@ public sealed class PartyIndexProjectionHandler
             Type = e.Type,
             IsActive = true,
             DisplayName = displayName,
+            SearchableContactChannels = [],
+            SearchableIdentifiers = [],
             CreatedAt = DateTimeOffset.UtcNow,
+            LastModifiedAt = DateTimeOffset.UtcNow,
+        };
+    }
+
+    private static PartyIndexEntry HandleContactChannelAdded(PartyIndexEntry state, ContactChannelAdded e)
+    {
+        ContactChannel channel = new()
+        {
+            Id = e.ContactChannelId,
+            Type = e.Type,
+            Value = e.Value,
+            IsPreferred = e.IsPreferred,
+        };
+
+        List<ContactChannel> channels = [.. state.SearchableContactChannels.Where(c => c.Id != e.ContactChannelId), channel];
+
+        return state with
+        {
+            SearchableContactChannels = channels,
+            LastModifiedAt = DateTimeOffset.UtcNow,
+        };
+    }
+
+    private static PartyIndexEntry? HandleContactChannelUpdated(PartyIndexEntry state, ContactChannelUpdated e)
+    {
+        List<ContactChannel> channels = [.. state.SearchableContactChannels];
+        int index = channels.FindIndex(c => c.Id == e.ContactChannelId);
+        if (index < 0)
+        {
+            return null;
+        }
+
+        ContactChannel existing = channels[index];
+        ContactChannel updated = existing with
+        {
+            Type = e.Type ?? existing.Type,
+            Value = e.Value ?? existing.Value,
+            IsPreferred = e.IsPreferred ?? existing.IsPreferred,
+        };
+
+        channels[index] = updated;
+
+        return state with
+        {
+            SearchableContactChannels = channels,
+            LastModifiedAt = DateTimeOffset.UtcNow,
+        };
+    }
+
+    private static PartyIndexEntry HandleContactChannelRemoved(PartyIndexEntry state, ContactChannelRemoved e)
+    {
+        return state with
+        {
+            SearchableContactChannels = [.. state.SearchableContactChannels.Where(c => c.Id != e.ContactChannelId)],
+            LastModifiedAt = DateTimeOffset.UtcNow,
+        };
+    }
+
+    private static PartyIndexEntry HandleIdentifierAdded(PartyIndexEntry state, IdentifierAdded e)
+    {
+        PartyIdentifier identifier = new()
+        {
+            Id = e.IdentifierId,
+            Type = e.Type,
+            Value = e.Value,
+        };
+
+        List<PartyIdentifier> identifiers = [.. state.SearchableIdentifiers.Where(i => i.Id != e.IdentifierId), identifier];
+
+        return state with
+        {
+            SearchableIdentifiers = identifiers,
+            LastModifiedAt = DateTimeOffset.UtcNow,
+        };
+    }
+
+    private static PartyIndexEntry HandleIdentifierRemoved(PartyIndexEntry state, IdentifierRemoved e)
+    {
+        return state with
+        {
+            SearchableIdentifiers = [.. state.SearchableIdentifiers.Where(i => i.Id != e.IdentifierId)],
             LastModifiedAt = DateTimeOffset.UtcNow,
         };
     }
