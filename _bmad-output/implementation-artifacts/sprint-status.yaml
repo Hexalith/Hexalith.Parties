@@ -93,7 +93,7 @@ development_status:
   # Epic 7: Event-Driven Integration & Subscriber Experience (3 stories)
   epic-7: in-progress
   7-1-event-publishing-verification-and-configuration: done
-  7-2-subscriber-experience-and-at-least-once-delivery: backlog
+  7-2-subscriber-experience-and-at-least-once-delivery: done
   7-3-handler-patterns-documentation-and-dangling-reference-guidance: backlog
   epic-7-retrospective: optional
 

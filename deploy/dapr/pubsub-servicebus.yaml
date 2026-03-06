@@ -20,6 +20,9 @@
 # ORDERING GUARANTEES (FR73):
 #   Azure Service Bus provides causal ordering per session. Use aggregate-ID
 #   as the session key to ensure ordered delivery per aggregate.
+#   This shared template assumes operators provision session-enabled topics
+#   and subscriptions ahead of time, then add the session metadata required
+#   by their DAPR Service Bus component in environment-specific manifests.
 #
 # NOTE: Topics must be PRE-CREATED in Azure Service Bus (no auto-creation).
 #

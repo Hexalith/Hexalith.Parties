@@ -39,6 +39,9 @@
 # ORDERING GUARANTEES (FR73):
 #   Kafka provides causal ordering per partition. Use aggregate-ID-based key routing
 #   to ensure all events for the same aggregate are processed in order.
+#   This shared template only captures scoping and dead-letter defaults.
+#   Add the partition-routing metadata required by your DAPR Kafka component
+#   when rendering environment-specific deployment manifests.
 #
 # DYNAMIC TENANT PROVISIONING:
 #   Publisher (commandapi): NOT listed in scoping = unrestricted.
