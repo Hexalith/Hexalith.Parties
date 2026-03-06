@@ -76,8 +76,8 @@ development_status:
   epic-4-retrospective: optional
 
   # Epic 5: AI Agent Party Management - MCP Server (4 stories)
-  epic-5: backlog
-  5-1-mcp-server-setup-and-get-party-find-parties-tools: backlog
+  epic-5: in-progress
+  5-1-mcp-server-setup-and-get-party-find-parties-tools: ready-for-dev
   5-2-create-party-mcp-tool: backlog
   5-3-update-party-and-delete-party-mcp-tools: backlog
   5-4-mcp-tools-tests-and-architectural-fitness: backlog

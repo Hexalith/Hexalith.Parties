@@ -10,7 +10,10 @@
       "Bash(xargs wc:*)",
       "Bash(gh pr:*)",
       "Bash(grep:*)",
-      "mcp__MCP_DOCKER__get_file_info"
+      "mcp__MCP_DOCKER__get_file_info",
+      "WebFetch(domain:www.nuget.org)",
+      "WebFetch(domain:modelcontextprotocol.github.io)",
+      "WebFetch(domain:csharp.sdk.modelcontextprotocol.io)"
     ]
   }
 }
