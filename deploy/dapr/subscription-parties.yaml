@@ -1,0 +1,29 @@
+# DAPR Declarative Subscription -- Production Parties Events
+# ====================================================================
+# Routes party domain events to subscriber endpoint with dead-letter support.
+# Topic follows pattern: {tenant}.parties.events
+# Dead-letter topic: deadletter.{tenant}.parties.events
+#
+# DEPLOYMENT NOTE:
+#   This file is a concrete single-tenant example that can be applied as-is
+#   after replacing "sample-tenant" with the real tenant identifier.
+#
+# MULTI-TENANT SETUP:
+#   Create one rendered subscription file per tenant:
+#     metadata.name: parties-events-<tenant-id>
+#     topic: <tenant-id>.parties.events
+#     deadLetterTopic: deadletter.<tenant-id>.parties.events
+#   Ensure the subscriber app-id is listed in pubsub component scopes
+#   and subscriptionScopes for the tenant's topic.
+apiVersion: dapr.io/v2alpha1
+kind: Subscription
+metadata:
+  name: parties-events-sample-tenant
+spec:
+  pubsubname: pubsub
+  topic: "sample-tenant.parties.events"
+  routes:
+    default: /events/parties
+  deadLetterTopic: "deadletter.sample-tenant.parties.events"
+scopes:
+  - "{env:SUBSCRIBER_APP_ID}"
