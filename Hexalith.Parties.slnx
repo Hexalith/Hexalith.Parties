@@ -20,5 +20,6 @@
     <Project Path="tests/Hexalith.Parties.IntegrationTests/Hexalith.Parties.IntegrationTests.csproj" />
     <Project Path="tests/Hexalith.Parties.Projections.Tests/Hexalith.Parties.Projections.Tests.csproj" />
     <Project Path="tests/Hexalith.Parties.Server.Tests/Hexalith.Parties.Server.Tests.csproj" />
+    <Project Path="tests/Hexalith.Parties.Sample.Tests/Hexalith.Parties.Sample.Tests.csproj" />
   </Folder>
 </Solution>

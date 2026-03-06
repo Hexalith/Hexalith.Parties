@@ -1,0 +1,24 @@
+# DAPR Subscription for the Sample app
+# ================================================================
+# Subscribes to party events on the local development tenant topic.
+#
+# IMPORTANT: For this subscription to be active at runtime, the
+# pubsub.yaml component scopes must include the sample's DAPR app-id.
+# The local AppHost pubsub.yaml already authorizes "sample" for Story 6.3.
+# If you copy this sample into another environment, ensure the subscriber
+# app-id is added to that environment's pubsub component scopes.
+#
+# Without the scope change, the sample still compiles and runs --
+# only the event subscription path will not receive events.
+apiVersion: dapr.io/v2alpha1
+kind: Subscription
+metadata:
+  name: sample-parties-events
+spec:
+  pubsubname: pubsub
+  topic: tenant-a.parties.events
+  routes:
+    default: /events/parties
+  deadLetterTopic: deadletter.tenant-a.parties.events
+scopes:
+  - sample
