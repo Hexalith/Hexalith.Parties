@@ -79,7 +79,7 @@ development_status:
   epic-5: in-progress
   5-1-mcp-server-setup-and-get-party-find-parties-tools: done
   5-2-create-party-mcp-tool: done
-  5-3-update-party-and-delete-party-mcp-tools: backlog
+  5-3-update-party-and-delete-party-mcp-tools: done
   5-4-mcp-tools-tests-and-architectural-fitness: backlog
   epic-5-retrospective: optional
 
