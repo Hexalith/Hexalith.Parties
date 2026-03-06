@@ -87,7 +87,7 @@ development_status:
   epic-6: in-progress
   6-1-client-package-command-and-query-abstractions: done
   6-2-getting-started-guide-and-readme: done
-  6-3-sample-integration-project: backlog
+  6-3-sample-integration-project: done
   epic-6-retrospective: optional
 
   # Epic 7: Event-Driven Integration & Subscriber Experience (3 stories)

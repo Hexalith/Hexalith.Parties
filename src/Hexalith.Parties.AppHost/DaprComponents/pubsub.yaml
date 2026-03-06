@@ -4,8 +4,8 @@
 # Topic pattern: {tenant}.{domain}.events
 #
 # Scoping:
-#   commandapi is NOT listed in publishingScopes = unrestricted publishing.
-#   This supports dynamic tenant provisioning without restart.
+#   commandapi publishes parties events.
+#   sample is authorized as the local reference subscriber used in Story 6.3.
 apiVersion: dapr.io/v1alpha1
 kind: Component
 metadata:
@@ -18,3 +18,4 @@ spec:
       value: "localhost:6379"
 scopes:
   - commandapi
+  - sample
