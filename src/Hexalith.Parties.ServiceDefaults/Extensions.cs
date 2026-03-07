@@ -92,11 +92,9 @@ public static class Extensions
     public static TBuilder AddDefaultHealthChecks<TBuilder>(this TBuilder builder)
         where TBuilder : IHostApplicationBuilder
     {
-        _ = builder.Services.AddHealthChecks()
-            // Add a default liveness check to ensure app is responsive
-            .AddCheck("self", () => HealthCheckResult.Healthy(), ["live"])
-            // Add a default readiness check so /ready has at least one meaningful probe.
-            .AddCheck("ready", () => HealthCheckResult.Healthy(), ["ready"]);
+        // Placeholder checks removed — real DAPR health checks are registered
+        // in Program.cs via AddPartiesDaprHealthChecks() (Story 8.2).
+        _ = builder.Services.AddHealthChecks();
 
         return builder;
     }

@@ -77,7 +77,13 @@ public sealed class PartiesController(
         var actorId = new ActorId($"{tenant}:party-index");
         IPartyIndexProjectionActor proxy = actorProxyFactory.CreateActorProxy<IPartyIndexProjectionActor>(
             actorId, nameof(PartyIndexProjectionActor));
+        bool isRebuilding = await proxy.IsRebuildingAsync().ConfigureAwait(false);
         IReadOnlyDictionary<string, PartyIndexEntry> entries = await proxy.GetEntriesAsync().ConfigureAwait(false);
+
+        if (isRebuilding)
+        {
+            SetDegradedHeaders(Response);
+        }
 
         IEnumerable<PartyIndexEntry> filtered = entries.Values;
 
@@ -161,7 +167,13 @@ public sealed class PartiesController(
         var actorId = new ActorId($"{tenant}:party-index");
         IPartyIndexProjectionActor proxy = actorProxyFactory.CreateActorProxy<IPartyIndexProjectionActor>(
             actorId, nameof(PartyIndexProjectionActor));
+        bool isRebuilding = await proxy.IsRebuildingAsync().ConfigureAwait(false);
         IReadOnlyDictionary<string, PartyIndexEntry> entries = await proxy.GetEntriesAsync().ConfigureAwait(false);
+
+        if (isRebuilding)
+        {
+            SetDegradedHeaders(Response);
+        }
 
         return Ok(PartySearchResultsBuilder.BuildSearchResults(entries.Values, q, null, null, page, pageSize));
     }
@@ -206,7 +218,17 @@ public sealed class PartiesController(
         var actorId = new ActorId($"{tenant}:party-detail:{id}");
         IPartyDetailProjectionActor proxy = actorProxyFactory.CreateActorProxy<IPartyDetailProjectionActor>(
             actorId, nameof(PartyDetailProjectionActor));
+        bool isRebuilding = await proxy.IsRebuildingAsync().ConfigureAwait(false);
         PartyDetail? detail = await proxy.GetDetailAsync().ConfigureAwait(false);
+
+        if (isRebuilding)
+        {
+            SetDegradedHeaders(Response);
+            return new JsonResult(detail)
+            {
+                StatusCode = StatusCodes.Status200OK,
+            };
+        }
 
         if (detail is null)
         {
@@ -523,6 +545,14 @@ public sealed class PartiesController(
         {
             throw new ValidationException(result.Errors);
         }
+    }
+
+    private static void SetDegradedHeaders(HttpResponse response)
+    {
+        ArgumentNullException.ThrowIfNull(response);
+
+        response.Headers["X-Service-Degraded"] = "true";
+        response.Headers["X-Stale-Data-Age"] = "0";
     }
 
     private ObjectResult CreateUnauthorizedProblemDetails(string detail, string correlationId)

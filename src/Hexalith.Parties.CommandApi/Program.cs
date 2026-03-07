@@ -1,4 +1,5 @@
 using Hexalith.Parties.CommandApi.Extensions;
+using Hexalith.Parties.CommandApi.HealthChecks;
 using Hexalith.Parties.CommandApi.Middleware;
 using Hexalith.Parties.ServiceDefaults;
 
@@ -8,6 +9,12 @@ WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 builder.AddServiceDefaults();
 
 builder.Services.AddDaprClient();
+
+// DAPR health checks:
+// - readiness is gated by sidecar + state store (command-processing dependencies)
+// - /health also reports pub/sub degradation and projection actor responsiveness
+builder.Services.AddHealthChecks().AddPartiesDaprHealthChecks();
+
 builder.Services.AddParties(builder.Configuration);
 
 WebApplication app = builder.Build();
@@ -33,6 +40,7 @@ if (app.Environment.IsDevelopment())
 app.UseMiddleware<GdprWarningMiddleware>();  // FIRST — every response gets GDPR header
 app.UseMiddleware<CorrelationIdMiddleware>();
 app.UseExceptionHandler();
+app.UseMiddleware<DegradedResponseMiddleware>();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();

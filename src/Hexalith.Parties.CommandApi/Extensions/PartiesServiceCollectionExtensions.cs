@@ -13,6 +13,7 @@ using Hexalith.Parties.CommandApi.Validation;
 using Hexalith.Parties.Projections.Abstractions;
 using Hexalith.Parties.Projections.Actors;
 using Hexalith.Parties.Projections.Configuration;
+using Hexalith.Parties.Projections.Services;
 using Hexalith.Parties.Projections.Strategies;
 
 using Microsoft.AspNetCore.Authentication;
@@ -49,7 +50,11 @@ public static class PartiesServiceCollectionExtensions
             .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             .AddJwtBearer();
 
-        _ = services.AddAuthorization();
+        _ = services.AddAuthorization(options =>
+        {
+            options.AddPolicy("Admin", policy =>
+                policy.RequireRole("admin", "Admin", "administrator", "Administrator"));
+        });
 
         // Claims transformation (tenant extraction from JWT)
         _ = services.AddTransient<IClaimsTransformation, PartiesClaimsTransformation>();
@@ -76,6 +81,13 @@ public static class PartiesServiceCollectionExtensions
 
         // Actor proxy factory for querying projection actors
         _ = services.AddSingleton<IActorProxyFactory>(_ => new ActorProxyFactory());
+
+        // Projection rebuild service (Story 8.3 — D14/D15)
+        _ = services.AddHttpClient<IProjectionRebuildService, ProjectionRebuildService>(client =>
+        {
+            string daprPort = configuration["DAPR_HTTP_PORT"] ?? "3500";
+            client.BaseAddress = new Uri($"http://127.0.0.1:{daprPort}");
+        });
 
         // FluentValidation (assembly scanning — no explicit validator registration)
         _ = services.AddValidatorsFromAssemblyContaining<CreatePartyValidator>();
