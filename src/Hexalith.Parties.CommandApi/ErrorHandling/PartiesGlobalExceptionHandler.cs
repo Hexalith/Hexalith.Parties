@@ -52,6 +52,34 @@ public sealed class PartiesGlobalExceptionHandler(ILogger<PartiesGlobalException
             return true;
         }
 
+        Exception? dependencyException = FindDependencyException(exception);
+        if (dependencyException is not null && !IsClientAbort(httpContext, dependencyException))
+        {
+            logger.LogError(
+                dependencyException,
+                "Infrastructure dependency unavailable: CorrelationId={CorrelationId}",
+                correlationId);
+
+            var dependencyDetails = new ProblemDetails
+            {
+                Status = StatusCodes.Status503ServiceUnavailable,
+                Title = "Dependency Unavailable",
+                Type = "urn:hexalith:parties:error:DependencyUnavailable",
+                Detail = "A required infrastructure dependency is temporarily unavailable. Retry the request after recovery.",
+                Instance = httpContext.Request.Path,
+                Extensions = { ["correlationId"] = correlationId },
+            };
+
+            httpContext.Response.StatusCode = StatusCodes.Status503ServiceUnavailable;
+            await httpContext.Response.WriteAsJsonAsync(
+                dependencyDetails,
+                (System.Text.Json.JsonSerializerOptions?)null,
+                "application/problem+json",
+                cancellationToken).ConfigureAwait(false);
+
+            return true;
+        }
+
         logger.LogError(exception, "Unhandled exception: CorrelationId={CorrelationId}", correlationId);
 
         bool isDevelopment = httpContext.RequestServices
@@ -85,6 +113,12 @@ public sealed class PartiesGlobalExceptionHandler(ILogger<PartiesGlobalException
         return FindAuthorizationExceptionRecursive(exception, maxDepth);
     }
 
+    private static Exception? FindDependencyException(Exception exception)
+    {
+        const int maxDepth = 10;
+        return FindDependencyExceptionRecursive(exception, maxDepth);
+    }
+
     private static Exception? FindAuthorizationExceptionRecursive(Exception? exception, int remainingDepth)
     {
         if (exception is null || remainingDepth <= 0)
@@ -110,6 +144,42 @@ public sealed class PartiesGlobalExceptionHandler(ILogger<PartiesGlobalException
         }
 
         return FindAuthorizationExceptionRecursive(exception.InnerException, remainingDepth - 1);
+    }
+
+    private static Exception? FindDependencyExceptionRecursive(Exception? exception, int remainingDepth)
+    {
+        if (exception is null || remainingDepth <= 0)
+        {
+            return null;
+        }
+
+        if (exception is HttpRequestException or TaskCanceledException or TimeoutException)
+        {
+            return exception;
+        }
+
+        if (exception is AggregateException aggregateException)
+        {
+            foreach (Exception inner in aggregateException.InnerExceptions)
+            {
+                Exception? found = FindDependencyExceptionRecursive(inner, remainingDepth - 1);
+                if (found is not null)
+                {
+                    return found;
+                }
+            }
+        }
+
+        return FindDependencyExceptionRecursive(exception.InnerException, remainingDepth - 1);
+    }
+
+    private static bool IsClientAbort(HttpContext httpContext, Exception exception)
+    {
+        ArgumentNullException.ThrowIfNull(httpContext);
+        ArgumentNullException.ThrowIfNull(exception);
+
+        return httpContext.RequestAborted.IsCancellationRequested
+            && exception is OperationCanceledException;
     }
 
     private static string? GetPropertyValue(Exception exception, string propertyName)

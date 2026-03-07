@@ -18,11 +18,11 @@ This guide covers deploying the Hexalith.Parties service with DAPR in production
 
 Choose one pub/sub component file based on your infrastructure:
 
-| Broker | Config File | Ordering | Notes |
-|--------|------------|----------|-------|
-| Kafka | `pubsub-kafka.yaml` | Per partition (use aggregate-ID key routing) | Best for high throughput |
-| RabbitMQ | `pubsub-rabbitmq.yaml` | Per queue binding | Good for moderate workloads |
-| Azure Service Bus | `pubsub-servicebus.yaml` | Per session (use aggregate-ID session key) | Topics must be pre-created |
+| Broker            | Config File              | Ordering                                     | Notes                       |
+| ----------------- | ------------------------ | -------------------------------------------- | --------------------------- |
+| Kafka             | `pubsub-kafka.yaml`      | Per partition (use aggregate-ID key routing) | Best for high throughput    |
+| RabbitMQ          | `pubsub-rabbitmq.yaml`   | Per queue binding                            | Good for moderate workloads |
+| Azure Service Bus | `pubsub-servicebus.yaml` | Per session (use aggregate-ID session key)   | Topics must be pre-created  |
 
 Copy the appropriate file to your DAPR component directory and configure environment variables.
 
@@ -30,11 +30,11 @@ Copy the appropriate file to your DAPR component directory and configure environ
 
 Choose one state store component file:
 
-| Backend | Config File | Notes |
-|---------|------------|-------|
-| CosmosDB | `statestore-cosmosdb.yaml` | 2 MB entry size limit (D5). Monitor aggregate sizes. |
-| PostgreSQL | `statestore-postgresql.yaml` | Auto-creates tables. No entry size limit concern. |
-| Redis | Local dev only (`statestore.yaml`) | Not recommended for production. |
+| Backend    | Config File                        | Notes                                                |
+| ---------- | ---------------------------------- | ---------------------------------------------------- |
+| CosmosDB   | `statestore-cosmosdb.yaml`         | 2 MB entry size limit (D5). Monitor aggregate sizes. |
+| PostgreSQL | `statestore-postgresql.yaml`       | Auto-creates tables. No entry size limit concern.    |
+| Redis      | Local dev only (`statestore.yaml`) | Not recommended for production.                      |
 
 ### State Store Requirements
 
@@ -60,29 +60,36 @@ A complete production DAPR deployment includes:
 Configure these environment variables for your deployment:
 
 **Access Control:**
+
 - `DAPR_TRUST_DOMAIN` -- SPIFFE trust domain (default: `hexalith.io`)
 - `DAPR_NAMESPACE` -- Kubernetes namespace (default: `hexalith`)
 
 **State Store (CosmosDB):**
+
 - `COSMOSDB_URL` -- CosmosDB account endpoint URL
 - `COSMOSDB_MASTER_KEY` -- CosmosDB master key
 - `COSMOSDB_DATABASE` -- Database name (default: `dapr`)
 - `COSMOSDB_COLLECTION` -- Container name (default: `state`)
 
 **State Store (PostgreSQL):**
+
 - `POSTGRESQL_CONNECTION_STRING` -- PostgreSQL connection string
 
 **Pub/Sub (Kafka):**
+
 - `KAFKA_BROKERS` -- Comma-separated broker addresses
 - `KAFKA_AUTH_TYPE` -- Authentication type (`none`, `password`, `mtls`, `oidc`)
 
 **Pub/Sub (RabbitMQ):**
+
 - `RABBITMQ_CONNECTION_STRING` -- RabbitMQ connection string
 
 **Pub/Sub (Azure Service Bus):**
+
 - `SERVICEBUS_CONNECTION_STRING` -- Service Bus connection string
 
 **Subscriber Identity:**
+
 - `SUBSCRIBER_APP_ID` -- App ID of the event subscriber service
 - `OPS_MONITOR_APP_ID` -- App ID of the operations monitoring service
 
@@ -100,20 +107,21 @@ The Hexalith.Parties service uses tenant-scoped topics for event isolation.
 ### Adding a Tenant
 
 1. Create a subscription file for the tenant (copy `subscription-parties.yaml` as template):
-   ```yaml
-   metadata:
-     name: parties-events-<tenant-id>
-   spec:
-     topic: "<tenant-id>.parties.events"
-     deadLetterTopic: "deadletter.<tenant-id>.parties.events"
-   ```
+
+    ```yaml
+    metadata:
+        name: parties-events-<tenant-id>
+    spec:
+        topic: "<tenant-id>.parties.events"
+        deadLetterTopic: "deadletter.<tenant-id>.parties.events"
+    ```
 
 2. Add the subscriber app-id to pub/sub component `subscriptionScopes` for the tenant's topic.
 
 3. Verify configuration:
-   ```bash
-   ./deploy/validate-deployment.ps1 --config-path <your-config-dir>
-   ```
+    ```bash
+    ./deploy/validate-deployment.ps1 --config-path <your-config-dir>
+    ```
 
 ---
 
@@ -155,7 +163,7 @@ Add the validation step to your deployment pipeline:
 # GitHub Actions example
 - name: Validate DAPR configuration
   run: |
-    pwsh -NoProfile -File deploy/validate-deployment.ps1 -ConfigPath deploy/dapr -Output json
+      pwsh -NoProfile -File deploy/validate-deployment.ps1 -ConfigPath deploy/dapr -Output json
 ```
 
 The tool exits with code `0` on success and `1` on failure, making it suitable for CI gate checks.
@@ -196,13 +204,147 @@ The tool exits with code `0` on success and `1` on failure, making it suitable f
 
 ---
 
-## Projection Rebuild (Operational Awareness)
+## Failure Mode Runbook Reference
 
-Projection actors (party detail, party index) can be rebuilt via admin endpoint (Story 8.3). If projection state becomes corrupted or out of sync:
+Use the health endpoints together with the remediation notes below when infrastructure problems occur in production.
 
-1. Use the admin rebuild endpoint to trigger replay from event store
-2. Monitor projection health via health check endpoints (Story 8.2)
-3. Projection actors handle state corruption gracefully with self-healing (D15)
+### State store unavailable
+
+- `/health` returns `503` because command durability is impaired.
+- `/ready` returns `503`; the instance should stop receiving new write traffic.
+- Write commands fail with `503 Dependency Unavailable` ProblemDetails instead of surfacing unhandled exceptions.
+- Query endpoints may continue returning the last successfully persisted projection state, with `X-Service-Degraded: true` and `X-Stale-Data-Age` headers when stale reads are being served.
+
+**Operator actions:**
+
+1. Check the configured `statestore` backend health, credentials, and network access.
+2. Restore state store connectivity before re-enabling traffic to the instance.
+3. After recovery, confirm `/ready` returns `200` and stale-read headers disappear from normal query traffic.
+
+### Pub/sub unavailable
+
+- `/health` returns `200` with a degraded pub/sub component entry.
+- `/ready` remains `200` because commands can still be durably committed.
+- Events are committed to the event store but publication may be delayed until pub/sub connectivity recovers.
+- Successful reads may include `X-Service-Degraded: true` and `X-Stale-Data-Age` headers to indicate delayed freshness.
+
+**Operator actions:**
+
+1. Inspect the configured broker/topic/session infrastructure and DAPR pub/sub component configuration.
+2. Verify dead-letter and retry policies remain enabled in `resiliency.yaml`.
+3. After recovery, watch subscriber lag until delayed publications are drained.
+
+### DAPR sidecar unavailable
+
+- `/health` returns `503` and `/ready` returns `503`.
+- The sidecar failure is logged at `Error` level.
+- No stale-read fallback is advertised because actor routing and state access through DAPR are not trustworthy in this mode.
+
+**Operator actions:**
+
+1. Restart or replace the pod/container hosting the DAPR sidecar.
+2. Verify the sidecar can reach placement, state store, and pub/sub dependencies.
+3. Confirm `/health` and `/ready` both return `200` before resuming normal traffic.
+
+---
+
+## Projection Rebuild
+
+Projection actors (party detail, party index) maintain read models derived from aggregate events. If projection state becomes corrupted or drifts from the source events, the system provides both automatic and manual rebuild capabilities.
+
+### Automatic Self-Healing (D15)
+
+Projection actors detect state corruption on activation. When deserialization fails during `OnActivateAsync()`:
+
+1. The actor logs the corruption at `Error` level with the affected tenant and actor key.
+2. The actor enters a **degraded** state — query responses return last-known cached data (or empty) with `X-Service-Degraded` headers.
+3. A rebuild is triggered automatically via a DAPR actor reminder. The rebuild reads aggregate events from the event store and replays them through the projection handlers.
+4. After rebuild completes, the actor resumes normal operation and logs a "rebuild completed" message at `Information` level.
+
+**No operator action is needed** for automatic self-healing. Monitor logs for `EventId 8300/8310` (corruption detected) and `EventId 8301/8311` (rebuild completed).
+
+### Manual Rebuild Procedure
+
+Use the admin rebuild endpoint when you suspect drift, after a state store migration, or after a schema change.
+
+**Trigger a rebuild:**
+
+```bash
+# Rebuild all projections for a tenant
+curl -X POST http://localhost:5000/api/v1/admin/projections/rebuild \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <admin-jwt>" \
+  -d '{"tenantId": "tenant-a", "projection": "all"}'
+
+# Rebuild only the detail projection for a specific party
+curl -X POST http://localhost:5000/api/v1/admin/projections/rebuild \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <admin-jwt>" \
+  -d '{"tenantId": "tenant-a", "projection": "detail", "partyId": "abc-123"}'
+
+# Rebuild only the index projection
+curl -X POST http://localhost:5000/api/v1/admin/projections/rebuild \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <admin-jwt>" \
+  -d '{"tenantId": "tenant-a", "projection": "index"}'
+```
+
+**Response:** `202 Accepted` with a `correlationId` for log correlation. The rebuild runs asynchronously in the background.
+
+**Parameters:**
+
+| Parameter    | Required | Values                    | Description                                  |
+| ------------ | -------- | ------------------------- | -------------------------------------------- |
+| `tenantId`   | Yes      | string                    | Target tenant identifier                     |
+| `projection` | Yes      | `detail`, `index`, `all`  | Which projection(s) to rebuild               |
+| `partyId`    | No       | string                    | Specific party (detail only, omit for all)   |
+
+### Monitoring a Rebuild
+
+1. **Logs:** Search for `correlationId` from the 202 response. Look for `EventId 8320` (rebuild started) and `EventId 8321` (rebuild completed).
+2. **Health endpoint:** During rebuild, `/health` may report `Degraded` for `projection-actors`. This is expected.
+3. **Query responses:** GET requests during rebuild include `X-Service-Degraded: true` headers. Data may be stale or incomplete until rebuild finishes.
+
+### Verifying Rebuild Success
+
+After rebuild completes:
+
+1. Check `/health` returns `Healthy` (no degraded components).
+2. Query a known party via `GET /api/v1/parties/{id}` and verify data is current.
+3. Confirm `X-Service-Degraded` headers are no longer present on GET responses.
+
+### Expected Rebuild Times
+
+Rebuild time depends on the number of events to replay:
+
+| Event count (per tenant) | Estimated time  | Notes                               |
+| ------------------------ | --------------- | ----------------------------------- |
+| < 1,000                  | < 5 seconds     | Small tenants                       |
+| 1,000 -- 10,000          | 5 -- 30 seconds | Medium tenants                      |
+| 10,000 -- 100,000        | 30s -- 5 min    | Large tenants, sequential I/O bound |
+| > 100,000                | 5+ minutes      | Consider rebuilding by party ID     |
+
+These are estimates based on sequential event reads from the DAPR sidecar. Actual times depend on state store backend latency and network conditions.
+
+### Impact on Service Availability
+
+- **Queries** continue to serve last-known cached data during rebuild. Responses include `X-Service-Degraded: true` and `X-Stale-Data-Age` headers.
+- **Write commands** are unaffected — they continue to be processed by aggregate actors independently.
+- **New events** arriving during rebuild will be processed normally after rebuild completes and the actor reactivates.
+
+### When to Use Manual Rebuild
+
+| Scenario                     | Action                                                |
+| ---------------------------- | ----------------------------------------------------- |
+| Suspected projection drift   | Rebuild `all` for the affected tenant                 |
+| After state store migration  | Rebuild `all` for all tenants                         |
+| After schema change          | Rebuild `all` for all tenants                         |
+| Single party data incorrect  | Rebuild `detail` with specific `partyId`              |
+| Index missing entries        | Rebuild `index` for the affected tenant               |
+
+### Admin Endpoint Security
+
+The rebuild endpoint requires the `Admin` authorization policy (JWT with `admin` or `Administrator` role claim). It is **not** exposed on the public API — only operators with elevated permissions can trigger a rebuild.
 
 ---
 

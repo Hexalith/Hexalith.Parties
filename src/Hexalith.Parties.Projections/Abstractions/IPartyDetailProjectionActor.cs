@@ -9,5 +9,9 @@ public interface IPartyDetailProjectionActor : IActor
 {
     Task HandleEventAsync(string partyId, IEventPayload @event);
 
+    Task<bool> PingAsync();
+
     Task<PartyDetail?> GetDetailAsync();
+
+    Task<bool> IsRebuildingAsync();
 }

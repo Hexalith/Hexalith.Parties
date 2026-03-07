@@ -100,13 +100,13 @@ development_status:
   # Epic 8: Operational Readiness & Production Hardening (3 stories)
   epic-8: in-progress
   8-1-deployment-validation-tooling: done
-  8-2-health-readiness-and-graceful-degradation: backlog
-  8-3-projection-health-monitoring-and-rebuild: backlog
+  8-2-health-readiness-and-graceful-degradation: done
+  8-3-projection-health-monitoring-and-rebuild: done
   epic-8-retrospective: optional
 
   # Epic 9: GDPR Compliance - v1.1 (5 stories)
-  epic-9: backlog
-  9-1-per-party-encryption-key-management: backlog
+  epic-9: in-progress
+  9-1-per-party-encryption-key-management: review
   9-2-field-level-encryption-and-crypto-shredding-activation: backlog
   9-3-right-to-erasure-and-verification: backlog
   9-4-consent-management-restriction-and-portability: backlog

@@ -9,6 +9,7 @@ using System.Text.Json;
 
 using Dapr.Actors;
 using Dapr.Actors.Client;
+using Dapr.Client;
 
 using Hexalith.EventStore.Server.Actors;
 using Hexalith.EventStore.Server.Commands;
@@ -135,12 +136,27 @@ public sealed class PartyApiRoundTripTestFactory : WebApplicationFactory<Program
             Arg.Any<ActorId>(), Arg.Any<string>(), Arg.Any<ActorProxyOptions?>())
             .Returns(indexProxy);
 
+        // Mock DaprClient for health checks (no sidecar in test environment)
+        DaprClient daprClient = Substitute.For<DaprClient>();
+        daprClient.CheckHealthAsync(Arg.Any<CancellationToken>()).Returns(true);
+        daprClient.GetStateAsync<string?>(
+            Arg.Any<string>(), Arg.Any<string>(), cancellationToken: Arg.Any<CancellationToken>())
+            .Returns((string?)null);
+        daprClient.GetMetadataAsync(Arg.Any<CancellationToken>())
+            .Returns(new DaprMetadata(
+                id: "test",
+                actors: [],
+                extended: new Dictionary<string, string>(),
+                components: [new DaprComponentsMetadata("pubsub", "pubsub.redis", "v1", [])]));
+
         builder.ConfigureTestServices(services =>
         {
             services.RemoveAll<ICommandRouter>();
             services.AddSingleton<ICommandRouter>(_ => new RecordingCommandRouter(partyStore));
             services.RemoveAll<IActorProxyFactory>();
             services.AddSingleton(proxyFactory);
+            services.RemoveAll<DaprClient>();
+            services.AddSingleton(daprClient);
         });
     }
 }
