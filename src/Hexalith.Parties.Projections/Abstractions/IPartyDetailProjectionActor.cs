@@ -14,4 +14,6 @@ public interface IPartyDetailProjectionActor : IActor
     Task<PartyDetail?> GetDetailAsync();
 
     Task<bool> IsRebuildingAsync();
+
+    Task EraseAsync(string partyId);
 }

@@ -1,6 +1,8 @@
+using Hexalith.Parties.Security;
+
 namespace Hexalith.Parties.CommandApi.Middleware;
 
-public sealed class CorrelationIdMiddleware(RequestDelegate next)
+public sealed class CorrelationIdMiddleware(RequestDelegate next, ICorrelationContextAccessor correlationContextAccessor)
 {
     public const string HeaderName = "X-Correlation-ID";
     public const string HttpContextKey = "CorrelationId";
@@ -22,7 +24,16 @@ public sealed class CorrelationIdMiddleware(RequestDelegate next)
 
         context.Items[HttpContextKey] = correlationId;
         context.Response.Headers[HeaderName] = correlationId;
+        string? previousCorrelationId = correlationContextAccessor.CorrelationId;
+        correlationContextAccessor.CorrelationId = correlationId;
 
-        await next(context).ConfigureAwait(false);
+        try
+        {
+            await next(context).ConfigureAwait(false);
+        }
+        finally
+        {
+            correlationContextAccessor.CorrelationId = previousCorrelationId;
+        }
     }
 }

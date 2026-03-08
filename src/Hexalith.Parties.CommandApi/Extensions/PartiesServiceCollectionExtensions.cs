@@ -1,11 +1,14 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
+using Dapr.Actors;
 using Dapr.Actors.Client;
 
 using FluentValidation;
 
 using Hexalith.EventStore.Server.Configuration;
+using Hexalith.EventStore.Server.Commands;
+using Hexalith.EventStore.Contracts.Security;
 using Hexalith.Parties.CommandApi.Authentication;
 using Hexalith.Parties.CommandApi.ErrorHandling;
 using Hexalith.Parties.CommandApi.Mcp;
@@ -15,6 +18,8 @@ using Hexalith.Parties.Projections.Actors;
 using Hexalith.Parties.Projections.Configuration;
 using Hexalith.Parties.Projections.Services;
 using Hexalith.Parties.Projections.Strategies;
+using Hexalith.Parties.Contracts.Security;
+using Hexalith.Parties.Security;
 
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -61,6 +66,25 @@ public static class PartiesServiceCollectionExtensions
 
         // EventStore server infrastructure (command routing, actors)
         _ = services.AddEventStoreServer(configuration);
+        _ = services.AddOptions<CommandStatusOptions>()
+            .BindConfiguration("EventStore:CommandStatus");
+        _ = services.AddSingleton<ICommandStatusStore, DaprCommandStatusStore>();
+
+        // GDPR / crypto-shredding infrastructure
+        _ = services.AddSingleton<ICorrelationContextAccessor, CorrelationContextAccessor>();
+        _ = services.AddSingleton<IKeyStorageBackend, LocalDevKeyStorageBackend>();
+        _ = services.AddSingleton<IKeyOperationAuditService, KeyOperationAuditService>();
+        _ = services.AddSingleton<PartyKeyManagementService>();
+        _ = services.AddSingleton<IPartyKeyRetryScheduler, ActorBackedPartyKeyRetryScheduler>();
+        _ = services.AddSingleton<PartyKeyLifecycleService>();
+        _ = services.AddSingleton<IPartyKeyManagementService>(sp =>
+            new CachedPartyKeyManagementService(sp.GetRequiredService<PartyKeyManagementService>()));
+        _ = services.AddSingleton<ICryptoStatusProvider>(sp => sp.GetRequiredService<PartyKeyLifecycleService>());
+        _ = services.AddSingleton<IEventPayloadProtectionService, PartyPayloadProtectionService>();
+        _ = services.AddSingleton<IPersonalDataCommandGuard, PartyPersonalDataCommandGuard>();
+        _ = services.AddSingleton<IReadOnlyList<ErasureStoreCleanupDelegate>>(_ => Array.Empty<ErasureStoreCleanupDelegate>());
+        _ = services.AddSingleton<IErasureVerificationService, ErasureVerificationService>();
+        _ = services.AddSingleton<PartyErasureOrchestrator>();
 
         // OpenAPI document generation
         _ = services.AddOpenApi();
@@ -77,6 +101,7 @@ public static class PartiesServiceCollectionExtensions
         {
             options.Actors.RegisterActor<PartyDetailProjectionActor>();
             options.Actors.RegisterActor<PartyIndexProjectionActor>();
+            options.Actors.RegisterActor<PartyKeyRetryActor>();
         });
 
         // Actor proxy factory for querying projection actors

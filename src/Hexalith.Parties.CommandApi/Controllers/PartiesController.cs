@@ -16,6 +16,7 @@ using Hexalith.Parties.Contracts.Models;
 using Hexalith.Parties.Contracts.ValueObjects;
 using Hexalith.Parties.Projections.Abstractions;
 using Hexalith.Parties.Projections.Actors;
+using Hexalith.Parties.Security;
 
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -28,6 +29,7 @@ namespace Hexalith.Parties.CommandApi.Controllers;
 public sealed class PartiesController(
     ICommandRouter commandRouter,
     IActorProxyFactory actorProxyFactory,
+    IPersonalDataCommandGuard personalDataCommandGuard,
     ILogger<PartiesController> logger) : ControllerBase
 {
     private const string _domain = "party";
@@ -85,7 +87,7 @@ public sealed class PartiesController(
             SetDegradedHeaders(Response);
         }
 
-        IEnumerable<PartyIndexEntry> filtered = entries.Values;
+        IEnumerable<PartyIndexEntry> filtered = entries.Values.Where(e => !e.IsErased);
 
         if (typeFilter is not null)
         {
@@ -175,7 +177,7 @@ public sealed class PartiesController(
             SetDegradedHeaders(Response);
         }
 
-        return Ok(PartySearchResultsBuilder.BuildSearchResults(entries.Values, q, null, null, page, pageSize));
+        return Ok(PartySearchResultsBuilder.BuildSearchResults(entries.Values.Where(e => !e.IsErased), q, null, null, page, pageSize));
     }
 
     [HttpGet("{id}")]
@@ -233,6 +235,11 @@ public sealed class PartiesController(
         if (detail is null)
         {
             return CreateNotFoundProblemDetails(id, correlationId);
+        }
+
+        if (detail.IsErased)
+        {
+            return CreateErasedProblemDetails(id, correlationId, detail.ErasedAt);
         }
 
         return Ok(detail);
@@ -401,6 +408,14 @@ public sealed class PartiesController(
             return CreateUnauthorizedProblemDetails("A valid tenant claim is required to access this resource.", correlationId);
         }
 
+        string? blockingReason = await personalDataCommandGuard
+            .GetBlockingReasonAsync(tenant, aggregateId, command!, cancellationToken)
+            .ConfigureAwait(false);
+        if (!string.IsNullOrWhiteSpace(blockingReason))
+        {
+            return CreateCryptoUnavailableProblemDetails(blockingReason, correlationId, tenant);
+        }
+
         string userId = User.FindFirst("sub")?.Value ?? "unknown";
 
         var submitCommand = new SubmitCommand(
@@ -446,6 +461,14 @@ public sealed class PartiesController(
         if (tenant is null)
         {
             return CreateUnauthorizedProblemDetails("A valid tenant claim is required to access this resource.", correlationId);
+        }
+
+        string? blockingReason = await personalDataCommandGuard
+            .GetBlockingReasonAsync(tenant, aggregateId, command!, cancellationToken)
+            .ConfigureAwait(false);
+        if (!string.IsNullOrWhiteSpace(blockingReason))
+        {
+            return CreateCryptoUnavailableProblemDetails(blockingReason, correlationId, tenant);
         }
 
         string userId = User.FindFirst("sub")?.Value ?? "unknown";
@@ -606,6 +629,27 @@ public sealed class PartiesController(
         return result;
     }
 
+    private ObjectResult CreateErasedProblemDetails(string partyId, string correlationId, DateTimeOffset? erasedAt)
+    {
+        var problemDetails = new ProblemDetails
+        {
+            Status = StatusCodes.Status410Gone,
+            Title = "Party Erased",
+            Type = "urn:hexalith:parties:error:PartyErased",
+            Detail = $"Party '{partyId}' has been erased under GDPR Article 17.",
+            Instance = HttpContext.Request.Path,
+            Extensions =
+            {
+                ["correlationId"] = correlationId,
+                ["erasedAt"] = erasedAt?.ToString("O"),
+            },
+        };
+
+        var result = new ObjectResult(problemDetails) { StatusCode = StatusCodes.Status410Gone };
+        result.ContentTypes.Add("application/problem+json");
+        return result;
+    }
+
     private ObjectResult CreateDomainRejectionProblemDetails(string? errorMessage, string correlationId, string tenant)
     {
         string rejectionType = errorMessage?.Replace("Domain rejection: ", string.Empty, StringComparison.Ordinal) ?? "Unknown";
@@ -625,6 +669,27 @@ public sealed class PartiesController(
                 ["correlationId"] = correlationId,
                 ["tenantId"] = tenant,
                 ["correctiveAction"] = "Adjust the request to satisfy domain rules and retry.",
+            },
+        };
+
+        var result = new ObjectResult(problemDetails) { StatusCode = StatusCodes.Status422UnprocessableEntity };
+        result.ContentTypes.Add("application/problem+json");
+        return result;
+    }
+
+    private ObjectResult CreateCryptoUnavailableProblemDetails(string detail, string correlationId, string tenant)
+    {
+        var problemDetails = new ProblemDetails
+        {
+            Status = StatusCodes.Status422UnprocessableEntity,
+            Title = "Personal Data Write Blocked",
+            Type = "urn:hexalith:parties:error:CryptoUnavailable",
+            Detail = detail,
+            Instance = HttpContext.Request.Path,
+            Extensions =
+            {
+                ["correlationId"] = correlationId,
+                ["tenantId"] = tenant,
             },
         };
 

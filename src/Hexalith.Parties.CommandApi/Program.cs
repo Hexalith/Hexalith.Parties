@@ -22,9 +22,8 @@ WebApplication app = builder.Build();
 // GDPR compliance warning (FR62) — non-dismissable, logged at startup
 ILogger startupLogger = app.Services.GetRequiredService<ILoggerFactory>().CreateLogger("Hexalith.Parties");
 startupLogger.LogWarning(
-    "GDPR Notice: This MVP does not include GDPR compliance features "
-    + "(crypto-shredding, consent, erasure). Do not store regulated EU personal data. "
-    + "See v1.1 roadmap.");
+    "GDPR Notice: Personal-data encryption at rest is enabled for protected fields, but full GDPR workflows "
+    + "(consent management and erasure verification) are not complete. Treat this service as partially compliant only.");
 
 // OpenAPI/Swagger UI (development mode only)
 if (app.Environment.IsDevelopment())

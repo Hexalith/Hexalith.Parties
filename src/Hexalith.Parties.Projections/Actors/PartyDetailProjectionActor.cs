@@ -53,6 +53,26 @@ public sealed partial class PartyDetailProjectionActor : Actor, IPartyDetailProj
 
     public Task<bool> IsRebuildingAsync() => Task.FromResult(_isRebuilding);
 
+    public async Task EraseAsync(string partyId)
+    {
+        (string actorPartyId, string stateKey) = ResolveStateContext(partyId);
+        ConditionalValue<PartyDetail> currentState = await StateManager.TryGetStateAsync<PartyDetail>(stateKey, default).ConfigureAwait(false);
+        PartyDetail? erased = PartyDetailProjectionHandler.ApplyErasure(actorPartyId, currentState.HasValue ? currentState.Value : null);
+        if (erased is not null)
+        {
+            await StateManager.SetStateAsync(stateKey, erased, default).ConfigureAwait(false);
+            _cachedDetail = erased;
+            s_lastKnownDetails[stateKey] = erased;
+        }
+        else
+        {
+            // No state existed — nothing to erase
+            await StateManager.TryRemoveStateAsync(stateKey, default).ConfigureAwait(false);
+            _cachedDetail = null;
+            s_lastKnownDetails.TryRemove(stateKey, out _);
+        }
+    }
+
     public async Task<PartyDetail?> GetDetailAsync()
     {
         string actorId = Host.Id.GetId();

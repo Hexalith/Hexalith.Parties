@@ -45,6 +45,12 @@ public static class GetPartyMcpTool
             throw new InvalidOperationException($"Party not found. No party exists with ID '{partyId}'.");
         }
 
+        if (detail.IsErased)
+        {
+            throw new InvalidOperationException(
+                $"Party '{partyId}' has been erased under GDPR Article 17. No personal data is available.");
+        }
+
         return JsonSerializer.Serialize(detail, McpSessionContext.JsonOptions);
     }
 }

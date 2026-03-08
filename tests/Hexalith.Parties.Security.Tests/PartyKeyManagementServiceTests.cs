@@ -12,8 +12,9 @@ public class PartyKeyManagementServiceTests
 {
     private readonly IKeyStorageBackend _backend = Substitute.For<IKeyStorageBackend>();
     private readonly IKeyOperationAuditService _auditService = Substitute.For<IKeyOperationAuditService>();
+    private readonly ICorrelationContextAccessor _correlationContextAccessor = new CorrelationContextAccessor();
 
-    private PartyKeyManagementService CreateService() => new(_backend, _auditService);
+    private PartyKeyManagementService CreateService() => new(_backend, _auditService, _correlationContextAccessor);
 
     [Fact]
     public async Task CreateKeyAsync_GeneratesValidAes256Key()
@@ -62,6 +63,18 @@ public class PartyKeyManagementServiceTests
     }
 
     [Fact]
+    public async Task CreateKeyAsync_UsesAmbientCorrelationIdInAuditEntry()
+    {
+        _correlationContextAccessor.CorrelationId = "corr-123";
+
+        await CreateService().CreateKeyAsync("acme", "p1");
+
+        await _auditService.Received(1).RecordOperationAsync(
+            Arg.Is<KeyOperationAuditEntry>(e => e.CorrelationId == "corr-123"),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
     public async Task GetKeyAsync_ReadsLatestVersionFromBackend()
     {
         byte[] expected = new byte[32];
@@ -77,6 +90,27 @@ public class PartyKeyManagementServiceTests
     }
 
     [Fact]
+    public async Task GetKeyAsync_AuditsReadOperation()
+    {
+        byte[] expected = new byte[32];
+        Random.Shared.NextBytes(expected);
+        _backend.ListKeyVersionsAsync("acme", "p1", Arg.Any<CancellationToken>())
+            .Returns([1, 2]);
+        _backend.ReadSecretAsync("acme/parties/p1/v2", Arg.Any<CancellationToken>())
+            .Returns(expected);
+
+        _ = await CreateService().GetKeyAsync("acme", "p1");
+
+        await _auditService.Received(1).RecordOperationAsync(
+            Arg.Is<KeyOperationAuditEntry>(e =>
+                e.OperationType == KeyOperationType.Read
+                && e.TenantId == "acme"
+                && e.PartyId == "p1"
+                && e.KeyVersion == 2),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
     public async Task GetKeyVersionAsync_ReadsSpecificVersion()
     {
         byte[] expected = new byte[32];
@@ -87,6 +121,34 @@ public class PartyKeyManagementServiceTests
         byte[] result = await CreateService().GetKeyVersionAsync("acme", "p1", 1);
 
         result.ShouldBe(expected);
+    }
+
+    [Fact]
+    public async Task CreateKeyAsync_ReturnsExistingLatestVersion_WhenKeyAlreadyExists()
+    {
+        _backend.ListKeyVersionsAsync("acme", "p1", Arg.Any<CancellationToken>())
+            .Returns([1]);
+
+        PartyKeyInfo result = await CreateService().CreateKeyAsync("acme", "p1");
+
+        result.Version.ShouldBe(1);
+        await _backend.DidNotReceive().CreateSecretAsync(
+            Arg.Any<string>(),
+            Arg.Any<byte[]>(),
+            Arg.Any<CancellationToken>());
+        await _auditService.DidNotReceive().RecordOperationAsync(
+            Arg.Is<KeyOperationAuditEntry>(e => e.OperationType == KeyOperationType.Create),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task RotateKeyAsync_WithoutExistingKey_ThrowsKeyNotFoundException()
+    {
+        _backend.ListKeyVersionsAsync("acme", "p1", Arg.Any<CancellationToken>())
+            .Returns((IReadOnlyList<int>)[]);
+
+        await Should.ThrowAsync<KeyNotFoundException>(
+            () => CreateService().RotateKeyAsync("acme", "p1"));
     }
 
     [Fact]

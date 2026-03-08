@@ -16,4 +16,6 @@ public interface IPartyIndexProjectionActor : IActor
     Task<IReadOnlyDictionary<string, PartyIndexEntry>> GetEntriesAsync();
 
     Task<bool> IsRebuildingAsync();
+
+    Task EraseAsync(string partyId);
 }

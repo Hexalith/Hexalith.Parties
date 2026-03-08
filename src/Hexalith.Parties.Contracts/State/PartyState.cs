@@ -1,4 +1,5 @@
 using Hexalith.Parties.Contracts.Events;
+using Hexalith.Parties.Contracts.Security;
 using Hexalith.Parties.Contracts.ValueObjects;
 
 namespace Hexalith.Parties.Contracts.State;
@@ -29,6 +30,10 @@ public sealed class PartyState
     public IReadOnlyList<ContactChannel> ContactChannels => _contactChannels;
 
     public IReadOnlyList<PartyIdentifier> Identifiers => _identifiers;
+
+    public ErasureStatus ErasureStatus { get; private set; } = ErasureStatus.Active;
+
+    public DateTimeOffset? ErasedAt { get; private set; }
 
     public void Apply(PartyCreated e)
     {
@@ -148,6 +153,40 @@ public sealed class PartyState
         ArgumentNullException.ThrowIfNull(e);
         DisplayName = e.DisplayName;
         SortName = e.SortName;
+    }
+
+    public void Apply(ErasePartyRequested e)
+    {
+        ArgumentNullException.ThrowIfNull(e);
+        ErasureStatus = ErasureStatus.ErasurePending;
+    }
+
+    public void Apply(PartyEncryptionKeyDeleted e)
+    {
+        ArgumentNullException.ThrowIfNull(e);
+        ErasureStatus = ErasureStatus.KeyDestroyed;
+    }
+
+#pragma warning disable CA1822 // Member does not access instance data — key rotation does not change party state
+    public void Apply(PartyEncryptionKeyRotated e)
+    {
+        ArgumentNullException.ThrowIfNull(e);
+        // Key rotation is an infrastructure event — no party state change.
+        // This Apply method exists for EventStore framework convention.
+    }
+#pragma warning restore CA1822
+
+    public void Apply(ErasureVerified e)
+    {
+        ArgumentNullException.ThrowIfNull(e);
+        ErasureStatus = ErasureStatus.Verified;
+    }
+
+    public void Apply(PartyErased e)
+    {
+        ArgumentNullException.ThrowIfNull(e);
+        ErasureStatus = ErasureStatus.Erased;
+        ErasedAt = e.ErasedAt;
     }
 
 #pragma warning disable CA1822 // Member does not access instance data — required as instance method for EventStore Apply convention

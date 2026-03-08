@@ -17,6 +17,7 @@ using Hexalith.Parties.Contracts.Models;
 using Hexalith.Parties.Contracts.Security;
 using Hexalith.Parties.Projections.Abstractions;
 using Hexalith.Parties.Projections.Services;
+using Hexalith.Parties.Security;
 
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -183,6 +184,9 @@ public sealed class AdminEndpointIntegrationTests : IClassFixture<AdminEndpointI
 
         internal IProjectionRebuildService RebuildService { get; } = Substitute.For<IProjectionRebuildService>();
         internal IPartyKeyManagementService KeyManagementService { get; } = Substitute.For<IPartyKeyManagementService>();
+        internal IErasureVerificationService ErasureVerificationService { get; } = Substitute.For<IErasureVerificationService>();
+        internal IKeyStorageBackend KeyStorageBackend { get; } = Substitute.For<IKeyStorageBackend>();
+        internal IKeyOperationAuditService KeyOperationAuditService { get; } = Substitute.For<IKeyOperationAuditService>();
 
         protected override void ConfigureWebHost(IWebHostBuilder builder)
         {
@@ -229,6 +233,14 @@ public sealed class AdminEndpointIntegrationTests : IClassFixture<AdminEndpointI
                 services.AddSingleton(RebuildService);
                 services.RemoveAll<IPartyKeyManagementService>();
                 services.AddSingleton(KeyManagementService);
+                services.RemoveAll<IKeyStorageBackend>();
+                services.AddSingleton(KeyStorageBackend);
+                services.RemoveAll<IKeyOperationAuditService>();
+                services.AddSingleton(KeyOperationAuditService);
+                services.RemoveAll<IErasureVerificationService>();
+                services.AddSingleton(ErasureVerificationService);
+                services.RemoveAll<PartyErasureOrchestrator>();
+                services.AddSingleton<PartyErasureOrchestrator>();
             });
         }
     }

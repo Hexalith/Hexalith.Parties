@@ -2,6 +2,8 @@ using System.Net;
 using System.Text.Json;
 
 using Hexalith.EventStore.Contracts.Events;
+using Hexalith.EventStore.Contracts.Identity;
+using Hexalith.EventStore.Contracts.Security;
 using Hexalith.Parties.Contracts.Events;
 using Hexalith.Parties.Contracts.Models;
 using Hexalith.Parties.Contracts.ValueObjects;
@@ -260,7 +262,17 @@ public sealed class ProjectionRebuildServiceTests
     {
         HttpClient httpClient = new(handler) { BaseAddress = new Uri("http://localhost:3500") };
         ILogger<ProjectionRebuildService> logger = Substitute.For<ILogger<ProjectionRebuildService>>();
-        return new ProjectionRebuildService(httpClient, logger);
+        IEventPayloadProtectionService protectionService = Substitute.For<IEventPayloadProtectionService>();
+        protectionService.UnprotectEventPayloadAsync(
+                Arg.Any<AggregateIdentity>(),
+                Arg.Any<string>(),
+                Arg.Any<byte[]>(),
+                Arg.Any<string>(),
+                Arg.Any<CancellationToken>())
+            .Returns(callInfo => Task.FromResult(new PayloadProtectionResult(
+                (byte[])callInfo[2],
+                (string)callInfo[3])));
+        return new ProjectionRebuildService(httpClient, protectionService, logger);
     }
 
     internal sealed class MockHttpMessageHandler : HttpMessageHandler

@@ -106,9 +106,9 @@ development_status:
 
   # Epic 9: GDPR Compliance - v1.1 (5 stories)
   epic-9: in-progress
-  9-1-per-party-encryption-key-management: review
-  9-2-field-level-encryption-and-crypto-shredding-activation: backlog
-  9-3-right-to-erasure-and-verification: backlog
+  9-1-per-party-encryption-key-management: in-progress
+  9-2-field-level-encryption-and-crypto-shredding-activation: ready-for-dev
+  9-3-right-to-erasure-and-verification: in-progress
   9-4-consent-management-restriction-and-portability: backlog
   9-5-semantic-search-and-temporal-name-queries: backlog
   epic-9-retrospective: optional

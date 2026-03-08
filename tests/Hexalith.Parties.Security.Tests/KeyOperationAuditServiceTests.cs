@@ -30,12 +30,28 @@ public class KeyOperationAuditServiceTests
             CorrelationId = "corr-1",
         };
 
+        // Configure ETag-based read/write
+        _daprClient.GetStateAndETagAsync<List<KeyOperationAuditEntry>>(
+            "statestore",
+            Arg.Any<string>(),
+            cancellationToken: Arg.Any<CancellationToken>())
+            .Returns((null as List<KeyOperationAuditEntry>, ""));
+
+        _daprClient.TrySaveStateAsync(
+            "statestore",
+            Arg.Any<string>(),
+            Arg.Any<List<KeyOperationAuditEntry>>(),
+            Arg.Any<string>(),
+            cancellationToken: Arg.Any<CancellationToken>())
+            .Returns(true);
+
         await CreateService().RecordOperationAsync(entry);
 
-        await _daprClient.Received(1).SaveStateAsync(
+        await _daprClient.Received(1).TrySaveStateAsync(
             "statestore",
             Arg.Is<string>(k => k.Contains("acme") && k.Contains("p1")),
             Arg.Any<List<KeyOperationAuditEntry>>(),
+            Arg.Any<string>(),
             cancellationToken: Arg.Any<CancellationToken>());
     }
 
@@ -99,11 +115,19 @@ public class KeyOperationAuditServiceTests
             },
         };
 
-        _daprClient.GetStateAsync<List<KeyOperationAuditEntry>>(
+        _daprClient.GetStateAndETagAsync<List<KeyOperationAuditEntry>>(
             "statestore",
             Arg.Any<string>(),
             cancellationToken: Arg.Any<CancellationToken>())
-            .Returns(_ => existing);
+            .Returns((existing, "etag-1"));
+
+        _daprClient.TrySaveStateAsync(
+            "statestore",
+            Arg.Any<string>(),
+            Arg.Any<List<KeyOperationAuditEntry>>(),
+            Arg.Any<string>(),
+            cancellationToken: Arg.Any<CancellationToken>())
+            .Returns(true);
 
         var newEntry = new KeyOperationAuditEntry
         {
@@ -117,10 +141,95 @@ public class KeyOperationAuditServiceTests
 
         await CreateService().RecordOperationAsync(newEntry);
 
-        await _daprClient.Received(1).SaveStateAsync(
+        await _daprClient.Received(1).TrySaveStateAsync(
             "statestore",
             Arg.Any<string>(),
             Arg.Is<List<KeyOperationAuditEntry>>(list => list.Count == 2),
+            "etag-1",
+            cancellationToken: Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task RecordOperationAsync_DoesNotMutateFetchedStateInstance()
+    {
+        var existing = new List<KeyOperationAuditEntry>
+        {
+            new()
+            {
+                OperationType = KeyOperationType.Create,
+                TenantId = "acme",
+                PartyId = "p1",
+                KeyVersion = 1,
+                Timestamp = DateTimeOffset.UtcNow.AddMinutes(-1),
+                CorrelationId = "corr-1",
+            },
+        };
+
+        _daprClient.GetStateAndETagAsync<List<KeyOperationAuditEntry>>(
+            "statestore",
+            Arg.Any<string>(),
+            cancellationToken: Arg.Any<CancellationToken>())
+            .Returns((existing, "etag-1"));
+
+        _daprClient.TrySaveStateAsync(
+            "statestore",
+            Arg.Any<string>(),
+            Arg.Any<List<KeyOperationAuditEntry>>(),
+            Arg.Any<string>(),
+            cancellationToken: Arg.Any<CancellationToken>())
+            .Returns(true);
+
+        await CreateService().RecordOperationAsync(new KeyOperationAuditEntry
+        {
+            OperationType = KeyOperationType.Read,
+            TenantId = "acme",
+            PartyId = "p1",
+            KeyVersion = 1,
+            Timestamp = DateTimeOffset.UtcNow,
+            CorrelationId = "corr-2",
+        });
+
+        existing.Count.ShouldBe(1);
+    }
+
+    [Fact]
+    public async Task RecordOperationAsync_RetriesOnETagConflict()
+    {
+        _daprClient.GetStateAndETagAsync<List<KeyOperationAuditEntry>>(
+            "statestore",
+            Arg.Any<string>(),
+            cancellationToken: Arg.Any<CancellationToken>())
+            .Returns(
+                (null as List<KeyOperationAuditEntry>, "etag-1"),
+                (null as List<KeyOperationAuditEntry>, "etag-2"));
+
+        // First attempt fails (ETag mismatch), second succeeds
+        _daprClient.TrySaveStateAsync(
+            "statestore",
+            Arg.Any<string>(),
+            Arg.Any<List<KeyOperationAuditEntry>>(),
+            Arg.Any<string>(),
+            cancellationToken: Arg.Any<CancellationToken>())
+            .Returns(false, true);
+
+        var entry = new KeyOperationAuditEntry
+        {
+            OperationType = KeyOperationType.Create,
+            TenantId = "acme",
+            PartyId = "p1",
+            KeyVersion = 1,
+            Timestamp = DateTimeOffset.UtcNow,
+            CorrelationId = "corr-1",
+        };
+
+        await CreateService().RecordOperationAsync(entry);
+
+        // Should have been called twice (retry)
+        await _daprClient.Received(2).TrySaveStateAsync(
+            "statestore",
+            Arg.Any<string>(),
+            Arg.Any<List<KeyOperationAuditEntry>>(),
+            Arg.Any<string>(),
             cancellationToken: Arg.Any<CancellationToken>());
     }
 }

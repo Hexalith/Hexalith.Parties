@@ -16,6 +16,7 @@ using Hexalith.Parties.CommandApi;
 using Hexalith.Parties.Contracts.Models;
 using Hexalith.Parties.Contracts.ValueObjects;
 using Hexalith.Parties.Projections.Abstractions;
+using Hexalith.Parties.Security;
 
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -38,6 +39,9 @@ public sealed class PartiesControllerProblemDetailsTests : IClassFixture<Parties
     public PartiesControllerProblemDetailsTests(PartiesApiTestFactory factory)
     {
         _factory = factory;
+        _factory.CommandGuard
+            .GetBlockingReasonAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<object>(), Arg.Any<CancellationToken>())
+            .Returns((string?)null);
     }
 
     [Fact]
@@ -173,6 +177,36 @@ public sealed class PartiesControllerProblemDetailsTests : IClassFixture<Parties
             .ShouldBe("urn:hexalith:parties:rejection:PartyCannotBeCreatedWithoutType");
         problem.RootElement.TryGetProperty("correctiveAction", out JsonElement correctiveAction).ShouldBeTrue();
         correctiveAction.GetString().ShouldBe("Adjust the request to satisfy domain rules and retry.");
+    }
+
+    [Fact]
+    public async Task UpdatePersonDetails_CryptoUnavailable_ReturnsUnprocessableEntityProblemDetailsAsync()
+    {
+        _factory.CommandGuard
+            .GetBlockingReasonAsync("tenant-a", Arg.Any<string>(), Arg.Any<object>(), Arg.Any<CancellationToken>())
+            .Returns("Personal data writes are blocked while the party encryption key is in CryptoPending state.");
+
+        using HttpClient client = _factory.CreateClient();
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", JwtTokenHelper.CreateToken(includeTenantClaim: true));
+
+        string partyId = Guid.NewGuid().ToString();
+        using HttpContent body = JsonContent.Create(new
+        {
+            partyId,
+            personDetails = new
+            {
+                firstName = "Ada",
+                lastName = "Lovelace",
+            },
+        });
+
+        HttpResponseMessage response = await client.PostAsync($"/api/v1/parties/{partyId}/update-person-details", body);
+
+        response.StatusCode.ShouldBe(HttpStatusCode.UnprocessableEntity);
+        using JsonDocument problem = await ReadJsonAsync(response);
+        problem.RootElement.GetProperty("title").GetString().ShouldBe("Personal Data Write Blocked");
+        problem.RootElement.GetProperty("type").GetString().ShouldBe("urn:hexalith:parties:error:CryptoUnavailable");
+        await _factory.Router.DidNotReceive().RouteCommandAsync(Arg.Any<SubmitCommand>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -1683,6 +1717,8 @@ public sealed class PartiesApiTestFactory : WebApplicationFactory<Program>
 
     internal IActorProxyFactory ActorProxyFactory { get; } = Substitute.For<IActorProxyFactory>();
 
+    internal IPersonalDataCommandGuard CommandGuard { get; } = Substitute.For<IPersonalDataCommandGuard>();
+
     private IReadOnlyDictionary<string, PartyIndexEntry> _indexEntries =
         new Dictionary<string, PartyIndexEntry>(StringComparer.Ordinal);
 
@@ -1737,6 +1773,8 @@ public sealed class PartiesApiTestFactory : WebApplicationFactory<Program>
             services.AddSingleton(Router);
             services.RemoveAll<IActorProxyFactory>();
             services.AddSingleton(ActorProxyFactory);
+            services.RemoveAll<IPersonalDataCommandGuard>();
+            services.AddSingleton(CommandGuard);
         });
     }
 }
