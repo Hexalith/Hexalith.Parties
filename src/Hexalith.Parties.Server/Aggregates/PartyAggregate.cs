@@ -5,6 +5,7 @@ using Hexalith.Parties.Contracts.Commands;
 using Hexalith.Parties.Contracts.Events;
 using Hexalith.Parties.Contracts.Models;
 using Hexalith.Parties.Contracts.Results;
+using Hexalith.Parties.Contracts.Security;
 using Hexalith.Parties.Contracts.State;
 using Hexalith.Parties.Contracts.ValueObjects;
 
@@ -225,6 +226,16 @@ public sealed class PartyAggregate : EventStoreAggregate<PartyState>
                 applied: [],
                 skipped: [],
                 rejected: ["Party does not exist."]);
+        }
+
+        // Erasure guard — reject modifications during/after erasure
+        if (state.ErasureStatus is not ErasureStatus.Active)
+        {
+            return new CompositeCommandResult(
+                [new PartyErasureInProgress { Message = "Party erasure in progress or completed. No modifications allowed." }],
+                applied: [],
+                skipped: [],
+                rejected: ["Party erasure in progress or completed. No modifications allowed."]);
         }
 
         // No-op check — all lists empty and no details
@@ -656,6 +667,12 @@ public sealed class PartyAggregate : EventStoreAggregate<PartyState>
             return DomainResult.Rejection([new PartyTypeMismatch { Message = "Party does not exist." }]);
         }
 
+        DomainResult? erasureRejection = RejectIfErasureInProgress(state);
+        if (erasureRejection is not null)
+        {
+            return erasureRejection;
+        }
+
         if (state.Type != PartyType.Person)
         {
             return DomainResult.Rejection([new PartyTypeMismatch { Message = $"Cannot update person details on a {state.Type} party." }]);
@@ -689,6 +706,12 @@ public sealed class PartyAggregate : EventStoreAggregate<PartyState>
         if (state is null)
         {
             return DomainResult.Rejection([new PartyTypeMismatch { Message = "Party does not exist." }]);
+        }
+
+        DomainResult? erasureRejection = RejectIfErasureInProgress(state);
+        if (erasureRejection is not null)
+        {
+            return erasureRejection;
         }
 
         if (state.Type != PartyType.Organization)
@@ -726,6 +749,12 @@ public sealed class PartyAggregate : EventStoreAggregate<PartyState>
             return DomainResult.Rejection([new PartyTypeMismatch { Message = "Party does not exist." }]);
         }
 
+        DomainResult? erasureRejection = RejectIfErasureInProgress(state);
+        if (erasureRejection is not null)
+        {
+            return erasureRejection;
+        }
+
         if (state.Type != PartyType.Organization)
         {
             return DomainResult.Rejection([new PartyTypeMismatch { Message = $"SetIsNaturalPerson only applies to organization parties." }]);
@@ -754,6 +783,12 @@ public sealed class PartyAggregate : EventStoreAggregate<PartyState>
             return DomainResult.Rejection([new PartyCannotBeDeactivatedWhenInactive()]);
         }
 
+        DomainResult? erasureRejection = RejectIfErasureInProgress(state);
+        if (erasureRejection is not null)
+        {
+            return erasureRejection;
+        }
+
         // AC#6: Idempotent — already deactivated
         if (!state.IsActive)
         {
@@ -772,6 +807,12 @@ public sealed class PartyAggregate : EventStoreAggregate<PartyState>
             return DomainResult.Rejection([new PartyCannotBeReactivatedWhenActive()]);
         }
 
+        DomainResult? erasureRejection = RejectIfErasureInProgress(state);
+        if (erasureRejection is not null)
+        {
+            return erasureRejection;
+        }
+
         // Idempotent — already active
         if (state.IsActive)
         {
@@ -781,6 +822,81 @@ public sealed class PartyAggregate : EventStoreAggregate<PartyState>
         return DomainResult.Success([new PartyReactivated()]);
     }
 
+    public static DomainResult Handle(EraseParty command, PartyState? state)
+    {
+        ArgumentNullException.ThrowIfNull(command);
+
+        if (state is null)
+        {
+            return DomainResult.Rejection([new PartyNotFound { Message = "Party does not exist." }]);
+        }
+
+        // Idempotent: if already erased, no-op (certificate is retrieved from state store, not aggregate)
+        if (state.ErasureStatus == ErasureStatus.Erased)
+        {
+            return DomainResult.NoOp();
+        }
+
+        // Idempotent: if erasure already in progress, no-op
+        if (state.ErasureStatus is ErasureStatus.ErasurePending or ErasureStatus.KeyDestroyed
+            or ErasureStatus.VerificationInProgress or ErasureStatus.Verified)
+        {
+            return DomainResult.NoOp();
+        }
+
+        ErasePartyRequested requested = new()
+        {
+            PartyId = command.PartyId,
+            TenantId = command.TenantId,
+            RequestedAt = DateTimeOffset.UtcNow,
+            RequestedBy = "admin", // Caller identity resolved upstream
+        };
+
+        return DomainResult.Success([requested]);
+    }
+
+    public static DomainResult Handle(RotatePartyKey command, PartyState? state)
+    {
+        ArgumentNullException.ThrowIfNull(command);
+
+        if (state is null)
+        {
+            return DomainResult.Rejection([new PartyNotFound { Message = "Party does not exist." }]);
+        }
+
+        DomainResult? erasureRejection = RejectIfErasureInProgress(state);
+        if (erasureRejection is not null)
+        {
+            return erasureRejection;
+        }
+
+        // Validate version numbers: NewKeyVersion must be > PreviousKeyVersion, both must be > 0
+        if (command.NewKeyVersion <= 0)
+        {
+            return DomainResult.Rejection([new PartyNotFound { Message = $"Invalid new key version: {command.NewKeyVersion}. Must be greater than 0." }]);
+        }
+
+        if (command.PreviousKeyVersion <= 0)
+        {
+            return DomainResult.Rejection([new PartyNotFound { Message = $"Invalid previous key version: {command.PreviousKeyVersion}. Must be greater than 0." }]);
+        }
+
+        if (command.NewKeyVersion <= command.PreviousKeyVersion)
+        {
+            return DomainResult.Rejection([new PartyNotFound { Message = $"New key version ({command.NewKeyVersion}) must be greater than previous version ({command.PreviousKeyVersion})." }]);
+        }
+
+        PartyEncryptionKeyRotated rotated = new()
+        {
+            PartyId = command.PartyId,
+            NewKeyVersion = command.NewKeyVersion,
+            PreviousKeyVersion = command.PreviousKeyVersion,
+            RotatedAt = DateTimeOffset.UtcNow,
+        };
+
+        return DomainResult.Success([rotated]);
+    }
+
     public static DomainResult Handle(AddContactChannel command, PartyState? state)
     {
         ArgumentNullException.ThrowIfNull(command);
@@ -788,6 +904,12 @@ public sealed class PartyAggregate : EventStoreAggregate<PartyState>
         if (state is null)
         {
             return DomainResult.Rejection([new PartyNotFound()]);
+        }
+
+        DomainResult? erasureRejection = RejectIfErasureInProgress(state);
+        if (erasureRejection is not null)
+        {
+            return erasureRejection;
         }
 
         // Idempotent: skip if channel already exists (D10 — safe for MCP retries)
@@ -823,6 +945,12 @@ public sealed class PartyAggregate : EventStoreAggregate<PartyState>
         if (state is null)
         {
             return DomainResult.Rejection([new PartyNotFound()]);
+        }
+
+        DomainResult? erasureRejection = RejectIfErasureInProgress(state);
+        if (erasureRejection is not null)
+        {
+            return erasureRejection;
         }
 
         // Channel not found check — use FindIndex to avoid exceptions (no LINQ First/Single)
@@ -875,6 +1003,12 @@ public sealed class PartyAggregate : EventStoreAggregate<PartyState>
             return DomainResult.Rejection([new PartyNotFound()]);
         }
 
+        DomainResult? erasureRejection = RejectIfErasureInProgress(state);
+        if (erasureRejection is not null)
+        {
+            return erasureRejection;
+        }
+
         // Channel not found check
         if (!state.ContactChannels.Any(c => c.Id == command.ContactChannelId))
         {
@@ -891,6 +1025,12 @@ public sealed class PartyAggregate : EventStoreAggregate<PartyState>
         if (state is null)
         {
             return DomainResult.Rejection([new PartyNotFound()]);
+        }
+
+        DomainResult? erasureRejection = RejectIfErasureInProgress(state);
+        if (erasureRejection is not null)
+        {
+            return erasureRejection;
         }
 
         // Idempotent: skip if identifier already exists (D10 — safe for MCP retries)
@@ -918,6 +1058,12 @@ public sealed class PartyAggregate : EventStoreAggregate<PartyState>
             return DomainResult.Rejection([new PartyNotFound()]);
         }
 
+        DomainResult? erasureRejection = RejectIfErasureInProgress(state);
+        if (erasureRejection is not null)
+        {
+            return erasureRejection;
+        }
+
         // Identifier not found check
         if (!state.Identifiers.Any(i => i.Id == command.IdentifierId))
         {
@@ -925,6 +1071,25 @@ public sealed class PartyAggregate : EventStoreAggregate<PartyState>
         }
 
         return DomainResult.Success([new IdentifierRemoved { IdentifierId = command.IdentifierId }]);
+    }
+
+    private static DomainResult? RejectIfErasureInProgress(PartyState? state)
+    {
+        if (state is null)
+        {
+            return null;
+        }
+
+        if (state.ErasureStatus is ErasureStatus.ErasurePending or ErasureStatus.KeyDestroyed
+            or ErasureStatus.VerificationInProgress or ErasureStatus.Verified or ErasureStatus.Erased)
+        {
+            return DomainResult.Rejection([new PartyErasureInProgress
+            {
+                Message = "Party erasure in progress or completed. No modifications allowed.",
+            }]);
+        }
+
+        return null;
     }
 
     private static (string DisplayName, string SortName) DeriveDisplayName(

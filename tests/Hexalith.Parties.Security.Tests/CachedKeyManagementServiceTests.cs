@@ -4,6 +4,7 @@ using Hexalith.Parties.Security;
 using NSubstitute;
 
 using Shouldly;
+using System.Diagnostics;
 
 namespace Hexalith.Parties.Security.Tests;
 
@@ -111,5 +112,26 @@ public class CachedKeyManagementServiceTests
         // Subsequent call would go to inner again
         await service.GetKeyAsync("acme", "p1");
         await _inner.Received(2).GetKeyAsync("acme", "p1", Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task GetKeyAsync_CacheHit_StaysWellUnderOneSecond_WhenBackendIsSlow()
+    {
+        byte[] key = new byte[32];
+        Random.Shared.NextBytes(key);
+        _inner.GetKeyAsync("acme", "p1", Arg.Any<CancellationToken>()).Returns(async _ =>
+        {
+            await Task.Delay(TimeSpan.FromMilliseconds(250)).ConfigureAwait(false);
+            return (byte[])key.Clone();
+        });
+
+        CachedPartyKeyManagementService service = CreateService();
+        _ = await service.GetKeyAsync("acme", "p1");
+
+        Stopwatch stopwatch = Stopwatch.StartNew();
+        _ = await service.GetKeyAsync("acme", "p1");
+        stopwatch.Stop();
+
+        stopwatch.Elapsed.ShouldBeLessThan(TimeSpan.FromSeconds(1));
     }
 }

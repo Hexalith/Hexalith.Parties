@@ -68,10 +68,12 @@ public class DeadLetterRoutingTests
     {
         DaprClient mockClient = Substitute.For<DaprClient>();
         IOptions<EventPublisherOptions> options = Options.Create(new EventPublisherOptions());
+        var payloadProtectionService = new NoOpEventPayloadProtectionService();
         var publisher = new EventPublisher(
             mockClient,
             options,
-            NullLogger<EventPublisher>.Instance);
+            NullLogger<EventPublisher>.Instance,
+            payloadProtectionService);
         return (publisher, mockClient);
     }
 

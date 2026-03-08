@@ -1,5 +1,6 @@
 using Hexalith.Parties.Contracts.Commands;
 using Hexalith.Parties.Contracts.Events;
+using Hexalith.Parties.Contracts.Security;
 using Hexalith.Parties.Contracts.State;
 using Hexalith.Parties.Contracts.ValueObjects;
 
@@ -322,4 +323,57 @@ public static class PartyTestData
             },
         ],
     };
+
+    public const string DefaultTenantId = "test-tenant";
+
+    public static EraseParty ValidEraseParty() => new()
+    {
+        PartyId = DefaultPartyId,
+        TenantId = DefaultTenantId,
+    };
+
+    public static RotatePartyKey ValidRotatePartyKey(int newVersion = 2, int previousVersion = 1) => new()
+    {
+        PartyId = DefaultPartyId,
+        NewKeyVersion = newVersion,
+        PreviousKeyVersion = previousVersion,
+    };
+
+    public static PartyState CreateErasurePendingState()
+    {
+        PartyState state = CreatePersonState();
+        state.Apply(new ErasePartyRequested
+        {
+            PartyId = DefaultPartyId,
+            TenantId = DefaultTenantId,
+            RequestedAt = DateTimeOffset.UtcNow,
+            RequestedBy = "admin",
+        });
+        return state;
+    }
+
+    public static PartyState CreateErasedState()
+    {
+        PartyState state = CreateErasurePendingState();
+        state.Apply(new PartyEncryptionKeyDeleted
+        {
+            PartyId = DefaultPartyId,
+            TenantId = DefaultTenantId,
+            DeletedAt = DateTimeOffset.UtcNow,
+        });
+        state.Apply(new ErasureVerified
+        {
+            PartyId = DefaultPartyId,
+            TenantId = DefaultTenantId,
+            VerifiedAt = DateTimeOffset.UtcNow,
+            VerificationReportId = "report-1",
+        });
+        state.Apply(new PartyErased
+        {
+            PartyId = DefaultPartyId,
+            TenantId = DefaultTenantId,
+            ErasedAt = DateTimeOffset.UtcNow,
+        });
+        return state;
+    }
 }

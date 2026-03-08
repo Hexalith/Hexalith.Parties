@@ -24,4 +24,6 @@ public sealed record PartyIndexEntry
     public DateTimeOffset CreatedAt { get; init; }
 
     public DateTimeOffset LastModifiedAt { get; init; }
+
+    public bool IsErased { get; init; }
 }

@@ -1,5 +1,3 @@
-using System.Collections.Concurrent;
-
 using Hexalith.Parties.Contracts.Security;
 
 using Microsoft.Extensions.Logging;
@@ -8,9 +6,17 @@ namespace Hexalith.Parties.Security;
 
 public sealed partial class PartyKeyLifecycleService(
     IPartyKeyManagementService keyManagementService,
+    IPartyKeyRetryScheduler retryScheduler,
     ILogger<PartyKeyLifecycleService> logger) : ICryptoStatusProvider
 {
-    private readonly ConcurrentDictionary<string, bool> _cryptoPendingParties = new();
+    public async Task MarkCryptoPendingAsync(string tenantId, string partyId, string reason, CancellationToken cancellationToken = default)
+    {
+        await retryScheduler.MarkPendingAsync(tenantId, partyId, reason, cancellationToken).ConfigureAwait(false);
+        LogKeyCreationFailed(tenantId, partyId, reason);
+    }
+
+    public Task ClearCryptoPendingAsync(string tenantId, string partyId, CancellationToken cancellationToken = default)
+        => retryScheduler.ClearPendingAsync(tenantId, partyId, cancellationToken);
 
     public async Task OnPartyCreatedAsync(string tenantId, string partyId, CancellationToken cancellationToken = default)
     {
@@ -22,16 +28,13 @@ public sealed partial class PartyKeyLifecycleService(
         catch (Exception ex)
         {
             // Party creation MUST NEVER fail due to key infrastructure unavailability
-            string pendingKey = BuildPendingKey(tenantId, partyId);
-            _cryptoPendingParties[pendingKey] = true;
-            LogKeyCreationFailed(tenantId, partyId, ex.Message);
+            await MarkCryptoPendingAsync(tenantId, partyId, ex.Message, cancellationToken).ConfigureAwait(false);
         }
     }
 
     public async Task RetryPendingKeyCreationAsync(string tenantId, string partyId, CancellationToken cancellationToken = default)
     {
-        string pendingKey = BuildPendingKey(tenantId, partyId);
-        if (!_cryptoPendingParties.ContainsKey(pendingKey))
+        if (!await retryScheduler.IsPendingAsync(tenantId, partyId, cancellationToken).ConfigureAwait(false))
         {
             return;
         }
@@ -39,7 +42,7 @@ public sealed partial class PartyKeyLifecycleService(
         try
         {
             PartyKeyInfo keyInfo = await keyManagementService.CreateKeyAsync(tenantId, partyId, cancellationToken).ConfigureAwait(false);
-            _cryptoPendingParties.TryRemove(pendingKey, out _);
+            await ClearCryptoPendingAsync(tenantId, partyId, cancellationToken).ConfigureAwait(false);
             LogKeyCreatedAfterRetry(tenantId, partyId, keyInfo.Version);
         }
         catch (Exception ex)
@@ -49,12 +52,7 @@ public sealed partial class PartyKeyLifecycleService(
     }
 
     public Task<bool> IsCryptoPendingAsync(string tenantId, string partyId, CancellationToken cancellationToken = default)
-    {
-        string pendingKey = BuildPendingKey(tenantId, partyId);
-        return Task.FromResult(_cryptoPendingParties.ContainsKey(pendingKey));
-    }
-
-    private static string BuildPendingKey(string tenantId, string partyId) => $"{tenantId}:{partyId}";
+        => retryScheduler.IsPendingAsync(tenantId, partyId, cancellationToken);
 
     [LoggerMessage(Level = LogLevel.Information, Message = "Encryption key created for party {TenantId}/{PartyId} version {Version}")]
     private partial void LogKeyCreated(string tenantId, string partyId, int version);

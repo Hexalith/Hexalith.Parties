@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using System.Security.Cryptography;
+using System.Threading;
 
 using Hexalith.Parties.Contracts.Security;
 
@@ -11,6 +12,26 @@ public sealed class CachedPartyKeyManagementService(IPartyKeyManagementService i
     private static readonly TimeSpan TtlJitter = TimeSpan.FromMinutes(2);
 
     private readonly ConcurrentDictionary<string, CacheEntry> _cache = new();
+    private long _cacheHits;
+    private long _cacheMisses;
+
+    static CachedPartyKeyManagementService()
+    {
+        PartyKeyManagementService.s_meter.CreateObservableGauge(
+            "parties.keys.cache_hit_ratio",
+            observeValue: () =>
+            {
+                // Gauge returns 0.0 if no lookups yet
+                long hits = Interlocked.Read(ref s_sharedHits);
+                long misses = Interlocked.Read(ref s_sharedMisses);
+                long total = hits + misses;
+                return total == 0 ? 0.0 : (double)hits / total;
+            },
+            description: "Cache hit ratio for key lookups");
+    }
+
+    private static long s_sharedHits;
+    private static long s_sharedMisses;
 
     public Task<PartyKeyInfo> CreateKeyAsync(string tenantId, string partyId, CancellationToken cancellationToken = default)
         => inner.CreateKeyAsync(tenantId, partyId, cancellationToken);
@@ -21,8 +42,13 @@ public sealed class CachedPartyKeyManagementService(IPartyKeyManagementService i
 
         if (_cache.TryGetValue(cacheKey, out CacheEntry? entry) && !entry.IsExpired)
         {
+            Interlocked.Increment(ref _cacheHits);
+            Interlocked.Increment(ref s_sharedHits);
             return (byte[])entry.KeyMaterial.Clone();
         }
+
+        Interlocked.Increment(ref _cacheMisses);
+        Interlocked.Increment(ref s_sharedMisses);
 
         byte[] key = await inner.GetKeyAsync(tenantId, partyId, cancellationToken).ConfigureAwait(false);
 

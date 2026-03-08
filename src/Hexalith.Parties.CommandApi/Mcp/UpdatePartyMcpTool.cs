@@ -16,6 +16,7 @@ using Hexalith.Parties.Contracts.Models;
 using Hexalith.Parties.Contracts.ValueObjects;
 using Hexalith.Parties.Projections.Abstractions;
 using Hexalith.Parties.Projections.Actors;
+using Hexalith.Parties.Security;
 
 using ModelContextProtocol.Server;
 
@@ -199,6 +200,18 @@ public static class UpdatePartyMcpTool
         {
             string errors = string.Join("; ", validationResult.Errors.Select(e => e.ErrorMessage));
             throw new InvalidOperationException($"Validation failed: {errors}");
+        }
+
+        IPersonalDataCommandGuard? commandGuard = services.GetService<IPersonalDataCommandGuard>();
+        if (commandGuard is not null)
+        {
+            string? blockingReason = await commandGuard
+                .GetBlockingReasonAsync(tenant, partyId, command, cancellationToken)
+                .ConfigureAwait(false);
+            if (!string.IsNullOrWhiteSpace(blockingReason))
+            {
+                throw new InvalidOperationException(blockingReason);
+            }
         }
 
         // Dispatch command via ICommandRouter

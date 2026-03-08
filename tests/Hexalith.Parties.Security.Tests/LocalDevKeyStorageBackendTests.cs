@@ -95,4 +95,18 @@ public class LocalDevKeyStorageBackendTests
         IReadOnlyList<int> tenantBVersions = await _backend.ListKeyVersionsAsync("tenant-b", "p1");
         tenantBVersions.ShouldBeEmpty();
     }
+
+    [Fact]
+    public async Task CreateSecret_WhenPartyVersionLimitExceeded_Throws()
+    {
+        byte[] key = new byte[32];
+
+        for (int i = 1; i <= 100; i++)
+        {
+            await _backend.CreateSecretAsync($"acme/parties/p1/v{i}", key);
+        }
+
+        await Should.ThrowAsync<InvalidOperationException>(
+            () => _backend.CreateSecretAsync("acme/parties/p1/v101", key));
+    }
 }

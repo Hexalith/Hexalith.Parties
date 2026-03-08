@@ -36,6 +36,12 @@ public sealed class PartyIndexProjectionHandler
         };
     }
 
+    public static PartyIndexEntry? ApplyErasure(string partyId, PartyIndexEntry? state)
+    {
+        // Remove entry entirely from index — erased parties should not appear in search
+        return null;
+    }
+
     private static PartyIndexEntry HandlePartyCreated(string partyId, PartyCreated e)
     {
         string displayName = DeriveDisplayName(e);

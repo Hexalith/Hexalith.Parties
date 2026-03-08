@@ -508,6 +508,83 @@ public class PartyDetailProjectionHandlerTests
         result.ShouldBeNull();
     }
 
+    // --- Erasure tests ---
+
+    [Fact]
+    public void ApplyErasure_WithPersonDetail_NullifiesPiiAndSetsErasedFlags()
+    {
+        PartyDetail state = CreatePersonDetailWithChannel() with
+        {
+            DisplayName = "John Doe",
+            SortName = "Doe, John",
+            Identifiers =
+            [
+                new PartyIdentifier
+                {
+                    Id = "id-vat-1",
+                    Type = IdentifierType.VAT,
+                    Value = "FR12345678901",
+                },
+            ],
+        };
+
+        PartyDetail? result = PartyDetailProjectionHandler.ApplyErasure(PartyId, state);
+
+        result.ShouldNotBeNull();
+        result.DisplayName.ShouldBe(string.Empty);
+        result.SortName.ShouldBe(string.Empty);
+        result.PersonDetails.ShouldBeNull();
+        result.OrganizationDetails.ShouldBeNull();
+        result.ContactChannels.ShouldBeEmpty();
+        result.Identifiers.ShouldBeEmpty();
+        result.IsErased.ShouldBeTrue();
+        result.ErasedAt.ShouldNotBeNull();
+    }
+
+    [Fact]
+    public void ApplyErasure_WithOrganizationDetail_NullifiesPiiAndSetsErasedFlags()
+    {
+        PartyDetail state = CreateOrganizationDetail() with
+        {
+            DisplayName = "Acme Corp",
+            SortName = "Acme Corp",
+        };
+
+        PartyDetail? result = PartyDetailProjectionHandler.ApplyErasure(PartyId, state);
+
+        result.ShouldNotBeNull();
+        result.DisplayName.ShouldBe(string.Empty);
+        result.SortName.ShouldBe(string.Empty);
+        result.OrganizationDetails.ShouldBeNull();
+        result.IsErased.ShouldBeTrue();
+        result.ErasedAt.ShouldNotBeNull();
+    }
+
+    [Fact]
+    public void ApplyErasure_NullState_ReturnsNull()
+    {
+        PartyDetail? result = PartyDetailProjectionHandler.ApplyErasure(PartyId, null);
+
+        result.ShouldBeNull();
+    }
+
+    [Fact]
+    public void ApplyErasure_PreservesNonPiiFields()
+    {
+        PartyDetail state = CreatePersonDetail() with
+        {
+            IsActive = false,
+        };
+
+        PartyDetail? result = PartyDetailProjectionHandler.ApplyErasure(PartyId, state);
+
+        result.ShouldNotBeNull();
+        result.Id.ShouldBe(PartyId);
+        result.Type.ShouldBe(PartyType.Person);
+        result.IsActive.ShouldBeFalse();
+        result.CreatedAt.ShouldBe(state.CreatedAt);
+    }
+
     // --- Helper methods ---
 
     private static PartyDetail CreatePersonDetail()

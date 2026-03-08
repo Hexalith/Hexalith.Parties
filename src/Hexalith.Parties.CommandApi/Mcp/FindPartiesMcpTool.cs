@@ -61,17 +61,20 @@ public static class FindPartiesMcpTool
 
         IReadOnlyDictionary<string, PartyIndexEntry> entries = await proxy.GetEntriesAsync().ConfigureAwait(false);
 
+        // Exclude erased parties from all MCP search/list results
+        IEnumerable<PartyIndexEntry> activeEntries = entries.Values.Where(e => !e.IsErased);
+
         bool? activeFilter = activeOnly ? true : null;
 
         if (string.IsNullOrWhiteSpace(query))
         {
             return JsonSerializer.Serialize(
-                PartySearchResultsBuilder.BuildPagedList(entries.Values, typeFilter, activeFilter, page, pageSize),
+                PartySearchResultsBuilder.BuildPagedList(activeEntries, typeFilter, activeFilter, page, pageSize),
                 McpSessionContext.JsonOptions);
         }
 
         return JsonSerializer.Serialize(
-            PartySearchResultsBuilder.BuildSearchResults(entries.Values, query, typeFilter, activeFilter, page, pageSize),
+            PartySearchResultsBuilder.BuildSearchResults(activeEntries, query, typeFilter, activeFilter, page, pageSize),
             McpSessionContext.JsonOptions);
     }
 }

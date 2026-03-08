@@ -10,6 +10,7 @@ using Hexalith.Parties.Contracts.Security;
 using Microsoft.IdentityModel.Tokens;
 
 using NSubstitute;
+using NSubstitute.ExceptionExtensions;
 
 using Shouldly;
 
@@ -17,7 +18,7 @@ namespace Hexalith.Parties.CommandApi.Tests.Controllers;
 
 public sealed class KeyRotationEndpointTests : IClassFixture<AdminEndpointIntegrationTests.AdminTestFactory>
 {
-    private const string RotateKeyEndpoint = "/api/v1/admin/parties/{0}/rotate-key?tenantId={1}";
+    private const string RotateKeyEndpoint = "/api/v1/admin/parties/{0}/rotate-key";
     private readonly AdminEndpointIntegrationTests.AdminTestFactory _factory;
 
     public KeyRotationEndpointTests(AdminEndpointIntegrationTests.AdminTestFactory factory)
@@ -28,22 +29,22 @@ public sealed class KeyRotationEndpointTests : IClassFixture<AdminEndpointIntegr
     [Fact]
     public async Task RotateKey_WithAdminToken_Returns202AcceptedAsync()
     {
-        _factory.KeyManagementService.RotateKeyAsync("acme", "p1", Arg.Any<CancellationToken>())
+        _factory.KeyManagementService.RotateKeyAsync("tenant-a", "p1", Arg.Any<CancellationToken>())
             .Returns(new PartyKeyInfo
             {
-                KeyId = "acme/parties/p1/v2",
+                KeyId = "tenant-a/parties/p1/v2",
                 Version = 2,
-                TenantId = "acme",
+                TenantId = "tenant-a",
                 PartyId = "p1",
                 Algorithm = EncryptionAlgorithm.AES256GCM,
                 CreatedAt = DateTimeOffset.UtcNow,
             });
 
         using HttpClient client = CreateAdminClient();
-        HttpResponseMessage response = await client.PostAsync(
-            string.Format(RotateKeyEndpoint, "p1", "acme"), null);
+        HttpResponseMessage response = await client.PostAsync(string.Format(RotateKeyEndpoint, "p1"), null);
 
         response.StatusCode.ShouldBe(HttpStatusCode.Accepted);
+        await _factory.KeyManagementService.Received(1).RotateKeyAsync("tenant-a", "p1", Arg.Any<CancellationToken>());
 
         JsonDocument payload = await JsonDocument.ParseAsync(
             await response.Content.ReadAsStreamAsync());
@@ -55,8 +56,7 @@ public sealed class KeyRotationEndpointTests : IClassFixture<AdminEndpointIntegr
     public async Task RotateKey_WithoutToken_Returns401Async()
     {
         using HttpClient client = _factory.CreateClient();
-        HttpResponseMessage response = await client.PostAsync(
-            string.Format(RotateKeyEndpoint, "p1", "acme"), null);
+        HttpResponseMessage response = await client.PostAsync(string.Format(RotateKeyEndpoint, "p1"), null);
 
         response.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
     }
@@ -65,20 +65,22 @@ public sealed class KeyRotationEndpointTests : IClassFixture<AdminEndpointIntegr
     public async Task RotateKey_WithRegularUserToken_Returns403Async()
     {
         using HttpClient client = CreateRegularUserClient();
-        HttpResponseMessage response = await client.PostAsync(
-            string.Format(RotateKeyEndpoint, "p1", "acme"), null);
+        HttpResponseMessage response = await client.PostAsync(string.Format(RotateKeyEndpoint, "p1"), null);
 
         response.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
     }
 
     [Fact]
-    public async Task RotateKey_MissingTenantId_Returns400Async()
+    public async Task RotateKey_MissingKey_Returns404Async()
     {
+        _factory.KeyManagementService.RotateKeyAsync("tenant-a", "missing-party", Arg.Any<CancellationToken>())
+            .ThrowsAsync(new KeyNotFoundException("No encryption key exists for tenant 'tenant-a' and party 'missing-party'."));
+
         using HttpClient client = CreateAdminClient();
         HttpResponseMessage response = await client.PostAsync(
-            "/api/v1/admin/parties/p1/rotate-key", null);
+            string.Format(RotateKeyEndpoint, "missing-party"), null);
 
-        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
     }
 
     private HttpClient CreateAdminClient()

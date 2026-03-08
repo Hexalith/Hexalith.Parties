@@ -13,9 +13,10 @@ namespace Hexalith.Parties.Security.Tests;
 public class PartyKeyLifecycleServiceTests
 {
     private readonly IPartyKeyManagementService _keyService = Substitute.For<IPartyKeyManagementService>();
+    private readonly IPartyKeyRetryScheduler _retryScheduler = Substitute.For<IPartyKeyRetryScheduler>();
 
     private PartyKeyLifecycleService CreateService()
-        => new(_keyService, NullLogger<PartyKeyLifecycleService>.Instance);
+        => new(_keyService, _retryScheduler, NullLogger<PartyKeyLifecycleService>.Instance);
 
     [Fact]
     public async Task OnPartyCreatedAsync_CreatesKey_WhenBackendAvailable()
@@ -34,8 +35,10 @@ public class PartyKeyLifecycleServiceTests
         var service = CreateService();
         await service.OnPartyCreatedAsync("acme", "p1");
 
+        _retryScheduler.IsPendingAsync("acme", "p1", Arg.Any<CancellationToken>()).Returns(false);
         bool pending = await service.IsCryptoPendingAsync("acme", "p1");
         pending.ShouldBeFalse();
+        await _retryScheduler.DidNotReceive().MarkPendingAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -47,8 +50,10 @@ public class PartyKeyLifecycleServiceTests
         var service = CreateService();
         await service.OnPartyCreatedAsync("acme", "p1");
 
+        _retryScheduler.IsPendingAsync("acme", "p1", Arg.Any<CancellationToken>()).Returns(true);
         bool pending = await service.IsCryptoPendingAsync("acme", "p1");
         pending.ShouldBeTrue();
+        await _retryScheduler.Received(1).MarkPendingAsync("acme", "p1", "Backend unavailable", Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -71,6 +76,8 @@ public class PartyKeyLifecycleServiceTests
         var service = CreateService();
         await service.OnPartyCreatedAsync("acme", "p1");
 
+        _retryScheduler.IsPendingAsync("acme", "p1", Arg.Any<CancellationToken>()).Returns(true);
+
         // Now make the backend available
         _keyService.CreateKeyAsync("acme", "p1", Arg.Any<CancellationToken>())
             .Returns(new PartyKeyInfo
@@ -85,8 +92,10 @@ public class PartyKeyLifecycleServiceTests
 
         await service.RetryPendingKeyCreationAsync("acme", "p1");
 
+        _retryScheduler.IsPendingAsync("acme", "p1", Arg.Any<CancellationToken>()).Returns(false);
         bool pending = await service.IsCryptoPendingAsync("acme", "p1");
         pending.ShouldBeFalse();
+        await _retryScheduler.Received(1).ClearPendingAsync("acme", "p1", Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -102,6 +111,7 @@ public class PartyKeyLifecycleServiceTests
     [Fact]
     public async Task IsCryptoPendingAsync_ReturnsFalse_WhenPartyNotTracked()
     {
+        _retryScheduler.IsPendingAsync("acme", "p1", Arg.Any<CancellationToken>()).Returns(false);
         var service = CreateService();
         bool pending = await service.IsCryptoPendingAsync("acme", "p1");
         pending.ShouldBeFalse();
@@ -120,9 +130,11 @@ public class PartyKeyLifecycleServiceTests
 
         // Same party, different tenant should not be pending
         string otherTenant = tenantId == "tenant-a" ? "tenant-b" : "tenant-a";
+        _retryScheduler.IsPendingAsync(otherTenant, partyId, Arg.Any<CancellationToken>()).Returns(false);
         bool pending = await service.IsCryptoPendingAsync(otherTenant, partyId);
         pending.ShouldBeFalse();
 
+        _retryScheduler.IsPendingAsync(tenantId, partyId, Arg.Any<CancellationToken>()).Returns(true);
         bool thisPending = await service.IsCryptoPendingAsync(tenantId, partyId);
         thisPending.ShouldBeTrue();
     }

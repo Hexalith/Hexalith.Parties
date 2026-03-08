@@ -4,6 +4,8 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 
 using Hexalith.EventStore.Contracts.Events;
+using Hexalith.EventStore.Contracts.Identity;
+using Hexalith.EventStore.Contracts.Security;
 using Hexalith.Parties.Contracts.Events;
 using Hexalith.Parties.Contracts.Models;
 using Hexalith.Parties.Projections.Handlers;
@@ -30,13 +32,16 @@ public sealed partial class ProjectionRebuildService : IProjectionRebuildService
     };
 
     private readonly HttpClient _daprHttpClient;
+    private readonly IEventPayloadProtectionService _payloadProtectionService;
     private readonly ILogger<ProjectionRebuildService> _logger;
 
     public ProjectionRebuildService(
         HttpClient daprHttpClient,
+        IEventPayloadProtectionService payloadProtectionService,
         ILogger<ProjectionRebuildService> logger)
     {
         _daprHttpClient = daprHttpClient;
+        _payloadProtectionService = payloadProtectionService;
         _logger = logger;
     }
 
@@ -441,7 +446,17 @@ public sealed partial class ProjectionRebuildService : IProjectionRebuildService
 
         try
         {
-            object? deserialized = JsonSerializer.Deserialize(envelope.Payload, eventType, s_jsonOptions);
+            AggregateIdentity identity = new(envelope.TenantId, envelope.Domain, envelope.AggregateId);
+            PayloadProtectionResult protectionResult = _payloadProtectionService
+                .UnprotectEventPayloadAsync(
+                    identity,
+                    envelope.EventTypeName,
+                    envelope.Payload,
+                    envelope.SerializationFormat)
+                .GetAwaiter()
+                .GetResult();
+
+            object? deserialized = JsonSerializer.Deserialize(protectionResult.PayloadBytes, eventType, s_jsonOptions);
             return deserialized as IEventPayload;
         }
         catch (JsonException ex)

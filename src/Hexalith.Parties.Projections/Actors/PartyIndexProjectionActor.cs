@@ -90,6 +90,17 @@ public sealed partial class PartyIndexProjectionActor : Actor, IPartyIndexProjec
 
     public Task<bool> IsRebuildingAsync() => Task.FromResult(_isRebuilding);
 
+    public async Task EraseAsync(string partyId)
+    {
+        string stateKey = ResolveStateKey(partyId);
+        _entries ??= await LoadStateAsync(stateKey).ConfigureAwait(false);
+
+        if (_entries.Remove(partyId))
+        {
+            await PersistStateAsync(stateKey).ConfigureAwait(false);
+        }
+    }
+
     public async Task<IReadOnlyDictionary<string, PartyIndexEntry>> GetEntriesAsync()
     {
         if (_isRebuilding)

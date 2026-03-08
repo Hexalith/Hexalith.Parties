@@ -24,6 +24,14 @@ public sealed class LocalDevKeyStorageBackend : IKeyStorageBackend
 
         ValidateNamespace(keyPath);
 
+        string partyPrefix = GetPartyPrefix(keyPath);
+        int existingSecrets = _secrets.Keys.Count(k => k.StartsWith(partyPrefix, StringComparison.Ordinal));
+        if (existingSecrets >= MaxSecretsPerParty)
+        {
+            throw new InvalidOperationException(
+                $"Party key storage limit exceeded for '{partyPrefix}'. Maximum versions per party is {MaxSecretsPerParty}.");
+        }
+
         byte[] stored = new byte[keyMaterial.Length];
         keyMaterial.CopyTo(stored, 0);
 
@@ -99,5 +107,11 @@ public sealed class LocalDevKeyStorageBackend : IKeyStorageBackend
                 $"Invalid key path format '{keyPath}'. Expected: '{{tenant}}/parties/{{partyId}}/v{{version}}'.",
                 nameof(keyPath));
         }
+    }
+
+    private static string GetPartyPrefix(string keyPath)
+    {
+        string[] parts = keyPath.Split('/');
+        return $"{parts[0]}/parties/{parts[2]}/";
     }
 }

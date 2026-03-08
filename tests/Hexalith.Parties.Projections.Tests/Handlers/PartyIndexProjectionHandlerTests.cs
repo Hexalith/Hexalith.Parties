@@ -364,6 +364,26 @@ public class PartyIndexProjectionHandlerTests
         state.LastModifiedAt.ShouldBeGreaterThan(state.CreatedAt);
     }
 
+    // --- Erasure tests ---
+
+    [Fact]
+    public void ApplyErasure_WithExistingEntry_ReturnsNull()
+    {
+        PartyIndexEntry state = CreatePersonIndexEntry();
+
+        PartyIndexEntry? result = PartyIndexProjectionHandler.ApplyErasure(PartyId, state);
+
+        result.ShouldBeNull();
+    }
+
+    [Fact]
+    public void ApplyErasure_NullState_ReturnsNull()
+    {
+        PartyIndexEntry? result = PartyIndexProjectionHandler.ApplyErasure(PartyId, null);
+
+        result.ShouldBeNull();
+    }
+
     // --- Helper methods ---
 
     private static PartyIndexEntry CreatePersonIndexEntry()

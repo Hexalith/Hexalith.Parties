@@ -50,6 +50,27 @@ public sealed class PartyDetailProjectionHandler
         };
     }
 
+    public static PartyDetail? ApplyErasure(string partyId, PartyDetail? state)
+    {
+        if (state is null)
+        {
+            return null;
+        }
+
+        return state with
+        {
+            DisplayName = string.Empty,
+            SortName = string.Empty,
+            PersonDetails = null,
+            OrganizationDetails = null,
+            ContactChannels = [],
+            Identifiers = [],
+            IsErased = true,
+            ErasedAt = DateTimeOffset.UtcNow,
+            LastModifiedAt = DateTimeOffset.UtcNow,
+        };
+    }
+
     private static PartyDetail HandlePartyCreated(string partyId, PartyCreated e)
     {
         string displayName = DeriveDisplayName(e);
