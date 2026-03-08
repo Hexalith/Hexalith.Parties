@@ -1,4 +1,4 @@
-namespace Hexalith.Parties.Security;
+namespace Hexalith.Parties.Contracts.Security;
 
 /// <summary>
 /// Determines whether a party command that writes personal data may proceed.

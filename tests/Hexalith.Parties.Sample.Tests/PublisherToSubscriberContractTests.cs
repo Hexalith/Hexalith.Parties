@@ -10,6 +10,7 @@ using Hexalith.Parties.Sample;
 
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.Logging.Abstractions;
+using Hexalith.EventStore.Contracts.Security;
 using Microsoft.Extensions.Options;
 
 using NSubstitute;
@@ -44,10 +45,22 @@ public sealed class PublisherToSubscriberContractTests : IDisposable
     public async Task PublisherGeneratedCloudEvents_FullyQualifiedEventNames_AreProcessedEndToEndAsync()
     {
         DaprClient daprClient = Substitute.For<DaprClient>();
+        IEventPayloadProtectionService payloadProtectionService = Substitute.For<IEventPayloadProtectionService>();
+        
+        payloadProtectionService
+            .UnprotectEventPayloadAsync(
+                Arg.Any<AggregateIdentity>(),
+                Arg.Any<string>(),
+                Arg.Any<byte[]>(),
+                Arg.Any<string>(),
+                Arg.Any<CancellationToken>())
+            .Returns(callInfo => Task.FromResult(new PayloadProtectionResult(callInfo.Arg<byte[]>(), callInfo.ArgAt<string>(3))));
+
         var publisher = new EventPublisher(
             daprClient,
             Options.Create(new EventPublisherOptions()),
-            NullLogger<EventPublisher>.Instance);
+            NullLogger<EventPublisher>.Instance,
+            payloadProtectionService);
 
         AggregateIdentity identity = new("tenant-a", "parties", "p-publisher-contract");
         List<(ServerEventEnvelope Envelope, Dictionary<string, string> Metadata)> publishedEvents = [];

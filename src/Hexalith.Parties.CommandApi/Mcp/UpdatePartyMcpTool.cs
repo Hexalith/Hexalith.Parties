@@ -16,7 +16,7 @@ using Hexalith.Parties.Contracts.Models;
 using Hexalith.Parties.Contracts.ValueObjects;
 using Hexalith.Parties.Projections.Abstractions;
 using Hexalith.Parties.Projections.Actors;
-using Hexalith.Parties.Security;
+using Hexalith.Parties.Contracts.Security;
 
 using ModelContextProtocol.Server;
 
