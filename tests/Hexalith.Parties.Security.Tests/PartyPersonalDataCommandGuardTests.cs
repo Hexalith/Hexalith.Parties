@@ -82,4 +82,48 @@ public sealed class PartyPersonalDataCommandGuardTests
         reason.ShouldNotBeNull();
         reason.ShouldContain("no party encryption key", Case.Insensitive);
     }
+
+    // ─── Task 6.3: Key available allows personal data write ───
+
+    [Fact]
+    public async Task GetBlockingReasonAsync_KeyAvailable_AllowsPersonalDataWrite()
+    {
+        _cryptoStatusProvider.IsCryptoPendingAsync("acme", "p1", Arg.Any<CancellationToken>()).Returns(false);
+        _keyStorageBackend.ListKeyVersionsAsync("acme", "p1", Arg.Any<CancellationToken>())
+            .Returns((IReadOnlyList<int>)[1]);
+
+        UpdatePersonDetails command = new()
+        {
+            PartyId = "p1",
+            PersonDetails = new PersonDetails
+            {
+                FirstName = "Ada",
+                LastName = "Lovelace",
+                DateOfBirth = null,
+                Prefix = null,
+                Suffix = null,
+            },
+        };
+
+        string? reason = await CreateGuard().GetBlockingReasonAsync("acme", "p1", command);
+
+        reason.ShouldBeNull();
+    }
+
+    // ─── Task 6.4: Non-personal data command always allows ───
+
+    [Fact]
+    public async Task GetBlockingReasonAsync_NonPersonalDataCommand_AlwaysAllows()
+    {
+        // No key setup, no crypto status — should not matter for non-PII commands
+        DeactivateParty command = new() { PartyId = "p1" };
+
+        string? reason = await CreateGuard().GetBlockingReasonAsync("acme", "p1", command);
+
+        reason.ShouldBeNull();
+
+        // Verify no backend calls were made (early exit for non-PII)
+        await _cryptoStatusProvider.DidNotReceive().IsCryptoPendingAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>());
+        await _keyStorageBackend.DidNotReceive().ListKeyVersionsAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>());
+    }
 }

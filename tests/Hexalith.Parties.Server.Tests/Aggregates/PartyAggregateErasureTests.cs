@@ -9,11 +9,9 @@ using Shouldly;
 
 namespace Hexalith.Parties.Server.Tests.Aggregates;
 
-public class PartyAggregateErasureTests
-{
+public class PartyAggregateErasureTests {
     [Fact]
-    public void Handle_ErasePartyCommand_EmitsErasePartyRequestedEvent()
-    {
+    public void Handle_ErasePartyCommand_EmitsErasePartyRequestedEvent() {
         // Arrange
         EraseParty command = PartyTestData.ValidEraseParty();
         PartyState state = PartyTestData.CreatePersonState();
@@ -30,8 +28,7 @@ public class PartyAggregateErasureTests
     }
 
     [Fact]
-    public void Handle_ErasePartyCommand_AlreadyErased_ReturnsNoOp()
-    {
+    public void Handle_ErasePartyCommand_AlreadyErased_ReturnsNoOp() {
         // Arrange
         EraseParty command = PartyTestData.ValidEraseParty();
         PartyState state = PartyTestData.CreateErasedState();
@@ -44,8 +41,7 @@ public class PartyAggregateErasureTests
     }
 
     [Fact]
-    public void Handle_ErasePartyCommand_ErasurePending_ReturnsNoOp()
-    {
+    public void Handle_ErasePartyCommand_ErasurePending_ReturnsNoOp() {
         // Arrange
         EraseParty command = PartyTestData.ValidEraseParty();
         PartyState state = PartyTestData.CreateErasurePendingState();
@@ -58,8 +54,7 @@ public class PartyAggregateErasureTests
     }
 
     [Fact]
-    public void Handle_ErasePartyCommand_NullState_ReturnsRejection()
-    {
+    public void Handle_ErasePartyCommand_NullState_ReturnsRejection() {
         // Arrange
         EraseParty command = PartyTestData.ValidEraseParty();
 
@@ -72,8 +67,7 @@ public class PartyAggregateErasureTests
     }
 
     [Fact]
-    public void Handle_AnyCommand_WhenErasurePending_RejectsWithErasureError()
-    {
+    public void Handle_AnyCommand_WhenErasurePending_RejectsWithErasureError() {
         // Arrange
         PartyState state = PartyTestData.CreateErasurePendingState();
         DeactivateParty command = PartyTestData.ValidDeactivateParty();
@@ -87,8 +81,7 @@ public class PartyAggregateErasureTests
     }
 
     [Fact]
-    public void Handle_AnyCommand_WhenErased_RejectsWithErasureError()
-    {
+    public void Handle_AnyCommand_WhenErased_RejectsWithErasureError() {
         // Arrange
         PartyState state = PartyTestData.CreateErasedState();
         UpdatePersonDetails command = PartyTestData.ValidUpdatePersonDetails();
@@ -102,14 +95,12 @@ public class PartyAggregateErasureTests
     }
 
     [Fact]
-    public void Apply_ErasePartyRequested_SetsErasurePendingStatus()
-    {
+    public void Apply_ErasePartyRequested_SetsErasurePendingStatus() {
         // Arrange
         PartyState state = PartyTestData.CreatePersonState();
 
         // Act
-        state.Apply(new ErasePartyRequested
-        {
+        state.Apply(new ErasePartyRequested {
             PartyId = PartyTestData.DefaultPartyId,
             TenantId = PartyTestData.DefaultTenantId,
             RequestedAt = DateTimeOffset.UtcNow,
@@ -121,14 +112,12 @@ public class PartyAggregateErasureTests
     }
 
     [Fact]
-    public void Apply_PartyEncryptionKeyDeleted_SetsKeyDestroyedStatus()
-    {
+    public void Apply_PartyEncryptionKeyDeleted_SetsKeyDestroyedStatus() {
         // Arrange
         PartyState state = PartyTestData.CreateErasurePendingState();
 
         // Act
-        state.Apply(new PartyEncryptionKeyDeleted
-        {
+        state.Apply(new PartyEncryptionKeyDeleted {
             PartyId = PartyTestData.DefaultPartyId,
             TenantId = PartyTestData.DefaultTenantId,
             DeletedAt = DateTimeOffset.UtcNow,
@@ -139,20 +128,17 @@ public class PartyAggregateErasureTests
     }
 
     [Fact]
-    public void Apply_ErasureVerified_SetsVerifiedStatus()
-    {
+    public void Apply_ErasureVerified_SetsVerifiedStatus() {
         // Arrange
         PartyState state = PartyTestData.CreateErasurePendingState();
-        state.Apply(new PartyEncryptionKeyDeleted
-        {
+        state.Apply(new PartyEncryptionKeyDeleted {
             PartyId = PartyTestData.DefaultPartyId,
             TenantId = PartyTestData.DefaultTenantId,
             DeletedAt = DateTimeOffset.UtcNow,
         });
 
         // Act
-        state.Apply(new ErasureVerified
-        {
+        state.Apply(new ErasureVerified {
             PartyId = PartyTestData.DefaultPartyId,
             TenantId = PartyTestData.DefaultTenantId,
             VerifiedAt = DateTimeOffset.UtcNow,
@@ -164,8 +150,7 @@ public class PartyAggregateErasureTests
     }
 
     [Fact]
-    public void Apply_PartyErased_SetsTerminalErasedState()
-    {
+    public void Apply_PartyErased_SetsTerminalErasedState() {
         // Arrange & Act
         PartyState state = PartyTestData.CreateErasedState();
 
@@ -175,12 +160,69 @@ public class PartyAggregateErasureTests
     }
 
     [Fact]
-    public void Handle_AddContactChannel_WhenErasurePending_RejectsWithErasureError()
-    {
+    public void Handle_MarkPartyEncryptionKeyDeleted_WhenPending_EmitsEvent() {
+        PartyState state = PartyTestData.CreateErasurePendingState();
+
+        var result = PartyAggregate.Handle(new MarkPartyEncryptionKeyDeleted {
+            PartyId = PartyTestData.DefaultPartyId,
+            TenantId = PartyTestData.DefaultTenantId,
+            DeletedAt = DateTimeOffset.UtcNow,
+        }, state);
+
+        result.IsSuccess.ShouldBeTrue();
+        result.Events[0].ShouldBeOfType<PartyEncryptionKeyDeleted>();
+    }
+
+    [Fact]
+    public void Handle_MarkErasureVerified_WhenKeyDestroyed_EmitsEvent() {
+        PartyState state = PartyTestData.CreateErasurePendingState();
+        state.Apply(new PartyEncryptionKeyDeleted {
+            PartyId = PartyTestData.DefaultPartyId,
+            TenantId = PartyTestData.DefaultTenantId,
+            DeletedAt = DateTimeOffset.UtcNow,
+        });
+
+        var result = PartyAggregate.Handle(new MarkErasureVerified {
+            PartyId = PartyTestData.DefaultPartyId,
+            TenantId = PartyTestData.DefaultTenantId,
+            VerifiedAt = DateTimeOffset.UtcNow,
+            VerificationReportId = "report-1",
+        }, state);
+
+        result.IsSuccess.ShouldBeTrue();
+        result.Events[0].ShouldBeOfType<ErasureVerified>();
+    }
+
+    [Fact]
+    public void Handle_CompletePartyErasure_WhenVerified_EmitsEvent() {
+        PartyState state = PartyTestData.CreateErasurePendingState();
+        state.Apply(new PartyEncryptionKeyDeleted {
+            PartyId = PartyTestData.DefaultPartyId,
+            TenantId = PartyTestData.DefaultTenantId,
+            DeletedAt = DateTimeOffset.UtcNow,
+        });
+        state.Apply(new ErasureVerified {
+            PartyId = PartyTestData.DefaultPartyId,
+            TenantId = PartyTestData.DefaultTenantId,
+            VerifiedAt = DateTimeOffset.UtcNow,
+            VerificationReportId = "report-1",
+        });
+
+        var result = PartyAggregate.Handle(new CompletePartyErasure {
+            PartyId = PartyTestData.DefaultPartyId,
+            TenantId = PartyTestData.DefaultTenantId,
+            ErasedAt = DateTimeOffset.UtcNow,
+        }, state);
+
+        result.IsSuccess.ShouldBeTrue();
+        result.Events[0].ShouldBeOfType<PartyErased>();
+    }
+
+    [Fact]
+    public void Handle_AddContactChannel_WhenErasurePending_RejectsWithErasureError() {
         // Arrange
         PartyState state = PartyTestData.CreateErasurePendingState();
-        AddContactChannel command = new()
-        {
+        AddContactChannel command = new() {
             PartyId = PartyTestData.DefaultPartyId,
             ContactChannelId = "ch-new",
             Type = Contracts.ValueObjects.ContactChannelType.Email,
@@ -196,13 +238,11 @@ public class PartyAggregateErasureTests
     }
 
     [Fact]
-    public void Handle_UpdateComposite_WhenErasurePending_RejectsWithErasureError()
-    {
+    public void Handle_UpdateComposite_WhenErasurePending_RejectsWithErasureError() {
         // Arrange
         PartyState state = PartyTestData.CreateErasurePendingState();
         // Add channels/identifiers to state so the composite has something to update
-        UpdatePartyComposite command = new()
-        {
+        UpdatePartyComposite command = new() {
             PartyId = PartyTestData.DefaultPartyId,
             PersonDetails = new Contracts.ValueObjects.PersonDetails { FirstName = "Test", LastName = "Test" },
         };
@@ -215,8 +255,7 @@ public class PartyAggregateErasureTests
     }
 
     [Fact]
-    public void Handle_RotatePartyKey_EmitsPartyEncryptionKeyRotatedEvent()
-    {
+    public void Handle_RotatePartyKey_EmitsPartyEncryptionKeyRotatedEvent() {
         // Arrange
         RotatePartyKey command = PartyTestData.ValidRotatePartyKey();
         PartyState state = PartyTestData.CreatePersonState();
@@ -234,8 +273,7 @@ public class PartyAggregateErasureTests
     }
 
     [Fact]
-    public void Handle_RotatePartyKey_NullState_ReturnsRejection()
-    {
+    public void Handle_RotatePartyKey_NullState_ReturnsRejection() {
         // Arrange
         RotatePartyKey command = PartyTestData.ValidRotatePartyKey();
 
@@ -248,8 +286,7 @@ public class PartyAggregateErasureTests
     }
 
     [Fact]
-    public void Handle_RotatePartyKey_WhenErasurePending_RejectsWithErasureError()
-    {
+    public void Handle_RotatePartyKey_WhenErasurePending_RejectsWithErasureError() {
         // Arrange
         RotatePartyKey command = PartyTestData.ValidRotatePartyKey();
         PartyState state = PartyTestData.CreateErasurePendingState();

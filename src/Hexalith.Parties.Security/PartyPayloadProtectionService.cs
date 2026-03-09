@@ -13,13 +13,16 @@ using Hexalith.Parties.Contracts.Events;
 using Hexalith.Parties.Contracts.Security;
 
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace Hexalith.Parties.Security;
 
 public sealed partial class PartyPayloadProtectionService(
     IPartyKeyManagementService keyManagementService,
     IKeyStorageBackend keyStorageBackend,
-    PartyKeyLifecycleService cryptoLifecycleService,
+    IPartyKeyLifecycleService cryptoLifecycleService,
+    DecryptionCircuitBreaker circuitBreaker,
+    IOptionsMonitor<CryptoShreddingOptions> cryptoOptions,
     ILogger<PartyPayloadProtectionService> logger) : IEventPayloadProtectionService
 {
     internal const string ProtectedSerializationFormat = "json+pdenc-v1";
@@ -48,6 +51,15 @@ public sealed partial class PartyPayloadProtectionService(
 
         if (!ShouldHandle(identity))
         {
+            return new PayloadProtectionResult(payloadBytes, serializationFormat);
+        }
+
+        // Read options snapshot once per call for consistent behavior within a single event
+        CryptoShreddingOptions options = cryptoOptions.CurrentValue;
+
+        if (!options.IsEnabled)
+        {
+            // When disabled: skip encryption on persist but key lifecycle still operates
             return new PayloadProtectionResult(payloadBytes, serializationFormat);
         }
 
@@ -108,16 +120,33 @@ public sealed partial class PartyPayloadProtectionService(
             return new PayloadProtectionResult(payloadBytes, serializationFormat);
         }
 
+        circuitBreaker.ThrowIfOpen(identity.TenantId, identity.AggregateId);
+
         JsonNode? root = JsonNode.Parse(payloadBytes);
         if (root is null)
         {
             return new PayloadProtectionResult(payloadBytes, serializationFormat);
         }
 
-        JsonNode? unprotected = await UnprotectNodeAsync(identity, eventTypeName, root, cancellationToken).ConfigureAwait(false);
-        byte[] unprotectedBytes = JsonSerializer.SerializeToUtf8Bytes(unprotected, s_jsonOptions);
-        LogUnprotectedPayload(identity.TenantId, identity.AggregateId, eventTypeName);
-        return new PayloadProtectionResult(unprotectedBytes, "json");
+        try
+        {
+            JsonNode? unprotected = await UnprotectNodeAsync(identity, eventTypeName, root, cancellationToken).ConfigureAwait(false);
+            byte[] unprotectedBytes = JsonSerializer.SerializeToUtf8Bytes(unprotected, s_jsonOptions);
+            LogUnprotectedPayload(identity.TenantId, identity.AggregateId, eventTypeName);
+            circuitBreaker.RecordSuccess(identity.TenantId, identity.AggregateId);
+            return new PayloadProtectionResult(unprotectedBytes, "json");
+        }
+        catch (Exception ex) when (ex is not DecryptionCircuitOpenException)
+        {
+            CryptoShreddingOptions cbOptions = cryptoOptions.CurrentValue;
+            circuitBreaker.RecordFailure(
+                identity.TenantId,
+                identity.AggregateId,
+                cbOptions.CircuitBreakerFailureThreshold,
+                cbOptions.CircuitBreakerBreakDuration,
+                cbOptions.CircuitBreakerMaxOpenDuration);
+            throw;
+        }
     }
 
     public async Task<object> ProtectSnapshotStateAsync(
@@ -151,7 +180,7 @@ public sealed partial class PartyPayloadProtectionService(
             return new ProtectedSnapshotState
             {
                 Marker = ProtectedSnapshotMarker,
-                TypeName = state.GetType().AssemblyQualifiedName ?? state.GetType().FullName ?? state.GetType().Name,
+                TypeName = state.GetType().FullName ?? state.GetType().Name,
                 Payload = Convert.ToBase64String(JsonSerializer.SerializeToUtf8Bytes(root, s_jsonOptions)),
                 SerializationFormat = ProtectedSerializationFormat,
             };
@@ -184,7 +213,8 @@ public sealed partial class PartyPayloadProtectionService(
             return state;
         }
 
-        Type? targetType = Type.GetType(protectedState.TypeName);
+        Type? targetType = Type.GetType(protectedState.TypeName)
+            ?? ResolveVersionTolerantType(protectedState.TypeName);
         if (targetType is null)
         {
             throw new InvalidOperationException($"Unable to resolve snapshot state type '{protectedState.TypeName}'.");
@@ -205,6 +235,35 @@ public sealed partial class PartyPayloadProtectionService(
 
     private static bool ShouldHandle(AggregateIdentity identity)
         => string.Equals(identity.Domain, "party", StringComparison.OrdinalIgnoreCase);
+
+    /// <summary>
+    /// Strips assembly version info from an assembly-qualified type name and retries resolution.
+    /// Supports snapshots persisted with older NuGet versions.
+    /// </summary>
+    private static Type? ResolveVersionTolerantType(string typeName)
+    {
+        // Extract just the full type name (everything before the first comma, if present)
+        int commaIndex = typeName.IndexOf(',', StringComparison.Ordinal);
+        string fullNameOnly = commaIndex >= 0 ? typeName[..commaIndex].Trim() : typeName;
+
+        Type? type = Type.GetType(fullNameOnly);
+        if (type is not null)
+        {
+            return type;
+        }
+
+        // Try searching loaded assemblies by full name
+        foreach (Assembly assembly in AppDomain.CurrentDomain.GetAssemblies())
+        {
+            type = assembly.GetType(fullNameOnly);
+            if (type is not null)
+            {
+                return type;
+            }
+        }
+
+        return null;
+    }
 
     private async Task<(byte[] Key, int Version)> GetCurrentKeyAsync(AggregateIdentity identity, bool createIfMissing, CancellationToken cancellationToken)
     {
@@ -262,7 +321,17 @@ public sealed partial class PartyPayloadProtectionService(
                 }
 
                 (string jsonName, JsonNode? childNode) = GetPropertyNode(obj, property);
-                object? value = property.GetValue(instance);
+                object? value;
+                try
+                {
+                    value = property.GetValue(instance);
+                }
+                catch (Exception ex)
+                {
+                    LogPropertyAccessFailure(identity.TenantId, identity.AggregateId, property.Name, ex.Message);
+                    continue;
+                }
+
                 if (childNode is null || value is null)
                 {
                     continue;
@@ -340,6 +409,11 @@ public sealed partial class PartyPayloadProtectionService(
                 return await DecryptNodeAsync(identity, eventTypeName, obj, cancellationToken).ConfigureAwait(false);
 
             case JsonObject obj:
+                if (IsSuspiciousEncryptedObject(obj))
+                {
+                    LogSuspiciousEncryptedField(identity.TenantId, identity.AggregateId, eventTypeName);
+                }
+
                 foreach (KeyValuePair<string, JsonNode?> property in obj.ToList())
                 {
                     if (property.Value is not null)
@@ -373,9 +447,22 @@ public sealed partial class PartyPayloadProtectionService(
         byte[] key = await keyManagementService.GetKeyVersionAsync(identity.TenantId, identity.AggregateId, version, cancellationToken).ConfigureAwait(false);
         try
         {
-            byte[] nonce = Convert.FromBase64String(marker["n"]?.GetValue<string>() ?? throw new InvalidOperationException("Encrypted field metadata is missing nonce."));
-            byte[] tag = Convert.FromBase64String(marker["t"]?.GetValue<string>() ?? throw new InvalidOperationException("Encrypted field metadata is missing tag."));
-            byte[] ciphertext = Convert.FromBase64String(marker["c"]?.GetValue<string>() ?? throw new InvalidOperationException("Encrypted field metadata is missing ciphertext."));
+            byte[] nonce;
+            byte[] tag;
+            byte[] ciphertext;
+            try
+            {
+                nonce = Convert.FromBase64String(marker["n"]?.GetValue<string>() ?? throw new InvalidOperationException("Encrypted field metadata is missing nonce."));
+                tag = Convert.FromBase64String(marker["t"]?.GetValue<string>() ?? throw new InvalidOperationException("Encrypted field metadata is missing tag."));
+                ciphertext = Convert.FromBase64String(marker["c"]?.GetValue<string>() ?? throw new InvalidOperationException("Encrypted field metadata is missing ciphertext."));
+            }
+            catch (FormatException ex)
+            {
+                LogCorruptedEncryptedField(identity.TenantId, identity.AggregateId, eventTypeName, ex.Message);
+                throw new InvalidOperationException(
+                    $"Corrupted encrypted field for {identity.TenantId}/{identity.AggregateId} in event {eventTypeName}: invalid base64 encoding.",
+                    ex);
+            }
 
             byte[] plaintext = new byte[ciphertext.Length];
             using var aes = new AesGcm(key, 16);
@@ -400,6 +487,11 @@ public sealed partial class PartyPayloadProtectionService(
         => obj.TryGetPropertyValue(EncryptedFieldMarker, out JsonNode? marker)
             && marker?.GetValue<bool>() == true;
 
+    private static bool IsSuspiciousEncryptedObject(JsonObject obj)
+        => !obj.ContainsKey(EncryptedFieldMarker)
+            && obj.ContainsKey("alg")
+            && obj.ContainsKey("kv");
+
     private static (string PropertyName, JsonNode? Node) GetPropertyNode(JsonObject obj, PropertyInfo property)
     {
         ArgumentNullException.ThrowIfNull(obj);
@@ -422,6 +514,15 @@ public sealed partial class PartyPayloadProtectionService(
 
     [LoggerMessage(Level = LogLevel.Warning, Message = "Party payload protection failed for {TenantId}/{PartyId}: {Error}")]
     private partial void LogProtectionFailure(string tenantId, string partyId, string error);
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "PropertyInfo.GetValue failed for {TenantId}/{PartyId} property '{PropertyName}': {Error}")]
+    private partial void LogPropertyAccessFailure(string tenantId, string partyId, string propertyName, string error);
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Corrupted encrypted field for {TenantId}/{PartyId} in event {EventTypeName}: {Error}")]
+    private partial void LogCorruptedEncryptedField(string tenantId, string partyId, string eventTypeName, string error);
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Suspicious encrypted field for {TenantId}/{PartyId} in event {EventTypeName}: JSON object has 'alg'/'kv' fields but missing '$enc' marker (possible corruption)")]
+    private partial void LogSuspiciousEncryptedField(string tenantId, string partyId, string eventTypeName);
 
     internal sealed record ProtectedSnapshotState
     {

@@ -22,6 +22,9 @@ public sealed class PartyKeyManagementService(
 
     public async Task<PartyKeyInfo> CreateKeyAsync(string tenantId, string partyId, CancellationToken cancellationToken = default)
     {
+        ArgumentException.ThrowIfNullOrWhiteSpace(tenantId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(partyId);
+
         long startTicks = Stopwatch.GetTimestamp();
         try
         {
@@ -64,6 +67,9 @@ public sealed class PartyKeyManagementService(
 
     public async Task<byte[]> GetKeyAsync(string tenantId, string partyId, CancellationToken cancellationToken = default)
     {
+        ArgumentException.ThrowIfNullOrWhiteSpace(tenantId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(partyId);
+
         long startTicks = Stopwatch.GetTimestamp();
         try
         {
@@ -84,6 +90,9 @@ public sealed class PartyKeyManagementService(
 
     public async Task<byte[]> GetKeyVersionAsync(string tenantId, string partyId, int version, CancellationToken cancellationToken = default)
     {
+        ArgumentException.ThrowIfNullOrWhiteSpace(tenantId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(partyId);
+
         string keyPath = BuildKeyPath(tenantId, partyId, version);
         byte[] key = await backend.ReadSecretAsync(keyPath, cancellationToken).ConfigureAwait(false);
         await AuditOperationAsync(KeyOperationType.Read, tenantId, partyId, version, cancellationToken).ConfigureAwait(false);
@@ -92,6 +101,9 @@ public sealed class PartyKeyManagementService(
 
     public async Task<PartyKeyInfo> RotateKeyAsync(string tenantId, string partyId, CancellationToken cancellationToken = default)
     {
+        ArgumentException.ThrowIfNullOrWhiteSpace(tenantId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(partyId);
+
         long startTicks = Stopwatch.GetTimestamp();
         try
         {
@@ -113,10 +125,19 @@ public sealed class PartyKeyManagementService(
                 {
                     await AuditOperationAsync(KeyOperationType.Rotate, tenantId, partyId, newVersion, cancellationToken).ConfigureAwait(false);
                 }
-                catch
+                catch (Exception auditEx)
                 {
-                    // Rollback: remove the orphaned secret version if audit recording fails
-                    await backend.DeleteSecretAsync(keyPath, cancellationToken).ConfigureAwait(false);
+                    // Rollback: remove the orphaned secret version if audit recording fails.
+                    // Wrap rollback in its own try/catch so the original exception is not lost.
+                    try
+                    {
+                        await backend.DeleteSecretAsync(keyPath, cancellationToken).ConfigureAwait(false);
+                    }
+                    catch (Exception rollbackEx)
+                    {
+                        throw new AggregateException("Key rotation audit failed and rollback also failed. Orphaned key version may exist.", auditEx, rollbackEx);
+                    }
+
                     throw;
                 }
 
@@ -142,6 +163,9 @@ public sealed class PartyKeyManagementService(
 
     public async Task<ErasureCertificate> DeleteKeyAsync(string tenantId, string partyId, CancellationToken cancellationToken = default)
     {
+        ArgumentException.ThrowIfNullOrWhiteSpace(tenantId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(partyId);
+
         long startTicks = Stopwatch.GetTimestamp();
         try
         {

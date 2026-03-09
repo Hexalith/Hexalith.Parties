@@ -1,6 +1,7 @@
 using Hexalith.EventStore.Contracts.Events;
 using Hexalith.Parties.Contracts.Events;
 using Hexalith.Parties.Contracts.Models;
+using Hexalith.Parties.Contracts.Security;
 using Hexalith.Parties.Contracts.ValueObjects;
 
 namespace Hexalith.Parties.Projections.Handlers;
@@ -12,12 +13,7 @@ public sealed class PartyDetailProjectionHandler
         return @event switch
         {
             PartyCreated e => HandlePartyCreated(partyId, e),
-            PartyDisplayNameDerived e when state is not null => state with
-            {
-                DisplayName = e.DisplayName,
-                SortName = e.SortName,
-                LastModifiedAt = DateTimeOffset.UtcNow,
-            },
+            PartyDisplayNameDerived e when state is not null => HandleNameDerived(state, e),
             PersonDetailsUpdated e when state is not null => state with
             {
                 PersonDetails = e.PersonDetails,
@@ -44,6 +40,20 @@ public sealed class PartyDetailProjectionHandler
                 IsActive = true,
                 LastModifiedAt = DateTimeOffset.UtcNow,
             },
+            ConsentRecorded e when state is not null => HandleConsentRecorded(state, e),
+            ConsentRevoked e when state is not null => HandleConsentRevoked(state, e),
+            ProcessingRestricted e when state is not null => state with
+            {
+                IsRestricted = true,
+                RestrictedAt = e.RestrictedAt,
+                LastModifiedAt = DateTimeOffset.UtcNow,
+            },
+            RestrictionLifted when state is not null => state with
+            {
+                IsRestricted = false,
+                RestrictedAt = null,
+                LastModifiedAt = DateTimeOffset.UtcNow,
+            },
             IsNaturalPersonChanged => null,
             PartyMerged => null,
             _ => null,
@@ -65,6 +75,8 @@ public sealed class PartyDetailProjectionHandler
             OrganizationDetails = null,
             ContactChannels = [],
             Identifiers = [],
+            ConsentRecords = [],
+            NameHistory = [],
             IsErased = true,
             ErasedAt = DateTimeOffset.UtcNow,
             LastModifiedAt = DateTimeOffset.UtcNow,
@@ -76,6 +88,7 @@ public sealed class PartyDetailProjectionHandler
         string displayName = DeriveDisplayName(e);
         string sortName = DeriveSortName(e);
 
+        DateTimeOffset now = DateTimeOffset.UtcNow;
         return new PartyDetail
         {
             Id = partyId,
@@ -85,7 +98,50 @@ public sealed class PartyDetailProjectionHandler
             SortName = sortName,
             PersonDetails = e.PersonDetails,
             OrganizationDetails = e.OrganizationDetails,
-            CreatedAt = DateTimeOffset.UtcNow,
+            NameHistory =
+            [
+                new NameHistoryEntry
+                {
+                    DisplayName = displayName,
+                    SortName = sortName,
+                    ChangedAt = now,
+                    TriggeredBy = nameof(PartyCreated),
+                },
+            ],
+            CreatedAt = now,
+            LastModifiedAt = now,
+        };
+    }
+
+    private static PartyDetail? HandleNameDerived(PartyDetail state, PartyDisplayNameDerived e)
+    {
+        // Deduplicate: skip if DisplayName hasn't actually changed
+        if (state.NameHistory.Count > 0 &&
+            string.Equals(state.NameHistory[^1].DisplayName, e.DisplayName, StringComparison.Ordinal))
+        {
+            return state with
+            {
+                DisplayName = e.DisplayName,
+                SortName = e.SortName,
+                LastModifiedAt = DateTimeOffset.UtcNow,
+            };
+        }
+
+        return state with
+        {
+            DisplayName = e.DisplayName,
+            SortName = e.SortName,
+            NameHistory =
+            [
+                .. state.NameHistory,
+                new NameHistoryEntry
+                {
+                    DisplayName = e.DisplayName,
+                    SortName = e.SortName,
+                    ChangedAt = DateTimeOffset.UtcNow,
+                    TriggeredBy = nameof(PartyDisplayNameDerived),
+                },
+            ],
             LastModifiedAt = DateTimeOffset.UtcNow,
         };
     }
@@ -205,6 +261,46 @@ public sealed class PartyDetailProjectionHandler
         return state with
         {
             Identifiers = state.Identifiers.Where(i => i.Id != e.IdentifierId).ToList(),
+            LastModifiedAt = DateTimeOffset.UtcNow,
+        };
+    }
+
+    private static PartyDetail HandleConsentRecorded(PartyDetail state, ConsentRecorded e)
+    {
+        ConsentRecord record = new()
+        {
+            ConsentId = e.ConsentId,
+            ChannelId = e.ChannelId,
+            Purpose = e.Purpose,
+            LawfulBasis = e.LawfulBasis,
+            GrantedAt = e.GrantedAt,
+            GrantedBy = e.GrantedBy,
+        };
+        return state with
+        {
+            ConsentRecords = [.. state.ConsentRecords, record],
+            LastModifiedAt = DateTimeOffset.UtcNow,
+        };
+    }
+
+    private static PartyDetail? HandleConsentRevoked(PartyDetail state, ConsentRevoked e)
+    {
+        List<ConsentRecord> records = state.ConsentRecords.ToList();
+        int idx = records.FindIndex(c => c.ConsentId == e.ConsentId);
+        if (idx < 0)
+        {
+            return null;
+        }
+
+        records[idx] = records[idx] with
+        {
+            RevokedAt = e.RevokedAt,
+            RevokedBy = e.RevokedBy,
+        };
+
+        return state with
+        {
+            ConsentRecords = records,
             LastModifiedAt = DateTimeOffset.UtcNow,
         };
     }

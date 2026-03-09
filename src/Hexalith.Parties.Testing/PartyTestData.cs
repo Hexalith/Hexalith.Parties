@@ -1,43 +1,38 @@
 using Hexalith.Parties.Contracts.Commands;
 using Hexalith.Parties.Contracts.Events;
+using Hexalith.Parties.Contracts.Models;
 using Hexalith.Parties.Contracts.Security;
 using Hexalith.Parties.Contracts.State;
 using Hexalith.Parties.Contracts.ValueObjects;
 
 namespace Hexalith.Parties.Testing;
 
-public static class PartyTestData
-{
+public static class PartyTestData {
     public const string DefaultPartyId = "a1b2c3d4-e5f6-7890-abcd-ef1234567890";
 
-    public static PersonDetails ValidPersonDetails() => new()
-    {
+    public static PersonDetails ValidPersonDetails() => new() {
         FirstName = "John",
         LastName = "Doe",
     };
 
-    public static OrganizationDetails ValidOrganizationDetails() => new()
-    {
+    public static OrganizationDetails ValidOrganizationDetails() => new() {
         LegalName = "Acme Corp",
         TradingName = "Acme Trading",
     };
 
-    public static CreateParty ValidCreatePerson() => new()
-    {
+    public static CreateParty ValidCreatePerson() => new() {
         PartyId = DefaultPartyId,
         Type = PartyType.Person,
         PersonDetails = ValidPersonDetails(),
     };
 
-    public static CreateParty ValidCreateOrganization() => new()
-    {
+    public static CreateParty ValidCreateOrganization() => new() {
         PartyId = DefaultPartyId,
         Type = PartyType.Organization,
         OrganizationDetails = ValidOrganizationDetails(),
     };
 
-    public static CreatePartyComposite ValidCreatePersonComposite() => new()
-    {
+    public static CreatePartyComposite ValidCreatePersonComposite() => new() {
         PartyId = DefaultPartyId,
         Type = PartyType.Person,
         PersonDetails = ValidPersonDetails(),
@@ -70,123 +65,102 @@ public static class PartyTestData
         ],
     };
 
-    public static UpdatePersonDetails ValidUpdatePersonDetails() => new()
-    {
+    public static UpdatePersonDetails ValidUpdatePersonDetails() => new() {
         PartyId = DefaultPartyId,
-        PersonDetails = new PersonDetails
-        {
+        PersonDetails = new PersonDetails {
             FirstName = "Jane",
             LastName = "Smith",
         },
     };
 
-    public static UpdateOrganizationDetails ValidUpdateOrganizationDetails() => new()
-    {
+    public static UpdateOrganizationDetails ValidUpdateOrganizationDetails() => new() {
         PartyId = DefaultPartyId,
-        OrganizationDetails = new OrganizationDetails
-        {
+        OrganizationDetails = new OrganizationDetails {
             LegalName = "New Legal Name",
             TradingName = "New Trading Name",
         },
     };
 
-    public static SetIsNaturalPerson ValidSetIsNaturalPerson(bool value = true) => new()
-    {
+    public static SetIsNaturalPerson ValidSetIsNaturalPerson(bool value = true) => new() {
         PartyId = DefaultPartyId,
         IsNaturalPerson = value,
     };
 
-    public static DeactivateParty ValidDeactivateParty() => new()
-    {
+    public static DeactivateParty ValidDeactivateParty() => new() {
         PartyId = DefaultPartyId,
     };
 
-    public static ReactivateParty ValidReactivateParty() => new()
-    {
+    public static ReactivateParty ValidReactivateParty() => new() {
         PartyId = DefaultPartyId,
     };
 
-    public static PartyState CreatePersonState()
-    {
+    public static PartyState CreatePersonState() {
         PartyState state = new();
-        state.Apply(new PartyCreated
-        {
+        state.Apply(new PartyCreated {
             Type = PartyType.Person,
             PersonDetails = ValidPersonDetails(),
         });
-        state.Apply(new PartyDisplayNameDerived
-        {
+        state.Apply(new PartyDisplayNameDerived {
             DisplayName = "John Doe",
             SortName = "Doe, John",
         });
         return state;
     }
 
-    public static PartyState CreateOrganizationState()
-    {
+    public static PartyState CreateOrganizationState() {
         PartyState state = new();
-        state.Apply(new PartyCreated
-        {
+        state.Apply(new PartyCreated {
             Type = PartyType.Organization,
             OrganizationDetails = ValidOrganizationDetails(),
         });
-        state.Apply(new PartyDisplayNameDerived
-        {
+        state.Apply(new PartyDisplayNameDerived {
             DisplayName = "Acme Corp",
             SortName = "Acme Corp",
         });
         return state;
     }
 
-    public static PartyState CreateDeactivatedPersonState()
-    {
+    public static PartyState CreateDeactivatedPersonState() {
         PartyState state = CreatePersonState();
         state.Apply(new PartyDeactivated());
         return state;
     }
 
-    public static PartyState CreateDeactivatedOrganizationState()
-    {
+    public static PartyState CreateDeactivatedOrganizationState() {
         PartyState state = CreateOrganizationState();
         state.Apply(new PartyDeactivated());
         return state;
     }
 
-    public static AddIdentifier ValidAddVatIdentifier() => new()
-    {
+    public static AddIdentifier ValidAddVatIdentifier() => new() {
         PartyId = DefaultPartyId,
         IdentifierId = "id-vat-1",
         Type = IdentifierType.VAT,
         Value = "FR12345678901",
     };
 
-    public static AddIdentifier ValidAddSiretIdentifier() => new()
-    {
+    public static AddIdentifier ValidAddSiretIdentifier() => new() {
         PartyId = DefaultPartyId,
         IdentifierId = "id-siret-1",
         Type = IdentifierType.SIRET,
         Value = "12345678901234",
     };
 
-    public static AddIdentifier ValidAddNationalIdIdentifier() => new()
-    {
+    public static AddIdentifier ValidAddNationalIdIdentifier() => new() {
         PartyId = DefaultPartyId,
         IdentifierId = "id-natid-1",
         Type = IdentifierType.NationalId,
         Value = "850101123456789",
     };
 
-    public static RemoveIdentifier ValidRemoveIdentifier() => new()
-    {
+    public static RemoveIdentifier ValidRemoveIdentifier() => new() {
         PartyId = DefaultPartyId,
         IdentifierId = "id-vat-1",
     };
 
-    public static PartyState CreatePersonStateWithIdentifier()
-    {
+    public static PartyState CreatePersonStateWithIdentifier() {
         PartyState state = CreatePersonState();
-        state.Apply(new IdentifierAdded
-        {
+        state.Apply(new IdentifierAdded {
             IdentifierId = "id-vat-1",
             Type = IdentifierType.VAT,
             Value = "FR12345678901",
@@ -194,26 +168,22 @@ public static class PartyTestData
         return state;
     }
 
-    public static PartyState CreatePersonStateWithChannelsAndIdentifiers()
-    {
+    public static PartyState CreatePersonStateWithChannelsAndIdentifiers() {
         PartyState state = CreatePersonState();
-        state.Apply(new ContactChannelAdded
-        {
+        state.Apply(new ContactChannelAdded {
             ContactChannelId = "ch-email-1",
             Type = ContactChannelType.Email,
             Value = "john@example.com",
             IsPreferred = true,
         });
         state.Apply(new PreferredContactChannelChanged { ContactChannelId = "ch-email-1" });
-        state.Apply(new ContactChannelAdded
-        {
+        state.Apply(new ContactChannelAdded {
             ContactChannelId = "ch-email-2",
             Type = ContactChannelType.Email,
             Value = "john.alt@example.com",
             IsPreferred = false,
         });
-        state.Apply(new IdentifierAdded
-        {
+        state.Apply(new IdentifierAdded {
             IdentifierId = "id-vat-1",
             Type = IdentifierType.VAT,
             Value = "FR12345678901",
@@ -221,19 +191,16 @@ public static class PartyTestData
         return state;
     }
 
-    public static PartyState CreateOrganizationStateWithChannelsAndIdentifiers()
-    {
+    public static PartyState CreateOrganizationStateWithChannelsAndIdentifiers() {
         PartyState state = CreateOrganizationState();
-        state.Apply(new ContactChannelAdded
-        {
+        state.Apply(new ContactChannelAdded {
             ContactChannelId = "ch-email-1",
             Type = ContactChannelType.Email,
             Value = "info@acme.com",
             IsPreferred = true,
         });
         state.Apply(new PreferredContactChannelChanged { ContactChannelId = "ch-email-1" });
-        state.Apply(new IdentifierAdded
-        {
+        state.Apply(new IdentifierAdded {
             IdentifierId = "id-vat-1",
             Type = IdentifierType.VAT,
             Value = "FR98765432100",
@@ -241,8 +208,7 @@ public static class PartyTestData
         return state;
     }
 
-    public static CreatePartyComposite ValidCreateOrganizationComposite() => new()
-    {
+    public static CreatePartyComposite ValidCreateOrganizationComposite() => new() {
         PartyId = DefaultPartyId,
         Type = PartyType.Organization,
         OrganizationDetails = ValidOrganizationDetails(),
@@ -268,8 +234,7 @@ public static class PartyTestData
         ],
     };
 
-    public static UpdatePartyComposite ValidUpdatePersonComposite() => new()
-    {
+    public static UpdatePartyComposite ValidUpdatePersonComposite() => new() {
         PartyId = DefaultPartyId,
         PersonDetails = new PersonDetails { FirstName = "Jane", LastName = "Smith" },
         AddContactChannels =
@@ -304,11 +269,9 @@ public static class PartyTestData
         ],
     };
 
-    public static UpdatePartyComposite ValidUpdateOrganizationComposite() => new()
-    {
+    public static UpdatePartyComposite ValidUpdateOrganizationComposite() => new() {
         PartyId = DefaultPartyId,
-        OrganizationDetails = new OrganizationDetails
-        {
+        OrganizationDetails = new OrganizationDetails {
             LegalName = "New Legal Name",
             TradingName = "New Trading Name",
         },
@@ -324,26 +287,77 @@ public static class PartyTestData
         ],
     };
 
+    public const string DefaultChannelId = "ch-email-1";
+    public const string DefaultConsentPurpose = "marketing";
     public const string DefaultTenantId = "test-tenant";
 
-    public static EraseParty ValidEraseParty() => new()
-    {
+    public static RecordConsent ValidRecordConsent() => new() {
+        PartyId = DefaultPartyId,
+        TenantId = DefaultTenantId,
+        ChannelId = DefaultChannelId,
+        Purpose = DefaultConsentPurpose,
+        LawfulBasis = LawfulBasis.Consent,
+        ActorUserId = "test-admin",
+    };
+
+    public static RevokeConsent ValidRevokeConsent(string? consentId = null) => new() {
+        PartyId = DefaultPartyId,
+        TenantId = DefaultTenantId,
+        ConsentId = consentId ?? $"{DefaultChannelId}:{DefaultConsentPurpose}",
+        ActorUserId = "test-admin",
+    };
+
+    public static RestrictProcessing ValidRestrictProcessing() => new() {
+        PartyId = DefaultPartyId,
+        TenantId = DefaultTenantId,
+        Reason = "Investigation pending",
+    };
+
+    public static LiftRestriction ValidLiftRestriction() => new() {
         PartyId = DefaultPartyId,
         TenantId = DefaultTenantId,
     };
 
-    public static RotatePartyKey ValidRotatePartyKey(int newVersion = 2, int previousVersion = 1) => new()
-    {
+    public static PartyState CreateStateWithConsent() {
+        PartyState state = CreatePersonStateWithChannelsAndIdentifiers();
+        state.Apply(new ConsentRecorded {
+            PartyId = DefaultPartyId,
+            TenantId = DefaultTenantId,
+            ConsentId = $"{DefaultChannelId}:{DefaultConsentPurpose}",
+            ChannelId = DefaultChannelId,
+            Purpose = DefaultConsentPurpose,
+            LawfulBasis = LawfulBasis.Consent,
+            GrantedAt = DateTimeOffset.UtcNow,
+            GrantedBy = "admin",
+        });
+        return state;
+    }
+
+    public static PartyState CreateRestrictedState() {
+        PartyState state = CreatePersonStateWithChannelsAndIdentifiers();
+        state.Apply(new ProcessingRestricted {
+            PartyId = DefaultPartyId,
+            TenantId = DefaultTenantId,
+            RestrictedAt = DateTimeOffset.UtcNow,
+            Reason = "Investigation pending",
+        });
+        return state;
+    }
+
+    public static EraseParty ValidEraseParty() => new() {
+        PartyId = DefaultPartyId,
+        TenantId = DefaultTenantId,
+    };
+
+    public static RotatePartyKey ValidRotatePartyKey(int newVersion = 2, int previousVersion = 1) => new() {
         PartyId = DefaultPartyId,
         NewKeyVersion = newVersion,
         PreviousKeyVersion = previousVersion,
     };
 
-    public static PartyState CreateErasurePendingState()
-    {
+    public static PartyState CreateErasurePendingState() {
         PartyState state = CreatePersonState();
-        state.Apply(new ErasePartyRequested
-        {
+        state.Apply(new ErasePartyRequested {
             PartyId = DefaultPartyId,
             TenantId = DefaultTenantId,
             RequestedAt = DateTimeOffset.UtcNow,
@@ -352,24 +366,90 @@ public static class PartyTestData
         return state;
     }
 
-    public static PartyState CreateErasedState()
+    // --- Search scenario test data ---
+
+    public static List<PartyIndexEntry> CreateSearchScenarioEntries()
     {
+        return
+        [
+            new PartyIndexEntry
+            {
+                Id = "p1",
+                Type = PartyType.Person,
+                IsActive = true,
+                DisplayName = "Jean Dupont",
+                SearchableContactChannels = [new ContactChannel { Id = "ch1", Type = ContactChannelType.Email, Value = "jean@example.com" }],
+                SearchableIdentifiers = [new PartyIdentifier { Id = "id1", Type = IdentifierType.VAT, Value = "FR11111111111" }],
+                CreatedAt = DateTimeOffset.UtcNow.AddDays(-30),
+                LastModifiedAt = DateTimeOffset.UtcNow,
+            },
+            new PartyIndexEntry
+            {
+                Id = "p2",
+                Type = PartyType.Organization,
+                IsActive = true,
+                DisplayName = "Acme Corporation",
+                SearchableContactChannels =
+                [
+                    new ContactChannel { Id = "ch2", Type = ContactChannelType.Email, Value = "info@acme.com" },
+                    new ContactChannel { Id = "ch3", Type = ContactChannelType.Phone, Value = "+33 1 23 45 67 89" },
+                    new ContactChannel { Id = "ch4", Type = ContactChannelType.PostalAddress, Value = "42 Rue de Rivoli, 75001 Paris" },
+                ],
+                SearchableIdentifiers = [new PartyIdentifier { Id = "id2", Type = IdentifierType.SIRET, Value = "12345678901234" }],
+                CreatedAt = DateTimeOffset.UtcNow.AddDays(-60),
+                LastModifiedAt = DateTimeOffset.UtcNow,
+            },
+            new PartyIndexEntry
+            {
+                Id = "p3",
+                Type = PartyType.Person,
+                IsActive = true,
+                DisplayName = "Marie Curie",
+                SearchableContactChannels = [new ContactChannel { Id = "ch5", Type = ContactChannelType.Email, Value = "marie@science.org" }],
+                SearchableIdentifiers = [],
+                CreatedAt = DateTimeOffset.UtcNow.AddDays(-10),
+                LastModifiedAt = DateTimeOffset.UtcNow,
+            },
+            new PartyIndexEntry
+            {
+                Id = "p4",
+                Type = PartyType.Person,
+                IsActive = false,
+                DisplayName = "Inactive Person",
+                SearchableContactChannels = [],
+                SearchableIdentifiers = [],
+                CreatedAt = DateTimeOffset.UtcNow.AddDays(-90),
+                LastModifiedAt = DateTimeOffset.UtcNow,
+            },
+            new PartyIndexEntry
+            {
+                Id = "p5",
+                Type = PartyType.Person,
+                IsActive = true,
+                DisplayName = "Erased Party",
+                IsErased = true,
+                SearchableContactChannels = [],
+                SearchableIdentifiers = [],
+                CreatedAt = DateTimeOffset.UtcNow.AddDays(-120),
+                LastModifiedAt = DateTimeOffset.UtcNow,
+            },
+        ];
+    }
+
+    public static PartyState CreateErasedState() {
         PartyState state = CreateErasurePendingState();
-        state.Apply(new PartyEncryptionKeyDeleted
-        {
+        state.Apply(new PartyEncryptionKeyDeleted {
             PartyId = DefaultPartyId,
             TenantId = DefaultTenantId,
             DeletedAt = DateTimeOffset.UtcNow,
         });
-        state.Apply(new ErasureVerified
-        {
+        state.Apply(new ErasureVerified {
             PartyId = DefaultPartyId,
             TenantId = DefaultTenantId,
             VerifiedAt = DateTimeOffset.UtcNow,
             VerificationReportId = "report-1",
         });
-        state.Apply(new PartyErased
-        {
+        state.Apply(new PartyErased {
             PartyId = DefaultPartyId,
             TenantId = DefaultTenantId,
             ErasedAt = DateTimeOffset.UtcNow,

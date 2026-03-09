@@ -6,6 +6,7 @@ using Dapr.Actors.Client;
 
 using Hexalith.Parties.CommandApi.Search;
 using Hexalith.Parties.Contracts.Models;
+using Hexalith.Parties.Contracts.Search;
 using Hexalith.Parties.Contracts.ValueObjects;
 using Hexalith.Parties.Projections.Abstractions;
 using Hexalith.Parties.Projections.Actors;
@@ -73,8 +74,9 @@ public static class FindPartiesMcpTool
                 McpSessionContext.JsonOptions);
         }
 
+        IPartySearchProvider searchProvider = services.GetRequiredService<IPartySearchProvider>();
         return JsonSerializer.Serialize(
-            PartySearchResultsBuilder.BuildSearchResults(activeEntries, query, typeFilter, activeFilter, page, pageSize),
+            searchProvider.Search(activeEntries, query, typeFilter, activeFilter, page, pageSize),
             McpSessionContext.JsonOptions);
     }
 }

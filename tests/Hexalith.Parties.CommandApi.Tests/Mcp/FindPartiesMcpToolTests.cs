@@ -5,7 +5,9 @@ using Dapr.Actors;
 using Dapr.Actors.Client;
 
 using Hexalith.Parties.CommandApi.Mcp;
+using Hexalith.Parties.CommandApi.Search;
 using Hexalith.Parties.Contracts.Models;
+using Hexalith.Parties.Contracts.Search;
 using Hexalith.Parties.Contracts.ValueObjects;
 using Hexalith.Parties.Projections.Abstractions;
 
@@ -63,6 +65,7 @@ public sealed class FindPartiesMcpToolTests
         IActorProxyFactory factory = CreateActorProxyFactory(indexActor);
         ServiceProvider services = new ServiceCollection()
             .AddSingleton(factory)
+            .AddSingleton<IPartySearchProvider, SemanticPartySearchProvider>()
             .BuildServiceProvider();
 
         string json = await FindPartiesMcpTool.FindPartiesAsync(services, query: "Dupont");
@@ -156,6 +159,44 @@ public sealed class FindPartiesMcpToolTests
 
         using JsonDocument document = JsonDocument.Parse(json);
         document.RootElement.GetProperty("pageSize").GetInt32().ShouldBe(100);
+    }
+
+    [Fact]
+    public async Task FindPartiesAsync_ErasedPartyInIndex_ExcludedFromResultsAsync()
+    {
+        using TenantScope _ = TenantScope.Create("tenant-a");
+
+        IPartyIndexProjectionActor indexActor = Substitute.For<IPartyIndexProjectionActor>();
+        indexActor.GetEntriesAsync().Returns(new Dictionary<string, PartyIndexEntry>
+        {
+            ["id-active"] = CreateIndexEntry("id-active", "Active User"),
+            ["id-erased"] = new PartyIndexEntry
+            {
+                Id = "id-erased",
+                Type = PartyType.Person,
+                IsActive = false,
+                DisplayName = string.Empty,
+                IsErased = true,
+                SearchableContactChannels = [],
+                SearchableIdentifiers = [],
+                CreatedAt = DateTimeOffset.UtcNow.AddDays(-30),
+                LastModifiedAt = DateTimeOffset.UtcNow,
+            },
+        });
+
+        IActorProxyFactory factory = CreateActorProxyFactory(indexActor);
+        ServiceProvider services = new ServiceCollection()
+            .AddSingleton(factory)
+            .BuildServiceProvider();
+
+        string json = await FindPartiesMcpTool.FindPartiesAsync(services, query: null);
+
+        using JsonDocument document = JsonDocument.Parse(json);
+        JsonElement root = document.RootElement;
+
+        root.GetProperty("totalCount").GetInt32().ShouldBe(1);
+        root.GetProperty("items").GetArrayLength().ShouldBe(1);
+        root.GetProperty("items")[0].GetProperty("displayName").GetString().ShouldBe("Active User");
     }
 
     [Fact]

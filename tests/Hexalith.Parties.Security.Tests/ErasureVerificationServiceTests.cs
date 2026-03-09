@@ -197,6 +197,68 @@ public class ErasureVerificationServiceTests
         status.ShouldBe(ErasureVerificationOverallStatus.Complete);
     }
 
+    [Fact]
+    public async Task VerifyErasureAsync_ActorCorrupted_TreatsAsClean()
+    {
+        // Arrange — delegate throws to simulate corrupted actor state (D15 pattern)
+        ErasureStoreCleanupDelegate corruptedStore = (_, _, _)
+            => throw new InvalidOperationException("Deserialization failed: corrupted state");
+        ErasureStoreCleanupDelegate healthyStore = (_, _, _) => Task.FromResult(
+            new ErasureVerificationStoreResult
+            {
+                StoreName = "index-projection",
+                Status = ErasureStoreCleanupStatus.Cleaned,
+                Timestamp = DateTimeOffset.UtcNow,
+            });
+
+        var service = CreateService([corruptedStore, healthyStore]);
+        ErasureCertificate certificate = CreateCertificate();
+
+        // Act — should NOT throw; corrupted store treated as Cleaned per D15
+        ErasureVerificationReport report = await service.VerifyErasureAsync(
+            TenantId, PartyId, certificate, CancellationToken.None);
+
+        // Assert
+        report.OverallStatus.ShouldBe(ErasureVerificationOverallStatus.Complete);
+        report.StoreResults.Count.ShouldBe(2);
+        report.StoreResults[0].Status.ShouldBe(ErasureStoreCleanupStatus.Cleaned);
+    }
+
+    [Fact]
+    public async Task VerifyErasureAsync_ResumesFromCheckpoint_SkippedAndCleaned_ReturnsComplete()
+    {
+        // Arrange — simulates checkpoint resumption:
+        // Store A was cleaned in previous run (returns Skipped on re-run)
+        // Store B failed previously but succeeds this time (returns Cleaned)
+        ErasureStoreCleanupDelegate alreadyCleanedStore = (_, _, _) => Task.FromResult(
+            new ErasureVerificationStoreResult
+            {
+                StoreName = "detail-projection",
+                Status = ErasureStoreCleanupStatus.Skipped,
+                Timestamp = DateTimeOffset.UtcNow,
+            });
+        ErasureStoreCleanupDelegate retriedStore = (_, _, _) => Task.FromResult(
+            new ErasureVerificationStoreResult
+            {
+                StoreName = "index-projection",
+                Status = ErasureStoreCleanupStatus.Cleaned,
+                Timestamp = DateTimeOffset.UtcNow,
+            });
+
+        var service = CreateService([alreadyCleanedStore, retriedStore]);
+        ErasureCertificate certificate = CreateCertificate();
+
+        // Act — checkpoint resumption: previously-cleaned stores return Skipped
+        ErasureVerificationReport report = await service.VerifyErasureAsync(
+            TenantId, PartyId, certificate, CancellationToken.None);
+
+        // Assert — overall Complete because all stores are Cleaned or Skipped
+        report.OverallStatus.ShouldBe(ErasureVerificationOverallStatus.Complete);
+        report.StoreResults.Count.ShouldBe(2);
+        report.StoreResults[0].Status.ShouldBe(ErasureStoreCleanupStatus.Skipped);
+        report.StoreResults[1].Status.ShouldBe(ErasureStoreCleanupStatus.Cleaned);
+    }
+
     private static ErasureVerificationService CreateService(IReadOnlyList<ErasureStoreCleanupDelegate> storeCleanups)
         => new(storeCleanups, NullLogger<ErasureVerificationService>.Instance);
 

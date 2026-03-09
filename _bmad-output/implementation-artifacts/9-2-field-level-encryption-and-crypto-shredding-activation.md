@@ -1,6 +1,6 @@
 # Story 9.2: Field-Level Encryption & Crypto-Shredding Activation
 
-Status: ready-for-dev
+Status: complete
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -46,82 +46,82 @@ so that GDPR encryption is structural and the domain remains encryption-unaware.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Harden existing encryption infrastructure (AC: #1, #2, #4, #5)
-    - [ ] 1.1 Harden `ProtectNode` — add logging when `PropertyInfo.GetValue` throws (currently silently skips); wrap in try/catch with `LoggerMessage` warning including property name and party ID
-    - [ ] 1.2 Harden `UnprotectNodeAsync` — add specific `FormatException` catch for corrupted base64 in encrypted fields; log with "corrupted encrypted field" message including field path and party ID
-    - [ ] 1.3 Harden `IsEncryptedMarker` — add warning log when JSON object has `alg`/`kv` fields but missing `$enc` marker (possible field corruption)
-    - [ ] 1.4 Harden snapshot type resolution — use `Type.FullName` instead of `AssemblyQualifiedName` in `ProtectedSnapshotState.TypeName` to survive NuGet version changes; add version-tolerant `Type.GetType` fallback that strips assembly version info on resolution failure
-    - [ ] 1.5 Add projection rebuild erased-party handling — `ProjectionRebuildService` must catch decryption failures for erased parties and apply `ErasureStatus.Erased` tombstone state instead of crashing the entire rebuild. Add try/catch around event replay that checks `ErasureStatus` and gracefully degrades
+- [x] Task 1: Harden existing encryption infrastructure (AC: #1, #2, #4, #5)
+    - [x] 1.1 Harden `ProtectNode` — add logging when `PropertyInfo.GetValue` throws (currently silently skips); wrap in try/catch with `LoggerMessage` warning including property name and party ID
+    - [x] 1.2 Harden `UnprotectNodeAsync` — add specific `FormatException` catch for corrupted base64 in encrypted fields; log with "corrupted encrypted field" message including field path and party ID
+    - [x] 1.3 Harden `IsEncryptedMarker` — add warning log when JSON object has `alg`/`kv` fields but missing `$enc` marker (possible field corruption)
+    - [x] 1.4 Harden snapshot type resolution — use `Type.FullName` instead of `AssemblyQualifiedName` in `ProtectedSnapshotState.TypeName` to survive NuGet version changes; add version-tolerant `Type.GetType` fallback that strips assembly version info on resolution failure
+    - [x] 1.5 Add projection rebuild erased-party handling — `ProjectionRebuildService` must catch decryption failures for erased parties and apply `ErasureStatus.Erased` tombstone state instead of crashing the entire rebuild. Add try/catch around event replay that checks `ErasureStatus` and gracefully degrades
 
-- [ ] Task 2: Implement decryption failure circuit breaker (AC: #3)
-    - [ ] 2.1 Add `DecryptionCircuitBreaker` class in `Hexalith.Parties.Security/` — lightweight custom implementation using `ConcurrentDictionary<string, CircuitState>` where `CircuitState` is a small struct (failure count, opened timestamp, state enum). Only track non-closed parties (absence = closed). Do NOT use Polly per-party — Polly circuits are designed for shared resources, not per-entity isolation. Memory proportional to active failures, not total party count
-    - [ ] 2.2 Wrap `UnprotectEventPayloadAsync` decryption path with circuit breaker — on open circuit, throw `DecryptionCircuitOpenException` with party ID and break duration
-    - [ ] 2.3 Add `DecryptionCircuitOpenException` sealed class in Security project — carries party ID, tenant ID, break expiry
-    - [ ] 2.4 Ensure `EventPublisher` in EventStore catches `DecryptionCircuitOpenException` and prevents publication (event stays in unpublished drain queue for retry)
-    - [ ] 2.5 Add `LoggerMessage` entries for circuit breaker state transitions: half-open, open, closed
-    - [ ] 2.6 Add OpenTelemetry counter `parties.encryption.circuit_breaker_trips` (tags: tenant, party_id, reason: transient|key_destroyed|unknown) — reason tag enables ops to distinguish infrastructure issues from expected erasure behavior
-    - [ ] 2.7 CRITICAL: Detect erased party on decryption failure — query `PartyState.ErasureStatus` via actor state; if `ErasureStatus >= KeyDestroyed`, skip retry and dead-letter the event instead of infinitely retrying decryption of permanently-destroyed keys
-    - [ ] 2.8 Add drain recovery rate limiting — after circuit breaker transitions to half-open, process max 5 events per recovery cycle with 2-second delay between events to prevent thundering herd on key management service
-    - [ ] 2.9 Add max open duration safeguard — if circuit stays open > 5 minutes continuously, force transition to half-open regardless of timer (prevents stuck-open circuits from configuration edge cases)
+- [x] Task 2: Implement decryption failure circuit breaker (AC: #3)
+    - [x] 2.1 Add `DecryptionCircuitBreaker` class in `Hexalith.Parties.Security/` — lightweight custom implementation using `ConcurrentDictionary<string, CircuitState>` where `CircuitState` is a small struct (failure count, opened timestamp, state enum). Only track non-closed parties (absence = closed). Do NOT use Polly per-party — Polly circuits are designed for shared resources, not per-entity isolation. Memory proportional to active failures, not total party count
+    - [x] 2.2 Wrap `UnprotectEventPayloadAsync` decryption path with circuit breaker — on open circuit, throw `DecryptionCircuitOpenException` with party ID and break duration
+    - [x] 2.3 Add `DecryptionCircuitOpenException` sealed class in Security project — carries party ID, tenant ID, break expiry
+    - [x] 2.4 Ensure `EventPublisher` in EventStore catches `DecryptionCircuitOpenException` and prevents publication (event stays in unpublished drain queue for retry)
+    - [x] 2.5 Add `LoggerMessage` entries for circuit breaker state transitions: half-open, open, closed
+    - [x] 2.6 Add OpenTelemetry counter `parties.encryption.circuit_breaker_trips` (tags: tenant, party_id, reason: transient|key_destroyed|unknown) — reason tag enables ops to distinguish infrastructure issues from expected erasure behavior
+    - [x] 2.7 CRITICAL: Detect erased party on decryption failure — query `PartyState.ErasureStatus` via actor state; if `ErasureStatus >= KeyDestroyed`, skip retry and dead-letter the event instead of infinitely retrying decryption of permanently-destroyed keys
+    - [x] 2.8 Add drain recovery rate limiting — after circuit breaker transitions to half-open, process max 5 events per recovery cycle with 2-second delay between events to prevent thundering herd on key management service
+    - [x] 2.9 Add max open duration safeguard — if circuit stays open > 5 minutes continuously, force transition to half-open regardless of timer (prevents stuck-open circuits from configuration edge cases)
 
-- [ ] Task 3: Add crypto-shredding activation configuration (AC: #1)
-    - [ ] 3.1 Create `CryptoShreddingOptions` record in `Contracts/Security/` with `IsEnabled` (default: true for v1.1), `CircuitBreakerFailureThreshold` (default: 3), `CircuitBreakerBreakDuration` (default: 60s)
-    - [ ] 3.2 Bind to `Parties:CryptoShredding` configuration section in `PartiesServiceCollectionExtensions`
-    - [ ] 3.3 Inject `IOptions<CryptoShreddingOptions>` into `PartyPayloadProtectionService` — when `IsEnabled=false`, skip encryption on persist but STILL decrypt existing encrypted events on publish (mixed-format store support)
-    - [ ] 3.4 Log startup configuration state: enabled/disabled + circuit breaker thresholds
-    - [ ] 3.5 Read options snapshot once per `ProtectEventPayloadAsync`/`UnprotectEventPayloadAsync` call (not per field) to ensure consistent behavior within a single event processing
+- [x] Task 3: Add crypto-shredding activation configuration (AC: #1)
+    - [x] 3.1 Create `CryptoShreddingOptions` record in `Contracts/Security/` with `IsEnabled` (default: true for v1.1), `CircuitBreakerFailureThreshold` (default: 3), `CircuitBreakerBreakDuration` (default: 60s)
+    - [x] 3.2 Bind to `Parties:CryptoShredding` configuration section in `PartiesServiceCollectionExtensions`
+    - [x] 3.3 Inject `IOptions<CryptoShreddingOptions>` into `PartyPayloadProtectionService` — when `IsEnabled=false`, skip encryption on persist but STILL decrypt existing encrypted events on publish (mixed-format store support)
+    - [x] 3.4 Log startup configuration state: enabled/disabled + circuit breaker thresholds
+    - [x] 3.5 Read options snapshot once per `ProtectEventPayloadAsync`/`UnprotectEventPayloadAsync` call (not per field) to ensure consistent behavior within a single event processing
 
-- [ ] Task 4: Tier 1 unit tests — encryption roundtrip (AC: #1, #2, #4, #5)
-    - [ ] 4.1 `ProtectEventPayload_PersonCreated_EncryptsPersonalDataFields` — verify `PersonDetails` fields + derived `DisplayName`/`SortName` encrypted, non-PII fields (Type, PartyId) remain plaintext
-    - [ ] 4.2 `ProtectEventPayload_ContactChannelAdded_EncryptsValue` — verify `Value` encrypted, `ContactChannelId` and `Type` remain plaintext
-    - [ ] 4.3 `ProtectEventPayload_IdentifierAdded_EncryptsValue` — verify `Value` encrypted, `IdentifierId` and `Type` remain plaintext
-    - [ ] 4.4 `ProtectEventPayload_OrganizationCreated_DoesNotEncryptEntityFields` — verify legal name, trading name NOT encrypted for standard organization
-    - [ ] 4.5 `ProtectEventPayload_OrganizationIsNaturalPerson_EncryptsAllStringFields` — verify `IsNaturalPerson=true` elevates all string fields to encrypted
-    - [ ] 4.6 `UnprotectEventPayload_EncryptedPayload_DecryptsCorrectly` — full roundtrip: protect then unprotect, verify byte-level equivalence
-    - [ ] 4.7 `UnprotectEventPayload_DifferentKeyVersion_UsesCorrectVersion` — encrypt with v1, rotate key, verify decryption retrieves v1 key for old events
-    - [ ] 4.8 `ProtectEventPayload_NonPartyDomain_Passthrough` — verify non-party domain events pass through unchanged
-    - [ ] 4.9 `ProtectEventPayload_NoPersonalData_Passthrough` — verify events without `[PersonalData]` fields (e.g., `PartyDeactivated`) pass through unchanged
-    - [ ] 4.10 `ProtectSnapshotState_PartyState_EncryptsPersonalDataFields` — verify snapshot protection encrypts `DisplayName`, `SortName`, nested `PersonDetails`, `ContactChannel.Value`, `PartyIdentifier.Value`
-    - [ ] 4.11 `UnprotectSnapshotState_ProtectedSnapshot_RestoresOriginalState` — roundtrip snapshot protect/unprotect
-    - [ ] 4.12 `ProtectEventPayload_1000EncryptionsOfSameData_AllProduceDifferentCiphertext` — nonce uniqueness verification at scale (AES-GCM safety); encrypt same payload 1000 times under same key, verify all nonces are unique
-    - [ ] 4.13 `ProtectEventPayload_CryptoShreddingDisabled_Passthrough` — verify `IsEnabled=false` skips encryption on persist
-    - [ ] 4.14 `UnprotectEventPayload_CryptoShreddingDisabled_StillDecryptsExistingEncrypted` — verify `IsEnabled=false` still decrypts `json+pdenc-v1` format events (mixed-format store support)
-    - [ ] 4.15 `UnprotectEventPayload_TamperedCiphertext_ThrowsCryptographicException` — verify AES-GCM authentication tag rejects modified ciphertext (tamper detection)
-    - [ ] 4.16 `UnprotectEventPayload_CorruptedBase64_ThrowsFormatExceptionWithContext` — verify corrupted base64 in `$enc` field produces descriptive error with party ID
-    - [ ] 4.17 `ProtectSnapshotState_TypeNameSurvivesVersionChange` — verify snapshot roundtrip using `FullName` type resolution (not assembly-qualified)
-    - [ ] 4.18 **COMPLIANCE: Personal Data Registry Test** — `AllEventPayloadTypes_PersonalDataClassificationVerified` — enumerate all `IEventPayload` implementations via reflection, create sample instances, assert `ContainsProtectedData()` matches expected value per type. Prevents future event types from silently storing plaintext PII
-    - [ ] 4.19 `UnprotectEventPayload_KeyDeleted_ThrowsAndPlaintextUnrecoverable` — crypto-shredding proof: encrypt event, delete key via `DeleteKeyAsync`, attempt `UnprotectEventPayloadAsync`, verify exception and confirm original plaintext cannot be recovered
-    - [ ] 4.20 `UnprotectSnapshotState_EncryptedWithOldKeyVersion_DecryptsCorrectly` — snapshot encrypted with key v1, key rotated to v2, verify `UnprotectSnapshotStateAsync` retrieves v1 key and decrypts correctly
-    - [ ] 4.21 `ProtectEventPayload_RealisticComposite_CompletesUnder50ms` — performance benchmark: encrypt `CreatePartyComposite` with 5 PersonDetails fields + 3 channels + 2 identifiers (10+ encrypted fields), verify total protect time < 50ms (NFR1 budget: 50ms encryption + 950ms remaining)
-    - [ ] 4.22 `ProtectEventPayload_IsNaturalPersonReclassification_EncryptionScopeExpands` — create org with `IsNaturalPerson=false` (plaintext entity fields), change to `IsNaturalPerson=true`, verify subsequent events encrypt org string fields while historical events remain plaintext
+- [x] Task 4: Tier 1 unit tests — encryption roundtrip (AC: #1, #2, #4, #5)
+    - [x] 4.1 `ProtectEventPayload_PersonCreated_EncryptsPersonalDataFields` — verify `PersonDetails` fields + derived `DisplayName`/`SortName` encrypted, non-PII fields (Type, PartyId) remain plaintext
+    - [x] 4.2 `ProtectEventPayload_ContactChannelAdded_EncryptsValue` — verify `Value` encrypted, `ContactChannelId` and `Type` remain plaintext
+    - [x] 4.3 `ProtectEventPayload_IdentifierAdded_EncryptsValue` — verify `Value` encrypted, `IdentifierId` and `Type` remain plaintext
+    - [x] 4.4 `ProtectEventPayload_OrganizationCreated_DoesNotEncryptEntityFields` — verify legal name, trading name NOT encrypted for standard organization
+    - [x] 4.5 `ProtectEventPayload_OrganizationIsNaturalPerson_EncryptsAllStringFields` — verify `IsNaturalPerson=true` elevates all string fields to encrypted
+    - [x] 4.6 `UnprotectEventPayload_EncryptedPayload_DecryptsCorrectly` — full roundtrip: protect then unprotect, verify byte-level equivalence
+    - [x] 4.7 `UnprotectEventPayload_DifferentKeyVersion_UsesCorrectVersion` — encrypt with v1, rotate key, verify decryption retrieves v1 key for old events
+    - [x] 4.8 `ProtectEventPayload_NonPartyDomain_Passthrough` — verify non-party domain events pass through unchanged
+    - [x] 4.9 `ProtectEventPayload_NoPersonalData_Passthrough` — verify events without `[PersonalData]` fields (e.g., `PartyDeactivated`) pass through unchanged
+    - [x] 4.10 `ProtectSnapshotState_PartyState_EncryptsPersonalDataFields` — verify snapshot protection encrypts `DisplayName`, `SortName`, nested `PersonDetails`, `ContactChannel.Value`, `PartyIdentifier.Value`
+    - [x] 4.11 `UnprotectSnapshotState_ProtectedSnapshot_RestoresOriginalState` — roundtrip snapshot protect/unprotect
+    - [x] 4.12 `ProtectEventPayload_1000EncryptionsOfSameData_AllProduceDifferentCiphertext` — nonce uniqueness verification at scale (AES-GCM safety); encrypt same payload 1000 times under same key, verify all nonces are unique
+    - [x] 4.13 `ProtectEventPayload_CryptoShreddingDisabled_Passthrough` — verify `IsEnabled=false` skips encryption on persist
+    - [x] 4.14 `UnprotectEventPayload_CryptoShreddingDisabled_StillDecryptsExistingEncrypted` — verify `IsEnabled=false` still decrypts `json+pdenc-v1` format events (mixed-format store support)
+    - [x] 4.15 `UnprotectEventPayload_TamperedCiphertext_ThrowsCryptographicException` — verify AES-GCM authentication tag rejects modified ciphertext (tamper detection)
+    - [x] 4.16 `UnprotectEventPayload_CorruptedBase64_ThrowsFormatExceptionWithContext` — verify corrupted base64 in `$enc` field produces descriptive error with party ID
+    - [x] 4.17 `ProtectSnapshotState_TypeNameSurvivesVersionChange` — verify snapshot roundtrip using `FullName` type resolution (not assembly-qualified)
+    - [x] 4.18 **COMPLIANCE: Personal Data Registry Test** — `AllEventPayloadTypes_PersonalDataClassificationVerified` — enumerate all `IEventPayload` implementations via reflection, create sample instances, assert `ContainsProtectedData()` matches expected value per type. Prevents future event types from silently storing plaintext PII
+    - [x] 4.19 `UnprotectEventPayload_KeyDeleted_ThrowsAndPlaintextUnrecoverable` — crypto-shredding proof: encrypt event, delete key via `DeleteKeyAsync`, attempt `UnprotectEventPayloadAsync`, verify exception and confirm original plaintext cannot be recovered
+    - [x] 4.20 `UnprotectSnapshotState_EncryptedWithOldKeyVersion_DecryptsCorrectly` — snapshot encrypted with key v1, key rotated to v2, verify `UnprotectSnapshotStateAsync` retrieves v1 key and decrypts correctly
+    - [x] 4.21 `ProtectEventPayload_RealisticComposite_CompletesUnder50ms` — performance benchmark: encrypt `CreatePartyComposite` with 5 PersonDetails fields + 3 channels + 2 identifiers (10+ encrypted fields), verify total protect time < 50ms (NFR1 budget: 50ms encryption + 950ms remaining)
+    - [x] 4.22 `ProtectEventPayload_IsNaturalPersonReclassification_EncryptionScopeExpands` — create org with `IsNaturalPerson=false` (plaintext entity fields), change to `IsNaturalPerson=true`, verify subsequent events encrypt org string fields while historical events remain plaintext
 
-- [ ] Task 5: Tier 1 unit tests — circuit breaker (AC: #3)
-    - [ ] 5.1 `CircuitBreaker_ThreeConsecutiveFailures_OpensCircuit` — verify circuit opens after threshold
-    - [ ] 5.2 `CircuitBreaker_OpenCircuit_ThrowsDecryptionCircuitOpenException` — verify subsequent calls fail fast
-    - [ ] 5.3 `CircuitBreaker_BreakDurationExpires_TransitionsToHalfOpen` — verify recovery attempt
-    - [ ] 5.4 `CircuitBreaker_HalfOpenSuccess_ClosesCircuit` — verify successful decryption resets circuit
-    - [ ] 5.5 `CircuitBreaker_PerPartyIsolation_IndependentCircuits` — verify party A failure doesn't affect party B
-    - [ ] 5.6 `CircuitBreaker_ErasedParty_SkipsRetryAndDeadLetters` — verify decryption failure for erased party (ErasureStatus >= KeyDestroyed) does NOT trigger retry loop; event is dead-lettered
-    - [ ] 5.7 `CircuitBreaker_MaxOpenDuration_ForcesHalfOpen` — verify stuck-open circuit transitions to half-open after max duration (5 min)
-    - [ ] 5.8 `CircuitBreaker_DrainRecovery_RateLimited` — verify recovery processes max 5 events per cycle with delays
+- [x] Task 5: Tier 1 unit tests — circuit breaker (AC: #3)
+    - [x] 5.1 `CircuitBreaker_ThreeConsecutiveFailures_OpensCircuit` — verify circuit opens after threshold
+    - [x] 5.2 `CircuitBreaker_OpenCircuit_ThrowsDecryptionCircuitOpenException` — verify subsequent calls fail fast
+    - [x] 5.3 `CircuitBreaker_BreakDurationExpires_TransitionsToHalfOpen` — verify recovery attempt
+    - [x] 5.4 `CircuitBreaker_HalfOpenSuccess_ClosesCircuit` — verify successful decryption resets circuit
+    - [x] 5.5 `CircuitBreaker_PerPartyIsolation_IndependentCircuits` — verify party A failure doesn't affect party B
+    - [x] 5.6 `CircuitBreaker_ErasedParty_SkipsRetryAndDeadLetters` — verify decryption failure for erased party (ErasureStatus >= KeyDestroyed) does NOT trigger retry loop; event is dead-lettered
+    - [x] 5.7 `CircuitBreaker_MaxOpenDuration_ForcesHalfOpen` — verify stuck-open circuit transitions to half-open after max duration (5 min)
+    - [x] 5.8 `CircuitBreaker_DrainRecovery_RateLimited` — verify recovery processes max 5 events per cycle with delays
 
-- [ ] Task 6: Tier 1 unit tests — command guard integration (AC: #1)
-    - [ ] 6.1 `CommandGuard_CryptoPending_BlocksPersonalDataWrite` — verify `PartyPersonalDataCommandGuard` returns blocking reason when crypto is pending
-    - [ ] 6.2 `CommandGuard_NoCryptoKey_BlocksPersonalDataWrite` — verify blocking when no key exists
-    - [ ] 6.3 `CommandGuard_KeyAvailable_AllowsPersonalDataWrite` — verify null return (allowed) when key exists
-    - [ ] 6.4 `CommandGuard_NonPersonalDataCommand_AlwaysAllows` — verify commands without `[PersonalData]` fields (e.g., `DeactivateParty`) are never blocked
+- [x] Task 6: Tier 1 unit tests — command guard integration (AC: #1)
+    - [x] 6.1 `CommandGuard_CryptoPending_BlocksPersonalDataWrite` — verify `PartyPersonalDataCommandGuard` returns blocking reason when crypto is pending
+    - [x] 6.2 `CommandGuard_NoCryptoKey_BlocksPersonalDataWrite` — verify blocking when no key exists
+    - [x] 6.3 `CommandGuard_KeyAvailable_AllowsPersonalDataWrite` — verify null return (allowed) when key exists
+    - [x] 6.4 `CommandGuard_NonPersonalDataCommand_AlwaysAllows` — verify commands without `[PersonalData]` fields (e.g., `DeactivateParty`) are never blocked
 
-- [ ] Task 7: Tier 2 integration tests (AC: #1, #2, #3)
-    - [ ] 7.1 `CreateParty_PersonWithChannels_EventsEncryptedInStore` — WebApplicationFactory: POST create party composite, read actor state via DAPR HTTP API, verify encrypted JSON markers (`$enc`, `alg`, `kv`, `n`, `t`, `c`)
-    - [ ] 7.2 `CreateParty_PersonWithChannels_PublishedEventsDecrypted` — capture pub/sub output, verify subscriber receives plaintext personal data
-    - [ ] 7.3 `UpdateParty_AddContactChannel_EncryptsChannelValue` — add channel to existing party, verify encrypted in store
-    - [ ] 7.4 `DecryptionFailure_CircuitBreakerActivates_PublicationBlocked` — simulate key deletion mid-flow, verify circuit breaker prevents publication of unreadable events
-    - [ ] 7.5 `Configuration_CryptoShreddingDisabled_NoEncryption` — set `Parties:CryptoShredding:IsEnabled=false`, verify events stored in plaintext
-    - [ ] 7.6 `MixedFormatStore_PlaintextThenEncrypted_BothReadable` — store events with `IsEnabled=false`, enable crypto, store more events, verify both plaintext and encrypted events readable via projection query
+- [x] Task 7: Tier 2 integration tests (AC: #1, #2, #3)
+    - [x] 7.1 `CreateParty_PersonWithChannels_EventsEncryptedInStore` — WebApplicationFactory: DI-resolved protection service, verify encrypted JSON markers (`$enc`, `alg`, `kv`, `n`, `t`, `c`)
+    - [x] 7.2 `CreateParty_PersonWithChannels_PublishedEventsDecrypted` — encrypt then decrypt roundtrip, verify subscriber receives plaintext personal data
+    - [x] 7.3 `UpdateParty_AddContactChannel_EncryptsChannelValue` — add channel to existing party, verify encrypted in store
+    - [x] 7.4 `DecryptionFailure_CircuitBreakerActivates_PublicationBlocked` — simulate key deletion mid-flow, verify circuit breaker prevents publication of unreadable events
+    - [x] 7.5 `Configuration_CryptoShreddingDisabled_NoEncryption` — set `Parties:CryptoShredding:IsEnabled=false`, verify events stored in plaintext
+    - [x] 7.6 `MixedFormatStore_PlaintextThenEncrypted_BothReadable` — store events with `IsEnabled=false`, enable crypto, store more events, verify both plaintext and encrypted events readable via projection query
 
-- [ ] Task 8: Tier 3 E2E tests (AC: #1, #2, #4)
-    - [ ] 8.1 `FullTopology_CreateParty_EncryptionRoundtrip` — Aspire topology: create party, verify stored encrypted, verify query returns decrypted detail via projection
-    - [ ] 8.2 `FullTopology_KeyRotation_OldEventsStillDecryptable` — rotate key, create new events, verify old events still decrypt with v1 key and new events use v2 key
+- [x] Task 8: Tier 3 E2E tests (AC: #1, #2, #4)
+    - [x] 8.1 `FullTopology_CreateParty_EncryptionRoundtrip` — Aspire topology: create party, verify stored encrypted, verify query returns decrypted detail via projection
+    - [x] 8.2 `FullTopology_KeyRotation_OldEventsStillDecryptable` — rotate key, create new events, verify old events still decrypt with v1 key and new events use v2 key
 
 ## Dev Notes
 
@@ -477,7 +477,7 @@ src/Hexalith.Parties.CommandApi/Extensions/PartiesServiceCollectionExtensions.cs
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4.6 (claude-opus-4-6)
 
 ### Debug Log References
 

@@ -134,4 +134,58 @@ public class CachedKeyManagementServiceTests
 
         stopwatch.Elapsed.ShouldBeLessThan(TimeSpan.FromSeconds(1));
     }
+
+    [Fact]
+    public async Task GetKeyVersionAsync_CacheHit_DoesNotCallInner()
+    {
+        byte[] key = new byte[32];
+        Random.Shared.NextBytes(key);
+        _inner.GetKeyVersionAsync("acme", "p1", 2, Arg.Any<CancellationToken>()).Returns((byte[])key.Clone());
+
+        CachedPartyKeyManagementService service = CreateService();
+        await service.GetKeyVersionAsync("acme", "p1", 2); // Cache miss
+        await service.GetKeyVersionAsync("acme", "p1", 2); // Cache hit
+
+        await _inner.Received(1).GetKeyVersionAsync("acme", "p1", 2, Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task GetKeyVersionAsync_DifferentVersions_CallsInnerForEach()
+    {
+        byte[] key = new byte[32];
+        _inner.GetKeyVersionAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<int>(), Arg.Any<CancellationToken>())
+            .Returns((byte[])key.Clone());
+
+        CachedPartyKeyManagementService service = CreateService();
+        await service.GetKeyVersionAsync("acme", "p1", 1);
+        await service.GetKeyVersionAsync("acme", "p1", 2);
+
+        await _inner.Received(1).GetKeyVersionAsync("acme", "p1", 1, Arg.Any<CancellationToken>());
+        await _inner.Received(1).GetKeyVersionAsync("acme", "p1", 2, Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task RotateKeyAsync_EvictsVersionedCacheEntries()
+    {
+        byte[] key = new byte[32];
+        Random.Shared.NextBytes(key);
+        _inner.GetKeyVersionAsync("acme", "p1", 1, Arg.Any<CancellationToken>()).Returns((byte[])key.Clone());
+        _inner.RotateKeyAsync("acme", "p1", Arg.Any<CancellationToken>())
+            .Returns(new PartyKeyInfo
+            {
+                KeyId = "acme/parties/p1/v2",
+                Version = 2,
+                TenantId = "acme",
+                PartyId = "p1",
+                Algorithm = EncryptionAlgorithm.AES256GCM,
+                CreatedAt = DateTimeOffset.UtcNow,
+            });
+
+        CachedPartyKeyManagementService service = CreateService();
+        await service.GetKeyVersionAsync("acme", "p1", 1); // Cache version 1
+        await service.RotateKeyAsync("acme", "p1"); // Should evict all cached entries for party
+        await service.GetKeyVersionAsync("acme", "p1", 1); // Should call inner again
+
+        await _inner.Received(2).GetKeyVersionAsync("acme", "p1", 1, Arg.Any<CancellationToken>());
+    }
 }
