@@ -65,14 +65,14 @@ public sealed class PartyApiRoundTripIntegrationTests : IClassFixture<PartyApiRo
         createResponse.StatusCode.ShouldBe(HttpStatusCode.Accepted);
         createResponse.Headers.TryGetValues("X-GDPR-Warning", out IEnumerable<string>? createWarningValues).ShouldBeTrue();
         createWarningValues.ShouldNotBeNull();
-        createWarningValues.Single().ShouldContain("does not include GDPR compliance features");
+        createWarningValues.Single().ShouldContain("encryption at rest is enabled");
 
         HttpResponseMessage getResponse = await client.GetAsync($"/api/v1/parties/{partyId}");
 
         getResponse.StatusCode.ShouldBe(HttpStatusCode.OK);
         getResponse.Headers.TryGetValues("X-GDPR-Warning", out IEnumerable<string>? getWarningValues).ShouldBeTrue();
         getWarningValues.ShouldNotBeNull();
-        getWarningValues.Single().ShouldContain("does not include GDPR compliance features");
+        getWarningValues.Single().ShouldContain("encryption at rest is enabled");
 
         JsonDocument payload = await JsonDocument.ParseAsync(await getResponse.Content.ReadAsStreamAsync());
         payload.RootElement.GetProperty("id").GetString().ShouldBe(partyId);

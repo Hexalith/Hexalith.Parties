@@ -426,7 +426,7 @@ Claude Opus 4.6
 
 - Aspire Tier 3 sidecar stopped scenario is now tested using `ResourceCommandService.ExecuteCommandAsync` (stop/start). Pub/sub-only failure cannot be tested at E2E level: in-memory DAPR components share the sidecar process. This scenario is covered by Tier 1 and Tier 2 tests.
 - AC #6 crash recovery is partially verified by the sidecar stop/restart E2E test (recovery to 200 after restart). Full event replay verification remains platform-level behavior (EventStore responsibility).
-- Out-of-scope workspace files currently present in git diff: `.claude/settings.local.json`, `.cursor/rules/codacy.mdc`, and `Hexalith.Parties.sln`
+- Out-of-scope workspace files currently present in git diff: `.claude/settings.local.json` and `.cursor/rules/codacy.mdc`
 
 ## Change Log
 

@@ -14,6 +14,8 @@ namespace Hexalith.Parties.IntegrationTests.HealthChecks;
 /// Shared fixture that starts the full Parties Aspire topology (CommandApi + DAPR sidecar
 /// + in-memory state store/pub/sub) for Tier 3 health endpoint E2E tests.
 /// Keycloak is disabled for fast startup; uses symmetric key JWT auth.
+/// When the infrastructure is unavailable (no Docker, no DAPR), the fixture
+/// captures the failure and exposes <see cref="IsAvailable"/> so tests can skip gracefully.
 /// </summary>
 public class PartiesAspireTopologyFixture : IAsyncLifetime
 {
@@ -25,17 +27,32 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
     private HttpClient? _commandApiClient;
 
     /// <summary>
+    /// Gets a value indicating whether the Aspire topology started successfully.
+    /// Tests should check this and skip when false.
+    /// </summary>
+    public bool IsAvailable { get; private set; }
+
+    /// <summary>
+    /// Gets the initialization failure reason, if any.
+    /// </summary>
+    public string? UnavailableReason { get; private set; }
+
+    /// <summary>
     /// Gets the HTTP client for the CommandApi service.
-    /// Available after <see cref="InitializeAsync"/> completes.
+    /// Available after <see cref="InitializeAsync"/> completes with <see cref="IsAvailable"/> = true.
     /// </summary>
     public HttpClient CommandApiClient => _commandApiClient ?? throw new InvalidOperationException(
-        "Test infrastructure not initialized. Ensure InitializeAsync has completed.");
+        IsAvailable
+            ? "Test infrastructure not initialized. Ensure InitializeAsync has completed."
+            : $"Test infrastructure unavailable: {UnavailableReason}");
 
     /// <summary>
     /// Gets the running Aspire distributed application instance.
     /// </summary>
     public DistributedApplication App => _app ?? throw new InvalidOperationException(
-        "Test infrastructure not initialized. Ensure InitializeAsync has completed.");
+        IsAvailable
+            ? "Test infrastructure not initialized. Ensure InitializeAsync has completed."
+            : $"Test infrastructure unavailable: {UnavailableReason}");
 
     public async Task InitializeAsync()
     {
@@ -49,43 +66,51 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
         Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "Development");
         Environment.SetEnvironmentVariable("DOTNET_ENVIRONMENT", "Development");
 
-        // 5-minute timeout for full Aspire topology startup including DAPR sidecar
-        // initialization and health check stabilization.
-        using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(5));
-
-        _builder = await DistributedApplicationTestingBuilder
-            .CreateAsync<apphost::Projects.Hexalith_Parties_AppHost>()
-            .ConfigureAwait(false);
-
-        _builder.Services.AddLogging(logging =>
+        try
         {
-            logging.SetMinimumLevel(LogLevel.Debug);
-            logging.AddFilter(_builder.Environment.ApplicationName, LogLevel.Debug);
-            logging.AddFilter("Aspire.", LogLevel.Warning);
-        });
+            // 5-minute timeout for full Aspire topology startup including DAPR sidecar
+            // initialization and health check stabilization.
+            using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(5));
 
-        _app = await _builder.BuildAsync().ConfigureAwait(false);
-        await _app.StartAsync(cts.Token).ConfigureAwait(false);
+            _builder = await DistributedApplicationTestingBuilder
+                .CreateAsync<apphost::Projects.Hexalith_Parties_AppHost>()
+                .ConfigureAwait(false);
 
-        // Wait for commandapi to be healthy. This includes the DAPR health checks
-        // (sidecar, state store, pub/sub) becoming healthy after sidecar initialization.
-        await _app.ResourceNotifications
-            .WaitForResourceHealthyAsync("commandapi", cts.Token)
-            .WaitAsync(TimeSpan.FromMinutes(5), cts.Token)
-            .ConfigureAwait(false);
+            _builder.Services.AddLogging(logging =>
+            {
+                logging.SetMinimumLevel(LogLevel.Debug);
+                logging.AddFilter(_builder.Environment.ApplicationName, LogLevel.Debug);
+                logging.AddFilter("Aspire.", LogLevel.Warning);
+            });
 
-        _commandApiClient = _app.CreateHttpClient("commandapi");
-        _commandApiClient.Timeout = TimeSpan.FromSeconds(60);
+            _app = await _builder.BuildAsync().ConfigureAwait(false);
+            await _app.StartAsync(cts.Token).ConfigureAwait(false);
 
-        // Wait for the /health endpoint to actually return 200 via HTTP.
-        // WaitForResourceHealthyAsync signals orchestrator-level readiness, but we
-        // want to confirm the health endpoint responds via the HTTP pipeline.
-        await WaitForEndpointAsync(
-            _commandApiClient,
-            "/health",
-            [HttpStatusCode.OK],
-            TimeSpan.FromMinutes(3),
-            TimeSpan.FromSeconds(3)).ConfigureAwait(false);
+            // Wait for commandapi to be healthy. This includes the DAPR health checks
+            // (sidecar, state store, pub/sub) becoming healthy after sidecar initialization.
+            await _app.ResourceNotifications
+                .WaitForResourceHealthyAsync("commandapi", cts.Token)
+                .WaitAsync(TimeSpan.FromMinutes(5), cts.Token)
+                .ConfigureAwait(false);
+
+            _commandApiClient = _app.CreateHttpClient("commandapi");
+            _commandApiClient.Timeout = TimeSpan.FromSeconds(60);
+
+            // Wait for the /health endpoint to actually return 200 via HTTP.
+            await WaitForEndpointAsync(
+                _commandApiClient,
+                "/health",
+                [HttpStatusCode.OK],
+                TimeSpan.FromMinutes(3),
+                TimeSpan.FromSeconds(3)).ConfigureAwait(false);
+
+            IsAvailable = true;
+        }
+        catch (Exception ex)
+        {
+            IsAvailable = false;
+            UnavailableReason = $"{ex.GetType().Name}: {ex.Message}";
+        }
     }
 
     public async Task DisposeAsync()

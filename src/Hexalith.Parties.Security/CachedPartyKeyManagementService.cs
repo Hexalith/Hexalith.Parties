@@ -12,8 +12,6 @@ public sealed class CachedPartyKeyManagementService(IPartyKeyManagementService i
     private static readonly TimeSpan TtlJitter = TimeSpan.FromMinutes(2);
 
     private readonly ConcurrentDictionary<string, CacheEntry> _cache = new();
-    private long _cacheHits;
-    private long _cacheMisses;
 
     static CachedPartyKeyManagementService()
     {
@@ -21,7 +19,6 @@ public sealed class CachedPartyKeyManagementService(IPartyKeyManagementService i
             "parties.keys.cache_hit_ratio",
             observeValue: () =>
             {
-                // Gauge returns 0.0 if no lookups yet
                 long hits = Interlocked.Read(ref s_sharedHits);
                 long misses = Interlocked.Read(ref s_sharedMisses);
                 long total = hits + misses;
@@ -42,12 +39,10 @@ public sealed class CachedPartyKeyManagementService(IPartyKeyManagementService i
 
         if (_cache.TryGetValue(cacheKey, out CacheEntry? entry) && !entry.IsExpired)
         {
-            Interlocked.Increment(ref _cacheHits);
             Interlocked.Increment(ref s_sharedHits);
             return (byte[])entry.KeyMaterial.Clone();
         }
 
-        Interlocked.Increment(ref _cacheMisses);
         Interlocked.Increment(ref s_sharedMisses);
 
         byte[] key = await inner.GetKeyAsync(tenantId, partyId, cancellationToken).ConfigureAwait(false);
@@ -58,21 +53,50 @@ public sealed class CachedPartyKeyManagementService(IPartyKeyManagementService i
         return key;
     }
 
-    public Task<byte[]> GetKeyVersionAsync(string tenantId, string partyId, int version, CancellationToken cancellationToken = default)
-        => inner.GetKeyVersionAsync(tenantId, partyId, version, cancellationToken);
+    public async Task<byte[]> GetKeyVersionAsync(string tenantId, string partyId, int version, CancellationToken cancellationToken = default)
+    {
+        string cacheKey = BuildVersionedCacheKey(tenantId, partyId, version);
+
+        if (_cache.TryGetValue(cacheKey, out CacheEntry? entry) && !entry.IsExpired)
+        {
+            Interlocked.Increment(ref s_sharedHits);
+            return (byte[])entry.KeyMaterial.Clone();
+        }
+
+        Interlocked.Increment(ref s_sharedMisses);
+
+        byte[] key = await inner.GetKeyVersionAsync(tenantId, partyId, version, cancellationToken).ConfigureAwait(false);
+
+        EvictIfPresent(cacheKey);
+        _cache[cacheKey] = new CacheEntry((byte[])key.Clone(), DateTimeOffset.UtcNow + JitteredTtl());
+
+        return key;
+    }
 
     public async Task<PartyKeyInfo> RotateKeyAsync(string tenantId, string partyId, CancellationToken cancellationToken = default)
     {
         PartyKeyInfo result = await inner.RotateKeyAsync(tenantId, partyId, cancellationToken).ConfigureAwait(false);
-        EvictIfPresent(BuildCacheKey(tenantId, partyId));
+        EvictAllForParty(tenantId, partyId);
         return result;
     }
 
     public async Task<ErasureCertificate> DeleteKeyAsync(string tenantId, string partyId, CancellationToken cancellationToken = default)
     {
         ErasureCertificate result = await inner.DeleteKeyAsync(tenantId, partyId, cancellationToken).ConfigureAwait(false);
-        EvictIfPresent(BuildCacheKey(tenantId, partyId));
+        EvictAllForParty(tenantId, partyId);
         return result;
+    }
+
+    private void EvictAllForParty(string tenantId, string partyId)
+    {
+        string prefix = $"{tenantId}:{partyId}";
+        foreach (string key in _cache.Keys)
+        {
+            if (key.StartsWith(prefix, StringComparison.Ordinal))
+            {
+                EvictIfPresent(key);
+            }
+        }
     }
 
     private void EvictIfPresent(string cacheKey)
@@ -84,6 +108,8 @@ public sealed class CachedPartyKeyManagementService(IPartyKeyManagementService i
     }
 
     private static string BuildCacheKey(string tenantId, string partyId) => $"{tenantId}:{partyId}";
+
+    private static string BuildVersionedCacheKey(string tenantId, string partyId, int version) => $"{tenantId}:{partyId}:v{version}";
 
     private static TimeSpan JitteredTtl() => MinTtl + (TtlJitter * Random.Shared.NextDouble());
 

@@ -75,6 +75,40 @@ public sealed class GetPartyMcpToolTests
     }
 
     [Fact]
+    public async Task GetPartyAsync_ErasedParty_ThrowsErasedErrorAsync()
+    {
+        using TenantScope tenantScope = TenantScope.Create("tenant-a");
+
+        string partyId = Guid.NewGuid().ToString();
+        PartyDetail erasedDetail = new()
+        {
+            Id = partyId,
+            Type = PartyType.Person,
+            IsActive = false,
+            DisplayName = string.Empty,
+            SortName = string.Empty,
+            IsErased = true,
+            ErasedAt = DateTimeOffset.UtcNow.AddMinutes(-5),
+            CreatedAt = DateTimeOffset.UtcNow.AddDays(-30),
+            LastModifiedAt = DateTimeOffset.UtcNow.AddMinutes(-5),
+        };
+
+        IPartyDetailProjectionActor projectionActor = Substitute.For<IPartyDetailProjectionActor>();
+        projectionActor.GetDetailAsync().Returns(erasedDetail);
+
+        IActorProxyFactory actorProxyFactory = CreateActorProxyFactory(projectionActor);
+        ServiceProvider services = new ServiceCollection()
+            .AddSingleton(actorProxyFactory)
+            .BuildServiceProvider();
+
+        InvalidOperationException exception = await Should.ThrowAsync<InvalidOperationException>(
+            () => GetPartyMcpTool.GetPartyAsync(partyId, services));
+
+        exception.Message.ShouldContain("erased");
+        exception.Message.ShouldContain("GDPR Article 17");
+    }
+
+    [Fact]
     public async Task GetPartyAsync_InvalidPartyIdFormat_ThrowsValidationErrorAsync()
     {
         using TenantScope _ = TenantScope.Create("tenant-a");

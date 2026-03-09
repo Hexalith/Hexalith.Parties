@@ -14,6 +14,7 @@ using Hexalith.Parties.Contracts.ValueObjects;
 using Hexalith.Parties.Security;
 
 using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.Options;
 
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
@@ -60,8 +61,13 @@ public class KeyManagementIntegrationTests
         PartyKeyManagementService keyService = new(backend, auditService, correlationAccessor);
         IPartyKeyRetryScheduler retryScheduler = Substitute.For<IPartyKeyRetryScheduler>();
         PartyKeyLifecycleService lifecycleService = new(keyService, retryScheduler, NullLogger<PartyKeyLifecycleService>.Instance);
+        IOptionsMonitor<CryptoShreddingOptions> cryptoOptions = Substitute.For<IOptionsMonitor<CryptoShreddingOptions>>();
+        cryptoOptions.CurrentValue.Returns(new CryptoShreddingOptions());
         PartyPayloadProtectionService protectionService = new(
-            keyService, backend, lifecycleService, NullLogger<PartyPayloadProtectionService>.Instance);
+            keyService, backend, lifecycleService,
+            new DecryptionCircuitBreaker(NullLogger<DecryptionCircuitBreaker>.Instance),
+            cryptoOptions,
+            NullLogger<PartyPayloadProtectionService>.Instance);
 
         PartyCreated payload = new()
         {
@@ -226,6 +232,36 @@ public class KeyManagementIntegrationTests
         // Assert — CryptoPending cleared
         bool pendingAfterRetry = await lifecycleService.IsCryptoPendingAsync("acme", "p1");
         pendingAfterRetry.ShouldBeFalse();
+    }
+
+    /// <summary>
+    /// 9.3-8.14: Idempotent erasure — calling DeleteKeyAsync twice for the same party
+    /// returns equivalent certificates (same PartyId, TenantId, and key versions destroyed).
+    /// </summary>
+    [Fact]
+    public async Task DeleteKeyAsync_CalledTwice_ReturnsEquivalentCertificates()
+    {
+        // Arrange
+        LocalDevKeyStorageBackend backend = new();
+        DaprClient daprClient = Substitute.For<DaprClient>();
+        ConfigureAuditMock(daprClient);
+        KeyOperationAuditService auditService = new(daprClient);
+        CorrelationContextAccessor correlationAccessor = new();
+        PartyKeyManagementService keyService = new(backend, auditService, correlationAccessor);
+
+        // Create a key first
+        await keyService.CreateKeyAsync("acme", "p1");
+
+        // Act — first deletion
+        ErasureCertificate cert1 = await keyService.DeleteKeyAsync("acme", "p1");
+
+        // Act — second deletion (idempotent)
+        ErasureCertificate cert2 = await keyService.DeleteKeyAsync("acme", "p1");
+
+        // Assert — both certificates reference the same party
+        cert1.PartyId.ShouldBe(cert2.PartyId);
+        cert1.TenantId.ShouldBe(cert2.TenantId);
+        cert2.VerificationStatus.ShouldBe(ErasureVerificationStatus.Verified);
     }
 
     /// <summary>

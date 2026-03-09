@@ -14,8 +14,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Hexalith.Parties.Projections.Services;
 
-public sealed partial class ProjectionRebuildService : IProjectionRebuildService
-{
+public sealed partial class ProjectionRebuildService : IProjectionRebuildService {
     private const string Domain = "party";
     private const string AggregateActorType = "AggregateActor";
     private const string DetailActorType = "PartyDetailProjectionActor";
@@ -25,8 +24,7 @@ public sealed partial class ProjectionRebuildService : IProjectionRebuildService
     private const string IndexManifestStateKeySuffix = "manifest";
     private const string RebuildCheckpointPrefix = "rebuild-checkpoint";
 
-    private static readonly JsonSerializerOptions s_jsonOptions = new()
-    {
+    private static readonly JsonSerializerOptions s_jsonOptions = new() {
         PropertyNameCaseInsensitive = true,
         Converters = { new JsonStringEnumConverter() },
     };
@@ -38,15 +36,13 @@ public sealed partial class ProjectionRebuildService : IProjectionRebuildService
     public ProjectionRebuildService(
         HttpClient daprHttpClient,
         IEventPayloadProtectionService payloadProtectionService,
-        ILogger<ProjectionRebuildService> logger)
-    {
+        ILogger<ProjectionRebuildService> logger) {
         _daprHttpClient = daprHttpClient;
         _payloadProtectionService = payloadProtectionService;
         _logger = logger;
     }
 
-    public async Task RebuildDetailProjectionAsync(string tenantId, string? partyId, CancellationToken cancellationToken)
-    {
+    public async Task RebuildDetailProjectionAsync(string tenantId, string? partyId, CancellationToken cancellationToken) {
         ArgumentException.ThrowIfNullOrWhiteSpace(tenantId);
 
         string projectionKey = partyId is not null ? $"detail:{partyId}" : "detail";
@@ -62,14 +58,11 @@ public sealed partial class ProjectionRebuildService : IProjectionRebuildService
         Log.RebuildStarted(_logger, "detail", tenantId, partyIds.Count);
 
         bool resumeReached = checkpoint is null;
-        foreach (string id in partyIds.OrderBy(static x => x, StringComparer.Ordinal))
-        {
+        foreach (string id in partyIds.OrderBy(static x => x, StringComparer.Ordinal)) {
             cancellationToken.ThrowIfCancellationRequested();
 
-            if (!resumeReached)
-            {
-                if (!string.Equals(id, checkpoint!.PartyId, StringComparison.Ordinal))
-                {
+            if (!resumeReached) {
+                if (!string.Equals(id, checkpoint!.PartyId, StringComparison.Ordinal)) {
                     continue;
                 }
 
@@ -89,8 +82,7 @@ public sealed partial class ProjectionRebuildService : IProjectionRebuildService
         Log.RebuildCompleted(_logger, "detail", tenantId, partyIds.Count);
     }
 
-    public async Task RebuildIndexProjectionAsync(string tenantId, CancellationToken cancellationToken)
-    {
+    public async Task RebuildIndexProjectionAsync(string tenantId, CancellationToken cancellationToken) {
         ArgumentException.ThrowIfNullOrWhiteSpace(tenantId);
 
         ProjectionRebuildCheckpoint? checkpoint = await ReadCheckpointAsync(
@@ -112,14 +104,11 @@ public sealed partial class ProjectionRebuildService : IProjectionRebuildService
             : [];
 
         bool resumeReached = checkpoint is null;
-        foreach (string id in partyIds.OrderBy(static x => x, StringComparer.Ordinal))
-        {
+        foreach (string id in partyIds.OrderBy(static x => x, StringComparer.Ordinal)) {
             cancellationToken.ThrowIfCancellationRequested();
 
-            if (!resumeReached)
-            {
-                if (!string.Equals(id, checkpoint!.PartyId, StringComparison.Ordinal))
-                {
+            if (!resumeReached) {
+                if (!string.Equals(id, checkpoint!.PartyId, StringComparison.Ordinal)) {
                     continue;
                 }
 
@@ -136,16 +125,13 @@ public sealed partial class ProjectionRebuildService : IProjectionRebuildService
                 resumeSequence + 1,
                 cancellationToken).ConfigureAwait(false);
 
-            foreach (EventReplayRecord evt in events)
-            {
+            foreach (EventReplayRecord evt in events) {
                 PartyIndexEntry? applied = PartyIndexProjectionHandler.Apply(id, evt.Payload, entry);
-                if (applied is not null)
-                {
+                if (applied is not null) {
                     entry = applied;
                     rebuiltIndex[id] = applied;
                 }
-                else if (entry is null)
-                {
+                else if (entry is null) {
                     _ = rebuiltIndex.Remove(id);
                 }
 
@@ -166,6 +152,52 @@ public sealed partial class ProjectionRebuildService : IProjectionRebuildService
         Log.RebuildCompleted(_logger, "index", tenantId, partyIds.Count);
     }
 
+    public async Task<IReadOnlyList<ProcessingActivityRecord>> GetProcessingRecordsAsync(
+        string tenantId,
+        string partyId,
+        CancellationToken cancellationToken) {
+        ArgumentException.ThrowIfNullOrWhiteSpace(tenantId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(partyId);
+
+        string actorId = $"{tenantId}:{Domain}:{partyId}";
+        string metadataKey = $"{tenantId}:{Domain}:{partyId}:metadata";
+
+        AggregateMetadataDto? metadata = await ReadActorStateAsync<AggregateMetadataDto>(
+            AggregateActorType,
+            actorId,
+            metadataKey,
+            cancellationToken).ConfigureAwait(false);
+
+        if (metadata is null || metadata.CurrentSequence <= 0) {
+            return [];
+        }
+
+        List<ProcessingActivityRecord> records = new(checked((int)metadata.CurrentSequence));
+        for (long seq = 1; seq <= metadata.CurrentSequence; seq++) {
+            string eventKey = $"{tenantId}:{Domain}:{partyId}:events:{seq}";
+            EventEnvelopeDto? envelope = await ReadActorStateAsync<EventEnvelopeDto>(
+                AggregateActorType,
+                actorId,
+                eventKey,
+                cancellationToken).ConfigureAwait(false);
+
+            if (envelope is null) {
+                Log.EventMissing(_logger, tenantId, partyId, seq);
+                continue;
+            }
+
+            IEventPayload? payload = DeserializeEventPayload(envelope);
+            records.Add(new ProcessingActivityRecord {
+                SequenceNumber = envelope.SequenceNumber,
+                EventType = GetShortEventTypeName(envelope.EventTypeName),
+                Timestamp = envelope.Timestamp,
+                Summary = CreateProcessingSummary(envelope.EventTypeName, payload),
+            });
+        }
+
+        return records;
+    }
+
     internal async Task<IReadOnlyList<IEventPayload>> ReadAggregateEventsAsync(
         string tenantId,
         string partyId,
@@ -178,8 +210,7 @@ public sealed partial class ProjectionRebuildService : IProjectionRebuildService
         string tenantId,
         string partyId,
         long startSequence,
-        CancellationToken cancellationToken)
-    {
+        CancellationToken cancellationToken) {
         ArgumentOutOfRangeException.ThrowIfLessThan(startSequence, 1L);
 
         string actorId = $"{tenantId}:{Domain}:{partyId}";
@@ -188,27 +219,23 @@ public sealed partial class ProjectionRebuildService : IProjectionRebuildService
         AggregateMetadataDto? metadata = await ReadActorStateAsync<AggregateMetadataDto>(
             AggregateActorType, actorId, metadataKey, cancellationToken).ConfigureAwait(false);
 
-        if (metadata is null || metadata.CurrentSequence <= 0 || startSequence > metadata.CurrentSequence)
-        {
+        if (metadata is null || metadata.CurrentSequence <= 0 || startSequence > metadata.CurrentSequence) {
             return [];
         }
 
         List<EventReplayRecord> events = new(checked((int)(metadata.CurrentSequence - startSequence + 1)));
-        for (long seq = startSequence; seq <= metadata.CurrentSequence; seq++)
-        {
+        for (long seq = startSequence; seq <= metadata.CurrentSequence; seq++) {
             string eventKey = $"{tenantId}:{Domain}:{partyId}:events:{seq}";
             EventEnvelopeDto? envelope = await ReadActorStateAsync<EventEnvelopeDto>(
                 AggregateActorType, actorId, eventKey, cancellationToken).ConfigureAwait(false);
 
-            if (envelope is null)
-            {
+            if (envelope is null) {
                 Log.EventMissing(_logger, tenantId, partyId, seq);
                 continue;
             }
 
             IEventPayload? payload = DeserializeEventPayload(envelope);
-            if (payload is not null)
-            {
+            if (payload is not null) {
                 events.Add(new EventReplayRecord(seq, payload));
             }
         }
@@ -221,8 +248,7 @@ public sealed partial class ProjectionRebuildService : IProjectionRebuildService
         string partyId,
         string projectionKey,
         long resumeSequence,
-        CancellationToken cancellationToken)
-    {
+        CancellationToken cancellationToken) {
         string detailActorId = GetDetailActorId(tenantId, partyId);
         string detailStateKey = GetDetailStateKey(tenantId, partyId);
         PartyDetail? detail = resumeSequence > 0
@@ -238,11 +264,9 @@ public sealed partial class ProjectionRebuildService : IProjectionRebuildService
             resumeSequence + 1,
             cancellationToken).ConfigureAwait(false);
 
-        foreach (EventReplayRecord evt in events)
-        {
+        foreach (EventReplayRecord evt in events) {
             PartyDetail? applied = PartyDetailProjectionHandler.Apply(partyId, evt.Payload, detail);
-            if (applied is not null)
-            {
+            if (applied is not null) {
                 detail = applied;
                 await WriteActorStateAsync(DetailActorType, detailActorId, detailStateKey, detail, cancellationToken).ConfigureAwait(false);
             }
@@ -254,24 +278,21 @@ public sealed partial class ProjectionRebuildService : IProjectionRebuildService
                 cancellationToken).ConfigureAwait(false);
         }
 
-        if (events.Count == 0 && detail is not null)
-        {
+        if (events.Count == 0 && detail is not null) {
             await WriteActorStateAsync(DetailActorType, detailActorId, detailStateKey, detail, cancellationToken).ConfigureAwait(false);
         }
 
         Log.PartyRebuilt(_logger, tenantId, partyId, events.Count);
     }
 
-    private async Task<IReadOnlyList<string>> GetPartyIdsForTenantAsync(string tenantId, CancellationToken cancellationToken)
-    {
+    private async Task<IReadOnlyList<string>> GetPartyIdsForTenantAsync(string tenantId, CancellationToken cancellationToken) {
         string indexActorId = GetIndexActorId(tenantId);
         string indexStateKey = GetIndexStateKey(tenantId);
 
         Dictionary<string, PartyIndexEntry>? index = await ReadActorStateAsync<Dictionary<string, PartyIndexEntry>>(
             IndexActorType, indexActorId, indexStateKey, cancellationToken).ConfigureAwait(false);
 
-        if (index is not null && index.Count > 0)
-        {
+        if (index is not null && index.Count > 0) {
             return index.Keys.OrderBy(static x => x, StringComparer.Ordinal).ToList();
         }
 
@@ -281,8 +302,7 @@ public sealed partial class ProjectionRebuildService : IProjectionRebuildService
             GetIndexManifestStateKey(tenantId),
             cancellationToken).ConfigureAwait(false);
 
-        if (manifest is not null && manifest.Count > 0)
-        {
+        if (manifest is not null && manifest.Count > 0) {
             return manifest
                 .Where(static x => !string.IsNullOrWhiteSpace(x))
                 .Distinct(StringComparer.Ordinal)
@@ -296,15 +316,13 @@ public sealed partial class ProjectionRebuildService : IProjectionRebuildService
 
     private async Task<T?> ReadActorStateAsync<T>(
         string actorType, string actorId, string stateKey, CancellationToken cancellationToken)
-        where T : class
-    {
+        where T : class {
         string encodedActorId = Uri.EscapeDataString(actorId);
         string encodedKey = Uri.EscapeDataString(stateKey);
         string url = $"/v1.0/actors/{actorType}/{encodedActorId}/state/{encodedKey}";
 
         HttpResponseMessage response = await _daprHttpClient.GetAsync(url, cancellationToken).ConfigureAwait(false);
-        if (response.StatusCode == HttpStatusCode.NotFound)
-        {
+        if (response.StatusCode == HttpStatusCode.NotFound) {
             return null;
         }
 
@@ -314,8 +332,7 @@ public sealed partial class ProjectionRebuildService : IProjectionRebuildService
     }
 
     private async Task WriteActorStateAsync<T>(
-        string actorType, string actorId, string stateKey, T value, CancellationToken cancellationToken)
-    {
+        string actorType, string actorId, string stateKey, T value, CancellationToken cancellationToken) {
         string encodedActorId = Uri.EscapeDataString(actorId);
         string url = $"/v1.0/actors/{actorType}/{encodedActorId}/state";
 
@@ -336,8 +353,7 @@ public sealed partial class ProjectionRebuildService : IProjectionRebuildService
     private async Task WriteIndexProjectionStateAsync(
         string tenantId,
         IReadOnlyDictionary<string, PartyIndexEntry> rebuiltIndex,
-        CancellationToken cancellationToken)
-    {
+        CancellationToken cancellationToken) {
         string actorId = GetIndexActorId(tenantId);
         string url = $"/v1.0/actors/{IndexActorType}/{Uri.EscapeDataString(actorId)}/state";
         string indexStateKey = GetIndexStateKey(tenantId);
@@ -391,8 +407,7 @@ public sealed partial class ProjectionRebuildService : IProjectionRebuildService
     private async Task DeleteCheckpointAsync(
         string tenantId,
         string projectionKey,
-        CancellationToken cancellationToken)
-    {
+        CancellationToken cancellationToken) {
         string actorId = GetIndexActorId(tenantId);
         string url = $"/v1.0/actors/{IndexActorType}/{Uri.EscapeDataString(actorId)}/state";
         var stateTransaction = new[]
@@ -430,22 +445,53 @@ public sealed partial class ProjectionRebuildService : IProjectionRebuildService
     private static string GetIndexManifestStateKey(string tenantId)
         => $"{tenantId}:{IndexProjectionName}:{IndexManifestStateKeySuffix}";
 
-    private IEventPayload? DeserializeEventPayload(EventEnvelopeDto envelope)
-    {
-        if (envelope.Payload is null || envelope.Payload.Length == 0)
-        {
+    private static string GetShortEventTypeName(string? eventTypeName) {
+        if (string.IsNullOrWhiteSpace(eventTypeName)) {
+            return "UnknownEvent";
+        }
+
+        int lastDot = eventTypeName.LastIndexOf('.');
+        return lastDot >= 0 ? eventTypeName[(lastDot + 1)..] : eventTypeName;
+    }
+
+    private static string CreateProcessingSummary(string eventTypeName, IEventPayload? payload)
+        => payload switch {
+            PartyCreated => "Party record created.",
+            PartyDisplayNameDerived => "Party display name derived.",
+            PersonDetailsUpdated => "Person details updated.",
+            OrganizationDetailsUpdated => "Organization details updated.",
+            ContactChannelAdded e => $"Contact channel '{e.ContactChannelId}' added.",
+            ContactChannelUpdated e => $"Contact channel '{e.ContactChannelId}' updated.",
+            ContactChannelRemoved e => $"Contact channel '{e.ContactChannelId}' removed.",
+            PreferredContactChannelChanged e => $"Preferred contact channel changed to '{e.ContactChannelId}'.",
+            IdentifierAdded e => $"Identifier '{e.IdentifierId}' added.",
+            IdentifierRemoved e => $"Identifier '{e.IdentifierId}' removed.",
+            PartyDeactivated => "Party deactivated.",
+            PartyReactivated => "Party reactivated.",
+            ConsentRecorded e => $"Consent recorded for '{e.Purpose}' via channel '{e.ChannelId}'.",
+            ConsentRevoked e => $"Consent '{e.ConsentId}' revoked.",
+            ProcessingRestricted e when !string.IsNullOrWhiteSpace(e.Reason) => $"Processing restricted: {e.Reason}",
+            ProcessingRestricted => "Processing restricted.",
+            RestrictionLifted => "Processing restriction lifted.",
+            ErasePartyRequested => "Party erasure requested.",
+            PartyEncryptionKeyDeleted => "Party encryption key deleted.",
+            ErasureVerified => "Party erasure verified.",
+            PartyErased => "Party erased.",
+            _ => $"{GetShortEventTypeName(eventTypeName)} recorded.",
+        };
+
+    private IEventPayload? DeserializeEventPayload(EventEnvelopeDto envelope) {
+        if (envelope.Payload is null || envelope.Payload.Length == 0) {
             return null;
         }
 
         Type? eventType = ResolveEventType(envelope.EventTypeName);
-        if (eventType is null)
-        {
+        if (eventType is null) {
             Log.UnknownEventType(_logger, envelope.EventTypeName, envelope.AggregateId);
             return null;
         }
 
-        try
-        {
+        try {
             AggregateIdentity identity = new(envelope.TenantId, envelope.Domain, envelope.AggregateId);
             PayloadProtectionResult protectionResult = _payloadProtectionService
                 .UnprotectEventPayloadAsync(
@@ -459,31 +505,33 @@ public sealed partial class ProjectionRebuildService : IProjectionRebuildService
             object? deserialized = JsonSerializer.Deserialize(protectionResult.PayloadBytes, eventType, s_jsonOptions);
             return deserialized as IEventPayload;
         }
-        catch (JsonException ex)
-        {
+        catch (InvalidOperationException ex) when (
+            string.Equals(envelope.SerializationFormat, "json+pdenc-v1", StringComparison.Ordinal)) {
+            // Decryption failure for an encrypted event — likely an erased party whose key was destroyed.
+            // Gracefully skip instead of crashing the entire rebuild.
+            Log.DecryptionFailedDuringRebuild(_logger, envelope.EventTypeName, envelope.AggregateId, envelope.SequenceNumber, ex);
+            return null;
+        }
+        catch (JsonException ex) {
             Log.EventDeserializationFailed(_logger, envelope.EventTypeName, envelope.AggregateId, envelope.SequenceNumber, ex);
             return null;
         }
     }
 
-    private static Type? ResolveEventType(string? eventTypeName)
-    {
-        if (string.IsNullOrWhiteSpace(eventTypeName))
-        {
+    private static Type? ResolveEventType(string? eventTypeName) {
+        if (string.IsNullOrWhiteSpace(eventTypeName)) {
             return null;
         }
 
         // Try direct type resolution (assembly-qualified name)
         Type? type = Type.GetType(eventTypeName);
-        if (type is not null)
-        {
+        if (type is not null) {
             return type;
         }
 
         // Search in the Parties.Contracts assembly where all domain events live
         type = typeof(PartyCreated).Assembly.GetType(eventTypeName);
-        if (type is not null)
-        {
+        if (type is not null) {
             return type;
         }
 
@@ -498,8 +546,7 @@ public sealed partial class ProjectionRebuildService : IProjectionRebuildService
                 && typeof(IEventPayload).IsAssignableFrom(t));
     }
 
-    internal sealed record AggregateMetadataDto
-    {
+    internal sealed record AggregateMetadataDto {
         [JsonPropertyName("currentSequence")]
         public long CurrentSequence { get; init; }
 
@@ -507,8 +554,7 @@ public sealed partial class ProjectionRebuildService : IProjectionRebuildService
         public DateTimeOffset LastModified { get; init; }
     }
 
-    internal sealed record EventEnvelopeDto
-    {
+    internal sealed record EventEnvelopeDto {
         [JsonPropertyName("aggregateId")]
         public string AggregateId { get; init; } = string.Empty;
 
@@ -520,6 +566,9 @@ public sealed partial class ProjectionRebuildService : IProjectionRebuildService
 
         [JsonPropertyName("sequenceNumber")]
         public long SequenceNumber { get; init; }
+
+        [JsonPropertyName("timestamp")]
+        public DateTimeOffset Timestamp { get; init; }
 
         [JsonPropertyName("eventTypeName")]
         public string EventTypeName { get; init; } = string.Empty;
@@ -535,8 +584,7 @@ public sealed partial class ProjectionRebuildService : IProjectionRebuildService
 
     internal sealed record ProjectionRebuildCheckpoint(string PartyId, long SequenceNumber);
 
-    private static partial class Log
-    {
+    private static partial class Log {
         [LoggerMessage(
             EventId = 8320,
             Level = LogLevel.Information,
@@ -578,5 +626,11 @@ public sealed partial class ProjectionRebuildService : IProjectionRebuildService
             Level = LogLevel.Warning,
             Message = "Index projection unavailable for tenant {TenantId}. Cannot enumerate party IDs for rebuild.")]
         public static partial void IndexUnavailableForRebuild(ILogger logger, string tenantId);
+
+        [LoggerMessage(
+            EventId = 8327,
+            Level = LogLevel.Information,
+            Message = "Decryption failed during rebuild for event {EventTypeName} in aggregate {AggregateId} at sequence {SequenceNumber}. Skipping (expected for erased parties).")]
+        public static partial void DecryptionFailedDuringRebuild(ILogger logger, string eventTypeName, string aggregateId, long sequenceNumber, Exception exception);
     }
 }

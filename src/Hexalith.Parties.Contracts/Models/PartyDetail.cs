@@ -24,9 +24,18 @@ public sealed record PartyDetail
 
     public IReadOnlyList<PartyIdentifier> Identifiers { get; init; } = [];
 
+    public IReadOnlyList<ConsentRecord> ConsentRecords { get; init; } = [];
+
+    [PersonalData]
+    public IReadOnlyList<NameHistoryEntry> NameHistory { get; init; } = [];
+
     public DateTimeOffset CreatedAt { get; init; }
 
     public DateTimeOffset LastModifiedAt { get; init; }
+
+    public bool IsRestricted { get; init; }
+
+    public DateTimeOffset? RestrictedAt { get; init; }
 
     public bool IsErased { get; init; }
 

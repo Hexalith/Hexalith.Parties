@@ -11,27 +11,23 @@ using Hexalith.Parties.Contracts.ValueObjects;
 
 namespace Hexalith.Parties.Server.Aggregates;
 
-public sealed class PartyAggregate : EventStoreAggregate<PartyState>
-{
+public sealed class PartyAggregate : EventStoreAggregate<PartyState> {
     private const int DefaultMaxSubOperations = 100;
 
     public static int MaxSubOperations { get; set; } = DefaultMaxSubOperations;
 
     public static int GetEffectiveMaxSubOperations() => MaxSubOperations <= 0 ? DefaultMaxSubOperations : MaxSubOperations;
 
-    public static CompositeCommandResult Handle(CreatePartyComposite command, PartyState? state)
-    {
+    public static CompositeCommandResult Handle(CreatePartyComposite command, PartyState? state) {
         ArgumentNullException.ThrowIfNull(command);
 
-        if (MaxSubOperations <= 0)
-        {
+        if (MaxSubOperations <= 0) {
             MaxSubOperations = DefaultMaxSubOperations;
         }
 
         // D17: Payload size guard
         int subOps = 1 + command.ContactChannels.Count + command.Identifiers.Count;
-        if (subOps > MaxSubOperations)
-        {
+        if (subOps > MaxSubOperations) {
             return new CompositeCommandResult(
                 [new CompositeOperationConflict { Message = $"Payload size exceeded: {subOps} sub-operations (maximum {MaxSubOperations})." }],
                 applied: [],
@@ -40,8 +36,7 @@ public sealed class PartyAggregate : EventStoreAggregate<PartyState>
         }
 
         // PartyId validation
-        if (string.IsNullOrWhiteSpace(command.PartyId) || !Guid.TryParse(command.PartyId, out _))
-        {
+        if (string.IsNullOrWhiteSpace(command.PartyId) || !Guid.TryParse(command.PartyId, out _)) {
             return new CompositeCommandResult(
                 [new PartyCannotBeCreatedWithInvalidId()],
                 applied: [],
@@ -50,8 +45,7 @@ public sealed class PartyAggregate : EventStoreAggregate<PartyState>
         }
 
         // Idempotency: party already exists
-        if (state is not null)
-        {
+        if (state is not null) {
             return new CompositeCommandResult(
                 events: [],
                 applied: [],
@@ -60,8 +54,7 @@ public sealed class PartyAggregate : EventStoreAggregate<PartyState>
         }
 
         // Type validation
-        if (command.Type == default)
-        {
+        if (command.Type == default) {
             return new CompositeCommandResult(
                 [new PartyCannotBeCreatedWithoutType()],
                 applied: [],
@@ -70,8 +63,7 @@ public sealed class PartyAggregate : EventStoreAggregate<PartyState>
         }
 
         // PersonDetails/OrganizationDetails validation
-        if (command.Type == PartyType.Person && command.PersonDetails is null)
-        {
+        if (command.Type == PartyType.Person && command.PersonDetails is null) {
             return new CompositeCommandResult(
                 [new PartyCannotBeCreatedWithoutPersonDetails()],
                 applied: [],
@@ -79,8 +71,7 @@ public sealed class PartyAggregate : EventStoreAggregate<PartyState>
                 rejected: ["Person details are required for person party type."]);
         }
 
-        if (command.Type == PartyType.Organization && command.OrganizationDetails is null)
-        {
+        if (command.Type == PartyType.Organization && command.OrganizationDetails is null) {
             return new CompositeCommandResult(
                 [new PartyCannotBeCreatedWithoutOrganizationDetails()],
                 applied: [],
@@ -88,10 +79,8 @@ public sealed class PartyAggregate : EventStoreAggregate<PartyState>
                 rejected: ["Organization details are required for organization party type."]);
         }
 
-        for (int i = 0; i < command.ContactChannels.Count; i++)
-        {
-            if (string.IsNullOrWhiteSpace(command.ContactChannels[i].ContactChannelId))
-            {
+        for (int i = 0; i < command.ContactChannels.Count; i++) {
+            if (string.IsNullOrWhiteSpace(command.ContactChannels[i].ContactChannelId)) {
                 return new CompositeCommandResult(
                     [new CompositeOperationConflict { Message = "Contact channel ID is required." }],
                     applied: [],
@@ -100,10 +89,8 @@ public sealed class PartyAggregate : EventStoreAggregate<PartyState>
             }
         }
 
-        for (int i = 0; i < command.Identifiers.Count; i++)
-        {
-            if (string.IsNullOrWhiteSpace(command.Identifiers[i].IdentifierId))
-            {
+        for (int i = 0; i < command.Identifiers.Count; i++) {
+            if (string.IsNullOrWhiteSpace(command.Identifiers[i].IdentifierId)) {
                 return new CompositeCommandResult(
                     [new CompositeOperationConflict { Message = "Identifier ID is required." }],
                     applied: [],
@@ -117,8 +104,7 @@ public sealed class PartyAggregate : EventStoreAggregate<PartyState>
         List<string> applied = [];
         List<string> skipped = [];
 
-        PartyCreated created = new()
-        {
+        PartyCreated created = new() {
             Type = command.Type,
             PersonDetails = command.PersonDetails,
             OrganizationDetails = command.OrganizationDetails,
@@ -128,8 +114,7 @@ public sealed class PartyAggregate : EventStoreAggregate<PartyState>
 
         (string displayName, string sortName) = DeriveDisplayName(command.Type, command.PersonDetails, command.OrganizationDetails);
 
-        PartyDisplayNameDerived nameDerived = new()
-        {
+        PartyDisplayNameDerived nameDerived = new() {
             DisplayName = displayName,
             SortName = sortName,
         };
@@ -138,17 +123,14 @@ public sealed class PartyAggregate : EventStoreAggregate<PartyState>
 
         // Process contact channels with duplicate ID detection
         HashSet<string> seenChannelIds = new(StringComparer.Ordinal);
-        for (int i = 0; i < command.ContactChannels.Count; i++)
-        {
+        for (int i = 0; i < command.ContactChannels.Count; i++) {
             AddContactChannel channel = command.ContactChannels[i];
-            if (!seenChannelIds.Add(channel.ContactChannelId))
-            {
+            if (!seenChannelIds.Add(channel.ContactChannelId)) {
                 skipped.Add($"Duplicate contact channel: {channel.ContactChannelId}");
                 continue;
             }
 
-            ContactChannelAdded channelAdded = new()
-            {
+            ContactChannelAdded channelAdded = new() {
                 ContactChannelId = channel.ContactChannelId,
                 Type = channel.Type,
                 Value = channel.Value,
@@ -157,10 +139,8 @@ public sealed class PartyAggregate : EventStoreAggregate<PartyState>
             events.Add(channelAdded);
             applied.Add($"Added contact channel: {channel.ContactChannelId} ({channel.Type})");
 
-            if (channel.IsPreferred)
-            {
-                events.Add(new PreferredContactChannelChanged
-                {
+            if (channel.IsPreferred) {
+                events.Add(new PreferredContactChannelChanged {
                     ContactChannelId = channel.ContactChannelId,
                 });
                 applied.Add($"Set preferred contact channel: {channel.ContactChannelId}");
@@ -169,17 +149,14 @@ public sealed class PartyAggregate : EventStoreAggregate<PartyState>
 
         // Process identifiers with duplicate ID detection
         HashSet<string> seenIdentifierIds = new(StringComparer.Ordinal);
-        for (int i = 0; i < command.Identifiers.Count; i++)
-        {
+        for (int i = 0; i < command.Identifiers.Count; i++) {
             AddIdentifier identifier = command.Identifiers[i];
-            if (!seenIdentifierIds.Add(identifier.IdentifierId))
-            {
+            if (!seenIdentifierIds.Add(identifier.IdentifierId)) {
                 skipped.Add($"Duplicate identifier: {identifier.IdentifierId}");
                 continue;
             }
 
-            IdentifierAdded identifierAdded = new()
-            {
+            IdentifierAdded identifierAdded = new() {
                 IdentifierId = identifier.IdentifierId,
                 Type = identifier.Type,
                 Value = identifier.Value,
@@ -191,12 +168,10 @@ public sealed class PartyAggregate : EventStoreAggregate<PartyState>
         return new CompositeCommandResult(events, applied, skipped, []);
     }
 
-    public static CompositeCommandResult Handle(UpdatePartyComposite command, PartyState? state)
-    {
+    public static CompositeCommandResult Handle(UpdatePartyComposite command, PartyState? state) {
         ArgumentNullException.ThrowIfNull(command);
 
-        if (MaxSubOperations <= 0)
-        {
+        if (MaxSubOperations <= 0) {
             MaxSubOperations = DefaultMaxSubOperations;
         }
 
@@ -209,8 +184,7 @@ public sealed class PartyAggregate : EventStoreAggregate<PartyState>
             + command.AddIdentifiers.Count
             + command.RemoveIdentifierIds.Count;
 
-        if (subOps > MaxSubOperations)
-        {
+        if (subOps > MaxSubOperations) {
             return new CompositeCommandResult(
                 [new CompositeOperationConflict { Message = $"Payload size exceeded: {subOps} sub-operations (maximum {MaxSubOperations})." }],
                 applied: [],
@@ -219,8 +193,7 @@ public sealed class PartyAggregate : EventStoreAggregate<PartyState>
         }
 
         // State null check — party must exist for update
-        if (state is null)
-        {
+        if (state is null) {
             return new CompositeCommandResult(
                 [new PartyNotFound { Message = "Party does not exist." }],
                 applied: [],
@@ -229,8 +202,7 @@ public sealed class PartyAggregate : EventStoreAggregate<PartyState>
         }
 
         // Erasure guard — reject modifications during/after erasure
-        if (state.ErasureStatus is not ErasureStatus.Active)
-        {
+        if (state.ErasureStatus is not ErasureStatus.Active) {
             return new CompositeCommandResult(
                 [new PartyErasureInProgress { Message = "Party erasure in progress or completed. No modifications allowed." }],
                 applied: [],
@@ -238,9 +210,21 @@ public sealed class PartyAggregate : EventStoreAggregate<PartyState>
                 rejected: ["Party erasure in progress or completed. No modifications allowed."]);
         }
 
+        // Restriction guard — reject modifications during restriction
+        if (state.IsRestricted) {
+            return new CompositeCommandResult(
+                [new PartyProcessingRestricted {
+                    PartyId = command.PartyId,
+                    TenantId = string.Empty,
+                    Message = "Party processing is restricted. No modifications allowed.",
+                }],
+                applied: [],
+                skipped: [],
+                rejected: ["Party processing is restricted. No modifications allowed."]);
+        }
+
         // No-op check — all lists empty and no details
-        if (subOps == 0)
-        {
+        if (subOps == 0) {
             return new CompositeCommandResult(
                 events: [],
                 applied: [],
@@ -250,51 +234,42 @@ public sealed class PartyAggregate : EventStoreAggregate<PartyState>
 
         // Build lookup structures from state for O(1) lookups
         Dictionary<string, ContactChannel> existingChannelsById = new(StringComparer.Ordinal);
-        for (int i = 0; i < state.ContactChannels.Count; i++)
-        {
+        for (int i = 0; i < state.ContactChannels.Count; i++) {
             existingChannelsById[state.ContactChannels[i].Id] = state.ContactChannels[i];
         }
 
         HashSet<string> existingIdentifierIds = new(StringComparer.Ordinal);
-        for (int i = 0; i < state.Identifiers.Count; i++)
-        {
+        for (int i = 0; i < state.Identifiers.Count; i++) {
             existingIdentifierIds.Add(state.Identifiers[i].Id);
         }
 
         // Conflict detection — channel operations
         HashSet<string> addChannelIds = new(StringComparer.Ordinal);
-        for (int i = 0; i < command.AddContactChannels.Count; i++)
-        {
+        for (int i = 0; i < command.AddContactChannels.Count; i++) {
             addChannelIds.Add(command.AddContactChannels[i].ContactChannelId);
         }
 
         HashSet<string> updateChannelIds = new(StringComparer.Ordinal);
-        for (int i = 0; i < command.UpdateContactChannels.Count; i++)
-        {
+        for (int i = 0; i < command.UpdateContactChannels.Count; i++) {
             updateChannelIds.Add(command.UpdateContactChannels[i].ContactChannelId);
         }
 
         HashSet<string> removeChannelIds = new(StringComparer.Ordinal);
         List<string> orderedRemoveChannelIds = [];
         List<string> duplicateRemoveChannelIds = [];
-        for (int i = 0; i < command.RemoveContactChannelIds.Count; i++)
-        {
+        for (int i = 0; i < command.RemoveContactChannelIds.Count; i++) {
             string id = command.RemoveContactChannelIds[i];
-            if (removeChannelIds.Add(id))
-            {
+            if (removeChannelIds.Add(id)) {
                 orderedRemoveChannelIds.Add(id);
             }
-            else
-            {
+            else {
                 duplicateRemoveChannelIds.Add(id);
             }
         }
 
-        for (int i = 0; i < command.RemoveContactChannelIds.Count; i++)
-        {
+        for (int i = 0; i < command.RemoveContactChannelIds.Count; i++) {
             string id = command.RemoveContactChannelIds[i];
-            if (addChannelIds.Contains(id))
-            {
+            if (addChannelIds.Contains(id)) {
                 return new CompositeCommandResult(
                     [new CompositeOperationConflict { Message = $"Conflicting operations on same channel ID: {id}." }],
                     applied: [],
@@ -302,8 +277,7 @@ public sealed class PartyAggregate : EventStoreAggregate<PartyState>
                     rejected: [$"Conflicting operations on same channel ID: {id}."]);
             }
 
-            if (updateChannelIds.Contains(id))
-            {
+            if (updateChannelIds.Contains(id)) {
                 return new CompositeCommandResult(
                     [new CompositeOperationConflict { Message = $"Conflicting operations on same channel ID: {id}." }],
                     applied: [],
@@ -314,28 +288,23 @@ public sealed class PartyAggregate : EventStoreAggregate<PartyState>
 
         // Conflict detection — identifier operations
         HashSet<string> addIdentifierIds = new(StringComparer.Ordinal);
-        for (int i = 0; i < command.AddIdentifiers.Count; i++)
-        {
+        for (int i = 0; i < command.AddIdentifiers.Count; i++) {
             addIdentifierIds.Add(command.AddIdentifiers[i].IdentifierId);
         }
 
         HashSet<string> removeIdentifierIds = new(StringComparer.Ordinal);
         List<string> orderedRemoveIdentifierIds = [];
         List<string> duplicateRemoveIdentifierIds = [];
-        for (int i = 0; i < command.RemoveIdentifierIds.Count; i++)
-        {
+        for (int i = 0; i < command.RemoveIdentifierIds.Count; i++) {
             string id = command.RemoveIdentifierIds[i];
-            if (removeIdentifierIds.Add(id))
-            {
+            if (removeIdentifierIds.Add(id)) {
                 orderedRemoveIdentifierIds.Add(id);
             }
-            else
-            {
+            else {
                 duplicateRemoveIdentifierIds.Add(id);
             }
 
-            if (addIdentifierIds.Contains(id))
-            {
+            if (addIdentifierIds.Contains(id)) {
                 return new CompositeCommandResult(
                     [new CompositeOperationConflict { Message = $"Conflicting operations on same identifier ID: {id}." }],
                     applied: [],
@@ -345,10 +314,8 @@ public sealed class PartyAggregate : EventStoreAggregate<PartyState>
         }
 
         // ID validation — blank IDs in all operation lists
-        for (int i = 0; i < command.AddContactChannels.Count; i++)
-        {
-            if (string.IsNullOrWhiteSpace(command.AddContactChannels[i].ContactChannelId))
-            {
+        for (int i = 0; i < command.AddContactChannels.Count; i++) {
+            if (string.IsNullOrWhiteSpace(command.AddContactChannels[i].ContactChannelId)) {
                 return new CompositeCommandResult(
                     [new CompositeOperationConflict { Message = "Contact channel ID is required." }],
                     applied: [],
@@ -357,10 +324,8 @@ public sealed class PartyAggregate : EventStoreAggregate<PartyState>
             }
         }
 
-        for (int i = 0; i < command.UpdateContactChannels.Count; i++)
-        {
-            if (string.IsNullOrWhiteSpace(command.UpdateContactChannels[i].ContactChannelId))
-            {
+        for (int i = 0; i < command.UpdateContactChannels.Count; i++) {
+            if (string.IsNullOrWhiteSpace(command.UpdateContactChannels[i].ContactChannelId)) {
                 return new CompositeCommandResult(
                     [new CompositeOperationConflict { Message = "Contact channel ID is required." }],
                     applied: [],
@@ -369,10 +334,8 @@ public sealed class PartyAggregate : EventStoreAggregate<PartyState>
             }
         }
 
-        for (int i = 0; i < command.RemoveContactChannelIds.Count; i++)
-        {
-            if (string.IsNullOrWhiteSpace(command.RemoveContactChannelIds[i]))
-            {
+        for (int i = 0; i < command.RemoveContactChannelIds.Count; i++) {
+            if (string.IsNullOrWhiteSpace(command.RemoveContactChannelIds[i])) {
                 return new CompositeCommandResult(
                     [new CompositeOperationConflict { Message = "Contact channel ID is required." }],
                     applied: [],
@@ -381,10 +344,8 @@ public sealed class PartyAggregate : EventStoreAggregate<PartyState>
             }
         }
 
-        for (int i = 0; i < command.AddIdentifiers.Count; i++)
-        {
-            if (string.IsNullOrWhiteSpace(command.AddIdentifiers[i].IdentifierId))
-            {
+        for (int i = 0; i < command.AddIdentifiers.Count; i++) {
+            if (string.IsNullOrWhiteSpace(command.AddIdentifiers[i].IdentifierId)) {
                 return new CompositeCommandResult(
                     [new CompositeOperationConflict { Message = "Identifier ID is required." }],
                     applied: [],
@@ -393,10 +354,8 @@ public sealed class PartyAggregate : EventStoreAggregate<PartyState>
             }
         }
 
-        for (int i = 0; i < command.RemoveIdentifierIds.Count; i++)
-        {
-            if (string.IsNullOrWhiteSpace(command.RemoveIdentifierIds[i]))
-            {
+        for (int i = 0; i < command.RemoveIdentifierIds.Count; i++) {
+            if (string.IsNullOrWhiteSpace(command.RemoveIdentifierIds[i])) {
                 return new CompositeCommandResult(
                     [new CompositeOperationConflict { Message = "Identifier ID is required." }],
                     applied: [],
@@ -406,10 +365,8 @@ public sealed class PartyAggregate : EventStoreAggregate<PartyState>
         }
 
         // Validate UpdateContactChannels IDs exist in state (D12 all-or-nothing)
-        for (int i = 0; i < command.UpdateContactChannels.Count; i++)
-        {
-            if (!existingChannelsById.ContainsKey(command.UpdateContactChannels[i].ContactChannelId))
-            {
+        for (int i = 0; i < command.UpdateContactChannels.Count; i++) {
+            if (!existingChannelsById.ContainsKey(command.UpdateContactChannels[i].ContactChannelId)) {
                 return new CompositeCommandResult(
                     [new ContactChannelNotFound { Message = $"Contact channel '{command.UpdateContactChannels[i].ContactChannelId}' not found." }],
                     applied: [],
@@ -419,10 +376,8 @@ public sealed class PartyAggregate : EventStoreAggregate<PartyState>
         }
 
         // Validate RemoveContactChannelIds exist in state (D12 all-or-nothing)
-        for (int i = 0; i < command.RemoveContactChannelIds.Count; i++)
-        {
-            if (!existingChannelsById.ContainsKey(command.RemoveContactChannelIds[i]))
-            {
+        for (int i = 0; i < command.RemoveContactChannelIds.Count; i++) {
+            if (!existingChannelsById.ContainsKey(command.RemoveContactChannelIds[i])) {
                 return new CompositeCommandResult(
                     [new ContactChannelNotFound { Message = $"Contact channel '{command.RemoveContactChannelIds[i]}' not found." }],
                     applied: [],
@@ -432,10 +387,8 @@ public sealed class PartyAggregate : EventStoreAggregate<PartyState>
         }
 
         // Validate RemoveIdentifierIds exist in state (D12 all-or-nothing)
-        for (int i = 0; i < command.RemoveIdentifierIds.Count; i++)
-        {
-            if (!existingIdentifierIds.Contains(command.RemoveIdentifierIds[i]))
-            {
+        for (int i = 0; i < command.RemoveIdentifierIds.Count; i++) {
+            if (!existingIdentifierIds.Contains(command.RemoveIdentifierIds[i])) {
                 return new CompositeCommandResult(
                     [new IdentifierNotFound { Message = $"Identifier '{command.RemoveIdentifierIds[i]}' not found." }],
                     applied: [],
@@ -445,8 +398,7 @@ public sealed class PartyAggregate : EventStoreAggregate<PartyState>
         }
 
         // PersonDetails type check
-        if (command.PersonDetails is not null && state.Type != PartyType.Person)
-        {
+        if (command.PersonDetails is not null && state.Type != PartyType.Person) {
             return new CompositeCommandResult(
                 [new PartyTypeMismatch { Message = $"Cannot update person details on a {state.Type} party." }],
                 applied: [],
@@ -455,8 +407,7 @@ public sealed class PartyAggregate : EventStoreAggregate<PartyState>
         }
 
         // OrganizationDetails type check
-        if (command.OrganizationDetails is not null && state.Type != PartyType.Organization)
-        {
+        if (command.OrganizationDetails is not null && state.Type != PartyType.Organization) {
             return new CompositeCommandResult(
                 [new PartyTypeMismatch { Message = $"Cannot update organization details on a {state.Type} party." }],
                 applied: [],
@@ -470,8 +421,7 @@ public sealed class PartyAggregate : EventStoreAggregate<PartyState>
         List<string> skipped = [];
 
         // PersonDetails update
-        if (command.PersonDetails is not null)
-        {
+        if (command.PersonDetails is not null) {
             events.Add(new PersonDetailsUpdated { PersonDetails = command.PersonDetails });
             applied.Add("Updated person details");
 
@@ -481,8 +431,7 @@ public sealed class PartyAggregate : EventStoreAggregate<PartyState>
         }
 
         // OrganizationDetails update
-        if (command.OrganizationDetails is not null)
-        {
+        if (command.OrganizationDetails is not null) {
             events.Add(new OrganizationDetailsUpdated { OrganizationDetails = command.OrganizationDetails });
             applied.Add("Updated organization details");
 
@@ -493,23 +442,19 @@ public sealed class PartyAggregate : EventStoreAggregate<PartyState>
 
         // AddContactChannels processing with state-duplicate and payload-duplicate detection
         HashSet<string> seenChannelIds = new(StringComparer.Ordinal);
-        for (int i = 0; i < command.AddContactChannels.Count; i++)
-        {
+        for (int i = 0; i < command.AddContactChannels.Count; i++) {
             AddContactChannel channel = command.AddContactChannels[i];
-            if (existingChannelsById.ContainsKey(channel.ContactChannelId))
-            {
+            if (existingChannelsById.ContainsKey(channel.ContactChannelId)) {
                 skipped.Add($"Duplicate contact channel: {channel.ContactChannelId}");
                 continue;
             }
 
-            if (!seenChannelIds.Add(channel.ContactChannelId))
-            {
+            if (!seenChannelIds.Add(channel.ContactChannelId)) {
                 skipped.Add($"Duplicate contact channel: {channel.ContactChannelId}");
                 continue;
             }
 
-            events.Add(new ContactChannelAdded
-            {
+            events.Add(new ContactChannelAdded {
                 ContactChannelId = channel.ContactChannelId,
                 Type = channel.Type,
                 Value = channel.Value,
@@ -517,8 +462,7 @@ public sealed class PartyAggregate : EventStoreAggregate<PartyState>
             });
             applied.Add($"Added contact channel: {channel.ContactChannelId} ({channel.Type})");
 
-            if (channel.IsPreferred)
-            {
+            if (channel.IsPreferred) {
                 events.Add(new PreferredContactChannelChanged { ContactChannelId = channel.ContactChannelId });
                 applied.Add($"Set preferred contact channel: {channel.ContactChannelId}");
             }
@@ -526,19 +470,16 @@ public sealed class PartyAggregate : EventStoreAggregate<PartyState>
 
         // UpdateContactChannels processing with within-list dedup and preferred channel logic
         HashSet<string> seenUpdateChannelIds = new(StringComparer.Ordinal);
-        for (int i = 0; i < command.UpdateContactChannels.Count; i++)
-        {
+        for (int i = 0; i < command.UpdateContactChannels.Count; i++) {
             UpdateContactChannel channel = command.UpdateContactChannels[i];
-            if (!seenUpdateChannelIds.Add(channel.ContactChannelId))
-            {
+            if (!seenUpdateChannelIds.Add(channel.ContactChannelId)) {
                 skipped.Add($"Duplicate contact channel update: {channel.ContactChannelId}");
                 continue;
             }
 
             ContactChannel existingChannel = existingChannelsById[channel.ContactChannelId];
 
-            events.Add(new ContactChannelUpdated
-            {
+            events.Add(new ContactChannelUpdated {
                 ContactChannelId = channel.ContactChannelId,
                 Type = channel.Type,
                 Value = channel.Value,
@@ -547,44 +488,37 @@ public sealed class PartyAggregate : EventStoreAggregate<PartyState>
             applied.Add($"Updated contact channel: {channel.ContactChannelId}");
 
             ContactChannelType targetType = channel.Type ?? existingChannel.Type;
-            if (channel.IsPreferred == true && (!existingChannel.IsPreferred || targetType != existingChannel.Type))
-            {
+            if (channel.IsPreferred == true && (!existingChannel.IsPreferred || targetType != existingChannel.Type)) {
                 events.Add(new PreferredContactChannelChanged { ContactChannelId = channel.ContactChannelId });
                 applied.Add($"Set preferred contact channel: {channel.ContactChannelId}");
             }
         }
 
         // RemoveContactChannelIds processing (using deduplicated order-preserving list from validation)
-        for (int i = 0; i < duplicateRemoveChannelIds.Count; i++)
-        {
+        for (int i = 0; i < duplicateRemoveChannelIds.Count; i++) {
             skipped.Add($"Duplicate contact channel removal: {duplicateRemoveChannelIds[i]}");
         }
 
-        foreach (string id in orderedRemoveChannelIds)
-        {
+        foreach (string id in orderedRemoveChannelIds) {
             events.Add(new ContactChannelRemoved { ContactChannelId = id });
             applied.Add($"Removed contact channel: {id}");
         }
 
         // AddIdentifiers processing with state-duplicate and payload-duplicate detection
         HashSet<string> seenIdentifierIds = new(StringComparer.Ordinal);
-        for (int i = 0; i < command.AddIdentifiers.Count; i++)
-        {
+        for (int i = 0; i < command.AddIdentifiers.Count; i++) {
             AddIdentifier identifier = command.AddIdentifiers[i];
-            if (existingIdentifierIds.Contains(identifier.IdentifierId))
-            {
+            if (existingIdentifierIds.Contains(identifier.IdentifierId)) {
                 skipped.Add($"Duplicate identifier: {identifier.IdentifierId}");
                 continue;
             }
 
-            if (!seenIdentifierIds.Add(identifier.IdentifierId))
-            {
+            if (!seenIdentifierIds.Add(identifier.IdentifierId)) {
                 skipped.Add($"Duplicate identifier: {identifier.IdentifierId}");
                 continue;
             }
 
-            events.Add(new IdentifierAdded
-            {
+            events.Add(new IdentifierAdded {
                 IdentifierId = identifier.IdentifierId,
                 Type = identifier.Type,
                 Value = identifier.Value,
@@ -593,13 +527,11 @@ public sealed class PartyAggregate : EventStoreAggregate<PartyState>
         }
 
         // RemoveIdentifierIds processing (using deduplicated order-preserving list from validation)
-        for (int i = 0; i < duplicateRemoveIdentifierIds.Count; i++)
-        {
+        for (int i = 0; i < duplicateRemoveIdentifierIds.Count; i++) {
             skipped.Add($"Duplicate identifier removal: {duplicateRemoveIdentifierIds[i]}");
         }
 
-        foreach (string id in orderedRemoveIdentifierIds)
-        {
+        foreach (string id in orderedRemoveIdentifierIds) {
             events.Add(new IdentifierRemoved { IdentifierId = id });
             applied.Add($"Removed identifier: {id}");
         }
@@ -608,40 +540,33 @@ public sealed class PartyAggregate : EventStoreAggregate<PartyState>
         return new CompositeCommandResult(events, applied, skipped, [], updatedDetail);
     }
 
-    public static DomainResult Handle(CreateParty command, PartyState? state)
-    {
+    public static DomainResult Handle(CreateParty command, PartyState? state) {
         ArgumentNullException.ThrowIfNull(command);
 
-        if (string.IsNullOrWhiteSpace(command.PartyId) || !Guid.TryParse(command.PartyId, out _))
-        {
+        if (string.IsNullOrWhiteSpace(command.PartyId) || !Guid.TryParse(command.PartyId, out _)) {
             return DomainResult.Rejection([new PartyCannotBeCreatedWithInvalidId()]);
         }
 
         // AC#3: Idempotent — if state already exists, party was already created
-        if (state is not null)
-        {
+        if (state is not null) {
             return DomainResult.NoOp();
         }
 
         // AC#4: Reject if no party type specified (default enum = 0)
-        if (command.Type == default)
-        {
+        if (command.Type == default) {
             return DomainResult.Rejection([new PartyCannotBeCreatedWithoutType()]);
         }
 
-        if (command.Type == PartyType.Person && command.PersonDetails is null)
-        {
+        if (command.Type == PartyType.Person && command.PersonDetails is null) {
             return DomainResult.Rejection([new PartyCannotBeCreatedWithoutPersonDetails()]);
         }
 
-        if (command.Type == PartyType.Organization && command.OrganizationDetails is null)
-        {
+        if (command.Type == PartyType.Organization && command.OrganizationDetails is null) {
             return DomainResult.Rejection([new PartyCannotBeCreatedWithoutOrganizationDetails()]);
         }
 
         // AC#1 + AC#2: Emit PartyCreated + PartyDisplayNameDerived
-        PartyCreated created = new()
-        {
+        PartyCreated created = new() {
             Type = command.Type,
             PersonDetails = command.PersonDetails,
             OrganizationDetails = command.OrganizationDetails,
@@ -649,8 +574,7 @@ public sealed class PartyAggregate : EventStoreAggregate<PartyState>
 
         (string displayName, string sortName) = DeriveDisplayName(command.Type, command.PersonDetails, command.OrganizationDetails);
 
-        PartyDisplayNameDerived nameDerived = new()
-        {
+        PartyDisplayNameDerived nameDerived = new() {
             DisplayName = displayName,
             SortName = sortName,
         };
@@ -658,40 +582,38 @@ public sealed class PartyAggregate : EventStoreAggregate<PartyState>
         return DomainResult.Success([created, nameDerived]);
     }
 
-    public static DomainResult Handle(UpdatePersonDetails command, PartyState? state)
-    {
+    public static DomainResult Handle(UpdatePersonDetails command, PartyState? state) {
         ArgumentNullException.ThrowIfNull(command);
 
-        if (state is null)
-        {
+        if (state is null) {
             return DomainResult.Rejection([new PartyTypeMismatch { Message = "Party does not exist." }]);
         }
 
         DomainResult? erasureRejection = RejectIfErasureInProgress(state);
-        if (erasureRejection is not null)
-        {
+        if (erasureRejection is not null) {
             return erasureRejection;
         }
 
-        if (state.Type != PartyType.Person)
-        {
+        DomainResult? restrictionRejection = RejectIfRestricted(command.PartyId, null, state);
+        if (restrictionRejection is not null) {
+            return restrictionRejection;
+        }
+
+        if (state.Type != PartyType.Person) {
             return DomainResult.Rejection([new PartyTypeMismatch { Message = $"Cannot update person details on a {state.Type} party." }]);
         }
 
-        if (command.PersonDetails is null)
-        {
+        if (command.PersonDetails is null) {
             return DomainResult.Rejection([new PartyTypeMismatch { Message = "Person details are required." }]);
         }
 
-        PersonDetailsUpdated updated = new()
-        {
+        PersonDetailsUpdated updated = new() {
             PersonDetails = command.PersonDetails,
         };
 
         (string displayName, string sortName) = DeriveDisplayName(PartyType.Person, command.PersonDetails, null);
 
-        PartyDisplayNameDerived nameDerived = new()
-        {
+        PartyDisplayNameDerived nameDerived = new() {
             DisplayName = displayName,
             SortName = sortName,
         };
@@ -699,40 +621,38 @@ public sealed class PartyAggregate : EventStoreAggregate<PartyState>
         return DomainResult.Success([updated, nameDerived]);
     }
 
-    public static DomainResult Handle(UpdateOrganizationDetails command, PartyState? state)
-    {
+    public static DomainResult Handle(UpdateOrganizationDetails command, PartyState? state) {
         ArgumentNullException.ThrowIfNull(command);
 
-        if (state is null)
-        {
+        if (state is null) {
             return DomainResult.Rejection([new PartyTypeMismatch { Message = "Party does not exist." }]);
         }
 
         DomainResult? erasureRejection = RejectIfErasureInProgress(state);
-        if (erasureRejection is not null)
-        {
+        if (erasureRejection is not null) {
             return erasureRejection;
         }
 
-        if (state.Type != PartyType.Organization)
-        {
+        DomainResult? restrictionRejection = RejectIfRestricted(command.PartyId, null, state);
+        if (restrictionRejection is not null) {
+            return restrictionRejection;
+        }
+
+        if (state.Type != PartyType.Organization) {
             return DomainResult.Rejection([new PartyTypeMismatch { Message = $"Cannot update organization details on a {state.Type} party." }]);
         }
 
-        if (command.OrganizationDetails is null)
-        {
+        if (command.OrganizationDetails is null) {
             return DomainResult.Rejection([new PartyTypeMismatch { Message = "Organization details are required." }]);
         }
 
-        OrganizationDetailsUpdated updated = new()
-        {
+        OrganizationDetailsUpdated updated = new() {
             OrganizationDetails = command.OrganizationDetails,
         };
 
         (string displayName, string sortName) = DeriveDisplayName(PartyType.Organization, null, command.OrganizationDetails);
 
-        PartyDisplayNameDerived nameDerived = new()
-        {
+        PartyDisplayNameDerived nameDerived = new() {
             DisplayName = displayName,
             SortName = sortName,
         };
@@ -740,112 +660,108 @@ public sealed class PartyAggregate : EventStoreAggregate<PartyState>
         return DomainResult.Success([updated, nameDerived]);
     }
 
-    public static DomainResult Handle(SetIsNaturalPerson command, PartyState? state)
-    {
+    public static DomainResult Handle(SetIsNaturalPerson command, PartyState? state) {
         ArgumentNullException.ThrowIfNull(command);
 
-        if (state is null)
-        {
+        if (state is null) {
             return DomainResult.Rejection([new PartyTypeMismatch { Message = "Party does not exist." }]);
         }
 
         DomainResult? erasureRejection = RejectIfErasureInProgress(state);
-        if (erasureRejection is not null)
-        {
+        if (erasureRejection is not null) {
             return erasureRejection;
         }
 
-        if (state.Type != PartyType.Organization)
-        {
+        DomainResult? restrictionRejection = RejectIfRestricted(command.PartyId, null, state);
+        if (restrictionRejection is not null) {
+            return restrictionRejection;
+        }
+
+        if (state.Type != PartyType.Organization) {
             return DomainResult.Rejection([new PartyTypeMismatch { Message = $"SetIsNaturalPerson only applies to organization parties." }]);
         }
 
         // Idempotency: no change needed if already at desired value
-        if (state.IsNaturalPerson == command.IsNaturalPerson)
-        {
+        if (state.IsNaturalPerson == command.IsNaturalPerson) {
             return DomainResult.NoOp();
         }
 
-        IsNaturalPersonChanged changed = new()
-        {
+        IsNaturalPersonChanged changed = new() {
             IsNaturalPerson = command.IsNaturalPerson,
         };
 
         return DomainResult.Success([changed]);
     }
 
-    public static DomainResult Handle(DeactivateParty command, PartyState? state)
-    {
+    public static DomainResult Handle(DeactivateParty command, PartyState? state) {
         ArgumentNullException.ThrowIfNull(command);
 
-        if (state is null)
-        {
+        if (state is null) {
             return DomainResult.Rejection([new PartyCannotBeDeactivatedWhenInactive()]);
         }
 
         DomainResult? erasureRejection = RejectIfErasureInProgress(state);
-        if (erasureRejection is not null)
-        {
+        if (erasureRejection is not null) {
             return erasureRejection;
         }
 
+        DomainResult? restrictionRejection = RejectIfRestricted(command.PartyId, null, state);
+        if (restrictionRejection is not null) {
+            return restrictionRejection;
+        }
+
         // AC#6: Idempotent — already deactivated
-        if (!state.IsActive)
-        {
+        if (!state.IsActive) {
             return DomainResult.NoOp();
         }
 
         return DomainResult.Success([new PartyDeactivated()]);
     }
 
-    public static DomainResult Handle(ReactivateParty command, PartyState? state)
-    {
+    public static DomainResult Handle(ReactivateParty command, PartyState? state) {
         ArgumentNullException.ThrowIfNull(command);
 
-        if (state is null)
-        {
+        if (state is null) {
             return DomainResult.Rejection([new PartyCannotBeReactivatedWhenActive()]);
         }
 
         DomainResult? erasureRejection = RejectIfErasureInProgress(state);
-        if (erasureRejection is not null)
-        {
+        if (erasureRejection is not null) {
             return erasureRejection;
         }
 
+        DomainResult? restrictionRejection = RejectIfRestricted(command.PartyId, null, state);
+        if (restrictionRejection is not null) {
+            return restrictionRejection;
+        }
+
         // Idempotent — already active
-        if (state.IsActive)
-        {
+        if (state.IsActive) {
             return DomainResult.NoOp();
         }
 
         return DomainResult.Success([new PartyReactivated()]);
     }
 
-    public static DomainResult Handle(EraseParty command, PartyState? state)
-    {
+    public static DomainResult Handle(EraseParty command, PartyState? state) {
         ArgumentNullException.ThrowIfNull(command);
 
-        if (state is null)
-        {
+        if (state is null) {
             return DomainResult.Rejection([new PartyNotFound { Message = "Party does not exist." }]);
         }
 
         // Idempotent: if already erased, no-op (certificate is retrieved from state store, not aggregate)
-        if (state.ErasureStatus == ErasureStatus.Erased)
-        {
+        if (state.ErasureStatus == ErasureStatus.Erased) {
             return DomainResult.NoOp();
         }
 
         // Idempotent: if erasure already in progress, no-op
         if (state.ErasureStatus is ErasureStatus.ErasurePending or ErasureStatus.KeyDestroyed
-            or ErasureStatus.VerificationInProgress or ErasureStatus.Verified)
-        {
+            or ErasureStatus.VerificationInProgress or ErasureStatus.Verified) {
             return DomainResult.NoOp();
         }
 
-        ErasePartyRequested requested = new()
-        {
+        ErasePartyRequested requested = new() {
             PartyId = command.PartyId,
             TenantId = command.TenantId,
             RequestedAt = DateTimeOffset.UtcNow,
@@ -855,39 +771,122 @@ public sealed class PartyAggregate : EventStoreAggregate<PartyState>
         return DomainResult.Success([requested]);
     }
 
-    public static DomainResult Handle(RotatePartyKey command, PartyState? state)
-    {
+    public static DomainResult Handle(MarkPartyEncryptionKeyDeleted command, PartyState? state) {
         ArgumentNullException.ThrowIfNull(command);
 
-        if (state is null)
-        {
+        if (state is null) {
+            return DomainResult.Rejection([new PartyNotFound { Message = "Party does not exist." }]);
+        }
+
+        if (state.ErasureStatus is ErasureStatus.KeyDestroyed or ErasureStatus.Verified or ErasureStatus.Erased) {
+            return DomainResult.NoOp();
+        }
+
+        if (state.ErasureStatus != ErasureStatus.ErasurePending) {
+            return DomainResult.Rejection([new PartyErasureInProgress
+            {
+                Message = $"Cannot mark key deletion while erasure status is '{state.ErasureStatus}'.",
+            }]);
+        }
+
+        return DomainResult.Success([
+            new PartyEncryptionKeyDeleted
+            {
+                PartyId = command.PartyId,
+                TenantId = command.TenantId,
+                DeletedAt = command.DeletedAt,
+            },
+        ]);
+    }
+
+    public static DomainResult Handle(MarkErasureVerified command, PartyState? state) {
+        ArgumentNullException.ThrowIfNull(command);
+
+        if (state is null) {
+            return DomainResult.Rejection([new PartyNotFound { Message = "Party does not exist." }]);
+        }
+
+        if (state.ErasureStatus is ErasureStatus.Verified or ErasureStatus.Erased) {
+            return DomainResult.NoOp();
+        }
+
+        if (state.ErasureStatus != ErasureStatus.KeyDestroyed) {
+            return DomainResult.Rejection([new PartyErasureInProgress
+            {
+                Message = $"Cannot mark erasure verified while erasure status is '{state.ErasureStatus}'.",
+            }]);
+        }
+
+        return DomainResult.Success([
+            new ErasureVerified
+            {
+                PartyId = command.PartyId,
+                TenantId = command.TenantId,
+                VerifiedAt = command.VerifiedAt,
+                VerificationReportId = command.VerificationReportId,
+            },
+        ]);
+    }
+
+    public static DomainResult Handle(CompletePartyErasure command, PartyState? state) {
+        ArgumentNullException.ThrowIfNull(command);
+
+        if (state is null) {
+            return DomainResult.Rejection([new PartyNotFound { Message = "Party does not exist." }]);
+        }
+
+        if (state.ErasureStatus == ErasureStatus.Erased) {
+            return DomainResult.NoOp();
+        }
+
+        if (state.ErasureStatus != ErasureStatus.Verified) {
+            return DomainResult.Rejection([new PartyErasureInProgress
+            {
+                Message = $"Cannot complete erasure while erasure status is '{state.ErasureStatus}'.",
+            }]);
+        }
+
+        return DomainResult.Success([
+            new PartyErased
+            {
+                PartyId = command.PartyId,
+                TenantId = command.TenantId,
+                ErasedAt = command.ErasedAt,
+            },
+        ]);
+    }
+
+    public static DomainResult Handle(RotatePartyKey command, PartyState? state) {
+        ArgumentNullException.ThrowIfNull(command);
+
+        if (state is null) {
             return DomainResult.Rejection([new PartyNotFound { Message = "Party does not exist." }]);
         }
 
         DomainResult? erasureRejection = RejectIfErasureInProgress(state);
-        if (erasureRejection is not null)
-        {
+        if (erasureRejection is not null) {
             return erasureRejection;
         }
 
+        DomainResult? restrictionRejection = RejectIfRestricted(command.PartyId, null, state);
+        if (restrictionRejection is not null) {
+            return restrictionRejection;
+        }
+
         // Validate version numbers: NewKeyVersion must be > PreviousKeyVersion, both must be > 0
-        if (command.NewKeyVersion <= 0)
-        {
+        if (command.NewKeyVersion <= 0) {
             return DomainResult.Rejection([new PartyNotFound { Message = $"Invalid new key version: {command.NewKeyVersion}. Must be greater than 0." }]);
         }
 
-        if (command.PreviousKeyVersion <= 0)
-        {
+        if (command.PreviousKeyVersion <= 0) {
             return DomainResult.Rejection([new PartyNotFound { Message = $"Invalid previous key version: {command.PreviousKeyVersion}. Must be greater than 0." }]);
         }
 
-        if (command.NewKeyVersion <= command.PreviousKeyVersion)
-        {
+        if (command.NewKeyVersion <= command.PreviousKeyVersion) {
             return DomainResult.Rejection([new PartyNotFound { Message = $"New key version ({command.NewKeyVersion}) must be greater than previous version ({command.PreviousKeyVersion})." }]);
         }
 
-        PartyEncryptionKeyRotated rotated = new()
-        {
+        PartyEncryptionKeyRotated rotated = new() {
             PartyId = command.PartyId,
             NewKeyVersion = command.NewKeyVersion,
             PreviousKeyVersion = command.PreviousKeyVersion,
@@ -897,29 +896,29 @@ public sealed class PartyAggregate : EventStoreAggregate<PartyState>
         return DomainResult.Success([rotated]);
     }
 
-    public static DomainResult Handle(AddContactChannel command, PartyState? state)
-    {
+    public static DomainResult Handle(AddContactChannel command, PartyState? state) {
         ArgumentNullException.ThrowIfNull(command);
 
-        if (state is null)
-        {
+        if (state is null) {
             return DomainResult.Rejection([new PartyNotFound()]);
         }
 
         DomainResult? erasureRejection = RejectIfErasureInProgress(state);
-        if (erasureRejection is not null)
-        {
+        if (erasureRejection is not null) {
             return erasureRejection;
         }
 
+        DomainResult? restrictionRejection = RejectIfRestricted(command.PartyId, null, state);
+        if (restrictionRejection is not null) {
+            return restrictionRejection;
+        }
+
         // Idempotent: skip if channel already exists (D10 — safe for MCP retries)
-        if (state.ContactChannels.Any(c => c.Id == command.ContactChannelId))
-        {
+        if (state.ContactChannels.Any(c => c.Id == command.ContactChannelId)) {
             return DomainResult.NoOp();
         }
 
-        ContactChannelAdded added = new()
-        {
+        ContactChannelAdded added = new() {
             ContactChannelId = command.ContactChannelId,
             Type = command.Type,
             Value = command.Value,
@@ -927,8 +926,7 @@ public sealed class PartyAggregate : EventStoreAggregate<PartyState>
         };
 
         // If marked as preferred, emit PreferredContactChannelChanged to clear others of same type
-        if (command.IsPreferred)
-        {
+        if (command.IsPreferred) {
             return DomainResult.Success([added, new PreferredContactChannelChanged
             {
                 ContactChannelId = command.ContactChannelId,
@@ -938,39 +936,37 @@ public sealed class PartyAggregate : EventStoreAggregate<PartyState>
         return DomainResult.Success([added]);
     }
 
-    public static DomainResult Handle(UpdateContactChannel command, PartyState? state)
-    {
+    public static DomainResult Handle(UpdateContactChannel command, PartyState? state) {
         ArgumentNullException.ThrowIfNull(command);
 
-        if (state is null)
-        {
+        if (state is null) {
             return DomainResult.Rejection([new PartyNotFound()]);
         }
 
         DomainResult? erasureRejection = RejectIfErasureInProgress(state);
-        if (erasureRejection is not null)
-        {
+        if (erasureRejection is not null) {
             return erasureRejection;
+        }
+
+        DomainResult? restrictionRejection = RejectIfRestricted(command.PartyId, null, state);
+        if (restrictionRejection is not null) {
+            return restrictionRejection;
         }
 
         // Channel not found check — use FindIndex to avoid exceptions (no LINQ First/Single)
         int channelIdx = -1;
-        for (int i = 0; i < state.ContactChannels.Count; i++)
-        {
-            if (state.ContactChannels[i].Id == command.ContactChannelId)
-            {
+        for (int i = 0; i < state.ContactChannels.Count; i++) {
+            if (state.ContactChannels[i].Id == command.ContactChannelId) {
                 channelIdx = i;
                 break;
             }
         }
 
-        if (channelIdx < 0)
-        {
+        if (channelIdx < 0) {
             return DomainResult.Rejection([new ContactChannelNotFound { Message = $"Contact channel '{command.ContactChannelId}' not found." }]);
         }
 
-        ContactChannelUpdated updated = new()
-        {
+        ContactChannelUpdated updated = new() {
             ContactChannelId = command.ContactChannelId,
             Type = command.Type,
             Value = command.Value,
@@ -983,8 +979,7 @@ public sealed class PartyAggregate : EventStoreAggregate<PartyState>
         // Emit preferred change when explicitly marking preferred and either:
         // 1) channel was not already preferred, or
         // 2) channel type changes (must clear preferred on the new type)
-        if (command.IsPreferred == true && (!existingChannel.IsPreferred || targetType != existingChannel.Type))
-        {
+        if (command.IsPreferred == true && (!existingChannel.IsPreferred || targetType != existingChannel.Type)) {
             return DomainResult.Success([updated, new PreferredContactChannelChanged
             {
                 ContactChannelId = command.ContactChannelId,
@@ -994,53 +989,54 @@ public sealed class PartyAggregate : EventStoreAggregate<PartyState>
         return DomainResult.Success([updated]);
     }
 
-    public static DomainResult Handle(RemoveContactChannel command, PartyState? state)
-    {
+    public static DomainResult Handle(RemoveContactChannel command, PartyState? state) {
         ArgumentNullException.ThrowIfNull(command);
 
-        if (state is null)
-        {
+        if (state is null) {
             return DomainResult.Rejection([new PartyNotFound()]);
         }
 
         DomainResult? erasureRejection = RejectIfErasureInProgress(state);
-        if (erasureRejection is not null)
-        {
+        if (erasureRejection is not null) {
             return erasureRejection;
         }
 
+        DomainResult? restrictionRejection = RejectIfRestricted(command.PartyId, null, state);
+        if (restrictionRejection is not null) {
+            return restrictionRejection;
+        }
+
         // Channel not found check
-        if (!state.ContactChannels.Any(c => c.Id == command.ContactChannelId))
-        {
+        if (!state.ContactChannels.Any(c => c.Id == command.ContactChannelId)) {
             return DomainResult.Rejection([new ContactChannelNotFound { Message = $"Contact channel '{command.ContactChannelId}' not found." }]);
         }
 
         return DomainResult.Success([new ContactChannelRemoved { ContactChannelId = command.ContactChannelId }]);
     }
 
-    public static DomainResult Handle(AddIdentifier command, PartyState? state)
-    {
+    public static DomainResult Handle(AddIdentifier command, PartyState? state) {
         ArgumentNullException.ThrowIfNull(command);
 
-        if (state is null)
-        {
+        if (state is null) {
             return DomainResult.Rejection([new PartyNotFound()]);
         }
 
         DomainResult? erasureRejection = RejectIfErasureInProgress(state);
-        if (erasureRejection is not null)
-        {
+        if (erasureRejection is not null) {
             return erasureRejection;
         }
 
+        DomainResult? restrictionRejection = RejectIfRestricted(command.PartyId, null, state);
+        if (restrictionRejection is not null) {
+            return restrictionRejection;
+        }
+
         // Idempotent: skip if identifier already exists (D10 — safe for MCP retries)
-        if (state.Identifiers.Any(i => i.Id == command.IdentifierId))
-        {
+        if (state.Identifiers.Any(i => i.Id == command.IdentifierId)) {
             return DomainResult.NoOp();
         }
 
-        IdentifierAdded added = new()
-        {
+        IdentifierAdded added = new() {
             IdentifierId = command.IdentifierId,
             Type = command.Type,
             Value = command.Value,
@@ -1049,40 +1045,214 @@ public sealed class PartyAggregate : EventStoreAggregate<PartyState>
         return DomainResult.Success([added]);
     }
 
-    public static DomainResult Handle(RemoveIdentifier command, PartyState? state)
-    {
+    public static DomainResult Handle(RemoveIdentifier command, PartyState? state) {
         ArgumentNullException.ThrowIfNull(command);
 
-        if (state is null)
-        {
+        if (state is null) {
             return DomainResult.Rejection([new PartyNotFound()]);
         }
 
         DomainResult? erasureRejection = RejectIfErasureInProgress(state);
-        if (erasureRejection is not null)
-        {
+        if (erasureRejection is not null) {
             return erasureRejection;
         }
 
+        DomainResult? restrictionRejection = RejectIfRestricted(command.PartyId, null, state);
+        if (restrictionRejection is not null) {
+            return restrictionRejection;
+        }
+
         // Identifier not found check
-        if (!state.Identifiers.Any(i => i.Id == command.IdentifierId))
-        {
+        if (!state.Identifiers.Any(i => i.Id == command.IdentifierId)) {
             return DomainResult.Rejection([new IdentifierNotFound { Message = $"Identifier '{command.IdentifierId}' not found." }]);
         }
 
         return DomainResult.Success([new IdentifierRemoved { IdentifierId = command.IdentifierId }]);
     }
 
-    private static DomainResult? RejectIfErasureInProgress(PartyState? state)
-    {
-        if (state is null)
-        {
+    public static DomainResult Handle(RecordConsent command, PartyState? state) {
+        ArgumentNullException.ThrowIfNull(command);
+
+        if (state is null) {
+            return DomainResult.Rejection([new PartyNotFound { Message = "Party does not exist." }]);
+        }
+
+        DomainResult? erasureRejection = RejectIfErasureInProgress(state);
+        if (erasureRejection is not null) {
+            return erasureRejection;
+        }
+
+        // NOTE: No restriction check — consent management allowed during restriction (Article 18(3))
+
+        // Validate channel exists
+        if (!state.ContactChannels.Any(c => c.Id == command.ChannelId)) {
+            return DomainResult.Rejection([new ContactChannelNotFound { Message = $"Contact channel '{command.ChannelId}' not found." }]);
+        }
+
+        // Validate purpose format
+        string purpose = command.Purpose?.Trim() ?? string.Empty;
+        if (string.IsNullOrWhiteSpace(purpose)) {
+            return DomainResult.Rejection([new InvalidConsentPurpose {
+                PartyId = command.PartyId,
+                    TenantId = string.Empty,
+                Purpose = command.Purpose,
+                Message = "Purpose is required.",
+            }]);
+        }
+
+        if (purpose.Length > 100) {
+            return DomainResult.Rejection([new InvalidConsentPurpose {
+                PartyId = command.PartyId,
+                TenantId = command.TenantId,
+                Purpose = command.Purpose,
+                Message = "Purpose must not exceed 100 characters.",
+            }]);
+        }
+
+        if (!System.Text.RegularExpressions.Regex.IsMatch(purpose, @"^[a-zA-Z0-9\-_]+$")) {
+            return DomainResult.Rejection([new InvalidConsentPurpose {
+                PartyId = command.PartyId,
+                TenantId = command.TenantId,
+                Purpose = command.Purpose,
+                Message = "Purpose must contain only alphanumeric characters, hyphens, and underscores.",
+            }]);
+        }
+
+        // Deterministic ConsentId for idempotency
+        string channelId = command.ChannelId.Trim();
+        string consentId = $"{channelId}:{purpose}".ToLowerInvariant();
+
+        // Idempotent: if active consent for same channel+purpose exists, no-op
+        if (state.ConsentRecords.Any(c => c.ConsentId == consentId && c.IsActive)) {
+            return DomainResult.NoOp();
+        }
+
+        return DomainResult.Success([new ConsentRecorded {
+            PartyId = command.PartyId,
+            TenantId = command.TenantId,
+            ConsentId = consentId,
+            ChannelId = channelId,
+            Purpose = purpose.ToLowerInvariant(),
+            LawfulBasis = command.LawfulBasis,
+            GrantedAt = DateTimeOffset.UtcNow,
+            GrantedBy = NormalizeActorUserId(command.ActorUserId),
+        }]);
+    }
+
+    public static DomainResult Handle(RevokeConsent command, PartyState? state) {
+        ArgumentNullException.ThrowIfNull(command);
+
+        if (state is null) {
+            return DomainResult.Rejection([new PartyNotFound { Message = "Party does not exist." }]);
+        }
+
+        DomainResult? erasureRejection = RejectIfErasureInProgress(state);
+        if (erasureRejection is not null) {
+            return erasureRejection;
+        }
+
+        // NOTE: No restriction check — consent management allowed during restriction (Article 18(3))
+
+        // Find consent by ID
+        ConsentRecord? consent = null;
+        for (int i = 0; i < state.ConsentRecords.Count; i++) {
+            if (state.ConsentRecords[i].ConsentId == command.ConsentId) {
+                consent = state.ConsentRecords[i];
+                break;
+            }
+        }
+
+        if (consent is null) {
+            return DomainResult.Rejection([new ConsentNotFound {
+                PartyId = command.PartyId,
+                TenantId = command.TenantId,
+                ConsentId = command.ConsentId,
+                Message = $"Consent '{command.ConsentId}' not found.",
+            }]);
+        }
+
+        // Idempotent: already revoked
+        if (!consent.IsActive) {
+            return DomainResult.NoOp();
+        }
+
+        return DomainResult.Success([new ConsentRevoked {
+            PartyId = command.PartyId,
+            TenantId = command.TenantId,
+            ConsentId = command.ConsentId,
+            RevokedAt = DateTimeOffset.UtcNow,
+            RevokedBy = NormalizeActorUserId(command.ActorUserId),
+        }]);
+    }
+
+    public static DomainResult Handle(RestrictProcessing command, PartyState? state) {
+        ArgumentNullException.ThrowIfNull(command);
+
+        if (state is null) {
+            return DomainResult.Rejection([new PartyNotFound { Message = "Party does not exist." }]);
+        }
+
+        DomainResult? erasureRejection = RejectIfErasureInProgress(state);
+        if (erasureRejection is not null) {
+            return erasureRejection;
+        }
+
+        // Idempotent: already restricted
+        if (state.IsRestricted) {
+            return DomainResult.NoOp();
+        }
+
+        return DomainResult.Success([new ProcessingRestricted {
+            PartyId = command.PartyId,
+            TenantId = command.TenantId,
+            RestrictedAt = DateTimeOffset.UtcNow,
+            Reason = command.Reason,
+        }]);
+    }
+
+    public static DomainResult Handle(LiftRestriction command, PartyState? state) {
+        ArgumentNullException.ThrowIfNull(command);
+
+        if (state is null) {
+            return DomainResult.Rejection([new PartyNotFound { Message = "Party does not exist." }]);
+        }
+
+        // Not restricted → reject
+        if (!state.IsRestricted) {
+            return DomainResult.Rejection([new PartyNotRestricted {
+                PartyId = command.PartyId,
+                TenantId = command.TenantId,
+                Message = "Party is not currently restricted.",
+            }]);
+        }
+
+        return DomainResult.Success([new RestrictionLifted {
+            PartyId = command.PartyId,
+            TenantId = command.TenantId,
+            LiftedAt = DateTimeOffset.UtcNow,
+        }]);
+    }
+
+    private static DomainResult? RejectIfRestricted(string partyId, string? tenantId, PartyState state) {
+        if (state.IsRestricted) {
+            return DomainResult.Rejection([new PartyProcessingRestricted
+            {
+                PartyId = partyId,
+                TenantId = tenantId ?? string.Empty,
+                Message = "Party processing is restricted. No modifications allowed.",
+            }]);
+        }
+
+        return null;
+    }
+
+    private static DomainResult? RejectIfErasureInProgress(PartyState? state) {
+        if (state is null) {
             return null;
         }
 
         if (state.ErasureStatus is ErasureStatus.ErasurePending or ErasureStatus.KeyDestroyed
-            or ErasureStatus.VerificationInProgress or ErasureStatus.Verified or ErasureStatus.Erased)
-        {
+            or ErasureStatus.VerificationInProgress or ErasureStatus.Verified or ErasureStatus.Erased) {
             return DomainResult.Rejection([new PartyErasureInProgress
             {
                 Message = "Party erasure in progress or completed. No modifications allowed.",
@@ -1095,10 +1265,8 @@ public sealed class PartyAggregate : EventStoreAggregate<PartyState>
     private static (string DisplayName, string SortName) DeriveDisplayName(
         PartyType type,
         PersonDetails? person,
-        OrganizationDetails? organization)
-    {
-        return type switch
-        {
+        OrganizationDetails? organization) {
+        return type switch {
             PartyType.Person when person is not null =>
                 ($"{person.FirstName} {person.LastName}", $"{person.LastName}, {person.FirstName}"),
             PartyType.Organization when organization is not null =>
@@ -1107,11 +1275,13 @@ public sealed class PartyAggregate : EventStoreAggregate<PartyState>
         };
     }
 
+    private static string NormalizeActorUserId(string? actorUserId)
+        => string.IsNullOrWhiteSpace(actorUserId) ? "unknown" : actorUserId.Trim();
+
     private static PartyDetail BuildPartyDetailFromState(
         string partyId,
         PartyState state,
-        IReadOnlyList<IEventPayload> events)
-    {
+        IReadOnlyList<IEventPayload> events) {
         string displayName = state.DisplayName;
         string sortName = state.SortName;
         PersonDetails? person = state.Person;
@@ -1120,10 +1290,8 @@ public sealed class PartyAggregate : EventStoreAggregate<PartyState>
         List<ContactChannel> channels = [.. state.ContactChannels];
         List<PartyIdentifier> identifiers = [.. state.Identifiers];
 
-        foreach (IEventPayload evt in events)
-        {
-            switch (evt)
-            {
+        foreach (IEventPayload evt in events) {
+            switch (evt) {
                 case PersonDetailsUpdated e:
                     person = e.PersonDetails;
                     break;
@@ -1137,14 +1305,11 @@ public sealed class PartyAggregate : EventStoreAggregate<PartyState>
                 case ContactChannelAdded e:
                     channels.Add(new ContactChannel { Id = e.ContactChannelId, Type = e.Type, Value = e.Value, IsPreferred = e.IsPreferred });
                     break;
-                case ContactChannelUpdated e:
-                    {
+                case ContactChannelUpdated e: {
                         int idx = channels.FindIndex(c => c.Id == e.ContactChannelId);
-                        if (idx >= 0)
-                        {
+                        if (idx >= 0) {
                             ContactChannel existing = channels[idx];
-                            channels[idx] = existing with
-                            {
+                            channels[idx] = existing with {
                                 Type = e.Type ?? existing.Type,
                                 Value = e.Value ?? existing.Value,
                                 IsPreferred = e.IsPreferred ?? existing.IsPreferred,
@@ -1157,16 +1322,12 @@ public sealed class PartyAggregate : EventStoreAggregate<PartyState>
                 case ContactChannelRemoved e:
                     channels.RemoveAll(c => c.Id == e.ContactChannelId);
                     break;
-                case PreferredContactChannelChanged e:
-                    {
+                case PreferredContactChannelChanged e: {
                         int targetIdx = channels.FindIndex(c => c.Id == e.ContactChannelId);
-                        if (targetIdx >= 0)
-                        {
+                        if (targetIdx >= 0) {
                             ContactChannelType targetType = channels[targetIdx].Type;
-                            for (int i = 0; i < channels.Count; i++)
-                            {
-                                if (channels[i].Type == targetType)
-                                {
+                            for (int i = 0; i < channels.Count; i++) {
+                                if (channels[i].Type == targetType) {
                                     channels[i] = channels[i] with { IsPreferred = channels[i].Id == e.ContactChannelId };
                                 }
                             }
@@ -1190,8 +1351,7 @@ public sealed class PartyAggregate : EventStoreAggregate<PartyState>
             }
         }
 
-        return new PartyDetail
-        {
+        return new PartyDetail {
             Id = partyId,
             Type = state.Type,
             IsActive = isActive,

@@ -7,7 +7,7 @@ namespace Hexalith.Parties.Security;
 public sealed partial class PartyKeyLifecycleService(
     IPartyKeyManagementService keyManagementService,
     IPartyKeyRetryScheduler retryScheduler,
-    ILogger<PartyKeyLifecycleService> logger) : ICryptoStatusProvider
+    ILogger<PartyKeyLifecycleService> logger) : IPartyKeyLifecycleService
 {
     public async Task MarkCryptoPendingAsync(string tenantId, string partyId, string reason, CancellationToken cancellationToken = default)
     {

@@ -7,6 +7,7 @@ namespace Hexalith.Parties.Contracts.State;
 public sealed class PartyState
 {
     private readonly List<ContactChannel> _contactChannels = [];
+    private readonly List<ConsentRecord> _consentRecords = [];
     private readonly List<PartyIdentifier> _identifiers = [];
 
     public DateTimeOffset CreatedAt { get; private set; }
@@ -29,11 +30,19 @@ public sealed class PartyState
 
     public IReadOnlyList<ContactChannel> ContactChannels => _contactChannels;
 
+    public IReadOnlyList<ConsentRecord> ConsentRecords => _consentRecords;
+
     public IReadOnlyList<PartyIdentifier> Identifiers => _identifiers;
 
     public ErasureStatus ErasureStatus { get; private set; } = ErasureStatus.Active;
 
     public DateTimeOffset? ErasedAt { get; private set; }
+
+    public bool IsRestricted { get; private set; }
+
+    public DateTimeOffset? RestrictedAt { get; private set; }
+
+    public string? RestrictionReason { get; private set; }
 
     public void Apply(PartyCreated e)
     {
@@ -153,6 +162,50 @@ public sealed class PartyState
         ArgumentNullException.ThrowIfNull(e);
         DisplayName = e.DisplayName;
         SortName = e.SortName;
+    }
+
+    public void Apply(ConsentRecorded e)
+    {
+        ArgumentNullException.ThrowIfNull(e);
+        _consentRecords.Add(new ConsentRecord
+        {
+            ConsentId = e.ConsentId,
+            ChannelId = e.ChannelId,
+            Purpose = e.Purpose,
+            LawfulBasis = e.LawfulBasis,
+            GrantedAt = e.GrantedAt,
+            GrantedBy = e.GrantedBy,
+        });
+    }
+
+    public void Apply(ConsentRevoked e)
+    {
+        ArgumentNullException.ThrowIfNull(e);
+        int idx = _consentRecords.FindIndex(c => c.ConsentId == e.ConsentId);
+        if (idx >= 0)
+        {
+            _consentRecords[idx] = _consentRecords[idx] with
+            {
+                RevokedAt = e.RevokedAt,
+                RevokedBy = e.RevokedBy,
+            };
+        }
+    }
+
+    public void Apply(ProcessingRestricted e)
+    {
+        ArgumentNullException.ThrowIfNull(e);
+        IsRestricted = true;
+        RestrictedAt = e.RestrictedAt;
+        RestrictionReason = e.Reason;
+    }
+
+    public void Apply(RestrictionLifted e)
+    {
+        ArgumentNullException.ThrowIfNull(e);
+        IsRestricted = false;
+        RestrictedAt = null;
+        RestrictionReason = null;
     }
 
     public void Apply(ErasePartyRequested e)

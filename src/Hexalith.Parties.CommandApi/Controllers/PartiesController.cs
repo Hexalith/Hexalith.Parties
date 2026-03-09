@@ -13,6 +13,7 @@ using Hexalith.Parties.CommandApi.Middleware;
 using Hexalith.Parties.CommandApi.Search;
 using Hexalith.Parties.Contracts.Commands;
 using Hexalith.Parties.Contracts.Models;
+using Hexalith.Parties.Contracts.Search;
 using Hexalith.Parties.Contracts.ValueObjects;
 using Hexalith.Parties.Projections.Abstractions;
 using Hexalith.Parties.Projections.Actors;
@@ -31,6 +32,7 @@ public sealed class PartiesController(
     ICommandRouter commandRouter,
     IActorProxyFactory actorProxyFactory,
     IPersonalDataCommandGuard personalDataCommandGuard,
+    IPartySearchProvider searchProvider,
     ILogger<PartiesController> logger) : ControllerBase
 {
     private const string _domain = "party";
@@ -178,7 +180,7 @@ public sealed class PartiesController(
             SetDegradedHeaders(Response);
         }
 
-        return Ok(PartySearchResultsBuilder.BuildSearchResults(entries.Values.Where(e => !e.IsErased), q, null, null, page, pageSize));
+        return Ok(searchProvider.Search(entries.Values.Where(e => !e.IsErased), q, null, null, page, pageSize));
     }
 
     [HttpGet("{id}")]
@@ -244,6 +246,95 @@ public sealed class PartiesController(
         }
 
         return Ok(detail);
+    }
+
+    [HttpGet("{id}/name")]
+    [ProducesResponseType(typeof(TemporalNameResult), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status410Gone, "application/problem+json")]
+    public async Task<IActionResult> GetPartyNameAtAsync(string id, [FromQuery] DateTimeOffset at)
+    {
+        string correlationId = HttpContext.Items[CorrelationIdMiddleware.HttpContextKey]?.ToString()
+            ?? Guid.NewGuid().ToString();
+
+        string? tenant = ExtractTenant();
+        if (tenant is null)
+        {
+            return CreateUnauthorizedProblemDetails("A valid tenant claim is required to access this resource.", correlationId);
+        }
+
+        var actorId = new ActorId($"{tenant}:party-detail:{id}");
+        IPartyDetailProjectionActor proxy = actorProxyFactory.CreateActorProxy<IPartyDetailProjectionActor>(
+            actorId, nameof(PartyDetailProjectionActor));
+
+        PartyDetail? detail = await proxy.GetDetailAsync().ConfigureAwait(false);
+
+        if (detail is null)
+        {
+            return CreateNotFoundProblemDetails(id, correlationId);
+        }
+
+        if (detail.IsErased)
+        {
+            return CreateErasedProblemDetails(id, correlationId, detail.ErasedAt);
+        }
+
+        if (detail.NameHistory.Count == 0)
+        {
+            return CreateNameHistoryUnavailableProblemDetails(id, correlationId);
+        }
+
+        NameHistoryEntry? entry = detail.NameHistory
+            .LastOrDefault(e => e.ChangedAt <= at);
+
+        if (entry is null)
+        {
+            return CreateNameNotFoundAtTimestampProblemDetails(id, at, correlationId);
+        }
+
+        return Ok(new TemporalNameResult
+        {
+            PartyId = id,
+            AsOf = at,
+            DisplayName = entry.DisplayName,
+            SortName = entry.SortName,
+        });
+    }
+
+    [HttpGet("{id}/name-history")]
+    [ProducesResponseType(typeof(IReadOnlyList<NameHistoryEntry>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status410Gone, "application/problem+json")]
+    public async Task<IActionResult> GetPartyNameHistoryAsync(string id)
+    {
+        string correlationId = HttpContext.Items[CorrelationIdMiddleware.HttpContextKey]?.ToString()
+            ?? Guid.NewGuid().ToString();
+
+        string? tenant = ExtractTenant();
+        if (tenant is null)
+        {
+            return CreateUnauthorizedProblemDetails("A valid tenant claim is required to access this resource.", correlationId);
+        }
+
+        var actorId = new ActorId($"{tenant}:party-detail:{id}");
+        IPartyDetailProjectionActor proxy = actorProxyFactory.CreateActorProxy<IPartyDetailProjectionActor>(
+            actorId, nameof(PartyDetailProjectionActor));
+
+        PartyDetail? detail = await proxy.GetDetailAsync().ConfigureAwait(false);
+
+        if (detail is null)
+        {
+            return CreateNotFoundProblemDetails(id, correlationId);
+        }
+
+        if (detail.IsErased)
+        {
+            return CreateErasedProblemDetails(id, correlationId, detail.ErasedAt);
+        }
+
+        return Ok(detail.NameHistory);
     }
 
     [HttpPost]
@@ -647,6 +738,49 @@ public sealed class PartiesController(
         };
 
         var result = new ObjectResult(problemDetails) { StatusCode = StatusCodes.Status410Gone };
+        result.ContentTypes.Add("application/problem+json");
+        return result;
+    }
+
+    private ObjectResult CreateNameNotFoundAtTimestampProblemDetails(string partyId, DateTimeOffset at, string correlationId)
+    {
+        var problemDetails = new ProblemDetails
+        {
+            Status = StatusCodes.Status404NotFound,
+            Title = "Name Not Found at Timestamp",
+            Type = "urn:hexalith:parties:error:NameNotFoundAtTimestamp",
+            Detail = "Party did not exist at the requested timestamp.",
+            Instance = HttpContext.Request.Path,
+            Extensions =
+            {
+                ["correlationId"] = correlationId,
+                ["partyId"] = partyId,
+                ["requestedTimestamp"] = at.ToString("O"),
+            },
+        };
+
+        var result = new ObjectResult(problemDetails) { StatusCode = StatusCodes.Status404NotFound };
+        result.ContentTypes.Add("application/problem+json");
+        return result;
+    }
+
+    private ObjectResult CreateNameHistoryUnavailableProblemDetails(string partyId, string correlationId)
+    {
+        var problemDetails = new ProblemDetails
+        {
+            Status = StatusCodes.Status404NotFound,
+            Title = "Name History Unavailable",
+            Type = "urn:hexalith:parties:error:NameHistoryUnavailable",
+            Detail = "Name history not available. Trigger projection rebuild.",
+            Instance = HttpContext.Request.Path,
+            Extensions =
+            {
+                ["correlationId"] = correlationId,
+                ["partyId"] = partyId,
+            },
+        };
+
+        var result = new ObjectResult(problemDetails) { StatusCode = StatusCodes.Status404NotFound };
         result.ContentTypes.Add("application/problem+json");
         return result;
     }

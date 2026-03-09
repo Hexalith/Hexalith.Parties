@@ -1,6 +1,7 @@
 using Hexalith.EventStore.Contracts.Events;
 using Hexalith.Parties.Contracts.Events;
 using Hexalith.Parties.Contracts.Models;
+using Hexalith.Parties.Contracts.Security;
 using Hexalith.Parties.Contracts.ValueObjects;
 using Hexalith.Parties.Projections.Handlers;
 using Hexalith.Parties.Testing;
@@ -583,6 +584,135 @@ public class PartyDetailProjectionHandlerTests
         result.Type.ShouldBe(PartyType.Person);
         result.IsActive.ShouldBeFalse();
         result.CreatedAt.ShouldBe(state.CreatedAt);
+    }
+
+    // --- Task 7.20: Consent and restriction projection tests ---
+
+    [Fact]
+    public void Apply_ConsentRecorded_AddsConsentRecordToProjection()
+    {
+        PartyDetail state = CreatePersonDetail();
+        ConsentRecorded @event = new()
+        {
+            PartyId = PartyId,
+            TenantId = "t1",
+            ConsentId = "ch-1:marketing",
+            ChannelId = "ch-1",
+            Purpose = "marketing",
+            LawfulBasis = LawfulBasis.Consent,
+            GrantedAt = DateTimeOffset.UtcNow,
+            GrantedBy = "admin",
+        };
+
+        PartyDetail? result = PartyDetailProjectionHandler.Apply(PartyId, @event, state);
+
+        result.ShouldNotBeNull();
+        result.ConsentRecords.Count.ShouldBe(1);
+        result.ConsentRecords[0].ConsentId.ShouldBe("ch-1:marketing");
+        result.ConsentRecords[0].IsActive.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void Apply_ConsentRevoked_SetsRevokedAtOnProjection()
+    {
+        PartyDetail state = CreatePersonDetail() with
+        {
+            ConsentRecords =
+            [
+                new ConsentRecord
+                {
+                    ConsentId = "ch-1:marketing",
+                    ChannelId = "ch-1",
+                    Purpose = "marketing",
+                    LawfulBasis = LawfulBasis.Consent,
+                    GrantedAt = DateTimeOffset.UtcNow.AddDays(-1),
+                    GrantedBy = "admin",
+                },
+            ],
+        };
+        ConsentRevoked @event = new()
+        {
+            PartyId = PartyId,
+            TenantId = "t1",
+            ConsentId = "ch-1:marketing",
+            RevokedAt = DateTimeOffset.UtcNow,
+            RevokedBy = "admin",
+        };
+
+        PartyDetail? result = PartyDetailProjectionHandler.Apply(PartyId, @event, state);
+
+        result.ShouldNotBeNull();
+        result.ConsentRecords.Count.ShouldBe(1);
+        result.ConsentRecords[0].IsActive.ShouldBeFalse();
+        result.ConsentRecords[0].RevokedAt.ShouldNotBeNull();
+    }
+
+    [Fact]
+    public void Apply_ProcessingRestricted_SetsIsRestrictedTrue()
+    {
+        PartyDetail state = CreatePersonDetail();
+        DateTimeOffset restrictedAt = DateTimeOffset.UtcNow;
+        ProcessingRestricted @event = new()
+        {
+            PartyId = PartyId,
+            TenantId = "t1",
+            RestrictedAt = restrictedAt,
+            Reason = "Investigation",
+        };
+
+        PartyDetail? result = PartyDetailProjectionHandler.Apply(PartyId, @event, state);
+
+        result.ShouldNotBeNull();
+        result.IsRestricted.ShouldBeTrue();
+        result.RestrictedAt.ShouldBe(restrictedAt);
+    }
+
+    [Fact]
+    public void Apply_RestrictionLifted_SetsIsRestrictedFalse()
+    {
+        PartyDetail state = CreatePersonDetail() with
+        {
+            IsRestricted = true,
+            RestrictedAt = DateTimeOffset.UtcNow.AddDays(-1),
+        };
+        RestrictionLifted @event = new()
+        {
+            PartyId = PartyId,
+            TenantId = "t1",
+            LiftedAt = DateTimeOffset.UtcNow,
+        };
+
+        PartyDetail? result = PartyDetailProjectionHandler.Apply(PartyId, @event, state);
+
+        result.ShouldNotBeNull();
+        result.IsRestricted.ShouldBeFalse();
+        result.RestrictedAt.ShouldBeNull();
+    }
+
+    [Fact]
+    public void ApplyErasure_ClearsConsentRecords()
+    {
+        PartyDetail state = CreatePersonDetail() with
+        {
+            ConsentRecords =
+            [
+                new ConsentRecord
+                {
+                    ConsentId = "ch-1:marketing",
+                    ChannelId = "ch-1",
+                    Purpose = "marketing",
+                    LawfulBasis = LawfulBasis.Consent,
+                    GrantedAt = DateTimeOffset.UtcNow,
+                    GrantedBy = "admin",
+                },
+            ],
+        };
+
+        PartyDetail? result = PartyDetailProjectionHandler.ApplyErasure(PartyId, state);
+
+        result.ShouldNotBeNull();
+        result.ConsentRecords.ShouldBeEmpty();
+        result.IsErased.ShouldBeTrue();
     }
 
     // --- Helper methods ---

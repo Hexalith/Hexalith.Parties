@@ -162,7 +162,7 @@ public class DeploymentValidationTests : IDisposable
         (int exitCode, string output) = await RunValidationAsync(_tempDir, jsonOutput: true, useGnuStyleArguments: true);
 
         exitCode.ShouldBe(0, $"Expected GNU-style arguments to work. Output:\n{output}");
-        output.ShouldContain("\"result\":  \"PASS\"");
+        output.ShouldContain("\"result\": \"PASS\"");
       }
 
       [Fact]
@@ -241,8 +241,7 @@ public class DeploymentValidationTests : IDisposable
         string? dir = AppContext.BaseDirectory;
         while (dir != null)
         {
-            if (Directory.GetFiles(dir, "*.slnx").Length > 0 ||
-                Directory.GetFiles(dir, "*.sln").Length > 0)
+            if (Directory.GetFiles(dir, "*.slnx").Length > 0)
             {
                 return dir;
             }
