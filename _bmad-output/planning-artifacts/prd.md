@@ -81,7 +81,7 @@ Hexalith.Parties is also the first domain microservice built on the Hexalith.Eve
 - **Single-prompt modification:** Updating a contact channel or adding an identifier achievable through one MCP tool call
 - **MCP tool clarity:** Tools well-named, well-documented, produce predictable results — AI agents use them correctly without retry or confusion
 - **Forgiving input schemas:** MCP tools accept partial input gracefully; missing optional fields default sensibly; validation errors clearly state what's needed
-- **Search result quality:** `search_parties` results include match metadata (matched fields, match type) sufficient for AI agents to rank candidates and make confident autonomous matches in unambiguous cases
+- **Search result quality:** `search_parties` results include display-name match metadata (matched field, match type) sufficient for AI agents to rank candidates in simple name-based cases. Email, identifier, and semantic search are deferred to the dedicated search capability.
 - **Transparent interaction:** End users manage contacts entirely through their AI assistant without needing to know Hexalith.Parties exists
 
 **Administrator Success (Laurent)**
@@ -158,14 +158,14 @@ The smallest version that creates real value: a party management microservice ac
 
 > **GDPR Notice:** MVP does not include GDPR compliance features. Do not store regulated EU personal data until v1.1. MVP is for development, evaluation, and non-personal/test data only. Startup warning banner is **non-dismissable** — it persists in the admin UI header and API response headers until v1.1 GDPR features are activated.
 
-> **Duplicate Notice:** MVP does not include duplicate detection. AI agents creating parties from extracted data (emails, documents) will likely create near-duplicates. `search_parties` match metadata provides advisory signals; consuming apps and operators are responsible for deduplication until v2. Consider adding near-match advisory warnings in `create_party` responses as a v1.1 enhancement.
+> **Duplicate Notice:** MVP does not include duplicate detection. AI agents creating parties from extracted data (emails, documents) will likely create near-duplicates. `search_parties` display-name match metadata provides advisory signals only; consuming apps and operators are responsible for deduplication until v2. Consider adding near-match advisory warnings in `create_party` responses as a v1.1 enhancement.
 
 **Included:**
 - Party aggregate: persons and organizations with type-specific details, contact channels (type-discriminated), identifiers, deactivation/reactivation, client-generated stable UUIDs
 - `[PersonalData]` field attributes as zero-cost preparation for v1.1 crypto-shredding
 - Display name / sort name derivation (simple concatenation; locale-aware deferred to v1.1)
 - REST command API with typed, self-explanatory `DomainResult` rejection responses
-- Read projection: paginated list, search by name/email/identifier with match metadata, filter by type; eventual consistency < 2 seconds (semantic search deferred to v1.1)
+- Read projection: paginated list, display-name search with match metadata, filter by type; eventual consistency < 2 seconds (email, identifier, and semantic search deferred to the dedicated search capability)
 - MCP server: 5 tools (`search_parties`, `get_party`, `create_party`, `update_party`, `list_parties`); `create_party` returns complete party; forgiving input schemas with sensible defaults and clear validation errors
 - NuGet packages: Hexalith.Parties.Contracts (including forward-compatible `PartyMerged` event), Hexalith.Parties.Client (`AddPartiesClient()`)
 - Via EventStore (zero additional effort): JWT auth, multi-tenancy, event publishing, idempotent commands, convention-based discovery, snapshot support
@@ -242,7 +242,7 @@ He adds `Hexalith.Parties.Client` to his case management project. One line: `bui
 
 **Opening Scene:** Aria is an AI agent processing Sophie's morning emails. An email arrives from "J. Dupont at Acme Corp" about an invoice dispute. Aria needs to link this email to the correct party in Sophie's workflow system. But who is "J. Dupont"? There are three Duponts in the system.
 
-**Rising Action:** Aria calls `search_parties` via MCP with the query "Dupont Acme." The results come back with match metadata — Jean Dupont (matched on last name + organization "Acme Corp", email domain matches), Jacques Dupont (matched on last name only, different organization), and Julie Dupont (matched on last name only, inactive). The match metadata gives Aria enough context: Jean Dupont has an email at acme.com, the sender domain matches, and he's associated with Acme Corp.
+**Rising Action:** Aria calls `search_parties` via MCP with the query "Dupont." The results come back with display-name match metadata — Jean Dupont (display-name prefix match), Jacques Dupont (display-name prefix match), and Julie Dupont (display-name prefix match, inactive). Aria calls `get_party` on the likely candidates to inspect contact channels and identifiers before linking the email.
 
 Aria is 95% confident this is Jean Dupont. She links the email to his party ID in Sophie's task system. She drafts a response: "I've linked the invoice dispute email from Jean Dupont at Acme Corp to case #427. His billing address is 42 Rue de Rivoli, Paris."
 
@@ -531,7 +531,7 @@ All commands from the Party aggregate are exposed as REST endpoints following Ev
 **Query Endpoints (REST):**
 - `GET /api/v1/parties` — paginated list with filters (type, active/inactive)
 - `GET /api/v1/parties/{id}` — full party details by ID
-- `GET /api/v1/parties/search?q=` — search by name, email, identifier, semantic
+- `GET /api/v1/parties/search?q=` — display-name search with match metadata. Email, identifier, and semantic search require the dedicated search capability.
 - **OpenAPI 3.x specification** auto-generated from endpoint definitions and published with the service
 
 **MCP Tools (5 tools):**
@@ -682,9 +682,9 @@ Each functional requirement below is traceable to user journeys and success crit
 ### Party Discovery & Search (MVP)
 
 - **FR14:** Consumer can list parties with pagination and filtering by type (person/organization) and active status
-- **FR15:** Consumer can search parties by name, email, or identifier
-- **FR16:** *(Deferred to v1.1)* Consumer can perform semantic search across parties. Exact/contains search (FR15) + match metadata (FR17) are sufficient for MVP identity resolution scenarios. Semantic search ships as a pluggable projection in v1.1.
-- **FR17:** Search results include match metadata (matched fields, match type) to support disambiguation by AI agents and humans
+- **FR15:** Consumer can search parties by display name in MVP. Email and identifier search are deferred to the dedicated search capability because the v1.0 index projection does not store those searchable fields.
+- **FR16:** *(Deferred to v1.1)* Consumer can perform semantic search across parties. Display-name exact/prefix/contains search (FR15) + match metadata (FR17) are sufficient for MVP name-based lookup scenarios. Semantic search ships as a pluggable projection in v1.1.
+- **FR17:** Search results include match metadata (matched field, match type) to support disambiguation by AI agents and humans. MVP emits `displayName`; `email` and `identifier` are reserved for the future search model.
 - **FR18:** Consumer can retrieve full party details by ID
 - **FR19:** Recently created or updated parties become discoverable in search results within the eventual consistency window defined by NFR6
 - **FR56:** System publishes auto-generated API specification documentation accessible to developers
@@ -693,7 +693,7 @@ Each functional requirement below is traceable to user journeys and success crit
 
 ### AI Agent Identity Resolution (MVP)
 
-- **FR20:** AI agent can search and resolve parties by name, email, or identifier via a dedicated AI-optimized interface
+- **FR20:** AI agent can search and resolve parties by display name via a dedicated AI-optimized interface in MVP. Email and identifier resolution require candidate retrieval or the future dedicated search capability.
 - **FR21:** AI agent can create a complete party (type details + contact channels + identifiers) in a single composite operation
 - **FR22:** AI agent can update party details, add/modify/remove contact channels and identifiers via a single operation
 - **FR23:** AI agent can retrieve full party details and list parties via dedicated AI-optimized tools

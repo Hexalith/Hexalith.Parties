@@ -68,7 +68,7 @@ Built on Hexalith.EventStore, it follows the same aggregate programming model: d
 
 **Command side:** Commands sent via REST/gRPC API, routed to aggregate actors, persisting events and publishing to downstream subscribers. **Idempotent command handling** ensures that duplicate commands in distributed scenarios are safely deduplicated, a requirement for any shared microservice.
 
-**Query side:** Read projections as first-class citizens — a default projection with search by name, email, identifier, and semantic search included in v1. The projection infrastructure is extensible by design: the extensibility contract ships in v1, and advanced search plugins (e.g., Elasticsearch) ship in v2. Consuming apps can also build domain-specific read models from published events, enabling offline/disconnected scenarios.
+**Query side:** Read projections as first-class citizens — a default projection with paginated list, filtering, and display-name search included in v1. The projection infrastructure is extensible by design: the extensibility contract ships in v1, while email, identifier, semantic, and advanced search plugins (e.g., Elasticsearch) ship through the dedicated search capability. Consuming apps can also build domain-specific read models from published events, enabling offline/disconnected scenarios.
 
 **Event publishing and encryption:** Events published to DAPR pub/sub are decrypted at publish time — consuming applications receive readable events and do not need access to encryption keys. After erasure, the `PartyErased` event notifies all subscribers to delete their local party data. Consuming apps never handle encryption directly.
 
@@ -182,7 +182,7 @@ Multi-tenancy is built-in at the contract level (Domain + AggregateId + TenantId
 - Display name / sort name derivation with locale-aware formatting
 - Command API (REST/gRPC) with idempotent command handling and typed rejection responses
 - Event publishing via DAPR pub/sub (decrypted at publish time)
-- Read projections with search (by name, email, identifier, and semantic search) and filtering + projection extensibility contract
+- Read projections with display-name search and filtering + projection extensibility contract for future email, identifier, semantic, and advanced search
 - Multi-tenancy at all layers
 - GDPR: crypto-shredding (events + snapshots), per-channel per-purpose consent, data portability export, right to restriction, processing records (Article 30), erasure verification, dangling reference guidance
 - TypeScript party picker component (embeddable) + standalone admin views
@@ -193,7 +193,7 @@ Multi-tenancy is built-in at the contract level (Domain + AggregateId + TenantId
 **v1 Known Limitations:**
 
 - No duplicate detection — consuming apps must coordinate party creation or designate a "party master" application. Duplicate detection and merge ships in v2. Identifiers (VAT, SIRET) will serve as natural deduplication keys in v2.
-- No advanced fuzzy/full-text search — Elasticsearch plugin ships in v2. v1 provides search by name, email, identifier, and semantic search via the default projection.
+- No email, identifier, semantic, fuzzy, or full-text search in the default v1 projection — v1 provides display-name search only. Dedicated search capabilities ship later.
 - No party relationships — employment, hierarchies, legal representation deferred to v2.
 
 **v2 — Roadmap:**
@@ -235,7 +235,7 @@ Multi-tenancy is built-in at the contract level (Domain + AggregateId + TenantId
 
 **Problem Experience:** Aria processes an email from "J. Dupont at Acme Corp" and needs to determine: is this Jean Dupont the existing supplier, Jacques Dupont the client, or someone entirely new? Without a structured party registry, actors remain unstructured text with no linkage across workflows. Disambiguation is manual and error-prone.
 
-**Success Vision:** Aria connects to Hexalith.Parties via MCP, searches for candidates by name/email/identifier, resolves ambiguities (asking the user to confirm when needed: "I found 3 matches for Dupont — which one?"), creates new parties from extracted data, and links party IDs to tasks and workflows. Identity resolution becomes a structured, reliable operation.
+**Success Vision:** Aria connects to Hexalith.Parties via MCP, searches for candidates by display name, retrieves candidate details when email or identifier evidence is needed, resolves ambiguities (asking the user to confirm when needed: "I found 3 matches for Dupont — which one?"), creates new parties from extracted data, and links party IDs to tasks and workflows. Identity resolution becomes a structured, reliable operation.
 
 **Key Interactions:**
 - Connects to Hexalith.Parties MCP server as a tool
@@ -355,12 +355,12 @@ The MVP delivers the smallest version of Hexalith.Parties that creates real valu
 
 #### REST API
 - **Command API** — create, update, and manage parties via REST
-- **Read projection** — list parties (paginated), search by name, email, or identifier (exact/contains), semantic search, filter by type (person/organization)
+- **Read projection** — list parties (paginated), display-name search (exact/prefix/contains), filter by type (person/organization). Email, identifier, and semantic search require the dedicated search capability.
 - **Typed rejection responses** via `DomainResult`
 - gRPC included only if provided automatically by EventStore with no additional deployment setup
 
 #### MCP Server (5 tools, optimized for AI ergonomics)
-- **`search_parties`** — search by name, email, or identifier for identity resolution
+- **`search_parties`** — search by display name for MVP identity resolution; use `get_party` on candidates when email or identifier evidence must be inspected
 - **`get_party`** — retrieve full party details by ID
 - **`create_party`** — composite creation: name + type details + contact channels + identifiers in a single tool call (not individual commands)
 - **`update_party`** — update details, add/modify/remove contact channels and identifiers
@@ -394,7 +394,7 @@ The MVP delivers the smallest version of Hexalith.Parties that creates real valu
 | **TypeScript admin portal** | MVP is API + MCP only. Admin views ship after core model is validated | v1.2 — Frontend |
 | **Party picker component** | Embeddable widget deferred with frontend | v1.2 — Frontend |
 | **Locale-aware name formatting** | Simple concatenation in MVP. i18n name ordering and honorifics deferred | v1.1 |
-| **Advanced search (Elasticsearch)** | Default projection search (name, email, identifier, semantic) sufficient for MVP. Fuzzy/full-text via Elasticsearch deferred | v2 |
+| **Advanced search (Elasticsearch)** | Default projection search is display-name-only for MVP. Email, identifier, semantic, fuzzy, and full-text search require the dedicated search capability | v2 |
 | **Duplicate detection & merge** | Complex feature — MVP apps coordinate party creation manually | v2 |
 | **Party relationships** | Employment, hierarchies, legal representation deferred | v2 |
 | **Cross-tenant party sharing** | Multi-tenant isolation sufficient for MVP | v2 |

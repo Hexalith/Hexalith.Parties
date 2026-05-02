@@ -41,9 +41,9 @@ This document provides the complete epic and story breakdown for Hexalith.Partie
 **Party Discovery & Search (MVP unless noted) — 10 FRs**
 
 - FR14: Consumer can list parties with pagination and filtering by type (person/organization) and active status
-- FR15: Consumer can search parties by name, email, or identifier
+- FR15: Consumer can search parties by display name in MVP. Email and identifier search are deferred to the dedicated search capability.
 - FR16: *(Deferred to v1.1)* Consumer can perform semantic search across parties
-- FR17: Search results include match metadata (matched fields, match type) to support disambiguation by AI agents and humans
+- FR17: Search results include match metadata (matched field, match type) to support disambiguation by AI agents and humans. MVP emits `displayName`; future search can emit `email` and `identifier`.
 - FR18: Consumer can retrieve full party details by ID
 - FR19: Recently created or updated parties become discoverable in search results within the eventual consistency window defined by NFR6
 - FR56: System publishes auto-generated API specification documentation accessible to developers
@@ -52,7 +52,7 @@ This document provides the complete epic and story breakdown for Hexalith.Partie
 
 **AI Agent Identity Resolution (MVP) — 7 FRs**
 
-- FR20: AI agent can search and resolve parties by name, email, or identifier via a dedicated AI-optimized interface
+- FR20: AI agent can search and resolve parties by display name via a dedicated AI-optimized interface in MVP. Email and identifier resolution requires candidate detail retrieval or the future dedicated search capability.
 - FR21: AI agent can create a complete party (type details + contact channels + identifiers) in a single composite operation
 - FR22: AI agent can update party details, add/modify/remove contact channels and identifiers via a single operation
 - FR23: AI agent can retrieve full party details and list parties via dedicated AI-optimized tools
@@ -249,7 +249,7 @@ This document provides the complete epic and story breakdown for Hexalith.Partie
 | FR12 | Epic 2 | Add identifier |
 | FR13 | Epic 2 | Remove identifier |
 | FR14 | Epic 3 | Paginated list with filters |
-| FR15 | Epic 3 | Search by name/email/identifier |
+| FR15 | Epic 3 | Display-name search in MVP; email/identifier search deferred |
 | FR16 | Epic 9 | Semantic search (v1.1) |
 | FR17 | Epic 3 | Match metadata in search results |
 | FR18 | Epic 1 | Retrieve party details by ID |
@@ -323,7 +323,7 @@ A developer can enrich parties with structured contact channels (postal, email, 
 **FRs covered:** FR8, FR9, FR10, FR11, FR12, FR13
 
 ### Epic 3: Party Discovery & Search (Read Projections)
-Consumers can discover parties through paginated listing, search by name/email/identifier with match metadata, filter by type and date range — all reflecting updates within 2 seconds. Builds the entire read projection infrastructure: PartyDetailProjectionActor, PartyIndexProjectionActor, pure handler extraction (D18), partitioned index state (D5), batch event processing (D16). Query REST endpoints and OpenAPI specification.
+Consumers can discover parties through paginated listing, display-name search with match metadata, and filtering by type and date range — all reflecting updates within 2 seconds. Builds the entire read projection infrastructure: PartyDetailProjectionActor, PartyIndexProjectionActor, pure handler extraction (D18), partitioned index state (D5), batch event processing (D16). Query REST endpoints and OpenAPI specification. Email and identifier search are intentionally deferred because the v1.0 index projection does not store those searchable fields.
 **FRs covered:** FR14, FR15, FR17, FR19, FR56, FR68
 
 ### Epic 4: Composite Commands & Advanced Aggregate Logic
@@ -775,7 +775,7 @@ So that I can manage party contact information and identifiers from any programm
 
 ## Epic 3: Party Discovery & Search (Read Projections)
 
-Consumers can discover parties through paginated listing, search by name/email/identifier with match metadata, filter by type and date range — all reflecting updates within 2 seconds. Builds the entire read projection infrastructure: PartyDetailProjectionActor, PartyIndexProjectionActor, pure handler extraction (D18), partitioned index state (D5), batch event processing (D16). Query REST endpoints and OpenAPI specification.
+Consumers can discover parties through paginated listing, display-name search with match metadata, and filtering by type and date range — all reflecting updates within 2 seconds. Builds the entire read projection infrastructure: PartyDetailProjectionActor, PartyIndexProjectionActor, pure handler extraction (D18), partitioned index state (D5), batch event processing (D16). Query REST endpoints and OpenAPI specification. Email and identifier search are intentionally deferred because the v1.0 index projection does not store those searchable fields.
 
 ### Story 3.1: Party Detail Projection Handler & Actor
 
@@ -854,11 +854,13 @@ So that consumers can browse and filter parties efficiently without loading full
 
 **Given** a `ContactChannelAdded` event with an email address
 **When** the handler processes it
-**Then** the `PartyIndexEntry` is updated with searchable email data and LastModifiedAt (FR68)
+**Then** the `PartyIndexEntry` updates freshness metadata only, including LastModifiedAt (FR68)
+**And** no email value is stored in the v1.0 index projection
 
 **Given** an `IdentifierAdded` event
 **When** the handler processes it
-**Then** the `PartyIndexEntry` is updated with searchable identifier data and LastModifiedAt
+**Then** the `PartyIndexEntry` updates freshness metadata only, including LastModifiedAt
+**And** no identifier value is stored in the v1.0 index projection
 
 **Given** the `PartyIndexProjectionHandler` class
 **When** reviewed for architecture compliance
@@ -882,7 +884,7 @@ So that consumers can browse and filter parties efficiently without loading full
 ### Story 3.3: Search, Match Metadata & Query Endpoints
 
 As a consumer,
-I want to search parties by name, email, or identifier and receive match metadata in results,
+I want to search parties by display name and receive match metadata in results,
 So that I can find the right party quickly and AI agents can perform confident disambiguation.
 
 **Acceptance Criteria:**
@@ -896,16 +898,18 @@ So that I can find the right party quickly and AI agents can perform confident d
 
 **Given** a tenant with parties
 **When** a `GET /api/v1/parties/search?q=Dupont` request is made
-**Then** parties matching "Dupont" by name are returned (FR15)
-**And** each result includes match metadata: matched fields and match type (exact, prefix, contains) (FR17)
+**Then** parties matching "Dupont" by display name are returned (FR15)
+**And** each result includes match metadata: matched field `displayName` and match type (exact, prefix, contains) (FR17)
 
 **Given** a search query matching a party by email
-**When** results are returned
-**Then** match metadata indicates the email field was matched (FR17)
+**When** the v1.0 display-name search endpoint is used
+**Then** no result is returned unless the email text also appears in the display name
+**And** `email` match metadata is reserved for the future dedicated search capability
 
 **Given** a search query matching a party by identifier value
-**When** results are returned
-**Then** match metadata indicates the identifier field was matched (FR17)
+**When** the v1.0 display-name search endpoint is used
+**Then** no result is returned unless the identifier text also appears in the display name
+**And** `identifier` match metadata is reserved for the future dedicated search capability
 
 **Given** a `GET /api/v1/parties?createdAfter=2026-01-01&createdBefore=2026-06-01` request
 **When** the request is processed
@@ -938,7 +942,7 @@ So that read model correctness, search behavior, and eventual consistency are ve
 **When** all projection tests are implemented
 **Then** the following test classes exist:
 - `PartyDetailProjectionHandlerTests` — event sequence: PartyCreated → ContactChannelAdded → ContactChannelUpdated → IdentifierAdded → PartyDeactivated; verify state at each step
-- `PartyIndexProjectionHandlerTests` — entry creation, display name updates, email/identifier indexing, deactivation, date field updates
+- `PartyIndexProjectionHandlerTests` — entry creation, display name updates, contact/identifier event freshness updates, deactivation, date field updates
 **And** all handler tests are Tier 1 compliant — zero DAPR references
 
 **Given** a multi-event sequence (PartyCreated → ContactChannelAdded × 3 → IdentifierAdded × 2)
@@ -947,7 +951,7 @@ So that read model correctness, search behavior, and eventual consistency are ve
 
 **Given** a search scenario with 5 parties (3 persons, 2 organizations)
 **When** search tests execute queries
-**Then** match metadata correctly identifies which fields matched and match type
+**Then** match metadata correctly identifies the matched display-name field and match type
 **And** type filtering returns only the requested party type
 **And** active status filtering works correctly
 **And** date range filtering returns correct results
@@ -961,6 +965,21 @@ So that read model correctness, search behavior, and eventual consistency are ve
 **Then** query endpoint tests verify pagination, filtering, search, and match metadata through the REST API layer
 
 **And** all tests pass with `dotnet test`
+
+### Post-Epic 3 Corrective Backlog
+
+The Epic 3 retrospective found that implementation and architecture align on display-name-only v1.0 search, while older planning language implied email and identifier search. The corrected scope is:
+
+- v1.0 index projection stores lightweight party summaries and supports display-name search only.
+- Detail projection stores contact channels and identifiers, but these fields are not searchable in the v1.0 index.
+- `email` and `identifier` match metadata values are reserved for the future dedicated search capability.
+
+Carry-forward action items:
+
+- Add executable no-PII logging regression coverage for command and query paths. Success criteria: tests fail if `[PersonalData]` values from party details, contact channels, identifiers, or display names are written to application logs.
+- Add composite-to-projection regression coverage. Success criteria: composite command event sequences are replayed through `PartyDetailProjectionHandler` and `PartyIndexProjectionHandler`, producing the expected detail and index state without adding email or identifier search fields.
+- Use an actor runtime readiness checklist for future projection stories. Success criteria: story review explicitly covers actor interfaces, DI registration, option binding, actor ID validation, state keys, flush behavior, and query consistency.
+- Keep projection lifecycle work explicit in operational readiness. Success criteria: D14 projection rebuild and D15 degradation behavior remain represented by Story 8.3 scope and are not treated as implicit assumptions.
 
 ---
 
@@ -1212,12 +1231,13 @@ So that I can perform identity resolution and access structured party informatio
 **Given** an AI agent calling `find_parties` with query "Dupont"
 **When** the tool executes
 **Then** matching `PartyIndexEntry[]` results are returned (FR20)
-**And** each result includes match metadata: matched fields and match type (FR17)
-**And** results are sufficient for the AI agent to rank candidates and make confident autonomous matches
+**And** each result includes display-name match metadata: matched field and match type (FR17)
+**And** results are sufficient for the AI agent to rank simple name-based candidates
 
 **Given** an AI agent calling `find_parties` with query "Dupont Acme"
 **When** the tool executes
-**Then** results include parties matching on name and/or organization, with match metadata indicating which fields matched
+**Then** results include parties whose display names match the query terms, with match metadata indicating the display-name match
+**And** email, identifier, or organization-based resolution requires retrieving candidate party details or the future dedicated search capability
 
 **Given** an AI agent calling `find_parties` with no query (list mode)
 **When** the tool executes
@@ -1964,7 +1984,8 @@ So that I can manage party data without using API tools or CLI commands.
 **Given** an authenticated administrator
 **When** they access the admin portal
 **Then** they can browse a paginated list of parties (FR65)
-**And** they can search parties by name, email, or identifier
+**And** they can search parties by display name in the baseline experience
+**And** email or identifier search is available only when the dedicated search capability is enabled
 **And** they can filter by party type (person/organization) and active status
 
 **Given** a party in the list

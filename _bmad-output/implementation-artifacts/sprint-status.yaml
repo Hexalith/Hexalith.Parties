@@ -1,4 +1,5 @@
-# generated: 2026-03-03
+# generated: 2026-05-01
+# last_updated: 2026-05-02
 # project: Hexalith.Parties
 # project_key: NOKEY
 # tracking_system: file-system
@@ -33,7 +34,8 @@
 # - SM typically creates next story after previous one is 'done' to incorporate learnings
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
-generated: 2026-03-03
+generated: 2026-05-01
+last_updated: 2026-05-02
 project: Hexalith.Parties
 project_key: NOKEY
 tracking_system: file-system
@@ -49,7 +51,7 @@ development_status:
   1-5-party-aggregate-tier-1-unit-tests: done
   1-6-rest-api-error-handling-and-party-retrieval: done
   1-7-apphost-local-development-and-gdpr-warning: done
-  epic-1-retrospective: optional
+  epic-1-retrospective: done
 
   # Epic 2: Contact Channels & Identifiers (4 stories)
   epic-2: in-progress
@@ -57,7 +59,7 @@ development_status:
   2-2-party-aggregate-identifier-management: done
   2-3-contact-channel-and-identifier-unit-tests: done
   2-4-rest-api-contact-channel-and-identifier-endpoints: done
-  epic-2-retrospective: optional
+  epic-2-retrospective: done
 
   # Epic 3: Party Discovery & Search - Read Projections (4 stories)
   epic-3: in-progress
@@ -65,7 +67,7 @@ development_status:
   3-2-party-index-projection-handler-and-actor: done
   3-3-search-match-metadata-and-query-endpoints: done
   3-4-projection-unit-and-integration-tests: done
-  epic-3-retrospective: optional
+  epic-3-retrospective: done
 
   # Epic 4: Composite Commands & Advanced Aggregate Logic (4 stories)
   epic-4: in-progress
@@ -73,7 +75,7 @@ development_status:
   4-2-update-party-composite-aggregate-handler: done
   4-3-composite-command-unit-tests: done
   4-4-composite-command-rest-and-validation: done
-  epic-4-retrospective: optional
+  epic-4-retrospective: done
 
   # Epic 5: AI Agent Party Management - MCP Server (4 stories)
   epic-5: in-progress
@@ -81,28 +83,28 @@ development_status:
   5-2-create-party-mcp-tool: done
   5-3-update-party-and-delete-party-mcp-tools: done
   5-4-mcp-tools-tests-and-architectural-fitness: done
-  epic-5-retrospective: optional
+  epic-5-retrospective: done
 
   # Epic 6: Developer Integration & Documentation (3 stories)
   epic-6: in-progress
   6-1-client-package-command-and-query-abstractions: done
   6-2-getting-started-guide-and-readme: done
   6-3-sample-integration-project: done
-  epic-6-retrospective: optional
+  epic-6-retrospective: done
 
   # Epic 7: Event-Driven Integration & Subscriber Experience (3 stories)
   epic-7: in-progress
   7-1-event-publishing-verification-and-configuration: done
   7-2-subscriber-experience-and-at-least-once-delivery: done
   7-3-handler-patterns-documentation-and-dangling-reference-guidance: done
-  epic-7-retrospective: optional
+  epic-7-retrospective: done
 
   # Epic 8: Operational Readiness & Production Hardening (3 stories)
   epic-8: in-progress
   8-1-deployment-validation-tooling: done
   8-2-health-readiness-and-graceful-degradation: done
   8-3-projection-health-monitoring-and-rebuild: done
-  epic-8-retrospective: optional
+  epic-8-retrospective: done
 
   # Epic 9: GDPR Compliance - v1.1 (5 stories)
   epic-9: in-progress
