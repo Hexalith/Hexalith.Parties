@@ -149,6 +149,68 @@ public sealed partial class PartyPayloadProtectionService(
         }
     }
 
+    /// <summary>
+    /// Returns a redacted payload where every encrypted marker (<c>{"$enc":true,...}</c>) is
+    /// replaced with JSON <c>null</c>. Used as a fail-safe for state rehydration after a party's
+    /// encryption key has been destroyed: subsequent commands (e.g. <c>MarkErasureVerified</c>,
+    /// <c>CompletePartyErasure</c>) only inspect lifecycle/erasure flags from non-encrypted events,
+    /// so redacting personal-data fields is sufficient to allow Apply-replay to continue.
+    /// </summary>
+    public static PayloadProtectionResult RedactProtectedPayload(byte[] payloadBytes, string serializationFormat)
+    {
+        ArgumentNullException.ThrowIfNull(payloadBytes);
+        ArgumentException.ThrowIfNullOrWhiteSpace(serializationFormat);
+
+        if (!string.Equals(serializationFormat, ProtectedSerializationFormat, StringComparison.Ordinal))
+        {
+            return new PayloadProtectionResult(payloadBytes, serializationFormat);
+        }
+
+        JsonNode? root = JsonNode.Parse(payloadBytes);
+        if (root is null)
+        {
+            return new PayloadProtectionResult(payloadBytes, serializationFormat);
+        }
+
+        JsonNode? redacted = RedactEncryptedMarkers(root);
+        byte[] redactedBytes = JsonSerializer.SerializeToUtf8Bytes(redacted, s_jsonOptions);
+        return new PayloadProtectionResult(redactedBytes, "json");
+    }
+
+    private static JsonNode? RedactEncryptedMarkers(JsonNode node)
+    {
+        switch (node)
+        {
+            case JsonObject obj when IsEncryptedMarker(obj):
+                return null;
+
+            case JsonObject obj:
+                foreach (KeyValuePair<string, JsonNode?> property in obj.ToList())
+                {
+                    if (property.Value is not null)
+                    {
+                        obj[property.Key] = RedactEncryptedMarkers(property.Value);
+                    }
+                }
+
+                return obj;
+
+            case JsonArray array:
+                for (int i = 0; i < array.Count; i++)
+                {
+                    if (array[i] is not null)
+                    {
+                        array[i] = RedactEncryptedMarkers(array[i]!);
+                    }
+                }
+
+                return array;
+
+            default:
+                return node;
+        }
+    }
+
     public async Task<object> ProtectSnapshotStateAsync(
         AggregateIdentity identity,
         object state,

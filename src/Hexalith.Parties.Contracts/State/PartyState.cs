@@ -44,6 +44,54 @@ public sealed class PartyState
 
     public string? RestrictionReason { get; private set; }
 
+    // Rejection events (IRejectionEvent) are persisted to the stream as normal events (EventStore D3)
+    // and replayed during state rehydration. They never mutate state, but the rehydrator requires an
+    // Apply overload per concrete event type — otherwise it throws MissingApplyMethodException.
+    //
+    // ORDERING NOTE: these no-op Applies are declared BEFORE the success Applies on purpose. The
+    // rehydrator resolves event types by short-name suffix match, iterating method discovery order.
+    // For example, event "PartyProcessingRestricted" would otherwise be incorrectly matched to
+    // Apply(ProcessingRestricted) because "PartyProcessingRestricted".EndsWith("ProcessingRestricted")
+    // is true. Declaring the rejection Applies first ensures their keys appear earlier in the
+    // discovery dictionary so the suffix match finds them first.
+#pragma warning disable CA1822 // Member does not access instance data — required as instance method for EventStore Apply convention
+    public void Apply(PartyNotFound e) => ArgumentNullException.ThrowIfNull(e);
+
+    public void Apply(PartyTypeMismatch e) => ArgumentNullException.ThrowIfNull(e);
+
+    public void Apply(PartyCannotBeCreatedWithInvalidId e) => ArgumentNullException.ThrowIfNull(e);
+
+    public void Apply(PartyCannotBeCreatedWithoutType e) => ArgumentNullException.ThrowIfNull(e);
+
+    public void Apply(PartyCannotBeCreatedWithoutPersonDetails e) => ArgumentNullException.ThrowIfNull(e);
+
+    public void Apply(PartyCannotBeCreatedWithoutOrganizationDetails e) => ArgumentNullException.ThrowIfNull(e);
+
+    public void Apply(PartyCannotBeDeactivatedWhenInactive e) => ArgumentNullException.ThrowIfNull(e);
+
+    public void Apply(PartyCannotBeReactivatedWhenActive e) => ArgumentNullException.ThrowIfNull(e);
+
+    public void Apply(PartyErasureInProgress e) => ArgumentNullException.ThrowIfNull(e);
+
+    public void Apply(PartyProcessingRestricted e) => ArgumentNullException.ThrowIfNull(e);
+
+    public void Apply(PartyNotRestricted e) => ArgumentNullException.ThrowIfNull(e);
+
+    public void Apply(ContactChannelNotFound e) => ArgumentNullException.ThrowIfNull(e);
+
+    public void Apply(IdentifierNotFound e) => ArgumentNullException.ThrowIfNull(e);
+
+    public void Apply(ConsentNotFound e) => ArgumentNullException.ThrowIfNull(e);
+
+    public void Apply(InvalidConsentPurpose e) => ArgumentNullException.ThrowIfNull(e);
+
+    public void Apply(PartyCannotAddDuplicateChannel e) => ArgumentNullException.ThrowIfNull(e);
+
+    public void Apply(PartyCannotAddDuplicateIdentifier e) => ArgumentNullException.ThrowIfNull(e);
+
+    public void Apply(CompositeOperationConflict e) => ArgumentNullException.ThrowIfNull(e);
+#pragma warning restore CA1822
+
     public void Apply(PartyCreated e)
     {
         ArgumentNullException.ThrowIfNull(e);

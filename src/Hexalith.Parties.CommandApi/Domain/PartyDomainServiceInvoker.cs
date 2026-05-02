@@ -3,12 +3,16 @@ using Hexalith.EventStore.Contracts.Events;
 using Hexalith.EventStore.Contracts.Results;
 using Hexalith.EventStore.Contracts.Security;
 using Hexalith.EventStore.Server.DomainServices;
+using Hexalith.Parties.Security;
 using Hexalith.Parties.Server.Aggregates;
+
+using Microsoft.Extensions.Logging;
 
 namespace Hexalith.Parties.CommandApi.Domain;
 
-internal sealed class PartyDomainServiceInvoker(
-    IEventPayloadProtectionService payloadProtectionService) : IDomainServiceInvoker
+internal sealed partial class PartyDomainServiceInvoker(
+    IEventPayloadProtectionService payloadProtectionService,
+    ILogger<PartyDomainServiceInvoker> logger) : IDomainServiceInvoker
 {
     private const string PartyDomain = "party";
 
@@ -45,21 +49,12 @@ internal sealed class PartyDomainServiceInvoker(
 
         object? snapshotState = state.SnapshotState is null
             ? null
-            : await payloadProtectionService
-                .UnprotectSnapshotStateAsync(command.AggregateIdentity, state.SnapshotState, cancellationToken)
-                .ConfigureAwait(false);
+            : await UnprotectSnapshotOrRedactAsync(command, state.SnapshotState, cancellationToken).ConfigureAwait(false);
 
         var events = new List<EventEnvelope>(state.Events.Count);
         foreach (EventEnvelope envelope in state.Events)
         {
-            PayloadProtectionResult result = await payloadProtectionService
-                .UnprotectEventPayloadAsync(
-                    command.AggregateIdentity,
-                    envelope.Metadata.EventTypeName,
-                    envelope.Payload,
-                    envelope.Metadata.SerializationFormat,
-                    cancellationToken)
-                .ConfigureAwait(false);
+            PayloadProtectionResult result = await UnprotectEnvelopeOrRedactAsync(command, envelope, cancellationToken).ConfigureAwait(false);
 
             events.Add(result.PayloadBytes == envelope.Payload
                     && string.Equals(result.SerializationFormat, envelope.Metadata.SerializationFormat, StringComparison.Ordinal)
@@ -72,4 +67,67 @@ internal sealed class PartyDomainServiceInvoker(
 
         return state with { SnapshotState = snapshotState, Events = events };
     }
+
+    /// <summary>
+    /// Unprotect an event payload, or fall back to redaction (encrypted markers replaced with
+    /// JSON null) when decryption fails. After a party's encryption key has been destroyed
+    /// (post-erasure), the lifecycle commands <c>MarkPartyEncryptionKeyDeleted</c>,
+    /// <c>MarkErasureVerified</c>, and <c>CompletePartyErasure</c> only need erasure-status flags
+    /// from non-encrypted events; redacting earlier encrypted events keeps Apply-replay working.
+    /// </summary>
+    private async Task<PayloadProtectionResult> UnprotectEnvelopeOrRedactAsync(
+        CommandEnvelope command,
+        EventEnvelope envelope,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            return await payloadProtectionService
+                .UnprotectEventPayloadAsync(
+                    command.AggregateIdentity,
+                    envelope.Metadata.EventTypeName,
+                    envelope.Payload,
+                    envelope.Metadata.SerializationFormat,
+                    cancellationToken)
+                .ConfigureAwait(false);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            LogRehydrationFallbackToRedaction(
+                command.AggregateIdentity.TenantId,
+                command.AggregateIdentity.AggregateId,
+                envelope.Metadata.EventTypeName,
+                ex.GetType().Name,
+                ex.Message);
+            return PartyPayloadProtectionService.RedactProtectedPayload(envelope.Payload, envelope.Metadata.SerializationFormat);
+        }
+    }
+
+    private async Task<object?> UnprotectSnapshotOrRedactAsync(
+        CommandEnvelope command,
+        object snapshotState,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            return await payloadProtectionService
+                .UnprotectSnapshotStateAsync(command.AggregateIdentity, snapshotState, cancellationToken)
+                .ConfigureAwait(false);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            LogSnapshotRehydrationFallbackToRedaction(
+                command.AggregateIdentity.TenantId,
+                command.AggregateIdentity.AggregateId,
+                ex.GetType().Name,
+                ex.Message);
+            return null;
+        }
+    }
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Falling back to redacted event payload during rehydration for {TenantId}/{PartyId} event {EventTypeName}: {ExceptionType}: {Error}")]
+    private partial void LogRehydrationFallbackToRedaction(string tenantId, string partyId, string eventTypeName, string exceptionType, string error);
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Falling back to null snapshot during rehydration for {TenantId}/{PartyId}: {ExceptionType}: {Error}")]
+    private partial void LogSnapshotRehydrationFallbackToRedaction(string tenantId, string partyId, string exceptionType, string error);
 }
