@@ -5,6 +5,7 @@ using System.Text.Json;
 using Dapr.Actors.Runtime;
 
 using Hexalith.EventStore.Contracts.Events;
+using Hexalith.Parties.Contracts.Events;
 using Hexalith.Parties.Contracts.Models;
 using Hexalith.Parties.Projections.Abstractions;
 using Hexalith.Parties.Projections.Handlers;
@@ -18,6 +19,7 @@ public sealed partial class PartyDetailProjectionActor : Actor, IPartyDetailProj
 {
     private const string ProjectionName = "party-detail";
     private const string RebuildReminderName = "auto-rebuild";
+    private static readonly JsonSerializerOptions s_jsonOptions = new(JsonSerializerDefaults.Web);
     private static readonly ConcurrentDictionary<string, PartyDetail> s_lastKnownDetails = new(StringComparer.Ordinal);
     private readonly ILogger<PartyDetailProjectionActor> _logger;
     private readonly IProjectionRebuildService _rebuildService;
@@ -46,6 +48,34 @@ public sealed partial class PartyDetailProjectionActor : Actor, IPartyDetailProj
             await StateManager.SetStateAsync(stateKey, newState, default).ConfigureAwait(false);
             _cachedDetail = newState;
             s_lastKnownDetails[stateKey] = newState;
+        }
+    }
+
+    public async Task HandleSerializedEventAsync(
+        string partyId,
+        string eventTypeName,
+        byte[] payload,
+        string serializationFormat)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(partyId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(eventTypeName);
+        ArgumentNullException.ThrowIfNull(payload);
+
+        if (!string.Equals(serializationFormat, "json", StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
+        Type? eventType = ResolveEventType(eventTypeName);
+        if (eventType is null)
+        {
+            return;
+        }
+
+        object? deserialized = JsonSerializer.Deserialize(payload, eventType, s_jsonOptions);
+        if (deserialized is IEventPayload eventPayload)
+        {
+            await HandleEventAsync(partyId, eventPayload).ConfigureAwait(false);
         }
     }
 
@@ -108,6 +138,22 @@ public sealed partial class PartyDetailProjectionActor : Actor, IPartyDetailProj
         {
             return _cachedDetail ?? s_lastKnownDetails.GetValueOrDefault(stateKey);
         }
+    }
+
+    public async Task<byte[]?> GetSerializedDetailAsync()
+    {
+        PartyDetail? detail = await GetDetailAsync().ConfigureAwait(false);
+        return detail is null
+            ? null
+            : JsonSerializer.SerializeToUtf8Bytes(detail, s_jsonOptions);
+    }
+
+    public async Task<string?> GetDetailJsonAsync()
+    {
+        PartyDetail? detail = await GetDetailAsync().ConfigureAwait(false);
+        return detail is null
+            ? null
+            : JsonSerializer.Serialize(detail, s_jsonOptions);
     }
 
     public async Task ReceiveReminderAsync(string reminderName, byte[] state, TimeSpan dueTime, TimeSpan period)
@@ -232,6 +278,25 @@ public sealed partial class PartyDetailProjectionActor : Actor, IPartyDetailProj
         }
 
         return (actorPartyId, $"{tenant}:{ProjectionName}:{actorPartyId}");
+    }
+
+    private static Type? ResolveEventType(string eventTypeName)
+    {
+        Type? type = Type.GetType(eventTypeName)
+            ?? typeof(PartyCreated).Assembly.GetType(eventTypeName);
+        if (type is not null)
+        {
+            return type;
+        }
+
+        string shortName = eventTypeName.Contains('.', StringComparison.Ordinal)
+            ? eventTypeName[(eventTypeName.LastIndexOf('.') + 1)..]
+            : eventTypeName;
+
+        return typeof(PartyCreated).Assembly
+            .GetTypes()
+            .FirstOrDefault(t => string.Equals(t.Name, shortName, StringComparison.Ordinal)
+                && typeof(IEventPayload).IsAssignableFrom(t));
     }
 
     private static partial class Log

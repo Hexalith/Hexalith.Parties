@@ -27,6 +27,18 @@ IResourceBuilder<ProjectResource> commandApi = builder.AddProject<Projects.Hexal
 // Wire Parties topology (delegates to EventStore + Parties Aspire extensions)
 HexalithPartiesResources partiesResources = builder.AddHexalithParties(commandApi, accessControlConfigPath);
 
+if (string.Equals(builder.Configuration["EnableMemoriesSearch"], "true", StringComparison.OrdinalIgnoreCase))
+{
+    string memoriesEndpoint = builder.Configuration["MemoriesEndpoint"] ?? "http://localhost:5010";
+
+    _ = commandApi
+        .WithEnvironment("Parties__MemoriesSearch__Enabled", "true")
+        .WithEnvironment("Parties__MemoriesSearch__Endpoint", memoriesEndpoint)
+        .WithEnvironment("Parties__MemoriesSearch__RequireApiToken", "false")
+        .WithEnvironment("Parties__MemoriesSearch__TenantId", "hexalith-dev")
+        .WithEnvironment("Parties__MemoriesSearch__CaseId", "parties");
+}
+
 // Optional Keycloak OIDC integration (follow EventStore pattern).
 // Set EnableKeycloak=false in environment or appsettings to run without Keycloak
 // (falls back to symmetric key auth via Authentication:JwtBearer:SigningKey).

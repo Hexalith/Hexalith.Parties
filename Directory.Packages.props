@@ -9,29 +9,29 @@
   </ItemGroup>
 
   <ItemGroup Label="Dapr">
-    <PackageVersion Include="Dapr.Client" Version="1.16.1" />
+    <PackageVersion Include="Dapr.Client" Version="1.17.7" />
     <PackageVersion Include="Dapr.AspNetCore" Version="1.16.1" />
     <PackageVersion Include="Dapr.Actors" Version="1.16.1" />
     <PackageVersion Include="Dapr.Actors.AspNetCore" Version="1.16.1" />
   </ItemGroup>
 
   <ItemGroup Label="Aspire">
-    <PackageVersion Include="Aspire.Hosting" Version="13.1.2" />
-    <PackageVersion Include="Aspire.Hosting.Azure.AppContainers" Version="13.1.2" />
-    <PackageVersion Include="Aspire.Hosting.Docker" Version="13.1.2-preview.1.26125.13" />
-    <PackageVersion Include="Aspire.Hosting.Keycloak" Version="13.1.2-preview.1.26125.13" />
-    <PackageVersion Include="Aspire.Hosting.Kubernetes" Version="13.1.2-preview.1.26125.13" />
-    <PackageVersion Include="Aspire.Hosting.Redis" Version="13.1.1" />
-    <PackageVersion Include="Aspire.Hosting.Testing" Version="13.1.1" />
+    <PackageVersion Include="Aspire.Hosting" Version="13.2.2" />
+    <PackageVersion Include="Aspire.Hosting.Azure.AppContainers" Version="13.2.2" />
+    <PackageVersion Include="Aspire.Hosting.Docker" Version="13.2.2" />
+    <PackageVersion Include="Aspire.Hosting.Keycloak" Version="13.2.2-preview.1.26207.2" />
+    <PackageVersion Include="Aspire.Hosting.Kubernetes" Version="13.2.2-preview.1.26207.2" />
+    <PackageVersion Include="Aspire.Hosting.Redis" Version="13.2.2" />
+    <PackageVersion Include="Aspire.Hosting.Testing" Version="13.2.1" />
     <PackageVersion Include="CommunityToolkit.Aspire.Hosting.Dapr" Version="13.0.0" />
   </ItemGroup>
 
   <ItemGroup Label="Aspire ServiceDefaults">
     <PackageVersion Include="Microsoft.Extensions.Http.Resilience" Version="10.3.0" />
     <PackageVersion Include="Microsoft.Extensions.ServiceDiscovery" Version="10.3.0" />
-    <PackageVersion Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.15.0" />
-    <PackageVersion Include="OpenTelemetry.Extensions.Hosting" Version="1.15.0" />
-    <PackageVersion Include="OpenTelemetry.Instrumentation.AspNetCore" Version="1.15.0" />
+    <PackageVersion Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.15.3" />
+    <PackageVersion Include="OpenTelemetry.Extensions.Hosting" Version="1.15.3" />
+    <PackageVersion Include="OpenTelemetry.Instrumentation.AspNetCore" Version="1.15.1" />
     <PackageVersion Include="OpenTelemetry.Instrumentation.Http" Version="1.15.0" />
     <PackageVersion Include="OpenTelemetry.Instrumentation.Runtime" Version="1.15.0" />
   </ItemGroup>
@@ -45,7 +45,7 @@
   </ItemGroup>
 
   <ItemGroup Label="Application">
-    <PackageVersion Include="MediatR" Version="14.0.0" />
+    <PackageVersion Include="MediatR" Version="14.1.0" />
     <PackageVersion Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.0" />
     <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="10.0.3" />
     <PackageVersion Include="Swashbuckle.AspNetCore.SwaggerUI" Version="10.1.2" />
@@ -56,6 +56,10 @@
   <ItemGroup Label="MCP">
     <PackageVersion Include="ModelContextProtocol" Version="1.0.0" />
     <PackageVersion Include="ModelContextProtocol.AspNetCore" Version="1.0.0" />
+  </ItemGroup>
+
+  <ItemGroup Label="Hexalith">
+    <PackageVersion Include="Hexalith.Memories.Client.Rest" Version="1.2.0" />
   </ItemGroup>
 
   <ItemGroup Label="Testing">

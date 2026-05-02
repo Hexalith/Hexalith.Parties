@@ -16,7 +16,7 @@ using Hexalith.Parties.Contracts.Models;
 using Hexalith.Parties.Contracts.ValueObjects;
 using Hexalith.Parties.Projections.Abstractions;
 using Hexalith.Parties.Projections.Actors;
-using Hexalith.Parties.Contracts.Security;
+using Hexalith.Parties.CommandApi.Search;
 
 using ModelContextProtocol.Server;
 
@@ -202,22 +202,15 @@ public static class UpdatePartyMcpTool
             throw new InvalidOperationException($"Validation failed: {errors}");
         }
 
-        IPersonalDataCommandGuard? commandGuard = services.GetService<IPersonalDataCommandGuard>();
-        if (commandGuard is not null)
-        {
-            string? blockingReason = await commandGuard
-                .GetBlockingReasonAsync(tenant, partyId, command, cancellationToken)
-                .ConfigureAwait(false);
-            if (!string.IsNullOrWhiteSpace(blockingReason))
-            {
-                throw new InvalidOperationException(blockingReason);
-            }
-        }
+        await PersonalDataCommandGuardAccessor
+            .EnsureWriteAllowedAsync(services, tenant, partyId, command, cancellationToken)
+            .ConfigureAwait(false);
 
         // Dispatch command via ICommandRouter
         ICommandRouter commandRouter = services.GetRequiredService<ICommandRouter>();
 
         var submitCommand = new SubmitCommand(
+            MessageId: Guid.NewGuid().ToString(),
             Tenant: tenant,
             Domain: "party",
             AggregateId: partyId,

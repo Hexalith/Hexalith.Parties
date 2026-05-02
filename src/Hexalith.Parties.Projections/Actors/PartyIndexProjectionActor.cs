@@ -5,6 +5,7 @@ using System.Text.Json;
 using Dapr.Actors.Runtime;
 
 using Hexalith.EventStore.Contracts.Events;
+using Hexalith.Parties.Contracts.Events;
 using Hexalith.Parties.Contracts.Models;
 using Hexalith.Parties.Projections.Abstractions;
 using Hexalith.Parties.Projections.Configuration;
@@ -22,6 +23,7 @@ public sealed partial class PartyIndexProjectionActor : Actor, IPartyIndexProjec
     private const string FlushReminderName = "flush-batch";
     private const string RebuildReminderName = "auto-rebuild";
     private const string ManifestStateKeySuffix = "manifest";
+    private static readonly JsonSerializerOptions s_jsonOptions = new(JsonSerializerDefaults.Web);
     private static readonly ConcurrentDictionary<string, IReadOnlyDictionary<string, PartyIndexEntry>> s_lastKnownEntries = new(StringComparer.Ordinal);
     private readonly IIndexPartitionStrategy _partitionStrategy;
     private readonly ProjectionOptions _options;
@@ -75,6 +77,34 @@ public sealed partial class PartyIndexProjectionActor : Actor, IPartyIndexProjec
                     TimeSpan.FromMilliseconds(_options.BatchTimeWindowMs),
                     TimeSpan.FromMilliseconds(-1)).ConfigureAwait(false);
             }
+        }
+    }
+
+    public async Task HandleSerializedEventAsync(
+        string partyId,
+        string eventTypeName,
+        byte[] payload,
+        string serializationFormat)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(partyId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(eventTypeName);
+        ArgumentNullException.ThrowIfNull(payload);
+
+        if (!string.Equals(serializationFormat, "json", StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
+        Type? eventType = ResolveEventType(eventTypeName);
+        if (eventType is null)
+        {
+            return;
+        }
+
+        object? deserialized = JsonSerializer.Deserialize(payload, eventType, s_jsonOptions);
+        if (deserialized is IEventPayload eventPayload)
+        {
+            await HandleEventAsync(partyId, eventPayload).ConfigureAwait(false);
         }
     }
 
@@ -165,6 +195,12 @@ public sealed partial class PartyIndexProjectionActor : Actor, IPartyIndexProjec
         }
 
         return _entries ?? new Dictionary<string, PartyIndexEntry>();
+    }
+
+    public async Task<string?> GetEntriesJsonAsync()
+    {
+        IReadOnlyDictionary<string, PartyIndexEntry> entries = await GetEntriesAsync().ConfigureAwait(false);
+        return JsonSerializer.Serialize(entries, s_jsonOptions);
     }
 
     public async Task ReceiveReminderAsync(string reminderName, byte[] state, TimeSpan dueTime, TimeSpan period)
@@ -304,6 +340,25 @@ public sealed partial class PartyIndexProjectionActor : Actor, IPartyIndexProjec
         }
 
         return _activeStateKey;
+    }
+
+    private static Type? ResolveEventType(string eventTypeName)
+    {
+        Type? type = Type.GetType(eventTypeName)
+            ?? typeof(PartyCreated).Assembly.GetType(eventTypeName);
+        if (type is not null)
+        {
+            return type;
+        }
+
+        string shortName = eventTypeName.Contains('.', StringComparison.Ordinal)
+            ? eventTypeName[(eventTypeName.LastIndexOf('.') + 1)..]
+            : eventTypeName;
+
+        return typeof(PartyCreated).Assembly
+            .GetTypes()
+            .FirstOrDefault(t => string.Equals(t.Name, shortName, StringComparison.Ordinal)
+                && typeof(IEventPayload).IsAssignableFrom(t));
     }
 
     private async Task<Dictionary<string, PartyIndexEntry>> LoadStateAsync(string stateKey)

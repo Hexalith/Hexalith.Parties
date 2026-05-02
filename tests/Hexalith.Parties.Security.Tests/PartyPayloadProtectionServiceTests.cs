@@ -649,6 +649,8 @@ public sealed class PartyPayloadProtectionServiceTests
             [typeof(IdentifierAdded)] = true,
 
             // Domain events without personal data
+            [typeof(ConsentRecorded)] = false,
+            [typeof(ConsentRevoked)] = false,
             [typeof(OrganizationDetailsUpdated)] = false, // IsNaturalPerson=false default → no personal data
             [typeof(PartyDeactivated)] = false,
             [typeof(PartyReactivated)] = false,
@@ -663,12 +665,16 @@ public sealed class PartyPayloadProtectionServiceTests
             [typeof(PartyEncryptionKeyRotated)] = false,
             [typeof(ErasePartyRequested)] = false,
             [typeof(PartyErased)] = false,
+            [typeof(ProcessingRestricted)] = false,
+            [typeof(RestrictionLifted)] = false,
             [typeof(ErasureVerified)] = false,
 
             // Rejection events (all without personal data)
             [typeof(CompositeOperationConflict)] = false,
+            [typeof(ConsentNotFound)] = false,
             [typeof(ContactChannelNotFound)] = false,
             [typeof(IdentifierNotFound)] = false,
+            [typeof(InvalidConsentPurpose)] = false,
             [typeof(PartyCannotAddDuplicateIdentifier)] = false,
             [typeof(PartyCannotBeCreatedWithoutOrganizationDetails)] = false,
             [typeof(PartyCannotAddDuplicateChannel)] = false,
@@ -679,6 +685,8 @@ public sealed class PartyPayloadProtectionServiceTests
             [typeof(PartyCannotBeCreatedWithoutPersonDetails)] = false,
             [typeof(PartyNotFound)] = false,
             [typeof(PartyErasureInProgress)] = false,
+            [typeof(PartyNotRestricted)] = false,
+            [typeof(PartyProcessingRestricted)] = false,
             [typeof(PartyTypeMismatch)] = false,
         };
 

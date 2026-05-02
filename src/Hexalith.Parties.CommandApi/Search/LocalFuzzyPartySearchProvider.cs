@@ -8,10 +8,10 @@ using Hexalith.Parties.Contracts.ValueObjects;
 namespace Hexalith.Parties.CommandApi.Search;
 
 /// <summary>
-/// Enhanced search provider with fuzzy matching, diacritic normalization,
+/// Local fallback search provider with fuzzy matching, diacritic normalization,
 /// type-text mapping, and multi-field relevance scoring.
 /// </summary>
-internal sealed class SemanticPartySearchProvider : IPartySearchProvider
+internal sealed class LocalFuzzyPartySearchProvider : IPartySearchProvider
 {
     private static readonly Dictionary<string, PartyType> s_typeAliases = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -376,6 +376,13 @@ internal sealed class SemanticPartySearchProvider : IPartySearchProvider
             score = 0.6;
             matchType = "contains";
             return true;
+        }
+
+        // Identifier-like tokens with digits create excessive false positives under Jaro-Winkler
+        // (for example Entry-50000 vs Entry-10000). Keep them to deterministic matching.
+        if (token.Any(char.IsDigit))
+        {
+            return false;
         }
 
         // Fuzzy match (Jaro-Winkler) — only when exact/prefix/contains fail

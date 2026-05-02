@@ -1,6 +1,8 @@
 using Aspire.Hosting;
 using Aspire.Hosting.ApplicationModel;
 
+using CommunityToolkit.Aspire.Hosting.Dapr;
+
 using Hexalith.EventStore.Aspire;
 
 namespace Hexalith.Parties.Aspire;
@@ -32,8 +34,28 @@ public static class HexalithPartiesExtensions
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentNullException.ThrowIfNull(commandApi);
 
-        // Wire EventStore topology (creates statestore, pubsub, sidecar)
-        HexalithEventStoreResources eventStoreResources = builder.AddHexalithEventStore(commandApi, daprConfigPath);
+        IResourceBuilder<IDaprComponentResource> stateStore = builder
+            .AddDaprComponent("statestore", "state.redis")
+            .WithMetadata("actorStateStore", "true")
+            .WithMetadata("redisHost", "localhost:6379")
+            .WithMetadata("keyPrefix", "none");
+        IResourceBuilder<IDaprComponentResource> pubSub = builder.AddDaprPubSub("pubsub");
+
+        _ = commandApi
+            .WithDaprSidecar(sidecar => sidecar
+                .WithOptions(new DaprSidecarOptions
+                {
+                    AppId = "commandapi",
+                    Config = daprConfigPath,
+                })
+                .WithReference(stateStore)
+                .WithReference(pubSub));
+
+        HexalithEventStoreResources eventStoreResources = new(
+            stateStore,
+            pubSub,
+            commandApi,
+            commandApi);
 
         // Return Parties resources wrapping EventStore resources
         return new HexalithPartiesResources(eventStoreResources, commandApi);

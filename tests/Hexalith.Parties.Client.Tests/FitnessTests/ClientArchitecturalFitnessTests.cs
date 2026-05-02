@@ -244,16 +244,24 @@ public sealed class ClientArchitecturalFitnessTests
                 .OrderBy(name => name, StringComparer.OrdinalIgnoreCase),
         ];
 
-        transitivePackageNames.Count.ShouldBe(11,
+        transitivePackageNames.Count.ShouldBe(13,
             $"Expected the accepted Microsoft.Extensions transitive package set to remain stable. Found: {string.Join(", ", transitivePackageNames)}");
+
+        HashSet<string> allowedContractInfrastructurePackages =
+        [
+            "ByteAether.Ulid",
+            "Hexalith.Commons.UniqueIds",
+        ];
 
         List<string> violations =
         [
-            .. transitivePackageNames.Where(name => !name.StartsWith("Microsoft.Extensions.", StringComparison.OrdinalIgnoreCase)),
+            .. transitivePackageNames.Where(name =>
+                !name.StartsWith("Microsoft.Extensions.", StringComparison.OrdinalIgnoreCase)
+                && !allowedContractInfrastructurePackages.Contains(name)),
         ];
 
         violations.ShouldBeEmpty(
-            $"Client transitive packages must remain limited to Microsoft.Extensions shared framework packages. " +
+            $"Client transitive packages must remain limited to Microsoft.Extensions shared framework packages and EventStore contract identity infrastructure. " +
             $"Found unexpected: {string.Join(", ", violations)}");
     }
 }

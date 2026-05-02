@@ -12,7 +12,7 @@ public sealed class PartyDetailProjectionHandler
     {
         return @event switch
         {
-            PartyCreated e => HandlePartyCreated(partyId, e),
+            PartyCreated e => state is null ? HandlePartyCreated(partyId, e) : state,
             PartyDisplayNameDerived e when state is not null => HandleNameDerived(state, e),
             PersonDetailsUpdated e when state is not null => state with
             {

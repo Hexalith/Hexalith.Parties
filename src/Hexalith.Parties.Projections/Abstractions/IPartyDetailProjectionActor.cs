@@ -9,9 +9,15 @@ public interface IPartyDetailProjectionActor : IActor
 {
     Task HandleEventAsync(string partyId, IEventPayload @event);
 
+    Task HandleSerializedEventAsync(string partyId, string eventTypeName, byte[] payload, string serializationFormat);
+
     Task<bool> PingAsync();
 
     Task<PartyDetail?> GetDetailAsync();
+
+    Task<string?> GetDetailJsonAsync();
+
+    Task<byte[]?> GetSerializedDetailAsync();
 
     Task<bool> IsRebuildingAsync();
 

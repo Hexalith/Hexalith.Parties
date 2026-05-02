@@ -133,14 +133,18 @@ public class SemanticSearchE2ETests(PartiesAspireTopologyFixture fixture, ITestO
     private static async Task<JsonDocument> WaitForSearchResultsAsync(HttpClient client, string query, int minCount)
     {
         DateTimeOffset deadline = DateTimeOffset.UtcNow.AddSeconds(30);
+        string? lastContent = null;
+        HttpStatusCode? lastStatusCode = null;
         JsonDocument? lastResult = null;
 
         while (DateTimeOffset.UtcNow < deadline)
         {
             using HttpResponseMessage response = await client.GetAsync($"{SearchEndpoint}?q={Uri.EscapeDataString(query)}");
+            lastStatusCode = response.StatusCode;
+            lastContent = await response.Content.ReadAsStringAsync();
             if (response.StatusCode == HttpStatusCode.OK)
             {
-                string content = await response.Content.ReadAsStringAsync();
+                string content = lastContent;
                 JsonDocument doc = JsonDocument.Parse(content);
 
                 if (doc.RootElement.TryGetProperty("items", out JsonElement items) && items.GetArrayLength() >= minCount)
@@ -157,10 +161,13 @@ public class SemanticSearchE2ETests(PartiesAspireTopologyFixture fixture, ITestO
 
         if (lastResult is not null)
         {
-            return lastResult;
+            throw new TimeoutException(
+                $"Search for '{query}' never returned {minCount}+ results within 30s. Last response: {lastContent}");
         }
 
-        throw new TimeoutException($"Search for '{query}' never returned {minCount}+ results within 30s.");
+        throw new TimeoutException(
+            $"Search for '{query}' never returned {minCount}+ results within 30s. "
+            + $"Last status: {lastStatusCode?.ToString() ?? "none"}. Last response: {lastContent ?? "<none>"}");
     }
 
     private static string CreateAdminToken()

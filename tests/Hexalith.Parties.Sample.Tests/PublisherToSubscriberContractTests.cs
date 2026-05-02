@@ -4,13 +4,14 @@ using System.Text.Json;
 using Dapr.Client;
 
 using Hexalith.EventStore.Contracts.Identity;
+using Hexalith.EventStore.Contracts.Security;
 using Hexalith.EventStore.Server.Configuration;
 using Hexalith.EventStore.Server.Events;
+using Hexalith.EventStore.Server.Projections;
 using Hexalith.Parties.Sample;
 
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.Logging.Abstractions;
-using Hexalith.EventStore.Contracts.Security;
 using Microsoft.Extensions.Options;
 
 using NSubstitute;
@@ -60,7 +61,8 @@ public sealed class PublisherToSubscriberContractTests : IDisposable
             daprClient,
             Options.Create(new EventPublisherOptions()),
             NullLogger<EventPublisher>.Instance,
-            payloadProtectionService);
+            payloadProtectionService,
+            new NoOpProjectionUpdateOrchestrator());
 
         AggregateIdentity identity = new("tenant-a", "parties", "p-publisher-contract");
         List<(ServerEventEnvelope Envelope, Dictionary<string, string> Metadata)> publishedEvents = [];
@@ -129,16 +131,20 @@ public sealed class PublisherToSubscriberContractTests : IDisposable
         });
 
         return new ServerEventEnvelope(
+            MessageId: Guid.NewGuid().ToString(),
             AggregateId: identity.AggregateId,
+            AggregateType: "Party",
             TenantId: identity.TenantId,
             Domain: identity.Domain,
             SequenceNumber: sequenceNumber,
+            GlobalPosition: sequenceNumber,
             Timestamp: DateTimeOffset.UtcNow,
             CorrelationId: "corr-publisher-contract",
             CausationId: "corr-publisher-contract",
             UserId: "reviewer@example.com",
             DomainServiceVersion: "1.0.0",
             EventTypeName: eventTypeName,
+            MetadataVersion: 1,
             SerializationFormat: "json",
             Payload: payloadBytes,
             Extensions: null);

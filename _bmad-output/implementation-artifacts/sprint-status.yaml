@@ -113,7 +113,7 @@ development_status:
   9-3-right-to-erasure-and-verification: done
   9-4-consent-management-restriction-and-portability: done
   9-5-temporal-name-queries: review
-  9-6-hexalith-memories-backed-party-search: ready-for-dev
+  9-6-hexalith-memories-backed-party-search: in-progress
   epic-9-retrospective: optional
 
   # Epic 11: Hexalith.Tenants Integration for Parties (4 stories)

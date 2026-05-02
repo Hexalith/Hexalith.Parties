@@ -7,7 +7,7 @@ namespace Hexalith.Parties.CommandApi.Search;
 /// <summary>
 /// Backward-compatible search provider that delegates to existing
 /// <see cref="PartySearchResultsBuilder"/> static methods.
-/// DI registration can swap between this and <see cref="SemanticPartySearchProvider"/>.
+/// DI registration can swap between this and <see cref="LocalFuzzyPartySearchProvider"/>.
 /// </summary>
 internal sealed class BasicPartySearchProvider : IPartySearchProvider
 {

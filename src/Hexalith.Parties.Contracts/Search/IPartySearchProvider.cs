@@ -5,7 +5,7 @@ namespace Hexalith.Parties.Contracts.Search;
 
 /// <summary>
 /// Pluggable search provider abstraction for party search.
-/// Default implementation uses enhanced token-based fuzzy matching over DAPR actor state.
+/// Default implementation uses local token-based fuzzy fallback matching over DAPR actor state.
 /// Can be swapped for Elasticsearch/OpenSearch in v2 via DI registration.
 /// </summary>
 public interface IPartySearchProvider

@@ -89,7 +89,8 @@ public class TemporalNameE2ETests(PartiesAspireTopologyFixture fixture, ITestOut
             return;
         }
 
-        updateResponse.StatusCode.ShouldBe(HttpStatusCode.Accepted);
+        string updateResponseBody = await updateResponse.Content.ReadAsStringAsync();
+        updateResponse.StatusCode.ShouldBe(HttpStatusCode.Accepted, updateResponseBody);
 
         // Wait for the name to change in the projection
         await WaitForPartyDetailAsync(client, partyId, "Jane Smith");

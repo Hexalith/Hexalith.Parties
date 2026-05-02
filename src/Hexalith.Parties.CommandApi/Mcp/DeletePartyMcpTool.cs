@@ -74,6 +74,7 @@ public static class DeletePartyMcpTool
         ICommandRouter commandRouter = services.GetRequiredService<ICommandRouter>();
 
         var submitCommand = new SubmitCommand(
+            MessageId: Guid.NewGuid().ToString(),
             Tenant: tenant,
             Domain: "party",
             AggregateId: partyId,

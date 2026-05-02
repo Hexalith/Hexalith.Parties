@@ -4,6 +4,7 @@ using Hexalith.EventStore.Contracts.Commands;
 using Hexalith.EventStore.Contracts.Identity;
 using Hexalith.EventStore.Server.Configuration;
 using Hexalith.EventStore.Server.Events;
+using Hexalith.EventStore.Server.Projections;
 
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
@@ -33,6 +34,7 @@ public class DeadLetterRoutingTests
     private static CommandEnvelope CreateCommandEnvelope()
     {
         return new CommandEnvelope(
+            MessageId: Guid.NewGuid().ToString(),
             TenantId: _tenantId,
             Domain: _domain,
             AggregateId: _aggregateId,
@@ -73,7 +75,8 @@ public class DeadLetterRoutingTests
             mockClient,
             options,
             NullLogger<EventPublisher>.Instance,
-            payloadProtectionService);
+            payloadProtectionService,
+            new NoOpProjectionUpdateOrchestrator());
         return (publisher, mockClient);
     }
 
@@ -112,16 +115,20 @@ public class DeadLetterRoutingTests
         var events = new List<EventEnvelope>
         {
             new(
+                MessageId: Guid.NewGuid().ToString(),
                 AggregateId: _aggregateId,
+                AggregateType: "Party",
                 TenantId: _tenantId,
                 Domain: _domain,
                 SequenceNumber: 1,
+                GlobalPosition: 1,
                 Timestamp: DateTimeOffset.UtcNow,
                 CorrelationId: _correlationId,
                 CausationId: _correlationId,
                 UserId: "test-user@example.com",
                 DomainServiceVersion: "1.0.0",
                 EventTypeName: "PartyCreated",
+                MetadataVersion: 1,
                 SerializationFormat: "json",
                 Payload: payload,
                 Extensions: null),
@@ -157,16 +164,20 @@ public class DeadLetterRoutingTests
         var events = new List<EventEnvelope>
         {
             new(
+                MessageId: Guid.NewGuid().ToString(),
                 AggregateId: _aggregateId,
+                AggregateType: "Party",
                 TenantId: _tenantId,
                 Domain: _domain,
                 SequenceNumber: 1,
+                GlobalPosition: 1,
                 Timestamp: DateTimeOffset.UtcNow,
                 CorrelationId: _correlationId,
                 CausationId: _correlationId,
                 UserId: "test-user@example.com",
                 DomainServiceVersion: "1.0.0",
                 EventTypeName: "PartyCreated",
+                MetadataVersion: 1,
                 SerializationFormat: "json",
                 Payload: payload,
                 Extensions: null),

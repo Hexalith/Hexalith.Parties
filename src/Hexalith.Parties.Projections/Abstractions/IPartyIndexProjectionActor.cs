@@ -9,11 +9,15 @@ public interface IPartyIndexProjectionActor : IActor
 {
     Task HandleEventAsync(string partyId, IEventPayload @event);
 
+    Task HandleSerializedEventAsync(string partyId, string eventTypeName, byte[] payload, string serializationFormat);
+
     Task FlushAsync();
 
     Task<bool> PingAsync();
 
     Task<IReadOnlyDictionary<string, PartyIndexEntry>> GetEntriesAsync();
+
+    Task<string?> GetEntriesJsonAsync();
 
     Task<bool> IsRebuildingAsync();
 

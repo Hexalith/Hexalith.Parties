@@ -7,9 +7,9 @@ using Shouldly;
 
 namespace Hexalith.Parties.CommandApi.Tests.Search;
 
-public class SemanticPartySearchProviderTests
+public class LocalFuzzyPartySearchProviderTests
 {
-    private readonly SemanticPartySearchProvider _provider = new();
+    private readonly LocalFuzzyPartySearchProvider _provider = new();
     private readonly List<PartyIndexEntry> _entries = PartyTestData.CreateSearchScenarioEntries();
 
     // 7.1 — exact match returns RelevanceScore ~1.0
@@ -126,7 +126,7 @@ public class SemanticPartySearchProviderTests
     [InlineData("Marie", "Marei", 0.85)]     // adjacent transposition
     public void JaroWinklerSimilarity_KnownPairs_MeetsThreshold(string s1, string s2, double minThreshold)
     {
-        double similarity = SemanticPartySearchProvider.JaroWinklerSimilarity(s1, s2);
+        double similarity = LocalFuzzyPartySearchProvider.JaroWinklerSimilarity(s1, s2);
 
         similarity.ShouldBeGreaterThanOrEqualTo(minThreshold);
     }
@@ -134,7 +134,7 @@ public class SemanticPartySearchProviderTests
     [Fact]
     public void JaroWinklerSimilarity_IdenticalStrings_Returns1()
     {
-        double similarity = SemanticPartySearchProvider.JaroWinklerSimilarity("Dupont", "Dupont");
+        double similarity = LocalFuzzyPartySearchProvider.JaroWinklerSimilarity("Dupont", "Dupont");
 
         similarity.ShouldBe(1.0);
     }
@@ -142,7 +142,7 @@ public class SemanticPartySearchProviderTests
     [Fact]
     public void JaroWinklerSimilarity_CompletelyDifferent_ReturnsBelowThreshold()
     {
-        double similarity = SemanticPartySearchProvider.JaroWinklerSimilarity("Dupont", "xyz");
+        double similarity = LocalFuzzyPartySearchProvider.JaroWinklerSimilarity("Dupont", "xyz");
 
         similarity.ShouldBeLessThan(0.85);
     }
@@ -154,7 +154,7 @@ public class SemanticPartySearchProviderTests
     [InlineData("naïve", "naive")]
     public void NormalizeDiacritics_RemovesAccents(string input, string expected)
     {
-        string result = SemanticPartySearchProvider.NormalizeDiacritics(input);
+        string result = LocalFuzzyPartySearchProvider.NormalizeDiacritics(input);
 
         result.ShouldBe(expected);
     }
@@ -162,7 +162,7 @@ public class SemanticPartySearchProviderTests
     [Fact]
     public void NormalizeDiacritics_NullInput_ReturnsEmpty()
     {
-        string result = SemanticPartySearchProvider.NormalizeDiacritics(null);
+        string result = LocalFuzzyPartySearchProvider.NormalizeDiacritics(null);
 
         result.ShouldBe(string.Empty);
     }

@@ -39,6 +39,7 @@ public sealed class AdminController(
     ILogger<AdminController> logger) : ControllerBase {
     private const string Domain = "party";
     private const string TenantClaimType = PartiesClaimsTransformation.TenantClaimType;
+    private static readonly JsonSerializerOptions s_jsonOptions = new(JsonSerializerDefaults.Web);
 
     private string? ExtractTenant()
         => User.FindAll(TenantClaimType)
@@ -156,6 +157,7 @@ public sealed class AdminController(
             };
 
             var submitCommand = new SubmitCommand(
+                MessageId: Guid.NewGuid().ToString(),
                 Tenant: tenantId,
                 Domain: Domain,
                 AggregateId: partyId,
@@ -282,6 +284,7 @@ public sealed class AdminController(
                 // Phase 1: Dispatch erasure command to aggregate
                 EraseParty command = new() { PartyId = partyId, TenantId = tenantId };
                 var submitCommand = new SubmitCommand(
+                    MessageId: Guid.NewGuid().ToString(),
                     Tenant: tenantId,
                     Domain: Domain,
                     AggregateId: partyId,
@@ -934,8 +937,50 @@ public sealed class AdminController(
         var actorId = new ActorId($"{tenantId}:party-detail:{partyId}");
         IPartyDetailProjectionActor proxy = actorProxyFactory.CreateActorProxy<IPartyDetailProjectionActor>(
             actorId, nameof(PartyDetailProjectionActor));
+
+        Task<string?>? jsonTask = null;
+        try {
+            jsonTask = proxy.GetDetailJsonAsync();
+        }
+        catch (NotImplementedException) {
+            // Older test doubles and actor implementations can still use the typed actor method.
+        }
+
+        if (jsonTask is not null) {
+            string? json = await jsonTask.ConfigureAwait(false);
+            if (!string.IsNullOrWhiteSpace(json)
+                && !string.Equals(json.Trim(), "{}", StringComparison.Ordinal)
+                && !string.Equals(json.Trim(), "null", StringComparison.OrdinalIgnoreCase)) {
+                return JsonSerializer.Deserialize<PartyDetail>(json, s_jsonOptions);
+            }
+        }
+
+        Task<byte[]?>? serializedTask = null;
+        try {
+            serializedTask = proxy.GetSerializedDetailAsync();
+        }
+        catch (NotImplementedException) {
+            // Older test doubles and actor implementations can still use the typed actor method.
+        }
+
+        if (serializedTask is not null) {
+            byte[]? payload = await serializedTask.ConfigureAwait(false);
+            if (payload is { Length: > 0 }
+                && !IsEmptyJsonPayload(payload)) {
+                return JsonSerializer.Deserialize<PartyDetail>(payload, s_jsonOptions);
+            }
+        }
+
         return await proxy.GetDetailAsync().ConfigureAwait(false);
     }
+
+    private static bool IsEmptyJsonPayload(byte[] payload)
+        => (payload.Length == 2 && payload[0] == (byte)'{' && payload[1] == (byte)'}')
+            || (payload.Length == 4
+                && (payload[0] == (byte)'n' || payload[0] == (byte)'N')
+                && (payload[1] == (byte)'u' || payload[1] == (byte)'U')
+                && (payload[2] == (byte)'l' || payload[2] == (byte)'L')
+                && (payload[3] == (byte)'l' || payload[3] == (byte)'L'));
 
     private Task<CommandProcessingResult> SubmitInternalCommandAsync<TCommand>(
         string tenantId,
@@ -946,6 +991,7 @@ public sealed class AdminController(
         string userId,
         CancellationToken cancellationToken) {
         var submitCommand = new SubmitCommand(
+            MessageId: Guid.NewGuid().ToString(),
             Tenant: tenantId,
             Domain: Domain,
             AggregateId: partyId,

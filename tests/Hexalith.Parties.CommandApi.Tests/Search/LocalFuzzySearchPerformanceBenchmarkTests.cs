@@ -11,12 +11,12 @@ using Xunit.Abstractions;
 namespace Hexalith.Parties.CommandApi.Tests.Search;
 
 /// <summary>
-/// Performance benchmark tests for SemanticPartySearchProvider.
+/// Performance benchmark tests for local fuzzy fallback search.
 /// Verifies NFR2/NFR4 compliance: search latency &lt; 500ms at scale.
 /// </summary>
-public class SemanticSearchPerformanceBenchmarkTests(ITestOutputHelper output)
+public class LocalFuzzySearchPerformanceBenchmarkTests(ITestOutputHelper output)
 {
-    private readonly SemanticPartySearchProvider _provider = new();
+    private readonly LocalFuzzyPartySearchProvider _provider = new();
 
     // ─── Task 10.1: Benchmark at 10K entries — verify < 500ms ───
 

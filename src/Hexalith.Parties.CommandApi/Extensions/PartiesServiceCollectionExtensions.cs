@@ -9,8 +9,12 @@ using FluentValidation;
 
 using Hexalith.EventStore.Server.Configuration;
 using Hexalith.EventStore.Server.Commands;
+using Hexalith.EventStore.Server.DomainServices;
+using Hexalith.EventStore.Server.Projections;
 using Hexalith.EventStore.Contracts.Security;
+using Hexalith.Memories.Client.Rest;
 using Hexalith.Parties.CommandApi.Authentication;
+using Hexalith.Parties.CommandApi.Domain;
 using Hexalith.Parties.CommandApi.ErrorHandling;
 using Hexalith.Parties.CommandApi.Mcp;
 using Hexalith.Parties.CommandApi.Validation;
@@ -66,6 +70,9 @@ public static class PartiesServiceCollectionExtensions {
 
         // EventStore server infrastructure (command routing, actors)
         _ = services.AddEventStoreServer(configuration);
+        _ = services.AddTransient<IDomainServiceInvoker, PartyDomainServiceInvoker>();
+        _ = services.AddTransient<IProjectionUpdateOrchestrator, PartyProjectionUpdateOrchestrator>();
+        _ = services.AddTransient<IProjectionPollerDeliveryGateway, PartyProjectionUpdateOrchestrator>();
         _ = services.AddOptions<CommandStatusOptions>()
             .BindConfiguration("EventStore:CommandStatus");
         _ = services.AddSingleton<ICommandStatusStore, DaprCommandStatusStore>();
@@ -97,9 +104,12 @@ public static class PartiesServiceCollectionExtensions {
         _ = services.AddSingleton<IEventPayloadProtectionService, PartyPayloadProtectionService>();
         _ = services.AddSingleton<IPersonalDataCommandGuard, PartyPersonalDataCommandGuard>();
         _ = services.AddSingleton<IPartyErasureRecordStore, PartyErasureRecordStore>();
+        PartyMemorySearchOptions memorySearch = configuration
+            .GetSection(PartyMemorySearchOptions.SectionName)
+            .Get<PartyMemorySearchOptions>() ?? new PartyMemorySearchOptions();
         _ = services.AddSingleton<IReadOnlyList<ErasureStoreCleanupDelegate>>(sp => {
             IActorProxyFactory actorProxyFactory = sp.GetRequiredService<IActorProxyFactory>();
-            return
+            List<ErasureStoreCleanupDelegate> cleanups =
             [
                 async (tenantId, partyId, cancellationToken) =>
                 {
@@ -136,6 +146,19 @@ public static class PartiesServiceCollectionExtensions {
                     Timestamp = DateTimeOffset.UtcNow,
                 }),
             ];
+
+            if (memorySearch.Enabled)
+            {
+                cleanups.Add((tenantId, partyId, cancellationToken) => Task.FromResult(new ErasureVerificationStoreResult
+                {
+                    StoreName = "memories-search",
+                    Status = ErasureStoreCleanupStatus.Failed,
+                    Timestamp = DateTimeOffset.UtcNow,
+                    ErrorMessage = $"Memories cleanup blocked: no persisted memory-unit mapping was supplied for urn:hexalith:parties:{tenantId}:party:{partyId}. Run the Memories repair/reindex procedure and retry erasure verification.",
+                }));
+            }
+
+            return cleanups;
         });
         _ = services.AddSingleton<IErasureVerificationService, ErasureVerificationService>();
         _ = services.AddSingleton<PartyErasureOrchestrator>();
@@ -145,8 +168,8 @@ public static class PartiesServiceCollectionExtensions {
 
         // Projection infrastructure (Epic 3)
         _ = services.AddSingleton<IIndexPartitionStrategy, SingleKeyPartitionStrategy>();
-        _ = services.AddOptions<ProjectionOptions>()
-            .Bind(configuration.GetSection(ProjectionOptions.ConfigurationSection))
+        _ = services.AddOptions<Hexalith.Parties.Projections.Configuration.ProjectionOptions>()
+            .Bind(configuration.GetSection(Hexalith.Parties.Projections.Configuration.ProjectionOptions.ConfigurationSection))
             .Validate(o => o.BatchSize > 0, "ProjectionOptions.BatchSize must be greater than 0.")
             .Validate(o => o.BatchTimeWindowMs > 0, "ProjectionOptions.BatchTimeWindowMs must be greater than 0.")
             .ValidateOnStart();
@@ -166,8 +189,31 @@ public static class PartiesServiceCollectionExtensions {
             client.BaseAddress = new Uri($"http://127.0.0.1:{daprPort}");
         });
 
-        // Search provider (pluggable — D2)
-        _ = services.AddSingleton<IPartySearchProvider, SemanticPartySearchProvider>();
+        // Search provider (local fallback until Hexalith.Memories rich search is configured)
+        _ = services.AddSingleton<IPartySearchProvider, LocalFuzzyPartySearchProvider>();
+        _ = services.AddSingleton<IPartySearchService, LocalPartySearchService>();
+        _ = services.AddOptions<PartyMemorySearchOptions>()
+            .BindConfiguration(PartyMemorySearchOptions.SectionName)
+            .ValidateOnStart();
+        _ = services.AddSingleton<IValidateOptions<PartyMemorySearchOptions>, PartyMemorySearchOptionsValidator>();
+
+        if (memorySearch.Enabled)
+        {
+            _ = services.AddMemoriesClient(options =>
+            {
+                options.Endpoint = memorySearch.Endpoint;
+                options.ApiToken = memorySearch.ApiToken;
+            });
+            _ = services.AddSingleton<PartyMemoryIndexingService>();
+            _ = services.AddSingleton<IPartySearchService, MemoriesPartySearchService>();
+            _ = services.AddHttpClient<PartyMemoryCleanupService>((_, httpClient) =>
+            {
+                if (memorySearch.Endpoint is not null)
+                {
+                    httpClient.BaseAddress = memorySearch.Endpoint;
+                }
+            });
+        }
 
         // FluentValidation (assembly scanning — no explicit validator registration)
         _ = services.AddValidatorsFromAssemblyContaining<CreatePartyValidator>();

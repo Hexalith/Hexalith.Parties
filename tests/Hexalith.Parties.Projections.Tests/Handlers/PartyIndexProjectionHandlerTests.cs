@@ -35,6 +35,26 @@ public class PartyIndexProjectionHandlerTests
         result.LastModifiedAt.ShouldNotBe(default);
     }
 
+    [Fact]
+    public void Apply_PartyCreated_WhenStateExists_DoesNotResetIndexEntry()
+    {
+        PartyIndexEntry state = CreatePersonIndexEntry() with
+        {
+            DisplayName = "Jane Smith",
+        };
+        PartyCreated @event = new()
+        {
+            Type = PartyType.Person,
+            PersonDetails = PartyTestData.ValidPersonDetails(),
+        };
+
+        PartyIndexEntry? result = PartyIndexProjectionHandler.Apply(PartyId, @event, state);
+
+        result = result.ShouldNotBeNull();
+        result.ShouldBe(state);
+        result.DisplayName.ShouldBe("Jane Smith");
+    }
+
     // --- 5.3: PartyCreated Organization ---
 
     [Fact]

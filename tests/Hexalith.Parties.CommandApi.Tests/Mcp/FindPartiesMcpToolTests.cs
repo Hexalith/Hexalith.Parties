@@ -65,7 +65,8 @@ public sealed class FindPartiesMcpToolTests
         IActorProxyFactory factory = CreateActorProxyFactory(indexActor);
         ServiceProvider services = new ServiceCollection()
             .AddSingleton(factory)
-            .AddSingleton<IPartySearchProvider, SemanticPartySearchProvider>()
+            .AddSingleton<IPartySearchProvider, LocalFuzzyPartySearchProvider>()
+            .AddSingleton<IPartySearchService, LocalPartySearchService>()
             .BuildServiceProvider();
 
         string json = await FindPartiesMcpTool.FindPartiesAsync(services, query: "Dupont");

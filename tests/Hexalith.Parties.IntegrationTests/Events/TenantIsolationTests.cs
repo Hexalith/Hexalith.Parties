@@ -7,6 +7,7 @@ using Dapr.Client;
 using Hexalith.EventStore.Contracts.Identity;
 using Hexalith.EventStore.Server.Configuration;
 using Hexalith.EventStore.Server.Events;
+using Hexalith.EventStore.Server.Projections;
 
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
@@ -32,16 +33,20 @@ public class TenantIsolationTests
     {
         byte[] payload = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(new { test = true }));
         return new EventEnvelope(
+            MessageId: Guid.NewGuid().ToString(),
             AggregateId: _aggregateId,
+            AggregateType: "Party",
             TenantId: tenantId,
             Domain: _domain,
             SequenceNumber: sequenceNumber,
+            GlobalPosition: sequenceNumber,
             Timestamp: DateTimeOffset.UtcNow,
             CorrelationId: _correlationId,
             CausationId: _correlationId,
             UserId: "test-user@example.com",
             DomainServiceVersion: "1.0.0",
             EventTypeName: eventTypeName,
+            MetadataVersion: 1,
             SerializationFormat: "json",
             Payload: payload,
             Extensions: null);
@@ -56,7 +61,8 @@ public class TenantIsolationTests
             mockClient,
             options,
             NullLogger<EventPublisher>.Instance,
-            payloadProtectionService);
+            payloadProtectionService,
+            new NoOpProjectionUpdateOrchestrator());
         return (publisher, mockClient);
     }
 

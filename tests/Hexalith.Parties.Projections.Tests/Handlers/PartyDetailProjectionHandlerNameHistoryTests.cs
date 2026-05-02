@@ -32,6 +32,26 @@ public class PartyDetailProjectionHandlerNameHistoryTests
         result.NameHistory[0].ChangedAt.ShouldNotBe(default);
     }
 
+    [Fact]
+    public void Apply_PartyCreated_WhenStateExists_DoesNotResetNameHistory()
+    {
+        PartyCreated createEvent = new()
+        {
+            Type = PartyType.Person,
+            PersonDetails = PartyTestData.ValidPersonDetails(),
+        };
+        PartyDetail? state = PartyDetailProjectionHandler.Apply(PartyId, createEvent, null);
+        state = state.ShouldNotBeNull();
+        DateTimeOffset originalChangedAt = state.NameHistory[0].ChangedAt;
+
+        PartyDetail? result = PartyDetailProjectionHandler.Apply(PartyId, createEvent, state);
+
+        result = result.ShouldNotBeNull();
+        result.ShouldBe(state);
+        result.NameHistory.Count.ShouldBe(1);
+        result.NameHistory[0].ChangedAt.ShouldBe(originalChangedAt);
+    }
+
     // 7.12 — PartyDisplayNameDerived appends to NameHistory
     [Fact]
     public void Apply_PartyDisplayNameDerived_AppendsToNameHistory()

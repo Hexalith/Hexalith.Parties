@@ -185,12 +185,12 @@ public sealed class TemporalNameEndpointTests : IClassFixture<TemporalNameEndpoi
 
     // 8.10: DI resolution test
     [Fact]
-    public void DIResolution_IPartySearchProvider_ResolvesToSemanticPartySearchProvider()
+    public void DIResolution_IPartySearchProvider_ResolvesToLocalFuzzyPartySearchProvider()
     {
         using IServiceScope scope = _factory.Services.CreateScope();
         IPartySearchProvider provider = scope.ServiceProvider.GetRequiredService<IPartySearchProvider>();
 
-        provider.ShouldBeOfType<CommandApi.Search.SemanticPartySearchProvider>();
+        provider.ShouldBeOfType<CommandApi.Search.LocalFuzzyPartySearchProvider>();
     }
 
     public sealed class TemporalNameTestFactory : WebApplicationFactory<Program>

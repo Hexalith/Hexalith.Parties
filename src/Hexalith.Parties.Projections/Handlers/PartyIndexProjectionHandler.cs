@@ -11,7 +11,7 @@ public sealed class PartyIndexProjectionHandler
     {
         return @event switch
         {
-            PartyCreated e => HandlePartyCreated(partyId, e),
+            PartyCreated e => state is null ? HandlePartyCreated(partyId, e) : state,
             PartyDisplayNameDerived e when state is not null => state with
             {
                 DisplayName = e.DisplayName,

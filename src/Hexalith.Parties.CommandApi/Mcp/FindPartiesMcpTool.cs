@@ -6,7 +6,6 @@ using Dapr.Actors.Client;
 
 using Hexalith.Parties.CommandApi.Search;
 using Hexalith.Parties.Contracts.Models;
-using Hexalith.Parties.Contracts.Search;
 using Hexalith.Parties.Contracts.ValueObjects;
 using Hexalith.Parties.Projections.Abstractions;
 using Hexalith.Parties.Projections.Actors;
@@ -23,6 +22,8 @@ public static class FindPartiesMcpTool
     public static async Task<string> FindPartiesAsync(
         IServiceProvider services,
         [Description("Search text to match against party names, organization names, and identifiers. Leave empty to list all parties.")] string? query = null,
+        [Description("Search mode: 'hybrid' (default), 'lexical', 'semantic', or 'graph'.")] string? mode = null,
+        [Description("Optional case id to scope Memories-backed rich search.")] string? caseId = null,
         [Description("Filter by party type: 'Person' or 'Organization'")] string? type = null,
         [Description("When true, only returns active parties")] bool activeOnly = true,
         [Description("Page number for pagination (starts at 1)")] int page = 1,
@@ -60,7 +61,7 @@ public static class FindPartiesMcpTool
         IPartyIndexProjectionActor proxy = actorProxyFactory.CreateActorProxy<IPartyIndexProjectionActor>(
             actorId, nameof(PartyIndexProjectionActor));
 
-        IReadOnlyDictionary<string, PartyIndexEntry> entries = await proxy.GetEntriesAsync().ConfigureAwait(false);
+        IReadOnlyDictionary<string, PartyIndexEntry> entries = await GetPartyIndexEntriesAsync(proxy).ConfigureAwait(false);
 
         // Exclude erased parties from all MCP search/list results
         IEnumerable<PartyIndexEntry> activeEntries = entries.Values.Where(e => !e.IsErased);
@@ -74,9 +75,60 @@ public static class FindPartiesMcpTool
                 McpSessionContext.JsonOptions);
         }
 
-        IPartySearchProvider searchProvider = services.GetRequiredService<IPartySearchProvider>();
+        IPartySearchService searchService = services.GetRequiredService<IPartySearchService>();
+        PartySearchResponse search = await searchService.SearchAsync(
+            new PartySearchRequest(
+                tenant,
+                query,
+                ParseSearchMode(mode),
+                typeFilter,
+                activeFilter,
+                page,
+                pageSize,
+                CaseId: caseId),
+            activeEntries,
+            cancellationToken).ConfigureAwait(false);
+
         return JsonSerializer.Serialize(
-            searchProvider.Search(activeEntries, query, typeFilter, activeFilter, page, pageSize),
+            search.Results,
             McpSessionContext.JsonOptions);
+    }
+
+    private static PartySearchMode ParseSearchMode(string? mode)
+        => mode?.Trim().ToLowerInvariant() switch
+        {
+            "lexical" or "syntactic" => PartySearchMode.Lexical,
+            "semantic" => PartySearchMode.Semantic,
+            "graph" => PartySearchMode.Graph,
+            _ => PartySearchMode.Hybrid,
+        };
+
+    private static async Task<IReadOnlyDictionary<string, PartyIndexEntry>> GetPartyIndexEntriesAsync(IPartyIndexProjectionActor proxy)
+    {
+        Task<string?>? jsonTask = null;
+        try
+        {
+            jsonTask = proxy.GetEntriesJsonAsync();
+        }
+        catch (NotImplementedException)
+        {
+            // Older test doubles and actor implementations can still use the typed actor method.
+        }
+
+        if (jsonTask is not null)
+        {
+            string? json = await jsonTask.ConfigureAwait(false);
+            if (!string.IsNullOrWhiteSpace(json))
+            {
+                Dictionary<string, PartyIndexEntry>? entries =
+                    JsonSerializer.Deserialize<Dictionary<string, PartyIndexEntry>>(json, McpSessionContext.JsonOptions);
+                if (entries is not null)
+                {
+                    return entries;
+                }
+            }
+        }
+
+        return await proxy.GetEntriesAsync().ConfigureAwait(false);
     }
 }

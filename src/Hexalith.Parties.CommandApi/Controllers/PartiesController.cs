@@ -9,11 +9,12 @@ using FluentValidation.Results;
 using Hexalith.EventStore.Server.Actors;
 using Hexalith.EventStore.Server.Commands;
 using Hexalith.EventStore.Server.Pipeline.Commands;
+using Hexalith.EventStore.Server.Projections;
+using Hexalith.EventStore.Contracts.Identity;
 using Hexalith.Parties.CommandApi.Middleware;
 using Hexalith.Parties.CommandApi.Search;
 using Hexalith.Parties.Contracts.Commands;
 using Hexalith.Parties.Contracts.Models;
-using Hexalith.Parties.Contracts.Search;
 using Hexalith.Parties.Contracts.ValueObjects;
 using Hexalith.Parties.Projections.Abstractions;
 using Hexalith.Parties.Projections.Actors;
@@ -32,10 +33,12 @@ public sealed class PartiesController(
     ICommandRouter commandRouter,
     IActorProxyFactory actorProxyFactory,
     IPersonalDataCommandGuard personalDataCommandGuard,
-    IPartySearchProvider searchProvider,
+    IPartySearchService searchService,
+    IProjectionUpdateOrchestrator projectionUpdateOrchestrator,
     ILogger<PartiesController> logger) : ControllerBase
 {
     private const string _domain = "party";
+    private static readonly JsonSerializerOptions s_jsonOptions = new(JsonSerializerDefaults.Web);
 
     [HttpGet]
     [ProducesResponseType(typeof(PagedResult<PartyIndexEntry>), StatusCodes.Status200OK)]
@@ -83,7 +86,7 @@ public sealed class PartiesController(
         IPartyIndexProjectionActor proxy = actorProxyFactory.CreateActorProxy<IPartyIndexProjectionActor>(
             actorId, nameof(PartyIndexProjectionActor));
         bool isRebuilding = await proxy.IsRebuildingAsync().ConfigureAwait(false);
-        IReadOnlyDictionary<string, PartyIndexEntry> entries = await proxy.GetEntriesAsync().ConfigureAwait(false);
+        IReadOnlyDictionary<string, PartyIndexEntry> entries = await GetPartyIndexEntriesAsync(proxy).ConfigureAwait(false);
 
         if (isRebuilding)
         {
@@ -130,6 +133,8 @@ public sealed class PartiesController(
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> SearchPartiesAsync(
         [FromQuery] string? q = null,
+        [FromQuery] string? mode = null,
+        [FromQuery] string? caseId = null,
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 20)
     {
@@ -173,14 +178,28 @@ public sealed class PartiesController(
         IPartyIndexProjectionActor proxy = actorProxyFactory.CreateActorProxy<IPartyIndexProjectionActor>(
             actorId, nameof(PartyIndexProjectionActor));
         bool isRebuilding = await proxy.IsRebuildingAsync().ConfigureAwait(false);
-        IReadOnlyDictionary<string, PartyIndexEntry> entries = await proxy.GetEntriesAsync().ConfigureAwait(false);
+        IReadOnlyDictionary<string, PartyIndexEntry> entries = await GetPartyIndexEntriesAsync(proxy).ConfigureAwait(false);
 
         if (isRebuilding)
         {
             SetDegradedHeaders(Response);
         }
 
-        return Ok(searchProvider.Search(entries.Values.Where(e => !e.IsErased), q, null, null, page, pageSize));
+        PartySearchResponse search = await searchService.SearchAsync(
+            new PartySearchRequest(
+                tenant,
+                q,
+                ParseSearchMode(mode),
+                TypeFilter: null,
+                ActiveFilter: null,
+                page,
+                pageSize,
+                CaseId: caseId),
+            entries.Values.Where(e => !e.IsErased),
+            HttpContext.RequestAborted).ConfigureAwait(false);
+
+        SetSearchMetadataHeaders(Response, search);
+        return Ok(search.Results);
     }
 
     [HttpGet("{id}")]
@@ -224,7 +243,7 @@ public sealed class PartiesController(
         IPartyDetailProjectionActor proxy = actorProxyFactory.CreateActorProxy<IPartyDetailProjectionActor>(
             actorId, nameof(PartyDetailProjectionActor));
         bool isRebuilding = await proxy.IsRebuildingAsync().ConfigureAwait(false);
-        PartyDetail? detail = await proxy.GetDetailAsync().ConfigureAwait(false);
+        PartyDetail? detail = await GetPartyDetailAsync(proxy).ConfigureAwait(false);
 
         if (isRebuilding)
         {
@@ -268,7 +287,7 @@ public sealed class PartiesController(
         IPartyDetailProjectionActor proxy = actorProxyFactory.CreateActorProxy<IPartyDetailProjectionActor>(
             actorId, nameof(PartyDetailProjectionActor));
 
-        PartyDetail? detail = await proxy.GetDetailAsync().ConfigureAwait(false);
+        PartyDetail? detail = await GetPartyDetailAsync(proxy).ConfigureAwait(false);
 
         if (detail is null)
         {
@@ -322,7 +341,7 @@ public sealed class PartiesController(
         IPartyDetailProjectionActor proxy = actorProxyFactory.CreateActorProxy<IPartyDetailProjectionActor>(
             actorId, nameof(PartyDetailProjectionActor));
 
-        PartyDetail? detail = await proxy.GetDetailAsync().ConfigureAwait(false);
+        PartyDetail? detail = await GetPartyDetailAsync(proxy).ConfigureAwait(false);
 
         if (detail is null)
         {
@@ -353,9 +372,9 @@ public sealed class PartiesController(
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest, "application/problem+json")]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status422UnprocessableEntity, "application/problem+json")]
-    public Task<IActionResult> UpdatePersonDetails(string id, [FromBody] UpdatePersonDetails command, CancellationToken cancellationToken)
+    public Task<IActionResult> UpdatePersonDetails(string id, [FromBody] JsonElement commandBody, CancellationToken cancellationToken)
     {
-        ArgumentNullException.ThrowIfNull(command);
+        UpdatePersonDetails command = ParseUpdatePersonDetails(id, commandBody);
         EnsureRouteMatchesBodyPartyId(id, command.PartyId, nameof(Contracts.Commands.UpdatePersonDetails.PartyId));
         return DispatchCommandAsync(id, nameof(UpdatePersonDetails), command with { PartyId = id }, cancellationToken);
     }
@@ -511,6 +530,7 @@ public sealed class PartiesController(
         string userId = User.FindFirst("sub")?.Value ?? "unknown";
 
         var submitCommand = new SubmitCommand(
+            MessageId: Guid.NewGuid().ToString(),
             Tenant: tenant,
             Domain: _domain,
             AggregateId: aggregateId,
@@ -534,6 +554,8 @@ public sealed class PartiesController(
         {
             return CreateDomainRejectionProblemDetails(result.ErrorMessage, correlationId, tenant);
         }
+
+        await TryUpdateProjectionAsync(tenant, aggregateId, correlationId, cancellationToken).ConfigureAwait(false);
 
         return Accepted(new { correlationId });
     }
@@ -566,6 +588,7 @@ public sealed class PartiesController(
         string userId = User.FindFirst("sub")?.Value ?? "unknown";
 
         var submitCommand = new SubmitCommand(
+            MessageId: Guid.NewGuid().ToString(),
             Tenant: tenant,
             Domain: _domain,
             AggregateId: aggregateId,
@@ -590,8 +613,191 @@ public sealed class PartiesController(
             return CreateDomainRejectionProblemDetails(result.ErrorMessage, correlationId, tenant);
         }
 
+        await TryUpdateProjectionAsync(tenant, aggregateId, correlationId, cancellationToken).ConfigureAwait(false);
+
         return Accepted(new { correlationId = result.CorrelationId ?? correlationId });
     }
+
+    private async Task TryUpdateProjectionAsync(
+        string tenant,
+        string aggregateId,
+        string correlationId,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            await projectionUpdateOrchestrator
+                .UpdateProjectionAsync(new AggregateIdentity(tenant, _domain, aggregateId), cancellationToken)
+                .ConfigureAwait(false);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            logger.LogWarning(
+                ex,
+                "Synchronous projection update failed after accepted command: AggregateId={AggregateId}, CorrelationId={CorrelationId}, Tenant={Tenant}",
+                aggregateId,
+                correlationId,
+                tenant);
+        }
+    }
+
+    private static UpdatePersonDetails ParseUpdatePersonDetails(string routeId, JsonElement body)
+    {
+        if (TryGetProperty(body, "personDetails", out JsonElement personDetailsElement))
+        {
+            return body.Deserialize<UpdatePersonDetails>(s_jsonOptions)
+                ?? throw new ValidationException(
+                    [
+                        new ValidationFailure(nameof(UpdatePersonDetails), "Request body is required."),
+                    ]);
+        }
+
+        string partyId = TryGetProperty(body, "partyId", out JsonElement partyIdElement)
+            ? partyIdElement.GetString() ?? routeId
+            : routeId;
+        string? firstName = TryGetProperty(body, "firstName", out JsonElement firstNameElement)
+            ? firstNameElement.GetString()
+            : null;
+        string? lastName = TryGetProperty(body, "lastName", out JsonElement lastNameElement)
+            ? lastNameElement.GetString()
+            : null;
+
+        if (string.IsNullOrWhiteSpace(firstName) || string.IsNullOrWhiteSpace(lastName))
+        {
+            throw new ValidationException(
+                    [
+                    new ValidationFailure("PersonDetails", "PersonDetails or firstName/lastName is required."),
+                ]);
+        }
+
+        DateTimeOffset? dateOfBirth = null;
+        if (TryGetProperty(body, "dateOfBirth", out JsonElement dateOfBirthElement)
+            && dateOfBirthElement.ValueKind != JsonValueKind.Null)
+        {
+            dateOfBirth = dateOfBirthElement.GetDateTimeOffset();
+        }
+
+        string? prefix = TryGetProperty(body, "prefix", out JsonElement prefixElement)
+            ? prefixElement.GetString()
+            : null;
+        string? suffix = TryGetProperty(body, "suffix", out JsonElement suffixElement)
+            ? suffixElement.GetString()
+            : null;
+
+        return new UpdatePersonDetails
+        {
+            PartyId = partyId,
+            PersonDetails = new PersonDetails
+            {
+                FirstName = firstName,
+                LastName = lastName,
+                DateOfBirth = dateOfBirth,
+                Prefix = prefix,
+                Suffix = suffix,
+            },
+        };
+    }
+
+    private static bool TryGetProperty(JsonElement element, string propertyName, out JsonElement value)
+    {
+        if (element.ValueKind == JsonValueKind.Object)
+        {
+            foreach (JsonProperty property in element.EnumerateObject())
+            {
+                if (string.Equals(property.Name, propertyName, StringComparison.OrdinalIgnoreCase))
+                {
+                    value = property.Value;
+                    return true;
+                }
+            }
+        }
+
+        value = default;
+        return false;
+    }
+
+    private static async Task<PartyDetail?> GetPartyDetailAsync(IPartyDetailProjectionActor proxy)
+    {
+        Task<string?>? jsonTask = null;
+        try
+        {
+            jsonTask = proxy.GetDetailJsonAsync();
+        }
+        catch (NotImplementedException)
+        {
+            // Older test doubles and actor implementations can still use the typed actor method.
+        }
+
+        if (jsonTask is not null)
+        {
+            string? json = await jsonTask.ConfigureAwait(false);
+            if (!string.IsNullOrWhiteSpace(json)
+                && !string.Equals(json.Trim(), "{}", StringComparison.Ordinal)
+                && !string.Equals(json.Trim(), "null", StringComparison.OrdinalIgnoreCase))
+            {
+                return JsonSerializer.Deserialize<PartyDetail>(json, s_jsonOptions);
+            }
+        }
+
+        Task<byte[]?>? serializedTask = null;
+        try
+        {
+            serializedTask = proxy.GetSerializedDetailAsync();
+        }
+        catch (NotImplementedException)
+        {
+            // Older test doubles and actor implementations can still use the typed actor method.
+        }
+
+        if (serializedTask is not null)
+        {
+            byte[]? payload = await serializedTask.ConfigureAwait(false);
+            if (payload is { Length: > 0 }
+                && !IsEmptyJsonPayload(payload))
+            {
+                return JsonSerializer.Deserialize<PartyDetail>(payload, s_jsonOptions);
+            }
+        }
+
+        return await proxy.GetDetailAsync().ConfigureAwait(false);
+    }
+
+    private static async Task<IReadOnlyDictionary<string, PartyIndexEntry>> GetPartyIndexEntriesAsync(IPartyIndexProjectionActor proxy)
+    {
+        Task<string?>? jsonTask = null;
+        try
+        {
+            jsonTask = proxy.GetEntriesJsonAsync();
+        }
+        catch (NotImplementedException)
+        {
+            // Older test doubles and actor implementations can still use the typed actor method.
+        }
+
+        if (jsonTask is not null)
+        {
+            string? json = await jsonTask.ConfigureAwait(false);
+            if (!string.IsNullOrWhiteSpace(json))
+            {
+                Dictionary<string, PartyIndexEntry>? entries =
+                    JsonSerializer.Deserialize<Dictionary<string, PartyIndexEntry>>(json, s_jsonOptions);
+                if (entries is not null)
+                {
+                    return entries;
+                }
+            }
+        }
+
+        return await proxy.GetEntriesAsync().ConfigureAwait(false);
+    }
+
+    private static bool IsEmptyJsonPayload(byte[] payload)
+        => (payload.Length == 2 && payload[0] == (byte)'{' && payload[1] == (byte)'}')
+            || (payload.Length == 4
+                && (payload[0] == (byte)'n' || payload[0] == (byte)'N')
+                && (payload[1] == (byte)'u' || payload[1] == (byte)'U')
+                && (payload[2] == (byte)'l' || payload[2] == (byte)'L')
+                && (payload[3] == (byte)'l' || payload[3] == (byte)'L'));
 
     private string? ExtractTenant()
     {
@@ -669,6 +875,24 @@ public sealed class PartiesController(
         response.Headers["X-Service-Degraded"] = "true";
         response.Headers["X-Stale-Data-Age"] = "0";
     }
+
+    private static void SetSearchMetadataHeaders(HttpResponse response, PartySearchResponse search)
+    {
+        response.Headers["X-Parties-Search-Status"] = search.Status.ToString();
+        if (!string.IsNullOrWhiteSpace(search.DegradedReason))
+        {
+            response.Headers["X-Parties-Search-Degraded-Reason"] = search.DegradedReason;
+        }
+    }
+
+    private static PartySearchMode ParseSearchMode(string? mode)
+        => mode?.Trim().ToLowerInvariant() switch
+        {
+            "lexical" or "syntactic" => PartySearchMode.Lexical,
+            "semantic" => PartySearchMode.Semantic,
+            "graph" => PartySearchMode.Graph,
+            _ => PartySearchMode.Hybrid,
+        };
 
     private ObjectResult CreateUnauthorizedProblemDetails(string detail, string correlationId)
     {
