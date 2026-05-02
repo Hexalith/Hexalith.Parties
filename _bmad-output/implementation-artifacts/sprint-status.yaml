@@ -1,4 +1,4 @@
-# generated: 2026-05-01
+# generated: 2026-05-02
 # last_updated: 2026-05-02
 # project: Hexalith.Parties
 # project_key: NOKEY
@@ -31,10 +31,10 @@
 # ===============
 # - Epic transitions to 'in-progress' automatically when first story is created
 # - Stories can be worked in parallel if team capacity allows
-# - SM typically creates next story after previous one is 'done' to incorporate learnings
+# - Developer typically creates next story after previous one is 'done' to incorporate learnings
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
-generated: 2026-05-01
+generated: 2026-05-02
 last_updated: 2026-05-02
 project: Hexalith.Parties
 project_key: NOKEY
@@ -61,7 +61,7 @@ development_status:
   2-4-rest-api-contact-channel-and-identifier-endpoints: done
   epic-2-retrospective: done
 
-  # Epic 3: Party Discovery & Search - Read Projections (4 stories)
+  # Epic 3: Party Discovery & Search (Read Projections) (4 stories)
   epic-3: in-progress
   3-1-party-detail-projection-handler-and-actor: done
   3-2-party-index-projection-handler-and-actor: done
@@ -77,7 +77,7 @@ development_status:
   4-4-composite-command-rest-and-validation: done
   epic-4-retrospective: done
 
-  # Epic 5: AI Agent Party Management - MCP Server (4 stories)
+  # Epic 5: AI Agent Party Management (MCP Server) (4 stories)
   epic-5: in-progress
   5-1-mcp-server-setup-and-get-party-find-parties-tools: done
   5-2-create-party-mcp-tool: done
@@ -106,16 +106,25 @@ development_status:
   8-3-projection-health-monitoring-and-rebuild: done
   epic-8-retrospective: done
 
-  # Epic 9: GDPR Compliance - v1.1 (5 stories)
+  # Epic 9: GDPR Compliance (v1.1) (6 stories)
   epic-9: in-progress
   9-1-per-party-encryption-key-management: done
   9-2-field-level-encryption-and-crypto-shredding-activation: done
   9-3-right-to-erasure-and-verification: done
   9-4-consent-management-restriction-and-portability: done
-  9-5-semantic-search-and-temporal-name-queries: review
+  9-5-temporal-name-queries: review
+  9-6-hexalith-memories-backed-party-search: ready-for-dev
   epic-9-retrospective: optional
 
-  # Epic 10: Administration & Frontend - v1.2 (3 stories)
+  # Epic 11: Hexalith.Tenants Integration for Parties (4 stories)
+  epic-11: in-progress
+  11-1-apphost-and-package-integration: ready-for-dev
+  11-2-tenants-event-consumption-and-local-access-projection: backlog
+  11-3-rest-and-mcp-tenant-authorization-enforcement: backlog
+  11-4-tenants-integration-tests-deployment-validation-and-documentation: backlog
+  epic-11-retrospective: optional
+
+  # Epic 10: Administration & Frontend (v1.2) (3 stories)
   epic-10: backlog
   10-1-admin-portal-browse-search-and-inspect: backlog
   10-2-admin-portal-gdpr-operations: backlog

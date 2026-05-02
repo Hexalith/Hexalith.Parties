@@ -347,11 +347,15 @@ Operators can deploy with confidence using deployment validation tooling (DAPR s
 **FRs covered:** FR61, FR64, FR71
 
 ### Epic 9: GDPR Compliance (v1.1)
-Administrators can fulfill all GDPR obligations — erasure via crypto-shredding with per-party keys, per-channel per-purpose consent management, data restriction, portability export, processing records (Article 30), and erasure verification across all data stores — with automated subscriber notification and decrypted events at publish time. Includes semantic search (FR16) and temporal name queries (FR72) deferred from MVP.
+Administrators can fulfill all GDPR obligations — erasure via crypto-shredding with per-party keys, per-channel per-purpose consent management, data restriction, portability export, processing records (Article 30), and erasure verification across all data stores — with automated subscriber notification and decrypted events at publish time. Includes temporal name queries (FR72) and Hexalith.Memories-backed party search (FR16) deferred from MVP.
 **FRs covered:** FR44, FR45, FR46, FR47, FR48, FR49, FR50, FR51, FR52, FR53, FR54, FR55, FR16, FR72
 
+### Epic 11: Hexalith.Tenants Integration for Parties
+Hexalith.Parties uses Hexalith.Tenants as the source of truth for tenant lifecycle, membership, roles, and tenant configuration while preserving Parties-owned tenant isolation for party aggregates, projections, REST, MCP, and event publication. This cross-cutting epic is scheduled before Epic 10 so the admin portal consumes tenant context instead of duplicating tenant management.
+**FRs covered:** FR39, FR40, FR41, FR75
+
 ### Epic 10: Administration & Frontend (v1.2)
-Administrators can browse, search, and inspect party records and process GDPR requests (erasure, restriction, consent, export) via a TypeScript admin portal. Consuming application developers can embed a party picker component in their UIs for party search and selection.
+Administrators can browse, search, and inspect party records and process party-level GDPR requests (erasure, restriction, consent, export) via a TypeScript admin portal. Tenant lifecycle, membership, roles, and configuration remain owned by Hexalith.Tenants admin capabilities. Consuming application developers can embed a party picker component in their UIs for party search and selection.
 **FRs covered:** FR65, FR66, FR67
 
 ---
@@ -1800,7 +1804,7 @@ So that read model issues are resolved automatically or with minimal operator in
 
 ## Epic 9: GDPR Compliance (v1.1)
 
-Administrators can fulfill all GDPR obligations — erasure via crypto-shredding with per-party keys, per-channel per-purpose consent management, data restriction, portability export, processing records (Article 30), and erasure verification across all data stores — with automated subscriber notification and decrypted events at publish time. Includes semantic search (FR16) and temporal name queries (FR72) deferred from MVP.
+Administrators can fulfill all GDPR obligations — erasure via crypto-shredding with per-party keys, per-channel per-purpose consent management, data restriction, portability export, processing records (Article 30), and erasure verification across all data stores — with automated subscriber notification and decrypted events at publish time. Includes temporal name queries (FR72) and Hexalith.Memories-backed party search (FR16) deferred from MVP.
 
 ### Story 9.1: Per-Party Encryption Key Management
 
@@ -1944,34 +1948,205 @@ So that GDPR Articles 6, 18, and 20 obligations are fulfilled.
 **Then** a complete, time-stamped record is maintained in the event stream (FR52)
 **And** records support Article 30 compliance reporting
 
-### Story 9.5: Semantic Search & Temporal Name Queries
+### Story 9.5: Temporal Name Queries
 
 As a consumer,
-I want semantic search across parties and the ability to query historical names,
-So that I can find parties by meaning (not just exact match) and audit name history.
+I want to query historical party names at a point in time,
+So that I can support legal and audit workflows without replaying the event stream on the request path.
 
 **Acceptance Criteria:**
-
-**Given** a tenant with parties
-**When** a semantic search query is made (e.g., "technology company in Paris")
-**Then** parties are matched based on semantic relevance, not just exact/prefix match (FR16)
-**And** the search is powered by a pluggable projection (extensible to Elasticsearch/OpenSearch in v2)
 
 **Given** a party whose name has changed over time
 **When** a temporal name query is made with a specific point in time
 **Then** the party's name as it was at that timestamp is returned (FR72)
-**And** the query uses the event stream history preserved since MVP
+**And** the query uses pre-computed name history tracked in the party detail projection
+**And** the request does not replay the event stream at query time.
 
-**Given** the semantic search projection
-**When** reviewed for architecture
-**Then** it is a pluggable projection backend — can be swapped without domain code changes (D2)
-**And** it integrates with the existing projection handler pattern (D18)
+**Given** a party with one or more name changes
+**When** the full name history endpoint is called
+**Then** name history entries are returned in chronological order
+**And** each entry includes display name, sort name, change timestamp, and triggering event/source where available.
+
+**Given** a timestamp before the party existed
+**When** the temporal name query is made
+**Then** the API returns `404 Not Found`.
+
+**Given** a party has been erased
+**When** the temporal name query is made after erasure
+**Then** the API returns `410 Gone`
+**And** erased name history is not returned.
+
+**Given** an MCP caller
+**When** `get_party_name_at` is called
+**Then** it returns the same temporal name result and error semantics as REST.
+
+### Story 9.6: Hexalith.Memories-Backed Party Search
+
+As a consumer and AI agent,
+I want Parties search to use Hexalith.Memories for lexical, semantic, hybrid, and graph-assisted retrieval,
+So that party discovery uses the shared Hexalith search/memory module instead of a Parties-local search engine.
+
+**Acceptance Criteria:**
+
+**Given** Hexalith.Memories integration is enabled
+**When** party events or projection changes occur
+**Then** Parties indexes searchable party memory units into Memories
+**And** indexed content includes display name, party type, contact channel values, identifier values, active/erased state, and useful event context
+**And** metadata includes tenant id, party id, aggregate id, event type, timestamps, correlation id, causation id, and source service where available.
+
+**Given** a consumer or AI agent calls party search with a natural-language query
+**When** Memories integration is healthy
+**Then** Parties uses Memories hybrid search by default
+**And** matching memory units are hydrated back to authoritative Parties projection data
+**And** response metadata includes Memories relevance, lexical, semantic, graph, and composite scores when available.
+
+**Given** a caller requests lexical-only or semantic-only search
+**When** the search mode is specified
+**Then** Parties calls Memories single-axis search with axis `syntactic` or `semantic`.
+
+**Given** graph context is requested from a known party or memory unit
+**When** graph-assisted search executes
+**Then** Parties uses Memories traversal or graph-scoped search
+**And** hydrates related party results.
+
+**Given** Memories is unavailable, disabled, or partially degraded
+**When** a search request arrives
+**Then** Parties falls back to local display-name search where possible
+**And** returns a degraded indicator explaining that Memories-backed rich search was unavailable.
+
+**Given** a party erasure is triggered
+**When** erasure verification runs
+**Then** all party-related Memories memory units and search indexes are purged or tombstoned
+**And** erasure is not reported complete until Memories cleanup succeeds or is explicitly recorded as blocked.
+
+**Given** dependency boundaries are checked
+**When** `Hexalith.Parties.Contracts` is reviewed
+**Then** it has no dependency on Hexalith.Memories packages.
+
+---
+
+## Epic 11: Hexalith.Tenants Integration for Parties
+
+Hexalith.Parties uses Hexalith.Tenants as the source of truth for tenant lifecycle, membership, roles, and tenant configuration while preserving Parties-owned tenant isolation for party aggregates, projections, REST, MCP, and event publication.
+
+### Story 11.1: AppHost and Package Integration
+
+As a developer running Hexalith.Parties locally,
+I want the Parties AppHost to compose with Hexalith.Tenants,
+So that tenant lifecycle and membership are available through the same local topology as party management.
+
+**Acceptance Criteria:**
+
+**Given** the Parties AppHost
+**When** the local development topology is started
+**Then** the AppHost references the Tenants service/topology using the Tenants Aspire integration or equivalent local composition
+**And** Tenants service configuration is visible in the topology.
+
+**Given** local development setup
+**When** the default sample environment is prepared
+**Then** a default active tenant is seeded or documented through Hexalith.Tenants
+**And** the sample/test user is assigned a role that permits party commands.
+
+**Given** tenant authorization is enabled
+**When** Parties starts
+**Then** startup validates that Tenants integration configuration is present
+**And** missing configuration fails fast with actionable diagnostics.
+
+**Given** the Tenants service cannot be reached
+**When** Parties health and readiness are checked
+**Then** the failure is surfaced according to documented degraded behavior.
+
+### Story 11.2: Tenants Event Consumption and Local Access Projection
+
+As Hexalith.Parties,
+I want to consume Hexalith.Tenants lifecycle, membership, role, and configuration events,
+So that authorization decisions can be made locally without polling.
+
+**Acceptance Criteria:**
+
+**Given** relevant Hexalith.Tenants lifecycle, membership, role, or configuration events are published
+**When** Parties receives them through DAPR pub/sub
+**Then** Parties updates a local tenant access projection/cache.
+
+**Given** the local tenant access projection/cache
+**When** queried for tenant access
+**Then** it records active tenant state, user membership, roles, and relevant tenant configuration.
+
+**Given** a tenant is disabled or a user is removed from a tenant
+**When** the corresponding Tenants event is processed by Parties
+**Then** subsequent Parties commands and MCP tools fail closed for that tenant/user.
+
+**Given** Tenants event consumption is eventually consistent
+**When** developer documentation is reviewed
+**Then** it explains the timing window
+**And** it documents the synchronous enforcement path if the Tenants authorization plugin is enabled.
+
+### Story 11.3: REST and MCP Tenant Authorization Enforcement
+
+As a platform operator,
+I want all Parties REST and MCP operations to enforce Tenants-backed access rules,
+So that users cannot manage party data for inactive or unauthorized tenants.
+
+**Acceptance Criteria:**
+
+**Given** a REST command or query endpoint is called
+**When** the request reaches Parties
+**Then** the endpoint validates tenant access through `ITenantAccessService`.
+
+**Given** an MCP tool is called
+**When** the tool resolves session tenant context
+**Then** the tool validates tenant access through the same `ITenantAccessService`
+**And** it does not rely only on `McpSessionContext.Tenant`.
+
+**Given** a Parties operation requires authorization
+**When** access is evaluated
+**Then** Reader permits read/search operations
+**And** Contributor permits create/update/deactivate/reactivate operations
+**And** Owner or a configured elevated role permits administrative party operations.
+
+**Given** a request has missing tenant, inactive tenant, missing membership, insufficient role, or stale/unknown tenant state
+**When** the request is evaluated
+**Then** Parties rejects it with standardized ProblemDetails or MCP errors.
+
+**Given** a command payload contains tenant information
+**When** the payload is validated
+**Then** tenant ID is ignored or rejected according to API contract rules
+**And** tenant identity is never accepted from command payloads.
+
+### Story 11.4: Tenants Integration Tests, Deployment Validation, and Documentation
+
+As a developer and operator,
+I want tests and docs proving Parties uses Hexalith.Tenants correctly,
+So that tenant integration is reliable in CI and local development.
+
+**Acceptance Criteria:**
+
+**Given** fast tenant authorization test scenarios
+**When** tests are written
+**Then** they use `Hexalith.Tenants.Testing` where appropriate.
+
+**Given** integration tests for Tenants-backed access
+**When** the test suite runs
+**Then** it covers active tenant allowed, disabled tenant denied, removed user denied, insufficient role denied, and cross-tenant projection isolation.
+
+**Given** deployment validation tooling
+**When** validation runs
+**Then** it checks Tenants subscription/configuration
+**And** reports actionable errors when integration is missing or unhealthy.
+
+**Given** getting-started documentation
+**When** a developer follows the guide
+**Then** tenants are provisioned through Hexalith.Tenants.
+
+**Given** tenant troubleshooting documentation
+**When** reviewed
+**Then** it distinguishes missing JWT claims from missing Tenants membership or role.
 
 ---
 
 ## Epic 10: Administration & Frontend (v1.2)
 
-Administrators can browse, search, and inspect party records and process GDPR requests (erasure, restriction, consent, export) via a TypeScript admin portal. Consuming application developers can embed a party picker component in their UIs for party search and selection.
+Administrators can browse, search, and inspect party records and process party-level GDPR requests (erasure, restriction, consent, export) via a TypeScript admin portal. Tenant lifecycle, membership, roles, and configuration management remain owned by Hexalith.Tenants admin capabilities; the Parties admin portal consumes active tenant context and must not duplicate Tenants management screens. Consuming application developers can embed a party picker component in their UIs for party search and selection.
 
 ### Story 10.1: Admin Portal — Browse, Search & Inspect
 
