@@ -121,7 +121,7 @@ development_status:
   11-1-apphost-and-package-integration: ready-for-dev
   11-2-tenants-event-consumption-and-local-access-projection: ready-for-dev
   11-3-rest-and-mcp-tenant-authorization-enforcement: ready-for-dev
-  11-4-tenants-integration-tests-deployment-validation-and-documentation: backlog
+  11-4-tenants-integration-tests-deployment-validation-and-documentation: ready-for-dev
   epic-11-retrospective: optional
 
   # Epic 10: Administration & Frontend (v1.2) (3 stories)
