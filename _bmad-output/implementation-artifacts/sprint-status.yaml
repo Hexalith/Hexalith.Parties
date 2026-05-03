@@ -127,6 +127,6 @@ development_status:
   # Epic 10: Administration & Frontend (v1.2) (3 stories)
   epic-10: in-progress
   10-1-admin-portal-browse-search-and-inspect: ready-for-dev
-  10-2-admin-portal-gdpr-operations: backlog
+  10-2-admin-portal-gdpr-operations: ready-for-dev
   10-3-embeddable-party-picker-component: backlog
   epic-10-retrospective: optional
