@@ -14,16 +14,16 @@ so that users cannot manage party data for inactive or unauthorized tenants.
 
 1. Given a REST command or query endpoint is called, when the request reaches Parties, then the endpoint validates tenant access through `ITenantAccessService`.
 2. Given an MCP tool is called, when the tool resolves session tenant context, then the tool validates tenant access through the same `ITenantAccessService` and does not rely only on `McpSessionContext.Tenant`.
-3. Given a Parties operation requires authorization, when access is evaluated, then `TenantReader` permits read/search operations, `TenantContributor` permits create/update/deactivate/reactivate operations, and `TenantOwner` permits administrative party operations.
-4. Given a request has missing tenant, inactive tenant, missing membership, insufficient role, or stale/unknown tenant state, when the request is evaluated, then Parties rejects it with standardized ProblemDetails or MCP errors.
-5. Given a command payload contains tenant information, when the payload is validated, then tenant ID is ignored or rejected according to API contract rules and tenant identity is never accepted from command payloads.
+3. Given a Parties operation requires authorization, when access is evaluated, then role permissions are cumulative: `TenantReader` permits read/search operations, `TenantContributor` permits read/search plus create/update/deactivate/reactivate operations, and `TenantOwner` permits read/search, write operations, and administrative party operations.
+4. Given a request has missing tenant, missing authenticated user, inactive tenant, missing membership, insufficient role, or stale/unknown tenant state, when the request is evaluated, then Parties rejects it with standardized ProblemDetails or MCP errors using the same safe reason-code vocabulary across REST and MCP.
+5. Given a command payload contains tenant information, when the payload is validated, then trusted tenant identity comes only from authenticated route/session/server context; payload tenant values are never authorization inputs, cannot override trusted context, and conflicting payload tenant values are rejected with validation/problem details.
 
 ## Tasks / Subtasks
 
 - [ ] Register and stabilize the tenant authorization boundary (AC: 1, 2, 3, 4)
   - [ ] Reuse the `ITenantAccessService` created by Story 11.2 from `src/Hexalith.Parties.CommandApi/Authorization`; do not create a parallel REST-specific or MCP-specific authorization service.
   - [ ] If Story 11.2 did not already add these types, add `TenantAccessRequirement` with `Read`, `Write`, and `Admin`, plus an access result carrying `Allowed`, reason code, and safe diagnostic text.
-  - [ ] Keep role mapping explicit: `TenantReader` allows `Read`; `TenantContributor` allows `Read` and `Write`; `TenantOwner` allows `Read`, `Write`, and `Admin`.
+  - [ ] Keep role mapping explicit and cumulative: `TenantReader` allows `Read`; `TenantContributor` allows `Read` and `Write`; `TenantOwner` allows `Read`, `Write`, and `Admin`.
   - [ ] Fail closed for missing tenant, missing user id, unknown tenant projection, disabled tenant, missing member, insufficient role, and stale/unknown projection state if such state is represented by Story 11.2.
   - [ ] Do not add Tenants dependencies to `src/Hexalith.Parties.Contracts`.
 
@@ -62,6 +62,7 @@ so that users cannot manage party data for inactive or unauthorized tenants.
 - [ ] Standardize authorization denial translation (AC: 4)
   - [ ] Centralize REST denial translation so Parties returns consistent ProblemDetails type URIs, titles, status codes, correlation id extension, and request path instance values.
   - [ ] Use stable reason codes suitable for tests and troubleshooting, for example `missing-tenant`, `missing-user`, `unknown-tenant`, `tenant-disabled`, `not-member`, `insufficient-role`, and `tenant-state-stale`.
+  - [ ] Return `401` only for missing or unusable authenticated tenant/user context; return `403` for known authorization denials such as unknown tenant projection, inactive tenant, missing membership, insufficient role, stale tenant state, and disabled tenant.
   - [ ] Keep denial details operationally useful but safe; do not include full claim sets, membership dictionaries, or personal party data.
   - [ ] For MCP tools, throw errors with the same reason-code vocabulary in the message or structured payload shape already used by the MCP layer.
 
@@ -69,6 +70,7 @@ so that users cannot manage party data for inactive or unauthorized tenants.
   - [ ] Update `README.md` and/or `docs/getting-started.md` to state that a valid tenant claim is necessary but not sufficient; the user must be an active member of an active Hexalith.Tenants tenant with the required role.
   - [ ] Update tenant troubleshooting to distinguish missing JWT tenant context from Tenants projection/membership denial.
   - [ ] Document role requirements: Reader for read/search, Contributor for write operations, Owner for party administration.
+  - [ ] Document that roles are cumulative and that Owner can perform read/search and write operations as well as party administration.
   - [ ] Do not add Parties-local tenant management instructions; point tenant lifecycle and membership setup to Hexalith.Tenants.
 
 - [ ] Add focused tests for REST and MCP authorization enforcement (AC: 1, 2, 3, 4, 5)
@@ -78,6 +80,9 @@ so that users cannot manage party data for inactive or unauthorized tenants.
   - [ ] Add admin endpoint tests proving contributor cannot run admin operations and owner can.
   - [ ] Add MCP tool tests using faked `ITenantAccessService` and `McpSessionContext` to prove every tool calls authorization before projection reads or command routing.
   - [ ] Add regression tests proving command body tenant values, if present on any request model, do not influence the effective tenant.
+  - [ ] Add spoofing regression tests proving conflicting payload tenant values are rejected and cannot redirect authorization context.
+  - [ ] Add architectural regression coverage proving `Hexalith.Parties.Contracts` remains free of Tenants dependencies and EventStore actor/projection key formats are unchanged.
+  - [ ] Add coverage or a focused code-level assertion that REST/MCP request paths do not introduce per-request Tenants HTTP/API polling.
 
 - [ ] Validate build and affected tests
   - [ ] Run `dotnet test tests/Hexalith.Parties.CommandApi.Tests/Hexalith.Parties.CommandApi.Tests.csproj --configuration Release`.
@@ -154,11 +159,22 @@ The same proposal says `Hexalith.Parties.Contracts` must remain free of Tenants 
 - Do not implement tenant lifecycle, membership, role, global administrator, or configuration management in Parties.
 - Do not use the presence of `eventstore:tenant`, `tenant_id`, `tid`, or `tenants` claims as sufficient authorization. Claims identify requested context; Tenants projection membership authorizes it.
 - Do not add tenant id fields or parameters to party command payloads or MCP tool schemas.
+- Use trusted tenant context only from authenticated claims, route/server context, or authenticated MCP session context. Payload tenant values, if present for legacy DTO compatibility, are non-authoritative and must be rejected when conflicting with trusted context.
 - Do not change EventStore actor identity formats or Parties projection actor keys.
 - Do not poll Tenants HTTP APIs on every request; this story should use the local access service from Story 11.2.
 - Do not log full tokens, full claim sets, membership dictionaries, contact channel values, identifier values, names, or other personal party data when denying access.
 - Keep REST and MCP behavior consistent: same requirement mapping, same deny-by-default behavior, and same reason-code vocabulary.
 - If global administrator support is needed for party admin operations, defer the exact policy unless the Tenants client exposes it directly. Do not infer global admin from a local Parties role claim.
+
+### Party-Mode Review Clarifications
+
+The 2026-05-03 party-mode review clarified these pre-development decisions:
+
+- Operation-role mapping is cumulative: Reader can read/search, Contributor can read/search/write, and Owner can read/search/write/admin.
+- REST and MCP must use the same `ITenantAccessService` decision path and reason-code vocabulary; `McpSessionContext.Tenant` is context only, not authorization proof.
+- Missing authenticated tenant or user context maps to `401`; inactive tenant, unknown tenant projection, missing membership, insufficient role, disabled tenant, and stale tenant state map to `403` unless an existing framework convention requires a more specific MCP error wrapper.
+- Payload tenant values are not authorization inputs. A conflicting payload tenant must be rejected rather than used to switch context.
+- Story 11.3 must not introduce Tenants event handling, Tenants projection schema changes, EventStore actor identity changes, or per-request Tenants HTTP/API polling.
 
 ### Testing Requirements
 
@@ -229,5 +245,29 @@ GPT-5 Codex
 ### Completion Notes List
 
 - Ultimate context engine analysis completed - comprehensive developer guide created.
+- Party-mode review completed on 2026-05-03; story clarified before development.
 
 ### File List
+
+### Party-Mode Review
+
+- Date: 2026-05-03T13:19:29.7922545+02:00
+- Selected story key: 11-3-rest-and-mcp-tenant-authorization-enforcement
+- Command/skill invocation used: `/bmad-party-mode 11-3-rest-and-mcp-tenant-authorization-enforcement; review;`
+- Participating BMAD agents: Winston (System Architect), Amelia (Senior Software Engineer), Murat (Master Test Architect), John (Product Manager)
+- Findings summary:
+  - The story needed sharper tenant identity source rules for REST and MCP so command payloads and MCP tenant context cannot be mistaken for authorization proof.
+  - Role inheritance was implicit; the review required a testable cumulative Reader, Contributor, and Owner matrix.
+  - REST and MCP denial translation needed a shared safe reason-code vocabulary and clear `401` versus `403` guidance.
+  - MCP tools needed explicit guidance to call `ITenantAccessService` for every read/write operation instead of relying only on `McpSessionContext.Tenant`.
+  - Test requirements needed spoofing, stale/unknown projection, contract-boundary, actor-key, and no-per-request-Tenants-polling regressions.
+- Changes applied:
+  - Clarified acceptance criteria for cumulative role permissions, missing authenticated user handling, shared REST/MCP reason codes, and payload tenant conflict rejection.
+  - Updated authorization boundary tasks to make role mapping cumulative.
+  - Added denial translation guidance for `401` missing context and `403` Tenants-backed authorization denials.
+  - Expanded documentation and test tasks for cumulative roles, spoofed payload tenants, contract dependency boundaries, actor/projection key stability, and no per-request Tenants HTTP/API polling.
+  - Added party-mode review clarification notes covering identity source, MCP context limits, payload tenant handling, and cross-story scope boundaries.
+- Findings deferred:
+  - Global administrator or service-principal bypass policy remains deferred unless the Tenants client exposes an explicit consumer authorization contract.
+  - Exact MCP wrapper/error type names remain implementation-specific, but must carry the shared reason-code vocabulary.
+- Final recommendation: ready-for-dev
