@@ -1,6 +1,6 @@
 # Story 11.1: AppHost and Package Integration
 
-Status: ready-for-dev
+Status: blocked
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -199,6 +199,30 @@ Recent relevant commits:
 {{agent_model_name_version}}
 
 ### Debug Log References
+
+### Review Round
+
+#### Party-Mode Review - 2026-05-03T09:39:25.7734981+02:00
+
+- Selected story key: `11-1-apphost-and-package-integration`
+- Command/skill invocation used: `/bmad-party-mode 11-1-apphost-and-package-integration; review;`
+- Participating BMAD agents: Winston (System Architect), John (Product Manager), Amelia (Senior Software Engineer), Murat (Test Architect)
+- Findings summary:
+  - AC2 leaves too much implementation discretion by saying the default tenant and sample user may be "seeded or documented"; the story needs one explicit Tenants-supported path and must not imply Parties can fake tenant membership locally.
+  - AC3 needs a precise tenant-authorization configuration gate, including the exact enabled flag, required option keys, validation location, and proof that disabled tenant authorization does not require Tenants configuration.
+  - AC4 needs an observable health contract for Tenants unreachability, including endpoint, status semantics, timeout expectations, and liveness/readiness behavior.
+  - AppHost topology guidance should make `tenants`, `commandapi`, and `eventstore` app-id/resource boundaries explicit so development does not replace the EventStore command gateway or overbuild later Story 11.2/11.3 responsibilities.
+  - Test guidance should name conditional options validation, fakeable Tenants health behavior, topology/resource-name verification, and a Contracts dependency guard.
+- Changes applied:
+  - Recorded this canonical party-mode review trace.
+  - Marked the story `blocked` because the review surfaced product/architecture decisions that should not be resolved silently during party-mode review.
+- Findings deferred:
+  - Decide whether AC2 is fulfilled by documented manual bootstrap or executable Tenants-supported bootstrap.
+  - Decide the exact sample/test user identity and minimum Tenants role for party commands.
+  - Define the precise Tenants health/readiness contract for unreachable Tenants service.
+  - Define the exact `Tenants:*` option keys and startup validation location.
+  - Confirm whether `WaitFor(tenants)` is required for `commandapi` startup or only for AppHost topology visibility.
+- Final recommendation: `blocked`
 
 ### Completion Notes List
 
