@@ -69,7 +69,10 @@ public class SemanticSearchE2ETests(PartiesAspireTopologyFixture fixture, ITestO
 
         // Search with fuzzy query "Dupnt" (misspelled — should match "Dupont" via Jaro-Winkler)
         JsonDocument searchResult = await WaitForSearchResultsAsync(client, "Dupnt", minCount: 1);
-        JsonElement items = searchResult.RootElement.GetProperty("items");
+        JsonElement items = searchResult.RootElement.TryGetProperty("results", out JsonElement results)
+            && results.TryGetProperty("items", out JsonElement nestedItems)
+            ? nestedItems
+            : searchResult.RootElement.GetProperty("items");
 
         items.GetArrayLength().ShouldBeGreaterThanOrEqualTo(1);
 

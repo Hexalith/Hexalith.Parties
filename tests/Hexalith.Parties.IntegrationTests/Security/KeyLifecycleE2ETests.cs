@@ -99,7 +99,9 @@ public class KeyLifecycleE2ETests(PartiesAspireTopologyFixture fixture, ITestOut
             return;
         }
 
-        createResponse.StatusCode.ShouldBe(HttpStatusCode.Accepted);
+        createResponse.StatusCode.ShouldBe(
+            HttpStatusCode.Accepted,
+            await createResponse.Content.ReadAsStringAsync());
 
         JsonDocument createPayload = await JsonDocument.ParseAsync(
             await createResponse.Content.ReadAsStreamAsync());

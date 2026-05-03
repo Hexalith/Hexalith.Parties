@@ -9,3 +9,13 @@ namespace Hexalith.Parties.IntegrationTests.HealthChecks;
 public class PartiesAspireTopologyCollection : ICollectionFixture<PartiesAspireTopologyFixture>
 {
 }
+
+[CollectionDefinition("PartiesAspireTopologyHealth")]
+public class PartiesAspireTopologyHealthCollection : ICollectionFixture<PartiesAspireTopologyFixture>
+{
+}
+
+[CollectionDefinition("PartiesAspireTopologyAdmin")]
+public class PartiesAspireTopologyAdminCollection : ICollectionFixture<PartiesAspireTopologyFixture>
+{
+}

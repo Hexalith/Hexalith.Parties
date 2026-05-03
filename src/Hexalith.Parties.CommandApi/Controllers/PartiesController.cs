@@ -1,5 +1,4 @@
 using System.Text.Json;
-using System.Text.Json.Nodes;
 
 using Dapr.Actors;
 using Dapr.Actors.Client;
@@ -12,6 +11,7 @@ using Hexalith.EventStore.Server.Commands;
 using Hexalith.EventStore.Server.Pipeline.Commands;
 using Hexalith.EventStore.Server.Projections;
 using Hexalith.EventStore.Contracts.Identity;
+using Hexalith.Parties.CommandApi.Extensions;
 using Hexalith.Parties.CommandApi.Middleware;
 using Hexalith.Parties.CommandApi.Search;
 using Hexalith.Parties.Contracts.Commands;
@@ -268,7 +268,7 @@ public sealed class PartiesController(
         IPartyDetailProjectionActor proxy = actorProxyFactory.CreateActorProxy<IPartyDetailProjectionActor>(
             actorId, nameof(PartyDetailProjectionActor));
         bool isRebuilding = await proxy.IsRebuildingAsync().ConfigureAwait(false);
-        PartyDetail? detail = await GetPartyDetailAsync(proxy).ConfigureAwait(false);
+        PartyDetail? detail = await proxy.ReadDetailAsync().ConfigureAwait(false);
 
         if (isRebuilding)
         {
@@ -312,7 +312,7 @@ public sealed class PartiesController(
         IPartyDetailProjectionActor proxy = actorProxyFactory.CreateActorProxy<IPartyDetailProjectionActor>(
             actorId, nameof(PartyDetailProjectionActor));
 
-        PartyDetail? detail = await GetPartyDetailAsync(proxy).ConfigureAwait(false);
+        PartyDetail? detail = await proxy.ReadDetailAsync().ConfigureAwait(false);
 
         if (detail is null)
         {
@@ -330,7 +330,9 @@ public sealed class PartiesController(
         }
 
         NameHistoryEntry? entry = detail.NameHistory
-            .LastOrDefault(e => e.ChangedAt <= at);
+            .Where(e => e.ChangedAt <= at)
+            .OrderBy(e => e.ChangedAt)
+            .LastOrDefault();
 
         if (entry is null)
         {
@@ -366,7 +368,7 @@ public sealed class PartiesController(
         IPartyDetailProjectionActor proxy = actorProxyFactory.CreateActorProxy<IPartyDetailProjectionActor>(
             actorId, nameof(PartyDetailProjectionActor));
 
-        PartyDetail? detail = await GetPartyDetailAsync(proxy).ConfigureAwait(false);
+        PartyDetail? detail = await proxy.ReadDetailAsync().ConfigureAwait(false);
 
         if (detail is null)
         {
@@ -767,74 +769,6 @@ public sealed class PartiesController(
         return false;
     }
 
-    private static async Task<PartyDetail?> GetPartyDetailAsync(IPartyDetailProjectionActor proxy)
-    {
-        Task<string?>? jsonTask = null;
-        try
-        {
-            jsonTask = proxy.GetDetailJsonAsync();
-        }
-        catch (NotImplementedException)
-        {
-            // Older test doubles and actor implementations can still use the typed actor method.
-        }
-
-        if (jsonTask is not null)
-        {
-            try
-            {
-                string? json = await jsonTask.ConfigureAwait(false);
-                if (!string.IsNullOrWhiteSpace(json)
-                    && !string.Equals(json.Trim(), "{}", StringComparison.Ordinal)
-                    && !string.Equals(json.Trim(), "null", StringComparison.OrdinalIgnoreCase))
-                {
-                    PartyDetail? deserialized = JsonSerializer.Deserialize<PartyDetail>(json, s_jsonOptions);
-                    if (deserialized is not null)
-                    {
-                        return deserialized;
-                    }
-                    // Fall through to typed-actor fallback when deserialize returned null —
-                    // legacy projections may need the typed call to materialize the detail.
-                }
-            }
-            catch (NotImplementedException)
-            {
-                // Dapr remoting raises NotImplementedException at await time, not invoke time.
-            }
-        }
-
-        Task<byte[]?>? serializedTask = null;
-        try
-        {
-            serializedTask = proxy.GetSerializedDetailAsync();
-        }
-        catch (NotImplementedException)
-        {
-            // Older test doubles and actor implementations can still use the typed actor method.
-        }
-
-        if (serializedTask is not null)
-        {
-            try
-            {
-                byte[]? payload = await serializedTask.ConfigureAwait(false);
-                if (payload is { Length: > 0 } && !IsEmptyJsonPayload(payload))
-                {
-                    PartyDetail? deserialized = JsonSerializer.Deserialize<PartyDetail>(payload, s_jsonOptions);
-                    if (deserialized is not null)
-                    {
-                        return deserialized;
-                    }
-                }
-            }
-            catch (NotImplementedException)
-            {
-            }
-        }
-
-        return await proxy.GetDetailAsync().ConfigureAwait(false);
-    }
-
     private static async Task<IReadOnlyDictionary<string, PartyIndexEntry>> GetPartyIndexEntriesAsync(IPartyIndexProjectionActor proxy)
     {
         Task<string?>? jsonTask = null;
@@ -862,36 +796,6 @@ public sealed class PartiesController(
         }
 
         return await proxy.GetEntriesAsync().ConfigureAwait(false);
-    }
-
-    private static bool IsEmptyJsonPayload(byte[] payload)
-    {
-        if (payload.Length == 0)
-        {
-            return true;
-        }
-
-        // Reject BOM-prefixed payloads when matching — the previous byte-pattern check failed
-        // on "{ }" with whitespace, "{}\n", and JSON.SerializeToUtf8Bytes(null) variants.
-        try
-        {
-            JsonNode? node = JsonNode.Parse(payload);
-            if (node is null)
-            {
-                return true;
-            }
-
-            return node switch
-            {
-                JsonObject obj => obj.Count == 0,
-                JsonArray arr => arr.Count == 0,
-                _ => false,
-            };
-        }
-        catch (JsonException)
-        {
-            return false;
-        }
     }
 
     private string? ExtractTenant()

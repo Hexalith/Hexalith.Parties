@@ -1,6 +1,6 @@
 # Story 9.6: Hexalith.Memories-Backed Party Search
 
-Status: in-progress (review patches applied 2026-05-03; awaiting maintainer sign-off + integration-suite re-run)
+Status: review
 
 <!-- Split from the former Story 9.5 "Semantic Search & Temporal Name Queries". -->
 
@@ -345,6 +345,7 @@ GPT-5 Codex
     - **Originally failing → still failing (2)**: `ErasureE2ETests.FullTopology_AfterErasure_PartyExcludedFromSearch` (search-projection cleanup ordering — needs separate look) and `ConsentRestrictionE2ETests.FullTopology_RestrictThenUpdate_RejectedThenLiftSucceeds` (passes in isolation in 4 s; fails when 30+ tests precede it).
     - **Originally passing → now failing (5)**: `SemanticSearchE2ETests.FullTopology_SemanticSearch_FuzzyQuery_ReturnsRankedResults`, `TemporalNameE2ETests.FullTopology_TemporalNameQuery_ReturnsOriginalNameAtCreationTimestamp`, `KeyLifecycleE2ETests.KeyRotation_InFullTopology_ProducesAuditableCorrelationId`, `EncryptionE2ETests.FullTopology_KeyRotation_OldEventsStillDecryptable`, `ConsentRestrictionE2ETests.FullTopology_CreatePartyRecordConsent_ConsentVisibleInDetail`. All five fail at the `CreateParty` POST with HTTP 422 at xUnit timestamps 00:46–02:32 (i.e., after ~30 prior E2E tests have hit the same shared `PartiesAspireTopology` fixture). All five pass when invoked in isolation against a fresh fixture — diagnostic confirmed for `ConsentRestrictionE2ETests.FullTopology_RestrictThenUpdate` (passes alone in 4 s). This is consistent with cumulative shared-topology pollution (DAPR sidecar state, actor activation pile-up, or a memory leak in the in-memory state store) rather than a logic regression in the rehydration / projection paths I touched.
   - **Halt rationale (workflow Step 9)**: net-new slnx failures gate the move to `review` even though every targeted root cause is verified fixed. The two remaining originally-failing tests (`AfterErasure_PartyExcludedFromSearch` and `RestrictThenUpdate_RejectedThenLiftSucceeds`) plus the 5 newly-flaky tests share a common shape — failure-after-N-prior-tests in the shared `PartiesAspireTopology` collection. Recommend handing the residual flakiness off to a Tier-3 hardening story (split the IntegrationTests collection so each test gets a fresh AppHost, or add a per-test fixture reset hook that flushes DAPR state) rather than re-scoping it back into 9-6.
+- Resume session 2026-05-03 (GPT-5 Codex): cleared the story completion gate. Registered `PartyDomainServiceInvoker` before EventStore actor setup so Parties command actors do not capture the default DAPR domain invoker. Extended post-erasure redaction fallback to include the local key backend's deleted-key `KeyNotFoundException` shape, allowing internal erasure commands and projection delivery to advance after crypto-shredding. Serialized the IntegrationTests assembly and split infrastructure-mutating Aspire health/admin checks into separate fixture collections so sidecar restart and projection rebuild tests do not pollute command-flow E2Es. Updated semantic/temporal/erasure/key lifecycle E2E assertions for the current response envelope and better failure diagnostics. Full solution regression now passes; story moved to `review`.
 
 ### Debug Log References
 
@@ -368,6 +369,9 @@ GPT-5 Codex
 - PASS (resume session 2026-05-02 Opus 4.7, post-fix) `dotnet test ... --filter "FullyQualifiedName~ConsentRestrictionE2ETests.FullTopology_RestrictThenUpdate"` in isolation against fresh fixture: 1 passed in 4 s (was failing at lift step before fix).
 - FAIL (resume session 2026-05-02 Opus 4.7, post-fix) `dotnet test Hexalith.Parties.slnx --no-build --no-restore --logger "console;verbosity=minimal"`: 3 of 5 originally failing tests now pass; remaining failures attributed to shared-topology pollution — failures occur only after ~30 sequential E2E tests in the same `PartiesAspireTopology` collection, same tests pass in isolation. Detailed delta in Completion Notes (resume session 2 entry).
 - FAIL (resume session 2026-05-02 Opus 4.7, post-fix) `dotnet test tests\Hexalith.Parties.IntegrationTests\Hexalith.Parties.IntegrationTests.csproj --no-restore --no-build --logger "console;verbosity=quiet"`: Failed 7, Passed 36, Skipped 1. See Completion Notes for the originally-failing-now-passing / still-failing / newly-flaky breakdown.
+- PASS (resume session 2026-05-03 GPT-5 Codex) `dotnet test tests\Hexalith.Parties.IntegrationTests\Hexalith.Parties.IntegrationTests.csproj --no-restore --filter "FullyQualifiedName~ErasureE2ETests" --logger "console;verbosity=minimal"`: 4 passed.
+- PASS (resume session 2026-05-03 GPT-5 Codex) `dotnet test tests\Hexalith.Parties.IntegrationTests\Hexalith.Parties.IntegrationTests.csproj --no-restore --logger "console;verbosity=minimal"`: 43 passed, 1 skipped.
+- PASS (resume session 2026-05-03 GPT-5 Codex) `dotnet test Hexalith.Parties.slnx --no-restore --logger "console;verbosity=minimal"`: all projects passed; IntegrationTests 43 passed / 1 skipped, CommandApi.Tests 274 passed, Projections.Tests 55 passed, Security.Tests 107 passed, plus remaining solution test projects passed.
 
 ### File List
 
@@ -418,7 +422,15 @@ GPT-5 Codex
 - tests/Hexalith.Parties.CommandApi.Tests/Search/PartyMemorySearchOptionsValidatorTests.cs
 - tests/Hexalith.Parties.IntegrationTests/Search/SemanticSearchE2ETests.cs
 - tests/Hexalith.Parties.IntegrationTests/Search/TemporalNameE2ETests.cs
+- tests/Hexalith.Parties.IntegrationTests/AssemblyInfo.cs
+- tests/Hexalith.Parties.IntegrationTests/Admin/AdminEndpointE2ETests.cs
+- tests/Hexalith.Parties.IntegrationTests/HealthChecks/HealthEndpointE2ETests.cs
+- tests/Hexalith.Parties.IntegrationTests/HealthChecks/PartiesAspireTopologyCollection.cs
+- tests/Hexalith.Parties.IntegrationTests/Security/ErasureE2ETests.cs
+- tests/Hexalith.Parties.IntegrationTests/Security/KeyLifecycleE2ETests.cs
 - tests/Hexalith.Parties.Projections.Tests/Handlers/PartyDetailProjectionHandlerNameHistoryTests.cs
+- _bmad-output/implementation-artifacts/9-6-hexalith-memories-backed-party-search.md
+- _bmad-output/implementation-artifacts/sprint-status.yaml
 - tests/Hexalith.Parties.Projections.Tests/Handlers/PartyIndexProjectionHandlerTests.cs
 
 ## Change Log
@@ -426,3 +438,4 @@ GPT-5 Codex
 | Date       | Author       | Description                                                                                                                                                                                                                                                                  |
 | ---------- | ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 2026-05-02 | Amelia (Opus 4.7) | Added 18 no-op `Apply(IRejectionEvent)` overloads to `PartyState` (declared before success Applies to keep the rehydrator's suffix-match resolver from mis-routing `PartyProcessingRestricted` into `Apply(ProcessingRestricted)`). Added `PartyPayloadProtectionService.RedactProtectedPayload` and wired tolerant fallback into `PartyDomainServiceInvoker` and `PartyProjectionUpdateOrchestrator` so post-erasure rehydration and projection delivery survive key destruction. 3 of 5 originally-failing E2E tests now pass; remaining slnx failures track shared-topology pollution and are recommended for a separate Tier-3 hardening story. Story remains `in-progress` per workflow Step 9 HALT. |
+| 2026-05-03 | GPT-5 Codex | Cleared the story 9-6 completion gate: fixed Parties domain invoker registration order, recognized deleted local key exceptions in post-erasure redaction fallback, isolated infrastructure-mutating Aspire E2Es, updated search/erasure/key lifecycle E2E assertions, and validated the full solution. Story moved to `review`. |

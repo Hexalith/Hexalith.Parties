@@ -1,0 +1,119 @@
+using System.Text.Json;
+using System.Text.Json.Nodes;
+
+using Hexalith.Parties.Contracts.Models;
+using Hexalith.Parties.Projections.Abstractions;
+
+namespace Hexalith.Parties.CommandApi.Extensions;
+
+internal static class PartyDetailProjectionActorExtensions
+{
+    private static readonly JsonSerializerOptions s_jsonOptions = new(JsonSerializerDefaults.Web);
+
+    public static async Task<PartyDetail?> ReadDetailAsync(this IPartyDetailProjectionActor proxy)
+    {
+        ArgumentNullException.ThrowIfNull(proxy);
+
+        Task<string?>? jsonTask = null;
+        try
+        {
+            jsonTask = proxy.GetDetailJsonAsync();
+        }
+        catch (NotImplementedException)
+        {
+        }
+
+        if (jsonTask is not null)
+        {
+            try
+            {
+                string? json = await jsonTask.ConfigureAwait(false);
+                if (!string.IsNullOrWhiteSpace(json) && !IsEmptyJsonString(json))
+                {
+                    PartyDetail? deserialized = JsonSerializer.Deserialize<PartyDetail>(json, s_jsonOptions);
+                    if (deserialized is not null)
+                    {
+                        return deserialized;
+                    }
+                }
+            }
+            catch (NotImplementedException)
+            {
+                // Dapr remoting raises NotImplementedException at await time, not invoke time.
+            }
+        }
+
+        Task<byte[]?>? serializedTask = null;
+        try
+        {
+            serializedTask = proxy.GetSerializedDetailAsync();
+        }
+        catch (NotImplementedException)
+        {
+        }
+
+        if (serializedTask is not null)
+        {
+            try
+            {
+                byte[]? payload = await serializedTask.ConfigureAwait(false);
+                if (payload is { Length: > 0 } && !IsEmptyJsonPayload(payload))
+                {
+                    PartyDetail? deserialized = JsonSerializer.Deserialize<PartyDetail>(payload, s_jsonOptions);
+                    if (deserialized is not null)
+                    {
+                        return deserialized;
+                    }
+                }
+            }
+            catch (NotImplementedException)
+            {
+            }
+        }
+
+        return await proxy.GetDetailAsync().ConfigureAwait(false);
+    }
+
+    private static bool IsEmptyJsonString(string json)
+    {
+        try
+        {
+            JsonNode? node = JsonNode.Parse(json);
+            return node switch
+            {
+                null => true,
+                JsonObject obj => obj.Count == 0,
+                JsonArray arr => arr.Count == 0,
+                _ => false,
+            };
+        }
+        catch (JsonException)
+        {
+            return false;
+        }
+    }
+
+    private static bool IsEmptyJsonPayload(byte[] payload)
+    {
+        if (payload.Length == 0)
+        {
+            return true;
+        }
+
+        try
+        {
+            JsonNode? node = JsonNode.Parse(payload);
+            return node switch
+            {
+                null => true,
+                JsonObject obj => obj.Count == 0,
+                JsonArray arr => arr.Count == 0,
+                _ => false,
+            };
+        }
+        catch (JsonException)
+        {
+            return false;
+        }
+    }
+}

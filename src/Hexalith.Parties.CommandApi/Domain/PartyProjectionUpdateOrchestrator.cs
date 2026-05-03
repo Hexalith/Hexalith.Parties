@@ -92,7 +92,7 @@ internal sealed class PartyProjectionUpdateOrchestrator(
             {
                 throw;
             }
-            catch (InvalidOperationException ex) when (IsKeyDestroyedFailure(ex))
+            catch (Exception ex) when (IsKeyDestroyedFailure(ex))
             {
                 // Narrowed catch (was: any Exception). Only fall back to a redacted payload
                 // when the failure is specifically the post-erasure "no encryption key
@@ -195,13 +195,15 @@ internal sealed class PartyProjectionUpdateOrchestrator(
     }
 
     /// <summary>
-    /// Recognises the specific InvalidOperationException thrown when a party's encryption key
-    /// has been destroyed (post-erasure). Other InvalidOperationException flavours from the
+    /// Recognises the specific failures thrown when a party's encryption key
+    /// has been destroyed (post-erasure). Other failures from the
     /// payload protection service (missing nonce / tag / ciphertext / key-version metadata)
     /// indicate transient or structural failures that must propagate, not be redacted away.
     /// </summary>
-    private static bool IsKeyDestroyedFailure(InvalidOperationException ex)
-        => ex.Message.Contains("No encryption key", StringComparison.OrdinalIgnoreCase)
+    private static bool IsKeyDestroyedFailure(Exception ex)
+        => (ex is InvalidOperationException or KeyNotFoundException)
+            && (ex.Message.Contains("No encryption key", StringComparison.OrdinalIgnoreCase)
             || ex.Message.Contains("key destroyed", StringComparison.OrdinalIgnoreCase)
-            || ex.Message.Contains("key has been deleted", StringComparison.OrdinalIgnoreCase);
+            || ex.Message.Contains("key has been deleted", StringComparison.OrdinalIgnoreCase)
+            || ex.Message.Contains("Secret not found", StringComparison.OrdinalIgnoreCase));
 }

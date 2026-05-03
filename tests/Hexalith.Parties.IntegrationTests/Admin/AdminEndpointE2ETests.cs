@@ -18,7 +18,7 @@ namespace Hexalith.Parties.IntegrationTests.Admin;
 /// </summary>
 [Trait("Category", "E2E")]
 [Trait("Tier", "3")]
-[Collection("PartiesAspireTopology")]
+[Collection("PartiesAspireTopologyAdmin")]
 public sealed class AdminEndpointE2ETests
 {
     private const string RebuildEndpoint = "/api/v1/admin/projections/rebuild";

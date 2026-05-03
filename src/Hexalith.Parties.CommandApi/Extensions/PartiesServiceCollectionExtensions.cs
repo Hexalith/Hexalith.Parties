@@ -69,8 +69,8 @@ public static class PartiesServiceCollectionExtensions {
         _ = services.AddTransient<IClaimsTransformation, PartiesClaimsTransformation>();
 
         // EventStore server infrastructure (command routing, actors)
-        _ = services.AddEventStoreServer(configuration);
         _ = services.AddTransient<IDomainServiceInvoker, PartyDomainServiceInvoker>();
+        _ = services.AddEventStoreServer(configuration);
         // Single concrete registration so both interfaces resolve to the same instance per scope.
         // Two separate AddTransient<TInterface, TImpl>() calls would create two parallel
         // orchestrators, silently splitting any state or cache between the synchronous-update

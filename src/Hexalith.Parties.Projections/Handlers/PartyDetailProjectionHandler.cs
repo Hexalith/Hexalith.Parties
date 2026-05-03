@@ -115,9 +115,12 @@ public sealed class PartyDetailProjectionHandler
 
     private static PartyDetail? HandleNameDerived(PartyDetail state, PartyDisplayNameDerived e)
     {
-        // Deduplicate: skip if DisplayName hasn't actually changed
+        // Deduplicate: skip when neither DisplayName nor SortName has changed.
+        // Sort-only changes (locale tweak, contracted family-name spelling) ARE tracked,
+        // because directory-style queries that order by SortName need the history.
         if (state.NameHistory.Count > 0 &&
-            string.Equals(state.NameHistory[^1].DisplayName, e.DisplayName, StringComparison.Ordinal))
+            string.Equals(state.NameHistory[^1].DisplayName, e.DisplayName, StringComparison.Ordinal) &&
+            string.Equals(state.NameHistory[^1].SortName, e.SortName, StringComparison.Ordinal))
         {
             return state with
             {

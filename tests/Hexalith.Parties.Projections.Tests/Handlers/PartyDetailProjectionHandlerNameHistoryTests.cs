@@ -79,7 +79,7 @@ public class PartyDetailProjectionHandlerNameHistoryTests
         result.SortName.ShouldBe("Smith, Jane");
     }
 
-    // 7.13 — duplicate DisplayName (no change) does NOT append
+    // 7.13 — duplicate DisplayName AND SortName (no change) does NOT append
     [Fact]
     public void Apply_PartyDisplayNameDerived_SameDisplayName_DoesNotAppend()
     {
@@ -100,6 +100,32 @@ public class PartyDetailProjectionHandlerNameHistoryTests
         result.ShouldNotBeNull();
         result.NameHistory.Count.ShouldBe(1); // No new entry added
         result.DisplayName.ShouldBe("John Doe");
+    }
+
+    // Sort-only change (display name unchanged) DOES append — directory-style queries
+    // ordered by SortName depend on history capturing the new collation.
+    [Fact]
+    public void Apply_PartyDisplayNameDerived_SortNameOnlyChange_AppendsHistoryEntry()
+    {
+        PartyCreated createEvent = new()
+        {
+            Type = PartyType.Person,
+            PersonDetails = PartyTestData.ValidPersonDetails(),
+        };
+        PartyDetail? state = PartyDetailProjectionHandler.Apply(PartyId, createEvent, null);
+
+        PartyDisplayNameDerived sortOnlyChange = new()
+        {
+            DisplayName = "John Doe",
+            SortName = "Doe John",
+        };
+        PartyDetail? result = PartyDetailProjectionHandler.Apply(PartyId, sortOnlyChange, state);
+
+        result.ShouldNotBeNull();
+        result.NameHistory.Count.ShouldBe(2);
+        result.NameHistory[1].DisplayName.ShouldBe("John Doe");
+        result.NameHistory[1].SortName.ShouldBe("Doe John");
+        result.SortName.ShouldBe("Doe John");
     }
 
     // 7.14 — ApplyErasure clears NameHistory

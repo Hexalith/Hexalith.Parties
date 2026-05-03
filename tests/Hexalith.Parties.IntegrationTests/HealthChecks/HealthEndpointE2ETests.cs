@@ -14,7 +14,7 @@ namespace Hexalith.Parties.IntegrationTests.HealthChecks;
 /// </summary>
 [Trait("Category", "E2E")]
 [Trait("Tier", "3")]
-[Collection("PartiesAspireTopology")]
+[Collection("PartiesAspireTopologyHealth")]
 public sealed class HealthEndpointE2ETests
 {
     /// <summary>

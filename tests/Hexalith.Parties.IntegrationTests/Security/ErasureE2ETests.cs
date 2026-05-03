@@ -61,7 +61,9 @@ public class ErasureE2ETests(PartiesAspireTopologyFixture fixture, ITestOutputHe
             return;
         }
 
-        createResponse.StatusCode.ShouldBe(HttpStatusCode.Accepted);
+        createResponse.StatusCode.ShouldBe(
+            HttpStatusCode.Accepted,
+            await createResponse.Content.ReadAsStringAsync());
 
         // Wait for party to be available in projection
         await WaitForPartyDetailAsync(client, partyId);
@@ -105,7 +107,9 @@ public class ErasureE2ETests(PartiesAspireTopologyFixture fixture, ITestOutputHe
             return;
         }
 
-        createResponse.StatusCode.ShouldBe(HttpStatusCode.Accepted);
+        createResponse.StatusCode.ShouldBe(
+            HttpStatusCode.Accepted,
+            await createResponse.Content.ReadAsStringAsync());
         await WaitForPartyDetailAsync(client, partyId);
 
         // Trigger erasure
@@ -150,7 +154,9 @@ public class ErasureE2ETests(PartiesAspireTopologyFixture fixture, ITestOutputHe
             return;
         }
 
-        createResponse.StatusCode.ShouldBe(HttpStatusCode.Accepted);
+        createResponse.StatusCode.ShouldBe(
+            HttpStatusCode.Accepted,
+            await createResponse.Content.ReadAsStringAsync());
         await WaitForPartyDetailAsync(client, partyId);
 
         // Trigger erasure
@@ -203,7 +209,9 @@ public class ErasureE2ETests(PartiesAspireTopologyFixture fixture, ITestOutputHe
             return;
         }
 
-        createResponse.StatusCode.ShouldBe(HttpStatusCode.Accepted);
+        createResponse.StatusCode.ShouldBe(
+            HttpStatusCode.Accepted,
+            await createResponse.Content.ReadAsStringAsync());
         await WaitForPartyDetailAsync(client, partyId);
 
         // Trigger erasure

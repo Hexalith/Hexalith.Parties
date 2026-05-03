@@ -60,17 +60,22 @@ public class TemporalNameE2ETests(PartiesAspireTopologyFixture fixture, ITestOut
             return;
         }
 
-        createResponse.StatusCode.ShouldBe(HttpStatusCode.Accepted);
+        createResponse.StatusCode.ShouldBe(
+            HttpStatusCode.Accepted,
+            await createResponse.Content.ReadAsStringAsync());
 
         // Wait for party to appear with original name
         JsonDocument originalDetail = await WaitForPartyDetailAsync(client, partyId, "John Doe");
         string originalDisplayName = originalDetail.RootElement.GetProperty("displayName").GetString()!;
         originalDisplayName.ShouldBe("John Doe");
 
-        // Record timestamp after creation is confirmed
-        DateTimeOffset afterCreation = DateTimeOffset.UtcNow;
+        // Capture the projection-side creation timestamp instead of the test-process wall-clock.
+        // The projection handler stamps NameHistoryEntry.ChangedAt with its own UtcNow, so
+        // comparing against test-process time was racy under inter-host clock skew.
+        DateTimeOffset afterCreation = originalDetail.RootElement
+            .GetProperty("createdAt").GetDateTimeOffset();
 
-        // Wait a moment to ensure temporal separation
+        // Wait a moment to ensure temporal separation between create and update events.
         await Task.Delay(1000);
 
         // Step 2: Update person details (name change)

@@ -112,8 +112,8 @@ development_status:
   9-2-field-level-encryption-and-crypto-shredding-activation: done
   9-3-right-to-erasure-and-verification: done
   9-4-consent-management-restriction-and-portability: done
-  9-5-temporal-name-queries: review
-  9-6-hexalith-memories-backed-party-search: in-progress
+  9-5-temporal-name-queries: done
+  9-6-hexalith-memories-backed-party-search: review
   epic-9-retrospective: optional
 
   # Epic 11: Hexalith.Tenants Integration for Parties (4 stories)

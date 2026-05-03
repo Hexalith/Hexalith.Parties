@@ -4,6 +4,7 @@ using System.Text.Json;
 using Dapr.Actors;
 using Dapr.Actors.Client;
 
+using Hexalith.Parties.CommandApi.Extensions;
 using Hexalith.Parties.Contracts.Models;
 using Hexalith.Parties.Contracts.ValueObjects;
 using Hexalith.Parties.Projections.Abstractions;
@@ -47,7 +48,7 @@ public static class GetPartyNameAtMcpTool
         IPartyDetailProjectionActor proxy = actorProxyFactory.CreateActorProxy<IPartyDetailProjectionActor>(
             actorId, nameof(PartyDetailProjectionActor));
 
-        PartyDetail? detail = await proxy.GetDetailAsync().ConfigureAwait(false);
+        PartyDetail? detail = await proxy.ReadDetailAsync().ConfigureAwait(false);
         if (detail is null)
         {
             throw new InvalidOperationException($"Party not found. No party exists with ID '{partyId}'.");
@@ -66,7 +67,9 @@ public static class GetPartyNameAtMcpTool
         }
 
         NameHistoryEntry? entry = detail.NameHistory
-            .LastOrDefault(e => e.ChangedAt <= asOfTimestamp);
+            .Where(e => e.ChangedAt <= asOfTimestamp)
+            .OrderBy(e => e.ChangedAt)
+            .LastOrDefault();
 
         if (entry is null)
         {
