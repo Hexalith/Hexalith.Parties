@@ -16,8 +16,6 @@ internal sealed partial class PartyDomainServiceInvoker(
 {
     private const string PartyDomain = "party";
 
-    private readonly PartyAggregate _aggregate = new();
-
     public async Task<DomainResult> InvokeAsync(
         CommandEnvelope command,
         object? currentState,
@@ -34,7 +32,11 @@ internal sealed partial class PartyDomainServiceInvoker(
         object? unprotectedState = await UnprotectCurrentStateAsync(command, currentState, cancellationToken)
             .ConfigureAwait(false);
 
-        return await _aggregate.ProcessAsync(command, unprotectedState).ConfigureAwait(false);
+        // Allocate the aggregate per invocation so the framework's ProcessAsync cannot
+        // accidentally retain transient state across concurrent calls. PartyAggregate.Handle
+        // methods are static — the allocation cost is negligible.
+        PartyAggregate aggregate = new();
+        return await aggregate.ProcessAsync(command, unprotectedState).ConfigureAwait(false);
     }
 
     private async Task<object?> UnprotectCurrentStateAsync(
@@ -91,7 +93,7 @@ internal sealed partial class PartyDomainServiceInvoker(
                     cancellationToken)
                 .ConfigureAwait(false);
         }
-        catch (Exception ex) when (ex is not OperationCanceledException)
+        catch (InvalidOperationException ex) when (IsKeyDestroyedFailure(ex))
         {
             LogRehydrationFallbackToRedaction(
                 command.AggregateIdentity.TenantId,
@@ -114,7 +116,7 @@ internal sealed partial class PartyDomainServiceInvoker(
                 .UnprotectSnapshotStateAsync(command.AggregateIdentity, snapshotState, cancellationToken)
                 .ConfigureAwait(false);
         }
-        catch (Exception ex) when (ex is not OperationCanceledException)
+        catch (InvalidOperationException ex) when (IsKeyDestroyedFailure(ex))
         {
             LogSnapshotRehydrationFallbackToRedaction(
                 command.AggregateIdentity.TenantId,
@@ -124,6 +126,16 @@ internal sealed partial class PartyDomainServiceInvoker(
             return null;
         }
     }
+
+    /// <summary>
+    /// Recognises the specific InvalidOperationException thrown when a party's encryption key
+    /// has been destroyed (post-erasure). All other failures propagate so transient KMS or
+    /// structural errors are not silently swallowed by the redaction fallback path.
+    /// </summary>
+    private static bool IsKeyDestroyedFailure(InvalidOperationException ex)
+        => ex.Message.Contains("No encryption key", StringComparison.OrdinalIgnoreCase)
+            || ex.Message.Contains("key destroyed", StringComparison.OrdinalIgnoreCase)
+            || ex.Message.Contains("key has been deleted", StringComparison.OrdinalIgnoreCase);
 
     [LoggerMessage(Level = LogLevel.Warning, Message = "Falling back to redacted event payload during rehydration for {TenantId}/{PartyId} event {EventTypeName}: {ExceptionType}: {Error}")]
     private partial void LogRehydrationFallbackToRedaction(string tenantId, string partyId, string eventTypeName, string exceptionType, string error);

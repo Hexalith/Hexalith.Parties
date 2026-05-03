@@ -135,7 +135,6 @@ public class SemanticSearchE2ETests(PartiesAspireTopologyFixture fixture, ITestO
         DateTimeOffset deadline = DateTimeOffset.UtcNow.AddSeconds(30);
         string? lastContent = null;
         HttpStatusCode? lastStatusCode = null;
-        JsonDocument? lastResult = null;
 
         while (DateTimeOffset.UtcNow < deadline)
         {
@@ -144,25 +143,21 @@ public class SemanticSearchE2ETests(PartiesAspireTopologyFixture fixture, ITestO
             lastContent = await response.Content.ReadAsStringAsync();
             if (response.StatusCode == HttpStatusCode.OK)
             {
-                string content = lastContent;
-                JsonDocument doc = JsonDocument.Parse(content);
+                JsonDocument doc = JsonDocument.Parse(lastContent);
+                JsonElement items = doc.RootElement.TryGetProperty("results", out JsonElement results)
+                    && results.TryGetProperty("items", out JsonElement nestedItems)
+                    ? nestedItems
+                    : doc.RootElement.TryGetProperty("items", out JsonElement legacyItems) ? legacyItems : default;
 
-                if (doc.RootElement.TryGetProperty("items", out JsonElement items) && items.GetArrayLength() >= minCount)
+                if (items.ValueKind == JsonValueKind.Array && items.GetArrayLength() >= minCount)
                 {
                     return doc;
                 }
 
-                lastResult?.Dispose();
-                lastResult = doc;
+                doc.Dispose();
             }
 
             await Task.Delay(500);
-        }
-
-        if (lastResult is not null)
-        {
-            throw new TimeoutException(
-                $"Search for '{query}' never returned {minCount}+ results within 30s. Last response: {lastContent}");
         }
 
         throw new TimeoutException(

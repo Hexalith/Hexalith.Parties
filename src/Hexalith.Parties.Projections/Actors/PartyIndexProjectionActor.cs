@@ -23,6 +23,7 @@ public sealed partial class PartyIndexProjectionActor : Actor, IPartyIndexProjec
     private const string FlushReminderName = "flush-batch";
     private const string RebuildReminderName = "auto-rebuild";
     private const string ManifestStateKeySuffix = "manifest";
+    private const string LastSequenceStateKeySuffix = "last-sequence";
     private static readonly JsonSerializerOptions s_jsonOptions = new(JsonSerializerDefaults.Web);
     private static readonly ConcurrentDictionary<string, IReadOnlyDictionary<string, PartyIndexEntry>> s_lastKnownEntries = new(StringComparer.Ordinal);
     private readonly IIndexPartitionStrategy _partitionStrategy;
@@ -30,6 +31,7 @@ public sealed partial class PartyIndexProjectionActor : Actor, IPartyIndexProjec
     private readonly ILogger<PartyIndexProjectionActor> _logger;
     private readonly IProjectionRebuildService _rebuildService;
     private Dictionary<string, PartyIndexEntry>? _entries;
+    private Dictionary<string, long>? _lastProcessedSequencePerParty;
     private string? _activeStateKey;
     private int _pendingChanges;
     private volatile bool _isRebuilding;
@@ -84,28 +86,91 @@ public sealed partial class PartyIndexProjectionActor : Actor, IPartyIndexProjec
         string partyId,
         string eventTypeName,
         byte[] payload,
-        string serializationFormat)
+        string serializationFormat,
+        long sequenceNumber)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(partyId);
         ArgumentException.ThrowIfNullOrWhiteSpace(eventTypeName);
         ArgumentNullException.ThrowIfNull(payload);
 
-        if (!string.Equals(serializationFormat, "json", StringComparison.OrdinalIgnoreCase))
+        // Skip already-applied events to make replay-from-zero idempotent. The sequence map is
+        // keyed per-party because the index actor is shared across all parties of a tenant.
+        await EnsureLastSequenceMapLoadedAsync(partyId).ConfigureAwait(false);
+        if (_lastProcessedSequencePerParty is not null
+            && _lastProcessedSequencePerParty.TryGetValue(partyId, out long last)
+            && sequenceNumber <= last)
         {
             return;
         }
 
-        Type? eventType = ResolveEventType(eventTypeName);
+        bool isJson = string.Equals(serializationFormat, "json", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(serializationFormat, "json-redacted", StringComparison.OrdinalIgnoreCase);
+        if (!isJson)
+        {
+            Log.NonJsonEventDropped(_logger, partyId, eventTypeName, serializationFormat);
+            return;
+        }
+
+        Type? eventType = PartyEventTypeResolver.Resolve(eventTypeName);
         if (eventType is null)
         {
+            Log.UnknownEventTypeDropped(_logger, partyId, eventTypeName);
             return;
         }
 
-        object? deserialized = JsonSerializer.Deserialize(payload, eventType, s_jsonOptions);
+        object? deserialized;
+        try
+        {
+            deserialized = JsonSerializer.Deserialize(payload, eventType, s_jsonOptions);
+        }
+        catch (JsonException ex)
+        {
+            Log.PayloadDeserializationFailed(_logger, partyId, eventTypeName, ex);
+            return;
+        }
+
         if (deserialized is IEventPayload eventPayload)
         {
             await HandleEventAsync(partyId, eventPayload).ConfigureAwait(false);
+            await PersistLastSequenceAsync(partyId, sequenceNumber).ConfigureAwait(false);
         }
+    }
+
+    private async Task EnsureLastSequenceMapLoadedAsync(string partyId)
+    {
+        if (_lastProcessedSequencePerParty is not null)
+        {
+            return;
+        }
+
+        string sequenceKey = ResolveSequenceMapKey(partyId);
+        try
+        {
+            ConditionalValue<Dictionary<string, long>> result =
+                await StateManager.TryGetStateAsync<Dictionary<string, long>>(sequenceKey, default).ConfigureAwait(false);
+            _lastProcessedSequencePerParty = result.HasValue ? result.Value : new Dictionary<string, long>(StringComparer.Ordinal);
+        }
+        catch
+        {
+            _lastProcessedSequencePerParty = new Dictionary<string, long>(StringComparer.Ordinal);
+        }
+    }
+
+    private async Task PersistLastSequenceAsync(string partyId, long sequenceNumber)
+    {
+        _lastProcessedSequencePerParty ??= new Dictionary<string, long>(StringComparer.Ordinal);
+        _lastProcessedSequencePerParty[partyId] = sequenceNumber;
+        string sequenceKey = ResolveSequenceMapKey(partyId);
+        await StateManager.SetStateAsync(sequenceKey, _lastProcessedSequencePerParty, default).ConfigureAwait(false);
+    }
+
+    private string ResolveSequenceMapKey(string partyId)
+    {
+        string actorId = Host.Id.GetId();
+        string[] segments = actorId.Split(':', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        string tenant = segments.Length >= 1 ? segments[0] : "unknown";
+        string partitionKey = _partitionStrategy.GetPartitionKey(partyId);
+        return $"{tenant}:{ProjectionName}:{partitionKey}:{LastSequenceStateKeySuffix}";
     }
 
     public async Task FlushAsync()
@@ -342,25 +407,6 @@ public sealed partial class PartyIndexProjectionActor : Actor, IPartyIndexProjec
         return _activeStateKey;
     }
 
-    private static Type? ResolveEventType(string eventTypeName)
-    {
-        Type? type = Type.GetType(eventTypeName)
-            ?? typeof(PartyCreated).Assembly.GetType(eventTypeName);
-        if (type is not null)
-        {
-            return type;
-        }
-
-        string shortName = eventTypeName.Contains('.', StringComparison.Ordinal)
-            ? eventTypeName[(eventTypeName.LastIndexOf('.') + 1)..]
-            : eventTypeName;
-
-        return typeof(PartyCreated).Assembly
-            .GetTypes()
-            .FirstOrDefault(t => string.Equals(t.Name, shortName, StringComparison.Ordinal)
-                && typeof(IEventPayload).IsAssignableFrom(t));
-    }
-
     private async Task<Dictionary<string, PartyIndexEntry>> LoadStateAsync(string stateKey)
     {
         ConditionalValue<Dictionary<string, PartyIndexEntry>> result =
@@ -426,5 +472,23 @@ public sealed partial class PartyIndexProjectionActor : Actor, IPartyIndexProjec
             Level = LogLevel.Error,
             Message = "Projection rebuild failed for actor {ActorKey}.")]
         public static partial void RebuildFailed(ILogger logger, string actorKey, Exception exception);
+
+        [LoggerMessage(
+            EventId = 8313,
+            Level = LogLevel.Warning,
+            Message = "PartyIndex projection received event {EventTypeName} for {PartyId} with non-JSON serialization format '{SerializationFormat}'. Event dropped.")]
+        public static partial void NonJsonEventDropped(ILogger logger, string partyId, string eventTypeName, string serializationFormat);
+
+        [LoggerMessage(
+            EventId = 8314,
+            Level = LogLevel.Warning,
+            Message = "PartyIndex projection could not resolve event type '{EventTypeName}' for {PartyId}. Event dropped.")]
+        public static partial void UnknownEventTypeDropped(ILogger logger, string partyId, string eventTypeName);
+
+        [LoggerMessage(
+            EventId = 8315,
+            Level = LogLevel.Warning,
+            Message = "PartyIndex projection failed to deserialize event {EventTypeName} for {PartyId}. Event dropped.")]
+        public static partial void PayloadDeserializationFailed(ILogger logger, string partyId, string eventTypeName, Exception exception);
     }
 }

@@ -18,8 +18,20 @@ internal sealed class LocalPartySearchService(IPartySearchProvider localSearchPr
 
         cancellationToken.ThrowIfCancellationRequested();
 
+        // Apply the same gate the Memories path enforces: drop erased entries, then enforce
+        // AuthorizedPartyIds when the caller scopes the request. Tenant/case filtering is
+        // not the local provider's responsibility because the controller already passes a
+        // tenant-scoped collection, but we still respect AuthorizedPartyIds so that local-mode
+        // and Memories-mode behave identically for callers that pass it.
+        IEnumerable<PartyIndexEntry> filtered = entries.Where(e => !e.IsErased);
+        if (request.AuthorizedPartyIds is not null)
+        {
+            IReadOnlySet<string> authorized = request.AuthorizedPartyIds;
+            filtered = filtered.Where(e => authorized.Contains(e.Id));
+        }
+
         PagedResult<PartySearchResult> results = localSearchProvider.Search(
-            entries.Where(e => !e.IsErased),
+            filtered,
             request.Query,
             request.TypeFilter,
             request.ActiveFilter,
@@ -42,7 +54,7 @@ internal sealed class LocalPartySearchService(IPartySearchProvider localSearchPr
             .. results.Items.Select(result => new PartySearchSourceMetadata(
                 PartyId: result.Party.Id,
                 SourceSystem: "Hexalith.Parties.LocalFallback",
-                SourceUri: $"urn:hexalith:parties:{request.TenantId}:party:{result.Party.Id}",
+                SourceUri: PartyMemoryUrn.Build(request.TenantId, result.Party.Id),
                 MemoryUnitId: null,
                 EventType: null)),
         ];

@@ -1,6 +1,6 @@
 # Story 9.6: Hexalith.Memories-Backed Party Search
 
-Status: in-progress
+Status: in-progress (review patches applied 2026-05-03; awaiting maintainer sign-off + integration-suite re-run)
 
 <!-- Split from the former Story 9.5 "Semantic Search & Temporal Name Queries". -->
 
@@ -120,6 +120,142 @@ Case workers, consumers, and AI agents can discover the correct party from incom
   - [x] 7.6 Add REST and MCP parity tests for default hybrid, explicit syntactic, explicit semantic, graph-assisted, and fallback modes
   - [x] 7.7 Add hydration edge-case tests for stale IDs, deleted parties, unauthorized parties, wrong tenant/case, and duplicate hits
   - [x] 7.8 Add one smoke path proving index -> Memories search -> Parties hydration -> authorization -> response metadata
+
+### Review Findings
+
+_Captured by `bmad-code-review` on 2026-05-03 (Opus 4.7). Three parallel review layers: Blind Hunter, Edge Case Hunter, Acceptance Auditor. Initial: 4 decision-needed, 50 patch, 3 deferred, 4 dismissed. After resolution: 0 decision-needed, 53 patch, 3 deferred, 4 dismissed. **Patch outcome (2026-05-03 follow-up): 47 patches applied, 6 remaining as action items (see "Remaining patch items" subsection). Story-owned tests: 264/264 CommandApi, 54/54 Projections, 107/107 Security — all passing post-patch.**_
+
+#### Patch outcome (2026-05-03 follow-up)
+
+Patches applied this session:
+
+- AC1 indexing wired into `PartyProjectionUpdateOrchestrator.DeliverProjectionAsync` via best-effort `TryIndexLatestEntryAsync`.
+- AC4 fallback wired in `MemoriesPartySearchService` — Memories outage now degrades to local with `Status=Degraded` rather than 500.
+- AC5 cleanup delegate now calls `PartyMemoryCleanupService.DeleteByPartyAsync` (new source-URI-based delete) instead of returning hard-coded `Failed`.
+- AC2 score/source/status metadata exposed in REST and MCP response bodies (returning the full `PartySearchResponse` envelope; `/search` ProducesResponseType updated).
+- AC6 `MemoriesSearchHealthCheck` added under `HealthChecks/`, registered in `PartiesHealthCheckExtensions` with `Degraded` failure status (so /ready does not flap on transient Memories outages).
+- New tests: `UnavailableMemoriesReturnsDegradedDisplayNameFallback`, `FallbackSearchDoesNotAdvertiseSemanticOrGraphScores`, `OperationalValidationReportsMemoriesEndpointAuthHealthProvisioningAndCleanup`, `DisabledAxisFallsBackToLocalDisplayNameSearch`, `GraphSearchWithoutContextFallsBackToLocalDisplayNameSearch`, `CaseScopedRequestDropsCandidatesFromOtherCases`, `PartyIdContainingColonRoundTripsThroughEncodedUrn`, `RejectionApplyMethodsAreDeclaredBeforeSuccessApplies`, `RejectionEventApplyHandlersExistForEverySuffixCollision`, `AddPartiesResolvesMemoriesPartySearchServiceWhenEnabled`, `AddPartiesResolvesLocalPartySearchServiceWhenDisabled`, `DeleteByPartyAsyncReportsBlockedReasonOnTransportFailure`, `DeleteByPartyAsyncReportsBlockedReasonWhenBaseAddressIsMissing`, `PartyMemoryIndexingServiceReturnsBlockedResultWhenMemoriesIngestFails`, `InactiveOrErasedPartyIsNotMappedForIndexing`, plus 3 disabled/probe variants of the health check.
+- Search correctness: pagination (request `Page * PageSize` from Memories), strict CaseId, URN encoding via `PartyMemoryUrn` helper (party ids with colons round-trip), tenant comparison `OrdinalIgnoreCase`, graph mode without context falls back, `EnabledAxes` enforced at runtime, hop score 1/(hop+1) distinguishes start node from neighbours, ToDictionary first-wins on duplicate ids, cancellation propagated through hydration.
+- Local fallback: `LocalPartySearchService` now applies `AuthorizedPartyIds` filter symmetrically with the Memories path.
+- Mapper: skip inactive parties, null-guards on `SearchableContactChannels`/`SearchableIdentifiers`/`DisplayName`.
+- Cleanup service: try/catch on `HttpRequestException`/`TaskCanceledException` returning blocked reason; auth-header configuration via `ConfigureAuthorization` static helper invoked in DI.
+- DI: single concrete-instance registration for `PartyProjectionUpdateOrchestrator` (was two AddTransient calls producing two separate instances). Last-wins removed by registering `LocalPartySearchService` as a concrete singleton and resolving `IPartySearchService` via factory based on `memorySearch.Enabled`. Fail-fast at registration when `Enabled=true && Endpoint is null`.
+- Domain rehydration: `PartyDomainServiceInvoker._aggregate` allocated per-call; redaction-fallback catch narrowed to `InvalidOperationException` matching the "key destroyed" message family (transient KMS / structural errors now propagate).
+- Projection actors: `HandleSerializedEventAsync` now takes `long sequenceNumber` and persists last-processed-sequence so replay-from-zero is idempotent for non-`PartyCreated` events. Added `PartyEventTypeResolver` (cached, full-name first, returns null on short-name collisions). Non-JSON payloads logged via `NonJsonEventDropped`. Unknown event types and deserialize failures also logged. Accepts both `"json"` and `"json-redacted"` formats.
+- `PartyPayloadProtectionService.RedactProtectedPayload` now returns format `"json-redacted"` (not `"json"`) so audit/compliance pipelines retain the "ever-encrypted" signal. Internal `RedactEncryptedMarkers` rebuilt as `RebuildWithoutEncryptedMarkers` returning a fresh `JsonNode` tree to avoid the parent-reassignment hazard.
+- Controller hardening: `caseId` validated (length + CR/LF), `DegradedReason` header sanitised against CRLF, `ParseUpdatePersonDetails` validates non-null `PersonDetails` and wraps `FormatException` from `dateOfBirth` parsing as `ValidationException`, `IsEmptyJsonPayload` rewritten via `JsonNode.Parse` to handle whitespace and BOM-prefixed payloads, `GetPartyDetailAsync` falls through to typed-actor when JSON branch deserializes to null, `NotImplementedException` catches now wrap both invoke and await sites in `PartiesController` and `FindPartiesMcpTool`.
+- Orchestrator: empty events array now logs at debug, `GetEventsAsync` propagates cancellation via `WaitAsync`, indexing call wrapped in best-effort try/catch.
+- `SemanticSearchE2ETests.WaitForSearchResultsAsync`: dead `lastResult` branch removed; reads now navigate the new `results.items` envelope shape with a fallback to legacy.
+
+##### Remaining patch items (deferred to follow-up)
+
+- [ ] [Review][Patch] `MemoriesPartySearchIntegrationTests.cs` integration test scaffold against an Aspire topology — left as action item; the existing `SemanticSearchE2ETests` and `TemporalNameE2ETests` exercise the topology, but a dedicated Memories smoke test (index → search → hydrate → response metadata) deserves its own file.
+- [ ] [Review][Patch] `PartyProjectionUpdateOrchestratorTests` co-located unit tests for full-stream replay correctness, decryption-failure cleanup behavior, ordering-by-SequenceNumber, cancellation mid-stream — left as action item; the patches are covered indirectly by the existing E2E suite, but targeted unit tests would harden the contract.
+- [ ] [Review][Patch] Test asserting default REST response includes `X-Parties-Search-Status: LocalOnly` header on the rebrand path — small follow-up.
+- [ ] [Review][Patch] `MessageId: Guid.NewGuid().ToString()` factor to a helper — style/maintenance, scattered across 6 sites.
+- [ ] [Review][Patch] `UpdatePersonDetails` route mismatch silent acceptance when body has no `partyId` — narrow improvement on top of the existing `EnsureRouteMatchesBodyPartyId` check; left as action item.
+- [ ] [Review][Patch] `PersonalDataCommandGuardAccessor` typed exception (vs `InvalidOperationException`) — small refactor for cleaner HTTP mapping; left as action item.
+
+##### Plaintext-PII / GDPR tradeoff (resolved decision #1) — operational note
+
+The decision to keep Memories as a plaintext-search store relies on the AC5 cleanup wiring landing AND functioning end-to-end. The cleanup delegate now calls `PartyMemoryCleanupService.DeleteByPartyAsync` against a source-URI-based DELETE endpoint (`api/tenants/{t}/cases/{c}/memory-units?sourceUri=...`). **Verify that the Memories service exposes this endpoint shape before this story moves to `done`.** If the Memories REST API only supports per-memory-unit deletion (which is what `DeleteMemoryUnitAsync` was originally written for), the cleanup will return `Failed` with HTTP 404/405 and erasure will block — same symptom as the original hard-coded `Failed`, just with a clearer reason. A follow-up patch may need to either (a) persist a per-party→memory-unit-id mapping during indexing (so cleanup can iterate per-unit), or (b) add the source-URI-batch DELETE endpoint to the Memories service.
+
+#### Decision-needed (resolved 2026-05-03)
+
+- [x] [Review][Decision→Patch] Plaintext PII in Memories content — **Resolved (a):** accept Memories as the plaintext-search store; GDPR boundary is the AC5 cleanup wiring patch below. Reasoning: tokenizing/hashing defeats lexical and semantic ranking, and the spec nominates Memories cleanup as the erasure mechanism. **This decision is conditional on the AC5 cleanup wiring patch landing — without it, plaintext PII in Memories has no automated erasure path, which is the GDPR violation we'd otherwise invite.** No additional patch beyond the existing AC5 cleanup item.
+- [x] [Review][Decision→Patch] `PartyDomainServiceInvoker._aggregate` field — **Resolved:** verified `PartyAggregate` is `sealed` with all `Handle` methods declared `static` and no instance fields; the dispatcher is effectively stateless. Demoted from critical to medium-severity defensive patch: move to `new PartyAggregate()` per `InvokeAsync` so the framework `EventStoreAggregate<TState>.ProcessAsync` cannot accidentally retain transient state across concurrent calls. Cost: one allocation per command. See new patch item under "Projection / domain rehydration".
+- [x] [Review][Decision→Patch] Redaction-on-decryption-failure too broad — **Resolved:** narrow the catch to the specific exception type EventStore raises for a destroyed encryption key (verify exact type before patching — likely `PartyEncryptionKeyDestroyedException` or `KeyDestroyedException`). Transient KMS / key-version / HSM errors must propagate so projections don't silently corrupt. See new patch item under "Projection / domain rehydration".
+- [x] [Review][Decision→Patch] Indexing wired but never invoked (AC1) — **Resolved:** classified as oversight, not a deliberate slice. Spec marks Tasks 3.3 ("Index party-created and party-updated data into Memories") and 7.8 ("smoke path proving index → Memories search → Parties hydration") done, but no production code calls `IndexAsync`. Wire the indexing service into `PartyProjectionUpdateOrchestrator.DeliverProjectionAsync` (or a sibling step) so each delivered event indexes into Memories when `memorySearch.Enabled=true`. See new patch item under "Acceptance-criteria gaps".
+
+#### Patch — acceptance-criteria gaps
+
+- [ ] [Review][Patch] AC1 indexing not wired — `PartyMemoryIndexingService` is registered in DI but never invoked. Wire it into `PartyProjectionUpdateOrchestrator.DeliverProjectionAsync` (or equivalent) so every delivered party event indexes into Memories when `memorySearch.Enabled=true`. Without this the entire feature is non-functional. [src/Hexalith.Parties.CommandApi/Search/PartyMemoryIndexingService.cs; src/Hexalith.Parties.CommandApi/Domain/PartyProjectionUpdateOrchestrator.cs]
+- [ ] [Review][Patch] AC5 cleanup delegate hard-codes `Failed` and never invokes `PartyMemoryCleanupService` — every erasure verification with `memorySearch.Enabled=true` reports `Failed` forever, blocking GDPR completion. Mandatory companion to the plaintext-PII decision above. [src/Hexalith.Parties.CommandApi/Extensions/PartiesServiceCollectionExtensions.cs:150-159]
+- [ ] [Review][Patch] AC4 fallback unimplemented — `MemoriesPartySearchService` has zero `try/catch`; Memories outage propagates as 500 instead of degrading to `LocalPartySearchService`. [src/Hexalith.Parties.CommandApi/Search/MemoriesPartySearchService.cs:23-78]
+- [ ] [Review][Patch] AC2 score / source / status metadata not exposed in REST body or MCP response at all — REST returns headers only, MCP omits everything beyond `Results`. [src/Hexalith.Parties.CommandApi/Controllers/PartiesController.cs:202; src/Hexalith.Parties.CommandApi/Mcp/FindPartiesMcpTool.cs:92-94]
+- [ ] [Review][Patch] AC6 operational validation absent — no Memories-targeted health/readiness probe; named test `OperationalValidationReportsMemoriesEndpointAuthHealthProvisioningAndCleanup` missing. [src/Hexalith.Parties.CommandApi/HealthChecks/]
+- [ ] [Review][Patch] Required test `UnavailableMemoriesReturnsDegradedDisplayNameFallback` missing — depends on AC4 fallback patch above. [tests/Hexalith.Parties.CommandApi.Tests/Search/]
+- [ ] [Review][Patch] Required test `FallbackSearchDoesNotAdvertiseSemanticOrGraphScores` missing by exact name — `LocalPartySearchServiceReturnsLocalOnlyFallbackMetadata` partially covers but doesn't assert all four score-metadata fields are null. [tests/Hexalith.Parties.CommandApi.Tests/Search/PartySearchServiceBoundaryTests.cs]
+- [ ] [Review][Patch] `MemoriesPartySearchIntegrationTests.cs` not present even though Task 7.2 marked done. [tests/Hexalith.Parties.IntegrationTests/Search/]
+
+#### Patch — search correctness
+
+- [ ] [Review][Patch] Pagination broken — Memories called with `request.PageSize` regardless of `Page`, then `Skip((Page-1)*PageSize)` against the trimmed candidate set; page > 1 always empty. [src/Hexalith.Parties.CommandApi/Search/MemoriesPartySearchService.cs:24,38,67,83-138]
+- [ ] [Review][Patch] `TotalCount` reports post-hydration page size, not upstream total. [src/Hexalith.Parties.CommandApi/Search/MemoriesPartySearchService.cs:Hydrate]
+- [ ] [Review][Patch] URN parser fails on tenant id or party id containing `:` — `Split(':')` requires exactly 6 parts; party with embedded colon silently disappears from rich search. Same issue on cleanup-side URN building. [src/Hexalith.Parties.CommandApi/Search/MemoriesPartySearchService.cs:TryExtractPartyId; src/Hexalith.Parties.CommandApi/Search/PartyMemoryUnitMapper.cs SourceUri]
+- [ ] [Review][Patch] CaseId filter bypassed when either side null — `(candidate.CaseId is not null && request.CaseId is not null && !equals)` admits null candidates into any case. Spec lists "wrong-case" as a drop reason. [src/Hexalith.Parties.CommandApi/Search/MemoriesPartySearchService.cs:103]
+- [ ] [Review][Patch] `LocalPartySearchService` ignores tenant + AuthorizedPartyIds + CaseId filters — asymmetric authorization vs Memories path. [src/Hexalith.Parties.CommandApi/Search/LocalPartySearchService.cs:8-56]
+- [ ] [Review][Patch] Tenant equality is `Ordinal` while URN structural parts are matched `OrdinalIgnoreCase` — case-mismatched tenant id silently drops every hit. [src/Hexalith.Parties.CommandApi/Search/MemoriesPartySearchService.cs:100]
+- [ ] [Review][Patch] Graph mode silently substitutes `request.Query` as start node when caller supplies no graph context — caller gets zero hits with no diagnostic. [src/Hexalith.Parties.CommandApi/Search/MemoriesPartySearchService.cs:50]
+- [ ] [Review][Patch] `EnabledAxes` config validated but never enforced at request time — operator-disabled axes still execute. [src/Hexalith.Parties.CommandApi/Search/MemoriesPartySearchService.cs Switch]
+- [ ] [Review][Patch] Empty/null query forwarded to Memories on REST search path; MCP short-circuits but REST does not. Behaviour asymmetric between MCP and REST for the same intent. [src/Hexalith.Parties.CommandApi/Controllers/PartiesController.cs:188-202 vs src/Hexalith.Parties.CommandApi/Mcp/FindPartiesMcpTool.cs:78-94]
+- [ ] [Review][Patch] Hydration filter `&&`/`||` precedence inconsistent — only the CaseId branch is parenthesized; readability and refactor-safety risk. [src/Hexalith.Parties.CommandApi/Search/MemoriesPartySearchService.cs:100-105]
+- [ ] [Review][Patch] Hydration `ToDictionary(e => e.Id)` throws on duplicate Id — corrupted index entry crashes the whole search request. [src/Hexalith.Parties.CommandApi/Search/MemoriesPartySearchService.cs:90-92]
+- [ ] [Review][Patch] `Hydrate` runs synchronously over potentially large dictionary with no `ThrowIfCancellationRequested` — late results delivered to disconnected clients. [src/Hexalith.Parties.CommandApi/Search/MemoriesPartySearchService.cs:Hydrate]
+- [ ] [Review][Patch] `MemoriesPartySearchService.SearchAsync` does not check cancellation before network round-trip. [src/Hexalith.Parties.CommandApi/Search/MemoriesPartySearchService.cs:14]
+- [ ] [Review][Patch] `ToCandidate(TraversalNode)` score collapses for hop 0 vs hop 1 — `Math.Max(1, HopDistance)` makes start node and immediate neighbours indistinguishable. [src/Hexalith.Parties.CommandApi/Search/MemoriesPartySearchService.cs:212-216]
+
+#### Patch — projection / domain rehydration
+
+- [ ] [Review][Patch] Replay-from-zero re-applies non-PartyCreated events on every command — only PartyCreated guarded; ContactChannelAdded, IdentifierAdded, NameHistoryAppend mutate projection state on every successful command. [src/Hexalith.Parties.CommandApi/Domain/PartyProjectionUpdateOrchestrator.cs DeliverProjectionAsync; src/Hexalith.Parties.Projections/Handlers/PartyDetailProjectionHandler.cs:line 2292; src/Hexalith.Parties.Projections/Handlers/PartyIndexProjectionHandler.cs:line 2305]
+- [ ] [Review][Patch] `GetEventsAsync(0)` not passed cancellation token — hung actor blocks request thread indefinitely. [src/Hexalith.Parties.CommandApi/Domain/PartyProjectionUpdateOrchestrator.cs DeliverProjectionAsync]
+- [ ] [Review][Patch] `TryUpdateProjectionAsync` catches and logs `Exception` after 202 already returned — projection failures invisible to client; no retry, no DLQ. [src/Hexalith.Parties.CommandApi/Controllers/PartiesController.cs:398-419]
+- [ ] [Review][Patch] Two `AddTransient` registrations of `PartyProjectionUpdateOrchestrator` produce two separate instances per scope — silent state divergence between IProjectionUpdateOrchestrator and IProjectionPollerDeliveryGateway. [src/Hexalith.Parties.CommandApi/Extensions/PartiesServiceCollectionExtensions.cs:882-883]
+- [ ] [Review][Patch] `ResolveEventType` returns first short-name match across the whole assembly — non-deterministic on collisions; cache absent so cost compounds with replay-from-zero. [src/Hexalith.Parties.Projections/Actors/PartyDetailProjectionActor.cs:2168-2185; src/Hexalith.Parties.Projections/Actors/PartyIndexProjectionActor.cs:2262-2279]
+- [ ] [Review][Patch] `HandleSerializedEventAsync` silently drops every non-`json` payload — diverging projection without log. [src/Hexalith.Parties.Projections/Actors/PartyDetailProjectionActor.cs HandleSerializedEventAsync; src/Hexalith.Parties.Projections/Actors/PartyIndexProjectionActor.cs HandleSerializedEventAsync]
+- [ ] [Review][Patch] Reflection-based deserialization accepts any `IEventPayload` from the assembly — should restrict to the specific events the projection switch handles. [src/Hexalith.Parties.Projections/Actors/PartyDetailProjectionActor.cs / PartyIndexProjectionActor.cs]
+- [ ] [Review][Patch] `Apply(PartyCreated) when state exists` silently ignores duplicates — at minimum log a warning so a re-arriving PartyCreated with different data isn't lost without trace. [src/Hexalith.Parties.Projections/Handlers/PartyDetailProjectionHandler.cs:2292; src/Hexalith.Parties.Projections/Handlers/PartyIndexProjectionHandler.cs:2305]
+- [ ] [Review][Patch] `PartyState` rejection-Apply ordering relies on undocumented rehydrator suffix-match — add a fitness test asserting rejection-Apply methods are declared first (or fix the rehydrator to match by full name). [src/Hexalith.Parties.Contracts/State/PartyState.cs:1995-2039]
+- [ ] [Review][Patch] Snapshot redaction returns `null` and forces full event replay — combined with the redaction-of-encrypted-fields path, a transient KMS error becomes permanent rehydration failure. [src/Hexalith.Parties.CommandApi/Domain/PartyDomainServiceInvoker.cs UnprotectSnapshotStateAsync]
+- [ ] [Review][Patch] `RedactProtectedPayload` returns `serializationFormat: "json"` — downstream "ever-encrypted" signal lost; emit `"json-redacted"` or set a metadata flag for audit/compliance pipelines. [src/Hexalith.Parties.Security/PartyPayloadProtectionService.cs:2325-2344]
+- [ ] [Review][Patch] Narrow the redaction-fallback catch (resolved decision) — `PartyDomainServiceInvoker.UnprotectCurrentStateAsync` and `PartyProjectionUpdateOrchestrator.DeliverProjectionAsync` should catch only the specific exception EventStore raises when an encryption key has been destroyed. All other failures (transient KMS, key-version mismatch, HSM permission errors) must propagate so projections don't silently corrupt. [src/Hexalith.Parties.CommandApi/Domain/PartyDomainServiceInvoker.cs UnprotectCurrentStateAsync; src/Hexalith.Parties.CommandApi/Domain/PartyProjectionUpdateOrchestrator.cs DeliverProjectionAsync]
+- [ ] [Review][Patch] `PartyDomainServiceInvoker._aggregate` shared field (resolved decision) — defensive: move `PartyAggregate` allocation inside `InvokeAsync` so the framework's `EventStoreAggregate<TState>.ProcessAsync` cannot accidentally retain transient state across concurrent calls. [src/Hexalith.Parties.CommandApi/Domain/PartyDomainServiceInvoker.cs:19,37]
+
+#### Patch — cleanup / mapper
+
+- [ ] [Review][Patch] `PartyMemoryCleanupService` not catching `HttpRequestException`/`TaskCanceledException` — exception aborts erasure flow instead of returning blocked reason. [src/Hexalith.Parties.CommandApi/Search/PartyMemoryCleanupService.cs]
+- [ ] [Review][Patch] `PartyMemoryCleanupService` HttpClient gets BaseAddress but no auth header — calls 401 when `RequireApiToken=true`. [src/Hexalith.Parties.CommandApi/Extensions/PartiesServiceCollectionExtensions.cs:209-214]
+- [ ] [Review][Patch] `PartyMemoryUnitMapper` indexes inactive parties — only `IsErased` excluded; deactivated parties still pushed to Memories and returned to callers that don't set `ActiveFilter=true`. [src/Hexalith.Parties.CommandApi/Search/PartyMemoryUnitMapper.cs:34-57]
+- [ ] [Review][Patch] `PartyMemoryUnitMapper` NREs on null `SearchableContactChannels`/`SearchableIdentifiers`/`DisplayName` from older entries. [src/Hexalith.Parties.CommandApi/Search/PartyMemoryUnitMapper.cs:60-93]
+- [ ] [Review][Patch] `PartyMemoryIndexingService.IndexAsync` doesn't catch `IngestAsync` failures — single failure aborts an indexing batch. [src/Hexalith.Parties.CommandApi/Search/PartyMemoryIndexingService.cs:30-40]
+
+#### Patch — controllers / inputs
+
+- [ ] [Review][Patch] `ParseUpdatePersonDetails` accepts null PersonDetails; unhandled `FormatException` on bad date returns 500 instead of 400. [src/Hexalith.Parties.CommandApi/Controllers/PartiesController.cs:421-476]
+- [ ] [Review][Patch] `IsEmptyJsonPayload` only matches exact 2- and 4-byte payloads — `{ }` with whitespace or BOM-prefixed JSON pass through and produce a default-valued `PartyDetail`. [src/Hexalith.Parties.CommandApi/Controllers/PartiesController.cs:571-577; src/Hexalith.Parties.CommandApi/Controllers/AdminController.cs:225-231]
+- [ ] [Review][Patch] `GetPartyDetailAsync` JSON branch returns null without falling through to typed actor call — legacy projections see party as missing on null deserialize. [src/Hexalith.Parties.CommandApi/Controllers/PartiesController.cs:496-540; src/Hexalith.Parties.CommandApi/Controllers/AdminController.cs:187-222]
+- [ ] [Review][Patch] `proxy.GetDetailJsonAsync()` `NotImplementedException` catch only wraps the synchronous invoke, not the await — Dapr actor proxies typically throw at await time, so the fallback never fires in production. [src/Hexalith.Parties.CommandApi/Controllers/PartiesController.cs:496-540]
+- [ ] [Review][Patch] `caseId` query parameter not validated — no length cap, no charset filter; cross-case probing not blocked. [src/Hexalith.Parties.CommandApi/Controllers/PartiesController.cs:137,197]
+- [ ] [Review][Patch] `DegradedReason` written to response header without CRLF sanitization — Memories returning a value with newline triggers a 500 from Kestrel. [src/Hexalith.Parties.CommandApi/Controllers/PartiesController.cs:879-886]
+- [ ] [Review][Patch] UpdatePersonDetails route mismatch silently accepts route-id-only payloads — body intent never validated. [src/Hexalith.Parties.CommandApi/Controllers/PartiesController.cs:375-380]
+
+#### Patch — DI / config
+
+- [ ] [Review][Patch] Memories endpoint may have null BaseAddress when Enabled=true — relies on validator running before AddHttpClient resolves the registration. Fail at registration if endpoint is missing while enabled. [src/Hexalith.Parties.CommandApi/Extensions/PartiesServiceCollectionExtensions.cs:107-109,207-214]
+- [ ] [Review][Patch] DI test for Memories-enabled path doesn't assert `IPartySearchService` resolves to `MemoriesPartySearchService` — registration-order regression undetected. [tests/Hexalith.Parties.CommandApi.Tests/Search/PartyMemorySearchOptionsValidatorTests.cs]
+- [ ] [Review][Patch] Multiple `AddSingleton<IPartySearchService>` registrations rely on last-wins; brittle to refactoring. [src/Hexalith.Parties.CommandApi/Extensions/PartiesServiceCollectionExtensions.cs:194-208]
+
+#### Patch — tests / dev quality
+
+- [ ] [Review][Patch] No tests for `PartyProjectionUpdateOrchestrator` — full-stream replay correctness, decryption-failure cleanup behavior, ordering-by-SequenceNumber, cancellation mid-stream. [src/Hexalith.Parties.CommandApi/Domain/PartyProjectionUpdateOrchestrator.cs has no co-located tests]
+- [ ] [Review][Patch] No test asserts default REST response includes `X-Parties-Search-Status: LocalOnly` header on the rebrand path. [tests/Hexalith.Parties.CommandApi.Tests/]
+- [ ] [Review][Patch] `SemanticSearchE2ETests.WaitForSearchResultsAsync` `lastResult` is declared but never assigned — dead branch. [tests/Hexalith.Parties.IntegrationTests/Search/SemanticSearchE2ETests.cs]
+
+#### Patch — minor
+
+- [ ] [Review][Patch] `MessageId: Guid.NewGuid().ToString()` scattered across 6 controllers/MCP tools — factor to a helper or default it in the contract. [Multiple call sites]
+- [ ] [Review][Patch] `JsonSerializerOptions` lacks `JsonStringEnumConverter` — string enums in OpenAPI clients vs internal serialization round-trip inconsistently. [Multiple controllers and projection actors]
+- [ ] [Review][Patch] `RedactEncryptedMarkers` mutates `JsonObject` in place via `obj[key] = recursive(...)` — `JsonNode` parent-reassignment may throw on nested non-marker objects; add tests for nested cases or rebuild rather than reassign. [src/Hexalith.Parties.Security/PartyPayloadProtectionService.cs:2347-2378]
+- [ ] [Review][Patch] Empty events array silently bypasses projection — emit a debug log instead of a silent return. [src/Hexalith.Parties.CommandApi/Domain/PartyProjectionUpdateOrchestrator.cs:43-46]
+- [ ] [Review][Patch] `PartyMemoryUnitMapper.BuildContent` emits `erased: false` always (erased entries return null upstream) — dead branch. [src/Hexalith.Parties.CommandApi/Search/PartyMemoryUnitMapper.cs:1744-1746,1770]
+- [ ] [Review][Patch] `PartyMemoryIndexingService` doesn't propagate correlationId/causationId via `ForProjection` factory — Parties↔Memories trace continuity lost. [src/Hexalith.Parties.CommandApi/Search/PartyMemoryUnitMapper.cs:28-29]
+- [ ] [Review][Patch] `PersonalDataCommandGuardAccessor` throws `InvalidOperationException` for guard violations — typed exception preferred for proper HTTP mapping and audit signal. [src/Hexalith.Parties.CommandApi/Search/PersonalDataCommandGuardAccessor.cs:1907-1928]
+
+#### Deferred
+
+- [x] [Review][Defer] Static `s_lastKnownDetails` ConcurrentDictionary on actor — pre-existing pattern (not introduced by 9-6); hardening belongs in a separate Tier-3 story. [src/Hexalith.Parties.Projections/Actors/PartyDetailProjectionActor.cs]
+- [x] [Review][Defer] AppHost `Parties__MemoriesSearch__ApiToken` env var not wired — deployment config concern, follow-up when the cleanup auth patch lands. [src/Hexalith.Parties.AppHost/Program.cs]
+- [x] [Review][Defer] `ContractsArchitectureFitnessTests` path uses hardcoded `..\..\..\..\..` — works in current CI structure; refactor to `[CallerFilePath]` when build layout changes. [tests/Hexalith.Parties.CommandApi.Tests/FitnessTests/ContractsArchitectureFitnessTests.cs]
 
 ## Dev Notes
 

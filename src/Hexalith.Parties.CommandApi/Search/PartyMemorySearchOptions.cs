@@ -19,6 +19,10 @@ internal sealed class PartyMemorySearchOptions
     public string? CaseId { get; init; }
 
     public string[] EnabledAxes { get; init; } = ["hybrid", "syntactic", "semantic", "graph"];
+
+    public bool IsAxisEnabled(string axis)
+        => !string.IsNullOrWhiteSpace(axis)
+            && EnabledAxes.Any(a => string.Equals(a, axis, StringComparison.OrdinalIgnoreCase));
 }
 
 internal sealed class PartyMemorySearchOptionsValidator : IValidateOptions<PartyMemorySearchOptions>

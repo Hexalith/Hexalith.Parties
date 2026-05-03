@@ -36,7 +36,10 @@ internal static class PartyMemoryUnitMapper
         ArgumentNullException.ThrowIfNull(entry);
         ArgumentNullException.ThrowIfNull(context);
 
-        if (entry.IsErased)
+        // Erased and inactive parties do not belong in the searchable index. The previous
+        // implementation only filtered erased; inactive (deactivated) parties were still
+        // pushed to Memories and surfaced in default-mode results that don't set ActiveFilter.
+        if (entry.IsErased || !entry.IsActive)
         {
             return null;
         }
@@ -44,7 +47,7 @@ internal static class PartyMemoryUnitMapper
         string aggregateId = string.IsNullOrWhiteSpace(context.AggregateId)
             ? entry.Id
             : context.AggregateId!;
-        string sourceUri = $"urn:hexalith:parties:{context.TenantId}:party:{aggregateId}";
+        string sourceUri = PartyMemoryUrn.Build(context.TenantId, aggregateId);
 
         return new PartyMemoryUnit(
             context.TenantId,
@@ -59,20 +62,36 @@ internal static class PartyMemoryUnitMapper
     private static string BuildContent(PartyIndexEntry entry, PartyMemoryUnitMappingContext context)
     {
         StringBuilder builder = new();
-        _ = builder.AppendLine($"Party: {entry.DisplayName}");
+        _ = builder.AppendLine($"Party: {entry.DisplayName ?? string.Empty}");
         _ = builder.AppendLine($"Party type: {entry.Type}");
         _ = builder.AppendLine($"Party id: {entry.Id}");
-        _ = builder.AppendLine($"State: {(entry.IsActive ? "active" : "inactive")}, erased: {entry.IsErased}");
+        _ = builder.AppendLine($"State: active");
         _ = builder.AppendLine($"Event context: {context.EventType ?? "projection"} from {context.SourceService}");
 
-        foreach (ContactChannel channel in entry.SearchableContactChannels)
+        if (entry.SearchableContactChannels is not null)
         {
-            _ = builder.AppendLine($"Contact {channel.Type}: {channel.Value}");
+            foreach (ContactChannel channel in entry.SearchableContactChannels)
+            {
+                if (channel is null)
+                {
+                    continue;
+                }
+
+                _ = builder.AppendLine($"Contact {channel.Type}: {channel.Value}");
+            }
         }
 
-        foreach (PartyIdentifier identifier in entry.SearchableIdentifiers)
+        if (entry.SearchableIdentifiers is not null)
         {
-            _ = builder.AppendLine($"Identifier {identifier.Type}: {identifier.Value}");
+            foreach (PartyIdentifier identifier in entry.SearchableIdentifiers)
+            {
+                if (identifier is null)
+                {
+                    continue;
+                }
+
+                _ = builder.AppendLine($"Identifier {identifier.Type}: {identifier.Value}");
+            }
         }
 
         return builder.ToString();
@@ -92,7 +111,7 @@ internal static class PartyMemoryUnitMapper
             ["eventType"] = Field(context.EventType ?? "PartyProjectionChanged"),
             ["sourceService"] = Field(context.SourceService),
             ["partyType"] = Field(entry.Type.ToString()),
-            ["displayName"] = Field(entry.DisplayName),
+            ["displayName"] = Field(entry.DisplayName ?? string.Empty),
             ["isActive"] = Field(entry.IsActive.ToString().ToLowerInvariant()),
             ["isErased"] = Field(entry.IsErased.ToString().ToLowerInvariant()),
             ["createdAt"] = Field(entry.CreatedAt.ToString("O")),
@@ -118,5 +137,5 @@ internal static class PartyMemoryUnitMapper
     }
 
     private static MetadataField Field(string value)
-        => new(value, MetadataOrigin.Human, 1.0f);
+        => new(value ?? string.Empty, MetadataOrigin.Human, 1.0f);
 }

@@ -89,8 +89,12 @@ public static class FindPartiesMcpTool
             activeEntries,
             cancellationToken).ConfigureAwait(false);
 
+        // Serialise the entire response so MCP clients receive the same metadata REST does:
+        // execution status, degraded reason, score channels (lexical/semantic/graph/composite),
+        // and source metadata. Without this, AI agents cannot reason about why a result ranked
+        // where it did or whether the search was rich, degraded, or local-only.
         return JsonSerializer.Serialize(
-            search.Results,
+            search,
             McpSessionContext.JsonOptions);
     }
 
@@ -117,15 +121,22 @@ public static class FindPartiesMcpTool
 
         if (jsonTask is not null)
         {
-            string? json = await jsonTask.ConfigureAwait(false);
-            if (!string.IsNullOrWhiteSpace(json))
+            try
             {
-                Dictionary<string, PartyIndexEntry>? entries =
-                    JsonSerializer.Deserialize<Dictionary<string, PartyIndexEntry>>(json, McpSessionContext.JsonOptions);
-                if (entries is not null)
+                string? json = await jsonTask.ConfigureAwait(false);
+                if (!string.IsNullOrWhiteSpace(json))
                 {
-                    return entries;
+                    Dictionary<string, PartyIndexEntry>? entries =
+                        JsonSerializer.Deserialize<Dictionary<string, PartyIndexEntry>>(json, McpSessionContext.JsonOptions);
+                    if (entries is not null)
+                    {
+                        return entries;
+                    }
                 }
+            }
+            catch (NotImplementedException)
+            {
+                // Dapr proxies typically surface "method not implemented" at await time.
             }
         }
 

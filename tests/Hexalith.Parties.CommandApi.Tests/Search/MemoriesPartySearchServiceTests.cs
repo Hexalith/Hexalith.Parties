@@ -2,6 +2,7 @@ using Hexalith.Memories.Client.Rest;
 using Hexalith.Memories.Contracts.V1;
 using Hexalith.Parties.CommandApi.Search;
 using Hexalith.Parties.Contracts.Models;
+using Hexalith.Parties.Contracts.Search;
 using Hexalith.Parties.Contracts.ValueObjects;
 
 using Microsoft.Extensions.Logging.Abstractions;
@@ -41,7 +42,7 @@ public class MemoriesPartySearchServiceTests
                 Query = "jean",
             },
         };
-        var service = new MemoriesPartySearchService(client);
+        var service = CreateService(client);
 
         PartySearchResponse response = await service.SearchAsync(
             new PartySearchRequest("tenant-a", "jean", PartySearchMode.Hybrid, null, null, 1, 20, CaseId: "case-a", AuthorizedPartyIds: new HashSet<string> { "p1" }),
@@ -90,7 +91,7 @@ public class MemoriesPartySearchServiceTests
                 Query = "jean",
             },
         };
-        var service = new MemoriesPartySearchService(client);
+        var service = CreateService(client);
 
         PartySearchResponse response = await service.SearchAsync(
             new PartySearchRequest("tenant-a", "jean", mode, null, null, 1, 20, CaseId: "case-a"),
@@ -122,7 +123,7 @@ public class MemoriesPartySearchServiceTests
                 ],
                 1),
         };
-        var service = new MemoriesPartySearchService(client);
+        var service = CreateService(client);
 
         PartySearchResponse response = await service.SearchAsync(
             new PartySearchRequest("tenant-a", "related", PartySearchMode.Graph, null, null, 1, 20, CaseId: "case-a", GraphContextMemoryUnitId: "memory-start"),
@@ -155,7 +156,7 @@ public class MemoriesPartySearchServiceTests
                 Query = "party",
             },
         };
-        var service = new MemoriesPartySearchService(client);
+        var service = CreateService(client);
 
         PartySearchResponse response = await service.SearchAsync(
             new PartySearchRequest("tenant-a", "party", PartySearchMode.Hybrid, null, null, 1, 20, AuthorizedPartyIds: new HashSet<string> { "allowed" }),
@@ -187,7 +188,7 @@ public class MemoriesPartySearchServiceTests
                 Query = "party",
             },
         };
-        var service = new MemoriesPartySearchService(client);
+        var service = CreateService(client);
 
         PartySearchResponse response = await service.SearchAsync(
             new PartySearchRequest("tenant-a", "party", PartySearchMode.Hybrid, null, null, 1, 20),
@@ -199,7 +200,151 @@ public class MemoriesPartySearchServiceTests
         response.SourceMetadata.Single().MemoryUnitId.ShouldBe("memory-2");
     }
 
-    private static FusedScoredResult CreateHit(string memoryUnitId, string sourceUri, double score = 0.8)
+    [Fact]
+    public async Task UnavailableMemoriesReturnsDegradedDisplayNameFallback()
+    {
+        var client = new ThrowingMemoriesClient(new HttpRequestException("connection refused"));
+        var service = CreateService(client);
+
+        PartySearchResponse response = await service.SearchAsync(
+            new PartySearchRequest("tenant-a", "Dupont", PartySearchMode.Hybrid, null, null, 1, 20),
+            [CreateEntry("p1", "Jean Dupont")],
+            CancellationToken.None).ConfigureAwait(true);
+
+        response.Status.ShouldBe(PartySearchExecutionStatus.Degraded);
+        response.DegradedReason.ShouldNotBeNull();
+        response.DegradedReason.ShouldContain("HttpRequestException");
+        response.Results.Items.ShouldContain(r => r.Party.Id == "p1");
+        // Fallback path must not advertise rich-search axes
+        response.ScoreMetadata.ShouldAllBe(s => s.LexicalScore == null && s.SemanticScore == null && s.GraphScore == null && s.CompositeScore == null);
+    }
+
+    [Fact]
+    public async Task FallbackSearchDoesNotAdvertiseSemanticOrGraphScores()
+    {
+        var client = new ThrowingMemoriesClient(new HttpRequestException("memories unreachable"));
+        var service = CreateService(client);
+
+        PartySearchResponse response = await service.SearchAsync(
+            new PartySearchRequest("tenant-a", "Dupont", PartySearchMode.Hybrid, null, null, 1, 20),
+            [CreateEntry("p1", "Jean Dupont")],
+            CancellationToken.None).ConfigureAwait(true);
+
+        response.Status.ShouldBe(PartySearchExecutionStatus.Degraded);
+        foreach (PartySearchScoreMetadata metadata in response.ScoreMetadata)
+        {
+            metadata.LexicalScore.ShouldBeNull();
+            metadata.SemanticScore.ShouldBeNull();
+            metadata.GraphScore.ShouldBeNull();
+            metadata.CompositeScore.ShouldBeNull();
+        }
+
+        foreach (PartySearchResult result in response.Results.Items)
+        {
+            result.Matches.ShouldAllBe(m => m.MatchType != "semantic" && m.MatchType != "graph" && m.MatchType != "hybrid");
+        }
+    }
+
+    [Fact]
+    public async Task DisabledAxisFallsBackToLocalDisplayNameSearch()
+    {
+        var client = new RecordingMemoriesClient();
+        var service = CreateService(client, options: new PartyMemorySearchOptions
+        {
+            Enabled = true,
+            EnabledAxes = ["hybrid"], // semantic disabled
+            TenantId = "tenant-a",
+            CaseId = "case-a",
+            Endpoint = new Uri("https://memories.example"),
+            ApiToken = "x",
+        });
+
+        PartySearchResponse response = await service.SearchAsync(
+            new PartySearchRequest("tenant-a", "Dupont", PartySearchMode.Semantic, null, null, 1, 20),
+            [CreateEntry("p1", "Jean Dupont")],
+            CancellationToken.None).ConfigureAwait(true);
+
+        client.HybridCalls.ShouldBe(0);
+        client.LastAxis.ShouldBeNull();
+        response.Status.ShouldBe(PartySearchExecutionStatus.Degraded);
+        response.DegradedReason.ShouldNotBeNull();
+        response.DegradedReason.ShouldContain("disabled");
+    }
+
+    [Fact]
+    public async Task GraphSearchWithoutContextFallsBackToLocalDisplayNameSearch()
+    {
+        var client = new RecordingMemoriesClient();
+        var service = CreateService(client);
+
+        PartySearchResponse response = await service.SearchAsync(
+            new PartySearchRequest("tenant-a", "Dupont", PartySearchMode.Graph, null, null, 1, 20),
+            [CreateEntry("p1", "Jean Dupont")],
+            CancellationToken.None).ConfigureAwait(true);
+
+        client.TraverseCalls.ShouldBe(0);
+        response.Status.ShouldBe(PartySearchExecutionStatus.Degraded);
+        response.DegradedReason.ShouldNotBeNull();
+        response.DegradedReason.ShouldContain("graph context");
+    }
+
+    [Fact]
+    public async Task CaseScopedRequestDropsCandidatesFromOtherCases()
+    {
+        var client = new RecordingMemoriesClient
+        {
+            HybridResult = new HybridSearchResult
+            {
+                Results =
+                [
+                    CreateHit("memory-other", "urn:hexalith:parties:tenant-a:party:p1", 0.9, caseId: "case-other"),
+                    CreateHit("memory-allowed", "urn:hexalith:parties:tenant-a:party:p2", 0.8, caseId: "case-a"),
+                ],
+                TotalCount = 2,
+                Degraded = false,
+                UnavailableAxes = [],
+                Query = "party",
+            },
+        };
+        var service = CreateService(client);
+
+        PartySearchResponse response = await service.SearchAsync(
+            new PartySearchRequest("tenant-a", "party", PartySearchMode.Hybrid, null, null, 1, 20, CaseId: "case-a"),
+            [CreateEntry("p1", "Jean"), CreateEntry("p2", "Acme")],
+            CancellationToken.None).ConfigureAwait(true);
+
+        response.Results.Items.Select(r => r.Party.Id).ShouldBe(["p2"]);
+    }
+
+    [Fact]
+    public async Task PartyIdContainingColonRoundTripsThroughEncodedUrn()
+    {
+        string awkwardId = "tenant:party:1";
+        var client = new RecordingMemoriesClient
+        {
+            HybridResult = new HybridSearchResult
+            {
+                Results =
+                [
+                    CreateHit("memory-1", PartyMemoryUrn.Build("tenant-a", awkwardId)),
+                ],
+                TotalCount = 1,
+                Degraded = false,
+                UnavailableAxes = [],
+                Query = "party",
+            },
+        };
+        var service = CreateService(client);
+
+        PartySearchResponse response = await service.SearchAsync(
+            new PartySearchRequest("tenant-a", "party", PartySearchMode.Hybrid, null, null, 1, 20),
+            [CreateEntry(awkwardId, "Awkward")],
+            CancellationToken.None).ConfigureAwait(true);
+
+        response.Results.Items.Single().Party.Id.ShouldBe(awkwardId);
+    }
+
+    private static FusedScoredResult CreateHit(string memoryUnitId, string sourceUri, double score = 0.8, string? caseId = null)
         => new()
         {
             MemoryUnitId = memoryUnitId,
@@ -207,6 +352,7 @@ public class MemoriesPartySearchServiceTests
             ContentSnippet = memoryUnitId,
             SourceUri = sourceUri,
             SourceType = SourceType.Event,
+            CaseId = caseId,
         };
 
     private static PartyIndexEntry CreateEntry(string id, string displayName)
@@ -220,6 +366,33 @@ public class MemoriesPartySearchServiceTests
             LastModifiedAt = DateTimeOffset.UtcNow,
             IsErased = false,
         };
+
+    private static MemoriesPartySearchService CreateService(MemoriesClient client, PartyMemorySearchOptions? options = null)
+    {
+        LocalPartySearchService localFallback = new(new LocalFuzzyPartySearchProvider());
+        return new MemoriesPartySearchService(
+            client,
+            localFallback,
+            new StubOptionsMonitor(options ?? new PartyMemorySearchOptions
+            {
+                Enabled = true,
+                EnabledAxes = ["hybrid", "syntactic", "semantic", "graph"],
+                TenantId = "tenant-a",
+                CaseId = "case-a",
+                Endpoint = new Uri("https://memories.example"),
+                ApiToken = "x",
+            }),
+            NullLogger<MemoriesPartySearchService>.Instance);
+    }
+
+    private sealed class StubOptionsMonitor(PartyMemorySearchOptions value) : IOptionsMonitor<PartyMemorySearchOptions>
+    {
+        public PartyMemorySearchOptions CurrentValue { get; } = value;
+
+        public PartyMemorySearchOptions Get(string? name) => CurrentValue;
+
+        public IDisposable? OnChange(Action<PartyMemorySearchOptions, string?> listener) => null;
+    }
 
     private sealed class RecordingMemoriesClient()
         : MemoriesClient(
@@ -276,5 +449,28 @@ public class MemoriesPartySearchServiceTests
             TraverseCalls++;
             return Task.FromResult(TraversalResult);
         }
+    }
+
+    private sealed class ThrowingMemoriesClient(Exception ex)
+        : MemoriesClient(
+            new HttpClient { BaseAddress = new Uri("https://memories.example") },
+            Options.Create(new MemoriesClientOptions()),
+            NullLogger<MemoriesClient>.Instance)
+    {
+        public override Task<HybridSearchResult> HybridSearchAsync(HybridSearchRequest request, CancellationToken ct)
+            => Task.FromException<HybridSearchResult>(ex);
+
+        public override Task<SearchResult> SearchAsync(SearchRequest request, CancellationToken ct)
+            => Task.FromException<SearchResult>(ex);
+
+        public override Task<TraversalResult> TraverseAsync(
+            string tenantId,
+            string startNodeId,
+            int depth = 2,
+            string? caseId = null,
+            IReadOnlyList<EdgeType>? edgeTypes = null,
+            CancellationToken ct = default,
+            int? tokenBudget = null)
+            => Task.FromException<TraversalResult>(ex);
     }
 }

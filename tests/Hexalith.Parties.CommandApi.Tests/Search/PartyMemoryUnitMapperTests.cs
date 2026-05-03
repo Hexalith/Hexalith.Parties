@@ -66,7 +66,7 @@ public class PartyMemoryUnitMapperTests
     public async Task PartyMemoryIndexingServiceIndexesPartyCreatedDataAndTracksMapping()
     {
         var client = new RecordingMemoriesClient();
-        var service = new PartyMemoryIndexingService(client);
+        var service = new PartyMemoryIndexingService(client, NullLogger<PartyMemoryIndexingService>.Instance);
         PartyIndexEntry entry = CreateEntry();
 
         PartyMemoryIndexingResult? result = await service.IndexAsync(
@@ -82,12 +82,43 @@ public class PartyMemoryUnitMapperTests
         result.PartyId.ShouldBe("party-1");
         result.SourceUri.ShouldBe("urn:hexalith:parties:tenant-a:party:party-1");
         result.WorkflowInstanceId.ShouldBe("workflow-1");
+        result.Indexed.ShouldBeTrue();
+        result.FailureReason.ShouldBeNull();
         client.LastTenantId.ShouldBe("tenant-a");
         client.LastCaseId.ShouldBe("case-a");
         client.LastSourceUri.ShouldBe(result.SourceUri);
         client.LastContentText.ShouldNotBeNull();
         client.LastContentText.ShouldContain("Jean Dupont");
         client.LastMetadata.ShouldContainKey("partyId");
+    }
+
+    [Fact]
+    public async Task PartyMemoryIndexingServiceReturnsBlockedResultWhenMemoriesIngestFails()
+    {
+        var client = new ThrowingMemoriesClient(new HttpRequestException("memories down"));
+        var service = new PartyMemoryIndexingService(client, NullLogger<PartyMemoryIndexingService>.Instance);
+        PartyIndexEntry entry = CreateEntry();
+
+        PartyMemoryIndexingResult? result = await service.IndexAsync(
+            entry,
+            new PartyMemoryUnitMappingContext("tenant-a", "case-a", "party-1", "PartyCreated"),
+            CancellationToken.None);
+
+        result.ShouldNotBeNull();
+        result.Indexed.ShouldBeFalse();
+        result.FailureReason.ShouldNotBeNull();
+        result.FailureReason.ShouldContain("HttpRequestException");
+        result.WorkflowInstanceId.ShouldBeNull();
+    }
+
+    [Fact]
+    public void InactiveOrErasedPartyIsNotMappedForIndexing()
+    {
+        PartyIndexEntry inactive = CreateEntry() with { IsActive = false };
+        PartyMemoryUnit? unit = PartyMemoryUnitMapper.Map(
+            inactive,
+            PartyMemoryUnitMappingContext.ForProjection("tenant-a", "case-a"));
+        unit.ShouldBeNull();
     }
 
     private static PartyIndexEntry CreateEntry()
@@ -156,6 +187,26 @@ public class PartyMemoryUnitMapperTests
             LastMetadata = metadata ?? new Dictionary<string, MetadataField>(StringComparer.Ordinal);
             return Task.FromResult("workflow-1");
         }
+#pragma warning restore HXL001
+    }
+
+    private sealed class ThrowingMemoriesClient(Exception ex)
+        : MemoriesClient(
+            new HttpClient { BaseAddress = new Uri("https://memories.example") },
+            Options.Create(new MemoriesClientOptions()),
+            NullLogger<MemoriesClient>.Instance)
+    {
+#pragma warning disable HXL001
+        public override Task<string> IngestAsync(
+            string tenantId,
+            string caseId,
+            string sourceUri,
+            byte[] content,
+            string contentType,
+            string ingestedBy,
+            IReadOnlyDictionary<string, MetadataField>? metadata,
+            CancellationToken ct)
+            => Task.FromException<string>(ex);
 #pragma warning restore HXL001
     }
 }

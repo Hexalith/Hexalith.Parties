@@ -73,14 +73,23 @@ public sealed class FindPartiesMcpToolTests
 
         using JsonDocument document = JsonDocument.Parse(json);
         JsonElement root = document.RootElement;
-
-        root.GetProperty("items").GetArrayLength().ShouldBe(1);
-        JsonElement item = root.GetProperty("items")[0];
+        // MCP now returns the full PartySearchResponse envelope; the paged items live under .results.items
+        JsonElement results = root.GetProperty("results");
+        results.GetProperty("items").GetArrayLength().ShouldBe(1);
+        JsonElement item = results.GetProperty("items")[0];
         item.GetProperty("party").GetProperty("displayName").GetString().ShouldBe("Jean Dupont");
         item.TryGetProperty("matches", out JsonElement matches).ShouldBeTrue();
         matches.GetArrayLength().ShouldBeGreaterThan(0);
         matches[0].GetProperty("matchedField").GetString().ShouldNotBeNullOrWhiteSpace();
         matches[0].GetProperty("matchType").GetString().ShouldNotBeNullOrWhiteSpace();
+
+        // Confirm the envelope-level fields are exposed too — ScoreMetadata + Status
+        root.TryGetProperty("status", out JsonElement statusEl).ShouldBeTrue();
+        root.TryGetProperty("scoreMetadata", out JsonElement scoresEl).ShouldBeTrue();
+        root.TryGetProperty("sourceMetadata", out JsonElement sourcesEl).ShouldBeTrue();
+        statusEl.ValueKind.ShouldNotBe(JsonValueKind.Undefined);
+        scoresEl.ValueKind.ShouldNotBe(JsonValueKind.Undefined);
+        sourcesEl.ValueKind.ShouldNotBe(JsonValueKind.Undefined);
     }
 
     [Fact]

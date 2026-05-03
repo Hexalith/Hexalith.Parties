@@ -85,4 +85,48 @@ public class PartyMemorySearchOptionsValidatorTests
 
         client.BaseAddress.ShouldBe(new Uri("https://memories.example/"));
     }
+
+    [Fact]
+    public void AddPartiesResolvesMemoriesPartySearchServiceWhenEnabled()
+    {
+        IConfigurationRoot configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["Parties:MemoriesSearch:Enabled"] = "true",
+                ["Parties:MemoriesSearch:Endpoint"] = "https://memories.example/",
+                ["Parties:MemoriesSearch:RequireApiToken"] = "false",
+                ["Parties:MemoriesSearch:TenantId"] = "tenant-a",
+                ["Parties:MemoriesSearch:CaseId"] = "case-a",
+            })
+            .Build();
+
+        ServiceProvider provider = new ServiceCollection()
+            .AddSingleton<IConfiguration>(configuration)
+            .AddLogging()
+            .AddParties(configuration)
+            .BuildServiceProvider();
+
+        IPartySearchService service = provider.GetRequiredService<IPartySearchService>();
+        service.GetType().Name.ShouldBe(nameof(MemoriesPartySearchService));
+    }
+
+    [Fact]
+    public void AddPartiesResolvesLocalPartySearchServiceWhenDisabled()
+    {
+        IConfigurationRoot configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["Parties:MemoriesSearch:Enabled"] = "false",
+            })
+            .Build();
+
+        ServiceProvider provider = new ServiceCollection()
+            .AddSingleton<IConfiguration>(configuration)
+            .AddLogging()
+            .AddParties(configuration)
+            .BuildServiceProvider();
+
+        IPartySearchService service = provider.GetRequiredService<IPartySearchService>();
+        service.GetType().Name.ShouldBe(nameof(LocalPartySearchService));
+    }
 }

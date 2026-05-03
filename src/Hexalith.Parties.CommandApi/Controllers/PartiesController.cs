@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.Json.Nodes;
 
 using Dapr.Actors;
 using Dapr.Actors.Client;
@@ -129,7 +130,7 @@ public sealed class PartiesController(
     }
 
     [HttpGet("search")]
-    [ProducesResponseType(typeof(PagedResult<PartySearchResult>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(PartySearchResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> SearchPartiesAsync(
         [FromQuery] string? q = null,
@@ -161,16 +162,40 @@ public sealed class PartiesController(
             pageSize = 100;
         }
 
+        // Validate caseId — applied as a tenant-scoped filter on Memories candidates.
+        // Reject extreme lengths and control characters to defend against header-injection
+        // and oversized-input attacks. Real authorization (the caller is allowed to scope
+        // to that case id) is the responsibility of upstream auth middleware.
+        if (caseId is not null)
+        {
+            if (caseId.Length > 256 || caseId.AsSpan().IndexOfAny('\r', '\n') >= 0)
+            {
+                return BadRequest(new ProblemDetails
+                {
+                    Title = "Invalid caseId.",
+                    Status = StatusCodes.Status400BadRequest,
+                    Detail = "caseId must be 256 characters or fewer and must not contain control characters.",
+                    Type = "urn:hexalith:parties:error:InvalidCaseId",
+                });
+            }
+        }
+
         if (string.IsNullOrWhiteSpace(q))
         {
-            var emptyResult = new PagedResult<PartySearchResult>
-            {
-                Items = [],
-                Page = page,
-                PageSize = pageSize,
-                TotalCount = 0,
-                TotalPages = 1,
-            };
+            var emptyResult = new PartySearchResponse(
+                new PagedResult<PartySearchResult>
+                {
+                    Items = [],
+                    Page = page,
+                    PageSize = pageSize,
+                    TotalCount = 0,
+                    TotalPages = 1,
+                },
+                PartySearchExecutionStatus.LocalOnly,
+                "Empty query — list endpoint behaviour applied.",
+                ScoreMetadata: [],
+                SourceMetadata: []);
+            SetSearchMetadataHeaders(Response, emptyResult);
             return Ok(emptyResult);
         }
 
@@ -199,7 +224,7 @@ public sealed class PartiesController(
             HttpContext.RequestAborted).ConfigureAwait(false);
 
         SetSearchMetadataHeaders(Response, search);
-        return Ok(search.Results);
+        return Ok(search);
     }
 
     [HttpGet("{id}")]
@@ -645,11 +670,24 @@ public sealed class PartiesController(
     {
         if (TryGetProperty(body, "personDetails", out JsonElement personDetailsElement))
         {
-            return body.Deserialize<UpdatePersonDetails>(s_jsonOptions)
+            UpdatePersonDetails? command = body.Deserialize<UpdatePersonDetails>(s_jsonOptions)
                 ?? throw new ValidationException(
                     [
                         new ValidationFailure(nameof(UpdatePersonDetails), "Request body is required."),
                     ]);
+
+            // The new-shape branch did not previously validate that PersonDetails is non-null.
+            // A body like { "partyId": "x", "personDetails": null } would deserialize to a
+            // record with PersonDetails = null and silently flow into the dispatcher.
+            if (command.PersonDetails is null)
+            {
+                throw new ValidationException(
+                    [
+                        new ValidationFailure("personDetails", "personDetails must be a non-null object."),
+                    ]);
+            }
+
+            return command;
         }
 
         string partyId = TryGetProperty(body, "partyId", out JsonElement partyIdElement)
@@ -674,7 +712,20 @@ public sealed class PartiesController(
         if (TryGetProperty(body, "dateOfBirth", out JsonElement dateOfBirthElement)
             && dateOfBirthElement.ValueKind != JsonValueKind.Null)
         {
-            dateOfBirth = dateOfBirthElement.GetDateTimeOffset();
+            // GetDateTimeOffset throws FormatException / InvalidOperationException for
+            // unparseable values; surface those as 400-class ValidationException so the
+            // global handler returns a structured ProblemDetails rather than 500.
+            try
+            {
+                dateOfBirth = dateOfBirthElement.GetDateTimeOffset();
+            }
+            catch (Exception ex) when (ex is FormatException or InvalidOperationException)
+            {
+                throw new ValidationException(
+                    [
+                        new ValidationFailure("dateOfBirth", $"dateOfBirth is not a valid ISO-8601 date/time: {ex.Message}"),
+                    ]);
+            }
         }
 
         string? prefix = TryGetProperty(body, "prefix", out JsonElement prefixElement)
@@ -730,12 +781,25 @@ public sealed class PartiesController(
 
         if (jsonTask is not null)
         {
-            string? json = await jsonTask.ConfigureAwait(false);
-            if (!string.IsNullOrWhiteSpace(json)
-                && !string.Equals(json.Trim(), "{}", StringComparison.Ordinal)
-                && !string.Equals(json.Trim(), "null", StringComparison.OrdinalIgnoreCase))
+            try
             {
-                return JsonSerializer.Deserialize<PartyDetail>(json, s_jsonOptions);
+                string? json = await jsonTask.ConfigureAwait(false);
+                if (!string.IsNullOrWhiteSpace(json)
+                    && !string.Equals(json.Trim(), "{}", StringComparison.Ordinal)
+                    && !string.Equals(json.Trim(), "null", StringComparison.OrdinalIgnoreCase))
+                {
+                    PartyDetail? deserialized = JsonSerializer.Deserialize<PartyDetail>(json, s_jsonOptions);
+                    if (deserialized is not null)
+                    {
+                        return deserialized;
+                    }
+                    // Fall through to typed-actor fallback when deserialize returned null —
+                    // legacy projections may need the typed call to materialize the detail.
+                }
+            }
+            catch (NotImplementedException)
+            {
+                // Dapr remoting raises NotImplementedException at await time, not invoke time.
             }
         }
 
@@ -751,11 +815,20 @@ public sealed class PartiesController(
 
         if (serializedTask is not null)
         {
-            byte[]? payload = await serializedTask.ConfigureAwait(false);
-            if (payload is { Length: > 0 }
-                && !IsEmptyJsonPayload(payload))
+            try
             {
-                return JsonSerializer.Deserialize<PartyDetail>(payload, s_jsonOptions);
+                byte[]? payload = await serializedTask.ConfigureAwait(false);
+                if (payload is { Length: > 0 } && !IsEmptyJsonPayload(payload))
+                {
+                    PartyDetail? deserialized = JsonSerializer.Deserialize<PartyDetail>(payload, s_jsonOptions);
+                    if (deserialized is not null)
+                    {
+                        return deserialized;
+                    }
+                }
+            }
+            catch (NotImplementedException)
+            {
             }
         }
 
@@ -792,12 +865,34 @@ public sealed class PartiesController(
     }
 
     private static bool IsEmptyJsonPayload(byte[] payload)
-        => (payload.Length == 2 && payload[0] == (byte)'{' && payload[1] == (byte)'}')
-            || (payload.Length == 4
-                && (payload[0] == (byte)'n' || payload[0] == (byte)'N')
-                && (payload[1] == (byte)'u' || payload[1] == (byte)'U')
-                && (payload[2] == (byte)'l' || payload[2] == (byte)'L')
-                && (payload[3] == (byte)'l' || payload[3] == (byte)'L'));
+    {
+        if (payload.Length == 0)
+        {
+            return true;
+        }
+
+        // Reject BOM-prefixed payloads when matching — the previous byte-pattern check failed
+        // on "{ }" with whitespace, "{}\n", and JSON.SerializeToUtf8Bytes(null) variants.
+        try
+        {
+            JsonNode? node = JsonNode.Parse(payload);
+            if (node is null)
+            {
+                return true;
+            }
+
+            return node switch
+            {
+                JsonObject obj => obj.Count == 0,
+                JsonArray arr => arr.Count == 0,
+                _ => false,
+            };
+        }
+        catch (JsonException)
+        {
+            return false;
+        }
+    }
 
     private string? ExtractTenant()
     {
@@ -881,7 +976,10 @@ public sealed class PartiesController(
         response.Headers["X-Parties-Search-Status"] = search.Status.ToString();
         if (!string.IsNullOrWhiteSpace(search.DegradedReason))
         {
-            response.Headers["X-Parties-Search-Degraded-Reason"] = search.DegradedReason;
+            // Strip CR/LF so a Memories-side reason containing newlines cannot trigger a
+            // header-injection / Kestrel-validation 500.
+            response.Headers["X-Parties-Search-Degraded-Reason"] =
+                search.DegradedReason.Replace('\r', ' ').Replace('\n', ' ');
         }
     }
 

@@ -442,8 +442,9 @@ public sealed class PartiesControllerProblemDetailsTests : IClassFixture<Parties
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
         using JsonDocument payload = await ReadJsonAsync(response);
 
-        payload.RootElement.GetProperty("totalCount").GetInt32().ShouldBe(3);
-        JsonElement items = payload.RootElement.GetProperty("items");
+        JsonElement results = payload.RootElement.GetProperty("results");
+        results.GetProperty("totalCount").GetInt32().ShouldBe(3);
+        JsonElement items = results.GetProperty("items");
         items.GetArrayLength().ShouldBe(3);
 
         items[0].GetProperty("party").GetProperty("id").GetString().ShouldBe("exact");
@@ -479,9 +480,10 @@ public sealed class PartiesControllerProblemDetailsTests : IClassFixture<Parties
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
         using JsonDocument payload = await ReadJsonAsync(response);
 
-        payload.RootElement.GetProperty("totalCount").GetInt32().ShouldBe(0);
-        payload.RootElement.GetProperty("totalPages").GetInt32().ShouldBe(1);
-        payload.RootElement.GetProperty("items").GetArrayLength().ShouldBe(0);
+        JsonElement results = payload.RootElement.GetProperty("results");
+        results.GetProperty("totalCount").GetInt32().ShouldBe(0);
+        results.GetProperty("totalPages").GetInt32().ShouldBe(1);
+        results.GetProperty("items").GetArrayLength().ShouldBe(0);
     }
 
     [Fact]
@@ -527,8 +529,9 @@ public sealed class PartiesControllerProblemDetailsTests : IClassFixture<Parties
         using JsonDocument payload = await ReadJsonAsync(response);
 
         // 3 matches: Dupont Alice, Dupont Bernard, Dupont Industries (all prefix)
-        payload.RootElement.GetProperty("totalCount").GetInt32().ShouldBe(3);
-        JsonElement items = payload.RootElement.GetProperty("items");
+        JsonElement results = payload.RootElement.GetProperty("results");
+        results.GetProperty("totalCount").GetInt32().ShouldBe(3);
+        JsonElement items = results.GetProperty("items");
         items.GetArrayLength().ShouldBe(3);
 
         // Sorted by priority (all prefix=1) then by displayName alphabetically
@@ -671,8 +674,9 @@ public sealed class PartiesControllerProblemDetailsTests : IClassFixture<Parties
 
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
         using JsonDocument payload = await ReadJsonAsync(response);
-        payload.RootElement.GetProperty("totalCount").GetInt32().ShouldBe(1);
-        JsonElement first = payload.RootElement.GetProperty("items")[0];
+        JsonElement results = payload.RootElement.GetProperty("results");
+        results.GetProperty("totalCount").GetInt32().ShouldBe(1);
+        JsonElement first = results.GetProperty("items")[0];
         first.GetProperty("party").GetProperty("id").GetString().ShouldBe("p1");
         first.GetProperty("matches")[0].GetProperty("matchedField").GetString().ShouldBe("email");
     }
@@ -707,7 +711,7 @@ public sealed class PartiesControllerProblemDetailsTests : IClassFixture<Parties
 
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
         using JsonDocument payload = await ReadJsonAsync(response);
-        payload.RootElement.GetProperty("totalCount").GetInt32().ShouldBe(2);
+        payload.RootElement.GetProperty("results").GetProperty("totalCount").GetInt32().ShouldBe(2);
         List<string?> ids = ExtractSearchItemIds(payload);
         ids.ShouldContain("person-match");
         ids.ShouldContain("org-match");
@@ -784,7 +788,7 @@ public sealed class PartiesControllerProblemDetailsTests : IClassFixture<Parties
             using HttpResponseMessage searchA = await clientA.GetAsync("/api/v1/parties/search?q=Alice");
             searchA.StatusCode.ShouldBe(HttpStatusCode.OK);
             using JsonDocument searchAPayload = await ReadJsonAsync(searchA);
-            searchAPayload.RootElement.GetProperty("totalCount").GetInt32().ShouldBe(1);
+            searchAPayload.RootElement.GetProperty("results").GetProperty("totalCount").GetInt32().ShouldBe(1);
             List<string?> searchAIds = ExtractSearchItemIds(searchAPayload);
             searchAIds.ShouldContain("a1");
 
@@ -792,7 +796,7 @@ public sealed class PartiesControllerProblemDetailsTests : IClassFixture<Parties
             using HttpResponseMessage searchB = await clientB.GetAsync("/api/v1/parties/search?q=Alice");
             searchB.StatusCode.ShouldBe(HttpStatusCode.OK);
             using JsonDocument searchBPayload = await ReadJsonAsync(searchB);
-            searchBPayload.RootElement.GetProperty("totalCount").GetInt32().ShouldBe(0);
+            searchBPayload.RootElement.GetProperty("results").GetProperty("totalCount").GetInt32().ShouldBe(0);
         }
         finally
         {
@@ -870,9 +874,10 @@ public sealed class PartiesControllerProblemDetailsTests : IClassFixture<Parties
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
         using JsonDocument payload = await ReadJsonAsync(response);
 
-        payload.RootElement.GetProperty("totalCount").GetInt32().ShouldBe(0);
-        payload.RootElement.GetProperty("totalPages").GetInt32().ShouldBe(1);
-        payload.RootElement.GetProperty("items").GetArrayLength().ShouldBe(0);
+        JsonElement results = payload.RootElement.GetProperty("results");
+        results.GetProperty("totalCount").GetInt32().ShouldBe(0);
+        results.GetProperty("totalPages").GetInt32().ShouldBe(1);
+        results.GetProperty("items").GetArrayLength().ShouldBe(0);
     }
 
     [Theory]
@@ -1695,7 +1700,11 @@ public sealed class PartiesControllerProblemDetailsTests : IClassFixture<Parties
 
     private static List<string?> ExtractSearchItemIds(JsonDocument payload)
     {
-        JsonElement items = payload.RootElement.GetProperty("items");
+        // The /search endpoint returns a PartySearchResponse envelope; items live under .results.items
+        JsonElement root = payload.RootElement;
+        JsonElement items = root.TryGetProperty("results", out JsonElement results)
+            ? results.GetProperty("items")
+            : root.GetProperty("items");
         List<string?> ids = [];
         for (int i = 0; i < items.GetArrayLength(); i++)
         {

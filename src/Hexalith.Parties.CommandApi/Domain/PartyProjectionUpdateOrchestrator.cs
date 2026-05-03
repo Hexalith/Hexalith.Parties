@@ -5,9 +5,13 @@ using Hexalith.EventStore.Contracts.Identity;
 using Hexalith.EventStore.Contracts.Security;
 using Hexalith.EventStore.Server.Actors;
 using Hexalith.EventStore.Server.Projections;
+using Hexalith.Parties.CommandApi.Search;
+using Hexalith.Parties.Contracts.Models;
 using Hexalith.Parties.Projections.Abstractions;
 using Hexalith.Parties.Projections.Actors;
 using Hexalith.Parties.Security;
+
+using Microsoft.Extensions.Options;
 
 using ServerEventEnvelope = Hexalith.EventStore.Server.Events.EventEnvelope;
 
@@ -16,6 +20,7 @@ namespace Hexalith.Parties.CommandApi.Domain;
 internal sealed class PartyProjectionUpdateOrchestrator(
     IActorProxyFactory actorProxyFactory,
     IEventPayloadProtectionService payloadProtectionService,
+    IServiceProvider serviceProvider,
     ILogger<PartyProjectionUpdateOrchestrator> logger) : IProjectionUpdateOrchestrator, IProjectionPollerDeliveryGateway
 {
     private const string PartyDomain = "party";
@@ -32,16 +37,31 @@ internal sealed class PartyProjectionUpdateOrchestrator(
             return;
         }
 
+        cancellationToken.ThrowIfCancellationRequested();
+
         IAggregateActor aggregate = actorProxyFactory.CreateActorProxy<IAggregateActor>(
             new ActorId(identity.ActorId),
             nameof(AggregateActor));
 
-        ServerEventEnvelope[] events = await aggregate
-            .GetEventsAsync(0)
-            .ConfigureAwait(false);
+        ServerEventEnvelope[] events;
+        try
+        {
+            events = await aggregate
+                .GetEventsAsync(0)
+                .WaitAsync(cancellationToken)
+                .ConfigureAwait(false);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
 
         if (events.Length == 0)
         {
+            logger.LogDebug(
+                "Aggregate {TenantId}/{AggregateId} has no events to deliver to projections.",
+                identity.TenantId,
+                identity.AggregateId);
             return;
         }
 
@@ -68,18 +88,24 @@ internal sealed class PartyProjectionUpdateOrchestrator(
                         cancellationToken)
                     .ConfigureAwait(false);
             }
-            catch (Exception ex) when (ex is not OperationCanceledException)
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
             {
-                // After a party's encryption key has been destroyed, encrypted historical events
-                // can no longer be decrypted. Fall back to a redacted payload so projection
-                // delivery does not stall on the post-erasure tail (PartyEncryptionKeyDeleted,
-                // ErasureVerified, PartyErased) that contains no personal data.
+                throw;
+            }
+            catch (InvalidOperationException ex) when (IsKeyDestroyedFailure(ex))
+            {
+                // Narrowed catch (was: any Exception). Only fall back to a redacted payload
+                // when the failure is specifically the post-erasure "no encryption key
+                // available" case. Transient KMS errors, key-version mismatches, or HSM
+                // permission errors propagate so projections don't silently corrupt with
+                // null personal-data fields on a recoverable failure.
                 logger.LogWarning(
                     ex,
-                    "Falling back to redacted payload during projection delivery for {TenantId}/{AggregateId} event {EventTypeName}.",
+                    "Falling back to redacted payload during projection delivery for {TenantId}/{AggregateId} event {EventTypeName} (sequence {SequenceNumber}). The party's encryption key is not available — proceeding with post-erasure tail only.",
                     identity.TenantId,
                     identity.AggregateId,
-                    envelope.EventTypeName);
+                    envelope.EventTypeName,
+                    envelope.SequenceNumber);
                 protectionResult = PartyPayloadProtectionService.RedactProtectedPayload(envelope.Payload, envelope.SerializationFormat);
             }
 
@@ -88,21 +114,94 @@ internal sealed class PartyProjectionUpdateOrchestrator(
                     identity.AggregateId,
                     envelope.EventTypeName,
                     protectionResult.PayloadBytes,
-                    protectionResult.SerializationFormat)
+                    protectionResult.SerializationFormat,
+                    envelope.SequenceNumber)
                 .ConfigureAwait(false);
             await indexProjection
                 .HandleSerializedEventAsync(
                     identity.AggregateId,
                     envelope.EventTypeName,
                     protectionResult.PayloadBytes,
-                    protectionResult.SerializationFormat)
+                    protectionResult.SerializationFormat,
+                    envelope.SequenceNumber)
                 .ConfigureAwait(false);
 
             logger.LogDebug(
-                "Delivered party event {EventTypeName} to projections for {TenantId}/{AggregateId}.",
+                "Delivered party event {EventTypeName} (sequence {SequenceNumber}) to projections for {TenantId}/{AggregateId}.",
                 envelope.EventTypeName,
+                envelope.SequenceNumber,
+                identity.TenantId,
+                identity.AggregateId);
+        }
+
+        // After delivering all events, push the latest index entry into Memories search if
+        // configured. Indexing is best-effort: failures are logged inside the indexing service
+        // and do not abort the projection-delivery contract.
+        await TryIndexLatestEntryAsync(identity, indexProjection, cancellationToken).ConfigureAwait(false);
+    }
+
+    private async Task TryIndexLatestEntryAsync(
+        AggregateIdentity identity,
+        IPartyIndexProjectionActor indexProjection,
+        CancellationToken cancellationToken)
+    {
+        PartyMemoryIndexingService? indexer = serviceProvider.GetService(typeof(PartyMemoryIndexingService)) as PartyMemoryIndexingService;
+        if (indexer is null)
+        {
+            return;
+        }
+
+        IOptionsMonitor<PartyMemorySearchOptions>? optionsMonitor = serviceProvider.GetService(typeof(IOptionsMonitor<PartyMemorySearchOptions>)) as IOptionsMonitor<PartyMemorySearchOptions>;
+        PartyMemorySearchOptions? memorySearchOptions = optionsMonitor?.CurrentValue;
+        if (memorySearchOptions is null || !memorySearchOptions.Enabled || string.IsNullOrWhiteSpace(memorySearchOptions.CaseId))
+        {
+            return;
+        }
+
+        try
+        {
+            IReadOnlyDictionary<string, PartyIndexEntry> entries = await indexProjection.GetEntriesAsync().ConfigureAwait(false);
+            if (!entries.TryGetValue(identity.AggregateId, out PartyIndexEntry? entry) || entry is null)
+            {
+                return;
+            }
+
+            cancellationToken.ThrowIfCancellationRequested();
+            _ = await indexer
+                .IndexAsync(
+                    entry,
+                    new PartyMemoryUnitMappingContext(
+                        TenantId: identity.TenantId,
+                        CaseId: memorySearchOptions.CaseId!,
+                        AggregateId: identity.AggregateId,
+                        EventType: "PartyProjectionChanged",
+                        SourceService: "Hexalith.Parties",
+                        Timestamp: DateTimeOffset.UtcNow),
+                    cancellationToken)
+                .ConfigureAwait(false);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(
+                ex,
+                "Memories indexing failed for {TenantId}/{AggregateId}; search may be stale until repair runs.",
                 identity.TenantId,
                 identity.AggregateId);
         }
     }
+
+    /// <summary>
+    /// Recognises the specific InvalidOperationException thrown when a party's encryption key
+    /// has been destroyed (post-erasure). Other InvalidOperationException flavours from the
+    /// payload protection service (missing nonce / tag / ciphertext / key-version metadata)
+    /// indicate transient or structural failures that must propagate, not be redacted away.
+    /// </summary>
+    private static bool IsKeyDestroyedFailure(InvalidOperationException ex)
+        => ex.Message.Contains("No encryption key", StringComparison.OrdinalIgnoreCase)
+            || ex.Message.Contains("key destroyed", StringComparison.OrdinalIgnoreCase)
+            || ex.Message.Contains("key has been deleted", StringComparison.OrdinalIgnoreCase);
 }

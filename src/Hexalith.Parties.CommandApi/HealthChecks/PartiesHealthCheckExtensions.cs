@@ -47,7 +47,12 @@ public static class PartiesHealthCheckExtensions
                 "projection-actors",
                 failureStatus: HealthStatus.Degraded,
                 tags: [],
-                timeout: healthCheckTimeout);
+                timeout: healthCheckTimeout)
+            .AddCheck<MemoriesSearchHealthCheck>(
+                "memories-search",
+                failureStatus: HealthStatus.Degraded,
+                tags: [],
+                timeout: TimeSpan.FromSeconds(5));
 
         return builder;
     }

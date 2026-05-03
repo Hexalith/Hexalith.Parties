@@ -71,8 +71,13 @@ public static class PartiesServiceCollectionExtensions {
         // EventStore server infrastructure (command routing, actors)
         _ = services.AddEventStoreServer(configuration);
         _ = services.AddTransient<IDomainServiceInvoker, PartyDomainServiceInvoker>();
-        _ = services.AddTransient<IProjectionUpdateOrchestrator, PartyProjectionUpdateOrchestrator>();
-        _ = services.AddTransient<IProjectionPollerDeliveryGateway, PartyProjectionUpdateOrchestrator>();
+        // Single concrete registration so both interfaces resolve to the same instance per scope.
+        // Two separate AddTransient<TInterface, TImpl>() calls would create two parallel
+        // orchestrators, silently splitting any state or cache between the synchronous-update
+        // and poller-delivery paths.
+        _ = services.AddTransient<PartyProjectionUpdateOrchestrator>();
+        _ = services.AddTransient<IProjectionUpdateOrchestrator>(sp => sp.GetRequiredService<PartyProjectionUpdateOrchestrator>());
+        _ = services.AddTransient<IProjectionPollerDeliveryGateway>(sp => sp.GetRequiredService<PartyProjectionUpdateOrchestrator>());
         _ = services.AddOptions<CommandStatusOptions>()
             .BindConfiguration("EventStore:CommandStatus");
         _ = services.AddSingleton<ICommandStatusStore, DaprCommandStatusStore>();
@@ -149,13 +154,33 @@ public static class PartiesServiceCollectionExtensions {
 
             if (memorySearch.Enabled)
             {
-                cleanups.Add((tenantId, partyId, cancellationToken) => Task.FromResult(new ErasureVerificationStoreResult
+                string memoriesCaseId = memorySearch.CaseId ?? string.Empty;
+                cleanups.Add(async (tenantId, partyId, cancellationToken) =>
                 {
-                    StoreName = "memories-search",
-                    Status = ErasureStoreCleanupStatus.Failed,
-                    Timestamp = DateTimeOffset.UtcNow,
-                    ErrorMessage = $"Memories cleanup blocked: no persisted memory-unit mapping was supplied for urn:hexalith:parties:{tenantId}:party:{partyId}. Run the Memories repair/reindex procedure and retry erasure verification.",
-                }));
+                    if (string.IsNullOrWhiteSpace(memoriesCaseId))
+                    {
+                        return new ErasureVerificationStoreResult
+                        {
+                            StoreName = "memories-search",
+                            Status = ErasureStoreCleanupStatus.Failed,
+                            Timestamp = DateTimeOffset.UtcNow,
+                            ErrorMessage = "Memories cleanup blocked: Parties:MemoriesSearch:CaseId is not configured.",
+                        };
+                    }
+
+                    PartyMemoryCleanupService cleanupService = sp.GetRequiredService<PartyMemoryCleanupService>();
+                    PartyMemoryCleanupResult result = await cleanupService
+                        .DeleteByPartyAsync(tenantId, memoriesCaseId, partyId, cancellationToken)
+                        .ConfigureAwait(false);
+
+                    return new ErasureVerificationStoreResult
+                    {
+                        StoreName = "memories-search",
+                        Status = result.Cleaned ? ErasureStoreCleanupStatus.Cleaned : ErasureStoreCleanupStatus.Failed,
+                        Timestamp = DateTimeOffset.UtcNow,
+                        ErrorMessage = result.BlockedReason,
+                    };
+                });
             }
 
             return cleanups;
@@ -191,7 +216,7 @@ public static class PartiesServiceCollectionExtensions {
 
         // Search provider (local fallback until Hexalith.Memories rich search is configured)
         _ = services.AddSingleton<IPartySearchProvider, LocalFuzzyPartySearchProvider>();
-        _ = services.AddSingleton<IPartySearchService, LocalPartySearchService>();
+        _ = services.AddSingleton<LocalPartySearchService>();
         _ = services.AddOptions<PartyMemorySearchOptions>()
             .BindConfiguration(PartyMemorySearchOptions.SectionName)
             .ValidateOnStart();
@@ -199,20 +224,37 @@ public static class PartiesServiceCollectionExtensions {
 
         if (memorySearch.Enabled)
         {
+            // Fail fast at startup if endpoint is missing — the validator catches this too,
+            // but DI also constructs MemoriesClient and the typed cleanup HttpClient before
+            // ValidateOnStart fires in some hosts.
+            if (memorySearch.Endpoint is null || !memorySearch.Endpoint.IsAbsoluteUri)
+            {
+                throw new InvalidOperationException(
+                    $"{PartyMemorySearchOptions.SectionName}:Endpoint must be an absolute URI when Memories search is enabled.");
+            }
+
             _ = services.AddMemoriesClient(options =>
             {
                 options.Endpoint = memorySearch.Endpoint;
                 options.ApiToken = memorySearch.ApiToken;
             });
             _ = services.AddSingleton<PartyMemoryIndexingService>();
-            _ = services.AddSingleton<IPartySearchService, MemoriesPartySearchService>();
+            _ = services.AddSingleton<IPartySearchService>(sp => new MemoriesPartySearchService(
+                sp.GetRequiredService<MemoriesClient>(),
+                sp.GetRequiredService<LocalPartySearchService>(),
+                sp.GetRequiredService<IOptionsMonitor<PartyMemorySearchOptions>>(),
+                sp.GetRequiredService<ILogger<MemoriesPartySearchService>>()));
+            string? memoriesApiToken = memorySearch.ApiToken;
             _ = services.AddHttpClient<PartyMemoryCleanupService>((_, httpClient) =>
             {
-                if (memorySearch.Endpoint is not null)
-                {
-                    httpClient.BaseAddress = memorySearch.Endpoint;
-                }
+                httpClient.BaseAddress = memorySearch.Endpoint;
+                PartyMemoryCleanupService.ConfigureAuthorization(httpClient, memoriesApiToken);
             });
+        }
+        else
+        {
+            // Local fallback is the only registered IPartySearchService when Memories is disabled.
+            _ = services.AddSingleton<IPartySearchService>(sp => sp.GetRequiredService<LocalPartySearchService>());
         }
 
         // FluentValidation (assembly scanning — no explicit validator registration)

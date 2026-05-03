@@ -172,12 +172,19 @@ public sealed partial class PartyPayloadProtectionService(
             return new PayloadProtectionResult(payloadBytes, serializationFormat);
         }
 
-        JsonNode? redacted = RedactEncryptedMarkers(root);
+        // Build a fresh JsonNode tree rather than mutate-in-place. JsonNode parents are
+        // single-owner: assigning a recursively-rebuilt subtree back to its original parent
+        // can throw "Cannot reassign" when a non-marker JsonObject contains a non-marker
+        // JsonObject. Constructing a new tree avoids the risk entirely.
+        JsonNode? redacted = RebuildWithoutEncryptedMarkers(root);
         byte[] redactedBytes = JsonSerializer.SerializeToUtf8Bytes(redacted, s_jsonOptions);
-        return new PayloadProtectionResult(redactedBytes, "json");
+        // Use a distinct format marker so downstream consumers (audit/compliance pipelines)
+        // can detect that this payload was redacted, rather than indistinguishable from a
+        // plain JSON event that was never encrypted.
+        return new PayloadProtectionResult(redactedBytes, "json-redacted");
     }
 
-    private static JsonNode? RedactEncryptedMarkers(JsonNode node)
+    private static JsonNode? RebuildWithoutEncryptedMarkers(JsonNode? node)
     {
         switch (node)
         {
@@ -185,29 +192,30 @@ public sealed partial class PartyPayloadProtectionService(
                 return null;
 
             case JsonObject obj:
-                foreach (KeyValuePair<string, JsonNode?> property in obj.ToList())
+                JsonObject rebuiltObj = new();
+                foreach (KeyValuePair<string, JsonNode?> property in obj)
                 {
-                    if (property.Value is not null)
-                    {
-                        obj[property.Key] = RedactEncryptedMarkers(property.Value);
-                    }
+                    rebuiltObj[property.Key] = property.Value is null
+                        ? null
+                        : RebuildWithoutEncryptedMarkers(property.Value.DeepClone());
                 }
 
-                return obj;
+                return rebuiltObj;
 
             case JsonArray array:
-                for (int i = 0; i < array.Count; i++)
+                JsonArray rebuiltArr = new();
+                foreach (JsonNode? item in array)
                 {
-                    if (array[i] is not null)
-                    {
-                        array[i] = RedactEncryptedMarkers(array[i]!);
-                    }
+                    rebuiltArr.Add(item is null ? null : RebuildWithoutEncryptedMarkers(item.DeepClone()));
                 }
 
-                return array;
+                return rebuiltArr;
+
+            case JsonValue value:
+                return value.DeepClone();
 
             default:
-                return node;
+                return node?.DeepClone();
         }
     }
 

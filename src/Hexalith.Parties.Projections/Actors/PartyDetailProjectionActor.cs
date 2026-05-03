@@ -19,11 +19,14 @@ public sealed partial class PartyDetailProjectionActor : Actor, IPartyDetailProj
 {
     private const string ProjectionName = "party-detail";
     private const string RebuildReminderName = "auto-rebuild";
+    private const string LastSequenceStateKeySuffix = "last-sequence";
     private static readonly JsonSerializerOptions s_jsonOptions = new(JsonSerializerDefaults.Web);
     private static readonly ConcurrentDictionary<string, PartyDetail> s_lastKnownDetails = new(StringComparer.Ordinal);
     private readonly ILogger<PartyDetailProjectionActor> _logger;
     private readonly IProjectionRebuildService _rebuildService;
     private PartyDetail? _cachedDetail;
+    private long _lastProcessedSequence = -1;
+    private bool _lastSequenceLoaded;
     private volatile bool _isRebuilding;
 
     public PartyDetailProjectionActor(
@@ -55,28 +58,92 @@ public sealed partial class PartyDetailProjectionActor : Actor, IPartyDetailProj
         string partyId,
         string eventTypeName,
         byte[] payload,
-        string serializationFormat)
+        string serializationFormat,
+        long sequenceNumber)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(partyId);
         ArgumentException.ThrowIfNullOrWhiteSpace(eventTypeName);
         ArgumentNullException.ThrowIfNull(payload);
 
-        if (!string.Equals(serializationFormat, "json", StringComparison.OrdinalIgnoreCase))
+        // Skip already-applied events to make replay-from-zero idempotent. The orchestrator
+        // calls GetEventsAsync(0) on every command, so without this guard every prior event
+        // would re-apply on every successful command.
+        await EnsureLastSequenceLoadedAsync(partyId).ConfigureAwait(false);
+        if (sequenceNumber <= _lastProcessedSequence)
         {
             return;
         }
 
-        Type? eventType = ResolveEventType(eventTypeName);
+        // Accept "json" and the new "json-redacted" marker (the latter is used after a party's
+        // encryption key has been destroyed; payloads have personal-data fields replaced with
+        // JSON null but otherwise round-trip through the same deserializer).
+        bool isJson = string.Equals(serializationFormat, "json", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(serializationFormat, "json-redacted", StringComparison.OrdinalIgnoreCase);
+        if (!isJson)
+        {
+            Log.NonJsonEventDropped(_logger, partyId, eventTypeName, serializationFormat);
+            return;
+        }
+
+        Type? eventType = PartyEventTypeResolver.Resolve(eventTypeName);
         if (eventType is null)
         {
+            Log.UnknownEventTypeDropped(_logger, partyId, eventTypeName);
             return;
         }
 
-        object? deserialized = JsonSerializer.Deserialize(payload, eventType, s_jsonOptions);
+        object? deserialized;
+        try
+        {
+            deserialized = JsonSerializer.Deserialize(payload, eventType, s_jsonOptions);
+        }
+        catch (JsonException ex)
+        {
+            Log.PayloadDeserializationFailed(_logger, partyId, eventTypeName, ex);
+            return;
+        }
+
         if (deserialized is IEventPayload eventPayload)
         {
             await HandleEventAsync(partyId, eventPayload).ConfigureAwait(false);
+            await PersistLastSequenceAsync(partyId, sequenceNumber).ConfigureAwait(false);
         }
+    }
+
+    private async Task EnsureLastSequenceLoadedAsync(string partyId)
+    {
+        if (_lastSequenceLoaded)
+        {
+            return;
+        }
+
+        (string _, string stateKey) = ResolveStateContext(partyId);
+        string sequenceKey = $"{stateKey}:{LastSequenceStateKeySuffix}";
+        try
+        {
+            ConditionalValue<long> result = await StateManager.TryGetStateAsync<long>(sequenceKey, default).ConfigureAwait(false);
+            _lastProcessedSequence = result.HasValue ? result.Value : -1;
+        }
+        catch
+        {
+            // Best-effort: on read failure, assume nothing processed and let replay rebuild state.
+            _lastProcessedSequence = -1;
+        }
+
+        _lastSequenceLoaded = true;
+    }
+
+    private async Task PersistLastSequenceAsync(string partyId, long sequenceNumber)
+    {
+        if (sequenceNumber <= _lastProcessedSequence)
+        {
+            return;
+        }
+
+        (string _, string stateKey) = ResolveStateContext(partyId);
+        string sequenceKey = $"{stateKey}:{LastSequenceStateKeySuffix}";
+        await StateManager.SetStateAsync(sequenceKey, sequenceNumber, default).ConfigureAwait(false);
+        _lastProcessedSequence = sequenceNumber;
     }
 
     public Task<bool> PingAsync() => Task.FromResult(true);
@@ -280,25 +347,6 @@ public sealed partial class PartyDetailProjectionActor : Actor, IPartyDetailProj
         return (actorPartyId, $"{tenant}:{ProjectionName}:{actorPartyId}");
     }
 
-    private static Type? ResolveEventType(string eventTypeName)
-    {
-        Type? type = Type.GetType(eventTypeName)
-            ?? typeof(PartyCreated).Assembly.GetType(eventTypeName);
-        if (type is not null)
-        {
-            return type;
-        }
-
-        string shortName = eventTypeName.Contains('.', StringComparison.Ordinal)
-            ? eventTypeName[(eventTypeName.LastIndexOf('.') + 1)..]
-            : eventTypeName;
-
-        return typeof(PartyCreated).Assembly
-            .GetTypes()
-            .FirstOrDefault(t => string.Equals(t.Name, shortName, StringComparison.Ordinal)
-                && typeof(IEventPayload).IsAssignableFrom(t));
-    }
-
     private static partial class Log
     {
         [LoggerMessage(
@@ -318,5 +366,23 @@ public sealed partial class PartyDetailProjectionActor : Actor, IPartyDetailProj
             Level = LogLevel.Error,
             Message = "Projection rebuild failed for actor {ActorKey}.")]
         public static partial void RebuildFailed(ILogger logger, string actorKey, Exception exception);
+
+        [LoggerMessage(
+            EventId = 8303,
+            Level = LogLevel.Warning,
+            Message = "PartyDetail projection received event {EventTypeName} for {PartyId} with non-JSON serialization format '{SerializationFormat}'. Event dropped.")]
+        public static partial void NonJsonEventDropped(ILogger logger, string partyId, string eventTypeName, string serializationFormat);
+
+        [LoggerMessage(
+            EventId = 8304,
+            Level = LogLevel.Warning,
+            Message = "PartyDetail projection could not resolve event type '{EventTypeName}' for {PartyId}. Event dropped.")]
+        public static partial void UnknownEventTypeDropped(ILogger logger, string partyId, string eventTypeName);
+
+        [LoggerMessage(
+            EventId = 8305,
+            Level = LogLevel.Warning,
+            Message = "PartyDetail projection failed to deserialize event {EventTypeName} for {PartyId}. Event dropped.")]
+        public static partial void PayloadDeserializationFailed(ILogger logger, string partyId, string eventTypeName, Exception exception);
     }
 }
