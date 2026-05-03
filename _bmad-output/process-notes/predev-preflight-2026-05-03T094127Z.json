@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "produced_by": "jobs/preflight-predev-hardening.py",
-  "timestamp": "2026-05-03T10:01:28Z",
+  "timestamp": "2026-05-03T09:41:27Z",
   "repo": "D:\\Hexalith.Parties",
   "result": "fail",
   "bootstrap_actions": [],
@@ -63,11 +63,11 @@
         ":(exclude)_bmad-output/process-notes/preflight-latest.json"
       ],
       "exit_code": 0,
-      "stdout": " M Hexalith.EventStore\n M Hexalith.FrontComposer\n M Hexalith.Memories\n M _bmad-output/implementation-artifacts/9-6-hexalith-memories-backed-party-search.md\n M _bmad-output/implementation-artifacts/deferred-work.md\n?? _bmad-output/implementation-artifacts/_review-9-6-current-diff.patch\n",
+      "stdout": " M Hexalith.EventStore\n M Hexalith.FrontComposer\n M Hexalith.Memories\n?? _bmad-output/implementation-artifacts/_review-9-6-current-diff.patch\n",
       "stderr": "",
-      "dirty_path_count": 6,
+      "dirty_path_count": 4,
       "result": "fail",
-      "details": "6 dirty path(s)"
+      "details": "4 dirty path(s)"
     }
   ],
   "note_to_llm": "This file was produced by jobs/preflight-predev-hardening.py. The recurring pre-dev hardening job MUST quote the contents of this file verbatim when reporting pre-flight results; do NOT re-run the checks yourself, paraphrase them, or summarize them in your own words."

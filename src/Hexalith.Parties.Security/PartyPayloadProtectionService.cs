@@ -359,7 +359,7 @@ public sealed partial class PartyPayloadProtectionService(
                     await cryptoLifecycleService
                         .MarkCryptoPendingAsync(identity.TenantId, identity.AggregateId, "No encryption key is available for this party.", cancellationToken)
                         .ConfigureAwait(false);
-                    throw new InvalidOperationException($"No encryption key is available for party '{identity.AggregateId}'.");
+                    throw new PartyEncryptionKeyDestroyedException(identity.TenantId, identity.AggregateId);
                 }
             }
 

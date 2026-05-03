@@ -66,7 +66,10 @@ internal sealed class MemoriesPartySearchService(
         // Memories must return enough candidates so that hydration can fill the requested page.
         // Request page * pageSize so that pagination after collapse can land on the right window
         // even when many candidates are filtered out by tenant/case/auth/active checks.
-        int memoriesTopK = checked(request.Page * request.PageSize);
+        // Use long arithmetic and clamp to int.MaxValue so a malicious or buggy caller passing
+        // a very large Page cannot trigger OverflowException (which would escape as a 500).
+        long memoriesTopKLong = (long)request.Page * request.PageSize;
+        int memoriesTopK = memoriesTopKLong > int.MaxValue ? int.MaxValue : (int)memoriesTopKLong;
 
         try
         {
@@ -176,8 +179,7 @@ internal sealed class MemoriesPartySearchService(
     private static bool IsTransientMemoriesFailure(Exception ex)
         => ex is HttpRequestException
             or TaskCanceledException
-            or TimeoutException
-            or InvalidOperationException;
+            or TimeoutException;
 
     private static string MapModeToAxis(PartySearchMode mode) => mode switch
     {
@@ -260,7 +262,8 @@ internal sealed class MemoriesPartySearchService(
                 .GroupBy(h => h.Entry.Id, StringComparer.Ordinal)
                 .Select(g => g.OrderByDescending(h => h.Candidate.CompositeScore ?? h.Candidate.Score ?? 0).First())
                 .OrderByDescending(h => h.Candidate.CompositeScore ?? h.Candidate.Score ?? 0)
-                .ThenBy(h => h.Entry.DisplayName, StringComparer.OrdinalIgnoreCase),
+                .ThenBy(h => h.Entry.DisplayName, StringComparer.OrdinalIgnoreCase)
+                .ThenBy(h => h.Entry.Id, StringComparer.Ordinal),
         ];
 
         List<PartySearchResult> items =
@@ -274,6 +277,15 @@ internal sealed class MemoriesPartySearchService(
         int totalCount = collapsed.Count;
         int totalPages = totalCount == 0 ? 1 : (int)Math.Ceiling((double)totalCount / request.PageSize);
 
+        // Build a single id-keyed lookup over the page items (not the full collapsed list) so
+        // ScoreMetadata / SourceMetadata don't pay an O(N²) `First` scan per page row, and so a
+        // future drift between collapse and metadata can't surface as InvalidOperationException.
+        Dictionary<string, HydratedCandidate> pageHydrated = new(items.Count, StringComparer.Ordinal);
+        foreach (HydratedCandidate hit in collapsed.Skip((request.Page - 1) * request.PageSize).Take(request.PageSize))
+        {
+            pageHydrated.TryAdd(hit.Entry.Id, hit);
+        }
+
         return new PartySearchResponse(
             new PagedResult<PartySearchResult>
             {
@@ -285,8 +297,8 @@ internal sealed class MemoriesPartySearchService(
             },
             status,
             degradedReason,
-            [.. items.Select(item => collapsed.First(h => h.Entry.Id == item.Party.Id)).Select(ToScoreMetadata)],
-            [.. items.Select(item => collapsed.First(h => h.Entry.Id == item.Party.Id)).Select(ToSourceMetadata)]);
+            [.. items.Select(item => ToScoreMetadata(pageHydrated[item.Party.Id]))],
+            [.. items.Select(item => ToSourceMetadata(pageHydrated[item.Party.Id]))]);
     }
 
     private static PartySearchResult ToSearchResult(HydratedCandidate hydrated)

@@ -88,7 +88,15 @@ public sealed partial class PartyDetailProjectionActor : Actor, IPartyDetailProj
         Type? eventType = PartyEventTypeResolver.Resolve(eventTypeName);
         if (eventType is null)
         {
-            Log.UnknownEventTypeDropped(_logger, partyId, eventTypeName);
+            if (PartyEventTypeResolver.IsAmbiguousShortName(eventTypeName))
+            {
+                Log.AmbiguousEventTypeDropped(_logger, partyId, eventTypeName);
+            }
+            else
+            {
+                Log.UnknownEventTypeDropped(_logger, partyId, eventTypeName);
+            }
+
             return;
         }
 
@@ -384,5 +392,11 @@ public sealed partial class PartyDetailProjectionActor : Actor, IPartyDetailProj
             Level = LogLevel.Warning,
             Message = "PartyDetail projection failed to deserialize event {EventTypeName} for {PartyId}. Event dropped.")]
         public static partial void PayloadDeserializationFailed(ILogger logger, string partyId, string eventTypeName, Exception exception);
+
+        [LoggerMessage(
+            EventId = 8306,
+            Level = LogLevel.Error,
+            Message = "PartyDetail projection found an ambiguous short event-type name '{EventTypeName}' for {PartyId} (multiple types share this short name). Event dropped — promote the emitter to a full-name event type to dispatch safely.")]
+        public static partial void AmbiguousEventTypeDropped(ILogger logger, string partyId, string eventTypeName);
     }
 }

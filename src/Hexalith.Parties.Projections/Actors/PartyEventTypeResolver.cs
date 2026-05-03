@@ -57,6 +57,35 @@ internal static class PartyEventTypeResolver
         });
     }
 
+    /// <summary>
+    /// Returns <see langword="true"/> when <paramref name="eventTypeName"/> resolves to a short
+    /// name that has more than one matching type in the Parties event assembly. Callers should
+    /// log this case distinctly from "unknown event type" because a colliding event was emitted
+    /// by the aggregate but cannot be dispatched safely.
+    /// </summary>
+    /// <param name="eventTypeName">The event type name (full or short) to test.</param>
+    /// <returns><see langword="true"/> if the short name maps to multiple types.</returns>
+    public static bool IsAmbiguousShortName(string eventTypeName)
+    {
+        if (string.IsNullOrWhiteSpace(eventTypeName))
+        {
+            return false;
+        }
+
+        // A full-name match takes precedence — that's never ambiguous.
+        if (s_byFullName.Value.ContainsKey(eventTypeName))
+        {
+            return false;
+        }
+
+        string shortName = eventTypeName.Contains('.', StringComparison.Ordinal)
+            ? eventTypeName[(eventTypeName.LastIndexOf('.') + 1)..]
+            : eventTypeName;
+
+        // The lookup stores `null` for ambiguous short names — distinguish from "missing key".
+        return s_byShortName.Value.TryGetValue(shortName, out Type? match) && match is null;
+    }
+
     private static FrozenDictionary<string, Type> BuildFullNameLookup()
     {
         Dictionary<string, Type> lookup = new(StringComparer.Ordinal);

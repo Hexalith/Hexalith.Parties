@@ -114,7 +114,15 @@ public sealed partial class PartyIndexProjectionActor : Actor, IPartyIndexProjec
         Type? eventType = PartyEventTypeResolver.Resolve(eventTypeName);
         if (eventType is null)
         {
-            Log.UnknownEventTypeDropped(_logger, partyId, eventTypeName);
+            if (PartyEventTypeResolver.IsAmbiguousShortName(eventTypeName))
+            {
+                Log.AmbiguousEventTypeDropped(_logger, partyId, eventTypeName);
+            }
+            else
+            {
+                Log.UnknownEventTypeDropped(_logger, partyId, eventTypeName);
+            }
+
             return;
         }
 
@@ -138,21 +146,30 @@ public sealed partial class PartyIndexProjectionActor : Actor, IPartyIndexProjec
 
     private async Task EnsureLastSequenceMapLoadedAsync(string partyId)
     {
-        if (_lastProcessedSequencePerParty is not null)
+        // Lazy-load the in-memory cache once per actor activation. Individual party sequence
+        // entries are persisted as separate state keys (see PersistLastSequenceAsync) so we
+        // don't pay an O(N) re-write of the whole dictionary on every event delivery. The
+        // first time a party is seen after activation we read its dedicated state key on
+        // demand inside this method.
+        _lastProcessedSequencePerParty ??= new Dictionary<string, long>(StringComparer.Ordinal);
+        if (_lastProcessedSequencePerParty.ContainsKey(partyId))
         {
             return;
         }
 
-        string sequenceKey = ResolveSequenceMapKey(partyId);
+        string sequenceKey = ResolveSequenceKey(partyId);
         try
         {
-            ConditionalValue<Dictionary<string, long>> result =
-                await StateManager.TryGetStateAsync<Dictionary<string, long>>(sequenceKey, default).ConfigureAwait(false);
-            _lastProcessedSequencePerParty = result.HasValue ? result.Value : new Dictionary<string, long>(StringComparer.Ordinal);
+            ConditionalValue<long> result =
+                await StateManager.TryGetStateAsync<long>(sequenceKey, default).ConfigureAwait(false);
+            if (result.HasValue)
+            {
+                _lastProcessedSequencePerParty[partyId] = result.Value;
+            }
         }
         catch
         {
-            _lastProcessedSequencePerParty = new Dictionary<string, long>(StringComparer.Ordinal);
+            // Best-effort load — replay-from-zero will rebuild on miss.
         }
     }
 
@@ -160,17 +177,22 @@ public sealed partial class PartyIndexProjectionActor : Actor, IPartyIndexProjec
     {
         _lastProcessedSequencePerParty ??= new Dictionary<string, long>(StringComparer.Ordinal);
         _lastProcessedSequencePerParty[partyId] = sequenceNumber;
-        string sequenceKey = ResolveSequenceMapKey(partyId);
-        await StateManager.SetStateAsync(sequenceKey, _lastProcessedSequencePerParty, default).ConfigureAwait(false);
+        // Persist only the changed party's sequence, not the entire map. The previous shape
+        // wrote O(parties_in_tenant) bytes on every event for every party — quadratic state
+        // store traffic at scale.
+        string sequenceKey = ResolveSequenceKey(partyId);
+        await StateManager.SetStateAsync(sequenceKey, sequenceNumber, default).ConfigureAwait(false);
     }
 
-    private string ResolveSequenceMapKey(string partyId)
+    private string ResolveSequenceKey(string partyId)
     {
         string actorId = Host.Id.GetId();
         string[] segments = actorId.Split(':', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
         string tenant = segments.Length >= 1 ? segments[0] : "unknown";
-        string partitionKey = _partitionStrategy.GetPartitionKey(partyId);
-        return $"{tenant}:{ProjectionName}:{partitionKey}:{LastSequenceStateKeySuffix}";
+        // Per-party state key so each party's checkpoint is independently versioned. The
+        // partition strategy is no longer part of the key — checkpoints follow the party id,
+        // which is the only stable durable identity for the sequence number anyway.
+        return $"{tenant}:{ProjectionName}:{partyId}:{LastSequenceStateKeySuffix}";
     }
 
     public async Task FlushAsync()
@@ -490,5 +512,11 @@ public sealed partial class PartyIndexProjectionActor : Actor, IPartyIndexProjec
             Level = LogLevel.Warning,
             Message = "PartyIndex projection failed to deserialize event {EventTypeName} for {PartyId}. Event dropped.")]
         public static partial void PayloadDeserializationFailed(ILogger logger, string partyId, string eventTypeName, Exception exception);
+
+        [LoggerMessage(
+            EventId = 8316,
+            Level = LogLevel.Error,
+            Message = "PartyIndex projection found an ambiguous short event-type name '{EventTypeName}' for {PartyId} (multiple types share this short name). Event dropped — promote the emitter to a full-name event type to dispatch safely.")]
+        public static partial void AmbiguousEventTypeDropped(ILogger logger, string partyId, string eventTypeName);
     }
 }

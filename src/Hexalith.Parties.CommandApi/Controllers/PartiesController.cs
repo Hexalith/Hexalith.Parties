@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
 
 using Dapr.Actors;
@@ -163,24 +164,46 @@ public sealed class PartiesController(
         }
 
         // Validate caseId — applied as a tenant-scoped filter on Memories candidates.
-        // Reject extreme lengths and control characters to defend against header-injection
-        // and oversized-input attacks. Real authorization (the caller is allowed to scope
-        // to that case id) is the responsibility of upstream auth middleware.
+        // Reject extreme lengths, ANY control character (not just CR/LF), path-traversal
+        // segments, and empty strings to defend against header-injection, oversized-input,
+        // proxy-collapse and case-isolation-bypass. Real authorization (the caller is allowed
+        // to scope to that case id) is the responsibility of upstream auth middleware.
         if (caseId is not null)
         {
-            if (caseId.Length > 256 || caseId.AsSpan().IndexOfAny('\r', '\n') >= 0)
+            if (caseId.Length == 0
+                || caseId.Length > 256
+                || ContainsControlCharacter(caseId)
+                || caseId.Contains("..", StringComparison.Ordinal))
             {
                 return BadRequest(new ProblemDetails
                 {
                     Title = "Invalid caseId.",
                     Status = StatusCodes.Status400BadRequest,
-                    Detail = "caseId must be 256 characters or fewer and must not contain control characters.",
+                    Detail = "caseId must be 1–256 printable characters and must not contain '..' segments.",
                     Type = "urn:hexalith:parties:error:InvalidCaseId",
                 });
             }
         }
 
-        if (string.IsNullOrWhiteSpace(q))
+        // Reject unknown modes explicitly rather than silently degrading. Graph mode requires
+        // a graph context that the REST endpoint does not currently expose (use the MCP tool).
+        PartySearchMode parsedMode;
+        try
+        {
+            parsedMode = ParseSearchModeStrict(mode);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new ProblemDetails
+            {
+                Title = "Invalid search mode.",
+                Status = StatusCodes.Status400BadRequest,
+                Detail = ex.Message,
+                Type = "urn:hexalith:parties:error:InvalidSearchMode",
+            });
+        }
+
+        if (IsEffectivelyEmptyQuery(q))
         {
             var emptyResult = new PartySearchResponse(
                 new PagedResult<PartySearchResult>
@@ -214,13 +237,13 @@ public sealed class PartiesController(
             new PartySearchRequest(
                 tenant,
                 q,
-                ParseSearchMode(mode),
+                parsedMode,
                 TypeFilter: null,
                 ActiveFilter: null,
                 page,
                 pageSize,
                 CaseId: caseId),
-            entries.Values.Where(e => !e.IsErased),
+            entries.Values.Where(e => e is not null && !e.IsErased),
             HttpContext.RequestAborted).ConfigureAwait(false);
 
         SetSearchMetadataHeaders(Response, search);
@@ -665,6 +688,12 @@ public sealed class PartiesController(
                 aggregateId,
                 correlationId,
                 tenant);
+
+            // Surface the failure to the client so callers depending on read-after-write
+            // consistency know the synchronous projection did not complete and can choose
+            // to poll or retry. The 202 Accepted contract still holds — the command itself
+            // was accepted by the aggregate.
+            HttpContext.Response.Headers["X-Parties-Projection-Sync"] = "failed";
         }
     }
 
@@ -895,6 +924,65 @@ public sealed class PartiesController(
             "graph" => PartySearchMode.Graph,
             _ => PartySearchMode.Hybrid,
         };
+
+    private static PartySearchMode ParseSearchModeStrict(string? mode)
+    {
+        if (mode is null)
+        {
+            return PartySearchMode.Hybrid;
+        }
+
+        return mode.Trim().ToLowerInvariant() switch
+        {
+            "" or "hybrid" => PartySearchMode.Hybrid,
+            "lexical" or "syntactic" => PartySearchMode.Lexical,
+            "semantic" => PartySearchMode.Semantic,
+            // The REST endpoint does not currently expose a graph context channel; graph mode
+            // is reachable via the find_parties MCP tool which accepts explicit context.
+            "graph" => throw new ArgumentException(
+                "Graph mode is not supported on the REST search endpoint. Use the find_parties MCP tool with explicit graph context."),
+            _ => throw new ArgumentException($"Unknown search mode '{mode}'. Allowed: hybrid, lexical, semantic."),
+        };
+    }
+
+    private static bool IsEffectivelyEmptyQuery([NotNullWhen(false)] string? q)
+    {
+        if (string.IsNullOrEmpty(q))
+        {
+            return true;
+        }
+
+        // Strip zero-width and bidi controls before checking for whitespace so that a query
+        // composed only of invisible characters (which `IsNullOrWhiteSpace` does not treat as
+        // whitespace) is also rejected as empty.
+        foreach (char c in q)
+        {
+            if (c is '​' or '‌' or '‍' or '‎' or '‏' or '﻿')
+            {
+                continue;
+            }
+
+            if (!char.IsWhiteSpace(c))
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private static bool ContainsControlCharacter(ReadOnlySpan<char> value)
+    {
+        foreach (char c in value)
+        {
+            if (char.IsControl(c))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
 
     private ObjectResult CreateUnauthorizedProblemDetails(string detail, string correlationId)
     {

@@ -201,9 +201,20 @@ internal sealed class PartyProjectionUpdateOrchestrator(
     /// indicate transient or structural failures that must propagate, not be redacted away.
     /// </summary>
     private static bool IsKeyDestroyedFailure(Exception ex)
-        => (ex is InvalidOperationException or KeyNotFoundException)
+    {
+        // Prefer the typed exception emitted by Hexalith.Parties.Security. Message-text
+        // fallback is kept only for older throw sites that have not yet been migrated to
+        // the typed exception; it is locale-fragile and should be removed once all throw
+        // sites use PartyEncryptionKeyDestroyedException.
+        if (ex is PartyEncryptionKeyDestroyedException)
+        {
+            return true;
+        }
+
+        return (ex is InvalidOperationException or KeyNotFoundException)
             && (ex.Message.Contains("No encryption key", StringComparison.OrdinalIgnoreCase)
             || ex.Message.Contains("key destroyed", StringComparison.OrdinalIgnoreCase)
             || ex.Message.Contains("key has been deleted", StringComparison.OrdinalIgnoreCase)
             || ex.Message.Contains("Secret not found", StringComparison.OrdinalIgnoreCase));
+    }
 }

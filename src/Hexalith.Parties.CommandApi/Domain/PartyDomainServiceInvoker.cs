@@ -129,15 +129,26 @@ internal sealed partial class PartyDomainServiceInvoker(
 
     /// <summary>
     /// Recognises the specific failures thrown when a party's encryption key
-    /// has been destroyed (post-erasure). All other failures propagate so transient KMS or
-    /// structural errors are not silently swallowed by the redaction fallback path.
+    /// has been destroyed (post-erasure). Prefers the typed
+    /// <see cref="PartyEncryptionKeyDestroyedException"/> emitted by the protection / key
+    /// management services. The legacy message-text fallback covers older throw sites that
+    /// have not yet been migrated and is locale-fragile; remove once every throw site uses
+    /// the typed exception. All other failures propagate so transient KMS or structural
+    /// errors are not silently swallowed by the redaction fallback path.
     /// </summary>
     private static bool IsKeyDestroyedFailure(Exception ex)
-        => (ex is InvalidOperationException or KeyNotFoundException)
+    {
+        if (ex is PartyEncryptionKeyDestroyedException)
+        {
+            return true;
+        }
+
+        return (ex is InvalidOperationException or KeyNotFoundException)
             && (ex.Message.Contains("No encryption key", StringComparison.OrdinalIgnoreCase)
             || ex.Message.Contains("key destroyed", StringComparison.OrdinalIgnoreCase)
             || ex.Message.Contains("key has been deleted", StringComparison.OrdinalIgnoreCase)
             || ex.Message.Contains("Secret not found", StringComparison.OrdinalIgnoreCase));
+    }
 
     [LoggerMessage(Level = LogLevel.Warning, Message = "Falling back to redacted event payload during rehydration for {TenantId}/{PartyId} event {EventTypeName}: {ExceptionType}: {Error}")]
     private partial void LogRehydrationFallbackToRedaction(string tenantId, string partyId, string eventTypeName, string exceptionType, string error);

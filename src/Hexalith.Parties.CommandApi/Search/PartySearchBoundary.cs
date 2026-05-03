@@ -57,6 +57,6 @@ public sealed record PartySearchScoreMetadata(
 public sealed record PartySearchSourceMetadata(
     string PartyId,
     string SourceSystem,
-    string SourceUri,
+    string? SourceUri,
     string? MemoryUnitId,
     string? EventType);

@@ -38,6 +38,9 @@ internal sealed class LocalPartySearchService(IPartySearchProvider localSearchPr
             request.Page,
             request.PageSize);
 
+        // Score/Source metadata are aligned 1:1 with the current page (`results.Items`), not
+        // with `results.TotalCount`. Consumers iterating these arrays must use them in lockstep
+        // with `Items` and re-fetch them with each page request.
         IReadOnlyList<PartySearchScoreMetadata> scores =
         [
             .. results.Items.Select(result => new PartySearchScoreMetadata(
@@ -49,12 +52,16 @@ internal sealed class LocalPartySearchService(IPartySearchProvider localSearchPr
                 CompositeScore: null)),
         ];
 
+        // Local fallback has no Memories memory unit. Emit a null SourceUri so callers do not
+        // mistakenly follow the URN against Memories (which would 404). The SourceSystem
+        // "Hexalith.Parties.LocalFallback" is the authoritative signal that the row came from
+        // the local index, not from Memories.
         IReadOnlyList<PartySearchSourceMetadata> sources =
         [
             .. results.Items.Select(result => new PartySearchSourceMetadata(
                 PartyId: result.Party.Id,
                 SourceSystem: "Hexalith.Parties.LocalFallback",
-                SourceUri: PartyMemoryUrn.Build(request.TenantId, result.Party.Id),
+                SourceUri: null,
                 MemoryUnitId: null,
                 EventType: null)),
         ];

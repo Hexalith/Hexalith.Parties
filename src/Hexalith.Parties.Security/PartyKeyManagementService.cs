@@ -76,7 +76,7 @@ public sealed class PartyKeyManagementService(
             IReadOnlyList<int> versions = await backend.ListKeyVersionsAsync(tenantId, partyId, cancellationToken).ConfigureAwait(false);
             if (versions.Count == 0)
             {
-                throw new KeyNotFoundException($"No encryption key exists for tenant '{tenantId}' and party '{partyId}'.");
+                throw new PartyEncryptionKeyDestroyedException(tenantId, partyId);
             }
 
             int latestVersion = versions.Max();
@@ -110,7 +110,7 @@ public sealed class PartyKeyManagementService(
             IReadOnlyList<int> versions = await backend.ListKeyVersionsAsync(tenantId, partyId, cancellationToken).ConfigureAwait(false);
             if (versions.Count == 0)
             {
-                throw new KeyNotFoundException($"No encryption key exists for tenant '{tenantId}' and party '{partyId}'.");
+                throw new PartyEncryptionKeyDestroyedException(tenantId, partyId);
             }
 
             int newVersion = versions.Max() + 1;

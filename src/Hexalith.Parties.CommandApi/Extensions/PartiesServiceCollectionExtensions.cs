@@ -154,9 +154,16 @@ public static class PartiesServiceCollectionExtensions {
 
             if (memorySearch.Enabled)
             {
-                string memoriesCaseId = memorySearch.CaseId ?? string.Empty;
                 cleanups.Add(async (tenantId, partyId, cancellationToken) =>
                 {
+                    // Read the current options on every call so a runtime config reload
+                    // (`IOptionsMonitor`) is honoured. Capturing CaseId at registration time
+                    // would silently bind cleanup to whatever value was set at boot.
+                    PartyMemorySearchOptions current = sp
+                        .GetRequiredService<IOptionsMonitor<PartyMemorySearchOptions>>()
+                        .CurrentValue;
+                    string memoriesCaseId = current.CaseId ?? string.Empty;
+
                     if (string.IsNullOrWhiteSpace(memoriesCaseId))
                     {
                         return new ErasureVerificationStoreResult
