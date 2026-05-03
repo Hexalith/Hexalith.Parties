@@ -233,6 +233,9 @@ public sealed class PartiesController(
             SetDegradedHeaders(Response);
         }
 
+        IReadOnlyList<PartyIndexEntry> visibleEntries = [.. entries.Values.Where(e => e is not null && !e.IsErased)];
+        HashSet<string> authorizedPartyIds = visibleEntries.Select(e => e.Id).ToHashSet(StringComparer.Ordinal);
+
         PartySearchResponse search = await searchService.SearchAsync(
             new PartySearchRequest(
                 tenant,
@@ -242,8 +245,9 @@ public sealed class PartiesController(
                 ActiveFilter: null,
                 page,
                 pageSize,
-                CaseId: caseId),
-            entries.Values.Where(e => e is not null && !e.IsErased),
+                CaseId: caseId,
+                AuthorizedPartyIds: authorizedPartyIds),
+            visibleEntries,
             HttpContext.RequestAborted).ConfigureAwait(false);
 
         SetSearchMetadataHeaders(Response, search);

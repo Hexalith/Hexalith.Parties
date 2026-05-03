@@ -29,7 +29,7 @@ When enabled, CommandApi registers `MemoriesClient` from `Hexalith.Memories.Clie
 - `semantic`: single-axis semantic search.
 - `graph`: traversal from a known Memories context.
 
-REST keeps the existing paged result body and adds search metadata headers:
+REST returns the search response envelope. The envelope includes the paged results plus execution status, degraded reason, Memories score metadata, and source metadata. REST also adds status headers for clients that inspect headers before parsing the body:
 
 - `X-Parties-Search-Status`: `Rich`, `Degraded`, or `LocalOnly`.
 - `X-Parties-Search-Degraded-Reason`: present when rich search is degraded.

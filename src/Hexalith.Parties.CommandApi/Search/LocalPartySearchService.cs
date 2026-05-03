@@ -17,6 +17,7 @@ internal sealed class LocalPartySearchService(IPartySearchProvider localSearchPr
         ArgumentNullException.ThrowIfNull(entries);
 
         cancellationToken.ThrowIfCancellationRequested();
+        request = NormalizeRequest(request);
 
         // Apply the same gate the Memories path enforces: drop erased entries, then enforce
         // AuthorizedPartyIds when the caller scopes the request. Tenant/case filtering is
@@ -69,8 +70,20 @@ internal sealed class LocalPartySearchService(IPartySearchProvider localSearchPr
         return Task.FromResult(new PartySearchResponse(
             results,
             PartySearchExecutionStatus.LocalOnly,
-            LocalFallbackReason,
+            DegradedReason: null,
             scores,
             sources));
+    }
+
+    private static PartySearchRequest NormalizeRequest(PartySearchRequest request)
+    {
+        if (request.AuthorizedPartyIds is null)
+        {
+            throw new InvalidOperationException("Party search requires an explicit AuthorizedPartyIds set.");
+        }
+
+        int page = Math.Max(1, request.Page);
+        int pageSize = Math.Clamp(request.PageSize, 1, 100);
+        return request with { Page = page, PageSize = pageSize };
     }
 }

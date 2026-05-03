@@ -45,7 +45,7 @@ public class MemoriesPartySearchServiceTests
         var service = CreateService(client);
 
         PartySearchResponse response = await service.SearchAsync(
-            new PartySearchRequest("tenant-a", "jean", PartySearchMode.Hybrid, null, null, 1, 20, CaseId: "case-a", AuthorizedPartyIds: new HashSet<string> { "p1" }),
+            CreateRequest("jean", PartySearchMode.Hybrid, CaseId: "case-a", AuthorizedPartyIds: Authorized("p1")),
             [CreateEntry("p1", "Jean Dupont")],
             CancellationToken.None).ConfigureAwait(true);
 
@@ -94,7 +94,7 @@ public class MemoriesPartySearchServiceTests
         var service = CreateService(client);
 
         PartySearchResponse response = await service.SearchAsync(
-            new PartySearchRequest("tenant-a", "jean", mode, null, null, 1, 20, CaseId: "case-a"),
+            CreateRequest("jean", mode, CaseId: "case-a", AuthorizedPartyIds: Authorized("p1")),
             [CreateEntry("p1", "Jean Dupont")],
             CancellationToken.None).ConfigureAwait(true);
 
@@ -123,14 +123,16 @@ public class MemoriesPartySearchServiceTests
                 ],
                 1),
         };
+        client.MemoryUnits["memory-related"] = CreateMemoryUnit("memory-related", "p2", "case-a");
         var service = CreateService(client);
 
         PartySearchResponse response = await service.SearchAsync(
-            new PartySearchRequest("tenant-a", "related", PartySearchMode.Graph, null, null, 1, 20, CaseId: "case-a", GraphContextMemoryUnitId: "memory-start"),
+            CreateRequest("related", PartySearchMode.Graph, CaseId: "case-a", GraphContextMemoryUnitId: "memory-start", AuthorizedPartyIds: Authorized("p2")),
             [CreateEntry("p2", "Acme")],
             CancellationToken.None).ConfigureAwait(true);
 
         client.TraverseCalls.ShouldBe(1);
+        client.LastStartNodeId.ShouldBe("memory-start");
         response.Results.Items.Single().Party.Id.ShouldBe("p2");
         response.SourceMetadata.Single().MemoryUnitId.ShouldBe("memory-related");
     }
@@ -159,7 +161,7 @@ public class MemoriesPartySearchServiceTests
         var service = CreateService(client);
 
         PartySearchResponse response = await service.SearchAsync(
-            new PartySearchRequest("tenant-a", "party", PartySearchMode.Hybrid, null, null, 1, 20, AuthorizedPartyIds: new HashSet<string> { "allowed" }),
+            CreateRequest("party", PartySearchMode.Hybrid, AuthorizedPartyIds: Authorized("allowed")),
             [
                 CreateEntry("erased", "Erased") with { IsErased = true },
                 CreateEntry("unauthorized", "Unauthorized"),
@@ -191,7 +193,7 @@ public class MemoriesPartySearchServiceTests
         var service = CreateService(client);
 
         PartySearchResponse response = await service.SearchAsync(
-            new PartySearchRequest("tenant-a", "party", PartySearchMode.Hybrid, null, null, 1, 20),
+            CreateRequest("party", PartySearchMode.Hybrid, AuthorizedPartyIds: Authorized("p1")),
             [CreateEntry("p1", "Jean Dupont")],
             CancellationToken.None).ConfigureAwait(true);
 
@@ -207,7 +209,7 @@ public class MemoriesPartySearchServiceTests
         var service = CreateService(client);
 
         PartySearchResponse response = await service.SearchAsync(
-            new PartySearchRequest("tenant-a", "Dupont", PartySearchMode.Hybrid, null, null, 1, 20),
+            CreateRequest("Dupont", PartySearchMode.Hybrid, AuthorizedPartyIds: Authorized("p1")),
             [CreateEntry("p1", "Jean Dupont")],
             CancellationToken.None).ConfigureAwait(true);
 
@@ -226,7 +228,7 @@ public class MemoriesPartySearchServiceTests
         var service = CreateService(client);
 
         PartySearchResponse response = await service.SearchAsync(
-            new PartySearchRequest("tenant-a", "Dupont", PartySearchMode.Hybrid, null, null, 1, 20),
+            CreateRequest("Dupont", PartySearchMode.Hybrid, AuthorizedPartyIds: Authorized("p1")),
             [CreateEntry("p1", "Jean Dupont")],
             CancellationToken.None).ConfigureAwait(true);
 
@@ -260,7 +262,7 @@ public class MemoriesPartySearchServiceTests
         });
 
         PartySearchResponse response = await service.SearchAsync(
-            new PartySearchRequest("tenant-a", "Dupont", PartySearchMode.Semantic, null, null, 1, 20),
+            CreateRequest("Dupont", PartySearchMode.Semantic, AuthorizedPartyIds: Authorized("p1")),
             [CreateEntry("p1", "Jean Dupont")],
             CancellationToken.None).ConfigureAwait(true);
 
@@ -278,7 +280,7 @@ public class MemoriesPartySearchServiceTests
         var service = CreateService(client);
 
         PartySearchResponse response = await service.SearchAsync(
-            new PartySearchRequest("tenant-a", "Dupont", PartySearchMode.Graph, null, null, 1, 20),
+            CreateRequest("Dupont", PartySearchMode.Graph, AuthorizedPartyIds: Authorized("p1")),
             [CreateEntry("p1", "Jean Dupont")],
             CancellationToken.None).ConfigureAwait(true);
 
@@ -309,7 +311,7 @@ public class MemoriesPartySearchServiceTests
         var service = CreateService(client);
 
         PartySearchResponse response = await service.SearchAsync(
-            new PartySearchRequest("tenant-a", "party", PartySearchMode.Hybrid, null, null, 1, 20, CaseId: "case-a"),
+            CreateRequest("party", PartySearchMode.Hybrid, CaseId: "case-a", AuthorizedPartyIds: Authorized("p1", "p2")),
             [CreateEntry("p1", "Jean"), CreateEntry("p2", "Acme")],
             CancellationToken.None).ConfigureAwait(true);
 
@@ -337,14 +339,140 @@ public class MemoriesPartySearchServiceTests
         var service = CreateService(client);
 
         PartySearchResponse response = await service.SearchAsync(
-            new PartySearchRequest("tenant-a", "party", PartySearchMode.Hybrid, null, null, 1, 20),
+            CreateRequest("party", PartySearchMode.Hybrid, AuthorizedPartyIds: Authorized(awkwardId)),
             [CreateEntry(awkwardId, "Awkward")],
             CancellationToken.None).ConfigureAwait(true);
 
         response.Results.Items.Single().Party.Id.ShouldBe(awkwardId);
     }
 
-    private static FusedScoredResult CreateHit(string memoryUnitId, string sourceUri, double score = 0.8, string? caseId = null)
+    [Fact]
+    public async Task GraphSearchWithPartyContextResolvesMemoryUnitBeforeTraversal()
+    {
+        var client = new RecordingMemoriesClient
+        {
+            SearchResult = new SearchResult
+            {
+                Results =
+                [
+                    new ScoredResult
+                    {
+                        MemoryUnitId = "memory-party-1",
+                        Score = 1.0,
+                        ContentSnippet = "Jean Dupont",
+                        SourceUri = PartyMemoryUrn.Build("tenant-a", "p1"),
+                        SourceType = SourceType.Event,
+                        Axis = "syntactic",
+                        CaseId = "case-a",
+                    },
+                ],
+                TotalCount = 1,
+                HasIndexedMemoryUnits = true,
+                Query = PartyMemoryUrn.Build("tenant-a", "p1"),
+            },
+            TraversalResult = new TraversalResult(
+                "memory-party-1",
+                2,
+                [
+                    new TraversalNode("memory-related", "Acme", PartyMemoryUrn.Build("tenant-a", "p2"), SourceType.Event, DateTimeOffset.UtcNow, 1, []),
+                ],
+                1),
+        };
+        client.MemoryUnits["memory-related"] = CreateMemoryUnit("memory-related", "p2", "case-a");
+        var service = CreateService(client);
+
+        PartySearchResponse response = await service.SearchAsync(
+            CreateRequest("related", PartySearchMode.Graph, CaseId: "case-a", GraphContextPartyId: "p1", AuthorizedPartyIds: Authorized("p2")),
+            [CreateEntry("p2", "Acme")],
+            CancellationToken.None).ConfigureAwait(true);
+
+        client.LastAxis.ShouldBe("syntactic");
+        client.LastStartNodeId.ShouldBe("memory-party-1");
+        response.Results.Items.Single().Party.Id.ShouldBe("p2");
+    }
+
+    [Fact]
+    public async Task DefaultCaseScopeFallsBackToConfiguredMemoriesCase()
+    {
+        var client = new RecordingMemoriesClient
+        {
+            HybridResult = new HybridSearchResult
+            {
+                Results =
+                [
+                    CreateHit("memory-wrong", PartyMemoryUrn.Build("tenant-a", "p1"), 0.9, caseId: "case-other"),
+                    CreateHit("memory-right", PartyMemoryUrn.Build("tenant-a", "p2"), 0.8, caseId: "case-a"),
+                ],
+                TotalCount = 2,
+                Degraded = false,
+                UnavailableAxes = [],
+                Query = "party",
+            },
+        };
+        var service = CreateService(client);
+
+        PartySearchResponse response = await service.SearchAsync(
+            CreateRequest("party", PartySearchMode.Hybrid, AuthorizedPartyIds: Authorized("p1", "p2")),
+            [CreateEntry("p1", "Wrong"), CreateEntry("p2", "Right")],
+            CancellationToken.None).ConfigureAwait(true);
+
+        response.Results.Items.Select(r => r.Party.Id).ShouldBe(["p2"]);
+    }
+
+    [Fact]
+    public async Task InactivePartyFromStaleMemoryHitIsNotHydrated()
+    {
+        var client = new RecordingMemoriesClient
+        {
+            HybridResult = new HybridSearchResult
+            {
+                Results = [CreateHit("memory-inactive", PartyMemoryUrn.Build("tenant-a", "p1"), 0.9, caseId: "case-a")],
+                TotalCount = 1,
+                Degraded = false,
+                UnavailableAxes = [],
+                Query = "party",
+            },
+        };
+        var service = CreateService(client);
+
+        PartySearchResponse response = await service.SearchAsync(
+            CreateRequest("party", PartySearchMode.Hybrid, CaseId: "case-a", AuthorizedPartyIds: Authorized("p1")),
+            [CreateEntry("p1", "Inactive") with { IsActive = false }],
+            CancellationToken.None).ConfigureAwait(true);
+
+        response.Results.Items.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task SearchWithoutAuthorizationScopeThrows()
+    {
+        var service = CreateService(new RecordingMemoriesClient());
+
+        await Should.ThrowAsync<InvalidOperationException>(() => service.SearchAsync(
+            new PartySearchRequest("tenant-a", "party", PartySearchMode.Hybrid, null, null, 1, 20, CaseId: "case-a"),
+            [CreateEntry("p1", "Jean")],
+            CancellationToken.None)).ConfigureAwait(true);
+    }
+
+    [Theory]
+    [InlineData(0, 0, 1, 1)]
+    [InlineData(-5, -10, 1, 1)]
+    [InlineData(1, 500, 1, 100)]
+    public async Task ServiceBoundaryNormalizesPaging(int page, int pageSize, int expectedPage, int expectedPageSize)
+    {
+        var client = new RecordingMemoriesClient();
+        var service = CreateService(client);
+
+        PartySearchResponse response = await service.SearchAsync(
+            CreateRequest("party", PartySearchMode.Hybrid, Page: page, PageSize: pageSize, AuthorizedPartyIds: Authorized("p1")),
+            [CreateEntry("p1", "Jean")],
+            CancellationToken.None).ConfigureAwait(true);
+
+        response.Results.Page.ShouldBe(expectedPage);
+        response.Results.PageSize.ShouldBe(expectedPageSize);
+    }
+
+    private static FusedScoredResult CreateHit(string memoryUnitId, string sourceUri, double score = 0.8, string? caseId = "case-a")
         => new()
         {
             MemoryUnitId = memoryUnitId,
@@ -354,6 +482,31 @@ public class MemoriesPartySearchServiceTests
             SourceType = SourceType.Event,
             CaseId = caseId,
         };
+
+    private static PartySearchRequest CreateRequest(
+        string query,
+        PartySearchMode mode,
+        int Page = 1,
+        int PageSize = 20,
+        string? CaseId = null,
+        string? GraphContextPartyId = null,
+        string? GraphContextMemoryUnitId = null,
+        IReadOnlySet<string>? AuthorizedPartyIds = null)
+        => new(
+            "tenant-a",
+            query,
+            mode,
+            TypeFilter: null,
+            ActiveFilter: null,
+            Page,
+            PageSize,
+            CaseId,
+            GraphContextPartyId,
+            GraphContextMemoryUnitId,
+            AuthorizedPartyIds ?? Authorized());
+
+    private static HashSet<string> Authorized(params string[] ids)
+        => ids.ToHashSet(StringComparer.Ordinal);
 
     private static PartyIndexEntry CreateEntry(string id, string displayName)
         => new()
@@ -365,6 +518,26 @@ public class MemoriesPartySearchServiceTests
             CreatedAt = DateTimeOffset.UtcNow,
             LastModifiedAt = DateTimeOffset.UtcNow,
             IsErased = false,
+        };
+
+    private static MemoryUnit CreateMemoryUnit(string memoryUnitId, string partyId, string caseId)
+        => new()
+        {
+            Id = memoryUnitId,
+            TenantId = "tenant-a",
+            CaseId = caseId,
+            Content = partyId,
+            ContentHash = "hash",
+            SourceUri = PartyMemoryUrn.Build("tenant-a", partyId),
+            SourceType = SourceType.Event,
+            IngestedBy = "Hexalith.Parties",
+            IngestedAt = DateTimeOffset.UtcNow,
+            LastUpdated = DateTimeOffset.UtcNow,
+            Status = MemoryUnitStatus.Indexed,
+            Metadata = new Dictionary<string, MetadataField>(StringComparer.Ordinal)
+            {
+                ["eventType"] = new("PartyCreated", MetadataOrigin.Human, 1.0f),
+            },
         };
 
     private static MemoriesPartySearchService CreateService(MemoriesClient client, PartyMemorySearchOptions? options = null)
@@ -405,6 +578,10 @@ public class MemoriesPartySearchServiceTests
         public int TraverseCalls { get; private set; }
 
         public string? LastAxis { get; private set; }
+
+        public string? LastStartNodeId { get; private set; }
+
+        public Dictionary<string, MemoryUnit> MemoryUnits { get; } = new(StringComparer.Ordinal);
 
         public HybridSearchResult HybridResult { get; init; } = new()
         {
@@ -447,8 +624,12 @@ public class MemoriesPartySearchServiceTests
             int? tokenBudget = null)
         {
             TraverseCalls++;
+            LastStartNodeId = startNodeId;
             return Task.FromResult(TraversalResult);
         }
+
+        public override Task<MemoryUnit> GetMemoryUnitAsync(string tenantId, string caseId, string memoryUnitId, CancellationToken ct)
+            => Task.FromResult(MemoryUnits[memoryUnitId]);
     }
 
     private sealed class ThrowingMemoriesClient(Exception ex)

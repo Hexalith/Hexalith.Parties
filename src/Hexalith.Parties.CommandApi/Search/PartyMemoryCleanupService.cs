@@ -42,7 +42,7 @@ internal sealed class PartyMemoryCleanupService(HttpClient httpClient, ILogger<P
         try
         {
             using HttpResponseMessage response = await httpClient.DeleteAsync(path, cancellationToken).ConfigureAwait(false);
-            return response.IsSuccessStatusCode
+            return response.IsSuccessStatusCode || response.StatusCode == System.Net.HttpStatusCode.NotFound
                 ? new PartyMemoryCleanupResult(partyId, memoryUnitId, sourceUri, Cleaned: true, BlockedReason: null)
                 : new PartyMemoryCleanupResult(
                     partyId,
@@ -110,7 +110,7 @@ internal sealed class PartyMemoryCleanupService(HttpClient httpClient, ILogger<P
         try
         {
             using HttpResponseMessage response = await httpClient.DeleteAsync(path, cancellationToken).ConfigureAwait(false);
-            return response.IsSuccessStatusCode
+            return response.IsSuccessStatusCode || response.StatusCode == System.Net.HttpStatusCode.NotFound
                 ? new PartyMemoryCleanupResult(partyId, MemoryUnitId: string.Empty, sourceUri, Cleaned: true, BlockedReason: null)
                 : new PartyMemoryCleanupResult(
                     partyId,

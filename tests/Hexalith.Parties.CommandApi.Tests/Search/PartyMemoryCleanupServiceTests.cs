@@ -64,6 +64,25 @@ public class PartyMemoryCleanupServiceTests
         result.BlockedReason.ShouldContain("BaseAddress");
     }
 
+    [Fact]
+    public async Task DeleteByPartyAsyncTreatsAlreadyMissingUnitsAsCleaned()
+    {
+        var handler = new TestHandler(new HttpResponseMessage(HttpStatusCode.NotFound)
+        {
+            ReasonPhrase = "Not Found",
+        });
+        var service = new PartyMemoryCleanupService(
+            new HttpClient(handler) { BaseAddress = new Uri("https://memories.example/") },
+            NullLogger<PartyMemoryCleanupService>.Instance);
+
+        PartyMemoryCleanupResult result = await service
+            .DeleteByPartyAsync("tenant-a", "case-a", "party-1", CancellationToken.None)
+            .ConfigureAwait(true);
+
+        result.Cleaned.ShouldBeTrue();
+        result.BlockedReason.ShouldBeNull();
+    }
+
     private sealed class TestHandler(HttpResponseMessage response) : HttpMessageHandler
     {
         public Uri? LastRequestUri { get; private set; }

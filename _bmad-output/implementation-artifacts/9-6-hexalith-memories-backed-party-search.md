@@ -417,6 +417,22 @@ tests/Hexalith.Parties.IntegrationTests/Search/MemoriesPartySearchIntegrationTes
 
 The former Story 9.5 local `SemanticPartySearchProvider` work is not the approved semantic search path. If any local fuzzy/token code remains, it must be treated as local fallback behavior only and should be renamed/documented accordingly.
 
+#### Search Core chunk review (2026-05-03)
+
+- [x] [Review][Patch] Default rich searches can run without the configured case scope [src/Hexalith.Parties.CommandApi/Search/PartySearchBoundary.cs:22]
+- [x] [Review][Patch] Hydration permits unrestricted results when `AuthorizedPartyIds` is omitted [src/Hexalith.Parties.CommandApi/Search/MemoriesPartySearchService.cs:236]
+- [x] [Review][Patch] Inactive parties can hydrate from stale Memories hits after deactivation [src/Hexalith.Parties.CommandApi/Search/PartyMemoryUnitMapper.cs:42]
+- [x] [Review][Patch] `GraphContextPartyId` is passed directly as a Memories traversal node id [src/Hexalith.Parties.CommandApi/Search/MemoriesPartySearchService.cs:105]
+- [x] [Review][Patch] Graph traversal candidates are stamped with the request case instead of verified from candidate data [src/Hexalith.Parties.CommandApi/Search/MemoriesPartySearchService.cs:116]
+- [x] [Review][Patch] Memories pagination can under-fill pages and under-report totals after hydration filters [src/Hexalith.Parties.CommandApi/Search/MemoriesPartySearchService.cs:71]
+- [x] [Review][Patch] `PartySearchRequest` paging values are not validated at the Search Core boundary [src/Hexalith.Parties.CommandApi/Search/PartySearchBoundary.cs:20]
+- [x] [Review][Patch] Hybrid score metadata leaves `RelevanceScore` null even when composite relevance is available [src/Hexalith.Parties.CommandApi/Search/MemoriesPartySearchService.cs:340]
+- [x] [Review][Patch] Memories cleanup treats already-missing units as blocked instead of idempotently clean [src/Hexalith.Parties.CommandApi/Search/PartyMemoryCleanupService.cs:112]
+- [x] [Review][Patch] Source metadata reports `Event` as the event type instead of the actual indexed party event or null [src/Hexalith.Parties.CommandApi/Search/MemoriesPartySearchService.cs:332]
+- [x] [Review][Patch] Local-only search responses populate the degraded-reason channel even when rich search was not attempted [src/Hexalith.Parties.CommandApi/Search/LocalPartySearchService.cs:69]
+- [x] [Review][Patch] Memories search documentation says REST only returns headers, contradicting the response metadata envelope [docs/memories-backed-party-search.md:32]
+- [x] [Review][Defer] Local fallback scoring does not observe cancellation during large in-memory fuzzy searches [src/Hexalith.Parties.CommandApi/Search/LocalFuzzyPartySearchProvider.cs:55] — deferred, pre-existing local-provider hardening
+
 ## Dev Agent Record
 
 ### Agent Model Used

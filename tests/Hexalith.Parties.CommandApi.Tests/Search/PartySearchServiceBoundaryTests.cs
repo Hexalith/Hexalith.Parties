@@ -23,12 +23,13 @@ public class PartySearchServiceBoundaryTests
                 TypeFilter: null,
                 ActiveFilter: null,
                 Page: 1,
-                PageSize: 20),
+                PageSize: 20,
+                AuthorizedPartyIds: entries.Select(e => e.Id).ToHashSet(StringComparer.Ordinal)),
             entries,
             CancellationToken.None);
 
         response.Status.ShouldBe(PartySearchExecutionStatus.LocalOnly);
-        response.DegradedReason.ShouldBe("Hexalith.Memories rich search is not configured; local display-name fallback was used.");
+        response.DegradedReason.ShouldBeNull();
         response.Results.Items.ShouldContain(r => r.Party.Id == "p1");
         response.Results.Items.ShouldAllBe(r => r.Matches.All(m => m.MatchType != "semantic" && m.MatchType != "graph"));
     }

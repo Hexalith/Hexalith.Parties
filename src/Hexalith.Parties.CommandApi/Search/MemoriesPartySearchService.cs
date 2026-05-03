@@ -31,6 +31,7 @@ internal sealed class MemoriesPartySearchService(
         IReadOnlyList<PartyIndexEntry> entryList = entries as IReadOnlyList<PartyIndexEntry> ?? [.. entries];
 
         PartyMemorySearchOptions current = options.CurrentValue;
+        request = NormalizeRequest(request, current);
 
         string requestedAxis = MapModeToAxis(request.Mode);
         if (!current.IsAxisEnabled(requestedAxis))
@@ -68,7 +69,8 @@ internal sealed class MemoriesPartySearchService(
         // even when many candidates are filtered out by tenant/case/auth/active checks.
         // Use long arithmetic and clamp to int.MaxValue so a malicious or buggy caller passing
         // a very large Page cannot trigger OverflowException (which would escape as a 500).
-        long memoriesTopKLong = (long)request.Page * request.PageSize;
+        long requestedWindow = (long)request.Page * request.PageSize;
+        long memoriesTopKLong = Math.Max(requestedWindow, entryList.Count);
         int memoriesTopK = memoriesTopKLong > int.MaxValue ? int.MaxValue : (int)memoriesTopKLong;
 
         try
@@ -102,18 +104,23 @@ internal sealed class MemoriesPartySearchService(
                     break;
 
                 case PartySearchMode.Graph:
-                    string startNodeId = request.GraphContextMemoryUnitId ?? request.GraphContextPartyId!;
+                    string? startNodeId = await ResolveGraphStartNodeIdAsync(request, cancellationToken).ConfigureAwait(false);
+                    if (string.IsNullOrWhiteSpace(startNodeId))
+                    {
+                        return await DegradeToLocalAsync(
+                            request,
+                            entryList,
+                            "Graph-assisted search could not resolve the party context to a Memories memory unit.",
+                            cancellationToken).ConfigureAwait(false);
+                    }
+
                     TraversalResult traversal = await memoriesClient.TraverseAsync(
                         request.TenantId,
                         startNodeId,
                         depth: 2,
                         caseId: request.CaseId,
                         ct: cancellationToken).ConfigureAwait(false);
-                    // Traversal results don't carry per-node CaseId because the case scope is
-                    // enforced server-side at the TraverseAsync request boundary. Tag each
-                    // candidate with the request's CaseId so the strict-case hydration filter
-                    // doesn't drop legitimate hits.
-                    candidates = [.. traversal.Nodes.Select(node => ToCandidate(node) with { CaseId = request.CaseId })];
+                    candidates = await BuildTraversalCandidatesAsync(request, traversal.Nodes, cancellationToken).ConfigureAwait(false);
                     if (traversal.Degraded)
                     {
                         status = PartySearchExecutionStatus.Degraded;
@@ -157,6 +164,64 @@ internal sealed class MemoriesPartySearchService(
         return Hydrate(request, entryList, candidates, status, degradedReason, cancellationToken);
     }
 
+    private async Task<string?> ResolveGraphStartNodeIdAsync(
+        PartySearchRequest request,
+        CancellationToken cancellationToken)
+    {
+        if (!string.IsNullOrWhiteSpace(request.GraphContextMemoryUnitId))
+        {
+            return request.GraphContextMemoryUnitId;
+        }
+
+        if (string.IsNullOrWhiteSpace(request.GraphContextPartyId))
+        {
+            return null;
+        }
+
+        string sourceUri = PartyMemoryUrn.Build(request.TenantId, request.GraphContextPartyId);
+        SearchResult result = await memoriesClient.SearchAsync(
+            new SearchRequest(request.TenantId, SyntacticAxis, sourceUri, request.CaseId, MaxResults: 5, Explain: false),
+            cancellationToken).ConfigureAwait(false);
+
+        return result.Results
+            .FirstOrDefault(r => string.Equals(r.SourceUri, sourceUri, StringComparison.Ordinal))?
+            .MemoryUnitId;
+    }
+
+    private async Task<IReadOnlyList<MemoryCandidate>> BuildTraversalCandidatesAsync(
+        PartySearchRequest request,
+        IReadOnlyList<TraversalNode> nodes,
+        CancellationToken cancellationToken)
+    {
+        List<MemoryCandidate> candidates = new(nodes.Count);
+        foreach (TraversalNode node in nodes)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            try
+            {
+                MemoryUnit unit = await memoriesClient
+                    .GetMemoryUnitAsync(request.TenantId, request.CaseId!, node.MemoryUnitId, cancellationToken)
+                    .ConfigureAwait(false);
+
+                candidates.Add(ToCandidate(node, unit));
+            }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                throw;
+            }
+            catch (Exception ex) when (IsTransientMemoriesFailure(ex) || ex is MemoriesRemoteException)
+            {
+                logger.LogWarning(
+                    ex,
+                    "Skipping graph traversal node {MemoryUnitId} because Memories unit hydration failed.",
+                    node.MemoryUnitId);
+            }
+        }
+
+        return candidates;
+    }
+
     private async Task<PartySearchResponse> DegradeToLocalAsync(
         PartySearchRequest request,
         IEnumerable<PartyIndexEntry> entries,
@@ -181,6 +246,28 @@ internal sealed class MemoriesPartySearchService(
             or TaskCanceledException
             or TimeoutException;
 
+    private static PartySearchRequest NormalizeRequest(
+        PartySearchRequest request,
+        PartyMemorySearchOptions options)
+    {
+        if (request.AuthorizedPartyIds is null)
+        {
+            throw new InvalidOperationException("Party search requires an explicit AuthorizedPartyIds set.");
+        }
+
+        string? caseId = string.IsNullOrWhiteSpace(request.CaseId)
+            ? options.CaseId
+            : request.CaseId;
+        if (string.IsNullOrWhiteSpace(caseId))
+        {
+            throw new InvalidOperationException("Party search requires an explicit case scope.");
+        }
+
+        int page = Math.Max(1, request.Page);
+        int pageSize = Math.Clamp(request.PageSize, 1, 100);
+        return request with { CaseId = caseId, Page = page, PageSize = pageSize };
+    }
+
     private static string MapModeToAxis(PartySearchMode mode) => mode switch
     {
         PartySearchMode.Lexical => SyntacticAxis,
@@ -201,7 +288,7 @@ internal sealed class MemoriesPartySearchService(
         Dictionary<string, PartyIndexEntry> entriesById = new(StringComparer.Ordinal);
         foreach (PartyIndexEntry entry in entries)
         {
-            if (entry.IsErased)
+            if (entry.IsErased || !entry.IsActive)
             {
                 continue;
             }
@@ -335,7 +422,7 @@ internal sealed class MemoriesPartySearchService(
             "Hexalith.Memories",
             hydrated.Candidate.SourceUri,
             hydrated.Candidate.MemoryUnitId,
-            SourceType.Event.ToString());
+            hydrated.Candidate.EventType);
 
     private static MemoryCandidate ToCandidate(FusedScoredResult result)
         => new(
@@ -343,11 +430,12 @@ internal sealed class MemoriesPartySearchService(
             result.SourceUri,
             result.CaseId,
             HybridAxis,
-            Score: null,
+            result.CompositeScore,
             result.SyntacticScore,
             result.SemanticScore,
             result.GraphScore,
-            result.CompositeScore);
+            result.CompositeScore,
+            EventType: null);
 
     private static MemoryCandidate ToCandidate(ScoredResult result)
         => new(
@@ -359,23 +447,26 @@ internal sealed class MemoriesPartySearchService(
             SyntacticScore: string.Equals(result.Axis, SyntacticAxis, StringComparison.OrdinalIgnoreCase) ? result.Score : null,
             SemanticScore: string.Equals(result.Axis, SemanticAxis, StringComparison.OrdinalIgnoreCase) ? result.Score : null,
             GraphScore: string.Equals(result.Axis, GraphAxis, StringComparison.OrdinalIgnoreCase) ? result.Score : null,
-            CompositeScore: null);
+            CompositeScore: null,
+            EventType: null);
 
-    private static MemoryCandidate ToCandidate(TraversalNode node)
+    private static MemoryCandidate ToCandidate(TraversalNode node, MemoryUnit unit)
     {
         // HopDistance 0 = the start node itself. Score it 1.0 and decay 1/(hop+1) for neighbours
         // so a hop-1 neighbour scores 0.5, hop-2 scores 0.333 — distinguishable, monotonic.
         double score = 1.0 / (1 + Math.Max(0, node.HopDistance));
+        string? eventType = unit.Metadata.TryGetValue("eventType", out MetadataField? field) ? field.Value : null;
         return new MemoryCandidate(
             node.MemoryUnitId,
-            node.SourceUri,
-            CaseId: null,
+            unit.SourceUri,
+            unit.CaseId,
             Axis: GraphAxis,
             Score: score,
             SyntacticScore: null,
             SemanticScore: null,
             GraphScore: score,
-            CompositeScore: null);
+            CompositeScore: null,
+            eventType);
     }
 
     private static string BuildDegradedReason(IReadOnlyList<string>? unavailableAxes)
@@ -392,7 +483,8 @@ internal sealed class MemoriesPartySearchService(
         double? SyntacticScore,
         double? SemanticScore,
         double? GraphScore,
-        double? CompositeScore);
+        double? CompositeScore,
+        string? EventType);
 
     private sealed record HydratedCandidate(PartyIndexEntry Entry, MemoryCandidate Candidate);
 }

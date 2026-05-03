@@ -64,7 +64,8 @@ public static class FindPartiesMcpTool
         IReadOnlyDictionary<string, PartyIndexEntry> entries = await GetPartyIndexEntriesAsync(proxy).ConfigureAwait(false);
 
         // Exclude erased parties from all MCP search/list results
-        IEnumerable<PartyIndexEntry> activeEntries = entries.Values.Where(e => !e.IsErased);
+        IReadOnlyList<PartyIndexEntry> activeEntries = [.. entries.Values.Where(e => !e.IsErased)];
+        HashSet<string> authorizedPartyIds = activeEntries.Select(e => e.Id).ToHashSet(StringComparer.Ordinal);
 
         bool? activeFilter = activeOnly ? true : null;
 
@@ -85,7 +86,8 @@ public static class FindPartiesMcpTool
                 activeFilter,
                 page,
                 pageSize,
-                CaseId: caseId),
+                CaseId: caseId,
+                AuthorizedPartyIds: authorizedPartyIds),
             activeEntries,
             cancellationToken).ConfigureAwait(false);
 
