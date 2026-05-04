@@ -14,12 +14,37 @@ so that I can manage party data without using API tools or CLI commands.
 
 1. Given an authenticated administrator, when they access the admin portal, then they can browse a paginated list of parties for the active tenant.
 2. Given the party list, when the administrator searches by display name, then baseline name search returns party matches with existing Parties search metadata and pagination.
-3. Given optional rich search capability is enabled by Story 9.6, when the administrator searches by email or identifier, then the portal exposes that capability only through the approved Parties search API and clearly handles degraded/local-only search status.
-4. Given party list filters, when the administrator filters by party type or active status, then the list updates without leaking parties from other tenants or erased parties.
+3. Given optional rich search capability is enabled by Story 9.6 and the portal can deterministically detect that the backend capability is available and healthy, when the administrator searches by email or identifier, then the portal exposes that capability only through the approved Parties search API; otherwise the UI remains display-name-only and clearly handles degraded/local-only search status without emulating rich search client-side.
+4. Given party list filters, when the administrator filters by party type or active party lifecycle status, then the list updates only within the currently authorized tenant scope without leaking counts, identifiers, display names, existence, parties from other tenants, or erased parties.
 5. Given a party in the list, when the administrator opens it, then the portal displays full party detail: party type, person or organization details, contact channels, identifiers, consent records when available, active/inactive state, created date, and last modified date.
 6. Given rendered party fields may contain user-supplied or AI-created data, when the portal displays them, then all values are output encoded as text and no raw HTML, `MarkupString`, script injection, or stored XSS path is introduced.
-7. Given an administrator lacks a valid token, tenant claim, or admin role, when the portal loads data, then the UI surfaces bounded unauthorized/forbidden states without showing cached or cross-tenant party data.
-8. Given the portal architecture is reviewed, when implementation is complete, then it uses the existing Hexalith.FrontComposer Blazor/Fluent UI shell and composable components rather than building a separate TypeScript SPA or duplicate tenant-management UI.
+7. Given an administrator lacks a valid token, tenant claim, or admin role, when the portal loads data or tenant context changes, then the UI clears list/search/detail state, ignores in-flight responses from the previous tenant, and surfaces bounded unauthorized/forbidden states without showing cached or cross-tenant party data.
+8. Given the portal architecture is reviewed, when implementation is complete, then it uses the existing Hexalith.FrontComposer Blazor/Fluent UI shell and composable components rather than building a separate TypeScript SPA, routing root, tenant selector, authorization model, or duplicate tenant-management UI.
+
+## Party-Mode Clarifications
+
+- Story 10.1 is read-only. It must not add create, edit, delete, activate, invite, assign-role, tenant lifecycle, tenant configuration, export, erasure, restriction, consent mutation, GDPR operation, or Memories-backed search management workflows.
+- The only required data sources are existing Parties APIs: `GET /api/v1/parties`, `GET /api/v1/parties/search`, and `GET /api/v1/parties/{id}`. The portal must not introduce new browse/search/detail endpoints to satisfy this story.
+- Baseline search means display-name search through the approved search API and whatever metadata that API already returns. Rich email/identifier search remains optional until Story 9.6 exposes a stable capability signal and healthy response path.
+- Tenant context and admin role state come from the existing authenticated app/API context and Hexalith.Tenants integration. This story must not infer tenant authority from client-side parsing or invent role/membership semantics.
+- Browser storage may persist only non-sensitive UI preferences such as page size when this matches FrontComposer conventions. Storage keys, routes, logs, telemetry dimensions, and test output must not contain tenant ids, party ids, display names, emails, identifiers, search text, JWTs, claims, or consent details unless an explicit later architecture decision allows it.
+- Detail rendering order should be predictable: summary, party type/status, contact channels, identifiers, consent records, restrictions/erasure state, timestamps, and system metadata. Stale, not-found, forbidden, and gone/erased detail outcomes must leave browse context intact while clearing the selected detail data.
+
+### UX State Matrix
+
+| State | Grid behavior | Detail behavior | User-facing intent | Allowed actions |
+| --- | --- | --- | --- | --- |
+| Loading | Show loading state without stale tenant rows | Disable or clear detail until current-tenant data arrives | Work is in progress | Cancel via navigation only |
+| No parties | Empty grid | No selected detail | No records exist for the tenant | Refresh |
+| No filtered/search results | Empty grid scoped to current query | No selected detail | No parties match current filters/search | Clear filters/search |
+| Display-name-only / rich search unavailable | Show display-name results only | Detail remains authoritative by id | Rich search is unavailable or degraded | Continue display-name search, refresh |
+| Stale/degraded projection | Show bounded warning from response headers | Show bounded stale indicator when detail is affected | Data may lag but remains inspectable | Refresh |
+| Unauthorized or missing token | Clear grid rows | Clear and disable detail | Sign-in is required | Sign in/retry where FrontComposer supports it |
+| Missing tenant | Clear grid rows | Clear and disable detail | Tenant context is unavailable | Change/select tenant through existing Tenants UX |
+| Forbidden/cross-tenant | Clear affected data without existence leak | Clear selected detail | Access is denied | Return to browse/retry |
+| Not found | Keep browse context | Show bounded not-found state without raw ProblemDetails | The selected record is unavailable in this scope | Return to browse/refresh |
+| Gone/erased | Remove affected row when safe | Show bounded gone/erased state | The party is erased or no longer inspectable | Return to browse/refresh |
+| Transient failure | Keep only current-tenant non-sensitive shell state | Clear or keep disabled detail based on failed request scope | Retryable failure | Retry |
 
 ## Tasks / Subtasks
 
@@ -40,7 +65,8 @@ so that I can manage party data without using API tools or CLI commands.
   - [ ] Use `GET /api/v1/parties/search` for display-name search and for rich search modes introduced by Story 9.6.
   - [ ] Preserve response metadata headers such as `X-Service-Degraded`, `X-Stale-Data-Age`, `X-Parties-Search-Status`, and `X-Parties-Search-Degraded-Reason` in a visible but bounded UI state.
   - [ ] Treat empty search text as list/browse behavior, matching `PartiesController.SearchPartiesAsync`.
-  - [ ] Keep email/identifier search disabled or clearly local-only unless the Story 9.6 rich search path is enabled and healthy.
+  - [ ] Keep email/identifier search disabled or clearly local-only unless the Story 9.6 rich search path is enabled, healthy, and explicitly detectable; do not emulate email/identifier search client-side.
+  - [ ] Ignore or cancel in-flight list/search responses from a previous tenant after tenant context changes.
 
 - [ ] Add filters, paging, and empty/error states (AC: 1, 2, 3, 4, 7)
   - [ ] Provide type filter options for `Person` and `Organization`.
@@ -48,6 +74,7 @@ so that I can manage party data without using API tools or CLI commands.
   - [ ] Preserve pagination state and page-size bounds; do not allow client page sizes above the API cap of 100.
   - [ ] Show distinct states for zero parties, zero filtered results, degraded search, unauthorized, forbidden, and transient query failure.
   - [ ] Do not use cached rows after `401`, `403`, missing tenant, or tenant-switch failures.
+  - [ ] Ensure forbidden and cross-tenant failures do not reveal record existence, counts, identifiers, display names, or previous detail values.
 
 - [ ] Add party inspect detail view (AC: 5, 6, 7)
   - [ ] Use `GET /api/v1/parties/{id}` for authoritative detail hydration.
@@ -57,10 +84,11 @@ so that I can manage party data without using API tools or CLI commands.
   - [ ] Display consent records when the detail payload includes them; do not add consent editing actions in this story.
   - [ ] Display active/inactive, restricted, erased, created, and last-modified state when present.
   - [ ] Handle `404`, `410`, degraded projection, and stale-list/detail mismatch without crashing or leaking raw ProblemDetails payloads.
+  - [ ] On stale, `404`, `403`, or `410` detail outcomes, clear selected detail data, keep browse context intact, and provide a bounded return/refresh path without implying mutation or lifecycle actions.
 
 - [ ] Enforce frontend security and privacy rules (AC: 4, 5, 6, 7)
   - [ ] Render all party data fields as encoded text through normal Razor/component binding.
-  - [ ] Do not use `MarkupString`, `AddMarkupContent`, `innerHTML`, raw HTML fragments, or untrusted data in JavaScript contexts.
+  - [ ] Do not use `MarkupString`, `@((MarkupString)...)`, `AddMarkupContent`, unsafe markdown rendering, `innerHTML`, raw HTML fragments, or untrusted data in JavaScript contexts for party values, status text, degraded messages, or API error text.
   - [ ] Do not log full party names, contact channel values, identifier values, consent details, JWTs, claim sets, or membership dictionaries from the portal.
   - [ ] Do not include raw user search text, identifiers, email addresses, or PII in client storage keys.
   - [ ] Keep tenant and user cache scope fail-closed by reusing FrontComposer storage and query conventions.
@@ -76,7 +104,10 @@ so that I can manage party data without using API tools or CLI commands.
   - [ ] Add API/transport tests or fakes proving the portal calls `GET /api/v1/parties`, `GET /api/v1/parties/search`, and `GET /api/v1/parties/{id}` with expected query parameters.
   - [ ] Add XSS regression tests using party values containing `<script>`, quotes, angle brackets, and HTML-like strings.
   - [ ] Add tests proving erased or cross-tenant records are not displayed after failed detail hydration.
-  - [ ] Add smoke coverage for keyboard navigation/focus on list rows and detail navigation.
+  - [ ] Add tests proving tenant switches clear list/search/detail state and that stale in-flight responses from the previous tenant cannot repopulate the UI.
+  - [ ] Add smoke coverage for keyboard navigation/focus on search, filters, pagination, list rows, detail navigation, retry/error actions, and focus restoration after paging/search/error retry.
+  - [ ] Add localization tests or resource checks for UI strings, status labels, empty/error messages, dates, booleans, and counts; avoid hard-coded component text except stable resource keys.
+  - [ ] Add accessibility checks that status badges are screen-reader labeled, visible focus is retained, and active/restricted/erased/stale states are not distinguished by color alone.
 
 - [ ] Validate build and affected tests
   - [ ] Run the affected FrontComposer/portal test project(s).
@@ -231,9 +262,22 @@ GPT-5 Codex
 
 ### Debug Log References
 
+- 2026-05-04T09:04:12Z - `/bmad-party-mode 10-1-admin-portal-browse-search-and-inspect; review;` completed with Winston, John, Sally, and Amelia.
+
 ### Completion Notes List
 
 - Ultimate context engine analysis completed - comprehensive developer guide created.
+- 2026-05-04T09:04:12Z - party-mode review completed; applied low-risk clarifications for rich-search capability gating, tenant-switch race handling, no-leak authorization states, read-only non-goals, API source boundaries, UX state matrix, XSS/storage constraints, accessibility, localization, and focused test coverage.
+
+## Party-Mode Review
+
+- Date/time: 2026-05-04T09:04:12Z
+- Selected story key: `10-1-admin-portal-browse-search-and-inspect`
+- Command/skill invocation used: `/bmad-party-mode 10-1-admin-portal-browse-search-and-inspect; review;`
+- Participating BMAD agents: Winston (System Architect), John (Product Manager), Sally (UX Designer), Amelia (Senior Software Engineer)
+- Findings summary: reviewers agreed the story was directionally sound but needed pre-dev hardening around API contract boundaries, optional Story 9.6 rich-search gating, tenant switch race handling, no-leak authorization behavior, stale/degraded UI states, detail information hierarchy, accessibility, localization, XSS constraints, PII-safe storage/logging, and focused test expectations.
+- Changes applied: tightened AC3/AC4/AC7/AC8; added read-only non-goals; added explicit API source and tenant authority constraints; added browser storage/logging privacy rules; added detail rendering order; added a UX state matrix; added task bullets for rich-search gating, stale tenant response handling, no-leak failures, stale/detail outcomes, raw HTML prohibitions, tenant-switch tests, keyboard/focus tests, localization checks, and accessible status indicators.
+- Findings deferred: exact localized copy; exact visual treatment of degraded/stale status; final column styling beyond required fields; rich-search ranking/highlighting/relevance; deep-link policy for party detail routes; any new masking policy for emails, identifiers, consent metadata, or AI-derived labels; any GDPR, tenant-management, or write-operation workflows.
+- Final recommendation: `ready-for-dev`
 
 ### File List
-
