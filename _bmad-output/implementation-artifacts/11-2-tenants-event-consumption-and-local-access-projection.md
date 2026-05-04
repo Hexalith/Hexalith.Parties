@@ -61,6 +61,7 @@ so that authorization decisions can be made locally without polling.
   - [ ] Add subscription/registration tests that prove `AddHexalithTenants` registers the projection store, event processor, and handlers without requiring a running DAPR sidecar.
   - [ ] Add endpoint-level tests for the subscription mapping if existing WebApplicationFactory infrastructure can assert routing, configured pub/sub/topic metadata, and CloudEvents envelope handling without a full sidecar.
   - [ ] Cover duplicate message id behavior, unknown event type skips, invalid payload failure, and the limitation or behavior of event ordering based on the public Tenants client API available during implementation.
+  - [ ] Cover replay and restart behavior explicitly: reprocessing the same message id after an in-memory projection restart must be documented as a single-instance limitation unless a durable projection/deduplication store is implemented by configuration.
   - [ ] Keep Tier 1 tests free of DAPR runtime dependencies.
 
 - [ ] Validate build and affected tests
@@ -148,10 +149,12 @@ Current Tenants submodule status observed in the prior story: `Hexalith.Tenants`
 - Tenants runtime dependencies are allowed only in CommandApi and infrastructure/test projects that need the local projection pipeline. Do not add them to `Hexalith.Parties.Contracts`, shared contract packages, or client-facing packages unless a later story explicitly requires it.
 - Do not block query access on polling Tenants HTTP APIs. The point of this story is local event-fed projection state.
 - Do not treat missing projection state as "allow and refresh later." Unknown tenant/user state is denied.
+- Keep tenant access denial reasons stable and safe for Story 11.3 to translate later. At minimum distinguish missing tenant, missing user id, unknown tenant, disabled tenant, missing member, insufficient role, and stale/unknown state only when the public Tenants client exposes freshness state.
 - Do not invent Parties-owned freshness metadata for `TenantLocalState`; if stale-state enforcement is required beyond missing/unknown projection state, defer it until the public Tenants client exposes durable freshness metadata.
 - Do not change EventStore actor key formats or Parties projection keys such as `{tenant}:party-detail:{partyId}` and `{tenant}:party-index`.
 - Avoid adding Tenants dependencies to `src/Hexalith.Parties.Client` unless a client-facing API contract is explicitly needed. Authorization is server-side.
 - Keep logs free of personal data and avoid logging full token contents or membership lists.
+- Keep event-consumption diagnostics secret- and PII-safe. Logs may include event type, tenant id, message id, sequence number, outcome category, and correlation id, but not membership dictionaries, role lists, token claims, party names, contact values, or raw invalid payloads.
 
 ### Testing Requirements
 
@@ -179,6 +182,16 @@ Story 11.1 established the AppHost/package integration slice and clarified sever
 - Tenants event subscription and local access projection are explicitly deferred to Story 11.2.
 - Tenants dependencies belong in AppHost/Aspire/CommandApi/tests as needed, not in `Hexalith.Parties.Contracts`.
 - Avoid recursive submodule operations. [Source: _bmad-output/implementation-artifacts/11-1-apphost-and-package-integration.md]
+
+### Advanced Elicitation Clarifications
+
+The 2026-05-04 advanced elicitation pass added these pre-development constraints:
+
+- The access service should return stable, safe reason codes so Story 11.3 can translate denials consistently across REST and MCP without inspecting Tenants projection internals.
+- The DAPR subscription should stay on the public Tenants client endpoint and CloudEvents model. Parties must not add a second subscription route, alternate envelope contract, or custom retry queue.
+- Tests should distinguish duplicate message id handling from ordering guarantees. If only in-memory deduplication is available, replay-after-restart behavior must be documented rather than hidden behind a fake durable guarantee.
+- Invalid payload diagnostics must be actionable but safe: include event type/message metadata and outcome category, not raw payloads, full claim sets, membership lists, or party PII.
+- Documentation should name the operational repair path for missing or lagging Tenants projection state: verify DAPR pub/sub configuration, Tenants topic subscription, projection health, and replay/rebuild procedure where the current platform exposes one.
 
 ### Git Intelligence
 
@@ -248,4 +261,28 @@ GPT-5 Codex
   - Exact stale-projection TTL or freshness policy remains deferred until the public Tenants client exposes durable freshness metadata or a later architecture decision defines it.
   - Global administrator policy remains deferred unless the Tenants client exposes it directly for consumer authorization decisions.
   - Broad REST/MCP endpoint and tool enforcement remains deferred to Story 11.3.
+- Final recommendation: ready-for-dev
+
+## Advanced Elicitation
+
+- Date/time: 2026-05-04T13:03:38.5991802+02:00
+- Selected story key: 11-2-tenants-event-consumption-and-local-access-projection
+- Command/skill invocation used: `/bmad-advanced-elicitation 11-2-tenants-event-consumption-and-local-access-projection`
+- Batch 1 method names: Red Team vs Blue Team; Failure Mode Analysis; Security Audit Personas; Architecture Decision Records; Critique and Refine
+- Reshuffled Batch 2 method names: Pre-mortem Analysis; Self-Consistency Validation; User Persona Focus Group; Chaos Monkey Scenarios; Expand or Contract for Audience
+- Findings summary:
+  - Tenant access results needed stable denial reasons so Story 11.3 can translate REST/MCP denials consistently without coupling to projection internals.
+  - The DAPR/CloudEvents subscription path needed an explicit guard against parallel Parties-owned envelopes, retry queues, or duplicate routes.
+  - Duplicate message handling needed to distinguish current message-id deduplication from durable replay-after-restart guarantees.
+  - Diagnostics and documentation needed stronger safety rules for invalid payloads, membership data, claims, and party PII.
+  - Operators needed a clearer troubleshooting path for missing or lagging Tenants projection state.
+- Changes applied:
+  - Added replay-after-restart test/documentation guidance for in-memory projection and deduplication limitations.
+  - Added stable safe tenant-access denial reason expectations for the later REST/MCP authorization story.
+  - Added logging and diagnostics guardrails for event type, message metadata, outcome category, and excluded sensitive values.
+  - Added Advanced Elicitation Clarifications covering subscription boundaries, duplicate/order guarantees, safe diagnostics, and operational repair guidance.
+- Findings deferred:
+  - Durable projection storage and durable deduplication remain deployment/configuration decisions unless a later story explicitly adds them.
+  - Exact freshness or stale-state policy remains deferred until the public Tenants client exposes durable freshness metadata.
+  - Broad REST/MCP denial translation remains Story 11.3 scope.
 - Final recommendation: ready-for-dev
