@@ -41,6 +41,13 @@ internal static class PartyDetailProjectionActorExtensions
             {
                 // Dapr remoting raises NotImplementedException at await time, not invoke time.
             }
+            catch (JsonException)
+            {
+                // Malformed remote payload — fall through to the byte-array strategy below.
+                // Earlier versions propagated this and aborted the request before the typed
+                // actor proxy could be tried; bringing the catch here lets the resilience
+                // ladder run to completion.
+            }
         }
 
         Task<byte[]?>? serializedTask = null;
@@ -69,6 +76,10 @@ internal static class PartyDetailProjectionActorExtensions
             catch (NotImplementedException)
             {
             }
+            catch (JsonException)
+            {
+                // Malformed remote payload — fall through to the typed-actor strategy.
+            }
         }
 
         return await proxy.GetDetailAsync().ConfigureAwait(false);
@@ -89,7 +100,11 @@ internal static class PartyDetailProjectionActorExtensions
         }
         catch (JsonException)
         {
-            return false;
+            // Whitespace-only or otherwise malformed JSON is logically empty for the caller's
+            // purpose: there is nothing to deserialize. Returning true coerces the resilience
+            // ladder to fall through to the next strategy rather than feeding garbage into
+            // JsonSerializer.Deserialize.
+            return true;
         }
     }
 

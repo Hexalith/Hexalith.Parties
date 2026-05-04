@@ -26,6 +26,7 @@ public sealed partial class PartyPayloadProtectionService(
     ILogger<PartyPayloadProtectionService> logger) : IEventPayloadProtectionService
 {
     internal const string ProtectedSerializationFormat = "json+pdenc-v1";
+    internal const string RedactedSerializationFormat = "json-redacted";
     private const string ProtectedSnapshotMarker = "$protectedSnapshot";
     private const string EncryptedFieldMarker = "$enc";
 
@@ -117,6 +118,10 @@ public sealed partial class PartyPayloadProtectionService(
 
         if (!ShouldHandle(identity) || !string.Equals(serializationFormat, ProtectedSerializationFormat, StringComparison.Ordinal))
         {
+            // Already-redacted payloads must not flow through the unprotect path: there is no
+            // ciphertext to decrypt, and re-protection of a redacted payload would silently
+            // re-encrypt nulled-out leaves. Treat as no-op so callers receive the redacted bytes
+            // verbatim.
             return new PayloadProtectionResult(payloadBytes, serializationFormat);
         }
 
@@ -166,6 +171,14 @@ public sealed partial class PartyPayloadProtectionService(
             return new PayloadProtectionResult(payloadBytes, serializationFormat);
         }
 
+        if (payloadBytes.Length == 0)
+        {
+            // ArgumentNullException.ThrowIfNull does not reject empty arrays; JsonNode.Parse
+            // throws JsonException on a length-zero buffer, which would escape the redaction
+            // path and abort projection delivery. Treat as a no-op.
+            return new PayloadProtectionResult(payloadBytes, serializationFormat);
+        }
+
         JsonNode? root = JsonNode.Parse(payloadBytes);
         if (root is null)
         {
@@ -177,11 +190,18 @@ public sealed partial class PartyPayloadProtectionService(
         // can throw "Cannot reassign" when a non-marker JsonObject contains a non-marker
         // JsonObject. Constructing a new tree avoids the risk entirely.
         JsonNode? redacted = RebuildWithoutEncryptedMarkers(root);
+
+        // Whole-payload $enc at the root would collapse to JSON literal "null" bytes which
+        // deserialize to a null event and silently drop the lifecycle event. Substitute an
+        // empty object so the event deserializes to a default-valued instance and the
+        // skip-and-log path can decide whether the redacted event is still useful.
+        redacted ??= new JsonObject();
+
         byte[] redactedBytes = JsonSerializer.SerializeToUtf8Bytes(redacted, s_jsonOptions);
         // Use a distinct format marker so downstream consumers (audit/compliance pipelines)
         // can detect that this payload was redacted, rather than indistinguishable from a
         // plain JSON event that was never encrypted.
-        return new PayloadProtectionResult(redactedBytes, "json-redacted");
+        return new PayloadProtectionResult(redactedBytes, RedactedSerializationFormat);
     }
 
     private static JsonNode? RebuildWithoutEncryptedMarkers(JsonNode? node)
@@ -192,12 +212,14 @@ public sealed partial class PartyPayloadProtectionService(
                 return null;
 
             case JsonObject obj:
+                // Walk the original object directly. JsonNode property values are single-owner,
+                // but the recursion always produces a fresh node (or null), so writing into
+                // rebuiltObj never re-parents an existing one. Avoid DeepClone() per recursion
+                // step — that would be O(N²) in tree depth on nested encrypted structures.
                 JsonObject rebuiltObj = new();
                 foreach (KeyValuePair<string, JsonNode?> property in obj)
                 {
-                    rebuiltObj[property.Key] = property.Value is null
-                        ? null
-                        : RebuildWithoutEncryptedMarkers(property.Value.DeepClone());
+                    rebuiltObj[property.Key] = RebuildWithoutEncryptedMarkers(property.Value);
                 }
 
                 return rebuiltObj;
@@ -206,7 +228,7 @@ public sealed partial class PartyPayloadProtectionService(
                 JsonArray rebuiltArr = new();
                 foreach (JsonNode? item in array)
                 {
-                    rebuiltArr.Add(item is null ? null : RebuildWithoutEncryptedMarkers(item.DeepClone()));
+                    rebuiltArr.Add(RebuildWithoutEncryptedMarkers(item));
                 }
 
                 return rebuiltArr;
@@ -356,9 +378,21 @@ public sealed partial class PartyPayloadProtectionService(
 
                 if (versions.Count == 0)
                 {
-                    await cryptoLifecycleService
-                        .MarkCryptoPendingAsync(identity.TenantId, identity.AggregateId, "No encryption key is available for this party.", cancellationToken)
-                        .ConfigureAwait(false);
+                    // The lifecycle marker is best-effort: a state-store outage here must not
+                    // mask the typed PartyEncryptionKeyDestroyedException, which catch sites use
+                    // to drive the redaction-fallback path. Swallow + log the marker failure and
+                    // proceed to throw the typed exception.
+                    try
+                    {
+                        await cryptoLifecycleService
+                            .MarkCryptoPendingAsync(identity.TenantId, identity.AggregateId, "No encryption key is available for this party.", cancellationToken)
+                            .ConfigureAwait(false);
+                    }
+                    catch (Exception markerEx)
+                    {
+                        LogProtectionFailure(identity.TenantId, identity.AggregateId, $"Crypto-pending marker write failed: {markerEx.Message}");
+                    }
+
                     throw new PartyEncryptionKeyDestroyedException(identity.TenantId, identity.AggregateId);
                 }
             }
@@ -554,8 +588,18 @@ public sealed partial class PartyPayloadProtectionService(
     }
 
     private static bool IsEncryptedMarker(JsonObject obj)
-        => obj.TryGetPropertyValue(EncryptedFieldMarker, out JsonNode? marker)
-            && marker?.GetValue<bool>() == true;
+    {
+        // Tolerant marker check: corrupted or adversarial payloads may store $enc as a string
+        // ("true") or number (1) instead of a JSON bool. JsonValue.GetValue<bool> throws
+        // InvalidOperationException on a type mismatch, which would escape the redaction path
+        // and abort projection delivery on a single bad event.
+        if (!obj.TryGetPropertyValue(EncryptedFieldMarker, out JsonNode? marker) || marker is null)
+        {
+            return false;
+        }
+
+        return marker is JsonValue value && value.TryGetValue(out bool flag) && flag;
+    }
 
     private static bool IsSuspiciousEncryptedObject(JsonObject obj)
         => !obj.ContainsKey(EncryptedFieldMarker)

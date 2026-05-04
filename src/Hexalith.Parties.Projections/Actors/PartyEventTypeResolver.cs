@@ -22,39 +22,12 @@ internal static class PartyEventTypeResolver
 {
     private static readonly Lazy<FrozenDictionary<string, Type>> s_byFullName = new(BuildFullNameLookup);
     private static readonly Lazy<FrozenDictionary<string, Type?>> s_byShortName = new(BuildShortNameLookup);
-    private static readonly ConcurrentDictionary<string, Type?> s_resolvedCache = new(StringComparer.Ordinal);
+    private static readonly ConcurrentDictionary<string, ResolveOutcome> s_resolvedCache = new(StringComparer.Ordinal);
 
     public static Type? Resolve(string eventTypeName)
     {
-        if (string.IsNullOrWhiteSpace(eventTypeName))
-        {
-            return null;
-        }
-
-        return s_resolvedCache.GetOrAdd(eventTypeName, name =>
-        {
-            // Prefer assembly-qualified or full-namespaced names — exact match.
-            if (s_byFullName.Value.TryGetValue(name, out Type? full))
-            {
-                return full;
-            }
-
-            // CLR Type.GetType handles assembly-qualified names like
-            // "Hexalith.Parties.Contracts.Events.PartyCreated, Hexalith.Parties.Contracts".
-            Type? clrResolved = Type.GetType(name, throwOnError: false);
-            if (clrResolved is not null && IsEventPayloadType(clrResolved))
-            {
-                return clrResolved;
-            }
-
-            // Fall back to the short name lookup. The lookup stores null for ambiguous short
-            // names so we can return null instead of guessing.
-            string shortName = name.Contains('.', StringComparison.Ordinal)
-                ? name[(name.LastIndexOf('.') + 1)..]
-                : name;
-
-            return s_byShortName.Value.TryGetValue(shortName, out Type? shortMatch) ? shortMatch : null;
-        });
+        ResolveOutcome outcome = ResolveInternal(eventTypeName);
+        return outcome.Type;
     }
 
     /// <summary>
@@ -67,23 +40,53 @@ internal static class PartyEventTypeResolver
     /// <returns><see langword="true"/> if the short name maps to multiple types.</returns>
     public static bool IsAmbiguousShortName(string eventTypeName)
     {
+        ResolveOutcome outcome = ResolveInternal(eventTypeName);
+        return outcome.IsAmbiguous;
+    }
+
+    private static ResolveOutcome ResolveInternal(string eventTypeName)
+    {
         if (string.IsNullOrWhiteSpace(eventTypeName))
         {
-            return false;
+            return ResolveOutcome.Unknown;
         }
 
-        // A full-name match takes precedence — that's never ambiguous.
-        if (s_byFullName.Value.ContainsKey(eventTypeName))
+        return s_resolvedCache.GetOrAdd(eventTypeName, name =>
         {
-            return false;
-        }
+            // Prefer assembly-qualified or full-namespaced names — exact match.
+            if (s_byFullName.Value.TryGetValue(name, out Type? full))
+            {
+                return new ResolveOutcome(full, IsAmbiguous: false);
+            }
 
-        string shortName = eventTypeName.Contains('.', StringComparison.Ordinal)
-            ? eventTypeName[(eventTypeName.LastIndexOf('.') + 1)..]
-            : eventTypeName;
+            // Fall back to the short name lookup. Type.GetType is intentionally NOT consulted
+            // here: it accepts assembly-qualified names like "System.Diagnostics.Process,
+            // System.Diagnostics.Process" and triggers arbitrary assembly load on miss, which
+            // an attacker controlling event-type-name strings could weaponize. The contract
+            // assembly is the only authoritative source for valid event types.
+            string shortName = name.Contains('.', StringComparison.Ordinal)
+                ? name[(name.LastIndexOf('.') + 1)..]
+                : name;
 
-        // The lookup stores `null` for ambiguous short names — distinguish from "missing key".
-        return s_byShortName.Value.TryGetValue(shortName, out Type? match) && match is null;
+            if (!s_byShortName.Value.TryGetValue(shortName, out Type? shortMatch))
+            {
+                return ResolveOutcome.Unknown;
+            }
+
+            // s_byShortName stores null for ambiguous short names. Distinguish "ambiguous"
+            // from "unknown" so callers (and IsAmbiguousShortName) can route to distinct
+            // diagnostics without re-walking the lookup.
+            return shortMatch is null
+                ? ResolveOutcome.Ambiguous
+                : new ResolveOutcome(shortMatch, IsAmbiguous: false);
+        });
+    }
+
+    private readonly record struct ResolveOutcome(Type? Type, bool IsAmbiguous)
+    {
+        public static ResolveOutcome Unknown { get; } = new(null, IsAmbiguous: false);
+
+        public static ResolveOutcome Ambiguous { get; } = new(null, IsAmbiguous: true);
     }
 
     private static FrozenDictionary<string, Type> BuildFullNameLookup()

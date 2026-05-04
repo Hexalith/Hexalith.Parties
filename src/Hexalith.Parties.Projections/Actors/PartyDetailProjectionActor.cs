@@ -20,12 +20,18 @@ public sealed partial class PartyDetailProjectionActor : Actor, IPartyDetailProj
     private const string ProjectionName = "party-detail";
     private const string RebuildReminderName = "auto-rebuild";
     private const string LastSequenceStateKeySuffix = "last-sequence";
+    private const string RedactedFormat = "json-redacted";
+    private const long UnloadedSequenceSentinel = long.MinValue;
     private static readonly JsonSerializerOptions s_jsonOptions = new(JsonSerializerDefaults.Web);
     private static readonly ConcurrentDictionary<string, PartyDetail> s_lastKnownDetails = new(StringComparer.Ordinal);
     private readonly ILogger<PartyDetailProjectionActor> _logger;
     private readonly IProjectionRebuildService _rebuildService;
     private PartyDetail? _cachedDetail;
-    private long _lastProcessedSequence = -1;
+
+    // Sentinel for "checkpoint not yet loaded from state store"; long.MinValue is used so that a
+    // legitimate persisted sequence of 0 (some event stores number from zero) does not collide
+    // with the not-loaded state.
+    private long _lastProcessedSequence = UnloadedSequenceSentinel;
     private bool _lastSequenceLoaded;
     private volatile bool _isRebuilding;
 
@@ -45,7 +51,18 @@ public sealed partial class PartyDetailProjectionActor : Actor, IPartyDetailProj
 
         (string actorPartyId, string stateKey) = ResolveStateContext(partyId);
         ConditionalValue<PartyDetail> currentState = await StateManager.TryGetStateAsync<PartyDetail>(stateKey, default).ConfigureAwait(false);
-        PartyDetail? newState = PartyDetailProjectionHandler.Apply(actorPartyId, @event, currentState.HasValue ? currentState.Value : null);
+        PartyDetail? existing = currentState.HasValue ? currentState.Value : null;
+
+        // PartyCreated arriving for existing state is normally benign on replay, but a non-replay
+        // duplicate (or a re-create with diverging payload after erasure) is a warning condition
+        // worth surfacing. The Apply method silently returns the existing state in this case;
+        // logging here gives observability without changing semantics.
+        if (@event is PartyCreated && existing is not null)
+        {
+            Log.PartyCreatedReceivedForExistingState(_logger, actorPartyId);
+        }
+
+        PartyDetail? newState = PartyDetailProjectionHandler.Apply(actorPartyId, @event, existing);
         if (newState is not null)
         {
             await StateManager.SetStateAsync(stateKey, newState, default).ConfigureAwait(false);
@@ -59,16 +76,18 @@ public sealed partial class PartyDetailProjectionActor : Actor, IPartyDetailProj
         string eventTypeName,
         byte[] payload,
         string serializationFormat,
-        long sequenceNumber)
+        long sequenceNumber,
+        CancellationToken cancellationToken)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(partyId);
         ArgumentException.ThrowIfNullOrWhiteSpace(eventTypeName);
         ArgumentNullException.ThrowIfNull(payload);
+        cancellationToken.ThrowIfCancellationRequested();
 
         // Skip already-applied events to make replay-from-zero idempotent. The orchestrator
         // calls GetEventsAsync(0) on every command, so without this guard every prior event
         // would re-apply on every successful command.
-        await EnsureLastSequenceLoadedAsync(partyId).ConfigureAwait(false);
+        await EnsureLastSequenceLoadedAsync(partyId, cancellationToken).ConfigureAwait(false);
         if (sequenceNumber <= _lastProcessedSequence)
         {
             return;
@@ -78,7 +97,8 @@ public sealed partial class PartyDetailProjectionActor : Actor, IPartyDetailProj
         // encryption key has been destroyed; payloads have personal-data fields replaced with
         // JSON null but otherwise round-trip through the same deserializer).
         bool isJson = string.Equals(serializationFormat, "json", StringComparison.OrdinalIgnoreCase)
-            || string.Equals(serializationFormat, "json-redacted", StringComparison.OrdinalIgnoreCase);
+            || string.Equals(serializationFormat, RedactedFormat, StringComparison.OrdinalIgnoreCase);
+        bool isRedacted = string.Equals(serializationFormat, RedactedFormat, StringComparison.OrdinalIgnoreCase);
         if (!isJson)
         {
             Log.NonJsonEventDropped(_logger, partyId, eventTypeName, serializationFormat);
@@ -107,18 +127,43 @@ public sealed partial class PartyDetailProjectionActor : Actor, IPartyDetailProj
         }
         catch (JsonException ex)
         {
-            Log.PayloadDeserializationFailed(_logger, partyId, eventTypeName, ex);
+            // Resolved decision 1: skip-and-log redacted events that fail to deserialize so
+            // operations can see the drop, while letting projection delivery advance past the
+            // event. Non-redacted deserialization failures take the same path but emit a
+            // distinct event id so dashboards can separate "post-erasure tolerated drop" from
+            // "live event corruption".
+            if (isRedacted)
+            {
+                Log.RedactedEventDropped(_logger, partyId, eventTypeName, sequenceNumber, ex);
+            }
+            else
+            {
+                Log.PayloadDeserializationFailed(_logger, partyId, eventTypeName, ex);
+            }
+
+            // Advance the checkpoint so the same un-deserializable event is not retried on the
+            // next replay-from-zero. Without this, the orchestrator's foreach would replay the
+            // dropped event forever, masking forward progress.
+            await PersistLastSequenceAsync(partyId, sequenceNumber, cancellationToken).ConfigureAwait(false);
             return;
         }
 
         if (deserialized is IEventPayload eventPayload)
         {
             await HandleEventAsync(partyId, eventPayload).ConfigureAwait(false);
-            await PersistLastSequenceAsync(partyId, sequenceNumber).ConfigureAwait(false);
+            await PersistLastSequenceAsync(partyId, sequenceNumber, cancellationToken).ConfigureAwait(false);
+        }
+        else if (isRedacted)
+        {
+            // Whole-payload redaction (root-level $enc collapsed to {}) yields a default-valued
+            // instance that may not implement IEventPayload. Advance the checkpoint and log so
+            // the lifecycle can move forward.
+            Log.RedactedEventDropped(_logger, partyId, eventTypeName, sequenceNumber, null);
+            await PersistLastSequenceAsync(partyId, sequenceNumber, cancellationToken).ConfigureAwait(false);
         }
     }
 
-    private async Task EnsureLastSequenceLoadedAsync(string partyId)
+    private async Task EnsureLastSequenceLoadedAsync(string partyId, CancellationToken cancellationToken)
     {
         if (_lastSequenceLoaded)
         {
@@ -129,19 +174,23 @@ public sealed partial class PartyDetailProjectionActor : Actor, IPartyDetailProj
         string sequenceKey = $"{stateKey}:{LastSequenceStateKeySuffix}";
         try
         {
-            ConditionalValue<long> result = await StateManager.TryGetStateAsync<long>(sequenceKey, default).ConfigureAwait(false);
-            _lastProcessedSequence = result.HasValue ? result.Value : -1;
+            ConditionalValue<long> result = await StateManager.TryGetStateAsync<long>(sequenceKey, cancellationToken).ConfigureAwait(false);
+            _lastProcessedSequence = result.HasValue ? result.Value : UnloadedSequenceSentinel;
         }
-        catch
+        catch (Exception ex) when (IsDeserializationFailure(ex) || ex is KeyNotFoundException)
         {
-            // Best-effort: on read failure, assume nothing processed and let replay rebuild state.
-            _lastProcessedSequence = -1;
+            // Persisted checkpoint is missing or unreadable — treat as "no prior progress" and
+            // let replay rebuild state. Infrastructure failures (state-store outage, OOM, etc.)
+            // must propagate so the orchestrator surfaces them rather than silently degrading
+            // to replay-from-zero on every command.
+            Log.SequenceCheckpointReset(_logger, partyId, ex.Message);
+            _lastProcessedSequence = UnloadedSequenceSentinel;
         }
 
         _lastSequenceLoaded = true;
     }
 
-    private async Task PersistLastSequenceAsync(string partyId, long sequenceNumber)
+    private async Task PersistLastSequenceAsync(string partyId, long sequenceNumber, CancellationToken cancellationToken)
     {
         if (sequenceNumber <= _lastProcessedSequence)
         {
@@ -150,7 +199,14 @@ public sealed partial class PartyDetailProjectionActor : Actor, IPartyDetailProj
 
         (string _, string stateKey) = ResolveStateContext(partyId);
         string sequenceKey = $"{stateKey}:{LastSequenceStateKeySuffix}";
-        await StateManager.SetStateAsync(sequenceKey, sequenceNumber, default).ConfigureAwait(false);
+
+        // Dapr Actor framework batches all SetStateAsync writes from a single actor turn into
+        // one commit at turn end (via SaveStateAsync). The state-key write in HandleEventAsync
+        // and this checkpoint write are therefore committed atomically when the state store
+        // supports transactional writes (Redis, Cosmos, etc.). For non-transactional state
+        // stores, a host crash mid-commit could still leave state and checkpoint divergent —
+        // mitigation: the idempotent collection-mutation handlers dedup-by-id on replay.
+        await StateManager.SetStateAsync(sequenceKey, sequenceNumber, cancellationToken).ConfigureAwait(false);
         _lastProcessedSequence = sequenceNumber;
     }
 
@@ -161,6 +217,7 @@ public sealed partial class PartyDetailProjectionActor : Actor, IPartyDetailProj
     public async Task EraseAsync(string partyId)
     {
         (string actorPartyId, string stateKey) = ResolveStateContext(partyId);
+        string sequenceKey = $"{stateKey}:{LastSequenceStateKeySuffix}";
         ConditionalValue<PartyDetail> currentState = await StateManager.TryGetStateAsync<PartyDetail>(stateKey, default).ConfigureAwait(false);
         PartyDetail? erased = PartyDetailProjectionHandler.ApplyErasure(actorPartyId, currentState.HasValue ? currentState.Value : null);
         if (erased is not null)
@@ -176,6 +233,14 @@ public sealed partial class PartyDetailProjectionActor : Actor, IPartyDetailProj
             _cachedDetail = null;
             s_lastKnownDetails.TryRemove(stateKey, out _);
         }
+
+        // Always remove the companion checkpoint key on erasure. Without this, recreating a
+        // party with the same id leaves a stale `:last-sequence` marker; events with sequence
+        // numbers ≤ the stale value would be silently dropped on replay until the new stream
+        // advances past the high-water mark.
+        await StateManager.TryRemoveStateAsync(sequenceKey, default).ConfigureAwait(false);
+        _lastProcessedSequence = UnloadedSequenceSentinel;
+        _lastSequenceLoaded = false;
     }
 
     public async Task<PartyDetail?> GetDetailAsync()
@@ -184,6 +249,7 @@ public sealed partial class PartyDetailProjectionActor : Actor, IPartyDetailProj
         string[] segments = actorId.Split(':', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
         if (segments.Length < 3)
         {
+            Log.MalformedActorId(_logger, actorId, ProjectionName);
             return null;
         }
 
@@ -242,6 +308,7 @@ public sealed partial class PartyDetailProjectionActor : Actor, IPartyDetailProj
         string[] segments = actorId.Split(':', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
         if (segments.Length < 3)
         {
+            Log.MalformedActorId(_logger, actorId, ProjectionName);
             return;
         }
 
@@ -285,6 +352,7 @@ public sealed partial class PartyDetailProjectionActor : Actor, IPartyDetailProj
         string[] segments = actorId.Split(':', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
         if (segments.Length < 3)
         {
+            Log.MalformedActorId(_logger, actorId, ProjectionName);
             await base.OnActivateAsync().ConfigureAwait(false);
             return;
         }
@@ -398,5 +466,29 @@ public sealed partial class PartyDetailProjectionActor : Actor, IPartyDetailProj
             Level = LogLevel.Error,
             Message = "PartyDetail projection found an ambiguous short event-type name '{EventTypeName}' for {PartyId} (multiple types share this short name). Event dropped — promote the emitter to a full-name event type to dispatch safely.")]
         public static partial void AmbiguousEventTypeDropped(ILogger logger, string partyId, string eventTypeName);
+
+        [LoggerMessage(
+            EventId = 8307,
+            Level = LogLevel.Warning,
+            Message = "PartyDetail projection dropped redacted event {EventTypeName} for {PartyId} at sequence {SequenceNumber} (post-erasure deserialization failure). Checkpoint advanced.")]
+        public static partial void RedactedEventDropped(ILogger logger, string partyId, string eventTypeName, long sequenceNumber, Exception? exception);
+
+        [LoggerMessage(
+            EventId = 8308,
+            Level = LogLevel.Warning,
+            Message = "PartyDetail projection sequence checkpoint reset for {PartyId} (state-store read failed: {Reason}). Replay-from-zero will rebuild state.")]
+        public static partial void SequenceCheckpointReset(ILogger logger, string partyId, string reason);
+
+        [LoggerMessage(
+            EventId = 8309,
+            Level = LogLevel.Warning,
+            Message = "PartyDetail projection actor id '{ActorId}' does not match expected '{{tenant}}:{ProjectionName}:{{partyId}}' shape. Operation aborted.")]
+        public static partial void MalformedActorId(ILogger logger, string actorId, string projectionName);
+
+        [LoggerMessage(
+            EventId = 8320,
+            Level = LogLevel.Warning,
+            Message = "PartyCreated event received for {PartyId} but state already exists. Existing state preserved (replay-safe), but a non-replay duplicate or post-erasure re-create may indicate a bug.")]
+        public static partial void PartyCreatedReceivedForExistingState(ILogger logger, string partyId);
     }
 }

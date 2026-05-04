@@ -46,4 +46,17 @@ public sealed class PartyEncryptionKeyDestroyedException : KeyNotFoundException
 
     /// <summary>Gets the party id whose key has been destroyed.</summary>
     public string PartyId { get; }
+
+    /// <summary>
+    /// Returns true when <paramref name="exception"/> is exactly a <see cref="PartyEncryptionKeyDestroyedException"/>.
+    /// Uses exact-type match (not <c>is</c> pattern) because the exception's base type is
+    /// <see cref="KeyNotFoundException"/>, which is widely thrown by generic dictionary/cache lookups;
+    /// a permissive base-type check would silently route unrelated programming bugs into the
+    /// post-erasure redaction path. Future variants (e.g., key-shredded, key-expired) must be
+    /// declared as siblings rather than subclasses so they receive distinct handling.
+    /// </summary>
+    /// <param name="exception">Candidate exception, may be null.</param>
+    /// <returns><c>true</c> when the exception is exactly this type; otherwise <c>false</c>.</returns>
+    public static bool IsMatch(Exception? exception) =>
+        exception is not null && exception.GetType() == typeof(PartyEncryptionKeyDestroyedException);
 }

@@ -2,6 +2,7 @@
 
   <ItemGroup>
     <InternalsVisibleTo Include="Hexalith.Parties.CommandApi.Tests" />
+    <InternalsVisibleTo Include="Hexalith.Parties.Projections.Tests" />
   </ItemGroup>
 
   <ItemGroup>

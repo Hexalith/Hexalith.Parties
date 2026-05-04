@@ -94,7 +94,19 @@ public sealed class PartyKeyManagementService(
         ArgumentException.ThrowIfNullOrWhiteSpace(partyId);
 
         string keyPath = BuildKeyPath(tenantId, partyId, version);
-        byte[] key = await backend.ReadSecretAsync(keyPath, cancellationToken).ConfigureAwait(false);
+        byte[] key;
+        try
+        {
+            key = await backend.ReadSecretAsync(keyPath, cancellationToken).ConfigureAwait(false);
+        }
+        catch (KeyNotFoundException ex) when (ex.GetType() != typeof(PartyEncryptionKeyDestroyedException))
+        {
+            // Backends that surface a raw KeyNotFoundException (e.g., Vault "Secret not found")
+            // must be normalized to the typed exception so catch sites recognize the post-erasure
+            // condition via PartyEncryptionKeyDestroyedException.IsMatch(...).
+            throw new PartyEncryptionKeyDestroyedException(tenantId, partyId, ex);
+        }
+
         await AuditOperationAsync(KeyOperationType.Read, tenantId, partyId, version, cancellationToken).ConfigureAwait(false);
         return key;
     }

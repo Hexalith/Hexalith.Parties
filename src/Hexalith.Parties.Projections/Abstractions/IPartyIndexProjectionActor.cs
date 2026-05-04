@@ -9,7 +9,7 @@ public interface IPartyIndexProjectionActor : IActor
 {
     Task HandleEventAsync(string partyId, IEventPayload @event);
 
-    Task HandleSerializedEventAsync(string partyId, string eventTypeName, byte[] payload, string serializationFormat, long sequenceNumber);
+    Task HandleSerializedEventAsync(string partyId, string eventTypeName, byte[] payload, string serializationFormat, long sequenceNumber, CancellationToken cancellationToken);
 
     Task FlushAsync();
 

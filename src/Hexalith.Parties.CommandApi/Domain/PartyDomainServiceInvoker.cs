@@ -36,6 +36,10 @@ internal sealed partial class PartyDomainServiceInvoker(
         // accidentally retain transient state across concurrent calls. PartyAggregate.Handle
         // methods are static — the allocation cost is negligible.
         PartyAggregate aggregate = new();
+        // Re-check cancellation right before dispatch: the unprotect/replay loop above can be
+        // long-running for parties with thousands of events, and the framework's ProcessAsync
+        // may not natively observe cancellation.
+        cancellationToken.ThrowIfCancellationRequested();
         return await aggregate.ProcessAsync(command, unprotectedState).ConfigureAwait(false);
     }
 
@@ -56,10 +60,21 @@ internal sealed partial class PartyDomainServiceInvoker(
         var events = new List<EventEnvelope>(state.Events.Count);
         foreach (EventEnvelope envelope in state.Events)
         {
+            // Per-iteration cancellation: streams of thousands of events were previously
+            // un-cancellable inside this loop because only the network call observed CT.
+            cancellationToken.ThrowIfCancellationRequested();
+
             PayloadProtectionResult result = await UnprotectEnvelopeOrRedactAsync(command, envelope, cancellationToken).ConfigureAwait(false);
 
-            events.Add(result.PayloadBytes == envelope.Payload
-                    && string.Equals(result.SerializationFormat, envelope.Metadata.SerializationFormat, StringComparison.Ordinal)
+            // The "no-op" fast path is signalled by the protection service returning the same
+            // byte[] reference and the same serialization format. Reference-equality on byte[]
+            // is fragile (a future defensive-clone change would silently break the optimization
+            // and force re-allocation on every event), but format equality keeps us safe in the
+            // common case where decryption was a no-op for un-protected events.
+            bool isNoOp = ReferenceEquals(result.PayloadBytes, envelope.Payload)
+                && string.Equals(result.SerializationFormat, envelope.Metadata.SerializationFormat, StringComparison.Ordinal);
+
+            events.Add(isNoOp
                 ? envelope
                 : new EventEnvelope(
                     envelope.Metadata with { SerializationFormat = result.SerializationFormat },
@@ -93,7 +108,7 @@ internal sealed partial class PartyDomainServiceInvoker(
                     cancellationToken)
                 .ConfigureAwait(false);
         }
-        catch (Exception ex) when (IsKeyDestroyedFailure(ex))
+        catch (Exception ex) when (PartyEncryptionKeyDestroyedException.IsMatch(ex))
         {
             LogRehydrationFallbackToRedaction(
                 command.AggregateIdentity.TenantId,
@@ -116,7 +131,7 @@ internal sealed partial class PartyDomainServiceInvoker(
                 .UnprotectSnapshotStateAsync(command.AggregateIdentity, snapshotState, cancellationToken)
                 .ConfigureAwait(false);
         }
-        catch (Exception ex) when (IsKeyDestroyedFailure(ex))
+        catch (Exception ex) when (PartyEncryptionKeyDestroyedException.IsMatch(ex))
         {
             LogSnapshotRehydrationFallbackToRedaction(
                 command.AggregateIdentity.TenantId,
@@ -125,29 +140,6 @@ internal sealed partial class PartyDomainServiceInvoker(
                 ex.Message);
             return null;
         }
-    }
-
-    /// <summary>
-    /// Recognises the specific failures thrown when a party's encryption key
-    /// has been destroyed (post-erasure). Prefers the typed
-    /// <see cref="PartyEncryptionKeyDestroyedException"/> emitted by the protection / key
-    /// management services. The legacy message-text fallback covers older throw sites that
-    /// have not yet been migrated and is locale-fragile; remove once every throw site uses
-    /// the typed exception. All other failures propagate so transient KMS or structural
-    /// errors are not silently swallowed by the redaction fallback path.
-    /// </summary>
-    private static bool IsKeyDestroyedFailure(Exception ex)
-    {
-        if (ex is PartyEncryptionKeyDestroyedException)
-        {
-            return true;
-        }
-
-        return (ex is InvalidOperationException or KeyNotFoundException)
-            && (ex.Message.Contains("No encryption key", StringComparison.OrdinalIgnoreCase)
-            || ex.Message.Contains("key destroyed", StringComparison.OrdinalIgnoreCase)
-            || ex.Message.Contains("key has been deleted", StringComparison.OrdinalIgnoreCase)
-            || ex.Message.Contains("Secret not found", StringComparison.OrdinalIgnoreCase));
     }
 
     [LoggerMessage(Level = LogLevel.Warning, Message = "Falling back to redacted event payload during rehydration for {TenantId}/{PartyId} event {EventTypeName}: {ExceptionType}: {Error}")]

@@ -149,8 +149,19 @@ public sealed class PartyDetailProjectionHandler
         };
     }
 
-    private static PartyDetail HandleContactChannelAdded(PartyDetail state, ContactChannelAdded e)
+    private static PartyDetail? HandleContactChannelAdded(PartyDetail state, ContactChannelAdded e)
     {
+        // Idempotent on replay: if the channel id is already present, skip the append rather
+        // than duplicate it. Combined with the per-actor sequence checkpoint, this protects
+        // against a host crash between state-key persistence and checkpoint persistence
+        // (Dapr batches both writes per turn, but non-transactional state stores can still
+        // surface a divergence). The index handler's HandleContactChannelRemoved relies on
+        // .Where(c.Id != e.ContactChannelId) so dedup-by-id is the canonical key.
+        if (state.ContactChannels.Any(c => c.Id == e.ContactChannelId))
+        {
+            return null;
+        }
+
         ContactChannel channel = new()
         {
             Id = e.ContactChannelId,
@@ -244,8 +255,14 @@ public sealed class PartyDetailProjectionHandler
         };
     }
 
-    private static PartyDetail HandleIdentifierAdded(PartyDetail state, IdentifierAdded e)
+    private static PartyDetail? HandleIdentifierAdded(PartyDetail state, IdentifierAdded e)
     {
+        // Idempotent on replay (see HandleContactChannelAdded for full rationale).
+        if (state.Identifiers.Any(i => i.Id == e.IdentifierId))
+        {
+            return null;
+        }
+
         PartyIdentifier identifier = new()
         {
             Id = e.IdentifierId,
@@ -268,8 +285,14 @@ public sealed class PartyDetailProjectionHandler
         };
     }
 
-    private static PartyDetail HandleConsentRecorded(PartyDetail state, ConsentRecorded e)
+    private static PartyDetail? HandleConsentRecorded(PartyDetail state, ConsentRecorded e)
     {
+        // Idempotent on replay (see HandleContactChannelAdded for full rationale).
+        if (state.ConsentRecords.Any(c => c.ConsentId == e.ConsentId))
+        {
+            return null;
+        }
+
         ConsentRecord record = new()
         {
             ConsentId = e.ConsentId,
