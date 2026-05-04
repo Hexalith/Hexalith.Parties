@@ -1,6 +1,6 @@
 # Story 11.2: Tenants Event Consumption and Local Access Projection
 
-Status: ready-for-dev
+Status: review
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -19,55 +19,55 @@ so that authorization decisions can be made locally without polling.
 
 ## Tasks / Subtasks
 
-- [ ] Register the Tenants client event infrastructure in Parties CommandApi (AC: 1)
-  - [ ] Add the required project/package reference from `src/Hexalith.Parties.CommandApi` to `Hexalith.Tenants.Client`; add `Hexalith.Tenants.Contracts` only where role/status types are directly needed.
-  - [ ] Call `Hexalith.Tenants.Client.Registration.AddHexalithTenants()` from `PartiesServiceCollectionExtensions.AddParties(...)` or a small dedicated extension invoked by it.
-  - [ ] Bind the existing `Tenants` configuration section so `PubSubName`, `TopicName`, and `CommandApiAppId` match Story 11.1 configuration. Preserve the default topic `system.tenants.events` unless planning/configuration explicitly changes it.
-  - [ ] Keep `Hexalith.Parties.Contracts` free of Tenants runtime dependencies.
+- [x] Register the Tenants client event infrastructure in Parties CommandApi (AC: 1)
+  - [x] Add the required project/package reference from `src/Hexalith.Parties.CommandApi` to `Hexalith.Tenants.Client`; add `Hexalith.Tenants.Contracts` only where role/status types are directly needed.
+  - [x] Call `Hexalith.Tenants.Client.Registration.AddHexalithTenants()` from `PartiesServiceCollectionExtensions.AddParties(...)` or a small dedicated extension invoked by it.
+  - [x] Bind the existing `Tenants` configuration section so `PubSubName`, `TopicName`, and `CommandApiAppId` match Story 11.1 configuration. Preserve the default topic `system.tenants.events` unless planning/configuration explicitly changes it.
+  - [x] Keep `Hexalith.Parties.Contracts` free of Tenants runtime dependencies.
 
-- [ ] Map the DAPR tenant event subscription endpoint (AC: 1)
-  - [ ] Add `app.UseCloudEvents()` before endpoint mapping and `app.MapSubscribeHandler()` before or with the subscription endpoint mapping in `src/Hexalith.Parties.CommandApi/Program.cs`.
-  - [ ] Call `app.MapTenantEventSubscription()` from `Hexalith.Tenants.Client.Subscription` so DAPR subscribes Parties to the configured pub/sub/topic.
-  - [ ] Preserve the existing middleware and endpoint order for GDPR warning, correlation, exception handling, degraded response, authentication, controllers, MCP, actor handlers, and default health endpoints.
-  - [ ] Verify the DAPR sidecar app id for Parties CommandApi can subscribe to the Tenants topic under `src/Hexalith.Parties.AppHost/DaprComponents/accesscontrol.yaml` if topic scoping is enforced.
+- [x] Map the DAPR tenant event subscription endpoint (AC: 1)
+  - [x] Add `app.UseCloudEvents()` before endpoint mapping and `app.MapSubscribeHandler()` before or with the subscription endpoint mapping in `src/Hexalith.Parties.CommandApi/Program.cs`.
+  - [x] Call `app.MapTenantEventSubscription()` from `Hexalith.Tenants.Client.Subscription` so DAPR subscribes Parties to the configured pub/sub/topic.
+  - [x] Preserve the existing middleware and endpoint order for GDPR warning, correlation, exception handling, degraded response, authentication, controllers, MCP, actor handlers, and default health endpoints.
+  - [x] Verify the DAPR sidecar app id for Parties CommandApi can subscribe to the Tenants topic under `src/Hexalith.Parties.AppHost/DaprComponents/accesscontrol.yaml` if topic scoping is enforced.
 
-- [ ] Provide a Parties-facing tenant access service boundary (AC: 2, 3)
-  - [ ] Add `ITenantAccessService` under `src/Hexalith.Parties.CommandApi/Authorization` or an equivalent CommandApi-owned namespace. This is the only service Story 11.3 should depend on for REST/MCP authorization.
-  - [ ] Add a concrete implementation backed by `Hexalith.Tenants.Client.Projections.ITenantProjectionStore`.
-  - [ ] Model access checks with explicit operation intent, for example `TenantAccessRequirement.Read`, `Write`, and `Admin`, without inventing new Tenants roles.
-  - [ ] Map Tenants roles as: `TenantReader` permits read/search only, `TenantContributor` permits read/write party operations but not admin, and `TenantOwner` permits read/write/admin party operations. Removed, unknown, unmapped, or missing roles grant no Parties permission. If global administrator support is needed, defer the exact policy unless Tenants client exposes it directly.
-  - [ ] Fail closed when the tenant state is missing, disabled, unknown, the user id is missing, the user is not a member, or the role is insufficient. Do not invent a stale-state TTL or timestamp in Parties; if the Tenants client exposes explicit freshness metadata during implementation, stale state must fail closed with a structured reason code.
-  - [ ] Resolve tenant and user identity from existing request, MCP, plugin context, or normalized claims inputs supplied to the service; do not add tenant id fields to Parties command contracts.
-  - [ ] Return a small structured result such as allowed/denied plus reason code; avoid throwing for expected authorization denials so REST/MCP can translate consistently in Story 11.3.
+- [x] Provide a Parties-facing tenant access service boundary (AC: 2, 3)
+  - [x] Add `ITenantAccessService` under `src/Hexalith.Parties.CommandApi/Authorization` or an equivalent CommandApi-owned namespace. This is the only service Story 11.3 should depend on for REST/MCP authorization.
+  - [x] Add a concrete implementation backed by `Hexalith.Tenants.Client.Projections.ITenantProjectionStore`.
+  - [x] Model access checks with explicit operation intent, for example `TenantAccessRequirement.Read`, `Write`, and `Admin`, without inventing new Tenants roles.
+  - [x] Map Tenants roles as: `TenantReader` permits read/search only, `TenantContributor` permits read/write party operations but not admin, and `TenantOwner` permits read/write/admin party operations. Removed, unknown, unmapped, or missing roles grant no Parties permission. If global administrator support is needed, defer the exact policy unless Tenants client exposes it directly.
+  - [x] Fail closed when the tenant state is missing, disabled, unknown, the user id is missing, the user is not a member, or the role is insufficient. Do not invent a stale-state TTL or timestamp in Parties; if the Tenants client exposes explicit freshness metadata during implementation, stale state must fail closed with a structured reason code.
+  - [x] Resolve tenant and user identity from existing request, MCP, plugin context, or normalized claims inputs supplied to the service; do not add tenant id fields to Parties command contracts.
+  - [x] Return a small structured result such as allowed/denied plus reason code; avoid throwing for expected authorization denials so REST/MCP can translate consistently in Story 11.3.
 
-- [ ] Ensure disabled tenants and removed users affect subsequent checks (AC: 2, 3)
-  - [ ] Rely on `TenantProjectionEventHandler` for `TenantDisabled`, `TenantEnabled`, `UserAddedToTenant`, `UserRemovedFromTenant`, `UserRoleChanged`, `TenantConfigurationSet`, and `TenantConfigurationRemoved` before writing custom event handlers.
-  - [ ] Consume the Tenants client-supported event contract only: `TenantCreated`, `TenantUpdated`, `TenantDisabled`, `TenantEnabled`, `UserAddedToTenant`, `UserRemovedFromTenant`, `UserRoleChanged`, `TenantConfigurationSet`, and `TenantConfigurationRemoved` on the configured `PubSubName`/`TopicName`. Do not invent new Tenants event names, CloudEvent types, or schema versions in Parties.
-  - [ ] Add only Parties-specific event handlers if a Parties-only configuration key must trigger cache invalidation or diagnostics beyond the Tenants local projection state.
-  - [ ] Preserve the Tenants client deduplication behavior in `TenantEventProcessor`; do not add a second message-id cache unless a durable store is explicitly required.
-  - [ ] Treat unknown event types as non-fatal skips and invalid payloads as processing failures, matching the Tenants client endpoint behavior.
-  - [ ] Use Tenants-provided message id and sequence metadata where exposed by the public client pipeline; older or duplicate events must not intentionally overwrite newer local projection state. If the current Tenants projection API cannot enforce ordering beyond its built-in `MessageId` deduplication, record that limitation in docs/tests rather than adding a separate ordering cache.
+- [x] Ensure disabled tenants and removed users affect subsequent checks (AC: 2, 3)
+  - [x] Rely on `TenantProjectionEventHandler` for `TenantDisabled`, `TenantEnabled`, `UserAddedToTenant`, `UserRemovedFromTenant`, `UserRoleChanged`, `TenantConfigurationSet`, and `TenantConfigurationRemoved` before writing custom event handlers.
+  - [x] Consume the Tenants client-supported event contract only: `TenantCreated`, `TenantUpdated`, `TenantDisabled`, `TenantEnabled`, `UserAddedToTenant`, `UserRemovedFromTenant`, `UserRoleChanged`, `TenantConfigurationSet`, and `TenantConfigurationRemoved` on the configured `PubSubName`/`TopicName`. Do not invent new Tenants event names, CloudEvent types, or schema versions in Parties.
+  - [x] Add only Parties-specific event handlers if a Parties-only configuration key must trigger cache invalidation or diagnostics beyond the Tenants local projection state.
+  - [x] Preserve the Tenants client deduplication behavior in `TenantEventProcessor`; do not add a second message-id cache unless a durable store is explicitly required.
+  - [x] Treat unknown event types as non-fatal skips and invalid payloads as processing failures, matching the Tenants client endpoint behavior.
+  - [x] Use Tenants-provided message id and sequence metadata where exposed by the public client pipeline; older or duplicate events must not intentionally overwrite newer local projection state. If the current Tenants projection API cannot enforce ordering beyond its built-in `MessageId` deduplication, record that limitation in docs/tests rather than adding a separate ordering cache.
 
-- [ ] Document eventual consistency and synchronous enforcement behavior (AC: 4)
-  - [ ] Update the developer-facing documentation created by earlier stories, most likely `README.md` and/or `docs/`, to explain that Parties authorizes from a local Tenants projection updated by DAPR pub/sub.
-  - [ ] State that a just-disabled tenant or just-removed user may be accepted until the event is consumed unless a synchronous Tenants/EventStore authorization plugin is enabled on the command gateway.
-  - [ ] Document the fail-closed behavior when local projection state is missing, unknown, disabled, or explicitly stale according to any public Tenants freshness marker available during implementation.
-  - [ ] Do not claim strong immediate consistency for REST or MCP unless the synchronous enforcement path is actually implemented and configured.
+- [x] Document eventual consistency and synchronous enforcement behavior (AC: 4)
+  - [x] Update the developer-facing documentation created by earlier stories, most likely `README.md` and/or `docs/`, to explain that Parties authorizes from a local Tenants projection updated by DAPR pub/sub.
+  - [x] State that a just-disabled tenant or just-removed user may be accepted until the event is consumed unless a synchronous Tenants/EventStore authorization plugin is enabled on the command gateway.
+  - [x] Document the fail-closed behavior when local projection state is missing, unknown, disabled, or explicitly stale according to any public Tenants freshness marker available during implementation.
+  - [x] Do not claim strong immediate consistency for REST or MCP unless the synchronous enforcement path is actually implemented and configured.
 
-- [ ] Add focused tests for event projection and access decisions (AC: 1, 2, 3)
-  - [ ] Add unit tests in `tests/Hexalith.Parties.CommandApi.Tests` for `ITenantAccessService` allowed/denied outcomes using fake or in-memory `ITenantProjectionStore`.
-  - [ ] Cover active tenant with reader/contributor/owner, disabled tenant denied, removed user denied, insufficient role denied, unknown tenant denied, missing user id denied, and unknown or unmapped role denied.
-  - [ ] Cover the role matrix explicitly: reader allows read only; contributor allows read and write but not admin; owner allows read, write, and admin.
-  - [ ] Add subscription/registration tests that prove `AddHexalithTenants` registers the projection store, event processor, and handlers without requiring a running DAPR sidecar.
-  - [ ] Add endpoint-level tests for the subscription mapping if existing WebApplicationFactory infrastructure can assert routing, configured pub/sub/topic metadata, and CloudEvents envelope handling without a full sidecar.
-  - [ ] Cover duplicate message id behavior, unknown event type skips, invalid payload failure, and the limitation or behavior of event ordering based on the public Tenants client API available during implementation.
-  - [ ] Cover replay and restart behavior explicitly: reprocessing the same message id after an in-memory projection restart must be documented as a single-instance limitation unless a durable projection/deduplication store is implemented by configuration.
-  - [ ] Keep Tier 1 tests free of DAPR runtime dependencies.
+- [x] Add focused tests for event projection and access decisions (AC: 1, 2, 3)
+  - [x] Add unit tests in `tests/Hexalith.Parties.CommandApi.Tests` for `ITenantAccessService` allowed/denied outcomes using fake or in-memory `ITenantProjectionStore`.
+  - [x] Cover active tenant with reader/contributor/owner, disabled tenant denied, removed user denied, insufficient role denied, unknown tenant denied, missing user id denied, and unknown or unmapped role denied.
+  - [x] Cover the role matrix explicitly: reader allows read only; contributor allows read and write but not admin; owner allows read, write, and admin.
+  - [x] Add subscription/registration tests that prove `AddHexalithTenants` registers the projection store, event processor, and handlers without requiring a running DAPR sidecar.
+  - [x] Add endpoint-level tests for the subscription mapping if existing WebApplicationFactory infrastructure can assert routing, configured pub/sub/topic metadata, and CloudEvents envelope handling without a full sidecar.
+  - [x] Cover duplicate message id behavior, unknown event type skips, invalid payload failure, and the limitation or behavior of event ordering based on the public Tenants client API available during implementation.
+  - [x] Cover replay and restart behavior explicitly: reprocessing the same message id after an in-memory projection restart must be documented as a single-instance limitation unless a durable projection/deduplication store is implemented by configuration.
+  - [x] Keep Tier 1 tests free of DAPR runtime dependencies.
 
-- [ ] Validate build and affected tests
-  - [ ] Run `dotnet test tests/Hexalith.Parties.CommandApi.Tests/Hexalith.Parties.CommandApi.Tests.csproj --configuration Release`.
-  - [ ] Run `dotnet build Hexalith.Parties.slnx --configuration Release`.
-  - [ ] If AppHost DAPR access-control scopes are changed, run or document an Aspire local smoke check that verifies the `commandapi` app can subscribe to `system.tenants.events`.
+- [x] Validate build and affected tests
+  - [x] Run `dotnet test tests/Hexalith.Parties.CommandApi.Tests/Hexalith.Parties.CommandApi.Tests.csproj --configuration Release`.
+  - [x] Run `dotnet build Hexalith.Parties.slnx --configuration Release`.
+  - [x] If AppHost DAPR access-control scopes are changed, run or document an Aspire local smoke check that verifies the `commandapi` app can subscribe to `system.tenants.events`.
 
 ## Dev Notes
 
@@ -232,12 +232,47 @@ GPT-5 Codex
 
 ### Debug Log References
 
+- 2026-05-04: Red phase confirmed missing `Hexalith.Parties.CommandApi.Authorization` boundary via CommandApi test compile failure.
+- 2026-05-04: Aligned `Dapr.AspNetCore` central package version to 1.17.7 because `Hexalith.Tenants.Client` requires >= 1.17.7.
+- 2026-05-04: Verified `src/Hexalith.Parties.AppHost/DaprComponents/accesscontrol.yaml` does not enforce DAPR pub/sub topic scoping; no AppHost access-control change was required.
+- 2026-05-04: `dotnet test tests/Hexalith.Parties.CommandApi.Tests/Hexalith.Parties.CommandApi.Tests.csproj --configuration Release --no-build` passed: 304 tests.
+- 2026-05-04: `dotnet build Hexalith.Parties.slnx --configuration Release` passed with 0 warnings and 0 errors.
+
 ### Completion Notes List
 
 - Ultimate context engine analysis completed - comprehensive developer guide created.
 - Party-mode review completed on 2026-05-03; story clarified before development.
+- Implemented Tenants client registration and explicit `Tenants` configuration defaults in CommandApi while keeping Parties contracts free of Tenants dependencies.
+- Mapped the public Tenants DAPR CloudEvents subscription endpoint through `UseCloudEvents()`, `MapSubscribeHandler()`, and `MapTenantEventSubscription()`.
+- Added `ITenantAccessService` with read/write/admin requirements, stable fail-closed denial reasons, and Tenants role mapping over `ITenantProjectionStore`.
+- Added sidecar-free tests for access decisions, role matrix, registration, event processing, duplicate/unknown/invalid payload behavior, subscription topic metadata, and Contracts dependency boundaries.
+- Documented eventual consistency, fail-closed access behavior, operational troubleshooting, and the in-memory projection/deduplication replay limitation.
 
 ### File List
+
+- Directory.Packages.props
+- README.md
+- _bmad-output/implementation-artifacts/11-2-tenants-event-consumption-and-local-access-projection.md
+- _bmad-output/implementation-artifacts/sprint-status.yaml
+- docs/getting-started.md
+- docs/tenant-access-projection.md
+- src/Hexalith.Parties.CommandApi/Authorization/ITenantAccessService.cs
+- src/Hexalith.Parties.CommandApi/Authorization/TenantAccessDecision.cs
+- src/Hexalith.Parties.CommandApi/Authorization/TenantAccessDenialReason.cs
+- src/Hexalith.Parties.CommandApi/Authorization/TenantAccessRequirement.cs
+- src/Hexalith.Parties.CommandApi/Authorization/TenantAccessService.cs
+- src/Hexalith.Parties.CommandApi/Extensions/PartiesServiceCollectionExtensions.cs
+- src/Hexalith.Parties.CommandApi/Hexalith.Parties.CommandApi.csproj
+- src/Hexalith.Parties.CommandApi/Program.cs
+- src/Hexalith.Parties.CommandApi/appsettings.json
+- tests/Hexalith.Parties.CommandApi.Tests/Authorization/TenantAccessServiceTests.cs
+- tests/Hexalith.Parties.CommandApi.Tests/FitnessTests/ContractsArchitectureFitnessTests.cs
+- tests/Hexalith.Parties.CommandApi.Tests/Hexalith.Parties.CommandApi.Tests.csproj
+- tests/Hexalith.Parties.CommandApi.Tests/Tenants/TenantEventInfrastructureTests.cs
+
+### Change Log
+
+- 2026-05-04: Completed Story 11.2 Tenants event consumption and local access projection; status moved to review.
 
 ### Party-Mode Review
 

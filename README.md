@@ -11,6 +11,7 @@ Hexalith.Parties is a ready-to-deploy party management microservice that lets yo
 - **MCP AI Tools** -- Five Model Context Protocol tools (`create_party`, `get_party`, `find_parties`, `update_party`, `delete_party`) for AI assistant integration
 - **NuGet Client Package** -- Typed `IPartiesCommandClient` and `IPartiesQueryClient` interfaces for .NET service-to-service calls
 - **Multi-Tenant** -- Tenant isolation via JWT claims, enforced at every layer
+- **Tenants Projection** -- Local event-fed cache of Hexalith.Tenants lifecycle, membership, role, and configuration state for fail-closed access checks
 - **.NET Aspire** -- One-command local deployment with dashboard, DAPR sidecars, and optional Keycloak
 
 ## Quick Start
@@ -26,6 +27,7 @@ Open the Aspire dashboard (URL shown in terminal output) to verify all resources
 ## Documentation
 
 - [Getting Started Guide](docs/getting-started.md) -- Deploy and send your first command in under 30 minutes
+- [Tenants Access Projection](docs/tenant-access-projection.md) -- Event-driven local tenant access state, consistency window, and fail-closed rules
 - [Architecture Overview](_bmad-output/planning-artifacts/architecture.md) -- System topology and design decisions
 - API Reference -- Available at `/openapi/v1.json` (Swagger UI in development mode)
 

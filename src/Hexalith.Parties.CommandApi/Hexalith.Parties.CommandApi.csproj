@@ -16,6 +16,7 @@
     <ProjectReference Include="..\Hexalith.Parties.Security\Hexalith.Parties.Security.csproj" />
     <ProjectReference Include="..\Hexalith.Parties.ServiceDefaults\Hexalith.Parties.ServiceDefaults.csproj" />
     <ProjectReference Include="..\..\Hexalith.EventStore\src\Hexalith.EventStore.Server\Hexalith.EventStore.Server.csproj" />
+    <ProjectReference Include="..\..\Hexalith.Tenants\src\Hexalith.Tenants.Client\Hexalith.Tenants.Client.csproj" />
   </ItemGroup>
 
   <ItemGroup>

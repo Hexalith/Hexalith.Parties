@@ -49,6 +49,8 @@ The terminal output will display a URL for the **Aspire dashboard** (typically `
 - **DAPR sidecar** -- event store and actor runtime
 - **Keycloak** (port 8180) -- OIDC provider for authentication (enabled by default)
 
+CommandApi also subscribes to Hexalith.Tenants events through DAPR pub/sub and maintains a local tenant access projection. Access checks that use this projection fail closed when tenant/user state is missing, disabled, or insufficient. Because the projection is event-fed, a just-disabled tenant or removed user may remain accepted until the corresponding event is consumed unless a synchronous Tenants/EventStore authorization plugin is enabled. See [Tenants Access Projection](tenant-access-projection.md) for the operational details.
+
 ### Obtain an Authentication Token
 
 Keycloak is enabled by default. The AppHost imports a development realm with a public client named `hexalith-parties` and test users, so you can get a token immediately.
@@ -442,6 +444,12 @@ Stop conflicting processes or configure alternative ports in `launchSettings.jso
 **Symptom:** Party created successfully (202) but GET returns 404.
 
 **Cause:** Event-sourced projections need a moment to process. Wait a few seconds and retry. If the issue persists, check the Aspire dashboard for actor health.
+
+### Tenants Projection Lag
+
+**Symptom:** Tenant access decisions do not reflect a recent tenant disablement, membership removal, or role change.
+
+**Cause:** CommandApi authorizes from a local Tenants projection updated by DAPR pub/sub. Verify DAPR sidecar health, the `system.tenants.events` subscription, Tenants event publishing, and projection replay/rebuild options available in your deployment.
 
 ---
 

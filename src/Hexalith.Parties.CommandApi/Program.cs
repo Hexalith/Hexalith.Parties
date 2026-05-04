@@ -2,6 +2,7 @@ using Hexalith.Parties.CommandApi.Extensions;
 using Hexalith.Parties.CommandApi.HealthChecks;
 using Hexalith.Parties.CommandApi.Middleware;
 using Hexalith.Parties.ServiceDefaults;
+using Hexalith.Tenants.Client.Subscription;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
@@ -42,7 +43,10 @@ app.UseExceptionHandler();
 app.UseMiddleware<DegradedResponseMiddleware>();
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseCloudEvents();
+app.MapSubscribeHandler();
 app.MapControllers();
+app.MapTenantEventSubscription();
 app.MapMcp().RequireAuthorization();
 app.MapActorsHandlers();
 app.MapDefaultEndpoints();                    // Health checks: /health, /alive, /ready

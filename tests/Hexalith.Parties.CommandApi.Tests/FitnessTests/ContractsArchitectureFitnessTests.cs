@@ -22,4 +22,23 @@ public class ContractsArchitectureFitnessTests
 
         projectXml.ShouldNotContain("Hexalith.Memories", Case.Insensitive);
     }
+
+    [Fact]
+    public void ContractsProjectDoesNotReferenceTenantsAssemblies()
+    {
+        string projectPath = Path.GetFullPath(Path.Combine(
+            AppContext.BaseDirectory,
+            "..",
+            "..",
+            "..",
+            "..",
+            "..",
+            "src",
+            "Hexalith.Parties.Contracts",
+            "Hexalith.Parties.Contracts.csproj"));
+
+        string projectXml = File.ReadAllText(projectPath);
+
+        projectXml.ShouldNotContain("Hexalith.Tenants", Case.Insensitive);
+    }
 }
