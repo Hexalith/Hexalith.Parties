@@ -15,8 +15,8 @@ so that users cannot manage party data for inactive or unauthorized tenants.
 1. Given a REST command or query endpoint is called, when the request reaches Parties, then the endpoint validates tenant access through `ITenantAccessService`.
 2. Given an MCP tool is called, when the tool resolves session tenant context, then the tool validates tenant access through the same `ITenantAccessService` and does not rely only on `McpSessionContext.Tenant`.
 3. Given a Parties operation requires authorization, when access is evaluated, then role permissions are cumulative: `TenantReader` permits read/search operations, `TenantContributor` permits read/search plus create/update/deactivate/reactivate operations, and `TenantOwner` permits read/search, write operations, and administrative party operations.
-4. Given a request has missing tenant, missing authenticated user, inactive tenant, missing membership, insufficient role, or stale/unknown tenant state, when the request is evaluated, then Parties rejects it with standardized ProblemDetails or MCP errors using the same safe reason-code vocabulary across REST and MCP.
-5. Given a command payload contains tenant information, when the payload is validated, then trusted tenant identity comes only from authenticated route/session/server context; payload tenant values are never authorization inputs, cannot override trusted context, and conflicting payload tenant values are rejected with validation/problem details.
+4. Given a request has missing tenant, missing authenticated user, inactive tenant, missing membership, insufficient role, authorization store failure, or stale/unknown tenant state, when the request is evaluated, then Parties rejects it with standardized ProblemDetails or MCP errors using the same safe reason-code vocabulary across REST and MCP.
+5. Given a command payload contains tenant information, when the payload is validated, then trusted tenant identity comes only from authenticated route/session/server context; payload tenant values are never authorization inputs, cannot override trusted context, and conflicting payload tenant values are rejected with validation/problem details before any projection read or command dispatch.
 
 ## Tasks / Subtasks
 
@@ -55,7 +55,7 @@ so that users cannot manage party data for inactive or unauthorized tenants.
 
 - [ ] Enforce tenant access on MCP write tools (AC: 2, 3, 4, 5)
   - [ ] Require `Write` in `create_party`, `update_party`, and `delete_party` before validating command payloads, reading current projection state for patch merge, or routing commands.
-  - [ ] Replace the hard-coded `UserId = "mcp-agent"` in MCP `SubmitCommand` creation with the authenticated user id captured from the session when available.
+  - [ ] Replace the hard-coded `UserId = "mcp-agent"` in MCP `SubmitCommand` creation with the authenticated user id captured from the session; if no usable authenticated user id is available, deny the tool call as `missing-user` before creating `SubmitCommand`.
   - [ ] Continue to use `McpSessionContext.Tenant` only as the requested tenant context; it is not sufficient authorization without `ITenantAccessService`.
   - [ ] Do not add tenant id parameters to MCP tool schemas. Tenant context must come from the authenticated transport/session.
 
@@ -63,6 +63,7 @@ so that users cannot manage party data for inactive or unauthorized tenants.
   - [ ] Centralize REST denial translation so Parties returns consistent ProblemDetails type URIs, titles, status codes, correlation id extension, and request path instance values.
   - [ ] Use stable reason codes suitable for tests and troubleshooting, for example `missing-tenant`, `missing-user`, `unknown-tenant`, `tenant-disabled`, `not-member`, `insufficient-role`, and `tenant-state-stale`.
   - [ ] Return `401` only for missing or unusable authenticated tenant/user context; return `403` for known authorization denials such as unknown tenant projection, inactive tenant, missing membership, insufficient role, stale tenant state, and disabled tenant.
+  - [ ] Treat Tenants projection/access-service exceptions, unavailable local projection state, and unreadable tenant authority data as fail-closed denials with a safe stale/unknown-state reason code; do not refresh from Tenants HTTP/API services on the request path.
   - [ ] Keep denial details operationally useful but safe; do not include full claim sets, membership dictionaries, or personal party data.
   - [ ] For MCP tools, throw errors with the same reason-code vocabulary in the message or structured payload shape already used by the MCP layer.
 
@@ -79,6 +80,7 @@ so that users cannot manage party data for inactive or unauthorized tenants.
   - [ ] Add command endpoint tests proving reader cannot create/update/deactivate and contributor can write.
   - [ ] Add admin endpoint tests proving contributor cannot run admin operations and owner can.
   - [ ] Add MCP tool tests using faked `ITenantAccessService` and `McpSessionContext` to prove every tool calls authorization before projection reads or command routing.
+  - [ ] Add call-order regression tests with faked projection actors/dispatchers proving denied REST and MCP requests do not read projections, merge patches, submit commands, or execute admin side effects.
   - [ ] Add regression tests proving command body tenant values, if present on any request model, do not influence the effective tenant.
   - [ ] Add spoofing regression tests proving conflicting payload tenant values are rejected and cannot redirect authorization context.
   - [ ] Add architectural regression coverage proving `Hexalith.Parties.Contracts` remains free of Tenants dependencies and EventStore actor/projection key formats are unchanged.
@@ -166,6 +168,14 @@ The same proposal says `Hexalith.Parties.Contracts` must remain free of Tenants 
 - Keep REST and MCP behavior consistent: same requirement mapping, same deny-by-default behavior, and same reason-code vocabulary.
 - If global administrator support is needed for party admin operations, defer the exact policy unless the Tenants client exposes it directly. Do not infer global admin from a local Parties role claim.
 
+### Authorization Call Order and State Freshness
+
+- REST queries must authorize before actor id construction that would disclose scoped projection existence through timing, response shape, or logs.
+- REST command helpers must authorize before personal-data guard checks, current-state projection reads, patch merge reads, and `SubmitCommand` construction.
+- MCP tools must treat missing session user id the same as REST missing authenticated user context; do not fall back to `mcp-agent` for audit identity or authorization.
+- Access-service failures, missing local tenant projections, and stale tenant state must deny with a stable safe reason code. This story must not add request-path Tenants API polling, background repair, or cache refresh behavior.
+- Denial logging may include correlation id, tenant id from trusted context, operation name, requirement, and reason code; it must not include raw tokens, full claim sets, member lists, or party personal data.
+
 ### Party-Mode Review Clarifications
 
 The 2026-05-03 party-mode review clarified these pre-development decisions:
@@ -175,6 +185,7 @@ The 2026-05-03 party-mode review clarified these pre-development decisions:
 - Missing authenticated tenant or user context maps to `401`; inactive tenant, unknown tenant projection, missing membership, insufficient role, disabled tenant, and stale tenant state map to `403` unless an existing framework convention requires a more specific MCP error wrapper.
 - Payload tenant values are not authorization inputs. A conflicting payload tenant must be rejected rather than used to switch context.
 - Story 11.3 must not introduce Tenants event handling, Tenants projection schema changes, EventStore actor identity changes, or per-request Tenants HTTP/API polling.
+- Advanced elicitation on 2026-05-04 tightened fail-closed behavior for access-service failures, MCP missing-user handling, authorization-before-side-effect ordering, and safe denial observability.
 
 ### Testing Requirements
 
@@ -183,6 +194,7 @@ The 2026-05-03 party-mode review clarified these pre-development decisions:
 - Test every REST query and command path through either endpoint tests or shared-helper tests that prove authorization occurs before projection actor access or command routing.
 - Test admin endpoints separately because they have both ASP.NET `Admin` policy and Tenants-backed `Admin` access.
 - Test MCP tools with faked services so no DAPR sidecar is needed.
+- Test fail-closed behavior for access-service exceptions or unavailable local tenant state, and assert the response still uses safe reason-code vocabulary without Tenants HTTP/API polling.
 - Retain existing architectural fitness tests, especially MCP no-event-type references and dependency direction checks.
 
 ### Latest Technical Information
@@ -246,6 +258,7 @@ GPT-5 Codex
 
 - Ultimate context engine analysis completed - comprehensive developer guide created.
 - Party-mode review completed on 2026-05-03; story clarified before development.
+- Advanced elicitation completed on 2026-05-04; story hardened for fail-closed authorization ordering and MCP missing-user behavior.
 
 ### File List
 
@@ -270,4 +283,27 @@ GPT-5 Codex
 - Findings deferred:
   - Global administrator or service-principal bypass policy remains deferred unless the Tenants client exposes an explicit consumer authorization contract.
   - Exact MCP wrapper/error type names remain implementation-specific, but must carry the shared reason-code vocabulary.
+- Final recommendation: ready-for-dev
+
+### Advanced Elicitation
+
+- Date: 2026-05-04T14:10:30.2106439+02:00
+- Selected story key: 11-3-rest-and-mcp-tenant-authorization-enforcement
+- Command/skill invocation used: `/bmad-advanced-elicitation 11-3-rest-and-mcp-tenant-authorization-enforcement`
+- Batch 1 method names: Red Team vs Blue Team; Failure Mode Analysis; Security Audit Personas; Self-Consistency Validation; Architecture Decision Records
+- Reshuffled Batch 2 method names: Pre-mortem Analysis; Chaos Monkey Scenarios; User Persona Focus Group; Critique and Refine; Expand or Contract for Audience
+- Findings summary:
+  - MCP write tools still allowed an ambiguous audit fallback if no authenticated user id was captured.
+  - Denial handling needed to make access-service failure and unavailable local tenant state explicitly fail closed without request-path Tenants polling.
+  - The story needed a clearer authorization-before-side-effect ordering rule for projections, patch merge reads, command dispatch, and admin side effects.
+  - Denial observability needed a safe positive list for logs and diagnostics.
+- Changes applied:
+  - Strengthened AC4 and AC5 around authorization store failure, stale/unknown state, and rejecting conflicting payload tenant values before projection reads or command dispatch.
+  - Updated MCP write tool tasks to deny missing authenticated user id instead of falling back to `mcp-agent`.
+  - Added fail-closed denial translation guidance for access-service exceptions and unavailable local projection state.
+  - Added call-order regression coverage for denied REST/MCP requests and admin operations.
+  - Added an authorization call-order and state-freshness section covering pre-side-effect authorization, no request-path Tenants polling, and safe denial logs.
+- Findings deferred:
+  - Global administrator or service-principal bypass policy remains deferred unless the Tenants client exposes an explicit consumer authorization contract.
+  - Exact MCP error wrapper type remains implementation-specific as long as it carries the shared reason-code vocabulary.
 - Final recommendation: ready-for-dev
