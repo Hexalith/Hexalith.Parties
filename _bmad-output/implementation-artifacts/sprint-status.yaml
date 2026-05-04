@@ -128,5 +128,5 @@ development_status:
   epic-10: in-progress
   10-1-admin-portal-browse-search-and-inspect: ready-for-dev
   10-2-admin-portal-gdpr-operations: ready-for-dev
-  10-3-embeddable-party-picker-component: backlog
+  10-3-embeddable-party-picker-component: ready-for-dev
   epic-10-retrospective: optional
