@@ -1,6 +1,6 @@
 # Story 11.3: REST and MCP Tenant Authorization Enforcement
 
-Status: ready-for-dev
+Status: review
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -20,76 +20,76 @@ so that users cannot manage party data for inactive or unauthorized tenants.
 
 ## Tasks / Subtasks
 
-- [ ] Register and stabilize the tenant authorization boundary (AC: 1, 2, 3, 4)
-  - [ ] Reuse the `ITenantAccessService` created by Story 11.2 from `src/Hexalith.Parties.CommandApi/Authorization`; do not create a parallel REST-specific or MCP-specific authorization service.
-  - [ ] If Story 11.2 did not already add these types, add `TenantAccessRequirement` with `Read`, `Write`, and `Admin`, plus an access result carrying `Allowed`, reason code, and safe diagnostic text.
-  - [ ] Keep role mapping explicit and cumulative: `TenantReader` allows `Read`; `TenantContributor` allows `Read` and `Write`; `TenantOwner` allows `Read`, `Write`, and `Admin`.
-  - [ ] Fail closed for missing tenant, missing user id, unknown tenant projection, disabled tenant, missing member, insufficient role, and stale/unknown projection state if such state is represented by Story 11.2.
-  - [ ] Do not add Tenants dependencies to `src/Hexalith.Parties.Contracts`.
+- [x] Register and stabilize the tenant authorization boundary (AC: 1, 2, 3, 4)
+  - [x] Reuse the `ITenantAccessService` created by Story 11.2 from `src/Hexalith.Parties.CommandApi/Authorization`; do not create a parallel REST-specific or MCP-specific authorization service.
+  - [x] If Story 11.2 did not already add these types, add `TenantAccessRequirement` with `Read`, `Write`, and `Admin`, plus an access result carrying `Allowed`, reason code, and safe diagnostic text.
+  - [x] Keep role mapping explicit and cumulative: `TenantReader` allows `Read`; `TenantContributor` allows `Read` and `Write`; `TenantOwner` allows `Read`, `Write`, and `Admin`.
+  - [x] Fail closed for missing tenant, missing user id, unknown tenant projection, disabled tenant, missing member, insufficient role, and stale/unknown projection state if such state is represented by Story 11.2.
+  - [x] Do not add Tenants dependencies to `src/Hexalith.Parties.Contracts`.
 
-- [ ] Enforce tenant access on REST query endpoints (AC: 1, 3, 4)
-  - [ ] Inject `ITenantAccessService` into `PartiesController`.
-  - [ ] Authorize `Read` before reading projection actors in `ListPartiesAsync`, `SearchPartiesAsync`, `GetPartyAsync`, `GetPartyNameAtAsync`, and `GetPartyNameHistoryAsync`.
-  - [ ] Preserve existing tenant extraction from the normalized `eventstore:tenant` claim, scoped party id cross-tenant checks, erased-party handling, degraded projection headers, pagination bounds, and `application/problem+json` response shape.
-  - [ ] Return `401` only when the authenticated request lacks usable tenant/user context; return `403` for inactive tenant, missing membership, insufficient role, stale/unknown tenant state, or disabled tenant.
+- [x] Enforce tenant access on REST query endpoints (AC: 1, 3, 4)
+  - [x] Inject `ITenantAccessService` into `PartiesController`.
+  - [x] Authorize `Read` before reading projection actors in `ListPartiesAsync`, `SearchPartiesAsync`, `GetPartyAsync`, `GetPartyNameAtAsync`, and `GetPartyNameHistoryAsync`.
+  - [x] Preserve existing tenant extraction from the normalized `eventstore:tenant` claim, scoped party id cross-tenant checks, erased-party handling, degraded projection headers, pagination bounds, and `application/problem+json` response shape.
+  - [x] Return `401` only when the authenticated request lacks usable tenant/user context; return `403` for inactive tenant, missing membership, insufficient role, stale/unknown tenant state, or disabled tenant.
 
-- [ ] Enforce tenant access on REST command endpoints (AC: 1, 3, 4, 5)
-  - [ ] Authorize `Write` inside the shared `DispatchCommandAsync` and `DispatchCompositeCommandAsync` paths before personal-data guard checks and before creating `SubmitCommand`.
-  - [ ] Cover all command routes that flow through those helpers: create, person/org update, natural-person reclassification, deactivate/reactivate, contact channel changes, identifier changes, create composite, and update composite.
-  - [ ] Continue to use the tenant from authenticated claims for `SubmitCommand.Tenant`; do not read tenant id from request bodies or let command payloads override the claim-derived tenant.
-  - [ ] Keep route/body `PartyId` consistency checks intact.
-  - [ ] Preserve existing validation and domain rejection behavior for requests that pass tenant authorization.
+- [x] Enforce tenant access on REST command endpoints (AC: 1, 3, 4, 5)
+  - [x] Authorize `Write` inside the shared `DispatchCommandAsync` and `DispatchCompositeCommandAsync` paths before personal-data guard checks and before creating `SubmitCommand`.
+  - [x] Cover all command routes that flow through those helpers: create, person/org update, natural-person reclassification, deactivate/reactivate, contact channel changes, identifier changes, create composite, and update composite.
+  - [x] Continue to use the tenant from authenticated claims for `SubmitCommand.Tenant`; do not read tenant id from request bodies or let command payloads override the claim-derived tenant.
+  - [x] Keep route/body `PartyId` consistency checks intact.
+  - [x] Preserve existing validation and domain rejection behavior for requests that pass tenant authorization.
 
-- [ ] Enforce tenant access on admin REST endpoints (AC: 1, 3, 4)
-  - [ ] Inject `ITenantAccessService` into `AdminController`.
-  - [ ] Require `Admin` before projection rebuild, key rotation, key version reads, key audit reads, erasure request/complete/verify/retry, restriction, consent, export, and any other party administration endpoint in `api/v1/admin`.
-  - [ ] Keep the existing ASP.NET `Admin` policy as an authentication/identity policy, but do not treat it as sufficient tenant authorization.
-  - [ ] For `RebuildProjections`, validate `request.TenantId` with `Admin` access instead of relying on an arbitrary body tenant value.
-  - [ ] Ensure admin denial responses do not leak membership lists, token contents, personal data, or tenant configuration values.
+- [x] Enforce tenant access on admin REST endpoints (AC: 1, 3, 4)
+  - [x] Inject `ITenantAccessService` into `AdminController`.
+  - [x] Require `Admin` before projection rebuild, key rotation, key version reads, key audit reads, erasure request/complete/verify/retry, restriction, consent, export, and any other party administration endpoint in `api/v1/admin`.
+  - [x] Keep the existing ASP.NET `Admin` policy as an authentication/identity policy, but do not treat it as sufficient tenant authorization.
+  - [x] For `RebuildProjections`, validate `request.TenantId` with `Admin` access instead of relying on an arbitrary body tenant value.
+  - [x] Ensure admin denial responses do not leak membership lists, token contents, personal data, or tenant configuration values.
 
-- [ ] Enforce tenant access on MCP read/search tools (AC: 2, 3, 4)
-  - [ ] Extend `McpSessionContext` or the MCP HTTP transport session handler to capture a safe user id from the authenticated principal, preferably `sub`, falling back only to an existing normalized user identifier.
-  - [ ] Add a small shared MCP authorization helper under `src/Hexalith.Parties.CommandApi/Mcp` or `Authorization` that calls `ITenantAccessService` and throws consistent tool-facing exceptions.
-  - [ ] Require `Read` in `find_parties`, `get_party`, and `get_party_name_at` before reading projection actors.
-  - [ ] Preserve UUID validation, erased-party behavior, eventual-consistency fallback, JSON serialization options, and pagination clamping.
+- [x] Enforce tenant access on MCP read/search tools (AC: 2, 3, 4)
+  - [x] Extend `McpSessionContext` or the MCP HTTP transport session handler to capture a safe user id from the authenticated principal, preferably `sub`, falling back only to an existing normalized user identifier.
+  - [x] Add a small shared MCP authorization helper under `src/Hexalith.Parties.CommandApi/Mcp` or `Authorization` that calls `ITenantAccessService` and throws consistent tool-facing exceptions.
+  - [x] Require `Read` in `find_parties`, `get_party`, and `get_party_name_at` before reading projection actors.
+  - [x] Preserve UUID validation, erased-party behavior, eventual-consistency fallback, JSON serialization options, and pagination clamping.
 
-- [ ] Enforce tenant access on MCP write tools (AC: 2, 3, 4, 5)
-  - [ ] Require `Write` in `create_party`, `update_party`, and `delete_party` before validating command payloads, reading current projection state for patch merge, or routing commands.
-  - [ ] Replace the hard-coded `UserId = "mcp-agent"` in MCP `SubmitCommand` creation with the authenticated user id captured from the session; if no usable authenticated user id is available, deny the tool call as `missing-user` before creating `SubmitCommand`.
-  - [ ] Continue to use `McpSessionContext.Tenant` only as the requested tenant context; it is not sufficient authorization without `ITenantAccessService`.
-  - [ ] Do not add tenant id parameters to MCP tool schemas. Tenant context must come from the authenticated transport/session.
+- [x] Enforce tenant access on MCP write tools (AC: 2, 3, 4, 5)
+  - [x] Require `Write` in `create_party`, `update_party`, and `delete_party` before validating command payloads, reading current projection state for patch merge, or routing commands.
+  - [x] Replace the hard-coded `UserId = "mcp-agent"` in MCP `SubmitCommand` creation with the authenticated user id captured from the session; if no usable authenticated user id is available, deny the tool call as `missing-user` before creating `SubmitCommand`.
+  - [x] Continue to use `McpSessionContext.Tenant` only as the requested tenant context; it is not sufficient authorization without `ITenantAccessService`.
+  - [x] Do not add tenant id parameters to MCP tool schemas. Tenant context must come from the authenticated transport/session.
 
-- [ ] Standardize authorization denial translation (AC: 4)
-  - [ ] Centralize REST denial translation so Parties returns consistent ProblemDetails type URIs, titles, status codes, correlation id extension, and request path instance values.
-  - [ ] Use stable reason codes suitable for tests and troubleshooting, for example `missing-tenant`, `missing-user`, `unknown-tenant`, `tenant-disabled`, `not-member`, `insufficient-role`, and `tenant-state-stale`.
-  - [ ] Return `401` only for missing or unusable authenticated tenant/user context; return `403` for known authorization denials such as unknown tenant projection, inactive tenant, missing membership, insufficient role, stale tenant state, and disabled tenant.
-  - [ ] Treat Tenants projection/access-service exceptions, unavailable local projection state, and unreadable tenant authority data as fail-closed denials with a safe stale/unknown-state reason code; do not refresh from Tenants HTTP/API services on the request path.
-  - [ ] Keep denial details operationally useful but safe; do not include full claim sets, membership dictionaries, or personal party data.
-  - [ ] For MCP tools, throw errors with the same reason-code vocabulary in the message or structured payload shape already used by the MCP layer.
+- [x] Standardize authorization denial translation (AC: 4)
+  - [x] Centralize REST denial translation so Parties returns consistent ProblemDetails type URIs, titles, status codes, correlation id extension, and request path instance values.
+  - [x] Use stable reason codes suitable for tests and troubleshooting, for example `missing-tenant`, `missing-user`, `unknown-tenant`, `tenant-disabled`, `not-member`, `insufficient-role`, and `tenant-state-stale`.
+  - [x] Return `401` only for missing or unusable authenticated tenant/user context; return `403` for known authorization denials such as unknown tenant projection, inactive tenant, missing membership, insufficient role, stale tenant state, and disabled tenant.
+  - [x] Treat Tenants projection/access-service exceptions, unavailable local projection state, and unreadable tenant authority data as fail-closed denials with a safe stale/unknown-state reason code; do not refresh from Tenants HTTP/API services on the request path.
+  - [x] Keep denial details operationally useful but safe; do not include full claim sets, membership dictionaries, or personal party data.
+  - [x] For MCP tools, throw errors with the same reason-code vocabulary in the message or structured payload shape already used by the MCP layer.
 
-- [ ] Update developer documentation and troubleshooting (AC: 4, 5)
-  - [ ] Update `README.md` and/or `docs/getting-started.md` to state that a valid tenant claim is necessary but not sufficient; the user must be an active member of an active Hexalith.Tenants tenant with the required role.
-  - [ ] Update tenant troubleshooting to distinguish missing JWT tenant context from Tenants projection/membership denial.
-  - [ ] Document role requirements: Reader for read/search, Contributor for write operations, Owner for party administration.
-  - [ ] Document that roles are cumulative and that Owner can perform read/search and write operations as well as party administration.
-  - [ ] Do not add Parties-local tenant management instructions; point tenant lifecycle and membership setup to Hexalith.Tenants.
+- [x] Update developer documentation and troubleshooting (AC: 4, 5)
+  - [x] Update `README.md` and/or `docs/getting-started.md` to state that a valid tenant claim is necessary but not sufficient; the user must be an active member of an active Hexalith.Tenants tenant with the required role.
+  - [x] Update tenant troubleshooting to distinguish missing JWT tenant context from Tenants projection/membership denial.
+  - [x] Document role requirements: Reader for read/search, Contributor for write operations, Owner for party administration.
+  - [x] Document that roles are cumulative and that Owner can perform read/search and write operations as well as party administration.
+  - [x] Do not add Parties-local tenant management instructions; point tenant lifecycle and membership setup to Hexalith.Tenants.
 
-- [ ] Add focused tests for REST and MCP authorization enforcement (AC: 1, 2, 3, 4, 5)
-  - [ ] Add unit tests in `tests/Hexalith.Parties.CommandApi.Tests/Authorization` for role-to-requirement mapping and denial reason translation if not already covered by Story 11.2.
-  - [ ] Add controller or WebApplicationFactory tests proving read endpoints allow reader/contributor/owner and deny unknown tenant, disabled tenant, removed user, missing user id, and insufficient role.
-  - [ ] Add command endpoint tests proving reader cannot create/update/deactivate and contributor can write.
-  - [ ] Add admin endpoint tests proving contributor cannot run admin operations and owner can.
-  - [ ] Add MCP tool tests using faked `ITenantAccessService` and `McpSessionContext` to prove every tool calls authorization before projection reads or command routing.
-  - [ ] Add call-order regression tests with faked projection actors/dispatchers proving denied REST and MCP requests do not read projections, merge patches, submit commands, or execute admin side effects.
-  - [ ] Add regression tests proving command body tenant values, if present on any request model, do not influence the effective tenant.
-  - [ ] Add spoofing regression tests proving conflicting payload tenant values are rejected and cannot redirect authorization context.
-  - [ ] Add architectural regression coverage proving `Hexalith.Parties.Contracts` remains free of Tenants dependencies and EventStore actor/projection key formats are unchanged.
-  - [ ] Add coverage or a focused code-level assertion that REST/MCP request paths do not introduce per-request Tenants HTTP/API polling.
+- [x] Add focused tests for REST and MCP authorization enforcement (AC: 1, 2, 3, 4, 5)
+  - [x] Add unit tests in `tests/Hexalith.Parties.CommandApi.Tests/Authorization` for role-to-requirement mapping and denial reason translation if not already covered by Story 11.2.
+  - [x] Add controller or WebApplicationFactory tests proving read endpoints allow reader/contributor/owner and deny unknown tenant, disabled tenant, removed user, missing user id, and insufficient role.
+  - [x] Add command endpoint tests proving reader cannot create/update/deactivate and contributor can write.
+  - [x] Add admin endpoint tests proving contributor cannot run admin operations and owner can.
+  - [x] Add MCP tool tests using faked `ITenantAccessService` and `McpSessionContext` to prove every tool calls authorization before projection reads or command routing.
+  - [x] Add call-order regression tests with faked projection actors/dispatchers proving denied REST and MCP requests do not read projections, merge patches, submit commands, or execute admin side effects.
+  - [x] Add regression tests proving command body tenant values, if present on any request model, do not influence the effective tenant.
+  - [x] Add spoofing regression tests proving conflicting payload tenant values are rejected and cannot redirect authorization context.
+  - [x] Add architectural regression coverage proving `Hexalith.Parties.Contracts` remains free of Tenants dependencies and EventStore actor/projection key formats are unchanged.
+  - [x] Add coverage or a focused code-level assertion that REST/MCP request paths do not introduce per-request Tenants HTTP/API polling.
 
-- [ ] Validate build and affected tests
-  - [ ] Run `dotnet test tests/Hexalith.Parties.CommandApi.Tests/Hexalith.Parties.CommandApi.Tests.csproj --configuration Release`.
-  - [ ] Run `dotnet build Hexalith.Parties.slnx --configuration Release`.
-  - [ ] If authorization behavior changes OpenAPI responses, verify generated API metadata still describes `401`, `403`, and ProblemDetails where relevant.
+- [x] Validate build and affected tests
+  - [x] Run `dotnet test tests/Hexalith.Parties.CommandApi.Tests/Hexalith.Parties.CommandApi.Tests.csproj --configuration Release`.
+  - [x] Run `dotnet build Hexalith.Parties.slnx --configuration Release`.
+  - [x] If authorization behavior changes OpenAPI responses, verify generated API metadata still describes `401`, `403`, and ProblemDetails where relevant.
 
 ## Dev Notes
 
@@ -254,13 +254,63 @@ GPT-5 Codex
 
 ### Debug Log References
 
+- `dotnet build src\Hexalith.Parties.CommandApi\Hexalith.Parties.CommandApi.csproj --configuration Release` - passed.
+- `dotnet build tests\Hexalith.Parties.CommandApi.Tests\Hexalith.Parties.CommandApi.Tests.csproj --configuration Release` - passed.
+- `dotnet test tests\Hexalith.Parties.CommandApi.Tests\Hexalith.Parties.CommandApi.Tests.csproj --configuration Release --no-build` - passed, 308 tests.
+- `dotnet build Hexalith.Parties.slnx --configuration Release` - passed.
+
 ### Completion Notes List
 
 - Ultimate context engine analysis completed - comprehensive developer guide created.
 - Party-mode review completed on 2026-05-03; story clarified before development.
 - Advanced elicitation completed on 2026-05-04; story hardened for fail-closed authorization ordering and MCP missing-user behavior.
+- Reused the Story 11.2 `ITenantAccessService` boundary for REST and MCP rather than creating a parallel authorization path.
+- Added standardized REST ProblemDetails and MCP error reason codes for missing tenant/user, unknown/disabled tenant, missing membership, insufficient role, and stale tenant state.
+- Enforced `Read`, `Write`, and `Admin` tenant access across Parties query/command/admin endpoints before projection reads, personal-data guard checks, command dispatch, or admin side effects.
+- Captured MCP authenticated user id in session context and replaced the `mcp-agent` write audit fallback with the authenticated user id.
+- Updated developer docs and focused tests for fail-closed tenant authorization, REST/MCP call ordering, role mapping, and architecture fitness.
 
 ### File List
+
+- README.md
+- docs/getting-started.md
+- src/Hexalith.Parties.CommandApi/Authorization/TenantAccessDecision.cs
+- src/Hexalith.Parties.CommandApi/Authorization/TenantAccessDenialReason.cs
+- src/Hexalith.Parties.CommandApi/Authorization/TenantAccessDenialTranslator.cs
+- src/Hexalith.Parties.CommandApi/Authorization/TenantAccessService.cs
+- src/Hexalith.Parties.CommandApi/Controllers/AdminController.cs
+- src/Hexalith.Parties.CommandApi/Controllers/PartiesController.cs
+- src/Hexalith.Parties.CommandApi/Extensions/PartiesServiceCollectionExtensions.cs
+- src/Hexalith.Parties.CommandApi/Mcp/CreatePartyMcpTool.cs
+- src/Hexalith.Parties.CommandApi/Mcp/DeletePartyMcpTool.cs
+- src/Hexalith.Parties.CommandApi/Mcp/FindPartiesMcpTool.cs
+- src/Hexalith.Parties.CommandApi/Mcp/GetPartyMcpTool.cs
+- src/Hexalith.Parties.CommandApi/Mcp/GetPartyNameAtMcpTool.cs
+- src/Hexalith.Parties.CommandApi/Mcp/McpSessionContext.cs
+- src/Hexalith.Parties.CommandApi/Mcp/McpTenantAuthorization.cs
+- src/Hexalith.Parties.CommandApi/Mcp/UpdatePartyMcpTool.cs
+- tests/Hexalith.Parties.CommandApi.Tests/Authorization/TenantAccessServiceTests.cs
+- tests/Hexalith.Parties.CommandApi.Tests/Authorization/TestTenantAccessService.cs
+- tests/Hexalith.Parties.CommandApi.Tests/Controllers/AdminEndpointIntegrationTests.cs
+- tests/Hexalith.Parties.CommandApi.Tests/Controllers/ConsentEndpointTests.cs
+- tests/Hexalith.Parties.CommandApi.Tests/Controllers/ErasureEndpointTests.cs
+- tests/Hexalith.Parties.CommandApi.Tests/Controllers/PartiesControllerProblemDetailsTests.cs
+- tests/Hexalith.Parties.CommandApi.Tests/Controllers/PortabilityEndpointTests.cs
+- tests/Hexalith.Parties.CommandApi.Tests/Controllers/RestrictionEndpointTests.cs
+- tests/Hexalith.Parties.CommandApi.Tests/Controllers/TemporalNameEndpointTests.cs
+- tests/Hexalith.Parties.CommandApi.Tests/FitnessTests/ArchitecturalFitnessTests.cs
+- tests/Hexalith.Parties.CommandApi.Tests/HealthChecks/HealthEndpointIntegrationTests.cs
+- tests/Hexalith.Parties.CommandApi.Tests/Mcp/CreatePartyMcpToolTests.cs
+- tests/Hexalith.Parties.CommandApi.Tests/Mcp/DeletePartyMcpToolTests.cs
+- tests/Hexalith.Parties.CommandApi.Tests/Mcp/FindPartiesMcpToolTests.cs
+- tests/Hexalith.Parties.CommandApi.Tests/Mcp/GetPartyMcpToolTests.cs
+- tests/Hexalith.Parties.CommandApi.Tests/Mcp/GetPartyNameAtMcpToolTests.cs
+- tests/Hexalith.Parties.CommandApi.Tests/Mcp/UpdateAndDeletePartyMcpToolTests.cs
+- tests/Hexalith.Parties.CommandApi.Tests/Mcp/UpdatePartyMcpToolTests.cs
+
+### Change Log
+
+- 2026-05-04: Implemented REST and MCP tenant authorization enforcement and moved story to review.
 
 ### Party-Mode Review
 

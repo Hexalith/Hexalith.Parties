@@ -173,7 +173,7 @@ public sealed class GetPartyNameAtMcpToolTests
             () => GetPartyNameAtMcpTool.GetPartyNameAtAsync(
                 "not-a-guid",
                 NameChangedAt.ToString("O"),
-                Substitute.For<IServiceProvider>()));
+                new ServiceCollection().AddSingleton<Hexalith.Parties.CommandApi.Authorization.ITenantAccessService, Hexalith.Parties.CommandApi.Tests.Authorization.TestTenantAccessService>().BuildServiceProvider()));
 
         exception.Message.ShouldStartWith("Invalid party ID format");
     }
@@ -187,7 +187,7 @@ public sealed class GetPartyNameAtMcpToolTests
             () => GetPartyNameAtMcpTool.GetPartyNameAtAsync(
                 Guid.NewGuid().ToString(),
                 "not-a-timestamp",
-                Substitute.For<IServiceProvider>()));
+                new ServiceCollection().AddSingleton<Hexalith.Parties.CommandApi.Authorization.ITenantAccessService, Hexalith.Parties.CommandApi.Tests.Authorization.TestTenantAccessService>().BuildServiceProvider()));
 
         exception.Message.ShouldStartWith("Invalid timestamp format");
     }
@@ -199,9 +199,9 @@ public sealed class GetPartyNameAtMcpToolTests
             () => GetPartyNameAtMcpTool.GetPartyNameAtAsync(
                 Guid.NewGuid().ToString(),
                 NameChangedAt.ToString("O"),
-                Substitute.For<IServiceProvider>()));
+                new ServiceCollection().AddSingleton<Hexalith.Parties.CommandApi.Authorization.ITenantAccessService, Hexalith.Parties.CommandApi.Tests.Authorization.TestTenantAccessService>().BuildServiceProvider()));
 
-        exception.Message.ShouldBe("Authentication required. No tenant context found in the request.");
+        exception.Message.ShouldContain("missing-tenant");
     }
 
     [Fact]
@@ -270,6 +270,7 @@ public sealed class GetPartyNameAtMcpToolTests
 
         return new ServiceCollection()
             .AddSingleton(actorProxyFactory)
+            .AddSingleton<Hexalith.Parties.CommandApi.Authorization.ITenantAccessService, Hexalith.Parties.CommandApi.Tests.Authorization.TestTenantAccessService>()
             .BuildServiceProvider();
     }
 
@@ -280,18 +281,32 @@ public sealed class GetPartyNameAtMcpToolTests
             .GetType("Hexalith.Parties.CommandApi.Mcp.McpSessionContext", throwOnError: true)!
             .GetField("Tenant", BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic)!;
 
+        private static readonly FieldInfo _userIdField = typeof(GetPartyNameAtMcpTool)
+            .Assembly
+            .GetType("Hexalith.Parties.CommandApi.Mcp.McpSessionContext", throwOnError: true)!
+            .GetField("UserId", BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic)!;
+
         private readonly AsyncLocal<string?> _tenant;
-        private readonly string? _previousValue;
+        private readonly AsyncLocal<string?> _userId;
+        private readonly string? _previousTenant;
+        private readonly string? _previousUserId;
 
         private TenantScope(string value)
         {
             _tenant = (AsyncLocal<string?>)_tenantField.GetValue(null)!;
-            _previousValue = _tenant.Value;
+            _userId = (AsyncLocal<string?>)_userIdField.GetValue(null)!;
+            _previousTenant = _tenant.Value;
+            _previousUserId = _userId.Value;
             _tenant.Value = value;
+            _userId.Value = "test-user";
         }
 
         public static TenantScope Create(string value) => new(value);
 
-        public void Dispose() => _tenant.Value = _previousValue;
+        public void Dispose()
+        {
+            _tenant.Value = _previousTenant;
+            _userId.Value = _previousUserId;
+        }
     }
 }

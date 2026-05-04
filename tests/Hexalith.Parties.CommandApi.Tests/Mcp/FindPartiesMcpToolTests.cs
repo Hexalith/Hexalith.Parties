@@ -67,6 +67,7 @@ public sealed class FindPartiesMcpToolTests
             .AddSingleton(factory)
             .AddSingleton<IPartySearchProvider, LocalFuzzyPartySearchProvider>()
             .AddSingleton<IPartySearchService, LocalPartySearchService>()
+            .AddSingleton<Hexalith.Parties.CommandApi.Authorization.ITenantAccessService, Hexalith.Parties.CommandApi.Tests.Authorization.TestTenantAccessService>()
             .BuildServiceProvider();
 
         string json = await FindPartiesMcpTool.FindPartiesAsync(services, query: "Dupont");
@@ -107,6 +108,7 @@ public sealed class FindPartiesMcpToolTests
         IActorProxyFactory factory = CreateActorProxyFactory(indexActor);
         ServiceProvider services = new ServiceCollection()
             .AddSingleton(factory)
+            .AddSingleton<Hexalith.Parties.CommandApi.Authorization.ITenantAccessService, Hexalith.Parties.CommandApi.Tests.Authorization.TestTenantAccessService>()
             .BuildServiceProvider();
 
         string json = await FindPartiesMcpTool.FindPartiesAsync(services, query: null);
@@ -137,6 +139,7 @@ public sealed class FindPartiesMcpToolTests
         IActorProxyFactory factory = CreateActorProxyFactory(indexActor);
         ServiceProvider services = new ServiceCollection()
             .AddSingleton(factory)
+            .AddSingleton<Hexalith.Parties.CommandApi.Authorization.ITenantAccessService, Hexalith.Parties.CommandApi.Tests.Authorization.TestTenantAccessService>()
             .BuildServiceProvider();
 
         string json = await FindPartiesMcpTool.FindPartiesAsync(services, query: null, page: 2, pageSize: 1);
@@ -163,6 +166,7 @@ public sealed class FindPartiesMcpToolTests
         IActorProxyFactory factory = CreateActorProxyFactory(indexActor);
         ServiceProvider services = new ServiceCollection()
             .AddSingleton(factory)
+            .AddSingleton<Hexalith.Parties.CommandApi.Authorization.ITenantAccessService, Hexalith.Parties.CommandApi.Tests.Authorization.TestTenantAccessService>()
             .BuildServiceProvider();
 
         string json = await FindPartiesMcpTool.FindPartiesAsync(services, query: null, pageSize: 200);
@@ -197,6 +201,7 @@ public sealed class FindPartiesMcpToolTests
         IActorProxyFactory factory = CreateActorProxyFactory(indexActor);
         ServiceProvider services = new ServiceCollection()
             .AddSingleton(factory)
+            .AddSingleton<Hexalith.Parties.CommandApi.Authorization.ITenantAccessService, Hexalith.Parties.CommandApi.Tests.Authorization.TestTenantAccessService>()
             .BuildServiceProvider();
 
         string json = await FindPartiesMcpTool.FindPartiesAsync(services, query: null);
@@ -213,9 +218,9 @@ public sealed class FindPartiesMcpToolTests
     public async Task FindPartiesAsync_MissingTenant_ThrowsAuthenticationErrorAsync()
     {
         InvalidOperationException exception = await Should.ThrowAsync<InvalidOperationException>(
-            () => FindPartiesMcpTool.FindPartiesAsync(Substitute.For<IServiceProvider>()));
+            () => FindPartiesMcpTool.FindPartiesAsync(new ServiceCollection().AddSingleton<Hexalith.Parties.CommandApi.Authorization.ITenantAccessService, Hexalith.Parties.CommandApi.Tests.Authorization.TestTenantAccessService>().BuildServiceProvider()));
 
-        exception.Message.ShouldBe("Authentication required. No tenant context found in the request.");
+        exception.Message.ShouldContain("missing-tenant");
     }
 
     private static IActorProxyFactory CreateActorProxyFactory(IPartyIndexProjectionActor indexActor)
@@ -248,18 +253,32 @@ public sealed class FindPartiesMcpToolTests
             .GetType("Hexalith.Parties.CommandApi.Mcp.McpSessionContext", throwOnError: true)!
             .GetField("Tenant", BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic)!;
 
+        private static readonly FieldInfo _userIdField = typeof(FindPartiesMcpTool)
+            .Assembly
+            .GetType("Hexalith.Parties.CommandApi.Mcp.McpSessionContext", throwOnError: true)!
+            .GetField("UserId", BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic)!;
+
         private readonly AsyncLocal<string?> _tenant;
-        private readonly string? _previousValue;
+        private readonly AsyncLocal<string?> _userId;
+        private readonly string? _previousTenant;
+        private readonly string? _previousUserId;
 
         private TenantScope(string value)
         {
             _tenant = (AsyncLocal<string?>)_tenantField.GetValue(null)!;
-            _previousValue = _tenant.Value;
+            _userId = (AsyncLocal<string?>)_userIdField.GetValue(null)!;
+            _previousTenant = _tenant.Value;
+            _previousUserId = _userId.Value;
             _tenant.Value = value;
+            _userId.Value = "test-user";
         }
 
         public static TenantScope Create(string value) => new(value);
 
-        public void Dispose() => _tenant.Value = _previousValue;
+        public void Dispose()
+        {
+            _tenant.Value = _previousTenant;
+            _userId.Value = _previousUserId;
+        }
     }
 }

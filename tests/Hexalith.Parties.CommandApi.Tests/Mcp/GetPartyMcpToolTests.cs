@@ -4,7 +4,9 @@ using System.Text.Json;
 using Dapr.Actors;
 using Dapr.Actors.Client;
 
+using Hexalith.Parties.CommandApi.Authorization;
 using Hexalith.Parties.CommandApi.Mcp;
+using Hexalith.Parties.CommandApi.Tests.Authorization;
 using Hexalith.Parties.Contracts.Models;
 using Hexalith.Parties.Contracts.ValueObjects;
 using Hexalith.Parties.Projections.Abstractions;
@@ -33,6 +35,7 @@ public sealed class GetPartyMcpToolTests
         IActorProxyFactory actorProxyFactory = CreateActorProxyFactory(projectionActor);
         ServiceProvider services = new ServiceCollection()
             .AddSingleton(actorProxyFactory)
+            .AddSingleton<Hexalith.Parties.CommandApi.Authorization.ITenantAccessService, Hexalith.Parties.CommandApi.Tests.Authorization.TestTenantAccessService>()
             .BuildServiceProvider();
 
         string json = await GetPartyMcpTool.GetPartyAsync(partyId, services);
@@ -66,6 +69,7 @@ public sealed class GetPartyMcpToolTests
         IActorProxyFactory actorProxyFactory = CreateActorProxyFactory(projectionActor);
         ServiceProvider services = new ServiceCollection()
             .AddSingleton(actorProxyFactory)
+            .AddSingleton<Hexalith.Parties.CommandApi.Authorization.ITenantAccessService, Hexalith.Parties.CommandApi.Tests.Authorization.TestTenantAccessService>()
             .BuildServiceProvider();
 
         InvalidOperationException exception = await Should.ThrowAsync<InvalidOperationException>(
@@ -99,6 +103,7 @@ public sealed class GetPartyMcpToolTests
         IActorProxyFactory actorProxyFactory = CreateActorProxyFactory(projectionActor);
         ServiceProvider services = new ServiceCollection()
             .AddSingleton(actorProxyFactory)
+            .AddSingleton<Hexalith.Parties.CommandApi.Authorization.ITenantAccessService, Hexalith.Parties.CommandApi.Tests.Authorization.TestTenantAccessService>()
             .BuildServiceProvider();
 
         InvalidOperationException exception = await Should.ThrowAsync<InvalidOperationException>(
@@ -112,21 +117,51 @@ public sealed class GetPartyMcpToolTests
     public async Task GetPartyAsync_InvalidPartyIdFormat_ThrowsValidationErrorAsync()
     {
         using TenantScope _ = TenantScope.Create("tenant-a");
+        ServiceProvider services = new ServiceCollection()
+            .AddSingleton(Substitute.For<IActorProxyFactory>())
+            .AddSingleton<ITenantAccessService, TestTenantAccessService>()
+            .BuildServiceProvider();
 
         InvalidOperationException exception = await Should.ThrowAsync<InvalidOperationException>(
-            () => GetPartyMcpTool.GetPartyAsync("not-a-guid", Substitute.For<IServiceProvider>()));
+            () => GetPartyMcpTool.GetPartyAsync("not-a-guid", services));
 
         exception.Message.ShouldBe(
             "Invalid party ID format. Expected a UUID like '550e8400-e29b-41d4-a716-446655440000'.");
     }
 
     [Fact]
+    public async Task GetPartyAsync_AccessDenied_DoesNotReadProjectionAsync()
+    {
+        using TenantScope _ = TenantScope.Create("tenant-a");
+
+        IPartyDetailProjectionActor projectionActor = Substitute.For<IPartyDetailProjectionActor>();
+        IActorProxyFactory actorProxyFactory = CreateActorProxyFactory(projectionActor);
+        ServiceProvider services = new ServiceCollection()
+            .AddSingleton(actorProxyFactory)
+            .AddSingleton<ITenantAccessService>(new TestTenantAccessService(
+                (_, _, _, _) => Task.FromResult(TenantAccessDecision.Denied(TenantAccessDenialReason.MissingMember))))
+            .BuildServiceProvider();
+
+        InvalidOperationException exception = await Should.ThrowAsync<InvalidOperationException>(() =>
+            GetPartyMcpTool.GetPartyAsync(Guid.NewGuid().ToString(), services));
+
+        exception.Message.ShouldContain("not-member");
+        await projectionActor.DidNotReceive().GetDetailAsync();
+    }
+
+    [Fact]
     public async Task GetPartyAsync_MissingTenant_ThrowsAuthenticationErrorAsync()
     {
-        InvalidOperationException exception = await Should.ThrowAsync<InvalidOperationException>(
-            () => GetPartyMcpTool.GetPartyAsync(Guid.NewGuid().ToString(), Substitute.For<IServiceProvider>()));
+        ServiceProvider services = new ServiceCollection()
+            .AddSingleton(Substitute.For<IActorProxyFactory>())
+            .AddSingleton<ITenantAccessService>(new TestTenantAccessService(
+                (_, _, _, _) => Task.FromResult(TenantAccessDecision.Denied(TenantAccessDenialReason.MissingTenantId))))
+            .BuildServiceProvider();
 
-        exception.Message.ShouldBe("Authentication required. No tenant context found in the request.");
+        InvalidOperationException exception = await Should.ThrowAsync<InvalidOperationException>(
+            () => GetPartyMcpTool.GetPartyAsync(Guid.NewGuid().ToString(), services));
+
+        exception.Message.ShouldContain("missing-tenant");
     }
 
     private static IActorProxyFactory CreateActorProxyFactory(IPartyDetailProjectionActor projectionActor)
@@ -186,18 +221,32 @@ public sealed class GetPartyMcpToolTests
             .GetType("Hexalith.Parties.CommandApi.Mcp.McpSessionContext", throwOnError: true)!
             .GetField("Tenant", BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic)!;
 
+        private static readonly FieldInfo _userIdField = typeof(GetPartyMcpTool)
+            .Assembly
+            .GetType("Hexalith.Parties.CommandApi.Mcp.McpSessionContext", throwOnError: true)!
+            .GetField("UserId", BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic)!;
+
         private readonly AsyncLocal<string?> _tenant;
-        private readonly string? _previousValue;
+        private readonly AsyncLocal<string?> _userId;
+        private readonly string? _previousTenant;
+        private readonly string? _previousUserId;
 
         private TenantScope(string value)
         {
             _tenant = (AsyncLocal<string?>)_tenantField.GetValue(null)!;
-            _previousValue = _tenant.Value;
+            _userId = (AsyncLocal<string?>)_userIdField.GetValue(null)!;
+            _previousTenant = _tenant.Value;
+            _previousUserId = _userId.Value;
             _tenant.Value = value;
+            _userId.Value = "test-user";
         }
 
         public static TenantScope Create(string value) => new(value);
 
-        public void Dispose() => _tenant.Value = _previousValue;
+        public void Dispose()
+        {
+            _tenant.Value = _previousTenant;
+            _userId.Value = _previousUserId;
+        }
     }
 }

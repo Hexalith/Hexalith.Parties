@@ -332,6 +332,8 @@ public sealed class HealthEndpointIntegrationTests : IClassFixture<HealthEndpoin
                 services.AddSingleton(CommandRouter);
                 services.RemoveAll<IActorProxyFactory>();
                 services.AddSingleton(ActorProxyFactory);
+                services.RemoveAll<Hexalith.Parties.CommandApi.Authorization.ITenantAccessService>();
+                services.AddSingleton<Hexalith.Parties.CommandApi.Authorization.ITenantAccessService, Hexalith.Parties.CommandApi.Tests.Authorization.TestTenantAccessService>();
             });
         }
     }

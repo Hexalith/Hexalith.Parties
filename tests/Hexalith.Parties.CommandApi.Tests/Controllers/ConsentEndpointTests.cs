@@ -359,6 +359,8 @@ public sealed class ConsentEndpointTests : IClassFixture<ConsentEndpointTests.Co
                 services.AddSingleton<PartyErasureOrchestrator>();
                 services.RemoveAll<IPersonalDataCommandGuard>();
                 services.AddSingleton(PersonalDataGuard);
+                services.RemoveAll<Hexalith.Parties.CommandApi.Authorization.ITenantAccessService>();
+                services.AddSingleton<Hexalith.Parties.CommandApi.Authorization.ITenantAccessService, Hexalith.Parties.CommandApi.Tests.Authorization.TestTenantAccessService>();
             });
         }
     }

@@ -373,6 +373,8 @@ public sealed class RestrictionEndpointTests : IClassFixture<RestrictionEndpoint
                 services.AddSingleton<PartyErasureOrchestrator>();
                 services.RemoveAll<IPersonalDataCommandGuard>();
                 services.AddSingleton(PersonalDataGuard);
+                services.RemoveAll<Hexalith.Parties.CommandApi.Authorization.ITenantAccessService>();
+                services.AddSingleton<Hexalith.Parties.CommandApi.Authorization.ITenantAccessService, Hexalith.Parties.CommandApi.Tests.Authorization.TestTenantAccessService>();
             });
         }
     }

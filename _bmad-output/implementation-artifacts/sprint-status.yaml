@@ -120,7 +120,7 @@ development_status:
   epic-11: in-progress
   11-1-apphost-and-package-integration: blocked
   11-2-tenants-event-consumption-and-local-access-projection: review
-  11-3-rest-and-mcp-tenant-authorization-enforcement: in-progress
+  11-3-rest-and-mcp-tenant-authorization-enforcement: review
   11-4-tenants-integration-tests-deployment-validation-and-documentation: ready-for-dev
   epic-11-retrospective: optional
 

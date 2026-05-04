@@ -8,4 +8,5 @@ public enum TenantAccessDenialReason {
     DisabledTenant,
     MissingMember,
     InsufficientRole,
+    TenantStateStale,
 }

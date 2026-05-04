@@ -295,12 +295,16 @@ public static class PartiesServiceCollectionExtensions {
                     string? tenant = httpContext.User.FindAll("eventstore:tenant")
                         .Select(c => c.Value)
                         .FirstOrDefault(v => !string.IsNullOrWhiteSpace(v));
+                    string? userId = httpContext.User.FindFirst("sub")?.Value
+                        ?? httpContext.User.Identity?.Name;
                     McpSessionContext.Tenant.Value = tenant;
+                    McpSessionContext.UserId.Value = string.IsNullOrWhiteSpace(userId) ? null : userId;
                     try {
                         await mcpServer.RunAsync(ct).ConfigureAwait(false);
                     }
                     finally {
                         McpSessionContext.Tenant.Value = null;
+                        McpSessionContext.UserId.Value = null;
                     }
                 };
             })

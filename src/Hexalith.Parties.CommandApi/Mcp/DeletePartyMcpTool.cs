@@ -10,6 +10,7 @@ using FluentValidation.Results;
 using Hexalith.EventStore.Server.Actors;
 using Hexalith.EventStore.Server.Commands;
 using Hexalith.EventStore.Server.Pipeline.Commands;
+using Hexalith.Parties.CommandApi.Authorization;
 using Hexalith.Parties.Contracts.Commands;
 using Hexalith.Parties.Contracts.Models;
 using Hexalith.Parties.Projections.Abstractions;
@@ -29,11 +30,10 @@ public static class DeletePartyMcpTool
         IServiceProvider services,
         CancellationToken cancellationToken = default)
     {
-        string? tenant = McpSessionContext.Tenant.Value;
-        if (string.IsNullOrWhiteSpace(tenant))
-        {
-            throw new InvalidOperationException("Authentication required. No tenant context found in the request.");
-        }
+        McpTenantAccessContext access = await McpTenantAuthorization
+            .RequireAccessAsync(services, TenantAccessRequirement.Write, cancellationToken)
+            .ConfigureAwait(false);
+        string tenant = access.TenantId;
 
         if (!Guid.TryParse(partyId, out _))
         {
@@ -81,7 +81,7 @@ public static class DeletePartyMcpTool
             CommandType: nameof(DeactivateParty),
             Payload: JsonSerializer.SerializeToUtf8Bytes(command),
             CorrelationId: Guid.NewGuid().ToString(),
-            UserId: "mcp-agent");
+            UserId: access.UserId);
 
         CommandProcessingResult result = await commandRouter
             .RouteCommandAsync(submitCommand, cancellationToken)

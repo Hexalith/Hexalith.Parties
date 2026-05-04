@@ -248,6 +248,8 @@ public sealed class TemporalNameEndpointTests : IClassFixture<TemporalNameEndpoi
                 services.AddSingleton(actorProxyFactory);
                 services.RemoveAll<IPersonalDataCommandGuard>();
                 services.AddSingleton(Substitute.For<IPersonalDataCommandGuard>());
+                services.RemoveAll<Hexalith.Parties.CommandApi.Authorization.ITenantAccessService>();
+                services.AddSingleton<Hexalith.Parties.CommandApi.Authorization.ITenantAccessService, Hexalith.Parties.CommandApi.Tests.Authorization.TestTenantAccessService>();
             });
         }
     }

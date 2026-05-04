@@ -12,7 +12,9 @@ using Dapr.Actors.Client;
 using Hexalith.EventStore.Server.Actors;
 using Hexalith.EventStore.Server.Commands;
 using Hexalith.EventStore.Server.Pipeline.Commands;
+using Hexalith.Parties.CommandApi.Authorization;
 using Hexalith.Parties.CommandApi;
+using Hexalith.Parties.CommandApi.Tests.Authorization;
 using Hexalith.Parties.Contracts.Models;
 using Hexalith.Parties.Contracts.ValueObjects;
 using Hexalith.Parties.Projections.Abstractions;
@@ -40,6 +42,7 @@ public sealed class PartiesControllerProblemDetailsTests : IClassFixture<Parties
     public PartiesControllerProblemDetailsTests(PartiesApiTestFactory factory)
     {
         _factory = factory;
+        _factory.TenantAccessService.AllowAll();
         _factory.CommandGuard
             .GetBlockingReasonAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<object>(), Arg.Any<CancellationToken>())
             .Returns((string?)null);
@@ -71,7 +74,68 @@ public sealed class PartiesControllerProblemDetailsTests : IClassFixture<Parties
 
         using JsonDocument problem = await ReadJsonAsync(response);
         problem.RootElement.GetProperty("status").GetInt32().ShouldBe(401);
-        problem.RootElement.GetProperty("title").GetString().ShouldBe("Unauthorized");
+        problem.RootElement.GetProperty("title").GetString().ShouldBe("Authentication context missing");
+    }
+
+    [Fact]
+    public async Task ListParties_TenantAccessDenied_ReturnsForbiddenBeforeProjectionReadAsync()
+    {
+        _factory.TenantAccessService.Handler = (_, _, requirement, _) => Task.FromResult(
+            requirement == TenantAccessRequirement.Read
+                ? TenantAccessDecision.Denied(TenantAccessDenialReason.UnknownTenant)
+                : TenantAccessDecision.Allowed);
+
+        using HttpClient client = _factory.CreateClient();
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", JwtTokenHelper.CreateToken(includeTenantClaim: true));
+        _factory.ActorProxyFactory.ClearReceivedCalls();
+
+        HttpResponseMessage response = await client.GetAsync("/api/v1/parties");
+
+        response.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
+        response.Content.Headers.ContentType?.MediaType.ShouldBe("application/problem+json");
+
+        using JsonDocument problem = await ReadJsonAsync(response);
+        problem.RootElement.GetProperty("reasonCode").GetString().ShouldBe("unknown-tenant");
+
+        _factory.ActorProxyFactory.DidNotReceive().CreateActorProxy<IPartyIndexProjectionActor>(
+            Arg.Is<ActorId>(id => string.Equals(id.ToString(), "tenant-a:party-index", StringComparison.Ordinal)),
+            Arg.Any<string>(),
+            Arg.Any<ActorProxyOptions?>());
+    }
+
+    [Fact]
+    public async Task CreateParty_TenantWriteDenied_DoesNotGuardOrDispatchCommandAsync()
+    {
+        _factory.Router.ClearReceivedCalls();
+        _factory.CommandGuard.ClearReceivedCalls();
+        _factory.TenantAccessService.Handler = (_, _, requirement, _) => Task.FromResult(
+            requirement == TenantAccessRequirement.Write
+                ? TenantAccessDecision.Denied(TenantAccessDenialReason.InsufficientRole)
+                : TenantAccessDecision.Allowed);
+
+        using HttpClient client = _factory.CreateClient();
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", JwtTokenHelper.CreateToken(includeTenantClaim: true));
+
+        using HttpContent body = JsonContent.Create(new
+        {
+            partyId = Guid.NewGuid().ToString(),
+            type = "person",
+            personDetails = new
+            {
+                firstName = "Ada",
+                lastName = "Lovelace",
+            },
+        });
+
+        HttpResponseMessage response = await client.PostAsync("/api/v1/parties", body);
+
+        response.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
+        using JsonDocument problem = await ReadJsonAsync(response);
+        problem.RootElement.GetProperty("reasonCode").GetString().ShouldBe("insufficient-role");
+
+        await _factory.CommandGuard.DidNotReceive()
+            .GetBlockingReasonAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<object>(), Arg.Any<CancellationToken>());
+        await _factory.Router.DidNotReceive().RouteCommandAsync(Arg.Any<SubmitCommand>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -1729,6 +1793,8 @@ public sealed class PartiesApiTestFactory : WebApplicationFactory<Program>
 
     internal IPersonalDataCommandGuard CommandGuard { get; } = Substitute.For<IPersonalDataCommandGuard>();
 
+    internal TestTenantAccessService TenantAccessService { get; } = new();
+
     private IReadOnlyDictionary<string, PartyIndexEntry> _indexEntries =
         new Dictionary<string, PartyIndexEntry>(StringComparer.Ordinal);
 
@@ -1785,6 +1851,8 @@ public sealed class PartiesApiTestFactory : WebApplicationFactory<Program>
             services.AddSingleton(ActorProxyFactory);
             services.RemoveAll<IPersonalDataCommandGuard>();
             services.AddSingleton(CommandGuard);
+            services.RemoveAll<ITenantAccessService>();
+            services.AddSingleton<ITenantAccessService>(TenantAccessService);
         });
     }
 }

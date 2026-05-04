@@ -4,6 +4,7 @@ using System.Text.Json;
 using Dapr.Actors;
 using Dapr.Actors.Client;
 
+using Hexalith.Parties.CommandApi.Authorization;
 using Hexalith.Parties.CommandApi.Search;
 using Hexalith.Parties.Contracts.Models;
 using Hexalith.Parties.Contracts.ValueObjects;
@@ -30,11 +31,10 @@ public static class FindPartiesMcpTool
         [Description("Number of results per page (max 100)")] int pageSize = 20,
         CancellationToken cancellationToken = default)
     {
-        string? tenant = McpSessionContext.Tenant.Value;
-        if (string.IsNullOrWhiteSpace(tenant))
-        {
-            throw new InvalidOperationException("Authentication required. No tenant context found in the request.");
-        }
+        McpTenantAccessContext access = await McpTenantAuthorization
+            .RequireAccessAsync(services, TenantAccessRequirement.Read, cancellationToken)
+            .ConfigureAwait(false);
+        string tenant = access.TenantId;
 
         if (page < 1)
         {

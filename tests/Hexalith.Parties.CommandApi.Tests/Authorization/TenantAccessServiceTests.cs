@@ -115,4 +115,23 @@ public class TenantAccessServiceTests {
         decision.IsAllowed.ShouldBeFalse();
         decision.Reason.ShouldBe(TenantAccessDenialReason.InsufficientRole);
     }
+
+    [Fact]
+    public async Task CheckAccessAsyncFailsClosedWhenProjectionStoreThrows() {
+        TenantAccessService service = new(new ThrowingTenantProjectionStore());
+
+        TenantAccessDecision decision = await service.CheckAccessAsync("tenant-1", "user-1", TenantAccessRequirement.Read);
+
+        decision.IsAllowed.ShouldBeFalse();
+        decision.Reason.ShouldBe(TenantAccessDenialReason.TenantStateStale);
+        decision.DiagnosticText.ShouldBe("Tenant access state is unavailable.");
+    }
+
+    private sealed class ThrowingTenantProjectionStore : ITenantProjectionStore {
+        public Task<TenantLocalState?> GetAsync(string tenantId, CancellationToken cancellationToken = default)
+            => throw new InvalidOperationException("Projection store unavailable.");
+
+        public Task SaveAsync(TenantLocalState state, CancellationToken cancellationToken = default)
+            => Task.CompletedTask;
+    }
 }

@@ -8,6 +8,7 @@ using Hexalith.EventStore.Server.Actors;
 using Hexalith.EventStore.Server.Commands;
 using Hexalith.EventStore.Server.Pipeline.Commands;
 using Hexalith.Parties.CommandApi.Authentication;
+using Hexalith.Parties.CommandApi.Authorization;
 using Hexalith.Parties.CommandApi.Middleware;
 using Hexalith.Parties.Contracts.Commands;
 using Hexalith.Parties.Contracts.Models;
@@ -36,6 +37,7 @@ public sealed class AdminController(
     ICommandRouter commandRouter,
     IActorProxyFactory actorProxyFactory,
     ICorrelationContextAccessor correlationContextAccessor,
+    ITenantAccessService tenantAccessService,
     ILogger<AdminController> logger) : ControllerBase {
     private const string Domain = "party";
     private const string TenantClaimType = PartiesClaimsTransformation.TenantClaimType;
@@ -46,17 +48,37 @@ public sealed class AdminController(
             .Select(c => c.Value)
             .FirstOrDefault(v => !string.IsNullOrWhiteSpace(v));
 
-    private string ExtractUserId()
+    private string? ExtractUserId()
         => User.FindFirst("sub")?.Value
-            ?? User.Identity?.Name
-            ?? "unknown";
+            ?? User.Identity?.Name;
+
+    private async Task<IActionResult?> AuthorizeAdminAccessAsync(
+        string? tenantId,
+        string correlationId,
+        CancellationToken cancellationToken) {
+        TenantAccessDecision decision = await tenantAccessService
+            .CheckAccessAsync(tenantId, ExtractUserId(), TenantAccessRequirement.Admin, cancellationToken)
+            .ConfigureAwait(false);
+
+        if (decision.IsAllowed) {
+            return null;
+        }
+
+        logger.LogWarning(
+            "Tenant admin access denied. CorrelationId={CorrelationId}, TenantId={TenantId}, ReasonCode={ReasonCode}",
+            correlationId,
+            tenantId,
+            TenantAccessDenialTranslator.ToReasonCode(decision.Reason));
+
+        return TenantAccessDenialTranslator.ToProblemDetails(decision, HttpContext.Request.Path, correlationId);
+    }
 
     [HttpPost("projections/rebuild")]
     [ProducesResponseType(StatusCodes.Status202Accepted)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
-    public IActionResult RebuildProjections([FromBody] RebuildProjectionsRequest request) {
+    public async Task<IActionResult> RebuildProjections([FromBody] RebuildProjectionsRequest request) {
         ArgumentNullException.ThrowIfNull(request);
 
         if (string.IsNullOrWhiteSpace(request.TenantId)) {
@@ -76,6 +98,13 @@ public sealed class AdminController(
 
         string correlationId = HttpContext.Items[CorrelationIdMiddleware.HttpContextKey]?.ToString()
             ?? Guid.NewGuid().ToString();
+        IActionResult? accessDenied = await AuthorizeAdminAccessAsync(
+            request.TenantId,
+            correlationId,
+            HttpContext.RequestAborted).ConfigureAwait(false);
+        if (accessDenied is not null) {
+            return accessDenied;
+        }
 
         // Start rebuild in background — don't block the HTTP request
         _ = Task.Run(async () => {
@@ -143,7 +172,12 @@ public sealed class AdminController(
 
         string correlationId = HttpContext.Items[CorrelationIdMiddleware.HttpContextKey]?.ToString()
             ?? Guid.NewGuid().ToString();
-        string userId = ExtractUserId();
+        IActionResult? accessDenied = await AuthorizeAdminAccessAsync(tenantId, correlationId, cancellationToken).ConfigureAwait(false);
+        if (accessDenied is not null) {
+            return accessDenied;
+        }
+
+        string userId = ExtractUserId()!;
         string? previousCorrelationId = correlationContextAccessor.CorrelationId;
         correlationContextAccessor.CorrelationId = correlationId;
 
@@ -227,6 +261,13 @@ public sealed class AdminController(
             return Problem(title: "Unauthorized", detail: "Tenant context is required.", statusCode: StatusCodes.Status401Unauthorized);
         }
 
+        string correlationId = HttpContext.Items[CorrelationIdMiddleware.HttpContextKey]?.ToString()
+            ?? Guid.NewGuid().ToString();
+        IActionResult? accessDenied = await AuthorizeAdminAccessAsync(tenantId, correlationId, cancellationToken).ConfigureAwait(false);
+        if (accessDenied is not null) {
+            return accessDenied;
+        }
+
         IReadOnlyList<int> versions = await keyStorageBackend.ListKeyVersionsAsync(tenantId, partyId, cancellationToken).ConfigureAwait(false);
         return Ok(new KeyVersionsResponse {
             PartyId = partyId,
@@ -250,6 +291,13 @@ public sealed class AdminController(
             return Problem(title: "Unauthorized", detail: "Tenant context is required.", statusCode: StatusCodes.Status401Unauthorized);
         }
 
+        string correlationId = HttpContext.Items[CorrelationIdMiddleware.HttpContextKey]?.ToString()
+            ?? Guid.NewGuid().ToString();
+        IActionResult? accessDenied = await AuthorizeAdminAccessAsync(tenantId, correlationId, cancellationToken).ConfigureAwait(false);
+        if (accessDenied is not null) {
+            return accessDenied;
+        }
+
         IReadOnlyList<KeyOperationAuditEntry> entries = await keyOperationAuditService
             .GetAuditTrailAsync(tenantId, partyId, cancellationToken)
             .ConfigureAwait(false);
@@ -262,7 +310,7 @@ public sealed class AdminController(
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
-    public IActionResult EraseParty(string partyId) {
+    public async Task<IActionResult> EraseParty(string partyId) {
         if (string.IsNullOrWhiteSpace(partyId)) {
             return Problem(title: "Invalid request", detail: "partyId is required.", statusCode: StatusCodes.Status400BadRequest);
         }
@@ -274,8 +322,15 @@ public sealed class AdminController(
 
         string correlationId = HttpContext.Items[CorrelationIdMiddleware.HttpContextKey]?.ToString()
             ?? Guid.NewGuid().ToString();
+        IActionResult? accessDenied = await AuthorizeAdminAccessAsync(
+            tenantId,
+            correlationId,
+            HttpContext.RequestAborted).ConfigureAwait(false);
+        if (accessDenied is not null) {
+            return accessDenied;
+        }
 
-        string userId = ExtractUserId();
+        string userId = ExtractUserId()!;
 
         _ = Task.Run(async () => {
             string? previousCorrelationId = correlationContextAccessor.CorrelationId;
@@ -484,7 +539,7 @@ public sealed class AdminController(
     [ProducesResponseType(typeof(ErasureStatusResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
-    public IActionResult GetErasureStatus(string partyId) {
+    public async Task<IActionResult> GetErasureStatus(string partyId) {
         if (string.IsNullOrWhiteSpace(partyId)) {
             return Problem(title: "Invalid request", detail: "partyId is required.", statusCode: StatusCodes.Status400BadRequest);
         }
@@ -494,15 +549,23 @@ public sealed class AdminController(
             return Problem(title: "Unauthorized", detail: "Tenant context is required.", statusCode: StatusCodes.Status401Unauthorized);
         }
 
-        PartyErasureStatusRecord? status = erasureRecordStore
-            .GetStatusAsync(tenantId, partyId, HttpContext.RequestAborted)
-            .GetAwaiter()
-            .GetResult();
+        string correlationId = HttpContext.Items[CorrelationIdMiddleware.HttpContextKey]?.ToString()
+            ?? Guid.NewGuid().ToString();
+        IActionResult? accessDenied = await AuthorizeAdminAccessAsync(
+            tenantId,
+            correlationId,
+            HttpContext.RequestAborted).ConfigureAwait(false);
+        if (accessDenied is not null) {
+            return accessDenied;
+        }
 
-        ErasureVerificationReport? report = erasureRecordStore
+        PartyErasureStatusRecord? status = await erasureRecordStore
+            .GetStatusAsync(tenantId, partyId, HttpContext.RequestAborted)
+            .ConfigureAwait(false);
+
+        ErasureVerificationReport? report = await erasureRecordStore
             .GetVerificationReportAsync(tenantId, partyId, HttpContext.RequestAborted)
-            .GetAwaiter()
-            .GetResult();
+            .ConfigureAwait(false);
 
         return Ok(new ErasureStatusResponse {
             PartyId = partyId,
@@ -520,7 +583,7 @@ public sealed class AdminController(
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
-    public IActionResult GetErasureCertificate(string partyId) {
+    public async Task<IActionResult> GetErasureCertificate(string partyId) {
         if (string.IsNullOrWhiteSpace(partyId)) {
             return Problem(title: "Invalid request", detail: "partyId is required.", statusCode: StatusCodes.Status400BadRequest);
         }
@@ -530,14 +593,22 @@ public sealed class AdminController(
             return Problem(title: "Unauthorized", detail: "Tenant context is required.", statusCode: StatusCodes.Status401Unauthorized);
         }
 
-        ErasureCertificate? certificate = erasureRecordStore
+        string correlationId = HttpContext.Items[CorrelationIdMiddleware.HttpContextKey]?.ToString()
+            ?? Guid.NewGuid().ToString();
+        IActionResult? accessDenied = await AuthorizeAdminAccessAsync(
+            tenantId,
+            correlationId,
+            HttpContext.RequestAborted).ConfigureAwait(false);
+        if (accessDenied is not null) {
+            return accessDenied;
+        }
+
+        ErasureCertificate? certificate = await erasureRecordStore
             .GetCertificateAsync(tenantId, partyId, HttpContext.RequestAborted)
-            .GetAwaiter()
-            .GetResult();
-        ErasureVerificationReport? report = erasureRecordStore
+            .ConfigureAwait(false);
+        ErasureVerificationReport? report = await erasureRecordStore
             .GetVerificationReportAsync(tenantId, partyId, HttpContext.RequestAborted)
-            .GetAwaiter()
-            .GetResult();
+            .ConfigureAwait(false);
 
         if (certificate is not null) {
             return Ok(new ErasureCertificateResponse {
@@ -558,7 +629,7 @@ public sealed class AdminController(
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
-    public IActionResult RetryVerification(string partyId) {
+    public async Task<IActionResult> RetryVerification(string partyId) {
         if (string.IsNullOrWhiteSpace(partyId)) {
             return Problem(title: "Invalid request", detail: "partyId is required.", statusCode: StatusCodes.Status400BadRequest);
         }
@@ -570,6 +641,13 @@ public sealed class AdminController(
 
         string correlationId = HttpContext.Items[CorrelationIdMiddleware.HttpContextKey]?.ToString()
             ?? Guid.NewGuid().ToString();
+        IActionResult? accessDenied = await AuthorizeAdminAccessAsync(
+            tenantId,
+            correlationId,
+            HttpContext.RequestAborted).ConfigureAwait(false);
+        if (accessDenied is not null) {
+            return accessDenied;
+        }
 
         _ = Task.Run(async () => {
             string? previousCorrelationId = correlationContextAccessor.CorrelationId;
@@ -644,7 +722,12 @@ public sealed class AdminController(
 
         string correlationId = HttpContext.Items[CorrelationIdMiddleware.HttpContextKey]?.ToString()
             ?? Guid.NewGuid().ToString();
-        string userId = ExtractUserId();
+        IActionResult? accessDenied = await AuthorizeAdminAccessAsync(tenantId, correlationId, cancellationToken).ConfigureAwait(false);
+        if (accessDenied is not null) {
+            return accessDenied;
+        }
+
+        string userId = ExtractUserId()!;
 
         RecordConsent command = new() {
             PartyId = partyId,
@@ -688,7 +771,12 @@ public sealed class AdminController(
 
         string correlationId = HttpContext.Items[CorrelationIdMiddleware.HttpContextKey]?.ToString()
             ?? Guid.NewGuid().ToString();
-        string userId = ExtractUserId();
+        IActionResult? accessDenied = await AuthorizeAdminAccessAsync(tenantId, correlationId, cancellationToken).ConfigureAwait(false);
+        if (accessDenied is not null) {
+            return accessDenied;
+        }
+
+        string userId = ExtractUserId()!;
 
         Contracts.Commands.RevokeConsent command = new() {
             PartyId = partyId,
@@ -723,6 +811,16 @@ public sealed class AdminController(
             return Problem(title: "Unauthorized", detail: "Tenant context is required.", statusCode: StatusCodes.Status401Unauthorized);
         }
 
+        string correlationId = HttpContext.Items[CorrelationIdMiddleware.HttpContextKey]?.ToString()
+            ?? Guid.NewGuid().ToString();
+        IActionResult? accessDenied = await AuthorizeAdminAccessAsync(
+            tenantId,
+            correlationId,
+            HttpContext.RequestAborted).ConfigureAwait(false);
+        if (accessDenied is not null) {
+            return accessDenied;
+        }
+
         PartyDetail? detail = await GetPartyDetailAsync(tenantId, partyId).ConfigureAwait(false);
         if (detail is null) {
             return NotFound(new ProblemDetails {
@@ -755,7 +853,12 @@ public sealed class AdminController(
 
         string correlationId = HttpContext.Items[CorrelationIdMiddleware.HttpContextKey]?.ToString()
             ?? Guid.NewGuid().ToString();
-        string userId = ExtractUserId();
+        IActionResult? accessDenied = await AuthorizeAdminAccessAsync(tenantId, correlationId, cancellationToken).ConfigureAwait(false);
+        if (accessDenied is not null) {
+            return accessDenied;
+        }
+
+        string userId = ExtractUserId()!;
 
         Contracts.Commands.RestrictProcessing command = new() {
             PartyId = partyId,
@@ -792,7 +895,12 @@ public sealed class AdminController(
 
         string correlationId = HttpContext.Items[CorrelationIdMiddleware.HttpContextKey]?.ToString()
             ?? Guid.NewGuid().ToString();
-        string userId = ExtractUserId();
+        IActionResult? accessDenied = await AuthorizeAdminAccessAsync(tenantId, correlationId, cancellationToken).ConfigureAwait(false);
+        if (accessDenied is not null) {
+            return accessDenied;
+        }
+
+        string userId = ExtractUserId()!;
 
         Contracts.Commands.LiftRestriction command = new() {
             PartyId = partyId,
@@ -828,6 +936,16 @@ public sealed class AdminController(
         string? tenantId = ExtractTenant();
         if (string.IsNullOrWhiteSpace(tenantId)) {
             return Problem(title: "Unauthorized", detail: "Tenant context is required.", statusCode: StatusCodes.Status401Unauthorized);
+        }
+
+        string correlationId = HttpContext.Items[CorrelationIdMiddleware.HttpContextKey]?.ToString()
+            ?? Guid.NewGuid().ToString();
+        IActionResult? accessDenied = await AuthorizeAdminAccessAsync(
+            tenantId,
+            correlationId,
+            HttpContext.RequestAborted).ConfigureAwait(false);
+        if (accessDenied is not null) {
+            return accessDenied;
         }
 
         PartyErasureStatusRecord? erasureStatus = await erasureRecordStore
@@ -898,6 +1016,13 @@ public sealed class AdminController(
         string? tenantId = ExtractTenant();
         if (string.IsNullOrWhiteSpace(tenantId)) {
             return Problem(title: "Unauthorized", detail: "Tenant context is required.", statusCode: StatusCodes.Status401Unauthorized);
+        }
+
+        string correlationId = HttpContext.Items[CorrelationIdMiddleware.HttpContextKey]?.ToString()
+            ?? Guid.NewGuid().ToString();
+        IActionResult? accessDenied = await AuthorizeAdminAccessAsync(tenantId, correlationId, cancellationToken).ConfigureAwait(false);
+        if (accessDenied is not null) {
+            return accessDenied;
         }
 
         PartyErasureStatusRecord? erasureStatus = await erasureRecordStore

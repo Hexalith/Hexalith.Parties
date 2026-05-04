@@ -24,7 +24,16 @@ public sealed class TenantAccessService : ITenantAccessService {
             return TenantAccessDecision.Denied(TenantAccessDenialReason.MissingUserId);
         }
 
-        TenantLocalState? state = await _projectionStore.GetAsync(tenantId, cancellationToken).ConfigureAwait(false);
+        TenantLocalState? state;
+        try {
+            state = await _projectionStore.GetAsync(tenantId, cancellationToken).ConfigureAwait(false);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException) {
+            return TenantAccessDecision.Denied(
+                TenantAccessDenialReason.TenantStateStale,
+                "Tenant access state is unavailable.");
+        }
+
         if (state is null) {
             return TenantAccessDecision.Denied(TenantAccessDenialReason.UnknownTenant);
         }

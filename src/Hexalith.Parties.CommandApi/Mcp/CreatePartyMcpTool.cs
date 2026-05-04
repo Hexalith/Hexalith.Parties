@@ -11,6 +11,7 @@ using FluentValidation.Results;
 using Hexalith.EventStore.Server.Actors;
 using Hexalith.EventStore.Server.Commands;
 using Hexalith.EventStore.Server.Pipeline.Commands;
+using Hexalith.Parties.CommandApi.Authorization;
 using Hexalith.Parties.Contracts.Commands;
 using Hexalith.Parties.Contracts.Models;
 using Hexalith.Parties.Contracts.ValueObjects;
@@ -43,11 +44,10 @@ public static class CreatePartyMcpTool
         [Description("VAT number — creates a VAT identifier")] string? vatNumber = null,
         CancellationToken cancellationToken = default)
     {
-        string? tenant = McpSessionContext.Tenant.Value;
-        if (string.IsNullOrWhiteSpace(tenant))
-        {
-            throw new InvalidOperationException("Authentication required. No tenant context found in the request.");
-        }
+        McpTenantAccessContext access = await McpTenantAuthorization
+            .RequireAccessAsync(services, TenantAccessRequirement.Write, cancellationToken)
+            .ConfigureAwait(false);
+        string tenant = access.TenantId;
 
         PartyType partyType = ParsePartyType(type);
 
@@ -164,7 +164,7 @@ public static class CreatePartyMcpTool
             CommandType: nameof(CreatePartyComposite),
             Payload: JsonSerializer.SerializeToUtf8Bytes(command),
             CorrelationId: Guid.NewGuid().ToString(),
-            UserId: "mcp-agent");
+            UserId: access.UserId);
 
         CommandProcessingResult result = await commandRouter
             .RouteCommandAsync(submitCommand, cancellationToken)
