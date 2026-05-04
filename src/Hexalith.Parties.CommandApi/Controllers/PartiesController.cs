@@ -12,6 +12,7 @@ using Hexalith.EventStore.Server.Commands;
 using Hexalith.EventStore.Server.Pipeline.Commands;
 using Hexalith.EventStore.Server.Projections;
 using Hexalith.EventStore.Contracts.Identity;
+using Hexalith.Parties.CommandApi.Authorization;
 using Hexalith.Parties.CommandApi.Extensions;
 using Hexalith.Parties.CommandApi.Middleware;
 using Hexalith.Parties.CommandApi.Search;
@@ -35,6 +36,7 @@ public sealed class PartiesController(
     ICommandRouter commandRouter,
     IActorProxyFactory actorProxyFactory,
     IPersonalDataCommandGuard personalDataCommandGuard,
+    ITenantAccessService tenantAccessService,
     IPartySearchService searchService,
     IProjectionUpdateOrchestrator projectionUpdateOrchestrator,
     ILogger<PartiesController> logger) : ControllerBase
@@ -59,9 +61,14 @@ public sealed class PartiesController(
             ?? Guid.NewGuid().ToString();
 
         string? tenant = ExtractTenant();
-        if (tenant is null)
+        IActionResult? accessDenied = await AuthorizeTenantAccessAsync(
+            tenant,
+            TenantAccessRequirement.Read,
+            correlationId,
+            HttpContext.RequestAborted).ConfigureAwait(false);
+        if (accessDenied is not null)
         {
-            return CreateUnauthorizedProblemDetails("A valid tenant claim is required to access this resource.", correlationId);
+            return accessDenied;
         }
 
         if (page < 1)
@@ -144,9 +151,14 @@ public sealed class PartiesController(
             ?? Guid.NewGuid().ToString();
 
         string? tenant = ExtractTenant();
-        if (tenant is null)
+        IActionResult? accessDenied = await AuthorizeTenantAccessAsync(
+            tenant,
+            TenantAccessRequirement.Read,
+            correlationId,
+            HttpContext.RequestAborted).ConfigureAwait(false);
+        if (accessDenied is not null)
         {
-            return CreateUnauthorizedProblemDetails("A valid tenant claim is required to access this resource.", correlationId);
+            return accessDenied;
         }
 
         if (page < 1)
@@ -238,7 +250,7 @@ public sealed class PartiesController(
 
         PartySearchResponse search = await searchService.SearchAsync(
             new PartySearchRequest(
-                tenant,
+                tenant!,
                 q,
                 parsedMode,
                 TypeFilter: null,
@@ -265,9 +277,14 @@ public sealed class PartiesController(
             ?? Guid.NewGuid().ToString();
 
         string? tenant = ExtractTenant();
-        if (tenant is null)
+        IActionResult? accessDenied = await AuthorizeTenantAccessAsync(
+            tenant,
+            TenantAccessRequirement.Read,
+            correlationId,
+            HttpContext.RequestAborted).ConfigureAwait(false);
+        if (accessDenied is not null)
         {
-            return CreateUnauthorizedProblemDetails("A valid tenant claim is required to access this resource.", correlationId);
+            return accessDenied;
         }
 
         if (TryParseScopedPartyId(id, out string scopedTenant, out string scopedDomain, out string scopedAggregateId))
@@ -330,9 +347,14 @@ public sealed class PartiesController(
             ?? Guid.NewGuid().ToString();
 
         string? tenant = ExtractTenant();
-        if (tenant is null)
+        IActionResult? accessDenied = await AuthorizeTenantAccessAsync(
+            tenant,
+            TenantAccessRequirement.Read,
+            correlationId,
+            HttpContext.RequestAborted).ConfigureAwait(false);
+        if (accessDenied is not null)
         {
-            return CreateUnauthorizedProblemDetails("A valid tenant claim is required to access this resource.", correlationId);
+            return accessDenied;
         }
 
         var actorId = new ActorId($"{tenant}:party-detail:{id}");
@@ -386,9 +408,14 @@ public sealed class PartiesController(
             ?? Guid.NewGuid().ToString();
 
         string? tenant = ExtractTenant();
-        if (tenant is null)
+        IActionResult? accessDenied = await AuthorizeTenantAccessAsync(
+            tenant,
+            TenantAccessRequirement.Read,
+            correlationId,
+            HttpContext.RequestAborted).ConfigureAwait(false);
+        if (accessDenied is not null)
         {
-            return CreateUnauthorizedProblemDetails("A valid tenant claim is required to access this resource.", correlationId);
+            return accessDenied;
         }
 
         var actorId = new ActorId($"{tenant}:party-detail:{id}");
@@ -568,24 +595,30 @@ public sealed class PartiesController(
             ?? Guid.NewGuid().ToString();
 
         string? tenant = ExtractTenant();
-        if (tenant is null)
+        IActionResult? accessDenied = await AuthorizeTenantAccessAsync(
+            tenant,
+            TenantAccessRequirement.Write,
+            correlationId,
+            cancellationToken).ConfigureAwait(false);
+        if (accessDenied is not null)
         {
-            return CreateUnauthorizedProblemDetails("A valid tenant claim is required to access this resource.", correlationId);
+            return accessDenied;
         }
 
+        string tenantId = tenant!;
         string? blockingReason = await personalDataCommandGuard
-            .GetBlockingReasonAsync(tenant, aggregateId, command!, cancellationToken)
+            .GetBlockingReasonAsync(tenantId, aggregateId, command!, cancellationToken)
             .ConfigureAwait(false);
         if (!string.IsNullOrWhiteSpace(blockingReason))
         {
-            return CreateCryptoUnavailableProblemDetails(blockingReason, correlationId, tenant);
+            return CreateCryptoUnavailableProblemDetails(blockingReason, correlationId, tenantId);
         }
 
-        string userId = User.FindFirst("sub")?.Value ?? "unknown";
+        string userId = ExtractUserId()!;
 
         var submitCommand = new SubmitCommand(
             MessageId: Guid.NewGuid().ToString(),
-            Tenant: tenant,
+            Tenant: tenantId,
             Domain: _domain,
             AggregateId: aggregateId,
             CommandType: commandType,
@@ -598,7 +631,7 @@ public sealed class PartiesController(
             commandType,
             aggregateId,
             correlationId,
-            tenant);
+            tenantId);
 
         CommandProcessingResult result = await commandRouter
             .RouteCommandAsync(submitCommand, cancellationToken)
@@ -606,10 +639,10 @@ public sealed class PartiesController(
 
         if (!result.Accepted)
         {
-            return CreateDomainRejectionProblemDetails(result.ErrorMessage, correlationId, tenant);
+            return CreateDomainRejectionProblemDetails(result.ErrorMessage, correlationId, tenantId);
         }
 
-        await TryUpdateProjectionAsync(tenant, aggregateId, correlationId, cancellationToken).ConfigureAwait(false);
+        await TryUpdateProjectionAsync(tenantId, aggregateId, correlationId, cancellationToken).ConfigureAwait(false);
 
         return Accepted(new { correlationId });
     }
@@ -626,24 +659,30 @@ public sealed class PartiesController(
             ?? Guid.NewGuid().ToString();
 
         string? tenant = ExtractTenant();
-        if (tenant is null)
+        IActionResult? accessDenied = await AuthorizeTenantAccessAsync(
+            tenant,
+            TenantAccessRequirement.Write,
+            correlationId,
+            cancellationToken).ConfigureAwait(false);
+        if (accessDenied is not null)
         {
-            return CreateUnauthorizedProblemDetails("A valid tenant claim is required to access this resource.", correlationId);
+            return accessDenied;
         }
 
+        string tenantId = tenant!;
         string? blockingReason = await personalDataCommandGuard
-            .GetBlockingReasonAsync(tenant, aggregateId, command!, cancellationToken)
+            .GetBlockingReasonAsync(tenantId, aggregateId, command!, cancellationToken)
             .ConfigureAwait(false);
         if (!string.IsNullOrWhiteSpace(blockingReason))
         {
-            return CreateCryptoUnavailableProblemDetails(blockingReason, correlationId, tenant);
+            return CreateCryptoUnavailableProblemDetails(blockingReason, correlationId, tenantId);
         }
 
-        string userId = User.FindFirst("sub")?.Value ?? "unknown";
+        string userId = ExtractUserId()!;
 
         var submitCommand = new SubmitCommand(
             MessageId: Guid.NewGuid().ToString(),
-            Tenant: tenant,
+            Tenant: tenantId,
             Domain: _domain,
             AggregateId: aggregateId,
             CommandType: commandType,
@@ -656,7 +695,7 @@ public sealed class PartiesController(
             commandType,
             aggregateId,
             correlationId,
-            tenant);
+            tenantId);
 
         CommandProcessingResult result = await commandRouter
             .RouteCommandAsync(submitCommand, cancellationToken)
@@ -664,10 +703,10 @@ public sealed class PartiesController(
 
         if (!result.Accepted)
         {
-            return CreateDomainRejectionProblemDetails(result.ErrorMessage, correlationId, tenant);
+            return CreateDomainRejectionProblemDetails(result.ErrorMessage, correlationId, tenantId);
         }
 
-        await TryUpdateProjectionAsync(tenant, aggregateId, correlationId, cancellationToken).ConfigureAwait(false);
+        await TryUpdateProjectionAsync(tenantId, aggregateId, correlationId, cancellationToken).ConfigureAwait(false);
 
         return Accepted(new { correlationId = result.CorrelationId ?? correlationId });
     }
@@ -836,6 +875,39 @@ public sealed class PartiesController(
         return User.FindAll("eventstore:tenant")
             .Select(c => c.Value)
             .FirstOrDefault(v => !string.IsNullOrWhiteSpace(v));
+    }
+
+    private string? ExtractUserId()
+    {
+        string? userId = User.FindFirst("sub")?.Value
+            ?? User.Identity?.Name;
+
+        return string.IsNullOrWhiteSpace(userId) ? null : userId;
+    }
+
+    private async Task<IActionResult?> AuthorizeTenantAccessAsync(
+        string? tenant,
+        TenantAccessRequirement requirement,
+        string correlationId,
+        CancellationToken cancellationToken)
+    {
+        TenantAccessDecision decision = await tenantAccessService
+            .CheckAccessAsync(tenant, ExtractUserId(), requirement, cancellationToken)
+            .ConfigureAwait(false);
+
+        if (decision.IsAllowed)
+        {
+            return null;
+        }
+
+        logger.LogWarning(
+            "Tenant access denied. CorrelationId={CorrelationId}, Tenant={Tenant}, Requirement={Requirement}, ReasonCode={ReasonCode}",
+            correlationId,
+            tenant,
+            requirement,
+            TenantAccessDenialTranslator.ToReasonCode(decision.Reason));
+
+        return TenantAccessDenialTranslator.ToProblemDetails(decision, HttpContext.Request.Path, correlationId);
     }
 
     private static void EnsureRouteMatchesBodyPartyId(string routeId, string bodyPartyId, string propertyName)

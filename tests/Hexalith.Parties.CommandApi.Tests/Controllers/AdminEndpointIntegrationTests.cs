@@ -241,6 +241,8 @@ public sealed class AdminEndpointIntegrationTests : IClassFixture<AdminEndpointI
                 services.AddSingleton(ErasureVerificationService);
                 services.RemoveAll<PartyErasureOrchestrator>();
                 services.AddSingleton<PartyErasureOrchestrator>();
+                services.RemoveAll<Hexalith.Parties.CommandApi.Authorization.ITenantAccessService>();
+                services.AddSingleton<Hexalith.Parties.CommandApi.Authorization.ITenantAccessService, Hexalith.Parties.CommandApi.Tests.Authorization.TestTenantAccessService>();
             });
         }
     }

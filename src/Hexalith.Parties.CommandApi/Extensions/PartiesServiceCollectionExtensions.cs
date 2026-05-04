@@ -13,6 +13,7 @@ using Hexalith.EventStore.Server.DomainServices;
 using Hexalith.EventStore.Server.Projections;
 using Hexalith.EventStore.Contracts.Security;
 using Hexalith.Memories.Client.Rest;
+using Hexalith.Parties.CommandApi.Authorization;
 using Hexalith.Parties.CommandApi.Authentication;
 using Hexalith.Parties.CommandApi.Domain;
 using Hexalith.Parties.CommandApi.ErrorHandling;
@@ -27,6 +28,7 @@ using Hexalith.Parties.Projections.Services;
 using Hexalith.Parties.Projections.Strategies;
 using Hexalith.Parties.Contracts.Security;
 using Hexalith.Parties.Security;
+using Hexalith.Tenants.Client.Registration;
 
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -71,6 +73,9 @@ public static class PartiesServiceCollectionExtensions {
         // EventStore server infrastructure (command routing, actors)
         _ = services.AddTransient<IDomainServiceInvoker, PartyDomainServiceInvoker>();
         _ = services.AddEventStoreServer(configuration);
+        _ = services.AddHexalithTenants(options => configuration.GetSection("Tenants").Bind(options));
+        _ = services.AddSingleton<ITenantAccessService, TenantAccessService>();
+
         // Single concrete registration so both interfaces resolve to the same instance per scope.
         // Two separate AddTransient<TInterface, TImpl>() calls would create two parallel
         // orchestrators, silently splitting any state or cache between the synchronous-update
@@ -290,12 +295,16 @@ public static class PartiesServiceCollectionExtensions {
                     string? tenant = httpContext.User.FindAll("eventstore:tenant")
                         .Select(c => c.Value)
                         .FirstOrDefault(v => !string.IsNullOrWhiteSpace(v));
+                    string? userId = httpContext.User.FindFirst("sub")?.Value
+                        ?? httpContext.User.Identity?.Name;
                     McpSessionContext.Tenant.Value = tenant;
+                    McpSessionContext.UserId.Value = string.IsNullOrWhiteSpace(userId) ? null : userId;
                     try {
                         await mcpServer.RunAsync(ct).ConfigureAwait(false);
                     }
                     finally {
                         McpSessionContext.Tenant.Value = null;
+                        McpSessionContext.UserId.Value = null;
                     }
                 };
             })

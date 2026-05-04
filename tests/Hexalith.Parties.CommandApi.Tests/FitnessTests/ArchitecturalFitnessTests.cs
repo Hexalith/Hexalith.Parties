@@ -90,6 +90,7 @@ public sealed class ArchitecturalFitnessTests
             "Hexalith.Parties.Contracts.Models",
             "Hexalith.Parties.Contracts.ValueObjects",
             "Hexalith.Parties.Contracts.Search",
+            "Hexalith.Parties.CommandApi.Authorization",
             "Hexalith.Parties.Projections.Abstractions",
             "Hexalith.Parties.Projections.Actors",
         ];

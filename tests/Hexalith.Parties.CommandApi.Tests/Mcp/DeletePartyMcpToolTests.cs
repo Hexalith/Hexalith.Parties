@@ -107,7 +107,7 @@ public sealed class DeletePartyMcpToolTests
         using TenantScope _ = TenantScope.Create("tenant-a");
 
         InvalidOperationException exception = await Should.ThrowAsync<InvalidOperationException>(
-            () => DeletePartyMcpTool.DeletePartyAsync("not-a-guid", Substitute.For<IServiceProvider>()));
+            () => DeletePartyMcpTool.DeletePartyAsync("not-a-guid", new ServiceCollection().AddSingleton<Hexalith.Parties.CommandApi.Authorization.ITenantAccessService, Hexalith.Parties.CommandApi.Tests.Authorization.TestTenantAccessService>().BuildServiceProvider()));
 
         exception.Message.ShouldBe("Party ID is required and must be a valid UUID.");
     }
@@ -116,9 +116,9 @@ public sealed class DeletePartyMcpToolTests
     public async Task DeletePartyAsync_MissingTenant_ThrowsAuthenticationErrorAsync()
     {
         InvalidOperationException exception = await Should.ThrowAsync<InvalidOperationException>(
-            () => DeletePartyMcpTool.DeletePartyAsync(Guid.NewGuid().ToString(), Substitute.For<IServiceProvider>()));
+            () => DeletePartyMcpTool.DeletePartyAsync(Guid.NewGuid().ToString(), new ServiceCollection().AddSingleton<Hexalith.Parties.CommandApi.Authorization.ITenantAccessService, Hexalith.Parties.CommandApi.Tests.Authorization.TestTenantAccessService>().BuildServiceProvider()));
 
-        exception.Message.ShouldBe("Authentication required. No tenant context found in the request.");
+        exception.Message.ShouldContain("missing-tenant");
     }
 
     private static ServiceProvider BuildServices<TCommand>(
@@ -130,6 +130,7 @@ public sealed class DeletePartyMcpToolTests
             .AddSingleton(router)
             .AddSingleton(actorProxyFactory)
             .AddSingleton(validator)
+            .AddSingleton<Hexalith.Parties.CommandApi.Authorization.ITenantAccessService, Hexalith.Parties.CommandApi.Tests.Authorization.TestTenantAccessService>()
             .BuildServiceProvider();
 
     private static IActorProxyFactory CreateActorProxyFactory(IPartyDetailProjectionActor projectionActor)
@@ -172,18 +173,32 @@ public sealed class DeletePartyMcpToolTests
             .GetType("Hexalith.Parties.CommandApi.Mcp.McpSessionContext", throwOnError: true)!
             .GetField("Tenant", BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic)!;
 
+        private static readonly FieldInfo _userIdField = typeof(DeletePartyMcpTool)
+            .Assembly
+            .GetType("Hexalith.Parties.CommandApi.Mcp.McpSessionContext", throwOnError: true)!
+            .GetField("UserId", BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic)!;
+
         private readonly AsyncLocal<string?> _tenant;
-        private readonly string? _previousValue;
+        private readonly AsyncLocal<string?> _userId;
+        private readonly string? _previousTenant;
+        private readonly string? _previousUserId;
 
         private TenantScope(string value)
         {
             _tenant = (AsyncLocal<string?>)_tenantField.GetValue(null)!;
-            _previousValue = _tenant.Value;
+            _userId = (AsyncLocal<string?>)_userIdField.GetValue(null)!;
+            _previousTenant = _tenant.Value;
+            _previousUserId = _userId.Value;
             _tenant.Value = value;
+            _userId.Value = "test-user";
         }
 
         public static TenantScope Create(string value) => new(value);
 
-        public void Dispose() => _tenant.Value = _previousValue;
+        public void Dispose()
+        {
+            _tenant.Value = _previousTenant;
+            _userId.Value = _previousUserId;
+        }
     }
 }
