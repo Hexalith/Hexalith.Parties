@@ -18,6 +18,15 @@ internal sealed class MemoriesPartySearchService(
     private const string GraphAxis = "graph";
     private const string HybridAxis = "hybrid";
 
+    /// <summary>
+    /// Reasonable upper bound for how many candidates to request from Memories per page.
+    /// Local hydration filters (tenant/case/auth/type/active) can drop a fraction of returned
+    /// rows so we ask for several times the requested window — but capped so a deep page
+    /// number can't translate into an enormous topK that Memories would clamp anyway and that
+    /// wastes RPC bandwidth. Memories itself clamps MaxResults to 100 (server-side).
+    /// </summary>
+    private const int MaxMemoriesTopK = 200;
+
     public async Task<PartySearchResponse> SearchAsync(
         PartySearchRequest request,
         IEnumerable<PartyIndexEntry> entries,
@@ -44,6 +53,7 @@ internal sealed class MemoriesPartySearchService(
                 request,
                 entryList,
                 $"Hexalith.Memories axis '{requestedAxis}' is disabled by configuration.",
+                DegradeCause.AxisDisabled,
                 cancellationToken).ConfigureAwait(false);
         }
 
@@ -58,6 +68,7 @@ internal sealed class MemoriesPartySearchService(
                 request,
                 entryList,
                 "Graph-assisted search requires a graph context (memory unit id or party id).",
+                DegradeCause.MissingContext,
                 cancellationToken).ConfigureAwait(false);
         }
 
@@ -65,13 +76,15 @@ internal sealed class MemoriesPartySearchService(
         PartySearchExecutionStatus status = PartySearchExecutionStatus.Rich;
         string? degradedReason = null;
         // Memories must return enough candidates so that hydration can fill the requested page.
-        // Request page * pageSize so that pagination after collapse can land on the right window
-        // even when many candidates are filtered out by tenant/case/auth/active checks.
-        // Use long arithmetic and clamp to int.MaxValue so a malicious or buggy caller passing
-        // a very large Page cannot trigger OverflowException (which would escape as a 500).
+        // Request a bounded multiple of the requested window so pagination after collapse can
+        // land on the right window even when many candidates are filtered out by
+        // tenant/case/auth/active checks. Long arithmetic avoids OverflowException on large
+        // page numbers; the cap (MaxMemoriesTopK) prevents asking Memories for an enormous
+        // result set when entryList is large — Memories clamps to 100 server-side anyway, so
+        // a 100k topK only wastes RPC bandwidth.
         long requestedWindow = (long)request.Page * request.PageSize;
-        long memoriesTopKLong = Math.Max(requestedWindow, entryList.Count);
-        int memoriesTopK = memoriesTopKLong > int.MaxValue ? int.MaxValue : (int)memoriesTopKLong;
+        long memoriesTopKLong = Math.Min(MaxMemoriesTopK, Math.Max(requestedWindow, request.PageSize));
+        int memoriesTopK = (int)memoriesTopKLong;
 
         try
         {
@@ -111,7 +124,16 @@ internal sealed class MemoriesPartySearchService(
                             request,
                             entryList,
                             "Graph-assisted search could not resolve the party context to a Memories memory unit.",
+                            DegradeCause.MissingContext,
                             cancellationToken).ConfigureAwait(false);
+                    }
+
+                    if (string.IsNullOrWhiteSpace(request.CaseId))
+                    {
+                        // Defensive guard: NormalizeRequest enforces non-empty CaseId today,
+                        // but a future caller path that bypasses normalization would otherwise
+                        // NRE on the null-forgiving operator below.
+                        throw new InvalidOperationException("Graph traversal requires a normalized case scope.");
                     }
 
                     TraversalResult traversal = await memoriesClient.TraverseAsync(
@@ -120,7 +142,8 @@ internal sealed class MemoriesPartySearchService(
                         depth: 2,
                         caseId: request.CaseId,
                         ct: cancellationToken).ConfigureAwait(false);
-                    candidates = await BuildTraversalCandidatesAsync(request, traversal.Nodes, cancellationToken).ConfigureAwait(false);
+                    IReadOnlyList<TraversalNode> nodes = traversal.Nodes ?? [];
+                    candidates = await BuildTraversalCandidatesAsync(request, startNodeId, nodes, cancellationToken).ConfigureAwait(false);
                     if (traversal.Degraded)
                     {
                         status = PartySearchExecutionStatus.Degraded;
@@ -158,6 +181,7 @@ internal sealed class MemoriesPartySearchService(
                 request,
                 entryList,
                 $"Hexalith.Memories search failed: {ex.GetType().Name}. Local fallback applied.",
+                DegradeCause.RuntimeFailure,
                 cancellationToken).ConfigureAwait(false);
         }
 
@@ -190,18 +214,38 @@ internal sealed class MemoriesPartySearchService(
 
     private async Task<IReadOnlyList<MemoryCandidate>> BuildTraversalCandidatesAsync(
         PartySearchRequest request,
+        string startNodeId,
         IReadOnlyList<TraversalNode> nodes,
         CancellationToken cancellationToken)
     {
+        if (string.IsNullOrWhiteSpace(request.CaseId))
+        {
+            throw new InvalidOperationException("Graph traversal requires a normalized case scope.");
+        }
+
         List<MemoryCandidate> candidates = new(nodes.Count);
         foreach (TraversalNode node in nodes)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
+            // The start node is the party that originated the graph search — the caller is
+            // looking for related parties, not for itself. Filter it out so a trivial
+            // "search from party-A" never has party-A dominating the result page.
+            if (string.Equals(node.MemoryUnitId, startNodeId, StringComparison.Ordinal))
+            {
+                continue;
+            }
+
+            if (string.IsNullOrWhiteSpace(node.MemoryUnitId))
+            {
+                logger.LogWarning("Skipping graph traversal node with null/empty MemoryUnitId.");
+                continue;
+            }
+
             try
             {
                 MemoryUnit unit = await memoriesClient
-                    .GetMemoryUnitAsync(request.TenantId, request.CaseId!, node.MemoryUnitId, cancellationToken)
+                    .GetMemoryUnitAsync(request.TenantId, request.CaseId, node.MemoryUnitId, cancellationToken)
                     .ConfigureAwait(false);
 
                 candidates.Add(ToCandidate(node, unit));
@@ -226,17 +270,36 @@ internal sealed class MemoriesPartySearchService(
         PartySearchRequest request,
         IEnumerable<PartyIndexEntry> entries,
         string degradedReason,
+        DegradeCause cause,
         CancellationToken cancellationToken)
     {
+        // Coerce the request to a mode the local provider can serve before delegating. Graph
+        // mode flowed through verbatim previously, but `LocalPartySearchService` ignores Mode
+        // — the response would advertise "graph context required" while the local provider
+        // ran the Hybrid path. Remap so the response mode and degraded reason agree.
+        PartySearchRequest localRequest = request.Mode == PartySearchMode.Graph
+            ? request with { Mode = PartySearchMode.Hybrid }
+            : request;
+
         PartySearchResponse local = await localFallback
-            .SearchAsync(request, entries, cancellationToken)
+            .SearchAsync(localRequest, entries, cancellationToken)
             .ConfigureAwait(false);
 
-        // Override the LocalOnly status with Degraded so callers can distinguish
-        // "Memories was never configured" (LocalOnly) from "Memories tried and failed" (Degraded).
+        // AC4 status semantics (resolved decision #3): distinguish between "Memories
+        // integration disabled by an axis-config choice" (a `LocalOnly` outcome — operator
+        // intent, not an alert), "runtime outage" (a `Degraded` outcome — operations should
+        // investigate), and "missing context" (also `Degraded` — caller misuse but the
+        // result set is still local-only fallback). The disabled-axis path here returns
+        // LocalOnly so operations alarms on `Degraded` remain unambiguous.
+        PartySearchExecutionStatus status = cause switch
+        {
+            DegradeCause.AxisDisabled => PartySearchExecutionStatus.LocalOnly,
+            _ => PartySearchExecutionStatus.Degraded,
+        };
+
         return local with
         {
-            Status = PartySearchExecutionStatus.Degraded,
+            Status = status,
             DegradedReason = degradedReason,
         };
     }
@@ -244,7 +307,8 @@ internal sealed class MemoriesPartySearchService(
     private static bool IsTransientMemoriesFailure(Exception ex)
         => ex is HttpRequestException
             or TaskCanceledException
-            or TimeoutException;
+            or TimeoutException
+            or MemoriesRemoteException;
 
     private static PartySearchRequest NormalizeRequest(
         PartySearchRequest request,
@@ -252,7 +316,11 @@ internal sealed class MemoriesPartySearchService(
     {
         if (request.AuthorizedPartyIds is null)
         {
-            throw new InvalidOperationException("Party search requires an explicit AuthorizedPartyIds set.");
+            // ArgumentException maps to a 400 ProblemDetails via the global validation
+            // handler; the previous InvalidOperationException surfaced as 500.
+            throw new ArgumentException(
+                "Party search requires an explicit AuthorizedPartyIds set.",
+                nameof(request));
         }
 
         string? caseId = string.IsNullOrWhiteSpace(request.CaseId)
@@ -260,12 +328,30 @@ internal sealed class MemoriesPartySearchService(
             : request.CaseId;
         if (string.IsNullOrWhiteSpace(caseId))
         {
-            throw new InvalidOperationException("Party search requires an explicit case scope.");
+            throw new ArgumentException(
+                "Party search requires an explicit case scope.",
+                nameof(request));
+        }
+
+        // Re-key the authorized set into an Ordinal HashSet so comparisons inside Hydrate
+        // are symmetric with internal id collections (which all use Ordinal). A caller
+        // passing OrdinalIgnoreCase previously slipped past the membership check, then got
+        // dropped silently at the entriesById lookup with no diagnostic.
+        IReadOnlySet<string> authorized = request.AuthorizedPartyIds!;
+        if (authorized is not HashSet<string> { Comparer: var cmp } || !ReferenceEquals(cmp, StringComparer.Ordinal))
+        {
+            authorized = new HashSet<string>(authorized, StringComparer.Ordinal);
         }
 
         int page = Math.Max(1, request.Page);
         int pageSize = Math.Clamp(request.PageSize, 1, 100);
-        return request with { CaseId = caseId, Page = page, PageSize = pageSize };
+        return request with
+        {
+            CaseId = caseId,
+            Page = page,
+            PageSize = pageSize,
+            AuthorizedPartyIds = authorized,
+        };
     }
 
     private static string MapModeToAxis(PartySearchMode mode) => mode switch
@@ -276,7 +362,7 @@ internal sealed class MemoriesPartySearchService(
         _ => HybridAxis,
     };
 
-    private static PartySearchResponse Hydrate(
+    private PartySearchResponse Hydrate(
         PartySearchRequest request,
         IEnumerable<PartyIndexEntry> entries,
         IReadOnlyList<MemoryCandidate> candidates,
@@ -284,16 +370,26 @@ internal sealed class MemoriesPartySearchService(
         string? degradedReason,
         CancellationToken cancellationToken)
     {
-        // Use first-wins on duplicate ids so a corrupted index entry can't crash the request.
         Dictionary<string, PartyIndexEntry> entriesById = new(StringComparer.Ordinal);
         foreach (PartyIndexEntry entry in entries)
         {
-            if (entry.IsErased || !entry.IsActive)
+            if (entry.IsErased)
             {
                 continue;
             }
 
-            entriesById.TryAdd(entry.Id, entry);
+            // Inactive entries stay in the lookup so callers explicitly passing
+            // ActiveFilter=false can find them; the IsActive filter is reapplied below
+            // against `request.ActiveFilter`.
+            if (!entriesById.TryAdd(entry.Id, entry))
+            {
+                // Split-brain corruption from concurrent projection writers becomes invisible
+                // when first-wins silently drops the duplicate. Logging makes the corruption
+                // signal observable so an operator can triage rather than chase a missing row.
+                logger.LogWarning(
+                    "Duplicate PartyIndexEntry id detected during search hydration: {PartyId}. Keeping first occurrence; the duplicate may carry divergent data.",
+                    entry.Id);
+            }
         }
 
         List<HydratedCandidate> hydrated = [];
@@ -301,21 +397,24 @@ internal sealed class MemoriesPartySearchService(
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            if (!PartyMemoryUrn.TryParse(candidate.SourceUri, out string tenantId, out string partyId))
+            if (!PartyMemoryUrn.TryParse(candidate.SourceUri, logger, out string tenantId, out string partyId))
             {
                 continue;
             }
 
+            // Tenant comparison is case-insensitive to tolerate canonical-casing drift in
+            // historical data; case scope is also case-insensitive for the same reason. The
+            // previous Ordinal vs OrdinalIgnoreCase asymmetry between tenant and case let
+            // mismatched-casing case ids silently drop hits.
             if (!string.Equals(tenantId, request.TenantId, StringComparison.OrdinalIgnoreCase))
             {
                 continue;
             }
 
-            // Strict case isolation: when the request is case-scoped, candidates without a case
-            // id (or with a mismatching case id) must be dropped. The previous "either side null
-            // means skip the check" policy admitted candidates from any case.
+            // Strict case isolation: when the request is case-scoped, candidates without a
+            // case id (or with a mismatching case id) must be dropped.
             if (!string.IsNullOrWhiteSpace(request.CaseId)
-                && !string.Equals(candidate.CaseId, request.CaseId, StringComparison.Ordinal))
+                && !string.Equals(candidate.CaseId, request.CaseId, StringComparison.OrdinalIgnoreCase))
             {
                 continue;
             }
@@ -343,35 +442,42 @@ internal sealed class MemoriesPartySearchService(
             hydrated.Add(new HydratedCandidate(entry, candidate));
         }
 
+        // Collapse duplicate party-id hits to one row, keeping the highest-scoring candidate.
+        // Inside the group, break score ties on MemoryUnitId so the kept candidate is
+        // deterministic across calls — otherwise tied scores let iterator order flip between
+        // queries, breaking idempotent client caches.
         List<HydratedCandidate> collapsed =
         [
             .. hydrated
                 .GroupBy(h => h.Entry.Id, StringComparer.Ordinal)
-                .Select(g => g.OrderByDescending(h => h.Candidate.CompositeScore ?? h.Candidate.Score ?? 0).First())
-                .OrderByDescending(h => h.Candidate.CompositeScore ?? h.Candidate.Score ?? 0)
+                .Select(g => g
+                    .OrderByDescending(h => SafeScore(h.Candidate))
+                    .ThenBy(h => h.Candidate.MemoryUnitId, StringComparer.Ordinal)
+                    .First())
+                .OrderByDescending(h => SafeScore(h.Candidate))
                 .ThenBy(h => h.Entry.DisplayName, StringComparer.OrdinalIgnoreCase)
                 .ThenBy(h => h.Entry.Id, StringComparer.Ordinal),
         ];
 
-        List<PartySearchResult> items =
-        [
-            .. collapsed
-                .Skip((request.Page - 1) * request.PageSize)
-                .Take(request.PageSize)
-                .Select(ToSearchResult),
-        ];
+        // Use long arithmetic + clamp so a malicious or buggy `Page=int.MaxValue` cannot
+        // overflow the skip count to a negative integer (Enumerable.Skip with negative
+        // returns the full sequence, producing the wrong page with the advertised page index).
+        long skipLong = (long)Math.Max(0, request.Page - 1) * Math.Max(0, request.PageSize);
+        int skip = skipLong > int.MaxValue ? int.MaxValue : (int)skipLong;
+
+        List<HydratedCandidate> page = [.. collapsed.Skip(skip).Take(request.PageSize)];
+
+        List<PartySearchResult> items = [.. page.Select(ToSearchResult)];
 
         int totalCount = collapsed.Count;
         int totalPages = totalCount == 0 ? 1 : (int)Math.Ceiling((double)totalCount / request.PageSize);
 
-        // Build a single id-keyed lookup over the page items (not the full collapsed list) so
-        // ScoreMetadata / SourceMetadata don't pay an O(N²) `First` scan per page row, and so a
-        // future drift between collapse and metadata can't surface as InvalidOperationException.
-        Dictionary<string, HydratedCandidate> pageHydrated = new(items.Count, StringComparer.Ordinal);
-        foreach (HydratedCandidate hit in collapsed.Skip((request.Page - 1) * request.PageSize).Take(request.PageSize))
-        {
-            pageHydrated.TryAdd(hit.Entry.Id, hit);
-        }
+        // Build score / source metadata directly from the same `page` list so there is no
+        // drift between `items` and the metadata arrays — the previous two-enumeration
+        // approach risked KeyNotFoundException if one enumeration ever produced a different
+        // ordering than the other.
+        IReadOnlyList<PartySearchScoreMetadata> scoreMetadata = [.. page.Select(ToScoreMetadata)];
+        IReadOnlyList<PartySearchSourceMetadata> sourceMetadata = [.. page.Select(ToSourceMetadata)];
 
         return new PartySearchResponse(
             new PagedResult<PartySearchResult>
@@ -384,13 +490,36 @@ internal sealed class MemoriesPartySearchService(
             },
             status,
             degradedReason,
-            [.. items.Select(item => ToScoreMetadata(pageHydrated[item.Party.Id]))],
-            [.. items.Select(item => ToSourceMetadata(pageHydrated[item.Party.Id]))]);
+            scoreMetadata,
+            sourceMetadata);
+    }
+
+    /// <summary>
+    /// Returns a score that is safe to sort and serialize. NaN/Infinity values produce
+    /// non-deterministic ordering with <see cref="System.Linq.Enumerable.OrderByDescending"/>
+    /// and break <c>JsonSerializer</c> mid-response when
+    /// <c>JsonNumberHandling.AllowNamedFloatingPointLiterals</c> is not configured.
+    /// </summary>
+    private static double SafeScore(MemoryCandidate candidate)
+    {
+        double score = candidate.CompositeScore ?? candidate.Score ?? 0;
+        return double.IsNaN(score) || double.IsInfinity(score) ? 0 : score;
+    }
+
+    private static double? SanitizeScore(double? score)
+    {
+        if (score is null)
+        {
+            return null;
+        }
+
+        double v = score.Value;
+        return double.IsNaN(v) || double.IsInfinity(v) ? null : v;
     }
 
     private static PartySearchResult ToSearchResult(HydratedCandidate hydrated)
     {
-        double score = hydrated.Candidate.CompositeScore ?? hydrated.Candidate.Score ?? 0;
+        double score = SafeScore(hydrated.Candidate);
         return new PartySearchResult
         {
             Party = hydrated.Entry,
@@ -410,11 +539,11 @@ internal sealed class MemoriesPartySearchService(
     private static PartySearchScoreMetadata ToScoreMetadata(HydratedCandidate hydrated)
         => new(
             hydrated.Entry.Id,
-            hydrated.Candidate.Score,
-            hydrated.Candidate.SyntacticScore,
-            hydrated.Candidate.SemanticScore,
-            hydrated.Candidate.GraphScore,
-            hydrated.Candidate.CompositeScore);
+            SanitizeScore(hydrated.Candidate.Score),
+            SanitizeScore(hydrated.Candidate.SyntacticScore),
+            SanitizeScore(hydrated.Candidate.SemanticScore),
+            SanitizeScore(hydrated.Candidate.GraphScore),
+            SanitizeScore(hydrated.Candidate.CompositeScore));
 
     private static PartySearchSourceMetadata ToSourceMetadata(HydratedCandidate hydrated)
         => new(
@@ -452,10 +581,18 @@ internal sealed class MemoriesPartySearchService(
 
     private static MemoryCandidate ToCandidate(TraversalNode node, MemoryUnit unit)
     {
-        // HopDistance 0 = the start node itself. Score it 1.0 and decay 1/(hop+1) for neighbours
-        // so a hop-1 neighbour scores 0.5, hop-2 scores 0.333 — distinguishable, monotonic.
-        double score = 1.0 / (1 + Math.Max(0, node.HopDistance));
-        string? eventType = unit.Metadata.TryGetValue("eventType", out MetadataField? field) ? field.Value : null;
+        // HopDistance >= 1 by the time we reach here (start node was filtered out in
+        // BuildTraversalCandidatesAsync). 1/(hop+1) keeps the score monotonic and
+        // distinguishable: hop-1 → 0.5, hop-2 → 0.333, hop-3 → 0.25, etc.
+        double score = 1.0 / (1 + Math.Max(1, node.HopDistance));
+        string? eventType = null;
+        if (unit.Metadata is not null
+            && unit.Metadata.TryGetValue("eventType", out MetadataField? field)
+            && !string.IsNullOrEmpty(field?.Value))
+        {
+            eventType = field.Value;
+        }
+
         return new MemoryCandidate(
             node.MemoryUnitId,
             unit.SourceUri,
@@ -473,6 +610,18 @@ internal sealed class MemoriesPartySearchService(
         => unavailableAxes is { Count: > 0 }
             ? $"Hexalith.Memories search degraded; unavailable axes: {string.Join(", ", unavailableAxes)}."
             : "Hexalith.Memories search degraded.";
+
+    /// <summary>
+    /// Why the request fell back to the local provider. Drives the response Status so
+    /// callers and operations dashboards can distinguish operator intent (axis disabled =
+    /// LocalOnly) from runtime outage (Memories failed = Degraded).
+    /// </summary>
+    private enum DegradeCause
+    {
+        AxisDisabled,
+        MissingContext,
+        RuntimeFailure,
+    }
 
     private sealed record MemoryCandidate(
         string MemoryUnitId,

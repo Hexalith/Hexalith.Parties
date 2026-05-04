@@ -45,7 +45,7 @@ public class PartyMemoryUnitMapperTests
         unit.Metadata["correlationId"].Value.ShouldBe("corr-1");
         unit.Metadata["causationId"].Value.ShouldBe("cause-1");
         unit.Metadata["sourceService"].Value.ShouldBe("Hexalith.Parties");
-        unit.Metadata["partyType"].Value.ShouldBe("Person");
+        unit.Metadata["partyType"].Value.ShouldBe("person");
         unit.Metadata["isActive"].Value.ShouldBe("true");
         unit.Metadata["isErased"].Value.ShouldBe("false");
     }
@@ -66,7 +66,8 @@ public class PartyMemoryUnitMapperTests
     public async Task PartyMemoryIndexingServiceIndexesPartyCreatedDataAndTracksMapping()
     {
         var client = new RecordingMemoriesClient();
-        var service = new PartyMemoryIndexingService(client, NullLogger<PartyMemoryIndexingService>.Instance);
+        var mappingStore = new RecordingMappingStore();
+        var service = new PartyMemoryIndexingService(client, mappingStore, NullLogger<PartyMemoryIndexingService>.Instance);
         PartyIndexEntry entry = CreateEntry();
 
         PartyMemoryIndexingResult? result = await service.IndexAsync(
@@ -90,13 +91,20 @@ public class PartyMemoryUnitMapperTests
         client.LastContentText.ShouldNotBeNull();
         client.LastContentText.ShouldContain("Jean Dupont");
         client.LastMetadata.ShouldContainKey("partyId");
+        // The indexing service must record the per-party → memory-unit-id mapping so that
+        // erasure cleanup can later iterate per-unit DELETEs (AC5 resolved decision #2).
+        IReadOnlyList<PartyMemoryUnitMappingEntry> mappings = await mappingStore.GetMappingsAsync("tenant-a", "party-1", CancellationToken.None);
+        mappings.Count.ShouldBe(1);
+        mappings[0].MemoryUnitId.ShouldBe("workflow-1");
+        mappings[0].SourceUri.ShouldBe(result.SourceUri);
     }
 
     [Fact]
     public async Task PartyMemoryIndexingServiceReturnsBlockedResultWhenMemoriesIngestFails()
     {
         var client = new ThrowingMemoriesClient(new HttpRequestException("memories down"));
-        var service = new PartyMemoryIndexingService(client, NullLogger<PartyMemoryIndexingService>.Instance);
+        var mappingStore = new RecordingMappingStore();
+        var service = new PartyMemoryIndexingService(client, mappingStore, NullLogger<PartyMemoryIndexingService>.Instance);
         PartyIndexEntry entry = CreateEntry();
 
         PartyMemoryIndexingResult? result = await service.IndexAsync(
@@ -112,13 +120,30 @@ public class PartyMemoryUnitMapperTests
     }
 
     [Fact]
-    public void InactiveOrErasedPartyIsNotMappedForIndexing()
+    public void ErasedPartyIsNotMappedForIndexing()
     {
+        PartyIndexEntry erased = CreateEntry() with { IsErased = true };
+        PartyMemoryUnit? unit = PartyMemoryUnitMapper.Map(
+            erased,
+            PartyMemoryUnitMappingContext.ForProjection("tenant-a", "case-a"));
+        unit.ShouldBeNull();
+    }
+
+    [Fact]
+    public void InactivePartyIsMappedWithLifecycleStateInMetadataAndContent()
+    {
+        // AC1 requires indexing the active/erased state — not only active parties.
+        // Inactive (deactivated) parties remain searchable when callers pass
+        // ActiveFilter=false; the metadata + content capture the lifecycle so
+        // hydration can apply the filter authoritatively.
         PartyIndexEntry inactive = CreateEntry() with { IsActive = false };
         PartyMemoryUnit? unit = PartyMemoryUnitMapper.Map(
             inactive,
             PartyMemoryUnitMappingContext.ForProjection("tenant-a", "case-a"));
-        unit.ShouldBeNull();
+
+        unit.ShouldNotBeNull();
+        unit.Metadata["isActive"].Value.ShouldBe("false");
+        unit.Content.ShouldContain("State: inactive");
     }
 
     private static PartyIndexEntry CreateEntry()
@@ -151,6 +176,34 @@ public class PartyMemoryUnitMapperTests
             LastModifiedAt = DateTimeOffset.Parse("2026-05-02T10:00:00Z"),
             IsErased = false,
         };
+
+    private sealed class RecordingMappingStore : IPartyMemoryUnitMappingStore
+    {
+        private readonly Dictionary<string, List<PartyMemoryUnitMappingEntry>> _mappings = new(StringComparer.Ordinal);
+
+        public Task RecordMappingAsync(string tenantId, string partyId, string memoryUnitId, string sourceUri, CancellationToken cancellationToken)
+        {
+            string key = $"{tenantId}:{partyId}";
+            if (!_mappings.TryGetValue(key, out List<PartyMemoryUnitMappingEntry>? list))
+            {
+                list = [];
+                _mappings[key] = list;
+            }
+
+            list.Add(new PartyMemoryUnitMappingEntry(memoryUnitId, sourceUri));
+            return Task.CompletedTask;
+        }
+
+        public Task<IReadOnlyList<PartyMemoryUnitMappingEntry>> GetMappingsAsync(string tenantId, string partyId, CancellationToken cancellationToken)
+            => Task.FromResult<IReadOnlyList<PartyMemoryUnitMappingEntry>>(
+                _mappings.TryGetValue($"{tenantId}:{partyId}", out List<PartyMemoryUnitMappingEntry>? list) ? list : []);
+
+        public Task ClearMappingsAsync(string tenantId, string partyId, CancellationToken cancellationToken)
+        {
+            _mappings.Remove($"{tenantId}:{partyId}");
+            return Task.CompletedTask;
+        }
+    }
 
     private sealed class RecordingMemoriesClient()
         : MemoriesClient(

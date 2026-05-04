@@ -34,8 +34,11 @@ internal sealed class LocalFuzzyPartySearchProvider : IPartySearchProvider
         PartyType? typeFilter,
         bool? activeFilter,
         int page,
-        int pageSize)
+        int pageSize,
+        CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
+
         if (string.IsNullOrWhiteSpace(query))
         {
             return new PagedResult<PartySearchResult>
@@ -52,14 +55,36 @@ internal sealed class LocalFuzzyPartySearchProvider : IPartySearchProvider
         string[] tokens = normalizedQuery
             .Split([' ', '\t', '\r', '\n'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 
-        List<PartySearchResult> results = ApplyFilters(entries, typeFilter, activeFilter)
-            .Where(e => !e.IsErased)
-            .Select(entry => EvaluateEntry(entry, tokens))
-            .Where(r => r is not null)
-            .Select(r => r!)
-            .OrderByDescending(r => r.RelevanceScore)
-            .ThenBy(r => r.Party.DisplayName, StringComparer.OrdinalIgnoreCase)
-            .ToList();
+        // Materialize once: callers may pass a yield-iterator over Dapr actor state, and the
+        // pipeline below enumerates `entries` multiple times via Where/Select/OrderBy.
+        IReadOnlyList<PartyIndexEntry> materialized = entries as IReadOnlyList<PartyIndexEntry> ?? [.. entries];
+
+        List<PartySearchResult> results = [];
+        foreach (PartyIndexEntry entry in ApplyFilters(materialized, typeFilter, activeFilter))
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            if (entry.IsErased)
+            {
+                continue;
+            }
+
+            PartySearchResult? evaluated = EvaluateEntry(entry, tokens);
+            if (evaluated is not null)
+            {
+                results.Add(evaluated);
+            }
+        }
+
+        results.Sort((left, right) =>
+        {
+            int byScore = right.RelevanceScore.CompareTo(left.RelevanceScore);
+            if (byScore != 0)
+            {
+                return byScore;
+            }
+
+            return string.Compare(left.Party.DisplayName, right.Party.DisplayName, StringComparison.OrdinalIgnoreCase);
+        });
 
         return CreatePagedResult(results, page, pageSize);
     }
@@ -216,7 +241,13 @@ internal sealed class LocalFuzzyPartySearchProvider : IPartySearchProvider
     {
         int totalCount = items.Count;
         int totalPages = totalCount == 0 ? 1 : (int)Math.Ceiling((double)totalCount / pageSize);
-        List<PartySearchResult> pagedItems = [.. items.Skip((page - 1) * pageSize).Take(pageSize)];
+        // Use long arithmetic and clamp to int.MaxValue so a malicious or buggy caller
+        // passing Page=int.MaxValue cannot overflow `(page-1)*pageSize` to a negative value
+        // (Enumerable.Skip with negative returns the full sequence, producing the wrong page
+        // with the advertised page index).
+        long skipLong = (long)Math.Max(0, page - 1) * Math.Max(0, pageSize);
+        int skip = skipLong > int.MaxValue ? int.MaxValue : (int)skipLong;
+        List<PartySearchResult> pagedItems = [.. items.Skip(skip).Take(pageSize)];
 
         return new PagedResult<PartySearchResult>
         {

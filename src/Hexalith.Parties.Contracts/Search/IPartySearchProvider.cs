@@ -16,5 +16,6 @@ public interface IPartySearchProvider
         PartyType? typeFilter,
         bool? activeFilter,
         int page,
-        int pageSize);
+        int pageSize,
+        CancellationToken cancellationToken = default);
 }

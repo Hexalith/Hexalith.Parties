@@ -268,7 +268,12 @@ public class MemoriesPartySearchServiceTests
 
         client.HybridCalls.ShouldBe(0);
         client.LastAxis.ShouldBeNull();
-        response.Status.ShouldBe(PartySearchExecutionStatus.Degraded);
+        // AC4 status semantics (resolved decision #3): operator-disabled axes return
+        // LocalOnly so operations alarms on `Degraded` remain unambiguous (Degraded =
+        // runtime outage, LocalOnly = intentional config). The reason text still mentions
+        // "disabled" so callers can distinguish this LocalOnly cause from "Memories
+        // never configured" (which has no reason text).
+        response.Status.ShouldBe(PartySearchExecutionStatus.LocalOnly);
         response.DegradedReason.ShouldNotBeNull();
         response.DegradedReason.ShouldContain("disabled");
     }
@@ -420,7 +425,36 @@ public class MemoriesPartySearchServiceTests
     }
 
     [Fact]
-    public async Task InactivePartyFromStaleMemoryHitIsNotHydrated()
+    public async Task InactivePartyHitIsHydratedWhenCallerExplicitlyRequestsInactive()
+    {
+        // AC1 + the search boundary's active-state filter: inactive parties are indexed and
+        // hydrated when callers explicitly pass ActiveFilter=false. The previous behavior of
+        // unconditionally dropping inactive entries hid them from operator/admin views that
+        // legitimately want to see deactivated parties.
+        var client = new RecordingMemoriesClient
+        {
+            HybridResult = new HybridSearchResult
+            {
+                Results = [CreateHit("memory-inactive", PartyMemoryUrn.Build("tenant-a", "p1"), 0.9, caseId: "case-a")],
+                TotalCount = 1,
+                Degraded = false,
+                UnavailableAxes = [],
+                Query = "party",
+            },
+        };
+        var service = CreateService(client);
+
+        PartySearchResponse response = await service.SearchAsync(
+            CreateRequest("party", PartySearchMode.Hybrid, CaseId: "case-a", ActiveFilter: false, AuthorizedPartyIds: Authorized("p1")),
+            [CreateEntry("p1", "Inactive") with { IsActive = false }],
+            CancellationToken.None).ConfigureAwait(true);
+
+        response.Results.Items.Count.ShouldBe(1);
+        response.Results.Items[0].Party.Id.ShouldBe("p1");
+    }
+
+    [Fact]
+    public async Task InactivePartyHitIsFilteredOutWhenCallerRequestsActiveOnly()
     {
         var client = new RecordingMemoriesClient
         {
@@ -436,7 +470,7 @@ public class MemoriesPartySearchServiceTests
         var service = CreateService(client);
 
         PartySearchResponse response = await service.SearchAsync(
-            CreateRequest("party", PartySearchMode.Hybrid, CaseId: "case-a", AuthorizedPartyIds: Authorized("p1")),
+            CreateRequest("party", PartySearchMode.Hybrid, CaseId: "case-a", ActiveFilter: true, AuthorizedPartyIds: Authorized("p1")),
             [CreateEntry("p1", "Inactive") with { IsActive = false }],
             CancellationToken.None).ConfigureAwait(true);
 
@@ -448,7 +482,9 @@ public class MemoriesPartySearchServiceTests
     {
         var service = CreateService(new RecordingMemoriesClient());
 
-        await Should.ThrowAsync<InvalidOperationException>(() => service.SearchAsync(
+        // ArgumentException maps cleanly to a 400 ProblemDetails via the global validation
+        // handler; the previous InvalidOperationException surfaced as 500.
+        await Should.ThrowAsync<ArgumentException>(() => service.SearchAsync(
             new PartySearchRequest("tenant-a", "party", PartySearchMode.Hybrid, null, null, 1, 20, CaseId: "case-a"),
             [CreateEntry("p1", "Jean")],
             CancellationToken.None)).ConfigureAwait(true);
@@ -491,13 +527,14 @@ public class MemoriesPartySearchServiceTests
         string? CaseId = null,
         string? GraphContextPartyId = null,
         string? GraphContextMemoryUnitId = null,
+        bool? ActiveFilter = null,
         IReadOnlySet<string>? AuthorizedPartyIds = null)
         => new(
             "tenant-a",
             query,
             mode,
             TypeFilter: null,
-            ActiveFilter: null,
+            ActiveFilter: ActiveFilter,
             Page,
             PageSize,
             CaseId,

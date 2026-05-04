@@ -34,8 +34,11 @@ internal sealed class SemanticPartySearchProvider : IPartySearchProvider
         PartyType? typeFilter,
         bool? activeFilter,
         int page,
-        int pageSize)
+        int pageSize,
+        CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
+
         if (string.IsNullOrWhiteSpace(query))
         {
             return new PagedResult<PartySearchResult>

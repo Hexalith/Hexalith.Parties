@@ -250,6 +250,10 @@ public static class PartiesServiceCollectionExtensions {
                 options.Endpoint = memorySearch.Endpoint;
                 options.ApiToken = memorySearch.ApiToken;
             });
+            // Per-party → memory-unit-id mapping so erasure cleanup can iterate per-unit
+            // DELETEs against the existing per-unit Memories endpoint (AC5 resolved
+            // decision #2). Backed by Dapr state store; durable across process restarts.
+            _ = services.AddSingleton<IPartyMemoryUnitMappingStore, PartyMemoryUnitMappingStore>();
             _ = services.AddSingleton<PartyMemoryIndexingService>();
             _ = services.AddSingleton<IPartySearchService>(sp => new MemoriesPartySearchService(
                 sp.GetRequiredService<MemoriesClient>(),
@@ -257,10 +261,13 @@ public static class PartiesServiceCollectionExtensions {
                 sp.GetRequiredService<IOptionsMonitor<PartyMemorySearchOptions>>(),
                 sp.GetRequiredService<ILogger<MemoriesPartySearchService>>()));
             string? memoriesApiToken = memorySearch.ApiToken;
-            _ = services.AddHttpClient<PartyMemoryCleanupService>((_, httpClient) =>
+            _ = services.AddHttpClient<PartyMemoryCleanupService>((sp, httpClient) =>
             {
                 httpClient.BaseAddress = memorySearch.Endpoint;
-                PartyMemoryCleanupService.ConfigureAuthorization(httpClient, memoriesApiToken);
+                PartyMemoryCleanupService.ConfigureAuthorization(
+                    httpClient,
+                    memoriesApiToken,
+                    sp.GetService<ILogger<PartyMemoryCleanupService>>());
             });
         }
         else

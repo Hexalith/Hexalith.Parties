@@ -25,8 +25,22 @@ internal sealed record PartyMemoryUnitMappingContext(
     string SourceService = "Hexalith.Parties",
     DateTimeOffset? Timestamp = null)
 {
-    public static PartyMemoryUnitMappingContext ForProjection(string tenantId, string caseId)
-        => new(tenantId, caseId, SourceService: "Hexalith.Parties");
+    public static PartyMemoryUnitMappingContext ForProjection(
+        string tenantId,
+        string caseId,
+        string? eventType = null,
+        string? aggregateId = null,
+        string? correlationId = null,
+        string? causationId = null,
+        DateTimeOffset? timestamp = null)
+        => new(
+            tenantId,
+            caseId,
+            aggregateId,
+            eventType,
+            correlationId,
+            causationId,
+            Timestamp: timestamp);
 }
 
 internal static class PartyMemoryUnitMapper
@@ -36,18 +50,21 @@ internal static class PartyMemoryUnitMapper
         ArgumentNullException.ThrowIfNull(entry);
         ArgumentNullException.ThrowIfNull(context);
 
-        // Erased and inactive parties do not belong in the searchable index. The previous
-        // implementation only filtered erased; inactive (deactivated) parties were still
-        // pushed to Memories and surfaced in default-mode results that don't set ActiveFilter.
-        if (entry.IsErased || !entry.IsActive)
+        // Erased parties are removed from the index entirely (the URN is purged via the
+        // erasure-cleanup flow). Inactive parties are still indexed so callers passing
+        // ActiveFilter=false can find them; the active/erased state is recorded in metadata
+        // and content so callers can reason about lifecycle without a separate lookup.
+        if (entry.IsErased)
         {
             return null;
         }
 
-        string aggregateId = string.IsNullOrWhiteSpace(context.AggregateId)
-            ? entry.Id
-            : context.AggregateId!;
-        string sourceUri = PartyMemoryUrn.Build(context.TenantId, aggregateId);
+        // The canonical source URI is keyed by the authoritative party id (entry.Id), not the
+        // aggregate id. Hydration parses the URN as partyId; using AggregateId here would
+        // cause every Memories hit to fail the entriesById lookup whenever aggregate and
+        // party ids diverge, and would also miss erasure cleanup for the same reason.
+        string sourceUri = PartyMemoryUrn.Build(context.TenantId, entry.Id);
+        string aggregateId = string.IsNullOrWhiteSpace(context.AggregateId) ? entry.Id : context.AggregateId!;
 
         return new PartyMemoryUnit(
             context.TenantId,
@@ -62,11 +79,11 @@ internal static class PartyMemoryUnitMapper
     private static string BuildContent(PartyIndexEntry entry, PartyMemoryUnitMappingContext context)
     {
         StringBuilder builder = new();
-        _ = builder.AppendLine($"Party: {entry.DisplayName ?? string.Empty}");
-        _ = builder.AppendLine($"Party type: {entry.Type}");
-        _ = builder.AppendLine($"Party id: {entry.Id}");
-        _ = builder.AppendLine($"State: active");
-        _ = builder.AppendLine($"Event context: {context.EventType ?? "projection"} from {context.SourceService}");
+        _ = builder.AppendLine($"Party: {SanitizeLine(entry.DisplayName)}");
+        _ = builder.AppendLine($"Party type: {MapPartyTypeToWire(entry.Type)}");
+        _ = builder.AppendLine($"Party id: {SanitizeLine(entry.Id)}");
+        _ = builder.AppendLine($"State: {(entry.IsActive ? "active" : "inactive")}");
+        _ = builder.AppendLine($"Event context: {SanitizeLine(context.EventType ?? "projection")} from {SanitizeLine(context.SourceService)}");
 
         if (entry.SearchableContactChannels is not null)
         {
@@ -77,7 +94,7 @@ internal static class PartyMemoryUnitMapper
                     continue;
                 }
 
-                _ = builder.AppendLine($"Contact {channel.Type}: {channel.Value}");
+                _ = builder.AppendLine($"Contact {channel.Type}: {SanitizeLine(channel.Value)}");
             }
         }
 
@@ -90,11 +107,30 @@ internal static class PartyMemoryUnitMapper
                     continue;
                 }
 
-                _ = builder.AppendLine($"Identifier {identifier.Type}: {identifier.Value}");
+                _ = builder.AppendLine($"Identifier {identifier.Type}: {SanitizeLine(identifier.Value)}");
             }
         }
 
         return builder.ToString();
+    }
+
+    /// <summary>
+    /// Replace newline characters in user-controlled text so an attacker cannot smuggle
+    /// fake structured lines into the content blob (e.g. a DisplayName of
+    /// <c>"Alice\nIdentifier SSN: 999-99-9999"</c> would otherwise produce a forged
+    /// Identifier line that semantic embeddings treat as real).
+    /// </summary>
+    private static string SanitizeLine(string? value)
+    {
+        if (string.IsNullOrEmpty(value))
+        {
+            return string.Empty;
+        }
+
+        return value
+            .Replace("\r\n", " ", StringComparison.Ordinal)
+            .Replace('\r', ' ')
+            .Replace('\n', ' ');
     }
 
     private static IReadOnlyDictionary<string, MetadataField> BuildMetadata(
@@ -102,40 +138,60 @@ internal static class PartyMemoryUnitMapper
         PartyMemoryUnitMappingContext context,
         string aggregateId)
     {
-        var metadata = new Dictionary<string, MetadataField>(StringComparer.Ordinal)
-        {
-            ["tenantId"] = Field(context.TenantId),
-            ["caseId"] = Field(context.CaseId),
-            ["partyId"] = Field(entry.Id),
-            ["aggregateId"] = Field(aggregateId),
-            ["eventType"] = Field(context.EventType ?? "PartyProjectionChanged"),
-            ["sourceService"] = Field(context.SourceService),
-            ["partyType"] = Field(entry.Type.ToString()),
-            ["displayName"] = Field(entry.DisplayName ?? string.Empty),
-            ["isActive"] = Field(entry.IsActive.ToString().ToLowerInvariant()),
-            ["isErased"] = Field(entry.IsErased.ToString().ToLowerInvariant()),
-            ["createdAt"] = Field(entry.CreatedAt.ToString("O")),
-            ["lastModifiedAt"] = Field(entry.LastModifiedAt.ToString("O")),
-        };
+        var metadata = new Dictionary<string, MetadataField>(StringComparer.Ordinal);
 
-        if (!string.IsNullOrWhiteSpace(context.CorrelationId))
+        AddRequired(metadata, "tenantId", context.TenantId);
+        AddRequired(metadata, "caseId", context.CaseId);
+        AddRequired(metadata, "partyId", entry.Id);
+        AddRequired(metadata, "aggregateId", aggregateId);
+        // EventType is now required at the call site so the cumulative "PartyProjectionChanged"
+        // marker is no longer hardcoded — callers thread the real envelope event type through
+        // the context, which AC1 requires for "useful event context" in metadata.
+        AddOptional(metadata, "eventType", context.EventType);
+        AddRequired(metadata, "sourceService", context.SourceService);
+        AddRequired(metadata, "partyType", MapPartyTypeToWire(entry.Type));
+        AddOptional(metadata, "displayName", entry.DisplayName);
+        AddRequired(metadata, "isActive", entry.IsActive ? "true" : "false");
+        AddRequired(metadata, "isErased", entry.IsErased ? "true" : "false");
+        AddRequired(metadata, "createdAt", entry.CreatedAt.ToString("O"));
+        AddRequired(metadata, "lastModifiedAt", entry.LastModifiedAt.ToString("O"));
+        AddOptional(metadata, "correlationId", context.CorrelationId);
+        AddOptional(metadata, "causationId", context.CausationId);
+        if (context.Timestamp is { } ts)
         {
-            metadata["correlationId"] = Field(context.CorrelationId!);
-        }
-
-        if (!string.IsNullOrWhiteSpace(context.CausationId))
-        {
-            metadata["causationId"] = Field(context.CausationId!);
-        }
-
-        if (context.Timestamp is not null)
-        {
-            metadata["timestamp"] = Field(context.Timestamp.Value.ToString("O"));
+            metadata["timestamp"] = Field(ts.ToString("O"));
         }
 
         return metadata;
     }
 
+    private static void AddRequired(Dictionary<string, MetadataField> metadata, string key, string value)
+        => metadata[key] = Field(value ?? string.Empty);
+
+    private static void AddOptional(Dictionary<string, MetadataField> metadata, string key, string? value)
+    {
+        // Drop empty-valued optional metadata so Memories does not have to disambiguate
+        // "absent" vs "explicit empty" when callers query metadata facets.
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return;
+        }
+
+        metadata[key] = Field(value);
+    }
+
+    /// <summary>
+    /// Map enum values to a stable lowercase wire string. Using <see cref="Enum.ToString()"/>
+    /// directly couples persisted metadata to the C# identifier — a future rename would silently
+    /// break facet queries against historical memory units.
+    /// </summary>
+    private static string MapPartyTypeToWire(PartyType type) => type switch
+    {
+        PartyType.Person => "person",
+        PartyType.Organization => "organization",
+        _ => type.ToString().ToLowerInvariant(),
+    };
+
     private static MetadataField Field(string value)
-        => new(value ?? string.Empty, MetadataOrigin.Human, 1.0f);
+        => new(value, MetadataOrigin.Human, 1.0f);
 }

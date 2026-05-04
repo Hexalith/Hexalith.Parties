@@ -17,8 +17,10 @@ internal sealed class BasicPartySearchProvider : IPartySearchProvider
         PartyType? typeFilter,
         bool? activeFilter,
         int page,
-        int pageSize)
+        int pageSize,
+        CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         return PartySearchResultsBuilder.BuildSearchResults(entries, query, typeFilter, activeFilter, page, pageSize);
     }
 }
