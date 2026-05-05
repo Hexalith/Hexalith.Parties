@@ -253,6 +253,10 @@ public static class PartiesServiceCollectionExtensions {
             // Per-party → memory-unit-id mapping so erasure cleanup can iterate per-unit
             // DELETEs against the existing per-unit Memories endpoint (AC5 resolved
             // decision #2). Backed by Dapr state store; durable across process restarts.
+            // P14: state-store component name is operator-configurable.
+            _ = services
+                .AddOptions<PartyMemoryUnitMappingStoreOptions>()
+                .Bind(configuration.GetSection(PartyMemoryUnitMappingStoreOptions.SectionName));
             _ = services.AddSingleton<IPartyMemoryUnitMappingStore, PartyMemoryUnitMappingStore>();
             _ = services.AddSingleton<PartyMemoryIndexingService>();
             _ = services.AddSingleton<IPartySearchService>(sp => new MemoriesPartySearchService(

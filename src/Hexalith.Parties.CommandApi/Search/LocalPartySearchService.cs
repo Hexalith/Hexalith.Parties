@@ -5,8 +5,10 @@ namespace Hexalith.Parties.CommandApi.Search;
 
 internal sealed class LocalPartySearchService(IPartySearchProvider localSearchProvider) : IPartySearchService
 {
-    public const string LocalFallbackReason =
-        "Hexalith.Memories rich search is not configured; local display-name fallback was used.";
+    // P41: The previously-declared `LocalFallbackReason` constant was dead code; AC4 was
+    // reconciled in the third-pass review (spec line 532) to NOT populate `DegradedReason`
+    // when the response is `Status=LocalOnly` (Memories integration disabled, not a runtime
+    // outage). Runtime degrades populate the reason from `MemoriesPartySearchService`.
 
     public Task<PartySearchResponse> SearchAsync(
         PartySearchRequest request,
@@ -37,7 +39,17 @@ internal sealed class LocalPartySearchService(IPartySearchProvider localSearchPr
             // OrdinalIgnoreCase set previously slipped through the Contains check then failed
             // the entriesById lookup with no diagnostic. Materializing the set with a known
             // comparer also de-aliases mutable caller state.
-            HashSet<string> authorizedById = new(authorized, StringComparer.Ordinal);
+            // P26: Filter null/whitespace ids so a buggy caller passing [null, "p1"]
+            // does not produce the silent drop the comment is trying to prevent.
+            HashSet<string> authorizedById = new(StringComparer.Ordinal);
+            foreach (string id in authorized)
+            {
+                if (!string.IsNullOrWhiteSpace(id))
+                {
+                    _ = authorizedById.Add(id);
+                }
+            }
+
             List<PartyIndexEntry> filteredList = [];
             foreach (PartyIndexEntry entry in materialized)
             {

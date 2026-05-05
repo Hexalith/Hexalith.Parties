@@ -29,7 +29,15 @@ HexalithPartiesResources partiesResources = builder.AddHexalithParties(commandAp
 
 if (string.Equals(builder.Configuration["EnableMemoriesSearch"], "true", StringComparison.OrdinalIgnoreCase))
 {
-    string memoriesEndpoint = builder.Configuration["MemoriesEndpoint"] ?? "http://localhost:5010";
+    string memoriesEndpoint = builder.Configuration["MemoriesEndpoint"] ?? "http://localhost:5010/";
+    if (!memoriesEndpoint.EndsWith('/'))
+    {
+        // P4: PartyMemorySearchOptionsValidator requires the endpoint base address to end
+        // with a trailing slash so HttpClient relative-path resolution preserves the base
+        // path component. Normalize here so operators supplying a custom MemoriesEndpoint
+        // without a slash do not see the validator fail at startup.
+        memoriesEndpoint += "/";
+    }
 
     _ = commandApi
         .WithEnvironment("Parties__MemoriesSearch__Enabled", "true")

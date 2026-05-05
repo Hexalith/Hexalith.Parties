@@ -39,6 +39,18 @@ internal sealed class LocalFuzzyPartySearchProvider : IPartySearchProvider
     {
         cancellationToken.ThrowIfCancellationRequested();
 
+        // P27: Reject `page < 1` so callers that bypass `LocalPartySearchService.NormalizeRequest`
+        // do not silently get page 1 contents while the response advertises page 0.
+        if (page < 1)
+        {
+            throw new ArgumentOutOfRangeException(nameof(page), page, "Page must be >= 1.");
+        }
+
+        if (pageSize < 1)
+        {
+            throw new ArgumentOutOfRangeException(nameof(pageSize), pageSize, "PageSize must be >= 1.");
+        }
+
         if (string.IsNullOrWhiteSpace(query))
         {
             return new PagedResult<PartySearchResult>

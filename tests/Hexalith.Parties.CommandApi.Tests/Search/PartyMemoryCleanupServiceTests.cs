@@ -132,8 +132,12 @@ public class PartyMemoryCleanupServiceTests
 
         result.Cleaned.ShouldBeTrue();
         handler.RequestUris.Count.ShouldBe(2);
-        handler.RequestUris[0].ToString().ShouldEndWith("memory-1");
-        handler.RequestUris[1].ToString().ShouldEndWith("memory-2");
+        // P22: Assert URI set + path shape includes /cases/ so a regression that drops the
+        // case segment (e.g., dispatching to /api/tenants/tenant-a/memory-units/memory-1)
+        // fails the test instead of slipping past a permissive EndsWith match.
+        HashSet<string> requestedAbsolutePaths = [.. handler.RequestUris.Select(u => u.AbsolutePath)];
+        requestedAbsolutePaths.ShouldContain("/api/tenants/tenant-a/cases/case-a/memory-units/memory-1");
+        requestedAbsolutePaths.ShouldContain("/api/tenants/tenant-a/cases/case-a/memory-units/memory-2");
         // Mappings are cleared on full success so a recreated party with the same id starts fresh.
         IReadOnlyList<PartyMemoryUnitMappingEntry> remaining = await mappingStore.GetMappingsAsync("tenant-a", "party-1", CancellationToken.None);
         remaining.ShouldBeEmpty();
@@ -166,6 +170,21 @@ public class PartyMemoryCleanupServiceTests
         public Task ClearMappingsAsync(string tenantId, string partyId, CancellationToken cancellationToken)
         {
             _mappings.Remove($"{tenantId}:{partyId}");
+            return Task.CompletedTask;
+        }
+
+        public Task ReplaceMappingsAsync(string tenantId, string partyId, IReadOnlyList<PartyMemoryUnitMappingEntry> entries, CancellationToken cancellationToken)
+        {
+            string key = $"{tenantId}:{partyId}";
+            if (entries.Count == 0)
+            {
+                _mappings.Remove(key);
+            }
+            else
+            {
+                _mappings[key] = [.. entries];
+            }
+
             return Task.CompletedTask;
         }
     }

@@ -218,8 +218,13 @@ internal sealed class SemanticPartySearchProvider : IPartySearchProvider
     private static PagedResult<PartySearchResult> CreatePagedResult(IReadOnlyList<PartySearchResult> items, int page, int pageSize)
     {
         int totalCount = items.Count;
-        int totalPages = totalCount == 0 ? 1 : (int)Math.Ceiling((double)totalCount / pageSize);
-        List<PartySearchResult> pagedItems = [.. items.Skip((page - 1) * pageSize).Take(pageSize)];
+        int totalPages = totalCount == 0 ? 1 : (int)Math.Ceiling((double)totalCount / Math.Max(1, pageSize));
+        // P19: Use long arithmetic and clamp to int.MaxValue so `Page=int.MaxValue` cannot
+        // overflow `(page-1)*pageSize` to a negative value. The sister provider
+        // `LocalFuzzyPartySearchProvider` already applies the same fix.
+        long skipLong = (long)Math.Max(0, page - 1) * Math.Max(0, pageSize);
+        int skip = skipLong > int.MaxValue ? int.MaxValue : (int)skipLong;
+        List<PartySearchResult> pagedItems = [.. items.Skip(skip).Take(pageSize)];
 
         return new PagedResult<PartySearchResult>
         {

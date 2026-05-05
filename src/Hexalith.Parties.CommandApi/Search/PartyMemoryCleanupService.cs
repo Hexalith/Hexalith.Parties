@@ -11,6 +11,11 @@ internal sealed record PartyMemoryCleanupResult(
     bool Cleaned,
     string? BlockedReason);
 
+internal sealed record PartyMemoryCleanupProbeResult(
+    bool Reachable,
+    int? StatusCode,
+    string? Reason);
+
 internal sealed class PartyMemoryCleanupService(
     HttpClient httpClient,
     IPartyMemoryUnitMappingStore mappingStore,
@@ -89,10 +94,29 @@ internal sealed class PartyMemoryCleanupService(
     /// not expose a batch <c>?sourceUri=</c> DELETE, so we read the per-party →
     /// memory-unit-id mapping that the indexing service records, then iterate per-unit
     /// DELETEs against the existing <c>DELETE /api/tenants/{t}/cases/{c}/memory-units/{id}</c>
-    /// endpoint. The result aggregates: <c>Cleaned=true</c> only when every unit deleted
-    /// successfully (or the mapping was empty). On any per-unit failure the aggregate result
-    /// reports the first blocked reason — the GDPR verifier blocks erasure completion until
-    /// the operator either re-runs cleanup or records a manual override.
+    /// endpoint.
+    /// <para>
+    /// <b>Atomicity (P17 / P25).</b> After each successful per-unit DELETE the mapping is
+    /// rewritten with only the still-failed entries so a cancellation or partial failure
+    /// leaves a consistent audit trail: a re-run will retry exactly the units that still
+    /// need cleanup, and the aggregate <c>n of N deleted</c> ratio reflects truth across
+    /// re-runs rather than collapsing to "{remaining} of {remaining}".
+    /// </para>
+    /// <para>
+    /// <b>Reporting (P36).</b> The aggregate <c>BlockedReason</c> includes the deleted-count
+    /// even on success so audit trails record per-erasure throughput; <c>MemoryUnitId</c>
+    /// carries the single-unit id when only one unit was mapped (otherwise the per-unit
+    /// detail lives in the per-unit results which the orchestrator can iterate).
+    /// </para>
+    /// <para>
+    /// <b>Empty-mapping invariant (P38).</b> Reporting <c>Cleaned=true</c> on
+    /// <c>mappings.Count == 0</c> assumes the mapping store and the indexing service share
+    /// the same view of "what was indexed". A misconfiguration where indexing wrote to a
+    /// different state store than cleanup reads from would silently report success here.
+    /// The validator pins the state-store name at startup (see
+    /// <see cref="PartyMemoryUnitMappingStoreOptions"/>); deployment validation should also
+    /// probe the mapping store round-trip (AC6 follow-up).
+    /// </para>
     /// </summary>
     public async Task<PartyMemoryCleanupResult> DeleteByPartyAsync(
         string tenantId,
@@ -122,11 +146,6 @@ internal sealed class PartyMemoryCleanupService(
 
         if (mappings.Count == 0)
         {
-            // No recorded mapping = nothing to delete. This is the legitimate "party was
-            // never indexed" case (e.g., Memories was disabled at the time of party creation
-            // or indexing has not yet caught up). Reporting Cleaned=true is correct here:
-            // AC5 requires us to ensure no party-related memory units remain, and there are
-            // none to begin with.
             return new PartyMemoryCleanupResult(
                 partyId,
                 MemoryUnitId: string.Empty,
@@ -135,53 +154,122 @@ internal sealed class PartyMemoryCleanupService(
                 BlockedReason: null);
         }
 
+        int initialCount = mappings.Count;
+        List<PartyMemoryUnitMappingEntry> remaining = [.. mappings];
         string? firstBlockedReason = null;
         string? firstBlockedUnitId = null;
         int deleted = 0;
-        foreach (PartyMemoryUnitMappingEntry mapping in mappings)
+        try
         {
-            cancellationToken.ThrowIfCancellationRequested();
-
-            PartyMemoryCleanupResult perUnit = await DeleteMemoryUnitAsync(
-                tenantId,
-                caseId,
-                partyId,
-                mapping.MemoryUnitId,
-                cancellationToken).ConfigureAwait(false);
-
-            if (perUnit.Cleaned)
+            foreach (PartyMemoryUnitMappingEntry mapping in mappings)
             {
-                deleted++;
+                cancellationToken.ThrowIfCancellationRequested();
+
+                PartyMemoryCleanupResult perUnit = await DeleteMemoryUnitAsync(
+                    tenantId,
+                    caseId,
+                    partyId,
+                    mapping.MemoryUnitId,
+                    cancellationToken).ConfigureAwait(false);
+
+                if (perUnit.Cleaned)
+                {
+                    deleted++;
+                    _ = remaining.RemoveAll(e =>
+                        string.Equals(e.MemoryUnitId, mapping.MemoryUnitId, StringComparison.Ordinal));
+                }
+                else if (firstBlockedReason is null)
+                {
+                    firstBlockedReason = perUnit.BlockedReason;
+                    firstBlockedUnitId = perUnit.MemoryUnitId;
+                }
             }
-            else if (firstBlockedReason is null)
+        }
+        finally
+        {
+            // Persist whatever we have done so far so a re-run after cancellation /
+            // exception sees the same audit trail. ReplaceMappingsAsync handles the
+            // empty-list case as a Clear.
+            if (remaining.Count != initialCount)
             {
-                firstBlockedReason = perUnit.BlockedReason;
-                firstBlockedUnitId = perUnit.MemoryUnitId;
+                await mappingStore
+                    .ReplaceMappingsAsync(tenantId, partyId, remaining, cancellationToken)
+                    .ConfigureAwait(false);
             }
         }
 
         if (firstBlockedReason is not null)
         {
-            // Leave the mapping in place so a re-run can pick up where we left off; clearing
-            // it would erase the audit trail of which units still need cleanup. The aggregate
-            // identifies the first blocked unit so an operator can act on it specifically.
             return new PartyMemoryCleanupResult(
                 partyId,
                 MemoryUnitId: firstBlockedUnitId ?? string.Empty,
                 sourceUri,
                 Cleaned: false,
-                BlockedReason: $"Memories cleanup partially failed ({deleted} of {mappings.Count} units deleted): {firstBlockedReason}");
+                BlockedReason: $"Memories cleanup partially failed ({deleted} of {initialCount} units deleted): {firstBlockedReason}");
         }
 
-        // All units deleted — clear the mapping so a recreated party with the same id starts
-        // with an empty mapping rather than inheriting stale references to deleted units.
-        await mappingStore.ClearMappingsAsync(tenantId, partyId, cancellationToken).ConfigureAwait(false);
         return new PartyMemoryCleanupResult(
             partyId,
-            MemoryUnitId: mappings.Count == 1 ? mappings[0].MemoryUnitId : string.Empty,
+            MemoryUnitId: initialCount == 1 ? mappings[0].MemoryUnitId : string.Empty,
             sourceUri,
             Cleaned: true,
-            BlockedReason: null);
+            BlockedReason: deleted > 1 ? $"Memories cleanup deleted {deleted} of {initialCount} units." : null);
+    }
+
+    /// <summary>
+    /// Lightweight health probe of the per-unit cleanup route. Issues a <c>DELETE</c> against a
+    /// synthetic memory-unit id; 404 means the route is reachable and the unit (correctly) does
+    /// not exist. Any other outcome surfaces an AC6 deployment-validation gap:
+    /// <list type="bullet">
+    ///   <item><description>200/204 — route reachable and the synthetic id improbably matched (still healthy).</description></item>
+    ///   <item><description>404 — route reachable, no unit exists (expected healthy outcome).</description></item>
+    ///   <item><description>401/403 — auth misconfigured (the token in <see cref="PartyMemorySearchOptions.ApiToken"/> is rejected).</description></item>
+    ///   <item><description>405 — DELETE not allowed at this shape (the AC5 gap that resolved decision #2 fixed; signals a Memories-server regression).</description></item>
+    ///   <item><description>5xx / network error — endpoint unreachable.</description></item>
+    /// </list>
+    /// </summary>
+    public async Task<PartyMemoryCleanupProbeResult> ProbeCleanupRouteAsync(
+        string tenantId,
+        string caseId,
+        CancellationToken cancellationToken)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(tenantId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(caseId);
+
+        if (httpClient.BaseAddress is null)
+        {
+            return new PartyMemoryCleanupProbeResult(false, null, "HttpClient has no BaseAddress.");
+        }
+
+        string syntheticUnitId = $"_health-probe-{Guid.NewGuid():N}";
+        string path = $"api/tenants/{Uri.EscapeDataString(tenantId)}/cases/{Uri.EscapeDataString(caseId)}/memory-units/{Uri.EscapeDataString(syntheticUnitId)}";
+
+        try
+        {
+            using HttpResponseMessage response = await httpClient.DeleteAsync(path, cancellationToken).ConfigureAwait(false);
+            int code = (int)response.StatusCode;
+            // 404 = route reachable, no unit (expected); 200/204 = route reachable + unit deleted
+            // (improbable but acceptable). Any other status is a deployment-validation gap.
+            bool reachable = response.IsSuccessStatusCode || response.StatusCode == System.Net.HttpStatusCode.NotFound;
+            string? reason = reachable
+                ? null
+                : code switch
+                {
+                    401 or 403 => $"Memories cleanup auth misconfigured (HTTP {code}).",
+                    405 => "Memories cleanup route does not accept DELETE (AC5 regression — server may have removed the per-unit DELETE endpoint).",
+                    _ => $"Memories cleanup probe returned unexpected HTTP {code} {response.ReasonPhrase}.",
+                };
+            return new PartyMemoryCleanupProbeResult(reachable, code, reason);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or TimeoutException)
+        {
+            logger.LogWarning(ex, "Memories cleanup probe failed for tenant {TenantId}/case {CaseId}.", tenantId, caseId);
+            return new PartyMemoryCleanupProbeResult(false, null, $"Memories cleanup endpoint unreachable: {ex.GetType().Name}.");
+        }
     }
 
     /// <summary>

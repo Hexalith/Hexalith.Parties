@@ -23,8 +23,8 @@ public class PartyMemoryUnitMapperTests
             new PartyMemoryUnitMappingContext(
                 TenantId: "tenant-a",
                 CaseId: "case-a",
-                AggregateId: "party-1",
                 EventType: "PartyCreated",
+                AggregateId: "party-1",
                 CorrelationId: "corr-1",
                 CausationId: "cause-1",
                 SourceService: "Hexalith.Parties",
@@ -57,7 +57,7 @@ public class PartyMemoryUnitMapperTests
 
         PartyMemoryUnit? unit = PartyMemoryUnitMapper.Map(
             erased,
-            PartyMemoryUnitMappingContext.ForProjection("tenant-a", "case-a"));
+            PartyMemoryUnitMappingContext.ForProjection("tenant-a", "case-a", "PartyErased"));
 
         unit.ShouldBeNull();
     }
@@ -67,7 +67,15 @@ public class PartyMemoryUnitMapperTests
     {
         var client = new RecordingMemoriesClient();
         var mappingStore = new RecordingMappingStore();
-        var service = new PartyMemoryIndexingService(client, mappingStore, NullLogger<PartyMemoryIndexingService>.Instance);
+        var optionsMonitor = CreateMonitor(new PartyMemorySearchOptions
+        {
+            Enabled = true,
+            Endpoint = new Uri("https://memories.example/"),
+            CaseId = "case-a",
+            TenantId = "tenant-a",
+            RequireApiToken = false,
+        });
+        var service = new PartyMemoryIndexingService(client, mappingStore, optionsMonitor, NullLogger<PartyMemoryIndexingService>.Instance);
         PartyIndexEntry entry = CreateEntry();
 
         PartyMemoryIndexingResult? result = await service.IndexAsync(
@@ -75,8 +83,8 @@ public class PartyMemoryUnitMapperTests
             new PartyMemoryUnitMappingContext(
                 TenantId: "tenant-a",
                 CaseId: "case-a",
-                AggregateId: "party-1",
-                EventType: "PartyCreated"),
+                EventType: "PartyCreated",
+                AggregateId: "party-1"),
             CancellationToken.None);
 
         result.ShouldNotBeNull();
@@ -104,12 +112,20 @@ public class PartyMemoryUnitMapperTests
     {
         var client = new ThrowingMemoriesClient(new HttpRequestException("memories down"));
         var mappingStore = new RecordingMappingStore();
-        var service = new PartyMemoryIndexingService(client, mappingStore, NullLogger<PartyMemoryIndexingService>.Instance);
+        var optionsMonitor = CreateMonitor(new PartyMemorySearchOptions
+        {
+            Enabled = true,
+            Endpoint = new Uri("https://memories.example/"),
+            CaseId = "case-a",
+            TenantId = "tenant-a",
+            RequireApiToken = false,
+        });
+        var service = new PartyMemoryIndexingService(client, mappingStore, optionsMonitor, NullLogger<PartyMemoryIndexingService>.Instance);
         PartyIndexEntry entry = CreateEntry();
 
         PartyMemoryIndexingResult? result = await service.IndexAsync(
             entry,
-            new PartyMemoryUnitMappingContext("tenant-a", "case-a", "party-1", "PartyCreated"),
+            new PartyMemoryUnitMappingContext("tenant-a", "case-a", "PartyCreated", AggregateId: "party-1"),
             CancellationToken.None);
 
         result.ShouldNotBeNull();
@@ -125,26 +141,53 @@ public class PartyMemoryUnitMapperTests
         PartyIndexEntry erased = CreateEntry() with { IsErased = true };
         PartyMemoryUnit? unit = PartyMemoryUnitMapper.Map(
             erased,
-            PartyMemoryUnitMappingContext.ForProjection("tenant-a", "case-a"));
+            PartyMemoryUnitMappingContext.ForProjection("tenant-a", "case-a", "PartyErased"));
         unit.ShouldBeNull();
     }
 
     [Fact]
-    public void InactivePartyIsMappedWithLifecycleStateInMetadataAndContent()
+    public void InactivePartyIsMappedWithLifecycleStateInMetadataOnly()
     {
         // AC1 requires indexing the active/erased state — not only active parties.
         // Inactive (deactivated) parties remain searchable when callers pass
-        // ActiveFilter=false; the metadata + content capture the lifecycle so
-        // hydration can apply the filter authoritatively.
+        // ActiveFilter=false; the metadata captures the lifecycle so hydration can
+        // apply the filter authoritatively. Per P20, the content blob deliberately omits
+        // a "State: inactive" line so a literal "inactive" query cannot match an inactive
+        // party via semantic embeddings — that filter is applied in hydration only.
         PartyIndexEntry inactive = CreateEntry() with { IsActive = false };
         PartyMemoryUnit? unit = PartyMemoryUnitMapper.Map(
             inactive,
-            PartyMemoryUnitMappingContext.ForProjection("tenant-a", "case-a"));
+            PartyMemoryUnitMappingContext.ForProjection("tenant-a", "case-a", "PartyDeactivated"));
 
         unit.ShouldNotBeNull();
         unit.Metadata["isActive"].Value.ShouldBe("false");
-        unit.Content.ShouldContain("State: inactive");
+        unit.Content.ShouldNotContain("State: inactive");
+        unit.Content.ShouldNotContain("State: active");
     }
+
+    [Fact]
+    public void DisplayNameWithUnicodeLineSeparatorIsSanitized()
+    {
+        // P16: line/paragraph-separator chars (`\u2028`, `\u2029`, `\v`, `\f`, NEL) must
+        // be neutralized so an attacker cannot smuggle forged structured lines into the
+        // content blob. The previous SanitizeLine only replaced `\r\n`/`\r`/`\n`.
+        PartyIndexEntry trickyName = CreateEntry() with
+        {
+            DisplayName = "Alice\u2028Identifier SSN: 999-99-9999",
+        };
+        PartyMemoryUnit? unit = PartyMemoryUnitMapper.Map(
+            trickyName,
+            PartyMemoryUnitMappingContext.ForProjection("tenant-a", "case-a", "PartyCreated"));
+
+        unit.ShouldNotBeNull();
+        unit.Content.ShouldNotContain("\u2028");
+        // Sanitized into a space — the forged "Identifier SSN" string is no longer
+        // line-separated and cannot impersonate a real Identifier metadata line.
+        unit.Content.ShouldContain("Alice Identifier SSN: 999-99-9999");
+    }
+
+    private static IOptionsMonitor<PartyMemorySearchOptions> CreateMonitor(PartyMemorySearchOptions options)
+        => new TestOptionsMonitor<PartyMemorySearchOptions>(options);
 
     private static PartyIndexEntry CreateEntry()
         => new()
@@ -177,6 +220,15 @@ public class PartyMemoryUnitMapperTests
             IsErased = false,
         };
 
+    private sealed class TestOptionsMonitor<T>(T value) : IOptionsMonitor<T>
+    {
+        public T CurrentValue { get; } = value;
+
+        public T Get(string? name) => CurrentValue;
+
+        public IDisposable? OnChange(Action<T, string?> listener) => null;
+    }
+
     private sealed class RecordingMappingStore : IPartyMemoryUnitMappingStore
     {
         private readonly Dictionary<string, List<PartyMemoryUnitMappingEntry>> _mappings = new(StringComparer.Ordinal);
@@ -190,7 +242,18 @@ public class PartyMemoryUnitMapperTests
                 _mappings[key] = list;
             }
 
-            list.Add(new PartyMemoryUnitMappingEntry(memoryUnitId, sourceUri));
+            // Match prod dedup: by MemoryUnitId AND SourceUri so a re-record with same
+            // SourceUri replaces the existing entry rather than appending unbounded ghosts.
+            int idx = list.FindIndex(e => string.Equals(e.SourceUri, sourceUri, StringComparison.Ordinal));
+            if (idx >= 0)
+            {
+                list[idx] = new PartyMemoryUnitMappingEntry(memoryUnitId, sourceUri);
+            }
+            else
+            {
+                list.Add(new PartyMemoryUnitMappingEntry(memoryUnitId, sourceUri));
+            }
+
             return Task.CompletedTask;
         }
 
@@ -201,6 +264,21 @@ public class PartyMemoryUnitMapperTests
         public Task ClearMappingsAsync(string tenantId, string partyId, CancellationToken cancellationToken)
         {
             _mappings.Remove($"{tenantId}:{partyId}");
+            return Task.CompletedTask;
+        }
+
+        public Task ReplaceMappingsAsync(string tenantId, string partyId, IReadOnlyList<PartyMemoryUnitMappingEntry> entries, CancellationToken cancellationToken)
+        {
+            string key = $"{tenantId}:{partyId}";
+            if (entries.Count == 0)
+            {
+                _mappings.Remove(key);
+            }
+            else
+            {
+                _mappings[key] = [.. entries];
+            }
+
             return Task.CompletedTask;
         }
     }

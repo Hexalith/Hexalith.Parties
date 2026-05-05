@@ -1,3 +1,6 @@
+using System.Security.Cryptography;
+using System.Text;
+
 using Microsoft.Extensions.Logging;
 
 namespace Hexalith.Parties.CommandApi.Search;
@@ -44,9 +47,13 @@ internal static class PartyMemoryUrn
         string[] parts = sourceUri.Split(':', StringSplitOptions.None);
         if (parts.Length != 6)
         {
+            // P10: Hash the URI rather than emit it verbatim — attacker-controlled URN parts
+            // can carry log-injection sequences or PII, and warning floods leak content
+            // into ops dashboards. The hash is reproducible across log lines so an operator
+            // can correlate occurrences without seeing the raw value.
             logger?.LogWarning(
-                "PartyMemoryUrn.TryParse rejected {SourceUri}: expected 6 colon-separated parts, found {PartCount}. All URNs MUST be built via PartyMemoryUrn.Build so reserved characters are percent-encoded.",
-                sourceUri,
+                "PartyMemoryUrn.TryParse rejected source URI hash {SourceUriHash}: expected 6 colon-separated parts, found {PartCount}. All URNs MUST be built via PartyMemoryUrn.Build so reserved characters are percent-encoded.",
+                Hash(sourceUri),
                 parts.Length);
             return false;
         }
@@ -57,8 +64,8 @@ internal static class PartyMemoryUrn
             || !string.Equals(parts[4], PartyMarker, StringComparison.OrdinalIgnoreCase))
         {
             logger?.LogWarning(
-                "PartyMemoryUrn.TryParse rejected {SourceUri}: scheme/namespace/resource/marker do not match the canonical urn:hexalith:parties:*:party:* shape.",
-                sourceUri);
+                "PartyMemoryUrn.TryParse rejected source URI hash {SourceUriHash}: scheme/namespace/resource/marker do not match the canonical urn:hexalith:parties:*:party:* shape.",
+                Hash(sourceUri));
             return false;
         }
 
@@ -67,11 +74,19 @@ internal static class PartyMemoryUrn
         if (string.IsNullOrWhiteSpace(tenantId) || string.IsNullOrWhiteSpace(partyId))
         {
             logger?.LogWarning(
-                "PartyMemoryUrn.TryParse rejected {SourceUri}: decoded tenant or party id is empty.",
-                sourceUri);
+                "PartyMemoryUrn.TryParse rejected source URI hash {SourceUriHash}: decoded tenant or party id is empty.",
+                Hash(sourceUri));
             return false;
         }
 
         return true;
+    }
+
+    private static string Hash(string value)
+    {
+        Span<byte> hash = stackalloc byte[32];
+        _ = SHA256.HashData(Encoding.UTF8.GetBytes(value), hash);
+        // 12 hex chars = 48 bits — plenty for log correlation without leaking the source.
+        return Convert.ToHexString(hash[..6]).ToLowerInvariant();
     }
 }

@@ -223,12 +223,16 @@ internal sealed partial class PartyProjectionUpdateOrchestrator(
                     new PartyMemoryUnitMappingContext(
                         TenantId: identity.TenantId,
                         CaseId: memorySearchOptions.CaseId!,
-                        AggregateId: identity.AggregateId,
                         // AC1: thread the actual triggering event type and timestamp through
                         // to Memories metadata. The previous "PartyProjectionChanged" /
                         // DateTimeOffset.UtcNow shape lost event-type granularity and re-stamped
-                        // every replay with the rehydration moment.
-                        EventType: latestEnvelope.EventTypeName,
+                        // every replay with the rehydration moment. EventType is required by
+                        // the record contract (P15); fall back to a stable marker if the
+                        // envelope's event type name is unexpectedly missing.
+                        EventType: string.IsNullOrWhiteSpace(latestEnvelope.EventTypeName)
+                            ? "PartyProjectionChanged"
+                            : latestEnvelope.EventTypeName,
+                        AggregateId: identity.AggregateId,
                         SourceService: "Hexalith.Parties",
                         Timestamp: latestEnvelope.Timestamp),
                     cancellationToken)

@@ -241,6 +241,17 @@ public class MemoriesPartySearchServiceTests
             metadata.CompositeScore.ShouldBeNull();
         }
 
+        // P23: SourceSystem must announce that the row originated from the local fallback
+        // path so consumers cannot mistake degraded local results for Memories-backed hits.
+        // Source URI is intentionally null on local fallback so callers do not follow a URN
+        // that would 404 against Memories.
+        foreach (PartySearchSourceMetadata source in response.SourceMetadata)
+        {
+            source.SourceSystem.ShouldBe("Hexalith.Parties.LocalFallback");
+            source.SourceUri.ShouldBeNull();
+            source.MemoryUnitId.ShouldBeNull();
+        }
+
         foreach (PartySearchResult result in response.Results.Items)
         {
             result.Matches.ShouldAllBe(m => m.MatchType != "semantic" && m.MatchType != "graph" && m.MatchType != "hybrid");

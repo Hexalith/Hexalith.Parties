@@ -20,12 +20,20 @@ internal sealed class MemoriesPartySearchService(
 
     /// <summary>
     /// Reasonable upper bound for how many candidates to request from Memories per page.
-    /// Local hydration filters (tenant/case/auth/type/active) can drop a fraction of returned
-    /// rows so we ask for several times the requested window — but capped so a deep page
-    /// number can't translate into an enormous topK that Memories would clamp anyway and that
-    /// wastes RPC bandwidth. Memories itself clamps MaxResults to 100 (server-side).
+    /// Memories itself clamps MaxResults to 100 server-side, so a higher value here only
+    /// wastes RPC bandwidth. We multiply the requested window by an amplification factor
+    /// (so hydration filters dropping a fraction of rows still leave the page filled) and
+    /// then cap at this constant.
     /// </summary>
     private const int MaxMemoriesTopK = 200;
+
+    /// <summary>
+    /// Multiplier applied to the requested page window when asking Memories for candidates.
+    /// Tenant / case / authorization / active-state hydration filters drop a fraction of
+    /// rows locally; without amplification, page 1 of a 50%-filter-drop tenant returns half
+    /// the requested page size.
+    /// </summary>
+    private const int FilterAmplificationFactor = 4;
 
     public async Task<PartySearchResponse> SearchAsync(
         PartySearchRequest request,
@@ -76,15 +84,15 @@ internal sealed class MemoriesPartySearchService(
         PartySearchExecutionStatus status = PartySearchExecutionStatus.Rich;
         string? degradedReason = null;
         // Memories must return enough candidates so that hydration can fill the requested page.
-        // Request a bounded multiple of the requested window so pagination after collapse can
+        // Compute a bounded multiple of the requested window so pagination after collapse can
         // land on the right window even when many candidates are filtered out by
         // tenant/case/auth/active checks. Long arithmetic avoids OverflowException on large
-        // page numbers; the cap (MaxMemoriesTopK) prevents asking Memories for an enormous
-        // result set when entryList is large — Memories clamps to 100 server-side anyway, so
-        // a 100k topK only wastes RPC bandwidth.
+        // page numbers; the cap (MaxMemoriesTopK) prevents an enormous topK that Memories
+        // would clamp anyway.
         long requestedWindow = (long)request.Page * request.PageSize;
-        long memoriesTopKLong = Math.Min(MaxMemoriesTopK, Math.Max(requestedWindow, request.PageSize));
-        int memoriesTopK = (int)memoriesTopKLong;
+        long amplified = checked(requestedWindow * FilterAmplificationFactor);
+        long memoriesTopKLong = Math.Min(MaxMemoriesTopK, Math.Max(amplified, request.PageSize));
+        int memoriesTopK = memoriesTopKLong > int.MaxValue ? int.MaxValue : (int)memoriesTopKLong;
 
         try
         {
@@ -94,7 +102,9 @@ internal sealed class MemoriesPartySearchService(
                     SearchResult lexical = await memoriesClient.SearchAsync(
                         new SearchRequest(request.TenantId, SyntacticAxis, request.Query, request.CaseId, memoriesTopK, Explain: true),
                         cancellationToken).ConfigureAwait(false);
-                    candidates = [.. lexical.Results.Select(ToCandidate)];
+                    // P8: defend against `Results == null` from a misbehaving server; the
+                    // traversal path already does this and the same defense applies here.
+                    candidates = [.. (lexical.Results ?? []).Select(ToCandidate)];
                     if (lexical.Degraded)
                     {
                         status = PartySearchExecutionStatus.Degraded;
@@ -107,7 +117,7 @@ internal sealed class MemoriesPartySearchService(
                     SearchResult semantic = await memoriesClient.SearchAsync(
                         new SearchRequest(request.TenantId, SemanticAxis, request.Query, request.CaseId, memoriesTopK, Explain: true),
                         cancellationToken).ConfigureAwait(false);
-                    candidates = [.. semantic.Results.Select(ToCandidate)];
+                    candidates = [.. (semantic.Results ?? []).Select(ToCandidate)];
                     if (semantic.Degraded)
                     {
                         status = PartySearchExecutionStatus.Degraded;
@@ -156,7 +166,7 @@ internal sealed class MemoriesPartySearchService(
                     HybridSearchResult hybrid = await memoriesClient.HybridSearchAsync(
                         new HybridSearchRequest(request.TenantId, request.Query, request.CaseId, memoriesTopK, Explain: true),
                         cancellationToken).ConfigureAwait(false);
-                    candidates = [.. hybrid.Results.Select(ToCandidate)];
+                    candidates = [.. (hybrid.Results ?? []).Select(ToCandidate)];
                     if (hybrid.Degraded)
                     {
                         status = PartySearchExecutionStatus.Degraded;
@@ -207,7 +217,7 @@ internal sealed class MemoriesPartySearchService(
             new SearchRequest(request.TenantId, SyntacticAxis, sourceUri, request.CaseId, MaxResults: 5, Explain: false),
             cancellationToken).ConfigureAwait(false);
 
-        return result.Results
+        return (result.Results ?? [])
             .FirstOrDefault(r => string.Equals(r.SourceUri, sourceUri, StringComparison.Ordinal))?
             .MemoryUnitId;
     }
@@ -254,7 +264,7 @@ internal sealed class MemoriesPartySearchService(
             {
                 throw;
             }
-            catch (Exception ex) when (IsTransientMemoriesFailure(ex) || ex is MemoriesRemoteException)
+            catch (Exception ex) when (IsTransientMemoriesFailure(ex))
             {
                 logger.LogWarning(
                     ex,
@@ -273,13 +283,13 @@ internal sealed class MemoriesPartySearchService(
         DegradeCause cause,
         CancellationToken cancellationToken)
     {
-        // Coerce the request to a mode the local provider can serve before delegating. Graph
-        // mode flowed through verbatim previously, but `LocalPartySearchService` ignores Mode
-        // — the response would advertise "graph context required" while the local provider
-        // ran the Hybrid path. Remap so the response mode and degraded reason agree.
-        PartySearchRequest localRequest = request.Mode == PartySearchMode.Graph
-            ? request with { Mode = PartySearchMode.Hybrid }
-            : request;
+        // P9: Coerce the request to a mode the local provider can serve before delegating
+        // on every degrade path, not just Graph. `LocalPartySearchService` ignores Mode, so
+        // a Lexical/Semantic/Hybrid request flowing through verbatim makes the response
+        // advertise (e.g.) "Mode=Semantic, Status=Degraded" while the local provider ran
+        // the same fuzzy lexical pipeline regardless of mode. Remap so the response mode and
+        // the actual local behavior agree.
+        PartySearchRequest localRequest = request with { Mode = PartySearchMode.Hybrid };
 
         PartySearchResponse local = await localFallback
             .SearchAsync(localRequest, entries, cancellationToken)
@@ -304,11 +314,28 @@ internal sealed class MemoriesPartySearchService(
         };
     }
 
+    /// <summary>
+    /// P6: Narrow the transient-failure surface to genuinely-transient exception shapes.
+    /// <see cref="MemoriesRemoteException"/> wraps both 4xx (caller misuse — config drift,
+    /// bad tenant id) and 5xx (server outage), so blanket-degrading on it would mask config
+    /// bugs as outages. Inspect the response status code and only treat connection-level
+    /// transports + 5xx as transient.
+    /// </summary>
     private static bool IsTransientMemoriesFailure(Exception ex)
-        => ex is HttpRequestException
-            or TaskCanceledException
-            or TimeoutException
-            or MemoriesRemoteException;
+    {
+        if (ex is HttpRequestException or TaskCanceledException or TimeoutException)
+        {
+            return true;
+        }
+
+        if (ex is MemoriesRemoteException remote)
+        {
+            int status = (int)remote.StatusCode;
+            return status is 0 or 408 or 429 or >= 500;
+        }
+
+        return false;
+    }
 
     private static PartySearchRequest NormalizeRequest(
         PartySearchRequest request,
@@ -333,15 +360,13 @@ internal sealed class MemoriesPartySearchService(
                 nameof(request));
         }
 
-        // Re-key the authorized set into an Ordinal HashSet so comparisons inside Hydrate
-        // are symmetric with internal id collections (which all use Ordinal). A caller
-        // passing OrdinalIgnoreCase previously slipped past the membership check, then got
-        // dropped silently at the entriesById lookup with no diagnostic.
-        IReadOnlySet<string> authorized = request.AuthorizedPartyIds!;
-        if (authorized is not HashSet<string> { Comparer: var cmp } || !ReferenceEquals(cmp, StringComparer.Ordinal))
-        {
-            authorized = new HashSet<string>(authorized, StringComparer.Ordinal);
-        }
+        // P26 + P28: Re-key the authorized set into an Ordinal HashSet so comparisons inside
+        // Hydrate are symmetric with internal id collections (which all use Ordinal). Filter
+        // null/whitespace ids so the silent-drop the dedup-log warns about cannot happen
+        // here. Use Equals (not ReferenceEquals) on the comparer because future BCL changes
+        // may wrap StringComparer.Ordinal in a singleton wrapper, and ReferenceEquals would
+        // start re-keying every call.
+        IReadOnlySet<string> authorized = NormalizeAuthorizedPartyIds(request.AuthorizedPartyIds!);
 
         int page = Math.Max(1, request.Page);
         int pageSize = Math.Clamp(request.PageSize, 1, 100);
@@ -352,6 +377,43 @@ internal sealed class MemoriesPartySearchService(
             PageSize = pageSize,
             AuthorizedPartyIds = authorized,
         };
+    }
+
+    private static IReadOnlySet<string> NormalizeAuthorizedPartyIds(IReadOnlySet<string> source)
+    {
+        if (source is HashSet<string> existing && Equals(existing.Comparer, StringComparer.Ordinal))
+        {
+            // Already an Ordinal HashSet; only re-allocate if any null/whitespace element
+            // would otherwise leak through.
+            if (!ContainsBlank(existing))
+            {
+                return existing;
+            }
+        }
+
+        HashSet<string> rekeyed = new(StringComparer.Ordinal);
+        foreach (string id in source)
+        {
+            if (!string.IsNullOrWhiteSpace(id))
+            {
+                _ = rekeyed.Add(id);
+            }
+        }
+
+        return rekeyed;
+    }
+
+    private static bool ContainsBlank(IEnumerable<string> ids)
+    {
+        foreach (string id in ids)
+        {
+            if (string.IsNullOrWhiteSpace(id))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private static string MapModeToAxis(PartySearchMode mode) => mode switch
@@ -371,6 +433,8 @@ internal sealed class MemoriesPartySearchService(
         CancellationToken cancellationToken)
     {
         Dictionary<string, PartyIndexEntry> entriesById = new(StringComparer.Ordinal);
+        int duplicateCount = 0;
+        string? firstDuplicateId = null;
         foreach (PartyIndexEntry entry in entries)
         {
             if (entry.IsErased)
@@ -383,13 +447,23 @@ internal sealed class MemoriesPartySearchService(
             // against `request.ActiveFilter`.
             if (!entriesById.TryAdd(entry.Id, entry))
             {
-                // Split-brain corruption from concurrent projection writers becomes invisible
-                // when first-wins silently drops the duplicate. Logging makes the corruption
-                // signal observable so an operator can triage rather than chase a missing row.
-                logger.LogWarning(
-                    "Duplicate PartyIndexEntry id detected during search hydration: {PartyId}. Keeping first occurrence; the duplicate may carry divergent data.",
-                    entry.Id);
+                // P11: Aggregate duplicate-id observations into a single per-request warning
+                // instead of warning per row. A real corruption surface across thousands of
+                // duplicate entries used to overwhelm the log pipeline; one summary warning
+                // preserves the diagnostic without flooding.
+                duplicateCount++;
+                firstDuplicateId ??= entry.Id;
             }
+        }
+
+        if (duplicateCount > 0)
+        {
+            logger.LogWarning(
+                "Duplicate PartyIndexEntry ids detected during search hydration for tenant {TenantId} case {CaseId}: {DuplicateCount} duplicate(s), first occurrence party id {FirstPartyId}. Keeping first occurrence per id; duplicates may carry divergent data.",
+                request.TenantId,
+                request.CaseId,
+                duplicateCount,
+                firstDuplicateId);
         }
 
         List<HydratedCandidate> hydrated = [];
@@ -402,11 +476,12 @@ internal sealed class MemoriesPartySearchService(
                 continue;
             }
 
-            // Tenant comparison is case-insensitive to tolerate canonical-casing drift in
-            // historical data; case scope is also case-insensitive for the same reason. The
-            // previous Ordinal vs OrdinalIgnoreCase asymmetry between tenant and case let
-            // mismatched-casing case ids silently drop hits.
-            if (!string.Equals(tenantId, request.TenantId, StringComparison.OrdinalIgnoreCase))
+            // P5: Tenant + case comparison reverted to Ordinal per spec line 400 ("Ordinal
+            // preferred, with canonical casing enforced at write time"). The previous
+            // OrdinalIgnoreCase relaxation risked multi-tenant data leak when tenant ids
+            // differed only by casing. Canonical-casing drift in historical data is
+            // diagnosed via the URN logger — not silently merged here.
+            if (!string.Equals(tenantId, request.TenantId, StringComparison.Ordinal))
             {
                 continue;
             }
@@ -414,7 +489,7 @@ internal sealed class MemoriesPartySearchService(
             // Strict case isolation: when the request is case-scoped, candidates without a
             // case id (or with a mismatching case id) must be dropped.
             if (!string.IsNullOrWhiteSpace(request.CaseId)
-                && !string.Equals(candidate.CaseId, request.CaseId, StringComparison.OrdinalIgnoreCase))
+                && !string.Equals(candidate.CaseId, request.CaseId, StringComparison.Ordinal))
             {
                 continue;
             }
@@ -470,7 +545,11 @@ internal sealed class MemoriesPartySearchService(
         List<PartySearchResult> items = [.. page.Select(ToSearchResult)];
 
         int totalCount = collapsed.Count;
-        int totalPages = totalCount == 0 ? 1 : (int)Math.Ceiling((double)totalCount / request.PageSize);
+        // P31: defensive max(1, …) so a future caller path that bypasses NormalizeRequest
+        // cannot divide by zero and produce NaN/Infinity — which then casts to int.MinValue
+        // for advertised TotalPages.
+        int divisor = Math.Max(1, request.PageSize);
+        int totalPages = totalCount == 0 ? 1 : (int)Math.Ceiling((double)totalCount / divisor);
 
         // Build score / source metadata directly from the same `page` list so there is no
         // drift between `items` and the metadata arrays — the previous two-enumeration
@@ -500,13 +579,24 @@ internal sealed class MemoriesPartySearchService(
     /// and break <c>JsonSerializer</c> mid-response when
     /// <c>JsonNumberHandling.AllowNamedFloatingPointLiterals</c> is not configured.
     /// </summary>
-    private static double SafeScore(MemoryCandidate candidate)
+    private double SafeScore(MemoryCandidate candidate)
     {
         double score = candidate.CompositeScore ?? candidate.Score ?? 0;
-        return double.IsNaN(score) || double.IsInfinity(score) ? 0 : score;
+        if (double.IsNaN(score) || double.IsInfinity(score))
+        {
+            // P12: Surface NaN/Infinity occurrences so a Memories upgrade emitting bad
+            // floats produces a diagnostic instead of silently corrupted ranking.
+            logger.LogWarning(
+                "MemoryCandidate score was NaN or Infinity (raw composite={Composite}, score={Score}); clamping to 0.",
+                candidate.CompositeScore,
+                candidate.Score);
+            return 0;
+        }
+
+        return score;
     }
 
-    private static double? SanitizeScore(double? score)
+    private double? SanitizeScore(double? score)
     {
         if (score is null)
         {
@@ -514,10 +604,16 @@ internal sealed class MemoriesPartySearchService(
         }
 
         double v = score.Value;
-        return double.IsNaN(v) || double.IsInfinity(v) ? null : v;
+        if (double.IsNaN(v) || double.IsInfinity(v))
+        {
+            logger.LogWarning("Sanitized NaN/Infinity score from Memories candidate; returning null in response metadata.");
+            return null;
+        }
+
+        return v;
     }
 
-    private static PartySearchResult ToSearchResult(HydratedCandidate hydrated)
+    private PartySearchResult ToSearchResult(HydratedCandidate hydrated)
     {
         double score = SafeScore(hydrated.Candidate);
         return new PartySearchResult
@@ -536,7 +632,7 @@ internal sealed class MemoriesPartySearchService(
         };
     }
 
-    private static PartySearchScoreMetadata ToScoreMetadata(HydratedCandidate hydrated)
+    private PartySearchScoreMetadata ToScoreMetadata(HydratedCandidate hydrated)
         => new(
             hydrated.Entry.Id,
             SanitizeScore(hydrated.Candidate.Score),
@@ -582,9 +678,11 @@ internal sealed class MemoriesPartySearchService(
     private static MemoryCandidate ToCandidate(TraversalNode node, MemoryUnit unit)
     {
         // HopDistance >= 1 by the time we reach here (start node was filtered out in
-        // BuildTraversalCandidatesAsync). 1/(hop+1) keeps the score monotonic and
-        // distinguishable: hop-1 → 0.5, hop-2 → 0.333, hop-3 → 0.25, etc.
-        double score = 1.0 / (1 + Math.Max(1, node.HopDistance));
+        // BuildTraversalCandidatesAsync). Use Math.Max(0, hop) to keep the score monotonic
+        // and let the upstream filter — not a score floor — guarantee start-node exclusion.
+        // This way a missed-filter bug surfaces as a 1.0 score that obviously dominates the
+        // page rather than as a hop-1 tie that hides the failure.
+        double score = 1.0 / (1 + Math.Max(0, node.HopDistance));
         string? eventType = null;
         if (unit.Metadata is not null
             && unit.Metadata.TryGetValue("eventType", out MetadataField? field)
