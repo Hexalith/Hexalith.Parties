@@ -4,6 +4,8 @@ using Microsoft.AspNetCore.Mvc;
 namespace Hexalith.Parties.CommandApi.Authorization;
 
 internal static class TenantAccessDenialTranslator {
+    internal const string PayloadTenantConflictReasonCode = "payload-tenant-conflict";
+
     internal static string ToReasonCode(TenantAccessDenialReason reason)
         => reason switch {
             TenantAccessDenialReason.MissingTenantId => "missing-tenant",
@@ -13,13 +15,27 @@ internal static class TenantAccessDenialTranslator {
             TenantAccessDenialReason.MissingMember => "not-member",
             TenantAccessDenialReason.InsufficientRole => "insufficient-role",
             TenantAccessDenialReason.TenantStateStale => "tenant-state-stale",
-            _ => "tenant-state-stale",
+            TenantAccessDenialReason.None => throw new InvalidOperationException(
+                "TenantAccessDenialReason.None has no client-facing reason code; the decision was Allowed."),
+            _ => throw new InvalidOperationException(
+                $"Unmapped TenantAccessDenialReason '{reason}'. Add it to ToReasonCode/ToHttpStatus/SafeDetail."),
         };
 
     internal static int ToHttpStatus(TenantAccessDenialReason reason)
-        => reason is TenantAccessDenialReason.MissingTenantId or TenantAccessDenialReason.MissingUserId
-            ? StatusCodes.Status401Unauthorized
-            : StatusCodes.Status403Forbidden;
+        => reason switch {
+            TenantAccessDenialReason.MissingTenantId or TenantAccessDenialReason.MissingUserId
+                => StatusCodes.Status401Unauthorized,
+            TenantAccessDenialReason.UnknownTenant
+                or TenantAccessDenialReason.DisabledTenant
+                or TenantAccessDenialReason.MissingMember
+                or TenantAccessDenialReason.InsufficientRole
+                or TenantAccessDenialReason.TenantStateStale
+                => StatusCodes.Status403Forbidden,
+            TenantAccessDenialReason.None => throw new InvalidOperationException(
+                "TenantAccessDenialReason.None has no HTTP status; the decision was Allowed."),
+            _ => throw new InvalidOperationException(
+                $"Unmapped TenantAccessDenialReason '{reason}'. Add it to ToReasonCode/ToHttpStatus/SafeDetail."),
+        };
 
     internal static ObjectResult ToProblemDetails(
         TenantAccessDecision decision,
@@ -45,6 +61,24 @@ internal static class TenantAccessDenialTranslator {
         return result;
     }
 
+    internal static ObjectResult ToPayloadTenantConflictProblemDetails(
+        PathString path,
+        string correlationId) {
+        var problem = new ProblemDetails {
+            Status = StatusCodes.Status400BadRequest,
+            Title = "Payload tenant conflict",
+            Detail = "The tenant identifier in the request body does not match the trusted tenant context. Payload tenant values cannot override the authenticated tenant.",
+            Type = $"urn:hexalith:parties:authorization:{PayloadTenantConflictReasonCode}",
+            Instance = path,
+        };
+        problem.Extensions["correlationId"] = correlationId;
+        problem.Extensions["reasonCode"] = PayloadTenantConflictReasonCode;
+
+        var result = new ObjectResult(problem) { StatusCode = StatusCodes.Status400BadRequest };
+        result.ContentTypes.Add("application/problem+json");
+        return result;
+    }
+
     internal static string ToMcpMessage(TenantAccessDecision decision) {
         string reasonCode = ToReasonCode(decision.Reason);
         return $"Tenant authorization failed ({reasonCode}): {decision.DiagnosticText ?? SafeDetail(decision.Reason)}";
@@ -59,6 +93,9 @@ internal static class TenantAccessDenialTranslator {
             TenantAccessDenialReason.MissingMember => "The authenticated user is not an active member of the tenant.",
             TenantAccessDenialReason.InsufficientRole => "The authenticated user does not have the required tenant role.",
             TenantAccessDenialReason.TenantStateStale => "Tenant access state is unavailable or not current enough to authorize the request.",
-            _ => "Tenant access could not be authorized.",
+            TenantAccessDenialReason.None => throw new InvalidOperationException(
+                "TenantAccessDenialReason.None has no detail; the decision was Allowed."),
+            _ => throw new InvalidOperationException(
+                $"Unmapped TenantAccessDenialReason '{reason}'. Add it to ToReasonCode/ToHttpStatus/SafeDetail."),
         };
 }

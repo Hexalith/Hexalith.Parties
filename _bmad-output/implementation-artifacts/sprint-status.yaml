@@ -1,5 +1,5 @@
 # generated: 2026-05-02
-# last_updated: 2026-05-05  (story 11-2 BMad code review complete; AC3 round-trip tests + replay-after-restart test + Client fitness test added; doc clarifications + 3 deferred items to 11-4; story moved to done)
+# last_updated: 2026-05-05  (story 11-3 BMad code review complete; D1 + D2 resolved; 17 patches applied — denial vocabulary, fail-closed observability, payload tenant conflict rejection, sub→oid claim ordering, role-matrix and fitness tests added; 368 tests pass; story moved to done)
 # project: Hexalith.Parties
 # project_key: NOKEY
 # tracking_system: file-system
@@ -35,7 +35,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-05-02
-last_updated: 2026-05-05T12:00:00Z
+last_updated: 2026-05-05T18:30:00Z
 project: Hexalith.Parties
 project_key: NOKEY
 tracking_system: file-system
@@ -120,7 +120,7 @@ development_status:
   epic-11: in-progress
   11-1-apphost-and-package-integration: blocked
   11-2-tenants-event-consumption-and-local-access-projection: done
-  11-3-rest-and-mcp-tenant-authorization-enforcement: review
+  11-3-rest-and-mcp-tenant-authorization-enforcement: done
   11-4-tenants-integration-tests-deployment-validation-and-documentation: ready-for-dev
   epic-11-retrospective: optional
 

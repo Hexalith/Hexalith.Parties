@@ -1,14 +1,21 @@
 using Hexalith.Tenants.Client.Projections;
 using Hexalith.Tenants.Contracts.Enums;
 
+using Microsoft.Extensions.Logging;
+
 namespace Hexalith.Parties.CommandApi.Authorization;
 
 public sealed class TenantAccessService : ITenantAccessService {
     private readonly ITenantProjectionStore _projectionStore;
+    private readonly ILogger<TenantAccessService> _logger;
 
-    public TenantAccessService(ITenantProjectionStore projectionStore) {
+    public TenantAccessService(
+        ITenantProjectionStore projectionStore,
+        ILogger<TenantAccessService> logger) {
         ArgumentNullException.ThrowIfNull(projectionStore);
+        ArgumentNullException.ThrowIfNull(logger);
         _projectionStore = projectionStore;
+        _logger = logger;
     }
 
     public async Task<TenantAccessDecision> CheckAccessAsync(
@@ -29,6 +36,14 @@ public sealed class TenantAccessService : ITenantAccessService {
             state = await _projectionStore.GetAsync(tenantId, cancellationToken).ConfigureAwait(false);
         }
         catch (Exception ex) when (ex is not OperationCanceledException) {
+            // Fail closed: classify as stale state, but log so operators can diagnose
+            // a real projection-store outage instead of seeing only blanket 403s.
+            // No claim sets, member dictionaries, or party PII in the log scope.
+            _logger.LogError(
+                ex,
+                "Tenant access state lookup failed; failing closed. TenantId={TenantId}, Requirement={Requirement}",
+                tenantId,
+                requirement);
             return TenantAccessDecision.Denied(
                 TenantAccessDenialReason.TenantStateStale,
                 "Tenant access state is unavailable.");

@@ -308,13 +308,10 @@ public static class PartiesServiceCollectionExtensions {
             .AddMcpServer()
             .WithHttpTransport(options => {
                 options.RunSessionHandler = async (httpContext, mcpServer, ct) => {
-                    string? tenant = httpContext.User.FindAll("eventstore:tenant")
-                        .Select(c => c.Value)
-                        .FirstOrDefault(v => !string.IsNullOrWhiteSpace(v));
-                    string? userId = httpContext.User.FindFirst("sub")?.Value
-                        ?? httpContext.User.Identity?.Name;
+                    string? tenant = PartiesAuthClaims.ExtractTenant(httpContext.User);
+                    string? userId = PartiesAuthClaims.ExtractUserId(httpContext.User);
                     McpSessionContext.Tenant.Value = tenant;
-                    McpSessionContext.UserId.Value = string.IsNullOrWhiteSpace(userId) ? null : userId;
+                    McpSessionContext.UserId.Value = userId;
                     try {
                         await mcpServer.RunAsync(ct).ConfigureAwait(false);
                     }

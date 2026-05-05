@@ -1864,20 +1864,25 @@ internal static class JwtTokenHelper
     internal const string SigningKey = "DevOnlySigningKey-AtLeast32Chars-MustBeSecure!";
 
     internal static string CreateToken(bool includeTenantClaim)
-        => includeTenantClaim ? CreateToken("tenant-a") : CreateTokenCore(null);
+        => includeTenantClaim ? CreateToken("tenant-a") : CreateTokenCore(null, "test-user");
 
     internal static string CreateToken(string tenantId)
-        => CreateTokenCore(tenantId);
+        => CreateTokenCore(tenantId, "test-user");
 
-    private static string CreateTokenCore(string? tenantId)
+    internal static string CreateTokenWithoutSub(string tenantId)
+        => CreateTokenCore(tenantId, subject: null);
+
+    private static string CreateTokenCore(string? tenantId, string? subject)
     {
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(SigningKey));
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
-        var claims = new List<Claim>
+        var claims = new List<Claim>();
+
+        if (subject is not null)
         {
-            new("sub", "test-user"),
-        };
+            claims.Add(new Claim("sub", subject));
+        }
 
         if (tenantId is not null)
         {

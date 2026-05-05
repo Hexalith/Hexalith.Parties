@@ -298,6 +298,30 @@ public sealed class CreatePartyMcpToolTests
         return actorProxyFactory;
     }
 
+    // P8 — MCP missing-user denial: a session with tenant context but no
+    // authenticated user id must deny the write tool with reason missing-user
+    // BEFORE any payload validation, projection read, or command dispatch.
+    // No `mcp-agent` fallback.
+    [Fact]
+    public async Task CreatePartyAsync_MissingUserId_ThrowsMissingUserAuthorizationErrorAsync()
+    {
+        using TenantOnlyScope _ = TenantOnlyScope.Create("tenant-a");
+
+        ICommandRouter router = Substitute.For<ICommandRouter>();
+
+        InvalidOperationException exception = await Should.ThrowAsync<InvalidOperationException>(
+            () => CreatePartyMcpTool.CreatePartyAsync(
+                type: "person",
+                services: new ServiceCollection()
+                    .AddSingleton(router)
+                    .AddSingleton<Hexalith.Parties.CommandApi.Authorization.ITenantAccessService, Hexalith.Parties.CommandApi.Tests.Authorization.TestTenantAccessService>()
+                    .BuildServiceProvider(),
+                lastName: "Dupont"));
+
+        exception.Message.ShouldContain("missing-user");
+        await router.DidNotReceive().RouteCommandAsync(Arg.Any<SubmitCommand>(), Arg.Any<CancellationToken>());
+    }
+
     private sealed class TenantScope : IDisposable
     {
         private static readonly FieldInfo _tenantField = typeof(CreatePartyMcpTool)
@@ -326,6 +350,44 @@ public sealed class CreatePartyMcpToolTests
         }
 
         public static TenantScope Create(string value) => new(value);
+
+        public void Dispose()
+        {
+            _tenant.Value = _previousTenant;
+            _userId.Value = _previousUserId;
+        }
+    }
+
+    // Sets Tenant but leaves UserId null — simulates a session where the
+    // authenticated principal lacks a usable subject identifier.
+    private sealed class TenantOnlyScope : IDisposable
+    {
+        private static readonly FieldInfo _tenantField = typeof(CreatePartyMcpTool)
+            .Assembly
+            .GetType("Hexalith.Parties.CommandApi.Mcp.McpSessionContext", throwOnError: true)!
+            .GetField("Tenant", BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic)!;
+
+        private static readonly FieldInfo _userIdField = typeof(CreatePartyMcpTool)
+            .Assembly
+            .GetType("Hexalith.Parties.CommandApi.Mcp.McpSessionContext", throwOnError: true)!
+            .GetField("UserId", BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic)!;
+
+        private readonly AsyncLocal<string?> _tenant;
+        private readonly AsyncLocal<string?> _userId;
+        private readonly string? _previousTenant;
+        private readonly string? _previousUserId;
+
+        private TenantOnlyScope(string tenant)
+        {
+            _tenant = (AsyncLocal<string?>)_tenantField.GetValue(null)!;
+            _userId = (AsyncLocal<string?>)_userIdField.GetValue(null)!;
+            _previousTenant = _tenant.Value;
+            _previousUserId = _userId.Value;
+            _tenant.Value = tenant;
+            _userId.Value = null;
+        }
+
+        public static TenantOnlyScope Create(string tenant) => new(tenant);
 
         public void Dispose()
         {

@@ -47,6 +47,7 @@ public sealed class PartiesController(
     [HttpGet]
     [ProducesResponseType(typeof(PagedResult<PartyIndexEntry>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden, "application/problem+json")]
     public async Task<IActionResult> ListPartiesAsync(
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 20,
@@ -140,6 +141,7 @@ public sealed class PartiesController(
     [HttpGet("search")]
     [ProducesResponseType(typeof(PartySearchResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden, "application/problem+json")]
     public async Task<IActionResult> SearchPartiesAsync(
         [FromQuery] string? q = null,
         [FromQuery] string? mode = null,
@@ -340,6 +342,7 @@ public sealed class PartiesController(
     [ProducesResponseType(typeof(TemporalNameResult), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status410Gone, "application/problem+json")]
     public async Task<IActionResult> GetPartyNameAtAsync(string id, [FromQuery] DateTimeOffset at)
     {
@@ -401,6 +404,7 @@ public sealed class PartiesController(
     [ProducesResponseType(typeof(IReadOnlyList<NameHistoryEntry>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status410Gone, "application/problem+json")]
     public async Task<IActionResult> GetPartyNameHistoryAsync(string id)
     {
@@ -441,6 +445,7 @@ public sealed class PartiesController(
     [ProducesResponseType(StatusCodes.Status202Accepted)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest, "application/problem+json")]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status422UnprocessableEntity, "application/problem+json")]
     public Task<IActionResult> CreateParty([FromBody] CreateParty command, CancellationToken cancellationToken)
     {
@@ -452,6 +457,7 @@ public sealed class PartiesController(
     [ProducesResponseType(StatusCodes.Status202Accepted)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest, "application/problem+json")]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status422UnprocessableEntity, "application/problem+json")]
     public Task<IActionResult> UpdatePersonDetails(string id, [FromBody] JsonElement commandBody, CancellationToken cancellationToken)
     {
@@ -464,6 +470,7 @@ public sealed class PartiesController(
     [ProducesResponseType(StatusCodes.Status202Accepted)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest, "application/problem+json")]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status422UnprocessableEntity, "application/problem+json")]
     public Task<IActionResult> UpdateOrganizationDetails(string id, [FromBody] UpdateOrganizationDetails command, CancellationToken cancellationToken)
     {
@@ -476,6 +483,7 @@ public sealed class PartiesController(
     [ProducesResponseType(StatusCodes.Status202Accepted)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest, "application/problem+json")]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status422UnprocessableEntity, "application/problem+json")]
     public Task<IActionResult> SetIsNaturalPerson(string id, [FromBody] SetIsNaturalPerson command, CancellationToken cancellationToken)
     {
@@ -488,6 +496,7 @@ public sealed class PartiesController(
     [ProducesResponseType(StatusCodes.Status202Accepted)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest, "application/problem+json")]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status422UnprocessableEntity, "application/problem+json")]
     public Task<IActionResult> DeactivateParty(string id, CancellationToken cancellationToken)
         => DispatchCommandAsync(id, nameof(Contracts.Commands.DeactivateParty), new DeactivateParty { PartyId = id }, cancellationToken);
@@ -496,6 +505,7 @@ public sealed class PartiesController(
     [ProducesResponseType(StatusCodes.Status202Accepted)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest, "application/problem+json")]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status422UnprocessableEntity, "application/problem+json")]
     public Task<IActionResult> ReactivateParty(string id, CancellationToken cancellationToken)
         => DispatchCommandAsync(id, nameof(Contracts.Commands.ReactivateParty), new ReactivateParty { PartyId = id }, cancellationToken);
@@ -504,6 +514,7 @@ public sealed class PartiesController(
     [ProducesResponseType(StatusCodes.Status202Accepted)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest, "application/problem+json")]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status422UnprocessableEntity, "application/problem+json")]
     public Task<IActionResult> AddContactChannel(string id, [FromBody] AddContactChannel command, CancellationToken cancellationToken)
     {
@@ -516,6 +527,7 @@ public sealed class PartiesController(
     [ProducesResponseType(StatusCodes.Status202Accepted)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest, "application/problem+json")]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status422UnprocessableEntity, "application/problem+json")]
     public Task<IActionResult> UpdateContactChannel(string id, [FromBody] UpdateContactChannel command, CancellationToken cancellationToken)
     {
@@ -528,6 +540,7 @@ public sealed class PartiesController(
     [ProducesResponseType(StatusCodes.Status202Accepted)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest, "application/problem+json")]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status422UnprocessableEntity, "application/problem+json")]
     public Task<IActionResult> RemoveContactChannel(string id, [FromBody] RemoveContactChannel command, CancellationToken cancellationToken)
     {
@@ -540,6 +553,7 @@ public sealed class PartiesController(
     [ProducesResponseType(StatusCodes.Status202Accepted)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest, "application/problem+json")]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status422UnprocessableEntity, "application/problem+json")]
     public Task<IActionResult> AddIdentifier(string id, [FromBody] AddIdentifier command, CancellationToken cancellationToken)
     {
@@ -552,6 +566,7 @@ public sealed class PartiesController(
     [ProducesResponseType(StatusCodes.Status202Accepted)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest, "application/problem+json")]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status422UnprocessableEntity, "application/problem+json")]
     public Task<IActionResult> RemoveIdentifier(string id, [FromBody] RemoveIdentifier command, CancellationToken cancellationToken)
     {
@@ -564,6 +579,7 @@ public sealed class PartiesController(
     [ProducesResponseType(StatusCodes.Status202Accepted)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest, "application/problem+json")]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status422UnprocessableEntity, "application/problem+json")]
     public Task<IActionResult> CreatePartyComposite([FromBody] CreatePartyComposite command, CancellationToken cancellationToken)
     {
@@ -575,6 +591,7 @@ public sealed class PartiesController(
     [ProducesResponseType(StatusCodes.Status202Accepted)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest, "application/problem+json")]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden, "application/problem+json")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status422UnprocessableEntity, "application/problem+json")]
     public Task<IActionResult> UpdatePartyComposite(string id, [FromBody] UpdatePartyComposite command, CancellationToken cancellationToken)
     {
@@ -589,8 +606,10 @@ public sealed class PartiesController(
         TCommand command,
         CancellationToken cancellationToken)
     {
-        await ValidateCommandAsync(command, cancellationToken).ConfigureAwait(false);
-
+        // AC5: authorization must precede payload validation, projection reads,
+        // personal-data guard checks, and SubmitCommand construction. A denied
+        // caller must not be able to probe validator behavior or trigger any
+        // side-effecting work.
         string correlationId = HttpContext.Items[CorrelationIdMiddleware.HttpContextKey]?.ToString()
             ?? Guid.NewGuid().ToString();
 
@@ -606,6 +625,15 @@ public sealed class PartiesController(
         }
 
         string tenantId = tenant!;
+        if (PartiesAuthClaims.HasConflictingPayloadTenant(command, tenantId))
+        {
+            return TenantAccessDenialTranslator.ToPayloadTenantConflictProblemDetails(
+                HttpContext.Request.Path,
+                correlationId);
+        }
+
+        await ValidateCommandAsync(command, cancellationToken).ConfigureAwait(false);
+
         string? blockingReason = await personalDataCommandGuard
             .GetBlockingReasonAsync(tenantId, aggregateId, command!, cancellationToken)
             .ConfigureAwait(false);
@@ -653,8 +681,8 @@ public sealed class PartiesController(
         TCommand command,
         CancellationToken cancellationToken)
     {
-        await ValidateCommandAsync(command, cancellationToken).ConfigureAwait(false);
-
+        // AC5: authorization must precede payload validation and SubmitCommand
+        // construction (see DispatchCommandAsync for rationale).
         string correlationId = HttpContext.Items[CorrelationIdMiddleware.HttpContextKey]?.ToString()
             ?? Guid.NewGuid().ToString();
 
@@ -670,6 +698,15 @@ public sealed class PartiesController(
         }
 
         string tenantId = tenant!;
+        if (PartiesAuthClaims.HasConflictingPayloadTenant(command, tenantId))
+        {
+            return TenantAccessDenialTranslator.ToPayloadTenantConflictProblemDetails(
+                HttpContext.Request.Path,
+                correlationId);
+        }
+
+        await ValidateCommandAsync(command, cancellationToken).ConfigureAwait(false);
+
         string? blockingReason = await personalDataCommandGuard
             .GetBlockingReasonAsync(tenantId, aggregateId, command!, cancellationToken)
             .ConfigureAwait(false);
@@ -870,20 +907,9 @@ public sealed class PartiesController(
         return await proxy.GetEntriesAsync().ConfigureAwait(false);
     }
 
-    private string? ExtractTenant()
-    {
-        return User.FindAll("eventstore:tenant")
-            .Select(c => c.Value)
-            .FirstOrDefault(v => !string.IsNullOrWhiteSpace(v));
-    }
+    private string? ExtractTenant() => PartiesAuthClaims.ExtractTenant(User);
 
-    private string? ExtractUserId()
-    {
-        string? userId = User.FindFirst("sub")?.Value
-            ?? User.Identity?.Name;
-
-        return string.IsNullOrWhiteSpace(userId) ? null : userId;
-    }
+    private string? ExtractUserId() => PartiesAuthClaims.ExtractUserId(User);
 
     private async Task<IActionResult?> AuthorizeTenantAccessAsync(
         string? tenant,
@@ -1077,16 +1103,25 @@ public sealed class PartiesController(
         return result;
     }
 
+    // Cross-tenant scoped-id rejection. Distinct from Tenants-projection denials
+    // (which use TenantAccessDenialTranslator) but emits the same `reasonCode`
+    // extension so clients have a single denial vocabulary to branch on.
+    private const string CrossTenantReasonCode = "cross-tenant";
+
     private ObjectResult CreateForbiddenProblemDetails(string detail, string correlationId)
     {
         var problemDetails = new ProblemDetails
         {
             Status = StatusCodes.Status403Forbidden,
             Title = "Forbidden",
-            Type = "urn:hexalith:parties:error:Forbidden",
+            Type = $"urn:hexalith:parties:authorization:{CrossTenantReasonCode}",
             Detail = detail,
             Instance = HttpContext.Request.Path,
-            Extensions = { ["correlationId"] = correlationId },
+            Extensions =
+            {
+                ["correlationId"] = correlationId,
+                ["reasonCode"] = CrossTenantReasonCode,
+            },
         };
 
         var result = new ObjectResult(problemDetails) { StatusCode = StatusCodes.Status403Forbidden };

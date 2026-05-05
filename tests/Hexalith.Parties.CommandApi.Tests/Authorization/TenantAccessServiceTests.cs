@@ -6,6 +6,7 @@ using Hexalith.Tenants.Contracts.Enums;
 using Hexalith.Tenants.Contracts.Events;
 
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging.Abstractions;
 
 using Shouldly;
 
@@ -35,7 +36,7 @@ public class TenantAccessServiceTests {
             Status = TenantStatus.Active,
             Members = { ["user-1"] = role },
         });
-        TenantAccessService service = new(store);
+        TenantAccessService service = new(store, NullLogger<TenantAccessService>.Instance);
 
         TenantAccessDecision decision = await service.CheckAccessAsync("tenant-1", "user-1", requirement);
 
@@ -54,7 +55,7 @@ public class TenantAccessServiceTests {
         string? tenantId,
         string? userId,
         TenantAccessDenialReason expectedReason) {
-        TenantAccessService service = new(new InMemoryTenantProjectionStore());
+        TenantAccessService service = new(new InMemoryTenantProjectionStore(), NullLogger<TenantAccessService>.Instance);
 
         TenantAccessDecision decision = await service.CheckAccessAsync(tenantId, userId, TenantAccessRequirement.Read);
 
@@ -64,7 +65,7 @@ public class TenantAccessServiceTests {
 
     [Fact]
     public async Task CheckAccessAsyncFailsClosedWhenTenantProjectionIsMissing() {
-        TenantAccessService service = new(new InMemoryTenantProjectionStore());
+        TenantAccessService service = new(new InMemoryTenantProjectionStore(), NullLogger<TenantAccessService>.Instance);
 
         TenantAccessDecision decision = await service.CheckAccessAsync("tenant-1", "user-1", TenantAccessRequirement.Read);
 
@@ -81,7 +82,7 @@ public class TenantAccessServiceTests {
             Status = TenantStatus.Disabled,
             Members = { ["user-1"] = TenantRole.TenantOwner },
         });
-        TenantAccessService service = new(store);
+        TenantAccessService service = new(store, NullLogger<TenantAccessService>.Instance);
 
         TenantAccessDecision decision = await service.CheckAccessAsync("tenant-1", "user-1", TenantAccessRequirement.Read);
 
@@ -98,7 +99,7 @@ public class TenantAccessServiceTests {
             Status = TenantStatus.Active,
             Members = { ["other-user"] = TenantRole.TenantOwner },
         });
-        TenantAccessService service = new(store);
+        TenantAccessService service = new(store, NullLogger<TenantAccessService>.Instance);
 
         TenantAccessDecision decision = await service.CheckAccessAsync("tenant-1", "user-1", TenantAccessRequirement.Read);
 
@@ -115,7 +116,7 @@ public class TenantAccessServiceTests {
             Status = TenantStatus.Active,
             Members = { ["user-1"] = (TenantRole)999 },
         });
-        TenantAccessService service = new(store);
+        TenantAccessService service = new(store, NullLogger<TenantAccessService>.Instance);
 
         TenantAccessDecision decision = await service.CheckAccessAsync("tenant-1", "user-1", TenantAccessRequirement.Read);
 
@@ -125,13 +126,28 @@ public class TenantAccessServiceTests {
 
     [Fact]
     public async Task CheckAccessAsyncFailsClosedWhenProjectionStoreThrows() {
-        TenantAccessService service = new(new ThrowingTenantProjectionStore());
+        TenantAccessService service = new(new ThrowingTenantProjectionStore(), NullLogger<TenantAccessService>.Instance);
 
         TenantAccessDecision decision = await service.CheckAccessAsync("tenant-1", "user-1", TenantAccessRequirement.Read);
 
         decision.IsAllowed.ShouldBeFalse();
         decision.Reason.ShouldBe(TenantAccessDenialReason.TenantStateStale);
         decision.DiagnosticText.ShouldBe("Tenant access state is unavailable.");
+    }
+
+    [Fact]
+    public async Task CheckAccessAsyncPropagatesOperationCanceledExceptionFromProjectionStore() {
+        // The projection-store catch filter intentionally lets OperationCanceledException
+        // propagate so callers honor request cancellation. A future change to that filter
+        // would silently turn cancellations into TenantStateStale denials — this test
+        // pins that contract.
+        TenantAccessService service = new(new CancellingTenantProjectionStore(), NullLogger<TenantAccessService>.Instance);
+
+        using var cts = new CancellationTokenSource();
+        cts.Cancel();
+
+        await Should.ThrowAsync<OperationCanceledException>(() =>
+            service.CheckAccessAsync("tenant-1", "user-1", TenantAccessRequirement.Read, cts.Token));
     }
 
     [Fact]
@@ -143,7 +159,7 @@ public class TenantAccessServiceTests {
         using (provider) {
             await processor.ProcessAsync(Envelope("m-1", new TenantCreated("tenant-1", "Tenant One", null, DateTimeOffset.UtcNow)));
             await processor.ProcessAsync(Envelope("m-2", new UserAddedToTenant("tenant-1", "user-1", TenantRole.TenantContributor)));
-            TenantAccessService service = new(store);
+            TenantAccessService service = new(store, NullLogger<TenantAccessService>.Instance);
 
             (await service.CheckAccessAsync("tenant-1", "user-1", TenantAccessRequirement.Read))
                 .IsAllowed.ShouldBeTrue();
@@ -164,7 +180,7 @@ public class TenantAccessServiceTests {
         using (provider) {
             await processor.ProcessAsync(Envelope("m-1", new TenantCreated("tenant-1", "Tenant One", null, DateTimeOffset.UtcNow)));
             await processor.ProcessAsync(Envelope("m-2", new UserAddedToTenant("tenant-1", "user-1", TenantRole.TenantContributor)));
-            TenantAccessService service = new(store);
+            TenantAccessService service = new(store, NullLogger<TenantAccessService>.Instance);
 
             (await service.CheckAccessAsync("tenant-1", "user-1", TenantAccessRequirement.Read))
                 .IsAllowed.ShouldBeTrue();
@@ -203,6 +219,16 @@ public class TenantAccessServiceTests {
     private sealed class ThrowingTenantProjectionStore : ITenantProjectionStore {
         public Task<TenantLocalState?> GetAsync(string tenantId, CancellationToken cancellationToken = default)
             => throw new InvalidOperationException("Projection store unavailable.");
+
+        public Task SaveAsync(TenantLocalState state, CancellationToken cancellationToken = default)
+            => Task.CompletedTask;
+    }
+
+    private sealed class CancellingTenantProjectionStore : ITenantProjectionStore {
+        public Task<TenantLocalState?> GetAsync(string tenantId, CancellationToken cancellationToken = default) {
+            cancellationToken.ThrowIfCancellationRequested();
+            return Task.FromResult<TenantLocalState?>(null);
+        }
 
         public Task SaveAsync(TenantLocalState state, CancellationToken cancellationToken = default)
             => Task.CompletedTask;

@@ -40,17 +40,11 @@ public sealed class AdminController(
     ITenantAccessService tenantAccessService,
     ILogger<AdminController> logger) : ControllerBase {
     private const string Domain = "party";
-    private const string TenantClaimType = PartiesClaimsTransformation.TenantClaimType;
     private static readonly JsonSerializerOptions s_jsonOptions = new(JsonSerializerDefaults.Web);
 
-    private string? ExtractTenant()
-        => User.FindAll(TenantClaimType)
-            .Select(c => c.Value)
-            .FirstOrDefault(v => !string.IsNullOrWhiteSpace(v));
+    private string? ExtractTenant() => PartiesAuthClaims.ExtractTenant(User);
 
-    private string? ExtractUserId()
-        => User.FindFirst("sub")?.Value
-            ?? User.Identity?.Name;
+    private string? ExtractUserId() => PartiesAuthClaims.ExtractUserId(User);
 
     private async Task<IActionResult?> AuthorizeAdminAccessAsync(
         string? tenantId,
@@ -73,6 +67,17 @@ public sealed class AdminController(
         return TenantAccessDenialTranslator.ToProblemDetails(decision, HttpContext.Request.Path, correlationId);
     }
 
+    // Caller pattern: var (denial, tenantId) = await AuthorizeAdminAccessAndExtractTenantAsync(...);
+    // If denial is non-null, return it. Otherwise tenantId is guaranteed non-null/non-whitespace
+    // because the access service rejects MissingTenantId before returning Allowed.
+    private async Task<(IActionResult? Denial, string TenantId)> AuthorizeAdminAccessAndExtractTenantAsync(
+        string correlationId,
+        CancellationToken cancellationToken) {
+        string? tenantId = ExtractTenant();
+        IActionResult? denial = await AuthorizeAdminAccessAsync(tenantId, correlationId, cancellationToken).ConfigureAwait(false);
+        return (denial, tenantId ?? string.Empty);
+    }
+
     [HttpPost("projections/rebuild")]
     [ProducesResponseType(StatusCodes.Status202Accepted)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
@@ -81,11 +86,30 @@ public sealed class AdminController(
     public async Task<IActionResult> RebuildProjections([FromBody] RebuildProjectionsRequest request) {
         ArgumentNullException.ThrowIfNull(request);
 
+        // AC5 + D1 resolution: authorization is the gate. We authorize on the
+        // JWT-extracted tenant (trusted context), not on `request.TenantId`,
+        // and then require `request.TenantId == JWT tenant` so the body cannot
+        // redirect the rebuild to a different tenant. Cross-tenant projection
+        // rebuild requires re-issuing a token with the target tenant context.
+        string correlationId = HttpContext.Items[CorrelationIdMiddleware.HttpContextKey]?.ToString()
+            ?? Guid.NewGuid().ToString();
+
+        (IActionResult? accessDenied, string trustedTenantId) = await AuthorizeAdminAccessAndExtractTenantAsync(correlationId, HttpContext.RequestAborted).ConfigureAwait(false);
+        if (accessDenied is not null) {
+            return accessDenied;
+        }
+
         if (string.IsNullOrWhiteSpace(request.TenantId)) {
             return Problem(
                 title: "Invalid request",
                 detail: "tenantId is required.",
                 statusCode: StatusCodes.Status400BadRequest);
+        }
+
+        if (!string.Equals(request.TenantId, trustedTenantId, StringComparison.Ordinal)) {
+            return TenantAccessDenialTranslator.ToPayloadTenantConflictProblemDetails(
+                HttpContext.Request.Path,
+                correlationId);
         }
 
         string[] validProjections = ["detail", "index", "all"];
@@ -94,16 +118,6 @@ public sealed class AdminController(
                 title: "Invalid request",
                 detail: $"projection must be one of: {string.Join(", ", validProjections)}.",
                 statusCode: StatusCodes.Status400BadRequest);
-        }
-
-        string correlationId = HttpContext.Items[CorrelationIdMiddleware.HttpContextKey]?.ToString()
-            ?? Guid.NewGuid().ToString();
-        IActionResult? accessDenied = await AuthorizeAdminAccessAsync(
-            request.TenantId,
-            correlationId,
-            HttpContext.RequestAborted).ConfigureAwait(false);
-        if (accessDenied is not null) {
-            return accessDenied;
         }
 
         // Start rebuild in background — don't block the HTTP request
@@ -162,17 +176,9 @@ public sealed class AdminController(
                 statusCode: StatusCodes.Status400BadRequest);
         }
 
-        string? tenantId = ExtractTenant();
-        if (string.IsNullOrWhiteSpace(tenantId)) {
-            return Problem(
-                title: "Unauthorized",
-                detail: "Tenant context is required.",
-                statusCode: StatusCodes.Status401Unauthorized);
-        }
-
         string correlationId = HttpContext.Items[CorrelationIdMiddleware.HttpContextKey]?.ToString()
             ?? Guid.NewGuid().ToString();
-        IActionResult? accessDenied = await AuthorizeAdminAccessAsync(tenantId, correlationId, cancellationToken).ConfigureAwait(false);
+        (IActionResult? accessDenied, string tenantId) = await AuthorizeAdminAccessAndExtractTenantAsync(correlationId, cancellationToken).ConfigureAwait(false);
         if (accessDenied is not null) {
             return accessDenied;
         }
@@ -256,14 +262,9 @@ public sealed class AdminController(
             return Problem(title: "Invalid request", detail: "partyId is required.", statusCode: StatusCodes.Status400BadRequest);
         }
 
-        string? tenantId = ExtractTenant();
-        if (string.IsNullOrWhiteSpace(tenantId)) {
-            return Problem(title: "Unauthorized", detail: "Tenant context is required.", statusCode: StatusCodes.Status401Unauthorized);
-        }
-
         string correlationId = HttpContext.Items[CorrelationIdMiddleware.HttpContextKey]?.ToString()
             ?? Guid.NewGuid().ToString();
-        IActionResult? accessDenied = await AuthorizeAdminAccessAsync(tenantId, correlationId, cancellationToken).ConfigureAwait(false);
+        (IActionResult? accessDenied, string tenantId) = await AuthorizeAdminAccessAndExtractTenantAsync(correlationId, cancellationToken).ConfigureAwait(false);
         if (accessDenied is not null) {
             return accessDenied;
         }
@@ -286,14 +287,9 @@ public sealed class AdminController(
             return Problem(title: "Invalid request", detail: "partyId is required.", statusCode: StatusCodes.Status400BadRequest);
         }
 
-        string? tenantId = ExtractTenant();
-        if (string.IsNullOrWhiteSpace(tenantId)) {
-            return Problem(title: "Unauthorized", detail: "Tenant context is required.", statusCode: StatusCodes.Status401Unauthorized);
-        }
-
         string correlationId = HttpContext.Items[CorrelationIdMiddleware.HttpContextKey]?.ToString()
             ?? Guid.NewGuid().ToString();
-        IActionResult? accessDenied = await AuthorizeAdminAccessAsync(tenantId, correlationId, cancellationToken).ConfigureAwait(false);
+        (IActionResult? accessDenied, string tenantId) = await AuthorizeAdminAccessAndExtractTenantAsync(correlationId, cancellationToken).ConfigureAwait(false);
         if (accessDenied is not null) {
             return accessDenied;
         }
@@ -315,17 +311,9 @@ public sealed class AdminController(
             return Problem(title: "Invalid request", detail: "partyId is required.", statusCode: StatusCodes.Status400BadRequest);
         }
 
-        string? tenantId = ExtractTenant();
-        if (string.IsNullOrWhiteSpace(tenantId)) {
-            return Problem(title: "Unauthorized", detail: "Tenant context is required.", statusCode: StatusCodes.Status401Unauthorized);
-        }
-
         string correlationId = HttpContext.Items[CorrelationIdMiddleware.HttpContextKey]?.ToString()
             ?? Guid.NewGuid().ToString();
-        IActionResult? accessDenied = await AuthorizeAdminAccessAsync(
-            tenantId,
-            correlationId,
-            HttpContext.RequestAborted).ConfigureAwait(false);
+        (IActionResult? accessDenied, string tenantId) = await AuthorizeAdminAccessAndExtractTenantAsync(correlationId, HttpContext.RequestAborted).ConfigureAwait(false);
         if (accessDenied is not null) {
             return accessDenied;
         }
@@ -544,17 +532,9 @@ public sealed class AdminController(
             return Problem(title: "Invalid request", detail: "partyId is required.", statusCode: StatusCodes.Status400BadRequest);
         }
 
-        string? tenantId = ExtractTenant();
-        if (string.IsNullOrWhiteSpace(tenantId)) {
-            return Problem(title: "Unauthorized", detail: "Tenant context is required.", statusCode: StatusCodes.Status401Unauthorized);
-        }
-
         string correlationId = HttpContext.Items[CorrelationIdMiddleware.HttpContextKey]?.ToString()
             ?? Guid.NewGuid().ToString();
-        IActionResult? accessDenied = await AuthorizeAdminAccessAsync(
-            tenantId,
-            correlationId,
-            HttpContext.RequestAborted).ConfigureAwait(false);
+        (IActionResult? accessDenied, string tenantId) = await AuthorizeAdminAccessAndExtractTenantAsync(correlationId, HttpContext.RequestAborted).ConfigureAwait(false);
         if (accessDenied is not null) {
             return accessDenied;
         }
@@ -588,17 +568,9 @@ public sealed class AdminController(
             return Problem(title: "Invalid request", detail: "partyId is required.", statusCode: StatusCodes.Status400BadRequest);
         }
 
-        string? tenantId = ExtractTenant();
-        if (string.IsNullOrWhiteSpace(tenantId)) {
-            return Problem(title: "Unauthorized", detail: "Tenant context is required.", statusCode: StatusCodes.Status401Unauthorized);
-        }
-
         string correlationId = HttpContext.Items[CorrelationIdMiddleware.HttpContextKey]?.ToString()
             ?? Guid.NewGuid().ToString();
-        IActionResult? accessDenied = await AuthorizeAdminAccessAsync(
-            tenantId,
-            correlationId,
-            HttpContext.RequestAborted).ConfigureAwait(false);
+        (IActionResult? accessDenied, string tenantId) = await AuthorizeAdminAccessAndExtractTenantAsync(correlationId, HttpContext.RequestAborted).ConfigureAwait(false);
         if (accessDenied is not null) {
             return accessDenied;
         }
@@ -634,17 +606,9 @@ public sealed class AdminController(
             return Problem(title: "Invalid request", detail: "partyId is required.", statusCode: StatusCodes.Status400BadRequest);
         }
 
-        string? tenantId = ExtractTenant();
-        if (string.IsNullOrWhiteSpace(tenantId)) {
-            return Problem(title: "Unauthorized", detail: "Tenant context is required.", statusCode: StatusCodes.Status401Unauthorized);
-        }
-
         string correlationId = HttpContext.Items[CorrelationIdMiddleware.HttpContextKey]?.ToString()
             ?? Guid.NewGuid().ToString();
-        IActionResult? accessDenied = await AuthorizeAdminAccessAsync(
-            tenantId,
-            correlationId,
-            HttpContext.RequestAborted).ConfigureAwait(false);
+        (IActionResult? accessDenied, string tenantId) = await AuthorizeAdminAccessAndExtractTenantAsync(correlationId, HttpContext.RequestAborted).ConfigureAwait(false);
         if (accessDenied is not null) {
             return accessDenied;
         }
@@ -715,14 +679,9 @@ public sealed class AdminController(
             return Problem(title: "Invalid request", detail: "partyId is required.", statusCode: StatusCodes.Status400BadRequest);
         }
 
-        string? tenantId = ExtractTenant();
-        if (string.IsNullOrWhiteSpace(tenantId)) {
-            return Problem(title: "Unauthorized", detail: "Tenant context is required.", statusCode: StatusCodes.Status401Unauthorized);
-        }
-
         string correlationId = HttpContext.Items[CorrelationIdMiddleware.HttpContextKey]?.ToString()
             ?? Guid.NewGuid().ToString();
-        IActionResult? accessDenied = await AuthorizeAdminAccessAsync(tenantId, correlationId, cancellationToken).ConfigureAwait(false);
+        (IActionResult? accessDenied, string tenantId) = await AuthorizeAdminAccessAndExtractTenantAsync(correlationId, cancellationToken).ConfigureAwait(false);
         if (accessDenied is not null) {
             return accessDenied;
         }
@@ -764,14 +723,9 @@ public sealed class AdminController(
             return Problem(title: "Invalid request", detail: "consentId is required.", statusCode: StatusCodes.Status400BadRequest);
         }
 
-        string? tenantId = ExtractTenant();
-        if (string.IsNullOrWhiteSpace(tenantId)) {
-            return Problem(title: "Unauthorized", detail: "Tenant context is required.", statusCode: StatusCodes.Status401Unauthorized);
-        }
-
         string correlationId = HttpContext.Items[CorrelationIdMiddleware.HttpContextKey]?.ToString()
             ?? Guid.NewGuid().ToString();
-        IActionResult? accessDenied = await AuthorizeAdminAccessAsync(tenantId, correlationId, cancellationToken).ConfigureAwait(false);
+        (IActionResult? accessDenied, string tenantId) = await AuthorizeAdminAccessAndExtractTenantAsync(correlationId, cancellationToken).ConfigureAwait(false);
         if (accessDenied is not null) {
             return accessDenied;
         }
@@ -806,17 +760,9 @@ public sealed class AdminController(
             return Problem(title: "Invalid request", detail: "partyId is required.", statusCode: StatusCodes.Status400BadRequest);
         }
 
-        string? tenantId = ExtractTenant();
-        if (string.IsNullOrWhiteSpace(tenantId)) {
-            return Problem(title: "Unauthorized", detail: "Tenant context is required.", statusCode: StatusCodes.Status401Unauthorized);
-        }
-
         string correlationId = HttpContext.Items[CorrelationIdMiddleware.HttpContextKey]?.ToString()
             ?? Guid.NewGuid().ToString();
-        IActionResult? accessDenied = await AuthorizeAdminAccessAsync(
-            tenantId,
-            correlationId,
-            HttpContext.RequestAborted).ConfigureAwait(false);
+        (IActionResult? accessDenied, string tenantId) = await AuthorizeAdminAccessAndExtractTenantAsync(correlationId, HttpContext.RequestAborted).ConfigureAwait(false);
         if (accessDenied is not null) {
             return accessDenied;
         }
@@ -846,14 +792,9 @@ public sealed class AdminController(
             return Problem(title: "Invalid request", detail: "partyId is required.", statusCode: StatusCodes.Status400BadRequest);
         }
 
-        string? tenantId = ExtractTenant();
-        if (string.IsNullOrWhiteSpace(tenantId)) {
-            return Problem(title: "Unauthorized", detail: "Tenant context is required.", statusCode: StatusCodes.Status401Unauthorized);
-        }
-
         string correlationId = HttpContext.Items[CorrelationIdMiddleware.HttpContextKey]?.ToString()
             ?? Guid.NewGuid().ToString();
-        IActionResult? accessDenied = await AuthorizeAdminAccessAsync(tenantId, correlationId, cancellationToken).ConfigureAwait(false);
+        (IActionResult? accessDenied, string tenantId) = await AuthorizeAdminAccessAndExtractTenantAsync(correlationId, cancellationToken).ConfigureAwait(false);
         if (accessDenied is not null) {
             return accessDenied;
         }
@@ -888,14 +829,9 @@ public sealed class AdminController(
             return Problem(title: "Invalid request", detail: "partyId is required.", statusCode: StatusCodes.Status400BadRequest);
         }
 
-        string? tenantId = ExtractTenant();
-        if (string.IsNullOrWhiteSpace(tenantId)) {
-            return Problem(title: "Unauthorized", detail: "Tenant context is required.", statusCode: StatusCodes.Status401Unauthorized);
-        }
-
         string correlationId = HttpContext.Items[CorrelationIdMiddleware.HttpContextKey]?.ToString()
             ?? Guid.NewGuid().ToString();
-        IActionResult? accessDenied = await AuthorizeAdminAccessAsync(tenantId, correlationId, cancellationToken).ConfigureAwait(false);
+        (IActionResult? accessDenied, string tenantId) = await AuthorizeAdminAccessAndExtractTenantAsync(correlationId, cancellationToken).ConfigureAwait(false);
         if (accessDenied is not null) {
             return accessDenied;
         }
@@ -933,17 +869,9 @@ public sealed class AdminController(
             return Problem(title: "Invalid request", detail: "partyId is required.", statusCode: StatusCodes.Status400BadRequest);
         }
 
-        string? tenantId = ExtractTenant();
-        if (string.IsNullOrWhiteSpace(tenantId)) {
-            return Problem(title: "Unauthorized", detail: "Tenant context is required.", statusCode: StatusCodes.Status401Unauthorized);
-        }
-
         string correlationId = HttpContext.Items[CorrelationIdMiddleware.HttpContextKey]?.ToString()
             ?? Guid.NewGuid().ToString();
-        IActionResult? accessDenied = await AuthorizeAdminAccessAsync(
-            tenantId,
-            correlationId,
-            HttpContext.RequestAborted).ConfigureAwait(false);
+        (IActionResult? accessDenied, string tenantId) = await AuthorizeAdminAccessAndExtractTenantAsync(correlationId, HttpContext.RequestAborted).ConfigureAwait(false);
         if (accessDenied is not null) {
             return accessDenied;
         }
@@ -1013,14 +941,9 @@ public sealed class AdminController(
             return Problem(title: "Invalid request", detail: "partyId is required.", statusCode: StatusCodes.Status400BadRequest);
         }
 
-        string? tenantId = ExtractTenant();
-        if (string.IsNullOrWhiteSpace(tenantId)) {
-            return Problem(title: "Unauthorized", detail: "Tenant context is required.", statusCode: StatusCodes.Status401Unauthorized);
-        }
-
         string correlationId = HttpContext.Items[CorrelationIdMiddleware.HttpContextKey]?.ToString()
             ?? Guid.NewGuid().ToString();
-        IActionResult? accessDenied = await AuthorizeAdminAccessAsync(tenantId, correlationId, cancellationToken).ConfigureAwait(false);
+        (IActionResult? accessDenied, string tenantId) = await AuthorizeAdminAccessAndExtractTenantAsync(correlationId, cancellationToken).ConfigureAwait(false);
         if (accessDenied is not null) {
             return accessDenied;
         }

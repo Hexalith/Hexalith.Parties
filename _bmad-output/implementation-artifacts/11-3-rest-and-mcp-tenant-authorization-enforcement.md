@@ -1,6 +1,6 @@
 # Story 11.3: REST and MCP Tenant Authorization Enforcement
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -357,3 +357,54 @@ GPT-5 Codex
   - Global administrator or service-principal bypass policy remains deferred unless the Tenants client exposes an explicit consumer authorization contract.
   - Exact MCP error wrapper type remains implementation-specific as long as it carries the shared reason-code vocabulary.
 - Final recommendation: ready-for-dev
+
+### Review Findings
+
+- Date: 2026-05-05
+- Skill invocation: `/bmad-code-review 11-3`
+- Diff source: commit `fa349c8 Implement tenant authorization enforcement` (35 files, +729 / -136 lines, excluding sprint-status / preflight noise)
+- Reviewers: Blind Hunter (adversarial, diff-only), Edge Case Hunter (diff + project read), Acceptance Auditor (diff + spec)
+- Raw findings: 45 → 31 unique after dedup. Triage: 2 decision-needed, 17 patch, 6 defer, 6 dismissed as noise.
+
+#### Decision-needed (resolved 2026-05-05)
+
+- [x] [Review][Decision-resolved] **D1** — AC5 vs `AdminController.RebuildProjections` payload-tenant-as-auth-input. **Resolution:** authorize on JWT-extracted tenant, then require `request.TenantId == JWT tenant`; reject mismatch with a 403 `payload-tenant-conflict` (or reuse vocabulary). Honors AC5 (trusted context as the only auth input) and the task wording (`request.TenantId` is still validated). Implementation folded into patch P1/P11. [src/Hexalith.Parties.CommandApi/Controllers/AdminController.cs:81-148]
+- [x] [Review][Decision-resolved] **D2** — `ExtractUserId` fallback semantics. **Resolution:** strict ordered claim list `sub` → `oid` and nothing else; drop the `User.Identity?.Name` fallback in `PartiesController`, `AdminController`, and the MCP `RunSessionHandler`. Missing both claims → fail closed as `missing-user`. Implementation folded into patches P3a (new helper) and P15 (consistency). [src/Hexalith.Parties.CommandApi/Controllers/AdminController.cs:51-53; PartiesController.cs:880-886; Extensions/PartiesServiceCollectionExtensions.cs:314-317]
+
+#### Patch — all applied 2026-05-05; build & 368-test suite pass
+
+- [x] [Review][Patch] AC5 — REST command dispatch never rejects conflicting payload `TenantId`; also covers `AdminController.RebuildProjections` enforcing `request.TenantId == JWT tenant` (D1 resolution) [src/Hexalith.Parties.CommandApi/Controllers/PartiesController.cs:586-712; AdminController.cs:81-148]
+- [x] [Review][Patch] Authorization-before-side-effect ordering — `ValidateCommandAsync` runs before `AuthorizeTenantAccessAsync` [src/Hexalith.Parties.CommandApi/Controllers/PartiesController.cs:592, 656]
+- [x] [Review][Patch] `TenantAccessService` swallows projection-store exceptions silently — inject `ILogger<TenantAccessService>` and log at error level (no PII) [src/Hexalith.Parties.CommandApi/Authorization/TenantAccessService.cs:31]
+- [x] [Review][Patch] `TenantAccessDenialTranslator` default switch arm masks unknown enum values as `tenant-state-stale` — make exhaustive (throw on unknown) [src/Hexalith.Parties.CommandApi/Authorization/TenantAccessDenialTranslator.cs:7-17, 19-22, 53-63]
+- [x] [Review][Patch] Add controller-level role-matrix happy-path tests (Reader/Contributor/Owner × Read/Write/Admin) — current diff covers deny-path only [tests/Hexalith.Parties.CommandApi.Tests/Controllers/PartiesControllerProblemDetailsTests.cs]
+- [x] [Review][Patch] Add per-reason endpoint denial tests for `tenant-disabled`, `not-member`, `tenant-state-stale`, `missing-user` — only `unknown-tenant` and `insufficient-role` covered today [tests/Hexalith.Parties.CommandApi.Tests/Controllers/PartiesControllerProblemDetailsTests.cs]
+- [x] [Review][Patch] Add admin endpoint denial + call-order regression tests proving contributor cannot run admin operations and denied admin requests do not execute side effects [tests/Hexalith.Parties.CommandApi.Tests/Controllers/AdminEndpointIntegrationTests.cs]
+- [x] [Review][Patch] Add MCP missing-user denial test for write tools (no `mcp-agent` fallback) — current MCP tests only cover missing-tenant [tests/Hexalith.Parties.CommandApi.Tests/Mcp/CreatePartyMcpToolTests.cs, UpdatePartyMcpToolTests.cs, DeletePartyMcpToolTests.cs]
+- [x] [Review][Patch] Add fitness/code-level assertion that REST/MCP request paths do not call Tenants HTTP/API on the request path [tests/Hexalith.Parties.CommandApi.Tests/FitnessTests/ArchitecturalFitnessTests.cs]
+- [x] [Review][Patch] Add fitness assertion proving EventStore actor/projection key formats unchanged by Story 11.3 [tests/Hexalith.Parties.CommandApi.Tests/FitnessTests/ArchitecturalFitnessTests.cs]
+- [x] [Review][Patch] `RebuildProjections` runs request-body validation before authorization — reorder so auth gates body inspection [src/Hexalith.Parties.CommandApi/Controllers/AdminController.cs:84-107]
+- [x] [Review][Patch] `TestTenantAccessService` shared on class fixture is mutable across tests — reset `Handler` per-test (constructor or `IAsyncLifetime`) to prevent ordering-dependent flakes [tests/Hexalith.Parties.CommandApi.Tests/Controllers/PartiesControllerProblemDetailsTests.cs:42-46, 1793-1799]
+- [x] [Review][Patch] `AdminController` missing-tenant fallbacks return bare `Problem(title:"Unauthorized", ...)` instead of `TenantAccessDenialTranslator` vocabulary — vocabulary inconsistent with PartiesController [src/Hexalith.Parties.CommandApi/Controllers/AdminController.cs:166-171, 260-262, 290-292, 318-321, 549-551, 593-595, 638-640, 719-721, 767-770, 809-812, 849-852, 889-892, 936-939, 1016-1019]
+- [x] [Review][Patch] Cross-tenant scoped-id check returns `urn:hexalith:parties:error:Forbidden` without `reasonCode` extension — align with new vocabulary [src/Hexalith.Parties.CommandApi/Controllers/PartiesController.cs:292-295, 1080-1095]
+- [x] [Review][Patch] Add `[ProducesResponseType(StatusCodes.Status403Forbidden)]` to query and POST endpoints that now return 403 via the access service [src/Hexalith.Parties.CommandApi/Controllers/PartiesController.cs:48-49, 142-143 and POST endpoints]
+- [x] [Review][Patch] Unify `ExtractUserId` to a single helper using strict claim ordering `sub` → `oid` (D2 resolution) — drop `User.Identity?.Name` fallback in `PartiesController`, `AdminController`, and the MCP `RunSessionHandler`; whitespace-check both [src/Hexalith.Parties.CommandApi/Controllers/AdminController.cs:51-53; PartiesController.cs:880-886; Extensions/PartiesServiceCollectionExtensions.cs:314-317]
+- [x] [Review][Patch] `TenantAccessServiceTests` lacks an `OperationCanceledException` propagation test for the projection-store catch filter [tests/Hexalith.Parties.CommandApi.Tests/Authorization/TenantAccessServiceTests.cs]
+
+#### Deferred
+
+- [x] [Review][Defer] Multiple `eventstore:tenant` claims silently collapse to the first — pre-existing extraction behavior, out of Story 11.3 scope
+- [x] [Review][Defer] MCP authorization failures use `InvalidOperationException` with reason code in message text only — spec permits a string contract; structured-error refactor is larger
+- [x] [Review][Defer] Long-running admin `Task.Run` background work runs to completion if tenant disabled mid-operation — pre-existing fire-and-forget; spec is request-boundary-scoped
+- [x] [Review][Defer] `RebuildProjections` accepts payload `partyId` without scope validation against the tenant — rebuild-service responsibility, out of authorization scope
+- [x] [Review][Defer] `TenantLocalState.Members` and projection lookups are case-sensitive (`StringComparer.Ordinal`) — Hexalith.Tenants library concern
+- [x] [Review][Defer] Tenant id logged at Warning level on every denial — operational log-noise tuning, not a correctness bug
+
+#### Dismissed (noise / out-of-scope)
+
+- `TenantStateStale` → 403 vs 503 retryable — spec explicitly mandates fail-closed denial with reason code
+- MCP test message assertions use `ShouldContain` rather than equality — acceptable assertion granularity
+- `DiagnosticText` could leak details if a future caller embedded raw exception messages — speculative; current producers are safe
+- NBSP / unicode-whitespace tenant claim edge case — speculative
+- `McpTenantAuthorization` resolves `ITenantAccessService` from `IServiceProvider` — MCP SDK scopes the provider per tool invocation
+- `ExtractUserId()!` null-forgiving fragility — not a current bug; covered by callers' authorize-first contract

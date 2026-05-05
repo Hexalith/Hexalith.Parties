@@ -41,6 +41,62 @@ public sealed class AdminEndpointIntegrationTests : IClassFixture<AdminEndpointI
     public AdminEndpointIntegrationTests(AdminTestFactory factory)
     {
         _factory = factory;
+        _factory.TenantAccessService.AllowAll();
+        _factory.RebuildService.ClearReceivedCalls();
+    }
+
+    // P7 — Admin denial + call-order regression: a denied admin request must
+    // not invoke the rebuild service before authorization fails closed.
+    [Fact]
+    public async Task RebuildProjections_TenantsAdminDenied_ReturnsForbiddenAndDoesNotRebuildAsync()
+    {
+        _factory.TenantAccessService.Handler = (_, _, requirement, _) => Task.FromResult(
+            requirement == Hexalith.Parties.CommandApi.Authorization.TenantAccessRequirement.Admin
+                ? Hexalith.Parties.CommandApi.Authorization.TenantAccessDecision.Denied(
+                    Hexalith.Parties.CommandApi.Authorization.TenantAccessDenialReason.InsufficientRole)
+                : Hexalith.Parties.CommandApi.Authorization.TenantAccessDecision.Allowed);
+
+        using HttpClient client = CreateAdminClient();
+        using HttpContent body = JsonContent.Create(new
+        {
+            tenantId = "tenant-a",
+            projection = "all",
+        });
+
+        HttpResponseMessage response = await client.PostAsync(RebuildEndpoint, body);
+
+        response.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
+        response.Content.Headers.ContentType?.MediaType.ShouldBe("application/problem+json");
+
+        JsonDocument problem = await JsonDocument.ParseAsync(await response.Content.ReadAsStreamAsync());
+        problem.RootElement.GetProperty("reasonCode").GetString().ShouldBe("insufficient-role");
+
+        await _factory.RebuildService.DidNotReceive().RebuildDetailProjectionAsync(
+            Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<CancellationToken>());
+        await _factory.RebuildService.DidNotReceive().RebuildIndexProjectionAsync(
+            Arg.Any<string>(), Arg.Any<CancellationToken>());
+    }
+
+    // D1 resolution: payload `tenantId` must equal the JWT-derived tenant.
+    // A mismatch is rejected with payload-tenant-conflict before the rebuild runs.
+    [Fact]
+    public async Task RebuildProjections_PayloadTenantDiffersFromJwt_ReturnsPayloadConflictAsync()
+    {
+        using HttpClient client = CreateAdminClient(); // JWT carries tenant-a
+        using HttpContent body = JsonContent.Create(new
+        {
+            tenantId = "tenant-b", // mismatch
+            projection = "all",
+        });
+
+        HttpResponseMessage response = await client.PostAsync(RebuildEndpoint, body);
+
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        JsonDocument problem = await JsonDocument.ParseAsync(await response.Content.ReadAsStreamAsync());
+        problem.RootElement.GetProperty("reasonCode").GetString().ShouldBe("payload-tenant-conflict");
+
+        await _factory.RebuildService.DidNotReceive().RebuildDetailProjectionAsync(
+            Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -187,6 +243,8 @@ public sealed class AdminEndpointIntegrationTests : IClassFixture<AdminEndpointI
         internal IErasureVerificationService ErasureVerificationService { get; } = Substitute.For<IErasureVerificationService>();
         internal IKeyStorageBackend KeyStorageBackend { get; } = Substitute.For<IKeyStorageBackend>();
         internal IKeyOperationAuditService KeyOperationAuditService { get; } = Substitute.For<IKeyOperationAuditService>();
+        internal Hexalith.Parties.CommandApi.Tests.Authorization.TestTenantAccessService TenantAccessService { get; }
+            = new();
 
         protected override void ConfigureWebHost(IWebHostBuilder builder)
         {
@@ -242,7 +300,7 @@ public sealed class AdminEndpointIntegrationTests : IClassFixture<AdminEndpointI
                 services.RemoveAll<PartyErasureOrchestrator>();
                 services.AddSingleton<PartyErasureOrchestrator>();
                 services.RemoveAll<Hexalith.Parties.CommandApi.Authorization.ITenantAccessService>();
-                services.AddSingleton<Hexalith.Parties.CommandApi.Authorization.ITenantAccessService, Hexalith.Parties.CommandApi.Tests.Authorization.TestTenantAccessService>();
+                services.AddSingleton<Hexalith.Parties.CommandApi.Authorization.ITenantAccessService>(TenantAccessService);
             });
         }
     }

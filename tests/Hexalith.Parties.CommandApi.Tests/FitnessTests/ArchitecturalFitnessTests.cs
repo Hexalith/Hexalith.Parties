@@ -265,6 +265,145 @@ public sealed class ArchitecturalFitnessTests
             $"Found: {string.Join(", ", violations)}");
     }
 
+    // P9 — No per-request Tenants HTTP/API polling: the request-path code in
+    // PartiesController, AdminController, and the MCP layer must reach the
+    // Tenants subsystem only through ITenantAccessService (which reads the
+    // local projection store). It must NOT introduce HttpClient or
+    // Hexalith.Tenants.Client.Subscription/Registration types into the
+    // request path.
+    [Fact]
+    public void RequestPathTypes_DoNotReferenceTenantsHttpOrSubscription()
+    {
+        Assembly commandApiAssembly = typeof(GetPartyMcpTool).Assembly;
+
+        string[] requestPathNamespaces =
+        [
+            "Hexalith.Parties.CommandApi.Controllers",
+            "Hexalith.Parties.CommandApi.Mcp",
+        ];
+
+        Type[] requestPathTypes = commandApiAssembly.GetTypes()
+            .Where(t => t.Namespace is not null && requestPathNamespaces.Contains(t.Namespace))
+            .ToArray();
+
+        requestPathTypes.ShouldNotBeEmpty("Expected request-path types to exist");
+
+        // Forbidden — these would imply per-request Tenants HTTP/API polling.
+        string[] forbiddenTypeNamespacePrefixes =
+        [
+            "System.Net.Http",
+            "Hexalith.Tenants.Client.Subscription",
+            "Hexalith.Tenants.Client.Registration",
+        ];
+
+        List<string> violations = [];
+
+        foreach (Type type in requestPathTypes)
+        {
+            foreach (FieldInfo field in type.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance | BindingFlags.DeclaredOnly))
+            {
+                if (IsInForbiddenNamespace(field.FieldType, forbiddenTypeNamespacePrefixes))
+                {
+                    violations.Add($"{type.FullName}.{field.Name} references forbidden type {field.FieldType.FullName}");
+                }
+            }
+
+            foreach (PropertyInfo prop in type.GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance | BindingFlags.DeclaredOnly))
+            {
+                if (IsInForbiddenNamespace(prop.PropertyType, forbiddenTypeNamespacePrefixes))
+                {
+                    violations.Add($"{type.FullName}.{prop.Name} references forbidden type {prop.PropertyType.FullName}");
+                }
+            }
+
+            foreach (MethodInfo method in type.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance | BindingFlags.DeclaredOnly))
+            {
+                foreach (Type localType in GetLocalVariableTypes(method))
+                {
+                    if (IsInForbiddenNamespace(localType, forbiddenTypeNamespacePrefixes))
+                    {
+                        violations.Add($"{type.FullName}.{method.Name} local variable references forbidden type {localType.FullName}");
+                    }
+                }
+            }
+
+            foreach (ConstructorInfo ctor in type.GetConstructors(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly))
+            {
+                foreach (ParameterInfo param in ctor.GetParameters())
+                {
+                    if (IsInForbiddenNamespace(param.ParameterType, forbiddenTypeNamespacePrefixes))
+                    {
+                        violations.Add($"{type.FullName}::ctor param '{param.Name}' is forbidden type {param.ParameterType.FullName}");
+                    }
+                }
+            }
+        }
+
+        violations.ShouldBeEmpty(
+            $"Request-path code must not reference HTTP clients or Tenants client subscription/registration types " +
+            $"(would introduce per-request Tenants polling). Use ITenantAccessService instead. Violations:\n" +
+            string.Join("\n", violations));
+    }
+
+    // P10 — EventStore actor/projection key formats must remain stable.
+    // Story 11.3 must not change the actor identity format used for the
+    // party-index and party-detail projections, otherwise existing aggregate
+    // and projection state becomes unreachable. We verify by reading the
+    // controller source as text and asserting the canonical tenant-scoped
+    // string-interpolation format is still present.
+    [Fact]
+    public void PartyProjectionActorKeyFormat_RemainsTenantPrefixedColonSeparated()
+    {
+        string testAssemblyDir = Path.GetDirectoryName(typeof(ArchitecturalFitnessTests).Assembly.Location)!;
+        string repoRoot = Path.GetFullPath(Path.Combine(testAssemblyDir, "..", "..", "..", "..", ".."));
+        string controllerPath = Path.Combine(
+            repoRoot, "src", "Hexalith.Parties.CommandApi", "Controllers", "PartiesController.cs");
+        File.Exists(controllerPath).ShouldBeTrue($"Controller source not found at {controllerPath}");
+
+        string source = File.ReadAllText(controllerPath);
+
+        // Canonical actor id construction patterns — string interpolation that
+        // must remain in the controller. Each pattern is a literal substring
+        // that the C# compiler will preserve in source.
+        string[] requiredFragments =
+        [
+            "{tenant}:party-index",
+            "{tenant}:party-detail:",
+        ];
+
+        List<string> missing = [.. requiredFragments.Where(f => !source.Contains(f, StringComparison.Ordinal))];
+
+        missing.ShouldBeEmpty(
+            "EventStore actor/projection key format must remain stable. " +
+            "PartiesController.cs no longer contains: " + string.Join(", ", missing) +
+            ". Story 11.3 must not change the actor id format because existing " +
+            "Dapr actor state and projection store data is keyed off these strings.");
+    }
+
+    private static bool IsInForbiddenNamespace(Type type, string[] forbiddenNamespacePrefixes)
+    {
+        Type checkType = Nullable.GetUnderlyingType(type) ?? type;
+
+        if (checkType.IsGenericType)
+        {
+            foreach (Type arg in checkType.GetGenericArguments())
+            {
+                if (IsInForbiddenNamespace(arg, forbiddenNamespacePrefixes))
+                {
+                    return true;
+                }
+            }
+        }
+
+        string? ns = checkType.Namespace;
+        if (ns is null)
+        {
+            return false;
+        }
+
+        return forbiddenNamespacePrefixes.Any(prefix => ns.StartsWith(prefix, StringComparison.Ordinal));
+    }
+
     private static IEnumerable<Type> GetLocalVariableTypes(MethodInfo method)
         => method
             .GetMethodBody()?
