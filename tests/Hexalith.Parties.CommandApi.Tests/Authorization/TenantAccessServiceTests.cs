@@ -1,8 +1,15 @@
 using Hexalith.Parties.CommandApi.Authorization;
 using Hexalith.Tenants.Client.Projections;
+using Hexalith.Tenants.Client.Registration;
+using Hexalith.Tenants.Client.Subscription;
 using Hexalith.Tenants.Contracts.Enums;
+using Hexalith.Tenants.Contracts.Events;
+
+using Microsoft.Extensions.DependencyInjection;
 
 using Shouldly;
+
+using System.Text.Json;
 
 namespace Hexalith.Parties.CommandApi.Tests.Authorization;
 
@@ -126,6 +133,72 @@ public class TenantAccessServiceTests {
         decision.Reason.ShouldBe(TenantAccessDenialReason.TenantStateStale);
         decision.DiagnosticText.ShouldBe("Tenant access state is unavailable.");
     }
+
+    [Fact]
+    public async Task CheckAccessAsyncDeniesAfterTenantDisabledEventIsProcessed() {
+        // AC3 round-trip: tenant active and member allowed,
+        // then TenantDisabled event flows through the Tenants client pipeline,
+        // then the same access check fails closed with DisabledTenant.
+        (TenantEventProcessor processor, ITenantProjectionStore store, ServiceProvider provider) = BuildTenantsPipeline();
+        using (provider) {
+            await processor.ProcessAsync(Envelope("m-1", new TenantCreated("tenant-1", "Tenant One", null, DateTimeOffset.UtcNow)));
+            await processor.ProcessAsync(Envelope("m-2", new UserAddedToTenant("tenant-1", "user-1", TenantRole.TenantContributor)));
+            TenantAccessService service = new(store);
+
+            (await service.CheckAccessAsync("tenant-1", "user-1", TenantAccessRequirement.Read))
+                .IsAllowed.ShouldBeTrue();
+
+            await processor.ProcessAsync(Envelope("m-3", new TenantDisabled("tenant-1", DateTimeOffset.UtcNow)));
+
+            TenantAccessDecision decision = await service.CheckAccessAsync("tenant-1", "user-1", TenantAccessRequirement.Read);
+            decision.IsAllowed.ShouldBeFalse();
+            decision.Reason.ShouldBe(TenantAccessDenialReason.DisabledTenant);
+        }
+    }
+
+    [Fact]
+    public async Task CheckAccessAsyncDeniesAfterUserRemovedFromTenantEventIsProcessed() {
+        // AC3 round-trip: user added then removed via Tenants events,
+        // access check after removal fails closed with MissingMember.
+        (TenantEventProcessor processor, ITenantProjectionStore store, ServiceProvider provider) = BuildTenantsPipeline();
+        using (provider) {
+            await processor.ProcessAsync(Envelope("m-1", new TenantCreated("tenant-1", "Tenant One", null, DateTimeOffset.UtcNow)));
+            await processor.ProcessAsync(Envelope("m-2", new UserAddedToTenant("tenant-1", "user-1", TenantRole.TenantContributor)));
+            TenantAccessService service = new(store);
+
+            (await service.CheckAccessAsync("tenant-1", "user-1", TenantAccessRequirement.Read))
+                .IsAllowed.ShouldBeTrue();
+
+            await processor.ProcessAsync(Envelope("m-3", new UserRemovedFromTenant("tenant-1", "user-1")));
+
+            TenantAccessDecision decision = await service.CheckAccessAsync("tenant-1", "user-1", TenantAccessRequirement.Read);
+            decision.IsAllowed.ShouldBeFalse();
+            decision.Reason.ShouldBe(TenantAccessDenialReason.MissingMember);
+        }
+    }
+
+    private static (TenantEventProcessor Processor, ITenantProjectionStore Store, ServiceProvider Provider) BuildTenantsPipeline() {
+        ServiceCollection services = new();
+        services.AddLogging();
+        services.AddHexalithTenants();
+        ServiceProvider provider = services.BuildServiceProvider();
+        return (
+            provider.GetRequiredService<TenantEventProcessor>(),
+            provider.GetRequiredService<ITenantProjectionStore>(),
+            provider);
+    }
+
+    private static TenantEventEnvelope Envelope<TEvent>(string messageId, TEvent @event)
+        => new(
+            messageId,
+            "tenant-1",
+            "system",
+            typeof(TEvent).FullName!,
+            1,
+            DateTimeOffset.UtcNow,
+            "correlation-1",
+            "json",
+            JsonSerializer.SerializeToUtf8Bytes(@event));
 
     private sealed class ThrowingTenantProjectionStore : ITenantProjectionStore {
         public Task<TenantLocalState?> GetAsync(string tenantId, CancellationToken cancellationToken = default)

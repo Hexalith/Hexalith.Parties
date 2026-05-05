@@ -74,6 +74,11 @@ public static class PartiesServiceCollectionExtensions {
         _ = services.AddTransient<IDomainServiceInvoker, PartyDomainServiceInvoker>();
         _ = services.AddEventStoreServer(configuration);
         _ = services.AddHexalithTenants(options => configuration.GetSection("Tenants").Bind(options));
+
+        // Singleton lifetime assumes ITenantProjectionStore is also Singleton (the default
+        // InMemoryTenantProjectionStore is). Replacing the projection store with a Scoped
+        // implementation creates a captive dependency — any such replacement must register
+        // the store as Singleton or change this lifetime to Scoped.
         _ = services.AddSingleton<ITenantAccessService, TenantAccessService>();
 
         // Single concrete registration so both interfaces resolve to the same instance per scope.

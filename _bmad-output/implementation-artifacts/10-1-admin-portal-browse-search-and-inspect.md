@@ -254,6 +254,15 @@ FrontComposer Story 5.2 shipped HTTP response classification, ETag caching, no-c
 - [Source: https://learn.microsoft.com/en-us/aspnet/core/security/cross-site-scripting?view=aspnetcore-10.0]
 - [Source: https://learn.microsoft.com/en-us/aspnet/core/blazor/security/interactive-server-side-rendering?view=aspnetcore-9.0]
 
+### ATDD Artifacts
+
+- Checklist: `_bmad-output/test-artifacts/atdd-checklist-10-1-admin-portal-browse-search-and-inspect.md`
+- Wire-level transport scaffolds (8 skipped facts, AC1–AC5/AC7): `tests/Hexalith.Parties.Client.Tests/AdminPortal/AdminPortalQueryContractTests.cs`
+- Architectural fitness scaffolds (6 skipped facts, AC8 + read-only non-goals): `tests/Hexalith.Parties.Contracts.Tests/AdminPortal/AdminPortalReadOnlySurfaceTests.cs`
+- XSS guardrail scaffolds (3 skipped facts, AC6): `tests/Hexalith.Parties.Contracts.Tests/AdminPortal/AdminPortalXssGuardrailTests.cs`
+- Authorization-state scaffolds (4 skipped facts, AC4/AC7): `tests/Hexalith.Parties.Contracts.Tests/AdminPortal/AdminPortalAuthorizationStateTests.cs`
+- bUnit component tests (browse grid, search box, filters, detail layout, focus/accessibility, localization): deferred to green phase under `tests/Hexalith.Parties.AdminPortal.Tests` once `src/Hexalith.Parties.AdminPortal` is created — see checklist activation guidance.
+
 ## Dev Agent Record
 
 ### Agent Model Used

@@ -102,7 +102,14 @@ public class TenantEventInfrastructureTests {
 
     [Fact]
     public async Task MapTenantEventSubscriptionMapsConfiguredRouteAndTopicMetadata() {
-        WebApplicationBuilder builder = WebApplication.CreateBuilder();
+        // Pin ContentRootPath and EnvironmentName so the test does not pick up
+        // ambient appsettings.json or ASPNETCORE_* env vars from the CI host.
+        WebApplicationBuilder builder = WebApplication.CreateBuilder(new WebApplicationOptions
+        {
+            Args = [],
+            ContentRootPath = AppContext.BaseDirectory,
+            EnvironmentName = "Test",
+        });
         builder.Services.AddLogging();
         builder.Services.AddHexalithTenants(options =>
         {
@@ -124,6 +131,29 @@ public class TenantEventInfrastructureTests {
         topic.ShouldNotBeNull();
         topic.PubsubName.ShouldBe("pubsub");
         topic.Name.ShouldBe("system.tenants.events");
+    }
+
+    [Fact]
+    public async Task ProcessorRestartReprocessesSameMessageIdAgainstSharedStore() {
+        // Documents the in-memory dedup limitation: deduplication is per-processor instance.
+        // After a restart (new TenantEventProcessor), the same MessageId is processed again
+        // unless a durable deduplication store is configured.
+        InMemoryTenantProjectionStore store = new();
+        ServiceCollection services = new();
+        services.AddLogging();
+        services.AddSingleton<ITenantProjectionStore>(store);
+        services.AddHexalithTenants();
+        using ServiceProvider provider = services.BuildServiceProvider();
+
+        TenantEventProcessor first = provider.GetRequiredService<TenantEventProcessor>();
+        (await first.ProcessAsync(Envelope("message-1", new TenantCreated("tenant-1", "Tenant One", null, DateTimeOffset.UtcNow))))
+            .ShouldBe(TenantEventProcessingResult.Processed);
+        (await first.ProcessAsync(Envelope("message-1", new TenantCreated("tenant-1", "Tenant One", null, DateTimeOffset.UtcNow))))
+            .ShouldBe(TenantEventProcessingResult.Duplicate);
+
+        TenantEventProcessor restarted = ActivatorUtilities.CreateInstance<TenantEventProcessor>(provider);
+        (await restarted.ProcessAsync(Envelope("message-1", new TenantCreated("tenant-1", "Tenant One", null, DateTimeOffset.UtcNow))))
+            .ShouldBe(TenantEventProcessingResult.Processed);
     }
 
     private static TenantEventEnvelope Envelope<TEvent>(string messageId, TEvent @event)

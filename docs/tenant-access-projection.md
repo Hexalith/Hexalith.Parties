@@ -6,7 +6,11 @@ Hexalith.Parties consumes Hexalith.Tenants events through DAPR pub/sub and keeps
 
 CommandApi maps the Tenants client subscription endpoint at `POST /tenants/events` with the configured `Tenants:PubSubName` and `Tenants:TopicName`. The default topic is `system.tenants.events`.
 
+`Tenants:CommandApiAppId` is consumed by the AppHost / DAPR access-control configuration (Story 11-1), not by CommandApi at runtime; the value documents the DAPR app id that the access-control YAML must allow to publish to and subscribe from the Tenants topic.
+
 The subscription uses DAPR CloudEvents and the Tenants client `TenantEventProcessor`. Parties does not define a second event envelope, retry queue, or tenant event schema. Supported Tenants events include tenant lifecycle, membership, role, and configuration changes handled by the Tenants projection handler.
+
+Event ordering: the Tenants client deduplicates by `MessageId` only. `SequenceNumber` is informational metadata; out-of-order delivery between distinct events is not enforced beyond DAPR's pub/sub guarantees. If two events for the same tenant arrive out of order, the later-applied event wins. Configure a durable projection store with stronger ordering semantics if strict order is required.
 
 ## Access Decisions
 
@@ -44,3 +48,5 @@ When the local projection is missing or lagging, check:
 - Projection state after replay or rebuild, where the platform exposes those operations.
 
 The default Tenants client projection and message-id deduplication are in-memory. Reprocessing the same message id after a process restart can be processed again unless a durable projection or deduplication store is configured.
+
+After a CommandApi restart, the in-memory projection starts empty. Until the publisher republishes Tenants events (or a durable store is configured to survive restarts), every `ITenantAccessService.CheckAccessAsync` call will deny with `UnknownTenant`. Plan replay/rebuild procedures or configure a durable `ITenantProjectionStore` for production deployments.

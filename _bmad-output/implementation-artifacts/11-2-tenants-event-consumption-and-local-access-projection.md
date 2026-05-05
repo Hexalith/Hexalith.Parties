@@ -1,6 +1,6 @@
 # Story 11.2: Tenants Event Consumption and Local Access Projection
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -273,6 +273,7 @@ GPT-5 Codex
 ### Change Log
 
 - 2026-05-04: Completed Story 11.2 Tenants event consumption and local access projection; status moved to review.
+- 2026-05-05: Code review complete — applied AC3 round-trip tests, replay-after-restart test, Client fitness test, sentinel-based path resolver, WebApplicationOptions hardening, doc clarifications for `CommandApiAppId`, event ordering, and cold-start behavior; documented Singleton lifetime contract on `TenantAccessService` registration. 6 deferred items recorded in `deferred-work.md`. Status moved to done.
 
 ### Party-Mode Review
 
@@ -321,3 +322,51 @@ GPT-5 Codex
   - Exact freshness or stale-state policy remains deferred until the public Tenants client exposes durable freshness metadata.
   - Broad REST/MCP denial translation remains Story 11.3 scope.
 - Final recommendation: ready-for-dev
+
+## Review Findings
+
+- Date: 2026-05-05
+- Reviewer: BMad code-review skill (Blind Hunter + Edge Case Hunter + Acceptance Auditor)
+- Diff under review: commit `324a85d` — "Implement tenants event access projection"
+- Triage: 3 decision-needed / 8 patch / 6 deferred / 10 dismissed as noise
+
+### Decision-Needed
+
+- [x] [Review][Decision→Defer] `/tenants/events` endpoint authorization posture — resolved as: defer to Story 11-4 deployment-validation probe. Story 11-1 (blocked) owns DAPR access-control YAML; adding a Parties-side check would duplicate logic that belongs in the Tenants client. The pragmatic safety net is a deployment-validation probe in 11-4 that fails closed if the topic isn't scoped to the expected publisher app id. [Source: src/Hexalith.Parties.CommandApi/Program.cs:49]
+- [x] [Review][Decision→Patch] `TenantAccessService` Singleton lifetime vs `ITenantProjectionStore` swap — resolved as: documentation. Spec explicitly accepts singleton scope for the in-memory store; added a comment at `PartiesServiceCollectionExtensions.cs:77` stating the contract that any replacement store must be Singleton. Code-level enforcement deferred until a durable store is actually wired. [Source: src/Hexalith.Parties.CommandApi/Extensions/PartiesServiceCollectionExtensions.cs:77]
+- [x] [Review][Decision→Dismiss] `Tenants:CommandApiAppId` config value is unused at runtime — resolved as: dismissed with documentation. The value is consumed by AppHost / DAPR access-control configuration (Story 11-1), not by CommandApi at runtime. Added a documentation note in `docs/tenant-access-projection.md` clarifying the role. [Source: src/Hexalith.Parties.CommandApi/appsettings.json:11]
+
+### Patches
+
+- [x] [Review][Patch] Add AC3 round-trip test — `TenantDisabled` event → projection → `ITenantAccessService.CheckAccessAsync` returns `DisabledTenant`. Existing tests construct `TenantLocalState` with `Status=Disabled` directly, never threading the event through `TenantEventProcessor`. [tests/Hexalith.Parties.CommandApi.Tests/Authorization/TenantAccessServiceTests.cs]
+- [x] [Review][Patch] Add AC3 round-trip test — `UserRemovedFromTenant` event → projection → `ITenantAccessService.CheckAccessAsync` returns `MissingMember`. Same gap as above for the user-removal half of AC3. [tests/Hexalith.Parties.CommandApi.Tests/Authorization/TenantAccessServiceTests.cs]
+- [x] [Review][Defer] Replace bespoke `WebApplication.CreateBuilder()` subscription test with a Program.cs-composition test — deferred to Story 11-4 integration suite. The existing `AddPartiesRegistersTenantsProjectionPipelineAndAccessService` already exercises real `AddParties` composition; full `WebApplicationFactory<Program>` route assertion is a larger refactor that fits more naturally with 11-4's deployment-validation tests. Hardened CI flake risk via P9 (`WebApplicationOptions` content-root pin). [tests/Hexalith.Parties.CommandApi.Tests/Tenants/TenantEventInfrastructureTests.cs:104-128]
+- [x] [Review][Patch] Add explicit replay-after-restart test — instantiate a second `TenantEventProcessor` against the same in-memory store and process the same `MessageId`; assert it is re-processed (proving the documented single-instance limitation). Spec testing requirement is currently met only by docs. [tests/Hexalith.Parties.CommandApi.Tests/Tenants/TenantEventInfrastructureTests.cs]
+- [x] [Review][Patch] Add event-ordering test or doc note — spec says "Cover duplicate message id behavior, unknown event type skips, invalid payload failure, and the limitation or behavior of event ordering". Only deduplication is exercised today; an out-of-order `SequenceNumber` test (or an explicit doc statement that ordering is not enforced beyond `MessageId` dedup) is missing. [tests/Hexalith.Parties.CommandApi.Tests/Tenants/TenantEventInfrastructureTests.cs]
+- [x] [Review][Patch] Add fitness test for `Hexalith.Parties.Client` Tenants boundary — current `ContractsArchitectureFitnessTests` only protects `Hexalith.Parties.Contracts.csproj`. Spec guardrail also names `Hexalith.Parties.Client` ("Authorization is server-side"). Manual inspection confirms Client is clean today; the test would prevent regression. [tests/Hexalith.Parties.CommandApi.Tests/FitnessTests/ContractsArchitectureFitnessTests.cs]
+- [x] [Review][Patch] Replace `..\..\..\..\..\src\...` path traversal in fitness test with a sentinel-based repo-root resolver — five `..` segments from `AppContext.BaseDirectory` are fragile to TFM/RID/output-path changes; missing files would silently throw `FileNotFoundException` instead of producing a clear "test infrastructure broken" failure. Walk up to `Hexalith.Parties.slnx` and combine. [tests/Hexalith.Parties.CommandApi.Tests/FitnessTests/ContractsArchitectureFitnessTests.cs:30-43]
+- [x] [Review][Patch] Use `WebApplicationOptions` (or `CreateEmptyBuilder`) in `TenantEventInfrastructureTests` instead of bare `WebApplication.CreateBuilder()` — current call honors `appsettings.json`, `ASPNETCORE_*`, and content root, which can flake under different CI working directories. [tests/Hexalith.Parties.CommandApi.Tests/Tenants/TenantEventInfrastructureTests.cs:104]
+
+### Deferred
+
+- [x] [Review][Defer] Whitespace not trimmed from `tenantId`/`userId` — values like `"user-1\r"` survive `IsNullOrWhiteSpace` and miss in lookups, returning `UnknownTenant`/`MissingMember` instead of failing fast. — deferred, normalization belongs in Story 11-3's REST/MCP request pipeline / claims transformation. [src/Hexalith.Parties.CommandApi/Authorization/TenantAccessService.cs]
+- [x] [Review][Defer] Case sensitivity of `userId` lookups — `Members` dict uses `StringComparer.Ordinal`; JWT `sub` casing varies by IdP. — deferred, requires alignment with Tenants client convention; not Parties-owned. [Hexalith.Tenants/src/Hexalith.Tenants.Client/Projections/TenantLocalState.cs:26-27]
+- [x] [Review][Defer] `TenantRole.TenantOwner = 0` is the default enum value — a malformed `UserAddedToTenant` payload with missing `Role` field silently grants `TenantOwner`. — deferred, Tenants client contract concern. [Hexalith.Tenants/src/Hexalith.Tenants.Contracts/Enums/TenantRole.cs]
+- [x] [Review][Defer] `TenantStatus.Active = 0` is the default enum value — a malformed event without `Status` defaults to `Active` (fail-open). — deferred, Tenants client contract concern. [Hexalith.Tenants/src/Hexalith.Tenants.Contracts/Enums/TenantStatus.cs]
+- [x] [Review][Defer] DAPR retry / dead-letter not configured for `FailedInvalidPayload` — endpoint returns 500, DAPR will redeliver indefinitely. — deferred, deployment configuration concern, naturally Story 11-4 scope. [src/Hexalith.Parties.CommandApi/appsettings.json]
+- [x] [Review][Defer] Cold-start denial trap not explicit in docs — after a process restart, in-memory projection is empty so every access decision is `UnknownTenant` until events are republished. — deferred, minor doc polish on top of the existing in-memory limitation note. [docs/tenant-access-projection.md]
+
+### Dismissed (noise / false positives, recorded for traceability)
+
+- `Members = { ... }` collection initializer NRE risk — `Members` defaults to `[]`, so the initializer mutates a real instance.
+- `AddDaprClient` registered twice — Tenants client `EnsureCoreRegistrations` checks `services.Any(s => s.ServiceType == typeof(DaprClient))` before registering.
+- `Members` dictionary thread-safety — `InMemoryTenantProjectionStore` clones state on both `GetAsync` and `SaveAsync`, so reader and writer never share a `Dictionary` instance.
+- In-memory store loses state on restart — explicit documented limitation per spec.
+- Singleton + in-memory dedup data loss — explicit documented limitation per spec.
+- `state.Status != Active` mislabels future status values — `TenantStatus` only has `Active`/`Disabled` today; speculative.
+- HTTP status mapping for processor results — that mapping lives in Tenants client, not Parties.
+- Public types in `Authorization/` should be `internal` — Story 11-3 consumes them; visibility is intentional.
+- `_ => false` switch fallthrough — that is the fail-closed posture the spec mandates.
+- `default(TenantAccessRequirement) = Read` — callers explicitly pass requirement; no model binding into this enum.
+
+
