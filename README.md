@@ -28,6 +28,7 @@ Open the Aspire dashboard (URL shown in terminal output) to verify all resources
 
 - [Getting Started Guide](docs/getting-started.md) -- Deploy and send your first command in under 30 minutes
 - [Tenants Access Projection](docs/tenant-access-projection.md) -- Event-driven local tenant access state, consistency window, and fail-closed rules
+- [Embeddable Party Picker](docs/frontend/party-picker.md) -- Blazor/custom-element picker integration for consuming applications
 - [Architecture Overview](_bmad-output/planning-artifacts/architecture.md) -- System topology and design decisions
 - API Reference -- Available at `/openapi/v1.json` (Swagger UI in development mode)
 

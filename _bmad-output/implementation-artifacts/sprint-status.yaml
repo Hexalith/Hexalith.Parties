@@ -1,5 +1,5 @@
 # generated: 2026-05-02
-# last_updated: 2026-05-05  (story 11-3 BMad code review complete; D1 + D2 resolved; 17 patches applied — denial vocabulary, fail-closed observability, payload tenant conflict rejection, sub→oid claim ordering, role-matrix and fitness tests added; 368 tests pass; story moved to done)
+# last_updated: 2026-05-05  (story 10-3 picker implementation in progress; picker tests pass; full solution build blocked by unrelated untracked 11.4 artifacts)
 # project: Hexalith.Parties
 # project_key: NOKEY
 # tracking_system: file-system
@@ -35,7 +35,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-05-02
-last_updated: 2026-05-05T18:30:00Z
+last_updated: 2026-05-05T19:10:00Z
 project: Hexalith.Parties
 project_key: NOKEY
 tracking_system: file-system
@@ -128,5 +128,5 @@ development_status:
   epic-10: in-progress
   10-1-admin-portal-browse-search-and-inspect: ready-for-dev
   10-2-admin-portal-gdpr-operations: ready-for-dev
-  10-3-embeddable-party-picker-component: ready-for-dev
+  10-3-embeddable-party-picker-component: in-progress
   epic-10-retrospective: optional

@@ -5,7 +5,8 @@ stepsCompleted:
   - step-03-test-strategy
   - step-04-generate-tests
   - step-04c-aggregate
-lastStep: step-04c-aggregate
+  - step-05-validate-and-complete
+lastStep: step-05-validate-and-complete
 lastSaved: 2026-05-05
 storyId: '10.1'
 storyKey: 10-1-admin-portal-browse-search-and-inspect
@@ -195,3 +196,40 @@ No new fixture files needed for the red phase. Existing `HttpPartiesCommandClien
 - **Reflection-only architecture tests** — `Hexalith.Parties.Contracts.Tests.csproj` deliberately stays free of `Microsoft.AspNetCore.App` framework references. AdminPortal architecture assertions resolve `RouteAttribute` and `ComponentBase` by full type name through the loaded portal assembly's transitive references.
 - **MockHandler reuse** — transport scaffolds reuse `HttpPartiesCommandClientTests.MockHandler` (internal in the same assembly). Activation will likely need to extend the handler with response headers; the relevant test body marks that hook explicitly.
 - **PartiesClientException property naming** — fixed during scaffold authoring: the property is `Status` (int), not `StatusCode`. Activation can rely on this without further edits.
+
+---
+
+## Step 05 — Validate & Complete
+
+### Validation Results
+
+- Prerequisites remain satisfied: story `10.1` is `ready-for-dev` and contains eight testable acceptance criteria.
+- Generated files are present and match the checklist frontmatter:
+  - `tests/Hexalith.Parties.Client.Tests/AdminPortal/AdminPortalQueryContractTests.cs`
+  - `tests/Hexalith.Parties.Contracts.Tests/AdminPortal/AdminPortalReadOnlySurfaceTests.cs`
+  - `tests/Hexalith.Parties.Contracts.Tests/AdminPortal/AdminPortalXssGuardrailTests.cs`
+  - `tests/Hexalith.Parties.Contracts.Tests/AdminPortal/AdminPortalAuthorizationStateTests.cs`
+- Red-phase compliance confirmed: all 21 generated tests use `[Fact(Skip = SkipReason)]`; no placeholder `Assert.True(true)` scaffolds were found.
+- Acceptance criteria coverage remains mapped for AC1 through AC8 in the checklist.
+- Story metadata and downstream handoff paths are captured in frontmatter and in the story's `### ATDD Artifacts` section.
+- CLI/browser cleanup: N/A. No browser or Playwright recording session was started for this validation pass.
+- Temp artifacts: N/A for this validation pass. Existing ATDD outputs are stored under `_bmad-output/test-artifacts/`.
+
+### Verification Commands
+
+```powershell
+dotnet test tests/Hexalith.Parties.Client.Tests/Hexalith.Parties.Client.Tests.csproj --configuration Release --filter "FullyQualifiedName~AdminPortalQueryContractTests"
+# Skipped: 8 / 8, Failed: 0
+
+dotnet test tests/Hexalith.Parties.Contracts.Tests/Hexalith.Parties.Contracts.Tests.csproj --configuration Release --filter "FullyQualifiedName~AdminPortal"
+# Skipped: 13 / 13, Failed: 0
+```
+
+Note: the contracts verification was rerun in isolation after a parallel build attempt hit a transient compiler file lock on `Hexalith.Parties.Contracts.dll`.
+
+### Completion Summary
+
+- Total red-phase scaffolds: 21 skipped tests.
+- Primary handoff: activate tests incrementally during `dev-story` for Story 10.1.
+- Key assumption: the green-phase implementation creates `src/Hexalith.Parties.AdminPortal` as a FrontComposer-hosted Blazor/Razor Class Library rather than a separate SPA.
+- Next recommended workflow: `bmad-dev-story 10-1-admin-portal-browse-search-and-inspect`.

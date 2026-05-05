@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+  <PropertyGroup>
+    <PackageId>Hexalith.Parties.Picker</PackageId>
+    <Description>Embeddable Blazor party picker component for Hexalith.Parties.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Hexalith.Parties.Contracts\Hexalith.Parties.Contracts.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Components.CustomElements" />
+  </ItemGroup>
+
+</Project>

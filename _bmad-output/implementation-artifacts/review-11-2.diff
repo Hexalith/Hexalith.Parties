@@ -1,0 +1,621 @@
+diff --git a/Directory.Packages.props b/Directory.Packages.props
+index 3970610..30ff032 100644
+--- a/Directory.Packages.props
++++ b/Directory.Packages.props
+@@ -10,7 +10,7 @@
+ 
+   <ItemGroup Label="Dapr">
+     <PackageVersion Include="Dapr.Client" Version="1.17.7" />
+-    <PackageVersion Include="Dapr.AspNetCore" Version="1.16.1" />
++    <PackageVersion Include="Dapr.AspNetCore" Version="1.17.7" />
+     <PackageVersion Include="Dapr.Actors" Version="1.16.1" />
+     <PackageVersion Include="Dapr.Actors.AspNetCore" Version="1.16.1" />
+   </ItemGroup>
+diff --git a/README.md b/README.md
+index 11e1960..9941cc4 100644
+--- a/README.md
++++ b/README.md
+@@ -11,6 +11,7 @@ Hexalith.Parties is a ready-to-deploy party management microservice that lets yo
+ - **MCP AI Tools** -- Five Model Context Protocol tools (`create_party`, `get_party`, `find_parties`, `update_party`, `delete_party`) for AI assistant integration
+ - **NuGet Client Package** -- Typed `IPartiesCommandClient` and `IPartiesQueryClient` interfaces for .NET service-to-service calls
+ - **Multi-Tenant** -- Tenant isolation via JWT claims, enforced at every layer
++- **Tenants Projection** -- Local event-fed cache of Hexalith.Tenants lifecycle, membership, role, and configuration state for fail-closed access checks
+ - **.NET Aspire** -- One-command local deployment with dashboard, DAPR sidecars, and optional Keycloak
+ 
+ ## Quick Start
+@@ -26,6 +27,7 @@ Open the Aspire dashboard (URL shown in terminal output) to verify all resources
+ ## Documentation
+ 
+ - [Getting Started Guide](docs/getting-started.md) -- Deploy and send your first command in under 30 minutes
++- [Tenants Access Projection](docs/tenant-access-projection.md) -- Event-driven local tenant access state, consistency window, and fail-closed rules
+ - [Architecture Overview](_bmad-output/planning-artifacts/architecture.md) -- System topology and design decisions
+ - API Reference -- Available at `/openapi/v1.json` (Swagger UI in development mode)
+ 
+diff --git a/docs/getting-started.md b/docs/getting-started.md
+index 63466f4..cd6212a 100644
+--- a/docs/getting-started.md
++++ b/docs/getting-started.md
+@@ -49,6 +49,8 @@ The terminal output will display a URL for the **Aspire dashboard** (typically `
+ - **DAPR sidecar** -- event store and actor runtime
+ - **Keycloak** (port 8180) -- OIDC provider for authentication (enabled by default)
+ 
++CommandApi also subscribes to Hexalith.Tenants events through DAPR pub/sub and maintains a local tenant access projection. Access checks that use this projection fail closed when tenant/user state is missing, disabled, or insufficient. Because the projection is event-fed, a just-disabled tenant or removed user may remain accepted until the corresponding event is consumed unless a synchronous Tenants/EventStore authorization plugin is enabled. See [Tenants Access Projection](tenant-access-projection.md) for the operational details.
++
+ ### Obtain an Authentication Token
+ 
+ Keycloak is enabled by default. The AppHost imports a development realm with a public client named `hexalith-parties` and test users, so you can get a token immediately.
+@@ -443,6 +445,12 @@ Stop conflicting processes or configure alternative ports in `launchSettings.jso
+ 
+ **Cause:** Event-sourced projections need a moment to process. Wait a few seconds and retry. If the issue persists, check the Aspire dashboard for actor health.
+ 
++### Tenants Projection Lag
++
++**Symptom:** Tenant access decisions do not reflect a recent tenant disablement, membership removal, or role change.
++
++**Cause:** CommandApi authorizes from a local Tenants projection updated by DAPR pub/sub. Verify DAPR sidecar health, the `system.tenants.events` subscription, Tenants event publishing, and projection replay/rebuild options available in your deployment.
++
+ ---
+ 
+ ## What's Next
+diff --git a/docs/tenant-access-projection.md b/docs/tenant-access-projection.md
+new file mode 100644
+index 0000000..ef718b5
+--- /dev/null
++++ b/docs/tenant-access-projection.md
+@@ -0,0 +1,46 @@
++# Tenants Access Projection
++
++Hexalith.Parties consumes Hexalith.Tenants events through DAPR pub/sub and keeps a local tenant access projection in the CommandApi process. The projection is updated by the public Tenants client pipeline registered with `AddHexalithTenants()` and exposed to Parties code through `ITenantAccessService`.
++
++## Event Subscription
++
++CommandApi maps the Tenants client subscription endpoint at `POST /tenants/events` with the configured `Tenants:PubSubName` and `Tenants:TopicName`. The default topic is `system.tenants.events`.
++
++The subscription uses DAPR CloudEvents and the Tenants client `TenantEventProcessor`. Parties does not define a second event envelope, retry queue, or tenant event schema. Supported Tenants events include tenant lifecycle, membership, role, and configuration changes handled by the Tenants projection handler.
++
++## Access Decisions
++
++`ITenantAccessService` checks the local Tenants projection and returns a structured allowed/denied result. Expected authorization denials are returned as reason codes rather than exceptions so REST and MCP enforcement can translate them consistently.
++
++The service fails closed when:
++
++- The tenant id is missing.
++- The user id is missing.
++- The tenant projection is unknown or missing.
++- The tenant is disabled.
++- The user is not a tenant member.
++- The user's role is insufficient or unmapped.
++
++Role mapping is intentionally small:
++
++| Tenants role | Read | Write | Admin |
++| --- | --- | --- | --- |
++| `TenantReader` | Yes | No | No |
++| `TenantContributor` | Yes | Yes | No |
++| `TenantOwner` | Yes | Yes | Yes |
++
++Parties does not invent tenant lifecycle, membership, role, or configuration state. Tenant configuration values remain Tenants-owned and are only projected locally through the Tenants client.
++
++## Consistency Window
++
++Tenants event consumption is eventually consistent. A just-disabled tenant or just-removed user can be accepted until the matching Tenants event is delivered and processed by CommandApi. Strong synchronous enforcement is outside this projection path unless a separate Tenants/EventStore authorization plugin is enabled on the command gateway.
++
++When the local projection is missing or lagging, check:
++
++- DAPR sidecar health for `commandapi`.
++- The configured pub/sub component and `Tenants:TopicName`.
++- Whether `commandapi` is subscribed to `system.tenants.events`.
++- Tenants event publishing health.
++- Projection state after replay or rebuild, where the platform exposes those operations.
++
++The default Tenants client projection and message-id deduplication are in-memory. Reprocessing the same message id after a process restart can be processed again unless a durable projection or deduplication store is configured.
+diff --git a/src/Hexalith.Parties.CommandApi/Authorization/ITenantAccessService.cs b/src/Hexalith.Parties.CommandApi/Authorization/ITenantAccessService.cs
+new file mode 100644
+index 0000000..f16775c
+--- /dev/null
++++ b/src/Hexalith.Parties.CommandApi/Authorization/ITenantAccessService.cs
+@@ -0,0 +1,9 @@
++namespace Hexalith.Parties.CommandApi.Authorization;
++
++public interface ITenantAccessService {
++    Task<TenantAccessDecision> CheckAccessAsync(
++        string? tenantId,
++        string? userId,
++        TenantAccessRequirement requirement,
++        CancellationToken cancellationToken = default);
++}
+diff --git a/src/Hexalith.Parties.CommandApi/Authorization/TenantAccessDecision.cs b/src/Hexalith.Parties.CommandApi/Authorization/TenantAccessDecision.cs
+new file mode 100644
+index 0000000..6f4edef
+--- /dev/null
++++ b/src/Hexalith.Parties.CommandApi/Authorization/TenantAccessDecision.cs
+@@ -0,0 +1,7 @@
++namespace Hexalith.Parties.CommandApi.Authorization;
++
++public sealed record TenantAccessDecision(bool IsAllowed, TenantAccessDenialReason Reason) {
++    public static TenantAccessDecision Allowed { get; } = new(true, TenantAccessDenialReason.None);
++
++    public static TenantAccessDecision Denied(TenantAccessDenialReason reason) => new(false, reason);
++}
+diff --git a/src/Hexalith.Parties.CommandApi/Authorization/TenantAccessDenialReason.cs b/src/Hexalith.Parties.CommandApi/Authorization/TenantAccessDenialReason.cs
+new file mode 100644
+index 0000000..0827d11
+--- /dev/null
++++ b/src/Hexalith.Parties.CommandApi/Authorization/TenantAccessDenialReason.cs
+@@ -0,0 +1,11 @@
++namespace Hexalith.Parties.CommandApi.Authorization;
++
++public enum TenantAccessDenialReason {
++    None,
++    MissingTenantId,
++    MissingUserId,
++    UnknownTenant,
++    DisabledTenant,
++    MissingMember,
++    InsufficientRole,
++}
+diff --git a/src/Hexalith.Parties.CommandApi/Authorization/TenantAccessRequirement.cs b/src/Hexalith.Parties.CommandApi/Authorization/TenantAccessRequirement.cs
+new file mode 100644
+index 0000000..6b5a12d
+--- /dev/null
++++ b/src/Hexalith.Parties.CommandApi/Authorization/TenantAccessRequirement.cs
+@@ -0,0 +1,7 @@
++namespace Hexalith.Parties.CommandApi.Authorization;
++
++public enum TenantAccessRequirement {
++    Read,
++    Write,
++    Admin,
++}
+diff --git a/src/Hexalith.Parties.CommandApi/Authorization/TenantAccessService.cs b/src/Hexalith.Parties.CommandApi/Authorization/TenantAccessService.cs
+new file mode 100644
+index 0000000..cfb988c
+--- /dev/null
++++ b/src/Hexalith.Parties.CommandApi/Authorization/TenantAccessService.cs
+@@ -0,0 +1,52 @@
++using Hexalith.Tenants.Client.Projections;
++using Hexalith.Tenants.Contracts.Enums;
++
++namespace Hexalith.Parties.CommandApi.Authorization;
++
++public sealed class TenantAccessService : ITenantAccessService {
++    private readonly ITenantProjectionStore _projectionStore;
++
++    public TenantAccessService(ITenantProjectionStore projectionStore) {
++        ArgumentNullException.ThrowIfNull(projectionStore);
++        _projectionStore = projectionStore;
++    }
++
++    public async Task<TenantAccessDecision> CheckAccessAsync(
++        string? tenantId,
++        string? userId,
++        TenantAccessRequirement requirement,
++        CancellationToken cancellationToken = default) {
++        if (string.IsNullOrWhiteSpace(tenantId)) {
++            return TenantAccessDecision.Denied(TenantAccessDenialReason.MissingTenantId);
++        }
++
++        if (string.IsNullOrWhiteSpace(userId)) {
++            return TenantAccessDecision.Denied(TenantAccessDenialReason.MissingUserId);
++        }
++
++        TenantLocalState? state = await _projectionStore.GetAsync(tenantId, cancellationToken).ConfigureAwait(false);
++        if (state is null) {
++            return TenantAccessDecision.Denied(TenantAccessDenialReason.UnknownTenant);
++        }
++
++        if (state.Status != TenantStatus.Active) {
++            return TenantAccessDecision.Denied(TenantAccessDenialReason.DisabledTenant);
++        }
++
++        if (!state.Members.TryGetValue(userId, out TenantRole role)) {
++            return TenantAccessDecision.Denied(TenantAccessDenialReason.MissingMember);
++        }
++
++        return HasPermission(role, requirement)
++            ? TenantAccessDecision.Allowed
++            : TenantAccessDecision.Denied(TenantAccessDenialReason.InsufficientRole);
++    }
++
++    private static bool HasPermission(TenantRole role, TenantAccessRequirement requirement)
++        => role switch {
++            TenantRole.TenantReader => requirement == TenantAccessRequirement.Read,
++            TenantRole.TenantContributor => requirement is TenantAccessRequirement.Read or TenantAccessRequirement.Write,
++            TenantRole.TenantOwner => requirement is TenantAccessRequirement.Read or TenantAccessRequirement.Write or TenantAccessRequirement.Admin,
++            _ => false,
++        };
++}
+diff --git a/src/Hexalith.Parties.CommandApi/Extensions/PartiesServiceCollectionExtensions.cs b/src/Hexalith.Parties.CommandApi/Extensions/PartiesServiceCollectionExtensions.cs
+index 702857b..67b0a1a 100644
+--- a/src/Hexalith.Parties.CommandApi/Extensions/PartiesServiceCollectionExtensions.cs
++++ b/src/Hexalith.Parties.CommandApi/Extensions/PartiesServiceCollectionExtensions.cs
+@@ -13,6 +13,7 @@ using Hexalith.EventStore.Server.DomainServices;
+ using Hexalith.EventStore.Server.Projections;
+ using Hexalith.EventStore.Contracts.Security;
+ using Hexalith.Memories.Client.Rest;
++using Hexalith.Parties.CommandApi.Authorization;
+ using Hexalith.Parties.CommandApi.Authentication;
+ using Hexalith.Parties.CommandApi.Domain;
+ using Hexalith.Parties.CommandApi.ErrorHandling;
+@@ -27,6 +28,7 @@ using Hexalith.Parties.Projections.Services;
+ using Hexalith.Parties.Projections.Strategies;
+ using Hexalith.Parties.Contracts.Security;
+ using Hexalith.Parties.Security;
++using Hexalith.Tenants.Client.Registration;
+ 
+ using Microsoft.AspNetCore.Authentication;
+ using Microsoft.AspNetCore.Authentication.JwtBearer;
+@@ -71,6 +73,9 @@ public static class PartiesServiceCollectionExtensions {
+         // EventStore server infrastructure (command routing, actors)
+         _ = services.AddTransient<IDomainServiceInvoker, PartyDomainServiceInvoker>();
+         _ = services.AddEventStoreServer(configuration);
++        _ = services.AddHexalithTenants(options => configuration.GetSection("Tenants").Bind(options));
++        _ = services.AddSingleton<ITenantAccessService, TenantAccessService>();
++
+         // Single concrete registration so both interfaces resolve to the same instance per scope.
+         // Two separate AddTransient<TInterface, TImpl>() calls would create two parallel
+         // orchestrators, silently splitting any state or cache between the synchronous-update
+diff --git a/src/Hexalith.Parties.CommandApi/Hexalith.Parties.CommandApi.csproj b/src/Hexalith.Parties.CommandApi/Hexalith.Parties.CommandApi.csproj
+index d7f8d97..340d1f0 100644
+--- a/src/Hexalith.Parties.CommandApi/Hexalith.Parties.CommandApi.csproj
++++ b/src/Hexalith.Parties.CommandApi/Hexalith.Parties.CommandApi.csproj
+@@ -16,6 +16,7 @@
+     <ProjectReference Include="..\Hexalith.Parties.Security\Hexalith.Parties.Security.csproj" />
+     <ProjectReference Include="..\Hexalith.Parties.ServiceDefaults\Hexalith.Parties.ServiceDefaults.csproj" />
+     <ProjectReference Include="..\..\Hexalith.EventStore\src\Hexalith.EventStore.Server\Hexalith.EventStore.Server.csproj" />
++    <ProjectReference Include="..\..\Hexalith.Tenants\src\Hexalith.Tenants.Client\Hexalith.Tenants.Client.csproj" />
+   </ItemGroup>
+ 
+   <ItemGroup>
+diff --git a/src/Hexalith.Parties.CommandApi/Program.cs b/src/Hexalith.Parties.CommandApi/Program.cs
+index 0134050..8b0f15c 100644
+--- a/src/Hexalith.Parties.CommandApi/Program.cs
++++ b/src/Hexalith.Parties.CommandApi/Program.cs
+@@ -2,6 +2,7 @@ using Hexalith.Parties.CommandApi.Extensions;
+ using Hexalith.Parties.CommandApi.HealthChecks;
+ using Hexalith.Parties.CommandApi.Middleware;
+ using Hexalith.Parties.ServiceDefaults;
++using Hexalith.Tenants.Client.Subscription;
+ 
+ WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
+ 
+@@ -42,7 +43,10 @@ app.UseExceptionHandler();
+ app.UseMiddleware<DegradedResponseMiddleware>();
+ app.UseAuthentication();
+ app.UseAuthorization();
++app.UseCloudEvents();
++app.MapSubscribeHandler();
+ app.MapControllers();
++app.MapTenantEventSubscription();
+ app.MapMcp().RequireAuthorization();
+ app.MapActorsHandlers();
+ app.MapDefaultEndpoints();                    // Health checks: /health, /alive, /ready
+diff --git a/src/Hexalith.Parties.CommandApi/appsettings.json b/src/Hexalith.Parties.CommandApi/appsettings.json
+index 7ca143d..8738e34 100644
+--- a/src/Hexalith.Parties.CommandApi/appsettings.json
++++ b/src/Hexalith.Parties.CommandApi/appsettings.json
+@@ -6,6 +6,11 @@
+     }
+   },
+   "AllowedHosts": "*",
++  "Tenants": {
++    "PubSubName": "pubsub",
++    "TopicName": "system.tenants.events",
++    "CommandApiAppId": "commandapi"
++  },
+   "Parties": {
+     "MemoriesSearch": {
+       "Enabled": false,
+diff --git a/tests/Hexalith.Parties.CommandApi.Tests/Authorization/TenantAccessServiceTests.cs b/tests/Hexalith.Parties.CommandApi.Tests/Authorization/TenantAccessServiceTests.cs
+new file mode 100644
+index 0000000..cbcc6d5
+--- /dev/null
++++ b/tests/Hexalith.Parties.CommandApi.Tests/Authorization/TenantAccessServiceTests.cs
+@@ -0,0 +1,118 @@
++using Hexalith.Parties.CommandApi.Authorization;
++using Hexalith.Tenants.Client.Projections;
++using Hexalith.Tenants.Contracts.Enums;
++
++using Shouldly;
++
++namespace Hexalith.Parties.CommandApi.Tests.Authorization;
++
++public class TenantAccessServiceTests {
++    [Theory]
++    [InlineData(TenantRole.TenantReader, TenantAccessRequirement.Read, true)]
++    [InlineData(TenantRole.TenantReader, TenantAccessRequirement.Write, false)]
++    [InlineData(TenantRole.TenantReader, TenantAccessRequirement.Admin, false)]
++    [InlineData(TenantRole.TenantContributor, TenantAccessRequirement.Read, true)]
++    [InlineData(TenantRole.TenantContributor, TenantAccessRequirement.Write, true)]
++    [InlineData(TenantRole.TenantContributor, TenantAccessRequirement.Admin, false)]
++    [InlineData(TenantRole.TenantOwner, TenantAccessRequirement.Read, true)]
++    [InlineData(TenantRole.TenantOwner, TenantAccessRequirement.Write, true)]
++    [InlineData(TenantRole.TenantOwner, TenantAccessRequirement.Admin, true)]
++    public async Task CheckAccessAsyncMapsTenantRolesToPartiesRequirements(
++        TenantRole role,
++        TenantAccessRequirement requirement,
++        bool expectedAllowed) {
++        InMemoryTenantProjectionStore store = new();
++        await store.SaveAsync(new TenantLocalState
++        {
++            TenantId = "tenant-1",
++            Status = TenantStatus.Active,
++            Members = { ["user-1"] = role },
++        });
++        TenantAccessService service = new(store);
++
++        TenantAccessDecision decision = await service.CheckAccessAsync("tenant-1", "user-1", requirement);
++
++        decision.IsAllowed.ShouldBe(expectedAllowed);
++        decision.Reason.ShouldBe(expectedAllowed
++            ? TenantAccessDenialReason.None
++            : TenantAccessDenialReason.InsufficientRole);
++    }
++
++    [Theory]
++    [InlineData(null, "user-1", TenantAccessDenialReason.MissingTenantId)]
++    [InlineData("", "user-1", TenantAccessDenialReason.MissingTenantId)]
++    [InlineData("tenant-1", null, TenantAccessDenialReason.MissingUserId)]
++    [InlineData("tenant-1", "", TenantAccessDenialReason.MissingUserId)]
++    public async Task CheckAccessAsyncFailsClosedWhenInputIdentityIsMissing(
++        string? tenantId,
++        string? userId,
++        TenantAccessDenialReason expectedReason) {
++        TenantAccessService service = new(new InMemoryTenantProjectionStore());
++
++        TenantAccessDecision decision = await service.CheckAccessAsync(tenantId, userId, TenantAccessRequirement.Read);
++
++        decision.IsAllowed.ShouldBeFalse();
++        decision.Reason.ShouldBe(expectedReason);
++    }
++
++    [Fact]
++    public async Task CheckAccessAsyncFailsClosedWhenTenantProjectionIsMissing() {
++        TenantAccessService service = new(new InMemoryTenantProjectionStore());
++
++        TenantAccessDecision decision = await service.CheckAccessAsync("tenant-1", "user-1", TenantAccessRequirement.Read);
++
++        decision.IsAllowed.ShouldBeFalse();
++        decision.Reason.ShouldBe(TenantAccessDenialReason.UnknownTenant);
++    }
++
++    [Fact]
++    public async Task CheckAccessAsyncFailsClosedWhenTenantIsDisabled() {
++        InMemoryTenantProjectionStore store = new();
++        await store.SaveAsync(new TenantLocalState
++        {
++            TenantId = "tenant-1",
++            Status = TenantStatus.Disabled,
++            Members = { ["user-1"] = TenantRole.TenantOwner },
++        });
++        TenantAccessService service = new(store);
++
++        TenantAccessDecision decision = await service.CheckAccessAsync("tenant-1", "user-1", TenantAccessRequirement.Read);
++
++        decision.IsAllowed.ShouldBeFalse();
++        decision.Reason.ShouldBe(TenantAccessDenialReason.DisabledTenant);
++    }
++
++    [Fact]
++    public async Task CheckAccessAsyncFailsClosedWhenUserIsNotTenantMember() {
++        InMemoryTenantProjectionStore store = new();
++        await store.SaveAsync(new TenantLocalState
++        {
++            TenantId = "tenant-1",
++            Status = TenantStatus.Active,
++            Members = { ["other-user"] = TenantRole.TenantOwner },
++        });
++        TenantAccessService service = new(store);
++
++        TenantAccessDecision decision = await service.CheckAccessAsync("tenant-1", "user-1", TenantAccessRequirement.Read);
++
++        decision.IsAllowed.ShouldBeFalse();
++        decision.Reason.ShouldBe(TenantAccessDenialReason.MissingMember);
++    }
++
++    [Fact]
++    public async Task CheckAccessAsyncFailsClosedForUnmappedTenantRoleValue() {
++        InMemoryTenantProjectionStore store = new();
++        await store.SaveAsync(new TenantLocalState
++        {
++            TenantId = "tenant-1",
++            Status = TenantStatus.Active,
++            Members = { ["user-1"] = (TenantRole)999 },
++        });
++        TenantAccessService service = new(store);
++
++        TenantAccessDecision decision = await service.CheckAccessAsync("tenant-1", "user-1", TenantAccessRequirement.Read);
++
++        decision.IsAllowed.ShouldBeFalse();
++        decision.Reason.ShouldBe(TenantAccessDenialReason.InsufficientRole);
++    }
++}
+diff --git a/tests/Hexalith.Parties.CommandApi.Tests/FitnessTests/ContractsArchitectureFitnessTests.cs b/tests/Hexalith.Parties.CommandApi.Tests/FitnessTests/ContractsArchitectureFitnessTests.cs
+index 0c427fb..9593552 100644
+--- a/tests/Hexalith.Parties.CommandApi.Tests/FitnessTests/ContractsArchitectureFitnessTests.cs
++++ b/tests/Hexalith.Parties.CommandApi.Tests/FitnessTests/ContractsArchitectureFitnessTests.cs
+@@ -22,4 +22,23 @@ public class ContractsArchitectureFitnessTests
+ 
+         projectXml.ShouldNotContain("Hexalith.Memories", Case.Insensitive);
+     }
++
++    [Fact]
++    public void ContractsProjectDoesNotReferenceTenantsAssemblies()
++    {
++        string projectPath = Path.GetFullPath(Path.Combine(
++            AppContext.BaseDirectory,
++            "..",
++            "..",
++            "..",
++            "..",
++            "..",
++            "src",
++            "Hexalith.Parties.Contracts",
++            "Hexalith.Parties.Contracts.csproj"));
++
++        string projectXml = File.ReadAllText(projectPath);
++
++        projectXml.ShouldNotContain("Hexalith.Tenants", Case.Insensitive);
++    }
+ }
+diff --git a/tests/Hexalith.Parties.CommandApi.Tests/Hexalith.Parties.CommandApi.Tests.csproj b/tests/Hexalith.Parties.CommandApi.Tests/Hexalith.Parties.CommandApi.Tests.csproj
+index cc88b9c..57becab 100644
+--- a/tests/Hexalith.Parties.CommandApi.Tests/Hexalith.Parties.CommandApi.Tests.csproj
++++ b/tests/Hexalith.Parties.CommandApi.Tests/Hexalith.Parties.CommandApi.Tests.csproj
+@@ -6,6 +6,7 @@
+   <ItemGroup>
+     <ProjectReference Include="..\..\src\Hexalith.Parties.CommandApi\Hexalith.Parties.CommandApi.csproj" />
+     <ProjectReference Include="..\..\src\Hexalith.Parties.Testing\Hexalith.Parties.Testing.csproj" />
++    <ProjectReference Include="..\..\Hexalith.Tenants\src\Hexalith.Tenants.Client\Hexalith.Tenants.Client.csproj" />
+   </ItemGroup>
+ 
+   <ItemGroup>
+diff --git a/tests/Hexalith.Parties.CommandApi.Tests/Tenants/TenantEventInfrastructureTests.cs b/tests/Hexalith.Parties.CommandApi.Tests/Tenants/TenantEventInfrastructureTests.cs
+new file mode 100644
+index 0000000..191ed2d
+--- /dev/null
++++ b/tests/Hexalith.Parties.CommandApi.Tests/Tenants/TenantEventInfrastructureTests.cs
+@@ -0,0 +1,143 @@
++using System.Text.Json;
++
++using Dapr;
++
++using Hexalith.Parties.CommandApi.Authorization;
++using Hexalith.Parties.CommandApi.Extensions;
++using Hexalith.Tenants.Client.Configuration;
++using Hexalith.Tenants.Client.Projections;
++using Hexalith.Tenants.Client.Registration;
++using Hexalith.Tenants.Client.Subscription;
++using Hexalith.Tenants.Contracts.Enums;
++using Hexalith.Tenants.Contracts.Events;
++
++using Microsoft.AspNetCore.Builder;
++using Microsoft.Extensions.Configuration;
++using Microsoft.Extensions.DependencyInjection;
++using Microsoft.Extensions.Options;
++using Microsoft.AspNetCore.Routing;
++
++using Shouldly;
++
++namespace Hexalith.Parties.CommandApi.Tests.Tenants;
++
++public class TenantEventInfrastructureTests {
++    [Fact]
++    public void AddPartiesRegistersTenantsProjectionPipelineAndAccessService() {
++        IConfiguration configuration = new ConfigurationBuilder()
++            .AddInMemoryCollection(new Dictionary<string, string?>
++            {
++                ["Tenants:PubSubName"] = "pubsub",
++                ["Tenants:TopicName"] = "system.tenants.events",
++                ["Tenants:CommandApiAppId"] = "commandapi",
++            })
++            .Build();
++        ServiceCollection services = new();
++        services.AddLogging();
++        services.AddSingleton(configuration);
++
++        services.AddParties(configuration);
++
++        using ServiceProvider provider = services.BuildServiceProvider();
++        provider.GetRequiredService<ITenantProjectionStore>().ShouldNotBeNull();
++        provider.GetRequiredService<TenantEventProcessor>().ShouldNotBeNull();
++        provider.GetRequiredService<ITenantAccessService>().ShouldNotBeNull();
++        HexalithTenantsOptions options = provider.GetRequiredService<IOptions<HexalithTenantsOptions>>().Value;
++        options.PubSubName.ShouldBe("pubsub");
++        options.TopicName.ShouldBe("system.tenants.events");
++        options.CommandApiAppId.ShouldBe("commandapi");
++    }
++
++    [Fact]
++    public async Task TenantEventProcessorAppliesSupportedEventsAndDeduplicatesByMessageId() {
++        ServiceCollection services = new();
++        services.AddLogging();
++        services.AddHexalithTenants();
++        using ServiceProvider provider = services.BuildServiceProvider();
++        TenantEventProcessor processor = provider.GetRequiredService<TenantEventProcessor>();
++
++        (await processor.ProcessAsync(Envelope("message-1", new TenantCreated("tenant-1", "Tenant One", null, DateTimeOffset.UtcNow))))
++            .ShouldBe(TenantEventProcessingResult.Processed);
++        (await processor.ProcessAsync(Envelope("message-2", new UserAddedToTenant("tenant-1", "user-1", TenantRole.TenantContributor))))
++            .ShouldBe(TenantEventProcessingResult.Processed);
++        (await processor.ProcessAsync(Envelope("message-2", new UserAddedToTenant("tenant-1", "user-1", TenantRole.TenantReader))))
++            .ShouldBe(TenantEventProcessingResult.Duplicate);
++        (await processor.ProcessAsync(Envelope("message-3", new TenantDisabled("tenant-1", DateTimeOffset.UtcNow))))
++            .ShouldBe(TenantEventProcessingResult.Processed);
++
++        TenantLocalState state = (await provider.GetRequiredService<ITenantProjectionStore>().GetAsync("tenant-1"))!;
++        state.Status.ShouldBe(TenantStatus.Disabled);
++        state.Members["user-1"].ShouldBe(TenantRole.TenantContributor);
++    }
++
++    [Fact]
++    public async Task TenantEventProcessorRemovesUsersAndFailsInvalidPayloadWithoutPoisoningMessageId() {
++        ServiceCollection services = new();
++        services.AddLogging();
++        services.AddHexalithTenants();
++        using ServiceProvider provider = services.BuildServiceProvider();
++        TenantEventProcessor processor = provider.GetRequiredService<TenantEventProcessor>();
++
++        _ = await processor.ProcessAsync(Envelope("message-1", new TenantCreated("tenant-1", "Tenant One", null, DateTimeOffset.UtcNow)));
++        _ = await processor.ProcessAsync(Envelope("message-2", new UserAddedToTenant("tenant-1", "user-1", TenantRole.TenantOwner)));
++        (await processor.ProcessAsync(Envelope("message-3", new UserRemovedFromTenant("tenant-1", "user-1"))))
++            .ShouldBe(TenantEventProcessingResult.Processed);
++        (await processor.ProcessAsync(new TenantEventEnvelope(
++            "bad-message",
++            "tenant-1",
++            "system",
++            typeof(TenantCreated).FullName!,
++            4,
++            DateTimeOffset.UtcNow,
++            "correlation-1",
++            "json",
++            "{ not-json"u8.ToArray())))
++            .ShouldBe(TenantEventProcessingResult.FailedInvalidPayload);
++        (await processor.ProcessAsync(Envelope("unknown-message", "Hexalith.Tenants.Contracts.Events.DoesNotExist", "{}"u8.ToArray())))
++            .ShouldBe(TenantEventProcessingResult.SkippedUnknownEventType);
++
++        TenantLocalState state = (await provider.GetRequiredService<ITenantProjectionStore>().GetAsync("tenant-1"))!;
++        state.Members.ContainsKey("user-1").ShouldBeFalse();
++    }
++
++    [Fact]
++    public async Task MapTenantEventSubscriptionMapsConfiguredRouteAndTopicMetadata() {
++        WebApplicationBuilder builder = WebApplication.CreateBuilder();
++        builder.Services.AddLogging();
++        builder.Services.AddHexalithTenants(options =>
++        {
++            options.PubSubName = "pubsub";
++            options.TopicName = "system.tenants.events";
++        });
++
++        await using WebApplication app = builder.Build();
++        app.MapSubscribeHandler();
++        app.MapTenantEventSubscription();
++
++        RouteEndpoint endpoint = ((IEndpointRouteBuilder)app)
++            .DataSources
++            .SelectMany(source => source.Endpoints)
++            .OfType<RouteEndpoint>()
++            .Single(e => e.RoutePattern.RawText == "/tenants/events");
++
++        ITopicMetadata topic = endpoint.Metadata.GetMetadata<ITopicMetadata>()!;
++        topic.ShouldNotBeNull();
++        topic.PubsubName.ShouldBe("pubsub");
++        topic.Name.ShouldBe("system.tenants.events");
++    }
++
++    private static TenantEventEnvelope Envelope<TEvent>(string messageId, TEvent @event)
++        => Envelope(messageId, typeof(TEvent).FullName!, JsonSerializer.SerializeToUtf8Bytes(@event));
++
++    private static TenantEventEnvelope Envelope(string messageId, string eventTypeName, byte[] payload)
++        => new(
++            messageId,
++            "tenant-1",
++            "system",
++            eventTypeName,
++            1,
++            DateTimeOffset.UtcNow,
++            "correlation-1",
++            "json",
++            payload);
++}

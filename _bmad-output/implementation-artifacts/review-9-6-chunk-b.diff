@@ -1,0 +1,1365 @@
+diff --git a/src/Hexalith.Parties.CommandApi/Domain/PartyDomainServiceInvoker.cs b/src/Hexalith.Parties.CommandApi/Domain/PartyDomainServiceInvoker.cs
+new file mode 100644
+index 0000000..772f7f2
+--- /dev/null
++++ b/src/Hexalith.Parties.CommandApi/Domain/PartyDomainServiceInvoker.cs
+@@ -0,0 +1,158 @@
++using Hexalith.EventStore.Contracts.Commands;
++using Hexalith.EventStore.Contracts.Events;
++using Hexalith.EventStore.Contracts.Results;
++using Hexalith.EventStore.Contracts.Security;
++using Hexalith.EventStore.Server.DomainServices;
++using Hexalith.Parties.Security;
++using Hexalith.Parties.Server.Aggregates;
++
++using Microsoft.Extensions.Logging;
++
++namespace Hexalith.Parties.CommandApi.Domain;
++
++internal sealed partial class PartyDomainServiceInvoker(
++    IEventPayloadProtectionService payloadProtectionService,
++    ILogger<PartyDomainServiceInvoker> logger) : IDomainServiceInvoker
++{
++    private const string PartyDomain = "party";
++
++    public async Task<DomainResult> InvokeAsync(
++        CommandEnvelope command,
++        object? currentState,
++        CancellationToken cancellationToken = default)
++    {
++        ArgumentNullException.ThrowIfNull(command);
++        cancellationToken.ThrowIfCancellationRequested();
++
++        if (!string.Equals(command.Domain, PartyDomain, StringComparison.OrdinalIgnoreCase))
++        {
++            throw new DomainServiceNotFoundException(command.TenantId, command.Domain);
++        }
++
++        object? unprotectedState = await UnprotectCurrentStateAsync(command, currentState, cancellationToken)
++            .ConfigureAwait(false);
++
++        // Allocate the aggregate per invocation so the framework's ProcessAsync cannot
++        // accidentally retain transient state across concurrent calls. PartyAggregate.Handle
++        // methods are static — the allocation cost is negligible.
++        PartyAggregate aggregate = new();
++        return await aggregate.ProcessAsync(command, unprotectedState).ConfigureAwait(false);
++    }
++
++    private async Task<object?> UnprotectCurrentStateAsync(
++        CommandEnvelope command,
++        object? currentState,
++        CancellationToken cancellationToken)
++    {
++        if (currentState is not DomainServiceCurrentState state)
++        {
++            return currentState;
++        }
++
++        object? snapshotState = state.SnapshotState is null
++            ? null
++            : await UnprotectSnapshotOrRedactAsync(command, state.SnapshotState, cancellationToken).ConfigureAwait(false);
++
++        var events = new List<EventEnvelope>(state.Events.Count);
++        foreach (EventEnvelope envelope in state.Events)
++        {
++            PayloadProtectionResult result = await UnprotectEnvelopeOrRedactAsync(command, envelope, cancellationToken).ConfigureAwait(false);
++
++            events.Add(result.PayloadBytes == envelope.Payload
++                    && string.Equals(result.SerializationFormat, envelope.Metadata.SerializationFormat, StringComparison.Ordinal)
++                ? envelope
++                : new EventEnvelope(
++                    envelope.Metadata with { SerializationFormat = result.SerializationFormat },
++                    result.PayloadBytes,
++                    envelope.Extensions));
++        }
++
++        return state with { SnapshotState = snapshotState, Events = events };
++    }
++
++    /// <summary>
++    /// Unprotect an event payload, or fall back to redaction (encrypted markers replaced with
++    /// JSON null) when decryption fails. After a party's encryption key has been destroyed
++    /// (post-erasure), the lifecycle commands <c>MarkPartyEncryptionKeyDeleted</c>,
++    /// <c>MarkErasureVerified</c>, and <c>CompletePartyErasure</c> only need erasure-status flags
++    /// from non-encrypted events; redacting earlier encrypted events keeps Apply-replay working.
++    /// </summary>
++    private async Task<PayloadProtectionResult> UnprotectEnvelopeOrRedactAsync(
++        CommandEnvelope command,
++        EventEnvelope envelope,
++        CancellationToken cancellationToken)
++    {
++        try
++        {
++            return await payloadProtectionService
++                .UnprotectEventPayloadAsync(
++                    command.AggregateIdentity,
++                    envelope.Metadata.EventTypeName,
++                    envelope.Payload,
++                    envelope.Metadata.SerializationFormat,
++                    cancellationToken)
++                .ConfigureAwait(false);
++        }
++        catch (Exception ex) when (IsKeyDestroyedFailure(ex))
++        {
++            LogRehydrationFallbackToRedaction(
++                command.AggregateIdentity.TenantId,
++                command.AggregateIdentity.AggregateId,
++                envelope.Metadata.EventTypeName,
++                ex.GetType().Name,
++                ex.Message);
++            return PartyPayloadProtectionService.RedactProtectedPayload(envelope.Payload, envelope.Metadata.SerializationFormat);
++        }
++    }
++
++    private async Task<object?> UnprotectSnapshotOrRedactAsync(
++        CommandEnvelope command,
++        object snapshotState,
++        CancellationToken cancellationToken)
++    {
++        try
++        {
++            return await payloadProtectionService
++                .UnprotectSnapshotStateAsync(command.AggregateIdentity, snapshotState, cancellationToken)
++                .ConfigureAwait(false);
++        }
++        catch (Exception ex) when (IsKeyDestroyedFailure(ex))
++        {
++            LogSnapshotRehydrationFallbackToRedaction(
++                command.AggregateIdentity.TenantId,
++                command.AggregateIdentity.AggregateId,
++                ex.GetType().Name,
++                ex.Message);
++            return null;
++        }
++    }
++
++    /// <summary>
++    /// Recognises the specific failures thrown when a party's encryption key
++    /// has been destroyed (post-erasure). Prefers the typed
++    /// <see cref="PartyEncryptionKeyDestroyedException"/> emitted by the protection / key
++    /// management services. The legacy message-text fallback covers older throw sites that
++    /// have not yet been migrated and is locale-fragile; remove once every throw site uses
++    /// the typed exception. All other failures propagate so transient KMS or structural
++    /// errors are not silently swallowed by the redaction fallback path.
++    /// </summary>
++    private static bool IsKeyDestroyedFailure(Exception ex)
++    {
++        if (ex is PartyEncryptionKeyDestroyedException)
++        {
++            return true;
++        }
++
++        return (ex is InvalidOperationException or KeyNotFoundException)
++            && (ex.Message.Contains("No encryption key", StringComparison.OrdinalIgnoreCase)
++            || ex.Message.Contains("key destroyed", StringComparison.OrdinalIgnoreCase)
++            || ex.Message.Contains("key has been deleted", StringComparison.OrdinalIgnoreCase)
++            || ex.Message.Contains("Secret not found", StringComparison.OrdinalIgnoreCase));
++    }
++
++    [LoggerMessage(Level = LogLevel.Warning, Message = "Falling back to redacted event payload during rehydration for {TenantId}/{PartyId} event {EventTypeName}: {ExceptionType}: {Error}")]
++    private partial void LogRehydrationFallbackToRedaction(string tenantId, string partyId, string eventTypeName, string exceptionType, string error);
++
++    [LoggerMessage(Level = LogLevel.Warning, Message = "Falling back to null snapshot during rehydration for {TenantId}/{PartyId}: {ExceptionType}: {Error}")]
++    private partial void LogSnapshotRehydrationFallbackToRedaction(string tenantId, string partyId, string exceptionType, string error);
++}
+diff --git a/src/Hexalith.Parties.CommandApi/Domain/PartyProjectionUpdateOrchestrator.cs b/src/Hexalith.Parties.CommandApi/Domain/PartyProjectionUpdateOrchestrator.cs
+new file mode 100644
+index 0000000..461c941
+--- /dev/null
++++ b/src/Hexalith.Parties.CommandApi/Domain/PartyProjectionUpdateOrchestrator.cs
+@@ -0,0 +1,220 @@
++using Dapr.Actors;
++using Dapr.Actors.Client;
++
++using Hexalith.EventStore.Contracts.Identity;
++using Hexalith.EventStore.Contracts.Security;
++using Hexalith.EventStore.Server.Actors;
++using Hexalith.EventStore.Server.Projections;
++using Hexalith.Parties.CommandApi.Search;
++using Hexalith.Parties.Contracts.Models;
++using Hexalith.Parties.Projections.Abstractions;
++using Hexalith.Parties.Projections.Actors;
++using Hexalith.Parties.Security;
++
++using Microsoft.Extensions.Options;
++
++using ServerEventEnvelope = Hexalith.EventStore.Server.Events.EventEnvelope;
++
++namespace Hexalith.Parties.CommandApi.Domain;
++
++internal sealed class PartyProjectionUpdateOrchestrator(
++    IActorProxyFactory actorProxyFactory,
++    IEventPayloadProtectionService payloadProtectionService,
++    IServiceProvider serviceProvider,
++    ILogger<PartyProjectionUpdateOrchestrator> logger) : IProjectionUpdateOrchestrator, IProjectionPollerDeliveryGateway
++{
++    private const string PartyDomain = "party";
++
++    public Task UpdateProjectionAsync(AggregateIdentity identity, CancellationToken cancellationToken = default)
++        => DeliverProjectionAsync(identity, cancellationToken);
++
++    public async Task DeliverProjectionAsync(AggregateIdentity identity, CancellationToken cancellationToken = default)
++    {
++        ArgumentNullException.ThrowIfNull(identity);
++
++        if (!string.Equals(identity.Domain, PartyDomain, StringComparison.OrdinalIgnoreCase))
++        {
++            return;
++        }
++
++        cancellationToken.ThrowIfCancellationRequested();
++
++        IAggregateActor aggregate = actorProxyFactory.CreateActorProxy<IAggregateActor>(
++            new ActorId(identity.ActorId),
++            nameof(AggregateActor));
++
++        ServerEventEnvelope[] events;
++        try
++        {
++            events = await aggregate
++                .GetEventsAsync(0)
++                .WaitAsync(cancellationToken)
++                .ConfigureAwait(false);
++        }
++        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
++        {
++            throw;
++        }
++
++        if (events.Length == 0)
++        {
++            logger.LogDebug(
++                "Aggregate {TenantId}/{AggregateId} has no events to deliver to projections.",
++                identity.TenantId,
++                identity.AggregateId);
++            return;
++        }
++
++        IPartyDetailProjectionActor detailProjection = actorProxyFactory.CreateActorProxy<IPartyDetailProjectionActor>(
++            new ActorId($"{identity.TenantId}:party-detail:{identity.AggregateId}"),
++            nameof(PartyDetailProjectionActor));
++        IPartyIndexProjectionActor indexProjection = actorProxyFactory.CreateActorProxy<IPartyIndexProjectionActor>(
++            new ActorId($"{identity.TenantId}:party-index"),
++            nameof(PartyIndexProjectionActor));
++
++        foreach (ServerEventEnvelope envelope in events.OrderBy(static e => e.SequenceNumber))
++        {
++            cancellationToken.ThrowIfCancellationRequested();
++
++            PayloadProtectionResult protectionResult;
++            try
++            {
++                protectionResult = await payloadProtectionService
++                    .UnprotectEventPayloadAsync(
++                        identity,
++                        envelope.EventTypeName,
++                        envelope.Payload,
++                        envelope.SerializationFormat,
++                        cancellationToken)
++                    .ConfigureAwait(false);
++            }
++            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
++            {
++                throw;
++            }
++            catch (Exception ex) when (IsKeyDestroyedFailure(ex))
++            {
++                // Narrowed catch (was: any Exception). Only fall back to a redacted payload
++                // when the failure is specifically the post-erasure "no encryption key
++                // available" case. Transient KMS errors, key-version mismatches, or HSM
++                // permission errors propagate so projections don't silently corrupt with
++                // null personal-data fields on a recoverable failure.
++                logger.LogWarning(
++                    ex,
++                    "Falling back to redacted payload during projection delivery for {TenantId}/{AggregateId} event {EventTypeName} (sequence {SequenceNumber}). The party's encryption key is not available — proceeding with post-erasure tail only.",
++                    identity.TenantId,
++                    identity.AggregateId,
++                    envelope.EventTypeName,
++                    envelope.SequenceNumber);
++                protectionResult = PartyPayloadProtectionService.RedactProtectedPayload(envelope.Payload, envelope.SerializationFormat);
++            }
++
++            await detailProjection
++                .HandleSerializedEventAsync(
++                    identity.AggregateId,
++                    envelope.EventTypeName,
++                    protectionResult.PayloadBytes,
++                    protectionResult.SerializationFormat,
++                    envelope.SequenceNumber)
++                .ConfigureAwait(false);
++            await indexProjection
++                .HandleSerializedEventAsync(
++                    identity.AggregateId,
++                    envelope.EventTypeName,
++                    protectionResult.PayloadBytes,
++                    protectionResult.SerializationFormat,
++                    envelope.SequenceNumber)
++                .ConfigureAwait(false);
++
++            logger.LogDebug(
++                "Delivered party event {EventTypeName} (sequence {SequenceNumber}) to projections for {TenantId}/{AggregateId}.",
++                envelope.EventTypeName,
++                envelope.SequenceNumber,
++                identity.TenantId,
++                identity.AggregateId);
++        }
++
++        // After delivering all events, push the latest index entry into Memories search if
++        // configured. Indexing is best-effort: failures are logged inside the indexing service
++        // and do not abort the projection-delivery contract.
++        await TryIndexLatestEntryAsync(identity, indexProjection, cancellationToken).ConfigureAwait(false);
++    }
++
++    private async Task TryIndexLatestEntryAsync(
++        AggregateIdentity identity,
++        IPartyIndexProjectionActor indexProjection,
++        CancellationToken cancellationToken)
++    {
++        PartyMemoryIndexingService? indexer = serviceProvider.GetService(typeof(PartyMemoryIndexingService)) as PartyMemoryIndexingService;
++        if (indexer is null)
++        {
++            return;
++        }
++
++        IOptionsMonitor<PartyMemorySearchOptions>? optionsMonitor = serviceProvider.GetService(typeof(IOptionsMonitor<PartyMemorySearchOptions>)) as IOptionsMonitor<PartyMemorySearchOptions>;
++        PartyMemorySearchOptions? memorySearchOptions = optionsMonitor?.CurrentValue;
++        if (memorySearchOptions is null || !memorySearchOptions.Enabled || string.IsNullOrWhiteSpace(memorySearchOptions.CaseId))
++        {
++            return;
++        }
++
++        try
++        {
++            IReadOnlyDictionary<string, PartyIndexEntry> entries = await indexProjection.GetEntriesAsync().ConfigureAwait(false);
++            if (!entries.TryGetValue(identity.AggregateId, out PartyIndexEntry? entry) || entry is null)
++            {
++                return;
++            }
++
++            cancellationToken.ThrowIfCancellationRequested();
++            _ = await indexer
++                .IndexAsync(
++                    entry,
++                    new PartyMemoryUnitMappingContext(
++                        TenantId: identity.TenantId,
++                        CaseId: memorySearchOptions.CaseId!,
++                        AggregateId: identity.AggregateId,
++                        EventType: "PartyProjectionChanged",
++                        SourceService: "Hexalith.Parties",
++                        Timestamp: DateTimeOffset.UtcNow),
++                    cancellationToken)
++                .ConfigureAwait(false);
++        }
++        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
++        {
++            throw;
++        }
++        catch (Exception ex)
++        {
++            logger.LogWarning(
++                ex,
++                "Memories indexing failed for {TenantId}/{AggregateId}; search may be stale until repair runs.",
++                identity.TenantId,
++                identity.AggregateId);
++        }
++    }
++
++    /// <summary>
++    /// Recognises the specific failures thrown when a party's encryption key
++    /// has been destroyed (post-erasure). Other failures from the
++    /// payload protection service (missing nonce / tag / ciphertext / key-version metadata)
++    /// indicate transient or structural failures that must propagate, not be redacted away.
++    /// </summary>
++    private static bool IsKeyDestroyedFailure(Exception ex)
++    {
++        // Prefer the typed exception emitted by Hexalith.Parties.Security. Message-text
++        // fallback is kept only for older throw sites that have not yet been migrated to
++        // the typed exception; it is locale-fragile and should be removed once all throw
++        // sites use PartyEncryptionKeyDestroyedException.
++        if (ex is PartyEncryptionKeyDestroyedException)
++        {
++            return true;
++        }
++
++        return (ex is InvalidOperationException or KeyNotFoundException)
++            && (ex.Message.Contains("No encryption key", StringComparison.OrdinalIgnoreCase)
++            || ex.Message.Contains("key destroyed", StringComparison.OrdinalIgnoreCase)
++            || ex.Message.Contains("key has been deleted", StringComparison.OrdinalIgnoreCase)
++            || ex.Message.Contains("Secret not found", StringComparison.OrdinalIgnoreCase));
++    }
++}
+diff --git a/src/Hexalith.Parties.CommandApi/Extensions/PartyDetailProjectionActorExtensions.cs b/src/Hexalith.Parties.CommandApi/Extensions/PartyDetailProjectionActorExtensions.cs
+new file mode 100644
+index 0000000..ad78da2
+--- /dev/null
++++ b/src/Hexalith.Parties.CommandApi/Extensions/PartyDetailProjectionActorExtensions.cs
+@@ -0,0 +1,119 @@
++using System.Text.Json;
++using System.Text.Json.Nodes;
++
++using Hexalith.Parties.Contracts.Models;
++using Hexalith.Parties.Projections.Abstractions;
++
++namespace Hexalith.Parties.CommandApi.Extensions;
++
++internal static class PartyDetailProjectionActorExtensions
++{
++    private static readonly JsonSerializerOptions s_jsonOptions = new(JsonSerializerDefaults.Web);
++
++    public static async Task<PartyDetail?> ReadDetailAsync(this IPartyDetailProjectionActor proxy)
++    {
++        ArgumentNullException.ThrowIfNull(proxy);
++
++        Task<string?>? jsonTask = null;
++        try
++        {
++            jsonTask = proxy.GetDetailJsonAsync();
++        }
++        catch (NotImplementedException)
++        {
++        }
++
++        if (jsonTask is not null)
++        {
++            try
++            {
++                string? json = await jsonTask.ConfigureAwait(false);
++                if (!string.IsNullOrWhiteSpace(json) && !IsEmptyJsonString(json))
++                {
++                    PartyDetail? deserialized = JsonSerializer.Deserialize<PartyDetail>(json, s_jsonOptions);
++                    if (deserialized is not null)
++                    {
++                        return deserialized;
++                    }
++                }
++            }
++            catch (NotImplementedException)
++            {
++                // Dapr remoting raises NotImplementedException at await time, not invoke time.
++            }
++        }
++
++        Task<byte[]?>? serializedTask = null;
++        try
++        {
++            serializedTask = proxy.GetSerializedDetailAsync();
++        }
++        catch (NotImplementedException)
++        {
++        }
++
++        if (serializedTask is not null)
++        {
++            try
++            {
++                byte[]? payload = await serializedTask.ConfigureAwait(false);
++                if (payload is { Length: > 0 } && !IsEmptyJsonPayload(payload))
++                {
++                    PartyDetail? deserialized = JsonSerializer.Deserialize<PartyDetail>(payload, s_jsonOptions);
++                    if (deserialized is not null)
++                    {
++                        return deserialized;
++                    }
++                }
++            }
++            catch (NotImplementedException)
++            {
++            }
++        }
++
++        return await proxy.GetDetailAsync().ConfigureAwait(false);
++    }
++
++    private static bool IsEmptyJsonString(string json)
++    {
++        try
++        {
++            JsonNode? node = JsonNode.Parse(json);
++            return node switch
++            {
++                null => true,
++                JsonObject obj => obj.Count == 0,
++                JsonArray arr => arr.Count == 0,
++                _ => false,
++            };
++        }
++        catch (JsonException)
++        {
++            return false;
++        }
++    }
++
++    private static bool IsEmptyJsonPayload(byte[] payload)
++    {
++        if (payload.Length == 0)
++        {
++            return true;
++        }
++
++        try
++        {
++            JsonNode? node = JsonNode.Parse(payload);
++            return node switch
++            {
++                null => true,
++                JsonObject obj => obj.Count == 0,
++                JsonArray arr => arr.Count == 0,
++                _ => false,
++            };
++        }
++        catch (JsonException)
++        {
++            return false;
++        }
++    }
++}
+diff --git a/src/Hexalith.Parties.Contracts/State/PartyState.cs b/src/Hexalith.Parties.Contracts/State/PartyState.cs
+index 69ab9ac..87057e9 100644
+--- a/src/Hexalith.Parties.Contracts/State/PartyState.cs
++++ b/src/Hexalith.Parties.Contracts/State/PartyState.cs
+@@ -44,6 +44,54 @@ public sealed class PartyState
+ 
+     public string? RestrictionReason { get; private set; }
+ 
++    // Rejection events (IRejectionEvent) are persisted to the stream as normal events (EventStore D3)
++    // and replayed during state rehydration. They never mutate state, but the rehydrator requires an
++    // Apply overload per concrete event type — otherwise it throws MissingApplyMethodException.
++    //
++    // ORDERING NOTE: these no-op Applies are declared BEFORE the success Applies on purpose. The
++    // rehydrator resolves event types by short-name suffix match, iterating method discovery order.
++    // For example, event "PartyProcessingRestricted" would otherwise be incorrectly matched to
++    // Apply(ProcessingRestricted) because "PartyProcessingRestricted".EndsWith("ProcessingRestricted")
++    // is true. Declaring the rejection Applies first ensures their keys appear earlier in the
++    // discovery dictionary so the suffix match finds them first.
++#pragma warning disable CA1822 // Member does not access instance data — required as instance method for EventStore Apply convention
++    public void Apply(PartyNotFound e) => ArgumentNullException.ThrowIfNull(e);
++
++    public void Apply(PartyTypeMismatch e) => ArgumentNullException.ThrowIfNull(e);
++
++    public void Apply(PartyCannotBeCreatedWithInvalidId e) => ArgumentNullException.ThrowIfNull(e);
++
++    public void Apply(PartyCannotBeCreatedWithoutType e) => ArgumentNullException.ThrowIfNull(e);
++
++    public void Apply(PartyCannotBeCreatedWithoutPersonDetails e) => ArgumentNullException.ThrowIfNull(e);
++
++    public void Apply(PartyCannotBeCreatedWithoutOrganizationDetails e) => ArgumentNullException.ThrowIfNull(e);
++
++    public void Apply(PartyCannotBeDeactivatedWhenInactive e) => ArgumentNullException.ThrowIfNull(e);
++
++    public void Apply(PartyCannotBeReactivatedWhenActive e) => ArgumentNullException.ThrowIfNull(e);
++
++    public void Apply(PartyErasureInProgress e) => ArgumentNullException.ThrowIfNull(e);
++
++    public void Apply(PartyProcessingRestricted e) => ArgumentNullException.ThrowIfNull(e);
++
++    public void Apply(PartyNotRestricted e) => ArgumentNullException.ThrowIfNull(e);
++
++    public void Apply(ContactChannelNotFound e) => ArgumentNullException.ThrowIfNull(e);
++
++    public void Apply(IdentifierNotFound e) => ArgumentNullException.ThrowIfNull(e);
++
++    public void Apply(ConsentNotFound e) => ArgumentNullException.ThrowIfNull(e);
++
++    public void Apply(InvalidConsentPurpose e) => ArgumentNullException.ThrowIfNull(e);
++
++    public void Apply(PartyCannotAddDuplicateChannel e) => ArgumentNullException.ThrowIfNull(e);
++
++    public void Apply(PartyCannotAddDuplicateIdentifier e) => ArgumentNullException.ThrowIfNull(e);
++
++    public void Apply(CompositeOperationConflict e) => ArgumentNullException.ThrowIfNull(e);
++#pragma warning restore CA1822
++
+     public void Apply(PartyCreated e)
+     {
+         ArgumentNullException.ThrowIfNull(e);
+diff --git a/src/Hexalith.Parties.Projections/Abstractions/IPartyDetailProjectionActor.cs b/src/Hexalith.Parties.Projections/Abstractions/IPartyDetailProjectionActor.cs
+index 6a81e2f..408c1df 100644
+--- a/src/Hexalith.Parties.Projections/Abstractions/IPartyDetailProjectionActor.cs
++++ b/src/Hexalith.Parties.Projections/Abstractions/IPartyDetailProjectionActor.cs
+@@ -9,10 +9,16 @@ public interface IPartyDetailProjectionActor : IActor
+ {
+     Task HandleEventAsync(string partyId, IEventPayload @event);
+ 
++    Task HandleSerializedEventAsync(string partyId, string eventTypeName, byte[] payload, string serializationFormat, long sequenceNumber);
++
+     Task<bool> PingAsync();
+ 
+     Task<PartyDetail?> GetDetailAsync();
+ 
++    Task<string?> GetDetailJsonAsync();
++
++    Task<byte[]?> GetSerializedDetailAsync();
++
+     Task<bool> IsRebuildingAsync();
+ 
+     Task EraseAsync(string partyId);
+diff --git a/src/Hexalith.Parties.Projections/Abstractions/IPartyIndexProjectionActor.cs b/src/Hexalith.Parties.Projections/Abstractions/IPartyIndexProjectionActor.cs
+index 55be4c4..a2949a5 100644
+--- a/src/Hexalith.Parties.Projections/Abstractions/IPartyIndexProjectionActor.cs
++++ b/src/Hexalith.Parties.Projections/Abstractions/IPartyIndexProjectionActor.cs
+@@ -9,12 +9,16 @@ public interface IPartyIndexProjectionActor : IActor
+ {
+     Task HandleEventAsync(string partyId, IEventPayload @event);
+ 
++    Task HandleSerializedEventAsync(string partyId, string eventTypeName, byte[] payload, string serializationFormat, long sequenceNumber);
++
+     Task FlushAsync();
+ 
+     Task<bool> PingAsync();
+ 
+     Task<IReadOnlyDictionary<string, PartyIndexEntry>> GetEntriesAsync();
+ 
++    Task<string?> GetEntriesJsonAsync();
++
+     Task<bool> IsRebuildingAsync();
+ 
+     Task EraseAsync(string partyId);
+diff --git a/src/Hexalith.Parties.Projections/Actors/PartyDetailProjectionActor.cs b/src/Hexalith.Parties.Projections/Actors/PartyDetailProjectionActor.cs
+index 1627c42..092f37f 100644
+--- a/src/Hexalith.Parties.Projections/Actors/PartyDetailProjectionActor.cs
++++ b/src/Hexalith.Parties.Projections/Actors/PartyDetailProjectionActor.cs
+@@ -5,6 +5,7 @@ using System.Text.Json;
+ using Dapr.Actors.Runtime;
+ 
+ using Hexalith.EventStore.Contracts.Events;
++using Hexalith.Parties.Contracts.Events;
+ using Hexalith.Parties.Contracts.Models;
+ using Hexalith.Parties.Projections.Abstractions;
+ using Hexalith.Parties.Projections.Handlers;
+@@ -18,10 +19,14 @@ public sealed partial class PartyDetailProjectionActor : Actor, IPartyDetailProj
+ {
+     private const string ProjectionName = "party-detail";
+     private const string RebuildReminderName = "auto-rebuild";
++    private const string LastSequenceStateKeySuffix = "last-sequence";
++    private static readonly JsonSerializerOptions s_jsonOptions = new(JsonSerializerDefaults.Web);
+     private static readonly ConcurrentDictionary<string, PartyDetail> s_lastKnownDetails = new(StringComparer.Ordinal);
+     private readonly ILogger<PartyDetailProjectionActor> _logger;
+     private readonly IProjectionRebuildService _rebuildService;
+     private PartyDetail? _cachedDetail;
++    private long _lastProcessedSequence = -1;
++    private bool _lastSequenceLoaded;
+     private volatile bool _isRebuilding;
+ 
+     public PartyDetailProjectionActor(
+@@ -49,6 +54,106 @@ public sealed partial class PartyDetailProjectionActor : Actor, IPartyDetailProj
+         }
+     }
+ 
++    public async Task HandleSerializedEventAsync(
++        string partyId,
++        string eventTypeName,
++        byte[] payload,
++        string serializationFormat,
++        long sequenceNumber)
++    {
++        ArgumentException.ThrowIfNullOrWhiteSpace(partyId);
++        ArgumentException.ThrowIfNullOrWhiteSpace(eventTypeName);
++        ArgumentNullException.ThrowIfNull(payload);
++
++        // Skip already-applied events to make replay-from-zero idempotent. The orchestrator
++        // calls GetEventsAsync(0) on every command, so without this guard every prior event
++        // would re-apply on every successful command.
++        await EnsureLastSequenceLoadedAsync(partyId).ConfigureAwait(false);
++        if (sequenceNumber <= _lastProcessedSequence)
++        {
++            return;
++        }
++
++        // Accept "json" and the new "json-redacted" marker (the latter is used after a party's
++        // encryption key has been destroyed; payloads have personal-data fields replaced with
++        // JSON null but otherwise round-trip through the same deserializer).
++        bool isJson = string.Equals(serializationFormat, "json", StringComparison.OrdinalIgnoreCase)
++            || string.Equals(serializationFormat, "json-redacted", StringComparison.OrdinalIgnoreCase);
++        if (!isJson)
++        {
++            Log.NonJsonEventDropped(_logger, partyId, eventTypeName, serializationFormat);
++            return;
++        }
++
++        Type? eventType = PartyEventTypeResolver.Resolve(eventTypeName);
++        if (eventType is null)
++        {
++            if (PartyEventTypeResolver.IsAmbiguousShortName(eventTypeName))
++            {
++                Log.AmbiguousEventTypeDropped(_logger, partyId, eventTypeName);
++            }
++            else
++            {
++                Log.UnknownEventTypeDropped(_logger, partyId, eventTypeName);
++            }
++
++            return;
++        }
++
++        object? deserialized;
++        try
++        {
++            deserialized = JsonSerializer.Deserialize(payload, eventType, s_jsonOptions);
++        }
++        catch (JsonException ex)
++        {
++            Log.PayloadDeserializationFailed(_logger, partyId, eventTypeName, ex);
++            return;
++        }
++
++        if (deserialized is IEventPayload eventPayload)
++        {
++            await HandleEventAsync(partyId, eventPayload).ConfigureAwait(false);
++            await PersistLastSequenceAsync(partyId, sequenceNumber).ConfigureAwait(false);
++        }
++    }
++
++    private async Task EnsureLastSequenceLoadedAsync(string partyId)
++    {
++        if (_lastSequenceLoaded)
++        {
++            return;
++        }
++
++        (string _, string stateKey) = ResolveStateContext(partyId);
++        string sequenceKey = $"{stateKey}:{LastSequenceStateKeySuffix}";
++        try
++        {
++            ConditionalValue<long> result = await StateManager.TryGetStateAsync<long>(sequenceKey, default).ConfigureAwait(false);
++            _lastProcessedSequence = result.HasValue ? result.Value : -1;
++        }
++        catch
++        {
++            // Best-effort: on read failure, assume nothing processed and let replay rebuild state.
++            _lastProcessedSequence = -1;
++        }
++
++        _lastSequenceLoaded = true;
++    }
++
++    private async Task PersistLastSequenceAsync(string partyId, long sequenceNumber)
++    {
++        if (sequenceNumber <= _lastProcessedSequence)
++        {
++            return;
++        }
++
++        (string _, string stateKey) = ResolveStateContext(partyId);
++        string sequenceKey = $"{stateKey}:{LastSequenceStateKeySuffix}";
++        await StateManager.SetStateAsync(sequenceKey, sequenceNumber, default).ConfigureAwait(false);
++        _lastProcessedSequence = sequenceNumber;
++    }
++
+     public Task<bool> PingAsync() => Task.FromResult(true);
+ 
+     public Task<bool> IsRebuildingAsync() => Task.FromResult(_isRebuilding);
+@@ -110,6 +215,22 @@ public sealed partial class PartyDetailProjectionActor : Actor, IPartyDetailProj
+         }
+     }
+ 
++    public async Task<byte[]?> GetSerializedDetailAsync()
++    {
++        PartyDetail? detail = await GetDetailAsync().ConfigureAwait(false);
++        return detail is null
++            ? null
++            : JsonSerializer.SerializeToUtf8Bytes(detail, s_jsonOptions);
++    }
++
++    public async Task<string?> GetDetailJsonAsync()
++    {
++        PartyDetail? detail = await GetDetailAsync().ConfigureAwait(false);
++        return detail is null
++            ? null
++            : JsonSerializer.Serialize(detail, s_jsonOptions);
++    }
++
+     public async Task ReceiveReminderAsync(string reminderName, byte[] state, TimeSpan dueTime, TimeSpan period)
+     {
+         if (!string.Equals(reminderName, RebuildReminderName, StringComparison.Ordinal))
+@@ -253,5 +374,29 @@ public sealed partial class PartyDetailProjectionActor : Actor, IPartyDetailProj
+             Level = LogLevel.Error,
+             Message = "Projection rebuild failed for actor {ActorKey}.")]
+         public static partial void RebuildFailed(ILogger logger, string actorKey, Exception exception);
++
++        [LoggerMessage(
++            EventId = 8303,
++            Level = LogLevel.Warning,
++            Message = "PartyDetail projection received event {EventTypeName} for {PartyId} with non-JSON serialization format '{SerializationFormat}'. Event dropped.")]
++        public static partial void NonJsonEventDropped(ILogger logger, string partyId, string eventTypeName, string serializationFormat);
++
++        [LoggerMessage(
++            EventId = 8304,
++            Level = LogLevel.Warning,
++            Message = "PartyDetail projection could not resolve event type '{EventTypeName}' for {PartyId}. Event dropped.")]
++        public static partial void UnknownEventTypeDropped(ILogger logger, string partyId, string eventTypeName);
++
++        [LoggerMessage(
++            EventId = 8305,
++            Level = LogLevel.Warning,
++            Message = "PartyDetail projection failed to deserialize event {EventTypeName} for {PartyId}. Event dropped.")]
++        public static partial void PayloadDeserializationFailed(ILogger logger, string partyId, string eventTypeName, Exception exception);
++
++        [LoggerMessage(
++            EventId = 8306,
++            Level = LogLevel.Error,
++            Message = "PartyDetail projection found an ambiguous short event-type name '{EventTypeName}' for {PartyId} (multiple types share this short name). Event dropped — promote the emitter to a full-name event type to dispatch safely.")]
++        public static partial void AmbiguousEventTypeDropped(ILogger logger, string partyId, string eventTypeName);
+     }
+ }
+diff --git a/src/Hexalith.Parties.Projections/Actors/PartyEventTypeResolver.cs b/src/Hexalith.Parties.Projections/Actors/PartyEventTypeResolver.cs
+new file mode 100644
+index 0000000..6006610
+--- /dev/null
++++ b/src/Hexalith.Parties.Projections/Actors/PartyEventTypeResolver.cs
+@@ -0,0 +1,157 @@
++using System.Collections.Concurrent;
++using System.Collections.Frozen;
++using System.Reflection;
++
++using Hexalith.EventStore.Contracts.Events;
++using Hexalith.Parties.Contracts.Events;
++
++namespace Hexalith.Parties.Projections.Actors;
++
++/// <summary>
++/// Resolves event type names to <see cref="IEventPayload"/> types from the Parties event
++/// assembly. Builds a static lookup the first time it is queried so that the projection actors
++/// don't pay <c>assembly.GetTypes()</c> on every event delivery (which compounded with the
++/// replay-from-zero pattern in PartyProjectionUpdateOrchestrator).
++/// <para>
++/// Resolution order: full-name match first, then short-name match. Short-name collisions across
++/// namespaces are NOT silently resolved — when more than one type shares a short name, the
++/// resolver returns null so the caller can log and skip rather than dispatch to a guessed type.
++/// </para>
++/// </summary>
++internal static class PartyEventTypeResolver
++{
++    private static readonly Lazy<FrozenDictionary<string, Type>> s_byFullName = new(BuildFullNameLookup);
++    private static readonly Lazy<FrozenDictionary<string, Type?>> s_byShortName = new(BuildShortNameLookup);
++    private static readonly ConcurrentDictionary<string, Type?> s_resolvedCache = new(StringComparer.Ordinal);
++
++    public static Type? Resolve(string eventTypeName)
++    {
++        if (string.IsNullOrWhiteSpace(eventTypeName))
++        {
++            return null;
++        }
++
++        return s_resolvedCache.GetOrAdd(eventTypeName, name =>
++        {
++            // Prefer assembly-qualified or full-namespaced names — exact match.
++            if (s_byFullName.Value.TryGetValue(name, out Type? full))
++            {
++                return full;
++            }
++
++            // CLR Type.GetType handles assembly-qualified names like
++            // "Hexalith.Parties.Contracts.Events.PartyCreated, Hexalith.Parties.Contracts".
++            Type? clrResolved = Type.GetType(name, throwOnError: false);
++            if (clrResolved is not null && IsEventPayloadType(clrResolved))
++            {
++                return clrResolved;
++            }
++
++            // Fall back to the short name lookup. The lookup stores null for ambiguous short
++            // names so we can return null instead of guessing.
++            string shortName = name.Contains('.', StringComparison.Ordinal)
++                ? name[(name.LastIndexOf('.') + 1)..]
++                : name;
++
++            return s_byShortName.Value.TryGetValue(shortName, out Type? shortMatch) ? shortMatch : null;
++        });
++    }
++
++    /// <summary>
++    /// Returns <see langword="true"/> when <paramref name="eventTypeName"/> resolves to a short
++    /// name that has more than one matching type in the Parties event assembly. Callers should
++    /// log this case distinctly from "unknown event type" because a colliding event was emitted
++    /// by the aggregate but cannot be dispatched safely.
++    /// </summary>
++    /// <param name="eventTypeName">The event type name (full or short) to test.</param>
++    /// <returns><see langword="true"/> if the short name maps to multiple types.</returns>
++    public static bool IsAmbiguousShortName(string eventTypeName)
++    {
++        if (string.IsNullOrWhiteSpace(eventTypeName))
++        {
++            return false;
++        }
++
++        // A full-name match takes precedence — that's never ambiguous.
++        if (s_byFullName.Value.ContainsKey(eventTypeName))
++        {
++            return false;
++        }
++
++        string shortName = eventTypeName.Contains('.', StringComparison.Ordinal)
++            ? eventTypeName[(eventTypeName.LastIndexOf('.') + 1)..]
++            : eventTypeName;
++
++        // The lookup stores `null` for ambiguous short names — distinguish from "missing key".
++        return s_byShortName.Value.TryGetValue(shortName, out Type? match) && match is null;
++    }
++
++    private static FrozenDictionary<string, Type> BuildFullNameLookup()
++    {
++        Dictionary<string, Type> lookup = new(StringComparer.Ordinal);
++        foreach (Type t in EnumerateEventTypes())
++        {
++            // FullName may be null for generic parameter types — those aren't events.
++            if (t.FullName is { } fullName)
++            {
++                lookup[fullName] = t;
++            }
++        }
++
++        return lookup.ToFrozenDictionary(StringComparer.Ordinal);
++    }
++
++    private static FrozenDictionary<string, Type?> BuildShortNameLookup()
++    {
++        Dictionary<string, List<Type>> grouped = new(StringComparer.Ordinal);
++        foreach (Type t in EnumerateEventTypes())
++        {
++            if (!grouped.TryGetValue(t.Name, out List<Type>? bucket))
++            {
++                bucket = [];
++                grouped[t.Name] = bucket;
++            }
++
++            bucket.Add(t);
++        }
++
++        // Map short name to the unique type, or null when there's a collision so the caller
++        // can decline to guess (preventing one tenant's renamed event from dispatching to
++        // another tenant's same-short-named event).
++        Dictionary<string, Type?> resolved = new(StringComparer.Ordinal);
++        foreach (KeyValuePair<string, List<Type>> kvp in grouped)
++        {
++            resolved[kvp.Key] = kvp.Value.Count == 1 ? kvp.Value[0] : null;
++        }
++
++        return resolved.ToFrozenDictionary(StringComparer.Ordinal);
++    }
++
++    private static IEnumerable<Type> EnumerateEventTypes()
++    {
++        Assembly partiesContracts = typeof(PartyCreated).Assembly;
++        Type[] types;
++        try
++        {
++            types = partiesContracts.GetTypes();
++        }
++        catch (ReflectionTypeLoadException ex)
++        {
++            // Some types failed to load (likely a missing reference). Fall back to the loaded ones.
++            types = ex.Types.Where(t => t is not null).Cast<Type>().ToArray();
++        }
++
++        foreach (Type t in types)
++        {
++            if (IsEventPayloadType(t))
++            {
++                yield return t;
++            }
++        }
++    }
++
++    private static bool IsEventPayloadType(Type t)
++        => !t.IsAbstract
++            && !t.IsInterface
++            && typeof(IEventPayload).IsAssignableFrom(t);
++}
+diff --git a/src/Hexalith.Parties.Projections/Actors/PartyIndexProjectionActor.cs b/src/Hexalith.Parties.Projections/Actors/PartyIndexProjectionActor.cs
+index 17154fb..2cc8854 100644
+--- a/src/Hexalith.Parties.Projections/Actors/PartyIndexProjectionActor.cs
++++ b/src/Hexalith.Parties.Projections/Actors/PartyIndexProjectionActor.cs
+@@ -5,6 +5,7 @@ using System.Text.Json;
+ using Dapr.Actors.Runtime;
+ 
+ using Hexalith.EventStore.Contracts.Events;
++using Hexalith.Parties.Contracts.Events;
+ using Hexalith.Parties.Contracts.Models;
+ using Hexalith.Parties.Projections.Abstractions;
+ using Hexalith.Parties.Projections.Configuration;
+@@ -22,12 +23,15 @@ public sealed partial class PartyIndexProjectionActor : Actor, IPartyIndexProjec
+     private const string FlushReminderName = "flush-batch";
+     private const string RebuildReminderName = "auto-rebuild";
+     private const string ManifestStateKeySuffix = "manifest";
++    private const string LastSequenceStateKeySuffix = "last-sequence";
++    private static readonly JsonSerializerOptions s_jsonOptions = new(JsonSerializerDefaults.Web);
+     private static readonly ConcurrentDictionary<string, IReadOnlyDictionary<string, PartyIndexEntry>> s_lastKnownEntries = new(StringComparer.Ordinal);
+     private readonly IIndexPartitionStrategy _partitionStrategy;
+     private readonly ProjectionOptions _options;
+     private readonly ILogger<PartyIndexProjectionActor> _logger;
+     private readonly IProjectionRebuildService _rebuildService;
+     private Dictionary<string, PartyIndexEntry>? _entries;
++    private Dictionary<string, long>? _lastProcessedSequencePerParty;
+     private string? _activeStateKey;
+     private int _pendingChanges;
+     private volatile bool _isRebuilding;
+@@ -78,6 +82,119 @@ public sealed partial class PartyIndexProjectionActor : Actor, IPartyIndexProjec
+         }
+     }
+ 
++    public async Task HandleSerializedEventAsync(
++        string partyId,
++        string eventTypeName,
++        byte[] payload,
++        string serializationFormat,
++        long sequenceNumber)
++    {
++        ArgumentException.ThrowIfNullOrWhiteSpace(partyId);
++        ArgumentException.ThrowIfNullOrWhiteSpace(eventTypeName);
++        ArgumentNullException.ThrowIfNull(payload);
++
++        // Skip already-applied events to make replay-from-zero idempotent. The sequence map is
++        // keyed per-party because the index actor is shared across all parties of a tenant.
++        await EnsureLastSequenceMapLoadedAsync(partyId).ConfigureAwait(false);
++        if (_lastProcessedSequencePerParty is not null
++            && _lastProcessedSequencePerParty.TryGetValue(partyId, out long last)
++            && sequenceNumber <= last)
++        {
++            return;
++        }
++
++        bool isJson = string.Equals(serializationFormat, "json", StringComparison.OrdinalIgnoreCase)
++            || string.Equals(serializationFormat, "json-redacted", StringComparison.OrdinalIgnoreCase);
++        if (!isJson)
++        {
++            Log.NonJsonEventDropped(_logger, partyId, eventTypeName, serializationFormat);
++            return;
++        }
++
++        Type? eventType = PartyEventTypeResolver.Resolve(eventTypeName);
++        if (eventType is null)
++        {
++            if (PartyEventTypeResolver.IsAmbiguousShortName(eventTypeName))
++            {
++                Log.AmbiguousEventTypeDropped(_logger, partyId, eventTypeName);
++            }
++            else
++            {
++                Log.UnknownEventTypeDropped(_logger, partyId, eventTypeName);
++            }
++
++            return;
++        }
++
++        object? deserialized;
++        try
++        {
++            deserialized = JsonSerializer.Deserialize(payload, eventType, s_jsonOptions);
++        }
++        catch (JsonException ex)
++        {
++            Log.PayloadDeserializationFailed(_logger, partyId, eventTypeName, ex);
++            return;
++        }
++
++        if (deserialized is IEventPayload eventPayload)
++        {
++            await HandleEventAsync(partyId, eventPayload).ConfigureAwait(false);
++            await PersistLastSequenceAsync(partyId, sequenceNumber).ConfigureAwait(false);
++        }
++    }
++
++    private async Task EnsureLastSequenceMapLoadedAsync(string partyId)
++    {
++        // Lazy-load the in-memory cache once per actor activation. Individual party sequence
++        // entries are persisted as separate state keys (see PersistLastSequenceAsync) so we
++        // don't pay an O(N) re-write of the whole dictionary on every event delivery. The
++        // first time a party is seen after activation we read its dedicated state key on
++        // demand inside this method.
++        _lastProcessedSequencePerParty ??= new Dictionary<string, long>(StringComparer.Ordinal);
++        if (_lastProcessedSequencePerParty.ContainsKey(partyId))
++        {
++            return;
++        }
++
++        string sequenceKey = ResolveSequenceKey(partyId);
++        try
++        {
++            ConditionalValue<long> result =
++                await StateManager.TryGetStateAsync<long>(sequenceKey, default).ConfigureAwait(false);
++            if (result.HasValue)
++            {
++                _lastProcessedSequencePerParty[partyId] = result.Value;
++            }
++        }
++        catch
++        {
++            // Best-effort load — replay-from-zero will rebuild on miss.
++        }
++    }
++
++    private async Task PersistLastSequenceAsync(string partyId, long sequenceNumber)
++    {
++        _lastProcessedSequencePerParty ??= new Dictionary<string, long>(StringComparer.Ordinal);
++        _lastProcessedSequencePerParty[partyId] = sequenceNumber;
++        // Persist only the changed party's sequence, not the entire map. The previous shape
++        // wrote O(parties_in_tenant) bytes on every event for every party — quadratic state
++        // store traffic at scale.
++        string sequenceKey = ResolveSequenceKey(partyId);
++        await StateManager.SetStateAsync(sequenceKey, sequenceNumber, default).ConfigureAwait(false);
++    }
++
++    private string ResolveSequenceKey(string partyId)
++    {
++        string actorId = Host.Id.GetId();
++        string[] segments = actorId.Split(':', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
++        string tenant = segments.Length >= 1 ? segments[0] : "unknown";
++        // Per-party state key so each party's checkpoint is independently versioned. The
++        // partition strategy is no longer part of the key — checkpoints follow the party id,
++        // which is the only stable durable identity for the sequence number anyway.
++        return $"{tenant}:{ProjectionName}:{partyId}:{LastSequenceStateKeySuffix}";
++    }
++
+     public async Task FlushAsync()
+     {
+         if (_pendingChanges > 0 && _activeStateKey is not null)
+@@ -167,6 +284,12 @@ public sealed partial class PartyIndexProjectionActor : Actor, IPartyIndexProjec
+         return _entries ?? new Dictionary<string, PartyIndexEntry>();
+     }
+ 
++    public async Task<string?> GetEntriesJsonAsync()
++    {
++        IReadOnlyDictionary<string, PartyIndexEntry> entries = await GetEntriesAsync().ConfigureAwait(false);
++        return JsonSerializer.Serialize(entries, s_jsonOptions);
++    }
++
+     public async Task ReceiveReminderAsync(string reminderName, byte[] state, TimeSpan dueTime, TimeSpan period)
+     {
+         if (string.Equals(reminderName, FlushReminderName, StringComparison.Ordinal))
+@@ -371,5 +494,29 @@ public sealed partial class PartyIndexProjectionActor : Actor, IPartyIndexProjec
+             Level = LogLevel.Error,
+             Message = "Projection rebuild failed for actor {ActorKey}.")]
+         public static partial void RebuildFailed(ILogger logger, string actorKey, Exception exception);
++
++        [LoggerMessage(
++            EventId = 8313,
++            Level = LogLevel.Warning,
++            Message = "PartyIndex projection received event {EventTypeName} for {PartyId} with non-JSON serialization format '{SerializationFormat}'. Event dropped.")]
++        public static partial void NonJsonEventDropped(ILogger logger, string partyId, string eventTypeName, string serializationFormat);
++
++        [LoggerMessage(
++            EventId = 8314,
++            Level = LogLevel.Warning,
++            Message = "PartyIndex projection could not resolve event type '{EventTypeName}' for {PartyId}. Event dropped.")]
++        public static partial void UnknownEventTypeDropped(ILogger logger, string partyId, string eventTypeName);
++
++        [LoggerMessage(
++            EventId = 8315,
++            Level = LogLevel.Warning,
++            Message = "PartyIndex projection failed to deserialize event {EventTypeName} for {PartyId}. Event dropped.")]
++        public static partial void PayloadDeserializationFailed(ILogger logger, string partyId, string eventTypeName, Exception exception);
++
++        [LoggerMessage(
++            EventId = 8316,
++            Level = LogLevel.Error,
++            Message = "PartyIndex projection found an ambiguous short event-type name '{EventTypeName}' for {PartyId} (multiple types share this short name). Event dropped — promote the emitter to a full-name event type to dispatch safely.")]
++        public static partial void AmbiguousEventTypeDropped(ILogger logger, string partyId, string eventTypeName);
+     }
+ }
+diff --git a/src/Hexalith.Parties.Projections/Handlers/PartyDetailProjectionHandler.cs b/src/Hexalith.Parties.Projections/Handlers/PartyDetailProjectionHandler.cs
+index fc8a0ca..a273631 100644
+--- a/src/Hexalith.Parties.Projections/Handlers/PartyDetailProjectionHandler.cs
++++ b/src/Hexalith.Parties.Projections/Handlers/PartyDetailProjectionHandler.cs
+@@ -12,7 +12,7 @@ public sealed class PartyDetailProjectionHandler
+     {
+         return @event switch
+         {
+-            PartyCreated e => HandlePartyCreated(partyId, e),
++            PartyCreated e => state is null ? HandlePartyCreated(partyId, e) : state,
+             PartyDisplayNameDerived e when state is not null => HandleNameDerived(state, e),
+             PersonDetailsUpdated e when state is not null => state with
+             {
+@@ -115,9 +115,12 @@ public sealed class PartyDetailProjectionHandler
+ 
+     private static PartyDetail? HandleNameDerived(PartyDetail state, PartyDisplayNameDerived e)
+     {
+-        // Deduplicate: skip if DisplayName hasn't actually changed
++        // Deduplicate: skip when neither DisplayName nor SortName has changed.
++        // Sort-only changes (locale tweak, contracted family-name spelling) ARE tracked,
++        // because directory-style queries that order by SortName need the history.
+         if (state.NameHistory.Count > 0 &&
+-            string.Equals(state.NameHistory[^1].DisplayName, e.DisplayName, StringComparison.Ordinal))
++            string.Equals(state.NameHistory[^1].DisplayName, e.DisplayName, StringComparison.Ordinal) &&
++            string.Equals(state.NameHistory[^1].SortName, e.SortName, StringComparison.Ordinal))
+         {
+             return state with
+             {
+diff --git a/src/Hexalith.Parties.Projections/Handlers/PartyIndexProjectionHandler.cs b/src/Hexalith.Parties.Projections/Handlers/PartyIndexProjectionHandler.cs
+index 571fffe..930a870 100644
+--- a/src/Hexalith.Parties.Projections/Handlers/PartyIndexProjectionHandler.cs
++++ b/src/Hexalith.Parties.Projections/Handlers/PartyIndexProjectionHandler.cs
+@@ -11,7 +11,7 @@ public sealed class PartyIndexProjectionHandler
+     {
+         return @event switch
+         {
+-            PartyCreated e => HandlePartyCreated(partyId, e),
++            PartyCreated e => state is null ? HandlePartyCreated(partyId, e) : state,
+             PartyDisplayNameDerived e when state is not null => state with
+             {
+                 DisplayName = e.DisplayName,
+diff --git a/src/Hexalith.Parties.Security/PartyEncryptionKeyDestroyedException.cs b/src/Hexalith.Parties.Security/PartyEncryptionKeyDestroyedException.cs
+new file mode 100644
+index 0000000..8861432
+--- /dev/null
++++ b/src/Hexalith.Parties.Security/PartyEncryptionKeyDestroyedException.cs
+@@ -0,0 +1,49 @@
++// <copyright file="PartyEncryptionKeyDestroyedException.cs" company="ITANEO">
++// Copyright (c) ITANEO (https://www.itaneo.com). All rights reserved.
++// Licensed under the MIT license. See LICENSE file in the project root for full license information.
++// </copyright>
++
++namespace Hexalith.Parties.Security;
++
++/// <summary>
++/// Thrown when a party's encryption key has been destroyed (post-erasure or explicit shred) and
++/// no plaintext or unprotect operation is possible. Catch sites that recover via the redaction
++/// fallback path should match this typed exception rather than message-text matching, which is
++/// fragile to localization, message rewording, and runtime resource-string changes. Transient
++/// KMS errors, key-version mismatches, and HSM permission failures must continue to propagate
++/// as their own types so projections and command handlers don't silently corrupt with null
++/// personal-data fields on a recoverable failure.
++/// </summary>
++public sealed class PartyEncryptionKeyDestroyedException : KeyNotFoundException
++{
++    /// <summary>
++    /// Initializes a new instance of the <see cref="PartyEncryptionKeyDestroyedException"/> class.
++    /// </summary>
++    /// <param name="tenantId">The tenant id whose key has been destroyed.</param>
++    /// <param name="partyId">The party id whose key has been destroyed.</param>
++    public PartyEncryptionKeyDestroyedException(string tenantId, string partyId)
++        : base($"Encryption key for tenant '{tenantId}' party '{partyId}' has been destroyed (post-erasure).")
++    {
++        TenantId = tenantId;
++        PartyId = partyId;
++    }
++
++    /// <summary>
++    /// Initializes a new instance of the <see cref="PartyEncryptionKeyDestroyedException"/> class.
++    /// </summary>
++    /// <param name="tenantId">The tenant id whose key has been destroyed.</param>
++    /// <param name="partyId">The party id whose key has been destroyed.</param>
++    /// <param name="innerException">The underlying KMS / storage exception.</param>
++    public PartyEncryptionKeyDestroyedException(string tenantId, string partyId, Exception innerException)
++        : base($"Encryption key for tenant '{tenantId}' party '{partyId}' has been destroyed (post-erasure).", innerException)
++    {
++        TenantId = tenantId;
++        PartyId = partyId;
++    }
++
++    /// <summary>Gets the tenant id whose key has been destroyed.</summary>
++    public string TenantId { get; }
++
++    /// <summary>Gets the party id whose key has been destroyed.</summary>
++    public string PartyId { get; }
++}
+diff --git a/src/Hexalith.Parties.Security/PartyKeyManagementService.cs b/src/Hexalith.Parties.Security/PartyKeyManagementService.cs
+index 566cc7f..4f4872f 100644
+--- a/src/Hexalith.Parties.Security/PartyKeyManagementService.cs
++++ b/src/Hexalith.Parties.Security/PartyKeyManagementService.cs
+@@ -76,7 +76,7 @@ public sealed class PartyKeyManagementService(
+             IReadOnlyList<int> versions = await backend.ListKeyVersionsAsync(tenantId, partyId, cancellationToken).ConfigureAwait(false);
+             if (versions.Count == 0)
+             {
+-                throw new KeyNotFoundException($"No encryption key exists for tenant '{tenantId}' and party '{partyId}'.");
++                throw new PartyEncryptionKeyDestroyedException(tenantId, partyId);
+             }
+ 
+             int latestVersion = versions.Max();
+@@ -110,7 +110,7 @@ public sealed class PartyKeyManagementService(
+             IReadOnlyList<int> versions = await backend.ListKeyVersionsAsync(tenantId, partyId, cancellationToken).ConfigureAwait(false);
+             if (versions.Count == 0)
+             {
+-                throw new KeyNotFoundException($"No encryption key exists for tenant '{tenantId}' and party '{partyId}'.");
++                throw new PartyEncryptionKeyDestroyedException(tenantId, partyId);
+             }
+ 
+             int newVersion = versions.Max() + 1;
+diff --git a/src/Hexalith.Parties.Security/PartyPayloadProtectionService.cs b/src/Hexalith.Parties.Security/PartyPayloadProtectionService.cs
+index 9f42dd8..1ca3eb8 100644
+--- a/src/Hexalith.Parties.Security/PartyPayloadProtectionService.cs
++++ b/src/Hexalith.Parties.Security/PartyPayloadProtectionService.cs
+@@ -149,6 +149,76 @@ public sealed partial class PartyPayloadProtectionService(
+         }
+     }
+ 
++    /// <summary>
++    /// Returns a redacted payload where every encrypted marker (<c>{"$enc":true,...}</c>) is
++    /// replaced with JSON <c>null</c>. Used as a fail-safe for state rehydration after a party's
++    /// encryption key has been destroyed: subsequent commands (e.g. <c>MarkErasureVerified</c>,
++    /// <c>CompletePartyErasure</c>) only inspect lifecycle/erasure flags from non-encrypted events,
++    /// so redacting personal-data fields is sufficient to allow Apply-replay to continue.
++    /// </summary>
++    public static PayloadProtectionResult RedactProtectedPayload(byte[] payloadBytes, string serializationFormat)
++    {
++        ArgumentNullException.ThrowIfNull(payloadBytes);
++        ArgumentException.ThrowIfNullOrWhiteSpace(serializationFormat);
++
++        if (!string.Equals(serializationFormat, ProtectedSerializationFormat, StringComparison.Ordinal))
++        {
++            return new PayloadProtectionResult(payloadBytes, serializationFormat);
++        }
++
++        JsonNode? root = JsonNode.Parse(payloadBytes);
++        if (root is null)
++        {
++            return new PayloadProtectionResult(payloadBytes, serializationFormat);
++        }
++
++        // Build a fresh JsonNode tree rather than mutate-in-place. JsonNode parents are
++        // single-owner: assigning a recursively-rebuilt subtree back to its original parent
++        // can throw "Cannot reassign" when a non-marker JsonObject contains a non-marker
++        // JsonObject. Constructing a new tree avoids the risk entirely.
++        JsonNode? redacted = RebuildWithoutEncryptedMarkers(root);
++        byte[] redactedBytes = JsonSerializer.SerializeToUtf8Bytes(redacted, s_jsonOptions);
++        // Use a distinct format marker so downstream consumers (audit/compliance pipelines)
++        // can detect that this payload was redacted, rather than indistinguishable from a
++        // plain JSON event that was never encrypted.
++        return new PayloadProtectionResult(redactedBytes, "json-redacted");
++    }
++
++    private static JsonNode? RebuildWithoutEncryptedMarkers(JsonNode? node)
++    {
++        switch (node)
++        {
++            case JsonObject obj when IsEncryptedMarker(obj):
++                return null;
++
++            case JsonObject obj:
++                JsonObject rebuiltObj = new();
++                foreach (KeyValuePair<string, JsonNode?> property in obj)
++                {
++                    rebuiltObj[property.Key] = property.Value is null
++                        ? null
++                        : RebuildWithoutEncryptedMarkers(property.Value.DeepClone());
++                }
++
++                return rebuiltObj;
++
++            case JsonArray array:
++                JsonArray rebuiltArr = new();
++                foreach (JsonNode? item in array)
++                {
++                    rebuiltArr.Add(item is null ? null : RebuildWithoutEncryptedMarkers(item.DeepClone()));
++                }
++
++                return rebuiltArr;
++
++            case JsonValue value:
++                return value.DeepClone();
++
++            default:
++                return node?.DeepClone();
++        }
++    }
++
+     public async Task<object> ProtectSnapshotStateAsync(
+         AggregateIdentity identity,
+         object state,
+@@ -289,7 +359,7 @@ public sealed partial class PartyPayloadProtectionService(
+                     await cryptoLifecycleService
+                         .MarkCryptoPendingAsync(identity.TenantId, identity.AggregateId, "No encryption key is available for this party.", cancellationToken)
+                         .ConfigureAwait(false);
+-                    throw new InvalidOperationException($"No encryption key is available for party '{identity.AggregateId}'.");
++                    throw new PartyEncryptionKeyDestroyedException(identity.TenantId, identity.AggregateId);
+                 }
+             }
+ 

@@ -150,6 +150,14 @@ so that DPO operations are efficient and auditable through a visual interface.
 
 ## Dev Notes
 
+### ATDD Artifacts
+
+- Checklist: `_bmad-output/test-artifacts/atdd-checklist-10-2-admin-portal-gdpr-operations.md`
+- Client/adapter contract tests: `tests/Hexalith.Parties.Client.Tests/AdminPortal/AdminPortalGdprOperationContractTests.cs`
+- Portal surface tests: `tests/Hexalith.Parties.Contracts.Tests/AdminPortal/AdminPortalGdprSurfaceTests.cs`
+- Authorization/state tests: `tests/Hexalith.Parties.Contracts.Tests/AdminPortal/AdminPortalGdprAuthorizationStateTests.cs`
+- Privacy/XSS guardrail tests: `tests/Hexalith.Parties.Contracts.Tests/AdminPortal/AdminPortalGdprPrivacyGuardrailTests.cs`
+
 ### Epic Context
 
 Epic 10 adds an administration and frontend layer for browsing, searching, inspecting, processing GDPR operations, and later embedding a party picker. Story 10.2 owns the GDPR operations UI on top of the Story 10.1 read-only portal foundation. Story 10.3 owns the embeddable picker. [Source: _bmad-output/planning-artifacts/epics.md#Epic 10: Administration & Frontend (v1.2)]
