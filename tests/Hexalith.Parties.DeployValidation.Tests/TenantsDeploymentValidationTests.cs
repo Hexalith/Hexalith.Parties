@@ -1,24 +1,11 @@
-// ATDD red-phase scaffolds for Story 11.4 — deployment validation must include
-// distinct, secret-safe, CI-readable checks for Hexalith.Tenants integration.
-
 namespace Hexalith.Parties.DeployValidation.Tests;
 
 using System.Diagnostics;
 using System.Text.Json;
 
-/// <summary>
-/// Story 11.4 — AC3: <c>deploy/validate-deployment.ps1</c> must detect missing or
-/// misconfigured Hexalith.Tenants integration with stable, distinct categories so CI
-/// logs and operators can react deterministically. Each test below is skipped until
-/// the script learns the new check; assertions describe the exact contract.
-/// </summary>
 [Collection("DeployValidation")]
 public sealed class TenantsDeploymentValidationTests : IDisposable
 {
-    private const string SkipReason =
-        "TDD red phase — Story 11.4 must extend deploy/validate-deployment.ps1 with " +
-        "Tenants subscription/configuration checks and surface them in JSON output.";
-
     private readonly string _scriptPath;
     private readonly string _tempDir;
     private bool _disposed;
@@ -40,91 +27,72 @@ public sealed class TenantsDeploymentValidationTests : IDisposable
         GC.SuppressFinalize(this);
     }
 
-    [Fact(Skip = SkipReason)]
+    [Fact]
     public async Task TenantsSubscription_Missing_FailsWithSpecificErrorAsync()
     {
-        WriteValidProductionConfig(_tempDir);
-        WritePartiesPubSub(_tempDir);
-        // Intentionally omit the Tenants subscription file.
+        WriteBaseProductionConfig(_tempDir, includeTenantsSubscription: false, includeTenantsConfig: true);
 
         (int exitCode, string output) = await RunValidationAsync(_tempDir);
 
         exitCode.ShouldBe(1);
+        output.ShouldContain("No Tenants subscription");
         output.ShouldContain("system.tenants.events");
-        output.ShouldContain("FAIL");
     }
 
-    [Fact(Skip = SkipReason)]
+    [Fact]
     public async Task TenantsSubscriptionScopes_MissingCommandApi_FailsWithRecommendationAsync()
     {
-        WriteValidProductionConfig(_tempDir);
-        WritePartiesPubSub(_tempDir);
-        WriteTenantsSubscription(_tempDir, includeCommandApiInScopes: false);
+        WriteBaseProductionConfig(_tempDir, includeTenantsSubscription: true, includeTenantsConfig: true, includeCommandApiScope: false);
 
         (int exitCode, string output) = await RunValidationAsync(_tempDir);
 
         exitCode.ShouldBe(1);
-        output.ShouldContain("commandapi");
+        output.ShouldContain("Missing commandapi subscription permission");
         output.ShouldContain("subscriptionScopes");
     }
 
-    [Fact(Skip = SkipReason)]
+    [Fact]
     public async Task TenantsConfiguration_Missing_FailsWithRecommendationAsync()
     {
-        WriteValidProductionConfig(_tempDir);
-        WritePartiesPubSub(_tempDir);
-        WriteTenantsSubscription(_tempDir, includeCommandApiInScopes: true);
-        // Tenants configuration block intentionally omitted from appsettings/yaml.
+        WriteBaseProductionConfig(_tempDir, includeTenantsSubscription: true, includeTenantsConfig: false);
 
         (int exitCode, string output) = await RunValidationAsync(_tempDir);
 
         exitCode.ShouldBe(1);
-        output.ShouldContain("Tenants");
-        output.ShouldContain("FAIL");
+        output.ShouldContain("No Tenants integration config found");
     }
 
-    [Fact(Skip = SkipReason)]
+    [Fact]
     public async Task TenantsConfiguration_Malformed_FailsWithDistinctCategoryAsync()
     {
-        WriteValidProductionConfig(_tempDir);
-        WritePartiesPubSub(_tempDir);
-        WriteTenantsSubscription(_tempDir, includeCommandApiInScopes: true);
-        WriteMalformedTenantsConfig(_tempDir);
+        WriteBaseProductionConfig(_tempDir, includeTenantsSubscription: true, includeTenantsConfig: true, malformedTenantsConfig: true);
 
         (int exitCode, string output) = await RunValidationAsync(_tempDir);
 
         exitCode.ShouldBe(1);
-        // Distinct from "missing" so operators can tell them apart in CI logs.
-        output.ShouldContain("Tenants configuration");
-        output.ShouldNotContain("not found", Case.Insensitive);
+        output.ShouldContain("Tenants configuration values");
+        output.ShouldContain("Missing or malformed Tenants config values");
     }
 
-    [Fact(Skip = SkipReason)]
+    [Fact]
     public async Task TenantsValidation_JsonOutput_IncludesTenantsChecksInChecksArrayAsync()
     {
-        WriteValidProductionConfig(_tempDir);
-        WritePartiesPubSub(_tempDir);
-        WriteTenantsSubscription(_tempDir, includeCommandApiInScopes: true);
-        WriteValidTenantsConfig(_tempDir);
+        WriteBaseProductionConfig(_tempDir, includeTenantsSubscription: true, includeTenantsConfig: true);
 
         (int exitCode, string output) = await RunValidationAsync(_tempDir, jsonOutput: true);
 
         exitCode.ShouldBe(0);
         using JsonDocument doc = JsonDocument.Parse(output);
         JsonElement checks = doc.RootElement.GetProperty("checks");
-        checks.ValueKind.ShouldBe(JsonValueKind.Array);
         checks.EnumerateArray()
-            .Any(c => (c.GetProperty("name").GetString() ?? string.Empty).Contains("Tenants", StringComparison.Ordinal))
-            .ShouldBeTrue("Expected at least one Tenants-named entry in checks[]");
+            .Any(c => c.GetProperty("category").GetString() == "Tenants Integration")
+            .ShouldBeTrue("Expected at least one Tenants Integration entry in checks[]");
     }
 
-    [Fact(Skip = SkipReason)]
+    [Fact]
     public async Task TenantsValidation_LocalDev_PassesWithWarningsAsync()
     {
-        WriteValidProductionConfig(_tempDir);
-        WritePartiesPubSub(_tempDir);
-        WriteLocalDevTenantsSubscription(_tempDir);
-        WriteValidTenantsConfig(_tempDir);
+        WriteLocalDevConfig(_tempDir);
 
         (int exitCode, string output) = await RunValidationAsync(_tempDir);
 
@@ -133,17 +101,13 @@ public sealed class TenantsDeploymentValidationTests : IDisposable
         output.ShouldContain("system.tenants.events");
     }
 
-    [Fact(Skip = SkipReason)]
+    [Fact]
     public async Task TenantsValidation_Output_DoesNotLeakSecretsOrPiiAsync()
     {
-        WriteValidProductionConfig(_tempDir);
-        WritePartiesPubSub(_tempDir);
-        WriteTenantsSubscriptionWithSensitiveValues(_tempDir);
-        WriteTenantsConfigWithSensitiveValues(_tempDir);
+        WriteBaseProductionConfig(_tempDir, includeTenantsSubscription: true, includeTenantsConfig: true, includeSensitiveValues: true);
 
-        (int exitCode, string output) = await RunValidationAsync(_tempDir);
+        (int _, string output) = await RunValidationAsync(_tempDir);
 
-        // Whatever the exit code, output must never echo tokens, claims, membership, or PII.
         output.ShouldNotContain("Bearer ", Case.Insensitive);
         output.ShouldNotContain("eventstore:tenant=");
         output.ShouldNotContain("user-1@example.com");
@@ -156,7 +120,7 @@ public sealed class TenantsDeploymentValidationTests : IDisposable
         {
             FileName = ResolvePowerShellExecutable(),
             Arguments = $"-NoProfile -NonInteractive -ExecutionPolicy Bypass -File \"{_scriptPath}\" " +
-                        $"-ConfigDir \"{configDir}\"" + (jsonOutput ? " -Json" : string.Empty),
+                        $"-ConfigPath \"{configDir}\"" + (jsonOutput ? " -Output json" : string.Empty),
             RedirectStandardOutput = true,
             RedirectStandardError = true,
             UseShellExecute = false,
@@ -164,14 +128,13 @@ public sealed class TenantsDeploymentValidationTests : IDisposable
 
         using Process? process = Process.Start(psi);
         process.ShouldNotBeNull("Unable to start PowerShell to run validation script");
-        string stdout = await process.StandardOutput.ReadToEndAsync();
-        string stderr = await process.StandardError.ReadToEndAsync();
-        await process.WaitForExitAsync();
+        string stdout = await process.StandardOutput.ReadToEndAsync().ConfigureAwait(false);
+        string stderr = await process.StandardError.ReadToEndAsync().ConfigureAwait(false);
+        await process.WaitForExitAsync().ConfigureAwait(false);
         return (process.ExitCode, stdout + stderr);
     }
 
-    private static string ResolvePowerShellExecutable()
-        => OperatingSystem.IsWindows() ? "pwsh" : "pwsh";
+    private static string ResolvePowerShellExecutable() => "pwsh";
 
     private static string? FindSolutionDirectory()
     {
@@ -180,35 +143,189 @@ public sealed class TenantsDeploymentValidationTests : IDisposable
         {
             dir = dir.Parent;
         }
+
         return dir?.FullName;
     }
 
-    // The fixture writers below are intentionally not implemented. Story 11.4 must
-    // ship them alongside the new validation logic so the tests share a single
-    // scaffolding pattern with the existing DeploymentValidationTests fixtures.
-    private static void WriteValidProductionConfig(string dir)
-        => throw new NotImplementedException("Reuse DeploymentValidationTests' WriteValidProductionConfig.");
+    private static void WriteBaseProductionConfig(
+        string dir,
+        bool includeTenantsSubscription,
+        bool includeTenantsConfig,
+        bool includeCommandApiScope = true,
+        bool malformedTenantsConfig = false,
+        bool includeSensitiveValues = false)
+    {
+        WriteCommonProductionFiles(dir, includeCommandApiScope);
+        if (includeTenantsSubscription)
+        {
+            WriteTenantsSubscription(dir);
+        }
 
-    private static void WritePartiesPubSub(string dir)
-        => throw new NotImplementedException("Story 11.4: emit a parties-events pubsub fixture.");
+        if (includeTenantsConfig)
+        {
+            WriteTenantsConfig(dir, malformedTenantsConfig, includeSensitiveValues);
+        }
+    }
 
-    private static void WriteTenantsSubscription(string dir, bool includeCommandApiInScopes)
-        => throw new NotImplementedException("Story 11.4: emit a system.tenants.events subscription fixture.");
+    private static void WriteCommonProductionFiles(string dir, bool includeCommandApiScope)
+    {
+        File.WriteAllText(Path.Combine(dir, "accesscontrol.yaml"), """
+            apiVersion: dapr.io/v1alpha1
+            kind: Configuration
+            spec:
+              accessControl:
+                defaultAction: deny
+                trustDomain: "hexalith.io"
+                policies:
+                  - appId: commandapi
+                    defaultAction: deny
+            """);
 
-    private static void WriteLocalDevTenantsSubscription(string dir)
-        => throw new NotImplementedException("Story 11.4: emit a local-dev variant warning on missing scopes.");
+        File.WriteAllText(Path.Combine(dir, "statestore.yaml"), """
+            apiVersion: dapr.io/v1alpha1
+            kind: Component
+            metadata:
+              name: statestore
+            spec:
+              type: state.azure.cosmosdb
+              metadata:
+                - name: url
+                  value: "{env:COSMOSDB_URL}"
+                - name: masterKey
+                  value: "{env:COSMOSDB_MASTER_KEY}"
+                - name: actorStateStore
+                  value: "true"
+            scopes:
+              - commandapi
+            """);
 
-    private static void WriteValidTenantsConfig(string dir)
-        => throw new NotImplementedException("Story 11.4: emit a valid Tenants config block (PubSubName, TopicName, CommandApiAppId).");
+        string scopes = includeCommandApiScope
+            ? "commandapi=system.tenants.events;{env:SUBSCRIBER_APP_ID}=acme.parties.events"
+            : "{env:SUBSCRIBER_APP_ID}=acme.parties.events";
+        File.WriteAllText(Path.Combine(dir, "pubsub.yaml"), $$"""
+            apiVersion: dapr.io/v1alpha1
+            kind: Component
+            metadata:
+              name: pubsub
+            spec:
+              type: pubsub.kafka
+              metadata:
+                - name: brokers
+                  value: "{env:KAFKA_BROKERS}"
+                - name: enableDeadLetter
+                  value: "true"
+                - name: publishingScopes
+                  value: "{env:SUBSCRIBER_APP_ID}="
+                - name: subscriptionScopes
+                  value: "{{scopes}}"
+            scopes:
+              - commandapi
+              - "{env:SUBSCRIBER_APP_ID}"
+            """);
 
-    private static void WriteMalformedTenantsConfig(string dir)
-        => throw new NotImplementedException("Story 11.4: emit a malformed Tenants config block (empty/invalid values).");
+        File.WriteAllText(Path.Combine(dir, "subscription-parties.yaml"), """
+            apiVersion: dapr.io/v2alpha1
+            kind: Subscription
+            spec:
+              pubsubname: pubsub
+              topic: "sample.parties.events"
+              routes:
+                default: /events/parties
+              deadLetterTopic: "deadletter.sample.parties.events"
+            scopes:
+              - "{env:SUBSCRIBER_APP_ID}"
+            """);
 
-    private static void WriteTenantsSubscriptionWithSensitiveValues(string dir)
-        => throw new NotImplementedException("Story 11.4: emit a Tenants subscription containing token-shaped values to verify redaction.");
+        File.WriteAllText(Path.Combine(dir, "resiliency.yaml"), """
+            apiVersion: dapr.io/v1alpha1
+            kind: Resiliency
+            spec:
+              policies:
+                retries:
+                  defaultRetry:
+                    policy: exponential
+                circuitBreakers:
+                  defaultBreaker:
+                    maxRequests: 1
+              targets:
+                components:
+                  pubsub:
+                    outbound:
+                      retry: defaultRetry
+                      circuitBreaker: defaultBreaker
+                    inbound:
+                      retry: defaultRetry
+                  statestore:
+                    retry: defaultRetry
+                    circuitBreaker: defaultBreaker
+            """);
+    }
 
-    private static void WriteTenantsConfigWithSensitiveValues(string dir)
-        => throw new NotImplementedException("Story 11.4: emit a Tenants config block containing PII-shaped values to verify redaction.");
+    private static void WriteTenantsSubscription(string dir)
+        => File.WriteAllText(Path.Combine(dir, "subscription-tenants.yaml"), """
+            apiVersion: dapr.io/v2alpha1
+            kind: Subscription
+            spec:
+              pubsubname: pubsub
+              topic: "system.tenants.events"
+              routes:
+                default: /events/tenants
+              deadLetterTopic: "deadletter.system.tenants.events"
+            scopes:
+              - commandapi
+            """);
+
+    private static void WriteTenantsConfig(string dir, bool malformed, bool includeSensitiveValues)
+        => File.WriteAllText(Path.Combine(dir, "tenants-integration.yaml"), malformed
+            ? """
+                apiVersion: hexalith.io/v1
+                kind: TenantsIntegration
+                spec:
+                  pubsubName: ""
+                  topicName: ""
+                  commandApiAppId: ""
+                """
+            : $$"""
+                apiVersion: hexalith.io/v1
+                kind: TenantsIntegration
+                spec:
+                  pubsubName: pubsub
+                  topicName: system.tenants.events
+                  commandApiAppId: commandapi
+                  tenantsDependencyHealth: healthy
+                  ignoredDiagnostic: "{{(includeSensitiveValues ? "Bearer secret eventstore:tenant=tenant-a user-1@example.com ConnectionString=secret" : "none")}}"
+                """);
+
+    private static void WriteLocalDevConfig(string dir)
+    {
+        WriteCommonProductionFiles(dir, includeCommandApiScope: false);
+        File.WriteAllText(Path.Combine(dir, "accesscontrol.yaml"), """
+            apiVersion: dapr.io/v1alpha1
+            kind: Configuration
+            spec:
+              accessControl:
+                defaultAction: allow
+                trustDomain: "public"
+                policies:
+                  - appId: commandapi
+                    defaultAction: deny
+            """);
+        File.WriteAllText(Path.Combine(dir, "pubsub.yaml"), """
+            apiVersion: dapr.io/v1alpha1
+            kind: Component
+            metadata:
+              name: pubsub
+            spec:
+              type: pubsub.redis
+              metadata:
+                - name: redisHost
+                  value: "localhost:6379"
+            scopes:
+              - commandapi
+            """);
+        WriteTenantsSubscription(dir);
+        WriteTenantsConfig(dir, malformed: false, includeSensitiveValues: false);
+    }
 
     private void Dispose(bool disposing)
     {
@@ -216,8 +333,9 @@ public sealed class TenantsDeploymentValidationTests : IDisposable
         if (disposing && Directory.Exists(_tempDir))
         {
             try { Directory.Delete(_tempDir, recursive: true); }
-            catch { /* best-effort cleanup */ }
+            catch { }
         }
+
         _disposed = true;
     }
 }

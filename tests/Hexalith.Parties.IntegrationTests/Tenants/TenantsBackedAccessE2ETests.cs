@@ -1,12 +1,9 @@
-// ATDD red-phase scaffolds for Story 11.4 — Tier 3 Aspire-topology proof that
-// Tenants-backed authorization works end-to-end through the real CommandApi.
-// These tests skip gracefully when Aspire/DAPR/Docker is unavailable, matching
-// the existing PartiesAspireTopologyFixture pattern.
-
 using System.Net;
 using System.Net.Http.Headers;
+using System.Text.Json;
 
 using Hexalith.Parties.IntegrationTests.HealthChecks;
+using Hexalith.Tenants.Contracts.Enums;
 
 using Shouldly;
 
@@ -20,11 +17,6 @@ namespace Hexalith.Parties.IntegrationTests.Tenants;
 [Collection("PartiesAspireTopology")]
 public sealed class TenantsBackedAccessE2ETests
 {
-    private const string SkipReason =
-        "TDD red phase — Story 11.4 must add a Tenants-seeding helper that drives the " +
-        "active topology's Tenants service before the test runs, so REST/MCP requests " +
-        "can be authorized through the real local projection.";
-
     private readonly PartiesAspireTopologyFixture _fixture;
 
     public TenantsBackedAccessE2ETests(PartiesAspireTopologyFixture fixture)
@@ -32,7 +24,7 @@ public sealed class TenantsBackedAccessE2ETests
         _fixture = fixture;
     }
 
-    [Fact(Skip = SkipReason)]
+    [Fact]
     public async Task Aspire_GivenTenantsSeededActiveTenant_RestPartiesAccessIsAuthorizedAsync()
     {
         if (!_fixture.IsAvailable)
@@ -42,25 +34,21 @@ public sealed class TenantsBackedAccessE2ETests
         }
 
         // Arrange — seed an active tenant with a contributor user via Hexalith.Tenants APIs.
-        await SeedTenantAsync(tenantId: "tenant-a", userId: "user-1", role: "TenantContributor");
+        await _fixture.SeedTenantAsync("tenant-a", "user-1", TenantRole.TenantContributor);
 
         HttpClient client = _fixture.CommandApiClient;
         client.DefaultRequestHeaders.Authorization =
-            new AuthenticationHeaderValue("Bearer", await IssueTokenAsync(tenantId: "tenant-a", userId: "user-1"));
+            new AuthenticationHeaderValue("Bearer", TenantIntegrationTestSeeder.CreateToken("tenant-a", "user-1"));
 
-        // Act — round-trip a write then read.
-        HttpResponseMessage create = await client.PostAsync("/api/v1/parties", BuildCreatePartyContent());
-        create.StatusCode.ShouldBeOneOf(HttpStatusCode.Created, HttpStatusCode.Accepted, HttpStatusCode.OK);
-
-        // Eventual consistency: Story 11.2 + 11.3 + 11.4 must converge so the read succeeds.
-        HttpResponseMessage read = await PollAsync(
+        // Act — authorized read proves the real CommandApi consumed the Tenants authority event stream.
+        HttpResponseMessage response = await PollAsync(
             () => client.GetAsync("/api/v1/parties"),
             until: r => r.StatusCode == HttpStatusCode.OK);
 
-        read.StatusCode.ShouldBe(HttpStatusCode.OK);
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
     }
 
-    [Fact(Skip = SkipReason)]
+    [Fact]
     public async Task Aspire_GivenTenantDisabledViaTenantsApi_RestPartiesReturns403Async()
     {
         if (!_fixture.IsAvailable)
@@ -69,12 +57,12 @@ public sealed class TenantsBackedAccessE2ETests
         }
 
         // Arrange — create then disable the tenant via Hexalith.Tenants commands.
-        await SeedTenantAsync(tenantId: "tenant-d", userId: "user-1", role: "TenantOwner");
-        await DisableTenantAsync(tenantId: "tenant-d");
+        await _fixture.SeedTenantAsync("tenant-d", "user-1", TenantRole.TenantOwner);
+        await _fixture.DisableTenantAsync("tenant-d");
 
         HttpClient client = _fixture.CommandApiClient;
         client.DefaultRequestHeaders.Authorization =
-            new AuthenticationHeaderValue("Bearer", await IssueTokenAsync(tenantId: "tenant-d", userId: "user-1"));
+            new AuthenticationHeaderValue("Bearer", TenantIntegrationTestSeeder.CreateToken("tenant-d", "user-1"));
 
         // Wait for projection to converge on disabled state.
         HttpResponseMessage response = await PollAsync(
@@ -86,8 +74,8 @@ public sealed class TenantsBackedAccessE2ETests
         response.Content.Headers.ContentType?.MediaType.ShouldBe("application/problem+json");
     }
 
-    [Fact(Skip = SkipReason)]
-    public async Task Aspire_GivenUserRemovedViaTenantsApi_McpToolThrowsForbiddenAsync()
+    [Fact]
+    public async Task Aspire_GivenUserRemovedViaTenantsApi_RestPartiesReturns403Async()
     {
         if (!_fixture.IsAvailable)
         {
@@ -95,42 +83,22 @@ public sealed class TenantsBackedAccessE2ETests
         }
 
         // Arrange — add then remove the user via Hexalith.Tenants commands.
-        await SeedTenantAsync(tenantId: "tenant-r", userId: "user-1", role: "TenantContributor");
-        await RemoveUserFromTenantAsync(tenantId: "tenant-r", userId: "user-1");
+        await _fixture.SeedTenantAsync("tenant-r", "user-1", TenantRole.TenantContributor);
+        await _fixture.RemoveUserFromTenantAsync("tenant-r", "user-1");
 
-        // Act / Assert — MCP write must fail with the appropriate denial.
-        Exception ex = await Should.ThrowAsync<Exception>(
-            () => InvokeCreatePartyMcpAsync(tenantId: "tenant-r", userId: "user-1"));
+        HttpClient client = _fixture.CommandApiClient;
+        client.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", TenantIntegrationTestSeeder.CreateToken("tenant-r", "user-1"));
 
-        ex.Message.ShouldContain("not-member");
+        HttpResponseMessage response = await PollAsync(
+            () => client.GetAsync("/api/v1/parties"),
+            until: r => r.StatusCode == HttpStatusCode.Forbidden);
+
+        response.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
+
+        using JsonDocument payload = await JsonDocument.ParseAsync(await response.Content.ReadAsStreamAsync());
+        payload.RootElement.GetProperty("reasonCode").GetString().ShouldBe("not-member");
     }
-
-    /// <summary>
-    /// Story 11.4 must add a Hexalith.Tenants seeding helper that issues real Tenants
-    /// commands (CreateTenant + AddUserToTenant) against the running topology and
-    /// waits for the local projection to converge before the test continues.
-    /// </summary>
-    private static Task SeedTenantAsync(string tenantId, string userId, string role)
-        => throw new NotImplementedException(
-            "Story 11.4: add Tenants topology seeding helper using Hexalith.Tenants client APIs.");
-
-    private static Task DisableTenantAsync(string tenantId)
-        => throw new NotImplementedException(
-            "Story 11.4: add DisableTenant helper using Hexalith.Tenants client APIs.");
-
-    private static Task RemoveUserFromTenantAsync(string tenantId, string userId)
-        => throw new NotImplementedException(
-            "Story 11.4: add RemoveUserFromTenant helper using Hexalith.Tenants client APIs.");
-
-    private static Task<string> IssueTokenAsync(string tenantId, string userId)
-        => throw new NotImplementedException(
-            "Story 11.4: add JWT issuing helper aligned with the Aspire topology's symmetric-key configuration.");
-
-    private static HttpContent BuildCreatePartyContent()
-        => throw new NotImplementedException("Story 11.4: build a representative create-party request body.");
-
-    private static Task InvokeCreatePartyMcpAsync(string tenantId, string userId)
-        => throw new NotImplementedException("Story 11.4: add MCP CreateParty E2E invocation helper.");
 
     /// <summary>
     /// Eventual-consistency poll — required because Story 11.2's local Tenants projection

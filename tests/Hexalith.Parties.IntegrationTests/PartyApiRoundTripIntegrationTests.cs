@@ -17,7 +17,10 @@ using Hexalith.EventStore.Server.Pipeline.Commands;
 using Hexalith.Parties.CommandApi;
 using Hexalith.Parties.Contracts.Models;
 using Hexalith.Parties.Contracts.ValueObjects;
+using Hexalith.Parties.IntegrationTests.Tenants;
 using Hexalith.Parties.Projections.Abstractions;
+using Hexalith.Tenants.Client.Projections;
+using Hexalith.Tenants.Contracts.Enums;
 
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -151,6 +154,11 @@ public sealed class PartyApiRoundTripTestFactory : WebApplicationFactory<Program
 
         builder.ConfigureTestServices(services =>
         {
+            InMemoryTenantProjectionStore tenantStore = TenantIntegrationTestSeeder.CreateProjectionStore(
+                new TenantMemberSeed("tenant-a", "integration-test-user", TenantRole.TenantContributor));
+
+            services.RemoveAll<ITenantProjectionStore>();
+            services.AddSingleton<ITenantProjectionStore>(tenantStore);
             services.RemoveAll<ICommandRouter>();
             services.AddSingleton<ICommandRouter>(_ => new RecordingCommandRouter(partyStore));
             services.RemoveAll<IActorProxyFactory>();

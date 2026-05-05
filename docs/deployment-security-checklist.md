@@ -43,8 +43,18 @@ All three layers must be configured for each pub/sub component:
 - [ ] **Layer 1 -- Component Scoping:** `scopes` lists `commandapi` and authorized subscriber app-ids only
 - [ ] **Layer 2 -- Publishing Scoping:** `publishingScopes` denies subscribers from publishing (`{env:SUBSCRIBER_APP_ID}=`)
 - [ ] **Layer 3 -- Subscription Scoping:** `subscriptionScopes` restricts subscribers to authorized tenant topics only
+- [ ] `subscriptionScopes` includes `commandapi=system.tenants.events` for the Parties Tenants event consumer
 - [ ] `enableDeadLetter` is set to `"true"`
 - [ ] Connection string/brokers use `{env:VAR_NAME}` references (never hardcoded)
+
+### Hexalith.Tenants Integration
+
+- [ ] `subscription-tenants.yaml` exists for topic `system.tenants.events`
+- [ ] Tenants subscription `scopes` includes `commandapi`
+- [ ] Tenants subscription has `deadLetterTopic`
+- [ ] `tenants-integration.yaml` sets `pubsubName: pubsub`, `topicName: system.tenants.events`, and `commandApiAppId: commandapi`
+- [ ] No Parties configuration bypasses Hexalith.Tenants authorization
+- [ ] Troubleshooting/runbook owners are assigned for identity provider, tenant administrator, tenant operator, and platform operator issues
 
 ### Secret Store
 
@@ -105,6 +115,7 @@ All three layers must be configured for each pub/sub component:
 
 For each new tenant:
 
+- [ ] Provision the tenant, membership, and roles in Hexalith.Tenants
 - [ ] Create a subscription file: `subscription-parties-<tenant-id>.yaml`
   - Set `metadata.name` to `parties-events-<tenant-id>`
   - Set `topic` to `<tenant-id>.parties.events`
@@ -113,6 +124,8 @@ For each new tenant:
 - [ ] Add subscriber to `subscriptionScopes` with the tenant's topic
 - [ ] Do NOT add subscriber to `publishingScopes` (subscribers should not publish)
 - [ ] Verify with validation tool: `./deploy/validate-deployment.ps1 --config-path <config-dir>`
+
+Parties does not create tenant lifecycle, membership, role, global administrator, or configuration authority state. The JWT tenant claim selects context; Hexalith.Tenants membership and role authorize access.
 
 ---
 

@@ -1,6 +1,6 @@
 # Story 11.4: Tenants Integration Tests, Deployment Validation, and Documentation
 
-Status: ready-for-dev
+Status: review
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -20,70 +20,70 @@ so that tenant integration is reliable in CI and local development.
 
 ## Tasks / Subtasks
 
-- [ ] Add Tenants testing helper references only where they reduce test setup (AC: 1)
-  - [ ] Add a project reference to `Hexalith.Tenants.Testing` in the affected test project(s), most likely `tests/Hexalith.Parties.CommandApi.Tests` for sidecar-free authorization tests and `tests/Hexalith.Parties.IntegrationTests` only if full-topology tests need Tenants seed helpers.
-  - [ ] Reuse `TenantTestHelpers`, `InMemoryTenantService`, and/or `InMemoryTenantProjection` for tenant lifecycle, membership, role, and projection setup instead of hand-rolling tenant aggregate behavior.
-  - [ ] Use public Tenants testing helpers/builders only; do not assert on private Tenants event shapes or duplicate Tenants lifecycle, membership, role, or disabled/removed-user policy in Parties-local fakes.
-  - [ ] Record a short implementation note naming which Tenants testing helpers are used and where thin Parties-local adapters remain intentional for request/auth composition.
-  - [ ] Do not add `Hexalith.Tenants.Testing` to production projects.
-  - [ ] Keep `src/Hexalith.Parties.Contracts` free of Tenants dependencies.
+- [x] Add Tenants testing helper references only where they reduce test setup (AC: 1)
+  - [x] Add a project reference to `Hexalith.Tenants.Testing` in the affected test project(s), most likely `tests/Hexalith.Parties.CommandApi.Tests` for sidecar-free authorization tests and `tests/Hexalith.Parties.IntegrationTests` only if full-topology tests need Tenants seed helpers.
+  - [x] Reuse `TenantTestHelpers`, `InMemoryTenantService`, and/or `InMemoryTenantProjection` for tenant lifecycle, membership, role, and projection setup instead of hand-rolling tenant aggregate behavior.
+  - [x] Use public Tenants testing helpers/builders only; do not assert on private Tenants event shapes or duplicate Tenants lifecycle, membership, role, or disabled/removed-user policy in Parties-local fakes.
+  - [x] Record a short implementation note naming which Tenants testing helpers are used and where thin Parties-local adapters remain intentional for request/auth composition.
+  - [x] Do not add `Hexalith.Tenants.Testing` to production projects.
+  - [x] Keep `src/Hexalith.Parties.Contracts` free of Tenants dependencies.
 
-- [ ] Strengthen fast Tenants-backed authorization tests (AC: 1, 2, 5)
-  - [ ] Extend or add tests in `tests/Hexalith.Parties.CommandApi.Tests/Authorization` for the access service and denial translation created by Stories 11.2 and 11.3.
-  - [ ] Cover active tenant allowed for the required role, disabled tenant denied, removed user denied, insufficient role denied, missing user id denied, unknown tenant denied, and missing/stale local projection state denied.
-  - [ ] Cover valid JWT tenant context with no active Tenants membership or role as denied; JWT claims identify requested context only and must never be the authorization source of truth.
-  - [ ] Cover the role matrix explicitly: `TenantReader` can read/search only, `TenantContributor` can read/write but not admin, and `TenantOwner` can read/write/admin.
-  - [ ] Assert denial reason codes remain stable for troubleshooting, for example `missing-tenant`, `missing-user`, `unknown-tenant`, `tenant-disabled`, `not-member`, `insufficient-role`, and `tenant-state-stale` when modeled.
-  - [ ] Keep these tests deterministic and sidecar-free; instantiate in-process Tenants testing helpers, fakes, or projection/service seams directly with no sidecars, containers, network calls, EventStore, DAPR, or external identity provider.
+- [x] Strengthen fast Tenants-backed authorization tests (AC: 1, 2, 5)
+  - [x] Extend or add tests in `tests/Hexalith.Parties.CommandApi.Tests/Authorization` for the access service and denial translation created by Stories 11.2 and 11.3.
+  - [x] Cover active tenant allowed for the required role, disabled tenant denied, removed user denied, insufficient role denied, missing user id denied, unknown tenant denied, and missing/stale local projection state denied.
+  - [x] Cover valid JWT tenant context with no active Tenants membership or role as denied; JWT claims identify requested context only and must never be the authorization source of truth.
+  - [x] Cover the role matrix explicitly: `TenantReader` can read/search only, `TenantContributor` can read/write but not admin, and `TenantOwner` can read/write/admin.
+  - [x] Assert denial reason codes remain stable for troubleshooting, for example `missing-tenant`, `missing-user`, `unknown-tenant`, `tenant-disabled`, `not-member`, `insufficient-role`, and `tenant-state-stale` when modeled.
+  - [x] Keep these tests deterministic and sidecar-free; instantiate in-process Tenants testing helpers, fakes, or projection/service seams directly with no sidecars, containers, network calls, EventStore, DAPR, or external identity provider.
 
-- [ ] Add integration coverage for REST, MCP, and projection isolation (AC: 2)
-  - [ ] Add or extend WebApplicationFactory/CommandApi tests that prove authorized active tenant access succeeds while disabled tenant, removed user, and insufficient role requests fail before projection reads or command routing.
-  - [ ] Cover REST read/query, REST write, admin REST, MCP read/search, and MCP write paths through representative endpoints/tools rather than duplicating every existing endpoint assertion.
-  - [ ] Preserve existing tenant isolation tests that verify tenant-scoped actor ids and query isolation; add Tenants-backed access scenarios without weakening cross-tenant non-enumeration behavior.
-  - [ ] Define projection isolation through externally observable behavior: seed or create similar data for at least two tenants, then assert tenant A cannot list, read, search, or MCP-resolve tenant B data and cannot address tenant B records by direct id/path.
-  - [ ] Keep these tests representative proof of the Story 11.1-11.3 integration contract; do not reopen topology, event handling, endpoint authorization design, command payload shape, MCP tool schemas, EventStore actor identity, or projection key strategy.
-  - [ ] If full Aspire topology tests are used, seed tenants and memberships through Hexalith.Tenants command/test helpers or documented Tenants APIs, not Parties-local tenant setup.
-  - [ ] Skip or quarantine Tier 3 tests gracefully when Docker, DAPR, or Aspire infrastructure is unavailable, matching the existing `PartiesAspireTopologyFixture` pattern.
+- [x] Add integration coverage for REST, MCP, and projection isolation (AC: 2)
+  - [x] Add or extend WebApplicationFactory/CommandApi tests that prove authorized active tenant access succeeds while disabled tenant, removed user, and insufficient role requests fail before projection reads or command routing.
+  - [x] Cover REST read/query, REST write, admin REST, MCP read/search, and MCP write paths through representative endpoints/tools rather than duplicating every existing endpoint assertion.
+  - [x] Preserve existing tenant isolation tests that verify tenant-scoped actor ids and query isolation; add Tenants-backed access scenarios without weakening cross-tenant non-enumeration behavior.
+  - [x] Define projection isolation through externally observable behavior: seed or create similar data for at least two tenants, then assert tenant A cannot list, read, search, or MCP-resolve tenant B data and cannot address tenant B records by direct id/path.
+  - [x] Keep these tests representative proof of the Story 11.1-11.3 integration contract; do not reopen topology, event handling, endpoint authorization design, command payload shape, MCP tool schemas, EventStore actor identity, or projection key strategy.
+  - [x] If full Aspire topology tests are used, seed tenants and memberships through Hexalith.Tenants command/test helpers or documented Tenants APIs, not Parties-local tenant setup.
+  - [x] Skip or quarantine Tier 3 tests gracefully when Docker, DAPR, or Aspire infrastructure is unavailable, matching the existing `PartiesAspireTopologyFixture` pattern.
 
-- [ ] Extend deployment validation for Tenants integration (AC: 3)
-  - [ ] Update `deploy/validate-deployment.ps1` so it detects Tenants event subscription/configuration requirements in addition to existing Parties DAPR checks.
-  - [ ] Validate that the configured pub/sub component scopes include the app id that hosts the Parties Tenants event subscription, normally `commandapi`, and that `subscriptionScopes` explicitly allow it to subscribe to `system.tenants.events` when production scoping is enabled.
-  - [ ] Validate that Tenants subscription configuration is present when Tenants integration is enabled, either through a declarative subscription file or documented programmatic subscription expectations from `MapTenantEventSubscription()`.
-  - [ ] Report actionable failures for missing `Tenants` configuration, wrong pub/sub name/topic, missing `commandapi` subscription permission, missing dead-letter/resiliency coverage, or unhealthy/missing Tenants integration configuration.
-  - [ ] Emit distinct validation categories for missing Tenants subscription, missing or malformed Tenants configuration, invalid or unreachable Tenants dependency where detectable, and Parties configuration that bypasses Tenants authorization.
-  - [ ] Ensure console output remains useful without color by using stable check names and clear `PASS`, `WARN`, and `FAIL` prefixes suitable for CI logs and screen readers.
-  - [ ] Preserve local development warnings where Redis/self-hosted DAPR intentionally omits production scoping metadata.
+- [x] Extend deployment validation for Tenants integration (AC: 3)
+  - [x] Update `deploy/validate-deployment.ps1` so it detects Tenants event subscription/configuration requirements in addition to existing Parties DAPR checks.
+  - [x] Validate that the configured pub/sub component scopes include the app id that hosts the Parties Tenants event subscription, normally `commandapi`, and that `subscriptionScopes` explicitly allow it to subscribe to `system.tenants.events` when production scoping is enabled.
+  - [x] Validate that Tenants subscription configuration is present when Tenants integration is enabled, either through a declarative subscription file or documented programmatic subscription expectations from `MapTenantEventSubscription()`.
+  - [x] Report actionable failures for missing `Tenants` configuration, wrong pub/sub name/topic, missing `commandapi` subscription permission, missing dead-letter/resiliency coverage, or unhealthy/missing Tenants integration configuration.
+  - [x] Emit distinct validation categories for missing Tenants subscription, missing or malformed Tenants configuration, invalid or unreachable Tenants dependency where detectable, and Parties configuration that bypasses Tenants authorization.
+  - [x] Ensure console output remains useful without color by using stable check names and clear `PASS`, `WARN`, and `FAIL` prefixes suitable for CI logs and screen readers.
+  - [x] Preserve local development warnings where Redis/self-hosted DAPR intentionally omits production scoping metadata.
 
-- [ ] Add deployment-validation tests for Tenants requirements (AC: 3)
-  - [ ] Extend `tests/Hexalith.Parties.DeployValidation.Tests/DeploymentValidationTests.cs` with known-good and known-bad Tenants config fixtures.
-  - [ ] Assert missing Tenants subscription/configuration fails with a specific message and recommendation.
-  - [ ] Assert malformed or empty Tenants config values, invalid/unreachable dependency signals where detectable, and missing authorization-required subscription scope each produce distinct, secret-safe failures.
-  - [ ] Assert missing `commandapi` access to `system.tenants.events` fails when production `subscriptionScopes` are present.
-  - [ ] Assert local development config can pass with warnings when the Tenants integration is explicitly documented as local-only or disabled.
-  - [ ] Keep JSON output valid and include Tenants validation checks in the structured `checks` array.
+- [x] Add deployment-validation tests for Tenants requirements (AC: 3)
+  - [x] Extend `tests/Hexalith.Parties.DeployValidation.Tests/DeploymentValidationTests.cs` with known-good and known-bad Tenants config fixtures.
+  - [x] Assert missing Tenants subscription/configuration fails with a specific message and recommendation.
+  - [x] Assert malformed or empty Tenants config values, invalid/unreachable dependency signals where detectable, and missing authorization-required subscription scope each produce distinct, secret-safe failures.
+  - [x] Assert missing `commandapi` access to `system.tenants.events` fails when production `subscriptionScopes` are present.
+  - [x] Assert local development config can pass with warnings when the Tenants integration is explicitly documented as local-only or disabled.
+  - [x] Keep JSON output valid and include Tenants validation checks in the structured `checks` array.
 
-- [ ] Update local getting-started and tenant provisioning docs (AC: 4, 5)
-  - [ ] Update `docs/getting-started.md` so the local walkthrough provisions or references an active tenant through Hexalith.Tenants before calling Parties REST or MCP.
-  - [ ] Present the setup order explicitly: provision tenant in Hexalith.Tenants, assign user membership/role, configure Parties Tenants subscription, run deployment validation, then run a minimal authorized Parties request.
-  - [ ] Distinguish the JWT tenant claim from Tenants membership: the claim selects requested tenant context, while active Tenants membership/role authorizes the operation.
-  - [ ] Document the minimum local role needed for the walkthrough, normally `TenantContributor` for create/update flows and `TenantReader` for read/search-only flows.
-  - [ ] Keep tenant lifecycle and membership management instructions pointed at Hexalith.Tenants. Do not add Parties-local tenant management screens, commands, or seed state as the authority.
-  - [ ] State that tenant ids are not command payload fields or MCP tool parameters; tenant context comes from authenticated request/session context and Tenants membership.
-  - [ ] Update README links or summary text if the high-level onboarding promise changes because Tenants provisioning is now required.
+- [x] Update local getting-started and tenant provisioning docs (AC: 4, 5)
+  - [x] Update `docs/getting-started.md` so the local walkthrough provisions or references an active tenant through Hexalith.Tenants before calling Parties REST or MCP.
+  - [x] Present the setup order explicitly: provision tenant in Hexalith.Tenants, assign user membership/role, configure Parties Tenants subscription, run deployment validation, then run a minimal authorized Parties request.
+  - [x] Distinguish the JWT tenant claim from Tenants membership: the claim selects requested tenant context, while active Tenants membership/role authorizes the operation.
+  - [x] Document the minimum local role needed for the walkthrough, normally `TenantContributor` for create/update flows and `TenantReader` for read/search-only flows.
+  - [x] Keep tenant lifecycle and membership management instructions pointed at Hexalith.Tenants. Do not add Parties-local tenant management screens, commands, or seed state as the authority.
+  - [x] State that tenant ids are not command payload fields or MCP tool parameters; tenant context comes from authenticated request/session context and Tenants membership.
+  - [x] Update README links or summary text if the high-level onboarding promise changes because Tenants provisioning is now required.
 
-- [ ] Update deployment and troubleshooting documentation (AC: 3, 5)
-  - [ ] Update `docs/deployment-guide.md` and `docs/deployment-security-checklist.md` with Tenants pub/sub topic `system.tenants.events`, required app ids, subscription permissions, validation command examples, and operator remediation steps.
-  - [ ] Add troubleshooting guidance that separates `401` missing/invalid JWT issues from `403` Tenants projection or membership/role denial.
-  - [ ] Include a troubleshooting decision table for missing/invalid tenant JWT claim, valid claim with no active Tenants membership, insufficient Tenants role, disabled tenant, and removed user, with symptom, likely cause, fix owner, and remediation.
-  - [ ] Document eventual-consistency behavior from Story 11.2: local Tenants projection lag can temporarily affect access decisions, and missing/unknown local state fails closed.
-  - [ ] Document how to inspect health/readiness and validation output when Tenants subscription/configuration is missing or unhealthy.
-  - [ ] Avoid exposing full claim sets, tokens, membership dictionaries, or personal party data in examples or logs.
+- [x] Update deployment and troubleshooting documentation (AC: 3, 5)
+  - [x] Update `docs/deployment-guide.md` and `docs/deployment-security-checklist.md` with Tenants pub/sub topic `system.tenants.events`, required app ids, subscription permissions, validation command examples, and operator remediation steps.
+  - [x] Add troubleshooting guidance that separates `401` missing/invalid JWT issues from `403` Tenants projection or membership/role denial.
+  - [x] Include a troubleshooting decision table for missing/invalid tenant JWT claim, valid claim with no active Tenants membership, insufficient Tenants role, disabled tenant, and removed user, with symptom, likely cause, fix owner, and remediation.
+  - [x] Document eventual-consistency behavior from Story 11.2: local Tenants projection lag can temporarily affect access decisions, and missing/unknown local state fails closed.
+  - [x] Document how to inspect health/readiness and validation output when Tenants subscription/configuration is missing or unhealthy.
+  - [x] Avoid exposing full claim sets, tokens, membership dictionaries, or personal party data in examples or logs.
 
-- [ ] Validate affected build and tests
-  - [ ] Run `dotnet test tests/Hexalith.Parties.CommandApi.Tests/Hexalith.Parties.CommandApi.Tests.csproj --configuration Release`.
-  - [ ] Run `dotnet test tests/Hexalith.Parties.DeployValidation.Tests/Hexalith.Parties.DeployValidation.Tests.csproj --configuration Release`.
-  - [ ] Run `dotnet test tests/Hexalith.Parties.IntegrationTests/Hexalith.Parties.IntegrationTests.csproj --configuration Release` when Docker/Aspire prerequisites are available, or record the infrastructure skip reason.
-  - [ ] Run `dotnet build Hexalith.Parties.slnx --configuration Release`.
+- [x] Validate affected build and tests
+  - [x] Run `dotnet test tests/Hexalith.Parties.CommandApi.Tests/Hexalith.Parties.CommandApi.Tests.csproj --configuration Release`.
+  - [x] Run `dotnet test tests/Hexalith.Parties.DeployValidation.Tests/Hexalith.Parties.DeployValidation.Tests.csproj --configuration Release`.
+  - [x] Run `dotnet test tests/Hexalith.Parties.IntegrationTests/Hexalith.Parties.IntegrationTests.csproj --configuration Release` when Docker/Aspire prerequisites are available, or record the infrastructure skip reason.
+  - [x] Run `dotnet build Hexalith.Parties.slnx --configuration Release`.
 
 ## Dev Notes
 
@@ -227,12 +227,62 @@ GPT-5 Codex
 
 ### Debug Log References
 
+- 2026-05-05: Added test-only `Hexalith.Tenants.Testing` reference to `tests/Hexalith.Parties.CommandApi.Tests`; initial red run failed because the namespace was unavailable.
+- 2026-05-05: Ran `dotnet test tests/Hexalith.Parties.CommandApi.Tests/Hexalith.Parties.CommandApi.Tests.csproj --configuration Release --filter FullyQualifiedName~HelperDrivenTenantAccessTests --no-restore --verbosity minimal` — passed 6/6.
+- 2026-05-05: Ran `dotnet test tests/Hexalith.Parties.CommandApi.Tests/Hexalith.Parties.CommandApi.Tests.csproj --configuration Release --filter "FullyQualifiedName~TenantAccessServiceTests|FullyQualifiedName~HelperDrivenTenantAccessTests|FullyQualifiedName~StoryElevenThreeReviewPatchesTests" --no-restore --verbosity minimal` — passed 41/41.
+- 2026-05-05: Ran `dotnet test tests/Hexalith.Parties.CommandApi.Tests/Hexalith.Parties.CommandApi.Tests.csproj --configuration Release --filter "FullyQualifiedName~PartiesControllerTenantAuthorizationTests|FullyQualifiedName~McpToolTenantAuthorizationTests|FullyQualifiedName~CrossTenantIsolationTests|FullyQualifiedName~AdminEndpointIntegrationTests" --no-restore --verbosity minimal` — passed 19/19.
+- 2026-05-05: Ran `dotnet test tests/Hexalith.Parties.DeployValidation.Tests/Hexalith.Parties.DeployValidation.Tests.csproj --configuration Release --no-restore --verbosity minimal` — passed 25/25.
+- 2026-05-05: Ran `pwsh -NoProfile -ExecutionPolicy Bypass -File deploy/validate-deployment.ps1 -ConfigPath deploy/dapr` — passed with 52 pass, 0 fail, 1 advisory secret-store warning.
+- 2026-05-05: Ran `dotnet test tests/Hexalith.Parties.IntegrationTests/Hexalith.Parties.IntegrationTests.csproj --configuration Release --filter FullyQualifiedName~TenantsBackedAccessE2ETests --no-restore --verbosity minimal` — passed 3/3.
+- 2026-05-05: Ran `dotnet test tests/Hexalith.Parties.IntegrationTests/Hexalith.Parties.IntegrationTests.csproj --configuration Release --filter FullyQualifiedName~PartyApiRoundTripIntegrationTests --no-restore --verbosity minimal` — passed 2/2.
+- 2026-05-05: Ran `dotnet test tests/Hexalith.Parties.CommandApi.Tests/Hexalith.Parties.CommandApi.Tests.csproj --configuration Release --no-restore --verbosity minimal` — 385/386 passed; the existing 100K semantic-search benchmark exceeded the 500 ms threshold once at 608 ms.
+- 2026-05-05: Reran `dotnet test tests/Hexalith.Parties.CommandApi.Tests/Hexalith.Parties.CommandApi.Tests.csproj --configuration Release --filter FullyQualifiedName~SemanticSearchPerformanceBenchmarkTests.Search_100KEntries_ExactMatch_CompletesWithin500ms --no-restore --verbosity minimal` — passed 1/1.
+- 2026-05-05: Ran `dotnet test tests/Hexalith.Parties.DeployValidation.Tests/Hexalith.Parties.DeployValidation.Tests.csproj --configuration Release --no-restore --verbosity minimal` — passed 25/25.
+- 2026-05-05: Ran `pwsh -NoProfile -ExecutionPolicy Bypass -File deploy/validate-deployment.ps1 -ConfigPath deploy/dapr` — passed with 52 pass, 0 fail, 1 advisory secret-store warning.
+- 2026-05-05: Ran `dotnet build Hexalith.Parties.slnx --configuration Release --no-restore --verbosity minimal` — passed with 0 warnings and 0 errors.
+- 2026-05-05: Ran `dotnet test tests/Hexalith.Parties.IntegrationTests/Hexalith.Parties.IntegrationTests.csproj --configuration Release --no-restore --verbosity minimal` — 39 passed, 1 skipped, 7 failed. The remaining failures are full-topology create-path tests returning `422` because `party/process` returns `500`; Tenants authorization no longer fails with `unknown-tenant`.
+
 ### Completion Notes List
 
 - Ultimate context engine analysis completed - comprehensive developer guide created.
 - Party-mode review completed on 2026-05-04; story clarified before development.
+- `HelperDrivenTenantAccessTests` now uses `TenantTestHelpers`, `InMemoryTenantService`, and `InMemoryTenantProjection` to seed Tenants-owned lifecycle, membership, disabled-tenant, removed-user, and role state. The only Parties-local adapter is the thin projection bridge that copies public Tenants read models into the existing `ITenantProjectionStore` seam for request authorization tests.
+- Fast authorization coverage now includes Tenants role matrix, missing identity, unknown tenant, disabled tenant, removed user, insufficient role, stale projection, stable reason-code translation, and valid JWT tenant context without active Tenants membership.
+- REST/MCP coverage now proves denied Tenants access returns stable safe diagnostics before projection reads or command routing, while tenant-specific projection test doubles verify tenant A cannot list, search, read, or MCP-resolve tenant B party data through representative paths.
+- Full-topology Tenants E2E coverage now seeds real Tenants event envelopes through `/tenants/events` and verifies active tenant access, disabled tenant denial, and removed-user denial through the running CommandApi. The shared Aspire fixture also seeds existing full-topology users to eliminate `unknown-tenant` auth failures in unrelated E2E classes.
+- WebApplicationFactory integration tests now seed `ITenantProjectionStore` explicitly so in-process command/query tests use Tenants-backed authorization state instead of empty projection state.
+- Deployment validation now emits a `Tenants Integration` category for Tenants config, subscription, `commandapi` scoping to `system.tenants.events`, dead-letter coverage, dependency health signals, and authorization bypass detection. Checked-in DAPR templates include the Tenants subscription and integration manifest.
+- Documentation now describes Hexalith.Tenants as the authority, the setup order before Parties calls, required local roles, no tenant ids in party payloads or MCP tools, deployment validation requirements, and separate 401/403 troubleshooting paths.
+- Full `tests/Hexalith.Parties.IntegrationTests` still has 7 residual full-topology create-path failures in existing search/security tests because `party/process` returns `500`, surfaced as `422` domain rejections. Those failures are outside the Tenants authorization scope of this story and were recorded for follow-up.
 
 ### File List
+
+- `tests/Hexalith.Parties.CommandApi.Tests/Hexalith.Parties.CommandApi.Tests.csproj`
+- `tests/Hexalith.Parties.CommandApi.Tests/Authorization/HelperDrivenTenantAccessTests.cs`
+- `tests/Hexalith.Parties.CommandApi.Tests/Controllers/CrossTenantIsolationTests.cs`
+- `tests/Hexalith.Parties.CommandApi.Tests/Controllers/PartiesControllerProblemDetailsTests.cs`
+- `tests/Hexalith.Parties.CommandApi.Tests/Controllers/PartiesControllerTenantAuthorizationTests.cs`
+- `tests/Hexalith.Parties.CommandApi.Tests/Mcp/McpToolTenantAuthorizationTests.cs`
+- `deploy/validate-deployment.ps1`
+- `deploy/dapr/pubsub-kafka.yaml`
+- `deploy/dapr/pubsub-rabbitmq.yaml`
+- `deploy/dapr/pubsub-servicebus.yaml`
+- `deploy/dapr/subscription-tenants.yaml`
+- `deploy/dapr/tenants-integration.yaml`
+- `tests/Hexalith.Parties.DeployValidation.Tests/DeploymentValidationTests.cs`
+- `tests/Hexalith.Parties.DeployValidation.Tests/TenantsDeploymentValidationTests.cs`
+- `tests/Hexalith.Parties.IntegrationTests/HealthChecks/PartiesAspireTopologyFixture.cs`
+- `tests/Hexalith.Parties.IntegrationTests/PartyApiRoundTripIntegrationTests.cs`
+- `tests/Hexalith.Parties.IntegrationTests/Tenants/TenantsBackedAccessE2ETests.cs`
+- `tests/Hexalith.Parties.IntegrationTests/Tenants/TenantIntegrationTestSeeder.cs`
+- `docs/getting-started.md`
+- `docs/deployment-guide.md`
+- `docs/deployment-security-checklist.md`
+- `README.md`
+
+### Change Log
+
+- 2026-05-05: Implemented Story 11.4 tests, Tenants deployment validation, DAPR template updates, and Tenants authority documentation; story moved to review.
 
 ### Party-Mode Review
 

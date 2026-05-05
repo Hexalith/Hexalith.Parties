@@ -4,7 +4,12 @@
 
 using Hexalith.Parties.CommandApi.Authorization;
 using Hexalith.Parties.CommandApi.Mcp;
+using Hexalith.Parties.CommandApi.Tests.Authorization;
 
+using Hexalith.EventStore.Server.Commands;
+using Hexalith.EventStore.Server.Pipeline.Commands;
+
+using Microsoft.Extensions.DependencyInjection;
 using NSubstitute;
 
 using Shouldly;
@@ -18,12 +23,7 @@ namespace Hexalith.Parties.CommandApi.Tests.Mcp;
 /// </summary>
 public sealed class McpToolTenantAuthorizationTests
 {
-    private const string SkipReason =
-        "TDD red phase — Story 11.4 must wire MCP tools to ITenantAccessService " +
-        "with denial messages that include stable reason codes (tenant-disabled, " +
-        "insufficient-role, tenant-state-stale).";
-
-    [Fact(Skip = SkipReason)]
+    [Fact]
     public async Task FindPartiesMcpTool_GivenDisabledTenant_ThrowsWithTenantDisabledCodeAsync()
     {
         // Arrange — controllable access service decides "DisabledTenant".
@@ -39,7 +39,7 @@ public sealed class McpToolTenantAuthorizationTests
         ex.Message.ShouldContain("tenant-disabled");
     }
 
-    [Fact(Skip = SkipReason)]
+    [Fact]
     public async Task CreatePartyMcpTool_GivenReader_ThrowsInsufficientRole_BeforeIssuingCommandAsync()
     {
         // Arrange — reader denied for write.
@@ -48,7 +48,7 @@ public sealed class McpToolTenantAuthorizationTests
                 ? TenantAccessDecision.Allowed
                 : TenantAccessDecision.Denied(TenantAccessDenialReason.InsufficientRole)));
 
-        ICommandRouterDouble router = Substitute.For<ICommandRouterDouble>();
+        ICommandRouter router = Substitute.For<ICommandRouter>();
         using McpSessionScope session = McpSessionScope.For("tenant-a", "user-reader");
 
         // Act / Assert
@@ -58,10 +58,10 @@ public sealed class McpToolTenantAuthorizationTests
         ex.Message.ShouldContain("insufficient-role");
 
         // Critical: command router was never invoked because authorization gated the call.
-        await router.DidNotReceive().RouteAsync(Arg.Any<object>(), Arg.Any<CancellationToken>());
+        await router.DidNotReceive().RouteCommandAsync(Arg.Any<SubmitCommand>(), Arg.Any<CancellationToken>());
     }
 
-    [Fact(Skip = SkipReason)]
+    [Fact]
     public async Task GetPartyMcpTool_GivenStaleProjection_ThrowsTenantStateStaleAsync()
     {
         TestTenantAccessService access = new((_, _, _, _) =>
@@ -78,31 +78,32 @@ public sealed class McpToolTenantAuthorizationTests
     }
 
     /// <summary>
-    /// Story 11.4 must add a sidecar-free MCP test harness that wires
-    /// <see cref="McpTenantAuthorization"/> with the supplied access service into the actual
-    /// <c>FindPartiesMcpTool</c>, then invokes it under <see cref="McpSessionContext"/>.
+    /// Sidecar-free MCP harness that wires <see cref="McpTenantAuthorization"/>
+    /// with the supplied access service into the actual tool.
     /// </summary>
     private static Task InvokeFindParties(ITenantAccessService access, string query)
-        => throw new NotImplementedException(
-            "Story 11.4: add sidecar-free MCP tool invocation harness driven by ITenantAccessService.");
+        => FindPartiesMcpTool.FindPartiesAsync(
+            new ServiceCollection()
+                .AddSingleton(access)
+                .BuildServiceProvider(),
+            query);
 
-    private static Task InvokeCreateParty(ITenantAccessService access, ICommandRouterDouble router)
-        => throw new NotImplementedException(
-            "Story 11.4: add sidecar-free MCP tool invocation harness with ICommandRouter tracking double.");
+    private static Task InvokeCreateParty(ITenantAccessService access, ICommandRouter router)
+        => CreatePartyMcpTool.CreatePartyAsync(
+            "Person",
+            new ServiceCollection()
+                .AddSingleton(access)
+                .AddSingleton(router)
+                .BuildServiceProvider(),
+            firstName: "Ada",
+            lastName: "Lovelace");
 
     private static Task InvokeGetParty(ITenantAccessService access, string partyId)
-        => throw new NotImplementedException(
-            "Story 11.4: add sidecar-free MCP tool invocation harness driven by ITenantAccessService.");
-
-    /// <summary>
-    /// Marker interface representing the command-routing seam used by MCP tools.
-    /// Story 11.4 must expose a substitutable seam so authorization-before-routing
-    /// can be asserted with NSubstitute.
-    /// </summary>
-    public interface ICommandRouterDouble
-    {
-        Task RouteAsync(object envelope, CancellationToken cancellationToken);
-    }
+        => GetPartyMcpTool.GetPartyAsync(
+            partyId,
+            new ServiceCollection()
+                .AddSingleton(access)
+                .BuildServiceProvider());
 
     private readonly struct McpSessionScope : IDisposable
     {

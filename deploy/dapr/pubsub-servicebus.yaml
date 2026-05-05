@@ -52,7 +52,7 @@ spec:
       value: "{env:SUBSCRIBER_APP_ID}=;{env:OPS_MONITOR_APP_ID}="
     # MUST CUSTOMIZE: Replace example topic names with actual tenant.parties.events topics.
     - name: subscriptionScopes
-      value: "{env:SUBSCRIBER_APP_ID}=acme.parties.events;{env:OPS_MONITOR_APP_ID}=deadletter.acme.parties.events"
+      value: "commandapi=system.tenants.events;{env:SUBSCRIBER_APP_ID}=acme.parties.events;{env:OPS_MONITOR_APP_ID}=deadletter.acme.parties.events"
 scopes:
   - commandapi
   - "{env:SUBSCRIBER_APP_ID}"

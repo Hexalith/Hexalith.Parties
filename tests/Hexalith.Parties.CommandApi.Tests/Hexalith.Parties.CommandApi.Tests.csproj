@@ -1,12 +1,14 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <IsPackable>false</IsPackable>
+    <NoWarn>$(NoWarn);xUnit1051</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Hexalith.Parties.CommandApi\Hexalith.Parties.CommandApi.csproj" />
     <ProjectReference Include="..\..\src\Hexalith.Parties.Testing\Hexalith.Parties.Testing.csproj" />
     <ProjectReference Include="..\..\Hexalith.Tenants\src\Hexalith.Tenants.Client\Hexalith.Tenants.Client.csproj" />
+    <ProjectReference Include="..\..\Hexalith.Tenants\src\Hexalith.Tenants.Testing\Hexalith.Tenants.Testing.csproj" PrivateAssets="all" ExcludeAssets="analyzers" />
   </ItemGroup>
 
   <ItemGroup>

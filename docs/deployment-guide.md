@@ -53,6 +53,8 @@ A complete production DAPR deployment includes:
     pubsub-<broker>.yaml        # One of: kafka, rabbitmq, servicebus
     statestore-<backend>.yaml   # One of: cosmosdb, postgresql
     subscription-parties.yaml   # Event subscription routing (per tenant)
+    subscription-tenants.yaml   # Hexalith.Tenants authority event subscription
+    tenants-integration.yaml    # Parties Tenants integration validation contract
 ```
 
 ### Environment Variables
@@ -97,7 +99,7 @@ Configure these environment variables for your deployment:
 
 ## Multi-Tenant Setup
 
-The Hexalith.Parties service uses tenant-scoped topics for event isolation.
+The Hexalith.Parties service uses tenant-scoped topics for party event isolation and consumes Hexalith.Tenants as the authority for tenant lifecycle, membership, role, and configuration state.
 
 ### Topic Naming Pattern
 
@@ -122,6 +124,19 @@ The Hexalith.Parties service uses tenant-scoped topics for event isolation.
     ```bash
     ./deploy/validate-deployment.ps1 --config-path <your-config-dir>
     ```
+
+### Hexalith.Tenants Authority Subscription
+
+Parties must subscribe to the shared Tenants topic:
+
+- Pub/sub name: `pubsub`
+- Topic: `system.tenants.events`
+- Hosting app id: `commandapi`
+- Declarative subscription: `subscription-tenants.yaml`
+- Route: `/events/tenants`
+- Dead-letter: `deadletter.system.tenants.events`
+
+When production `subscriptionScopes` are enabled, include `commandapi=system.tenants.events`. Parties consumes this state for authorization only; tenant lifecycle, membership, roles, global administrators, and tenant configuration remain managed by Hexalith.Tenants.
 
 ---
 
@@ -201,6 +216,21 @@ The tool exits with code `0` on success and `1` on failure, making it suitable f
 
 **Problem:** Failed messages are silently dropped.
 **Fix:** Set `enableDeadLetter: "true"` on pub/sub components and `deadLetterTopic` on subscriptions.
+
+### Missing Tenants subscription or scope
+
+**Problem:** Parties does not receive `system.tenants.events`, so local tenant access state is missing or stale.
+**Fix:** Add `subscription-tenants.yaml`, ensure it is scoped to `commandapi`, and add `commandapi=system.tenants.events` to pub/sub `subscriptionScopes`.
+
+### Tenant authorization failures
+
+| Observable symptom | Likely cause | Fix owner | Expected behavior |
+| ------------------ | ------------ | --------- | ----------------- |
+| REST `401`, MCP `missing-tenant` | JWT missing tenant claim or user id | Identity provider owner | Request rejected before Tenants lookup |
+| REST `403`, MCP `not-member` | Valid tenant claim but no active Tenants membership | Tenant administrator | No party projection read or command routing |
+| REST `403`, MCP `insufficient-role` | User role is below the operation requirement | Tenant administrator | Read/write/admin matrix enforced |
+| REST `403`, MCP `tenant-disabled` | Tenant disabled in Hexalith.Tenants | Tenant operator | All tenant-scoped access fails closed |
+| REST `403`, MCP `tenant-state-stale` | Tenants subscription, projection, or dependency unhealthy | Platform operator | Access fails closed until local state recovers |
 
 ---
 

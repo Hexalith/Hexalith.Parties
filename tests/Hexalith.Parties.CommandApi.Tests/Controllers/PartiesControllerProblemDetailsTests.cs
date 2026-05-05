@@ -1798,18 +1798,58 @@ public sealed class PartiesApiTestFactory : WebApplicationFactory<Program>
     private IReadOnlyDictionary<string, PartyIndexEntry> _indexEntries =
         new Dictionary<string, PartyIndexEntry>(StringComparer.Ordinal);
 
+    private readonly Dictionary<string, IReadOnlyDictionary<string, PartyIndexEntry>> _indexEntriesByActorId =
+        new(StringComparer.Ordinal);
+
+    private readonly Dictionary<string, PartyDetail> _detailsByActorId = new(StringComparer.Ordinal);
+
     internal void SetIndexEntries(params PartyIndexEntry[] entries)
     {
         _indexEntries = entries.ToDictionary(entry => entry.Id, StringComparer.Ordinal);
     }
 
+    internal void SetTenantParties(string tenantId, params PartyDetail[] details)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(tenantId);
+        ArgumentNullException.ThrowIfNull(details);
+
+        var indexEntries = new Dictionary<string, PartyIndexEntry>(StringComparer.Ordinal);
+        foreach (PartyDetail detail in details)
+        {
+            _detailsByActorId[$"{tenantId}:party-detail:{detail.Id}"] = detail;
+            indexEntries[detail.Id] = new PartyIndexEntry
+            {
+                Id = detail.Id,
+                Type = detail.Type,
+                IsActive = detail.IsActive,
+                DisplayName = detail.DisplayName,
+                SearchableContactChannels = detail.ContactChannels,
+                SearchableIdentifiers = detail.Identifiers,
+                CreatedAt = detail.CreatedAt,
+                LastModifiedAt = detail.LastModifiedAt,
+                IsErased = detail.IsErased,
+            };
+        }
+
+        _indexEntriesByActorId[$"{tenantId}:party-index"] = indexEntries;
+        ResetIndexProxy();
+    }
+
     internal void ResetIndexProxy()
     {
-        IPartyIndexProjectionActor indexProxy = Substitute.For<IPartyIndexProjectionActor>();
-        indexProxy.GetEntriesAsync().Returns(_ => Task.FromResult(_indexEntries));
         ActorProxyFactory.CreateActorProxy<IPartyIndexProjectionActor>(
             Arg.Any<ActorId>(), Arg.Any<string>(), Arg.Any<ActorProxyOptions?>())
-            .Returns(indexProxy);
+            .Returns(call =>
+            {
+                string actorId = call.ArgAt<ActorId>(0).GetId();
+                IReadOnlyDictionary<string, PartyIndexEntry> entries =
+                    _indexEntriesByActorId.TryGetValue(actorId, out IReadOnlyDictionary<string, PartyIndexEntry>? tenantEntries)
+                        ? tenantEntries
+                        : _indexEntries;
+                IPartyIndexProjectionActor indexProxy = Substitute.For<IPartyIndexProjectionActor>();
+                indexProxy.GetEntriesAsync().Returns(_ => Task.FromResult(entries));
+                return indexProxy;
+            });
     }
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
@@ -1829,19 +1869,18 @@ public sealed class PartiesApiTestFactory : WebApplicationFactory<Program>
             });
         });
 
-        // Mock IPartyDetailProjectionActor to return null (party not found)
-        IPartyDetailProjectionActor detailProxy = Substitute.For<IPartyDetailProjectionActor>();
-        detailProxy.GetDetailAsync().Returns(Task.FromResult<PartyDetail?>(null));
         ActorProxyFactory.CreateActorProxy<IPartyDetailProjectionActor>(
             Arg.Any<ActorId>(), Arg.Any<string>(), Arg.Any<ActorProxyOptions?>())
-            .Returns(detailProxy);
+            .Returns(call =>
+            {
+                string actorId = call.ArgAt<ActorId>(0).GetId();
+                _ = _detailsByActorId.TryGetValue(actorId, out PartyDetail? detail);
+                IPartyDetailProjectionActor detailProxy = Substitute.For<IPartyDetailProjectionActor>();
+                detailProxy.GetDetailAsync().Returns(Task.FromResult<PartyDetail?>(detail));
+                return detailProxy;
+            });
 
-        // Mock IPartyIndexProjectionActor to return empty entries
-        IPartyIndexProjectionActor indexProxy = Substitute.For<IPartyIndexProjectionActor>();
-        indexProxy.GetEntriesAsync().Returns(_ => Task.FromResult(_indexEntries));
-        ActorProxyFactory.CreateActorProxy<IPartyIndexProjectionActor>(
-            Arg.Any<ActorId>(), Arg.Any<string>(), Arg.Any<ActorProxyOptions?>())
-            .Returns(indexProxy);
+        ResetIndexProxy();
 
         builder.ConfigureTestServices(services =>
         {

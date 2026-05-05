@@ -46,10 +46,23 @@ The terminal output will display a URL for the **Aspire dashboard** (typically `
 
 **What gets started:**
 - **commandapi** -- the REST API and MCP server
+- **Hexalith.Tenants** -- tenant lifecycle, membership, role, and configuration authority
 - **DAPR sidecar** -- event store and actor runtime
 - **Keycloak** (port 8180) -- OIDC provider for authentication (enabled by default)
 
 CommandApi also subscribes to Hexalith.Tenants events through DAPR pub/sub and maintains a local tenant access projection. A valid JWT tenant claim is necessary, but it is not sufficient: the authenticated user must be an active member of an active Hexalith.Tenants tenant with the required role. `TenantReader` can read and search parties, `TenantContributor` can read/search and create/update/deactivate/reactivate parties, and `TenantOwner` can also run party administration operations. Roles are cumulative, so an owner can perform reader and contributor operations too. Access checks fail closed when tenant/user state is missing, disabled, or insufficient. Because the projection is event-fed, a just-disabled tenant or removed user may remain accepted until the corresponding event is consumed unless a synchronous Tenants/EventStore authorization plugin is enabled. See [Tenants Access Projection](tenant-access-projection.md) for the operational details.
+
+### Provision the Local Tenant
+
+Before calling Parties, provision tenant access through Hexalith.Tenants:
+
+1. Create or use an active tenant in Hexalith.Tenants.
+2. Add the local user as a tenant member.
+3. Assign `TenantContributor` for create/update flows, or `TenantReader` for read/search-only flows.
+4. Confirm Parties is subscribed to `system.tenants.events`.
+5. Run `pwsh -NoProfile -File deploy/validate-deployment.ps1 -ConfigPath deploy/dapr`.
+
+The JWT tenant claim selects the requested tenant context. Hexalith.Tenants membership and role authorize the operation. Tenant ids are not party command payload fields or MCP tool parameters.
 
 ### Obtain an Authentication Token
 
@@ -438,6 +451,15 @@ Stop conflicting processes or configure alternative ports in `launchSettings.jso
 **Symptom:** API or MCP tools return `403 Forbidden` or an error with reason codes such as `unknown-tenant`, `tenant-disabled`, `not-member`, `insufficient-role`, or `tenant-state-stale`.
 
 **Cause:** The token may identify a tenant, but Hexalith.Tenants local projection state did not authorize the user for the requested operation. Verify tenant lifecycle and membership in Hexalith.Tenants rather than adding Parties-local tenant management. Reader is enough for read/search, Contributor is required for party writes, and Owner is required for administration.
+
+| Symptom | Likely cause | Fix owner | REST/MCP behavior |
+| --- | --- | --- | --- |
+| `401 missing-tenant` | JWT lacks trusted tenant claim | Identity provider owner | REST returns 401; MCP throws `missing-tenant` |
+| `403 not-member` | Valid tenant claim but no active Hexalith.Tenants membership | Tenant administrator | REST returns 403; MCP throws `not-member` |
+| `403 insufficient-role` | Membership exists but role is too low | Tenant administrator | Read may pass; write/admin fails |
+| `403 tenant-disabled` | Tenant is disabled in Hexalith.Tenants | Tenant operator | All tenant-scoped access fails closed |
+| `403 not-member` after removal | User was removed from Hexalith.Tenants | Tenant administrator | Access fails after projection consumes removal |
+| `403 tenant-state-stale` | Local Tenants projection unavailable or behind | Platform operator | Retry after subscription/projection health is restored |
 
 ### Projection Delay
 

@@ -118,6 +118,20 @@ function Get-YamlType {
     return $null
 }
 
+function Test-TopicAllowedForApp {
+    param([string]$ScopesValue, [string]$AppId, [string]$Topic)
+    if (-not $ScopesValue) { return $false }
+    $entries = $ScopesValue -split ";"
+    foreach ($entry in $entries) {
+        $parts = $entry -split "=", 2
+        if ($parts.Count -ne 2) { continue }
+        if ($parts[0].Trim() -ne $AppId) { continue }
+        $topics = @($parts[1] -split "," | ForEach-Object { $_.Trim() } | Where-Object { $_ })
+        if ($topics -contains $Topic) { return $true }
+    }
+    return $false
+}
+
 # ---------------------------------------------------------------------------
 # Validation checks
 # ---------------------------------------------------------------------------
@@ -449,6 +463,131 @@ function Test-Subscription {
     }
 }
 
+function Test-TenantsIntegration {
+    param([string]$ConfigPath)
+    $Category = "Tenants Integration"
+    $expectedPubSub = "pubsub"
+    $expectedTopic = "system.tenants.events"
+    $expectedAppId = "commandapi"
+
+    $tenantConfigFiles = @(Get-ChildItem -Path $ConfigPath -Filter "*tenants*.yaml" -ErrorAction SilentlyContinue |
+        Where-Object { $_.Name -notlike "subscription*" })
+    if ($tenantConfigFiles.Count -eq 0) {
+        if ($script:IsLocalDevelopment) {
+            Add-Result $Category "Tenants configuration present" "Warn" "No Tenants integration config found (local development profile)" `
+                "Document local-only mode or add a Tenants integration config with pubsubName, topicName, and commandApiAppId."
+        }
+        else {
+            Add-Result $Category "Tenants configuration present" "Fail" "No Tenants integration config found" `
+                "Add Tenants integration config. Impact: Parties cannot prove it consumes Hexalith.Tenants state for authorization. Remediation target: deployment configuration."
+        }
+    }
+    else {
+        foreach ($cfg in $tenantConfigFiles) {
+            $content = Read-YamlFile $cfg.FullName
+            $fileName = $cfg.Name
+            $pubsubName = Get-YamlValue $content "pubsubName"
+            $topicName = Get-YamlValue $content "topicName"
+            $appId = Get-YamlValue $content "commandApiAppId"
+            $bypass = Get-YamlValue $content "bypassTenantsAuthorization"
+            $dependencyHealth = Get-YamlValue $content "tenantsDependencyHealth"
+
+            if ($pubsubName -eq $expectedPubSub -and $topicName -eq $expectedTopic -and $appId -eq $expectedAppId) {
+                Add-Result $Category "Tenants configuration values ($fileName)" "Pass" "Tenants config targets $expectedPubSub/$expectedTopic for $expectedAppId"
+            }
+            else {
+                Add-Result $Category "Tenants configuration values ($fileName)" "Fail" "Missing or malformed Tenants config values" `
+                    "Set pubsubName=$expectedPubSub, topicName=$expectedTopic, and commandApiAppId=$expectedAppId. Impact: tenant access projection may not receive authoritative Tenants state. Remediation target: $fileName."
+            }
+
+            if ($bypass -eq "true") {
+                Add-Result $Category "Parties does not bypass Tenants authorization ($fileName)" "Fail" "bypassTenantsAuthorization is true" `
+                    "Remove bypass mode. Impact: JWT tenant claims could be treated as authorization. Remediation target: Parties authorization configuration."
+            }
+            else {
+                Add-Result $Category "Parties does not bypass Tenants authorization ($fileName)" "Pass" "No Tenants authorization bypass configured"
+            }
+
+            if ($dependencyHealth -match "^(unhealthy|unreachable|missing)$") {
+                Add-Result $Category "Tenants dependency health ($fileName)" "Fail" "Tenants dependency signal is $dependencyHealth" `
+                    "Verify Hexalith.Tenants deployment, service discovery, and event publishing. Impact: Parties fails closed or uses stale tenant access state."
+            }
+            elseif ($dependencyHealth) {
+                Add-Result $Category "Tenants dependency health ($fileName)" "Pass" "Tenants dependency signal is $dependencyHealth"
+            }
+        }
+    }
+
+    $tenantSubscriptions = @(Get-ChildItem -Path $ConfigPath -Filter "subscription*.yaml" -ErrorAction SilentlyContinue |
+        Where-Object {
+            $content = Read-YamlFile $_.FullName
+            ($content -match "(?m)^\s*topic:\s*[`"']?$expectedTopic[`"']?") -or
+            ($content -match "(?m)^\s*topicName:\s*[`"']?$expectedTopic[`"']?")
+        })
+
+    if ($tenantSubscriptions.Count -eq 0) {
+        if ($script:IsLocalDevelopment) {
+            Add-Result $Category "Tenants subscription present" "Warn" "No declarative subscription for $expectedTopic found (local development profile)" `
+                "Ensure MapTenantEventSubscription() is active locally or add subscription-tenants.yaml for production."
+        }
+        else {
+            Add-Result $Category "Tenants subscription present" "Fail" "No Tenants subscription for $expectedTopic found" `
+                "Add a DAPR subscription for $expectedTopic routed to commandapi. Impact: Parties local tenant projection will not update. Remediation target: subscription-tenants.yaml or MapTenantEventSubscription()."
+        }
+    }
+    else {
+        foreach ($sub in $tenantSubscriptions) {
+            $content = Read-YamlFile $sub.FullName
+            $fileName = $sub.Name
+            $pubsubName = Get-YamlValue $content "pubsubname"
+            $scopes = Get-YamlScopes $content
+
+            if ($pubsubName -eq $expectedPubSub) {
+                Add-Result $Category "Tenants subscription pub/sub ($fileName)" "Pass" "Subscription uses pubsubname: $expectedPubSub"
+            }
+            else {
+                Add-Result $Category "Tenants subscription pub/sub ($fileName)" "Fail" "Subscription pubsubname is '$pubsubName'" `
+                    "Set pubsubname to '$expectedPubSub'. Impact: Tenants events may be routed through the wrong component."
+            }
+
+            if ($scopes -contains $expectedAppId) {
+                Add-Result $Category "Tenants subscription scoped to commandapi ($fileName)" "Pass" "Subscription scopes include $expectedAppId"
+            }
+            else {
+                Add-Result $Category "Tenants subscription scoped to commandapi ($fileName)" "Fail" "Subscription scopes do not include $expectedAppId" `
+                    "Add commandapi to subscription scopes. Impact: the Parties Tenants event subscription cannot run."
+            }
+
+            if ($content -match "(?m)deadLetterTopic:") {
+                Add-Result $Category "Tenants subscription dead-letter ($fileName)" "Pass" "Dead-letter topic is configured"
+            }
+            else {
+                Add-Result $Category "Tenants subscription dead-letter ($fileName)" "Fail" "No deadLetterTopic configured for Tenants subscription" `
+                    "Add a deadLetterTopic and resiliency policy. Impact: failed Tenants events can be lost silently."
+            }
+        }
+    }
+
+    $pubsubFiles = @(Get-ChildItem -Path $ConfigPath -Filter "pubsub*.yaml" -ErrorAction SilentlyContinue)
+    foreach ($psFile in $pubsubFiles) {
+        $content = Read-YamlFile $psFile.FullName
+        if ((Get-YamlKind $content) -ne "Component") { continue }
+        $fileName = $psFile.Name
+        $subScopes = Get-YamlValue $content "subscriptionScopes"
+        if (Test-TopicAllowedForApp $subScopes $expectedAppId $expectedTopic) {
+            Add-Result $Category "commandapi can subscribe to Tenants topic ($fileName)" "Pass" "$expectedAppId is allowed to subscribe to $expectedTopic"
+        }
+        elseif ($script:IsLocalDevelopment -or ((Get-YamlType $content) -eq "pubsub.redis")) {
+            Add-Result $Category "commandapi can subscribe to Tenants topic ($fileName)" "Warn" "No explicit commandapi subscription scope for $expectedTopic (local development profile)" `
+                "Add subscriptionScopes entry '$expectedAppId=$expectedTopic' for production scoping."
+        }
+        else {
+            Add-Result $Category "commandapi can subscribe to Tenants topic ($fileName)" "Fail" "Missing commandapi subscription permission for $expectedTopic" `
+                "Add '$expectedAppId=$expectedTopic' to subscriptionScopes. Impact: production DAPR scoping blocks Tenants events from Parties."
+        }
+    }
+}
+
 function Test-Resiliency {
     param([string]$ConfigPath)
     $Category = "Resiliency"
@@ -544,6 +683,7 @@ Test-AccessControl $resolvedPath
 Test-StateStore $resolvedPath
 Test-PubSub $resolvedPath
 Test-Subscription $resolvedPath
+Test-TenantsIntegration $resolvedPath
 Test-Resiliency $resolvedPath
 Test-SecretStore $resolvedPath
 

@@ -5,6 +5,9 @@ using System.Net;
 using Aspire.Hosting;
 using Aspire.Hosting.Testing;
 
+using Hexalith.Parties.IntegrationTests.Tenants;
+using Hexalith.Tenants.Contracts.Enums;
+
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
@@ -104,6 +107,8 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
                 TimeSpan.FromMinutes(3),
                 TimeSpan.FromSeconds(3)).ConfigureAwait(false);
 
+            await SeedDefaultTenantAccessAsync(cts.Token).ConfigureAwait(false);
+
             IsAvailable = true;
         }
         catch (Exception ex)
@@ -111,6 +116,52 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
             IsAvailable = false;
             UnavailableReason = $"{ex.GetType().Name}: {ex.Message}";
         }
+    }
+
+    public Task SeedTenantAsync(
+        string tenantId,
+        string userId,
+        TenantRole role,
+        CancellationToken cancellationToken = default)
+        => TenantIntegrationTestSeeder.SeedActiveTenantAsync(
+            CommandApiClient,
+            tenantId,
+            [new TenantMemberSeed(tenantId, userId, role)],
+            cancellationToken);
+
+    public Task DisableTenantAsync(
+        string tenantId,
+        CancellationToken cancellationToken = default)
+        => TenantIntegrationTestSeeder.DisableTenantAsync(CommandApiClient, tenantId, cancellationToken: cancellationToken);
+
+    public Task RemoveUserFromTenantAsync(
+        string tenantId,
+        string userId,
+        CancellationToken cancellationToken = default)
+        => TenantIntegrationTestSeeder.RemoveUserFromTenantAsync(CommandApiClient, tenantId, userId, cancellationToken: cancellationToken);
+
+    private async Task SeedDefaultTenantAccessAsync(CancellationToken cancellationToken)
+    {
+        await TenantIntegrationTestSeeder.SeedActiveTenantAsync(
+            CommandApiClient,
+            "tenant-a",
+            [
+                new TenantMemberSeed("tenant-a", "e2e-test-admin", TenantRole.TenantOwner),
+            ],
+            cancellationToken).ConfigureAwait(false);
+
+        await TenantIntegrationTestSeeder.SeedActiveTenantAsync(
+            CommandApiClient,
+            "e2e-tenant",
+            [
+                new TenantMemberSeed("e2e-tenant", "e2e-test-user", TenantRole.TenantOwner),
+                new TenantMemberSeed("e2e-tenant", "e2e-search-test", TenantRole.TenantOwner),
+                new TenantMemberSeed("e2e-tenant", "e2e-temporal-name-test", TenantRole.TenantOwner),
+                new TenantMemberSeed("e2e-tenant", "e2e-consent-test", TenantRole.TenantOwner),
+                new TenantMemberSeed("e2e-tenant", "e2e-encryption-test", TenantRole.TenantOwner),
+                new TenantMemberSeed("e2e-tenant", "e2e-erasure-test", TenantRole.TenantOwner),
+            ],
+            cancellationToken).ConfigureAwait(false);
     }
 
     public async Task DisposeAsync()

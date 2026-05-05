@@ -25,7 +25,8 @@
 #   commandapi is NOT listed in publishingScopes = can publish to ANY topic.
 #
 # SUBSCRIBER-SIDE SCOPING:
-#   commandapi is NOT listed in subscriptionScopes = can subscribe to all topics.
+#   commandapi is explicitly listed for system.tenants.events so Parties can
+#   consume Hexalith.Tenants authority state even when production scoping is on.
 #   External subscribers must be explicitly scoped to authorized tenant topics.
 #
 # ADDING A NEW SUBSCRIBER SERVICE (Production)
@@ -74,7 +75,7 @@ spec:
     # commandapi is NOT listed = unrestricted subscription to all topics.
     # MUST CUSTOMIZE: Replace example topic names with actual tenant.parties.events topics.
     - name: subscriptionScopes
-      value: "{env:SUBSCRIBER_APP_ID}=acme.parties.events;{env:OPS_MONITOR_APP_ID}=deadletter.acme.parties.events"
+      value: "commandapi=system.tenants.events;{env:SUBSCRIBER_APP_ID}=acme.parties.events;{env:OPS_MONITOR_APP_ID}=deadletter.acme.parties.events"
 scopes:
   - commandapi
   - "{env:SUBSCRIBER_APP_ID}"

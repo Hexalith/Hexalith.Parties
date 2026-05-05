@@ -35,7 +35,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-05-02
-last_updated: 2026-05-05T19:10:00Z
+last_updated: 2026-05-05T19:07:20+02:00
 project: Hexalith.Parties
 project_key: NOKEY
 tracking_system: file-system
@@ -121,7 +121,7 @@ development_status:
   11-1-apphost-and-package-integration: blocked
   11-2-tenants-event-consumption-and-local-access-projection: done
   11-3-rest-and-mcp-tenant-authorization-enforcement: done
-  11-4-tenants-integration-tests-deployment-validation-and-documentation: ready-for-dev
+  11-4-tenants-integration-tests-deployment-validation-and-documentation: review
   epic-11-retrospective: optional
 
   # Epic 10: Administration & Frontend (v1.2) (3 stories)

@@ -152,6 +152,82 @@ public class DeploymentValidationTests : IDisposable
 
         root.TryGetProperty("checks", out JsonElement checks).ShouldBeTrue();
         checks.GetArrayLength().ShouldBeGreaterThan(0);
+        checks.EnumerateArray().Any(check =>
+            check.GetProperty("category").GetString() == "Tenants Integration").ShouldBeTrue();
+    }
+
+    [Fact]
+    public async Task MissingTenantsSubscription_FailsWithSpecificRecommendation()
+    {
+        WriteValidProductionConfig(_tempDir);
+        File.Delete(Path.Combine(_tempDir, "subscription-tenants.yaml"));
+
+        (int exitCode, string output) = await RunValidationAsync(_tempDir);
+
+        exitCode.ShouldBe(1);
+        output.ShouldContain("No Tenants subscription");
+        output.ShouldContain("system.tenants.events");
+        output.ShouldContain("local tenant projection");
+    }
+
+    [Fact]
+    public async Task MalformedTenantsConfig_FailsWithoutSecretData()
+    {
+        WriteValidProductionConfig(_tempDir);
+        File.WriteAllText(Path.Combine(_tempDir, "tenants-integration.yaml"), """
+            apiVersion: hexalith.io/v1
+            kind: TenantsIntegration
+            metadata:
+              name: parties-tenants
+            spec:
+              pubsubName: ""
+              topicName: ""
+              commandApiAppId: ""
+            """);
+
+        (int exitCode, string output) = await RunValidationAsync(_tempDir);
+
+        exitCode.ShouldBe(1);
+        output.ShouldContain("Missing or malformed Tenants config values");
+        output.ShouldContain("pubsubName=pubsub");
+        output.ShouldNotContain("token");
+        output.ShouldNotContain("membership");
+    }
+
+    [Fact]
+    public async Task MissingCommandApiTenantsSubscriptionScope_FailsWhenProductionScopesArePresent()
+    {
+        WriteValidProductionConfig(_tempDir);
+        WritePubSubWithoutTenantsCommandApiScope(_tempDir);
+
+        (int exitCode, string output) = await RunValidationAsync(_tempDir);
+
+        exitCode.ShouldBe(1);
+        output.ShouldContain("Missing commandapi subscription permission");
+        output.ShouldContain("system.tenants.events");
+    }
+
+    [Fact]
+    public async Task UnhealthyTenantsDependencySignal_FailsWithActionableImpact()
+    {
+        WriteValidProductionConfig(_tempDir);
+        File.WriteAllText(Path.Combine(_tempDir, "tenants-integration.yaml"), """
+            apiVersion: hexalith.io/v1
+            kind: TenantsIntegration
+            metadata:
+              name: parties-tenants
+            spec:
+              pubsubName: pubsub
+              topicName: system.tenants.events
+              commandApiAppId: commandapi
+              tenantsDependencyHealth: unhealthy
+            """);
+
+        (int exitCode, string output) = await RunValidationAsync(_tempDir);
+
+        exitCode.ShouldBe(1);
+        output.ShouldContain("Tenants dependency signal is unhealthy");
+        output.ShouldContain("fails closed");
     }
 
     [Fact]
@@ -315,7 +391,7 @@ public class DeploymentValidationTests : IDisposable
                 - name: publishingScopes
                   value: "{env:SUBSCRIBER_APP_ID}="
                 - name: subscriptionScopes
-                  value: "{env:SUBSCRIBER_APP_ID}=acme.parties.events"
+                  value: "commandapi=system.tenants.events;{env:SUBSCRIBER_APP_ID}=acme.parties.events"
             scopes:
               - commandapi
               - "{env:SUBSCRIBER_APP_ID}"
@@ -334,6 +410,33 @@ public class DeploymentValidationTests : IDisposable
               deadLetterTopic: "deadletter.sample-tenant.parties.events"
             scopes:
               - "{env:SUBSCRIBER_APP_ID}"
+            """);
+
+        File.WriteAllText(Path.Combine(dir, "subscription-tenants.yaml"), """
+            apiVersion: dapr.io/v2alpha1
+            kind: Subscription
+            metadata:
+              name: tenants-events-commandapi
+            spec:
+              pubsubname: pubsub
+              topic: "system.tenants.events"
+              routes:
+                default: /events/tenants
+              deadLetterTopic: "deadletter.system.tenants.events"
+            scopes:
+              - commandapi
+            """);
+
+        File.WriteAllText(Path.Combine(dir, "tenants-integration.yaml"), """
+            apiVersion: hexalith.io/v1
+            kind: TenantsIntegration
+            metadata:
+              name: parties-tenants
+            spec:
+              pubsubName: pubsub
+              topicName: system.tenants.events
+              commandApiAppId: commandapi
+              tenantsDependencyHealth: healthy
             """);
 
         File.WriteAllText(Path.Combine(dir, "resiliency.yaml"), """
@@ -497,6 +600,31 @@ public class DeploymentValidationTests : IDisposable
                   value: "true"
                 - name: publishingScopes
                   value: "{env:SUBSCRIBER_APP_ID}=acme.parties.events"
+                - name: subscriptionScopes
+                  value: "{env:SUBSCRIBER_APP_ID}=acme.parties.events"
+            scopes:
+              - commandapi
+              - "{env:SUBSCRIBER_APP_ID}"
+            """);
+    }
+
+    private static void WritePubSubWithoutTenantsCommandApiScope(string dir)
+    {
+        File.WriteAllText(Path.Combine(dir, "pubsub-kafka.yaml"), """
+            apiVersion: dapr.io/v1alpha1
+            kind: Component
+            metadata:
+              name: pubsub
+            spec:
+              type: pubsub.kafka
+              version: v1
+              metadata:
+                - name: brokers
+                  value: "{env:KAFKA_BROKERS}"
+                - name: enableDeadLetter
+                  value: "true"
+                - name: publishingScopes
+                  value: "{env:SUBSCRIBER_APP_ID}="
                 - name: subscriptionScopes
                   value: "{env:SUBSCRIBER_APP_ID}=acme.parties.events"
             scopes:
