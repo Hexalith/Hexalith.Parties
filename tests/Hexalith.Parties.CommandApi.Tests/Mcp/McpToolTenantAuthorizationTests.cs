@@ -33,10 +33,10 @@ public sealed class McpToolTenantAuthorizationTests
         using McpSessionScope session = McpSessionScope.For("tenant-a", "user-1");
 
         // Act / Assert — auth gate throws BEFORE any projection lookup.
-        InvalidOperationException ex = await Should.ThrowAsync<InvalidOperationException>(
+        McpTenantAuthorizationException ex = await Should.ThrowAsync<McpTenantAuthorizationException>(
             () => InvokeFindParties(access, query: "Ada"));
 
-        ex.Message.ShouldContain("tenant-disabled");
+        ex.ReasonCode.ShouldBe("tenant-disabled");
     }
 
     [Fact]
@@ -52,10 +52,10 @@ public sealed class McpToolTenantAuthorizationTests
         using McpSessionScope session = McpSessionScope.For("tenant-a", "user-reader");
 
         // Act / Assert
-        InvalidOperationException ex = await Should.ThrowAsync<InvalidOperationException>(
+        McpTenantAuthorizationException ex = await Should.ThrowAsync<McpTenantAuthorizationException>(
             () => InvokeCreateParty(access, router));
 
-        ex.Message.ShouldContain("insufficient-role");
+        ex.ReasonCode.ShouldBe("insufficient-role");
 
         // Critical: command router was never invoked because authorization gated the call.
         await router.DidNotReceive().RouteCommandAsync(Arg.Any<SubmitCommand>(), Arg.Any<CancellationToken>());
@@ -71,10 +71,10 @@ public sealed class McpToolTenantAuthorizationTests
 
         using McpSessionScope session = McpSessionScope.For("tenant-a", "user-1");
 
-        InvalidOperationException ex = await Should.ThrowAsync<InvalidOperationException>(
+        McpTenantAuthorizationException ex = await Should.ThrowAsync<McpTenantAuthorizationException>(
             () => InvokeGetParty(access, partyId: Guid.NewGuid().ToString()));
 
-        ex.Message.ShouldContain("tenant-state-stale");
+        ex.ReasonCode.ShouldBe("tenant-state-stale");
     }
 
     /// <summary>
@@ -83,9 +83,7 @@ public sealed class McpToolTenantAuthorizationTests
     /// </summary>
     private static async Task InvokeFindParties(ITenantAccessService access, string query)
     {
-        ServiceProvider services = new ServiceCollection()
-            .AddSingleton(access)
-            .BuildServiceProvider();
+        ServiceProvider services = McpToolTestServices.BuildForFind(access);
         try
         {
             await FindPartiesMcpTool.FindPartiesAsync(services, query).ConfigureAwait(false);
@@ -98,10 +96,7 @@ public sealed class McpToolTenantAuthorizationTests
 
     private static async Task InvokeCreateParty(ITenantAccessService access, ICommandRouter router)
     {
-        ServiceProvider services = new ServiceCollection()
-            .AddSingleton(access)
-            .AddSingleton(router)
-            .BuildServiceProvider();
+        ServiceProvider services = McpToolTestServices.BuildForCreate(access, router);
         try
         {
             await CreatePartyMcpTool.CreatePartyAsync(
@@ -118,9 +113,7 @@ public sealed class McpToolTenantAuthorizationTests
 
     private static async Task InvokeGetParty(ITenantAccessService access, string partyId)
     {
-        ServiceProvider services = new ServiceCollection()
-            .AddSingleton(access)
-            .BuildServiceProvider();
+        ServiceProvider services = McpToolTestServices.BuildForGet(access);
         try
         {
             await GetPartyMcpTool.GetPartyAsync(partyId, services).ConfigureAwait(false);
@@ -128,33 +121,6 @@ public sealed class McpToolTenantAuthorizationTests
         finally
         {
             await services.DisposeAsync().ConfigureAwait(false);
-        }
-    }
-
-    /// <summary>
-    /// Saves the previous AsyncLocal tenant/user values on construction and restores them on dispose.
-    /// Using <c>sealed class</c> rather than <c>readonly struct</c> avoids boxing on <c>using</c>
-    /// and ensures Dispose runs against the same captured previous-values regardless of value-copy semantics.
-    /// </summary>
-    private sealed class McpSessionScope : IDisposable
-    {
-        private readonly string? _previousTenant;
-        private readonly string? _previousUserId;
-
-        private McpSessionScope(string tenantId, string userId)
-        {
-            _previousTenant = McpSessionContext.Tenant.Value;
-            _previousUserId = McpSessionContext.UserId.Value;
-            McpSessionContext.Tenant.Value = tenantId;
-            McpSessionContext.UserId.Value = userId;
-        }
-
-        public static McpSessionScope For(string tenantId, string userId) => new(tenantId, userId);
-
-        public void Dispose()
-        {
-            McpSessionContext.Tenant.Value = _previousTenant;
-            McpSessionContext.UserId.Value = _previousUserId;
         }
     }
 }

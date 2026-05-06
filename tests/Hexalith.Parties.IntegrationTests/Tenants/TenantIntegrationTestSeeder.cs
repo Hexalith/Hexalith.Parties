@@ -192,11 +192,47 @@ internal static class TenantIntegrationTestSeeder
                 : configured;
         }
 
+        string? appSettingsKey = ReadDevelopmentSigningKey();
+        if (!string.IsNullOrWhiteSpace(appSettingsKey))
+        {
+            return appSettingsKey.Length < 32
+                ? throw new InvalidOperationException(
+                    "Authentication:JwtBearer:SigningKey in CommandApi development settings must be at least 32 characters for HMAC-SHA256.")
+                : appSettingsKey;
+        }
+
         // Generate a cryptographically random per-process key for tests when no
-        // environment-provided key is supplied. Process-stable so all tokens minted
-        // in the same test run share the same signing key.
+        // environment-provided or CommandApi development key is supplied. Process-stable
+        // so all tokens minted in the same test run share the same signing key.
         byte[] random = RandomNumberGenerator.GetBytes(48);
         return Convert.ToBase64String(random);
+    }
+
+    private static string? ReadDevelopmentSigningKey()
+    {
+        DirectoryInfo? current = new(AppContext.BaseDirectory);
+        while (current is not null)
+        {
+            string candidate = Path.Combine(
+                current.FullName,
+                "src",
+                "Hexalith.Parties.CommandApi",
+                "appsettings.Development.json");
+            if (File.Exists(candidate))
+            {
+                using FileStream stream = File.OpenRead(candidate);
+                using JsonDocument document = JsonDocument.Parse(stream);
+                if (document.RootElement.TryGetProperty("Authentication:JwtBearer", out JsonElement auth)
+                    && auth.TryGetProperty("SigningKey", out JsonElement signingKey))
+                {
+                    return signingKey.GetString();
+                }
+            }
+
+            current = current.Parent;
+        }
+
+        return null;
     }
 
     private static async Task PublishTenantEventAsync<TEvent>(

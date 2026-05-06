@@ -60,9 +60,14 @@ public sealed class HelperDrivenTenantAccessTests
     [Fact]
     public async Task CheckAccessAsync_AfterUserRemovedFromTenantEventApplied_DeniesAsMissingMemberAsync()
     {
-        // Arrange — owner is added, then removed via Tenants command.
+        // Arrange — owner is added with a second owner kept in place, then the target user is removed.
         InMemoryTenantService tenants = new();
         TenantTestHelpers.CreateTenantWithOwner(tenants, tenantId: "tenant-a", ownerUserId: "user-1");
+        DomainResult addSecondOwner = tenants.ProcessCommand(
+            new AddUserToTenant("tenant-a", "user-2", TenantRole.TenantOwner),
+            userId: "user-1");
+        addSecondOwner.IsSuccess.ShouldBeTrue();
+
         DomainResult removeResult = tenants.ProcessCommand(
             new RemoveUserFromTenant("tenant-a", "user-1"),
             userId: "global-admin",

@@ -6,7 +6,13 @@
 apiVersion: dapr.io/v2alpha1
 kind: Subscription
 metadata:
-  name: tenants-events-commandapi
+  name: hexalith-parties-tenants-events-commandapi
+  annotations:
+    # DAPR subscription schema keeps delivery retry policy in resiliency.yaml.
+    # This annotation names the expected inbound policy so reviewers/operators can
+    # verify dead-letter delivery has bounded retries before poison routing.
+    hexalith.io/resiliency-policy: pubsubRetryInbound
+    hexalith.io/max-deliveries: "20"
 spec:
   pubsubname: pubsub
   topic: "system.tenants.events"

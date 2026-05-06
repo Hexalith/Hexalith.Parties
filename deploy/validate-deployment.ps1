@@ -67,16 +67,38 @@ function Read-YamlFile {
     Get-Content $Path -Raw
 }
 
+function ConvertFrom-YamlScalar {
+    param([string]$Value)
+    if ($null -eq $Value) { return $null }
+    $trimmed = $Value.Trim()
+    if ($trimmed.Length -ge 2) {
+        $first = $trimmed[0]
+        $last = $trimmed[$trimmed.Length - 1]
+        if (($first -eq '"' -and $last -eq '"') -or ($first -eq "'" -and $last -eq "'")) {
+            return $trimmed.Substring(1, $trimmed.Length - 2).Trim()
+        }
+    }
+    return $trimmed
+}
+
+function Split-YamlDocuments {
+    param([string]$Content)
+    if (-not $Content) { return @() }
+    $documents = @([regex]::Split($Content, "(?m)^\s*---\s*$") |
+        Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
+    return $documents
+}
+
 function Get-YamlValue {
     param([string]$Content, [string]$Key)
     if (-not $Content) { return $null }
     $escapedKey = [regex]::Escape($Key)
     # metadata list style: - name: key \n   value: val. Case-insensitive on key only.
-    if ($Content -match "(?msi)name:\s*$escapedKey\s*\r?\n\s*(?:#[^\n]*\r?\n\s*)*value:\s*[`"']?([^`"'\r\n]+)[`"']?") {
-        return $Matches[1].Trim()
+    if ($Content -match "(?msi)name:\s*$escapedKey\s*\r?\n\s*(?:#[^\n]*\r?\n\s*)*value:\s*([^\r\n#]+)") {
+        return ConvertFrom-YamlScalar $Matches[1]
     }
-    if ($Content -match "(?mi)^\s*$escapedKey\s*:\s*[`"']?([^`"'\r\n#]+)[`"']?") {
-        return $Matches[1].Trim()
+    if ($Content -match "(?mi)^\s*$escapedKey\s*:\s*([^\r\n#]+)") {
+        return ConvertFrom-YamlScalar $Matches[1]
     }
     return $null
 }
@@ -89,8 +111,8 @@ function Get-YamlScopes {
         $block = $Matches[1]
         $lines = $block -split "[\r\n]+"
         foreach ($line in $lines) {
-            if ($line -match '^\s*-\s*[`"'']?([^`"''\r\n]+)[`"'']?\s*$') {
-                $scopes += $Matches[1].Trim()
+            if ($line -match '^\s*-\s*([^\r\n#]+)') {
+                $scopes += ConvertFrom-YamlScalar $Matches[1]
             }
         }
     }
@@ -99,24 +121,24 @@ function Get-YamlScopes {
 
 function Get-YamlKind {
     param([string]$Content)
-    if ($Content -match "(?m)^kind:\s*(\S+)") {
-        return $Matches[1].Trim()
+    if ($Content -match "(?m)^\s*kind:\s*([^\r\n#]+)") {
+        return ConvertFrom-YamlScalar $Matches[1]
     }
     return $null
 }
 
 function Get-YamlApiVersion {
     param([string]$Content)
-    if ($Content -match "(?m)^apiVersion:\s*(\S+)") {
-        return $Matches[1].Trim()
+    if ($Content -match "(?m)^\s*apiVersion:\s*([^\r\n#]+)") {
+        return ConvertFrom-YamlScalar $Matches[1]
     }
     return $null
 }
 
 function Get-YamlType {
     param([string]$Content)
-    if ($Content -match "(?m)^\s*type:\s*(\S+)") {
-        return $Matches[1].Trim()
+    if ($Content -match "(?m)^\s*type:\s*([^\r\n#]+)") {
+        return ConvertFrom-YamlScalar $Matches[1]
     }
     return $null
 }
@@ -128,8 +150,8 @@ function Test-TopicAllowedForApp {
     foreach ($entry in $entries) {
         $parts = $entry -split "=", 2
         if ($parts.Count -ne 2) { continue }
-        if ($parts[0].Trim() -ne $AppId) { continue }
-        $topics = @($parts[1] -split "," | ForEach-Object { $_.Trim() } | Where-Object { $_ })
+        if ((ConvertFrom-YamlScalar $parts[0]) -ne $AppId) { continue }
+        $topics = @($parts[1] -split "," | ForEach-Object { ConvertFrom-YamlScalar $_ } | Where-Object { $_ })
         if ($topics -contains $Topic) { return $true }
     }
     return $false
@@ -586,19 +608,21 @@ function Test-TenantsIntegration {
     $pubsubFiles = @(Get-ChildItem -Path $ConfigPath -Filter "pubsub*.yaml" -ErrorAction SilentlyContinue)
     foreach ($psFile in $pubsubFiles) {
         $content = Read-YamlFile $psFile.FullName
-        if ((Get-YamlKind $content) -ne "Component") { continue }
         $fileName = $psFile.Name
-        $subScopes = Get-YamlValue $content "subscriptionScopes"
-        if (Test-TopicAllowedForApp $subScopes $expectedAppId $expectedTopic) {
-            Add-Result $Category "commandapi can subscribe to Tenants topic ($fileName)" "Pass" "$expectedAppId is allowed to subscribe to $expectedTopic"
-        }
-        elseif ($script:IsLocalDevelopment -or ((Get-YamlType $content) -eq "pubsub.redis")) {
-            Add-Result $Category "commandapi can subscribe to Tenants topic ($fileName)" "Warn" "No explicit commandapi subscription scope for $expectedTopic (local development profile)" `
-                "Add subscriptionScopes entry '$expectedAppId=$expectedTopic' for production scoping."
-        }
-        else {
-            Add-Result $Category "commandapi can subscribe to Tenants topic ($fileName)" "Fail" "Missing commandapi subscription permission for $expectedTopic" `
-                "Add '$expectedAppId=$expectedTopic' to subscriptionScopes. Impact: production DAPR scoping blocks Tenants events from Parties."
+        $componentDocuments = @(Split-YamlDocuments $content | Where-Object { (Get-YamlKind $_) -eq "Component" })
+        foreach ($componentDocument in $componentDocuments) {
+            $subScopes = Get-YamlValue $componentDocument "subscriptionScopes"
+            if (Test-TopicAllowedForApp $subScopes $expectedAppId $expectedTopic) {
+                Add-Result $Category "commandapi can subscribe to Tenants topic ($fileName)" "Pass" "$expectedAppId is allowed to subscribe to $expectedTopic"
+            }
+            elseif ($script:IsLocalDevelopment -or ((Get-YamlType $componentDocument) -eq "pubsub.redis")) {
+                Add-Result $Category "commandapi can subscribe to Tenants topic ($fileName)" "Warn" "No explicit commandapi subscription scope for $expectedTopic (local development profile)" `
+                    "Add subscriptionScopes entry '$expectedAppId=$expectedTopic' for production scoping."
+            }
+            else {
+                Add-Result $Category "commandapi can subscribe to Tenants topic ($fileName)" "Fail" "Missing commandapi subscription permission for $expectedTopic" `
+                    "Add '$expectedAppId=$expectedTopic' to subscriptionScopes. Impact: production DAPR scoping blocks Tenants events from Parties."
+            }
         }
     }
 }

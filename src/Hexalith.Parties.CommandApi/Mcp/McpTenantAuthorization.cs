@@ -11,13 +11,13 @@ internal static class McpTenantAuthorization {
         string? userId = McpSessionContext.UserId.Value;
 
         if (string.IsNullOrWhiteSpace(tenant)) {
-            throw new InvalidOperationException(TenantAccessDenialTranslator.ToMcpMessage(
-                TenantAccessDecision.Denied(TenantAccessDenialReason.MissingTenantId)));
+            throw McpTenantAuthorizationException.FromDecision(
+                TenantAccessDecision.Denied(TenantAccessDenialReason.MissingTenantId));
         }
 
         if (string.IsNullOrWhiteSpace(userId)) {
-            throw new InvalidOperationException(TenantAccessDenialTranslator.ToMcpMessage(
-                TenantAccessDecision.Denied(TenantAccessDenialReason.MissingUserId)));
+            throw McpTenantAuthorizationException.FromDecision(
+                TenantAccessDecision.Denied(TenantAccessDenialReason.MissingUserId));
         }
 
         ITenantAccessService accessService = services.GetRequiredService<ITenantAccessService>();
@@ -26,7 +26,7 @@ internal static class McpTenantAuthorization {
             .ConfigureAwait(false);
 
         if (!decision.IsAllowed) {
-            throw new InvalidOperationException(TenantAccessDenialTranslator.ToMcpMessage(decision));
+            throw McpTenantAuthorizationException.FromDecision(decision);
         }
 
         return new McpTenantAccessContext(tenant!, userId!);

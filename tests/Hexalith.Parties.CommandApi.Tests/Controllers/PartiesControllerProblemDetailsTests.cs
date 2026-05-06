@@ -42,6 +42,7 @@ public sealed class PartiesControllerProblemDetailsTests : IClassFixture<Parties
     public PartiesControllerProblemDetailsTests(PartiesApiTestFactory factory)
     {
         _factory = factory;
+        _factory.ResetProjectionState();
         _factory.TenantAccessService.AllowAll();
         _factory.CommandGuard
             .GetBlockingReasonAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<object>(), Arg.Any<CancellationToken>())
@@ -98,7 +99,7 @@ public sealed class PartiesControllerProblemDetailsTests : IClassFixture<Parties
         problem.RootElement.GetProperty("reasonCode").GetString().ShouldBe("unknown-tenant");
 
         _factory.ActorProxyFactory.DidNotReceive().CreateActorProxy<IPartyIndexProjectionActor>(
-            Arg.Is<ActorId>(id => string.Equals(id.ToString(), "tenant-a:party-index", StringComparison.Ordinal)),
+            Arg.Is<ActorId>(id => string.Equals(id.ToString(), TenantActorIds.PartyIndex("tenant-a"), StringComparison.Ordinal)),
             Arg.Any<string>(),
             Arg.Any<ActorProxyOptions?>());
     }
@@ -572,7 +573,7 @@ public sealed class PartiesControllerProblemDetailsTests : IClassFixture<Parties
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
 
         _factory.ActorProxyFactory.Received().CreateActorProxy<IPartyIndexProjectionActor>(
-            Arg.Is<ActorId>(id => string.Equals(id.GetId(), "tenant-a:party-index", StringComparison.Ordinal)),
+            Arg.Is<ActorId>(id => string.Equals(id.GetId(), TenantActorIds.PartyIndex("tenant-a"), StringComparison.Ordinal)),
             Arg.Any<string>(),
             Arg.Any<ActorProxyOptions?>());
     }
@@ -807,12 +808,12 @@ public sealed class PartiesControllerProblemDetailsTests : IClassFixture<Parties
         tenantBProxy.GetEntriesAsync().Returns(Task.FromResult<IReadOnlyDictionary<string, PartyIndexEntry>>(tenantBEntries));
 
         _factory.ActorProxyFactory.CreateActorProxy<IPartyIndexProjectionActor>(
-            Arg.Is<ActorId>(id => string.Equals(id.GetId(), "tenant-a:party-index", StringComparison.Ordinal)),
+            Arg.Is<ActorId>(id => string.Equals(id.GetId(), TenantActorIds.PartyIndex("tenant-a"), StringComparison.Ordinal)),
             Arg.Any<string>(), Arg.Any<ActorProxyOptions?>())
             .Returns(tenantAProxy);
 
         _factory.ActorProxyFactory.CreateActorProxy<IPartyIndexProjectionActor>(
-            Arg.Is<ActorId>(id => string.Equals(id.GetId(), "tenant-b:party-index", StringComparison.Ordinal)),
+            Arg.Is<ActorId>(id => string.Equals(id.GetId(), TenantActorIds.PartyIndex("tenant-b"), StringComparison.Ordinal)),
             Arg.Any<string>(), Arg.Any<ActorProxyOptions?>())
             .Returns(tenantBProxy);
 
@@ -880,7 +881,7 @@ public sealed class PartiesControllerProblemDetailsTests : IClassFixture<Parties
         await client.GetAsync($"/api/v1/parties/{partyId}");
 
         _factory.ActorProxyFactory.Received().CreateActorProxy<IPartyDetailProjectionActor>(
-            Arg.Is<ActorId>(id => string.Equals(id.GetId(), $"tenant-a:party-detail:{partyId}", StringComparison.Ordinal)),
+            Arg.Is<ActorId>(id => string.Equals(id.GetId(), TenantActorIds.PartyDetail("tenant-a", partyId), StringComparison.Ordinal)),
             Arg.Any<string>(),
             Arg.Any<ActorProxyOptions?>());
     }
@@ -1803,9 +1804,26 @@ public sealed class PartiesApiTestFactory : WebApplicationFactory<Program>
 
     private readonly Dictionary<string, PartyDetail> _detailsByActorId = new(StringComparer.Ordinal);
 
+    private readonly object _projectionLock = new();
+
     internal void SetIndexEntries(params PartyIndexEntry[] entries)
     {
-        _indexEntries = entries.ToDictionary(entry => entry.Id, StringComparer.Ordinal);
+        lock (_projectionLock)
+        {
+            _indexEntries = entries.ToDictionary(entry => entry.Id, StringComparer.Ordinal);
+        }
+    }
+
+    internal void ResetProjectionState()
+    {
+        lock (_projectionLock)
+        {
+            _indexEntries = new Dictionary<string, PartyIndexEntry>(StringComparer.Ordinal);
+            _indexEntriesByActorId.Clear();
+            _detailsByActorId.Clear();
+        }
+
+        ResetIndexProxy();
     }
 
     internal void SetTenantParties(string tenantId, params PartyDetail[] details)
@@ -1816,8 +1834,7 @@ public sealed class PartiesApiTestFactory : WebApplicationFactory<Program>
         var indexEntries = new Dictionary<string, PartyIndexEntry>(StringComparer.Ordinal);
         foreach (PartyDetail detail in details)
         {
-            _detailsByActorId[$"{tenantId}:party-detail:{detail.Id}"] = detail;
-            indexEntries[detail.Id] = new PartyIndexEntry
+            if (!indexEntries.TryAdd(detail.Id, new PartyIndexEntry
             {
                 Id = detail.Id,
                 Type = detail.Type,
@@ -1828,28 +1845,54 @@ public sealed class PartiesApiTestFactory : WebApplicationFactory<Program>
                 CreatedAt = detail.CreatedAt,
                 LastModifiedAt = detail.LastModifiedAt,
                 IsErased = detail.IsErased,
-            };
+            }))
+            {
+                throw new InvalidOperationException(
+                    $"Tenant '{tenantId}' test projection already contains party id '{detail.Id}'.");
+            }
         }
 
-        _indexEntriesByActorId[$"{tenantId}:party-index"] = indexEntries;
+        lock (_projectionLock)
+        {
+            string detailPrefix = TenantActorIds.PartyDetailPrefix(tenantId);
+            foreach (string actorId in _detailsByActorId.Keys.Where(key => key.StartsWith(detailPrefix, StringComparison.Ordinal)).ToArray())
+            {
+                _detailsByActorId.Remove(actorId);
+            }
+
+            foreach (PartyDetail detail in details)
+            {
+                _detailsByActorId[TenantActorIds.PartyDetail(tenantId, detail.Id)] = detail;
+            }
+
+            _indexEntriesByActorId[TenantActorIds.PartyIndex(tenantId)] = indexEntries;
+        }
+
         ResetIndexProxy();
     }
 
     internal void ResetIndexProxy()
     {
-        ActorProxyFactory.CreateActorProxy<IPartyIndexProjectionActor>(
-            Arg.Any<ActorId>(), Arg.Any<string>(), Arg.Any<ActorProxyOptions?>())
-            .Returns(call =>
-            {
-                string actorId = call.ArgAt<ActorId>(0).GetId();
-                IReadOnlyDictionary<string, PartyIndexEntry> entries =
-                    _indexEntriesByActorId.TryGetValue(actorId, out IReadOnlyDictionary<string, PartyIndexEntry>? tenantEntries)
-                        ? tenantEntries
-                        : _indexEntries;
-                IPartyIndexProjectionActor indexProxy = Substitute.For<IPartyIndexProjectionActor>();
-                indexProxy.GetEntriesAsync().Returns(_ => Task.FromResult(entries));
-                return indexProxy;
-            });
+        lock (_projectionLock)
+        {
+            ActorProxyFactory.CreateActorProxy<IPartyIndexProjectionActor>(
+                Arg.Any<ActorId>(), Arg.Any<string>(), Arg.Any<ActorProxyOptions?>())
+                .Returns(call =>
+                {
+                    string actorId = call.ArgAt<ActorId>(0).GetId();
+                    IReadOnlyDictionary<string, PartyIndexEntry> entries;
+                    lock (_projectionLock)
+                    {
+                        entries = _indexEntriesByActorId.TryGetValue(actorId, out IReadOnlyDictionary<string, PartyIndexEntry>? tenantEntries)
+                            ? tenantEntries
+                            : _indexEntries;
+                    }
+
+                    IPartyIndexProjectionActor indexProxy = Substitute.For<IPartyIndexProjectionActor>();
+                    indexProxy.GetEntriesAsync().Returns(_ => Task.FromResult(entries));
+                    return indexProxy;
+                });
+        }
     }
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
@@ -1874,7 +1917,12 @@ public sealed class PartiesApiTestFactory : WebApplicationFactory<Program>
             .Returns(call =>
             {
                 string actorId = call.ArgAt<ActorId>(0).GetId();
-                _ = _detailsByActorId.TryGetValue(actorId, out PartyDetail? detail);
+                PartyDetail? detail;
+                lock (_projectionLock)
+                {
+                    _ = _detailsByActorId.TryGetValue(actorId, out detail);
+                }
+
                 IPartyDetailProjectionActor detailProxy = Substitute.For<IPartyDetailProjectionActor>();
                 detailProxy.GetDetailAsync().Returns(Task.FromResult<PartyDetail?>(detail));
                 return detailProxy;

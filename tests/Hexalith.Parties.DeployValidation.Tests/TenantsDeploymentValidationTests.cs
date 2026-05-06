@@ -98,7 +98,78 @@ public sealed class TenantsDeploymentValidationTests : IDisposable
 
         exitCode.ShouldBe(0);
         output.ShouldContain("WARN");
+        output.ShouldContain("No Tenants integration config found");
+        output.ShouldContain("No declarative subscription for system.tenants.events found");
         output.ShouldContain("system.tenants.events");
+    }
+
+    [Fact]
+    public async Task TenantsValidation_QuotedTenantsIntegrationKind_IsRecognizedAsync()
+    {
+        WriteBaseProductionConfig(_tempDir, includeTenantsSubscription: true, includeTenantsConfig: true);
+        string tenantsConfig = Path.Combine(_tempDir, "tenants-integration.yaml");
+        File.WriteAllText(
+            tenantsConfig,
+            File.ReadAllText(tenantsConfig).Replace("kind: TenantsIntegration", "kind: \"TenantsIntegration\"", StringComparison.Ordinal));
+
+        (int exitCode, string output) = await RunValidationAsync(_tempDir);
+
+        exitCode.ShouldBe(0, output);
+        output.ShouldNotContain("No Tenants integration config found");
+    }
+
+    [Fact]
+    public async Task TenantsValidation_SubscriptionScopesWithQuotesAndWhitespace_AllowsCommandApiAsync()
+    {
+        WriteBaseProductionConfig(_tempDir, includeTenantsSubscription: true, includeTenantsConfig: true);
+        string pubsub = Path.Combine(_tempDir, "pubsub.yaml");
+        File.WriteAllText(
+            pubsub,
+            File.ReadAllText(pubsub).Replace(
+                "value: \"commandapi=system.tenants.events;{env:SUBSCRIBER_APP_ID}=acme.parties.events\"",
+                "value: ' \"commandapi\" = \"system.tenants.events\" ; {env:SUBSCRIBER_APP_ID}=acme.parties.events '",
+                StringComparison.Ordinal));
+
+        (int exitCode, string output) = await RunValidationAsync(_tempDir);
+
+        exitCode.ShouldBe(0, output);
+        output.ShouldContain("commandapi is allowed to subscribe to system.tenants.events");
+    }
+
+    [Fact]
+    public async Task TenantsValidation_MultiDocumentPubSub_InspectsAllComponentDocumentsAsync()
+    {
+        WriteBaseProductionConfig(_tempDir, includeTenantsSubscription: true, includeTenantsConfig: true, includeCommandApiScope: false);
+        File.WriteAllText(Path.Combine(_tempDir, "pubsub.yaml"), """
+            apiVersion: dapr.io/v1alpha1
+            kind: Configuration
+            metadata:
+              name: unrelated-config
+            ---
+            apiVersion: dapr.io/v1alpha1
+            kind: Component
+            metadata:
+              name: pubsub
+            spec:
+              type: pubsub.kafka
+              metadata:
+                - name: brokers
+                  value: "{env:KAFKA_BROKERS}"
+                - name: enableDeadLetter
+                  value: "true"
+                - name: publishingScopes
+                  value: "{env:SUBSCRIBER_APP_ID}="
+                - name: subscriptionScopes
+                  value: "commandapi=system.tenants.events;{env:SUBSCRIBER_APP_ID}=acme.parties.events"
+            scopes:
+              - commandapi
+              - "{env:SUBSCRIBER_APP_ID}"
+            """);
+
+        (int exitCode, string output) = await RunValidationAsync(_tempDir);
+
+        exitCode.ShouldBe(0, output);
+        output.ShouldContain("commandapi is allowed to subscribe to system.tenants.events");
     }
 
     [Fact]
@@ -391,8 +462,6 @@ public sealed class TenantsDeploymentValidationTests : IDisposable
             scopes:
               - commandapi
             """);
-        WriteTenantsSubscription(dir);
-        WriteTenantsConfig(dir, malformed: false, includeSensitiveValues: false);
     }
 
     private void Dispose(bool disposing)

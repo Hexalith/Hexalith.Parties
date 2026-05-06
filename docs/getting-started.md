@@ -62,6 +62,15 @@ Before calling Parties, provision tenant access through Hexalith.Tenants:
 4. Confirm Parties is subscribed to `system.tenants.events`.
 5. Run `pwsh -NoProfile -File deploy/validate-deployment.ps1 -ConfigPath deploy/dapr`.
 
+One quick local subscription check is the CommandApi DAPR sidecar metadata endpoint. Find the CommandApi DAPR HTTP port in the Aspire dashboard, then run:
+
+```bash
+curl -s http://localhost:<commandapi-dapr-http-port>/v1.0/metadata \
+  | jq '.subscriptions[] | select(.pubsubName == "pubsub" and .topic == "system.tenants.events")'
+```
+
+If that returns no row, verify `deploy/dapr/subscription-tenants.yaml` is loaded or that the local `MapTenantEventSubscription()` path is active.
+
 The JWT tenant claim selects the requested tenant context. Hexalith.Tenants membership and role authorize the operation. Tenant ids are not party command payload fields or MCP tool parameters.
 
 ### Obtain an Authentication Token
@@ -99,6 +108,7 @@ $env:TOKEN = $tokenResponse.access_token
 ```
 
 > If you sign in to the Keycloak admin console, use `admin/admin`. The imported realm users above are only for local development.
+> Keycloak authenticates the user and issues the tenant claim; Hexalith.Tenants membership and `TenantReader`/`TenantContributor`/`TenantOwner` roles remain the authorization source of truth for Parties.
 
 #### Alternative: Disable Keycloak
 

@@ -14,6 +14,7 @@ using Hexalith.Parties.CommandApi.Authorization;
 using Hexalith.Parties.CommandApi.Mcp;
 using Hexalith.Parties.CommandApi.Search;
 using Hexalith.Parties.CommandApi.Tests.Authorization;
+using Hexalith.Parties.CommandApi.Tests.Mcp;
 using Hexalith.Parties.Contracts.Models;
 using Hexalith.Parties.Contracts.Search;
 using Hexalith.Parties.Contracts.ValueObjects;
@@ -39,6 +40,7 @@ public sealed class CrossTenantIsolationTests : IClassFixture<PartiesApiTestFact
     public CrossTenantIsolationTests(PartiesApiTestFactory factory)
     {
         _factory = factory;
+        _factory.ResetProjectionState();
         _factory.Router.ClearReceivedCalls();
         _factory.ActorProxyFactory.ClearReceivedCalls();
         // IClassFixture shares the factory instance — reset Handler so other tests don't inherit
@@ -70,9 +72,13 @@ public sealed class CrossTenantIsolationTests : IClassFixture<PartiesApiTestFact
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
         using JsonDocument body = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
 
-        string payload = body.RootElement.GetRawText();
-        payload.ShouldContain("tenant-a-party-");
-        payload.ShouldNotContain("tenant-b-party-");
+        JsonElement items = body.RootElement.GetProperty("items");
+        items.GetArrayLength().ShouldBe(2);
+        items.EnumerateArray()
+            .Count(item => item.GetRawText().Contains("tenant-b-party-", StringComparison.Ordinal))
+            .ShouldBe(0);
+        items.EnumerateArray()
+            .ShouldAllBe(item => item.GetRawText().Contains("tenant-a-party-", StringComparison.Ordinal));
     }
 
     [Fact]
@@ -224,11 +230,11 @@ public sealed class CrossTenantIsolationTests : IClassFixture<PartiesApiTestFact
 
         IActorProxyFactory actorProxyFactory = Substitute.For<IActorProxyFactory>();
         actorProxyFactory.CreateActorProxy<IPartyIndexProjectionActor>(
-            Arg.Is<ActorId>(id => string.Equals(id.GetId(), "tenant-a:party-index", StringComparison.Ordinal)),
+            Arg.Is<ActorId>(id => string.Equals(id.GetId(), TenantActorIds.PartyIndex("tenant-a"), StringComparison.Ordinal)),
             Arg.Any<string>())
             .Returns(tenantAIndexActor);
         actorProxyFactory.CreateActorProxy<IPartyIndexProjectionActor>(
-            Arg.Is<ActorId>(id => string.Equals(id.GetId(), "tenant-b:party-index", StringComparison.Ordinal)),
+            Arg.Is<ActorId>(id => string.Equals(id.GetId(), TenantActorIds.PartyIndex("tenant-b"), StringComparison.Ordinal)),
             Arg.Any<string>())
             .Returns(tenantBIndexActor);
 
@@ -320,30 +326,4 @@ public sealed class CrossTenantIsolationTests : IClassFixture<PartiesApiTestFact
 
     public sealed record MockPartyHit(string PartyId, string TenantId, string Name);
 
-    /// <summary>
-    /// Saves the previous AsyncLocal tenant/user values on construction and restores them on dispose.
-    /// Sealed class rather than readonly struct so <c>using</c> does not box, and Dispose runs against
-    /// the captured previous-values without value-copy concerns.
-    /// </summary>
-    private sealed class McpSessionScope : IDisposable
-    {
-        private readonly string? _previousTenant;
-        private readonly string? _previousUserId;
-
-        private McpSessionScope(string tenantId, string userId)
-        {
-            _previousTenant = McpSessionContext.Tenant.Value;
-            _previousUserId = McpSessionContext.UserId.Value;
-            McpSessionContext.Tenant.Value = tenantId;
-            McpSessionContext.UserId.Value = userId;
-        }
-
-        public static McpSessionScope For(string tenantId, string userId) => new(tenantId, userId);
-
-        public void Dispose()
-        {
-            McpSessionContext.Tenant.Value = _previousTenant;
-            McpSessionContext.UserId.Value = _previousUserId;
-        }
-    }
 }
