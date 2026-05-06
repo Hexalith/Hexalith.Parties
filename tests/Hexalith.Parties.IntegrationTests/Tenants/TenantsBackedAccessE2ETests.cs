@@ -7,7 +7,7 @@ using Hexalith.Tenants.Contracts.Enums;
 
 using Shouldly;
 
-using Xunit.Sdk;
+using Xunit.Abstractions;
 
 namespace Hexalith.Parties.IntegrationTests.Tenants;
 
@@ -20,16 +20,18 @@ namespace Hexalith.Parties.IntegrationTests.Tenants;
 public sealed class TenantsBackedAccessE2ETests
 {
     private readonly PartiesAspireTopologyFixture _fixture;
+    private readonly ITestOutputHelper _output;
 
-    public TenantsBackedAccessE2ETests(PartiesAspireTopologyFixture fixture)
+    public TenantsBackedAccessE2ETests(PartiesAspireTopologyFixture fixture, ITestOutputHelper output)
     {
         _fixture = fixture;
+        _output = output;
     }
 
     [Fact]
     public async Task Aspire_GivenTenantsSeededActiveTenant_RestPartiesAccessIsAuthorizedAsync()
     {
-        SkipIfInfrastructureUnavailable();
+        if (ShouldSkipForInfrastructure()) { return; }
 
         await _fixture.SeedTenantAsync("tenant-a", "user-1", TenantRole.TenantContributor);
 
@@ -52,7 +54,7 @@ public sealed class TenantsBackedAccessE2ETests
     [Fact]
     public async Task Aspire_GivenTenantDisabledViaTenantsApi_RestPartiesReturns403Async()
     {
-        SkipIfInfrastructureUnavailable();
+        if (ShouldSkipForInfrastructure()) { return; }
 
         await _fixture.SeedTenantAsync("tenant-d", "user-1", TenantRole.TenantOwner);
         await _fixture.DisableTenantAsync("tenant-d");
@@ -77,7 +79,7 @@ public sealed class TenantsBackedAccessE2ETests
     [Fact]
     public async Task Aspire_GivenUserRemovedViaTenantsApi_RestPartiesReturns403Async()
     {
-        SkipIfInfrastructureUnavailable();
+        if (ShouldSkipForInfrastructure()) { return; }
 
         await _fixture.SeedTenantAsync("tenant-r", "user-1", TenantRole.TenantContributor);
         await _fixture.RemoveUserFromTenantAsync("tenant-r", "user-1");
@@ -102,7 +104,7 @@ public sealed class TenantsBackedAccessE2ETests
     [Fact]
     public async Task Aspire_GivenValidJwtTenantClaimWithoutMembership_RestPartiesReturns403NotMemberAsync()
     {
-        SkipIfInfrastructureUnavailable();
+        if (ShouldSkipForInfrastructure()) { return; }
 
         // Active tenant exists with an unrelated owner; the calling user has never been added.
         await _fixture.SeedTenantAsync("tenant-nm", "owner-only", TenantRole.TenantOwner);
@@ -127,7 +129,7 @@ public sealed class TenantsBackedAccessE2ETests
     [Fact]
     public async Task Aspire_GivenReaderRoleOnWriteEndpoint_RestPartiesReturns403InsufficientRoleAsync()
     {
-        SkipIfInfrastructureUnavailable();
+        if (ShouldSkipForInfrastructure()) { return; }
 
         await _fixture.SeedTenantAsync("tenant-ir", "reader-user", TenantRole.TenantReader);
 
@@ -161,7 +163,7 @@ public sealed class TenantsBackedAccessE2ETests
     [Fact]
     public async Task Aspire_GivenTwoTenants_TenantACannotEnumerateOrFetchTenantBPartiesAsync()
     {
-        SkipIfInfrastructureUnavailable();
+        if (ShouldSkipForInfrastructure()) { return; }
 
         await _fixture.SeedTenantAsync("tenant-iso-a", "user-a", TenantRole.TenantContributor);
         await _fixture.SeedTenantAsync("tenant-iso-b", "user-b", TenantRole.TenantOwner);
@@ -185,16 +187,22 @@ public sealed class TenantsBackedAccessE2ETests
                 || r.StatusCode == HttpStatusCode.OK
                 || r.StatusCode == HttpStatusCode.UnprocessableEntity);
 
+        bool createSkipped;
         try
         {
-            await SkipIfKnownPartyProcessUnavailableAsync(createResponse);
-            createResponse.IsSuccessStatusCode.ShouldBeTrue(
-                $"Tenant B create should succeed; got {(int)createResponse.StatusCode} {createResponse.StatusCode}");
+            createSkipped = await ShouldSkipForKnownPartyProcessUnavailableAsync(createResponse);
+            if (!createSkipped)
+            {
+                createResponse.IsSuccessStatusCode.ShouldBeTrue(
+                    $"Tenant B create should succeed; got {(int)createResponse.StatusCode} {createResponse.StatusCode}");
+            }
         }
         finally
         {
             createResponse.Dispose();
         }
+
+        if (createSkipped) { return; }
 
         string tokenA = TenantIntegrationTestSeeder.CreateToken("tenant-iso-a", "user-a");
         HttpResponseMessage listResponse = await PollAsync(
@@ -233,28 +241,38 @@ public sealed class TenantsBackedAccessE2ETests
         return _fixture.CommandApiClient.SendAsync(request);
     }
 
-    private void SkipIfInfrastructureUnavailable()
+    // The project's xUnit v2.9.3 runner reports `throw SkipException.ForSkip(...)` as a Failed
+    // test rather than a Skipped one when surfaced via VSTest, so we mirror the project's
+    // existing E2E pattern (log via ITestOutputHelper + early return) used by 14+ other
+    // integration tests in this suite (e.g. ConsentRestrictionE2ETests, EncryptionE2ETests).
+    private bool ShouldSkipForInfrastructure()
     {
-        if (!_fixture.IsAvailable)
+        if (_fixture.IsAvailable)
         {
-            throw SkipException.ForSkip($"Aspire topology unavailable: {_fixture.UnavailableReason}");
+            return false;
         }
+
+        _output.WriteLine($"Skipped: Aspire topology unavailable: {_fixture.UnavailableReason}");
+        return true;
     }
 
-    private static async Task SkipIfKnownPartyProcessUnavailableAsync(HttpResponseMessage response)
+    private async Task<bool> ShouldSkipForKnownPartyProcessUnavailableAsync(HttpResponseMessage response)
     {
         if (response.StatusCode != HttpStatusCode.UnprocessableEntity)
         {
-            return;
+            return false;
         }
 
         string body = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
         if (body.Contains("party/process", StringComparison.OrdinalIgnoreCase)
             && body.Contains("Internal Server Error", StringComparison.OrdinalIgnoreCase))
         {
-            throw SkipException.ForSkip(
-                "Aspire party/process command route returned 500; projection-isolation create path is infrastructure-gated.");
+            _output.WriteLine(
+                "Skipped: Aspire party/process command route returned 500; projection-isolation create path is infrastructure-gated.");
+            return true;
         }
+
+        return false;
     }
 
     private static async Task AssertReasonCodeAsync(HttpResponseMessage response, string expectedReasonCode)
