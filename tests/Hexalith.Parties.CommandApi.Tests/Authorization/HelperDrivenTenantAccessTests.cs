@@ -138,6 +138,60 @@ public sealed class HelperDrivenTenantAccessTests
         decision.Reason.ShouldBe(TenantAccessDenialReason.TenantStateStale);
     }
 
+    [Fact]
+    public async Task CheckAccessAsync_GivenMissingTenantId_DeniesAsMissingTenantIdAsync()
+    {
+        // Arrange — projection has data for tenant-a, but caller does not present any tenant context.
+        InMemoryTenantService tenants = new();
+        TenantTestHelpers.CreateTenantWithOwner(tenants, tenantId: "tenant-a", ownerUserId: "user-1");
+
+        ITenantProjectionStore store = await ProjectFromTenantsAsync(tenants);
+        TenantAccessService service = new(store, NullLogger<TenantAccessService>.Instance);
+
+        // Act — null tenant id (e.g., JWT lacks the tenant claim entirely).
+        TenantAccessDecision decision = await service.CheckAccessAsync(tenantId: null, userId: "user-1", TenantAccessRequirement.Read);
+
+        // Assert — fast-path denial; reason code stable for troubleshooting.
+        decision.IsAllowed.ShouldBeFalse();
+        decision.Reason.ShouldBe(TenantAccessDenialReason.MissingTenantId);
+    }
+
+    [Fact]
+    public async Task CheckAccessAsync_GivenMissingUserId_DeniesAsMissingUserIdAsync()
+    {
+        // Arrange — projection has data for tenant-a, but caller does not present a user/subject id.
+        InMemoryTenantService tenants = new();
+        TenantTestHelpers.CreateTenantWithOwner(tenants, tenantId: "tenant-a", ownerUserId: "user-1");
+
+        ITenantProjectionStore store = await ProjectFromTenantsAsync(tenants);
+        TenantAccessService service = new(store, NullLogger<TenantAccessService>.Instance);
+
+        // Act — null user id (e.g., JWT lacks the sub claim).
+        TenantAccessDecision decision = await service.CheckAccessAsync(tenantId: "tenant-a", userId: null, TenantAccessRequirement.Read);
+
+        // Assert — fast-path denial; reason code stable for troubleshooting.
+        decision.IsAllowed.ShouldBeFalse();
+        decision.Reason.ShouldBe(TenantAccessDenialReason.MissingUserId);
+    }
+
+    [Fact]
+    public async Task CheckAccessAsync_GivenUnknownTenant_DeniesAsUnknownTenantAsync()
+    {
+        // Arrange — only tenant-a is provisioned; caller asks for a tenant the projection has never seen.
+        InMemoryTenantService tenants = new();
+        TenantTestHelpers.CreateTenantWithOwner(tenants, tenantId: "tenant-a", ownerUserId: "user-1");
+
+        ITenantProjectionStore store = await ProjectFromTenantsAsync(tenants);
+        TenantAccessService service = new(store, NullLogger<TenantAccessService>.Instance);
+
+        // Act — request for tenant-z which is not in the local projection.
+        TenantAccessDecision decision = await service.CheckAccessAsync("tenant-z", "user-1", TenantAccessRequirement.Read);
+
+        // Assert — unknown tenant must fail closed with the documented reason code.
+        decision.IsAllowed.ShouldBeFalse();
+        decision.Reason.ShouldBe(TenantAccessDenialReason.UnknownTenant);
+    }
+
     /// <summary>
     /// Replays public Tenants testing events through <see cref="InMemoryTenantProjection"/>
     /// and copies the resulting read model into the Parties access seam.

@@ -132,36 +132,62 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
     public Task DisableTenantAsync(
         string tenantId,
         CancellationToken cancellationToken = default)
-        => TenantIntegrationTestSeeder.DisableTenantAsync(CommandApiClient, tenantId, cancellationToken: cancellationToken);
+        => TenantIntegrationTestSeeder.DisableTenantAsync(CommandApiClient, tenantId, cancellationToken);
 
     public Task RemoveUserFromTenantAsync(
         string tenantId,
         string userId,
         CancellationToken cancellationToken = default)
-        => TenantIntegrationTestSeeder.RemoveUserFromTenantAsync(CommandApiClient, tenantId, userId, cancellationToken: cancellationToken);
+        => TenantIntegrationTestSeeder.RemoveUserFromTenantAsync(CommandApiClient, tenantId, userId, cancellationToken);
 
+    /// <summary>
+    /// Pre-seeds tenant access state so unrelated E2E tests in this fixture (search,
+    /// temporal-name, consent, encryption, erasure, admin) do not all need to seed
+    /// their own users before exercising tenant-scoped endpoints.
+    /// <para>
+    /// <b>Known coupling:</b> this list is hand-maintained against the user ids each
+    /// E2E test class expects. Adding a new E2E test that uses a new user id requires
+    /// either adding it here or seeding it in the test class itself. A future refactor
+    /// (deferred-work.md, Story 11-4 review item D8) should move this seeding into
+    /// each E2E class so the fixture is no longer the implicit coupling point.
+    /// </para>
+    /// </summary>
     private async Task SeedDefaultTenantAccessAsync(CancellationToken cancellationToken)
     {
-        await TenantIntegrationTestSeeder.SeedActiveTenantAsync(
-            CommandApiClient,
-            "tenant-a",
-            [
-                new TenantMemberSeed("tenant-a", "e2e-test-admin", TenantRole.TenantOwner),
-            ],
-            cancellationToken).ConfigureAwait(false);
+        cancellationToken.ThrowIfCancellationRequested();
 
-        await TenantIntegrationTestSeeder.SeedActiveTenantAsync(
-            CommandApiClient,
-            "e2e-tenant",
-            [
-                new TenantMemberSeed("e2e-tenant", "e2e-test-user", TenantRole.TenantOwner),
-                new TenantMemberSeed("e2e-tenant", "e2e-search-test", TenantRole.TenantOwner),
-                new TenantMemberSeed("e2e-tenant", "e2e-temporal-name-test", TenantRole.TenantOwner),
-                new TenantMemberSeed("e2e-tenant", "e2e-consent-test", TenantRole.TenantOwner),
-                new TenantMemberSeed("e2e-tenant", "e2e-encryption-test", TenantRole.TenantOwner),
-                new TenantMemberSeed("e2e-tenant", "e2e-erasure-test", TenantRole.TenantOwner),
-            ],
-            cancellationToken).ConfigureAwait(false);
+        try
+        {
+            await TenantIntegrationTestSeeder.SeedActiveTenantAsync(
+                CommandApiClient,
+                "tenant-a",
+                [
+                    new TenantMemberSeed("tenant-a", "e2e-test-admin", TenantRole.TenantOwner),
+                ],
+                cancellationToken).ConfigureAwait(false);
+
+            await TenantIntegrationTestSeeder.SeedActiveTenantAsync(
+                CommandApiClient,
+                "e2e-tenant",
+                [
+                    new TenantMemberSeed("e2e-tenant", "e2e-test-user", TenantRole.TenantOwner),
+                    new TenantMemberSeed("e2e-tenant", "e2e-search-test", TenantRole.TenantOwner),
+                    new TenantMemberSeed("e2e-tenant", "e2e-temporal-name-test", TenantRole.TenantOwner),
+                    new TenantMemberSeed("e2e-tenant", "e2e-consent-test", TenantRole.TenantOwner),
+                    new TenantMemberSeed("e2e-tenant", "e2e-encryption-test", TenantRole.TenantOwner),
+                    new TenantMemberSeed("e2e-tenant", "e2e-erasure-test", TenantRole.TenantOwner),
+                ],
+                cancellationToken).ConfigureAwait(false);
+        }
+        catch (Exception ex)
+        {
+            // Surface the seeding failure as fixture-unavailable so dependent tests skip
+            // instead of producing misleading authorization failures downstream.
+            throw new InvalidOperationException(
+                $"Failed to seed default Tenants access state for the Aspire topology fixture. " +
+                $"Cause: {ex.GetType().Name}: {ex.Message}",
+                ex);
+        }
     }
 
     public async Task DisposeAsync()

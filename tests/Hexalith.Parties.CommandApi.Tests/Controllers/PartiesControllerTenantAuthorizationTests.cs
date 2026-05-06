@@ -27,7 +27,7 @@ namespace Hexalith.Parties.CommandApi.Tests.Controllers;
 /// Story 11.4 — AC2, AC5: REST denial responses must use Tenants-backed authorization
 /// state and must not read projections or route commands when access is denied.
 /// </summary>
-public sealed class PartiesControllerTenantAuthorizationTests : IClassFixture<PartiesApiTestFactory>
+public sealed class PartiesControllerTenantAuthorizationTests : IClassFixture<PartiesApiTestFactory>, IDisposable
 {
     private readonly PartiesApiTestFactory _factory;
 
@@ -36,6 +36,17 @@ public sealed class PartiesControllerTenantAuthorizationTests : IClassFixture<Pa
         _factory = factory;
         _factory.Router.ClearReceivedCalls();
         _factory.ActorProxyFactory.ClearReceivedCalls();
+        // Reset Handler at the start of every test — IClassFixture shares the factory
+        // (and therefore the TenantAccessService instance) across all tests in this class.
+        _factory.TenantAccessService.AllowAll();
+    }
+
+    public void Dispose()
+    {
+        // Restore the default allow-all handler so unrelated tests in other classes that
+        // share the factory do not inherit a deny-state from this class's tests.
+        _factory.TenantAccessService.AllowAll();
+        GC.SuppressFinalize(this);
     }
 
     [Fact]
@@ -69,9 +80,12 @@ public sealed class PartiesControllerTenantAuthorizationTests : IClassFixture<Pa
     }
 
     [Fact]
-    public async Task GetParty_GivenContributorOnReadEndpoint_Returns200Async()
+    public async Task GetParty_GivenContributorOnReadEndpoint_Returns404OrOkButNotForbiddenAsync()
     {
         // Positive control to prove auth enforcement does NOT block legitimate reads.
+        // The projection is empty, so the controller will return 404. We pin to NotFound here
+        // (rather than a generic ShouldNotBe Forbidden, which would also accept 200, 500, etc.)
+        // so a regression that swallows the 404 path or returns a different status is detected.
         _factory.TenantAccessService.AllowAll();
 
         using HttpClient client = CreateClient(tenantId: "tenant-a");
@@ -81,8 +95,8 @@ public sealed class PartiesControllerTenantAuthorizationTests : IClassFixture<Pa
 
         HttpResponseMessage response = await client.GetAsync("/api/v1/parties/" + partyId);
 
-        // Either 200 with body or 404 when projection has no record — but never 403 for an authorized contributor.
-        response.StatusCode.ShouldNotBe(HttpStatusCode.Forbidden);
+        // Authorized contributor + empty projection ⇒ 404 (not 403, not 500).
+        response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
     }
 
     [Fact]

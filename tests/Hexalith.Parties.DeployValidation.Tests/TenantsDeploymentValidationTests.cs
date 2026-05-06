@@ -130,11 +130,63 @@ public sealed class TenantsDeploymentValidationTests : IDisposable
         process.ShouldNotBeNull("Unable to start PowerShell to run validation script");
         string stdout = await process.StandardOutput.ReadToEndAsync().ConfigureAwait(false);
         string stderr = await process.StandardError.ReadToEndAsync().ConfigureAwait(false);
-        await process.WaitForExitAsync().ConfigureAwait(false);
+        // 2-minute hard cap so a hung pwsh does not stall CI indefinitely.
+        using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(2));
+        await process.WaitForExitAsync(cts.Token).ConfigureAwait(false);
         return (process.ExitCode, stdout + stderr);
     }
 
-    private static string ResolvePowerShellExecutable() => "pwsh";
+    /// <summary>
+    /// Prefer PowerShell 7+ ("pwsh") which is cross-platform and matches the script's #requires.
+    /// Falls back to Windows PowerShell ("powershell.exe") for environments without PS7 installed.
+    /// </summary>
+    private static string ResolvePowerShellExecutable()
+    {
+        if (IsExecutableAvailable("pwsh"))
+        {
+            return "pwsh";
+        }
+
+        if (OperatingSystem.IsWindows() && IsExecutableAvailable("powershell.exe"))
+        {
+            return "powershell.exe";
+        }
+
+        // Fall back to "pwsh" so the test fails with a clear "executable not found" diagnostic
+        // rather than silently picking the wrong shell.
+        return "pwsh";
+    }
+
+    private static bool IsExecutableAvailable(string fileName)
+    {
+        try
+        {
+            using Process? process = Process.Start(new ProcessStartInfo
+            {
+                FileName = fileName,
+                Arguments = "-NoProfile -Command \"exit 0\"",
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true,
+            });
+            if (process is null)
+            {
+                return false;
+            }
+
+            process.WaitForExit(TimeSpan.FromSeconds(5));
+            return process.HasExited && process.ExitCode == 0;
+        }
+        catch (System.ComponentModel.Win32Exception)
+        {
+            return false;
+        }
+        catch (InvalidOperationException)
+        {
+            return false;
+        }
+    }
 
     private static string? FindSolutionDirectory()
     {
@@ -276,10 +328,22 @@ public sealed class TenantsDeploymentValidationTests : IDisposable
             """);
 
     private static void WriteTenantsConfig(string dir, bool malformed, bool includeSensitiveValues)
-        => File.WriteAllText(Path.Combine(dir, "tenants-integration.yaml"), malformed
-            ? """
+    {
+        // Inject PII into a metadata.annotations field that the validator does not parse.
+        // The test then asserts the validator never echoes arbitrary YAML content into its output —
+        // proving it only emits values it has explicitly chosen to emit, not raw config payloads.
+        string sensitiveAnnotation = includeSensitiveValues
+            ? "Bearer secret eventstore:tenant=tenant-a user-1@example.com ConnectionString=secret"
+            : "none";
+
+        File.WriteAllText(Path.Combine(dir, "tenants-integration.yaml"), malformed
+            ? $$"""
                 apiVersion: hexalith.io/v1
                 kind: TenantsIntegration
+                metadata:
+                  name: parties-tenants
+                  annotations:
+                    diagnostic: "{{sensitiveAnnotation}}"
                 spec:
                   pubsubName: ""
                   topicName: ""
@@ -288,13 +352,17 @@ public sealed class TenantsDeploymentValidationTests : IDisposable
             : $$"""
                 apiVersion: hexalith.io/v1
                 kind: TenantsIntegration
+                metadata:
+                  name: parties-tenants
+                  annotations:
+                    diagnostic: "{{sensitiveAnnotation}}"
                 spec:
                   pubsubName: pubsub
                   topicName: system.tenants.events
                   commandApiAppId: commandapi
                   tenantsDependencyHealth: healthy
-                  ignoredDiagnostic: "{{(includeSensitiveValues ? "Bearer secret eventstore:tenant=tenant-a user-1@example.com ConnectionString=secret" : "none")}}"
                 """);
+    }
 
     private static void WriteLocalDevConfig(string dir)
     {
@@ -332,8 +400,18 @@ public sealed class TenantsDeploymentValidationTests : IDisposable
         if (_disposed) return;
         if (disposing && Directory.Exists(_tempDir))
         {
-            try { Directory.Delete(_tempDir, recursive: true); }
-            catch { }
+            try
+            {
+                Directory.Delete(_tempDir, recursive: true);
+            }
+            catch (IOException)
+            {
+                // Locked file or in-use handle; safe to leave for OS temp cleanup.
+            }
+            catch (UnauthorizedAccessException)
+            {
+                // ACL issue; safe to leave for OS temp cleanup.
+            }
         }
 
         _disposed = true;

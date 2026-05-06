@@ -133,6 +133,7 @@ Parties must subscribe to the shared Tenants topic:
 - Topic: `system.tenants.events`
 - Hosting app id: `commandapi`
 - Declarative subscription: `subscription-tenants.yaml`
+- Integration manifest: `tenants-integration.yaml` (consumed by `validate-deployment.ps1`)
 - Route: `/events/tenants`
 - Dead-letter: `deadletter.system.tenants.events`
 
@@ -226,8 +227,10 @@ The tool exits with code `0` on success and `1` on failure, making it suitable f
 
 | Observable symptom | Likely cause | Fix owner | Expected behavior |
 | ------------------ | ------------ | --------- | ----------------- |
-| REST `401`, MCP `missing-tenant` | JWT missing tenant claim or user id | Identity provider owner | Request rejected before Tenants lookup |
-| REST `403`, MCP `not-member` | Valid tenant claim but no active Tenants membership | Tenant administrator | No party projection read or command routing |
+| REST `401`, MCP `missing-tenant` | JWT missing tenant claim | Identity provider owner | Request rejected before Tenants lookup |
+| REST `401`, MCP `missing-user` | JWT missing subject/user id | Identity provider owner | Request rejected before Tenants lookup |
+| REST `403`, MCP `unknown-tenant` | Tenant id absent from the local Tenants projection | Tenant administrator + Platform operator | Provision the tenant in Hexalith.Tenants and wait for projection convergence |
+| REST `403`, MCP `not-member` | Valid tenant claim but no active Tenants membership (or user removed) | Tenant administrator | No party projection read or command routing |
 | REST `403`, MCP `insufficient-role` | User role is below the operation requirement | Tenant administrator | Read/write/admin matrix enforced |
 | REST `403`, MCP `tenant-disabled` | Tenant disabled in Hexalith.Tenants | Tenant operator | All tenant-scoped access fails closed |
 | REST `403`, MCP `tenant-state-stale` | Tenants subscription, projection, or dependency unhealthy | Platform operator | Access fails closed until local state recovers |

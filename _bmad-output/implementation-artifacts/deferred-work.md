@@ -2,6 +2,19 @@
 
 Items raised during code review that are real but not actionable in the current story. Pick up in a follow-up story or hardening sprint.
 
+## Deferred from: code review of 11-4-tenants-integration-tests-deployment-validation-and-documentation (2026-05-05)
+
+- 7 residual full-topology integration test failures — `party/process` returns 500 → surfaces as 422 in create-path E2E tests. Pre-existing; dev notes (line 244) acknowledge the failures are unrelated to Tenants authorization. Investigate as a separate hardening item.
+- `EventStore.Contracts.Results.DomainResult` coupling pulled into Parties tests via `Hexalith.Tenants.Testing` — the Tenants helper APIs return this type. Acceptable as the Tenants public API surface; defer to architecture-fitness follow-up if test-project boundaries are tightened.
+- `PrivateAssets="all"` on the `Hexalith.Tenants.Testing` reference does not enforce a build-time prohibition against a future `src/` project taking the same dependency. Add an architecture-fitness test that forbids `Hexalith.Tenants.Testing` references under `src/`.
+- `[Collection("DeployValidation")]` shared across `DeploymentValidationTests` and `TenantsDeploymentValidationTests` with overlapping `Path.GetTempPath()` patterns — low flake risk in practice; defer dedicated fixture isolation work.
+- `Path.GetTempPath` Guid-prefix collision risk in `TenantsDeploymentValidationTests` — Edge Case Hunter himself flagged the probability as negligible.
+- `PollAsync` first iteration wastes one delay cycle when convergence is immediate — Edge Case Hunter flagged as harmless boundary condition.
+- `tenant-state-stale` recovery transition (until-recovers branch) not covered by integration test — denial path is sufficient for AC; defer recovery test to a separate hardening story.
+- `ProjectFromTenantsAsync` silently drops unknown event types in `InMemoryTenantProjection.ApplyEvents` — projection-conformance test belongs in the upstream Hexalith.Tenants test suite, not in Parties.
+- `validate-deployment.ps1` has no real Parties-source bypass detection — only the synthetic `bypassTenantsAuthorization` YAML flag is checked. Defer broader detection (missing `MapTenantEventSubscription()`, missing `ITenantAccessService` registration, etc.) to a deployment-validation hardening pass.
+
+
 ## Deferred from: code review of 11-3-rest-and-mcp-tenant-authorization-enforcement (2026-05-05)
 
 - Multiple `eventstore:tenant` claims silently collapse to the first via `FindAll(...).FirstOrDefault(...)` in PartiesController, AdminController, and the MCP `RunSessionHandler` — pre-existing extraction behavior, no per-request tenant selector. Out of Story 11.3 scope; revisit if multi-tenant tokens become a supported issuance pattern. [src/Hexalith.Parties.CommandApi/Controllers/PartiesController.cs ExtractTenant; AdminController.cs:46-49; Extensions/PartiesServiceCollectionExtensions.cs:311-313]

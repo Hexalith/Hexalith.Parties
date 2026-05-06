@@ -1,6 +1,14 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <IsPackable>false</IsPackable>
+    <!--
+      xUnit1051 fires when an async test calls a method that accepts CancellationToken
+      without forwarding TestContext.Current.CancellationToken. Many pre-existing tests
+      in this project (controller, MCP, search, projection) predate that lint rule and
+      would need broad refactoring to plumb the token through every helper. Project-wide
+      suppression is documented as deferred work (story 11-4 review item D5); see
+      _bmad-output/implementation-artifacts/deferred-work.md.
+    -->
     <NoWarn>$(NoWarn);xUnit1051</NoWarn>
   </PropertyGroup>
 

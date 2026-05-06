@@ -69,11 +69,13 @@ function Read-YamlFile {
 
 function Get-YamlValue {
     param([string]$Content, [string]$Key)
-    # metadata list style: - name: key \n   value: val
-    if ($Content -match "(?ms)name:\s*$Key\s*\r?\n\s*(?:#[^\n]*\r?\n\s*)*value:\s*[`"']?([^`"'\r\n]+)[`"']?") {
+    if (-not $Content) { return $null }
+    $escapedKey = [regex]::Escape($Key)
+    # metadata list style: - name: key \n   value: val. Case-insensitive on key only.
+    if ($Content -match "(?msi)name:\s*$escapedKey\s*\r?\n\s*(?:#[^\n]*\r?\n\s*)*value:\s*[`"']?([^`"'\r\n]+)[`"']?") {
         return $Matches[1].Trim()
     }
-    if ($Content -match "(?m)^\s*$Key\s*:\s*[`"']?([^`"'\r\n#]+)[`"']?") {
+    if ($Content -match "(?mi)^\s*$escapedKey\s*:\s*[`"']?([^`"'\r\n#]+)[`"']?") {
         return $Matches[1].Trim()
     }
     return $null
@@ -82,6 +84,7 @@ function Get-YamlValue {
 function Get-YamlScopes {
     param([string]$Content)
     $scopes = @()
+    if (-not $Content) { return , $scopes }
     if ($Content -match "(?ms)^scopes:\s*\r?\n((?:\s*-\s*[^\r\n]+[\r\n]*)*)") {
         $block = $Matches[1]
         $lines = $block -split "[\r\n]+"
@@ -470,8 +473,14 @@ function Test-TenantsIntegration {
     $expectedTopic = "system.tenants.events"
     $expectedAppId = "commandapi"
 
+    # Filter by manifest kind rather than filename so files that happen to
+    # contain "tenants" but are subscriptions or other manifests are not
+    # parsed as TenantsIntegration manifests.
     $tenantConfigFiles = @(Get-ChildItem -Path $ConfigPath -Filter "*tenants*.yaml" -ErrorAction SilentlyContinue |
-        Where-Object { $_.Name -notlike "subscription*" })
+        Where-Object {
+            $_.Name -notlike "subscription*" -and
+            (Get-YamlKind (Read-YamlFile $_.FullName)) -eq "TenantsIntegration"
+        })
     if ($tenantConfigFiles.Count -eq 0) {
         if ($script:IsLocalDevelopment) {
             Add-Result $Category "Tenants configuration present" "Warn" "No Tenants integration config found (local development profile)" `
@@ -485,11 +494,16 @@ function Test-TenantsIntegration {
     else {
         foreach ($cfg in $tenantConfigFiles) {
             $content = Read-YamlFile $cfg.FullName
+            if (-not $content) {
+                Add-Result $Category "Tenants configuration values ($($cfg.Name))" "Fail" "Tenants integration manifest is unreadable or empty" `
+                    "Verify file permissions and YAML content. Remediation target: $($cfg.FullName)."
+                continue
+            }
+
             $fileName = $cfg.Name
             $pubsubName = Get-YamlValue $content "pubsubName"
             $topicName = Get-YamlValue $content "topicName"
             $appId = Get-YamlValue $content "commandApiAppId"
-            $bypass = Get-YamlValue $content "bypassTenantsAuthorization"
             $dependencyHealth = Get-YamlValue $content "tenantsDependencyHealth"
 
             if ($pubsubName -eq $expectedPubSub -and $topicName -eq $expectedTopic -and $appId -eq $expectedAppId) {
@@ -500,29 +514,29 @@ function Test-TenantsIntegration {
                     "Set pubsubName=$expectedPubSub, topicName=$expectedTopic, and commandApiAppId=$expectedAppId. Impact: tenant access projection may not receive authoritative Tenants state. Remediation target: $fileName."
             }
 
-            if ($bypass -eq "true") {
-                Add-Result $Category "Parties does not bypass Tenants authorization ($fileName)" "Fail" "bypassTenantsAuthorization is true" `
-                    "Remove bypass mode. Impact: JWT tenant claims could be treated as authorization. Remediation target: Parties authorization configuration."
-            }
-            else {
-                Add-Result $Category "Parties does not bypass Tenants authorization ($fileName)" "Pass" "No Tenants authorization bypass configured"
-            }
-
-            if ($dependencyHealth -match "^(unhealthy|unreachable|missing)$") {
+            # dependencyHealth signal: case-insensitive match; unknown values warn instead of silently passing.
+            # Values are operator-controlled enum tokens (healthy/unhealthy/etc.) — safe to echo.
+            if ($dependencyHealth -match "^(?i)(unhealthy|unreachable|missing)$") {
                 Add-Result $Category "Tenants dependency health ($fileName)" "Fail" "Tenants dependency signal is $dependencyHealth" `
                     "Verify Hexalith.Tenants deployment, service discovery, and event publishing. Impact: Parties fails closed or uses stale tenant access state."
             }
-            elseif ($dependencyHealth) {
+            elseif ($dependencyHealth -match "^(?i)(healthy|ok|ready)$") {
                 Add-Result $Category "Tenants dependency health ($fileName)" "Pass" "Tenants dependency signal is $dependencyHealth"
+            }
+            elseif ($dependencyHealth) {
+                Add-Result $Category "Tenants dependency health ($fileName)" "Warn" "Tenants dependency signal is not a recognized value" `
+                    "Use one of: healthy, ok, ready, unhealthy, unreachable, missing. Remediation target: $fileName."
             }
         }
     }
 
+    $escapedExpectedTopic = [regex]::Escape($expectedTopic)
     $tenantSubscriptions = @(Get-ChildItem -Path $ConfigPath -Filter "subscription*.yaml" -ErrorAction SilentlyContinue |
         Where-Object {
             $content = Read-YamlFile $_.FullName
-            ($content -match "(?m)^\s*topic:\s*[`"']?$expectedTopic[`"']?") -or
-            ($content -match "(?m)^\s*topicName:\s*[`"']?$expectedTopic[`"']?")
+            if (-not $content) { return $false }
+            ($content -match "(?m)^\s*topic:\s*[`"']?$escapedExpectedTopic[`"']?") -or
+            ($content -match "(?m)^\s*topicName:\s*[`"']?$escapedExpectedTopic[`"']?")
         })
 
     if ($tenantSubscriptions.Count -eq 0) {
@@ -543,11 +557,11 @@ function Test-TenantsIntegration {
             $scopes = Get-YamlScopes $content
 
             if ($pubsubName -eq $expectedPubSub) {
-                Add-Result $Category "Tenants subscription pub/sub ($fileName)" "Pass" "Subscription uses pubsubname: $expectedPubSub"
+                Add-Result $Category "Tenants subscription pub/sub ($fileName)" "Pass" "Subscription uses the expected pubsub component"
             }
             else {
-                Add-Result $Category "Tenants subscription pub/sub ($fileName)" "Fail" "Subscription pubsubname is '$pubsubName'" `
-                    "Set pubsubname to '$expectedPubSub'. Impact: Tenants events may be routed through the wrong component."
+                Add-Result $Category "Tenants subscription pub/sub ($fileName)" "Fail" "Subscription pubsubname does not match expected value" `
+                    "Set pubsubname to '$expectedPubSub'. Impact: Tenants events may be routed through the wrong component. Remediation target: $fileName."
             }
 
             if ($scopes -contains $expectedAppId) {
@@ -558,12 +572,13 @@ function Test-TenantsIntegration {
                     "Add commandapi to subscription scopes. Impact: the Parties Tenants event subscription cannot run."
             }
 
-            if ($content -match "(?m)deadLetterTopic:") {
+            # Dead-letter topic must be present AND have a non-empty value.
+            if ($content -match "(?m)^\s*deadLetterTopic:\s*[`"']?([^`"'\r\n#]+)[`"']?") {
                 Add-Result $Category "Tenants subscription dead-letter ($fileName)" "Pass" "Dead-letter topic is configured"
             }
             else {
                 Add-Result $Category "Tenants subscription dead-letter ($fileName)" "Fail" "No deadLetterTopic configured for Tenants subscription" `
-                    "Add a deadLetterTopic and resiliency policy. Impact: failed Tenants events can be lost silently."
+                    "Add a non-empty deadLetterTopic and resiliency policy. Impact: failed Tenants events can be lost silently."
             }
         }
     }

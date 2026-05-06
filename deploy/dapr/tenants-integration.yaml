@@ -1,7 +1,9 @@
 # Hexalith.Parties Tenants Integration Contract
 # ====================================================================
 # Deployment validation reads this manifest to confirm that Parties is
-# configured as a consumer of Hexalith.Tenants authority state.
+# configured as a consumer of Hexalith.Tenants authority state. Parties
+# only consumes Tenants state; tenant lifecycle, membership, role, and
+# configuration ownership remain with Hexalith.Tenants.
 apiVersion: hexalith.io/v1
 kind: TenantsIntegration
 metadata:

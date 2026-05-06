@@ -81,60 +81,80 @@ public sealed class McpToolTenantAuthorizationTests
     /// Sidecar-free MCP harness that wires <see cref="McpTenantAuthorization"/>
     /// with the supplied access service into the actual tool.
     /// </summary>
-    private static Task InvokeFindParties(ITenantAccessService access, string query)
-        => FindPartiesMcpTool.FindPartiesAsync(
-            new ServiceCollection()
-                .AddSingleton(access)
-                .BuildServiceProvider(),
-            query);
-
-    private static Task InvokeCreateParty(ITenantAccessService access, ICommandRouter router)
-        => CreatePartyMcpTool.CreatePartyAsync(
-            "Person",
-            new ServiceCollection()
-                .AddSingleton(access)
-                .AddSingleton(router)
-                .BuildServiceProvider(),
-            firstName: "Ada",
-            lastName: "Lovelace");
-
-    private static Task InvokeGetParty(ITenantAccessService access, string partyId)
-        => GetPartyMcpTool.GetPartyAsync(
-            partyId,
-            new ServiceCollection()
-                .AddSingleton(access)
-                .BuildServiceProvider());
-
-    private readonly struct McpSessionScope : IDisposable
+    private static async Task InvokeFindParties(ITenantAccessService access, string query)
     {
-        private readonly IDisposable _tenantScope;
-        private readonly IDisposable _userScope;
-
-        private McpSessionScope(IDisposable tenantScope, IDisposable userScope)
+        ServiceProvider services = new ServiceCollection()
+            .AddSingleton(access)
+            .BuildServiceProvider();
+        try
         {
-            _tenantScope = tenantScope;
-            _userScope = userScope;
+            await FindPartiesMcpTool.FindPartiesAsync(services, query).ConfigureAwait(false);
         }
-
-        public static McpSessionScope For(string tenantId, string userId)
+        finally
         {
+            await services.DisposeAsync().ConfigureAwait(false);
+        }
+    }
+
+    private static async Task InvokeCreateParty(ITenantAccessService access, ICommandRouter router)
+    {
+        ServiceProvider services = new ServiceCollection()
+            .AddSingleton(access)
+            .AddSingleton(router)
+            .BuildServiceProvider();
+        try
+        {
+            await CreatePartyMcpTool.CreatePartyAsync(
+                "Person",
+                services,
+                firstName: "Ada",
+                lastName: "Lovelace").ConfigureAwait(false);
+        }
+        finally
+        {
+            await services.DisposeAsync().ConfigureAwait(false);
+        }
+    }
+
+    private static async Task InvokeGetParty(ITenantAccessService access, string partyId)
+    {
+        ServiceProvider services = new ServiceCollection()
+            .AddSingleton(access)
+            .BuildServiceProvider();
+        try
+        {
+            await GetPartyMcpTool.GetPartyAsync(partyId, services).ConfigureAwait(false);
+        }
+        finally
+        {
+            await services.DisposeAsync().ConfigureAwait(false);
+        }
+    }
+
+    /// <summary>
+    /// Saves the previous AsyncLocal tenant/user values on construction and restores them on dispose.
+    /// Using <c>sealed class</c> rather than <c>readonly struct</c> avoids boxing on <c>using</c>
+    /// and ensures Dispose runs against the same captured previous-values regardless of value-copy semantics.
+    /// </summary>
+    private sealed class McpSessionScope : IDisposable
+    {
+        private readonly string? _previousTenant;
+        private readonly string? _previousUserId;
+
+        private McpSessionScope(string tenantId, string userId)
+        {
+            _previousTenant = McpSessionContext.Tenant.Value;
+            _previousUserId = McpSessionContext.UserId.Value;
             McpSessionContext.Tenant.Value = tenantId;
             McpSessionContext.UserId.Value = userId;
-            return new McpSessionScope(
-                new ResetOnDispose(() => McpSessionContext.Tenant.Value = null),
-                new ResetOnDispose(() => McpSessionContext.UserId.Value = null));
         }
+
+        public static McpSessionScope For(string tenantId, string userId) => new(tenantId, userId);
 
         public void Dispose()
         {
-            _tenantScope.Dispose();
-            _userScope.Dispose();
-        }
-
-        private sealed class ResetOnDispose(Action action) : IDisposable
-        {
-            private readonly Action _action = action;
-            public void Dispose() => _action();
+            McpSessionContext.Tenant.Value = _previousTenant;
+            McpSessionContext.UserId.Value = _previousUserId;
         }
     }
 }

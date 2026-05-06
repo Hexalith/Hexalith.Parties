@@ -1,6 +1,8 @@
+using System.Collections.Concurrent;
 using System.IdentityModel.Tokens.Jwt;
 using System.Net.Http.Json;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 
@@ -13,33 +15,80 @@ using Microsoft.IdentityModel.Tokens;
 
 namespace Hexalith.Parties.IntegrationTests.Tenants;
 
+/// <summary>
+/// Helpers for seeding Tenants-backed authorization state into the running
+/// Aspire CommandApi during full-topology tests.
+/// <para>
+/// <b>Why this seeds via /tenants/events instead of through Hexalith.Tenants commands:</b>
+/// In the local Aspire topology used by these tests, Hexalith.Tenants does not yet expose
+/// a stable HTTP command surface that Parties tests can call directly to provision tenants
+/// and memberships. Until that surface exists, this helper simulates DAPR delivery to
+/// Parties' own Tenants event ingress, which exercises Story 11.2's local projection,
+/// authorization, and fail-closed behavior end-to-end inside the Parties process.
+/// The simulated envelope shape mirrors the production Tenants pub/sub envelope and
+/// must be kept in sync with <see cref="TenantEventEnvelope"/> upstream.
+/// Follow-up: replace with real Hexalith.Tenants command invocations once the topology
+/// exposes them. See deferred-work.md (Story 11-4 review, item D1).
+/// </para>
+/// </summary>
 internal static class TenantIntegrationTestSeeder
 {
     private const string Issuer = "hexalith-dev";
     private const string Audience = "hexalith-parties";
-    private const string SigningKey = "DevOnlySigningKey-AtLeast32Chars-MustBeSecure!";
+    private const string SigningKeyEnvVar = "HEXALITH_PARTIES_TEST_SIGNING_KEY";
 
+    // Per-tenant monotonic sequence counter. Shared across SeedActiveTenantAsync,
+    // DisableTenantAsync, and RemoveUserFromTenantAsync so consecutive operations on
+    // the same tenant produce strictly-increasing SequenceNumber values that the local
+    // Tenants projection accepts in order.
+    private static readonly ConcurrentDictionary<string, long> s_sequenceCounters = new(StringComparer.Ordinal);
+
+    private static readonly Lazy<string> s_signingKey = new(ResolveSigningKey);
+
+    internal static async Task<InMemoryTenantProjectionStore> CreateProjectionStoreAsync(params TenantMemberSeed[] members)
+    {
+        InMemoryTenantProjectionStore store = new();
+        foreach (IGrouping<string, TenantMemberSeed> tenantGroup in members.GroupBy(m => m.TenantId, StringComparer.Ordinal))
+        {
+            await store.SaveAsync(BuildState(tenantGroup)).ConfigureAwait(false);
+        }
+
+        return store;
+    }
+
+    /// <summary>
+    /// Synchronous overload for callers (such as <c>WebApplicationFactory.ConfigureTestServices</c>)
+    /// that cannot await. Safe because <see cref="InMemoryTenantProjectionStore.SaveAsync"/>
+    /// completes synchronously — no I/O, no SynchronizationContext capture, no deadlock risk.
+    /// New async callers should prefer <see cref="CreateProjectionStoreAsync"/>.
+    /// </summary>
     internal static InMemoryTenantProjectionStore CreateProjectionStore(params TenantMemberSeed[] members)
     {
         InMemoryTenantProjectionStore store = new();
         foreach (IGrouping<string, TenantMemberSeed> tenantGroup in members.GroupBy(m => m.TenantId, StringComparer.Ordinal))
         {
-            var state = new TenantLocalState
-            {
-                TenantId = tenantGroup.Key,
-                Name = $"Test {tenantGroup.Key}",
-                Status = TenantStatus.Active,
-            };
-
-            foreach (TenantMemberSeed member in tenantGroup)
-            {
-                state.Members[member.UserId] = member.Role;
-            }
-
-            store.SaveAsync(state).GetAwaiter().GetResult();
+            // SaveAsync on the in-memory store completes synchronously; safe to GetResult.
+            store.SaveAsync(BuildState(tenantGroup)).GetAwaiter().GetResult();
         }
 
         return store;
+    }
+
+    private static TenantLocalState BuildState(IGrouping<string, TenantMemberSeed> tenantGroup)
+    {
+        var state = new TenantLocalState
+        {
+            TenantId = tenantGroup.Key,
+            Name = $"Test {tenantGroup.Key}",
+            Status = TenantStatus.Active,
+        };
+
+        foreach (TenantMemberSeed member in tenantGroup)
+        {
+            state.Members[member.UserId] = member.Role;
+        }
+
+        return state;
     }
 
     internal static async Task SeedActiveTenantAsync(
@@ -56,17 +105,16 @@ internal static class TenantIntegrationTestSeeder
             client,
             tenantId,
             new TenantCreated(tenantId, $"Test {tenantId}", null, DateTimeOffset.UtcNow),
-            sequenceNumber: 1,
+            NextSequenceNumber(tenantId),
             cancellationToken).ConfigureAwait(false);
 
-        long sequenceNumber = 2;
         foreach (TenantMemberSeed member in members)
         {
             await PublishTenantEventAsync(
                 client,
                 tenantId,
                 new UserAddedToTenant(tenantId, member.UserId, member.Role),
-                sequenceNumber++,
+                NextSequenceNumber(tenantId),
                 cancellationToken).ConfigureAwait(false);
         }
     }
@@ -74,31 +122,29 @@ internal static class TenantIntegrationTestSeeder
     internal static Task DisableTenantAsync(
         HttpClient client,
         string tenantId,
-        long sequenceNumber = 100,
         CancellationToken cancellationToken = default)
         => PublishTenantEventAsync(
             client,
             tenantId,
             new TenantDisabled(tenantId, DateTimeOffset.UtcNow),
-            sequenceNumber,
+            NextSequenceNumber(tenantId),
             cancellationToken);
 
     internal static Task RemoveUserFromTenantAsync(
         HttpClient client,
         string tenantId,
         string userId,
-        long sequenceNumber = 100,
         CancellationToken cancellationToken = default)
         => PublishTenantEventAsync(
             client,
             tenantId,
             new UserRemovedFromTenant(tenantId, userId),
-            sequenceNumber,
+            NextSequenceNumber(tenantId),
             cancellationToken);
 
     internal static string CreateToken(string tenantId, string userId, bool includeAdminRole = false)
     {
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(SigningKey));
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(s_signingKey.Value));
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
         var claims = new List<Claim>
@@ -109,6 +155,9 @@ internal static class TenantIntegrationTestSeeder
 
         if (includeAdminRole)
         {
+            // Keycloak realm role used by legacy admin-endpoint authorization filters.
+            // This is NOT a Hexalith.Tenants role enum (TenantOwner/TenantContributor/TenantReader)
+            // and does not authorize tenant-scoped operations on its own.
             claims.Add(new Claim(ClaimTypes.Role, "admin"));
         }
 
@@ -117,10 +166,37 @@ internal static class TenantIntegrationTestSeeder
             audience: Audience,
             claims: claims,
             notBefore: DateTime.UtcNow.AddMinutes(-1),
-            expires: DateTime.UtcNow.AddMinutes(30),
+            expires: DateTime.UtcNow.AddHours(2),
             signingCredentials: credentials);
 
         return new JwtSecurityTokenHandler().WriteToken(token);
+    }
+
+    /// <summary>
+    /// Resets the per-tenant sequence counters. Call between test runs that re-seed
+    /// the same tenant id from a clean projection state.
+    /// </summary>
+    internal static void ResetSequenceCounters() => s_sequenceCounters.Clear();
+
+    private static long NextSequenceNumber(string tenantId)
+        => s_sequenceCounters.AddOrUpdate(tenantId, _ => 1L, (_, current) => current + 1);
+
+    private static string ResolveSigningKey()
+    {
+        string? configured = Environment.GetEnvironmentVariable(SigningKeyEnvVar);
+        if (!string.IsNullOrWhiteSpace(configured))
+        {
+            return configured.Length < 32
+                ? throw new InvalidOperationException(
+                    $"{SigningKeyEnvVar} must be at least 32 characters for HMAC-SHA256.")
+                : configured;
+        }
+
+        // Generate a cryptographically random per-process key for tests when no
+        // environment-provided key is supplied. Process-stable so all tokens minted
+        // in the same test run share the same signing key.
+        byte[] random = RandomNumberGenerator.GetBytes(48);
+        return Convert.ToBase64String(random);
     }
 
     private static async Task PublishTenantEventAsync<TEvent>(
@@ -145,7 +221,13 @@ internal static class TenantIntegrationTestSeeder
             .PostAsJsonAsync("/tenants/events", envelope, cancellationToken)
             .ConfigureAwait(false);
 
-        response.EnsureSuccessStatusCode();
+        if (!response.IsSuccessStatusCode)
+        {
+            string body = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+            throw new InvalidOperationException(
+                $"Failed to publish simulated Tenants event {typeof(TEvent).Name} for tenant '{tenantId}' to /tenants/events. " +
+                $"Status: {(int)response.StatusCode} {response.StatusCode}. Body: {body}");
+        }
     }
 }
 

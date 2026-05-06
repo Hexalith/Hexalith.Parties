@@ -455,6 +455,8 @@ Stop conflicting processes or configure alternative ports in `launchSettings.jso
 | Symptom | Likely cause | Fix owner | REST/MCP behavior |
 | --- | --- | --- | --- |
 | `401 missing-tenant` | JWT lacks trusted tenant claim | Identity provider owner | REST returns 401; MCP throws `missing-tenant` |
+| `401 missing-user` | JWT lacks trusted user/subject claim | Identity provider owner | REST returns 401; MCP throws `missing-user` |
+| `403 unknown-tenant` | Tenant id is not present in the local Tenants projection | Tenant administrator | Provision the tenant in Hexalith.Tenants and wait for the subscription to converge |
 | `403 not-member` | Valid tenant claim but no active Hexalith.Tenants membership | Tenant administrator | REST returns 403; MCP throws `not-member` |
 | `403 insufficient-role` | Membership exists but role is too low | Tenant administrator | Read may pass; write/admin fails |
 | `403 tenant-disabled` | Tenant is disabled in Hexalith.Tenants | Tenant operator | All tenant-scoped access fails closed |

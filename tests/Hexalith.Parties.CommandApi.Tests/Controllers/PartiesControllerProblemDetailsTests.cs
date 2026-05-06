@@ -1908,6 +1908,9 @@ internal static class JwtTokenHelper
     internal static string CreateToken(string tenantId)
         => CreateTokenCore(tenantId, "test-user");
 
+    internal static string CreateToken(string tenantId, string userId)
+        => CreateTokenCore(tenantId, userId);
+
     internal static string CreateTokenWithoutSub(string tenantId)
         => CreateTokenCore(tenantId, subject: null);
 
