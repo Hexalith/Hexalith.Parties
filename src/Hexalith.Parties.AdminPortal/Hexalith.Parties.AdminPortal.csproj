@@ -6,8 +6,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
     <ProjectReference Include="..\Hexalith.Parties.Contracts\Hexalith.Parties.Contracts.csproj" />
     <ProjectReference Include="..\..\Hexalith.FrontComposer\src\Hexalith.FrontComposer.Contracts\Hexalith.FrontComposer.Contracts.csproj" />
+    <ProjectReference Include="..\..\Hexalith.Tenants\src\Hexalith.Tenants.Client\Hexalith.Tenants.Client.csproj" />
+    <ProjectReference Include="..\..\Hexalith.Tenants\src\Hexalith.Tenants.Contracts\Hexalith.Tenants.Contracts.csproj" />
   </ItemGroup>
 
 </Project>

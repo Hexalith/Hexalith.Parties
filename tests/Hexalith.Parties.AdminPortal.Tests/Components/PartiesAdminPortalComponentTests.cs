@@ -1,13 +1,17 @@
 using Bunit;
 
 using System.Globalization;
+using System.Security.Claims;
 
 using Hexalith.Parties.AdminPortal.Components;
 using Hexalith.Parties.AdminPortal.Services;
 using Hexalith.Parties.AdminPortal.Tests.Services;
 using Hexalith.Parties.Contracts.Models;
 using Hexalith.Parties.Contracts.ValueObjects;
+using Hexalith.Tenants.Client.Projections;
+using Hexalith.Tenants.Contracts.Enums;
 
+using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -17,6 +21,18 @@ namespace Hexalith.Parties.AdminPortal.Tests.Components;
 
 public sealed class PartiesAdminPortalComponentTests : BunitContext
 {
+    private const string AdminUserId = "admin-user";
+
+    private readonly TestAuthenticationStateProvider _authProvider = new();
+    private readonly InMemoryTenantProjectionStore _tenantStore = new();
+
+    public PartiesAdminPortalComponentTests()
+    {
+        Services.AddSingleton<AuthenticationStateProvider>(_authProvider);
+        Services.AddSingleton<ITenantProjectionStore>(_tenantStore);
+        Services.AddScoped<IAdminPortalAuthorizationService, AdminPortalAuthorizationService>();
+    }
+
     [Fact]
     public void PartiesAdminPortal_InitialBrowse_RendersDensePartyRows()
     {
@@ -39,7 +55,7 @@ public sealed class PartiesAdminPortalComponentTests : BunitContext
     }
 
     [Fact]
-    public void PartiesAdminPortal_FailsClosed_WhenAuthParametersDefaultToFalse()
+    public void PartiesAdminPortal_FailsClosed_WhenAuthenticationStateIsUnauthenticated()
     {
         var api = new RecordingAdminPortalApiClient();
         api.EnqueueList(Page(IndexEntry("party-secret", "Secret", PartyType.Person, true)));
@@ -52,6 +68,43 @@ public sealed class PartiesAdminPortalComponentTests : BunitContext
         {
             cut.Markup.ShouldContain("Sign-in is required");
             cut.Markup.ShouldNotContain("Secret");
+        });
+
+        api.ListRequests.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void PartiesAdminPortal_DerivesAuthorizationFromTenantsMembership()
+    {
+        var api = new RecordingAdminPortalApiClient();
+        api.EnqueueList(Page(IndexEntry("party-owner", "Owner visible", PartyType.Person, true)));
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+        SeedTenant("scope-a", AdminUserId, TenantRole.TenantOwner);
+
+        _authProvider.SetAuthenticated(AdminUserId, "scope-a");
+        IRenderedComponent<PartiesAdminPortal> cut = Render<PartiesAdminPortal>(p => p
+            .Add(x => x.ContextKey, "scope-a"));
+
+        cut.WaitForAssertion(() => cut.Markup.ShouldContain("Owner visible"));
+        api.ListRequests.Single().Page.ShouldBe(1);
+    }
+
+    [Fact]
+    public void PartiesAdminPortal_DerivesAdminRoleFromTenantsMembership()
+    {
+        var api = new RecordingAdminPortalApiClient();
+        api.EnqueueList(Page(IndexEntry("party-reader", "Reader hidden", PartyType.Person, true)));
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+        SeedTenant("scope-a", "reader-user", TenantRole.TenantReader);
+
+        _authProvider.SetAuthenticated("reader-user", "scope-a");
+        IRenderedComponent<PartiesAdminPortal> cut = Render<PartiesAdminPortal>(p => p
+            .Add(x => x.ContextKey, "scope-a"));
+
+        cut.WaitForAssertion(() =>
+        {
+            cut.Markup.ShouldContain("Administrator access is required");
+            cut.Markup.ShouldNotContain("Reader hidden");
         });
 
         api.ListRequests.ShouldBeEmpty();
@@ -199,13 +252,8 @@ public sealed class PartiesAdminPortalComponentTests : BunitContext
 
         cut.WaitForAssertion(() => cut.Markup.ShouldContain("Tenant A"));
 
-        cut.InvokeAsync(() => cut.Instance.SetParametersAsync(ParameterView.FromDictionary(new Dictionary<string, object?>
-        {
-            [nameof(PartiesAdminPortal.ContextKey)] = "scope-b",
-            [nameof(PartiesAdminPortal.IsAuthenticated)] = true,
-            [nameof(PartiesAdminPortal.HasTenantContext)] = true,
-            [nameof(PartiesAdminPortal.IsAdmin)] = false,
-        })));
+        SeedTenant("scope-b", "reader-user", TenantRole.TenantReader);
+        cut.InvokeAsync(() => _authProvider.SetAuthenticated("reader-user", "scope-b"));
 
         cut.WaitForAssertion(() =>
         {
@@ -232,13 +280,8 @@ public sealed class PartiesAdminPortalComponentTests : BunitContext
         IRenderedComponent<PartiesAdminPortal> cut = RenderAuthorized("scope-a");
         cut.WaitForAssertion(() => api.ListRequests.Count.ShouldBe(1));
 
-        cut.InvokeAsync(() => cut.Instance.SetParametersAsync(ParameterView.FromDictionary(new Dictionary<string, object?>
-        {
-            [nameof(PartiesAdminPortal.ContextKey)] = "scope-b",
-            [nameof(PartiesAdminPortal.IsAuthenticated)] = true,
-            [nameof(PartiesAdminPortal.HasTenantContext)] = true,
-            [nameof(PartiesAdminPortal.IsAdmin)] = true,
-        })));
+        SeedTenant("scope-b", AdminUserId, TenantRole.TenantOwner);
+        cut.InvokeAsync(() => _authProvider.SetAuthenticated(AdminUserId, "scope-b"));
 
         cut.WaitForAssertion(() => cut.Markup.ShouldContain("Tenant B"));
         delayed.TrySetResult(new AdminPortalQueryResult<PagedResult<PartyIndexEntry>>(
@@ -340,12 +383,11 @@ public sealed class PartiesAdminPortalComponentTests : BunitContext
                 RestrictedAt = DateTimeOffset.Parse("2026-05-03T00:00:00Z"),
             });
             Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+            SeedTenant("scope-fr", AdminUserId, TenantRole.TenantOwner);
+            _authProvider.SetAuthenticated(AdminUserId, "scope-fr");
 
             IRenderedComponent<PartiesAdminPortal> cut = Render<PartiesAdminPortal>(p => p
                 .Add(x => x.ContextKey, "scope-fr")
-                .Add(x => x.IsAuthenticated, true)
-                .Add(x => x.HasTenantContext, true)
-                .Add(x => x.IsAdmin, true)
                 .Add(x => x.Labels, new AdminPortalLabels
                 {
                     Page = "Page",
@@ -383,12 +425,11 @@ public sealed class PartiesAdminPortalComponentTests : BunitContext
         var api = new RecordingAdminPortalApiClient();
         api.EnqueueList(Page<PartyIndexEntry>());
         Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+        SeedTenant("scope-a", AdminUserId, TenantRole.TenantOwner);
+        _authProvider.SetAuthenticated(AdminUserId, "scope-a");
 
         IRenderedComponent<PartiesAdminPortal> cut = Render<PartiesAdminPortal>(p => p
             .Add(x => x.ContextKey, "scope-a")
-            .Add(x => x.IsAuthenticated, true)
-            .Add(x => x.HasTenantContext, true)
-            .Add(x => x.IsAdmin, true)
             .Add(x => x.Labels, new AdminPortalLabels
             {
                 Title = "Tiers",
@@ -506,12 +547,24 @@ public sealed class PartiesAdminPortalComponentTests : BunitContext
     }
 
     private IRenderedComponent<PartiesAdminPortal> RenderAuthorized(string contextKey, int pageSize = AdminPortalQueryBounds.DefaultPageSize)
-        => Render<PartiesAdminPortal>(p => p
+    {
+        SeedTenant(contextKey, AdminUserId, TenantRole.TenantOwner);
+        _authProvider.SetAuthenticated(AdminUserId, contextKey);
+        return Render<PartiesAdminPortal>(p => p
             .Add(x => x.ContextKey, contextKey)
-            .Add(x => x.IsAuthenticated, true)
-            .Add(x => x.HasTenantContext, true)
-            .Add(x => x.IsAdmin, true)
             .Add(x => x.PageSize, pageSize));
+    }
+
+    private void SeedTenant(string tenantId, string userId, TenantRole role)
+    {
+        var state = new TenantLocalState
+        {
+            TenantId = tenantId,
+            Status = TenantStatus.Active,
+        };
+        state.Members[userId] = role;
+        _tenantStore.SaveAsync(state).GetAwaiter().GetResult();
+    }
 
     private static PartyIndexEntry IndexEntry(string id, string name, PartyType type, bool active) => new()
     {
@@ -531,4 +584,22 @@ public sealed class PartiesAdminPortalComponentTests : BunitContext
         TotalCount = items.Length,
         TotalPages = items.Length == 0 ? 0 : 1,
     };
+
+    private sealed class TestAuthenticationStateProvider : AuthenticationStateProvider
+    {
+        private AuthenticationState _state = new(new ClaimsPrincipal(new ClaimsIdentity()));
+
+        public override Task<AuthenticationState> GetAuthenticationStateAsync() => Task.FromResult(_state);
+
+        public void SetAuthenticated(string userId, string tenantId)
+        {
+            Claim[] claims =
+            [
+                new Claim("sub", userId),
+                new Claim("eventstore:tenant", tenantId),
+            ];
+            _state = new AuthenticationState(new ClaimsPrincipal(new ClaimsIdentity(claims, "Test")));
+            NotifyAuthenticationStateChanged(GetAuthenticationStateAsync());
+        }
+    }
 }

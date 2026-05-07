@@ -1,5 +1,5 @@
 # generated: 2026-05-02
-# last_updated: 2026-05-07  (story 11-1 moved review→done after bmad-code-review applied 7 patches across decisions and direct fixes: opt-in `Tenants:Enabled` base default, shared state-store `keyPrefix=none` propagation, bounded HttpClient timeout, cancellation rethrow, AC2 manual-bootstrap docs, switchable tenants readiness probe + `/ready=503` integration test; 5 items deferred. Focused CommandApi tests 23/23 passing; AppHost and CommandApi build clean. Earlier same-day updates: story 11-1 moved blocked→review; story 10-1 moved in-progress→review; story 11-4 moved to done.)
+# last_updated: 2026-05-07  (epic 9 retrospective completed and saved as epic-9-retro-2026-05-07.md. Earlier same-day update: story 11-1 moved review→done after bmad-code-review applied 7 patches across decisions and direct fixes: opt-in `Tenants:Enabled` base default, shared state-store `keyPrefix=none` propagation, bounded HttpClient timeout, cancellation rethrow, AC2 manual-bootstrap docs, switchable tenants readiness probe + `/ready=503` integration test; 5 items deferred. Focused CommandApi tests 23/23 passing; AppHost and CommandApi build clean. Earlier same-day updates: story 11-1 moved blocked→review; story 10-1 moved in-progress→review; story 11-4 moved to done.)
 # project: Hexalith.Parties
 # project_key: NOKEY
 # tracking_system: file-system
@@ -114,7 +114,7 @@ development_status:
   9-4-consent-management-restriction-and-portability: done
   9-5-temporal-name-queries: done
   9-6-hexalith-memories-backed-party-search: done
-  epic-9-retrospective: optional
+  epic-9-retrospective: done
 
   # Epic 11: Hexalith.Tenants Integration for Parties (4 stories)
   epic-11: in-progress
@@ -127,7 +127,7 @@ development_status:
   # Epic 10: Administration & Frontend (v1.2) (4 stories — 10-1-1 added by pass-2 review)
   epic-10: in-progress
   10-1-admin-portal-browse-search-and-inspect: done
-  10-1-1-admin-portal-frontcomposer-and-tenants-integration: backlog
+  10-1-1-admin-portal-frontcomposer-and-tenants-integration: in-progress
   10-2-admin-portal-gdpr-operations: ready-for-dev
   10-3-embeddable-party-picker-component: in-progress
   epic-10-retrospective: optional

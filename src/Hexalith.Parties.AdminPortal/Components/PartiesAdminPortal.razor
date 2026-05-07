@@ -1,5 +1,7 @@
 @page "/admin/parties"
 @inject IPartiesAdminPortalApiClient ApiClient
+@inject IAdminPortalAuthorizationService AuthorizationService
+@inject AuthenticationStateProvider AuthenticationStateProvider
 @implements IDisposable
 
 <section class="hx-parties-admin" aria-labelledby="@($"hx-parties-admin-title-{_instanceId}")">
@@ -269,6 +271,7 @@
     private PartyDetail? _detail;
     private AdminPortalQueryMetadata? _detailMetadata;
     private string? _previousContextSignature;
+    private AdminPortalAuthorizationState _authorizationState = AdminPortalAuthorizationState.Unauthenticated;
     private StatusKind _statusKind = StatusKind.Loading;
     private DetailEmptyKind _detailEmptyKind = DetailEmptyKind.SelectParty;
     private string? _validationDetail;
@@ -288,15 +291,6 @@
 
     [Parameter]
     public string? ContextKey { get; set; }
-
-    [Parameter]
-    public bool IsAuthenticated { get; set; }
-
-    [Parameter]
-    public bool HasTenantContext { get; set; }
-
-    [Parameter]
-    public bool IsAdmin { get; set; }
 
     [Parameter]
     public int PageSize { get; set; } = AdminPortalQueryBounds.DefaultPageSize;
@@ -357,13 +351,21 @@
         _ => EffectiveLabels.SelectParty,
     };
 
-    protected override async Task OnParametersSetAsync()
+    protected override void OnInitialized()
     {
+        AuthenticationStateProvider.AuthenticationStateChanged += OnAuthenticationStateChanged;
+    }
+
+    protected override Task OnParametersSetAsync() => ApplyAuthorizationContextAsync();
+
+    private async Task ApplyAuthorizationContextAsync()
+    {
+        AdminPortalAuthorizationState authorizationState = await AuthorizationService
+            .GetAuthorizationStateAsync()
+            .ConfigureAwait(false);
         string signature = string.Join('|',
             ContextKey ?? "<null>",
-            IsAuthenticated,
-            HasTenantContext,
-            IsAdmin,
+            authorizationState.ContextSignature,
             PageSize,
             RichSearchAvailable);
         if (string.Equals(_previousContextSignature, signature, StringComparison.Ordinal))
@@ -372,23 +374,24 @@
         }
 
         _previousContextSignature = signature;
+        _authorizationState = authorizationState;
         ResetVisibleState();
 
-        if (!IsAuthenticated)
+        if (!_authorizationState.IsAuthenticated)
         {
             _statusKind = StatusKind.SignInRequired;
             _detailEmptyKind = DetailEmptyKind.SignInRequired;
             return;
         }
 
-        if (!HasTenantContext)
+        if (!_authorizationState.HasTenantContext)
         {
             _statusKind = StatusKind.TenantUnavailable;
             _detailEmptyKind = DetailEmptyKind.TenantUnavailable;
             return;
         }
 
-        if (!IsAdmin)
+        if (!_authorizationState.IsAdmin)
         {
             _statusKind = StatusKind.AdminRequired;
             _detailEmptyKind = DetailEmptyKind.AccessDenied;
@@ -396,6 +399,15 @@
         }
 
         await LoadPageAsync().ConfigureAwait(false);
+    }
+
+    private void OnAuthenticationStateChanged(Task<AuthenticationState> task)
+    {
+        _ = InvokeAsync(async () =>
+        {
+            await ApplyAuthorizationContextAsync().ConfigureAwait(false);
+            await SafeStateHasChangedAsync().ConfigureAwait(false);
+        });
     }
 
     private async Task SubmitSearchAsync()
@@ -819,6 +831,7 @@
             return;
         }
 
+        AuthenticationStateProvider.AuthenticationStateChanged -= OnAuthenticationStateChanged;
         CancelInFlight();
     }
 

@@ -2,6 +2,7 @@ using Hexalith.FrontComposer.Contracts.Registration;
 using Hexalith.Parties.AdminPortal.Services;
 
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
 
 namespace Hexalith.Parties.AdminPortal.Extensions;
@@ -19,6 +20,7 @@ public static class PartiesAdminPortalServiceCollectionExtensions
         services.AddHttpClient<IPartiesAdminPortalApiClient, PartiesAdminPortalApiClient>();
         services.AddScoped<PartiesAdminListCoordinator>();
         services.AddScoped<AdminPortalPartyQueryService>();
+        services.TryAddScoped<IAdminPortalAuthorizationService, AdminPortalAuthorizationService>();
         return services;
     }
 
