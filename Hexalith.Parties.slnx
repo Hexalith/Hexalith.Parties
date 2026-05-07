@@ -5,6 +5,7 @@
   <Folder Name="/src/">
     <Project Path="src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj" />
     <Project Path="src/Hexalith.Parties.Aspire/Hexalith.Parties.Aspire.csproj" />
+    <Project Path="src/Hexalith.Parties.AdminPortal/Hexalith.Parties.AdminPortal.csproj" />
     <Project Path="src/Hexalith.Parties.Client/Hexalith.Parties.Client.csproj" />
     <Project Path="src/Hexalith.Parties.CommandApi/Hexalith.Parties.CommandApi.csproj" />
     <Project Path="src/Hexalith.Parties.Contracts/Hexalith.Parties.Contracts.csproj" />
@@ -17,6 +18,7 @@
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/Hexalith.Parties.Client.Tests/Hexalith.Parties.Client.Tests.csproj" />
+    <Project Path="tests/Hexalith.Parties.AdminPortal.Tests/Hexalith.Parties.AdminPortal.Tests.csproj" />
     <Project Path="tests/Hexalith.Parties.CommandApi.Tests/Hexalith.Parties.CommandApi.Tests.csproj" />
     <Project Path="tests/Hexalith.Parties.Contracts.Tests/Hexalith.Parties.Contracts.Tests.csproj" />
     <Project Path="tests/Hexalith.Parties.Picker.Tests/Hexalith.Parties.Picker.Tests.csproj" />

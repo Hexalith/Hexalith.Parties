@@ -2,6 +2,15 @@
 
 Items raised during code review that are real but not actionable in the current story. Pick up in a follow-up story or hardening sprint.
 
+## Deferred from: code review of 10-1-admin-portal-browse-search-and-inspect (2026-05-07)
+
+- `AdminPortalQueryBounds.BoundPage` has no upper limit; `_page` could overflow with `int.MaxValue` clicks. Defensive only; not realistic at human click rate. [src/Hexalith.Parties.AdminPortal/Services/AdminPortalQueryBounds.cs]
+- `AdminPortalQueryException.StatusCode` is publicly exposed — a future caller logging `ex.StatusCode` would mildly leak server status. No current consumer uses it. [src/Hexalith.Parties.AdminPortal/Services/AdminPortalQueryException.cs]
+- Header parsing edge cases: multiple values for the same header (`X-Service-Degraded`), non-bool synonyms ("yes"/"1"), very long query strings (>2KB → 414), inverted date ranges (`createdBefore < createdAfter`). All defensive; backend currently emits canonical bool/single-value headers. [src/Hexalith.Parties.AdminPortal/Services/PartiesAdminPortalApiClient.cs]
+- `PortalFilters.Active` does not trim whitespace before `bool.TryParse` — minor robustness only. [src/Hexalith.Parties.AdminPortal/Components/PartiesAdminPortal.razor]
+- `AdminPortalQueryFailureKind` switches in `ApplyFailure`/`SelectPartyAsync` are non-exhaustive — no new failure kinds planned for this story. [src/Hexalith.Parties.AdminPortal/Services/AdminPortalQueryFailureKind.cs]
+- Adopt `IAsyncDisposable` to await any in-flight task before final disposal — the immediate `ObjectDisposedException` race after `Dispose` is covered by P11 (`_disposed` flag check); the broader async-dispose contract is a hardening improvement, not a fix.
+
 ## Deferred from: code review of 11-4-tenants-integration-tests-deployment-validation-and-documentation — pass 2 (2026-05-06)
 
 - `tenants-integration.yaml` and `subscription-tenants.yaml` hardcode `commandapi` without env-var indirection (`{env:COMMAND_API_APP_ID}`) — diverges from rest of deploy folder pattern; deferred because changing this could break operator-side env wiring without a coordinated config-template refresh. [deploy/dapr/tenants-integration.yaml, deploy/dapr/subscription-tenants.yaml]

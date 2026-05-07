@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+  <PropertyGroup>
+    <PackageId>Hexalith.Parties.AdminPortal</PackageId>
+    <Description>FrontComposer-hosted Blazor administration portal for Hexalith.Parties.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Hexalith.Parties.Contracts\Hexalith.Parties.Contracts.csproj" />
+    <ProjectReference Include="..\..\Hexalith.FrontComposer\src\Hexalith.FrontComposer.Contracts\Hexalith.FrontComposer.Contracts.csproj" />
+  </ItemGroup>
+
+</Project>
