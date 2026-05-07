@@ -243,7 +243,12 @@ public sealed class HelperDrivenTenantAccessTests
                 ? throw new InvalidOperationException("Local Tenants projection is stale for this tenant.")
                 : Task.FromResult<TenantLocalState?>(null);
 
+        // Throw on SaveAsync rather than silently no-op'ing: this fake exists only to surface
+        // the stale-projection denial path on Get; any test that accidentally calls SaveAsync
+        // would otherwise get a vacuous pass without actually persisting state.
         public Task SaveAsync(TenantLocalState state, CancellationToken cancellationToken = default)
-            => Task.CompletedTask;
+            => throw new NotSupportedException(
+                $"{nameof(StaleSignalingTenantProjectionStore)} only models stale-read denial; tests must not call {nameof(SaveAsync)} on it. " +
+                $"Use a real {nameof(ITenantProjectionStore)} implementation if you need to persist state.");
     }
 }

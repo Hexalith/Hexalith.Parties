@@ -35,7 +35,8 @@ using Shouldly;
 
 namespace Hexalith.Parties.CommandApi.Tests.Controllers;
 
-public sealed class PartiesControllerProblemDetailsTests : IClassFixture<PartiesApiTestFactory>
+[Collection(PartiesApiTestCollection.Name)]
+public sealed class PartiesControllerProblemDetailsTests : IClassFixture<PartiesApiTestFactory>, IDisposable
 {
     private readonly PartiesApiTestFactory _factory;
 
@@ -47,6 +48,20 @@ public sealed class PartiesControllerProblemDetailsTests : IClassFixture<Parties
         _factory.CommandGuard
             .GetBlockingReasonAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<object>(), Arg.Any<CancellationToken>())
             .Returns((string?)null);
+    }
+
+    /// <summary>
+    /// Reset shared fixture state on dispose so subsequent test classes that share the
+    /// same <see cref="PartiesApiTestFactory"/> via IClassFixture don't inherit dirty
+    /// projection or access-handler state from the last test in this class.
+    /// </summary>
+    public void Dispose()
+    {
+        _factory.ResetProjectionState();
+        _factory.TenantAccessService.AllowAll();
+        _factory.Router.ClearReceivedCalls();
+        _factory.ActorProxyFactory.ClearReceivedCalls();
+        GC.SuppressFinalize(this);
     }
 
     [Fact]
@@ -1831,6 +1846,9 @@ public sealed class PartiesApiTestFactory : WebApplicationFactory<Program>
         ArgumentException.ThrowIfNullOrWhiteSpace(tenantId);
         ArgumentNullException.ThrowIfNull(details);
 
+        // Defensive copies — sharing PartyDetail.ContactChannels/Identifiers between the
+        // detail and the index entry would let a future test mutating one bleed into the
+        // other (and into the projection that the read-side code returns).
         var indexEntries = new Dictionary<string, PartyIndexEntry>(StringComparer.Ordinal);
         foreach (PartyDetail detail in details)
         {
@@ -1840,8 +1858,8 @@ public sealed class PartiesApiTestFactory : WebApplicationFactory<Program>
                 Type = detail.Type,
                 IsActive = detail.IsActive,
                 DisplayName = detail.DisplayName,
-                SearchableContactChannels = detail.ContactChannels,
-                SearchableIdentifiers = detail.Identifiers,
+                SearchableContactChannels = detail.ContactChannels.ToArray(),
+                SearchableIdentifiers = detail.Identifiers.ToArray(),
                 CreatedAt = detail.CreatedAt,
                 LastModifiedAt = detail.LastModifiedAt,
                 IsErased = detail.IsErased,
@@ -1852,6 +1870,9 @@ public sealed class PartiesApiTestFactory : WebApplicationFactory<Program>
             }
         }
 
+        // Hold the projection lock around the full mutation AND the proxy reset so a
+        // concurrent reader can never observe a state where the detail dictionary has
+        // been cleared but the index dictionary is still stale (or vice versa).
         lock (_projectionLock)
         {
             string detailPrefix = TenantActorIds.PartyDetailPrefix(tenantId);
@@ -1866,33 +1887,44 @@ public sealed class PartiesApiTestFactory : WebApplicationFactory<Program>
             }
 
             _indexEntriesByActorId[TenantActorIds.PartyIndex(tenantId)] = indexEntries;
-        }
 
-        ResetIndexProxy();
+            ResetIndexProxyLocked();
+        }
     }
 
     internal void ResetIndexProxy()
     {
         lock (_projectionLock)
         {
-            ActorProxyFactory.CreateActorProxy<IPartyIndexProjectionActor>(
-                Arg.Any<ActorId>(), Arg.Any<string>(), Arg.Any<ActorProxyOptions?>())
-                .Returns(call =>
-                {
-                    string actorId = call.ArgAt<ActorId>(0).GetId();
-                    IReadOnlyDictionary<string, PartyIndexEntry> entries;
-                    lock (_projectionLock)
-                    {
-                        entries = _indexEntriesByActorId.TryGetValue(actorId, out IReadOnlyDictionary<string, PartyIndexEntry>? tenantEntries)
-                            ? tenantEntries
-                            : _indexEntries;
-                    }
-
-                    IPartyIndexProjectionActor indexProxy = Substitute.For<IPartyIndexProjectionActor>();
-                    indexProxy.GetEntriesAsync().Returns(_ => Task.FromResult(entries));
-                    return indexProxy;
-                });
+            ResetIndexProxyLocked();
         }
+    }
+
+    /// <summary>
+    /// Lock-held variant of <see cref="ResetIndexProxy"/>. The NSubstitute callback below
+    /// snapshots the projection dictionary inside the same lock used by readers — that
+    /// snapshot is what the actor proxy returns, so even if a writer races we always
+    /// hand the proxy a coherent view rather than a half-mutated dictionary.
+    /// </summary>
+    private void ResetIndexProxyLocked()
+    {
+        ActorProxyFactory.CreateActorProxy<IPartyIndexProjectionActor>(
+            Arg.Any<ActorId>(), Arg.Any<string>(), Arg.Any<ActorProxyOptions?>())
+            .Returns(call =>
+            {
+                string actorId = call.ArgAt<ActorId>(0).GetId();
+                IReadOnlyDictionary<string, PartyIndexEntry> entries;
+                lock (_projectionLock)
+                {
+                    entries = _indexEntriesByActorId.TryGetValue(actorId, out IReadOnlyDictionary<string, PartyIndexEntry>? tenantEntries)
+                        ? tenantEntries
+                        : _indexEntries;
+                }
+
+                IPartyIndexProjectionActor indexProxy = Substitute.For<IPartyIndexProjectionActor>();
+                indexProxy.GetEntriesAsync().Returns(_ => Task.FromResult(entries));
+                return indexProxy;
+            });
     }
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)

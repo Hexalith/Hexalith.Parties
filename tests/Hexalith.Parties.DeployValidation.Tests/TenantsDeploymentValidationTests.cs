@@ -175,14 +175,68 @@ public sealed class TenantsDeploymentValidationTests : IDisposable
     [Fact]
     public async Task TenantsValidation_Output_DoesNotLeakSecretsOrPiiAsync()
     {
-        WriteBaseProductionConfig(_tempDir, includeTenantsSubscription: true, includeTenantsConfig: true, includeSensitiveValues: true);
+        // Inject a single random GUID sentinel into every operator-supplied field that the
+        // validator parses (pubsubName/topicName/commandApiAppId/tenantsDependencyHealth/
+        // dependency annotations). If the validator echoes ANY raw operator-supplied value,
+        // the sentinel will appear somewhere in the output — proving the secret-safe contract
+        // independently of which field a real operator might paste a secret into. Wins over
+        // the previous test that only matched 4 hand-picked tokens against a deliberately
+        // ignored YAML field.
+        string sentinel = $"hexalith-pii-sentinel-{Guid.NewGuid():N}";
+        WriteBaseProductionConfigWithSentinel(_tempDir, sentinel);
 
         (int _, string output) = await RunValidationAsync(_tempDir);
 
+        output.ShouldNotContain(sentinel, Case.Insensitive,
+            "validate-deployment.ps1 must not echo operator-supplied YAML values into its output. Output:\n" + output);
+        // Keep the legacy literal-token assertions as defence in depth — they exercise the
+        // narrower "common secret patterns" contract for completeness.
         output.ShouldNotContain("Bearer ", Case.Insensitive);
         output.ShouldNotContain("eventstore:tenant=");
         output.ShouldNotContain("user-1@example.com");
         output.ShouldNotContain("ConnectionString=");
+    }
+
+    /// <summary>
+    /// Writes a production config where every operator-supplied tenants field carries the
+    /// supplied sentinel (so the validator's "no leak" contract is proved by sentinel absence,
+    /// not by hand-picked token strings).
+    /// </summary>
+    private static void WriteBaseProductionConfigWithSentinel(string dir, string sentinel)
+    {
+        WriteCommonProductionFiles(dir, includeCommandApiScope: true);
+        File.WriteAllText(Path.Combine(dir, "subscription-tenants.yaml"), $$"""
+            apiVersion: dapr.io/v2alpha1
+            kind: Subscription
+            metadata:
+              annotations:
+                diagnostic: "Bearer {{sentinel}}"
+            spec:
+              pubsubname: pubsub
+              topic: "system.tenants.events"
+              routes:
+                default: /events/tenants
+              deadLetterTopic: "deadletter.system.tenants.events"
+            scopes:
+              - commandapi
+            """);
+        // Inject the sentinel into multiple fields. The valid-shape spec keys
+        // (pubsubName/topicName/commandApiAppId) are kept correct so the validator does
+        // not Fail on shape — instead it succeeds, and we assert nothing in its output
+        // echoes the sentinel from the annotations or the dependency-health field.
+        File.WriteAllText(Path.Combine(dir, "tenants-integration.yaml"), $$"""
+            apiVersion: hexalith.io/v1
+            kind: TenantsIntegration
+            metadata:
+              name: parties-tenants
+              annotations:
+                diagnostic: "Bearer {{sentinel}} eventstore:tenant=tenant-a"
+            spec:
+              pubsubName: pubsub
+              topicName: system.tenants.events
+              commandApiAppId: commandapi
+              tenantsDependencyHealth: "healthy {{sentinel}}"
+            """);
     }
 
     private async Task<(int exitCode, string output)> RunValidationAsync(string configDir, bool jsonOutput = false)
@@ -199,12 +253,27 @@ public sealed class TenantsDeploymentValidationTests : IDisposable
 
         using Process? process = Process.Start(psi);
         process.ShouldNotBeNull("Unable to start PowerShell to run validation script");
-        string stdout = await process.StandardOutput.ReadToEndAsync().ConfigureAwait(false);
-        string stderr = await process.StandardError.ReadToEndAsync().ConfigureAwait(false);
-        // 2-minute hard cap so a hung pwsh does not stall CI indefinitely.
+        // 2-minute hard cap covers BOTH the stdout/stderr drain AND WaitForExitAsync — a
+        // hung pwsh that produces output but never exits would otherwise block ReadToEndAsync
+        // before the timeout could fire.
         using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(2));
-        await process.WaitForExitAsync(cts.Token).ConfigureAwait(false);
-        return (process.ExitCode, stdout + stderr);
+        Task<string> stdoutTask = process.StandardOutput.ReadToEndAsync(cts.Token);
+        Task<string> stderrTask = process.StandardError.ReadToEndAsync(cts.Token);
+        try
+        {
+            await Task.WhenAll(stdoutTask, stderrTask, process.WaitForExitAsync(cts.Token)).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException)
+        {
+            if (!process.HasExited)
+            {
+                try { process.Kill(entireProcessTree: true); } catch (InvalidOperationException) { /* already exited */ }
+            }
+            throw new TimeoutException(
+                $"PowerShell validation did not complete within {cts.Token}. ConfigPath: {configDir}.");
+        }
+
+        return (process.ExitCode, stdoutTask.Result + stderrTask.Result);
     }
 
     /// <summary>

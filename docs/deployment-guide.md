@@ -233,7 +233,7 @@ The tool exits with code `0` on success and `1` on failure, making it suitable f
 | REST `403`, MCP `not-member` | Valid tenant claim but no active Tenants membership (or user removed) | Tenant administrator | No party projection read or command routing |
 | REST `403`, MCP `insufficient-role` | User role is below the operation requirement | Tenant administrator | Read/write/admin matrix enforced |
 | REST `403`, MCP `tenant-disabled` | Tenant disabled in Hexalith.Tenants | Tenant operator | All tenant-scoped access fails closed |
-| REST `403`, MCP `tenant-state-stale` | Tenants subscription, projection, or dependency unhealthy | Platform operator | Access fails closed until local state recovers |
+| REST `403`, MCP `tenant-state-stale` | Tenants subscription, projection, or dependency unhealthy | Platform operator | Access fails closed until local state recovers. Operator-driven recovery — the response carries no `Retry-After` header today, so clients should not auto-retry in a tight loop |
 
 ---
 

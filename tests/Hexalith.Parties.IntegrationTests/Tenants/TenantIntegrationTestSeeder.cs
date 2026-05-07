@@ -5,6 +5,7 @@ using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 using Hexalith.Tenants.Client.Projections;
 using Hexalith.Tenants.Client.Subscription;
@@ -45,6 +46,27 @@ internal static class TenantIntegrationTestSeeder
 
     private static readonly Lazy<string> s_signingKey = new(ResolveSigningKey);
 
+    /// <summary>
+    /// JSON options for the simulated Tenants event payload. Uses a string enum converter so
+    /// fields like <see cref="TenantRole"/> serialize as their canonical string names ("TenantOwner",
+    /// "TenantContributor", "TenantReader") matching the production Tenants pub/sub envelope and
+    /// the projection's deserialization contract. Default options would emit enums as integers,
+    /// which the receiving projection would silently reject.
+    /// </summary>
+    private static readonly JsonSerializerOptions s_eventPayloadOptions = new(JsonSerializerDefaults.Web)
+    {
+        Converters = { new JsonStringEnumConverter() },
+    };
+
+    /// <summary>
+    /// True when <see cref="ResolveSigningKey"/> fell back to a process-random signing key
+    /// because no env var or development settings file was found. Tokens minted in this state
+    /// will fail JWT validation against any process that uses a different key, surfacing as
+    /// 401/403 in tests. Fixtures should observe this and surface it in their unavailability
+    /// reason rather than running tests that look like authorization failures.
+    /// </summary>
+    internal static bool SigningKeyIsRandomFallback { get; private set; }
+
     internal static async Task<InMemoryTenantProjectionStore> CreateProjectionStoreAsync(params TenantMemberSeed[] members)
     {
         InMemoryTenantProjectionStore store = new();
@@ -58,8 +80,9 @@ internal static class TenantIntegrationTestSeeder
 
     /// <summary>
     /// Synchronous overload for callers (such as <c>WebApplicationFactory.ConfigureTestServices</c>)
-    /// that cannot await. Safe because <see cref="InMemoryTenantProjectionStore.SaveAsync"/>
-    /// completes synchronously — no I/O, no SynchronizationContext capture, no deadlock risk.
+    /// that cannot await. Asserts the underlying SaveAsync completes synchronously — if a future
+    /// upstream change adds real awaits the runtime check fails fast with a clear diagnostic
+    /// rather than risking a sync-over-async deadlock.
     /// New async callers should prefer <see cref="CreateProjectionStoreAsync"/>.
     /// </summary>
     internal static InMemoryTenantProjectionStore CreateProjectionStore(params TenantMemberSeed[] members)
@@ -67,8 +90,14 @@ internal static class TenantIntegrationTestSeeder
         InMemoryTenantProjectionStore store = new();
         foreach (IGrouping<string, TenantMemberSeed> tenantGroup in members.GroupBy(m => m.TenantId, StringComparer.Ordinal))
         {
-            // SaveAsync on the in-memory store completes synchronously; safe to GetResult.
-            store.SaveAsync(BuildState(tenantGroup)).GetAwaiter().GetResult();
+            Task saveTask = store.SaveAsync(BuildState(tenantGroup));
+            if (!saveTask.IsCompletedSuccessfully)
+            {
+                throw new InvalidOperationException(
+                    $"{nameof(InMemoryTenantProjectionStore)}.SaveAsync did not complete synchronously. " +
+                    $"Use {nameof(CreateProjectionStoreAsync)} instead — calling .GetAwaiter().GetResult() here would risk a sync-over-async deadlock.");
+            }
+            saveTask.GetAwaiter().GetResult();
         }
 
         return store;
@@ -201,9 +230,12 @@ internal static class TenantIntegrationTestSeeder
                 : appSettingsKey;
         }
 
-        // Generate a cryptographically random per-process key for tests when no
-        // environment-provided or CommandApi development key is supplied. Process-stable
-        // so all tokens minted in the same test run share the same signing key.
+        // Last-resort fallback: generate a cryptographically random per-process key. Tokens
+        // minted with this key will fail JWT validation against any process that uses a
+        // different key (the running CommandApi). Mark the fallback so fixtures can surface
+        // it in their unavailability reason rather than running tests that look like genuine
+        // authorization failures.
+        SigningKeyIsRandomFallback = true;
         byte[] random = RandomNumberGenerator.GetBytes(48);
         return Convert.ToBase64String(random);
     }
@@ -251,7 +283,7 @@ internal static class TenantIntegrationTestSeeder
             Timestamp: DateTimeOffset.UtcNow,
             CorrelationId: Guid.NewGuid().ToString("N"),
             SerializationFormat: "json",
-            Payload: JsonSerializer.SerializeToUtf8Bytes(@event));
+            Payload: JsonSerializer.SerializeToUtf8Bytes(@event, s_eventPayloadOptions));
 
         using HttpResponseMessage response = await client
             .PostAsJsonAsync("/tenants/events", envelope, cancellationToken)

@@ -69,6 +69,12 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
         Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "Development");
         Environment.SetEnvironmentVariable("DOTNET_ENVIRONMENT", "Development");
 
+        // Reset per-tenant sequence counters so a re-init in the same test process starts
+        // at sequence 1 again (the local Tenants projection accepts only strictly-increasing
+        // sequence numbers, so leftover counter state from a previous fixture run can cause
+        // the first seeded event to be silently rejected).
+        TenantIntegrationTestSeeder.ResetSequenceCounters();
+
         try
         {
             // 5-minute timeout for full Aspire topology startup including DAPR sidecar
@@ -166,6 +172,8 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
                 ],
                 cancellationToken).ConfigureAwait(false);
 
+            cancellationToken.ThrowIfCancellationRequested();
+
             await TenantIntegrationTestSeeder.SeedActiveTenantAsync(
                 CommandApiClient,
                 "e2e-tenant",
@@ -179,12 +187,22 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
                 ],
                 cancellationToken).ConfigureAwait(false);
         }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
         catch (Exception ex)
         {
             // Surface the seeding failure as fixture-unavailable so dependent tests skip
-            // instead of producing misleading authorization failures downstream.
+            // instead of producing misleading authorization failures downstream. If the
+            // seeder fell back to a random JWT signing key, every PublishTenantEventAsync
+            // would have produced 401s — name that explicitly so the failure mode is obvious.
+            string signingKeyHint = TenantIntegrationTestSeeder.SigningKeyIsRandomFallback
+                ? " (signing key fell back to a per-process random value because no env var or appsettings.Development.json key was found; tokens cannot be validated by the running CommandApi)"
+                : string.Empty;
+
             throw new InvalidOperationException(
-                $"Failed to seed default Tenants access state for the Aspire topology fixture. " +
+                $"Failed to seed default Tenants access state for the Aspire topology fixture{signingKeyHint}. " +
                 $"Cause: {ex.GetType().Name}: {ex.Message}",
                 ex);
         }

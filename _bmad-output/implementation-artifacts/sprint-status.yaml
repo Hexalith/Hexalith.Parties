@@ -1,5 +1,5 @@
 # generated: 2026-05-02
-# last_updated: 2026-05-06  (story 11-4 moved to review after aligning Tenants E2E skip pattern with project conventions; targeted slice 6/6, full IntegrationTests baseline 42 pass / 1 skip / 7 deferred-baseline failures)
+# last_updated: 2026-05-07  (story 11-4 moved to done after pass-2 bmad-code-review applied 36 patches, deferred 7, dismissed 7; verified build + validate-deployment.ps1 + DeployValidation.Tests + CommandApi.Tests against the patches)
 # project: Hexalith.Parties
 # project_key: NOKEY
 # tracking_system: file-system
@@ -35,7 +35,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-05-02
-last_updated: 2026-05-06T11:30:00+02:00
+last_updated: 2026-05-07T08:00:00+02:00
 project: Hexalith.Parties
 project_key: NOKEY
 tracking_system: file-system
@@ -121,7 +121,7 @@ development_status:
   11-1-apphost-and-package-integration: blocked
   11-2-tenants-event-consumption-and-local-access-projection: done
   11-3-rest-and-mcp-tenant-authorization-enforcement: done
-  11-4-tenants-integration-tests-deployment-validation-and-documentation: review
+  11-4-tenants-integration-tests-deployment-validation-and-documentation: done
   epic-11-retrospective: optional
 
   # Epic 10: Administration & Frontend (v1.2) (3 stories)

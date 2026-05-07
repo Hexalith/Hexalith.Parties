@@ -22,7 +22,11 @@ cd Hexalith.Parties
 dotnet aspire run --project src/Hexalith.Parties.AppHost
 ```
 
-Open the Aspire dashboard (URL shown in terminal output) to verify all resources are running. Provision or use an active Hexalith.Tenants tenant membership before the first Parties call; Parties consumes Tenants state and does not manage tenant lifecycle or roles. See the [Getting Started Guide](docs/getting-started.md) for the full walkthrough including your first API call.
+Open the Aspire dashboard (URL shown in terminal output) to verify all resources are running.
+
+> **Prerequisite — tenant access state.** Provision or use an active Hexalith.Tenants tenant membership before the first Parties call. Parties consumes Tenants state and does not manage tenant lifecycle or roles itself.
+
+See the [Getting Started Guide](docs/getting-started.md) for the full walkthrough including your first API call.
 
 ## Documentation
 

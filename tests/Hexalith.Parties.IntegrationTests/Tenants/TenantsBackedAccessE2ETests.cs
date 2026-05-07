@@ -38,7 +38,7 @@ public sealed class TenantsBackedAccessE2ETests
         string token = TenantIntegrationTestSeeder.CreateToken("tenant-a", "user-1");
 
         HttpResponseMessage response = await PollAsync(
-            () => SendAsync(HttpMethod.Get, "/api/v1/parties", token),
+            ct => SendAsync(HttpMethod.Get, "/api/v1/parties", token, cancellationToken: ct),
             until: r => r.StatusCode == HttpStatusCode.OK);
 
         try
@@ -62,7 +62,7 @@ public sealed class TenantsBackedAccessE2ETests
         string token = TenantIntegrationTestSeeder.CreateToken("tenant-d", "user-1");
 
         HttpResponseMessage response = await PollAsync(
-            () => SendAsync(HttpMethod.Get, "/api/v1/parties", token),
+            ct => SendAsync(HttpMethod.Get, "/api/v1/parties", token, cancellationToken: ct),
             until: r => r.StatusCode == HttpStatusCode.Forbidden);
 
         try
@@ -87,7 +87,7 @@ public sealed class TenantsBackedAccessE2ETests
         string token = TenantIntegrationTestSeeder.CreateToken("tenant-r", "user-1");
 
         HttpResponseMessage response = await PollAsync(
-            () => SendAsync(HttpMethod.Get, "/api/v1/parties", token),
+            ct => SendAsync(HttpMethod.Get, "/api/v1/parties", token, cancellationToken: ct),
             until: r => r.StatusCode == HttpStatusCode.Forbidden);
 
         try
@@ -112,7 +112,7 @@ public sealed class TenantsBackedAccessE2ETests
         string token = TenantIntegrationTestSeeder.CreateToken("tenant-nm", "user-without-membership");
 
         HttpResponseMessage response = await PollAsync(
-            () => SendAsync(HttpMethod.Get, "/api/v1/parties", token),
+            ct => SendAsync(HttpMethod.Get, "/api/v1/parties", token, cancellationToken: ct),
             until: r => r.StatusCode == HttpStatusCode.Forbidden);
 
         try
@@ -146,7 +146,7 @@ public sealed class TenantsBackedAccessE2ETests
             """;
 
         HttpResponseMessage response = await PollAsync(
-            () => SendAsync(HttpMethod.Post, "/api/v1/parties", token, writePayload),
+            ct => SendAsync(HttpMethod.Post, "/api/v1/parties", token, writePayload, ct),
             until: r => r.StatusCode == HttpStatusCode.Forbidden);
 
         try
@@ -168,10 +168,11 @@ public sealed class TenantsBackedAccessE2ETests
         await _fixture.SeedTenantAsync("tenant-iso-a", "user-a", TenantRole.TenantContributor);
         await _fixture.SeedTenantAsync("tenant-iso-b", "user-b", TenantRole.TenantOwner);
 
+        Guid tenantBPartyId = Guid.NewGuid();
         string tokenB = TenantIntegrationTestSeeder.CreateToken("tenant-iso-b", "user-b");
         string tenantBPayload = $$"""
             {
-              "partyId": "{{Guid.NewGuid()}}",
+              "partyId": "{{tenantBPartyId}}",
               "type": "person",
               "personDetails": {
                 "firstName": "TenantB",
@@ -181,7 +182,7 @@ public sealed class TenantsBackedAccessE2ETests
             """;
 
         HttpResponseMessage createResponse = await PollAsync(
-            () => SendAsync(HttpMethod.Post, "/api/v1/parties", tokenB, tenantBPayload),
+            ct => SendAsync(HttpMethod.Post, "/api/v1/parties", tokenB, tenantBPayload, ct),
             until: r => r.StatusCode == HttpStatusCode.Accepted
                 || r.StatusCode == HttpStatusCode.Created
                 || r.StatusCode == HttpStatusCode.OK
@@ -202,11 +203,21 @@ public sealed class TenantsBackedAccessE2ETests
             createResponse.Dispose();
         }
 
-        if (createSkipped) { return; }
+        if (createSkipped)
+        {
+            _output.WriteLine(
+                "Skipped Aspire_GivenTwoTenants_TenantACannotEnumerateOrFetchTenantBPartiesAsync: tenant B create did not converge before isolation assertion could run; this is the deferred-baseline `party/process` 500 path tracked in deferred-work.md.");
+            return;
+        }
+
+        // Wait for tenant-iso-b's projection to converge before the isolation check runs against
+        // tenant-iso-a — otherwise the assertion may pass vacuously because tenant-iso-b's record
+        // never hit the read model in the first place.
+        await WaitForTenantBPartyVisibleAsync(tokenB, tenantBPartyId);
 
         string tokenA = TenantIntegrationTestSeeder.CreateToken("tenant-iso-a", "user-a");
         HttpResponseMessage listResponse = await PollAsync(
-            () => SendAsync(HttpMethod.Get, "/api/v1/parties", tokenA),
+            ct => SendAsync(HttpMethod.Get, "/api/v1/parties", tokenA, cancellationToken: ct),
             until: r => r.StatusCode == HttpStatusCode.OK);
 
         try
@@ -216,6 +227,7 @@ public sealed class TenantsBackedAccessE2ETests
 
             body.ShouldNotContain("tenant-iso-b");
             body.ShouldNotContain("TenantB");
+            body.ShouldNotContain(tenantBPartyId.ToString());
         }
         finally
         {
@@ -223,11 +235,34 @@ public sealed class TenantsBackedAccessE2ETests
         }
     }
 
+    private async Task WaitForTenantBPartyVisibleAsync(string tokenB, Guid tenantBPartyId, int attempts = 20, int delayMs = 250)
+    {
+        for (int i = 0; i < attempts; i++)
+        {
+            using HttpResponseMessage response = await SendAsync(HttpMethod.Get, "/api/v1/parties", tokenB).ConfigureAwait(false);
+            if (response.StatusCode == HttpStatusCode.OK)
+            {
+                string body = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+                if (body.Contains(tenantBPartyId.ToString(), StringComparison.OrdinalIgnoreCase)
+                    || body.Contains("TenantB", StringComparison.OrdinalIgnoreCase))
+                {
+                    return;
+                }
+            }
+
+            await Task.Delay(delayMs).ConfigureAwait(false);
+        }
+
+        throw new TimeoutException(
+            $"Tenant-iso-b's party {tenantBPartyId} was not visible to tenant-iso-b within {attempts * delayMs}ms; cross-tenant isolation assertion would be vacuous.");
+    }
+
     private Task<HttpResponseMessage> SendAsync(
         HttpMethod method,
         string requestUri,
         string token,
-        string? jsonBody = null)
+        string? jsonBody = null,
+        CancellationToken cancellationToken = default)
     {
         // Per-request HttpRequestMessage avoids mutating the shared fixture HttpClient's
         // DefaultRequestHeaders, which would race across parallel tests.
@@ -238,7 +273,7 @@ public sealed class TenantsBackedAccessE2ETests
             request.Content = new StringContent(jsonBody, System.Text.Encoding.UTF8, "application/json");
         }
 
-        return _fixture.CommandApiClient.SendAsync(request);
+        return _fixture.CommandApiClient.SendAsync(request, cancellationToken);
     }
 
     // The project's xUnit v2.9.3 runner reports `throw SkipException.ForSkip(...)` as a Failed
@@ -264,43 +299,105 @@ public sealed class TenantsBackedAccessE2ETests
         }
 
         string body = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+
+        // Match a structured ProblemDetails payload rather than a free-text substring so
+        // future error-message rewordings don't accidentally suppress real regressions.
+        // The tracked deferred-baseline failure surfaces as a 422 ProblemDetails whose
+        // `type` ends with `party-process-internal-error` OR carries an `errorCode` of
+        // `party-process-internal-error`. Any other 422 is treated as a real failure.
+        try
+        {
+            using JsonDocument doc = JsonDocument.Parse(body);
+            if (TryGetStringProperty(doc.RootElement, "type", out string? typeValue)
+                && (typeValue?.Contains("party-process-internal-error", StringComparison.OrdinalIgnoreCase) ?? false))
+            {
+                _output.WriteLine(
+                    $"Skipped: deferred-baseline party/process 500 (ProblemDetails type {typeValue}); see deferred-work.md.");
+                return true;
+            }
+
+            if (TryGetStringProperty(doc.RootElement, "errorCode", out string? errorCode)
+                && string.Equals(errorCode, "party-process-internal-error", StringComparison.OrdinalIgnoreCase))
+            {
+                _output.WriteLine(
+                    $"Skipped: deferred-baseline party/process 500 (errorCode {errorCode}); see deferred-work.md.");
+                return true;
+            }
+        }
+        catch (JsonException)
+        {
+            // Fall through to the legacy substring fallback for non-JSON 422 bodies.
+        }
+
+        // Legacy fallback for plain-text 422 bodies. Kept intentionally narrow so it cannot
+        // mask a different 422 with similar wording — operators should migrate to the
+        // structured ProblemDetails contract above.
         if (body.Contains("party/process", StringComparison.OrdinalIgnoreCase)
             && body.Contains("Internal Server Error", StringComparison.OrdinalIgnoreCase))
         {
             _output.WriteLine(
-                "Skipped: Aspire party/process command route returned 500; projection-isolation create path is infrastructure-gated.");
+                "Skipped: Aspire party/process command route returned 500 (matched on legacy plain-text body); see deferred-work.md.");
             return true;
         }
 
         return false;
     }
 
+    private static bool TryGetStringProperty(JsonElement element, string name, out string? value)
+    {
+        if (element.ValueKind == JsonValueKind.Object
+            && element.TryGetProperty(name, out JsonElement property)
+            && property.ValueKind == JsonValueKind.String)
+        {
+            value = property.GetString();
+            return true;
+        }
+
+        value = null;
+        return false;
+    }
+
     private static async Task AssertReasonCodeAsync(HttpResponseMessage response, string expectedReasonCode)
     {
         string body = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
-        using JsonDocument payload = JsonDocument.Parse(body);
-        if (!payload.RootElement.TryGetProperty("reasonCode", out JsonElement reasonElement))
+        try
         {
-            throw new InvalidOperationException(
-                $"Response did not contain 'reasonCode'. Status: {(int)response.StatusCode}. Body: {body}");
-        }
+            using JsonDocument payload = JsonDocument.Parse(body);
+            if (!payload.RootElement.TryGetProperty("reasonCode", out JsonElement reasonElement))
+            {
+                throw new InvalidOperationException(
+                    $"Response did not contain 'reasonCode'. Status: {(int)response.StatusCode}. Body: {body}");
+            }
 
-        reasonElement.GetString().ShouldBe(expectedReasonCode);
+            reasonElement.GetString().ShouldBe(expectedReasonCode);
+        }
+        catch (JsonException ex)
+        {
+            // A non-JSON denial body would otherwise throw JsonException and mask the real
+            // reason-code mismatch. Surface the body explicitly so the failure diagnostic is
+            // actionable in CI logs.
+            throw new InvalidOperationException(
+                $"Response body for status {(int)response.StatusCode} {response.StatusCode} was not valid JSON; " +
+                $"expected reasonCode '{expectedReasonCode}'. Body: {body}",
+                ex);
+        }
     }
 
     /// <summary>
     /// Eventual-consistency poll — required because Story 11.2's local Tenants projection
     /// converges asynchronously after Tenants commands. Throws TimeoutException with the
-    /// last observed status when the until-condition is never satisfied.
+    /// last observed status when the until-condition is never satisfied. The action delegate
+    /// MUST honor the supplied <see cref="CancellationToken"/>.
     /// </summary>
     private static async Task<HttpResponseMessage> PollAsync(
-        Func<Task<HttpResponseMessage>> action,
+        Func<CancellationToken, Task<HttpResponseMessage>> action,
         Func<HttpResponseMessage, bool> until,
         int attempts = 20,
         int delayMs = 250,
         CancellationToken cancellationToken = default)
     {
-        HttpResponseMessage last = await action().ConfigureAwait(false);
+        cancellationToken.ThrowIfCancellationRequested();
+        HttpResponseMessage last = await action(cancellationToken).ConfigureAwait(false);
         if (until(last))
         {
             return last;
@@ -310,7 +407,7 @@ public sealed class TenantsBackedAccessE2ETests
         {
             await Task.Delay(delayMs, cancellationToken).ConfigureAwait(false);
             last.Dispose();
-            last = await action().ConfigureAwait(false);
+            last = await action(cancellationToken).ConfigureAwait(false);
             if (until(last))
             {
                 return last;

@@ -71,33 +71,58 @@ function ConvertFrom-YamlScalar {
     param([string]$Value)
     if ($null -eq $Value) { return $null }
     $trimmed = $Value.Trim()
+    # Strip trailing comment (whitespace + '#' to end). Inside quotes, '#' is preserved by the
+    # quote-pair extraction below; only unquoted scalars get the comment stripped here.
     if ($trimmed.Length -ge 2) {
         $first = $trimmed[0]
         $last = $trimmed[$trimmed.Length - 1]
         if (($first -eq '"' -and $last -eq '"') -or ($first -eq "'" -and $last -eq "'")) {
-            return $trimmed.Substring(1, $trimmed.Length - 2).Trim()
+            return $trimmed.Substring(1, $trimmed.Length - 2)
         }
     }
+    if ($trimmed -match '^(.*?)(?:\s+#.*)?$') {
+        return $Matches[1].Trim()
+    }
     return $trimmed
+}
+
+function Split-YamlScopeList {
+    param([string]$Value)
+    if (-not $Value) { return @() }
+    return @($Value -split "[,;]" |
+        ForEach-Object { ConvertFrom-YamlScalar $_ } |
+        Where-Object { $_ })
 }
 
 function Split-YamlDocuments {
     param([string]$Content)
     if (-not $Content) { return @() }
-    $documents = @([regex]::Split($Content, "(?m)^\s*---\s*$") |
+    return @([regex]::Split($Content, "(?m)^\s*---\s*$") |
         Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
-    return $documents
 }
 
 function Get-YamlValue {
-    param([string]$Content, [string]$Key)
+    param(
+        [string]$Content,
+        [string]$Key,
+        # Restrict matching to a specific shape to avoid the metadata-list pattern accidentally
+        # matching unrelated `name:`/`value:` pairs that surround a top-level scalar.
+        # Default ('Auto') tries top-level first, then metadata-list — top-level keys like
+        # `pubsubname:` or `topic:` are unambiguous and should not fall through to the list pattern.
+        [ValidateSet("Auto", "TopLevel", "MetadataList")]
+        [string]$Mode = "Auto"
+    )
     if (-not $Content) { return $null }
     $escapedKey = [regex]::Escape($Key)
-    # metadata list style: - name: key \n   value: val. Case-insensitive on key only.
-    if ($Content -match "(?msi)name:\s*$escapedKey\s*\r?\n\s*(?:#[^\n]*\r?\n\s*)*value:\s*([^\r\n#]+)") {
-        return ConvertFrom-YamlScalar $Matches[1]
+    # Capture full line content; ConvertFrom-YamlScalar strips trailing comments and quote pairs.
+    if ($Mode -ne "MetadataList") {
+        if ($Content -match "(?mi)^\s*$escapedKey\s*:\s*([^\r\n]+)") {
+            return ConvertFrom-YamlScalar $Matches[1]
+        }
+        if ($Mode -eq "TopLevel") { return $null }
     }
-    if ($Content -match "(?mi)^\s*$escapedKey\s*:\s*([^\r\n#]+)") {
+    # metadata list style: - name: key \n   value: val. Case-insensitive on key only.
+    if ($Content -match "(?msi)name:\s*$escapedKey\s*\r?\n\s*(?:#[^\n]*\r?\n\s*)*value:\s*([^\r\n]+)") {
         return ConvertFrom-YamlScalar $Matches[1]
     }
     return $null
@@ -150,8 +175,20 @@ function Test-TopicAllowedForApp {
     foreach ($entry in $entries) {
         $parts = $entry -split "=", 2
         if ($parts.Count -ne 2) { continue }
-        if ((ConvertFrom-YamlScalar $parts[0]) -ne $AppId) { continue }
+        $left = ConvertFrom-YamlScalar $parts[0]
         $topics = @($parts[1] -split "," | ForEach-Object { ConvertFrom-YamlScalar $_ } | Where-Object { $_ })
+        # '*' wildcard grants all apps access.
+        if ($left -eq "*") {
+            if ($topics -contains $Topic) {
+                return $true
+            }
+            continue
+        }
+        # Env-token left sides (e.g. {env:SUBSCRIBER_APP_ID}) name OTHER applications and never
+        # the commandapi target by project convention; skip them so an env-token entry doesn't
+        # mask a missing explicit commandapi=... scope.
+        if ($left -match '\{env:[^}]+\}') { continue }
+        if ($left -ne $AppId) { continue }
         if ($topics -contains $Topic) { return $true }
     }
     return $false
@@ -495,12 +532,14 @@ function Test-TenantsIntegration {
     $expectedTopic = "system.tenants.events"
     $expectedAppId = "commandapi"
 
-    # Filter by manifest kind rather than filename so files that happen to
-    # contain "tenants" but are subscriptions or other manifests are not
-    # parsed as TenantsIntegration manifests.
-    $tenantConfigFiles = @(Get-ChildItem -Path $ConfigPath -Filter "*tenants*.yaml" -ErrorAction SilentlyContinue |
+    # Filter by manifest kind rather than filename: a file canonically named differently
+    # (e.g. parties-integration.yaml) is still a valid TenantsIntegration manifest, while a
+    # file named tenants-foo.yaml whose kind is something else must not be parsed here.
+    # Use a case-insensitive Where-Object so non-Windows filesystems do not silently miss
+    # files like Tenants*.yaml or *.YAML.
+    $tenantConfigFiles = @(Get-ChildItem -Path $ConfigPath -Filter "*.yaml" -ErrorAction SilentlyContinue |
         Where-Object {
-            $_.Name -notlike "subscription*" -and
+            $_.Name -notmatch '(?i)^subscription' -and
             (Get-YamlKind (Read-YamlFile $_.FullName)) -eq "TenantsIntegration"
         })
     if ($tenantConfigFiles.Count -eq 0) {
@@ -523,10 +562,10 @@ function Test-TenantsIntegration {
             }
 
             $fileName = $cfg.Name
-            $pubsubName = Get-YamlValue $content "pubsubName"
-            $topicName = Get-YamlValue $content "topicName"
-            $appId = Get-YamlValue $content "commandApiAppId"
-            $dependencyHealth = Get-YamlValue $content "tenantsDependencyHealth"
+            $pubsubName = Get-YamlValue $content "pubsubName" -Mode TopLevel
+            $topicName = Get-YamlValue $content "topicName" -Mode TopLevel
+            $appId = Get-YamlValue $content "commandApiAppId" -Mode TopLevel
+            $dependencyHealth = Get-YamlValue $content "tenantsDependencyHealth" -Mode TopLevel
 
             if ($pubsubName -eq $expectedPubSub -and $topicName -eq $expectedTopic -and $appId -eq $expectedAppId) {
                 Add-Result $Category "Tenants configuration values ($fileName)" "Pass" "Tenants config targets $expectedPubSub/$expectedTopic for $expectedAppId"
@@ -537,15 +576,18 @@ function Test-TenantsIntegration {
             }
 
             # dependencyHealth signal: case-insensitive match; unknown values warn instead of silently passing.
-            # Values are operator-controlled enum tokens (healthy/unhealthy/etc.) — safe to echo.
-            if ($dependencyHealth -match "^(?i)(unhealthy|unreachable|missing)$") {
-                Add-Result $Category "Tenants dependency health ($fileName)" "Fail" "Tenants dependency signal is $dependencyHealth" `
+            # Echo only the matched normalized keyword (never the raw operator-supplied value) so a
+            # secret accidentally pasted into this field never reaches CI logs.
+            if ($null -ne $dependencyHealth -and $dependencyHealth -match "^(?i)(unhealthy|unreachable|missing)$") {
+                $matched = $Matches[1].ToLowerInvariant()
+                Add-Result $Category "Tenants dependency health ($fileName)" "Fail" "Tenants dependency signal is $matched" `
                     "Verify Hexalith.Tenants deployment, service discovery, and event publishing. Impact: Parties fails closed or uses stale tenant access state."
             }
-            elseif ($dependencyHealth -match "^(?i)(healthy|ok|ready)$") {
-                Add-Result $Category "Tenants dependency health ($fileName)" "Pass" "Tenants dependency signal is $dependencyHealth"
+            elseif ($null -ne $dependencyHealth -and $dependencyHealth -match "^(?i)(healthy|ok|ready)$") {
+                $matched = $Matches[1].ToLowerInvariant()
+                Add-Result $Category "Tenants dependency health ($fileName)" "Pass" "Tenants dependency signal is $matched"
             }
-            elseif ($dependencyHealth) {
+            elseif (-not [string]::IsNullOrWhiteSpace($dependencyHealth)) {
                 Add-Result $Category "Tenants dependency health ($fileName)" "Warn" "Tenants dependency signal is not a recognized value" `
                     "Use one of: healthy, ok, ready, unhealthy, unreachable, missing. Remediation target: $fileName."
             }
@@ -553,12 +595,24 @@ function Test-TenantsIntegration {
     }
 
     $escapedExpectedTopic = [regex]::Escape($expectedTopic)
-    $tenantSubscriptions = @(Get-ChildItem -Path $ConfigPath -Filter "subscription*.yaml" -ErrorAction SilentlyContinue |
+    # Anchor at end of line so `system.tenants.events.foo` does not match as the Tenants topic.
+    # Walk every YAML document in the file to support multi-document subscription files.
+    $tenantSubscriptions = @(Get-ChildItem -Path $ConfigPath -Filter "*.yaml" -ErrorAction SilentlyContinue |
+        Where-Object {
+            $_.Name -match '(?i)^subscription'
+        } |
         Where-Object {
             $content = Read-YamlFile $_.FullName
             if (-not $content) { return $false }
-            ($content -match "(?m)^\s*topic:\s*[`"']?$escapedExpectedTopic[`"']?") -or
-            ($content -match "(?m)^\s*topicName:\s*[`"']?$escapedExpectedTopic[`"']?")
+            $documents = @(Split-YamlDocuments $content)
+            if ($documents.Count -eq 0) { $documents = @($content) }
+            foreach ($doc in $documents) {
+                if (($doc -match "(?m)^\s*topic:\s*[`"']?$escapedExpectedTopic[`"']?\s*$") -or
+                    ($doc -match "(?m)^\s*topicName:\s*[`"']?$escapedExpectedTopic[`"']?\s*$")) {
+                    return $true
+                }
+            }
+            return $false
         })
 
     if ($tenantSubscriptions.Count -eq 0) {
@@ -575,8 +629,30 @@ function Test-TenantsIntegration {
         foreach ($sub in $tenantSubscriptions) {
             $content = Read-YamlFile $sub.FullName
             $fileName = $sub.Name
-            $pubsubName = Get-YamlValue $content "pubsubname"
-            $scopes = Get-YamlScopes $content
+            # Iterate every document in the subscription file so multi-document files don't
+            # silently miss subsequent docs.
+            $subscriptionDocs = @(Split-YamlDocuments $content)
+            if ($subscriptionDocs.Count -eq 0) { $subscriptionDocs = @($content) }
+            $pubsubName = $null
+            $scopes = @()
+            $deadLetterValue = $null
+            foreach ($doc in $subscriptionDocs) {
+                if ((Get-YamlKind $doc) -ne "Subscription") { continue }
+                if (-not (($doc -match "(?m)^\s*topic:\s*[`"']?$escapedExpectedTopic[`"']?\s*$") -or
+                          ($doc -match "(?m)^\s*topicName:\s*[`"']?$escapedExpectedTopic[`"']?\s*$"))) {
+                    continue
+                }
+                if (-not $pubsubName) {
+                    $pubsubName = Get-YamlValue $doc "pubsubname" -Mode TopLevel
+                }
+                $docScopes = Get-YamlScopes $doc
+                foreach ($s in $docScopes) {
+                    if ($scopes -notcontains $s) { $scopes += $s }
+                }
+                if (-not $deadLetterValue -and $doc -match "(?m)^\s*deadLetterTopic:\s*[`"']?([^`"'\r\n#]+)[`"']?") {
+                    $deadLetterValue = (ConvertFrom-YamlScalar $Matches[1])
+                }
+            }
 
             if ($pubsubName -eq $expectedPubSub) {
                 Add-Result $Category "Tenants subscription pub/sub ($fileName)" "Pass" "Subscription uses the expected pubsub component"
@@ -594,8 +670,8 @@ function Test-TenantsIntegration {
                     "Add commandapi to subscription scopes. Impact: the Parties Tenants event subscription cannot run."
             }
 
-            # Dead-letter topic must be present AND have a non-empty value.
-            if ($content -match "(?m)^\s*deadLetterTopic:\s*[`"']?([^`"'\r\n#]+)[`"']?") {
+            # Dead-letter topic must be present AND have a non-empty value (after trim).
+            if (-not [string]::IsNullOrWhiteSpace($deadLetterValue)) {
                 Add-Result $Category "Tenants subscription dead-letter ($fileName)" "Pass" "Dead-letter topic is configured"
             }
             else {
@@ -605,11 +681,19 @@ function Test-TenantsIntegration {
         }
     }
 
-    $pubsubFiles = @(Get-ChildItem -Path $ConfigPath -Filter "pubsub*.yaml" -ErrorAction SilentlyContinue)
+    $pubsubFiles = @(Get-ChildItem -Path $ConfigPath -Filter "*.yaml" -ErrorAction SilentlyContinue |
+        Where-Object { $_.Name -match '(?i)^pubsub' })
     foreach ($psFile in $pubsubFiles) {
         $content = Read-YamlFile $psFile.FullName
         $fileName = $psFile.Name
         $componentDocuments = @(Split-YamlDocuments $content | Where-Object { (Get-YamlKind $_) -eq "Component" })
+        if ($componentDocuments.Count -eq 0) {
+            # Surface that the file produced no inspectable Component documents so operators
+            # see a row instead of silently treating the file as green.
+            Add-Result $Category "commandapi can subscribe to Tenants topic ($fileName)" "Warn" "No Component document found in pub/sub file" `
+                "Verify the YAML contains a `kind: Component` document for the pub/sub component."
+            continue
+        }
         foreach ($componentDocument in $componentDocuments) {
             $subScopes = Get-YamlValue $componentDocument "subscriptionScopes"
             if (Test-TopicAllowedForApp $subScopes $expectedAppId $expectedTopic) {

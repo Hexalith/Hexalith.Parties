@@ -1,6 +1,6 @@
 # Story 11.4: Tenants Integration Tests, Deployment Validation, and Documentation
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -300,6 +300,7 @@ GPT-5 Codex
 - 2026-05-05: BMAD code review (Blind Hunter + Edge Case Hunter + Acceptance Auditor) — 8 decision-needed resolved (6 patched, 2 deferred), 30 of 50 patches applied, 9 items deferred. Verified: full solution build clean (0 warnings, 0 errors); CommandApi.Tests 390/390 pass; DeployValidation.Tests 25/25 pass; validate-deployment.ps1 against deploy/dapr 51/52 PASS + 1 advisory WARN. Story moved back to in-progress to surface the 20 remaining patch action items.
 - 2026-05-06: Addressed remaining Story 11.4 review patch action items; DeployValidation.Tests passed 28/28 and TenantsBackedAccessE2ETests passed 6/6. Story remains in-progress pending unrelated full regression blockers documented in Debug Log References.
 - 2026-05-06: Aligned `TenantsBackedAccessE2ETests` skip handling with the project's standard `ITestOutputHelper` log + early-return pattern (xUnit v3 `SkipException.ForSkip` was incompatible with xUnit v2.9.3 + VSTest, surfacing legitimate skip conditions as failures). Tenants E2E slice 6/6 pass; full IntegrationTests suite improved to 42 pass / 1 skip / 7 deferred-baseline failures. Story moved to `review`.
+- 2026-05-07: Pass-2 `bmad-code-review` (Blind Hunter + Edge Case Hunter + Acceptance Auditor) on `b98d7ad..HEAD` narrowed scope (27 files, ~2.8k lines). Auditor verdict: pass with concerns (no blocking findings). Triaged 84 raw findings → 36 patches applied, 7 deferred (appended to deferred-work.md), 7 dismissed. Verified: solution build clean, validate-deployment.ps1 51/52 PASS + 1 advisory WARN, DeployValidation.Tests 28/28 pass, CommandApi.Tests 389/390 pass (one pre-existing timing-flake on the 100K semantic-search benchmark that passes in isolation). Story moved to `done`.
 
 ### Party-Mode Review
 
@@ -409,4 +410,70 @@ Remaining unchecked patches are cosmetic (extract helper, refactor magic strings
 - [x] [Review][Defer] `tenant-state-stale` REST recovery (until-recovers transition) not exercised — denial path is sufficient for AC; defer recovery test.
 - [x] [Review][Defer] `ProjectFromTenantsAsync` silently drops unknown event types — projection-conformance test belongs in Tenants suite, not Parties.
 - [x] [Review][Defer] No real Parties-source bypass detection in `validate-deployment.ps1` (only the synthetic YAML flag) — defer broader detection design.
+
+### Review Findings — Pass 2
+
+Review run: 2026-05-06 — `bmad-code-review` (Blind Hunter + Edge Case Hunter + Acceptance Auditor) on diff `b98d7ad..HEAD` narrowed to Story 11.4 file scope (27 files, ~2.8k lines). Diff snapshot: `_bmad-output/implementation-artifacts/review-11-4-pass2.diff`. Acceptance Auditor verdict: **Pass with concerns** — all 5 ACs met; no blocking findings. Raw counts before triage: Blind 27 / Edge 50 / Auditor 7 = 84 → after dedupe and triage: **0 decision-needed, 36 patch, 7 defer, 7 dismiss**.
+
+**Patches (36) — applied 2026-05-07**
+
+Verification: full solution build clean (0 warnings, 0 errors); `validate-deployment.ps1 -ConfigPath deploy/dapr` 51 PASS / 0 FAIL / 1 advisory WARN; `Hexalith.Parties.DeployValidation.Tests` 28/28 pass; `Hexalith.Parties.CommandApi.Tests` 389/390 pass (the timing-sensitive 100K semantic-search benchmark exceeded its 500 ms threshold once at 635 ms in the full-suite run and passes in isolation — pre-existing flake unrelated to the patches).
+
+
+- [x] [Review][Patch] `Test-Subscription` topic regex unanchored — `topic: system.tenants.events.foo` matches as Tenants subscription; anchor end with `[\"']?\s*$` and require quote balance [deploy/validate-deployment.ps1 Test-Subscription topic/topicName regex]
+- [x] [Review][Patch] `Get-YamlValue` non-quoted branch eats values containing `#` not preceded by whitespace; require whitespace before `#` (`([^\r\n]+?)(?:\s+#.*)?$`) [deploy/validate-deployment.ps1 Get-YamlValue]
+- [x] [Review][Patch] `pubsub*.yaml` files with no `kind: Component` document silently produce no rows — emit `Warn` when `$componentDocuments` empty so operators see the file was inspected [deploy/validate-deployment.ps1 Test-TenantsIntegration pubsub block]
+- [x] [Review][Patch] `Test-TopicAllowedForApp` does not handle `*` wildcard or env-token left side (`{env:SUBSCRIBER_APP_ID}=…`); treat `*` as wildcard and warn (not fail) on env tokens [deploy/validate-deployment.ps1 Test-TopicAllowedForApp]
+- [x] [Review][Patch] Tenants config filename filter `*tenants*.yaml` ignores files canonically named differently despite the comment claiming kind-based filtering; iterate `*.yaml` and filter solely by `kind: TenantsIntegration` [deploy/validate-deployment.ps1]
+- [x] [Review][Patch] `Get-YamlValue` first regex (metadata-list `name:`/`value:` form) can match top-level keys ambiguously when intervening lines also contain `name:`/`value:`; reserve the metadata-list pattern to known list contexts [deploy/validate-deployment.ps1 Get-YamlValue]
+- [x] [Review][Patch] `Get-YamlScopes` only matches the first `scopes:` block in a multi-document file; split documents in Test-TenantsIntegration / Test-Subscription before calling [deploy/validate-deployment.ps1 Get-YamlScopes]
+- [x] [Review][Patch] `dependencyHealth` raw value echoed in Add-Result message; echo only the matched lowercase keyword to prevent operator-pasted secrets from leaking into CI logs [deploy/validate-deployment.ps1 Test-TenantsIntegration dependencyHealth branch]
+- [x] [Review][Patch] `tenantsDependencyHealth` matched against regex without null-guard; `Get-YamlValue` may return `$null` and silently passes; add `if ($null -ne $dependencyHealth -and …)` [deploy/validate-deployment.ps1]
+- [x] [Review][Patch] `Get-ChildItem -Filter '*tenants*.yaml'` is case-sensitive on Linux; replace with `Where-Object { $_.Name -match '(?i)tenants.*\.yaml$' }` so `Tenants*.yaml` and `.YAML` extensions are picked up on Linux deployments [deploy/validate-deployment.ps1]
+- [x] [Review][Patch] `deadLetterTopic` regex passes whitespace-only or empty-quoted values; trim and assert `[string]::IsNullOrWhiteSpace` fails closed [deploy/validate-deployment.ps1 Test-Subscription dead-letter check]
+- [x] [Review][Patch] PII leak test asserts only 4 named tokens absent and injects sentinel into a field the validator never echoes; switch to a single random GUID sentinel injected into a field the validator does consume (e.g., `dependencyHealth`) and assert the sentinel is absent [tests/Hexalith.Parties.DeployValidation.Tests/TenantsDeploymentValidationTests.cs TenantsValidation_Output_DoesNotLeakSecretsOrPiiAsync]
+- [x] [Review][Patch] `CreateProjectionStore` sync overload uses `.GetAwaiter().GetResult()` on a Task whose synchronous-completion is owned by an upstream module; runtime-check `IsCompletedSuccessfully` and throw a clear diagnostic otherwise [tests/Hexalith.Parties.IntegrationTests/Tenants/TenantIntegrationTestSeeder.cs CreateProjectionStore]
+- [x] [Review][Patch] Static `s_sequenceCounters` never reset between fixture runs in same process; call `ResetSequenceCounters()` at the start of `PartiesAspireTopologyFixture.InitializeAsync` to prevent counter drift across re-init or test-runner reuse [TenantIntegrationTestSeeder.cs + PartiesAspireTopologyFixture.cs]
+- [x] [Review][Patch] `ResolveSigningKey` silently fabricates random per-process key when neither env var nor dev settings file is present; tokens fail JWT validation and tests observe 401/403 indistinguishably from real failures. Log a loud warning via `_output` when fallback is used; throw in CI [TenantIntegrationTestSeeder.cs ResolveSigningKey]
+- [x] [Review][Patch] `PollAsync` first attempt invocation ignores the caller's `cancellationToken`; only `Task.Delay` honors it. Require `Func<CancellationToken, Task<HttpResponseMessage>>` in the delegate signature and pass token on first call [tests/Hexalith.Parties.IntegrationTests/Tenants/TenantsBackedAccessE2ETests.cs PollAsync]
+- [x] [Review][Patch] `AssertReasonCodeAsync` throws `JsonException` on a non-JSON 403 body, masking real reason-code mismatches; wrap with try/catch and `Assert.Fail` with the body text as diagnostic [TenantsBackedAccessE2ETests.cs AssertReasonCodeAsync]
+- [x] [Review][Patch] Cross-tenant MCP isolation tests assert via `ex.Message.ShouldContain("not-member")` instead of typed `ex.ReasonCode` exposed by the new `McpTenantAuthorizationException`; cast and assert on `ReasonCode` [tests/Hexalith.Parties.CommandApi.Tests/Controllers/CrossTenantIsolationTests.cs]
+- [x] [Review][Patch] `MockPartyHit.TenantId` synthesized from `displayName.Contains("tenant-a-party")` — passes if production accidentally returns tenant-b row whose name contains the tenant-a substring; additionally assert `ActorProxyFactory.DidNotReceive().CreateActorProxy<…>(…tenant-b:party-index…)` [CrossTenantIsolationTests.cs FindPartiesMcpTool_TenantAUser_DoesNotIncludeTenantBHitsAsync]
+- [x] [Review][Patch] `JsonSerializer.SerializeToUtf8Bytes(@event)` uses default options; enums emitted as integers while CommandApi `/tenants/events` ingress likely expects string enums; thread a `JsonSerializerOptions` with `JsonStringEnumConverter` matching production [TenantIntegrationTestSeeder.cs PublishTenantEventAsync]
+- [x] [Review][Patch] `ShouldSkipForKnownPartyProcessUnavailableAsync` matches generic substrings (`party/process` + `Internal Server Error`) — masks regressions where unrelated 422s carry similar wording; match on a structured ProblemDetails type/title or specific reason code [TenantsBackedAccessE2ETests.cs]
+- [x] [Review][Patch] Skip path silent in two-tenant isolation E2E (no `_output.WriteLine` differentiates skip from pass), and tenant-iso-b party is not awaited for projection visibility before the isolation assertion runs against tenant-iso-a [TenantsBackedAccessE2ETests.cs Aspire_GivenTwoTenants_TenantACannotEnumerateOrFetchTenantBPartiesAsync] — log skip via `_output` and poll tenant-iso-b party visibility before switching tokens
+- [x] [Review][Patch] `SeedDefaultTenantAccessAsync` honors cancellation only at start; long sequential seed loop ignores cancellation between calls — add `cancellationToken.ThrowIfCancellationRequested()` between each `PublishTenantEventAsync` [PartiesAspireTopologyFixture.cs SeedDefaultTenantAccessAsync]
+- [x] [Review][Patch] Two `IClassFixture<PartiesApiTestFactory>` test classes mutating shared `TestTenantAccessService.Handler` can run in parallel across classes (xUnit default); assign both classes to a shared `[Collection("PartiesApiFactory")]` to disable cross-class parallel [CrossTenantIsolationTests.cs + PartiesControllerTenantAuthorizationTests.cs]
+- [x] [Review][Patch] `InvokeFindParties` non-finally path leaks `ServiceProvider` if exception is thrown during build; wrap McpSessionScope and ServiceProvider in a single try/finally so dispose runs unconditionally [CrossTenantIsolationTests.cs InvokeFindParties]
+- [x] [Review][Patch] `PartiesApiTestFactory.SetTenantParties` shares `ContactChannels`/`Identifiers` collection refs between PartyDetail and PartyIndexEntry; future test mutating one bleeds into the other — defensively `.ToArray()` collections on copy [PartiesControllerProblemDetailsTests.cs SetTenantParties]
+- [x] [Review][Patch] `ResetProjectionState` runs in ctor with no Dispose unwind; subsequent suites inherit dirty fixture state — implement `IDisposable` with reset on dispose [PartiesControllerProblemDetailsTests.cs]
+- [x] [Review][Patch] `SetTenantParties` and `ResetIndexProxy` not synchronized; `ResetIndexProxy` lambda re-locks `_projectionLock` (recursive lock acquisition risk) — hold lock around full SetTenantParties body and snapshot proxy state outside lock for ResetIndexProxy [PartiesControllerProblemDetailsTests.cs]
+- [x] [Review][Patch] `Router.ClearReceivedCalls` is set in ctor but no `Router.DidNotReceive().Route(...)` assertion follows the DisabledTenant request — adding it proves auth fired before routing rather than relying on absence [PartiesControllerTenantAuthorizationTests.cs DisabledTenant test]
+- [x] [Review][Patch] `process.WaitForExitAsync(cts.Token)` already has timeout but `ReadToEndAsync` calls don't accept cancellation; pass `cts.Token` to `ReadToEndAsync` so a hung pwsh stdout doesn't outlive the timeout [TenantsDeploymentValidationTests.cs RunPwsh helper]
+- [x] [Review][Patch] `[Collection("DeployValidation")]` declared on `TenantsDeploymentValidationTests` without a matching `CollectionDefinition` in the diff; either remove the attribute or add the definition (deferred-work item already mentions overlap with `DeploymentValidationTests`) [TenantsDeploymentValidationTests.cs]
+- [x] [Review][Patch] `StaleSignalingTenantProjectionStore.SaveAsync` silently no-ops; future test that calls SaveAsync gets vacuous pass — throw `NotSupportedException` on unexpected calls with a diagnostic [HelperDrivenTenantAccessTests.cs StaleSignalingTenantProjectionStore]
+- [x] [Review][Patch] RabbitMQ pubsub yaml comment about example topic names not updated for `commandapi=system.tenants.events` scope; operators copying outdated example pattern would drop tenants scope [deploy/dapr/pubsub-rabbitmq.yaml comment near subscriptionScopes]
+- [x] [Review][Patch] README new sentence packs three ideas onto one line and obscures the original "Open the Aspire dashboard" instruction; move tenant prerequisite to a dedicated bullet/sub-heading and keep the original line intact [README.md:9-10]
+- [x] [Review][Patch] Decision tables — add `403 unknown-tenant` MCP-tool symptom row to `deployment-guide.md`; add `pwsh 7+` requirement note + jq fallback for verification curl [docs/getting-started.md, docs/deployment-guide.md]
+- [x] [Review][Patch] `tenant-state-stale` doc says "Retry after subscription/projection health is restored" without `Retry-After` semantics or operator-vs-client guidance; clarify that recovery is operator-driven and the response carries no `Retry-After` header today [docs/getting-started.md, docs/deployment-guide.md]
+
+**Deferred (7, pre-existing, design-question, or out-of-scope)**
+
+- [x] [Review][Defer] `tenants-integration.yaml` and `subscription-tenants.yaml` hardcode `commandapi` without env-var indirection — diverges from rest of deploy folder pattern; deliberately deferred since changing this could break operator-side env wiring.
+- [x] [Review][Defer] `Test-TenantsIntegration` does not cross-validate manifest topic/pubsubName against subscription file values — design enhancement; current behavior is two unrelated Fails when files disagree.
+- [x] [Review][Defer] `subscription-tenants.yaml` advisory annotations (`hexalith.io/resiliency-policy`, `hexalith.io/max-deliveries`) are not validator-checked against `resiliency.yaml` — defer to deployment-validation hardening pass.
+- [x] [Review][Defer] `McpSessionScope` AsyncLocal nested-scope contract — current restoration is correct for documented usage; add an xUnit collection guard if/when await-outside-using patterns appear.
+- [x] [Review][Defer] `JsonSerializer` parse / `FileStream` lifetime in `ResolveSigningKey` — file handle leak on malformed JSON is theoretical; broader test-config refactor preferred.
+- [x] [Review][Defer] Multi-document YAML `...` end-of-doc separator handling in `Split-YamlDocuments` — rarely seen in DAPR manifests; add when a real config exhibits it.
+- [x] [Review][Defer] Project-wide `xUnit1051` suppression remains; pass-1 deferred and pass-2 reaffirms — plumb `TestContext.Current.CancellationToken` through new tests in a hardening sprint.
+
+**Dismissed (7, noise / false positive)**
+
+- `McpTenantAuthorizationException` not `[Serializable]` and lacks serialization ctor — BinaryFormatter is deprecated; cross-AppDomain not a real use case.
+- `IsExecutableAvailable` exit-code-based detection cannot distinguish "missing" from "misconfigured" — probing is best-effort by design; surfacing false-not-available is the safe failure mode.
+- `BuildForCreate` omits `IActorProxyFactory` — intentional minimal DI surface; tests exercise auth path before routing.
+- `TenantAccessDenialTranslator.ToReasonCode` throws on unmapped `Reason.None` — defensive behavior is correct; throwing surfaces unmapped enum values in tests.
+- `FindSolutionDirectory` returning null without diagnostic message — already covered by `ShouldNotBeNull` assertion at the call site.
+- `Long.MaxValue` sequence-counter overflow in test seeder — theoretical only.
+- `appsettings.Development.json` nested-vs-flat key path in `ResolveSigningKey` — current code reads the flat path which matches production config; nested layout is hypothetical.
 

@@ -65,11 +65,17 @@ Before calling Parties, provision tenant access through Hexalith.Tenants:
 One quick local subscription check is the CommandApi DAPR sidecar metadata endpoint. Find the CommandApi DAPR HTTP port in the Aspire dashboard, then run:
 
 ```bash
+# With jq (recommended)
 curl -s http://localhost:<commandapi-dapr-http-port>/v1.0/metadata \
   | jq '.subscriptions[] | select(.pubsubName == "pubsub" and .topic == "system.tenants.events")'
+
+# Without jq (any POSIX shell or PowerShell)
+curl -s http://localhost:<commandapi-dapr-http-port>/v1.0/metadata | grep -F 'system.tenants.events'
 ```
 
-If that returns no row, verify `deploy/dapr/subscription-tenants.yaml` is loaded or that the local `MapTenantEventSubscription()` path is active.
+> **Tooling note.** `validate-deployment.ps1` requires PowerShell 7+ (`pwsh`); Windows PowerShell 5.1 does not support some multiline regex constructs the script uses. Install pwsh from <https://aka.ms/powershell> if you don't already have it.
+
+If neither command returns the row, verify `deploy/dapr/subscription-tenants.yaml` is loaded or that the local `MapTenantEventSubscription()` path is active.
 
 The JWT tenant claim selects the requested tenant context. Hexalith.Tenants membership and role authorize the operation. Tenant ids are not party command payload fields or MCP tool parameters.
 
@@ -471,7 +477,7 @@ Stop conflicting processes or configure alternative ports in `launchSettings.jso
 | `403 insufficient-role` | Membership exists but role is too low | Tenant administrator | Read may pass; write/admin fails |
 | `403 tenant-disabled` | Tenant is disabled in Hexalith.Tenants | Tenant operator | All tenant-scoped access fails closed |
 | `403 not-member` after removal | User was removed from Hexalith.Tenants | Tenant administrator | Access fails after projection consumes removal |
-| `403 tenant-state-stale` | Local Tenants projection unavailable or behind | Platform operator | Retry after subscription/projection health is restored |
+| `403 tenant-state-stale` | Local Tenants projection unavailable or behind | Platform operator | Operator-driven recovery: restore Tenants subscription/projection health, then retry. The response carries no `Retry-After` header today; clients should NOT auto-retry in a tight loop |
 
 ### Projection Delay
 

@@ -48,7 +48,10 @@ spec:
     # commandapi is NOT listed = unrestricted publishing.
     - name: publishingScopes
       value: "{env:SUBSCRIBER_APP_ID}=;{env:OPS_MONITOR_APP_ID}="
-    # MUST CUSTOMIZE: Replace example topic names with actual tenant.parties.events topics.
+    # MUST CUSTOMIZE: Replace example tenant.parties.events topic names below with the actual
+    # tenants and topics for your deployment. The 'commandapi=system.tenants.events' entry is
+    # NOT optional — it grants the Parties CommandApi permission to subscribe to Hexalith.Tenants
+    # authority events. Removing it disables Story 11.x tenant authorization on this profile.
     - name: subscriptionScopes
       value: "commandapi=system.tenants.events;{env:SUBSCRIBER_APP_ID}=acme.parties.events;{env:OPS_MONITOR_APP_ID}=deadletter.acme.parties.events"
 scopes:

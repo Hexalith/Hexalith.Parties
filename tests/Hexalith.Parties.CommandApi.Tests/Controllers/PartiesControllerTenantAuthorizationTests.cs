@@ -27,6 +27,7 @@ namespace Hexalith.Parties.CommandApi.Tests.Controllers;
 /// Story 11.4 — AC2, AC5: REST denial responses must use Tenants-backed authorization
 /// state and must not read projections or route commands when access is denied.
 /// </summary>
+[Collection(PartiesApiTestCollection.Name)]
 public sealed class PartiesControllerTenantAuthorizationTests : IClassFixture<PartiesApiTestFactory>, IDisposable
 {
     private readonly PartiesApiTestFactory _factory;
@@ -77,6 +78,12 @@ public sealed class PartiesControllerTenantAuthorizationTests : IClassFixture<Pa
                 Arg.Is<ActorId>(id => string.Equals(id.GetId(), $"tenant-a:party-detail:{partyId}", StringComparison.Ordinal)),
                 Arg.Any<string>(),
                 Arg.Any<ActorProxyOptions?>());
+
+        // Critical: command router was never invoked for this denied request — proves
+        // authorization fired before any command routing path could fire.
+        await _factory.Router
+            .DidNotReceive()
+            .RouteCommandAsync(Arg.Any<SubmitCommand>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]

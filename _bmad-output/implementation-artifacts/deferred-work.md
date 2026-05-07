@@ -2,6 +2,16 @@
 
 Items raised during code review that are real but not actionable in the current story. Pick up in a follow-up story or hardening sprint.
 
+## Deferred from: code review of 11-4-tenants-integration-tests-deployment-validation-and-documentation — pass 2 (2026-05-06)
+
+- `tenants-integration.yaml` and `subscription-tenants.yaml` hardcode `commandapi` without env-var indirection (`{env:COMMAND_API_APP_ID}`) — diverges from rest of deploy folder pattern; deferred because changing this could break operator-side env wiring without a coordinated config-template refresh. [deploy/dapr/tenants-integration.yaml, deploy/dapr/subscription-tenants.yaml]
+- `Test-TenantsIntegration` does not cross-validate manifest topic/pubsubName against subscription file values — design enhancement; current behavior produces two unrelated Fails when files disagree, which is informative enough. Revisit if operators report confusion. [deploy/validate-deployment.ps1 Test-TenantsIntegration]
+- `subscription-tenants.yaml` advisory annotations (`hexalith.io/resiliency-policy`, `hexalith.io/max-deliveries`) are not validator-checked against `resiliency.yaml` — annotations can drift indefinitely without any test catching it. Defer extending the validator to probe the named policy in a deployment-validation hardening pass. [deploy/dapr/subscription-tenants.yaml, deploy/validate-deployment.ps1]
+- `McpSessionScope` AsyncLocal nested-scope contract — current restoration is correct for documented usage but a future test pattern using await chains outside the `using` block could leak parent-flow tenant id to parallel tests. Add an xUnit collection guard if/when those patterns appear. [tests/Hexalith.Parties.CommandApi.Tests/Mcp/McpSessionScope.cs]
+- `JsonSerializer.Parse` / `FileStream` lifetime in `ResolveSigningKey` — file handle leak on malformed JSON; pre-existing pattern. Broader test-config refactor preferred over targeted fix. [tests/Hexalith.Parties.IntegrationTests/Tenants/TenantIntegrationTestSeeder.cs ResolveSigningKey]
+- Multi-document YAML `...` end-of-doc separator handling in `Split-YamlDocuments` — rarely seen in Helm-generated DAPR manifests. Add when a real config exhibits it. [deploy/validate-deployment.ps1 Split-YamlDocuments]
+- Project-wide `xUnit1051` suppression in `Hexalith.Parties.CommandApi.Tests.csproj` — pass-1 deferred and pass-2 reaffirms; threading `TestContext.Current.CancellationToken` through new tests is straightforward but project-wide suppression should be tightened to file/method scope in a hardening sprint. [tests/Hexalith.Parties.CommandApi.Tests/Hexalith.Parties.CommandApi.Tests.csproj]
+
 ## Deferred from: code review of 11-4-tenants-integration-tests-deployment-validation-and-documentation (2026-05-05)
 
 - 7 residual full-topology integration test failures — `party/process` returns 500 → surfaces as 422 in create-path E2E tests. Pre-existing; dev notes (line 244) acknowledge the failures are unrelated to Tenants authorization. Investigate as a separate hardening item.

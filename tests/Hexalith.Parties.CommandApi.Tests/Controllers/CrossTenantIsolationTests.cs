@@ -33,6 +33,7 @@ namespace Hexalith.Parties.CommandApi.Tests.Controllers;
 /// guarantees. These tests bind two tenants in a single test pass and assert
 /// tenant A cannot observe tenant B records by any externally visible path.
 /// </summary>
+[Collection(PartiesApiTestCollection.Name)]
 public sealed class CrossTenantIsolationTests : IClassFixture<PartiesApiTestFactory>, IDisposable
 {
     private readonly PartiesApiTestFactory _factory;
@@ -115,14 +116,20 @@ public sealed class CrossTenantIsolationTests : IClassFixture<PartiesApiTestFact
         // Act — InvokeFindParties wires actor proxies for BOTH tenants, so isolation
         // is genuinely exercised: the MCP tool must filter results to the calling tenant
         // even when tenant B index entries match the query.
-        IReadOnlyList<MockPartyHit> hits = await InvokeFindParties(
+        FindPartiesInvocation invocation = await InvokeFindPartiesWithProxyFactory(
             callingTenantId: "tenant-a",
             userId: "user-1",
             query: "Lovelace");
 
         // Assert — only tenant A results, even though tenant B has matching entries.
-        hits.ShouldNotBeEmpty();
-        hits.ShouldAllBe(h => h.TenantId == "tenant-a");
+        invocation.Hits.ShouldNotBeEmpty();
+        invocation.Hits.ShouldAllBe(h => h.TenantId == "tenant-a");
+        // Calling-tenant routing must never reach into tenant-b's index actor — assert this on
+        // the actor proxy factory directly so a future refactor that returns tenant-b items
+        // with tenant-a-shaped names cannot pass this test vacuously.
+        invocation.ActorProxyFactory.DidNotReceive().CreateActorProxy<IPartyIndexProjectionActor>(
+            Arg.Is<ActorId>(id => string.Equals(id.GetId(), TenantActorIds.PartyIndex("tenant-b"), StringComparison.Ordinal)),
+            Arg.Any<string>());
     }
 
     [Fact]
@@ -153,11 +160,14 @@ public sealed class CrossTenantIsolationTests : IClassFixture<PartiesApiTestFact
         // Allow only tenant-b; the calling tenant-a will be denied as not-member.
         AllowOnly(tenantId: "tenant-b", userId: "user-b");
 
-        InvalidOperationException ex = await Should.ThrowAsync<InvalidOperationException>(
+        // Assert on the typed exception's ReasonCode property rather than substring-matching the
+        // free-text message — a future translator change that includes "not-member" in a different
+        // denial reason's message would otherwise pass silently.
+        McpTenantAuthorizationException ex = await Should.ThrowAsync<McpTenantAuthorizationException>(
             () => InvokeGetPartyMcp(callingTenantId: "tenant-a", userId: "user-1", partyId: anyPartyId));
 
+        ex.ReasonCode.ShouldBe("not-member");
         ex.Message.ShouldContain("Tenant authorization failed");
-        ex.Message.ShouldContain("not-member");
     }
 
     /// <summary>
@@ -204,8 +214,10 @@ public sealed class CrossTenantIsolationTests : IClassFixture<PartiesApiTestFact
     /// must filter results, even when the other tenant has matching entries that would
     /// otherwise be visible. The factory's TenantAccessService is the same instance
     /// resolved via DI, so the test's AllowOnly handler governs authorization.
+    /// Returns the actor-proxy factory alongside the hits so the caller can assert
+    /// directly on tenant-b actor invocation (or its absence).
     /// </summary>
-    private async Task<IReadOnlyList<MockPartyHit>> InvokeFindParties(string callingTenantId, string userId, string query)
+    private async Task<FindPartiesInvocation> InvokeFindPartiesWithProxyFactory(string callingTenantId, string userId, string query)
     {
         using McpSessionScope _ = McpSessionScope.For(callingTenantId, userId);
 
@@ -255,14 +267,17 @@ public sealed class CrossTenantIsolationTests : IClassFixture<PartiesApiTestFact
                     $"FindPartiesMcpTool response did not contain 'results.items'. Payload: {json}");
             }
 
-            return items.EnumerateArray()
+            MockPartyHit[] hits = items.EnumerateArray()
                 .Select(item => new MockPartyHit(
                     item.GetProperty("party").GetProperty("id").GetString()!,
-                    // Synthesize tenant id from displayName prefix for assertion clarity;
-                    // production payload does not echo tenant id.
+                    // Synthesize tenant id from displayName prefix for assertion clarity only;
+                    // the authoritative isolation assertion is the actor-proxy DidNotReceive check
+                    // performed by the caller against the returned ActorProxyFactory.
                     item.GetProperty("party").GetProperty("displayName").GetString()!.Contains("tenant-a-party") ? "tenant-a" : "tenant-b",
                     item.GetProperty("party").GetProperty("displayName").GetString()!))
                 .ToArray();
+
+            return new FindPartiesInvocation(hits, actorProxyFactory);
         }
         finally
         {
@@ -296,6 +311,8 @@ public sealed class CrossTenantIsolationTests : IClassFixture<PartiesApiTestFact
             await services.DisposeAsync().ConfigureAwait(false);
         }
     }
+
+    private sealed record FindPartiesInvocation(IReadOnlyList<MockPartyHit> Hits, IActorProxyFactory ActorProxyFactory);
 
     private static PartyDetail CreatePartyDetail(string id, string displayName)
         => new()
