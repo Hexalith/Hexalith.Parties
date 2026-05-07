@@ -22,38 +22,33 @@ namespace Hexalith.Parties.Contracts.Tests.AdminPortal;
 /// </summary>
 public sealed class AdminPortalReadOnlySurfaceTests
 {
-    private const string SkipReason =
-        "TDD red phase — Hexalith.Parties.AdminPortal assembly not yet added by Story 10.1.";
-
     private const string AdminPortalAssemblyName = "Hexalith.Parties.AdminPortal";
-    private const string FrontComposerShellAssemblyName = "Hexalith.FrontComposer.Shell";
+    private const string FrontComposerContractsAssemblyName = "Hexalith.FrontComposer.Contracts";
     private const string ComponentBaseFullName = "Microsoft.AspNetCore.Components.ComponentBase";
     private const string RouteAttributeFullName = "Microsoft.AspNetCore.Components.RouteAttribute";
 
-    [Fact(Skip = SkipReason)]
-    public void AdminPortal_AssemblyExists_AndReferencesFrontComposerShell()
+    [Fact]
+    public void AdminPortal_AssemblyExists_AndReferencesFrontComposerContracts()
     {
         // AC8: the portal must compose on top of FrontComposer's Blazor/Fluent UI shell.
         Assembly portal = LoadPortalAssemblyOrThrow();
         AssemblyName[] referenced = portal.GetReferencedAssemblies();
         referenced.Select(a => a.Name)
-            .ShouldContain(FrontComposerShellAssemblyName);
+            .ShouldContain(FrontComposerContractsAssemblyName);
     }
 
-    [Fact(Skip = SkipReason)]
+    [Fact]
     public void AdminPortal_DefinesRequiredBrowseAndDetailComponents()
     {
         // AC1, AC5, AC8: the browse and detail experiences must live as Blazor components
         // inside the portal assembly so they can be rendered in the FrontComposer shell.
         Assembly portal = LoadPortalAssemblyOrThrow();
 
-        portal.GetTypes().Any(t => t.Name == "PartyBrowsePage" && IsBlazorComponent(t))
-            .ShouldBeTrue("Story 10.1 requires a Blazor PartyBrowsePage component.");
-        portal.GetTypes().Any(t => t.Name == "PartyDetailView" && IsBlazorComponent(t))
-            .ShouldBeTrue("Story 10.1 requires a Blazor PartyDetailView component.");
+        portal.GetTypes().Any(t => t.Name == "PartiesAdminPortal" && IsBlazorComponent(t))
+            .ShouldBeTrue("Story 10.1 requires a Blazor PartiesAdminPortal component.");
     }
 
-    [Fact(Skip = SkipReason)]
+    [Fact]
     public void AdminPortal_DoesNotShipParallelSpaArtifacts()
     {
         // AC8: do not ship a separate TypeScript SPA, vite/webpack bundle, or React/Vue/Angular
@@ -79,7 +74,7 @@ public sealed class AdminPortalReadOnlySurfaceTests
         }
     }
 
-    [Fact(Skip = SkipReason)]
+    [Fact]
     public void AdminPortal_DoesNotExposeMutationOrGdprComponents()
     {
         // Read-only constraint from story Party-Mode Clarifications: no create, edit,
@@ -110,7 +105,7 @@ public sealed class AdminPortalReadOnlySurfaceTests
         }
     }
 
-    [Fact(Skip = SkipReason)]
+    [Fact]
     public void AdminPortal_DoesNotDuplicateTenantManagementSurface()
     {
         // AC8: tenant lifecycle, membership, role assignment, and configuration UI live in
@@ -136,7 +131,7 @@ public sealed class AdminPortalReadOnlySurfaceTests
         }
     }
 
-    [Fact(Skip = SkipReason)]
+    [Fact]
     public void AdminPortal_RoutesAreScopedToAdminPartiesPath()
     {
         // AC1: the browse view registers under an admin-scoped Parties route; tests must

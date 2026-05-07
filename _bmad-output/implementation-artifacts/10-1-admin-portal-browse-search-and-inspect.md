@@ -1,6 +1,6 @@
 # Story 10.1: Admin Portal - Browse, Search, and Inspect
 
-Status: in-progress
+Status: review
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -276,6 +276,7 @@ GPT-5 Codex
 - 2026-05-07T12:15:00+02:00 - Green/refactor phase: implemented FrontComposer-registered `/admin/parties` route, metadata-preserving Parties REST transport, fail-closed state handling, labels surface, and encoded Razor detail rendering.
 - 2026-05-07T12:30:00+02:00 - Validation: `dotnet test tests\Hexalith.Parties.AdminPortal.Tests\Hexalith.Parties.AdminPortal.Tests.csproj --configuration Release` passed 8/8; `dotnet build Hexalith.Parties.slnx --configuration Release` passed; unsafe-rendering scan for `MarkupString`, `AddMarkupContent`, `innerHTML`, logging, and browser storage found no matches.
 - 2026-05-07T18:00:00+02:00 - BMad pass-1 code review (Blind Hunter + Edge Case Hunter + Acceptance Auditor) executed; 5 decision-needed + 37 patch + 6 defer + 4 dismiss findings logged in Review Findings. Pass-1 application: D1 (search wire shape → patch), D5 (drop unsupported `type`/`active` from search → patch), D2a (auth defaults flipped fail-closed → patch), and 25 patch items (P1–P15, P18, P21–P24, P26–P28, P32–P33) applied. D2b (Hexalith.Tenants integration), D3 (rich-search detection), D4 (FrontComposer Fluent UI reuse), and 12 patch items (P16, P17, P20, P25, P29–P31, P34–P37) deferred to follow-up story 10-1.1. Validation: `dotnet build Hexalith.Parties.slnx --configuration Release` clean; `dotnet test tests/Hexalith.Parties.AdminPortal.Tests --configuration Release` 16/16 (8 new tests added for status mapping, network failure, null-id validation, fail-closed defaults).
+- 2026-05-07T22:30:00+02:00 - BMad dev-story continuation for unresolved patch findings P16, P17, P20, P25, P29, P30, P31, and P34-P37. Added restrictions, system metadata, name history, stale detail metadata, bounded query metadata, retry/no-leak tests, async stale-response coverage, and activated Story 10.1 ATDD guardrails. Validation: `dotnet test tests/Hexalith.Parties.AdminPortal.Tests/Hexalith.Parties.AdminPortal.Tests.csproj --configuration Release` 22/22; `dotnet test tests/Hexalith.Parties.Client.Tests/Hexalith.Parties.Client.Tests.csproj --configuration Release` 59 passed / 6 skipped GDPR Story 10.2 scaffolds; `dotnet test tests/Hexalith.Parties.Contracts.Tests/Hexalith.Parties.Contracts.Tests.csproj --configuration Release` 42 passed / 15 skipped GDPR Story 10.2 scaffolds; `dotnet build Hexalith.Parties.slnx --configuration Release` clean; full `dotnet test Hexalith.Parties.slnx --configuration Release --no-build` failed outside Story 10.1 scope on `AdminEndpointE2ETests.RebuildEndpoint_WithAdminToken_Returns202AcceptedAsync` returning 403, while isolated `SemanticSearchPerformanceBenchmarkTests.Search_100KEntries_ExactMatch_CompletesWithin500ms` passed after the parallel full-suite perf failure.
 
 ### Completion Notes List
 
@@ -284,6 +285,7 @@ GPT-5 Codex
 - 2026-05-07 - Added a Parties-owned Blazor/Razor admin portal package registered against FrontComposer through a `DomainManifest` and route `/admin/parties`; no TypeScript SPA, tenant-management UI, or GDPR mutation workflow was introduced.
 - 2026-05-07 - Implemented browse/search/filter/paging/detail hydration against existing `GET /api/v1/parties`, `GET /api/v1/parties/search`, and `GET /api/v1/parties/{id}` APIs with page-size capping, degraded/stale metadata surfacing, bounded failures, and cancellation/version guards for tenant-context changes.
 - 2026-05-07 - Added normal Razor text rendering for party values plus XSS, authorization, localization-label, transport, and no-leak tests. Backend APIs were unchanged, so CommandApi tests were not required by the conditional validation task; full-topology integration tests were not run because this story changed only the frontend package and no Aspire/DAPR topology was needed.
+- 2026-05-07 - Resolved remaining Story 10.1 patch findings by adding detail rendering for restrictions, erased/restricted timestamps, party id, sort name, and name history; bounding metadata from server-controlled headers/body fields; surfacing stale detail age; proving retry, gone/forbidden no-leak behavior, real async tenant-switch stale-response suppression, keyboard/native-control accessibility affordances, and date/boolean/count localization coverage.
 
 ## Party-Mode Review
 
@@ -299,11 +301,14 @@ GPT-5 Codex
 ### File List
 
 - `Hexalith.Parties.slnx`
+- `Directory.Packages.props`
 - `src/Hexalith.Parties.AdminPortal/Components/PartiesAdminPortal.razor`
 - `src/Hexalith.Parties.AdminPortal/Extensions/PartiesAdminPortalServiceCollectionExtensions.cs`
 - `src/Hexalith.Parties.AdminPortal/Hexalith.Parties.AdminPortal.csproj`
+- `src/Hexalith.Parties.AdminPortal/Services/AdminPortalListState.cs`
 - `src/Hexalith.Parties.AdminPortal/Services/AdminPortalLabels.cs`
 - `src/Hexalith.Parties.AdminPortal/Services/AdminPortalListRequest.cs`
+- `src/Hexalith.Parties.AdminPortal/Services/AdminPortalPartyQueryService.cs`
 - `src/Hexalith.Parties.AdminPortal/Services/AdminPortalQueryBounds.cs`
 - `src/Hexalith.Parties.AdminPortal/Services/AdminPortalQueryException.cs`
 - `src/Hexalith.Parties.AdminPortal/Services/AdminPortalQueryFailureKind.cs`
@@ -314,6 +319,7 @@ GPT-5 Codex
 - `src/Hexalith.Parties.AdminPortal/Services/PartiesAdminPortalApiClient.cs`
 - `src/Hexalith.Parties.AdminPortal/Services/PartiesAdminPortalManifest.cs`
 - `src/Hexalith.Parties.AdminPortal/Services/PartiesAdminPortalOptions.cs`
+- `src/Hexalith.Parties.AdminPortal/Services/PartiesAdminListCoordinator.cs`
 - `src/Hexalith.Parties.AdminPortal/_Imports.razor`
 - `tests/Hexalith.Parties.AdminPortal.Tests/Components/PartiesAdminPortalComponentTests.cs`
 - `tests/Hexalith.Parties.AdminPortal.Tests/Hexalith.Parties.AdminPortal.Tests.csproj`
@@ -321,12 +327,19 @@ GPT-5 Codex
 - `tests/Hexalith.Parties.AdminPortal.Tests/Services/RecordingAdminPortalApiClient.cs`
 - `tests/Hexalith.Parties.AdminPortal.Tests/Services/RecordingHttpMessageHandler.cs`
 - `tests/Hexalith.Parties.AdminPortal.Tests/Usings.cs`
+- `tests/Hexalith.Parties.Client.Tests/AdminPortal/AdminPortalQueryContractTests.cs`
+- `tests/Hexalith.Parties.Client.Tests/Hexalith.Parties.Client.Tests.csproj`
+- `tests/Hexalith.Parties.Contracts.Tests/AdminPortal/AdminPortalAuthorizationStateTests.cs`
+- `tests/Hexalith.Parties.Contracts.Tests/AdminPortal/AdminPortalReadOnlySurfaceTests.cs`
+- `tests/Hexalith.Parties.Contracts.Tests/AdminPortal/AdminPortalXssGuardrailTests.cs`
+- `tests/Hexalith.Parties.Contracts.Tests/Hexalith.Parties.Contracts.Tests.csproj`
 - `_bmad-output/implementation-artifacts/10-1-admin-portal-browse-search-and-inspect.md`
 - `_bmad-output/implementation-artifacts/sprint-status.yaml`
 
 ### Change Log
 
 - 2026-05-07 - Implemented Story 10.1 admin portal browse/search/inspect foundation and marked ready for review.
+- 2026-05-07 - Resolved remaining Story 10.1 BMad review patch findings P16, P17, P20, P25, P29-P31, and P34-P37; marked story ready for review.
 
 ### Review Findings
 
@@ -363,28 +376,28 @@ Pass-1 BMad code review (2026-05-07). Three reviewers: Blind Hunter (adversarial
 - [x] [Review][Patch][Applied] **P13 — `AddHttpClient<T>` + `TryAddScoped<I>` lifetime mismatch** [Extensions/PartiesAdminPortalServiceCollectionExtensions.cs]
 - [x] [Review][Patch][Applied] **P14 — Constructor overloading on `PartiesAdminPortalApiClient` is a DI footgun** [Services/PartiesAdminPortalApiClient.cs:23-37]
 - [x] [Review][Patch][Applied] **P15 — Hardcoded English strings in select options & aria-labels (`Person`, `Organization`, `Search capabilities`, `Party pages`)** [Components/PartiesAdminPortal.razor]
-- [ ] [Review][Patch] **P16 — Detail rendering missing restrictions section and `ErasedAt`/`RestrictedAt` timestamps** [Components/PartiesAdminPortal.razor detail panel]
-- [ ] [Review][Patch] **P17 — System metadata block missing in detail (Id, name history)** [Components/PartiesAdminPortal.razor detail panel]
+- [x] [Review][Patch][Applied] **P16 — Detail rendering missing restrictions section and `ErasedAt`/`RestrictedAt` timestamps** [Components/PartiesAdminPortal.razor detail panel]
+- [x] [Review][Patch][Applied] **P17 — System metadata block missing in detail (Id, name history)** [Components/PartiesAdminPortal.razor detail panel]
 - [x] [Review][Patch][Applied] **P18 — `NotFound`/`Gone` returned for list endpoint not mapped to `NoData`** [Components/PartiesAdminPortal.razor:ApplyFailure]
 - [x] [Review][Patch][Applied] **P19 — Inconsistent URL escaping: `type=` and `active=` query parameters not escaped** [Services/PartiesAdminPortalApiClient.cs:67,72,103,108]
-- [ ] [Review][Patch] **P20 — `AdminPortalQueryMetadata` exposes raw server-controlled strings without bounds** [Services/AdminPortalQueryMetadata.cs]
+- [x] [Review][Patch][Applied] **P20 — `AdminPortalQueryMetadata` exposes raw server-controlled strings without bounds** [Services/AdminPortalQueryMetadata.cs]
 - [x] [Review][Patch][Applied] **P21 — `/admin/parties` route hardcoded twice (component `@page` + manifest `Route` constant)** [Components/PartiesAdminPortal.razor and Services/PartiesAdminPortalManifest.cs]
 - [x] [Review][Patch][Applied] **P22 — `FormatDate` locale-blind, drops time-of-day, prints `0001-01-01` sentinel for `default(DateTimeOffset)`** [Components/PartiesAdminPortal.razor:FormatDate]
 - [x] [Review][Patch][Applied] **P23 — `PortalFilters.Type` Enum.TryParse case-insensitive accepts numeric strings** [Components/PartiesAdminPortal.razor:PortalFilters]
 - [x] [Review][Patch][Applied] **P24 — `PartySearchResult.Party` potential null reference in UI projection** [Components/PartiesAdminPortal.razor search-to-row mapping]
-- [ ] [Review][Patch] **P25 — `UnauthorizedOrTenantChange` test does not actually verify stale-response suppression (synchronous test doubles)** [tests/Hexalith.Parties.AdminPortal.Tests/Components/PartiesAdminPortalComponentTests.cs]
+- [x] [Review][Patch][Applied] **P25 — `UnauthorizedOrTenantChange` test does not actually verify stale-response suppression (synchronous test doubles)** [tests/Hexalith.Parties.AdminPortal.Tests/Components/PartiesAdminPortalComponentTests.cs]
 - [x] [Review][Patch][Applied] **P26 — `ClientSideRichSearchAttempts` is a lying test (counter exposed but never incremented)** [tests/Hexalith.Parties.AdminPortal.Tests/Services/RecordingAdminPortalApiClient.cs]
 - [x] [Review][Patch][Applied] **P27 — `cut.Markup.ShouldContain("Active")` is ambiguous (matches headers, filter, badge)** [tests/Hexalith.Parties.AdminPortal.Tests/Components/PartiesAdminPortalComponentTests.cs]
 - [x] [Review][Patch][Applied] **P28 — `RecordingAdminPortalApiClient.GetPartyAsync` throws on empty queue while List/Search return defaults (inconsistent)** [tests/Hexalith.Parties.AdminPortal.Tests/Services/RecordingAdminPortalApiClient.cs]
-- [ ] [Review][Patch] **P29 — ATDD scaffolds in `tests/Hexalith.Parties.Client.Tests/AdminPortal/` and `tests/Hexalith.Parties.Contracts.Tests/AdminPortal/` remain `[Fact(Skip)]` — green-phase activation never happened**
-- [ ] [Review][Patch] **P30 — A11y/keyboard/focus tests missing** despite story tasks marked `[x]` [tests/Hexalith.Parties.AdminPortal.Tests]
-- [ ] [Review][Patch] **P31 — Erased/cross-tenant component-level test missing** (transport-only coverage exists; no bUnit Gone/Forbidden flow) [tests/Hexalith.Parties.AdminPortal.Tests]
+- [x] [Review][Patch][Applied] **P29 — ATDD scaffolds in `tests/Hexalith.Parties.Client.Tests/AdminPortal/` and `tests/Hexalith.Parties.Contracts.Tests/AdminPortal/` remain `[Fact(Skip)]` — green-phase activation never happened**
+- [x] [Review][Patch][Applied] **P30 — A11y/keyboard/focus tests missing** despite story tasks marked `[x]` [tests/Hexalith.Parties.AdminPortal.Tests]
+- [x] [Review][Patch][Applied] **P31 — Erased/cross-tenant component-level test missing** (transport-only coverage exists; no bUnit Gone/Forbidden flow) [tests/Hexalith.Parties.AdminPortal.Tests]
 - [x] [Review][Patch][Applied] **P32 — `HttpClient.BaseAddress` null check missing** [Services/PartiesAdminPortalApiClient.cs ctor]
 - [x] [Review][Patch][Applied] **P33 — Page > TotalPages handling — stale `Next` button state** [Components/PartiesAdminPortal.razor:ApplyRowsAsync]
-- [ ] [Review][Patch] **P34 — `AdminPortalQueryMetadata.StaleDataAge` not surfaced in detail panel** [Components/PartiesAdminPortal.razor:SelectPartyAsync]
-- [ ] [Review][Patch] **P35 — Gone/erased rows not removed from list when detail returns 410** [Components/PartiesAdminPortal.razor:SelectPartyAsync Gone branch]
-- [ ] [Review][Patch] **P36 — No retry affordance for transient failures** (UX matrix says "Retry"; only Search/Clear available) [Components/PartiesAdminPortal.razor]
-- [ ] [Review][Patch] **P37 — Localization tests partial: no date/boolean/count localization tests** [tests/Hexalith.Parties.AdminPortal.Tests]
+- [x] [Review][Patch][Applied] **P34 — `AdminPortalQueryMetadata.StaleDataAge` not surfaced in detail panel** [Components/PartiesAdminPortal.razor:SelectPartyAsync]
+- [x] [Review][Patch][Applied] **P35 — Gone/erased rows not removed from list when detail returns 410** [Components/PartiesAdminPortal.razor:SelectPartyAsync Gone branch]
+- [x] [Review][Patch][Applied] **P36 — No retry affordance for transient failures** (UX matrix says "Retry"; only Search/Clear available) [Components/PartiesAdminPortal.razor]
+- [x] [Review][Patch][Applied] **P37 — Localization tests partial: no date/boolean/count localization tests** [tests/Hexalith.Parties.AdminPortal.Tests]
 
 #### Deferred
 

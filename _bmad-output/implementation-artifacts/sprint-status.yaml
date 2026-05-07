@@ -1,5 +1,5 @@
 # generated: 2026-05-02
-# last_updated: 2026-05-07  (story 10-1 moved review→in-progress after pass-1 bmad-code-review applied D1+D5+D2a+25 patches, deferred D2b+D3+D4+12 patches+6 defensive items, dismissed 4; verified `dotnet build Hexalith.Parties.slnx --configuration Release` clean and `dotnet test tests/Hexalith.Parties.AdminPortal.Tests` 16/16. Earlier same-day update: story 11-4 moved to done after pass-2 bmad-code-review applied 36 patches, deferred 7, dismissed 7.)
+# last_updated: 2026-05-07  (story 10-1 moved in-progress→review after resolving remaining P16, P17, P20, P25, P29-P31, and P34-P37 review patches; focused AdminPortal/Client/Contracts tests and solution build passed. Full solution test still has unrelated Integration AdminEndpoint 403 failure. Earlier same-day update: story 11-4 moved to done after pass-2 bmad-code-review applied 36 patches, deferred 7, dismissed 7.)
 # project: Hexalith.Parties
 # project_key: NOKEY
 # tracking_system: file-system
@@ -35,7 +35,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-05-02
-last_updated: 2026-05-07T18:00:00+02:00
+last_updated: 2026-05-07T22:30:00+02:00
 project: Hexalith.Parties
 project_key: NOKEY
 tracking_system: file-system
@@ -126,7 +126,7 @@ development_status:
 
   # Epic 10: Administration & Frontend (v1.2) (3 stories)
   epic-10: in-progress
-  10-1-admin-portal-browse-search-and-inspect: in-progress
+  10-1-admin-portal-browse-search-and-inspect: review
   10-2-admin-portal-gdpr-operations: ready-for-dev
   10-3-embeddable-party-picker-component: in-progress
   epic-10-retrospective: optional

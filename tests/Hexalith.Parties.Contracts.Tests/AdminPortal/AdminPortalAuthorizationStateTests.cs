@@ -19,9 +19,6 @@ namespace Hexalith.Parties.Contracts.Tests.AdminPortal;
 /// </summary>
 public sealed class AdminPortalAuthorizationStateTests
 {
-    private const string SkipReason =
-        "TDD red phase — Hexalith.Parties.AdminPortal authorization state coordinator not yet wired.";
-
     private const string AdminPortalAssemblyName = "Hexalith.Parties.AdminPortal";
 
     private static readonly string[] _requiredStateNames =
@@ -38,7 +35,7 @@ public sealed class AdminPortalAuthorizationStateTests
         "TransientFailure",
     ];
 
-    [Fact(Skip = SkipReason)]
+    [Fact]
     public void AdminPortal_DefinesDistinguishableAuthorizationStates()
     {
         // AC7: missing token / missing tenant / missing admin role must each be a
@@ -58,7 +55,7 @@ public sealed class AdminPortalAuthorizationStateTests
         }
     }
 
-    [Fact(Skip = SkipReason)]
+    [Fact]
     public void AdminPortal_DefinesTenantSwitchResetHook()
     {
         // AC7: tenant context changes must clear list/search/detail state and ignore
@@ -78,7 +75,7 @@ public sealed class AdminPortalAuthorizationStateTests
             "PartiesAdminListCoordinator must define ResetForTenantSwitch (AC7).");
     }
 
-    [Fact(Skip = SkipReason)]
+    [Fact]
     public void AdminPortal_DefinesScopedQueryServiceFailingClosed()
     {
         // AC7 + Implementation Guardrails: cached rows must not survive 401, 403, missing
@@ -101,7 +98,7 @@ public sealed class AdminPortalAuthorizationStateTests
             "AdminPortalPartyQueryService must implement IDisposable/IAsyncDisposable to drop cached state on tenant switch.");
     }
 
-    [Fact(Skip = SkipReason)]
+    [Fact]
     public void AdminPortal_DoesNotInferAuthorizationFromJwtTenantClaim()
     {
         // Party-Mode Clarification + Epic 11: tenant authority must come from

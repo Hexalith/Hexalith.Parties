@@ -56,6 +56,14 @@ public sealed record AdminPortalLabels
 
     public string Page { get; init; } = "Page";
 
+    public string Of { get; init; } = "of";
+
+    public string TotalCount { get; init; } = "total";
+
+    public string Yes { get; init; } = "Yes";
+
+    public string No { get; init; } = "No";
+
     public string DetailRegion { get; init; } = "Party detail";
 
     public string SelectParty { get; init; } = "Select a party";
@@ -133,6 +141,28 @@ public sealed record AdminPortalLabels
     public string NoConsentRecords { get; init; } = "No consent records";
 
     public string Revoked { get; init; } = "Revoked";
+
+    public string Restrictions { get; init; } = "Restrictions";
+
+    public string RestrictedAt { get; init; } = "Restricted at";
+
+    public string ErasedAt { get; init; } = "Erased at";
+
+    public string SystemMetadata { get; init; } = "System metadata";
+
+    public string PartyId { get; init; } = "Party id";
+
+    public string SortName { get; init; } = "Sort name";
+
+    public string NameHistory { get; init; } = "Name history";
+
+    public string NoNameHistory { get; init; } = "No name history";
+
+    public string ChangedAt { get; init; } = "Changed at";
+
+    public string TriggeredBy { get; init; } = "Triggered by";
+
+    public string DataAge { get; init; } = "Data age";
 
     public string DetailUnavailable { get; init; } = "The selected party is unavailable";
 

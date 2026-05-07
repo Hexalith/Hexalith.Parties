@@ -11,6 +11,8 @@ public static class PartiesAdminPortalServiceCollectionExtensions
     {
         services.AddOptions<PartiesAdminPortalOptions>();
         services.AddHttpClient<IPartiesAdminPortalApiClient, PartiesAdminPortalApiClient>();
+        services.AddScoped<PartiesAdminListCoordinator>();
+        services.AddScoped<AdminPortalPartyQueryService>();
         return services;
     }
 

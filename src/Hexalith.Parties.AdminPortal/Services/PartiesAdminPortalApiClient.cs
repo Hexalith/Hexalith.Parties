@@ -67,21 +67,9 @@ public sealed class PartiesAdminPortalApiClient : IPartiesAdminPortalApiClient
             $"pageSize={AdminPortalQueryBounds.BoundPageSize(request.PageSize)}",
         };
 
-        return await SendAsync(
+        return await SendSearchAsync(
             $"api/v1/parties/search?{string.Join('&', parts)}",
-            async (response, ct) =>
-            {
-                AdminPortalSearchResponse body = await ReadPayloadAsync<AdminPortalSearchResponse>(response, ct).ConfigureAwait(false);
-                return body.Results;
-            },
-            cancellationToken,
-            (metadata, body) => body is AdminPortalSearchResponse search
-                ? metadata with
-                {
-                    SearchStatus = metadata.SearchStatus ?? search.Status,
-                    SearchDegradedReason = metadata.SearchDegradedReason ?? search.DegradedReason,
-                }
-                : metadata).ConfigureAwait(false);
+            cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<AdminPortalQueryResult<PartyDetail>> GetPartyAsync(string partyId, CancellationToken cancellationToken)
@@ -112,6 +100,38 @@ public sealed class PartiesAdminPortalApiClient : IPartiesAdminPortalApiClient
             }
 
             return new(payload, metadata);
+        }
+        catch (HttpRequestException ex)
+        {
+            throw new AdminPortalQueryException(AdminPortalQueryFailureKind.TransientFailure, (int?)ex.StatusCode);
+        }
+        catch (TaskCanceledException) when (!cancellationToken.IsCancellationRequested)
+        {
+            throw new AdminPortalQueryException(AdminPortalQueryFailureKind.TransientFailure);
+        }
+        catch (JsonException)
+        {
+            throw new AdminPortalQueryException(AdminPortalQueryFailureKind.Unknown);
+        }
+    }
+
+    private async Task<AdminPortalQueryResult<PagedResult<PartySearchResult>>> SendSearchAsync(
+        string url,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            using HttpResponseMessage response = await _httpClient.GetAsync(url, cancellationToken).ConfigureAwait(false);
+            ThrowIfFailure(response, cancellationToken);
+            AdminPortalSearchResponse body = await ReadPayloadAsync<AdminPortalSearchResponse>(response, cancellationToken).ConfigureAwait(false);
+            AdminPortalQueryMetadata wireMetadata = ReadMetadata(response);
+            AdminPortalQueryMetadata metadata = wireMetadata with
+            {
+                SearchStatus = wireMetadata.SearchStatus ?? body.Status,
+                SearchDegradedReason = wireMetadata.SearchDegradedReason ?? body.DegradedReason,
+            };
+
+            return new(body.Results, metadata);
         }
         catch (HttpRequestException ex)
         {

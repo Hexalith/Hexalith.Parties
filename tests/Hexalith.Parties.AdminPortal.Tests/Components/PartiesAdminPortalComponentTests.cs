@@ -1,5 +1,7 @@
 using Bunit;
 
+using System.Globalization;
+
 using Hexalith.Parties.AdminPortal.Components;
 using Hexalith.Parties.AdminPortal.Services;
 using Hexalith.Parties.AdminPortal.Tests.Services;
@@ -129,6 +131,59 @@ public sealed class PartiesAdminPortalComponentTests : BunitContext
     }
 
     [Fact]
+    public void PartiesAdminPortal_SelectParty_RendersRestrictionsSystemMetadataNameHistoryAndStaleAge()
+    {
+        var api = new RecordingAdminPortalApiClient();
+        DateTimeOffset restrictedAt = DateTimeOffset.Parse("2026-05-03T10:15:00Z");
+        api.EnqueueList(Page(IndexEntry("party-3b", "Ada Lovelace", PartyType.Person, true)));
+        api.EnqueueDetail(new PartyDetail
+        {
+            Id = "party-3b",
+            Type = PartyType.Person,
+            IsActive = true,
+            DisplayName = "Ada Lovelace",
+            SortName = "Lovelace, Ada",
+            ContactChannels = [],
+            Identifiers = [],
+            ConsentRecords = [],
+            NameHistory =
+            [
+                new NameHistoryEntry
+                {
+                    DisplayName = "Ada Byron",
+                    SortName = "Byron, Ada",
+                    ChangedAt = DateTimeOffset.Parse("2026-05-01T09:00:00Z"),
+                    TriggeredBy = "PartyDisplayNameDerived",
+                },
+            ],
+            CreatedAt = DateTimeOffset.Parse("2026-05-01T00:00:00Z"),
+            LastModifiedAt = DateTimeOffset.Parse("2026-05-03T10:15:00Z"),
+            IsRestricted = true,
+            RestrictedAt = restrictedAt,
+            IsErased = false,
+        }, new AdminPortalQueryMetadata(StaleDataAge: "PT12S"));
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+
+        IRenderedComponent<PartiesAdminPortal> cut = RenderAuthorized("scope-a");
+        cut.WaitForAssertion(() => cut.Find("tbody button").TextContent.ShouldContain("Ada Lovelace"));
+        cut.Find("tbody button").Click();
+
+        cut.WaitForAssertion(() =>
+        {
+            cut.Markup.ShouldContain("Data age");
+            cut.Markup.ShouldContain("PT12S");
+            cut.Markup.ShouldContain("Restrictions");
+            cut.Markup.ShouldContain("Restricted at");
+            cut.Markup.ShouldContain("System metadata");
+            cut.Markup.ShouldContain("party-3b");
+            cut.Markup.ShouldContain("Lovelace, Ada");
+            cut.Markup.ShouldContain("Name history");
+            cut.Markup.ShouldContain("Ada Byron");
+            cut.Markup.ShouldContain("PartyDisplayNameDerived");
+        });
+    }
+
+    [Fact]
     public void PartiesAdminPortal_UnauthorizedOrTenantChange_ClearsRowsAndIgnoresStaleResponses()
     {
         var api = new RecordingAdminPortalApiClient();
@@ -154,6 +209,167 @@ public sealed class PartiesAdminPortalComponentTests : BunitContext
             cut.FindAll("tbody tr").ShouldBeEmpty();
             cut.Find("button[type='submit']").HasAttribute("disabled").ShouldBeFalse();
         });
+    }
+
+    [Fact]
+    public void PartiesAdminPortal_TenantSwitch_IgnoresDelayedPreviousTenantResponse()
+    {
+        var api = new RecordingAdminPortalApiClient();
+        var delayed = new TaskCompletionSource<AdminPortalQueryResult<PagedResult<PartyIndexEntry>>>();
+        api.EnqueueList(ct =>
+        {
+            ct.Register(() => delayed.TrySetCanceled(ct));
+            return delayed.Task;
+        });
+        api.EnqueueList(Page(IndexEntry("party-new", "Tenant B", PartyType.Person, true)));
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+
+        IRenderedComponent<PartiesAdminPortal> cut = RenderAuthorized("scope-a");
+        cut.WaitForAssertion(() => api.ListRequests.Count.ShouldBe(1));
+
+        cut.InvokeAsync(() => cut.Instance.SetParametersAsync(ParameterView.FromDictionary(new Dictionary<string, object?>
+        {
+            [nameof(PartiesAdminPortal.ContextKey)] = "scope-b",
+            [nameof(PartiesAdminPortal.IsAuthenticated)] = true,
+            [nameof(PartiesAdminPortal.HasTenantContext)] = true,
+            [nameof(PartiesAdminPortal.IsAdmin)] = true,
+        })));
+
+        cut.WaitForAssertion(() => cut.Markup.ShouldContain("Tenant B"));
+        delayed.TrySetResult(new AdminPortalQueryResult<PagedResult<PartyIndexEntry>>(
+            Page(IndexEntry("party-old", "Tenant A", PartyType.Organization, true)),
+            AdminPortalQueryMetadata.Empty));
+
+        cut.WaitForAssertion(() =>
+        {
+            cut.Markup.ShouldContain("Tenant B");
+            cut.Markup.ShouldNotContain("Tenant A");
+        });
+    }
+
+    [Fact]
+    public void PartiesAdminPortal_DetailGone_RemovesRowAndDoesNotLeakPreviousDetail()
+    {
+        var api = new RecordingAdminPortalApiClient();
+        api.EnqueueList(Page(IndexEntry("party-gone", "Erased Person", PartyType.Person, true)));
+        api.EnqueueDetailFailure(AdminPortalQueryFailureKind.Gone);
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+
+        IRenderedComponent<PartiesAdminPortal> cut = RenderAuthorized("scope-a");
+        cut.WaitForAssertion(() => cut.Markup.ShouldContain("Erased Person"));
+        cut.Find("tbody button").Click();
+
+        cut.WaitForAssertion(() =>
+        {
+            cut.Markup.ShouldContain("erased or no longer inspectable");
+            cut.Markup.ShouldNotContain("Erased Person");
+            cut.FindAll("tbody tr").ShouldBeEmpty();
+        });
+    }
+
+    [Fact]
+    public void PartiesAdminPortal_DetailForbidden_ClearsDetailWithoutRemovingBrowseContext()
+    {
+        var api = new RecordingAdminPortalApiClient();
+        api.EnqueueList(Page(IndexEntry("party-forbidden", "Tenant Scoped", PartyType.Organization, true)));
+        api.EnqueueDetailFailure(AdminPortalQueryFailureKind.Forbidden);
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+
+        IRenderedComponent<PartiesAdminPortal> cut = RenderAuthorized("scope-a");
+        cut.WaitForAssertion(() => cut.Markup.ShouldContain("Tenant Scoped"));
+        cut.Find("tbody button").Click();
+
+        cut.WaitForAssertion(() =>
+        {
+            cut.Markup.ShouldContain("Access denied");
+            cut.Markup.ShouldContain("Tenant Scoped");
+            cut.Markup.ShouldNotContain("party-forbidden</dd>");
+        });
+    }
+
+    [Fact]
+    public void PartiesAdminPortal_ListTransientFailure_OffersRetry()
+    {
+        var api = new RecordingAdminPortalApiClient();
+        api.EnqueueListFailure(AdminPortalQueryFailureKind.TransientFailure);
+        api.EnqueueList(Page(IndexEntry("party-retry", "Retry Success", PartyType.Person, true)));
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+
+        IRenderedComponent<PartiesAdminPortal> cut = RenderAuthorized("scope-a");
+        cut.WaitForAssertion(() => cut.Markup.ShouldContain("Party data is temporarily unavailable"));
+        cut.FindAll("button").Single(button => button.TextContent.Trim() == "Retry").Click();
+
+        cut.WaitForAssertion(() => cut.Markup.ShouldContain("Retry Success"));
+        api.ListRequests.Count.ShouldBe(2);
+    }
+
+    [Fact]
+    public void PartiesAdminPortal_UsesLocalizedLabelsForDatesBooleansAndCounts()
+    {
+        CultureInfo? previousCulture = CultureInfo.CurrentCulture;
+        CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo("fr-FR");
+        try
+        {
+            var api = new RecordingAdminPortalApiClient();
+            api.EnqueueList(new PagedResult<PartyIndexEntry>
+            {
+                Items = [IndexEntry("party-fr", "Jean Martin", PartyType.Person, false)],
+                Page = 1,
+                PageSize = 20,
+                TotalCount = 42,
+                TotalPages = 3,
+            });
+            api.EnqueueDetail(new PartyDetail
+            {
+                Id = "party-fr",
+                Type = PartyType.Person,
+                IsActive = false,
+                DisplayName = "Jean Martin",
+                SortName = "Martin, Jean",
+                ContactChannels = [],
+                Identifiers = [],
+                ConsentRecords = [],
+                CreatedAt = DateTimeOffset.Parse("2026-05-01T00:00:00Z"),
+                LastModifiedAt = DateTimeOffset.Parse("2026-05-02T00:00:00Z"),
+                IsRestricted = true,
+                RestrictedAt = DateTimeOffset.Parse("2026-05-03T00:00:00Z"),
+            });
+            Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+
+            IRenderedComponent<PartiesAdminPortal> cut = Render<PartiesAdminPortal>(p => p
+                .Add(x => x.ContextKey, "scope-fr")
+                .Add(x => x.IsAuthenticated, true)
+                .Add(x => x.HasTenantContext, true)
+                .Add(x => x.IsAdmin, true)
+                .Add(x => x.Labels, new AdminPortalLabels
+                {
+                    Page = "Page",
+                    Of = "sur",
+                    TotalCount = "au total",
+                    Inactive = "Inactif",
+                    Yes = "Oui",
+                    No = "Non",
+                }));
+
+            cut.WaitForAssertion(() =>
+            {
+                cut.Markup.ShouldContain("Page 1 sur 3, 42 au total");
+                cut.Find("td span.hx-parties-admin__badge").TextContent.Trim().ShouldBe("Inactif");
+                cut.Markup.ShouldContain("01/05/2026");
+            });
+            cut.Find("tbody button").Click();
+
+            cut.WaitForAssertion(() =>
+            {
+                cut.Markup.ShouldContain("Oui");
+                cut.Markup.ShouldContain("Non");
+                cut.Markup.ShouldContain("03/05/2026");
+            });
+        }
+        finally
+        {
+            CultureInfo.CurrentCulture = previousCulture;
+        }
     }
 
     [Fact]

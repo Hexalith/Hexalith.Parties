@@ -24,6 +24,7 @@ public sealed class PartiesAdminPortalApiClientTests
     [Fact]
     public async Task ListPartiesAsync_BoundsPageSizeAndPreservesDegradedHeadersAsync()
     {
+        string longReason = new('x', 256);
         var handler = new RecordingHttpMessageHandler(
             HttpStatusCode.OK,
             JsonSerializer.Serialize(Page<PartyIndexEntry>(), _jsonOptions),
@@ -32,7 +33,7 @@ public sealed class PartiesAdminPortalApiClientTests
                 ["X-Service-Degraded"] = "true",
                 ["X-Stale-Data-Age"] = "PT12S",
                 ["X-Parties-Search-Status"] = "local-only",
-                ["X-Parties-Search-Degraded-Reason"] = "rich-search-disabled",
+                ["X-Parties-Search-Degraded-Reason"] = longReason,
             });
         PartiesAdminPortalApiClient client = CreateClient(handler);
 
@@ -47,7 +48,7 @@ public sealed class PartiesAdminPortalApiClientTests
         result.Metadata.ServiceDegraded.ShouldBe(true);
         result.Metadata.StaleDataAge.ShouldBe("PT12S");
         result.Metadata.SearchStatus.ShouldBe("local-only");
-        result.Metadata.SearchDegradedReason.ShouldBe("rich-search-disabled");
+        result.Metadata.SearchDegradedReason!.Length.ShouldBe(128);
     }
 
     [Fact]

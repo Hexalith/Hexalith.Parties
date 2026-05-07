@@ -18,19 +18,10 @@ namespace Hexalith.Parties.Contracts.Tests.AdminPortal;
 /// </summary>
 public sealed class AdminPortalXssGuardrailTests
 {
-    private const string SkipReason =
-        "TDD red phase — Hexalith.Parties.AdminPortal assembly not yet added by Story 10.1.";
-
     private const string AdminPortalAssemblyName = "Hexalith.Parties.AdminPortal";
     private const string MarkupStringFullName = "Microsoft.AspNetCore.Components.MarkupString";
 
-    private static readonly string[] _forbiddenRenderApis =
-    [
-        "AddMarkupContent",
-        "AddContent.*MarkupString",
-    ];
-
-    [Fact(Skip = SkipReason)]
+    [Fact]
     public void AdminPortal_DoesNotDeclareMarkupStringFields()
     {
         // AC6: forbid any field/property typed as MarkupString — reduces the surface where a
@@ -47,27 +38,36 @@ public sealed class AdminPortalXssGuardrailTests
             "AdminPortal must not declare MarkupString fields/properties for party data rendering.");
     }
 
-    [Fact(Skip = SkipReason)]
-    public void AdminPortal_DoesNotInvokeAddMarkupContentInBuildRenderTree()
+    [Fact]
+    public void AdminPortal_SourceDoesNotUseUnsafeRawRenderingApis()
     {
-        // AC6: detect AddMarkupContent calls in BuildRenderTree IL. Story 10.1 must use only
-        // standard Razor encoding (AddContent with strings or framework primitives).
-        Assembly portal = LoadPortalAssembly();
+        string repoRoot = FindRepoRoot();
+        string portalRoot = Path.Combine(repoRoot, "src", "Hexalith.Parties.AdminPortal");
+        string[] sourceFiles = Directory.GetFiles(portalRoot, "*.*", SearchOption.AllDirectories)
+            .Where(path => path.EndsWith(".razor", StringComparison.OrdinalIgnoreCase)
+                || path.EndsWith(".cs", StringComparison.OrdinalIgnoreCase))
+            .ToArray();
 
-        IEnumerable<MethodInfo> renderMethods = portal.GetTypes()
-            .Where(t => t.GetMethod("BuildRenderTree", BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public) is not null)
-            .Select(t => t.GetMethod("BuildRenderTree", BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public)!);
+        string[] forbidden =
+        [
+            "MarkupString",
+            "AddMarkupContent",
+            "innerHTML",
+            "AddContent(0, (MarkupString)",
+        ];
 
-        IEnumerable<string> offenders = renderMethods
-            .Where(m => m.GetMethodBody() is not null)
-            .Where(ContainsForbiddenIlReference)
-            .Select(m => m.DeclaringType?.FullName ?? m.Name);
-
-        offenders.ShouldBeEmpty(
-            "AdminPortal components must not call AddMarkupContent or render MarkupString from BuildRenderTree.");
+        foreach (string file in sourceFiles)
+        {
+            string contents = File.ReadAllText(file);
+            foreach (string token in forbidden)
+            {
+                contents.Contains(token, StringComparison.OrdinalIgnoreCase)
+                    .ShouldBeFalse($"AdminPortal source file '{file}' must not use unsafe raw rendering token '{token}'.");
+            }
+        }
     }
 
-    [Fact(Skip = SkipReason)]
+    [Fact]
     public void AdminPortal_HasNoJsInteropBridgeForRawPartyHtml()
     {
         // Implementation Guardrails: do not pipe party values through JS interop scripts
@@ -109,47 +109,6 @@ public sealed class AdminPortalXssGuardrailTests
         return memberType?.FullName == MarkupStringFullName;
     }
 
-    private static bool ContainsForbiddenIlReference(MethodInfo method)
-    {
-        // Lightweight IL scan: look for tokens whose resolved member name matches the
-        // forbidden render APIs. Skipped tests do not run; activation populates the
-        // resolver paths once Microsoft.AspNetCore.Components.RenderTree is loaded.
-        MethodBody? body = method.GetMethodBody();
-        if (body is null)
-        {
-            return false;
-        }
-
-        Module module = method.Module;
-        byte[] il = body.GetILAsByteArray() ?? [];
-
-        for (int i = 0; i + 4 < il.Length; i++)
-        {
-            if (il[i] is 0x28 or 0x6F)
-            {
-                int token = BitConverter.ToInt32(il, i + 1);
-                try
-                {
-                    MemberInfo? resolved = module.ResolveMember(token);
-                    string? name = resolved?.Name;
-                    if (name is not null && _forbiddenRenderApis.Any(forbidden =>
-                        name.Contains(forbidden.Split('.', 2)[0], StringComparison.Ordinal)))
-                    {
-                        return true;
-                    }
-                }
-                catch
-                {
-                    // Token resolution failures are ignored during IL scan.
-                }
-
-                i += 4;
-            }
-        }
-
-        return false;
-    }
-
     private static Assembly LoadPortalAssembly()
     {
         Assembly? loaded = AppDomain.CurrentDomain
@@ -157,5 +116,21 @@ public sealed class AdminPortalXssGuardrailTests
             .FirstOrDefault(a => string.Equals(a.GetName().Name, AdminPortalAssemblyName, StringComparison.Ordinal));
 
         return loaded ?? Assembly.Load(new AssemblyName(AdminPortalAssemblyName));
+    }
+
+    private static string FindRepoRoot()
+    {
+        DirectoryInfo? directory = new(AppContext.BaseDirectory);
+        while (directory is not null)
+        {
+            if (File.Exists(Path.Combine(directory.FullName, "Hexalith.Parties.slnx")))
+            {
+                return directory.FullName;
+            }
+
+            directory = directory.Parent;
+        }
+
+        throw new InvalidOperationException("Could not locate repository root.");
     }
 }
