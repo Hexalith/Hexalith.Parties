@@ -50,8 +50,8 @@ The trigger is not a product-scope change. It is an acceptance and review-integr
 ### Technical Impact
 
 - Add one Tier 3 integration smoke test file under `tests/Hexalith.Parties.IntegrationTests/Search/`.
-- Add HTTP-boundary coverage under `tests/Hexalith.Parties.CommandApi.Tests/Controllers/` or the existing search/controller test location.
-- Add co-located orchestrator unit tests under `tests/Hexalith.Parties.CommandApi.Tests/Domain/`.
+- Add HTTP-boundary coverage under `tests/Hexalith.Parties.Tests/Controllers/` or the existing search/controller test location.
+- Add co-located orchestrator unit tests under `tests/Hexalith.Parties.Tests/Domain/`.
 - No PRD, architecture decision, production code, or package-boundary change is required unless tests expose a defect.
 - Do not initialize nested submodules recursively while setting up test topology; use existing root-level project composition and configured fixtures.
 
@@ -104,7 +104,7 @@ The missing work is narrow but high-signal:
 - [ ] Task 8: Review verification addendum
   - [ ] 8.1 Add `tests/Hexalith.Parties.IntegrationTests/Search/MemoriesPartySearchIntegrationTests.cs` with a smoke path proving index -> Memories search -> Parties hydration -> authorization -> response metadata.
   - [ ] 8.2 Add an HTTP-boundary test asserting the default local search response includes `X-Parties-Search-Status: LocalOnly` when Memories search is disabled.
-  - [ ] 8.3 Add `PartyProjectionUpdateOrchestratorTests` co-located under CommandApi domain tests for full-stream replay correctness, key-destroyed redaction fallback, sequence-number ordering, and cancellation.
+  - [ ] 8.3 Add `PartyProjectionUpdateOrchestratorTests` co-located under Parties service domain tests for full-stream replay correctness, key-destroyed redaction fallback, sequence-number ordering, and cancellation.
 ```
 
 **Rationale:** Keeps completed service-level tests truthful while making the remaining review obligations explicit and blocking.
@@ -155,8 +155,8 @@ Add a note in the story file, not necessarily in `sprint-status.yaml`, that Stor
 
 ```text
 tests/Hexalith.Parties.IntegrationTests/Search/MemoriesPartySearchIntegrationTests.cs
-tests/Hexalith.Parties.CommandApi.Tests/Controllers/PartiesControllerSearchHeaderTests.cs
-tests/Hexalith.Parties.CommandApi.Tests/Domain/PartyProjectionUpdateOrchestratorTests.cs
+tests/Hexalith.Parties.Tests/Controllers/PartiesControllerSearchHeaderTests.cs
+tests/Hexalith.Parties.Tests/Domain/PartyProjectionUpdateOrchestratorTests.cs
 ```
 
 Exact filenames may follow existing local conventions, but the three test responsibilities should remain separate enough that failures point to the right boundary.

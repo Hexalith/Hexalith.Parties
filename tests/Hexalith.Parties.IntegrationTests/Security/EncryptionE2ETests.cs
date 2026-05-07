@@ -38,7 +38,7 @@ public class EncryptionE2ETests(PartiesAspireTopologyFixture fixture, ITestOutpu
         if (!fixture.IsAvailable) { output.WriteLine($"Skipped: {fixture.UnavailableReason}"); return; }
 
         string partyId = Guid.NewGuid().ToString();
-        HttpClient client = fixture.CommandApiClient;
+        HttpClient client = fixture.PartiesClient;
         client.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", CreateAdminToken());
 
@@ -85,7 +85,7 @@ public class EncryptionE2ETests(PartiesAspireTopologyFixture fixture, ITestOutpu
         if (!fixture.IsAvailable) { output.WriteLine($"Skipped: {fixture.UnavailableReason}"); return; }
 
         string partyId = Guid.NewGuid().ToString();
-        HttpClient client = fixture.CommandApiClient;
+        HttpClient client = fixture.PartiesClient;
         client.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", CreateAdminToken());
 

@@ -168,7 +168,7 @@ The client should:
 - **sealed record** for options types
 - Command types are `sealed record` from `Hexalith.Parties.Contracts.Commands`
 - Value objects and models from `Hexalith.Parties.Contracts.ValueObjects` and `Hexalith.Parties.Contracts.Models`
-- **NO** references to `Hexalith.Parties.Server`, `Hexalith.Parties.Projections`, `Hexalith.Parties.CommandApi`
+- **NO** references to `Hexalith.Parties.Server`, `Hexalith.Parties.Projections`, `Hexalith.Parties`
 - **NO** event type references — only commands, models, and value objects
 
 ### File Structure
@@ -203,7 +203,7 @@ tests/Hexalith.Parties.Client.Tests/
 - **Tier 1 only**: no DAPR, no HTTP, no database — mock `HttpMessageHandler` for HTTP tests
 - **DI test pattern**: build `ServiceCollection`, add `AddPartiesClient()`, build provider, resolve interfaces
 - **HTTP mock pattern**: custom `DelegatingHandler` or `NSubstitute` on `HttpMessageHandler` to return canned responses
-- Follow established pattern from `Hexalith.Parties.CommandApi.Tests`
+- Follow established pattern from `Hexalith.Parties.Tests`
 
 ### Existing Types to Reuse (DO NOT Recreate)
 
@@ -248,12 +248,12 @@ These are managed via `Directory.Packages.props` (central package management). I
 
 - [Source: _bmad-output/planning-artifacts/epics.md#Story 6.1]
 - [Source: _bmad-output/planning-artifacts/architecture.md#Client Package]
-- [Source: src/Hexalith.Parties.CommandApi/Controllers/PartiesController.cs]
+- [Source: src/Hexalith.Parties/Controllers/PartiesController.cs]
 - [Source: src/Hexalith.Parties.Contracts/Models/PartyDetail.cs]
 - [Source: src/Hexalith.Parties.Contracts/Models/PagedResult.cs]
 - [Source: src/Hexalith.Parties.Contracts/Models/PartySearchResult.cs]
 - [Source: src/Hexalith.Parties.Contracts/Models/PartyIndexEntry.cs]
-- [Source: tests/Hexalith.Parties.CommandApi.Tests/FitnessTests/ArchitecturalFitnessTests.cs]
+- [Source: tests/Hexalith.Parties.Tests/FitnessTests/ArchitecturalFitnessTests.cs]
 
 ## Dev Agent Record
 

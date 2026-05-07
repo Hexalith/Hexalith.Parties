@@ -9,7 +9,7 @@
 #
 # Adding New Domain Services (Production):
 #   1. Add a policy entry with defaultAction: deny and NO allowed operations.
-#   2. The commandapi policy already uses wildcard (/**) for outbound invocation.
+#   2. The parties policy already uses wildcard (/**) for outbound invocation.
 #   3. Do NOT add new services to pub/sub scopes, state store scopes, or publishingScopes.
 apiVersion: dapr.io/v1alpha1
 kind: Configuration
@@ -20,8 +20,8 @@ spec:
     defaultAction: deny
     trustDomain: "{env:DAPR_TRUST_DOMAIN|hexalith.io}"
     policies:
-      # commandapi: Trusted caller -- REST API + actor host + event publisher
-      - appId: commandapi
+      # parties: Trusted caller -- REST API + actor host + event publisher
+      - appId: parties
         defaultAction: deny
         trustDomain: "{env:DAPR_TRUST_DOMAIN|hexalith.io}"
         namespace: "{env:DAPR_NAMESPACE|hexalith}"

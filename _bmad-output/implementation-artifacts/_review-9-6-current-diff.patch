@@ -153,10 +153,10 @@ index 4d62941..29db0b0 100644
  // Optional Keycloak OIDC integration (follow EventStore pattern).
  // Set EnableKeycloak=false in environment or appsettings to run without Keycloak
  // (falls back to symmetric key auth via Authentication:JwtBearer:SigningKey).
-diff --git a/src/Hexalith.Parties.CommandApi/Controllers/AdminController.cs b/src/Hexalith.Parties.CommandApi/Controllers/AdminController.cs
+diff --git a/src/Hexalith.Parties/Controllers/AdminController.cs b/src/Hexalith.Parties/Controllers/AdminController.cs
 index e06a0cc..2e9f254 100644
---- a/src/Hexalith.Parties.CommandApi/Controllers/AdminController.cs
-+++ b/src/Hexalith.Parties.CommandApi/Controllers/AdminController.cs
+--- a/src/Hexalith.Parties/Controllers/AdminController.cs
++++ b/src/Hexalith.Parties/Controllers/AdminController.cs
 @@ -39,6 +39,7 @@ public sealed class AdminController(
      ILogger<AdminController> logger) : ControllerBase {
      private const string Domain = "party";
@@ -241,19 +241,19 @@ index e06a0cc..2e9f254 100644
              Tenant: tenantId,
              Domain: Domain,
              AggregateId: partyId,
-diff --git a/src/Hexalith.Parties.CommandApi/Controllers/PartiesController.cs b/src/Hexalith.Parties.CommandApi/Controllers/PartiesController.cs
+diff --git a/src/Hexalith.Parties/Controllers/PartiesController.cs b/src/Hexalith.Parties/Controllers/PartiesController.cs
 index c9c70f2..77823d1 100644
---- a/src/Hexalith.Parties.CommandApi/Controllers/PartiesController.cs
-+++ b/src/Hexalith.Parties.CommandApi/Controllers/PartiesController.cs
+--- a/src/Hexalith.Parties/Controllers/PartiesController.cs
++++ b/src/Hexalith.Parties/Controllers/PartiesController.cs
 @@ -9,11 +9,13 @@ using FluentValidation.Results;
  using Hexalith.EventStore.Server.Actors;
  using Hexalith.EventStore.Server.Commands;
  using Hexalith.EventStore.Server.Pipeline.Commands;
 +using Hexalith.EventStore.Server.Projections;
 +using Hexalith.EventStore.Contracts.Identity;
-+using Hexalith.Parties.CommandApi.Extensions;
- using Hexalith.Parties.CommandApi.Middleware;
- using Hexalith.Parties.CommandApi.Search;
++using Hexalith.Parties.Extensions;
+ using Hexalith.Parties.Middleware;
+ using Hexalith.Parties.Search;
  using Hexalith.Parties.Contracts.Commands;
  using Hexalith.Parties.Contracts.Models;
 -using Hexalith.Parties.Contracts.Search;
@@ -645,11 +645,11 @@ index c9c70f2..77823d1 100644
      private ObjectResult CreateUnauthorizedProblemDetails(string detail, string correlationId)
      {
          var problemDetails = new ProblemDetails
-diff --git a/src/Hexalith.Parties.CommandApi/Domain/PartyDomainServiceInvoker.cs b/src/Hexalith.Parties.CommandApi/Domain/PartyDomainServiceInvoker.cs
+diff --git a/src/Hexalith.Parties/Domain/PartyDomainServiceInvoker.cs b/src/Hexalith.Parties/Domain/PartyDomainServiceInvoker.cs
 new file mode 100644
 index 0000000..2a36b82
 --- /dev/null
-+++ b/src/Hexalith.Parties.CommandApi/Domain/PartyDomainServiceInvoker.cs
++++ b/src/Hexalith.Parties/Domain/PartyDomainServiceInvoker.cs
 @@ -0,0 +1,147 @@
 +using Hexalith.EventStore.Contracts.Commands;
 +using Hexalith.EventStore.Contracts.Events;
@@ -661,7 +661,7 @@ index 0000000..2a36b82
 +
 +using Microsoft.Extensions.Logging;
 +
-+namespace Hexalith.Parties.CommandApi.Domain;
++namespace Hexalith.Parties.Domain;
 +
 +internal sealed partial class PartyDomainServiceInvoker(
 +    IEventPayloadProtectionService payloadProtectionService,
@@ -798,11 +798,11 @@ index 0000000..2a36b82
 +    [LoggerMessage(Level = LogLevel.Warning, Message = "Falling back to null snapshot during rehydration for {TenantId}/{PartyId}: {ExceptionType}: {Error}")]
 +    private partial void LogSnapshotRehydrationFallbackToRedaction(string tenantId, string partyId, string exceptionType, string error);
 +}
-diff --git a/src/Hexalith.Parties.CommandApi/Domain/PartyProjectionUpdateOrchestrator.cs b/src/Hexalith.Parties.CommandApi/Domain/PartyProjectionUpdateOrchestrator.cs
+diff --git a/src/Hexalith.Parties/Domain/PartyProjectionUpdateOrchestrator.cs b/src/Hexalith.Parties/Domain/PartyProjectionUpdateOrchestrator.cs
 new file mode 100644
 index 0000000..d108ccb
 --- /dev/null
-+++ b/src/Hexalith.Parties.CommandApi/Domain/PartyProjectionUpdateOrchestrator.cs
++++ b/src/Hexalith.Parties/Domain/PartyProjectionUpdateOrchestrator.cs
 @@ -0,0 +1,209 @@
 +using Dapr.Actors;
 +using Dapr.Actors.Client;
@@ -811,7 +811,7 @@ index 0000000..d108ccb
 +using Hexalith.EventStore.Contracts.Security;
 +using Hexalith.EventStore.Server.Actors;
 +using Hexalith.EventStore.Server.Projections;
-+using Hexalith.Parties.CommandApi.Search;
++using Hexalith.Parties.Search;
 +using Hexalith.Parties.Contracts.Models;
 +using Hexalith.Parties.Projections.Abstractions;
 +using Hexalith.Parties.Projections.Actors;
@@ -821,7 +821,7 @@ index 0000000..d108ccb
 +
 +using ServerEventEnvelope = Hexalith.EventStore.Server.Events.EventEnvelope;
 +
-+namespace Hexalith.Parties.CommandApi.Domain;
++namespace Hexalith.Parties.Domain;
 +
 +internal sealed class PartyProjectionUpdateOrchestrator(
 +    IActorProxyFactory actorProxyFactory,
@@ -1013,10 +1013,10 @@ index 0000000..d108ccb
 +            || ex.Message.Contains("key has been deleted", StringComparison.OrdinalIgnoreCase)
 +            || ex.Message.Contains("Secret not found", StringComparison.OrdinalIgnoreCase));
 +}
-diff --git a/src/Hexalith.Parties.CommandApi/Extensions/PartiesServiceCollectionExtensions.cs b/src/Hexalith.Parties.CommandApi/Extensions/PartiesServiceCollectionExtensions.cs
+diff --git a/src/Hexalith.Parties/Extensions/PartiesServiceCollectionExtensions.cs b/src/Hexalith.Parties/Extensions/PartiesServiceCollectionExtensions.cs
 index cdf01b1..74eac46 100644
---- a/src/Hexalith.Parties.CommandApi/Extensions/PartiesServiceCollectionExtensions.cs
-+++ b/src/Hexalith.Parties.CommandApi/Extensions/PartiesServiceCollectionExtensions.cs
+--- a/src/Hexalith.Parties/Extensions/PartiesServiceCollectionExtensions.cs
++++ b/src/Hexalith.Parties/Extensions/PartiesServiceCollectionExtensions.cs
 @@ -9,8 +9,12 @@ using FluentValidation;
  
  using Hexalith.EventStore.Server.Configuration;
@@ -1025,11 +1025,11 @@ index cdf01b1..74eac46 100644
 +using Hexalith.EventStore.Server.Projections;
  using Hexalith.EventStore.Contracts.Security;
 +using Hexalith.Memories.Client.Rest;
- using Hexalith.Parties.CommandApi.Authentication;
-+using Hexalith.Parties.CommandApi.Domain;
- using Hexalith.Parties.CommandApi.ErrorHandling;
- using Hexalith.Parties.CommandApi.Mcp;
- using Hexalith.Parties.CommandApi.Validation;
+ using Hexalith.Parties.Authentication;
++using Hexalith.Parties.Domain;
+ using Hexalith.Parties.ErrorHandling;
+ using Hexalith.Parties.Mcp;
+ using Hexalith.Parties.Validation;
 @@ -65,7 +69,15 @@ public static class PartiesServiceCollectionExtensions {
          _ = services.AddTransient<IClaimsTransformation, PartiesClaimsTransformation>();
  
@@ -1162,11 +1162,11 @@ index cdf01b1..74eac46 100644
  
          // FluentValidation (assembly scanning — no explicit validator registration)
          _ = services.AddValidatorsFromAssemblyContaining<CreatePartyValidator>();
-diff --git a/src/Hexalith.Parties.CommandApi/Extensions/PartyDetailProjectionActorExtensions.cs b/src/Hexalith.Parties.CommandApi/Extensions/PartyDetailProjectionActorExtensions.cs
+diff --git a/src/Hexalith.Parties/Extensions/PartyDetailProjectionActorExtensions.cs b/src/Hexalith.Parties/Extensions/PartyDetailProjectionActorExtensions.cs
 new file mode 100644
 index 0000000..ad78da2
 --- /dev/null
-+++ b/src/Hexalith.Parties.CommandApi/Extensions/PartyDetailProjectionActorExtensions.cs
++++ b/src/Hexalith.Parties/Extensions/PartyDetailProjectionActorExtensions.cs
 @@ -0,0 +1,119 @@
 +using System.Text.Json;
 +using System.Text.Json.Nodes;
@@ -1174,7 +1174,7 @@ index 0000000..ad78da2
 +using Hexalith.Parties.Contracts.Models;
 +using Hexalith.Parties.Projections.Abstractions;
 +
-+namespace Hexalith.Parties.CommandApi.Extensions;
++namespace Hexalith.Parties.Extensions;
 +
 +internal static class PartyDetailProjectionActorExtensions
 +{
@@ -1287,20 +1287,20 @@ index 0000000..ad78da2
 +        }
 +    }
 +}
-diff --git a/src/Hexalith.Parties.CommandApi/HealthChecks/MemoriesSearchHealthCheck.cs b/src/Hexalith.Parties.CommandApi/HealthChecks/MemoriesSearchHealthCheck.cs
+diff --git a/src/Hexalith.Parties/HealthChecks/MemoriesSearchHealthCheck.cs b/src/Hexalith.Parties/HealthChecks/MemoriesSearchHealthCheck.cs
 new file mode 100644
 index 0000000..10e5b00
 --- /dev/null
-+++ b/src/Hexalith.Parties.CommandApi/HealthChecks/MemoriesSearchHealthCheck.cs
++++ b/src/Hexalith.Parties/HealthChecks/MemoriesSearchHealthCheck.cs
 @@ -0,0 +1,109 @@
 +using Hexalith.Memories.Client.Rest;
 +using Hexalith.Memories.Contracts.V1;
-+using Hexalith.Parties.CommandApi.Search;
++using Hexalith.Parties.Search;
 +
 +using Microsoft.Extensions.Diagnostics.HealthChecks;
 +using Microsoft.Extensions.Options;
 +
-+namespace Hexalith.Parties.CommandApi.HealthChecks;
++namespace Hexalith.Parties.HealthChecks;
 +
 +/// <summary>
 +/// Health check for Hexalith.Memories search integration. Distinguishes local Parties
@@ -1402,10 +1402,10 @@ index 0000000..10e5b00
 +        }
 +    }
 +}
-diff --git a/src/Hexalith.Parties.CommandApi/HealthChecks/PartiesHealthCheckExtensions.cs b/src/Hexalith.Parties.CommandApi/HealthChecks/PartiesHealthCheckExtensions.cs
+diff --git a/src/Hexalith.Parties/HealthChecks/PartiesHealthCheckExtensions.cs b/src/Hexalith.Parties/HealthChecks/PartiesHealthCheckExtensions.cs
 index 0dae133..7f61785 100644
---- a/src/Hexalith.Parties.CommandApi/HealthChecks/PartiesHealthCheckExtensions.cs
-+++ b/src/Hexalith.Parties.CommandApi/HealthChecks/PartiesHealthCheckExtensions.cs
+--- a/src/Hexalith.Parties/HealthChecks/PartiesHealthCheckExtensions.cs
++++ b/src/Hexalith.Parties/HealthChecks/PartiesHealthCheckExtensions.cs
 @@ -47,7 +47,12 @@ public static class PartiesHealthCheckExtensions
                  "projection-actors",
                  failureStatus: HealthStatus.Degraded,
@@ -1420,10 +1420,10 @@ index 0dae133..7f61785 100644
  
          return builder;
      }
-diff --git a/src/Hexalith.Parties.CommandApi/Hexalith.Parties.CommandApi.csproj b/src/Hexalith.Parties.CommandApi/Hexalith.Parties.CommandApi.csproj
+diff --git a/src/Hexalith.Parties/Hexalith.Parties.csproj b/src/Hexalith.Parties/Hexalith.Parties.csproj
 index 3355268..d7f8d97 100644
---- a/src/Hexalith.Parties.CommandApi/Hexalith.Parties.CommandApi.csproj
-+++ b/src/Hexalith.Parties.CommandApi/Hexalith.Parties.CommandApi.csproj
+--- a/src/Hexalith.Parties/Hexalith.Parties.csproj
++++ b/src/Hexalith.Parties/Hexalith.Parties.csproj
 @@ -27,6 +27,7 @@
      <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
      <PackageReference Include="ModelContextProtocol.AspNetCore" />
@@ -1432,10 +1432,10 @@ index 3355268..d7f8d97 100644
    </ItemGroup>
  
  </Project>
-diff --git a/src/Hexalith.Parties.CommandApi/Mcp/CreatePartyMcpTool.cs b/src/Hexalith.Parties.CommandApi/Mcp/CreatePartyMcpTool.cs
+diff --git a/src/Hexalith.Parties/Mcp/CreatePartyMcpTool.cs b/src/Hexalith.Parties/Mcp/CreatePartyMcpTool.cs
 index 01b9a18..44a4abd 100644
---- a/src/Hexalith.Parties.CommandApi/Mcp/CreatePartyMcpTool.cs
-+++ b/src/Hexalith.Parties.CommandApi/Mcp/CreatePartyMcpTool.cs
+--- a/src/Hexalith.Parties/Mcp/CreatePartyMcpTool.cs
++++ b/src/Hexalith.Parties/Mcp/CreatePartyMcpTool.cs
 @@ -157,6 +157,7 @@ public static class CreatePartyMcpTool
          ICommandRouter commandRouter = services.GetRequiredService<ICommandRouter>();
  
@@ -1444,10 +1444,10 @@ index 01b9a18..44a4abd 100644
              Tenant: tenant,
              Domain: "party",
              AggregateId: partyId,
-diff --git a/src/Hexalith.Parties.CommandApi/Mcp/DeletePartyMcpTool.cs b/src/Hexalith.Parties.CommandApi/Mcp/DeletePartyMcpTool.cs
+diff --git a/src/Hexalith.Parties/Mcp/DeletePartyMcpTool.cs b/src/Hexalith.Parties/Mcp/DeletePartyMcpTool.cs
 index 60ab9d5..ff9571e 100644
---- a/src/Hexalith.Parties.CommandApi/Mcp/DeletePartyMcpTool.cs
-+++ b/src/Hexalith.Parties.CommandApi/Mcp/DeletePartyMcpTool.cs
+--- a/src/Hexalith.Parties/Mcp/DeletePartyMcpTool.cs
++++ b/src/Hexalith.Parties/Mcp/DeletePartyMcpTool.cs
 @@ -74,6 +74,7 @@ public static class DeletePartyMcpTool
          ICommandRouter commandRouter = services.GetRequiredService<ICommandRouter>();
  
@@ -1456,13 +1456,13 @@ index 60ab9d5..ff9571e 100644
              Tenant: tenant,
              Domain: "party",
              AggregateId: partyId,
-diff --git a/src/Hexalith.Parties.CommandApi/Mcp/FindPartiesMcpTool.cs b/src/Hexalith.Parties.CommandApi/Mcp/FindPartiesMcpTool.cs
+diff --git a/src/Hexalith.Parties/Mcp/FindPartiesMcpTool.cs b/src/Hexalith.Parties/Mcp/FindPartiesMcpTool.cs
 index ec37c5f..bedaea3 100644
---- a/src/Hexalith.Parties.CommandApi/Mcp/FindPartiesMcpTool.cs
-+++ b/src/Hexalith.Parties.CommandApi/Mcp/FindPartiesMcpTool.cs
+--- a/src/Hexalith.Parties/Mcp/FindPartiesMcpTool.cs
++++ b/src/Hexalith.Parties/Mcp/FindPartiesMcpTool.cs
 @@ -6,7 +6,6 @@ using Dapr.Actors.Client;
  
- using Hexalith.Parties.CommandApi.Search;
+ using Hexalith.Parties.Search;
  using Hexalith.Parties.Contracts.Models;
 -using Hexalith.Parties.Contracts.Search;
  using Hexalith.Parties.Contracts.ValueObjects;
@@ -1560,15 +1560,15 @@ index ec37c5f..bedaea3 100644
 +        return await proxy.GetEntriesAsync().ConfigureAwait(false);
 +    }
  }
-diff --git a/src/Hexalith.Parties.CommandApi/Mcp/GetPartyNameAtMcpTool.cs b/src/Hexalith.Parties.CommandApi/Mcp/GetPartyNameAtMcpTool.cs
+diff --git a/src/Hexalith.Parties/Mcp/GetPartyNameAtMcpTool.cs b/src/Hexalith.Parties/Mcp/GetPartyNameAtMcpTool.cs
 index 40bc1bd..a305401 100644
---- a/src/Hexalith.Parties.CommandApi/Mcp/GetPartyNameAtMcpTool.cs
-+++ b/src/Hexalith.Parties.CommandApi/Mcp/GetPartyNameAtMcpTool.cs
+--- a/src/Hexalith.Parties/Mcp/GetPartyNameAtMcpTool.cs
++++ b/src/Hexalith.Parties/Mcp/GetPartyNameAtMcpTool.cs
 @@ -4,6 +4,7 @@ using System.Text.Json;
  using Dapr.Actors;
  using Dapr.Actors.Client;
  
-+using Hexalith.Parties.CommandApi.Extensions;
++using Hexalith.Parties.Extensions;
  using Hexalith.Parties.Contracts.Models;
  using Hexalith.Parties.Contracts.ValueObjects;
  using Hexalith.Parties.Projections.Abstractions;
@@ -1592,16 +1592,16 @@ index 40bc1bd..a305401 100644
  
          if (entry is null)
          {
-diff --git a/src/Hexalith.Parties.CommandApi/Mcp/UpdatePartyMcpTool.cs b/src/Hexalith.Parties.CommandApi/Mcp/UpdatePartyMcpTool.cs
+diff --git a/src/Hexalith.Parties/Mcp/UpdatePartyMcpTool.cs b/src/Hexalith.Parties/Mcp/UpdatePartyMcpTool.cs
 index 584624a..850b9fc 100644
---- a/src/Hexalith.Parties.CommandApi/Mcp/UpdatePartyMcpTool.cs
-+++ b/src/Hexalith.Parties.CommandApi/Mcp/UpdatePartyMcpTool.cs
+--- a/src/Hexalith.Parties/Mcp/UpdatePartyMcpTool.cs
++++ b/src/Hexalith.Parties/Mcp/UpdatePartyMcpTool.cs
 @@ -16,7 +16,7 @@ using Hexalith.Parties.Contracts.Models;
  using Hexalith.Parties.Contracts.ValueObjects;
  using Hexalith.Parties.Projections.Abstractions;
  using Hexalith.Parties.Projections.Actors;
 -using Hexalith.Parties.Contracts.Security;
-+using Hexalith.Parties.CommandApi.Search;
++using Hexalith.Parties.Search;
  
  using ModelContextProtocol.Server;
  
@@ -1632,11 +1632,11 @@ index 584624a..850b9fc 100644
              Tenant: tenant,
              Domain: "party",
              AggregateId: partyId,
-diff --git a/src/Hexalith.Parties.CommandApi/Search/BasicPartySearchProvider.cs b/src/Hexalith.Parties.CommandApi/Search/BasicPartySearchProvider.cs
+diff --git a/src/Hexalith.Parties/Search/BasicPartySearchProvider.cs b/src/Hexalith.Parties/Search/BasicPartySearchProvider.cs
 index 06889e8..673911a 100644
---- a/src/Hexalith.Parties.CommandApi/Search/BasicPartySearchProvider.cs
-+++ b/src/Hexalith.Parties.CommandApi/Search/BasicPartySearchProvider.cs
-@@ -7,7 +7,7 @@ namespace Hexalith.Parties.CommandApi.Search;
+--- a/src/Hexalith.Parties/Search/BasicPartySearchProvider.cs
++++ b/src/Hexalith.Parties/Search/BasicPartySearchProvider.cs
+@@ -7,7 +7,7 @@ namespace Hexalith.Parties.Search;
  /// <summary>
  /// Backward-compatible search provider that delegates to existing
  /// <see cref="PartySearchResultsBuilder"/> static methods.
@@ -1645,15 +1645,15 @@ index 06889e8..673911a 100644
  /// </summary>
  internal sealed class BasicPartySearchProvider : IPartySearchProvider
  {
-diff --git a/src/Hexalith.Parties.CommandApi/Search/SemanticPartySearchProvider.cs b/src/Hexalith.Parties.CommandApi/Search/LocalFuzzyPartySearchProvider.cs
+diff --git a/src/Hexalith.Parties/Search/SemanticPartySearchProvider.cs b/src/Hexalith.Parties/Search/LocalFuzzyPartySearchProvider.cs
 similarity index 96%
-rename from src/Hexalith.Parties.CommandApi/Search/SemanticPartySearchProvider.cs
-rename to src/Hexalith.Parties.CommandApi/Search/LocalFuzzyPartySearchProvider.cs
+rename from src/Hexalith.Parties/Search/SemanticPartySearchProvider.cs
+rename to src/Hexalith.Parties/Search/LocalFuzzyPartySearchProvider.cs
 index fc372c7..184c8bf 100644
---- a/src/Hexalith.Parties.CommandApi/Search/SemanticPartySearchProvider.cs
-+++ b/src/Hexalith.Parties.CommandApi/Search/LocalFuzzyPartySearchProvider.cs
+--- a/src/Hexalith.Parties/Search/SemanticPartySearchProvider.cs
++++ b/src/Hexalith.Parties/Search/LocalFuzzyPartySearchProvider.cs
 @@ -8,10 +8,10 @@ using Hexalith.Parties.Contracts.ValueObjects;
- namespace Hexalith.Parties.CommandApi.Search;
+ namespace Hexalith.Parties.Search;
  
  /// <summary>
 -/// Enhanced search provider with fuzzy matching, diacritic normalization,
@@ -1679,16 +1679,16 @@ index fc372c7..184c8bf 100644
          // Fuzzy match (Jaro-Winkler) — only when exact/prefix/contains fail
          double similarity = JaroWinklerSimilarity(candidate, token);
          if (similarity >= 0.85)
-diff --git a/src/Hexalith.Parties.CommandApi/Search/LocalPartySearchService.cs b/src/Hexalith.Parties.CommandApi/Search/LocalPartySearchService.cs
+diff --git a/src/Hexalith.Parties/Search/LocalPartySearchService.cs b/src/Hexalith.Parties/Search/LocalPartySearchService.cs
 new file mode 100644
 index 0000000..2ac02e4
 --- /dev/null
-+++ b/src/Hexalith.Parties.CommandApi/Search/LocalPartySearchService.cs
++++ b/src/Hexalith.Parties/Search/LocalPartySearchService.cs
 @@ -0,0 +1,69 @@
 +using Hexalith.Parties.Contracts.Models;
 +using Hexalith.Parties.Contracts.Search;
 +
-+namespace Hexalith.Parties.CommandApi.Search;
++namespace Hexalith.Parties.Search;
 +
 +internal sealed class LocalPartySearchService(IPartySearchProvider localSearchProvider) : IPartySearchService
 +{
@@ -1754,11 +1754,11 @@ index 0000000..2ac02e4
 +            sources));
 +    }
 +}
-diff --git a/src/Hexalith.Parties.CommandApi/Search/MemoriesPartySearchService.cs b/src/Hexalith.Parties.CommandApi/Search/MemoriesPartySearchService.cs
+diff --git a/src/Hexalith.Parties/Search/MemoriesPartySearchService.cs b/src/Hexalith.Parties/Search/MemoriesPartySearchService.cs
 new file mode 100644
 index 0000000..6f73208
 --- /dev/null
-+++ b/src/Hexalith.Parties.CommandApi/Search/MemoriesPartySearchService.cs
++++ b/src/Hexalith.Parties/Search/MemoriesPartySearchService.cs
 @@ -0,0 +1,386 @@
 +using Hexalith.Memories.Client.Rest;
 +using Hexalith.Memories.Contracts.V1;
@@ -1767,7 +1767,7 @@ index 0000000..6f73208
 +using Microsoft.Extensions.Logging;
 +using Microsoft.Extensions.Options;
 +
-+namespace Hexalith.Parties.CommandApi.Search;
++namespace Hexalith.Parties.Search;
 +
 +internal sealed class MemoriesPartySearchService(
 +    MemoriesClient memoriesClient,
@@ -2146,17 +2146,17 @@ index 0000000..6f73208
 +
 +    private sealed record HydratedCandidate(PartyIndexEntry Entry, MemoryCandidate Candidate);
 +}
-diff --git a/src/Hexalith.Parties.CommandApi/Search/PartyMemoryCleanupService.cs b/src/Hexalith.Parties.CommandApi/Search/PartyMemoryCleanupService.cs
+diff --git a/src/Hexalith.Parties/Search/PartyMemoryCleanupService.cs b/src/Hexalith.Parties/Search/PartyMemoryCleanupService.cs
 new file mode 100644
 index 0000000..b16bf8a
 --- /dev/null
-+++ b/src/Hexalith.Parties.CommandApi/Search/PartyMemoryCleanupService.cs
++++ b/src/Hexalith.Parties/Search/PartyMemoryCleanupService.cs
 @@ -0,0 +1,176 @@
 +using System.Net.Http.Headers;
 +
 +using Microsoft.Extensions.Logging;
 +
-+namespace Hexalith.Parties.CommandApi.Search;
++namespace Hexalith.Parties.Search;
 +
 +internal sealed record PartyMemoryCleanupResult(
 +    string PartyId,
@@ -2328,11 +2328,11 @@ index 0000000..b16bf8a
 +        }
 +    }
 +}
-diff --git a/src/Hexalith.Parties.CommandApi/Search/PartyMemoryIndexingService.cs b/src/Hexalith.Parties.CommandApi/Search/PartyMemoryIndexingService.cs
+diff --git a/src/Hexalith.Parties/Search/PartyMemoryIndexingService.cs b/src/Hexalith.Parties/Search/PartyMemoryIndexingService.cs
 new file mode 100644
 index 0000000..179e43d
 --- /dev/null
-+++ b/src/Hexalith.Parties.CommandApi/Search/PartyMemoryIndexingService.cs
++++ b/src/Hexalith.Parties/Search/PartyMemoryIndexingService.cs
 @@ -0,0 +1,83 @@
 +using System.Text;
 +
@@ -2341,7 +2341,7 @@ index 0000000..179e43d
 +
 +using Microsoft.Extensions.Logging;
 +
-+namespace Hexalith.Parties.CommandApi.Search;
++namespace Hexalith.Parties.Search;
 +
 +internal sealed record PartyMemoryIndexingResult(
 +    string PartyId,
@@ -2417,15 +2417,15 @@ index 0000000..179e43d
 +        }
 +    }
 +}
-diff --git a/src/Hexalith.Parties.CommandApi/Search/PartyMemorySearchOptions.cs b/src/Hexalith.Parties.CommandApi/Search/PartyMemorySearchOptions.cs
+diff --git a/src/Hexalith.Parties/Search/PartyMemorySearchOptions.cs b/src/Hexalith.Parties/Search/PartyMemorySearchOptions.cs
 new file mode 100644
 index 0000000..a6081a5
 --- /dev/null
-+++ b/src/Hexalith.Parties.CommandApi/Search/PartyMemorySearchOptions.cs
++++ b/src/Hexalith.Parties/Search/PartyMemorySearchOptions.cs
 @@ -0,0 +1,86 @@
 +using Microsoft.Extensions.Options;
 +
-+namespace Hexalith.Parties.CommandApi.Search;
++namespace Hexalith.Parties.Search;
 +
 +internal sealed class PartyMemorySearchOptions
 +{
@@ -2509,11 +2509,11 @@ index 0000000..a6081a5
 +            : ValidateOptionsResult.Fail(failures);
 +    }
 +}
-diff --git a/src/Hexalith.Parties.CommandApi/Search/PartyMemoryUnitMapper.cs b/src/Hexalith.Parties.CommandApi/Search/PartyMemoryUnitMapper.cs
+diff --git a/src/Hexalith.Parties/Search/PartyMemoryUnitMapper.cs b/src/Hexalith.Parties/Search/PartyMemoryUnitMapper.cs
 new file mode 100644
 index 0000000..6324ac2
 --- /dev/null
-+++ b/src/Hexalith.Parties.CommandApi/Search/PartyMemoryUnitMapper.cs
++++ b/src/Hexalith.Parties/Search/PartyMemoryUnitMapper.cs
 @@ -0,0 +1,141 @@
 +using System.Text;
 +
@@ -2521,7 +2521,7 @@ index 0000000..6324ac2
 +using Hexalith.Parties.Contracts.Models;
 +using Hexalith.Parties.Contracts.ValueObjects;
 +
-+namespace Hexalith.Parties.CommandApi.Search;
++namespace Hexalith.Parties.Search;
 +
 +internal sealed record PartyMemoryUnit(
 +    string TenantId,
@@ -2656,13 +2656,13 @@ index 0000000..6324ac2
 +    private static MetadataField Field(string value)
 +        => new(value ?? string.Empty, MetadataOrigin.Human, 1.0f);
 +}
-diff --git a/src/Hexalith.Parties.CommandApi/Search/PartyMemoryUrn.cs b/src/Hexalith.Parties.CommandApi/Search/PartyMemoryUrn.cs
+diff --git a/src/Hexalith.Parties/Search/PartyMemoryUrn.cs b/src/Hexalith.Parties/Search/PartyMemoryUrn.cs
 new file mode 100644
 index 0000000..ace643b
 --- /dev/null
-+++ b/src/Hexalith.Parties.CommandApi/Search/PartyMemoryUrn.cs
++++ b/src/Hexalith.Parties/Search/PartyMemoryUrn.cs
 @@ -0,0 +1,47 @@
-+namespace Hexalith.Parties.CommandApi.Search;
++namespace Hexalith.Parties.Search;
 +
 +/// <summary>
 +/// Builds and parses the canonical Memories source URN for parties:
@@ -2709,16 +2709,16 @@ index 0000000..ace643b
 +        return !string.IsNullOrWhiteSpace(tenantId) && !string.IsNullOrWhiteSpace(partyId);
 +    }
 +}
-diff --git a/src/Hexalith.Parties.CommandApi/Search/PartySearchBoundary.cs b/src/Hexalith.Parties.CommandApi/Search/PartySearchBoundary.cs
+diff --git a/src/Hexalith.Parties/Search/PartySearchBoundary.cs b/src/Hexalith.Parties/Search/PartySearchBoundary.cs
 new file mode 100644
 index 0000000..211805a
 --- /dev/null
-+++ b/src/Hexalith.Parties.CommandApi/Search/PartySearchBoundary.cs
++++ b/src/Hexalith.Parties/Search/PartySearchBoundary.cs
 @@ -0,0 +1,62 @@
 +using Hexalith.Parties.Contracts.Models;
 +using Hexalith.Parties.Contracts.ValueObjects;
 +
-+namespace Hexalith.Parties.CommandApi.Search;
++namespace Hexalith.Parties.Search;
 +
 +public interface IPartySearchService
 +{
@@ -2777,15 +2777,15 @@ index 0000000..211805a
 +    string SourceUri,
 +    string? MemoryUnitId,
 +    string? EventType);
-diff --git a/src/Hexalith.Parties.CommandApi/Search/PersonalDataCommandGuardAccessor.cs b/src/Hexalith.Parties.CommandApi/Search/PersonalDataCommandGuardAccessor.cs
+diff --git a/src/Hexalith.Parties/Search/PersonalDataCommandGuardAccessor.cs b/src/Hexalith.Parties/Search/PersonalDataCommandGuardAccessor.cs
 new file mode 100644
 index 0000000..5df189a
 --- /dev/null
-+++ b/src/Hexalith.Parties.CommandApi/Search/PersonalDataCommandGuardAccessor.cs
++++ b/src/Hexalith.Parties/Search/PersonalDataCommandGuardAccessor.cs
 @@ -0,0 +1,28 @@
 +using Hexalith.Parties.Contracts.Security;
 +
-+namespace Hexalith.Parties.CommandApi.Search;
++namespace Hexalith.Parties.Search;
 +
 +internal static class PersonalDataCommandGuardAccessor
 +{
@@ -2811,10 +2811,10 @@ index 0000000..5df189a
 +        }
 +    }
 +}
-diff --git a/src/Hexalith.Parties.CommandApi/appsettings.Development.json b/src/Hexalith.Parties.CommandApi/appsettings.Development.json
+diff --git a/src/Hexalith.Parties/appsettings.Development.json b/src/Hexalith.Parties/appsettings.Development.json
 index 2e8e6f0..daaf97f 100644
---- a/src/Hexalith.Parties.CommandApi/appsettings.Development.json
-+++ b/src/Hexalith.Parties.CommandApi/appsettings.Development.json
+--- a/src/Hexalith.Parties/appsettings.Development.json
++++ b/src/Hexalith.Parties/appsettings.Development.json
 @@ -10,5 +10,15 @@
      "Audience": "hexalith-parties",
      "SigningKey": "DevOnlySigningKey-AtLeast32Chars-MustBeSecure!",
@@ -2831,10 +2831,10 @@ index 2e8e6f0..daaf97f 100644
 +    }
    }
  }
-diff --git a/src/Hexalith.Parties.CommandApi/appsettings.json b/src/Hexalith.Parties.CommandApi/appsettings.json
+diff --git a/src/Hexalith.Parties/appsettings.json b/src/Hexalith.Parties/appsettings.json
 index 10f68b8..7ca143d 100644
---- a/src/Hexalith.Parties.CommandApi/appsettings.json
-+++ b/src/Hexalith.Parties.CommandApi/appsettings.json
+--- a/src/Hexalith.Parties/appsettings.json
++++ b/src/Hexalith.Parties/appsettings.json
 @@ -5,5 +5,16 @@
        "Microsoft.AspNetCore": "Warning"
      }
@@ -3559,10 +3559,10 @@ index 9f42dd8..bd58309 100644
      public async Task<object> ProtectSnapshotStateAsync(
          AggregateIdentity identity,
          object state,
-diff --git a/tests/Hexalith.Parties.CommandApi.Tests/Controllers/PartiesControllerProblemDetailsTests.cs b/tests/Hexalith.Parties.CommandApi.Tests/Controllers/PartiesControllerProblemDetailsTests.cs
+diff --git a/tests/Hexalith.Parties.Tests/Controllers/PartiesControllerProblemDetailsTests.cs b/tests/Hexalith.Parties.Tests/Controllers/PartiesControllerProblemDetailsTests.cs
 index 334f6f3..f6f3608 100644
---- a/tests/Hexalith.Parties.CommandApi.Tests/Controllers/PartiesControllerProblemDetailsTests.cs
-+++ b/tests/Hexalith.Parties.CommandApi.Tests/Controllers/PartiesControllerProblemDetailsTests.cs
+--- a/tests/Hexalith.Parties.Tests/Controllers/PartiesControllerProblemDetailsTests.cs
++++ b/tests/Hexalith.Parties.Tests/Controllers/PartiesControllerProblemDetailsTests.cs
 @@ -442,8 +442,9 @@ public sealed class PartiesControllerProblemDetailsTests : IClassFixture<Parties
          response.StatusCode.ShouldBe(HttpStatusCode.OK);
          using JsonDocument payload = await ReadJsonAsync(response);
@@ -3667,10 +3667,10 @@ index 334f6f3..f6f3608 100644
          List<string?> ids = [];
          for (int i = 0; i < items.GetArrayLength(); i++)
          {
-diff --git a/tests/Hexalith.Parties.CommandApi.Tests/Controllers/TemporalNameEndpointTests.cs b/tests/Hexalith.Parties.CommandApi.Tests/Controllers/TemporalNameEndpointTests.cs
+diff --git a/tests/Hexalith.Parties.Tests/Controllers/TemporalNameEndpointTests.cs b/tests/Hexalith.Parties.Tests/Controllers/TemporalNameEndpointTests.cs
 index 7e1dc2d..e7edae9 100644
---- a/tests/Hexalith.Parties.CommandApi.Tests/Controllers/TemporalNameEndpointTests.cs
-+++ b/tests/Hexalith.Parties.CommandApi.Tests/Controllers/TemporalNameEndpointTests.cs
+--- a/tests/Hexalith.Parties.Tests/Controllers/TemporalNameEndpointTests.cs
++++ b/tests/Hexalith.Parties.Tests/Controllers/TemporalNameEndpointTests.cs
 @@ -185,12 +185,12 @@ public sealed class TemporalNameEndpointTests : IClassFixture<TemporalNameEndpoi
  
      // 8.10: DI resolution test
@@ -3686,15 +3686,15 @@ index 7e1dc2d..e7edae9 100644
      }
  
      public sealed class TemporalNameTestFactory : WebApplicationFactory<Program>
-diff --git a/tests/Hexalith.Parties.CommandApi.Tests/FitnessTests/ContractsArchitectureFitnessTests.cs b/tests/Hexalith.Parties.CommandApi.Tests/FitnessTests/ContractsArchitectureFitnessTests.cs
+diff --git a/tests/Hexalith.Parties.Tests/FitnessTests/ContractsArchitectureFitnessTests.cs b/tests/Hexalith.Parties.Tests/FitnessTests/ContractsArchitectureFitnessTests.cs
 new file mode 100644
 index 0000000..0c427fb
 --- /dev/null
-+++ b/tests/Hexalith.Parties.CommandApi.Tests/FitnessTests/ContractsArchitectureFitnessTests.cs
++++ b/tests/Hexalith.Parties.Tests/FitnessTests/ContractsArchitectureFitnessTests.cs
 @@ -0,0 +1,25 @@
 +using Shouldly;
 +
-+namespace Hexalith.Parties.CommandApi.Tests.FitnessTests;
++namespace Hexalith.Parties.Tests.FitnessTests;
 +
 +public class ContractsArchitectureFitnessTests
 +{
@@ -3717,11 +3717,11 @@ index 0000000..0c427fb
 +        projectXml.ShouldNotContain("Hexalith.Memories", Case.Insensitive);
 +    }
 +}
-diff --git a/tests/Hexalith.Parties.CommandApi.Tests/FitnessTests/PartyStateApplyOrderingFitnessTests.cs b/tests/Hexalith.Parties.CommandApi.Tests/FitnessTests/PartyStateApplyOrderingFitnessTests.cs
+diff --git a/tests/Hexalith.Parties.Tests/FitnessTests/PartyStateApplyOrderingFitnessTests.cs b/tests/Hexalith.Parties.Tests/FitnessTests/PartyStateApplyOrderingFitnessTests.cs
 new file mode 100644
 index 0000000..55755f5
 --- /dev/null
-+++ b/tests/Hexalith.Parties.CommandApi.Tests/FitnessTests/PartyStateApplyOrderingFitnessTests.cs
++++ b/tests/Hexalith.Parties.Tests/FitnessTests/PartyStateApplyOrderingFitnessTests.cs
 @@ -0,0 +1,80 @@
 +using System.Reflection;
 +
@@ -3730,7 +3730,7 @@ index 0000000..55755f5
 +
 +using Shouldly;
 +
-+namespace Hexalith.Parties.CommandApi.Tests.FitnessTests;
++namespace Hexalith.Parties.Tests.FitnessTests;
 +
 +/// <summary>
 +/// Fitness test guarding the PartyState rejection-Apply ordering invariant. The rehydrator
@@ -3803,16 +3803,16 @@ index 0000000..55755f5
 +        }
 +    }
 +}
-diff --git a/tests/Hexalith.Parties.CommandApi.Tests/HealthChecks/MemoriesSearchHealthCheckTests.cs b/tests/Hexalith.Parties.CommandApi.Tests/HealthChecks/MemoriesSearchHealthCheckTests.cs
+diff --git a/tests/Hexalith.Parties.Tests/HealthChecks/MemoriesSearchHealthCheckTests.cs b/tests/Hexalith.Parties.Tests/HealthChecks/MemoriesSearchHealthCheckTests.cs
 new file mode 100644
 index 0000000..f7bab07
 --- /dev/null
-+++ b/tests/Hexalith.Parties.CommandApi.Tests/HealthChecks/MemoriesSearchHealthCheckTests.cs
++++ b/tests/Hexalith.Parties.Tests/HealthChecks/MemoriesSearchHealthCheckTests.cs
 @@ -0,0 +1,174 @@
 +using Hexalith.Memories.Client.Rest;
 +using Hexalith.Memories.Contracts.V1;
-+using Hexalith.Parties.CommandApi.HealthChecks;
-+using Hexalith.Parties.CommandApi.Search;
++using Hexalith.Parties.HealthChecks;
++using Hexalith.Parties.Search;
 +
 +using Microsoft.Extensions.DependencyInjection;
 +using Microsoft.Extensions.Diagnostics.HealthChecks;
@@ -3821,7 +3821,7 @@ index 0000000..f7bab07
 +
 +using Shouldly;
 +
-+namespace Hexalith.Parties.CommandApi.Tests.HealthChecks;
++namespace Hexalith.Parties.Tests.HealthChecks;
 +
 +public class MemoriesSearchHealthCheckTests
 +{
@@ -3983,10 +3983,10 @@ index 0000000..f7bab07
 +            => Task.FromException<HybridSearchResult>(ex);
 +    }
 +}
-diff --git a/tests/Hexalith.Parties.CommandApi.Tests/Mcp/FindPartiesMcpToolTests.cs b/tests/Hexalith.Parties.CommandApi.Tests/Mcp/FindPartiesMcpToolTests.cs
+diff --git a/tests/Hexalith.Parties.Tests/Mcp/FindPartiesMcpToolTests.cs b/tests/Hexalith.Parties.Tests/Mcp/FindPartiesMcpToolTests.cs
 index 392167c..13007a8 100644
---- a/tests/Hexalith.Parties.CommandApi.Tests/Mcp/FindPartiesMcpToolTests.cs
-+++ b/tests/Hexalith.Parties.CommandApi.Tests/Mcp/FindPartiesMcpToolTests.cs
+--- a/tests/Hexalith.Parties.Tests/Mcp/FindPartiesMcpToolTests.cs
++++ b/tests/Hexalith.Parties.Tests/Mcp/FindPartiesMcpToolTests.cs
 @@ -65,21 +65,31 @@ public sealed class FindPartiesMcpToolTests
          IActorProxyFactory factory = CreateActorProxyFactory(indexActor);
          ServiceProvider services = new ServiceCollection()
@@ -4023,11 +4023,11 @@ index 392167c..13007a8 100644
      }
  
      [Fact]
-diff --git a/tests/Hexalith.Parties.CommandApi.Tests/Mcp/GetPartyNameAtMcpToolTests.cs b/tests/Hexalith.Parties.CommandApi.Tests/Mcp/GetPartyNameAtMcpToolTests.cs
+diff --git a/tests/Hexalith.Parties.Tests/Mcp/GetPartyNameAtMcpToolTests.cs b/tests/Hexalith.Parties.Tests/Mcp/GetPartyNameAtMcpToolTests.cs
 new file mode 100644
 index 0000000..1bb8ed7
 --- /dev/null
-+++ b/tests/Hexalith.Parties.CommandApi.Tests/Mcp/GetPartyNameAtMcpToolTests.cs
++++ b/tests/Hexalith.Parties.Tests/Mcp/GetPartyNameAtMcpToolTests.cs
 @@ -0,0 +1,297 @@
 +using System.Reflection;
 +using System.Text.Json;
@@ -4035,7 +4035,7 @@ index 0000000..1bb8ed7
 +using Dapr.Actors;
 +using Dapr.Actors.Client;
 +
-+using Hexalith.Parties.CommandApi.Mcp;
++using Hexalith.Parties.Mcp;
 +using Hexalith.Parties.Contracts.Models;
 +using Hexalith.Parties.Contracts.ValueObjects;
 +using Hexalith.Parties.Projections.Abstractions;
@@ -4046,7 +4046,7 @@ index 0000000..1bb8ed7
 +
 +using Shouldly;
 +
-+namespace Hexalith.Parties.CommandApi.Tests.Mcp;
++namespace Hexalith.Parties.Tests.Mcp;
 +
 +public sealed class GetPartyNameAtMcpToolTests
 +{
@@ -4308,7 +4308,7 @@ index 0000000..1bb8ed7
 +    {
 +        private static readonly FieldInfo _tenantField = typeof(GetPartyNameAtMcpTool)
 +            .Assembly
-+            .GetType("Hexalith.Parties.CommandApi.Mcp.McpSessionContext", throwOnError: true)!
++            .GetType("Hexalith.Parties.Mcp.McpSessionContext", throwOnError: true)!
 +            .GetField("Tenant", BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic)!;
 +
 +        private readonly AsyncLocal<string?> _tenant;
@@ -4326,16 +4326,16 @@ index 0000000..1bb8ed7
 +        public void Dispose() => _tenant.Value = _previousValue;
 +    }
 +}
-diff --git a/tests/Hexalith.Parties.CommandApi.Tests/Search/SemanticPartySearchProviderTests.cs b/tests/Hexalith.Parties.CommandApi.Tests/Search/LocalFuzzyPartySearchProviderTests.cs
+diff --git a/tests/Hexalith.Parties.Tests/Search/SemanticPartySearchProviderTests.cs b/tests/Hexalith.Parties.Tests/Search/LocalFuzzyPartySearchProviderTests.cs
 similarity index 91%
-rename from tests/Hexalith.Parties.CommandApi.Tests/Search/SemanticPartySearchProviderTests.cs
-rename to tests/Hexalith.Parties.CommandApi.Tests/Search/LocalFuzzyPartySearchProviderTests.cs
+rename from tests/Hexalith.Parties.Tests/Search/SemanticPartySearchProviderTests.cs
+rename to tests/Hexalith.Parties.Tests/Search/LocalFuzzyPartySearchProviderTests.cs
 index 6a5f8a6..80479e0 100644
---- a/tests/Hexalith.Parties.CommandApi.Tests/Search/SemanticPartySearchProviderTests.cs
-+++ b/tests/Hexalith.Parties.CommandApi.Tests/Search/LocalFuzzyPartySearchProviderTests.cs
+--- a/tests/Hexalith.Parties.Tests/Search/SemanticPartySearchProviderTests.cs
++++ b/tests/Hexalith.Parties.Tests/Search/LocalFuzzyPartySearchProviderTests.cs
 @@ -7,9 +7,9 @@ using Shouldly;
  
- namespace Hexalith.Parties.CommandApi.Tests.Search;
+ namespace Hexalith.Parties.Tests.Search;
  
 -public class SemanticPartySearchProviderTests
 +public class LocalFuzzyPartySearchProviderTests
@@ -4390,15 +4390,15 @@ index 6a5f8a6..80479e0 100644
  
          result.ShouldBe(string.Empty);
      }
-diff --git a/tests/Hexalith.Parties.CommandApi.Tests/Search/SemanticSearchPerformanceBenchmarkTests.cs b/tests/Hexalith.Parties.CommandApi.Tests/Search/LocalFuzzySearchPerformanceBenchmarkTests.cs
+diff --git a/tests/Hexalith.Parties.Tests/Search/SemanticSearchPerformanceBenchmarkTests.cs b/tests/Hexalith.Parties.Tests/Search/LocalFuzzySearchPerformanceBenchmarkTests.cs
 similarity index 96%
-rename from tests/Hexalith.Parties.CommandApi.Tests/Search/SemanticSearchPerformanceBenchmarkTests.cs
-rename to tests/Hexalith.Parties.CommandApi.Tests/Search/LocalFuzzySearchPerformanceBenchmarkTests.cs
+rename from tests/Hexalith.Parties.Tests/Search/SemanticSearchPerformanceBenchmarkTests.cs
+rename to tests/Hexalith.Parties.Tests/Search/LocalFuzzySearchPerformanceBenchmarkTests.cs
 index 785e8a4..737cffc 100644
---- a/tests/Hexalith.Parties.CommandApi.Tests/Search/SemanticSearchPerformanceBenchmarkTests.cs
-+++ b/tests/Hexalith.Parties.CommandApi.Tests/Search/LocalFuzzySearchPerformanceBenchmarkTests.cs
+--- a/tests/Hexalith.Parties.Tests/Search/SemanticSearchPerformanceBenchmarkTests.cs
++++ b/tests/Hexalith.Parties.Tests/Search/LocalFuzzySearchPerformanceBenchmarkTests.cs
 @@ -11,12 +11,12 @@ using Xunit.Abstractions;
- namespace Hexalith.Parties.CommandApi.Tests.Search;
+ namespace Hexalith.Parties.Tests.Search;
  
  /// <summary>
 -/// Performance benchmark tests for SemanticPartySearchProvider.
@@ -4413,15 +4413,15 @@ index 785e8a4..737cffc 100644
  
      // ─── Task 10.1: Benchmark at 10K entries — verify < 500ms ───
  
-diff --git a/tests/Hexalith.Parties.CommandApi.Tests/Search/MemoriesPartySearchServiceTests.cs b/tests/Hexalith.Parties.CommandApi.Tests/Search/MemoriesPartySearchServiceTests.cs
+diff --git a/tests/Hexalith.Parties.Tests/Search/MemoriesPartySearchServiceTests.cs b/tests/Hexalith.Parties.Tests/Search/MemoriesPartySearchServiceTests.cs
 new file mode 100644
 index 0000000..2bd5232
 --- /dev/null
-+++ b/tests/Hexalith.Parties.CommandApi.Tests/Search/MemoriesPartySearchServiceTests.cs
++++ b/tests/Hexalith.Parties.Tests/Search/MemoriesPartySearchServiceTests.cs
 @@ -0,0 +1,476 @@
 +using Hexalith.Memories.Client.Rest;
 +using Hexalith.Memories.Contracts.V1;
-+using Hexalith.Parties.CommandApi.Search;
++using Hexalith.Parties.Search;
 +using Hexalith.Parties.Contracts.Models;
 +using Hexalith.Parties.Contracts.Search;
 +using Hexalith.Parties.Contracts.ValueObjects;
@@ -4431,7 +4431,7 @@ index 0000000..2bd5232
 +
 +using Shouldly;
 +
-+namespace Hexalith.Parties.CommandApi.Tests.Search;
++namespace Hexalith.Parties.Tests.Search;
 +
 +public class MemoriesPartySearchServiceTests
 +{
@@ -4895,21 +4895,21 @@ index 0000000..2bd5232
 +            => Task.FromException<TraversalResult>(ex);
 +    }
 +}
-diff --git a/tests/Hexalith.Parties.CommandApi.Tests/Search/PartyMemoryCleanupServiceTests.cs b/tests/Hexalith.Parties.CommandApi.Tests/Search/PartyMemoryCleanupServiceTests.cs
+diff --git a/tests/Hexalith.Parties.Tests/Search/PartyMemoryCleanupServiceTests.cs b/tests/Hexalith.Parties.Tests/Search/PartyMemoryCleanupServiceTests.cs
 new file mode 100644
 index 0000000..6159da6
 --- /dev/null
-+++ b/tests/Hexalith.Parties.CommandApi.Tests/Search/PartyMemoryCleanupServiceTests.cs
++++ b/tests/Hexalith.Parties.Tests/Search/PartyMemoryCleanupServiceTests.cs
 @@ -0,0 +1,83 @@
 +using System.Net;
 +
-+using Hexalith.Parties.CommandApi.Search;
++using Hexalith.Parties.Search;
 +
 +using Microsoft.Extensions.Logging.Abstractions;
 +
 +using Shouldly;
 +
-+namespace Hexalith.Parties.CommandApi.Tests.Search;
++namespace Hexalith.Parties.Tests.Search;
 +
 +public class PartyMemoryCleanupServiceTests
 +{
@@ -4984,14 +4984,14 @@ index 0000000..6159da6
 +            => Task.FromException<HttpResponseMessage>(ex);
 +    }
 +}
-diff --git a/tests/Hexalith.Parties.CommandApi.Tests/Search/PartyMemorySearchOptionsValidatorTests.cs b/tests/Hexalith.Parties.CommandApi.Tests/Search/PartyMemorySearchOptionsValidatorTests.cs
+diff --git a/tests/Hexalith.Parties.Tests/Search/PartyMemorySearchOptionsValidatorTests.cs b/tests/Hexalith.Parties.Tests/Search/PartyMemorySearchOptionsValidatorTests.cs
 new file mode 100644
 index 0000000..9e2a9fa
 --- /dev/null
-+++ b/tests/Hexalith.Parties.CommandApi.Tests/Search/PartyMemorySearchOptionsValidatorTests.cs
++++ b/tests/Hexalith.Parties.Tests/Search/PartyMemorySearchOptionsValidatorTests.cs
 @@ -0,0 +1,132 @@
-+using Hexalith.Parties.CommandApi.Search;
-+using Hexalith.Parties.CommandApi.Extensions;
++using Hexalith.Parties.Search;
++using Hexalith.Parties.Extensions;
 +using Hexalith.Memories.Client.Rest;
 +
 +using Microsoft.Extensions.Configuration;
@@ -5000,7 +5000,7 @@ index 0000000..9e2a9fa
 +
 +using Shouldly;
 +
-+namespace Hexalith.Parties.CommandApi.Tests.Search;
++namespace Hexalith.Parties.Tests.Search;
 +
 +public class PartyMemorySearchOptionsValidatorTests
 +{
@@ -5122,15 +5122,15 @@ index 0000000..9e2a9fa
 +        service.GetType().Name.ShouldBe(nameof(LocalPartySearchService));
 +    }
 +}
-diff --git a/tests/Hexalith.Parties.CommandApi.Tests/Search/PartyMemoryUnitMapperTests.cs b/tests/Hexalith.Parties.CommandApi.Tests/Search/PartyMemoryUnitMapperTests.cs
+diff --git a/tests/Hexalith.Parties.Tests/Search/PartyMemoryUnitMapperTests.cs b/tests/Hexalith.Parties.Tests/Search/PartyMemoryUnitMapperTests.cs
 new file mode 100644
 index 0000000..b66ad54
 --- /dev/null
-+++ b/tests/Hexalith.Parties.CommandApi.Tests/Search/PartyMemoryUnitMapperTests.cs
++++ b/tests/Hexalith.Parties.Tests/Search/PartyMemoryUnitMapperTests.cs
 @@ -0,0 +1,212 @@
 +using Hexalith.Memories.Contracts.V1;
 +using Hexalith.Memories.Client.Rest;
-+using Hexalith.Parties.CommandApi.Search;
++using Hexalith.Parties.Search;
 +using Hexalith.Parties.Contracts.Models;
 +using Hexalith.Parties.Contracts.ValueObjects;
 +
@@ -5139,7 +5139,7 @@ index 0000000..b66ad54
 +
 +using Shouldly;
 +
-+namespace Hexalith.Parties.CommandApi.Tests.Search;
++namespace Hexalith.Parties.Tests.Search;
 +
 +public class PartyMemoryUnitMapperTests
 +{
@@ -5340,19 +5340,19 @@ index 0000000..b66ad54
 +#pragma warning restore HXL001
 +    }
 +}
-diff --git a/tests/Hexalith.Parties.CommandApi.Tests/Search/PartySearchServiceBoundaryTests.cs b/tests/Hexalith.Parties.CommandApi.Tests/Search/PartySearchServiceBoundaryTests.cs
+diff --git a/tests/Hexalith.Parties.Tests/Search/PartySearchServiceBoundaryTests.cs b/tests/Hexalith.Parties.Tests/Search/PartySearchServiceBoundaryTests.cs
 new file mode 100644
 index 0000000..919a852
 --- /dev/null
-+++ b/tests/Hexalith.Parties.CommandApi.Tests/Search/PartySearchServiceBoundaryTests.cs
++++ b/tests/Hexalith.Parties.Tests/Search/PartySearchServiceBoundaryTests.cs
 @@ -0,0 +1,93 @@
-+using Hexalith.Parties.CommandApi.Search;
++using Hexalith.Parties.Search;
 +using Hexalith.Parties.Contracts.Models;
 +using Hexalith.Parties.Testing;
 +
 +using Shouldly;
 +
-+namespace Hexalith.Parties.CommandApi.Tests.Search;
++namespace Hexalith.Parties.Tests.Search;
 +
 +public class PartySearchServiceBoundaryTests
 +{

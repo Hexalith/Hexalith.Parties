@@ -115,7 +115,7 @@ So that my consuming application can build reliable read models from party event
 - `docs/event-publishing.md` — production broker config, subscription patterns, dead letter, retry/circuit breaker policies, ordering guarantees per broker
 
 **DAPR Configuration (already exists):**
-- `src/Hexalith.Parties.AppHost/DaprComponents/pubsub.yaml` — Redis, scopes: `commandapi`, `sample`
+- `src/Hexalith.Parties.AppHost/DaprComponents/pubsub.yaml` — Redis, scopes: `parties`, `sample`
 - `src/Hexalith.Parties.AppHost/DaprComponents/subscription-parties.yaml` — `tenant-a.parties.events` -> `/events/parties`, dead letter, scope: `sample`
 - `src/Hexalith.Parties.AppHost/DaprComponents/resiliency.yaml` — exponential backoff + circuit breaker
 - `deploy/dapr/` — production configs for Kafka, RabbitMQ, Azure Service Bus

@@ -524,7 +524,7 @@ tests/
     Aggregates/
       PartyAggregateConsentTests.cs             # Tier 1: consent Handle/Apply
       PartyAggregateRestrictionTests.cs         # Tier 1: restriction Handle/Apply + guard
-  Hexalith.Parties.CommandApi.Tests/
+  Hexalith.Parties.Tests/
     Controllers/
       ConsentEndpointTests.cs                   # Tier 2: consent admin endpoints
       RestrictionEndpointTests.cs               # Tier 2: restriction admin endpoints
@@ -549,7 +549,7 @@ src/
   Hexalith.Parties.Projections/
     Handlers/
       PartyDetailProjectionHandler.cs           # Add Apply methods for consent/restriction events
-  Hexalith.Parties.CommandApi/
+  Hexalith.Parties/
     Controllers/
       AdminController.cs                        # Add 7 new endpoints (consent CRUD, restrict/lift, export, processing-records)
   Hexalith.Parties.Testing/
@@ -585,7 +585,7 @@ src/
 - [Source: src/Hexalith.Parties.Contracts/Models/PartyDetail.cs - Read model]
 - [Source: src/Hexalith.Parties.Contracts/ValueObjects/ContactChannel.cs - Channel model]
 - [Source: src/Hexalith.Parties.Contracts/Security/IPersonalDataCommandGuard.cs - Guard pattern]
-- [Source: src/Hexalith.Parties.CommandApi/Controllers/AdminController.cs - Admin endpoint patterns]
+- [Source: src/Hexalith.Parties/Controllers/AdminController.cs - Admin endpoint patterns]
 - [Source: src/Hexalith.Parties.Testing/PartyTestData.cs - Test data factory]
 
 ## Dev Agent Record
@@ -603,7 +603,7 @@ Claude Opus 4.6
 - Added `InvalidConsentPurpose` and enriched rejection contracts (`ConsentNotFound`, `PartyNotRestricted`, `PartyProcessingRestricted`) so domain rejections now carry the party/tenant context claimed by the story and tests.
 - Normalized admin GDPR domain rejections to `422 Unprocessable Entity` and fixed export behavior to prefer erasure-status store state over lagging projections, returning `410 Gone` for erased parties even when the read model is stale.
 - Validation completed with `Hexalith.Parties.Server.Tests` passing (`177/177`) and focused command API GDPR suites passing (`29/29` across consent, restriction, and portability tests).
-- A pre-existing unrelated failure remains in the full `Hexalith.Parties.CommandApi.Tests` project: `ArchitecturalFitnessTests.McpNamespace_ReferencesOnlyCommandAndModelTypes` for `UpdatePartyMcpTool` referencing `IPersonalDataCommandGuard`.
+- A pre-existing unrelated failure remains in the full `Hexalith.Parties.Tests` project: `ArchitecturalFitnessTests.McpNamespace_ReferencesOnlyCommandAndModelTypes` for `UpdatePartyMcpTool` referencing `IPersonalDataCommandGuard`.
 
 ### File List
 
@@ -617,9 +617,9 @@ Claude Opus 4.6
 - `src/Hexalith.Parties.Projections/Services/IProjectionRebuildService.cs` — exposed processing-record query contract.
 - `src/Hexalith.Parties.Projections/Services/ProjectionRebuildService.cs` — implemented processing-record retrieval and event summary mapping.
 - `src/Hexalith.Parties.Server/Aggregates/PartyAggregate.cs` — fixed consent identity propagation, invalid-purpose rejection typing, richer rejection payloads, and restriction rejection handling.
-- `src/Hexalith.Parties.CommandApi/Controllers/AdminController.cs` — added processing-records endpoint, JWT subject extraction, `422` domain rejection handling, and corrected export erased-vs-lagging-projection behavior.
+- `src/Hexalith.Parties/Controllers/AdminController.cs` — added processing-records endpoint, JWT subject extraction, `422` domain rejection handling, and corrected export erased-vs-lagging-projection behavior.
 - `src/Hexalith.Parties.Testing/PartyTestData.cs` — updated consent test fixtures with actor identity defaults.
 - `tests/Hexalith.Parties.Server.Tests/Aggregates/PartyAggregateConsentTests.cs` — added/updated consent aggregate coverage for identities and rejections.
 - `tests/Hexalith.Parties.Server.Tests/Aggregates/PartyAggregateRestrictionTests.cs` — added/updated restriction rejection payload assertions.
-- `tests/Hexalith.Parties.CommandApi.Tests/Controllers/ConsentEndpointTests.cs` — verified `422` admin rejection behavior and JWT subject propagation.
-- `tests/Hexalith.Parties.CommandApi.Tests/Controllers/PortabilityEndpointTests.cs` — covered erased-vs-lagging-projection export behavior and processing-records responses.
+- `tests/Hexalith.Parties.Tests/Controllers/ConsentEndpointTests.cs` — verified `422` admin rejection behavior and JWT subject propagation.
+- `tests/Hexalith.Parties.Tests/Controllers/PortabilityEndpointTests.cs` — covered erased-vs-lagging-projection export behavior and processing-records responses.

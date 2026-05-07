@@ -21,7 +21,7 @@ so that users cannot manage party data for inactive or unauthorized tenants.
 ## Tasks / Subtasks
 
 - [x] Register and stabilize the tenant authorization boundary (AC: 1, 2, 3, 4)
-  - [x] Reuse the `ITenantAccessService` created by Story 11.2 from `src/Hexalith.Parties.CommandApi/Authorization`; do not create a parallel REST-specific or MCP-specific authorization service.
+  - [x] Reuse the `ITenantAccessService` created by Story 11.2 from `src/Hexalith.Parties/Authorization`; do not create a parallel REST-specific or MCP-specific authorization service.
   - [x] If Story 11.2 did not already add these types, add `TenantAccessRequirement` with `Read`, `Write`, and `Admin`, plus an access result carrying `Allowed`, reason code, and safe diagnostic text.
   - [x] Keep role mapping explicit and cumulative: `TenantReader` allows `Read`; `TenantContributor` allows `Read` and `Write`; `TenantOwner` allows `Read`, `Write`, and `Admin`.
   - [x] Fail closed for missing tenant, missing user id, unknown tenant projection, disabled tenant, missing member, insufficient role, and stale/unknown projection state if such state is represented by Story 11.2.
@@ -49,7 +49,7 @@ so that users cannot manage party data for inactive or unauthorized tenants.
 
 - [x] Enforce tenant access on MCP read/search tools (AC: 2, 3, 4)
   - [x] Extend `McpSessionContext` or the MCP HTTP transport session handler to capture a safe user id from the authenticated principal, preferably `sub`, falling back only to an existing normalized user identifier.
-  - [x] Add a small shared MCP authorization helper under `src/Hexalith.Parties.CommandApi/Mcp` or `Authorization` that calls `ITenantAccessService` and throws consistent tool-facing exceptions.
+  - [x] Add a small shared MCP authorization helper under `src/Hexalith.Parties/Mcp` or `Authorization` that calls `ITenantAccessService` and throws consistent tool-facing exceptions.
   - [x] Require `Read` in `find_parties`, `get_party`, and `get_party_name_at` before reading projection actors.
   - [x] Preserve UUID validation, erased-party behavior, eventual-consistency fallback, JSON serialization options, and pagination clamping.
 
@@ -75,7 +75,7 @@ so that users cannot manage party data for inactive or unauthorized tenants.
   - [x] Do not add Parties-local tenant management instructions; point tenant lifecycle and membership setup to Hexalith.Tenants.
 
 - [x] Add focused tests for REST and MCP authorization enforcement (AC: 1, 2, 3, 4, 5)
-  - [x] Add unit tests in `tests/Hexalith.Parties.CommandApi.Tests/Authorization` for role-to-requirement mapping and denial reason translation if not already covered by Story 11.2.
+  - [x] Add unit tests in `tests/Hexalith.Parties.Tests/Authorization` for role-to-requirement mapping and denial reason translation if not already covered by Story 11.2.
   - [x] Add controller or WebApplicationFactory tests proving read endpoints allow reader/contributor/owner and deny unknown tenant, disabled tenant, removed user, missing user id, and insufficient role.
   - [x] Add command endpoint tests proving reader cannot create/update/deactivate and contributor can write.
   - [x] Add admin endpoint tests proving contributor cannot run admin operations and owner can.
@@ -87,7 +87,7 @@ so that users cannot manage party data for inactive or unauthorized tenants.
   - [x] Add coverage or a focused code-level assertion that REST/MCP request paths do not introduce per-request Tenants HTTP/API polling.
 
 - [x] Validate build and affected tests
-  - [x] Run `dotnet test tests/Hexalith.Parties.CommandApi.Tests/Hexalith.Parties.CommandApi.Tests.csproj --configuration Release`.
+  - [x] Run `dotnet test tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj --configuration Release`.
   - [x] Run `dotnet build Hexalith.Parties.slnx --configuration Release`.
   - [x] If authorization behavior changes OpenAPI responses, verify generated API metadata still describes `401`, `403`, and ProblemDetails where relevant.
 
@@ -113,37 +113,37 @@ The same proposal says `Hexalith.Parties.Contracts` must remain free of Tenants 
 
 ### Current Code State and Files Likely Touched
 
-`src/Hexalith.Parties.CommandApi/Controllers/PartiesController.cs`
+`src/Hexalith.Parties/Controllers/PartiesController.cs`
 
 - Current state: `[Authorize]` controller extracts `eventstore:tenant`, performs projection reads through actor ids such as `{tenant}:party-index` and `{tenant}:party-detail:{id}`, dispatches commands through shared `DispatchCommandAsync` and `DispatchCompositeCommandAsync`, returns ProblemDetails for unauthorized/forbidden/not found/erased/domain rejection cases, and already blocks scoped party IDs whose tenant segment differs from the claim-derived tenant.
 - Story change: inject `ITenantAccessService`; authorize `Read` in all query methods and `Write` in the two shared dispatch helpers before projection reads or command routing.
 - Preserve: claim-derived tenant as the only effective tenant, route/body `PartyId` validation, cross-tenant scoped-id rejection, degraded projection headers, crypto/personal-data guard behavior, domain rejection handling, and existing ProblemDetails content type.
 
-`src/Hexalith.Parties.CommandApi/Controllers/AdminController.cs`
+`src/Hexalith.Parties/Controllers/AdminController.cs`
 
 - Current state: `[Authorize(Policy = "Admin")]` gates admin endpoints, then each method extracts tenant context or accepts `RebuildProjectionsRequest.TenantId`; admin methods manage projection rebuild, key lifecycle/audit, erasure, consent, restriction, and export flows.
 - Story change: also require Tenants-backed `Admin` access through `ITenantAccessService`. For body-supplied tenant IDs such as projection rebuild, validate that tenant through the access service before using it.
 - Preserve: existing ASP.NET `Admin` policy, correlation context handling, ProblemDetails status mapping, and erasure/crypto command flow.
 
-`src/Hexalith.Parties.CommandApi/Mcp/McpSessionContext.cs`
+`src/Hexalith.Parties/Mcp/McpSessionContext.cs`
 
 - Current state: stores only tenant in `AsyncLocal<string?>` plus JSON options.
 - Story change: add authenticated user id context, or otherwise provide the MCP authorization helper with the authenticated user id captured in the HTTP transport session.
 - Preserve: no tenant id tool parameter; tenant context comes from authenticated transport/session.
 
-`src/Hexalith.Parties.CommandApi/Extensions/PartiesServiceCollectionExtensions.cs`
+`src/Hexalith.Parties/Extensions/PartiesServiceCollectionExtensions.cs`
 
 - Current state: configures JWT bearer auth, an `Admin` role policy, claims transformation, EventStore command infrastructure, projection actors, search provider, validation, controllers, JSON options, and MCP server transport. MCP `RunSessionHandler` copies the first `eventstore:tenant` claim into `McpSessionContext.Tenant`.
 - Story change: ensure the access service and MCP session user id are available to controllers/tools. If Story 11.2 already registered the access service, do not duplicate registration.
 - Preserve: middleware order and MCP `RequireAuthorization()` mapping in `Program.cs`.
 
-`src/Hexalith.Parties.CommandApi/Mcp/*.cs`
+`src/Hexalith.Parties/Mcp/*.cs`
 
 - Current state: MCP tools validate tenant presence, then directly read projection actors or route commands. `create_party`, `update_party`, and `delete_party` use `UserId = "mcp-agent"` when creating `SubmitCommand`.
 - Story change: require `Read` for `find_parties`, `get_party`, and `get_party_name_at`; require `Write` for `create_party`, `update_party`, and `delete_party`; pass authenticated user id into `SubmitCommand` where available.
 - Preserve: MCP boundary fitness rule that MCP code must not reference domain event types.
 
-`tests/Hexalith.Parties.CommandApi.Tests`
+`tests/Hexalith.Parties.Tests`
 
 - Current state: includes WebApplicationFactory-style health endpoint tests and architectural fitness tests.
 - Story change: add focused authorization tests with fake access-service behavior and no DAPR sidecar requirement.
@@ -208,7 +208,7 @@ The 2026-05-03 party-mode review clarified these pre-development decisions:
 
 Story 11.2 established the local tenant access projection/service boundary and warned that Tenants event consumption is eventually consistent. This story should enforce through that boundary, not recreate event handlers or projection state. Unknown or stale projection state must deny access rather than allow and refresh later. [Source: _bmad-output/implementation-artifacts/11-2-tenants-event-consumption-and-local-access-projection.md]
 
-Story 11.1 clarified that `commandapi` is the EventStore command gateway hosting/routing Parties module handlers, not the Tenants service resource. This story must preserve that command path and only add authorization checks before REST/MCP operations use Parties state or dispatch commands. [Source: _bmad-output/implementation-artifacts/11-1-apphost-and-package-integration.md]
+Story 11.1 clarified that `parties` is the EventStore command gateway hosting/routing Parties module handlers, not the Tenants service resource. This story must preserve that command path and only add authorization checks before REST/MCP operations use Parties state or dispatch commands. [Source: _bmad-output/implementation-artifacts/11-1-apphost-and-package-integration.md]
 
 ### Git Intelligence
 
@@ -216,10 +216,10 @@ Recent commits show the automation just created Story 11.2 and logged the prior 
 
 ### Project Structure Notes
 
-- Shared authorization types belong under `src/Hexalith.Parties.CommandApi/Authorization/`.
+- Shared authorization types belong under `src/Hexalith.Parties/Authorization/`.
 - REST ProblemDetails translation can live near existing controller helpers or in a small `Authorization`/`ErrorHandling` helper if it reduces duplication.
-- MCP authorization helpers should live under `src/Hexalith.Parties.CommandApi/Mcp/` or `Authorization/` and must preserve the MCP namespace fitness constraints.
-- Tests should stay in `tests/Hexalith.Parties.CommandApi.Tests`, with subfolders such as `Authorization/`, `Controllers/`, and `Mcp/`.
+- MCP authorization helpers should live under `src/Hexalith.Parties/Mcp/` or `Authorization/` and must preserve the MCP namespace fitness constraints.
+- Tests should stay in `tests/Hexalith.Parties.Tests`, with subfolders such as `Authorization/`, `Controllers/`, and `Mcp/`.
 - Documentation updates should prefer `README.md`, `docs/getting-started.md`, and existing troubleshooting/deployment docs rather than adding a separate tenant-management guide.
 - No separate UX artifact was found for this story.
 - No `project-context.md` persistent fact file was found in the repository during story creation.
@@ -231,16 +231,16 @@ Recent commits show the automation just created Story 11.2 and logged the prior 
 - [Source: _bmad-output/planning-artifacts/architecture.md#Architectural Boundaries]
 - [Source: _bmad-output/implementation-artifacts/11-2-tenants-event-consumption-and-local-access-projection.md]
 - [Source: _bmad-output/implementation-artifacts/11-1-apphost-and-package-integration.md]
-- [Source: src/Hexalith.Parties.CommandApi/Controllers/PartiesController.cs]
-- [Source: src/Hexalith.Parties.CommandApi/Controllers/AdminController.cs]
-- [Source: src/Hexalith.Parties.CommandApi/Extensions/PartiesServiceCollectionExtensions.cs]
-- [Source: src/Hexalith.Parties.CommandApi/Mcp/McpSessionContext.cs]
-- [Source: src/Hexalith.Parties.CommandApi/Mcp/CreatePartyMcpTool.cs]
-- [Source: src/Hexalith.Parties.CommandApi/Mcp/UpdatePartyMcpTool.cs]
-- [Source: src/Hexalith.Parties.CommandApi/Mcp/DeletePartyMcpTool.cs]
-- [Source: src/Hexalith.Parties.CommandApi/Mcp/FindPartiesMcpTool.cs]
-- [Source: src/Hexalith.Parties.CommandApi/Mcp/GetPartyMcpTool.cs]
-- [Source: src/Hexalith.Parties.CommandApi/Mcp/GetPartyNameAtMcpTool.cs]
+- [Source: src/Hexalith.Parties/Controllers/PartiesController.cs]
+- [Source: src/Hexalith.Parties/Controllers/AdminController.cs]
+- [Source: src/Hexalith.Parties/Extensions/PartiesServiceCollectionExtensions.cs]
+- [Source: src/Hexalith.Parties/Mcp/McpSessionContext.cs]
+- [Source: src/Hexalith.Parties/Mcp/CreatePartyMcpTool.cs]
+- [Source: src/Hexalith.Parties/Mcp/UpdatePartyMcpTool.cs]
+- [Source: src/Hexalith.Parties/Mcp/DeletePartyMcpTool.cs]
+- [Source: src/Hexalith.Parties/Mcp/FindPartiesMcpTool.cs]
+- [Source: src/Hexalith.Parties/Mcp/GetPartyMcpTool.cs]
+- [Source: src/Hexalith.Parties/Mcp/GetPartyNameAtMcpTool.cs]
 - [Source: Hexalith.Tenants/src/Hexalith.Tenants.Client/Projections/TenantLocalState.cs]
 - [Source: Hexalith.Tenants/src/Hexalith.Tenants.Client/Projections/ITenantProjectionStore.cs]
 - [Source: Hexalith.Tenants/src/Hexalith.Tenants.Contracts/Enums/TenantRole.cs]
@@ -254,9 +254,9 @@ GPT-5 Codex
 
 ### Debug Log References
 
-- `dotnet build src\Hexalith.Parties.CommandApi\Hexalith.Parties.CommandApi.csproj --configuration Release` - passed.
-- `dotnet build tests\Hexalith.Parties.CommandApi.Tests\Hexalith.Parties.CommandApi.Tests.csproj --configuration Release` - passed.
-- `dotnet test tests\Hexalith.Parties.CommandApi.Tests\Hexalith.Parties.CommandApi.Tests.csproj --configuration Release --no-build` - passed, 308 tests.
+- `dotnet build src\Hexalith.Parties\Hexalith.Parties.csproj --configuration Release` - passed.
+- `dotnet build tests\Hexalith.Parties.Tests\Hexalith.Parties.Tests.csproj --configuration Release` - passed.
+- `dotnet test tests\Hexalith.Parties.Tests\Hexalith.Parties.Tests.csproj --configuration Release --no-build` - passed, 308 tests.
 - `dotnet build Hexalith.Parties.slnx --configuration Release` - passed.
 
 ### Completion Notes List
@@ -274,39 +274,39 @@ GPT-5 Codex
 
 - README.md
 - docs/getting-started.md
-- src/Hexalith.Parties.CommandApi/Authorization/TenantAccessDecision.cs
-- src/Hexalith.Parties.CommandApi/Authorization/TenantAccessDenialReason.cs
-- src/Hexalith.Parties.CommandApi/Authorization/TenantAccessDenialTranslator.cs
-- src/Hexalith.Parties.CommandApi/Authorization/TenantAccessService.cs
-- src/Hexalith.Parties.CommandApi/Controllers/AdminController.cs
-- src/Hexalith.Parties.CommandApi/Controllers/PartiesController.cs
-- src/Hexalith.Parties.CommandApi/Extensions/PartiesServiceCollectionExtensions.cs
-- src/Hexalith.Parties.CommandApi/Mcp/CreatePartyMcpTool.cs
-- src/Hexalith.Parties.CommandApi/Mcp/DeletePartyMcpTool.cs
-- src/Hexalith.Parties.CommandApi/Mcp/FindPartiesMcpTool.cs
-- src/Hexalith.Parties.CommandApi/Mcp/GetPartyMcpTool.cs
-- src/Hexalith.Parties.CommandApi/Mcp/GetPartyNameAtMcpTool.cs
-- src/Hexalith.Parties.CommandApi/Mcp/McpSessionContext.cs
-- src/Hexalith.Parties.CommandApi/Mcp/McpTenantAuthorization.cs
-- src/Hexalith.Parties.CommandApi/Mcp/UpdatePartyMcpTool.cs
-- tests/Hexalith.Parties.CommandApi.Tests/Authorization/TenantAccessServiceTests.cs
-- tests/Hexalith.Parties.CommandApi.Tests/Authorization/TestTenantAccessService.cs
-- tests/Hexalith.Parties.CommandApi.Tests/Controllers/AdminEndpointIntegrationTests.cs
-- tests/Hexalith.Parties.CommandApi.Tests/Controllers/ConsentEndpointTests.cs
-- tests/Hexalith.Parties.CommandApi.Tests/Controllers/ErasureEndpointTests.cs
-- tests/Hexalith.Parties.CommandApi.Tests/Controllers/PartiesControllerProblemDetailsTests.cs
-- tests/Hexalith.Parties.CommandApi.Tests/Controllers/PortabilityEndpointTests.cs
-- tests/Hexalith.Parties.CommandApi.Tests/Controllers/RestrictionEndpointTests.cs
-- tests/Hexalith.Parties.CommandApi.Tests/Controllers/TemporalNameEndpointTests.cs
-- tests/Hexalith.Parties.CommandApi.Tests/FitnessTests/ArchitecturalFitnessTests.cs
-- tests/Hexalith.Parties.CommandApi.Tests/HealthChecks/HealthEndpointIntegrationTests.cs
-- tests/Hexalith.Parties.CommandApi.Tests/Mcp/CreatePartyMcpToolTests.cs
-- tests/Hexalith.Parties.CommandApi.Tests/Mcp/DeletePartyMcpToolTests.cs
-- tests/Hexalith.Parties.CommandApi.Tests/Mcp/FindPartiesMcpToolTests.cs
-- tests/Hexalith.Parties.CommandApi.Tests/Mcp/GetPartyMcpToolTests.cs
-- tests/Hexalith.Parties.CommandApi.Tests/Mcp/GetPartyNameAtMcpToolTests.cs
-- tests/Hexalith.Parties.CommandApi.Tests/Mcp/UpdateAndDeletePartyMcpToolTests.cs
-- tests/Hexalith.Parties.CommandApi.Tests/Mcp/UpdatePartyMcpToolTests.cs
+- src/Hexalith.Parties/Authorization/TenantAccessDecision.cs
+- src/Hexalith.Parties/Authorization/TenantAccessDenialReason.cs
+- src/Hexalith.Parties/Authorization/TenantAccessDenialTranslator.cs
+- src/Hexalith.Parties/Authorization/TenantAccessService.cs
+- src/Hexalith.Parties/Controllers/AdminController.cs
+- src/Hexalith.Parties/Controllers/PartiesController.cs
+- src/Hexalith.Parties/Extensions/PartiesServiceCollectionExtensions.cs
+- src/Hexalith.Parties/Mcp/CreatePartyMcpTool.cs
+- src/Hexalith.Parties/Mcp/DeletePartyMcpTool.cs
+- src/Hexalith.Parties/Mcp/FindPartiesMcpTool.cs
+- src/Hexalith.Parties/Mcp/GetPartyMcpTool.cs
+- src/Hexalith.Parties/Mcp/GetPartyNameAtMcpTool.cs
+- src/Hexalith.Parties/Mcp/McpSessionContext.cs
+- src/Hexalith.Parties/Mcp/McpTenantAuthorization.cs
+- src/Hexalith.Parties/Mcp/UpdatePartyMcpTool.cs
+- tests/Hexalith.Parties.Tests/Authorization/TenantAccessServiceTests.cs
+- tests/Hexalith.Parties.Tests/Authorization/TestTenantAccessService.cs
+- tests/Hexalith.Parties.Tests/Controllers/AdminEndpointIntegrationTests.cs
+- tests/Hexalith.Parties.Tests/Controllers/ConsentEndpointTests.cs
+- tests/Hexalith.Parties.Tests/Controllers/ErasureEndpointTests.cs
+- tests/Hexalith.Parties.Tests/Controllers/PartiesControllerProblemDetailsTests.cs
+- tests/Hexalith.Parties.Tests/Controllers/PortabilityEndpointTests.cs
+- tests/Hexalith.Parties.Tests/Controllers/RestrictionEndpointTests.cs
+- tests/Hexalith.Parties.Tests/Controllers/TemporalNameEndpointTests.cs
+- tests/Hexalith.Parties.Tests/FitnessTests/ArchitecturalFitnessTests.cs
+- tests/Hexalith.Parties.Tests/HealthChecks/HealthEndpointIntegrationTests.cs
+- tests/Hexalith.Parties.Tests/Mcp/CreatePartyMcpToolTests.cs
+- tests/Hexalith.Parties.Tests/Mcp/DeletePartyMcpToolTests.cs
+- tests/Hexalith.Parties.Tests/Mcp/FindPartiesMcpToolTests.cs
+- tests/Hexalith.Parties.Tests/Mcp/GetPartyMcpToolTests.cs
+- tests/Hexalith.Parties.Tests/Mcp/GetPartyNameAtMcpToolTests.cs
+- tests/Hexalith.Parties.Tests/Mcp/UpdateAndDeletePartyMcpToolTests.cs
+- tests/Hexalith.Parties.Tests/Mcp/UpdatePartyMcpToolTests.cs
 
 ### Change Log
 
@@ -368,28 +368,28 @@ GPT-5 Codex
 
 #### Decision-needed (resolved 2026-05-05)
 
-- [x] [Review][Decision-resolved] **D1** — AC5 vs `AdminController.RebuildProjections` payload-tenant-as-auth-input. **Resolution:** authorize on JWT-extracted tenant, then require `request.TenantId == JWT tenant`; reject mismatch with a 403 `payload-tenant-conflict` (or reuse vocabulary). Honors AC5 (trusted context as the only auth input) and the task wording (`request.TenantId` is still validated). Implementation folded into patch P1/P11. [src/Hexalith.Parties.CommandApi/Controllers/AdminController.cs:81-148]
-- [x] [Review][Decision-resolved] **D2** — `ExtractUserId` fallback semantics. **Resolution:** strict ordered claim list `sub` → `oid` and nothing else; drop the `User.Identity?.Name` fallback in `PartiesController`, `AdminController`, and the MCP `RunSessionHandler`. Missing both claims → fail closed as `missing-user`. Implementation folded into patches P3a (new helper) and P15 (consistency). [src/Hexalith.Parties.CommandApi/Controllers/AdminController.cs:51-53; PartiesController.cs:880-886; Extensions/PartiesServiceCollectionExtensions.cs:314-317]
+- [x] [Review][Decision-resolved] **D1** — AC5 vs `AdminController.RebuildProjections` payload-tenant-as-auth-input. **Resolution:** authorize on JWT-extracted tenant, then require `request.TenantId == JWT tenant`; reject mismatch with a 403 `payload-tenant-conflict` (or reuse vocabulary). Honors AC5 (trusted context as the only auth input) and the task wording (`request.TenantId` is still validated). Implementation folded into patch P1/P11. [src/Hexalith.Parties/Controllers/AdminController.cs:81-148]
+- [x] [Review][Decision-resolved] **D2** — `ExtractUserId` fallback semantics. **Resolution:** strict ordered claim list `sub` → `oid` and nothing else; drop the `User.Identity?.Name` fallback in `PartiesController`, `AdminController`, and the MCP `RunSessionHandler`. Missing both claims → fail closed as `missing-user`. Implementation folded into patches P3a (new helper) and P15 (consistency). [src/Hexalith.Parties/Controllers/AdminController.cs:51-53; PartiesController.cs:880-886; Extensions/PartiesServiceCollectionExtensions.cs:314-317]
 
 #### Patch — all applied 2026-05-05; build & 368-test suite pass
 
-- [x] [Review][Patch] AC5 — REST command dispatch never rejects conflicting payload `TenantId`; also covers `AdminController.RebuildProjections` enforcing `request.TenantId == JWT tenant` (D1 resolution) [src/Hexalith.Parties.CommandApi/Controllers/PartiesController.cs:586-712; AdminController.cs:81-148]
-- [x] [Review][Patch] Authorization-before-side-effect ordering — `ValidateCommandAsync` runs before `AuthorizeTenantAccessAsync` [src/Hexalith.Parties.CommandApi/Controllers/PartiesController.cs:592, 656]
-- [x] [Review][Patch] `TenantAccessService` swallows projection-store exceptions silently — inject `ILogger<TenantAccessService>` and log at error level (no PII) [src/Hexalith.Parties.CommandApi/Authorization/TenantAccessService.cs:31]
-- [x] [Review][Patch] `TenantAccessDenialTranslator` default switch arm masks unknown enum values as `tenant-state-stale` — make exhaustive (throw on unknown) [src/Hexalith.Parties.CommandApi/Authorization/TenantAccessDenialTranslator.cs:7-17, 19-22, 53-63]
-- [x] [Review][Patch] Add controller-level role-matrix happy-path tests (Reader/Contributor/Owner × Read/Write/Admin) — current diff covers deny-path only [tests/Hexalith.Parties.CommandApi.Tests/Controllers/PartiesControllerProblemDetailsTests.cs]
-- [x] [Review][Patch] Add per-reason endpoint denial tests for `tenant-disabled`, `not-member`, `tenant-state-stale`, `missing-user` — only `unknown-tenant` and `insufficient-role` covered today [tests/Hexalith.Parties.CommandApi.Tests/Controllers/PartiesControllerProblemDetailsTests.cs]
-- [x] [Review][Patch] Add admin endpoint denial + call-order regression tests proving contributor cannot run admin operations and denied admin requests do not execute side effects [tests/Hexalith.Parties.CommandApi.Tests/Controllers/AdminEndpointIntegrationTests.cs]
-- [x] [Review][Patch] Add MCP missing-user denial test for write tools (no `mcp-agent` fallback) — current MCP tests only cover missing-tenant [tests/Hexalith.Parties.CommandApi.Tests/Mcp/CreatePartyMcpToolTests.cs, UpdatePartyMcpToolTests.cs, DeletePartyMcpToolTests.cs]
-- [x] [Review][Patch] Add fitness/code-level assertion that REST/MCP request paths do not call Tenants HTTP/API on the request path [tests/Hexalith.Parties.CommandApi.Tests/FitnessTests/ArchitecturalFitnessTests.cs]
-- [x] [Review][Patch] Add fitness assertion proving EventStore actor/projection key formats unchanged by Story 11.3 [tests/Hexalith.Parties.CommandApi.Tests/FitnessTests/ArchitecturalFitnessTests.cs]
-- [x] [Review][Patch] `RebuildProjections` runs request-body validation before authorization — reorder so auth gates body inspection [src/Hexalith.Parties.CommandApi/Controllers/AdminController.cs:84-107]
-- [x] [Review][Patch] `TestTenantAccessService` shared on class fixture is mutable across tests — reset `Handler` per-test (constructor or `IAsyncLifetime`) to prevent ordering-dependent flakes [tests/Hexalith.Parties.CommandApi.Tests/Controllers/PartiesControllerProblemDetailsTests.cs:42-46, 1793-1799]
-- [x] [Review][Patch] `AdminController` missing-tenant fallbacks return bare `Problem(title:"Unauthorized", ...)` instead of `TenantAccessDenialTranslator` vocabulary — vocabulary inconsistent with PartiesController [src/Hexalith.Parties.CommandApi/Controllers/AdminController.cs:166-171, 260-262, 290-292, 318-321, 549-551, 593-595, 638-640, 719-721, 767-770, 809-812, 849-852, 889-892, 936-939, 1016-1019]
-- [x] [Review][Patch] Cross-tenant scoped-id check returns `urn:hexalith:parties:error:Forbidden` without `reasonCode` extension — align with new vocabulary [src/Hexalith.Parties.CommandApi/Controllers/PartiesController.cs:292-295, 1080-1095]
-- [x] [Review][Patch] Add `[ProducesResponseType(StatusCodes.Status403Forbidden)]` to query and POST endpoints that now return 403 via the access service [src/Hexalith.Parties.CommandApi/Controllers/PartiesController.cs:48-49, 142-143 and POST endpoints]
-- [x] [Review][Patch] Unify `ExtractUserId` to a single helper using strict claim ordering `sub` → `oid` (D2 resolution) — drop `User.Identity?.Name` fallback in `PartiesController`, `AdminController`, and the MCP `RunSessionHandler`; whitespace-check both [src/Hexalith.Parties.CommandApi/Controllers/AdminController.cs:51-53; PartiesController.cs:880-886; Extensions/PartiesServiceCollectionExtensions.cs:314-317]
-- [x] [Review][Patch] `TenantAccessServiceTests` lacks an `OperationCanceledException` propagation test for the projection-store catch filter [tests/Hexalith.Parties.CommandApi.Tests/Authorization/TenantAccessServiceTests.cs]
+- [x] [Review][Patch] AC5 — REST command dispatch never rejects conflicting payload `TenantId`; also covers `AdminController.RebuildProjections` enforcing `request.TenantId == JWT tenant` (D1 resolution) [src/Hexalith.Parties/Controllers/PartiesController.cs:586-712; AdminController.cs:81-148]
+- [x] [Review][Patch] Authorization-before-side-effect ordering — `ValidateCommandAsync` runs before `AuthorizeTenantAccessAsync` [src/Hexalith.Parties/Controllers/PartiesController.cs:592, 656]
+- [x] [Review][Patch] `TenantAccessService` swallows projection-store exceptions silently — inject `ILogger<TenantAccessService>` and log at error level (no PII) [src/Hexalith.Parties/Authorization/TenantAccessService.cs:31]
+- [x] [Review][Patch] `TenantAccessDenialTranslator` default switch arm masks unknown enum values as `tenant-state-stale` — make exhaustive (throw on unknown) [src/Hexalith.Parties/Authorization/TenantAccessDenialTranslator.cs:7-17, 19-22, 53-63]
+- [x] [Review][Patch] Add controller-level role-matrix happy-path tests (Reader/Contributor/Owner × Read/Write/Admin) — current diff covers deny-path only [tests/Hexalith.Parties.Tests/Controllers/PartiesControllerProblemDetailsTests.cs]
+- [x] [Review][Patch] Add per-reason endpoint denial tests for `tenant-disabled`, `not-member`, `tenant-state-stale`, `missing-user` — only `unknown-tenant` and `insufficient-role` covered today [tests/Hexalith.Parties.Tests/Controllers/PartiesControllerProblemDetailsTests.cs]
+- [x] [Review][Patch] Add admin endpoint denial + call-order regression tests proving contributor cannot run admin operations and denied admin requests do not execute side effects [tests/Hexalith.Parties.Tests/Controllers/AdminEndpointIntegrationTests.cs]
+- [x] [Review][Patch] Add MCP missing-user denial test for write tools (no `mcp-agent` fallback) — current MCP tests only cover missing-tenant [tests/Hexalith.Parties.Tests/Mcp/CreatePartyMcpToolTests.cs, UpdatePartyMcpToolTests.cs, DeletePartyMcpToolTests.cs]
+- [x] [Review][Patch] Add fitness/code-level assertion that REST/MCP request paths do not call Tenants HTTP/API on the request path [tests/Hexalith.Parties.Tests/FitnessTests/ArchitecturalFitnessTests.cs]
+- [x] [Review][Patch] Add fitness assertion proving EventStore actor/projection key formats unchanged by Story 11.3 [tests/Hexalith.Parties.Tests/FitnessTests/ArchitecturalFitnessTests.cs]
+- [x] [Review][Patch] `RebuildProjections` runs request-body validation before authorization — reorder so auth gates body inspection [src/Hexalith.Parties/Controllers/AdminController.cs:84-107]
+- [x] [Review][Patch] `TestTenantAccessService` shared on class fixture is mutable across tests — reset `Handler` per-test (constructor or `IAsyncLifetime`) to prevent ordering-dependent flakes [tests/Hexalith.Parties.Tests/Controllers/PartiesControllerProblemDetailsTests.cs:42-46, 1793-1799]
+- [x] [Review][Patch] `AdminController` missing-tenant fallbacks return bare `Problem(title:"Unauthorized", ...)` instead of `TenantAccessDenialTranslator` vocabulary — vocabulary inconsistent with PartiesController [src/Hexalith.Parties/Controllers/AdminController.cs:166-171, 260-262, 290-292, 318-321, 549-551, 593-595, 638-640, 719-721, 767-770, 809-812, 849-852, 889-892, 936-939, 1016-1019]
+- [x] [Review][Patch] Cross-tenant scoped-id check returns `urn:hexalith:parties:error:Forbidden` without `reasonCode` extension — align with new vocabulary [src/Hexalith.Parties/Controllers/PartiesController.cs:292-295, 1080-1095]
+- [x] [Review][Patch] Add `[ProducesResponseType(StatusCodes.Status403Forbidden)]` to query and POST endpoints that now return 403 via the access service [src/Hexalith.Parties/Controllers/PartiesController.cs:48-49, 142-143 and POST endpoints]
+- [x] [Review][Patch] Unify `ExtractUserId` to a single helper using strict claim ordering `sub` → `oid` (D2 resolution) — drop `User.Identity?.Name` fallback in `PartiesController`, `AdminController`, and the MCP `RunSessionHandler`; whitespace-check both [src/Hexalith.Parties/Controllers/AdminController.cs:51-53; PartiesController.cs:880-886; Extensions/PartiesServiceCollectionExtensions.cs:314-317]
+- [x] [Review][Patch] `TenantAccessServiceTests` lacks an `OperationCanceledException` propagation test for the projection-store catch filter [tests/Hexalith.Parties.Tests/Authorization/TenantAccessServiceTests.cs]
 
 #### Deferred
 

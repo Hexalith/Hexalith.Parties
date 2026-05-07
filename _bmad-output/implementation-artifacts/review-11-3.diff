@@ -44,12 +44,12 @@ index cd6212a..916c156 100644
  
  ### Projection Delay
  
-diff --git a/src/Hexalith.Parties.CommandApi/Authorization/TenantAccessDecision.cs b/src/Hexalith.Parties.CommandApi/Authorization/TenantAccessDecision.cs
+diff --git a/src/Hexalith.Parties/Authorization/TenantAccessDecision.cs b/src/Hexalith.Parties/Authorization/TenantAccessDecision.cs
 index 6f4edef..b01dd38 100644
---- a/src/Hexalith.Parties.CommandApi/Authorization/TenantAccessDecision.cs
-+++ b/src/Hexalith.Parties.CommandApi/Authorization/TenantAccessDecision.cs
+--- a/src/Hexalith.Parties/Authorization/TenantAccessDecision.cs
++++ b/src/Hexalith.Parties/Authorization/TenantAccessDecision.cs
 @@ -1,7 +1,8 @@
- namespace Hexalith.Parties.CommandApi.Authorization;
+ namespace Hexalith.Parties.Authorization;
  
 -public sealed record TenantAccessDecision(bool IsAllowed, TenantAccessDenialReason Reason) {
 +public sealed record TenantAccessDecision(bool IsAllowed, TenantAccessDenialReason Reason, string? DiagnosticText = null) {
@@ -59,26 +59,26 @@ index 6f4edef..b01dd38 100644
 +    public static TenantAccessDecision Denied(TenantAccessDenialReason reason, string? diagnosticText = null)
 +        => new(false, reason, diagnosticText);
  }
-diff --git a/src/Hexalith.Parties.CommandApi/Authorization/TenantAccessDenialReason.cs b/src/Hexalith.Parties.CommandApi/Authorization/TenantAccessDenialReason.cs
+diff --git a/src/Hexalith.Parties/Authorization/TenantAccessDenialReason.cs b/src/Hexalith.Parties/Authorization/TenantAccessDenialReason.cs
 index 0827d11..58589e4 100644
---- a/src/Hexalith.Parties.CommandApi/Authorization/TenantAccessDenialReason.cs
-+++ b/src/Hexalith.Parties.CommandApi/Authorization/TenantAccessDenialReason.cs
+--- a/src/Hexalith.Parties/Authorization/TenantAccessDenialReason.cs
++++ b/src/Hexalith.Parties/Authorization/TenantAccessDenialReason.cs
 @@ -8,4 +8,5 @@ public enum TenantAccessDenialReason {
      DisabledTenant,
      MissingMember,
      InsufficientRole,
 +    TenantStateStale,
  }
-diff --git a/src/Hexalith.Parties.CommandApi/Authorization/TenantAccessDenialTranslator.cs b/src/Hexalith.Parties.CommandApi/Authorization/TenantAccessDenialTranslator.cs
+diff --git a/src/Hexalith.Parties/Authorization/TenantAccessDenialTranslator.cs b/src/Hexalith.Parties/Authorization/TenantAccessDenialTranslator.cs
 new file mode 100644
 index 0000000..355e7ae
 --- /dev/null
-+++ b/src/Hexalith.Parties.CommandApi/Authorization/TenantAccessDenialTranslator.cs
++++ b/src/Hexalith.Parties/Authorization/TenantAccessDenialTranslator.cs
 @@ -0,0 +1,64 @@
 +using Microsoft.AspNetCore.Http;
 +using Microsoft.AspNetCore.Mvc;
 +
-+namespace Hexalith.Parties.CommandApi.Authorization;
++namespace Hexalith.Parties.Authorization;
 +
 +internal static class TenantAccessDenialTranslator {
 +    internal static string ToReasonCode(TenantAccessDenialReason reason)
@@ -139,10 +139,10 @@ index 0000000..355e7ae
 +            _ => "Tenant access could not be authorized.",
 +        };
 +}
-diff --git a/src/Hexalith.Parties.CommandApi/Authorization/TenantAccessService.cs b/src/Hexalith.Parties.CommandApi/Authorization/TenantAccessService.cs
+diff --git a/src/Hexalith.Parties/Authorization/TenantAccessService.cs b/src/Hexalith.Parties/Authorization/TenantAccessService.cs
 index cfb988c..59f1572 100644
---- a/src/Hexalith.Parties.CommandApi/Authorization/TenantAccessService.cs
-+++ b/src/Hexalith.Parties.CommandApi/Authorization/TenantAccessService.cs
+--- a/src/Hexalith.Parties/Authorization/TenantAccessService.cs
++++ b/src/Hexalith.Parties/Authorization/TenantAccessService.cs
 @@ -24,7 +24,16 @@ public sealed class TenantAccessService : ITenantAccessService {
              return TenantAccessDecision.Denied(TenantAccessDenialReason.MissingUserId);
          }
@@ -161,16 +161,16 @@ index cfb988c..59f1572 100644
          if (state is null) {
              return TenantAccessDecision.Denied(TenantAccessDenialReason.UnknownTenant);
          }
-diff --git a/src/Hexalith.Parties.CommandApi/Controllers/AdminController.cs b/src/Hexalith.Parties.CommandApi/Controllers/AdminController.cs
+diff --git a/src/Hexalith.Parties/Controllers/AdminController.cs b/src/Hexalith.Parties/Controllers/AdminController.cs
 index 2e9f254..759501b 100644
---- a/src/Hexalith.Parties.CommandApi/Controllers/AdminController.cs
-+++ b/src/Hexalith.Parties.CommandApi/Controllers/AdminController.cs
+--- a/src/Hexalith.Parties/Controllers/AdminController.cs
++++ b/src/Hexalith.Parties/Controllers/AdminController.cs
 @@ -8,6 +8,7 @@ using Hexalith.EventStore.Server.Actors;
  using Hexalith.EventStore.Server.Commands;
  using Hexalith.EventStore.Server.Pipeline.Commands;
- using Hexalith.Parties.CommandApi.Authentication;
-+using Hexalith.Parties.CommandApi.Authorization;
- using Hexalith.Parties.CommandApi.Middleware;
+ using Hexalith.Parties.Authentication;
++using Hexalith.Parties.Authorization;
+ using Hexalith.Parties.Middleware;
  using Hexalith.Parties.Contracts.Commands;
  using Hexalith.Parties.Contracts.Models;
 @@ -36,6 +37,7 @@ public sealed class AdminController(
@@ -509,18 +509,18 @@ index 2e9f254..759501b 100644
          PartyErasureStatusRecord? erasureStatus = await erasureRecordStore
              .GetStatusAsync(tenantId, partyId, cancellationToken)
              .ConfigureAwait(false);
-diff --git a/src/Hexalith.Parties.CommandApi/Controllers/PartiesController.cs b/src/Hexalith.Parties.CommandApi/Controllers/PartiesController.cs
+diff --git a/src/Hexalith.Parties/Controllers/PartiesController.cs b/src/Hexalith.Parties/Controllers/PartiesController.cs
 index 96c1773..5100ed7 100644
---- a/src/Hexalith.Parties.CommandApi/Controllers/PartiesController.cs
-+++ b/src/Hexalith.Parties.CommandApi/Controllers/PartiesController.cs
+--- a/src/Hexalith.Parties/Controllers/PartiesController.cs
++++ b/src/Hexalith.Parties/Controllers/PartiesController.cs
 @@ -12,6 +12,7 @@ using Hexalith.EventStore.Server.Commands;
  using Hexalith.EventStore.Server.Pipeline.Commands;
  using Hexalith.EventStore.Server.Projections;
  using Hexalith.EventStore.Contracts.Identity;
-+using Hexalith.Parties.CommandApi.Authorization;
- using Hexalith.Parties.CommandApi.Extensions;
- using Hexalith.Parties.CommandApi.Middleware;
- using Hexalith.Parties.CommandApi.Search;
++using Hexalith.Parties.Authorization;
+ using Hexalith.Parties.Extensions;
+ using Hexalith.Parties.Middleware;
+ using Hexalith.Parties.Search;
 @@ -35,6 +36,7 @@ public sealed class PartiesController(
      ICommandRouter commandRouter,
      IActorProxyFactory actorProxyFactory,
@@ -781,10 +781,10 @@ index 96c1773..5100ed7 100644
      private static void EnsureRouteMatchesBodyPartyId(string routeId, string bodyPartyId, string propertyName)
      {
          if (string.IsNullOrWhiteSpace(bodyPartyId))
-diff --git a/src/Hexalith.Parties.CommandApi/Extensions/PartiesServiceCollectionExtensions.cs b/src/Hexalith.Parties.CommandApi/Extensions/PartiesServiceCollectionExtensions.cs
+diff --git a/src/Hexalith.Parties/Extensions/PartiesServiceCollectionExtensions.cs b/src/Hexalith.Parties/Extensions/PartiesServiceCollectionExtensions.cs
 index 67b0a1a..29e881d 100644
---- a/src/Hexalith.Parties.CommandApi/Extensions/PartiesServiceCollectionExtensions.cs
-+++ b/src/Hexalith.Parties.CommandApi/Extensions/PartiesServiceCollectionExtensions.cs
+--- a/src/Hexalith.Parties/Extensions/PartiesServiceCollectionExtensions.cs
++++ b/src/Hexalith.Parties/Extensions/PartiesServiceCollectionExtensions.cs
 @@ -295,12 +295,16 @@ public static class PartiesServiceCollectionExtensions {
                      string? tenant = httpContext.User.FindAll("eventstore:tenant")
                          .Select(c => c.Value)
@@ -802,15 +802,15 @@ index 67b0a1a..29e881d 100644
                      }
                  };
              })
-diff --git a/src/Hexalith.Parties.CommandApi/Mcp/CreatePartyMcpTool.cs b/src/Hexalith.Parties.CommandApi/Mcp/CreatePartyMcpTool.cs
+diff --git a/src/Hexalith.Parties/Mcp/CreatePartyMcpTool.cs b/src/Hexalith.Parties/Mcp/CreatePartyMcpTool.cs
 index 44a4abd..bd85ee6 100644
---- a/src/Hexalith.Parties.CommandApi/Mcp/CreatePartyMcpTool.cs
-+++ b/src/Hexalith.Parties.CommandApi/Mcp/CreatePartyMcpTool.cs
+--- a/src/Hexalith.Parties/Mcp/CreatePartyMcpTool.cs
++++ b/src/Hexalith.Parties/Mcp/CreatePartyMcpTool.cs
 @@ -11,6 +11,7 @@ using FluentValidation.Results;
  using Hexalith.EventStore.Server.Actors;
  using Hexalith.EventStore.Server.Commands;
  using Hexalith.EventStore.Server.Pipeline.Commands;
-+using Hexalith.Parties.CommandApi.Authorization;
++using Hexalith.Parties.Authorization;
  using Hexalith.Parties.Contracts.Commands;
  using Hexalith.Parties.Contracts.Models;
  using Hexalith.Parties.Contracts.ValueObjects;
@@ -839,15 +839,15 @@ index 44a4abd..bd85ee6 100644
  
          CommandProcessingResult result = await commandRouter
              .RouteCommandAsync(submitCommand, cancellationToken)
-diff --git a/src/Hexalith.Parties.CommandApi/Mcp/DeletePartyMcpTool.cs b/src/Hexalith.Parties.CommandApi/Mcp/DeletePartyMcpTool.cs
+diff --git a/src/Hexalith.Parties/Mcp/DeletePartyMcpTool.cs b/src/Hexalith.Parties/Mcp/DeletePartyMcpTool.cs
 index ff9571e..ac24d64 100644
---- a/src/Hexalith.Parties.CommandApi/Mcp/DeletePartyMcpTool.cs
-+++ b/src/Hexalith.Parties.CommandApi/Mcp/DeletePartyMcpTool.cs
+--- a/src/Hexalith.Parties/Mcp/DeletePartyMcpTool.cs
++++ b/src/Hexalith.Parties/Mcp/DeletePartyMcpTool.cs
 @@ -10,6 +10,7 @@ using FluentValidation.Results;
  using Hexalith.EventStore.Server.Actors;
  using Hexalith.EventStore.Server.Commands;
  using Hexalith.EventStore.Server.Pipeline.Commands;
-+using Hexalith.Parties.CommandApi.Authorization;
++using Hexalith.Parties.Authorization;
  using Hexalith.Parties.Contracts.Commands;
  using Hexalith.Parties.Contracts.Models;
  using Hexalith.Parties.Projections.Abstractions;
@@ -876,16 +876,16 @@ index ff9571e..ac24d64 100644
  
          CommandProcessingResult result = await commandRouter
              .RouteCommandAsync(submitCommand, cancellationToken)
-diff --git a/src/Hexalith.Parties.CommandApi/Mcp/FindPartiesMcpTool.cs b/src/Hexalith.Parties.CommandApi/Mcp/FindPartiesMcpTool.cs
+diff --git a/src/Hexalith.Parties/Mcp/FindPartiesMcpTool.cs b/src/Hexalith.Parties/Mcp/FindPartiesMcpTool.cs
 index 9bb5a0a..1237af2 100644
---- a/src/Hexalith.Parties.CommandApi/Mcp/FindPartiesMcpTool.cs
-+++ b/src/Hexalith.Parties.CommandApi/Mcp/FindPartiesMcpTool.cs
+--- a/src/Hexalith.Parties/Mcp/FindPartiesMcpTool.cs
++++ b/src/Hexalith.Parties/Mcp/FindPartiesMcpTool.cs
 @@ -4,6 +4,7 @@ using System.Text.Json;
  using Dapr.Actors;
  using Dapr.Actors.Client;
  
-+using Hexalith.Parties.CommandApi.Authorization;
- using Hexalith.Parties.CommandApi.Search;
++using Hexalith.Parties.Authorization;
+ using Hexalith.Parties.Search;
  using Hexalith.Parties.Contracts.Models;
  using Hexalith.Parties.Contracts.ValueObjects;
 @@ -30,11 +31,10 @@ public static class FindPartiesMcpTool
@@ -904,15 +904,15 @@ index 9bb5a0a..1237af2 100644
  
          if (page < 1)
          {
-diff --git a/src/Hexalith.Parties.CommandApi/Mcp/GetPartyMcpTool.cs b/src/Hexalith.Parties.CommandApi/Mcp/GetPartyMcpTool.cs
+diff --git a/src/Hexalith.Parties/Mcp/GetPartyMcpTool.cs b/src/Hexalith.Parties/Mcp/GetPartyMcpTool.cs
 index f9f30bd..0f3a682 100644
---- a/src/Hexalith.Parties.CommandApi/Mcp/GetPartyMcpTool.cs
-+++ b/src/Hexalith.Parties.CommandApi/Mcp/GetPartyMcpTool.cs
+--- a/src/Hexalith.Parties/Mcp/GetPartyMcpTool.cs
++++ b/src/Hexalith.Parties/Mcp/GetPartyMcpTool.cs
 @@ -4,6 +4,7 @@ using System.Text.Json;
  using Dapr.Actors;
  using Dapr.Actors.Client;
  
-+using Hexalith.Parties.CommandApi.Authorization;
++using Hexalith.Parties.Authorization;
  using Hexalith.Parties.Contracts.Models;
  using Hexalith.Parties.Projections.Abstractions;
  using Hexalith.Parties.Projections.Actors;
@@ -932,16 +932,16 @@ index f9f30bd..0f3a682 100644
  
          if (!Guid.TryParse(partyId, out _))
          {
-diff --git a/src/Hexalith.Parties.CommandApi/Mcp/GetPartyNameAtMcpTool.cs b/src/Hexalith.Parties.CommandApi/Mcp/GetPartyNameAtMcpTool.cs
+diff --git a/src/Hexalith.Parties/Mcp/GetPartyNameAtMcpTool.cs b/src/Hexalith.Parties/Mcp/GetPartyNameAtMcpTool.cs
 index a305401..1a3d3af 100644
---- a/src/Hexalith.Parties.CommandApi/Mcp/GetPartyNameAtMcpTool.cs
-+++ b/src/Hexalith.Parties.CommandApi/Mcp/GetPartyNameAtMcpTool.cs
+--- a/src/Hexalith.Parties/Mcp/GetPartyNameAtMcpTool.cs
++++ b/src/Hexalith.Parties/Mcp/GetPartyNameAtMcpTool.cs
 @@ -4,6 +4,7 @@ using System.Text.Json;
  using Dapr.Actors;
  using Dapr.Actors.Client;
  
-+using Hexalith.Parties.CommandApi.Authorization;
- using Hexalith.Parties.CommandApi.Extensions;
++using Hexalith.Parties.Authorization;
+ using Hexalith.Parties.Extensions;
  using Hexalith.Parties.Contracts.Models;
  using Hexalith.Parties.Contracts.ValueObjects;
 @@ -25,11 +26,10 @@ public static class GetPartyNameAtMcpTool
@@ -960,10 +960,10 @@ index a305401..1a3d3af 100644
  
          if (!Guid.TryParse(partyId, out _))
          {
-diff --git a/src/Hexalith.Parties.CommandApi/Mcp/McpSessionContext.cs b/src/Hexalith.Parties.CommandApi/Mcp/McpSessionContext.cs
+diff --git a/src/Hexalith.Parties/Mcp/McpSessionContext.cs b/src/Hexalith.Parties/Mcp/McpSessionContext.cs
 index ec1d797..cbba1ad 100644
---- a/src/Hexalith.Parties.CommandApi/Mcp/McpSessionContext.cs
-+++ b/src/Hexalith.Parties.CommandApi/Mcp/McpSessionContext.cs
+--- a/src/Hexalith.Parties/Mcp/McpSessionContext.cs
++++ b/src/Hexalith.Parties/Mcp/McpSessionContext.cs
 @@ -7,6 +7,8 @@ internal static class McpSessionContext
  {
      public static readonly AsyncLocal<string?> Tenant = new();
@@ -973,15 +973,15 @@ index ec1d797..cbba1ad 100644
      public static readonly JsonSerializerOptions JsonOptions = new()
      {
          PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-diff --git a/src/Hexalith.Parties.CommandApi/Mcp/McpTenantAuthorization.cs b/src/Hexalith.Parties.CommandApi/Mcp/McpTenantAuthorization.cs
+diff --git a/src/Hexalith.Parties/Mcp/McpTenantAuthorization.cs b/src/Hexalith.Parties/Mcp/McpTenantAuthorization.cs
 new file mode 100644
 index 0000000..e00bd3e
 --- /dev/null
-+++ b/src/Hexalith.Parties.CommandApi/Mcp/McpTenantAuthorization.cs
++++ b/src/Hexalith.Parties/Mcp/McpTenantAuthorization.cs
 @@ -0,0 +1,36 @@
-+using Hexalith.Parties.CommandApi.Authorization;
++using Hexalith.Parties.Authorization;
 +
-+namespace Hexalith.Parties.CommandApi.Mcp;
++namespace Hexalith.Parties.Mcp;
 +
 +internal static class McpTenantAuthorization {
 +    internal static async Task<McpTenantAccessContext> RequireAccessAsync(
@@ -1015,15 +1015,15 @@ index 0000000..e00bd3e
 +}
 +
 +internal sealed record McpTenantAccessContext(string TenantId, string UserId);
-diff --git a/src/Hexalith.Parties.CommandApi/Mcp/UpdatePartyMcpTool.cs b/src/Hexalith.Parties.CommandApi/Mcp/UpdatePartyMcpTool.cs
+diff --git a/src/Hexalith.Parties/Mcp/UpdatePartyMcpTool.cs b/src/Hexalith.Parties/Mcp/UpdatePartyMcpTool.cs
 index 850b9fc..bffee75 100644
---- a/src/Hexalith.Parties.CommandApi/Mcp/UpdatePartyMcpTool.cs
-+++ b/src/Hexalith.Parties.CommandApi/Mcp/UpdatePartyMcpTool.cs
+--- a/src/Hexalith.Parties/Mcp/UpdatePartyMcpTool.cs
++++ b/src/Hexalith.Parties/Mcp/UpdatePartyMcpTool.cs
 @@ -11,6 +11,7 @@ using FluentValidation.Results;
  using Hexalith.EventStore.Server.Actors;
  using Hexalith.EventStore.Server.Commands;
  using Hexalith.EventStore.Server.Pipeline.Commands;
-+using Hexalith.Parties.CommandApi.Authorization;
++using Hexalith.Parties.Authorization;
  using Hexalith.Parties.Contracts.Commands;
  using Hexalith.Parties.Contracts.Models;
  using Hexalith.Parties.Contracts.ValueObjects;
@@ -1052,10 +1052,10 @@ index 850b9fc..bffee75 100644
  
          CommandProcessingResult result = await commandRouter
              .RouteCommandAsync(submitCommand, cancellationToken)
-diff --git a/tests/Hexalith.Parties.CommandApi.Tests/Authorization/TenantAccessServiceTests.cs b/tests/Hexalith.Parties.CommandApi.Tests/Authorization/TenantAccessServiceTests.cs
+diff --git a/tests/Hexalith.Parties.Tests/Authorization/TenantAccessServiceTests.cs b/tests/Hexalith.Parties.Tests/Authorization/TenantAccessServiceTests.cs
 index cbcc6d5..7a23329 100644
---- a/tests/Hexalith.Parties.CommandApi.Tests/Authorization/TenantAccessServiceTests.cs
-+++ b/tests/Hexalith.Parties.CommandApi.Tests/Authorization/TenantAccessServiceTests.cs
+--- a/tests/Hexalith.Parties.Tests/Authorization/TenantAccessServiceTests.cs
++++ b/tests/Hexalith.Parties.Tests/Authorization/TenantAccessServiceTests.cs
 @@ -115,4 +115,23 @@ public class TenantAccessServiceTests {
          decision.IsAllowed.ShouldBeFalse();
          decision.Reason.ShouldBe(TenantAccessDenialReason.InsufficientRole);
@@ -1080,15 +1080,15 @@ index cbcc6d5..7a23329 100644
 +            => Task.CompletedTask;
 +    }
  }
-diff --git a/tests/Hexalith.Parties.CommandApi.Tests/Authorization/TestTenantAccessService.cs b/tests/Hexalith.Parties.CommandApi.Tests/Authorization/TestTenantAccessService.cs
+diff --git a/tests/Hexalith.Parties.Tests/Authorization/TestTenantAccessService.cs b/tests/Hexalith.Parties.Tests/Authorization/TestTenantAccessService.cs
 new file mode 100644
 index 0000000..08a4736
 --- /dev/null
-+++ b/tests/Hexalith.Parties.CommandApi.Tests/Authorization/TestTenantAccessService.cs
++++ b/tests/Hexalith.Parties.Tests/Authorization/TestTenantAccessService.cs
 @@ -0,0 +1,33 @@
-+using Hexalith.Parties.CommandApi.Authorization;
++using Hexalith.Parties.Authorization;
 +
-+namespace Hexalith.Parties.CommandApi.Tests.Authorization;
++namespace Hexalith.Parties.Tests.Authorization;
 +
 +internal sealed class TestTenantAccessService : ITenantAccessService {
 +    private static readonly Func<string?, string?, TenantAccessRequirement, CancellationToken, Task<TenantAccessDecision>> s_allowAll =
@@ -1119,56 +1119,56 @@ index 0000000..08a4736
 +        CancellationToken cancellationToken = default)
 +        => Handler(tenantId, userId, requirement, cancellationToken);
 +}
-diff --git a/tests/Hexalith.Parties.CommandApi.Tests/Controllers/AdminEndpointIntegrationTests.cs b/tests/Hexalith.Parties.CommandApi.Tests/Controllers/AdminEndpointIntegrationTests.cs
+diff --git a/tests/Hexalith.Parties.Tests/Controllers/AdminEndpointIntegrationTests.cs b/tests/Hexalith.Parties.Tests/Controllers/AdminEndpointIntegrationTests.cs
 index db450a1..1613a26 100644
---- a/tests/Hexalith.Parties.CommandApi.Tests/Controllers/AdminEndpointIntegrationTests.cs
-+++ b/tests/Hexalith.Parties.CommandApi.Tests/Controllers/AdminEndpointIntegrationTests.cs
+--- a/tests/Hexalith.Parties.Tests/Controllers/AdminEndpointIntegrationTests.cs
++++ b/tests/Hexalith.Parties.Tests/Controllers/AdminEndpointIntegrationTests.cs
 @@ -241,6 +241,8 @@ public sealed class AdminEndpointIntegrationTests : IClassFixture<AdminEndpointI
                  services.AddSingleton(ErasureVerificationService);
                  services.RemoveAll<PartyErasureOrchestrator>();
                  services.AddSingleton<PartyErasureOrchestrator>();
-+                services.RemoveAll<Hexalith.Parties.CommandApi.Authorization.ITenantAccessService>();
-+                services.AddSingleton<Hexalith.Parties.CommandApi.Authorization.ITenantAccessService, Hexalith.Parties.CommandApi.Tests.Authorization.TestTenantAccessService>();
++                services.RemoveAll<Hexalith.Parties.Authorization.ITenantAccessService>();
++                services.AddSingleton<Hexalith.Parties.Authorization.ITenantAccessService, Hexalith.Parties.Tests.Authorization.TestTenantAccessService>();
              });
          }
      }
-diff --git a/tests/Hexalith.Parties.CommandApi.Tests/Controllers/ConsentEndpointTests.cs b/tests/Hexalith.Parties.CommandApi.Tests/Controllers/ConsentEndpointTests.cs
+diff --git a/tests/Hexalith.Parties.Tests/Controllers/ConsentEndpointTests.cs b/tests/Hexalith.Parties.Tests/Controllers/ConsentEndpointTests.cs
 index 9c52b11..a02b9a4 100644
---- a/tests/Hexalith.Parties.CommandApi.Tests/Controllers/ConsentEndpointTests.cs
-+++ b/tests/Hexalith.Parties.CommandApi.Tests/Controllers/ConsentEndpointTests.cs
+--- a/tests/Hexalith.Parties.Tests/Controllers/ConsentEndpointTests.cs
++++ b/tests/Hexalith.Parties.Tests/Controllers/ConsentEndpointTests.cs
 @@ -359,6 +359,8 @@ public sealed class ConsentEndpointTests : IClassFixture<ConsentEndpointTests.Co
                  services.AddSingleton<PartyErasureOrchestrator>();
                  services.RemoveAll<IPersonalDataCommandGuard>();
                  services.AddSingleton(PersonalDataGuard);
-+                services.RemoveAll<Hexalith.Parties.CommandApi.Authorization.ITenantAccessService>();
-+                services.AddSingleton<Hexalith.Parties.CommandApi.Authorization.ITenantAccessService, Hexalith.Parties.CommandApi.Tests.Authorization.TestTenantAccessService>();
++                services.RemoveAll<Hexalith.Parties.Authorization.ITenantAccessService>();
++                services.AddSingleton<Hexalith.Parties.Authorization.ITenantAccessService, Hexalith.Parties.Tests.Authorization.TestTenantAccessService>();
              });
          }
      }
-diff --git a/tests/Hexalith.Parties.CommandApi.Tests/Controllers/ErasureEndpointTests.cs b/tests/Hexalith.Parties.CommandApi.Tests/Controllers/ErasureEndpointTests.cs
+diff --git a/tests/Hexalith.Parties.Tests/Controllers/ErasureEndpointTests.cs b/tests/Hexalith.Parties.Tests/Controllers/ErasureEndpointTests.cs
 index 96717ae..55e6bbf 100644
---- a/tests/Hexalith.Parties.CommandApi.Tests/Controllers/ErasureEndpointTests.cs
-+++ b/tests/Hexalith.Parties.CommandApi.Tests/Controllers/ErasureEndpointTests.cs
+--- a/tests/Hexalith.Parties.Tests/Controllers/ErasureEndpointTests.cs
++++ b/tests/Hexalith.Parties.Tests/Controllers/ErasureEndpointTests.cs
 @@ -448,6 +448,8 @@ public sealed class ErasureEndpointTests : IClassFixture<ErasureEndpointTests.Er
                  services.AddSingleton<PartyErasureOrchestrator>();
                  services.RemoveAll<IPersonalDataCommandGuard>();
                  services.AddSingleton(PersonalDataGuard);
-+                services.RemoveAll<Hexalith.Parties.CommandApi.Authorization.ITenantAccessService>();
-+                services.AddSingleton<Hexalith.Parties.CommandApi.Authorization.ITenantAccessService, Hexalith.Parties.CommandApi.Tests.Authorization.TestTenantAccessService>();
++                services.RemoveAll<Hexalith.Parties.Authorization.ITenantAccessService>();
++                services.AddSingleton<Hexalith.Parties.Authorization.ITenantAccessService, Hexalith.Parties.Tests.Authorization.TestTenantAccessService>();
              });
          }
      }
-diff --git a/tests/Hexalith.Parties.CommandApi.Tests/Controllers/PartiesControllerProblemDetailsTests.cs b/tests/Hexalith.Parties.CommandApi.Tests/Controllers/PartiesControllerProblemDetailsTests.cs
+diff --git a/tests/Hexalith.Parties.Tests/Controllers/PartiesControllerProblemDetailsTests.cs b/tests/Hexalith.Parties.Tests/Controllers/PartiesControllerProblemDetailsTests.cs
 index f6f3608..5a248ac 100644
---- a/tests/Hexalith.Parties.CommandApi.Tests/Controllers/PartiesControllerProblemDetailsTests.cs
-+++ b/tests/Hexalith.Parties.CommandApi.Tests/Controllers/PartiesControllerProblemDetailsTests.cs
+--- a/tests/Hexalith.Parties.Tests/Controllers/PartiesControllerProblemDetailsTests.cs
++++ b/tests/Hexalith.Parties.Tests/Controllers/PartiesControllerProblemDetailsTests.cs
 @@ -12,7 +12,9 @@ using Dapr.Actors.Client;
  using Hexalith.EventStore.Server.Actors;
  using Hexalith.EventStore.Server.Commands;
  using Hexalith.EventStore.Server.Pipeline.Commands;
-+using Hexalith.Parties.CommandApi.Authorization;
- using Hexalith.Parties.CommandApi;
-+using Hexalith.Parties.CommandApi.Tests.Authorization;
++using Hexalith.Parties.Authorization;
+ using Hexalith.Parties;
++using Hexalith.Parties.Tests.Authorization;
  using Hexalith.Parties.Contracts.Models;
  using Hexalith.Parties.Contracts.ValueObjects;
  using Hexalith.Parties.Projections.Abstractions;
@@ -1268,80 +1268,80 @@ index f6f3608..5a248ac 100644
          });
      }
  }
-diff --git a/tests/Hexalith.Parties.CommandApi.Tests/Controllers/PortabilityEndpointTests.cs b/tests/Hexalith.Parties.CommandApi.Tests/Controllers/PortabilityEndpointTests.cs
+diff --git a/tests/Hexalith.Parties.Tests/Controllers/PortabilityEndpointTests.cs b/tests/Hexalith.Parties.Tests/Controllers/PortabilityEndpointTests.cs
 index 4d10c23..322f5c6 100644
---- a/tests/Hexalith.Parties.CommandApi.Tests/Controllers/PortabilityEndpointTests.cs
-+++ b/tests/Hexalith.Parties.CommandApi.Tests/Controllers/PortabilityEndpointTests.cs
+--- a/tests/Hexalith.Parties.Tests/Controllers/PortabilityEndpointTests.cs
++++ b/tests/Hexalith.Parties.Tests/Controllers/PortabilityEndpointTests.cs
 @@ -427,6 +427,8 @@ public sealed class PortabilityEndpointTests : IClassFixture<PortabilityEndpoint
                  services.AddSingleton<PartyErasureOrchestrator>();
                  services.RemoveAll<IPersonalDataCommandGuard>();
                  services.AddSingleton(PersonalDataGuard);
-+                services.RemoveAll<Hexalith.Parties.CommandApi.Authorization.ITenantAccessService>();
-+                services.AddSingleton<Hexalith.Parties.CommandApi.Authorization.ITenantAccessService, Hexalith.Parties.CommandApi.Tests.Authorization.TestTenantAccessService>();
++                services.RemoveAll<Hexalith.Parties.Authorization.ITenantAccessService>();
++                services.AddSingleton<Hexalith.Parties.Authorization.ITenantAccessService, Hexalith.Parties.Tests.Authorization.TestTenantAccessService>();
              });
          }
      }
-diff --git a/tests/Hexalith.Parties.CommandApi.Tests/Controllers/RestrictionEndpointTests.cs b/tests/Hexalith.Parties.CommandApi.Tests/Controllers/RestrictionEndpointTests.cs
+diff --git a/tests/Hexalith.Parties.Tests/Controllers/RestrictionEndpointTests.cs b/tests/Hexalith.Parties.Tests/Controllers/RestrictionEndpointTests.cs
 index 6f8e7df..90256e8 100644
---- a/tests/Hexalith.Parties.CommandApi.Tests/Controllers/RestrictionEndpointTests.cs
-+++ b/tests/Hexalith.Parties.CommandApi.Tests/Controllers/RestrictionEndpointTests.cs
+--- a/tests/Hexalith.Parties.Tests/Controllers/RestrictionEndpointTests.cs
++++ b/tests/Hexalith.Parties.Tests/Controllers/RestrictionEndpointTests.cs
 @@ -373,6 +373,8 @@ public sealed class RestrictionEndpointTests : IClassFixture<RestrictionEndpoint
                  services.AddSingleton<PartyErasureOrchestrator>();
                  services.RemoveAll<IPersonalDataCommandGuard>();
                  services.AddSingleton(PersonalDataGuard);
-+                services.RemoveAll<Hexalith.Parties.CommandApi.Authorization.ITenantAccessService>();
-+                services.AddSingleton<Hexalith.Parties.CommandApi.Authorization.ITenantAccessService, Hexalith.Parties.CommandApi.Tests.Authorization.TestTenantAccessService>();
++                services.RemoveAll<Hexalith.Parties.Authorization.ITenantAccessService>();
++                services.AddSingleton<Hexalith.Parties.Authorization.ITenantAccessService, Hexalith.Parties.Tests.Authorization.TestTenantAccessService>();
              });
          }
      }
-diff --git a/tests/Hexalith.Parties.CommandApi.Tests/Controllers/TemporalNameEndpointTests.cs b/tests/Hexalith.Parties.CommandApi.Tests/Controllers/TemporalNameEndpointTests.cs
+diff --git a/tests/Hexalith.Parties.Tests/Controllers/TemporalNameEndpointTests.cs b/tests/Hexalith.Parties.Tests/Controllers/TemporalNameEndpointTests.cs
 index e7edae9..55dbac5 100644
---- a/tests/Hexalith.Parties.CommandApi.Tests/Controllers/TemporalNameEndpointTests.cs
-+++ b/tests/Hexalith.Parties.CommandApi.Tests/Controllers/TemporalNameEndpointTests.cs
+--- a/tests/Hexalith.Parties.Tests/Controllers/TemporalNameEndpointTests.cs
++++ b/tests/Hexalith.Parties.Tests/Controllers/TemporalNameEndpointTests.cs
 @@ -248,6 +248,8 @@ public sealed class TemporalNameEndpointTests : IClassFixture<TemporalNameEndpoi
                  services.AddSingleton(actorProxyFactory);
                  services.RemoveAll<IPersonalDataCommandGuard>();
                  services.AddSingleton(Substitute.For<IPersonalDataCommandGuard>());
-+                services.RemoveAll<Hexalith.Parties.CommandApi.Authorization.ITenantAccessService>();
-+                services.AddSingleton<Hexalith.Parties.CommandApi.Authorization.ITenantAccessService, Hexalith.Parties.CommandApi.Tests.Authorization.TestTenantAccessService>();
++                services.RemoveAll<Hexalith.Parties.Authorization.ITenantAccessService>();
++                services.AddSingleton<Hexalith.Parties.Authorization.ITenantAccessService, Hexalith.Parties.Tests.Authorization.TestTenantAccessService>();
              });
          }
      }
-diff --git a/tests/Hexalith.Parties.CommandApi.Tests/FitnessTests/ArchitecturalFitnessTests.cs b/tests/Hexalith.Parties.CommandApi.Tests/FitnessTests/ArchitecturalFitnessTests.cs
+diff --git a/tests/Hexalith.Parties.Tests/FitnessTests/ArchitecturalFitnessTests.cs b/tests/Hexalith.Parties.Tests/FitnessTests/ArchitecturalFitnessTests.cs
 index 92bbced..bf3f058 100644
---- a/tests/Hexalith.Parties.CommandApi.Tests/FitnessTests/ArchitecturalFitnessTests.cs
-+++ b/tests/Hexalith.Parties.CommandApi.Tests/FitnessTests/ArchitecturalFitnessTests.cs
+--- a/tests/Hexalith.Parties.Tests/FitnessTests/ArchitecturalFitnessTests.cs
++++ b/tests/Hexalith.Parties.Tests/FitnessTests/ArchitecturalFitnessTests.cs
 @@ -90,6 +90,7 @@ public sealed class ArchitecturalFitnessTests
              "Hexalith.Parties.Contracts.Models",
              "Hexalith.Parties.Contracts.ValueObjects",
              "Hexalith.Parties.Contracts.Search",
-+            "Hexalith.Parties.CommandApi.Authorization",
++            "Hexalith.Parties.Authorization",
              "Hexalith.Parties.Projections.Abstractions",
              "Hexalith.Parties.Projections.Actors",
          ];
-diff --git a/tests/Hexalith.Parties.CommandApi.Tests/HealthChecks/HealthEndpointIntegrationTests.cs b/tests/Hexalith.Parties.CommandApi.Tests/HealthChecks/HealthEndpointIntegrationTests.cs
+diff --git a/tests/Hexalith.Parties.Tests/HealthChecks/HealthEndpointIntegrationTests.cs b/tests/Hexalith.Parties.Tests/HealthChecks/HealthEndpointIntegrationTests.cs
 index 1804f36..e65df36 100644
---- a/tests/Hexalith.Parties.CommandApi.Tests/HealthChecks/HealthEndpointIntegrationTests.cs
-+++ b/tests/Hexalith.Parties.CommandApi.Tests/HealthChecks/HealthEndpointIntegrationTests.cs
+--- a/tests/Hexalith.Parties.Tests/HealthChecks/HealthEndpointIntegrationTests.cs
++++ b/tests/Hexalith.Parties.Tests/HealthChecks/HealthEndpointIntegrationTests.cs
 @@ -332,6 +332,8 @@ public sealed class HealthEndpointIntegrationTests : IClassFixture<HealthEndpoin
                  services.AddSingleton(CommandRouter);
                  services.RemoveAll<IActorProxyFactory>();
                  services.AddSingleton(ActorProxyFactory);
-+                services.RemoveAll<Hexalith.Parties.CommandApi.Authorization.ITenantAccessService>();
-+                services.AddSingleton<Hexalith.Parties.CommandApi.Authorization.ITenantAccessService, Hexalith.Parties.CommandApi.Tests.Authorization.TestTenantAccessService>();
++                services.RemoveAll<Hexalith.Parties.Authorization.ITenantAccessService>();
++                services.AddSingleton<Hexalith.Parties.Authorization.ITenantAccessService, Hexalith.Parties.Tests.Authorization.TestTenantAccessService>();
              });
          }
      }
-diff --git a/tests/Hexalith.Parties.CommandApi.Tests/Mcp/CreatePartyMcpToolTests.cs b/tests/Hexalith.Parties.CommandApi.Tests/Mcp/CreatePartyMcpToolTests.cs
+diff --git a/tests/Hexalith.Parties.Tests/Mcp/CreatePartyMcpToolTests.cs b/tests/Hexalith.Parties.Tests/Mcp/CreatePartyMcpToolTests.cs
 index feeee3b..b028a43 100644
---- a/tests/Hexalith.Parties.CommandApi.Tests/Mcp/CreatePartyMcpToolTests.cs
-+++ b/tests/Hexalith.Parties.CommandApi.Tests/Mcp/CreatePartyMcpToolTests.cs
+--- a/tests/Hexalith.Parties.Tests/Mcp/CreatePartyMcpToolTests.cs
++++ b/tests/Hexalith.Parties.Tests/Mcp/CreatePartyMcpToolTests.cs
 @@ -33,7 +33,7 @@ public sealed class CreatePartyMcpToolTests
          InvalidOperationException exception = await Should.ThrowAsync<InvalidOperationException>(
              () => CreatePartyMcpTool.CreatePartyAsync(
                  type: null,
 -                services: Substitute.For<IServiceProvider>(),
-+                services: new ServiceCollection().AddSingleton<Hexalith.Parties.CommandApi.Authorization.ITenantAccessService, Hexalith.Parties.CommandApi.Tests.Authorization.TestTenantAccessService>().BuildServiceProvider(),
++                services: new ServiceCollection().AddSingleton<Hexalith.Parties.Authorization.ITenantAccessService, Hexalith.Parties.Tests.Authorization.TestTenantAccessService>().BuildServiceProvider(),
                  lastName: "Dupont"));
  
          exception.Message.ShouldBe("Party type is required. Must be 'Person' or 'Organization'.");
@@ -1350,7 +1350,7 @@ index feeee3b..b028a43 100644
              () => CreatePartyMcpTool.CreatePartyAsync(
                  type: "person",
 -                services: Substitute.For<IServiceProvider>(),
-+                services: new ServiceCollection().AddSingleton<Hexalith.Parties.CommandApi.Authorization.ITenantAccessService, Hexalith.Parties.CommandApi.Tests.Authorization.TestTenantAccessService>().BuildServiceProvider(),
++                services: new ServiceCollection().AddSingleton<Hexalith.Parties.Authorization.ITenantAccessService, Hexalith.Parties.Tests.Authorization.TestTenantAccessService>().BuildServiceProvider(),
                  lastName: "Dupont",
                  dateOfBirth: "03/06/2026"));
  
@@ -1358,7 +1358,7 @@ index feeee3b..b028a43 100644
              .AddSingleton(router)
              .AddSingleton(actorProxyFactory)
              .AddSingleton<IValidator<CreatePartyComposite>>(new InlineValidator<CreatePartyComposite>())
-+            .AddSingleton<Hexalith.Parties.CommandApi.Authorization.ITenantAccessService, Hexalith.Parties.CommandApi.Tests.Authorization.TestTenantAccessService>()
++            .AddSingleton<Hexalith.Parties.Authorization.ITenantAccessService, Hexalith.Parties.Tests.Authorization.TestTenantAccessService>()
              .BuildServiceProvider();
  
          string json = await CreatePartyMcpTool.CreatePartyAsync(
@@ -1366,17 +1366,17 @@ index feeee3b..b028a43 100644
              .AddSingleton(router)
              .AddSingleton(actorProxyFactory)
              .AddSingleton(validator)
-+            .AddSingleton<Hexalith.Parties.CommandApi.Authorization.ITenantAccessService, Hexalith.Parties.CommandApi.Tests.Authorization.TestTenantAccessService>()
++            .AddSingleton<Hexalith.Parties.Authorization.ITenantAccessService, Hexalith.Parties.Tests.Authorization.TestTenantAccessService>()
              .BuildServiceProvider();
  
      private static IActorProxyFactory CreateActorProxyFactory(IPartyDetailProjectionActor projectionActor)
 @@ -303,18 +305,32 @@ public sealed class CreatePartyMcpToolTests
-             .GetType("Hexalith.Parties.CommandApi.Mcp.McpSessionContext", throwOnError: true)!
+             .GetType("Hexalith.Parties.Mcp.McpSessionContext", throwOnError: true)!
              .GetField("Tenant", BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic)!;
  
 +        private static readonly FieldInfo _userIdField = typeof(CreatePartyMcpTool)
 +            .Assembly
-+            .GetType("Hexalith.Parties.CommandApi.Mcp.McpSessionContext", throwOnError: true)!
++            .GetType("Hexalith.Parties.Mcp.McpSessionContext", throwOnError: true)!
 +            .GetField("UserId", BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic)!;
 +
          private readonly AsyncLocal<string?> _tenant;
@@ -1406,16 +1406,16 @@ index feeee3b..b028a43 100644
 +        }
      }
  }
-diff --git a/tests/Hexalith.Parties.CommandApi.Tests/Mcp/DeletePartyMcpToolTests.cs b/tests/Hexalith.Parties.CommandApi.Tests/Mcp/DeletePartyMcpToolTests.cs
+diff --git a/tests/Hexalith.Parties.Tests/Mcp/DeletePartyMcpToolTests.cs b/tests/Hexalith.Parties.Tests/Mcp/DeletePartyMcpToolTests.cs
 index eca3963..fad7c93 100644
---- a/tests/Hexalith.Parties.CommandApi.Tests/Mcp/DeletePartyMcpToolTests.cs
-+++ b/tests/Hexalith.Parties.CommandApi.Tests/Mcp/DeletePartyMcpToolTests.cs
+--- a/tests/Hexalith.Parties.Tests/Mcp/DeletePartyMcpToolTests.cs
++++ b/tests/Hexalith.Parties.Tests/Mcp/DeletePartyMcpToolTests.cs
 @@ -107,7 +107,7 @@ public sealed class DeletePartyMcpToolTests
          using TenantScope _ = TenantScope.Create("tenant-a");
  
          InvalidOperationException exception = await Should.ThrowAsync<InvalidOperationException>(
 -            () => DeletePartyMcpTool.DeletePartyAsync("not-a-guid", Substitute.For<IServiceProvider>()));
-+            () => DeletePartyMcpTool.DeletePartyAsync("not-a-guid", new ServiceCollection().AddSingleton<Hexalith.Parties.CommandApi.Authorization.ITenantAccessService, Hexalith.Parties.CommandApi.Tests.Authorization.TestTenantAccessService>().BuildServiceProvider()));
++            () => DeletePartyMcpTool.DeletePartyAsync("not-a-guid", new ServiceCollection().AddSingleton<Hexalith.Parties.Authorization.ITenantAccessService, Hexalith.Parties.Tests.Authorization.TestTenantAccessService>().BuildServiceProvider()));
  
          exception.Message.ShouldBe("Party ID is required and must be a valid UUID.");
      }
@@ -1424,7 +1424,7 @@ index eca3963..fad7c93 100644
      {
          InvalidOperationException exception = await Should.ThrowAsync<InvalidOperationException>(
 -            () => DeletePartyMcpTool.DeletePartyAsync(Guid.NewGuid().ToString(), Substitute.For<IServiceProvider>()));
-+            () => DeletePartyMcpTool.DeletePartyAsync(Guid.NewGuid().ToString(), new ServiceCollection().AddSingleton<Hexalith.Parties.CommandApi.Authorization.ITenantAccessService, Hexalith.Parties.CommandApi.Tests.Authorization.TestTenantAccessService>().BuildServiceProvider()));
++            () => DeletePartyMcpTool.DeletePartyAsync(Guid.NewGuid().ToString(), new ServiceCollection().AddSingleton<Hexalith.Parties.Authorization.ITenantAccessService, Hexalith.Parties.Tests.Authorization.TestTenantAccessService>().BuildServiceProvider()));
  
 -        exception.Message.ShouldBe("Authentication required. No tenant context found in the request.");
 +        exception.Message.ShouldContain("missing-tenant");
@@ -1435,17 +1435,17 @@ index eca3963..fad7c93 100644
              .AddSingleton(router)
              .AddSingleton(actorProxyFactory)
              .AddSingleton(validator)
-+            .AddSingleton<Hexalith.Parties.CommandApi.Authorization.ITenantAccessService, Hexalith.Parties.CommandApi.Tests.Authorization.TestTenantAccessService>()
++            .AddSingleton<Hexalith.Parties.Authorization.ITenantAccessService, Hexalith.Parties.Tests.Authorization.TestTenantAccessService>()
              .BuildServiceProvider();
  
      private static IActorProxyFactory CreateActorProxyFactory(IPartyDetailProjectionActor projectionActor)
 @@ -172,18 +173,32 @@ public sealed class DeletePartyMcpToolTests
-             .GetType("Hexalith.Parties.CommandApi.Mcp.McpSessionContext", throwOnError: true)!
+             .GetType("Hexalith.Parties.Mcp.McpSessionContext", throwOnError: true)!
              .GetField("Tenant", BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic)!;
  
 +        private static readonly FieldInfo _userIdField = typeof(DeletePartyMcpTool)
 +            .Assembly
-+            .GetType("Hexalith.Parties.CommandApi.Mcp.McpSessionContext", throwOnError: true)!
++            .GetType("Hexalith.Parties.Mcp.McpSessionContext", throwOnError: true)!
 +            .GetField("UserId", BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic)!;
 +
          private readonly AsyncLocal<string?> _tenant;
@@ -1475,15 +1475,15 @@ index eca3963..fad7c93 100644
 +        }
      }
  }
-diff --git a/tests/Hexalith.Parties.CommandApi.Tests/Mcp/FindPartiesMcpToolTests.cs b/tests/Hexalith.Parties.CommandApi.Tests/Mcp/FindPartiesMcpToolTests.cs
+diff --git a/tests/Hexalith.Parties.Tests/Mcp/FindPartiesMcpToolTests.cs b/tests/Hexalith.Parties.Tests/Mcp/FindPartiesMcpToolTests.cs
 index 13007a8..2845145 100644
---- a/tests/Hexalith.Parties.CommandApi.Tests/Mcp/FindPartiesMcpToolTests.cs
-+++ b/tests/Hexalith.Parties.CommandApi.Tests/Mcp/FindPartiesMcpToolTests.cs
+--- a/tests/Hexalith.Parties.Tests/Mcp/FindPartiesMcpToolTests.cs
++++ b/tests/Hexalith.Parties.Tests/Mcp/FindPartiesMcpToolTests.cs
 @@ -67,6 +67,7 @@ public sealed class FindPartiesMcpToolTests
              .AddSingleton(factory)
              .AddSingleton<IPartySearchProvider, LocalFuzzyPartySearchProvider>()
              .AddSingleton<IPartySearchService, LocalPartySearchService>()
-+            .AddSingleton<Hexalith.Parties.CommandApi.Authorization.ITenantAccessService, Hexalith.Parties.CommandApi.Tests.Authorization.TestTenantAccessService>()
++            .AddSingleton<Hexalith.Parties.Authorization.ITenantAccessService, Hexalith.Parties.Tests.Authorization.TestTenantAccessService>()
              .BuildServiceProvider();
  
          string json = await FindPartiesMcpTool.FindPartiesAsync(services, query: "Dupont");
@@ -1491,7 +1491,7 @@ index 13007a8..2845145 100644
          IActorProxyFactory factory = CreateActorProxyFactory(indexActor);
          ServiceProvider services = new ServiceCollection()
              .AddSingleton(factory)
-+            .AddSingleton<Hexalith.Parties.CommandApi.Authorization.ITenantAccessService, Hexalith.Parties.CommandApi.Tests.Authorization.TestTenantAccessService>()
++            .AddSingleton<Hexalith.Parties.Authorization.ITenantAccessService, Hexalith.Parties.Tests.Authorization.TestTenantAccessService>()
              .BuildServiceProvider();
  
          string json = await FindPartiesMcpTool.FindPartiesAsync(services, query: null);
@@ -1499,7 +1499,7 @@ index 13007a8..2845145 100644
          IActorProxyFactory factory = CreateActorProxyFactory(indexActor);
          ServiceProvider services = new ServiceCollection()
              .AddSingleton(factory)
-+            .AddSingleton<Hexalith.Parties.CommandApi.Authorization.ITenantAccessService, Hexalith.Parties.CommandApi.Tests.Authorization.TestTenantAccessService>()
++            .AddSingleton<Hexalith.Parties.Authorization.ITenantAccessService, Hexalith.Parties.Tests.Authorization.TestTenantAccessService>()
              .BuildServiceProvider();
  
          string json = await FindPartiesMcpTool.FindPartiesAsync(services, query: null, page: 2, pageSize: 1);
@@ -1507,7 +1507,7 @@ index 13007a8..2845145 100644
          IActorProxyFactory factory = CreateActorProxyFactory(indexActor);
          ServiceProvider services = new ServiceCollection()
              .AddSingleton(factory)
-+            .AddSingleton<Hexalith.Parties.CommandApi.Authorization.ITenantAccessService, Hexalith.Parties.CommandApi.Tests.Authorization.TestTenantAccessService>()
++            .AddSingleton<Hexalith.Parties.Authorization.ITenantAccessService, Hexalith.Parties.Tests.Authorization.TestTenantAccessService>()
              .BuildServiceProvider();
  
          string json = await FindPartiesMcpTool.FindPartiesAsync(services, query: null, pageSize: 200);
@@ -1515,7 +1515,7 @@ index 13007a8..2845145 100644
          IActorProxyFactory factory = CreateActorProxyFactory(indexActor);
          ServiceProvider services = new ServiceCollection()
              .AddSingleton(factory)
-+            .AddSingleton<Hexalith.Parties.CommandApi.Authorization.ITenantAccessService, Hexalith.Parties.CommandApi.Tests.Authorization.TestTenantAccessService>()
++            .AddSingleton<Hexalith.Parties.Authorization.ITenantAccessService, Hexalith.Parties.Tests.Authorization.TestTenantAccessService>()
              .BuildServiceProvider();
  
          string json = await FindPartiesMcpTool.FindPartiesAsync(services, query: null);
@@ -1524,7 +1524,7 @@ index 13007a8..2845145 100644
      {
          InvalidOperationException exception = await Should.ThrowAsync<InvalidOperationException>(
 -            () => FindPartiesMcpTool.FindPartiesAsync(Substitute.For<IServiceProvider>()));
-+            () => FindPartiesMcpTool.FindPartiesAsync(new ServiceCollection().AddSingleton<Hexalith.Parties.CommandApi.Authorization.ITenantAccessService, Hexalith.Parties.CommandApi.Tests.Authorization.TestTenantAccessService>().BuildServiceProvider()));
++            () => FindPartiesMcpTool.FindPartiesAsync(new ServiceCollection().AddSingleton<Hexalith.Parties.Authorization.ITenantAccessService, Hexalith.Parties.Tests.Authorization.TestTenantAccessService>().BuildServiceProvider()));
  
 -        exception.Message.ShouldBe("Authentication required. No tenant context found in the request.");
 +        exception.Message.ShouldContain("missing-tenant");
@@ -1532,12 +1532,12 @@ index 13007a8..2845145 100644
  
      private static IActorProxyFactory CreateActorProxyFactory(IPartyIndexProjectionActor indexActor)
 @@ -248,18 +253,32 @@ public sealed class FindPartiesMcpToolTests
-             .GetType("Hexalith.Parties.CommandApi.Mcp.McpSessionContext", throwOnError: true)!
+             .GetType("Hexalith.Parties.Mcp.McpSessionContext", throwOnError: true)!
              .GetField("Tenant", BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic)!;
  
 +        private static readonly FieldInfo _userIdField = typeof(FindPartiesMcpTool)
 +            .Assembly
-+            .GetType("Hexalith.Parties.CommandApi.Mcp.McpSessionContext", throwOnError: true)!
++            .GetType("Hexalith.Parties.Mcp.McpSessionContext", throwOnError: true)!
 +            .GetField("UserId", BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic)!;
 +
          private readonly AsyncLocal<string?> _tenant;
@@ -1567,17 +1567,17 @@ index 13007a8..2845145 100644
 +        }
      }
  }
-diff --git a/tests/Hexalith.Parties.CommandApi.Tests/Mcp/GetPartyMcpToolTests.cs b/tests/Hexalith.Parties.CommandApi.Tests/Mcp/GetPartyMcpToolTests.cs
+diff --git a/tests/Hexalith.Parties.Tests/Mcp/GetPartyMcpToolTests.cs b/tests/Hexalith.Parties.Tests/Mcp/GetPartyMcpToolTests.cs
 index d621b63..977b427 100644
---- a/tests/Hexalith.Parties.CommandApi.Tests/Mcp/GetPartyMcpToolTests.cs
-+++ b/tests/Hexalith.Parties.CommandApi.Tests/Mcp/GetPartyMcpToolTests.cs
+--- a/tests/Hexalith.Parties.Tests/Mcp/GetPartyMcpToolTests.cs
++++ b/tests/Hexalith.Parties.Tests/Mcp/GetPartyMcpToolTests.cs
 @@ -4,7 +4,9 @@ using System.Text.Json;
  using Dapr.Actors;
  using Dapr.Actors.Client;
  
-+using Hexalith.Parties.CommandApi.Authorization;
- using Hexalith.Parties.CommandApi.Mcp;
-+using Hexalith.Parties.CommandApi.Tests.Authorization;
++using Hexalith.Parties.Authorization;
+ using Hexalith.Parties.Mcp;
++using Hexalith.Parties.Tests.Authorization;
  using Hexalith.Parties.Contracts.Models;
  using Hexalith.Parties.Contracts.ValueObjects;
  using Hexalith.Parties.Projections.Abstractions;
@@ -1585,7 +1585,7 @@ index d621b63..977b427 100644
          IActorProxyFactory actorProxyFactory = CreateActorProxyFactory(projectionActor);
          ServiceProvider services = new ServiceCollection()
              .AddSingleton(actorProxyFactory)
-+            .AddSingleton<Hexalith.Parties.CommandApi.Authorization.ITenantAccessService, Hexalith.Parties.CommandApi.Tests.Authorization.TestTenantAccessService>()
++            .AddSingleton<Hexalith.Parties.Authorization.ITenantAccessService, Hexalith.Parties.Tests.Authorization.TestTenantAccessService>()
              .BuildServiceProvider();
  
          string json = await GetPartyMcpTool.GetPartyAsync(partyId, services);
@@ -1593,7 +1593,7 @@ index d621b63..977b427 100644
          IActorProxyFactory actorProxyFactory = CreateActorProxyFactory(projectionActor);
          ServiceProvider services = new ServiceCollection()
              .AddSingleton(actorProxyFactory)
-+            .AddSingleton<Hexalith.Parties.CommandApi.Authorization.ITenantAccessService, Hexalith.Parties.CommandApi.Tests.Authorization.TestTenantAccessService>()
++            .AddSingleton<Hexalith.Parties.Authorization.ITenantAccessService, Hexalith.Parties.Tests.Authorization.TestTenantAccessService>()
              .BuildServiceProvider();
  
          InvalidOperationException exception = await Should.ThrowAsync<InvalidOperationException>(
@@ -1601,7 +1601,7 @@ index d621b63..977b427 100644
          IActorProxyFactory actorProxyFactory = CreateActorProxyFactory(projectionActor);
          ServiceProvider services = new ServiceCollection()
              .AddSingleton(actorProxyFactory)
-+            .AddSingleton<Hexalith.Parties.CommandApi.Authorization.ITenantAccessService, Hexalith.Parties.CommandApi.Tests.Authorization.TestTenantAccessService>()
++            .AddSingleton<Hexalith.Parties.Authorization.ITenantAccessService, Hexalith.Parties.Tests.Authorization.TestTenantAccessService>()
              .BuildServiceProvider();
  
          InvalidOperationException exception = await Should.ThrowAsync<InvalidOperationException>(
@@ -1661,12 +1661,12 @@ index d621b63..977b427 100644
  
      private static IActorProxyFactory CreateActorProxyFactory(IPartyDetailProjectionActor projectionActor)
 @@ -186,18 +221,32 @@ public sealed class GetPartyMcpToolTests
-             .GetType("Hexalith.Parties.CommandApi.Mcp.McpSessionContext", throwOnError: true)!
+             .GetType("Hexalith.Parties.Mcp.McpSessionContext", throwOnError: true)!
              .GetField("Tenant", BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic)!;
  
 +        private static readonly FieldInfo _userIdField = typeof(GetPartyMcpTool)
 +            .Assembly
-+            .GetType("Hexalith.Parties.CommandApi.Mcp.McpSessionContext", throwOnError: true)!
++            .GetType("Hexalith.Parties.Mcp.McpSessionContext", throwOnError: true)!
 +            .GetField("UserId", BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic)!;
 +
          private readonly AsyncLocal<string?> _tenant;
@@ -1696,16 +1696,16 @@ index d621b63..977b427 100644
 +        }
      }
  }
-diff --git a/tests/Hexalith.Parties.CommandApi.Tests/Mcp/GetPartyNameAtMcpToolTests.cs b/tests/Hexalith.Parties.CommandApi.Tests/Mcp/GetPartyNameAtMcpToolTests.cs
+diff --git a/tests/Hexalith.Parties.Tests/Mcp/GetPartyNameAtMcpToolTests.cs b/tests/Hexalith.Parties.Tests/Mcp/GetPartyNameAtMcpToolTests.cs
 index 1bb8ed7..5513b89 100644
---- a/tests/Hexalith.Parties.CommandApi.Tests/Mcp/GetPartyNameAtMcpToolTests.cs
-+++ b/tests/Hexalith.Parties.CommandApi.Tests/Mcp/GetPartyNameAtMcpToolTests.cs
+--- a/tests/Hexalith.Parties.Tests/Mcp/GetPartyNameAtMcpToolTests.cs
++++ b/tests/Hexalith.Parties.Tests/Mcp/GetPartyNameAtMcpToolTests.cs
 @@ -173,7 +173,7 @@ public sealed class GetPartyNameAtMcpToolTests
              () => GetPartyNameAtMcpTool.GetPartyNameAtAsync(
                  "not-a-guid",
                  NameChangedAt.ToString("O"),
 -                Substitute.For<IServiceProvider>()));
-+                new ServiceCollection().AddSingleton<Hexalith.Parties.CommandApi.Authorization.ITenantAccessService, Hexalith.Parties.CommandApi.Tests.Authorization.TestTenantAccessService>().BuildServiceProvider()));
++                new ServiceCollection().AddSingleton<Hexalith.Parties.Authorization.ITenantAccessService, Hexalith.Parties.Tests.Authorization.TestTenantAccessService>().BuildServiceProvider()));
  
          exception.Message.ShouldStartWith("Invalid party ID format");
      }
@@ -1714,7 +1714,7 @@ index 1bb8ed7..5513b89 100644
                  Guid.NewGuid().ToString(),
                  "not-a-timestamp",
 -                Substitute.For<IServiceProvider>()));
-+                new ServiceCollection().AddSingleton<Hexalith.Parties.CommandApi.Authorization.ITenantAccessService, Hexalith.Parties.CommandApi.Tests.Authorization.TestTenantAccessService>().BuildServiceProvider()));
++                new ServiceCollection().AddSingleton<Hexalith.Parties.Authorization.ITenantAccessService, Hexalith.Parties.Tests.Authorization.TestTenantAccessService>().BuildServiceProvider()));
  
          exception.Message.ShouldStartWith("Invalid timestamp format");
      }
@@ -1723,7 +1723,7 @@ index 1bb8ed7..5513b89 100644
                  Guid.NewGuid().ToString(),
                  NameChangedAt.ToString("O"),
 -                Substitute.For<IServiceProvider>()));
-+                new ServiceCollection().AddSingleton<Hexalith.Parties.CommandApi.Authorization.ITenantAccessService, Hexalith.Parties.CommandApi.Tests.Authorization.TestTenantAccessService>().BuildServiceProvider()));
++                new ServiceCollection().AddSingleton<Hexalith.Parties.Authorization.ITenantAccessService, Hexalith.Parties.Tests.Authorization.TestTenantAccessService>().BuildServiceProvider()));
  
 -        exception.Message.ShouldBe("Authentication required. No tenant context found in the request.");
 +        exception.Message.ShouldContain("missing-tenant");
@@ -1734,17 +1734,17 @@ index 1bb8ed7..5513b89 100644
  
          return new ServiceCollection()
              .AddSingleton(actorProxyFactory)
-+            .AddSingleton<Hexalith.Parties.CommandApi.Authorization.ITenantAccessService, Hexalith.Parties.CommandApi.Tests.Authorization.TestTenantAccessService>()
++            .AddSingleton<Hexalith.Parties.Authorization.ITenantAccessService, Hexalith.Parties.Tests.Authorization.TestTenantAccessService>()
              .BuildServiceProvider();
      }
  
 @@ -280,18 +281,32 @@ public sealed class GetPartyNameAtMcpToolTests
-             .GetType("Hexalith.Parties.CommandApi.Mcp.McpSessionContext", throwOnError: true)!
+             .GetType("Hexalith.Parties.Mcp.McpSessionContext", throwOnError: true)!
              .GetField("Tenant", BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic)!;
  
 +        private static readonly FieldInfo _userIdField = typeof(GetPartyNameAtMcpTool)
 +            .Assembly
-+            .GetType("Hexalith.Parties.CommandApi.Mcp.McpSessionContext", throwOnError: true)!
++            .GetType("Hexalith.Parties.Mcp.McpSessionContext", throwOnError: true)!
 +            .GetField("UserId", BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic)!;
 +
          private readonly AsyncLocal<string?> _tenant;
@@ -1774,25 +1774,25 @@ index 1bb8ed7..5513b89 100644
 +        }
      }
  }
-diff --git a/tests/Hexalith.Parties.CommandApi.Tests/Mcp/UpdateAndDeletePartyMcpToolTests.cs b/tests/Hexalith.Parties.CommandApi.Tests/Mcp/UpdateAndDeletePartyMcpToolTests.cs
+diff --git a/tests/Hexalith.Parties.Tests/Mcp/UpdateAndDeletePartyMcpToolTests.cs b/tests/Hexalith.Parties.Tests/Mcp/UpdateAndDeletePartyMcpToolTests.cs
 index 1ade88f..ab82c91 100644
---- a/tests/Hexalith.Parties.CommandApi.Tests/Mcp/UpdateAndDeletePartyMcpToolTests.cs
-+++ b/tests/Hexalith.Parties.CommandApi.Tests/Mcp/UpdateAndDeletePartyMcpToolTests.cs
+--- a/tests/Hexalith.Parties.Tests/Mcp/UpdateAndDeletePartyMcpToolTests.cs
++++ b/tests/Hexalith.Parties.Tests/Mcp/UpdateAndDeletePartyMcpToolTests.cs
 @@ -169,6 +169,7 @@ public sealed class UpdateAndDeletePartyMcpToolTests
              .AddSingleton(router)
              .AddSingleton(actorProxyFactory)
              .AddSingleton(validator)
-+            .AddSingleton<Hexalith.Parties.CommandApi.Authorization.ITenantAccessService, Hexalith.Parties.CommandApi.Tests.Authorization.TestTenantAccessService>()
++            .AddSingleton<Hexalith.Parties.Authorization.ITenantAccessService, Hexalith.Parties.Tests.Authorization.TestTenantAccessService>()
              .BuildServiceProvider();
  
      private static IActorProxyFactory CreateActorProxyFactory(IPartyDetailProjectionActor projectionActor)
 @@ -222,18 +223,32 @@ public sealed class UpdateAndDeletePartyMcpToolTests
-             .GetType("Hexalith.Parties.CommandApi.Mcp.McpSessionContext", throwOnError: true)!
+             .GetType("Hexalith.Parties.Mcp.McpSessionContext", throwOnError: true)!
              .GetField("Tenant", BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic)!;
  
 +        private static readonly FieldInfo _userIdField = typeof(DeletePartyMcpTool)
 +            .Assembly
-+            .GetType("Hexalith.Parties.CommandApi.Mcp.McpSessionContext", throwOnError: true)!
++            .GetType("Hexalith.Parties.Mcp.McpSessionContext", throwOnError: true)!
 +            .GetField("UserId", BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic)!;
 +
          private readonly AsyncLocal<string?> _tenant;
@@ -1822,16 +1822,16 @@ index 1ade88f..ab82c91 100644
 +        }
      }
  }
-diff --git a/tests/Hexalith.Parties.CommandApi.Tests/Mcp/UpdatePartyMcpToolTests.cs b/tests/Hexalith.Parties.CommandApi.Tests/Mcp/UpdatePartyMcpToolTests.cs
+diff --git a/tests/Hexalith.Parties.Tests/Mcp/UpdatePartyMcpToolTests.cs b/tests/Hexalith.Parties.Tests/Mcp/UpdatePartyMcpToolTests.cs
 index 8e0c655..83464df 100644
---- a/tests/Hexalith.Parties.CommandApi.Tests/Mcp/UpdatePartyMcpToolTests.cs
-+++ b/tests/Hexalith.Parties.CommandApi.Tests/Mcp/UpdatePartyMcpToolTests.cs
+--- a/tests/Hexalith.Parties.Tests/Mcp/UpdatePartyMcpToolTests.cs
++++ b/tests/Hexalith.Parties.Tests/Mcp/UpdatePartyMcpToolTests.cs
 @@ -236,7 +236,7 @@ public sealed class UpdatePartyMcpToolTests
          InvalidOperationException exception = await Should.ThrowAsync<InvalidOperationException>(
              () => UpdatePartyMcpTool.UpdatePartyAsync(
                  partyId: partyId,
 -                services: Substitute.For<IServiceProvider>()));
-+                services: new ServiceCollection().AddSingleton<Hexalith.Parties.CommandApi.Authorization.ITenantAccessService, Hexalith.Parties.CommandApi.Tests.Authorization.TestTenantAccessService>().BuildServiceProvider()));
++                services: new ServiceCollection().AddSingleton<Hexalith.Parties.Authorization.ITenantAccessService, Hexalith.Parties.Tests.Authorization.TestTenantAccessService>().BuildServiceProvider()));
  
          exception.Message.ShouldBe("No changes specified. Provide at least one field to update.");
      }
@@ -1840,7 +1840,7 @@ index 8e0c655..83464df 100644
              () => UpdatePartyMcpTool.UpdatePartyAsync(
                  partyId: Guid.NewGuid().ToString(),
 -                services: Substitute.For<IServiceProvider>(),
-+                services: new ServiceCollection().AddSingleton<Hexalith.Parties.CommandApi.Authorization.ITenantAccessService, Hexalith.Parties.CommandApi.Tests.Authorization.TestTenantAccessService>().BuildServiceProvider(),
++                services: new ServiceCollection().AddSingleton<Hexalith.Parties.Authorization.ITenantAccessService, Hexalith.Parties.Tests.Authorization.TestTenantAccessService>().BuildServiceProvider(),
                  firstName: "Pierre"));
  
 -        exception.Message.ShouldBe("Authentication required. No tenant context found in the request.");
@@ -1852,17 +1852,17 @@ index 8e0c655..83464df 100644
              .AddSingleton(router)
              .AddSingleton(actorProxyFactory)
              .AddSingleton(validator)
-+            .AddSingleton<Hexalith.Parties.CommandApi.Authorization.ITenantAccessService, Hexalith.Parties.CommandApi.Tests.Authorization.TestTenantAccessService>()
++            .AddSingleton<Hexalith.Parties.Authorization.ITenantAccessService, Hexalith.Parties.Tests.Authorization.TestTenantAccessService>()
              .BuildServiceProvider();
  
      private static IActorProxyFactory CreateActorProxyFactory(IPartyDetailProjectionActor projectionActor)
 @@ -342,18 +343,32 @@ public sealed class UpdatePartyMcpToolTests
-             .GetType("Hexalith.Parties.CommandApi.Mcp.McpSessionContext", throwOnError: true)!
+             .GetType("Hexalith.Parties.Mcp.McpSessionContext", throwOnError: true)!
              .GetField("Tenant", BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic)!;
  
 +        private static readonly FieldInfo _userIdField = typeof(UpdatePartyMcpTool)
 +            .Assembly
-+            .GetType("Hexalith.Parties.CommandApi.Mcp.McpSessionContext", throwOnError: true)!
++            .GetType("Hexalith.Parties.Mcp.McpSessionContext", throwOnError: true)!
 +            .GetField("UserId", BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic)!;
 +
          private readonly AsyncLocal<string?> _tenant;

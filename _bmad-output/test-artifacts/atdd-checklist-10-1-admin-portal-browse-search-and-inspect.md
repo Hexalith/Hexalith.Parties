@@ -23,7 +23,7 @@ generatedTestFiles:
 inputDocuments:
   - _bmad-output/implementation-artifacts/10-1-admin-portal-browse-search-and-inspect.md
   - _bmad/tea/config.yaml
-  - src/Hexalith.Parties.CommandApi/Controllers/PartiesController.cs
+  - src/Hexalith.Parties/Controllers/PartiesController.cs
   - src/Hexalith.Parties.Client/HttpPartiesQueryClient.cs
   - src/Hexalith.Parties.Client/Abstractions/IPartiesQueryClient.cs
   - src/Hexalith.Parties.Contracts/Models/PartyDetail.cs
@@ -121,7 +121,7 @@ inputDocuments:
 
 - **bUnit component tests** — render assertions for browse grid, search box, filters panel, detail layout, accessibility/focus, and localization. Defer to green phase: add a new `tests/Hexalith.Parties.AdminPortal.Tests` project alongside `src/Hexalith.Parties.AdminPortal`, mirroring `Hexalith.FrontComposer.Shell.Tests` conventions (bUnit + Fluxor + NSubstitute + Verify). Story tasks already enumerate the bUnit coverage required.
 - **Aspire integration smoke** — the existing `tests/Hexalith.Parties.IntegrationTests` topology can be extended after green to assert `/admin/parties` is reachable end-to-end with admin authentication; gate behind infra prerequisites already enforced by the integration test fixture.
-- **No new backend tests** — story is read-only. Existing controller coverage in `tests/Hexalith.Parties.CommandApi.Tests` already pins endpoint behavior.
+- **No new backend tests** — story is read-only. Existing controller coverage in `tests/Hexalith.Parties.Tests` already pins endpoint behavior.
 
 ### Red Phase Confirmation
 

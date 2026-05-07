@@ -6,7 +6,7 @@ using Hexalith.Tenants.Aspire;
 IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder(args);
 
 // Resolve DAPR access control configuration path.
-// Both commandapi and any domain-service sidecars load this Configuration CRD.
+// Both parties and any domain-service sidecars load this Configuration CRD.
 string accessControlConfigPath = Path.Combine(Directory.GetCurrentDirectory(), "DaprComponents", "accesscontrol.yaml");
 if (!File.Exists(accessControlConfigPath))
 {
@@ -22,8 +22,8 @@ if (!File.Exists(accessControlConfigPath))
         accessControlConfigPath);
 }
 
-// Add Parties CommandApi project
-IResourceBuilder<ProjectResource> commandApi = builder.AddProject<Projects.Hexalith_Parties_CommandApi>("commandapi");
+// Add Parties service project.
+IResourceBuilder<ProjectResource> parties = builder.AddProject<Projects.Hexalith_Parties>("parties");
 IResourceBuilder<ProjectResource> tenants = builder.AddProject<Projects.Hexalith_Tenants>("tenants");
 
 HexalithTenantsResources tenantsResources = builder.AddHexalithTenants(tenants, accessControlConfigPath);
@@ -36,17 +36,17 @@ if (!string.IsNullOrWhiteSpace(bootstrapGlobalAdminUserId))
 
 // Wire Parties topology (delegates to EventStore + Parties Aspire extensions)
 HexalithPartiesResources partiesResources = builder.AddHexalithParties(
-    commandApi,
+    parties,
     accessControlConfigPath,
     tenantsResources.StateStore,
     tenantsResources.PubSub);
 
-_ = commandApi
+_ = parties
     .WithReference(tenantsResources.CommandApi)
     .WaitFor(tenantsResources.CommandApi)
     .WithEnvironment("Tenants__Enabled", "true")
     .WithEnvironment("Tenants__ServiceName", "tenants")
-    .WithEnvironment("Tenants__CommandApiAppId", "commandapi")
+    .WithEnvironment("Tenants__CommandApiAppId", "parties")
     .WithEnvironment("Tenants__PubSubName", "pubsub")
     .WithEnvironment("Tenants__TopicName", "system.tenants.events");
 
@@ -62,7 +62,7 @@ if (string.Equals(builder.Configuration["EnableMemoriesSearch"], "true", StringC
         memoriesEndpoint += "/";
     }
 
-    _ = commandApi
+    _ = parties
         .WithEnvironment("Parties__MemoriesSearch__Enabled", "true")
         .WithEnvironment("Parties__MemoriesSearch__Endpoint", memoriesEndpoint)
         .WithEnvironment("Parties__MemoriesSearch__RequireApiToken", "false")
@@ -80,7 +80,7 @@ if (!string.Equals(builder.Configuration["EnableKeycloak"], "false", StringCompa
 
     EndpointReference keycloakEndpoint = keycloak.GetEndpoint("http");
     var realmUrl = ReferenceExpression.Create($"{keycloakEndpoint}/realms/hexalith");
-    _ = commandApi
+    _ = parties
         .WithReference(keycloak)
         .WaitFor(keycloak)
         .WithEnvironment("Authentication__JwtBearer__Authority", realmUrl)

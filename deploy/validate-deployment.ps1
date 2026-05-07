@@ -185,8 +185,8 @@ function Test-TopicAllowedForApp {
             continue
         }
         # Env-token left sides (e.g. {env:SUBSCRIBER_APP_ID}) name OTHER applications and never
-        # the commandapi target by project convention; skip them so an env-token entry doesn't
-        # mask a missing explicit commandapi=... scope.
+        # the parties target by project convention; skip them so an env-token entry doesn't
+        # mask a missing explicit parties=... scope.
         if ($left -match '\{env:[^}]+\}') { continue }
         if ($left -ne $AppId) { continue }
         if ($topics -contains $Topic) { return $true }
@@ -314,16 +314,16 @@ function Test-StateStore {
         # Scopes
         $scopes = Get-YamlScopes $content
         if ($scopes.Count -eq 0) {
-            Add-Result $Category "Scopes restrict to commandapi ($fileName)" "Fail" "No scopes defined" `
-                "Add scopes list containing ONLY 'commandapi'. No other app-id needs state store access."
+            Add-Result $Category "Scopes restrict to parties ($fileName)" "Fail" "No scopes defined" `
+                "Add scopes list containing ONLY 'parties'. No other app-id needs state store access."
         }
-        elseif ($scopes.Count -eq 1 -and ($scopes[0] -eq "commandapi")) {
-            Add-Result $Category "Scopes restrict to commandapi ($fileName)" "Pass" "Scopes: [commandapi] only"
+        elseif ($scopes.Count -eq 1 -and ($scopes[0] -eq "parties")) {
+            Add-Result $Category "Scopes restrict to parties ($fileName)" "Pass" "Scopes: [parties] only"
         }
         else {
             $scopeList = $scopes -join ", "
-            Add-Result $Category "Scopes restrict to commandapi ($fileName)" "Fail" "Scopes contain non-commandapi entries: [$scopeList]" `
-                "State store scopes should contain ONLY 'commandapi'. Remove other app-ids."
+            Add-Result $Category "Scopes restrict to parties ($fileName)" "Fail" "Scopes contain non-parties entries: [$scopeList]" `
+                "State store scopes should contain ONLY 'parties'. Remove other app-ids."
         }
 
         # Connection string uses env-var
@@ -378,7 +378,7 @@ function Test-PubSub {
         }
         else {
             Add-Result $Category "Scopes defined ($fileName)" "Fail" "No component scopes defined" `
-                "Add scopes list with commandapi and authorized subscriber app-ids."
+                "Add scopes list with parties and authorized subscriber app-ids."
         }
 
         # publishingScopes restricts subscribers
@@ -500,7 +500,7 @@ function Test-Subscription {
         if ($scopes.Count -gt 0) {
             $hasHardcoded = $false
             foreach ($scope in $scopes) {
-                if ($scope -notmatch "\{env:" -and $scope -ne "commandapi") {
+                if ($scope -notmatch "\{env:" -and $scope -ne "parties") {
                     $hasHardcoded = $true
                 }
             }
@@ -530,7 +530,7 @@ function Test-TenantsIntegration {
     $Category = "Tenants Integration"
     $expectedPubSub = "pubsub"
     $expectedTopic = "system.tenants.events"
-    $expectedAppId = "commandapi"
+    $expectedAppId = "parties"
 
     # Filter by manifest kind rather than filename: a file canonically named differently
     # (e.g. parties-integration.yaml) is still a valid TenantsIntegration manifest, while a
@@ -622,7 +622,7 @@ function Test-TenantsIntegration {
         }
         else {
             Add-Result $Category "Tenants subscription present" "Fail" "No Tenants subscription for $expectedTopic found" `
-                "Add a DAPR subscription for $expectedTopic routed to commandapi. Impact: Parties local tenant projection will not update. Remediation target: subscription-tenants.yaml or MapTenantEventSubscription()."
+                "Add a DAPR subscription for $expectedTopic routed to parties. Impact: Parties local tenant projection will not update. Remediation target: subscription-tenants.yaml or MapTenantEventSubscription()."
         }
     }
     else {
@@ -663,11 +663,11 @@ function Test-TenantsIntegration {
             }
 
             if ($scopes -contains $expectedAppId) {
-                Add-Result $Category "Tenants subscription scoped to commandapi ($fileName)" "Pass" "Subscription scopes include $expectedAppId"
+                Add-Result $Category "Tenants subscription scoped to parties ($fileName)" "Pass" "Subscription scopes include $expectedAppId"
             }
             else {
-                Add-Result $Category "Tenants subscription scoped to commandapi ($fileName)" "Fail" "Subscription scopes do not include $expectedAppId" `
-                    "Add commandapi to subscription scopes. Impact: the Parties Tenants event subscription cannot run."
+                Add-Result $Category "Tenants subscription scoped to parties ($fileName)" "Fail" "Subscription scopes do not include $expectedAppId" `
+                    "Add parties to subscription scopes. Impact: the Parties Tenants event subscription cannot run."
             }
 
             # Dead-letter topic must be present AND have a non-empty value (after trim).
@@ -690,21 +690,21 @@ function Test-TenantsIntegration {
         if ($componentDocuments.Count -eq 0) {
             # Surface that the file produced no inspectable Component documents so operators
             # see a row instead of silently treating the file as green.
-            Add-Result $Category "commandapi can subscribe to Tenants topic ($fileName)" "Warn" "No Component document found in pub/sub file" `
+            Add-Result $Category "parties can subscribe to Tenants topic ($fileName)" "Warn" "No Component document found in pub/sub file" `
                 "Verify the YAML contains a `kind: Component` document for the pub/sub component."
             continue
         }
         foreach ($componentDocument in $componentDocuments) {
             $subScopes = Get-YamlValue $componentDocument "subscriptionScopes"
             if (Test-TopicAllowedForApp $subScopes $expectedAppId $expectedTopic) {
-                Add-Result $Category "commandapi can subscribe to Tenants topic ($fileName)" "Pass" "$expectedAppId is allowed to subscribe to $expectedTopic"
+                Add-Result $Category "parties can subscribe to Tenants topic ($fileName)" "Pass" "$expectedAppId is allowed to subscribe to $expectedTopic"
             }
             elseif ($script:IsLocalDevelopment -or ((Get-YamlType $componentDocument) -eq "pubsub.redis")) {
-                Add-Result $Category "commandapi can subscribe to Tenants topic ($fileName)" "Warn" "No explicit commandapi subscription scope for $expectedTopic (local development profile)" `
+                Add-Result $Category "parties can subscribe to Tenants topic ($fileName)" "Warn" "No explicit parties subscription scope for $expectedTopic (local development profile)" `
                     "Add subscriptionScopes entry '$expectedAppId=$expectedTopic' for production scoping."
             }
             else {
-                Add-Result $Category "commandapi can subscribe to Tenants topic ($fileName)" "Fail" "Missing commandapi subscription permission for $expectedTopic" `
+                Add-Result $Category "parties can subscribe to Tenants topic ($fileName)" "Fail" "Missing parties subscription permission for $expectedTopic" `
                     "Add '$expectedAppId=$expectedTopic' to subscriptionScopes. Impact: production DAPR scoping blocks Tenants events from Parties."
             }
         }

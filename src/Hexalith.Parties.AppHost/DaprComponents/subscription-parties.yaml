@@ -1,6 +1,6 @@
 # Local development subscription for the sample subscriber.
 #
-# commandapi publishes party events but does NOT expose /events/parties.
+# parties publishes party events but does NOT expose /events/parties.
 # The sample application is the local reference subscriber and maps that
 # endpoint, so the subscription scope must target app-id "sample".
 #

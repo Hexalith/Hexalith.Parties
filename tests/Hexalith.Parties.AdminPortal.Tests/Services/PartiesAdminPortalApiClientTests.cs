@@ -103,6 +103,69 @@ public sealed class PartiesAdminPortalApiClientTests
     }
 
     [Fact]
+    public async Task GetRichSearchCapabilityAsync_ParsesHealthyMemoriesSearchHealthAsync()
+    {
+        var handler = new RecordingHttpMessageHandler(
+            HttpStatusCode.OK,
+            """
+            {
+              "status": "Healthy",
+              "results": {
+                "memories-search": {
+                  "status": "Healthy",
+                  "description": "Memories rich search, cleanup route, and mapping store are all reachable.",
+                  "data": {
+                    "enabled": true,
+                    "searchReachable": true,
+                    "degradedReportedByMemories": false
+                  }
+                }
+              }
+            }
+            """);
+        PartiesAdminPortalApiClient client = CreateClient(handler);
+
+        AdminPortalRichSearchCapability capability = await client
+            .GetRichSearchCapabilityAsync(CancellationToken.None)
+            .ConfigureAwait(true);
+
+        handler.LastRequest!.RequestUri!.PathAndQuery.ShouldBe("/health");
+        capability.IsAvailable.ShouldBeTrue();
+        capability.IsDegraded.ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task GetRichSearchCapabilityAsync_ParsesDegradedMemoriesSearchHealthAsync()
+    {
+        var handler = new RecordingHttpMessageHandler(
+            HttpStatusCode.OK,
+            """
+            {
+              "status": "Degraded",
+              "results": {
+                "memories-search": {
+                  "status": "Degraded",
+                  "description": "Memories integration degraded: search (HttpRequestException).",
+                  "data": {
+                    "enabled": true,
+                    "searchReachable": false
+                  }
+                }
+              }
+            }
+            """);
+        PartiesAdminPortalApiClient client = CreateClient(handler);
+
+        AdminPortalRichSearchCapability capability = await client
+            .GetRichSearchCapabilityAsync(CancellationToken.None)
+            .ConfigureAwait(true);
+
+        capability.IsAvailable.ShouldBeFalse();
+        capability.IsDegraded.ShouldBeTrue();
+        capability.Reason.ShouldNotBeNull().ShouldContain("search");
+    }
+
+    [Fact]
     public async Task GetPartyAsync_OnForbidden_SurfacesBoundedFailureWithoutProblemDetailsLeakAsync()
     {
         var handler = new RecordingHttpMessageHandler(

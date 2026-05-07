@@ -244,7 +244,7 @@ src/
   Hexalith.Parties.Client             # Client abstractions, IPartiesCommandClient, IPartiesQueryClient, AddPartiesClient()
   Hexalith.Parties.Server             # Party aggregate, Handle/Apply, domain processors
   Hexalith.Parties.Projections        # Read projection infrastructure, match metadata, search
-  Hexalith.Parties.CommandApi         # REST API endpoints, MCP server, validation
+  Hexalith.Parties         # REST API endpoints, MCP server, validation
   Hexalith.Parties.Aspire             # Aspire hosting extensions for Parties
   Hexalith.Parties.AppHost            # Aspire AppHost (DAPR topology orchestrator)
   Hexalith.Parties.ServiceDefaults    # Shared service config, OpenTelemetry
@@ -255,7 +255,7 @@ tests/
   Hexalith.Parties.Client.Tests       # Tier 1 — client abstractions
   Hexalith.Parties.Server.Tests       # Tier 1 — aggregate logic (pure Handle/Apply)
   Hexalith.Parties.Projections.Tests  # Tier 1 — projection logic
-  Hexalith.Parties.CommandApi.Tests   # Tier 2 — API + MCP integration
+  Hexalith.Parties.Tests   # Tier 2 — API + MCP integration
   Hexalith.Parties.IntegrationTests   # Tier 3 — full-stack Aspire topology
 
 samples/
@@ -264,7 +264,7 @@ samples/
 
 **Key structural differences from EventStore:**
 - `Hexalith.Parties.Projections` — new project, no EventStore equivalent. Houses read projection infrastructure.
-- MCP server hosted within `CommandApi` (same process, shared auth pipeline) — architecture decision to be confirmed in step 4.
+- MCP server hosted within the Parties service (same process, shared auth pipeline) — architecture decision to be confirmed in step 4.
 - `Hexalith.Parties.Server.Tests` tests pure aggregate logic without EventStore — validates domain correctness independently.
 
 **Testing Framework:**
@@ -324,7 +324,7 @@ samples/
 - **Rejected:** Dedicated query database (operational complexity), in-memory rebuild (cold start violation at scale)
 - **Rationale:** Same infrastructure as write side, actor lifecycle provides in-memory performance when activated, no separate database to manage
 - **Consequence:** Search limited to basic key-lookup in v1.0; full-text search deferred to v1.1 with dedicated search engine
-- **Affects:** Projections, CommandApi, MCP tools, Client query abstractions
+- **Affects:** Projections, Parties service, MCP tools, Client query abstractions
 
 **D2 — Search: Separate Concern, Deferred to v1.1**
 
@@ -350,7 +350,7 @@ samples/
 - **Rejected:** Per-party only (no list capability without separate index), per-tenant only (state size at 100K parties)
 - **Rationale:** Clean separation — index for list/search, detail for get-by-ID. Each has independent scaling and testing characteristics
 - **Consequence:** Two event handler implementations, two test surfaces. Index actor needs partitioned state management (see D5)
-- **Affects:** Projections, CommandApi query routing, testing strategy
+- **Affects:** Projections, Parties service query routing, testing strategy
 
 **D5 — Index Actor State Management: Partitioned State (Interface-First)**
 
@@ -433,8 +433,8 @@ samples/
 - **Rejected:** "Thin pass-through" (insufficient for forgiving input + response assembly), "smart orchestration" (domain logic leakage risk), premature normalization abstraction (YAGNI)
 - **Rationale:** MCP tools have forgiving input schemas (FR74) and return complete entities with match metadata. This is non-trivial translation but contains zero domain logic. Explicit boundary prevents scope creep
 - **Architectural fitness enforcement:** MCP layer code must have zero references to domain event types — only command types and query result types. Enforced via lint rule or compilation test (MCP project references Contracts but not Server). Violations indicate domain logic leakage
-- **Consequence:** MCP layer will be a significant component (~30-40% of CommandApi) but architecturally bounded. Boundary is machine-verifiable, not just documented
-- **Affects:** CommandApi (MCP server implementation), testing strategy, developer documentation, CI pipeline (fitness test)
+- **Consequence:** MCP layer will be a significant component (~30-40% of the Parties service) but architecturally bounded. Boundary is machine-verifiable, not just documented
+- **Affects:** Parties service (MCP server implementation), testing strategy, developer documentation, CI pipeline (fitness test)
 
 **D12 — Partial Failure: Eliminated by Design**
 
@@ -471,7 +471,7 @@ samples/
   - Return "service degraded" to callers during rebuild
 - **Rationale:** DAPR state store entries can be corrupted (partial writes, operator error, store migration). Without graceful handling, corrupted state = permanent query failure for the affected tenant until manual intervention
 - **Consequence:** Actor activation includes corruption detection. Callers (API, MCP) must handle "degraded" responses
-- **Affects:** Projections (actor activation logic), CommandApi (degraded response handling), operational alerting
+- **Affects:** Projections (actor activation logic), Parties service (degraded response handling), operational alerting
 
 **D16 — Index Actor Batch Event Processing**
 
@@ -709,9 +709,9 @@ Hexalith.Parties.Projections/
     └── PartyIndexProjectionActor.cs
 ```
 
-**CommandApi Project (REST + MCP — references Contracts + Server + Projections):**
+**Parties Service Project (REST + MCP — references Contracts + Server + Projections):**
 ```
-Hexalith.Parties.CommandApi/
+Hexalith.Parties/
 ├── Controllers/
 │   └── PartiesController.cs               # REST API, route: api/v1/parties
 ├── Mcp/
@@ -859,7 +859,7 @@ Hexalith.Parties.Client/
 - MCP layer: zero references to domain event types — only command types and query result types
 - Projection handlers: zero DAPR references
 - Contracts project: zero runtime dependencies beyond netstandard2.1
-- Client project: no references to Server, Projections, or CommandApi
+- Client project: no references to Server, Projections, or Parties service
 - Test tier compliance: Tier 1 tests have zero infrastructure dependencies
 
 **Anti-Patterns (explicitly forbidden):**
@@ -994,8 +994,8 @@ Hexalith.Parties/
 │   │   └── Configuration/
 │   │       └── ProjectionOptions.cs                # Batch size, partition strategy
 │   │
-│   ├── Hexalith.Parties.CommandApi/       # REST + MCP — references Contracts + Server + Projections
-│   │   ├── Hexalith.Parties.CommandApi.csproj
+│   ├── Hexalith.Parties/       # REST + MCP — references Contracts + Server + Projections
+│   │   ├── Hexalith.Parties.csproj
 │   │   ├── Controllers/
 │   │   │   └── PartiesController.cs                # Route: api/v1/parties
 │   │   ├── Mcp/
@@ -1066,8 +1066,8 @@ Hexalith.Parties/
 │   │       ├── PartyDetailProjectionHandlerTests.cs
 │   │       └── PartyIndexProjectionHandlerTests.cs
 │   │
-│   ├── Hexalith.Parties.CommandApi.Tests/           # Tier 2 — API + MCP integration
-│   │   ├── Hexalith.Parties.CommandApi.Tests.csproj
+│   ├── Hexalith.Parties.Tests/           # Tier 2 — API + MCP integration
+│   │   ├── Hexalith.Parties.Tests.csproj
 │   │   ├── Controllers/
 │   │   ├── Mcp/
 │   │   ├── Validation/
@@ -1092,15 +1092,15 @@ Hexalith.Parties/
 Contracts ← Client         (consumer package)
 Contracts ← Server         (aggregate logic)
 Contracts ← Projections    (read side)
-Contracts + Server + Projections ← CommandApi  (API surface)
-CommandApi ← AppHost       (hosting)
+Contracts + Server + Projections ← Parties service  (API surface)
+Parties service ← AppHost       (hosting)
 All src/ ← Testing         (test utilities)
 ```
 
 **Forbidden Dependencies:**
-- Client must NOT reference Server, Projections, or CommandApi
+- Client must NOT reference Server, Projections, or Parties service
 - Projections handlers must NOT reference DAPR (only actors reference DAPR)
-- MCP layer (CommandApi/Mcp/) must NOT reference domain event types — only commands and models
+- MCP layer (Parties/Mcp/) must NOT reference domain event types — only commands and models
 - Contracts must NOT reference any runtime dependency beyond netstandard2.1
 
 **NuGet Packages Published (6):**
@@ -1124,12 +1124,12 @@ All src/ ← Testing         (test utilities)
 | Contact Channels (FR8-11) | Contracts (types), Server (Handle) | `Commands/AddContactChannel.cs`, `ValueObjects/ContactChannel.cs` |
 | Identifiers (FR12-13) | Contracts (types), Server (Handle) | `Commands/AddIdentifier.cs`, `ValueObjects/PartyIdentifier.cs` |
 | Discovery & Search (FR14-19) | Projections (handlers/actors), Contracts (models) | `PartyIndexProjectionHandler.cs`, `PartyIndexEntry.cs` |
-| AI Agent / MCP (FR20-25, FR74) | CommandApi/Mcp/ | `CreatePartyMcpTool.cs`, `UpdatePartyMcpTool.cs` |
+| AI Agent / MCP (FR20-25, FR74) | Parties/Mcp/ | `CreatePartyMcpTool.cs`, `UpdatePartyMcpTool.cs` |
 | Developer Integration (FR26-33) | Client (abstractions), Contracts (types) | `IPartiesCommandClient.cs`, `AddPartiesClient()` |
 | Event-Driven (FR34-38) | AppHost (DAPR config), EventStore | `DaprComponents/pubsub.yaml`, `subscription-parties.yaml` |
-| Multi-Tenancy (FR39-43) | CommandApi (middleware), EventStore | `PartiesController.cs` (JWT extraction) |
+| Multi-Tenancy (FR39-43) | Parties service (middleware), EventStore | `PartiesController.cs` (JWT extraction) |
 | GDPR (FR44-55) | Contracts (`[PersonalData]`), Server (v1.1) | Attribute placement on value objects |
-| System Resilience (FR64, 71) | ServiceDefaults, CommandApi | `Extensions.cs` (health checks) |
+| System Resilience (FR64, 71) | ServiceDefaults, Parties service | `Extensions.cs` (health checks) |
 
 **Cross-Cutting Concern → Location:**
 
@@ -1138,9 +1138,9 @@ All src/ ← Testing         (test utilities)
 | Multi-tenancy enforcement | EventStore (write-side), Projections actors (read-side query filtering) |
 | GDPR `[PersonalData]` markers | Contracts value objects (attribute placement) |
 | Observability | ServiceDefaults `Extensions.cs`, all projects via `ILogger<T>` |
-| Error handling | CommandApi `ErrorHandling/`, Server rejection events |
-| Validation | CommandApi `Validation/` (FluentValidation), Server `Handle` (domain rules) |
-| Architectural fitness | CommandApi.Tests `FitnessTests/ArchitecturalFitnessTests.cs` |
+| Error handling | Parties service `ErrorHandling/`, Server rejection events |
+| Validation | Parties service `Validation/` (FluentValidation), Server `Handle` (domain rules) |
+| Architectural fitness | Parties.Tests `FitnessTests/ArchitecturalFitnessTests.cs` |
 
 ### Integration Points
 
@@ -1183,7 +1183,7 @@ Client → REST/MCP → Query → Projection Actor → Return PartyDetail/PartyI
 
 ```bash
 dotnet aspire run --project src/Hexalith.Parties.AppHost
-# Starts: CommandApi + DAPR sidecar + Redis (state + pub/sub) + Aspire dashboard
+# Starts: Parties service + DAPR sidecar + Redis (state + pub/sub) + Aspire dashboard
 ```
 
 **Build & Test:**
@@ -1200,7 +1200,7 @@ dotnet test tests/Hexalith.Parties.Projections.Tests/
 
 # Tier 2 — DAPR slim init required
 dapr init --slim
-dotnet test tests/Hexalith.Parties.CommandApi.Tests/
+dotnet test tests/Hexalith.Parties.Tests/
 
 # Tier 3 — Full DAPR + Docker
 dapr init

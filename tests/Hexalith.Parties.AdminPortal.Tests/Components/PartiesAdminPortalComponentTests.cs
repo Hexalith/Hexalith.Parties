@@ -1,5 +1,7 @@
 using Bunit;
 
+using AngleSharp.Dom;
+
 using System.Globalization;
 using System.Security.Claims;
 
@@ -13,6 +15,7 @@ using Hexalith.Tenants.Contracts.Enums;
 
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components;
+using Microsoft.FluentUI.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
 
 using Shouldly;
@@ -28,6 +31,8 @@ public sealed class PartiesAdminPortalComponentTests : BunitContext
 
     public PartiesAdminPortalComponentTests()
     {
+        JSInterop.Mode = JSRuntimeMode.Loose;
+        Services.AddFluentUIComponents();
         Services.AddSingleton<AuthenticationStateProvider>(_authProvider);
         Services.AddSingleton<ITenantProjectionStore>(_tenantStore);
         Services.AddScoped<IAdminPortalAuthorizationService, AdminPortalAuthorizationService>();
@@ -52,6 +57,27 @@ public sealed class PartiesAdminPortalComponentTests : BunitContext
         });
 
         api.ListRequests.Single().PageSize.ShouldBe(20);
+    }
+
+    [Fact]
+    public void PartiesAdminPortal_BrowseSurface_UsesFluentComponentsInsteadOfRawHtmlControls()
+    {
+        var api = new RecordingAdminPortalApiClient();
+        api.EnqueueList(Page(IndexEntry("party-fluent", "Fluent Row", PartyType.Person, true)));
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+
+        IRenderedComponent<PartiesAdminPortal> cut = RenderAuthorized("scope-a");
+
+        cut.WaitForAssertion(() =>
+        {
+            cut.Markup.ShouldContain("Fluent Row");
+            cut.FindComponent<FluentDataGrid<PartyIndexEntry>>();
+            cut.FindComponent<FluentTextInput>();
+            cut.FindComponents<FluentSelect<string, string>>().Count.ShouldBe(2);
+            cut.FindComponents<FluentButton>().Count.ShouldBeGreaterThan(0);
+            cut.Markup.ShouldNotContain("<input", Case.Sensitive);
+            cut.Markup.ShouldNotContain("<select", Case.Sensitive);
+        });
     }
 
     [Fact]
@@ -126,8 +152,8 @@ public sealed class PartiesAdminPortalComponentTests : BunitContext
         IRenderedComponent<PartiesAdminPortal> cut = RenderAuthorized("scope-a", pageSize: 250);
 
         cut.WaitForAssertion(() => api.ListRequests.Count.ShouldBe(1));
-        cut.Find("input[type=\"search\"]").Input("grace@example.test");
-        cut.Find("button[type=\"submit\"]").Click();
+        SetSearch(cut, "grace@example.test");
+        ClickFluentButton(cut, "Search");
 
         cut.WaitForAssertion(() =>
         {
@@ -144,8 +170,77 @@ public sealed class PartiesAdminPortalComponentTests : BunitContext
         search.Type.ShouldBeNull();
         search.Active.ShouldBeNull();
         // Filter selects must be disabled while the query is non-empty.
-        cut.Find("select[aria-label=\"Party type\"]").HasAttribute("disabled").ShouldBeTrue();
-        cut.Find("select[aria-label=\"Active state\"]").HasAttribute("disabled").ShouldBeTrue();
+        IReadOnlyList<IRenderedComponent<FluentSelect<string, string>>> selects = cut.FindComponents<FluentSelect<string, string>>();
+        (selects[0].Instance.Disabled == true).ShouldBeTrue();
+        (selects[1].Instance.Disabled == true).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void PartiesAdminPortal_HealthyRichSearchProbe_EnablesRichSearchModesForCircuit()
+    {
+        var api = new RecordingAdminPortalApiClient();
+        api.EnqueueRichSearchCapability(AdminPortalRichSearchCapability.Available());
+        api.EnqueueList(Page(IndexEntry("party-rich", "Rich Search", PartyType.Person, true)));
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+
+        IRenderedComponent<PartiesAdminPortal> cut = RenderAuthorized("scope-a");
+
+        cut.WaitForAssertion(() =>
+        {
+            cut.Markup.ShouldContain("Rich Search");
+            FindFluentButton(cut, "Email").HasAttribute("disabled").ShouldBeFalse();
+            FindFluentButton(cut, "Identifier").HasAttribute("disabled").ShouldBeFalse();
+        });
+
+        SetSearch(cut, "rich@example.test");
+        ClickFluentButton(cut, "Search");
+
+        cut.WaitForAssertion(() => api.SearchRequests.Count.ShouldBe(1));
+        api.RichSearchCapabilityProbeCount.ShouldBe(1);
+    }
+
+    [Fact]
+    public void PartiesAdminPortal_DegradedRichSearchProbe_DisablesRichSearchModesWithDistinctStatus()
+    {
+        var api = new RecordingAdminPortalApiClient();
+        api.EnqueueRichSearchCapability(AdminPortalRichSearchCapability.Degraded("memories-search degraded"));
+        api.EnqueueList(Page(IndexEntry("party-local", "Local Only", PartyType.Person, true)));
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+
+        IRenderedComponent<PartiesAdminPortal> cut = RenderAuthorized("scope-a");
+
+        cut.WaitForAssertion(() =>
+        {
+            cut.Markup.ShouldContain("Rich search is temporarily unavailable");
+            cut.Markup.ShouldNotContain("Display-name search only");
+            FindFluentButton(cut, "Email").HasAttribute("disabled").ShouldBeTrue();
+            FindFluentButton(cut, "Identifier").HasAttribute("disabled").ShouldBeTrue();
+        });
+    }
+
+    [Fact]
+    public void PartiesAdminPortal_TenantSwitch_InvalidatesRichSearchProbeCache()
+    {
+        var api = new RecordingAdminPortalApiClient();
+        api.EnqueueRichSearchCapability(AdminPortalRichSearchCapability.Available());
+        api.EnqueueList(Page(IndexEntry("party-a", "Tenant A", PartyType.Person, true)));
+        api.EnqueueRichSearchCapability(AdminPortalRichSearchCapability.Degraded("tenant-b search offline"));
+        api.EnqueueList(Page(IndexEntry("party-b", "Tenant B", PartyType.Person, true)));
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+
+        IRenderedComponent<PartiesAdminPortal> cut = RenderAuthorized("scope-a");
+        cut.WaitForAssertion(() => FindFluentButton(cut, "Email").HasAttribute("disabled").ShouldBeFalse());
+
+        SeedTenant("scope-b", AdminUserId, TenantRole.TenantOwner);
+        cut.InvokeAsync(() => _authProvider.SetAuthenticated(AdminUserId, "scope-b"));
+
+        cut.WaitForAssertion(() =>
+        {
+            cut.Markup.ShouldContain("Tenant B");
+            cut.Markup.ShouldContain("Rich search is temporarily unavailable");
+            FindFluentButton(cut, "Email").HasAttribute("disabled").ShouldBeTrue();
+        });
+        api.RichSearchCapabilityProbeCount.ShouldBe(2);
     }
 
     [Fact]
@@ -171,8 +266,8 @@ public sealed class PartiesAdminPortalComponentTests : BunitContext
 
         IRenderedComponent<PartiesAdminPortal> cut = RenderAuthorized("scope-a");
 
-        cut.WaitForAssertion(() => cut.Find("tbody button").TextContent.ShouldContain("alert"));
-        cut.Find("tbody button").Click();
+        cut.WaitForAssertion(() => FindFluentButton(cut, "alert").TextContent.ShouldContain("alert"));
+        ClickFluentButton(cut, "alert");
 
         cut.WaitForAssertion(() =>
         {
@@ -222,8 +317,8 @@ public sealed class PartiesAdminPortalComponentTests : BunitContext
         Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
 
         IRenderedComponent<PartiesAdminPortal> cut = RenderAuthorized("scope-a");
-        cut.WaitForAssertion(() => cut.Find("tbody button").TextContent.ShouldContain("Ada Lovelace"));
-        cut.Find("tbody button").Click();
+        cut.WaitForAssertion(() => FindFluentButton(cut, "Ada Lovelace").TextContent.ShouldContain("Ada Lovelace"));
+        ClickFluentButton(cut, "Ada Lovelace");
 
         cut.WaitForAssertion(() =>
         {
@@ -259,8 +354,7 @@ public sealed class PartiesAdminPortalComponentTests : BunitContext
         {
             cut.Markup.ShouldContain("Administrator access is required");
             cut.Markup.ShouldNotContain("Tenant A");
-            cut.FindAll("tbody tr").ShouldBeEmpty();
-            cut.Find("button[type='submit']").HasAttribute("disabled").ShouldBeFalse();
+            FindFluentButton(cut, "Search").HasAttribute("disabled").ShouldBeFalse();
         });
     }
 
@@ -305,13 +399,12 @@ public sealed class PartiesAdminPortalComponentTests : BunitContext
 
         IRenderedComponent<PartiesAdminPortal> cut = RenderAuthorized("scope-a");
         cut.WaitForAssertion(() => cut.Markup.ShouldContain("Erased Person"));
-        cut.Find("tbody button").Click();
+        ClickFluentButton(cut, "Erased Person");
 
         cut.WaitForAssertion(() =>
         {
             cut.Markup.ShouldContain("erased or no longer inspectable");
             cut.Markup.ShouldNotContain("Erased Person");
-            cut.FindAll("tbody tr").ShouldBeEmpty();
         });
     }
 
@@ -325,7 +418,7 @@ public sealed class PartiesAdminPortalComponentTests : BunitContext
 
         IRenderedComponent<PartiesAdminPortal> cut = RenderAuthorized("scope-a");
         cut.WaitForAssertion(() => cut.Markup.ShouldContain("Tenant Scoped"));
-        cut.Find("tbody button").Click();
+        ClickFluentButton(cut, "Tenant Scoped");
 
         cut.WaitForAssertion(() =>
         {
@@ -345,7 +438,7 @@ public sealed class PartiesAdminPortalComponentTests : BunitContext
 
         IRenderedComponent<PartiesAdminPortal> cut = RenderAuthorized("scope-a");
         cut.WaitForAssertion(() => cut.Markup.ShouldContain("Party data is temporarily unavailable"));
-        cut.FindAll("button").Single(button => button.TextContent.Trim() == "Retry").Click();
+        ClickFluentButton(cut, "Retry");
 
         cut.WaitForAssertion(() => cut.Markup.ShouldContain("Retry Success"));
         api.ListRequests.Count.ShouldBe(2);
@@ -404,7 +497,7 @@ public sealed class PartiesAdminPortalComponentTests : BunitContext
                 cut.Find("td span.hx-parties-admin__badge").TextContent.Trim().ShouldBe("Inactif");
                 cut.Markup.ShouldContain("01/05/2026");
             });
-            cut.Find("tbody button").Click();
+            ClickFluentButton(cut, "Jean Martin");
 
             cut.WaitForAssertion(() =>
             {
@@ -443,8 +536,9 @@ public sealed class PartiesAdminPortalComponentTests : BunitContext
         cut.WaitForAssertion(() =>
         {
             cut.Find("h1").TextContent.ShouldBe("Tiers");
-            cut.Find("input[type=\"search\"]").GetAttribute("aria-label").ShouldBe("Rechercher des tiers");
-            cut.Find("input[type=\"search\"]").GetAttribute("placeholder").ShouldBe("Nom affiche");
+            FluentTextInput search = cut.FindComponent<FluentTextInput>().Instance;
+            search.AdditionalAttributes!["aria-label"].ShouldBe("Rechercher des tiers");
+            search.Placeholder.ShouldBe("Nom affiche");
             cut.Markup.ShouldContain("Aucun tiers");
             cut.Markup.ShouldContain("Personne");
             cut.Markup.ShouldContain("Organisation");
@@ -465,7 +559,7 @@ public sealed class PartiesAdminPortalComponentTests : BunitContext
 
         IRenderedComponent<PartiesAdminPortal> cut = RenderAuthorized("scope-a");
         cut.WaitForAssertion(() => cut.Markup.ShouldContain("Visible Row"));
-        cut.Find("tbody button").Click();
+        ClickFluentButton(cut, "Visible Row");
 
         cut.WaitForAssertion(() =>
         {
@@ -493,21 +587,20 @@ public sealed class PartiesAdminPortalComponentTests : BunitContext
         cut.WaitForAssertion(() => cut.Markup.ShouldContain("Keyboard Row"));
 
         // Search input is a native focusable element with no overriding tabindex.
-        var searchInput = cut.Find("input[type=\"search\"]");
-        searchInput.HasAttribute("tabindex").ShouldBeFalse();
+        (cut.FindComponent<FluentTextInput>().Instance.Disabled == true).ShouldBeFalse();
 
         // Type and active filter selects are reachable.
-        cut.Find("select[aria-label=\"Party type\"]").HasAttribute("tabindex").ShouldBeFalse();
-        cut.Find("select[aria-label=\"Active state\"]").HasAttribute("tabindex").ShouldBeFalse();
+        cut.FindComponents<FluentSelect<string, string>>().Count.ShouldBe(2);
 
         // Submit and Clear buttons are reachable.
-        cut.FindAll("button[type=\"submit\"]").Count.ShouldBe(1);
+        FindFluentButton(cut, "Search");
+        FindFluentButton(cut, "Clear");
 
         // Each row's display-name button is keyboard-reachable.
-        cut.Find("tbody button").HasAttribute("tabindex").ShouldBeFalse();
+        FindFluentButton(cut, "Keyboard Row");
 
         // Pagination buttons are keyboard-reachable (state-disabled is acceptable).
-        cut.FindAll("nav.hx-parties-admin__paging button").Count.ShouldBeGreaterThan(0);
+        cut.FindAll("nav.hx-parties-admin__paging fluent-button").Count.ShouldBeGreaterThan(0);
     }
 
     [Fact]
@@ -553,6 +646,28 @@ public sealed class PartiesAdminPortalComponentTests : BunitContext
         return Render<PartiesAdminPortal>(p => p
             .Add(x => x.ContextKey, contextKey)
             .Add(x => x.PageSize, pageSize));
+    }
+
+    private static IElement FindFluentButton(IRenderedComponent<PartiesAdminPortal> cut, string text)
+    {
+        List<IElement> exact = [.. cut.FindAll("fluent-button")
+            .Where(button => string.Equals(button.TextContent.Trim(), text, StringComparison.Ordinal))];
+        if (exact.Count == 1)
+        {
+            return exact[0];
+        }
+
+        return cut.FindAll("fluent-button")
+            .Single(button => button.TextContent.Contains(text, StringComparison.Ordinal));
+    }
+
+    private static void ClickFluentButton(IRenderedComponent<PartiesAdminPortal> cut, string text)
+        => FindFluentButton(cut, text).Click();
+
+    private static void SetSearch(IRenderedComponent<PartiesAdminPortal> cut, string value)
+    {
+        IRenderedComponent<FluentTextInput> input = cut.FindComponent<FluentTextInput>();
+        cut.InvokeAsync(() => input.Instance.ValueChanged.InvokeAsync(value)).GetAwaiter().GetResult();
     }
 
     private void SeedTenant(string tenantId, string userId, TenantRole role)

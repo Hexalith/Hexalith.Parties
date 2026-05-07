@@ -10,76 +10,70 @@
         <p class="hx-parties-admin__status" role="status" aria-live="polite">@StatusText</p>
     </header>
 
-    <EditForm Model="_filters" OnValidSubmit="SubmitSearchAsync" FormName="party-admin-search">
-        <div class="hx-parties-admin__toolbar">
-            <label>
-                <span>@EffectiveLabels.Search</span>
-                <input type="search" @bind="_filters.Query" @bind:event="oninput" aria-label="@EffectiveLabels.SearchAriaLabel" placeholder="@EffectiveLabels.SearchPlaceholder" @ref="_searchInputRef" />
-            </label>
-            <label>
-                <span>@EffectiveLabels.PartyType</span>
-                <select @bind="_filters.TypeValue" aria-label="@EffectiveLabels.PartyType" disabled="@FiltersDisabledInSearchMode" aria-disabled="@FiltersDisabledInSearchMode">
-                    <option value="">@EffectiveLabels.AllTypes</option>
-                    <option value="Person">@EffectiveLabels.PersonOption</option>
-                    <option value="Organization">@EffectiveLabels.OrganizationOption</option>
-                </select>
-            </label>
-            <label>
-                <span>@EffectiveLabels.ActiveState</span>
-                <select @bind="_filters.ActiveValue" aria-label="@EffectiveLabels.ActiveState" disabled="@FiltersDisabledInSearchMode" aria-disabled="@FiltersDisabledInSearchMode">
-                    <option value="">@EffectiveLabels.AllStates</option>
-                    <option value="true">@EffectiveLabels.Active</option>
-                    <option value="false">@EffectiveLabels.Inactive</option>
-                </select>
-            </label>
-            <button type="submit">@EffectiveLabels.Submit</button>
-            <button type="button" @onclick="ClearFiltersAsync">@EffectiveLabels.Clear</button>
-            @if (RetryAvailable)
-            {
-                <button type="button" @onclick="RetryAsync" @ref="_retryButtonRef">@EffectiveLabels.Retry</button>
-            }
-        </div>
-    </EditForm>
+    <div class="hx-parties-admin__toolbar">
+        <FluentTextInput Value="@_filters.Query"
+                         ValueChanged="OnQueryChangedAsync"
+                         TextInputType="TextInputType.Search"
+                         Label="@EffectiveLabels.Search"
+                         aria-label="@EffectiveLabels.SearchAriaLabel"
+                         Placeholder="@EffectiveLabels.SearchPlaceholder"
+                         @ref="_searchInputRef" />
+        <FluentSelect TOption="string" TValue="string"
+                      Items="@_partyTypeOptions"
+                      Value="@_filters.TypeValue"
+                      ValueChanged="OnTypeChangedAsync"
+                      OptionText="PartyTypeOptionLabel"
+                      Label="@EffectiveLabels.PartyType"
+                      aria-label="@EffectiveLabels.PartyType"
+                      Disabled="@FiltersDisabledInSearchMode" />
+        <FluentSelect TOption="string" TValue="string"
+                      Items="@_activeStateOptions"
+                      Value="@_filters.ActiveValue"
+                      ValueChanged="OnActiveChangedAsync"
+                      OptionText="ActiveStateOptionLabel"
+                      Label="@EffectiveLabels.ActiveState"
+                      aria-label="@EffectiveLabels.ActiveState"
+                      Disabled="@FiltersDisabledInSearchMode" />
+        <FluentButton Appearance="ButtonAppearance.Primary" OnClick="SubmitSearchAsync">@EffectiveLabels.Submit</FluentButton>
+        <FluentButton Appearance="ButtonAppearance.Outline" OnClick="ClearFiltersAsync">@EffectiveLabels.Clear</FluentButton>
+        @if (RetryAvailable)
+        {
+            <FluentButton Appearance="ButtonAppearance.Outline" OnClick="RetryAsync">@EffectiveLabels.Retry</FluentButton>
+        }
+    </div>
 
     <div class="hx-parties-admin__search-modes" aria-label="@EffectiveLabels.SearchModesRegion">
-        <button type="button" disabled aria-disabled="true">@EffectiveLabels.DisplayNameMode</button>
-        <button type="button" disabled="@(!RichSearchAvailable)" aria-disabled="@(!RichSearchAvailable)">@EffectiveLabels.EmailMode</button>
-        <button type="button" disabled="@(!RichSearchAvailable)" aria-disabled="@(!RichSearchAvailable)">@EffectiveLabels.IdentifierMode</button>
+        <FluentButton Disabled="true">@EffectiveLabels.DisplayNameMode</FluentButton>
+        <FluentButton Disabled="@(!IsRichSearchAvailable)">@EffectiveLabels.EmailMode</FluentButton>
+        <FluentButton Disabled="@(!IsRichSearchAvailable)">@EffectiveLabels.IdentifierMode</FluentButton>
     </div>
 
     <div class="hx-parties-admin__layout">
         <div class="hx-parties-admin__list">
-            <table aria-label="@EffectiveLabels.PartiesGrid">
-                <thead>
-                    <tr>
-                        <th scope="col">@EffectiveLabels.DisplayNameColumn</th>
-                        <th scope="col">@EffectiveLabels.TypeColumn</th>
-                        <th scope="col">@EffectiveLabels.StateColumn</th>
-                        <th scope="col">@EffectiveLabels.CreatedColumn</th>
-                        <th scope="col">@EffectiveLabels.ModifiedColumn</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (PartyIndexEntry row in _rows)
-                    {
-                        <tr @key="row.Id">
-                            <td>
-                                <button type="button" @onclick="() => SelectPartyAsync(row.Id)">
-                                    @row.DisplayName
-                                </button>
-                            </td>
-                            <td>@EffectiveLabels.PartyTypeLabel(row.Type.ToString())</td>
-                            <td>
-                                <span class="hx-parties-admin__badge" aria-label="@StatusLabel(row)">
-                                    @StatusLabel(row)
-                                </span>
-                            </td>
-                            <td>@FormatDate(row.CreatedAt)</td>
-                            <td>@FormatDate(row.LastModifiedAt)</td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
+            <FluentDataGrid Items="@RowsQuery"
+                            GridTemplateColumns="2fr 1fr 1fr 1fr 1fr"
+                            DisplayMode="DataGridDisplayMode.Table"
+                            aria-label="@EffectiveLabels.PartiesGrid">
+                <TemplateColumn Title="@EffectiveLabels.DisplayNameColumn" Context="row">
+                    <FluentButton Appearance="ButtonAppearance.Subtle" OnClick="() => SelectPartyAsync(row.Id)">
+                        @row.DisplayName
+                    </FluentButton>
+                </TemplateColumn>
+                <TemplateColumn Title="@EffectiveLabels.TypeColumn" Context="row">
+                    @EffectiveLabels.PartyTypeLabel(row.Type.ToString())
+                </TemplateColumn>
+                <TemplateColumn Title="@EffectiveLabels.StateColumn" Context="row">
+                    <span class="hx-parties-admin__badge" aria-label="@StatusLabel(row)">
+                        @StatusLabel(row)
+                    </span>
+                </TemplateColumn>
+                <TemplateColumn Title="@EffectiveLabels.CreatedColumn" Context="row">
+                    @FormatDate(row.CreatedAt)
+                </TemplateColumn>
+                <TemplateColumn Title="@EffectiveLabels.ModifiedColumn" Context="row">
+                    @FormatDate(row.LastModifiedAt)
+                </TemplateColumn>
+            </FluentDataGrid>
 
             @if (!_isLoading && _rows.Count == 0)
             {
@@ -87,9 +81,9 @@
             }
 
             <nav class="hx-parties-admin__paging" aria-label="@EffectiveLabels.PagingRegion">
-                <button type="button" disabled="@(_page <= 1 || _isLoading)" @onclick="PreviousPageAsync">@EffectiveLabels.Previous</button>
+                <FluentButton Disabled="@(_page <= 1 || _isLoading)" OnClick="PreviousPageAsync">@EffectiveLabels.Previous</FluentButton>
                 <span>@EffectiveLabels.Page @_page @EffectiveLabels.Of @_totalPages, @_totalCount @EffectiveLabels.TotalCount</span>
-                <button type="button" disabled="@(!_hasNextPage || _isLoading)" @onclick="NextPageAsync">@EffectiveLabels.Next</button>
+                <FluentButton Disabled="@(!_hasNextPage || _isLoading)" OnClick="NextPageAsync">@EffectiveLabels.Next</FluentButton>
             </nav>
         </div>
 
@@ -265,6 +259,8 @@
 @code {
     private readonly PortalFilters _filters = new();
     private readonly List<PartyIndexEntry> _rows = [];
+    private readonly string[] _partyTypeOptions = ["", "Person", "Organization"];
+    private readonly string[] _activeStateOptions = ["", "true", "false"];
     private readonly string _instanceId = Guid.NewGuid().ToString("N").Substring(0, 8);
     private CancellationTokenSource? _listCts;
     private CancellationTokenSource? _detailCts;
@@ -272,6 +268,7 @@
     private AdminPortalQueryMetadata? _detailMetadata;
     private string? _previousContextSignature;
     private AdminPortalAuthorizationState _authorizationState = AdminPortalAuthorizationState.Unauthenticated;
+    private AdminPortalRichSearchCapability _richSearchCapability = AdminPortalRichSearchCapability.LocalOnly();
     private StatusKind _statusKind = StatusKind.Loading;
     private DetailEmptyKind _detailEmptyKind = DetailEmptyKind.SelectParty;
     private string? _validationDetail;
@@ -285,9 +282,9 @@
     private long _detailVersion;
     private int _disposed;
     private AdminPortalQueryFailureKind? _lastFailure;
+    private string? _richSearchCapabilityContextSignature;
     private FocusTarget _pendingFocus = FocusTarget.None;
-    private ElementReference _searchInputRef;
-    private ElementReference _retryButtonRef;
+    private FluentTextInput? _searchInputRef;
 
     [Parameter]
     public string? ContextKey { get; set; }
@@ -296,14 +293,15 @@
     public int PageSize { get; set; } = AdminPortalQueryBounds.DefaultPageSize;
 
     [Parameter]
-    public bool RichSearchAvailable { get; set; }
-
-    [Parameter]
     public AdminPortalLabels? Labels { get; set; }
 
     private AdminPortalLabels EffectiveLabels => Labels ?? new AdminPortalLabels();
 
+    private bool IsRichSearchAvailable => _richSearchCapability.IsAvailable;
+
     private bool FiltersDisabledInSearchMode => !string.IsNullOrWhiteSpace(_filters.Query);
+
+    private IQueryable<PartyIndexEntry> RowsQuery => _rows.AsQueryable();
 
     private bool RetryAvailable
         => _lastFailure is AdminPortalQueryFailureKind.TransientFailure
@@ -314,6 +312,7 @@
         StatusKind.Loading => EffectiveLabels.Loading,
         StatusKind.Loaded => EffectiveLabels.Loaded,
         StatusKind.DisplayNameOnly => EffectiveLabels.DisplayNameOnly,
+        StatusKind.RichSearchProbeDegraded => EffectiveLabels.RichSearchProbeDegraded,
         StatusKind.Degraded => EffectiveLabels.Degraded,
         StatusKind.SignInRequired => EffectiveLabels.SignInRequired,
         StatusKind.TenantUnavailable => EffectiveLabels.TenantUnavailable,
@@ -366,8 +365,7 @@
         string signature = string.Join('|',
             ContextKey ?? "<null>",
             authorizationState.ContextSignature,
-            PageSize,
-            RichSearchAvailable);
+            PageSize);
         if (string.Equals(_previousContextSignature, signature, StringComparison.Ordinal))
         {
             return;
@@ -375,6 +373,12 @@
 
         _previousContextSignature = signature;
         _authorizationState = authorizationState;
+        if (!string.Equals(_richSearchCapabilityContextSignature, authorizationState.ContextSignature, StringComparison.Ordinal))
+        {
+            _richSearchCapability = AdminPortalRichSearchCapability.LocalOnly();
+            _richSearchCapabilityContextSignature = null;
+        }
+
         ResetVisibleState();
 
         if (!_authorizationState.IsAuthenticated)
@@ -398,6 +402,7 @@
             return;
         }
 
+        await EnsureRichSearchCapabilityAsync(authorizationState.ContextSignature).ConfigureAwait(false);
         await LoadPageAsync().ConfigureAwait(false);
     }
 
@@ -415,6 +420,24 @@
         _page = 1;
         _pendingFocus = FocusTarget.SearchInput;
         await LoadPageAsync().ConfigureAwait(false);
+    }
+
+    private Task OnQueryChangedAsync(string value)
+    {
+        _filters.Query = value;
+        return Task.CompletedTask;
+    }
+
+    private Task OnTypeChangedAsync(string value)
+    {
+        _filters.TypeValue = value;
+        return Task.CompletedTask;
+    }
+
+    private Task OnActiveChangedAsync(string value)
+    {
+        _filters.ActiveValue = value;
+        return Task.CompletedTask;
     }
 
     private async Task ClearFiltersAsync()
@@ -533,12 +556,27 @@
         }
 
         _hasNextPage = page.Page > 0 && page.TotalPages > page.Page;
-        _statusKind = metadata.IsLocalOnlySearch
+        _statusKind = _richSearchCapability.IsDegraded
+            ? StatusKind.RichSearchProbeDegraded
+            : metadata.IsLocalOnlySearch
             ? StatusKind.DisplayNameOnly
             : metadata.IsDegraded
                 ? StatusKind.Degraded
                 : StatusKind.Loaded;
         await SafeStateHasChangedAsync().ConfigureAwait(false);
+    }
+
+    private async Task EnsureRichSearchCapabilityAsync(string contextSignature)
+    {
+        if (string.Equals(_richSearchCapabilityContextSignature, contextSignature, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        _richSearchCapability = await ApiClient
+            .GetRichSearchCapabilityAsync(CancellationToken.None)
+            .ConfigureAwait(false);
+        _richSearchCapabilityContextSignature = contextSignature;
     }
 
     private async Task SelectPartyAsync(string partyId)
@@ -632,10 +670,13 @@
             switch (pending)
             {
                 case FocusTarget.SearchInput:
-                    await _searchInputRef.FocusAsync().ConfigureAwait(false);
+                    if (_searchInputRef?.Element is { } searchElement)
+                    {
+                        await searchElement.FocusAsync().ConfigureAwait(false);
+                    }
+
                     break;
                 case FocusTarget.RetryButton:
-                    await _retryButtonRef.FocusAsync().ConfigureAwait(false);
                     break;
             }
         }
@@ -824,6 +865,22 @@
             ? EffectiveLabels.MissingDate
             : date.ToString("g", System.Globalization.CultureInfo.CurrentCulture);
 
+    private string PartyTypeOptionLabel(string value) => value switch
+    {
+        "" => EffectiveLabels.AllTypes,
+        "Person" => EffectiveLabels.PersonOption,
+        "Organization" => EffectiveLabels.OrganizationOption,
+        _ => value,
+    };
+
+    private string ActiveStateOptionLabel(string value) => value switch
+    {
+        "" => EffectiveLabels.AllStates,
+        "true" => EffectiveLabels.Active,
+        "false" => EffectiveLabels.Inactive,
+        _ => value,
+    };
+
     public void Dispose()
     {
         if (Interlocked.Exchange(ref _disposed, 1) != 0)
@@ -840,6 +897,7 @@
         Loading,
         Loaded,
         DisplayNameOnly,
+        RichSearchProbeDegraded,
         Degraded,
         SignInRequired,
         TenantUnavailable,

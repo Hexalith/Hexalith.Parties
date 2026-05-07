@@ -95,7 +95,7 @@ The EventStore submodule (`Hexalith.EventStore/`) already provides the complete 
 
 **`src/Hexalith.Parties.AppHost/DaprComponents/pubsub.yaml`**:
 - Type: `pubsub.redis`, Redis host: `localhost:6379`
-- Scopes: `commandapi`, `sample`
+- Scopes: `parties`, `sample`
 
 **`src/Hexalith.Parties.AppHost/DaprComponents/subscription-parties.yaml`**:
 - API version: `v2alpha1`, topic: `tenant-a.parties.events`
@@ -276,7 +276,7 @@ Claude Opus 4.6
 ### Completion Notes List
 
 - **Task 1:** Created 6 production DAPR deployment config templates in `deploy/dapr/` adapted from EventStore submodule templates for the Parties domain. Each config uses environment variables for secrets (never hardcoded), three-layer scoping architecture (component, publishing, subscription), and documented operator instructions.
-- **Task 2:** Audited all 4 local dev DAPR configs and corrected the subscription scope to target the sample subscriber app-id (`sample`), which is the local endpoint exposing `/events/parties`. Pubsub scopes remain `commandapi` + `sample`, resiliency uses exponential backoff + circuit breakers, and access control uses allow-default appropriate for self-hosted mode.
+- **Task 2:** Audited all 4 local dev DAPR configs and corrected the subscription scope to target the sample subscriber app-id (`sample`), which is the local endpoint exposing `/events/parties`. Pubsub scopes remain `parties` + `sample`, resiliency uses exponential backoff + circuit breakers, and access control uses allow-default appropriate for self-hosted mode.
 - **Task 3:** Created 5 Tier 2 publisher contract tests in `EventPublishingVerificationTests.cs` verifying the `EventPublisher` contract: publish calls to DAPR pub/sub, event ordering within a published batch, camelCase/ISO 8601 payload format, CloudEvents 1.0 envelope attributes (`type`/`source`/`id`), and sequential publication of multi-event batches.
 - **Task 4:** Created 3 Tier 2 publisher contract tests in `TenantIsolationTests.cs` verifying tenant-scoped topic naming, concurrent tenant-specific publication to separate topics, and tenant context presence in event envelopes.
 - **Task 5:** Created 3 Tier 2 publisher/dead-letter contract tests in `DeadLetterRoutingTests.cs` verifying dead letter topic routing (`deadletter.{tenant}.parties.events`), publish failure result when pub/sub is unavailable, and success on a second attempt after a transient failure.

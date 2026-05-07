@@ -14,7 +14,7 @@ using Microsoft.Extensions.Logging;
 namespace Hexalith.Parties.IntegrationTests.HealthChecks;
 
 /// <summary>
-/// Shared fixture that starts the full Parties Aspire topology (CommandApi + DAPR sidecar
+/// Shared fixture that starts the full Parties Aspire topology (Parties service + DAPR sidecar
 /// + in-memory state store/pub/sub) for Tier 3 health endpoint E2E tests.
 /// Keycloak is disabled for fast startup; uses symmetric key JWT auth.
 /// When the infrastructure is unavailable (no Docker, no DAPR), the fixture
@@ -27,7 +27,7 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
     private string? _previousEnableKeycloak;
     private string? _previousAspNetCoreEnvironment;
     private string? _previousDotNetEnvironment;
-    private HttpClient? _commandApiClient;
+    private HttpClient? _partiesClient;
 
     /// <summary>
     /// Gets a value indicating whether the Aspire topology started successfully.
@@ -41,10 +41,10 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
     public string? UnavailableReason { get; private set; }
 
     /// <summary>
-    /// Gets the HTTP client for the CommandApi service.
+    /// Gets the HTTP client for the Parties service.
     /// Available after <see cref="InitializeAsync"/> completes with <see cref="IsAvailable"/> = true.
     /// </summary>
-    public HttpClient CommandApiClient => _commandApiClient ?? throw new InvalidOperationException(
+    public HttpClient PartiesClient => _partiesClient ?? throw new InvalidOperationException(
         IsAvailable
             ? "Test infrastructure not initialized. Ensure InitializeAsync has completed."
             : $"Test infrastructure unavailable: {UnavailableReason}");
@@ -63,7 +63,7 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
         _previousEnableKeycloak = Environment.GetEnvironmentVariable("EnableKeycloak");
         Environment.SetEnvironmentVariable("EnableKeycloak", "false");
 
-        // Force Development environment so CommandApi loads appsettings.Development.json.
+        // Force Development environment so Parties service loads appsettings.Development.json.
         _previousAspNetCoreEnvironment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
         _previousDotNetEnvironment = Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT");
         Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "Development");
@@ -95,19 +95,19 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
             _app = await _builder.BuildAsync().ConfigureAwait(false);
             await _app.StartAsync(cts.Token).ConfigureAwait(false);
 
-            // Wait for commandapi to be healthy. This includes the DAPR health checks
+            // Wait for parties to be healthy. This includes the DAPR health checks
             // (sidecar, state store, pub/sub) becoming healthy after sidecar initialization.
             await _app.ResourceNotifications
-                .WaitForResourceHealthyAsync("commandapi", cts.Token)
+                .WaitForResourceHealthyAsync("parties", cts.Token)
                 .WaitAsync(TimeSpan.FromMinutes(5), cts.Token)
                 .ConfigureAwait(false);
 
-            _commandApiClient = _app.CreateHttpClient("commandapi");
-            _commandApiClient.Timeout = TimeSpan.FromSeconds(60);
+            _partiesClient = _app.CreateHttpClient("parties");
+            _partiesClient.Timeout = TimeSpan.FromSeconds(60);
 
             // Wait for the /health endpoint to actually return 200 via HTTP.
             await WaitForEndpointAsync(
-                _commandApiClient,
+                _partiesClient,
                 "/health",
                 [HttpStatusCode.OK],
                 TimeSpan.FromMinutes(3),
@@ -130,7 +130,7 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
         TenantRole role,
         CancellationToken cancellationToken = default)
         => TenantIntegrationTestSeeder.SeedActiveTenantAsync(
-            CommandApiClient,
+            PartiesClient,
             tenantId,
             [new TenantMemberSeed(tenantId, userId, role)],
             cancellationToken);
@@ -138,13 +138,13 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
     public Task DisableTenantAsync(
         string tenantId,
         CancellationToken cancellationToken = default)
-        => TenantIntegrationTestSeeder.DisableTenantAsync(CommandApiClient, tenantId, cancellationToken);
+        => TenantIntegrationTestSeeder.DisableTenantAsync(PartiesClient, tenantId, cancellationToken);
 
     public Task RemoveUserFromTenantAsync(
         string tenantId,
         string userId,
         CancellationToken cancellationToken = default)
-        => TenantIntegrationTestSeeder.RemoveUserFromTenantAsync(CommandApiClient, tenantId, userId, cancellationToken);
+        => TenantIntegrationTestSeeder.RemoveUserFromTenantAsync(PartiesClient, tenantId, userId, cancellationToken);
 
     /// <summary>
     /// Pre-seeds tenant access state so unrelated E2E tests in this fixture (search,
@@ -165,7 +165,7 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
         try
         {
             await TenantIntegrationTestSeeder.SeedActiveTenantAsync(
-                CommandApiClient,
+                PartiesClient,
                 "tenant-a",
                 [
                     new TenantMemberSeed("tenant-a", "e2e-test-admin", TenantRole.TenantOwner),
@@ -175,7 +175,7 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
             cancellationToken.ThrowIfCancellationRequested();
 
             await TenantIntegrationTestSeeder.SeedActiveTenantAsync(
-                CommandApiClient,
+                PartiesClient,
                 "e2e-tenant",
                 [
                     new TenantMemberSeed("e2e-tenant", "e2e-test-user", TenantRole.TenantOwner),
@@ -198,7 +198,7 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
             // seeder fell back to a random JWT signing key, every PublishTenantEventAsync
             // would have produced 401s — name that explicitly so the failure mode is obvious.
             string signingKeyHint = TenantIntegrationTestSeeder.SigningKeyIsRandomFallback
-                ? " (signing key fell back to a per-process random value because no env var or appsettings.Development.json key was found; tokens cannot be validated by the running CommandApi)"
+                ? " (signing key fell back to a per-process random value because no env var or appsettings.Development.json key was found; tokens cannot be validated by the running Parties service)"
                 : string.Empty;
 
             throw new InvalidOperationException(
@@ -210,7 +210,7 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
 
     public async Task DisposeAsync()
     {
-        _commandApiClient?.Dispose();
+        _partiesClient?.Dispose();
 
         if (_app is not null)
         {

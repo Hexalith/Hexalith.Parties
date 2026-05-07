@@ -302,11 +302,11 @@ Authorization: Bearer <admin-jwt>
 
 **Files created in Story 8-2 (reference, reuse where applicable):**
 
-- `src/Hexalith.Parties.CommandApi/HealthChecks/` — 5 health check files
-- `src/Hexalith.Parties.CommandApi/Middleware/DegradedResponseMiddleware.cs`
-- `tests/Hexalith.Parties.CommandApi.Tests/HealthChecks/` — 6 test files
+- `src/Hexalith.Parties/HealthChecks/` — 5 health check files
+- `src/Hexalith.Parties/Middleware/DegradedResponseMiddleware.cs`
+- `tests/Hexalith.Parties.Tests/HealthChecks/` — 6 test files
 - `tests/Hexalith.Parties.IntegrationTests/HealthChecks/` — 3 test files
-- `src/Hexalith.Parties.CommandApi/Properties/launchSettings.json`
+- `src/Hexalith.Parties/Properties/launchSettings.json`
 
 ### Git Intelligence
 
@@ -324,7 +324,7 @@ src/Hexalith.Parties.Projections/
     IProjectionRebuildService.cs        — Interface for rebuild operations
     ProjectionRebuildService.cs         — Event replay through pure handlers
 
-src/Hexalith.Parties.CommandApi/
+src/Hexalith.Parties/
   Controllers/
     AdminController.cs                  — Admin-only rebuild endpoint
 ```
@@ -340,7 +340,7 @@ src/Hexalith.Parties.Projections/
     IPartyDetailProjectionActor.cs      — Add IsRebuildingAsync() method
     IPartyIndexProjectionActor.cs       — Add IsRebuildingAsync() method
 
-src/Hexalith.Parties.CommandApi/
+src/Hexalith.Parties/
   Program.cs                            — Register IProjectionRebuildService, admin authorization policy
 
 docs/
@@ -350,7 +350,7 @@ docs/
 **Test files to create:**
 
 ```
-tests/Hexalith.Parties.CommandApi.Tests/
+tests/Hexalith.Parties.Tests/
   Projections/
     PartyDetailProjectionActorCorruptionTests.cs    — Tier 1: corruption detection, rebuild flag
     PartyIndexProjectionActorCorruptionTests.cs     — Tier 1: corruption detection, rebuild flag
@@ -397,7 +397,7 @@ tests/Hexalith.Parties.IntegrationTests/
 
 - Rebuild service goes in `Projections/Services/` (new folder — keeps rebuild logic with projection domain)
 - Admin controller goes in `CommandApi/Controllers/` (alongside `PartiesController`)
-- No new projects needed — all code fits in existing `Hexalith.Parties.Projections` and `Hexalith.Parties.CommandApi`
+- No new projects needed — all code fits in existing `Hexalith.Parties.Projections` and `Hexalith.Parties`
 - Tests go in existing test projects — no new test projects needed
 - Projection actor interfaces gain `IsRebuildingAsync()` — this is a minor contract addition
 
@@ -415,8 +415,8 @@ tests/Hexalith.Parties.IntegrationTests/
 - [Source: src/Hexalith.Parties.Projections/Actors/PartyIndexProjectionActor.cs — Current actor implementation]
 - [Source: src/Hexalith.Parties.Projections/Handlers/PartyDetailProjectionHandler.cs — Pure handler for replay]
 - [Source: src/Hexalith.Parties.Projections/Handlers/PartyIndexProjectionHandler.cs — Pure handler for replay]
-- [Source: src/Hexalith.Parties.CommandApi/HealthChecks/ProjectionActorsHealthCheck.cs — Existing health check]
-- [Source: src/Hexalith.Parties.CommandApi/Middleware/DegradedResponseMiddleware.cs — Existing degradation headers]
+- [Source: src/Hexalith.Parties/HealthChecks/ProjectionActorsHealthCheck.cs — Existing health check]
+- [Source: src/Hexalith.Parties/Middleware/DegradedResponseMiddleware.cs — Existing degradation headers]
 
 ## Senior Developer Review (AI)
 
@@ -475,13 +475,13 @@ Claude Opus 4.6 (claude-opus-4-6)
 | `src/Hexalith.Parties.Projections/Services/IProjectionRebuildService.cs`                           | Created  | Interface for rebuild operations                                                                                                                                  |
 | `src/Hexalith.Parties.Projections/Services/ProjectionRebuildService.cs`                            | Created  | Event replay via DAPR Actor State HTTP API, type resolution, pure handler replay, state transaction writes                                                        |
 | `src/Hexalith.Parties.Projections/Hexalith.Parties.Projections.csproj`                             | Modified | Added `InternalsVisibleTo` for test project                                                                                                                       |
-| `src/Hexalith.Parties.CommandApi/Controllers/AdminController.cs`                                   | Created  | Admin rebuild endpoint with `[Authorize(Policy = "Admin")]`, 202 Accepted, background `Task.Run`                                                                  |
-| `src/Hexalith.Parties.CommandApi/Extensions/PartiesServiceCollectionExtensions.cs`                 | Modified | Added Admin authorization policy, registered `IProjectionRebuildService` via `AddHttpClient`                                                                      |
+| `src/Hexalith.Parties/Controllers/AdminController.cs`                                   | Created  | Admin rebuild endpoint with `[Authorize(Policy = "Admin")]`, 202 Accepted, background `Task.Run`                                                                  |
+| `src/Hexalith.Parties/Extensions/PartiesServiceCollectionExtensions.cs`                 | Modified | Added Admin authorization policy, registered `IProjectionRebuildService` via `AddHttpClient`                                                                      |
 | `docs/deployment-guide.md`                                                                         | Modified | Added comprehensive projection rebuild operational documentation                                                                                                  |
-| `tests/Hexalith.Parties.CommandApi.Tests/Projections/PartyDetailProjectionActorCorruptionTests.cs` | Created  | 5 Tier 1 tests: corruption detection, normal state, degraded mode, exception propagation                                                                          |
-| `tests/Hexalith.Parties.CommandApi.Tests/Projections/PartyIndexProjectionActorCorruptionTests.cs`  | Created  | 4 Tier 1 tests: corruption detection, normal state, degraded mode                                                                                                 |
-| `tests/Hexalith.Parties.CommandApi.Tests/Projections/ProjectionRebuildServiceTests.cs`             | Created  | 3 Tier 1 tests: event replay, no metadata, missing events                                                                                                         |
-| `tests/Hexalith.Parties.CommandApi.Tests/Controllers/AdminEndpointIntegrationTests.cs`             | Created  | 5 Tier 2 tests: admin 202, no-token 401, no-role 403, missing tenantId 400, invalid projection 400                                                                |
+| `tests/Hexalith.Parties.Tests/Projections/PartyDetailProjectionActorCorruptionTests.cs` | Created  | 5 Tier 1 tests: corruption detection, normal state, degraded mode, exception propagation                                                                          |
+| `tests/Hexalith.Parties.Tests/Projections/PartyIndexProjectionActorCorruptionTests.cs`  | Created  | 4 Tier 1 tests: corruption detection, normal state, degraded mode                                                                                                 |
+| `tests/Hexalith.Parties.Tests/Projections/ProjectionRebuildServiceTests.cs`             | Created  | 3 Tier 1 tests: event replay, no metadata, missing events                                                                                                         |
+| `tests/Hexalith.Parties.Tests/Controllers/AdminEndpointIntegrationTests.cs`             | Created  | 5 Tier 2 tests: admin 202, no-token 401, no-role 403, missing tenantId 400, invalid projection 400                                                                |
 | `tests/Hexalith.Parties.IntegrationTests/Admin/AdminEndpointE2ETests.cs`                           | Created  | 3 Tier 3 E2E tests: admin endpoint accessibility and authorization in full Aspire topology                                                                        |
 
 ### File List
@@ -490,11 +490,11 @@ Claude Opus 4.6 (claude-opus-4-6)
 
 - `src/Hexalith.Parties.Projections/Services/IProjectionRebuildService.cs`
 - `src/Hexalith.Parties.Projections/Services/ProjectionRebuildService.cs`
-- `src/Hexalith.Parties.CommandApi/Controllers/AdminController.cs`
-- `tests/Hexalith.Parties.CommandApi.Tests/Projections/PartyDetailProjectionActorCorruptionTests.cs`
-- `tests/Hexalith.Parties.CommandApi.Tests/Projections/PartyIndexProjectionActorCorruptionTests.cs`
-- `tests/Hexalith.Parties.CommandApi.Tests/Projections/ProjectionRebuildServiceTests.cs`
-- `tests/Hexalith.Parties.CommandApi.Tests/Controllers/AdminEndpointIntegrationTests.cs`
+- `src/Hexalith.Parties/Controllers/AdminController.cs`
+- `tests/Hexalith.Parties.Tests/Projections/PartyDetailProjectionActorCorruptionTests.cs`
+- `tests/Hexalith.Parties.Tests/Projections/PartyIndexProjectionActorCorruptionTests.cs`
+- `tests/Hexalith.Parties.Tests/Projections/ProjectionRebuildServiceTests.cs`
+- `tests/Hexalith.Parties.Tests/Controllers/AdminEndpointIntegrationTests.cs`
 - `tests/Hexalith.Parties.IntegrationTests/Admin/AdminEndpointE2ETests.cs`
 
 **Modified files (7):**
@@ -504,15 +504,15 @@ Claude Opus 4.6 (claude-opus-4-6)
 - `src/Hexalith.Parties.Projections/Actors/PartyDetailProjectionActor.cs`
 - `src/Hexalith.Parties.Projections/Actors/PartyIndexProjectionActor.cs`
 - `src/Hexalith.Parties.Projections/Hexalith.Parties.Projections.csproj`
-- `src/Hexalith.Parties.CommandApi/Extensions/PartiesServiceCollectionExtensions.cs`
+- `src/Hexalith.Parties/Extensions/PartiesServiceCollectionExtensions.cs`
 - `docs/deployment-guide.md`
 
 **Review remediation updates:**
 
 - `src/Hexalith.Parties.Projections/Services/ProjectionRebuildService.cs` (modified) -- Added checkpoint resume support, index manifest fallback, and stricter actor-state read semantics
 - `src/Hexalith.Parties.Projections/Actors/PartyIndexProjectionActor.cs` (modified) -- Persisted party ID manifest alongside index state for corruption recovery
-- `src/Hexalith.Parties.CommandApi/Controllers/PartiesController.cs` (modified) -- Added explicit degraded headers during rebuild and guaranteed `200 OK` detail responses while rebuilding
-- `tests/Hexalith.Parties.CommandApi.Tests/Projections/ProjectionRebuildServiceTests.cs` (modified) -- Added regression tests for checkpoint resume and manifest fallback
-- `tests/Hexalith.Parties.CommandApi.Tests/HealthChecks/HealthEndpointIntegrationTests.cs` (modified) -- Added degraded-header query tests for rebuild scenarios
+- `src/Hexalith.Parties/Controllers/PartiesController.cs` (modified) -- Added explicit degraded headers during rebuild and guaranteed `200 OK` detail responses while rebuilding
+- `tests/Hexalith.Parties.Tests/Projections/ProjectionRebuildServiceTests.cs` (modified) -- Added regression tests for checkpoint resume and manifest fallback
+- `tests/Hexalith.Parties.Tests/HealthChecks/HealthEndpointIntegrationTests.cs` (modified) -- Added degraded-header query tests for rebuild scenarios
 - `_bmad-output/implementation-artifacts/8-3-projection-health-monitoring-and-rebuild.md` (modified) -- Updated status and recorded review remediation outcome
 - `_bmad-output/implementation-artifacts/sprint-status.yaml` (modified) -- Synced story status to done

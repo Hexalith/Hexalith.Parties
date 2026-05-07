@@ -60,7 +60,6 @@ public static class Extensions
                     .AddHttpClientInstrumentation()
                     .AddRuntimeInstrumentation())
             .WithTracing(tracing => tracing.AddSource(builder.Environment.ApplicationName)
-                    .AddSource("Hexalith.Parties.CommandApi")
                     .AddSource("Hexalith.Parties")
                     .AddAspNetCoreInstrumentation(tracing =>
                         // Exclude health check requests from tracing

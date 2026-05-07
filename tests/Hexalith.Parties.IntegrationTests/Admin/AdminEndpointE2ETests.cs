@@ -42,7 +42,7 @@ public sealed class AdminEndpointE2ETests
             projection = "all",
         });
 
-        using HttpResponseMessage response = await _fixture.CommandApiClient
+        using HttpResponseMessage response = await _fixture.PartiesClient
             .PostAsync(RebuildEndpoint, body);
 
         response.StatusCode.ShouldBe(HttpStatusCode.Unauthorized,
@@ -63,7 +63,7 @@ public sealed class AdminEndpointE2ETests
         request.Headers.Authorization =
             new AuthenticationHeaderValue("Bearer", CreateToken(includeAdminRole: false));
 
-        using HttpResponseMessage response = await _fixture.CommandApiClient
+        using HttpResponseMessage response = await _fixture.PartiesClient
             .SendAsync(request);
 
         response.StatusCode.ShouldBe(HttpStatusCode.Forbidden,
@@ -84,7 +84,7 @@ public sealed class AdminEndpointE2ETests
         request.Headers.Authorization =
             new AuthenticationHeaderValue("Bearer", CreateToken(includeAdminRole: true));
 
-        using HttpResponseMessage response = await _fixture.CommandApiClient
+        using HttpResponseMessage response = await _fixture.PartiesClient
             .SendAsync(request);
 
         response.StatusCode.ShouldBe(HttpStatusCode.Accepted,

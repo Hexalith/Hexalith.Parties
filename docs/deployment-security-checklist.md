@@ -27,12 +27,12 @@ Exit code `0` = all checks passed. Exit code `1` = failures detected.
 - [ ] `trustDomain` is set to a real SPIFFE domain (NOT `public`)
 - [ ] `namespace` matches the Kubernetes namespace for the deployment
 - [ ] Policies restrict operations to known `appId` values only
-- [ ] Only `commandapi` has `/**` POST access; other services have `deny` default
+- [ ] Only `parties` has `/**` POST access; other services have `deny` default
 
 ### State Store Scoping
 
 - [ ] State store component has `actorStateStore: "true"` metadata
-- [ ] `scopes` list contains ONLY `commandapi` (no other app-ids)
+- [ ] `scopes` list contains ONLY `parties` (no other app-ids)
 - [ ] Connection string uses `{env:VAR_NAME}` reference (never hardcoded)
 - [ ] Database/container is provisioned and accessible from the deployment environment
 
@@ -40,19 +40,19 @@ Exit code `0` = all checks passed. Exit code `1` = failures detected.
 
 All three layers must be configured for each pub/sub component:
 
-- [ ] **Layer 1 -- Component Scoping:** `scopes` lists `commandapi` and authorized subscriber app-ids only
+- [ ] **Layer 1 -- Component Scoping:** `scopes` lists `parties` and authorized subscriber app-ids only
 - [ ] **Layer 2 -- Publishing Scoping:** `publishingScopes` denies subscribers from publishing (`{env:SUBSCRIBER_APP_ID}=`)
 - [ ] **Layer 3 -- Subscription Scoping:** `subscriptionScopes` restricts subscribers to authorized tenant topics only
-- [ ] `subscriptionScopes` includes `commandapi=system.tenants.events` for the Parties Tenants event consumer
+- [ ] `subscriptionScopes` includes `parties=system.tenants.events` for the Parties Tenants event consumer
 - [ ] `enableDeadLetter` is set to `"true"`
 - [ ] Connection string/brokers use `{env:VAR_NAME}` references (never hardcoded)
 
 ### Hexalith.Tenants Integration
 
 - [ ] `subscription-tenants.yaml` exists for topic `system.tenants.events`
-- [ ] Tenants subscription `scopes` includes `commandapi`
+- [ ] Tenants subscription `scopes` includes `parties`
 - [ ] Tenants subscription has `deadLetterTopic`
-- [ ] `tenants-integration.yaml` sets `pubsubName: pubsub`, `topicName: system.tenants.events`, and `commandApiAppId: commandapi`
+- [ ] `tenants-integration.yaml` sets `pubsubName: pubsub`, `topicName: system.tenants.events`, and `commandApiAppId: parties`
 - [ ] No Parties configuration bypasses Hexalith.Tenants authorization
 - [ ] Troubleshooting/runbook owners are assigned for identity provider, tenant administrator, tenant operator, and platform operator issues
 

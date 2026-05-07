@@ -1,5 +1,5 @@
 # generated: 2026-05-02
-# last_updated: 2026-05-07  (epic 9 retrospective completed and saved as epic-9-retro-2026-05-07.md. Earlier same-day update: story 11-1 moved review→done after bmad-code-review applied 7 patches across decisions and direct fixes: opt-in `Tenants:Enabled` base default, shared state-store `keyPrefix=none` propagation, bounded HttpClient timeout, cancellation rethrow, AC2 manual-bootstrap docs, switchable tenants readiness probe + `/ready=503` integration test; 5 items deferred. Focused CommandApi tests 23/23 passing; AppHost and CommandApi build clean. Earlier same-day updates: story 11-1 moved blocked→review; story 10-1 moved in-progress→review; story 11-4 moved to done.)
+# last_updated: 2026-05-07  (sprint-change-proposal-2026-05-07.md approved: EventStore-Fronted Architecture Pivot. New Epic 12 added with 11 stories (12-0 spike + 12-1..12-10) all status=backlog. Stories 10-1-1, 10-2, 10-3 are PAUSED pending Epic 12 — their consumer-facing scope is superseded by Epic 12 stories 12-7 (admin portal rebuild on FrontComposer + EventStore queries) and 12-8 (picker rewrite); status fields preserved for audit. Companion PRD edits (FR60, FR62, NFR5, FR39-FR43, Epic 5 narrative, Epic 10 narrative) and Architecture additions (ADR D14, ADR D15, payload catalog) are out-of-band of this YAML. Earlier same-day updates: epic 9 retrospective completed and saved as epic-9-retro-2026-05-07.md; story 11-1 moved review→done after bmad-code-review applied 7 patches across decisions and direct fixes: opt-in `Tenants:Enabled` base default, shared state-store `keyPrefix=none` propagation, bounded HttpClient timeout, cancellation rethrow, AC2 manual-bootstrap docs, switchable tenants readiness probe + `/ready=503` integration test; 5 items deferred. Focused CommandApi tests 23/23 passing; AppHost and CommandApi build clean. Earlier same-day updates: story 11-1 moved blocked→review; story 10-1 moved in-progress→review; story 11-4 moved to done.)
 # project: Hexalith.Parties
 # project_key: NOKEY
 # tracking_system: file-system
@@ -36,6 +36,8 @@
 
 generated: 2026-05-02
 last_updated: 2026-05-07
+# sprint_change_proposals:
+#   - sprint-change-proposal-2026-05-07.md  (EventStore-Fronted Architecture Pivot — added Epic 12; paused 10-1-1, 10-2, 10-3)
 project: Hexalith.Parties
 project_key: NOKEY
 tracking_system: file-system
@@ -125,9 +127,32 @@ development_status:
   epic-11-retrospective: optional
 
   # Epic 10: Administration & Frontend (v1.2) (4 stories — 10-1-1 added by pass-2 review)
+  # NOTE (2026-05-07): 10-1-1, 10-2, 10-3 are PAUSED pending Epic 12. Their consumer-facing
+  # scope (admin portal + picker) is superseded by Epic 12 stories 12-7 (admin portal rebuild
+  # on FrontComposer + EventStore queries) and 12-8 (picker rewrite). Status fields preserved
+  # for audit per sprint-change-proposal-2026-05-07.md.
   epic-10: in-progress
   10-1-admin-portal-browse-search-and-inspect: done
-  10-1-1-admin-portal-frontcomposer-and-tenants-integration: in-progress
-  10-2-admin-portal-gdpr-operations: ready-for-dev
-  10-3-embeddable-party-picker-component: in-progress
+  10-1-1-admin-portal-frontcomposer-and-tenants-integration: in-progress  # PAUSED — superseded by 12-7
+  10-2-admin-portal-gdpr-operations: ready-for-dev                        # PAUSED — superseded by 12-7
+  10-3-embeddable-party-picker-component: in-progress                     # PAUSED — superseded by 12-8
   epic-10-retrospective: optional
+
+  # Epic 12: EventStore-Fronted Architecture Pivot (11 stories)
+  # Added 2026-05-07 per sprint-change-proposal-2026-05-07.md.
+  # Story 12-0 is a feasibility spike and is the GATE for the rest of Epic 12.
+  # Wave 1 (server pivot): 12-1..12-4. Wave 2 (consumer migration): 12-5..12-10.
+  # Wave 2 cannot start until Wave 1 lands.
+  epic-12: backlog
+  12-0-eventstore-parties-actor-invocation-feasibility-spike: backlog
+  12-1-apphost-recomposition: backlog
+  12-2-parties-actor-host: backlog
+  12-3-validation-relocation-and-tenant-auth-ownership: backlog
+  12-4-server-tier-1-tier-2-test-rewrite: backlog
+  12-5-parties-client-thin-wrapper: backlog
+  12-6-parties-mcp-thin-host: backlog
+  12-7-admin-portal-rebuild-on-frontcomposer: backlog
+  12-8-picker-rewrite: backlog
+  12-9-sample-and-getting-started-doc-updates: backlog
+  12-10-deployment-validation-and-topology-fitness-rewrite: backlog
+  epic-12-retrospective: optional

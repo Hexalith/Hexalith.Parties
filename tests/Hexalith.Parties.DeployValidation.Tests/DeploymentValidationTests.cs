@@ -90,7 +90,7 @@ public class DeploymentValidationTests : IDisposable
         (int exitCode, string output) = await RunValidationAsync(_tempDir);
 
         exitCode.ShouldBe(1);
-        output.ShouldContain("commandapi");
+        output.ShouldContain("parties");
     }
 
     [Fact]
@@ -195,15 +195,15 @@ public class DeploymentValidationTests : IDisposable
     }
 
     [Fact]
-    public async Task MissingCommandApiTenantsSubscriptionScope_FailsWhenProductionScopesArePresent()
+    public async Task MissingPartiesTenantsSubscriptionScope_FailsWhenProductionScopesArePresent()
     {
         WriteValidProductionConfig(_tempDir);
-        WritePubSubWithoutTenantsCommandApiScope(_tempDir);
+        WritePubSubWithoutTenantsPartiesScope(_tempDir);
 
         (int exitCode, string output) = await RunValidationAsync(_tempDir);
 
         exitCode.ShouldBe(1);
-        output.ShouldContain("Missing commandapi subscription permission");
+        output.ShouldContain("Missing parties subscription permission");
         output.ShouldContain("system.tenants.events");
     }
 
@@ -219,7 +219,7 @@ public class DeploymentValidationTests : IDisposable
             spec:
               pubsubName: pubsub
               topicName: system.tenants.events
-              commandApiAppId: commandapi
+              commandApiAppId: parties
               tenantsDependencyHealth: unhealthy
             """);
 
@@ -340,7 +340,7 @@ public class DeploymentValidationTests : IDisposable
                 defaultAction: deny
                 trustDomain: "{env:DAPR_TRUST_DOMAIN|hexalith.io}"
                 policies:
-                  - appId: commandapi
+                  - appId: parties
                     defaultAction: deny
                     trustDomain: "{env:DAPR_TRUST_DOMAIN|hexalith.io}"
                     namespace: "{env:DAPR_NAMESPACE|hexalith}"
@@ -370,7 +370,7 @@ public class DeploymentValidationTests : IDisposable
                 - name: actorStateStore
                   value: "true"
             scopes:
-              - commandapi
+              - parties
             """);
 
         File.WriteAllText(Path.Combine(dir, "pubsub-kafka.yaml"), """
@@ -391,9 +391,9 @@ public class DeploymentValidationTests : IDisposable
                 - name: publishingScopes
                   value: "{env:SUBSCRIBER_APP_ID}="
                 - name: subscriptionScopes
-                  value: "commandapi=system.tenants.events;{env:SUBSCRIBER_APP_ID}=acme.parties.events"
+                  value: "parties=system.tenants.events;{env:SUBSCRIBER_APP_ID}=acme.parties.events"
             scopes:
-              - commandapi
+              - parties
               - "{env:SUBSCRIBER_APP_ID}"
             """);
 
@@ -416,7 +416,7 @@ public class DeploymentValidationTests : IDisposable
             apiVersion: dapr.io/v2alpha1
             kind: Subscription
             metadata:
-              name: tenants-events-commandapi
+              name: tenants-events-parties
             spec:
               pubsubname: pubsub
               topic: "system.tenants.events"
@@ -424,7 +424,7 @@ public class DeploymentValidationTests : IDisposable
                 default: /events/tenants
               deadLetterTopic: "deadletter.system.tenants.events"
             scopes:
-              - commandapi
+              - parties
             """);
 
         File.WriteAllText(Path.Combine(dir, "tenants-integration.yaml"), """
@@ -435,7 +435,7 @@ public class DeploymentValidationTests : IDisposable
             spec:
               pubsubName: pubsub
               topicName: system.tenants.events
-              commandApiAppId: commandapi
+              commandApiAppId: parties
               tenantsDependencyHealth: healthy
             """);
 
@@ -484,7 +484,7 @@ public class DeploymentValidationTests : IDisposable
                 defaultAction: allow
                 trustDomain: "hexalith.io"
                 policies:
-                  - appId: commandapi
+                  - appId: parties
                     defaultAction: deny
                     trustDomain: "hexalith.io"
                     namespace: "hexalith"
@@ -536,7 +536,7 @@ public class DeploymentValidationTests : IDisposable
                 - name: actorStateStore
                   value: "true"
             scopes:
-              - commandapi
+              - parties
             """);
     }
 
@@ -578,7 +578,7 @@ public class DeploymentValidationTests : IDisposable
                 - name: subscriptionScopes
                   value: "{env:SUBSCRIBER_APP_ID}=acme.parties.events"
             scopes:
-              - commandapi
+              - parties
               - "{env:SUBSCRIBER_APP_ID}"
             """);
     }
@@ -603,12 +603,12 @@ public class DeploymentValidationTests : IDisposable
                 - name: subscriptionScopes
                   value: "{env:SUBSCRIBER_APP_ID}=acme.parties.events"
             scopes:
-              - commandapi
+              - parties
               - "{env:SUBSCRIBER_APP_ID}"
             """);
     }
 
-    private static void WritePubSubWithoutTenantsCommandApiScope(string dir)
+    private static void WritePubSubWithoutTenantsPartiesScope(string dir)
     {
         File.WriteAllText(Path.Combine(dir, "pubsub-kafka.yaml"), """
             apiVersion: dapr.io/v1alpha1
@@ -628,7 +628,7 @@ public class DeploymentValidationTests : IDisposable
                 - name: subscriptionScopes
                   value: "{env:SUBSCRIBER_APP_ID}=acme.parties.events"
             scopes:
-              - commandapi
+              - parties
               - "{env:SUBSCRIBER_APP_ID}"
             """);
     }
@@ -645,7 +645,7 @@ public class DeploymentValidationTests : IDisposable
                 defaultAction: allow
                 trustDomain: "public"
                 policies:
-                  - appId: commandapi
+                  - appId: parties
                     defaultAction: deny
                     trustDomain: "public"
                     namespace: "default"
@@ -669,7 +669,7 @@ public class DeploymentValidationTests : IDisposable
                 - name: actorStateStore
                   value: "true"
             scopes:
-              - commandapi
+              - parties
             """);
 
         File.WriteAllText(Path.Combine(dir, "pubsub.yaml"), """
@@ -684,7 +684,7 @@ public class DeploymentValidationTests : IDisposable
                 - name: redisHost
                   value: "localhost:6379"
             scopes:
-              - commandapi
+              - parties
               - sample
             """);
 
@@ -744,7 +744,7 @@ public class DeploymentValidationTests : IDisposable
                     trip: consecutiveFailures > 5
               targets:
                 apps:
-                  commandapi:
+                  parties:
                     retry: defaultRetry
             """);
     }

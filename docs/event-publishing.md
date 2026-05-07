@@ -126,7 +126,7 @@ When the pub/sub circuit breaker opens, the `AggregateActor` receives immediate 
 The `deploy/dapr/accesscontrol.yaml` defines service-to-service invocation policies:
 
 - **Default action:** `deny` (secure by default)
-- **commandapi:** Allowed to invoke domain services via POST
+- **parties:** Allowed to invoke domain services via POST
 - **Subscribers:** No service invocation permissions (receive events via pub/sub only)
 
 Configure `DAPR_TRUST_DOMAIN` and `DAPR_NAMESPACE` environment variables for your Kubernetes deployment.
@@ -135,11 +135,11 @@ Configure `DAPR_TRUST_DOMAIN` and `DAPR_NAMESPACE` environment variables for you
 
 Local development uses Redis-backed pub/sub configured in [src/Hexalith.Parties.AppHost/DaprComponents](src/Hexalith.Parties.AppHost/DaprComponents):
 
-- **pubsub.yaml:** Redis on `localhost:6379`, scopes: `commandapi`, `sample`
+- **pubsub.yaml:** Redis on `localhost:6379`, scopes: `parties`, `sample`
 - **subscription-parties.yaml:** Topic `tenant-a.parties.events`, scoped to the sample subscriber app-id `sample`
 - **resiliency.yaml:** Conservative retry policies for fast local iteration
 - **accesscontrol.yaml:** `defaultAction: allow` (no mTLS in self-hosted mode)
 
-The sample subscriber endpoint lives in [samples/Hexalith.Parties.Sample/PartyEventHandler.cs](samples/Hexalith.Parties.Sample/PartyEventHandler.cs) and maps `/events/parties`. `commandapi` is the publisher only.
+The sample subscriber endpoint lives in [samples/Hexalith.Parties.Sample/PartyEventHandler.cs](samples/Hexalith.Parties.Sample/PartyEventHandler.cs) and maps `/events/parties`. `parties` is the publisher only.
 
 Run via .NET Aspire: `dotnet run --project src/Hexalith.Parties.AppHost`

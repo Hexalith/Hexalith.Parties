@@ -144,7 +144,7 @@ so that DPO operations are efficient and auditable through a visual interface.
 
 - [ ] Validate build and affected tests
   - [ ] Run the affected FrontComposer/Parties portal component test project(s).
-  - [ ] Run focused backend suites if endpoint contracts change: `tests/Hexalith.Parties.CommandApi.Tests` erasure, consent, restriction, portability, and admin endpoint tests.
+  - [ ] Run focused backend suites if endpoint contracts change: `tests/Hexalith.Parties.Tests` erasure, consent, restriction, portability, and admin endpoint tests.
   - [ ] Run affected integration tests only when DAPR/Aspire prerequisites are available; otherwise record the infrastructure skip reason.
   - [ ] Run `dotnet build Hexalith.Parties.slnx --configuration Release`.
 
@@ -172,7 +172,7 @@ PRD requirements mapped to this story are FR66 plus the GDPR capability requirem
 
 ### Current Backend Surface
 
-`src/Hexalith.Parties.CommandApi/Controllers/AdminController.cs`
+`src/Hexalith.Parties/Controllers/AdminController.cs`
 
 - Current state: admin-only controller under `/api/v1/admin` with `[Authorize(Policy = "Admin")]`.
 - Erasure endpoints already exist:
@@ -192,7 +192,7 @@ PRD requirements mapped to this story are FR66 plus the GDPR capability requirem
   - `GET /api/v1/admin/parties/{partyId}/processing-records`
 - Preserve: tenant extraction from the authenticated user, admin policy enforcement, `401` missing tenant behavior, `403` forbidden behavior, `422` domain rejection ProblemDetails, `409` erasure-in-progress export behavior, and `410` erased-party export/processing behavior.
 
-`src/Hexalith.Parties.CommandApi/Controllers/PartiesController.cs`
+`src/Hexalith.Parties/Controllers/PartiesController.cs`
 
 - Current state: authenticated party list/search/detail endpoints under `/api/v1/parties`.
 - Story usage: reuse Story 10.1 detail hydration and degraded/search handling; this story layers GDPR actions onto the selected party.
@@ -260,9 +260,9 @@ Required behavior:
 
 - Parties-specific portal code should live in a Parties-owned frontend project or adapter layer that references FrontComposer packages/submodule output.
 - Do not place Parties domain UI directly inside the FrontComposer submodule unless that submodule is intentionally being changed.
-- Backend changes, if any, stay in `src/Hexalith.Parties.CommandApi`.
+- Backend changes, if any, stay in `src/Hexalith.Parties`.
 - Shared public data contracts stay in `src/Hexalith.Parties.Contracts`; do not add UI framework dependencies there.
-- Component tests should live near the new portal test project. Backend endpoint tests stay in `tests/Hexalith.Parties.CommandApi.Tests`.
+- Component tests should live near the new portal test project. Backend endpoint tests stay in `tests/Hexalith.Parties.Tests`.
 - Existing backend focused suites include `ErasureEndpointTests`, `ConsentEndpointTests`, `RestrictionEndpointTests`, `PortabilityEndpointTests`, and `AdminEndpointIntegrationTests`.
 - Full-topology tests follow existing integration fixtures and should skip gracefully when DAPR/Aspire infrastructure is unavailable.
 - No `project-context.md` persistent fact file was found during story creation.
@@ -312,15 +312,15 @@ Recent git history includes Story 11.1 party review bookkeeping, Memories search
 - [Source: _bmad-output/implementation-artifacts/9-3-right-to-erasure-and-verification.md]
 - [Source: _bmad-output/implementation-artifacts/9-4-consent-management-restriction-and-portability.md]
 - [Source: _bmad-output/implementation-artifacts/10-1-admin-portal-browse-search-and-inspect.md]
-- [Source: src/Hexalith.Parties.CommandApi/Controllers/AdminController.cs]
-- [Source: src/Hexalith.Parties.CommandApi/Controllers/PartiesController.cs]
+- [Source: src/Hexalith.Parties/Controllers/AdminController.cs]
+- [Source: src/Hexalith.Parties/Controllers/PartiesController.cs]
 - [Source: src/Hexalith.Parties.Contracts/Models/PartyDetail.cs]
 - [Source: src/Hexalith.Parties.Contracts/ValueObjects/ConsentRecord.cs]
 - [Source: src/Hexalith.Parties.Contracts/Models/ProcessingActivityRecord.cs]
-- [Source: tests/Hexalith.Parties.CommandApi.Tests/Controllers/ErasureEndpointTests.cs]
-- [Source: tests/Hexalith.Parties.CommandApi.Tests/Controllers/ConsentEndpointTests.cs]
-- [Source: tests/Hexalith.Parties.CommandApi.Tests/Controllers/RestrictionEndpointTests.cs]
-- [Source: tests/Hexalith.Parties.CommandApi.Tests/Controllers/PortabilityEndpointTests.cs]
+- [Source: tests/Hexalith.Parties.Tests/Controllers/ErasureEndpointTests.cs]
+- [Source: tests/Hexalith.Parties.Tests/Controllers/ConsentEndpointTests.cs]
+- [Source: tests/Hexalith.Parties.Tests/Controllers/RestrictionEndpointTests.cs]
+- [Source: tests/Hexalith.Parties.Tests/Controllers/PortabilityEndpointTests.cs]
 - [Source: Hexalith.FrontComposer/_bmad-output/implementation-artifacts/4-3-datagrid-filtering-sorting-and-search.md]
 - [Source: Hexalith.FrontComposer/_bmad-output/implementation-artifacts/5-2-http-response-handling-and-etag-caching.md]
 - [Source: https://learn.microsoft.com/en-us/aspnet/core/security/cross-site-scripting?view=aspnetcore-10.0]

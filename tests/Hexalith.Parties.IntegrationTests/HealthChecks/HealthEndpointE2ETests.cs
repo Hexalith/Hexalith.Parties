@@ -18,10 +18,10 @@ namespace Hexalith.Parties.IntegrationTests.HealthChecks;
 public sealed class HealthEndpointE2ETests
 {
     /// <summary>
-    /// Resource names observed for the DAPR sidecar attached to CommandApi.
+    /// Resource names observed for the DAPR sidecar attached to Parties service.
     /// Aspire exposes the sidecar as a logical resource and a runnable CLI-backed resource.
     /// </summary>
-    private static readonly string[] s_sidecarResourceNames = ["commandapi-dapr-cli", "commandapi-dapr"];
+    private static readonly string[] s_sidecarResourceNames = ["parties-dapr-cli", "parties-dapr"];
 
     private readonly PartiesAspireTopologyFixture _fixture;
 
@@ -39,7 +39,7 @@ public sealed class HealthEndpointE2ETests
     {
         if (!_fixture.IsAvailable) { return; }
 
-        using HttpResponseMessage response = await _fixture.CommandApiClient
+        using HttpResponseMessage response = await _fixture.PartiesClient
             .GetAsync("/health");
 
         response.StatusCode.ShouldBe(HttpStatusCode.OK,
@@ -51,7 +51,7 @@ public sealed class HealthEndpointE2ETests
     {
         if (!_fixture.IsAvailable) { return; }
 
-        using HttpResponseMessage response = await _fixture.CommandApiClient
+        using HttpResponseMessage response = await _fixture.PartiesClient
             .GetAsync("/ready");
 
         response.StatusCode.ShouldBe(HttpStatusCode.OK,
@@ -63,7 +63,7 @@ public sealed class HealthEndpointE2ETests
     {
         if (!_fixture.IsAvailable) { return; }
 
-        using HttpResponseMessage response = await _fixture.CommandApiClient
+        using HttpResponseMessage response = await _fixture.PartiesClient
             .GetAsync("/alive");
 
         response.StatusCode.ShouldBe(HttpStatusCode.OK,
@@ -75,7 +75,7 @@ public sealed class HealthEndpointE2ETests
     {
         if (!_fixture.IsAvailable) { return; }
 
-        using HttpResponseMessage response = await _fixture.CommandApiClient
+        using HttpResponseMessage response = await _fixture.PartiesClient
             .GetAsync("/health");
 
         response.Headers.Contains("X-Service-Degraded").ShouldBeFalse(
@@ -107,14 +107,14 @@ public sealed class HealthEndpointE2ETests
             TimeSpan.FromSeconds(2));
 
         // Assert: /health returns 503 (sidecar check reports Unhealthy)
-        using (HttpResponseMessage healthResponse = await _fixture.CommandApiClient.GetAsync("/health"))
+        using (HttpResponseMessage healthResponse = await _fixture.PartiesClient.GetAsync("/health"))
         {
             healthResponse.StatusCode.ShouldBe(HttpStatusCode.ServiceUnavailable,
                 "DAPR sidecar is stopped — /health should return 503 (Unhealthy).");
         }
 
         // Assert: /ready returns 503 (sidecar check is tagged "ready")
-        using (HttpResponseMessage readyResponse = await _fixture.CommandApiClient.GetAsync("/ready"))
+        using (HttpResponseMessage readyResponse = await _fixture.PartiesClient.GetAsync("/ready"))
         {
             readyResponse.StatusCode.ShouldBe(HttpStatusCode.ServiceUnavailable,
                 "DAPR sidecar is stopped — /ready should return 503.");
@@ -137,7 +137,7 @@ public sealed class HealthEndpointE2ETests
             TimeSpan.FromSeconds(3));
 
         // Assert: /health recovers after sidecar restart
-        using (HttpResponseMessage recoveryResponse = await _fixture.CommandApiClient.GetAsync("/health"))
+        using (HttpResponseMessage recoveryResponse = await _fixture.PartiesClient.GetAsync("/health"))
         {
             recoveryResponse.StatusCode.ShouldBe(HttpStatusCode.OK,
                 "After sidecar restart, /health should recover to 200.");
@@ -180,7 +180,7 @@ public sealed class HealthEndpointE2ETests
         {
             try
             {
-                using HttpResponseMessage response = await _fixture.CommandApiClient
+                using HttpResponseMessage response = await _fixture.PartiesClient
                     .GetAsync(url)
                     .ConfigureAwait(false);
 

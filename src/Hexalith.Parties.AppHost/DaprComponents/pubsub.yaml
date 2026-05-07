@@ -4,7 +4,7 @@
 # Topic pattern: {tenant}.{domain}.events
 #
 # Scoping:
-#   commandapi publishes parties events.
+#   parties publishes parties events.
 #   sample is authorized as the local reference subscriber used in Story 6.3.
 apiVersion: dapr.io/v1alpha1
 kind: Component
@@ -17,5 +17,5 @@ spec:
     - name: redisHost
       value: "localhost:6379"
 scopes:
-  - commandapi
+  - parties
   - sample

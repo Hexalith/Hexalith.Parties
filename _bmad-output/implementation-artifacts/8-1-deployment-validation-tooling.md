@@ -41,8 +41,8 @@ So that I can be confident DAPR access controls, tenant isolation, and pub/sub p
 ## Tasks / Subtasks
 
 - [x] Task 1: Create missing production state store DAPR component templates (AC: #4)
-  - [x] Create `deploy/dapr/statestore-cosmosdb.yaml` — CosmosDB state store with actorStateStore, scoped to commandapi, env-var connection string, entry size limit documentation (D5)
-  - [x] Create `deploy/dapr/statestore-postgresql.yaml` — PostgreSQL state store with actorStateStore, scoped to commandapi, env-var connection string
+  - [x] Create `deploy/dapr/statestore-cosmosdb.yaml` — CosmosDB state store with actorStateStore, scoped to parties, env-var connection string, entry size limit documentation (D5)
+  - [x] Create `deploy/dapr/statestore-postgresql.yaml` — PostgreSQL state store with actorStateStore, scoped to parties, env-var connection string
 
 - [x] Task 2: Create deployment validation tool (AC: #1, #2, #3)
   - [x] Create `deploy/validate-deployment.ps1` (PowerShell cross-platform script) that:
@@ -56,7 +56,7 @@ So that I can be confident DAPR access controls, tenant isolation, and pub/sub p
     - Policies restrict operations to known app-ids only
   - [x] Implement state store validation checks:
     - State store component exists with `actorStateStore: true`
-    - Scopes list contains ONLY `commandapi` (no other app-ids)
+    - Scopes list contains ONLY `parties` (no other app-ids)
     - Connection string uses env-var reference (not hardcoded)
   - [x] Implement pub/sub validation checks:
     - Pub/sub component exists with scopes defined
@@ -133,7 +133,7 @@ So that I can be confident DAPR access controls, tenant isolation, and pub/sub p
 ### What Already Exists (DO NOT Recreate)
 
 **Production DAPR component configs (deploy/dapr/) — 6 files exist:**
-- `accesscontrol.yaml` — Configuration kind, `defaultAction: deny`, trust domain via env-var, commandapi policy with `/**` POST allow
+- `accesscontrol.yaml` — Configuration kind, `defaultAction: deny`, trust domain via env-var, parties policy with `/**` POST allow
 - `resiliency.yaml` — Resiliency kind, exponential retries (10 default, 5 outbound pubsub, 20 inbound pubsub), circuit breakers, per-component targets
 - `subscription-parties.yaml` — Subscription v2alpha1, single-tenant example (`sample-tenant`), dead-letter topic, subscriber app-id via env-var
 - `pubsub-kafka.yaml` — Component kind, 3-layer scoping architecture (component/publishing/subscription), env-var connection, dead-letter enabled
@@ -142,14 +142,14 @@ So that I can be confident DAPR access controls, tenant isolation, and pub/sub p
 
 **Local dev DAPR configs (src/Hexalith.Parties.AppHost/DaprComponents/) — 5 files exist:**
 - `accesscontrol.yaml` — `defaultAction: allow` (self-hosted, no mTLS), trust domain `public`
-- `statestore.yaml` — Redis, `actorStateStore: true`, scoped to commandapi
+- `statestore.yaml` — Redis, `actorStateStore: true`, scoped to parties
 - `pubsub.yaml` — Redis Streams pubsub for local dev
 - `resiliency.yaml` — Same resiliency policies as production
 - `subscription-parties.yaml` — Local dev subscription
 
 **Key patterns in existing deploy configs (FOLLOW EXACTLY):**
 - All configs use `{env:VAR_NAME}` for secrets/connection strings — NEVER hardcode
-- Component scopes restrict access to `commandapi` + explicit subscriber app-ids
+- Component scopes restrict access to `parties` + explicit subscriber app-ids
 - 3-layer pub/sub scoping: component scopes → publishingScopes → subscriptionScopes
 - `publishingScopes` denies subscribers from publishing (`{env:SUBSCRIBER_APP_ID}=`)
 - `subscriptionScopes` restricts subscribers to specific tenant topics
@@ -187,7 +187,7 @@ So that I can be confident DAPR access controls, tenant isolation, and pub/sub p
 - `tests/Hexalith.Parties.Client.Tests/` — Tier 1
 - `tests/Hexalith.Parties.Server.Tests/` — Tier 1
 - `tests/Hexalith.Parties.Projections.Tests/` — Tier 1
-- `tests/Hexalith.Parties.CommandApi.Tests/` — Tier 2
+- `tests/Hexalith.Parties.Tests/` — Tier 2
 - `tests/Hexalith.Parties.IntegrationTests/` — Tier 3
 - `tests/Hexalith.Parties.Sample.Tests/` — Tier 1
 
@@ -222,9 +222,9 @@ So that I can be confident DAPR access controls, tenant isolation, and pub/sub p
 
 The validation tool must verify the 3-layer pub/sub scoping pattern used across all broker configs:
 
-1. **Layer 1 — Component Scoping (`scopes`):** Controls which app-ids can USE the pub/sub component. Only `commandapi` and authorized subscriber app-ids should be listed.
-2. **Layer 2 — Publishing Scoping (`publishingScopes`):** Controls which app-ids can PUBLISH to which topics. Subscribers should have empty publish access (`{env:SUBSCRIBER_APP_ID}=`). `commandapi` NOT listed = unrestricted.
-3. **Layer 3 — Subscription Scoping (`subscriptionScopes`):** Controls which app-ids can SUBSCRIBE to which topics. Subscribers restricted to authorized tenant topics only. `commandapi` NOT listed = unrestricted.
+1. **Layer 1 — Component Scoping (`scopes`):** Controls which app-ids can USE the pub/sub component. Only `parties` and authorized subscriber app-ids should be listed.
+2. **Layer 2 — Publishing Scoping (`publishingScopes`):** Controls which app-ids can PUBLISH to which topics. Subscribers should have empty publish access (`{env:SUBSCRIBER_APP_ID}=`). `parties` NOT listed = unrestricted.
+3. **Layer 3 — Subscription Scoping (`subscriptionScopes`):** Controls which app-ids can SUBSCRIBE to which topics. Subscribers restricted to authorized tenant topics only. `parties` NOT listed = unrestricted.
 
 **DAPR limitation:** Wildcards (`*`) are NOT supported in scoping — strict string match only.
 
@@ -325,8 +325,8 @@ Claude Opus 4.6
 
 ### Completion Notes List
 
-- **Task 1**: Created `statestore-cosmosdb.yaml` and `statestore-postgresql.yaml` following existing deploy config patterns (env-var references, actorStateStore, commandapi-only scopes, extensive header comments including D5 entry size limit documentation).
-- **Task 2**: Created `validate-deployment.ps1` with 6 validation categories: Access Control (file exists, defaultAction deny, trust domain, explicit app-id policies, wildcard rejection), State Store (exists, actorStateStore, commandapi-only scopes, env-var connection), Pub/Sub (scopes, publishingScopes, subscriptionScopes, dead-letter, env-var connection, local-dev warnings), Subscription (v2alpha1, dead-letter, env-var scopes, local-dev warnings), Resiliency (exists, circuit breakers, exponential retry, pub/sub and state store target wiring), Secret Store (advisory warning). Supports console and JSON output, documented GNU-style CLI syntax, and CI-friendly exit codes. Production configs pass 39/40 (1 advisory warning for missing secret store); local AppHost DAPR configs pass with warnings.
+- **Task 1**: Created `statestore-cosmosdb.yaml` and `statestore-postgresql.yaml` following existing deploy config patterns (env-var references, actorStateStore, parties-only scopes, extensive header comments including D5 entry size limit documentation).
+- **Task 2**: Created `validate-deployment.ps1` with 6 validation categories: Access Control (file exists, defaultAction deny, trust domain, explicit app-id policies, wildcard rejection), State Store (exists, actorStateStore, parties-only scopes, env-var connection), Pub/Sub (scopes, publishingScopes, subscriptionScopes, dead-letter, env-var connection, local-dev warnings), Subscription (v2alpha1, dead-letter, env-var scopes, local-dev warnings), Resiliency (exists, circuit breakers, exponential retry, pub/sub and state store target wiring), Secret Store (advisory warning). Supports console and JSON output, documented GNU-style CLI syntax, and CI-friendly exit codes. Production configs pass 39/40 (1 advisory warning for missing secret store); local AppHost DAPR configs pass with warnings.
 - **Task 3**: Created `docs/deployment-security-checklist.md` with pre-deployment checklist, per-broker notes, state store backend notes (D5), tenant provisioning checklist, v1.1 preparation, network security/IAM operator scope, and validation tool reference.
 - **Task 4**: Created `docs/deployment-guide.md` with broker/state store selection guidance, environment variables, multi-tenant setup, backup strategy (crypto-shredding), CI/CD integration, and troubleshooting.
 - **Task 5**: Created 14 xUnit/Shouldly tests: valid config passes, missing accesscontrol fails, defaultAction allow fails, hardcoded connection string fails, missing scopes fails, missing dead-letter fails, subscriber publishing fails, missing resiliency file fails, JSON output valid, GNU-style CLI arguments work, local dev config passes with warnings, wildcard `appId` fails, missing component resiliency targets fail, and secret store warning remains advisory. All 14 pass.

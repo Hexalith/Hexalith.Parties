@@ -63,7 +63,7 @@
         ":(exclude)_bmad-output/process-notes/preflight-latest.json"
       ],
       "exit_code": 0,
-      "stdout": "A  _bmad-output/implementation-artifacts/9-5-semantic-search-and-temporal-name-queries.md\nA  src/Hexalith.Parties.CommandApi/Search/SemanticPartySearchProvider.cs\nA  tests/Hexalith.Parties.CommandApi.Tests/Search/SemanticPartySearchProviderTests.cs\nA  tests/Hexalith.Parties.CommandApi.Tests/Search/SemanticSearchPerformanceBenchmarkTests.cs\n?? _bmad-output/implementation-artifacts/_review-9-6-chunk-a-diff.patch\n",
+      "stdout": "A  _bmad-output/implementation-artifacts/9-5-semantic-search-and-temporal-name-queries.md\nA  src/Hexalith.Parties/Search/SemanticPartySearchProvider.cs\nA  tests/Hexalith.Parties.Tests/Search/SemanticPartySearchProviderTests.cs\nA  tests/Hexalith.Parties.Tests/Search/SemanticSearchPerformanceBenchmarkTests.cs\n?? _bmad-output/implementation-artifacts/_review-9-6-chunk-a-diff.patch\n",
       "stderr": "",
       "dirty_path_count": 5,
       "result": "fail",

@@ -9,7 +9,7 @@ namespace Hexalith.Parties.Client.Tests.FitnessTests;
 public sealed class ClientArchitecturalFitnessTests
 {
     [Fact]
-    public void ClientAssembly_HasNoReferencesToServerProjectionsOrCommandApi()
+    public void ClientAssembly_HasNoReferencesToServerProjectionsOrPartiesService()
     {
         Assembly clientAssembly = typeof(HttpPartiesCommandClient).Assembly;
 
@@ -19,7 +19,7 @@ public sealed class ClientArchitecturalFitnessTests
         [
             "Hexalith.Parties.Server",
             "Hexalith.Parties.Projections",
-            "Hexalith.Parties.CommandApi",
+            "Hexalith.Parties",
         ];
 
         List<string> violations = [];
@@ -34,7 +34,7 @@ public sealed class ClientArchitecturalFitnessTests
         }
 
         violations.ShouldBeEmpty(
-            $"Client assembly must not reference Server, Projections, or CommandApi. " +
+            $"Client assembly must not reference Server, Projections, or Parties service. " +
             $"Found: {string.Join(", ", violations)}");
     }
 
@@ -93,7 +93,7 @@ public sealed class ClientArchitecturalFitnessTests
         [
             "Hexalith.Parties.Server",
             "Hexalith.Parties.Projections",
-            "Hexalith.Parties.CommandApi",
+            "Hexalith.Parties",
             "Dapr",
             "MediatR",
             "FluentValidation",

@@ -57,7 +57,7 @@ So that I can manage party contact information and identifiers from any programm
 
 #### Review Follow-ups (AI)
 
-- [x] [AI-Review][HIGH] Add CommandApi tests that exercise all 5 new REST endpoints (happy path + validation + domain rejection) to validate AC #2, #3, #4, #5, #6, and #7. Implemented in `tests/Hexalith.Parties.CommandApi.Tests/Controllers/PartiesControllerProblemDetailsTests.cs` with theory-based coverage for all five routes.
+- [x] [AI-Review][HIGH] Add CommandApi tests that exercise all 5 new REST endpoints (happy path + validation + domain rejection) to validate AC #2, #3, #4, #5, #6, and #7. Implemented in `tests/Hexalith.Parties.Tests/Controllers/PartiesControllerProblemDetailsTests.cs` with theory-based coverage for all five routes.
 - [x] [AI-Review][MEDIUM] Align endpoint method names with controller convention. Originally added `Async` suffix; second review corrected to drop `Async` suffix to match the dominant pre-existing convention (6/7 POST methods have no suffix). Fixed in `PartiesController.cs`.
 - [x] [AI-Review][MEDIUM] Keep Dev Agent Record `File List` in sync with actual git modifications; file list updated below.
 
@@ -251,7 +251,7 @@ The existing `DispatchCommandAsync` already maps rejection to 422 ProblemDetails
 
 **New files (this story):**
 ```
-src/Hexalith.Parties.CommandApi/
+src/Hexalith.Parties/
 ├── Controllers/
 │   └── PartiesController.cs                         <- MODIFY: add 5 POST endpoints
 └── Validation/
@@ -267,7 +267,7 @@ src/Hexalith.Parties.CommandApi/
 - `src/Hexalith.Parties.Server/` -- all Handle methods already exist
 - `src/Hexalith.Parties.Testing/` -- no test data changes needed
 - `src/Hexalith.Parties.Projections/` -- not in scope
-- `src/Hexalith.Parties.CommandApi/Extensions/` -- no DI changes needed (assembly scanning auto-discovers validators)
+- `src/Hexalith.Parties/Extensions/` -- no DI changes needed (assembly scanning auto-discovers validators)
 
 ### Architecture Compliance
 
@@ -351,9 +351,9 @@ No new packages needed for this story.
 - [Source: _bmad-output/planning-artifacts/epics.md#Story-2.4 -- Acceptance criteria and requirements]
 - [Source: _bmad-output/planning-artifacts/architecture.md -- REST API patterns (D8-D12), validation conventions, JSON conventions, implementation patterns]
 - [Source: _bmad-output/implementation-artifacts/1-6-rest-api-error-handling-and-party-retrieval.md -- REST API foundation patterns, controller dispatch, error handling, validators]
-- [Source: src/Hexalith.Parties.CommandApi/Controllers/PartiesController.cs -- Existing 7 endpoints (1 GET + 6 POST) and DispatchCommandAsync method]
-- [Source: src/Hexalith.Parties.CommandApi/Validation/ -- Existing 6 validators as pattern reference]
-- [Source: src/Hexalith.Parties.CommandApi/Extensions/PartiesServiceCollectionExtensions.cs -- Assembly scanning registration]
+- [Source: src/Hexalith.Parties/Controllers/PartiesController.cs -- Existing 7 endpoints (1 GET + 6 POST) and DispatchCommandAsync method]
+- [Source: src/Hexalith.Parties/Validation/ -- Existing 6 validators as pattern reference]
+- [Source: src/Hexalith.Parties/Extensions/PartiesServiceCollectionExtensions.cs -- Assembly scanning registration]
 - [Source: src/Hexalith.Parties.Contracts/Commands/ -- AddContactChannel, UpdateContactChannel, RemoveContactChannel, AddIdentifier, RemoveIdentifier]
 - [Source: src/Hexalith.Parties.Server/Aggregates/PartyAggregate.cs -- Handle methods for all 5 commands (already implemented)]
 - [Source: _bmad-output/implementation-artifacts/2-3-contact-channel-and-identifier-unit-tests.md -- Previous story patterns and learnings]
@@ -387,13 +387,13 @@ No issues encountered. Straightforward implementation following established patt
 
 ### File List
 
-- `src/Hexalith.Parties.CommandApi/Controllers/PartiesController.cs` -- MODIFIED: added 5 POST endpoints
-- `src/Hexalith.Parties.CommandApi/Validation/AddContactChannelValidator.cs` -- NEW
-- `src/Hexalith.Parties.CommandApi/Validation/UpdateContactChannelValidator.cs` -- NEW
-- `src/Hexalith.Parties.CommandApi/Validation/RemoveContactChannelValidator.cs` -- NEW
-- `src/Hexalith.Parties.CommandApi/Validation/AddIdentifierValidator.cs` -- NEW
-- `src/Hexalith.Parties.CommandApi/Validation/RemoveIdentifierValidator.cs` -- NEW
-- `tests/Hexalith.Parties.CommandApi.Tests/Controllers/PartiesControllerProblemDetailsTests.cs` -- MODIFIED: added endpoint-level tests for all 5 Story 2.4 routes (Accepted/BadRequest/UnprocessableEntity)
+- `src/Hexalith.Parties/Controllers/PartiesController.cs` -- MODIFIED: added 5 POST endpoints
+- `src/Hexalith.Parties/Validation/AddContactChannelValidator.cs` -- NEW
+- `src/Hexalith.Parties/Validation/UpdateContactChannelValidator.cs` -- NEW
+- `src/Hexalith.Parties/Validation/RemoveContactChannelValidator.cs` -- NEW
+- `src/Hexalith.Parties/Validation/AddIdentifierValidator.cs` -- NEW
+- `src/Hexalith.Parties/Validation/RemoveIdentifierValidator.cs` -- NEW
+- `tests/Hexalith.Parties.Tests/Controllers/PartiesControllerProblemDetailsTests.cs` -- MODIFIED: added endpoint-level tests for all 5 Story 2.4 routes (Accepted/BadRequest/UnprocessableEntity)
 - `_bmad-output/implementation-artifacts/sprint-status.yaml` -- MODIFIED: story status sync updates
 
 ## Senior Developer Review (AI)

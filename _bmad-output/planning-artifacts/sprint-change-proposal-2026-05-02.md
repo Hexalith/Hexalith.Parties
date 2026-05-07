@@ -106,7 +106,7 @@ This keeps completed stories intact and adds a focused integration layer rather 
 
 ### Technical Impact
 
-- Add `Hexalith.Tenants` package/project references where appropriate, likely `CommandApi`, `AppHost`, deployment validation tests, and integration tests.
+- Add `Hexalith.Tenants` package/project references where appropriate, likely `Hexalith.Parties`, `AppHost`, deployment validation tests, and integration tests.
 - Add a tenant access service in Parties that answers: tenant exists, tenant is active, user has required role, tenant config relevant to Parties.
 - Subscribe to Tenants events and maintain a local read model or cache for fast command-path checks.
 - Preserve EventStore tenant scoping and actor key formats. Tenants does not replace aggregate identity isolation.
@@ -246,7 +246,7 @@ Multi-tenancy - Split into authority and enforcement. Hexalith.Tenants is the au
 **ADD:**
 
 ```text
-src/Hexalith.Parties.CommandApi
+src/Hexalith.Parties
   Authorization/
     ITenantAccessService.cs
     TenantsBackedTenantAccessService.cs
@@ -257,7 +257,7 @@ src/Hexalith.Parties.Projections
     TenantAccessProjectionHandler.cs
     TenantAccessReadModel.cs
 
-tests/Hexalith.Parties.CommandApi.Tests
+tests/Hexalith.Parties.Tests
   Authorization/
     TenantAccessAuthorizationTests.cs
 

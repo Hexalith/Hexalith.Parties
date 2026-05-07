@@ -12,7 +12,7 @@ so that MCP tool behavior is verified and the translation layer boundary is mach
 
 ## Acceptance Criteria
 
-1. **Given** the `Hexalith.Parties.CommandApi.Tests` project, **when** MCP tool tests are implemented, **then** the following test classes exist under `Mcp/`:
+1. **Given** the `Hexalith.Parties.Tests` project, **when** MCP tool tests are implemented, **then** the following test classes exist under `Mcp/`:
    - `CreatePartyMcpToolTests` -- full input, partial input, missing required fields, generated channel IDs, complete response verification
    - `FindPartiesMcpToolTests` -- search query, empty query (list mode), match metadata presence, pagination
    - `GetPartyMcpToolTests` -- existing party, non-existent party, response shape
@@ -41,14 +41,14 @@ so that MCP tool behavior is verified and the translation layer boundary is mach
 ## Tasks / Subtasks
 
 - [x] Task 1: Create `GetPartyMcpToolTests` (AC: #1, #2)
-  - [x] 1.1: Create `tests/Hexalith.Parties.CommandApi.Tests/Mcp/GetPartyMcpToolTests.cs`
+  - [x] 1.1: Create `tests/Hexalith.Parties.Tests/Mcp/GetPartyMcpToolTests.cs`
   - [x] 1.2: Test `GetPartyAsync_ValidPartyId_ReturnsCompletePartyDetailJson` -- mock `IPartyDetailProjectionActor.GetDetailAsync()` returning a full `PartyDetail`, verify JSON shape has all properties (id, type, isActive, displayName, sortName, personDetails, contactChannels, identifiers, createdAt, lastModifiedAt)
   - [x] 1.3: Test `GetPartyAsync_NonExistentParty_ThrowsNotFoundError` -- projection returns null, verify `InvalidOperationException` with message "Party not found. No party exists with ID '{partyId}'."
   - [x] 1.4: Test `GetPartyAsync_InvalidPartyIdFormat_ThrowsValidationError` -- pass "not-a-guid", verify `InvalidOperationException` about UUID format
   - [x] 1.5: Test `GetPartyAsync_MissingTenant_ThrowsAuthenticationError` -- no tenant set, verify "Authentication required" error
 
 - [x] Task 2: Create `FindPartiesMcpToolTests` (AC: #1, #2)
-  - [x] 2.1: Create `tests/Hexalith.Parties.CommandApi.Tests/Mcp/FindPartiesMcpToolTests.cs`
+  - [x] 2.1: Create `tests/Hexalith.Parties.Tests/Mcp/FindPartiesMcpToolTests.cs`
   - [x] 2.2: Test `FindPartiesAsync_WithQuery_ReturnsMatchingResultsWithMetadata` -- mock `IPartyIndexProjectionActor.GetEntriesAsync()` returning entries, query "Dupont", verify search results contain match metadata (matchedField, matchType)
   - [x] 2.3: Test `FindPartiesAsync_EmptyQuery_ReturnsPaginatedList` -- no query, verify `PagedResult` with items, page, pageSize, totalCount, totalPages
   - [x] 2.4: Test `FindPartiesAsync_Pagination_RespectsPageAndPageSize` -- multiple entries, page=2, pageSize=1, verify correct page returned
@@ -75,7 +75,7 @@ so that MCP tool behavior is verified and the translation layer boundary is mach
   - [x] 4.10: Test `UpdatePartyAsync_InvalidRemoveChannelId_ThrowsValidationError` -- removeContactChannelIds "not-a-guid", verify clear error
 
 - [x] Task 5: Expand `DeletePartyMcpToolTests` (AC: #1)
-  - [x] 5.1: Create `tests/Hexalith.Parties.CommandApi.Tests/Mcp/DeletePartyMcpToolTests.cs` with new tests (existing tests in `UpdateAndDeletePartyMcpToolTests.cs` are preserved)
+  - [x] 5.1: Create `tests/Hexalith.Parties.Tests/Mcp/DeletePartyMcpToolTests.cs` with new tests (existing tests in `UpdateAndDeletePartyMcpToolTests.cs` are preserved)
   - [x] 5.2: Test `DeletePartyAsync_ActiveParty_DispatchesDeactivateCommand` -- verify `SubmitCommand` with `CommandType = nameof(DeactivateParty)` is dispatched
   - [x] 5.3: Test `DeletePartyAsync_AlreadyDeactivated_ReturnsImmediatelyWithoutCommand` -- projection returns `IsActive = false`, verify router is NOT called, verify returned JSON has `isActive = false`
   - [x] 5.4: Test `DeletePartyAsync_NonExistentParty_ThrowsNotFoundError` -- projection returns null
@@ -83,8 +83,8 @@ so that MCP tool behavior is verified and the translation layer boundary is mach
   - [x] 5.6: Test `DeletePartyAsync_MissingTenant_ThrowsAuthenticationError`
 
 - [x] Task 6: Create `ArchitecturalFitnessTests` (AC: #3, #4)
-  - [x] 6.1: Create `tests/Hexalith.Parties.CommandApi.Tests/FitnessTests/ArchitecturalFitnessTests.cs`
-  - [x] 6.2: Test `McpNamespace_HasZeroReferencesToEventTypes` -- use reflection to scan all types in `Hexalith.Parties.CommandApi.Mcp` namespace, inspect method parameters, return types, field types, and local variables/generic arguments for any type implementing `IEventPayload` or `IRejectionEvent`. Assert zero references found.
+  - [x] 6.1: Create `tests/Hexalith.Parties.Tests/FitnessTests/ArchitecturalFitnessTests.cs`
+  - [x] 6.2: Test `McpNamespace_HasZeroReferencesToEventTypes` -- use reflection to scan all types in `Hexalith.Parties.Mcp` namespace, inspect method parameters, return types, field types, and local variables/generic arguments for any type implementing `IEventPayload` or `IRejectionEvent`. Assert zero references found.
   - [x] 6.3: Test `McpNamespace_ReferencesOnlyCommandAndModelTypes` -- verify referenced types from Contracts are only from `Contracts.Commands`, `Contracts.Models`, `Contracts.ValueObjects`, `Contracts.Search`, or `Projections.Abstractions` namespaces
   - [x] 6.4: Test `ProjectionHandlers_HaveZeroDaprReferences` -- scan types in `Hexalith.Parties.Projections.Handlers` namespace, verify zero references to any `Dapr.*` assembly or namespace
   - [x] 6.5: Test `ContractsProject_HasNoRuntimeDependenciesBeyondNetstandard` -- load `Hexalith.Parties.Contracts` assembly, check `GetReferencedAssemblies()`, verify only `netstandard`, `System.*`, and `Hexalith.EventStore.Contracts` references
@@ -103,17 +103,17 @@ This story adds comprehensive test coverage for all 5 MCP tools and creates CI-e
 ### What already exists (do not recreate)
 
 - **3 existing MCP test files** -- tests already exist for specific scenarios:
-  - `tests/Hexalith.Parties.CommandApi.Tests/Mcp/CreatePartyMcpToolTests.cs` -- 3 tests: type missing validation, invalid dateOfBirth, fallback response display name
-  - `tests/Hexalith.Parties.CommandApi.Tests/Mcp/UpdateAndDeletePartyMcpToolTests.cs` -- 4 tests: existing channel update, delete with stale projection, rejected+inactive idempotent, rejected+still-active error
+  - `tests/Hexalith.Parties.Tests/Mcp/CreatePartyMcpToolTests.cs` -- 3 tests: type missing validation, invalid dateOfBirth, fallback response display name
+  - `tests/Hexalith.Parties.Tests/Mcp/UpdateAndDeletePartyMcpToolTests.cs` -- 4 tests: existing channel update, delete with stale projection, rejected+inactive idempotent, rejected+still-active error
   - **DO NOT delete or modify these files** -- new tests go in NEW test class files alongside them
 
 - **MCP tool implementations** (the code being tested):
-  - `src/Hexalith.Parties.CommandApi/Mcp/GetPartyMcpTool.cs` -- 50 lines, static class with `get_party` tool
-  - `src/Hexalith.Parties.CommandApi/Mcp/FindPartiesMcpTool.cs` -- 77 lines, static class with `find_parties` tool
-  - `src/Hexalith.Parties.CommandApi/Mcp/CreatePartyMcpTool.cs` -- static class with `create_party` tool
-  - `src/Hexalith.Parties.CommandApi/Mcp/UpdatePartyMcpTool.cs` -- static class with `update_party` tool
-  - `src/Hexalith.Parties.CommandApi/Mcp/DeletePartyMcpTool.cs` -- static class with `delete_party` tool
-  - `src/Hexalith.Parties.CommandApi/Mcp/McpSessionContext.cs` -- `internal static class` with `AsyncLocal<string?> Tenant` and `JsonSerializerOptions JsonOptions`
+  - `src/Hexalith.Parties/Mcp/GetPartyMcpTool.cs` -- 50 lines, static class with `get_party` tool
+  - `src/Hexalith.Parties/Mcp/FindPartiesMcpTool.cs` -- 77 lines, static class with `find_parties` tool
+  - `src/Hexalith.Parties/Mcp/CreatePartyMcpTool.cs` -- static class with `create_party` tool
+  - `src/Hexalith.Parties/Mcp/UpdatePartyMcpTool.cs` -- static class with `update_party` tool
+  - `src/Hexalith.Parties/Mcp/DeletePartyMcpTool.cs` -- static class with `delete_party` tool
+  - `src/Hexalith.Parties/Mcp/McpSessionContext.cs` -- `internal static class` with `AsyncLocal<string?> Tenant` and `JsonSerializerOptions JsonOptions`
 
 - **Test infrastructure already in use** (follow these patterns exactly):
   - xUnit + Shouldly + NSubstitute (DO NOT add Moq or any other library)
@@ -146,7 +146,7 @@ using FluentValidation;
 using Hexalith.EventStore.Server.Actors;
 using Hexalith.EventStore.Server.Commands;
 using Hexalith.EventStore.Server.Pipeline.Commands;
-using Hexalith.Parties.CommandApi.Mcp;
+using Hexalith.Parties.Mcp;
 using Hexalith.Parties.Contracts.Commands;
 using Hexalith.Parties.Contracts.Models;
 using Hexalith.Parties.Contracts.ValueObjects;
@@ -158,7 +158,7 @@ using NSubstitute;
 
 using Shouldly;
 
-namespace Hexalith.Parties.CommandApi.Tests.Mcp;
+namespace Hexalith.Parties.Tests.Mcp;
 
 public sealed class ExampleMcpToolTests
 {
@@ -274,7 +274,7 @@ Assembly mcpAssembly = typeof(GetPartyMcpTool).Assembly;
 
 // Get all types in Mcp namespace
 Type[] mcpTypes = mcpAssembly.GetTypes()
-    .Where(t => t.Namespace == "Hexalith.Parties.CommandApi.Mcp")
+    .Where(t => t.Namespace == "Hexalith.Parties.Mcp")
     .ToArray();
 
 // Get all types implementing IEventPayload (from EventStore.Contracts)
@@ -298,7 +298,7 @@ Type[] handlerTypes = projectionsAssembly.GetTypes()
 **Key types for imports in fitness tests:**
 - `Hexalith.EventStore.Contracts.Events.IEventPayload` -- the interface to check against
 - `Hexalith.EventStore.Contracts.Events.IRejectionEvent` -- extends IEventPayload
-- `Hexalith.Parties.CommandApi.Mcp.GetPartyMcpTool` -- anchor type for CommandApi assembly
+- `Hexalith.Parties.Mcp.GetPartyMcpTool` -- anchor type for CommandApi assembly
 - `Hexalith.Parties.Projections.Handlers.PartyDetailProjectionHandler` -- anchor type for Projections assembly
 - `Hexalith.Parties.Contracts.Commands.CreatePartyComposite` -- anchor type for Contracts assembly
 
@@ -359,7 +359,7 @@ Guid.TryParse(command.PartyId, out _).ShouldBeTrue(); // auto-generated UUID
 
 ### Critical architectural constraints (D11 -- must be enforced by fitness tests)
 
-**ALLOWED in MCP namespace (`Hexalith.Parties.CommandApi.Mcp`):**
+**ALLOWED in MCP namespace (`Hexalith.Parties.Mcp`):**
 - Types from `Hexalith.Parties.Contracts.Commands` (CreatePartyComposite, UpdatePartyComposite, DeactivateParty, etc.)
 - Types from `Hexalith.Parties.Contracts.Models` (PartyDetail, PartyIndexEntry, PartySearchResult, etc.)
 - Types from `Hexalith.Parties.Contracts.ValueObjects` (PersonDetails, OrganizationDetails, ContactChannel, etc.)
@@ -385,7 +385,7 @@ Guid.TryParse(command.PartyId, out _).ShouldBeTrue(); // auto-generated UUID
 
 New files to create:
 ```
-tests/Hexalith.Parties.CommandApi.Tests/
+tests/Hexalith.Parties.Tests/
 +-- Mcp/
 |   +-- CreatePartyMcpToolTests.cs       (EXISTS - expand with new tests)
 |   +-- FindPartiesMcpToolTests.cs       (NEW)
@@ -445,14 +445,14 @@ Stories 5.1-5.3 each added MCP tool code. Story 5.4 adds only test files -- no p
 - [Source: `_bmad-output/planning-artifacts/architecture.md#D19`] -- Composite command test matrix
 - [Source: `_bmad-output/planning-artifacts/architecture.md#Architectural-Fitness-Tests`] -- 5 fitness tests enforced in CI
 - [Source: `_bmad-output/implementation-artifacts/5-3-update-party-and-delete-party-mcp-tools.md`] -- Previous story
-- [Source: `tests/Hexalith.Parties.CommandApi.Tests/Mcp/CreatePartyMcpToolTests.cs`] -- Existing create tool tests (pattern reference)
-- [Source: `tests/Hexalith.Parties.CommandApi.Tests/Mcp/UpdateAndDeletePartyMcpToolTests.cs`] -- Existing update/delete tests (pattern reference)
-- [Source: `src/Hexalith.Parties.CommandApi/Mcp/GetPartyMcpTool.cs`] -- Get tool implementation
-- [Source: `src/Hexalith.Parties.CommandApi/Mcp/FindPartiesMcpTool.cs`] -- Find tool implementation
-- [Source: `src/Hexalith.Parties.CommandApi/Mcp/CreatePartyMcpTool.cs`] -- Create tool implementation
-- [Source: `src/Hexalith.Parties.CommandApi/Mcp/UpdatePartyMcpTool.cs`] -- Update tool implementation
-- [Source: `src/Hexalith.Parties.CommandApi/Mcp/DeletePartyMcpTool.cs`] -- Delete tool implementation
-- [Source: `src/Hexalith.Parties.CommandApi/Mcp/McpSessionContext.cs`] -- Tenant and JSON context
+- [Source: `tests/Hexalith.Parties.Tests/Mcp/CreatePartyMcpToolTests.cs`] -- Existing create tool tests (pattern reference)
+- [Source: `tests/Hexalith.Parties.Tests/Mcp/UpdateAndDeletePartyMcpToolTests.cs`] -- Existing update/delete tests (pattern reference)
+- [Source: `src/Hexalith.Parties/Mcp/GetPartyMcpTool.cs`] -- Get tool implementation
+- [Source: `src/Hexalith.Parties/Mcp/FindPartiesMcpTool.cs`] -- Find tool implementation
+- [Source: `src/Hexalith.Parties/Mcp/CreatePartyMcpTool.cs`] -- Create tool implementation
+- [Source: `src/Hexalith.Parties/Mcp/UpdatePartyMcpTool.cs`] -- Update tool implementation
+- [Source: `src/Hexalith.Parties/Mcp/DeletePartyMcpTool.cs`] -- Delete tool implementation
+- [Source: `src/Hexalith.Parties/Mcp/McpSessionContext.cs`] -- Tenant and JSON context
 - [Source: `Hexalith.EventStore/src/Hexalith.EventStore.Contracts/Events/IEventPayload.cs`] -- Event interface for fitness test
 - [Source: `Hexalith.EventStore/src/Hexalith.EventStore.Contracts/Events/IRejectionEvent.cs`] -- Rejection event interface
 - [Source: `src/Hexalith.Parties.Contracts/Hexalith.Parties.Contracts.csproj`] -- Contracts project references
@@ -492,12 +492,12 @@ Claude Opus 4.6
 
 ### File List
 
-- tests/Hexalith.Parties.CommandApi.Tests/Mcp/GetPartyMcpToolTests.cs (NEW)
-- tests/Hexalith.Parties.CommandApi.Tests/Mcp/FindPartiesMcpToolTests.cs (NEW)
-- tests/Hexalith.Parties.CommandApi.Tests/Mcp/CreatePartyMcpToolTests.cs (MODIFIED - added 5 tests, 2 helpers)
-- tests/Hexalith.Parties.CommandApi.Tests/Mcp/UpdatePartyMcpToolTests.cs (NEW)
-- tests/Hexalith.Parties.CommandApi.Tests/Mcp/DeletePartyMcpToolTests.cs (NEW)
-- tests/Hexalith.Parties.CommandApi.Tests/FitnessTests/ArchitecturalFitnessTests.cs (NEW, later strengthened during senior review)
+- tests/Hexalith.Parties.Tests/Mcp/GetPartyMcpToolTests.cs (NEW)
+- tests/Hexalith.Parties.Tests/Mcp/FindPartiesMcpToolTests.cs (NEW)
+- tests/Hexalith.Parties.Tests/Mcp/CreatePartyMcpToolTests.cs (MODIFIED - added 5 tests, 2 helpers)
+- tests/Hexalith.Parties.Tests/Mcp/UpdatePartyMcpToolTests.cs (NEW)
+- tests/Hexalith.Parties.Tests/Mcp/DeletePartyMcpToolTests.cs (NEW)
+- tests/Hexalith.Parties.Tests/FitnessTests/ArchitecturalFitnessTests.cs (NEW, later strengthened during senior review)
 - _bmad-output/implementation-artifacts/5-4-mcp-tools-tests-and-architectural-fitness.md (MODIFIED - senior review corrections and closure)
 - _bmad-output/implementation-artifacts/sprint-status.yaml (MODIFIED - story status sync)
 

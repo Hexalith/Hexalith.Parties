@@ -16,18 +16,18 @@ detectedStack: backend
 testFramework: xUnit + Shouldly + NSubstitute
 generationMode: ai-generation
 generatedTestFiles:
-  - tests/Hexalith.Parties.CommandApi.Tests/Authorization/HelperDrivenTenantAccessTests.cs
-  - tests/Hexalith.Parties.CommandApi.Tests/Controllers/PartiesControllerTenantAuthorizationTests.cs
-  - tests/Hexalith.Parties.CommandApi.Tests/Mcp/McpToolTenantAuthorizationTests.cs
-  - tests/Hexalith.Parties.CommandApi.Tests/Controllers/CrossTenantIsolationTests.cs
+  - tests/Hexalith.Parties.Tests/Authorization/HelperDrivenTenantAccessTests.cs
+  - tests/Hexalith.Parties.Tests/Controllers/PartiesControllerTenantAuthorizationTests.cs
+  - tests/Hexalith.Parties.Tests/Mcp/McpToolTenantAuthorizationTests.cs
+  - tests/Hexalith.Parties.Tests/Controllers/CrossTenantIsolationTests.cs
   - tests/Hexalith.Parties.IntegrationTests/Tenants/TenantsBackedAccessE2ETests.cs
   - tests/Hexalith.Parties.DeployValidation.Tests/TenantsDeploymentValidationTests.cs
 inputDocuments:
   - _bmad-output/implementation-artifacts/11-4-tenants-integration-tests-deployment-validation-and-documentation.md
   - _bmad-output/implementation-artifacts/sprint-status.yaml
   - _bmad/tea/config.yaml
-  - tests/Hexalith.Parties.CommandApi.Tests/Authorization/TenantAccessServiceTests.cs
-  - tests/Hexalith.Parties.CommandApi.Tests/Authorization/TestTenantAccessService.cs
+  - tests/Hexalith.Parties.Tests/Authorization/TenantAccessServiceTests.cs
+  - tests/Hexalith.Parties.Tests/Authorization/TestTenantAccessService.cs
   - tests/Hexalith.Parties.IntegrationTests/Events/TenantIsolationTests.cs
   - tests/Hexalith.Parties.DeployValidation.Tests/DeploymentValidationTests.cs
   - Hexalith.Tenants/src/Hexalith.Tenants.Testing/Helpers/TenantTestHelpers.cs
@@ -57,7 +57,7 @@ inputDocuments:
 
 - Story status: `ready-for-dev` with 5 ACs and 8 task groups
 - Test projects available:
-  - `tests/Hexalith.Parties.CommandApi.Tests` (sidecar-free unit/integration)
+  - `tests/Hexalith.Parties.Tests` (sidecar-free unit/integration)
   - `tests/Hexalith.Parties.IntegrationTests` (Aspire topology, gracefully skips)
   - `tests/Hexalith.Parties.DeployValidation.Tests` (PowerShell harness)
 - Hexalith.Tenants.Testing helpers available (submodule already checked out)
@@ -76,7 +76,7 @@ inputDocuments:
 
 1. **REST/MCP authorization-before-projection** (AC 2) — observable proof auth runs before reads
 2. **Cross-tenant projection isolation via REST/MCP** (AC 2) — tenant A cannot list/search/read/MCP-resolve tenant B data
-3. **Tenants subscription deployment validation** (AC 3) — `system.tenants.events`, commandapi subscriptionScopes, distinct failure categories
+3. **Tenants subscription deployment validation** (AC 3) — `system.tenants.events`, parties subscriptionScopes, distinct failure categories
 4. **JWT-claim-without-membership negative case** (AC 1, 2) — claims identify context only
 5. **Eventual-consistency / stale-projection denial** (AC 1, 5) — `tenant-state-stale` reason
 
@@ -99,9 +99,9 @@ inputDocuments:
 
 | Tier | Project | Purpose |
 |---|---|---|
-| **T1 unit** | `tests/Hexalith.Parties.CommandApi.Tests/Authorization` | Fast access decisions w/ helper APIs |
-| **T1 controller** | `tests/Hexalith.Parties.CommandApi.Tests/Controllers` | WebApplicationFactory; ProblemDetails + auth-before-projection |
-| **T1 MCP** | `tests/Hexalith.Parties.CommandApi.Tests/Mcp` | MCP tool denial paths |
+| **T1 unit** | `tests/Hexalith.Parties.Tests/Authorization` | Fast access decisions w/ helper APIs |
+| **T1 controller** | `tests/Hexalith.Parties.Tests/Controllers` | WebApplicationFactory; ProblemDetails + auth-before-projection |
+| **T1 MCP** | `tests/Hexalith.Parties.Tests/Mcp` | MCP tool denial paths |
 | **T2 integration** | `tests/Hexalith.Parties.IntegrationTests/Tenants` (new) | Full Aspire topology Tenants-backed scenarios; gracefully skip when Docker/Aspire unavailable |
 | **Deploy validation** | `tests/Hexalith.Parties.DeployValidation.Tests` | PowerShell script harness w/ temp YAML/JSON fixtures |
 
@@ -163,7 +163,7 @@ inputDocuments:
 | # | Priority | Test Name | Expected |
 |---|---|---|---|
 | 23 | **P0** | `TenantsSubscription_Missing_FailsWithSpecificError` | exit 1, contains `system.tenants.events` |
-| 24 | **P0** | `TenantsSubscriptionScopes_MissingCommandApi_FailsWithRecommendation` | exit 1, contains `commandapi`, contains `subscriptionScopes` |
+| 24 | **P0** | `TenantsSubscriptionScopes_MissingCommandApi_FailsWithRecommendation` | exit 1, contains `parties`, contains `subscriptionScopes` |
 | 25 | **P0** | `TenantsConfiguration_Missing_FailsWithRecommendation` | exit 1, contains `Tenants` config marker |
 | 26 | **P1** | `TenantsConfiguration_Malformed_FailsWithDistinctCategory` | exit 1, distinct check name vs missing |
 | 27 | **P0** | `TenantsValidation_JsonOutput_IncludesTenantsChecksInChecksArray` | valid JSON, `checks[]` includes Tenants entries |
@@ -207,10 +207,10 @@ Each test is designed to fail before implementation lands:
 
 | File | # Skipped Tests | Scope |
 |---|---|---|
-| `tests/Hexalith.Parties.CommandApi.Tests/Authorization/HelperDrivenTenantAccessTests.cs` | 6 | AC1, AC2 — fast access decisions via Tenants helpers |
-| `tests/Hexalith.Parties.CommandApi.Tests/Controllers/PartiesControllerTenantAuthorizationTests.cs` | 6 | AC2, AC5 — REST auth-before-projection |
-| `tests/Hexalith.Parties.CommandApi.Tests/Mcp/McpToolTenantAuthorizationTests.cs` | 3 | AC2 — MCP auth-before-projection |
-| `tests/Hexalith.Parties.CommandApi.Tests/Controllers/CrossTenantIsolationTests.cs` | 4 | AC2 — cross-tenant non-enumeration |
+| `tests/Hexalith.Parties.Tests/Authorization/HelperDrivenTenantAccessTests.cs` | 6 | AC1, AC2 — fast access decisions via Tenants helpers |
+| `tests/Hexalith.Parties.Tests/Controllers/PartiesControllerTenantAuthorizationTests.cs` | 6 | AC2, AC5 — REST auth-before-projection |
+| `tests/Hexalith.Parties.Tests/Mcp/McpToolTenantAuthorizationTests.cs` | 3 | AC2 — MCP auth-before-projection |
+| `tests/Hexalith.Parties.Tests/Controllers/CrossTenantIsolationTests.cs` | 4 | AC2 — cross-tenant non-enumeration |
 | `tests/Hexalith.Parties.IntegrationTests/Tenants/TenantsBackedAccessE2ETests.cs` | 3 | AC2 — Tier 3 Aspire topology (auto-skips when infra unavailable) |
 | `tests/Hexalith.Parties.DeployValidation.Tests/TenantsDeploymentValidationTests.cs` | 7 | AC3 — deployment validation Tenants checks |
 | **Total** | **29** | |
@@ -231,7 +231,7 @@ Each red-phase test references a `NotImplementedException` helper. Story 11.4 im
 2. **Multi-tenant projection seeder** in `PartiesApiTestFactory` — preloads two tenants' worth of `PartyDetail`/`PartyIndexEntry` rows under separate projection actor proxies.
 3. **MCP tool invocation harness** — sidecar-free wrapper that invokes `FindPartiesMcpTool` / `CreatePartyMcpTool` / `GetPartyMcpTool` with `ITenantAccessService` and an `ICommandRouter` tracking double.
 4. **Aspire topology Tenants seeder** — uses Hexalith.Tenants client APIs to provision tenant + membership + role through the running CommandApi/Tenants topology, polls until the local projection converges.
-5. **Deployment-validation YAML/JSON fixtures** for: missing Tenants subscription, missing commandapi in subscriptionScopes, missing/malformed Tenants config, valid local-dev config, sensitive-value redaction probe.
+5. **Deployment-validation YAML/JSON fixtures** for: missing Tenants subscription, missing parties in subscriptionScopes, missing/malformed Tenants config, valid local-dev config, sensitive-value redaction probe.
 
 ### Next Steps (Task-by-Task Activation)
 
@@ -332,7 +332,7 @@ The default `checklist.md` is JS/Playwright-oriented; the items below are mapped
 Activate one test family at a time:
 
 1. Strip `Skip = SkipReason` from test #N (start with `HelperDrivenTenantAccessTests` — easiest helper bridge).
-2. Run `dotnet test tests/Hexalith.Parties.CommandApi.Tests/Hexalith.Parties.CommandApi.Tests.csproj --filter "FullyQualifiedName~HelperDrivenTenantAccessTests"`.
+2. Run `dotnet test tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj --filter "FullyQualifiedName~HelperDrivenTenantAccessTests"`.
 3. Confirm RED (NotImplementedException from helper or assertion failure).
 4. Implement the helper / production change.
 5. Confirm GREEN.

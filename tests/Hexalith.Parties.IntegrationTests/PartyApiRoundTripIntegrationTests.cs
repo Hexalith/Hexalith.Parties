@@ -14,7 +14,7 @@ using Dapr.Client;
 using Hexalith.EventStore.Server.Actors;
 using Hexalith.EventStore.Server.Commands;
 using Hexalith.EventStore.Server.Pipeline.Commands;
-using Hexalith.Parties.CommandApi;
+using Hexalith.Parties;
 using Hexalith.Parties.Contracts.Models;
 using Hexalith.Parties.Contracts.ValueObjects;
 using Hexalith.Parties.IntegrationTests.Tenants;

@@ -100,7 +100,7 @@ Base route: `api/v1/parties`
 ### MCP Server Configuration
 
 - MCP is mapped at `app.MapMcp().RequireAuthorization()` in `Program.cs`
-- 5 MCP tools: `search_parties`, `get_party`, `create_party`, `update_party`, `delete_party` (in `src/Hexalith.Parties.CommandApi/Mcp/`)
+- 5 MCP tools: `search_parties`, `get_party`, `create_party`, `update_party`, `delete_party` (in `src/Hexalith.Parties/Mcp/`)
 - Tools are designed for AI ergonomics (forgiving schemas, composite operations)
 
 ### Authentication Setup for Examples
@@ -119,7 +119,7 @@ Base route: `api/v1/parties`
 ### Aspire AppHost Topology
 
 - Entry point: `src/Hexalith.Parties.AppHost/Program.cs`
-- Launches `commandapi` project with DAPR sidecar
+- Launches `parties` project with DAPR sidecar
 - DAPR access control config at `DaprComponents/accesscontrol.yaml`
 - Optional Keycloak integration (default on)
 - Run command: `dotnet aspire run --project src/Hexalith.Parties.AppHost`
@@ -236,9 +236,9 @@ docs/
 - [Source: _bmad-output/planning-artifacts/prd.md#FR62]
 - [Source: _bmad-output/planning-artifacts/prd.md#NFR30]
 - [Source: _bmad-output/planning-artifacts/architecture.md#Starter Template Evaluation]
-- [Source: src/Hexalith.Parties.CommandApi/Controllers/PartiesController.cs]
-- [Source: src/Hexalith.Parties.CommandApi/Program.cs]
-- [Source: src/Hexalith.Parties.CommandApi/Middleware/GdprWarningMiddleware.cs]
+- [Source: src/Hexalith.Parties/Controllers/PartiesController.cs]
+- [Source: src/Hexalith.Parties/Program.cs]
+- [Source: src/Hexalith.Parties/Middleware/GdprWarningMiddleware.cs]
 - [Source: src/Hexalith.Parties.AppHost/Program.cs]
 - [Source: src/Hexalith.Parties.Client/Extensions/PartiesClientServiceCollectionExtensions.cs]
 - [Source: _bmad-output/implementation-artifacts/6-1-client-package-command-and-query-abstractions.md]

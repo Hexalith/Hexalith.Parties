@@ -31,14 +31,14 @@ so that I can perform identity resolution and access structured party informatio
 ## Tasks / Subtasks
 
 - [x] Task 1: Add MCP server infrastructure to CommandApi (AC: #1)
-  - [x] 1.1: Add `ModelContextProtocol.AspNetCore` package reference to `Directory.Packages.props` and to `src/Hexalith.Parties.CommandApi/Hexalith.Parties.CommandApi.csproj`
+  - [x] 1.1: Add `ModelContextProtocol.AspNetCore` package reference to `Directory.Packages.props` and to `src/Hexalith.Parties/Hexalith.Parties.csproj`
   - [x] 1.2: Add MCP server registration in `PartiesServiceCollectionExtensions.cs`: `.AddMcpServer().WithHttpTransport().WithToolsFromAssembly()`
-  - [x] 1.3: Add `app.MapMcp()` endpoint mapping in `src/Hexalith.Parties.CommandApi/Program.cs` after `app.MapControllers();` (line 38) — this ensures MCP endpoints share the same authentication/authorization middleware pipeline
+  - [x] 1.3: Add `app.MapMcp()` endpoint mapping in `src/Hexalith.Parties/Program.cs` after `app.MapControllers();` (line 38) — this ensures MCP endpoints share the same authentication/authorization middleware pipeline
   - [x] 1.4: Verify MCP endpoints share JWT Bearer authentication and tenant extraction from the `eventstore:tenant` claim — same as `PartiesController`
-  - [x] 1.5: Create `src/Hexalith.Parties.CommandApi/Mcp/` folder for MCP tool classes
+  - [x] 1.5: Create `src/Hexalith.Parties/Mcp/` folder for MCP tool classes
 
 - [x] Task 2: Implement `GetPartyMcpTool` (AC: #2, #3, #7, #8)
-  - [x] 2.1: Create `src/Hexalith.Parties.CommandApi/Mcp/GetPartyMcpTool.cs` with `[McpServerToolType]` attribute on the class
+  - [x] 2.1: Create `src/Hexalith.Parties/Mcp/GetPartyMcpTool.cs` with `[McpServerToolType]` attribute on the class
   - [x] 2.2: Implement `get_party` method with `[McpServerTool]` and `[Description("Retrieves the complete details of a party by its ID, including person/organization details, contact channels, identifiers, and active status.")]`
   - [x] 2.3: Accept `partyId` parameter (string, required) with `[Description("The unique identifier (UUID) of the party to retrieve")]`
   - [x] 2.4: Validate `partyId` is a valid GUID; return clear error if not
@@ -49,7 +49,7 @@ so that I can perform identity resolution and access structured party informatio
   - [x] 2.9: Return 403-equivalent error for missing/invalid tenant claim
 
 - [x] Task 3: Implement `FindPartiesMcpTool` (AC: #4, #5, #6, #7, #8)
-  - [x] 3.1: Create `src/Hexalith.Parties.CommandApi/Mcp/FindPartiesMcpTool.cs` with `[McpServerToolType]` attribute
+  - [x] 3.1: Create `src/Hexalith.Parties/Mcp/FindPartiesMcpTool.cs` with `[McpServerToolType]` attribute
   - [x] 3.2: Implement `find_parties` method with `[McpServerTool]` and `[Description("Searches for parties by name, organization, or other criteria. Returns matching parties with match metadata for disambiguation. When called with no query, returns a paginated list of all parties.")]`
   - [x] 3.3: Accept parameters: `query` (string, optional) with `[Description("Search text to match against party names, organization names, and identifiers. Leave empty to list all parties.")]`, `type` (string, optional) with `[Description("Filter by party type: 'Person' or 'Organization'")]`, `activeOnly` (bool, optional, default true) with `[Description("When true, only returns active parties")]`, `page` (int, optional, default 1) with `[Description("Page number for pagination (starts at 1)")]`, `pageSize` (int, optional, default 20) with `[Description("Number of results per page (max 100)")]`
   - [x] 3.4: Extract tenant from MCP request context
@@ -80,11 +80,11 @@ The following pieces are already implemented and should be reused directly:
 - **PagedResult<T> model:** used for paginated responses with Items, Page, PageSize, TotalCount, TotalPages
 - **IPartyDetailProjectionActor:** `src/Hexalith.Parties.Contracts/Projections/IPartyDetailProjectionActor.cs` — DAPR actor interface for retrieving full party details
 - **IPartyIndexProjectionActor:** `src/Hexalith.Parties.Contracts/Projections/IPartyIndexProjectionActor.cs` — DAPR actor interface for party search and listing
-- **PartiesController query endpoints:** `src/Hexalith.Parties.CommandApi/Controllers/PartiesController.cs` — the `GetPartyAsync`, `ListPartiesAsync`, and `SearchPartiesAsync` methods show exactly how to query projection actors, extract tenant context, and handle errors. **These are the reference implementation for MCP tools.**
+- **PartiesController query endpoints:** `src/Hexalith.Parties/Controllers/PartiesController.cs` — the `GetPartyAsync`, `ListPartiesAsync`, and `SearchPartiesAsync` methods show exactly how to query projection actors, extract tenant context, and handle errors. **These are the reference implementation for MCP tools.**
 - **JWT tenant extraction pattern:** `User.FindAll("eventstore:tenant")` — used in `PartiesController` for multi-tenancy
 - **ModelContextProtocol NuGet package:** Already declared in `Directory.Packages.props` at version 1.0.0
 - **JSON serialization options:** camelCase property naming, WhenWritingNull ignore, string enum converter — configured in `PartiesServiceCollectionExtensions.cs`
-- **Existing service registration:** `src/Hexalith.Parties.CommandApi/Extensions/PartiesServiceCollectionExtensions.cs`
+- **Existing service registration:** `src/Hexalith.Parties/Extensions/PartiesServiceCollectionExtensions.cs`
 
 ### MCP Server technology: ModelContextProtocol C# SDK 1.0.0
 
@@ -246,7 +246,7 @@ MCP tools should translate infrastructure/domain errors into AI-friendly message
 
 New files to create:
 ```
-src/Hexalith.Parties.CommandApi/
+src/Hexalith.Parties/
 ├── Mcp/
 │   ├── GetPartyMcpTool.cs      (new)
 │   └── FindPartiesMcpTool.cs   (new)
@@ -255,11 +255,11 @@ src/Hexalith.Parties.CommandApi/
 Files to modify:
 ```
 Directory.Packages.props                                      (add ModelContextProtocol.AspNetCore)
-src/Hexalith.Parties.CommandApi/Hexalith.Parties.CommandApi.csproj  (add package reference)
-src/Hexalith.Parties.CommandApi/Extensions/PartiesServiceCollectionExtensions.cs  (add MCP server registration)
+src/Hexalith.Parties/Hexalith.Parties.csproj  (add package reference)
+src/Hexalith.Parties/Extensions/PartiesServiceCollectionExtensions.cs  (add MCP server registration)
 ```
 
-Application pipeline — `src/Hexalith.Parties.CommandApi/Program.cs`:
+Application pipeline — `src/Hexalith.Parties/Program.cs`:
 - Add `app.MapMcp();` after `app.MapControllers();` (line 38) and before `app.MapActorsHandlers();` (line 39)
 - This ensures MCP endpoints share the full middleware pipeline (GDPR warning, correlation ID, exception handler, auth)
 - `MapMcp()` adds `/sse` and `/messages` endpoints for MCP communication
@@ -320,8 +320,8 @@ Pattern: focused, additive changes with test coverage in the same slice. Story 5
 - [Source: `_bmad-output/planning-artifacts/architecture.md#FR17`] — Match metadata for search results
 - [Source: `_bmad-output/planning-artifacts/architecture.md#FR20`] — Search and discovery
 - [Source: `_bmad-output/planning-artifacts/architecture.md#FR23`] — Pagination support
-- [Source: `src/Hexalith.Parties.CommandApi/Controllers/PartiesController.cs`] — Reference implementation for query patterns
-- [Source: `src/Hexalith.Parties.CommandApi/Extensions/PartiesServiceCollectionExtensions.cs`] — Service registration patterns
+- [Source: `src/Hexalith.Parties/Controllers/PartiesController.cs`] — Reference implementation for query patterns
+- [Source: `src/Hexalith.Parties/Extensions/PartiesServiceCollectionExtensions.cs`] — Service registration patterns
 - [Source: `src/Hexalith.Parties.Contracts/Models/PartyDetail.cs`] — Complete party entity model
 - [Source: `src/Hexalith.Parties.Contracts/Models/PartyIndexEntry.cs`] — Search result entry model
 - [Source: `src/Hexalith.Parties.Contracts/Models/PartySearchResult.cs`] — Search result with match metadata
@@ -361,18 +361,18 @@ Claude Opus 4.6
 ### File List
 
 - `Directory.Packages.props` (modified — added ModelContextProtocol.AspNetCore 1.0.0)
-- `src/Hexalith.Parties.CommandApi/Hexalith.Parties.CommandApi.csproj` (modified — added ModelContextProtocol.AspNetCore package reference)
-- `src/Hexalith.Parties.CommandApi/Extensions/PartiesServiceCollectionExtensions.cs` (modified — added MCP server registration with RunSessionHandler)
-- `src/Hexalith.Parties.CommandApi/Program.cs` (modified — added `app.MapMcp().RequireAuthorization()`)
-- `src/Hexalith.Parties.CommandApi/Mcp/McpSessionContext.cs` (new — AsyncLocal tenant + shared JSON options)
-- `src/Hexalith.Parties.CommandApi/Mcp/GetPartyMcpTool.cs` (new — get_party MCP tool)
-- `src/Hexalith.Parties.CommandApi/Mcp/FindPartiesMcpTool.cs` (new — find_parties MCP tool)
-- `src/Hexalith.Parties.CommandApi/Search/PartySearchResultsBuilder.cs` (new — shared REST/MCP list and search result builder)
-- `src/Hexalith.Parties.CommandApi/Controllers/PartiesController.cs` (modified — reused shared search builder and removed obsolete composite payload handling)
+- `src/Hexalith.Parties/Hexalith.Parties.csproj` (modified — added ModelContextProtocol.AspNetCore package reference)
+- `src/Hexalith.Parties/Extensions/PartiesServiceCollectionExtensions.cs` (modified — added MCP server registration with RunSessionHandler)
+- `src/Hexalith.Parties/Program.cs` (modified — added `app.MapMcp().RequireAuthorization()`)
+- `src/Hexalith.Parties/Mcp/McpSessionContext.cs` (new — AsyncLocal tenant + shared JSON options)
+- `src/Hexalith.Parties/Mcp/GetPartyMcpTool.cs` (new — get_party MCP tool)
+- `src/Hexalith.Parties/Mcp/FindPartiesMcpTool.cs` (new — find_parties MCP tool)
+- `src/Hexalith.Parties/Search/PartySearchResultsBuilder.cs` (new — shared REST/MCP list and search result builder)
+- `src/Hexalith.Parties/Controllers/PartiesController.cs` (modified — reused shared search builder and removed obsolete composite payload handling)
 - `src/Hexalith.Parties.Contracts/Models/PartyIndexEntry.cs` (modified — added internal searchable email/identifier state)
 - `src/Hexalith.Parties.Contracts/Results/CompositeCommandResult.cs` (modified — removed obsolete `ResultPayload` override)
 - `src/Hexalith.Parties.Projections/Handlers/PartyIndexProjectionHandler.cs` (modified — keeps searchable contact channel and identifier indexes in sync)
-- `tests/Hexalith.Parties.CommandApi.Tests/Controllers/PartiesControllerProblemDetailsTests.cs` (modified — updated composite acceptance assertions and added richer search coverage)
+- `tests/Hexalith.Parties.Tests/Controllers/PartiesControllerProblemDetailsTests.cs` (modified — updated composite acceptance assertions and added richer search coverage)
 - `tests/Hexalith.Parties.Projections.Tests/Handlers/PartyIndexProjectionHandlerTests.cs` (modified — verifies searchable contact/identifier indexing behavior)
 - `_bmad-output/implementation-artifacts/sprint-status.yaml` (modified — synced story status after review completion)
 - `_bmad-output/implementation-artifacts/5-1-mcp-server-setup-and-get-party-find-parties-tools.md` (modified — review closure and validation evidence)

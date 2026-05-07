@@ -279,7 +279,7 @@ tests/Hexalith.Parties.Projections.Tests/
 **No modifications to:**
 - `src/Hexalith.Parties.Contracts/` -- all read models and events already exist
 - `src/Hexalith.Parties.Server/` -- aggregate is not affected
-- `src/Hexalith.Parties.CommandApi/` -- query endpoints are Story 3.3
+- `src/Hexalith.Parties/` -- query endpoints are Story 3.3
 - `src/Hexalith.Parties.Projections/Hexalith.Parties.Projections.csproj` -- already has Dapr.Client + Dapr.Actors + Contracts reference
 
 **Verify test project has correct references:**

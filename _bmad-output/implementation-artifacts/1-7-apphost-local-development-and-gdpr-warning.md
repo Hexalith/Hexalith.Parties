@@ -12,7 +12,7 @@ So that I can develop and evaluate the service easily while being aware of compl
 
 ## Acceptance Criteria
 
-1. **Given** a developer with .NET 10 SDK and Docker installed, **When** they run `dotnet aspire run` on the AppHost project, **Then** the following components start: Hexalith.Parties.CommandApi with DAPR sidecar, Redis (state store + pub/sub) for local development, and Aspire dashboard for observability. **And** the service accepts requests within 30 seconds of container launch (NFR5).
+1. **Given** a developer with .NET 10 SDK and Docker installed, **When** they run `dotnet aspire run` on the AppHost project, **Then** the following components start: Hexalith.Parties with DAPR sidecar, Redis (state store + pub/sub) for local development, and Aspire dashboard for observability. **And** the service accepts requests within 30 seconds of container launch (NFR5).
 
 2. **Given** the AppHost project, **When** reviewed for DAPR configuration, **Then** the following DAPR component files exist under `DaprComponents/`: `statestore.yaml` (Redis for local dev), `pubsub.yaml` (Redis Streams for local dev), `subscription-parties.yaml` (event subscription configuration). **And** `launchSettings.json` exists with appropriate profiles.
 
@@ -32,7 +32,7 @@ So that I can develop and evaluate the service easily while being aware of compl
   - [x] 1.3: `ConfigureOpenTelemetry<TBuilder>()` — logging (JSON console + OTLP), metrics, tracing with health endpoint exclusion
   - [x] 1.4: `AddDefaultHealthChecks<TBuilder>()` — "self" liveness check
   - [x] 1.5: `MapDefaultEndpoints()` — `/health`, `/alive`, `/ready` with JSON response in dev
-  - [x] 1.6: Add tracing sources: `Hexalith.Parties.CommandApi`, `Hexalith.Parties`
+  - [x] 1.6: Add tracing sources: `Hexalith.Parties`, `Hexalith.Parties`
   - [x] 1.7: Add `ServiceDefaults` project reference to CommandApi `.csproj`
 
 - [x] Task 2: Create Aspire hosting extensions (AC: #1)
@@ -60,7 +60,7 @@ So that I can develop and evaluate the service easily while being aware of compl
   - [x] 4.3: Verify health endpoints respond: `/health` (all), `/alive` (live), `/ready` (ready-tagged)
 
 - [x] Task 5: Implement GDPR compliance warning (AC: #4, #5)
-  - [x] 5.1: Create `src/Hexalith.Parties.CommandApi/Middleware/GdprWarningMiddleware.cs` — adds `X-GDPR-Warning` header to every response
+  - [x] 5.1: Create `src/Hexalith.Parties/Middleware/GdprWarningMiddleware.cs` — adds `X-GDPR-Warning` header to every response
   - [x] 5.2: Register middleware in `Program.cs` — place FIRST in pipeline (before exception handler)
   - [x] 5.3: Add GDPR startup warning log at `Warning` level in `Program.cs` during app initialization
   - [x] 5.4: Warning text: "GDPR Notice: This MVP does not include GDPR compliance features (crypto-shredding, consent, erasure). Do not store regulated EU personal data. See v1.1 roadmap."
@@ -80,7 +80,7 @@ The `Extensions.cs` must mirror `Hexalith.EventStore.ServiceDefaults/Extensions.
 // Tracing sources — use Parties names, not EventStore
 .WithTracing(tracing => tracing
     .AddSource(builder.Environment.ApplicationName)
-    .AddSource("Hexalith.Parties.CommandApi")
+    .AddSource("Hexalith.Parties")
     .AddSource("Hexalith.Parties")
     // ... rest identical to EventStore
 ```
@@ -140,7 +140,7 @@ if (!File.Exists(accessControlConfigPath))
 // Throw FileNotFoundException if not found
 
 // 2. Add Parties CommandApi project
-IResourceBuilder<ProjectResource> commandApi = builder.AddProject<Projects.Hexalith_Parties_CommandApi>("commandapi");
+IResourceBuilder<ProjectResource> commandApi = builder.AddProject<Projects.Hexalith_Parties>("parties");
 
 // 3. Wire Parties topology (delegates to EventStore + Parties Aspire extensions)
 HexalithPartiesResources partiesResources = builder.AddHexalithParties(commandApi, accessControlConfigPath);
@@ -150,7 +150,7 @@ HexalithPartiesResources partiesResources = builder.AddHexalithParties(commandAp
 ```
 
 **Key differences from EventStore AppHost:**
-- References `Projects.Hexalith_Parties_CommandApi` (not EventStore CommandApi)
+- References `Projects.Hexalith_Parties` (not EventStore CommandApi)
 - Calls `builder.AddHexalithParties()` (not `AddHexalithEventStore()`)
 - No sample domain service (Parties IS the domain service)
 - Keycloak realm: `hexalith` (same realm, different audience: `hexalith-parties`)
@@ -174,7 +174,7 @@ spec:
   - name: actorStateStore
     value: "true"
 scopes:
-  - commandapi
+  - parties
 ```
 
 **pubsub.yaml:**
@@ -190,10 +190,10 @@ spec:
   - name: redisHost
     value: "localhost:6379"
 scopes:
-  - commandapi
+  - parties
 ```
 
-**accesscontrol.yaml** — Defines service-to-service policies. Follow EventStore pattern. Scope `commandapi` as trusted with all infrastructure access.
+**accesscontrol.yaml** — Defines service-to-service policies. Follow EventStore pattern. Scope `parties` as trusted with all infrastructure access.
 
 **resiliency.yaml** — Retry, timeout, circuit breaker policies. Follow EventStore pattern.
 
@@ -205,7 +205,7 @@ scopes:
 
 ```csharp
 // GdprWarningMiddleware.cs
-namespace Hexalith.Parties.CommandApi.Middleware;
+namespace Hexalith.Parties.Middleware;
 
 public sealed class GdprWarningMiddleware(RequestDelegate next)
 {
@@ -245,8 +245,8 @@ startupLogger.LogWarning(
 After all changes, `Program.cs` should look like:
 
 ```csharp
-using Hexalith.Parties.CommandApi.Extensions;
-using Hexalith.Parties.CommandApi.Middleware;
+using Hexalith.Parties.Extensions;
+using Hexalith.Parties.Middleware;
 using Hexalith.Parties.ServiceDefaults;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
@@ -345,16 +345,16 @@ src/Hexalith.Parties.AppHost/
     ├── accesscontrol.yaml                       ← NEW
     └── resiliency.yaml                          ← NEW
 
-src/Hexalith.Parties.CommandApi/
+src/Hexalith.Parties/
 └── Middleware/
     └── GdprWarningMiddleware.cs                 ← NEW
 ```
 
 **Modified files:**
 ```
-src/Hexalith.Parties.CommandApi/
+src/Hexalith.Parties/
 ├── Program.cs                                   ← MODIFIED (add ServiceDefaults, GDPR log, MapDefaultEndpoints)
-└── Hexalith.Parties.CommandApi.csproj           ← MODIFIED (add ServiceDefaults project reference)
+└── Hexalith.Parties.csproj           ← MODIFIED (add ServiceDefaults project reference)
 
 src/Hexalith.Parties.Aspire/
 └── Hexalith.Parties.Aspire.csproj              ← MODIFIED (add EventStore.Aspire reference)
@@ -368,7 +368,7 @@ src/Hexalith.Parties.Aspire/
 ```xml
 <Project Sdk="Aspire.AppHost.Sdk/13.1.2">
   <ItemGroup>
-    <ProjectReference Include="..\Hexalith.Parties.CommandApi\..." />
+    <ProjectReference Include="..\Hexalith.Parties\..." />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Aspire.Hosting.Redis" />
@@ -442,7 +442,7 @@ a3caccb Merge pull request #5 — Story 1.4: Party Aggregate Update & Lifecycle
 5. No PII in log messages — GDPR warning text is generic, no personal data
 6. Build must succeed with `TreatWarningsAsErrors = true`
 7. Fix the ServiceDefaults.csproj typo (`PackagePackageReference` -> `PackageReference`)
-8. DAPR YAML files must have correct `scopes` restricting access to `commandapi` only
+8. DAPR YAML files must have correct `scopes` restricting access to `parties` only
 9. The `subscription-parties.yaml` from AC #2 is for event subscriptions. Since no projections exist yet (Epic 3), either create a minimal placeholder or skip it. The end-to-end round trip works via the aggregate actor — no subscriptions needed.
 
 ### Anti-Patterns to Avoid
@@ -466,8 +466,8 @@ a3caccb Merge pull request #5 — Story 1.4: Party Aggregate Update & Lifecycle
 - [Source: Hexalith.EventStore/src/Hexalith.EventStore.Aspire/HexalithEventStoreResources.cs — Resources record reference]
 - [Source: Hexalith.EventStore/src/Hexalith.EventStore.AppHost/Program.cs — AppHost reference (86 lines)]
 - [Source: Hexalith.EventStore/src/Hexalith.EventStore.CommandApi/HealthChecks/ — DAPR health check classes]
-- [Source: src/Hexalith.Parties.CommandApi/Program.cs — Current CommandApi entry point]
-- [Source: src/Hexalith.Parties.CommandApi/Extensions/PartiesServiceCollectionExtensions.cs — Current DI registration]
+- [Source: src/Hexalith.Parties/Program.cs — Current CommandApi entry point]
+- [Source: src/Hexalith.Parties/Extensions/PartiesServiceCollectionExtensions.cs — Current DI registration]
 
 ## Dev Agent Record
 
@@ -481,7 +481,7 @@ Claude Opus 4.6
 
 ### Completion Notes List
 
-- **Task 1:** Created `Extensions.cs` in ServiceDefaults mirroring EventStore pattern with Parties-specific tracing sources (`Hexalith.Parties.CommandApi`, `Hexalith.Parties`). Allman brace style. All 6 methods implemented: `AddServiceDefaults`, `ConfigureOpenTelemetry`, `AddOpenTelemetryExporters`, `AddDefaultHealthChecks`, `WriteHealthCheckJsonResponse`, `MapDefaultEndpoints`.
+- **Task 1:** Created `Extensions.cs` in ServiceDefaults mirroring EventStore pattern with Parties-specific tracing sources (`Hexalith.Parties`, `Hexalith.Parties`). Allman brace style. All 6 methods implemented: `AddServiceDefaults`, `ConfigureOpenTelemetry`, `AddOpenTelemetryExporters`, `AddDefaultHealthChecks`, `WriteHealthCheckJsonResponse`, `MapDefaultEndpoints`.
 - **Task 2:** Created `HexalithPartiesExtensions.cs` with `AddHexalithParties()` delegating to EventStore's `AddHexalithEventStore()`. Created `HexalithPartiesResources` record. Added EventStore.Aspire project reference to Aspire.csproj.
 - **Task 3:** Created AppHost `Program.cs` following EventStore pattern — DAPR config path resolution, CommandApi project wiring via `AddHexalithParties()`, optional Keycloak OIDC (audience: `hexalith-parties`), publisher environments (docker/k8s/aca). Created 4 DAPR component YAML files (statestore, pubsub, accesscontrol, resiliency) and launchSettings.json.
 - **Task 4:** Updated CommandApi `Program.cs` — added `builder.AddServiceDefaults()` before `AddParties()`, added `app.MapDefaultEndpoints()` after `MapActorsHandlers()`. Added ServiceDefaults project reference to CommandApi.csproj.
@@ -507,17 +507,17 @@ Claude Opus 4.6
 - `src/Hexalith.Parties.AppHost/DaprComponents/accesscontrol.yaml`
 - `src/Hexalith.Parties.AppHost/DaprComponents/resiliency.yaml`
 - `src/Hexalith.Parties.AppHost/DaprComponents/subscription-parties.yaml`
-- `src/Hexalith.Parties.CommandApi/Middleware/GdprWarningMiddleware.cs`
+- `src/Hexalith.Parties/Middleware/GdprWarningMiddleware.cs`
 - `tests/Hexalith.Parties.IntegrationTests/PartyApiRoundTripIntegrationTests.cs`
 
 **Modified files:**
-- `src/Hexalith.Parties.CommandApi/Program.cs` — added ServiceDefaults, GDPR warning log, GdprWarningMiddleware, MapDefaultEndpoints
-- `src/Hexalith.Parties.CommandApi/Hexalith.Parties.CommandApi.csproj` — added ServiceDefaults project reference
+- `src/Hexalith.Parties/Program.cs` — added ServiceDefaults, GDPR warning log, GdprWarningMiddleware, MapDefaultEndpoints
+- `src/Hexalith.Parties/Hexalith.Parties.csproj` — added ServiceDefaults project reference
 - `src/Hexalith.Parties.Aspire/Hexalith.Parties.Aspire.csproj` — added EventStore.Aspire project reference
 - `src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj` — added Aspire project reference, Keycloak/publisher packages, Content items, OutputType
 - `tests/Hexalith.Parties.IntegrationTests/Hexalith.Parties.IntegrationTests.csproj` — added `Microsoft.AspNetCore.Mvc.Testing`
 - `src/Hexalith.Parties.ServiceDefaults/Extensions.cs` — added default `ready` health check tag for `/ready`
-- `src/Hexalith.Parties.CommandApi/Middleware/GdprWarningMiddleware.cs` — switched header assignment to single-value set
+- `src/Hexalith.Parties/Middleware/GdprWarningMiddleware.cs` — switched header assignment to single-value set
 - `_bmad-output/implementation-artifacts/sprint-status.yaml` — synced story status transitions (`review` → `in-progress` → `done`)
 
 ### Review Follow-ups (AI)

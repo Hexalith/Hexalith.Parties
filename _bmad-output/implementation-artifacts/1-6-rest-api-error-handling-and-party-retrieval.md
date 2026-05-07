@@ -40,7 +40,7 @@ So that I can interact with the party service from any programming language and 
   - [x] 1.3: Verify project references to Contracts, Server, Projections remain correct
 
 - [x] Task 2: Create Program.cs and DI registration (AC: #1, #7, #10)
-  - [x] 2.1: Create `src/Hexalith.Parties.CommandApi/Program.cs` — `WebApplication.CreateBuilder` pattern
+  - [x] 2.1: Create `src/Hexalith.Parties/Program.cs` — `WebApplication.CreateBuilder` pattern
   - [x] 2.2: Create `Extensions/PartiesServiceCollectionExtensions.cs` with `AddParties()` method
   - [x] 2.3: Register JWT Bearer authentication (development symmetric key + OIDC authority for prod)
   - [x] 2.4: Register FluentValidation via `AddValidatorsFromAssemblyContaining<T>()` (assembly scanning)
@@ -96,11 +96,11 @@ So that I can interact with the party service from any programming language and 
 
 ### Review Follow-ups (AI)
 
-- [x] [AI-Review][HIGH] AC #8 cross-tenant GET for opaque IDs: **Resolved as architectural decision.** Opaque party IDs (plain GUIDs) intentionally return `404` (not `403`) when the party belongs to another tenant — returning `403` would disclose party existence in foreign tenants, enabling cross-tenant enumeration attacks. Tenant-qualified identifiers (e.g., `tenant-b:party:{id}`) already correctly return `403`. Added code comment documenting this decision and integration test (`GetParty_OpaqueIdBelongingToOtherTenant_ReturnsNotFoundToPreventEnumerationAsync`) codifying the expected behavior. Full cross-tenant 403 for opaque IDs deferred to Epic 3 projections. [src/Hexalith.Parties.CommandApi/Controllers/PartiesController.cs]
-- [x] [AI-Review][HIGH] AC #8 conflict resolved by aligning AC wording with the implemented anti-enumeration behavior (`403` for tenant-qualified identifiers, `404` for opaque foreign-tenant identifiers). [src/Hexalith.Parties.CommandApi/Controllers/PartiesController.cs]
-- [x] [AI-Review][HIGH] Task 8.3 transparency mismatch resolved by updating task text to explicitly include CommandApi test-project changes. [tests/Hexalith.Parties.CommandApi.Tests/Hexalith.Parties.CommandApi.Tests.csproj]
-- [x] [AI-Review][MEDIUM] Task 5.1/5.2 documentation mismatch resolved by naming both exception handlers and their DI registrations. [src/Hexalith.Parties.CommandApi/Extensions/PartiesServiceCollectionExtensions.cs]
-- [x] [AI-Review][MEDIUM] AC #2 response contract mismatch resolved by normalizing the story/API contract to canonical camelCase `correlationId`. [src/Hexalith.Parties.CommandApi/Controllers/PartiesController.cs]
+- [x] [AI-Review][HIGH] AC #8 cross-tenant GET for opaque IDs: **Resolved as architectural decision.** Opaque party IDs (plain GUIDs) intentionally return `404` (not `403`) when the party belongs to another tenant — returning `403` would disclose party existence in foreign tenants, enabling cross-tenant enumeration attacks. Tenant-qualified identifiers (e.g., `tenant-b:party:{id}`) already correctly return `403`. Added code comment documenting this decision and integration test (`GetParty_OpaqueIdBelongingToOtherTenant_ReturnsNotFoundToPreventEnumerationAsync`) codifying the expected behavior. Full cross-tenant 403 for opaque IDs deferred to Epic 3 projections. [src/Hexalith.Parties/Controllers/PartiesController.cs]
+- [x] [AI-Review][HIGH] AC #8 conflict resolved by aligning AC wording with the implemented anti-enumeration behavior (`403` for tenant-qualified identifiers, `404` for opaque foreign-tenant identifiers). [src/Hexalith.Parties/Controllers/PartiesController.cs]
+- [x] [AI-Review][HIGH] Task 8.3 transparency mismatch resolved by updating task text to explicitly include CommandApi test-project changes. [tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj]
+- [x] [AI-Review][MEDIUM] Task 5.1/5.2 documentation mismatch resolved by naming both exception handlers and their DI registrations. [src/Hexalith.Parties/Extensions/PartiesServiceCollectionExtensions.cs]
+- [x] [AI-Review][MEDIUM] AC #2 response contract mismatch resolved by normalizing the story/API contract to canonical camelCase `correlationId`. [src/Hexalith.Parties/Controllers/PartiesController.cs]
 
 ## Dev Notes
 
@@ -357,7 +357,7 @@ PartyAggregate.Handle(ReactivateParty, PartyState?) → DomainResult
 
 **New files (this story):**
 ```
-src/Hexalith.Parties.CommandApi/
+src/Hexalith.Parties/
 ├── Program.cs                                       ← NEW
 ├── appsettings.json                                 ← NEW
 ├── appsettings.Development.json                     ← NEW
@@ -378,8 +378,8 @@ src/Hexalith.Parties.CommandApi/
 
 **Modified files:**
 ```
-src/Hexalith.Parties.CommandApi/
-└── Hexalith.Parties.CommandApi.csproj               ← MODIFIED (SDK → Web, possible new packages)
+src/Hexalith.Parties/
+└── Hexalith.Parties.csproj               ← MODIFIED (SDK → Web, possible new packages)
 ```
 
 **No modifications to any existing src/ or test/ project files.**
@@ -447,58 +447,58 @@ Claude Opus 4.6 (claude-opus-4-6)
 
 | File | Action | Description |
 |------|--------|-------------|
-| `src/Hexalith.Parties.CommandApi/Hexalith.Parties.CommandApi.csproj` | Modified | Changed SDK to Web, added EventStore.Server reference, added Dapr.AspNetCore |
-| `src/Hexalith.Parties.CommandApi/Program.cs` | Created | WebApplication host with middleware pipeline |
-| `src/Hexalith.Parties.CommandApi/appsettings.json` | Created | Base logging configuration |
-| `src/Hexalith.Parties.CommandApi/appsettings.Development.json` | Created | Dev JWT config (symmetric key) |
-| `src/Hexalith.Parties.CommandApi/Extensions/PartiesServiceCollectionExtensions.cs` | Created | DI registration: auth, validation, EventStore, JSON, HttpClient |
-| `src/Hexalith.Parties.CommandApi/Authentication/PartiesAuthenticationOptions.cs` | Created | JWT configuration options with startup validation |
-| `src/Hexalith.Parties.CommandApi/Authentication/ConfigurePartiesJwtBearerOptions.cs` | Created | JWT Bearer options (OIDC + symmetric key dev mode) |
-| `src/Hexalith.Parties.CommandApi/Authentication/PartiesClaimsTransformation.cs` | Created | Tenant extraction from JWT claims |
-| `src/Hexalith.Parties.CommandApi/Middleware/CorrelationIdMiddleware.cs` | Created | X-Correlation-ID header handling |
-| `src/Hexalith.Parties.CommandApi/Controllers/PartiesController.cs` | Created | 6 POST + 1 GET endpoints with command dispatch |
-| `src/Hexalith.Parties.CommandApi/Models/PartyStateSnapshot.cs` | Created | Internal DTO for DAPR actor state deserialization |
-| `src/Hexalith.Parties.CommandApi/ErrorHandling/PartiesValidationExceptionHandler.cs` | Created | ValidationException → 400 ProblemDetails |
-| `src/Hexalith.Parties.CommandApi/ErrorHandling/PartiesGlobalExceptionHandler.cs` | Created | Catch-all → 500 ProblemDetails + command authorization exception chain mapping to 403 ProblemDetails |
-| `src/Hexalith.Parties.CommandApi/Validation/CreatePartyValidator.cs` | Created | PartyId GUID, Type, conditional details |
-| `src/Hexalith.Parties.CommandApi/Validation/UpdatePersonDetailsValidator.cs` | Created | PartyId GUID, PersonDetails not null |
-| `src/Hexalith.Parties.CommandApi/Validation/UpdateOrganizationDetailsValidator.cs` | Created | PartyId GUID, OrganizationDetails not null |
-| `src/Hexalith.Parties.CommandApi/Validation/SetIsNaturalPersonValidator.cs` | Created | PartyId GUID |
-| `src/Hexalith.Parties.CommandApi/Validation/DeactivatePartyValidator.cs` | Created | PartyId GUID |
-| `src/Hexalith.Parties.CommandApi/Validation/ReactivatePartyValidator.cs` | Created | PartyId GUID |
-| `src/Hexalith.Parties.CommandApi/Controllers/PartiesController.cs` | Modified | Added explicit command validation execution, route/body PartyId consistency checks, 401 for missing tenant claims, and correctiveAction in 422 ProblemDetails |
-| `src/Hexalith.Parties.CommandApi/Controllers/PartiesController.cs` | Modified | Removed controller-wide `Produces("application/json")` to allow `application/problem+json` for error responses |
-| `src/Hexalith.Parties.CommandApi/ErrorHandling/PartiesGlobalExceptionHandler.cs` | Modified | Added command-authorization exception-chain detection and explicit 403 ProblemDetails mapping |
-| `tests/Hexalith.Parties.CommandApi.Tests/Hexalith.Parties.CommandApi.Tests.csproj` | Modified | Added `Microsoft.AspNetCore.Mvc.Testing` for API integration testing |
-| `tests/Hexalith.Parties.CommandApi.Tests/Controllers/PartiesControllerProblemDetailsTests.cs` | Created | Added integration tests for 400/401/403/422 ProblemDetails contracts with JWT-authenticated requests |
-| `src/Hexalith.Parties.CommandApi/Controllers/PartiesController.cs` | Modified | Added architectural decision comment for AC #8 cross-tenant opaque ID behavior (Date: 2026-03-04) |
-| `tests/Hexalith.Parties.CommandApi.Tests/Controllers/PartiesControllerProblemDetailsTests.cs` | Modified | Added enumeration-prevention test for opaque IDs returning 404 (Date: 2026-03-04) |
+| `src/Hexalith.Parties/Hexalith.Parties.csproj` | Modified | Changed SDK to Web, added EventStore.Server reference, added Dapr.AspNetCore |
+| `src/Hexalith.Parties/Program.cs` | Created | WebApplication host with middleware pipeline |
+| `src/Hexalith.Parties/appsettings.json` | Created | Base logging configuration |
+| `src/Hexalith.Parties/appsettings.Development.json` | Created | Dev JWT config (symmetric key) |
+| `src/Hexalith.Parties/Extensions/PartiesServiceCollectionExtensions.cs` | Created | DI registration: auth, validation, EventStore, JSON, HttpClient |
+| `src/Hexalith.Parties/Authentication/PartiesAuthenticationOptions.cs` | Created | JWT configuration options with startup validation |
+| `src/Hexalith.Parties/Authentication/ConfigurePartiesJwtBearerOptions.cs` | Created | JWT Bearer options (OIDC + symmetric key dev mode) |
+| `src/Hexalith.Parties/Authentication/PartiesClaimsTransformation.cs` | Created | Tenant extraction from JWT claims |
+| `src/Hexalith.Parties/Middleware/CorrelationIdMiddleware.cs` | Created | X-Correlation-ID header handling |
+| `src/Hexalith.Parties/Controllers/PartiesController.cs` | Created | 6 POST + 1 GET endpoints with command dispatch |
+| `src/Hexalith.Parties/Models/PartyStateSnapshot.cs` | Created | Internal DTO for DAPR actor state deserialization |
+| `src/Hexalith.Parties/ErrorHandling/PartiesValidationExceptionHandler.cs` | Created | ValidationException → 400 ProblemDetails |
+| `src/Hexalith.Parties/ErrorHandling/PartiesGlobalExceptionHandler.cs` | Created | Catch-all → 500 ProblemDetails + command authorization exception chain mapping to 403 ProblemDetails |
+| `src/Hexalith.Parties/Validation/CreatePartyValidator.cs` | Created | PartyId GUID, Type, conditional details |
+| `src/Hexalith.Parties/Validation/UpdatePersonDetailsValidator.cs` | Created | PartyId GUID, PersonDetails not null |
+| `src/Hexalith.Parties/Validation/UpdateOrganizationDetailsValidator.cs` | Created | PartyId GUID, OrganizationDetails not null |
+| `src/Hexalith.Parties/Validation/SetIsNaturalPersonValidator.cs` | Created | PartyId GUID |
+| `src/Hexalith.Parties/Validation/DeactivatePartyValidator.cs` | Created | PartyId GUID |
+| `src/Hexalith.Parties/Validation/ReactivatePartyValidator.cs` | Created | PartyId GUID |
+| `src/Hexalith.Parties/Controllers/PartiesController.cs` | Modified | Added explicit command validation execution, route/body PartyId consistency checks, 401 for missing tenant claims, and correctiveAction in 422 ProblemDetails |
+| `src/Hexalith.Parties/Controllers/PartiesController.cs` | Modified | Removed controller-wide `Produces("application/json")` to allow `application/problem+json` for error responses |
+| `src/Hexalith.Parties/ErrorHandling/PartiesGlobalExceptionHandler.cs` | Modified | Added command-authorization exception-chain detection and explicit 403 ProblemDetails mapping |
+| `tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj` | Modified | Added `Microsoft.AspNetCore.Mvc.Testing` for API integration testing |
+| `tests/Hexalith.Parties.Tests/Controllers/PartiesControllerProblemDetailsTests.cs` | Created | Added integration tests for 400/401/403/422 ProblemDetails contracts with JWT-authenticated requests |
+| `src/Hexalith.Parties/Controllers/PartiesController.cs` | Modified | Added architectural decision comment for AC #8 cross-tenant opaque ID behavior (Date: 2026-03-04) |
+| `tests/Hexalith.Parties.Tests/Controllers/PartiesControllerProblemDetailsTests.cs` | Modified | Added enumeration-prevention test for opaque IDs returning 404 (Date: 2026-03-04) |
 
 ### File List
 
-- `src/Hexalith.Parties.CommandApi/Hexalith.Parties.CommandApi.csproj` (modified)
-- `src/Hexalith.Parties.CommandApi/Program.cs` (new)
-- `src/Hexalith.Parties.CommandApi/appsettings.json` (new)
-- `src/Hexalith.Parties.CommandApi/appsettings.Development.json` (new)
-- `src/Hexalith.Parties.CommandApi/Extensions/PartiesServiceCollectionExtensions.cs` (new)
-- `src/Hexalith.Parties.CommandApi/Authentication/PartiesAuthenticationOptions.cs` (new)
-- `src/Hexalith.Parties.CommandApi/Authentication/ConfigurePartiesJwtBearerOptions.cs` (new)
-- `src/Hexalith.Parties.CommandApi/Authentication/PartiesClaimsTransformation.cs` (new)
-- `src/Hexalith.Parties.CommandApi/Middleware/CorrelationIdMiddleware.cs` (new)
-- `src/Hexalith.Parties.CommandApi/Controllers/PartiesController.cs` (new)
-- `src/Hexalith.Parties.CommandApi/Models/PartyStateSnapshot.cs` (new)
-- `src/Hexalith.Parties.CommandApi/ErrorHandling/PartiesValidationExceptionHandler.cs` (new)
-- `src/Hexalith.Parties.CommandApi/ErrorHandling/PartiesGlobalExceptionHandler.cs` (new)
-- `src/Hexalith.Parties.CommandApi/Validation/CreatePartyValidator.cs` (new)
-- `src/Hexalith.Parties.CommandApi/Validation/UpdatePersonDetailsValidator.cs` (new)
-- `src/Hexalith.Parties.CommandApi/Validation/UpdateOrganizationDetailsValidator.cs` (new)
-- `src/Hexalith.Parties.CommandApi/Validation/SetIsNaturalPersonValidator.cs` (new)
-- `src/Hexalith.Parties.CommandApi/Validation/DeactivatePartyValidator.cs` (new)
-- `src/Hexalith.Parties.CommandApi/Validation/ReactivatePartyValidator.cs` (new)
-- `src/Hexalith.Parties.CommandApi/Controllers/PartiesController.cs` (modified)
-- `src/Hexalith.Parties.CommandApi/ErrorHandling/PartiesGlobalExceptionHandler.cs` (modified)
-- `tests/Hexalith.Parties.CommandApi.Tests/Hexalith.Parties.CommandApi.Tests.csproj` (modified)
-- `tests/Hexalith.Parties.CommandApi.Tests/Controllers/PartiesControllerProblemDetailsTests.cs` (new)
+- `src/Hexalith.Parties/Hexalith.Parties.csproj` (modified)
+- `src/Hexalith.Parties/Program.cs` (new)
+- `src/Hexalith.Parties/appsettings.json` (new)
+- `src/Hexalith.Parties/appsettings.Development.json` (new)
+- `src/Hexalith.Parties/Extensions/PartiesServiceCollectionExtensions.cs` (new)
+- `src/Hexalith.Parties/Authentication/PartiesAuthenticationOptions.cs` (new)
+- `src/Hexalith.Parties/Authentication/ConfigurePartiesJwtBearerOptions.cs` (new)
+- `src/Hexalith.Parties/Authentication/PartiesClaimsTransformation.cs` (new)
+- `src/Hexalith.Parties/Middleware/CorrelationIdMiddleware.cs` (new)
+- `src/Hexalith.Parties/Controllers/PartiesController.cs` (new)
+- `src/Hexalith.Parties/Models/PartyStateSnapshot.cs` (new)
+- `src/Hexalith.Parties/ErrorHandling/PartiesValidationExceptionHandler.cs` (new)
+- `src/Hexalith.Parties/ErrorHandling/PartiesGlobalExceptionHandler.cs` (new)
+- `src/Hexalith.Parties/Validation/CreatePartyValidator.cs` (new)
+- `src/Hexalith.Parties/Validation/UpdatePersonDetailsValidator.cs` (new)
+- `src/Hexalith.Parties/Validation/UpdateOrganizationDetailsValidator.cs` (new)
+- `src/Hexalith.Parties/Validation/SetIsNaturalPersonValidator.cs` (new)
+- `src/Hexalith.Parties/Validation/DeactivatePartyValidator.cs` (new)
+- `src/Hexalith.Parties/Validation/ReactivatePartyValidator.cs` (new)
+- `src/Hexalith.Parties/Controllers/PartiesController.cs` (modified)
+- `src/Hexalith.Parties/ErrorHandling/PartiesGlobalExceptionHandler.cs` (modified)
+- `tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj` (modified)
+- `tests/Hexalith.Parties.Tests/Controllers/PartiesControllerProblemDetailsTests.cs` (new)
 
 ### Senior Developer Review (AI)
 
@@ -520,17 +520,17 @@ Changes Requested
 
 1. **[HIGH] Missing explicit cross-tenant `403` path for GET by party ID (AC #8).**
   - Evidence: tenant-scoped actor key lookup returns generic not found when party does not exist in current tenant scope; no discriminator exists for foreign-tenant party IDs.
-  - Location: `src/Hexalith.Parties.CommandApi/Controllers/PartiesController.cs`
+  - Location: `src/Hexalith.Parties/Controllers/PartiesController.cs`
 
 2. **[MEDIUM] Validators were registered but not executed for command dispatch path.**
   - Evidence: controller dispatched commands directly via `ICommandRouter` without invoking `IValidator<T>`.
   - Fix applied: explicit `ValidateCommandAsync` before routing; failures now surface as `400 application/problem+json`.
-  - Location: `src/Hexalith.Parties.CommandApi/Controllers/PartiesController.cs`
+  - Location: `src/Hexalith.Parties/Controllers/PartiesController.cs`
 
 3. **[MEDIUM] Missing tenant claim returned `403` instead of required `401` (AC #7).**
   - Evidence: `ExtractTenant()` null path created forbidden response.
   - Fix applied: replaced with unauthorized ProblemDetails response (`401`).
-  - Location: `src/Hexalith.Parties.CommandApi/Controllers/PartiesController.cs`
+  - Location: `src/Hexalith.Parties/Controllers/PartiesController.cs`
 
 4. **[MEDIUM] Command-level authorization failures now map to explicit `403` ProblemDetails via exception-chain detection in global handler.**
   - Fix applied: detect `CommandAuthorizationException` by type name and map to `403` with `tenantId` extension.
@@ -538,7 +538,7 @@ Changes Requested
 
 5. **[LOW] Domain rejection ProblemDetails lacked corrective-action guidance (AC #6 wording).**
   - Fix applied: added `correctiveAction` extension in `422` response.
-  - Location: `src/Hexalith.Parties.CommandApi/Controllers/PartiesController.cs`
+  - Location: `src/Hexalith.Parties/Controllers/PartiesController.cs`
 
 #### Git vs Story File List Audit
 
@@ -581,7 +581,7 @@ Changes Requested
   - Evidence: AC text + controller comment and logic path (`TryParseScopedPartyId` only yields `403` for tenant-qualified IDs).
 
 2. **[HIGH] Story task completion claim is inaccurate for test-project modifications.**
-  - Task 8.3 says no test-project changes, but `tests/Hexalith.Parties.CommandApi.Tests` was modified and extended.
+  - Task 8.3 says no test-project changes, but `tests/Hexalith.Parties.Tests` was modified and extended.
   - This is a task-audit failure (marked done while contradicted by actual changes).
 
 3. **[MEDIUM] Task 5 implementation notes are out of sync with code reality.**

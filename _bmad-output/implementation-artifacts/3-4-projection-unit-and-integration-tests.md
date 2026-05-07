@@ -87,7 +87,7 @@ This story adds comprehensive test coverage for the projection infrastructure bu
 - `PartyIndexProjectionHandlerTests` (14 tests) in same directory -- covers PartyCreated (person/org), PartyDisplayNameDerived, deactivation/reactivation, contact/identifier LastModifiedAt tracking, multi-event sequence (6 events), null state handling
 
 **Query endpoint tests (added during Story 3.3 review):**
-- `PartiesControllerProblemDetailsTests` in `tests/Hexalith.Parties.CommandApi.Tests/Controllers/` -- includes `ListParties_WithFiltersAndDateRange_ReturnsExpectedSubsetAsync` (4 parties, type/active/date filtering), `ListParties_InvalidPaginationBounds_AreClampedAsync` (150 parties), `SearchParties_WithDisplayNameMatches_ReturnsRankedMatchesWithMetadataAsync` (4 parties, exact/prefix/contains), `SearchParties_EmptyQuery_ReturnsEmptyPagedResultAsync`, `ListParties_UsesTenantScopedIndexActorIdAsync`
+- `PartiesControllerProblemDetailsTests` in `tests/Hexalith.Parties.Tests/Controllers/` -- includes `ListParties_WithFiltersAndDateRange_ReturnsExpectedSubsetAsync` (4 parties, type/active/date filtering), `ListParties_InvalidPaginationBounds_AreClampedAsync` (150 parties), `SearchParties_WithDisplayNameMatches_ReturnsRankedMatchesWithMetadataAsync` (4 parties, exact/prefix/contains), `SearchParties_EmptyQuery_ReturnsEmptyPagedResultAsync`, `ListParties_UsesTenantScopedIndexActorIdAsync`
 
 **Integration tests:**
 - `PartyApiRoundTripIntegrationTests` -- basic create-then-get roundtrip + readiness check
@@ -158,7 +158,7 @@ public async Task ListParties_WithFiveParties_ReturnsFilteredResultsAsync()
 }
 ```
 
-Uses `PartiesApiTestFactory` (in `tests/Hexalith.Parties.CommandApi.Tests/`) which extends `WebApplicationFactory<Program>` and registers NSubstitute mocks for `IActorProxyFactory` and `ICommandRouter`.
+Uses `PartiesApiTestFactory` (in `tests/Hexalith.Parties.Tests/`) which extends `WebApplicationFactory<Program>` and registers NSubstitute mocks for `IActorProxyFactory` and `ICommandRouter`.
 
 ### Tenant Isolation Test Pattern
 
@@ -200,7 +200,7 @@ tests/Hexalith.Parties.Projections.Tests/Handlers/
 +-- PartyDetailProjectionHandlerTests.cs      <- MODIFY: Verify/add step-by-step multi-event sequence test
 +-- PartyIndexProjectionHandlerTests.cs       <- MODIFY: Verify/add date field update assertions
 
-tests/Hexalith.Parties.CommandApi.Tests/Controllers/
+tests/Hexalith.Parties.Tests/Controllers/
 +-- PartiesControllerProblemDetailsTests.cs   <- MODIFY: Add 5-party search scenario, tenant isolation, edge cases
 
 src/Hexalith.Parties.Testing/
@@ -251,7 +251,7 @@ No new files should be needed -- add tests to existing test classes.
 
 - **DO NOT** add production code -- this story is test-only
 - **DO NOT** modify projection handlers, actors, or controllers
-- **DO NOT** create new test projects -- use existing `Hexalith.Parties.Projections.Tests` and `Hexalith.Parties.CommandApi.Tests`
+- **DO NOT** create new test projects -- use existing `Hexalith.Parties.Projections.Tests` and `Hexalith.Parties.Tests`
 - **DO NOT** duplicate existing tests -- verify coverage first, then add only what's missing
 - **DO NOT** add DAPR references to handler unit tests -- Tier 1 compliance means zero DAPR imports
 - **DO NOT** test actor internals (state management, batching, reminders) -- actors are tested through their public interfaces at the API level
@@ -294,12 +294,12 @@ No new files should be needed -- add tests to existing test classes.
 - [Source: _bmad-output/implementation-artifacts/3-3-search-match-metadata-and-query-endpoints.md -- Previous story patterns, test infrastructure, IActorProxyFactory injection]
 - [Source: tests/Hexalith.Parties.Projections.Tests/Handlers/PartyDetailProjectionHandlerTests.cs -- 21 existing handler tests]
 - [Source: tests/Hexalith.Parties.Projections.Tests/Handlers/PartyIndexProjectionHandlerTests.cs -- 14 existing handler tests]
-- [Source: tests/Hexalith.Parties.CommandApi.Tests/Controllers/PartiesControllerProblemDetailsTests.cs -- 17 existing controller tests including query endpoint coverage]
+- [Source: tests/Hexalith.Parties.Tests/Controllers/PartiesControllerProblemDetailsTests.cs -- 17 existing controller tests including query endpoint coverage]
 - [Source: tests/Hexalith.Parties.IntegrationTests/PartyApiRoundTripIntegrationTests.cs -- 2 existing integration tests]
 - [Source: src/Hexalith.Parties.Testing/PartyTestData.cs -- Test data factory methods]
 - [Source: src/Hexalith.Parties.Projections/Handlers/PartyDetailProjectionHandler.cs -- Pure handler, static Apply method]
 - [Source: src/Hexalith.Parties.Projections/Handlers/PartyIndexProjectionHandler.cs -- Pure handler, static Apply method]
-- [Source: src/Hexalith.Parties.CommandApi/Controllers/PartiesController.cs -- ListPartiesAsync, SearchPartiesAsync, GetPartyAsync]
+- [Source: src/Hexalith.Parties/Controllers/PartiesController.cs -- ListPartiesAsync, SearchPartiesAsync, GetPartyAsync]
 
 ## Dev Agent Record
 
@@ -347,7 +347,7 @@ No debug issues encountered. All tests passed on first run.
 
 - tests/Hexalith.Parties.Projections.Tests/Handlers/PartyDetailProjectionHandlerTests.cs (MODIFIED) -- Added step-by-step event sequence test; added intermediate DisplayName assertions to multi-event sequence test
 - tests/Hexalith.Parties.Projections.Tests/Handlers/PartyIndexProjectionHandlerTests.cs (MODIFIED) -- Added intermediate DisplayName assertions after ContactChannelAdded/IdentifierAdded steps in multi-event sequence test
-- tests/Hexalith.Parties.CommandApi.Tests/Controllers/PartiesControllerProblemDetailsTests.cs (MODIFIED) -- Added 11 new API tests (10 original + 1 review follow-up), SetFivePartyScenario helper, ExtractItemIds/ExtractSearchItemIds helpers, JwtTokenHelper.CreateToken(string) overload, PartiesApiTestFactory.ResetIndexProxy method; strengthened type/date/tenant assertions
+- tests/Hexalith.Parties.Tests/Controllers/PartiesControllerProblemDetailsTests.cs (MODIFIED) -- Added 11 new API tests (10 original + 1 review follow-up), SetFivePartyScenario helper, ExtractItemIds/ExtractSearchItemIds helpers, JwtTokenHelper.CreateToken(string) overload, PartiesApiTestFactory.ResetIndexProxy method; strengthened type/date/tenant assertions
 - _bmad-output/implementation-artifacts/sprint-status.yaml (MODIFIED) -- Updated story 3-4 status through development lifecycle
 - _bmad-output/implementation-artifacts/3-4-projection-unit-and-integration-tests.md (MODIFIED) -- Story file with task tracking, dev agent record, and review follow-ups
 
@@ -363,7 +363,7 @@ No debug issues encountered. All tests passed on first run.
 - Git/story discrepancy observed: story file is untracked while claiming completed implementation documentation.
 - Validation run (targeted):
   - `dotnet test tests/Hexalith.Parties.Projections.Tests/Hexalith.Parties.Projections.Tests.csproj` → PASS (35/35)
-  - `dotnet test tests/Hexalith.Parties.CommandApi.Tests/Hexalith.Parties.CommandApi.Tests.csproj` → PASS (38/38)
+  - `dotnet test tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj` → PASS (38/38)
 
 #### Findings
 
@@ -373,19 +373,19 @@ No debug issues encountered. All tests passed on first run.
   - Resolution: Added intermediate DisplayName assertions to multi-event sequence test documenting that contact/identifier events only mutate LastModifiedAt (D4 design constraint).
 
 2. **[HIGH] Search implementation does not support email/identifier match metadata** -- RESOLVED
-  - Evidence: search logic evaluates only `DisplayName` exact/prefix/contains and emits `MatchedField = "displayName"` exclusively (`src/Hexalith.Parties.CommandApi/Controllers/PartiesController.cs:188`, `src/Hexalith.Parties.CommandApi/Controllers/PartiesController.cs:191`, `src/Hexalith.Parties.CommandApi/Controllers/PartiesController.cs:199`, `src/Hexalith.Parties.CommandApi/Controllers/PartiesController.cs:204`).
+  - Evidence: search logic evaluates only `DisplayName` exact/prefix/contains and emits `MatchedField = "displayName"` exclusively (`src/Hexalith.Parties/Controllers/PartiesController.cs:188`, `src/Hexalith.Parties/Controllers/PartiesController.cs:191`, `src/Hexalith.Parties/Controllers/PartiesController.cs:199`, `src/Hexalith.Parties/Controllers/PartiesController.cs:204`).
   - Resolution: Added specification test documenting displayName-only search behavior. Email/identifier search requires extending PartyIndexEntry model (future enhancement).
 
 3. **[MEDIUM] Type-filter tests are weak assertions** -- RESOLVED
-  - Evidence: tests validate only `totalCount` and item count, not actual returned `type` values (`tests/Hexalith.Parties.CommandApi.Tests/Controllers/PartiesControllerProblemDetailsTests.cs:514`, `tests/Hexalith.Parties.CommandApi.Tests/Controllers/PartiesControllerProblemDetailsTests.cs:532`).
+  - Evidence: tests validate only `totalCount` and item count, not actual returned `type` values (`tests/Hexalith.Parties.Tests/Controllers/PartiesControllerProblemDetailsTests.cs:514`, `tests/Hexalith.Parties.Tests/Controllers/PartiesControllerProblemDetailsTests.cs:532`).
   - Resolution: Added per-item type field assertions verifying "Person" or "Organization" values.
 
 4. **[MEDIUM] Date-range scenario test validates counts only** -- RESOLVED
-  - Evidence: test checks only counts for each query branch without asserting expected IDs (`tests/Hexalith.Parties.CommandApi.Tests/Controllers/PartiesControllerProblemDetailsTests.cs:572`).
+  - Evidence: test checks only counts for each query branch without asserting expected IDs (`tests/Hexalith.Parties.Tests/Controllers/PartiesControllerProblemDetailsTests.cs:572`).
   - Resolution: Added specific party ID assertions (ShouldContain) for each date range query branch.
 
 5. **[MEDIUM] Tenant-isolation scenario verifies counts, not explicit non-leakage in payload** -- RESOLVED
-  - Evidence: assertions confirm totals (3 vs 2 and 1 vs 0) but do not assert returned IDs are tenant-scoped (`tests/Hexalith.Parties.CommandApi.Tests/Controllers/PartiesControllerProblemDetailsTests.cs:607`).
+  - Evidence: assertions confirm totals (3 vs 2 and 1 vs 0) but do not assert returned IDs are tenant-scoped (`tests/Hexalith.Parties.Tests/Controllers/PartiesControllerProblemDetailsTests.cs:607`).
   - Resolution: Added ID presence (ShouldContain) and absence (ShouldNotContain) assertions for both list and search results.
 
 ### Senior Developer Review (AI) - Round 2
@@ -404,8 +404,8 @@ No debug issues encountered. All tests passed on first run.
 
 1. **[HIGH] AC #1 remains semantically unmet for email/identifier indexing** -- RESOLVED
   - Evidence (AC expectation): `PartyIndexProjectionHandlerTests` is described as covering "email/identifier indexing" (`_bmad-output/implementation-artifacts/3-4-projection-unit-and-integration-tests.md:15`).
-  - Evidence (implementation): search logic matches only `DisplayName` and emits only `MatchedField = "displayName"` (`src/Hexalith.Parties.CommandApi/Controllers/PartiesController.cs:183`, `:188`, `:196`, `:204`).
-  - Evidence (test behavior): dedicated test expects email query to return zero matches and documents display-name-only behavior (`tests/Hexalith.Parties.CommandApi.Tests/Controllers/PartiesControllerProblemDetailsTests.cs:628`, `:635`).
+  - Evidence (implementation): search logic matches only `DisplayName` and emits only `MatchedField = "displayName"` (`src/Hexalith.Parties/Controllers/PartiesController.cs:183`, `:188`, `:196`, `:204`).
+  - Evidence (test behavior): dedicated test expects email query to return zero matches and documents display-name-only behavior (`tests/Hexalith.Parties.Tests/Controllers/PartiesControllerProblemDetailsTests.cs:628`, `:635`).
 
 2. **[MEDIUM] Documentation mismatch in regression count history** -- RESOLVED
   - Evidence: Task/notes still contain stale `163` references in historical review data despite current full run being `164` tests (`_bmad-output/implementation-artifacts/3-4-projection-unit-and-integration-tests.md:317`; current run: `dotnet test Hexalith.Parties.slnx` PASS 164/164).

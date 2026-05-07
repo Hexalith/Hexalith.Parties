@@ -64,8 +64,8 @@ So that I can find the right party quickly and AI agents can perform confident d
   - [x] 6.2: `dotnet test Hexalith.Parties.slnx` -- all tests pass (147 existing + new), zero regressions
 
 - [x] Review Follow-ups (AI)
-    - [x] [AI-Review][HIGH] Add automated tests for `GET /api/v1/parties` covering pagination defaults/bounds, `type` and `active` filters, created/modified date filters, and tenant isolation (`tests/Hexalith.Parties.CommandApi.Tests/Controllers`).
-    - [x] [AI-Review][HIGH] Add automated tests for `GET /api/v1/parties/search` covering exact/prefix/contains ranking, `MatchMetadata` payload values, pagination, and empty-query behavior (`tests/Hexalith.Parties.CommandApi.Tests/Controllers`).
+    - [x] [AI-Review][HIGH] Add automated tests for `GET /api/v1/parties` covering pagination defaults/bounds, `type` and `active` filters, created/modified date filters, and tenant isolation (`tests/Hexalith.Parties.Tests/Controllers`).
+    - [x] [AI-Review][HIGH] Add automated tests for `GET /api/v1/parties/search` covering exact/prefix/contains ranking, `MatchMetadata` payload values, pagination, and empty-query behavior (`tests/Hexalith.Parties.Tests/Controllers`).
     - [x] [AI-Review][MEDIUM] Register OpenAPI services explicitly with `AddOpenApi(...)` in `AddParties(...)` to avoid implicit framework behavior for `MapOpenApi()`.
     - [x] [AI-Review][MEDIUM] Sync story `File List` with actual git changes (submodule pointer change in `Hexalith.EventStore` documented below).
 
@@ -294,7 +294,7 @@ public async Task<IActionResult> GetPartyAsync(string id, CancellationToken canc
 ```
 
 **Remove after migration:**
-- `PartyStateSnapshot` internal DTO (`src/Hexalith.Parties.CommandApi/Models/PartyStateSnapshot.cs`)
+- `PartyStateSnapshot` internal DTO (`src/Hexalith.Parties/Models/PartyStateSnapshot.cs`)
 - The `_actorType`, `_actorStateJsonOptions`, and snapshot-related constants
 - The "DaprSidecar" HttpClient registration in `PartiesServiceCollectionExtensions.cs` (check if any other code uses it first)
 - The `IHttpClientFactory` constructor dependency if no longer needed
@@ -351,7 +351,7 @@ src/Hexalith.Parties.Projections/Abstractions/
 src/Hexalith.Parties.Projections/Actors/
 +-- PartyIndexProjectionActor.cs       <- MODIFIED: Implement GetEntriesAsync()
 +-- PartyDetailProjectionActor.cs      <- MODIFIED: Implement GetDetailAsync()
-src/Hexalith.Parties.CommandApi/
+src/Hexalith.Parties/
 +-- Controllers/PartiesController.cs   <- MODIFIED: Add list/search endpoints, migrate GET {id}
 +-- Extensions/PartiesServiceCollectionExtensions.cs <- MODIFIED: Remove DaprSidecar HttpClient if unused
 +-- Program.cs                         <- MODIFIED: Add OpenAPI/Swagger UI middleware
@@ -359,12 +359,12 @@ src/Hexalith.Parties.CommandApi/
 
 **Removed files:**
 ```
-src/Hexalith.Parties.CommandApi/Models/
+src/Hexalith.Parties/Models/
 +-- PartyStateSnapshot.cs             <- REMOVED: No longer needed after projection migration
 ```
 
 **Verify project references:**
-- `Hexalith.Parties.CommandApi.csproj` already references `Hexalith.Parties.Projections` -- needed for actor interfaces
+- `Hexalith.Parties.csproj` already references `Hexalith.Parties.Projections` -- needed for actor interfaces
 - May need `Dapr.Actors.Client` package for `ActorProxy.Create` if not already referenced (check `Dapr.AspNetCore` transitive deps)
 - May need `Swashbuckle.AspNetCore.SwaggerUI` or `Scalar.AspNetCore` for Swagger UI
 
@@ -381,7 +381,7 @@ src/Hexalith.Parties.CommandApi/Models/
 ### Testing Standards
 
 - **No new Tier 1 handler tests** -- handlers are unchanged
-- **Controller endpoint tests** should be added to `tests/Hexalith.Parties.CommandApi.Tests/Controllers/`
+- **Controller endpoint tests** should be added to `tests/Hexalith.Parties.Tests/Controllers/`
 - Story 3.4 covers comprehensive projection integration tests -- this story focuses on endpoint correctness
 - Test method naming: `{Method}_{Scenario}_{ExpectedResult}`
 - xUnit + Shouldly for assertions
@@ -466,9 +466,9 @@ bd4d7c3 Merge pull request #12 -- Story 2.4: REST API Contact Channel & Identifi
 - [Source: src/Hexalith.Parties.Projections/Abstractions/IPartyDetailProjectionActor.cs -- Current interface: HandleEventAsync]
 - [Source: src/Hexalith.Parties.Projections/Actors/PartyIndexProjectionActor.cs -- Dictionary state, batch processing, ResolveStateKey, LoadStateAsync]
 - [Source: src/Hexalith.Parties.Projections/Actors/PartyDetailProjectionActor.cs -- Per-party state management]
-- [Source: src/Hexalith.Parties.CommandApi/Controllers/PartiesController.cs -- Existing endpoints, tenant extraction, ProblemDetails patterns]
-- [Source: src/Hexalith.Parties.CommandApi/Extensions/PartiesServiceCollectionExtensions.cs -- DI registration, actor registration, DaprSidecar HttpClient]
-- [Source: src/Hexalith.Parties.CommandApi/Models/PartyStateSnapshot.cs -- Temporary DTO to be removed]
+- [Source: src/Hexalith.Parties/Controllers/PartiesController.cs -- Existing endpoints, tenant extraction, ProblemDetails patterns]
+- [Source: src/Hexalith.Parties/Extensions/PartiesServiceCollectionExtensions.cs -- DI registration, actor registration, DaprSidecar HttpClient]
+- [Source: src/Hexalith.Parties/Models/PartyStateSnapshot.cs -- Temporary DTO to be removed]
 - [Source: _bmad-output/implementation-artifacts/3-2-party-index-projection-handler-and-actor.md -- Previous story patterns and learnings]
 
 ## Dev Agent Record
@@ -494,14 +494,14 @@ bd4d7c3 Merge pull request #12 -- Story 2.4: REST API Contact Channel & Identifi
     - Evidence:
       - Story ACs and tasks reference list/search behavior: lines 15-21, 47-48.
       - No `/api/v1/parties/search` tests found across `tests/**`.
-      - Existing tests target POST and GET-by-id paths, e.g. `tests/Hexalith.Parties.CommandApi.Tests/Controllers/PartiesControllerProblemDetailsTests.cs` and `tests/Hexalith.Parties.IntegrationTests/PartyApiRoundTripIntegrationTests.cs`.
+      - Existing tests target POST and GET-by-id paths, e.g. `tests/Hexalith.Parties.Tests/Controllers/PartiesControllerProblemDetailsTests.cs` and `tests/Hexalith.Parties.IntegrationTests/PartyApiRoundTripIntegrationTests.cs`.
 
 2. **[HIGH] Task 6.2 completion note overstates coverage as "147 existing + new tests".**
     - Current run reports 147 total tests passing; no clear increment tied to list/search endpoint verification.
     - This creates a mismatch between completion notes and verifiable coverage for newly introduced behavior.
 
 3. **[MEDIUM] OpenAPI service registration is implicit.**
-    - `Program.cs` maps OpenAPI endpoint via `MapOpenApi()`, but `Hexalith.Parties.CommandApi` does not explicitly register `AddOpenApi(...)` in service configuration.
+    - `Program.cs` maps OpenAPI endpoint via `MapOpenApi()`, but `Hexalith.Parties` does not explicitly register `AddOpenApi(...)` in service configuration.
     - This may rely on framework defaults/transitive behavior rather than explicit app configuration.
 
 4. **[MEDIUM] Git vs story File List discrepancy.**
@@ -525,7 +525,7 @@ Claude Opus 4.6
 - After migration to actor proxy: 2 tests failed (GetParty tests) due to ActorProxy.Create not working without DAPR sidecar in test environment
 - Fix: Refactored to inject IActorProxyFactory (testable) instead of static ActorProxy.Create; mocked in test factories
 - Final build/test: 0 errors, 0 warnings, 147/147 tests pass
-- Review fix validation: `dotnet test tests/Hexalith.Parties.CommandApi.Tests/Hexalith.Parties.CommandApi.Tests.csproj` passed (27/27)
+- Review fix validation: `dotnet test tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj` passed (27/27)
 - Full regression after review fixes: `dotnet test Hexalith.Parties.slnx` passed (152/152)
 
 ### Completion Notes List
@@ -559,14 +559,14 @@ Modified files:
 - src/Hexalith.Parties.Projections/Abstractions/IPartyDetailProjectionActor.cs
 - src/Hexalith.Parties.Projections/Actors/PartyIndexProjectionActor.cs
 - src/Hexalith.Parties.Projections/Actors/PartyDetailProjectionActor.cs
-- src/Hexalith.Parties.CommandApi/Controllers/PartiesController.cs
-- src/Hexalith.Parties.CommandApi/Extensions/PartiesServiceCollectionExtensions.cs
-- src/Hexalith.Parties.CommandApi/Program.cs
-- src/Hexalith.Parties.CommandApi/Hexalith.Parties.CommandApi.csproj
-- tests/Hexalith.Parties.CommandApi.Tests/Controllers/PartiesControllerProblemDetailsTests.cs
+- src/Hexalith.Parties/Controllers/PartiesController.cs
+- src/Hexalith.Parties/Extensions/PartiesServiceCollectionExtensions.cs
+- src/Hexalith.Parties/Program.cs
+- src/Hexalith.Parties/Hexalith.Parties.csproj
+- tests/Hexalith.Parties.Tests/Controllers/PartiesControllerProblemDetailsTests.cs
 - tests/Hexalith.Parties.IntegrationTests/PartyApiRoundTripIntegrationTests.cs
 - _bmad-output/implementation-artifacts/sprint-status.yaml
 - Hexalith.EventStore (submodule pointer updated in working tree)
 
 Deleted files:
-- src/Hexalith.Parties.CommandApi/Models/PartyStateSnapshot.cs
+- src/Hexalith.Parties/Models/PartyStateSnapshot.cs

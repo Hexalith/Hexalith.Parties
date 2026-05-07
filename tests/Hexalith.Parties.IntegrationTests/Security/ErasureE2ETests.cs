@@ -20,7 +20,7 @@ namespace Hexalith.Parties.IntegrationTests.Security;
 
 /// <summary>
 /// Tier 3 E2E tests that verify the full GDPR Article 17 erasure flow
-/// through the Aspire topology (CommandApi + DAPR sidecar + state stores).
+/// through the Aspire topology (Parties service + DAPR sidecar + state stores).
 /// Skip gracefully when Docker/DAPR is unavailable.
 /// </summary>
 [Collection("PartiesAspireTopology")]
@@ -41,7 +41,7 @@ public class ErasureE2ETests(PartiesAspireTopologyFixture fixture, ITestOutputHe
         if (!fixture.IsAvailable) { output.WriteLine($"Skipped: {fixture.UnavailableReason}"); return; }
 
         string partyId = Guid.NewGuid().ToString();
-        HttpClient client = fixture.CommandApiClient;
+        HttpClient client = fixture.PartiesClient;
         client.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", CreateAdminToken());
 
@@ -87,7 +87,7 @@ public class ErasureE2ETests(PartiesAspireTopologyFixture fixture, ITestOutputHe
         if (!fixture.IsAvailable) { output.WriteLine($"Skipped: {fixture.UnavailableReason}"); return; }
 
         string partyId = Guid.NewGuid().ToString();
-        HttpClient client = fixture.CommandApiClient;
+        HttpClient client = fixture.PartiesClient;
         client.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", CreateAdminToken());
 
@@ -134,7 +134,7 @@ public class ErasureE2ETests(PartiesAspireTopologyFixture fixture, ITestOutputHe
         if (!fixture.IsAvailable) { output.WriteLine($"Skipped: {fixture.UnavailableReason}"); return; }
 
         string partyId = Guid.NewGuid().ToString();
-        HttpClient client = fixture.CommandApiClient;
+        HttpClient client = fixture.PartiesClient;
         client.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", CreateAdminToken());
 
@@ -189,7 +189,7 @@ public class ErasureE2ETests(PartiesAspireTopologyFixture fixture, ITestOutputHe
         if (!fixture.IsAvailable) { output.WriteLine($"Skipped: {fixture.UnavailableReason}"); return; }
 
         string partyId = Guid.NewGuid().ToString();
-        HttpClient client = fixture.CommandApiClient;
+        HttpClient client = fixture.PartiesClient;
         client.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", CreateAdminToken());
 

@@ -87,8 +87,8 @@ So that consumers can browse and filter parties efficiently without loading full
 
 ### Review Follow-ups (AI)
 
-- [x] [AI-Review][High] Register `IIndexPartitionStrategy` in DI (for example `SingleKeyPartitionStrategy`) so `PartyIndexProjectionActor` can be activated without runtime resolution failures. [src/Hexalith.Parties.CommandApi/Extensions/PartiesServiceCollectionExtensions.cs]
-- [x] [AI-Review][High] Bind and validate `ProjectionOptions` from configuration section `Parties:Projections` so batch settings are truly configurable as required by AC #9. [src/Hexalith.Parties.CommandApi/Extensions/PartiesServiceCollectionExtensions.cs]
+- [x] [AI-Review][High] Register `IIndexPartitionStrategy` in DI (for example `SingleKeyPartitionStrategy`) so `PartyIndexProjectionActor` can be activated without runtime resolution failures. [src/Hexalith.Parties/Extensions/PartiesServiceCollectionExtensions.cs]
+- [x] [AI-Review][High] Bind and validate `ProjectionOptions` from configuration section `Parties:Projections` so batch settings are truly configurable as required by AC #9. [src/Hexalith.Parties/Extensions/PartiesServiceCollectionExtensions.cs]
 - [x] [AI-Review][High] Implement the claimed `FlushAsync()` method (or uncheck task 4.6 and update story scope) to match the accepted task definition. [src/Hexalith.Parties.Projections/Actors/PartyIndexProjectionActor.cs]
 - [x] [AI-Review][Medium] Tighten actor id validation to enforce exact `{tenant}:party-index` format (`segments.Length == 2`) instead of accepting extra segments. [src/Hexalith.Parties.Projections/Actors/PartyIndexProjectionActor.cs]
 - [x] [AI-Review][Medium] Remove cached `_stateKey` assumption or document v1.0 limitation explicitly; current caching prevents per-party partition keys if `IIndexPartitionStrategy` evolves beyond single-key. [src/Hexalith.Parties.Projections/Actors/PartyIndexProjectionActor.cs]
@@ -361,7 +361,7 @@ tests/Hexalith.Parties.Projections.Tests/
 **No modifications to:**
 - `src/Hexalith.Parties.Contracts/` -- PartyIndexEntry and all events already exist
 - `src/Hexalith.Parties.Server/` -- aggregate is not affected
-- `src/Hexalith.Parties.CommandApi/` -- query endpoints are Story 3.3
+- `src/Hexalith.Parties/` -- query endpoints are Story 3.3
 - `src/Hexalith.Parties.Projections/Handlers/PartyDetailProjectionHandler.cs` -- separate projection, do not touch
 - `src/Hexalith.Parties.Projections/Actors/PartyDetailProjectionActor.cs` -- separate projection, do not touch
 
@@ -495,7 +495,7 @@ Approved
 
 1. **DI and options wiring fixed**  
     Added `IIndexPartitionStrategy` registration, `ProjectionOptions` binding/validation, and projection actor registration in Command API composition root.  
-    Evidence: `src/Hexalith.Parties.CommandApi/Extensions/PartiesServiceCollectionExtensions.cs`.
+    Evidence: `src/Hexalith.Parties/Extensions/PartiesServiceCollectionExtensions.cs`.
 
 2. **`FlushAsync()` implemented and used**  
     Added `FlushAsync()` and reused it from reminder and deactivation paths.  
@@ -557,5 +557,5 @@ New files:
 - tests/Hexalith.Parties.Projections.Tests/Handlers/PartyIndexProjectionHandlerTests.cs
 
 Modified files:
-- src/Hexalith.Parties.CommandApi/Extensions/PartiesServiceCollectionExtensions.cs
+- src/Hexalith.Parties/Extensions/PartiesServiceCollectionExtensions.cs
 - src/Hexalith.Parties.Projections/Actors/PartyDetailProjectionActor.cs

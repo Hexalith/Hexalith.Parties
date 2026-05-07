@@ -85,7 +85,7 @@ Admin browse/search and embeddable party picker should offer:
 
 ### Technical Impact
 
-- Add `Hexalith.Memories.Client.Rest` and `Hexalith.Memories.Contracts` references only to integration-facing projects, likely `Hexalith.Parties.CommandApi`, `Hexalith.Parties.Projections` or a new integration project, AppHost, and tests.
+- Add `Hexalith.Memories.Client.Rest` and `Hexalith.Memories.Contracts` references only to integration-facing projects, likely `Hexalith.Parties`, `Hexalith.Parties.Projections` or a new integration project, AppHost, and tests.
 - Keep `Hexalith.Parties.Contracts` free of Memories dependencies.
 - Introduce a Parties-owned abstraction such as `IPartySearchService` or `IPartySearchBackend` that can use either local projection search or Memories.
 - Add a party-to-memory indexing adapter that maps party events/projections into Memories `IngestionInput` with `SourceType.Event`, stable `SourceUri`, and metadata such as party id, tenant id, event type, aggregate id, display name, party type, contact channel values, identifier values, active/erased status, and timestamps.
@@ -223,7 +223,7 @@ Consequence: Parties has a local baseline search fallback plus a Memories-backed
 **ADD:**
 
 ```text
-src/Hexalith.Parties.CommandApi
+src/Hexalith.Parties
   Search/
     IPartySearchService.cs
     LocalPartySearchService.cs
@@ -237,7 +237,7 @@ src/Hexalith.Parties.Projections or src/Hexalith.Parties.SearchIntegration
     PartyMemorySearchOptions.cs
     PartyMemoryUnitRegistry.cs
 
-tests/Hexalith.Parties.CommandApi.Tests
+tests/Hexalith.Parties.Tests
   Search/
     MemoriesPartySearchServiceTests.cs
     PartySearchResultHydratorTests.cs

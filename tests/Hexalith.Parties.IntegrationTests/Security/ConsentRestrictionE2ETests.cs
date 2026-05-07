@@ -45,7 +45,7 @@ public class ConsentRestrictionE2ETests(PartiesAspireTopologyFixture fixture, IT
         if (!fixture.IsAvailable) { output.WriteLine($"Skipped: {fixture.UnavailableReason}"); return; }
 
         string partyId = Guid.NewGuid().ToString();
-        HttpClient client = fixture.CommandApiClient;
+        HttpClient client = fixture.PartiesClient;
         client.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", CreateAdminToken());
 
@@ -113,7 +113,7 @@ public class ConsentRestrictionE2ETests(PartiesAspireTopologyFixture fixture, IT
         if (!fixture.IsAvailable) { output.WriteLine($"Skipped: {fixture.UnavailableReason}"); return; }
 
         string partyId = Guid.NewGuid().ToString();
-        HttpClient client = fixture.CommandApiClient;
+        HttpClient client = fixture.PartiesClient;
         client.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", CreateAdminToken());
 
@@ -185,7 +185,7 @@ public class ConsentRestrictionE2ETests(PartiesAspireTopologyFixture fixture, IT
         if (!fixture.IsAvailable) { output.WriteLine($"Skipped: {fixture.UnavailableReason}"); return; }
 
         string partyId = Guid.NewGuid().ToString();
-        HttpClient client = fixture.CommandApiClient;
+        HttpClient client = fixture.PartiesClient;
         client.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", CreateAdminToken());
 
@@ -250,7 +250,7 @@ public class ConsentRestrictionE2ETests(PartiesAspireTopologyFixture fixture, IT
         if (!fixture.IsAvailable) { output.WriteLine($"Skipped: {fixture.UnavailableReason}"); return; }
 
         string partyId = Guid.NewGuid().ToString();
-        HttpClient client = fixture.CommandApiClient;
+        HttpClient client = fixture.PartiesClient;
         client.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", CreateAdminToken());
 

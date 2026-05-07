@@ -63,7 +63,7 @@
         ":(exclude)_bmad-output/process-notes/preflight-latest.json"
       ],
       "exit_code": 0,
-      "stdout": " M Hexalith.EventStore\n M Hexalith.FrontComposer\n M Hexalith.Memories\n M _bmad-output/implementation-artifacts/9-6-hexalith-memories-backed-party-search.md\n M src/Hexalith.Parties.CommandApi/Domain/PartyDomainServiceInvoker.cs\n M src/Hexalith.Parties.CommandApi/Domain/PartyProjectionUpdateOrchestrator.cs\n M src/Hexalith.Parties.Contracts/State/PartyState.cs\n M src/Hexalith.Parties.Security/PartyPayloadProtectionService.cs\n",
+      "stdout": " M Hexalith.EventStore\n M Hexalith.FrontComposer\n M Hexalith.Memories\n M _bmad-output/implementation-artifacts/9-6-hexalith-memories-backed-party-search.md\n M src/Hexalith.Parties/Domain/PartyDomainServiceInvoker.cs\n M src/Hexalith.Parties/Domain/PartyProjectionUpdateOrchestrator.cs\n M src/Hexalith.Parties.Contracts/State/PartyState.cs\n M src/Hexalith.Parties.Security/PartyPayloadProtectionService.cs\n",
       "stderr": "",
       "dirty_path_count": 8,
       "result": "fail",

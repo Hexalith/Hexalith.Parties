@@ -51,7 +51,7 @@ spec:
         trip: consecutiveFailures > 10
   targets:
     apps:
-      commandapi:
+      parties:
         retry: defaultRetry
         timeout: daprSidecar
         circuitBreaker: defaultBreaker

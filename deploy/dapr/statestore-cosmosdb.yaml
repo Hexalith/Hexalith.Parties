@@ -15,8 +15,8 @@
 #   CosmosDB supports per-item TTL natively when the container has DefaultTimeToLive set.
 #
 # Component Scoping:
-#   Only commandapi can access this state store. Actors run in-process under the
-#   commandapi app-id, so no other app-id needs state store access.
+#   Only parties can access this state store. Actors run in-process under the
+#   parties app-id, so no other app-id needs state store access.
 #
 # PREREQUISITES:
 #   1. Create a CosmosDB account with SQL API.
@@ -49,4 +49,4 @@ spec:
     - name: actorStateStore
       value: "true"
 scopes:
-  - commandapi
+  - parties

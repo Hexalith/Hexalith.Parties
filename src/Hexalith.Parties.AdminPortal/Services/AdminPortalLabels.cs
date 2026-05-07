@@ -74,6 +74,8 @@ public sealed record AdminPortalLabels
 
     public string DisplayNameOnly { get; init; } = "Display-name search only";
 
+    public string RichSearchProbeDegraded { get; init; } = "Rich search is temporarily unavailable";
+
     public string Degraded { get; init; } = "Data may be stale or degraded";
 
     public string NoParties { get; init; } = "No parties";

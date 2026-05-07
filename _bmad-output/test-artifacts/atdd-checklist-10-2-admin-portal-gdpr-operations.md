@@ -24,8 +24,8 @@ inputDocuments:
   - _bmad-output/implementation-artifacts/10-2-admin-portal-gdpr-operations.md
   - _bmad-output/test-artifacts/atdd-checklist-10-1-admin-portal-browse-search-and-inspect.md
   - _bmad/tea/config.yaml
-  - src/Hexalith.Parties.CommandApi/Controllers/AdminController.cs
-  - src/Hexalith.Parties.CommandApi/Controllers/PartiesController.cs
+  - src/Hexalith.Parties/Controllers/AdminController.cs
+  - src/Hexalith.Parties/Controllers/PartiesController.cs
   - src/Hexalith.Parties.Contracts/Models/PartyDetail.cs
   - src/Hexalith.Parties.Contracts/ValueObjects/ConsentRecord.cs
   - src/Hexalith.Parties.Contracts/Models/ProcessingActivityRecord.cs
@@ -33,10 +33,10 @@ inputDocuments:
   - tests/Hexalith.Parties.Contracts.Tests/AdminPortal/AdminPortalReadOnlySurfaceTests.cs
   - tests/Hexalith.Parties.Contracts.Tests/AdminPortal/AdminPortalXssGuardrailTests.cs
   - tests/Hexalith.Parties.Contracts.Tests/AdminPortal/AdminPortalAuthorizationStateTests.cs
-  - tests/Hexalith.Parties.CommandApi.Tests/Controllers/ErasureEndpointTests.cs
-  - tests/Hexalith.Parties.CommandApi.Tests/Controllers/ConsentEndpointTests.cs
-  - tests/Hexalith.Parties.CommandApi.Tests/Controllers/RestrictionEndpointTests.cs
-  - tests/Hexalith.Parties.CommandApi.Tests/Controllers/PortabilityEndpointTests.cs
+  - tests/Hexalith.Parties.Tests/Controllers/ErasureEndpointTests.cs
+  - tests/Hexalith.Parties.Tests/Controllers/ConsentEndpointTests.cs
+  - tests/Hexalith.Parties.Tests/Controllers/RestrictionEndpointTests.cs
+  - tests/Hexalith.Parties.Tests/Controllers/PortabilityEndpointTests.cs
   - .agents/skills/bmad-testarch-atdd/resources/knowledge/data-factories.md
   - .agents/skills/bmad-testarch-atdd/resources/knowledge/component-tdd.md
   - .agents/skills/bmad-testarch-atdd/resources/knowledge/test-quality.md
@@ -61,7 +61,7 @@ inputDocuments:
 - Test framework: existing xUnit + Shouldly projects:
   - `tests/Hexalith.Parties.Client.Tests`
   - `tests/Hexalith.Parties.Contracts.Tests`
-  - focused backend endpoint suites under `tests/Hexalith.Parties.CommandApi.Tests`
+  - focused backend endpoint suites under `tests/Hexalith.Parties.Tests`
 - Story 10.1 ATDD is already complete and provides the portal foundation/precedent.
 
 ### Existing Coverage To Preserve

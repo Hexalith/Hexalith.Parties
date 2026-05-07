@@ -36,7 +36,7 @@ public class SemanticSearchE2ETests(PartiesAspireTopologyFixture fixture, ITestO
     {
         if (!fixture.IsAvailable) { output.WriteLine($"Skipped: {fixture.UnavailableReason}"); return; }
 
-        HttpClient client = fixture.CommandApiClient;
+        HttpClient client = fixture.PartiesClient;
         client.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", CreateAdminToken());
 

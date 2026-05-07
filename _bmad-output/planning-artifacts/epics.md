@@ -383,14 +383,14 @@ So that I have a consistent, buildable foundation for the party management servi
 - `.gitignore` (copied from EventStore)
 - `LICENSE` (MIT)
 **And** all 10 source projects exist as empty .csproj stubs under `src/`:
-- Hexalith.Parties.Contracts, Client, Server, Projections, CommandApi, Aspire, AppHost, ServiceDefaults, Testing
+- Hexalith.Parties.Contracts, Client, Server, Projections, Parties service, Aspire, AppHost, ServiceDefaults, Testing
 **And** all 6 test projects exist as empty .csproj stubs under `tests/`:
-- Contracts.Tests, Client.Tests, Server.Tests, Projections.Tests, CommandApi.Tests, IntegrationTests
+- Contracts.Tests, Client.Tests, Server.Tests, Projections.Tests, Parties.Tests, IntegrationTests
 **And** the sample project exists as an empty .csproj stub under `samples/`:
 - Hexalith.Parties.Sample
 **And** project references follow the strict dependency direction:
 - Contracts ← Client, Server, Projections
-- Contracts + Server + Projections ← CommandApi
+- Contracts + Server + Projections ← Parties service
 - All src/ ← Testing
 **And** `dotnet restore Hexalith.Parties.slnx` completes without errors
 **And** `dotnet build Hexalith.Parties.slnx` compiles successfully (empty projects, no source files yet)
@@ -539,7 +539,7 @@ So that I can interact with the party service from any programming language and 
 
 **Acceptance Criteria:**
 
-**Given** the CommandApi project
+**Given** the Parties service project
 **When** the REST API is implemented
 **Then** `PartiesController` exists with route `api/v1/parties` (URL-path versioning — FR57)
 **And** POST endpoints exist for: CreateParty, UpdatePersonDetails, UpdateOrganizationDetails, SetIsNaturalPerson, DeactivateParty, ReactivateParty
@@ -592,7 +592,7 @@ So that I can develop and evaluate the service easily while being aware of compl
 **Given** a developer with .NET 10 SDK and Docker installed
 **When** they run `dotnet aspire run` on the AppHost project
 **Then** the following components start:
-- Hexalith.Parties.CommandApi with DAPR sidecar
+- Hexalith.Parties with DAPR sidecar
 - Redis (state store + pub/sub) for local development
 - Aspire dashboard for observability
 **And** the service accepts requests within 30 seconds of container launch (NFR5)
@@ -923,7 +923,7 @@ So that I can find the right party quickly and AI agents can perform confident d
 **When** the request is processed
 **Then** only parties modified after the specified date are returned (FR68)
 
-**Given** the CommandApi project
+**Given** the Parties service project
 **When** the OpenAPI specification is reviewed
 **Then** it is auto-generated from endpoint definitions (FR56)
 **And** it conforms to OpenAPI 3.x (NFR25)
@@ -964,7 +964,7 @@ So that read model correctness, search behavior, and eventual consistency are ve
 **When** Tenant A queries parties
 **Then** zero Tenant B parties appear in results (FR39, NFR9)
 
-**Given** the CommandApi.Tests project
+**Given** the Parties.Tests project
 **When** API integration tests are implemented
 **Then** query endpoint tests verify pagination, filtering, search, and match metadata through the REST API layer
 
@@ -1216,7 +1216,7 @@ So that I can perform identity resolution and access structured party informatio
 
 **Acceptance Criteria:**
 
-**Given** the CommandApi project
+**Given** the Parties service project
 **When** the MCP server is configured
 **Then** MCP tools are registered via `AddMcpTools()` extension method with assembly scanning
 **And** the MCP server implements the MCP protocol specification (NFR26)
@@ -1351,7 +1351,7 @@ So that MCP tool behavior is verified and the translation layer boundary is mach
 
 **Acceptance Criteria:**
 
-**Given** the Hexalith.Parties.CommandApi.Tests project
+**Given** the Hexalith.Parties.Tests project
 **When** MCP tool tests are implemented
 **Then** the following test classes exist under `Mcp/`:
 - `CreatePartyMcpToolTests` — full input, partial input, missing required fields, generated channel IDs, complete response verification
@@ -1370,7 +1370,7 @@ So that MCP tool behavior is verified and the translation layer boundary is mach
 
 **Given** the `FitnessTests/ArchitecturalFitnessTests.cs` file
 **When** the MCP boundary test is implemented
-**Then** it verifies via reflection or compilation test that the `CommandApi/Mcp/` namespace:
+**Then** it verifies via reflection or compilation test that the `Parties/Mcp/` namespace:
 - Has zero references to any type implementing `IEventPayload` or `IRejectionEvent`
 - References only command types (from Contracts/Commands/) and model types (from Contracts/Models/)
 **And** this test runs in CI and fails the build on violation (D11)
@@ -1380,8 +1380,8 @@ So that MCP tool behavior is verified and the translation layer boundary is mach
 **Then** the following additional boundaries are verified:
 - Projection handlers have zero DAPR references
 - Contracts project has zero runtime dependencies beyond netstandard2.1
-- Client project has no references to Server, Projections, or CommandApi
-**And** all fitness tests are in `CommandApi.Tests/FitnessTests/`
+- Client project has no references to Server, Projections, or Parties service
+**And** all fitness tests are in `Parties.Tests/FitnessTests/`
 
 **And** all tests pass with `dotnet test`
 
@@ -1431,7 +1431,7 @@ So that I can send commands and query parties without knowing anything about DAP
 
 **Given** the Client project
 **When** reviewed for architectural boundaries
-**Then** it has no references to Server, Projections, or CommandApi projects
+**Then** it has no references to Server, Projections, or Parties service projects
 
 **Given** a developer using the client abstractions
 **When** they send a `CreateParty` command via `IPartiesCommandClient`

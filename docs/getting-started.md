@@ -45,12 +45,12 @@ dotnet aspire run --project src/Hexalith.Parties.AppHost
 The terminal output will display a URL for the **Aspire dashboard** (typically `https://localhost:15XXX`). Open it in your browser to verify all resources show a green **Running** status.
 
 **What gets started:**
-- **commandapi** -- the REST API and MCP server
+- **parties** -- the REST API and MCP server
 - **Hexalith.Tenants** -- tenant lifecycle, membership, role, and configuration authority
 - **DAPR sidecar** -- event store and actor runtime
 - **Keycloak** (port 8180) -- OIDC provider for authentication (enabled by default)
 
-CommandApi also subscribes to Hexalith.Tenants events through DAPR pub/sub and maintains a local tenant access projection. A valid JWT tenant claim is necessary, but it is not sufficient: the authenticated user must be an active member of an active Hexalith.Tenants tenant with the required role. `TenantReader` can read and search parties, `TenantContributor` can read/search and create/update/deactivate/reactivate parties, and `TenantOwner` can also run party administration operations. Roles are cumulative, so an owner can perform reader and contributor operations too. Access checks fail closed when tenant/user state is missing, disabled, or insufficient. Because the projection is event-fed, a just-disabled tenant or removed user may remain accepted until the corresponding event is consumed unless a synchronous Tenants/EventStore authorization plugin is enabled. See [Tenants Access Projection](tenant-access-projection.md) for the operational details.
+Parties service also subscribes to Hexalith.Tenants events through DAPR pub/sub and maintains a local tenant access projection. A valid JWT tenant claim is necessary, but it is not sufficient: the authenticated user must be an active member of an active Hexalith.Tenants tenant with the required role. `TenantReader` can read and search parties, `TenantContributor` can read/search and create/update/deactivate/reactivate parties, and `TenantOwner` can also run party administration operations. Roles are cumulative, so an owner can perform reader and contributor operations too. Access checks fail closed when tenant/user state is missing, disabled, or insufficient. Because the projection is event-fed, a just-disabled tenant or removed user may remain accepted until the corresponding event is consumed unless a synchronous Tenants/EventStore authorization plugin is enabled. See [Tenants Access Projection](tenant-access-projection.md) for the operational details.
 
 ### Provision the Local Tenant
 
@@ -62,15 +62,15 @@ Before calling Parties, provision tenant access through Hexalith.Tenants:
 4. Confirm Parties is subscribed to `system.tenants.events`.
 5. Run `pwsh -NoProfile -File deploy/validate-deployment.ps1 -ConfigPath deploy/dapr`.
 
-One quick local subscription check is the CommandApi DAPR sidecar metadata endpoint. Find the CommandApi DAPR HTTP port in the Aspire dashboard, then run:
+One quick local subscription check is the Parties service DAPR sidecar metadata endpoint. Find the Parties service DAPR HTTP port in the Aspire dashboard, then run:
 
 ```bash
 # With jq (recommended)
-curl -s http://localhost:<commandapi-dapr-http-port>/v1.0/metadata \
+curl -s http://localhost:<parties-dapr-http-port>/v1.0/metadata \
   | jq '.subscriptions[] | select(.pubsubName == "pubsub" and .topic == "system.tenants.events")'
 
 # Without jq (any POSIX shell or PowerShell)
-curl -s http://localhost:<commandapi-dapr-http-port>/v1.0/metadata | grep -F 'system.tenants.events'
+curl -s http://localhost:<parties-dapr-http-port>/v1.0/metadata | grep -F 'system.tenants.events'
 ```
 
 > **Tooling note.** `validate-deployment.ps1` requires PowerShell 7+ (`pwsh`); Windows PowerShell 5.1 does not support some multiline regex constructs the script uses. Install pwsh from <https://aka.ms/powershell> if you don't already have it.
@@ -140,7 +140,7 @@ This falls back to symmetric key JWT authentication. Set the signing key in `app
 
 ## Step 2: First Command -- Create a Party
 
-Find the `commandapi` HTTP endpoint in the Aspire dashboard before sending API calls. The examples below assume `http://localhost:5000`; replace that value if your local endpoint differs.
+Find the `parties` HTTP endpoint in the Aspire dashboard before sending API calls. The examples below assume `http://localhost:5000`; replace that value if your local endpoint differs.
 
 Send a `CreateParty` command via REST:
 
@@ -323,7 +323,7 @@ In `appsettings.json`:
 }
 ```
 
-Use the HTTPS endpoint shown for `commandapi` in the Aspire dashboard if your local port differs.
+Use the HTTPS endpoint shown for `parties` in the Aspire dashboard if your local port differs.
 
 ### Send Commands and Queries
 
@@ -489,7 +489,7 @@ Stop conflicting processes or configure alternative ports in `launchSettings.jso
 
 **Symptom:** Tenant access decisions do not reflect a recent tenant disablement, membership removal, or role change.
 
-**Cause:** CommandApi authorizes from a local Tenants projection updated by DAPR pub/sub. Verify DAPR sidecar health, the `system.tenants.events` subscription, Tenants event publishing, and projection replay/rebuild options available in your deployment.
+**Cause:** Parties service authorizes from a local Tenants projection updated by DAPR pub/sub. Verify DAPR sidecar health, the `system.tenants.events` subscription, Tenants event publishing, and projection replay/rebuild options available in your deployment.
 
 ---
 

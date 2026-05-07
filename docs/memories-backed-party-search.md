@@ -20,7 +20,7 @@ Hexalith.Parties can route party discovery through Hexalith.Memories when `Parti
 }
 ```
 
-When enabled, CommandApi registers `MemoriesClient` from `Hexalith.Memories.Client.Rest`. `Hexalith.Parties.Contracts` does not reference Memories packages.
+When enabled, Parties service registers `MemoriesClient` from `Hexalith.Memories.Client.Rest`. `Hexalith.Parties.Contracts` does not reference Memories packages.
 
 ## Modes
 

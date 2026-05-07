@@ -4,7 +4,7 @@
 # Each DAPR sidecar loads this Configuration to evaluate INCOMING service invocation requests.
 #
 # App-ID Topology (1 service):
-#   - commandapi: REST API host + DAPR actor host + event publisher (all in-process).
+#   - parties: REST API host + DAPR actor host + event publisher (all in-process).
 #     The ONLY app-id that needs infrastructure access (state store, pub/sub).
 #
 # Security Posture:
@@ -22,8 +22,8 @@ spec:
     defaultAction: allow
     trustDomain: "public"
     policies:
-      # commandapi: Trusted caller -- REST API + actor host + event publisher
-      - appId: commandapi
+      # parties: Trusted caller -- REST API + actor host + event publisher
+      - appId: parties
         defaultAction: deny
         trustDomain: "public"
         namespace: "default"

@@ -8,8 +8,8 @@ namespace Hexalith.Parties.Aspire;
 /// Contains the resource builders created by <see cref="HexalithPartiesExtensions.AddHexalithParties"/>
 /// for further customization by the consumer.
 /// </summary>
-/// <param name="EventStoreResources">The EventStore resources (state store, pub/sub, CommandApi).</param>
-/// <param name="CommandApi">The CommandApi project resource builder.</param>
+/// <param name="EventStoreResources">The EventStore resources (state store, pub/sub, Parties service).</param>
+/// <param name="Parties">The Parties service project resource builder.</param>
 public record HexalithPartiesResources(
     HexalithEventStoreResources EventStoreResources,
-    IResourceBuilder<ProjectResource> CommandApi);
+    IResourceBuilder<ProjectResource> Parties);

@@ -63,7 +63,7 @@
         ":(exclude)_bmad-output/process-notes/preflight-latest.json"
       ],
       "exit_code": 0,
-      "stdout": " M Directory.Packages.props\n M _bmad-output/implementation-artifacts/11-2-tenants-event-consumption-and-local-access-projection.md\n M _bmad-output/implementation-artifacts/9-6-hexalith-memories-backed-party-search.md\n M _bmad-output/implementation-artifacts/sprint-status.yaml\n M src/Hexalith.Parties.CommandApi/Extensions/PartiesServiceCollectionExtensions.cs\n M src/Hexalith.Parties.CommandApi/Hexalith.Parties.CommandApi.csproj\n M src/Hexalith.Parties.CommandApi/Program.cs\n M tests/Hexalith.Parties.CommandApi.Tests/Hexalith.Parties.CommandApi.Tests.csproj\n?? src/Hexalith.Parties.CommandApi/Authorization/\n?? tests/Hexalith.Parties.CommandApi.Tests/Authorization/\n?? tests/Hexalith.Parties.CommandApi.Tests/Tenants/\n",
+      "stdout": " M Directory.Packages.props\n M _bmad-output/implementation-artifacts/11-2-tenants-event-consumption-and-local-access-projection.md\n M _bmad-output/implementation-artifacts/9-6-hexalith-memories-backed-party-search.md\n M _bmad-output/implementation-artifacts/sprint-status.yaml\n M src/Hexalith.Parties/Extensions/PartiesServiceCollectionExtensions.cs\n M src/Hexalith.Parties/Hexalith.Parties.csproj\n M src/Hexalith.Parties/Program.cs\n M tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj\n?? src/Hexalith.Parties/Authorization/\n?? tests/Hexalith.Parties.Tests/Authorization/\n?? tests/Hexalith.Parties.Tests/Tenants/\n",
       "stderr": "",
       "dirty_path_count": 11,
       "result": "fail",

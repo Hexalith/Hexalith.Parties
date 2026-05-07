@@ -12,6 +12,9 @@ public interface IPartiesAdminPortalApiClient
         AdminPortalSearchRequest request,
         CancellationToken cancellationToken);
 
+    Task<AdminPortalRichSearchCapability> GetRichSearchCapabilityAsync(
+        CancellationToken cancellationToken);
+
     Task<AdminPortalQueryResult<PartyDetail>> GetPartyAsync(
         string partyId,
         CancellationToken cancellationToken);

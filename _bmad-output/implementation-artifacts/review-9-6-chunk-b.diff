@@ -1,8 +1,8 @@
-diff --git a/src/Hexalith.Parties.CommandApi/Domain/PartyDomainServiceInvoker.cs b/src/Hexalith.Parties.CommandApi/Domain/PartyDomainServiceInvoker.cs
+diff --git a/src/Hexalith.Parties/Domain/PartyDomainServiceInvoker.cs b/src/Hexalith.Parties/Domain/PartyDomainServiceInvoker.cs
 new file mode 100644
 index 0000000..772f7f2
 --- /dev/null
-+++ b/src/Hexalith.Parties.CommandApi/Domain/PartyDomainServiceInvoker.cs
++++ b/src/Hexalith.Parties/Domain/PartyDomainServiceInvoker.cs
 @@ -0,0 +1,158 @@
 +using Hexalith.EventStore.Contracts.Commands;
 +using Hexalith.EventStore.Contracts.Events;
@@ -14,7 +14,7 @@ index 0000000..772f7f2
 +
 +using Microsoft.Extensions.Logging;
 +
-+namespace Hexalith.Parties.CommandApi.Domain;
++namespace Hexalith.Parties.Domain;
 +
 +internal sealed partial class PartyDomainServiceInvoker(
 +    IEventPayloadProtectionService payloadProtectionService,
@@ -162,11 +162,11 @@ index 0000000..772f7f2
 +    [LoggerMessage(Level = LogLevel.Warning, Message = "Falling back to null snapshot during rehydration for {TenantId}/{PartyId}: {ExceptionType}: {Error}")]
 +    private partial void LogSnapshotRehydrationFallbackToRedaction(string tenantId, string partyId, string exceptionType, string error);
 +}
-diff --git a/src/Hexalith.Parties.CommandApi/Domain/PartyProjectionUpdateOrchestrator.cs b/src/Hexalith.Parties.CommandApi/Domain/PartyProjectionUpdateOrchestrator.cs
+diff --git a/src/Hexalith.Parties/Domain/PartyProjectionUpdateOrchestrator.cs b/src/Hexalith.Parties/Domain/PartyProjectionUpdateOrchestrator.cs
 new file mode 100644
 index 0000000..461c941
 --- /dev/null
-+++ b/src/Hexalith.Parties.CommandApi/Domain/PartyProjectionUpdateOrchestrator.cs
++++ b/src/Hexalith.Parties/Domain/PartyProjectionUpdateOrchestrator.cs
 @@ -0,0 +1,220 @@
 +using Dapr.Actors;
 +using Dapr.Actors.Client;
@@ -175,7 +175,7 @@ index 0000000..461c941
 +using Hexalith.EventStore.Contracts.Security;
 +using Hexalith.EventStore.Server.Actors;
 +using Hexalith.EventStore.Server.Projections;
-+using Hexalith.Parties.CommandApi.Search;
++using Hexalith.Parties.Search;
 +using Hexalith.Parties.Contracts.Models;
 +using Hexalith.Parties.Projections.Abstractions;
 +using Hexalith.Parties.Projections.Actors;
@@ -185,7 +185,7 @@ index 0000000..461c941
 +
 +using ServerEventEnvelope = Hexalith.EventStore.Server.Events.EventEnvelope;
 +
-+namespace Hexalith.Parties.CommandApi.Domain;
++namespace Hexalith.Parties.Domain;
 +
 +internal sealed class PartyProjectionUpdateOrchestrator(
 +    IActorProxyFactory actorProxyFactory,
@@ -388,11 +388,11 @@ index 0000000..461c941
 +            || ex.Message.Contains("Secret not found", StringComparison.OrdinalIgnoreCase));
 +    }
 +}
-diff --git a/src/Hexalith.Parties.CommandApi/Extensions/PartyDetailProjectionActorExtensions.cs b/src/Hexalith.Parties.CommandApi/Extensions/PartyDetailProjectionActorExtensions.cs
+diff --git a/src/Hexalith.Parties/Extensions/PartyDetailProjectionActorExtensions.cs b/src/Hexalith.Parties/Extensions/PartyDetailProjectionActorExtensions.cs
 new file mode 100644
 index 0000000..ad78da2
 --- /dev/null
-+++ b/src/Hexalith.Parties.CommandApi/Extensions/PartyDetailProjectionActorExtensions.cs
++++ b/src/Hexalith.Parties/Extensions/PartyDetailProjectionActorExtensions.cs
 @@ -0,0 +1,119 @@
 +using System.Text.Json;
 +using System.Text.Json.Nodes;
@@ -400,7 +400,7 @@ index 0000000..ad78da2
 +using Hexalith.Parties.Contracts.Models;
 +using Hexalith.Parties.Projections.Abstractions;
 +
-+namespace Hexalith.Parties.CommandApi.Extensions;
++namespace Hexalith.Parties.Extensions;
 +
 +internal static class PartyDetailProjectionActorExtensions
 +{

@@ -20,7 +20,7 @@ public static class HexalithPartiesExtensions
     /// in a <see cref="HexalithPartiesResources"/> record.
     /// </summary>
     /// <param name="builder">The distributed application builder.</param>
-    /// <param name="commandApi">The CommandApi project resource builder.</param>
+    /// <param name="parties">The Parties service project resource builder.</param>
     /// <param name="daprConfigPath">
     /// Path to the Dapr sidecar configuration file (access control policies).
     /// When null, the sidecar starts without access control.
@@ -28,11 +28,11 @@ public static class HexalithPartiesExtensions
     /// <returns>A <see cref="HexalithPartiesResources"/> containing the resource builders for further customization.</returns>
     public static HexalithPartiesResources AddHexalithParties(
         this IDistributedApplicationBuilder builder,
-        IResourceBuilder<ProjectResource> commandApi,
+        IResourceBuilder<ProjectResource> parties,
         string? daprConfigPath = null)
     {
         ArgumentNullException.ThrowIfNull(builder);
-        ArgumentNullException.ThrowIfNull(commandApi);
+        ArgumentNullException.ThrowIfNull(parties);
 
         IResourceBuilder<IDaprComponentResource> stateStore = builder
             .AddDaprComponent("statestore", "state.redis")
@@ -41,7 +41,7 @@ public static class HexalithPartiesExtensions
             .WithMetadata("keyPrefix", "none");
         IResourceBuilder<IDaprComponentResource> pubSub = builder.AddDaprPubSub("pubsub");
 
-        return builder.AddHexalithParties(commandApi, daprConfigPath, stateStore, pubSub);
+        return builder.AddHexalithParties(parties, daprConfigPath, stateStore, pubSub);
     }
 
     /// <summary>
@@ -50,20 +50,20 @@ public static class HexalithPartiesExtensions
     /// Hexalith.Tenants, where both modules must share the same local state store and pub/sub.
     /// </summary>
     /// <param name="builder">The distributed application builder.</param>
-    /// <param name="commandApi">The CommandApi project resource builder.</param>
+    /// <param name="parties">The Parties service project resource builder.</param>
     /// <param name="daprConfigPath">Path to the Dapr sidecar configuration file.</param>
     /// <param name="stateStore">Shared DAPR state store component.</param>
     /// <param name="pubSub">Shared DAPR pub/sub component.</param>
     /// <returns>A <see cref="HexalithPartiesResources"/> containing the resource builders for further customization.</returns>
     public static HexalithPartiesResources AddHexalithParties(
         this IDistributedApplicationBuilder builder,
-        IResourceBuilder<ProjectResource> commandApi,
+        IResourceBuilder<ProjectResource> parties,
         string? daprConfigPath,
         IResourceBuilder<IDaprComponentResource> stateStore,
         IResourceBuilder<IDaprComponentResource> pubSub)
     {
         ArgumentNullException.ThrowIfNull(builder);
-        ArgumentNullException.ThrowIfNull(commandApi);
+        ArgumentNullException.ThrowIfNull(parties);
         ArgumentNullException.ThrowIfNull(stateStore);
         ArgumentNullException.ThrowIfNull(pubSub);
 
@@ -73,11 +73,11 @@ public static class HexalithPartiesExtensions
         // Parties keys flat regardless of which AppHost overload is used.
         _ = stateStore.WithMetadata("keyPrefix", "none");
 
-        _ = commandApi
+        _ = parties
             .WithDaprSidecar(sidecar => sidecar
                 .WithOptions(new DaprSidecarOptions
                 {
-                    AppId = "commandapi",
+                    AppId = "parties",
                     Config = daprConfigPath,
                 })
                 .WithReference(stateStore)
@@ -86,10 +86,10 @@ public static class HexalithPartiesExtensions
         HexalithEventStoreResources eventStoreResources = new(
             stateStore,
             pubSub,
-            commandApi,
-            commandApi);
+            parties,
+            parties);
 
         // Return Parties resources wrapping EventStore resources
-        return new HexalithPartiesResources(eventStoreResources, commandApi);
+        return new HexalithPartiesResources(eventStoreResources, parties);
     }
 }

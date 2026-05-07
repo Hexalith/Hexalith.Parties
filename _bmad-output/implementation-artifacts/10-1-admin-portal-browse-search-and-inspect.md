@@ -111,7 +111,7 @@ so that I can manage party data without using API tools or CLI commands.
 
 - [x] Validate build and affected tests
   - [x] Run the affected FrontComposer/portal test project(s).
-  - [x] Run `dotnet test tests/Hexalith.Parties.CommandApi.Tests/Hexalith.Parties.CommandApi.Tests.csproj --configuration Release` if backend API behavior changes.
+  - [x] Run `dotnet test tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj --configuration Release` if backend API behavior changes.
   - [x] Run the affected integration tests only if full topology prerequisites are available; otherwise record the infrastructure skip reason.
   - [x] Run `dotnet build Hexalith.Parties.slnx --configuration Release`.
 
@@ -131,13 +131,13 @@ PRD requirements mapped to this story are FR65 and NFR32: administrators can bro
 
 ### Current Backend Surface
 
-`src/Hexalith.Parties.CommandApi/Controllers/PartiesController.cs`
+`src/Hexalith.Parties/Controllers/PartiesController.cs`
 
 - Current state: exposes authenticated browse, search, get-by-id, temporal name, and command endpoints under `/api/v1/parties`.
 - Story usage: the portal should consume `ListPartiesAsync`, `SearchPartiesAsync`, and `GetPartyAsync` rather than creating new browse/search APIs.
 - Preserve: tenant extraction from `eventstore:tenant`, page-size cap at 100, erased-party filtering on list/search, cross-tenant scoped-id rejection, degraded projection headers, `401` missing-tenant behavior, `403` cross-tenant behavior, `404` not found, and `410` erased state.
 
-`src/Hexalith.Parties.CommandApi/Controllers/AdminController.cs`
+`src/Hexalith.Parties/Controllers/AdminController.cs`
 
 - Current state: admin-only backend controller under `/api/v1/admin` for projection rebuild, key management, erasure, consent, restriction, portability export, and processing records.
 - Story usage: Story 10.1 may link to or read admin-only state needed for inspection, but must not add GDPR mutation workflows. Those belong to Story 10.2.
@@ -190,9 +190,9 @@ Required behavior:
 ### Project Structure Notes
 
 - Parties-specific portal code should live in a Parties-owned frontend project or adapter layer that references FrontComposer packages/submodule output; do not place Parties domain UI directly inside the FrontComposer submodule unless that submodule is intentionally being changed.
-- Backend API changes, if any, stay in `src/Hexalith.Parties.CommandApi`.
+- Backend API changes, if any, stay in `src/Hexalith.Parties`.
 - Shared public data contracts stay in `src/Hexalith.Parties.Contracts`; do not add UI framework dependencies there.
-- Component tests should live near the new portal test project. Backend controller tests stay in `tests/Hexalith.Parties.CommandApi.Tests`.
+- Component tests should live near the new portal test project. Backend controller tests stay in `tests/Hexalith.Parties.Tests`.
 - Full-topology tests follow the existing `tests/Hexalith.Parties.IntegrationTests` fixture pattern and should skip gracefully when DAPR/Aspire infrastructure is unavailable.
 - No `project-context.md` persistent fact file was found during story creation.
 
@@ -242,11 +242,11 @@ FrontComposer Story 5.2 shipped HTTP response classification, ETag caching, no-c
 - [Source: _bmad-output/planning-artifacts/prd.md#NFR32]
 - [Source: _bmad-output/planning-artifacts/architecture.md#Requirements Overview]
 - [Source: _bmad-output/planning-artifacts/architecture.md#Requirements Coverage Validation]
-- [Source: src/Hexalith.Parties.CommandApi/Controllers/PartiesController.cs]
-- [Source: src/Hexalith.Parties.CommandApi/Controllers/AdminController.cs]
+- [Source: src/Hexalith.Parties/Controllers/PartiesController.cs]
+- [Source: src/Hexalith.Parties/Controllers/AdminController.cs]
 - [Source: src/Hexalith.Parties.Contracts/Models/PartyIndexEntry.cs]
 - [Source: src/Hexalith.Parties.Contracts/Models/PartyDetail.cs]
-- [Source: tests/Hexalith.Parties.CommandApi.Tests/Controllers/AdminEndpointIntegrationTests.cs]
+- [Source: tests/Hexalith.Parties.Tests/Controllers/AdminEndpointIntegrationTests.cs]
 - [Source: tests/Hexalith.Parties.IntegrationTests/Admin/AdminEndpointE2ETests.cs]
 - [Source: _bmad-output/implementation-artifacts/9-6-hexalith-memories-backed-party-search.md]
 - [Source: Hexalith.FrontComposer/_bmad-output/implementation-artifacts/4-3-datagrid-filtering-sorting-and-search.md]
@@ -423,7 +423,7 @@ Pass-2 BMad code review (2026-05-07). Three reviewers: Blind Hunter (adversarial
 
 #### Decision-needed
 
-- [x] [Review][Decision][Resolved → Patch D1.1] **D1 — Status enum casing mismatch breaks Local-Only/Degraded UI signal end-to-end** — Resolution: align client to PascalCase (matches backend `Enum.ToString()` emission with `JsonStringEnumConverter()` no-policy). Drop the `JsonNamingPolicy.CamelCase` converter from the AdminPortal client; change `IsLocalOnlySearch`/`IsDegraded` comparisons to PascalCase literals (`"LocalOnly"`/`"Degraded"`); update tests to send PascalCase. Smallest blast radius — no backend change. — Backend `PartiesController.SetSearchMetadataHeaders` emits `X-Parties-Search-Status: LocalOnly`/`Degraded`/`Rich` (PascalCase via `Enum.ToString()`) and the JSON body sets `Status` from the same enum. Client uses `JsonStringEnumConverter(JsonNamingPolicy.CamelCase)` (camelCase), and `AdminPortalQueryMetadata.IsLocalOnlySearch` matches the literal `"local-only"` (kebab). Tests pre-encode the body as `"local-only"` so they pass; production wire never matches. UI **never** shows "Display-name search only" copy in production. [src/Hexalith.Parties.AdminPortal/Services/PartiesAdminPortalApiClient.cs:19; AdminPortalQueryMetadata.cs IsLocalOnlySearch; src/Hexalith.Parties.CommandApi/Controllers/PartiesController.cs SetSearchMetadataHeaders]
+- [x] [Review][Decision][Resolved → Patch D1.1] **D1 — Status enum casing mismatch breaks Local-Only/Degraded UI signal end-to-end** — Resolution: align client to PascalCase (matches backend `Enum.ToString()` emission with `JsonStringEnumConverter()` no-policy). Drop the `JsonNamingPolicy.CamelCase` converter from the AdminPortal client; change `IsLocalOnlySearch`/`IsDegraded` comparisons to PascalCase literals (`"LocalOnly"`/`"Degraded"`); update tests to send PascalCase. Smallest blast radius — no backend change. — Backend `PartiesController.SetSearchMetadataHeaders` emits `X-Parties-Search-Status: LocalOnly`/`Degraded`/`Rich` (PascalCase via `Enum.ToString()`) and the JSON body sets `Status` from the same enum. Client uses `JsonStringEnumConverter(JsonNamingPolicy.CamelCase)` (camelCase), and `AdminPortalQueryMetadata.IsLocalOnlySearch` matches the literal `"local-only"` (kebab). Tests pre-encode the body as `"local-only"` so they pass; production wire never matches. UI **never** shows "Display-name search only" copy in production. [src/Hexalith.Parties.AdminPortal/Services/PartiesAdminPortalApiClient.cs:19; AdminPortalQueryMetadata.cs IsLocalOnlySearch; src/Hexalith.Parties/Controllers/PartiesController.cs SetSearchMetadataHeaders]
 - [x] [Review][Decision][Resolved → Patch D2.1] **D2 — Search-mode filters silently dropped while UI presents them as enabled** — Resolution: disable Type/Active `<select>`s in search mode (add `disabled="@(!string.IsNullOrWhiteSpace(_filters.Query))"`). Add bUnit test asserting the disabled state. — Pass-1 D5 correctly removed `type=`/`active=` from the search URL; UI continues to render Type and Active filter `<select>`s as enabled when `_filters.Query` is non-empty; user picking Active=true while typing receives unfiltered results. [src/Hexalith.Parties.AdminPortal/Components/PartiesAdminPortal.razor filter render around 50-90; tests/Hexalith.Parties.AdminPortal.Tests/Services/RecordingAdminPortalApiClient.cs SearchPartiesAsync]
 - [x] [Review][Decision][Resolved → Patch D3.1] **D3 — Should `_detail.Id` be displayed in the System metadata section?** — Resolution: hide entirely. Aligns with the explicit task line 60 ("do not display or parse `tenant:domain:aggregateId` scoped ids as user-facing labels"). Remove the `@_detail.Id` rendering from the System metadata block; preserve display name + name history + timestamps. — [src/Hexalith.Parties.AdminPortal/Components/PartiesAdminPortal.razor System metadata block]
 - [x] [Review][Decision][Resolved → Patch D4.1] **D4 — How should `Labels` parameter changes invalidate cached status text mid-session?** — Resolution: recompute `_statusText`/`_emptyText`/`_detailEmptyText` live via `EffectiveLabels` on every render. Convert the cached fields to computed properties or evaluate `EffectiveLabels.X` directly in markup; remove the cached field assignments. Drops the staleness window without signature complexity. — [src/Hexalith.Parties.AdminPortal/Components/PartiesAdminPortal.razor:266, 316-322, 325-344, 510]

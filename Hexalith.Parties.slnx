@@ -7,7 +7,7 @@
     <Project Path="src/Hexalith.Parties.Aspire/Hexalith.Parties.Aspire.csproj" />
     <Project Path="src/Hexalith.Parties.AdminPortal/Hexalith.Parties.AdminPortal.csproj" />
     <Project Path="src/Hexalith.Parties.Client/Hexalith.Parties.Client.csproj" />
-    <Project Path="src/Hexalith.Parties.CommandApi/Hexalith.Parties.CommandApi.csproj" />
+    <Project Path="src/Hexalith.Parties/Hexalith.Parties.csproj" />
     <Project Path="src/Hexalith.Parties.Contracts/Hexalith.Parties.Contracts.csproj" />
     <Project Path="src/Hexalith.Parties.Picker/Hexalith.Parties.Picker.csproj" />
     <Project Path="src/Hexalith.Parties.Projections/Hexalith.Parties.Projections.csproj" />
@@ -19,7 +19,7 @@
   <Folder Name="/tests/">
     <Project Path="tests/Hexalith.Parties.Client.Tests/Hexalith.Parties.Client.Tests.csproj" />
     <Project Path="tests/Hexalith.Parties.AdminPortal.Tests/Hexalith.Parties.AdminPortal.Tests.csproj" />
-    <Project Path="tests/Hexalith.Parties.CommandApi.Tests/Hexalith.Parties.CommandApi.Tests.csproj" />
+    <Project Path="tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj" />
     <Project Path="tests/Hexalith.Parties.Contracts.Tests/Hexalith.Parties.Contracts.Tests.csproj" />
     <Project Path="tests/Hexalith.Parties.Picker.Tests/Hexalith.Parties.Picker.Tests.csproj" />
     <Project Path="tests/Hexalith.Parties.IntegrationTests/Hexalith.Parties.IntegrationTests.csproj" />

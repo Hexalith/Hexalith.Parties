@@ -27,7 +27,7 @@ so that I can turn "Jean Dupont at Acme Corp, email jean@acme.com" into a struct
 ## Tasks / Subtasks
 
 - [x] Task 1: Create `CreatePartyMcpTool` class (AC: #1, #2, #3, #5, #6)
-  - [x] 1.1: Create `src/Hexalith.Parties.CommandApi/Mcp/CreatePartyMcpTool.cs` as a `static class` with `[McpServerToolType]` attribute
+  - [x] 1.1: Create `src/Hexalith.Parties/Mcp/CreatePartyMcpTool.cs` as a `static class` with `[McpServerToolType]` attribute
   - [x] 1.2: Implement `create_party` method with `[McpServerTool(Name = "create_party")]` and `[Description("Creates a new party (person or organization) with optional contact channels and identifiers. Accepts forgiving input — missing IDs are auto-generated, partial details are accepted.")]`
   - [x] 1.3: Define forgiving input parameters with `[Description]` attributes:
     - `type` (string, required): `"Person"` or `"Organization"` — the party type
@@ -90,12 +90,12 @@ This story adds the `create_party` MCP tool — a **write tool** that enables AI
 ### What already exists (do not recreate)
 
 - **MCP server infrastructure** — fully set up in Story 5.1: `AddMcpServer().WithHttpTransport().WithToolsFromAssembly()` in `PartiesServiceCollectionExtensions.cs`, `app.MapMcp().RequireAuthorization()` in `Program.cs`
-- **McpSessionContext** — `src/Hexalith.Parties.CommandApi/Mcp/McpSessionContext.cs` with `AsyncLocal<string?> Tenant` and shared `JsonSerializerOptions`
-- **GetPartyMcpTool** — `src/Hexalith.Parties.CommandApi/Mcp/GetPartyMcpTool.cs` — reference for MCP tool patterns (static class, `[McpServerToolType]`, `IServiceProvider` injection, tenant extraction, error handling, JSON return)
-- **FindPartiesMcpTool** — `src/Hexalith.Parties.CommandApi/Mcp/FindPartiesMcpTool.cs` — reference for parameter patterns
+- **McpSessionContext** — `src/Hexalith.Parties/Mcp/McpSessionContext.cs` with `AsyncLocal<string?> Tenant` and shared `JsonSerializerOptions`
+- **GetPartyMcpTool** — `src/Hexalith.Parties/Mcp/GetPartyMcpTool.cs` — reference for MCP tool patterns (static class, `[McpServerToolType]`, `IServiceProvider` injection, tenant extraction, error handling, JSON return)
+- **FindPartiesMcpTool** — `src/Hexalith.Parties/Mcp/FindPartiesMcpTool.cs` — reference for parameter patterns
 - **CreatePartyComposite command** — `src/Hexalith.Parties.Contracts/Commands/CreatePartyComposite.cs` — the target command type
-- **CreatePartyCompositeValidator** — `src/Hexalith.Parties.CommandApi/Validation/CreatePartyCompositeValidator.cs` — FluentValidation validator with full input validation rules
-- **PartiesController.DispatchCompositeCommandAsync** — `src/Hexalith.Parties.CommandApi/Controllers/PartiesController.cs` — reference implementation for command dispatch via `ICommandRouter`
+- **CreatePartyCompositeValidator** — `src/Hexalith.Parties/Validation/CreatePartyCompositeValidator.cs` — FluentValidation validator with full input validation rules
+- **PartiesController.DispatchCompositeCommandAsync** — `src/Hexalith.Parties/Controllers/PartiesController.cs` — reference implementation for command dispatch via `ICommandRouter`
 - **ICommandRouter** — registered by `AddEventStoreServer(configuration)`, accepts `SubmitCommand` and returns `CommandProcessingResult`
 - **SubmitCommand** — record with `Tenant`, `Domain`, `AggregateId`, `CommandType`, `Payload` (byte[]), `CorrelationId`, `UserId`
 - **CommandProcessingResult** — record with `Accepted`, `ErrorMessage`, `CorrelationId`, `EventCount`
@@ -265,7 +265,7 @@ The MCP tool's input normalization must produce data that passes all these rules
 
 New file to create:
 ```
-src/Hexalith.Parties.CommandApi/
+src/Hexalith.Parties/
 ├── Mcp/
 │   ├── GetPartyMcpTool.cs        (exists)
 │   ├── FindPartiesMcpTool.cs     (exists)
@@ -325,12 +325,12 @@ Pattern: focused, additive changes. Story 5.2 adds a single new file (`CreatePar
 - [Source: `_bmad-output/planning-artifacts/architecture.md#FR24`] — Complete party returned on create
 - [Source: `_bmad-output/planning-artifacts/architecture.md#FR25`] — Forgiving input schemas
 - [Source: `_bmad-output/implementation-artifacts/5-1-mcp-server-setup-and-get-party-find-parties-tools.md`] — Previous story (MCP infrastructure + read tools)
-- [Source: `src/Hexalith.Parties.CommandApi/Mcp/GetPartyMcpTool.cs`] — Reference MCP tool implementation
-- [Source: `src/Hexalith.Parties.CommandApi/Mcp/FindPartiesMcpTool.cs`] — Reference MCP tool with parameters
-- [Source: `src/Hexalith.Parties.CommandApi/Mcp/McpSessionContext.cs`] — Tenant and JSON options
+- [Source: `src/Hexalith.Parties/Mcp/GetPartyMcpTool.cs`] — Reference MCP tool implementation
+- [Source: `src/Hexalith.Parties/Mcp/FindPartiesMcpTool.cs`] — Reference MCP tool with parameters
+- [Source: `src/Hexalith.Parties/Mcp/McpSessionContext.cs`] — Tenant and JSON options
 - [Source: `src/Hexalith.Parties.Contracts/Commands/CreatePartyComposite.cs`] — Target command type
-- [Source: `src/Hexalith.Parties.CommandApi/Validation/CreatePartyCompositeValidator.cs`] — Existing validator
-- [Source: `src/Hexalith.Parties.CommandApi/Controllers/PartiesController.cs`] — Command dispatch reference
+- [Source: `src/Hexalith.Parties/Validation/CreatePartyCompositeValidator.cs`] — Existing validator
+- [Source: `src/Hexalith.Parties/Controllers/PartiesController.cs`] — Command dispatch reference
 - [Source: `src/Hexalith.Parties.Contracts/Models/PartyDetail.cs`] — Response model
 
 ## Senior Developer Review (AI)
@@ -356,7 +356,7 @@ Claude Opus 4.6
 ### Debug Log References
 
 - Build: zero errors, zero warnings
-- Tests: 231 total (21 contracts + 36 projections + 118 server + 2 integration + 54 commandapi), all pass
+- Tests: 231 total (21 contracts + 36 projections + 118 server + 2 integration + 54 parties), all pass
 
 ### Completion Notes List
 
@@ -381,7 +381,7 @@ Claude Opus 4.6
 
 ### File List
 
-- `src/Hexalith.Parties.CommandApi/Mcp/CreatePartyMcpTool.cs` (NEW, updated after review)
-- `tests/Hexalith.Parties.CommandApi.Tests/Mcp/CreatePartyMcpToolTests.cs` (NEW)
+- `src/Hexalith.Parties/Mcp/CreatePartyMcpTool.cs` (NEW, updated after review)
+- `tests/Hexalith.Parties.Tests/Mcp/CreatePartyMcpToolTests.cs` (NEW)
 - `_bmad-output/implementation-artifacts/5-2-create-party-mcp-tool.md` (review notes and status updated)
 - `_bmad-output/implementation-artifacts/sprint-status.yaml` (story status synced to done)

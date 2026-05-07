@@ -189,7 +189,7 @@ scopes:
   - sample
 ```
 
-**Important**: For the sample subscription to be active at runtime, the `pubsub.yaml` component scopes must include the sample's DAPR app-id. The existing `pubsub.yaml` only scopes to `commandapi`. Document this requirement clearly.
+**Important**: For the sample subscription to be active at runtime, the `pubsub.yaml` component scopes must include the sample's DAPR app-id. The existing `pubsub.yaml` only scopes to `parties`. Document this requirement clearly.
 
 ### JSON Serialization Convention
 

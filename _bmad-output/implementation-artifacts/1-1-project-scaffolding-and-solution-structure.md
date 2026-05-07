@@ -25,7 +25,7 @@ so that I have a consistent, buildable foundation for the party management servi
     - Hexalith.Parties.Client
     - Hexalith.Parties.Server
     - Hexalith.Parties.Projections
-    - Hexalith.Parties.CommandApi
+    - Hexalith.Parties
     - Hexalith.Parties.Aspire
     - Hexalith.Parties.AppHost (Aspire.AppHost.Sdk)
     - Hexalith.Parties.ServiceDefaults
@@ -35,7 +35,7 @@ so that I have a consistent, buildable foundation for the party management servi
     - Hexalith.Parties.Client.Tests
     - Hexalith.Parties.Server.Tests
     - Hexalith.Parties.Projections.Tests
-    - Hexalith.Parties.CommandApi.Tests
+    - Hexalith.Parties.Tests
     - Hexalith.Parties.IntegrationTests
 5. **Sample project exists under `samples/`:**
     - Hexalith.Parties.Sample
@@ -62,7 +62,7 @@ so that I have a consistent, buildable foundation for the party management servi
     - [x] 3.2: Create `src/Hexalith.Parties.Client/Hexalith.Parties.Client.csproj` — ProjectReference to Contracts
     - [x] 3.3: Create `src/Hexalith.Parties.Server/Hexalith.Parties.Server.csproj` — ProjectReference to Contracts, PackageReferences to Dapr and MediatR
     - [x] 3.4: Create `src/Hexalith.Parties.Projections/Hexalith.Parties.Projections.csproj` — ProjectReference to Contracts, PackageReferences to Dapr
-    - [x] 3.5: Create `src/Hexalith.Parties.CommandApi/Hexalith.Parties.CommandApi.csproj` — ProjectReferences to Contracts, Server, Projections; PackageReferences for API; IsPackable=false
+    - [x] 3.5: Create `src/Hexalith.Parties/Hexalith.Parties.csproj` — ProjectReferences to Contracts, Server, Projections; PackageReferences for API; IsPackable=false
     - [x] 3.6: Create `src/Hexalith.Parties.Aspire/Hexalith.Parties.Aspire.csproj` — PackageReference to Aspire.Hosting
     - [x] 3.7: Create `src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj` — MUST use `Aspire.AppHost.Sdk/13.1.2` SDK (see Dev Notes)
     - [x] 3.8: Create `src/Hexalith.Parties.ServiceDefaults/Hexalith.Parties.ServiceDefaults.csproj` — PackageReferences for OpenTelemetry, Resilience; IsPackable=false
@@ -72,7 +72,7 @@ so that I have a consistent, buildable foundation for the party management servi
     - [x] 4.2: Create `tests/Hexalith.Parties.Client.Tests/Hexalith.Parties.Client.Tests.csproj`
     - [x] 4.3: Create `tests/Hexalith.Parties.Server.Tests/Hexalith.Parties.Server.Tests.csproj`
     - [x] 4.4: Create `tests/Hexalith.Parties.Projections.Tests/Hexalith.Parties.Projections.Tests.csproj`
-    - [x] 4.5: Create `tests/Hexalith.Parties.CommandApi.Tests/Hexalith.Parties.CommandApi.Tests.csproj`
+    - [x] 4.5: Create `tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj`
     - [x] 4.6: Create `tests/Hexalith.Parties.IntegrationTests/Hexalith.Parties.IntegrationTests.csproj`
 - [x] Task 5: Create sample project stub (AC: #5)
     - [x] 5.1: Create `samples/Hexalith.Parties.Sample/Hexalith.Parties.Sample.csproj`
@@ -136,7 +136,7 @@ The AppHost project MUST use the Aspire AppHost SDK, NOT `Microsoft.NET.Sdk`. Th
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Hexalith.Parties.CommandApi\Hexalith.Parties.CommandApi.csproj" />
+    <ProjectReference Include="..\Hexalith.Parties\Hexalith.Parties.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -201,7 +201,7 @@ Keep ALL existing packages from EventStore (Dapr, Aspire, Microsoft.Extensions, 
     <Project Path="src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj" />
     <Project Path="src/Hexalith.Parties.Aspire/Hexalith.Parties.Aspire.csproj" />
     <Project Path="src/Hexalith.Parties.Client/Hexalith.Parties.Client.csproj" />
-    <Project Path="src/Hexalith.Parties.CommandApi/Hexalith.Parties.CommandApi.csproj" />
+    <Project Path="src/Hexalith.Parties/Hexalith.Parties.csproj" />
     <Project Path="src/Hexalith.Parties.Contracts/Hexalith.Parties.Contracts.csproj" />
     <Project Path="src/Hexalith.Parties.Projections/Hexalith.Parties.Projections.csproj" />
     <Project Path="src/Hexalith.Parties.Server/Hexalith.Parties.Server.csproj" />
@@ -210,7 +210,7 @@ Keep ALL existing packages from EventStore (Dapr, Aspire, Microsoft.Extensions, 
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/Hexalith.Parties.Client.Tests/Hexalith.Parties.Client.Tests.csproj" />
-    <Project Path="tests/Hexalith.Parties.CommandApi.Tests/Hexalith.Parties.CommandApi.Tests.csproj" />
+    <Project Path="tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj" />
     <Project Path="tests/Hexalith.Parties.Contracts.Tests/Hexalith.Parties.Contracts.Tests.csproj" />
     <Project Path="tests/Hexalith.Parties.IntegrationTests/Hexalith.Parties.IntegrationTests.csproj" />
     <Project Path="tests/Hexalith.Parties.Projections.Tests/Hexalith.Parties.Projections.Tests.csproj" />
@@ -370,8 +370,8 @@ Hexalith.Parties/
 │   │   └── Hexalith.Parties.Server.csproj       # refs: Contracts + Dapr + MediatR
 │   ├── Hexalith.Parties.Projections/
 │   │   └── Hexalith.Parties.Projections.csproj  # refs: Contracts + Dapr
-│   ├── Hexalith.Parties.CommandApi/
-│   │   └── Hexalith.Parties.CommandApi.csproj   # refs: Contracts, Server, Projections + API pkgs
+│   ├── Hexalith.Parties/
+│   │   └── Hexalith.Parties.csproj   # refs: Contracts, Server, Projections + API pkgs
 │   ├── Hexalith.Parties.Aspire/
 │   │   └── Hexalith.Parties.Aspire.csproj       # refs: Aspire.Hosting
 │   ├── Hexalith.Parties.AppHost/
@@ -390,8 +390,8 @@ Hexalith.Parties/
 │   │   └── Hexalith.Parties.Server.Tests.csproj     # refs: Server, Testing + xUnit
 │   ├── Hexalith.Parties.Projections.Tests/
 │   │   └── Hexalith.Parties.Projections.Tests.csproj  # refs: Projections, Testing + xUnit
-│   ├── Hexalith.Parties.CommandApi.Tests/
-│   │   └── Hexalith.Parties.CommandApi.Tests.csproj   # refs: CommandApi, Testing + xUnit
+│   ├── Hexalith.Parties.Tests/
+│   │   └── Hexalith.Parties.Tests.csproj   # refs: CommandApi, Testing + xUnit
 │   └── Hexalith.Parties.IntegrationTests/
 │       └── Hexalith.Parties.IntegrationTests.csproj   # refs: CommandApi, Testing + xUnit
 │
@@ -454,7 +454,7 @@ Claude Opus 4.6
 - src/Hexalith.Parties.Client/Hexalith.Parties.Client.csproj (new)
 - src/Hexalith.Parties.Server/Hexalith.Parties.Server.csproj (new)
 - src/Hexalith.Parties.Projections/Hexalith.Parties.Projections.csproj (new)
-- src/Hexalith.Parties.CommandApi/Hexalith.Parties.CommandApi.csproj (new)
+- src/Hexalith.Parties/Hexalith.Parties.csproj (new)
 - src/Hexalith.Parties.Aspire/Hexalith.Parties.Aspire.csproj (new)
 - src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj (new)
 - src/Hexalith.Parties.ServiceDefaults/Hexalith.Parties.ServiceDefaults.csproj (new)
@@ -463,7 +463,7 @@ Claude Opus 4.6
 - tests/Hexalith.Parties.Client.Tests/Hexalith.Parties.Client.Tests.csproj (new)
 - tests/Hexalith.Parties.Server.Tests/Hexalith.Parties.Server.Tests.csproj (new)
 - tests/Hexalith.Parties.Projections.Tests/Hexalith.Parties.Projections.Tests.csproj (new)
-- tests/Hexalith.Parties.CommandApi.Tests/Hexalith.Parties.CommandApi.Tests.csproj (new)
+- tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj (new)
 - tests/Hexalith.Parties.IntegrationTests/Hexalith.Parties.IntegrationTests.csproj (new)
 - samples/Hexalith.Parties.Sample/Hexalith.Parties.Sample.csproj (new)
 

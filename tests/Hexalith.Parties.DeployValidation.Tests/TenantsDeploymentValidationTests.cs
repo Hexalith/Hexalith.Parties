@@ -40,14 +40,14 @@ public sealed class TenantsDeploymentValidationTests : IDisposable
     }
 
     [Fact]
-    public async Task TenantsSubscriptionScopes_MissingCommandApi_FailsWithRecommendationAsync()
+    public async Task TenantsSubscriptionScopes_MissingParties_FailsWithRecommendationAsync()
     {
-        WriteBaseProductionConfig(_tempDir, includeTenantsSubscription: true, includeTenantsConfig: true, includeCommandApiScope: false);
+        WriteBaseProductionConfig(_tempDir, includeTenantsSubscription: true, includeTenantsConfig: true, includePartiesScope: false);
 
         (int exitCode, string output) = await RunValidationAsync(_tempDir);
 
         exitCode.ShouldBe(1);
-        output.ShouldContain("Missing commandapi subscription permission");
+        output.ShouldContain("Missing parties subscription permission");
         output.ShouldContain("subscriptionScopes");
     }
 
@@ -119,27 +119,27 @@ public sealed class TenantsDeploymentValidationTests : IDisposable
     }
 
     [Fact]
-    public async Task TenantsValidation_SubscriptionScopesWithQuotesAndWhitespace_AllowsCommandApiAsync()
+    public async Task TenantsValidation_SubscriptionScopesWithQuotesAndWhitespace_AllowsPartiesAsync()
     {
         WriteBaseProductionConfig(_tempDir, includeTenantsSubscription: true, includeTenantsConfig: true);
         string pubsub = Path.Combine(_tempDir, "pubsub.yaml");
         File.WriteAllText(
             pubsub,
             File.ReadAllText(pubsub).Replace(
-                "value: \"commandapi=system.tenants.events;{env:SUBSCRIBER_APP_ID}=acme.parties.events\"",
-                "value: ' \"commandapi\" = \"system.tenants.events\" ; {env:SUBSCRIBER_APP_ID}=acme.parties.events '",
+                "value: \"parties=system.tenants.events;{env:SUBSCRIBER_APP_ID}=acme.parties.events\"",
+                "value: ' \"parties\" = \"system.tenants.events\" ; {env:SUBSCRIBER_APP_ID}=acme.parties.events '",
                 StringComparison.Ordinal));
 
         (int exitCode, string output) = await RunValidationAsync(_tempDir);
 
         exitCode.ShouldBe(0, output);
-        output.ShouldContain("commandapi is allowed to subscribe to system.tenants.events");
+        output.ShouldContain("parties is allowed to subscribe to system.tenants.events");
     }
 
     [Fact]
     public async Task TenantsValidation_MultiDocumentPubSub_InspectsAllComponentDocumentsAsync()
     {
-        WriteBaseProductionConfig(_tempDir, includeTenantsSubscription: true, includeTenantsConfig: true, includeCommandApiScope: false);
+        WriteBaseProductionConfig(_tempDir, includeTenantsSubscription: true, includeTenantsConfig: true, includePartiesScope: false);
         File.WriteAllText(Path.Combine(_tempDir, "pubsub.yaml"), """
             apiVersion: dapr.io/v1alpha1
             kind: Configuration
@@ -160,16 +160,16 @@ public sealed class TenantsDeploymentValidationTests : IDisposable
                 - name: publishingScopes
                   value: "{env:SUBSCRIBER_APP_ID}="
                 - name: subscriptionScopes
-                  value: "commandapi=system.tenants.events;{env:SUBSCRIBER_APP_ID}=acme.parties.events"
+                  value: "parties=system.tenants.events;{env:SUBSCRIBER_APP_ID}=acme.parties.events"
             scopes:
-              - commandapi
+              - parties
               - "{env:SUBSCRIBER_APP_ID}"
             """);
 
         (int exitCode, string output) = await RunValidationAsync(_tempDir);
 
         exitCode.ShouldBe(0, output);
-        output.ShouldContain("commandapi is allowed to subscribe to system.tenants.events");
+        output.ShouldContain("parties is allowed to subscribe to system.tenants.events");
     }
 
     [Fact]
@@ -204,7 +204,7 @@ public sealed class TenantsDeploymentValidationTests : IDisposable
     /// </summary>
     private static void WriteBaseProductionConfigWithSentinel(string dir, string sentinel)
     {
-        WriteCommonProductionFiles(dir, includeCommandApiScope: true);
+        WriteCommonProductionFiles(dir, includePartiesScope: true);
         File.WriteAllText(Path.Combine(dir, "subscription-tenants.yaml"), $$"""
             apiVersion: dapr.io/v2alpha1
             kind: Subscription
@@ -218,7 +218,7 @@ public sealed class TenantsDeploymentValidationTests : IDisposable
                 default: /events/tenants
               deadLetterTopic: "deadletter.system.tenants.events"
             scopes:
-              - commandapi
+              - parties
             """);
         // Inject the sentinel into multiple fields. The valid-shape spec keys
         // (pubsubName/topicName/commandApiAppId) are kept correct so the validator does
@@ -234,7 +234,7 @@ public sealed class TenantsDeploymentValidationTests : IDisposable
             spec:
               pubsubName: pubsub
               topicName: system.tenants.events
-              commandApiAppId: commandapi
+              commandApiAppId: parties
               tenantsDependencyHealth: "healthy {{sentinel}}"
             """);
     }
@@ -343,11 +343,11 @@ public sealed class TenantsDeploymentValidationTests : IDisposable
         string dir,
         bool includeTenantsSubscription,
         bool includeTenantsConfig,
-        bool includeCommandApiScope = true,
+        bool includePartiesScope = true,
         bool malformedTenantsConfig = false,
         bool includeSensitiveValues = false)
     {
-        WriteCommonProductionFiles(dir, includeCommandApiScope);
+        WriteCommonProductionFiles(dir, includePartiesScope);
         if (includeTenantsSubscription)
         {
             WriteTenantsSubscription(dir);
@@ -359,7 +359,7 @@ public sealed class TenantsDeploymentValidationTests : IDisposable
         }
     }
 
-    private static void WriteCommonProductionFiles(string dir, bool includeCommandApiScope)
+    private static void WriteCommonProductionFiles(string dir, bool includePartiesScope)
     {
         File.WriteAllText(Path.Combine(dir, "accesscontrol.yaml"), """
             apiVersion: dapr.io/v1alpha1
@@ -369,7 +369,7 @@ public sealed class TenantsDeploymentValidationTests : IDisposable
                 defaultAction: deny
                 trustDomain: "hexalith.io"
                 policies:
-                  - appId: commandapi
+                  - appId: parties
                     defaultAction: deny
             """);
 
@@ -388,11 +388,11 @@ public sealed class TenantsDeploymentValidationTests : IDisposable
                 - name: actorStateStore
                   value: "true"
             scopes:
-              - commandapi
+              - parties
             """);
 
-        string scopes = includeCommandApiScope
-            ? "commandapi=system.tenants.events;{env:SUBSCRIBER_APP_ID}=acme.parties.events"
+        string scopes = includePartiesScope
+            ? "parties=system.tenants.events;{env:SUBSCRIBER_APP_ID}=acme.parties.events"
             : "{env:SUBSCRIBER_APP_ID}=acme.parties.events";
         File.WriteAllText(Path.Combine(dir, "pubsub.yaml"), $$"""
             apiVersion: dapr.io/v1alpha1
@@ -411,7 +411,7 @@ public sealed class TenantsDeploymentValidationTests : IDisposable
                 - name: subscriptionScopes
                   value: "{{scopes}}"
             scopes:
-              - commandapi
+              - parties
               - "{env:SUBSCRIBER_APP_ID}"
             """);
 
@@ -464,7 +464,7 @@ public sealed class TenantsDeploymentValidationTests : IDisposable
                 default: /events/tenants
               deadLetterTopic: "deadletter.system.tenants.events"
             scopes:
-              - commandapi
+              - parties
             """);
 
     private static void WriteTenantsConfig(string dir, bool malformed, bool includeSensitiveValues)
@@ -499,14 +499,14 @@ public sealed class TenantsDeploymentValidationTests : IDisposable
                 spec:
                   pubsubName: pubsub
                   topicName: system.tenants.events
-                  commandApiAppId: commandapi
+                  commandApiAppId: parties
                   tenantsDependencyHealth: healthy
                 """);
     }
 
     private static void WriteLocalDevConfig(string dir)
     {
-        WriteCommonProductionFiles(dir, includeCommandApiScope: false);
+        WriteCommonProductionFiles(dir, includePartiesScope: false);
         File.WriteAllText(Path.Combine(dir, "accesscontrol.yaml"), """
             apiVersion: dapr.io/v1alpha1
             kind: Configuration
@@ -515,7 +515,7 @@ public sealed class TenantsDeploymentValidationTests : IDisposable
                 defaultAction: allow
                 trustDomain: "public"
                 policies:
-                  - appId: commandapi
+                  - appId: parties
                     defaultAction: deny
             """);
         File.WriteAllText(Path.Combine(dir, "pubsub.yaml"), """
@@ -529,7 +529,7 @@ public sealed class TenantsDeploymentValidationTests : IDisposable
                 - name: redisHost
                   value: "localhost:6379"
             scopes:
-              - commandapi
+              - parties
             """);
     }
 

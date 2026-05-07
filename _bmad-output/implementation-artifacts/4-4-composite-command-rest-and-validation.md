@@ -54,8 +54,8 @@ so that API consumers can create and update full parties in single HTTP requests
     - [x] 2.4: Reuse existing unauthorized / forbidden / domain-rejection `ProblemDetails` conventions.
 
 - [x] Task 3: Add `FluentValidation` validators for composite commands (AC: #4, #5, #6)
-    - [x] 3.1: Create `src/Hexalith.Parties.CommandApi/Validation/CreatePartyCompositeValidator.cs`.
-    - [x] 3.2: Create `src/Hexalith.Parties.CommandApi/Validation/UpdatePartyCompositeValidator.cs`.
+    - [x] 3.1: Create `src/Hexalith.Parties/Validation/CreatePartyCompositeValidator.cs`.
+    - [x] 3.2: Create `src/Hexalith.Parties/Validation/UpdatePartyCompositeValidator.cs`.
     - [x] 3.3: Reuse existing validator patterns and child-command rules where practical; keep registration via assembly scanning only.
     - [x] 3.4: Introduce a single configurable max-sub-operations option for API validation that aligns with aggregate `MaxSubOperations` behavior.
 
@@ -85,9 +85,9 @@ The following pieces are already implemented and should be reused:
 - `CompositeCommandResult` in `src/Hexalith.Parties.Contracts/Results/CompositeCommandResult.cs`
 - `PartyAggregate.Handle(CreatePartyComposite, PartyState?)` in `src/Hexalith.Parties.Server/Aggregates/PartyAggregate.cs`
 - `PartyAggregate.Handle(UpdatePartyComposite, PartyState?)` in `src/Hexalith.Parties.Server/Aggregates/PartyAggregate.cs`
-- Existing validation registration via assembly scanning in `src/Hexalith.Parties.CommandApi/Extensions/PartiesServiceCollectionExtensions.cs`
-- Existing controller patterns in `src/Hexalith.Parties.CommandApi/Controllers/PartiesController.cs`
-- Existing API test harness in `tests/Hexalith.Parties.CommandApi.Tests/Controllers/PartiesControllerProblemDetailsTests.cs`
+- Existing validation registration via assembly scanning in `src/Hexalith.Parties/Extensions/PartiesServiceCollectionExtensions.cs`
+- Existing controller patterns in `src/Hexalith.Parties/Controllers/PartiesController.cs`
+- Existing API test harness in `tests/Hexalith.Parties.Tests/Controllers/PartiesControllerProblemDetailsTests.cs`
 
 ### Critical implementation seam: current command dispatch cannot return composite payloads
 
@@ -204,11 +204,11 @@ If you need to construct a `PartyDetail` response from write-side data, prefer r
 
 Primary files:
 
-- `src/Hexalith.Parties.CommandApi/Controllers/PartiesController.cs`
-- `src/Hexalith.Parties.CommandApi/Validation/CreatePartyCompositeValidator.cs` (new)
-- `src/Hexalith.Parties.CommandApi/Validation/UpdatePartyCompositeValidator.cs` (new)
-- `src/Hexalith.Parties.CommandApi/Extensions/PartiesServiceCollectionExtensions.cs` (only if the new plumbing requires additional service registration)
-- `tests/Hexalith.Parties.CommandApi.Tests/Controllers/PartiesControllerProblemDetailsTests.cs`
+- `src/Hexalith.Parties/Controllers/PartiesController.cs`
+- `src/Hexalith.Parties/Validation/CreatePartyCompositeValidator.cs` (new)
+- `src/Hexalith.Parties/Validation/UpdatePartyCompositeValidator.cs` (new)
+- `src/Hexalith.Parties/Extensions/PartiesServiceCollectionExtensions.cs` (only if the new plumbing requires additional service registration)
+- `tests/Hexalith.Parties.Tests/Controllers/PartiesControllerProblemDetailsTests.cs`
 
 Potential EventStore dependency surface if Task 1 is implemented at the shared pipeline level:
 
@@ -268,19 +268,19 @@ That pattern suggests keeping changes focused, additive, and accompanied by test
 - [Source: `_bmad-output/planning-artifacts/architecture.md#D11`]
 - [Source: `_bmad-output/planning-artifacts/architecture.md#D12`]
 - [Source: `_bmad-output/planning-artifacts/architecture.md#D17`]
-- [Source: `src/Hexalith.Parties.CommandApi/Controllers/PartiesController.cs`]
-- [Source: `src/Hexalith.Parties.CommandApi/Extensions/PartiesServiceCollectionExtensions.cs`]
-- [Source: `src/Hexalith.Parties.CommandApi/Validation/CreatePartyValidator.cs`]
-- [Source: `src/Hexalith.Parties.CommandApi/Validation/AddContactChannelValidator.cs`]
-- [Source: `src/Hexalith.Parties.CommandApi/Validation/UpdateContactChannelValidator.cs`]
-- [Source: `src/Hexalith.Parties.CommandApi/Validation/AddIdentifierValidator.cs`]
+- [Source: `src/Hexalith.Parties/Controllers/PartiesController.cs`]
+- [Source: `src/Hexalith.Parties/Extensions/PartiesServiceCollectionExtensions.cs`]
+- [Source: `src/Hexalith.Parties/Validation/CreatePartyValidator.cs`]
+- [Source: `src/Hexalith.Parties/Validation/AddContactChannelValidator.cs`]
+- [Source: `src/Hexalith.Parties/Validation/UpdateContactChannelValidator.cs`]
+- [Source: `src/Hexalith.Parties/Validation/AddIdentifierValidator.cs`]
 - [Source: `src/Hexalith.Parties.Contracts/Commands/CreatePartyComposite.cs`]
 - [Source: `src/Hexalith.Parties.Contracts/Commands/UpdatePartyComposite.cs`]
 - [Source: `src/Hexalith.Parties.Contracts/Results/CompositeCommandResult.cs`]
 - [Source: `src/Hexalith.Parties.Contracts/Models/PartyDetail.cs`]
 - [Source: `src/Hexalith.Parties.Contracts/State/PartyState.cs`]
 - [Source: `src/Hexalith.Parties.Projections/Handlers/PartyDetailProjectionHandler.cs`]
-- [Source: `tests/Hexalith.Parties.CommandApi.Tests/Controllers/PartiesControllerProblemDetailsTests.cs`]
+- [Source: `tests/Hexalith.Parties.Tests/Controllers/PartiesControllerProblemDetailsTests.cs`]
 - [Source: `Hexalith.EventStore/src/Hexalith.EventStore.Server/Actors/CommandProcessingResult.cs`]
 - [Source: `Hexalith.EventStore/src/Hexalith.EventStore.Server/Commands/ICommandRouter.cs`]
 
@@ -313,10 +313,10 @@ Extended the EventStore command pipeline with an optional `ResultPayload` string
 - `Hexalith.EventStore/src/Hexalith.EventStore.Server/Actors/AggregateActor.cs` (modified - pass-through ResultPayload in CompleteTerminalAsync)
 - `src/Hexalith.Parties.Contracts/Results/CompositeCommandResult.cs` (modified - added UpdatedPartyDetail, overridden ResultPayload with JSON serialization)
 - `src/Hexalith.Parties.Server/Aggregates/PartyAggregate.cs` (modified - BuildPartyDetailFromState helper, update-composite returns PartyDetail)
-- `src/Hexalith.Parties.CommandApi/Controllers/PartiesController.cs` (modified - create-composite and update-composite endpoints, DispatchCompositeCommandAsync)
-- `src/Hexalith.Parties.CommandApi/Validation/CreatePartyCompositeValidator.cs` (new)
-- `src/Hexalith.Parties.CommandApi/Validation/UpdatePartyCompositeValidator.cs` (new)
-- `tests/Hexalith.Parties.CommandApi.Tests/Controllers/PartiesControllerProblemDetailsTests.cs` (modified - 10 new composite endpoint tests)
+- `src/Hexalith.Parties/Controllers/PartiesController.cs` (modified - create-composite and update-composite endpoints, DispatchCompositeCommandAsync)
+- `src/Hexalith.Parties/Validation/CreatePartyCompositeValidator.cs` (new)
+- `src/Hexalith.Parties/Validation/UpdatePartyCompositeValidator.cs` (new)
+- `tests/Hexalith.Parties.Tests/Controllers/PartiesControllerProblemDetailsTests.cs` (modified - 10 new composite endpoint tests)
 
 ### Change Log
 
@@ -329,13 +329,13 @@ Extended the EventStore command pipeline with an optional `ResultPayload` string
 - `_bmad-output/implementation-artifacts/sprint-status.yaml` (modified) — Synced Story 4.4 sprint tracking to done
 - `src/Hexalith.Parties.Contracts/State/PartyState.cs` (modified) — Added `CreatedAt` to write-side state and initialize it on `PartyCreated`
 - `src/Hexalith.Parties.Server/Aggregates/PartyAggregate.cs` (modified) — Mapped `CreatedAt` into write-side `PartyDetail` and exposed effective max-sub-operation helper
-- `src/Hexalith.Parties.CommandApi/Validation/CreatePartyCompositeValidator.cs` (modified) — Added type-specific detail requirements, nested GUID validation, and aggregate-aligned max-sub-operation enforcement
-- `src/Hexalith.Parties.CommandApi/Validation/UpdatePartyCompositeValidator.cs` (modified) — Added nested GUID/value/type validation and aggregate-aligned max-sub-operation enforcement
+- `src/Hexalith.Parties/Validation/CreatePartyCompositeValidator.cs` (modified) — Added type-specific detail requirements, nested GUID validation, and aggregate-aligned max-sub-operation enforcement
+- `src/Hexalith.Parties/Validation/UpdatePartyCompositeValidator.cs` (modified) — Added nested GUID/value/type validation and aggregate-aligned max-sub-operation enforcement
 - `Hexalith.EventStore/src/Hexalith.EventStore.Server/Actors/PipelineState.cs` (modified) — Added persisted `ResultPayload` checkpoint field
 - `Hexalith.EventStore/src/Hexalith.EventStore.Server/Actors/AggregateActor.cs` (modified) — Preserved `ResultPayload` through checkpointing, publish-failure handling, and `EventsStored` resume
 - `tests/Hexalith.Parties.Contracts.Tests/State/PartyStateTests.cs` (modified) — Asserted `CreatedAt` is set for newly created parties
 - `tests/Hexalith.Parties.Server.Tests/Aggregates/PartyAggregateCompositeTests.cs` (modified) — Asserted update-composite returns complete `PartyDetail`, including timestamps
-- `tests/Hexalith.Parties.CommandApi.Tests/Controllers/PartiesControllerProblemDetailsTests.cs` (modified) — Added invalid composite payload regression cases for missing type-specific details and missing add-operation values
+- `tests/Hexalith.Parties.Tests/Controllers/PartiesControllerProblemDetailsTests.cs` (modified) — Added invalid composite payload regression cases for missing type-specific details and missing add-operation values
 - `Hexalith.EventStore/tests/Hexalith.EventStore.Server.Tests/Actors/StateMachineIntegrationTests.cs` (modified) — Added crash/recovery regression covering `ResultPayload` preservation
 
 ### Senior Developer Review (AI)
@@ -350,7 +350,7 @@ Extended the EventStore command pipeline with an optional `ResultPayload` string
 
 ### Verification
 
-- `dotnet test tests/Hexalith.Parties.CommandApi.Tests/Hexalith.Parties.CommandApi.Tests.csproj --filter "FullyQualifiedName~PartiesControllerProblemDetailsTests"`
+- `dotnet test tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj --filter "FullyQualifiedName~PartiesControllerProblemDetailsTests"`
 - `dotnet test tests/Hexalith.Parties.Contracts.Tests/Hexalith.Parties.Contracts.Tests.csproj --filter "FullyQualifiedName~PartyStateTests"`
 - `dotnet test tests/Hexalith.Parties.Server.Tests/Hexalith.Parties.Server.Tests.csproj --filter "FullyQualifiedName~PartyAggregateCompositeTests"`
 - `dotnet test Hexalith.EventStore/tests/Hexalith.EventStore.Server.Tests/Hexalith.EventStore.Server.Tests.csproj --filter "FullyQualifiedName~StateMachineIntegrationTests.ProcessCommand_CrashAtEventsStored_Resume_PreservesResultPayload"`

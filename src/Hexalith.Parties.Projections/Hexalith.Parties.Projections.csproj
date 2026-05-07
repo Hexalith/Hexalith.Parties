@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
-    <InternalsVisibleTo Include="Hexalith.Parties.CommandApi.Tests" />
+    <InternalsVisibleTo Include="Hexalith.Parties.Tests" />
     <InternalsVisibleTo Include="Hexalith.Parties.Projections.Tests" />
   </ItemGroup>
 

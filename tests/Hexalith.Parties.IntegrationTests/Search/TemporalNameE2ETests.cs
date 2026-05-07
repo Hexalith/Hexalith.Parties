@@ -35,7 +35,7 @@ public class TemporalNameE2ETests(PartiesAspireTopologyFixture fixture, ITestOut
     {
         if (!fixture.IsAvailable) { output.WriteLine($"Skipped: {fixture.UnavailableReason}"); return; }
 
-        HttpClient client = fixture.CommandApiClient;
+        HttpClient client = fixture.PartiesClient;
         client.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", CreateAdminToken());
 

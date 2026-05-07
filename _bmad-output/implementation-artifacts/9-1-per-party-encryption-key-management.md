@@ -294,7 +294,7 @@ src/
     CachedPartyKeyManagementService.cs   # Caching decorator
     KeyOperationAuditService.cs          # Audit implementation (DAPR state store)
     LocalDevKeyStorageBackend.cs         # Dev/test backend (in-memory, with realistic constraints)
-  Hexalith.Parties.CommandApi/
+  Hexalith.Parties/
     Controllers/
       AdminController.cs                # MODIFY: add rotate-key endpoint
 
@@ -306,7 +306,7 @@ tests/
     PartyKeyManagementServiceTests.cs    # Tier 1 unit tests
     CachedKeyManagementServiceTests.cs   # Cache behavior tests
     KeyOperationAuditServiceTests.cs     # Audit tests
-  Hexalith.Parties.CommandApi.Tests/
+  Hexalith.Parties.Tests/
     Controllers/
       KeyRotationEndpointTests.cs        # Tier 2 integration tests
   Hexalith.Parties.IntegrationTests/
@@ -466,24 +466,24 @@ New files:
 - tests/Hexalith.Parties.Contracts.Tests/Security/PartyKeyInfoTests.cs
 - tests/Hexalith.Parties.Contracts.Tests/Security/KeyOperationAuditEntryTests.cs
 - tests/Hexalith.Parties.Contracts.Tests/Security/ErasureCertificateTests.cs
-- tests/Hexalith.Parties.CommandApi.Tests/Controllers/KeyRotationEndpointTests.cs
+- tests/Hexalith.Parties.Tests/Controllers/KeyRotationEndpointTests.cs
 - tests/Hexalith.Parties.IntegrationTests/Security/KeyLifecycleE2ETests.cs
 
 Modified files:
 
-- src/Hexalith.Parties.CommandApi/Controllers/AdminController.cs (added rotate-key endpoint + domain event dispatch via ICommandRouter)
+- src/Hexalith.Parties/Controllers/AdminController.cs (added rotate-key endpoint + domain event dispatch via ICommandRouter)
 - src/Hexalith.Parties.Server/Aggregates/PartyAggregate.cs (added Handle(RotatePartyKey) → emits PartyEncryptionKeyRotated)
 - src/Hexalith.Parties.Contracts/State/PartyState.cs (added Apply(PartyEncryptionKeyRotated) — no-op for framework convention)
 - src/Hexalith.Parties.Testing/PartyTestData.cs (added ValidRotatePartyKey helper)
 - tests/Hexalith.Parties.Server.Tests/Aggregates/PartyAggregateErasureTests.cs (added 3 RotatePartyKey aggregate tests)
 - tests/Hexalith.Parties.IntegrationTests/Security/KeyLifecycleE2ETests.cs (added 2 E2E tests: create party with key, rotation with audit)
-- src/Hexalith.Parties.CommandApi/Middleware/CorrelationIdMiddleware.cs (propagates correlation ID into ambient async context)
-- src/Hexalith.Parties.CommandApi/Extensions/PartiesServiceCollectionExtensions.cs (registers correlation context accessor)
+- src/Hexalith.Parties/Middleware/CorrelationIdMiddleware.cs (propagates correlation ID into ambient async context)
+- src/Hexalith.Parties/Extensions/PartiesServiceCollectionExtensions.cs (registers correlation context accessor)
 - src/Hexalith.Parties.Security/PartyKeyManagementService.cs (uses ambient correlation ID for audit records)
 - src/Hexalith.Parties.Security/PartyPayloadProtectionService.cs (routes PartyCreated and CryptoPending recovery through PartyKeyLifecycleService)
 - src/Hexalith.Parties.Security/LocalDevKeyStorageBackend.cs (enforces per-party version limit)
-- src/Hexalith.Parties.CommandApi/Hexalith.Parties.CommandApi.csproj (added Security project reference)
-- tests/Hexalith.Parties.CommandApi.Tests/Controllers/AdminEndpointIntegrationTests.cs (registered IPartyKeyManagementService mock)
+- src/Hexalith.Parties/Hexalith.Parties.csproj (added Security project reference)
+- tests/Hexalith.Parties.Tests/Controllers/AdminEndpointIntegrationTests.cs (registered IPartyKeyManagementService mock)
 - tests/Hexalith.Parties.Security.Tests/PartyKeyManagementServiceTests.cs (covers correlation ID audit propagation)
 - tests/Hexalith.Parties.Security.Tests/CachedKeyManagementServiceTests.cs (covers cache-hit timing staying under 1 second)
 - tests/Hexalith.Parties.Security.Tests/LocalDevKeyStorageBackendTests.cs (covers per-party version limit)

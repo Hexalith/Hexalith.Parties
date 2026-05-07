@@ -39,7 +39,7 @@ Choose one state store component file:
 ### State Store Requirements
 
 - **actorStateStore: true** -- Required. Actors (aggregates, projections) persist state via DAPR actors.
-- **Scoped to commandapi only** -- Only the command API process accesses state store.
+- **Scoped to parties only** -- Only the command API process accesses state store.
 - **Entry size limits (D5):** CosmosDB has a 2 MB per-document limit. If aggregate state approaches this limit, consider the partition interface for scale. Monitor `statestore` operation latencies and sizes.
 
 ### Required Component Files
@@ -131,13 +131,13 @@ Parties must subscribe to the shared Tenants topic:
 
 - Pub/sub name: `pubsub`
 - Topic: `system.tenants.events`
-- Hosting app id: `commandapi`
+- Hosting app id: `parties`
 - Declarative subscription: `subscription-tenants.yaml`
 - Integration manifest: `tenants-integration.yaml` (consumed by `validate-deployment.ps1`)
 - Route: `/events/tenants`
 - Dead-letter: `deadletter.system.tenants.events`
 
-When production `subscriptionScopes` are enabled, include `commandapi=system.tenants.events`. Parties consumes this state for authorization only; tenant lifecycle, membership, roles, global administrators, and tenant configuration remain managed by Hexalith.Tenants.
+When production `subscriptionScopes` are enabled, include `parties=system.tenants.events`. Parties consumes this state for authorization only; tenant lifecycle, membership, roles, global administrators, and tenant configuration remain managed by Hexalith.Tenants.
 
 ---
 
@@ -200,8 +200,8 @@ The tool exits with code `0` on success and `1` on failure, making it suitable f
 
 ### State store accessible to multiple app-ids
 
-**Problem:** Non-commandapi services can read/write actor state.
-**Fix:** Set state store `scopes` to `[commandapi]` only.
+**Problem:** Non-parties services can read/write actor state.
+**Fix:** Set state store `scopes` to `[parties]` only.
 
 ### Subscribers can publish events
 
@@ -221,7 +221,7 @@ The tool exits with code `0` on success and `1` on failure, making it suitable f
 ### Missing Tenants subscription or scope
 
 **Problem:** Parties does not receive `system.tenants.events`, so local tenant access state is missing or stale.
-**Fix:** Add `subscription-tenants.yaml`, ensure it is scoped to `commandapi`, and add `commandapi=system.tenants.events` to pub/sub `subscriptionScopes`.
+**Fix:** Add `subscription-tenants.yaml`, ensure it is scoped to `parties`, and add `parties=system.tenants.events` to pub/sub `subscriptionScopes`.
 
 ### Tenant authorization failures
 

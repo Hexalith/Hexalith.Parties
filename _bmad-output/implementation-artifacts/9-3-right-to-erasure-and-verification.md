@@ -353,7 +353,7 @@ src/
       IErasureVerificationService.cs          # Verification service interface
   Hexalith.Parties.Security/
     ErasureVerificationService.cs             # Background verification (follows ProjectionRebuildService)
-  Hexalith.Parties.CommandApi/
+  Hexalith.Parties/
     Controllers/
       AdminController.cs                      # MODIFY: add erase, erasure-status, erasure-certificate, retry-verification endpoints
 
@@ -364,7 +364,7 @@ tests/
     ErasureProjectionHandlerTests.cs          # Tier 1: ApplyErasure for detail and index handlers
   Hexalith.Parties.Security.Tests/
     ErasureVerificationServiceTests.cs        # Tier 1: verification service logic
-  Hexalith.Parties.CommandApi.Tests/
+  Hexalith.Parties.Tests/
     Controllers/
       ErasureEndpointTests.cs                 # Tier 2: admin endpoints + read sweep
   Hexalith.Parties.IntegrationTests/
@@ -388,7 +388,7 @@ src/
     Actors/
       PartyDetailProjectionActor.cs            # Implement EraseAsync + IsErased check on read
       PartyIndexProjectionActor.cs             # Implement EraseAsync
-  Hexalith.Parties.CommandApi/
+  Hexalith.Parties/
     Controllers/
       AdminController.cs                       # Add 4 erasure endpoints
     (REST read endpoints)                      # Add erasure state check before response
@@ -442,7 +442,7 @@ GPT-5.4
 - 2026-03-09: Focused validation after review remediation
     - `dotnet test tests/Hexalith.Parties.Server.Tests/Hexalith.Parties.Server.Tests.csproj --no-restore --filter PartyAggregateErasureTests`
     - `dotnet test tests/Hexalith.Parties.Security.Tests/Hexalith.Parties.Security.Tests.csproj --no-restore --filter ErasureVerificationServiceTests`
-    - `dotnet test tests/Hexalith.Parties.CommandApi.Tests/Hexalith.Parties.CommandApi.Tests.csproj --no-restore --filter ErasureEndpointTests`
+    - `dotnet test tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj --no-restore --filter ErasureEndpointTests`
 
 ### Completion Notes List
 
@@ -459,11 +459,11 @@ GPT-5.4
 - `src/Hexalith.Parties.Contracts/Commands/MarkPartyEncryptionKeyDeleted.cs`
 - `src/Hexalith.Parties.Contracts/Security/IPartyErasureRecordStore.cs`
 - `src/Hexalith.Parties.Contracts/Security/PartyErasureStatusRecord.cs`
-- `src/Hexalith.Parties.CommandApi/Controllers/AdminController.cs`
-- `src/Hexalith.Parties.CommandApi/Extensions/PartiesServiceCollectionExtensions.cs`
+- `src/Hexalith.Parties/Controllers/AdminController.cs`
+- `src/Hexalith.Parties/Extensions/PartiesServiceCollectionExtensions.cs`
 - `src/Hexalith.Parties.Security/PartyErasureRecordStore.cs`
 - `src/Hexalith.Parties.Server/Aggregates/PartyAggregate.cs`
-- `tests/Hexalith.Parties.CommandApi.Tests/Controllers/ErasureEndpointTests.cs`
+- `tests/Hexalith.Parties.Tests/Controllers/ErasureEndpointTests.cs`
 - `tests/Hexalith.Parties.Server.Tests/Aggregates/PartyAggregateErasureTests.cs`
 
 ## Change Log
@@ -496,4 +496,4 @@ GPT-5.4
 
 - `Hexalith.Parties.Server.Tests` filtered to `PartyAggregateErasureTests`: passed
 - `Hexalith.Parties.Security.Tests` filtered to `ErasureVerificationServiceTests`: passed
-- `Hexalith.Parties.CommandApi.Tests` filtered to `ErasureEndpointTests`: passed
+- `Hexalith.Parties.Tests` filtered to `ErasureEndpointTests`: passed

@@ -412,7 +412,7 @@ tests/
   Hexalith.Parties.Security.Tests/
     PartyPayloadProtectionServiceTests.cs    # Add roundtrip tests (4.1-4.13)
     PartyPersonalDataCommandGuardTests.cs    # Add guard tests (6.1-6.4)
-  Hexalith.Parties.CommandApi.Tests/
+  Hexalith.Parties.Tests/
     Security/
       EncryptionIntegrationTests.cs          # Tier 2 tests (7.1-7.5)
   Hexalith.Parties.IntegrationTests/
@@ -425,7 +425,7 @@ tests/
 src/Hexalith.Parties.Security/PartyPayloadProtectionService.cs
   — Inject IOptions<CryptoShreddingOptions>, add IsEnabled check, integrate circuit breaker
 
-src/Hexalith.Parties.CommandApi/Extensions/PartiesServiceCollectionExtensions.cs
+src/Hexalith.Parties/Extensions/PartiesServiceCollectionExtensions.cs
   — Bind CryptoShreddingOptions, register DecryptionCircuitBreaker
 ```
 

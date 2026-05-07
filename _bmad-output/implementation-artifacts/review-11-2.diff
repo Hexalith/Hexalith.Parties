@@ -102,20 +102,20 @@ index 0000000..ef718b5
 +
 +When the local projection is missing or lagging, check:
 +
-+- DAPR sidecar health for `commandapi`.
++- DAPR sidecar health for `parties`.
 +- The configured pub/sub component and `Tenants:TopicName`.
-+- Whether `commandapi` is subscribed to `system.tenants.events`.
++- Whether `parties` is subscribed to `system.tenants.events`.
 +- Tenants event publishing health.
 +- Projection state after replay or rebuild, where the platform exposes those operations.
 +
 +The default Tenants client projection and message-id deduplication are in-memory. Reprocessing the same message id after a process restart can be processed again unless a durable projection or deduplication store is configured.
-diff --git a/src/Hexalith.Parties.CommandApi/Authorization/ITenantAccessService.cs b/src/Hexalith.Parties.CommandApi/Authorization/ITenantAccessService.cs
+diff --git a/src/Hexalith.Parties/Authorization/ITenantAccessService.cs b/src/Hexalith.Parties/Authorization/ITenantAccessService.cs
 new file mode 100644
 index 0000000..f16775c
 --- /dev/null
-+++ b/src/Hexalith.Parties.CommandApi/Authorization/ITenantAccessService.cs
++++ b/src/Hexalith.Parties/Authorization/ITenantAccessService.cs
 @@ -0,0 +1,9 @@
-+namespace Hexalith.Parties.CommandApi.Authorization;
++namespace Hexalith.Parties.Authorization;
 +
 +public interface ITenantAccessService {
 +    Task<TenantAccessDecision> CheckAccessAsync(
@@ -124,26 +124,26 @@ index 0000000..f16775c
 +        TenantAccessRequirement requirement,
 +        CancellationToken cancellationToken = default);
 +}
-diff --git a/src/Hexalith.Parties.CommandApi/Authorization/TenantAccessDecision.cs b/src/Hexalith.Parties.CommandApi/Authorization/TenantAccessDecision.cs
+diff --git a/src/Hexalith.Parties/Authorization/TenantAccessDecision.cs b/src/Hexalith.Parties/Authorization/TenantAccessDecision.cs
 new file mode 100644
 index 0000000..6f4edef
 --- /dev/null
-+++ b/src/Hexalith.Parties.CommandApi/Authorization/TenantAccessDecision.cs
++++ b/src/Hexalith.Parties/Authorization/TenantAccessDecision.cs
 @@ -0,0 +1,7 @@
-+namespace Hexalith.Parties.CommandApi.Authorization;
++namespace Hexalith.Parties.Authorization;
 +
 +public sealed record TenantAccessDecision(bool IsAllowed, TenantAccessDenialReason Reason) {
 +    public static TenantAccessDecision Allowed { get; } = new(true, TenantAccessDenialReason.None);
 +
 +    public static TenantAccessDecision Denied(TenantAccessDenialReason reason) => new(false, reason);
 +}
-diff --git a/src/Hexalith.Parties.CommandApi/Authorization/TenantAccessDenialReason.cs b/src/Hexalith.Parties.CommandApi/Authorization/TenantAccessDenialReason.cs
+diff --git a/src/Hexalith.Parties/Authorization/TenantAccessDenialReason.cs b/src/Hexalith.Parties/Authorization/TenantAccessDenialReason.cs
 new file mode 100644
 index 0000000..0827d11
 --- /dev/null
-+++ b/src/Hexalith.Parties.CommandApi/Authorization/TenantAccessDenialReason.cs
++++ b/src/Hexalith.Parties/Authorization/TenantAccessDenialReason.cs
 @@ -0,0 +1,11 @@
-+namespace Hexalith.Parties.CommandApi.Authorization;
++namespace Hexalith.Parties.Authorization;
 +
 +public enum TenantAccessDenialReason {
 +    None,
@@ -154,29 +154,29 @@ index 0000000..0827d11
 +    MissingMember,
 +    InsufficientRole,
 +}
-diff --git a/src/Hexalith.Parties.CommandApi/Authorization/TenantAccessRequirement.cs b/src/Hexalith.Parties.CommandApi/Authorization/TenantAccessRequirement.cs
+diff --git a/src/Hexalith.Parties/Authorization/TenantAccessRequirement.cs b/src/Hexalith.Parties/Authorization/TenantAccessRequirement.cs
 new file mode 100644
 index 0000000..6b5a12d
 --- /dev/null
-+++ b/src/Hexalith.Parties.CommandApi/Authorization/TenantAccessRequirement.cs
++++ b/src/Hexalith.Parties/Authorization/TenantAccessRequirement.cs
 @@ -0,0 +1,7 @@
-+namespace Hexalith.Parties.CommandApi.Authorization;
++namespace Hexalith.Parties.Authorization;
 +
 +public enum TenantAccessRequirement {
 +    Read,
 +    Write,
 +    Admin,
 +}
-diff --git a/src/Hexalith.Parties.CommandApi/Authorization/TenantAccessService.cs b/src/Hexalith.Parties.CommandApi/Authorization/TenantAccessService.cs
+diff --git a/src/Hexalith.Parties/Authorization/TenantAccessService.cs b/src/Hexalith.Parties/Authorization/TenantAccessService.cs
 new file mode 100644
 index 0000000..cfb988c
 --- /dev/null
-+++ b/src/Hexalith.Parties.CommandApi/Authorization/TenantAccessService.cs
++++ b/src/Hexalith.Parties/Authorization/TenantAccessService.cs
 @@ -0,0 +1,52 @@
 +using Hexalith.Tenants.Client.Projections;
 +using Hexalith.Tenants.Contracts.Enums;
 +
-+namespace Hexalith.Parties.CommandApi.Authorization;
++namespace Hexalith.Parties.Authorization;
 +
 +public sealed class TenantAccessService : ITenantAccessService {
 +    private readonly ITenantProjectionStore _projectionStore;
@@ -225,18 +225,18 @@ index 0000000..cfb988c
 +            _ => false,
 +        };
 +}
-diff --git a/src/Hexalith.Parties.CommandApi/Extensions/PartiesServiceCollectionExtensions.cs b/src/Hexalith.Parties.CommandApi/Extensions/PartiesServiceCollectionExtensions.cs
+diff --git a/src/Hexalith.Parties/Extensions/PartiesServiceCollectionExtensions.cs b/src/Hexalith.Parties/Extensions/PartiesServiceCollectionExtensions.cs
 index 702857b..67b0a1a 100644
---- a/src/Hexalith.Parties.CommandApi/Extensions/PartiesServiceCollectionExtensions.cs
-+++ b/src/Hexalith.Parties.CommandApi/Extensions/PartiesServiceCollectionExtensions.cs
+--- a/src/Hexalith.Parties/Extensions/PartiesServiceCollectionExtensions.cs
++++ b/src/Hexalith.Parties/Extensions/PartiesServiceCollectionExtensions.cs
 @@ -13,6 +13,7 @@ using Hexalith.EventStore.Server.DomainServices;
  using Hexalith.EventStore.Server.Projections;
  using Hexalith.EventStore.Contracts.Security;
  using Hexalith.Memories.Client.Rest;
-+using Hexalith.Parties.CommandApi.Authorization;
- using Hexalith.Parties.CommandApi.Authentication;
- using Hexalith.Parties.CommandApi.Domain;
- using Hexalith.Parties.CommandApi.ErrorHandling;
++using Hexalith.Parties.Authorization;
+ using Hexalith.Parties.Authentication;
+ using Hexalith.Parties.Domain;
+ using Hexalith.Parties.ErrorHandling;
 @@ -27,6 +28,7 @@ using Hexalith.Parties.Projections.Services;
  using Hexalith.Parties.Projections.Strategies;
  using Hexalith.Parties.Contracts.Security;
@@ -255,10 +255,10 @@ index 702857b..67b0a1a 100644
          // Single concrete registration so both interfaces resolve to the same instance per scope.
          // Two separate AddTransient<TInterface, TImpl>() calls would create two parallel
          // orchestrators, silently splitting any state or cache between the synchronous-update
-diff --git a/src/Hexalith.Parties.CommandApi/Hexalith.Parties.CommandApi.csproj b/src/Hexalith.Parties.CommandApi/Hexalith.Parties.CommandApi.csproj
+diff --git a/src/Hexalith.Parties/Hexalith.Parties.csproj b/src/Hexalith.Parties/Hexalith.Parties.csproj
 index d7f8d97..340d1f0 100644
---- a/src/Hexalith.Parties.CommandApi/Hexalith.Parties.CommandApi.csproj
-+++ b/src/Hexalith.Parties.CommandApi/Hexalith.Parties.CommandApi.csproj
+--- a/src/Hexalith.Parties/Hexalith.Parties.csproj
++++ b/src/Hexalith.Parties/Hexalith.Parties.csproj
 @@ -16,6 +16,7 @@
      <ProjectReference Include="..\Hexalith.Parties.Security\Hexalith.Parties.Security.csproj" />
      <ProjectReference Include="..\Hexalith.Parties.ServiceDefaults\Hexalith.Parties.ServiceDefaults.csproj" />
@@ -267,13 +267,13 @@ index d7f8d97..340d1f0 100644
    </ItemGroup>
  
    <ItemGroup>
-diff --git a/src/Hexalith.Parties.CommandApi/Program.cs b/src/Hexalith.Parties.CommandApi/Program.cs
+diff --git a/src/Hexalith.Parties/Program.cs b/src/Hexalith.Parties/Program.cs
 index 0134050..8b0f15c 100644
---- a/src/Hexalith.Parties.CommandApi/Program.cs
-+++ b/src/Hexalith.Parties.CommandApi/Program.cs
-@@ -2,6 +2,7 @@ using Hexalith.Parties.CommandApi.Extensions;
- using Hexalith.Parties.CommandApi.HealthChecks;
- using Hexalith.Parties.CommandApi.Middleware;
+--- a/src/Hexalith.Parties/Program.cs
++++ b/src/Hexalith.Parties/Program.cs
+@@ -2,6 +2,7 @@ using Hexalith.Parties.Extensions;
+ using Hexalith.Parties.HealthChecks;
+ using Hexalith.Parties.Middleware;
  using Hexalith.Parties.ServiceDefaults;
 +using Hexalith.Tenants.Client.Subscription;
  
@@ -290,10 +290,10 @@ index 0134050..8b0f15c 100644
  app.MapMcp().RequireAuthorization();
  app.MapActorsHandlers();
  app.MapDefaultEndpoints();                    // Health checks: /health, /alive, /ready
-diff --git a/src/Hexalith.Parties.CommandApi/appsettings.json b/src/Hexalith.Parties.CommandApi/appsettings.json
+diff --git a/src/Hexalith.Parties/appsettings.json b/src/Hexalith.Parties/appsettings.json
 index 7ca143d..8738e34 100644
---- a/src/Hexalith.Parties.CommandApi/appsettings.json
-+++ b/src/Hexalith.Parties.CommandApi/appsettings.json
+--- a/src/Hexalith.Parties/appsettings.json
++++ b/src/Hexalith.Parties/appsettings.json
 @@ -6,6 +6,11 @@
      }
    },
@@ -301,24 +301,24 @@ index 7ca143d..8738e34 100644
 +  "Tenants": {
 +    "PubSubName": "pubsub",
 +    "TopicName": "system.tenants.events",
-+    "CommandApiAppId": "commandapi"
++    "CommandApiAppId": "parties"
 +  },
    "Parties": {
      "MemoriesSearch": {
        "Enabled": false,
-diff --git a/tests/Hexalith.Parties.CommandApi.Tests/Authorization/TenantAccessServiceTests.cs b/tests/Hexalith.Parties.CommandApi.Tests/Authorization/TenantAccessServiceTests.cs
+diff --git a/tests/Hexalith.Parties.Tests/Authorization/TenantAccessServiceTests.cs b/tests/Hexalith.Parties.Tests/Authorization/TenantAccessServiceTests.cs
 new file mode 100644
 index 0000000..cbcc6d5
 --- /dev/null
-+++ b/tests/Hexalith.Parties.CommandApi.Tests/Authorization/TenantAccessServiceTests.cs
++++ b/tests/Hexalith.Parties.Tests/Authorization/TenantAccessServiceTests.cs
 @@ -0,0 +1,118 @@
-+using Hexalith.Parties.CommandApi.Authorization;
++using Hexalith.Parties.Authorization;
 +using Hexalith.Tenants.Client.Projections;
 +using Hexalith.Tenants.Contracts.Enums;
 +
 +using Shouldly;
 +
-+namespace Hexalith.Parties.CommandApi.Tests.Authorization;
++namespace Hexalith.Parties.Tests.Authorization;
 +
 +public class TenantAccessServiceTests {
 +    [Theory]
@@ -430,10 +430,10 @@ index 0000000..cbcc6d5
 +        decision.Reason.ShouldBe(TenantAccessDenialReason.InsufficientRole);
 +    }
 +}
-diff --git a/tests/Hexalith.Parties.CommandApi.Tests/FitnessTests/ContractsArchitectureFitnessTests.cs b/tests/Hexalith.Parties.CommandApi.Tests/FitnessTests/ContractsArchitectureFitnessTests.cs
+diff --git a/tests/Hexalith.Parties.Tests/FitnessTests/ContractsArchitectureFitnessTests.cs b/tests/Hexalith.Parties.Tests/FitnessTests/ContractsArchitectureFitnessTests.cs
 index 0c427fb..9593552 100644
---- a/tests/Hexalith.Parties.CommandApi.Tests/FitnessTests/ContractsArchitectureFitnessTests.cs
-+++ b/tests/Hexalith.Parties.CommandApi.Tests/FitnessTests/ContractsArchitectureFitnessTests.cs
+--- a/tests/Hexalith.Parties.Tests/FitnessTests/ContractsArchitectureFitnessTests.cs
++++ b/tests/Hexalith.Parties.Tests/FitnessTests/ContractsArchitectureFitnessTests.cs
 @@ -22,4 +22,23 @@ public class ContractsArchitectureFitnessTests
  
          projectXml.ShouldNotContain("Hexalith.Memories", Case.Insensitive);
@@ -458,30 +458,30 @@ index 0c427fb..9593552 100644
 +        projectXml.ShouldNotContain("Hexalith.Tenants", Case.Insensitive);
 +    }
  }
-diff --git a/tests/Hexalith.Parties.CommandApi.Tests/Hexalith.Parties.CommandApi.Tests.csproj b/tests/Hexalith.Parties.CommandApi.Tests/Hexalith.Parties.CommandApi.Tests.csproj
+diff --git a/tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj b/tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj
 index cc88b9c..57becab 100644
---- a/tests/Hexalith.Parties.CommandApi.Tests/Hexalith.Parties.CommandApi.Tests.csproj
-+++ b/tests/Hexalith.Parties.CommandApi.Tests/Hexalith.Parties.CommandApi.Tests.csproj
+--- a/tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj
++++ b/tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj
 @@ -6,6 +6,7 @@
    <ItemGroup>
-     <ProjectReference Include="..\..\src\Hexalith.Parties.CommandApi\Hexalith.Parties.CommandApi.csproj" />
+     <ProjectReference Include="..\..\src\Hexalith.Parties\Hexalith.Parties.csproj" />
      <ProjectReference Include="..\..\src\Hexalith.Parties.Testing\Hexalith.Parties.Testing.csproj" />
 +    <ProjectReference Include="..\..\Hexalith.Tenants\src\Hexalith.Tenants.Client\Hexalith.Tenants.Client.csproj" />
    </ItemGroup>
  
    <ItemGroup>
-diff --git a/tests/Hexalith.Parties.CommandApi.Tests/Tenants/TenantEventInfrastructureTests.cs b/tests/Hexalith.Parties.CommandApi.Tests/Tenants/TenantEventInfrastructureTests.cs
+diff --git a/tests/Hexalith.Parties.Tests/Tenants/TenantEventInfrastructureTests.cs b/tests/Hexalith.Parties.Tests/Tenants/TenantEventInfrastructureTests.cs
 new file mode 100644
 index 0000000..191ed2d
 --- /dev/null
-+++ b/tests/Hexalith.Parties.CommandApi.Tests/Tenants/TenantEventInfrastructureTests.cs
++++ b/tests/Hexalith.Parties.Tests/Tenants/TenantEventInfrastructureTests.cs
 @@ -0,0 +1,143 @@
 +using System.Text.Json;
 +
 +using Dapr;
 +
-+using Hexalith.Parties.CommandApi.Authorization;
-+using Hexalith.Parties.CommandApi.Extensions;
++using Hexalith.Parties.Authorization;
++using Hexalith.Parties.Extensions;
 +using Hexalith.Tenants.Client.Configuration;
 +using Hexalith.Tenants.Client.Projections;
 +using Hexalith.Tenants.Client.Registration;
@@ -497,7 +497,7 @@ index 0000000..191ed2d
 +
 +using Shouldly;
 +
-+namespace Hexalith.Parties.CommandApi.Tests.Tenants;
++namespace Hexalith.Parties.Tests.Tenants;
 +
 +public class TenantEventInfrastructureTests {
 +    [Fact]
@@ -507,7 +507,7 @@ index 0000000..191ed2d
 +            {
 +                ["Tenants:PubSubName"] = "pubsub",
 +                ["Tenants:TopicName"] = "system.tenants.events",
-+                ["Tenants:CommandApiAppId"] = "commandapi",
++                ["Tenants:CommandApiAppId"] = "parties",
 +            })
 +            .Build();
 +        ServiceCollection services = new();
@@ -523,7 +523,7 @@ index 0000000..191ed2d
 +        HexalithTenantsOptions options = provider.GetRequiredService<IOptions<HexalithTenantsOptions>>().Value;
 +        options.PubSubName.ShouldBe("pubsub");
 +        options.TopicName.ShouldBe("system.tenants.events");
-+        options.CommandApiAppId.ShouldBe("commandapi");
++        options.CommandApiAppId.ShouldBe("parties");
 +    }
 +
 +    [Fact]

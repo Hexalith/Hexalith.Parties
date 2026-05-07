@@ -136,7 +136,7 @@ Pub/sub = `Degraded` (not `Unhealthy`) because cached reads can continue. State 
 **No new NuGet packages needed.** All dependencies are already available:
 
 - `Microsoft.Extensions.Diagnostics.HealthChecks` — available via framework (net10.0)
-- `Dapr.Client` — already referenced in `Hexalith.Parties.CommandApi.csproj`
+- `Dapr.Client` — already referenced in `Hexalith.Parties.csproj`
 - `NSubstitute` 5.3.0 — for mocking `DaprClient` in tests
 - `Shouldly` 4.3.0 — for assertions
 
@@ -173,7 +173,7 @@ Pub/sub = `Degraded` (not `Unhealthy`) because cached reads can continue. State 
 
 **Existing test projects (7 projects, 371+ tests passing):**
 
-- `tests/Hexalith.Parties.CommandApi.Tests/` — Tier 2 tests, add health check integration tests here
+- `tests/Hexalith.Parties.Tests/` — Tier 2 tests, add health check integration tests here
 - `tests/Hexalith.Parties.IntegrationTests/` — Tier 3 tests, add E2E health tests here
 
 ### File Structure Requirements
@@ -181,7 +181,7 @@ Pub/sub = `Degraded` (not `Unhealthy`) because cached reads can continue. State 
 **New files to create:**
 
 ```
-src/Hexalith.Parties.CommandApi/
+src/Hexalith.Parties/
   HealthChecks/
     DaprSidecarHealthCheck.cs          — IHealthCheck, uses DaprClient.CheckHealthAsync()
     DaprStateStoreHealthCheck.cs       — IHealthCheck, reads sentinel key from state store
@@ -194,7 +194,7 @@ src/Hexalith.Parties.CommandApi/
 **Existing files to modify:**
 
 ```
-src/Hexalith.Parties.CommandApi/Program.cs
+src/Hexalith.Parties/Program.cs
   — Add: builder.Services.AddHealthChecks().AddPartiesDaprHealthChecks();
   — Add: app.UseMiddleware<DegradedResponseMiddleware>(); (after UseRouting, before MapControllers)
 
@@ -205,7 +205,7 @@ src/Hexalith.Parties.ServiceDefaults/Extensions.cs
 **Test files to create:**
 
 ```
-tests/Hexalith.Parties.CommandApi.Tests/
+tests/Hexalith.Parties.Tests/
   HealthChecks/
     DaprSidecarHealthCheckTests.cs     — Tier 1 unit tests
     DaprStateStoreHealthCheckTests.cs  — Tier 1 unit tests
@@ -298,7 +298,7 @@ Branch naming convention: `feat/story-8-2-health-readiness-and-graceful-degradat
 
 - Health checks go in `CommandApi/HealthChecks/` (matches EventStore convention)
 - Middleware goes in `CommandApi/Middleware/` (matches existing `CorrelationIdMiddleware`, `GdprWarningMiddleware`)
-- No new projects needed — all code fits in existing `Hexalith.Parties.CommandApi`
+- No new projects needed — all code fits in existing `Hexalith.Parties`
 - Tests go in existing test projects — no new test projects needed
 
 ### References
@@ -312,7 +312,7 @@ Branch naming convention: `feat/story-8-2-health-readiness-and-graceful-degradat
 - [Source: _bmad-output/implementation-artifacts/8-1-deployment-validation-tooling.md — Previous story]
 - [Source: Hexalith.EventStore/src/Hexalith.EventStore.CommandApi/HealthChecks/ — Reference implementation]
 - [Source: src/Hexalith.Parties.ServiceDefaults/Extensions.cs — Existing health endpoint setup]
-- [Source: src/Hexalith.Parties.CommandApi/ErrorHandling/ — Existing exception handlers]
+- [Source: src/Hexalith.Parties/ErrorHandling/ — Existing exception handlers]
 - [Source: deploy/dapr/resiliency.yaml — DAPR resilience configuration]
 
 ## Dev Agent Record
@@ -334,7 +334,7 @@ Claude Opus 4.6
 - Tier 3 E2E: `extern alias apphost` needed for `Projects.Hexalith_Parties_AppHost` due to `Program` class ambiguity between AppHost and CommandApi.
 - Pre-existing bug: `PartyIndexProjectionActor.GetEntriesAsync()` returns `Dictionary<string, PartyIndexEntry>` which DAPR's `DataContractSerializer` can't serialize without `KnownType` annotations.
 - Aspire 13.x `ResourceCommandService` with `KnownResourceCommands.StopCommand`/`StartCommand` enables stopping individual resources during E2E tests. CommunityToolkit.Aspire.Hosting.Dapr names sidecar resources as `{parentResourceName}-dapr` (source: `IDistributedApplicationComponentBuilderExtensions.cs` line `$"{builder.Resource.Name}-dapr"`). This unblocked the sidecar failure E2E test.
-- Aspire testing exposed the runnable sidecar resource as `commandapi-dapr-cli` in this environment. The E2E test now tries both `commandapi-dapr-cli` and `commandapi-dapr` so the stop/start flow works across naming variations.
+- Aspire testing exposed the runnable sidecar resource as `parties-dapr-cli` in this environment. The E2E test now tries both `parties-dapr-cli` and `parties-dapr` so the stop/start flow works across naming variations.
 - Projection actor health probes initially timed out during sidecar restart because actor placement had not fully recovered. Switching the probe to remoting-safe `PingAsync()` actor methods eliminated the false degradation caused by collection serialization and reduced the recovery window to real sidecar readiness.
 
 ### Completion Notes List
@@ -354,37 +354,37 @@ Claude Opus 4.6
 - Added process-level last-known projection caches so transient state store outages can still serve previously persisted detail/index snapshots after actor reactivation
 - Narrowed dependency-unavailable mapping so client-aborted requests are no longer misreported as infrastructure outages
 - Added operator runbook guidance to `docs/deployment-guide.md` and aligned story status/tasks with the remaining AC #6 validation gap
-- Implemented sidecar failure E2E test using Aspire 13.x `ResourceCommandService`: stops `commandapi-dapr` sidecar, verifies `/health` and `/ready` return 503, restarts sidecar and verifies recovery to 200 (AC #5, partial AC #6)
+- Implemented sidecar failure E2E test using Aspire 13.x `ResourceCommandService`: stops `parties-dapr` sidecar, verifies `/health` and `/ready` return 503, restarts sidecar and verifies recovery to 200 (AC #5, partial AC #6)
 - Replaced projection actor health reads with lightweight `PingAsync()` probes so health checks validate actor routing without depending on Dapr remoting serialization of projection payloads
-- Hardened the sidecar E2E test to work with both `commandapi-dapr-cli` and `commandapi-dapr` resource names exposed by Aspire/Dapr hosting
+- Hardened the sidecar E2E test to work with both `parties-dapr-cli` and `parties-dapr` resource names exposed by Aspire/Dapr hosting
 - Re-ran story-focused validation successfully: CommandApi targeted tests `30/30` passed; Tier 3 Aspire health suite `5 passed, 1 skipped`
 
 ### File List
 
 **New files:**
 
-- `src/Hexalith.Parties.CommandApi/HealthChecks/DaprSidecarHealthCheck.cs`
-- `src/Hexalith.Parties.CommandApi/HealthChecks/DaprStateStoreHealthCheck.cs`
-- `src/Hexalith.Parties.CommandApi/HealthChecks/DaprPubSubHealthCheck.cs`
-- `src/Hexalith.Parties.CommandApi/HealthChecks/ProjectionActorsHealthCheck.cs`
-- `src/Hexalith.Parties.CommandApi/HealthChecks/PartiesHealthCheckExtensions.cs`
-- `src/Hexalith.Parties.CommandApi/Middleware/DegradedResponseMiddleware.cs`
-- `tests/Hexalith.Parties.CommandApi.Tests/HealthChecks/DaprSidecarHealthCheckTests.cs`
-- `tests/Hexalith.Parties.CommandApi.Tests/HealthChecks/DaprStateStoreHealthCheckTests.cs`
-- `tests/Hexalith.Parties.CommandApi.Tests/HealthChecks/DaprPubSubHealthCheckTests.cs`
-- `tests/Hexalith.Parties.CommandApi.Tests/HealthChecks/ProjectionActorsHealthCheckTests.cs`
-- `tests/Hexalith.Parties.CommandApi.Tests/HealthChecks/DegradedResponseMiddlewareTests.cs`
-- `tests/Hexalith.Parties.CommandApi.Tests/HealthChecks/HealthEndpointIntegrationTests.cs`
-- `tests/Hexalith.Parties.CommandApi.Tests/ErrorHandling/PartiesGlobalExceptionHandlerTests.cs`
+- `src/Hexalith.Parties/HealthChecks/DaprSidecarHealthCheck.cs`
+- `src/Hexalith.Parties/HealthChecks/DaprStateStoreHealthCheck.cs`
+- `src/Hexalith.Parties/HealthChecks/DaprPubSubHealthCheck.cs`
+- `src/Hexalith.Parties/HealthChecks/ProjectionActorsHealthCheck.cs`
+- `src/Hexalith.Parties/HealthChecks/PartiesHealthCheckExtensions.cs`
+- `src/Hexalith.Parties/Middleware/DegradedResponseMiddleware.cs`
+- `tests/Hexalith.Parties.Tests/HealthChecks/DaprSidecarHealthCheckTests.cs`
+- `tests/Hexalith.Parties.Tests/HealthChecks/DaprStateStoreHealthCheckTests.cs`
+- `tests/Hexalith.Parties.Tests/HealthChecks/DaprPubSubHealthCheckTests.cs`
+- `tests/Hexalith.Parties.Tests/HealthChecks/ProjectionActorsHealthCheckTests.cs`
+- `tests/Hexalith.Parties.Tests/HealthChecks/DegradedResponseMiddlewareTests.cs`
+- `tests/Hexalith.Parties.Tests/HealthChecks/HealthEndpointIntegrationTests.cs`
+- `tests/Hexalith.Parties.Tests/ErrorHandling/PartiesGlobalExceptionHandlerTests.cs`
 - `tests/Hexalith.Parties.IntegrationTests/HealthChecks/HealthEndpointE2ETests.cs`
 - `tests/Hexalith.Parties.IntegrationTests/HealthChecks/PartiesAspireTopologyFixture.cs`
 - `tests/Hexalith.Parties.IntegrationTests/HealthChecks/PartiesAspireTopologyCollection.cs`
-- `src/Hexalith.Parties.CommandApi/Properties/launchSettings.json`
+- `src/Hexalith.Parties/Properties/launchSettings.json`
 
 **Modified files:**
 
-- `src/Hexalith.Parties.CommandApi/Program.cs` — added health check registration and DegradedResponseMiddleware
-- `src/Hexalith.Parties.CommandApi/ErrorHandling/PartiesGlobalExceptionHandler.cs` — maps dependency failures to `503` ProblemDetails
+- `src/Hexalith.Parties/Program.cs` — added health check registration and DegradedResponseMiddleware
+- `src/Hexalith.Parties/ErrorHandling/PartiesGlobalExceptionHandler.cs` — maps dependency failures to `503` ProblemDetails
 - `src/Hexalith.Parties.ServiceDefaults/Extensions.cs` — removed placeholder "self" and "ready" health checks
 - `src/Hexalith.Parties.Projections/Abstractions/IPartyDetailProjectionActor.cs` — added remoting-safe `PingAsync()` probe contract for health checks
 - `src/Hexalith.Parties.Projections/Abstractions/IPartyIndexProjectionActor.cs` — added remoting-safe `PingAsync()` probe contract for health checks
@@ -394,7 +394,7 @@ Claude Opus 4.6
 - `tests/Hexalith.Parties.IntegrationTests/PartyApiRoundTripIntegrationTests.cs` — added DaprClient mock to test factory
 - `tests/Hexalith.Parties.IntegrationTests/Hexalith.Parties.IntegrationTests.csproj` — added Aspire.Hosting.Testing + AppHost alias
 - `src/Hexalith.Parties.ServiceDefaults/Hexalith.Parties.ServiceDefaults.csproj` — added IsAspireSharedProject + FrameworkReference
-- `tests/Hexalith.Parties.CommandApi.Tests/HealthChecks/ProjectionActorsHealthCheckTests.cs` — updated actor health tests to verify `PingAsync()` probing
+- `tests/Hexalith.Parties.Tests/HealthChecks/ProjectionActorsHealthCheckTests.cs` — updated actor health tests to verify `PingAsync()` probing
 - `tests/Hexalith.Parties.IntegrationTests/HealthChecks/HealthEndpointE2ETests.cs` — probes both observed sidecar resource names during stop/start recovery validation
 
 ## Senior Developer Review (AI)
@@ -435,4 +435,4 @@ Claude Opus 4.6
 - 2026-03-07: Tier 3 E2E tests — implemented full Aspire topology tests (4 active, 3 skipped). Fixed 3 bugs: ProjectionActorsHealthCheck timeout enforcement, DegradedResponseMiddleware circular dependency on actor paths, projection-actors failure status Unhealthy→Degraded. Fixed Aspire test infrastructure: launchSettings.json, IsAspireSharedProject, FrameworkReference, extern alias for Program ambiguity.
 - 2026-03-07: AI review remediation — added operator runbook guidance, strengthened last-known projection fallback across actor reactivation, narrowed dependency outage classification for client aborts, and moved the story/sprint status back to `in-progress` pending explicit AC #6 verification.
 - 2026-03-07: Implemented sidecar failure E2E test using Aspire 13.x ResourceCommandService — stops DAPR sidecar, verifies 503 on /health and /ready, restarts and verifies recovery to 200. Unblocked Task 7 subtask 2. Pub/sub subtask 3 remains blocked (in-memory components share sidecar process).
-- 2026-03-07: Final review remediation validation — switched projection actor health checks to `PingAsync()` probes, made sidecar resource selection resilient to `commandapi-dapr-cli`/`commandapi-dapr` naming differences, reran focused validation successfully, and marked the story done.
+- 2026-03-07: Final review remediation validation — switched projection actor health checks to `PingAsync()` probes, made sidecar resource selection resilient to `parties-dapr-cli`/`parties-dapr` naming differences, reran focused validation successfully, and marked the story done.

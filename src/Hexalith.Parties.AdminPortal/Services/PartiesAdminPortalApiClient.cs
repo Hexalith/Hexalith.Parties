@@ -90,6 +90,31 @@ public sealed class PartiesAdminPortalApiClient : IPartiesAdminPortalApiClient
             cancellationToken).ConfigureAwait(false);
     }
 
+    public async Task<AdminPortalRichSearchCapability> GetRichSearchCapabilityAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            using HttpResponseMessage response = await _httpClient.GetAsync("health", cancellationToken).ConfigureAwait(false);
+            EnsureJsonResponse(response);
+
+            using Stream stream = await response.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false);
+            using JsonDocument document = await JsonDocument.ParseAsync(stream, cancellationToken: cancellationToken).ConfigureAwait(false);
+            return ParseRichSearchCapability(document.RootElement);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception ex) when (ex is HttpRequestException
+            or IOException
+            or JsonException
+            or AdminPortalQueryException
+            or TaskCanceledException)
+        {
+            return AdminPortalRichSearchCapability.Degraded($"Rich search probe unavailable: {ex.GetType().Name}");
+        }
+    }
+
     private async Task<AdminPortalQueryResult<T>> SendAsync<T>(
         string url,
         Func<HttpResponseMessage, CancellationToken, Task<T?>> readPayload,
@@ -264,6 +289,51 @@ public sealed class PartiesAdminPortalApiClient : IPartiesAdminPortalApiClient
         => response.Headers.TryGetValues(name, out IEnumerable<string>? values)
             ? values.FirstOrDefault()
             : null;
+
+    private static AdminPortalRichSearchCapability ParseRichSearchCapability(JsonElement root)
+    {
+        if (!root.TryGetProperty("results", out JsonElement results)
+            || !results.TryGetProperty("memories-search", out JsonElement memoriesSearch))
+        {
+            return AdminPortalRichSearchCapability.LocalOnly("memories-search health check unavailable");
+        }
+
+        string? status = ReadStringProperty(memoriesSearch, "status");
+        string? description = ReadStringProperty(memoriesSearch, "description");
+        JsonElement data = memoriesSearch.TryGetProperty("data", out JsonElement dataElement)
+            ? dataElement
+            : default;
+        bool enabled = ReadBoolProperty(data, "enabled") == true;
+        if (!enabled)
+        {
+            return AdminPortalRichSearchCapability.LocalOnly(description ?? "Memories rich search is disabled");
+        }
+
+        bool searchReachable = ReadBoolProperty(data, "searchReachable") != false;
+        bool degradedReportedByMemories = ReadBoolProperty(data, "degradedReportedByMemories") == true;
+        if (string.Equals(status, "Healthy", StringComparison.OrdinalIgnoreCase)
+            && searchReachable
+            && !degradedReportedByMemories)
+        {
+            return AdminPortalRichSearchCapability.Available();
+        }
+
+        return AdminPortalRichSearchCapability.Degraded(description ?? $"memories-search reported {status ?? "unknown"}");
+    }
+
+    private static string? ReadStringProperty(JsonElement element, string name)
+        => element.ValueKind == JsonValueKind.Object
+            && element.TryGetProperty(name, out JsonElement property)
+            && property.ValueKind == JsonValueKind.String
+                ? property.GetString()
+                : null;
+
+    private static bool? ReadBoolProperty(JsonElement element, string name)
+        => element.ValueKind == JsonValueKind.Object
+            && element.TryGetProperty(name, out JsonElement property)
+            && property.ValueKind is JsonValueKind.True or JsonValueKind.False
+                ? property.GetBoolean()
+                : null;
 
     private static void ThrowIfFailure(HttpResponseMessage response, CancellationToken cancellationToken)
     {

@@ -102,7 +102,7 @@ so that my users can search and select parties without building a custom party s
 - [ ] Validate build and affected tests
   - [x] Run the picker component test project(s).
   - [x] Run affected FrontComposer tests if FrontComposer adapters are changed.
-  - [x] Run `dotnet test tests/Hexalith.Parties.CommandApi.Tests/Hexalith.Parties.CommandApi.Tests.csproj --configuration Release` if backend API behavior changes.
+  - [x] Run `dotnet test tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj --configuration Release` if backend API behavior changes.
   - [ ] Run `dotnet build Hexalith.Parties.slnx --configuration Release`.
 
 ## Dev Notes
@@ -121,13 +121,13 @@ PRD requirement FR67 maps directly to this story: consuming application develope
 
 ### Current Backend Surface
 
-`src/Hexalith.Parties.CommandApi/Controllers/PartiesController.cs`
+`src/Hexalith.Parties/Controllers/PartiesController.cs`
 
 - Current state: exposes authenticated list, search, detail, temporal name, and command endpoints under `/api/v1/parties`.
 - Story usage: the picker should primarily consume `SearchPartiesAsync`; it may consume `ListPartiesAsync` only for explicit initial browse and `GetPartyAsync` only for selected-party preview.
 - Preserve: tenant extraction from `eventstore:tenant`, page-size cap at 100, erased-party filtering, cross-tenant scoped-id rejection, `401` missing-tenant behavior, `403` cross-tenant behavior, `404` not found, `410` erased state, and degraded/search metadata headers.
 
-`src/Hexalith.Parties.CommandApi/Search/PartySearchBoundary.cs`
+`src/Hexalith.Parties/Search/PartySearchBoundary.cs`
 
 - Current state: search uses `PartySearchRequest`, `PartySearchMode`, `PartySearchResponse`, `PartySearchExecutionStatus`, `PartySearchScoreMetadata`, and `PartySearchSourceMetadata` inside the CommandApi boundary.
 - Story usage: the picker should consume only the public REST response envelope and headers, not internal service classes.
@@ -172,7 +172,7 @@ FrontComposer storage rules are fail-closed for tenant/user scope and forbid raw
 
 Story 9.6 adds Memories-backed lexical, semantic, hybrid, and graph-assisted party search through the existing Parties search service and REST/MCP surfaces. The picker should consume the public REST search contract but avoid depending on in-progress or review-only internals. [Source: _bmad-output/implementation-artifacts/9-6-hexalith-memories-backed-party-search.md]
 
-REST graph mode currently rejects direct `mode=graph` because graph context is exposed through MCP rather than the REST search endpoint. The picker must not expose graph mode in REST unless a stable REST graph context contract exists. [Source: src/Hexalith.Parties.CommandApi/Controllers/PartiesController.cs]
+REST graph mode currently rejects direct `mode=graph` because graph context is exposed through MCP rather than the REST search endpoint. The picker must not expose graph mode in REST unless a stable REST graph context contract exists. [Source: src/Hexalith.Parties/Controllers/PartiesController.cs]
 
 If rich search degrades, the response status/header contract is the user's source of truth. Do not describe local fuzzy/display-name fallback as semantic search, and do not create client-side email/identifier search by scanning hidden data.
 
@@ -191,8 +191,8 @@ Required behavior:
 
 - Parties-specific picker code should live in a Parties-owned frontend package/project or adapter layer. Do not place Parties domain UI directly inside the `Hexalith.FrontComposer` submodule unless that submodule is intentionally being changed.
 - Shared public domain contracts stay in `src/Hexalith.Parties.Contracts`; do not add Blazor, Fluent UI, FrontComposer, custom-element, or JavaScript packaging dependencies there.
-- Backend API changes, if any, stay in `src/Hexalith.Parties.CommandApi`, but this story should prefer existing read endpoints.
-- Component tests should live near the new picker test project. Backend controller tests stay in `tests/Hexalith.Parties.CommandApi.Tests`.
+- Backend API changes, if any, stay in `src/Hexalith.Parties`, but this story should prefer existing read endpoints.
+- Component tests should live near the new picker test project. Backend controller tests stay in `tests/Hexalith.Parties.Tests`.
 - Full-topology tests are useful only if DAPR/Aspire prerequisites are available; record an infrastructure skip rather than making absence of topology a product failure.
 - No `project-context.md` persistent fact file was found during story creation.
 
@@ -240,8 +240,8 @@ Story 9.6 is currently `review` and Story 11.2 is currently `in-progress` in thi
 - [Source: _bmad-output/implementation-artifacts/10-1-admin-portal-browse-search-and-inspect.md]
 - [Source: _bmad-output/implementation-artifacts/10-2-admin-portal-gdpr-operations.md]
 - [Source: _bmad-output/implementation-artifacts/9-6-hexalith-memories-backed-party-search.md]
-- [Source: src/Hexalith.Parties.CommandApi/Controllers/PartiesController.cs]
-- [Source: src/Hexalith.Parties.CommandApi/Search/PartySearchBoundary.cs]
+- [Source: src/Hexalith.Parties/Controllers/PartiesController.cs]
+- [Source: src/Hexalith.Parties/Search/PartySearchBoundary.cs]
 - [Source: src/Hexalith.Parties.Contracts/Models/PartySearchResult.cs]
 - [Source: src/Hexalith.Parties.Contracts/Models/PartyIndexEntry.cs]
 - [Source: src/Hexalith.Parties.Contracts/Models/PartyDetail.cs]
@@ -265,7 +265,7 @@ GPT-5 Codex
 - 2026-05-04T15:03:37.6566633+02:00 - `/bmad-create-story 10-3-embeddable-party-picker-component` completed via automation.
 - 2026-05-05T19:10:00+02:00 - Story moved to in-progress; direct dev-story implementation started without ATDD generation.
 - 2026-05-05T19:22:00+02:00 - `dotnet test tests/Hexalith.Parties.Picker.Tests/Hexalith.Parties.Picker.Tests.csproj --configuration Release` passed: 21 tests.
-- 2026-05-05T19:25:00+02:00 - `dotnet build Hexalith.Parties.slnx --configuration Release` blocked by pre-existing unrelated untracked 11.4 files in `tests/Hexalith.Parties.DeployValidation.Tests` and `tests/Hexalith.Parties.CommandApi.Tests`.
+- 2026-05-05T19:25:00+02:00 - `dotnet build Hexalith.Parties.slnx --configuration Release` blocked by pre-existing unrelated untracked 11.4 files in `tests/Hexalith.Parties.DeployValidation.Tests` and `tests/Hexalith.Parties.Tests`.
 
 ### Completion Notes List
 

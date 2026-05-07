@@ -9,7 +9,7 @@
 #
 # Layer 1 -- Component Scoping (scopes field):
 #   Controls which app-ids can USE this pub/sub component at all.
-#   Only commandapi and authorized subscriber app-ids are listed.
+#   Only parties and authorized subscriber app-ids are listed.
 #
 # Layer 2 -- Publishing Scoping (publishingScopes metadata):
 #   Controls which app-ids can PUBLISH to which topics.
@@ -22,10 +22,10 @@
 #   NOTE: DAPR does NOT support wildcards (*) in scoping -- strict string match only.
 #
 # PUBLISHER-SIDE SCOPING:
-#   commandapi is NOT listed in publishingScopes = can publish to ANY topic.
+#   parties is NOT listed in publishingScopes = can publish to ANY topic.
 #
 # SUBSCRIBER-SIDE SCOPING:
-#   commandapi is explicitly listed for system.tenants.events so Parties can
+#   parties is explicitly listed for system.tenants.events so Parties can
 #   consume Hexalith.Tenants authority state even when production scoping is on.
 #   External subscribers must be explicitly scoped to authorized tenant topics.
 #
@@ -45,7 +45,7 @@
 #   when rendering environment-specific deployment manifests.
 #
 # DYNAMIC TENANT PROVISIONING:
-#   Publisher (commandapi): NOT listed in scoping = unrestricted.
+#   Publisher (parties): NOT listed in scoping = unrestricted.
 #   Subscriber: MUST be explicitly granted access per tenant topic.
 apiVersion: dapr.io/v1alpha1
 kind: Component
@@ -67,16 +67,16 @@ spec:
     - name: deadLetterTopic
       value: "deadletter"
     # Publishing scoping:
-    # commandapi is NOT listed = unrestricted publishing to all topics.
+    # parties is NOT listed = unrestricted publishing to all topics.
     # Subscribers are denied publishing.
     - name: publishingScopes
       value: "{env:SUBSCRIBER_APP_ID}=;{env:OPS_MONITOR_APP_ID}="
     # Subscription scoping:
-    # commandapi is NOT listed = unrestricted subscription to all topics.
+    # parties is NOT listed = unrestricted subscription to all topics.
     # MUST CUSTOMIZE: Replace example topic names with actual tenant.parties.events topics.
     - name: subscriptionScopes
-      value: "commandapi=system.tenants.events;{env:SUBSCRIBER_APP_ID}=acme.parties.events;{env:OPS_MONITOR_APP_ID}=deadletter.acme.parties.events"
+      value: "parties=system.tenants.events;{env:SUBSCRIBER_APP_ID}=acme.parties.events;{env:OPS_MONITOR_APP_ID}=deadletter.acme.parties.events"
 scopes:
-  - commandapi
+  - parties
   - "{env:SUBSCRIBER_APP_ID}"
   - "{env:OPS_MONITOR_APP_ID}"

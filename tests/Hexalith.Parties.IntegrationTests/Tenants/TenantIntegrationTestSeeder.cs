@@ -18,7 +18,7 @@ namespace Hexalith.Parties.IntegrationTests.Tenants;
 
 /// <summary>
 /// Helpers for seeding Tenants-backed authorization state into the running
-/// Aspire CommandApi during full-topology tests.
+/// Aspire Parties service during full-topology tests.
 /// <para>
 /// <b>Why this seeds via /tenants/events instead of through Hexalith.Tenants commands:</b>
 /// In the local Aspire topology used by these tests, Hexalith.Tenants does not yet expose
@@ -226,13 +226,13 @@ internal static class TenantIntegrationTestSeeder
         {
             return appSettingsKey.Length < 32
                 ? throw new InvalidOperationException(
-                    "Authentication:JwtBearer:SigningKey in CommandApi development settings must be at least 32 characters for HMAC-SHA256.")
+                    "Authentication:JwtBearer:SigningKey in Parties service development settings must be at least 32 characters for HMAC-SHA256.")
                 : appSettingsKey;
         }
 
         // Last-resort fallback: generate a cryptographically random per-process key. Tokens
         // minted with this key will fail JWT validation against any process that uses a
-        // different key (the running CommandApi). Mark the fallback so fixtures can surface
+        // different key (the running Parties service). Mark the fallback so fixtures can surface
         // it in their unavailability reason rather than running tests that look like genuine
         // authorization failures.
         SigningKeyIsRandomFallback = true;
@@ -248,7 +248,7 @@ internal static class TenantIntegrationTestSeeder
             string candidate = Path.Combine(
                 current.FullName,
                 "src",
-                "Hexalith.Parties.CommandApi",
+                "Hexalith.Parties",
                 "appsettings.Development.json");
             if (File.Exists(candidate))
             {

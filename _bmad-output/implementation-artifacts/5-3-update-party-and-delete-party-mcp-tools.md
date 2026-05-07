@@ -31,7 +31,7 @@ so that I can make targeted modifications without sending full party state.
 ## Tasks / Subtasks
 
 - [x] Task 1: Create `UpdatePartyMcpTool` class (AC: #1, #2, #3, #4, #5, #8)
-  - [x] 1.1: Create `src/Hexalith.Parties.CommandApi/Mcp/UpdatePartyMcpTool.cs` as a `static class` with `[McpServerToolType]` attribute
+  - [x] 1.1: Create `src/Hexalith.Parties/Mcp/UpdatePartyMcpTool.cs` as a `static class` with `[McpServerToolType]` attribute
   - [x] 1.2: Implement `update_party` method with `[McpServerTool(Name = "update_party")]` and `[Description("Updates an existing party using patch semantics — only specified fields are modified. Supports updating person/organization details, adding/updating/removing contact channels, and adding/removing identifiers. Missing IDs for new items are auto-generated.")]`
   - [x] 1.3: Define forgiving input parameters with `[Description]` attributes:
     - `partyId` (string, required): The party ID to update
@@ -82,7 +82,7 @@ so that I can make targeted modifications without sending full party state.
     - **Eventual consistency note:** If the projection returns the old state (pre-update), return it anyway — the projection will catch up. The important thing is returning a `PartyDetail`, not just a correlation ID
 
 - [x] Task 2: Create `DeletePartyMcpTool` class (AC: #6, #7, #8)
-  - [x] 2.1: Create `src/Hexalith.Parties.CommandApi/Mcp/DeletePartyMcpTool.cs` as a `static class` with `[McpServerToolType]` attribute
+  - [x] 2.1: Create `src/Hexalith.Parties/Mcp/DeletePartyMcpTool.cs` as a `static class` with `[McpServerToolType]` attribute
   - [x] 2.2: Implement `delete_party` method with `[McpServerTool(Name = "delete_party")]` and `[Description("Deactivates a party (soft delete). The party record is preserved but marked as inactive. This operation is idempotent — deleting an already deactivated party succeeds without error.")]`
   - [x] 2.3: Define parameters:
     - `partyId` (string, required): The party ID to deactivate
@@ -124,14 +124,14 @@ This story adds two MCP tools — `update_party` and `delete_party` — completi
 ### What already exists (do not recreate)
 
 - **MCP server infrastructure** — fully set up in Story 5.1: `AddMcpServer().WithHttpTransport().WithToolsFromAssembly()` in `PartiesServiceCollectionExtensions.cs`
-- **McpSessionContext** — `src/Hexalith.Parties.CommandApi/Mcp/McpSessionContext.cs` with `AsyncLocal<string?> Tenant` and shared `JsonSerializerOptions`
-- **CreatePartyMcpTool** — `src/Hexalith.Parties.CommandApi/Mcp/CreatePartyMcpTool.cs` — reference for write MCP tool patterns (input normalization, command dispatch, projection query, error handling)
-- **GetPartyMcpTool** — `src/Hexalith.Parties.CommandApi/Mcp/GetPartyMcpTool.cs` — reference for projection query pattern
-- **FindPartiesMcpTool** — `src/Hexalith.Parties.CommandApi/Mcp/FindPartiesMcpTool.cs` — reference for parameter patterns
+- **McpSessionContext** — `src/Hexalith.Parties/Mcp/McpSessionContext.cs` with `AsyncLocal<string?> Tenant` and shared `JsonSerializerOptions`
+- **CreatePartyMcpTool** — `src/Hexalith.Parties/Mcp/CreatePartyMcpTool.cs` — reference for write MCP tool patterns (input normalization, command dispatch, projection query, error handling)
+- **GetPartyMcpTool** — `src/Hexalith.Parties/Mcp/GetPartyMcpTool.cs` — reference for projection query pattern
+- **FindPartiesMcpTool** — `src/Hexalith.Parties/Mcp/FindPartiesMcpTool.cs` — reference for parameter patterns
 - **UpdatePartyComposite command** — `src/Hexalith.Parties.Contracts/Commands/UpdatePartyComposite.cs` — the target update command with explicit add/update/remove lists
 - **DeactivateParty command** — `src/Hexalith.Parties.Contracts/Commands/DeactivateParty.cs` — the target deactivation command (just PartyId)
-- **UpdatePartyCompositeValidator** — `src/Hexalith.Parties.CommandApi/Validation/UpdatePartyCompositeValidator.cs` — FluentValidation validator for update operations
-- **DeactivatePartyValidator** — `src/Hexalith.Parties.CommandApi/Validation/DeactivatePartyValidator.cs` — FluentValidation validator for deactivation
+- **UpdatePartyCompositeValidator** — `src/Hexalith.Parties/Validation/UpdatePartyCompositeValidator.cs` — FluentValidation validator for update operations
+- **DeactivatePartyValidator** — `src/Hexalith.Parties/Validation/DeactivatePartyValidator.cs` — FluentValidation validator for deactivation
 - **ICommandRouter** — registered by `AddEventStoreServer(configuration)`, accepts `SubmitCommand` and returns `CommandProcessingResult`
 - **SubmitCommand** — record with `Tenant`, `Domain`, `AggregateId`, `CommandType`, `Payload` (byte[]), `CorrelationId`, `UserId`
 - **CommandProcessingResult** — record with `Accepted`, `ErrorMessage`, `CorrelationId`, `EventCount`
@@ -280,7 +280,7 @@ The MCP tools' input normalization must produce data that passes all these rules
 
 New files to create:
 ```
-src/Hexalith.Parties.CommandApi/
+src/Hexalith.Parties/
 ├── Mcp/
 │   ├── GetPartyMcpTool.cs          (exists)
 │   ├── FindPartiesMcpTool.cs       (exists)
@@ -349,14 +349,14 @@ Pattern: focused, additive changes. Story 5.3 adds two new files (`UpdatePartyMc
 - [Source: `_bmad-output/planning-artifacts/architecture.md#FR69`] — Complete updated party returned
 - [Source: `_bmad-output/planning-artifacts/architecture.md#FR74`] — Patch semantics for MCP update
 - [Source: `_bmad-output/implementation-artifacts/5-2-create-party-mcp-tool.md`] — Previous story (create_party MCP tool)
-- [Source: `src/Hexalith.Parties.CommandApi/Mcp/CreatePartyMcpTool.cs`] — Reference write MCP tool implementation
-- [Source: `src/Hexalith.Parties.CommandApi/Mcp/GetPartyMcpTool.cs`] — Reference read MCP tool implementation
-- [Source: `src/Hexalith.Parties.CommandApi/Mcp/McpSessionContext.cs`] — Tenant and JSON options
+- [Source: `src/Hexalith.Parties/Mcp/CreatePartyMcpTool.cs`] — Reference write MCP tool implementation
+- [Source: `src/Hexalith.Parties/Mcp/GetPartyMcpTool.cs`] — Reference read MCP tool implementation
+- [Source: `src/Hexalith.Parties/Mcp/McpSessionContext.cs`] — Tenant and JSON options
 - [Source: `src/Hexalith.Parties.Contracts/Commands/UpdatePartyComposite.cs`] — Target update command type
 - [Source: `src/Hexalith.Parties.Contracts/Commands/DeactivateParty.cs`] — Target deactivation command type
-- [Source: `src/Hexalith.Parties.CommandApi/Validation/UpdatePartyCompositeValidator.cs`] — Update validator
-- [Source: `src/Hexalith.Parties.CommandApi/Validation/DeactivatePartyValidator.cs`] — Deactivation validator
-- [Source: `src/Hexalith.Parties.CommandApi/Controllers/PartiesController.cs`] — Command dispatch reference
+- [Source: `src/Hexalith.Parties/Validation/UpdatePartyCompositeValidator.cs`] — Update validator
+- [Source: `src/Hexalith.Parties/Validation/DeactivatePartyValidator.cs`] — Deactivation validator
+- [Source: `src/Hexalith.Parties/Controllers/PartiesController.cs`] — Command dispatch reference
 - [Source: `src/Hexalith.Parties.Contracts/Models/PartyDetail.cs`] — Response model
 
 ## Dev Agent Record
@@ -384,9 +384,9 @@ Code review follow-up: added missing existing-contact-channel update support and
 
 ### File List
 
-- `src/Hexalith.Parties.CommandApi/Mcp/UpdatePartyMcpTool.cs` (NEW)
-- `src/Hexalith.Parties.CommandApi/Mcp/DeletePartyMcpTool.cs` (NEW)
-- `tests/Hexalith.Parties.CommandApi.Tests/Mcp/UpdateAndDeletePartyMcpToolTests.cs` (NEW)
+- `src/Hexalith.Parties/Mcp/UpdatePartyMcpTool.cs` (NEW)
+- `src/Hexalith.Parties/Mcp/DeletePartyMcpTool.cs` (NEW)
+- `tests/Hexalith.Parties.Tests/Mcp/UpdateAndDeletePartyMcpToolTests.cs` (NEW)
 - `_bmad-output/implementation-artifacts/5-3-update-party-and-delete-party-mcp-tools.md` (UPDATED)
 - `_bmad-output/implementation-artifacts/sprint-status.yaml` (UPDATED)
 

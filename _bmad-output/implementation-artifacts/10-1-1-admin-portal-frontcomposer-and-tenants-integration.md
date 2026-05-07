@@ -26,13 +26,13 @@ so that AC3, AC7, and AC8 of Story 10.1 are met without relying on host wiring o
   - [x] Inject `AuthenticationStateProvider`; consume `Hexalith.Tenants` membership/role services.
   - [x] Replace passive `[Parameter] bool IsAuthenticated/HasTenantContext/IsAdmin` with derived values; remove host-wiring contract.
   - [x] Update bUnit tests to assert auth derivation; remove the host-bool fixtures.
-- [ ] Rich-search capability detection (AC: 2)
-  - [ ] Add capability probe consumer (endpoint TBD with Story 9.6 owners).
-  - [ ] Cache the probe result for the circuit lifetime; invalidate on tenant switch.
-  - [ ] Surface degraded-probe state distinct from local-only.
+- [x] Rich-search capability detection (AC: 2)
+  - [x] Add capability probe consumer (endpoint TBD with Story 9.6 owners).
+  - [x] Cache the probe result for the circuit lifetime; invalidate on tenant switch.
+  - [x] Surface degraded-probe state distinct from local-only.
 - [ ] FrontComposer Fluent UI adoption (AC: 3)
-  - [ ] Replace `<table>` with `FluentDataGrid<T>` and column descriptors.
-  - [ ] Replace search/filter inputs with `FluentTextInput`/`FluentSelect`.
+  - [x] Replace `<table>` with `FluentDataGrid<T>` and column descriptors.
+  - [x] Replace search/filter inputs with `FluentTextInput`/`FluentSelect`.
   - [ ] Replace pagination buttons with FrontComposer paging component.
   - [ ] Wire FrontComposer query transport (ETag caching, auth redirect).
 - [ ] Activate scaffolding services (AC: 4)
@@ -71,6 +71,14 @@ Story 10.1 (`10-1-admin-portal-browse-search-and-inspect.md`) shipped the read-o
 - 2026-05-07: `dotnet build src\Hexalith.Parties.AdminPortal\Hexalith.Parties.AdminPortal.csproj --configuration Release --no-restore` passed.
 - 2026-05-07: `dotnet build Hexalith.Parties.slnx --configuration Release --no-restore` passed.
 - 2026-05-07: Searched for a concrete rich-search capability endpoint; only search-status headers/planning references were present, while the story still says endpoint TBD.
+- 2026-05-07: Rechecked rich-search contracts and found the CommandApi `/health` JSON `memories-search` entry with enabled/searchReachable/degradedReportedByMemories data.
+- 2026-05-07: Red test run failed as expected because `AdminPortalRichSearchCapability` and `GetRichSearchCapabilityAsync` did not exist.
+- 2026-05-07: `dotnet test tests\Hexalith.Parties.AdminPortal.Tests\Hexalith.Parties.AdminPortal.Tests.csproj --configuration Release --no-restore` passed: 32/32.
+- 2026-05-07: `dotnet build Hexalith.Parties.slnx --configuration Release --no-restore` passed.
+- 2026-05-07: Red Fluent UI adoption test failed against raw table/input/select markup.
+- 2026-05-07: `dotnet test tests\Hexalith.Parties.AdminPortal.Tests\Hexalith.Parties.AdminPortal.Tests.csproj --configuration Release` passed: 33/33 after Fluent UI migration and selector updates.
+- 2026-05-07: `dotnet build Hexalith.Parties.slnx --configuration Release --no-restore` passed.
+- 2026-05-07: Searched for a dedicated FrontComposer paging component and REST query transport with ETag/auth redirect; no matching paging component or Parties REST transport contract was present.
 
 ### Completion Notes
 
@@ -79,6 +87,11 @@ Story 10.1 (`10-1-admin-portal-browse-search-and-inspect.md`) shipped the read-o
 - Updated bUnit coverage to seed Tenants membership/roles and assert owner/non-owner/unauthenticated behavior without host bool fixtures.
 - Set story and sprint tracking to `in-progress`.
 - HALT before rich-search capability detection because the story names the endpoint as TBD and the repository does not contain a stable capability endpoint contract to consume.
+- Completed AC2 rich-search capability detection by consuming the existing CommandApi `/health` `memories-search` capability signal.
+- Added circuit-lifetime rich-search probe caching in the live portal component, invalidated by authorization/tenant context changes.
+- Email and identifier search mode buttons now activate only when the probe reports healthy rich search; degraded probes keep those modes disabled and surface a distinct "Rich search is temporarily unavailable" status instead of the local-only status.
+- Partially advanced AC3: the browse grid now uses `FluentDataGrid<T>` with template columns, toolbar search uses `FluentTextInput`, filters use `FluentSelect`, and actions use `FluentButton`.
+- HALT before completing the remaining AC3 subtasks because the repository does not currently expose a dedicated FrontComposer paging component or a Parties REST query transport contract for FrontComposer ETag caching/auth redirect wiring.
 
 ## File List
 
@@ -89,11 +102,20 @@ Story 10.1 (`10-1-admin-portal-browse-search-and-inspect.md`) shipped the read-o
 - src/Hexalith.Parties.AdminPortal/Services/AdminPortalAuthorizationService.cs
 - src/Hexalith.Parties.AdminPortal/Services/AdminPortalAuthorizationState.cs
 - src/Hexalith.Parties.AdminPortal/Services/IAdminPortalAuthorizationService.cs
+- src/Hexalith.Parties.AdminPortal/Services/AdminPortalRichSearchCapability.cs
+- src/Hexalith.Parties.AdminPortal/Services/AdminPortalLabels.cs
+- src/Hexalith.Parties.AdminPortal/Services/IPartiesAdminPortalApiClient.cs
+- src/Hexalith.Parties.AdminPortal/Services/PartiesAdminPortalApiClient.cs
+- Directory.Packages.props
 - tests/Hexalith.Parties.AdminPortal.Tests/Components/PartiesAdminPortalComponentTests.cs
 - tests/Hexalith.Parties.AdminPortal.Tests/Hexalith.Parties.AdminPortal.Tests.csproj
+- tests/Hexalith.Parties.AdminPortal.Tests/Services/PartiesAdminPortalApiClientTests.cs
+- tests/Hexalith.Parties.AdminPortal.Tests/Services/RecordingAdminPortalApiClient.cs
 - _bmad-output/implementation-artifacts/10-1-1-admin-portal-frontcomposer-and-tenants-integration.md
 - _bmad-output/implementation-artifacts/sprint-status.yaml
 
 ## Change Log
 
 - 2026-05-07: Completed AC1 Tenants-backed authorization derivation and halted on the unresolved rich-search capability endpoint contract.
+- 2026-05-07: Completed AC2 rich-search capability detection using CommandApi `/health`, with circuit cache invalidation on tenant switch and degraded-probe UI status.
+- 2026-05-07: Partially migrated AC3 surfaces to Fluent UI components; halted on missing FrontComposer paging/REST transport contracts.

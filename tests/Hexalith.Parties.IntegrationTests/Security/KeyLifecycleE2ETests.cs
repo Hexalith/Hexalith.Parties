@@ -32,7 +32,7 @@ public class KeyLifecycleE2ETests(PartiesAspireTopologyFixture fixture, ITestOut
     {
         if (!fixture.IsAvailable) { output.WriteLine($"Skipped: {fixture.UnavailableReason}"); return; }
 
-        HttpClient client = fixture.CommandApiClient;
+        HttpClient client = fixture.PartiesClient;
         client.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", CreateAdminToken());
 
@@ -54,7 +54,7 @@ public class KeyLifecycleE2ETests(PartiesAspireTopologyFixture fixture, ITestOut
     {
         if (!fixture.IsAvailable) { output.WriteLine($"Skipped: {fixture.UnavailableReason}"); return; }
 
-        HttpClient client = fixture.CommandApiClient;
+        HttpClient client = fixture.PartiesClient;
         client.DefaultRequestHeaders.Authorization = null;
         using HttpRequestMessage request = new(HttpMethod.Post,
             string.Format(RotateKeyEndpoint, "e2e-party-1"));
@@ -80,7 +80,7 @@ public class KeyLifecycleE2ETests(PartiesAspireTopologyFixture fixture, ITestOut
         if (!fixture.IsAvailable) { output.WriteLine($"Skipped: {fixture.UnavailableReason}"); return; }
 
         string partyId = Guid.NewGuid().ToString();
-        HttpClient client = fixture.CommandApiClient;
+        HttpClient client = fixture.PartiesClient;
         client.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", CreateAdminToken());
 
@@ -124,7 +124,7 @@ public class KeyLifecycleE2ETests(PartiesAspireTopologyFixture fixture, ITestOut
         if (!fixture.IsAvailable) { output.WriteLine($"Skipped: {fixture.UnavailableReason}"); return; }
 
         string partyId = Guid.NewGuid().ToString();
-        HttpClient client = fixture.CommandApiClient;
+        HttpClient client = fixture.PartiesClient;
         client.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", CreateAdminToken());
 

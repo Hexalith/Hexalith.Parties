@@ -180,7 +180,7 @@ Adding `RelevanceScore` to `PartySearchResult` serves the AI agent use case (MCP
 - `PagedResult<T>` — generic pagination wrapper. Reuse for all responses.
 - `MatchMetadata` — existing search metadata model. Add "fuzzy" match type (no schema change needed — `MatchType` is already a string).
 - `PartyTestData` — test data factory. Extend with search scenario data (fuzzy match candidates, name history sequences).
-- Existing search endpoint tests in `Hexalith.Parties.CommandApi.Tests/Mcp/FindPartiesMcpToolTests.cs` — template for new tests.
+- Existing search endpoint tests in `Hexalith.Parties.Tests/Mcp/FindPartiesMcpToolTests.cs` — template for new tests.
 
 **Key patterns to follow exactly:**
 ```csharp
@@ -463,7 +463,7 @@ src/
   Hexalith.Parties.Contracts/
     Search/
       IPartySearchProvider.cs                   # Search provider interface (in Contracts for NuGet visibility)
-  Hexalith.Parties.CommandApi/
+  Hexalith.Parties/
     Search/
       SemanticPartySearchProvider.cs             # Enhanced fuzzy/token search
       BasicPartySearchProvider.cs                # Wrapper around existing builder (backward compat)
@@ -476,7 +476,7 @@ src/
       TemporalNameResult.cs                     # Temporal query response
 
 tests/
-  Hexalith.Parties.CommandApi.Tests/
+  Hexalith.Parties.Tests/
     Search/
       SemanticPartySearchProviderTests.cs       # Tier 1: semantic search logic
       BasicPartySearchProviderTests.cs          # Tier 1: backward compatibility
@@ -504,7 +504,7 @@ src/
   Hexalith.Parties.Projections/
     Handlers/
       PartyDetailProjectionHandler.cs           # Track name history on PartyCreated + PartyDisplayNameDerived, clear on erasure
-  Hexalith.Parties.CommandApi/
+  Hexalith.Parties/
     Controllers/
       PartiesController.cs                      # Add name query endpoints, inject IPartySearchProvider for search
     Mcp/
@@ -539,9 +539,9 @@ src/
 - [Source: _bmad-output/planning-artifacts/prd.md#Journey 2 — Aria Resolves an Identity]
 - [Source: _bmad-output/planning-artifacts/prd.md#Journey 3 — Sophie Manages Contacts]
 - [Source: _bmad-output/implementation-artifacts/9-4-consent-management-restriction-and-portability.md#Dev Notes]
-- [Source: src/Hexalith.Parties.CommandApi/Search/PartySearchResultsBuilder.cs — v1.0 search algorithm]
-- [Source: src/Hexalith.Parties.CommandApi/Controllers/PartiesController.cs — Search endpoint, GetParty pattern]
-- [Source: src/Hexalith.Parties.CommandApi/Mcp/FindPartiesMcpTool.cs — MCP search tool]
+- [Source: src/Hexalith.Parties/Search/PartySearchResultsBuilder.cs — v1.0 search algorithm]
+- [Source: src/Hexalith.Parties/Controllers/PartiesController.cs — Search endpoint, GetParty pattern]
+- [Source: src/Hexalith.Parties/Mcp/FindPartiesMcpTool.cs — MCP search tool]
 - [Source: src/Hexalith.Parties.Projections/Handlers/PartyIndexProjectionHandler.cs — Index projection]
 - [Source: src/Hexalith.Parties.Projections/Handlers/PartyDetailProjectionHandler.cs — Detail projection, DeriveDisplayName]
 - [Source: src/Hexalith.Parties.Contracts/Models/PartyDetail.cs — Read model]

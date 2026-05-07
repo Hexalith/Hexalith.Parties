@@ -9,8 +9,8 @@
 #   PostgreSQL state store supports TTL via the cleanupInterval metadata field.
 #
 # Component Scoping:
-#   Only commandapi can access this state store. Actors run in-process under the
-#   commandapi app-id, so no other app-id needs state store access.
+#   Only parties can access this state store. Actors run in-process under the
+#   parties app-id, so no other app-id needs state store access.
 #
 # PREREQUISITES:
 #   1. Create a PostgreSQL database for DAPR state storage.
@@ -36,4 +36,4 @@ spec:
       # Default: 3600 seconds (1 hour).
       value: "3600"
 scopes:
-  - commandapi
+  - parties

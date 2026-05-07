@@ -22,23 +22,23 @@ index 5582f14..4b650e7 100644
 --- a/deploy/dapr/pubsub-kafka.yaml
 +++ b/deploy/dapr/pubsub-kafka.yaml
 @@ -25,7 +25,8 @@
- #   commandapi is NOT listed in publishingScopes = can publish to ANY topic.
+ #   parties is NOT listed in publishingScopes = can publish to ANY topic.
  #
  # SUBSCRIBER-SIDE SCOPING:
--#   commandapi is NOT listed in subscriptionScopes = can subscribe to all topics.
-+#   commandapi is explicitly listed for system.tenants.events so Parties can
+-#   parties is NOT listed in subscriptionScopes = can subscribe to all topics.
++#   parties is explicitly listed for system.tenants.events so Parties can
 +#   consume Hexalith.Tenants authority state even when production scoping is on.
  #   External subscribers must be explicitly scoped to authorized tenant topics.
  #
  # ADDING A NEW SUBSCRIBER SERVICE (Production)
 @@ -74,7 +75,7 @@ spec:
-     # commandapi is NOT listed = unrestricted subscription to all topics.
+     # parties is NOT listed = unrestricted subscription to all topics.
      # MUST CUSTOMIZE: Replace example topic names with actual tenant.parties.events topics.
      - name: subscriptionScopes
 -      value: "{env:SUBSCRIBER_APP_ID}=acme.parties.events;{env:OPS_MONITOR_APP_ID}=deadletter.acme.parties.events"
-+      value: "commandapi=system.tenants.events;{env:SUBSCRIBER_APP_ID}=acme.parties.events;{env:OPS_MONITOR_APP_ID}=deadletter.acme.parties.events"
++      value: "parties=system.tenants.events;{env:SUBSCRIBER_APP_ID}=acme.parties.events;{env:OPS_MONITOR_APP_ID}=deadletter.acme.parties.events"
  scopes:
-   - commandapi
+   - parties
    - "{env:SUBSCRIBER_APP_ID}"
 diff --git a/deploy/dapr/pubsub-rabbitmq.yaml b/deploy/dapr/pubsub-rabbitmq.yaml
 index 31db39d..3dd5251 100644
@@ -49,9 +49,9 @@ index 31db39d..3dd5251 100644
      # MUST CUSTOMIZE: Replace example topic names with actual tenant.parties.events topics.
      - name: subscriptionScopes
 -      value: "{env:SUBSCRIBER_APP_ID}=acme.parties.events;{env:OPS_MONITOR_APP_ID}=deadletter.acme.parties.events"
-+      value: "commandapi=system.tenants.events;{env:SUBSCRIBER_APP_ID}=acme.parties.events;{env:OPS_MONITOR_APP_ID}=deadletter.acme.parties.events"
++      value: "parties=system.tenants.events;{env:SUBSCRIBER_APP_ID}=acme.parties.events;{env:OPS_MONITOR_APP_ID}=deadletter.acme.parties.events"
  scopes:
-   - commandapi
+   - parties
    - "{env:SUBSCRIBER_APP_ID}"
 diff --git a/deploy/dapr/pubsub-servicebus.yaml b/deploy/dapr/pubsub-servicebus.yaml
 index 9ebb4f2..5e4459e 100644
@@ -62,9 +62,9 @@ index 9ebb4f2..5e4459e 100644
      # MUST CUSTOMIZE: Replace example topic names with actual tenant.parties.events topics.
      - name: subscriptionScopes
 -      value: "{env:SUBSCRIBER_APP_ID}=acme.parties.events;{env:OPS_MONITOR_APP_ID}=deadletter.acme.parties.events"
-+      value: "commandapi=system.tenants.events;{env:SUBSCRIBER_APP_ID}=acme.parties.events;{env:OPS_MONITOR_APP_ID}=deadletter.acme.parties.events"
++      value: "parties=system.tenants.events;{env:SUBSCRIBER_APP_ID}=acme.parties.events;{env:OPS_MONITOR_APP_ID}=deadletter.acme.parties.events"
  scopes:
-   - commandapi
+   - parties
    - "{env:SUBSCRIBER_APP_ID}"
 diff --git a/deploy/dapr/subscription-tenants.yaml b/deploy/dapr/subscription-tenants.yaml
 new file mode 100644
@@ -80,7 +80,7 @@ index 0000000..baf1353
 +apiVersion: dapr.io/v2alpha1
 +kind: Subscription
 +metadata:
-+  name: tenants-events-commandapi
++  name: tenants-events-parties
 +spec:
 +  pubsubname: pubsub
 +  topic: "system.tenants.events"
@@ -88,7 +88,7 @@ index 0000000..baf1353
 +    default: /events/tenants
 +  deadLetterTopic: "deadletter.system.tenants.events"
 +scopes:
-+  - commandapi
++  - parties
 diff --git a/deploy/dapr/tenants-integration.yaml b/deploy/dapr/tenants-integration.yaml
 new file mode 100644
 index 0000000..cacc181
@@ -106,7 +106,7 @@ index 0000000..cacc181
 +spec:
 +  pubsubName: pubsub
 +  topicName: system.tenants.events
-+  commandApiAppId: commandapi
++  commandApiAppId: parties
 +  tenantsDependencyHealth: healthy
 diff --git a/deploy/validate-deployment.ps1 b/deploy/validate-deployment.ps1
 index 684f4c7..b312be9 100644
@@ -142,7 +142,7 @@ index 684f4c7..b312be9 100644
 +    $Category = "Tenants Integration"
 +    $expectedPubSub = "pubsub"
 +    $expectedTopic = "system.tenants.events"
-+    $expectedAppId = "commandapi"
++    $expectedAppId = "parties"
 +
 +    $tenantConfigFiles = @(Get-ChildItem -Path $ConfigPath -Filter "*tenants*.yaml" -ErrorAction SilentlyContinue |
 +        Where-Object { $_.Name -notlike "subscription*" })
@@ -206,7 +206,7 @@ index 684f4c7..b312be9 100644
 +        }
 +        else {
 +            Add-Result $Category "Tenants subscription present" "Fail" "No Tenants subscription for $expectedTopic found" `
-+                "Add a DAPR subscription for $expectedTopic routed to commandapi. Impact: Parties local tenant projection will not update. Remediation target: subscription-tenants.yaml or MapTenantEventSubscription()."
++                "Add a DAPR subscription for $expectedTopic routed to parties. Impact: Parties local tenant projection will not update. Remediation target: subscription-tenants.yaml or MapTenantEventSubscription()."
 +        }
 +    }
 +    else {
@@ -225,11 +225,11 @@ index 684f4c7..b312be9 100644
 +            }
 +
 +            if ($scopes -contains $expectedAppId) {
-+                Add-Result $Category "Tenants subscription scoped to commandapi ($fileName)" "Pass" "Subscription scopes include $expectedAppId"
++                Add-Result $Category "Tenants subscription scoped to parties ($fileName)" "Pass" "Subscription scopes include $expectedAppId"
 +            }
 +            else {
-+                Add-Result $Category "Tenants subscription scoped to commandapi ($fileName)" "Fail" "Subscription scopes do not include $expectedAppId" `
-+                    "Add commandapi to subscription scopes. Impact: the Parties Tenants event subscription cannot run."
++                Add-Result $Category "Tenants subscription scoped to parties ($fileName)" "Fail" "Subscription scopes do not include $expectedAppId" `
++                    "Add parties to subscription scopes. Impact: the Parties Tenants event subscription cannot run."
 +            }
 +
 +            if ($content -match "(?m)deadLetterTopic:") {
@@ -249,14 +249,14 @@ index 684f4c7..b312be9 100644
 +        $fileName = $psFile.Name
 +        $subScopes = Get-YamlValue $content "subscriptionScopes"
 +        if (Test-TopicAllowedForApp $subScopes $expectedAppId $expectedTopic) {
-+            Add-Result $Category "commandapi can subscribe to Tenants topic ($fileName)" "Pass" "$expectedAppId is allowed to subscribe to $expectedTopic"
++            Add-Result $Category "parties can subscribe to Tenants topic ($fileName)" "Pass" "$expectedAppId is allowed to subscribe to $expectedTopic"
 +        }
 +        elseif ($script:IsLocalDevelopment -or ((Get-YamlType $content) -eq "pubsub.redis")) {
-+            Add-Result $Category "commandapi can subscribe to Tenants topic ($fileName)" "Warn" "No explicit commandapi subscription scope for $expectedTopic (local development profile)" `
++            Add-Result $Category "parties can subscribe to Tenants topic ($fileName)" "Warn" "No explicit parties subscription scope for $expectedTopic (local development profile)" `
 +                "Add subscriptionScopes entry '$expectedAppId=$expectedTopic' for production scoping."
 +        }
 +        else {
-+            Add-Result $Category "commandapi can subscribe to Tenants topic ($fileName)" "Fail" "Missing commandapi subscription permission for $expectedTopic" `
++            Add-Result $Category "parties can subscribe to Tenants topic ($fileName)" "Fail" "Missing parties subscription permission for $expectedTopic" `
 +                "Add '$expectedAppId=$expectedTopic' to subscriptionScopes. Impact: production DAPR scoping blocks Tenants events from Parties."
 +        }
 +    }
@@ -305,12 +305,12 @@ index 184282a..49627ed 100644
 +
 +- Pub/sub name: `pubsub`
 +- Topic: `system.tenants.events`
-+- Hosting app id: `commandapi`
++- Hosting app id: `parties`
 +- Declarative subscription: `subscription-tenants.yaml`
 +- Route: `/events/tenants`
 +- Dead-letter: `deadletter.system.tenants.events`
 +
-+When production `subscriptionScopes` are enabled, include `commandapi=system.tenants.events`. Parties consumes this state for authorization only; tenant lifecycle, membership, roles, global administrators, and tenant configuration remain managed by Hexalith.Tenants.
++When production `subscriptionScopes` are enabled, include `parties=system.tenants.events`. Parties consumes this state for authorization only; tenant lifecycle, membership, roles, global administrators, and tenant configuration remain managed by Hexalith.Tenants.
 +
  ---
  
@@ -322,7 +322,7 @@ index 184282a..49627ed 100644
 +### Missing Tenants subscription or scope
 +
 +**Problem:** Parties does not receive `system.tenants.events`, so local tenant access state is missing or stale.
-+**Fix:** Add `subscription-tenants.yaml`, ensure it is scoped to `commandapi`, and add `commandapi=system.tenants.events` to pub/sub `subscriptionScopes`.
++**Fix:** Add `subscription-tenants.yaml`, ensure it is scoped to `parties`, and add `parties=system.tenants.events` to pub/sub `subscriptionScopes`.
 +
 +### Tenant authorization failures
 +
@@ -342,19 +342,19 @@ index dfdae24..8905983 100644
 --- a/docs/deployment-security-checklist.md
 +++ b/docs/deployment-security-checklist.md
 @@ -43,9 +43,19 @@ All three layers must be configured for each pub/sub component:
- - [ ] **Layer 1 -- Component Scoping:** `scopes` lists `commandapi` and authorized subscriber app-ids only
+ - [ ] **Layer 1 -- Component Scoping:** `scopes` lists `parties` and authorized subscriber app-ids only
  - [ ] **Layer 2 -- Publishing Scoping:** `publishingScopes` denies subscribers from publishing (`{env:SUBSCRIBER_APP_ID}=`)
  - [ ] **Layer 3 -- Subscription Scoping:** `subscriptionScopes` restricts subscribers to authorized tenant topics only
-+- [ ] `subscriptionScopes` includes `commandapi=system.tenants.events` for the Parties Tenants event consumer
++- [ ] `subscriptionScopes` includes `parties=system.tenants.events` for the Parties Tenants event consumer
  - [ ] `enableDeadLetter` is set to `"true"`
  - [ ] Connection string/brokers use `{env:VAR_NAME}` references (never hardcoded)
  
 +### Hexalith.Tenants Integration
 +
 +- [ ] `subscription-tenants.yaml` exists for topic `system.tenants.events`
-+- [ ] Tenants subscription `scopes` includes `commandapi`
++- [ ] Tenants subscription `scopes` includes `parties`
 +- [ ] Tenants subscription has `deadLetterTopic`
-+- [ ] `tenants-integration.yaml` sets `pubsubName: pubsub`, `topicName: system.tenants.events`, and `commandApiAppId: commandapi`
++- [ ] `tenants-integration.yaml` sets `pubsubName: pubsub`, `topicName: system.tenants.events`, and `commandApiAppId: parties`
 +- [ ] No Parties configuration bypasses Hexalith.Tenants authorization
 +- [ ] Troubleshooting/runbook owners are assigned for identity provider, tenant administrator, tenant operator, and platform operator issues
 +
@@ -385,7 +385,7 @@ index 916c156..8ddddab 100644
 @@ -46,11 +46,24 @@ The terminal output will display a URL for the **Aspire dashboard** (typically `
  
  **What gets started:**
- - **commandapi** -- the REST API and MCP server
+ - **parties** -- the REST API and MCP server
 +- **Hexalith.Tenants** -- tenant lifecycle, membership, role, and configuration authority
  - **DAPR sidecar** -- event store and actor runtime
  - **Keycloak** (port 8180) -- OIDC provider for authentication (enabled by default)
@@ -423,14 +423,14 @@ index 916c156..8ddddab 100644
  ### Projection Delay
  
  **Symptom:** Party created successfully (202) but GET returns 404.
-diff --git a/tests/Hexalith.Parties.CommandApi.Tests/Authorization/HelperDrivenTenantAccessTests.cs b/tests/Hexalith.Parties.CommandApi.Tests/Authorization/HelperDrivenTenantAccessTests.cs
+diff --git a/tests/Hexalith.Parties.Tests/Authorization/HelperDrivenTenantAccessTests.cs b/tests/Hexalith.Parties.Tests/Authorization/HelperDrivenTenantAccessTests.cs
 new file mode 100644
 index 0000000..58079fc
 --- /dev/null
-+++ b/tests/Hexalith.Parties.CommandApi.Tests/Authorization/HelperDrivenTenantAccessTests.cs
++++ b/tests/Hexalith.Parties.Tests/Authorization/HelperDrivenTenantAccessTests.cs
 @@ -0,0 +1,190 @@
 +using Hexalith.EventStore.Contracts.Results;
-+using Hexalith.Parties.CommandApi.Authorization;
++using Hexalith.Parties.Authorization;
 +using Hexalith.Tenants.Client.Projections;
 +using Hexalith.Tenants.Contracts.Commands;
 +using Hexalith.Tenants.Contracts.Enums;
@@ -442,7 +442,7 @@ index 0000000..58079fc
 +
 +using Shouldly;
 +
-+namespace Hexalith.Parties.CommandApi.Tests.Authorization;
++namespace Hexalith.Parties.Tests.Authorization;
 +
 +/// <summary>
 +/// Story 11.4 — AC1, AC2: Fast tenant-access decisions wired through
@@ -619,11 +619,11 @@ index 0000000..58079fc
 +            => Task.CompletedTask;
 +    }
 +}
-diff --git a/tests/Hexalith.Parties.CommandApi.Tests/Controllers/CrossTenantIsolationTests.cs b/tests/Hexalith.Parties.CommandApi.Tests/Controllers/CrossTenantIsolationTests.cs
+diff --git a/tests/Hexalith.Parties.Tests/Controllers/CrossTenantIsolationTests.cs b/tests/Hexalith.Parties.Tests/Controllers/CrossTenantIsolationTests.cs
 new file mode 100644
 index 0000000..b0454df
 --- /dev/null
-+++ b/tests/Hexalith.Parties.CommandApi.Tests/Controllers/CrossTenantIsolationTests.cs
++++ b/tests/Hexalith.Parties.Tests/Controllers/CrossTenantIsolationTests.cs
 @@ -0,0 +1,259 @@
 +// ATDD red-phase scaffolds for Story 11.4 — cross-tenant projection isolation
 +// proven through observable REST/MCP behavior. Tenant A must never list, fetch,
@@ -637,10 +637,10 @@ index 0000000..b0454df
 +using Dapr.Actors;
 +using Dapr.Actors.Client;
 +
-+using Hexalith.Parties.CommandApi.Authorization;
-+using Hexalith.Parties.CommandApi.Mcp;
-+using Hexalith.Parties.CommandApi.Search;
-+using Hexalith.Parties.CommandApi.Tests.Authorization;
++using Hexalith.Parties.Authorization;
++using Hexalith.Parties.Mcp;
++using Hexalith.Parties.Search;
++using Hexalith.Parties.Tests.Authorization;
 +using Hexalith.Parties.Contracts.Models;
 +using Hexalith.Parties.Contracts.Search;
 +using Hexalith.Parties.Contracts.ValueObjects;
@@ -651,7 +651,7 @@ index 0000000..b0454df
 +
 +using Shouldly;
 +
-+namespace Hexalith.Parties.CommandApi.Tests.Controllers;
++namespace Hexalith.Parties.Tests.Controllers;
 +
 +/// <summary>
 +/// Story 11.4 — AC2: Tenants-backed enforcement must produce the same observable
@@ -884,10 +884,10 @@ index 0000000..b0454df
 +        }
 +    }
 +}
-diff --git a/tests/Hexalith.Parties.CommandApi.Tests/Controllers/PartiesControllerProblemDetailsTests.cs b/tests/Hexalith.Parties.CommandApi.Tests/Controllers/PartiesControllerProblemDetailsTests.cs
+diff --git a/tests/Hexalith.Parties.Tests/Controllers/PartiesControllerProblemDetailsTests.cs b/tests/Hexalith.Parties.Tests/Controllers/PartiesControllerProblemDetailsTests.cs
 index ff37e84..0d5d985 100644
---- a/tests/Hexalith.Parties.CommandApi.Tests/Controllers/PartiesControllerProblemDetailsTests.cs
-+++ b/tests/Hexalith.Parties.CommandApi.Tests/Controllers/PartiesControllerProblemDetailsTests.cs
+--- a/tests/Hexalith.Parties.Tests/Controllers/PartiesControllerProblemDetailsTests.cs
++++ b/tests/Hexalith.Parties.Tests/Controllers/PartiesControllerProblemDetailsTests.cs
 @@ -1798,18 +1798,58 @@ public sealed class PartiesApiTestFactory : WebApplicationFactory<Program>
      private IReadOnlyDictionary<string, PartyIndexEntry> _indexEntries =
          new Dictionary<string, PartyIndexEntry>(StringComparer.Ordinal);
@@ -979,11 +979,11 @@ index ff37e84..0d5d985 100644
  
          builder.ConfigureTestServices(services =>
          {
-diff --git a/tests/Hexalith.Parties.CommandApi.Tests/Controllers/PartiesControllerTenantAuthorizationTests.cs b/tests/Hexalith.Parties.CommandApi.Tests/Controllers/PartiesControllerTenantAuthorizationTests.cs
+diff --git a/tests/Hexalith.Parties.Tests/Controllers/PartiesControllerTenantAuthorizationTests.cs b/tests/Hexalith.Parties.Tests/Controllers/PartiesControllerTenantAuthorizationTests.cs
 new file mode 100644
 index 0000000..4125241
 --- /dev/null
-+++ b/tests/Hexalith.Parties.CommandApi.Tests/Controllers/PartiesControllerTenantAuthorizationTests.cs
++++ b/tests/Hexalith.Parties.Tests/Controllers/PartiesControllerTenantAuthorizationTests.cs
 @@ -0,0 +1,165 @@
 +// ATDD red-phase scaffolds for Story 11.4 — REST authorization-before-projection
 +// proof. Each test asserts that tenant access denial happens BEFORE projection
@@ -999,8 +999,8 @@ index 0000000..4125241
 +using Dapr.Actors.Client;
 +
 +using Hexalith.EventStore.Server.Commands;
-+using Hexalith.Parties.CommandApi.Authorization;
-+using Hexalith.Parties.CommandApi.Tests.Authorization;
++using Hexalith.Parties.Authorization;
++using Hexalith.Parties.Tests.Authorization;
 +using Hexalith.Parties.Projections.Abstractions;
 +using Hexalith.EventStore.Server.Pipeline.Commands;
 +
@@ -1008,7 +1008,7 @@ index 0000000..4125241
 +
 +using Shouldly;
 +
-+namespace Hexalith.Parties.CommandApi.Tests.Controllers;
++namespace Hexalith.Parties.Tests.Controllers;
 +
 +/// <summary>
 +/// Story 11.4 — AC2, AC5: REST denial responses must use Tenants-backed authorization
@@ -1150,10 +1150,10 @@ index 0000000..4125241
 +        return client;
 +    }
 +}
-diff --git a/tests/Hexalith.Parties.CommandApi.Tests/Hexalith.Parties.CommandApi.Tests.csproj b/tests/Hexalith.Parties.CommandApi.Tests/Hexalith.Parties.CommandApi.Tests.csproj
+diff --git a/tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj b/tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj
 index 57becab..2790590 100644
---- a/tests/Hexalith.Parties.CommandApi.Tests/Hexalith.Parties.CommandApi.Tests.csproj
-+++ b/tests/Hexalith.Parties.CommandApi.Tests/Hexalith.Parties.CommandApi.Tests.csproj
+--- a/tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj
++++ b/tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj
 @@ -1,12 +1,14 @@
  <Project Sdk="Microsoft.NET.Sdk">
    <PropertyGroup>
@@ -1162,26 +1162,26 @@ index 57becab..2790590 100644
    </PropertyGroup>
  
    <ItemGroup>
-     <ProjectReference Include="..\..\src\Hexalith.Parties.CommandApi\Hexalith.Parties.CommandApi.csproj" />
+     <ProjectReference Include="..\..\src\Hexalith.Parties\Hexalith.Parties.csproj" />
      <ProjectReference Include="..\..\src\Hexalith.Parties.Testing\Hexalith.Parties.Testing.csproj" />
      <ProjectReference Include="..\..\Hexalith.Tenants\src\Hexalith.Tenants.Client\Hexalith.Tenants.Client.csproj" />
 +    <ProjectReference Include="..\..\Hexalith.Tenants\src\Hexalith.Tenants.Testing\Hexalith.Tenants.Testing.csproj" PrivateAssets="all" ExcludeAssets="analyzers" />
    </ItemGroup>
  
    <ItemGroup>
-diff --git a/tests/Hexalith.Parties.CommandApi.Tests/Mcp/McpToolTenantAuthorizationTests.cs b/tests/Hexalith.Parties.CommandApi.Tests/Mcp/McpToolTenantAuthorizationTests.cs
+diff --git a/tests/Hexalith.Parties.Tests/Mcp/McpToolTenantAuthorizationTests.cs b/tests/Hexalith.Parties.Tests/Mcp/McpToolTenantAuthorizationTests.cs
 new file mode 100644
 index 0000000..56e4c88
 --- /dev/null
-+++ b/tests/Hexalith.Parties.CommandApi.Tests/Mcp/McpToolTenantAuthorizationTests.cs
++++ b/tests/Hexalith.Parties.Tests/Mcp/McpToolTenantAuthorizationTests.cs
 @@ -0,0 +1,140 @@
 +// ATDD red-phase scaffolds for Story 11.4 — MCP tool authorization-before-projection.
 +// MCP tools must reject denied access via the Tenants-backed access service before
 +// reading projections or routing commands.
 +
-+using Hexalith.Parties.CommandApi.Authorization;
-+using Hexalith.Parties.CommandApi.Mcp;
-+using Hexalith.Parties.CommandApi.Tests.Authorization;
++using Hexalith.Parties.Authorization;
++using Hexalith.Parties.Mcp;
++using Hexalith.Parties.Tests.Authorization;
 +
 +using Hexalith.EventStore.Server.Commands;
 +using Hexalith.EventStore.Server.Pipeline.Commands;
@@ -1191,7 +1191,7 @@ index 0000000..56e4c88
 +
 +using Shouldly;
 +
-+namespace Hexalith.Parties.CommandApi.Tests.Mcp;
++namespace Hexalith.Parties.Tests.Mcp;
 +
 +/// <summary>
 +/// Story 11.4 — AC2: MCP tools must use the same Tenants-backed access decision
@@ -1374,7 +1374,7 @@ index 86479d0..5b95313 100644
 +        (int exitCode, string output) = await RunValidationAsync(_tempDir);
 +
 +        exitCode.ShouldBe(1);
-+        output.ShouldContain("Missing commandapi subscription permission");
++        output.ShouldContain("Missing parties subscription permission");
 +        output.ShouldContain("system.tenants.events");
 +    }
 +
@@ -1390,7 +1390,7 @@ index 86479d0..5b95313 100644
 +            spec:
 +              pubsubName: pubsub
 +              topicName: system.tenants.events
-+              commandApiAppId: commandapi
++              commandApiAppId: parties
 +              tenantsDependencyHealth: unhealthy
 +            """);
 +
@@ -1407,9 +1407,9 @@ index 86479d0..5b95313 100644
                    value: "{env:SUBSCRIBER_APP_ID}="
                  - name: subscriptionScopes
 -                  value: "{env:SUBSCRIBER_APP_ID}=acme.parties.events"
-+                  value: "commandapi=system.tenants.events;{env:SUBSCRIBER_APP_ID}=acme.parties.events"
++                  value: "parties=system.tenants.events;{env:SUBSCRIBER_APP_ID}=acme.parties.events"
              scopes:
-               - commandapi
+               - parties
                - "{env:SUBSCRIBER_APP_ID}"
 @@ -336,6 +412,33 @@ public class DeploymentValidationTests : IDisposable
                - "{env:SUBSCRIBER_APP_ID}"
@@ -1419,7 +1419,7 @@ index 86479d0..5b95313 100644
 +            apiVersion: dapr.io/v2alpha1
 +            kind: Subscription
 +            metadata:
-+              name: tenants-events-commandapi
++              name: tenants-events-parties
 +            spec:
 +              pubsubname: pubsub
 +              topic: "system.tenants.events"
@@ -1427,7 +1427,7 @@ index 86479d0..5b95313 100644
 +                default: /events/tenants
 +              deadLetterTopic: "deadletter.system.tenants.events"
 +            scopes:
-+              - commandapi
++              - parties
 +            """);
 +
 +        File.WriteAllText(Path.Combine(dir, "tenants-integration.yaml"), """
@@ -1438,7 +1438,7 @@ index 86479d0..5b95313 100644
 +            spec:
 +              pubsubName: pubsub
 +              topicName: system.tenants.events
-+              commandApiAppId: commandapi
++              commandApiAppId: parties
 +              tenantsDependencyHealth: healthy
 +            """);
 +
@@ -1469,7 +1469,7 @@ index 86479d0..5b95313 100644
 +                - name: subscriptionScopes
 +                  value: "{env:SUBSCRIBER_APP_ID}=acme.parties.events"
 +            scopes:
-+              - commandapi
++              - parties
 +              - "{env:SUBSCRIBER_APP_ID}"
 +            """);
 +    }
@@ -1532,7 +1532,7 @@ index 0000000..acb3245
 +        (int exitCode, string output) = await RunValidationAsync(_tempDir);
 +
 +        exitCode.ShouldBe(1);
-+        output.ShouldContain("Missing commandapi subscription permission");
++        output.ShouldContain("Missing parties subscription permission");
 +        output.ShouldContain("subscriptionScopes");
 +    }
 +
@@ -1662,7 +1662,7 @@ index 0000000..acb3245
 +                defaultAction: deny
 +                trustDomain: "hexalith.io"
 +                policies:
-+                  - appId: commandapi
++                  - appId: parties
 +                    defaultAction: deny
 +            """);
 +
@@ -1681,11 +1681,11 @@ index 0000000..acb3245
 +                - name: actorStateStore
 +                  value: "true"
 +            scopes:
-+              - commandapi
++              - parties
 +            """);
 +
 +        string scopes = includeCommandApiScope
-+            ? "commandapi=system.tenants.events;{env:SUBSCRIBER_APP_ID}=acme.parties.events"
++            ? "parties=system.tenants.events;{env:SUBSCRIBER_APP_ID}=acme.parties.events"
 +            : "{env:SUBSCRIBER_APP_ID}=acme.parties.events";
 +        File.WriteAllText(Path.Combine(dir, "pubsub.yaml"), $$"""
 +            apiVersion: dapr.io/v1alpha1
@@ -1704,7 +1704,7 @@ index 0000000..acb3245
 +                - name: subscriptionScopes
 +                  value: "{{scopes}}"
 +            scopes:
-+              - commandapi
++              - parties
 +              - "{env:SUBSCRIBER_APP_ID}"
 +            """);
 +
@@ -1757,7 +1757,7 @@ index 0000000..acb3245
 +                default: /events/tenants
 +              deadLetterTopic: "deadletter.system.tenants.events"
 +            scopes:
-+              - commandapi
++              - parties
 +            """);
 +
 +    private static void WriteTenantsConfig(string dir, bool malformed, bool includeSensitiveValues)
@@ -1776,7 +1776,7 @@ index 0000000..acb3245
 +                spec:
 +                  pubsubName: pubsub
 +                  topicName: system.tenants.events
-+                  commandApiAppId: commandapi
++                  commandApiAppId: parties
 +                  tenantsDependencyHealth: healthy
 +                  ignoredDiagnostic: "{{(includeSensitiveValues ? "Bearer secret eventstore:tenant=tenant-a user-1@example.com ConnectionString=secret" : "none")}}"
 +                """);
@@ -1792,7 +1792,7 @@ index 0000000..acb3245
 +                defaultAction: allow
 +                trustDomain: "public"
 +                policies:
-+                  - appId: commandapi
++                  - appId: parties
 +                    defaultAction: deny
 +            """);
 +        File.WriteAllText(Path.Combine(dir, "pubsub.yaml"), """
@@ -1806,7 +1806,7 @@ index 0000000..acb3245
 +                - name: redisHost
 +                  value: "localhost:6379"
 +            scopes:
-+              - commandapi
++              - parties
 +            """);
 +        WriteTenantsSubscription(dir);
 +        WriteTenantsConfig(dir, malformed: false, includeSensitiveValues: false);
@@ -1905,7 +1905,7 @@ index 9328cc3..5cec25b 100644
 --- a/tests/Hexalith.Parties.IntegrationTests/PartyApiRoundTripIntegrationTests.cs
 +++ b/tests/Hexalith.Parties.IntegrationTests/PartyApiRoundTripIntegrationTests.cs
 @@ -17,7 +17,10 @@ using Hexalith.EventStore.Server.Pipeline.Commands;
- using Hexalith.Parties.CommandApi;
+ using Hexalith.Parties;
  using Hexalith.Parties.Contracts.Models;
  using Hexalith.Parties.Contracts.ValueObjects;
 +using Hexalith.Parties.IntegrationTests.Tenants;

@@ -13,7 +13,7 @@ namespace Hexalith.Parties.IntegrationTests.Tenants;
 
 /// <summary>
 /// Story 11.4 — AC2: full-topology Tenants integration tests. These add confidence
-/// beyond the sidecar-free CommandApi tests by seeding tenant state through
+/// beyond the sidecar-free Parties service tests by seeding tenant state through
 /// Hexalith.Tenants APIs and exercising the real REST/MCP surface.
 /// </summary>
 [Collection("PartiesAspireTopology")]
@@ -273,7 +273,7 @@ public sealed class TenantsBackedAccessE2ETests
             request.Content = new StringContent(jsonBody, System.Text.Encoding.UTF8, "application/json");
         }
 
-        return _fixture.CommandApiClient.SendAsync(request, cancellationToken);
+        return _fixture.PartiesClient.SendAsync(request, cancellationToken);
     }
 
     // The project's xUnit v2.9.3 runner reports `throw SkipException.ForSkip(...)` as a Failed
