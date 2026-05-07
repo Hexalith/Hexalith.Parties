@@ -2,9 +2,9 @@
 @inject IPartiesAdminPortalApiClient ApiClient
 @implements IDisposable
 
-<section class="hx-parties-admin" aria-labelledby="hx-parties-admin-title">
+<section class="hx-parties-admin" aria-labelledby="@($"hx-parties-admin-title-{_instanceId}")">
     <header class="hx-parties-admin__header">
-        <h1 id="hx-parties-admin-title">@EffectiveLabels.Title</h1>
+        <h1 id="@($"hx-parties-admin-title-{_instanceId}")">@EffectiveLabels.Title</h1>
         <p class="hx-parties-admin__status" role="status" aria-live="polite">@StatusText</p>
     </header>
 
@@ -12,11 +12,11 @@
         <div class="hx-parties-admin__toolbar">
             <label>
                 <span>@EffectiveLabels.Search</span>
-                <input type="search" @bind="_filters.Query" @bind:event="oninput" aria-label="@EffectiveLabels.SearchAriaLabel" placeholder="@EffectiveLabels.SearchPlaceholder" />
+                <input type="search" @bind="_filters.Query" @bind:event="oninput" aria-label="@EffectiveLabels.SearchAriaLabel" placeholder="@EffectiveLabels.SearchPlaceholder" @ref="_searchInputRef" />
             </label>
             <label>
                 <span>@EffectiveLabels.PartyType</span>
-                <select @bind="_filters.TypeValue" aria-label="@EffectiveLabels.PartyType">
+                <select @bind="_filters.TypeValue" aria-label="@EffectiveLabels.PartyType" disabled="@FiltersDisabledInSearchMode" aria-disabled="@FiltersDisabledInSearchMode">
                     <option value="">@EffectiveLabels.AllTypes</option>
                     <option value="Person">@EffectiveLabels.PersonOption</option>
                     <option value="Organization">@EffectiveLabels.OrganizationOption</option>
@@ -24,7 +24,7 @@
             </label>
             <label>
                 <span>@EffectiveLabels.ActiveState</span>
-                <select @bind="_filters.ActiveValue" aria-label="@EffectiveLabels.ActiveState">
+                <select @bind="_filters.ActiveValue" aria-label="@EffectiveLabels.ActiveState" disabled="@FiltersDisabledInSearchMode" aria-disabled="@FiltersDisabledInSearchMode">
                     <option value="">@EffectiveLabels.AllStates</option>
                     <option value="true">@EffectiveLabels.Active</option>
                     <option value="false">@EffectiveLabels.Inactive</option>
@@ -32,15 +32,15 @@
             </label>
             <button type="submit">@EffectiveLabels.Submit</button>
             <button type="button" @onclick="ClearFiltersAsync">@EffectiveLabels.Clear</button>
-            @if (_lastFailure is AdminPortalQueryFailureKind.TransientFailure)
+            @if (RetryAvailable)
             {
-                <button type="button" @onclick="RetryAsync">@EffectiveLabels.Retry</button>
+                <button type="button" @onclick="RetryAsync" @ref="_retryButtonRef">@EffectiveLabels.Retry</button>
             }
         </div>
     </EditForm>
 
     <div class="hx-parties-admin__search-modes" aria-label="@EffectiveLabels.SearchModesRegion">
-        <button type="button" disabled>@EffectiveLabels.DisplayNameMode</button>
+        <button type="button" disabled aria-disabled="true">@EffectiveLabels.DisplayNameMode</button>
         <button type="button" disabled="@(!RichSearchAvailable)" aria-disabled="@(!RichSearchAvailable)">@EffectiveLabels.EmailMode</button>
         <button type="button" disabled="@(!RichSearchAvailable)" aria-disabled="@(!RichSearchAvailable)">@EffectiveLabels.IdentifierMode</button>
     </div>
@@ -66,7 +66,7 @@
                                     @row.DisplayName
                                 </button>
                             </td>
-                            <td>@row.Type</td>
+                            <td>@EffectiveLabels.PartyTypeLabel(row.Type.ToString())</td>
                             <td>
                                 <span class="hx-parties-admin__badge" aria-label="@StatusLabel(row)">
                                     @StatusLabel(row)
@@ -92,7 +92,11 @@
         </div>
 
         <aside class="hx-parties-admin__detail" aria-label="@EffectiveLabels.DetailRegion">
-            @if (_detail is null)
+            @if (_isDetailLoading)
+            {
+                <p role="status" aria-live="polite">@EffectiveLabels.DetailLoading</p>
+            }
+            else if (_detail is null)
             {
                 <p>@DetailEmptyText</p>
             }
@@ -104,11 +108,11 @@
                     <p class="hx-parties-admin__status" role="status">@EffectiveLabels.DataAge: @_detailMetadata.StaleDataAge</p>
                 }
 
-                <section aria-labelledby="party-summary-heading">
-                    <h3 id="party-summary-heading">@EffectiveLabels.Summary</h3>
+                <section aria-labelledby="@($"party-summary-heading-{_instanceId}")">
+                    <h3 id="@($"party-summary-heading-{_instanceId}")">@EffectiveLabels.Summary</h3>
                     <dl>
                         <dt>@EffectiveLabels.TypeColumn</dt>
-                        <dd>@_detail.Type</dd>
+                        <dd>@EffectiveLabels.PartyTypeLabel(_detail.Type.ToString())</dd>
                         <dt>@EffectiveLabels.Status</dt>
                         <dd>@DetailStatus(_detail)</dd>
                         <dt>@EffectiveLabels.CreatedColumn</dt>
@@ -120,8 +124,8 @@
 
                 @if (_detail.PersonDetails is not null)
                 {
-                    <section aria-labelledby="person-details-heading">
-                        <h3 id="person-details-heading">@EffectiveLabels.PersonDetails</h3>
+                    <section aria-labelledby="@($"person-details-heading-{_instanceId}")">
+                        <h3 id="@($"person-details-heading-{_instanceId}")">@EffectiveLabels.PersonDetails</h3>
                         <dl>
                             <dt>@EffectiveLabels.FirstName</dt>
                             <dd>@_detail.PersonDetails.FirstName</dd>
@@ -133,8 +137,8 @@
 
                 @if (_detail.OrganizationDetails is not null)
                 {
-                    <section aria-labelledby="organization-details-heading">
-                        <h3 id="organization-details-heading">@EffectiveLabels.OrganizationDetails</h3>
+                    <section aria-labelledby="@($"organization-details-heading-{_instanceId}")">
+                        <h3 id="@($"organization-details-heading-{_instanceId}")">@EffectiveLabels.OrganizationDetails</h3>
                         <dl>
                             <dt>@EffectiveLabels.LegalName</dt>
                             <dd>@_detail.OrganizationDetails.LegalName</dd>
@@ -146,8 +150,8 @@
                     </section>
                 }
 
-                <section aria-labelledby="contact-channels-heading">
-                    <h3 id="contact-channels-heading">@EffectiveLabels.ContactChannels</h3>
+                <section aria-labelledby="@($"contact-channels-heading-{_instanceId}")">
+                    <h3 id="@($"contact-channels-heading-{_instanceId}")">@EffectiveLabels.ContactChannels</h3>
                     @if (_detail.ContactChannels.Count == 0)
                     {
                         <p>@EffectiveLabels.NoContactChannels</p>
@@ -157,14 +161,14 @@
                         <ul>
                             @foreach (ContactChannel channel in _detail.ContactChannels)
                             {
-                                <li>@channel.Type: @channel.Value (@(channel.IsPreferred ? EffectiveLabels.Preferred : EffectiveLabels.Standard))</li>
+                                <li>@EffectiveLabels.ContactChannelTypeLabel(channel.Type.ToString()): @channel.Value (@(channel.IsPreferred ? EffectiveLabels.ContactPreferred : EffectiveLabels.ContactStandard))</li>
                             }
                         </ul>
                     }
                 </section>
 
-                <section aria-labelledby="identifiers-heading">
-                    <h3 id="identifiers-heading">@EffectiveLabels.Identifiers</h3>
+                <section aria-labelledby="@($"identifiers-heading-{_instanceId}")">
+                    <h3 id="@($"identifiers-heading-{_instanceId}")">@EffectiveLabels.Identifiers</h3>
                     @if (_detail.Identifiers.Count == 0)
                     {
                         <p>@EffectiveLabels.NoIdentifiers</p>
@@ -174,14 +178,14 @@
                         <ul>
                             @foreach (PartyIdentifier identifier in _detail.Identifiers)
                             {
-                                <li>@identifier.Type: @identifier.Value</li>
+                                <li>@EffectiveLabels.IdentifierTypeLabel(identifier.Type.ToString()): @identifier.Value</li>
                             }
                         </ul>
                     }
                 </section>
 
-                <section aria-labelledby="consents-heading">
-                    <h3 id="consents-heading">@EffectiveLabels.ConsentRecords</h3>
+                <section aria-labelledby="@($"consents-heading-{_instanceId}")">
+                    <h3 id="@($"consents-heading-{_instanceId}")">@EffectiveLabels.ConsentRecords</h3>
                     @if (_detail.ConsentRecords.Count == 0)
                     {
                         <p>@EffectiveLabels.NoConsentRecords</p>
@@ -191,14 +195,14 @@
                         <ul>
                             @foreach (ConsentRecord consent in _detail.ConsentRecords)
                             {
-                                <li>@consent.Purpose: @(consent.IsActive ? EffectiveLabels.Active : EffectiveLabels.Revoked)</li>
+                                <li>@EffectiveLabels.ConsentPurposeLabel(consent.Purpose.ToString()): @(consent.IsActive ? EffectiveLabels.ConsentActive : EffectiveLabels.ConsentRevoked)</li>
                             }
                         </ul>
                     }
                 </section>
 
-                <section aria-labelledby="restrictions-heading">
-                    <h3 id="restrictions-heading">@EffectiveLabels.Restrictions</h3>
+                <section aria-labelledby="@($"restrictions-heading-{_instanceId}")">
+                    <h3 id="@($"restrictions-heading-{_instanceId}")">@EffectiveLabels.Restrictions</h3>
                     <dl>
                         <dt>@EffectiveLabels.Restricted</dt>
                         <dd>@BooleanText(_detail.IsRestricted)</dd>
@@ -211,18 +215,19 @@
                     </dl>
                 </section>
 
-                <section aria-labelledby="system-metadata-heading">
-                    <h3 id="system-metadata-heading">@EffectiveLabels.SystemMetadata</h3>
+                @* P-pass-2 D3.1: scoped party id is intentionally not displayed as a user-facing
+                    label per Story 10.1 task line 60 ("do not display tenant:domain:aggregateId
+                    scoped ids as user-facing labels"). *@
+                <section aria-labelledby="@($"system-metadata-heading-{_instanceId}")">
+                    <h3 id="@($"system-metadata-heading-{_instanceId}")">@EffectiveLabels.SystemMetadata</h3>
                     <dl>
-                        <dt>@EffectiveLabels.PartyId</dt>
-                        <dd>@_detail.Id</dd>
                         <dt>@EffectiveLabels.SortName</dt>
                         <dd>@_detail.SortName</dd>
                     </dl>
                 </section>
 
-                <section aria-labelledby="name-history-heading">
-                    <h3 id="name-history-heading">@EffectiveLabels.NameHistory</h3>
+                <section aria-labelledby="@($"name-history-heading-{_instanceId}")">
+                    <h3 id="@($"name-history-heading-{_instanceId}")">@EffectiveLabels.NameHistory</h3>
                     @if (_detail.NameHistory.Count == 0)
                     {
                         <p>@EffectiveLabels.NoNameHistory</p>
@@ -258,23 +263,28 @@
 @code {
     private readonly PortalFilters _filters = new();
     private readonly List<PartyIndexEntry> _rows = [];
+    private readonly string _instanceId = Guid.NewGuid().ToString("N").Substring(0, 8);
     private CancellationTokenSource? _listCts;
     private CancellationTokenSource? _detailCts;
     private PartyDetail? _detail;
     private AdminPortalQueryMetadata? _detailMetadata;
     private string? _previousContextSignature;
-    private string _statusText = "Loading parties";
-    private string _emptyText = "No parties";
-    private string _detailEmptyText = "Select a party";
+    private StatusKind _statusKind = StatusKind.Loading;
+    private DetailEmptyKind _detailEmptyKind = DetailEmptyKind.SelectParty;
+    private string? _validationDetail;
     private int _page = 1;
     private int _totalPages;
     private int _totalCount;
     private bool _hasNextPage;
     private bool _isLoading;
+    private bool _isDetailLoading;
     private long _listVersion;
     private long _detailVersion;
-    private bool _disposed;
+    private int _disposed;
     private AdminPortalQueryFailureKind? _lastFailure;
+    private FocusTarget _pendingFocus = FocusTarget.None;
+    private ElementReference _searchInputRef;
+    private ElementReference _retryButtonRef;
 
     [Parameter]
     public string? ContextKey { get; set; }
@@ -299,11 +309,53 @@
 
     private AdminPortalLabels EffectiveLabels => Labels ?? new AdminPortalLabels();
 
-    private string StatusText => _statusText;
+    private bool FiltersDisabledInSearchMode => !string.IsNullOrWhiteSpace(_filters.Query);
 
-    private string EmptyText => _emptyText;
+    private bool RetryAvailable
+        => _lastFailure is AdminPortalQueryFailureKind.TransientFailure
+            or AdminPortalQueryFailureKind.Unknown;
 
-    private string DetailEmptyText => _detailEmptyText;
+    private string StatusText => _statusKind switch
+    {
+        StatusKind.Loading => EffectiveLabels.Loading,
+        StatusKind.Loaded => EffectiveLabels.Loaded,
+        StatusKind.DisplayNameOnly => EffectiveLabels.DisplayNameOnly,
+        StatusKind.Degraded => EffectiveLabels.Degraded,
+        StatusKind.SignInRequired => EffectiveLabels.SignInRequired,
+        StatusKind.TenantUnavailable => EffectiveLabels.TenantUnavailable,
+        StatusKind.AdminRequired => EffectiveLabels.AdminRequired,
+        StatusKind.Forbidden => EffectiveLabels.AdminRequired,
+        StatusKind.TransientFailure => EffectiveLabels.TransientFailure,
+        StatusKind.NoData => EffectiveLabels.NoData,
+        StatusKind.LoadFailure => EffectiveLabels.LoadFailure,
+        StatusKind.Validation => string.IsNullOrWhiteSpace(_validationDetail)
+            ? EffectiveLabels.LoadFailure
+            : $"{EffectiveLabels.ValidationProblemPrefix}: {_validationDetail}",
+        _ => EffectiveLabels.Loading,
+    };
+
+    private string EmptyText => _statusKind switch
+    {
+        StatusKind.SignInRequired => EffectiveLabels.SignInToBrowse,
+        StatusKind.TenantUnavailable => EffectiveLabels.SelectTenant,
+        StatusKind.AdminRequired => EffectiveLabels.AccessDenied,
+        StatusKind.Forbidden => EffectiveLabels.AccessDenied,
+        _ => string.IsNullOrWhiteSpace(_filters.Query)
+            ? EffectiveLabels.NoParties
+            : EffectiveLabels.NoMatches,
+    };
+
+    private string DetailEmptyText => _detailEmptyKind switch
+    {
+        DetailEmptyKind.SignInRequired => EffectiveLabels.SignInRequired,
+        DetailEmptyKind.TenantUnavailable => EffectiveLabels.TenantUnavailable,
+        DetailEmptyKind.AccessDenied => EffectiveLabels.AccessDenied,
+        DetailEmptyKind.DetailUnavailable => EffectiveLabels.DetailUnavailable,
+        DetailEmptyKind.DetailErased => EffectiveLabels.DetailErased,
+        DetailEmptyKind.TransientFailure => EffectiveLabels.TransientFailure,
+        DetailEmptyKind.DetailLoadFailure => EffectiveLabels.DetailLoadFailure,
+        _ => EffectiveLabels.SelectParty,
+    };
 
     protected override async Task OnParametersSetAsync()
     {
@@ -324,22 +376,22 @@
 
         if (!IsAuthenticated)
         {
-            _statusText = EffectiveLabels.SignInRequired;
-            _emptyText = EffectiveLabels.SignInToBrowse;
+            _statusKind = StatusKind.SignInRequired;
+            _detailEmptyKind = DetailEmptyKind.SignInRequired;
             return;
         }
 
         if (!HasTenantContext)
         {
-            _statusText = EffectiveLabels.TenantUnavailable;
-            _emptyText = EffectiveLabels.SelectTenant;
+            _statusKind = StatusKind.TenantUnavailable;
+            _detailEmptyKind = DetailEmptyKind.TenantUnavailable;
             return;
         }
 
         if (!IsAdmin)
         {
-            _statusText = EffectiveLabels.AdminRequired;
-            _emptyText = EffectiveLabels.AccessDenied;
+            _statusKind = StatusKind.AdminRequired;
+            _detailEmptyKind = DetailEmptyKind.AccessDenied;
             return;
         }
 
@@ -349,6 +401,7 @@
     private async Task SubmitSearchAsync()
     {
         _page = 1;
+        _pendingFocus = FocusTarget.SearchInput;
         await LoadPageAsync().ConfigureAwait(false);
     }
 
@@ -358,6 +411,7 @@
         _filters.TypeValue = string.Empty;
         _filters.ActiveValue = string.Empty;
         _page = 1;
+        _pendingFocus = FocusTarget.SearchInput;
         await LoadPageAsync().ConfigureAwait(false);
     }
 
@@ -383,13 +437,19 @@
 
     private async Task LoadPageAsync()
     {
+        if (Volatile.Read(ref _disposed) != 0)
+        {
+            return;
+        }
+
         long version = SwapListCts(out CancellationToken token);
         _isLoading = true;
-        _statusText = EffectiveLabels.Loading;
+        _statusKind = StatusKind.Loading;
+        _validationDetail = null;
         _rows.Clear();
         _detail = null;
         _detailMetadata = null;
-        _detailEmptyText = EffectiveLabels.SelectParty;
+        _detailEmptyKind = DetailEmptyKind.SelectParty;
         _lastFailure = null;
 
         try
@@ -408,7 +468,7 @@
                     .ConfigureAwait(false);
                 PagedResult<PartyIndexEntry> page = new()
                 {
-                    Items = [.. result.Payload.Items.Where(static x => x.Party is not null).Select(static x => x.Party)],
+                    Items = [.. result.Payload.Items.Where(static x => x.Party is not null).Select(static x => x.Party!)],
                     Page = result.Payload.Page,
                     PageSize = result.Payload.PageSize,
                     TotalCount = result.Payload.TotalCount,
@@ -424,7 +484,7 @@
         {
             if (version == _listVersion)
             {
-                ApplyFailure(ex.Kind);
+                ApplyFailure(ex);
             }
         }
         finally
@@ -446,22 +506,39 @@
         }
 
         _rows.Clear();
-        _rows.AddRange(page.Items.Where(static row => !row.IsErased));
+        // Backend already filters erased parties from list/search; trust server counts.
+        // No client-side IsErased filter — would otherwise leak an erased-count signal via
+        // total/displayed mismatch (P8).
+        _rows.AddRange(page.Items);
         _totalPages = page.TotalPages;
         _totalCount = page.TotalCount;
+
+        // Canonicalize _page from the server response so subsequent Previous/Next navigate
+        // from what the server actually served (e.g., when the request was clamped) — P1.
+        if (page.Page > 0)
+        {
+            _page = page.Page;
+        }
+
         _hasNextPage = page.Page > 0 && page.TotalPages > page.Page;
-        _statusText = metadata.IsLocalOnlySearch
-            ? EffectiveLabels.DisplayNameOnly
+        _statusKind = metadata.IsLocalOnlySearch
+            ? StatusKind.DisplayNameOnly
             : metadata.IsDegraded
-                ? EffectiveLabels.Degraded
-                : EffectiveLabels.Loaded;
-        _emptyText = string.IsNullOrWhiteSpace(_filters.Query) ? EffectiveLabels.NoParties : EffectiveLabels.NoMatches;
+                ? StatusKind.Degraded
+                : StatusKind.Loaded;
         await SafeStateHasChangedAsync().ConfigureAwait(false);
     }
 
     private async Task SelectPartyAsync(string partyId)
     {
+        if (Volatile.Read(ref _disposed) != 0)
+        {
+            return;
+        }
+
         long version = SwapDetailCts(out CancellationToken token);
+        _isDetailLoading = true;
+        await SafeStateHasChangedAsync().ConfigureAwait(false);
 
         try
         {
@@ -470,9 +547,21 @@
                 .ConfigureAwait(false);
             if (version == _detailVersion)
             {
-                _detail = result.Payload.IsErased ? null : result.Payload;
-                _detailMetadata = result.Payload.IsErased ? null : result.Metadata;
-                _detailEmptyText = result.Payload.IsErased ? EffectiveLabels.DetailErased : EffectiveLabels.SelectParty;
+                if (result.Payload.IsErased)
+                {
+                    // P30: align 200-with-erased path to the 410 path — remove the row from
+                    // the visible list so the user cannot click it again.
+                    _detail = null;
+                    _detailMetadata = result.Metadata;
+                    _detailEmptyKind = DetailEmptyKind.DetailErased;
+                    _rows.RemoveAll(row => string.Equals(row.Id, partyId, StringComparison.Ordinal));
+                }
+                else
+                {
+                    _detail = result.Payload;
+                    _detailMetadata = result.Metadata;
+                    _detailEmptyKind = DetailEmptyKind.SelectParty;
+                }
             }
         }
         catch (OperationCanceledException)
@@ -484,13 +573,15 @@
             {
                 _detail = null;
                 _detailMetadata = null;
-                _detailEmptyText = ex.Kind switch
+                _detailEmptyKind = ex.Kind switch
                 {
-                    AdminPortalQueryFailureKind.Forbidden => EffectiveLabels.AccessDenied,
-                    AdminPortalQueryFailureKind.NotFound => EffectiveLabels.DetailUnavailable,
-                    AdminPortalQueryFailureKind.Gone => EffectiveLabels.DetailErased,
-                    AdminPortalQueryFailureKind.TransientFailure => EffectiveLabels.TransientFailure,
-                    _ => EffectiveLabels.DetailLoadFailure,
+                    AdminPortalQueryFailureKind.AuthenticationRequired => DetailEmptyKind.SignInRequired,
+                    AdminPortalQueryFailureKind.TenantRequired => DetailEmptyKind.TenantUnavailable,
+                    AdminPortalQueryFailureKind.Forbidden => DetailEmptyKind.AccessDenied,
+                    AdminPortalQueryFailureKind.NotFound => DetailEmptyKind.DetailUnavailable,
+                    AdminPortalQueryFailureKind.Gone => DetailEmptyKind.DetailErased,
+                    AdminPortalQueryFailureKind.TransientFailure => DetailEmptyKind.TransientFailure,
+                    _ => DetailEmptyKind.DetailLoadFailure,
                 };
 
                 if (ex.Kind is AdminPortalQueryFailureKind.Gone or AdminPortalQueryFailureKind.NotFound)
@@ -501,7 +592,48 @@
         }
         finally
         {
+            if (version == _detailVersion)
+            {
+                _isDetailLoading = false;
+            }
+
             await SafeStateHasChangedAsync().ConfigureAwait(false);
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (Volatile.Read(ref _disposed) != 0)
+        {
+            return;
+        }
+
+        FocusTarget pending = _pendingFocus;
+        if (pending == FocusTarget.None)
+        {
+            return;
+        }
+
+        _pendingFocus = FocusTarget.None;
+        try
+        {
+            switch (pending)
+            {
+                case FocusTarget.SearchInput:
+                    await _searchInputRef.FocusAsync().ConfigureAwait(false);
+                    break;
+                case FocusTarget.RetryButton:
+                    await _retryButtonRef.FocusAsync().ConfigureAwait(false);
+                    break;
+            }
+        }
+        catch (InvalidOperationException)
+        {
+            // Element ref not yet rendered (e.g., retry button not visible) — drop silently.
+        }
+        catch (Microsoft.JSInterop.JSException)
+        {
+            // JS interop failure (e.g., disconnected circuit) — focus is best-effort.
         }
     }
 
@@ -517,8 +649,10 @@
             _filters.Query,
             AdminPortalQueryBounds.BoundPage(_page),
             AdminPortalQueryBounds.BoundPageSize(PageSize),
-            _filters.Type,
-            _filters.Active);
+            // Filter values are intentionally not forwarded to /api/v1/parties/search — backend
+            // does not accept them. UI disables the filter selects in search mode (D2.1).
+            null,
+            null);
 
     private void ResetVisibleState()
     {
@@ -530,14 +664,15 @@
         _totalPages = 0;
         _totalCount = 0;
         _isLoading = false;
+        _isDetailLoading = false;
         _page = 1;
-        _statusText = EffectiveLabels.Loading;
-        _emptyText = EffectiveLabels.NoParties;
-        _detailEmptyText = EffectiveLabels.SelectParty;
+        _statusKind = StatusKind.Loading;
+        _detailEmptyKind = DetailEmptyKind.SelectParty;
+        _validationDetail = null;
         _lastFailure = null;
     }
 
-    private void ApplyFailure(AdminPortalQueryFailureKind kind)
+    private void ApplyFailure(AdminPortalQueryException ex)
     {
         _rows.Clear();
         _detail = null;
@@ -545,20 +680,33 @@
         _hasNextPage = false;
         _totalPages = 0;
         _totalCount = 0;
-        _lastFailure = kind;
-        _statusText = kind switch
+        _lastFailure = ex.Kind;
+        _validationDetail = ex.Kind == AdminPortalQueryFailureKind.Validation
+            ? ex.ValidationDetail
+            : null;
+        _statusKind = ex.Kind switch
         {
-            AdminPortalQueryFailureKind.AuthenticationRequired => EffectiveLabels.SignInRequired,
-            AdminPortalQueryFailureKind.TenantRequired => EffectiveLabels.TenantUnavailable,
-            AdminPortalQueryFailureKind.Forbidden => EffectiveLabels.AdminRequired,
-            AdminPortalQueryFailureKind.TransientFailure => EffectiveLabels.TransientFailure,
-            AdminPortalQueryFailureKind.NotFound => EffectiveLabels.NoData,
-            AdminPortalQueryFailureKind.Gone => EffectiveLabels.NoData,
-            AdminPortalQueryFailureKind.Validation => EffectiveLabels.LoadFailure,
-            _ => EffectiveLabels.LoadFailure,
+            AdminPortalQueryFailureKind.AuthenticationRequired => StatusKind.SignInRequired,
+            AdminPortalQueryFailureKind.TenantRequired => StatusKind.TenantUnavailable,
+            AdminPortalQueryFailureKind.Forbidden => StatusKind.Forbidden,
+            AdminPortalQueryFailureKind.TransientFailure => StatusKind.TransientFailure,
+            AdminPortalQueryFailureKind.NotFound => StatusKind.NoData,
+            AdminPortalQueryFailureKind.Gone => StatusKind.NoData,
+            AdminPortalQueryFailureKind.Validation => StatusKind.Validation,
+            _ => StatusKind.LoadFailure,
         };
-        _emptyText = kind is AdminPortalQueryFailureKind.Forbidden ? EffectiveLabels.AccessDenied : EffectiveLabels.NoData;
-        _detailEmptyText = EffectiveLabels.SelectParty;
+        _detailEmptyKind = ex.Kind switch
+        {
+            AdminPortalQueryFailureKind.AuthenticationRequired => DetailEmptyKind.SignInRequired,
+            AdminPortalQueryFailureKind.TenantRequired => DetailEmptyKind.TenantUnavailable,
+            AdminPortalQueryFailureKind.Forbidden => DetailEmptyKind.AccessDenied,
+            _ => DetailEmptyKind.SelectParty,
+        };
+
+        if (RetryAvailable)
+        {
+            _pendingFocus = FocusTarget.RetryButton;
+        }
     }
 
     private long SwapListCts(out CancellationToken token)
@@ -609,7 +757,7 @@
 
     private async Task SafeStateHasChangedAsync()
     {
-        if (_disposed)
+        if (Volatile.Read(ref _disposed) != 0)
         {
             return;
         }
@@ -624,7 +772,17 @@
     }
 
     private string StatusLabel(PartyIndexEntry row)
-        => row.IsErased ? EffectiveLabels.Erased : row.IsActive ? EffectiveLabels.Active : EffectiveLabels.Inactive;
+    {
+        // PartyIndexEntry does not carry IsRestricted (the index projection omits it). The
+        // detail panel surfaces the full state matrix including Restricted via DetailStatus
+        // — list/detail discrepancy on Restricted state is by design at the contract layer.
+        if (row.IsErased)
+        {
+            return EffectiveLabels.Erased;
+        }
+
+        return row.IsActive ? EffectiveLabels.Active : EffectiveLabels.Inactive;
+    }
 
     private string DetailStatus(PartyDetail detail)
     {
@@ -646,16 +804,57 @@
     private string BooleanText(bool value)
         => value ? EffectiveLabels.Yes : EffectiveLabels.No;
 
-    private static string FormatOptionalDate(DateTimeOffset? date)
-        => date is null ? string.Empty : FormatDate(date.Value);
+    private string FormatOptionalDate(DateTimeOffset? date)
+        => date is null ? EffectiveLabels.MissingDate : FormatDate(date.Value);
 
-    private static string FormatDate(DateTimeOffset date)
-        => date == default ? string.Empty : date.ToString("g", System.Globalization.CultureInfo.CurrentCulture);
+    private string FormatDate(DateTimeOffset date)
+        => date == default
+            ? EffectiveLabels.MissingDate
+            : date.ToString("g", System.Globalization.CultureInfo.CurrentCulture);
 
     public void Dispose()
     {
-        _disposed = true;
+        if (Interlocked.Exchange(ref _disposed, 1) != 0)
+        {
+            return;
+        }
+
         CancelInFlight();
+    }
+
+    private enum StatusKind
+    {
+        Loading,
+        Loaded,
+        DisplayNameOnly,
+        Degraded,
+        SignInRequired,
+        TenantUnavailable,
+        AdminRequired,
+        Forbidden,
+        TransientFailure,
+        NoData,
+        LoadFailure,
+        Validation,
+    }
+
+    private enum DetailEmptyKind
+    {
+        SelectParty,
+        SignInRequired,
+        TenantUnavailable,
+        AccessDenied,
+        DetailUnavailable,
+        DetailErased,
+        TransientFailure,
+        DetailLoadFailure,
+    }
+
+    private enum FocusTarget
+    {
+        None,
+        SearchInput,
+        RetryButton,
     }
 
     private sealed class PortalFilters
@@ -667,13 +866,19 @@
         public string ActiveValue { get; set; } = string.Empty;
 
         public PartyType? Type
-            => Enum.TryParse(TypeValue, ignoreCase: false, out PartyType parsed)
-                && parsed is PartyType.Person or PartyType.Organization
-                && !int.TryParse(TypeValue, out _)
-                ? parsed
-                : null;
+        {
+            get
+            {
+                string trimmed = TypeValue?.Trim() ?? string.Empty;
+                return Enum.TryParse(trimmed, ignoreCase: false, out PartyType parsed)
+                    && parsed is PartyType.Person or PartyType.Organization
+                    && !int.TryParse(trimmed, out _)
+                    ? parsed
+                    : null;
+            }
+        }
 
         public bool? Active
-            => bool.TryParse(ActiveValue, out bool parsed) ? parsed : null;
+            => bool.TryParse(ActiveValue?.Trim(), out bool parsed) ? parsed : null;
     }
 }

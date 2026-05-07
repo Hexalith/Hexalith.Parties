@@ -52,10 +52,10 @@ public sealed class AdminPortalReadOnlySurfaceTests
     public void AdminPortal_DoesNotShipParallelSpaArtifacts()
     {
         // AC8: do not ship a separate TypeScript SPA, vite/webpack bundle, or React/Vue/Angular
-        // root inside the Parties admin portal package.
-        Assembly portal = LoadPortalAssemblyOrThrow();
-        string assemblyDirectory = Path.GetDirectoryName(portal.Location)
-            ?? throw new InvalidOperationException("AdminPortal assembly location is unavailable.");
+        // root inside the Parties admin portal package source tree. Bin scans are tautologies
+        // (SPA configs never land in build output) so this walks back from the test bin folder
+        // to the AdminPortal source directory and probes there.
+        string sourceDirectory = ResolveAdminPortalSourceDirectory();
 
         string[] forbidden =
         [
@@ -69,9 +69,30 @@ public sealed class AdminPortalReadOnlySurfaceTests
 
         foreach (string artifact in forbidden)
         {
-            File.Exists(Path.Combine(assemblyDirectory, artifact))
-                .ShouldBeFalse($"AdminPortal must not ship the parallel SPA artifact '{artifact}'.");
+            File.Exists(Path.Combine(sourceDirectory, artifact))
+                .ShouldBeFalse($"AdminPortal source tree must not ship the parallel SPA artifact '{artifact}'.");
         }
+    }
+
+    private static string ResolveAdminPortalSourceDirectory()
+    {
+        // Walk up from the test bin folder to the repository root, then descend into the
+        // AdminPortal project source. The walk-up has a hard cap so a test run from a
+        // detached worktree fails fast instead of recursing forever.
+        string? cursor = Path.GetDirectoryName(typeof(AdminPortalReadOnlySurfaceTests).Assembly.Location);
+        for (int i = 0; i < 10 && cursor is not null; i++)
+        {
+            string candidate = Path.Combine(cursor, "src", AdminPortalAssemblyName);
+            if (Directory.Exists(candidate))
+            {
+                return candidate;
+            }
+
+            cursor = Path.GetDirectoryName(cursor);
+        }
+
+        throw new InvalidOperationException(
+            $"Could not locate src/{AdminPortalAssemblyName} relative to the test assembly directory.");
     }
 
     [Fact]
@@ -158,11 +179,21 @@ public sealed class AdminPortalReadOnlySurfaceTests
         routeAttribute.ShouldNotBeNull(
             $"Cannot resolve {RouteAttributeFullName}; AdminPortal must reference Microsoft.AspNetCore.Components.");
 
-        IEnumerable<string> routes = portal.GetTypes()
+        List<string> routes = [.. portal.GetTypes()
             .SelectMany(t => t.GetCustomAttributes(routeAttribute!, inherit: false))
-            .Select(attribute => (string)attribute.GetType()
-                .GetProperty("Template", BindingFlags.Public | BindingFlags.Instance)!
-                .GetValue(attribute)!);
+            .Select(attribute =>
+            {
+                PropertyInfo? template = attribute.GetType()
+                    .GetProperty("Template", BindingFlags.Public | BindingFlags.Instance);
+                return template?.GetValue(attribute) as string;
+            })
+            .Where(static t => !string.IsNullOrEmpty(t))
+            .Cast<string>()];
+
+        // Without this assertion the foreach below would pass vacuously when no Blazor
+        // route attributes are visible (e.g., reflection silently skipping the type).
+        routes.ShouldNotBeEmpty(
+            "AdminPortal must declare at least one Blazor route to satisfy AC1; none were discovered.");
 
         foreach (string template in routes)
         {

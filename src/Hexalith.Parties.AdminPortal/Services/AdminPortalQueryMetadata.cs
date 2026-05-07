@@ -15,9 +15,9 @@ public sealed record AdminPortalQueryMetadata
         string? SearchDegradedReason = null)
     {
         this.ServiceDegraded = ServiceDegraded;
-        this.StaleDataAge = BoundHeaderValue(StaleDataAge);
-        this.SearchStatus = BoundHeaderValue(SearchStatus);
-        this.SearchDegradedReason = BoundHeaderValue(SearchDegradedReason);
+        this.StaleDataAge = StaleDataAge;
+        this.SearchStatus = SearchStatus;
+        this.SearchDegradedReason = SearchDegradedReason;
     }
 
     public bool ServiceDegraded { get; init; }
@@ -41,7 +41,7 @@ public sealed record AdminPortalQueryMetadata
     }
 
     public bool IsLocalOnlySearch
-        => string.Equals(SearchStatus, "local-only", StringComparison.OrdinalIgnoreCase);
+        => string.Equals(SearchStatus, "LocalOnly", StringComparison.OrdinalIgnoreCase);
 
     public bool IsDegraded
         => ServiceDegraded

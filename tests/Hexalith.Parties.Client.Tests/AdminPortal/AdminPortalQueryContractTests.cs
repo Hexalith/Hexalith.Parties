@@ -64,7 +64,9 @@ public sealed class AdminPortalQueryContractTests
             HttpResponseMessage response = JsonResponse(HttpStatusCode.OK, EmptyIndexPage());
             response.Headers.Add("X-Service-Degraded", "true");
             response.Headers.Add("X-Stale-Data-Age", "PT12S");
-            response.Headers.Add("X-Parties-Search-Status", "local-only");
+            // Backend emits PascalCase for the search-status header (Enum.ToString) — verify
+            // the client preserves it verbatim and treats it as local-only.
+            response.Headers.Add("X-Parties-Search-Status", "LocalOnly");
             response.Headers.Add("X-Parties-Search-Degraded-Reason", new string('x', 256));
             return Task.FromResult(response);
         });
@@ -76,7 +78,8 @@ public sealed class AdminPortalQueryContractTests
 
         result.Metadata.ServiceDegraded.ShouldBeTrue();
         result.Metadata.StaleDataAge.ShouldBe("PT12S");
-        result.Metadata.SearchStatus.ShouldBe("local-only");
+        result.Metadata.SearchStatus.ShouldBe("LocalOnly");
+        result.Metadata.IsLocalOnlySearch.ShouldBeTrue();
         result.Metadata.SearchDegradedReason!.Length.ShouldBe(128);
     }
 
@@ -93,7 +96,7 @@ public sealed class AdminPortalQueryContractTests
                 TotalCount = 0,
                 TotalPages = 0,
             },
-            status = "local-only",
+            status = "LocalOnly",
         };
         var handler = new AdminPortalHandler((_, _) => Task.FromResult(JsonResponse(HttpStatusCode.OK, responseBody)));
         PartiesAdminPortalApiClient client = CreateClient(handler);
@@ -128,7 +131,7 @@ public sealed class AdminPortalQueryContractTests
                 TotalCount = 1,
                 TotalPages = 1,
             },
-            status = "local-only",
+            status = "LocalOnly",
             degradedReason = "rich-search-disabled",
         };
         var handler = new AdminPortalHandler((_, _) => Task.FromResult(JsonResponse(HttpStatusCode.OK, responseBody)));

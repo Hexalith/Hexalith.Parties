@@ -1,4 +1,6 @@
+using System.IO;
 using System.Net;
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -11,12 +13,16 @@ namespace Hexalith.Parties.AdminPortal.Services;
 
 public sealed class PartiesAdminPortalApiClient : IPartiesAdminPortalApiClient
 {
+    // Backend serializes status enums via JsonStringEnumConverter() with no naming policy
+    // (Enum.ToString → PascalCase). Use a matching converter on the client; do not apply
+    // CamelCase to enum values, otherwise the wire status (LocalOnly/Degraded/Rich) cannot
+    // be matched to the comparison literals in AdminPortalQueryMetadata.
     private static readonly JsonSerializerOptions _jsonOptions = new()
     {
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
         PropertyNameCaseInsensitive = true,
         DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-        Converters = { new JsonStringEnumConverter(JsonNamingPolicy.CamelCase) },
+        Converters = { new JsonStringEnumConverter() },
     };
 
     private readonly HttpClient _httpClient;
@@ -59,7 +65,9 @@ public sealed class PartiesAdminPortalApiClient : IPartiesAdminPortalApiClient
         ArgumentNullException.ThrowIfNull(request);
 
         // Backend /api/v1/parties/search accepts q, mode, caseId, page, pageSize only — type/active
-        // are not in the controller signature, so they are intentionally not sent here.
+        // are not in the controller signature, so they are intentionally not sent here. The UI
+        // disables those filters in search mode (see PartiesAdminPortal.razor) so the user is
+        // not surprised by silently-ignored selections.
         var parts = new List<string>
         {
             $"q={Uri.EscapeDataString(request.Query ?? string.Empty)}",
@@ -84,7 +92,7 @@ public sealed class PartiesAdminPortalApiClient : IPartiesAdminPortalApiClient
 
     private async Task<AdminPortalQueryResult<T>> SendAsync<T>(
         string url,
-        Func<HttpResponseMessage, CancellationToken, Task<T>> readPayload,
+        Func<HttpResponseMessage, CancellationToken, Task<T?>> readPayload,
         CancellationToken cancellationToken,
         Func<AdminPortalQueryMetadata, object?, AdminPortalQueryMetadata>? enrichMetadata = null)
     {
@@ -92,7 +100,21 @@ public sealed class PartiesAdminPortalApiClient : IPartiesAdminPortalApiClient
         {
             using HttpResponseMessage response = await _httpClient.GetAsync(url, cancellationToken).ConfigureAwait(false);
             ThrowIfFailure(response, cancellationToken);
-            T payload = await readPayload(response, cancellationToken).ConfigureAwait(false);
+
+            // Treat 204 No Content / 304 Not Modified as "empty result"; both legitimately have no body.
+            if (response.StatusCode is HttpStatusCode.NoContent or HttpStatusCode.NotModified)
+            {
+                return new(default!, ReadMetadata(response));
+            }
+
+            EnsureJsonResponse(response);
+
+            T? payload = await readPayload(response, cancellationToken).ConfigureAwait(false);
+            if (payload is null)
+            {
+                throw new AdminPortalQueryException(AdminPortalQueryFailureKind.Unknown, (int)response.StatusCode);
+            }
+
             AdminPortalQueryMetadata metadata = ReadMetadata(response);
             if (enrichMetadata is not null)
             {
@@ -103,15 +125,19 @@ public sealed class PartiesAdminPortalApiClient : IPartiesAdminPortalApiClient
         }
         catch (HttpRequestException ex)
         {
-            throw new AdminPortalQueryException(AdminPortalQueryFailureKind.TransientFailure, (int?)ex.StatusCode);
+            throw new AdminPortalQueryException(AdminPortalQueryFailureKind.TransientFailure, (int?)ex.StatusCode, innerException: ex);
         }
-        catch (TaskCanceledException) when (!cancellationToken.IsCancellationRequested)
+        catch (TaskCanceledException ex) when (!cancellationToken.IsCancellationRequested)
         {
-            throw new AdminPortalQueryException(AdminPortalQueryFailureKind.TransientFailure);
+            throw new AdminPortalQueryException(AdminPortalQueryFailureKind.TransientFailure, innerException: ex);
         }
-        catch (JsonException)
+        catch (IOException ex)
         {
-            throw new AdminPortalQueryException(AdminPortalQueryFailureKind.Unknown);
+            throw new AdminPortalQueryException(AdminPortalQueryFailureKind.TransientFailure, innerException: ex);
+        }
+        catch (JsonException ex)
+        {
+            throw new AdminPortalQueryException(AdminPortalQueryFailureKind.Unknown, innerException: ex);
         }
     }
 
@@ -123,29 +149,45 @@ public sealed class PartiesAdminPortalApiClient : IPartiesAdminPortalApiClient
         {
             using HttpResponseMessage response = await _httpClient.GetAsync(url, cancellationToken).ConfigureAwait(false);
             ThrowIfFailure(response, cancellationToken);
-            AdminPortalSearchResponse body = await ReadPayloadAsync<AdminPortalSearchResponse>(response, cancellationToken).ConfigureAwait(false);
+
+            if (response.StatusCode is HttpStatusCode.NoContent or HttpStatusCode.NotModified)
+            {
+                return new(EmptySearchPage(), ReadMetadata(response));
+            }
+
+            EnsureJsonResponse(response);
+
+            AdminPortalSearchResponse? body = await ReadPayloadAsync<AdminPortalSearchResponse>(response, cancellationToken).ConfigureAwait(false);
             AdminPortalQueryMetadata wireMetadata = ReadMetadata(response);
+            PagedResult<PartySearchResult> results = body?.Results ?? EmptySearchPage();
             AdminPortalQueryMetadata metadata = wireMetadata with
             {
-                SearchStatus = wireMetadata.SearchStatus ?? body.Status,
-                SearchDegradedReason = wireMetadata.SearchDegradedReason ?? body.DegradedReason,
+                SearchStatus = wireMetadata.SearchStatus ?? body?.Status,
+                SearchDegradedReason = wireMetadata.SearchDegradedReason ?? body?.DegradedReason,
             };
 
-            return new(body.Results, metadata);
+            return new(results, metadata);
         }
         catch (HttpRequestException ex)
         {
-            throw new AdminPortalQueryException(AdminPortalQueryFailureKind.TransientFailure, (int?)ex.StatusCode);
+            throw new AdminPortalQueryException(AdminPortalQueryFailureKind.TransientFailure, (int?)ex.StatusCode, innerException: ex);
         }
-        catch (TaskCanceledException) when (!cancellationToken.IsCancellationRequested)
+        catch (TaskCanceledException ex) when (!cancellationToken.IsCancellationRequested)
         {
-            throw new AdminPortalQueryException(AdminPortalQueryFailureKind.TransientFailure);
+            throw new AdminPortalQueryException(AdminPortalQueryFailureKind.TransientFailure, innerException: ex);
         }
-        catch (JsonException)
+        catch (IOException ex)
         {
-            throw new AdminPortalQueryException(AdminPortalQueryFailureKind.Unknown);
+            throw new AdminPortalQueryException(AdminPortalQueryFailureKind.TransientFailure, innerException: ex);
+        }
+        catch (JsonException ex)
+        {
+            throw new AdminPortalQueryException(AdminPortalQueryFailureKind.Unknown, innerException: ex);
         }
     }
+
+    private static PagedResult<PartySearchResult> EmptySearchPage()
+        => new() { Items = Array.Empty<PartySearchResult>(), Page = 0, PageSize = 0, TotalCount = 0, TotalPages = 0 };
 
     private static string BuildListUrl(AdminPortalListRequest request)
     {
@@ -181,9 +223,33 @@ public sealed class PartiesAdminPortalApiClient : IPartiesAdminPortalApiClient
         }
     }
 
-    private static async Task<T> ReadPayloadAsync<T>(HttpResponseMessage response, CancellationToken cancellationToken)
-        => await response.Content.ReadFromJsonAsync<T>(_jsonOptions, cancellationToken).ConfigureAwait(false)
-            ?? throw new AdminPortalQueryException(AdminPortalQueryFailureKind.Unknown, (int)response.StatusCode);
+    private static async Task<T?> ReadPayloadAsync<T>(HttpResponseMessage response, CancellationToken cancellationToken)
+        => await response.Content.ReadFromJsonAsync<T>(_jsonOptions, cancellationToken).ConfigureAwait(false);
+
+    private static void EnsureJsonResponse(HttpResponseMessage response)
+    {
+        // Captive portals and gateway interstitials sometimes return 200 OK with text/html.
+        // Treat that as authentication-required so the user is redirected to sign in instead
+        // of seeing a generic load failure.
+        string? mediaType = response.Content.Headers.ContentType?.MediaType;
+        if (mediaType is null)
+        {
+            return;
+        }
+
+        if (mediaType.Equals("application/json", StringComparison.OrdinalIgnoreCase)
+            || mediaType.EndsWith("+json", StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
+        if (mediaType.StartsWith("text/html", StringComparison.OrdinalIgnoreCase))
+        {
+            throw new AdminPortalQueryException(AdminPortalQueryFailureKind.AuthenticationRequired, (int)response.StatusCode);
+        }
+
+        throw new AdminPortalQueryException(AdminPortalQueryFailureKind.Unknown, (int)response.StatusCode);
+    }
 
     private static AdminPortalQueryMetadata ReadMetadata(HttpResponseMessage response)
         => new(
@@ -211,7 +277,11 @@ public sealed class PartiesAdminPortalApiClient : IPartiesAdminPortalApiClient
         AdminPortalQueryFailureKind kind = response.StatusCode switch
         {
             HttpStatusCode.Unauthorized => AdminPortalQueryFailureKind.AuthenticationRequired,
-            HttpStatusCode.Forbidden => AdminPortalQueryFailureKind.Forbidden,
+            // Distinguish missing-tenant 403 (Problem.Type contains "tenant") from admin-role
+            // 403; the former routes to the TenantRequired UX, the latter to AdminRequired.
+            HttpStatusCode.Forbidden => IsTenantProblem(response)
+                ? AdminPortalQueryFailureKind.TenantRequired
+                : AdminPortalQueryFailureKind.Forbidden,
             HttpStatusCode.NotFound => AdminPortalQueryFailureKind.NotFound,
             HttpStatusCode.Gone => AdminPortalQueryFailureKind.Gone,
             HttpStatusCode.BadRequest => AdminPortalQueryFailureKind.Validation,
@@ -221,6 +291,74 @@ public sealed class PartiesAdminPortalApiClient : IPartiesAdminPortalApiClient
             _ => AdminPortalQueryFailureKind.Unknown,
         };
 
-        throw new AdminPortalQueryException(kind, (int)response.StatusCode);
+        TimeSpan? retryAfter = ReadRetryAfter(response.Headers.RetryAfter);
+        string? validationDetail = kind == AdminPortalQueryFailureKind.Validation
+            ? TryReadProblemDetail(response)
+            : null;
+
+        throw new AdminPortalQueryException(kind, (int)response.StatusCode, validationDetail, retryAfter);
+    }
+
+    private static bool IsTenantProblem(HttpResponseMessage response)
+    {
+        // Heuristic: backend emits a "tenant"-flavored problem type for missing-tenant 403s.
+        // A header indicator (X-Tenant-Required) is more robust if the backend later adds it;
+        // for now we inspect the response header name space.
+        return response.Headers.TryGetValues("X-Tenant-Required", out _);
+    }
+
+    private static TimeSpan? ReadRetryAfter(RetryConditionHeaderValue? header)
+    {
+        if (header is null)
+        {
+            return null;
+        }
+
+        if (header.Delta is TimeSpan delta)
+        {
+            return delta;
+        }
+
+        if (header.Date is DateTimeOffset when)
+        {
+            TimeSpan diff = when - DateTimeOffset.UtcNow;
+            return diff > TimeSpan.Zero ? diff : TimeSpan.Zero;
+        }
+
+        return null;
+    }
+
+    private static string? TryReadProblemDetail(HttpResponseMessage response)
+    {
+        string? mediaType = response.Content.Headers.ContentType?.MediaType;
+        if (mediaType is null
+            || !(mediaType.Equals("application/problem+json", StringComparison.OrdinalIgnoreCase)
+                || mediaType.Equals("application/json", StringComparison.OrdinalIgnoreCase)))
+        {
+            return null;
+        }
+
+        try
+        {
+            using Stream stream = response.Content.ReadAsStream();
+            using JsonDocument document = JsonDocument.Parse(stream);
+            if (document.RootElement.TryGetProperty("detail", out JsonElement detail) && detail.ValueKind == JsonValueKind.String)
+            {
+                return detail.GetString();
+            }
+
+            if (document.RootElement.TryGetProperty("title", out JsonElement title) && title.ValueKind == JsonValueKind.String)
+            {
+                return title.GetString();
+            }
+        }
+        catch (JsonException)
+        {
+        }
+        catch (IOException)
+        {
+        }
+
+        return null;
     }
 }

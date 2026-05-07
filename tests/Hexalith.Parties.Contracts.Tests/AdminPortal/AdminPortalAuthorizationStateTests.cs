@@ -80,7 +80,9 @@ public sealed class AdminPortalAuthorizationStateTests
     {
         // AC7 + Implementation Guardrails: cached rows must not survive 401, 403, missing
         // tenant, or tenant-switch failures. The query service exposed to portal pages must
-        // be tenant-scoped (not singleton) so that scope disposal removes cached state.
+        // be tenant-scoped (not singleton) so that scope disposal removes cached state. We
+        // verify both disposability AND the DI lifetime by reflectively reading the
+        // ServiceDescriptor that the AddHexalithPartiesAdminPortal extension registers.
         Assembly portal = LoadPortalAssembly();
 
         Type queryService = portal.GetTypes()
@@ -96,6 +98,59 @@ public sealed class AdminPortalAuthorizationStateTests
 
         disposable.ShouldBeTrue(
             "AdminPortalPartyQueryService must implement IDisposable/IAsyncDisposable to drop cached state on tenant switch.");
+
+        // Verify the DI registration lifetime via the public extension, using reflection
+        // so this test project stays framework-free. Loads Microsoft.Extensions.DependencyInjection
+        // at runtime, invokes AddHexalithPartiesAdminPortal on a fresh ServiceCollection,
+        // and reads the resulting ServiceDescriptor.Lifetime for AdminPortalPartyQueryService.
+        VerifyScopedLifetime(portal, queryService);
+    }
+
+    private static void VerifyScopedLifetime(Assembly portal, Type queryService)
+    {
+        Type extensionsType = portal.GetTypes()
+            .FirstOrDefault(t => t.Name == "PartiesAdminPortalServiceCollectionExtensions")
+            ?? throw new InvalidOperationException(
+                "AdminPortal must expose PartiesAdminPortalServiceCollectionExtensions.");
+
+        MethodInfo addMethod = extensionsType
+            .GetMethod("AddHexalithPartiesAdminPortal", BindingFlags.Public | BindingFlags.Static)
+            ?? throw new InvalidOperationException(
+                "AddHexalithPartiesAdminPortal extension method must exist.");
+
+        Type serviceCollectionType = Type.GetType(
+            "Microsoft.Extensions.DependencyInjection.ServiceCollection, Microsoft.Extensions.DependencyInjection",
+            throwOnError: false)
+            ?? throw new InvalidOperationException(
+                "Microsoft.Extensions.DependencyInjection.ServiceCollection must be loadable to verify lifetimes.");
+
+        object services = Activator.CreateInstance(serviceCollectionType)
+            ?? throw new InvalidOperationException("Failed to create ServiceCollection.");
+
+        addMethod.Invoke(null, [services]);
+
+        Type descriptorType = Type.GetType(
+            "Microsoft.Extensions.DependencyInjection.ServiceDescriptor, Microsoft.Extensions.DependencyInjection.Abstractions",
+            throwOnError: false)
+            ?? throw new InvalidOperationException(
+                "Microsoft.Extensions.DependencyInjection.ServiceDescriptor must be loadable.");
+
+        PropertyInfo serviceTypeProp = descriptorType.GetProperty("ServiceType")
+            ?? throw new InvalidOperationException("ServiceDescriptor.ServiceType must exist.");
+        PropertyInfo lifetimeProp = descriptorType.GetProperty("Lifetime")
+            ?? throw new InvalidOperationException("ServiceDescriptor.Lifetime must exist.");
+
+        object? descriptor = ((System.Collections.IEnumerable)services)
+            .Cast<object>()
+            .FirstOrDefault(d => (Type)serviceTypeProp.GetValue(d)! == queryService);
+
+        descriptor.ShouldNotBeNull(
+            "AdminPortalPartyQueryService must be registered by AddHexalithPartiesAdminPortal.");
+
+        object lifetime = lifetimeProp.GetValue(descriptor)!;
+        lifetime.ToString().ShouldBe(
+            "Scoped",
+            "AdminPortalPartyQueryService must be registered as Scoped (per-circuit) so tenant switches drop cached state.");
     }
 
     [Fact]

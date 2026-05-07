@@ -169,4 +169,36 @@ public sealed record AdminPortalLabels
     public string DetailErased { get; init; } = "The selected party is erased or no longer inspectable";
 
     public string DetailLoadFailure { get; init; } = "Detail could not be loaded";
+
+    public string DetailLoading { get; init; } = "Loading party detail";
+
+    public string MissingDate { get; init; } = "—";
+
+    public string ContactPreferred { get; init; } = "Preferred";
+
+    public string ContactStandard { get; init; } = "Standard";
+
+    public string ConsentActive { get; init; } = "Active";
+
+    public string ConsentRevoked { get; init; } = "Revoked";
+
+    public string ValidationProblemPrefix { get; init; } = "Validation";
+
+    public string PartyTypeLabel(string typeName) => typeName switch
+    {
+        "Person" => PersonOption,
+        "Organization" => OrganizationOption,
+        _ => typeName,
+    };
+
+    // The four enum-translation hooks below are virtual seams for hosts that need to localize
+    // contract enum values. Default implementation is identity; overriding requires a derived
+    // record. Kept as instance methods (not static) so a subclass record can override them.
+#pragma warning disable CA1822 // Members do not access instance data — intentional for override seam.
+    public string ContactChannelTypeLabel(string typeName) => typeName;
+
+    public string IdentifierTypeLabel(string typeName) => typeName;
+
+    public string ConsentPurposeLabel(string purposeName) => purposeName;
+#pragma warning restore CA1822
 }

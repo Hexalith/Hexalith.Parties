@@ -35,7 +35,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-05-02
-last_updated: 2026-05-07T23:55:00+02:00
+last_updated: 2026-05-07
 project: Hexalith.Parties
 project_key: NOKEY
 tracking_system: file-system
@@ -124,9 +124,10 @@ development_status:
   11-4-tenants-integration-tests-deployment-validation-and-documentation: done
   epic-11-retrospective: optional
 
-  # Epic 10: Administration & Frontend (v1.2) (3 stories)
+  # Epic 10: Administration & Frontend (v1.2) (4 stories — 10-1-1 added by pass-2 review)
   epic-10: in-progress
-  10-1-admin-portal-browse-search-and-inspect: review
+  10-1-admin-portal-browse-search-and-inspect: done
+  10-1-1-admin-portal-frontcomposer-and-tenants-integration: backlog
   10-2-admin-portal-gdpr-operations: ready-for-dev
   10-3-embeddable-party-picker-component: in-progress
   epic-10-retrospective: optional

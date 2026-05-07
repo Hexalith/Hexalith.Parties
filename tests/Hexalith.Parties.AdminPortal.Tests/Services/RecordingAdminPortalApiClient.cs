@@ -35,7 +35,10 @@ internal sealed class RecordingAdminPortalApiClient : IPartiesAdminPortalApiClie
 
     public Task<AdminPortalQueryResult<PagedResult<PartyIndexEntry>>> ListPartiesAsync(AdminPortalListRequest request, CancellationToken cancellationToken)
     {
-        ListRequests.Add(request with { PageSize = AdminPortalQueryBounds.BoundPageSize(request.PageSize) });
+        // Record the request as supplied — do not re-bound page-size; tests must assert what
+        // the component actually sends so a missing component-side bound surfaces as a test
+        // failure rather than being silently masked by stub coercion (P20).
+        ListRequests.Add(request);
         return _listResponses.Count == 0
             ? Task.FromResult(new AdminPortalQueryResult<PagedResult<PartyIndexEntry>>(Empty<PartyIndexEntry>(), AdminPortalQueryMetadata.Empty))
             : _listResponses.Dequeue()(cancellationToken);
@@ -43,7 +46,7 @@ internal sealed class RecordingAdminPortalApiClient : IPartiesAdminPortalApiClie
 
     public Task<AdminPortalQueryResult<PagedResult<PartySearchResult>>> SearchPartiesAsync(AdminPortalSearchRequest request, CancellationToken cancellationToken)
     {
-        SearchRequests.Add(request with { PageSize = AdminPortalQueryBounds.BoundPageSize(request.PageSize) });
+        SearchRequests.Add(request);
         return _searchResponses.Count == 0
             ? Task.FromResult(new AdminPortalQueryResult<PagedResult<PartySearchResult>>(Empty<PartySearchResult>(), AdminPortalQueryMetadata.Empty))
             : _searchResponses.Dequeue()(cancellationToken);

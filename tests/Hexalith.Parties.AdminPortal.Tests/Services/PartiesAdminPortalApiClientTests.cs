@@ -32,7 +32,7 @@ public sealed class PartiesAdminPortalApiClientTests
             {
                 ["X-Service-Degraded"] = "true",
                 ["X-Stale-Data-Age"] = "PT12S",
-                ["X-Parties-Search-Status"] = "local-only",
+                ["X-Parties-Search-Status"] = "LocalOnly",
                 ["X-Parties-Search-Degraded-Reason"] = longReason,
             });
         PartiesAdminPortalApiClient client = CreateClient(handler);
@@ -47,7 +47,8 @@ public sealed class PartiesAdminPortalApiClientTests
         handler.LastRequest.RequestUri.Query.ShouldContain("active=true");
         result.Metadata.ServiceDegraded.ShouldBe(true);
         result.Metadata.StaleDataAge.ShouldBe("PT12S");
-        result.Metadata.SearchStatus.ShouldBe("local-only");
+        result.Metadata.SearchStatus.ShouldBe("LocalOnly");
+        result.Metadata.IsLocalOnlySearch.ShouldBeTrue();
         result.Metadata.SearchDegradedReason!.Length.ShouldBe(128);
     }
 
@@ -72,7 +73,7 @@ public sealed class PartiesAdminPortalApiClientTests
                 Matches = [],
                 RelevanceScore = 0.9,
             }),
-            status = "localOnly",
+            status = "LocalOnly",
             degradedReason = "rich-search-disabled",
         };
         var handler = new RecordingHttpMessageHandler(
@@ -80,7 +81,7 @@ public sealed class PartiesAdminPortalApiClientTests
             JsonSerializer.Serialize(responseBody, _jsonOptions),
             new Dictionary<string, string>
             {
-                ["X-Parties-Search-Status"] = "local-only",
+                ["X-Parties-Search-Status"] = "LocalOnly",
             });
         PartiesAdminPortalApiClient client = CreateClient(handler);
 
@@ -96,8 +97,9 @@ public sealed class PartiesAdminPortalApiClientTests
         handler.LastRequest.RequestUri.Query.ShouldNotContain("type=");
         handler.LastRequest.RequestUri.Query.ShouldNotContain("active=");
         result.Payload.Items.ShouldHaveSingleItem();
-        result.Payload.Items[0].Party.DisplayName.ShouldBe("Ada Lovelace");
-        result.Metadata.SearchStatus.ShouldBe("local-only");
+        result.Payload.Items[0].Party!.DisplayName.ShouldBe("Ada Lovelace");
+        result.Metadata.SearchStatus.ShouldBe("LocalOnly");
+        result.Metadata.IsLocalOnlySearch.ShouldBeTrue();
     }
 
     [Fact]

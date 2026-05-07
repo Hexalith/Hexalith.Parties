@@ -67,15 +67,13 @@ public sealed class PartiesAdminPortalComponentTests : BunitContext
             Party = IndexEntry("party-2", "Grace Hopper", PartyType.Person, true),
             Matches = [],
             RelevanceScore = 1.0,
-        }), new AdminPortalQueryMetadata(SearchStatus: "local-only", SearchDegradedReason: "rich-search-disabled"));
+        }), new AdminPortalQueryMetadata(SearchStatus: "LocalOnly", SearchDegradedReason: "rich-search-disabled"));
         Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
 
         IRenderedComponent<PartiesAdminPortal> cut = RenderAuthorized("scope-a", pageSize: 250);
 
         cut.WaitForAssertion(() => api.ListRequests.Count.ShouldBe(1));
         cut.Find("input[type=\"search\"]").Input("grace@example.test");
-        cut.Find("select[aria-label=\"Party type\"]").Change("Person");
-        cut.Find("select[aria-label=\"Active state\"]").Change("true");
         cut.Find("button[type=\"submit\"]").Click();
 
         cut.WaitForAssertion(() =>
@@ -87,8 +85,14 @@ public sealed class PartiesAdminPortalComponentTests : BunitContext
         AdminPortalSearchRequest search = api.SearchRequests.Single();
         search.Query.ShouldBe("grace@example.test");
         search.PageSize.ShouldBe(100);
-        search.Type.ShouldBe(PartyType.Person);
-        search.Active.ShouldBe(true);
+        // Type/Active intentionally not forwarded to /api/v1/parties/search — backend does
+        // not accept them. UI disables the filter selects in search mode (D2.1) so the user
+        // sees the constraint rather than a silently-ignored selection.
+        search.Type.ShouldBeNull();
+        search.Active.ShouldBeNull();
+        // Filter selects must be disabled while the query is non-empty.
+        cut.Find("select[aria-label=\"Party type\"]").HasAttribute("disabled").ShouldBeTrue();
+        cut.Find("select[aria-label=\"Active state\"]").HasAttribute("disabled").ShouldBeTrue();
     }
 
     [Fact]
@@ -175,7 +179,8 @@ public sealed class PartiesAdminPortalComponentTests : BunitContext
             cut.Markup.ShouldContain("Restrictions");
             cut.Markup.ShouldContain("Restricted at");
             cut.Markup.ShouldContain("System metadata");
-            cut.Markup.ShouldContain("party-3b");
+            // Scoped party id is intentionally not rendered as a user-facing label (D3.1).
+            cut.Markup.ShouldNotContain("party-3b");
             cut.Markup.ShouldContain("Lovelace, Ada");
             cut.Markup.ShouldContain("Name history");
             cut.Markup.ShouldContain("Ada Byron");
@@ -403,6 +408,101 @@ public sealed class PartiesAdminPortalComponentTests : BunitContext
             cut.Markup.ShouldContain("Personne");
             cut.Markup.ShouldContain("Organisation");
         });
+    }
+
+    [Fact]
+    public void PartiesAdminPortal_CrossTenantScopedId_DetailReturnsForbiddenAndRowIsHidden()
+    {
+        // Task line 100: cross-tenant scoped ids must be rejected or hidden consistent with
+        // PartiesController.GetPartyAsync. The portal accepts the id from the row click,
+        // but the backend returns Forbidden — UI shows "Access denied" without leaking
+        // the scoped id into a detail field, and browse context remains intact.
+        var api = new RecordingAdminPortalApiClient();
+        api.EnqueueList(Page(IndexEntry("tenant-other:party:p-99", "Visible Row", PartyType.Person, true)));
+        api.EnqueueDetailFailure(AdminPortalQueryFailureKind.Forbidden);
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+
+        IRenderedComponent<PartiesAdminPortal> cut = RenderAuthorized("scope-a");
+        cut.WaitForAssertion(() => cut.Markup.ShouldContain("Visible Row"));
+        cut.Find("tbody button").Click();
+
+        cut.WaitForAssertion(() =>
+        {
+            cut.Markup.ShouldContain("Access denied");
+            cut.Markup.ShouldContain("Visible Row");
+            // Scoped id must never appear in detail fields; D3.1 also prohibits it from the
+            // System metadata block.
+            cut.Markup.ShouldNotContain("tenant-other:party:p-99</dd>");
+            cut.Markup.ShouldNotContain("tenant-other:party:p-99</dt>");
+        });
+    }
+
+    [Fact]
+    public void PartiesAdminPortal_KeyboardNavigation_TabReachesSearchFiltersAndRows()
+    {
+        // P39: validate that the toolbar / list / paging surface is keyboard-reachable.
+        // Native HTML `<input>`, `<select>`, `<button>` are tab-focusable by default; this
+        // test pins the affordances and tab-order semantics so a future refactor cannot
+        // introduce role="presentation" or tabindex="-1" regressions silently.
+        var api = new RecordingAdminPortalApiClient();
+        api.EnqueueList(Page(IndexEntry("party-kbd", "Keyboard Row", PartyType.Person, true)));
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+
+        IRenderedComponent<PartiesAdminPortal> cut = RenderAuthorized("scope-a");
+        cut.WaitForAssertion(() => cut.Markup.ShouldContain("Keyboard Row"));
+
+        // Search input is a native focusable element with no overriding tabindex.
+        var searchInput = cut.Find("input[type=\"search\"]");
+        searchInput.HasAttribute("tabindex").ShouldBeFalse();
+
+        // Type and active filter selects are reachable.
+        cut.Find("select[aria-label=\"Party type\"]").HasAttribute("tabindex").ShouldBeFalse();
+        cut.Find("select[aria-label=\"Active state\"]").HasAttribute("tabindex").ShouldBeFalse();
+
+        // Submit and Clear buttons are reachable.
+        cut.FindAll("button[type=\"submit\"]").Count.ShouldBe(1);
+
+        // Each row's display-name button is keyboard-reachable.
+        cut.Find("tbody button").HasAttribute("tabindex").ShouldBeFalse();
+
+        // Pagination buttons are keyboard-reachable (state-disabled is acceptable).
+        cut.FindAll("nav.hx-parties-admin__paging button").Count.ShouldBeGreaterThan(0);
+    }
+
+    [Fact]
+    public void PartiesAdminPortal_StatusBadges_ColorIndependentTextDistinguishesStates()
+    {
+        // P39 / Task line 110: active/erased/inactive states must NOT be distinguished by
+        // color alone. Verify each carries text content sufficient for a screen reader.
+        // (PartyIndexEntry does not carry IsRestricted; restricted state is a detail-panel
+        // concern only.)
+        var api = new RecordingAdminPortalApiClient();
+        api.EnqueueList(new PagedResult<PartyIndexEntry>
+        {
+            Items =
+            [
+                IndexEntry("p-active", "Active Row", PartyType.Person, true),
+                IndexEntry("p-inactive", "Inactive Row", PartyType.Person, false),
+            ],
+            Page = 1,
+            PageSize = 20,
+            TotalCount = 2,
+            TotalPages = 1,
+        });
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+
+        IRenderedComponent<PartiesAdminPortal> cut = RenderAuthorized("scope-a");
+        cut.WaitForAssertion(() => cut.FindAll("td span.hx-parties-admin__badge").Count.ShouldBe(2));
+
+        var badges = cut.FindAll("td span.hx-parties-admin__badge").Select(b => b.TextContent.Trim()).ToList();
+        badges.ShouldContain("Active");
+        badges.ShouldContain("Inactive");
+
+        // Each badge has aria-label matching its visible text — screen readers read the same content.
+        foreach (var badge in cut.FindAll("td span.hx-parties-admin__badge"))
+        {
+            badge.GetAttribute("aria-label").ShouldBe(badge.TextContent.Trim());
+        }
     }
 
     private IRenderedComponent<PartiesAdminPortal> RenderAuthorized(string contextKey, int pageSize = AdminPortalQueryBounds.DefaultPageSize)
