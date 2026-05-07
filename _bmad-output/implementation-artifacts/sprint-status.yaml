@@ -1,5 +1,5 @@
 # generated: 2026-05-02
-# last_updated: 2026-05-07  (story 10-1 moved in-progress→review after resolving remaining P16, P17, P20, P25, P29-P31, and P34-P37 review patches; focused AdminPortal/Client/Contracts tests and solution build passed. Full solution test still has unrelated Integration AdminEndpoint 403 failure. Earlier same-day update: story 11-4 moved to done after pass-2 bmad-code-review applied 36 patches, deferred 7, dismissed 7.)
+# last_updated: 2026-05-07  (story 11-1 moved review→done after bmad-code-review applied 7 patches across decisions and direct fixes: opt-in `Tenants:Enabled` base default, shared state-store `keyPrefix=none` propagation, bounded HttpClient timeout, cancellation rethrow, AC2 manual-bootstrap docs, switchable tenants readiness probe + `/ready=503` integration test; 5 items deferred. Focused CommandApi tests 23/23 passing; AppHost and CommandApi build clean. Earlier same-day updates: story 11-1 moved blocked→review; story 10-1 moved in-progress→review; story 11-4 moved to done.)
 # project: Hexalith.Parties
 # project_key: NOKEY
 # tracking_system: file-system
@@ -35,7 +35,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-05-02
-last_updated: 2026-05-07T22:30:00+02:00
+last_updated: 2026-05-07T23:55:00+02:00
 project: Hexalith.Parties
 project_key: NOKEY
 tracking_system: file-system
@@ -118,7 +118,7 @@ development_status:
 
   # Epic 11: Hexalith.Tenants Integration for Parties (4 stories)
   epic-11: in-progress
-  11-1-apphost-and-package-integration: blocked
+  11-1-apphost-and-package-integration: done
   11-2-tenants-event-consumption-and-local-access-projection: done
   11-3-rest-and-mcp-tenant-authorization-enforcement: done
   11-4-tenants-integration-tests-deployment-validation-and-documentation: done

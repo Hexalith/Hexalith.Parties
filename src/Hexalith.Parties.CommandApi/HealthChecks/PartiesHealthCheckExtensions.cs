@@ -1,6 +1,9 @@
 using Dapr.Client;
 
+using Hexalith.Parties.CommandApi.Configuration;
+
 using Microsoft.Extensions.Diagnostics.HealthChecks;
+using Microsoft.Extensions.Options;
 
 namespace Hexalith.Parties.CommandApi.HealthChecks;
 
@@ -48,6 +51,14 @@ public static class PartiesHealthCheckExtensions
                 failureStatus: HealthStatus.Degraded,
                 tags: [],
                 timeout: healthCheckTimeout)
+            .Add(new HealthCheckRegistration(
+                "tenants-integration",
+                sp => new TenantsIntegrationHealthCheck(
+                    sp.GetRequiredService<IOptions<TenantIntegrationOptions>>(),
+                    sp.GetRequiredService<ITenantsReadinessProbe>()),
+                failureStatus: HealthStatus.Unhealthy,
+                tags: ["ready"],
+                timeout: healthCheckTimeout))
             .AddCheck<MemoriesSearchHealthCheck>(
                 "memories-search",
                 failureStatus: HealthStatus.Degraded,

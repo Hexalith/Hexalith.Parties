@@ -2,6 +2,14 @@
 
 Items raised during code review that are real but not actionable in the current story. Pick up in a follow-up story or hardening sprint.
 
+## Deferred from: code review of 11-1-apphost-and-package-integration (2026-05-07)
+
+- AppHost env-vars on `commandapi` duplicate `appsettings.json` Tenants values; env-var precedence makes JSON values dead under AppHost. Future maintenance trap; pre-existing pattern. [src/Hexalith.Parties.AppHost/Program.cs:48-52]
+- `ValidateOnStart` eagerness for `TenantIntegrationOptions` is not asserted by any test. Likely fires correctly under modern .NET host, but if validation falls back to lazy on `IOptions.Value`, missing config surfaces as a 500 from `/ready` rather than a startup crash. Add a startup-fail integration test in a hardening pass. [src/Hexalith.Parties.CommandApi/Extensions/PartiesServiceCollectionExtensions.cs:79-82]
+- `WaitFor(tenantsResources.CommandApi)` waits on the project resource, not the Tenants DAPR sidecar. First N readiness probes after startup may race app-id resolution, briefly returning `/ready=503`. Pre-existing Aspire pattern across sibling stories. [src/Hexalith.Parties.AppHost/Program.cs:45-46]
+- `Uri.EscapeDataString(serviceName)` does not validate that the service name is a syntactically valid DAPR app id. Typos like `tenants/` or `tenants:dev` percent-encode and surface as opaque "not ready" instead of a clear configuration error. Low impact. [src/Hexalith.Parties.CommandApi/HealthChecks/TenantsIntegrationHealthCheck.cs:25-26]
+- Integration test fake `HealthyTenantsReadinessProbe` uses `RemoveAll().Add()`, which is a no-op if a future regression drops the production `ITenantsReadinessProbe` registration. Add a guard test asserting the production registration exists. [tests/Hexalith.Parties.CommandApi.Tests/HealthChecks/HealthEndpointIntegrationTests.cs:336-348]
+
 ## Deferred from: code review of 10-1-admin-portal-browse-search-and-inspect (2026-05-07)
 
 - `AdminPortalQueryBounds.BoundPage` has no upper limit; `_page` could overflow with `int.MaxValue` clicks. Defensive only; not realistic at human click rate. [src/Hexalith.Parties.AdminPortal/Services/AdminPortalQueryBounds.cs]

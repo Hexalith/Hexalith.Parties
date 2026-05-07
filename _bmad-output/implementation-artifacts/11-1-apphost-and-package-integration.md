@@ -1,6 +1,6 @@
 # Story 11.1: AppHost and Package Integration
 
-Status: blocked
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -19,34 +19,34 @@ so that tenant lifecycle and membership are available through the same local top
 
 ## Tasks / Subtasks
 
-- [ ] Compose Hexalith.Tenants into the Parties AppHost topology (AC: 1)
-  - [ ] Add project references needed by `src/Hexalith.Parties.AppHost` to use `Hexalith.Tenants.Aspire` and the Tenants service project.
-  - [ ] Reuse `Hexalith.Tenants.Aspire.HexalithTenantsExtensions.AddHexalithTenants`; do not recreate Tenants state store/pubsub wiring by hand unless the Tenants Aspire API is unusable.
-  - [ ] Ensure the Tenants resource appears with a stable Aspire resource name, preferably `tenants`, and the existing `commandapi` resource keeps its current DAPR app id as the EventStore command gateway hosting Parties module handlers.
-  - [ ] Wire the `commandapi` EventStore command gateway to the Tenants resource with `WithReference(...)` and `WaitFor(...)` or an equivalent health-gated dependency, without breaking the existing EventStore topology created by `AddHexalithParties`.
-  - [ ] Keep the local access-control path resolution intact; if touched, prefer the Tenants AppHost `ResolveDaprConfigPath(builder.AppHostDirectory, ...)` pattern because it works under both `dotnet run` and Aspire testing.
+- [x] Compose Hexalith.Tenants into the Parties AppHost topology (AC: 1)
+  - [x] Add project references needed by `src/Hexalith.Parties.AppHost` to use `Hexalith.Tenants.Aspire` and the Tenants service project.
+  - [x] Reuse `Hexalith.Tenants.Aspire.HexalithTenantsExtensions.AddHexalithTenants`; do not recreate Tenants state store/pubsub wiring by hand unless the Tenants Aspire API is unusable.
+  - [x] Ensure the Tenants resource appears with a stable Aspire resource name, preferably `tenants`, and the existing `commandapi` resource keeps its current DAPR app id as the EventStore command gateway hosting Parties module handlers.
+  - [x] Wire the `commandapi` EventStore command gateway to the Tenants resource with `WithReference(...)` and `WaitFor(...)` or an equivalent health-gated dependency, without breaking the existing EventStore topology created by `AddHexalithParties`.
+  - [x] Keep the local access-control path resolution intact; if touched, prefer the Tenants AppHost `ResolveDaprConfigPath(builder.AppHostDirectory, ...)` pattern because it works under both `dotnet run` and Aspire testing.
 
-- [ ] Align local development bootstrap/configuration (AC: 2, 3)
-  - [ ] Add explicit configuration for Tenants bootstrap/user setup in local development, using Tenants-supported settings such as `Tenants:BootstrapGlobalAdminUserId` where applicable.
-  - [ ] Document or wire the path for creating a default active tenant and assigning a sample/test user with a role that permits party commands. The current Tenants bootstrap service only bootstraps a global administrator; do not claim it creates a tenant/member unless the code is extended or a documented command path is provided.
-  - [ ] Add a Parties-side tenant integration configuration section, for example `Tenants:Enabled`, `Tenants:ServiceName`, `Tenants:CommandApiAppId`, `Tenants:PubSubName`, and `Tenants:TopicName`, matching the actual options consumed by the code. Keep `Tenants:CommandApiAppId` pointed at `commandapi` when it identifies the EventStore command gateway.
-  - [ ] Fail fast at startup only when tenant authorization is enabled and required Tenants settings are missing; keep existing non-Tenants local smoke paths usable when the feature is explicitly disabled.
+- [x] Align local development bootstrap/configuration (AC: 2, 3)
+  - [x] Add explicit configuration for Tenants bootstrap/user setup in local development, using Tenants-supported settings such as `Tenants:BootstrapGlobalAdminUserId` where applicable.
+  - [x] Document or wire the path for creating a default active tenant and assigning a sample/test user with a role that permits party commands. The current Tenants bootstrap service only bootstraps a global administrator; do not claim it creates a tenant/member unless the code is extended or a documented command path is provided.
+  - [x] Add a Parties-side tenant integration configuration section, for example `Tenants:Enabled`, `Tenants:ServiceName`, `Tenants:CommandApiAppId`, `Tenants:PubSubName`, and `Tenants:TopicName`, matching the actual options consumed by the code. Keep `Tenants:CommandApiAppId` pointed at `commandapi` when it identifies the EventStore command gateway.
+  - [x] Fail fast at startup only when tenant authorization is enabled and required Tenants settings are missing; keep existing non-Tenants local smoke paths usable when the feature is explicitly disabled.
 
-- [ ] Surface Tenants reachability through health/readiness (AC: 4)
-  - [ ] Add a health check that verifies Tenants integration reachability/configuration using the concrete integration path selected for this story.
-  - [ ] Decide and document whether Tenants unreachability is `Unhealthy` for `/ready` when tenant authorization is enabled, or `Degraded` when the feature is disabled or operating in an explicitly documented degraded mode.
-  - [ ] Preserve the existing DAPR readiness behavior: `dapr-sidecar` and `dapr-statestore` remain readiness-gating checks, while pub/sub and projection actor health currently contribute to `/health` as degraded dependencies.
+- [x] Surface Tenants reachability through health/readiness (AC: 4)
+  - [x] Add a health check that verifies Tenants integration reachability/configuration using the concrete integration path selected for this story.
+  - [x] Decide and document whether Tenants unreachability is `Unhealthy` for `/ready` when tenant authorization is enabled, or `Degraded` when the feature is disabled or operating in an explicitly documented degraded mode.
+  - [x] Preserve the existing DAPR readiness behavior: `dapr-sidecar` and `dapr-statestore` remain readiness-gating checks, while pub/sub and projection actor health currently contribute to `/health` as degraded dependencies.
 
-- [ ] Add focused tests and validation (AC: 1, 3, 4)
-  - [ ] Add AppHost or configuration tests that prove the Tenants project/reference is present and the `commandapi` EventStore command gateway dependency is wired.
-  - [ ] Add startup/options validation tests for missing Tenants configuration when tenant authorization is enabled.
-  - [ ] Add health-check tests for Tenants reachable/unreachable behavior, using fakes where possible instead of requiring a full DAPR/Tenants runtime.
-  - [ ] Run at minimum `dotnet build Hexalith.Parties.slnx --configuration Release` and the affected test projects.
+- [x] Add focused tests and validation (AC: 1, 3, 4)
+  - [x] Add AppHost or configuration tests that prove the Tenants project/reference is present and the `commandapi` EventStore command gateway dependency is wired.
+  - [x] Add startup/options validation tests for missing Tenants configuration when tenant authorization is enabled.
+  - [x] Add health-check tests for Tenants reachable/unreachable behavior, using fakes where possible instead of requiring a full DAPR/Tenants runtime.
+  - [x] Run at minimum `dotnet build Hexalith.Parties.slnx --configuration Release` and the affected test projects.
 
-- [ ] Keep package and dependency boundaries clean (AC: 1)
-  - [ ] Do not add Tenants dependencies to `src/Hexalith.Parties.Contracts`; that package must remain free of Tenants runtime references.
-  - [ ] Add Tenants references only where needed: AppHost/Aspire for topology, CommandApi for client/options/health if required, and tests for test helpers.
-  - [ ] Do not initialize or update nested submodules recursively. The root-level `Hexalith.Tenants` submodule already exists for this work.
+- [x] Keep package and dependency boundaries clean (AC: 1)
+  - [x] Do not add Tenants dependencies to `src/Hexalith.Parties.Contracts`; that package must remain free of Tenants runtime references.
+  - [x] Add Tenants references only where needed: AppHost/Aspire for topology, CommandApi for client/options/health if required, and tests for test helpers.
+  - [x] Do not initialize or update nested submodules recursively. The root-level `Hexalith.Tenants` submodule already exists for this work.
 
 ## Dev Notes
 
@@ -196,9 +196,16 @@ Recent relevant commits:
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+GPT-5
 
 ### Debug Log References
+
+- `dotnet test tests/Hexalith.Parties.CommandApi.Tests/Hexalith.Parties.CommandApi.Tests.csproj --configuration Release --filter "FullyQualifiedName~TenantIntegrationOptionsValidatorTests|FullyQualifiedName~TenantsIntegrationHealthCheckTests|FullyQualifiedName~AppHostTenantsTopologyTests"` — passed, 10/10.
+- `dotnet test tests/Hexalith.Parties.CommandApi.Tests/Hexalith.Parties.CommandApi.Tests.csproj --configuration Release --filter "FullyQualifiedName~HealthEndpointIntegrationTests"` — passed, 12/12.
+- `dotnet build src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --configuration Release` — passed.
+- `dotnet build Hexalith.Parties.slnx --configuration Release` — passed after clearing stale sample `bin/obj` artifacts.
+- `dotnet test tests/Hexalith.Parties.CommandApi.Tests/Hexalith.Parties.CommandApi.Tests.csproj --configuration Release --filter "FullyQualifiedName!~SemanticSearchPerformanceBenchmarkTests"` — passed, 396/396.
+- Full `Hexalith.Parties.CommandApi.Tests` run: 399/400 passed; `SemanticSearchPerformanceBenchmarkTests.Search_100KEntries_ExactMatch_CompletesWithin500ms` missed the 500ms threshold in full-suite runs (509-514ms) and passed when rerun alone once. No Tenants/AppHost functional failures remained.
 
 ### Review Round
 
@@ -224,8 +231,66 @@ Recent relevant commits:
   - Confirm whether `WaitFor(tenants)` is required for `commandapi` startup or only for AppHost topology visibility.
 - Final recommendation: `blocked`
 
+### Local Development Bootstrap (AC 2)
+
+The Tenants bootstrap service (`Hexalith.Tenants` `BootstrapHostedService`) only ensures a global administrator user exists — it does not create an application tenant or assign tenant membership. AC 2 is therefore satisfied by **documented manual setup**, not automatic seeding. To prepare a local environment in which a sample/test user can issue Parties commands:
+
+1. Configure the bootstrap admin user id (Aspire AppHost forwards `Tenants:BootstrapGlobalAdminUserId` to the `tenants` project as `Tenants__BootstrapGlobalAdminUserId`):
+   - **Default fixture**: `appsettings.Development.json` ships `Tenants:BootstrapGlobalAdminUserId="tenant-a-user"` so `dotnet run --project src/Hexalith.Parties.AppHost` works out of the box for the canonical sample identity.
+   - **Override**: set the environment variable `Tenants__BootstrapGlobalAdminUserId=<your-user-id>` (or use user-secrets on the AppHost project) to bootstrap a different admin.
+2. Start the topology: `dotnet run --project src/Hexalith.Parties.AppHost`. The `tenants` resource starts and the global admin user is provisioned automatically.
+3. Create a default tenant and assign the sample user a Parties-permitting role using the Tenants Command API (`commandapi` DAPR app id, exposed by the EventStore command gateway). Issue the canonical Tenants commands as that admin:
+   - `CreateTenant` to provision the tenant aggregate.
+   - `AddUserToTenant` (or the Tenants role-assignment command) to attach the sample user with a role whose policy permits `parties.commands.*`.
+4. The sample user can now authenticate with a JWT carrying the corresponding tenant claim and issue Parties commands.
+
+This procedure must run once per fresh local environment. Story 11.2 onward consumes the resulting tenant state through the local access projection.
+
 ### Completion Notes List
 
 - Ultimate context engine analysis completed - comprehensive developer guide created.
+- Composed Hexalith.Tenants into the Parties AppHost with stable `tenants` resource name, reused `AddHexalithTenants`, shared the Tenants DAPR state/pubsub resources with Parties, and added `WithReference(...).WaitFor(...)` from `commandapi` to the Tenants project resource.
+- Added Parties-side `Tenants` integration options with `Tenants:Enabled`, `Tenants:ServiceName`, `Tenants:CommandApiAppId`, `Tenants:PubSubName`, and `Tenants:TopicName`; startup validation now fails fast only when Tenants integration is enabled and required settings are missing.
+- Added Tenants readiness health behavior: when enabled, `tenants-integration` is readiness-gating and reports `Unhealthy` if the Tenants service cannot be reached through DAPR service invocation; when disabled, the check returns healthy so local smoke paths can opt out explicitly.
+- Kept `Hexalith.Parties.Contracts` free of Tenants references and did not initialize/update nested submodules.
 
 ### File List
+- src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj
+- src/Hexalith.Parties.AppHost/Program.cs
+- src/Hexalith.Parties.Aspire/HexalithPartiesExtensions.cs
+- src/Hexalith.Parties.CommandApi/Configuration/TenantIntegrationOptions.cs
+- src/Hexalith.Parties.CommandApi/Extensions/PartiesServiceCollectionExtensions.cs
+- src/Hexalith.Parties.CommandApi/HealthChecks/PartiesHealthCheckExtensions.cs
+- src/Hexalith.Parties.CommandApi/HealthChecks/TenantsIntegrationHealthCheck.cs
+- src/Hexalith.Parties.CommandApi/appsettings.Development.json
+- src/Hexalith.Parties.CommandApi/appsettings.json
+- tests/Hexalith.Parties.CommandApi.Tests/Configuration/TenantIntegrationOptionsValidatorTests.cs
+- tests/Hexalith.Parties.CommandApi.Tests/FitnessTests/AppHostTenantsTopologyTests.cs
+- tests/Hexalith.Parties.CommandApi.Tests/HealthChecks/HealthEndpointIntegrationTests.cs
+- tests/Hexalith.Parties.CommandApi.Tests/HealthChecks/TenantsIntegrationHealthCheckTests.cs
+- _bmad-output/implementation-artifacts/11-1-apphost-and-package-integration.md
+- _bmad-output/implementation-artifacts/sprint-status.yaml
+
+### Change Log
+
+- 2026-05-07: Implemented AppHost Tenants composition, startup options validation, Tenants readiness health check, and focused test coverage; moved story to review.
+- 2026-05-07: Code review applied 7 patches (3 from resolved decisions + 4 direct): base `Tenants:Enabled=false` opt-in default; shared state-store `keyPrefix=none` reapplied in 5-arg `AddHexalithParties`; bounded `HttpClient` timeout via named client; cooperative cancellation rethrow in Tenants health check; AC2 manual-bootstrap docs; switchable tenants probe + `/ready=503` integration test. 5 items deferred to `deferred-work.md`. Story moved to done.
+
+### Review Findings
+
+Adversarial review on 2026-05-07 (Blind Hunter + Edge Case Hunter + Acceptance Auditor). Raw findings: 35; after dedup + dismiss: 12.
+
+- [x] [Review][Decision] Hardcoded `BootstrapGlobalAdminUserId="tenant-a-user"` in committed Development settings — Resolved: kept as documented dev fixture; `Tenants__BootstrapGlobalAdminUserId` env var or user-secrets remain the override path. Documented in the new "Local Development Bootstrap (AC 2)" section.
+- [x] [Review][Decision] `Tenants:Enabled=true` default in committed `appsettings.json` — Resolved (option a): base `appsettings.json` now ships `Enabled=false`. Development.json + AppHost env vars enable it explicitly so non-Tenants smoke paths remain usable.
+- [x] [Review][Decision] Shared Tenants state-store missing `keyPrefix=none` metadata — Resolved (option b): the 5-arg `AddHexalithParties` overload now reapplies `WithMetadata("keyPrefix", "none")` on the shared state store before wiring the sidecar, preserving the existing EventStore actor key format without touching the Tenants submodule.
+- [x] [Review][Patch] HttpClient lacks bounded request timeout in DaprTenantsReadinessProbe — Fixed: named client `tenants-readiness-probe` registered with `Timeout = TimeSpan.FromSeconds(2)`; probe uses `CreateClient(HttpClientName)`. [src/Hexalith.Parties.CommandApi/Extensions/PartiesServiceCollectionExtensions.cs, HealthChecks/TenantsIntegrationHealthCheck.cs]
+- [x] [Review][Patch] Catch swallows `OperationCanceledException` and reports it as a check failure — Fixed: added `catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { throw; }` so graceful shutdown does not flap `/ready`. [src/Hexalith.Parties.CommandApi/HealthChecks/TenantsIntegrationHealthCheck.cs]
+- [x] [Review][Patch] AC2 default-tenant creation path is neither seeded nor documented — Fixed: added "Local Development Bootstrap (AC 2)" section to this story documenting the manual `CreateTenant` + role-assignment command path operators must run once per fresh local environment.
+- [x] [Review][Patch] No `/ready=503` integration test for unavailable Tenants probe — Fixed: replaced fixture-level `HealthyTenantsReadinessProbe` with `SwitchableTenantsReadinessProbe`; added `ReadyEndpoint_TenantsIntegrationUnreachable_Returns503Async` asserting both the 503 response and the `tenants-integration` check status in the JSON payload. [tests/Hexalith.Parties.CommandApi.Tests/HealthChecks/HealthEndpointIntegrationTests.cs]
+- [x] [Review][Defer] AppHost env-vars duplicate `appsettings.json` Tenants values for `commandapi` [src/Hexalith.Parties.AppHost/Program.cs:48-52] — env-var precedence makes JSON values dead under AppHost; future maintenance trap. Low priority; pre-existing pattern in the host.
+- [x] [Review][Defer] `ValidateOnStart` eagerness not asserted by any test [src/Hexalith.Parties.CommandApi/Extensions/PartiesServiceCollectionExtensions.cs:79-82] — likely fires correctly under modern host, but no failing-startup test exists; if validation actually fires lazily, missing config produces a 500 from `/ready` rather than a startup crash. Add a startup-fail integration test in a hardening pass.
+- [x] [Review][Defer] `WaitFor(tenantsResources.CommandApi)` waits on the project resource, not the Tenants DAPR sidecar [src/Hexalith.Parties.AppHost/Program.cs:45-46] — first N readiness probes after startup may race the sidecar app-id resolution, briefly returning `/ready=503`. Pre-existing Aspire pattern across sibling stories.
+- [x] [Review][Defer] `Uri.EscapeDataString(serviceName)` doesn't validate service-name format [src/Hexalith.Parties.CommandApi/HealthChecks/TenantsIntegrationHealthCheck.cs:25-26] — typos like `tenants/` or `tenants:dev` percent-encode and surface as opaque "not ready"; low impact.
+- [x] [Review][Defer] Test fake `HealthyTenantsReadinessProbe` masks any future regression where `ITenantsReadinessProbe` is dropped from production DI [tests/Hexalith.Parties.CommandApi.Tests/HealthChecks/HealthEndpointIntegrationTests.cs:336-348] — `RemoveAll().Add()` is a no-op when the production registration is missing. Add a guard test asserting the production registration exists in a hardening pass.
+
+Dismissed (12): `BootstrapGlobalAdminUserId` not in `TenantIntegrationOptions` (belongs to Tenants-side options); DAPR `/method/ready` invocation routes correctly to `Hexalith.Tenants.ServiceDefaults.MapDefaultEndpoints` `/ready`; `_configuration["DAPR_HTTP_PORT"]` resolves through .NET host's default env-var provider; `..\..\Hexalith.Tenants` ProjectReferences are the project's git-submodule layout; topology cycle via `WithReference(tenantsResources.CommandApi)` did not surface in completed sibling stories using the same pattern; `internal interface ITenantsReadinessProbe` is reachable from tests via `InternalsVisibleTo` in `Hexalith.Parties.CommandApi.csproj:9`; both 3-arg and 5-arg `AddHexalithParties` overloads coexist (no breaking change); `IsSuccessStatusCode` accepting 204 is not a credible regression vector for DAPR `/ready`; `CommandApiAppId` is consumed by the `HexalithTenants` client (separate options class registered in same DI scope); two options classes binding the same `Tenants` section is by design; `RepositoryRoot.Locate()` is the standard fitness test pattern; `WithEnvironment` ordering after `AddHexalithTenants` is fine in the current Aspire toolkit version (tests pass).

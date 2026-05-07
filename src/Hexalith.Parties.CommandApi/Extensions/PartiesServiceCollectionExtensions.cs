@@ -15,8 +15,10 @@ using Hexalith.EventStore.Contracts.Security;
 using Hexalith.Memories.Client.Rest;
 using Hexalith.Parties.CommandApi.Authorization;
 using Hexalith.Parties.CommandApi.Authentication;
+using Hexalith.Parties.CommandApi.Configuration;
 using Hexalith.Parties.CommandApi.Domain;
 using Hexalith.Parties.CommandApi.ErrorHandling;
+using Hexalith.Parties.CommandApi.HealthChecks;
 using Hexalith.Parties.CommandApi.Mcp;
 using Hexalith.Parties.CommandApi.Validation;
 using Hexalith.Parties.CommandApi.Search;
@@ -74,6 +76,13 @@ public static class PartiesServiceCollectionExtensions {
         _ = services.AddTransient<IDomainServiceInvoker, PartyDomainServiceInvoker>();
         _ = services.AddEventStoreServer(configuration);
         _ = services.AddHexalithTenants(options => configuration.GetSection("Tenants").Bind(options));
+        _ = services.AddOptions<TenantIntegrationOptions>()
+            .Bind(configuration.GetSection(TenantIntegrationOptions.SectionName))
+            .ValidateOnStart();
+        _ = services.AddSingleton<IValidateOptions<TenantIntegrationOptions>, TenantIntegrationOptionsValidator>();
+        _ = services
+            .AddHttpClient(DaprTenantsReadinessProbe.HttpClientName, client => client.Timeout = TimeSpan.FromSeconds(2));
+        _ = services.AddSingleton<ITenantsReadinessProbe, DaprTenantsReadinessProbe>();
 
         // Singleton lifetime assumes ITenantProjectionStore is also Singleton (the default
         // InMemoryTenantProjectionStore is). Replacing the projection store with a Scoped

@@ -1,6 +1,7 @@
 using CommunityToolkit.Aspire.Hosting.Dapr;
 
 using Hexalith.Parties.Aspire;
+using Hexalith.Tenants.Aspire;
 
 IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder(args);
 
@@ -23,9 +24,31 @@ if (!File.Exists(accessControlConfigPath))
 
 // Add Parties CommandApi project
 IResourceBuilder<ProjectResource> commandApi = builder.AddProject<Projects.Hexalith_Parties_CommandApi>("commandapi");
+IResourceBuilder<ProjectResource> tenants = builder.AddProject<Projects.Hexalith_Tenants>("tenants");
+
+HexalithTenantsResources tenantsResources = builder.AddHexalithTenants(tenants, accessControlConfigPath);
+
+string? bootstrapGlobalAdminUserId = builder.Configuration["Tenants:BootstrapGlobalAdminUserId"];
+if (!string.IsNullOrWhiteSpace(bootstrapGlobalAdminUserId))
+{
+    _ = tenants.WithEnvironment("Tenants__BootstrapGlobalAdminUserId", bootstrapGlobalAdminUserId);
+}
 
 // Wire Parties topology (delegates to EventStore + Parties Aspire extensions)
-HexalithPartiesResources partiesResources = builder.AddHexalithParties(commandApi, accessControlConfigPath);
+HexalithPartiesResources partiesResources = builder.AddHexalithParties(
+    commandApi,
+    accessControlConfigPath,
+    tenantsResources.StateStore,
+    tenantsResources.PubSub);
+
+_ = commandApi
+    .WithReference(tenantsResources.CommandApi)
+    .WaitFor(tenantsResources.CommandApi)
+    .WithEnvironment("Tenants__Enabled", "true")
+    .WithEnvironment("Tenants__ServiceName", "tenants")
+    .WithEnvironment("Tenants__CommandApiAppId", "commandapi")
+    .WithEnvironment("Tenants__PubSubName", "pubsub")
+    .WithEnvironment("Tenants__TopicName", "system.tenants.events");
 
 if (string.Equals(builder.Configuration["EnableMemoriesSearch"], "true", StringComparison.OrdinalIgnoreCase))
 {

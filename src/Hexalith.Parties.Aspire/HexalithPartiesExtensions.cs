@@ -41,6 +41,38 @@ public static class HexalithPartiesExtensions
             .WithMetadata("keyPrefix", "none");
         IResourceBuilder<IDaprComponentResource> pubSub = builder.AddDaprPubSub("pubsub");
 
+        return builder.AddHexalithParties(commandApi, daprConfigPath, stateStore, pubSub);
+    }
+
+    /// <summary>
+    /// Adds the Hexalith Parties topology using existing shared DAPR component resources.
+    /// This is used by AppHosts that compose Parties with another Hexalith module, such as
+    /// Hexalith.Tenants, where both modules must share the same local state store and pub/sub.
+    /// </summary>
+    /// <param name="builder">The distributed application builder.</param>
+    /// <param name="commandApi">The CommandApi project resource builder.</param>
+    /// <param name="daprConfigPath">Path to the Dapr sidecar configuration file.</param>
+    /// <param name="stateStore">Shared DAPR state store component.</param>
+    /// <param name="pubSub">Shared DAPR pub/sub component.</param>
+    /// <returns>A <see cref="HexalithPartiesResources"/> containing the resource builders for further customization.</returns>
+    public static HexalithPartiesResources AddHexalithParties(
+        this IDistributedApplicationBuilder builder,
+        IResourceBuilder<ProjectResource> commandApi,
+        string? daprConfigPath,
+        IResourceBuilder<IDaprComponentResource> stateStore,
+        IResourceBuilder<IDaprComponentResource> pubSub)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentNullException.ThrowIfNull(commandApi);
+        ArgumentNullException.ThrowIfNull(stateStore);
+        ArgumentNullException.ThrowIfNull(pubSub);
+
+        // Preserve the EventStore actor key format expected by Parties projections.
+        // The shared state store from a composing module (e.g. Hexalith.Tenants) does not
+        // set keyPrefix, so DAPR would default to <appId>||<key>. Re-applying it here keeps
+        // Parties keys flat regardless of which AppHost overload is used.
+        _ = stateStore.WithMetadata("keyPrefix", "none");
+
         _ = commandApi
             .WithDaprSidecar(sidecar => sidecar
                 .WithOptions(new DaprSidecarOptions

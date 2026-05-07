@@ -13,6 +13,7 @@ using Dapr.Client;
 using Hexalith.EventStore.Server.Actors;
 using Hexalith.EventStore.Server.Commands;
 using Hexalith.EventStore.Server.Pipeline.Commands;
+using Hexalith.Parties.CommandApi.HealthChecks;
 using Hexalith.Parties.Contracts.Models;
 using Hexalith.Parties.Contracts.ValueObjects;
 using Hexalith.Parties.Projections.Abstractions;
@@ -81,6 +82,22 @@ public sealed class HealthEndpointIntegrationTests : IClassFixture<HealthEndpoin
         HttpResponseMessage response = await client.GetAsync("/ready");
 
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
+    }
+
+    [Fact]
+    public async Task ReadyEndpoint_TenantsIntegrationUnreachable_Returns503Async()
+    {
+        ConfigureHealthyDaprClient();
+        _factory.TenantsReadinessProbe.IsReady = false;
+
+        using HttpClient client = _factory.CreateClient();
+        HttpResponseMessage response = await client.GetAsync("/ready");
+
+        response.StatusCode.ShouldBe(HttpStatusCode.ServiceUnavailable);
+
+        JsonDocument payload = await JsonDocument.ParseAsync(await response.Content.ReadAsStreamAsync());
+        payload.RootElement.GetProperty("results").GetProperty("tenants-integration").GetProperty("status").GetString()
+            .ShouldBe("Unhealthy");
     }
 
     [Fact]
@@ -251,6 +268,7 @@ public sealed class HealthEndpointIntegrationTests : IClassFixture<HealthEndpoin
             Arg.Any<string>(), Arg.Any<string>(), cancellationToken: Arg.Any<CancellationToken>())
             .Returns((string?)null);
         ConfigureHealthyPubSub();
+        _factory.TenantsReadinessProbe.IsReady = true;
     }
 
     private void ConfigureHealthyPubSub()
@@ -286,6 +304,7 @@ public sealed class HealthEndpointIntegrationTests : IClassFixture<HealthEndpoin
         internal IActorProxyFactory ActorProxyFactory { get; } = Substitute.For<IActorProxyFactory>();
         internal IPartyDetailProjectionActor DetailProjectionActor { get; } = Substitute.For<IPartyDetailProjectionActor>();
         internal IPartyIndexProjectionActor IndexProjectionActor { get; } = Substitute.For<IPartyIndexProjectionActor>();
+        internal SwitchableTenantsReadinessProbe TenantsReadinessProbe { get; } = new();
 
         protected override void ConfigureWebHost(IWebHostBuilder builder)
         {
@@ -332,10 +351,20 @@ public sealed class HealthEndpointIntegrationTests : IClassFixture<HealthEndpoin
                 services.AddSingleton(CommandRouter);
                 services.RemoveAll<IActorProxyFactory>();
                 services.AddSingleton(ActorProxyFactory);
+                services.RemoveAll<ITenantsReadinessProbe>();
+                services.AddSingleton<ITenantsReadinessProbe>(TenantsReadinessProbe);
                 services.RemoveAll<Hexalith.Parties.CommandApi.Authorization.ITenantAccessService>();
                 services.AddSingleton<Hexalith.Parties.CommandApi.Authorization.ITenantAccessService, Hexalith.Parties.CommandApi.Tests.Authorization.TestTenantAccessService>();
             });
         }
+    }
+
+    internal sealed class SwitchableTenantsReadinessProbe : ITenantsReadinessProbe
+    {
+        public bool IsReady { get; set; } = true;
+
+        public Task<bool> IsReadyAsync(string serviceName, CancellationToken cancellationToken)
+            => Task.FromResult(IsReady);
     }
 }
 
