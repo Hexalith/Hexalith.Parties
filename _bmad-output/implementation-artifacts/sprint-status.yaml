@@ -146,7 +146,7 @@ development_status:
   # Wave 1 (server pivot): 12-1..12-4. Wave 2 (consumer migration): 12-5..12-10.
   # Wave 2 cannot start until Wave 1 lands.
   epic-12: in-progress
-  12-0-eventstore-parties-actor-invocation-feasibility-spike: ready-for-dev
+  12-0-eventstore-parties-actor-invocation-feasibility-spike: in-progress
   12-1-apphost-recomposition: ready-for-dev
   12-2-parties-actor-host: ready-for-dev
   12-3-validation-relocation-and-tenant-auth-ownership: ready-for-dev
