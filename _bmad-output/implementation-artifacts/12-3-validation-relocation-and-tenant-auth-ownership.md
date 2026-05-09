@@ -10,8 +10,8 @@ so that the request path has a single, unambiguous validation and authorization 
 
 ## Acceptance Criteria
 
-1. Given Parties command payload validators such as `CreatePartyValidator`, when a command is routed from EventStore to the Parties actor/domain host, then the payload is validated before `PartyAggregate.Handle` or `PartyAggregate.ProcessAsync` can execute.
-2. Given an invalid Parties command payload submitted through the EventStore command path, then the request is rejected with the platform validation response shape and no Parties domain event is persisted or published.
+1. Given Parties command payload validators such as `CreatePartyValidator`, when a command is routed from EventStore to the Parties actor/domain host, then the payload is validated in the actor-host/domain invoker path before `PartyAggregate.Handle` or `PartyAggregate.ProcessAsync` can execute; controller, REST, MCP, or command-constructor validation alone does not satisfy this criterion.
+2. Given an invalid Parties command payload submitted through the EventStore command path, then the request is rejected with the EventStore/platform validation response shape rather than a Parties-specific envelope, and no Parties domain event is persisted, published, or projected.
 3. Given EventStore gateway command/query ingress, then tenant validation and RBAC use EventStore's `ITenantValidator` and `IRbacValidator` plug-in surface; Parties does not register, replace, or wrap a gateway-level tenant validator.
 4. Given the EventStore-fronted request path after Story 12.2, then `ITenantAccessService` and `TenantAccessDenialTranslator` are not used for command/query authorization in Parties; any retained Tenants projection services are limited to projection-side or internal actor-host concerns.
 5. Given an unauthorized tenant, user, or role, when a Parties command is submitted to EventStore, then EventStore denies the request before invoking the Parties actor/domain host and returns the platform forbidden/problem-details response.
@@ -32,6 +32,7 @@ so that the request path has a single, unambiguous validation and authorization 
 - [ ] Move Parties payload validation into the actor-host/domain invocation path. (AC: 1, 2)
   - [ ] Register Parties FluentValidation validators in the actor host if Story 12.2 retained or moved the registrations.
   - [ ] Add a narrow validation component or decorate `PartyDomainServiceInvoker` so the concrete payload type is validated before protected state/events are unprotected and before aggregate processing.
+  - [ ] Treat `PartyDomainServiceInvoker` or the immediately adjacent actor-host/domain adapter as the preferred insertion point; do not satisfy this task through old controller, REST, MCP, or API model-validation paths.
   - [ ] Preserve existing payload protection behavior in `PartyDomainServiceInvoker`; validation must not bypass protected state/event handling or change the domain string accepted by the invoker.
   - [ ] If EventStore's payload-type convention cannot invoke Parties validators without changes to the `Hexalith.EventStore` submodule, document the platform gap and stop or defer the submodule work rather than editing EventStore in this story.
 - [ ] Remove Parties tenant authorization from the command/query request path. (AC: 3, 4, 5)
@@ -41,13 +42,15 @@ so that the request path has a single, unambiguous validation and authorization 
   - [ ] If `ITenantAccessService` remains registered for projection-side/internal use, rename, scope, or document it so tests can distinguish it from gateway request-path authorization.
 - [ ] Preserve EventStore-owned authorization semantics. (AC: 3, 5, 6)
   - [ ] Verify EventStore gateway submit/validation paths call `ITenantValidator` and `IRbacValidator` before domain actor invocation.
+  - [ ] For unauthorized requests with invalid payloads, preserve EventStore authorization-first behavior: tenant/RBAC denial occurs before Parties payload validation and before actor/domain invocation.
   - [ ] Keep the EventStore `AggregateActor` tenant mismatch guard between actor id and command tenant id; do not treat it as a replacement for gateway authorization.
   - [ ] Verify Parties DAPR access-control configuration still allows only EventStore-origin invocation required by Story 12.0/12.1 and does not broaden to wildcard clients.
 - [ ] Update tests and fitness coverage. (AC: 1-7)
-  - [ ] Add focused tests proving invalid Parties command payloads are rejected before `PartyAggregate.ProcessAsync` can run.
-  - [ ] Add or update tests proving unauthorized EventStore gateway submissions do not invoke the Parties domain invoker.
-  - [ ] Add architectural fitness tests proving Parties does not register EventStore gateway `ITenantValidator`/`IRbacValidator` implementations and does not use `ITenantAccessService` in command/query request-path code.
+  - [ ] Add focused tests proving invalid Parties command payloads are rejected before `PartyAggregate.ProcessAsync` can run, with fakes or spies proving no aggregate/domain invocation occurs.
+  - [ ] Add or update tests proving unauthorized EventStore gateway submissions do not invoke the Parties actor/domain invoker, including an invalid-payload-plus-unauthorized case to prove authorization wins first.
+  - [ ] Add architectural fitness tests proving Parties does not register EventStore gateway `ITenantValidator`/`IRbacValidator` implementations and does not use `ITenantAccessService` or `TenantAccessDenialTranslator` in command/query request-path code.
   - [ ] Update Tenants projection tests to preserve projection-side behavior without asserting gateway request-path ownership by Parties.
+  - [ ] Ensure validation and authorization tests cannot pass through stale REST/MCP/controller routes; target the EventStore-to-actor-host/domain boundary or focused domain-invoker fixtures directly.
   - [ ] Keep broad EventStore gateway Tier-1/Tier-2 rewrite scope out of this story; Story 12.4 owns the larger suite conversion.
 - [ ] Verify the boundary change. (AC: 1-7)
   - [ ] Run the focused validation/domain-invoker tests added by this story.
@@ -70,6 +73,7 @@ so that the request path has a single, unambiguous validation and authorization 
 - `src/Hexalith.Parties/Domain/PartyDomainServiceInvoker.cs` currently accepts only domain `"party"`, unprotects state/events through `IEventPayloadProtectionService`, and then calls `new PartyAggregate().ProcessAsync(...)`. This is the most likely local place to enforce validation before aggregate behavior if EventStore does not provide a cross-domain validator hook.
 - `src/Hexalith.Parties/Validation/**` contains command validators including `CreatePartyValidator`, composite command validators, update/delete validators, and nested payload rules. Reuse these validators instead of duplicating validation logic.
 - `src/Hexalith.Parties/ErrorHandling/PartiesValidationExceptionHandler.cs` maps FluentValidation failures to ProblemDetails for the old ASP.NET request path. After the pivot, confirm whether EventStore maps validation exceptions or requires a domain-invoker-specific exception/result shape.
+- The platform validation response asserted by this story should be the EventStore/platform validation contract in force after Stories 12.1 and 12.2. Do not create a new Parties-only validation response envelope to satisfy AC 2.
 - `src/Hexalith.Parties/Authorization/TenantAccessService.cs` reads the local Tenants projection and fail-closes on unknown, disabled, stale, or insufficient tenant membership. This behavior may remain useful for projection-side/internal decisions, but it must not be the command/query gateway authorization source after the pivot.
 - `src/Hexalith.Parties/Authorization/TenantAccessDenialTranslator.cs` contains the old Parties-specific denial-to-problem-details mapping. Do not keep it in the command/query path once EventStore owns gateway denial responses.
 - `Hexalith.EventStore/src/Hexalith.EventStore/Authorization/ITenantValidator.cs` and `IRbacValidator.cs` define the EventStore authorization plug-in surface.
@@ -93,6 +97,7 @@ so that the request path has a single, unambiguous validation and authorization 
 
 - EventStore owns public command/query ingress, JWT authentication, tenant validation, RBAC, sanitized extension handling, and generic response mapping.
 - Parties owns domain-specific payload validation, aggregate execution, projection runtime, crypto-shredding behavior, and local projection maintenance behind DAPR.
+- EventStore authorization precedes Parties payload validation for public command/query ingress. If a request is both unauthorized and payload-invalid, the expected external result is the EventStore tenant/RBAC denial, and Parties validation must not run.
 - Validation must be deterministic and side-effect-free. A failed validator must not call aggregate handlers, mutate protected state, persist events, publish events, update projections, or create audit records except safe denial/validation logs.
 - Tenant authorization must fail before the Parties actor/domain host is invoked. Tests should assert absence of actor/domain invoker calls for unauthorized requests.
 - Safe denial and validation logs may include correlation ids, tenant ids, command type names, denial categories, and validator rule names, but must not include access tokens, signing keys, raw encrypted payloads, protected PII values, or full command payload dumps.
@@ -102,11 +107,15 @@ so that the request path has a single, unambiguous validation and authorization 
 
 - Minimum focused tests:
   - A `PartyDomainServiceInvoker` or validation-wrapper test proves invalid `CreateParty` and representative update/composite commands throw validation before aggregate processing.
-  - A regression test proves no domain events are emitted when validation fails.
-  - A gateway authorization test or focused EventStore-host test proves denied tenant/RBAC submissions do not call the Parties domain invoker.
+  - A regression test proves no domain events are emitted and no projection/read-model changes occur when validation fails.
+  - A gateway authorization test or focused EventStore-host test proves denied tenant/RBAC submissions do not call the Parties domain invoker, using a spy/fake invocation point rather than old controller behavior.
   - An architectural fitness test proves `Hexalith.Parties` does not register or implement EventStore gateway `ITenantValidator` or `IRbacValidator` for command/query ingress.
   - A source or dependency fitness test proves command/query request-path code does not reference `ITenantAccessService` or `TenantAccessDenialTranslator`.
   - A Tenants projection test proves local tenant projection consumption still works if retained for projection-side/internal use.
+- Troubleshooting expectation:
+  - Validation failures point developers to Parties FluentValidation payload rules and the actor-host/domain validation adapter.
+  - Tenant/RBAC denials point developers to EventStore gateway authorization configuration and `ITenantValidator`/`IRbacValidator` behavior.
+  - Tenant mismatch guard failures point developers to EventStore `AggregateActor` actor-id-versus-command-tenant consistency, not to public gateway authorization policy.
 - Run at least:
   - `dotnet test tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj --filter "FullyQualifiedName~PartyDomainServiceInvoker|FullyQualifiedName~Validation|FullyQualifiedName~Authorization|FullyQualifiedName~Tenant"`
   - `dotnet test tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj --filter ArchitecturalFitnessTests`
@@ -173,3 +182,26 @@ TBD
 | Date | Version | Description | Author |
 |---|---:|---|---|
 | 2026-05-09 | 0.1 | Created ready-for-dev story through BMAD pre-dev hardening automation. | Codex |
+| 2026-05-09 | 0.2 | Applied party-mode review clarifications for validation insertion point, authorization ordering, and boundary test oracles. | Codex |
+
+## Party-Mode Review
+
+- Date: 2026-05-09T18:55:10+02:00
+- Selected story key: `12-3-validation-relocation-and-tenant-auth-ownership`
+- Command/skill invocation used: `/bmad-party-mode 12-3-validation-relocation-and-tenant-auth-ownership; review;`
+- Participating BMAD agents: Winston (System Architect), Amelia (Senior Software Engineer), Murat (Master Test Architect and Quality Advisor), Paige (Technical Writer)
+- Findings summary:
+  - The story was directionally sound but needed sharper validation-boundary wording so implementation does not satisfy ACs through old controller, REST, MCP, or command-constructor validation.
+  - Authorization ownership needed explicit ordering: EventStore tenant/RBAC denial must happen before Parties actor/domain invocation and before Parties payload validation on unauthorized requests.
+  - Test guidance needed stronger negative oracles for no aggregate invocation, no event append/publish/project side effects, no stale public-route false positives, and no Parties tenant-auth services in command/query request paths.
+  - Developers need troubleshooting cues that distinguish Parties payload validation failures, EventStore tenant/RBAC denials, and EventStore `AggregateActor` tenant mismatch guard failures.
+- Changes applied:
+  - Clarified AC 1 and AC 2 to name the actor-host/domain invoker boundary and forbid a Parties-specific validation envelope.
+  - Added implementation tasks for preferred validation insertion point, authorization-first ordering, spies/fakes proving non-invocation, and stale REST/MCP route isolation.
+  - Expanded architecture, security, testing, and troubleshooting guidance around response shape, no-events/no-projection assertions, EventStore-owned authorization, and defense-in-depth tenant mismatch handling.
+- Findings deferred:
+  - Whether EventStore contract/controller/actor changes are required remains a blocker decision for implementation; do not edit the root-level EventStore submodule unless ACs cannot be met and the gap is recorded.
+  - Whether retained Parties tenant-access services are deleted, deprecated, renamed, or scoped remains deferred unless current registrations make command/query misuse likely.
+  - Broad EventStore gateway Tier-1/Tier-2 rewrite remains with Story 12.4.
+  - Shared platform validator registry design remains out of scope unless an existing platform pattern is already available.
+- Final recommendation: ready-for-dev
