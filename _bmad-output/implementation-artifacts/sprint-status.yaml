@@ -1,4 +1,5 @@
 # generated: 2026-05-02
+# last_updated: 2026-05-09  (story 12-5 created as ready-for-dev for the Parties client thin wrapper over EventStore command/query submission.)
 # last_updated: 2026-05-09  (story 12-0 advanced review -> done after bmad-code-review: D1 verdict-integrity resolved by keeping `partial` and adding static-analysis-only caveats throughout story + dated spike note + feasibility table; 13 patches applied including AC2 vocabulary fix, missing AC3 sections (Logs/Trace, EventStore Persistence), illustrative-payload disclaimer + valid ULID, regex-based fitness-test assertions, deletion-gate doc comment, parameter-name-decoupled `AddEventStoreServer(` substring, MapMethods/casing variant coverage, domain-matrix DAPR-app-id-casing clarification, forward-looking auth/tenant relabeling, agent-model attribution, explicit Wave-1 unblock decision in Spike Conclusion. 4 items deferred to deferred-work.md (wildcard registration assumption, rg-on-PATH reproduction commands, persistence state-store config dependency, domain matrix narrative clarity). Spike fitness tests still 4/4 green; EventStore submodule still clean.)
 # last_updated: 2026-05-09  (story 12-0 advanced in-progress -> review at close-out: spike outcome `partial`, 4/4 focused fitness tests pass, EventStore submodule clean, three pre-existing Hexalith.Parties.Tests failures (ArchitecturalFitnessTests.ClientProject_HasNoReferencesToServerProjectionsOrPartiesService, HealthEndpointIntegrationTests.QueryEndpoint_PubSubDegraded_AddsDegradationHeadersAsync, TemporalNameEndpointTests.GetPartyNameAt_ErasedParty_Returns410Gone) verified unrelated to spike footprint and logged in deferred-work.md.)
 # last_updated: 2026-05-09  (story 12-3 created as ready-for-dev for validation relocation and EventStore tenant auth ownership. Earlier same day: story 12-2 created as ready-for-dev for Parties actor host cleanup; story 12-1 created as ready-for-dev for AppHost recomposition; story 12-0 created as ready-for-dev; epic-12 moved backlog -> in-progress for EventStore-fronted architecture pivot spike.)
@@ -154,7 +155,7 @@ development_status:
   12-2-parties-actor-host: ready-for-dev
   12-3-validation-relocation-and-tenant-auth-ownership: ready-for-dev
   12-4-server-tier-1-tier-2-test-rewrite: ready-for-dev
-  12-5-parties-client-thin-wrapper: backlog
+  12-5-parties-client-thin-wrapper: ready-for-dev
   12-6-parties-mcp-thin-host: backlog
   12-7-admin-portal-rebuild-on-frontcomposer: backlog
   12-8-picker-rewrite: backlog
