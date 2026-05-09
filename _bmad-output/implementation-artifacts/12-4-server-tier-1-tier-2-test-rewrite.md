@@ -1,0 +1,206 @@
+# Story 12.4: Server Tier-1/Tier-2 Test Rewrite
+
+Status: ready-for-dev
+
+## Story
+
+As a developer,
+I want server-side tests to drive Parties through EventStore's command and query gateway instead of the retired Parties REST surface,
+so that the Parties actor host is verified through its production entry point and coverage parity survives the Epic 12 pivot.
+
+## Acceptance Criteria
+
+1. Given the existing `tests/Hexalith.Parties.Tests/Controllers/**` suite, then every assertion that hits a Parties REST URL is rewritten, retired with explicit replacement coverage, or moved behind EventStore gateway semantics using `POST /api/v1/commands` or `POST /api/v1/queries`.
+2. Given Tier-2 gateway tests, then the test host is rooted in the new EventStore-fronted topology and verifies EventStore gateway behavior plus Parties actor/domain invocation, not the old `Hexalith.Parties` controller pipeline.
+3. Given the existing `tests/Hexalith.Parties.IntegrationTests/**` Tier-3 suite, then tests that previously called Parties REST endpoints are rewritten to use EventStore gateway requests and assert EventStore stream/state evidence using the canonical EventStore key/stream format.
+4. Given prior coverage gaps, then Memories-backed search, key lifecycle, erasure, consent, restriction, portability, encryption, temporal-name, tenant isolation, and health/readiness scenarios retain at least the same scenario coverage after the rewrite.
+5. Given Story 12.2 removed public REST/MCP from `Hexalith.Parties`, then no new test reintroduces `MapControllers`, Parties REST URLs, in-process MCP calls, or per-response GDPR warning-header expectations.
+6. Given Story 12.3 moved payload validation and tenant authorization boundaries, then tests prove invalid payloads and unauthorized tenant/RBAC requests are rejected before Parties actor/domain execution and do not persist or publish domain events.
+7. Given Tier-1 tests, then pure aggregate, projection-handler, contract, and client-abstraction tests remain infrastructure-free and do not depend on DAPR, HTTP, Redis, Aspire, WebApplicationFactory, or EventStore gateway startup.
+8. Given architectural fitness coverage, then tests prevent broad controller/MCP regressions, enforce the EventStore gateway entry point, and document any intentionally retired old REST/MCP tests with their replacement owner.
+
+## Tasks / Subtasks
+
+- [ ] Confirm predecessor gates and stop if the server pivot is not ready. (AC: 1-8)
+  - [ ] Read `_bmad-output/implementation-artifacts/12-0-eventstore-parties-actor-invocation-feasibility-spike.md`.
+  - [ ] Read `_bmad-output/implementation-artifacts/12-1-apphost-recomposition.md`.
+  - [ ] Read `_bmad-output/implementation-artifacts/12-2-parties-actor-host.md`.
+  - [ ] Read `_bmad-output/implementation-artifacts/12-3-validation-relocation-and-tenant-auth-ownership.md`.
+  - [ ] If Story 12.0 still has only a blocked or not-proven command path, stop through the normal dev workflow; do not rewrite broad tests against an unproven gateway.
+  - [ ] If Stories 12.1-12.3 have not landed, limit work to red/failing guardrail tests that describe the expected conversion and do not delete old coverage prematurely.
+- [ ] Inventory old server-facing test coverage before editing. (AC: 1, 3, 4)
+  - [ ] Build a checklist of every file under `tests/Hexalith.Parties.Tests/Controllers/**` and classify it as command, query, admin/GDPR command, projection query, tenant authorization, problem-details/error mapping, or obsolete public-surface assertion.
+  - [ ] Build a checklist of every file under `tests/Hexalith.Parties.IntegrationTests/**` that calls `/api/v1/parties`, `/api/v1/admin`, old health/GDPR-header behavior, or direct Parties REST routes.
+  - [ ] Include current MCP tests under `tests/Hexalith.Parties.Tests/Mcp/**` only as retired evidence for Story 12.6; do not rewrite MCP behavior here.
+  - [ ] Record the coverage parity checklist in this story's Dev Agent Record or a focused test-rewrite note if it becomes too large for the completion notes.
+- [ ] Create EventStore gateway test helpers for Tier 2. (AC: 1, 2, 5, 6)
+  - [ ] Replace `PartiesApiTestFactory`/controller-oriented fixtures with an EventStore gateway factory or helper rooted in the topology from Story 12.1.
+  - [ ] Use EventStore command/query request shapes with `Domain="party"` unless a later accepted architecture change renames the domain.
+  - [ ] Use the Story 12.0 static registration shape mapping `*|party|v1` to `AppId=parties`, `MethodName=process` unless later implementation proves a narrower production configuration.
+  - [ ] Keep deterministic test tenants, users, roles, correlation ids, aggregate ids, and timestamps so rewritten tests do not rely on mutable global fixture state.
+  - [ ] Expose enough fakes/spies to prove whether the Parties domain invoker or actor host was called; unauthorized/invalid tests must assert no invocation.
+- [ ] Rewrite command-path controller tests through EventStore gateway. (AC: 1, 2, 4, 6)
+  - [ ] Convert create/update/delete/deactivate/reactivate/contact-channel/identifier/composite tests to `POST /api/v1/commands`.
+  - [ ] Convert GDPR command tests for key rotation, erasure, consent, restriction, portability, and encryption lifecycle to gateway command requests while preserving previous success and failure scenarios.
+  - [ ] Preserve old ProblemDetails assertions only where EventStore owns the response contract; remove Parties-specific controller exception-handler assumptions that no longer apply.
+  - [ ] For invalid payloads, assert platform validation response shape, no domain invocation, and no event persistence.
+  - [ ] For unauthorized tenants/roles, assert EventStore gateway denial before Parties invocation and no persisted events.
+- [ ] Rewrite query-path tests through EventStore gateway. (AC: 1, 2, 4)
+  - [ ] Convert party detail lookup, temporal name, search, admin read-only inspection, projection health/readiness, and Memories-backed search reads to `POST /api/v1/queries`.
+  - [ ] If EventStore query routing still needs a Parties adapter, add the minimal adapter test coverage required to prove the contract and record any unresolved blocker instead of keeping old REST tests green.
+  - [ ] Preserve tenant isolation negative tests for query paths: Tenant A must not receive Tenant B records under concurrent or sequential test data.
+  - [ ] Preserve erased-party query semantics using EventStore-owned response mapping rather than old controller status-code assumptions when those differ.
+- [ ] Rewrite Tier-3 Aspire integration tests. (AC: 3, 4, 5)
+  - [ ] Update `PartiesAspireTopologyFixture` and dependent tests to create clients for the EventStore gateway resource instead of the Parties service for command/query requests.
+  - [ ] Keep Parties health/readiness checks only for actor-host liveness, not user-facing command/query behavior.
+  - [ ] Replace GDPR header expectations with FR62 startup-log-only evidence or remove them when they are purely obsolete public-surface assertions.
+  - [ ] Assert events appear in Redis/EventStore state using the canonical EventStore stream/category/key format where the test has write-path scope.
+  - [ ] Keep infrastructure-unavailable skips explicit and narrow; do not silently skip coverage when Docker/DAPR/Aspire is available.
+- [ ] Preserve Tier-1 boundaries. (AC: 7)
+  - [ ] Keep `tests/Hexalith.Parties.Server.Tests/**` focused on pure aggregate `Handle`/`Apply` behavior.
+  - [ ] Keep `tests/Hexalith.Parties.Projections.Tests/**` focused on pure projection handlers, not DAPR actors or EventStore gateway startup.
+  - [ ] Keep contract tests in `tests/Hexalith.Parties.Contracts.Tests/**` free of service-host and DAPR dependencies.
+  - [ ] If a test needs WebApplicationFactory, DAPR, Redis, or EventStore gateway startup, it belongs in Tier 2/Tier 3, not Tier 1.
+- [ ] Harden fitness and obsolete-test detection. (AC: 5, 8)
+  - [ ] Update `tests/Hexalith.Parties.Tests/FitnessTests/ArchitecturalFitnessTests.cs` so actor-host constraints from Story 12.2 remain enforced after controller tests are deleted or moved.
+  - [ ] Add source/project checks that fail if tests still call old Parties REST routes such as `/api/v1/parties`, `/api/v1/admin`, `MapControllers`, `MapMcp`, or assert `X-GDPR-Warning`.
+  - [ ] Add a coverage-parity guardrail listing old controller/integration files and their EventStore gateway replacement tests or explicit future-story owner.
+  - [ ] Keep MCP replacement ownership pointed at Story 12.6; do not backfill new MCP host tests in this story.
+- [ ] Verify the rewrite. (AC: 1-8)
+  - [ ] Run `dotnet test tests/Hexalith.Parties.Server.Tests/Hexalith.Parties.Server.Tests.csproj`.
+  - [ ] Run `dotnet test tests/Hexalith.Parties.Projections.Tests/Hexalith.Parties.Projections.Tests.csproj`.
+  - [ ] Run `dotnet test tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj`.
+  - [ ] Run `dotnet test tests/Hexalith.Parties.IntegrationTests/Hexalith.Parties.IntegrationTests.csproj` when DAPR/Docker/Aspire are available; otherwise record the exact unavailability reason.
+  - [ ] Run `dotnet build Hexalith.Parties.slnx`.
+
+## Dev Notes
+
+### Source Context
+
+- Epic 12 is sourced from `_bmad-output/planning-artifacts/sprint-change-proposal-2026-05-07.md`; the proposal is authoritative for Story 12.4.
+- The pivot decision is that clients submit commands and queries to EventStore. EventStore owns public ingress, authentication, tenant validation, RBAC, response mapping, persistence, stream visibility, and admin inspection. Parties owns domain execution and projection runtime behind DAPR.
+- Story 12.0 has a partial spike conclusion. It says EventStore has command-side remote invocation machinery, but the previous topology lacked a separate EventStore API resource, a Parties `/process` endpoint, and a compatible query adapter. Story 12.4 must not assume those gaps are fixed unless Stories 12.1-12.3 have landed.
+- Story 12.1 owns AppHost recomposition. Story 12.2 owns removal of Parties public REST/MCP. Story 12.3 owns validation relocation and tenant authorization ownership. This story owns the server test conversion after those boundaries exist.
+- Wave 1 sequencing is structural: 12.1 -> 12.2 -> 12.3 -> 12.4. Wave 2 client, MCP, admin portal, picker, sample, and documentation work must not start here.
+
+### Current Implementation to Inspect
+
+- `tests/Hexalith.Parties.Tests/Controllers/**` currently exercises the old Parties REST/admin controllers. It contains tenant authorization, problem-details, temporal-name, consent, restriction, portability, erasure, key-rotation, cross-tenant isolation, and admin endpoint coverage that must be rewritten or explicitly retired.
+- `tests/Hexalith.Parties.Tests/Controllers/PartiesApiTestCollection.cs` serializes shared controller fixtures because `TestTenantAccessService.Handler` is mutable. Rewritten gateway tests should avoid this shared mutable handler pattern where practical.
+- `tests/Hexalith.Parties.IntegrationTests/PartyApiRoundTripIntegrationTests.cs` still posts to `/api/v1/parties`, reads `/api/v1/parties/{id}`, and asserts `X-GDPR-Warning`. All three assumptions are obsolete after the EventStore-fronted pivot.
+- `tests/Hexalith.Parties.IntegrationTests/HealthChecks/PartiesAspireTopologyFixture.cs` creates a Parties service HTTP client and waits for `parties` health. After Story 12.1, command/query tests should create an EventStore client for gateway calls while retaining Parties health checks only for actor-host liveness.
+- `tests/Hexalith.Parties.Tests/FitnessTests/ArchitecturalFitnessTests.cs` still has MCP/controller-era assumptions, including MCP types in the Parties assembly and a projection key-format check that reads `Controllers/PartiesController.cs`. Story 12.2/12.4 should update these fitness tests for the actor-host world.
+- `tests/Hexalith.Parties.Tests/FitnessTests/EventStorePartiesInvocationSpikeTests.cs` documents current blockers from Story 12.0. Once Stories 12.1-12.3 land, update or replace these tests so they prove the new positive path rather than freezing the old blockers.
+- `tests/Hexalith.Parties.Server.Tests/Aggregates/**` is the Tier-1 aggregate coverage. Keep it pure and do not move gateway or DAPR concerns into this project.
+- `tests/Hexalith.Parties.Projections.Tests/Handlers/**` is the Tier-1 projection-handler coverage. Keep handlers DAPR-free and put actor/gateway/projection-adapter coverage in Tier 2 or Tier 3.
+- `src/Hexalith.Parties/Controllers/**`, `src/Hexalith.Parties/Mcp/**`, and `src/Hexalith.Parties/Middleware/GdprWarningMiddleware.cs` are old public-surface code paths expected to disappear or be quarantined by Story 12.2. Do not write tests that require them to remain.
+- `Hexalith.EventStore/src/Hexalith.EventStore.Server/DomainServices/DaprDomainServiceInvoker.cs`, `DomainServiceResolver.cs`, `Commands/CommandRouter.cs`, and `Queries/QueryRouter.cs` define the gateway and domain/projection routing contracts the rewritten tests must exercise.
+
+### Coverage Parity Checklist
+
+- Command write path: create party, update person/organization details, contact channel add/update/remove, identifier add/remove, deactivate/reactivate, composite create/update, duplicate/conflict rejection, idempotency where already covered.
+- Query read path: get by id, search/find/list, temporal name lookup, projection not found/erased behavior, Memories-backed search result metadata, tenant-filtered empty results.
+- GDPR/security path: key lifecycle, key rotation, field encryption, erasure request/verification, consent, restriction, portability, erased reads, no raw protected payloads in logs or responses.
+- Tenant/auth path: missing tenant, unauthorized tenant, disabled tenant, stale/unknown tenant projection if still relevant internally, wrong role, cross-tenant query/write denial, fail-closed behavior.
+- Operational path: health/readiness, DAPR sidecar state/pubsub checks, projection health, degraded dependency behavior, EventStore stream/state proof in Tier 3.
+- Retired or future-owned path: old Parties REST routes, old admin controller routes, old in-process MCP direct tool tests, `X-GDPR-Warning` response header, Swagger/OpenAPI endpoint assertions.
+
+### Technical Constraints
+
+- Keep package versions aligned with this repository: .NET SDK `10.0.103`, `net10.0`, Aspire `13.2.2`, Aspire Hosting Testing `13.2.1`, CommunityToolkit Aspire DAPR `13.0.0`, `Dapr.Client`/`Dapr.AspNetCore` `1.17.7`, `Dapr.Actors`/`Dapr.Actors.AspNetCore` `1.16.1`, xUnit `2.9.3`, Shouldly `4.3.0`, NSubstitute `5.3.0`, and `Microsoft.AspNetCore.Mvc.Testing` `10.0.0`.
+- Do not initialize or update nested submodules. `Hexalith.EventStore`, `Hexalith.Tenants`, `Hexalith.FrontComposer`, and `Hexalith.Memories` are root-level submodules already present in the workspace.
+- Do not edit the `Hexalith.EventStore` submodule in this story. If the tests prove EventStore needs a platform change, stop and record the blocker for a separate EventStore story.
+- Keep `Domain="party"` as the tested command/query domain unless an accepted architecture update changes it. Story 12.0 found convention routing alone was not enough and recommended explicit registration to `AppId=parties`, `MethodName=process`.
+- Keep DAPR access-control semantics on the receiving sidecar. The Parties sidecar should allow only EventStore-origin invocation needed for the actor/domain path; tests should not normalize wildcard caller sets.
+- Do not reintroduce Parties REST controllers, in-process MCP tools, Swagger/OpenAPI, or per-response GDPR warning headers to keep old tests green.
+- Do not implement `Hexalith.Parties.Client`, `Hexalith.Parties.Mcp`, Admin Portal, Picker, sample, or getting-started rewrites. Those belong to Stories 12.5-12.9.
+
+### Architecture and Security Guidance
+
+- Gateway denial must happen before Parties actor/domain invocation. Tests should prove absence of invocation for invalid tenant/RBAC and invalid structural payload cases.
+- Domain validation must remain side-effect-free. Rejected payloads must not mutate actor state, persist EventStore events, publish pub/sub messages, update projections, or create sensitive audit payloads.
+- EventStore stream/state evidence matters because the pivot's purpose is to validate EventStore as the production entry point. Tier-3 write tests should assert EventStore persistence, not only HTTP status.
+- Safe failure responses may include correlation ids, tenant ids, command/query type names, denial categories, and validator rule names. They must not include access tokens, signing keys, raw encrypted payloads, protected personal data, or full command payload dumps.
+- Health tests should distinguish EventStore gateway readiness from Parties actor-host liveness. Parties may expose health/default endpoints, but user-facing command/query readiness is EventStore-owned after the pivot.
+- If an old assertion was really testing domain behavior, move it to Tier 1 or EventStore gateway tests. If it was only testing old REST/MCP transport behavior, retire it and name the future owner if applicable.
+
+### Testing Guidance
+
+- Minimum focused tests:
+  - Gateway create-party command reaches Parties domain execution and persists an EventStore event.
+  - Gateway get/search query returns projection data through the EventStore query path or records a blocked projection-adapter gap.
+  - Invalid create/update/composite payload is rejected before domain execution and persists no events.
+  - Unauthorized tenant/RBAC submission is rejected before Parties invocation and persists no events.
+  - Old REST/admin/MCP routes are absent from tests and source after Story 12.2.
+  - Key lifecycle, erasure, consent, restriction, portability, encryption, temporal-name, and Memories-backed search scenarios retain replacement coverage.
+  - Tier-1 test projects remain free of DAPR, HTTP, Redis, Aspire, and WebApplicationFactory dependencies.
+- Run at least:
+  - `dotnet test tests/Hexalith.Parties.Server.Tests/Hexalith.Parties.Server.Tests.csproj`
+  - `dotnet test tests/Hexalith.Parties.Projections.Tests/Hexalith.Parties.Projections.Tests.csproj`
+  - `dotnet test tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj`
+  - `dotnet test tests/Hexalith.Parties.IntegrationTests/Hexalith.Parties.IntegrationTests.csproj`
+  - `dotnet build Hexalith.Parties.slnx`
+- Current documentation check: Microsoft Learn for ASP.NET Core 10 integration tests still documents `WebApplicationFactory<TEntryPoint>` as the TestServer/bootstrap mechanism for app integration tests, and DAPR v1.17 docs still describe service invocation by app ID plus receiving-sidecar access-control policies. Use these mechanics only where they match the EventStore-fronted topology.
+
+### Out of Scope
+
+- Implementing the EventStore platform changes if the gateway/projection contract is insufficient.
+- Rebuilding the client package, MCP host, Admin Portal, Picker, sample app, README, or getting-started guide.
+- Preserving old Parties REST/admin/MCP transport behavior for compatibility.
+- Changing production deployment manifests beyond tests that assert the topology already introduced by Story 12.1.
+- Changing the public EventStore authorization, command, query, or projection contract shape.
+
+### References
+
+- `_bmad-output/planning-artifacts/sprint-change-proposal-2026-05-07.md` - Story 12.4 ACs, Epic 12 pivot rationale, sequencing, risks, and out-of-scope boundaries.
+- `_bmad-output/implementation-artifacts/12-0-eventstore-parties-actor-invocation-feasibility-spike.md` - gate, domain/app-id guidance, current command/query blockers, and EventStore submodule stop rule.
+- `_bmad-output/implementation-artifacts/12-1-apphost-recomposition.md` - EventStore-fronted AppHost topology and DAPR component split.
+- `_bmad-output/implementation-artifacts/12-2-parties-actor-host.md` - public REST/MCP cleanup and actor-host boundary.
+- `_bmad-output/implementation-artifacts/12-3-validation-relocation-and-tenant-auth-ownership.md` - validation and tenant authorization boundary.
+- `_bmad-output/implementation-artifacts/sprint-status.yaml` - Epic 12 sequence and story state.
+- `tests/Hexalith.Parties.Tests/Controllers/**` - old Tier-2 controller suite to rewrite or retire.
+- `tests/Hexalith.Parties.Tests/Mcp/**` - old in-process MCP tests; future replacement belongs to Story 12.6.
+- `tests/Hexalith.Parties.IntegrationTests/**` - Tier-3 Aspire/REST suite to rewrite through EventStore gateway.
+- `tests/Hexalith.Parties.Tests/FitnessTests/ArchitecturalFitnessTests.cs` - boundary and obsolete-surface fitness tests.
+- `tests/Hexalith.Parties.Tests/FitnessTests/EventStorePartiesInvocationSpikeTests.cs` - Story 12.0 blocker evidence to update when the positive path exists.
+- `tests/Hexalith.Parties.Server.Tests/Aggregates/**` - Tier-1 aggregate coverage to keep pure.
+- `tests/Hexalith.Parties.Projections.Tests/Handlers/**` - Tier-1 projection handler coverage to keep pure.
+- `Hexalith.EventStore/src/Hexalith.EventStore.Server/DomainServices/DomainServiceResolver.cs` - domain service resolution.
+- `Hexalith.EventStore/src/Hexalith.EventStore.Server/DomainServices/DaprDomainServiceInvoker.cs` - remote domain-service invocation contract.
+- `Hexalith.EventStore/src/Hexalith.EventStore.Server/Commands/CommandRouter.cs` - EventStore command routing path.
+- `Hexalith.EventStore/src/Hexalith.EventStore.Server/Queries/QueryRouter.cs` - EventStore query routing path.
+- DAPR v1.17 service invocation access-control docs: https://docs.dapr.io/operations/configuration/invoke-allowlist/
+- DAPR v1.17 actors docs: https://docs.dapr.io/developing-applications/building-blocks/actors/
+- ASP.NET Core 10 integration testing docs: https://learn.microsoft.com/en-us/aspnet/core/test/integration-tests?view=aspnetcore-10.0
+
+## Project Structure Notes
+
+- Keep rewritten Tier-2 gateway tests under `tests/Hexalith.Parties.Tests` unless they require full Aspire/Docker runtime.
+- Keep full topology tests under `tests/Hexalith.Parties.IntegrationTests`.
+- Keep pure aggregate and projection-handler coverage in `tests/Hexalith.Parties.Server.Tests` and `tests/Hexalith.Parties.Projections.Tests`.
+- Keep static architecture/source checks under `tests/Hexalith.Parties.Tests/FitnessTests`.
+- Generated `bin/` and `obj/` outputs must stay out of commits.
+
+## Dev Agent Record
+
+### Agent Model Used
+
+TBD
+
+### Debug Log References
+
+TBD
+
+### Completion Notes List
+
+TBD
+
+### File List
+
+TBD
+
+## Change Log
+
+| Date | Version | Description | Author |
+|---|---:|---|---|
+| 2026-05-09 | 0.1 | Created ready-for-dev story through BMAD pre-dev hardening automation. | Codex |
