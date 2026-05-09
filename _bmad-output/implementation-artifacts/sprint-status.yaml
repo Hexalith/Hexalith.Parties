@@ -1,4 +1,5 @@
 # generated: 2026-05-02
+# last_updated: 2026-05-09  (story 12-0 advanced in-progress -> review at close-out: spike outcome `partial`, 4/4 focused fitness tests pass, EventStore submodule clean, three pre-existing Hexalith.Parties.Tests failures (ArchitecturalFitnessTests.ClientProject_HasNoReferencesToServerProjectionsOrPartiesService, HealthEndpointIntegrationTests.QueryEndpoint_PubSubDegraded_AddsDegradationHeadersAsync, TemporalNameEndpointTests.GetPartyNameAt_ErasedParty_Returns410Gone) verified unrelated to spike footprint and logged in deferred-work.md.)
 # last_updated: 2026-05-09  (story 12-3 created as ready-for-dev for validation relocation and EventStore tenant auth ownership. Earlier same day: story 12-2 created as ready-for-dev for Parties actor host cleanup; story 12-1 created as ready-for-dev for AppHost recomposition; story 12-0 created as ready-for-dev; epic-12 moved backlog -> in-progress for EventStore-fronted architecture pivot spike.)
 # last_updated: 2026-05-09  (story 12-4 created as ready-for-dev for server Tier-1/Tier-2 test rewrite through the EventStore gateway.)
 # last_updated: 2026-05-09  (story 10-1-1 AC4 completed under PAUSE via user-directed AC4-only scope: AdminPortalPartyQueryService + PartiesAdminListCoordinator wired into PartiesAdminPortal.razor; coordinator drives every load/error transition; tenant-switch resets scope token and bumps coordinator version; AdminPortalAuthorizationStateTests tightened from method-presence to behavior assertions. AdminPortal tests 41/41 (was 33), contracts tests 42 passing/15 skipped, solution build clean. Story remains in-progress — AC3 paging/transport subtasks are HALTED, superseded by Epic 12 story 12-7. Same-day earlier: bmad-code-review applied 11 of 12 patches across PartiesAdminPortal.razor + PartiesAdminPortalApiClient.cs (1 reverted: _rowsQueryCache broke FluentDataGrid change detection). Decision-needed item (X-Tenant-Required heuristic) deferred. 13 defer items added to deferred-work.md.)
@@ -147,7 +148,7 @@ development_status:
   # Wave 1 (server pivot): 12-1..12-4. Wave 2 (consumer migration): 12-5..12-10.
   # Wave 2 cannot start until Wave 1 lands.
   epic-12: in-progress
-  12-0-eventstore-parties-actor-invocation-feasibility-spike: in-progress
+  12-0-eventstore-parties-actor-invocation-feasibility-spike: review
   12-1-apphost-recomposition: ready-for-dev
   12-2-parties-actor-host: ready-for-dev
   12-3-validation-relocation-and-tenant-auth-ownership: ready-for-dev

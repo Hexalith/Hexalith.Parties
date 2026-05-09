@@ -1,6 +1,6 @@
 # Story 12.0: EventStore-to-Parties Actor Invocation Feasibility Spike
 
-Status: in-progress
+Status: review
 
 ## Story
 
@@ -192,10 +192,12 @@ Codex GPT-5
 - Added dated spike conclusion artifact with verdict, topology, required configuration, reproduction samples, domain/app-id matrix, command/query blocker classifications, limitations, and follow-up decisions.
 - Classified the result as `partial`: EventStore submodule changes are not currently indicated, but the current Parties topology cannot yet prove remote command invocation, EventStore persistence through that remote path, or query projection response.
 - Completion gate is not advanced to `review` because the broader `Hexalith.Parties.Tests` regression run has three existing-area failures.
+- 2026-05-09 (close-out): Re-verified the three failures are pre-existing and unrelated to story 12-0. Spike commit `59c448c` only modified BMAD artifacts plus `EventStorePartiesInvocationSpikeTests.cs`; no production code changed. `git log` confirms all three failing test files were last modified in commit `db0bf14`, well before any 12-0 activity. Failures logged in `_bmad-output/implementation-artifacts/deferred-work.md` under "story 12-0 EventStore-to-Parties feasibility spike (2026-05-09)" for future Epic 12 / hardening pickup. Spike fitness tests still 4/4 green; EventStore submodule still clean. Status advanced to `review` per close-out decision.
 
 ### File List
 
 - `_bmad-output/implementation-artifacts/12-0-eventstore-parties-actor-invocation-feasibility-spike.md`
+- `_bmad-output/implementation-artifacts/deferred-work.md`
 - `_bmad-output/implementation-artifacts/sprint-status.yaml`
 - `docs/spikes/2026-05-09-eventstore-parties-actor-invocation.md`
 - `tests/Hexalith.Parties.Tests/FitnessTests/EventStorePartiesInvocationSpikeTests.cs`
@@ -207,6 +209,7 @@ Codex GPT-5
 | 2026-05-09 | 0.1 | Created ready-for-dev story through BMAD pre-dev hardening automation. | Codex |
 | 2026-05-09 | 0.2 | Party-mode review applied low-risk clarifications for spike evidence, domain/app-id matrix, query blocker classification, stop rules, tenant/auth evidence, dated conclusion artifact, and EventStore submodule verification. | Codex |
 | 2026-05-09 | 1.0 | Completed feasibility artifacts with partial verdict, focused fitness tests, blocker classification, and dated spike note; held status in-progress because broader regression suite has three existing-area failures. | Codex |
+| 2026-05-09 | 1.1 | Verified the three regression failures are pre-existing and unrelated to spike scope (last touched in `db0bf14`); logged them in `deferred-work.md`; advanced Status from in-progress to review. | Claude |
 
 ## Party-Mode Review
 
