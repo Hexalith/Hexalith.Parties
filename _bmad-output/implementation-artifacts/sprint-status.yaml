@@ -1,4 +1,5 @@
 # generated: 2026-05-02
+# last_updated: 2026-05-09  (bmad-code-review of story 10-1-1 applied: 11 of 12 patches applied across PartiesAdminPortal.razor + PartiesAdminPortalApiClient.cs (1 reverted: _rowsQueryCache broke FluentDataGrid change detection). Decision-needed item (X-Tenant-Required heuristic) deferred — story is PAUSED per Epic 12 pivot. 13 defer items added to deferred-work.md. Solution builds clean; 33/33 admin portal tests pass. Story 10-1-1 stays in-progress because AC4 (scaffolding wiring) is unstarted.)
 # last_updated: 2026-05-07  (sprint-change-proposal-2026-05-07.md approved: EventStore-Fronted Architecture Pivot. New Epic 12 added with 11 stories (12-0 spike + 12-1..12-10) all status=backlog. Stories 10-1-1, 10-2, 10-3 are PAUSED pending Epic 12 — their consumer-facing scope is superseded by Epic 12 stories 12-7 (admin portal rebuild on FrontComposer + EventStore queries) and 12-8 (picker rewrite); status fields preserved for audit. Companion PRD edits (FR60, FR62, NFR5, FR39-FR43, Epic 5 narrative, Epic 10 narrative) and Architecture additions (ADR D14, ADR D15, payload catalog) are out-of-band of this YAML. Earlier same-day updates: epic 9 retrospective completed and saved as epic-9-retro-2026-05-07.md; story 11-1 moved review→done after bmad-code-review applied 7 patches across decisions and direct fixes: opt-in `Tenants:Enabled` base default, shared state-store `keyPrefix=none` propagation, bounded HttpClient timeout, cancellation rethrow, AC2 manual-bootstrap docs, switchable tenants readiness probe + `/ready=503` integration test; 5 items deferred. Focused CommandApi tests 23/23 passing; AppHost and CommandApi build clean. Earlier same-day updates: story 11-1 moved blocked→review; story 10-1 moved in-progress→review; story 11-4 moved to done.)
 # project: Hexalith.Parties
 # project_key: NOKEY
@@ -35,7 +36,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-05-02
-last_updated: 2026-05-07
+last_updated: 2026-05-09
 # sprint_change_proposals:
 #   - sprint-change-proposal-2026-05-07.md  (EventStore-Fronted Architecture Pivot — added Epic 12; paused 10-1-1, 10-2, 10-3)
 project: Hexalith.Parties

@@ -113,9 +113,55 @@ Story 10.1 (`10-1-admin-portal-browse-search-and-inspect.md`) shipped the read-o
 - tests/Hexalith.Parties.AdminPortal.Tests/Services/RecordingAdminPortalApiClient.cs
 - _bmad-output/implementation-artifacts/10-1-1-admin-portal-frontcomposer-and-tenants-integration.md
 - _bmad-output/implementation-artifacts/sprint-status.yaml
+- _bmad-output/implementation-artifacts/_review-10-1-1-diff.patch (review artifact)
+- _bmad-output/implementation-artifacts/deferred-work.md (defer entries from review)
 
 ## Change Log
 
 - 2026-05-07: Completed AC1 Tenants-backed authorization derivation and halted on the unresolved rich-search capability endpoint contract.
 - 2026-05-07: Completed AC2 rich-search capability detection using CommandApi `/health`, with circuit cache invalidation on tenant switch and degraded-probe UI status.
 - 2026-05-07: Partially migrated AC3 surfaces to Fluent UI components; halted on missing FrontComposer paging/REST transport contracts.
+- 2026-05-09: BMad code review (three-layer adversarial: Blind Hunter + Edge Case Hunter + Acceptance Auditor) executed against `9b6d180..HEAD` scoped to AdminPortal. Findings recorded below.
+- 2026-05-09: Applied 11 of 12 patches (1 reverted: `_rowsQueryCache` broke FluentDataGrid change detection). Solution builds clean; 33/33 admin portal tests pass.
+
+## Review Findings (2026-05-09)
+
+### Acceptance audit summary
+
+All four AC promises are met to the scope claimed in the story. AC1 and AC2 fully delivered, AC3 partial-as-scoped (paging/REST transport explicitly halted), AC4 unstarted (scaffolding files received hardening but are not wired). Two minor bookkeeping discrepancies surfaced as defer items below.
+
+### Decision-needed (resolved 2026-05-09)
+
+- [x] [Review][Decision] `IsTenantProblem` heuristic relies on a header (`X-Tenant-Required`) that the backend does not emit — `StatusKind.TenantRequired` UX path is unreachable today. **Resolved → defer**. Reason: story is PAUSED and Epic 12 will rebuild this surface on FrontComposer + EventStore queries; deferred until a backend contract exists (header or problem+json `type` discriminator). Local `!HasTenantContext` is not a viable substitute because the heuristic is intended to catch server-side tenant-validation failures (suspended/missing tenant) where the client still has a tenant context. [src/Hexalith.Parties.AdminPortal/Services/PartiesAdminPortalApiClient.cs:1696]
+
+### Patches (fixable now)
+
+- [x] [Review][Patch] Rich-search probe ignores cancellation — `EnsureRichSearchCapabilityAsync` calls `GetRichSearchCapabilityAsync(CancellationToken.None)`. On disposal or rapid tenant switch, the in-flight probe completes against a stale context and overwrites `_richSearchCapability`. [src/Hexalith.Parties.AdminPortal/Components/PartiesAdminPortal.razor:617]
+- [x] [Review][Patch] `OnAuthenticationStateChanged` fire-and-forget swallows exceptions and lacks reentrancy guard — two rapid auth events (token refresh + tenant switch) interleave through `ApplyAuthorizationContextAsync` because the dedup-by-signature check happens AFTER the awaited `GetAuthorizationStateAsync`; both probes/loads run, risking cross-tenant data being painted. Wrap in try/catch with surfaced error, and add an in-flight guard (e.g., `Interlocked.Exchange` token or SemaphoreSlim) so only the latest signature wins. [src/Hexalith.Parties.AdminPortal/Components/PartiesAdminPortal.razor:411-415,440-485]
+- [x] [Review][Patch] `SelectPartyAsync` race vs `ResetVisibleState` — auth-state change during a detail load can clear `_detail` then have the in-flight task repopulate it because neither version (`_detailVersion`) nor the detail CTS is bumped by `ResetVisibleState` separately from the swap; a stale tenant's detail can land on the new tenant's screen. Bump `_detailVersion` in `ResetVisibleState` and re-check before assignment. [src/Hexalith.Parties.AdminPortal/Components/PartiesAdminPortal.razor:582-651]
+- [x] [Review][Patch] `TryReadProblemDetail` uses synchronous `ReadAsStream()` — sync-over-async on the Blazor circuit during the error path; switch to `ReadAsStreamAsync(cancellationToken)`. [src/Hexalith.Parties.AdminPortal/Services/PartiesAdminPortalApiClient.cs:1733]
+- [x] [Review][Patch] 204/304 returns `default!` `PartyDetail` (null at runtime), then `result.Payload.IsErased` NREs — either treat 204/304 as a not-found case before returning, or null-check at the consumer. [src/Hexalith.Parties.AdminPortal/Services/PartiesAdminPortalApiClient.cs:130-133, src/Hexalith.Parties.AdminPortal/Components/PartiesAdminPortal.razor:600]
+- [x] [Review][Patch] Detail panel renders crash if backend serializes `null` collections — `PartyDetail.ContactChannels`/`Identifiers`/`ConsentRecords`/`NameHistory` are `IReadOnlyList<>` with `[]` initializers, but `JsonSerializer` overwrites the default with `null` if the JSON property is `null`. Add `[JsonOnDeserialized]` normalization or null-coalesce at access sites. [src/Hexalith.Parties.AdminPortal/Components/PartiesAdminPortal.razor:151,168,185,227]
+- [x] [Review][Patch] Enter-to-submit accessibility regression — replacing `<EditForm OnValidSubmit>` with `<FluentTextInput>` + `<FluentButton OnClick>` removes Enter-key submit. Either wrap inputs in a form/EditForm that triggers `SubmitSearchAsync`, or add `@onkeydown` handling. [src/Hexalith.Parties.AdminPortal/Components/PartiesAdminPortal.razor:32-61]
+- [x] [Review][Patch] `ParseRichSearchCapability` defaults `searchReachable` to `true` when the property is missing (`!= false`) — fail-open. Should default to `false` so an outdated/malformed `/health` payload degrades safely. [src/Hexalith.Parties.AdminPortal/Services/PartiesAdminPortalApiClient.cs:1638]
+- [x] [Review][Patch][Reverted] `RowsQuery => _rows.AsQueryable()` allocates a fresh `EnumerableQuery<>` on every render — patch attempted via `_rowsQueryCache ??= ...` but reverted: caching the IQueryable identity caused FluentDataGrid to skip re-rendering after `_rows` mutations (6 tests failed). Tradeoff is not worth the LOW-severity perf gain; reverted to per-render allocation. [src/Hexalith.Parties.AdminPortal/Components/PartiesAdminPortal.razor:304]
+- [x] [Review][Patch] `_hasNextPage` correctly clamps when `page.Page == 0`, but `_page` is left at the stale client-side value, locking the user on a non-existent page. Canonicalize `_page` to `page.TotalPages` (or 1) in this branch. [src/Hexalith.Parties.AdminPortal/Components/PartiesAdminPortal.razor:558]
+- [x] [Review][Patch] `OnQueryChangedAsync`/`OnTypeChangedAsync`/`OnActiveChangedAsync` are `async`-suffixed but synchronous (`return Task.CompletedTask`) — drop the suffix or remove the Task wrapper to avoid misleading API and per-keystroke Task allocations. [src/Hexalith.Parties.AdminPortal/Components/PartiesAdminPortal.razor:514-530]
+- [x] [Review][Patch] `OnAfterRenderAsync` only catches `InvalidOperationException`/`JSException` around `FocusAsync` — add `ObjectDisposedException` to the catch list (post-disposal focus). [src/Hexalith.Parties.AdminPortal/Components/PartiesAdminPortal.razor:703-739]
+
+### Deferred (recorded in deferred-work.md)
+
+- [x] [Review][Defer] `AuthenticationStateChanged` subscription leak risk on circuit-aborted teardown — Dispose unsubscribes, but the lambda captures `this`; if Dispose never runs the singleton provider holds a stale reference. [src/Hexalith.Parties.AdminPortal/Components/PartiesAdminPortal.razor]
+- [x] [Review][Defer] `GetRichSearchCapabilityAsync` swallows `AdminPortalQueryException` — captive-portal HTML on `/health` becomes `Degraded` instead of `AuthenticationRequired`. Low priority because `/health` is typically anonymous. [src/Hexalith.Parties.AdminPortal/Services/PartiesAdminPortalApiClient.cs:1457]
+- [x] [Review][Defer] `AdminPortalQueryMetadata` constructor accepts unbounded header values — `BoundHeaderValue` was moved to the call sites. Test still passes the bounded path, but a future caller constructing the type directly bypasses the invariant. [src/Hexalith.Parties.AdminPortal/Services/AdminPortalQueryMetadata.cs]
+- [x] [Review][Defer] `SwapListCts` race: between `Interlocked.Exchange(ref _listCts, newCts)` and `token = newCts.Token`, a concurrent swap could `SafeCancel(newCts)`. Mitigated downstream in `AdminPortalPartyQueryService` but not at the component. [src/Hexalith.Parties.AdminPortal/Components/PartiesAdminPortal.razor:768,778]
+- [x] [Review][Defer] Test helpers use sync-over-async (`GetAwaiter().GetResult()` on Bunit dispatcher / `_tenantStore.SaveAsync(state).GetAwaiter().GetResult()`). Test-only, may deadlock on alternate runners. [tests/Hexalith.Parties.AdminPortal.Tests/Components/PartiesAdminPortalComponentTests.cs:2280,2291]
+- [x] [Review][Defer] `TryReadProblemDetail` reads JSON unbounded — `JsonDocument.Parse` of arbitrarily large response. Defensive only; backend is trusted. [src/Hexalith.Parties.AdminPortal/Services/PartiesAdminPortalApiClient.cs:1733]
+- [x] [Review][Defer] Two unauthenticated users share `<missing>` cache key in `AdminPortalAuthorizationState.ContextSignature` — mitigated because `IsAdmin=false` returns early. Pattern is fragile if downstream code adds branches. [src/Hexalith.Parties.AdminPortal/Services/AdminPortalAuthorizationService.cs:48-49]
+- [x] [Review][Defer] `AdminPortalQueryException.RetryAfter` populated from `Retry-After` header but never consumed by UI. [src/Hexalith.Parties.AdminPortal/Services/AdminPortalQueryException.cs]
+- [x] [Review][Defer] `FluentTextInput.Element` may be null on first render after a state transition — focus is silently lost; `_pendingFocus` already cleared, no retry path. [src/Hexalith.Parties.AdminPortal/Components/PartiesAdminPortal.razor:722]
+- [x] [Review][Defer] MediaType comparison rejects legitimate non-standard subtypes (e.g., `application/x-ndjson`) and a captive-portal `text/html` is reported as Unknown failure rather than redirect-to-sign-in. [src/Hexalith.Parties.AdminPortal/Services/PartiesAdminPortalApiClient.cs:265-269]
+- [x] [Review][Defer] `Items.Where(x => x.Party is not null).Select(x => x.Party!)` — backend should enforce `required` on `Party.Id`; null-Id slipping through would NRE the click handler. [src/Hexalith.Parties.AdminPortal/Components/PartiesAdminPortal.razor:506,569]
+- [x] [Review][Defer] File List drift: `_bmad-output/implementation-artifacts/sprint-status.yaml` is in the story's File List but the captured diff (9b6d180..HEAD) contains zero hunks for that path; sprint-tracking edit was made out-of-band or is missing. [_bmad-output/implementation-artifacts/sprint-status.yaml]
+- [x] [Review][Defer] Pagination subtask wording: Tasks line 36 reads `[ ] Replace pagination buttons with FrontComposer paging component`. The diff DOES replace pagination with `FluentButton`; the unchecked subtask refers to a dedicated FrontComposer paging component which the Completion Notes acknowledge does not exist. Tighten the subtask wording. [_bmad-output/implementation-artifacts/10-1-1-admin-portal-frontcomposer-and-tenants-integration.md:36]
+

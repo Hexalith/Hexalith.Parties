@@ -124,12 +124,14 @@ public sealed class PartiesAdminPortalApiClient : IPartiesAdminPortalApiClient
         try
         {
             using HttpResponseMessage response = await _httpClient.GetAsync(url, cancellationToken).ConfigureAwait(false);
-            ThrowIfFailure(response, cancellationToken);
+            await ThrowIfFailureAsync(response, cancellationToken).ConfigureAwait(false);
 
-            // Treat 204 No Content / 304 Not Modified as "empty result"; both legitimately have no body.
+            // 204/304 are unexpected for the typed list/detail endpoints (the backend
+            // always returns 200 with a body, including for empty pages). Surfacing as
+            // NotFound prevents callers from dereferencing a default-constructed payload.
             if (response.StatusCode is HttpStatusCode.NoContent or HttpStatusCode.NotModified)
             {
-                return new(default!, ReadMetadata(response));
+                throw new AdminPortalQueryException(AdminPortalQueryFailureKind.NotFound, (int)response.StatusCode);
             }
 
             EnsureJsonResponse(response);
@@ -173,7 +175,7 @@ public sealed class PartiesAdminPortalApiClient : IPartiesAdminPortalApiClient
         try
         {
             using HttpResponseMessage response = await _httpClient.GetAsync(url, cancellationToken).ConfigureAwait(false);
-            ThrowIfFailure(response, cancellationToken);
+            await ThrowIfFailureAsync(response, cancellationToken).ConfigureAwait(false);
 
             if (response.StatusCode is HttpStatusCode.NoContent or HttpStatusCode.NotModified)
             {
@@ -309,7 +311,9 @@ public sealed class PartiesAdminPortalApiClient : IPartiesAdminPortalApiClient
             return AdminPortalRichSearchCapability.LocalOnly(description ?? "Memories rich search is disabled");
         }
 
-        bool searchReachable = ReadBoolProperty(data, "searchReachable") != false;
+        // Fail closed: a missing or non-boolean searchReachable value degrades safely to
+        // local-only rather than implicitly trusting the backend reports rich search.
+        bool searchReachable = ReadBoolProperty(data, "searchReachable") == true;
         bool degradedReportedByMemories = ReadBoolProperty(data, "degradedReportedByMemories") == true;
         if (string.Equals(status, "Healthy", StringComparison.OrdinalIgnoreCase)
             && searchReachable
@@ -335,7 +339,7 @@ public sealed class PartiesAdminPortalApiClient : IPartiesAdminPortalApiClient
                 ? property.GetBoolean()
                 : null;
 
-    private static void ThrowIfFailure(HttpResponseMessage response, CancellationToken cancellationToken)
+    private static async Task ThrowIfFailureAsync(HttpResponseMessage response, CancellationToken cancellationToken)
     {
         if (response.IsSuccessStatusCode)
         {
@@ -363,7 +367,7 @@ public sealed class PartiesAdminPortalApiClient : IPartiesAdminPortalApiClient
 
         TimeSpan? retryAfter = ReadRetryAfter(response.Headers.RetryAfter);
         string? validationDetail = kind == AdminPortalQueryFailureKind.Validation
-            ? TryReadProblemDetail(response)
+            ? await TryReadProblemDetailAsync(response, cancellationToken).ConfigureAwait(false)
             : null;
 
         throw new AdminPortalQueryException(kind, (int)response.StatusCode, validationDetail, retryAfter);
@@ -398,7 +402,7 @@ public sealed class PartiesAdminPortalApiClient : IPartiesAdminPortalApiClient
         return null;
     }
 
-    private static string? TryReadProblemDetail(HttpResponseMessage response)
+    private static async Task<string?> TryReadProblemDetailAsync(HttpResponseMessage response, CancellationToken cancellationToken)
     {
         string? mediaType = response.Content.Headers.ContentType?.MediaType;
         if (mediaType is null
@@ -410,8 +414,8 @@ public sealed class PartiesAdminPortalApiClient : IPartiesAdminPortalApiClient
 
         try
         {
-            using Stream stream = response.Content.ReadAsStream();
-            using JsonDocument document = JsonDocument.Parse(stream);
+            using Stream stream = await response.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false);
+            using JsonDocument document = await JsonDocument.ParseAsync(stream, cancellationToken: cancellationToken).ConfigureAwait(false);
             if (document.RootElement.TryGetProperty("detail", out JsonElement detail) && detail.ValueKind == JsonValueKind.String)
             {
                 return detail.GetString();

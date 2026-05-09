@@ -10,9 +10,9 @@
         <p class="hx-parties-admin__status" role="status" aria-live="polite">@StatusText</p>
     </header>
 
-    <div class="hx-parties-admin__toolbar">
+    <div class="hx-parties-admin__toolbar" @onkeydown="OnToolbarKeyDownAsync">
         <FluentTextInput Value="@_filters.Query"
-                         ValueChanged="OnQueryChangedAsync"
+                         ValueChanged="OnQueryChanged"
                          TextInputType="TextInputType.Search"
                          Label="@EffectiveLabels.Search"
                          aria-label="@EffectiveLabels.SearchAriaLabel"
@@ -21,7 +21,7 @@
         <FluentSelect TOption="string" TValue="string"
                       Items="@_partyTypeOptions"
                       Value="@_filters.TypeValue"
-                      ValueChanged="OnTypeChangedAsync"
+                      ValueChanged="OnTypeChanged"
                       OptionText="PartyTypeOptionLabel"
                       Label="@EffectiveLabels.PartyType"
                       aria-label="@EffectiveLabels.PartyType"
@@ -29,7 +29,7 @@
         <FluentSelect TOption="string" TValue="string"
                       Items="@_activeStateOptions"
                       Value="@_filters.ActiveValue"
-                      ValueChanged="OnActiveChangedAsync"
+                      ValueChanged="OnActiveChanged"
                       OptionText="ActiveStateOptionLabel"
                       Label="@EffectiveLabels.ActiveState"
                       aria-label="@EffectiveLabels.ActiveState"
@@ -262,6 +262,8 @@
     private readonly string[] _partyTypeOptions = ["", "Person", "Organization"];
     private readonly string[] _activeStateOptions = ["", "true", "false"];
     private readonly string _instanceId = Guid.NewGuid().ToString("N").Substring(0, 8);
+    private readonly CancellationTokenSource _lifetimeCts = new();
+    private long _authContextClaim;
     private CancellationTokenSource? _listCts;
     private CancellationTokenSource? _detailCts;
     private PartyDetail? _detail;
@@ -359,9 +361,28 @@
 
     private async Task ApplyAuthorizationContextAsync()
     {
+        if (Volatile.Read(ref _disposed) != 0)
+        {
+            return;
+        }
+
+        // Each invocation claims a monotonic version. A later caller (e.g., AuthenticationStateChanged
+        // firing during OnParametersSetAsync) supersedes the earlier one: when the earlier
+        // caller resumes after its await, it sees a newer claim and exits without writing
+        // back state. This prevents two interleaved callers from both painting state across
+        // a tenant switch (cross-tenant leak) without holding a lock that would deadlock the
+        // cancellation flow when LoadPageAsync is awaiting an in-flight HTTP call.
+        long claim = Interlocked.Increment(ref _authContextClaim);
+
         AdminPortalAuthorizationState authorizationState = await AuthorizationService
-            .GetAuthorizationStateAsync()
+            .GetAuthorizationStateAsync(_lifetimeCts.Token)
             .ConfigureAwait(false);
+
+        if (claim != Volatile.Read(ref _authContextClaim))
+        {
+            return;
+        }
+
         string signature = string.Join('|',
             ContextKey ?? "<null>",
             authorizationState.ContextSignature,
@@ -403,6 +424,12 @@
         }
 
         await EnsureRichSearchCapabilityAsync(authorizationState.ContextSignature).ConfigureAwait(false);
+
+        if (claim != Volatile.Read(ref _authContextClaim))
+        {
+            return;
+        }
+
         await LoadPageAsync().ConfigureAwait(false);
     }
 
@@ -410,9 +437,33 @@
     {
         _ = InvokeAsync(async () =>
         {
-            await ApplyAuthorizationContextAsync().ConfigureAwait(false);
-            await SafeStateHasChangedAsync().ConfigureAwait(false);
+            try
+            {
+                await ApplyAuthorizationContextAsync().ConfigureAwait(false);
+                await SafeStateHasChangedAsync().ConfigureAwait(false);
+            }
+            catch (OperationCanceledException)
+            {
+                // Component disposed while applying — drop silently.
+            }
+            catch (Exception ex)
+            {
+                // Surface auth-state errors as the failure UI rather than dropping silently
+                // through a discarded fire-and-forget Task.
+                _statusKind = StatusKind.LoadFailure;
+                _validationDetail = ex.Message;
+                _lastFailure = AdminPortalQueryFailureKind.Unknown;
+                await SafeStateHasChangedAsync().ConfigureAwait(false);
+            }
         });
+    }
+
+    private async Task OnToolbarKeyDownAsync(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            await SubmitSearchAsync().ConfigureAwait(false);
+        }
     }
 
     private async Task SubmitSearchAsync()
@@ -422,23 +473,11 @@
         await LoadPageAsync().ConfigureAwait(false);
     }
 
-    private Task OnQueryChangedAsync(string value)
-    {
-        _filters.Query = value;
-        return Task.CompletedTask;
-    }
+    private void OnQueryChanged(string value) => _filters.Query = value;
 
-    private Task OnTypeChangedAsync(string value)
-    {
-        _filters.TypeValue = value;
-        return Task.CompletedTask;
-    }
+    private void OnTypeChanged(string value) => _filters.TypeValue = value;
 
-    private Task OnActiveChangedAsync(string value)
-    {
-        _filters.ActiveValue = value;
-        return Task.CompletedTask;
-    }
+    private void OnActiveChanged(string value) => _filters.ActiveValue = value;
 
     private async Task ClearFiltersAsync()
     {
@@ -549,13 +588,15 @@
         _totalCount = page.TotalCount;
 
         // Canonicalize _page from the server response so subsequent Previous/Next navigate
-        // from what the server actually served (e.g., when the request was clamped) — P1.
-        if (page.Page > 0)
-        {
-            _page = page.Page;
-        }
+        // from what the server actually served. When the server returns Page == 0 (e.g.,
+        // empty result with TotalPages > 0 because the client overflowed past the last
+        // available page), pin _page to TotalPages or 1 so the user is not stranded on a
+        // page that does not exist.
+        _page = page.Page > 0
+            ? page.Page
+            : page.TotalPages > 0 ? page.TotalPages : 1;
 
-        _hasNextPage = page.Page > 0 && page.TotalPages > page.Page;
+        _hasNextPage = page.TotalPages > _page;
         _statusKind = _richSearchCapability.IsDegraded
             ? StatusKind.RichSearchProbeDegraded
             : metadata.IsLocalOnlySearch
@@ -573,8 +614,10 @@
             return;
         }
 
+        // Use the per-instance lifetime token so an in-flight probe is canceled on disposal
+        // rather than completing against a torn-down component.
         _richSearchCapability = await ApiClient
-            .GetRichSearchCapabilityAsync(CancellationToken.None)
+            .GetRichSearchCapabilityAsync(_lifetimeCts.Token)
             .ConfigureAwait(false);
         _richSearchCapabilityContextSignature = contextSignature;
     }
@@ -608,7 +651,7 @@
                 }
                 else
                 {
-                    _detail = result.Payload;
+                    _detail = NormalizeDetail(result.Payload);
                     _detailMetadata = result.Metadata;
                     _detailEmptyKind = DetailEmptyKind.SelectParty;
                 }
@@ -680,6 +723,10 @@
                     break;
             }
         }
+        catch (ObjectDisposedException)
+        {
+            // Component disposed between render and focus — focus is best-effort.
+        }
         catch (InvalidOperationException)
         {
             // Element ref not yet rendered (e.g., retry button not visible) — drop silently.
@@ -710,6 +757,11 @@
     private void ResetVisibleState()
     {
         CancelInFlight();
+        // Bump both versions so any in-flight list/detail tasks that resume after this reset
+        // see a stale version and short-circuit, preventing cross-tenant data being painted
+        // back into _rows/_detail after a tenant switch.
+        Interlocked.Increment(ref _listVersion);
+        Interlocked.Increment(ref _detailVersion);
         _rows.Clear();
         _detail = null;
         _detailMetadata = null;
@@ -724,6 +776,18 @@
         _validationDetail = null;
         _lastFailure = null;
     }
+
+    private static PartyDetail NormalizeDetail(PartyDetail detail)
+        => detail with
+        {
+            // System.Text.Json overwrites the contract's `[]` defaults with `null` if a
+            // backend response omits/nulls the property, which would NRE the render of
+            // .Count and the foreach. Normalize to empty lists at the assignment site.
+            ContactChannels = detail.ContactChannels ?? [],
+            Identifiers = detail.Identifiers ?? [],
+            ConsentRecords = detail.ConsentRecords ?? [],
+            NameHistory = detail.NameHistory ?? [],
+        };
 
     private void ApplyFailure(AdminPortalQueryException ex)
     {
@@ -890,6 +954,15 @@
 
         AuthenticationStateProvider.AuthenticationStateChanged -= OnAuthenticationStateChanged;
         CancelInFlight();
+        try
+        {
+            _lifetimeCts.Cancel();
+        }
+        catch (ObjectDisposedException)
+        {
+        }
+
+        _lifetimeCts.Dispose();
     }
 
     private enum StatusKind
