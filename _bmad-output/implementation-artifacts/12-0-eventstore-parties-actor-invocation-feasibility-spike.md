@@ -1,6 +1,6 @@
 # Story 12.0: EventStore-to-Parties Actor Invocation Feasibility Spike
 
-Status: review
+Status: done
 
 ## Story
 
@@ -126,9 +126,11 @@ so that the rest of Epic 12 can proceed without an upstream platform dependency.
 
 Date/time: 2026-05-09 16:34 Europe/Paris
 
-Outcome: `partial`
+Outcome: `partial` — *static-analysis only; no runtime proof attempted.* See "Verdict basis" in the dated note.
 
 Detailed note: [docs/spikes/2026-05-09-eventstore-parties-actor-invocation.md](../../docs/spikes/2026-05-09-eventstore-parties-actor-invocation.md)
+
+Wave-1 unblock decision (AC4 closure): **Epic 12 is NOT blocked by this spike.** Wave 1 (Stories 12-1..12-4) may proceed. Wave 2 (12-5..12-10) remains gated on Wave-1 landing. The static finding "no EventStore submodule source change is indicated" is sufficient to unblock per AC4, but a runtime proof during 12.1's AppHost recomposition must convert the four predicted-blocked feasibility-table rows into evidence-backed status before any production claim is made.
 
 Findings:
 
@@ -142,12 +144,12 @@ Findings:
 
 Feasibility table:
 
-| Area | Status | Classification | Evidence |
+| Area | Status | Classification (AC2 vocabulary) | Evidence basis |
 |---|---|---|---|
-| Command routing | blocked | local topology / missing endpoint | EventStore can invoke DAPR domain services, but Parties currently has no compatible `/process` endpoint and AppHost does not start a separate EventStore API. |
-| Event persistence | unknown | dependent on command routing | `AggregateActor` persists events after domain invocation, but the remote Parties path did not reach invocation in this topology. |
-| Query routing | blocked | EventStore contract mismatch in Parties adapter | EventStore requires `IProjectionActor`; Parties actors currently expose custom actor interfaces. |
-| Projection response | blocked | missing Parties query adapter | No deterministic response can be returned through EventStore until a compatible projection actor/adapter exists. |
+| Command routing | blocked (predicted; not-attempted at runtime) | routing — local topology / missing endpoint | Static analysis: EventStore can invoke DAPR domain services, but Parties currently has no compatible `/process` endpoint and AppHost does not start a separate EventStore API. |
+| Event persistence | unknown (not-attempted) | dependent on command routing; also depends on shared state-store config (`actorStateStore=true`, `keyPrefix=none`) not yet verified | Static analysis: `AggregateActor` persists events after domain invocation, but the remote Parties path did not reach invocation in this topology. |
+| Query routing | blocked (predicted; not-attempted at runtime) | EventStore contract limitation — generic `IProjectionActor` contract not implemented by Parties projections | Static analysis: EventStore requires `IProjectionActor`; Parties actors currently expose custom actor interfaces. |
+| Projection response | blocked (predicted; not-attempted at runtime) | missing Parties query handler — no projection actor/adapter implements `IProjectionActor.QueryAsync(QueryEnvelope)` | Static analysis: no deterministic response can be returned through EventStore until a compatible projection actor/adapter exists. |
 
 Commands run:
 
@@ -177,7 +179,8 @@ Next-story guidance:
 
 ### Agent Model Used
 
-Codex GPT-5
+- Implementation (v0.1–v1.0): Codex GPT-5
+- Close-out (v1.1) + code-review patches (v1.2): Claude Opus 4.7
 
 ### Debug Log References
 
@@ -190,8 +193,8 @@ Codex GPT-5
 
 - Added focused spike fitness tests documenting current blockers: no separate EventStore API resource in Parties AppHost, no Parties `/process` endpoint, in-process Parties domain invoker precedence, and missing EventStore generic projection actor contract in Parties projections.
 - Added dated spike conclusion artifact with verdict, topology, required configuration, reproduction samples, domain/app-id matrix, command/query blocker classifications, limitations, and follow-up decisions.
-- Classified the result as `partial`: EventStore submodule changes are not currently indicated, but the current Parties topology cannot yet prove remote command invocation, EventStore persistence through that remote path, or query projection response.
-- Completion gate is not advanced to `review` because the broader `Hexalith.Parties.Tests` regression run has three existing-area failures.
+- Classified the result as `partial` based on static-analysis only (no runtime proof attempted): EventStore submodule changes are not currently indicated by source inspection, but the current Parties topology cannot yet prove remote command invocation, EventStore persistence through that remote path, or query projection response. All four feasibility-table rows are "predicted blocked / not-attempted at runtime" — runtime upgrade to evidence-backed status is deferred to Story 12.1+.
+- Initially held status `in-progress` at v1.0 because the broader `Hexalith.Parties.Tests` regression run had three existing-area failures; v1.1 reclassified those as pre-existing (see close-out below).
 - 2026-05-09 (close-out): Re-verified the three failures are pre-existing and unrelated to story 12-0. Spike commit `59c448c` only modified BMAD artifacts plus `EventStorePartiesInvocationSpikeTests.cs`; no production code changed. `git log` confirms all three failing test files were last modified in commit `db0bf14`, well before any 12-0 activity. Failures logged in `_bmad-output/implementation-artifacts/deferred-work.md` under "story 12-0 EventStore-to-Parties feasibility spike (2026-05-09)" for future Epic 12 / hardening pickup. Spike fitness tests still 4/4 green; EventStore submodule still clean. Status advanced to `review` per close-out decision.
 
 ### File List
@@ -202,6 +205,31 @@ Codex GPT-5
 - `docs/spikes/2026-05-09-eventstore-parties-actor-invocation.md`
 - `tests/Hexalith.Parties.Tests/FitnessTests/EventStorePartiesInvocationSpikeTests.cs`
 
+### Review Findings
+
+Adversarial review on 2026-05-09 (Blind Hunter + Edge Case Hunter + Acceptance Auditor). Raw findings: ~37; after dedup + dismiss: 18 actionable (1 decision-needed, 13 patches, 4 defer).
+
+- [x] [Review][Decision] **Verdict integrity** — Resolved (option b): kept `partial` and added prominent "static-analysis only — no runtime proof attempted" caveats. Story Outcome line, dated spike-note "Verdict basis" callout, feasibility table rows, command/query evidence sections, and domain/app-id matrix all now explicitly mark predicted-blocked / not-attempted-at-runtime status. Runtime upgrade deferred to Story 12.1+. — `partial` with all `blocked`/`unknown` rows rests entirely on static source inspection; no runtime proof attempted. Per Party-Mode Clarification "logs alone are not enough" + "two-day timeout without an incompatible platform behavior is `not-proven`, not automatically `no`". AC1 evidence list (request body, response status, resolved domain/app-id, Parties-side invocation marker, stream/category, event type, aggregate id, tenant/domain metadata, correlation/command id) cannot be satisfied by static reading; the matrix's "observed failure mode" column was never observed at runtime. Choose: (a) downgrade outcome to `not-proven` with rows `not-attempted`; (b) keep `partial` and add prominent "static-analysis only — no runtime proof attempted" caveats throughout story + spike note + completion notes; (c) run minimal runtime proof now to convert some rows to evidence-backed status; (d) accept current framing.
+- [x] [Review][Patch] Stale Completion Notes claim contradicts current Status [12-0-eventstore-parties-actor-invocation-feasibility-spike.md:194]
+- [x] [Review][Patch] AC2 blocker classification uses unenumerated vocabulary; map to AC2 enum (`EventStore contract limitation` or `missing Parties query handler`) [12-0-eventstore-parties-actor-invocation-feasibility-spike.md:149, docs/spikes/2026-05-09-eventstore-parties-actor-invocation.md:131,139]
+- [x] [Review][Patch] Spike note missing labeled "Logs/Trace Evidence" + "EventStore Persistence Evidence" sections (AC3 structural requirement) [docs/spikes/2026-05-09-eventstore-parties-actor-invocation.md]
+- [x] [Review][Patch] JSON request sample won't deserialize against real `CommandEnvelope` (uses `tenant` not `TenantId`, payload as JSON object not byte[], missing required `userId`) [docs/spikes/2026-05-09-eventstore-parties-actor-invocation.md:73-93]
+- [x] [Review][Patch] `messageId` example `01HXSPK000000000000000001` is not a valid ULID (no entropy section) [docs/spikes/2026-05-09-eventstore-parties-actor-invocation.md:301]
+- [x] [Review][Patch] `ShouldNotContain("IProjectionActor")` over-matches local `IPartyDetailProjectionActor` and misses inheritance from base class `ProjectionActor` [tests/Hexalith.Parties.Tests/FitnessTests/EventStorePartiesInvocationSpikeTests.cs:71-72]
+- [x] [Review][Patch] Spike fitness tests are short-shelf-life string-greps; add class-level XML doc comment naming the deletion gate (Story 12.1 close) so future devs know the tests retire with the AppHost recomposition [tests/Hexalith.Parties.Tests/FitnessTests/EventStorePartiesInvocationSpikeTests.cs]
+- [x] [Review][Patch] `IndexOf("AddEventStoreServer(configuration)")` is parameter-name-coupled; routine refactor to `AddEventStoreServer(builder.Configuration)` returns -1 and the inequality comparison fails with a confusing message. Use `"AddEventStoreServer("` substring and guard both indices `>= 0` before comparing [tests/Hexalith.Parties.Tests/FitnessTests/EventStorePartiesInvocationSpikeTests.cs:47-49]
+- [x] [Review][Patch] Domain matrix `Parties` row failure mode misattributed (resolver passes case unchanged; the actual failure is DAPR sidecar app-id casing convention). Add a clarifying sentence [docs/spikes/2026-05-09-eventstore-parties-actor-invocation.md:65]
+- [x] [Review][Patch] Tenant/auth values in spike note are prescriptive ("must include `sub=spike-user`") but no harness was actually run — relabel as forward-looking inputs or explicitly state "no harness executed; values are for the next runtime proof" [docs/spikes/2026-05-09-eventstore-parties-actor-invocation.md:55-57]
+- [x] [Review][Patch] Change Log v1.1 attributes to "Claude" but Agent Model Used field still says "Codex GPT-5" — add a Close-out actor line or update the field to reflect the close-out actor [12-0-eventstore-parties-actor-invocation-feasibility-spike.md:135,170]
+- [x] [Review][Patch] `MapPost("/process"` `ShouldNotContain` is bypassed by `MapMethods("/process", ["POST"], ...)`, casing variants, and routing constants — the assertion silently keeps reporting "blocker present" if a future story implements `/process` via any of those paths [tests/Hexalith.Parties.Tests/FitnessTests/EventStorePartiesInvocationSpikeTests.cs:29-31]
+- [x] [Review][Patch] Add explicit Wave-1 unblock decision sentence to Spike Conclusion ("Epic 12 is NOT blocked. Wave 1 — Stories 12-1..12-4 — may proceed.") satisfying AC4 closure [12-0-eventstore-parties-actor-invocation-feasibility-spike.md (## Spike Conclusion)]
+- [x] [Review][Defer] Wildcard `*|party|v1` registration assumes resolver wildcard key format `*|domain|version` with case-passthrough on domain — defer until Story 12.1 wires the static registration [docs/spikes/2026-05-09-eventstore-parties-actor-invocation.md:57,63]
+- [x] [Review][Defer] Reproduction commands use `rg -n "^"` (effectively `cat -n`) and assume `rg` on PATH while the code block is labeled `powershell` [docs/spikes/2026-05-09-eventstore-parties-actor-invocation.md:153-167]
+- [x] [Review][Defer] Event persistence "unknown" classification doesn't acknowledge state-store config dependencies (`actorStateStore=true`, `keyPrefix=none` between EventStore and Parties); 12.1 will surface [docs/spikes/2026-05-09-eventstore-parties-actor-invocation.md:139,141]
+- [x] [Review][Defer] Domain matrix may read as "convention works for `party`" then "explicit registration required" without bridging — clarification tied to D1 verdict-integrity outcome [docs/spikes/2026-05-09-eventstore-parties-actor-invocation.md domain matrix]
+
+Dismissed (7): missing `using` directives (ImplicitUsings enabled at root `Directory.Build.props`); `RepositoryRoot.Locate()` unintroduced (file already exists at `tests/Hexalith.Parties.Tests/FitnessTests/RepositoryRoot.cs`); duplicate `# last_updated:` comments (project's append-only convention in sprint-status.yaml header); 12-4 `backlog` → `ready-for-dev` flip (committed in separate commit `5a903f0` for story 12-4 creation, not 12-0 work); deferred-work entries lack quoted snippets (file:line is sufficient — quoted snippets rot worse than line refs); `DomainServiceRequestRouter.ProcessAsync` substring still serves the assertion's intent of "no current EventStore-style remote router wiring"; `git -C Hexalith.EventStore status --short` assumes initialized submodule (reproduction guidance only — the spike itself ran with the submodule initialized).
+
 ## Change Log
 
 | Date | Version | Description | Author |
@@ -210,6 +238,7 @@ Codex GPT-5
 | 2026-05-09 | 0.2 | Party-mode review applied low-risk clarifications for spike evidence, domain/app-id matrix, query blocker classification, stop rules, tenant/auth evidence, dated conclusion artifact, and EventStore submodule verification. | Codex |
 | 2026-05-09 | 1.0 | Completed feasibility artifacts with partial verdict, focused fitness tests, blocker classification, and dated spike note; held status in-progress because broader regression suite has three existing-area failures. | Codex |
 | 2026-05-09 | 1.1 | Verified the three regression failures are pre-existing and unrelated to spike scope (last touched in `db0bf14`); logged them in `deferred-work.md`; advanced Status from in-progress to review. | Claude |
+| 2026-05-09 | 1.2 | bmad-code-review applied: D1 verdict-integrity resolved (option b — kept `partial`, added static-analysis-only caveats); 13 patches applied across story file, dated spike note, and `EventStorePartiesInvocationSpikeTests.cs`; 4 items deferred to `deferred-work.md`; 7 dismissed. Spike fitness tests still 4/4 green. Status advanced from review to done. | Claude |
 
 ## Party-Mode Review
 
