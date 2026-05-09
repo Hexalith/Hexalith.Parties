@@ -1,5 +1,6 @@
 @page "/admin/parties"
-@inject IPartiesAdminPortalApiClient ApiClient
+@inject AdminPortalPartyQueryService QueryService
+@inject PartiesAdminListCoordinator ListCoordinator
 @inject IAdminPortalAuthorizationService AuthorizationService
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @implements IDisposable
@@ -406,6 +407,7 @@
         {
             _statusKind = StatusKind.SignInRequired;
             _detailEmptyKind = DetailEmptyKind.SignInRequired;
+            ListCoordinator.Transition(AdminPortalListState.MissingToken);
             return;
         }
 
@@ -413,6 +415,7 @@
         {
             _statusKind = StatusKind.TenantUnavailable;
             _detailEmptyKind = DetailEmptyKind.TenantUnavailable;
+            ListCoordinator.Transition(AdminPortalListState.MissingTenant);
             return;
         }
 
@@ -420,6 +423,7 @@
         {
             _statusKind = StatusKind.AdminRequired;
             _detailEmptyKind = DetailEmptyKind.AccessDenied;
+            ListCoordinator.Transition(AdminPortalListState.Forbidden);
             return;
         }
 
@@ -453,6 +457,7 @@
                 _statusKind = StatusKind.LoadFailure;
                 _validationDetail = ex.Message;
                 _lastFailure = AdminPortalQueryFailureKind.Unknown;
+                ListCoordinator.Transition(AdminPortalListState.TransientFailure);
                 await SafeStateHasChangedAsync().ConfigureAwait(false);
             }
         });
@@ -519,6 +524,7 @@
         long version = SwapListCts(out CancellationToken token);
         _isLoading = true;
         _statusKind = StatusKind.Loading;
+        ListCoordinator.Transition(AdminPortalListState.Loading);
         _validationDetail = null;
         _rows.Clear();
         _detail = null;
@@ -530,14 +536,14 @@
         {
             if (string.IsNullOrWhiteSpace(_filters.Query))
             {
-                AdminPortalQueryResult<PagedResult<PartyIndexEntry>> result = await ApiClient
+                AdminPortalQueryResult<PagedResult<PartyIndexEntry>> result = await QueryService.ApiClient
                     .ListPartiesAsync(CreateListRequest(), token)
                     .ConfigureAwait(false);
                 await ApplyRowsAsync(result.Payload, result.Metadata, version).ConfigureAwait(false);
             }
             else
             {
-                AdminPortalQueryResult<PagedResult<PartySearchResult>> result = await ApiClient
+                AdminPortalQueryResult<PagedResult<PartySearchResult>> result = await QueryService.ApiClient
                     .SearchPartiesAsync(CreateSearchRequest(), token)
                     .ConfigureAwait(false);
                 PagedResult<PartyIndexEntry> page = new()
@@ -597,6 +603,9 @@
             : page.TotalPages > 0 ? page.TotalPages : 1;
 
         _hasNextPage = page.TotalPages > _page;
+        bool degraded = _richSearchCapability.IsDegraded
+            || metadata.IsLocalOnlySearch
+            || metadata.IsDegraded;
         _statusKind = _richSearchCapability.IsDegraded
             ? StatusKind.RichSearchProbeDegraded
             : metadata.IsLocalOnlySearch
@@ -604,6 +613,11 @@
             : metadata.IsDegraded
                 ? StatusKind.Degraded
                 : StatusKind.Loaded;
+        ListCoordinator.Transition(_rows.Count == 0
+            ? AdminPortalListState.ReadyEmpty
+            : degraded
+                ? AdminPortalListState.DegradedSearch
+                : AdminPortalListState.ReadyHasResults);
         await SafeStateHasChangedAsync().ConfigureAwait(false);
     }
 
@@ -616,7 +630,7 @@
 
         // Use the per-instance lifetime token so an in-flight probe is canceled on disposal
         // rather than completing against a torn-down component.
-        _richSearchCapability = await ApiClient
+        _richSearchCapability = await QueryService.ApiClient
             .GetRichSearchCapabilityAsync(_lifetimeCts.Token)
             .ConfigureAwait(false);
         _richSearchCapabilityContextSignature = contextSignature;
@@ -635,7 +649,7 @@
 
         try
         {
-            AdminPortalQueryResult<PartyDetail> result = await ApiClient
+            AdminPortalQueryResult<PartyDetail> result = await QueryService.ApiClient
                 .GetPartyAsync(partyId, token)
                 .ConfigureAwait(false);
             if (version == _detailVersion)
@@ -762,6 +776,11 @@
         // back into _rows/_detail after a tenant switch.
         Interlocked.Increment(ref _listVersion);
         Interlocked.Increment(ref _detailVersion);
+        // Cancel the per-circuit scope token and reset the list coordinator so any FrontComposer
+        // observer holding a previous-tenant token sees cancellation before the new tenant's
+        // load fires (AC4 — wires the previously dead scaffolding into the live lifecycle).
+        QueryService.ResetForTenantSwitch();
+        ListCoordinator.ResetForTenantSwitch();
         _rows.Clear();
         _detail = null;
         _detailMetadata = null;
@@ -819,6 +838,17 @@
             AdminPortalQueryFailureKind.Forbidden => DetailEmptyKind.AccessDenied,
             _ => DetailEmptyKind.SelectParty,
         };
+        ListCoordinator.Transition(ex.Kind switch
+        {
+            AdminPortalQueryFailureKind.AuthenticationRequired => AdminPortalListState.MissingToken,
+            AdminPortalQueryFailureKind.TenantRequired => AdminPortalListState.MissingTenant,
+            AdminPortalQueryFailureKind.Forbidden => AdminPortalListState.Forbidden,
+            AdminPortalQueryFailureKind.NotFound => AdminPortalListState.NotFound,
+            AdminPortalQueryFailureKind.Gone => AdminPortalListState.Gone,
+            // Validation/Unknown share the transient bucket on the coordinator surface;
+            // the component still distinguishes them via _statusKind for screen text.
+            _ => AdminPortalListState.TransientFailure,
+        });
 
         if (RetryAvailable)
         {

@@ -36,6 +36,8 @@ public sealed class PartiesAdminPortalComponentTests : BunitContext
         Services.AddSingleton<AuthenticationStateProvider>(_authProvider);
         Services.AddSingleton<ITenantProjectionStore>(_tenantStore);
         Services.AddScoped<IAdminPortalAuthorizationService, AdminPortalAuthorizationService>();
+        Services.AddScoped<AdminPortalPartyQueryService>();
+        Services.AddScoped<PartiesAdminListCoordinator>();
     }
 
     [Fact]
@@ -637,6 +639,164 @@ public sealed class PartiesAdminPortalComponentTests : BunitContext
         {
             badge.GetAttribute("aria-label").ShouldBe(badge.TextContent.Trim());
         }
+    }
+
+    [Fact]
+    public void PartiesAdminPortal_HealthyLoad_DrivesListCoordinatorToReadyHasResults()
+    {
+        // AC4: live load/error transitions must drive PartiesAdminListCoordinator.State
+        // (no longer dead-code scaffolding). A successful list with rows transitions the
+        // coordinator from the initial Loading to ReadyHasResults.
+        var coordinator = new PartiesAdminListCoordinator();
+        Services.AddSingleton(coordinator);
+
+        var api = new RecordingAdminPortalApiClient();
+        api.EnqueueList(Page(IndexEntry("party-c1", "Coordinated Row", PartyType.Person, true)));
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+
+        IRenderedComponent<PartiesAdminPortal> cut = RenderAuthorized("scope-coord");
+
+        cut.WaitForAssertion(() =>
+        {
+            cut.Markup.ShouldContain("Coordinated Row");
+            coordinator.State.ShouldBe(AdminPortalListState.ReadyHasResults);
+        });
+    }
+
+    [Fact]
+    public void PartiesAdminPortal_EmptyLoad_DrivesListCoordinatorToReadyEmpty()
+    {
+        var coordinator = new PartiesAdminListCoordinator();
+        Services.AddSingleton(coordinator);
+
+        var api = new RecordingAdminPortalApiClient();
+        api.EnqueueList(Page<PartyIndexEntry>());
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+
+        IRenderedComponent<PartiesAdminPortal> cut = RenderAuthorized("scope-empty");
+
+        cut.WaitForAssertion(() => coordinator.State.ShouldBe(AdminPortalListState.ReadyEmpty));
+    }
+
+    [Fact]
+    public void PartiesAdminPortal_LocalOnlySearch_DrivesListCoordinatorToDegradedSearch()
+    {
+        var coordinator = new PartiesAdminListCoordinator();
+        Services.AddSingleton(coordinator);
+
+        var api = new RecordingAdminPortalApiClient();
+        api.EnqueueList(Page<PartyIndexEntry>());
+        api.EnqueueSearch(
+            Page(new PartySearchResult
+            {
+                Party = IndexEntry("party-degraded", "Degraded Match", PartyType.Person, true),
+                Matches = [],
+                RelevanceScore = 1.0,
+            }),
+            new AdminPortalQueryMetadata(SearchStatus: "LocalOnly", SearchDegradedReason: "rich-search-disabled"));
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+
+        IRenderedComponent<PartiesAdminPortal> cut = RenderAuthorized("scope-degraded");
+        cut.WaitForAssertion(() => api.ListRequests.Count.ShouldBe(1));
+
+        SetSearch(cut, "needle");
+        ClickFluentButton(cut, "Search");
+
+        cut.WaitForAssertion(() => coordinator.State.ShouldBe(AdminPortalListState.DegradedSearch));
+    }
+
+    [Fact]
+    public void PartiesAdminPortal_TransientListFailure_DrivesListCoordinatorToTransientFailure()
+    {
+        var coordinator = new PartiesAdminListCoordinator();
+        Services.AddSingleton(coordinator);
+
+        var api = new RecordingAdminPortalApiClient();
+        api.EnqueueListFailure(AdminPortalQueryFailureKind.TransientFailure);
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+
+        IRenderedComponent<PartiesAdminPortal> cut = RenderAuthorized("scope-transient");
+
+        cut.WaitForAssertion(() => coordinator.State.ShouldBe(AdminPortalListState.TransientFailure));
+    }
+
+    [Fact]
+    public void PartiesAdminPortal_Unauthenticated_DrivesListCoordinatorToMissingToken()
+    {
+        var coordinator = new PartiesAdminListCoordinator();
+        Services.AddSingleton(coordinator);
+
+        var api = new RecordingAdminPortalApiClient();
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+
+        IRenderedComponent<PartiesAdminPortal> cut = Render<PartiesAdminPortal>(p => p
+            .Add(x => x.ContextKey, "scope-anon"));
+
+        cut.WaitForAssertion(() => coordinator.State.ShouldBe(AdminPortalListState.MissingToken));
+    }
+
+    [Fact]
+    public void PartiesAdminPortal_MissingTenant_DrivesListCoordinatorToMissingTenant()
+    {
+        var coordinator = new PartiesAdminListCoordinator();
+        Services.AddSingleton(coordinator);
+
+        var api = new RecordingAdminPortalApiClient();
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+
+        // Authenticated user but the tenant projection knows nothing about the active scope.
+        _authProvider.SetAuthenticated(AdminUserId, "scope-unknown");
+
+        IRenderedComponent<PartiesAdminPortal> cut = Render<PartiesAdminPortal>(p => p
+            .Add(x => x.ContextKey, "scope-unknown"));
+
+        cut.WaitForAssertion(() => coordinator.State.ShouldBe(AdminPortalListState.MissingTenant));
+    }
+
+    [Fact]
+    public void PartiesAdminPortal_NonAdmin_DrivesListCoordinatorToForbidden()
+    {
+        var coordinator = new PartiesAdminListCoordinator();
+        Services.AddSingleton(coordinator);
+
+        var api = new RecordingAdminPortalApiClient();
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+        SeedTenant("scope-reader", "reader-user", TenantRole.TenantReader);
+        _authProvider.SetAuthenticated("reader-user", "scope-reader");
+
+        IRenderedComponent<PartiesAdminPortal> cut = Render<PartiesAdminPortal>(p => p
+            .Add(x => x.ContextKey, "scope-reader"));
+
+        cut.WaitForAssertion(() => coordinator.State.ShouldBe(AdminPortalListState.Forbidden));
+    }
+
+    [Fact]
+    public void PartiesAdminPortal_TenantSwitch_CancelsQueryServiceScopeToken()
+    {
+        // AC4: AdminPortalPartyQueryService must be wired into the component lifecycle, not
+        // dead code. Tenant switch must invoke ResetForTenantSwitch on the live instance,
+        // observable as the previous scope token transitioning to canceled.
+        var api = new RecordingAdminPortalApiClient();
+        api.EnqueueList(Page(IndexEntry("party-tenA", "Tenant A", PartyType.Person, true)));
+        api.EnqueueList(Page(IndexEntry("party-tenB", "Tenant B", PartyType.Person, true)));
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+        var queryService = new AdminPortalPartyQueryService(api);
+        Services.AddSingleton(queryService);
+
+        IRenderedComponent<PartiesAdminPortal> cut = RenderAuthorized("scope-a");
+        cut.WaitForAssertion(() => cut.Markup.ShouldContain("Tenant A"));
+
+        CancellationToken beforeToken = queryService.ScopeCancellationToken;
+        beforeToken.IsCancellationRequested.ShouldBeFalse();
+
+        SeedTenant("scope-b", AdminUserId, TenantRole.TenantOwner);
+        cut.InvokeAsync(() => _authProvider.SetAuthenticated(AdminUserId, "scope-b"));
+
+        cut.WaitForAssertion(() =>
+        {
+            cut.Markup.ShouldContain("Tenant B");
+            beforeToken.IsCancellationRequested.ShouldBeTrue();
+        });
     }
 
     private IRenderedComponent<PartiesAdminPortal> RenderAuthorized(string contextKey, int pageSize = AdminPortalQueryBounds.DefaultPageSize)

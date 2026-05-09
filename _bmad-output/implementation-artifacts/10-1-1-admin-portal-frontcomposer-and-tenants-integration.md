@@ -33,15 +33,15 @@ so that AC3, AC7, and AC8 of Story 10.1 are met without relying on host wiring o
 - [ ] FrontComposer Fluent UI adoption (AC: 3)
   - [x] Replace `<table>` with `FluentDataGrid<T>` and column descriptors.
   - [x] Replace search/filter inputs with `FluentTextInput`/`FluentSelect`.
-  - [ ] Replace pagination buttons with FrontComposer paging component.
-  - [ ] Wire FrontComposer query transport (ETag caching, auth redirect).
-- [ ] Activate scaffolding services (AC: 4)
-  - [ ] Inject `AdminPortalPartyQueryService` into the component.
-  - [ ] Drive `PartiesAdminListCoordinator.State` from real load/error transitions.
-  - [ ] Tighten fitness tests to assert behavior, not type presence.
-- [ ] Validate build and affected tests
-  - [ ] `dotnet test tests\Hexalith.Parties.AdminPortal.Tests --configuration Release`.
-  - [ ] `dotnet build Hexalith.Parties.slnx --configuration Release`.
+  - [ ] Replace pagination buttons with FrontComposer paging component. **HALTED — no dedicated FrontComposer paging component exists in the repo; Epic 12 story 12-7 (admin portal rebuild on FrontComposer + EventStore queries) supersedes this subtask.**
+  - [ ] Wire FrontComposer query transport (ETag caching, auth redirect). **HALTED — no Parties REST query transport contract exists for FrontComposer; superseded by Epic 12 story 12-7.**
+- [x] Activate scaffolding services (AC: 4)
+  - [x] Inject `AdminPortalPartyQueryService` into the component.
+  - [x] Drive `PartiesAdminListCoordinator.State` from real load/error transitions.
+  - [x] Tighten fitness tests to assert behavior, not type presence.
+- [x] Validate build and affected tests
+  - [x] `dotnet test tests\Hexalith.Parties.AdminPortal.Tests --configuration Release`.
+  - [x] `dotnet build Hexalith.Parties.slnx --configuration Release`.
 
 ## Dev Notes
 
@@ -79,6 +79,8 @@ Story 10.1 (`10-1-admin-portal-browse-search-and-inspect.md`) shipped the read-o
 - 2026-05-07: `dotnet test tests\Hexalith.Parties.AdminPortal.Tests\Hexalith.Parties.AdminPortal.Tests.csproj --configuration Release` passed: 33/33 after Fluent UI migration and selector updates.
 - 2026-05-07: `dotnet build Hexalith.Parties.slnx --configuration Release --no-restore` passed.
 - 2026-05-07: Searched for a dedicated FrontComposer paging component and REST query transport with ETag/auth redirect; no matching paging component or Parties REST transport contract was present.
+- 2026-05-09 (AC4 wiring): Red `PartiesAdminPortal_HealthyLoad_DrivesListCoordinatorToReadyHasResults` confirmed the coordinator was dead-code (state stayed Loading regardless of load outcome) before the wiring landed; all 8 new bUnit transition tests went green after the component changes.
+- 2026-05-09 (regression check): `dotnet test tests/Hexalith.Parties.Server.Tests --configuration Release` 177/177 passing; `dotnet test tests/Hexalith.Parties.Picker.Tests --configuration Release` 21/21 passing; `dotnet test tests/Hexalith.Parties.Client.Tests --configuration Release` 57 passing / 6 skipped / 2 failing — both failures are pre-existing fitness tests (`ClientAssembly_HasNoReferencesToServerProjectionsOrPartiesService`, `ClientCsproj_HasNoForbiddenProjectReferences`) that forbid any reference starting with the bare prefix `Hexalith.Parties`, which matches the legitimate `Hexalith.Parties.Contracts` reference. Unrelated to AdminPortal changes; not introduced by this story. `dotnet test tests/Hexalith.Parties.Tests --configuration Release` 398/401 (3 pre-existing integration test failures in `Hexalith.Parties.Tests`, project untouched by this story).
 
 ### Completion Notes
 
@@ -92,6 +94,11 @@ Story 10.1 (`10-1-admin-portal-browse-search-and-inspect.md`) shipped the read-o
 - Email and identifier search mode buttons now activate only when the probe reports healthy rich search; degraded probes keep those modes disabled and surface a distinct "Rich search is temporarily unavailable" status instead of the local-only status.
 - Partially advanced AC3: the browse grid now uses `FluentDataGrid<T>` with template columns, toolbar search uses `FluentTextInput`, filters use `FluentSelect`, and actions use `FluentButton`.
 - HALT before completing the remaining AC3 subtasks because the repository does not currently expose a dedicated FrontComposer paging component or a Parties REST query transport contract for FrontComposer ETag caching/auth redirect wiring.
+- 2026-05-09 (resumed under PAUSE per /bmad-dev-story 10-1-1, AC4-only scope confirmed): Completed AC4 — `AdminPortalPartyQueryService` and `PartiesAdminListCoordinator` are now wired into the live `PartiesAdminPortal.razor` lifecycle (no longer dead-code scaffolding). The component injects both services, routes every API call through `QueryService.ApiClient`, and drives `PartiesAdminListCoordinator.State` through every load/error transition path. `ResetVisibleState` calls `QueryService.ResetForTenantSwitch()` and `ListCoordinator.ResetForTenantSwitch()` so a tenant switch cancels the per-circuit scope token and observers see Loading/Version-bump before the new load fires.
+- AC4 reachability: every `AdminPortalListState` value (Loading, ReadyEmpty, ReadyHasResults, MissingToken, MissingTenant, Forbidden, NotFound, Gone, DegradedSearch, TransientFailure) is now reachable from a real component code path; new bUnit tests pin Loading→ReadyHasResults, ReadyEmpty, DegradedSearch (LocalOnly metadata), MissingToken (unauthenticated), MissingTenant (no tenant projection), Forbidden (non-admin), TransientFailure (list failure), and tenant-switch scope-token cancellation.
+- Tightened fitness tests: `AdminPortalAuthorizationStateTests` migrated from reflective method-presence checks to direct-type behavior assertions — `PartiesAdminListCoordinator.Transition`/`State`/`Version`/`ResetForTenantSwitch` round-trip and `AdminPortalPartyQueryService.ResetForTenantSwitch()` cancels handed-out tokens. `VerifyScopedLifetime` now also asserts the coordinator is registered Scoped (was only checking the query service).
+- Build/tests: `dotnet test tests/Hexalith.Parties.AdminPortal.Tests --configuration Release` 41/41 passing (was 33). `dotnet test tests/Hexalith.Parties.Contracts.Tests --configuration Release` 42 passing, 15 skipped (Story 10.2 GDPR scaffolds; unchanged). `dotnet build Hexalith.Parties.slnx --configuration Release` clean (0 warnings, 0 errors).
+- AC3 paging/transport remains explicitly HALTED — superseded by Epic 12 story 12-7. No code synthesized for the missing FrontComposer paging component or the FrontComposer REST query transport.
 
 ## File List
 
@@ -106,11 +113,15 @@ Story 10.1 (`10-1-admin-portal-browse-search-and-inspect.md`) shipped the read-o
 - src/Hexalith.Parties.AdminPortal/Services/AdminPortalLabels.cs
 - src/Hexalith.Parties.AdminPortal/Services/IPartiesAdminPortalApiClient.cs
 - src/Hexalith.Parties.AdminPortal/Services/PartiesAdminPortalApiClient.cs
+- src/Hexalith.Parties.AdminPortal/Services/AdminPortalPartyQueryService.cs
+- src/Hexalith.Parties.AdminPortal/Services/PartiesAdminListCoordinator.cs
+- src/Hexalith.Parties.AdminPortal/Services/AdminPortalListState.cs
 - Directory.Packages.props
 - tests/Hexalith.Parties.AdminPortal.Tests/Components/PartiesAdminPortalComponentTests.cs
 - tests/Hexalith.Parties.AdminPortal.Tests/Hexalith.Parties.AdminPortal.Tests.csproj
 - tests/Hexalith.Parties.AdminPortal.Tests/Services/PartiesAdminPortalApiClientTests.cs
 - tests/Hexalith.Parties.AdminPortal.Tests/Services/RecordingAdminPortalApiClient.cs
+- tests/Hexalith.Parties.Contracts.Tests/AdminPortal/AdminPortalAuthorizationStateTests.cs
 - _bmad-output/implementation-artifacts/10-1-1-admin-portal-frontcomposer-and-tenants-integration.md
 - _bmad-output/implementation-artifacts/sprint-status.yaml
 - _bmad-output/implementation-artifacts/_review-10-1-1-diff.patch (review artifact)
@@ -123,6 +134,7 @@ Story 10.1 (`10-1-admin-portal-browse-search-and-inspect.md`) shipped the read-o
 - 2026-05-07: Partially migrated AC3 surfaces to Fluent UI components; halted on missing FrontComposer paging/REST transport contracts.
 - 2026-05-09: BMad code review (three-layer adversarial: Blind Hunter + Edge Case Hunter + Acceptance Auditor) executed against `9b6d180..HEAD` scoped to AdminPortal. Findings recorded below.
 - 2026-05-09: Applied 11 of 12 patches (1 reverted: `_rowsQueryCache` broke FluentDataGrid change detection). Solution builds clean; 33/33 admin portal tests pass.
+- 2026-05-09: Completed AC4 (scaffolding wiring) under PAUSE per /bmad-dev-story 10-1-1 with explicit AC4-only scope. Added `PartiesAdminListCoordinator.Transition(AdminPortalListState)`; injected `AdminPortalPartyQueryService` and `PartiesAdminListCoordinator` into `PartiesAdminPortal.razor`; routed all `IPartiesAdminPortalApiClient` calls through `QueryService.ApiClient`; drove coordinator state transitions across LoadPageAsync (Loading), ApplyRowsAsync (ReadyEmpty/ReadyHasResults/DegradedSearch), ApplyFailure (MissingToken/MissingTenant/Forbidden/NotFound/Gone/TransientFailure), and ApplyAuthorizationContextAsync fail-closed branches; ResetVisibleState now also resets the query service scope token and the list coordinator. Removed dead-code TODOs from `AdminPortalPartyQueryService`/`PartiesAdminListCoordinator`/`AdminPortalListState`. Tightened `AdminPortalAuthorizationStateTests` from reflective method-presence checks to direct-type behavior assertions (Transition round-trip, ResetForTenantSwitch token cancellation, scoped lifetime for both services). Added 8 bUnit tests pinning each non-Loading state transition. AdminPortal tests 41/41, contracts tests 42/42 (15 GDPR skips unchanged), solution build 0/0. AC3 paging/transport remain HALTED — superseded by Epic 12 story 12-7.
 
 ## Review Findings (2026-05-09)
 

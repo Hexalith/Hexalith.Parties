@@ -1,8 +1,11 @@
 namespace Hexalith.Parties.AdminPortal.Services;
 
-// TODO(Story 10-1.1): wire into PartiesAdminPortal.razor — currently scaffolding for
-// FrontComposer integration. The state enum has 10 values but only Loading is reachable
-// from the live component path.
+/// <summary>
+/// Per-circuit observable state for the admin portal browse surface. The live component
+/// drives transitions through <see cref="Transition"/> on every load/error path; FrontComposer
+/// shells observe <see cref="State"/> and <see cref="Version"/> to render coherent paging
+/// and discard in-flight responses after a tenant switch.
+/// </summary>
 public sealed class PartiesAdminListCoordinator
 {
     private long _version;
@@ -15,6 +18,8 @@ public sealed class PartiesAdminListCoordinator
         get => (AdminPortalListState)Volatile.Read(ref _state);
         private set => Volatile.Write(ref _state, (int)value);
     }
+
+    public void Transition(AdminPortalListState newState) => State = newState;
 
     public void ResetForTenantSwitch()
     {

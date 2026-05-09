@@ -1,8 +1,11 @@
 namespace Hexalith.Parties.AdminPortal.Services;
 
-// TODO(Story 10-1.1): wire into PartiesAdminPortal.razor — currently scaffolding for
-// FrontComposer integration. The component does not yet consume this service; tenant-switch
-// reset is performed component-locally via OnParametersSetAsync signature change.
+/// <summary>
+/// Per-circuit accessor for <see cref="IPartiesAdminPortalApiClient"/> that exposes a
+/// scope-lifetime <see cref="ScopeCancellationToken"/>. Tenant switches call
+/// <see cref="ResetForTenantSwitch"/> so any in-flight request observing the scope token is
+/// cancelled before it can paint cross-tenant data.
+/// </summary>
 public sealed class AdminPortalPartyQueryService(IPartiesAdminPortalApiClient apiClient) : IDisposable
 {
     private CancellationTokenSource _scopeCts = new();

@@ -1,7 +1,9 @@
 namespace Hexalith.Parties.AdminPortal.Services;
 
-// TODO(Story 10-1.1): wire into PartiesAdminPortal.razor — currently scaffolding for
-// FrontComposer integration. Only Loading is reachable from the live component path.
+/// <summary>
+/// Discrete browse-surface states observed by FrontComposer shells. The live admin portal
+/// component drives every value through <see cref="PartiesAdminListCoordinator.Transition"/>.
+/// </summary>
 public enum AdminPortalListState
 {
     Loading,

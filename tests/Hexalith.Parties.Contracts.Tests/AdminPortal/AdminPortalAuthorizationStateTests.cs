@@ -1,26 +1,31 @@
-// ATDD red-phase authorization-state scaffolds for Story 10.1 — Admin Portal.
-// AC4 + AC7: missing token, missing tenant claim, missing admin role, and tenant
-// switches must all clear visible browse/search/detail state and discard in-flight
-// responses from the previous tenant. These contract checks verify the AdminPortal
-// exposes a state coordinator with the matching distinguishable states; they are
-// skipped until the implementation lands the corresponding seam in green phase.
+// Story 10.1 + 10.1.1 — Admin Portal AC4/AC7 fitness tests.
+//
+// AC4 + AC7: missing token, missing tenant claim, missing admin role, and tenant switches
+// must all clear visible browse/search/detail state and discard in-flight responses from
+// the previous tenant. These checks now assert OBSERVABLE BEHAVIOR (state transitions,
+// scope cancellation) rather than mere type/method presence so a future refactor cannot
+// regress to dead-code scaffolding while still passing the suite.
 
 using System.Linq;
 using System.Reflection;
+
+using Hexalith.Parties.AdminPortal.Extensions;
+using Hexalith.Parties.AdminPortal.Services;
+
+using Microsoft.Extensions.DependencyInjection;
+
+using NSubstitute;
 
 using Shouldly;
 
 namespace Hexalith.Parties.Contracts.Tests.AdminPortal;
 
 /// <summary>
-/// Story 10.1 — AC4 + AC7. Reflective fitness checks ensuring the admin portal exposes
-/// distinguishable state names and a tenant-coordinated reset hook the FrontComposer
-/// shell can dispatch on tenant switch.
+/// Story 10.1 + 10.1.1 — AC4 + AC7. Behavioral fitness checks for the admin portal state
+/// coordinator and per-circuit query service that drive the live component lifecycle.
 /// </summary>
 public sealed class AdminPortalAuthorizationStateTests
 {
-    private const string AdminPortalAssemblyName = "Hexalith.Parties.AdminPortal";
-
     private static readonly string[] _requiredStateNames =
     [
         "Loading",
@@ -40,14 +45,7 @@ public sealed class AdminPortalAuthorizationStateTests
     {
         // AC7: missing token / missing tenant / missing admin role must each be a
         // distinguishable UI copy state, not collapsed into a single "unauthorized" bucket.
-        Assembly portal = LoadPortalAssembly();
-
-        Type stateEnum = portal.GetTypes()
-            .FirstOrDefault(t => t.Name == "AdminPortalListState" && t.IsEnum)
-            ?? throw new InvalidOperationException(
-                "AdminPortal must expose an enum AdminPortalListState describing each browse state.");
-
-        IEnumerable<string> declared = Enum.GetNames(stateEnum);
+        IEnumerable<string> declared = Enum.GetNames(typeof(AdminPortalListState));
         foreach (string required in _requiredStateNames)
         {
             declared.ShouldContain(required,
@@ -56,101 +54,60 @@ public sealed class AdminPortalAuthorizationStateTests
     }
 
     [Fact]
-    public void AdminPortal_DefinesTenantSwitchResetHook()
+    public void AdminPortal_PartiesAdminListCoordinator_ExposesObservableStateTransitions()
     {
-        // AC7: tenant context changes must clear list/search/detail state and ignore
-        // in-flight responses from the previous tenant. The portal must expose a
-        // ResetForTenantSwitch (or equivalent) method invoked by the FrontComposer scope
-        // observer the moment a tenant flip is announced.
-        Assembly portal = LoadPortalAssembly();
+        // AC4: the coordinator must support real state transitions so the live component can
+        // drive it (no longer dead-code scaffolding). Behavior assertion: instantiate the
+        // coordinator, transition to ReadyHasResults, and assert the public State surface
+        // reflects it; ResetForTenantSwitch must return State to Loading and bump Version
+        // so subscribers can discard stale in-flight work.
+        var coordinator = new PartiesAdminListCoordinator();
 
-        Type coordinator = portal.GetTypes()
-            .FirstOrDefault(t => t.Name == "PartiesAdminListCoordinator")
-            ?? throw new InvalidOperationException(
-                "AdminPortal must expose PartiesAdminListCoordinator for tenant-switch reset.");
+        coordinator.State.ShouldBe(AdminPortalListState.Loading,
+            "Coordinator must start in Loading.");
 
-        MethodInfo? resetMethod = coordinator
-            .GetMethod("ResetForTenantSwitch", BindingFlags.Public | BindingFlags.Instance);
-        resetMethod.ShouldNotBeNull(
-            "PartiesAdminListCoordinator must define ResetForTenantSwitch (AC7).");
+        coordinator.Transition(AdminPortalListState.ReadyHasResults);
+        coordinator.State.ShouldBe(AdminPortalListState.ReadyHasResults,
+            "Transition(ReadyHasResults) must update the public State surface.");
+
+        long versionBeforeReset = coordinator.Version;
+        coordinator.ResetForTenantSwitch();
+
+        coordinator.State.ShouldBe(AdminPortalListState.Loading,
+            "ResetForTenantSwitch must return State to Loading.");
+        coordinator.Version.ShouldBeGreaterThan(versionBeforeReset,
+            "ResetForTenantSwitch must bump Version so observers can discard in-flight stale work.");
     }
 
     [Fact]
-    public void AdminPortal_DefinesScopedQueryServiceFailingClosed()
+    public void AdminPortal_AdminPortalPartyQueryService_CancelsScopeTokenOnTenantSwitch()
     {
-        // AC7 + Implementation Guardrails: cached rows must not survive 401, 403, missing
-        // tenant, or tenant-switch failures. The query service exposed to portal pages must
-        // be tenant-scoped (not singleton) so that scope disposal removes cached state. We
-        // verify both disposability AND the DI lifetime by reflectively reading the
-        // ServiceDescriptor that the AddHexalithPartiesAdminPortal extension registers.
-        Assembly portal = LoadPortalAssembly();
+        // AC4 + AC7: cached rows must not survive 401, 403, missing tenant, or tenant-switch
+        // failures. Behavior assertion: ResetForTenantSwitch must observably cancel any
+        // CancellationToken handed out before the call, so an in-flight HTTP request races
+        // its way to OperationCanceledException rather than completing against the new
+        // tenant. Disposable + scoped lifetime are still required so per-circuit disposal
+        // participates.
+        IPartiesAdminPortalApiClient apiStub = Substitute.For<IPartiesAdminPortalApiClient>();
+        using var queryService = new AdminPortalPartyQueryService(apiStub);
 
-        Type queryService = portal.GetTypes()
-            .FirstOrDefault(t => t.Name == "AdminPortalPartyQueryService")
-            ?? throw new InvalidOperationException(
-                "AdminPortal must expose AdminPortalPartyQueryService.");
+        CancellationToken capturedToken = queryService.ScopeCancellationToken;
+        capturedToken.IsCancellationRequested.ShouldBeFalse(
+            "Scope token must start uncancelled.");
 
-        // The service must implement IDisposable or IAsyncDisposable so scoped disposal
-        // can drop in-flight responses (CTS cancellation + cached results).
-        bool disposable = queryService
-            .GetInterfaces()
-            .Any(i => i == typeof(IDisposable) || i == typeof(IAsyncDisposable));
+        queryService.ResetForTenantSwitch();
 
-        disposable.ShouldBeTrue(
-            "AdminPortalPartyQueryService must implement IDisposable/IAsyncDisposable to drop cached state on tenant switch.");
+        capturedToken.IsCancellationRequested.ShouldBeTrue(
+            "ResetForTenantSwitch must cancel the previously handed-out scope token so in-flight requests fail closed.");
 
-        // Verify the DI registration lifetime via the public extension, using reflection
-        // so this test project stays framework-free. Loads Microsoft.Extensions.DependencyInjection
-        // at runtime, invokes AddHexalithPartiesAdminPortal on a fresh ServiceCollection,
-        // and reads the resulting ServiceDescriptor.Lifetime for AdminPortalPartyQueryService.
-        VerifyScopedLifetime(portal, queryService);
-    }
+        // Disposing the service must also cancel the current scope token so circuit
+        // teardown drops any remaining in-flight work.
+        CancellationToken postResetToken = queryService.ScopeCancellationToken;
+        queryService.Dispose();
+        postResetToken.IsCancellationRequested.ShouldBeTrue(
+            "Disposing AdminPortalPartyQueryService must cancel the current scope token.");
 
-    private static void VerifyScopedLifetime(Assembly portal, Type queryService)
-    {
-        Type extensionsType = portal.GetTypes()
-            .FirstOrDefault(t => t.Name == "PartiesAdminPortalServiceCollectionExtensions")
-            ?? throw new InvalidOperationException(
-                "AdminPortal must expose PartiesAdminPortalServiceCollectionExtensions.");
-
-        MethodInfo addMethod = extensionsType
-            .GetMethod("AddHexalithPartiesAdminPortal", BindingFlags.Public | BindingFlags.Static)
-            ?? throw new InvalidOperationException(
-                "AddHexalithPartiesAdminPortal extension method must exist.");
-
-        Type serviceCollectionType = Type.GetType(
-            "Microsoft.Extensions.DependencyInjection.ServiceCollection, Microsoft.Extensions.DependencyInjection",
-            throwOnError: false)
-            ?? throw new InvalidOperationException(
-                "Microsoft.Extensions.DependencyInjection.ServiceCollection must be loadable to verify lifetimes.");
-
-        object services = Activator.CreateInstance(serviceCollectionType)
-            ?? throw new InvalidOperationException("Failed to create ServiceCollection.");
-
-        addMethod.Invoke(null, [services]);
-
-        Type descriptorType = Type.GetType(
-            "Microsoft.Extensions.DependencyInjection.ServiceDescriptor, Microsoft.Extensions.DependencyInjection.Abstractions",
-            throwOnError: false)
-            ?? throw new InvalidOperationException(
-                "Microsoft.Extensions.DependencyInjection.ServiceDescriptor must be loadable.");
-
-        PropertyInfo serviceTypeProp = descriptorType.GetProperty("ServiceType")
-            ?? throw new InvalidOperationException("ServiceDescriptor.ServiceType must exist.");
-        PropertyInfo lifetimeProp = descriptorType.GetProperty("Lifetime")
-            ?? throw new InvalidOperationException("ServiceDescriptor.Lifetime must exist.");
-
-        object? descriptor = ((System.Collections.IEnumerable)services)
-            .Cast<object>()
-            .FirstOrDefault(d => (Type)serviceTypeProp.GetValue(d)! == queryService);
-
-        descriptor.ShouldNotBeNull(
-            "AdminPortalPartyQueryService must be registered by AddHexalithPartiesAdminPortal.");
-
-        object lifetime = lifetimeProp.GetValue(descriptor)!;
-        lifetime.ToString().ShouldBe(
-            "Scoped",
-            "AdminPortalPartyQueryService must be registered as Scoped (per-circuit) so tenant switches drop cached state.");
+        VerifyScopedLifetime();
     }
 
     [Fact]
@@ -158,13 +115,12 @@ public sealed class AdminPortalAuthorizationStateTests
     {
         // Party-Mode Clarification + Epic 11: tenant authority must come from
         // Hexalith.Tenants, not from JWT tenant-claim parsing in the admin portal.
-        Assembly portal = LoadPortalAssembly();
+        Assembly portal = typeof(AdminPortalListState).Assembly;
 
         IEnumerable<string> classNames = portal.GetTypes()
             .Where(t => t.IsClass)
             .Select(t => t.Name);
 
-        // Forbid type names that imply local JWT-claim parsing of tenant authority.
         string[] forbidden =
         [
             "JwtTenantClaimParser",
@@ -179,12 +135,28 @@ public sealed class AdminPortalAuthorizationStateTests
         }
     }
 
-    private static Assembly LoadPortalAssembly()
+    private static void VerifyScopedLifetime()
     {
-        Assembly? loaded = AppDomain.CurrentDomain
-            .GetAssemblies()
-            .FirstOrDefault(a => string.Equals(a.GetName().Name, AdminPortalAssemblyName, StringComparison.Ordinal));
+        // The query service and the list coordinator both hold per-circuit state, so
+        // AddHexalithPartiesAdminPortal must register them as Scoped — not Singleton, which
+        // would bleed cached state across tenants/users.
+        ServiceCollection services = new();
+        services.AddHexalithPartiesAdminPortal();
 
-        return loaded ?? Assembly.Load(new AssemblyName(AdminPortalAssemblyName));
+        ServiceDescriptor? queryDescriptor = services
+            .FirstOrDefault(d => d.ServiceType == typeof(AdminPortalPartyQueryService));
+        queryDescriptor.ShouldNotBeNull(
+            "AdminPortalPartyQueryService must be registered by AddHexalithPartiesAdminPortal.");
+        queryDescriptor.Lifetime.ShouldBe(
+            ServiceLifetime.Scoped,
+            "AdminPortalPartyQueryService must be Scoped (per-circuit) so tenant switches drop cached state.");
+
+        ServiceDescriptor? coordinatorDescriptor = services
+            .FirstOrDefault(d => d.ServiceType == typeof(PartiesAdminListCoordinator));
+        coordinatorDescriptor.ShouldNotBeNull(
+            "PartiesAdminListCoordinator must be registered by AddHexalithPartiesAdminPortal.");
+        coordinatorDescriptor.Lifetime.ShouldBe(
+            ServiceLifetime.Scoped,
+            "PartiesAdminListCoordinator must be Scoped so each circuit has its own list state.");
     }
 }
