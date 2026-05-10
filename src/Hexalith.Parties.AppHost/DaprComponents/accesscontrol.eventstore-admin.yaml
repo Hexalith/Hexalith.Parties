@@ -1,12 +1,13 @@
 # DAPR Access Control Configuration for the EventStore Admin Server sidecar.
-# Admin Server is HTTP-facing and delegates to EventStore; no peer service should
-# invoke it through DAPR in the local topology.
+# defaultAction: deny + empty policies - Admin Server is HTTP-facing and
+# delegates to EventStore through HTTP, not DAPR. No peer should invoke it
+# through the DAPR sidecar.
 apiVersion: dapr.io/v1alpha1
 kind: Configuration
 metadata:
   name: accesscontrol-eventstore-admin
 spec:
   accessControl:
-    defaultAction: allow  # Self-hosted local development; use deny with mTLS in production.
+    defaultAction: deny
     trustDomain: "public"
     policies: []

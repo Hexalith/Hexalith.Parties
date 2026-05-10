@@ -39,10 +39,9 @@ spec:
         retry: defaultRetry
         timeout: daprSidecar
         circuitBreaker: defaultBreaker
-      eventstore-admin:
-        retry: defaultRetry
-        timeout: daprSidecar
-        circuitBreaker: defaultBreaker
+      # eventstore-admin intentionally omitted: its DAPR access-control denies
+      # all peer invocations (admin server is HTTP-facing only), so DAPR-level
+      # resiliency targets here would be dead config.
       parties:
         retry: defaultRetry
         timeout: daprSidecar

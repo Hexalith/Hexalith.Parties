@@ -15,5 +15,7 @@
   <ItemGroup>
     <Using Include="Xunit" />
     <Using Include="Shouldly" />
+    <Using Include="System.Linq" />
+    <Using Include="System.Text.RegularExpressions" />
   </ItemGroup>
 </Project>

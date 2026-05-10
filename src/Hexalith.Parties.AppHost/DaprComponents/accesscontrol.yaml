@@ -1,13 +1,16 @@
 # DAPR Access Control Configuration for the EventStore sidecar.
-# This file is loaded only by the eventstore sidecar and governs inbound
-# DAPR service invocation to EventStore.
+# defaultAction: deny - only listed peers may invoke EventStore through DAPR.
+# Under the EventStore-fronted topology, the caller set is well-known:
+# - eventstore-admin: admin operations (HTTP verbs reflect read/write surface)
+# - tenants: tenant lifecycle commands routed through EventStore
+# - parties: tenant API and reactor commands routed through EventStore
 apiVersion: dapr.io/v1alpha1
 kind: Configuration
 metadata:
   name: accesscontrol
 spec:
   accessControl:
-    defaultAction: allow  # Self-hosted local development; use deny with mTLS in production.
+    defaultAction: deny
     trustDomain: "public"
     policies:
       - appId: eventstore-admin
@@ -19,6 +22,14 @@ spec:
             httpVerb: ['GET', 'POST', 'PUT']
             action: allow
       - appId: tenants
+        defaultAction: deny
+        trustDomain: "public"
+        namespace: "default"
+        operations:
+          - name: /**
+            httpVerb: ['POST']
+            action: allow
+      - appId: parties
         defaultAction: deny
         trustDomain: "public"
         namespace: "default"

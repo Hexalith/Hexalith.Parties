@@ -4,7 +4,6 @@
   </Folder>
   <Folder Name="/src/">
     <Project Path="src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj" />
-    <Project Path="src/Hexalith.Parties.Aspire/Hexalith.Parties.Aspire.csproj" />
     <Project Path="src/Hexalith.Parties.AdminPortal/Hexalith.Parties.AdminPortal.csproj" />
     <Project Path="src/Hexalith.Parties.Client/Hexalith.Parties.Client.csproj" />
     <Project Path="src/Hexalith.Parties/Hexalith.Parties.csproj" />

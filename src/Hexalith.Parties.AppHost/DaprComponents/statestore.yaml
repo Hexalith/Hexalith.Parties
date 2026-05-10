@@ -12,7 +12,7 @@ spec:
     - name: redisHost
       value: "{env:REDIS_HOST|localhost:6379}"
     - name: redisPassword
-      value: "{env:REDIS_PASSWORD}"
+      value: "{env:REDIS_PASSWORD|}"
     - name: actorStateStore
       value: "true"
     - name: keyPrefix

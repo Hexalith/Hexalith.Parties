@@ -2,8 +2,6 @@ using CommunityToolkit.Aspire.Hosting.Dapr;
 
 using Hexalith.EventStore.Aspire;
 
-const string FalseLiteral = "false";
-
 IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder(args);
 
 string eventStoreAccessControlConfigPath = ResolveDaprConfigPath("accesscontrol.yaml");
@@ -37,7 +35,9 @@ IResourceBuilder<ProjectResource> parties = builder.AddProject<Projects.Hexalith
             Config = partiesAccessControlConfigPath,
         })
         .WithReference(eventStoreResources.StateStore)
-        .WithReference(eventStoreResources.PubSub));
+        .WithReference(eventStoreResources.PubSub))
+    .WaitFor(eventStoreResources.StateStore)
+    .WaitFor(eventStoreResources.PubSub);
 
 IResourceBuilder<ProjectResource> tenants = builder.AddProject<Projects.Hexalith_Tenants>("tenants")
     .WithDaprSidecar(sidecar => sidecar
@@ -47,7 +47,9 @@ IResourceBuilder<ProjectResource> tenants = builder.AddProject<Projects.Hexalith
             Config = tenantsAccessControlConfigPath,
         })
         .WithReference(eventStoreResources.StateStore)
-        .WithReference(eventStoreResources.PubSub));
+        .WithReference(eventStoreResources.PubSub))
+    .WaitFor(eventStoreResources.StateStore)
+    .WaitFor(eventStoreResources.PubSub);
 
 string? bootstrapGlobalAdminUserId = builder.Configuration["Tenants:BootstrapGlobalAdminUserId"];
 if (!string.IsNullOrWhiteSpace(bootstrapGlobalAdminUserId))
@@ -66,6 +68,14 @@ _ = parties
     .WithEnvironment("Tenants__PubSubName", "pubsub")
     .WithEnvironment("Tenants__TopicName", "system.tenants.events");
 
+// Tenants takes a direct WithReference(eventStore) here intentionally, diverging
+// from the canonical Hexalith.EventStore.AppHost sample where Tenants is a peer
+// with no eventstore reference. Under the EventStore-fronted topology, Tenants
+// commands flow through EventStore (Tenants__CommandApiAppId=eventstore on the
+// caller side), so Tenants needs eventstore visibility to coordinate startup.
+// The Hexalith.Tenants.Aspire helper was removed in this story; if a future
+// story (12.2 or beyond) reintroduces a wrapping helper, this block becomes the
+// inlined equivalent of what AddHexalithTenants would have produced.
 _ = tenants
     .WithReference(eventStore)
     .WaitFor(eventStore);
@@ -86,9 +96,10 @@ if (string.Equals(builder.Configuration["EnableMemoriesSearch"], "true", StringC
         .WithEnvironment("Parties__MemoriesSearch__CaseId", "parties");
 }
 
+bool enableKeycloak = !bool.TryParse(builder.Configuration["EnableKeycloak"], out bool parsed) || parsed;
 IResourceBuilder<KeycloakResource>? keycloak = null;
 ReferenceExpression? realmUrl = null;
-if (!string.Equals(builder.Configuration["EnableKeycloak"], FalseLiteral, StringComparison.OrdinalIgnoreCase))
+if (enableKeycloak)
 {
     keycloak = builder.AddKeycloak("keycloak", 8180)
         .WithRealmImport("./KeycloakRealms");
@@ -101,7 +112,7 @@ if (!string.Equals(builder.Configuration["EnableKeycloak"], FalseLiteral, String
         .WithEnvironment("Authentication__JwtBearer__Authority", realmUrl)
         .WithEnvironment("Authentication__JwtBearer__Issuer", realmUrl)
         .WithEnvironment("Authentication__JwtBearer__Audience", "hexalith-eventstore")
-        .WithEnvironment("Authentication__JwtBearer__RequireHttpsMetadata", FalseLiteral)
+        .WithEnvironment("Authentication__JwtBearer__RequireHttpsMetadata", "false")
         .WithEnvironment("Authentication__JwtBearer__SigningKey", "");
 
     _ = adminServer.WithReference(keycloak)
@@ -109,23 +120,32 @@ if (!string.Equals(builder.Configuration["EnableKeycloak"], FalseLiteral, String
         .WithEnvironment("Authentication__JwtBearer__Authority", realmUrl)
         .WithEnvironment("Authentication__JwtBearer__Issuer", realmUrl)
         .WithEnvironment("Authentication__JwtBearer__Audience", "hexalith-eventstore")
-        .WithEnvironment("Authentication__JwtBearer__RequireHttpsMetadata", FalseLiteral)
+        .WithEnvironment("Authentication__JwtBearer__RequireHttpsMetadata", "false")
         .WithEnvironment("Authentication__JwtBearer__SigningKey", "");
 
+    // Multi-audience tolerance: Parties accepts its own audience plus the
+    // EventStore audience, so tokens minted for cross-service DAPR invocations
+    // (eventstore -> parties /process) validate without per-call token exchange.
     _ = parties.WithReference(keycloak)
         .WaitFor(keycloak)
         .WithEnvironment("Authentication__JwtBearer__Authority", realmUrl)
         .WithEnvironment("Authentication__JwtBearer__Issuer", realmUrl)
         .WithEnvironment("Authentication__JwtBearer__Audience", "hexalith-parties")
-        .WithEnvironment("Authentication__JwtBearer__RequireHttpsMetadata", FalseLiteral)
+        .WithEnvironment("Authentication__JwtBearer__TokenValidationParameters__ValidAudiences__0", "hexalith-parties")
+        .WithEnvironment("Authentication__JwtBearer__TokenValidationParameters__ValidAudiences__1", "hexalith-eventstore")
+        .WithEnvironment("Authentication__JwtBearer__RequireHttpsMetadata", "false")
         .WithEnvironment("Authentication__JwtBearer__SigningKey", "");
 
+    // Multi-audience tolerance: Tenants validates its own audience and accepts
+    // EventStore-issued tokens for command-gateway invocations.
     _ = tenants.WithReference(keycloak)
         .WaitFor(keycloak)
         .WithEnvironment("Authentication__JwtBearer__Authority", realmUrl)
         .WithEnvironment("Authentication__JwtBearer__Issuer", realmUrl)
-        .WithEnvironment("Authentication__JwtBearer__Audience", "hexalith-eventstore")
-        .WithEnvironment("Authentication__JwtBearer__RequireHttpsMetadata", FalseLiteral)
+        .WithEnvironment("Authentication__JwtBearer__Audience", "hexalith-tenants")
+        .WithEnvironment("Authentication__JwtBearer__TokenValidationParameters__ValidAudiences__0", "hexalith-tenants")
+        .WithEnvironment("Authentication__JwtBearer__TokenValidationParameters__ValidAudiences__1", "hexalith-eventstore")
+        .WithEnvironment("Authentication__JwtBearer__RequireHttpsMetadata", "false")
         .WithEnvironment("Authentication__JwtBearer__SigningKey", "");
 
     _ = adminUI.WithReference(keycloak)
@@ -136,11 +156,20 @@ if (!string.Equals(builder.Configuration["EnableKeycloak"], FalseLiteral, String
 }
 else
 {
-    _ = adminUI.WithEnvironment("EventStore__AdminServer__SwaggerUrl", ReferenceExpression.Create($"{adminServer.GetEndpoint("https")}/swagger/index.html"));
+    // Keycloak disabled: explicitly clear OIDC env vars on adminUI to prevent
+    // stale Authority/ClientId values from a previous launch leaking into the UI.
+    _ = adminUI
+        .WithEnvironment("EventStore__AdminServer__SwaggerUrl", ReferenceExpression.Create($"{adminServer.GetEndpoint("https")}/swagger/index.html"))
+        .WithEnvironment("EventStore__Authentication__Authority", "")
+        .WithEnvironment("EventStore__Authentication__ClientId", "");
 }
 
 string? publishTarget = builder.Configuration["PUBLISH_TARGET"];
-if (string.Equals(publishTarget, "docker", StringComparison.OrdinalIgnoreCase))
+if (string.IsNullOrWhiteSpace(publishTarget))
+{
+    // Default: no publish environment registered; AppHost runs in dev mode only.
+}
+else if (string.Equals(publishTarget, "docker", StringComparison.OrdinalIgnoreCase))
 {
     _ = builder.AddDockerComposeEnvironment("docker");
 }
@@ -152,25 +181,37 @@ else if (string.Equals(publishTarget, "aca", StringComparison.OrdinalIgnoreCase)
 {
     _ = builder.AddAzureContainerAppEnvironment("aca");
 }
+else
+{
+    throw new InvalidOperationException(
+        $"Unknown PUBLISH_TARGET '{publishTarget}'. Supported values: docker, k8s, aca, or unset for dev mode.");
+}
 
 builder.Build().Run();
 
 static string ResolveDaprConfigPath(string fileName)
 {
-    string configPath = Path.Combine(Directory.GetCurrentDirectory(), "DaprComponents", fileName);
-    if (!File.Exists(configPath))
+    string cwdPath = Path.Combine(Directory.GetCurrentDirectory(), "DaprComponents", fileName);
+    if (File.Exists(cwdPath))
     {
-        configPath = Path.GetFullPath(
-            Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "DaprComponents", fileName));
+        return cwdPath;
     }
 
-    if (!File.Exists(configPath))
+    string baseDirPath = Path.Combine(AppContext.BaseDirectory, "DaprComponents", fileName);
+    if (File.Exists(baseDirPath))
     {
-        throw new FileNotFoundException(
-            "DAPR configuration not found. "
-            + $"Ensure {fileName} exists in the DaprComponents directory.",
-            configPath);
+        return baseDirPath;
     }
 
-    return configPath;
+    string sourceTreePath = Path.GetFullPath(
+        Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "DaprComponents", fileName));
+    if (File.Exists(sourceTreePath))
+    {
+        return sourceTreePath;
+    }
+
+    throw new FileNotFoundException(
+        $"DAPR configuration not found. Probed: '{cwdPath}', '{baseDirPath}', '{sourceTreePath}'. "
+        + $"Ensure {fileName} exists in the DaprComponents directory of the running AppHost.",
+        cwdPath);
 }

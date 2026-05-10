@@ -1,13 +1,14 @@
 # DAPR Access Control Configuration for the Parties actor-host sidecar.
-# EventStore is the command/query gateway; it invokes Parties through POST-only
-# DAPR service invocation using the Story 12.0 `party -> parties/process` mapping.
+# defaultAction: deny - only EventStore may invoke Parties, and only on /process.
+# This matches the Story 12.0 `party -> parties/process` mapping; broader paths
+# (actor methods, /healthz, /metrics) must not be exposed to peer DAPR callers.
 apiVersion: dapr.io/v1alpha1
 kind: Configuration
 metadata:
   name: accesscontrol-parties
 spec:
   accessControl:
-    defaultAction: allow  # Self-hosted local development; use deny with mTLS in production.
+    defaultAction: deny
     trustDomain: "public"
     policies:
       - appId: eventstore
@@ -15,6 +16,6 @@ spec:
         trustDomain: "public"
         namespace: "default"
         operations:
-          - name: /**
+          - name: /process
             httpVerb: ['POST']
             action: allow

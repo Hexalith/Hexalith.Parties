@@ -2,6 +2,24 @@
 
 Items raised during code review that are real but not actionable in the current story. Pick up in a follow-up story or hardening sprint.
 
+## Deferred from: code review of story 12-1 AppHost recomposition (2026-05-10)
+
+- **`AddHexalithEventStore` helper sets `redisHost` via `WithMetadata`, bypassing local `statestore.yaml`** — yaml is not the runtime source of truth for redisHost; deploy-validation tests assert against yaml, creating a divergence. Fix belongs in the EventStore submodule helper, not Story 12.1. [Hexalith.EventStore/src/Hexalith.EventStore.Aspire/HexalithEventStoreExtensions.cs:72-77]
+- **Hard-coded `trustDomain: "public"` and `namespace: "default"` in DAPR access-control YAMLs** — production SPIFFE identities differ; needs env-var substitution. [src/Hexalith.Parties.AppHost/DaprComponents/accesscontrol*.yaml]
+- **Uniform `circuitBreaker` policy** — health-probe burst can trip and cascade-trip command path; needs separate breakers per route class. [src/Hexalith.Parties.AppHost/DaprComponents/resiliency.yaml:38-53]
+- **Shared state store with `keyPrefix=none` + `actorStateStore=true` across 4 appIds** — spec-mandated but architecturally risky (Redis key collisions, actor placement service confusion); document as deliberate exception in a follow-up. [src/Hexalith.Parties.AppHost/DaprComponents/statestore.yaml:16-19]
+- **Circular `WaitFor` intent** — parties → tenants → eventstore chain plus EventStore reads tenants AllowedCallers; brittle startup ordering needs explicit one-way decision. [src/Hexalith.Parties.AppHost/Program.cs:69-71]
+- **`/ready` path validity through DAPR sidecar** — DAPR sidecars typically expose `/v1.0/healthz`; `/ready` may not be the invocable path. [src/Hexalith.Parties.AppHost/DaprComponents/accesscontrol.tenants.yaml:26-28]
+- **Hard-coded Keycloak port 8180** — pre-existing; conflicts if multiple Aspire AppHosts run concurrently. [src/Hexalith.Parties.AppHost/Program.cs:93]
+- **`WithRealmImport("./KeycloakRealms")` relative path** — pre-existing dependency on cwd; should use `Path.Combine(AppContext.BaseDirectory, ...)`. [src/Hexalith.Parties.AppHost/Program.cs:93-94]
+- **`MemoriesEndpoint` URL validation** — pre-existing; invalid URL forwarded verbatim to Parties, fails later with cryptic HttpClient binding error. [src/Hexalith.Parties.AppHost/Program.cs:73-87]
+- **`Tenants__BootstrapGlobalAdminUserId` flow has no test** — minor coverage gap; no regression. [src/Hexalith.Parties.AppHost/Program.cs:52-56]
+- **Test brittleness — Program.cs substring assertions** — many `ShouldContain` use short literals (`"parties"`, `"process"`, `"party"`) that match comments and other contexts; wider test refactor needed. [tests/Hexalith.Parties.Tests/FitnessTests/AppHostTenantsTopologyTests.cs:617-697]
+- **`FindSolutionDirectory` infinite walk safety** — testing infra needs max-depth or env override; CI artifacts without slnx ancestor produce unhelpful errors. [tests/Hexalith.Parties.DeployValidation.Tests/AppHostDaprTopologyValidationTests.cs:77-86]
+- **`Directory.GetFiles` discovery weakness in deploy-validation** — concatenation-based asserts mask file-of-origin; per-file YAML parser preferred. [tests/Hexalith.Parties.DeployValidation.Tests/AppHostDaprTopologyValidationTests.cs:553-555]
+- **Tenants given direct state-store/pub-sub access vs spec architecture posture** — relates to decision-needed item #3 (Tenants Aspire removal); defer until that resolves. [src/Hexalith.Parties.AppHost/Program.cs:42-50]
+- **`SigningKey=""` clearing pattern not asserted across all 4 services** — single-service regression would still pass; assert `>= 4` occurrences. [tests/Hexalith.Parties.Tests/FitnessTests/AppHostTenantsTopologyTests.cs:82-98]
+
 ## Deferred from: story 12-1 AppHost recomposition validation (2026-05-09)
 
 Residual full-solution test failures observed after Story 12.1 focused AppHost topology tests, deploy-validation tests, AppHost build, and solution build passed. These failures are outside the Story 12.1 AppHost/DAPR component footprint and should be handled by the owning follow-up stories or hardening items.

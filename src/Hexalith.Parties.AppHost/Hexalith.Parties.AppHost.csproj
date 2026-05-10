@@ -34,4 +34,8 @@
     </Content>
   </ItemGroup>
 
+  <Target Name="ValidateHexalithTenantsBasePath" BeforeTargets="ResolveProjectReferences">
+    <Error Condition="!Exists('$(HexalithTenantsBasePath)')" Text="HexalithTenantsBasePath '$(HexalithTenantsBasePath)' does not exist. Ensure the Hexalith.Tenants submodule is initialized as a sibling of Hexalith.Parties." />
+  </Target>
+
 </Project>

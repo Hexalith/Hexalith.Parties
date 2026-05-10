@@ -86,7 +86,6 @@ public sealed class AppHostTenantsTopologyTests
 
         program.ShouldContain(@"WithEnvironment(""Authentication__JwtBearer__Authority"", realmUrl)");
         program.ShouldContain(@"WithEnvironment(""Authentication__JwtBearer__Issuer"", realmUrl)");
-        program.ShouldContain(@"WithEnvironment(""Authentication__JwtBearer__SigningKey"", """")");
         program.ShouldContain(@"WithEnvironment(""Authentication__JwtBearer__Audience"", ""hexalith-eventstore"")");
         program.ShouldContain(@"WithEnvironment(""Authentication__JwtBearer__Audience"", ""hexalith-parties"")");
         program.ShouldContain("eventStore.WithReference(keycloak)");
@@ -95,6 +94,68 @@ public sealed class AppHostTenantsTopologyTests
         program.ShouldContain("tenants.WithReference(keycloak)");
         program.ShouldContain("adminUI.WithReference(keycloak)");
         program.ShouldContain(@"WithEnvironment(""EventStore__AdminServer__SwaggerUrl""");
+
+        // SigningKey="" must be cleared on every JWT-bearing service to avoid
+        // dual-mode auth conflict; assert on count rather than presence so a
+        // single-service regression cannot pass.
+        int signingKeyClearCount = System.Text.RegularExpressions.Regex.Matches(
+            program,
+            @"WithEnvironment\(""Authentication__JwtBearer__SigningKey"",\s*""""\)").Count;
+        signingKeyClearCount.ShouldBeGreaterThanOrEqualTo(
+            4,
+            $"Expected SigningKey clearing on at least 4 services (eventstore, eventstore-admin, parties, tenants); found {signingKeyClearCount}.");
+    }
+
+    [Fact]
+    public void AppHostProgramAcceptsCrossServiceTokensViaValidAudiences()
+    {
+        // Cross-service DAPR invocations (eventstore -> parties /process,
+        // eventstore -> tenants commands) carry tokens minted with the
+        // `hexalith-eventstore` audience. The receiver services must list it
+        // in TokenValidationParameters.ValidAudiences alongside their own
+        // audience to avoid 401s on the invocation hop.
+        string program = ReadAppHostProgram();
+
+        program.ShouldContain(@"Authentication__JwtBearer__TokenValidationParameters__ValidAudiences__0"", ""hexalith-parties""");
+        program.ShouldContain(@"Authentication__JwtBearer__TokenValidationParameters__ValidAudiences__1"", ""hexalith-eventstore""");
+        program.ShouldContain(@"Authentication__JwtBearer__TokenValidationParameters__ValidAudiences__0"", ""hexalith-tenants""");
+    }
+
+    [Fact]
+    public void AppHostProgramClearsAdminUiAuthEnvWhenKeycloakDisabled()
+    {
+        // When EnableKeycloak=false the admin UI must explicitly clear stale
+        // OIDC env values so a previous launch's Authority/ClientId cannot
+        // leak into the dashboard wiring.
+        string program = ReadAppHostProgram();
+
+        program.ShouldContain(@"WithEnvironment(""EventStore__Authentication__Authority"", """")");
+        program.ShouldContain(@"WithEnvironment(""EventStore__Authentication__ClientId"", """")");
+    }
+
+    [Fact]
+    public void AppHostProgramValidatesPublishTargetEnum()
+    {
+        string program = ReadAppHostProgram();
+
+        program.ShouldContain("Unknown PUBLISH_TARGET");
+        program.ShouldContain("InvalidOperationException");
+    }
+
+    [Fact]
+    public void AppHostProgramWaitsForSharedDaprComponentsOnPartiesAndTenants()
+    {
+        string program = ReadAppHostProgram();
+
+        int waitForStateStoreCount = System.Text.RegularExpressions.Regex.Matches(
+            program,
+            @"\.WaitFor\(eventStoreResources\.StateStore\)").Count;
+        int waitForPubSubCount = System.Text.RegularExpressions.Regex.Matches(
+            program,
+            @"\.WaitFor\(eventStoreResources\.PubSub\)").Count;
+
+        waitForStateStoreCount.ShouldBeGreaterThanOrEqualTo(2, "parties and tenants must both WaitFor the shared state store.");
+        waitForPubSubCount.ShouldBeGreaterThanOrEqualTo(2, "parties and tenants must both WaitFor the shared pubsub.");
     }
 
     private static string ReadAppHostProject()

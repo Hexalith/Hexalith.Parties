@@ -42,7 +42,6 @@ See the [Getting Started Guide](docs/getting-started.md) for the full walkthroug
 Hexalith.Parties/
   src/
     Hexalith.Parties.AppHost/        # Aspire orchestration (entry point)
-    Hexalith.Parties.Aspire/         # Aspire hosting extensions
     Hexalith.Parties.Client/         # NuGet client package (commands + queries)
     Hexalith.Parties/     # REST API, MCP server, controllers
     Hexalith.Parties.Contracts/      # Shared DTOs, commands, events, value objects

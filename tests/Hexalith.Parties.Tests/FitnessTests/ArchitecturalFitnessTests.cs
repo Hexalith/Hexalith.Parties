@@ -1,4 +1,5 @@
 using System.Reflection;
+using System.Text.RegularExpressions;
 using System.Xml.Linq;
 
 using Hexalith.EventStore.Contracts.Events;
@@ -467,5 +468,47 @@ public sealed class ArchitecturalFitnessTests
         {
             violations.Add($"{context}: references {checkType.FullName} from forbidden namespace {ns}");
         }
+    }
+
+    [Fact]
+    public void PartiesProjectionActorsDoNotImplementEventStoreGenericProjectionContract()
+    {
+        // Relocated from Story 12.0 spike fitness test (deleted in commit 6a4b557).
+        // Parties projection actors must remain on the Parties-owned interfaces
+        // (IPartyDetailProjectionActor / IPartyIndexProjectionActor) and must not
+        // adopt EventStore's generic IProjectionActor contract — that adoption
+        // would couple Parties projections to EventStore's actor lifecycle and
+        // is the architectural inversion Epic 12 explicitly avoids.
+        string detailSource = File.ReadAllText(Path.Combine(
+            RepositoryRoot.Locate(),
+            "src",
+            "Hexalith.Parties.Projections",
+            "Actors",
+            "PartyDetailProjectionActor.cs"));
+        string indexSource = File.ReadAllText(Path.Combine(
+            RepositoryRoot.Locate(),
+            "src",
+            "Hexalith.Parties.Projections",
+            "Actors",
+            "PartyIndexProjectionActor.cs"));
+
+        // Match `IProjectionActor` as a whole word NOT preceded by `Party` (avoids matching local
+        // `IPartyDetailProjectionActor` / `IPartyIndexProjectionActor`). Also catches inheritance
+        // from EventStore's abstract base via `: ProjectionActor` form.
+        Regex eventStoreContract = new(@"(?<!\w)(?:I?ProjectionActor)\b(?!\w)");
+        Regex localPartyContract = new(@"\bIParty\w*ProjectionActor\b");
+
+        bool DetectsEventStoreContract(string source)
+        {
+            string stripped = localPartyContract.Replace(source, string.Empty);
+            return eventStoreContract.IsMatch(stripped);
+        }
+
+        DetectsEventStoreContract(detailSource).ShouldBeFalse(
+            "PartyDetailProjectionActor must not implement EventStore's generic IProjectionActor contract.");
+        DetectsEventStoreContract(indexSource).ShouldBeFalse(
+            "PartyIndexProjectionActor must not implement EventStore's generic IProjectionActor contract.");
+        detailSource.ShouldContain("IPartyDetailProjectionActor");
+        indexSource.ShouldContain("IPartyIndexProjectionActor");
     }
 }

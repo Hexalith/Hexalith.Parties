@@ -1,6 +1,9 @@
 # DAPR Pub/Sub Component -- Local Development.
-# EventStore publishes domain events; Parties keeps its Tenants subscription path;
-# Tenants shares the same Redis-backed component for the local platform topology.
+# Explicit per-appId publish/subscribe scopes (no empty-string silencing):
+# - eventstore publishes parties domain events to sample.parties.events
+# - tenants publishes tenant lifecycle events to system.tenants.events
+# - parties subscribes to system.tenants.events
+# - sample subscribes to sample.parties.events
 apiVersion: dapr.io/v1alpha1
 kind: Component
 metadata:
@@ -12,13 +15,13 @@ spec:
     - name: redisHost
       value: "{env:REDIS_HOST|localhost:6379}"
     - name: redisPassword
-      value: "{env:REDIS_PASSWORD}"
+      value: "{env:REDIS_PASSWORD|}"
     - name: enableDeadLetter
       value: "true"
     - name: publishingScopes
-      value: "parties=;tenants="
+      value: "eventstore=sample.parties.events;tenants=system.tenants.events"
     - name: subscriptionScopes
-      value: "parties=system.tenants.events;tenants=;sample=sample.parties.events"
+      value: "parties=system.tenants.events;sample=sample.parties.events"
 scopes:
   - eventstore
   - parties
