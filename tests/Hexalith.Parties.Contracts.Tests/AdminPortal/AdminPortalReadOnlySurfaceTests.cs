@@ -96,20 +96,17 @@ public sealed class AdminPortalReadOnlySurfaceTests
     }
 
     [Fact]
-    public void AdminPortal_DoesNotExposeMutationOrGdprComponents()
+    public void AdminPortal_DoesNotExposeUnrelatedMutationOrTenantManagementComponents()
     {
-        // Read-only constraint from story Party-Mode Clarifications: no create, edit,
-        // delete, activate, invite, role assignment, tenant lifecycle, tenant configuration,
-        // export, erasure, restriction, consent mutation, GDPR operation, or Memories search
-        // management workflows belong in Story 10.1.
+        // Story 10.2 intentionally adds GDPR operation components to the same portal
+        // assembly. Keep Story 10.1's guardrail focused on unrelated mutation,
+        // tenant-management, and Memories-management surfaces.
         Assembly portal = LoadPortalAssemblyOrThrow();
 
         string[] forbiddenNameFragments =
         [
-            "Create", "Edit", "Update", "Delete", "Erase", "Restrict",
-            "Export", "Invite", "AssignRole", "ConsentMutation",
-            "TenantLifecycle", "TenantConfiguration", "GdprWorkflow",
-            "MemoriesSearchManagement",
+            "Create", "Edit", "Update", "Delete", "Invite", "AssignRole",
+            "TenantLifecycle", "TenantConfiguration", "MemoriesSearchManagement",
         ];
 
         IEnumerable<string> componentNames = portal.GetTypes()
@@ -121,7 +118,7 @@ public sealed class AdminPortalReadOnlySurfaceTests
             foreach (string fragment in forbiddenNameFragments)
             {
                 name.Contains(fragment, StringComparison.Ordinal)
-                    .ShouldBeFalse($"Component '{name}' implies mutation/GDPR scope reserved for Stories 10.2/10.3.");
+                    .ShouldBeFalse($"Component '{name}' implies unrelated mutation or management scope.");
             }
         }
     }

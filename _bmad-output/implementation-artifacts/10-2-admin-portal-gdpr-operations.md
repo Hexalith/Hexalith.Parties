@@ -1,6 +1,6 @@
 # Story 10.2: Admin Portal - GDPR Operations
 
-Status: in-progress
+Status: review
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -68,85 +68,85 @@ so that DPO operations are efficient and auditable through a visual interface.
 
 ## Tasks / Subtasks
 
-- [ ] Extend the Parties admin portal GDPR operations surface (AC: 1, 7, 10)
-  - [ ] Add a GDPR operations area to the Story 10.1 party detail route or the established FrontComposer route convention.
-  - [ ] Reuse FrontComposer shell services, navigation, command feedback, warning banners, auth redirect, localization, density, storage, and DataGrid/query state where available.
-  - [ ] Keep the page operational and dense: no landing page, marketing hero, decorative cards, or duplicated tenant-management UI.
-  - [ ] Do not implement tenant lifecycle, membership, role, or configuration management in Parties; Hexalith.Tenants remains authoritative.
-  - [ ] Keep GDPR operation state isolated by active tenant id, selected party id, and operation type; clear stale state on tenant switch, sign-out, authorization failure, party change, and erased terminal state.
+- [x] Extend the Parties admin portal GDPR operations surface (AC: 1, 7, 10)
+  - [x] Add a GDPR operations area to the Story 10.1 party detail route or the established FrontComposer route convention.
+  - [x] Reuse FrontComposer shell services, navigation, command feedback, warning banners, auth redirect, localization, density, storage, and DataGrid/query state where available.
+  - [x] Keep the page operational and dense: no landing page, marketing hero, decorative cards, or duplicated tenant-management UI.
+  - [x] Do not implement tenant lifecycle, membership, role, or configuration management in Parties; Hexalith.Tenants remains authoritative.
+  - [x] Keep GDPR operation state isolated by active tenant id, selected party id, and operation type; clear stale state on tenant switch, sign-out, authorization failure, party change, and erased terminal state.
 
-- [ ] Implement erasure request and status UX (AC: 2, 3, 8, 9)
-  - [ ] Call `POST /api/v1/admin/parties/{partyId}/erase` only after an explicit confirmation that names the irreversible crypto-shredding consequence without echoing unnecessary PII.
-  - [ ] Display the accepted correlation id and transition into a status state that queries `GET /api/v1/admin/parties/{partyId}/erasure-status`.
-  - [ ] Display `ErasureStatusResponse.Status`, `UpdatedAt`, `ErasedAt`, and store-result statuses when present.
-  - [ ] Fetch `GET /api/v1/admin/parties/{partyId}/erasure-certificate` when status indicates certificate/report availability.
-  - [ ] Use explicit loading, unavailable, failure, and retry states for erasure status/certificate retrieval; do not imply that accepted erasure means completed erasure.
-  - [ ] Offer `POST /api/v1/admin/parties/{partyId}/retry-verification` only for verification failure or partial states where the backend supports retry.
-  - [ ] Disable normal party mutation actions while erasure is pending, key-destroyed, verification-in-progress, verified, or erased.
-  - [ ] Treat `410 Gone` and erased-state responses as terminal privacy states; do not rehydrate or display stale detail fields.
+- [x] Implement erasure request and status UX (AC: 2, 3, 8, 9)
+  - [x] Call `POST /api/v1/admin/parties/{partyId}/erase` only after an explicit confirmation that names the irreversible crypto-shredding consequence without echoing unnecessary PII.
+  - [x] Display the accepted correlation id and transition into a status state that queries `GET /api/v1/admin/parties/{partyId}/erasure-status`.
+  - [x] Display `ErasureStatusResponse.Status`, `UpdatedAt`, `ErasedAt`, and store-result statuses when present.
+  - [x] Fetch `GET /api/v1/admin/parties/{partyId}/erasure-certificate` when status indicates certificate/report availability.
+  - [x] Use explicit loading, unavailable, failure, and retry states for erasure status/certificate retrieval; do not imply that accepted erasure means completed erasure.
+  - [x] Offer `POST /api/v1/admin/parties/{partyId}/retry-verification` only for verification failure or partial states where the backend supports retry.
+  - [x] Disable normal party mutation actions while erasure is pending, key-destroyed, verification-in-progress, verified, or erased.
+  - [x] Treat `410 Gone` and erased-state responses as terminal privacy states; do not rehydrate or display stale detail fields.
 
-- [ ] Implement restriction and lift-restriction actions (AC: 4, 8, 9)
-  - [ ] Use `POST /api/v1/admin/parties/{partyId}/restrict` with optional reason text.
-  - [ ] Use `POST /api/v1/admin/parties/{partyId}/lift-restriction` for restricted parties only.
-  - [ ] Render `PartyDetail.IsRestricted` and `RestrictedAt` in the read-only detail view.
-  - [ ] Handle domain rejection `422` as bounded operator feedback through the existing FrontComposer command outcome path.
-  - [ ] Do not block consent management during restriction; Article 18 workflows require consent actions to remain available.
+- [x] Implement restriction and lift-restriction actions (AC: 4, 8, 9)
+  - [x] Use `POST /api/v1/admin/parties/{partyId}/restrict` with optional reason text.
+  - [x] Use `POST /api/v1/admin/parties/{partyId}/lift-restriction` for restricted parties only.
+  - [x] Render `PartyDetail.IsRestricted` and `RestrictedAt` in the read-only detail view.
+  - [x] Handle domain rejection `422` as bounded operator feedback through the existing FrontComposer command outcome path.
+  - [x] Do not block consent management during restriction; Article 18 workflows require consent actions to remain available.
 
-- [ ] Implement consent management UI (AC: 5, 8, 9)
-  - [ ] Read existing consent records from `PartyDetail.ConsentRecords` or `GET /api/v1/admin/parties/{partyId}/consent` when a fresh admin-specific read is needed.
-  - [ ] Add consent through `POST /api/v1/admin/parties/{partyId}/consent` with `channelId`, `purpose`, and `lawfulBasis`.
-  - [ ] Revoke consent through `DELETE /api/v1/admin/parties/{partyId}/consent/{consentId}`.
-  - [ ] Treat consent add/revoke as command-style operations over existing backend semantics; do not add replacement, batch, concurrency-token, or party-wide consent behavior unless the backend already exposes it.
-  - [ ] Present lawful basis choices from the existing contract enum, not free-form UI strings.
-  - [ ] Show active and revoked consent records with granted/revoked timestamps and actor fields as encoded text.
-  - [ ] Validate required fields client-side for usability, but rely on backend validation and domain rejection as authoritative.
-  - [ ] Do not add party-wide consent or batch consent semantics; current model is per-channel per-purpose.
+- [x] Implement consent management UI (AC: 5, 8, 9)
+  - [x] Read existing consent records from `PartyDetail.ConsentRecords` or `GET /api/v1/admin/parties/{partyId}/consent` when a fresh admin-specific read is needed.
+  - [x] Add consent through `POST /api/v1/admin/parties/{partyId}/consent` with `channelId`, `purpose`, and `lawfulBasis`.
+  - [x] Revoke consent through `DELETE /api/v1/admin/parties/{partyId}/consent/{consentId}`.
+  - [x] Treat consent add/revoke as command-style operations over existing backend semantics; do not add replacement, batch, concurrency-token, or party-wide consent behavior unless the backend already exposes it.
+  - [x] Present lawful basis choices from the existing contract enum, not free-form UI strings.
+  - [x] Show active and revoked consent records with granted/revoked timestamps and actor fields as encoded text.
+  - [x] Validate required fields client-side for usability, but rely on backend validation and domain rejection as authoritative.
+  - [x] Do not add party-wide consent or batch consent semantics; current model is per-channel per-purpose.
 
-- [ ] Implement portability export and processing records (AC: 6, 7, 8, 9)
-  - [ ] Call `GET /api/v1/admin/parties/{partyId}/export` and produce a downloadable JSON file from the response body.
-  - [ ] Use a safe filename derived from non-PII identifiers such as party id and timestamp; do not use display name, email, identifier, or purpose text in filenames or storage keys.
-  - [ ] Handle `409 Conflict` erasure-in-progress and `410 Gone` erased-party states with distinct operator copy.
-  - [ ] Read `GET /api/v1/admin/parties/{partyId}/processing-records` and display Article 30 activity summaries in chronological or sequence order.
-  - [ ] Treat processing records and erasure certificates as backend-authoritative, read-only compliance records; do not derive or edit compliance state client-side.
-  - [ ] Treat processing summaries as untrusted text; render normally encoded and do not expose backend stack traces.
+- [x] Implement portability export and processing records (AC: 6, 7, 8, 9)
+  - [x] Call `GET /api/v1/admin/parties/{partyId}/export` and produce a downloadable JSON file from the response body.
+  - [x] Use a safe filename derived from non-PII identifiers such as party id and timestamp; do not use display name, email, identifier, or purpose text in filenames or storage keys.
+  - [x] Handle `409 Conflict` erasure-in-progress and `410 Gone` erased-party states with distinct operator copy.
+  - [x] Read `GET /api/v1/admin/parties/{partyId}/processing-records` and display Article 30 activity summaries in chronological or sequence order.
+  - [x] Treat processing records and erasure certificates as backend-authoritative, read-only compliance records; do not derive or edit compliance state client-side.
+  - [x] Treat processing summaries as untrusted text; render normally encoded and do not expose backend stack traces.
 
-- [ ] Add DPO dashboard summary widgets or compact panels (AC: 7, 8, 9, 10)
-  - [ ] Provide entry points for pending erasure requests, recent erasure audit status, restricted parties, and consent overview for the active tenant.
-  - [ ] If the backend does not yet expose tenant-wide GDPR summary endpoints, implement a bounded UI from available party list/detail/admin endpoints and record the limitation in completion notes.
-  - [ ] Keep counts and summaries tenant-scoped and clear all summary state on tenant switch.
-  - [ ] Do not introduce a separate dashboard data store or client-side PII index.
+- [x] Add DPO dashboard summary widgets or compact panels (AC: 7, 8, 9, 10)
+  - [x] Provide entry points for pending erasure requests, recent erasure audit status, restricted parties, and consent overview for the active tenant.
+  - [x] If the backend does not yet expose tenant-wide GDPR summary endpoints, implement a bounded UI from available party list/detail/admin endpoints and record the limitation in completion notes.
+  - [x] Keep counts and summaries tenant-scoped and clear all summary state on tenant switch.
+  - [x] Do not introduce a separate dashboard data store or client-side PII index.
 
-- [ ] Enforce authorization, tenant, privacy, and accessibility behavior (AC: 1-10)
-  - [ ] Reuse the existing backend `[Authorize(Policy = "Admin")]` enforcement; frontend affordances must not replace server authorization.
-  - [ ] Distinguish missing token, missing tenant claim, missing admin role, cross-tenant scoped id, and transient API failure in bounded UI states.
-  - [ ] Clear visible party detail, consent records, processing records, and export state after tenant switch or any `401` / `403` outcome.
-  - [ ] Never store or log full party names, contact values, identifiers, consent purposes, export payloads, JWTs, claims, or membership dictionaries.
-  - [ ] Log only operation type, non-PII party id, correlation/status id, and outcome category when needed for audit/support diagnostics.
-  - [ ] Make destructive erasure and restriction controls keyboard reachable, labeled for screen readers, and confirmation-based.
-  - [ ] Manage focus after confirmations, command failures, status refreshes, and export-download outcomes; announce long-running erasure/export state changes through accessible status regions.
-  - [ ] Use localized resource strings for labels, status messages, lawful-basis labels, and warning copy.
+- [x] Enforce authorization, tenant, privacy, and accessibility behavior (AC: 1-10)
+  - [x] Reuse the existing backend `[Authorize(Policy = "Admin")]` enforcement; frontend affordances must not replace server authorization.
+  - [x] Distinguish missing token, missing tenant claim, missing admin role, cross-tenant scoped id, and transient API failure in bounded UI states.
+  - [x] Clear visible party detail, consent records, processing records, and export state after tenant switch or any `401` / `403` outcome.
+  - [x] Never store or log full party names, contact values, identifiers, consent purposes, export payloads, JWTs, claims, or membership dictionaries.
+  - [x] Log only operation type, non-PII party id, correlation/status id, and outcome category when needed for audit/support diagnostics.
+  - [x] Make destructive erasure and restriction controls keyboard reachable, labeled for screen readers, and confirmation-based.
+  - [x] Manage focus after confirmations, command failures, status refreshes, and export-download outcomes; announce long-running erasure/export state changes through accessible status regions.
+  - [x] Use localized resource strings for labels, status messages, lawful-basis labels, and warning copy.
 
-- [ ] Add operator and completion documentation (AC: 1-10)
-  - [ ] Document page purpose, required admin role, active tenant behavior, supported GDPR actions, known backend dependencies, and privacy-safe failure behavior.
-  - [ ] Record any missing tenant-wide DPO summary endpoint or infrastructure dependency as a bounded limitation, not as client-side aggregation scope.
-  - [ ] In completion notes, list reused endpoints, confirm no new GDPR workflow/backing store was added, list localization resource files touched, summarize accessibility checks, and include dated validation evidence.
+- [x] Add operator and completion documentation (AC: 1-10)
+  - [x] Document page purpose, required admin role, active tenant behavior, supported GDPR actions, known backend dependencies, and privacy-safe failure behavior.
+  - [x] Record any missing tenant-wide DPO summary endpoint or infrastructure dependency as a bounded limitation, not as client-side aggregation scope.
+  - [x] In completion notes, list reused endpoints, confirm no new GDPR workflow/backing store was added, list localization resource files touched, summarize accessibility checks, and include dated validation evidence.
 
-- [ ] Add tests for GDPR portal behavior (AC: 1-10)
-  - [ ] Add bUnit/component tests for erasure confirm, accepted state, status polling/refresh, certificate/report rendering, retry affordance, and erased terminal state.
-  - [ ] Add component tests for restriction, lift restriction, consent add/revoke/history, export download trigger, processing-record display, dashboard summaries, and empty/degraded states.
-  - [ ] Add fake transport or adapter tests proving calls to the existing admin endpoints with expected methods, route ids, and JSON bodies.
-  - [ ] Add fake transport/API contract tests for success, validation/domain rejection, forbidden, not found, conflict, gone, and transient failure shapes for each consumed admin endpoint.
-  - [ ] Add XSS regression tests using `<script>`, quotes, angle brackets, party fields, contact values, consent purposes, channel labels, ProblemDetails details, processing summaries, erasure reason/status text, export metadata, and DPO summary values.
-  - [ ] Add authorization and tenant-switch tests proving cached GDPR state is cleared after missing/expired token, `401`, `403`, missing tenant, non-admin user, cross-tenant scoped id, sign-out, tenant change, and stale in-flight response.
-  - [ ] Add export-download tests for safe filename/content type, no inline rendering of untrusted export payloads, disabled/loading states, cancellation/failure handling, and tenant/auth failure cleanup.
-  - [ ] Add accessibility/localization tests or assertions for named controls, keyboard flow, focus return after dialogs, accessible status announcements for polling/export, and localized resources for operational labels and statuses.
-  - [ ] Keep existing backend endpoint suites green: erasure, consent, restriction, portability, and admin endpoint tests.
+- [x] Add tests for GDPR portal behavior (AC: 1-10)
+  - [x] Add bUnit/component tests for erasure confirm, accepted state, status polling/refresh, certificate/report rendering, retry affordance, and erased terminal state.
+  - [x] Add component tests for restriction, lift restriction, consent add/revoke/history, export download trigger, processing-record display, dashboard summaries, and empty/degraded states.
+  - [x] Add fake transport or adapter tests proving calls to the existing admin endpoints with expected methods, route ids, and JSON bodies.
+  - [x] Add fake transport/API contract tests for success, validation/domain rejection, forbidden, not found, conflict, gone, and transient failure shapes for each consumed admin endpoint.
+  - [x] Add XSS regression tests using `<script>`, quotes, angle brackets, party fields, contact values, consent purposes, channel labels, ProblemDetails details, processing summaries, erasure reason/status text, export metadata, and DPO summary values.
+  - [x] Add authorization and tenant-switch tests proving cached GDPR state is cleared after missing/expired token, `401`, `403`, missing tenant, non-admin user, cross-tenant scoped id, sign-out, tenant change, and stale in-flight response.
+  - [x] Add export-download tests for safe filename/content type, no inline rendering of untrusted export payloads, disabled/loading states, cancellation/failure handling, and tenant/auth failure cleanup.
+  - [x] Add accessibility/localization tests or assertions for named controls, keyboard flow, focus return after dialogs, accessible status announcements for polling/export, and localized resources for operational labels and statuses.
+  - [x] Keep existing backend endpoint suites green: erasure, consent, restriction, portability, and admin endpoint tests.
 
-- [ ] Validate build and affected tests
-  - [ ] Run the affected FrontComposer/Parties portal component test project(s).
-  - [ ] Run focused backend suites if endpoint contracts change: `tests/Hexalith.Parties.Tests` erasure, consent, restriction, portability, and admin endpoint tests.
-  - [ ] Run affected integration tests only when DAPR/Aspire prerequisites are available; otherwise record the infrastructure skip reason.
-  - [ ] Run `dotnet build Hexalith.Parties.slnx --configuration Release`.
+- [x] Validate build and affected tests
+  - [x] Run the affected FrontComposer/Parties portal component test project(s).
+  - [x] Run focused backend suites if endpoint contracts change: `tests/Hexalith.Parties.Tests` erasure, consent, restriction, portability, and admin endpoint tests.
+  - [x] Run affected integration tests only when DAPR/Aspire prerequisites are available; otherwise record the infrastructure skip reason.
+  - [x] Run `dotnet build Hexalith.Parties.slnx --configuration Release`.
 
 ## Dev Notes
 
@@ -335,12 +335,90 @@ GPT-5 Codex
 
 ### Debug Log References
 
+- 2026-05-10 - Continued dev-story after Epic 12 supersession marker; treated the explicit `10-2` invocation as authorization to close Story 10.2 against the current EventStore-fronted client boundary rather than the retired `/api/v1/admin` controller transport.
+- 2026-05-10 - Initial focused test run: `dotnet test tests/Hexalith.Parties.AdminPortal.Tests/Hexalith.Parties.AdminPortal.Tests.csproj --configuration Release` passed 41/41. Parallel client/contracts test runs hit a shared `VBCSCompiler` file lock; resolved with `dotnet build-server shutdown` and reran sequentially.
+- 2026-05-10 - Focused validation: client GDPR contract tests 6/6, contracts GDPR tests 15/15, aggregate consent/erasure/restriction tests 59/59, erasure verification tests 11/11, erasure certificate test 1/1.
+- 2026-05-10 - Backend Story 10.2-era controller endpoint suites were not present under their old names; `ArchitecturalFitnessTests` now marks the old admin controller route tests as retired by Epic 12. Validation used the live EventStore/client contract and domain/security suites instead.
+- 2026-05-10 - Full regression first exposed a stale Story 10.1 read-only fitness assertion that forbade Story 10.2 GDPR components from existing in the shared AdminPortal assembly. Updated that guardrail to continue banning unrelated mutation, tenant-management, and Memories-management surfaces while allowing intentional GDPR components.
+- 2026-05-10 - Final validation: `dotnet build Hexalith.Parties.slnx --configuration Release` clean; `dotnet test Hexalith.Parties.slnx --configuration Release --no-build` passed with 886 passed and 6 expected DAPR/Aspire health-check skips.
+
 ### Completion Notes List
 
 - Ultimate context engine analysis completed - comprehensive developer guide created.
 - 2026-05-04T10:14:12Z - party-mode review completed; applied low-risk clarifications for endpoint contract assumptions, tenant/auth state cleanup, post-command refresh behavior, read-only compliance records, XSS/logging constraints, accessibility/localization requirements, operator documentation, and focused frontend/API contract tests.
+- 2026-05-10 - Story 10.2 GDPR portal surface is complete on the current EventStore-fronted Parties client boundary: the AdminPortal detail surface renders compact GDPR operations, erasure confirmation/status/certificate/retry affordances, restriction/lift controls, consent add/revoke/history, portability export, processing records, and DPO operational summary entry points.
+- 2026-05-10 - No new GDPR workflow, persistence store, tenant authority, tenant-management UI, batch restriction, party-wide consent, or client-side PII index was added. Hexalith.Tenants remains authoritative for tenant/admin membership, and backend/server authorization remains authoritative.
+- 2026-05-10 - The literal Story 10.2 `/api/v1/admin` endpoint assumptions are superseded by Epic 12; this close-out validates the same operator flows through `IAdminPortalGdprClient`, `HttpAdminPortalGdprClient`, and EventStore command/query route constants (`eventstore:command:party:*`, `eventstore:query:party:*`).
+- 2026-05-10 - Tenant-wide DPO summary endpoint remains unavailable; the UI provides bounded, tenant-scoped entry points and selected-party/list-derived cues only. No separate dashboard data store or compliance ledger was introduced.
+- 2026-05-10 - Localization surface is centralized through `AdminPortalLabels`; accessibility coverage includes named controls, keyboard-reachable Fluent UI actions, status regions, confirmation flow, and color-independent status text. XSS/privacy guardrails validate normal encoded rendering and safe export filename/storage behavior.
+- 2026-05-10 - Adjusted the Story 10.1 read-only contract guardrail so it no longer fails because Story 10.2 GDPR components intentionally share the AdminPortal assembly, while preserving bans on unrelated CRUD, tenant-management, and Memories-management components.
 
 ### File List
+
+- src/Hexalith.Parties.AdminPortal/_Imports.razor
+- src/Hexalith.Parties.AdminPortal/Components/ConsentManagementPanel.razor
+- src/Hexalith.Parties.AdminPortal/Components/DpoOperationalSummaryPanel.razor
+- src/Hexalith.Parties.AdminPortal/Components/ErasureStatusPanel.razor
+- src/Hexalith.Parties.AdminPortal/Components/ErasureVerificationReportPanel.razor
+- src/Hexalith.Parties.AdminPortal/Components/PartiesAdminPortal.razor
+- src/Hexalith.Parties.AdminPortal/Components/PartyGdprOperationsPanel.razor
+- src/Hexalith.Parties.AdminPortal/Components/PortabilityExportPanel.razor
+- src/Hexalith.Parties.AdminPortal/Components/ProcessingRecordsPanel.razor
+- src/Hexalith.Parties.AdminPortal/Components/RestrictionActionsPanel.razor
+- src/Hexalith.Parties.AdminPortal/Extensions/PartiesAdminPortalServiceCollectionExtensions.cs
+- src/Hexalith.Parties.AdminPortal/Hexalith.Parties.AdminPortal.csproj
+- src/Hexalith.Parties.AdminPortal/Services/AdminPortalAuthorizationService.cs
+- src/Hexalith.Parties.AdminPortal/Services/AdminPortalAuthorizationState.cs
+- src/Hexalith.Parties.AdminPortal/Services/AdminPortalGdprOperationState.cs
+- src/Hexalith.Parties.AdminPortal/Services/AdminPortalGdprStateCoordinator.cs
+- src/Hexalith.Parties.AdminPortal/Services/AdminPortalLabels.cs
+- src/Hexalith.Parties.AdminPortal/Services/AdminPortalListRequest.cs
+- src/Hexalith.Parties.AdminPortal/Services/AdminPortalListState.cs
+- src/Hexalith.Parties.AdminPortal/Services/AdminPortalPartyQueryService.cs
+- src/Hexalith.Parties.AdminPortal/Services/AdminPortalQueryBounds.cs
+- src/Hexalith.Parties.AdminPortal/Services/AdminPortalQueryException.cs
+- src/Hexalith.Parties.AdminPortal/Services/AdminPortalQueryFailureKind.cs
+- src/Hexalith.Parties.AdminPortal/Services/AdminPortalQueryMetadata.cs
+- src/Hexalith.Parties.AdminPortal/Services/AdminPortalQueryResult.cs
+- src/Hexalith.Parties.AdminPortal/Services/AdminPortalRichSearchCapability.cs
+- src/Hexalith.Parties.AdminPortal/Services/AdminPortalSearchRequest.cs
+- src/Hexalith.Parties.AdminPortal/Services/AdminPortalSearchResponse.cs
+- src/Hexalith.Parties.AdminPortal/Services/GdprExportFileNameBuilder.cs
+- src/Hexalith.Parties.AdminPortal/Services/IAdminPortalAuthorizationService.cs
+- src/Hexalith.Parties.AdminPortal/Services/IPartiesAdminPortalApiClient.cs
+- src/Hexalith.Parties.AdminPortal/Services/PartiesAdminListCoordinator.cs
+- src/Hexalith.Parties.AdminPortal/Services/PartiesAdminPortalApiClient.cs
+- src/Hexalith.Parties.AdminPortal/Services/PartiesAdminPortalManifest.cs
+- src/Hexalith.Parties.AdminPortal/Services/PartiesAdminPortalOptions.cs
+- src/Hexalith.Parties.Client/AdminPortal/AdminPortalExportDownload.cs
+- src/Hexalith.Parties.Client/AdminPortal/AdminPortalGdprCommandResult.cs
+- src/Hexalith.Parties.Client/AdminPortal/AdminPortalGdprOutcome.cs
+- src/Hexalith.Parties.Client/AdminPortal/AdminPortalGdprRoutes.cs
+- src/Hexalith.Parties.Client/AdminPortal/HttpAdminPortalGdprClient.cs
+- src/Hexalith.Parties.Client/AdminPortal/IAdminPortalGdprClient.cs
+- tests/Hexalith.Parties.AdminPortal.Tests/Components/PartiesAdminPortalComponentTests.cs
+- tests/Hexalith.Parties.AdminPortal.Tests/Hexalith.Parties.AdminPortal.Tests.csproj
+- tests/Hexalith.Parties.AdminPortal.Tests/Services/PartiesAdminPortalApiClientTests.cs
+- tests/Hexalith.Parties.AdminPortal.Tests/Services/PartiesAdminPortalServiceCollectionTests.cs
+- tests/Hexalith.Parties.AdminPortal.Tests/Services/RecordingAdminPortalApiClient.cs
+- tests/Hexalith.Parties.AdminPortal.Tests/Services/RecordingHttpMessageHandler.cs
+- tests/Hexalith.Parties.AdminPortal.Tests/Usings.cs
+- tests/Hexalith.Parties.Client.Tests/AdminPortal/AdminPortalGdprOperationContractTests.cs
+- tests/Hexalith.Parties.Client.Tests/AdminPortal/AdminPortalQueryContractTests.cs
+- tests/Hexalith.Parties.Contracts.Tests/AdminPortal/AdminPortalAuthorizationStateTests.cs
+- tests/Hexalith.Parties.Contracts.Tests/AdminPortal/AdminPortalGdprAuthorizationStateTests.cs
+- tests/Hexalith.Parties.Contracts.Tests/AdminPortal/AdminPortalGdprPrivacyGuardrailTests.cs
+- tests/Hexalith.Parties.Contracts.Tests/AdminPortal/AdminPortalGdprSurfaceTests.cs
+- tests/Hexalith.Parties.Contracts.Tests/AdminPortal/AdminPortalReadOnlySurfaceTests.cs
+- tests/Hexalith.Parties.Contracts.Tests/AdminPortal/AdminPortalXssGuardrailTests.cs
+- _bmad-output/implementation-artifacts/10-2-admin-portal-gdpr-operations.md
+- _bmad-output/implementation-artifacts/sprint-status.yaml
+
+### Change Log
+
+| Date | Version | Description | Author |
+| --- | --- | --- | --- |
+| 2026-05-10 | 1.0 | Completed Story 10.2 close-out on the EventStore-fronted client boundary: GDPR portal surface/components and adapter contracts validated, stale Story 10.1 read-only guardrail adjusted for shared assembly coexistence, all tasks checked, status moved to review. Build clean; full no-build regression passed 886/886 with 6 expected DAPR/Aspire health skips. | GPT-5 Codex |
 
 ## Party-Mode Review
 
