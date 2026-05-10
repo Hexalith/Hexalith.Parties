@@ -1,15 +1,6 @@
-# DAPR State Store Component -- Local Development
-# =============================================================
-# Redis-backed state store for actor state, snapshots, and command status tracking.
-# Composite key pattern: {tenant}||{domain}||{aggregateId}
-#
-# Command Status TTL:
-#   The 24-hour default TTL for command status entries is set at the APPLICATION level
-#   via DaprClient.SaveStateAsync metadata (ttlInSeconds: 86400), NOT at the component level.
-#
-# Component Scoping:
-#   Only parties can access this state store. Actors run in-process under the
-#   parties app-id, so no other app-id needs state store access.
+# DAPR State Store Component -- Local Development.
+# Redis-backed shared state for EventStore, Admin Server, Parties actor hosting,
+# and Tenants. keyPrefix=none preserves shared key visibility across sidecars.
 apiVersion: dapr.io/v1alpha1
 kind: Component
 metadata:
@@ -19,8 +10,15 @@ spec:
   version: v1
   metadata:
     - name: redisHost
-      value: "localhost:6379"
+      value: "{env:REDIS_HOST|localhost:6379}"
+    - name: redisPassword
+      value: "{env:REDIS_PASSWORD}"
     - name: actorStateStore
       value: "true"
+    - name: keyPrefix
+      value: "none"
 scopes:
+  - eventstore
+  - eventstore-admin
   - parties
+  - tenants

@@ -1,28 +1,28 @@
-# DAPR Access Control Configuration for the EventStore sidecar.
-# This file is loaded only by the eventstore sidecar and governs inbound
-# DAPR service invocation to EventStore.
+# DAPR Access Control Configuration for the Tenants sidecar.
+# EventStore invokes Tenants as a domain service through POST-only DAPR service
+# invocation; Parties still calls Tenants readiness directly for local health.
 apiVersion: dapr.io/v1alpha1
 kind: Configuration
 metadata:
-  name: accesscontrol
+  name: accesscontrol-tenants
 spec:
   accessControl:
     defaultAction: allow  # Self-hosted local development; use deny with mTLS in production.
     trustDomain: "public"
     policies:
-      - appId: eventstore-admin
-        defaultAction: deny
-        trustDomain: "public"
-        namespace: "default"
-        operations:
-          - name: /**
-            httpVerb: ['GET', 'POST', 'PUT']
-            action: allow
-      - appId: tenants
+      - appId: eventstore
         defaultAction: deny
         trustDomain: "public"
         namespace: "default"
         operations:
           - name: /**
             httpVerb: ['POST']
+            action: allow
+      - appId: parties
+        defaultAction: deny
+        trustDomain: "public"
+        namespace: "default"
+        operations:
+          - name: /ready
+            httpVerb: ['GET']
             action: allow

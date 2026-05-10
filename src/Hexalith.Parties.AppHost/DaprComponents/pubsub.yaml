@@ -1,11 +1,6 @@
-# DAPR Pub/Sub Component -- Local Development
-# ================================================================
-# Redis-backed pub/sub for event distribution with per-tenant-per-domain topics.
-# Topic pattern: {tenant}.{domain}.events
-#
-# Scoping:
-#   parties publishes parties events.
-#   sample is authorized as the local reference subscriber used in Story 6.3.
+# DAPR Pub/Sub Component -- Local Development.
+# EventStore publishes domain events; Parties keeps its Tenants subscription path;
+# Tenants shares the same Redis-backed component for the local platform topology.
 apiVersion: dapr.io/v1alpha1
 kind: Component
 metadata:
@@ -15,7 +10,17 @@ spec:
   version: v1
   metadata:
     - name: redisHost
-      value: "localhost:6379"
+      value: "{env:REDIS_HOST|localhost:6379}"
+    - name: redisPassword
+      value: "{env:REDIS_PASSWORD}"
+    - name: enableDeadLetter
+      value: "true"
+    - name: publishingScopes
+      value: "parties=;tenants="
+    - name: subscriptionScopes
+      value: "parties=system.tenants.events;tenants=;sample=sample.parties.events"
 scopes:
+  - eventstore
   - parties
+  - tenants
   - sample

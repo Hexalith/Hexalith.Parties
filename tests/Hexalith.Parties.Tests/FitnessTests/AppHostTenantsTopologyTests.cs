@@ -5,39 +5,96 @@ namespace Hexalith.Parties.Tests.FitnessTests;
 public sealed class AppHostTenantsTopologyTests
 {
     [Fact]
-    public void AppHostProjectReferencesTenantsServiceAndAspireProjects()
+    public void AppHostProjectReferencesEventStoreTenantsAndAspireProjects()
     {
         string project = ReadAppHostProject();
 
+        project.ShouldContain(@"Hexalith.EventStore\src\Hexalith.EventStore\Hexalith.EventStore.csproj");
+        project.ShouldContain(@"Hexalith.EventStore\src\Hexalith.EventStore.Admin.Server.Host\Hexalith.EventStore.Admin.Server.Host.csproj");
+        project.ShouldContain(@"Hexalith.EventStore\src\Hexalith.EventStore.Admin.UI\Hexalith.EventStore.Admin.UI.csproj");
+        project.ShouldContain(@"Hexalith.EventStore\src\Hexalith.EventStore.Aspire\Hexalith.EventStore.Aspire.csproj");
         project.ShouldContain(@"Hexalith.Tenants\src\Hexalith.Tenants\Hexalith.Tenants.csproj");
-        project.ShouldContain(@"Hexalith.Tenants\src\Hexalith.Tenants.Aspire\Hexalith.Tenants.Aspire.csproj");
+        project.ShouldNotContain(@"Hexalith.Tenants\src\Hexalith.Tenants.Aspire\Hexalith.Tenants.Aspire.csproj");
+        project.ShouldContain(@"Hexalith.EventStore.Aspire\Hexalith.EventStore.Aspire.csproj"" IsAspireProjectResource=""false""");
         project.ShouldContain(@"IsAspireProjectResource=""false""");
     }
 
     [Fact]
-    public void AppHostProgramComposesTenantsWithStableResourceNameAndTenantsDependency()
+    public void AppHostProgramComposesStandaloneEventStoreTopologyWithStableResourceNames()
     {
         string program = ReadAppHostProgram();
 
+        program.ShouldContain(@"AddProject<Projects.Hexalith_EventStore>(""eventstore"")");
+        program.ShouldContain(@"AddProject<Projects.Hexalith_EventStore_Admin_Server_Host>(""eventstore-admin"")");
+        program.ShouldContain(@"AddProject<Projects.Hexalith_EventStore_Admin_UI>(""eventstore-admin-ui"")");
         program.ShouldContain(@"AddProject<Projects.Hexalith_Parties>(""parties"")");
         program.ShouldContain(@"AddProject<Projects.Hexalith_Tenants>(""tenants"")");
-        program.ShouldContain("AddHexalithTenants");
-        program.ShouldContain("WithReference(tenantsResources.CommandApi)");
-        program.ShouldContain("WaitFor(tenantsResources.CommandApi)");
+        program.ShouldContain("AddHexalithEventStore");
+        program.ShouldNotContain("AddHexalithParties(");
+        program.ShouldNotContain("AddHexalithTenants(");
     }
 
     [Fact]
-    public void PartiesAspireExtensionAcceptsSharedDaprComponentsForTenantsComposition()
+    public void AppHostProgramUsesSplitDaprConfigurationFiles()
     {
-        string extension = File.ReadAllText(Path.Combine(
-            RepositoryRoot.Locate(),
-            "src",
-            "Hexalith.Parties.Aspire",
-            "HexalithPartiesExtensions.cs"));
+        string program = ReadAppHostProgram();
 
-        extension.ShouldContain("IResourceBuilder<IDaprComponentResource> stateStore");
-        extension.ShouldContain("IResourceBuilder<IDaprComponentResource> pubSub");
-        extension.ShouldContain("AddHexalithParties(parties, daprConfigPath, stateStore, pubSub)");
+        program.ShouldContain(@"ResolveDaprConfigPath(""accesscontrol.yaml"")");
+        program.ShouldContain(@"ResolveDaprConfigPath(""accesscontrol.eventstore-admin.yaml"")");
+        program.ShouldContain(@"ResolveDaprConfigPath(""accesscontrol.tenants.yaml"")");
+        program.ShouldContain(@"ResolveDaprConfigPath(""accesscontrol.parties.yaml"")");
+        program.ShouldContain(@"ResolveDaprConfigPath(""resiliency.yaml"")");
+        program.ShouldContain("eventStoreAccessControlConfigPath");
+        program.ShouldContain("adminServerAccessControlConfigPath");
+        program.ShouldContain("tenantsAccessControlConfigPath");
+        program.ShouldContain("partiesAccessControlConfigPath");
+    }
+
+    [Fact]
+    public void AppHostProgramSharesEventStoreDaprComponentsWithPartiesAndTenants()
+    {
+        string program = ReadAppHostProgram();
+
+        program.ShouldContain("AppId = \"parties\"");
+        program.ShouldContain("AppId = \"tenants\"");
+        program.ShouldContain("WithReference(eventStoreResources.StateStore)");
+        program.ShouldContain("WithReference(eventStoreResources.PubSub)");
+        program.ShouldContain(@"WithEnvironment(""Tenants__ServiceName"", ""tenants"")");
+        program.ShouldContain(@"WithEnvironment(""Tenants__CommandApiAppId"", ""eventstore"")");
+        program.ShouldContain(@"WithEnvironment(""Tenants__PubSubName"", ""pubsub"")");
+        program.ShouldContain(@"WithEnvironment(""Tenants__TopicName"", ""system.tenants.events"")");
+    }
+
+    [Fact]
+    public void AppHostProgramMapsPartyDomainToPartiesActorHost()
+    {
+        string program = ReadAppHostProgram();
+
+        program.ShouldContain("EventStore__DomainServices__Registrations__*|party|v1__AppId");
+        program.ShouldContain("EventStore__DomainServices__Registrations__*|party|v1__MethodName");
+        program.ShouldContain("EventStore__DomainServices__Registrations__*|party|v1__Domain");
+        program.ShouldContain("EventStore__DomainServices__Registrations__*|party|v1__Version");
+        program.ShouldContain(@"""parties""");
+        program.ShouldContain(@"""process""");
+        program.ShouldContain(@"""party""");
+    }
+
+    [Fact]
+    public void AppHostProgramWiresKeycloakToEventStoreAdminPartiesAndTenants()
+    {
+        string program = ReadAppHostProgram();
+
+        program.ShouldContain(@"WithEnvironment(""Authentication__JwtBearer__Authority"", realmUrl)");
+        program.ShouldContain(@"WithEnvironment(""Authentication__JwtBearer__Issuer"", realmUrl)");
+        program.ShouldContain(@"WithEnvironment(""Authentication__JwtBearer__SigningKey"", """")");
+        program.ShouldContain(@"WithEnvironment(""Authentication__JwtBearer__Audience"", ""hexalith-eventstore"")");
+        program.ShouldContain(@"WithEnvironment(""Authentication__JwtBearer__Audience"", ""hexalith-parties"")");
+        program.ShouldContain("eventStore.WithReference(keycloak)");
+        program.ShouldContain("adminServer.WithReference(keycloak)");
+        program.ShouldContain("parties.WithReference(keycloak)");
+        program.ShouldContain("tenants.WithReference(keycloak)");
+        program.ShouldContain("adminUI.WithReference(keycloak)");
+        program.ShouldContain(@"WithEnvironment(""EventStore__AdminServer__SwaggerUrl""");
     }
 
     private static string ReadAppHostProject()

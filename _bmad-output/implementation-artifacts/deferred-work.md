@@ -2,6 +2,15 @@
 
 Items raised during code review that are real but not actionable in the current story. Pick up in a follow-up story or hardening sprint.
 
+## Deferred from: story 12-1 AppHost recomposition validation (2026-05-09)
+
+Residual full-solution test failures observed after Story 12.1 focused AppHost topology tests, deploy-validation tests, AppHost build, and solution build passed. These failures are outside the Story 12.1 AppHost/DAPR component footprint and should be handled by the owning follow-up stories or hardening items.
+
+- **`ClientArchitecturalFitnessTests.ClientCsproj_HasNoForbiddenProjectReferences`** and **`ClientArchitecturalFitnessTests.ClientAssembly_HasNoReferencesToServerProjectionsOrPartiesService`** — same over-broad client architecture guard class as the already logged `ArchitecturalFitnessTests.ClientProject_HasNoReferencesToServerProjectionsOrPartiesService` failure. The tests flag legitimate `Hexalith.Parties.Contracts` / substring matches rather than a Story 12.1 AppHost dependency. [tests/Hexalith.Parties.Client.Tests/FitnessTests/ClientArchitecturalFitnessTests.cs:36,112]
+- **`PartyPayloadProtectionServiceTests.ProtectEventPayload_PersonCreated_EncryptsPersonalDataFields`** — random encrypted payload text contained the literal sentinel `Ada`, causing a probabilistic false positive in a security serialization test. Story 12.1 does not touch payload protection or encryption code. [tests/Hexalith.Parties.Security.Tests/PartyPayloadProtectionServiceTests.cs:95]
+- **`PartyApiRoundTripIntegrationTests.ReadyEndpoint_ReturnsSuccessAsync`** — `/ready` returned `503 ServiceUnavailable` in full-solution run. Story 12.1 changes AppHost composition only; the test hosts the service directly and remains outside the AppHost topology change. [tests/Hexalith.Parties.IntegrationTests/PartyApiRoundTripIntegrationTests.cs:93]
+- **`AdminEndpointE2ETests.RebuildEndpoint_WithAdminToken_Returns202AcceptedAsync`** — admin rebuild endpoint returned `403 Forbidden` in full-solution run. Story 12.1 does not change admin controller authorization or integration-test token setup. [tests/Hexalith.Parties.IntegrationTests/Admin/AdminEndpointE2ETests.cs:90]
+
 ## Deferred from: story 12-0 EventStore-to-Parties feasibility spike (2026-05-09)
 
 Three pre-existing test failures observed when running the full `Hexalith.Parties.Tests` suite against `main` after the spike commit (`59c448c`). The spike commit only added BMAD artifacts plus `tests/Hexalith.Parties.Tests/FitnessTests/EventStorePartiesInvocationSpikeTests.cs` (4 passing) — none of these failures are caused by story 12-0 work. Verified via `git log` that all three test files were last modified in commit `db0bf14`, well before any 12-0 activity. Marked deferred per Jérôme's close-out decision so story 12-0 can transition to `review`.

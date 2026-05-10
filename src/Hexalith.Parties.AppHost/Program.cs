@@ -1,32 +1,53 @@
 using CommunityToolkit.Aspire.Hosting.Dapr;
 
-using Hexalith.Parties.Aspire;
-using Hexalith.Tenants.Aspire;
+using Hexalith.EventStore.Aspire;
+
+const string FalseLiteral = "false";
 
 IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder(args);
 
-// Resolve DAPR access control configuration path.
-// Both parties and any domain-service sidecars load this Configuration CRD.
-string accessControlConfigPath = Path.Combine(Directory.GetCurrentDirectory(), "DaprComponents", "accesscontrol.yaml");
-if (!File.Exists(accessControlConfigPath))
-{
-    accessControlConfigPath = Path.GetFullPath(
-        Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "DaprComponents", "accesscontrol.yaml"));
-}
+string eventStoreAccessControlConfigPath = ResolveDaprConfigPath("accesscontrol.yaml");
+string adminServerAccessControlConfigPath = ResolveDaprConfigPath("accesscontrol.eventstore-admin.yaml");
+string tenantsAccessControlConfigPath = ResolveDaprConfigPath("accesscontrol.tenants.yaml");
+string partiesAccessControlConfigPath = ResolveDaprConfigPath("accesscontrol.parties.yaml");
+string resiliencyConfigPath = ResolveDaprConfigPath("resiliency.yaml");
 
-if (!File.Exists(accessControlConfigPath))
-{
-    throw new FileNotFoundException(
-        "DAPR access control configuration not found. "
-        + "Ensure accesscontrol.yaml exists in the DaprComponents directory.",
-        accessControlConfigPath);
-}
+IResourceBuilder<ProjectResource> eventStore = builder.AddProject<Projects.Hexalith_EventStore>("eventstore")
+    .WithEnvironment("Authentication__DaprInternal__AllowedCallers__0", "tenants")
+    .WithEnvironment("EventStore__DomainServices__Registrations__*|party|v1__AppId", "parties")
+    .WithEnvironment("EventStore__DomainServices__Registrations__*|party|v1__MethodName", "process")
+    .WithEnvironment("EventStore__DomainServices__Registrations__*|party|v1__TenantId", "*")
+    .WithEnvironment("EventStore__DomainServices__Registrations__*|party|v1__Domain", "party")
+    .WithEnvironment("EventStore__DomainServices__Registrations__*|party|v1__Version", "v1");
+IResourceBuilder<ProjectResource> adminServer = builder.AddProject<Projects.Hexalith_EventStore_Admin_Server_Host>("eventstore-admin");
+IResourceBuilder<ProjectResource> adminUI = builder.AddProject<Projects.Hexalith_EventStore_Admin_UI>("eventstore-admin-ui");
+HexalithEventStoreResources eventStoreResources = builder.AddHexalithEventStore(
+    eventStore,
+    adminServer,
+    adminUI,
+    eventStoreAccessControlConfigPath,
+    adminServerAccessControlConfigPath,
+    resiliencyConfigPath);
 
-// Add Parties service project.
-IResourceBuilder<ProjectResource> parties = builder.AddProject<Projects.Hexalith_Parties>("parties");
-IResourceBuilder<ProjectResource> tenants = builder.AddProject<Projects.Hexalith_Tenants>("tenants");
+IResourceBuilder<ProjectResource> parties = builder.AddProject<Projects.Hexalith_Parties>("parties")
+    .WithDaprSidecar(sidecar => sidecar
+        .WithOptions(new DaprSidecarOptions
+        {
+            AppId = "parties",
+            Config = partiesAccessControlConfigPath,
+        })
+        .WithReference(eventStoreResources.StateStore)
+        .WithReference(eventStoreResources.PubSub));
 
-HexalithTenantsResources tenantsResources = builder.AddHexalithTenants(tenants, accessControlConfigPath);
+IResourceBuilder<ProjectResource> tenants = builder.AddProject<Projects.Hexalith_Tenants>("tenants")
+    .WithDaprSidecar(sidecar => sidecar
+        .WithOptions(new DaprSidecarOptions
+        {
+            AppId = "tenants",
+            Config = tenantsAccessControlConfigPath,
+        })
+        .WithReference(eventStoreResources.StateStore)
+        .WithReference(eventStoreResources.PubSub));
 
 string? bootstrapGlobalAdminUserId = builder.Configuration["Tenants:BootstrapGlobalAdminUserId"];
 if (!string.IsNullOrWhiteSpace(bootstrapGlobalAdminUserId))
@@ -34,31 +55,26 @@ if (!string.IsNullOrWhiteSpace(bootstrapGlobalAdminUserId))
     _ = tenants.WithEnvironment("Tenants__BootstrapGlobalAdminUserId", bootstrapGlobalAdminUserId);
 }
 
-// Wire Parties topology (delegates to EventStore + Parties Aspire extensions)
-HexalithPartiesResources partiesResources = builder.AddHexalithParties(
-    parties,
-    accessControlConfigPath,
-    tenantsResources.StateStore,
-    tenantsResources.PubSub);
-
 _ = parties
-    .WithReference(tenantsResources.CommandApi)
-    .WaitFor(tenantsResources.CommandApi)
+    .WithReference(eventStore)
+    .WaitFor(eventStore)
+    .WithReference(tenants)
+    .WaitFor(tenants)
     .WithEnvironment("Tenants__Enabled", "true")
     .WithEnvironment("Tenants__ServiceName", "tenants")
-    .WithEnvironment("Tenants__CommandApiAppId", "parties")
+    .WithEnvironment("Tenants__CommandApiAppId", "eventstore")
     .WithEnvironment("Tenants__PubSubName", "pubsub")
     .WithEnvironment("Tenants__TopicName", "system.tenants.events");
+
+_ = tenants
+    .WithReference(eventStore)
+    .WaitFor(eventStore);
 
 if (string.Equals(builder.Configuration["EnableMemoriesSearch"], "true", StringComparison.OrdinalIgnoreCase))
 {
     string memoriesEndpoint = builder.Configuration["MemoriesEndpoint"] ?? "http://localhost:5010/";
     if (!memoriesEndpoint.EndsWith('/'))
     {
-        // P4: PartyMemorySearchOptionsValidator requires the endpoint base address to end
-        // with a trailing slash so HttpClient relative-path resolution preserves the base
-        // path component. Normalize here so operators supplying a custom MemoriesEndpoint
-        // without a slash do not see the validator fail at startup.
         memoriesEndpoint += "/";
     }
 
@@ -70,40 +86,91 @@ if (string.Equals(builder.Configuration["EnableMemoriesSearch"], "true", StringC
         .WithEnvironment("Parties__MemoriesSearch__CaseId", "parties");
 }
 
-// Optional Keycloak OIDC integration (follow EventStore pattern).
-// Set EnableKeycloak=false in environment or appsettings to run without Keycloak
-// (falls back to symmetric key auth via Authentication:JwtBearer:SigningKey).
-if (!string.Equals(builder.Configuration["EnableKeycloak"], "false", StringComparison.OrdinalIgnoreCase))
+IResourceBuilder<KeycloakResource>? keycloak = null;
+ReferenceExpression? realmUrl = null;
+if (!string.Equals(builder.Configuration["EnableKeycloak"], FalseLiteral, StringComparison.OrdinalIgnoreCase))
 {
-    IResourceBuilder<KeycloakResource> keycloak = builder.AddKeycloak("keycloak", 8180)
+    keycloak = builder.AddKeycloak("keycloak", 8180)
         .WithRealmImport("./KeycloakRealms");
 
     EndpointReference keycloakEndpoint = keycloak.GetEndpoint("http");
-    var realmUrl = ReferenceExpression.Create($"{keycloakEndpoint}/realms/hexalith");
-    _ = parties
-        .WithReference(keycloak)
+    realmUrl = ReferenceExpression.Create($"{keycloakEndpoint}/realms/hexalith");
+
+    _ = eventStore.WithReference(keycloak)
+        .WaitFor(keycloak)
+        .WithEnvironment("Authentication__JwtBearer__Authority", realmUrl)
+        .WithEnvironment("Authentication__JwtBearer__Issuer", realmUrl)
+        .WithEnvironment("Authentication__JwtBearer__Audience", "hexalith-eventstore")
+        .WithEnvironment("Authentication__JwtBearer__RequireHttpsMetadata", FalseLiteral)
+        .WithEnvironment("Authentication__JwtBearer__SigningKey", "");
+
+    _ = adminServer.WithReference(keycloak)
+        .WaitFor(keycloak)
+        .WithEnvironment("Authentication__JwtBearer__Authority", realmUrl)
+        .WithEnvironment("Authentication__JwtBearer__Issuer", realmUrl)
+        .WithEnvironment("Authentication__JwtBearer__Audience", "hexalith-eventstore")
+        .WithEnvironment("Authentication__JwtBearer__RequireHttpsMetadata", FalseLiteral)
+        .WithEnvironment("Authentication__JwtBearer__SigningKey", "");
+
+    _ = parties.WithReference(keycloak)
         .WaitFor(keycloak)
         .WithEnvironment("Authentication__JwtBearer__Authority", realmUrl)
         .WithEnvironment("Authentication__JwtBearer__Issuer", realmUrl)
         .WithEnvironment("Authentication__JwtBearer__Audience", "hexalith-parties")
-        .WithEnvironment("Authentication__JwtBearer__RequireHttpsMetadata", "false")
-        // Explicitly clear SigningKey to prevent dual-mode auth conflict.
+        .WithEnvironment("Authentication__JwtBearer__RequireHttpsMetadata", FalseLiteral)
         .WithEnvironment("Authentication__JwtBearer__SigningKey", "");
+
+    _ = tenants.WithReference(keycloak)
+        .WaitFor(keycloak)
+        .WithEnvironment("Authentication__JwtBearer__Authority", realmUrl)
+        .WithEnvironment("Authentication__JwtBearer__Issuer", realmUrl)
+        .WithEnvironment("Authentication__JwtBearer__Audience", "hexalith-eventstore")
+        .WithEnvironment("Authentication__JwtBearer__RequireHttpsMetadata", FalseLiteral)
+        .WithEnvironment("Authentication__JwtBearer__SigningKey", "");
+
+    _ = adminUI.WithReference(keycloak)
+        .WaitFor(keycloak)
+        .WithEnvironment("EventStore__AdminServer__SwaggerUrl", ReferenceExpression.Create($"{adminServer.GetEndpoint("https")}/swagger/index.html"))
+        .WithEnvironment("EventStore__Authentication__Authority", realmUrl)
+        .WithEnvironment("EventStore__Authentication__ClientId", "hexalith-eventstore");
+}
+else
+{
+    _ = adminUI.WithEnvironment("EventStore__AdminServer__SwaggerUrl", ReferenceExpression.Create($"{adminServer.GetEndpoint("https")}/swagger/index.html"));
 }
 
-// --- Publisher environments (only activate during `aspire publish`) ---
 string? publishTarget = builder.Configuration["PUBLISH_TARGET"];
 if (string.Equals(publishTarget, "docker", StringComparison.OrdinalIgnoreCase))
 {
-    builder.AddDockerComposeEnvironment("docker");
+    _ = builder.AddDockerComposeEnvironment("docker");
 }
 else if (string.Equals(publishTarget, "k8s", StringComparison.OrdinalIgnoreCase))
 {
-    builder.AddKubernetesEnvironment("k8s");
+    _ = builder.AddKubernetesEnvironment("k8s");
 }
 else if (string.Equals(publishTarget, "aca", StringComparison.OrdinalIgnoreCase))
 {
-    builder.AddAzureContainerAppEnvironment("aca");
+    _ = builder.AddAzureContainerAppEnvironment("aca");
 }
 
 builder.Build().Run();
+
+static string ResolveDaprConfigPath(string fileName)
+{
+    string configPath = Path.Combine(Directory.GetCurrentDirectory(), "DaprComponents", fileName);
+    if (!File.Exists(configPath))
+    {
+        configPath = Path.GetFullPath(
+            Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "DaprComponents", fileName));
+    }
+
+    if (!File.Exists(configPath))
+    {
+        throw new FileNotFoundException(
+            "DAPR configuration not found. "
+            + $"Ensure {fileName} exists in the DaprComponents directory.",
+            configPath);
+    }
+
+    return configPath;
+}

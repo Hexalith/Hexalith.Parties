@@ -35,7 +35,19 @@ spec:
         trip: consecutiveFailures > 5
   targets:
     apps:
+      eventstore:
+        retry: defaultRetry
+        timeout: daprSidecar
+        circuitBreaker: defaultBreaker
+      eventstore-admin:
+        retry: defaultRetry
+        timeout: daprSidecar
+        circuitBreaker: defaultBreaker
       parties:
+        retry: defaultRetry
+        timeout: daprSidecar
+        circuitBreaker: defaultBreaker
+      tenants:
         retry: defaultRetry
         timeout: daprSidecar
         circuitBreaker: defaultBreaker
