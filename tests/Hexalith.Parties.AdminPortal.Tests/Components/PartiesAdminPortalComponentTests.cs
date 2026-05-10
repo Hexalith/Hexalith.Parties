@@ -166,8 +166,8 @@ public sealed class PartiesAdminPortalComponentTests : BunitContext
         AdminPortalSearchRequest search = api.SearchRequests.Single();
         search.Query.ShouldBe("grace@example.test");
         search.PageSize.ShouldBe(100);
-        // Type/Active intentionally not forwarded to /api/v1/parties/search — backend does
-        // not accept them. UI disables the filter selects in search mode (D2.1) so the user
+        // Type/Active intentionally not forwarded to the rich-search query contract yet.
+        // UI disables the filter selects in search mode (D2.1) so the user
         // sees the constraint rather than a silently-ignored selection.
         search.Type.ShouldBeNull();
         search.Active.ShouldBeNull();

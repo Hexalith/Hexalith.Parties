@@ -763,8 +763,8 @@
             _filters.Query,
             AdminPortalQueryBounds.BoundPage(_page),
             AdminPortalQueryBounds.BoundPageSize(PageSize),
-            // Filter values are intentionally not forwarded to /api/v1/parties/search — backend
-            // does not accept them. UI disables the filter selects in search mode (D2.1).
+            // Filter values are intentionally not forwarded to the rich-search query contract yet.
+            // UI disables the filter selects in search mode (D2.1).
             null,
             null);
 

@@ -1,10 +1,6 @@
-using System.Net;
-using System.Text.Json;
-using System.Text.Json.Serialization;
-
+using Hexalith.FrontComposer.Contracts.Communication;
 using Hexalith.Parties.AdminPortal.Services;
 using Hexalith.Parties.Contracts.Models;
-using Hexalith.Parties.Contracts.ValueObjects;
 
 using Microsoft.Extensions.Options;
 
@@ -14,23 +10,12 @@ namespace Hexalith.Parties.Client.Tests.AdminPortal;
 
 public sealed class AdminPortalQueryContractTests
 {
-    private static readonly JsonSerializerOptions _jsonOptions = new()
-    {
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-        Converters = { new JsonStringEnumConverter(JsonNamingPolicy.CamelCase) },
-    };
-
     [Fact]
     public async Task ListPartiesAsync_WhenTenantSwitchCancelsToken_PropagatesCancellationAsync()
     {
         using var cts = new CancellationTokenSource();
-        var handler = new AdminPortalHandler(async (_, ct) =>
-        {
-            await Task.Delay(TimeSpan.FromMinutes(1), ct).ConfigureAwait(false);
-            return JsonResponse(HttpStatusCode.OK, EmptyIndexPage());
-        });
-        PartiesAdminPortalApiClient client = CreateClient(handler);
+        var queryService = new BlockingQueryService();
+        PartiesAdminPortalApiClient client = CreateClient(queryService);
 
         Task<AdminPortalQueryResult<PagedResult<PartyIndexEntry>>> pending = client.ListPartiesAsync(
             new AdminPortalListRequest(1, 20, null, null),
@@ -42,172 +27,127 @@ public sealed class AdminPortalQueryContractTests
     }
 
     [Fact]
-    public async Task ListPartiesAsync_PageSizeAboveServerCap_ClientClampsTo100Async()
+    public async Task ListPartiesAsync_ClampsPageSizeInEventStoreQueryRequestAsync()
     {
-        var handler = new AdminPortalHandler((_, _) => Task.FromResult(JsonResponse(HttpStatusCode.OK, EmptyIndexPage())));
-        PartiesAdminPortalApiClient client = CreateClient(handler);
+        var queryService = new RecordingQueryService();
+        PartiesAdminPortalApiClient client = CreateClient(queryService);
 
         await client.ListPartiesAsync(
             new AdminPortalListRequest(1, 200, null, null),
             CancellationToken.None);
 
-        string query = handler.LastRequest!.RequestUri!.Query;
-        query.ShouldContain("pageSize=100");
-        query.ShouldNotContain("pageSize=200");
+        queryService.LastRequest.ShouldNotBeNull().Take.ShouldBe(100);
     }
 
     [Fact]
-    public async Task ListPartiesAsync_WhenResponseHasDegradedHeaders_SurfacesBoundedMetadataToCallerAsync()
+    public async Task SearchPartiesAsync_UsesPostQueriesContractShapeThroughFrontComposerAsync()
     {
-        var handler = new AdminPortalHandler((_, _) =>
-        {
-            HttpResponseMessage response = JsonResponse(HttpStatusCode.OK, EmptyIndexPage());
-            response.Headers.Add("X-Service-Degraded", "true");
-            response.Headers.Add("X-Stale-Data-Age", "PT12S");
-            // Backend emits PascalCase for the search-status header (Enum.ToString) — verify
-            // the client preserves it verbatim and treats it as local-only.
-            response.Headers.Add("X-Parties-Search-Status", "LocalOnly");
-            response.Headers.Add("X-Parties-Search-Degraded-Reason", new string('x', 256));
-            return Task.FromResult(response);
-        });
-        PartiesAdminPortalApiClient client = CreateClient(handler);
+        var queryService = new RecordingQueryService();
+        PartiesAdminPortalApiClient client = CreateClient(queryService);
 
-        AdminPortalQueryResult<PagedResult<PartyIndexEntry>> result = await client.ListPartiesAsync(
-            new AdminPortalListRequest(1, 20, null, null),
-            CancellationToken.None);
-
-        result.Metadata.ServiceDegraded.ShouldBeTrue();
-        result.Metadata.StaleDataAge.ShouldBe("PT12S");
-        result.Metadata.SearchStatus.ShouldBe("LocalOnly");
-        result.Metadata.IsLocalOnlySearch.ShouldBeTrue();
-        result.Metadata.SearchDegradedReason!.Length.ShouldBe(128);
-    }
-
-    [Fact]
-    public async Task SearchPartiesAsync_EmptyQuery_SendsApprovedSearchRequestAsync()
-    {
-        var responseBody = new
-        {
-            results = new PagedResult<PartySearchResult>
-            {
-                Items = [],
-                Page = 1,
-                PageSize = 20,
-                TotalCount = 0,
-                TotalPages = 0,
-            },
-            status = "LocalOnly",
-        };
-        var handler = new AdminPortalHandler((_, _) => Task.FromResult(JsonResponse(HttpStatusCode.OK, responseBody)));
-        PartiesAdminPortalApiClient client = CreateClient(handler);
-
-        AdminPortalQueryResult<PagedResult<PartySearchResult>> result = await client.SearchPartiesAsync(
-            new AdminPortalSearchRequest(string.Empty, 1, 20, null, null),
-            CancellationToken.None);
-
-        result.Payload.Items.ShouldBeEmpty();
-        handler.LastRequest!.RequestUri!.PathAndQuery.ShouldStartWith("/api/v1/parties/search?");
-        handler.LastRequest.RequestUri.Query.ShouldContain("q=");
-    }
-
-    [Fact]
-    public async Task SearchPartiesAsync_RichSearchUnavailable_KeepsDisplayNameOnlyMetadataAsync()
-    {
-        var responseBody = new
-        {
-            results = new PagedResult<PartySearchResult>
-            {
-                Items =
-                [
-                    new PartySearchResult
-                    {
-                        Party = IndexEntry("p-1", "Anna Smith", PartyType.Person, true),
-                        Matches = [],
-                        RelevanceScore = 0.0,
-                    },
-                ],
-                Page = 1,
-                PageSize = 20,
-                TotalCount = 1,
-                TotalPages = 1,
-            },
-            status = "LocalOnly",
-            degradedReason = "rich-search-disabled",
-        };
-        var handler = new AdminPortalHandler((_, _) => Task.FromResult(JsonResponse(HttpStatusCode.OK, responseBody)));
-        PartiesAdminPortalApiClient client = CreateClient(handler);
-
-        AdminPortalQueryResult<PagedResult<PartySearchResult>> result = await client.SearchPartiesAsync(
+        await client.SearchPartiesAsync(
             new AdminPortalSearchRequest("anna@example.com", 1, 20, null, null),
             CancellationToken.None);
 
-        result.Payload.Items.Count.ShouldBe(1);
-        result.Metadata.IsLocalOnlySearch.ShouldBeTrue();
-        result.Metadata.SearchDegradedReason.ShouldBe("rich-search-disabled");
-        handler.LastRequest!.RequestUri!.Query.ShouldNotContain("type=");
-        handler.LastRequest.RequestUri.Query.ShouldNotContain("active=");
+        QueryRequest request = queryService.LastRequest.ShouldNotBeNull();
+        request.Domain.ShouldBe("party");
+        request.QueryType.ShouldBe("SearchParties");
+        request.SearchQuery.ShouldBe("anna@example.com");
+        request.CacheDiscriminator.ShouldBe("parties-admin-search-v1");
     }
 
-    [Theory]
-    [InlineData(HttpStatusCode.Gone, AdminPortalQueryFailureKind.Gone)]
-    [InlineData(HttpStatusCode.Forbidden, AdminPortalQueryFailureKind.Forbidden)]
-    [InlineData(HttpStatusCode.Unauthorized, AdminPortalQueryFailureKind.AuthenticationRequired)]
-    public async Task QueryFailures_SurfaceTypedBoundedOutcomesAsync(HttpStatusCode status, AdminPortalQueryFailureKind expected)
+    [Fact]
+    public async Task QueryFailures_SurfaceTypedBoundedOutcomesAsync()
     {
-        var handler = new AdminPortalHandler((_, _) => Task.FromResult(JsonResponse(status, new
+        var queryService = new RecordingQueryService
         {
-            title = "Forbidden",
-            detail = "tenant=other party=p-99",
-        })));
-        PartiesAdminPortalApiClient client = CreateClient(handler);
+            ExceptionToThrow = new QueryFailureException(
+                QueryFailureKind.NotFound,
+                ProblemDetailsPayload.Empty),
+        };
+        PartiesAdminPortalApiClient client = CreateClient(queryService);
 
         AdminPortalQueryException ex = await Should.ThrowAsync<AdminPortalQueryException>(
-            () => client.GetPartyAsync("tenant:other:p-99", CancellationToken.None));
+            () => client.GetPartyAsync("p-99", CancellationToken.None));
 
-        ex.Kind.ShouldBe(expected);
-        ex.Message.ShouldNotContain("tenant=other");
+        ex.Kind.ShouldBe(AdminPortalQueryFailureKind.NotFound);
         ex.Message.ShouldNotContain("p-99");
     }
 
-    private static PartiesAdminPortalApiClient CreateClient(HttpMessageHandler handler)
+    [Fact]
+    public void AdminPortalSource_DoesNotContainRetiredPartiesRestReads()
+    {
+        string root = LocateRepositoryRoot();
+        string sourceRoot = Path.Combine(root, "src", "Hexalith.Parties.AdminPortal");
+        string[] files = Directory.GetFiles(sourceRoot, "*.*", SearchOption.AllDirectories)
+            .Where(static path => path.EndsWith(".cs", StringComparison.OrdinalIgnoreCase)
+                || path.EndsWith(".razor", StringComparison.OrdinalIgnoreCase))
+            .ToArray();
+
+        string source = string.Join(Environment.NewLine, files.Select(File.ReadAllText));
+
+        source.ShouldNotContain("api/v1/parties");
+        source.ShouldNotContain("api/v1/admin");
+        source.ShouldNotContain("MapControllers");
+        source.ShouldNotContain("MarkupString");
+        source.ShouldNotContain("AddMarkupContent");
+    }
+
+    private static PartiesAdminPortalApiClient CreateClient(IQueryService queryService)
         => new(
-            new HttpClient(handler) { BaseAddress = new Uri("http://localhost/") },
-            Options.Create(new PartiesAdminPortalOptions()));
+            queryService,
+            Options.Create(new PartiesAdminPortalOptions
+            {
+                ListProjectionType = "PartyIndex",
+                ListQueryType = "ListParties",
+                SearchProjectionType = "PartySearch",
+                SearchQueryType = "SearchParties",
+                DetailProjectionType = "PartyDetail",
+                DetailQueryType = "GetParty",
+            }));
 
-    private static HttpResponseMessage JsonResponse(HttpStatusCode status, object body)
-        => new(status)
+    private static string LocateRepositoryRoot()
+    {
+        DirectoryInfo? directory = new(AppContext.BaseDirectory);
+        while (directory is not null)
         {
-            Content = new StringContent(JsonSerializer.Serialize(body, _jsonOptions), System.Text.Encoding.UTF8, "application/json"),
-        };
+            if (File.Exists(Path.Combine(directory.FullName, "Hexalith.Parties.slnx")))
+            {
+                return directory.FullName;
+            }
 
-    private static PagedResult<PartyIndexEntry> EmptyIndexPage() => new()
+            directory = directory.Parent;
+        }
+
+        throw new InvalidOperationException("Unable to locate repository root.");
+    }
+
+    private sealed class RecordingQueryService : IQueryService
     {
-        Items = [],
-        Page = 1,
-        PageSize = 20,
-        TotalCount = 0,
-        TotalPages = 0,
-    };
+        public QueryRequest? LastRequest { get; private set; }
 
-    private static PartyIndexEntry IndexEntry(string id, string name, PartyType type, bool active) => new()
-    {
-        Id = id,
-        Type = type,
-        IsActive = active,
-        DisplayName = name,
-        CreatedAt = DateTimeOffset.Parse("2026-05-01T00:00:00Z"),
-        LastModifiedAt = DateTimeOffset.Parse("2026-05-02T00:00:00Z"),
-    };
+        public Exception? ExceptionToThrow { get; init; }
 
-    private sealed class AdminPortalHandler(Func<HttpRequestMessage, CancellationToken, Task<HttpResponseMessage>> handler) : HttpMessageHandler
-    {
-        public HttpRequestMessage? LastRequest { get; private set; }
-
-        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        public Task<QueryResult<T>> QueryAsync<T>(QueryRequest request, CancellationToken cancellationToken = default)
         {
-            LastRequest = request;
             cancellationToken.ThrowIfCancellationRequested();
-            return handler(request, cancellationToken);
+            LastRequest = request;
+
+            if (ExceptionToThrow is not null)
+            {
+                throw ExceptionToThrow;
+            }
+
+            return Task.FromResult(new QueryResult<T>([], 0, ETag: null));
+        }
+    }
+
+    private sealed class BlockingQueryService : IQueryService
+    {
+        public async Task<QueryResult<T>> QueryAsync<T>(QueryRequest request, CancellationToken cancellationToken = default)
+        {
+            await Task.Delay(TimeSpan.FromMinutes(1), cancellationToken).ConfigureAwait(false);
+            return new QueryResult<T>([], 0, ETag: null);
         }
     }
 }

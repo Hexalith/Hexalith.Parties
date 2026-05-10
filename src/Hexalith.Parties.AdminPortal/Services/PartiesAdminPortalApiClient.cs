@@ -1,10 +1,4 @@
-using System.IO;
-using System.Net;
-using System.Net.Http.Headers;
-using System.Net.Http.Json;
-using System.Text.Json;
-using System.Text.Json.Serialization;
-
+using Hexalith.FrontComposer.Contracts.Communication;
 using Hexalith.Parties.Contracts.Models;
 
 using Microsoft.Extensions.Options;
@@ -13,37 +7,17 @@ namespace Hexalith.Parties.AdminPortal.Services;
 
 public sealed class PartiesAdminPortalApiClient : IPartiesAdminPortalApiClient
 {
-    // Backend serializes status enums via JsonStringEnumConverter() with no naming policy
-    // (Enum.ToString → PascalCase). Use a matching converter on the client; do not apply
-    // CamelCase to enum values, otherwise the wire status (LocalOnly/Degraded/Rich) cannot
-    // be matched to the comparison literals in AdminPortalQueryMetadata.
-    private static readonly JsonSerializerOptions _jsonOptions = new()
+    private const string ListCacheDiscriminator = "parties-admin-list-v1";
+    private const string SearchCacheDiscriminator = "parties-admin-search-v1";
+    private const string DetailCacheDiscriminator = "parties-admin-detail-v1";
+
+    private readonly IQueryService _queryService;
+    private readonly PartiesAdminPortalOptions _options;
+
+    public PartiesAdminPortalApiClient(IQueryService queryService, IOptions<PartiesAdminPortalOptions> options)
     {
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-        PropertyNameCaseInsensitive = true,
-        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-        Converters = { new JsonStringEnumConverter() },
-    };
-
-    private readonly HttpClient _httpClient;
-
-    public PartiesAdminPortalApiClient(HttpClient httpClient, IOptions<PartiesAdminPortalOptions> options)
-    {
-        ArgumentNullException.ThrowIfNull(httpClient);
-        ArgumentNullException.ThrowIfNull(options);
-
-        _httpClient = httpClient;
-
-        if (options.Value.ApiBaseAddress is not null)
-        {
-            _httpClient.BaseAddress = options.Value.ApiBaseAddress;
-        }
-
-        if (_httpClient.BaseAddress is null)
-        {
-            throw new InvalidOperationException(
-                "PartiesAdminPortalApiClient requires HttpClient.BaseAddress or PartiesAdminPortalOptions.ApiBaseAddress to be configured.");
-        }
+        _queryService = queryService ?? throw new ArgumentNullException(nameof(queryService));
+        _options = options?.Value ?? throw new ArgumentNullException(nameof(options));
     }
 
     public async Task<AdminPortalQueryResult<PagedResult<PartyIndexEntry>>> ListPartiesAsync(
@@ -52,10 +26,20 @@ public sealed class PartiesAdminPortalApiClient : IPartiesAdminPortalApiClient
     {
         ArgumentNullException.ThrowIfNull(request);
 
-        return await SendAsync(
-            BuildListUrl(request),
-            ReadPayloadAsync<PagedResult<PartyIndexEntry>>,
-            cancellationToken).ConfigureAwait(false);
+        int page = AdminPortalQueryBounds.BoundPage(request.Page);
+        int pageSize = AdminPortalQueryBounds.BoundPageSize(request.PageSize);
+        QueryRequest query = new(
+            ProjectionType: RequireContract(_options.ListProjectionType, nameof(_options.ListProjectionType)),
+            TenantId: null,
+            Skip: (page - 1) * pageSize,
+            Take: pageSize,
+            ColumnFilters: BuildListFilters(request),
+            Domain: Domain,
+            QueryType: RequireContract(_options.ListQueryType, nameof(_options.ListQueryType)),
+            CacheDiscriminator: ListCacheDiscriminator);
+
+        QueryResult<PartyIndexEntry> result = await ExecuteAsync<PartyIndexEntry>(query, cancellationToken).ConfigureAwait(false);
+        return new(ToPage(result, page, pageSize), MetadataFrom(result));
     }
 
     public async Task<AdminPortalQueryResult<PagedResult<PartySearchResult>>> SearchPartiesAsync(
@@ -64,375 +48,162 @@ public sealed class PartiesAdminPortalApiClient : IPartiesAdminPortalApiClient
     {
         ArgumentNullException.ThrowIfNull(request);
 
-        // Backend /api/v1/parties/search accepts q, mode, caseId, page, pageSize only — type/active
-        // are not in the controller signature, so they are intentionally not sent here. The UI
-        // disables those filters in search mode (see PartiesAdminPortal.razor) so the user is
-        // not surprised by silently-ignored selections.
-        var parts = new List<string>
-        {
-            $"q={Uri.EscapeDataString(request.Query ?? string.Empty)}",
-            $"page={AdminPortalQueryBounds.BoundPage(request.Page)}",
-            $"pageSize={AdminPortalQueryBounds.BoundPageSize(request.PageSize)}",
-        };
+        int page = AdminPortalQueryBounds.BoundPage(request.Page);
+        int pageSize = AdminPortalQueryBounds.BoundPageSize(request.PageSize);
+        QueryRequest query = new(
+            ProjectionType: RequireContract(_options.SearchProjectionType, nameof(_options.SearchProjectionType)),
+            TenantId: null,
+            Skip: (page - 1) * pageSize,
+            Take: pageSize,
+            SearchQuery: request.Query ?? string.Empty,
+            Domain: Domain,
+            QueryType: RequireContract(_options.SearchQueryType, nameof(_options.SearchQueryType)),
+            CacheDiscriminator: SearchCacheDiscriminator);
 
-        return await SendSearchAsync(
-            $"api/v1/parties/search?{string.Join('&', parts)}",
-            cancellationToken).ConfigureAwait(false);
+        QueryResult<PartySearchResult> result = await ExecuteAsync<PartySearchResult>(query, cancellationToken).ConfigureAwait(false);
+        return new(ToPage(result, page, pageSize), MetadataFrom(result));
+    }
+
+    public Task<AdminPortalRichSearchCapability> GetRichSearchCapabilityAsync(CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        return Task.FromResult(AdminPortalRichSearchCapability.LocalOnly(
+            "Rich-search capability query is blocked until Story 12.4/12.5 freezes the EventStore query contract."));
     }
 
     public async Task<AdminPortalQueryResult<PartyDetail>> GetPartyAsync(string partyId, CancellationToken cancellationToken)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(partyId);
 
-        return await SendAsync(
-            $"api/v1/parties/{Uri.EscapeDataString(partyId)}",
-            ReadPayloadAsync<PartyDetail>,
-            cancellationToken).ConfigureAwait(false);
+        QueryRequest query = new(
+            ProjectionType: RequireContract(_options.DetailProjectionType, nameof(_options.DetailProjectionType)),
+            TenantId: null,
+            Take: 1,
+            Domain: Domain,
+            AggregateId: partyId,
+            QueryType: RequireContract(_options.DetailQueryType, nameof(_options.DetailQueryType)),
+            EntityId: partyId,
+            ProjectionActorType: _options.DetailProjectionActorType,
+            CacheDiscriminator: DetailCacheDiscriminator);
+
+        QueryResult<PartyDetail> result = await ExecuteAsync<PartyDetail>(query, cancellationToken).ConfigureAwait(false);
+        PartyDetail? detail = result.Items.FirstOrDefault();
+        if (detail is null)
+        {
+            throw new AdminPortalQueryException(AdminPortalQueryFailureKind.NotFound);
+        }
+
+        return new(detail, MetadataFrom(result));
     }
 
-    public async Task<AdminPortalRichSearchCapability> GetRichSearchCapabilityAsync(CancellationToken cancellationToken)
+    private string Domain => string.IsNullOrWhiteSpace(_options.Domain) ? "party" : _options.Domain.Trim();
+
+    private async Task<QueryResult<T>> ExecuteAsync<T>(QueryRequest query, CancellationToken cancellationToken)
     {
         try
         {
-            using HttpResponseMessage response = await _httpClient.GetAsync("health", cancellationToken).ConfigureAwait(false);
-            EnsureJsonResponse(response);
-
-            using Stream stream = await response.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false);
-            using JsonDocument document = await JsonDocument.ParseAsync(stream, cancellationToken: cancellationToken).ConfigureAwait(false);
-            return ParseRichSearchCapability(document.RootElement);
+            return await _queryService.QueryAsync<T>(query, cancellationToken).ConfigureAwait(false);
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
             throw;
         }
-        catch (Exception ex) when (ex is HttpRequestException
-            or IOException
-            or JsonException
-            or AdminPortalQueryException
-            or TaskCanceledException)
+        catch (AuthRedirectRequiredException ex)
         {
-            return AdminPortalRichSearchCapability.Degraded($"Rich search probe unavailable: {ex.GetType().Name}");
+            throw new AdminPortalQueryException(AdminPortalQueryFailureKind.AuthenticationRequired, innerException: ex);
+        }
+        catch (QueryFailureException ex)
+        {
+            throw new AdminPortalQueryException(MapFailureKind(ex), ex.Problem.Status, retryAfter: ex.RetryAfter, innerException: ex);
+        }
+        catch (TimeoutException ex)
+        {
+            throw new AdminPortalQueryException(AdminPortalQueryFailureKind.TransientFailure, innerException: ex);
+        }
+        catch (OperationCanceledException ex)
+        {
+            throw new AdminPortalQueryException(AdminPortalQueryFailureKind.TransientFailure, innerException: ex);
         }
     }
 
-    private async Task<AdminPortalQueryResult<T>> SendAsync<T>(
-        string url,
-        Func<HttpResponseMessage, CancellationToken, Task<T?>> readPayload,
-        CancellationToken cancellationToken,
-        Func<AdminPortalQueryMetadata, object?, AdminPortalQueryMetadata>? enrichMetadata = null)
+    private static AdminPortalQueryFailureKind MapFailureKind(QueryFailureException ex)
+        => ex.Kind switch
+        {
+            QueryFailureKind.Unauthorized => AdminPortalQueryFailureKind.AuthenticationRequired,
+            QueryFailureKind.Forbidden => IsTenantProblem(ex.Problem)
+                ? AdminPortalQueryFailureKind.TenantRequired
+                : AdminPortalQueryFailureKind.Forbidden,
+            QueryFailureKind.NotFound => AdminPortalQueryFailureKind.NotFound,
+            QueryFailureKind.RateLimited => AdminPortalQueryFailureKind.TransientFailure,
+            _ => AdminPortalQueryFailureKind.Unknown,
+        };
+
+    private static bool IsTenantProblem(ProblemDetailsPayload problem)
+        => ContainsTenant(problem.Title)
+            || ContainsTenant(problem.Detail)
+            || problem.GlobalErrors.Any(ContainsTenant);
+
+    private static bool ContainsTenant(string? value)
+        => value?.Contains("tenant", StringComparison.OrdinalIgnoreCase) == true;
+
+    private static IReadOnlyDictionary<string, string>? BuildListFilters(AdminPortalListRequest request)
     {
-        try
+        var filters = new Dictionary<string, string>(StringComparer.Ordinal)
         {
-            using HttpResponseMessage response = await _httpClient.GetAsync(url, cancellationToken).ConfigureAwait(false);
-            await ThrowIfFailureAsync(response, cancellationToken).ConfigureAwait(false);
-
-            // 204/304 are unexpected for the typed list/detail endpoints (the backend
-            // always returns 200 with a body, including for empty pages). Surfacing as
-            // NotFound prevents callers from dereferencing a default-constructed payload.
-            if (response.StatusCode is HttpStatusCode.NoContent or HttpStatusCode.NotModified)
-            {
-                throw new AdminPortalQueryException(AdminPortalQueryFailureKind.NotFound, (int)response.StatusCode);
-            }
-
-            EnsureJsonResponse(response);
-
-            T? payload = await readPayload(response, cancellationToken).ConfigureAwait(false);
-            if (payload is null)
-            {
-                throw new AdminPortalQueryException(AdminPortalQueryFailureKind.Unknown, (int)response.StatusCode);
-            }
-
-            AdminPortalQueryMetadata metadata = ReadMetadata(response);
-            if (enrichMetadata is not null)
-            {
-                metadata = enrichMetadata(metadata, payload);
-            }
-
-            return new(payload, metadata);
-        }
-        catch (HttpRequestException ex)
-        {
-            throw new AdminPortalQueryException(AdminPortalQueryFailureKind.TransientFailure, (int?)ex.StatusCode, innerException: ex);
-        }
-        catch (TaskCanceledException ex) when (!cancellationToken.IsCancellationRequested)
-        {
-            throw new AdminPortalQueryException(AdminPortalQueryFailureKind.TransientFailure, innerException: ex);
-        }
-        catch (IOException ex)
-        {
-            throw new AdminPortalQueryException(AdminPortalQueryFailureKind.TransientFailure, innerException: ex);
-        }
-        catch (JsonException ex)
-        {
-            throw new AdminPortalQueryException(AdminPortalQueryFailureKind.Unknown, innerException: ex);
-        }
-    }
-
-    private async Task<AdminPortalQueryResult<PagedResult<PartySearchResult>>> SendSearchAsync(
-        string url,
-        CancellationToken cancellationToken)
-    {
-        try
-        {
-            using HttpResponseMessage response = await _httpClient.GetAsync(url, cancellationToken).ConfigureAwait(false);
-            await ThrowIfFailureAsync(response, cancellationToken).ConfigureAwait(false);
-
-            if (response.StatusCode is HttpStatusCode.NoContent or HttpStatusCode.NotModified)
-            {
-                return new(EmptySearchPage(), ReadMetadata(response));
-            }
-
-            EnsureJsonResponse(response);
-
-            AdminPortalSearchResponse? body = await ReadPayloadAsync<AdminPortalSearchResponse>(response, cancellationToken).ConfigureAwait(false);
-            AdminPortalQueryMetadata wireMetadata = ReadMetadata(response);
-            PagedResult<PartySearchResult> results = body?.Results ?? EmptySearchPage();
-            AdminPortalQueryMetadata metadata = wireMetadata with
-            {
-                SearchStatus = wireMetadata.SearchStatus ?? body?.Status,
-                SearchDegradedReason = wireMetadata.SearchDegradedReason ?? body?.DegradedReason,
-            };
-
-            return new(results, metadata);
-        }
-        catch (HttpRequestException ex)
-        {
-            throw new AdminPortalQueryException(AdminPortalQueryFailureKind.TransientFailure, (int?)ex.StatusCode, innerException: ex);
-        }
-        catch (TaskCanceledException ex) when (!cancellationToken.IsCancellationRequested)
-        {
-            throw new AdminPortalQueryException(AdminPortalQueryFailureKind.TransientFailure, innerException: ex);
-        }
-        catch (IOException ex)
-        {
-            throw new AdminPortalQueryException(AdminPortalQueryFailureKind.TransientFailure, innerException: ex);
-        }
-        catch (JsonException ex)
-        {
-            throw new AdminPortalQueryException(AdminPortalQueryFailureKind.Unknown, innerException: ex);
-        }
-    }
-
-    private static PagedResult<PartySearchResult> EmptySearchPage()
-        => new() { Items = Array.Empty<PartySearchResult>(), Page = 0, PageSize = 0, TotalCount = 0, TotalPages = 0 };
-
-    private static string BuildListUrl(AdminPortalListRequest request)
-    {
-        var parts = new List<string>
-        {
-            $"page={AdminPortalQueryBounds.BoundPage(request.Page)}",
-            $"pageSize={AdminPortalQueryBounds.BoundPageSize(request.PageSize)}",
+            ["page"] = AdminPortalQueryBounds.BoundPage(request.Page).ToString(System.Globalization.CultureInfo.InvariantCulture),
+            ["pageSize"] = AdminPortalQueryBounds.BoundPageSize(request.PageSize).ToString(System.Globalization.CultureInfo.InvariantCulture),
         };
 
         if (request.Type is not null)
         {
-            parts.Add($"type={Uri.EscapeDataString(request.Type.Value.ToString())}");
+            filters["type"] = request.Type.Value.ToString();
         }
 
         if (request.Active is not null)
         {
-            parts.Add($"active={Uri.EscapeDataString(request.Active.Value.ToString().ToLowerInvariant())}");
+            filters["active"] = request.Active.Value ? "true" : "false";
         }
 
-        AddDate(parts, "createdAfter", request.CreatedAfter);
-        AddDate(parts, "createdBefore", request.CreatedBefore);
-        AddDate(parts, "modifiedAfter", request.ModifiedAfter);
-        AddDate(parts, "modifiedBefore", request.ModifiedBefore);
+        AddDate(filters, "createdAfter", request.CreatedAfter);
+        AddDate(filters, "createdBefore", request.CreatedBefore);
+        AddDate(filters, "modifiedAfter", request.ModifiedAfter);
+        AddDate(filters, "modifiedBefore", request.ModifiedBefore);
 
-        return $"api/v1/parties?{string.Join('&', parts)}";
+        return filters;
     }
 
-    private static void AddDate(List<string> parts, string name, DateTimeOffset? value)
+    private static void AddDate(Dictionary<string, string> filters, string name, DateTimeOffset? value)
     {
         if (value is not null)
         {
-            parts.Add($"{name}={Uri.EscapeDataString(value.Value.ToString("O"))}");
+            filters[name] = value.Value.ToString("O", System.Globalization.CultureInfo.InvariantCulture);
         }
     }
 
-    private static async Task<T?> ReadPayloadAsync<T>(HttpResponseMessage response, CancellationToken cancellationToken)
-        => await response.Content.ReadFromJsonAsync<T>(_jsonOptions, cancellationToken).ConfigureAwait(false);
-
-    private static void EnsureJsonResponse(HttpResponseMessage response)
+    private static string RequireContract(string? value, string optionName)
     {
-        // Captive portals and gateway interstitials sometimes return 200 OK with text/html.
-        // Treat that as authentication-required so the user is redirected to sign in instead
-        // of seeing a generic load failure.
-        string? mediaType = response.Content.Headers.ContentType?.MediaType;
-        if (mediaType is null)
+        if (!string.IsNullOrWhiteSpace(value))
         {
-            return;
+            return value.Trim();
         }
 
-        if (mediaType.Equals("application/json", StringComparison.OrdinalIgnoreCase)
-            || mediaType.EndsWith("+json", StringComparison.OrdinalIgnoreCase))
-        {
-            return;
-        }
-
-        if (mediaType.StartsWith("text/html", StringComparison.OrdinalIgnoreCase))
-        {
-            throw new AdminPortalQueryException(AdminPortalQueryFailureKind.AuthenticationRequired, (int)response.StatusCode);
-        }
-
-        throw new AdminPortalQueryException(AdminPortalQueryFailureKind.Unknown, (int)response.StatusCode);
+        throw new AdminPortalQueryException(
+            AdminPortalQueryFailureKind.ContractUnavailable,
+            validationDetail: $"{optionName} is not configured because Story 12.4/12.5 has not frozen the Parties EventStore query contract.");
     }
 
-    private static AdminPortalQueryMetadata ReadMetadata(HttpResponseMessage response)
-        => new(
-            ServiceDegraded: ReadHeader(response, "X-Service-Degraded") is string degraded
-                && bool.TryParse(degraded, out bool isDegraded)
-                && isDegraded,
-            StaleDataAge: ReadHeader(response, "X-Stale-Data-Age"),
-            SearchStatus: ReadHeader(response, "X-Parties-Search-Status"),
-            SearchDegradedReason: ReadHeader(response, "X-Parties-Search-Degraded-Reason"));
-
-    private static string? ReadHeader(HttpResponseMessage response, string name)
-        => response.Headers.TryGetValues(name, out IEnumerable<string>? values)
-            ? values.FirstOrDefault()
-            : null;
-
-    private static AdminPortalRichSearchCapability ParseRichSearchCapability(JsonElement root)
-    {
-        if (!root.TryGetProperty("results", out JsonElement results)
-            || !results.TryGetProperty("memories-search", out JsonElement memoriesSearch))
+    private static PagedResult<T> ToPage<T>(QueryResult<T> result, int page, int pageSize)
+        => new()
         {
-            return AdminPortalRichSearchCapability.LocalOnly("memories-search health check unavailable");
-        }
-
-        string? status = ReadStringProperty(memoriesSearch, "status");
-        string? description = ReadStringProperty(memoriesSearch, "description");
-        JsonElement data = memoriesSearch.TryGetProperty("data", out JsonElement dataElement)
-            ? dataElement
-            : default;
-        bool enabled = ReadBoolProperty(data, "enabled") == true;
-        if (!enabled)
-        {
-            return AdminPortalRichSearchCapability.LocalOnly(description ?? "Memories rich search is disabled");
-        }
-
-        // Fail closed: a missing or non-boolean searchReachable value degrades safely to
-        // local-only rather than implicitly trusting the backend reports rich search.
-        bool searchReachable = ReadBoolProperty(data, "searchReachable") == true;
-        bool degradedReportedByMemories = ReadBoolProperty(data, "degradedReportedByMemories") == true;
-        if (string.Equals(status, "Healthy", StringComparison.OrdinalIgnoreCase)
-            && searchReachable
-            && !degradedReportedByMemories)
-        {
-            return AdminPortalRichSearchCapability.Available();
-        }
-
-        return AdminPortalRichSearchCapability.Degraded(description ?? $"memories-search reported {status ?? "unknown"}");
-    }
-
-    private static string? ReadStringProperty(JsonElement element, string name)
-        => element.ValueKind == JsonValueKind.Object
-            && element.TryGetProperty(name, out JsonElement property)
-            && property.ValueKind == JsonValueKind.String
-                ? property.GetString()
-                : null;
-
-    private static bool? ReadBoolProperty(JsonElement element, string name)
-        => element.ValueKind == JsonValueKind.Object
-            && element.TryGetProperty(name, out JsonElement property)
-            && property.ValueKind is JsonValueKind.True or JsonValueKind.False
-                ? property.GetBoolean()
-                : null;
-
-    private static async Task ThrowIfFailureAsync(HttpResponseMessage response, CancellationToken cancellationToken)
-    {
-        if (response.IsSuccessStatusCode)
-        {
-            return;
-        }
-
-        cancellationToken.ThrowIfCancellationRequested();
-
-        AdminPortalQueryFailureKind kind = response.StatusCode switch
-        {
-            HttpStatusCode.Unauthorized => AdminPortalQueryFailureKind.AuthenticationRequired,
-            // Distinguish missing-tenant 403 (Problem.Type contains "tenant") from admin-role
-            // 403; the former routes to the TenantRequired UX, the latter to AdminRequired.
-            HttpStatusCode.Forbidden => IsTenantProblem(response)
-                ? AdminPortalQueryFailureKind.TenantRequired
-                : AdminPortalQueryFailureKind.Forbidden,
-            HttpStatusCode.NotFound => AdminPortalQueryFailureKind.NotFound,
-            HttpStatusCode.Gone => AdminPortalQueryFailureKind.Gone,
-            HttpStatusCode.BadRequest => AdminPortalQueryFailureKind.Validation,
-            HttpStatusCode.UnprocessableEntity => AdminPortalQueryFailureKind.Validation,
-            HttpStatusCode.TooManyRequests => AdminPortalQueryFailureKind.TransientFailure,
-            _ when (int)response.StatusCode >= 500 => AdminPortalQueryFailureKind.TransientFailure,
-            _ => AdminPortalQueryFailureKind.Unknown,
+            Items = result.Items,
+            Page = page,
+            PageSize = pageSize,
+            TotalCount = result.TotalCount,
+            TotalPages = pageSize <= 0 ? 0 : (int)Math.Ceiling(result.TotalCount / (double)pageSize),
         };
 
-        TimeSpan? retryAfter = ReadRetryAfter(response.Headers.RetryAfter);
-        string? validationDetail = kind == AdminPortalQueryFailureKind.Validation
-            ? await TryReadProblemDetailAsync(response, cancellationToken).ConfigureAwait(false)
-            : null;
-
-        throw new AdminPortalQueryException(kind, (int)response.StatusCode, validationDetail, retryAfter);
-    }
-
-    private static bool IsTenantProblem(HttpResponseMessage response)
-    {
-        // Heuristic: backend emits a "tenant"-flavored problem type for missing-tenant 403s.
-        // A header indicator (X-Tenant-Required) is more robust if the backend later adds it;
-        // for now we inspect the response header name space.
-        return response.Headers.TryGetValues("X-Tenant-Required", out _);
-    }
-
-    private static TimeSpan? ReadRetryAfter(RetryConditionHeaderValue? header)
-    {
-        if (header is null)
-        {
-            return null;
-        }
-
-        if (header.Delta is TimeSpan delta)
-        {
-            return delta;
-        }
-
-        if (header.Date is DateTimeOffset when)
-        {
-            TimeSpan diff = when - DateTimeOffset.UtcNow;
-            return diff > TimeSpan.Zero ? diff : TimeSpan.Zero;
-        }
-
-        return null;
-    }
-
-    private static async Task<string?> TryReadProblemDetailAsync(HttpResponseMessage response, CancellationToken cancellationToken)
-    {
-        string? mediaType = response.Content.Headers.ContentType?.MediaType;
-        if (mediaType is null
-            || !(mediaType.Equals("application/problem+json", StringComparison.OrdinalIgnoreCase)
-                || mediaType.Equals("application/json", StringComparison.OrdinalIgnoreCase)))
-        {
-            return null;
-        }
-
-        try
-        {
-            using Stream stream = await response.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false);
-            using JsonDocument document = await JsonDocument.ParseAsync(stream, cancellationToken: cancellationToken).ConfigureAwait(false);
-            if (document.RootElement.TryGetProperty("detail", out JsonElement detail) && detail.ValueKind == JsonValueKind.String)
-            {
-                return detail.GetString();
-            }
-
-            if (document.RootElement.TryGetProperty("title", out JsonElement title) && title.ValueKind == JsonValueKind.String)
-            {
-                return title.GetString();
-            }
-        }
-        catch (JsonException)
-        {
-        }
-        catch (IOException)
-        {
-        }
-
-        return null;
-    }
+    private static AdminPortalQueryMetadata MetadataFrom<T>(QueryResult<T> result)
+        => result.IsNotModified
+            ? new AdminPortalQueryMetadata(StaleDataAge: "not-modified")
+            : AdminPortalQueryMetadata.Empty;
 }

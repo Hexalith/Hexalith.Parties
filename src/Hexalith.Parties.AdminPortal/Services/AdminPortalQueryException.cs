@@ -28,6 +28,7 @@ public sealed class AdminPortalQueryException : Exception
             AdminPortalQueryFailureKind.NotFound => "The selected party is unavailable.",
             AdminPortalQueryFailureKind.Gone => "The selected party is erased or no longer inspectable.",
             AdminPortalQueryFailureKind.TransientFailure => "The request could not be completed. Try again.",
+            AdminPortalQueryFailureKind.ContractUnavailable => "The EventStore query contract is not available yet.",
             AdminPortalQueryFailureKind.Validation => "The request was rejected as invalid.",
             _ => "The request could not be completed.",
         };

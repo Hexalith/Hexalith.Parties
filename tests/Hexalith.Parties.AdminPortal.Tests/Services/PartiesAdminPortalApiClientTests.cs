@@ -1,7 +1,4 @@
-using System.Net;
-using System.Text.Json;
-using System.Text.Json.Serialization;
-
+using Hexalith.FrontComposer.Contracts.Communication;
 using Hexalith.Parties.AdminPortal.Services;
 using Hexalith.Parties.Contracts.Models;
 using Hexalith.Parties.Contracts.ValueObjects;
@@ -14,52 +11,47 @@ namespace Hexalith.Parties.AdminPortal.Tests.Services;
 
 public sealed class PartiesAdminPortalApiClientTests
 {
-    private static readonly JsonSerializerOptions _jsonOptions = new()
-    {
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-        Converters = { new JsonStringEnumConverter(JsonNamingPolicy.CamelCase) },
-    };
-
     [Fact]
-    public async Task ListPartiesAsync_BoundsPageSizeAndPreservesDegradedHeadersAsync()
+    public async Task ListPartiesAsync_UsesFrontComposerQueryServiceWithPartyDomainAndBoundedPagingAsync()
     {
-        string longReason = new('x', 256);
-        var handler = new RecordingHttpMessageHandler(
-            HttpStatusCode.OK,
-            JsonSerializer.Serialize(Page<PartyIndexEntry>(), _jsonOptions),
-            new Dictionary<string, string>
+        var queryService = new RecordingQueryService();
+        queryService.Enqueue([
+            new PartyIndexEntry
             {
-                ["X-Service-Degraded"] = "true",
-                ["X-Stale-Data-Age"] = "PT12S",
-                ["X-Parties-Search-Status"] = "LocalOnly",
-                ["X-Parties-Search-Degraded-Reason"] = longReason,
-            });
-        PartiesAdminPortalApiClient client = CreateClient(handler);
+                Id = "p-1",
+                Type = PartyType.Person,
+                IsActive = true,
+                DisplayName = "Ada Lovelace",
+                CreatedAt = DateTimeOffset.Parse("2026-05-01T00:00:00Z"),
+                LastModifiedAt = DateTimeOffset.Parse("2026-05-02T00:00:00Z"),
+            },
+        ], totalCount: 101);
+        PartiesAdminPortalApiClient client = CreateClient(queryService);
 
         AdminPortalQueryResult<PagedResult<PartyIndexEntry>> result = await client.ListPartiesAsync(
-            new AdminPortalListRequest(Page: 1, PageSize: 250, Type: PartyType.Person, Active: true),
+            new AdminPortalListRequest(Page: 2, PageSize: 250, Type: PartyType.Person, Active: true),
             CancellationToken.None);
 
-        handler.LastRequest!.RequestUri!.PathAndQuery.ShouldContain("/api/v1/parties?");
-        handler.LastRequest.RequestUri.Query.ShouldContain("pageSize=100");
-        handler.LastRequest.RequestUri.Query.ShouldContain("type=Person");
-        handler.LastRequest.RequestUri.Query.ShouldContain("active=true");
-        result.Metadata.ServiceDegraded.ShouldBe(true);
-        result.Metadata.StaleDataAge.ShouldBe("PT12S");
-        result.Metadata.SearchStatus.ShouldBe("LocalOnly");
-        result.Metadata.IsLocalOnlySearch.ShouldBeTrue();
-        result.Metadata.SearchDegradedReason!.Length.ShouldBe(128);
+        QueryRequest request = queryService.LastRequest.ShouldNotBeNull();
+        request.Domain.ShouldBe("party");
+        request.ProjectionType.ShouldBe("PartyIndex");
+        request.QueryType.ShouldBe("ListParties");
+        request.Skip.ShouldBe(100);
+        request.Take.ShouldBe(100);
+        request.CacheDiscriminator.ShouldBe("parties-admin-list-v1");
+        request.ColumnFilters.ShouldNotBeNull()["type"].ShouldBe("Person");
+        request.ColumnFilters.ShouldNotBeNull()["active"].ShouldBe("true");
+        result.Payload.Page.ShouldBe(2);
+        result.Payload.PageSize.ShouldBe(100);
+        result.Payload.TotalPages.ShouldBe(2);
     }
 
     [Fact]
-    public async Task SearchPartiesAsync_DeserializesPartySearchResponseShapeAndOmitsUnsupportedFiltersAsync()
+    public async Task SearchPartiesAsync_UsesSearchQueryWithoutForwardingUnsupportedFiltersAsync()
     {
-        // The backend /api/v1/parties/search endpoint returns PartySearchResponse {results, status, degradedReason, ...},
-        // not a flat PagedResult<PartySearchResult>. Mirror that shape on the wire.
-        var responseBody = new
-        {
-            results = Page(new PartySearchResult
+        var queryService = new RecordingQueryService();
+        queryService.Enqueue([
+            new PartySearchResult
             {
                 Party = new PartyIndexEntry
                 {
@@ -72,172 +64,155 @@ public sealed class PartiesAdminPortalApiClientTests
                 },
                 Matches = [],
                 RelevanceScore = 0.9,
-            }),
-            status = "LocalOnly",
-            degradedReason = "rich-search-disabled",
-        };
-        var handler = new RecordingHttpMessageHandler(
-            HttpStatusCode.OK,
-            JsonSerializer.Serialize(responseBody, _jsonOptions),
-            new Dictionary<string, string>
-            {
-                ["X-Parties-Search-Status"] = "LocalOnly",
-            });
-        PartiesAdminPortalApiClient client = CreateClient(handler);
+            },
+        ], totalCount: 1);
+        PartiesAdminPortalApiClient client = CreateClient(queryService);
 
         AdminPortalQueryResult<PagedResult<PartySearchResult>> result = await client.SearchPartiesAsync(
-            new AdminPortalSearchRequest("ada@example.test", Page: 2, PageSize: 200, Type: PartyType.Person, Active: true),
+            new AdminPortalSearchRequest("ada@example.test", Page: 1, PageSize: 20, Type: PartyType.Person, Active: true),
             CancellationToken.None);
 
-        handler.LastRequest!.RequestUri!.PathAndQuery.ShouldStartWith("/api/v1/parties/search?");
-        handler.LastRequest.RequestUri.Query.ShouldContain("q=ada%40example.test");
-        handler.LastRequest.RequestUri.Query.ShouldContain("page=2");
-        handler.LastRequest.RequestUri.Query.ShouldContain("pageSize=100");
-        // Backend /search does not accept type or active — they must not be sent.
-        handler.LastRequest.RequestUri.Query.ShouldNotContain("type=");
-        handler.LastRequest.RequestUri.Query.ShouldNotContain("active=");
+        QueryRequest request = queryService.LastRequest.ShouldNotBeNull();
+        request.Domain.ShouldBe("party");
+        request.ProjectionType.ShouldBe("PartySearch");
+        request.QueryType.ShouldBe("SearchParties");
+        request.SearchQuery.ShouldBe("ada@example.test");
+        request.ColumnFilters.ShouldBeNull();
+        request.CacheDiscriminator.ShouldBe("parties-admin-search-v1");
         result.Payload.Items.ShouldHaveSingleItem();
-        result.Payload.Items[0].Party!.DisplayName.ShouldBe("Ada Lovelace");
-        result.Metadata.SearchStatus.ShouldBe("LocalOnly");
-        result.Metadata.IsLocalOnlySearch.ShouldBeTrue();
     }
 
     [Fact]
-    public async Task GetRichSearchCapabilityAsync_ParsesHealthyMemoriesSearchHealthAsync()
+    public async Task GetPartyAsync_UsesDetailQueryAndReturnsFirstProjectionItemAsync()
     {
-        var handler = new RecordingHttpMessageHandler(
-            HttpStatusCode.OK,
-            """
+        var queryService = new RecordingQueryService();
+        queryService.Enqueue([
+            new PartyDetail
             {
-              "status": "Healthy",
-              "results": {
-                "memories-search": {
-                  "status": "Healthy",
-                  "description": "Memories rich search, cleanup route, and mapping store are all reachable.",
-                  "data": {
-                    "enabled": true,
-                    "searchReachable": true,
-                    "degradedReportedByMemories": false
-                  }
-                }
-              }
-            }
-            """);
-        PartiesAdminPortalApiClient client = CreateClient(handler);
+                Id = "p-1",
+                Type = PartyType.Person,
+                IsActive = true,
+                DisplayName = "Ada Lovelace",
+                SortName = "Lovelace, Ada",
+                CreatedAt = DateTimeOffset.Parse("2026-05-01T00:00:00Z"),
+                LastModifiedAt = DateTimeOffset.Parse("2026-05-02T00:00:00Z"),
+            },
+        ], totalCount: 1);
+        PartiesAdminPortalApiClient client = CreateClient(queryService);
 
-        AdminPortalRichSearchCapability capability = await client
-            .GetRichSearchCapabilityAsync(CancellationToken.None)
-            .ConfigureAwait(true);
+        AdminPortalQueryResult<PartyDetail> result = await client.GetPartyAsync("p-1", CancellationToken.None);
 
-        handler.LastRequest!.RequestUri!.PathAndQuery.ShouldBe("/health");
-        capability.IsAvailable.ShouldBeTrue();
-        capability.IsDegraded.ShouldBeFalse();
+        QueryRequest request = queryService.LastRequest.ShouldNotBeNull();
+        request.Domain.ShouldBe("party");
+        request.AggregateId.ShouldBe("p-1");
+        request.EntityId.ShouldBe("p-1");
+        request.ProjectionType.ShouldBe("PartyDetail");
+        request.QueryType.ShouldBe("GetParty");
+        request.ProjectionActorType.ShouldBe("PartyDetailProjectionActor");
+        result.Payload.DisplayName.ShouldBe("Ada Lovelace");
     }
 
     [Fact]
-    public async Task GetRichSearchCapabilityAsync_ParsesDegradedMemoriesSearchHealthAsync()
+    public async Task MissingEventStoreQueryContract_FailsClosedWithoutCallingQueryServiceAsync()
     {
-        var handler = new RecordingHttpMessageHandler(
-            HttpStatusCode.OK,
-            """
-            {
-              "status": "Degraded",
-              "results": {
-                "memories-search": {
-                  "status": "Degraded",
-                  "description": "Memories integration degraded: search (HttpRequestException).",
-                  "data": {
-                    "enabled": true,
-                    "searchReachable": false
-                  }
-                }
-              }
-            }
-            """);
-        PartiesAdminPortalApiClient client = CreateClient(handler);
+        var queryService = new RecordingQueryService();
+        PartiesAdminPortalApiClient client = new(
+            queryService,
+            Options.Create(new PartiesAdminPortalOptions()));
+
+        AdminPortalQueryException ex = await Should.ThrowAsync<AdminPortalQueryException>(
+            () => client.ListPartiesAsync(new AdminPortalListRequest(1, 20, null, null), CancellationToken.None));
+
+        ex.Kind.ShouldBe(AdminPortalQueryFailureKind.ContractUnavailable);
+        ex.Message.ShouldNotContain("api/v1/parties");
+        queryService.CallCount.ShouldBe(0);
+    }
+
+    [Fact]
+    public async Task QueryFailures_SurfaceTypedBoundedOutcomesWithoutProblemDetailsLeakAsync()
+    {
+        var queryService = new RecordingQueryService
+        {
+            ExceptionToThrow = new QueryFailureException(
+                QueryFailureKind.Forbidden,
+                new ProblemDetailsPayload(
+                    "Forbidden",
+                    "tenant=other party=p-99",
+                    403,
+                    null,
+                    new Dictionary<string, IReadOnlyList<string>>(StringComparer.Ordinal),
+                    [])),
+        };
+        PartiesAdminPortalApiClient client = CreateClient(queryService);
+
+        AdminPortalQueryException ex = await Should.ThrowAsync<AdminPortalQueryException>(
+            () => client.GetPartyAsync("tenant:other:p-99", CancellationToken.None));
+
+        ex.Kind.ShouldBe(AdminPortalQueryFailureKind.TenantRequired);
+        ex.Message.ShouldNotContain("tenant=other");
+        ex.Message.ShouldNotContain("p-99");
+    }
+
+    [Fact]
+    public async Task GetRichSearchCapabilityAsync_RecordsBlockedContractAsLocalOnlyAsync()
+    {
+        var queryService = new RecordingQueryService();
+        PartiesAdminPortalApiClient client = CreateClient(queryService);
 
         AdminPortalRichSearchCapability capability = await client
             .GetRichSearchCapabilityAsync(CancellationToken.None)
             .ConfigureAwait(true);
 
         capability.IsAvailable.ShouldBeFalse();
-        capability.IsDegraded.ShouldBeTrue();
-        capability.Reason.ShouldNotBeNull().ShouldContain("search");
+        capability.IsDegraded.ShouldBeFalse();
+        capability.Reason.ShouldNotBeNull().ShouldContain("Story 12.4/12.5");
+        queryService.CallCount.ShouldBe(0);
     }
 
-    [Fact]
-    public async Task GetPartyAsync_OnForbidden_SurfacesBoundedFailureWithoutProblemDetailsLeakAsync()
-    {
-        var handler = new RecordingHttpMessageHandler(
-            HttpStatusCode.Forbidden,
-            "{\"type\":\"about:blank\",\"title\":\"Forbidden\",\"status\":403,\"detail\":\"tenant=other party=p-99\"}");
-        PartiesAdminPortalApiClient client = CreateClient(handler);
-
-        AdminPortalQueryException ex = await Should.ThrowAsync<AdminPortalQueryException>(
-            () => client.GetPartyAsync("tenant:other:p-99", CancellationToken.None));
-
-        ex.Kind.ShouldBe(AdminPortalQueryFailureKind.Forbidden);
-        ex.Message.ShouldBe("Access is denied.");
-        ex.Message.ShouldNotContain("tenant=other");
-        ex.Message.ShouldNotContain("p-99");
-    }
-
-    [Fact]
-    public async Task GetPartyAsync_NullOrEmptyId_ThrowsArgumentExceptionAsync()
-    {
-        PartiesAdminPortalApiClient client = CreateClient(new RecordingHttpMessageHandler(HttpStatusCode.OK, "{}"));
-
-        await Should.ThrowAsync<ArgumentException>(() => client.GetPartyAsync(null!, CancellationToken.None));
-        await Should.ThrowAsync<ArgumentException>(() => client.GetPartyAsync(string.Empty, CancellationToken.None));
-        await Should.ThrowAsync<ArgumentException>(() => client.GetPartyAsync("   ", CancellationToken.None));
-    }
-
-    [Theory]
-    [InlineData(HttpStatusCode.BadRequest, AdminPortalQueryFailureKind.Validation)]
-    [InlineData(HttpStatusCode.UnprocessableEntity, AdminPortalQueryFailureKind.Validation)]
-    [InlineData(HttpStatusCode.TooManyRequests, AdminPortalQueryFailureKind.TransientFailure)]
-    [InlineData(HttpStatusCode.InternalServerError, AdminPortalQueryFailureKind.TransientFailure)]
-    [InlineData(HttpStatusCode.BadGateway, AdminPortalQueryFailureKind.TransientFailure)]
-    public async Task ListPartiesAsync_MapsHttpStatusCodesToBoundedFailureKindsAsync(HttpStatusCode status, AdminPortalQueryFailureKind expected)
-    {
-        var handler = new RecordingHttpMessageHandler(status, "{}");
-        PartiesAdminPortalApiClient client = CreateClient(handler);
-
-        AdminPortalQueryException ex = await Should.ThrowAsync<AdminPortalQueryException>(
-            () => client.ListPartiesAsync(new AdminPortalListRequest(1, 20, null, null), CancellationToken.None));
-
-        ex.Kind.ShouldBe(expected);
-    }
-
-    [Fact]
-    public async Task ListPartiesAsync_OnNetworkFailure_SurfacesTransientFailureAsync()
-    {
-        var handler = new ThrowingHttpMessageHandler(new HttpRequestException("DNS failed"));
-        PartiesAdminPortalApiClient client = CreateClient(handler);
-
-        AdminPortalQueryException ex = await Should.ThrowAsync<AdminPortalQueryException>(
-            () => client.ListPartiesAsync(new AdminPortalListRequest(1, 20, null, null), CancellationToken.None));
-
-        ex.Kind.ShouldBe(AdminPortalQueryFailureKind.TransientFailure);
-    }
-
-    private static PartiesAdminPortalApiClient CreateClient(HttpMessageHandler handler)
+    private static PartiesAdminPortalApiClient CreateClient(RecordingQueryService queryService)
         => new(
-            new HttpClient(handler) { BaseAddress = new Uri("https://parties.test/") },
-            Options.Create(new PartiesAdminPortalOptions()));
+            queryService,
+            Options.Create(new PartiesAdminPortalOptions
+            {
+                ListProjectionType = "PartyIndex",
+                ListQueryType = "ListParties",
+                SearchProjectionType = "PartySearch",
+                SearchQueryType = "SearchParties",
+                DetailProjectionType = "PartyDetail",
+                DetailQueryType = "GetParty",
+                DetailProjectionActorType = "PartyDetailProjectionActor",
+            }));
 
-    private static PagedResult<T> Page<T>(params T[] items) => new()
+    private sealed class RecordingQueryService : IQueryService
     {
-        Items = items,
-        Page = items.Length == 0 ? 1 : 2,
-        PageSize = 20,
-        TotalCount = items.Length,
-        TotalPages = items.Length == 0 ? 0 : 1,
-    };
+        private object? _items;
+        private int _totalCount;
 
-    private sealed class ThrowingHttpMessageHandler(Exception toThrow) : HttpMessageHandler
-    {
-        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
-            => throw toThrow;
+        public QueryRequest? LastRequest { get; private set; }
+
+        public int CallCount { get; private set; }
+
+        public Exception? ExceptionToThrow { get; init; }
+
+        public void Enqueue<T>(IReadOnlyList<T> items, int totalCount)
+        {
+            _items = items;
+            _totalCount = totalCount;
+        }
+
+        public Task<QueryResult<T>> QueryAsync<T>(QueryRequest request, CancellationToken cancellationToken = default)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            CallCount++;
+            LastRequest = request;
+
+            if (ExceptionToThrow is not null)
+            {
+                throw ExceptionToThrow;
+            }
+
+            IReadOnlyList<T> items = _items as IReadOnlyList<T> ?? [];
+            return Task.FromResult(new QueryResult<T>(items, _totalCount, ETag: null));
+        }
     }
 }

@@ -1,7 +1,7 @@
-// ATDD red-phase transport scaffolds for Story 10.2 — Admin Portal GDPR Operations.
-// These tests pin the frontend-facing client/adapter contract for existing admin
-// GDPR endpoints. They are skipped until the green phase adds the portal GDPR
-// operation seam on top of the current HttpClient-based Parties client stack.
+// ATDD red-phase transport scaffolds for Story 12.7 — Admin Portal GDPR Operations.
+// These tests pin the frontend-facing client/adapter contract for the EventStore
+// command/query boundary. They are skipped until Story 12.5 exposes the typed
+// client contract that replaces the retired admin controller surface.
 
 using System.Reflection;
 
@@ -20,7 +20,7 @@ namespace Hexalith.Parties.Client.Tests.AdminPortal;
 public sealed class AdminPortalGdprOperationContractTests
 {
     private const string SkipReason =
-        "TDD red phase — Story 10.2 must add an admin GDPR portal client/adapter over existing admin endpoints.";
+        "TDD red phase — Story 12.7 is blocked until Story 12.5 exposes EventStore GDPR command/query methods.";
 
     private const string AdapterTypeName = "Hexalith.Parties.Client.AdminPortal.IAdminPortalGdprClient";
     private const string RouteMapTypeName = "Hexalith.Parties.Client.AdminPortal.AdminPortalGdprRoutes";
@@ -32,7 +32,7 @@ public sealed class AdminPortalGdprOperationContractTests
         Type adapter = LoadClientType(AdapterTypeName);
 
         adapter.GetMethod("RequestErasureAsync", PublicInstance)
-            .ShouldNotBeNull("AC2 requires Request Erasure to call POST /api/v1/admin/parties/{partyId}/erase.");
+            .ShouldNotBeNull("AC4 requires Request Erasure to call the accepted EventStore command/client contract.");
         adapter.GetMethod("GetErasureStatusAsync", PublicInstance)
             .ShouldNotBeNull("AC2/AC3 require polling or refreshing authoritative erasure status.");
         adapter.GetMethod("GetErasureCertificateAsync", PublicInstance)
@@ -65,20 +65,20 @@ public sealed class AdminPortalGdprOperationContractTests
     }
 
     [Fact(Skip = SkipReason)]
-    public void AdminGdprRoutes_MapToExistingAdminEndpointContracts()
+    public void AdminGdprRoutes_MapToEventStoreCommandAndQueryContracts()
     {
         Type routes = LoadClientType(RouteMapTypeName);
 
-        GetRoute(routes, "EraseParty").ShouldBe("api/v1/admin/parties/{partyId}/erase");
-        GetRoute(routes, "ErasureStatus").ShouldBe("api/v1/admin/parties/{partyId}/erasure-status");
-        GetRoute(routes, "ErasureCertificate").ShouldBe("api/v1/admin/parties/{partyId}/erasure-certificate");
-        GetRoute(routes, "RetryVerification").ShouldBe("api/v1/admin/parties/{partyId}/retry-verification");
-        GetRoute(routes, "RestrictProcessing").ShouldBe("api/v1/admin/parties/{partyId}/restrict");
-        GetRoute(routes, "LiftRestriction").ShouldBe("api/v1/admin/parties/{partyId}/lift-restriction");
-        GetRoute(routes, "Consent").ShouldBe("api/v1/admin/parties/{partyId}/consent");
-        GetRoute(routes, "ConsentById").ShouldBe("api/v1/admin/parties/{partyId}/consent/{consentId}");
-        GetRoute(routes, "Export").ShouldBe("api/v1/admin/parties/{partyId}/export");
-        GetRoute(routes, "ProcessingRecords").ShouldBe("api/v1/admin/parties/{partyId}/processing-records");
+        GetRoute(routes, "EraseParty").ShouldBe("eventstore:command:party:EraseParty");
+        GetRoute(routes, "ErasureStatus").ShouldBe("eventstore:query:party:GetErasureStatus");
+        GetRoute(routes, "ErasureCertificate").ShouldBe("eventstore:query:party:GetErasureCertificate");
+        GetRoute(routes, "RetryVerification").ShouldBe("eventstore:command:party:RetryErasureVerification");
+        GetRoute(routes, "RestrictProcessing").ShouldBe("eventstore:command:party:RestrictProcessing");
+        GetRoute(routes, "LiftRestriction").ShouldBe("eventstore:command:party:LiftRestriction");
+        GetRoute(routes, "Consent").ShouldBe("eventstore:command:party:AddConsent");
+        GetRoute(routes, "ConsentById").ShouldBe("eventstore:command:party:RevokeConsent");
+        GetRoute(routes, "Export").ShouldBe("eventstore:query:party:ExportPartyData");
+        GetRoute(routes, "ProcessingRecords").ShouldBe("eventstore:query:party:GetProcessingRecords");
     }
 
     [Fact(Skip = SkipReason)]

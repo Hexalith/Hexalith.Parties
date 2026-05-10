@@ -9,5 +9,6 @@ public enum AdminPortalQueryFailureKind
     Gone,
     Validation,
     TransientFailure,
+    ContractUnavailable,
     Unknown,
 }
