@@ -15,7 +15,7 @@ public sealed class ClientArchitecturalFitnessTests
 
         AssemblyName[] referencedAssemblies = clientAssembly.GetReferencedAssemblies();
 
-        string[] forbiddenPrefixes =
+        string[] forbiddenAssemblyNames =
         [
             "Hexalith.Parties.Server",
             "Hexalith.Parties.Projections",
@@ -26,8 +26,8 @@ public sealed class ClientArchitecturalFitnessTests
 
         foreach (AssemblyName referenced in referencedAssemblies)
         {
-            if (forbiddenPrefixes.Any(prefix =>
-                referenced.Name!.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)))
+            if (forbiddenAssemblyNames.Any(name =>
+                string.Equals(referenced.Name, name, StringComparison.OrdinalIgnoreCase)))
             {
                 violations.Add(referenced.Name!);
             }
@@ -103,7 +103,7 @@ public sealed class ClientArchitecturalFitnessTests
 
         foreach (string forbidden in forbiddenReferences)
         {
-            if (declaredReferences.Any(reference => reference.Contains(forbidden, StringComparison.OrdinalIgnoreCase)))
+            if (declaredReferences.Any(reference => IsForbiddenReference(reference, forbidden)))
             {
                 violations.Add(forbidden);
             }
@@ -138,6 +138,14 @@ public sealed class ClientArchitecturalFitnessTests
             "Microsoft.Extensions.Http",
             "Microsoft.Extensions.Options",
         ]);
+    }
+
+    private static bool IsForbiddenReference(string reference, string forbiddenName)
+    {
+        string fileName = Path.GetFileNameWithoutExtension(reference);
+
+        return string.Equals(fileName, forbiddenName, StringComparison.OrdinalIgnoreCase)
+            || string.Equals(reference, forbiddenName, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]

@@ -20,6 +20,16 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!--
+      Story 12.2 retires the in-process Parties REST controllers and MCP tools.
+      These suites asserted the old public surface directly; EventStore gateway
+      replacements belong to Stories 12.4 and 12.6.
+    -->
+    <Compile Remove="Controllers\**\*.cs" />
+    <Compile Remove="Mcp\**\*.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="coverlet.collector" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" />

@@ -19,7 +19,6 @@ using Hexalith.Parties.Configuration;
 using Hexalith.Parties.Domain;
 using Hexalith.Parties.ErrorHandling;
 using Hexalith.Parties.HealthChecks;
-using Hexalith.Parties.Mcp;
 using Hexalith.Parties.Validation;
 using Hexalith.Parties.Search;
 using Hexalith.Parties.Contracts.Search;
@@ -214,9 +213,6 @@ public static class PartiesServiceCollectionExtensions {
         _ = services.AddSingleton<IErasureVerificationService, ErasureVerificationService>();
         _ = services.AddSingleton<PartyErasureOrchestrator>();
 
-        // OpenAPI document generation
-        _ = services.AddOpenApi();
-
         // Projection infrastructure (Epic 3)
         _ = services.AddSingleton<IIndexPartitionStrategy, SingleKeyPartitionStrategy>();
         _ = services.AddOptions<Hexalith.Parties.Projections.Configuration.ProjectionOptions>()
@@ -297,41 +293,11 @@ public static class PartiesServiceCollectionExtensions {
         // FluentValidation (assembly scanning — no explicit validator registration)
         _ = services.AddValidatorsFromAssemblyContaining<CreatePartyValidator>();
 
-        // JSON serialization: camelCase, ISO 8601, string enums, omit nulls
-        _ = services.AddControllers()
-            .AddJsonOptions(options => {
-                options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
-                options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
-                options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
-            });
-
         _ = services.ConfigureHttpJsonOptions(options => {
             options.SerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
             options.SerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
             options.SerializerOptions.Converters.Add(new JsonStringEnumConverter());
         });
-
-        // MCP Server (Model Context Protocol) — AI agent tool interface
-#pragma warning disable MCPEXP002 // RunSessionHandler is experimental; required to capture tenant from HttpContext
-        _ = services
-            .AddMcpServer()
-            .WithHttpTransport(options => {
-                options.RunSessionHandler = async (httpContext, mcpServer, ct) => {
-                    string? tenant = PartiesAuthClaims.ExtractTenant(httpContext.User);
-                    string? userId = PartiesAuthClaims.ExtractUserId(httpContext.User);
-                    McpSessionContext.Tenant.Value = tenant;
-                    McpSessionContext.UserId.Value = userId;
-                    try {
-                        await mcpServer.RunAsync(ct).ConfigureAwait(false);
-                    }
-                    finally {
-                        McpSessionContext.Tenant.Value = null;
-                        McpSessionContext.UserId.Value = null;
-                    }
-                };
-            })
-            .WithToolsFromAssembly();
-#pragma warning restore MCPEXP002
 
         return services;
     }

@@ -13,6 +13,20 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!--
+      Story 12.2 removes the old Parties REST/admin endpoints from the actor host.
+      These E2E suites target that retired surface and are intentionally
+      quarantined until EventStore gateway replacements are added by later
+      Epic 12 stories.
+    -->
+    <Compile Remove="Admin\**\*.cs" />
+    <Compile Remove="Search\**\*.cs" />
+    <Compile Remove="Security\**\*E2ETests.cs" />
+    <Compile Remove="Tenants\**\*.cs" />
+    <Compile Remove="PartyApiRoundTripIntegrationTests.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Aspire.Hosting.Testing" />
     <PackageReference Include="coverlet.collector" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" />

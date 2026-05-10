@@ -3,8 +3,9 @@ using System.Text.RegularExpressions;
 using System.Xml.Linq;
 
 using Hexalith.EventStore.Contracts.Events;
-using Hexalith.Parties.Mcp;
 using Hexalith.Parties.Projections.Handlers;
+
+using Microsoft.AspNetCore.Mvc;
 
 using Shouldly;
 
@@ -13,120 +14,175 @@ namespace Hexalith.Parties.Tests.FitnessTests;
 public sealed class ArchitecturalFitnessTests
 {
     [Fact]
-    public void McpNamespace_HasZeroReferencesToEventTypes()
+    public void PartiesAssembly_HasNoPublicRestControllerSurface()
     {
-        Assembly mcpAssembly = typeof(GetPartyMcpTool).Assembly;
-
-        Type[] mcpTypes = mcpAssembly.GetTypes()
-            .Where(t => t.Namespace == "Hexalith.Parties.Mcp")
-            .ToArray();
-
-        mcpTypes.ShouldNotBeEmpty("Expected MCP types to exist in namespace");
-
-        Type eventPayloadInterface = typeof(IEventPayload);
-        Type rejectionEventInterface = typeof(IRejectionEvent);
+        Assembly partiesAssembly = typeof(Program).Assembly;
 
         List<string> violations = [];
-
-        foreach (Type mcpType in mcpTypes)
+        foreach (Type type in partiesAssembly.GetTypes().Where(t => t.Namespace?.StartsWith("Hexalith.Parties", StringComparison.Ordinal) == true))
         {
-            foreach (MethodInfo method in mcpType.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance | BindingFlags.DeclaredOnly))
+            if (type.GetCustomAttributes().Any(a => a.GetType().FullName == typeof(ApiControllerAttribute).FullName))
             {
-                if (IsEventType(method.ReturnType, eventPayloadInterface, rejectionEventInterface))
-                {
-                    violations.Add($"{mcpType.Name}.{method.Name} returns event type {method.ReturnType.Name}");
-                }
-
-                foreach (ParameterInfo param in method.GetParameters())
-                {
-                    if (IsEventType(param.ParameterType, eventPayloadInterface, rejectionEventInterface))
-                    {
-                        violations.Add($"{mcpType.Name}.{method.Name} parameter '{param.Name}' is event type {param.ParameterType.Name}");
-                    }
-                }
-
-                foreach (Type localType in GetLocalVariableTypes(method))
-                {
-                    if (IsEventType(localType, eventPayloadInterface, rejectionEventInterface))
-                    {
-                        violations.Add($"{mcpType.Name}.{method.Name} local variable is event type {localType.Name}");
-                    }
-                }
+                violations.Add($"{type.FullName} has [ApiController]");
             }
 
-            // Check fields
-            foreach (FieldInfo field in mcpType.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance | BindingFlags.DeclaredOnly))
+            if (typeof(ControllerBase).IsAssignableFrom(type))
             {
-                if (IsEventType(field.FieldType, eventPayloadInterface, rejectionEventInterface))
-                {
-                    violations.Add($"{mcpType.Name}.{field.Name} is event type {field.FieldType.Name}");
-                }
-            }
-
-            // Check properties
-            foreach (PropertyInfo prop in mcpType.GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance | BindingFlags.DeclaredOnly))
-            {
-                if (IsEventType(prop.PropertyType, eventPayloadInterface, rejectionEventInterface))
-                {
-                    violations.Add($"{mcpType.Name}.{prop.Name} is event type {prop.PropertyType.Name}");
-                }
+                violations.Add($"{type.FullName} derives from ControllerBase");
             }
         }
 
-        violations.ShouldBeEmpty($"MCP namespace must not reference event types. Violations:\n{string.Join("\n", violations)}");
+        violations.ShouldBeEmpty(
+            "Hexalith.Parties is now an actor host; REST controllers must move behind EventStore-owned gateways.\n"
+            + string.Join("\n", violations));
     }
 
     [Fact]
-    public void McpNamespace_ReferencesOnlyCommandAndModelTypes()
+    public void PartiesAssembly_HasNoInProcessMcpToolSurface()
     {
-        Assembly mcpAssembly = typeof(GetPartyMcpTool).Assembly;
+        Assembly partiesAssembly = typeof(Program).Assembly;
 
-        Type[] mcpTypes = mcpAssembly.GetTypes()
-            .Where(t => t.Namespace == "Hexalith.Parties.Mcp")
-            .ToArray();
-
-        HashSet<string> allowedNamespaces =
+        string[] forbiddenAttributeNames =
         [
-            "Hexalith.Parties.Contracts.Commands",
-            "Hexalith.Parties.Contracts.Models",
-            "Hexalith.Parties.Contracts.ValueObjects",
-            "Hexalith.Parties.Contracts.Search",
-            "Hexalith.Parties.Authorization",
-            "Hexalith.Parties.Projections.Abstractions",
-            "Hexalith.Parties.Projections.Actors",
+            "ModelContextProtocol.Server.McpServerToolTypeAttribute",
+            "ModelContextProtocol.Server.McpServerToolAttribute",
         ];
 
         List<string> violations = [];
-
-        foreach (Type mcpType in mcpTypes)
+        foreach (Type type in partiesAssembly.GetTypes().Where(t => t.Namespace?.StartsWith("Hexalith.Parties", StringComparison.Ordinal) == true))
         {
-            foreach (MethodInfo method in mcpType.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance | BindingFlags.DeclaredOnly))
+            foreach (CustomAttributeData attribute in type.CustomAttributes)
             {
-                CheckType(method.ReturnType, allowedNamespaces, violations, $"{mcpType.Name}.{method.Name} return type");
-
-                foreach (ParameterInfo param in method.GetParameters())
+                if (forbiddenAttributeNames.Contains(attribute.AttributeType.FullName, StringComparer.Ordinal))
                 {
-                    CheckType(param.ParameterType, allowedNamespaces, violations, $"{mcpType.Name}.{method.Name} param '{param.Name}'");
-                }
-
-                foreach (Type localType in GetLocalVariableTypes(method))
-                {
-                    CheckType(localType, allowedNamespaces, violations, $"{mcpType.Name}.{method.Name} local variable");
+                    violations.Add($"{type.FullName} has {attribute.AttributeType.Name}");
                 }
             }
 
-            foreach (FieldInfo field in mcpType.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance | BindingFlags.DeclaredOnly))
+            foreach (MethodInfo method in type.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance | BindingFlags.DeclaredOnly))
             {
-                CheckType(field.FieldType, allowedNamespaces, violations, $"{mcpType.Name}.{field.Name}");
-            }
-
-            foreach (PropertyInfo prop in mcpType.GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance | BindingFlags.DeclaredOnly))
-            {
-                CheckType(prop.PropertyType, allowedNamespaces, violations, $"{mcpType.Name}.{prop.Name}");
+                foreach (CustomAttributeData attribute in method.CustomAttributes)
+                {
+                    if (forbiddenAttributeNames.Contains(attribute.AttributeType.FullName, StringComparer.Ordinal))
+                    {
+                        violations.Add($"{type.FullName}.{method.Name} has {attribute.AttributeType.Name}");
+                    }
+                }
             }
         }
 
-        violations.ShouldBeEmpty($"MCP namespace references forbidden Parties types:\n{string.Join("\n", violations)}");
+        violations.ShouldBeEmpty(
+            "Hexalith.Parties must not host MCP tools in-process; Story 12.6 owns the new thin MCP host.\n"
+            + string.Join("\n", violations));
+    }
+
+    [Fact]
+    public void Program_SourceContainsOnlyActorHostMappingsAndDocumentedDaprInternalExceptions()
+    {
+        string source = ReadRepoFile("src", "Hexalith.Parties", "Program.cs");
+
+        string[] forbiddenFragments =
+        [
+            "MapControllers",
+            "MapMcp",
+            "MapOpenApi",
+            "UseSwaggerUI",
+            "GdprWarningMiddleware",
+            "MapGroup",
+            "MapGet",
+            "MapPost",
+            "MapPut",
+            "MapPatch",
+            "MapDelete",
+        ];
+
+        List<string> violations = [.. forbiddenFragments.Where(fragment => source.Contains(fragment, StringComparison.Ordinal))];
+        violations.ShouldBeEmpty(
+            "Program.cs must not expose REST, MCP, OpenAPI, GDPR-header middleware, or public minimal API mappings: "
+            + string.Join(", ", violations));
+
+        source.ShouldContain("app.MapActorsHandlers()");
+        source.ShouldContain("app.MapDefaultEndpoints()");
+        source.ShouldContain("app.MapSubscribeHandler()");
+        source.ShouldContain("app.MapTenantEventSubscription()");
+        source.ShouldContain("DAPR sidecar-internal");
+        source.ShouldContain("accesscontrol.parties.yaml");
+    }
+
+    [Fact]
+    public void PartiesProject_RemovesRestOpenApiAndMcpHostPackages()
+    {
+        XDocument project = XDocument.Load(RepoPath("src", "Hexalith.Parties", "Hexalith.Parties.csproj"));
+
+        string[] packageReferences =
+        [
+            .. project.Descendants()
+                .Where(e => e.Name.LocalName == "PackageReference")
+                .Select(e => e.Attribute("Include")?.Value)
+                .Where(value => !string.IsNullOrWhiteSpace(value))
+                .Select(value => value!),
+        ];
+
+        string[] forbiddenPackages =
+        [
+            "ModelContextProtocol.AspNetCore",
+            "Microsoft.AspNetCore.OpenApi",
+            "Swashbuckle.AspNetCore.SwaggerUI",
+        ];
+
+        List<string> violations = [.. forbiddenPackages.Where(package => packageReferences.Contains(package, StringComparer.OrdinalIgnoreCase))];
+        violations.ShouldBeEmpty("Actor host project must not reference public REST/OpenAPI/MCP hosting packages: " + string.Join(", ", violations));
+    }
+
+    [Fact]
+    public void PartiesSource_HasNoControllerOrMcpSurfaceMarkers()
+    {
+        string sourceRoot = Path.Combine(RepositoryRoot.Locate(), "src", "Hexalith.Parties");
+        string[] sourceFiles = Directory.GetFiles(sourceRoot, "*.cs", SearchOption.AllDirectories);
+
+        string[] forbiddenPatterns =
+        [
+            @"\[ApiController\]",
+            @"\bControllerBase\b",
+            @"\[Route\(",
+            @"McpServerToolType",
+            @"McpServerTool",
+            @"AddMcpServer",
+            @"WithToolsFromAssembly",
+            @"MapMcp",
+            @"MapControllers",
+        ];
+
+        List<string> violations = [];
+        foreach (string file in sourceFiles)
+        {
+            string text = File.ReadAllText(file);
+            foreach (string pattern in forbiddenPatterns)
+            {
+                if (Regex.IsMatch(text, pattern))
+                {
+                    violations.Add($"{Path.GetRelativePath(RepositoryRoot.Locate(), file)} contains {pattern}");
+                }
+            }
+        }
+
+        violations.ShouldBeEmpty("Forbidden public surface markers remain:\n" + string.Join("\n", violations));
+    }
+
+    [Fact]
+    public void PartiesAppHost_KeepsPartiesAppIdAndDedicatedDaprAccessControl()
+    {
+        string appHost = ReadRepoFile("src", "Hexalith.Parties.AppHost", "Program.cs");
+        string partiesAccessControl = ReadRepoFile("src", "Hexalith.Parties.AppHost", "DaprComponents", "accesscontrol.parties.yaml");
+
+        appHost.ShouldContain("AppId = \"parties\"");
+        appHost.ShouldContain("accesscontrol.parties.yaml");
+        partiesAccessControl.ShouldContain("defaultAction: deny");
+        partiesAccessControl.ShouldContain("appId: eventstore");
+        partiesAccessControl.ShouldContain("name: /process");
+        partiesAccessControl.ShouldContain("httpVerb: ['POST']");
+        partiesAccessControl.ShouldNotContain("appId: *");
+        partiesAccessControl.ShouldNotContain("name: /**");
     }
 
     [Fact]
@@ -167,22 +223,6 @@ public sealed class ArchitecturalFitnessTests
                     }
                 }
             }
-
-            foreach (FieldInfo field in handlerType.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance | BindingFlags.DeclaredOnly))
-            {
-                if (IsDaprType(field.FieldType))
-                {
-                    violations.Add($"{handlerType.Name}.{field.Name} is DAPR type {field.FieldType.FullName}");
-                }
-            }
-
-            foreach (PropertyInfo prop in handlerType.GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance | BindingFlags.DeclaredOnly))
-            {
-                if (IsDaprType(prop.PropertyType))
-                {
-                    violations.Add($"{handlerType.Name}.{prop.Name} is DAPR type {prop.PropertyType.FullName}");
-                }
-            }
         }
 
         violations.ShouldBeEmpty($"Projection handlers must not reference DAPR types. Violations:\n{string.Join("\n", violations)}");
@@ -216,23 +256,14 @@ public sealed class ArchitecturalFitnessTests
         }
 
         violations.ShouldBeEmpty(
-            $"Contracts project should only depend on netstandard, System.*, and Hexalith.EventStore.Contracts. " +
-            $"Found: {string.Join(", ", violations)}");
+            $"Contracts project should only depend on netstandard, System.*, and Hexalith.EventStore.Contracts. "
+            + $"Found: {string.Join(", ", violations)}");
     }
 
     [Fact]
     public void ClientProject_HasNoReferencesToServerProjectionsOrPartiesService()
     {
-        // Verify declared client dependencies via project XML rather than raw substring matching.
-        string testAssemblyDir = Path.GetDirectoryName(typeof(ArchitecturalFitnessTests).Assembly.Location)!;
-
-        // Navigate from test output to repository root: bin/Debug/net10.0 -> tests/project -> root
-        string repoRoot = Path.GetFullPath(Path.Combine(testAssemblyDir, "..", "..", "..", "..", ".."));
-        string clientCsprojPath = Path.Combine(repoRoot, "src", "Hexalith.Parties.Client", "Hexalith.Parties.Client.csproj");
-
-        File.Exists(clientCsprojPath).ShouldBeTrue($"Client .csproj not found at {clientCsprojPath}");
-
-        XDocument project = XDocument.Load(clientCsprojPath);
+        XDocument project = XDocument.Load(RepoPath("src", "Hexalith.Parties.Client", "Hexalith.Parties.Client.csproj"));
 
         List<string> declaredReferences =
         [
@@ -255,246 +286,23 @@ public sealed class ArchitecturalFitnessTests
 
         foreach (string forbidden in forbiddenReferences)
         {
-            if (declaredReferences.Any(reference => reference.Contains(forbidden, StringComparison.OrdinalIgnoreCase)))
+            if (declaredReferences.Any(reference => IsForbiddenClientReference(reference, forbidden)))
             {
                 violations.Add(forbidden);
             }
         }
 
         violations.ShouldBeEmpty(
-            $"Client project must not reference Server, Projections, or Parties service. " +
-            $"Found: {string.Join(", ", violations)}");
-    }
-
-    // P9 — No per-request Tenants HTTP/API polling: the request-path code in
-    // PartiesController, AdminController, and the MCP layer must reach the
-    // Tenants subsystem only through ITenantAccessService (which reads the
-    // local projection store). It must NOT introduce HttpClient or
-    // Hexalith.Tenants.Client.Subscription/Registration types into the
-    // request path.
-    [Fact]
-    public void RequestPathTypes_DoNotReferenceTenantsHttpOrSubscription()
-    {
-        Assembly commandApiAssembly = typeof(GetPartyMcpTool).Assembly;
-
-        string[] requestPathNamespaces =
-        [
-            "Hexalith.Parties.Controllers",
-            "Hexalith.Parties.Mcp",
-        ];
-
-        Type[] requestPathTypes = commandApiAssembly.GetTypes()
-            .Where(t => t.Namespace is not null && requestPathNamespaces.Contains(t.Namespace))
-            .ToArray();
-
-        requestPathTypes.ShouldNotBeEmpty("Expected request-path types to exist");
-
-        // Forbidden — these would imply per-request Tenants HTTP/API polling.
-        string[] forbiddenTypeNamespacePrefixes =
-        [
-            "System.Net.Http",
-            "Hexalith.Tenants.Client.Subscription",
-            "Hexalith.Tenants.Client.Registration",
-        ];
-
-        List<string> violations = [];
-
-        foreach (Type type in requestPathTypes)
-        {
-            foreach (FieldInfo field in type.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance | BindingFlags.DeclaredOnly))
-            {
-                if (IsInForbiddenNamespace(field.FieldType, forbiddenTypeNamespacePrefixes))
-                {
-                    violations.Add($"{type.FullName}.{field.Name} references forbidden type {field.FieldType.FullName}");
-                }
-            }
-
-            foreach (PropertyInfo prop in type.GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance | BindingFlags.DeclaredOnly))
-            {
-                if (IsInForbiddenNamespace(prop.PropertyType, forbiddenTypeNamespacePrefixes))
-                {
-                    violations.Add($"{type.FullName}.{prop.Name} references forbidden type {prop.PropertyType.FullName}");
-                }
-            }
-
-            foreach (MethodInfo method in type.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance | BindingFlags.DeclaredOnly))
-            {
-                foreach (Type localType in GetLocalVariableTypes(method))
-                {
-                    if (IsInForbiddenNamespace(localType, forbiddenTypeNamespacePrefixes))
-                    {
-                        violations.Add($"{type.FullName}.{method.Name} local variable references forbidden type {localType.FullName}");
-                    }
-                }
-            }
-
-            foreach (ConstructorInfo ctor in type.GetConstructors(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly))
-            {
-                foreach (ParameterInfo param in ctor.GetParameters())
-                {
-                    if (IsInForbiddenNamespace(param.ParameterType, forbiddenTypeNamespacePrefixes))
-                    {
-                        violations.Add($"{type.FullName}::ctor param '{param.Name}' is forbidden type {param.ParameterType.FullName}");
-                    }
-                }
-            }
-        }
-
-        violations.ShouldBeEmpty(
-            $"Request-path code must not reference HTTP clients or Tenants client subscription/registration types " +
-            $"(would introduce per-request Tenants polling). Use ITenantAccessService instead. Violations:\n" +
-            string.Join("\n", violations));
-    }
-
-    // P10 — EventStore actor/projection key formats must remain stable.
-    // Story 11.3 must not change the actor identity format used for the
-    // party-index and party-detail projections, otherwise existing aggregate
-    // and projection state becomes unreachable. We verify by reading the
-    // controller source as text and asserting the canonical tenant-scoped
-    // string-interpolation format is still present.
-    [Fact]
-    public void PartyProjectionActorKeyFormat_RemainsTenantPrefixedColonSeparated()
-    {
-        string testAssemblyDir = Path.GetDirectoryName(typeof(ArchitecturalFitnessTests).Assembly.Location)!;
-        string repoRoot = Path.GetFullPath(Path.Combine(testAssemblyDir, "..", "..", "..", "..", ".."));
-        string controllerPath = Path.Combine(
-            repoRoot, "src", "Hexalith.Parties", "Controllers", "PartiesController.cs");
-        File.Exists(controllerPath).ShouldBeTrue($"Controller source not found at {controllerPath}");
-
-        string source = File.ReadAllText(controllerPath);
-
-        // Canonical actor id construction patterns — string interpolation that
-        // must remain in the controller. Each pattern is a literal substring
-        // that the C# compiler will preserve in source.
-        string[] requiredFragments =
-        [
-            "{tenant}:party-index",
-            "{tenant}:party-detail:",
-        ];
-
-        List<string> missing = [.. requiredFragments.Where(f => !source.Contains(f, StringComparison.Ordinal))];
-
-        missing.ShouldBeEmpty(
-            "EventStore actor/projection key format must remain stable. " +
-            "PartiesController.cs no longer contains: " + string.Join(", ", missing) +
-            ". Story 11.3 must not change the actor id format because existing " +
-            "Dapr actor state and projection store data is keyed off these strings.");
-    }
-
-    private static bool IsInForbiddenNamespace(Type type, string[] forbiddenNamespacePrefixes)
-    {
-        Type checkType = Nullable.GetUnderlyingType(type) ?? type;
-
-        if (checkType.IsGenericType)
-        {
-            foreach (Type arg in checkType.GetGenericArguments())
-            {
-                if (IsInForbiddenNamespace(arg, forbiddenNamespacePrefixes))
-                {
-                    return true;
-                }
-            }
-        }
-
-        string? ns = checkType.Namespace;
-        if (ns is null)
-        {
-            return false;
-        }
-
-        return forbiddenNamespacePrefixes.Any(prefix => ns.StartsWith(prefix, StringComparison.Ordinal));
-    }
-
-    private static IEnumerable<Type> GetLocalVariableTypes(MethodInfo method)
-        => method
-            .GetMethodBody()?
-            .LocalVariables
-            .Select(local => local.LocalType)
-            .Where(type => type is not null)
-            ?? [];
-
-    private static bool IsEventType(Type type, Type eventPayloadInterface, Type rejectionEventInterface)
-    {
-        Type checkType = Nullable.GetUnderlyingType(type) ?? type;
-
-        if (checkType.IsGenericType)
-        {
-            return checkType.GetGenericArguments().Any(arg => IsEventType(arg, eventPayloadInterface, rejectionEventInterface));
-        }
-
-        return eventPayloadInterface.IsAssignableFrom(checkType) || rejectionEventInterface.IsAssignableFrom(checkType);
-    }
-
-    private static bool IsDaprType(Type type)
-    {
-        Type checkType = Nullable.GetUnderlyingType(type) ?? type;
-
-        if (checkType.IsGenericType)
-        {
-            return checkType.GetGenericArguments().Any(IsDaprType);
-        }
-
-        string? ns = checkType.Namespace;
-        return ns is not null && ns.StartsWith("Dapr", StringComparison.Ordinal);
-    }
-
-    private static void CheckType(Type type, HashSet<string> allowedNamespaces, List<string> violations, string context)
-    {
-        Type checkType = Nullable.GetUnderlyingType(type) ?? type;
-
-        if (checkType.IsGenericType)
-        {
-            foreach (Type arg in checkType.GetGenericArguments())
-            {
-                CheckType(arg, allowedNamespaces, violations, context);
-            }
-
-            return;
-        }
-
-        string? ns = checkType.Namespace;
-        if (ns is null || !ns.StartsWith("Hexalith.Parties.", StringComparison.Ordinal))
-        {
-            return;
-        }
-
-        // Skip types from the MCP namespace itself and from Search (internal helper)
-        if (ns == "Hexalith.Parties.Mcp" || ns == "Hexalith.Parties.Search")
-        {
-            return;
-        }
-
-        if (!allowedNamespaces.Contains(ns))
-        {
-            violations.Add($"{context}: references {checkType.FullName} from forbidden namespace {ns}");
-        }
+            "Client project must not reference Server, Projections, or Parties service. "
+            + $"Found: {string.Join(", ", violations)}");
     }
 
     [Fact]
     public void PartiesProjectionActorsDoNotImplementEventStoreGenericProjectionContract()
     {
-        // Relocated from Story 12.0 spike fitness test (deleted in commit 6a4b557).
-        // Parties projection actors must remain on the Parties-owned interfaces
-        // (IPartyDetailProjectionActor / IPartyIndexProjectionActor) and must not
-        // adopt EventStore's generic IProjectionActor contract — that adoption
-        // would couple Parties projections to EventStore's actor lifecycle and
-        // is the architectural inversion Epic 12 explicitly avoids.
-        string detailSource = File.ReadAllText(Path.Combine(
-            RepositoryRoot.Locate(),
-            "src",
-            "Hexalith.Parties.Projections",
-            "Actors",
-            "PartyDetailProjectionActor.cs"));
-        string indexSource = File.ReadAllText(Path.Combine(
-            RepositoryRoot.Locate(),
-            "src",
-            "Hexalith.Parties.Projections",
-            "Actors",
-            "PartyIndexProjectionActor.cs"));
+        string detailSource = ReadRepoFile("src", "Hexalith.Parties.Projections", "Actors", "PartyDetailProjectionActor.cs");
+        string indexSource = ReadRepoFile("src", "Hexalith.Parties.Projections", "Actors", "PartyIndexProjectionActor.cs");
 
-        // Match `IProjectionActor` as a whole word NOT preceded by `Party` (avoids matching local
-        // `IPartyDetailProjectionActor` / `IPartyIndexProjectionActor`). Also catches inheritance
-        // from EventStore's abstract base via `: ProjectionActor` form.
         Regex eventStoreContract = new(@"(?<!\w)(?:I?ProjectionActor)\b(?!\w)");
         Regex localPartyContract = new(@"\bIParty\w*ProjectionActor\b");
 
@@ -510,5 +318,38 @@ public sealed class ArchitecturalFitnessTests
             "PartyIndexProjectionActor must not implement EventStore's generic IProjectionActor contract.");
         detailSource.ShouldContain("IPartyDetailProjectionActor");
         indexSource.ShouldContain("IPartyIndexProjectionActor");
+    }
+
+    private static string ReadRepoFile(params string[] segments)
+        => File.ReadAllText(RepoPath(segments));
+
+    private static string RepoPath(params string[] segments)
+        => Path.Combine([RepositoryRoot.Locate(), .. segments]);
+
+    private static bool IsForbiddenClientReference(string reference, string forbiddenProjectName)
+    {
+        string fileName = Path.GetFileNameWithoutExtension(reference);
+        return string.Equals(fileName, forbiddenProjectName, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static IEnumerable<Type> GetLocalVariableTypes(MethodInfo method)
+        => method
+            .GetMethodBody()?
+            .LocalVariables
+            .Select(local => local.LocalType)
+            .Where(type => type is not null)
+            ?? [];
+
+    private static bool IsDaprType(Type type)
+    {
+        Type checkType = Nullable.GetUnderlyingType(type) ?? type;
+
+        if (checkType.IsGenericType)
+        {
+            return checkType.GetGenericArguments().Any(IsDaprType);
+        }
+
+        string? ns = checkType.Namespace;
+        return ns is not null && ns.StartsWith("Dapr", StringComparison.Ordinal);
     }
 }

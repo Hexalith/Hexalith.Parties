@@ -5,9 +5,6 @@ using System.Net;
 using Aspire.Hosting;
 using Aspire.Hosting.Testing;
 
-using Hexalith.Parties.IntegrationTests.Tenants;
-using Hexalith.Tenants.Contracts.Enums;
-
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
@@ -69,12 +66,6 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
         Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "Development");
         Environment.SetEnvironmentVariable("DOTNET_ENVIRONMENT", "Development");
 
-        // Reset per-tenant sequence counters so a re-init in the same test process starts
-        // at sequence 1 again (the local Tenants projection accepts only strictly-increasing
-        // sequence numbers, so leftover counter state from a previous fixture run can cause
-        // the first seeded event to be silently rejected).
-        TenantIntegrationTestSeeder.ResetSequenceCounters();
-
         try
         {
             // 5-minute timeout for full Aspire topology startup including DAPR sidecar
@@ -113,98 +104,12 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
                 TimeSpan.FromMinutes(3),
                 TimeSpan.FromSeconds(3)).ConfigureAwait(false);
 
-            await SeedDefaultTenantAccessAsync(cts.Token).ConfigureAwait(false);
-
             IsAvailable = true;
         }
         catch (Exception ex)
         {
             IsAvailable = false;
             UnavailableReason = $"{ex.GetType().Name}: {ex.Message}";
-        }
-    }
-
-    public Task SeedTenantAsync(
-        string tenantId,
-        string userId,
-        TenantRole role,
-        CancellationToken cancellationToken = default)
-        => TenantIntegrationTestSeeder.SeedActiveTenantAsync(
-            PartiesClient,
-            tenantId,
-            [new TenantMemberSeed(tenantId, userId, role)],
-            cancellationToken);
-
-    public Task DisableTenantAsync(
-        string tenantId,
-        CancellationToken cancellationToken = default)
-        => TenantIntegrationTestSeeder.DisableTenantAsync(PartiesClient, tenantId, cancellationToken);
-
-    public Task RemoveUserFromTenantAsync(
-        string tenantId,
-        string userId,
-        CancellationToken cancellationToken = default)
-        => TenantIntegrationTestSeeder.RemoveUserFromTenantAsync(PartiesClient, tenantId, userId, cancellationToken);
-
-    /// <summary>
-    /// Pre-seeds tenant access state so unrelated E2E tests in this fixture (search,
-    /// temporal-name, consent, encryption, erasure, admin) do not all need to seed
-    /// their own users before exercising tenant-scoped endpoints.
-    /// <para>
-    /// <b>Known coupling:</b> this list is hand-maintained against the user ids each
-    /// E2E test class expects. Adding a new E2E test that uses a new user id requires
-    /// either adding it here or seeding it in the test class itself. A future refactor
-    /// (deferred-work.md, Story 11-4 review item D8) should move this seeding into
-    /// each E2E class so the fixture is no longer the implicit coupling point.
-    /// </para>
-    /// </summary>
-    private async Task SeedDefaultTenantAccessAsync(CancellationToken cancellationToken)
-    {
-        cancellationToken.ThrowIfCancellationRequested();
-
-        try
-        {
-            await TenantIntegrationTestSeeder.SeedActiveTenantAsync(
-                PartiesClient,
-                "tenant-a",
-                [
-                    new TenantMemberSeed("tenant-a", "e2e-test-admin", TenantRole.TenantOwner),
-                ],
-                cancellationToken).ConfigureAwait(false);
-
-            cancellationToken.ThrowIfCancellationRequested();
-
-            await TenantIntegrationTestSeeder.SeedActiveTenantAsync(
-                PartiesClient,
-                "e2e-tenant",
-                [
-                    new TenantMemberSeed("e2e-tenant", "e2e-test-user", TenantRole.TenantOwner),
-                    new TenantMemberSeed("e2e-tenant", "e2e-search-test", TenantRole.TenantOwner),
-                    new TenantMemberSeed("e2e-tenant", "e2e-temporal-name-test", TenantRole.TenantOwner),
-                    new TenantMemberSeed("e2e-tenant", "e2e-consent-test", TenantRole.TenantOwner),
-                    new TenantMemberSeed("e2e-tenant", "e2e-encryption-test", TenantRole.TenantOwner),
-                    new TenantMemberSeed("e2e-tenant", "e2e-erasure-test", TenantRole.TenantOwner),
-                ],
-                cancellationToken).ConfigureAwait(false);
-        }
-        catch (OperationCanceledException)
-        {
-            throw;
-        }
-        catch (Exception ex)
-        {
-            // Surface the seeding failure as fixture-unavailable so dependent tests skip
-            // instead of producing misleading authorization failures downstream. If the
-            // seeder fell back to a random JWT signing key, every PublishTenantEventAsync
-            // would have produced 401s — name that explicitly so the failure mode is obvious.
-            string signingKeyHint = TenantIntegrationTestSeeder.SigningKeyIsRandomFallback
-                ? " (signing key fell back to a per-process random value because no env var or appsettings.Development.json key was found; tokens cannot be validated by the running Parties service)"
-                : string.Empty;
-
-            throw new InvalidOperationException(
-                $"Failed to seed default Tenants access state for the Aspire topology fixture{signingKeyHint}. " +
-                $"Cause: {ex.GetType().Name}: {ex.Message}",
-                ex);
         }
     }
 

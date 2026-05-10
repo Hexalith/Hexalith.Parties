@@ -26,28 +26,17 @@ startupLogger.LogWarning(
     "GDPR Notice: Personal-data encryption at rest is enabled for protected fields, but full GDPR workflows "
     + "(consent management and erasure verification) are not complete. Treat this service as partially compliant only.");
 
-// OpenAPI/Swagger UI (development mode only)
-if (app.Environment.IsDevelopment())
-{
-    _ = app.MapOpenApi();
-    _ = app.UseSwaggerUI(options =>
-    {
-        options.SwaggerEndpoint("/openapi/v1.json", "Hexalith.Parties API v1");
-    });
-}
-
 // Middleware pipeline (order matters)
-app.UseMiddleware<GdprWarningMiddleware>();  // FIRST — every response gets GDPR header
 app.UseMiddleware<CorrelationIdMiddleware>();
 app.UseExceptionHandler();
 app.UseMiddleware<DegradedResponseMiddleware>();
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseCloudEvents();
+// DAPR sidecar-internal endpoints only. Client-facing access is blocked by
+// AppHost DAPR accesscontrol.parties.yaml; EventStore is the public gateway.
 app.MapSubscribeHandler();
-app.MapControllers();
 app.MapTenantEventSubscription();
-app.MapMcp().RequireAuthorization();
 app.MapActorsHandlers();
 app.MapDefaultEndpoints();                    // Health checks: /health, /alive, /ready
 
