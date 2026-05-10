@@ -39,6 +39,13 @@ IResourceBuilder<ProjectResource> parties = builder.AddProject<Projects.Hexalith
     .WaitFor(eventStoreResources.StateStore)
     .WaitFor(eventStoreResources.PubSub);
 
+IResourceBuilder<ProjectResource> partiesMcp = builder.AddProject<Projects.Hexalith_Parties_Mcp>("parties-mcp")
+    .WithReference(eventStore)
+    .WaitFor(eventStore)
+    .WithReference(parties)
+    .WaitFor(parties)
+    .WithEnvironment("Parties__Mcp__EventStoreGatewayBaseUrl", ReferenceExpression.Create($"{eventStore.GetEndpoint("https")}"));
+
 IResourceBuilder<ProjectResource> tenants = builder.AddProject<Projects.Hexalith_Tenants>("tenants")
     .WithDaprSidecar(sidecar => sidecar
         .WithOptions(new DaprSidecarOptions
@@ -132,6 +139,16 @@ if (enableKeycloak)
         .WithEnvironment("Authentication__JwtBearer__Issuer", realmUrl)
         .WithEnvironment("Authentication__JwtBearer__Audience", "hexalith-parties")
         .WithEnvironment("Authentication__JwtBearer__TokenValidationParameters__ValidAudiences__0", "hexalith-parties")
+        .WithEnvironment("Authentication__JwtBearer__TokenValidationParameters__ValidAudiences__1", "hexalith-eventstore")
+        .WithEnvironment("Authentication__JwtBearer__RequireHttpsMetadata", "false")
+        .WithEnvironment("Authentication__JwtBearer__SigningKey", "");
+
+    _ = partiesMcp.WithReference(keycloak)
+        .WaitFor(keycloak)
+        .WithEnvironment("Authentication__JwtBearer__Authority", realmUrl)
+        .WithEnvironment("Authentication__JwtBearer__Issuer", realmUrl)
+        .WithEnvironment("Authentication__JwtBearer__Audience", "hexalith-parties-mcp")
+        .WithEnvironment("Authentication__JwtBearer__TokenValidationParameters__ValidAudiences__0", "hexalith-parties-mcp")
         .WithEnvironment("Authentication__JwtBearer__TokenValidationParameters__ValidAudiences__1", "hexalith-eventstore")
         .WithEnvironment("Authentication__JwtBearer__RequireHttpsMetadata", "false")
         .WithEnvironment("Authentication__JwtBearer__SigningKey", "");

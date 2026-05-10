@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "produced_by": "jobs/preflight-predev-hardening.py",
-  "timestamp": "2026-05-10T11:08:13Z",
+  "timestamp": "2026-05-10T10:06:35Z",
   "repo": "D:\\Hexalith.Parties",
   "result": "fail",
   "bootstrap_actions": [],
@@ -12,8 +12,8 @@
       "path": "D:\\Hexalith.Parties\\_bmad-output\\implementation-artifacts\\sprint-status.yaml",
       "result": "pass",
       "details": "PARSE OK",
-      "file_size_bytes": 14069,
-      "line_count": 172,
+      "file_size_bytes": 13657,
+      "line_count": 171,
       "top_level_keys": [
         "development_status",
         "generated",
@@ -42,9 +42,9 @@
     {
       "id": 4,
       "name": "status-artifact consistency",
-      "story_keys_checked": 54,
+      "story_keys_checked": 55,
       "result": "pass",
-      "details": "no drift across 54 story keys"
+      "details": "no drift across 55 story keys"
     },
     {
       "id": 5,
@@ -63,11 +63,11 @@
         ":(exclude)_bmad-output/process-notes/preflight-latest.json"
       ],
       "exit_code": 0,
-      "stdout": " M Hexalith.Parties.slnx\n M _bmad-output/implementation-artifacts/12-6-parties-mcp-thin-host.md\n M _bmad-output/implementation-artifacts/sprint-status.yaml\n M src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj\n M src/Hexalith.Parties.AppHost/Program.cs\n?? src/Hexalith.Parties.Mcp/\n?? tests/Hexalith.Parties.Mcp.Tests/\n",
+      "stdout": "A  _bmad-output/implementation-artifacts/12-9-sample-and-getting-started-doc-updates.md\nMM _bmad-output/implementation-artifacts/sprint-status.yaml\nM  _bmad-output/process-notes/predev-hardening-runs.log\n",
       "stderr": "",
-      "dirty_path_count": 7,
+      "dirty_path_count": 3,
       "result": "fail",
-      "details": "7 dirty path(s)"
+      "details": "3 dirty path(s)"
     }
   ],
   "note_to_llm": "This file was produced by jobs/preflight-predev-hardening.py. The recurring pre-dev hardening job MUST quote the contents of this file verbatim when reporting pre-flight results; do NOT re-run the checks yourself, paraphrase them, or summarize them in your own words."

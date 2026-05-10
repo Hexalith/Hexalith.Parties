@@ -4,6 +4,7 @@
 # last_updated: 2026-05-10  (story 12-9 created as ready-for-dev for EventStore-fronted sample and getting-started documentation updates.)
 # last_updated: 2026-05-10  (story 12-8 created as ready-for-dev for the EventStore-fronted Picker rewrite over the typed Parties client boundary, preserving Story 10.3 embedding behavior while replacing the old REST transport.)
 # last_updated: 2026-05-10  (story 12-6 created as ready-for-dev for the separate Parties MCP thin host over the typed Parties/EventStore client boundary.)
+# last_updated: 2026-05-10  (story 12-6 moved in-progress -> blocked after gate-confirmed limited dev pass: Stories 12-4 and 12-5 remain blocked/unfrozen, so only separate MCP host/test scaffolding, canonical tool metadata, safe contract-unavailable responses, AppHost parties-mcp resource wiring, and guardrails were added. Full dispatch/context/error parity waits for 12-4/12-5 landing or formal contract freeze.)
 # last_updated: 2026-05-10  (story 12-4 moved ready-for-dev -> blocked after party-mode review: normal test rewrite is gated until predecessor behavior from Stories 12.1-12.3 is merged or formally frozen; story updated with coverage matrix, tier ownership, routing/rejection evidence, retired-surface outcome, and deferred-decision clarifications.)
 # last_updated: 2026-05-09  (story 12-5 created as ready-for-dev for the Parties client thin wrapper over EventStore command/query submission.)
 # last_updated: 2026-05-09  (story 12-1 advanced in-progress -> review: AppHost recomposed around standalone eventstore, eventstore-admin, eventstore-admin-ui, parties, and tenants resources; split DAPR access-control files added; shared statestore/pubsub preserved with keyPrefix=none; focused AppHost/deploy-validation tests green; AppHost and solution builds clean; full-solution residual failures logged in deferred-work.md; runtime Aspire dashboard proof not captured because `dotnet aspire` CLI is unavailable on PATH.)
@@ -163,7 +164,7 @@ development_status:
   12-3-validation-relocation-and-tenant-auth-ownership: review
   12-4-server-tier-1-tier-2-test-rewrite: blocked
   12-5-parties-client-thin-wrapper: blocked
-  12-6-parties-mcp-thin-host: ready-for-dev
+  12-6-parties-mcp-thin-host: blocked
   12-7-admin-portal-rebuild-on-frontcomposer: ready-for-dev
   12-8-picker-rewrite: ready-for-dev
   12-9-sample-and-getting-started-doc-updates: ready-for-dev

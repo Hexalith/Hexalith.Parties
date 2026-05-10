@@ -1,0 +1,100 @@
+using Shouldly;
+
+namespace Hexalith.Parties.Mcp.Tests;
+
+public sealed class PartiesMcpProjectFitnessTests
+{
+    [Fact]
+    public void McpProjectReferencesOnlyAcceptedProductionBoundaries()
+    {
+        string project = File.ReadAllText(Path.Combine(
+            RepositoryRoot.Locate(),
+            "src",
+            "Hexalith.Parties.Mcp",
+            "Hexalith.Parties.Mcp.csproj"));
+
+        project.ShouldContain("..\\Hexalith.Parties.Contracts\\Hexalith.Parties.Contracts.csproj");
+        project.ShouldContain("..\\Hexalith.Parties.Client\\Hexalith.Parties.Client.csproj");
+        project.ShouldContain("..\\Hexalith.Parties.ServiceDefaults\\Hexalith.Parties.ServiceDefaults.csproj");
+        project.ShouldContain("ModelContextProtocol.AspNetCore");
+
+        string[] forbidden =
+        [
+            "Hexalith.Parties\\Hexalith.Parties.csproj",
+            "Hexalith.Parties.Server",
+            "Hexalith.Parties.Projections",
+            "Hexalith.Parties.Security",
+            "Dapr.",
+            "MediatR",
+            "FluentValidation",
+            "Microsoft.AspNetCore.Mvc",
+            "Swashbuckle",
+        ];
+
+        IEnumerable<string> violations = forbidden.Where(project.Contains);
+        violations.ShouldBeEmpty("The MCP host must remain a thin consumer over the typed client boundary.");
+    }
+
+    [Fact]
+    public void McpStartupUsesStatelessHttpTransportAndSeparateMapMcp()
+    {
+        string program = File.ReadAllText(Path.Combine(
+            RepositoryRoot.Locate(),
+            "src",
+            "Hexalith.Parties.Mcp",
+            "Program.cs"));
+
+        program.ShouldContain("AddServiceDefaults()");
+        program.ShouldContain("AddMcpServer()");
+        program.ShouldContain("WithHttpTransport(options => options.Stateless = true)");
+        program.ShouldContain("WithToolsFromAssembly()");
+        program.ShouldContain("app.MapMcp()");
+        program.ShouldContain("app.MapDefaultEndpoints()");
+    }
+
+    [Fact]
+    public void AppHostWiresPartiesMcpAsSeparateResource()
+    {
+        string program = File.ReadAllText(Path.Combine(
+            RepositoryRoot.Locate(),
+            "src",
+            "Hexalith.Parties.AppHost",
+            "Program.cs"));
+
+        program.ShouldContain("AddProject<Projects.Hexalith_Parties_Mcp>(\"parties-mcp\")");
+        program.ShouldContain("partiesMcp");
+        program.ShouldContain("WithReference(eventStore)");
+        program.ShouldContain("WaitFor(eventStore)");
+        program.ShouldContain("WithReference(parties)");
+        program.ShouldContain("WaitFor(parties)");
+    }
+
+    [Fact]
+    public void McpSourceDoesNotReferenceForbiddenActorHostOrServerInternals()
+    {
+        string sourceRoot = Path.Combine(RepositoryRoot.Locate(), "src", "Hexalith.Parties.Mcp");
+        string combinedSource = string.Join(
+            Environment.NewLine,
+            Directory.GetFiles(sourceRoot, "*.cs", SearchOption.AllDirectories)
+                .Select(File.ReadAllText));
+
+        string[] forbidden =
+        [
+            "ICommandRouter",
+            "IActorProxyFactory",
+            "IPartySearchService",
+            "ITenantAccessService",
+            "TenantAccessDenialTranslator",
+            "Hexalith.Parties.Projections",
+            "Hexalith.Parties.Server",
+            "Hexalith.Parties.Security",
+            "Dapr.",
+            "MediatR",
+            "FluentValidation",
+            "ControllerBase",
+        ];
+
+        IEnumerable<string> violations = forbidden.Where(combinedSource.Contains);
+        violations.ShouldBeEmpty("The MCP host scaffold must not depend on retired Parties REST/MCP internals.");
+    }
+}
