@@ -32,6 +32,15 @@ so that I onboard against the canonical platform pattern.
 - MCP blocker wording: if `parties-mcp` is unavailable or not accepted when this story is implemented, use dated blocker language instead of routing users through the Parties actor host.
 - Documentation UX: screenshots, diagrams, and code samples need descriptive alt text or adjacent prose, must not rely on color alone, and should keep EventStore/Parties boundary language plain and culture-neutral.
 
+## Advanced Elicitation Clarifications
+
+- Evidence freeze rule: before publishing runnable command/query or MCP examples, capture dated evidence from Stories 12.5 and 12.6 showing the accepted route, domain, auth/tenant header, payload, response, and tool-name contracts. If evidence is still in review, disputed, or blocked, publish a dated blocker or non-runnable placeholder instead of guessed snippets.
+- Snippet status rule: every copied command/query/MCP example in `README.md` or `docs/getting-started.md` should be clearly treated by tests as either runnable against the accepted EventStore/`parties-mcp` surface or intentionally blocked with a date and predecessor story reference.
+- Gateway configuration rule: sample options, comments, launch settings, and docs must name the configured endpoint as the EventStore gateway or typed client boundary. Avoid ambiguous `Parties` host wording that could send adopters to the actor host.
+- Event subscriber contract rule: subscriber examples may model only the additive EventStore-published envelope fields they consume, must acknowledge unknown or future events without redelivery loops, and must not imply DAPR actor or service-invocation access to Parties.
+- Troubleshooting rule: authorization, tenant, projection-lag, EventStore-readiness, and MCP-unavailable guidance must stay outside backend internals. Safe troubleshooting points to gateway status, tenant/RBAC configuration, projection freshness, and dated blockers rather than Parties actor endpoints, stack traces, or protected payloads.
+- Test stability rule: source-text guardrails should parse project files and checked snippets where practical, strip generated `bin`/`obj` output, and allow forbidden literals only in explicitly named negative tests or historical artifacts so the story does not create brittle repo-wide scans.
+
 ## Tasks / Subtasks
 
 - [ ] Confirm predecessor gates and current contract state. (AC: 1-10)
@@ -43,6 +52,7 @@ so that I onboard against the canonical platform pattern.
   - [ ] Read `_bmad-output/implementation-artifacts/12-5-parties-client-thin-wrapper.md`.
   - [ ] Read `_bmad-output/implementation-artifacts/12-6-parties-mcp-thin-host.md`.
   - [ ] Read `_bmad-output/implementation-artifacts/12-7-admin-portal-rebuild-on-frontcomposer.md` and `_bmad-output/implementation-artifacts/12-8-picker-rewrite.md` for consumer migration language.
+  - [ ] Record the dated source artifact and status used as evidence for command/query, auth/tenant, RBAC, response-mapping, and MCP tool contracts.
   - [ ] If Story 12.5 is still blocked and no formal EventStore client/gateway contract is frozen, limit implementation to red guardrail tests, documentation placeholders with explicit blockers, and source-text cleanup that does not fabricate working commands.
   - [ ] If Story 12.6 is not implemented or frozen, do not publish final MCP setup instructions; record a dated blocker naming the missing `parties-mcp` endpoint.
 
@@ -52,6 +62,7 @@ so that I onboard against the canonical platform pattern.
   - [ ] Keep `Dapr.AspNetCore` or its accepted replacement only for the subscriber endpoint; do not add DAPR actor, DAPR client, or sidecar invocation dependencies for command/query traffic.
   - [ ] Keep command/query calls behind `IPartiesCommandClient` and `IPartiesQueryClient`; do not call `HttpClient` directly for old Parties routes or EventStore DTOs unless Story 12.5 explicitly requires a lower-level seam.
   - [ ] Update configuration names and comments so `Parties:BaseUrl` or its replacement clearly points to the EventStore gateway/client boundary, not the Parties actor host.
+  - [ ] Check launch settings, options binding, sample comments, and test fixtures for ambiguous endpoint names that could be interpreted as a direct Parties actor-host URL.
 
 - [ ] Rewrite sample walkthrough code and comments. (AC: 2, 3, 6, 9)
   - [ ] Update `samples/Hexalith.Parties.Sample/Program.cs` comments to remove old "REST API and MCP" positioning.
@@ -71,6 +82,7 @@ so that I onboard against the canonical platform pattern.
   - [ ] Replace `POST /api/v1/parties`, `GET /api/v1/parties/{id}`, `GET /api/v1/parties/search`, and `GET /api/v1/parties` examples with EventStore command/query gateway examples.
   - [ ] Use `Domain="party"` and the command/query type names accepted by Story 12.5 or the frozen Wave 1 contract. Do not use the sprint proposal's older `Domain="Parties"` wording unless a later accepted decision changes the domain.
   - [ ] Explain command acceptance versus projection/query availability without promising read-your-write behavior unless the accepted EventStore/client contract proves it.
+  - [ ] Label any non-runnable example as a dated blocker tied to the predecessor story whose contract is missing; do not mix blocker text with copy-pastable commands.
   - [ ] Keep the non-.NET path focused on EventStore HTTP gateway calls, not old direct Parties REST.
   - [ ] Replace API overview tables so they list command/query gateway shapes and typed client methods instead of old Parties routes.
   - [ ] Update troubleshooting for `401`, `403`, projection lag, Tenants projection lag, and EventStore gateway readiness without telling adopters to call Parties internals.
@@ -87,6 +99,7 @@ so that I onboard against the canonical platform pattern.
   - [ ] Add package/reference tests proving the sample does not reference Parties service/server/projection, DAPR actor, MediatR, FluentValidation, MVC controller, Swagger/OpenAPI, or EventStore server assemblies.
   - [ ] Update existing sample tests under `tests/Hexalith.Parties.Sample.Tests/**` so they validate EventStore-fronted comments/config and subscriber behavior rather than old direct Parties endpoint assumptions.
   - [ ] Add a doc command-shape test or checked snippet inventory so README/getting-started examples do not drift back to old routes.
+  - [ ] Add a blocker-snippet test path so docs fail if a predecessor contract is unresolved but the docs present runnable commands, and fail if accepted contracts exist but the docs still present only blocker placeholders.
 
 - [ ] Verify the docs and sample update. (AC: 1-10)
   - [ ] Run `dotnet test tests/Hexalith.Parties.Sample.Tests/Hexalith.Parties.Sample.Tests.csproj --configuration Release`.
@@ -151,6 +164,9 @@ so that I onboard against the canonical platform pattern.
   - Sample event handler tests still prove idempotent delivery, tolerant deserialization, unknown-event acknowledgement, and no redelivery loops for unhandled additive events.
   - Docs/source fitness tests check internal consistency of the onboarding path, not only absence of retired route literals.
   - Package/reference tests parse project files where practical rather than relying only on raw text scans.
+  - Checked command/query snippets prove `POST /api/v1/commands` and `POST /api/v1/queries` examples use the accepted `Domain="party"` casing and do not include retired route literals in URLs, comments, or nearby explanatory text.
+  - Blocker-placeholder tests distinguish final runnable snippets from unresolved predecessor contracts, so docs cannot accidentally publish guessed command/query or MCP examples.
+  - Troubleshooting tests or source checks verify that tenant/auth/projection guidance points to EventStore gateway, tenant/RBAC configuration, and projection freshness rather than Parties actor-host internals.
   - Relative docs links and referenced sample files are checked without requiring external network access in normal CI.
   - If Story 12.5 or 12.6 remains blocked, docs tests assert a dated blocker is present instead of runnable final snippets.
 - Run at least:
@@ -218,6 +234,7 @@ TBD
 
 | Date | Version | Description | Author |
 |---|---:|---|---|
+| 2026-05-10 | 0.3 | Advanced elicitation completed; applied evidence-freeze, snippet-status, gateway-config, subscriber-contract, troubleshooting, and test-stability clarifications. | Codex |
 | 2026-05-10 | 0.2 | Party-mode review completed; applied gateway-boundary, source-of-truth, scan-scope, MCP, package-boundary, and documentation UX clarifications. | Codex |
 | 2026-05-10 | 0.1 | Created ready-for-dev story through BMAD pre-dev hardening automation. | Codex |
 
@@ -243,4 +260,29 @@ TBD
   - Whether historical migration notes may mention retired routes requires product/docs judgment.
   - Whether forbidden literal scanning becomes a shared repo-wide guardrail remains out of scope for this story.
   - Whether EventStore Admin UI screenshots are required now or can stay text-first until the UI stabilizes remains deferred.
+- Final recommendation: ready-for-dev
+
+## Advanced Elicitation
+
+- Date/time: 2026-05-10T19:03:38+02:00
+- Selected story key: `12-9-sample-and-getting-started-doc-updates`
+- Command/skill invocation used: `/bmad-advanced-elicitation 12-9-sample-and-getting-started-doc-updates`
+- Batch 1 method names: Red Team vs Blue Team; Failure Mode Analysis; Security Audit Personas; Self-Consistency Validation; Architecture Decision Records
+- Reshuffled Batch 2 method names: Pre-mortem Analysis; Chaos Monkey Scenarios; User Persona Focus Group; Critique and Refine; Expand or Contract for Audience
+- Findings summary:
+  - The story needed a stricter evidence freeze so documentation does not publish guessed runnable EventStore or MCP contracts while predecessor stories remain in review or disputed.
+  - Docs and tests need to distinguish accepted runnable snippets from intentionally blocked placeholder text.
+  - Sample configuration names can accidentally point adopters to the Parties actor host unless endpoint ownership is explicit.
+  - Event subscriber examples need an additive-envelope and unknown-event acknowledgement rule to avoid brittle consumer guidance.
+  - Troubleshooting guidance must keep users at gateway, tenant/RBAC, projection freshness, and blocker evidence levels rather than backend internals.
+  - Guardrail tests should be narrow and parse structured files/snippets where practical to avoid brittle false positives.
+- Changes applied:
+  - Added advanced elicitation clarifications for evidence freeze, snippet status, EventStore gateway configuration, subscriber contract, troubleshooting, and test stability.
+  - Added tasks to record dated predecessor evidence, scan ambiguous endpoint names, label blocked snippets, and test blocker-vs-runnable snippet behavior.
+  - Expanded testing guidance for command/query snippet shape, blocker placeholders, and internal-troubleshooting regressions.
+- Findings deferred:
+  - Final runnable command/query payload examples remain deferred to accepted Story 12.5 evidence.
+  - Final MCP endpoint and tool setup examples remain deferred to accepted Story 12.6 evidence.
+  - Any product-level decision to include historical migration notes that mention retired routes remains deferred.
+  - Shared repo-wide docs guardrails remain out of scope unless a later story accepts that broader test policy.
 - Final recommendation: ready-for-dev
