@@ -1,17 +1,26 @@
+using System.Reflection;
+using System.Text.Json;
+
+using FluentValidation;
+using FluentValidation.Results;
+
 using Hexalith.EventStore.Contracts.Commands;
 using Hexalith.EventStore.Contracts.Events;
 using Hexalith.EventStore.Contracts.Results;
 using Hexalith.EventStore.Contracts.Security;
+using Hexalith.Parties.Contracts.Commands;
 using Hexalith.EventStore.Server.DomainServices;
 using Hexalith.Parties.Security;
 using Hexalith.Parties.Server.Aggregates;
 
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 namespace Hexalith.Parties.Domain;
 
 internal sealed partial class PartyDomainServiceInvoker(
     IEventPayloadProtectionService payloadProtectionService,
+    IServiceProvider serviceProvider,
     ILogger<PartyDomainServiceInvoker> logger) : IDomainServiceInvoker
 {
     private const string PartyDomain = "party";
@@ -29,6 +38,8 @@ internal sealed partial class PartyDomainServiceInvoker(
             throw new DomainServiceNotFoundException(command.TenantId, command.Domain);
         }
 
+        await ValidatePayloadAsync(command, cancellationToken).ConfigureAwait(false);
+
         object? unprotectedState = await UnprotectCurrentStateAsync(command, currentState, cancellationToken)
             .ConfigureAwait(false);
 
@@ -41,6 +52,59 @@ internal sealed partial class PartyDomainServiceInvoker(
         // may not natively observe cancellation.
         cancellationToken.ThrowIfCancellationRequested();
         return await aggregate.ProcessAsync(command, unprotectedState).ConfigureAwait(false);
+    }
+
+    private async Task ValidatePayloadAsync(CommandEnvelope command, CancellationToken cancellationToken)
+    {
+        Type? commandType = ResolveCommandType(command.CommandType);
+        if (commandType is null)
+        {
+            return;
+        }
+
+        Type validatorType = typeof(IValidator<>).MakeGenericType(commandType);
+        if (serviceProvider.GetService(validatorType) is not IValidator validator)
+        {
+            return;
+        }
+
+        object payload;
+        try
+        {
+            payload = JsonSerializer.Deserialize(command.Payload, commandType)
+                ?? throw new JsonException($"Payload for '{command.CommandType}' deserialized to null.");
+        }
+        catch (JsonException ex)
+        {
+            throw new ValidationException(
+                [new ValidationFailure("Payload", $"Payload must be valid JSON for {commandType.Name}: {ex.Message}")]);
+        }
+
+        ValidationResult result = await validator
+            .ValidateAsync(new ValidationContext<object>(payload), cancellationToken)
+            .ConfigureAwait(false);
+
+        if (!result.IsValid)
+        {
+            throw new ValidationException(result.Errors);
+        }
+    }
+
+    private static Type? ResolveCommandType(string commandType)
+    {
+        Type? resolved = Type.GetType(commandType, throwOnError: false);
+        if (resolved is not null)
+        {
+            return resolved;
+        }
+
+        string unqualified = commandType.Split(',', 2)[0].Trim();
+        Assembly contractsAssembly = typeof(CreateParty).Assembly;
+        return contractsAssembly
+            .GetTypes()
+            .FirstOrDefault(type =>
+                string.Equals(type.FullName, unqualified, StringComparison.Ordinal)
+                || string.Equals(type.Name, unqualified, StringComparison.Ordinal));
     }
 
     private async Task<object?> UnprotectCurrentStateAsync(

@@ -159,7 +159,7 @@ development_status:
   12-0-eventstore-parties-actor-invocation-feasibility-spike: done
   12-1-apphost-recomposition: done
   12-2-parties-actor-host: review
-  12-3-validation-relocation-and-tenant-auth-ownership: ready-for-dev
+  12-3-validation-relocation-and-tenant-auth-ownership: review
   12-4-server-tier-1-tier-2-test-rewrite: blocked
   12-5-parties-client-thin-wrapper: blocked
   12-6-parties-mcp-thin-host: ready-for-dev

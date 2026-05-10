@@ -1,6 +1,6 @@
 # Story 12.3: Validation Relocation and Tenant Auth Ownership
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -20,43 +20,43 @@ so that the request path has a single, unambiguous validation and authorization 
 
 ## Tasks / Subtasks
 
-- [ ] Confirm predecessor gates before implementation. (AC: 1-7)
-  - [ ] Read `_bmad-output/implementation-artifacts/12-0-eventstore-parties-actor-invocation-feasibility-spike.md`.
-  - [ ] If `## Spike Conclusion` is still pending or negative, stop through the normal dev workflow; do not move validation or authorization boundaries yet.
-  - [ ] Confirm Story 12.1 established EventStore-fronted AppHost topology and Story 12.2 removed or quarantined Parties public REST/MCP surfaces, or keep this story limited to the actor-host/domain path that already exists.
-- [ ] Inventory current validation and authorization locations. (AC: 1, 3, 4)
-  - [ ] Inspect `src/Hexalith.Parties/Extensions/PartiesServiceCollectionExtensions.cs` for validator, EventStore, Tenants, authentication, and authorization registrations.
-  - [ ] Inspect `src/Hexalith.Parties/Domain/PartyDomainServiceInvoker.cs` as the current in-process domain invocation point before `PartyAggregate.ProcessAsync`.
-  - [ ] Inspect any remaining controller/admin/MCP code only to remove stale request-path assumptions left after Story 12.2; do not reintroduce public endpoints.
-  - [ ] Inspect EventStore authorization contracts and defaults: `ITenantValidator`, `IRbacValidator`, `ClaimsTenantValidator`, `ClaimsRbacValidator`, `ActorTenantValidator`, and `ActorRbacValidator`.
-- [ ] Move Parties payload validation into the actor-host/domain invocation path. (AC: 1, 2)
-  - [ ] Register Parties FluentValidation validators in the actor host if Story 12.2 retained or moved the registrations.
-  - [ ] Add a narrow validation component or decorate `PartyDomainServiceInvoker` so the concrete payload type is validated before protected state/events are unprotected and before aggregate processing.
-  - [ ] Treat `PartyDomainServiceInvoker` or the immediately adjacent actor-host/domain adapter as the preferred insertion point; do not satisfy this task through old controller, REST, MCP, or API model-validation paths.
-  - [ ] Preserve existing payload protection behavior in `PartyDomainServiceInvoker`; validation must not bypass protected state/event handling or change the domain string accepted by the invoker.
-  - [ ] If EventStore's payload-type convention cannot invoke Parties validators without changes to the `Hexalith.EventStore` submodule, document the platform gap and stop or defer the submodule work rather than editing EventStore in this story.
-- [ ] Remove Parties tenant authorization from the command/query request path. (AC: 3, 4, 5)
-  - [ ] Ensure Parties does not register an EventStore gateway `ITenantValidator` or `IRbacValidator` implementation.
-  - [ ] Remove any remaining command/query use of `ITenantAccessService`, `TenantAccessDenialTranslator`, or Parties-specific gateway denial mapping.
-  - [ ] Preserve Tenants event projection services, projection stores, and internal access data only when they are still used by projection-side or actor-host internals.
-  - [ ] If `ITenantAccessService` remains registered for projection-side/internal use, rename, scope, or document it so tests can distinguish it from gateway request-path authorization.
-- [ ] Preserve EventStore-owned authorization semantics. (AC: 3, 5, 6)
-  - [ ] Verify EventStore gateway submit/validation paths call `ITenantValidator` and `IRbacValidator` before domain actor invocation.
-  - [ ] For unauthorized requests with invalid payloads, preserve EventStore authorization-first behavior: tenant/RBAC denial occurs before Parties payload validation and before actor/domain invocation.
-  - [ ] Keep the EventStore `AggregateActor` tenant mismatch guard between actor id and command tenant id; do not treat it as a replacement for gateway authorization.
-  - [ ] Verify Parties DAPR access-control configuration still allows only EventStore-origin invocation required by Story 12.0/12.1 and does not broaden to wildcard clients.
-- [ ] Update tests and fitness coverage. (AC: 1-7)
-  - [ ] Add focused tests proving invalid Parties command payloads are rejected before `PartyAggregate.ProcessAsync` can run, with fakes or spies proving no aggregate/domain invocation occurs.
-  - [ ] Add or update tests proving unauthorized EventStore gateway submissions do not invoke the Parties actor/domain invoker, including an invalid-payload-plus-unauthorized case to prove authorization wins first.
-  - [ ] Add architectural fitness tests proving Parties does not register EventStore gateway `ITenantValidator`/`IRbacValidator` implementations and does not use `ITenantAccessService` or `TenantAccessDenialTranslator` in command/query request-path code.
-  - [ ] Update Tenants projection tests to preserve projection-side behavior without asserting gateway request-path ownership by Parties.
-  - [ ] Ensure validation and authorization tests cannot pass through stale REST/MCP/controller routes; target the EventStore-to-actor-host/domain boundary or focused domain-invoker fixtures directly.
-  - [ ] Keep broad EventStore gateway Tier-1/Tier-2 rewrite scope out of this story; Story 12.4 owns the larger suite conversion.
-- [ ] Verify the boundary change. (AC: 1-7)
-  - [ ] Run the focused validation/domain-invoker tests added by this story.
-  - [ ] Run the relevant authorization and Tenants projection tests.
-  - [ ] Run `dotnet test tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj --filter ArchitecturalFitnessTests`.
-  - [ ] Run `dotnet build Hexalith.Parties.slnx`.
+- [x] Confirm predecessor gates before implementation. (AC: 1-7)
+  - [x] Read `_bmad-output/implementation-artifacts/12-0-eventstore-parties-actor-invocation-feasibility-spike.md`.
+  - [x] If `## Spike Conclusion` is still pending or negative, stop through the normal dev workflow; do not move validation or authorization boundaries yet.
+  - [x] Confirm Story 12.1 established EventStore-fronted AppHost topology and Story 12.2 removed or quarantined Parties public REST/MCP surfaces, or keep this story limited to the actor-host/domain path that already exists.
+- [x] Inventory current validation and authorization locations. (AC: 1, 3, 4)
+  - [x] Inspect `src/Hexalith.Parties/Extensions/PartiesServiceCollectionExtensions.cs` for validator, EventStore, Tenants, authentication, and authorization registrations.
+  - [x] Inspect `src/Hexalith.Parties/Domain/PartyDomainServiceInvoker.cs` as the current in-process domain invocation point before `PartyAggregate.ProcessAsync`.
+  - [x] Inspect any remaining controller/admin/MCP code only to remove stale request-path assumptions left after Story 12.2; do not reintroduce public endpoints.
+  - [x] Inspect EventStore authorization contracts and defaults: `ITenantValidator`, `IRbacValidator`, `ClaimsTenantValidator`, `ClaimsRbacValidator`, `ActorTenantValidator`, and `ActorRbacValidator`.
+- [x] Move Parties payload validation into the actor-host/domain invocation path. (AC: 1, 2)
+  - [x] Register Parties FluentValidation validators in the actor host if Story 12.2 retained or moved the registrations.
+  - [x] Add a narrow validation component or decorate `PartyDomainServiceInvoker` so the concrete payload type is validated before protected state/events are unprotected and before aggregate processing.
+  - [x] Treat `PartyDomainServiceInvoker` or the immediately adjacent actor-host/domain adapter as the preferred insertion point; do not satisfy this task through old controller, REST, MCP, or API model-validation paths.
+  - [x] Preserve existing payload protection behavior in `PartyDomainServiceInvoker`; validation must not bypass protected state/event handling or change the domain string accepted by the invoker.
+  - [x] If EventStore's payload-type convention cannot invoke Parties validators without changes to the `Hexalith.EventStore` submodule, document the platform gap and stop or defer the submodule work rather than editing EventStore in this story.
+- [x] Remove Parties tenant authorization from the command/query request path. (AC: 3, 4, 5)
+  - [x] Ensure Parties does not register an EventStore gateway `ITenantValidator` or `IRbacValidator` implementation.
+  - [x] Remove any remaining command/query use of `ITenantAccessService`, `TenantAccessDenialTranslator`, or Parties-specific gateway denial mapping.
+  - [x] Preserve Tenants event projection services, projection stores, and internal access data only when they are still used by projection-side or actor-host internals.
+  - [x] If `ITenantAccessService` remains registered for projection-side/internal use, rename, scope, or document it so tests can distinguish it from gateway request-path authorization.
+- [x] Preserve EventStore-owned authorization semantics. (AC: 3, 5, 6)
+  - [x] Verify EventStore gateway submit/validation paths call `ITenantValidator` and `IRbacValidator` before domain actor invocation.
+  - [x] For unauthorized requests with invalid payloads, preserve EventStore authorization-first behavior: tenant/RBAC denial occurs before Parties payload validation and before actor/domain invocation.
+  - [x] Keep the EventStore `AggregateActor` tenant mismatch guard between actor id and command tenant id; do not treat it as a replacement for gateway authorization.
+  - [x] Verify Parties DAPR access-control configuration still allows only EventStore-origin invocation required by Story 12.0/12.1 and does not broaden to wildcard clients.
+- [x] Update tests and fitness coverage. (AC: 1-7)
+  - [x] Add focused tests proving invalid Parties command payloads are rejected before `PartyAggregate.ProcessAsync` can run, with fakes or spies proving no aggregate/domain invocation occurs.
+  - [x] Add or update tests proving unauthorized EventStore gateway submissions do not invoke the Parties actor/domain invoker, including an invalid-payload-plus-unauthorized case to prove authorization wins first.
+  - [x] Add architectural fitness tests proving Parties does not register EventStore gateway `ITenantValidator`/`IRbacValidator` implementations and does not use `ITenantAccessService` or `TenantAccessDenialTranslator` in command/query request-path code.
+  - [x] Update Tenants projection tests to preserve projection-side behavior without asserting gateway request-path ownership by Parties.
+  - [x] Ensure validation and authorization tests cannot pass through stale REST/MCP/controller routes; target the EventStore-to-actor-host/domain boundary or focused domain-invoker fixtures directly.
+  - [x] Keep broad EventStore gateway Tier-1/Tier-2 rewrite scope out of this story; Story 12.4 owns the larger suite conversion.
+- [x] Verify the boundary change. (AC: 1-7)
+  - [x] Run the focused validation/domain-invoker tests added by this story.
+  - [x] Run the relevant authorization and Tenants projection tests.
+  - [x] Run `dotnet test tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj --filter ArchitecturalFitnessTests`.
+  - [x] Run `dotnet build Hexalith.Parties.slnx`.
 
 ## Dev Notes
 
@@ -163,19 +163,34 @@ so that the request path has a single, unambiguous validation and authorization 
 
 ### Agent Model Used
 
-TBD
+- Codex GPT-5
 
 ### Debug Log References
 
-TBD
+- Confirmed Story 12.0 gate is `done` with a dated `partial` conclusion explicitly unblocking Wave 1; Story 12.1 is `done`; Story 12.2 is `review` with REST/MCP surfaces removed or quarantined in project inclusion.
+- Red phase: new `PartyDomainServiceInvokerValidationTests` initially failed because `PartyDomainServiceInvoker` had no validator dependency or pre-aggregate validation path.
+- Green phase: `PartyDomainServiceInvoker` now resolves the concrete command payload type, uses registered FluentValidation validators, throws `ValidationException` for invalid payloads, and does this before protected state/event unprotection and `PartyAggregate.ProcessAsync`.
+- Focused tests: `dotnet test tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj --filter "FullyQualifiedName~PartyDomainServiceInvokerValidationTests|FullyQualifiedName~ArchitecturalFitnessTests" --no-restore` (17/17 passed).
+- Relevant validation/authorization/tenant slice: `dotnet test tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj --filter "FullyQualifiedName~PartyDomainServiceInvoker|FullyQualifiedName~Validation|FullyQualifiedName~Authorization|FullyQualifiedName~Tenant" --no-restore` (69/69 passed).
+- Architectural fitness: `dotnet test tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj --filter ArchitecturalFitnessTests --no-restore` (14/14 passed).
+- Full regression: `dotnet test Hexalith.Parties.slnx --no-restore` passed across the solution.
+- Build: `dotnet build Hexalith.Parties.slnx --no-restore` passed with 0 warnings and 0 errors.
 
 ### Completion Notes List
 
-TBD
+- Added actor-host/domain invocation validation in `PartyDomainServiceInvoker`; invalid Parties command payloads now fail through FluentValidation before protected state/event replay and before aggregate processing.
+- Kept the existing `party` domain boundary and payload protection behavior intact; valid commands continue into `PartyAggregate.ProcessAsync`.
+- Left EventStore submodule source unchanged; added source fitness guardrails from the Parties test project to pin EventStore authorization-before-validation order and the `AggregateActor` tenant mismatch guard.
+- Added fitness coverage proving Parties does not implement/register EventStore gateway tenant/RBAC validators and that command/query request-path code does not use `ITenantAccessService` or `TenantAccessDenialTranslator`.
+- Preserved Tenants projection/internal registration behavior; focused tenant tests remain green and `ITenantAccessService` is distinguished from gateway authorization by request-path fitness checks.
 
 ### File List
 
-TBD
+- `_bmad-output/implementation-artifacts/12-3-validation-relocation-and-tenant-auth-ownership.md`
+- `_bmad-output/implementation-artifacts/sprint-status.yaml`
+- `src/Hexalith.Parties/Domain/PartyDomainServiceInvoker.cs`
+- `tests/Hexalith.Parties.Tests/Domain/PartyDomainServiceInvokerValidationTests.cs`
+- `tests/Hexalith.Parties.Tests/FitnessTests/ArchitecturalFitnessTests.cs`
 
 ## Change Log
 
@@ -183,6 +198,7 @@ TBD
 |---|---:|---|---|
 | 2026-05-09 | 0.1 | Created ready-for-dev story through BMAD pre-dev hardening automation. | Codex |
 | 2026-05-09 | 0.2 | Applied party-mode review clarifications for validation insertion point, authorization ordering, and boundary test oracles. | Codex |
+| 2026-05-10 | 1.0 | Added actor-host payload validation before aggregate execution, pinned EventStore-owned authorization boundaries with fitness tests, verified focused/full regression suites, and moved story to review. | Codex |
 
 ## Party-Mode Review
 

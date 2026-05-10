@@ -186,6 +186,87 @@ public sealed class ArchitecturalFitnessTests
     }
 
     [Fact]
+    public void PartiesAssembly_DoesNotImplementEventStoreGatewayAuthorizationContracts()
+    {
+        string sourceRoot = Path.Combine(RepositoryRoot.Locate(), "src", "Hexalith.Parties");
+        string[] sourceFiles = Directory.GetFiles(sourceRoot, "*.cs", SearchOption.AllDirectories);
+        List<string> violations = [];
+
+        foreach (string file in sourceFiles)
+        {
+            string text = File.ReadAllText(file);
+            if (Regex.IsMatch(text, @":\s*(?:[\w\.]+\.)?ITenantValidator\b")
+                || Regex.IsMatch(text, @":\s*(?:[\w\.]+\.)?IRbacValidator\b"))
+            {
+                violations.Add(Path.GetRelativePath(RepositoryRoot.Locate(), file));
+            }
+        }
+
+        violations.ShouldBeEmpty(
+            "EventStore owns gateway tenant/RBAC validation; Hexalith.Parties must not implement those gateway contracts.\n"
+            + string.Join("\n", violations));
+    }
+
+    [Fact]
+    public void PartiesRequestPath_DoesNotUseTenantAccessServiceOrDenialTranslator()
+    {
+        string serviceRegistration = ReadRepoFile("src", "Hexalith.Parties", "Extensions", "PartiesServiceCollectionExtensions.cs");
+        string domainInvoker = ReadRepoFile("src", "Hexalith.Parties", "Domain", "PartyDomainServiceInvoker.cs");
+        string program = ReadRepoFile("src", "Hexalith.Parties", "Program.cs");
+
+        serviceRegistration.ShouldNotContain("ITenantValidator");
+        serviceRegistration.ShouldNotContain("IRbacValidator");
+        domainInvoker.ShouldNotContain("ITenantAccessService");
+        domainInvoker.ShouldNotContain("TenantAccessDenialTranslator");
+        program.ShouldNotContain("ITenantAccessService");
+        program.ShouldNotContain("TenantAccessDenialTranslator");
+    }
+
+    [Fact]
+    public void EventStoreGateway_AuthorizationBehaviorRunsBeforeValidationBehavior()
+    {
+        string eventStoreRegistration = ReadRepoFile(
+            "Hexalith.EventStore",
+            "src",
+            "Hexalith.EventStore",
+            "Extensions",
+            "ServiceCollectionExtensions.cs");
+
+        int authorizationIndex = eventStoreRegistration.IndexOf(
+            "cfg.AddOpenBehavior(typeof(AuthorizationBehavior<,>))",
+            StringComparison.Ordinal);
+        int validationIndex = eventStoreRegistration.IndexOf(
+            "cfg.AddOpenBehavior(typeof(ValidationBehavior<,>))",
+            StringComparison.Ordinal);
+
+        authorizationIndex.ShouldBeGreaterThanOrEqualTo(0);
+        validationIndex.ShouldBeGreaterThanOrEqualTo(0);
+        authorizationIndex.ShouldBeLessThan(
+            validationIndex,
+            "EventStore gateway authorization must run before request validation so unauthorized invalid payloads are denied before Parties payload validation or actor/domain invocation.");
+    }
+
+    [Fact]
+    public void EventStoreAggregateActor_TenantMismatchGuardPrecedesDomainInvocation()
+    {
+        string aggregateActor = ReadRepoFile(
+            "Hexalith.EventStore",
+            "src",
+            "Hexalith.EventStore.Server",
+            "Actors",
+            "AggregateActor.cs");
+
+        int tenantValidationIndex = aggregateActor.IndexOf("tenantValidator.Validate(command.TenantId, Host.Id.GetId())", StringComparison.Ordinal);
+        int domainInvocationIndex = aggregateActor.IndexOf(".InvokeAsync(command, currentState)", StringComparison.Ordinal);
+
+        tenantValidationIndex.ShouldBeGreaterThanOrEqualTo(0);
+        domainInvocationIndex.ShouldBeGreaterThanOrEqualTo(0);
+        tenantValidationIndex.ShouldBeLessThan(
+            domainInvocationIndex,
+            "EventStore AggregateActor tenant mismatch defense must remain before domain actor invocation.");
+    }
+
+    [Fact]
     public void ProjectionHandlers_HaveZeroDaprReferences()
     {
         Assembly projectionsAssembly = typeof(PartyDetailProjectionHandler).Assembly;
