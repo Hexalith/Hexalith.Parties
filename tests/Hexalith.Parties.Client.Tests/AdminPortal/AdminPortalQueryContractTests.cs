@@ -6,6 +6,8 @@ using Microsoft.Extensions.Options;
 
 using Shouldly;
 
+using System.Xml.Linq;
+
 namespace Hexalith.Parties.Client.Tests.AdminPortal;
 
 public sealed class AdminPortalQueryContractTests
@@ -91,6 +93,27 @@ public sealed class AdminPortalQueryContractTests
         source.ShouldNotContain("MapControllers");
         source.ShouldNotContain("MarkupString");
         source.ShouldNotContain("AddMarkupContent");
+    }
+
+    [Fact]
+    public void AdminPortalProject_ReferencesFrontComposerShellAndPartiesClientBoundaries()
+    {
+        string root = LocateRepositoryRoot();
+        string projectPath = Path.Combine(root, "src", "Hexalith.Parties.AdminPortal", "Hexalith.Parties.AdminPortal.csproj");
+        XDocument project = XDocument.Load(projectPath);
+
+        string[] projectReferences = project
+            .Descendants()
+            .Where(static element => element.Name.LocalName == "ProjectReference")
+            .Select(static element => element.Attribute("Include")?.Value ?? string.Empty)
+            .ToArray();
+
+        projectReferences.ShouldContain(static include => include.EndsWith(
+            @"Hexalith.FrontComposer.Shell\Hexalith.FrontComposer.Shell.csproj",
+            StringComparison.Ordinal));
+        projectReferences.ShouldContain(static include => include.EndsWith(
+            @"Hexalith.Parties.Client\Hexalith.Parties.Client.csproj",
+            StringComparison.Ordinal));
     }
 
     private static PartiesAdminPortalApiClient CreateClient(IQueryService queryService)

@@ -1,6 +1,9 @@
 using Hexalith.FrontComposer.Contracts.Communication;
+using Hexalith.Parties.Client;
+using Hexalith.Parties.Client.Abstractions;
 using Hexalith.Parties.Contracts.Models;
 
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 
 namespace Hexalith.Parties.AdminPortal.Services;
@@ -11,12 +14,32 @@ public sealed class PartiesAdminPortalApiClient : IPartiesAdminPortalApiClient
     private const string SearchCacheDiscriminator = "parties-admin-search-v1";
     private const string DetailCacheDiscriminator = "parties-admin-detail-v1";
 
-    private readonly IQueryService _queryService;
+    private readonly IPartiesQueryClient? _partiesQueryClient;
+    private readonly IQueryService? _queryService;
     private readonly PartiesAdminPortalOptions _options;
 
-    public PartiesAdminPortalApiClient(IQueryService queryService, IOptions<PartiesAdminPortalOptions> options)
+    [ActivatorUtilitiesConstructor]
+    public PartiesAdminPortalApiClient(IServiceProvider serviceProvider, IOptions<PartiesAdminPortalOptions> options)
+        : this(
+            serviceProvider?.GetService<IPartiesQueryClient>(),
+            serviceProvider?.GetService<IQueryService>(),
+            options)
     {
-        _queryService = queryService ?? throw new ArgumentNullException(nameof(queryService));
+        ArgumentNullException.ThrowIfNull(serviceProvider);
+    }
+
+    public PartiesAdminPortalApiClient(IQueryService queryService, IOptions<PartiesAdminPortalOptions> options)
+        : this(null, queryService, options)
+    {
+    }
+
+    private PartiesAdminPortalApiClient(
+        IPartiesQueryClient? partiesQueryClient,
+        IQueryService? queryService,
+        IOptions<PartiesAdminPortalOptions> options)
+    {
+        _partiesQueryClient = partiesQueryClient;
+        _queryService = queryService;
         _options = options?.Value ?? throw new ArgumentNullException(nameof(options));
     }
 
@@ -28,6 +51,23 @@ public sealed class PartiesAdminPortalApiClient : IPartiesAdminPortalApiClient
 
         int page = AdminPortalQueryBounds.BoundPage(request.Page);
         int pageSize = AdminPortalQueryBounds.BoundPageSize(request.PageSize);
+        if (_partiesQueryClient is not null)
+        {
+            PagedResult<PartyIndexEntry> typedResult = await ExecutePartiesQueryAsync(
+                (client, token) => client.ListPartiesAsync(
+                    page,
+                    pageSize,
+                    request.Type,
+                    request.Active,
+                    request.CreatedAfter,
+                    request.CreatedBefore,
+                    request.ModifiedAfter,
+                    request.ModifiedBefore,
+                    token),
+                cancellationToken).ConfigureAwait(false);
+            return new(typedResult, AdminPortalQueryMetadata.Empty);
+        }
+
         QueryRequest query = new(
             ProjectionType: RequireContract(_options.ListProjectionType, nameof(_options.ListProjectionType)),
             TenantId: null,
@@ -50,6 +90,14 @@ public sealed class PartiesAdminPortalApiClient : IPartiesAdminPortalApiClient
 
         int page = AdminPortalQueryBounds.BoundPage(request.Page);
         int pageSize = AdminPortalQueryBounds.BoundPageSize(request.PageSize);
+        if (_partiesQueryClient is not null)
+        {
+            PagedResult<PartySearchResult> typedResult = await ExecutePartiesQueryAsync(
+                (client, token) => client.SearchPartiesAsync(request.Query ?? string.Empty, page, pageSize, token),
+                cancellationToken).ConfigureAwait(false);
+            return new(typedResult, AdminPortalQueryMetadata.Empty);
+        }
+
         QueryRequest query = new(
             ProjectionType: RequireContract(_options.SearchProjectionType, nameof(_options.SearchProjectionType)),
             TenantId: null,
@@ -74,6 +122,14 @@ public sealed class PartiesAdminPortalApiClient : IPartiesAdminPortalApiClient
     public async Task<AdminPortalQueryResult<PartyDetail>> GetPartyAsync(string partyId, CancellationToken cancellationToken)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(partyId);
+
+        if (_partiesQueryClient is not null)
+        {
+            PartyDetail typedDetail = await ExecutePartiesQueryAsync(
+                (client, token) => client.GetPartyAsync(partyId, token),
+                cancellationToken).ConfigureAwait(false);
+            return new(typedDetail, AdminPortalQueryMetadata.Empty);
+        }
 
         QueryRequest query = new(
             ProjectionType: RequireContract(_options.DetailProjectionType, nameof(_options.DetailProjectionType)),
@@ -100,9 +156,13 @@ public sealed class PartiesAdminPortalApiClient : IPartiesAdminPortalApiClient
 
     private async Task<QueryResult<T>> ExecuteAsync<T>(QueryRequest query, CancellationToken cancellationToken)
     {
+        IQueryService queryService = _queryService ?? throw new AdminPortalQueryException(
+            AdminPortalQueryFailureKind.ContractUnavailable,
+            validationDetail: "Neither IPartiesQueryClient nor FrontComposer IQueryService is registered for the Parties admin portal.");
+
         try
         {
-            return await _queryService.QueryAsync<T>(query, cancellationToken).ConfigureAwait(false);
+            return await queryService.QueryAsync<T>(query, cancellationToken).ConfigureAwait(false);
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
@@ -115,6 +175,32 @@ public sealed class PartiesAdminPortalApiClient : IPartiesAdminPortalApiClient
         catch (QueryFailureException ex)
         {
             throw new AdminPortalQueryException(MapFailureKind(ex), ex.Problem.Status, retryAfter: ex.RetryAfter, innerException: ex);
+        }
+        catch (TimeoutException ex)
+        {
+            throw new AdminPortalQueryException(AdminPortalQueryFailureKind.TransientFailure, innerException: ex);
+        }
+        catch (OperationCanceledException ex)
+        {
+            throw new AdminPortalQueryException(AdminPortalQueryFailureKind.TransientFailure, innerException: ex);
+        }
+    }
+
+    private async Task<T> ExecutePartiesQueryAsync<T>(
+        Func<IPartiesQueryClient, CancellationToken, Task<T>> operation,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            return await operation(_partiesQueryClient!, cancellationToken).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (PartiesClientException ex)
+        {
+            throw new AdminPortalQueryException(MapFailureKind(ex), ex.Status, innerException: ex);
         }
         catch (TimeoutException ex)
         {
@@ -142,6 +228,21 @@ public sealed class PartiesAdminPortalApiClient : IPartiesAdminPortalApiClient
         => ContainsTenant(problem.Title)
             || ContainsTenant(problem.Detail)
             || problem.GlobalErrors.Any(ContainsTenant);
+
+    private static AdminPortalQueryFailureKind MapFailureKind(PartiesClientException ex)
+        => ex.Status switch
+        {
+            401 => AdminPortalQueryFailureKind.AuthenticationRequired,
+            403 => ContainsTenant(ex.Title) || ContainsTenant(ex.Detail)
+                ? AdminPortalQueryFailureKind.TenantRequired
+                : AdminPortalQueryFailureKind.Forbidden,
+            404 => AdminPortalQueryFailureKind.NotFound,
+            410 => AdminPortalQueryFailureKind.Gone,
+            400 or 422 => AdminPortalQueryFailureKind.Validation,
+            408 or 429 => AdminPortalQueryFailureKind.TransientFailure,
+            >= 500 => AdminPortalQueryFailureKind.TransientFailure,
+            _ => AdminPortalQueryFailureKind.Unknown,
+        };
 
     private static bool ContainsTenant(string? value)
         => value?.Contains("tenant", StringComparison.OrdinalIgnoreCase) == true;

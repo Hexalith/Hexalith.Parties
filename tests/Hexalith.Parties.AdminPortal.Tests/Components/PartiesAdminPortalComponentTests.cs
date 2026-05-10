@@ -339,6 +339,45 @@ public sealed class PartiesAdminPortalComponentTests : BunitContext
     }
 
     [Fact]
+    public void PartiesAdminPortal_GdprOperations_AreDisabledUntilEventStoreClientContractExists()
+    {
+        var api = new RecordingAdminPortalApiClient();
+        api.EnqueueList(Page(IndexEntry("party-gdpr", "GDPR Party", PartyType.Person, true)));
+        api.EnqueueDetail(new PartyDetail
+        {
+            Id = "party-gdpr",
+            Type = PartyType.Person,
+            IsActive = true,
+            DisplayName = "GDPR Party",
+            SortName = "Party, GDPR",
+            ContactChannels = [],
+            Identifiers = [],
+            ConsentRecords = [],
+            CreatedAt = DateTimeOffset.Parse("2026-05-01T00:00:00Z"),
+            LastModifiedAt = DateTimeOffset.Parse("2026-05-02T00:00:00Z"),
+        });
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+
+        IRenderedComponent<PartiesAdminPortal> cut = RenderAuthorized("scope-a");
+        cut.WaitForAssertion(() => FindFluentButton(cut, "GDPR Party").TextContent.ShouldContain("GDPR Party"));
+        ClickFluentButton(cut, "GDPR Party");
+
+        cut.WaitForAssertion(() =>
+        {
+            cut.Markup.ShouldContain("GDPR operations");
+            cut.Markup.ShouldContain("EventStore GDPR client contract");
+            FindFluentButton(cut, "Request erasure").HasAttribute("disabled").ShouldBeTrue();
+            FindFluentButton(cut, "Restrict processing").HasAttribute("disabled").ShouldBeTrue();
+            FindFluentButton(cut, "Lift restriction").HasAttribute("disabled").ShouldBeTrue();
+            FindFluentButton(cut, "Add consent").HasAttribute("disabled").ShouldBeTrue();
+            FindFluentButton(cut, "Revoke consent").HasAttribute("disabled").ShouldBeTrue();
+            FindFluentButton(cut, "Export party data").HasAttribute("disabled").ShouldBeTrue();
+            FindFluentButton(cut, "Processing records").HasAttribute("disabled").ShouldBeTrue();
+            cut.Markup.ShouldNotContain("api/v1/admin");
+        });
+    }
+
+    [Fact]
     public void PartiesAdminPortal_UnauthorizedOrTenantChange_ClearsRowsAndIgnoresStaleResponses()
     {
         var api = new RecordingAdminPortalApiClient();

@@ -1,8 +1,10 @@
 using Hexalith.FrontComposer.Contracts.Communication;
+using Hexalith.Parties.Client.Abstractions;
 using Hexalith.Parties.AdminPortal.Services;
 using Hexalith.Parties.Contracts.Models;
 using Hexalith.Parties.Contracts.ValueObjects;
 
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 
 using Shouldly;
@@ -11,6 +13,39 @@ namespace Hexalith.Parties.AdminPortal.Tests.Services;
 
 public sealed class PartiesAdminPortalApiClientTests
 {
+    [Fact]
+    public async Task ListPartiesAsync_WhenPartiesQueryClientIsRegistered_PrefersTypedClientBoundaryAsync()
+    {
+        var partiesQueryClient = new RecordingPartiesQueryClient();
+        partiesQueryClient.ListResult = new PagedResult<PartyIndexEntry>
+        {
+            Items = [],
+            Page = 1,
+            PageSize = 100,
+            TotalCount = 0,
+            TotalPages = 0,
+        };
+        var queryService = new RecordingQueryService();
+        using ServiceProvider serviceProvider = new ServiceCollection()
+            .AddSingleton<IPartiesQueryClient>(partiesQueryClient)
+            .AddSingleton<IQueryService>(queryService)
+            .BuildServiceProvider();
+        PartiesAdminPortalApiClient client = new(
+            serviceProvider,
+            Options.Create(new PartiesAdminPortalOptions()));
+
+        AdminPortalQueryResult<PagedResult<PartyIndexEntry>> result = await client.ListPartiesAsync(
+            new AdminPortalListRequest(Page: 1, PageSize: 250, Type: PartyType.Organization, Active: false),
+            CancellationToken.None);
+
+        result.Payload.PageSize.ShouldBe(100);
+        partiesQueryClient.ListCallCount.ShouldBe(1);
+        partiesQueryClient.LastListRequest.ShouldNotBeNull().PageSize.ShouldBe(100);
+        partiesQueryClient.LastListRequest.ShouldNotBeNull().Type.ShouldBe(PartyType.Organization);
+        partiesQueryClient.LastListRequest.ShouldNotBeNull().Active.ShouldBe(false);
+        queryService.CallCount.ShouldBe(0);
+    }
+
     [Fact]
     public async Task ListPartiesAsync_UsesFrontComposerQueryServiceWithPartyDomainAndBoundedPagingAsync()
     {
@@ -215,4 +250,46 @@ public sealed class PartiesAdminPortalApiClientTests
             return Task.FromResult(new QueryResult<T>(items, _totalCount, ETag: null));
         }
     }
+
+    private sealed class RecordingPartiesQueryClient : IPartiesQueryClient
+    {
+        public PagedResult<PartyIndexEntry>? ListResult { get; set; }
+
+        public ListRequestSnapshot? LastListRequest { get; private set; }
+
+        public int ListCallCount { get; private set; }
+
+        public Task<PartyDetail> GetPartyAsync(string partyId, CancellationToken ct)
+            => throw new NotImplementedException();
+
+        public Task<PagedResult<PartyIndexEntry>> ListPartiesAsync(
+            int page,
+            int pageSize,
+            PartyType? type,
+            bool? active,
+            DateTimeOffset? createdAfter,
+            DateTimeOffset? createdBefore,
+            DateTimeOffset? modifiedAfter,
+            DateTimeOffset? modifiedBefore,
+            CancellationToken ct)
+        {
+            ct.ThrowIfCancellationRequested();
+            ListCallCount++;
+            LastListRequest = new(page, pageSize, type, active, createdAfter, createdBefore, modifiedAfter, modifiedBefore);
+            return Task.FromResult(ListResult ?? new PagedResult<PartyIndexEntry> { Items = [] });
+        }
+
+        public Task<PagedResult<PartySearchResult>> SearchPartiesAsync(string query, int page, int pageSize, CancellationToken ct)
+            => throw new NotImplementedException();
+    }
+
+    private sealed record ListRequestSnapshot(
+        int Page,
+        int PageSize,
+        PartyType? Type,
+        bool? Active,
+        DateTimeOffset? CreatedAfter,
+        DateTimeOffset? CreatedBefore,
+        DateTimeOffset? ModifiedAfter,
+        DateTimeOffset? ModifiedBefore);
 }

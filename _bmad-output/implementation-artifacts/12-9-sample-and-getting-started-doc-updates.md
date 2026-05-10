@@ -21,6 +21,17 @@ so that I onboard against the canonical platform pattern.
 9. Given adopter-facing examples include party data, error output, logs, or event payloads, then they avoid regulated personal data, access tokens, signing keys, tenant membership dictionaries, raw protected payloads, stack traces, DAPR sidecar configuration details, and PII in filenames, log messages, screenshots, or copied snippets.
 10. Given tests are complete, then sample tests, docs/link/source fitness tests, and focused build checks prove that old Parties REST/admin/MCP route literals are absent from adopter docs/sample production code, the sample package references stay within the approved boundary, and the EventStore-fronted onboarding path is internally consistent.
 
+## Party-Mode Review Clarifications
+
+- Contract source of truth: final command/query, auth/tenant header, RBAC, routing, and response examples must be copied from accepted predecessor implementation evidence, especially Stories 12.4-12.6. Do not reconstruct public contracts from Parties internals or blocked consumer stories.
+- Public gateway boundary: adopter-facing docs and sample production code must not present Parties as the public API surface. All public command/query examples go through EventStore `POST /api/v1/commands` or `POST /api/v1/queries` with `Domain="party"` unless a later accepted architecture decision changes the domain.
+- Ownership split: EventStore owns public authentication, tenant resolution, RBAC, command/query routing, and generic response mapping. Parties owns domain execution, actors, projections, and internal domain behavior. `parties-mcp` is a separate MCP integration host, not the public command/query gateway and not a replacement for EventStore.
+- Package/reference rule: sample package references are allow-listed only. Any dependency beyond `Hexalith.Parties.Client`, `Hexalith.Parties.Contracts`, `Hexalith.Parties.ServiceDefaults` where needed, and subscriber-owned DAPR packages requires an explicit story update.
+- Text guardrail scope: scan `README.md`, `docs/getting-started.md`, `samples/Hexalith.Parties.Sample/**`, sample project files, and relevant sample tests. Tests may contain denylist literals as assertions. Historical story artifacts, generated output, `bin/`, `obj/`, package lock files, and archived notes are out of scope unless explicitly listed in a named allowlist with a reason.
+- Forbidden positioning: adopter-facing docs and sample production code must not describe Swagger/OpenAPI, actor-host `/mcp`, in-process MCP, direct Parties REST/admin routes, projection endpoints, `X-GDPR-Warning`, or Parties-hosted command/query routes as supported setup or integration paths.
+- MCP blocker wording: if `parties-mcp` is unavailable or not accepted when this story is implemented, use dated blocker language instead of routing users through the Parties actor host.
+- Documentation UX: screenshots, diagrams, and code samples need descriptive alt text or adjacent prose, must not rely on color alone, and should keep EventStore/Parties boundary language plain and culture-neutral.
+
 ## Tasks / Subtasks
 
 - [ ] Confirm predecessor gates and current contract state. (AC: 1-10)
@@ -91,7 +102,7 @@ so that I onboard against the canonical platform pattern.
 - Epic 12 is sourced from `_bmad-output/planning-artifacts/sprint-change-proposal-2026-05-07.md`; that proposal is authoritative for Story 12.9.
 - The pivot decision is that all public command/query traffic goes through EventStore. `Hexalith.Parties` is the actor host/projection runtime behind EventStore, not the adopter-facing REST or MCP surface.
 - Story 12.9 is Wave 2 and follows the client, MCP, admin portal, and picker migration stories. Its docs must describe the accepted surfaces those stories create, not old compatibility paths.
-- Story 12.5 is currently blocked until Wave 1 behavior lands or freezes. Documentation may define guardrails and placeholders, but final runnable command/query snippets require the frozen EventStore client/gateway contract.
+- Story 12.5 was blocked when this story was created, but current implementation status must be treated as authoritative. If the typed client/gateway contract is accepted when development starts, use that evidence; if it is still blocked or materially disputed, limit implementation to red guardrail tests, documentation placeholders with explicit blockers, and source-text cleanup that does not fabricate working commands.
 - No `project-context.md` persistent fact file was found during story creation.
 
 ### Current Implementation to Inspect
@@ -138,6 +149,9 @@ so that I onboard against the canonical platform pattern.
   - Sample production code contains no old direct Parties REST/admin route literals and no old in-process MCP endpoint instructions.
   - Sample project references stay limited to client/contracts/service defaults where needed plus subscriber-owned DAPR packages.
   - Sample event handler tests still prove idempotent delivery, tolerant deserialization, unknown-event acknowledgement, and no redelivery loops for unhandled additive events.
+  - Docs/source fitness tests check internal consistency of the onboarding path, not only absence of retired route literals.
+  - Package/reference tests parse project files where practical rather than relying only on raw text scans.
+  - Relative docs links and referenced sample files are checked without requiring external network access in normal CI.
   - If Story 12.5 or 12.6 remains blocked, docs tests assert a dated blocker is present instead of runnable final snippets.
 - Run at least:
   - `dotnet test tests/Hexalith.Parties.Sample.Tests/Hexalith.Parties.Sample.Tests.csproj --configuration Release`
@@ -204,4 +218,29 @@ TBD
 
 | Date | Version | Description | Author |
 |---|---:|---|---|
+| 2026-05-10 | 0.2 | Party-mode review completed; applied gateway-boundary, source-of-truth, scan-scope, MCP, package-boundary, and documentation UX clarifications. | Codex |
 | 2026-05-10 | 0.1 | Created ready-for-dev story through BMAD pre-dev hardening automation. | Codex |
+
+## Party-Mode Review
+
+- Date/time: 2026-05-10T17:02:14+02:00
+- Selected story key: `12-9-sample-and-getting-started-doc-updates`
+- Command/skill invocation used: `/bmad-party-mode 12-9-sample-and-getting-started-doc-updates; review;`
+- Participating BMAD agents: Winston (System Architect), Amelia (Senior Software Engineer), Murat (Master Test Architect and Quality Advisor), Paige (Technical Writer)
+- Findings summary:
+  - Public docs risk freezing guessed contracts while predecessor stories are still in review or blocked.
+  - Adopter-facing docs need a hard EventStore gateway boundary and must not present Parties internals as public APIs.
+  - Guardrail scans need explicit path scope and allowlist rules to avoid false positives from tests or historical artifacts.
+  - Package/reference rules should be allow-list based and parsed where practical.
+  - MCP docs need clear `parties-mcp` separation or dated blocker wording.
+  - Docs examples need safe placeholder data, narrow GDPR wording, and accessible/culture-neutral presentation.
+- Changes applied:
+  - Added party-mode review clarifications for contract source of truth, public gateway boundary, EventStore/Parties/`parties-mcp` ownership split, package allow-listing, text guardrail scope, forbidden public positioning, MCP blocker wording, and docs UX expectations.
+  - Updated stale Story 12.5 context so current implementation evidence is authoritative and blocked/disputed contracts require placeholders instead of fabricated runnable snippets.
+  - Tightened testing guidance around onboarding consistency, parsed project-file checks, and offline relative-link/reference validation.
+- Findings deferred:
+  - Final command/query payload shape, auth/tenant header shape, RBAC examples, and route mapping examples remain tied to accepted predecessor implementation evidence.
+  - Whether historical migration notes may mention retired routes requires product/docs judgment.
+  - Whether forbidden literal scanning becomes a shared repo-wide guardrail remains out of scope for this story.
+  - Whether EventStore Admin UI screenshots are required now or can stay text-first until the UI stabilizes remains deferred.
+- Final recommendation: ready-for-dev

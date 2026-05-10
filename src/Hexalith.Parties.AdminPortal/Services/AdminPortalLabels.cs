@@ -150,6 +150,25 @@ public sealed record AdminPortalLabels
 
     public string ErasedAt { get; init; } = "Erased at";
 
+    public string GdprOperations { get; init; } = "GDPR operations";
+
+    public string GdprOperationsUnavailable { get; init; } =
+        "GDPR operations are unavailable until the EventStore GDPR client contract is available.";
+
+    public string RequestErasure { get; init; } = "Request erasure";
+
+    public string RestrictProcessing { get; init; } = "Restrict processing";
+
+    public string LiftRestriction { get; init; } = "Lift restriction";
+
+    public string AddConsent { get; init; } = "Add consent";
+
+    public string RevokeConsent { get; init; } = "Revoke consent";
+
+    public string ExportPartyData { get; init; } = "Export party data";
+
+    public string ProcessingRecords { get; init; } = "Processing records";
+
     public string SystemMetadata { get; init; } = "System metadata";
 
     public string PartyId { get; init; } = "Party id";

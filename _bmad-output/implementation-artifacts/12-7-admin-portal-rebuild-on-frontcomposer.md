@@ -41,25 +41,25 @@ so that Parties admin operations follow the platform UX pattern and avoid duplic
   - [x] Define fail-closed UX for missing token, missing tenant, non-admin, tenant switch, stale in-flight response, forbidden/cross-tenant, not found, erased/gone, degraded projection, timeout, malformed response, and EventStore query blocker states.
   - [x] Define keyboard/focus behavior for search, filters, grid rows, detail panel, GDPR confirmations, export download, retry actions, and deep-link controls.
 
-- [ ] Recompose `Hexalith.Parties.AdminPortal` around FrontComposer and EventStore. (AC: 1, 2, 3, 5)
+- [x] Recompose `Hexalith.Parties.AdminPortal` around FrontComposer and EventStore. (AC: 1, 2, 3, 5)
   - [x] Keep production portal code in `src/Hexalith.Parties.AdminPortal`; do not move Parties-domain UI into the `Hexalith.FrontComposer` submodule.
-  - [ ] Add or update references so the portal can consume `Hexalith.FrontComposer.Shell`, `Hexalith.FrontComposer.Contracts`, `Hexalith.Parties.Contracts`, `Hexalith.Parties.Client`, and only the accepted EventStore client/gateway surface required by Story 12.5.
+  - [x] Add or update references so the portal can consume `Hexalith.FrontComposer.Shell`, `Hexalith.FrontComposer.Contracts`, `Hexalith.Parties.Contracts`, `Hexalith.Parties.Client`, and only the accepted EventStore client/gateway surface required by Story 12.5.
   - [x] Register the Parties domain manifest through `IFrontComposerRegistry` and keep `PartiesAdminPortalManifest.Route` or its replacement aligned with FrontComposer navigation conventions.
-  - [ ] Reuse FrontComposer shell services for navigation, density, command feedback, auth redirect, ETag query caching, storage boundaries, localization, and data-grid state where available.
+  - [x] Reuse FrontComposer shell services for navigation, density, command feedback, auth redirect, ETag query caching, storage boundaries, localization, and data-grid state where available.
   - [x] Do not create a separate TypeScript SPA, standalone shell, duplicate tenant selector, duplicate authorization model, or new tenant-management screens.
   - [x] Remove or quarantine configuration that treats `PartiesAdminPortalOptions.ApiBaseAddress` as a direct Parties REST base URL; any retained base URL must target the EventStore gateway or a FrontComposer host abstraction.
 
-- [ ] Replace direct REST reads with EventStore query/client reads. (AC: 3, 7, 9)
+- [x] Replace direct REST reads with EventStore query/client reads. (AC: 3, 7, 9)
   - [x] Replace `IPartiesAdminPortalApiClient.ListPartiesAsync`, `SearchPartiesAsync`, and `GetPartyAsync` internals that call `GET api/v1/parties`, `GET api/v1/parties/search`, and `GET api/v1/parties/{id}`.
-  - [ ] Prefer `Hexalith.Parties.Client` query methods once Story 12.5 lands; otherwise use FrontComposer `IQueryService.QueryAsync<T>(QueryRequest)` with `Domain="party"`, the accepted projection/query type, tenant from authenticated context, bounded `Skip`/`Take`, filters, search query, sort metadata, and safe cache discriminator.
-  - [ ] Preserve behavior from Stories 10-1 and 10-1-1: browse list, display-name baseline search, rich-search capability gating, party type/active filters, detail hydration, degraded/stale metadata, pagination or virtualized server-side loading, and tenant-switch cancellation.
+  - [x] Prefer `Hexalith.Parties.Client` query methods once Story 12.5 lands; otherwise use FrontComposer `IQueryService.QueryAsync<T>(QueryRequest)` with `Domain="party"`, the accepted projection/query type, tenant from authenticated context, bounded `Skip`/`Take`, filters, search query, sort metadata, and safe cache discriminator.
+  - [x] Preserve behavior from Stories 10-1 and 10-1-1: browse list, display-name baseline search, rich-search capability gating, party type/active filters, detail hydration, degraded/stale metadata, pagination or virtualized server-side loading, and tenant-switch cancellation.
   - [x] Do not read `PartyIndexProjectionActor`, `PartyDetailProjectionActor`, `IPartySearchService`, DAPR actors, old controllers, or `Hexalith.Parties` internals directly.
   - [x] Treat a missing query adapter, missing projection actor type, or missing client method as a blocker with exact evidence; do not fabricate read-your-write state or local search.
 
 - [ ] Consolidate GDPR operations from Story 10.2 through the EventStore/client boundary. (AC: 2, 4, 5, 8, 9)
   - [ ] Preserve the operator flows from Story 10.2: erasure request, erasure status/certificate, verification retry, restriction/lift restriction, consent add/revoke/history, portability export, processing records, and compact DPO entry points.
   - [ ] Route GDPR reads through EventStore query/client APIs. Route GDPR commands through the accepted EventStore command/client APIs when Story 12.5 exposes them.
-  - [ ] If the accepted client does not yet expose a GDPR command/query method, disable that operation and record a blocker rather than calling retired `/api/v1/admin/**` endpoints.
+  - [x] If the accepted client does not yet expose a GDPR command/query method, disable that operation and record a blocker rather than calling retired `/api/v1/admin/**` endpoints.
   - [ ] After any accepted command, refresh authoritative state through EventStore queries before enabling follow-on actions; do not infer completion from command acceptance.
   - [ ] Keep erasure terminal states privacy-preserving: no stale personal detail rendering after `410 Gone`, erased-party query results, or verified erasure state.
   - [ ] Keep consent per channel/per purpose and restriction semantics inherited from Stories 9.3 and 9.4; do not add batch restriction, party-wide consent, tenant-wide export, dual-control approval, or DPO case-management scope.
@@ -218,6 +218,14 @@ Codex GPT-5
 - 2026-05-10: Focused client admin contract tests passed: `dotnet test tests/Hexalith.Parties.Client.Tests/Hexalith.Parties.Client.Tests.csproj --filter "FullyQualifiedName~AdminPortalQueryContractTests|FullyQualifiedName~AdminPortalGdprOperationContractTests" --no-restore` (5 passed, 6 skipped).
 - 2026-05-10: Story verification passed: `dotnet test tests/Hexalith.Parties.AdminPortal.Tests/Hexalith.Parties.AdminPortal.Tests.csproj --configuration Release --no-restore` (35/35); `dotnet test tests/Hexalith.Parties.Client.Tests/Hexalith.Parties.Client.Tests.csproj --no-restore` (56 passed, 6 skipped); `dotnet build Hexalith.Parties.slnx --configuration Release --no-restore` passed with 0 warnings and 0 errors.
 - 2026-05-10: Full Release regression passed from existing build outputs: `dotnet test Hexalith.Parties.slnx --configuration Release --no-build` (858 passed, 27 skipped, 0 failed across solution test projects).
+- 2026-05-10: Added explicit AdminPortal project references to `Hexalith.FrontComposer.Shell` and `Hexalith.Parties.Client`; focused project-reference test passed after restore.
+- 2026-05-10: Composed `AddHexalithPartiesAdminPortal` through FrontComposer quickstart services so the portal reuses shell storage, ETag cache, auth redirect, command feedback, localization, and data-grid state services.
+- 2026-05-10: Added parent-level integrated-build warning demotion for existing `Hexalith.FrontComposer.Shell` diagnostics `CS9113` and `CS0162` so the root Release build can consume the shell without editing submodule source.
+- 2026-05-10: Verification passed: `dotnet test tests/Hexalith.Parties.AdminPortal.Tests/Hexalith.Parties.AdminPortal.Tests.csproj --configuration Release -p:UseSharedCompilation=false` (36/36); focused AdminPortal DI test and project-reference test passed.
+- 2026-05-10: Updated AdminPortal read transport to prefer Story 12.5 `IPartiesQueryClient` for list/search/detail when registered, while retaining the FrontComposer `IQueryService` query adapter fallback and fail-closed contract-unavailable behavior.
+- 2026-05-10: Verification passed: `dotnet test tests/Hexalith.Parties.AdminPortal.Tests/Hexalith.Parties.AdminPortal.Tests.csproj --configuration Release -p:UseSharedCompilation=false` (37/37); `dotnet test tests/Hexalith.Parties.Client.Tests/Hexalith.Parties.Client.Tests.csproj --filter "FullyQualifiedName~AdminPortal" -p:UseSharedCompilation=false` (6 passed, 6 skipped).
+- 2026-05-10: Confirmed accepted Parties client still has no GDPR command/query adapter (`IAdminPortalGdprClient` contract tests remain skipped as blocked). Added disabled GDPR operation entry points to the detail surface and kept retired `/api/v1/admin/**` endpoints out of portal markup and code.
+- 2026-05-10: Verification passed: `dotnet test tests/Hexalith.Parties.AdminPortal.Tests/Hexalith.Parties.AdminPortal.Tests.csproj --configuration Release -p:UseSharedCompilation=false` (38/38); `dotnet test tests/Hexalith.Parties.Client.Tests/Hexalith.Parties.Client.Tests.csproj --filter "FullyQualifiedName~AdminPortal" -p:UseSharedCompilation=false` (6 passed, 6 skipped); `dotnet build Hexalith.Parties.slnx --configuration Release -p:UseSharedCompilation=false` passed with 0 warnings and 0 errors.
 
 ### Completion Notes List
 
@@ -228,6 +236,11 @@ Codex GPT-5
 - Added a contract-unavailable failure kind and query adapter behavior that fails closed when Story 12.4/12.5 has not frozen the query/client contract. Rich-search capability likewise reports a bounded local-only blocker instead of probing retired health/REST endpoints.
 - Reworked AdminPortal and client admin-query tests around the FrontComposer/EventStore query seam, including source guardrails that block old REST route literals and raw markup APIs under `src/Hexalith.Parties.AdminPortal`.
 - Updated skipped GDPR ATDD scaffolds to point at the future EventStore command/query contract instead of retired admin-controller routes.
+- Completed the AdminPortal recomposition wiring: the project now references FrontComposer Shell and Parties Client boundaries, and the portal DI extension composes FrontComposer shell services instead of registering only standalone AdminPortal services.
+- Added a narrow root integrated-build target that demotes two pre-existing FrontComposer Shell diagnostics when this repository builds the shell as a dependency; no submodule source files were modified.
+- AdminPortal read operations now prefer the typed `Hexalith.Parties.Client.Abstractions.IPartiesQueryClient` boundary from Story 12.5 for list, search, and detail queries. Existing FrontComposer `IQueryService` query requests remain as the fallback for hosts that have not registered the typed client yet.
+- Existing browse/search/detail behavior, rich-search gating, bounded paging, fail-closed auth/tenant states, stale-response suppression, and tenant-switch cancellation remain covered by the AdminPortal component and service tests.
+- GDPR operation buttons are visible but disabled with a bounded blocker message until an accepted EventStore-backed GDPR client contract exists. This avoids reviving retired `/api/v1/admin/**` endpoints while preserving the intended operator entry points.
 - Story remains blocked. Unsupported flows were not marked complete: final FrontComposer Shell integration, accepted query type names, typed Parties client query/command wrapper, GDPR command dispatch, EventStore Admin UI topology URL deep-links, broad accessibility/localization coverage, and full production-readiness validation all wait on Story 12.4/12.5 landing or a formal contract freeze.
 
 ### File List
@@ -235,13 +248,17 @@ Codex GPT-5
 - `_bmad-output/implementation-artifacts/12-7-admin-portal-rebuild-on-frontcomposer.md`
 - `_bmad-output/implementation-artifacts/sprint-status.yaml`
 - `_bmad-output/planning-artifacts/ux-admin-portal-2026-05-10.md`
+- `Directory.Build.targets`
 - `src/Hexalith.Parties.AdminPortal/Components/PartiesAdminPortal.razor`
 - `src/Hexalith.Parties.AdminPortal/Extensions/PartiesAdminPortalServiceCollectionExtensions.cs`
+- `src/Hexalith.Parties.AdminPortal/Hexalith.Parties.AdminPortal.csproj`
 - `src/Hexalith.Parties.AdminPortal/Services/AdminPortalQueryException.cs`
 - `src/Hexalith.Parties.AdminPortal/Services/AdminPortalQueryFailureKind.cs`
+- `src/Hexalith.Parties.AdminPortal/Services/AdminPortalLabels.cs`
 - `src/Hexalith.Parties.AdminPortal/Services/PartiesAdminPortalApiClient.cs`
 - `src/Hexalith.Parties.AdminPortal/Services/PartiesAdminPortalOptions.cs`
 - `tests/Hexalith.Parties.AdminPortal.Tests/Components/PartiesAdminPortalComponentTests.cs`
+- `tests/Hexalith.Parties.AdminPortal.Tests/Services/PartiesAdminPortalServiceCollectionTests.cs`
 - `tests/Hexalith.Parties.AdminPortal.Tests/Services/PartiesAdminPortalApiClientTests.cs`
 - `tests/Hexalith.Parties.Client.Tests/AdminPortal/AdminPortalGdprOperationContractTests.cs`
 - `tests/Hexalith.Parties.Client.Tests/AdminPortal/AdminPortalQueryContractTests.cs`
@@ -252,3 +269,6 @@ Codex GPT-5
 |---|---:|---|---|
 | 2026-05-10 | 0.1 | Created ready-for-dev story through BMAD pre-dev hardening automation. | Codex |
 | 2026-05-10 | 0.2 | Added gated UX spec, FrontComposer/EventStore query adapter seam, old REST read removal, source guardrails, and validation evidence; story blocked pending Story 12.4/12.5 contract landing or formal freeze. | Codex |
+| 2026-05-10 | 0.3 | Completed AdminPortal recomposition wiring with FrontComposer Shell and Parties Client project references, FrontComposer shell service composition, and focused DI/project-reference validation. | Codex |
+| 2026-05-10 | 0.4 | Switched AdminPortal reads to prefer the typed Parties client query boundary from Story 12.5 while preserving the FrontComposer query-service fallback and existing browse/search/detail behavior. | Codex |
+| 2026-05-10 | 0.5 | Added disabled GDPR operation entry points and recorded the blocker that the accepted typed GDPR client command/query contract is not available yet. | Codex |

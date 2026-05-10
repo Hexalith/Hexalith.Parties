@@ -1,0 +1,5 @@
+<Project>
+  <PropertyGroup Condition="'$(MSBuildProjectName)' == 'Hexalith.FrontComposer.Shell'">
+    <WarningsNotAsErrors>$(WarningsNotAsErrors);CS9113;CS0162</WarningsNotAsErrors>
+  </PropertyGroup>
+</Project>

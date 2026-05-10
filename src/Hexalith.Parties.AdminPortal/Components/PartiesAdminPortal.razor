@@ -212,6 +212,20 @@
                     </dl>
                 </section>
 
+                <section aria-labelledby="@($"gdpr-operations-heading-{_instanceId}")">
+                    <h3 id="@($"gdpr-operations-heading-{_instanceId}")">@EffectiveLabels.GdprOperations</h3>
+                    <p role="status" aria-live="polite">@EffectiveLabels.GdprOperationsUnavailable</p>
+                    <div class="hx-parties-admin__gdpr-actions">
+                        <FluentButton Disabled="true">@EffectiveLabels.RequestErasure</FluentButton>
+                        <FluentButton Disabled="true">@EffectiveLabels.RestrictProcessing</FluentButton>
+                        <FluentButton Disabled="true">@EffectiveLabels.LiftRestriction</FluentButton>
+                        <FluentButton Disabled="true">@EffectiveLabels.AddConsent</FluentButton>
+                        <FluentButton Disabled="true">@EffectiveLabels.RevokeConsent</FluentButton>
+                        <FluentButton Disabled="true">@EffectiveLabels.ExportPartyData</FluentButton>
+                        <FluentButton Disabled="true">@EffectiveLabels.ProcessingRecords</FluentButton>
+                    </div>
+                </section>
+
                 @* P-pass-2 D3.1: scoped party id is intentionally not displayed as a user-facing
                     label per Story 10.1 task line 60 ("do not display tenant:domain:aggregateId
                     scoped ids as user-facing labels"). *@
