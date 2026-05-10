@@ -1,5 +1,6 @@
 # generated: 2026-05-02
 # last_updated: 2026-05-10  (story 12-1 advanced review -> done after bmad-code-review: 7 decisions resolved (deny-by-default DAPR access control, parties added as eventstore caller + /process restriction, Tenants Aspire removal accepted with documented divergence, explicit per-service pubsub scopes, multi-audience JWT tolerance, Hexalith.Parties.Aspire helper deleted, AppHost-source secret-scan added). 22 patches applied (15 originals + 7 decision-driven). 15 items deferred to deferred-work.md. AppHost build clean; deploy-validation 37/37; AppHost topology + projection-contract 11/11; full solution build clean.)
+# last_updated: 2026-05-10  (story 12-6 created as ready-for-dev for the separate Parties MCP thin host over the typed Parties/EventStore client boundary.)
 # last_updated: 2026-05-10  (story 12-4 moved ready-for-dev -> blocked after party-mode review: normal test rewrite is gated until predecessor behavior from Stories 12.1-12.3 is merged or formally frozen; story updated with coverage matrix, tier ownership, routing/rejection evidence, retired-surface outcome, and deferred-decision clarifications.)
 # last_updated: 2026-05-09  (story 12-5 created as ready-for-dev for the Parties client thin wrapper over EventStore command/query submission.)
 # last_updated: 2026-05-09  (story 12-1 advanced in-progress -> review: AppHost recomposed around standalone eventstore, eventstore-admin, eventstore-admin-ui, parties, and tenants resources; split DAPR access-control files added; shared statestore/pubsub preserved with keyPrefix=none; focused AppHost/deploy-validation tests green; AppHost and solution builds clean; full-solution residual failures logged in deferred-work.md; runtime Aspire dashboard proof not captured because `dotnet aspire` CLI is unavailable on PATH.)
@@ -159,7 +160,7 @@ development_status:
   12-3-validation-relocation-and-tenant-auth-ownership: ready-for-dev
   12-4-server-tier-1-tier-2-test-rewrite: blocked
   12-5-parties-client-thin-wrapper: ready-for-dev
-  12-6-parties-mcp-thin-host: backlog
+  12-6-parties-mcp-thin-host: ready-for-dev
   12-7-admin-portal-rebuild-on-frontcomposer: backlog
   12-8-picker-rewrite: backlog
   12-9-sample-and-getting-started-doc-updates: backlog
