@@ -1,4 +1,6 @@
 @inject AdminPortalPartyQueryService QueryService
+@inject AdminPortalEventStoreAdminLinks EventStoreLinks
+@inject AdminPortalGdprStateCoordinator GdprCoordinator
 @inject IJSRuntime JsRuntime
 
 <section aria-labelledby="@($"gdpr-operations-heading-{_instanceId}")">
@@ -51,6 +53,16 @@
         @if (!string.IsNullOrWhiteSpace(_correlationId))
         {
             <p>@Labels.GdprCorrelationId: @_correlationId</p>
+            @if (EventStoreLinks.BuildCorrelationLink(_correlationId) is { } correlationLink)
+            {
+                <a href="@correlationLink" target="_blank" rel="noopener noreferrer">@Labels.OpenEventStoreCorrelation</a>
+            }
+            else
+            {
+                <FluentButton Appearance="ButtonAppearance.Outline" Disabled="true">
+                    @Labels.EventStoreAdminUnavailable
+                </FluentButton>
+            }
         }
     </section>
 
@@ -119,6 +131,9 @@
     public AdminPortalLabels Labels { get; set; } = new();
 
     [Parameter]
+    public string? TenantContextSignature { get; set; }
+
+    [Parameter]
     public EventCallback RefreshParty { get; set; }
 
     private IReadOnlyList<ConsentRecord> ConsentRecords
@@ -175,6 +190,7 @@
             _processingRecords = [];
             _exportFileName = null;
             _lastOutcome = null;
+            GdprCoordinator.Track(TenantContextSignature, Party.Id);
         }
     }
 
@@ -217,8 +233,14 @@
     }
 
     private async Task RetryVerificationAsync()
-        => await RunCommandAsync(() => QueryService.ApiClient
-            .RetryErasureVerificationAsync(Party.Id, CancellationToken.None)).ConfigureAwait(false);
+        => await RunCommandAsync(async () =>
+        {
+            AdminPortalGdprCommandResult result = await QueryService.ApiClient
+                .RetryErasureVerificationAsync(Party.Id, CancellationToken.None)
+                .ConfigureAwait(false);
+            await RefreshErasureStatusAsync().ConfigureAwait(false);
+            return result;
+        }).ConfigureAwait(false);
 
     private async Task RestrictAsync()
         => await RunCommandAsync(async () =>

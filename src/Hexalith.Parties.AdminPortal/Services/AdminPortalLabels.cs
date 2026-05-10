@@ -222,6 +222,14 @@ public sealed record AdminPortalLabels
 
     public string ProcessingRecords { get; init; } = "Processing records";
 
+    public string EventStoreLinks { get; init; } = "EventStore links";
+
+    public string OpenEventStoreStream { get; init; } = "Open EventStore stream";
+
+    public string OpenEventStoreCorrelation { get; init; } = "Open EventStore correlation";
+
+    public string EventStoreAdminUnavailable { get; init; } = "EventStore Admin UI unavailable";
+
     public string SystemMetadata { get; init; } = "System metadata";
 
     public string PartyId { get; init; } = "Party id";

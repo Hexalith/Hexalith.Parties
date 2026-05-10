@@ -1,7 +1,11 @@
+using System.Text.Json;
+
 using Hexalith.FrontComposer.Contracts.Communication;
+using Hexalith.Parties.Client.AdminPortal;
 using Hexalith.Parties.Client.Abstractions;
 using Hexalith.Parties.AdminPortal.Services;
 using Hexalith.Parties.Contracts.Models;
+using Hexalith.Parties.Contracts.Security;
 using Hexalith.Parties.Contracts.ValueObjects;
 
 using Microsoft.Extensions.DependencyInjection;
@@ -79,6 +83,24 @@ public sealed class PartiesAdminPortalApiClientTests
         result.Payload.Page.ShouldBe(2);
         result.Payload.PageSize.ShouldBe(100);
         result.Payload.TotalPages.ShouldBe(2);
+    }
+
+    [Fact]
+    public async Task ListPartiesAsync_PreservesEventStoreNotModifiedSignalInMetadataAsync()
+    {
+        var queryService = new RecordingQueryService();
+        queryService.Enqueue(
+            Array.Empty<PartyIndexEntry>(),
+            totalCount: 0,
+            isNotModified: true);
+        PartiesAdminPortalApiClient client = CreateClient(queryService);
+
+        AdminPortalQueryResult<PagedResult<PartyIndexEntry>> result = await client.ListPartiesAsync(
+            new AdminPortalListRequest(Page: 1, PageSize: 20, Type: null, Active: null),
+            CancellationToken.None);
+
+        result.Metadata.StaleDataAge.ShouldBe("not-modified");
+        result.Payload.Items.ShouldBeEmpty();
     }
 
     [Fact]
@@ -189,6 +211,24 @@ public sealed class PartiesAdminPortalApiClientTests
     }
 
     [Fact]
+    public async Task GdprMalformedQueryResponse_MapsToTransientFailureWithoutParserDetailAsync()
+    {
+        using ServiceProvider serviceProvider = new ServiceCollection()
+            .AddSingleton<IAdminPortalGdprClient>(new MalformedGdprClient())
+            .BuildServiceProvider();
+        PartiesAdminPortalApiClient client = new(
+            serviceProvider,
+            Options.Create(new PartiesAdminPortalOptions()));
+
+        AdminPortalQueryException ex = await Should.ThrowAsync<AdminPortalQueryException>(
+            () => client.GetProcessingRecordsAsync("party-1", CancellationToken.None));
+
+        ex.Kind.ShouldBe(AdminPortalQueryFailureKind.TransientFailure);
+        ex.Message.ShouldNotContain("<html>");
+        ex.Message.ShouldNotContain("unexpected-token");
+    }
+
+    [Fact]
     public async Task GetRichSearchCapabilityAsync_RecordsBlockedContractAsLocalOnlyAsync()
     {
         var queryService = new RecordingQueryService();
@@ -229,10 +269,13 @@ public sealed class PartiesAdminPortalApiClientTests
 
         public Exception? ExceptionToThrow { get; init; }
 
-        public void Enqueue<T>(IReadOnlyList<T> items, int totalCount)
+        private bool _isNotModified;
+
+        public void Enqueue<T>(IReadOnlyList<T> items, int totalCount, bool isNotModified = false)
         {
             _items = items;
             _totalCount = totalCount;
+            _isNotModified = isNotModified;
         }
 
         public Task<QueryResult<T>> QueryAsync<T>(QueryRequest request, CancellationToken cancellationToken = default)
@@ -247,7 +290,7 @@ public sealed class PartiesAdminPortalApiClientTests
             }
 
             IReadOnlyList<T> items = _items as IReadOnlyList<T> ?? [];
-            return Task.FromResult(new QueryResult<T>(items, _totalCount, ETag: null));
+            return Task.FromResult(new QueryResult<T>(items, _totalCount, ETag: null, _isNotModified));
         }
     }
 
@@ -292,4 +335,45 @@ public sealed class PartiesAdminPortalApiClientTests
         DateTimeOffset? CreatedBefore,
         DateTimeOffset? ModifiedAfter,
         DateTimeOffset? ModifiedBefore);
+
+    private sealed class MalformedGdprClient : IAdminPortalGdprClient
+    {
+        public Task<AdminPortalGdprCommandResult> RequestErasureAsync(string partyId, CancellationToken cancellationToken)
+            => throw new NotImplementedException();
+
+        public Task<PartyErasureStatusRecord?> GetErasureStatusAsync(string partyId, CancellationToken cancellationToken)
+            => throw new NotImplementedException();
+
+        public Task<ErasureCertificate?> GetErasureCertificateAsync(string partyId, CancellationToken cancellationToken)
+            => throw new NotImplementedException();
+
+        public Task<AdminPortalGdprCommandResult> RetryErasureVerificationAsync(string partyId, CancellationToken cancellationToken)
+            => throw new NotImplementedException();
+
+        public Task<AdminPortalGdprCommandResult> RestrictProcessingAsync(string partyId, string? reason, CancellationToken cancellationToken)
+            => throw new NotImplementedException();
+
+        public Task<AdminPortalGdprCommandResult> LiftRestrictionAsync(string partyId, CancellationToken cancellationToken)
+            => throw new NotImplementedException();
+
+        public Task<AdminPortalGdprCommandResult> AddConsentAsync(
+            string partyId,
+            string channelId,
+            string purpose,
+            LawfulBasis lawfulBasis,
+            CancellationToken cancellationToken)
+            => throw new NotImplementedException();
+
+        public Task<AdminPortalGdprCommandResult> RevokeConsentAsync(string partyId, string consentId, CancellationToken cancellationToken)
+            => throw new NotImplementedException();
+
+        public Task<IReadOnlyList<ConsentRecord>> GetConsentAsync(string partyId, CancellationToken cancellationToken)
+            => throw new NotImplementedException();
+
+        public Task<AdminPortalExportDownload> ExportPartyDataAsync(string partyId, CancellationToken cancellationToken)
+            => throw new NotImplementedException();
+
+        public Task<IReadOnlyList<ProcessingActivityRecord>> GetProcessingRecordsAsync(string partyId, CancellationToken cancellationToken)
+            => throw new JsonException("unexpected-token <html>");
+    }
 }

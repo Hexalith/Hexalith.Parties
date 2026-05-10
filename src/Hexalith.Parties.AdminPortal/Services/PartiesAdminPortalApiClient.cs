@@ -1,3 +1,5 @@
+using System.Text.Json;
+
 using Hexalith.FrontComposer.Contracts.Communication;
 using Hexalith.Parties.Client;
 using Hexalith.Parties.Client.Abstractions;
@@ -231,6 +233,14 @@ public sealed class PartiesAdminPortalApiClient : IPartiesAdminPortalApiClient
         {
             throw new AdminPortalQueryException(AdminPortalQueryFailureKind.TransientFailure, innerException: ex);
         }
+        catch (JsonException ex)
+        {
+            throw new AdminPortalQueryException(AdminPortalQueryFailureKind.TransientFailure, innerException: ex);
+        }
+        catch (NotSupportedException ex)
+        {
+            throw new AdminPortalQueryException(AdminPortalQueryFailureKind.TransientFailure, innerException: ex);
+        }
         catch (OperationCanceledException ex)
         {
             throw new AdminPortalQueryException(AdminPortalQueryFailureKind.TransientFailure, innerException: ex);
@@ -254,6 +264,14 @@ public sealed class PartiesAdminPortalApiClient : IPartiesAdminPortalApiClient
             throw new AdminPortalQueryException(MapFailureKind(ex), ex.Status, innerException: ex);
         }
         catch (TimeoutException ex)
+        {
+            throw new AdminPortalQueryException(AdminPortalQueryFailureKind.TransientFailure, innerException: ex);
+        }
+        catch (JsonException ex)
+        {
+            throw new AdminPortalQueryException(AdminPortalQueryFailureKind.TransientFailure, innerException: ex);
+        }
+        catch (NotSupportedException ex)
         {
             throw new AdminPortalQueryException(AdminPortalQueryFailureKind.TransientFailure, innerException: ex);
         }
@@ -291,6 +309,14 @@ public sealed class PartiesAdminPortalApiClient : IPartiesAdminPortalApiClient
         catch (PartiesClientException ex)
         {
             throw new AdminPortalQueryException(MapFailureKind(ex), ex.Status, innerException: ex);
+        }
+        catch (JsonException ex)
+        {
+            throw new AdminPortalQueryException(AdminPortalQueryFailureKind.TransientFailure, innerException: ex);
+        }
+        catch (NotSupportedException ex)
+        {
+            throw new AdminPortalQueryException(AdminPortalQueryFailureKind.TransientFailure, innerException: ex);
         }
     }
 

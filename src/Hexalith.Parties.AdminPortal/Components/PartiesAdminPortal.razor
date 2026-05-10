@@ -2,6 +2,8 @@
 @inject AdminPortalPartyQueryService QueryService
 @inject PartiesAdminListCoordinator ListCoordinator
 @inject IAdminPortalAuthorizationService AuthorizationService
+@inject AdminPortalEventStoreAdminLinks EventStoreLinks
+@inject AdminPortalGdprStateCoordinator GdprCoordinator
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @implements IDisposable
 
@@ -214,7 +216,22 @@
 
                 <PartyGdprOperationsPanel Party="_detail"
                                           Labels="EffectiveLabels"
+                                          TenantContextSignature="_authorizationState.ContextSignature"
                                           RefreshParty="RefreshSelectedPartyAsync" />
+
+                <section aria-labelledby="@($"eventstore-links-heading-{_instanceId}")">
+                    <h3 id="@($"eventstore-links-heading-{_instanceId}")">@EffectiveLabels.EventStoreLinks</h3>
+                    @if (EventStoreLinks.BuildStreamLink(_detail.Id) is { } streamLink)
+                    {
+                        <a href="@streamLink" target="_blank" rel="noopener noreferrer">@EffectiveLabels.OpenEventStoreStream</a>
+                    }
+                    else
+                    {
+                        <FluentButton Appearance="ButtonAppearance.Outline" Disabled="true">
+                            @EffectiveLabels.EventStoreAdminUnavailable
+                        </FluentButton>
+                    }
+                </section>
 
                 @* P-pass-2 D3.1: scoped party id is intentionally not displayed as a user-facing
                     label per Story 10.1 task line 60 ("do not display tenant:domain:aggregateId
@@ -410,6 +427,7 @@
 
         if (!_authorizationState.IsAuthenticated)
         {
+            GdprCoordinator.ResetForSignOut();
             _statusKind = StatusKind.SignInRequired;
             _detailEmptyKind = DetailEmptyKind.SignInRequired;
             ListCoordinator.Transition(AdminPortalListState.MissingToken);
@@ -418,6 +436,7 @@
 
         if (!_authorizationState.HasTenantContext)
         {
+            GdprCoordinator.ResetForTenantSwitch();
             _statusKind = StatusKind.TenantUnavailable;
             _detailEmptyKind = DetailEmptyKind.TenantUnavailable;
             ListCoordinator.Transition(AdminPortalListState.MissingTenant);
@@ -426,6 +445,7 @@
 
         if (!_authorizationState.IsAdmin)
         {
+            GdprCoordinator.ResetForAuthorizationFailure();
             _statusKind = StatusKind.AdminRequired;
             _detailEmptyKind = DetailEmptyKind.AccessDenied;
             ListCoordinator.Transition(AdminPortalListState.Forbidden);
@@ -668,6 +688,7 @@
                     _detail = null;
                     _detailMetadata = result.Metadata;
                     _detailEmptyKind = DetailEmptyKind.DetailErased;
+                    GdprCoordinator.ResetForErasedTerminalState();
                     _rows.RemoveAll(row => string.Equals(row.Id, partyId, StringComparison.Ordinal));
                 }
                 else
@@ -701,6 +722,23 @@
                 if (ex.Kind is AdminPortalQueryFailureKind.Gone or AdminPortalQueryFailureKind.NotFound)
                 {
                     _rows.RemoveAll(row => string.Equals(row.Id, partyId, StringComparison.Ordinal));
+                }
+
+                if (ex.Kind is AdminPortalQueryFailureKind.Gone)
+                {
+                    GdprCoordinator.ResetForErasedTerminalState();
+                }
+                else if (ex.Kind is AdminPortalQueryFailureKind.AuthenticationRequired)
+                {
+                    GdprCoordinator.ResetForSignOut();
+                }
+                else if (ex.Kind is AdminPortalQueryFailureKind.TenantRequired)
+                {
+                    GdprCoordinator.ResetForTenantSwitch();
+                }
+                else if (ex.Kind is AdminPortalQueryFailureKind.Forbidden)
+                {
+                    GdprCoordinator.ResetForAuthorizationFailure();
                 }
             }
         }
@@ -793,6 +831,7 @@
         // load fires (AC4 — wires the previously dead scaffolding into the live lifecycle).
         QueryService.ResetForTenantSwitch();
         ListCoordinator.ResetForTenantSwitch();
+        GdprCoordinator.ResetForTenantSwitch();
         _rows.Clear();
         _detail = null;
         _detailMetadata = null;
@@ -829,6 +868,22 @@
         _totalPages = 0;
         _totalCount = 0;
         _lastFailure = ex.Kind;
+        if (ex.Kind is AdminPortalQueryFailureKind.AuthenticationRequired)
+        {
+            GdprCoordinator.ResetForSignOut();
+        }
+        else if (ex.Kind is AdminPortalQueryFailureKind.TenantRequired)
+        {
+            GdprCoordinator.ResetForTenantSwitch();
+        }
+        else if (ex.Kind is AdminPortalQueryFailureKind.Forbidden)
+        {
+            GdprCoordinator.ResetForAuthorizationFailure();
+        }
+        else if (ex.Kind is AdminPortalQueryFailureKind.Gone)
+        {
+            GdprCoordinator.ResetForErasedTerminalState();
+        }
         _validationDetail = ex.Kind == AdminPortalQueryFailureKind.Validation
             ? ex.ValidationDetail
             : null;

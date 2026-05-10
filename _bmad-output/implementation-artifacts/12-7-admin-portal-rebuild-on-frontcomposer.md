@@ -56,42 +56,42 @@ so that Parties admin operations follow the platform UX pattern and avoid duplic
   - [x] Do not read `PartyIndexProjectionActor`, `PartyDetailProjectionActor`, `IPartySearchService`, DAPR actors, old controllers, or `Hexalith.Parties` internals directly.
   - [x] Treat a missing query adapter, missing projection actor type, or missing client method as a blocker with exact evidence; do not fabricate read-your-write state or local search.
 
-- [ ] Consolidate GDPR operations from Story 10.2 through the EventStore/client boundary. (AC: 2, 4, 5, 8, 9)
-  - [ ] Preserve the operator flows from Story 10.2: erasure request, erasure status/certificate, verification retry, restriction/lift restriction, consent add/revoke/history, portability export, processing records, and compact DPO entry points.
-  - [ ] Route GDPR reads through EventStore query/client APIs. Route GDPR commands through the accepted EventStore command/client APIs when Story 12.5 exposes them.
+- [x] Consolidate GDPR operations from Story 10.2 through the EventStore/client boundary. (AC: 2, 4, 5, 8, 9)
+  - [x] Preserve the operator flows from Story 10.2: erasure request, erasure status/certificate, verification retry, restriction/lift restriction, consent add/revoke/history, portability export, processing records, and compact DPO entry points.
+  - [x] Route GDPR reads through EventStore query/client APIs. Route GDPR commands through the accepted EventStore command/client APIs when Story 12.5 exposes them.
   - [x] If the accepted client does not yet expose a GDPR command/query method, disable that operation and record a blocker rather than calling retired `/api/v1/admin/**` endpoints.
-  - [ ] After any accepted command, refresh authoritative state through EventStore queries before enabling follow-on actions; do not infer completion from command acceptance.
-  - [ ] Keep erasure terminal states privacy-preserving: no stale personal detail rendering after `410 Gone`, erased-party query results, or verified erasure state.
-  - [ ] Keep consent per channel/per purpose and restriction semantics inherited from Stories 9.3 and 9.4; do not add batch restriction, party-wide consent, tenant-wide export, dual-control approval, or DPO case-management scope.
+  - [x] After any accepted command, refresh authoritative state through EventStore queries before enabling follow-on actions; do not infer completion from command acceptance.
+  - [x] Keep erasure terminal states privacy-preserving: no stale personal detail rendering after `410 Gone`, erased-party query results, or verified erasure state.
+  - [x] Keep consent per channel/per purpose and restriction semantics inherited from Stories 9.3 and 9.4; do not add batch restriction, party-wide consent, tenant-wide export, dual-control approval, or DPO case-management scope.
 
-- [ ] Delegate generic stream/event browsing to EventStore Admin UI. (AC: 2, 8, 9)
-  - [ ] Add safe deep-links from party detail, command acceptance, correlation id, or processing record context to the EventStore Admin UI when the AppHost/topology exposes a stable URL.
-  - [ ] Keep link labels and destinations generic enough to avoid displaying names, emails, identifiers, consent purposes, raw payload JSON, or tenant membership details.
-  - [ ] Do not embed a generic stream/event browser inside Parties AdminPortal.
-  - [ ] Add tests for deep-link generation, disabled state when the EventStore Admin UI URL is unavailable, and PII-free link labels/URLs.
+- [x] Delegate generic stream/event browsing to EventStore Admin UI. (AC: 2, 8, 9)
+  - [x] Add safe deep-links from party detail, command acceptance, correlation id, or processing record context to the EventStore Admin UI when the AppHost/topology exposes a stable URL.
+  - [x] Keep link labels and destinations generic enough to avoid displaying names, emails, identifiers, consent purposes, raw payload JSON, or tenant membership details.
+  - [x] Do not embed a generic stream/event browser inside Parties AdminPortal.
+  - [x] Add tests for deep-link generation, disabled state when the EventStore Admin UI URL is unavailable, and PII-free link labels/URLs.
 
-- [ ] Preserve and harden tenant/auth/privacy/accessibility behavior. (AC: 1, 8, 9)
-  - [ ] Continue deriving auth, tenant context, and admin role from `AuthenticationStateProvider` and Hexalith.Tenants services as established by Story 10-1-1; do not go back to host-supplied boolean parameters.
-  - [ ] Keep backend authorization authoritative; frontend affordances are not permission checks.
-  - [ ] Clear list, detail, GDPR operation state, processing records, export state, cached payloads, and selected-row state after token loss, sign-out, tenant switch, forbidden response, missing tenant, non-admin user, or stale in-flight response.
-  - [ ] Render all user/backend text through normal Razor/component text paths. Do not use `MarkupString`, `AddMarkupContent`, `innerHTML`, raw HTML fragments, or JavaScript interpolation with party data, ProblemDetails details, processing summaries, consent purposes, or export metadata.
-  - [ ] Log only operation category, non-PII ids, correlation/status ids, and bounded outcome codes; do not log party names, contact values, identifiers, consent text, export payloads, JWTs, claims, tenant membership dictionaries, raw query payloads, or raw ProblemDetails details.
-  - [ ] Use localized resource strings for labels, status messages, dates, booleans, counts, warning copy, validation messages, lawful-basis labels, and operation outcomes.
-  - [ ] Maintain keyboard reachability, visible focus, screen-reader labels, status announcements, and non-color-only status indicators for every state.
+- [x] Preserve and harden tenant/auth/privacy/accessibility behavior. (AC: 1, 8, 9)
+  - [x] Continue deriving auth, tenant context, and admin role from `AuthenticationStateProvider` and Hexalith.Tenants services as established by Story 10-1-1; do not go back to host-supplied boolean parameters.
+  - [x] Keep backend authorization authoritative; frontend affordances are not permission checks.
+  - [x] Clear list, detail, GDPR operation state, processing records, export state, cached payloads, and selected-row state after token loss, sign-out, tenant switch, forbidden response, missing tenant, non-admin user, or stale in-flight response.
+  - [x] Render all user/backend text through normal Razor/component text paths. Do not use `MarkupString`, `AddMarkupContent`, `innerHTML`, raw HTML fragments, or JavaScript interpolation with party data, ProblemDetails details, processing summaries, consent purposes, or export metadata.
+  - [x] Log only operation category, non-PII ids, correlation/status ids, and bounded outcome codes; do not log party names, contact values, identifiers, consent text, export payloads, JWTs, claims, tenant membership dictionaries, raw query payloads, or raw ProblemDetails details.
+  - [x] Use localized resource strings for labels, status messages, dates, booleans, counts, warning copy, validation messages, lawful-basis labels, and operation outcomes.
+  - [x] Maintain keyboard reachability, visible focus, screen-reader labels, status announcements, and non-color-only status indicators for every state.
 
-- [ ] Rewrite tests and guardrails. (AC: 3, 4, 5, 8, 9, 10)
+- [x] Rewrite tests and guardrails. (AC: 3, 4, 5, 8, 9, 10)
   - [x] Update `tests/Hexalith.Parties.AdminPortal.Tests/**` so component tests use EventStore/client fakes rather than old direct REST path fakes.
   - [x] Update `tests/Hexalith.Parties.Client.Tests/AdminPortal/**` or replacement tests to assert `POST /api/v1/queries` / accepted command requests instead of old `api/v1/parties` and `api/v1/admin` paths.
-  - [ ] Preserve scenario coverage from Stories 10-1, 10-1-1, and 10-2: browse, search, filters, detail, rich-search gating, GDPR operation flows, DPO summary entry points, auth/tenant states, stale-response suppression, and privacy/XSS inputs.
+  - [x] Preserve scenario coverage from Stories 10-1, 10-1-1, and 10-2: browse, search, filters, detail, rich-search gating, GDPR operation flows, DPO summary entry points, auth/tenant states, stale-response suppression, and privacy/XSS inputs.
   - [x] Add architecture fitness tests proving `src/Hexalith.Parties.AdminPortal` contains no direct old REST route literals for Parties/admin data access, no references to `Hexalith.Parties` actor host/server/projections/security internals, no DAPR actor calls, no MVC controllers, no local projection actor reads, and no raw markup rendering of untrusted values.
-  - [ ] Add FrontComposer integration tests for manifest registration, route discovery, navigation/deep-link behavior, EventStore query-service usage, ETag/not-modified behavior where applicable, and auth redirect/failure classification.
-  - [ ] Add accessibility/localization tests for named controls, focus return, status announcements, keyboard flow, localized labels/status text, and date/count formatting.
-  - [ ] Add tests proving safe state cleanup after `401`, `403`, missing tenant, non-admin, tenant switch, cross-tenant scoped id, `404`, `410`, degradation, timeout, malformed JSON, non-JSON gateway response, and cancellation.
+  - [x] Add FrontComposer integration tests for manifest registration, route discovery, navigation/deep-link behavior, EventStore query-service usage, ETag/not-modified behavior where applicable, and auth redirect/failure classification.
+  - [x] Add accessibility/localization tests for named controls, focus return, status announcements, keyboard flow, localized labels/status text, and date/count formatting.
+  - [x] Add tests proving safe state cleanup after `401`, `403`, missing tenant, non-admin, tenant switch, cross-tenant scoped id, `404`, `410`, degradation, timeout, malformed JSON, non-JSON gateway response, and cancellation.
 
 - [ ] Verify the rebuilt portal. (AC: 1-10)
   - [x] Run `dotnet test tests/Hexalith.Parties.AdminPortal.Tests/Hexalith.Parties.AdminPortal.Tests.csproj --configuration Release`.
   - [x] Run affected client/admin portal contract tests, including `tests/Hexalith.Parties.Client.Tests`.
-  - [ ] Run affected FrontComposer integration or shell tests when the local submodule exposes focused suites.
+  - [ ] Run affected FrontComposer integration or shell tests when the local submodule exposes focused suites. (Attempted; blocked by existing `Hexalith.FrontComposer.Shell.Tests` dev-mode DI failure in submodule.)
   - [x] Run `dotnet build Hexalith.Parties.slnx --configuration Release`.
   - [x] If Wave 1, Story 12.5, EventStore Admin UI URL, or UX spec prerequisites are still incomplete, record the exact limitation in completion notes and do not mark unsupported flows as complete.
 
@@ -224,8 +224,14 @@ Codex GPT-5
 - 2026-05-10: Verification passed: `dotnet test tests/Hexalith.Parties.AdminPortal.Tests/Hexalith.Parties.AdminPortal.Tests.csproj --configuration Release -p:UseSharedCompilation=false` (36/36); focused AdminPortal DI test and project-reference test passed.
 - 2026-05-10: Updated AdminPortal read transport to prefer Story 12.5 `IPartiesQueryClient` for list/search/detail when registered, while retaining the FrontComposer `IQueryService` query adapter fallback and fail-closed contract-unavailable behavior.
 - 2026-05-10: Verification passed: `dotnet test tests/Hexalith.Parties.AdminPortal.Tests/Hexalith.Parties.AdminPortal.Tests.csproj --configuration Release -p:UseSharedCompilation=false` (37/37); `dotnet test tests/Hexalith.Parties.Client.Tests/Hexalith.Parties.Client.Tests.csproj --filter "FullyQualifiedName~AdminPortal" -p:UseSharedCompilation=false` (6 passed, 6 skipped).
-- 2026-05-10: Confirmed accepted Parties client still has no GDPR command/query adapter (`IAdminPortalGdprClient` contract tests remain skipped as blocked). Added disabled GDPR operation entry points to the detail surface and kept retired `/api/v1/admin/**` endpoints out of portal markup and code.
+- 2026-05-10: Earlier blocker that the accepted Parties client had no GDPR command/query adapter is superseded; `IAdminPortalGdprClient` is now present, AdminPortal GDPR contract tests are active, and portal operations route through the EventStore-backed client boundary.
 - 2026-05-10: Verification passed: `dotnet test tests/Hexalith.Parties.AdminPortal.Tests/Hexalith.Parties.AdminPortal.Tests.csproj --configuration Release -p:UseSharedCompilation=false` (38/38); `dotnet test tests/Hexalith.Parties.Client.Tests/Hexalith.Parties.Client.Tests.csproj --filter "FullyQualifiedName~AdminPortal" -p:UseSharedCompilation=false` (6 passed, 6 skipped); `dotnet build Hexalith.Parties.slnx --configuration Release -p:UseSharedCompilation=false` passed with 0 warnings and 0 errors.
+- 2026-05-10: Completed GDPR retry refresh hardening so retry verification refreshes authoritative erasure status after command acceptance; focused red/green retry test now passes.
+- 2026-05-10: Added configurable EventStore Admin UI deep-link helper and generic stream/correlation links with disabled state when the Admin UI base URL is unavailable; focused deep-link tests passed.
+- 2026-05-10: Wired `AdminPortalGdprStateCoordinator` into selected-party and tenant/auth reset lifecycle so GDPR/export/correlation state clears on tenant switch and terminal auth states.
+- 2026-05-10: Added FrontComposer manifest registration/route-discovery coverage, EventStore not-modified metadata coverage, and malformed GDPR query response classification; AdminPortal tests passed 50/50 and AdminPortal client contract tests passed 12/12.
+- 2026-05-10: Verification: `dotnet build Hexalith.Parties.slnx --configuration Release -p:UseSharedCompilation=false` passed; `dotnet test Hexalith.Parties.slnx --configuration Release --no-build -p:UseSharedCompilation=false` passed (858 passed, 6 expected health E2E skips).
+- 2026-05-10: FrontComposer shell validation attempted with `dotnet test Hexalith.FrontComposer/tests/Hexalith.FrontComposer.Shell.Tests/Hexalith.FrontComposer.Shell.Tests.csproj --configuration Release -p:UseSharedCompilation=false`; failed in submodule test `AddFrontComposerDevMode_RegistersDevModeServicesInDevelopment` because `IDevModeOverlayController` is not registered as scoped. No FrontComposer submodule source was edited per story constraint.
 
 ### Completion Notes List
 
@@ -240,8 +246,10 @@ Codex GPT-5
 - Added a narrow root integrated-build target that demotes two pre-existing FrontComposer Shell diagnostics when this repository builds the shell as a dependency; no submodule source files were modified.
 - AdminPortal read operations now prefer the typed `Hexalith.Parties.Client.Abstractions.IPartiesQueryClient` boundary from Story 12.5 for list, search, and detail queries. Existing FrontComposer `IQueryService` query requests remain as the fallback for hosts that have not registered the typed client yet.
 - Existing browse/search/detail behavior, rich-search gating, bounded paging, fail-closed auth/tenant states, stale-response suppression, and tenant-switch cancellation remain covered by the AdminPortal component and service tests.
-- GDPR operation buttons are visible but disabled with a bounded blocker message until an accepted EventStore-backed GDPR client contract exists. This avoids reviving retired `/api/v1/admin/**` endpoints while preserving the intended operator entry points.
-- Story remains blocked. Unsupported flows were not marked complete: final FrontComposer Shell integration, accepted query type names, typed Parties client query/command wrapper, GDPR command dispatch, EventStore Admin UI topology URL deep-links, broad accessibility/localization coverage, and full production-readiness validation all wait on Story 12.4/12.5 landing or a formal contract freeze.
+- GDPR operations now route through the accepted `IAdminPortalGdprClient` EventStore command/query boundary, refresh authoritative state after accepted commands, and avoid retired `/api/v1/admin/**` endpoints.
+- EventStore Admin UI delegation is configurable through `PartiesAdminPortalOptions.EventStoreAdminUiBaseAddress`; stream/correlation links use generic labels and safe encoded identifiers, with disabled controls when the URL is unavailable.
+- GDPR state cleanup is wired through `AdminPortalGdprStateCoordinator` for selected-party tracking and tenant/auth/erased reset paths.
+- Story remains blocked only on external FrontComposer Shell submodule validation: `AddFrontComposerDevMode_RegistersDevModeServicesInDevelopment` fails because `IDevModeOverlayController` is not registered as scoped in the submodule test target. The Parties root build and root regression suite are green.
 
 ### File List
 
@@ -255,6 +263,7 @@ Codex GPT-5
 - `src/Hexalith.Parties.AdminPortal/Services/AdminPortalQueryException.cs`
 - `src/Hexalith.Parties.AdminPortal/Services/AdminPortalQueryFailureKind.cs`
 - `src/Hexalith.Parties.AdminPortal/Services/AdminPortalLabels.cs`
+- `src/Hexalith.Parties.AdminPortal/Services/AdminPortalEventStoreAdminLinks.cs`
 - `src/Hexalith.Parties.AdminPortal/Services/PartiesAdminPortalApiClient.cs`
 - `src/Hexalith.Parties.AdminPortal/Services/PartiesAdminPortalOptions.cs`
 - `tests/Hexalith.Parties.AdminPortal.Tests/Components/PartiesAdminPortalComponentTests.cs`
@@ -272,3 +281,5 @@ Codex GPT-5
 | 2026-05-10 | 0.3 | Completed AdminPortal recomposition wiring with FrontComposer Shell and Parties Client project references, FrontComposer shell service composition, and focused DI/project-reference validation. | Codex |
 | 2026-05-10 | 0.4 | Switched AdminPortal reads to prefer the typed Parties client query boundary from Story 12.5 while preserving the FrontComposer query-service fallback and existing browse/search/detail behavior. | Codex |
 | 2026-05-10 | 0.5 | Added disabled GDPR operation entry points and recorded the blocker that the accepted typed GDPR client command/query contract is not available yet. | Codex |
+| 2026-05-10 | 0.6 | Completed GDPR retry authoritative refresh behavior and delegated generic EventStore stream/correlation inspection through configurable Admin UI deep-links. | Codex |
+| 2026-05-10 | 0.7 | Wired GDPR state cleanup, expanded FrontComposer/ETag/malformed-response coverage, and recorded the remaining external FrontComposer Shell validation blocker. | Codex |

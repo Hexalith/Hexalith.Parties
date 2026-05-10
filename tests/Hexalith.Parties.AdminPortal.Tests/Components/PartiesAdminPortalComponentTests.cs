@@ -38,6 +38,9 @@ public sealed class PartiesAdminPortalComponentTests : BunitContext
         Services.AddSingleton<AuthenticationStateProvider>(_authProvider);
         Services.AddSingleton<ITenantProjectionStore>(_tenantStore);
         Services.AddScoped<IAdminPortalAuthorizationService, AdminPortalAuthorizationService>();
+        Services.AddOptions<PartiesAdminPortalOptions>();
+        Services.AddScoped<AdminPortalEventStoreAdminLinks>();
+        Services.AddScoped<AdminPortalGdprStateCoordinator>();
         Services.AddScoped<AdminPortalPartyQueryService>();
         Services.AddScoped<PartiesAdminListCoordinator>();
     }
@@ -379,6 +382,76 @@ public sealed class PartiesAdminPortalComponentTests : BunitContext
     }
 
     [Fact]
+    public void PartiesAdminPortal_DetailShowsSafeEventStoreAdminLinksWhenConfigured()
+    {
+        var api = new RecordingAdminPortalApiClient();
+        api.EnqueueList(Page(IndexEntry("party-link", "Ada <Admin>", PartyType.Person, true)));
+        api.EnqueueDetail(new PartyDetail
+        {
+            Id = "tenant-a:party:party-link",
+            Type = PartyType.Person,
+            IsActive = true,
+            DisplayName = "Ada <Admin>",
+            SortName = "Admin, Ada",
+            ContactChannels = [new ContactChannel { Id = "c-1", Type = ContactChannelType.Email, Value = "ada@example.test", IsPreferred = true }],
+            Identifiers = [],
+            ConsentRecords = [],
+            CreatedAt = DateTimeOffset.Parse("2026-05-01T00:00:00Z"),
+            LastModifiedAt = DateTimeOffset.Parse("2026-05-02T00:00:00Z"),
+        });
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+        Services.Configure<PartiesAdminPortalOptions>(options =>
+        {
+            options.EventStoreAdminUiBaseAddress = new Uri("https://admin.example/");
+        });
+
+        IRenderedComponent<PartiesAdminPortal> cut = RenderAuthorized("scope-a");
+        cut.WaitForAssertion(() => cut.Markup.ShouldContain("Ada &lt;Admin&gt;"));
+        ClickFluentButton(cut, "Ada");
+
+        cut.WaitForAssertion(() =>
+        {
+            IElement link = cut.Find("a[href*='streams?aggregateId=tenant-a%3Aparty%3Aparty-link']");
+            link.TextContent.Trim().ShouldBe("Open EventStore stream");
+            link.GetAttribute("target").ShouldBe("_blank");
+            link.GetAttribute("rel").ShouldBe("noopener noreferrer");
+            link.GetAttribute("href")!.ShouldNotContain("Ada");
+            link.GetAttribute("href")!.ShouldNotContain("ada@example.test");
+        });
+    }
+
+    [Fact]
+    public void PartiesAdminPortal_DetailDisablesEventStoreAdminLinksWhenUrlIsUnavailable()
+    {
+        var api = new RecordingAdminPortalApiClient();
+        api.EnqueueList(Page(IndexEntry("party-no-admin-ui", "No Admin UI", PartyType.Person, true)));
+        api.EnqueueDetail(new PartyDetail
+        {
+            Id = "party-no-admin-ui",
+            Type = PartyType.Person,
+            IsActive = true,
+            DisplayName = "No Admin UI",
+            SortName = "Admin UI, No",
+            ContactChannels = [],
+            Identifiers = [],
+            ConsentRecords = [],
+            CreatedAt = DateTimeOffset.Parse("2026-05-01T00:00:00Z"),
+            LastModifiedAt = DateTimeOffset.Parse("2026-05-02T00:00:00Z"),
+        });
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+
+        IRenderedComponent<PartiesAdminPortal> cut = RenderAuthorized("scope-a");
+        cut.WaitForAssertion(() => cut.Markup.ShouldContain("No Admin UI"));
+        ClickFluentButton(cut, "No Admin UI");
+
+        cut.WaitForAssertion(() =>
+        {
+            cut.Markup.ShouldContain("EventStore Admin UI unavailable");
+            cut.FindAll("a[href*='streams']").ShouldBeEmpty();
+        });
+    }
+
+    [Fact]
     public void PartiesAdminPortal_RequestErasure_RequiresConfirmationAndDisplaysCorrelation()
     {
         var api = new RecordingAdminPortalApiClient();
@@ -420,6 +493,62 @@ public sealed class PartiesAdminPortalComponentTests : BunitContext
             api.ErasureStatusRequests.Single().ShouldBe("party-erase");
             cut.Markup.ShouldContain("corr-erasure");
             cut.Markup.ShouldContain("ErasurePending");
+        });
+    }
+
+    [Fact]
+    public void PartiesAdminPortal_RetryVerification_RefreshesAuthoritativeErasureStatus()
+    {
+        var api = new RecordingAdminPortalApiClient();
+        api.EnqueueList(Page(IndexEntry("party-retry-erasure", "Retry Erasure", PartyType.Person, true)));
+        api.EnqueueDetail(new PartyDetail
+        {
+            Id = "party-retry-erasure",
+            Type = PartyType.Person,
+            IsActive = true,
+            DisplayName = "Retry Erasure",
+            SortName = "Erasure, Retry",
+            ContactChannels = [],
+            Identifiers = [],
+            ConsentRecords = [],
+            CreatedAt = DateTimeOffset.Parse("2026-05-01T00:00:00Z"),
+            LastModifiedAt = DateTimeOffset.Parse("2026-05-02T00:00:00Z"),
+        });
+        api.EnqueueErasureStatus(new PartyErasureStatusRecord
+        {
+            PartyId = "party-retry-erasure",
+            TenantId = "scope-a",
+            Status = "VerificationFailed",
+            UpdatedAt = DateTimeOffset.Parse("2026-05-03T00:00:00Z"),
+        });
+        api.EnqueueErasureStatus(new PartyErasureStatusRecord
+        {
+            PartyId = "party-retry-erasure",
+            TenantId = "scope-a",
+            Status = "Verified",
+            UpdatedAt = DateTimeOffset.Parse("2026-05-03T00:05:00Z"),
+        });
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+
+        IRenderedComponent<PartiesAdminPortal> cut = RenderAuthorized("scope-a");
+        cut.WaitForAssertion(() => cut.Markup.ShouldContain("Retry Erasure"));
+        ClickFluentButton(cut, "Retry Erasure");
+        cut.WaitForAssertion(() => cut.Markup.ShouldContain("GDPR operations"));
+
+        ClickFluentButton(cut, "Refresh erasure status");
+        cut.WaitForAssertion(() =>
+        {
+            api.ErasureStatusRequests.Count.ShouldBe(1);
+            cut.Markup.ShouldContain("VerificationFailed");
+        });
+
+        ClickFluentButton(cut, "Retry verification");
+
+        cut.WaitForAssertion(() =>
+        {
+            api.RetryVerificationRequests.Single().ShouldBe("party-retry-erasure");
+            api.ErasureStatusRequests.Count.ShouldBe(2);
+            cut.Markup.ShouldContain("Verified");
         });
     }
 
@@ -522,6 +651,51 @@ public sealed class PartiesAdminPortalComponentTests : BunitContext
             cut.Markup.ShouldContain("Administrator access is required");
             cut.Markup.ShouldNotContain("Tenant A");
             FindFluentButton(cut, "Search").HasAttribute("disabled").ShouldBeFalse();
+        });
+    }
+
+    [Fact]
+    public void PartiesAdminPortal_TenantSwitch_ClearsGdprCoordinatorState()
+    {
+        var coordinator = new AdminPortalGdprStateCoordinator();
+        Services.AddSingleton(coordinator);
+
+        var api = new RecordingAdminPortalApiClient();
+        api.EnqueueList(Page(IndexEntry("party-gdpr-state", "Tenant A Subject", PartyType.Person, true)));
+        api.EnqueueDetail(new PartyDetail
+        {
+            Id = "party-gdpr-state",
+            Type = PartyType.Person,
+            IsActive = true,
+            DisplayName = "Tenant A Subject",
+            SortName = "Subject, Tenant A",
+            ContactChannels = [],
+            Identifiers = [],
+            ConsentRecords = [],
+            CreatedAt = DateTimeOffset.Parse("2026-05-01T00:00:00Z"),
+            LastModifiedAt = DateTimeOffset.Parse("2026-05-02T00:00:00Z"),
+        });
+        api.EnqueueList(Page(IndexEntry("party-gdpr-state-b", "Tenant B Subject", PartyType.Person, true)));
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+
+        IRenderedComponent<PartiesAdminPortal> cut = RenderAuthorized("scope-a");
+        cut.WaitForAssertion(() => cut.Markup.ShouldContain("Tenant A Subject"));
+        ClickFluentButton(cut, "Tenant A Subject");
+
+        cut.WaitForAssertion(() =>
+        {
+            coordinator.ActivePartyId.ShouldBe("party-gdpr-state");
+            coordinator.State.ShouldBe(AdminPortalGdprOperationState.Ready);
+        });
+
+        SeedTenant("scope-b", AdminUserId, TenantRole.TenantOwner);
+        cut.InvokeAsync(() => _authProvider.SetAuthenticated(AdminUserId, "scope-b"));
+
+        cut.WaitForAssertion(() =>
+        {
+            cut.Markup.ShouldContain("Tenant B Subject");
+            coordinator.ActivePartyId.ShouldBeNull();
+            coordinator.State.ShouldBe(AdminPortalGdprOperationState.NotLoaded);
         });
     }
 

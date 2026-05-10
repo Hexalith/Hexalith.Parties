@@ -5,6 +5,12 @@ public sealed class PartiesAdminPortalOptions
     [Obsolete("Admin portal reads now flow through FrontComposer IQueryService/EventStore. Configure EventStore at the shell boundary instead.")]
     public Uri? ApiBaseAddress { get; set; }
 
+    public Uri? EventStoreAdminUiBaseAddress { get; set; }
+
+    public string EventStoreAdminUiStreamPath { get; set; } = "streams";
+
+    public string EventStoreAdminUiCorrelationPath { get; set; } = "correlations";
+
     public string Domain { get; set; } = "party";
 
     public string? ListProjectionType { get; set; }

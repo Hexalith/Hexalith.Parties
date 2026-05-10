@@ -22,6 +22,7 @@ public static class PartiesAdminPortalServiceCollectionExtensions
         services.AddScoped<IPartiesAdminPortalApiClient, PartiesAdminPortalApiClient>();
         services.AddScoped<PartiesAdminListCoordinator>();
         services.AddScoped<AdminPortalGdprStateCoordinator>();
+        services.AddScoped<AdminPortalEventStoreAdminLinks>();
         services.AddScoped<AdminPortalPartyQueryService>();
         services.TryAddScoped<IAdminPortalAuthorizationService, AdminPortalAuthorizationService>();
         return services;
