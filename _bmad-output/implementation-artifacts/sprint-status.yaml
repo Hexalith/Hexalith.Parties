@@ -161,7 +161,7 @@ development_status:
   12-4-server-tier-1-tier-2-test-rewrite: blocked
   12-5-parties-client-thin-wrapper: ready-for-dev
   12-6-parties-mcp-thin-host: ready-for-dev
-  12-7-admin-portal-rebuild-on-frontcomposer: backlog
+  12-7-admin-portal-rebuild-on-frontcomposer: ready-for-dev
   12-8-picker-rewrite: backlog
   12-9-sample-and-getting-started-doc-updates: backlog
   12-10-deployment-validation-and-topology-fitness-rewrite: backlog
