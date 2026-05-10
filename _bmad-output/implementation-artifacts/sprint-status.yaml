@@ -2,6 +2,7 @@
 # last_updated: 2026-05-10  (story 12-5 moved ready-for-dev -> blocked after party-mode review: normal client wrapper implementation is gated until Wave 1 behavior from Stories 12.1-12.4 is merged or formally frozen; story updated with EventStore boundary, source compatibility, old-route removal, dependency exclusion, red guardrail, and safe error-mapping clarifications.)
 # last_updated: 2026-05-10  (story 12-1 advanced review -> done after bmad-code-review: 7 decisions resolved (deny-by-default DAPR access control, parties added as eventstore caller + /process restriction, Tenants Aspire removal accepted with documented divergence, explicit per-service pubsub scopes, multi-audience JWT tolerance, Hexalith.Parties.Aspire helper deleted, AppHost-source secret-scan added). 22 patches applied (15 originals + 7 decision-driven). 15 items deferred to deferred-work.md. AppHost build clean; deploy-validation 37/37; AppHost topology + projection-contract 11/11; full solution build clean.)
 # last_updated: 2026-05-10  (story 12-9 created as ready-for-dev for EventStore-fronted sample and getting-started documentation updates.)
+# last_updated: 2026-05-10  (story 12-10 created as ready-for-dev for EventStore-fronted deployment validation and topology fitness rewrite.)
 # last_updated: 2026-05-10  (story 12-8 created as ready-for-dev for the EventStore-fronted Picker rewrite over the typed Parties client boundary, preserving Story 10.3 embedding behavior while replacing the old REST transport.)
 # last_updated: 2026-05-10  (story 12-6 created as ready-for-dev for the separate Parties MCP thin host over the typed Parties/EventStore client boundary.)
 # last_updated: 2026-05-10  (story 12-6 moved in-progress -> blocked after gate-confirmed limited dev pass: Stories 12-4 and 12-5 remain blocked/unfrozen, so only separate MCP host/test scaffolding, canonical tool metadata, safe contract-unavailable responses, AppHost parties-mcp resource wiring, and guardrails were added. Full dispatch/context/error parity waits for 12-4/12-5 landing or formal contract freeze.)
@@ -168,5 +169,5 @@ development_status:
   12-7-admin-portal-rebuild-on-frontcomposer: ready-for-dev
   12-8-picker-rewrite: ready-for-dev
   12-9-sample-and-getting-started-doc-updates: ready-for-dev
-  12-10-deployment-validation-and-topology-fitness-rewrite: backlog
+  12-10-deployment-validation-and-topology-fitness-rewrite: ready-for-dev
   epic-12-retrospective: optional
