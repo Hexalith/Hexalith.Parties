@@ -6,7 +6,7 @@
         <dt>@Labels.GdprDpoRestricted</dt>
         <dd>@(Party.IsRestricted ? Labels.Yes : Labels.No)</dd>
         <dt>@Labels.GdprDpoConsentOverview</dt>
-        <dd>@Party.ConsentRecords.Count</dd>
+        <dd>@(Party.ConsentRecords?.Count ?? 0)</dd>
         <dt>@Labels.GdprDpoAuditTrail</dt>
         <dd>@ProcessingRecordCount</dd>
     </dl>

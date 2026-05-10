@@ -39,6 +39,13 @@
                         <dd>@FormatDate(consent.GrantedAt)</dd>
                         <dt>@Labels.TriggeredBy</dt>
                         <dd>@consent.GrantedBy</dd>
+                        @if (!consent.IsActive)
+                        {
+                            <dt>@Labels.Revoked</dt>
+                            <dd>@FormatNullableDate(consent.RevokedAt)</dd>
+                            <dt>@Labels.TriggeredBy</dt>
+                            <dd>@(consent.RevokedBy ?? Labels.MissingDate)</dd>
+                        }
                     </dl>
                     @if (consent.IsActive)
                     {
@@ -101,4 +108,7 @@
         => date == default
             ? Labels.MissingDate
             : date.ToString("g", System.Globalization.CultureInfo.CurrentCulture);
+
+    private string FormatNullableDate(DateTimeOffset? date)
+        => date is null ? Labels.MissingDate : FormatDate(date.Value);
 }

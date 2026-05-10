@@ -23,10 +23,17 @@ public sealed class AdminPortalEventStoreAdminLinks(IOptions<PartiesAdminPortalO
         UriBuilder builder = new(_options.EventStoreAdminUiBaseAddress)
         {
             Path = CombinePath(_options.EventStoreAdminUiBaseAddress.AbsolutePath, path),
-            Query = $"{parameterName}={Uri.EscapeDataString(value)}",
+            Query = AppendQueryParameter(_options.EventStoreAdminUiBaseAddress.Query, parameterName, value),
         };
 
         return builder.Uri;
+    }
+
+    private static string AppendQueryParameter(string existingQuery, string parameterName, string value)
+    {
+        string encoded = $"{Uri.EscapeDataString(parameterName)}={Uri.EscapeDataString(value)}";
+        string trimmed = string.IsNullOrEmpty(existingQuery) ? string.Empty : existingQuery.TrimStart('?');
+        return string.IsNullOrEmpty(trimmed) ? encoded : $"{trimmed}&{encoded}";
     }
 
     private static string CombinePath(string basePath, string relativePath)

@@ -54,7 +54,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-05-02
-last_updated: 2026-05-10  # story 10-1-1 advanced review -> done after bmad-code-review (closure scope): 3 decisions resolved (D1 patch /health probe restoration, D2 defer 12.4/12.5 metadata contract, D3 patch IValidateOptions + ValidateOnStart), 17 patches applied, 19 defers recorded. AdminPortal tests 65/65, AdminPortal client contract tests 12/12, Release solution build clean, full Release no-build regression 930 passed / 6 expected health E2E skips.
+last_updated: 2026-05-10  # story 10-2 advanced review -> in-progress after bmad-code-review chunk 1 (AdminPortal UI). 2 decisions resolved (D1 defer enum-vs-string to chunk 2; D2 patch defense-in-depth export filename derivation), 14 patches applied (AC3/AC5/AC6/AC8 fixes + IDisposable+CTS lifecycle + coordinator tenant-clear + EventStore link query preservation + filename builder hardening + focus return), 16 defers recorded. Chunks 2 (Client GDPR boundary) and 3 (tests) outstanding. AdminPortal tests 65/65, full Release regression 930 passed / 6 expected DAPR/Aspire skips. Earlier same day: story 10-1-1 advanced review -> done after bmad-code-review (closure scope): 3 decisions resolved (D1 patch /health probe restoration, D2 defer 12.4/12.5 metadata contract, D3 patch IValidateOptions + ValidateOnStart), 17 patches applied, 19 defers recorded.
 # sprint_change_proposals:
 #   - sprint-change-proposal-2026-05-07.md  (EventStore-Fronted Architecture Pivot — added Epic 12; paused 10-1-1, 10-2, 10-3)
 project: Hexalith.Parties
@@ -153,7 +153,7 @@ development_status:
   epic-10: in-progress
   10-1-admin-portal-browse-search-and-inspect: done
   10-1-1-admin-portal-frontcomposer-and-tenants-integration: done         # Closed via bmad-code-review 2026-05-10 against 12-7 successor evidence
-  10-2-admin-portal-gdpr-operations: review                               # PAUSED — superseded by 12-7
+  10-2-admin-portal-gdpr-operations: in-progress                          # PAUSED — superseded by 12-7; mid bmad-code-review (chunk 1 of 3 done)
   10-3-embeddable-party-picker-component: review                          # PAUSED — superseded by 12-8
   epic-10-retrospective: optional
 

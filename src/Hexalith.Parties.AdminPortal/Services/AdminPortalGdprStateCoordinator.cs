@@ -55,17 +55,16 @@ public sealed class AdminPortalGdprStateCoordinator
         return true;
     }
 
-#pragma warning disable CA1822 // Reflection contract expects an instance coordinator method.
-    public bool CanMutateParty(AdminPortalGdprOperationState state)
+    public static bool CanMutateParty(AdminPortalGdprOperationState state)
         => state is not (AdminPortalGdprOperationState.ErasurePending
             or AdminPortalGdprOperationState.VerificationPartial
             or AdminPortalGdprOperationState.VerificationFailed
             or AdminPortalGdprOperationState.Verified
             or AdminPortalGdprOperationState.Erased);
-#pragma warning restore CA1822
 
     private void Reset(AdminPortalGdprOperationState state)
     {
+        ActiveTenantId = null;
         ActivePartyId = null;
         RequestVersion++;
         State = state;

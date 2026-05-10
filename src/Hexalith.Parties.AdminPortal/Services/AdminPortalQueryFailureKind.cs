@@ -6,6 +6,7 @@ public enum AdminPortalQueryFailureKind
     TenantRequired,
     Forbidden,
     NotFound,
+    Conflict,
     Gone,
     Validation,
     TransientFailure,

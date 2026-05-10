@@ -208,6 +208,12 @@ public sealed record AdminPortalLabels
 
     public string GdprTerminalErased { get; init; } = "Party erased";
 
+    public string GdprOperationNotFound { get; init; } = "The selected party is no longer available";
+
+    public string GdprOperationContractUnavailable { get; init; } = "GDPR operations are temporarily unavailable";
+
+    public string GdprOperationFailed { get; init; } = "Operation failed";
+
     public string RequestErasure { get; init; } = "Request erasure";
 
     public string RestrictProcessing { get; init; } = "Restrict processing";

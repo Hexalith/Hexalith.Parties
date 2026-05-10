@@ -472,6 +472,7 @@ public sealed class PartiesAdminPortalApiClient : IPartiesAdminPortalApiClient
     private static AdminPortalQueryFailureKind MapByStatus(int? status)
         => status switch
         {
+            409 => AdminPortalQueryFailureKind.Conflict,
             410 => AdminPortalQueryFailureKind.Gone,
             400 or 422 => AdminPortalQueryFailureKind.Validation,
             408 or 429 => AdminPortalQueryFailureKind.TransientFailure,
@@ -492,6 +493,7 @@ public sealed class PartiesAdminPortalApiClient : IPartiesAdminPortalApiClient
                 ? AdminPortalQueryFailureKind.TenantRequired
                 : AdminPortalQueryFailureKind.Forbidden,
             404 => AdminPortalQueryFailureKind.NotFound,
+            409 => AdminPortalQueryFailureKind.Conflict,
             410 => AdminPortalQueryFailureKind.Gone,
             400 or 422 => AdminPortalQueryFailureKind.Validation,
             408 or 429 => AdminPortalQueryFailureKind.TransientFailure,

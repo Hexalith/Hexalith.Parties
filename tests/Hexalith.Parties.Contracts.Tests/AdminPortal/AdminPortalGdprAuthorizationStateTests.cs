@@ -94,7 +94,11 @@ public sealed class AdminPortalGdprAuthorizationStateTests
     {
         Type coordinator = LoadCoordinator();
 
-        MethodInfo method = coordinator.GetMethod("CanMutateParty", BindingFlags.Public | BindingFlags.Instance)
+        // Static or instance is a design choice; the spec intent is "mutation gating depends on
+        // authoritative erasure state", which is a pure function over the state value.
+        MethodInfo method = coordinator.GetMethod(
+            "CanMutateParty",
+            BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static)
             ?? throw new InvalidOperationException("Coordinator must expose CanMutateParty.");
 
         method.ReturnType.ShouldBe(typeof(bool));

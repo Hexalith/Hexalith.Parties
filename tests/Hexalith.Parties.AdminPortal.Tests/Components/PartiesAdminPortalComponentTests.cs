@@ -613,7 +613,9 @@ public sealed class PartiesAdminPortalComponentTests : BunitContext
             CreatedAt = DateTimeOffset.Parse("2026-05-01T00:00:00Z"),
             LastModifiedAt = DateTimeOffset.Parse("2026-05-02T00:00:00Z"),
         });
-        api.EnqueueExport(new AdminPortalExportDownload("party-party-export-export.json", "application/json", []));
+        // Server-supplied FileName is intentionally an attacker-style PII-leaking name to prove
+        // the UI re-derives a safe non-PII filename via GdprExportFileNameBuilder (D2 defense-in-depth).
+        api.EnqueueExport(new AdminPortalExportDownload("attacker-Export Party-leak.json", "application/json", [0x7B, 0x7D]));
         Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
 
         IRenderedComponent<PartiesAdminPortal> cut = RenderAuthorized("scope-a");
@@ -627,8 +629,12 @@ public sealed class PartiesAdminPortalComponentTests : BunitContext
         {
             api.ExportRequests.Single().ShouldBe("party-export");
             cut.Markup.ShouldContain("Export prepared");
-            cut.Markup.ShouldContain("party-party-export-export.json");
-            cut.Markup.ShouldNotContain("Export Party-export");
+            cut.Markup.ShouldContain("party-party-export-export-");
+            cut.Markup.ShouldContain("Z.json");
+            // The transport-supplied attacker filename must never reach the UI.
+            cut.Markup.ShouldNotContain("attacker-Export Party-leak.json");
+            cut.Markup.ShouldNotContain("attacker");
+            cut.Markup.ShouldNotContain("leak");
         });
     }
 

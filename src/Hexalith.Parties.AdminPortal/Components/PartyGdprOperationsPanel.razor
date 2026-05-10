@@ -1,10 +1,11 @@
+@implements IDisposable
 @inject AdminPortalPartyQueryService QueryService
 @inject AdminPortalEventStoreAdminLinks EventStoreLinks
 @inject AdminPortalGdprStateCoordinator GdprCoordinator
 @inject IJSRuntime JsRuntime
 
 <section aria-labelledby="@($"gdpr-operations-heading-{_instanceId}")">
-    <h3 id="@($"gdpr-operations-heading-{_instanceId}")">@Labels.GdprOperations</h3>
+    <h3 id="@($"gdpr-operations-heading-{_instanceId}")" tabindex="-1" @ref="_operationsHeading">@Labels.GdprOperations</h3>
     <p role="status" aria-live="polite">@OperationMessage</p>
 
     <DpoOperationalSummaryPanel Party="Party"
@@ -121,8 +122,11 @@
     private string _lawfulBasisValue = LawfulBasis.Consent.ToString();
     private string? _exportFileName;
     private AdminPortalGdprOutcome? _lastOutcome;
+    private AdminPortalGdprOutcome? _focusedOutcome;
     private bool _confirmErasure;
     private bool _isBusy;
+    private CancellationTokenSource? _cts;
+    private ElementReference _operationsHeading;
 
     [Parameter, EditorRequired]
     public PartyDetail Party { get; set; } = default!;
@@ -151,7 +155,10 @@
             AdminPortalGdprOutcome.Erased => Labels.GdprTerminalErased,
             AdminPortalGdprOutcome.TransientFailure => Labels.TransientFailure,
             AdminPortalGdprOutcome.AuthenticationRequired => Labels.SignInRequired,
-            _ => Labels.GdprOperations,
+            AdminPortalGdprOutcome.NotFound => Labels.GdprOperationNotFound,
+            AdminPortalGdprOutcome.ContractUnavailable => Labels.GdprOperationContractUnavailable,
+            AdminPortalGdprOutcome.Unknown => Labels.GdprOperationFailed,
+            _ => Labels.GdprOperationFailed,
         };
 
     private bool IsErasurePending
@@ -169,6 +176,7 @@
     private bool CanAddConsent
         => !_isBusy
             && !Party.IsErased
+            && !IsErasurePending
             && !string.IsNullOrWhiteSpace(_consentChannelId)
             && !string.IsNullOrWhiteSpace(_consentPurpose);
 
@@ -178,10 +186,16 @@
     private bool CanRetryVerification
         => !_isBusy && _erasureStatus?.Status is "VerificationPartial" or "VerificationFailed" or "Partial" or "Failed";
 
+    protected override void OnInitialized() => _cts = new CancellationTokenSource();
+
     protected override void OnParametersSet()
     {
         if (!string.Equals(_previousPartyId, Party.Id, StringComparison.Ordinal))
         {
+            // Cancel any in-flight requests bound to the previous party so their continuations
+                // do not mutate state that now refers to a different party.
+            CancelInFlight();
+            _cts = new CancellationTokenSource();
             _previousPartyId = Party.Id;
             _confirmErasure = false;
             _correlationId = null;
@@ -190,9 +204,51 @@
             _processingRecords = [];
             _exportFileName = null;
             _lastOutcome = null;
+            _focusedOutcome = null;
             GdprCoordinator.Track(TenantContextSignature, Party.Id);
         }
     }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (_lastOutcome is not null && _lastOutcome != _focusedOutcome)
+        {
+            _focusedOutcome = _lastOutcome;
+            try
+            {
+                await _operationsHeading.FocusAsync().ConfigureAwait(false);
+            }
+            catch (JSDisconnectedException)
+            {
+                // Circuit disconnect: nothing to focus on.
+            }
+            catch (JSException)
+            {
+                // Element not yet rendered or detached; outcome status announcement still fires via aria-live.
+            }
+        }
+    }
+
+    public void Dispose()
+    {
+        CancelInFlight();
+    }
+
+    private void CancelInFlight()
+    {
+        try
+        {
+            _cts?.Cancel();
+        }
+        catch (ObjectDisposedException)
+        {
+        }
+
+        _cts?.Dispose();
+        _cts = null;
+    }
+
+    private CancellationToken Token => _cts?.Token ?? CancellationToken.None;
 
     private void BeginErasureConfirmation()
     {
@@ -207,9 +263,8 @@
         await RunCommandAsync(async () =>
         {
             AdminPortalGdprCommandResult result = await QueryService.ApiClient
-                .RequestErasureAsync(Party.Id, CancellationToken.None)
+                .RequestErasureAsync(Party.Id, Token)
                 .ConfigureAwait(false);
-            _correlationId = result.CorrelationId;
             _confirmErasure = false;
             await RefreshErasureStatusAsync().ConfigureAwait(false);
             return result;
@@ -221,12 +276,12 @@
         await RunQueryAsync(async () =>
         {
             _erasureStatus = await QueryService.ApiClient
-                .GetErasureStatusAsync(Party.Id, CancellationToken.None)
+                .GetErasureStatusAsync(Party.Id, Token)
                 .ConfigureAwait(false);
             if (_erasureStatus?.Status is "Verified" or "Complete" or "Erased")
             {
                 _erasureCertificate = await QueryService.ApiClient
-                    .GetErasureCertificateAsync(Party.Id, CancellationToken.None)
+                    .GetErasureCertificateAsync(Party.Id, Token)
                     .ConfigureAwait(false);
             }
         }).ConfigureAwait(false);
@@ -236,7 +291,7 @@
         => await RunCommandAsync(async () =>
         {
             AdminPortalGdprCommandResult result = await QueryService.ApiClient
-                .RetryErasureVerificationAsync(Party.Id, CancellationToken.None)
+                .RetryErasureVerificationAsync(Party.Id, Token)
                 .ConfigureAwait(false);
             await RefreshErasureStatusAsync().ConfigureAwait(false);
             return result;
@@ -246,7 +301,7 @@
         => await RunCommandAsync(async () =>
         {
             AdminPortalGdprCommandResult result = await QueryService.ApiClient
-                .RestrictProcessingAsync(Party.Id, _restrictionReason, CancellationToken.None)
+                .RestrictProcessingAsync(Party.Id, _restrictionReason, Token)
                 .ConfigureAwait(false);
             await RefreshParty.InvokeAsync().ConfigureAwait(false);
             return result;
@@ -256,7 +311,7 @@
         => await RunCommandAsync(async () =>
         {
             AdminPortalGdprCommandResult result = await QueryService.ApiClient
-                .LiftRestrictionAsync(Party.Id, CancellationToken.None)
+                .LiftRestrictionAsync(Party.Id, Token)
                 .ConfigureAwait(false);
             await RefreshParty.InvokeAsync().ConfigureAwait(false);
             return result;
@@ -272,7 +327,7 @@
         await RunCommandAsync(async () =>
         {
             AdminPortalGdprCommandResult result = await QueryService.ApiClient
-                .AddConsentAsync(Party.Id, _consentChannelId!, _consentPurpose!, lawfulBasis, CancellationToken.None)
+                .AddConsentAsync(Party.Id, _consentChannelId!, _consentPurpose!, lawfulBasis, Token)
                 .ConfigureAwait(false);
             await RefreshParty.InvokeAsync().ConfigureAwait(false);
             return result;
@@ -283,7 +338,7 @@
         => await RunCommandAsync(async () =>
         {
             AdminPortalGdprCommandResult result = await QueryService.ApiClient
-                .RevokeConsentAsync(Party.Id, consentId, CancellationToken.None)
+                .RevokeConsentAsync(Party.Id, consentId, Token)
                 .ConfigureAwait(false);
             await RefreshParty.InvokeAsync().ConfigureAwait(false);
             return result;
@@ -294,23 +349,38 @@
         await RunQueryAsync(async () =>
         {
             AdminPortalExportDownload export = await QueryService.ApiClient
-                .ExportPartyDataAsync(Party.Id, CancellationToken.None)
+                .ExportPartyDataAsync(Party.Id, Token)
                 .ConfigureAwait(false);
-            _exportFileName = export.FileName;
-            if (export.Payload.Length > 0)
+            // Defense-in-depth: re-derive the download filename from non-PII components
+            // rather than trusting the transport-supplied FileName. Resolved 2026-05-10 (D2).
+            string safeFileName = GdprExportFileNameBuilder.Build(Party.Id, DateTimeOffset.UtcNow);
+            if (export.Payload.Length == 0)
             {
-                try
-                {
-                    await JsRuntime.InvokeVoidAsync(
-                        "HexalithPartiesAdminPortal.downloadJson",
-                        export.FileName,
-                        export.ContentType,
-                        Convert.ToBase64String(export.Payload)).ConfigureAwait(false);
-                }
-                catch (JSException)
-                {
-                    // Hosts without the optional download helper still receive the safe filename cue.
-                }
+                _exportFileName = null;
+                throw new AdminPortalQueryException(AdminPortalQueryFailureKind.TransientFailure);
+            }
+
+            try
+            {
+                await JsRuntime.InvokeVoidAsync(
+                    "HexalithPartiesAdminPortal.downloadJson",
+                    safeFileName,
+                    export.ContentType,
+                    Convert.ToBase64String(export.Payload)).ConfigureAwait(false);
+                _exportFileName = safeFileName;
+            }
+            catch (JSDisconnectedException)
+            {
+                // Circuit disconnect: drop the export silently; the operator's session is gone.
+                _exportFileName = null;
+                throw new AdminPortalQueryException(AdminPortalQueryFailureKind.TransientFailure);
+            }
+            catch (JSException)
+            {
+                // Host did not register the download helper — surface a transient failure
+                // rather than implying the export completed.
+                _exportFileName = null;
+                throw new AdminPortalQueryException(AdminPortalQueryFailureKind.TransientFailure);
             }
         }).ConfigureAwait(false);
     }
@@ -320,7 +390,7 @@
         await RunQueryAsync(async () =>
         {
             _processingRecords = await QueryService.ApiClient
-                .GetProcessingRecordsAsync(Party.Id, CancellationToken.None)
+                .GetProcessingRecordsAsync(Party.Id, Token)
                 .ConfigureAwait(false);
         }).ConfigureAwait(false);
     }
@@ -332,11 +402,20 @@
         {
             AdminPortalGdprCommandResult result = await action().ConfigureAwait(false);
             _lastOutcome = result.Outcome;
-            _correlationId ??= result.CorrelationId;
+            // Refresh correlation per command so auditors see the most recent operation,
+            // not the first one ever recorded for this party.
+            if (!string.IsNullOrWhiteSpace(result.CorrelationId))
+            {
+                _correlationId = result.CorrelationId;
+            }
         }
         catch (AdminPortalQueryException ex)
         {
             _lastOutcome = OutcomeFromFailure(ex.Kind);
+        }
+        catch (OperationCanceledException) when (Token.IsCancellationRequested)
+        {
+            // Component disposed or party changed mid-flight; drop result silently.
         }
         finally
         {
@@ -356,6 +435,10 @@
         {
             _lastOutcome = OutcomeFromFailure(ex.Kind);
         }
+        catch (OperationCanceledException) when (Token.IsCancellationRequested)
+        {
+            // Component disposed or party changed mid-flight; drop result silently.
+        }
         finally
         {
             _isBusy = false;
@@ -368,9 +451,12 @@
             AdminPortalQueryFailureKind.AuthenticationRequired => AdminPortalGdprOutcome.AuthenticationRequired,
             AdminPortalQueryFailureKind.TenantRequired => AdminPortalGdprOutcome.MissingTenant,
             AdminPortalQueryFailureKind.Forbidden => AdminPortalGdprOutcome.Forbidden,
+            AdminPortalQueryFailureKind.NotFound => AdminPortalGdprOutcome.NotFound,
+            AdminPortalQueryFailureKind.Conflict => AdminPortalGdprOutcome.ErasureInProgress,
             AdminPortalQueryFailureKind.Gone => AdminPortalGdprOutcome.Erased,
             AdminPortalQueryFailureKind.Validation => AdminPortalGdprOutcome.ValidationRejected,
             AdminPortalQueryFailureKind.TransientFailure => AdminPortalGdprOutcome.TransientFailure,
+            AdminPortalQueryFailureKind.ContractUnavailable => AdminPortalGdprOutcome.ContractUnavailable,
             _ => AdminPortalGdprOutcome.Unknown,
         };
 }
