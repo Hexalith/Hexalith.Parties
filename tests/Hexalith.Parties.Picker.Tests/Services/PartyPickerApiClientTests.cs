@@ -1,7 +1,10 @@
 using System.Net;
 
+using Hexalith.Parties.Client;
+using Hexalith.Parties.Client.Abstractions;
+using Hexalith.Parties.Contracts.Models;
+using Hexalith.Parties.Contracts.ValueObjects;
 using Hexalith.Parties.Picker.Services;
-using Hexalith.Parties.Picker.Tests.Services;
 
 using Shouldly;
 
@@ -10,10 +13,10 @@ namespace Hexalith.Parties.Picker.Tests.Services;
 public sealed class PartyPickerApiClientTests
 {
     [Fact]
-    public async Task SearchAsync_WithoutAuthProvider_ReturnsAuthenticationRequiredWithoutCallingApi()
+    public async Task SearchAsync_WithoutAuthProvider_ReturnsAuthenticationRequiredWithoutCallingClient()
     {
-        var handler = new RecordingHttpMessageHandler();
-        var client = new PartyPickerApiClient(new HttpClient(handler) { BaseAddress = new Uri("https://parties.test/") });
+        var queryClient = new RecordingPartiesQueryClient();
+        var client = new PartyPickerApiClient(queryClient);
 
         PartyPickerSearchResponse response = await client.SearchAsync(new PartyPickerSearchRequest
         {
@@ -21,19 +24,19 @@ public sealed class PartyPickerApiClientTests
         }, CancellationToken.None);
 
         response.State.ShouldBe(PartyPickerSearchState.AuthenticationRequired);
-        handler.Requests.ShouldBeEmpty();
+        queryClient.SearchCalls.ShouldBeEmpty();
     }
 
     [Fact]
-    public async Task SearchAsync_BuildsApprovedSearchRequestWithBoundedPageSizeAndHostAuthorization()
+    public async Task SearchAsync_UsesTypedPartiesQueryClientWithNormalizedQueryAndBoundedPageSize()
     {
-        var handler = new RecordingHttpMessageHandler();
-        handler.Enqueue(PartyPickerTestData.SearchResponse(PartyPickerTestData.Result()));
-        var client = new PartyPickerApiClient(new HttpClient(handler) { BaseAddress = new Uri("https://parties.test/") });
+        var queryClient = new RecordingPartiesQueryClient();
+        queryClient.Enqueue(SearchResultPage(PartyPickerTestData.Result()));
+        var client = new PartyPickerApiClient(queryClient);
 
         PartyPickerSearchResponse response = await client.SearchAsync(new PartyPickerSearchRequest
         {
-            Query = "  ada  ",
+            Query = "  a\u0000da  ",
             Page = 2,
             PageSize = 250,
             Mode = PartyPickerSearchMode.Semantic,
@@ -42,80 +45,57 @@ public sealed class PartyPickerApiClientTests
         }, CancellationToken.None);
 
         response.State.ShouldBe(PartyPickerSearchState.Ready);
-        handler.Requests.Count.ShouldBe(1);
-        HttpRequestMessage request = handler.Requests.Single();
-        request.Method.ShouldBe(HttpMethod.Get);
-        request.RequestUri!.ToString().ShouldBe("https://parties.test/api/v1/parties/search?q=ada&page=2&pageSize=100&mode=semantic&caseId=case-42");
-        request.Headers.Authorization!.Scheme.ShouldBe("Bearer");
-        request.Headers.Authorization.Parameter.ShouldBe("token-from-host");
+        response.Metadata.SearchStatus.ShouldBe("Unavailable");
+        queryClient.SearchCalls.ShouldBe([new SearchCall("ada", 2, PartyPickerDefaults.MaxPageSize)]);
+    }
+
+    [Fact]
+    public async Task SearchAsync_WithInvisibleOnlyQuery_DoesNotCallClient()
+    {
+        var queryClient = new RecordingPartiesQueryClient();
+        var client = new PartyPickerApiClient(queryClient);
+
+        PartyPickerSearchResponse response = await client.SearchAsync(Request("\u0000\u0001"), CancellationToken.None);
+
+        response.State.ShouldBe(PartyPickerSearchState.Idle);
+        queryClient.SearchCalls.ShouldBeEmpty();
     }
 
     [Theory]
-    [InlineData("LocalOnly", PartyPickerSearchState.LocalOnly)]
-    [InlineData("Degraded", PartyPickerSearchState.Degraded)]
-    public async Task SearchAsync_MapsSearchStatusHeadersToBoundedStates(string header, PartyPickerSearchState expectedState)
+    [InlineData(401, PartyPickerSearchState.Unauthorized)]
+    [InlineData(403, PartyPickerSearchState.Forbidden)]
+    [InlineData(404, PartyPickerSearchState.NotFound)]
+    [InlineData(410, PartyPickerSearchState.Gone)]
+    [InlineData(503, PartyPickerSearchState.TransientFailure)]
+    public async Task SearchAsync_MapsClientFailuresToNonLeakingStates(int statusCode, PartyPickerSearchState expectedState)
     {
-        var handler = new RecordingHttpMessageHandler();
-        handler.Enqueue(PartyPickerTestData.SearchResponse(header, "backend reason", PartyPickerTestData.Result()));
-        var client = new PartyPickerApiClient(new HttpClient(handler) { BaseAddress = new Uri("https://parties.test/") });
-
-        PartyPickerSearchResponse response = await client.SearchAsync(Request("ada"), CancellationToken.None);
-
-        response.State.ShouldBe(expectedState);
-        response.Metadata.SearchStatus.ShouldBe(header);
-        response.Metadata.DegradedReason.ShouldBe("backend reason");
-    }
-
-    [Theory]
-    [InlineData(HttpStatusCode.Unauthorized, PartyPickerSearchState.Unauthorized)]
-    [InlineData(HttpStatusCode.Forbidden, PartyPickerSearchState.Forbidden)]
-    [InlineData(HttpStatusCode.NotFound, PartyPickerSearchState.NotFound)]
-    [InlineData(HttpStatusCode.Gone, PartyPickerSearchState.Gone)]
-    [InlineData(HttpStatusCode.ServiceUnavailable, PartyPickerSearchState.TransientFailure)]
-    public async Task SearchAsync_MapsApiFailuresToNonLeakingStates(HttpStatusCode statusCode, PartyPickerSearchState expectedState)
-    {
-        var handler = new RecordingHttpMessageHandler();
-        handler.Enqueue(PartyPickerTestData.Failure(statusCode));
-        var client = new PartyPickerApiClient(new HttpClient(handler) { BaseAddress = new Uri("https://parties.test/") });
+        var queryClient = new RecordingPartiesQueryClient();
+        queryClient.ThrowOnSearch = new PartiesClientException(
+            statusCode,
+            "Problem title",
+            "problem-type",
+            "token party Ada Lovelace backend detail",
+            "correlation-1");
+        var client = new PartyPickerApiClient(queryClient);
 
         PartyPickerSearchResponse response = await client.SearchAsync(Request("ada"), CancellationToken.None);
 
         response.State.ShouldBe(expectedState);
         response.SafeReason.ShouldNotBeNullOrWhiteSpace();
         response.SafeReason.ShouldNotContain("token");
+        response.SafeReason.ShouldNotContain("Ada");
     }
 
     [Fact]
-    public async Task SearchAsync_AllowsHostRequestCustomizerInsteadOfTokenProvider()
+    public async Task SearchAsync_EmptyTypedResult_ReturnsEmptyState()
     {
-        var handler = new RecordingHttpMessageHandler();
-        handler.Enqueue(PartyPickerTestData.SearchResponse(PartyPickerTestData.Result()));
-        var client = new PartyPickerApiClient(new HttpClient(handler) { BaseAddress = new Uri("https://parties.test/") });
+        var queryClient = new RecordingPartiesQueryClient();
+        queryClient.Enqueue(SearchResultPage());
+        var client = new PartyPickerApiClient(queryClient);
 
-        PartyPickerSearchResponse response = await client.SearchAsync(new PartyPickerSearchRequest
-        {
-            Query = "ada",
-            RequestCustomizer = (message, _) =>
-            {
-                message.Headers.Add("X-Host-Auth", "present");
-                return ValueTask.CompletedTask;
-            },
-        }, CancellationToken.None);
+        PartyPickerSearchResponse response = await client.SearchAsync(Request("ada"), CancellationToken.None);
 
-        response.State.ShouldBe(PartyPickerSearchState.Ready);
-        handler.Requests.Single().Headers.GetValues("X-Host-Auth").Single().ShouldBe("present");
-    }
-
-    [Fact]
-    public async Task SearchAsync_WithInvisibleOnlyQuery_DoesNotCallApi()
-    {
-        var handler = new RecordingHttpMessageHandler();
-        var client = new PartyPickerApiClient(new HttpClient(handler) { BaseAddress = new Uri("https://parties.test/") });
-
-        PartyPickerSearchResponse response = await client.SearchAsync(Request("\u0000\u0001"), CancellationToken.None);
-
-        response.State.ShouldBe(PartyPickerSearchState.Idle);
-        handler.Requests.ShouldBeEmpty();
+        response.State.ShouldBe(PartyPickerSearchState.Empty);
     }
 
     private static PartyPickerSearchRequest Request(string query)
@@ -124,4 +104,55 @@ public sealed class PartyPickerApiClientTests
             Query = query,
             AccessTokenProvider = _ => ValueTask.FromResult<string?>("host-token"),
         };
+
+    private static PagedResult<PartySearchResult> SearchResultPage(params PartySearchResult[] results)
+        => new()
+        {
+            Items = results,
+            Page = 1,
+            PageSize = 10,
+            TotalCount = results.Length,
+            TotalPages = results.Length == 0 ? 0 : 1,
+        };
+
+    internal sealed record SearchCall(string Query, int Page, int PageSize);
+
+    internal sealed class RecordingPartiesQueryClient : IPartiesQueryClient
+    {
+        private readonly Queue<PagedResult<PartySearchResult>> _responses = [];
+
+        public List<SearchCall> SearchCalls { get; } = [];
+
+        public Exception? ThrowOnSearch { get; set; }
+
+        public void Enqueue(PagedResult<PartySearchResult> response)
+            => _responses.Enqueue(response);
+
+        public Task<PartyDetail> GetPartyAsync(string partyId, CancellationToken ct)
+            => throw new NotSupportedException();
+
+        public Task<PagedResult<PartyIndexEntry>> ListPartiesAsync(
+            int page,
+            int pageSize,
+            PartyType? type,
+            bool? active,
+            DateTimeOffset? createdAfter,
+            DateTimeOffset? createdBefore,
+            DateTimeOffset? modifiedAfter,
+            DateTimeOffset? modifiedBefore,
+            CancellationToken ct)
+            => throw new NotSupportedException();
+
+        public Task<PagedResult<PartySearchResult>> SearchPartiesAsync(string query, int page, int pageSize, CancellationToken ct)
+        {
+            SearchCalls.Add(new SearchCall(query, page, pageSize));
+
+            if (ThrowOnSearch is not null)
+            {
+                throw ThrowOnSearch;
+            }
+
+            return Task.FromResult(_responses.Count == 0 ? SearchResultPage() : _responses.Dequeue());
+        }
+    }
 }

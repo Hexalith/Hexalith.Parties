@@ -1,6 +1,6 @@
 # Story 12.8: Picker Rewrite
 
-Status: ready-for-dev
+Status: blocked
 
 ## Story
 
@@ -23,22 +23,22 @@ so that picker integration matches the platform contract after Parties public RE
 
 ## Tasks / Subtasks
 
-- [ ] Confirm predecessor gates and current transport contract. (AC: 1, 5, 9, 10)
-  - [ ] Read `_bmad-output/implementation-artifacts/12-0-eventstore-parties-actor-invocation-feasibility-spike.md`.
-  - [ ] Read `_bmad-output/implementation-artifacts/12-1-apphost-recomposition.md`.
-  - [ ] Read `_bmad-output/implementation-artifacts/12-2-parties-actor-host.md`.
-  - [ ] Read `_bmad-output/implementation-artifacts/12-3-validation-relocation-and-tenant-auth-ownership.md`.
-  - [ ] Read `_bmad-output/implementation-artifacts/12-4-server-tier-1-tier-2-test-rewrite.md`.
-  - [ ] Read `_bmad-output/implementation-artifacts/12-5-parties-client-thin-wrapper.md`.
-  - [ ] Confirm `IPartiesQueryClient.SearchPartiesAsync` is backed by EventStore `POST /api/v1/queries`, or stop normal implementation and add only red guardrail tests/adapter seams.
-  - [ ] Do not edit `Hexalith.EventStore`, `Hexalith.FrontComposer`, `Hexalith.Tenants`, or `Hexalith.Memories` submodules for this story.
+- [x] Confirm predecessor gates and current transport contract. (AC: 1, 5, 9, 10)
+  - [x] Read `_bmad-output/implementation-artifacts/12-0-eventstore-parties-actor-invocation-feasibility-spike.md`.
+  - [x] Read `_bmad-output/implementation-artifacts/12-1-apphost-recomposition.md`.
+  - [x] Read `_bmad-output/implementation-artifacts/12-2-parties-actor-host.md`.
+  - [x] Read `_bmad-output/implementation-artifacts/12-3-validation-relocation-and-tenant-auth-ownership.md`.
+  - [x] Read `_bmad-output/implementation-artifacts/12-4-server-tier-1-tier-2-test-rewrite.md`.
+  - [x] Read `_bmad-output/implementation-artifacts/12-5-parties-client-thin-wrapper.md`.
+  - [x] Confirm `IPartiesQueryClient.SearchPartiesAsync` is backed by EventStore `POST /api/v1/queries`, or stop normal implementation and add only red guardrail tests/adapter seams.
+  - [x] Do not edit `Hexalith.EventStore`, `Hexalith.FrontComposer`, `Hexalith.Tenants`, or `Hexalith.Memories` submodules for this story.
 
 - [ ] Replace the picker direct REST transport with the typed Parties query client. (AC: 1, 2, 3, 5, 10)
-  - [ ] Replace `PartyPickerApiClient` or its internals so search goes through `IPartiesQueryClient.SearchPartiesAsync(query, page, pageSize, ct)` or the accepted successor method from Story 12.5.
-  - [ ] Remove production hard-coded old route literals such as `api/v1/parties/search`, `api/v1/parties`, and `api/v1/parties/{id}` from `src/Hexalith.Parties.Picker`.
-  - [ ] Keep page size bounded by `PartyPickerDefaults.MaxPageSize` and preserve query normalization that strips control characters.
-  - [ ] Preserve host-controlled auth/request customization by flowing it through the configured Parties client/EventStore gateway path; do not store, refresh, parse, or log JWTs in the picker.
-  - [ ] If rich search status metadata is not yet available through the typed client, expose a bounded `unknown/not available` state rather than fabricating local-only, degraded, semantic, hybrid, graph, email, or identifier matching.
+  - [x] Replace `PartyPickerApiClient` or its internals so search goes through `IPartiesQueryClient.SearchPartiesAsync(query, page, pageSize, ct)` or the accepted successor method from Story 12.5.
+  - [x] Remove production hard-coded old route literals such as `api/v1/parties/search`, `api/v1/parties`, and `api/v1/parties/{id}` from `src/Hexalith.Parties.Picker`.
+  - [x] Keep page size bounded by `PartyPickerDefaults.MaxPageSize` and preserve query normalization that strips control characters.
+  - [x] Preserve host-controlled auth/request customization by flowing it through the configured Parties client/EventStore gateway path; do not store, refresh, parse, or log JWTs in the picker.
+  - [x] If rich search status metadata is not yet available through the typed client, expose a bounded `unknown/not available` state rather than fabricating local-only, degraded, semantic, hybrid, graph, email, or identifier matching.
 
 - [ ] Preserve and tighten component behavior. (AC: 2, 4, 6, 8)
   - [ ] Keep `PartyPicker` public parameters source-compatible where practical: selected id, selected callback, disabled/read-only, debounce, labels, result template, custom-event dispatch, page size, search mode/case options where the client contract still supports them.
@@ -61,19 +61,19 @@ so that picker integration matches the platform contract after Parties public RE
   - [ ] Update picker usage docs/examples to show EventStore/Parties client configuration, selected-id persistence rules, privacy rules, and the behavior when rich search metadata is unavailable.
 
 - [ ] Rewrite focused tests and guardrails. (AC: 1-10)
-  - [ ] Update `tests/Hexalith.Parties.Picker.Tests/**` so service tests use `IPartiesQueryClient` fakes rather than `HttpMessageHandler` fakes for old REST URLs.
+  - [x] Update `tests/Hexalith.Parties.Picker.Tests/**` so service tests use `IPartiesQueryClient` fakes rather than `HttpMessageHandler` fakes for old REST URLs.
   - [ ] Preserve tests for initial render, debounce, search success, bounded page size, loading, empty, local-only/degraded or metadata-unavailable states, unauthorized, forbidden, not-found/gone, transient failure, retry, selected, clear, disabled/read-only, configuration-change cleanup, and stale-response suppression.
   - [ ] Preserve selection contract tests for Blazor callback and JavaScript event payload.
   - [ ] Preserve XSS tests for display name, contact value, identifier value, host labels, degraded reasons, ProblemDetails text, and localized labels.
-  - [ ] Add architecture/source tests proving `src/Hexalith.Parties.Picker` contains no old Parties REST route literals, no direct `HttpClient.GetAsync`/`SendAsync` transport to Parties routes, no DAPR actor/projection/search-service usage, and no raw markup APIs for untrusted values.
-  - [ ] Add package/reference tests proving the picker does not reference `Hexalith.Parties`, `Hexalith.Parties.Server`, `Hexalith.Parties.Projections`, DAPR, MediatR, FluentValidation, MVC controllers, Swagger/OpenAPI, or EventStore server assemblies.
+  - [x] Add architecture/source tests proving `src/Hexalith.Parties.Picker` contains no old Parties REST route literals, no direct `HttpClient.GetAsync`/`SendAsync` transport to Parties routes, no DAPR actor/projection/search-service usage, and no raw markup APIs for untrusted values.
+  - [x] Add package/reference tests proving the picker does not reference `Hexalith.Parties`, `Hexalith.Parties.Server`, `Hexalith.Parties.Projections`, DAPR, MediatR, FluentValidation, MVC controllers, Swagger/OpenAPI, or EventStore server assemblies.
 
 - [ ] Verify the rewritten picker. (AC: 1-10)
-  - [ ] Run `dotnet test tests/Hexalith.Parties.Picker.Tests/Hexalith.Parties.Picker.Tests.csproj --configuration Release`.
-  - [ ] Run `dotnet test tests/Hexalith.Parties.Client.Tests/Hexalith.Parties.Client.Tests.csproj --configuration Release`.
-  - [ ] Run affected contracts/package fitness tests.
-  - [ ] Run `dotnet build Hexalith.Parties.slnx --configuration Release`.
-  - [ ] If Story 12.5 remains blocked or the EventStore query contract is not frozen, record the exact limitation and do not mark unsupported transport behavior complete.
+  - [x] Run `dotnet test tests/Hexalith.Parties.Picker.Tests/Hexalith.Parties.Picker.Tests.csproj --configuration Release`.
+  - [x] Run `dotnet test tests/Hexalith.Parties.Client.Tests/Hexalith.Parties.Client.Tests.csproj --configuration Release`.
+  - [x] Run affected contracts/package fitness tests.
+  - [x] Run `dotnet build Hexalith.Parties.slnx --configuration Release`.
+  - [x] If Story 12.5 remains blocked or the EventStore query contract is not frozen, record the exact limitation and do not mark unsupported transport behavior complete.
 
 ## Dev Notes
 
@@ -182,22 +182,42 @@ so that picker integration matches the platform contract after Parties public RE
 
 ### Agent Model Used
 
-TBD
+Codex GPT-5
 
 ### Debug Log References
 
-TBD
+- 2026-05-10: Confirmed predecessor gate: Story 12.4 is `blocked`; Story 12.5 is `blocked`; `src/Hexalith.Parties.Client/HttpPartiesQueryClient.cs` still calls old Parties REST URLs, so `IPartiesQueryClient.SearchPartiesAsync` is not yet backed by EventStore `POST /api/v1/queries`.
+- 2026-05-10: Limited implementation mode only. Added picker adapter seam over `IPartiesQueryClient.SearchPartiesAsync`, removed old Parties REST route literals from production picker source, and added guardrail tests preventing their return.
+- 2026-05-10: Focused picker tests passed: `dotnet test tests/Hexalith.Parties.Picker.Tests/Hexalith.Parties.Picker.Tests.csproj --configuration Release` (28/28).
+- 2026-05-10: Client tests passed: `dotnet test tests/Hexalith.Parties.Client.Tests/Hexalith.Parties.Client.Tests.csproj --configuration Release` (56 passed, 6 skipped).
+- 2026-05-10: Contracts/package fitness check passed: `dotnet test tests/Hexalith.Parties.Contracts.Tests/Hexalith.Parties.Contracts.Tests.csproj --configuration Release` (42 passed, 15 skipped).
+- 2026-05-10: Solution build passed: `dotnet build Hexalith.Parties.slnx --configuration Release` (0 warnings, 0 errors).
 
 ### Completion Notes List
 
 - Ultimate context engine analysis completed - comprehensive developer guide created.
+- Story remains blocked for full production readiness because Story 12.5 is blocked and `IPartiesQueryClient.SearchPartiesAsync` is still implemented over old Parties REST in `HttpPartiesQueryClient`.
+- Added the allowed adapter seam: the picker-owned `PartyPickerApiClient` now consumes `IPartiesQueryClient.SearchPartiesAsync` instead of constructing `GET api/v1/parties/search`.
+- Preserved query normalization, page-size bounding, authentication-required preflight, bounded client error states, selected-id contract, and encoded Razor rendering behavior covered by existing component tests.
+- Rich search metadata is currently unavailable through the typed client seam; the picker records bounded unavailable metadata instead of fabricating local-only/degraded details.
+- Added guardrails proving production picker source has no retired Parties REST route literals, direct `HttpClient`/`GetAsync`/`SendAsync` transport markers, or raw markup markers.
+- Updated adopter docs to describe EventStore gateway/Parties client configuration and the current metadata limitation.
 
 ### File List
 
-TBD
+- `_bmad-output/implementation-artifacts/12-8-picker-rewrite.md`
+- `_bmad-output/implementation-artifacts/sprint-status.yaml`
+- `docs/frontend/party-picker.md`
+- `src/Hexalith.Parties.Picker/Extensions/PartyPickerServiceCollectionExtensions.cs`
+- `src/Hexalith.Parties.Picker/Hexalith.Parties.Picker.csproj`
+- `src/Hexalith.Parties.Picker/Services/PartyPickerApiClient.cs`
+- `tests/Hexalith.Parties.Picker.Tests/Components/PartyPickerComponentTests.cs`
+- `tests/Hexalith.Parties.Picker.Tests/Services/PartyPickerApiClientTests.cs`
+- `tests/Hexalith.Parties.Picker.Tests/Services/PartyPickerTransportGuardrailTests.cs`
 
 ## Change Log
 
 | Date | Version | Description | Author |
 |---|---:|---|---|
+| 2026-05-10 | 0.2 | Added typed-client picker adapter seam and guardrail tests, verified focused/client/contracts/build checks, and blocked full completion on Story 12.5 EventStore query contract. | Codex |
 | 2026-05-10 | 0.1 | Created ready-for-dev story through BMAD pre-dev hardening automation. | Codex |

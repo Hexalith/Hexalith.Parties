@@ -1,21 +1,19 @@
 # Embeddable Party Picker
 
-`Hexalith.Parties.Picker` is a Parties-owned Razor class library for host applications that need party search and selection without building a custom selector. It consumes the existing Parties REST read API only.
+`Hexalith.Parties.Picker` is a Parties-owned Razor class library for host applications that need party search and selection without building a custom selector. It consumes party reads through `Hexalith.Parties.Client` so host applications can point the client at the EventStore gateway configuration.
 
 ## Blazor Usage
 
-Register the picker services and provide an `HttpClient` owned by the host application:
+Register the picker services and provide the Parties client configuration. `Parties:BaseUrl` is the EventStore gateway base URL, not a Parties actor-host REST endpoint.
 
 ```csharp
-builder.Services.AddHttpClient();
-builder.Services.AddHexalithPartyPicker();
+builder.Services.AddHexalithPartyPicker(builder.Configuration);
 ```
 
 Render the component with host-owned authentication:
 
 ```razor
-<PartyPicker ApiBaseUrl="https://parties.example"
-             ContextKey="@($"{TenantContextVersion}:{UserContextVersion}")"
+<PartyPicker ContextKey="@($"{TenantContextVersion}:{UserContextVersion}")"
              AccessTokenProvider="GetAccessTokenAsync"
              SearchMode="hybrid"
              PageSize="10"
@@ -36,7 +34,6 @@ Then configure it from the JavaScript host:
 
 ```html
 <hexalith-party-picker id="party-picker"
-                       api-base-url="https://parties.example"
                        search-mode="hybrid"
                        page-size="10"></hexalith-party-picker>
 ```
@@ -54,17 +51,19 @@ The DOM `party-selected` detail intentionally contains only `partyId`, `partyTyp
 
 ## Search Behavior
 
-The picker calls `GET /api/v1/parties/search` with bounded `q`, `page`, `pageSize`, and only explicitly configured `mode` or `caseId` parameters. `pageSize` is capped at the backend maximum of `100`; the default type-ahead page size is `10`.
+The picker normalizes the type-ahead text, caps `pageSize` at `100`, and calls `IPartiesQueryClient.SearchPartiesAsync(query, page, pageSize, cancellationToken)`. The picker package must not construct old Parties REST URLs, call DAPR actors, or reach into Parties server/projection internals.
 
 Empty or invisible-only queries do not call the backend. The picker does not call Hexalith.Memories directly and does not emulate semantic, hybrid, graph, email, or identifier search in the browser.
 
-When the API returns `X-Parties-Search-Status`, `X-Parties-Search-Degraded-Reason`, `X-Service-Degraded`, or `X-Stale-Data-Age`, the picker preserves the metadata internally and renders bounded local-only/degraded states without printing raw backend exception text.
+Until Story 12.5 exposes/freeze rich search metadata through the typed client, metadata unavailable from `IPartiesQueryClient` is treated as bounded unavailable state. The picker must not fabricate local-only, degraded, semantic, hybrid, graph, email, or identifier matching details.
 
 ## Privacy And State
 
 Hosts must provide either an access-token provider, an in-memory token property for the custom element, or a request customizer. The picker does not refresh tokens and does not persist tokens.
 
 Use `ContextKey` to represent tenant, signed-in user, and host configuration changes. When it changes, the picker clears visible results, selected preview data, and pending requests before searching again.
+
+`ApiBaseUrl` remains on the component for source compatibility with existing hosts, but request routing is owned by the configured `Hexalith.Parties.Client` service. Do not point `ApiBaseUrl` at a Parties actor-host REST endpoint or rely on it for transport selection.
 
 The component renders all party data, labels, degraded states, and problem summaries through normal Razor text rendering. Do not pass raw HTML labels or templates that render untrusted values with `MarkupString`, `AddMarkupContent`, `innerHTML`, or unsafe markdown.
 

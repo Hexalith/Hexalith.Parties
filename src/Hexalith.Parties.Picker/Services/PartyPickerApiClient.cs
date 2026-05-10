@@ -1,17 +1,13 @@
-using System.Globalization;
 using System.Net;
-using System.Net.Http.Headers;
-using System.Net.Http.Json;
-using System.Text.Json;
 
+using Hexalith.Parties.Client;
+using Hexalith.Parties.Client.Abstractions;
 using Hexalith.Parties.Contracts.Models;
 
 namespace Hexalith.Parties.Picker.Services;
 
-public sealed class PartyPickerApiClient(HttpClient httpClient)
+public sealed class PartyPickerApiClient(IPartiesQueryClient queryClient)
 {
-    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
-
     public async Task<PartyPickerSearchResponse> SearchAsync(
         PartyPickerSearchRequest request,
         CancellationToken cancellationToken)
@@ -29,96 +25,53 @@ public sealed class PartyPickerApiClient(HttpClient httpClient)
             };
         }
 
-        if (request.AccessTokenProvider is null && request.RequestCustomizer is null)
+        if (!await HasHostRequestContextAsync(request, cancellationToken).ConfigureAwait(false))
         {
             return AuthenticationRequired(request);
         }
 
-        using HttpRequestMessage message = new(HttpMethod.Get, BuildSearchUri(request, query));
-
-        if (request.AccessTokenProvider is not null)
+        try
         {
-            string? token = await request.AccessTokenProvider(cancellationToken).ConfigureAwait(false);
-            if (string.IsNullOrWhiteSpace(token))
-            {
-                return AuthenticationRequired(request);
-            }
+            PagedResult<PartySearchResult> payload = await queryClient
+                .SearchPartiesAsync(
+                    query,
+                    Math.Max(1, request.Page),
+                    BoundPageSize(request.PageSize),
+                    cancellationToken)
+                .ConfigureAwait(false);
 
-            message.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            return ToSearchResponse(request, payload);
         }
-
-        if (request.RequestCustomizer is not null)
+        catch (PartiesClientException ex) when (ex.Status > 0)
         {
-            await request.RequestCustomizer(message, cancellationToken).ConfigureAwait(false);
+            return FailureResponse(request, (HttpStatusCode)ex.Status);
         }
-
-        using HttpResponseMessage response = await httpClient.SendAsync(message, cancellationToken).ConfigureAwait(false);
-        PartyPickerSearchMetadata metadata = ReadMetadata(response);
-
-        if (!response.IsSuccessStatusCode)
-        {
-            return FailureResponse(request, response.StatusCode, metadata);
-        }
-
-        PagedResult<PartySearchResult>? payload = await response.Content
-            .ReadFromJsonAsync<PagedResult<PartySearchResult>>(JsonOptions, cancellationToken)
-            .ConfigureAwait(false);
-
-        if (payload is null || payload.Items.Count == 0)
+        catch (HttpRequestException)
         {
             return new PartyPickerSearchResponse
             {
-                State = PartyPickerSearchState.Empty,
-                Metadata = metadata,
-                Page = payload?.Page ?? request.Page,
-                PageSize = payload?.PageSize ?? BoundPageSize(request.PageSize),
-                TotalCount = payload?.TotalCount ?? 0,
+                State = PartyPickerSearchState.TransientFailure,
+                Page = request.Page,
+                PageSize = BoundPageSize(request.PageSize),
+                SafeReason = "The Parties client could not complete the request.",
             };
         }
-
-        return new PartyPickerSearchResponse
-        {
-            State = metadata.IsLocalOnly
-                ? PartyPickerSearchState.LocalOnly
-                : metadata.IsDegraded
-                    ? PartyPickerSearchState.Degraded
-                    : PartyPickerSearchState.Ready,
-            Results = payload.Items,
-            Metadata = metadata,
-            Page = payload.Page,
-            PageSize = payload.PageSize,
-            TotalCount = payload.TotalCount,
-        };
     }
 
     public static int BoundPageSize(int pageSize)
         => Math.Clamp(pageSize <= 0 ? PartyPickerDefaults.PageSize : pageSize, 1, PartyPickerDefaults.MaxPageSize);
 
-    internal static Uri BuildSearchUri(PartyPickerSearchRequest request, string normalizedQuery)
+    private static async ValueTask<bool> HasHostRequestContextAsync(
+        PartyPickerSearchRequest request,
+        CancellationToken cancellationToken)
     {
-        int page = Math.Max(1, request.Page);
-        int pageSize = BoundPageSize(request.PageSize);
-        var parts = new List<string>
+        if (request.AccessTokenProvider is not null)
         {
-            $"q={Uri.EscapeDataString(normalizedQuery)}",
-            $"page={page.ToString(CultureInfo.InvariantCulture)}",
-            $"pageSize={pageSize.ToString(CultureInfo.InvariantCulture)}",
-        };
-
-        if (request.Mode is not null)
-        {
-            parts.Add($"mode={Uri.EscapeDataString(ToApiMode(request.Mode.Value))}");
+            string? token = await request.AccessTokenProvider(cancellationToken).ConfigureAwait(false);
+            return !string.IsNullOrWhiteSpace(token);
         }
 
-        if (!string.IsNullOrWhiteSpace(request.CaseId))
-        {
-            parts.Add($"caseId={Uri.EscapeDataString(request.CaseId)}");
-        }
-
-        string relative = $"api/v1/parties/search?{string.Join('&', parts)}";
-        return request.ApiBaseAddress is null
-            ? new Uri(relative, UriKind.Relative)
-            : new Uri(request.ApiBaseAddress, relative);
+        return request.RequestCustomizer is not null;
     }
 
     private static PartyPickerSearchResponse AuthenticationRequired(PartyPickerSearchRequest request)
@@ -132,8 +85,7 @@ public sealed class PartyPickerApiClient(HttpClient httpClient)
 
     private static PartyPickerSearchResponse FailureResponse(
         PartyPickerSearchRequest request,
-        HttpStatusCode statusCode,
-        PartyPickerSearchMetadata metadata)
+        HttpStatusCode statusCode)
         => new()
         {
             State = statusCode switch
@@ -149,7 +101,6 @@ public sealed class PartyPickerApiClient(HttpClient httpClient)
                     HttpStatusCode.GatewayTimeout => PartyPickerSearchState.TransientFailure,
                 _ => PartyPickerSearchState.Error,
             },
-            Metadata = metadata,
             Page = request.Page,
             PageSize = BoundPageSize(request.PageSize),
             SafeReason = statusCode switch
@@ -163,28 +114,35 @@ public sealed class PartyPickerApiClient(HttpClient httpClient)
             StatusCode = statusCode,
         };
 
-    private static PartyPickerSearchMetadata ReadMetadata(HttpResponseMessage response)
-        => new()
+    private static PartyPickerSearchResponse ToSearchResponse(
+        PartyPickerSearchRequest request,
+        PagedResult<PartySearchResult> payload)
+    {
+        if (payload.Items.Count == 0)
         {
-            SearchStatus = ReadHeader(response, "X-Parties-Search-Status"),
-            DegradedReason = ReadHeader(response, "X-Parties-Search-Degraded-Reason"),
-            ServiceDegraded = ReadHeader(response, "X-Service-Degraded"),
-            StaleDataAge = ReadHeader(response, "X-Stale-Data-Age"),
-        };
+            return new PartyPickerSearchResponse
+            {
+                State = PartyPickerSearchState.Empty,
+                Page = payload.Page,
+                PageSize = payload.PageSize,
+                TotalCount = payload.TotalCount,
+            };
+        }
 
-    private static string? ReadHeader(HttpResponseMessage response, string name)
-        => response.Headers.TryGetValues(name, out IEnumerable<string>? values)
-            ? values.FirstOrDefault()
-            : null;
+        return new PartyPickerSearchResponse
+        {
+            State = PartyPickerSearchState.Ready,
+            Results = payload.Items,
+            Page = payload.Page,
+            PageSize = payload.PageSize,
+            TotalCount = payload.TotalCount,
+            Metadata = new PartyPickerSearchMetadata
+            {
+                SearchStatus = "Unavailable",
+            },
+        };
+    }
 
     private static string NormalizeQuery(string query)
         => string.Concat(query.Where(c => !char.IsControl(c))).Trim();
-
-    private static string ToApiMode(PartyPickerSearchMode mode)
-        => mode switch
-        {
-            PartyPickerSearchMode.Lexical => "lexical",
-            PartyPickerSearchMode.Semantic => "semantic",
-            _ => "hybrid",
-        };
 }

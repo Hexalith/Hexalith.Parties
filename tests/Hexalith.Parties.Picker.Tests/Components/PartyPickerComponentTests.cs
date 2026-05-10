@@ -1,5 +1,6 @@
 using Bunit;
 
+using Hexalith.Parties.Contracts.Models;
 using Hexalith.Parties.Contracts.ValueObjects;
 using Hexalith.Parties.Picker.Components;
 using Hexalith.Parties.Picker.Services;
@@ -17,7 +18,7 @@ public sealed class PartyPickerComponentTests : BunitContext
     [Fact]
     public void PartyPicker_InitialRender_ExposesAccessibleSearchAndIdleState()
     {
-        RegisterClient(new RecordingHttpMessageHandler());
+        RegisterClient();
 
         IRenderedComponent<PartyPicker> cut = Render<PartyPicker>(parameters => parameters
             .Add(p => p.AccessToken, "host-token")
@@ -31,7 +32,7 @@ public sealed class PartyPickerComponentTests : BunitContext
     [Fact]
     public void PartyPicker_UsesLocalizedLabelsWithoutUnsafeMarkup()
     {
-        RegisterClient(new RecordingHttpMessageHandler());
+        RegisterClient();
 
         IRenderedComponent<PartyPicker> cut = Render<PartyPicker>(parameters => parameters
             .Add(p => p.AccessToken, "host-token")
@@ -49,9 +50,9 @@ public sealed class PartyPickerComponentTests : BunitContext
     [Fact]
     public void PartyPicker_SearchSuccess_RendersEncodedResultsAndStatusText()
     {
-        var handler = new RecordingHttpMessageHandler();
-        handler.Enqueue(PartyPickerTestData.SearchResponse(PartyPickerTestData.Result(name: "<script>alert(1)</script>")));
-        RegisterClient(handler);
+        var queryClient = new PartyPickerApiClientTests.RecordingPartiesQueryClient();
+        queryClient.Enqueue(SearchResultPage(PartyPickerTestData.Result(name: "<script>alert(1)</script>")));
+        RegisterClient(queryClient);
 
         IRenderedComponent<PartyPicker> cut = Render<PartyPicker>(parameters => parameters
             .Add(p => p.AccessToken, "host-token")
@@ -70,9 +71,9 @@ public sealed class PartyPickerComponentTests : BunitContext
     [Fact]
     public void PartyPicker_LocalOnlyAndDegradedStates_AreVisibleAndBounded()
     {
-        var handler = new RecordingHttpMessageHandler();
-        handler.Enqueue(PartyPickerTestData.SearchResponse("LocalOnly", "local fallback", PartyPickerTestData.Result()));
-        RegisterClient(handler);
+        var queryClient = new PartyPickerApiClientTests.RecordingPartiesQueryClient();
+        queryClient.Enqueue(SearchResultPage(PartyPickerTestData.Result()));
+        RegisterClient(queryClient);
 
         IRenderedComponent<PartyPicker> cut = Render<PartyPicker>(parameters => parameters
             .Add(p => p.AccessToken, "host-token")
@@ -83,7 +84,7 @@ public sealed class PartyPickerComponentTests : BunitContext
 
         cut.WaitForAssertion(() =>
         {
-            cut.Find(".hx-party-picker__status").TextContent.ShouldBe("Local search results");
+            cut.Find(".hx-party-picker__status").TextContent.ShouldBeEmpty();
             cut.Markup.ShouldNotContain("local fallback");
         });
     }
@@ -91,8 +92,8 @@ public sealed class PartyPickerComponentTests : BunitContext
     [Fact]
     public void PartyPicker_MissingToken_ShowsAuthenticationRequiredWithoutRequest()
     {
-        var handler = new RecordingHttpMessageHandler();
-        RegisterClient(handler);
+        var queryClient = new PartyPickerApiClientTests.RecordingPartiesQueryClient();
+        RegisterClient(queryClient);
 
         IRenderedComponent<PartyPicker> cut = Render<PartyPicker>(parameters => parameters
             .Add(p => p.DebounceMilliseconds, 1)
@@ -103,16 +104,16 @@ public sealed class PartyPickerComponentTests : BunitContext
         cut.WaitForAssertion(() =>
         {
             cut.Find(".hx-party-picker__status").TextContent.ShouldBe("Authentication is required");
-            handler.Requests.ShouldBeEmpty();
+            queryClient.SearchCalls.ShouldBeEmpty();
         });
     }
 
     [Fact]
     public async Task PartyPicker_ContextChange_ClearsVisibleResultsAndSelection()
     {
-        var handler = new RecordingHttpMessageHandler();
-        handler.Enqueue(PartyPickerTestData.SearchResponse(PartyPickerTestData.Result()));
-        RegisterClient(handler);
+        var queryClient = new PartyPickerApiClientTests.RecordingPartiesQueryClient();
+        queryClient.Enqueue(SearchResultPage(PartyPickerTestData.Result()));
+        RegisterClient(queryClient);
 
         PartyPickerSelection? selected = null;
         IRenderedComponent<PartyPicker> cut = Render<PartyPicker>(parameters => parameters
@@ -157,9 +158,19 @@ public sealed class PartyPickerComponentTests : BunitContext
         detail.ToString().ShouldNotContain("token");
     }
 
-    private void RegisterClient(RecordingHttpMessageHandler handler)
+    private void RegisterClient(PartyPickerApiClientTests.RecordingPartiesQueryClient? queryClient = null)
     {
-        var httpClient = new HttpClient(handler) { BaseAddress = new Uri("https://parties.test/") };
-        Services.AddScoped(_ => new PartyPickerApiClient(httpClient));
+        queryClient ??= new PartyPickerApiClientTests.RecordingPartiesQueryClient();
+        Services.AddScoped(_ => new PartyPickerApiClient(queryClient));
     }
+
+    private static PagedResult<PartySearchResult> SearchResultPage(params PartySearchResult[] results)
+        => new()
+        {
+            Items = results,
+            Page = 1,
+            PageSize = 10,
+            TotalCount = results.Length,
+            TotalPages = results.Length == 0 ? 0 : 1,
+        };
 }
