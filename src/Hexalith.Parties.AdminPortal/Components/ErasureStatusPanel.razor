@@ -1,0 +1,45 @@
+<section aria-labelledby="@($"erasure-status-heading-{InstanceId}")">
+    <h4 id="@($"erasure-status-heading-{InstanceId}")">@Labels.GdprErasureStatus</h4>
+    @if (Status is null)
+    {
+        <p>@Labels.GdprCertificateUnavailable</p>
+    }
+    else
+    {
+        <dl>
+            <dt>@Labels.Status</dt>
+            <dd>@Status.Status</dd>
+            <dt>@Labels.GdprUpdatedAt</dt>
+            <dd>@FormatDate(Status.UpdatedAt)</dd>
+            <dt>@Labels.ErasedAt</dt>
+            <dd>@FormatOptionalDate(Status.ErasedAt)</dd>
+        </dl>
+    }
+
+    <section aria-labelledby="@($"erasure-report-heading-{InstanceId}")">
+        <h5 id="@($"erasure-report-heading-{InstanceId}")">@Labels.GdprCertificate</h5>
+        <ErasureVerificationReportPanel Certificate="Certificate" Labels="Labels" />
+    </section>
+</section>
+
+@code {
+    [Parameter, EditorRequired]
+    public PartyErasureStatusRecord? Status { get; set; }
+
+    [Parameter, EditorRequired]
+    public ErasureCertificate? Certificate { get; set; }
+
+    [Parameter, EditorRequired]
+    public AdminPortalLabels Labels { get; set; } = new();
+
+    [Parameter]
+    public string InstanceId { get; set; } = Guid.NewGuid().ToString("N");
+
+    private string FormatOptionalDate(DateTimeOffset? date)
+        => date is null ? Labels.MissingDate : FormatDate(date.Value);
+
+    private string FormatDate(DateTimeOffset date)
+        => date == default
+            ? Labels.MissingDate
+            : date.ToString("g", System.Globalization.CultureInfo.CurrentCulture);
+}

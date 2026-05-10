@@ -1,0 +1,104 @@
+<section aria-labelledby="@($"consent-management-heading-{InstanceId}")">
+    <h4 id="@($"consent-management-heading-{InstanceId}")">@Labels.ConsentRecords</h4>
+    <div class="hx-parties-admin__gdpr-form">
+        <FluentTextInput Value="@ChannelId"
+                         ValueChanged="ChannelIdChanged"
+                         Label="@Labels.GdprChannelId"
+                         aria-label="@Labels.GdprChannelId" />
+        <FluentTextInput Value="@Purpose"
+                         ValueChanged="PurposeChanged"
+                         Label="@Labels.GdprPurpose"
+                         aria-label="@Labels.GdprPurpose" />
+        <FluentSelect TOption="string" TValue="string"
+                      Items="@LawfulBasisOptions"
+                      Value="@LawfulBasisValue"
+                      ValueChanged="LawfulBasisValueChanged"
+                      Label="@Labels.GdprLawfulBasis"
+                      aria-label="@Labels.GdprLawfulBasis" />
+        <FluentButton Appearance="ButtonAppearance.Outline"
+                      Disabled="@(!CanAdd)"
+                      OnClick="Add">
+            @Labels.AddConsent
+        </FluentButton>
+    </div>
+
+    @if (ConsentRecords.Count == 0)
+    {
+        <p>@Labels.NoConsentRecords</p>
+    }
+    else
+    {
+        <ul>
+            @foreach (ConsentRecord consent in ConsentRecords)
+            {
+                <li>
+                    @consent.ChannelId - @Labels.ConsentPurposeLabel(consent.Purpose): @consent.LawfulBasis
+                    (@(consent.IsActive ? Labels.ConsentActive : Labels.ConsentRevoked))
+                    <dl>
+                        <dt>@Labels.ChangedAt</dt>
+                        <dd>@FormatDate(consent.GrantedAt)</dd>
+                        <dt>@Labels.TriggeredBy</dt>
+                        <dd>@consent.GrantedBy</dd>
+                    </dl>
+                    @if (consent.IsActive)
+                    {
+                        <FluentButton Appearance="ButtonAppearance.Subtle"
+                                      Disabled="@(!CanRevoke)"
+                                      OnClick="() => Revoke.InvokeAsync(consent.ConsentId)">
+                            @Labels.RevokeConsent
+                        </FluentButton>
+                    }
+                </li>
+            }
+        </ul>
+    }
+</section>
+
+@code {
+    [Parameter, EditorRequired]
+    public AdminPortalLabels Labels { get; set; } = new();
+
+    [Parameter]
+    public string InstanceId { get; set; } = Guid.NewGuid().ToString("N");
+
+    [Parameter]
+    public IReadOnlyList<ConsentRecord> ConsentRecords { get; set; } = [];
+
+    [Parameter]
+    public string? ChannelId { get; set; }
+
+    [Parameter]
+    public EventCallback<string?> ChannelIdChanged { get; set; }
+
+    [Parameter]
+    public string? Purpose { get; set; }
+
+    [Parameter]
+    public EventCallback<string?> PurposeChanged { get; set; }
+
+    [Parameter]
+    public string LawfulBasisValue { get; set; } = LawfulBasis.Consent.ToString();
+
+    [Parameter]
+    public EventCallback<string> LawfulBasisValueChanged { get; set; }
+
+    [Parameter]
+    public IReadOnlyList<string> LawfulBasisOptions { get; set; } = [];
+
+    [Parameter]
+    public bool CanAdd { get; set; }
+
+    [Parameter]
+    public bool CanRevoke { get; set; }
+
+    [Parameter]
+    public EventCallback Add { get; set; }
+
+    [Parameter]
+    public EventCallback<string> Revoke { get; set; }
+
+    private string FormatDate(DateTimeOffset date)
+        => date == default
+            ? Labels.MissingDate
+            : date.ToString("g", System.Globalization.CultureInfo.CurrentCulture);
+}

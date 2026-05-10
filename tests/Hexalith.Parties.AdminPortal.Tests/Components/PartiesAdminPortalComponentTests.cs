@@ -8,7 +8,9 @@ using System.Security.Claims;
 using Hexalith.Parties.AdminPortal.Components;
 using Hexalith.Parties.AdminPortal.Services;
 using Hexalith.Parties.AdminPortal.Tests.Services;
+using Hexalith.Parties.Client.AdminPortal;
 using Hexalith.Parties.Contracts.Models;
+using Hexalith.Parties.Contracts.Security;
 using Hexalith.Parties.Contracts.ValueObjects;
 using Hexalith.Tenants.Client.Projections;
 using Hexalith.Tenants.Contracts.Enums;
@@ -339,7 +341,7 @@ public sealed class PartiesAdminPortalComponentTests : BunitContext
     }
 
     [Fact]
-    public void PartiesAdminPortal_GdprOperations_AreDisabledUntilEventStoreClientContractExists()
+    public void PartiesAdminPortal_GdprOperations_SurfaceUsesEventStoreClientContract()
     {
         var api = new RecordingAdminPortalApiClient();
         api.EnqueueList(Page(IndexEntry("party-gdpr", "GDPR Party", PartyType.Person, true)));
@@ -365,15 +367,139 @@ public sealed class PartiesAdminPortalComponentTests : BunitContext
         cut.WaitForAssertion(() =>
         {
             cut.Markup.ShouldContain("GDPR operations");
-            cut.Markup.ShouldContain("EventStore GDPR client contract");
-            FindFluentButton(cut, "Request erasure").HasAttribute("disabled").ShouldBeTrue();
-            FindFluentButton(cut, "Restrict processing").HasAttribute("disabled").ShouldBeTrue();
+            cut.Markup.ShouldContain("Operational summary");
+            FindFluentButton(cut, "Request erasure").HasAttribute("disabled").ShouldBeFalse();
+            FindFluentButton(cut, "Restrict processing").HasAttribute("disabled").ShouldBeFalse();
             FindFluentButton(cut, "Lift restriction").HasAttribute("disabled").ShouldBeTrue();
             FindFluentButton(cut, "Add consent").HasAttribute("disabled").ShouldBeTrue();
-            FindFluentButton(cut, "Revoke consent").HasAttribute("disabled").ShouldBeTrue();
-            FindFluentButton(cut, "Export party data").HasAttribute("disabled").ShouldBeTrue();
-            FindFluentButton(cut, "Processing records").HasAttribute("disabled").ShouldBeTrue();
+            FindFluentButton(cut, "Export party data").HasAttribute("disabled").ShouldBeFalse();
+            FindFluentButton(cut, "Processing records").HasAttribute("disabled").ShouldBeFalse();
             cut.Markup.ShouldNotContain("api/v1/admin");
+        });
+    }
+
+    [Fact]
+    public void PartiesAdminPortal_RequestErasure_RequiresConfirmationAndDisplaysCorrelation()
+    {
+        var api = new RecordingAdminPortalApiClient();
+        api.EnqueueList(Page(IndexEntry("party-erase", "Erase Candidate", PartyType.Person, true)));
+        api.EnqueueDetail(new PartyDetail
+        {
+            Id = "party-erase",
+            Type = PartyType.Person,
+            IsActive = true,
+            DisplayName = "Erase Candidate",
+            SortName = "Candidate, Erase",
+            ContactChannels = [],
+            Identifiers = [],
+            ConsentRecords = [],
+            CreatedAt = DateTimeOffset.Parse("2026-05-01T00:00:00Z"),
+            LastModifiedAt = DateTimeOffset.Parse("2026-05-02T00:00:00Z"),
+        });
+        api.EnqueueErasureStatus(new PartyErasureStatusRecord
+        {
+            PartyId = "party-erase",
+            TenantId = "scope-a",
+            Status = "ErasurePending",
+            UpdatedAt = DateTimeOffset.Parse("2026-05-03T00:00:00Z"),
+        });
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+
+        IRenderedComponent<PartiesAdminPortal> cut = RenderAuthorized("scope-a");
+        cut.WaitForAssertion(() => cut.Markup.ShouldContain("Erase Candidate"));
+        ClickFluentButton(cut, "Erase Candidate");
+        cut.WaitForAssertion(() => cut.Markup.ShouldContain("GDPR operations"));
+
+        ClickFluentButton(cut, "Request erasure");
+        cut.WaitForAssertion(() => cut.Markup.ShouldContain("irreversible verification"));
+        ClickFluentButton(cut, "Confirm erasure");
+
+        cut.WaitForAssertion(() =>
+        {
+            api.ErasureRequests.Single().ShouldBe("party-erase");
+            api.ErasureStatusRequests.Single().ShouldBe("party-erase");
+            cut.Markup.ShouldContain("corr-erasure");
+            cut.Markup.ShouldContain("ErasurePending");
+        });
+    }
+
+    [Fact]
+    public void PartiesAdminPortal_ProcessingRecords_RenderEncodedAuditSummaries()
+    {
+        var api = new RecordingAdminPortalApiClient();
+        api.EnqueueList(Page(IndexEntry("party-processing", "Processing Party", PartyType.Person, true)));
+        api.EnqueueDetail(new PartyDetail
+        {
+            Id = "party-processing",
+            Type = PartyType.Person,
+            IsActive = true,
+            DisplayName = "Processing Party",
+            SortName = "Party, Processing",
+            ContactChannels = [],
+            Identifiers = [],
+            ConsentRecords = [],
+            CreatedAt = DateTimeOffset.Parse("2026-05-01T00:00:00Z"),
+            LastModifiedAt = DateTimeOffset.Parse("2026-05-02T00:00:00Z"),
+        });
+        api.EnqueueProcessingRecords(new ProcessingActivityRecord
+        {
+            SequenceNumber = 7,
+            EventType = "ConsentRecorded",
+            Timestamp = DateTimeOffset.Parse("2026-05-03T00:00:00Z"),
+            Summary = "<script>alert(1)</script>",
+        });
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+
+        IRenderedComponent<PartiesAdminPortal> cut = RenderAuthorized("scope-a");
+        cut.WaitForAssertion(() => cut.Markup.ShouldContain("Processing Party"));
+        ClickFluentButton(cut, "Processing Party");
+        cut.WaitForAssertion(() => cut.Markup.ShouldContain("GDPR operations"));
+
+        ClickFluentButton(cut, "Processing records");
+
+        cut.WaitForAssertion(() =>
+        {
+            api.ProcessingRecordRequests.Single().ShouldBe("party-processing");
+            cut.Markup.ShouldContain("ConsentRecorded");
+            cut.Markup.ShouldContain("&lt;script&gt;alert(1)&lt;/script&gt;");
+            cut.Markup.ShouldNotContain("<script>alert(1)</script>");
+        });
+    }
+
+    [Fact]
+    public void PartiesAdminPortal_PortabilityExport_UsesSafeDownloadEnvelopeCue()
+    {
+        var api = new RecordingAdminPortalApiClient();
+        api.EnqueueList(Page(IndexEntry("party-export", "Export Party", PartyType.Organization, true)));
+        api.EnqueueDetail(new PartyDetail
+        {
+            Id = "party-export",
+            Type = PartyType.Organization,
+            IsActive = true,
+            DisplayName = "Export Party",
+            SortName = "Party, Export",
+            ContactChannels = [],
+            Identifiers = [],
+            ConsentRecords = [],
+            CreatedAt = DateTimeOffset.Parse("2026-05-01T00:00:00Z"),
+            LastModifiedAt = DateTimeOffset.Parse("2026-05-02T00:00:00Z"),
+        });
+        api.EnqueueExport(new AdminPortalExportDownload("party-party-export-export.json", "application/json", []));
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+
+        IRenderedComponent<PartiesAdminPortal> cut = RenderAuthorized("scope-a");
+        cut.WaitForAssertion(() => cut.Markup.ShouldContain("Export Party"));
+        ClickFluentButton(cut, "Export Party");
+        cut.WaitForAssertion(() => cut.Markup.ShouldContain("GDPR operations"));
+
+        ClickFluentButton(cut, "Export party data");
+
+        cut.WaitForAssertion(() =>
+        {
+            api.ExportRequests.Single().ShouldBe("party-export");
+            cut.Markup.ShouldContain("Export prepared");
+            cut.Markup.ShouldContain("party-party-export-export.json");
+            cut.Markup.ShouldNotContain("Export Party-export");
         });
     }
 

@@ -17,13 +17,10 @@ namespace Hexalith.Parties.Contracts.Tests.AdminPortal;
 /// </summary>
 public sealed class AdminPortalGdprPrivacyGuardrailTests
 {
-    private const string SkipReason =
-        "TDD red phase — Story 10.2 GDPR portal assembly and privacy seams are not implemented yet.";
-
     private const string AdminPortalAssemblyName = "Hexalith.Parties.AdminPortal";
     private const string MarkupStringFullName = "Microsoft.AspNetCore.Components.MarkupString";
 
-    [Fact(Skip = SkipReason)]
+    [Fact]
     public void GdprComponents_DoNotDeclareMarkupStringFieldsOrProperties()
     {
         Assembly portal = LoadPortalAssembly();
@@ -38,26 +35,31 @@ public sealed class AdminPortalGdprPrivacyGuardrailTests
             "GDPR portal components must render party, consent, ProblemDetails, processing, and status text as encoded text.");
     }
 
-    [Fact(Skip = SkipReason)]
+    [Fact]
     public void GdprComponents_DoNotInvokeRawMarkupRenderApis()
     {
-        Assembly portal = LoadPortalAssembly();
-
-        IEnumerable<MethodInfo> renderMethods = portal.GetTypes()
-            .Where(IsGdprType)
-            .Select(t => t.GetMethod("BuildRenderTree", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
-            .Where(m => m is not null)!;
-
-        IEnumerable<string> offenders = renderMethods
-            .Where(m => m!.GetMethodBody() is not null)
-            .Where(m => ContainsForbiddenRenderCall(m!))
-            .Select(m => m!.DeclaringType?.FullName ?? m.Name);
+        string root = FindRepositoryRoot();
+        IEnumerable<string> offenders = Directory.EnumerateFiles(
+                Path.Combine(root, "src", "Hexalith.Parties.AdminPortal"),
+                "*.*",
+                SearchOption.AllDirectories)
+            .Where(path => path.EndsWith(".razor", StringComparison.OrdinalIgnoreCase)
+                || path.EndsWith(".cs", StringComparison.OrdinalIgnoreCase))
+            .Where(path => IsGdprSource(path))
+            .Where(path =>
+            {
+                string text = File.ReadAllText(path);
+                return text.Contains("MarkupString", StringComparison.Ordinal)
+                    || text.Contains("AddMarkupContent", StringComparison.Ordinal)
+                    || text.Contains("RenderTreeBuilder", StringComparison.Ordinal);
+            })
+            .Select(path => Path.GetRelativePath(root, path));
 
         offenders.ShouldBeEmpty(
             "GDPR portal components must not call AddMarkupContent or render MarkupString.");
     }
 
-    [Fact(Skip = SkipReason)]
+    [Fact]
     public void GdprComponents_DoNotExposeUnsafeJsInteropHtmlPaths()
     {
         Assembly portal = LoadPortalAssembly();
@@ -81,7 +83,7 @@ public sealed class AdminPortalGdprPrivacyGuardrailTests
         }
     }
 
-    [Fact(Skip = SkipReason)]
+    [Fact]
     public void GdprDownloadFilenameBuilder_UsesOnlyNonPiiIdentifiers()
     {
         Type filenameBuilder = LoadPortalAssembly().GetTypes()
@@ -99,7 +101,7 @@ public sealed class AdminPortalGdprPrivacyGuardrailTests
         parameterNames.ShouldNotContain("purpose");
     }
 
-    [Fact(Skip = SkipReason)]
+    [Fact]
     public void GdprStorageAndTelemetryKeys_DoNotContainPiiFragments()
     {
         Assembly portal = LoadPortalAssembly();
@@ -162,43 +164,8 @@ public sealed class AdminPortalGdprPrivacyGuardrailTests
         return memberType?.FullName == MarkupStringFullName;
     }
 
-    private static bool ContainsForbiddenRenderCall(MethodInfo method)
-    {
-        MethodBody? body = method.GetMethodBody();
-        if (body is null)
-        {
-            return false;
-        }
-
-        Module module = method.Module;
-        byte[] il = body.GetILAsByteArray() ?? [];
-
-        for (int i = 0; i + 4 < il.Length; i++)
-        {
-            if (il[i] is 0x28 or 0x6F)
-            {
-                int token = BitConverter.ToInt32(il, i + 1);
-                try
-                {
-                    MemberInfo? resolved = module.ResolveMember(token);
-                    if (resolved?.Name is string name
-                        && (name.Contains("AddMarkupContent", StringComparison.Ordinal)
-                            || name.Contains("MarkupString", StringComparison.Ordinal)))
-                    {
-                        return true;
-                    }
-                }
-                catch
-                {
-                    // Ignore unresolved metadata tokens during lightweight IL scan.
-                }
-
-                i += 4;
-            }
-        }
-
-        return false;
-    }
+    private static bool IsGdprSource(string path)
+        => IsGdprLiteral(Path.GetFileNameWithoutExtension(path));
 
     private static IEnumerable<string> StringConstants(Assembly assembly)
         => assembly.GetTypes()
@@ -214,4 +181,20 @@ public sealed class AdminPortalGdprPrivacyGuardrailTests
             || value.Contains("export", StringComparison.OrdinalIgnoreCase)
             || value.Contains("processing", StringComparison.OrdinalIgnoreCase)
             || value.Contains("dpo", StringComparison.OrdinalIgnoreCase);
+
+    private static string FindRepositoryRoot()
+    {
+        string? current = AppContext.BaseDirectory;
+        while (!string.IsNullOrWhiteSpace(current))
+        {
+            if (File.Exists(Path.Combine(current, "Hexalith.Parties.slnx")))
+            {
+                return current;
+            }
+
+            current = Directory.GetParent(current)?.FullName;
+        }
+
+        throw new InvalidOperationException("Repository root not found.");
+    }
 }

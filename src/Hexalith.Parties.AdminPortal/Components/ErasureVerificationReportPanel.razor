@@ -1,0 +1,26 @@
+@if (Certificate is null)
+{
+    <p>@Labels.GdprCertificateUnavailable</p>
+}
+else
+{
+    <dl>
+        <dt>@Labels.Status</dt>
+        <dd>@Certificate.VerificationStatus</dd>
+        <dt>@Labels.GdprUpdatedAt</dt>
+        <dd>@FormatDate(Certificate.Timestamp)</dd>
+    </dl>
+}
+
+@code {
+    [Parameter, EditorRequired]
+    public ErasureCertificate? Certificate { get; set; }
+
+    [Parameter, EditorRequired]
+    public AdminPortalLabels Labels { get; set; } = new();
+
+    private static string FormatDate(DateTimeOffset date)
+        => date == default
+            ? string.Empty
+            : date.ToString("g", System.Globalization.CultureInfo.CurrentCulture);
+}

@@ -91,6 +91,27 @@ so that incorrect deployments fail fast.
 
 ## Dev Notes
 
+### Required Topology Contract
+
+| Component | Role | Public/Internal | Required Dependencies | Expected DAPR/AppHost Validation |
+|---|---|---|---|---|
+| `eventstore` | Public command/query gateway for Parties commands and queries | Public gateway | Tenants authority, shared `statestore`, shared `pubsub`, Parties actor host command routing | Validates `*|party|v1` routes to `parties/process`; allows only required callers; reports `gateway_not_ready` separately from internal host health. |
+| `parties` | Internal actor host and projection runtime behind EventStore | Internal only | EventStore, Tenants, shared `statestore`, shared `pubsub` | Validates no public REST, Swagger/OpenAPI, or in-process MCP surface; validates only `eventstore -> parties /process` where required. |
+| `tenants` | Authority service for tenant validation and membership decisions | Internal dependency | Shared DAPR resources and EventStore-facing integration | Validates authority reachability as `authority_unreachable`; missing or malformed Tenants integration fails closed. |
+| `eventstore-admin` | EventStore inspection/admin server | Admin inspection only | EventStore gateway and configured Swagger endpoint | Validates admin wiring without treating admin resources as public command/query gateways. |
+| `eventstore-admin-ui` | Operator UI for EventStore admin inspection | Admin inspection only | `eventstore-admin` Swagger URL | Validates Admin UI-to-Admin Server wiring and reports `admin_resource_unavailable` separately. |
+| `parties-mcp` | Separate MCP consumer host | Consumer host | EventStore and Parties startup/liveness references only | Validates this is not a Parties-hosted public MCP surface and does not grant broad caller permissions. |
+
+Validation must keep EventStore gateway readiness, Parties internal host liveness, Tenants authority reachability, admin inspection resources, and MCP consumer host status as separate result categories. Tests should prove one category can fail without being reported as another category.
+
+### Validation Message Contract
+
+Validation output may include stable machine-readable codes, file names, check names, resource names, app ids, route names, and remediation categories. Validation output must not echo arbitrary operator-supplied values, secrets, access tokens, passwords, signing keys, connection strings, URI userinfo, Keycloak credentials, DAPR secret values, raw tenant membership data, raw protected party payloads, or raw exception traces. Console output must not rely on color alone; JSON output should remain stable enough for deterministic assertions.
+
+### Story 12.1 Deferred Gap Disposition Format
+
+When closing the Story 12.1 deferred validation items, record a compact decision table in the Dev Agent Record with columns: gap, prior source, disposition (`implemented-here`, `deferred-with-owner`, `no-longer-applicable`), evidence/test, owner, and rationale.
+
 ### Source Context
 
 - Epic 12 comes from `_bmad-output/planning-artifacts/sprint-change-proposal-2026-05-07.md`; Story 12.10 closes the topology/deployment validation loop for the EventStore-fronted pivot.
@@ -119,6 +140,7 @@ so that incorrect deployments fail fast.
 - Prefer structured parsing for XML/YAML/JSON/project files. Use regex only for narrow source-code invariants where no structured parser is practical.
 - Keep deployment validation side-effect-free: tests should write temp manifests and run `deploy/validate-deployment.ps1`; they must not start real infrastructure unless explicitly gated and documented.
 - Generated `bin/`, `obj/`, `TestResults`, Aspire dashboard captures, screenshots, and publish outputs must stay out of commits unless a test explicitly owns a sanitized fixture.
+- Do not initialize or update nested submodules. Do not edit EventStore, Tenants, FrontComposer, or Memories submodules. If a root-level submodule is already present and must be inspected, do not run recursive submodule commands.
 
 ### Security and Privacy Guidance
 
@@ -139,10 +161,11 @@ so that incorrect deployments fail fast.
 
 - Minimum focused tests:
   - Static AppHost resource declarations and dependency wiring for `eventstore`, `eventstore-admin`, `eventstore-admin-ui`, `parties`, `tenants`, and `parties-mcp`.
-  - DAPR access-control caller matrix: `parties -> eventstore` where required, `tenants -> eventstore` where required, `eventstore -> parties /process`, no wildcard app ids, no broad Parties `/**`.
-  - Deployment validator rejects missing EventStore gateway, missing Parties actor host, missing Tenants integration, missing shared state/pubsub, and malformed topology manifest values.
-  - Validator JSON output remains valid and sanitized for both pass and fail cases.
-  - Architectural fitness still blocks REST/OpenAPI/MCP regressions in `Hexalith.Parties` and keeps MCP only in `Hexalith.Parties.Mcp`.
+  - DAPR access-control caller matrix: `parties -> eventstore` where required, `tenants -> eventstore` where required, `eventstore -> parties /process`, explicit denied caller/resource examples, no wildcard app ids, and no broad Parties `/**`.
+  - Deployment validator rejects missing EventStore gateway, missing DAPR sidecar/config, missing Parties actor host, missing Tenants integration, missing shared state/pubsub, unauthorized DAPR scopes, admin UI treated as the command/query gateway, and malformed topology manifest values.
+  - Deployment validator includes at least one combined missing-dependency case and asserts each failure reports a distinct sanitized reason.
+  - Validator JSON and console output remain valid and sanitized for both pass and fail cases, including absence assertions for secrets, credentials, connection strings, URI userinfo, DAPR secret values, raw tenant data, and raw exception traces.
+  - Architectural fitness still blocks REST/OpenAPI/MCP regressions in `Hexalith.Parties` through layered checks for service registration, route mapping, OpenAPI document generation, exposed ports, and MCP host references; it keeps MCP only in `Hexalith.Parties.Mcp`.
   - AppHost source and launchSettings secret scans cover Keycloak, connection strings, bearer tokens, admin passwords, and client secrets.
   - Existing Tenants validation tests keep passing after pivoting `commandApiAppId` expectations to `eventstore` where appropriate.
 
@@ -206,4 +229,16 @@ TBD
 
 | Date | Version | Description | Author |
 |---|---:|---|---|
+| 2026-05-10 | 0.2 | Applied party-mode review clarifications for topology contract, DAPR matrices, negative validation cases, sanitized output, deferred-gap disposition, and submodule guardrails. | Codex |
 | 2026-05-10 | 0.1 | Created ready-for-dev story through BMAD pre-dev hardening automation. | Codex |
+
+## Party-Mode Review
+
+- Date/time: 2026-05-10T18:06:50+02:00
+- Selected story key: 12-10-deployment-validation-and-topology-fitness-rewrite
+- Command/skill invocation used: `/bmad-party-mode 12-10-deployment-validation-and-topology-fitness-rewrite; review;`
+- Participating BMAD agents: Winston (System Architect), Amelia (Senior Software Engineer), Murat (Master Test Architect and Quality Advisor), Paige (Technical Writer)
+- Findings summary: the story was directionally ready but needed sharper pre-dev wording for the required EventStore-fronted topology contract, DAPR caller/resource matrices, gateway readiness versus internal liveness categories, negative deployment-validation cases, sanitized output assertions, retired REST/OpenAPI/MCP guardrail layers, Story 12.1 deferred-gap disposition, and submodule boundaries.
+- Changes applied: added a required topology contract table; added validation output/redaction rules; added a Story 12.1 deferred-gap disposition format; strengthened focused testing guidance for denied DAPR paths, combined missing-dependency failures, sanitized JSON/console assertions, layered retired-surface checks, and non-recursive submodule handling.
+- Findings deferred: exact runtime health probe endpoints and deployment-manifest source-of-truth locations remain implementation details to validate against existing AppHost/deploy-validation structure; any platform contract change outside topology validation must be recorded as a blocker rather than silently implemented here.
+- Final recommendation: ready-for-dev

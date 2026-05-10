@@ -1,0 +1,354 @@
+@inject AdminPortalPartyQueryService QueryService
+@inject IJSRuntime JsRuntime
+
+<section aria-labelledby="@($"gdpr-operations-heading-{_instanceId}")">
+    <h3 id="@($"gdpr-operations-heading-{_instanceId}")">@Labels.GdprOperations</h3>
+    <p role="status" aria-live="polite">@OperationMessage</p>
+
+    <DpoOperationalSummaryPanel Party="Party"
+                                Labels="Labels"
+                                InstanceId="@_instanceId"
+                                IsErasurePending="@IsErasurePending"
+                                ProcessingRecordCount="@_processingRecords.Count" />
+
+    <section aria-labelledby="@($"erasure-actions-heading-{_instanceId}")">
+        <h4 id="@($"erasure-actions-heading-{_instanceId}")">@Labels.RequestErasure</h4>
+        @if (_confirmErasure)
+        {
+            <p>@Labels.GdprErasureWarning</p>
+            <FluentButton Appearance="ButtonAppearance.Primary"
+                          Disabled="@_isBusy"
+                          OnClick="ConfirmErasureAsync">
+                @Labels.GdprConfirmErasure
+            </FluentButton>
+            <FluentButton Appearance="ButtonAppearance.Outline"
+                          Disabled="@_isBusy"
+                          OnClick="CancelErasure">
+                @Labels.GdprCancel
+            </FluentButton>
+        }
+        else
+        {
+            <FluentButton Appearance="ButtonAppearance.Outline"
+                          Disabled="@(!CanRequestErasure)"
+                          OnClick="BeginErasureConfirmation">
+                @Labels.RequestErasure
+            </FluentButton>
+        }
+        <FluentButton Appearance="ButtonAppearance.Outline"
+                      Disabled="@_isBusy"
+                      OnClick="RefreshErasureStatusAsync">
+            @Labels.GdprRefreshStatus
+        </FluentButton>
+        @if (CanRetryVerification)
+        {
+            <FluentButton Appearance="ButtonAppearance.Outline"
+                          Disabled="@_isBusy"
+                          OnClick="RetryVerificationAsync">
+                @Labels.GdprRetryVerification
+            </FluentButton>
+        }
+        @if (!string.IsNullOrWhiteSpace(_correlationId))
+        {
+            <p>@Labels.GdprCorrelationId: @_correlationId</p>
+        }
+    </section>
+
+    <ErasureStatusPanel Status="_erasureStatus"
+                        Certificate="_erasureCertificate"
+                        Labels="Labels"
+                        InstanceId="@_instanceId" />
+
+    <RestrictionActionsPanel Labels="Labels"
+                             InstanceId="@_instanceId"
+                             Reason="@_restrictionReason"
+                             ReasonChanged="value => _restrictionReason = value"
+                             CanRestrict="@CanRestrict"
+                             CanLift="@CanLiftRestriction"
+                             Restrict="RestrictAsync"
+                             Lift="LiftRestrictionAsync" />
+
+    <ConsentManagementPanel Labels="Labels"
+                            InstanceId="@_instanceId"
+                            ConsentRecords="@ConsentRecords"
+                            ChannelId="@_consentChannelId"
+                            ChannelIdChanged="value => _consentChannelId = value"
+                            Purpose="@_consentPurpose"
+                            PurposeChanged="value => _consentPurpose = value"
+                            LawfulBasisValue="@_lawfulBasisValue"
+                            LawfulBasisValueChanged="value => _lawfulBasisValue = value"
+                            LawfulBasisOptions="@_lawfulBasisOptions"
+                            CanAdd="@CanAddConsent"
+                            CanRevoke="@(!_isBusy)"
+                            Add="AddConsentAsync"
+                            Revoke="RevokeConsentAsync" />
+
+    <PortabilityExportPanel Labels="Labels"
+                            InstanceId="@_instanceId"
+                            CanExport="@CanExport"
+                            FileName="@_exportFileName"
+                            Export="ExportAsync" />
+
+    <ProcessingRecordsPanel Labels="Labels"
+                            InstanceId="@_instanceId"
+                            Records="@_processingRecords"
+                            Refresh="LoadProcessingRecordsAsync" />
+</section>
+
+@code {
+    private readonly string[] _lawfulBasisOptions = Enum.GetNames<LawfulBasis>();
+    private readonly string _instanceId = Guid.NewGuid().ToString("N").Substring(0, 8);
+    private IReadOnlyList<ProcessingActivityRecord> _processingRecords = [];
+    private PartyErasureStatusRecord? _erasureStatus;
+    private ErasureCertificate? _erasureCertificate;
+    private string? _previousPartyId;
+    private string? _correlationId;
+    private string? _restrictionReason;
+    private string? _consentChannelId;
+    private string? _consentPurpose;
+    private string _lawfulBasisValue = LawfulBasis.Consent.ToString();
+    private string? _exportFileName;
+    private AdminPortalGdprOutcome? _lastOutcome;
+    private bool _confirmErasure;
+    private bool _isBusy;
+
+    [Parameter, EditorRequired]
+    public PartyDetail Party { get; set; } = default!;
+
+    [Parameter, EditorRequired]
+    public AdminPortalLabels Labels { get; set; } = new();
+
+    [Parameter]
+    public EventCallback RefreshParty { get; set; }
+
+    private IReadOnlyList<ConsentRecord> ConsentRecords
+        => Party.ConsentRecords ?? [];
+
+    private string OperationMessage
+        => _lastOutcome switch
+        {
+            AdminPortalGdprOutcome.Accepted => Labels.GdprOperationAccepted,
+            AdminPortalGdprOutcome.Completed => Labels.GdprOperationCompleted,
+            AdminPortalGdprOutcome.ValidationRejected => Labels.GdprOperationRejected,
+            AdminPortalGdprOutcome.Forbidden => Labels.AccessDenied,
+            AdminPortalGdprOutcome.MissingTenant => Labels.TenantUnavailable,
+            AdminPortalGdprOutcome.ErasureInProgress => Labels.GdprDpoPendingErasure,
+            AdminPortalGdprOutcome.Erased => Labels.GdprTerminalErased,
+            AdminPortalGdprOutcome.TransientFailure => Labels.TransientFailure,
+            AdminPortalGdprOutcome.AuthenticationRequired => Labels.SignInRequired,
+            _ => Labels.GdprOperations,
+        };
+
+    private bool IsErasurePending
+        => Party.IsErased || _erasureStatus?.Status is "ErasurePending" or "KeyDestroyed" or "VerificationInProgress" or "Verified";
+
+    private bool CanRequestErasure
+        => !_isBusy && !Party.IsErased && !IsErasurePending;
+
+    private bool CanRestrict
+        => !_isBusy && !Party.IsRestricted && !Party.IsErased && !IsErasurePending;
+
+    private bool CanLiftRestriction
+        => !_isBusy && Party.IsRestricted && !Party.IsErased;
+
+    private bool CanAddConsent
+        => !_isBusy
+            && !Party.IsErased
+            && !string.IsNullOrWhiteSpace(_consentChannelId)
+            && !string.IsNullOrWhiteSpace(_consentPurpose);
+
+    private bool CanExport
+        => !_isBusy && !Party.IsErased && !IsErasurePending;
+
+    private bool CanRetryVerification
+        => !_isBusy && _erasureStatus?.Status is "VerificationPartial" or "VerificationFailed" or "Partial" or "Failed";
+
+    protected override void OnParametersSet()
+    {
+        if (!string.Equals(_previousPartyId, Party.Id, StringComparison.Ordinal))
+        {
+            _previousPartyId = Party.Id;
+            _confirmErasure = false;
+            _correlationId = null;
+            _erasureStatus = null;
+            _erasureCertificate = null;
+            _processingRecords = [];
+            _exportFileName = null;
+            _lastOutcome = null;
+        }
+    }
+
+    private void BeginErasureConfirmation()
+    {
+        _confirmErasure = true;
+        _lastOutcome = null;
+    }
+
+    private void CancelErasure() => _confirmErasure = false;
+
+    private async Task ConfirmErasureAsync()
+    {
+        await RunCommandAsync(async () =>
+        {
+            AdminPortalGdprCommandResult result = await QueryService.ApiClient
+                .RequestErasureAsync(Party.Id, CancellationToken.None)
+                .ConfigureAwait(false);
+            _correlationId = result.CorrelationId;
+            _confirmErasure = false;
+            await RefreshErasureStatusAsync().ConfigureAwait(false);
+            return result;
+        }).ConfigureAwait(false);
+    }
+
+    private async Task RefreshErasureStatusAsync()
+    {
+        await RunQueryAsync(async () =>
+        {
+            _erasureStatus = await QueryService.ApiClient
+                .GetErasureStatusAsync(Party.Id, CancellationToken.None)
+                .ConfigureAwait(false);
+            if (_erasureStatus?.Status is "Verified" or "Complete" or "Erased")
+            {
+                _erasureCertificate = await QueryService.ApiClient
+                    .GetErasureCertificateAsync(Party.Id, CancellationToken.None)
+                    .ConfigureAwait(false);
+            }
+        }).ConfigureAwait(false);
+    }
+
+    private async Task RetryVerificationAsync()
+        => await RunCommandAsync(() => QueryService.ApiClient
+            .RetryErasureVerificationAsync(Party.Id, CancellationToken.None)).ConfigureAwait(false);
+
+    private async Task RestrictAsync()
+        => await RunCommandAsync(async () =>
+        {
+            AdminPortalGdprCommandResult result = await QueryService.ApiClient
+                .RestrictProcessingAsync(Party.Id, _restrictionReason, CancellationToken.None)
+                .ConfigureAwait(false);
+            await RefreshParty.InvokeAsync().ConfigureAwait(false);
+            return result;
+        }).ConfigureAwait(false);
+
+    private async Task LiftRestrictionAsync()
+        => await RunCommandAsync(async () =>
+        {
+            AdminPortalGdprCommandResult result = await QueryService.ApiClient
+                .LiftRestrictionAsync(Party.Id, CancellationToken.None)
+                .ConfigureAwait(false);
+            await RefreshParty.InvokeAsync().ConfigureAwait(false);
+            return result;
+        }).ConfigureAwait(false);
+
+    private async Task AddConsentAsync()
+    {
+        if (!Enum.TryParse(_lawfulBasisValue, out LawfulBasis lawfulBasis))
+        {
+            lawfulBasis = LawfulBasis.Consent;
+        }
+
+        await RunCommandAsync(async () =>
+        {
+            AdminPortalGdprCommandResult result = await QueryService.ApiClient
+                .AddConsentAsync(Party.Id, _consentChannelId!, _consentPurpose!, lawfulBasis, CancellationToken.None)
+                .ConfigureAwait(false);
+            await RefreshParty.InvokeAsync().ConfigureAwait(false);
+            return result;
+        }).ConfigureAwait(false);
+    }
+
+    private async Task RevokeConsentAsync(string consentId)
+        => await RunCommandAsync(async () =>
+        {
+            AdminPortalGdprCommandResult result = await QueryService.ApiClient
+                .RevokeConsentAsync(Party.Id, consentId, CancellationToken.None)
+                .ConfigureAwait(false);
+            await RefreshParty.InvokeAsync().ConfigureAwait(false);
+            return result;
+        }).ConfigureAwait(false);
+
+    private async Task ExportAsync()
+    {
+        await RunQueryAsync(async () =>
+        {
+            AdminPortalExportDownload export = await QueryService.ApiClient
+                .ExportPartyDataAsync(Party.Id, CancellationToken.None)
+                .ConfigureAwait(false);
+            _exportFileName = export.FileName;
+            if (export.Payload.Length > 0)
+            {
+                try
+                {
+                    await JsRuntime.InvokeVoidAsync(
+                        "HexalithPartiesAdminPortal.downloadJson",
+                        export.FileName,
+                        export.ContentType,
+                        Convert.ToBase64String(export.Payload)).ConfigureAwait(false);
+                }
+                catch (JSException)
+                {
+                    // Hosts without the optional download helper still receive the safe filename cue.
+                }
+            }
+        }).ConfigureAwait(false);
+    }
+
+    private async Task LoadProcessingRecordsAsync()
+    {
+        await RunQueryAsync(async () =>
+        {
+            _processingRecords = await QueryService.ApiClient
+                .GetProcessingRecordsAsync(Party.Id, CancellationToken.None)
+                .ConfigureAwait(false);
+        }).ConfigureAwait(false);
+    }
+
+    private async Task RunCommandAsync(Func<Task<AdminPortalGdprCommandResult>> action)
+    {
+        _isBusy = true;
+        try
+        {
+            AdminPortalGdprCommandResult result = await action().ConfigureAwait(false);
+            _lastOutcome = result.Outcome;
+            _correlationId ??= result.CorrelationId;
+        }
+        catch (AdminPortalQueryException ex)
+        {
+            _lastOutcome = OutcomeFromFailure(ex.Kind);
+        }
+        finally
+        {
+            _isBusy = false;
+        }
+    }
+
+    private async Task RunQueryAsync(Func<Task> action)
+    {
+        _isBusy = true;
+        try
+        {
+            await action().ConfigureAwait(false);
+            _lastOutcome = AdminPortalGdprOutcome.Completed;
+        }
+        catch (AdminPortalQueryException ex)
+        {
+            _lastOutcome = OutcomeFromFailure(ex.Kind);
+        }
+        finally
+        {
+            _isBusy = false;
+        }
+    }
+
+    private static AdminPortalGdprOutcome OutcomeFromFailure(AdminPortalQueryFailureKind kind)
+        => kind switch
+        {
+            AdminPortalQueryFailureKind.AuthenticationRequired => AdminPortalGdprOutcome.AuthenticationRequired,
+            AdminPortalQueryFailureKind.TenantRequired => AdminPortalGdprOutcome.MissingTenant,
+            AdminPortalQueryFailureKind.Forbidden => AdminPortalGdprOutcome.Forbidden,
+            AdminPortalQueryFailureKind.Gone => AdminPortalGdprOutcome.Erased,
+            AdminPortalQueryFailureKind.Validation => AdminPortalGdprOutcome.ValidationRejected,
+            AdminPortalQueryFailureKind.TransientFailure => AdminPortalGdprOutcome.TransientFailure,
+            _ => AdminPortalGdprOutcome.Unknown,
+        };
+}

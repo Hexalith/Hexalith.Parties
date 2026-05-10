@@ -1,4 +1,5 @@
 using Hexalith.Parties.Client.Abstractions;
+using Hexalith.Parties.Client.AdminPortal;
 
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -28,6 +29,11 @@ public static class PartiesClientServiceCollectionExtensions
         });
 
         services.AddHttpClient<IPartiesQueryClient, HttpPartiesQueryClient>(client =>
+        {
+            client.BaseAddress = validatedBaseAddress;
+        });
+
+        services.AddHttpClient<IAdminPortalGdprClient, HttpAdminPortalGdprClient>(client =>
         {
             client.BaseAddress = validatedBaseAddress;
         });

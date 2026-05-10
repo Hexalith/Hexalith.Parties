@@ -212,19 +212,9 @@
                     </dl>
                 </section>
 
-                <section aria-labelledby="@($"gdpr-operations-heading-{_instanceId}")">
-                    <h3 id="@($"gdpr-operations-heading-{_instanceId}")">@EffectiveLabels.GdprOperations</h3>
-                    <p role="status" aria-live="polite">@EffectiveLabels.GdprOperationsUnavailable</p>
-                    <div class="hx-parties-admin__gdpr-actions">
-                        <FluentButton Disabled="true">@EffectiveLabels.RequestErasure</FluentButton>
-                        <FluentButton Disabled="true">@EffectiveLabels.RestrictProcessing</FluentButton>
-                        <FluentButton Disabled="true">@EffectiveLabels.LiftRestriction</FluentButton>
-                        <FluentButton Disabled="true">@EffectiveLabels.AddConsent</FluentButton>
-                        <FluentButton Disabled="true">@EffectiveLabels.RevokeConsent</FluentButton>
-                        <FluentButton Disabled="true">@EffectiveLabels.ExportPartyData</FluentButton>
-                        <FluentButton Disabled="true">@EffectiveLabels.ProcessingRecords</FluentButton>
-                    </div>
-                </section>
+                <PartyGdprOperationsPanel Party="_detail"
+                                          Labels="EffectiveLabels"
+                                          RefreshParty="RefreshSelectedPartyAsync" />
 
                 @* P-pass-2 D3.1: scoped party id is intentionally not displayed as a user-facing
                     label per Story 10.1 task line 60 ("do not display tenant:domain:aggregateId
@@ -283,6 +273,7 @@
     private CancellationTokenSource? _detailCts;
     private PartyDetail? _detail;
     private AdminPortalQueryMetadata? _detailMetadata;
+    private string? _selectedPartyId;
     private string? _previousContextSignature;
     private AdminPortalAuthorizationState _authorizationState = AdminPortalAuthorizationState.Unauthenticated;
     private AdminPortalRichSearchCapability _richSearchCapability = AdminPortalRichSearchCapability.LocalOnly();
@@ -542,6 +533,7 @@
         _validationDetail = null;
         _rows.Clear();
         _detail = null;
+        _selectedPartyId = null;
         _detailMetadata = null;
         _detailEmptyKind = DetailEmptyKind.SelectParty;
         _lastFailure = null;
@@ -657,6 +649,7 @@
             return;
         }
 
+        _selectedPartyId = partyId;
         long version = SwapDetailCts(out CancellationToken token);
         _isDetailLoading = true;
         await SafeStateHasChangedAsync().ConfigureAwait(false);
@@ -721,6 +714,11 @@
             await SafeStateHasChangedAsync().ConfigureAwait(false);
         }
     }
+
+    private Task RefreshSelectedPartyAsync()
+        => string.IsNullOrWhiteSpace(_selectedPartyId)
+            ? Task.CompletedTask
+            : SelectPartyAsync(_selectedPartyId);
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {

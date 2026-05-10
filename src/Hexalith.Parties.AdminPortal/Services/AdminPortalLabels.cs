@@ -155,6 +155,59 @@ public sealed record AdminPortalLabels
     public string GdprOperationsUnavailable { get; init; } =
         "GDPR operations are unavailable until the EventStore GDPR client contract is available.";
 
+    public string GdprOperationalSummary { get; init; } = "Operational summary";
+
+    public string GdprRestrictionReason { get; init; } = "Restriction reason";
+
+    public string GdprChannelId { get; init; } = "Channel id";
+
+    public string GdprPurpose { get; init; } = "Purpose";
+
+    public string GdprLawfulBasis { get; init; } = "Lawful basis";
+
+    public string GdprRefreshStatus { get; init; } = "Refresh erasure status";
+
+    public string GdprConfirmErasure { get; init; } = "Confirm erasure";
+
+    public string GdprCancel { get; init; } = "Cancel";
+
+    public string GdprErasureWarning { get; init; } =
+        "Erasure destroys protected party data and starts irreversible verification.";
+
+    public string GdprCorrelationId { get; init; } = "Correlation id";
+
+    public string GdprErasureStatus { get; init; } = "Erasure status";
+
+    public string GdprUpdatedAt { get; init; } = "Updated at";
+
+    public string GdprCertificate { get; init; } = "Erasure certificate";
+
+    public string GdprCertificateUnavailable { get; init; } = "Certificate unavailable";
+
+    public string GdprRetryVerification { get; init; } = "Retry verification";
+
+    public string GdprExportPrepared { get; init; } = "Export prepared";
+
+    public string GdprProcessingRecords { get; init; } = "Processing activity records";
+
+    public string GdprNoProcessingRecords { get; init; } = "No processing activity records";
+
+    public string GdprOperationAccepted { get; init; } = "Operation accepted";
+
+    public string GdprOperationCompleted { get; init; } = "Operation completed";
+
+    public string GdprOperationRejected { get; init; } = "Operation rejected";
+
+    public string GdprDpoPendingErasure { get; init; } = "Pending erasure";
+
+    public string GdprDpoRestricted { get; init; } = "Restricted party";
+
+    public string GdprDpoConsentOverview { get; init; } = "Consent records";
+
+    public string GdprDpoAuditTrail { get; init; } = "Audit trail";
+
+    public string GdprTerminalErased { get; init; } = "Party erased";
+
     public string RequestErasure { get; init; } = "Request erasure";
 
     public string RestrictProcessing { get; init; } = "Restrict processing";

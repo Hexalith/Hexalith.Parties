@@ -15,15 +15,12 @@ namespace Hexalith.Parties.Contracts.Tests.AdminPortal;
 /// </summary>
 public sealed class AdminPortalGdprSurfaceTests
 {
-    private const string SkipReason =
-        "TDD red phase — Story 10.2 GDPR portal components are not implemented yet.";
-
     private const string AdminPortalAssemblyName = "Hexalith.Parties.AdminPortal";
     private const string FrontComposerShellAssemblyName = "Hexalith.FrontComposer.Shell";
     private const string ComponentBaseFullName = "Microsoft.AspNetCore.Components.ComponentBase";
     private const string RouteAttributeFullName = "Microsoft.AspNetCore.Components.RouteAttribute";
 
-    [Fact(Skip = SkipReason)]
+    [Fact]
     public void AdminPortalGdprSurface_ExtendsFrontComposerAdminPortalAssembly()
     {
         Assembly portal = LoadPortalAssembly();
@@ -33,7 +30,7 @@ public sealed class AdminPortalGdprSurfaceTests
                 "AC10 requires extending the FrontComposer Blazor/Fluent UI shell, not a standalone SPA.");
     }
 
-    [Fact(Skip = SkipReason)]
+    [Fact]
     public void AdminPortalGdprSurface_DefinesRequiredOperationalComponents()
     {
         Assembly portal = LoadPortalAssembly();
@@ -58,7 +55,7 @@ public sealed class AdminPortalGdprSurfaceTests
         }
     }
 
-    [Fact(Skip = SkipReason)]
+    [Fact]
     public void AdminPortalGdprSurface_DoesNotIntroduceTenantManagementComponents()
     {
         Assembly portal = LoadPortalAssembly();
@@ -80,7 +77,7 @@ public sealed class AdminPortalGdprSurfaceTests
         }
     }
 
-    [Fact(Skip = SkipReason)]
+    [Fact]
     public void AdminPortalGdprRoutes_RemainScopedUnderAdminParties()
     {
         Assembly portal = LoadPortalAssembly();
@@ -102,7 +99,7 @@ public sealed class AdminPortalGdprSurfaceTests
         }
     }
 
-    [Fact(Skip = SkipReason)]
+    [Fact]
     public void AdminPortalGdprSurface_DoesNotShipParallelSpaArtifacts()
     {
         Assembly portal = LoadPortalAssembly();

@@ -1,7 +1,10 @@
 using Hexalith.FrontComposer.Contracts.Communication;
 using Hexalith.Parties.Client;
 using Hexalith.Parties.Client.Abstractions;
+using Hexalith.Parties.Client.AdminPortal;
 using Hexalith.Parties.Contracts.Models;
+using Hexalith.Parties.Contracts.Security;
+using Hexalith.Parties.Contracts.ValueObjects;
 
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
@@ -15,6 +18,7 @@ public sealed class PartiesAdminPortalApiClient : IPartiesAdminPortalApiClient
     private const string DetailCacheDiscriminator = "parties-admin-detail-v1";
 
     private readonly IPartiesQueryClient? _partiesQueryClient;
+    private readonly IAdminPortalGdprClient? _gdprClient;
     private readonly IQueryService? _queryService;
     private readonly PartiesAdminPortalOptions _options;
 
@@ -22,6 +26,7 @@ public sealed class PartiesAdminPortalApiClient : IPartiesAdminPortalApiClient
     public PartiesAdminPortalApiClient(IServiceProvider serviceProvider, IOptions<PartiesAdminPortalOptions> options)
         : this(
             serviceProvider?.GetService<IPartiesQueryClient>(),
+            serviceProvider?.GetService<IAdminPortalGdprClient>(),
             serviceProvider?.GetService<IQueryService>(),
             options)
     {
@@ -29,16 +34,18 @@ public sealed class PartiesAdminPortalApiClient : IPartiesAdminPortalApiClient
     }
 
     public PartiesAdminPortalApiClient(IQueryService queryService, IOptions<PartiesAdminPortalOptions> options)
-        : this(null, queryService, options)
+        : this(null, null, queryService, options)
     {
     }
 
     private PartiesAdminPortalApiClient(
         IPartiesQueryClient? partiesQueryClient,
+        IAdminPortalGdprClient? gdprClient,
         IQueryService? queryService,
         IOptions<PartiesAdminPortalOptions> options)
     {
         _partiesQueryClient = partiesQueryClient;
+        _gdprClient = gdprClient;
         _queryService = queryService;
         _options = options?.Value ?? throw new ArgumentNullException(nameof(options));
     }
@@ -152,6 +159,50 @@ public sealed class PartiesAdminPortalApiClient : IPartiesAdminPortalApiClient
         return new(detail, MetadataFrom(result));
     }
 
+    public Task<AdminPortalGdprCommandResult> RequestErasureAsync(string partyId, CancellationToken cancellationToken)
+        => ExecuteGdprCommandAsync(client => client.RequestErasureAsync(partyId, cancellationToken));
+
+    public Task<PartyErasureStatusRecord?> GetErasureStatusAsync(string partyId, CancellationToken cancellationToken)
+        => ExecuteGdprQueryAsync(client => client.GetErasureStatusAsync(partyId, cancellationToken));
+
+    public Task<ErasureCertificate?> GetErasureCertificateAsync(string partyId, CancellationToken cancellationToken)
+        => ExecuteGdprQueryAsync(client => client.GetErasureCertificateAsync(partyId, cancellationToken));
+
+    public Task<AdminPortalGdprCommandResult> RetryErasureVerificationAsync(string partyId, CancellationToken cancellationToken)
+        => ExecuteGdprCommandAsync(client => client.RetryErasureVerificationAsync(partyId, cancellationToken));
+
+    public Task<AdminPortalGdprCommandResult> RestrictProcessingAsync(
+        string partyId,
+        string? reason,
+        CancellationToken cancellationToken)
+        => ExecuteGdprCommandAsync(client => client.RestrictProcessingAsync(partyId, reason, cancellationToken));
+
+    public Task<AdminPortalGdprCommandResult> LiftRestrictionAsync(string partyId, CancellationToken cancellationToken)
+        => ExecuteGdprCommandAsync(client => client.LiftRestrictionAsync(partyId, cancellationToken));
+
+    public Task<AdminPortalGdprCommandResult> AddConsentAsync(
+        string partyId,
+        string channelId,
+        string purpose,
+        LawfulBasis lawfulBasis,
+        CancellationToken cancellationToken)
+        => ExecuteGdprCommandAsync(client => client.AddConsentAsync(partyId, channelId, purpose, lawfulBasis, cancellationToken));
+
+    public Task<AdminPortalGdprCommandResult> RevokeConsentAsync(
+        string partyId,
+        string consentId,
+        CancellationToken cancellationToken)
+        => ExecuteGdprCommandAsync(client => client.RevokeConsentAsync(partyId, consentId, cancellationToken));
+
+    public Task<IReadOnlyList<ConsentRecord>> GetConsentAsync(string partyId, CancellationToken cancellationToken)
+        => ExecuteGdprQueryAsync(client => client.GetConsentAsync(partyId, cancellationToken));
+
+    public Task<AdminPortalExportDownload> ExportPartyDataAsync(string partyId, CancellationToken cancellationToken)
+        => ExecuteGdprQueryAsync(client => client.ExportPartyDataAsync(partyId, cancellationToken));
+
+    public Task<IReadOnlyList<ProcessingActivityRecord>> GetProcessingRecordsAsync(string partyId, CancellationToken cancellationToken)
+        => ExecuteGdprQueryAsync(client => client.GetProcessingRecordsAsync(partyId, cancellationToken));
+
     private string Domain => string.IsNullOrWhiteSpace(_options.Domain) ? "party" : _options.Domain.Trim();
 
     private async Task<QueryResult<T>> ExecuteAsync<T>(QueryRequest query, CancellationToken cancellationToken)
@@ -212,6 +263,37 @@ public sealed class PartiesAdminPortalApiClient : IPartiesAdminPortalApiClient
         }
     }
 
+    private async Task<AdminPortalGdprCommandResult> ExecuteGdprCommandAsync(
+        Func<IAdminPortalGdprClient, Task<AdminPortalGdprCommandResult>> operation)
+    {
+        IAdminPortalGdprClient client = _gdprClient
+            ?? throw new AdminPortalQueryException(AdminPortalQueryFailureKind.ContractUnavailable);
+
+        try
+        {
+            return await operation(client).ConfigureAwait(false);
+        }
+        catch (PartiesClientException ex)
+        {
+            return new AdminPortalGdprCommandResult(MapGdprOutcome(ex), ex.CorrelationId, ex.Detail);
+        }
+    }
+
+    private async Task<T> ExecuteGdprQueryAsync<T>(Func<IAdminPortalGdprClient, Task<T>> operation)
+    {
+        IAdminPortalGdprClient client = _gdprClient
+            ?? throw new AdminPortalQueryException(AdminPortalQueryFailureKind.ContractUnavailable);
+
+        try
+        {
+            return await operation(client).ConfigureAwait(false);
+        }
+        catch (PartiesClientException ex)
+        {
+            throw new AdminPortalQueryException(MapFailureKind(ex), ex.Status, innerException: ex);
+        }
+    }
+
     private static AdminPortalQueryFailureKind MapFailureKind(QueryFailureException ex)
         => ex.Kind switch
         {
@@ -242,6 +324,22 @@ public sealed class PartiesAdminPortalApiClient : IPartiesAdminPortalApiClient
             408 or 429 => AdminPortalQueryFailureKind.TransientFailure,
             >= 500 => AdminPortalQueryFailureKind.TransientFailure,
             _ => AdminPortalQueryFailureKind.Unknown,
+        };
+
+    private static AdminPortalGdprOutcome MapGdprOutcome(PartiesClientException ex)
+        => ex.Status switch
+        {
+            401 => AdminPortalGdprOutcome.AuthenticationRequired,
+            403 => ContainsTenant(ex.Title) || ContainsTenant(ex.Detail)
+                ? AdminPortalGdprOutcome.MissingTenant
+                : AdminPortalGdprOutcome.Forbidden,
+            404 => AdminPortalGdprOutcome.NotFound,
+            409 => AdminPortalGdprOutcome.ErasureInProgress,
+            410 => AdminPortalGdprOutcome.Erased,
+            400 or 422 => AdminPortalGdprOutcome.ValidationRejected,
+            408 or 429 => AdminPortalGdprOutcome.TransientFailure,
+            >= 500 => AdminPortalGdprOutcome.TransientFailure,
+            _ => AdminPortalGdprOutcome.Unknown,
         };
 
     private static bool ContainsTenant(string? value)

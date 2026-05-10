@@ -19,14 +19,11 @@ namespace Hexalith.Parties.Client.Tests.AdminPortal;
 /// </summary>
 public sealed class AdminPortalGdprOperationContractTests
 {
-    private const string SkipReason =
-        "TDD red phase — Story 12.7 is blocked until Story 12.5 exposes EventStore GDPR command/query methods.";
-
     private const string AdapterTypeName = "Hexalith.Parties.Client.AdminPortal.IAdminPortalGdprClient";
     private const string RouteMapTypeName = "Hexalith.Parties.Client.AdminPortal.AdminPortalGdprRoutes";
     private const string OutcomeTypeName = "Hexalith.Parties.Client.AdminPortal.AdminPortalGdprOutcome";
 
-    [Fact(Skip = SkipReason)]
+    [Fact]
     public void AdminGdprClient_DefinesErasureRequestStatusCertificateAndRetryMethods()
     {
         Type adapter = LoadClientType(AdapterTypeName);
@@ -41,7 +38,7 @@ public sealed class AdminPortalGdprOperationContractTests
             .ShouldNotBeNull("AC3 requires retry only for supported partial or failed verification states.");
     }
 
-    [Fact(Skip = SkipReason)]
+    [Fact]
     public void AdminGdprClient_DefinesRestrictionConsentExportAndProcessingMethods()
     {
         Type adapter = LoadClientType(AdapterTypeName);
@@ -64,7 +61,7 @@ public sealed class AdminPortalGdprOperationContractTests
         }
     }
 
-    [Fact(Skip = SkipReason)]
+    [Fact]
     public void AdminGdprRoutes_MapToEventStoreCommandAndQueryContracts()
     {
         Type routes = LoadClientType(RouteMapTypeName);
@@ -81,7 +78,7 @@ public sealed class AdminPortalGdprOperationContractTests
         GetRoute(routes, "ProcessingRecords").ShouldBe("eventstore:query:party:GetProcessingRecords");
     }
 
-    [Fact(Skip = SkipReason)]
+    [Fact]
     public void AddConsentAsync_PreservesChannelPurposeAndLawfulBasisShape()
     {
         Type adapter = LoadClientType(AdapterTypeName);
@@ -98,7 +95,7 @@ public sealed class AdminPortalGdprOperationContractTests
             .ShouldBeTrue("Consent add must target an existing channel id.");
     }
 
-    [Fact(Skip = SkipReason)]
+    [Fact]
     public void GdprOutcomes_DistinguishForbiddenConflictGoneAndDomainRejection()
     {
         Type outcome = LoadClientType(OutcomeTypeName);
@@ -123,7 +120,7 @@ public sealed class AdminPortalGdprOperationContractTests
         }
     }
 
-    [Fact(Skip = SkipReason)]
+    [Fact]
     public void ExportPartyDataAsync_ReturnsDownloadEnvelopeWithoutPiiFilenameInputs()
     {
         Type adapter = LoadClientType(AdapterTypeName);

@@ -1,0 +1,30 @@
+<section aria-labelledby="@($"dpo-summary-heading-{InstanceId}")">
+    <h4 id="@($"dpo-summary-heading-{InstanceId}")">@Labels.GdprOperationalSummary</h4>
+    <dl>
+        <dt>@Labels.GdprDpoPendingErasure</dt>
+        <dd>@(IsErasurePending ? Labels.Yes : Labels.No)</dd>
+        <dt>@Labels.GdprDpoRestricted</dt>
+        <dd>@(Party.IsRestricted ? Labels.Yes : Labels.No)</dd>
+        <dt>@Labels.GdprDpoConsentOverview</dt>
+        <dd>@Party.ConsentRecords.Count</dd>
+        <dt>@Labels.GdprDpoAuditTrail</dt>
+        <dd>@ProcessingRecordCount</dd>
+    </dl>
+</section>
+
+@code {
+    [Parameter, EditorRequired]
+    public PartyDetail Party { get; set; } = default!;
+
+    [Parameter, EditorRequired]
+    public AdminPortalLabels Labels { get; set; } = new();
+
+    [Parameter]
+    public string InstanceId { get; set; } = Guid.NewGuid().ToString("N");
+
+    [Parameter]
+    public bool IsErasurePending { get; set; }
+
+    [Parameter]
+    public int ProcessingRecordCount { get; set; }
+}

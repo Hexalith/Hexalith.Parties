@@ -1,0 +1,29 @@
+<section aria-labelledby="@($"portability-export-heading-{InstanceId}")">
+    <h4 id="@($"portability-export-heading-{InstanceId}")">@Labels.ExportPartyData</h4>
+    <FluentButton Appearance="ButtonAppearance.Outline"
+                  Disabled="@(!CanExport)"
+                  OnClick="Export">
+        @Labels.ExportPartyData
+    </FluentButton>
+    @if (!string.IsNullOrWhiteSpace(FileName))
+    {
+        <p role="status" aria-live="polite">@Labels.GdprExportPrepared: @FileName</p>
+    }
+</section>
+
+@code {
+    [Parameter, EditorRequired]
+    public AdminPortalLabels Labels { get; set; } = new();
+
+    [Parameter]
+    public string InstanceId { get; set; } = Guid.NewGuid().ToString("N");
+
+    [Parameter]
+    public bool CanExport { get; set; }
+
+    [Parameter]
+    public string? FileName { get; set; }
+
+    [Parameter]
+    public EventCallback Export { get; set; }
+}

@@ -15,12 +15,9 @@ namespace Hexalith.Parties.Contracts.Tests.AdminPortal;
 /// </summary>
 public sealed class AdminPortalGdprAuthorizationStateTests
 {
-    private const string SkipReason =
-        "TDD red phase — Story 10.2 GDPR state coordinator is not implemented yet.";
-
     private const string AdminPortalAssemblyName = "Hexalith.Parties.AdminPortal";
 
-    [Fact(Skip = SkipReason)]
+    [Fact]
     public void GdprOperationState_DefinesBoundedPrivacyAndAuthorizationStates()
     {
         Type state = LoadPortalAssembly().GetTypes()
@@ -55,7 +52,7 @@ public sealed class AdminPortalGdprAuthorizationStateTests
         }
     }
 
-    [Fact(Skip = SkipReason)]
+    [Fact]
     public void GdprStateCoordinator_ClearsSensitiveStateOnAuthTenantAndPartyBoundaryChanges()
     {
         Type coordinator = LoadCoordinator();
@@ -76,7 +73,7 @@ public sealed class AdminPortalGdprAuthorizationStateTests
         }
     }
 
-    [Fact(Skip = SkipReason)]
+    [Fact]
     public void GdprStateCoordinator_IgnoresStaleResponsesAfterTenantOrPartySwitch()
     {
         Type coordinator = LoadCoordinator();
@@ -92,7 +89,7 @@ public sealed class AdminPortalGdprAuthorizationStateTests
         propertyNames.ShouldContain("RequestVersion");
     }
 
-    [Fact(Skip = SkipReason)]
+    [Fact]
     public void GdprStateCoordinator_DisablesConflictingWritesDuringErasureStates()
     {
         Type coordinator = LoadCoordinator();
@@ -105,7 +102,7 @@ public sealed class AdminPortalGdprAuthorizationStateTests
             .ShouldBeTrue("Mutation gating must depend on authoritative erasure state.");
     }
 
-    [Fact(Skip = SkipReason)]
+    [Fact]
     public void AdminPortal_DoesNotInferGdprAuthorizationFromJwtTenantClaimOrLocalRoleParsers()
     {
         Assembly portal = LoadPortalAssembly();

@@ -1,0 +1,46 @@
+<section aria-labelledby="@($"processing-records-heading-{InstanceId}")">
+    <h4 id="@($"processing-records-heading-{InstanceId}")">@Labels.GdprProcessingRecords</h4>
+    <FluentButton Appearance="ButtonAppearance.Outline" OnClick="Refresh">
+        @Labels.ProcessingRecords
+    </FluentButton>
+    @if (Records.Count == 0)
+    {
+        <p>@Labels.GdprNoProcessingRecords</p>
+    }
+    else
+    {
+        <ol>
+            @foreach (ProcessingActivityRecord record in Records.OrderBy(r => r.SequenceNumber))
+            {
+                <li>
+                    <strong>@record.EventType</strong>
+                    <dl>
+                        <dt>@Labels.ChangedAt</dt>
+                        <dd>@FormatDate(record.Timestamp)</dd>
+                        <dt>@Labels.Summary</dt>
+                        <dd>@record.Summary</dd>
+                    </dl>
+                </li>
+            }
+        </ol>
+    }
+</section>
+
+@code {
+    [Parameter, EditorRequired]
+    public AdminPortalLabels Labels { get; set; } = new();
+
+    [Parameter]
+    public string InstanceId { get; set; } = Guid.NewGuid().ToString("N");
+
+    [Parameter]
+    public IReadOnlyList<ProcessingActivityRecord> Records { get; set; } = [];
+
+    [Parameter]
+    public EventCallback Refresh { get; set; }
+
+    private string FormatDate(DateTimeOffset date)
+        => date == default
+            ? Labels.MissingDate
+            : date.ToString("g", System.Globalization.CultureInfo.CurrentCulture);
+}
