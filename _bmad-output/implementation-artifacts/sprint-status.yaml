@@ -52,7 +52,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-05-02
-last_updated: 2026-05-10  # bmad-code-review of 12-3-validation-relocation-and-tenant-auth-ownership: review -> done
+last_updated: 2026-05-10  # story 12-4 moved in-progress -> review after EventStore gateway Tier-2 rewrite, retired REST/admin/MCP test cleanup, obsolete-surface fitness hardening, and required validation passed
 # sprint_change_proposals:
 #   - sprint-change-proposal-2026-05-07.md  (EventStore-Fronted Architecture Pivot — added Epic 12; paused 10-1-1, 10-2, 10-3)
 project: Hexalith.Parties
@@ -165,7 +165,7 @@ development_status:
   12-1-apphost-recomposition: done
   12-2-parties-actor-host: done
   12-3-validation-relocation-and-tenant-auth-ownership: done
-  12-4-server-tier-1-tier-2-test-rewrite: blocked
+  12-4-server-tier-1-tier-2-test-rewrite: review
   12-5-parties-client-thin-wrapper: blocked
   12-6-parties-mcp-thin-host: blocked
   12-7-admin-portal-rebuild-on-frontcomposer: blocked

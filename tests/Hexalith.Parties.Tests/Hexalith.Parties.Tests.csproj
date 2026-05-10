@@ -15,18 +15,12 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\Hexalith.Parties\Hexalith.Parties.csproj" />
     <ProjectReference Include="..\..\src\Hexalith.Parties.Testing\Hexalith.Parties.Testing.csproj" />
+    <ProjectReference Include="..\..\Hexalith.EventStore\src\Hexalith.EventStore\Hexalith.EventStore.csproj">
+      <Aliases>eventstore</Aliases>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Hexalith.EventStore\src\Hexalith.EventStore.Testing\Hexalith.EventStore.Testing.csproj" />
     <ProjectReference Include="..\..\Hexalith.Tenants\src\Hexalith.Tenants.Client\Hexalith.Tenants.Client.csproj" />
     <ProjectReference Include="..\..\Hexalith.Tenants\src\Hexalith.Tenants.Testing\Hexalith.Tenants.Testing.csproj" PrivateAssets="all" ExcludeAssets="analyzers" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <!--
-      Story 12.2 retires the in-process Parties REST controllers and MCP tools.
-      These suites asserted the old public surface directly; EventStore gateway
-      replacements belong to Stories 12.4 and 12.6.
-    -->
-    <Compile Remove="Controllers\**\*.cs" />
-    <Compile Remove="Mcp\**\*.cs" />
   </ItemGroup>
 
   <ItemGroup>
