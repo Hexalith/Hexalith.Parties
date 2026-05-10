@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using System.Text.Json;
 
 namespace Hexalith.Parties.Mcp.Tools;
 
@@ -7,13 +8,44 @@ internal sealed record PartiesMcpToolResult(
     [property: JsonPropertyName("category")] string Category,
     [property: JsonPropertyName("code")] string Code,
     [property: JsonPropertyName("message")] string Message,
-    [property: JsonPropertyName("toolName")] string ToolName)
+    [property: JsonPropertyName("toolName")] string ToolName,
+    [property: JsonPropertyName("correlationId")]
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    string? CorrelationId = null,
+    [property: JsonPropertyName("data")]
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    object? Data = null)
 {
-    public static PartiesMcpToolResult ContractBlocked(string toolName)
+    private static readonly JsonSerializerOptions JsonOptions = new()
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+        Converters = { new JsonStringEnumConverter() },
+    };
+
+    public static PartiesMcpToolResult Accepted(string toolName, string correlationId)
         => new(
-            "blocked",
-            "contract_unavailable",
-            "parties-mcp-client-contract-blocked",
-            "Parties MCP tool dispatch is scaffolded, but execution is blocked until Story 12.5 lands or formally freezes the typed Parties client over the EventStore gateway.",
-            toolName);
+            "accepted",
+            "success",
+            "parties-mcp-accepted",
+            "The Parties command was accepted by the EventStore gateway.",
+            toolName,
+            correlationId);
+
+    public static PartiesMcpToolResult Succeeded(string toolName, object? data = null, string? code = null)
+        => new(
+            "succeeded",
+            "success",
+            code ?? "parties-mcp-succeeded",
+            "The Parties MCP tool completed successfully.",
+            toolName,
+            Data: data is null ? null : JsonSerializer.SerializeToElement(data, JsonOptions));
+
+    public static PartiesMcpToolResult Failed(
+        string toolName,
+        string category,
+        string code,
+        string message,
+        string? correlationId = null)
+        => new("failed", category, code, message, toolName, correlationId);
 }

@@ -60,23 +60,16 @@ public sealed class PartiesMcpToolContractTests
     }
 
     [Fact]
-    public void ScaffoldedToolsReturnSanitizedBlockedResultUntilClientContractLands()
+    public void ToolMethodsDispatchThroughInstanceInjectedClients()
     {
-        PartiesMcpToolResult result = PartiesMcpTools.GetParty("party-123");
+        MethodInfo[] toolMethods = GetToolMethods();
 
-        result.Status.ShouldBe("blocked");
-        result.Category.ShouldBe("contract_unavailable");
-        result.Code.ShouldBe("parties-mcp-client-contract-blocked");
-        result.ToolName.ShouldBe("get_party");
-        result.Message.ShouldContain("Story 12.5");
-        result.Message.ShouldNotContain("party-123");
-        result.Message.ShouldNotContain("Bearer", Case.Insensitive);
-        result.Message.ShouldNotContain("DAPR", Case.Insensitive);
+        toolMethods.ShouldAllBe(method => !method.IsStatic);
     }
 
     private static MethodInfo[] GetToolMethods()
         => typeof(PartiesMcpTools)
-            .GetMethods(BindingFlags.Public | BindingFlags.Static)
+            .GetMethods(BindingFlags.Public | BindingFlags.Instance)
             .Where(method => method.GetCustomAttribute<McpServerToolAttribute>() is not null)
             .ToArray();
 

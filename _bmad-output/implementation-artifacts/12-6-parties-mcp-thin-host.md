@@ -1,6 +1,6 @@
 # Story 12.6: Parties MCP Thin Host
 
-Status: blocked
+Status: review
 
 ## Story
 
@@ -38,35 +38,35 @@ so that Parties remains MCP-accessible after the in-process MCP wiring is remove
   - [x] Add both projects to `Hexalith.Parties.slnx`.
   - [x] Reference `Hexalith.Parties.Contracts`, `Hexalith.Parties.Client`, `Hexalith.Parties.ServiceDefaults`, and only the accepted EventStore client/gateway contract dependency required by Story 12.5.
   - [x] Reference `ModelContextProtocol.AspNetCore` from centrally managed package version `1.0.0`.
-- [ ] Implement MCP host startup and context capture. (AC: 1, 4, 5, 6)
+- [x] Implement MCP host startup and context capture. (AC: 1, 4, 5, 6)
   - [x] Use the current C# MCP SDK pattern: `AddMcpServer().WithHttpTransport(options => options.Stateless = true).WithToolsFromAssembly()` or explicit `WithTools<T>()` registration, followed by `app.MapMcp()`.
-  - [ ] Add service defaults, health/default endpoints, authentication context forwarding, and options validation needed to locate the EventStore gateway.
+  - [x] Add service defaults, health/default endpoints, authentication context forwarding, and options validation needed to locate the EventStore gateway.
   - [x] Keep the host stateless unless a required compatibility scenario proves per-session state is necessary.
-  - [ ] Do not use the old `RunSessionHandler`/AsyncLocal tenant model unless it is retained only as a thin adapter over the host's authenticated request context.
-- [ ] Port canonical tool contracts to the new host. (AC: 2, 3, 5, 10)
-  - [ ] Port `create_party` with the same forgiving person/organization/contact/identifier parameters, but dispatch through `IPartiesCommandClient.CreatePartyCompositeAsync` or the accepted Story 12.5 command method.
-  - [ ] Port `update_party` with patch semantics, route `partyId` as authoritative, preserve add/update/remove contact-channel and identifier behavior, and dispatch through `IPartiesCommandClient`.
-  - [ ] Port `delete_party` as deactivate/soft-delete, preserving idempotent already-inactive behavior where the client/query contract can observe current state.
-  - [ ] Port `get_party` and `find_parties` through `IPartiesQueryClient` without actor/projection/search-service shortcuts.
+  - [x] Do not use the old `RunSessionHandler`/AsyncLocal tenant model unless it is retained only as a thin adapter over the host's authenticated request context.
+- [x] Port canonical tool contracts to the new host. (AC: 2, 3, 5, 10)
+  - [x] Port `create_party` with the same forgiving person/organization/contact/identifier parameters, but dispatch through `IPartiesCommandClient.CreatePartyCompositeAsync` or the accepted Story 12.5 command method.
+  - [x] Port `update_party` with patch semantics, route `partyId` as authoritative, preserve add/update/remove contact-channel and identifier behavior, and dispatch through `IPartiesCommandClient`.
+  - [x] Port `delete_party` as deactivate/soft-delete, preserving idempotent already-inactive behavior where the client/query contract can observe current state.
+  - [x] Port `get_party` and `find_parties` through `IPartiesQueryClient` without actor/projection/search-service shortcuts.
   - [x] Decide and record the fate of `get_party_name_at`; if preserved, route it through an EventStore query/client path rather than the old projection actor.
-  - [ ] Keep output JSON camelCase, omit nulls, and serialize enums as strings to match existing MCP/client behavior.
-- [ ] Map safe MCP errors and lifecycle responses. (AC: 4, 5)
-  - [ ] Convert `PartiesClientException` and EventStore gateway classifications into stable MCP error categories such as validation failed, unauthorized/forbidden, not found, conflict/rejected, degraded/downstream failed, timeout, and canceled.
-  - [ ] Include safe correlation/message ids when available.
-  - [ ] Avoid localized or brittle message assertions; expose machine-readable codes/categories for agent branching.
-  - [ ] Add tests proving exception messages and structured payloads do not contain raw payload JSON, protected PII samples, bearer tokens, DAPR sidecar names, or sidecar configuration.
+  - [x] Keep output JSON camelCase, omit nulls, and serialize enums as strings to match existing MCP/client behavior.
+- [x] Map safe MCP errors and lifecycle responses. (AC: 4, 5)
+  - [x] Convert `PartiesClientException` and EventStore gateway classifications into stable MCP error categories such as validation failed, unauthorized/forbidden, not found, conflict/rejected, degraded/downstream failed, timeout, and canceled.
+  - [x] Include safe correlation/message ids when available.
+  - [x] Avoid localized or brittle message assertions; expose machine-readable codes/categories for agent branching.
+  - [x] Add tests proving exception messages and structured payloads do not contain raw payload JSON, protected PII samples, bearer tokens, DAPR sidecar names, or sidecar configuration.
 - [x] Wire AppHost and deployment topology. (AC: 6, 7)
   - [x] Update `src/Hexalith.Parties.AppHost/Program.cs` to add a `parties-mcp` project resource after the MCP host project exists.
   - [x] Ensure `parties-mcp` references/waits for `eventstore`; reference/wait for `parties` only for startup/liveness ordering, not for direct command/query calls.
   - [x] Configure the EventStore gateway base URL/app id for the MCP host using the same convention as Story 12.5.
   - [x] Add focused AppHost topology tests proving `parties-mcp` is separate from `parties` and does not receive DAPR actor sidecar privileges intended for actor-host invocation.
-- [ ] Migrate and rewrite tests from the old MCP suite. (AC: 2, 3, 5, 8, 9, 10)
-  - [ ] Move canonical tests from `tests/Hexalith.Parties.Tests/Mcp/*` into `tests/Hexalith.Parties.Mcp.Tests`.
-  - [ ] Replace actor/search/router fakes with `IPartiesCommandClient` and `IPartiesQueryClient` fakes from Story 12.5 or narrow local test doubles.
-  - [ ] Preserve tests for create person/organization, missing required fields, invalid UUIDs, find/list pagination and filters, erased-party handling, update patch merge, duplicate-safe/idempotent behavior, delete idempotency, cancellation propagation, and malformed downstream responses.
+- [x] Migrate and rewrite tests from the old MCP suite. (AC: 2, 3, 5, 8, 9, 10)
+  - [x] Move canonical tests from `tests/Hexalith.Parties.Tests/Mcp/*` into `tests/Hexalith.Parties.Mcp.Tests`.
+  - [x] Replace actor/search/router fakes with `IPartiesCommandClient` and `IPartiesQueryClient` fakes from Story 12.5 or narrow local test doubles.
+  - [x] Preserve tests for create person/organization, missing required fields, invalid UUIDs, find/list pagination and filters, erased-party handling, update patch merge, duplicate-safe/idempotent behavior, delete idempotency, cancellation propagation, and malformed downstream responses.
   - [x] Add source/dependency fitness tests proving no old in-process `Hexalith.Parties.Mcp` namespace remains under `src/Hexalith.Parties` after Story 12.2 and no direct DAPR/EventStore-server APIs are referenced by the new MCP project.
   - [x] Add a compatibility-matrix note in the Dev Agent Record mapping each old MCP test file/scenario to its new test path, future owner, or explicit retirement reason.
-- [ ] Verify the MCP host. (AC: 1-10)
+- [x] Verify the MCP host. (AC: 1-10)
   - [x] Run `dotnet test tests/Hexalith.Parties.Mcp.Tests/Hexalith.Parties.Mcp.Tests.csproj`.
   - [x] Run `dotnet test tests/Hexalith.Parties.Client.Tests/Hexalith.Parties.Client.Tests.csproj`.
   - [x] Run focused AppHost topology/fitness tests covering `parties-mcp`.
@@ -171,6 +171,13 @@ Codex GPT-5
 - 2026-05-10: `dotnet test tests/Hexalith.Parties.Client.Tests/Hexalith.Parties.Client.Tests.csproj` passed (59 passed, 6 skipped).
 - 2026-05-10: `dotnet build src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj` passed.
 - 2026-05-10: `dotnet build Hexalith.Parties.slnx` passed. Restore still prints a pre-existing skipped-project warning for `Hexalith.EventStore\Hexalith.Tenants/src/Hexalith.Tenants.Contracts/Hexalith.Tenants.Contracts.csproj`.
+- 2026-05-10: Rechecked predecessor gate after Story 12.5 moved to `review`; typed Parties client command/query methods are available over the EventStore gateway, so the prior scaffold-only blocker is no longer active for this story.
+- 2026-05-10: Red MCP dispatch tests initially failed against the scaffold because tools were static blocked stubs and request-context services did not exist.
+- 2026-05-10: `dotnet test tests/Hexalith.Parties.Mcp.Tests/Hexalith.Parties.Mcp.Tests.csproj` passed (16/16).
+- 2026-05-10: `dotnet test tests/Hexalith.Parties.Client.Tests/Hexalith.Parties.Client.Tests.csproj --no-restore` passed (49 passed, 6 skipped).
+- 2026-05-10: `dotnet build Hexalith.Parties.slnx --no-restore` passed with 0 warnings and 0 errors.
+- 2026-05-10: First full no-build regression hit one unrelated timing miss in `SemanticSearchPerformanceBenchmarkTests.Search_100KEntries_ExactMatch_CompletesWithin500ms` (514ms vs 500ms); the focused rerun passed.
+- 2026-05-10: Second `dotnet test Hexalith.Parties.slnx --no-build` full regression passed; integration health skips remain pre-existing.
 
 ### Completion Notes List
 
@@ -179,8 +186,18 @@ Codex GPT-5
 - Compatibility decision: preserve `get_party_name_at` as a blocked scaffolded tool for now. It must be routed through an EventStore query/client path once Story 12.4/12.5 provides or freezes that contract; it was not dropped silently.
 - Added `tests/Hexalith.Parties.Mcp.Tests` guardrails for canonical tool names/descriptions, read/write/idempotency annotations, sanitized blocked output, allowed project references, forbidden dependency/source markers, stateless startup registration, and AppHost `parties-mcp` separation.
 - Wired AppHost with a separate `parties-mcp` resource that references/waits for `eventstore` and references/waits for `parties` only for startup/liveness ordering; it does not receive a DAPR actor sidecar.
-- Story remains blocked because full tool dispatch, tenant/user context forwarding, safe client exception mapping, old MCP scenario migration, and complete parity cannot be implemented honestly until Story 12.5 lands or a formal Wave 1/typed-client contract freeze exists.
-- Compatibility matrix: old `tests/Hexalith.Parties.Tests/Mcp/CreatePartyMcpToolTests.cs` -> future `tests/Hexalith.Parties.Mcp.Tests` command-dispatch coverage after 12.5; `FindPartiesMcpToolTests.cs` and `GetPartyMcpToolTests.cs` -> future query-client coverage after 12.4/12.5; `UpdatePartyMcpToolTests.cs` and `UpdateAndDeletePartyMcpToolTests.cs` -> future patch/deactivate coverage after typed command/query semantics freeze; `DeletePartyMcpToolTests.cs` -> future idempotent deactivate coverage after observable state/query contract freezes; `GetPartyNameAtMcpToolTests.cs` -> preserved compatibility owner in this story but blocked pending query path; `McpToolTenantAuthorizationTests.cs` -> future host-auth/context-forwarding coverage after EventStore auth/header contract freezes; `McpSessionScope.cs` and `McpToolTestServices.cs` -> old in-process test helpers retired, not copied into the new scaffold.
+- Prior blocked state cleared after the Story 12.5 typed client boundary became available; remaining implementation now routes through the accepted `IPartiesCommandClient`/`IPartiesQueryClient` surface.
+- Compatibility matrix: old `tests/Hexalith.Parties.Tests/Mcp/CreatePartyMcpToolTests.cs` scenarios -> `tests/Hexalith.Parties.Mcp.Tests/PartiesMcpToolDispatchTests.cs` create-command dispatch coverage; `FindPartiesMcpToolTests.cs` and `GetPartyMcpToolTests.cs` scenarios -> query-client search/list/get coverage; `UpdatePartyMcpToolTests.cs` and `UpdateAndDeletePartyMcpToolTests.cs` scenarios -> route-party-id authority, patch, contact/identifier, and lifecycle dispatch coverage; `DeletePartyMcpToolTests.cs` scenarios -> idempotent deactivate coverage through query-client observable state; `GetPartyNameAtMcpToolTests.cs` scenario -> preserved via query-client `PartyDetail.NameHistory`; `McpToolTenantAuthorizationTests.cs` scenarios -> missing-context fail-closed and header/token forwarding coverage; `McpSessionScope.cs` and `McpToolTestServices.cs` -> old in-process helpers retired, not copied into the new host.
+- Implemented the previously blocked typed-client dispatch path now that Story 12.5 provides `IPartiesCommandClient` and `IPartiesQueryClient`.
+- Added per-request tenant/user context capture from claims or headers, fail-closed tool behavior when context is absent, and forwarding of `Authorization`, `X-Tenant-Id`, and `X-User-Id` to the EventStore gateway HTTP client.
+- Converted canonical tools from static blocked stubs into injected MCP tools: `get_party`, `find_parties`, `create_party`, `update_party`, `delete_party`, and compatibility `get_party_name_at`.
+- `create_party` now builds `CreatePartyComposite` with forgiving person/organization/contact/identifier inputs and submits through `IPartiesCommandClient.CreatePartyCompositeAsync`.
+- `update_party` preserves route `partyId` authority, person/organization patching, contact add/update/remove, identifier add/remove, active-state lifecycle patching, and submits through `IPartiesCommandClient`.
+- `delete_party` reads current state via `IPartiesQueryClient.GetPartyAsync`, returns idempotent success for already-inactive parties, and otherwise dispatches `DeactivatePartyAsync`.
+- `get_party` and `find_parties` use `IPartiesQueryClient`; `find_parties` chooses search or list semantics based on query text and preserves paging/type/active filters.
+- `get_party_name_at` is preserved and routed through the query-client path by reading `PartyDetail.NameHistory` rather than reintroducing projection actors.
+- Added stable sanitized MCP result categories/codes for missing context, validation, unauthorized, forbidden, not found/gone, conflict, timeout, canceled, downstream failure, and rejected gateway responses; result payloads serialize nested data with camelCase, null omission, and string enums.
+- Rewrote MCP tests to cover typed client dispatch, missing context fail-closed behavior, contact/identifier patch semantics, delete idempotency, search/list branching, sanitized client error mapping, canonical tool metadata, startup/AppHost/source fitness, and dependency boundaries.
 
 ### File List
 
@@ -190,8 +207,11 @@ Codex GPT-5
 - `src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj`
 - `src/Hexalith.Parties.AppHost/Program.cs`
 - `src/Hexalith.Parties.Mcp/Hexalith.Parties.Mcp.csproj`
+- `src/Hexalith.Parties.Mcp/McpContextForwardingHandler.cs`
+- `src/Hexalith.Parties.Mcp/PartiesMcpHttpClientNames.cs`
 - `src/Hexalith.Parties.Mcp/Program.cs`
 - `src/Hexalith.Parties.Mcp/PartiesMcpOptions.cs`
+- `src/Hexalith.Parties.Mcp/PartiesMcpRequestContext.cs`
 - `src/Hexalith.Parties.Mcp/Tools/PartiesMcpToolNames.cs`
 - `src/Hexalith.Parties.Mcp/Tools/PartiesMcpToolResult.cs`
 - `src/Hexalith.Parties.Mcp/Tools/PartiesMcpTools.cs`
@@ -199,6 +219,7 @@ Codex GPT-5
 - `tests/Hexalith.Parties.Mcp.Tests/RepositoryRoot.cs`
 - `tests/Hexalith.Parties.Mcp.Tests/PartiesMcpProjectFitnessTests.cs`
 - `tests/Hexalith.Parties.Mcp.Tests/PartiesMcpToolContractTests.cs`
+- `tests/Hexalith.Parties.Mcp.Tests/PartiesMcpToolDispatchTests.cs`
 
 ## Change Log
 
@@ -206,3 +227,4 @@ Codex GPT-5
 |---|---:|---|---|
 | 2026-05-10 | 0.1 | Created ready-for-dev story through BMAD pre-dev hardening automation. | Codex |
 | 2026-05-10 | 0.2 | Added blocked-scope MCP host scaffold, canonical tool metadata, safe blocked responses, AppHost resource wiring, and guardrail tests; story blocked pending Story 12.4/12.5 contract landing/freeze. | Codex |
+| 2026-05-10 | 1.0 | Completed Parties MCP thin host over the typed Parties/EventStore client boundary with context forwarding, canonical tool dispatch, sanitized error mapping, compatibility temporal lookup, migrated guardrail tests, and full validation. | Codex |
