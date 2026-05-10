@@ -20,6 +20,15 @@ so that incorrect deployments fail fast.
 8. Given prior deferred fitness gaps, then this story either resolves or explicitly reclassifies the Story 12.1 deferred validation items that are in scope for topology/deploy validation: production trust domain placeholders, route-specific resiliency policy coverage, shared state-store exception documentation, startup dependency assertions, AppHost source/launchSettings secret scans, and brittle substring tests.
 9. Given validation tests are complete, then focused deploy-validation tests, AppHost topology tests, architectural fitness tests, and solution build all pass or record exact infrastructure/tooling blockers without editing EventStore, Tenants, FrontComposer, or Memories submodules.
 
+## Advanced Elicitation Clarifications
+
+- Evidence source rule: topology and deploy-validation assertions must be grounded in current checked-in AppHost, DAPR component, deploy script, and accepted predecessor story evidence. If those sources disagree, record the dated blocker and fail closed rather than normalizing the story around guessed production topology.
+- Failure taxonomy rule: keep EventStore gateway readiness, Parties actor-host liveness, Tenants authority reachability, EventStore Admin Server/UI wiring, DAPR component validity, and optional `parties-mcp` availability as separate validation categories. A missing internal actor host must not be reported as a public gateway outage, and a missing MCP host must not fail core command/query topology unless MCP is enabled.
+- Parser-first guardrail rule: prefer YAML/XML/JSON/PowerShell structure-aware checks for manifests, project files, and validation output. Use source-text regex only for narrow invariants after comments/generated output are excluded, and document each allowlist for retired literals or secret-looking tokens.
+- Receiving-sidecar DAPR rule: access-control validation must inspect the receiving sidecar policy file for each allowed call, including method/path shape and caller app ids. Do not infer safety from caller-side configuration or broad component scopes.
+- Sanitized-output rule: every new validator failure path needs paired console and JSON assertions that allow only stable names, categories, check ids, resource ids, route names, and remediation labels. Tests should include at least one secret-looking or operator-supplied value and prove it is not echoed.
+- Runtime-proof rule: runtime Aspire checks are useful only when they use official resource notification/health APIs and can run deterministically. If local Aspire tooling or infrastructure is unavailable, completion notes must state that runtime proof was not captured and identify the static tests/builds used instead.
+
 ## Tasks / Subtasks
 
 - [ ] Confirm predecessor and scope gates. (AC: 1-9)
@@ -35,6 +44,7 @@ so that incorrect deployments fail fast.
 - [ ] Inventory current validation coverage before editing. (AC: 1-8)
   - [ ] List every existing test in `AppHostTenantsTopologyTests.cs`, `ArchitecturalFitnessTests.cs`, `AppHostDaprTopologyValidationTests.cs`, `DeploymentValidationTests.cs`, and `TenantsDeploymentValidationTests.cs`.
   - [ ] Create a compact coverage matrix in the Dev Agent Record with columns: file/test, current invariant, AC-12.10.x label, gap, action taken, and deferred owner.
+  - [ ] Record the evidence source for each new topology invariant: AppHost source, DAPR YAML, deploy script behavior, predecessor story artifact, or explicit blocker.
   - [ ] Identify brittle substring assertions that match comments or unrelated literals; replace them with regexes, XML parsing, or small source parsers where practical.
   - [ ] Avoid creating a second deploy-validation test harness unless the existing tests cannot represent the required topology checks.
 
@@ -51,6 +61,7 @@ so that incorrect deployments fail fast.
   - [ ] Assert `eventstore` access-control explicitly allows `eventstore-admin`, `tenants`, and `parties` only for the required methods; no wildcard app ids.
   - [ ] Assert `accesscontrol.parties.yaml` allows only `eventstore` to invoke `/process` with POST.
   - [ ] Assert Tenants access control exposes only the accepted readiness/invocation paths and does not grant broad caller sets.
+  - [ ] For every allowed invocation, test the receiving sidecar file, caller app id, method, and path together; do not count component scopes or caller-side config as authorization proof.
   - [ ] Reconcile deferred `/ready` through DAPR-sidecar validity: either validate the actual accepted path or record the exact architecture blocker.
   - [ ] Assert `statestore.yaml` and `pubsub.yaml` keep shared component names, required scopes, env-var secret placeholders, `actorStateStore=true`, and `keyPrefix=none`.
   - [ ] Document the shared state store exception as deliberate and tested, not an accidental broadening.
@@ -61,6 +72,7 @@ so that incorrect deployments fail fast.
   - [ ] Update expected `TenantsIntegration.spec.commandApiAppId` from the pre-pivot `parties` value to the accepted EventStore-fronted `eventstore` value when validating production topology.
   - [ ] Validate EventStore Admin UI to Admin Server wiring without requiring runtime dashboard access.
   - [ ] Keep JSON output stable: each added check must include category, check, status, details, and recommendation.
+  - [ ] Keep validation categories distinct for gateway, actor-host, Tenants authority, admin resources, DAPR components, and optional MCP; combined missing-dependency cases must report separate sanitized failures.
   - [ ] Ensure validation output never echoes arbitrary YAML values; use normalized status/category names and file/check names instead.
 
 - [ ] Add negative production-manifest tests. (AC: 2, 5, 7)
@@ -71,6 +83,7 @@ so that incorrect deployments fail fast.
   - [ ] Missing shared `statestore` or `pubsub` fails with component-specific remediation.
   - [ ] Missing `parties-mcp` is not a core command/query deployment failure unless the manifest declares MCP enabled; when enabled, missing MCP must fail with a sanitized message.
   - [ ] Malformed or secret-looking operator values in topology manifests must not appear in console or JSON output.
+  - [ ] At least one negative fixture should contain a fake token, password, connection string, or URI userinfo value and assert both console and JSON output redact or omit it.
 
 - [ ] Preserve retired-surface architectural guardrails. (AC: 4)
   - [ ] Ensure `ArchitecturalFitnessTests.cs` fails on public REST controller markers, Swagger/OpenAPI hosting packages, in-process MCP attributes/registrations, and old actor-host `/mcp` mapping.
@@ -81,6 +94,7 @@ so that incorrect deployments fail fast.
   - [ ] If adding runtime Aspire tests, use `DistributedApplicationTestingBuilder` and `ResourceNotifications.WaitForResourceHealthyAsync(...)`/resource states rather than sleeps or dashboard scraping.
   - [ ] Use `.WaitFor(...)` in AppHost only for dependency readiness semantics that match Aspire's health behavior; use `.WaitForStart(...)` only if startup without health is the explicit requirement.
   - [ ] If local `dotnet aspire` is unavailable, keep runtime proof out of completion claims and rely on deterministic static tests plus build evidence.
+  - [ ] When runtime Aspire proof is skipped, add a completion-note entry naming the unavailable command/tool and the static test/build evidence that replaced it.
 
 - [ ] Verify the story. (AC: 1-9)
   - [ ] Run `dotnet test tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj --filter "FullyQualifiedName~AppHostTenantsTopologyTests|FullyQualifiedName~ArchitecturalFitnessTests" --configuration Release`.
@@ -165,6 +179,7 @@ When closing the Story 12.1 deferred validation items, record a compact decision
   - Deployment validator rejects missing EventStore gateway, missing DAPR sidecar/config, missing Parties actor host, missing Tenants integration, missing shared state/pubsub, unauthorized DAPR scopes, admin UI treated as the command/query gateway, and malformed topology manifest values.
   - Deployment validator includes at least one combined missing-dependency case and asserts each failure reports a distinct sanitized reason.
   - Validator JSON and console output remain valid and sanitized for both pass and fail cases, including absence assertions for secrets, credentials, connection strings, URI userinfo, DAPR secret values, raw tenant data, and raw exception traces.
+  - Parser-backed checks are preferred for YAML, XML project files, JSON output, and generated validation objects; raw source-text scans must document comment/generated-output exclusions and literal allowlists.
   - Architectural fitness still blocks REST/OpenAPI/MCP regressions in `Hexalith.Parties` through layered checks for service registration, route mapping, OpenAPI document generation, exposed ports, and MCP host references; it keeps MCP only in `Hexalith.Parties.Mcp`.
   - AppHost source and launchSettings secret scans cover Keycloak, connection strings, bearer tokens, admin passwords, and client secrets.
   - Existing Tenants validation tests keep passing after pivoting `commandApiAppId` expectations to `eventstore` where appropriate.
@@ -229,6 +244,7 @@ TBD
 
 | Date | Version | Description | Author |
 |---|---:|---|---|
+| 2026-05-10 | 0.3 | Advanced elicitation completed; applied evidence-source, failure-taxonomy, parser-first, receiving-sidecar, sanitized-output, and runtime-proof clarifications. | Codex |
 | 2026-05-10 | 0.2 | Applied party-mode review clarifications for topology contract, DAPR matrices, negative validation cases, sanitized output, deferred-gap disposition, and submodule guardrails. | Codex |
 | 2026-05-10 | 0.1 | Created ready-for-dev story through BMAD pre-dev hardening automation. | Codex |
 
@@ -241,4 +257,27 @@ TBD
 - Findings summary: the story was directionally ready but needed sharper pre-dev wording for the required EventStore-fronted topology contract, DAPR caller/resource matrices, gateway readiness versus internal liveness categories, negative deployment-validation cases, sanitized output assertions, retired REST/OpenAPI/MCP guardrail layers, Story 12.1 deferred-gap disposition, and submodule boundaries.
 - Changes applied: added a required topology contract table; added validation output/redaction rules; added a Story 12.1 deferred-gap disposition format; strengthened focused testing guidance for denied DAPR paths, combined missing-dependency failures, sanitized JSON/console assertions, layered retired-surface checks, and non-recursive submodule handling.
 - Findings deferred: exact runtime health probe endpoints and deployment-manifest source-of-truth locations remain implementation details to validate against existing AppHost/deploy-validation structure; any platform contract change outside topology validation must be recorded as a blocker rather than silently implemented here.
+- Final recommendation: ready-for-dev
+
+## Advanced Elicitation
+
+- Date/time: 2026-05-10T20:07:47+02:00
+- Selected story key: `12-10-deployment-validation-and-topology-fitness-rewrite`
+- Command/skill invocation used: `/bmad-advanced-elicitation 12-10-deployment-validation-and-topology-fitness-rewrite`
+- Batch 1 method names: Red Team vs Blue Team; Failure Mode Analysis; Security Audit Personas; Self-Consistency Validation; Architecture Decision Records
+- Reshuffled Batch 2 method names: Pre-mortem Analysis; Chaos Monkey Scenarios; User Persona Focus Group; Critique and Refine; Expand or Contract for Audience
+- Findings summary:
+  - The story needed an explicit evidence-source rule so validation changes are anchored to checked-in topology sources and accepted predecessor evidence instead of inferred production shape.
+  - Failure categories needed sharper separation so gateway, actor-host, Tenants, admin, DAPR, and optional MCP failures cannot be collapsed into misleading operator messages.
+  - DAPR access-control checks needed a receiving-sidecar rule to avoid false confidence from caller-side configuration or broad component scopes.
+  - Validator output needed concrete negative fixtures proving secret-looking and operator-supplied values are not echoed to console or JSON.
+  - Runtime proof needed a deterministic boundary: use official Aspire health/resource APIs when available, otherwise record the exact tooling gap and static evidence used.
+- Changes applied:
+  - Added advanced elicitation clarifications for evidence sources, failure taxonomy, parser-first guardrails, receiving-sidecar DAPR validation, sanitized output, and runtime proof.
+  - Added subtasks for evidence-source recording, receiving-sidecar invocation assertions, distinct combined-failure reporting, secret-looking negative fixtures, and runtime-proof completion notes.
+  - Expanded testing guidance to prefer parser-backed checks and require documented exclusions for source-text scans.
+- Findings deferred:
+  - Exact runtime health probe endpoints remain implementation-time evidence to validate against AppHost and accepted platform behavior.
+  - Production manifest source-of-truth locations remain implementation-time evidence unless the current deploy-validation script already exposes them.
+  - Any platform contract change outside topology/deploy validation remains a blocker for this story rather than silent scope expansion.
 - Final recommendation: ready-for-dev
