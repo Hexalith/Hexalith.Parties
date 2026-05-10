@@ -6,6 +6,8 @@ using Hexalith.Parties.Client.Abstractions;
 using Hexalith.Parties.Contracts.Commands;
 using Hexalith.Parties.Contracts.ValueObjects;
 
+using Microsoft.Extensions.Options;
+
 using Shouldly;
 
 namespace Hexalith.Parties.Client.Tests;
@@ -13,7 +15,7 @@ namespace Hexalith.Parties.Client.Tests;
 public sealed class HttpPartiesCommandClientTests
 {
     [Fact]
-    public async Task CreatePartyAsync_SendsPostToCorrectEndpoint_ReturnsCorrelationIdAsync()
+    public async Task CreatePartyAsync_SubmitsEventStoreCommandAndReturnsCorrelationIdAsync()
     {
         const string expectedCorrelationId = "corr-123";
         (HttpPartiesCommandClient client, MockHandler handler) = CreateClient(expectedCorrelationId);
@@ -22,38 +24,32 @@ public sealed class HttpPartiesCommandClientTests
         {
             PartyId = "p-1",
             Type = PartyType.Person,
+            PersonDetails = new PersonDetails { FirstName = "Ada", LastName = "Lovelace" },
         };
 
         string result = await client.CreatePartyAsync(command, CancellationToken.None);
 
         result.ShouldBe(expectedCorrelationId);
         handler.LastRequest!.Method.ShouldBe(HttpMethod.Post);
-        handler.LastRequest.RequestUri!.PathAndQuery.ShouldBe("/api/v1/parties");
-    }
-
-    [Fact]
-    public async Task UpdatePersonDetailsAsync_SendsPostWithPartyIdInRoute_ReturnsCorrelationIdAsync()
-    {
-        const string expectedCorrelationId = "corr-456";
-        (HttpPartiesCommandClient client, MockHandler handler) = CreateClient(expectedCorrelationId);
-
-        var command = new UpdatePersonDetails
-        {
-            PartyId = "p-1",
-            PersonDetails = new PersonDetails { FirstName = "Jane", LastName = "Doe" },
-        };
-
-        string result = await client.UpdatePersonDetailsAsync("p-1", command, CancellationToken.None);
-
-        result.ShouldBe(expectedCorrelationId);
-        handler.LastRequest!.RequestUri!.PathAndQuery.ShouldBe("/api/v1/parties/p-1/update-person-details");
+        handler.LastRequest.RequestUri!.PathAndQuery.ShouldBe("/api/v1/commands");
 
         using JsonDocument body = JsonDocument.Parse(handler.LastRequestBody!);
-        body.RootElement.GetProperty("partyId").GetString().ShouldBe("p-1");
+        JsonElement root = body.RootElement;
+        root.GetProperty("tenant").GetString().ShouldBe("tenant-a");
+        root.GetProperty("domain").GetString().ShouldBe("party");
+        root.GetProperty("aggregateId").GetString().ShouldBe("p-1");
+        root.GetProperty("commandType").GetString().ShouldBe(typeof(CreateParty).FullName);
+        root.GetProperty("messageId").GetString().ShouldNotBeNullOrWhiteSpace();
+        root.GetProperty("correlationId").GetString().ShouldBe(root.GetProperty("messageId").GetString());
+
+        JsonElement payload = root.GetProperty("payload");
+        payload.GetProperty("partyId").GetString().ShouldBe("p-1");
+        payload.GetProperty("type").GetString().ShouldBe("Person");
+        payload.GetProperty("personDetails").GetProperty("firstName").GetString().ShouldBe("Ada");
     }
 
     [Fact]
-    public async Task UpdatePersonDetailsAsync_ReplacesBodyPartyIdWithRoutePartyIdAsync()
+    public async Task UpdatePersonDetailsAsync_ReplacesBodyPartyIdWithRoutePartyIdInEventStorePayloadAsync()
     {
         (HttpPartiesCommandClient client, MockHandler handler) = CreateClient("corr-456");
 
@@ -66,33 +62,53 @@ public sealed class HttpPartiesCommandClientTests
         await client.UpdatePersonDetailsAsync("p-1", command, CancellationToken.None);
 
         using JsonDocument body = JsonDocument.Parse(handler.LastRequestBody!);
-        body.RootElement.GetProperty("partyId").GetString().ShouldBe("p-1");
+        JsonElement root = body.RootElement;
+        root.GetProperty("aggregateId").GetString().ShouldBe("p-1");
+        root.GetProperty("commandType").GetString().ShouldBe(typeof(UpdatePersonDetails).FullName);
+        root.GetProperty("payload").GetProperty("partyId").GetString().ShouldBe("p-1");
     }
 
     [Fact]
-    public async Task DeactivatePartyAsync_SendsPostWithEmptyBody_ReturnsCorrelationIdAsync()
+    public async Task DeactivatePartyAsync_UsesTypedDeactivateCommandPayloadAsync()
     {
-        const string expectedCorrelationId = "corr-789";
-        (HttpPartiesCommandClient client, MockHandler handler) = CreateClient(expectedCorrelationId);
+        (HttpPartiesCommandClient client, MockHandler handler) = CreateClient("corr-789");
 
-        string result = await client.DeactivatePartyAsync("p-1", CancellationToken.None);
+        string result = await client.DeactivatePartyAsync("p-2", CancellationToken.None);
 
-        result.ShouldBe(expectedCorrelationId);
-        handler.LastRequest!.RequestUri!.PathAndQuery.ShouldBe("/api/v1/parties/p-1/deactivate");
+        result.ShouldBe("corr-789");
+        using JsonDocument body = JsonDocument.Parse(handler.LastRequestBody!);
+        JsonElement root = body.RootElement;
+        root.GetProperty("aggregateId").GetString().ShouldBe("p-2");
+        root.GetProperty("commandType").GetString().ShouldBe(typeof(DeactivateParty).FullName);
+        root.GetProperty("payload").GetProperty("partyId").GetString().ShouldBe("p-2");
     }
 
-    [Fact]
-    public async Task ReactivatePartyAsync_SendsPostToCorrectEndpointAsync()
+    [Theory]
+    [InlineData(nameof(IPartiesCommandClient.UpdateOrganizationDetailsAsync), typeof(UpdateOrganizationDetails))]
+    [InlineData(nameof(IPartiesCommandClient.AddContactChannelAsync), typeof(AddContactChannel))]
+    [InlineData(nameof(IPartiesCommandClient.UpdateContactChannelAsync), typeof(UpdateContactChannel))]
+    [InlineData(nameof(IPartiesCommandClient.RemoveContactChannelAsync), typeof(RemoveContactChannel))]
+    [InlineData(nameof(IPartiesCommandClient.AddIdentifierAsync), typeof(AddIdentifier))]
+    [InlineData(nameof(IPartiesCommandClient.RemoveIdentifierAsync), typeof(RemoveIdentifier))]
+    [InlineData(nameof(IPartiesCommandClient.UpdatePartyCompositeAsync), typeof(UpdatePartyComposite))]
+    [InlineData(nameof(IPartiesCommandClient.SetIsNaturalPersonAsync), typeof(SetIsNaturalPerson))]
+    public async Task RoutePartyIdMethods_OverrideStalePayloadPartyIdAsync(string methodName, Type expectedCommandType)
     {
-        (HttpPartiesCommandClient client, MockHandler handler) = CreateClient("corr-x");
+        ArgumentNullException.ThrowIfNull(expectedCommandType);
 
-        await client.ReactivatePartyAsync("p-2", CancellationToken.None);
+        (HttpPartiesCommandClient client, MockHandler handler) = CreateClient("corr-route");
 
-        handler.LastRequest!.RequestUri!.PathAndQuery.ShouldBe("/api/v1/parties/p-2/reactivate");
+        await InvokeRouteMethodAsync(client, methodName);
+
+        using JsonDocument body = JsonDocument.Parse(handler.LastRequestBody!);
+        JsonElement root = body.RootElement;
+        root.GetProperty("aggregateId").GetString().ShouldBe("p-route");
+        root.GetProperty("commandType").GetString().ShouldBe(expectedCommandType.FullName);
+        root.GetProperty("payload").GetProperty("partyId").GetString().ShouldBe("p-route");
     }
 
     [Fact]
-    public async Task CreatePartyCompositeAsync_SendsPostToCorrectEndpointAsync()
+    public async Task CreatePartyCompositeAsync_UsesConcreteCommandTypeAsync()
     {
         (HttpPartiesCommandClient client, MockHandler handler) = CreateClient("corr-comp");
 
@@ -104,262 +120,9 @@ public sealed class HttpPartiesCommandClientTests
 
         await client.CreatePartyCompositeAsync(command, CancellationToken.None);
 
-        handler.LastRequest!.RequestUri!.PathAndQuery.ShouldBe("/api/v1/parties/create-composite");
-    }
-
-    [Fact]
-    public async Task UpdatePartyCompositeAsync_SendsPostWithPartyIdInRouteAsync()
-    {
-        (HttpPartiesCommandClient client, MockHandler handler) = CreateClient("corr-upd");
-
-        var command = new UpdatePartyComposite { PartyId = "p-4" };
-
-        await client.UpdatePartyCompositeAsync("p-4", command, CancellationToken.None);
-
-        handler.LastRequest!.RequestUri!.PathAndQuery.ShouldBe("/api/v1/parties/p-4/update-composite");
-    }
-
-    [Fact]
-    public async Task UpdatePartyCompositeAsync_ReplacesBodyPartyIdWithRoutePartyIdAsync()
-    {
-        (HttpPartiesCommandClient client, MockHandler handler) = CreateClient("corr-upd");
-
-        var command = new UpdatePartyComposite { PartyId = "stale-id" };
-
-        await client.UpdatePartyCompositeAsync("p-4", command, CancellationToken.None);
-
         using JsonDocument body = JsonDocument.Parse(handler.LastRequestBody!);
-        body.RootElement.GetProperty("partyId").GetString().ShouldBe("p-4");
-    }
-
-    [Fact]
-    public async Task SetIsNaturalPersonAsync_SendsPostToCorrectEndpointAsync()
-    {
-        (HttpPartiesCommandClient client, MockHandler handler) = CreateClient("corr-nat");
-
-        var command = new SetIsNaturalPerson { PartyId = "p-5", IsNaturalPerson = true };
-
-        await client.SetIsNaturalPersonAsync("p-5", command, CancellationToken.None);
-
-        handler.LastRequest!.RequestUri!.PathAndQuery.ShouldBe("/api/v1/parties/p-5/set-natural-person");
-    }
-
-    [Fact]
-    public async Task SetIsNaturalPersonAsync_ReplacesBodyPartyIdWithRoutePartyIdAsync()
-    {
-        (HttpPartiesCommandClient client, MockHandler handler) = CreateClient("corr-nat");
-
-        var command = new SetIsNaturalPerson { PartyId = "stale-id", IsNaturalPerson = true };
-
-        await client.SetIsNaturalPersonAsync("p-5", command, CancellationToken.None);
-
-        using JsonDocument body = JsonDocument.Parse(handler.LastRequestBody!);
-        body.RootElement.GetProperty("partyId").GetString().ShouldBe("p-5");
-    }
-
-    [Fact]
-    public async Task AddContactChannelAsync_SendsPostToCorrectEndpointAsync()
-    {
-        (HttpPartiesCommandClient client, MockHandler handler) = CreateClient("corr-acc");
-
-        var command = new AddContactChannel
-        {
-            PartyId = "p-6",
-            ContactChannelId = "cc-1",
-            Type = ContactChannelType.Email,
-            Value = "test@example.com",
-        };
-
-        await client.AddContactChannelAsync("p-6", command, CancellationToken.None);
-
-        handler.LastRequest!.RequestUri!.PathAndQuery.ShouldBe("/api/v1/parties/p-6/add-contact-channel");
-    }
-
-    [Fact]
-    public async Task AddContactChannelAsync_ReplacesBodyPartyIdWithRoutePartyIdAsync()
-    {
-        (HttpPartiesCommandClient client, MockHandler handler) = CreateClient("corr-acc");
-
-        var command = new AddContactChannel
-        {
-            PartyId = "stale-id",
-            ContactChannelId = "cc-1",
-            Type = ContactChannelType.Email,
-            Value = "test@example.com",
-        };
-
-        await client.AddContactChannelAsync("p-6", command, CancellationToken.None);
-
-        using JsonDocument body = JsonDocument.Parse(handler.LastRequestBody!);
-        body.RootElement.GetProperty("partyId").GetString().ShouldBe("p-6");
-    }
-
-    [Fact]
-    public async Task RemoveContactChannelAsync_SendsPostToCorrectEndpointAsync()
-    {
-        (HttpPartiesCommandClient client, MockHandler handler) = CreateClient("corr-rcc");
-
-        var command = new RemoveContactChannel { PartyId = "p-7", ContactChannelId = "cc-1" };
-
-        await client.RemoveContactChannelAsync("p-7", command, CancellationToken.None);
-
-        handler.LastRequest!.RequestUri!.PathAndQuery.ShouldBe("/api/v1/parties/p-7/remove-contact-channel");
-    }
-
-    [Fact]
-    public async Task RemoveContactChannelAsync_ReplacesBodyPartyIdWithRoutePartyIdAsync()
-    {
-        (HttpPartiesCommandClient client, MockHandler handler) = CreateClient("corr-rcc");
-
-        var command = new RemoveContactChannel { PartyId = "stale-id", ContactChannelId = "cc-1" };
-
-        await client.RemoveContactChannelAsync("p-7", command, CancellationToken.None);
-
-        using JsonDocument body = JsonDocument.Parse(handler.LastRequestBody!);
-        body.RootElement.GetProperty("partyId").GetString().ShouldBe("p-7");
-    }
-
-    [Fact]
-    public async Task UpdateContactChannelAsync_SendsPostToCorrectEndpointAsync()
-    {
-        (HttpPartiesCommandClient client, MockHandler handler) = CreateClient("corr-ucc");
-
-        var command = new UpdateContactChannel { PartyId = "p-8", ContactChannelId = "cc-1" };
-
-        await client.UpdateContactChannelAsync("p-8", command, CancellationToken.None);
-
-        handler.LastRequest!.RequestUri!.PathAndQuery.ShouldBe("/api/v1/parties/p-8/update-contact-channel");
-    }
-
-    [Fact]
-    public async Task UpdateContactChannelAsync_ReplacesBodyPartyIdWithRoutePartyIdAsync()
-    {
-        (HttpPartiesCommandClient client, MockHandler handler) = CreateClient("corr-ucc");
-
-        var command = new UpdateContactChannel { PartyId = "stale-id", ContactChannelId = "cc-1" };
-
-        await client.UpdateContactChannelAsync("p-8", command, CancellationToken.None);
-
-        using JsonDocument body = JsonDocument.Parse(handler.LastRequestBody!);
-        body.RootElement.GetProperty("partyId").GetString().ShouldBe("p-8");
-    }
-
-    [Fact]
-    public async Task AddIdentifierAsync_SendsPostToCorrectEndpointAsync()
-    {
-        (HttpPartiesCommandClient client, MockHandler handler) = CreateClient("corr-aid");
-
-        var command = new AddIdentifier
-        {
-            PartyId = "p-9",
-            IdentifierId = "id-1",
-            Type = IdentifierType.VAT,
-            Value = "FR123456789",
-        };
-
-        await client.AddIdentifierAsync("p-9", command, CancellationToken.None);
-
-        handler.LastRequest!.RequestUri!.PathAndQuery.ShouldBe("/api/v1/parties/p-9/add-identifier");
-    }
-
-    [Fact]
-    public async Task AddIdentifierAsync_ReplacesBodyPartyIdWithRoutePartyIdAsync()
-    {
-        (HttpPartiesCommandClient client, MockHandler handler) = CreateClient("corr-aid");
-
-        var command = new AddIdentifier
-        {
-            PartyId = "stale-id",
-            IdentifierId = "id-1",
-            Type = IdentifierType.VAT,
-            Value = "FR123456789",
-        };
-
-        await client.AddIdentifierAsync("p-9", command, CancellationToken.None);
-
-        using JsonDocument body = JsonDocument.Parse(handler.LastRequestBody!);
-        body.RootElement.GetProperty("partyId").GetString().ShouldBe("p-9");
-    }
-
-    [Fact]
-    public async Task RemoveIdentifierAsync_SendsPostToCorrectEndpointAsync()
-    {
-        (HttpPartiesCommandClient client, MockHandler handler) = CreateClient("corr-rid");
-
-        var command = new RemoveIdentifier { PartyId = "p-10", IdentifierId = "id-1" };
-
-        await client.RemoveIdentifierAsync("p-10", command, CancellationToken.None);
-
-        handler.LastRequest!.RequestUri!.PathAndQuery.ShouldBe("/api/v1/parties/p-10/remove-identifier");
-    }
-
-    [Fact]
-    public async Task RemoveIdentifierAsync_ReplacesBodyPartyIdWithRoutePartyIdAsync()
-    {
-        (HttpPartiesCommandClient client, MockHandler handler) = CreateClient("corr-rid");
-
-        var command = new RemoveIdentifier { PartyId = "stale-id", IdentifierId = "id-1" };
-
-        await client.RemoveIdentifierAsync("p-10", command, CancellationToken.None);
-
-        using JsonDocument body = JsonDocument.Parse(handler.LastRequestBody!);
-        body.RootElement.GetProperty("partyId").GetString().ShouldBe("p-10");
-    }
-
-    [Fact]
-    public async Task UpdateOrganizationDetailsAsync_SendsPostToCorrectEndpointAsync()
-    {
-        (HttpPartiesCommandClient client, MockHandler handler) = CreateClient("corr-org");
-
-        var command = new UpdateOrganizationDetails
-        {
-            PartyId = "p-11",
-            OrganizationDetails = new OrganizationDetails { LegalName = "Acme Corp" },
-        };
-
-        await client.UpdateOrganizationDetailsAsync("p-11", command, CancellationToken.None);
-
-        handler.LastRequest!.RequestUri!.PathAndQuery.ShouldBe("/api/v1/parties/p-11/update-organization-details");
-    }
-
-    [Fact]
-    public async Task UpdateOrganizationDetailsAsync_ReplacesBodyPartyIdWithRoutePartyIdAsync()
-    {
-        (HttpPartiesCommandClient client, MockHandler handler) = CreateClient("corr-org");
-
-        var command = new UpdateOrganizationDetails
-        {
-            PartyId = "stale-id",
-            OrganizationDetails = new OrganizationDetails { LegalName = "Acme Corp" },
-        };
-
-        await client.UpdateOrganizationDetailsAsync("p-11", command, CancellationToken.None);
-
-        using JsonDocument body = JsonDocument.Parse(handler.LastRequestBody!);
-        body.RootElement.GetProperty("partyId").GetString().ShouldBe("p-11");
-    }
-
-    [Fact]
-    public async Task CreatePartyAsync_SerializesWithCamelCaseAndStringEnumsAsync()
-    {
-        (HttpPartiesCommandClient client, MockHandler handler) = CreateClient("corr-ser");
-
-        var command = new CreateParty
-        {
-            PartyId = "p-ser",
-            Type = PartyType.Person,
-            PersonDetails = new PersonDetails { FirstName = "John", LastName = "Doe" },
-        };
-
-        await client.CreatePartyAsync(command, CancellationToken.None);
-
-        string body = handler.LastRequestBody!;
-        using JsonDocument doc = JsonDocument.Parse(body);
-        JsonElement root = doc.RootElement;
-
-        root.GetProperty("partyId").GetString().ShouldBe("p-ser");
-        root.GetProperty("type").GetString().ShouldBe("Person");
-        root.GetProperty("personDetails").GetProperty("firstName").GetString().ShouldBe("John");
+        body.RootElement.GetProperty("aggregateId").GetString().ShouldBe("p-3");
+        body.RootElement.GetProperty("commandType").GetString().ShouldBe(typeof(CreatePartyComposite).FullName);
     }
 
     [Fact]
@@ -369,7 +132,7 @@ public sealed class HttpPartiesCommandClientTests
         {
             status = 404,
             title = "Party Not Found",
-            type = "urn:hexalith:parties:error:PartyNotFound",
+            type = "urn:hexalith:eventstore:error:not-found",
             detail = "No party found with ID 'p-missing'.",
             correlationId = "corr-err",
         });
@@ -379,16 +142,45 @@ public sealed class HttpPartiesCommandClientTests
             problemJson,
             "application/problem+json");
         var httpClient = new HttpClient(handler) { BaseAddress = new Uri("https://localhost") };
-        var client = new HttpPartiesCommandClient(httpClient);
+        var client = new HttpPartiesCommandClient(httpClient, Options.Create(ClientOptions()));
 
         PartiesClientException exception = await Should.ThrowAsync<PartiesClientException>(
             () => client.DeactivatePartyAsync("p-missing", CancellationToken.None));
 
         exception.Status.ShouldBe(404);
         exception.Title.ShouldBe("Party Not Found");
-        exception.Type.ShouldBe("urn:hexalith:parties:error:PartyNotFound");
+        exception.Type.ShouldBe("urn:hexalith:eventstore:error:not-found");
         exception.Detail.ShouldBe("No party found with ID 'p-missing'.");
         exception.CorrelationId.ShouldBe("corr-err");
+    }
+
+    [Fact]
+    public async Task PostCommand_OnSensitiveProblemDetail_DoesNotLeakPayloadValuesAsync()
+    {
+        string problemJson = JsonSerializer.Serialize(new
+        {
+            status = 422,
+            title = "Validation failed",
+            type = "urn:hexalith:eventstore:error:validation",
+            detail = "payload.personDetails.email=ada@example.test token=secret",
+            correlationId = "corr-sensitive",
+        });
+
+        var handler = new MockHandler(
+            HttpStatusCode.UnprocessableEntity,
+            problemJson,
+            "application/problem+json");
+        var httpClient = new HttpClient(handler) { BaseAddress = new Uri("https://localhost") };
+        var client = new HttpPartiesCommandClient(httpClient, Options.Create(ClientOptions()));
+
+        PartiesClientException exception = await Should.ThrowAsync<PartiesClientException>(
+            () => client.CreatePartyAsync(
+                new CreateParty { PartyId = "p-sensitive", Type = PartyType.Person },
+                CancellationToken.None));
+
+        exception.Detail.ShouldNotBeNull().ShouldNotContain("ada@example.test");
+        exception.Detail.ShouldNotBeNull().ShouldNotContain("secret");
+        exception.CorrelationId.ShouldBe("corr-sensitive");
     }
 
     [Fact]
@@ -399,13 +191,86 @@ public sealed class HttpPartiesCommandClientTests
             "{}",
             "application/json");
         var httpClient = new HttpClient(handler) { BaseAddress = new Uri("https://localhost") };
-        var client = new HttpPartiesCommandClient(httpClient);
+        var client = new HttpPartiesCommandClient(httpClient, Options.Create(ClientOptions()));
 
         PartiesClientException exception = await Should.ThrowAsync<PartiesClientException>(
             () => client.DeactivatePartyAsync("p-malformed", CancellationToken.None));
 
         exception.Status.ShouldBe(202);
         exception.Detail.ShouldBe("Response did not contain a valid correlationId.");
+    }
+
+    private static async Task InvokeRouteMethodAsync(HttpPartiesCommandClient client, string methodName)
+    {
+        switch (methodName)
+        {
+            case nameof(IPartiesCommandClient.UpdateOrganizationDetailsAsync):
+                await client.UpdateOrganizationDetailsAsync(
+                    "p-route",
+                    new UpdateOrganizationDetails
+                    {
+                        PartyId = "stale-id",
+                        OrganizationDetails = new OrganizationDetails { LegalName = "Acme Corp" },
+                    },
+                    CancellationToken.None).ConfigureAwait(false);
+                break;
+            case nameof(IPartiesCommandClient.AddContactChannelAsync):
+                await client.AddContactChannelAsync(
+                    "p-route",
+                    new AddContactChannel
+                    {
+                        PartyId = "stale-id",
+                        ContactChannelId = "cc-1",
+                        Type = ContactChannelType.Email,
+                        Value = "test@example.com",
+                    },
+                    CancellationToken.None).ConfigureAwait(false);
+                break;
+            case nameof(IPartiesCommandClient.UpdateContactChannelAsync):
+                await client.UpdateContactChannelAsync(
+                    "p-route",
+                    new UpdateContactChannel { PartyId = "stale-id", ContactChannelId = "cc-1" },
+                    CancellationToken.None).ConfigureAwait(false);
+                break;
+            case nameof(IPartiesCommandClient.RemoveContactChannelAsync):
+                await client.RemoveContactChannelAsync(
+                    "p-route",
+                    new RemoveContactChannel { PartyId = "stale-id", ContactChannelId = "cc-1" },
+                    CancellationToken.None).ConfigureAwait(false);
+                break;
+            case nameof(IPartiesCommandClient.AddIdentifierAsync):
+                await client.AddIdentifierAsync(
+                    "p-route",
+                    new AddIdentifier
+                    {
+                        PartyId = "stale-id",
+                        IdentifierId = "id-1",
+                        Type = IdentifierType.VAT,
+                        Value = "FR123456789",
+                    },
+                    CancellationToken.None).ConfigureAwait(false);
+                break;
+            case nameof(IPartiesCommandClient.RemoveIdentifierAsync):
+                await client.RemoveIdentifierAsync(
+                    "p-route",
+                    new RemoveIdentifier { PartyId = "stale-id", IdentifierId = "id-1" },
+                    CancellationToken.None).ConfigureAwait(false);
+                break;
+            case nameof(IPartiesCommandClient.UpdatePartyCompositeAsync):
+                await client.UpdatePartyCompositeAsync(
+                    "p-route",
+                    new UpdatePartyComposite { PartyId = "stale-id" },
+                    CancellationToken.None).ConfigureAwait(false);
+                break;
+            case nameof(IPartiesCommandClient.SetIsNaturalPersonAsync):
+                await client.SetIsNaturalPersonAsync(
+                    "p-route",
+                    new SetIsNaturalPerson { PartyId = "stale-id", IsNaturalPerson = true },
+                    CancellationToken.None).ConfigureAwait(false);
+                break;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(methodName), methodName, null);
+        }
     }
 
     private static (HttpPartiesCommandClient Client, MockHandler Handler) CreateClient(string correlationId)
@@ -415,8 +280,15 @@ public sealed class HttpPartiesCommandClientTests
             JsonSerializer.Serialize(new { correlationId }),
             "application/json");
         var httpClient = new HttpClient(handler) { BaseAddress = new Uri("https://localhost") };
-        return (new HttpPartiesCommandClient(httpClient), handler);
+        return (new HttpPartiesCommandClient(httpClient, Options.Create(ClientOptions())), handler);
     }
+
+    private static PartiesClientOptions ClientOptions()
+        => new()
+        {
+            BaseUrl = "https://localhost",
+            Tenant = "tenant-a",
+        };
 
     internal sealed class MockHandler(
         HttpStatusCode statusCode,

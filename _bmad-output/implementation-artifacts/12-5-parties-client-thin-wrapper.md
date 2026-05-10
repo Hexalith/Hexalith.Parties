@@ -1,6 +1,6 @@
 # Story 12.5: Parties Client Thin Wrapper
 
-Status: blocked
+Status: review
 
 ## Story
 
@@ -30,56 +30,56 @@ so that I can submit Parties commands and queries with strongly typed payloads w
 
 ## Tasks / Subtasks
 
-- [ ] Confirm predecessor gates before implementation. (AC: 1-8)
-  - [ ] Read `_bmad-output/implementation-artifacts/12-0-eventstore-parties-actor-invocation-feasibility-spike.md`.
-  - [ ] Read `_bmad-output/implementation-artifacts/12-1-apphost-recomposition.md`.
-  - [ ] Read `_bmad-output/implementation-artifacts/12-2-parties-actor-host.md`.
-  - [ ] Read `_bmad-output/implementation-artifacts/12-3-validation-relocation-and-tenant-auth-ownership.md`.
-  - [ ] Read `_bmad-output/implementation-artifacts/12-4-server-tier-1-tier-2-test-rewrite.md`.
-  - [ ] Confirm Story 12.4 is no longer blocked, or confirm a formal Wave 1 contract freeze covers the command/query envelope, response/error taxonomy, validation/auth ownership, and query adapter contract. If not, stop normal implementation and add only red guardrail tests or contract probes.
-  - [ ] If Wave 1 has not landed, limit work to failing/red client guardrail tests and do not claim production readiness.
-- [ ] Inventory the current client surface and preserve consumer API shape unless a breaking change is explicitly justified. (AC: 1, 2, 3, 4)
-  - [ ] Inspect `src/Hexalith.Parties.Client/Abstractions/IPartiesCommandClient.cs`.
-  - [ ] Inspect `src/Hexalith.Parties.Client/Abstractions/IPartiesQueryClient.cs`.
-  - [ ] Inspect `src/Hexalith.Parties.Client/HttpPartiesCommandClient.cs`.
-  - [ ] Inspect `src/Hexalith.Parties.Client/HttpPartiesQueryClient.cs`.
-  - [ ] Inspect `src/Hexalith.Parties.Client/Extensions/PartiesClientServiceCollectionExtensions.cs`.
-  - [ ] Keep method names and typed command/query return models stable for downstream projects unless an accepted EventStore client contract forces an intentional migration note.
-- [ ] Replace direct Parties REST command transport with EventStore command submission. (AC: 1, 2, 4, 5)
-  - [ ] Remove hard-coded old command URLs such as `api/v1/parties`, `api/v1/parties/{id}/update-person-details`, and `api/v1/parties/create-composite` from the client implementation.
-  - [ ] Build EventStore command requests using `Domain="party"`, the concrete Parties command type name, the aggregate id from the command/party id, a client-owned message id, a correlation id, and the serialized command payload.
-  - [ ] Keep route-party-id override behavior for update/contact/identifier/composite methods: the method `partyId` parameter remains authoritative over any stale `PartyId` already inside the command object.
-  - [ ] Return the EventStore correlation id accepted by the gateway; do not return an old Parties-controller response field.
-  - [ ] Do not bypass EventStore authorization or validation by calling `Hexalith.Parties` actor host, DAPR sidecar, `PartyDomainServiceInvoker`, MediatR, or old controllers directly.
-- [ ] Replace direct Parties REST query transport with EventStore query submission. (AC: 1, 3, 4, 5)
-  - [ ] Remove hard-coded old query URLs such as `api/v1/parties/{id}`, `api/v1/parties`, and `api/v1/parties/search`.
-  - [ ] Map `GetPartyAsync`, `ListPartiesAsync`, and `SearchPartiesAsync` to EventStore query requests using `Domain="party"` and the query type/projection metadata proven by Story 12.4.
-  - [ ] Keep current typed result contracts: `PartyDetail`, `PagedResult<PartyIndexEntry>`, and `PagedResult<PartySearchResult>`.
-  - [ ] Preserve ISO 8601 date filter serialization, string enum behavior, page/page-size semantics, and null optional filter omission when encoding query payloads.
-  - [ ] If Story 12.4 records a query adapter blocker, stop and record the exact missing EventStore/Parties projection contract instead of reviving direct Parties REST reads.
-- [ ] Update DI and options for the EventStore gateway boundary. (AC: 1, 4, 7)
-  - [ ] Reassess `PartiesClientOptions.BaseUrl`; if retained, document that it is the EventStore gateway base URL, not a Parties service URL.
-  - [ ] Prefer the existing `AddPartiesClient(...)` one-liner while wiring EventStore client dependencies internally.
-  - [ ] Do not require consumers to configure DAPR, actor proxies, MediatR, FluentValidation, or the Parties actor host.
-  - [ ] Keep package dependencies under the NFR31 target and update fitness tests if the EventStore client dependency changes the accepted transitive package set.
-- [ ] Rewrite client tests to the EventStore contract. (AC: 2, 3, 4, 5, 6)
-  - [ ] Update `tests/Hexalith.Parties.Client.Tests/HttpPartiesCommandClientTests.cs` or its replacement to assert EventStore command request construction rather than old Parties REST paths.
-  - [ ] Update `tests/Hexalith.Parties.Client.Tests/HttpPartiesQueryClientTests.cs` or its replacement to assert EventStore query request construction and typed response deserialization.
-  - [ ] Add red guardrail tests first when Wave 1 is not merged or formally frozen: old `/api/v1/parties` route literals are absent, `Domain="party"` is used, public typed interfaces remain source-compatible, and forbidden dependencies stay out of the client project.
-  - [ ] Use `Hexalith.EventStore.Client.Testing` fakes if they expose the needed command/query seam; otherwise use a narrow mocked HTTP handler against EventStore DTOs and record the absence of a higher-level fake as a test seam gap.
-  - [ ] Keep negative tests for validation/problem details, not found, conflict, unauthorized/forbidden, malformed accepted responses, malformed query payloads, and cancellation propagation.
-  - [ ] Assert the client never sends or stores raw protected payloads in exception messages.
-- [ ] Harden package-boundary and endpoint fitness tests. (AC: 1, 6, 7)
-  - [ ] Update `tests/Hexalith.Parties.Client.Tests/FitnessTests/ClientArchitecturalFitnessTests.cs` so the allowed package/reference list reflects the EventStore client dependency and still blocks Parties service/server/projection/DAPR/MediatR/FluentValidation leakage.
-  - [ ] Add source-text checks proving `Hexalith.Parties.Client` no longer contains old Parties REST path literals.
-  - [ ] Add tests proving the DI option name or documentation cannot be interpreted as a Parties actor-host endpoint when it now targets EventStore.
-  - [ ] Keep the client package size/transitive-dependency guardrail aligned with NFR31; update the expected dependency list only with explicit rationale.
-- [ ] Verify the rewritten client. (AC: 1-8)
-  - [ ] Run `dotnet test tests/Hexalith.Parties.Client.Tests/Hexalith.Parties.Client.Tests.csproj`.
-  - [ ] Run `dotnet test tests/Hexalith.Parties.Contracts.Tests/Hexalith.Parties.Contracts.Tests.csproj`.
-  - [ ] Run any focused EventStore client/testing tests required by the new dependency seam.
-  - [ ] Run `dotnet build Hexalith.Parties.slnx`.
-  - [ ] If Wave 1 is still active or dirty in the working tree, record that this story was verified only to the extent possible against the current gateway contract.
+- [x] Confirm predecessor gates before implementation. (AC: 1-8)
+  - [x] Read `_bmad-output/implementation-artifacts/12-0-eventstore-parties-actor-invocation-feasibility-spike.md`.
+  - [x] Read `_bmad-output/implementation-artifacts/12-1-apphost-recomposition.md`.
+  - [x] Read `_bmad-output/implementation-artifacts/12-2-parties-actor-host.md`.
+  - [x] Read `_bmad-output/implementation-artifacts/12-3-validation-relocation-and-tenant-auth-ownership.md`.
+  - [x] Read `_bmad-output/implementation-artifacts/12-4-server-tier-1-tier-2-test-rewrite.md`.
+  - [x] Confirm Story 12.4 is no longer blocked, or confirm a formal Wave 1 contract freeze covers the command/query envelope, response/error taxonomy, validation/auth ownership, and query adapter contract. If not, stop normal implementation and add only red guardrail tests or contract probes.
+  - [x] If Wave 1 has not landed, limit work to failing/red client guardrail tests and do not claim production readiness.
+- [x] Inventory the current client surface and preserve consumer API shape unless a breaking change is explicitly justified. (AC: 1, 2, 3, 4)
+  - [x] Inspect `src/Hexalith.Parties.Client/Abstractions/IPartiesCommandClient.cs`.
+  - [x] Inspect `src/Hexalith.Parties.Client/Abstractions/IPartiesQueryClient.cs`.
+  - [x] Inspect `src/Hexalith.Parties.Client/HttpPartiesCommandClient.cs`.
+  - [x] Inspect `src/Hexalith.Parties.Client/HttpPartiesQueryClient.cs`.
+  - [x] Inspect `src/Hexalith.Parties.Client/Extensions/PartiesClientServiceCollectionExtensions.cs`.
+  - [x] Keep method names and typed command/query return models stable for downstream projects unless an accepted EventStore client contract forces an intentional migration note.
+- [x] Replace direct Parties REST command transport with EventStore command submission. (AC: 1, 2, 4, 5)
+  - [x] Remove hard-coded old command URLs such as `api/v1/parties`, `api/v1/parties/{id}/update-person-details`, and `api/v1/parties/create-composite` from the client implementation.
+  - [x] Build EventStore command requests using `Domain="party"`, the concrete Parties command type name, the aggregate id from the command/party id, a client-owned message id, a correlation id, and the serialized command payload.
+  - [x] Keep route-party-id override behavior for update/contact/identifier/composite methods: the method `partyId` parameter remains authoritative over any stale `PartyId` already inside the command object.
+  - [x] Return the EventStore correlation id accepted by the gateway; do not return an old Parties-controller response field.
+  - [x] Do not bypass EventStore authorization or validation by calling `Hexalith.Parties` actor host, DAPR sidecar, `PartyDomainServiceInvoker`, MediatR, or old controllers directly.
+- [x] Replace direct Parties REST query transport with EventStore query submission. (AC: 1, 3, 4, 5)
+  - [x] Remove hard-coded old query URLs such as `api/v1/parties/{id}`, `api/v1/parties`, and `api/v1/parties/search`.
+  - [x] Map `GetPartyAsync`, `ListPartiesAsync`, and `SearchPartiesAsync` to EventStore query requests using `Domain="party"` and the query type/projection metadata proven by Story 12.4.
+  - [x] Keep current typed result contracts: `PartyDetail`, `PagedResult<PartyIndexEntry>`, and `PagedResult<PartySearchResult>`.
+  - [x] Preserve ISO 8601 date filter serialization, string enum behavior, page/page-size semantics, and null optional filter omission when encoding query payloads.
+  - [x] If Story 12.4 records a query adapter blocker, stop and record the exact missing EventStore/Parties projection contract instead of reviving direct Parties REST reads.
+- [x] Update DI and options for the EventStore gateway boundary. (AC: 1, 4, 7)
+  - [x] Reassess `PartiesClientOptions.BaseUrl`; if retained, document that it is the EventStore gateway base URL, not a Parties service URL.
+  - [x] Prefer the existing `AddPartiesClient(...)` one-liner while wiring EventStore client dependencies internally.
+  - [x] Do not require consumers to configure DAPR, actor proxies, MediatR, FluentValidation, or the Parties actor host.
+  - [x] Keep package dependencies under the NFR31 target and update fitness tests if the EventStore client dependency changes the accepted transitive package set.
+- [x] Rewrite client tests to the EventStore contract. (AC: 2, 3, 4, 5, 6)
+  - [x] Update `tests/Hexalith.Parties.Client.Tests/HttpPartiesCommandClientTests.cs` or its replacement to assert EventStore command request construction rather than old Parties REST paths.
+  - [x] Update `tests/Hexalith.Parties.Client.Tests/HttpPartiesQueryClientTests.cs` or its replacement to assert EventStore query request construction and typed response deserialization.
+  - [x] Add red guardrail tests first when Wave 1 is not merged or formally frozen: old `/api/v1/parties` route literals are absent, `Domain="party"` is used, public typed interfaces remain source-compatible, and forbidden dependencies stay out of the client project.
+  - [x] Use `Hexalith.EventStore.Client.Testing` fakes if they expose the needed command/query seam; otherwise use a narrow mocked HTTP handler against EventStore DTOs and record the absence of a higher-level fake as a test seam gap.
+  - [x] Keep negative tests for validation/problem details, not found, conflict, unauthorized/forbidden, malformed accepted responses, malformed query payloads, and cancellation propagation.
+  - [x] Assert the client never sends or stores raw protected payloads in exception messages.
+- [x] Harden package-boundary and endpoint fitness tests. (AC: 1, 6, 7)
+  - [x] Update `tests/Hexalith.Parties.Client.Tests/FitnessTests/ClientArchitecturalFitnessTests.cs` so the allowed package/reference list reflects the EventStore client dependency and still blocks Parties service/server/projection/DAPR/MediatR/FluentValidation leakage.
+  - [x] Add source-text checks proving `Hexalith.Parties.Client` no longer contains old Parties REST path literals.
+  - [x] Add tests proving the DI option name or documentation cannot be interpreted as a Parties actor-host endpoint when it now targets EventStore.
+  - [x] Keep the client package size/transitive-dependency guardrail aligned with NFR31; update the expected dependency list only with explicit rationale.
+- [x] Verify the rewritten client. (AC: 1-8)
+  - [x] Run `dotnet test tests/Hexalith.Parties.Client.Tests/Hexalith.Parties.Client.Tests.csproj`.
+  - [x] Run `dotnet test tests/Hexalith.Parties.Contracts.Tests/Hexalith.Parties.Contracts.Tests.csproj`.
+  - [x] Run any focused EventStore client/testing tests required by the new dependency seam.
+  - [x] Run `dotnet build Hexalith.Parties.slnx`.
+  - [x] If Wave 1 is still active or dirty in the working tree, record that this story was verified only to the extent possible against the current gateway contract.
 
 ## Dev Notes
 
@@ -181,25 +181,47 @@ so that I can submit Parties commands and queries with strongly typed payloads w
 
 ### Agent Model Used
 
-TBD
+Codex GPT-5
 
 ### Debug Log References
 
-TBD
+- 2026-05-10: Loaded predecessor story records 12.0 through 12.4. Stories 12.0 through 12.3 are `done`; Story 12.4 is `review` and records the earlier blocked state as stale after Wave 1 predecessors landed. Proceeding with normal client implementation.
+- 2026-05-10: Red client tests initially failed because the production clients still used retired Parties REST paths and lacked tenant-aware EventStore envelope options.
+- 2026-05-10: Focused client tests passed: `dotnet test tests/Hexalith.Parties.Client.Tests/Hexalith.Parties.Client.Tests.csproj --no-restore` (49 passed, 6 pre-existing skipped).
+- 2026-05-10: Contract tests passed: `dotnet test tests/Hexalith.Parties.Contracts.Tests/Hexalith.Parties.Contracts.Tests.csproj --no-restore` (42 passed, 15 pre-existing skipped).
+- 2026-05-10: Full solution build passed: `dotnet build Hexalith.Parties.slnx --no-restore`.
+- 2026-05-10: Full no-build regression passed: `dotnet test Hexalith.Parties.slnx --no-build` (all projects green; integration health skips remain pre-existing).
 
 ### Completion Notes List
 
-TBD
+- Replaced the command client transport with EventStore `POST /api/v1/commands` submission using `Domain="party"`, configured tenant, aggregate id from the typed command or method `partyId`, concrete Parties command type name, client-owned message id/correlation id, and serialized typed payload.
+- Replaced the query client transport with EventStore `POST /api/v1/queries` submission for `GetParty`, `ListParties`, and `SearchParties`, preserving typed return shapes and encoding page/date/filter payloads with camelCase, string enums, ISO 8601 dates, and null omission.
+- Kept `IPartiesCommandClient` and `IPartiesQueryClient` method surfaces unchanged; restored concrete `HttpClient` constructors while marking the options constructor for DI activation.
+- Added `PartiesClientOptions.Tenant` and documented `PartiesClientOptions.BaseUrl` as the EventStore gateway base URL. `AddPartiesClient(...)` remains the one-line DI entry point and does not require DAPR, actor, MediatR, FluentValidation, or Parties host configuration.
+- Added a narrow `Hexalith.EventStore.Contracts` project reference for the query gateway DTO. The command gateway request DTO is still local because the API-facing command request lives in the EventStore service assembly rather than the contracts package; no EventStore submodule source was edited.
+- Rewrote client tests from old `/api/v1/parties` URL assertions to EventStore command/query envelope assertions, including route-party-id override behavior, typed query response deserialization, malformed success handling, and safe problem-detail redaction for sensitive payload/token markers.
+- Hardened client fitness tests to require the EventStore contracts boundary, reject EventStore server/service and Parties service/projection/server references, prove retired Parties REST/admin route literals are absent from client source, and pin BaseUrl documentation to the EventStore gateway.
 
 ### File List
 
-TBD
+- `_bmad-output/implementation-artifacts/12-5-parties-client-thin-wrapper.md`
+- `_bmad-output/implementation-artifacts/sprint-status.yaml`
+- `src/Hexalith.Parties.Client/Hexalith.Parties.Client.csproj`
+- `src/Hexalith.Parties.Client/HttpPartiesCommandClient.cs`
+- `src/Hexalith.Parties.Client/HttpPartiesQueryClient.cs`
+- `src/Hexalith.Parties.Client/PartiesClientOptions.cs`
+- `tests/Hexalith.Parties.Client.Tests/DependencyInjectionTests.cs`
+- `tests/Hexalith.Parties.Client.Tests/FitnessTests/ClientArchitecturalFitnessTests.cs`
+- `tests/Hexalith.Parties.Client.Tests/HttpPartiesCommandClientTests.cs`
+- `tests/Hexalith.Parties.Client.Tests/HttpPartiesQueryClientTests.cs`
 
 ## Change Log
 
 | Date | Version | Description | Author |
 |---|---:|---|---|
 | 2026-05-10 | 0.2 | Party-mode review blocked normal implementation until Wave 1 contracts land/freeze and added guardrails for EventStore boundary, source compatibility, old-route removal, dependency exclusions, and safe error mapping. | Codex |
+| 2026-05-10 | 0.3 | Started implementation after predecessor gate recheck confirmed Story 12.4 is no longer blocked and the Wave 1 command/query envelope is available for the client rewrite. | Codex |
+| 2026-05-10 | 1.0 | Rewrote Parties client as an EventStore command/query gateway wrapper, preserved public typed interfaces, added tenant/gateway options, hardened client boundary tests, and completed required validation. | Codex |
 | 2026-05-09 | 0.1 | Created ready-for-dev story through BMAD pre-dev hardening automation. | Codex |
 
 ## Party-Mode Review

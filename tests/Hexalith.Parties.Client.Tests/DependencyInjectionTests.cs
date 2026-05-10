@@ -52,6 +52,7 @@ public sealed class DependencyInjectionTests
         PartiesClientOptions options = provider.GetRequiredService<IOptions<PartiesClientOptions>>().Value;
 
         options.BaseUrl.ShouldBe("https://localhost:5001");
+        options.Tenant.ShouldBe("tenant-a");
     }
 
     [Fact]
@@ -97,6 +98,7 @@ public sealed class DependencyInjectionTests
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
                 ["Parties:BaseUrl"] = "https://localhost:5001",
+                ["Parties:Tenant"] = "tenant-a",
             })
             .Build();
     }

@@ -72,10 +72,27 @@ public sealed class ClientArchitecturalFitnessTests
     }
 
     [Fact]
+    public void ClientAssembly_ReferencesEventStoreContractsForGatewayBoundary()
+    {
+        Assembly clientAssembly = typeof(HttpPartiesCommandClient).Assembly;
+
+        string[] referencedAssemblies =
+        [
+            .. clientAssembly.GetReferencedAssemblies()
+                .Select(static assembly => assembly.Name)
+                .Where(static name => !string.IsNullOrWhiteSpace(name))
+                .Select(static name => name!),
+        ];
+
+        referencedAssemblies.ShouldContain("Hexalith.EventStore.Contracts");
+        referencedAssemblies.ShouldNotContain("Hexalith.EventStore");
+        referencedAssemblies.ShouldNotContain("Hexalith.EventStore.Server");
+    }
+
+    [Fact]
     public void ClientCsproj_HasNoForbiddenProjectReferences()
     {
-        string testAssemblyDir = Path.GetDirectoryName(typeof(ClientArchitecturalFitnessTests).Assembly.Location)!;
-        string repoRoot = Path.GetFullPath(Path.Combine(testAssemblyDir, "..", "..", "..", "..", ".."));
+        string repoRoot = LocateRepositoryRoot();
         string clientCsprojPath = Path.Combine(repoRoot, "src", "Hexalith.Parties.Client", "Hexalith.Parties.Client.csproj");
 
         File.Exists(clientCsprojPath).ShouldBeTrue($"Client .csproj not found at {clientCsprojPath}");
@@ -121,10 +138,37 @@ public sealed class ClientArchitecturalFitnessTests
     }
 
     [Fact]
+    public void ClientCsproj_ReferencesEventStoreContractsWithoutServerProject()
+    {
+        string repoRoot = LocateRepositoryRoot();
+        string clientCsprojPath = Path.Combine(repoRoot, "src", "Hexalith.Parties.Client", "Hexalith.Parties.Client.csproj");
+
+        XDocument project = XDocument.Load(clientCsprojPath);
+
+        string[] projectReferences =
+        [
+            .. project
+                .Descendants()
+                .Where(e => e.Name.LocalName == "ProjectReference")
+                .Select(e => e.Attribute("Include")?.Value)
+                .Where(value => !string.IsNullOrWhiteSpace(value))
+                .Select(value => value!),
+        ];
+
+        projectReferences.ShouldContain(reference =>
+            reference.EndsWith(
+                Path.Combine("Hexalith.EventStore.Contracts", "Hexalith.EventStore.Contracts.csproj"),
+                StringComparison.OrdinalIgnoreCase));
+        projectReferences.ShouldNotContain(reference =>
+            reference.EndsWith(
+                Path.Combine("Hexalith.EventStore", "Hexalith.EventStore.csproj"),
+                StringComparison.OrdinalIgnoreCase));
+    }
+
+    [Fact]
     public void ClientCsproj_ReferencesOnlyExpectedAbstractionPackages()
     {
-        string testAssemblyDir = Path.GetDirectoryName(typeof(ClientArchitecturalFitnessTests).Assembly.Location)!;
-        string repoRoot = Path.GetFullPath(Path.Combine(testAssemblyDir, "..", "..", "..", "..", ".."));
+        string repoRoot = LocateRepositoryRoot();
         string clientCsprojPath = Path.Combine(repoRoot, "src", "Hexalith.Parties.Client", "Hexalith.Parties.Client.csproj");
 
         XDocument project = XDocument.Load(clientCsprojPath);
@@ -144,6 +188,36 @@ public sealed class ClientArchitecturalFitnessTests
             "Microsoft.Extensions.Http",
             "Microsoft.Extensions.Options",
         ]);
+    }
+
+    [Fact]
+    public void ClientSource_DoesNotContainRetiredPartiesRestRoutes()
+    {
+        string repoRoot = LocateRepositoryRoot();
+        string sourceRoot = Path.Combine(repoRoot, "src", "Hexalith.Parties.Client");
+        string source = string.Join(
+            Environment.NewLine,
+            Directory.GetFiles(sourceRoot, "*.cs", SearchOption.AllDirectories)
+                .Where(static path => !path.Contains($"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}", StringComparison.OrdinalIgnoreCase)
+                    && !path.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}", StringComparison.OrdinalIgnoreCase))
+                .Select(File.ReadAllText));
+
+        source.ShouldNotContain("api/v1/parties");
+        source.ShouldNotContain("api/v1/admin");
+        source.ShouldContain("api/v1/commands");
+        source.ShouldContain("api/v1/queries");
+    }
+
+    [Fact]
+    public void PartiesClientOptions_DocumentsBaseUrlAsEventStoreGateway()
+    {
+        string repoRoot = LocateRepositoryRoot();
+        string optionsPath = Path.Combine(repoRoot, "src", "Hexalith.Parties.Client", "PartiesClientOptions.cs");
+        string source = File.ReadAllText(optionsPath);
+
+        source.ShouldContain("EventStore gateway base URL");
+        source.ShouldNotContain("Parties service URL");
+        source.ShouldNotContain("actor-host endpoint");
     }
 
     private static bool IsForbiddenReference(string reference, string forbiddenName, bool allowSubtree)
@@ -189,6 +263,22 @@ public sealed class ClientArchitecturalFitnessTests
             && candidate.Length > forbidden.Length
             && candidate.StartsWith(forbidden, StringComparison.OrdinalIgnoreCase)
             && candidate[forbidden.Length] == '.';
+    }
+
+    private static string LocateRepositoryRoot()
+    {
+        DirectoryInfo? directory = new(AppContext.BaseDirectory);
+        while (directory is not null)
+        {
+            if (File.Exists(Path.Combine(directory.FullName, "Hexalith.Parties.slnx")))
+            {
+                return directory.FullName;
+            }
+
+            directory = directory.Parent;
+        }
+
+        throw new InvalidOperationException("Unable to locate repository root.");
     }
 
     [Fact]
@@ -266,8 +356,7 @@ public sealed class ClientArchitecturalFitnessTests
     [Fact]
     public void ClientCsproj_TransitiveDependenciesAreOnlySharedFrameworkPackages()
     {
-        string testAssemblyDir = Path.GetDirectoryName(typeof(ClientArchitecturalFitnessTests).Assembly.Location)!;
-        string repoRoot = Path.GetFullPath(Path.Combine(testAssemblyDir, "..", "..", "..", "..", ".."));
+        string repoRoot = LocateRepositoryRoot();
         string assetsFilePath = Path.Combine(repoRoot, "src", "Hexalith.Parties.Client", "obj", "project.assets.json");
 
         File.Exists(assetsFilePath).ShouldBeTrue($"Client assets file not found at {assetsFilePath}");

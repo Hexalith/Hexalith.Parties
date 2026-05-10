@@ -5,10 +5,31 @@ using System.Text.Json.Serialization;
 using Hexalith.Parties.Client.Abstractions;
 using Hexalith.Parties.Contracts.Commands;
 
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
+
 namespace Hexalith.Parties.Client;
 
-public sealed class HttpPartiesCommandClient(HttpClient httpClient) : IPartiesCommandClient
+public sealed class HttpPartiesCommandClient : IPartiesCommandClient
 {
+    private const string PartyDomain = "party";
+    private const string CommandGatewayPath = "api/v1/commands";
+
+    private readonly HttpClient _httpClient;
+    private readonly PartiesClientOptions _options;
+
+    public HttpPartiesCommandClient(HttpClient httpClient)
+        : this(httpClient, Options.Create(new PartiesClientOptions()))
+    {
+    }
+
+    [ActivatorUtilitiesConstructor]
+    public HttpPartiesCommandClient(HttpClient httpClient, IOptions<PartiesClientOptions> options)
+    {
+        _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
+        _options = options?.Value ?? throw new ArgumentNullException(nameof(options));
+    }
+
     internal static readonly JsonSerializerOptions JsonOptions = new()
     {
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
@@ -17,103 +38,96 @@ public sealed class HttpPartiesCommandClient(HttpClient httpClient) : IPartiesCo
     };
 
     public Task<string> CreatePartyAsync(CreateParty command, CancellationToken ct)
-        => PostCommandAsync("api/v1/parties", command, ct);
+    {
+        ArgumentNullException.ThrowIfNull(command);
+        return PostCommandAsync(command.PartyId, command, ct);
+    }
 
     public Task<string> UpdatePersonDetailsAsync(string partyId, UpdatePersonDetails command, CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(command);
-        return PostCommandAsync(
-            $"api/v1/parties/{Uri.EscapeDataString(partyId)}/update-person-details",
-            command with { PartyId = partyId },
-            ct);
+        return PostCommandAsync(partyId, command with { PartyId = partyId }, ct);
     }
 
     public Task<string> UpdateOrganizationDetailsAsync(string partyId, UpdateOrganizationDetails command, CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(command);
-        return PostCommandAsync(
-            $"api/v1/parties/{Uri.EscapeDataString(partyId)}/update-organization-details",
-            command with { PartyId = partyId },
-            ct);
+        return PostCommandAsync(partyId, command with { PartyId = partyId }, ct);
     }
 
     public Task<string> AddContactChannelAsync(string partyId, AddContactChannel command, CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(command);
-        return PostCommandAsync(
-            $"api/v1/parties/{Uri.EscapeDataString(partyId)}/add-contact-channel",
-            command with { PartyId = partyId },
-            ct);
+        return PostCommandAsync(partyId, command with { PartyId = partyId }, ct);
     }
 
     public Task<string> UpdateContactChannelAsync(string partyId, UpdateContactChannel command, CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(command);
-        return PostCommandAsync(
-            $"api/v1/parties/{Uri.EscapeDataString(partyId)}/update-contact-channel",
-            command with { PartyId = partyId },
-            ct);
+        return PostCommandAsync(partyId, command with { PartyId = partyId }, ct);
     }
 
     public Task<string> RemoveContactChannelAsync(string partyId, RemoveContactChannel command, CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(command);
-        return PostCommandAsync(
-            $"api/v1/parties/{Uri.EscapeDataString(partyId)}/remove-contact-channel",
-            command with { PartyId = partyId },
-            ct);
+        return PostCommandAsync(partyId, command with { PartyId = partyId }, ct);
     }
 
     public Task<string> AddIdentifierAsync(string partyId, AddIdentifier command, CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(command);
-        return PostCommandAsync(
-            $"api/v1/parties/{Uri.EscapeDataString(partyId)}/add-identifier",
-            command with { PartyId = partyId },
-            ct);
+        return PostCommandAsync(partyId, command with { PartyId = partyId }, ct);
     }
 
     public Task<string> RemoveIdentifierAsync(string partyId, RemoveIdentifier command, CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(command);
-        return PostCommandAsync(
-            $"api/v1/parties/{Uri.EscapeDataString(partyId)}/remove-identifier",
-            command with { PartyId = partyId },
-            ct);
+        return PostCommandAsync(partyId, command with { PartyId = partyId }, ct);
     }
 
     public Task<string> DeactivatePartyAsync(string partyId, CancellationToken ct)
-        => PostCommandAsync($"api/v1/parties/{Uri.EscapeDataString(partyId)}/deactivate", (object?)null, ct);
+        => PostCommandAsync(partyId, new DeactivateParty { PartyId = partyId }, ct);
 
     public Task<string> ReactivatePartyAsync(string partyId, CancellationToken ct)
-        => PostCommandAsync($"api/v1/parties/{Uri.EscapeDataString(partyId)}/reactivate", (object?)null, ct);
+        => PostCommandAsync(partyId, new ReactivateParty { PartyId = partyId }, ct);
 
     public Task<string> CreatePartyCompositeAsync(CreatePartyComposite command, CancellationToken ct)
-        => PostCommandAsync("api/v1/parties/create-composite", command, ct);
+    {
+        ArgumentNullException.ThrowIfNull(command);
+        return PostCommandAsync(command.PartyId, command, ct);
+    }
 
     public Task<string> UpdatePartyCompositeAsync(string partyId, UpdatePartyComposite command, CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(command);
-        return PostCommandAsync(
-            $"api/v1/parties/{Uri.EscapeDataString(partyId)}/update-composite",
-            command with { PartyId = partyId },
-            ct);
+        return PostCommandAsync(partyId, command with { PartyId = partyId }, ct);
     }
 
     public Task<string> SetIsNaturalPersonAsync(string partyId, SetIsNaturalPerson command, CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(command);
-        return PostCommandAsync(
-            $"api/v1/parties/{Uri.EscapeDataString(partyId)}/set-natural-person",
-            command with { PartyId = partyId },
-            ct);
+        return PostCommandAsync(partyId, command with { PartyId = partyId }, ct);
     }
 
-    private async Task<string> PostCommandAsync<TCommand>(string requestUri, TCommand command, CancellationToken ct)
+    private async Task<string> PostCommandAsync<TCommand>(string aggregateId, TCommand command, CancellationToken ct)
     {
-        using HttpResponseMessage response = command is null
-            ? await httpClient.PostAsync(requestUri, null, ct).ConfigureAwait(false)
-            : await httpClient.PostAsJsonAsync(requestUri, command, JsonOptions, ct).ConfigureAwait(false);
+        ArgumentException.ThrowIfNullOrWhiteSpace(aggregateId);
+        ArgumentNullException.ThrowIfNull(command);
+
+        string messageId = Guid.NewGuid().ToString("N");
+        var request = new EventStoreCommandRequest(
+            MessageId: messageId,
+            Tenant: _options.Tenant,
+            Domain: PartyDomain,
+            AggregateId: aggregateId,
+            CommandType: typeof(TCommand).FullName ?? typeof(TCommand).Name,
+            Payload: JsonSerializer.SerializeToElement(command, JsonOptions),
+            CorrelationId: messageId,
+            Extensions: null);
+
+        using HttpResponseMessage response = await _httpClient
+            .PostAsJsonAsync(CommandGatewayPath, request, JsonOptions, ct)
+            .ConfigureAwait(false);
 
         if (!response.IsSuccessStatusCode)
         {
@@ -169,9 +183,10 @@ public sealed class HttpPartiesCommandClient(HttpClient httpClient) : IPartiesCo
 
                 JsonElement root = doc.RootElement;
 
-                if (root.TryGetProperty("status", out JsonElement statusElement))
+                if (root.TryGetProperty("status", out JsonElement statusElement)
+                    && statusElement.TryGetInt32(out int problemStatus))
                 {
-                    status = statusElement.GetInt32();
+                    status = problemStatus;
                 }
 
                 if (root.TryGetProperty("title", out JsonElement titleElement))
@@ -186,7 +201,7 @@ public sealed class HttpPartiesCommandClient(HttpClient httpClient) : IPartiesCo
 
                 if (root.TryGetProperty("detail", out JsonElement detailElement))
                 {
-                    detail = detailElement.GetString();
+                    detail = SanitizeDetail(detailElement.GetString());
                 }
 
                 if (root.TryGetProperty("correlationId", out JsonElement corrElement))
@@ -196,7 +211,7 @@ public sealed class HttpPartiesCommandClient(HttpClient httpClient) : IPartiesCo
             }
             catch (JsonException)
             {
-                // If we can't parse the body, use HTTP status info only
+                // If we can't parse the body, use HTTP status info only.
             }
         }
 
@@ -207,4 +222,40 @@ public sealed class HttpPartiesCommandClient(HttpClient httpClient) : IPartiesCo
             detail,
             correlationId);
     }
+
+    private static string? SanitizeDetail(string? detail)
+    {
+        if (string.IsNullOrWhiteSpace(detail))
+        {
+            return detail;
+        }
+
+        string[] sensitiveMarkers =
+        [
+            "payload",
+            "token",
+            "authorization",
+            "bearer",
+            "secret",
+            "password",
+            "sidecar",
+            "dapr",
+            "redis",
+            "connection string",
+        ];
+
+        return sensitiveMarkers.Any(marker => detail.Contains(marker, StringComparison.OrdinalIgnoreCase))
+            ? "Details withheld by Parties client."
+            : detail;
+    }
+
+    private sealed record EventStoreCommandRequest(
+        string MessageId,
+        string Tenant,
+        string Domain,
+        string AggregateId,
+        string CommandType,
+        JsonElement Payload,
+        string? CorrelationId,
+        Dictionary<string, string>? Extensions);
 }

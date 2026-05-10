@@ -1,31 +1,56 @@
 using System.Net.Http.Json;
+using System.Text.Json;
 
+using Hexalith.EventStore.Contracts.Queries;
 using Hexalith.Parties.Client.Abstractions;
 using Hexalith.Parties.Contracts.Models;
 using Hexalith.Parties.Contracts.ValueObjects;
 
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
+
 namespace Hexalith.Parties.Client;
 
-public sealed class HttpPartiesQueryClient(HttpClient httpClient) : IPartiesQueryClient
+public sealed class HttpPartiesQueryClient : IPartiesQueryClient
 {
-    public async Task<PartyDetail> GetPartyAsync(string partyId, CancellationToken ct)
+    private const string PartyDomain = "party";
+    private const string QueryGatewayPath = "api/v1/queries";
+    private const string ListAggregateId = "parties";
+    private const string DetailProjectionActorType = "PartyDetailProjectionActor";
+
+    private readonly HttpClient _httpClient;
+    private readonly PartiesClientOptions _options;
+
+    public HttpPartiesQueryClient(HttpClient httpClient)
+        : this(httpClient, Options.Create(new PartiesClientOptions()))
     {
-        using HttpResponseMessage response = await httpClient
-            .GetAsync($"api/v1/parties/{Uri.EscapeDataString(partyId)}", ct)
-            .ConfigureAwait(false);
-
-        if (!response.IsSuccessStatusCode)
-        {
-            await HttpPartiesCommandClient.ThrowOnErrorAsync(response, ct).ConfigureAwait(false);
-        }
-
-        return await response.Content
-            .ReadFromJsonAsync<PartyDetail>(HttpPartiesCommandClient.JsonOptions, ct)
-            .ConfigureAwait(false)
-            ?? throw new PartiesClientException(200, "OK", null, "Response body was null.", null);
     }
 
-    public async Task<PagedResult<PartyIndexEntry>> ListPartiesAsync(
+    [ActivatorUtilitiesConstructor]
+    public HttpPartiesQueryClient(HttpClient httpClient, IOptions<PartiesClientOptions> options)
+    {
+        _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
+        _options = options?.Value ?? throw new ArgumentNullException(nameof(options));
+    }
+
+    public Task<PartyDetail> GetPartyAsync(string partyId, CancellationToken ct)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(partyId);
+
+        var request = new SubmitQueryRequest(
+            Tenant: _options.Tenant,
+            Domain: PartyDomain,
+            AggregateId: partyId,
+            QueryType: "GetParty",
+            ProjectionType: "PartyDetail",
+            Payload: null,
+            EntityId: partyId,
+            ProjectionActorType: DetailProjectionActorType);
+
+        return PostQueryAsync<PartyDetail>(request, ct);
+    }
+
+    public Task<PagedResult<PartyIndexEntry>> ListPartiesAsync(
         int page,
         int pageSize,
         PartyType? type,
@@ -36,65 +61,47 @@ public sealed class HttpPartiesQueryClient(HttpClient httpClient) : IPartiesQuer
         DateTimeOffset? modifiedBefore,
         CancellationToken ct)
     {
-        var queryParams = new List<string>
-        {
-            $"page={page}",
-            $"pageSize={pageSize}",
-        };
+        var payload = new ListPartiesQueryPayload(
+            page,
+            pageSize,
+            type?.ToString(),
+            active,
+            FormatDate(createdAfter),
+            FormatDate(createdBefore),
+            FormatDate(modifiedAfter),
+            FormatDate(modifiedBefore));
 
-        if (type is not null)
-        {
-            queryParams.Add($"type={type.Value}");
-        }
+        var request = new SubmitQueryRequest(
+            Tenant: _options.Tenant,
+            Domain: PartyDomain,
+            AggregateId: ListAggregateId,
+            QueryType: "ListParties",
+            ProjectionType: "PartyIndex",
+            Payload: JsonSerializer.SerializeToElement(payload, HttpPartiesCommandClient.JsonOptions),
+            EntityId: ListAggregateId);
 
-        if (active is not null)
-        {
-            queryParams.Add($"active={active.Value.ToString().ToLowerInvariant()}");
-        }
-
-        if (createdAfter is not null)
-        {
-            queryParams.Add($"createdAfter={Uri.EscapeDataString(createdAfter.Value.ToString("o"))}");
-        }
-
-        if (createdBefore is not null)
-        {
-            queryParams.Add($"createdBefore={Uri.EscapeDataString(createdBefore.Value.ToString("o"))}");
-        }
-
-        if (modifiedAfter is not null)
-        {
-            queryParams.Add($"modifiedAfter={Uri.EscapeDataString(modifiedAfter.Value.ToString("o"))}");
-        }
-
-        if (modifiedBefore is not null)
-        {
-            queryParams.Add($"modifiedBefore={Uri.EscapeDataString(modifiedBefore.Value.ToString("o"))}");
-        }
-
-        string url = $"api/v1/parties?{string.Join('&', queryParams)}";
-
-        using HttpResponseMessage response = await httpClient
-            .GetAsync(url, ct)
-            .ConfigureAwait(false);
-
-        if (!response.IsSuccessStatusCode)
-        {
-            await HttpPartiesCommandClient.ThrowOnErrorAsync(response, ct).ConfigureAwait(false);
-        }
-
-        return await response.Content
-            .ReadFromJsonAsync<PagedResult<PartyIndexEntry>>(HttpPartiesCommandClient.JsonOptions, ct)
-            .ConfigureAwait(false)
-            ?? throw new PartiesClientException(200, "OK", null, "Response body was null.", null);
+        return PostQueryAsync<PagedResult<PartyIndexEntry>>(request, ct);
     }
 
-    public async Task<PagedResult<PartySearchResult>> SearchPartiesAsync(string query, int page, int pageSize, CancellationToken ct)
+    public Task<PagedResult<PartySearchResult>> SearchPartiesAsync(string query, int page, int pageSize, CancellationToken ct)
     {
-        string url = $"api/v1/parties/search?q={Uri.EscapeDataString(query)}&page={page}&pageSize={pageSize}";
+        var payload = new SearchPartiesQueryPayload(query, page, pageSize);
+        var request = new SubmitQueryRequest(
+            Tenant: _options.Tenant,
+            Domain: PartyDomain,
+            AggregateId: ListAggregateId,
+            QueryType: "SearchParties",
+            ProjectionType: "PartySearch",
+            Payload: JsonSerializer.SerializeToElement(payload, HttpPartiesCommandClient.JsonOptions),
+            EntityId: ListAggregateId);
 
-        using HttpResponseMessage response = await httpClient
-            .GetAsync(url, ct)
+        return PostQueryAsync<PagedResult<PartySearchResult>>(request, ct);
+    }
+
+    private async Task<T> PostQueryAsync<T>(SubmitQueryRequest request, CancellationToken ct)
+    {
+        using HttpResponseMessage response = await _httpClient
+            .PostAsJsonAsync(QueryGatewayPath, request, HttpPartiesCommandClient.JsonOptions, ct)
             .ConfigureAwait(false);
 
         if (!response.IsSuccessStatusCode)
@@ -102,9 +109,55 @@ public sealed class HttpPartiesQueryClient(HttpClient httpClient) : IPartiesQuer
             await HttpPartiesCommandClient.ThrowOnErrorAsync(response, ct).ConfigureAwait(false);
         }
 
-        return await response.Content
-            .ReadFromJsonAsync<PagedResult<PartySearchResult>>(HttpPartiesCommandClient.JsonOptions, ct)
-            .ConfigureAwait(false)
-            ?? throw new PartiesClientException(200, "OK", null, "Response body was null.", null);
+        string? correlationId = null;
+        try
+        {
+            using JsonDocument doc = await JsonDocument.ParseAsync(
+                await response.Content.ReadAsStreamAsync(ct).ConfigureAwait(false),
+                cancellationToken: ct).ConfigureAwait(false);
+
+            if (doc.RootElement.TryGetProperty("correlationId", out JsonElement correlationIdElement))
+            {
+                correlationId = correlationIdElement.GetString();
+            }
+
+            if (doc.RootElement.TryGetProperty("payload", out JsonElement payloadElement)
+                && payloadElement.ValueKind is not JsonValueKind.Null and not JsonValueKind.Undefined)
+            {
+                return payloadElement.Deserialize<T>(HttpPartiesCommandClient.JsonOptions)
+                    ?? throw new PartiesClientException(200, "OK", null, "Response body was null.", correlationId);
+            }
+        }
+        catch (JsonException)
+        {
+            throw new PartiesClientException(
+                (int)response.StatusCode,
+                response.ReasonPhrase ?? "OK",
+                null,
+                "Response did not contain a valid query payload.",
+                correlationId);
+        }
+
+        throw new PartiesClientException(
+            (int)response.StatusCode,
+            response.ReasonPhrase ?? "OK",
+            null,
+            "Response did not contain a valid query payload.",
+            correlationId);
     }
+
+    private static string? FormatDate(DateTimeOffset? value)
+        => value?.ToString("O", System.Globalization.CultureInfo.InvariantCulture);
+
+    private sealed record ListPartiesQueryPayload(
+        int Page,
+        int PageSize,
+        string? Type,
+        bool? Active,
+        string? CreatedAfter,
+        string? CreatedBefore,
+        string? ModifiedAfter,
+        string? ModifiedBefore);
+
+    private sealed record SearchPartiesQueryPayload(string Query, int Page, int PageSize);
 }
