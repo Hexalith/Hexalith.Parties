@@ -1,6 +1,6 @@
 # Story 10.3: Embeddable Party Picker Component
 
-Status: in-progress
+Status: review
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -99,11 +99,11 @@ so that my users can search and select parties without building a custom party s
   - [x] Add accessibility/localization tests for accessible names, keyboard navigation, focus return after select/clear/retry, localized resource parity, and long localized labels in compact layout.
   - [x] Add package/registration tests proving the picker can be consumed without pulling UI dependencies into `Hexalith.Parties.Contracts`.
 
-- [ ] Validate build and affected tests
+- [x] Validate build and affected tests
   - [x] Run the picker component test project(s).
   - [x] Run affected FrontComposer tests if FrontComposer adapters are changed.
   - [x] Run `dotnet test tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj --configuration Release` if backend API behavior changes.
-  - [ ] Run `dotnet build Hexalith.Parties.slnx --configuration Release`.
+  - [x] Run `dotnet build Hexalith.Parties.slnx --configuration Release`.
 
 ## Dev Notes
 
@@ -266,6 +266,8 @@ GPT-5 Codex
 - 2026-05-05T19:10:00+02:00 - Story moved to in-progress; direct dev-story implementation started without ATDD generation.
 - 2026-05-05T19:22:00+02:00 - `dotnet test tests/Hexalith.Parties.Picker.Tests/Hexalith.Parties.Picker.Tests.csproj --configuration Release` passed: 21 tests.
 - 2026-05-05T19:25:00+02:00 - `dotnet build Hexalith.Parties.slnx --configuration Release` blocked by pre-existing unrelated untracked 11.4 files in `tests/Hexalith.Parties.DeployValidation.Tests` and `tests/Hexalith.Parties.Tests`.
+- 2026-05-10T20:19:47+02:00 - `dotnet build Hexalith.Parties.slnx --configuration Release` passed with 0 warnings and 0 errors.
+- 2026-05-10T20:19:47+02:00 - `dotnet test Hexalith.Parties.slnx --configuration Release --no-build` passed: 902 tests, 6 expected integration skips.
 
 ### Completion Notes List
 
@@ -275,11 +277,12 @@ GPT-5 Codex
 - Added privacy-safe `party-selected` DOM event dispatch that carries only party id, type, and status, while .NET hosts receive a typed selection callback.
 - Added adopter documentation and README link for Blazor and JavaScript host usage, privacy rules, search behavior, and theming.
 - Added picker tests for approved REST calls, page-size bounds, host authorization, status header mapping, non-leaking failures, encoded rendering, localized labels, context cleanup, event payload privacy, and package boundary guardrails.
-- Validation caveat: picker tests pass, but full solution build remains blocked by unrelated pre-existing 11.4 ATDD files that currently fail compilation/analyzers.
+- Validation complete: Release solution build passed with 0 warnings and 0 errors; full no-build regression passed with 902 tests and 6 expected integration skips.
 
 ### Change Log
 
 - 2026-05-05 - Added embeddable party picker RCL, tests, documentation, package references, and solution registration.
+- 2026-05-10 - Completed final build/regression validation and moved story to review.
 
 ### File List
 

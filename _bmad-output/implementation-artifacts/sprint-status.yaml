@@ -53,7 +53,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-05-02
-last_updated: 2026-05-10  # story 10-2 moved in-progress -> review after EventStore-fronted GDPR portal close-out; full no-build regression passed 886/886 with 6 expected DAPR/Aspire health skips
+last_updated: 2026-05-10  # story 10-3 moved in-progress -> review after final Release solution build passed cleanly and full no-build regression passed 902 tests with 6 expected integration skips
 # sprint_change_proposals:
 #   - sprint-change-proposal-2026-05-07.md  (EventStore-Fronted Architecture Pivot — added Epic 12; paused 10-1-1, 10-2, 10-3)
 project: Hexalith.Parties
@@ -153,7 +153,7 @@ development_status:
   10-1-admin-portal-browse-search-and-inspect: done
   10-1-1-admin-portal-frontcomposer-and-tenants-integration: in-progress  # PAUSED — superseded by 12-7
   10-2-admin-portal-gdpr-operations: review                               # PAUSED — superseded by 12-7
-  10-3-embeddable-party-picker-component: in-progress                     # PAUSED — superseded by 12-8
+  10-3-embeddable-party-picker-component: review                          # PAUSED — superseded by 12-8
   epic-10-retrospective: optional
 
   # Epic 12: EventStore-Fronted Architecture Pivot (11 stories)
