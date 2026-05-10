@@ -688,6 +688,10 @@ public sealed class PartyPayloadProtectionServiceTests
             [typeof(PartyNotRestricted)] = false,
             [typeof(PartyProcessingRestricted)] = false,
             [typeof(PartyTypeMismatch)] = false,
+            // Carries CommandType + property-name/error-code metadata only — no PII.
+            // PartyDomainServiceInvoker explicitly excludes raw payload fragments and validator
+            // messages from the rejection event to keep this classification stable.
+            [typeof(PartyCommandValidationRejected)] = false,
         };
 
         // Verify every IEventPayload type is classified

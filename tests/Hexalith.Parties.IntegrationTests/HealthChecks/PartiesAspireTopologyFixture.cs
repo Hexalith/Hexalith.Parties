@@ -17,6 +17,21 @@ namespace Hexalith.Parties.IntegrationTests.HealthChecks;
 /// When the infrastructure is unavailable (no Docker, no DAPR), the fixture
 /// captures the failure and exposes <see cref="IsAvailable"/> so tests can skip gracefully.
 /// </summary>
+/// <remarks>
+/// <para>
+/// <strong>This fixture does NOT seed any tenants.</strong> Story 12.2 retired the in-process
+/// REST/MCP surface and the integration test project Compile-Removes
+/// <c>Tenants/**/*.cs</c> (including <c>TenantIntegrationTestSeeder</c>). All current consumers
+/// of this fixture exercise only the health/ready/alive endpoints, which do not require an
+/// authenticated tenant.
+/// </para>
+/// <para>
+/// If you add a test that requires tenant access (a tenant-scoped projection, an RBAC-protected
+/// route, an authenticated query), call <see cref="RequireSeededTenants"/> as a precondition so
+/// the failure is loud and self-explanatory instead of a silent 401/403. You will also need to
+/// reinstate the seeder before that test can pass.
+/// </para>
+/// </remarks>
 public class PartiesAspireTopologyFixture : IAsyncLifetime
 {
     private DistributedApplication? _app;
@@ -112,6 +127,19 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
             UnavailableReason = $"{ex.GetType().Name}: {ex.Message}";
         }
     }
+
+    /// <summary>
+    /// Precondition guard for tests that require seeded tenant access. Always throws because
+    /// Story 12.2 retired the in-process tenant-seeding plumbing. Call this at the top of any
+    /// new test that depends on tenant context so the failure is explicit.
+    /// </summary>
+    /// <exception cref="InvalidOperationException">Always thrown.</exception>
+    public static void RequireSeededTenants() => throw new InvalidOperationException(
+        "PartiesAspireTopologyFixture does not seed tenants. Story 12.2 retired the in-process "
+        + "REST/MCP surface and TenantIntegrationTestSeeder is Compile-Removed in the integration "
+        + "test project (Tenants/**/*.cs). Reinstate the seeder and update this fixture if your "
+        + "test needs authenticated tenant access. Health/ready/alive endpoints do not require "
+        + "seeded tenants.");
 
     public async Task DisposeAsync()
     {

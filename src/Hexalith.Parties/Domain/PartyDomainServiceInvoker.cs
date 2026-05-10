@@ -1,5 +1,7 @@
+using System.Collections.Concurrent;
 using System.Reflection;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 using FluentValidation;
 using FluentValidation.Results;
@@ -8,8 +10,9 @@ using Hexalith.EventStore.Contracts.Commands;
 using Hexalith.EventStore.Contracts.Events;
 using Hexalith.EventStore.Contracts.Results;
 using Hexalith.EventStore.Contracts.Security;
-using Hexalith.Parties.Contracts.Commands;
 using Hexalith.EventStore.Server.DomainServices;
+using Hexalith.Parties.Contracts.Commands;
+using Hexalith.Parties.Contracts.Events;
 using Hexalith.Parties.Security;
 using Hexalith.Parties.Server.Aggregates;
 
@@ -20,10 +23,24 @@ namespace Hexalith.Parties.Domain;
 
 internal sealed partial class PartyDomainServiceInvoker(
     IEventPayloadProtectionService payloadProtectionService,
-    IServiceProvider serviceProvider,
+    IServiceScopeFactory serviceScopeFactory,
     ILogger<PartyDomainServiceInvoker> logger) : IDomainServiceInvoker
 {
     private const string PartyDomain = "party";
+
+    // Allowlist anchor — only types from this assembly may be resolved as command payload types.
+    // Prevents Type.GetType from loading arbitrary assemblies via assembly-qualified wire data.
+    private static readonly Assembly ContractsAssembly = typeof(CreateParty).Assembly;
+
+    // Symmetric to envelope payload serialization. EventStore producers serialize with default
+    // System.Text.Json options + JsonStringEnumConverter; deserializing with anything else risks
+    // silently dropping required fields, which would yield false-pass / false-fail validation.
+    private static readonly JsonSerializerOptions PayloadJsonOptions = new(JsonSerializerDefaults.General)
+    {
+        Converters = { new JsonStringEnumConverter() },
+    };
+
+    private static readonly ConcurrentDictionary<string, Type?> CommandTypeCache = new(StringComparer.Ordinal);
 
     public async Task<DomainResult> InvokeAsync(
         CommandEnvelope command,
@@ -38,7 +55,14 @@ internal sealed partial class PartyDomainServiceInvoker(
             throw new DomainServiceNotFoundException(command.TenantId, command.Domain);
         }
 
-        await ValidatePayloadAsync(command, cancellationToken).ConfigureAwait(false);
+        DomainResult? rejection = await TryRejectInvalidPayloadAsync(command, cancellationToken).ConfigureAwait(false);
+        if (rejection is not null)
+        {
+            // Short-circuit before any payload unprotection or aggregate processing. Returning a
+            // rejection result keeps the failure on the platform's normal IRejectionEvent path
+            // (no dead-letter, no AggregateActor infrastructure-failure routing).
+            return rejection;
+        }
 
         object? unprotectedState = await UnprotectCurrentStateAsync(command, currentState, cancellationToken)
             .ConfigureAwait(false);
@@ -54,57 +78,129 @@ internal sealed partial class PartyDomainServiceInvoker(
         return await aggregate.ProcessAsync(command, unprotectedState).ConfigureAwait(false);
     }
 
-    private async Task ValidatePayloadAsync(CommandEnvelope command, CancellationToken cancellationToken)
+    private async Task<DomainResult?> TryRejectInvalidPayloadAsync(
+        CommandEnvelope command,
+        CancellationToken cancellationToken)
     {
         Type? commandType = ResolveCommandType(command.CommandType);
         if (commandType is null)
         {
-            return;
+            // Fail-closed on unresolved command types: a command whose payload type cannot be
+            // located in the contracts assembly cannot be validated, and silently skipping
+            // validation would let an attacker bypass FluentValidation by mangling CommandType.
+            LogUnresolvedCommandType(command.CommandType);
+            return RejectionFor(command.CommandType, "CommandType", "UnresolvedCommandType");
         }
 
+        // Use a synchronous scope: validators are stateless and have no async resources.
+        // AsyncServiceScope would force an `await using` whose disposal awaiter does not accept
+        // ConfigureAwait, breaking the project-wide CA2007 rule.
+        using IServiceScope scope = serviceScopeFactory.CreateScope();
         Type validatorType = typeof(IValidator<>).MakeGenericType(commandType);
-        if (serviceProvider.GetService(validatorType) is not IValidator validator)
+        if (scope.ServiceProvider.GetService(validatorType) is not IValidator validator)
         {
-            return;
+            // No validator registered for a known contract type: surface as a warning so misconfig
+            // is observable, but allow the command through. Validation is opt-in per command type
+            // and registering all command types is the responsibility of the actor host startup.
+            LogValidatorMissing(commandType.FullName ?? commandType.Name);
+            return null;
         }
 
-        object payload;
+        if (command.Payload.Length == 0)
+        {
+            return RejectionFor(command.CommandType, "Payload", "EmptyPayload");
+        }
+
+        object? payload;
         try
         {
-            payload = JsonSerializer.Deserialize(command.Payload, commandType)
-                ?? throw new JsonException($"Payload for '{command.CommandType}' deserialized to null.");
+            payload = JsonSerializer.Deserialize(command.Payload, commandType, PayloadJsonOptions);
         }
-        catch (JsonException ex)
+        catch (Exception ex) when (ex is JsonException or NotSupportedException or ArgumentException)
         {
-            throw new ValidationException(
-                [new ValidationFailure("Payload", $"Payload must be valid JSON for {commandType.Name}: {ex.Message}")]);
+            // Note: ex.Message is intentionally not surfaced to the rejection event — it can carry
+            // payload fragments (offset context, field excerpts) that would end up in persisted
+            // events and operator logs. Log the underlying exception type at debug for diagnostics.
+            LogPayloadDeserializationFailure(command.CommandType, ex.GetType().Name);
+            return RejectionFor(command.CommandType, "Payload", "InvalidJson");
         }
+
+        if (payload is null)
+        {
+            return RejectionFor(command.CommandType, "Payload", "InvalidJson");
+        }
+
+        IValidationContext context = (IValidationContext)Activator.CreateInstance(
+            typeof(ValidationContext<>).MakeGenericType(commandType),
+            payload)!;
 
         ValidationResult result = await validator
-            .ValidateAsync(new ValidationContext<object>(payload), cancellationToken)
+            .ValidateAsync(context, cancellationToken)
             .ConfigureAwait(false);
 
-        if (!result.IsValid)
+        if (result.IsValid)
         {
-            throw new ValidationException(result.Errors);
+            return null;
         }
+
+        IReadOnlyList<PartyValidationFailure> failures = [.. result.Errors.Select(failure => new PartyValidationFailure
+        {
+            PropertyName = failure.PropertyName ?? string.Empty,
+            ErrorCode = failure.ErrorCode ?? "ValidationFailure",
+        })];
+
+        return DomainResult.Rejection(
+            [new PartyCommandValidationRejected
+            {
+                CommandType = commandType.FullName ?? commandType.Name,
+                Failures = failures,
+            }]);
     }
+
+    private static DomainResult RejectionFor(string commandType, string propertyName, string errorCode)
+        => DomainResult.Rejection(
+            [new PartyCommandValidationRejected
+            {
+                CommandType = commandType,
+                Failures = [new PartyValidationFailure { PropertyName = propertyName, ErrorCode = errorCode }],
+            }]);
 
     private static Type? ResolveCommandType(string commandType)
     {
-        Type? resolved = Type.GetType(commandType, throwOnError: false);
-        if (resolved is not null)
+        if (string.IsNullOrWhiteSpace(commandType))
         {
-            return resolved;
+            return null;
         }
 
-        string unqualified = commandType.Split(',', 2)[0].Trim();
-        Assembly contractsAssembly = typeof(CreateParty).Assembly;
-        return contractsAssembly
+        return CommandTypeCache.GetOrAdd(commandType, ResolveCommandTypeUncached);
+    }
+
+    private static Type? ResolveCommandTypeUncached(string commandType)
+    {
+        // Strip optional assembly suffix and surrounding whitespace/quotes that may sneak in
+        // through wire serialization variants.
+        string typeName = commandType.Split(',', 2)[0].Trim().Trim('"', '\'');
+        if (typeName.Length == 0)
+        {
+            return null;
+        }
+
+        // Restrict resolution to the contracts assembly — never call Type.GetType on raw wire
+        // input, which would happily load arbitrary assemblies from the probing path given an
+        // assembly-qualified attacker-controlled name like "Foo, EvilAssembly".
+        Type? exact = ContractsAssembly.GetType(typeName, throwOnError: false);
+        if (exact is not null)
+        {
+            return exact;
+        }
+
+        // Short-name fallback only succeeds when exactly one type in the contracts assembly
+        // matches by Name. Multiple matches resolve to null so command-type ambiguity fails-closed.
+        Type[] candidates = [.. ContractsAssembly
             .GetTypes()
-            .FirstOrDefault(type =>
-                string.Equals(type.FullName, unqualified, StringComparison.Ordinal)
-                || string.Equals(type.Name, unqualified, StringComparison.Ordinal));
+            .Where(type => string.Equals(type.Name, typeName, StringComparison.Ordinal))
+            .Take(2)];
+        return candidates.Length == 1 ? candidates[0] : null;
     }
 
     private async Task<object?> UnprotectCurrentStateAsync(
@@ -211,4 +307,13 @@ internal sealed partial class PartyDomainServiceInvoker(
 
     [LoggerMessage(Level = LogLevel.Warning, Message = "Falling back to null snapshot during rehydration for {TenantId}/{PartyId}: {ExceptionType}: {Error}")]
     private partial void LogSnapshotRehydrationFallbackToRedaction(string tenantId, string partyId, string exceptionType, string error);
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Rejecting Parties command with unresolved CommandType {CommandType}")]
+    private partial void LogUnresolvedCommandType(string commandType);
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "No FluentValidation validator registered for Parties command type {CommandType}; payload validation is being skipped")]
+    private partial void LogValidatorMissing(string commandType);
+
+    [LoggerMessage(Level = LogLevel.Debug, Message = "Rejecting Parties command {CommandType}: payload deserialization failed with {ExceptionType}")]
+    private partial void LogPayloadDeserializationFailure(string commandType, string exceptionType);
 }

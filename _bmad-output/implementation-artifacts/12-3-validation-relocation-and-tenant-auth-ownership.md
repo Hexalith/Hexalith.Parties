@@ -1,6 +1,6 @@
 # Story 12.3: Validation Relocation and Tenant Auth Ownership
 
-Status: review
+Status: done
 
 ## Story
 
@@ -187,8 +187,13 @@ so that the request path has a single, unambiguous validation and authorization 
 ### File List
 
 - `_bmad-output/implementation-artifacts/12-3-validation-relocation-and-tenant-auth-ownership.md`
+- `_bmad-output/implementation-artifacts/deferred-work.md`
 - `_bmad-output/implementation-artifacts/sprint-status.yaml`
+- `src/Hexalith.Parties.Contracts/Events/PartyCommandValidationRejected.cs` (new — review pass)
+- `src/Hexalith.Parties/Authorization/TenantAccessDenialTranslator.cs` (deleted — review pass)
 - `src/Hexalith.Parties/Domain/PartyDomainServiceInvoker.cs`
+- `src/Hexalith.Parties/Extensions/PartiesServiceCollectionExtensions.cs` (review pass — projection-only comment)
+- `tests/Hexalith.Parties.Security.Tests/PartyPayloadProtectionServiceTests.cs` (review pass — classify new rejection event)
 - `tests/Hexalith.Parties.Tests/Domain/PartyDomainServiceInvokerValidationTests.cs`
 - `tests/Hexalith.Parties.Tests/FitnessTests/ArchitecturalFitnessTests.cs`
 
@@ -199,6 +204,54 @@ so that the request path has a single, unambiguous validation and authorization 
 | 2026-05-09 | 0.1 | Created ready-for-dev story through BMAD pre-dev hardening automation. | Codex |
 | 2026-05-09 | 0.2 | Applied party-mode review clarifications for validation insertion point, authorization ordering, and boundary test oracles. | Codex |
 | 2026-05-10 | 1.0 | Added actor-host payload validation before aggregate execution, pinned EventStore-owned authorization boundaries with fitness tests, verified focused/full regression suites, and moved story to review. | Codex |
+| 2026-05-10 | 1.1 | bmad-code-review: 16 patches applied + 3 decisions resolved. AC2 dead-letter side-effect fixed by translating validation failures into `DomainResult.Rejection` over a new `PartyCommandValidationRejected` rejection event (no submodule edit). Allowlisted type resolution, scoped validator resolution, symmetric JSON options, widened deserialization catch, and PII-safe error code in the rejection event. Test fixture now mirrors production validator assembly scan; branch coverage added (unknown command, malformed JSON, empty payload, no-validator, AssemblyQualifiedName). Fitness tests now strip comments/strings before regex, filter bin/obj, and degrade gracefully when EventStore submodule is absent. `TenantAccessDenialTranslator` deleted; `ITenantAccessService` registration documented as projection-only. Full solution build clean; 870 tests passed (27 pre-existing skips). 5 items deferred to deferred-work.md. | Claude Opus 4.7 |
+
+### Review Findings
+
+Source: `bmad-code-review` of commit `03b5fc0` on 2026-05-10. Reviewers: Blind Hunter (28 raw), Edge Case Hunter (~25 raw), Acceptance Auditor (~10 raw). 31 findings retained after dedupe; 7 dismissed.
+
+#### Decision-needed (resolved)
+
+- [x] [Review][Decision][Resolved] **AC2 violation: validation failures dead-letter and surface as HTTP 500** — Throwing `FluentValidation.ValidationException` from inside `IDomainServiceInvoker.InvokeAsync` is caught by `AggregateActor.cs:327` and routed to `HandleInfrastructureFailureAsync` (dead-letter publish + Rejected checkpoint + idempotency rejection). **Resolved:** translate validation failures into `DomainResult.Rejection([new PartyCommandValidationRejected(...)])`. Rejection events are the platform's normal mechanism (Parties already has 19); they surface via `DomainCommandRejectedExceptionHandler` as 422-style ProblemDetails. AC2's "no Parties domain event persisted" is interpreted as "no state-changing event"; the validation-rejection event is platform metadata, not a Party state change. No EventStore submodule edit.
+- [x] [Review][Decision][Resolved] **`ITenantAccessService` registration retained without scoping/renaming/documentation per AC4** — **Resolved:** add an explicit `// projection-side only — not for command/query gateway authorization` comment beside the registration in `PartiesServiceCollectionExtensions.cs:90`, and tighten the existing fitness test to also assert the request path does not reference `ITenantAccessService` outside the projection adapter.
+- [x] [Review][Decision][Resolved] **`TenantAccessDenialTranslator` is dead code from pre-pivot REST path** — **Resolved:** delete `src/Hexalith.Parties/Authorization/TenantAccessDenialTranslator.cs`. No consumers in `src/Hexalith.Parties/**`; spec Tasks line 40 explicitly asked for removal.
+
+#### Patch (applied)
+
+- [x] [Review][Patch] **Fail-closed on unresolved CommandType** — invoker now returns `DomainResult.Rejection([PartyCommandValidationRejected{ ErrorCode = "UnresolvedCommandType" }])`. [src/Hexalith.Parties/Domain/PartyDomainServiceInvoker.cs:84-93]
+- [x] [Review][Patch] **Disambiguate short-name fallback** — `ResolveCommandTypeUncached` requires `Take(2).Length == 1` so colliding short names fail-closed. [src/Hexalith.Parties/Domain/PartyDomainServiceInvoker.cs:182-198]
+- [x] [Review][Patch] **Restrict type resolution to contracts assembly allowlist** — `ContractsAssembly.GetType(...)` replaces `Type.GetType(...)`, never loads arbitrary assemblies from wire data. [src/Hexalith.Parties/Domain/PartyDomainServiceInvoker.cs:177-197]
+- [x] [Review][Patch] **Validate against `ValidationContext<TCommand>`** — built dynamically via `Activator.CreateInstance(typeof(ValidationContext<>).MakeGenericType(commandType), payload)`. [src/Hexalith.Parties/Domain/PartyDomainServiceInvoker.cs:128-133]
+- [x] [Review][Patch] **Pass `JsonSerializerOptions` symmetric with envelope serialization** — `PayloadJsonOptions` static (General + JsonStringEnumConverter). [src/Hexalith.Parties/Domain/PartyDomainServiceInvoker.cs:35-43, 113]
+- [x] [Review][Patch] **Guard null/empty payload and widen exception catch** — explicit `command.Payload.Length == 0` rejection plus `catch (Exception ex) when (ex is JsonException or NotSupportedException or ArgumentException)`. [src/Hexalith.Parties/Domain/PartyDomainServiceInvoker.cs:108-126]
+- [x] [Review][Patch] **Sanitize `JsonException.Message`** — rejection event carries only `ErrorCode = "InvalidJson"`; raw exception type logged at Debug level only, never embedded in user-facing or persisted text. [src/Hexalith.Parties/Domain/PartyDomainServiceInvoker.cs:118-122]
+- [x] [Review][Patch] **Cache `ResolveCommandType` results in `ConcurrentDictionary`** — single reflection scan per CommandType string. [src/Hexalith.Parties/Domain/PartyDomainServiceInvoker.cs:45, 167-175]
+- [x] [Review][Patch] **Resolve validators through `IServiceScopeFactory`** — invoker now takes `IServiceScopeFactory` and uses `using IServiceScope scope = ...CreateScope()` per call. [src/Hexalith.Parties/Domain/PartyDomainServiceInvoker.cs:24-29, 93-95]
+- [x] [Review][Patch] **Aggregate-side-effect oracle hardened** — invalid-payload tests now pass a non-null `currentState` carrying both a snapshot and a protected event, so `DidNotReceiveWithAnyArgs()` becomes a meaningful "no unprotect was called" assertion. [tests/Hexalith.Parties.Tests/Domain/PartyDomainServiceInvokerValidationTests.cs:38-77]
+- [x] [Review][Patch] **Test fixture mirrors production assembly scan** — `CreateInvoker` uses `AddValidatorsFromAssemblyContaining<CreatePartyValidator>()`. [tests/Hexalith.Parties.Tests/Domain/PartyDomainServiceInvokerValidationTests.cs:194-203]
+- [x] [Review][Patch] **Branch-coverage tests added** — unknown CommandType, malformed JSON, empty payload, missing-validator, AssemblyQualifiedName resolution. [tests/Hexalith.Parties.Tests/Domain/PartyDomainServiceInvokerValidationTests.cs:96-189]
+- [x] [Review][Patch] **Filter `bin/` and `obj/` from source-text fitness scans** — new `EnumerateSourceFiles` helper applied across architectural tests. [tests/Hexalith.Parties.Tests/FitnessTests/ArchitecturalFitnessTests.cs:474-491]
+- [x] [Review][Patch] **Skip cleanly when EventStore submodule paths are absent** — `TryReadEventStoreFile` returns null and tests early-return, replacing `FileNotFoundException`. [tests/Hexalith.Parties.Tests/FitnessTests/ArchitecturalFitnessTests.cs:469-477]
+- [x] [Review][Patch] **Tighten interface-implementation regex** — sources now stripped of comments + string literals before regex via new `StripCommentsAndStringLiterals` helper. [tests/Hexalith.Parties.Tests/FitnessTests/ArchitecturalFitnessTests.cs:497-651]
+- [x] [Review][Patch] **Restore using-directive grouping; drop unused `using`** — handled in the `PartyDomainServiceInvoker.cs` rewrite. [src/Hexalith.Parties/Domain/PartyDomainServiceInvoker.cs:1-21]
+
+#### Defer
+
+- [x] [Review][Defer] **AC7 — no projection-side test added in this diff** [tests/Hexalith.Parties.Tests/Tenants/TenantEventInfrastructureTests.cs] — deferred; existing 69/69 tenant tests still pass and Dev Agent treated Tasks line 52 as no-update-needed.
+- [x] [Review][Defer] **AC6 fitness test pins string ordering, not behavior** [tests/Hexalith.Parties.Tests/FitnessTests/ArchitecturalFitnessTests.cs:240-258] — deferred; tripwire is acceptable, Roslyn rewrite is improvement-of-improvement.
+- [x] [Review][Defer] **Double JSON deserialization (validate then aggregate)** [src/Hexalith.Parties/Domain/PartyDomainServiceInvoker.cs:74,54] — deferred; performance only, no correctness impact.
+- [x] [Review][Defer] **No per-command validation timeout** [src/Hexalith.Parties/Domain/PartyDomainServiceInvoker.cs:83-85] — deferred; relies on caller-supplied `CancellationToken`, sufficient for now.
+- [x] [Review][Defer] **Runtime non-invocation test for unauthorized requests via spy `IDomainServiceInvoker`** — deferred to Story 12-4's Tier-2 test rewrite, which owns the EventStore-gateway integration suite. The architectural fitness test pinning `AuthorizationBehavior` ahead of `ValidationBehavior` plus the `AggregateActor` tenant-mismatch-guard tripwire establish the boundary at static-analysis level for this story.
+
+#### Dismissed (recorded for trail)
+
+- Validation runs before payload unprotection — claim that encrypted command payloads break (Blind #10): commands are not protected, only state and events; misreading of `UnprotectCurrentStateAsync`.
+- Tests reference validators not introduced by this diff (Blind #18): validators pre-existed in `src/Hexalith.Parties/Validation/**`.
+- Collection-expression `new ValidationException([...])` (Blind #21): C# 12 + FluentValidation 12.1.1 (per `Hexalith.EventStore/CLAUDE.md`) supports the constructor.
+- ULID literal `01HX0000000000000000000000` not valid (Blind #13): valid Crockford base32, no requirement for unique IDs in the test fixture.
+- `PartyDomainServiceInvoker` is `internal sealed` — InternalsVisibleTo missing (Blind #27): tests already compile, plumbing pre-exists.
+- `ShouldBeEmpty` eager-message string concat (Blind #17): standard Shouldly idiom.
+- Positive test asserts `PartyDisplayNameDerived` (Blind #22): legitimate downstream-event coverage in a happy-path test.
 
 ## Party-Mode Review
 

@@ -23,13 +23,13 @@ Traceability labels for implementation and review: AC-12.4.1 maps to criterion 1
 
 ## Tasks / Subtasks
 
-- [ ] Confirm predecessor gates and stop if the server pivot is not ready. (AC: 1-8)
-  - [ ] Read `_bmad-output/implementation-artifacts/12-0-eventstore-parties-actor-invocation-feasibility-spike.md`.
-  - [ ] Read `_bmad-output/implementation-artifacts/12-1-apphost-recomposition.md`.
-  - [ ] Read `_bmad-output/implementation-artifacts/12-2-parties-actor-host.md`.
-  - [ ] Read `_bmad-output/implementation-artifacts/12-3-validation-relocation-and-tenant-auth-ownership.md`.
-  - [ ] If Story 12.0 still has only a blocked or not-proven command path, stop through the normal dev workflow; do not rewrite broad tests against an unproven gateway.
-  - [ ] If Stories 12.1-12.3 have not landed and the required AppHost topology, Parties `/process` endpoint, validation/auth boundary, and query routing contract are not merged or formally frozen, stop normal implementation; limit work to red/failing guardrail tests that describe the expected conversion and do not delete old coverage prematurely.
+- [x] Confirm predecessor gates and stop if the server pivot is not ready. (AC: 1-8)
+  - [x] Read `_bmad-output/implementation-artifacts/12-0-eventstore-parties-actor-invocation-feasibility-spike.md`.
+  - [x] Read `_bmad-output/implementation-artifacts/12-1-apphost-recomposition.md`.
+  - [x] Read `_bmad-output/implementation-artifacts/12-2-parties-actor-host.md`.
+  - [x] Read `_bmad-output/implementation-artifacts/12-3-validation-relocation-and-tenant-auth-ownership.md`.
+  - [x] If Story 12.0 still has only a blocked or not-proven command path, stop through the normal dev workflow; do not rewrite broad tests against an unproven gateway.
+  - [x] If Stories 12.1-12.3 have not landed and the required AppHost topology, Parties `/process` endpoint, validation/auth boundary, and query routing contract are not merged or formally frozen, stop normal implementation; limit work to red/failing guardrail tests that describe the expected conversion and do not delete old coverage prematurely.
 - [ ] Inventory old server-facing test coverage before editing. (AC: 1, 3, 4)
   - [ ] Build a checklist of every file under `tests/Hexalith.Parties.Tests/Controllers/**` and classify it as command, query, admin/GDPR command, projection query, tenant authorization, problem-details/error mapping, or obsolete public-surface assertion.
   - [ ] Build a checklist of every file under `tests/Hexalith.Parties.IntegrationTests/**` that calls `/api/v1/parties`, `/api/v1/admin`, old health/GDPR-header behavior, or direct Parties REST routes.
@@ -209,19 +209,23 @@ Before implementation removes old coverage, create or update a matrix in the Dev
 
 ### Agent Model Used
 
-TBD
+Codex GPT-5
 
 ### Debug Log References
 
-TBD
+- 2026-05-10: Loaded predecessor gates before implementation. Story 12.0 is `done` with a dated `partial` static-analysis spike and explicit Wave-1 unblock. Story 12.1 is `done`. Stories 12.2 and 12.3 remain in `review`, not `done`, and no formal freeze marker was found in their story records or `sprint-status.yaml`.
+- 2026-05-10: `sprint-status.yaml` currently marks story 12.4 as `blocked`; normal broad server test rewrite remains gated by the story's own predecessor rule.
 
 ### Completion Notes List
 
-TBD
+- Confirmed the predecessor gate and stopped normal implementation because Stories 12.2 and 12.3 have not landed or been formally frozen.
+- No source or test rewrite was performed. Old controller, integration, and MCP evidence was not deleted or retired as part of this blocked pass.
+- Existing guardrails from Stories 12.2 and 12.3 were observed in `tests/Hexalith.Parties.Tests/FitnessTests/ArchitecturalFitnessTests.cs`, including checks for retired REST/MCP surface, EventStore-owned authorization order, Parties sidecar access-control scope, and Tier-1 projection purity.
+- Story remains `blocked` until 12.2 and 12.3 are done or their contracts are explicitly frozen.
 
 ### File List
 
-TBD
+- `_bmad-output/implementation-artifacts/12-4-server-tier-1-tier-2-test-rewrite.md`
 
 ## Party-Mode Review
 
@@ -238,5 +242,6 @@ TBD
 
 | Date | Version | Description | Author |
 |---|---:|---|---|
+| 2026-05-10 | 0.3 | Dev workflow gate check confirmed normal implementation is still blocked because Stories 12.2 and 12.3 are in review rather than done/frozen; recorded gate evidence without rewriting tests. | Codex |
 | 2026-05-10 | 0.2 | Party-mode review blocked normal development until predecessor contracts land/freeze and applied low-risk clarification for gates, coverage traceability, tier ownership, routing/rejection evidence, and retired-surface outcomes. | Codex |
 | 2026-05-09 | 0.1 | Created ready-for-dev story through BMAD pre-dev hardening automation. | Codex |

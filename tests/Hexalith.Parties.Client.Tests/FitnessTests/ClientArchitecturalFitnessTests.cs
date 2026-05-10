@@ -15,19 +15,22 @@ public sealed class ClientArchitecturalFitnessTests
 
         AssemblyName[] referencedAssemblies = clientAssembly.GetReferencedAssemblies();
 
-        string[] forbiddenAssemblyNames =
+        // Server/Projections roots match their entire subtree (e.g., a future
+        // Hexalith.Parties.Server.Internal satellite must also be banned).
+        // Bare "Hexalith.Parties" is exact-match-only because Hexalith.Parties.Contracts
+        // is an allowed dependency.
+        (string Name, bool AllowSubtree)[] forbiddenAssemblies =
         [
-            "Hexalith.Parties.Server",
-            "Hexalith.Parties.Projections",
-            "Hexalith.Parties",
+            ("Hexalith.Parties.Server", true),
+            ("Hexalith.Parties.Projections", true),
+            ("Hexalith.Parties", false),
         ];
 
         List<string> violations = [];
 
         foreach (AssemblyName referenced in referencedAssemblies)
         {
-            if (forbiddenAssemblyNames.Any(name =>
-                string.Equals(referenced.Name, name, StringComparison.OrdinalIgnoreCase)))
+            if (forbiddenAssemblies.Any(entry => MatchesForbiddenName(referenced.Name, entry.Name, entry.AllowSubtree)))
             {
                 violations.Add(referenced.Name!);
             }
@@ -89,21 +92,24 @@ public sealed class ClientArchitecturalFitnessTests
                 .Select(value => value!),
         ];
 
-        string[] forbiddenReferences =
+        // Server/Projections/Dapr/MediatR/FluentValidation match their entire subtree
+        // (Dapr.Client, MediatR.Contracts, FluentValidation.AspNetCore, etc. are all banned).
+        // Bare "Hexalith.Parties" is exact-match-only because Hexalith.Parties.Contracts is allowed.
+        (string Name, bool AllowSubtree)[] forbiddenReferences =
         [
-            "Hexalith.Parties.Server",
-            "Hexalith.Parties.Projections",
-            "Hexalith.Parties",
-            "Dapr",
-            "MediatR",
-            "FluentValidation",
+            ("Hexalith.Parties.Server", true),
+            ("Hexalith.Parties.Projections", true),
+            ("Hexalith.Parties", false),
+            ("Dapr", true),
+            ("MediatR", true),
+            ("FluentValidation", true),
         ];
 
         List<string> violations = [];
 
-        foreach (string forbidden in forbiddenReferences)
+        foreach ((string forbidden, bool allowSubtree) in forbiddenReferences)
         {
-            if (declaredReferences.Any(reference => IsForbiddenReference(reference, forbidden)))
+            if (declaredReferences.Any(reference => IsForbiddenReference(reference, forbidden, allowSubtree)))
             {
                 violations.Add(forbidden);
             }
@@ -140,12 +146,49 @@ public sealed class ClientArchitecturalFitnessTests
         ]);
     }
 
-    private static bool IsForbiddenReference(string reference, string forbiddenName)
+    private static bool IsForbiddenReference(string reference, string forbiddenName, bool allowSubtree)
     {
-        string fileName = Path.GetFileNameWithoutExtension(reference);
+        // A reference can be a project path ("..\..\Foo\Foo.csproj") or a bare package name ("Foo").
+        // GetFileNameWithoutExtension on a bare package strips the last dot segment ("Foo.Bar" -> "Foo"),
+        // so we only strip known project file extensions and then compare.
+        string fileName = Path.GetFileName(reference);
+        string normalized = StripProjectExtension(fileName);
 
-        return string.Equals(fileName, forbiddenName, StringComparison.OrdinalIgnoreCase)
-            || string.Equals(reference, forbiddenName, StringComparison.OrdinalIgnoreCase);
+        return MatchesForbiddenName(normalized, forbiddenName, allowSubtree)
+            || MatchesForbiddenName(reference, forbiddenName, allowSubtree);
+    }
+
+    private static string StripProjectExtension(string value)
+    {
+        if (value.EndsWith(".csproj", StringComparison.OrdinalIgnoreCase))
+        {
+            return value[..^".csproj".Length];
+        }
+
+        if (value.EndsWith(".dll", StringComparison.OrdinalIgnoreCase))
+        {
+            return value[..^".dll".Length];
+        }
+
+        return value;
+    }
+
+    private static bool MatchesForbiddenName(string? candidate, string forbidden, bool allowSubtree)
+    {
+        if (string.IsNullOrEmpty(candidate))
+        {
+            return false;
+        }
+
+        if (string.Equals(candidate, forbidden, StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        return allowSubtree
+            && candidate.Length > forbidden.Length
+            && candidate.StartsWith(forbidden, StringComparison.OrdinalIgnoreCase)
+            && candidate[forbidden.Length] == '.';
     }
 
     [Fact]

@@ -1,7 +1,20 @@
 # DAPR Access Control Configuration for the Parties actor-host sidecar.
-# defaultAction: deny - only EventStore may invoke Parties, and only on /process.
-# This matches the Story 12.0 `party -> parties/process` mapping; broader paths
-# (actor methods, /healthz, /metrics) must not be exposed to peer DAPR callers.
+# Story 12.2 reference: AC2 + AC3.
+#
+# Service-invocation policy:
+#   defaultAction: deny — only EventStore may invoke Parties via service invocation,
+#   and only on /process. This matches the Story 12.0 `party -> parties/process`
+#   mapping; broader paths (actor methods, /healthz, /metrics) must not be exposed
+#   to peer DAPR callers.
+#
+# Pub/sub event delivery (NOT covered by this list):
+#   The Tenants -> Parties event flow is delivered by the shared pubsub component:
+#   the Tenants app publishes tenant lifecycle events; the Parties sidecar invokes
+#   `app.MapTenantEventSubscription()` (POST /tenants/events) after delivery. Pub/sub
+#   delivery bypasses service-invocation access control and is enforced instead by
+#   the pubsub component scope (defined in pubsub.yaml; subscriber routes in
+#   subscription-parties.yaml). New publishers/subscribers must be added there, not
+#   in this access-control list.
 apiVersion: dapr.io/v1alpha1
 kind: Configuration
 metadata:

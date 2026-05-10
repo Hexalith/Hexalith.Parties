@@ -33,8 +33,19 @@ app.UseMiddleware<DegradedResponseMiddleware>();
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseCloudEvents();
-// DAPR sidecar-internal endpoints only. Client-facing access is blocked by
-// AppHost DAPR accesscontrol.parties.yaml; EventStore is the public gateway.
+
+// DAPR sidecar-internal endpoints — these are NOT public REST surfaces:
+//   - app.MapSubscribeHandler() exposes POST /dapr/subscribe, the DAPR pub/sub
+//     subscription-discovery callback. The Parties sidecar invokes it at startup to
+//     learn which topics this app subscribes to. Never called by external clients.
+//   - app.MapTenantEventSubscription() exposes POST /tenants/events, the Tenants
+//     pub/sub event-delivery callback. The Parties sidecar delivers Tenants lifecycle
+//     events here after the Tenants app publishes on the shared pubsub component.
+//     Delivery is enforced by the pubsub component (scoped to parties + tenants in
+//     the AppHost composition), not by service-invocation access control.
+// Client-facing service-invocation access is blocked by AppHost DAPR
+// accesscontrol.parties.yaml (defaultAction: deny; only eventstore -> POST /process).
+// EventStore is the public command/query gateway after Story 12.2.
 app.MapSubscribeHandler();
 app.MapTenantEventSubscription();
 app.MapActorsHandlers();

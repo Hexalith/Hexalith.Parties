@@ -83,6 +83,14 @@ public static class PartiesServiceCollectionExtensions {
             .AddHttpClient(DaprTenantsReadinessProbe.HttpClientName, client => client.Timeout = TimeSpan.FromSeconds(2));
         _ = services.AddSingleton<ITenantsReadinessProbe, DaprTenantsReadinessProbe>();
 
+        // Projection-side only — NOT for command/query gateway authorization (Story 12.3 AC4).
+        // EventStore owns gateway tenant validation/RBAC via ITenantValidator/IRbacValidator.
+        // Parties retains ITenantAccessService strictly for projection-side / internal actor-host
+        // membership lookups against the local Tenants projection. The fitness test
+        // PartiesRequestPath_DoesNotUseTenantAccessServiceOrDenialTranslator pins this boundary
+        // by asserting the request-path code paths (Program, Domain invoker, command/query
+        // controllers) do not consume this service.
+        //
         // Singleton lifetime assumes ITenantProjectionStore is also Singleton (the default
         // InMemoryTenantProjectionStore is). Replacing the projection store with a Scoped
         // implementation creates a captive dependency — any such replacement must register
