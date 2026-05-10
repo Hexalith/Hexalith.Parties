@@ -1,4 +1,5 @@
 # generated: 2026-05-02
+# last_updated: 2026-05-10  (story 12-4 moved ready-for-dev -> blocked after party-mode review: normal test rewrite is gated until predecessor behavior from Stories 12.1-12.3 is merged or formally frozen; story updated with coverage matrix, tier ownership, routing/rejection evidence, retired-surface outcome, and deferred-decision clarifications.)
 # last_updated: 2026-05-09  (story 12-5 created as ready-for-dev for the Parties client thin wrapper over EventStore command/query submission.)
 # last_updated: 2026-05-09  (story 12-1 advanced in-progress -> review: AppHost recomposed around standalone eventstore, eventstore-admin, eventstore-admin-ui, parties, and tenants resources; split DAPR access-control files added; shared statestore/pubsub preserved with keyPrefix=none; focused AppHost/deploy-validation tests green; AppHost and solution builds clean; full-solution residual failures logged in deferred-work.md; runtime Aspire dashboard proof not captured because `dotnet aspire` CLI is unavailable on PATH.)
 # last_updated: 2026-05-09  (story 12-0 advanced review -> done after bmad-code-review: D1 verdict-integrity resolved by keeping `partial` and adding static-analysis-only caveats throughout story + dated spike note + feasibility table; 13 patches applied including AC2 vocabulary fix, missing AC3 sections (Logs/Trace, EventStore Persistence), illustrative-payload disclaimer + valid ULID, regex-based fitness-test assertions, deletion-gate doc comment, parameter-name-decoupled `AddEventStoreServer(` substring, MapMethods/casing variant coverage, domain-matrix DAPR-app-id-casing clarification, forward-looking auth/tenant relabeling, agent-model attribution, explicit Wave-1 unblock decision in Spike Conclusion. 4 items deferred to deferred-work.md (wildcard registration assumption, rg-on-PATH reproduction commands, persistence state-store config dependency, domain matrix narrative clarity). Spike fitness tests still 4/4 green; EventStore submodule still clean.)
@@ -42,7 +43,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-05-02
-last_updated: 2026-05-09
+last_updated: 2026-05-10
 # sprint_change_proposals:
 #   - sprint-change-proposal-2026-05-07.md  (EventStore-Fronted Architecture Pivot — added Epic 12; paused 10-1-1, 10-2, 10-3)
 project: Hexalith.Parties
@@ -155,7 +156,7 @@ development_status:
   12-1-apphost-recomposition: review
   12-2-parties-actor-host: ready-for-dev
   12-3-validation-relocation-and-tenant-auth-ownership: ready-for-dev
-  12-4-server-tier-1-tier-2-test-rewrite: ready-for-dev
+  12-4-server-tier-1-tier-2-test-rewrite: blocked
   12-5-parties-client-thin-wrapper: ready-for-dev
   12-6-parties-mcp-thin-host: backlog
   12-7-admin-portal-rebuild-on-frontcomposer: backlog
