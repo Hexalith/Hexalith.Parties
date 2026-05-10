@@ -6,6 +6,7 @@ using Hexalith.Parties.AdminPortal.Services;
 
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Options;
 
 namespace Hexalith.Parties.AdminPortal.Extensions;
 
@@ -18,7 +19,9 @@ public static class PartiesAdminPortalServiceCollectionExtensions
     public static IServiceCollection AddHexalithPartiesAdminPortal(this IServiceCollection services)
     {
         services.AddHexalithFrontComposerQuickstart();
-        services.AddOptions<PartiesAdminPortalOptions>();
+        services.AddHttpClient();
+        services.AddOptions<PartiesAdminPortalOptions>().ValidateOnStart();
+        services.TryAddSingleton<IValidateOptions<PartiesAdminPortalOptions>, PartiesAdminPortalOptionsValidator>();
         services.AddScoped<IPartiesAdminPortalApiClient, PartiesAdminPortalApiClient>();
         services.AddScoped<PartiesAdminListCoordinator>();
         services.AddScoped<AdminPortalGdprStateCoordinator>();

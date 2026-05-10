@@ -84,15 +84,159 @@ public sealed class AdminPortalQueryContractTests
         string[] files = Directory.GetFiles(sourceRoot, "*.*", SearchOption.AllDirectories)
             .Where(static path => path.EndsWith(".cs", StringComparison.OrdinalIgnoreCase)
                 || path.EndsWith(".razor", StringComparison.OrdinalIgnoreCase))
+            .Where(static path =>
+                !path.Contains($"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}", StringComparison.Ordinal)
+                && !path.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}", StringComparison.Ordinal))
             .ToArray();
 
-        string source = string.Join(Environment.NewLine, files.Select(File.ReadAllText));
+        // Strip comments before scanning: comments may legitimately reference retired
+        // routes as historical context. String literals are preserved so any literal
+        // mention of a retired route in production code still trips the test.
+        string source = string.Join(
+            Environment.NewLine,
+            files.Select(static path => StripCommentsPreservingStringLiterals(File.ReadAllText(path))));
 
         source.ShouldNotContain("api/v1/parties");
         source.ShouldNotContain("api/v1/admin");
         source.ShouldNotContain("MapControllers");
         source.ShouldNotContain("MarkupString");
         source.ShouldNotContain("AddMarkupContent");
+    }
+
+    private static string StripCommentsPreservingStringLiterals(string source)
+    {
+        var output = new System.Text.StringBuilder(source.Length);
+        int i = 0;
+        while (i < source.Length)
+        {
+            char c = source[i];
+
+            // Verbatim string literal @"..." — preserve verbatim, double-quote escapes "" stay inside.
+            if (c == '@' && i + 1 < source.Length && source[i + 1] == '"')
+            {
+                output.Append(c);
+                output.Append(source[i + 1]);
+                i += 2;
+                while (i < source.Length)
+                {
+                    if (source[i] == '"')
+                    {
+                        if (i + 1 < source.Length && source[i + 1] == '"')
+                        {
+                            output.Append('"');
+                            output.Append('"');
+                            i += 2;
+                            continue;
+                        }
+
+                        output.Append('"');
+                        i++;
+                        break;
+                    }
+
+                    output.Append(source[i]);
+                    i++;
+                }
+
+                continue;
+            }
+
+            // Regular string literal "..." — preserve, with backslash escapes.
+            if (c == '"')
+            {
+                output.Append(c);
+                i++;
+                while (i < source.Length)
+                {
+                    char ch = source[i];
+                    if (ch == '\\' && i + 1 < source.Length)
+                    {
+                        output.Append(ch);
+                        output.Append(source[i + 1]);
+                        i += 2;
+                        continue;
+                    }
+
+                    output.Append(ch);
+                    i++;
+                    if (ch == '"' || ch == '\n')
+                    {
+                        break;
+                    }
+                }
+
+                continue;
+            }
+
+            // Char literal '...' — preserve.
+            if (c == '\'')
+            {
+                output.Append(c);
+                i++;
+                while (i < source.Length)
+                {
+                    char ch = source[i];
+                    if (ch == '\\' && i + 1 < source.Length)
+                    {
+                        output.Append(ch);
+                        output.Append(source[i + 1]);
+                        i += 2;
+                        continue;
+                    }
+
+                    output.Append(ch);
+                    i++;
+                    if (ch == '\'' || ch == '\n')
+                    {
+                        break;
+                    }
+                }
+
+                continue;
+            }
+
+            // Block comment /* ... */
+            if (c == '/' && i + 1 < source.Length && source[i + 1] == '*')
+            {
+                i += 2;
+                while (i + 1 < source.Length && !(source[i] == '*' && source[i + 1] == '/'))
+                {
+                    i++;
+                }
+
+                i = Math.Min(i + 2, source.Length);
+                continue;
+            }
+
+            // Line comment // ...
+            if (c == '/' && i + 1 < source.Length && source[i + 1] == '/')
+            {
+                while (i < source.Length && source[i] != '\n')
+                {
+                    i++;
+                }
+
+                continue;
+            }
+
+            // Razor comment @* ... *@
+            if (c == '@' && i + 1 < source.Length && source[i + 1] == '*')
+            {
+                i += 2;
+                while (i + 1 < source.Length && !(source[i] == '*' && source[i + 1] == '@'))
+                {
+                    i++;
+                }
+
+                i = Math.Min(i + 2, source.Length);
+                continue;
+            }
+
+            output.Append(c);
+            i++;
+        }
+
+        return output.ToString();
     }
 
     [Fact]

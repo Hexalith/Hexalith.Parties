@@ -18,25 +18,29 @@ public sealed class PartiesAdminPortalApiClient : IPartiesAdminPortalApiClient
     private const string ListCacheDiscriminator = "parties-admin-list-v1";
     private const string SearchCacheDiscriminator = "parties-admin-search-v1";
     private const string DetailCacheDiscriminator = "parties-admin-detail-v1";
+    private const string RichSearchProbeHttpClientName = "parties-admin-portal-richsearch";
+    private const string ContractUnavailableUserMessage = "The Parties query contract is not configured for this admin portal.";
+    private const string RichSearchUnavailableUserMessage = "Rich search is not currently configured for this admin portal.";
 
     private readonly IPartiesQueryClient? _partiesQueryClient;
     private readonly IAdminPortalGdprClient? _gdprClient;
     private readonly IQueryService? _queryService;
+    private readonly IHttpClientFactory? _httpClientFactory;
     private readonly PartiesAdminPortalOptions _options;
 
     [ActivatorUtilitiesConstructor]
     public PartiesAdminPortalApiClient(IServiceProvider serviceProvider, IOptions<PartiesAdminPortalOptions> options)
         : this(
-            serviceProvider?.GetService<IPartiesQueryClient>(),
-            serviceProvider?.GetService<IAdminPortalGdprClient>(),
-            serviceProvider?.GetService<IQueryService>(),
+            (serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider))).GetService<IPartiesQueryClient>(),
+            serviceProvider.GetService<IAdminPortalGdprClient>(),
+            serviceProvider.GetService<IQueryService>(),
+            serviceProvider.GetService<IHttpClientFactory>(),
             options)
     {
-        ArgumentNullException.ThrowIfNull(serviceProvider);
     }
 
     public PartiesAdminPortalApiClient(IQueryService queryService, IOptions<PartiesAdminPortalOptions> options)
-        : this(null, null, queryService, options)
+        : this(null, null, queryService, null, options)
     {
     }
 
@@ -44,12 +48,16 @@ public sealed class PartiesAdminPortalApiClient : IPartiesAdminPortalApiClient
         IPartiesQueryClient? partiesQueryClient,
         IAdminPortalGdprClient? gdprClient,
         IQueryService? queryService,
+        IHttpClientFactory? httpClientFactory,
         IOptions<PartiesAdminPortalOptions> options)
     {
+        ArgumentNullException.ThrowIfNull(options);
         _partiesQueryClient = partiesQueryClient;
         _gdprClient = gdprClient;
         _queryService = queryService;
-        _options = options?.Value ?? throw new ArgumentNullException(nameof(options));
+        _httpClientFactory = httpClientFactory;
+        _options = options.Value
+            ?? throw new InvalidOperationException("PartiesAdminPortalOptions.Value resolved to null.");
     }
 
     public async Task<AdminPortalQueryResult<PagedResult<PartyIndexEntry>>> ListPartiesAsync(
@@ -60,6 +68,7 @@ public sealed class PartiesAdminPortalApiClient : IPartiesAdminPortalApiClient
 
         int page = AdminPortalQueryBounds.BoundPage(request.Page);
         int pageSize = AdminPortalQueryBounds.BoundPageSize(request.PageSize);
+        int skip = ComputeBoundedSkip(page, pageSize);
         if (_partiesQueryClient is not null)
         {
             PagedResult<PartyIndexEntry> typedResult = await ExecutePartiesQueryAsync(
@@ -74,13 +83,13 @@ public sealed class PartiesAdminPortalApiClient : IPartiesAdminPortalApiClient
                     request.ModifiedBefore,
                     token),
                 cancellationToken).ConfigureAwait(false);
-            return new(typedResult, AdminPortalQueryMetadata.Empty);
+            return new(typedResult ?? new PagedResult<PartyIndexEntry> { Items = [] }, AdminPortalQueryMetadata.Empty);
         }
 
         QueryRequest query = new(
             ProjectionType: RequireContract(_options.ListProjectionType, nameof(_options.ListProjectionType)),
             TenantId: null,
-            Skip: (page - 1) * pageSize,
+            Skip: skip,
             Take: pageSize,
             ColumnFilters: BuildListFilters(request),
             Domain: Domain,
@@ -99,18 +108,19 @@ public sealed class PartiesAdminPortalApiClient : IPartiesAdminPortalApiClient
 
         int page = AdminPortalQueryBounds.BoundPage(request.Page);
         int pageSize = AdminPortalQueryBounds.BoundPageSize(request.PageSize);
+        int skip = ComputeBoundedSkip(page, pageSize);
         if (_partiesQueryClient is not null)
         {
             PagedResult<PartySearchResult> typedResult = await ExecutePartiesQueryAsync(
                 (client, token) => client.SearchPartiesAsync(request.Query ?? string.Empty, page, pageSize, token),
                 cancellationToken).ConfigureAwait(false);
-            return new(typedResult, AdminPortalQueryMetadata.Empty);
+            return new(typedResult ?? new PagedResult<PartySearchResult> { Items = [] }, AdminPortalQueryMetadata.Empty);
         }
 
         QueryRequest query = new(
             ProjectionType: RequireContract(_options.SearchProjectionType, nameof(_options.SearchProjectionType)),
             TenantId: null,
-            Skip: (page - 1) * pageSize,
+            Skip: skip,
             Take: pageSize,
             SearchQuery: request.Query ?? string.Empty,
             Domain: Domain,
@@ -121,11 +131,48 @@ public sealed class PartiesAdminPortalApiClient : IPartiesAdminPortalApiClient
         return new(ToPage(result, page, pageSize), MetadataFrom(result));
     }
 
-    public Task<AdminPortalRichSearchCapability> GetRichSearchCapabilityAsync(CancellationToken cancellationToken)
+    public async Task<AdminPortalRichSearchCapability> GetRichSearchCapabilityAsync(CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        return Task.FromResult(AdminPortalRichSearchCapability.LocalOnly(
-            "Rich-search capability query is blocked until Story 12.4/12.5 freezes the EventStore query contract."));
+
+        if (_httpClientFactory is null || _options.RichSearchProbeBaseAddress is null)
+        {
+            return AdminPortalRichSearchCapability.LocalOnly(RichSearchUnavailableUserMessage);
+        }
+
+        try
+        {
+            HttpClient httpClient = _httpClientFactory.CreateClient(RichSearchProbeHttpClientName);
+            httpClient.BaseAddress ??= _options.RichSearchProbeBaseAddress;
+
+            using HttpResponseMessage response = await httpClient
+                .GetAsync("health", cancellationToken)
+                .ConfigureAwait(false);
+            if (!response.IsSuccessStatusCode)
+            {
+                return AdminPortalRichSearchCapability.Degraded(
+                    $"Rich search probe returned HTTP {(int)response.StatusCode}.");
+            }
+
+            using Stream stream = await response.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false);
+            using JsonDocument document = await JsonDocument
+                .ParseAsync(stream, cancellationToken: cancellationToken)
+                .ConfigureAwait(false);
+            return ParseRichSearchCapability(document.RootElement);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception ex) when (ex is HttpRequestException
+            or IOException
+            or JsonException
+            or TaskCanceledException
+            or TimeoutException)
+        {
+            return AdminPortalRichSearchCapability.Degraded(
+                $"Rich search probe unavailable: {ex.GetType().Name}");
+        }
     }
 
     public async Task<AdminPortalQueryResult<PartyDetail>> GetPartyAsync(string partyId, CancellationToken cancellationToken)
@@ -137,7 +184,12 @@ public sealed class PartiesAdminPortalApiClient : IPartiesAdminPortalApiClient
             PartyDetail typedDetail = await ExecutePartiesQueryAsync(
                 (client, token) => client.GetPartyAsync(partyId, token),
                 cancellationToken).ConfigureAwait(false);
-            return new(typedDetail, AdminPortalQueryMetadata.Empty);
+            if (typedDetail is null)
+            {
+                throw new AdminPortalQueryException(AdminPortalQueryFailureKind.NotFound);
+            }
+
+            return new(NormalizeDetail(typedDetail), AdminPortalQueryMetadata.Empty);
         }
 
         QueryRequest query = new(
@@ -152,35 +204,60 @@ public sealed class PartiesAdminPortalApiClient : IPartiesAdminPortalApiClient
             CacheDiscriminator: DetailCacheDiscriminator);
 
         QueryResult<PartyDetail> result = await ExecuteAsync<PartyDetail>(query, cancellationToken).ConfigureAwait(false);
+        if (result.Items.Count > 1)
+        {
+            throw new AdminPortalQueryException(
+                AdminPortalQueryFailureKind.Unknown,
+                validationDetail: "Detail projection returned more than one item for an aggregate-by-id query.");
+        }
+
         PartyDetail? detail = result.Items.FirstOrDefault();
         if (detail is null)
         {
             throw new AdminPortalQueryException(AdminPortalQueryFailureKind.NotFound);
         }
 
-        return new(detail, MetadataFrom(result));
+        return new(NormalizeDetail(detail), MetadataFrom(result));
     }
 
     public Task<AdminPortalGdprCommandResult> RequestErasureAsync(string partyId, CancellationToken cancellationToken)
-        => ExecuteGdprCommandAsync(client => client.RequestErasureAsync(partyId, cancellationToken));
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(partyId);
+        return ExecuteGdprCommandAsync(client => client.RequestErasureAsync(partyId, cancellationToken));
+    }
 
     public Task<PartyErasureStatusRecord?> GetErasureStatusAsync(string partyId, CancellationToken cancellationToken)
-        => ExecuteGdprQueryAsync(client => client.GetErasureStatusAsync(partyId, cancellationToken));
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(partyId);
+        return ExecuteGdprQueryAsync(client => client.GetErasureStatusAsync(partyId, cancellationToken));
+    }
 
     public Task<ErasureCertificate?> GetErasureCertificateAsync(string partyId, CancellationToken cancellationToken)
-        => ExecuteGdprQueryAsync(client => client.GetErasureCertificateAsync(partyId, cancellationToken));
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(partyId);
+        return ExecuteGdprQueryAsync(client => client.GetErasureCertificateAsync(partyId, cancellationToken));
+    }
 
     public Task<AdminPortalGdprCommandResult> RetryErasureVerificationAsync(string partyId, CancellationToken cancellationToken)
-        => ExecuteGdprCommandAsync(client => client.RetryErasureVerificationAsync(partyId, cancellationToken));
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(partyId);
+        return ExecuteGdprCommandAsync(client => client.RetryErasureVerificationAsync(partyId, cancellationToken));
+    }
 
     public Task<AdminPortalGdprCommandResult> RestrictProcessingAsync(
         string partyId,
         string? reason,
         CancellationToken cancellationToken)
-        => ExecuteGdprCommandAsync(client => client.RestrictProcessingAsync(partyId, reason, cancellationToken));
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(partyId);
+        return ExecuteGdprCommandAsync(client => client.RestrictProcessingAsync(partyId, reason, cancellationToken));
+    }
 
     public Task<AdminPortalGdprCommandResult> LiftRestrictionAsync(string partyId, CancellationToken cancellationToken)
-        => ExecuteGdprCommandAsync(client => client.LiftRestrictionAsync(partyId, cancellationToken));
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(partyId);
+        return ExecuteGdprCommandAsync(client => client.LiftRestrictionAsync(partyId, cancellationToken));
+    }
 
     public Task<AdminPortalGdprCommandResult> AddConsentAsync(
         string partyId,
@@ -188,22 +265,40 @@ public sealed class PartiesAdminPortalApiClient : IPartiesAdminPortalApiClient
         string purpose,
         LawfulBasis lawfulBasis,
         CancellationToken cancellationToken)
-        => ExecuteGdprCommandAsync(client => client.AddConsentAsync(partyId, channelId, purpose, lawfulBasis, cancellationToken));
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(partyId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(channelId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(purpose);
+        return ExecuteGdprCommandAsync(client => client.AddConsentAsync(partyId, channelId, purpose, lawfulBasis, cancellationToken));
+    }
 
     public Task<AdminPortalGdprCommandResult> RevokeConsentAsync(
         string partyId,
         string consentId,
         CancellationToken cancellationToken)
-        => ExecuteGdprCommandAsync(client => client.RevokeConsentAsync(partyId, consentId, cancellationToken));
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(partyId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(consentId);
+        return ExecuteGdprCommandAsync(client => client.RevokeConsentAsync(partyId, consentId, cancellationToken));
+    }
 
     public Task<IReadOnlyList<ConsentRecord>> GetConsentAsync(string partyId, CancellationToken cancellationToken)
-        => ExecuteGdprQueryAsync(client => client.GetConsentAsync(partyId, cancellationToken));
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(partyId);
+        return ExecuteGdprQueryAsync(client => client.GetConsentAsync(partyId, cancellationToken));
+    }
 
     public Task<AdminPortalExportDownload> ExportPartyDataAsync(string partyId, CancellationToken cancellationToken)
-        => ExecuteGdprQueryAsync(client => client.ExportPartyDataAsync(partyId, cancellationToken));
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(partyId);
+        return ExecuteGdprQueryAsync(client => client.ExportPartyDataAsync(partyId, cancellationToken));
+    }
 
     public Task<IReadOnlyList<ProcessingActivityRecord>> GetProcessingRecordsAsync(string partyId, CancellationToken cancellationToken)
-        => ExecuteGdprQueryAsync(client => client.GetProcessingRecordsAsync(partyId, cancellationToken));
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(partyId);
+        return ExecuteGdprQueryAsync(client => client.GetProcessingRecordsAsync(partyId, cancellationToken));
+    }
 
     private string Domain => string.IsNullOrWhiteSpace(_options.Domain) ? "party" : _options.Domain.Trim();
 
@@ -228,6 +323,10 @@ public sealed class PartiesAdminPortalApiClient : IPartiesAdminPortalApiClient
         catch (QueryFailureException ex)
         {
             throw new AdminPortalQueryException(MapFailureKind(ex), ex.Problem.Status, retryAfter: ex.RetryAfter, innerException: ex);
+        }
+        catch (HttpRequestException ex)
+        {
+            throw new AdminPortalQueryException(AdminPortalQueryFailureKind.TransientFailure, innerException: ex);
         }
         catch (TimeoutException ex)
         {
@@ -263,6 +362,10 @@ public sealed class PartiesAdminPortalApiClient : IPartiesAdminPortalApiClient
         {
             throw new AdminPortalQueryException(MapFailureKind(ex), ex.Status, innerException: ex);
         }
+        catch (HttpRequestException ex)
+        {
+            throw new AdminPortalQueryException(AdminPortalQueryFailureKind.TransientFailure, innerException: ex);
+        }
         catch (TimeoutException ex)
         {
             throw new AdminPortalQueryException(AdminPortalQueryFailureKind.TransientFailure, innerException: ex);
@@ -295,6 +398,15 @@ public sealed class PartiesAdminPortalApiClient : IPartiesAdminPortalApiClient
         {
             return new AdminPortalGdprCommandResult(MapGdprOutcome(ex), ex.CorrelationId, ex.Detail);
         }
+        catch (Exception ex) when (ex is HttpRequestException
+            or TimeoutException
+            or JsonException
+            or NotSupportedException
+            or TaskCanceledException
+            or OperationCanceledException)
+        {
+            return new AdminPortalGdprCommandResult(AdminPortalGdprOutcome.TransientFailure, CorrelationId: null, Detail: null);
+        }
     }
 
     private async Task<T> ExecuteGdprQueryAsync<T>(Func<IAdminPortalGdprClient, Task<T>> operation)
@@ -310,6 +422,14 @@ public sealed class PartiesAdminPortalApiClient : IPartiesAdminPortalApiClient
         {
             throw new AdminPortalQueryException(MapFailureKind(ex), ex.Status, innerException: ex);
         }
+        catch (HttpRequestException ex)
+        {
+            throw new AdminPortalQueryException(AdminPortalQueryFailureKind.TransientFailure, innerException: ex);
+        }
+        catch (TimeoutException ex)
+        {
+            throw new AdminPortalQueryException(AdminPortalQueryFailureKind.TransientFailure, innerException: ex);
+        }
         catch (JsonException ex)
         {
             throw new AdminPortalQueryException(AdminPortalQueryFailureKind.TransientFailure, innerException: ex);
@@ -318,6 +438,23 @@ public sealed class PartiesAdminPortalApiClient : IPartiesAdminPortalApiClient
         {
             throw new AdminPortalQueryException(AdminPortalQueryFailureKind.TransientFailure, innerException: ex);
         }
+        catch (OperationCanceledException ex)
+        {
+            throw new AdminPortalQueryException(AdminPortalQueryFailureKind.TransientFailure, innerException: ex);
+        }
+    }
+
+    private static int ComputeBoundedSkip(int page, int pageSize)
+    {
+        long skip = ((long)page - 1) * pageSize;
+        if (skip > int.MaxValue || skip < 0)
+        {
+            throw new AdminPortalQueryException(
+                AdminPortalQueryFailureKind.Validation,
+                validationDetail: "Requested page exceeds the addressable range.");
+        }
+
+        return (int)skip;
     }
 
     private static AdminPortalQueryFailureKind MapFailureKind(QueryFailureException ex)
@@ -329,6 +466,16 @@ public sealed class PartiesAdminPortalApiClient : IPartiesAdminPortalApiClient
                 : AdminPortalQueryFailureKind.Forbidden,
             QueryFailureKind.NotFound => AdminPortalQueryFailureKind.NotFound,
             QueryFailureKind.RateLimited => AdminPortalQueryFailureKind.TransientFailure,
+            _ => MapByStatus(ex.Problem.Status),
+        };
+
+    private static AdminPortalQueryFailureKind MapByStatus(int? status)
+        => status switch
+        {
+            410 => AdminPortalQueryFailureKind.Gone,
+            400 or 422 => AdminPortalQueryFailureKind.Validation,
+            408 or 429 => AdminPortalQueryFailureKind.TransientFailure,
+            >= 500 => AdminPortalQueryFailureKind.TransientFailure,
             _ => AdminPortalQueryFailureKind.Unknown,
         };
 
@@ -412,9 +559,12 @@ public sealed class PartiesAdminPortalApiClient : IPartiesAdminPortalApiClient
             return value.Trim();
         }
 
+        // Internal dependency note: this surface is the IQueryService fallback path.
+        // The typed IPartiesQueryClient path bypasses RequireContract entirely; once that
+        // typed boundary is the only path, this fallback (and its options) can be retired.
         throw new AdminPortalQueryException(
             AdminPortalQueryFailureKind.ContractUnavailable,
-            validationDetail: $"{optionName} is not configured because Story 12.4/12.5 has not frozen the Parties EventStore query contract.");
+            validationDetail: $"{optionName} is not configured. {ContractUnavailableUserMessage}");
     }
 
     private static PagedResult<T> ToPage<T>(QueryResult<T> result, int page, int pageSize)
@@ -431,4 +581,63 @@ public sealed class PartiesAdminPortalApiClient : IPartiesAdminPortalApiClient
         => result.IsNotModified
             ? new AdminPortalQueryMetadata(StaleDataAge: "not-modified")
             : AdminPortalQueryMetadata.Empty;
+
+    private static PartyDetail NormalizeDetail(PartyDetail detail)
+        => detail with
+        {
+            // System.Text.Json overwrites the contract's `[]` defaults with `null` if the
+            // backend omits/nulls the property. Normalize at the API client boundary so
+            // every consumer sees non-null collections regardless of transport.
+            ContactChannels = detail.ContactChannels ?? [],
+            Identifiers = detail.Identifiers ?? [],
+            ConsentRecords = detail.ConsentRecords ?? [],
+            NameHistory = detail.NameHistory ?? [],
+        };
+
+    private static AdminPortalRichSearchCapability ParseRichSearchCapability(JsonElement root)
+    {
+        if (!root.TryGetProperty("results", out JsonElement results)
+            || !results.TryGetProperty("memories-search", out JsonElement memoriesSearch))
+        {
+            return AdminPortalRichSearchCapability.LocalOnly("memories-search health check unavailable");
+        }
+
+        string? status = ReadStringProperty(memoriesSearch, "status");
+        string? description = ReadStringProperty(memoriesSearch, "description");
+        JsonElement data = memoriesSearch.TryGetProperty("data", out JsonElement dataElement)
+            ? dataElement
+            : default;
+        bool enabled = ReadBoolProperty(data, "enabled") == true;
+        if (!enabled)
+        {
+            return AdminPortalRichSearchCapability.LocalOnly(description ?? "Memories rich search is disabled");
+        }
+
+        // Fail closed: a missing or non-boolean searchReachable value degrades safely to
+        // local-only rather than implicitly trusting the backend reports rich search.
+        bool searchReachable = ReadBoolProperty(data, "searchReachable") == true;
+        bool degradedReportedByMemories = ReadBoolProperty(data, "degradedReportedByMemories") == true;
+        if (string.Equals(status, "Healthy", StringComparison.OrdinalIgnoreCase)
+            && searchReachable
+            && !degradedReportedByMemories)
+        {
+            return AdminPortalRichSearchCapability.Available();
+        }
+
+        return AdminPortalRichSearchCapability.Degraded(description ?? $"memories-search reported {status ?? "unknown"}");
+    }
+
+    private static string? ReadStringProperty(JsonElement element, string name)
+        => element.ValueKind == JsonValueKind.Object
+            && element.TryGetProperty(name, out JsonElement property)
+            && property.ValueKind == JsonValueKind.String
+                ? property.GetString()
+                : null;
+
+    private static bool? ReadBoolProperty(JsonElement element, string name)
+        => element.ValueKind == JsonValueKind.Object
+            && element.TryGetProperty(name, out JsonElement property)
+            && property.ValueKind is JsonValueKind.True or JsonValueKind.False
+                ? property.GetBoolean()
+                : null;
 }

@@ -26,4 +26,6 @@ public sealed class PartiesAdminPortalOptions
     public string? DetailQueryType { get; set; }
 
     public string? DetailProjectionActorType { get; set; }
+
+    public Uri? RichSearchProbeBaseAddress { get; set; }
 }
