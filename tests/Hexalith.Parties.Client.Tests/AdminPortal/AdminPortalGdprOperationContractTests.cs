@@ -4,9 +4,19 @@
 // client contract that replaces the retired admin controller surface.
 
 using System.Reflection;
+using System.Net;
+using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 using Hexalith.Parties.Client;
+using Hexalith.Parties.Client.AdminPortal;
+using Hexalith.Parties.Contracts.Commands;
+using Hexalith.Parties.Contracts.Models;
 using Hexalith.Parties.Contracts.Security;
+using Hexalith.Parties.Contracts.ValueObjects;
+
+using Microsoft.Extensions.Options;
 
 using Shouldly;
 
@@ -19,6 +29,13 @@ namespace Hexalith.Parties.Client.Tests.AdminPortal;
 /// </summary>
 public sealed class AdminPortalGdprOperationContractTests
 {
+    private static readonly JsonSerializerOptions s_jsonOptions = new()
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+        Converters = { new JsonStringEnumConverter() },
+    };
+
     private const string AdapterTypeName = "Hexalith.Parties.Client.AdminPortal.IAdminPortalGdprClient";
     private const string RouteMapTypeName = "Hexalith.Parties.Client.AdminPortal.AdminPortalGdprRoutes";
     private const string OutcomeTypeName = "Hexalith.Parties.Client.AdminPortal.AdminPortalGdprOutcome";
@@ -139,6 +156,93 @@ public sealed class AdminPortalGdprOperationContractTests
             "Export filenames/storage keys must not be derived from personal display names.");
     }
 
+    [Fact]
+    public async Task AddConsentAsync_SubmitsRecordConsentContractCommandTypeAsync()
+    {
+        var handler = new RecordingHandler(
+            HttpStatusCode.Accepted,
+            JsonSerializer.Serialize(new { correlationId = "corr-consent" }),
+            "application/json");
+        var client = CreateHttpClient(handler);
+
+        await client.AddConsentAsync("party-1", "channel-1", "billing", LawfulBasis.Consent, CancellationToken.None);
+
+        handler.LastRequest.ShouldNotBeNull().RequestUri!.PathAndQuery.ShouldBe("/api/v1/commands");
+        using JsonDocument body = JsonDocument.Parse(handler.LastRequestBody.ShouldNotBeNull());
+        JsonElement root = body.RootElement;
+        root.GetProperty("commandType").GetString().ShouldBe(typeof(RecordConsent).FullName);
+        root.GetProperty("aggregateId").GetString().ShouldBe("party-1");
+        root.GetProperty("payload").GetProperty("purpose").GetString().ShouldBe("billing");
+    }
+
+    [Fact]
+    public async Task RetryVerificationAsync_FailsClosedUntilBackendContractExistsAsync()
+    {
+        var handler = new RecordingHandler(HttpStatusCode.Accepted, "{}", "application/json");
+        var client = CreateHttpClient(handler);
+
+        AdminPortalGdprCommandResult result = await client.RetryErasureVerificationAsync("party-1", CancellationToken.None);
+
+        result.Outcome.ShouldBe(AdminPortalGdprOutcome.ContractUnavailable);
+        handler.LastRequest.ShouldBeNull("Retry must not submit a private client-only command type.");
+    }
+
+    [Fact]
+    public async Task GetConsentAsync_UsesPartyDetailProjectionQueryInsteadOfGdprRouteNameAsync()
+    {
+        var detail = new PartyDetail
+        {
+            Id = "party-1",
+            Type = PartyType.Person,
+            IsActive = true,
+            DisplayName = "Ada Lovelace",
+            SortName = "Lovelace, Ada",
+            CreatedAt = DateTimeOffset.Parse("2026-05-01T00:00:00Z"),
+            LastModifiedAt = DateTimeOffset.Parse("2026-05-02T00:00:00Z"),
+            ConsentRecords =
+            [
+                new ConsentRecord
+                {
+                    ConsentId = "consent-1",
+                    ChannelId = "channel-1",
+                    Purpose = "billing",
+                    LawfulBasis = LawfulBasis.Consent,
+                    GrantedAt = DateTimeOffset.Parse("2026-05-03T00:00:00Z"),
+                    GrantedBy = "admin",
+                },
+            ],
+        };
+        var handler = new RecordingHandler(
+            HttpStatusCode.OK,
+            JsonSerializer.Serialize(new { payload = detail }, s_jsonOptions),
+            "application/json");
+        var client = CreateHttpClient(handler);
+
+        IReadOnlyList<ConsentRecord> result = await client.GetConsentAsync("party-1", CancellationToken.None);
+
+        result.ShouldHaveSingleItem().Purpose.ShouldBe("billing");
+        handler.LastRequest.ShouldNotBeNull().RequestUri!.PathAndQuery.ShouldBe("/api/v1/queries");
+        using JsonDocument body = JsonDocument.Parse(handler.LastRequestBody.ShouldNotBeNull());
+        JsonElement root = body.RootElement;
+        root.GetProperty("queryType").GetString().ShouldBe("GetParty");
+        root.GetProperty("projectionType").GetString().ShouldBe("PartyDetail");
+        root.GetProperty("projectionActorType").GetString().ShouldBe("PartyDetailProjectionActor");
+    }
+
+    [Fact]
+    public async Task ExportPartyDataAsync_FailsClosedUntilAuthoritativeExportContractExistsAsync()
+    {
+        var handler = new RecordingHandler(HttpStatusCode.OK, "{}", "application/json");
+        var client = CreateHttpClient(handler);
+
+        PartiesClientException ex = await Should.ThrowAsync<PartiesClientException>(
+            () => client.ExportPartyDataAsync("party-1", CancellationToken.None));
+
+        ex.Status.ShouldBe((int)HttpStatusCode.NotImplemented);
+        ex.Title.ShouldBe(AdminPortalGdprOutcome.ContractUnavailable.ToString());
+        handler.LastRequest.ShouldBeNull("Export must not synthesize an export from a generic projection query.");
+    }
+
     private static BindingFlags PublicInstance => BindingFlags.Public | BindingFlags.Instance;
 
     private static Type LoadClientType(string fullName)
@@ -172,5 +276,37 @@ public sealed class AdminPortalGdprOperationContractTests
         }
 
         return type;
+    }
+
+    private static HttpAdminPortalGdprClient CreateHttpClient(RecordingHandler handler)
+    {
+        var httpClient = new HttpClient(handler) { BaseAddress = new Uri("https://localhost") };
+        return new HttpAdminPortalGdprClient(
+            httpClient,
+            Options.Create(new PartiesClientOptions { BaseUrl = "https://localhost", Tenant = "tenant-a" }));
+    }
+
+    private sealed class RecordingHandler(
+        HttpStatusCode statusCode,
+        string responseBody,
+        string contentType) : HttpMessageHandler
+    {
+        public HttpRequestMessage? LastRequest { get; private set; }
+
+        public string? LastRequestBody { get; private set; }
+
+        protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            LastRequest = request;
+            if (request.Content is not null)
+            {
+                LastRequestBody = await request.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+            }
+
+            return new HttpResponseMessage(statusCode)
+            {
+                Content = new StringContent(responseBody, Encoding.UTF8, contentType),
+            };
+        }
     }
 }

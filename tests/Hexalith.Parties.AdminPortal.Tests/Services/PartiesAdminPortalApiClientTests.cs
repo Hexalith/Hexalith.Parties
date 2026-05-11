@@ -489,6 +489,37 @@ public sealed class PartiesAdminPortalApiClientTests
     }
 
     [Fact]
+    public async Task GdprQuery_ContractUnavailable_MapsToContractUnavailableExceptionAsync()
+    {
+        using ServiceProvider serviceProvider = new ServiceCollection()
+            .AddSingleton<IAdminPortalGdprClient>(new ContractUnavailableGdprClient())
+            .BuildServiceProvider();
+        PartiesAdminPortalApiClient client = new(
+            serviceProvider,
+            Options.Create(new PartiesAdminPortalOptions()));
+
+        AdminPortalQueryException ex = await Should.ThrowAsync<AdminPortalQueryException>(
+            () => client.ExportPartyDataAsync("party-1", CancellationToken.None));
+
+        ex.Kind.ShouldBe(AdminPortalQueryFailureKind.ContractUnavailable);
+    }
+
+    [Fact]
+    public async Task GdprCommand_ContractUnavailable_MapsToContractUnavailableOutcomeAsync()
+    {
+        using ServiceProvider serviceProvider = new ServiceCollection()
+            .AddSingleton<IAdminPortalGdprClient>(new ContractUnavailableGdprClient())
+            .BuildServiceProvider();
+        PartiesAdminPortalApiClient client = new(
+            serviceProvider,
+            Options.Create(new PartiesAdminPortalOptions()));
+
+        AdminPortalGdprCommandResult result = await client.RetryErasureVerificationAsync("party-1", CancellationToken.None);
+
+        result.Outcome.ShouldBe(AdminPortalGdprOutcome.ContractUnavailable);
+    }
+
+    [Fact]
     public async Task GdprMethods_RejectNullOrWhitespaceArgumentsAsync()
     {
         using ServiceProvider serviceProvider = new ServiceCollection()
@@ -792,6 +823,50 @@ public sealed class PartiesAdminPortalApiClientTests
 
         public Task<IReadOnlyList<ProcessingActivityRecord>> GetProcessingRecordsAsync(string partyId, CancellationToken cancellationToken)
             => throw new HttpRequestException("transport down");
+    }
+
+    private sealed class ContractUnavailableGdprClient : IAdminPortalGdprClient
+    {
+        private static PartiesClientException Exception()
+            => new(501, AdminPortalGdprOutcome.ContractUnavailable.ToString(), null, null, null);
+
+        public Task<AdminPortalGdprCommandResult> RequestErasureAsync(string partyId, CancellationToken cancellationToken)
+            => throw Exception();
+
+        public Task<PartyErasureStatusRecord?> GetErasureStatusAsync(string partyId, CancellationToken cancellationToken)
+            => throw Exception();
+
+        public Task<ErasureCertificate?> GetErasureCertificateAsync(string partyId, CancellationToken cancellationToken)
+            => throw Exception();
+
+        public Task<AdminPortalGdprCommandResult> RetryErasureVerificationAsync(string partyId, CancellationToken cancellationToken)
+            => throw Exception();
+
+        public Task<AdminPortalGdprCommandResult> RestrictProcessingAsync(string partyId, string? reason, CancellationToken cancellationToken)
+            => throw Exception();
+
+        public Task<AdminPortalGdprCommandResult> LiftRestrictionAsync(string partyId, CancellationToken cancellationToken)
+            => throw Exception();
+
+        public Task<AdminPortalGdprCommandResult> AddConsentAsync(
+            string partyId,
+            string channelId,
+            string purpose,
+            LawfulBasis lawfulBasis,
+            CancellationToken cancellationToken)
+            => throw Exception();
+
+        public Task<AdminPortalGdprCommandResult> RevokeConsentAsync(string partyId, string consentId, CancellationToken cancellationToken)
+            => throw Exception();
+
+        public Task<IReadOnlyList<ConsentRecord>> GetConsentAsync(string partyId, CancellationToken cancellationToken)
+            => throw Exception();
+
+        public Task<AdminPortalExportDownload> ExportPartyDataAsync(string partyId, CancellationToken cancellationToken)
+            => throw Exception();
+
+        public Task<IReadOnlyList<ProcessingActivityRecord>> GetProcessingRecordsAsync(string partyId, CancellationToken cancellationToken)
+            => throw Exception();
     }
 
     private sealed class StaticHttpMessageHandler(string responseJson) : HttpMessageHandler

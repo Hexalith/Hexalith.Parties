@@ -260,11 +260,19 @@
 
     private async Task ConfirmErasureAsync()
     {
+        string partyId = Party.Id;
+        string? tenantSignature = TenantContextSignature;
+        CancellationToken token = Token;
         await RunCommandAsync(async () =>
         {
             AdminPortalGdprCommandResult result = await QueryService.ApiClient
-                .RequestErasureAsync(Party.Id, Token)
+                .RequestErasureAsync(partyId, token)
                 .ConfigureAwait(false);
+            if (!IsCurrentOperation(partyId, tenantSignature, token))
+            {
+                return result;
+            }
+
             _confirmErasure = false;
             await RefreshErasureStatusAsync().ConfigureAwait(false);
             return result;
@@ -273,49 +281,91 @@
 
     private async Task RefreshErasureStatusAsync()
     {
+        string partyId = Party.Id;
+        string? tenantSignature = TenantContextSignature;
+        CancellationToken token = Token;
         await RunQueryAsync(async () =>
         {
-            _erasureStatus = await QueryService.ApiClient
-                .GetErasureStatusAsync(Party.Id, Token)
+            PartyErasureStatusRecord? status = await QueryService.ApiClient
+                .GetErasureStatusAsync(partyId, token)
                 .ConfigureAwait(false);
-            if (_erasureStatus?.Status is "Verified" or "Complete" or "Erased")
+            if (!IsCurrentOperation(partyId, tenantSignature, token))
             {
-                _erasureCertificate = await QueryService.ApiClient
-                    .GetErasureCertificateAsync(Party.Id, Token)
+                return;
+            }
+
+            _erasureStatus = status;
+            if (status?.Status is "Verified" or "Complete" or "Erased")
+            {
+                ErasureCertificate? certificate = await QueryService.ApiClient
+                    .GetErasureCertificateAsync(partyId, token)
                     .ConfigureAwait(false);
+                if (!IsCurrentOperation(partyId, tenantSignature, token))
+                {
+                    return;
+                }
+
+                _erasureCertificate = certificate;
             }
         }).ConfigureAwait(false);
     }
 
     private async Task RetryVerificationAsync()
-        => await RunCommandAsync(async () =>
+    {
+        string partyId = Party.Id;
+        string? tenantSignature = TenantContextSignature;
+        CancellationToken token = Token;
+        await RunCommandAsync(async () =>
         {
             AdminPortalGdprCommandResult result = await QueryService.ApiClient
-                .RetryErasureVerificationAsync(Party.Id, Token)
+                .RetryErasureVerificationAsync(partyId, token)
                 .ConfigureAwait(false);
-            await RefreshErasureStatusAsync().ConfigureAwait(false);
+            if (IsCurrentOperation(partyId, tenantSignature, token))
+            {
+                await RefreshErasureStatusAsync().ConfigureAwait(false);
+            }
+
             return result;
         }).ConfigureAwait(false);
+    }
 
     private async Task RestrictAsync()
-        => await RunCommandAsync(async () =>
+    {
+        string partyId = Party.Id;
+        string? tenantSignature = TenantContextSignature;
+        CancellationToken token = Token;
+        await RunCommandAsync(async () =>
         {
             AdminPortalGdprCommandResult result = await QueryService.ApiClient
-                .RestrictProcessingAsync(Party.Id, _restrictionReason, Token)
+                .RestrictProcessingAsync(partyId, _restrictionReason, token)
                 .ConfigureAwait(false);
-            await RefreshParty.InvokeAsync().ConfigureAwait(false);
+            if (IsCurrentOperation(partyId, tenantSignature, token))
+            {
+                await RefreshParty.InvokeAsync().ConfigureAwait(false);
+            }
+
             return result;
         }).ConfigureAwait(false);
+    }
 
     private async Task LiftRestrictionAsync()
-        => await RunCommandAsync(async () =>
+    {
+        string partyId = Party.Id;
+        string? tenantSignature = TenantContextSignature;
+        CancellationToken token = Token;
+        await RunCommandAsync(async () =>
         {
             AdminPortalGdprCommandResult result = await QueryService.ApiClient
-                .LiftRestrictionAsync(Party.Id, Token)
+                .LiftRestrictionAsync(partyId, token)
                 .ConfigureAwait(false);
-            await RefreshParty.InvokeAsync().ConfigureAwait(false);
+            if (IsCurrentOperation(partyId, tenantSignature, token))
+            {
+                await RefreshParty.InvokeAsync().ConfigureAwait(false);
+            }
+
             return result;
         }).ConfigureAwait(false);
+    }
 
     private async Task AddConsentAsync()
     {
@@ -324,36 +374,60 @@
             lawfulBasis = LawfulBasis.Consent;
         }
 
+        string partyId = Party.Id;
+        string? tenantSignature = TenantContextSignature;
+        CancellationToken token = Token;
         await RunCommandAsync(async () =>
         {
             AdminPortalGdprCommandResult result = await QueryService.ApiClient
-                .AddConsentAsync(Party.Id, _consentChannelId!, _consentPurpose!, lawfulBasis, Token)
+                .AddConsentAsync(partyId, _consentChannelId!, _consentPurpose!, lawfulBasis, token)
                 .ConfigureAwait(false);
-            await RefreshParty.InvokeAsync().ConfigureAwait(false);
+            if (IsCurrentOperation(partyId, tenantSignature, token))
+            {
+                await RefreshParty.InvokeAsync().ConfigureAwait(false);
+            }
+
             return result;
         }).ConfigureAwait(false);
     }
 
     private async Task RevokeConsentAsync(string consentId)
-        => await RunCommandAsync(async () =>
+    {
+        string partyId = Party.Id;
+        string? tenantSignature = TenantContextSignature;
+        CancellationToken token = Token;
+        await RunCommandAsync(async () =>
         {
             AdminPortalGdprCommandResult result = await QueryService.ApiClient
-                .RevokeConsentAsync(Party.Id, consentId, Token)
+                .RevokeConsentAsync(partyId, consentId, token)
                 .ConfigureAwait(false);
-            await RefreshParty.InvokeAsync().ConfigureAwait(false);
+            if (IsCurrentOperation(partyId, tenantSignature, token))
+            {
+                await RefreshParty.InvokeAsync().ConfigureAwait(false);
+            }
+
             return result;
         }).ConfigureAwait(false);
+    }
 
     private async Task ExportAsync()
     {
+        string partyId = Party.Id;
+        string? tenantSignature = TenantContextSignature;
+        CancellationToken token = Token;
         await RunQueryAsync(async () =>
         {
             AdminPortalExportDownload export = await QueryService.ApiClient
-                .ExportPartyDataAsync(Party.Id, Token)
+                .ExportPartyDataAsync(partyId, token)
                 .ConfigureAwait(false);
+            if (!IsCurrentOperation(partyId, tenantSignature, token))
+            {
+                return;
+            }
+
             // Defense-in-depth: re-derive the download filename from non-PII components
             // rather than trusting the transport-supplied FileName. Resolved 2026-05-10 (D2).
-            string safeFileName = GdprExportFileNameBuilder.Build(Party.Id, DateTimeOffset.UtcNow);
+            string safeFileName = GdprExportFileNameBuilder.Build(partyId, DateTimeOffset.UtcNow);
             if (export.Payload.Length == 0)
             {
                 _exportFileName = null;
@@ -387,20 +461,35 @@
 
     private async Task LoadProcessingRecordsAsync()
     {
+        string partyId = Party.Id;
+        string? tenantSignature = TenantContextSignature;
+        CancellationToken token = Token;
         await RunQueryAsync(async () =>
         {
-            _processingRecords = await QueryService.ApiClient
-                .GetProcessingRecordsAsync(Party.Id, Token)
+            IReadOnlyList<ProcessingActivityRecord> records = await QueryService.ApiClient
+                .GetProcessingRecordsAsync(partyId, token)
                 .ConfigureAwait(false);
+            if (IsCurrentOperation(partyId, tenantSignature, token))
+            {
+                _processingRecords = records;
+            }
         }).ConfigureAwait(false);
     }
 
     private async Task RunCommandAsync(Func<Task<AdminPortalGdprCommandResult>> action)
     {
+        string partyId = Party.Id;
+        string? tenantSignature = TenantContextSignature;
+        CancellationToken token = Token;
         _isBusy = true;
         try
         {
             AdminPortalGdprCommandResult result = await action().ConfigureAwait(false);
+            if (!IsCurrentOperation(partyId, tenantSignature, token))
+            {
+                return;
+            }
+
             _lastOutcome = result.Outcome;
             // Refresh correlation per command so auditors see the most recent operation,
             // not the first one ever recorded for this party.
@@ -411,39 +500,68 @@
         }
         catch (AdminPortalQueryException ex)
         {
+            if (!IsCurrentOperation(partyId, tenantSignature, token))
+            {
+                return;
+            }
+
             _lastOutcome = OutcomeFromFailure(ex.Kind);
         }
-        catch (OperationCanceledException) when (Token.IsCancellationRequested)
+        catch (OperationCanceledException) when (token.IsCancellationRequested)
         {
             // Component disposed or party changed mid-flight; drop result silently.
         }
         finally
         {
-            _isBusy = false;
+            if (IsCurrentOperation(partyId, tenantSignature, token))
+            {
+                _isBusy = false;
+            }
         }
     }
 
     private async Task RunQueryAsync(Func<Task> action)
     {
+        string partyId = Party.Id;
+        string? tenantSignature = TenantContextSignature;
+        CancellationToken token = Token;
         _isBusy = true;
         try
         {
             await action().ConfigureAwait(false);
+            if (!IsCurrentOperation(partyId, tenantSignature, token))
+            {
+                return;
+            }
+
             _lastOutcome = AdminPortalGdprOutcome.Completed;
         }
         catch (AdminPortalQueryException ex)
         {
+            if (!IsCurrentOperation(partyId, tenantSignature, token))
+            {
+                return;
+            }
+
             _lastOutcome = OutcomeFromFailure(ex.Kind);
         }
-        catch (OperationCanceledException) when (Token.IsCancellationRequested)
+        catch (OperationCanceledException) when (token.IsCancellationRequested)
         {
             // Component disposed or party changed mid-flight; drop result silently.
         }
         finally
         {
-            _isBusy = false;
+            if (IsCurrentOperation(partyId, tenantSignature, token))
+            {
+                _isBusy = false;
+            }
         }
     }
+
+    private bool IsCurrentOperation(string partyId, string? tenantSignature, CancellationToken token)
+        => !token.IsCancellationRequested
+            && string.Equals(Party.Id, partyId, StringComparison.Ordinal)
+            && string.Equals(TenantContextSignature, tenantSignature, StringComparison.Ordinal);
 
     private static AdminPortalGdprOutcome OutcomeFromFailure(AdminPortalQueryFailureKind kind)
         => kind switch

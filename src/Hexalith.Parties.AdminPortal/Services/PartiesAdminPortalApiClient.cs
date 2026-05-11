@@ -495,6 +495,7 @@ public sealed class PartiesAdminPortalApiClient : IPartiesAdminPortalApiClient
             404 => AdminPortalQueryFailureKind.NotFound,
             409 => AdminPortalQueryFailureKind.Conflict,
             410 => AdminPortalQueryFailureKind.Gone,
+            501 when IsContractUnavailable(ex.Title) => AdminPortalQueryFailureKind.ContractUnavailable,
             400 or 422 => AdminPortalQueryFailureKind.Validation,
             408 or 429 => AdminPortalQueryFailureKind.TransientFailure,
             >= 500 => AdminPortalQueryFailureKind.TransientFailure,
@@ -511,6 +512,7 @@ public sealed class PartiesAdminPortalApiClient : IPartiesAdminPortalApiClient
             404 => AdminPortalGdprOutcome.NotFound,
             409 => AdminPortalGdprOutcome.ErasureInProgress,
             410 => AdminPortalGdprOutcome.Erased,
+            501 when IsContractUnavailable(ex.Title) => AdminPortalGdprOutcome.ContractUnavailable,
             400 or 422 => AdminPortalGdprOutcome.ValidationRejected,
             408 or 429 => AdminPortalGdprOutcome.TransientFailure,
             >= 500 => AdminPortalGdprOutcome.TransientFailure,
@@ -519,6 +521,9 @@ public sealed class PartiesAdminPortalApiClient : IPartiesAdminPortalApiClient
 
     private static bool ContainsTenant(string? value)
         => value?.Contains("tenant", StringComparison.OrdinalIgnoreCase) == true;
+
+    private static bool IsContractUnavailable(string? value)
+        => string.Equals(value, AdminPortalGdprOutcome.ContractUnavailable.ToString(), StringComparison.Ordinal);
 
     private static IReadOnlyDictionary<string, string>? BuildListFilters(AdminPortalListRequest request)
     {

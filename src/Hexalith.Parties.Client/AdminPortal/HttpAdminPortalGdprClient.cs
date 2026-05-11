@@ -42,25 +42,16 @@ public sealed class HttpAdminPortalGdprClient : IAdminPortalGdprClient
             cancellationToken);
 
     public Task<PartyErasureStatusRecord?> GetErasureStatusAsync(string partyId, CancellationToken cancellationToken)
-        => PostQueryAsync<PartyErasureStatusRecord?>(
-            partyId,
-            AdminPortalGdprRoutes.ErasureStatus,
-            payload: new PartyQueryPayload(partyId),
-            cancellationToken);
+        => GetErasureStatusFromPartyDetailAsync(partyId, cancellationToken);
 
     public Task<ErasureCertificate?> GetErasureCertificateAsync(string partyId, CancellationToken cancellationToken)
-        => PostQueryAsync<ErasureCertificate?>(
-            partyId,
-            AdminPortalGdprRoutes.ErasureCertificate,
-            payload: new PartyQueryPayload(partyId),
-            cancellationToken);
+        => Task.FromException<ErasureCertificate?>(ContractUnavailable());
 
     public Task<AdminPortalGdprCommandResult> RetryErasureVerificationAsync(string partyId, CancellationToken cancellationToken)
-        => PostCommandAsync(
-            partyId,
-            new RetryErasureVerificationCommand { PartyId = partyId, TenantId = _options.Tenant },
-            AdminPortalGdprRoutes.RetryVerification,
-            cancellationToken);
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(partyId);
+        return Task.FromResult(new AdminPortalGdprCommandResult(AdminPortalGdprOutcome.ContractUnavailable, null));
+    }
 
     public Task<AdminPortalGdprCommandResult> RestrictProcessingAsync(
         string partyId,
@@ -106,31 +97,20 @@ public sealed class HttpAdminPortalGdprClient : IAdminPortalGdprClient
             cancellationToken);
 
     public Task<IReadOnlyList<ConsentRecord>> GetConsentAsync(string partyId, CancellationToken cancellationToken)
-        => PostQueryAsync<IReadOnlyList<ConsentRecord>>(
-            partyId,
-            "eventstore:query:party:GetConsent",
-            payload: new PartyQueryPayload(partyId),
-            cancellationToken);
+        => GetConsentFromPartyDetailAsync(partyId, cancellationToken);
 
     public async Task<AdminPortalExportDownload> ExportPartyDataAsync(string partyId, CancellationToken cancellationToken)
     {
-        JsonElement payload = await PostQueryAsync<JsonElement>(
-            partyId,
-            AdminPortalGdprRoutes.Export,
-            payload: new PartyQueryPayload(partyId),
-            cancellationToken).ConfigureAwait(false);
-
-        byte[] bytes = JsonSerializer.SerializeToUtf8Bytes(payload, HttpPartiesCommandClient.JsonOptions);
-        string fileName = $"party-{SanitizeFileToken(partyId)}-export-{DateTimeOffset.UtcNow:yyyyMMddHHmmss}.json";
-        return new AdminPortalExportDownload(fileName, "application/json", bytes);
+        ArgumentException.ThrowIfNullOrWhiteSpace(partyId);
+        await Task.CompletedTask.ConfigureAwait(false);
+        throw ContractUnavailable();
     }
 
     public Task<IReadOnlyList<ProcessingActivityRecord>> GetProcessingRecordsAsync(string partyId, CancellationToken cancellationToken)
-        => PostQueryAsync<IReadOnlyList<ProcessingActivityRecord>>(
-            partyId,
-            AdminPortalGdprRoutes.ProcessingRecords,
-            payload: new PartyQueryPayload(partyId),
-            cancellationToken);
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(partyId);
+        return Task.FromException<IReadOnlyList<ProcessingActivityRecord>>(ContractUnavailable());
+    }
 
     private async Task<AdminPortalGdprCommandResult> PostCommandAsync<TCommand>(
         string aggregateId,
@@ -147,7 +127,7 @@ public sealed class HttpAdminPortalGdprClient : IAdminPortalGdprClient
             Tenant: _options.Tenant,
             Domain: PartyDomain,
             AggregateId: aggregateId,
-            CommandType: CommandName(route, typeof(TCommand)),
+            CommandType: typeof(TCommand).FullName ?? typeof(TCommand).Name,
             Payload: JsonSerializer.SerializeToElement(command, HttpPartiesCommandClient.JsonOptions),
             CorrelationId: messageId,
             Extensions: null);
@@ -167,7 +147,9 @@ public sealed class HttpAdminPortalGdprClient : IAdminPortalGdprClient
 
     private async Task<T> PostQueryAsync<T>(
         string aggregateId,
-        string route,
+        string queryType,
+        string projectionType,
+        string? projectionActorType,
         object? payload,
         CancellationToken cancellationToken)
     {
@@ -177,10 +159,11 @@ public sealed class HttpAdminPortalGdprClient : IAdminPortalGdprClient
             Tenant: _options.Tenant,
             Domain: PartyDomain,
             AggregateId: aggregateId,
-            QueryType: QueryName(route),
-            ProjectionType: QueryName(route),
+            QueryType: queryType,
+            ProjectionType: projectionType,
             Payload: payload is null ? null : JsonSerializer.SerializeToElement(payload, HttpPartiesCommandClient.JsonOptions),
-            EntityId: aggregateId);
+            EntityId: aggregateId,
+            ProjectionActorType: projectionActorType);
 
         using HttpResponseMessage response = await _httpClient
             .PostAsJsonAsync(QueryGatewayPath, request, HttpPartiesCommandClient.JsonOptions, cancellationToken)
@@ -205,16 +188,38 @@ public sealed class HttpAdminPortalGdprClient : IAdminPortalGdprClient
         throw new PartiesClientException((int)response.StatusCode, "OK", null, "Response did not contain a query payload.", null);
     }
 
-    private static string CommandName(string route, Type fallbackType)
-        => RouteName(route) ?? fallbackType.FullName ?? fallbackType.Name;
+    private async Task<PartyDetail> GetPartyDetailAsync(string partyId, CancellationToken cancellationToken)
+        => await PostQueryAsync<PartyDetail>(
+            partyId,
+            queryType: "GetParty",
+            projectionType: "PartyDetail",
+            projectionActorType: "PartyDetailProjectionActor",
+            payload: null,
+            cancellationToken).ConfigureAwait(false);
 
-    private static string QueryName(string route)
-        => RouteName(route) ?? route;
-
-    private static string? RouteName(string route)
+    private async Task<PartyErasureStatusRecord?> GetErasureStatusFromPartyDetailAsync(
+        string partyId,
+        CancellationToken cancellationToken)
     {
-        int index = route.LastIndexOf(':');
-        return index >= 0 && index + 1 < route.Length ? route[(index + 1)..] : null;
+        PartyDetail detail = await GetPartyDetailAsync(partyId, cancellationToken).ConfigureAwait(false);
+        return detail.IsErased
+            ? new PartyErasureStatusRecord
+            {
+                PartyId = detail.Id,
+                TenantId = _options.Tenant,
+                Status = "Erased",
+                UpdatedAt = detail.ErasedAt ?? detail.LastModifiedAt,
+                ErasedAt = detail.ErasedAt,
+            }
+            : null;
+    }
+
+    private async Task<IReadOnlyList<ConsentRecord>> GetConsentFromPartyDetailAsync(
+        string partyId,
+        CancellationToken cancellationToken)
+    {
+        PartyDetail detail = await GetPartyDetailAsync(partyId, cancellationToken).ConfigureAwait(false);
+        return detail.ConsentRecords;
     }
 
     private static async Task<string?> ReadCorrelationIdAsync(HttpResponseMessage response, CancellationToken cancellationToken)
@@ -315,12 +320,13 @@ public sealed class HttpAdminPortalGdprClient : IAdminPortalGdprClient
 
     private sealed record PartyQueryPayload(string PartyId);
 
-    private sealed record RetryErasureVerificationCommand
-    {
-        public required string PartyId { get; init; }
-
-        public required string TenantId { get; init; }
-    }
+    private static PartiesClientException ContractUnavailable()
+        => new(
+            (int)HttpStatusCode.NotImplemented,
+            AdminPortalGdprOutcome.ContractUnavailable.ToString(),
+            null,
+            "No EventStore GDPR query contract is available for this operation.",
+            null);
 
     private sealed record EventStoreCommandRequest(
         string MessageId,
