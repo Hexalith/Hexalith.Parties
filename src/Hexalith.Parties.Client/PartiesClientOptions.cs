@@ -10,5 +10,5 @@ public sealed record PartiesClientOptions
     /// <summary>
     /// Gets the tenant identifier placed in EventStore command and query envelopes.
     /// </summary>
-    public string Tenant { get; init; } = "default";
+    public string Tenant { get; init; } = string.Empty;
 }

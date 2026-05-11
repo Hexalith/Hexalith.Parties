@@ -52,9 +52,9 @@ public sealed class HttpPartiesQueryClientTests
         root.GetProperty("domain").GetString().ShouldBe("party");
         root.GetProperty("aggregateId").GetString().ShouldBe("p-1");
         root.GetProperty("entityId").GetString().ShouldBe("p-1");
-        root.GetProperty("projectionType").GetString().ShouldBe("PartyDetail");
-        root.GetProperty("queryType").GetString().ShouldBe("GetParty");
-        root.GetProperty("projectionActorType").GetString().ShouldBe("PartyDetailProjectionActor");
+        root.GetProperty("queryType").GetString().ShouldBe("PartyDetail");
+        root.TryGetProperty("projectionType", out _).ShouldBeFalse();
+        root.TryGetProperty("projectionActorType", out _).ShouldBeFalse();
     }
 
     [Fact]
@@ -100,8 +100,8 @@ public sealed class HttpPartiesQueryClientTests
 
         using JsonDocument body = JsonDocument.Parse(handler.LastRequestBody!);
         JsonElement root = body.RootElement;
-        root.GetProperty("projectionType").GetString().ShouldBe("PartyIndex");
-        root.GetProperty("queryType").GetString().ShouldBe("ListParties");
+        root.GetProperty("queryType").GetString().ShouldBe("PartyIndex");
+        root.TryGetProperty("projectionType", out _).ShouldBeFalse();
         root.TryGetProperty("projectionActorType", out _).ShouldBeFalse();
 
         JsonElement payload = root.GetProperty("payload");
@@ -191,15 +191,21 @@ public sealed class HttpPartiesQueryClientTests
 
         result.Items.Count.ShouldBe(1);
         result.Items[0].Party.Id.ShouldBe("p-42");
+        result.Items[0].Party.Type.ShouldBe(PartyType.Organization);
+        result.Items[0].Matches.Count.ShouldBe(1);
         result.Items[0].Matches[0].MatchedField.ShouldBe("displayName");
+        result.Items[0].Matches[0].MatchType.ShouldBe("prefix");
 
         using JsonDocument body = JsonDocument.Parse(handler.LastRequestBody!);
         JsonElement root = body.RootElement;
-        root.GetProperty("projectionType").GetString().ShouldBe("PartySearch");
-        root.GetProperty("queryType").GetString().ShouldBe("SearchParties");
-        root.GetProperty("payload").GetProperty("query").GetString().ShouldBe("acme");
-        root.GetProperty("payload").GetProperty("mode").GetString().ShouldBe("Hybrid");
-        root.GetProperty("payload").GetProperty("caseId").GetString().ShouldBe("case-42");
+        root.GetProperty("queryType").GetString().ShouldBe("PartySearch");
+        root.TryGetProperty("projectionType", out _).ShouldBeFalse();
+        JsonElement payload = root.GetProperty("payload");
+        payload.GetProperty("query").GetString().ShouldBe("acme");
+        payload.GetProperty("page").GetInt32().ShouldBe(1);
+        payload.GetProperty("pageSize").GetInt32().ShouldBe(20);
+        payload.GetProperty("mode").GetString().ShouldBe("Hybrid");
+        payload.GetProperty("caseId").GetString().ShouldBe("case-42");
         handler.LastRequest!.Headers.Authorization!.Scheme.ShouldBe("Bearer");
         handler.LastRequest.Headers.Authorization.Parameter.ShouldBe("host-token");
     }
@@ -229,6 +235,55 @@ public sealed class HttpPartiesQueryClientTests
         exception.CorrelationId.ShouldBe("corr-q-err");
     }
 
+    [Theory]
+    [InlineData(HttpStatusCode.BadRequest, 400, "urn:hexalith:eventstore:error:validation")]
+    [InlineData(HttpStatusCode.Unauthorized, 401, "urn:hexalith:eventstore:error:unauthorized")]
+    [InlineData(HttpStatusCode.Forbidden, 403, "urn:hexalith:eventstore:error:forbidden")]
+    [InlineData(HttpStatusCode.Conflict, 409, "urn:hexalith:eventstore:error:conflict")]
+    [InlineData(HttpStatusCode.ServiceUnavailable, 503, "urn:hexalith:eventstore:error:degraded")]
+    public async Task QueryErrorResponses_MapToPartiesClientExceptionAsync(
+        HttpStatusCode httpStatusCode,
+        int expectedStatus,
+        string expectedType)
+    {
+        string problemJson = JsonSerializer.Serialize(new
+        {
+            status = expectedStatus,
+            title = "EventStore query failed",
+            type = expectedType,
+            detail = "Safe query failure detail.",
+            correlationId = "corr-query-error",
+        });
+
+        (HttpPartiesQueryClient client, _) = CreateClient(
+            httpStatusCode,
+            problemJson,
+            "application/problem+json");
+
+        PartiesClientException exception = await Should.ThrowAsync<PartiesClientException>(
+            () => client.GetPartyAsync("p-error", CancellationToken.None));
+
+        exception.Status.ShouldBe(expectedStatus);
+        exception.Type.ShouldBe(expectedType);
+        exception.Detail.ShouldBe("Safe query failure detail.");
+        exception.CorrelationId.ShouldBe("corr-query-error");
+    }
+
+    [Fact]
+    public async Task QueryMalformedJsonResponse_ThrowsTypedClientExceptionAsync()
+    {
+        (HttpPartiesQueryClient client, _) = CreateClient(
+            HttpStatusCode.OK,
+            "{",
+            "application/json");
+
+        PartiesClientException exception = await Should.ThrowAsync<PartiesClientException>(
+            () => client.GetPartyAsync("p-malformed", CancellationToken.None));
+
+        exception.Status.ShouldBe(200);
+        exception.Detail.ShouldBe("Response did not contain a valid query payload.");
+    }
+
     [Fact]
     public async Task QuerySuccessWithoutPayload_ThrowsTypedClientExceptionAsync()
     {
@@ -242,6 +297,18 @@ public sealed class HttpPartiesQueryClientTests
         exception.Status.ShouldBe(200);
         exception.Detail.ShouldBe("Response did not contain a valid query payload.");
         exception.CorrelationId.ShouldBe("corr-empty");
+    }
+
+    [Fact]
+    public async Task GetPartyAsync_WhenCancelled_PropagatesCancellationAsync()
+    {
+        var httpClient = new HttpClient(new CancellationHandler()) { BaseAddress = new Uri("https://localhost") };
+        var client = new HttpPartiesQueryClient(httpClient, Options.Create(ClientOptions()));
+        using var cts = new CancellationTokenSource();
+        await cts.CancelAsync();
+
+        await Should.ThrowAsync<OperationCanceledException>(
+            () => client.GetPartyAsync("p-cancel", cts.Token));
     }
 
     private static (HttpPartiesQueryClient Client, HttpPartiesCommandClientTests.MockHandler Handler) CreateClient(
@@ -269,4 +336,13 @@ public sealed class HttpPartiesQueryClientTests
             BaseUrl = "https://localhost",
             Tenant = "tenant-a",
         };
+
+    private sealed class CancellationHandler : HttpMessageHandler
+    {
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK));
+        }
+    }
 }

@@ -54,7 +54,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-05-02
-last_updated: 2026-05-11  # story 12-4 moved review -> done after bmad-code-review deferred the only new live findings to a separate EventStore story/patch: the submodule scope conflict and async derived DomainResult dispatch bug in Hexalith.EventStore. Story 12.4 has no unresolved in-scope patch findings.
+last_updated: 2026-05-11  # story 12-5 moved review -> done after bmad-code-review applied 5 client-wrapper patches: gateway-valid query envelopes, fail-closed tenant config, expanded EventStore error/cancellation tests, restored search pagination/typed-shape assertions, and broader safe problem-detail redaction. Client tests 74/74, contracts tests 57/57, Release solution build clean.
 # sprint_change_proposals:
 #   - sprint-change-proposal-2026-05-07.md  (EventStore-Fronted Architecture Pivot — added Epic 12; paused 10-1-1, 10-2, 10-3)
 project: Hexalith.Parties
@@ -168,7 +168,7 @@ development_status:
   12-2-parties-actor-host: done
   12-3-validation-relocation-and-tenant-auth-ownership: done
   12-4-server-tier-1-tier-2-test-rewrite: done
-  12-5-parties-client-thin-wrapper: review
+  12-5-parties-client-thin-wrapper: done
   12-6-parties-mcp-thin-host: review
   12-7-admin-portal-rebuild-on-frontcomposer: blocked
   12-8-picker-rewrite: blocked

@@ -15,13 +15,17 @@ public static class PartiesClientServiceCollectionExtensions
 
         IConfigurationSection partiesSection = configuration.GetSection("Parties");
         Uri validatedBaseAddress = GetValidatedBaseAddress(partiesSection);
+        _ = GetValidatedTenant(partiesSection);
 
         services
             .AddOptions<PartiesClientOptions>()
             .Bind(partiesSection)
             .Validate(
                 options => Uri.TryCreate(options.BaseUrl, UriKind.Absolute, out _),
-                "Parties:BaseUrl must be an absolute URI.");
+                "Parties:BaseUrl must be an absolute URI.")
+            .Validate(
+                options => !string.IsNullOrWhiteSpace(options.Tenant),
+                "Parties:Tenant configuration is required.");
 
         services.AddHttpClient<IPartiesCommandClient, HttpPartiesCommandClient>(client =>
         {
@@ -52,5 +56,13 @@ public static class PartiesClientServiceCollectionExtensions
         return Uri.TryCreate(baseUrl, UriKind.Absolute, out Uri? baseAddress)
             ? baseAddress
             : throw new InvalidOperationException("Parties:BaseUrl must be an absolute URI.");
+    }
+
+    private static string GetValidatedTenant(IConfigurationSection partiesSection)
+    {
+        string? tenant = partiesSection[nameof(PartiesClientOptions.Tenant)];
+        return string.IsNullOrWhiteSpace(tenant)
+            ? throw new InvalidOperationException("Parties:Tenant configuration is required.")
+            : tenant;
     }
 }

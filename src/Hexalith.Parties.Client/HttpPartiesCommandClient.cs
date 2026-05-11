@@ -1,4 +1,5 @@
 using System.Net.Http.Json;
+using System.Text.RegularExpressions;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -17,6 +18,9 @@ public sealed class HttpPartiesCommandClient : IPartiesCommandClient
 
     private readonly HttpClient _httpClient;
     private readonly PartiesClientOptions _options;
+    private static readonly Regex SensitiveDetailPattern = new(
+        "(?i)(payload|token|authorization|bearer|secret|password|sidecar|dapr|redis|connection\\s*string|connectionstring|api[-_\\s]*key|client[-_\\s]*secret)",
+        RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
     public HttpPartiesCommandClient(HttpClient httpClient)
         : this(httpClient, Options.Create(new PartiesClientOptions()))
@@ -117,7 +121,7 @@ public sealed class HttpPartiesCommandClient : IPartiesCommandClient
         string messageId = Guid.NewGuid().ToString("N");
         var request = new EventStoreCommandRequest(
             MessageId: messageId,
-            Tenant: _options.Tenant,
+            Tenant: GetValidatedTenant(_options),
             Domain: PartyDomain,
             AggregateId: aggregateId,
             CommandType: typeof(TCommand).FullName ?? typeof(TCommand).Name,
@@ -230,23 +234,17 @@ public sealed class HttpPartiesCommandClient : IPartiesCommandClient
             return detail;
         }
 
-        string[] sensitiveMarkers =
-        [
-            "payload",
-            "token",
-            "authorization",
-            "bearer",
-            "secret",
-            "password",
-            "sidecar",
-            "dapr",
-            "redis",
-            "connection string",
-        ];
-
-        return sensitiveMarkers.Any(marker => detail.Contains(marker, StringComparison.OrdinalIgnoreCase))
+        return SensitiveDetailPattern.IsMatch(detail)
             ? "Details withheld by Parties client."
             : detail;
+    }
+
+    internal static string GetValidatedTenant(PartiesClientOptions options)
+    {
+        ArgumentNullException.ThrowIfNull(options);
+        return string.IsNullOrWhiteSpace(options.Tenant)
+            ? throw new InvalidOperationException("Parties:Tenant configuration is required.")
+            : options.Tenant;
     }
 
     private sealed record EventStoreCommandRequest(

@@ -75,11 +75,27 @@ public sealed class DependencyInjectionTests
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
                 ["Parties:BaseUrl"] = "/relative",
+                ["Parties:Tenant"] = "tenant-a",
             })
             .Build();
 
         Should.Throw<InvalidOperationException>(() => services.AddPartiesClient(configuration))
             .Message.ShouldContain("Parties:BaseUrl must be an absolute URI.");
+    }
+
+    [Fact]
+    public void AddPartiesClient_ThrowsWhenTenantIsMissingAsync()
+    {
+        var services = new ServiceCollection();
+        IConfiguration configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["Parties:BaseUrl"] = "https://localhost:5001",
+            })
+            .Build();
+
+        Should.Throw<InvalidOperationException>(() => services.AddPartiesClient(configuration))
+            .Message.ShouldContain("Parties:Tenant configuration is required.");
     }
 
     private static ServiceProvider BuildProvider()

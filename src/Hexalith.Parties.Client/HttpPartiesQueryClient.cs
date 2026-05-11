@@ -16,7 +16,9 @@ public sealed class HttpPartiesQueryClient : IPartiesQueryClient
     private const string PartyDomain = "party";
     private const string QueryGatewayPath = "api/v1/queries";
     private const string ListAggregateId = "parties";
-    private const string DetailProjectionActorType = "PartyDetailProjectionActor";
+    private const string PartyDetailQueryType = "PartyDetail";
+    private const string PartyIndexQueryType = "PartyIndex";
+    private const string PartySearchQueryType = "PartySearch";
 
     private readonly HttpClient _httpClient;
     private readonly PartiesClientOptions _options;
@@ -38,14 +40,14 @@ public sealed class HttpPartiesQueryClient : IPartiesQueryClient
         ArgumentException.ThrowIfNullOrWhiteSpace(partyId);
 
         var request = new SubmitQueryRequest(
-            Tenant: _options.Tenant,
+            Tenant: HttpPartiesCommandClient.GetValidatedTenant(_options),
             Domain: PartyDomain,
             AggregateId: partyId,
-            QueryType: "GetParty",
-            ProjectionType: "PartyDetail",
+            QueryType: PartyDetailQueryType,
+            ProjectionType: null,
             Payload: null,
             EntityId: partyId,
-            ProjectionActorType: DetailProjectionActorType);
+            ProjectionActorType: null);
 
         return PostQueryAsync<PartyDetail>(request, ct);
     }
@@ -72,11 +74,11 @@ public sealed class HttpPartiesQueryClient : IPartiesQueryClient
             FormatDate(modifiedBefore));
 
         var request = new SubmitQueryRequest(
-            Tenant: _options.Tenant,
+            Tenant: HttpPartiesCommandClient.GetValidatedTenant(_options),
             Domain: PartyDomain,
             AggregateId: ListAggregateId,
-            QueryType: "ListParties",
-            ProjectionType: "PartyIndex",
+            QueryType: PartyIndexQueryType,
+            ProjectionType: null,
             Payload: JsonSerializer.SerializeToElement(payload, HttpPartiesCommandClient.JsonOptions),
             EntityId: ListAggregateId);
 
@@ -94,11 +96,11 @@ public sealed class HttpPartiesQueryClient : IPartiesQueryClient
     {
         var payload = new SearchPartiesQueryPayload(query, page, pageSize, mode, caseId);
         var request = new SubmitQueryRequest(
-            Tenant: _options.Tenant,
+            Tenant: HttpPartiesCommandClient.GetValidatedTenant(_options),
             Domain: PartyDomain,
             AggregateId: ListAggregateId,
-            QueryType: "SearchParties",
-            ProjectionType: "PartySearch",
+            QueryType: PartySearchQueryType,
+            ProjectionType: null,
             Payload: JsonSerializer.SerializeToElement(payload, HttpPartiesCommandClient.JsonOptions),
             EntityId: ListAggregateId);
 

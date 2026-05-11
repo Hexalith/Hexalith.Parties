@@ -276,6 +276,11 @@ These three items were marked "Deferred to follow-up story 10-1.1" in the pass-1
 - `PartyCreated` arriving for a party whose detail state is non-null is silently no-op'd — the existing test pins this behavior intentionally for replay idempotency, but if state was seeded by an out-of-order non-creation event first, `NameHistory` stays empty forever and the temporal endpoint returns 404 indefinitely. Needs a design discussion on projection-rebuild semantics before flipping the guard. [src/Hexalith.Parties.Projections/Handlers/PartyDetailProjectionHandler.cs:15]
 - `NameHistory` grows unbounded inside `PartyDetail` actor state and `GET /name-history` has no pagination or size guard — once the per-key state payload exceeds the Dapr state-store limit the projection wedges. Needs a GDPR retention policy + pagination protocol designed with the consent/legal owners. [src/Hexalith.Parties.Projections/Handlers/PartyDetailProjectionHandler.cs:130-146; src/Hexalith.Parties/Controllers/PartiesController.cs:354-382]
 
+## Deferred from: code review of story 12-5-parties-client-thin-wrapper (2026-05-11)
+
+- Command gateway request DTO remains duplicated locally — EventStore currently keeps the API-facing command request DTO in the service assembly rather than the contracts package, so the local client record matches today's shape but remains a cross-package contract drift risk. [_bmad-output/implementation-artifacts/12-5-parties-client-thin-wrapper.md:200]
+- Query paging and blank-search input validation remains unspecified — page/page-size bounds and blank search handling were not introduced by this transport rewrite and should be resolved as an API behavior policy rather than guessed in the thin wrapper. [src/Hexalith.Parties.Client/HttpPartiesQueryClient.cs:53]
+
 ## Deferred from: code review of story 12-2-parties-actor-host (2026-05-10)
 
 - Source-text fitness scans (`tests/Hexalith.Parties.Tests/FitnessTests/ArchitecturalFitnessTests.cs`) use raw `string.Contains`/regex without stripping C# comments and string literals — XML-doc references to `MapMcp`, `McpServerTool`, `MapPost`, or `IProjectionActor` would trigger false positives. Pre-existing pattern across the fitness suite; bundle into a future fitness-test hardening pass that adds a comment/string stripper.

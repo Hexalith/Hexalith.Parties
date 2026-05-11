@@ -1,6 +1,6 @@
 # Story 12.5: Parties Client Thin Wrapper
 
-Status: review
+Status: done
 
 ## Story
 
@@ -80,6 +80,16 @@ so that I can submit Parties commands and queries with strongly typed payloads w
   - [x] Run any focused EventStore client/testing tests required by the new dependency seam.
   - [x] Run `dotnet build Hexalith.Parties.slnx`.
   - [x] If Wave 1 is still active or dirty in the working tree, record that this story was verified only to the extent possible against the current gateway contract.
+
+### Review Findings
+
+- [x] [Review][Patch] Query envelopes target invalid or unproven EventStore query metadata [src/Hexalith.Parties.Client/HttpPartiesQueryClient.cs:40] — `ProjectionType` is sent as `PartyDetail`/`PartyIndex`/`PartySearch`, but EventStore validates projection types as lowercase tenant/domain-style identifiers, and Story 12.4 only proved `queryType = "PartyDetail"` with default `ProjectionType = "party"`. The client also sends `ProjectionActorType = "PartyDetailProjectionActor"`, while EventStore's `QueryRouter` invokes `IProjectionActor.QueryAsync` and Parties projection actors intentionally implement `IPartyDetailProjectionActor`/`IPartyIndexProjectionActor`, not the EventStore generic projection contract. List/search payload filtering is not proven by the Wave 1 adapter either. Applied: client query envelopes no longer send invalid projection type or projection actor metadata; query type constants are aligned to the EventStore gateway-tested shape and tests now assert the corrected envelope.
+- [x] [Review][Patch] Missing tenant configuration silently falls back to `default` [src/Hexalith.Parties.Client/PartiesClientOptions.cs:13] — `PartiesClientOptions.Tenant` defaults to `"default"` and `AddPartiesClient` validates only `BaseUrl`, so a missing tenant config can send real command/query traffic to the wrong tenant instead of failing closed. Applied: tenant defaults to empty, DI validates `Parties:Tenant`, and command/query sends fail closed when manually constructed without a tenant.
+- [x] [Review][Patch] Required EventStore error-path coverage is incomplete [tests/Hexalith.Parties.Client.Tests/HttpPartiesCommandClientTests.cs:129] — the rewritten tests cover one 404, one sensitive 422 detail, malformed accepted command response, and missing query payload, but the story explicitly required validation/problem details, not-found, conflict, unauthorized/forbidden, malformed query payloads, and cancellation propagation. Applied: command and query client tests now cover validation, unauthorized, forbidden, conflict, degraded responses, malformed query JSON, and cancellation propagation.
+- [x] [Review][Patch] Search query payload assertions no longer prove pagination or full typed result shape [tests/Hexalith.Parties.Client.Tests/HttpPartiesQueryClientTests.cs:172] — the old search test asserted `page` and `pageSize`, and typed result assertions for nested party type, match count, and match type were removed. A regression that drops search pagination or corrupts nested match data would now pass. Applied: search tests assert payload pagination and nested typed result shape.
+- [x] [Review][Patch] Problem detail sanitization misses common secret spellings [src/Hexalith.Parties.Client/HttpPartiesCommandClient.cs:233] — `SanitizeDetail` redacts `connection string` but not `connectionString`, `apiKey`, `client_secret`, or similar gateway secret spellings, despite AC5's no-token/no-sidecar/no-protected-detail leakage constraint. Applied: sanitization now catches common API-key/client-secret/connection-string spellings.
+- [x] [Review][Defer] Command gateway request DTO remains duplicated locally [_bmad-output/implementation-artifacts/12-5-parties-client-thin-wrapper.md:200] — deferred, EventStore currently keeps the API-facing command request DTO in the service assembly rather than the contracts package, so the local client record matches today's shape but remains a cross-package contract drift risk.
+- [x] [Review][Defer] Query paging and blank-search input validation remains unspecified [src/Hexalith.Parties.Client/HttpPartiesQueryClient.cs:53] — deferred, page/page-size bounds and blank search handling were not introduced by this transport rewrite and should be resolved as an API behavior policy rather than guessed in the thin wrapper.
 
 ## Dev Notes
 
@@ -191,6 +201,7 @@ Codex GPT-5
 - 2026-05-10: Contract tests passed: `dotnet test tests/Hexalith.Parties.Contracts.Tests/Hexalith.Parties.Contracts.Tests.csproj --no-restore` (42 passed, 15 pre-existing skipped).
 - 2026-05-10: Full solution build passed: `dotnet build Hexalith.Parties.slnx --no-restore`.
 - 2026-05-10: Full no-build regression passed: `dotnet test Hexalith.Parties.slnx --no-build` (all projects green; integration health skips remain pre-existing).
+- 2026-05-11: Code-review remediation passed: `dotnet test tests\Hexalith.Parties.Client.Tests\Hexalith.Parties.Client.Tests.csproj --no-restore --configuration Release -p:UseSharedCompilation=false` (74/74), `dotnet test tests\Hexalith.Parties.Contracts.Tests\Hexalith.Parties.Contracts.Tests.csproj --no-restore --configuration Release -p:UseSharedCompilation=false` (57/57), and `dotnet build Hexalith.Parties.slnx --no-restore --configuration Release -p:UseSharedCompilation=false`.
 
 ### Completion Notes List
 
@@ -222,6 +233,7 @@ Codex GPT-5
 | 2026-05-10 | 0.2 | Party-mode review blocked normal implementation until Wave 1 contracts land/freeze and added guardrails for EventStore boundary, source compatibility, old-route removal, dependency exclusions, and safe error mapping. | Codex |
 | 2026-05-10 | 0.3 | Started implementation after predecessor gate recheck confirmed Story 12.4 is no longer blocked and the Wave 1 command/query envelope is available for the client rewrite. | Codex |
 | 2026-05-10 | 1.0 | Rewrote Parties client as an EventStore command/query gateway wrapper, preserved public typed interfaces, added tenant/gateway options, hardened client boundary tests, and completed required validation. | Codex |
+| 2026-05-11 | 1.1 | Applied code-review remediation: gateway-valid query envelopes, fail-closed tenant configuration, expanded error/cancellation coverage, stronger search assertions, and broader safe-detail redaction. | Codex |
 | 2026-05-09 | 0.1 | Created ready-for-dev story through BMAD pre-dev hardening automation. | Codex |
 
 ## Party-Mode Review

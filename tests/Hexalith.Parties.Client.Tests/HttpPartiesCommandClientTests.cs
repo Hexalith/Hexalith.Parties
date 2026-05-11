@@ -162,7 +162,7 @@ public sealed class HttpPartiesCommandClientTests
             status = 422,
             title = "Validation failed",
             type = "urn:hexalith:eventstore:error:validation",
-            detail = "payload.personDetails.email=ada@example.test token=secret",
+            detail = "payload.personDetails.email=ada@example.test apiKey=abc connectionString=redis://host client_secret=secret",
             correlationId = "corr-sensitive",
         });
 
@@ -179,8 +179,43 @@ public sealed class HttpPartiesCommandClientTests
                 CancellationToken.None));
 
         exception.Detail.ShouldNotBeNull().ShouldNotContain("ada@example.test");
+        exception.Detail.ShouldNotBeNull().ShouldNotContain("abc");
+        exception.Detail.ShouldNotBeNull().ShouldNotContain("redis://host");
         exception.Detail.ShouldNotBeNull().ShouldNotContain("secret");
         exception.CorrelationId.ShouldBe("corr-sensitive");
+    }
+
+    [Theory]
+    [InlineData(HttpStatusCode.BadRequest, 400, "urn:hexalith:eventstore:error:validation")]
+    [InlineData(HttpStatusCode.Unauthorized, 401, "urn:hexalith:eventstore:error:unauthorized")]
+    [InlineData(HttpStatusCode.Forbidden, 403, "urn:hexalith:eventstore:error:forbidden")]
+    [InlineData(HttpStatusCode.Conflict, 409, "urn:hexalith:eventstore:error:conflict")]
+    [InlineData(HttpStatusCode.ServiceUnavailable, 503, "urn:hexalith:eventstore:error:degraded")]
+    public async Task CommandErrorResponses_MapToPartiesClientExceptionAsync(
+        HttpStatusCode httpStatusCode,
+        int expectedStatus,
+        string expectedType)
+    {
+        string problemJson = JsonSerializer.Serialize(new
+        {
+            status = expectedStatus,
+            title = "EventStore command failed",
+            type = expectedType,
+            detail = "Safe command failure detail.",
+            correlationId = "corr-command-error",
+        });
+
+        var handler = new MockHandler(httpStatusCode, problemJson, "application/problem+json");
+        var httpClient = new HttpClient(handler) { BaseAddress = new Uri("https://localhost") };
+        var client = new HttpPartiesCommandClient(httpClient, Options.Create(ClientOptions()));
+
+        PartiesClientException exception = await Should.ThrowAsync<PartiesClientException>(
+            () => client.DeactivatePartyAsync("p-error", CancellationToken.None));
+
+        exception.Status.ShouldBe(expectedStatus);
+        exception.Type.ShouldBe(expectedType);
+        exception.Detail.ShouldBe("Safe command failure detail.");
+        exception.CorrelationId.ShouldBe("corr-command-error");
     }
 
     [Fact]
@@ -198,6 +233,18 @@ public sealed class HttpPartiesCommandClientTests
 
         exception.Status.ShouldBe(202);
         exception.Detail.ShouldBe("Response did not contain a valid correlationId.");
+    }
+
+    [Fact]
+    public async Task DeactivatePartyAsync_WhenCancelled_PropagatesCancellationAsync()
+    {
+        var httpClient = new HttpClient(new CancellationHandler()) { BaseAddress = new Uri("https://localhost") };
+        var client = new HttpPartiesCommandClient(httpClient, Options.Create(ClientOptions()));
+        using var cts = new CancellationTokenSource();
+        await cts.CancelAsync();
+
+        await Should.ThrowAsync<OperationCanceledException>(
+            () => client.DeactivatePartyAsync("p-cancel", cts.Token));
     }
 
     private static async Task InvokeRouteMethodAsync(HttpPartiesCommandClient client, string methodName)
@@ -311,6 +358,15 @@ public sealed class HttpPartiesCommandClientTests
             {
                 Content = new StringContent(responseBody, Encoding.UTF8, contentType),
             };
+        }
+    }
+
+    private sealed class CancellationHandler : HttpMessageHandler
+    {
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            return Task.FromResult(new HttpResponseMessage(HttpStatusCode.Accepted));
         }
     }
 }
