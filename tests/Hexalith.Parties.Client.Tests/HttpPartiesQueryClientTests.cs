@@ -176,7 +176,18 @@ public sealed class HttpPartiesQueryClientTests
             HttpStatusCode.OK,
             QueryResponse(expectedResult));
 
-        PagedResult<PartySearchResult> result = await client.SearchPartiesAsync("acme", 1, 20, CancellationToken.None);
+        PagedResult<PartySearchResult> result = await client.SearchPartiesAsync(
+            "acme",
+            1,
+            20,
+            CancellationToken.None,
+            mode: "Hybrid",
+            caseId: "case-42",
+            requestCustomizer: (request, _) =>
+            {
+                request.Headers.Authorization = new("Bearer", "host-token");
+                return ValueTask.CompletedTask;
+            });
 
         result.Items.Count.ShouldBe(1);
         result.Items[0].Party.Id.ShouldBe("p-42");
@@ -187,6 +198,10 @@ public sealed class HttpPartiesQueryClientTests
         root.GetProperty("projectionType").GetString().ShouldBe("PartySearch");
         root.GetProperty("queryType").GetString().ShouldBe("SearchParties");
         root.GetProperty("payload").GetProperty("query").GetString().ShouldBe("acme");
+        root.GetProperty("payload").GetProperty("mode").GetString().ShouldBe("Hybrid");
+        root.GetProperty("payload").GetProperty("caseId").GetString().ShouldBe("case-42");
+        handler.LastRequest!.Headers.Authorization!.Scheme.ShouldBe("Bearer");
+        handler.LastRequest.Headers.Authorization.Parameter.ShouldBe("host-token");
     }
 
     [Fact]

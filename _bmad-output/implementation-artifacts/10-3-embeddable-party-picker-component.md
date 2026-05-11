@@ -1,6 +1,6 @@
 # Story 10.3: Embeddable Party Picker Component
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -104,6 +104,13 @@ so that my users can search and select parties without building a custom party s
   - [x] Run affected FrontComposer tests if FrontComposer adapters are changed.
   - [x] Run `dotnet test tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj --configuration Release` if backend API behavior changes.
   - [x] Run `dotnet build Hexalith.Parties.slnx --configuration Release`.
+
+### Review Findings
+
+- [x] [Review][Decision] Host auth injection is presence-checked but not applied to the outgoing query — resolved by extending the typed query client search method with an optional request customizer and composing picker host token/request customization into the outgoing EventStore gateway request.
+- [x] [Review][Decision] Token/provider/customizer changes are not a cleanup boundary unless their nullness changes — resolved by adding `AuthContextKey`, fingerprinting the direct access-token value without retaining token text, and including delegate identity in the component context signature.
+- [x] [Review][Patch] SearchMode and CaseId are exposed and documented but ignored by the typed-client search path [src/Hexalith.Parties.Picker/Components/PartyPicker.razor:112]
+- [x] [Review][Patch] Local-only/degraded coverage is now a misleading success-only assertion instead of proving metadata-unavailable or degraded-state behavior [tests/Hexalith.Parties.Picker.Tests/Components/PartyPickerComponentTests.cs:72]
 
 ## Dev Notes
 
@@ -268,6 +275,7 @@ GPT-5 Codex
 - 2026-05-05T19:25:00+02:00 - `dotnet build Hexalith.Parties.slnx --configuration Release` blocked by pre-existing unrelated untracked 11.4 files in `tests/Hexalith.Parties.DeployValidation.Tests` and `tests/Hexalith.Parties.Tests`.
 - 2026-05-10T20:19:47+02:00 - `dotnet build Hexalith.Parties.slnx --configuration Release` passed with 0 warnings and 0 errors.
 - 2026-05-10T20:19:47+02:00 - `dotnet test Hexalith.Parties.slnx --configuration Release --no-build` passed: 902 tests, 6 expected integration skips.
+- 2026-05-11 - BMad code review applied picker/client auth-boundary patches. Focused picker tests passed 30/30, client tests passed 60/60, AdminPortal tests passed 67/67, and targeted Client/Picker/AdminPortal Release builds passed. Full solution Release build remains blocked by unrelated Hexalith.Parties.Security missing-type/ref-assembly failures.
 
 ### Completion Notes List
 
@@ -278,6 +286,7 @@ GPT-5 Codex
 - Added adopter documentation and README link for Blazor and JavaScript host usage, privacy rules, search behavior, and theming.
 - Added picker tests for approved REST calls, page-size bounds, host authorization, status header mapping, non-leaking failures, encoded rendering, localized labels, context cleanup, event payload privacy, and package boundary guardrails.
 - Validation complete: Release solution build passed with 0 warnings and 0 errors; full no-build regression passed with 902 tests and 6 expected integration skips.
+- BMad code review findings resolved: host auth/request customization now flows through the typed client request hook; search mode/case id are forwarded in query payloads; token/auth context changes clear picker UI state; metadata-unavailable coverage no longer claims local-only/degraded behavior.
 
 ### Change Log
 
@@ -290,6 +299,8 @@ GPT-5 Codex
 - Hexalith.Parties.slnx
 - README.md
 - docs/frontend/party-picker.md
+- src/Hexalith.Parties.Client/Abstractions/IPartiesQueryClient.cs
+- src/Hexalith.Parties.Client/HttpPartiesQueryClient.cs
 - src/Hexalith.Parties.Picker/Hexalith.Parties.Picker.csproj
 - src/Hexalith.Parties.Picker/_Imports.razor
 - src/Hexalith.Parties.Picker/Components/PartyPicker.razor
@@ -313,5 +324,7 @@ GPT-5 Codex
 - tests/Hexalith.Parties.Picker.Tests/Services/PartyPickerPackagingTests.cs
 - tests/Hexalith.Parties.Picker.Tests/Services/PartyPickerTestData.cs
 - tests/Hexalith.Parties.Picker.Tests/Services/RecordingHttpMessageHandler.cs
+- tests/Hexalith.Parties.AdminPortal.Tests/Services/PartiesAdminPortalApiClientTests.cs
+- tests/Hexalith.Parties.Client.Tests/HttpPartiesQueryClientTests.cs
 - _bmad-output/implementation-artifacts/10-3-embeddable-party-picker-component.md
 - _bmad-output/implementation-artifacts/sprint-status.yaml

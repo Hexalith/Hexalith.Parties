@@ -717,7 +717,14 @@ public sealed class PartiesAdminPortalApiClientTests
             return Task.FromResult(ListResult ?? new PagedResult<PartyIndexEntry> { Items = [] });
         }
 
-        public Task<PagedResult<PartySearchResult>> SearchPartiesAsync(string query, int page, int pageSize, CancellationToken ct)
+        public Task<PagedResult<PartySearchResult>> SearchPartiesAsync(
+            string query,
+            int page,
+            int pageSize,
+            CancellationToken ct,
+            string? mode = null,
+            string? caseId = null,
+            Func<HttpRequestMessage, CancellationToken, ValueTask>? requestCustomizer = null)
         {
             ct.ThrowIfCancellationRequested();
             SearchCallCount++;

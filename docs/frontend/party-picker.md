@@ -14,6 +14,7 @@ Render the component with host-owned authentication:
 
 ```razor
 <PartyPicker ContextKey="@($"{TenantContextVersion}:{UserContextVersion}")"
+             AuthContextKey="@AccessTokenVersion"
              AccessTokenProvider="GetAccessTokenAsync"
              SearchMode="hybrid"
              PageSize="10"
@@ -42,6 +43,7 @@ Then configure it from the JavaScript host:
 const picker = document.getElementById("party-picker");
 picker.accessToken = await getTokenFromHost();
 picker.contextKey = `${tenantContextVersion}:${userContextVersion}`;
+picker.authContextKey = accessTokenVersion;
 picker.addEventListener("party-selected", event => {
   const selectedPartyId = event.detail.partyId;
 });
@@ -61,7 +63,7 @@ Until Story 12.5 exposes/freeze rich search metadata through the typed client, m
 
 Hosts must provide either an access-token provider, an in-memory token property for the custom element, or a request customizer. The picker does not refresh tokens and does not persist tokens.
 
-Use `ContextKey` to represent tenant, signed-in user, and host configuration changes. When it changes, the picker clears visible results, selected preview data, and pending requests before searching again.
+Use `ContextKey` to represent tenant, signed-in user, and host configuration changes. Use `AuthContextKey` for a non-sensitive authentication version when the host uses a token provider whose delegate instance does not change. When either key changes, the picker clears visible results, selected preview data, and pending requests before searching again.
 
 `ApiBaseUrl` remains on the component for source compatibility with existing hosts, but request routing is owned by the configured `Hexalith.Parties.Client` service. Do not point `ApiBaseUrl` at a Parties actor-host REST endpoint or rely on it for transport selection.
 

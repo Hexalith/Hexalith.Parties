@@ -1,4 +1,5 @@
 using System.Net;
+using System.Net.Http.Headers;
 
 using Hexalith.Parties.Client;
 using Hexalith.Parties.Client.Abstractions;
@@ -37,7 +38,10 @@ public sealed class PartyPickerApiClient(IPartiesQueryClient queryClient)
                     query,
                     Math.Max(1, request.Page),
                     BoundPageSize(request.PageSize),
-                    cancellationToken)
+                    cancellationToken,
+                    request.Mode?.ToString().ToLowerInvariant(),
+                    request.CaseId,
+                    CreateRequestCustomizer(request))
                 .ConfigureAwait(false);
 
             return ToSearchResponse(request, payload);
@@ -72,6 +76,28 @@ public sealed class PartyPickerApiClient(IPartiesQueryClient queryClient)
         }
 
         return request.RequestCustomizer is not null;
+    }
+
+    private static Func<HttpRequestMessage, CancellationToken, ValueTask>? CreateRequestCustomizer(PartyPickerSearchRequest request)
+    {
+        if (request.AccessTokenProvider is null)
+        {
+            return request.RequestCustomizer;
+        }
+
+        return async (message, cancellationToken) =>
+        {
+            string? token = await request.AccessTokenProvider(cancellationToken).ConfigureAwait(false);
+            if (!string.IsNullOrWhiteSpace(token))
+            {
+                message.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            }
+
+            if (request.RequestCustomizer is not null)
+            {
+                await request.RequestCustomizer(message, cancellationToken).ConfigureAwait(false);
+            }
+        };
     }
 
     private static PartyPickerSearchResponse AuthenticationRequired(PartyPickerSearchRequest request)

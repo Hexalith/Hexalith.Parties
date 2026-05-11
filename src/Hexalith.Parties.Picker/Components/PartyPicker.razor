@@ -100,6 +100,9 @@
     public string? ContextKey { get; set; }
 
     [Parameter]
+    public string? AuthContextKey { get; set; }
+
+    [Parameter]
     public string? SelectedPartyId { get; set; }
 
     [Parameter]
@@ -163,14 +166,15 @@
             "|",
             ApiBaseUrl,
             ContextKey,
+            AuthContextKey,
             SearchMode,
             CaseId,
             PageSize.ToString(System.Globalization.CultureInfo.InvariantCulture),
             Disabled.ToString(),
             ReadOnly.ToString(),
-            string.IsNullOrWhiteSpace(AccessToken).ToString(),
-            (AccessTokenProvider is null).ToString(),
-            (RequestCustomizer is null).ToString());
+            TokenFingerprint(AccessToken),
+            DelegateFingerprint(AccessTokenProvider),
+            DelegateFingerprint(RequestCustomizer));
 
         if (_previousContextSignature is not null && !string.Equals(_previousContextSignature, signature, StringComparison.Ordinal))
         {
@@ -268,6 +272,17 @@
         cancellationToken.ThrowIfCancellationRequested();
         return ValueTask.FromResult(AccessToken);
     }
+
+    private static string TokenFingerprint(string? token)
+        => string.IsNullOrWhiteSpace(token)
+            ? "none"
+            : StringComparer.Ordinal.GetHashCode(token).ToString(System.Globalization.CultureInfo.InvariantCulture);
+
+    private static string DelegateFingerprint(Delegate? handler)
+        => handler is null
+            ? "none"
+            : System.Runtime.CompilerServices.RuntimeHelpers.GetHashCode(handler)
+                .ToString(System.Globalization.CultureInfo.InvariantCulture);
 
     private async Task RetryAsync()
     {

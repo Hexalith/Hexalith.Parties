@@ -47,6 +47,39 @@ public sealed class PartyPickerApiClientTests
         response.State.ShouldBe(PartyPickerSearchState.Ready);
         response.Metadata.SearchStatus.ShouldBe("Unavailable");
         queryClient.SearchCalls.ShouldBe([new SearchCall("ada", 2, PartyPickerDefaults.MaxPageSize)]);
+        queryClient.LastMode.ShouldBe("semantic");
+        queryClient.LastCaseId.ShouldBe("case-42");
+        queryClient.LastRequestCustomizer.ShouldNotBeNull();
+
+        using var message = new HttpRequestMessage(HttpMethod.Post, "https://localhost/api/v1/queries");
+        await queryClient.LastRequestCustomizer(message, CancellationToken.None);
+        message.Headers.Authorization!.Scheme.ShouldBe("Bearer");
+        message.Headers.Authorization.Parameter.ShouldBe("token-from-host");
+    }
+
+    [Fact]
+    public async Task SearchAsync_ComposesHostRequestCustomizerAfterBearerToken()
+    {
+        var queryClient = new RecordingPartiesQueryClient();
+        queryClient.Enqueue(SearchResultPage(PartyPickerTestData.Result()));
+        var client = new PartyPickerApiClient(queryClient);
+
+        await client.SearchAsync(new PartyPickerSearchRequest
+        {
+            Query = "ada",
+            AccessTokenProvider = _ => ValueTask.FromResult<string?>("token-from-host"),
+            RequestCustomizer = (message, _) =>
+            {
+                message.Headers.Add("X-Host-Context", "tenant-a");
+                return ValueTask.CompletedTask;
+            },
+        }, CancellationToken.None);
+
+        using var message = new HttpRequestMessage(HttpMethod.Post, "https://localhost/api/v1/queries");
+        await queryClient.LastRequestCustomizer!(message, CancellationToken.None);
+
+        message.Headers.Authorization!.Parameter.ShouldBe("token-from-host");
+        message.Headers.GetValues("X-Host-Context").ShouldBe(["tenant-a"]);
     }
 
     [Fact]
@@ -143,9 +176,25 @@ public sealed class PartyPickerApiClientTests
             CancellationToken ct)
             => throw new NotSupportedException();
 
-        public Task<PagedResult<PartySearchResult>> SearchPartiesAsync(string query, int page, int pageSize, CancellationToken ct)
+        public Func<HttpRequestMessage, CancellationToken, ValueTask>? LastRequestCustomizer { get; private set; }
+
+        public string? LastMode { get; private set; }
+
+        public string? LastCaseId { get; private set; }
+
+        public Task<PagedResult<PartySearchResult>> SearchPartiesAsync(
+            string query,
+            int page,
+            int pageSize,
+            CancellationToken ct,
+            string? mode = null,
+            string? caseId = null,
+            Func<HttpRequestMessage, CancellationToken, ValueTask>? requestCustomizer = null)
         {
             SearchCalls.Add(new SearchCall(query, page, pageSize));
+            LastMode = mode;
+            LastCaseId = caseId;
+            LastRequestCustomizer = requestCustomizer;
 
             if (ThrowOnSearch is not null)
             {

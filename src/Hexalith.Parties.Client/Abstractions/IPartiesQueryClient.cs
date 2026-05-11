@@ -18,5 +18,12 @@ public interface IPartiesQueryClient
         DateTimeOffset? modifiedBefore,
         CancellationToken ct);
 
-    Task<PagedResult<PartySearchResult>> SearchPartiesAsync(string query, int page, int pageSize, CancellationToken ct);
+    Task<PagedResult<PartySearchResult>> SearchPartiesAsync(
+        string query,
+        int page,
+        int pageSize,
+        CancellationToken ct,
+        string? mode = null,
+        string? caseId = null,
+        Func<HttpRequestMessage, CancellationToken, ValueTask>? requestCustomizer = null);
 }

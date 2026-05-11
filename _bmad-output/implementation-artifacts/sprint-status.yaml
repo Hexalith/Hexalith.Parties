@@ -54,7 +54,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-05-02
-last_updated: 2026-05-11  # story 10-2 moved review -> done after code-review chunks 2/3 patch findings were applied: GDPR client command envelopes now use real contract command types, unavailable authoritative GDPR backend contracts fail closed with bounded ContractUnavailable outcomes, safe PartyDetail projection reads cover consent/erased status, transport tests assert EventStore request shape, and stale GDPR UI continuations are gated by captured party/tenant/token context. Focused Client/AdminPortal/Contracts tests green; Release build clean; full no-build regression 934 passed / 6 expected DAPR/Aspire health skips.
+last_updated: 2026-05-11  # story 10-3 moved review -> done after bmad-code-review applied picker/client auth-boundary findings: typed query search now supports request customization, picker host token/request customization flows to the EventStore gateway request, SearchMode/CaseId are forwarded, auth context changes clear visible picker state, and metadata-unavailable coverage was corrected. Picker tests 30/30, Client tests 60/60, AdminPortal tests 67/67, targeted Client/Picker/AdminPortal Release builds clean. Full solution Release build remains blocked by unrelated Hexalith.Parties.Security missing-type/ref-assembly failures.
 # sprint_change_proposals:
 #   - sprint-change-proposal-2026-05-07.md  (EventStore-Fronted Architecture Pivot — added Epic 12; paused 10-1-1, 10-2, 10-3)
 project: Hexalith.Parties
@@ -154,7 +154,7 @@ development_status:
   10-1-admin-portal-browse-search-and-inspect: done
   10-1-1-admin-portal-frontcomposer-and-tenants-integration: done         # Closed via bmad-code-review 2026-05-10 against 12-7 successor evidence
   10-2-admin-portal-gdpr-operations: done                                 # Closed after code-review chunks 2/3 patch findings applied; consumer-facing successor remains 12-7
-  10-3-embeddable-party-picker-component: review                          # PAUSED — superseded by 12-8
+  10-3-embeddable-party-picker-component: done                            # Closed after bmad-code-review; consumer-facing successor remains 12-8
   epic-10-retrospective: optional
 
   # Epic 12: EventStore-Fronted Architecture Pivot (11 stories)

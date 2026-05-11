@@ -83,9 +83,16 @@ public sealed class HttpPartiesQueryClient : IPartiesQueryClient
         return PostQueryAsync<PagedResult<PartyIndexEntry>>(request, ct);
     }
 
-    public Task<PagedResult<PartySearchResult>> SearchPartiesAsync(string query, int page, int pageSize, CancellationToken ct)
+    public Task<PagedResult<PartySearchResult>> SearchPartiesAsync(
+        string query,
+        int page,
+        int pageSize,
+        CancellationToken ct,
+        string? mode = null,
+        string? caseId = null,
+        Func<HttpRequestMessage, CancellationToken, ValueTask>? requestCustomizer = null)
     {
-        var payload = new SearchPartiesQueryPayload(query, page, pageSize);
+        var payload = new SearchPartiesQueryPayload(query, page, pageSize, mode, caseId);
         var request = new SubmitQueryRequest(
             Tenant: _options.Tenant,
             Domain: PartyDomain,
@@ -95,13 +102,26 @@ public sealed class HttpPartiesQueryClient : IPartiesQueryClient
             Payload: JsonSerializer.SerializeToElement(payload, HttpPartiesCommandClient.JsonOptions),
             EntityId: ListAggregateId);
 
-        return PostQueryAsync<PagedResult<PartySearchResult>>(request, ct);
+        return PostQueryAsync<PagedResult<PartySearchResult>>(request, ct, requestCustomizer);
     }
 
-    private async Task<T> PostQueryAsync<T>(SubmitQueryRequest request, CancellationToken ct)
+    private async Task<T> PostQueryAsync<T>(
+        SubmitQueryRequest request,
+        CancellationToken ct,
+        Func<HttpRequestMessage, CancellationToken, ValueTask>? requestCustomizer = null)
     {
+        using var httpRequest = new HttpRequestMessage(HttpMethod.Post, QueryGatewayPath)
+        {
+            Content = JsonContent.Create(request, options: HttpPartiesCommandClient.JsonOptions),
+        };
+
+        if (requestCustomizer is not null)
+        {
+            await requestCustomizer(httpRequest, ct).ConfigureAwait(false);
+        }
+
         using HttpResponseMessage response = await _httpClient
-            .PostAsJsonAsync(QueryGatewayPath, request, HttpPartiesCommandClient.JsonOptions, ct)
+            .SendAsync(httpRequest, ct)
             .ConfigureAwait(false);
 
         if (!response.IsSuccessStatusCode)
@@ -159,5 +179,5 @@ public sealed class HttpPartiesQueryClient : IPartiesQueryClient
         string? ModifiedAfter,
         string? ModifiedBefore);
 
-    private sealed record SearchPartiesQueryPayload(string Query, int Page, int PageSize);
+    private sealed record SearchPartiesQueryPayload(string Query, int Page, int PageSize, string? Mode, string? CaseId);
 }

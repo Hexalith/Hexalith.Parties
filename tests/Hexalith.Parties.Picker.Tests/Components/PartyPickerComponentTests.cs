@@ -69,7 +69,7 @@ public sealed class PartyPickerComponentTests : BunitContext
     }
 
     [Fact]
-    public void PartyPicker_LocalOnlyAndDegradedStates_AreVisibleAndBounded()
+    public void PartyPicker_MetadataUnavailable_DoesNotClaimLocalOnlyOrDegradedSearch()
     {
         var queryClient = new PartyPickerApiClientTests.RecordingPartiesQueryClient();
         queryClient.Enqueue(SearchResultPage(PartyPickerTestData.Result()));
@@ -85,7 +85,8 @@ public sealed class PartyPickerComponentTests : BunitContext
         cut.WaitForAssertion(() =>
         {
             cut.Find(".hx-party-picker__status").TextContent.ShouldBeEmpty();
-            cut.Markup.ShouldNotContain("local fallback");
+            cut.Markup.ShouldNotContain("Local search results");
+            cut.Markup.ShouldNotContain("Limited search results");
         });
     }
 
@@ -135,6 +136,33 @@ public sealed class PartyPickerComponentTests : BunitContext
             [nameof(PartyPicker.DebounceMilliseconds)] = 1,
             [nameof(PartyPicker.DispatchDomEvents)] = false,
             [nameof(PartyPicker.SelectedPartyChanged)] = EventCallback.Factory.Create<PartyPickerSelection?>(this, value => selected = value),
+        })));
+
+        cut.FindAll("[role=\"option\"]").ShouldBeEmpty();
+        cut.Markup.ShouldNotContain("Ada Lovelace");
+    }
+
+    [Fact]
+    public async Task PartyPicker_TokenChange_ClearsVisibleResultsAndSelection()
+    {
+        var queryClient = new PartyPickerApiClientTests.RecordingPartiesQueryClient();
+        queryClient.Enqueue(SearchResultPage(PartyPickerTestData.Result()));
+        RegisterClient(queryClient);
+
+        IRenderedComponent<PartyPicker> cut = Render<PartyPicker>(parameters => parameters
+            .Add(p => p.AccessToken, "host-token-a")
+            .Add(p => p.DebounceMilliseconds, 1)
+            .Add(p => p.DispatchDomEvents, false));
+
+        cut.Find("input").Input("ada");
+        cut.WaitForAssertion(() => cut.FindAll("[role=\"option\"]").Count.ShouldBe(1));
+        await cut.InvokeAsync(() => cut.Find(".hx-party-picker__result-button").Click());
+
+        await cut.InvokeAsync(() => cut.Instance.SetParametersAsync(ParameterView.FromDictionary(new Dictionary<string, object?>
+        {
+            [nameof(PartyPicker.AccessToken)] = "host-token-b",
+            [nameof(PartyPicker.DebounceMilliseconds)] = 1,
+            [nameof(PartyPicker.DispatchDomEvents)] = false,
         })));
 
         cut.FindAll("[role=\"option\"]").ShouldBeEmpty();
