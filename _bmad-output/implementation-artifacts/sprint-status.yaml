@@ -54,7 +54,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-05-02
-last_updated: 2026-05-11  # story 12-5 moved review -> done after bmad-code-review applied 5 client-wrapper patches: gateway-valid query envelopes, fail-closed tenant config, expanded EventStore error/cancellation tests, restored search pagination/typed-shape assertions, and broader safe problem-detail redaction. Client tests 74/74, contracts tests 57/57, Release solution build clean.
+last_updated: 2026-05-11  # story 12-6 moved review -> done after bmad-code-review applied 4 MCP compatibility patches: restored create/update aliases and partial patch merge behavior, lifecycle-plus-detail updates, searched-result type/active filtering, and temporal name lookup failure semantics. MCP tests 21/21, client tests 74/74, solution build clean.
 # sprint_change_proposals:
 #   - sprint-change-proposal-2026-05-07.md  (EventStore-Fronted Architecture Pivot — added Epic 12; paused 10-1-1, 10-2, 10-3)
 project: Hexalith.Parties
@@ -169,7 +169,7 @@ development_status:
   12-3-validation-relocation-and-tenant-auth-ownership: done
   12-4-server-tier-1-tier-2-test-rewrite: done
   12-5-parties-client-thin-wrapper: done
-  12-6-parties-mcp-thin-host: review
+  12-6-parties-mcp-thin-host: done
   12-7-admin-portal-rebuild-on-frontcomposer: blocked
   12-8-picker-rewrite: blocked
   12-9-sample-and-getting-started-doc-updates: ready-for-dev

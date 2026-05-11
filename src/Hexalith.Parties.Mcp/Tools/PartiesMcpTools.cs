@@ -63,7 +63,15 @@ internal sealed class PartiesMcpTools(
                     PagedResult<PartySearchResult> searchResult = await queryClient
                         .SearchPartiesAsync(query.Trim(), page, pageSize, cancellationToken)
                         .ConfigureAwait(false);
-                    return PartiesMcpToolResult.Succeeded(PartiesMcpToolNames.FindParties, searchResult);
+
+                    if (!TryParseEnum(type, out PartyType? searchPartyType))
+                    {
+                        return ValidationFailed(PartiesMcpToolNames.FindParties, "party type");
+                    }
+
+                    return PartiesMcpToolResult.Succeeded(
+                        PartiesMcpToolNames.FindParties,
+                        FilterSearchResult(searchResult, searchPartyType, active));
                 }
 
                 if (!TryParseEnum(type, out PartyType? partyType))
@@ -84,9 +92,18 @@ internal sealed class PartiesMcpTools(
         [Description("Party kind, such as person or organization.")] string? partyType = null,
         [Description("Person given name when creating a person.")] string? givenName = null,
         [Description("Person family name when creating a person.")] string? familyName = null,
+        [Description("Alias for givenName, preserved for pre-pivot MCP callers.")] string? firstName = null,
+        [Description("Alias for familyName, preserved for pre-pivot MCP callers.")] string? lastName = null,
+        [Description("Person date of birth as an ISO 8601 date or date-time.")] string? dateOfBirth = null,
+        [Description("Optional person name prefix.")] string? prefix = null,
+        [Description("Optional person name suffix.")] string? suffix = null,
         [Description("Organization legal name when creating an organization.")] string? legalName = null,
+        [Description("Optional organization trading or brand name.")] string? tradingName = null,
+        [Description("Optional organization legal form.")] string? legalForm = null,
+        [Description("Optional organization registration number.")] string? registrationNumber = null,
         [Description("Optional email contact channel value.")] string? email = null,
         [Description("Optional phone contact channel value.")] string? phone = null,
+        [Description("Optional VAT number alias for identifierValue.")] string? vatNumber = null,
         [Description("Optional identifier type, such as TaxId, VAT, SIRET, NationalId, CompanyRegistration, or Other.")] string? identifierType = null,
         [Description("Optional identifier value.")] string? identifierValue = null,
         CancellationToken cancellationToken = default)
@@ -100,7 +117,12 @@ internal sealed class PartiesMcpTools(
                     return validation;
                 }
 
-                PartyType type = ResolveCreateType(partyType, givenName, familyName, legalName);
+                string? effectiveGivenName = FirstNonEmpty(givenName, firstName);
+                string? effectiveFamilyName = FirstNonEmpty(familyName, lastName);
+                string? effectiveIdentifierType = FirstNonEmpty(identifierType, !string.IsNullOrWhiteSpace(vatNumber) ? "VAT" : null);
+                string? effectiveIdentifierValue = FirstNonEmpty(identifierValue, vatNumber);
+
+                PartyType type = ResolveCreateType(partyType, effectiveGivenName, effectiveFamilyName, legalName);
                 if (type == PartyType.Unknown)
                 {
                     return ValidationFailed(PartiesMcpToolNames.CreateParty, "party type");
@@ -110,13 +132,19 @@ internal sealed class PartiesMcpTools(
                 CreatePartyComposite? command = BuildCreateCommand(
                     effectivePartyId,
                     type,
-                    givenName,
-                    familyName,
+                    effectiveGivenName,
+                    effectiveFamilyName,
+                    dateOfBirth,
+                    prefix,
+                    suffix,
                     legalName,
+                    tradingName,
+                    legalForm,
+                    registrationNumber,
                     email,
                     phone,
-                    identifierType,
-                    identifierValue);
+                    effectiveIdentifierType,
+                    effectiveIdentifierValue);
                 if (command is null)
                 {
                     return ValidationFailed(PartiesMcpToolNames.CreateParty, "party details");
@@ -134,7 +162,15 @@ internal sealed class PartiesMcpTools(
         [Description("The authoritative party identifier to update.")] string partyId,
         [Description("Optional person given name patch.")] string? givenName = null,
         [Description("Optional person family name patch.")] string? familyName = null,
+        [Description("Alias for givenName, preserved for pre-pivot MCP callers.")] string? firstName = null,
+        [Description("Alias for familyName, preserved for pre-pivot MCP callers.")] string? lastName = null,
+        [Description("Optional person date-of-birth patch as an ISO 8601 date or date-time.")] string? dateOfBirth = null,
+        [Description("Optional person name prefix patch.")] string? prefix = null,
+        [Description("Optional person name suffix patch.")] string? suffix = null,
         [Description("Optional organization legal name patch.")] string? legalName = null,
+        [Description("Optional organization trading or brand name patch.")] string? tradingName = null,
+        [Description("Optional organization legal form patch.")] string? legalForm = null,
+        [Description("Optional organization registration number patch.")] string? registrationNumber = null,
         [Description("Optional active-state patch.")] bool? active = null,
         [Description("Optional email contact channel to add.")] string? addEmail = null,
         [Description("Optional phone contact channel to add.")] string? addPhone = null,
@@ -143,9 +179,12 @@ internal sealed class PartiesMcpTools(
         [Description("Optional replacement contact channel value for the updated contact.")] string? updateContactChannelValue = null,
         [Description("Optional preferred flag for the updated contact channel.")] bool? updateContactChannelPreferred = null,
         [Description("Optional contact channel id to remove.")] string? removeContactChannelId = null,
+        [Description("Comma-separated contact channel ids to remove, preserved for pre-pivot MCP callers.")] string? removeContactChannelIds = null,
+        [Description("Optional VAT number alias for addIdentifierValue.")] string? addVatNumber = null,
         [Description("Optional identifier type to add.")] string? addIdentifierType = null,
         [Description("Optional identifier value to add.")] string? addIdentifierValue = null,
         [Description("Optional identifier id to remove.")] string? removeIdentifierId = null,
+        [Description("Comma-separated identifier ids to remove, preserved for pre-pivot MCP callers.")] string? removeIdentifierIds = null,
         CancellationToken cancellationToken = default)
         => await ExecuteAsync(
             PartiesMcpToolNames.UpdateParty,
@@ -157,30 +196,42 @@ internal sealed class PartiesMcpTools(
                     return validation;
                 }
 
-                if (active.HasValue)
-                {
-                    string lifecycleCorrelation = active.Value
-                        ? await commandClient.ReactivatePartyAsync(partyId, cancellationToken).ConfigureAwait(false)
-                        : await commandClient.DeactivatePartyAsync(partyId, cancellationToken).ConfigureAwait(false);
-                    return PartiesMcpToolResult.Accepted(PartiesMcpToolNames.UpdateParty, lifecycleCorrelation);
-                }
+                string? effectiveGivenName = FirstNonEmpty(givenName, firstName);
+                string? effectiveFamilyName = FirstNonEmpty(familyName, lastName);
+                string? effectiveAddIdentifierType = FirstNonEmpty(addIdentifierType, !string.IsNullOrWhiteSpace(addVatNumber) ? "VAT" : null);
+                string? effectiveAddIdentifierValue = FirstNonEmpty(addIdentifierValue, addVatNumber);
+                string? effectiveRemoveContactIds = CombineCsv(removeContactChannelId, removeContactChannelIds);
+                string? effectiveRemoveIdentifierIds = CombineCsv(removeIdentifierId, removeIdentifierIds);
+                bool needsCurrentParty = HasAny(effectiveGivenName, effectiveFamilyName, dateOfBirth, prefix, suffix, legalName, tradingName, legalForm, registrationNumber)
+                    || HasAny(updateContactChannelId, updateContactChannelType, updateContactChannelValue)
+                    || updateContactChannelPreferred.HasValue;
+                PartyDetail? currentParty = needsCurrentParty
+                    ? await queryClient.GetPartyAsync(partyId, cancellationToken).ConfigureAwait(false)
+                    : null;
 
                 UpdatePartyComposite? command = BuildUpdateCommand(
                     partyId,
-                    givenName,
-                    familyName,
+                    currentParty,
+                    effectiveGivenName,
+                    effectiveFamilyName,
+                    dateOfBirth,
+                    prefix,
+                    suffix,
                     legalName,
+                    tradingName,
+                    legalForm,
+                    registrationNumber,
                     addEmail,
                     addPhone,
                     updateContactChannelId,
                     updateContactChannelType,
                     updateContactChannelValue,
                     updateContactChannelPreferred,
-                    removeContactChannelId,
-                    addIdentifierType,
-                    addIdentifierValue,
-                    removeIdentifierId);
-                if (command is null)
+                    effectiveRemoveContactIds,
+                    effectiveAddIdentifierType,
+                    effectiveAddIdentifierValue,
+                    effectiveRemoveIdentifierIds);
+                if (command is null && !active.HasValue)
                 {
                     return PartiesMcpToolResult.Failed(
                         PartiesMcpToolNames.UpdateParty,
@@ -189,10 +240,24 @@ internal sealed class PartiesMcpTools(
                         "No supported update fields were provided.");
                 }
 
-                string correlationId = await commandClient
-                    .UpdatePartyCompositeAsync(partyId, command, cancellationToken)
-                    .ConfigureAwait(false);
-                return PartiesMcpToolResult.Accepted(PartiesMcpToolNames.UpdateParty, correlationId);
+                List<string> correlationIds = [];
+                if (command is not null)
+                {
+                    correlationIds.Add(await commandClient
+                        .UpdatePartyCompositeAsync(partyId, command, cancellationToken)
+                        .ConfigureAwait(false));
+                }
+
+                if (active.HasValue)
+                {
+                    correlationIds.Add(active.Value
+                        ? await commandClient.ReactivatePartyAsync(partyId, cancellationToken).ConfigureAwait(false)
+                        : await commandClient.DeactivatePartyAsync(partyId, cancellationToken).ConfigureAwait(false));
+                }
+
+                return correlationIds.Count == 1
+                    ? PartiesMcpToolResult.Accepted(PartiesMcpToolNames.UpdateParty, correlationIds[0])
+                    : PartiesMcpToolResult.Accepted(PartiesMcpToolNames.UpdateParty, correlationIds);
             }).ConfigureAwait(false);
 
     [McpServerTool(Name = PartiesMcpToolNames.DeleteParty, Title = "Delete Party", Destructive = true, Idempotent = true)]
@@ -245,10 +310,36 @@ internal sealed class PartiesMcpTools(
                 }
 
                 PartyDetail party = await queryClient.GetPartyAsync(partyId, cancellationToken).ConfigureAwait(false);
+                if (party.IsErased)
+                {
+                    return PartiesMcpToolResult.Failed(
+                        PartiesMcpToolNames.GetPartyNameAt,
+                        "not_found",
+                        "parties-mcp-party-erased",
+                        "The requested Parties resource was not found.");
+                }
+
+                if (party.NameHistory.Count == 0)
+                {
+                    return PartiesMcpToolResult.Failed(
+                        PartiesMcpToolNames.GetPartyNameAt,
+                        "not_found",
+                        "parties-mcp-name-history-unavailable",
+                        "Name history is not available for the requested Parties resource.");
+                }
+
                 NameHistoryEntry? history = party.NameHistory
                     .Where(entry => entry.ChangedAt <= instant)
                     .OrderByDescending(entry => entry.ChangedAt)
                     .FirstOrDefault();
+                if (history is null)
+                {
+                    return PartiesMcpToolResult.Failed(
+                        PartiesMcpToolNames.GetPartyNameAt,
+                        "not_found",
+                        "parties-mcp-name-not-effective",
+                        "The Parties resource did not have an effective name at the requested instant.");
+                }
 
                 return PartiesMcpToolResult.Succeeded(
                     PartiesMcpToolNames.GetPartyNameAt,
@@ -256,8 +347,8 @@ internal sealed class PartiesMcpTools(
                     {
                         PartyId = party.Id,
                         AsOf = instant,
-                        DisplayName = history?.DisplayName ?? party.DisplayName,
-                        SortName = history?.SortName ?? party.SortName,
+                        DisplayName = history.DisplayName,
+                        SortName = history.SortName,
                     });
             }).ConfigureAwait(false);
 
@@ -272,6 +363,14 @@ internal sealed class PartiesMcpTools(
         catch (PartiesClientException ex)
         {
             return MapClientException(toolName, ex);
+        }
+        catch (FormatException)
+        {
+            return PartiesMcpToolResult.Failed(
+                toolName,
+                "validation_failed",
+                "parties-mcp-validation-failed",
+                "One or more Parties MCP arguments were invalid.");
         }
         catch (OperationCanceledException)
         {
@@ -353,22 +452,53 @@ internal sealed class PartiesMcpTools(
             _ => "The Parties gateway rejected the requested operation.",
         };
 
+    private static PagedResult<PartySearchResult> FilterSearchResult(
+        PagedResult<PartySearchResult> result,
+        PartyType? type,
+        bool? active)
+    {
+        if (type is null && active is null)
+        {
+            return result;
+        }
+
+        PartySearchResult[] filtered =
+        [
+            .. result.Items.Where(item =>
+                (type is null || item.Party.Type == type)
+                && (active is null || item.Party.IsActive == active)),
+        ];
+
+        return result with
+        {
+            Items = filtered,
+            TotalCount = filtered.Length,
+            TotalPages = filtered.Length == 0 ? 0 : (int)Math.Ceiling(filtered.Length / (double)Math.Max(1, result.PageSize)),
+        };
+    }
+
     private static CreatePartyComposite? BuildCreateCommand(
         string partyId,
         PartyType type,
         string? givenName,
         string? familyName,
+        string? dateOfBirth,
+        string? prefix,
+        string? suffix,
         string? legalName,
+        string? tradingName,
+        string? legalForm,
+        string? registrationNumber,
         string? email,
         string? phone,
         string? identifierType,
         string? identifierValue)
     {
         PersonDetails? person = type == PartyType.Person
-            ? BuildPersonDetails(givenName, familyName)
+            ? BuildPersonDetails(givenName, familyName, dateOfBirth, prefix, suffix)
             : null;
         OrganizationDetails? organization = type == PartyType.Organization
-            ? BuildOrganizationDetails(legalName)
+            ? BuildOrganizationDetails(legalName, tradingName, legalForm, registrationNumber)
             : null;
 
         if ((type == PartyType.Person && person is null) || (type == PartyType.Organization && organization is null))
@@ -431,9 +561,16 @@ internal sealed class PartiesMcpTools(
 
     private static UpdatePartyComposite? BuildUpdateCommand(
         string partyId,
+        PartyDetail? currentParty,
         string? givenName,
         string? familyName,
+        string? dateOfBirth,
+        string? prefix,
+        string? suffix,
         string? legalName,
+        string? tradingName,
+        string? legalForm,
+        string? registrationNumber,
         string? addEmail,
         string? addPhone,
         string? updateContactChannelId,
@@ -445,11 +582,11 @@ internal sealed class PartiesMcpTools(
         string? addIdentifierValue,
         string? removeIdentifierId)
     {
-        PersonDetails? person = HasAny(givenName, familyName)
-            ? BuildPersonDetails(givenName, familyName)
+        PersonDetails? person = HasAny(givenName, familyName, dateOfBirth, prefix, suffix)
+            ? BuildPersonDetails(givenName, familyName, dateOfBirth, prefix, suffix, currentParty?.PersonDetails)
             : null;
-        OrganizationDetails? organization = !string.IsNullOrWhiteSpace(legalName)
-            ? BuildOrganizationDetails(legalName)
+        OrganizationDetails? organization = HasAny(legalName, tradingName, legalForm, registrationNumber)
+            ? BuildOrganizationDetails(legalName, tradingName, legalForm, registrationNumber, currentParty?.OrganizationDetails)
             : null;
 
         List<AddContactChannel> addContacts = [];
@@ -478,8 +615,20 @@ internal sealed class PartiesMcpTools(
         }
 
         List<UpdateContactChannel> updateContacts = [];
-        if (!string.IsNullOrWhiteSpace(updateContactChannelId))
+        if (HasAny(updateContactChannelId, updateContactChannelType, updateContactChannelValue) || updateContactChannelPreferred.HasValue)
         {
+            if (string.IsNullOrWhiteSpace(updateContactChannelId))
+            {
+                return null;
+            }
+
+            ContactChannel? currentContact = currentParty?.ContactChannels
+                .FirstOrDefault(channel => string.Equals(channel.Id, updateContactChannelId.Trim(), StringComparison.Ordinal));
+            if (currentParty is not null && currentContact is null)
+            {
+                return null;
+            }
+
             if (!TryParseEnum(updateContactChannelType, out ContactChannelType? parsedContactType))
             {
                 return null;
@@ -489,9 +638,9 @@ internal sealed class PartiesMcpTools(
             {
                 PartyId = partyId,
                 ContactChannelId = updateContactChannelId.Trim(),
-                Type = parsedContactType,
-                Value = string.IsNullOrWhiteSpace(updateContactChannelValue) ? null : updateContactChannelValue.Trim(),
-                IsPreferred = updateContactChannelPreferred,
+                Type = parsedContactType ?? currentContact?.Type,
+                Value = string.IsNullOrWhiteSpace(updateContactChannelValue) ? currentContact?.Value : updateContactChannelValue.Trim(),
+                IsPreferred = updateContactChannelPreferred ?? currentContact?.IsPreferred,
             });
         }
 
@@ -512,8 +661,8 @@ internal sealed class PartiesMcpTools(
             });
         }
 
-        string[] removeContacts = string.IsNullOrWhiteSpace(removeContactChannelId) ? [] : [removeContactChannelId.Trim()];
-        string[] removeIdentifiers = string.IsNullOrWhiteSpace(removeIdentifierId) ? [] : [removeIdentifierId.Trim()];
+        string[] removeContacts = SplitCsv(removeContactChannelId);
+        string[] removeIdentifiers = SplitCsv(removeIdentifierId);
 
         return person is null
             && organization is null
@@ -536,30 +685,48 @@ internal sealed class PartiesMcpTools(
             };
     }
 
-    private static PersonDetails? BuildPersonDetails(string? givenName, string? familyName)
+    private static PersonDetails? BuildPersonDetails(
+        string? givenName,
+        string? familyName,
+        string? dateOfBirth = null,
+        string? prefix = null,
+        string? suffix = null,
+        PersonDetails? current = null)
     {
-        if (string.IsNullOrWhiteSpace(givenName) || string.IsNullOrWhiteSpace(familyName))
+        if (string.IsNullOrWhiteSpace(familyName) && string.IsNullOrWhiteSpace(current?.LastName))
         {
             return null;
         }
 
         return new PersonDetails
         {
-            FirstName = givenName.Trim(),
-            LastName = familyName.Trim(),
+            FirstName = string.IsNullOrWhiteSpace(givenName) ? current?.FirstName ?? string.Empty : givenName.Trim(),
+            LastName = string.IsNullOrWhiteSpace(familyName) ? current?.LastName ?? string.Empty : familyName.Trim(),
+            DateOfBirth = dateOfBirth is null ? current?.DateOfBirth : ParseDateOfBirth(dateOfBirth),
+            Prefix = prefix ?? current?.Prefix,
+            Suffix = suffix ?? current?.Suffix,
         };
     }
 
-    private static OrganizationDetails? BuildOrganizationDetails(string? legalName)
+    private static OrganizationDetails? BuildOrganizationDetails(
+        string? legalName,
+        string? tradingName = null,
+        string? legalForm = null,
+        string? registrationNumber = null,
+        OrganizationDetails? current = null)
     {
-        if (string.IsNullOrWhiteSpace(legalName))
+        if (string.IsNullOrWhiteSpace(legalName) && string.IsNullOrWhiteSpace(current?.LegalName))
         {
             return null;
         }
 
         return new OrganizationDetails
         {
-            LegalName = legalName.Trim(),
+            LegalName = string.IsNullOrWhiteSpace(legalName) ? current?.LegalName ?? string.Empty : legalName.Trim(),
+            TradingName = tradingName ?? current?.TradingName,
+            LegalForm = legalForm ?? current?.LegalForm,
+            RegistrationNumber = registrationNumber ?? current?.RegistrationNumber,
+            IsNaturalPerson = current?.IsNaturalPerson ?? false,
         };
     }
 
@@ -598,6 +765,49 @@ internal sealed class PartiesMcpTools(
 
     private static bool HasAny(params string?[] values)
         => values.Any(value => !string.IsNullOrWhiteSpace(value));
+
+    private static string? FirstNonEmpty(params string?[] values)
+        => values.FirstOrDefault(value => !string.IsNullOrWhiteSpace(value));
+
+    private static string? CombineCsv(params string?[] values)
+    {
+        string[] parts = [.. values
+            .Where(value => !string.IsNullOrWhiteSpace(value))
+            .SelectMany(value => value!.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+            .Where(value => !string.IsNullOrWhiteSpace(value))];
+
+        return parts.Length == 0 ? null : string.Join(",", parts);
+    }
+
+    private static string[] SplitCsv(string? value)
+        => string.IsNullOrWhiteSpace(value)
+            ? []
+            : [.. value.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)];
+
+    private static DateTimeOffset? ParseDateOfBirth(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return null;
+        }
+
+        string[] supportedFormats =
+        [
+            "yyyy-MM-dd",
+            "yyyy-MM-ddTHH:mm:ssK",
+            "yyyy-MM-ddTHH:mm:ss.FFFFFFFK",
+            "O",
+        ];
+
+        return DateTimeOffset.TryParseExact(
+            value,
+            supportedFormats,
+            CultureInfo.InvariantCulture,
+            DateTimeStyles.AllowWhiteSpaces | DateTimeStyles.AssumeUniversal,
+            out DateTimeOffset parsed)
+            ? parsed
+            : throw new FormatException("Date of birth must be a valid ISO 8601 date or date-time.");
+    }
 
     private static string NewId()
         => Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture);

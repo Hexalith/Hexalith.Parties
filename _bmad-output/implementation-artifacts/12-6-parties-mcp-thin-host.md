@@ -1,6 +1,6 @@
 # Story 12.6: Parties MCP Thin Host
 
-Status: review
+Status: done
 
 ## Story
 
@@ -71,6 +71,13 @@ so that Parties remains MCP-accessible after the in-process MCP wiring is remove
   - [x] Run `dotnet test tests/Hexalith.Parties.Client.Tests/Hexalith.Parties.Client.Tests.csproj`.
   - [x] Run focused AppHost topology/fitness tests covering `parties-mcp`.
   - [x] Run `dotnet build Hexalith.Parties.slnx`.
+
+### Review Findings
+
+- [x] [Review][Patch] `update_party` no longer preserves patch semantics for partial person/organization updates, lifecycle-plus-detail updates, and multi-remove inputs [src/Hexalith.Parties.Mcp/Tools/PartiesMcpTools.cs:133]
+- [x] [Review][Patch] `find_parties` ignores type and active filters whenever a search query is supplied [src/Hexalith.Parties.Mcp/Tools/PartiesMcpTools.cs:61]
+- [x] [Review][Patch] `get_party_name_at` returns current names when the requested instant predates name history or name history is unavailable [src/Hexalith.Parties.Mcp/Tools/PartiesMcpTools.cs:247]
+- [x] [Review][Patch] `create_party` dropped pre-pivot person/organization fields and rejects formerly supported partial person input [src/Hexalith.Parties.Mcp/Tools/PartiesMcpTools.cs:82]
 
 ## Dev Notes
 
@@ -198,6 +205,7 @@ Codex GPT-5
 - `get_party_name_at` is preserved and routed through the query-client path by reading `PartyDetail.NameHistory` rather than reintroducing projection actors.
 - Added stable sanitized MCP result categories/codes for missing context, validation, unauthorized, forbidden, not found/gone, conflict, timeout, canceled, downstream failure, and rejected gateway responses; result payloads serialize nested data with camelCase, null omission, and string enums.
 - Rewrote MCP tests to cover typed client dispatch, missing context fail-closed behavior, contact/identifier patch semantics, delete idempotency, search/list branching, sanitized client error mapping, canonical tool metadata, startup/AppHost/source fitness, and dependency boundaries.
+- Code review patches restored pre-pivot MCP compatibility for create/update aliases and partial patch merge behavior, active-state updates combined with detail patches, comma-separated removal inputs, searched-result type/active filtering, and temporal name lookup failure semantics when history is unavailable or not yet effective.
 
 ### File List
 

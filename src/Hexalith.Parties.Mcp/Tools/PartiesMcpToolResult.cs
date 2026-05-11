@@ -32,6 +32,15 @@ internal sealed record PartiesMcpToolResult(
             toolName,
             correlationId);
 
+    public static PartiesMcpToolResult Accepted(string toolName, IReadOnlyList<string> correlationIds)
+        => new(
+            "accepted",
+            "success",
+            "parties-mcp-accepted",
+            "The Parties commands were accepted by the EventStore gateway.",
+            toolName,
+            Data: JsonSerializer.SerializeToElement(new { correlationIds }, JsonOptions));
+
     public static PartiesMcpToolResult Succeeded(string toolName, object? data = null, string? code = null)
         => new(
             "succeeded",
