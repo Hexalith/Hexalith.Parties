@@ -54,7 +54,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-05-02
-last_updated: 2026-05-11  # story 10-3 moved review -> done after bmad-code-review applied picker/client auth-boundary findings: typed query search now supports request customization, picker host token/request customization flows to the EventStore gateway request, SearchMode/CaseId are forwarded, auth context changes clear visible picker state, and metadata-unavailable coverage was corrected. Picker tests 30/30, Client tests 60/60, AdminPortal tests 67/67, targeted Client/Picker/AdminPortal Release builds clean. Full solution Release build remains blocked by unrelated Hexalith.Parties.Security missing-type/ref-assembly failures.
+last_updated: 2026-05-11  # story 12-4 moved review -> done after bmad-code-review deferred the only new live findings to a separate EventStore story/patch: the submodule scope conflict and async derived DomainResult dispatch bug in Hexalith.EventStore. Story 12.4 has no unresolved in-scope patch findings.
 # sprint_change_proposals:
 #   - sprint-change-proposal-2026-05-07.md  (EventStore-Fronted Architecture Pivot — added Epic 12; paused 10-1-1, 10-2, 10-3)
 project: Hexalith.Parties
@@ -167,7 +167,7 @@ development_status:
   12-1-apphost-recomposition: done
   12-2-parties-actor-host: done
   12-3-validation-relocation-and-tenant-auth-ownership: done
-  12-4-server-tier-1-tier-2-test-rewrite: review
+  12-4-server-tier-1-tier-2-test-rewrite: done
   12-5-parties-client-thin-wrapper: review
   12-6-parties-mcp-thin-host: review
   12-7-admin-portal-rebuild-on-frontcomposer: blocked

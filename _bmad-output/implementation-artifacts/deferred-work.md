@@ -2,6 +2,11 @@
 
 Items raised during code review that are real but not actionable in the current story. Pick up in a follow-up story or hardening sprint.
 
+## Deferred from: code review of story 12-4 server Tier-1/Tier-2 test rewrite (2026-05-11)
+
+- **EventStore submodule change conflicts with Story 12.4 scope** — Story 12.4 explicitly says not to edit the `Hexalith.EventStore` submodule. Per Jérôme's 2026-05-11 review decision, move this work into a separate EventStore story/patch rather than treating it as a Story 12.4 cross-boundary exception. [Hexalith.EventStore/src/Hexalith.EventStore.Client/Aggregates/EventStoreAggregate.cs:95]
+- **Async derived `DomainResult` handlers are accepted but cannot dispatch** — `EventStoreAggregate.DiscoverHandleMethods` accepts any `Task<T>` where `T : DomainResult`, but `DispatchCommandAsync` only matches `Task<DomainResult>`. Because `Task<T>` is invariant, an accepted async handler returning a derived result, such as `Task<CompositeCommandResult>`, falls through to the unexpected-type path at runtime. The follow-up should either narrow discovery back to `Task<DomainResult>` or update dispatch to await reflected `Task` results and cast to `DomainResult`, with sync/async derived-result coverage. [Hexalith.EventStore/src/Hexalith.EventStore.Client/Aggregates/EventStoreAggregate.cs:95,141]
+
 ## Deferred from: code review of story 10-2 chunk 1 AdminPortal UI (2026-05-10)
 
 Bmad-code-review chunk 1 of 3 (`src/Hexalith.Parties.AdminPortal/Components|Services|Extensions|_Imports.razor`) against story 10-2-admin-portal-gdpr-operations spec. Diff range `04b1799^..fd7d57c`, 20 files, +1444/−28. Chunks 2 (`src/Hexalith.Parties.Client/AdminPortal`) and 3 (tests) outstanding.
