@@ -1,3 +1,6 @@
+using Hexalith.EventStore.Contracts.Commands;
+using Hexalith.EventStore.Contracts.Results;
+using Hexalith.EventStore.Server.DomainServices;
 using Hexalith.Parties.Extensions;
 using Hexalith.Parties.HealthChecks;
 using Hexalith.Parties.Middleware;
@@ -48,6 +51,16 @@ app.UseCloudEvents();
 // EventStore is the public command/query gateway after Story 12.2.
 app.MapSubscribeHandler();
 app.MapTenantEventSubscription();
+app.MapPost("/process", static async (
+    DomainServiceRequest request,
+    IDomainServiceInvoker invoker,
+    CancellationToken cancellationToken) =>
+{
+    DomainResult result = await invoker
+        .InvokeAsync(request.Command, request.CurrentState, cancellationToken)
+        .ConfigureAwait(false);
+    return Results.Json(DomainServiceWireResult.FromDomainResult(result));
+}).ExcludeFromDescription();
 app.MapActorsHandlers();
 app.MapDefaultEndpoints();                    // Health checks: /health, /alive, /ready
 

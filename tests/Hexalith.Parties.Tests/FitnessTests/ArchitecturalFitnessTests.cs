@@ -90,7 +90,6 @@ public sealed class ArchitecturalFitnessTests
             "GdprWarningMiddleware",
             "MapGroup",
             "MapGet",
-            "MapPost",
             "MapPut",
             "MapPatch",
             "MapDelete",
@@ -105,6 +104,7 @@ public sealed class ArchitecturalFitnessTests
         source.ShouldContain("app.MapDefaultEndpoints()");
         source.ShouldContain("app.MapSubscribeHandler()");
         source.ShouldContain("app.MapTenantEventSubscription()");
+        source.ShouldContain("app.MapPost(\"/process\"");
         source.ShouldContain("DAPR sidecar-internal");
         source.ShouldContain("accesscontrol.parties.yaml");
 
@@ -116,6 +116,9 @@ public sealed class ArchitecturalFitnessTests
         source.ShouldContain(
             "/tenants/events",
             customMessage: "MapTenantEventSubscription exception must name the route it exposes (POST /tenants/events).");
+        source.ShouldContain(
+            "only eventstore -> POST /process",
+            customMessage: "The retained /process endpoint must be documented as DAPR service-invocation plumbing restricted by accesscontrol.parties.yaml.");
     }
 
     [Fact]
@@ -204,6 +207,12 @@ public sealed class ArchitecturalFitnessTests
                 && !File.Exists(RepoPath(row.ReplacementTestPath.Split('/'))))
             {
                 violations.Add($"{row.OldTestPath} replacement path is missing: {row.ReplacementTestPath}.");
+            }
+
+            if (row.AcceptanceCriteria.Contains("AC-12.4.4", StringComparison.Ordinal)
+                && string.IsNullOrWhiteSpace(row.ReplacementTestPath))
+            {
+                violations.Add($"{row.OldTestPath} retains AC-12.4.4 behavior but has no executable replacement path.");
             }
         }
 
@@ -743,12 +752,12 @@ public sealed class ArchitecturalFitnessTests
         Retired("tests/Hexalith.Parties.Tests/Controllers/ConsentEndpointTests.cs", "Tier-2 command controller", "Consent domain behavior remains in aggregate/projection coverage; old response contract retired.", "AC-12.4.1, AC-12.4.4, AC-12.4.5", "Tier-1 domain/projection suites plus EventStore gateway smoke", "tests/Hexalith.Parties.Tests/Gateway/EventStoreGatewayRoutingTests.cs"),
         Retired("tests/Hexalith.Parties.Tests/Controllers/CrossTenantIsolationTests.cs", "Tier-2 controller authorization", "Gateway tenant denial before Parties invocation.", "AC-12.4.1, AC-12.4.6", "EventStore gateway authorization tests", "tests/Hexalith.Parties.Tests/Gateway/EventStoreGatewayRoutingTests.cs"),
         Retired("tests/Hexalith.Parties.Tests/Controllers/ErasureEndpointTests.cs", "Tier-2 command/query controller", "Erasure projection behavior retained without old controller response mapping.", "AC-12.4.1, AC-12.4.4, AC-12.4.5", "Tier-1 projection erasure coverage plus EventStore gateway smoke", "tests/Hexalith.Parties.Projections.Tests/Handlers/PartyIndexProjectionHandlerTests.cs"),
-        Retired("tests/Hexalith.Parties.Tests/Controllers/KeyRotationEndpointTests.cs", "Tier-2 admin/security controller", "Security lifecycle belongs to security/domain tiers; old admin route retired.", "AC-12.4.1, AC-12.4.4, AC-12.4.5", "Security and architectural fitness suites", "tests/Hexalith.Parties.Tests/FitnessTests/ArchitecturalFitnessTests.cs"),
+        Retired("tests/Hexalith.Parties.Tests/Controllers/KeyRotationEndpointTests.cs", "Tier-2 admin/security controller", "Security lifecycle belongs to security/domain tiers; old admin route retired.", "AC-12.4.1, AC-12.4.4, AC-12.4.5", "Security lifecycle suites", "tests/Hexalith.Parties.Security.Tests/PartyKeyLifecycleServiceTests.cs"),
         Retired("tests/Hexalith.Parties.Tests/Controllers/PartiesApiTestCollection.cs", "Tier-2 controller fixture", "Mutable controller fixture retired; gateway tests use deterministic per-test host.", "AC-12.4.1, AC-12.4.2", "EventStore gateway test factory", "tests/Hexalith.Parties.Tests/Gateway/EventStoreGatewayRoutingTests.cs"),
         Retired("tests/Hexalith.Parties.Tests/Controllers/PartiesControllerProblemDetailsTests.cs", "Tier-2 controller error mapping", "EventStore owns validation response and rejection-before-invocation evidence.", "AC-12.4.1, AC-12.4.6", "EventStore gateway invalid-shape test", "tests/Hexalith.Parties.Tests/Gateway/EventStoreGatewayRoutingTests.cs"),
         Retired("tests/Hexalith.Parties.Tests/Controllers/PartiesControllerTenantAuthorizationTests.cs", "Tier-2 controller authorization", "Gateway denies unauthorized tenants before command/query routing.", "AC-12.4.1, AC-12.4.6", "EventStore gateway authorization tests", "tests/Hexalith.Parties.Tests/Gateway/EventStoreGatewayRoutingTests.cs"),
-        Retired("tests/Hexalith.Parties.Tests/Controllers/PortabilityEndpointTests.cs", "Tier-2 GDPR controller", "Portability transport route retired; domain/projection data shape remains in Tier 1.", "AC-12.4.1, AC-12.4.4, AC-12.4.5", "Tier-1 contract/projection suites", "tests/Hexalith.Parties.Contracts.Tests/State/PartyStateTests.cs"),
-        Retired("tests/Hexalith.Parties.Tests/Controllers/RestrictionEndpointTests.cs", "Tier-2 GDPR controller", "Restriction transport route retired; replacement behavior belongs to EventStore command contract.", "AC-12.4.1, AC-12.4.4, AC-12.4.5", "EventStore gateway smoke and future EventStore GDPR contract tests", "tests/Hexalith.Parties.Tests/Gateway/EventStoreGatewayRoutingTests.cs"),
+        Retired("tests/Hexalith.Parties.Tests/Controllers/PortabilityEndpointTests.cs", "Tier-2 GDPR controller", "Portability transport route retired; export client contract now fails closed until authoritative EventStore export exists.", "AC-12.4.1, AC-12.4.4, AC-12.4.5", "Admin GDPR EventStore operation contract tests", "tests/Hexalith.Parties.Client.Tests/AdminPortal/AdminPortalGdprOperationContractTests.cs"),
+        Retired("tests/Hexalith.Parties.Tests/Controllers/RestrictionEndpointTests.cs", "Tier-2 GDPR controller", "Restriction transport route retired; domain command behavior remains in aggregate coverage and EventStore gateway smoke.", "AC-12.4.1, AC-12.4.4, AC-12.4.5", "Aggregate restriction suites plus EventStore gateway smoke", "tests/Hexalith.Parties.Server.Tests/Aggregates/PartyAggregateRestrictionTests.cs"),
         Retired("tests/Hexalith.Parties.Tests/Controllers/StoryElevenThreeReviewPatchesTests.cs", "Tier-2 controller regression", "Old public-surface patch checks retired behind actor-host fitness.", "AC-12.4.1, AC-12.4.5, AC-12.4.8", "Architectural fitness", "tests/Hexalith.Parties.Tests/FitnessTests/ArchitecturalFitnessTests.cs"),
         Retired("tests/Hexalith.Parties.Tests/Controllers/TemporalNameEndpointTests.cs", "Tier-2 query controller", "Temporal-name projection behavior remains outside old route contract.", "AC-12.4.1, AC-12.4.4", "Tier-1 projection suites plus EventStore query smoke", "tests/Hexalith.Parties.Tests/Gateway/EventStoreGatewayRoutingTests.cs"),
         Retired("tests/Hexalith.Parties.Tests/Controllers/TenantActorIds.cs", "Tier-2 controller helper", "Controller-era tenant actor helper retired with controller fixture.", "AC-12.4.1, AC-12.4.8", "EventStore gateway deterministic test data", "tests/Hexalith.Parties.Tests/Gateway/EventStoreGatewayRoutingTests.cs"),
@@ -764,12 +773,12 @@ public sealed class ArchitecturalFitnessTests
         Retired("tests/Hexalith.Parties.Tests/Mcp/UpdatePartyMcpToolTests.cs", "in-process MCP", "Future thin MCP host replacement is owned by Story 12.6.", "AC-12.4.5, AC-12.4.8", "Story 12.6 future MCP host tests", ""),
         Retired("tests/Hexalith.Parties.IntegrationTests/Admin/AdminEndpointE2ETests.cs", "Tier-3 admin route", "Old admin route retired; EventStore owns future admin ingress.", "AC-12.4.3, AC-12.4.5", "Architectural fitness and future EventStore admin tests", "tests/Hexalith.Parties.Tests/FitnessTests/ArchitecturalFitnessTests.cs"),
         Retired("tests/Hexalith.Parties.IntegrationTests/PartyApiRoundTripIntegrationTests.cs", "Tier-3 Parties route", "Round-trip ingress moves to EventStore command/query gateway.", "AC-12.4.3, AC-12.4.5", "EventStore gateway routing tests", "tests/Hexalith.Parties.Tests/Gateway/EventStoreGatewayRoutingTests.cs"),
-        Retired("tests/Hexalith.Parties.IntegrationTests/Search/SemanticSearchE2ETests.cs", "Tier-3 search route", "Memories-backed search remains future EventStore query integration scope.", "AC-12.4.3, AC-12.4.4", "Future EventStore query integration tests", ""),
+        Retired("tests/Hexalith.Parties.IntegrationTests/Search/SemanticSearchE2ETests.cs", "Tier-3 search route", "Memories-backed search behavior remains in search service coverage while transport moves behind EventStore query ingress.", "AC-12.4.3, AC-12.4.4", "Search service suites plus EventStore query smoke", "tests/Hexalith.Parties.Tests/Search/MemoriesPartySearchServiceTests.cs"),
         Retired("tests/Hexalith.Parties.IntegrationTests/Search/TemporalNameE2ETests.cs", "Tier-3 query route", "Temporal-name query moves behind EventStore query gateway.", "AC-12.4.3, AC-12.4.4", "EventStore query smoke and future Tier-3 gateway tests", "tests/Hexalith.Parties.Tests/Gateway/EventStoreGatewayRoutingTests.cs"),
-        Retired("tests/Hexalith.Parties.IntegrationTests/Security/ConsentRestrictionE2ETests.cs", "Tier-3 security route", "Security/GDPR transport route retired; future EventStore contract tests own end-to-end ingress.", "AC-12.4.3, AC-12.4.4, AC-12.4.5", "Future EventStore security integration tests", ""),
-        Retired("tests/Hexalith.Parties.IntegrationTests/Security/EncryptionE2ETests.cs", "Tier-3 security route", "Encryption evidence remains in security/domain tiers; old response contract retired.", "AC-12.4.3, AC-12.4.4, AC-12.4.5", "Security suites and future EventStore security integration tests", ""),
+        Retired("tests/Hexalith.Parties.IntegrationTests/Security/ConsentRestrictionE2ETests.cs", "Tier-3 security route", "Security/GDPR transport route retired; consent and restriction command behavior remains in aggregate coverage.", "AC-12.4.3, AC-12.4.4, AC-12.4.5", "Aggregate consent and restriction suites", "tests/Hexalith.Parties.Server.Tests/Aggregates/PartyAggregateConsentTests.cs"),
+        Retired("tests/Hexalith.Parties.IntegrationTests/Security/EncryptionE2ETests.cs", "Tier-3 security route", "Encryption evidence remains in security/domain tiers; old response contract retired.", "AC-12.4.3, AC-12.4.4, AC-12.4.5", "Security payload protection and integration suites", "tests/Hexalith.Parties.Security.Tests/PartyPayloadProtectionServiceTests.cs"),
         Retired("tests/Hexalith.Parties.IntegrationTests/Security/ErasureE2ETests.cs", "Tier-3 security route", "Erasure projection behavior retained; old ingress contract retired.", "AC-12.4.3, AC-12.4.4, AC-12.4.5", "Tier-1 projection erasure and future EventStore security integration tests", "tests/Hexalith.Parties.Projections.Tests/Handlers/PartyIndexProjectionHandlerTests.cs"),
-        Retired("tests/Hexalith.Parties.IntegrationTests/Security/KeyLifecycleE2ETests.cs", "Tier-3 security route", "Key lifecycle public ingress moves to EventStore/admin future coverage.", "AC-12.4.3, AC-12.4.4, AC-12.4.5", "Future EventStore security integration tests", ""),
+        Retired("tests/Hexalith.Parties.IntegrationTests/Security/KeyLifecycleE2ETests.cs", "Tier-3 security route", "Key lifecycle public ingress retires while key lifecycle behavior remains in security suites.", "AC-12.4.3, AC-12.4.4, AC-12.4.5", "Security key lifecycle suites", "tests/Hexalith.Parties.Security.Tests/PartyKeyLifecycleServiceTests.cs"),
         Retired("tests/Hexalith.Parties.IntegrationTests/Tenants/TenantIntegrationTestSeeder.cs", "Tier-3 REST seeder", "Seeder retired with old Parties HTTP client fixture.", "AC-12.4.3, AC-12.4.5", "EventStore gateway deterministic test data", "tests/Hexalith.Parties.Tests/Gateway/EventStoreGatewayRoutingTests.cs"),
         Retired("tests/Hexalith.Parties.IntegrationTests/Tenants/TenantsBackedAccessE2ETests.cs", "Tier-3 tenant route", "Tenant denial remains in gateway and tenant projection tests.", "AC-12.4.3, AC-12.4.6", "EventStore gateway authorization and tenant access tests", "tests/Hexalith.Parties.Tests/Gateway/EventStoreGatewayRoutingTests.cs"),
     ];

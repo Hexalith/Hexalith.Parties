@@ -40,6 +40,7 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
     private string? _previousAspNetCoreEnvironment;
     private string? _previousDotNetEnvironment;
     private HttpClient? _partiesClient;
+    private HttpClient? _eventStoreClient;
 
     /// <summary>
     /// Gets a value indicating whether the Aspire topology started successfully.
@@ -57,6 +58,15 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
     /// Available after <see cref="InitializeAsync"/> completes with <see cref="IsAvailable"/> = true.
     /// </summary>
     public HttpClient PartiesClient => _partiesClient ?? throw new InvalidOperationException(
+        IsAvailable
+            ? "Test infrastructure not initialized. Ensure InitializeAsync has completed."
+            : $"Test infrastructure unavailable: {UnavailableReason}");
+
+    /// <summary>
+    /// Gets the HTTP client for the EventStore public gateway.
+    /// Available after <see cref="InitializeAsync"/> completes with <see cref="IsAvailable"/> = true.
+    /// </summary>
+    public HttpClient EventStoreClient => _eventStoreClient ?? throw new InvalidOperationException(
         IsAvailable
             ? "Test infrastructure not initialized. Ensure InitializeAsync has completed."
             : $"Test infrastructure unavailable: {UnavailableReason}");
@@ -107,13 +117,25 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
                 .WaitForResourceHealthyAsync("parties", cts.Token)
                 .WaitAsync(TimeSpan.FromMinutes(5), cts.Token)
                 .ConfigureAwait(false);
+            await _app.ResourceNotifications
+                .WaitForResourceHealthyAsync("eventstore", cts.Token)
+                .WaitAsync(TimeSpan.FromMinutes(5), cts.Token)
+                .ConfigureAwait(false);
 
             _partiesClient = _app.CreateHttpClient("parties");
             _partiesClient.Timeout = TimeSpan.FromSeconds(60);
+            _eventStoreClient = _app.CreateHttpClient("eventstore");
+            _eventStoreClient.Timeout = TimeSpan.FromSeconds(60);
 
             // Wait for the /health endpoint to actually return 200 via HTTP.
             await WaitForEndpointAsync(
                 _partiesClient,
+                "/health",
+                [HttpStatusCode.OK],
+                TimeSpan.FromMinutes(3),
+                TimeSpan.FromSeconds(3)).ConfigureAwait(false);
+            await WaitForEndpointAsync(
+                _eventStoreClient,
                 "/health",
                 [HttpStatusCode.OK],
                 TimeSpan.FromMinutes(3),
@@ -144,6 +166,7 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
     public async Task DisposeAsync()
     {
         _partiesClient?.Dispose();
+        _eventStoreClient?.Dispose();
 
         if (_app is not null)
         {
