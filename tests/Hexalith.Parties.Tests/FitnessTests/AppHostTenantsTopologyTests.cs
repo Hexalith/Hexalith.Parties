@@ -1,3 +1,5 @@
+using System.Text.RegularExpressions;
+
 using Shouldly;
 
 namespace Hexalith.Parties.Tests.FitnessTests;
@@ -14,6 +16,7 @@ public sealed class AppHostTenantsTopologyTests
         project.ShouldContain(@"Hexalith.EventStore\src\Hexalith.EventStore.Admin.UI\Hexalith.EventStore.Admin.UI.csproj");
         project.ShouldContain(@"Hexalith.EventStore\src\Hexalith.EventStore.Aspire\Hexalith.EventStore.Aspire.csproj");
         project.ShouldContain(@"Hexalith.Tenants\src\Hexalith.Tenants\Hexalith.Tenants.csproj");
+        project.ShouldContain(@"Hexalith.Parties.Mcp\Hexalith.Parties.Mcp.csproj");
         project.ShouldNotContain(@"Hexalith.Tenants\src\Hexalith.Tenants.Aspire\Hexalith.Tenants.Aspire.csproj");
         project.ShouldContain(@"Hexalith.EventStore.Aspire\Hexalith.EventStore.Aspire.csproj"" IsAspireProjectResource=""false""");
         project.ShouldContain(@"IsAspireProjectResource=""false""");
@@ -24,11 +27,14 @@ public sealed class AppHostTenantsTopologyTests
     {
         string program = ReadAppHostProgram();
 
-        program.ShouldContain(@"AddProject<Projects.Hexalith_EventStore>(""eventstore"")");
-        program.ShouldContain(@"AddProject<Projects.Hexalith_EventStore_Admin_Server_Host>(""eventstore-admin"")");
-        program.ShouldContain(@"AddProject<Projects.Hexalith_EventStore_Admin_UI>(""eventstore-admin-ui"")");
-        program.ShouldContain(@"AddProject<Projects.Hexalith_Parties>(""parties"")");
-        program.ShouldContain(@"AddProject<Projects.Hexalith_Tenants>(""tenants"")");
+        Dictionary<string, string> resources = ExtractProjectResources(program);
+
+        resources["eventstore"].ShouldBe("Projects.Hexalith_EventStore");
+        resources["eventstore-admin"].ShouldBe("Projects.Hexalith_EventStore_Admin_Server_Host");
+        resources["eventstore-admin-ui"].ShouldBe("Projects.Hexalith_EventStore_Admin_UI");
+        resources["parties"].ShouldBe("Projects.Hexalith_Parties");
+        resources["tenants"].ShouldBe("Projects.Hexalith_Tenants");
+        resources["parties-mcp"].ShouldBe("Projects.Hexalith_Parties_Mcp");
         program.ShouldContain("AddHexalithEventStore");
         program.ShouldNotContain("AddHexalithParties(");
         program.ShouldNotContain("AddHexalithTenants(");
@@ -70,13 +76,14 @@ public sealed class AppHostTenantsTopologyTests
     {
         string program = ReadAppHostProgram();
 
-        program.ShouldContain("EventStore__DomainServices__Registrations__*|party|v1__AppId");
-        program.ShouldContain("EventStore__DomainServices__Registrations__*|party|v1__MethodName");
-        program.ShouldContain("EventStore__DomainServices__Registrations__*|party|v1__Domain");
-        program.ShouldContain("EventStore__DomainServices__Registrations__*|party|v1__Version");
-        program.ShouldContain(@"""parties""");
-        program.ShouldContain(@"""process""");
-        program.ShouldContain(@"""party""");
+        program.ShouldMatch(
+            @"WithEnvironment\(""EventStore__DomainServices__Registrations__\*\|party\|v1__AppId"",\s*""parties""\)");
+        program.ShouldMatch(
+            @"WithEnvironment\(""EventStore__DomainServices__Registrations__\*\|party\|v1__MethodName"",\s*""process""\)");
+        program.ShouldMatch(
+            @"WithEnvironment\(""EventStore__DomainServices__Registrations__\*\|party\|v1__Domain"",\s*""party""\)");
+        program.ShouldMatch(
+            @"WithEnvironment\(""EventStore__DomainServices__Registrations__\*\|party\|v1__Version"",\s*""v1""\)");
     }
 
     [Fact]
@@ -93,7 +100,10 @@ public sealed class AppHostTenantsTopologyTests
         program.ShouldContain("parties.WithReference(keycloak)");
         program.ShouldContain("tenants.WithReference(keycloak)");
         program.ShouldContain("adminUI.WithReference(keycloak)");
-        program.ShouldContain(@"WithEnvironment(""EventStore__AdminServer__SwaggerUrl""");
+        Regex adminUiSwaggerUrl = new(@"adminUI[\s\S]*?WithEnvironment\(""EventStore__AdminServer__SwaggerUrl"",\s*ReferenceExpression\.Create\(\$""\{adminServer\.GetEndpoint\(""https""\)\}/swagger/index\.html""\)\)");
+        adminUiSwaggerUrl.Matches(program).Count.ShouldBe(
+            2,
+            "EventStore Admin UI must receive the Admin Server Swagger URL in both Keycloak-on and Keycloak-off branches.");
 
         // SigningKey="" must be cleared on every JWT-bearing service to avoid
         // dual-mode auth conflict; assert on count rather than presence so a
@@ -158,6 +168,29 @@ public sealed class AppHostTenantsTopologyTests
         waitForPubSubCount.ShouldBeGreaterThanOrEqualTo(2, "parties and tenants must both WaitFor the shared pubsub.");
     }
 
+    [Fact]
+    public void AppHostProgramWiresPartiesMcpAsSeparateConsumerHost()
+    {
+        string program = ReadAppHostProgram();
+
+        program.ShouldContain(@"AddProject<Projects.Hexalith_Parties_Mcp>(""parties-mcp"")");
+        program.ShouldMatch(@"partiesMcp[\s\S]*?\.WithReference\(eventStore\)[\s\S]*?\.WaitFor\(eventStore\)");
+        program.ShouldMatch(@"partiesMcp[\s\S]*?\.WithReference\(parties\)[\s\S]*?\.WaitFor\(parties\)");
+        program.ShouldContain(@"WithEnvironment(""Parties__Mcp__EventStoreGatewayBaseUrl""");
+    }
+
+    [Fact]
+    public void AppHostProgramUsesWaitForForDependencyReadiness()
+    {
+        string program = ReadAppHostProgram();
+
+        program.ShouldContain(".WaitFor(eventStore)");
+        program.ShouldContain(".WaitFor(tenants)");
+        program.ShouldContain(".WaitFor(eventStoreResources.StateStore)");
+        program.ShouldContain(".WaitFor(eventStoreResources.PubSub)");
+        program.ShouldNotContain(".WaitForStart(");
+    }
+
     private static string ReadAppHostProject()
         => File.ReadAllText(RepositoryRoot.ProjectFile("Hexalith.Parties.AppHost"));
 
@@ -167,4 +200,15 @@ public sealed class AppHostTenantsTopologyTests
             "src",
             "Hexalith.Parties.AppHost",
             "Program.cs"));
+
+    private static Dictionary<string, string> ExtractProjectResources(string program)
+    {
+        Regex addProject = new(@"AddProject<(?<project>Projects\.[^>]+)>\(""(?<name>[^""]+)""\)");
+        return addProject
+            .Matches(program)
+            .ToDictionary(
+                match => match.Groups["name"].Value,
+                match => match.Groups["project"].Value,
+                StringComparer.Ordinal);
+    }
 }

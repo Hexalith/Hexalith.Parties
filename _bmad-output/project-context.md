@@ -25,7 +25,7 @@ _This file contains critical rules and patterns that AI agents must follow when 
 - Core application packages: MediatR `14.1.0`, FluentValidation `12.1.1`, Microsoft.Extensions `10.x`, JWT Bearer `10.0.0`, Fluent UI Blazor `5.0.0-rc.2-26098.1`.
 - MCP packages: ModelContextProtocol `1.0.0`, but the main `Hexalith.Parties` actor host must not expose in-process MCP tools.
 - Observability/service defaults: OpenTelemetry `1.15.x`, Microsoft.Extensions.Http.Resilience `10.3.0`, ServiceDiscovery `10.3.0`.
-- Testing: xUnit `2.9.3`, xUnit runner `3.1.5`, Shouldly `4.3.0`, NSubstitute `5.3.0`, bUnit `2.7.2`, Testcontainers `4.10.0`, coverlet `6.0.4`.
+- Testing: xUnit v3 `3.2.2`, xUnit runner `3.1.5`, Shouldly `4.3.0`, NSubstitute `5.3.0`, bUnit `2.7.2`, Testcontainers `4.10.0`, coverlet `6.0.4`.
 
 ## Critical Implementation Rules
 
@@ -64,7 +64,7 @@ _This file contains critical rules and patterns that AI agents must follow when 
 - Projection tests must verify tenant isolation and event ordering assumptions; read-side code should fail closed on stale or missing tenant access state.
 - For composite commands, test applied/skipped/rejected outcomes, duplicate operation handling, sub-operation limits, no-op idempotency, erasure/restriction guards, and emitted event order.
 - Do not remove or weaken the `PartyState` rejection-event fitness tests; they guard EventStore suffix-based Apply resolution.
-- Existing `xUnit1051` suppression in `Hexalith.Parties.Tests` is documented deferred work. Do not spread that suppression to new projects unless deliberately accepted.
+- Existing `xUnit1051` cancellation-token analyzer debt is documented deferred work and suppressed for root test projects during the xUnit v3 migration. Prefer plumbing `TestContext.Current.CancellationToken` in new or touched async tests.
 
 ### Code Quality & Style Rules
 

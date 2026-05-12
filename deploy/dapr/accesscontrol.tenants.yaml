@@ -1,0 +1,29 @@
+# DAPR Access Control Configuration -- Production Tenants Authority
+# ==================================================================
+# Receiving-sidecar policy for Tenants. EventStore owns command routing; the
+# Parties actor host is limited to the accepted readiness probe path.
+apiVersion: dapr.io/v1alpha1
+kind: Configuration
+metadata:
+  name: accesscontrol-tenants
+spec:
+  accessControl:
+    defaultAction: deny
+    trustDomain: "{env:DAPR_TRUST_DOMAIN|hexalith.io}"
+    policies:
+      - appId: eventstore
+        defaultAction: deny
+        trustDomain: "{env:DAPR_TRUST_DOMAIN|hexalith.io}"
+        namespace: "{env:DAPR_NAMESPACE|hexalith}"
+        operations:
+          - name: /**
+            httpVerb: ['POST']
+            action: allow
+      - appId: parties
+        defaultAction: deny
+        trustDomain: "{env:DAPR_TRUST_DOMAIN|hexalith.io}"
+        namespace: "{env:DAPR_NAMESPACE|hexalith}"
+        operations:
+          - name: /ready
+            httpVerb: ['GET']
+            action: allow

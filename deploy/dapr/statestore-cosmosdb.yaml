@@ -15,8 +15,9 @@
 #   CosmosDB supports per-item TTL natively when the container has DefaultTimeToLive set.
 #
 # Component Scoping:
-#   Only parties can access this state store. Actors run in-process under the
-#   parties app-id, so no other app-id needs state store access.
+#   EventStore, EventStore Admin, Parties, and Tenants share this state store
+#   in the canonical EventStore-fronted topology. keyPrefix=none is deliberate
+#   and validated so each sidecar sees the same logical keys.
 #
 # PREREQUISITES:
 #   1. Create a CosmosDB account with SQL API.
@@ -48,5 +49,10 @@ spec:
       value: "{env:COSMOSDB_COLLECTION|state}"
     - name: actorStateStore
       value: "true"
+    - name: keyPrefix
+      value: "none"
 scopes:
+  - eventstore
+  - eventstore-admin
   - parties
+  - tenants

@@ -11,5 +11,5 @@ metadata:
 spec:
   pubsubName: pubsub
   topicName: system.tenants.events
-  commandApiAppId: parties
+  commandApiAppId: eventstore
   tenantsDependencyHealth: healthy

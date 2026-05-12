@@ -147,6 +147,37 @@ public sealed class ArchitecturalFitnessTests
     }
 
     [Fact]
+    public void PartiesMcp_IsSeparateConsumerHostWithoutActorOrServerReferences()
+    {
+        XDocument mcpProject = XDocument.Load(RepoPath("src", "Hexalith.Parties.Mcp", "Hexalith.Parties.Mcp.csproj"));
+
+        string[] packageReferences =
+        [
+            .. mcpProject.Descendants()
+                .Where(e => e.Name.LocalName == "PackageReference")
+                .Select(e => e.Attribute("Include")?.Value)
+                .Where(value => !string.IsNullOrWhiteSpace(value))
+                .Select(value => value!),
+        ];
+
+        string[] projectReferences =
+        [
+            .. mcpProject.Descendants()
+                .Where(e => e.Name.LocalName == "ProjectReference")
+                .Select(e => e.Attribute("Include")?.Value)
+                .Where(value => !string.IsNullOrWhiteSpace(value))
+                .Select(value => value!),
+        ];
+
+        packageReferences.ShouldContain("ModelContextProtocol.AspNetCore");
+        packageReferences.ShouldNotContain("Dapr.Actors.AspNetCore");
+        packageReferences.ShouldNotContain("Dapr.Actors");
+        projectReferences.ShouldNotContain(reference => IsForbiddenClientReference(reference, "Hexalith.Parties"));
+        projectReferences.ShouldNotContain(reference => IsForbiddenClientReference(reference, "Hexalith.EventStore.Server"));
+        projectReferences.ShouldNotContain(reference => IsForbiddenClientReference(reference, "Hexalith.EventStore"));
+    }
+
+    [Fact]
     public void ServerTestProjects_DoNotRetainOldPartiesRestOrAdminAssertions()
     {
         string[] roots =

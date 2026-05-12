@@ -9,8 +9,9 @@
 #   PostgreSQL state store supports TTL via the cleanupInterval metadata field.
 #
 # Component Scoping:
-#   Only parties can access this state store. Actors run in-process under the
-#   parties app-id, so no other app-id needs state store access.
+#   EventStore, EventStore Admin, Parties, and Tenants share this state store
+#   in the canonical EventStore-fronted topology. keyPrefix=none is deliberate
+#   and validated so each sidecar sees the same logical keys.
 #
 # PREREQUISITES:
 #   1. Create a PostgreSQL database for DAPR state storage.
@@ -31,9 +32,14 @@ spec:
       value: "{env:POSTGRESQL_CONNECTION_STRING}"
     - name: actorStateStore
       value: "true"
+    - name: keyPrefix
+      value: "none"
     - name: cleanupInterval
       # Interval for cleaning up expired state entries (TTL support).
       # Default: 3600 seconds (1 hour).
       value: "3600"
 scopes:
+  - eventstore
+  - eventstore-admin
   - parties
+  - tenants

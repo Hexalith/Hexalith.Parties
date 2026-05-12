@@ -1,6 +1,6 @@
 # Story 12.10: Deployment Validation and Topology Fitness Rewrite
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -31,77 +31,77 @@ so that incorrect deployments fail fast.
 
 ## Tasks / Subtasks
 
-- [ ] Confirm predecessor and scope gates. (AC: 1-9)
-  - [ ] Read `_bmad-output/implementation-artifacts/12-1-apphost-recomposition.md`.
-  - [ ] Read `_bmad-output/implementation-artifacts/12-2-parties-actor-host.md`.
-  - [ ] Read `_bmad-output/implementation-artifacts/12-3-validation-relocation-and-tenant-auth-ownership.md`.
-  - [ ] Read `_bmad-output/implementation-artifacts/12-4-server-tier-1-tier-2-test-rewrite.md`.
-  - [ ] Read `_bmad-output/implementation-artifacts/12-5-parties-client-thin-wrapper.md`.
-  - [ ] Read `_bmad-output/implementation-artifacts/12-6-parties-mcp-thin-host.md`.
-  - [ ] Read `_bmad-output/implementation-artifacts/12-7-admin-portal-rebuild-on-frontcomposer.md`, `12-8-picker-rewrite.md`, and `12-9-sample-and-getting-started-doc-updates.md` for consumer topology wording.
-  - [ ] If the runtime command/query/client contracts are still blocked, keep this story focused on static topology/deploy validation and do not fabricate runtime success.
+- [x] Confirm predecessor and scope gates. (AC: 1-9)
+  - [x] Read `_bmad-output/implementation-artifacts/12-1-apphost-recomposition.md`.
+  - [x] Read `_bmad-output/implementation-artifacts/12-2-parties-actor-host.md`.
+  - [x] Read `_bmad-output/implementation-artifacts/12-3-validation-relocation-and-tenant-auth-ownership.md`.
+  - [x] Read `_bmad-output/implementation-artifacts/12-4-server-tier-1-tier-2-test-rewrite.md`.
+  - [x] Read `_bmad-output/implementation-artifacts/12-5-parties-client-thin-wrapper.md`.
+  - [x] Read `_bmad-output/implementation-artifacts/12-6-parties-mcp-thin-host.md`.
+  - [x] Read `_bmad-output/implementation-artifacts/12-7-admin-portal-rebuild-on-frontcomposer.md`, `12-8-picker-rewrite.md`, and `12-9-sample-and-getting-started-doc-updates.md` for consumer topology wording.
+  - [x] If the runtime command/query/client contracts are still blocked, keep this story focused on static topology/deploy validation and do not fabricate runtime success.
 
-- [ ] Inventory current validation coverage before editing. (AC: 1-8)
-  - [ ] List every existing test in `AppHostTenantsTopologyTests.cs`, `ArchitecturalFitnessTests.cs`, `AppHostDaprTopologyValidationTests.cs`, `DeploymentValidationTests.cs`, and `TenantsDeploymentValidationTests.cs`.
-  - [ ] Create a compact coverage matrix in the Dev Agent Record with columns: file/test, current invariant, AC-12.10.x label, gap, action taken, and deferred owner.
-  - [ ] Record the evidence source for each new topology invariant: AppHost source, DAPR YAML, deploy script behavior, predecessor story artifact, or explicit blocker.
-  - [ ] Identify brittle substring assertions that match comments or unrelated literals; replace them with regexes, XML parsing, or small source parsers where practical.
-  - [ ] Avoid creating a second deploy-validation test harness unless the existing tests cannot represent the required topology checks.
+- [x] Inventory current validation coverage before editing. (AC: 1-8)
+  - [x] List every existing test in `AppHostTenantsTopologyTests.cs`, `ArchitecturalFitnessTests.cs`, `AppHostDaprTopologyValidationTests.cs`, `DeploymentValidationTests.cs`, and `TenantsDeploymentValidationTests.cs`.
+  - [x] Create a compact coverage matrix in the Dev Agent Record with columns: file/test, current invariant, AC-12.10.x label, gap, action taken, and deferred owner.
+  - [x] Record the evidence source for each new topology invariant: AppHost source, DAPR YAML, deploy script behavior, predecessor story artifact, or explicit blocker.
+  - [x] Identify brittle substring assertions that match comments or unrelated literals; replace them with regexes, XML parsing, or small source parsers where practical.
+  - [x] Avoid creating a second deploy-validation test harness unless the existing tests cannot represent the required topology checks.
 
-- [ ] Harden AppHost topology fitness. (AC: 1, 6, 8)
-  - [ ] Update `AppHostTenantsTopologyTests.cs` so resource-name checks parse the AppHost source deliberately and assert the exact resource declarations for `eventstore`, `eventstore-admin`, `eventstore-admin-ui`, `parties`, `tenants`, and `parties-mcp`.
-  - [ ] Assert `parties` and `tenants` wait for shared `StateStore` and `PubSub`; assert `parties-mcp` references/waits for `eventstore` and references/waits for `parties` only for startup/liveness.
-  - [ ] Assert `EnableKeycloak` parsing, multi-audience receiver tolerance, and `Authentication__JwtBearer__SigningKey=""` clearing for every JWT-bearing service.
-  - [ ] Assert `eventstore-admin-ui` receives the Admin Server Swagger URL in both Keycloak-on and Keycloak-off branches.
-  - [ ] Replace broad `ShouldContain("parties")`, `ShouldContain("party")`, and similar checks with patterns tied to the surrounding configuration key.
+- [x] Harden AppHost topology fitness. (AC: 1, 6, 8)
+  - [x] Update `AppHostTenantsTopologyTests.cs` so resource-name checks parse the AppHost source deliberately and assert the exact resource declarations for `eventstore`, `eventstore-admin`, `eventstore-admin-ui`, `parties`, `tenants`, and `parties-mcp`.
+  - [x] Assert `parties` and `tenants` wait for shared `StateStore` and `PubSub`; assert `parties-mcp` references/waits for `eventstore` and references/waits for `parties` only for startup/liveness.
+  - [x] Assert `EnableKeycloak` parsing, multi-audience receiver tolerance, and `Authentication__JwtBearer__SigningKey=""` clearing for every JWT-bearing service.
+  - [x] Assert `eventstore-admin-ui` receives the Admin Server Swagger URL in both Keycloak-on and Keycloak-off branches.
+  - [x] Replace broad `ShouldContain("parties")`, `ShouldContain("party")`, and similar checks with patterns tied to the surrounding configuration key.
 
-- [ ] Harden DAPR component and access-control validation. (AC: 3, 7, 8)
-  - [ ] Validate all access-control YAMLs under `src/Hexalith.Parties.AppHost/DaprComponents/`: `accesscontrol.yaml`, `accesscontrol.eventstore-admin.yaml`, `accesscontrol.tenants.yaml`, and `accesscontrol.parties.yaml`.
-  - [ ] Assert deny-by-default posture in production-intended files and classify any local-dev exception explicitly by trust domain and file path.
-  - [ ] Assert `eventstore` access-control explicitly allows `eventstore-admin`, `tenants`, and `parties` only for the required methods; no wildcard app ids.
-  - [ ] Assert `accesscontrol.parties.yaml` allows only `eventstore` to invoke `/process` with POST.
-  - [ ] Assert Tenants access control exposes only the accepted readiness/invocation paths and does not grant broad caller sets.
-  - [ ] For every allowed invocation, test the receiving sidecar file, caller app id, method, and path together; do not count component scopes or caller-side config as authorization proof.
-  - [ ] Reconcile deferred `/ready` through DAPR-sidecar validity: either validate the actual accepted path or record the exact architecture blocker.
-  - [ ] Assert `statestore.yaml` and `pubsub.yaml` keep shared component names, required scopes, env-var secret placeholders, `actorStateStore=true`, and `keyPrefix=none`.
-  - [ ] Document the shared state store exception as deliberate and tested, not an accidental broadening.
+- [x] Harden DAPR component and access-control validation. (AC: 3, 7, 8)
+  - [x] Validate all access-control YAMLs under `src/Hexalith.Parties.AppHost/DaprComponents/`: `accesscontrol.yaml`, `accesscontrol.eventstore-admin.yaml`, `accesscontrol.tenants.yaml`, and `accesscontrol.parties.yaml`.
+  - [x] Assert deny-by-default posture in production-intended files and classify any local-dev exception explicitly by trust domain and file path.
+  - [x] Assert `eventstore` access-control explicitly allows `eventstore-admin`, `tenants`, and `parties` only for the required methods; no wildcard app ids.
+  - [x] Assert `accesscontrol.parties.yaml` allows only `eventstore` to invoke `/process` with POST.
+  - [x] Assert Tenants access control exposes only the accepted readiness/invocation paths and does not grant broad caller sets.
+  - [x] For every allowed invocation, test the receiving sidecar file, caller app id, method, and path together; do not count component scopes or caller-side config as authorization proof.
+  - [x] Reconcile deferred `/ready` through DAPR-sidecar validity: either validate the actual accepted path or record the exact architecture blocker.
+  - [x] Assert `statestore.yaml` and `pubsub.yaml` keep shared component names, required scopes, env-var secret placeholders, `actorStateStore=true`, and `keyPrefix=none`.
+  - [x] Document the shared state store exception as deliberate and tested, not an accidental broadening.
 
-- [ ] Extend `deploy/validate-deployment.ps1` for the EventStore-fronted topology. (AC: 2, 5, 7)
-  - [ ] Add topology checks that can validate production manifests for required app ids/resources: `eventstore`, `eventstore-admin`, `eventstore-admin-ui`, `parties`, `tenants`, and optionally `parties-mcp` when present.
-  - [ ] Add manifest-shape checks for the EventStore domain service registration from `*|party|v1` to `AppId=parties`, `MethodName=process`, and `Domain=party`, or record a blocker if production manifests do not currently expose that contract.
-  - [ ] Update expected `TenantsIntegration.spec.commandApiAppId` from the pre-pivot `parties` value to the accepted EventStore-fronted `eventstore` value when validating production topology.
-  - [ ] Validate EventStore Admin UI to Admin Server wiring without requiring runtime dashboard access.
-  - [ ] Keep JSON output stable: each added check must include category, check, status, details, and recommendation.
-  - [ ] Keep validation categories distinct for gateway, actor-host, Tenants authority, admin resources, DAPR components, and optional MCP; combined missing-dependency cases must report separate sanitized failures.
-  - [ ] Ensure validation output never echoes arbitrary YAML values; use normalized status/category names and file/check names instead.
+- [x] Extend `deploy/validate-deployment.ps1` for the EventStore-fronted topology. (AC: 2, 5, 7)
+  - [x] Add topology checks that can validate production manifests for required app ids/resources: `eventstore`, `eventstore-admin`, `eventstore-admin-ui`, `parties`, `tenants`, and optionally `parties-mcp` when present.
+  - [x] Add manifest-shape checks for the EventStore domain service registration from `*|party|v1` to `AppId=parties`, `MethodName=process`, and `Domain=party`, or record a blocker if production manifests do not currently expose that contract.
+  - [x] Update expected `TenantsIntegration.spec.commandApiAppId` from the pre-pivot `parties` value to the accepted EventStore-fronted `eventstore` value when validating production topology.
+  - [x] Validate EventStore Admin UI to Admin Server wiring without requiring runtime dashboard access.
+  - [x] Keep JSON output stable: each added check must include category, check, status, details, and recommendation.
+  - [x] Keep validation categories distinct for gateway, actor-host, Tenants authority, admin resources, DAPR components, and optional MCP; combined missing-dependency cases must report separate sanitized failures.
+  - [x] Ensure validation output never echoes arbitrary YAML values; use normalized status/category names and file/check names instead.
 
-- [ ] Add negative production-manifest tests. (AC: 2, 5, 7)
-  - [ ] Missing `eventstore` fails with a specific EventStore gateway/topology recommendation.
-  - [ ] Missing `eventstore-admin` or `eventstore-admin-ui` fails or warns according to the deployment profile, with a clear operator action.
-  - [ ] Missing `parties` actor host fails because EventStore command routing cannot invoke the domain service.
-  - [ ] Missing `tenants` or malformed Tenants integration fails closed with the existing Tenants category.
-  - [ ] Missing shared `statestore` or `pubsub` fails with component-specific remediation.
-  - [ ] Missing `parties-mcp` is not a core command/query deployment failure unless the manifest declares MCP enabled; when enabled, missing MCP must fail with a sanitized message.
-  - [ ] Malformed or secret-looking operator values in topology manifests must not appear in console or JSON output.
-  - [ ] At least one negative fixture should contain a fake token, password, connection string, or URI userinfo value and assert both console and JSON output redact or omit it.
+- [x] Add negative production-manifest tests. (AC: 2, 5, 7)
+  - [x] Missing `eventstore` fails with a specific EventStore gateway/topology recommendation.
+  - [x] Missing `eventstore-admin` or `eventstore-admin-ui` fails or warns according to the deployment profile, with a clear operator action.
+  - [x] Missing `parties` actor host fails because EventStore command routing cannot invoke the domain service.
+  - [x] Missing `tenants` or malformed Tenants integration fails closed with the existing Tenants category.
+  - [x] Missing shared `statestore` or `pubsub` fails with component-specific remediation.
+  - [x] Missing `parties-mcp` is not a core command/query deployment failure unless the manifest declares MCP enabled; when enabled, missing MCP must fail with a sanitized message.
+  - [x] Malformed or secret-looking operator values in topology manifests must not appear in console or JSON output.
+  - [x] At least one negative fixture should contain a fake token, password, connection string, or URI userinfo value and assert both console and JSON output redact or omit it.
 
-- [ ] Preserve retired-surface architectural guardrails. (AC: 4)
-  - [ ] Ensure `ArchitecturalFitnessTests.cs` fails on public REST controller markers, Swagger/OpenAPI hosting packages, in-process MCP attributes/registrations, and old actor-host `/mcp` mapping.
-  - [ ] Keep checks scoped to source files and project references so legitimate test/story/documentation references do not produce false positives.
-  - [ ] Include `parties-mcp` as the only allowed MCP host and assert it has no DAPR actor sidecar, no `Hexalith.Parties` service project reference, and no EventStore server assembly reference.
+- [x] Preserve retired-surface architectural guardrails. (AC: 4)
+  - [x] Ensure `ArchitecturalFitnessTests.cs` fails on public REST controller markers, Swagger/OpenAPI hosting packages, in-process MCP attributes/registrations, and old actor-host `/mcp` mapping.
+  - [x] Keep checks scoped to source files and project references so legitimate test/story/documentation references do not produce false positives.
+  - [x] Include `parties-mcp` as the only allowed MCP host and assert it has no DAPR actor sidecar, no `Hexalith.Parties` service project reference, and no EventStore server assembly reference.
 
-- [ ] Verify official Aspire testing and readiness usage. (AC: 1, 6, 9)
-  - [ ] If adding runtime Aspire tests, use `DistributedApplicationTestingBuilder` and `ResourceNotifications.WaitForResourceHealthyAsync(...)`/resource states rather than sleeps or dashboard scraping.
-  - [ ] Use `.WaitFor(...)` in AppHost only for dependency readiness semantics that match Aspire's health behavior; use `.WaitForStart(...)` only if startup without health is the explicit requirement.
-  - [ ] If local `dotnet aspire` is unavailable, keep runtime proof out of completion claims and rely on deterministic static tests plus build evidence.
-  - [ ] When runtime Aspire proof is skipped, add a completion-note entry naming the unavailable command/tool and the static test/build evidence that replaced it.
+- [x] Verify official Aspire testing and readiness usage. (AC: 1, 6, 9)
+  - [x] If adding runtime Aspire tests, use `DistributedApplicationTestingBuilder` and `ResourceNotifications.WaitForResourceHealthyAsync(...)`/resource states rather than sleeps or dashboard scraping.
+  - [x] Use `.WaitFor(...)` in AppHost only for dependency readiness semantics that match Aspire's health behavior; use `.WaitForStart(...)` only if startup without health is the explicit requirement.
+  - [x] If local `dotnet aspire` is unavailable, keep runtime proof out of completion claims and rely on deterministic static tests plus build evidence.
+  - [x] When runtime Aspire proof is skipped, add a completion-note entry naming the unavailable command/tool and the static test/build evidence that replaced it.
 
-- [ ] Verify the story. (AC: 1-9)
-  - [ ] Run `dotnet test tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj --filter "FullyQualifiedName~AppHostTenantsTopologyTests|FullyQualifiedName~ArchitecturalFitnessTests" --configuration Release`.
-  - [ ] Run `dotnet test tests/Hexalith.Parties.DeployValidation.Tests/Hexalith.Parties.DeployValidation.Tests.csproj --configuration Release`.
-  - [ ] Run `dotnet build src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --configuration Release`.
-  - [ ] Run `dotnet build Hexalith.Parties.slnx --configuration Release`.
-  - [ ] If running `dotnet aspire run --project src/Hexalith.Parties.AppHost` is possible, record dashboard resource names and EventStore Admin UI reachability; otherwise record the exact unavailable tool/runtime.
+- [x] Verify the story. (AC: 1-9)
+  - [x] Run `dotnet test tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj --filter "FullyQualifiedName~AppHostTenantsTopologyTests|FullyQualifiedName~ArchitecturalFitnessTests" --configuration Release`.
+  - [x] Run `dotnet test tests/Hexalith.Parties.DeployValidation.Tests/Hexalith.Parties.DeployValidation.Tests.csproj --configuration Release`.
+  - [x] Run `dotnet build src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --configuration Release`.
+  - [x] Run `dotnet build Hexalith.Parties.slnx --configuration Release`.
+  - [x] If running `dotnet aspire run --project src/Hexalith.Parties.AppHost` is possible, record dashboard resource names and EventStore Admin UI reachability; otherwise record the exact unavailable tool/runtime.
 
 ## Dev Notes
 
@@ -226,24 +226,74 @@ When closing the Story 12.1 deferred validation items, record a compact decision
 
 ### Agent Model Used
 
-TBD
+GPT-5 Codex
 
 ### Debug Log References
 
-TBD
+- 2026-05-12: Resolved workflow customization and loaded project context/config.
+- 2026-05-12: Confirmed predecessor scope: Stories 12.1 through 12.6 are done; 12.7 and 12.8 remain blocked consumer migrations; 12.9 is in review and used only for public wording/context.
+- 2026-05-12: Red phase captured with `dotnet test tests/Hexalith.Parties.DeployValidation.Tests/Hexalith.Parties.DeployValidation.Tests.csproj --configuration Release`; expected failures showed pre-pivot `commandApiAppId=parties`, `statestore` scoped only to `parties`, and missing EventStore topology validation.
+- 2026-05-12: Runtime Aspire proof not captured because `dotnet aspire --version` failed: `dotnet-aspire does not exist` / command not found on PATH.
+- 2026-05-12: Full no-build regression attempted twice with `dotnet test Hexalith.Parties.slnx --configuration Release --no-build` and once with `--blame-hang --blame-hang-timeout 120s --verbosity normal`; all three commands timed out without returning test results.
+
+### Coverage Matrix
+
+| File/test | Current invariant | AC-12.10.x | Gap | Action taken | Deferred owner |
+|---|---|---|---|---|---|
+| `AppHostTenantsTopologyTests` | AppHost project/resource graph, DAPR configs, waits, auth wiring | AC1, AC6, AC8 | Substring resource checks and missing `parties-mcp` readiness assertion | Added parser-backed resource extraction, `parties-mcp` checks, exact domain route env assertions, Admin UI Swagger branch count, and `WaitFor`/no `WaitForStart` guard | None |
+| `ArchitecturalFitnessTests` | Retired REST/OpenAPI/MCP guardrails | AC4 | Separate MCP host boundary not explicitly checked | Added `Hexalith.Parties.Mcp` project guard: MCP package allowed only there, no DAPR actor package, no Parties service or EventStore server references | None |
+| `AppHostDaprTopologyValidationTests` | Static AppHost DAPR component checks | AC3, AC7, AC8 | Production validator did not enforce equivalent receiving-sidecar matrix | Kept static AppHost checks; added production validator split-file checks for EventStore, Parties, Tenants, and Admin receiving sidecars | None |
+| `DeploymentValidationTests` | PowerShell validator temp production/local manifests | AC2, AC5, AC7 | Production fixtures modeled pre-pivot topology | Updated fixtures to EventStore-fronted topology, added `topology.yaml`, split ACLs, state/pubsub scopes, negative topology/MCP/redaction cases | None |
+| `TenantsDeploymentValidationTests` | Tenants integration validation | AC2, AC5, AC7 | Expected `commandApiAppId=parties` | Pivoted expected command API app id to `eventstore`; retained Parties subscription scope for tenant projection consumer | None |
+| `deploy/validate-deployment.ps1` | Production deployment validation | AC2, AC3, AC5, AC7 | No topology category, pre-pivot state/tenant assumptions | Added EventStore topology category, receiving-sidecar ACL validation, shared state/pubsub rules, `commandApiAppId=eventstore`, and sanitized output checks | None |
+
+### Story 12.1 Deferred Gap Disposition
+
+| Gap | Prior source | Disposition | Evidence/test | Owner | Rationale |
+|---|---|---|---|---|---|
+| Production trust-domain placeholders | Story 12.1 deferred work | implemented-here | `Test-AccessControl`, production fixtures, `deploy/dapr/accesscontrol*.yaml` | Parties | Validator keeps `public` as local-only warning and validates production placeholders without echoing secrets. |
+| Route-specific resiliency policy coverage | Story 12.1 deferred work | deferred-with-owner | Existing `Test-Resiliency`; no runtime route manifest source | EventStore/AppHost deployment | Current manifests expose component resiliency, not per-route policy metadata. |
+| Shared state-store exception documentation | Story 12.1 deferred work | implemented-here | `Test-StateStore`, `deploy/dapr/statestore*.yaml` | Parties | `eventstore`, `eventstore-admin`, `parties`, and `tenants` scopes plus `keyPrefix=none` are explicit and tested. |
+| Startup dependency assertions | Story 12.1 deferred work | implemented-here | `AppHostProgramWaitsForSharedDaprComponentsOnPartiesAndTenants`, `AppHostProgramWiresPartiesMcpAsSeparateConsumerHost` | Parties | Static AppHost tests assert dependency readiness waits and no `WaitForStart`. |
+| `/ready` through DAPR sidecar validity | Story 12.1 deferred work | implemented-here | `Test-AccessControl` Tenants sidecar accepted paths | Parties/Tenants | Tenants receiving sidecar validates `parties -> GET /ready` separately from command routing. |
+| AppHost source/launchSettings secret scans | Story 12.1 deferred work | implemented-here | Existing `AppHostSourceAndLaunchSettingsDoNotContainPlainTextSecrets`; deploy validator redaction tests | Parties | Source and output paths are covered without publishing runtime manifests. |
+| Brittle substring tests | Story 12.1 deferred work | implemented-here | Parser-backed AppHost resource/domain tests; structured deploy fixtures | Parties | Broad string checks were replaced or narrowed around exact keys/routes. |
 
 ### Completion Notes List
 
-- Ultimate context engine analysis completed - comprehensive developer guide created.
+- Hardened AppHost topology fitness around exact EventStore/Admin/UI/Parties/Tenants/`parties-mcp` resource declarations, readiness waits, domain route env keys, Keycloak/JWT clearing, and Admin UI Swagger wiring.
+- Extended deployment validation to enforce the EventStore-fronted topology: required resources in `topology.yaml`, split receiving-sidecar access-control files, `eventstore -> parties /process`, Tenants readiness, shared `statestore` scopes with `keyPrefix=none`, pub/sub publish/subscribe scopes, dead-letter requirements, and `TenantsIntegration.spec.commandApiAppId=eventstore`.
+- Added negative production-manifest tests for missing EventStore gateway, enabled-but-missing `parties-mcp`, malformed Tenants config, missing shared components/scopes, wildcard callers, and secret-looking topology values across console and JSON output.
+- Updated checked-in production deploy templates under `deploy/dapr` to match the new validator contract, including split access-control files and `topology.yaml`.
+- Runtime Aspire proof was not captured because `dotnet-aspire` is not installed on PATH; static topology tests, deploy-validation tests, AppHost build, deployment script validation, and solution build are the replacement evidence.
+- Full no-build regression did not complete in this environment: `dotnet test Hexalith.Parties.slnx --configuration Release --no-build` timed out at 4 minutes and 10 minutes, and the `--blame-hang` retry also timed out at 6 minutes without returned test results.
 
 ### File List
 
-TBD
+- `_bmad-output/implementation-artifacts/12-10-deployment-validation-and-topology-fitness-rewrite.md`
+- `_bmad-output/implementation-artifacts/sprint-status.yaml`
+- `deploy/dapr/accesscontrol.yaml`
+- `deploy/dapr/accesscontrol.eventstore-admin.yaml`
+- `deploy/dapr/accesscontrol.parties.yaml`
+- `deploy/dapr/accesscontrol.tenants.yaml`
+- `deploy/dapr/pubsub-kafka.yaml`
+- `deploy/dapr/pubsub-rabbitmq.yaml`
+- `deploy/dapr/pubsub-servicebus.yaml`
+- `deploy/dapr/statestore-cosmosdb.yaml`
+- `deploy/dapr/statestore-postgresql.yaml`
+- `deploy/dapr/tenants-integration.yaml`
+- `deploy/dapr/topology.yaml`
+- `deploy/validate-deployment.ps1`
+- `tests/Hexalith.Parties.DeployValidation.Tests/DeploymentValidationTests.cs`
+- `tests/Hexalith.Parties.DeployValidation.Tests/TenantsDeploymentValidationTests.cs`
+- `tests/Hexalith.Parties.Tests/FitnessTests/AppHostTenantsTopologyTests.cs`
+- `tests/Hexalith.Parties.Tests/FitnessTests/ArchitecturalFitnessTests.cs`
 
 ## Change Log
 
 | Date | Version | Description | Author |
 |---|---:|---|---|
+| 2026-05-12 | 1.0 | Rewrote deployment validation and topology fitness around the EventStore-fronted topology, split DAPR receiving-sidecar access control, shared DAPR component scopes, optional `parties-mcp`, sanitized output assertions, and production deploy templates; story moved to review. | Codex |
 | 2026-05-10 | 0.3 | Advanced elicitation completed; applied evidence-source, failure-taxonomy, parser-first, receiving-sidecar, sanitized-output, and runtime-proof clarifications. | Codex |
 | 2026-05-10 | 0.2 | Applied party-mode review clarifications for topology contract, DAPR matrices, negative validation cases, sanitized output, deferred-gap disposition, and submodule guardrails. | Codex |
 | 2026-05-10 | 0.1 | Created ready-for-dev story through BMAD pre-dev hardening automation. | Codex |

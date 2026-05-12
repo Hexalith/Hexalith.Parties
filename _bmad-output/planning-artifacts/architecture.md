@@ -226,7 +226,7 @@ Manual scaffolding following EventStore conventions. No CLI generator — the ac
 | MediatR | 14.0.0 | 14.0.0 | 14.0.0 | Current |
 | FluentValidation | 12.1.1 | 12.1.1 | 12.1.1 | Current |
 | OpenTelemetry | 1.15.0 | 1.15.0 | 1.15.0 | Current |
-| xUnit | 2.9.3 | 2.9.3 | 2.9.3 | Current |
+| xUnit | 2.9.3 | 3.2.2 | 3.2.2 | Migrated to xUnit v3 package IDs |
 | Shouldly | 4.3.0 | 4.3.0 | 4.3.0 | Current |
 | NSubstitute | 5.3.0 | 5.3.0 | 5.3.0 | Current |
 | ModelContextProtocol | N/A | 1.0.0 | 1.0.0 | New — Parties-specific. Stable release 2/25/2026 |
@@ -268,7 +268,7 @@ samples/
 - `Hexalith.Parties.Server.Tests` tests pure aggregate logic without EventStore — validates domain correctness independently.
 
 **Testing Framework:**
-- xUnit 2.9.3 with Shouldly assertions, NSubstitute mocking
+- xUnit v3 3.2.2 with Shouldly assertions, NSubstitute mocking
 - Three-tier strategy: Tier 1 (unit, no external deps), Tier 2 (DAPR slim init), Tier 3 (full Aspire topology)
 - coverlet.collector 6.0.4 for coverage
 

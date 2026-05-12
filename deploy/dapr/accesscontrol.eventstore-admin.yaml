@@ -1,0 +1,12 @@
+# DAPR Access Control Configuration -- Production EventStore Admin Server
+# =======================================================================
+# The Admin Server is HTTP-facing and does not accept DAPR peer invocation.
+apiVersion: dapr.io/v1alpha1
+kind: Configuration
+metadata:
+  name: accesscontrol-eventstore-admin
+spec:
+  accessControl:
+    defaultAction: deny
+    trustDomain: "{env:DAPR_TRUST_DOMAIN|hexalith.io}"
+    policies: []

@@ -234,7 +234,7 @@ public sealed class TenantsDeploymentValidationTests : IDisposable
             spec:
               pubsubName: pubsub
               topicName: system.tenants.events
-              commandApiAppId: parties
+              commandApiAppId: eventstore
               tenantsDependencyHealth: "healthy {{sentinel}}"
             """);
     }
@@ -369,8 +369,77 @@ public sealed class TenantsDeploymentValidationTests : IDisposable
                 defaultAction: deny
                 trustDomain: "hexalith.io"
                 policies:
+                  - appId: eventstore-admin
+                    defaultAction: deny
+                  - appId: tenants
+                    defaultAction: deny
                   - appId: parties
                     defaultAction: deny
+            """);
+
+        File.WriteAllText(Path.Combine(dir, "accesscontrol.parties.yaml"), """
+            apiVersion: dapr.io/v1alpha1
+            kind: Configuration
+            spec:
+              accessControl:
+                defaultAction: deny
+                trustDomain: "hexalith.io"
+                policies:
+                  - appId: eventstore
+                    defaultAction: deny
+                    operations:
+                      - name: /process
+                        httpVerb: ['POST']
+                        action: allow
+            """);
+
+        File.WriteAllText(Path.Combine(dir, "accesscontrol.tenants.yaml"), """
+            apiVersion: dapr.io/v1alpha1
+            kind: Configuration
+            spec:
+              accessControl:
+                defaultAction: deny
+                trustDomain: "hexalith.io"
+                policies:
+                  - appId: eventstore
+                    defaultAction: deny
+                  - appId: parties
+                    defaultAction: deny
+                    operations:
+                      - name: /ready
+                        httpVerb: ['GET']
+                        action: allow
+            """);
+
+        File.WriteAllText(Path.Combine(dir, "accesscontrol.eventstore-admin.yaml"), """
+            apiVersion: dapr.io/v1alpha1
+            kind: Configuration
+            spec:
+              accessControl:
+                defaultAction: deny
+                trustDomain: "hexalith.io"
+                policies: []
+            """);
+
+        File.WriteAllText(Path.Combine(dir, "topology.yaml"), """
+            apiVersion: hexalith.io/v1
+            kind: PartiesTopology
+            spec:
+              appIds:
+                - eventstore
+                - eventstore-admin
+                - eventstore-admin-ui
+                - parties
+                - tenants
+                - parties-mcp
+              mcpEnabled: false
+              eventStoreAdminUi:
+                adminServerAppId: eventstore-admin
+              domainServices:
+                - key: "*|party|v1"
+                  appId: parties
+                  methodName: process
+                  domain: party
             """);
 
         File.WriteAllText(Path.Combine(dir, "statestore.yaml"), """
@@ -387,8 +456,13 @@ public sealed class TenantsDeploymentValidationTests : IDisposable
                   value: "{env:COSMOSDB_MASTER_KEY}"
                 - name: actorStateStore
                   value: "true"
+                - name: keyPrefix
+                  value: "none"
             scopes:
+              - eventstore
+              - eventstore-admin
               - parties
+              - tenants
             """);
 
         string scopes = includePartiesScope
@@ -407,11 +481,13 @@ public sealed class TenantsDeploymentValidationTests : IDisposable
                 - name: enableDeadLetter
                   value: "true"
                 - name: publishingScopes
-                  value: "{env:SUBSCRIBER_APP_ID}="
+                  value: "eventstore=sample.parties.events;tenants=system.tenants.events;{env:SUBSCRIBER_APP_ID}="
                 - name: subscriptionScopes
                   value: "{{scopes}}"
             scopes:
+              - eventstore
               - parties
+              - tenants
               - "{env:SUBSCRIBER_APP_ID}"
             """);
 
@@ -499,7 +575,7 @@ public sealed class TenantsDeploymentValidationTests : IDisposable
                 spec:
                   pubsubName: pubsub
                   topicName: system.tenants.events
-                  commandApiAppId: parties
+                  commandApiAppId: eventstore
                   tenantsDependencyHealth: healthy
                 """);
     }

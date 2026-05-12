@@ -1,16 +1,16 @@
 # DAPR Access Control Configuration -- Production
 # ==================================================================
-# Defines service-to-service invocation policies for the Parties service.
-# Each DAPR sidecar loads this Configuration to evaluate INCOMING invocation requests.
+# Defines service-to-service invocation policies for the EventStore gateway sidecar.
+# Each DAPR sidecar loads its own Configuration to evaluate INCOMING invocation requests.
 #
 # Security Posture: defaultAction: deny (secure by default)
 # Trust Domain: Configure for production environment via DAPR_TRUST_DOMAIN env var
 # Namespace: Configure for production Kubernetes namespace via DAPR_NAMESPACE env var
 #
-# Adding New Domain Services (Production):
-#   1. Add a policy entry with defaultAction: deny and NO allowed operations.
-#   2. The parties policy already uses wildcard (/**) for outbound invocation.
-#   3. Do NOT add new services to pub/sub scopes, state store scopes, or publishingScopes.
+# Required EventStore callers:
+#   eventstore-admin: operator inspection calls
+#   tenants: tenant lifecycle commands
+#   parties: projection/reactor commands routed through the EventStore gateway
 apiVersion: dapr.io/v1alpha1
 kind: Configuration
 metadata:
@@ -20,7 +20,22 @@ spec:
     defaultAction: deny
     trustDomain: "{env:DAPR_TRUST_DOMAIN|hexalith.io}"
     policies:
-      # parties: Trusted caller -- REST API + actor host + event publisher
+      - appId: eventstore-admin
+        defaultAction: deny
+        trustDomain: "{env:DAPR_TRUST_DOMAIN|hexalith.io}"
+        namespace: "{env:DAPR_NAMESPACE|hexalith}"
+        operations:
+          - name: /**
+            httpVerb: ['GET', 'POST', 'PUT']
+            action: allow
+      - appId: tenants
+        defaultAction: deny
+        trustDomain: "{env:DAPR_TRUST_DOMAIN|hexalith.io}"
+        namespace: "{env:DAPR_NAMESPACE|hexalith}"
+        operations:
+          - name: /**
+            httpVerb: ['POST']
+            action: allow
       - appId: parties
         defaultAction: deny
         trustDomain: "{env:DAPR_TRUST_DOMAIN|hexalith.io}"

@@ -1,0 +1,22 @@
+# DAPR Access Control Configuration -- Production Parties Actor Host
+# ==================================================================
+# Receiving-sidecar policy for the internal Parties actor host. Only
+# EventStore may invoke the domain entry point used by the EventStore-fronted
+# command/query gateway.
+apiVersion: dapr.io/v1alpha1
+kind: Configuration
+metadata:
+  name: accesscontrol-parties
+spec:
+  accessControl:
+    defaultAction: deny
+    trustDomain: "{env:DAPR_TRUST_DOMAIN|hexalith.io}"
+    policies:
+      - appId: eventstore
+        defaultAction: deny
+        trustDomain: "{env:DAPR_TRUST_DOMAIN|hexalith.io}"
+        namespace: "{env:DAPR_NAMESPACE|hexalith}"
+        operations:
+          - name: /process
+            httpVerb: ['POST']
+            action: allow

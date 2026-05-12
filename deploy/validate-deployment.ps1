@@ -194,6 +194,41 @@ function Test-TopicAllowedForApp {
     return $false
 }
 
+function Test-ScopesContainAll {
+    param(
+        [string[]]$Scopes,
+        [string[]]$Required
+    )
+    foreach ($requiredScope in $Required) {
+        if ($Scopes -notcontains $requiredScope) {
+            return $false
+        }
+    }
+    return $true
+}
+
+function Test-AppIdListed {
+    param(
+        [string]$Content,
+        [string]$AppId
+    )
+    $escaped = [regex]::Escape($AppId)
+    return $Content -match "(?m)^\s*-\s*$escaped\s*$"
+}
+
+function Test-InvocationPolicy {
+    param(
+        [string]$Content,
+        [string]$AppId,
+        [string]$Path,
+        [string]$Verb
+    )
+    $escapedAppId = [regex]::Escape($AppId)
+    $escapedPath = [regex]::Escape($Path)
+    $escapedVerb = [regex]::Escape($Verb)
+    return $Content -match "(?ms)-\s*appId:\s*[`"']?$escapedAppId[`"']?.*?operations:\s*.*?name:\s*[`"']?$escapedPath[`"']?.*?httpVerb:\s*\[[^\]]*$escapedVerb[^\]]*\].*?action:\s*allow"
+}
+
 # ---------------------------------------------------------------------------
 # Validation checks
 # ---------------------------------------------------------------------------
@@ -277,6 +312,100 @@ function Test-AccessControl {
     else {
         Add-Result $Category "Policies restrict to known app-ids" "Pass" "Policy entries restrict access to explicit app-ids: [$($appIds -join ', ')]"
     }
+
+    $eventStoreCallers = @("eventstore-admin", "tenants", "parties")
+    foreach ($caller in $eventStoreCallers) {
+        if ($appIds -contains $caller) {
+            Add-Result $Category "EventStore caller allowed: $caller" "Pass" "$caller is explicitly listed for the EventStore receiving sidecar"
+        }
+        elseif ($script:IsLocalDevelopment) {
+            Add-Result $Category "EventStore caller allowed: $caller" "Warn" "Required production EventStore caller is missing (local development profile)" `
+                "Add an explicit $caller policy to accesscontrol.yaml for production."
+        }
+        else {
+            Add-Result $Category "EventStore caller allowed: $caller" "Fail" "Required EventStore caller is missing" `
+                "Add an explicit $caller policy to accesscontrol.yaml. Remediation target: EventStore gateway access control."
+        }
+    }
+
+    $partiesFile = Join-Path $ConfigPath "accesscontrol.parties.yaml"
+    $partiesContent = Read-YamlFile $partiesFile
+    if (-not $partiesContent) {
+        if ($script:IsLocalDevelopment) {
+            Add-Result $Category "Parties receiving sidecar policy" "Warn" "accesscontrol.parties.yaml not found (local development profile)" `
+                "Add accesscontrol.parties.yaml for production so only eventstore can invoke POST /process."
+        }
+        else {
+            Add-Result $Category "Parties receiving sidecar policy" "Fail" "accesscontrol.parties.yaml not found" `
+                "Add accesscontrol.parties.yaml with eventstore -> POST /process only."
+        }
+    }
+    else {
+        if ($partiesContent -match "(?m)^\s{2,4}defaultAction:\s*deny") {
+            Add-Result $Category "Parties sidecar deny-by-default" "Pass" "accesscontrol.parties.yaml uses defaultAction: deny"
+        }
+        else {
+            Add-Result $Category "Parties sidecar deny-by-default" "Fail" "Parties sidecar default action is not deny" `
+                "Set accesscontrol.parties.yaml spec.accessControl.defaultAction to deny."
+        }
+
+        if (Test-InvocationPolicy $partiesContent "eventstore" "/process" "POST") {
+            Add-Result $Category "eventstore invokes parties /process" "Pass" "Receiving sidecar allows eventstore -> POST /process"
+        }
+        else {
+            Add-Result $Category "eventstore invokes parties /process" "Fail" "Required receiving-sidecar invocation is missing" `
+                "Allow only appId=eventstore, method POST, path /process in accesscontrol.parties.yaml."
+        }
+
+        if ($partiesContent -match "appId:\s*['`"]?\*['`"]?" -or $partiesContent -match "name:\s*['`"]?/\*\*['`"]?") {
+            Add-Result $Category "Parties sidecar has no wildcard invocation" "Fail" "Wildcard caller or broad Parties path is configured" `
+                "Remove wildcard app-id and broad /** operations from accesscontrol.parties.yaml."
+        }
+        else {
+            Add-Result $Category "Parties sidecar has no wildcard invocation" "Pass" "No wildcard app-id or /** Parties operation found"
+        }
+    }
+
+    $tenantsFile = Join-Path $ConfigPath "accesscontrol.tenants.yaml"
+    $tenantsContent = Read-YamlFile $tenantsFile
+    if (-not $tenantsContent) {
+        if ($script:IsLocalDevelopment) {
+            Add-Result $Category "Tenants receiving sidecar policy" "Warn" "accesscontrol.tenants.yaml not found (local development profile)" `
+                "Add accesscontrol.tenants.yaml for production Tenants authority invocation."
+        }
+        else {
+            Add-Result $Category "Tenants receiving sidecar policy" "Fail" "accesscontrol.tenants.yaml not found" `
+                "Add accesscontrol.tenants.yaml with explicit EventStore and accepted readiness callers."
+        }
+    }
+    elseif (($tenantsContent -match "(?m)^\s{2,4}defaultAction:\s*deny") -and
+        (Test-InvocationPolicy $tenantsContent "parties" "/ready" "GET")) {
+        Add-Result $Category "Tenants sidecar accepted paths" "Pass" "Tenants receiving sidecar is deny-by-default and exposes the accepted readiness path"
+    }
+    else {
+        Add-Result $Category "Tenants sidecar accepted paths" "Fail" "Tenants receiving-sidecar policy is missing deny posture or /ready shape" `
+            "Keep accesscontrol.tenants.yaml deny-by-default and restrict readiness to appId=parties, GET /ready."
+    }
+
+    $adminFile = Join-Path $ConfigPath "accesscontrol.eventstore-admin.yaml"
+    $adminContent = Read-YamlFile $adminFile
+    if (-not $adminContent) {
+        if ($script:IsLocalDevelopment) {
+            Add-Result $Category "EventStore Admin receiving sidecar policy" "Warn" "accesscontrol.eventstore-admin.yaml not found (local development profile)" `
+                "Add accesscontrol.eventstore-admin.yaml for production admin sidecar isolation."
+        }
+        else {
+            Add-Result $Category "EventStore Admin receiving sidecar policy" "Fail" "accesscontrol.eventstore-admin.yaml not found" `
+                "Add accesscontrol.eventstore-admin.yaml with deny-by-default and no peer policies."
+        }
+    }
+    elseif (($adminContent -match "(?m)^\s{2,4}defaultAction:\s*deny") -and ($adminContent -match "policies:\s*\[\]")) {
+        Add-Result $Category "EventStore Admin sidecar locked down" "Pass" "Admin Server receiving sidecar has no DAPR peer callers"
+    }
+    else {
+        Add-Result $Category "EventStore Admin sidecar locked down" "Fail" "Admin Server sidecar is not locked down" `
+            "Keep accesscontrol.eventstore-admin.yaml deny-by-default with policies: []."
+    }
 }
 
 function Test-StateStore {
@@ -313,17 +442,34 @@ function Test-StateStore {
 
         # Scopes
         $scopes = Get-YamlScopes $content
+        $requiredSharedScopes = @("eventstore", "eventstore-admin", "parties", "tenants")
         if ($scopes.Count -eq 0) {
-            Add-Result $Category "Scopes restrict to parties ($fileName)" "Fail" "No scopes defined" `
-                "Add scopes list containing ONLY 'parties'. No other app-id needs state store access."
+            Add-Result $Category "Shared topology scopes ($fileName)" "Fail" "No scopes defined" `
+                "Add required shared topology scopes: eventstore, eventstore-admin, parties, tenants."
         }
-        elseif ($scopes.Count -eq 1 -and ($scopes[0] -eq "parties")) {
-            Add-Result $Category "Scopes restrict to parties ($fileName)" "Pass" "Scopes: [parties] only"
+        elseif (Test-ScopesContainAll $scopes $requiredSharedScopes) {
+            Add-Result $Category "Shared topology scopes ($fileName)" "Pass" "State store includes required shared topology scopes"
+        }
+        elseif ($script:IsLocalDevelopment -and $scopes -contains "parties") {
+            Add-Result $Category "Shared topology scopes ($fileName)" "Warn" "Only the local Parties state-store scope is configured" `
+                "Production manifests must include required shared topology scopes: eventstore, eventstore-admin, parties, tenants."
         }
         else {
-            $scopeList = $scopes -join ", "
-            Add-Result $Category "Scopes restrict to parties ($fileName)" "Fail" "Scopes contain non-parties entries: [$scopeList]" `
-                "State store scopes should contain ONLY 'parties'. Remove other app-ids."
+            Add-Result $Category "Shared topology scopes ($fileName)" "Fail" "Missing required shared topology scopes" `
+                "Add scopes for eventstore, eventstore-admin, parties, and tenants."
+        }
+
+        $keyPrefix = Get-YamlValue $content "keyPrefix"
+        if ($keyPrefix -eq "none") {
+            Add-Result $Category "keyPrefix is none ($fileName)" "Pass" "keyPrefix=none preserves shared topology state visibility"
+        }
+        elseif ($script:IsLocalDevelopment) {
+            Add-Result $Category "keyPrefix is none ($fileName)" "Warn" "keyPrefix=none is not configured (local development profile)" `
+                "Set keyPrefix=none for the shared EventStore-fronted topology."
+        }
+        else {
+            Add-Result $Category "keyPrefix is none ($fileName)" "Fail" "keyPrefix=none is not configured" `
+                "Set metadata keyPrefix=none for the shared EventStore-fronted topology."
         }
 
         # Connection string uses env-var
@@ -373,8 +519,20 @@ function Test-PubSub {
 
         # Scopes defined
         $scopes = Get-YamlScopes $content
+        $requiredPubSubScopes = @("eventstore", "parties", "tenants")
         if ($scopes.Count -gt 0) {
-            Add-Result $Category "Scopes defined ($fileName)" "Pass" "Component scopes: [$($scopes -join ', ')]"
+            Add-Result $Category "Scopes defined ($fileName)" "Pass" "Component scopes configured"
+            if (Test-ScopesContainAll $scopes $requiredPubSubScopes) {
+                Add-Result $Category "EventStore topology pub/sub scopes ($fileName)" "Pass" "Pub/sub includes eventstore, parties, and tenants"
+            }
+            elseif ($isLocalDevPubSub -and $scopes -contains "parties") {
+                Add-Result $Category "EventStore topology pub/sub scopes ($fileName)" "Warn" "Only local pub/sub scopes are configured" `
+                    "Production pub/sub scopes must include eventstore, parties, and tenants."
+            }
+            else {
+                Add-Result $Category "EventStore topology pub/sub scopes ($fileName)" "Fail" "Missing required EventStore-fronted pub/sub scopes" `
+                    "Add eventstore, parties, and tenants to pub/sub component scopes."
+            }
         }
         else {
             Add-Result $Category "Scopes defined ($fileName)" "Fail" "No component scopes defined" `
@@ -390,6 +548,30 @@ function Test-PubSub {
             else {
                 Add-Result $Category "publishingScopes restricts subscribers ($fileName)" "Fail" "Subscribers may have publishing access to topics" `
                     "Deny subscriber publishing: set subscriber entries to 'SUBSCRIBER_APP_ID=' (empty topics)."
+            }
+
+            if (Test-TopicAllowedForApp $pubScopes "eventstore" "sample.parties.events") {
+                Add-Result $Category "eventstore can publish party events ($fileName)" "Pass" "EventStore publisher scope is configured"
+            }
+            elseif ($isLocalDevPubSub) {
+                Add-Result $Category "eventstore can publish party events ($fileName)" "Warn" "EventStore publisher scope is not configured (local development profile)" `
+                    "Add publishingScopes entry eventstore=sample.parties.events for production."
+            }
+            else {
+                Add-Result $Category "eventstore can publish party events ($fileName)" "Fail" "EventStore publisher scope is missing" `
+                    "Add publishingScopes entry eventstore=sample.parties.events."
+            }
+
+            if (Test-TopicAllowedForApp $pubScopes "tenants" "system.tenants.events") {
+                Add-Result $Category "tenants can publish authority events ($fileName)" "Pass" "Tenants publisher scope is configured"
+            }
+            elseif ($isLocalDevPubSub) {
+                Add-Result $Category "tenants can publish authority events ($fileName)" "Warn" "Tenants publisher scope is not configured (local development profile)" `
+                    "Add publishingScopes entry tenants=system.tenants.events for production."
+            }
+            else {
+                Add-Result $Category "tenants can publish authority events ($fileName)" "Fail" "Tenants publisher scope is missing" `
+                    "Add publishingScopes entry tenants=system.tenants.events."
             }
         }
         else {
@@ -531,6 +713,7 @@ function Test-TenantsIntegration {
     $expectedPubSub = "pubsub"
     $expectedTopic = "system.tenants.events"
     $expectedAppId = "parties"
+    $expectedCommandAppId = "eventstore"
 
     # Filter by manifest kind rather than filename: a file canonically named differently
     # (e.g. parties-integration.yaml) is still a valid TenantsIntegration manifest, while a
@@ -567,12 +750,12 @@ function Test-TenantsIntegration {
             $appId = Get-YamlValue $content "commandApiAppId" -Mode TopLevel
             $dependencyHealth = Get-YamlValue $content "tenantsDependencyHealth" -Mode TopLevel
 
-            if ($pubsubName -eq $expectedPubSub -and $topicName -eq $expectedTopic -and $appId -eq $expectedAppId) {
-                Add-Result $Category "Tenants configuration values ($fileName)" "Pass" "Tenants config targets $expectedPubSub/$expectedTopic for $expectedAppId"
+            if ($pubsubName -eq $expectedPubSub -and $topicName -eq $expectedTopic -and $appId -eq $expectedCommandAppId) {
+                Add-Result $Category "Tenants configuration values ($fileName)" "Pass" "Tenants config targets EventStore-fronted command gateway"
             }
             else {
                 Add-Result $Category "Tenants configuration values ($fileName)" "Fail" "Missing or malformed Tenants config values" `
-                    "Set pubsubName=$expectedPubSub, topicName=$expectedTopic, and commandApiAppId=$expectedAppId. Impact: tenant access projection may not receive authoritative Tenants state. Remediation target: $fileName."
+                    "Set pubsubName=$expectedPubSub, topicName=$expectedTopic, and commandApiAppId=$expectedCommandAppId. Impact: tenant access projection may not receive authoritative Tenants state. Remediation target: $fileName."
             }
 
             # dependencyHealth signal: case-insensitive match; unknown values warn instead of silently passing.
@@ -784,6 +967,88 @@ function Test-SecretStore {
     Add-Result $Category "Secret store component exists" "Pass" "Secret store component found"
 }
 
+function Test-EventStoreFrontedTopology {
+    param([string]$ConfigPath)
+    $Category = "EventStore Topology"
+
+    $topologyFiles = @(Get-ChildItem -Path $ConfigPath -Filter "*.yaml" -ErrorAction SilentlyContinue |
+        Where-Object { (Get-YamlKind (Read-YamlFile $_.FullName)) -eq "PartiesTopology" })
+
+    if ($topologyFiles.Count -eq 0) {
+        if ($script:IsLocalDevelopment) {
+            Add-Result $Category "Topology manifest present" "Warn" "No EventStore-fronted topology manifest found (local development profile)" `
+                "Add topology.yaml for production deployment validation."
+        }
+        else {
+            Add-Result $Category "Topology manifest present" "Fail" "No EventStore-fronted topology manifest found" `
+                "Add topology.yaml with eventstore, eventstore-admin, eventstore-admin-ui, parties, tenants, and optional parties-mcp."
+        }
+        return
+    }
+
+    foreach ($topologyFile in $topologyFiles) {
+        $content = Read-YamlFile $topologyFile.FullName
+        $fileName = $topologyFile.Name
+
+        Add-Result $Category "Topology manifest present ($fileName)" "Pass" "EventStore-fronted topology manifest found"
+
+        $requiredApps = @(
+            @{ AppId = "eventstore"; Label = "EventStore gateway"; Recommendation = "Add eventstore to topology.yaml so command/query gateway readiness is validated." },
+            @{ AppId = "eventstore-admin"; Label = "EventStore Admin Server"; Recommendation = "Add eventstore-admin to topology.yaml for admin inspection validation." },
+            @{ AppId = "eventstore-admin-ui"; Label = "EventStore Admin UI"; Recommendation = "Add eventstore-admin-ui to topology.yaml and wire it to eventstore-admin." },
+            @{ AppId = "parties"; Label = "Parties actor host"; Recommendation = "Add parties to topology.yaml so EventStore command routing can invoke the domain host." },
+            @{ AppId = "tenants"; Label = "Tenants authority"; Recommendation = "Add tenants to topology.yaml so tenant authority reachability is validated." }
+        )
+
+        foreach ($required in $requiredApps) {
+            if (Test-AppIdListed $content $required.AppId) {
+                Add-Result $Category "$($required.Label) resource ($fileName)" "Pass" "$($required.AppId) resource is declared"
+            }
+            else {
+                Add-Result $Category "$($required.Label) resource ($fileName)" "Fail" "$($required.AppId) resource is missing from topology.yaml" `
+                    $required.Recommendation
+            }
+        }
+
+        $mcpEnabled = Get-YamlValue $content "mcpEnabled" -Mode TopLevel
+        if ($mcpEnabled -eq "true") {
+            if (Test-AppIdListed $content "parties-mcp") {
+                Add-Result $Category "Optional MCP resource ($fileName)" "Pass" "parties-mcp is declared because mcpEnabled=true"
+            }
+            else {
+                Add-Result $Category "Optional MCP resource ($fileName)" "Fail" "parties-mcp resource is missing while mcpEnabled=true" `
+                    "Add parties-mcp or set mcpEnabled=false if MCP is not deployed."
+            }
+        }
+        elseif (Test-AppIdListed $content "parties-mcp") {
+            Add-Result $Category "Optional MCP resource ($fileName)" "Pass" "parties-mcp is declared as an optional consumer host"
+        }
+        else {
+            Add-Result $Category "Optional MCP resource ($fileName)" "Warn" "parties-mcp is not declared and mcpEnabled is not true" `
+                "Declare parties-mcp when deploying the optional MCP consumer host."
+        }
+
+        if ($content -match '\*\|party\|v1' -and
+            $content -match "(?m)^\s*appId:\s*parties\s*$" -and
+            $content -match "(?m)^\s*methodName:\s*process\s*$" -and
+            $content -match "(?m)^\s*domain:\s*party\s*$") {
+            Add-Result $Category "Party domain route ($fileName)" "Pass" "Party domain route targets parties/process"
+        }
+        else {
+            Add-Result $Category "Party domain route ($fileName)" "Fail" "Party domain route is missing or malformed" `
+                "Configure *|party|v1 with AppId=parties, MethodName=process, and Domain=party."
+        }
+
+        if ($content -match "(?m)^\s*adminServerAppId:\s*eventstore-admin\s*$") {
+            Add-Result $Category "Admin UI wiring ($fileName)" "Pass" "EventStore Admin UI targets the Admin Server resource"
+        }
+        else {
+            Add-Result $Category "Admin UI wiring ($fileName)" "Fail" "EventStore Admin UI wiring is missing" `
+                "Set eventStoreAdminUi.adminServerAppId=eventstore-admin."
+        }
+    }
+}
+
 # ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
@@ -803,6 +1068,7 @@ $resolvedPath = (Resolve-Path $ConfigPath).Path
 
 # Run all validation checks
 Test-AccessControl $resolvedPath
+Test-EventStoreFrontedTopology $resolvedPath
 Test-StateStore $resolvedPath
 Test-PubSub $resolvedPath
 Test-Subscription $resolvedPath

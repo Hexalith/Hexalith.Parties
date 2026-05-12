@@ -79,7 +79,7 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
             ? "Test infrastructure not initialized. Ensure InitializeAsync has completed."
             : $"Test infrastructure unavailable: {UnavailableReason}");
 
-    public async Task InitializeAsync()
+    public async ValueTask InitializeAsync()
     {
         // Disable Keycloak for health check tests — symmetric key JWT auth is sufficient.
         _previousEnableKeycloak = Environment.GetEnvironmentVariable("EnableKeycloak");
@@ -163,7 +163,7 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
         + "test needs authenticated tenant access. Health/ready/alive endpoints do not require "
         + "seeded tenants.");
 
-    public async Task DisposeAsync()
+    public async ValueTask DisposeAsync()
     {
         _partiesClient?.Dispose();
         _eventStoreClient?.Dispose();

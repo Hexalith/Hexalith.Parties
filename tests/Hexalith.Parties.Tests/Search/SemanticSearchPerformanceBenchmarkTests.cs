@@ -6,7 +6,7 @@ using Hexalith.Parties.Contracts.ValueObjects;
 
 using Shouldly;
 
-using Xunit.Abstractions;
+using Xunit;
 
 namespace Hexalith.Parties.Tests.Search;
 

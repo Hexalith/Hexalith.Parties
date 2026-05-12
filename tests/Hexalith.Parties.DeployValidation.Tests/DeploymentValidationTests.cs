@@ -57,6 +57,34 @@ public class DeploymentValidationTests : IDisposable
     }
 
     [Fact]
+    public async Task MissingEventStoreTopologyResource_FailsWithGatewayRecommendation()
+    {
+        WriteValidProductionConfig(_tempDir);
+        WriteTopologyConfig(_tempDir, includeEventStore: false);
+
+        (int exitCode, string output) = await RunValidationAsync(_tempDir);
+
+        exitCode.ShouldBe(1);
+        output.ShouldContain("EventStore gateway");
+        output.ShouldContain("eventstore");
+        output.ShouldContain("topology.yaml");
+    }
+
+    [Fact]
+    public async Task PartiesMcpEnabledButMissingResource_FailsWithOptionalMcpRecommendation()
+    {
+        WriteValidProductionConfig(_tempDir);
+        WriteTopologyConfig(_tempDir, includePartiesMcp: false, mcpEnabled: true);
+
+        (int exitCode, string output) = await RunValidationAsync(_tempDir);
+
+        exitCode.ShouldBe(1);
+        output.ShouldContain("Optional MCP");
+        output.ShouldContain("parties-mcp");
+        output.ShouldContain("mcpEnabled");
+    }
+
+    [Fact]
     public async Task DefaultActionAllow_FailsWithRecommendation()
     {
         WriteValidProductionConfig(_tempDir);
@@ -90,7 +118,7 @@ public class DeploymentValidationTests : IDisposable
         (int exitCode, string output) = await RunValidationAsync(_tempDir);
 
         exitCode.ShouldBe(1);
-        output.ShouldContain("parties");
+        output.ShouldContain("required shared topology scopes");
     }
 
     [Fact]
@@ -189,7 +217,7 @@ public class DeploymentValidationTests : IDisposable
 
         exitCode.ShouldBe(1);
         output.ShouldContain("Missing or malformed Tenants config values");
-        output.ShouldContain("pubsubName=pubsub");
+        output.ShouldContain("commandApiAppId=eventstore");
         output.ShouldNotContain("token");
         output.ShouldNotContain("membership");
     }
@@ -219,7 +247,7 @@ public class DeploymentValidationTests : IDisposable
             spec:
               pubsubName: pubsub
               topicName: system.tenants.events
-              commandApiAppId: parties
+              commandApiAppId: eventstore
               tenantsDependencyHealth: unhealthy
             """);
 
@@ -292,6 +320,26 @@ public class DeploymentValidationTests : IDisposable
         output.ShouldContain("secretstore");
     }
 
+    [Fact]
+    public async Task TopologyValidation_Output_DoesNotLeakSecretLookingManifestValues()
+    {
+        string sentinel = $"hexalith-secret-sentinel-{Guid.NewGuid():N}";
+        WriteValidProductionConfig(_tempDir);
+        WriteTopologyConfig(_tempDir, includeSecretAnnotation: true, secretSentinel: sentinel);
+
+        (int exitCode, string consoleOutput) = await RunValidationAsync(_tempDir);
+        (int jsonExitCode, string jsonOutput) = await RunValidationAsync(_tempDir, jsonOutput: true);
+
+        exitCode.ShouldBe(0, consoleOutput);
+        jsonExitCode.ShouldBe(0, jsonOutput);
+        consoleOutput.ShouldNotContain(sentinel, Case.Insensitive);
+        jsonOutput.ShouldNotContain(sentinel, Case.Insensitive);
+        consoleOutput.ShouldNotContain("Bearer ", Case.Insensitive);
+        jsonOutput.ShouldNotContain("Bearer ", Case.Insensitive);
+        consoleOutput.ShouldNotContain("ConnectionString=", Case.Insensitive);
+        jsonOutput.ShouldNotContain("ConnectionString=", Case.Insensitive);
+    }
+
     protected virtual void Dispose(bool disposing)
     {
         if (!_disposed)
@@ -340,6 +388,22 @@ public class DeploymentValidationTests : IDisposable
                 defaultAction: deny
                 trustDomain: "{env:DAPR_TRUST_DOMAIN|hexalith.io}"
                 policies:
+                  - appId: eventstore-admin
+                    defaultAction: deny
+                    trustDomain: "{env:DAPR_TRUST_DOMAIN|hexalith.io}"
+                    namespace: "{env:DAPR_NAMESPACE|hexalith}"
+                    operations:
+                      - name: /**
+                        httpVerb: ['GET', 'POST', 'PUT']
+                        action: allow
+                  - appId: tenants
+                    defaultAction: deny
+                    trustDomain: "{env:DAPR_TRUST_DOMAIN|hexalith.io}"
+                    namespace: "{env:DAPR_NAMESPACE|hexalith}"
+                    operations:
+                      - name: /**
+                        httpVerb: ['POST']
+                        action: allow
                   - appId: parties
                     defaultAction: deny
                     trustDomain: "{env:DAPR_TRUST_DOMAIN|hexalith.io}"
@@ -349,6 +413,9 @@ public class DeploymentValidationTests : IDisposable
                         httpVerb: ['POST']
                         action: allow
             """);
+
+        WriteSplitAccessControlFiles(dir);
+        WriteTopologyConfig(dir);
 
         File.WriteAllText(Path.Combine(dir, "statestore-cosmosdb.yaml"), """
             apiVersion: dapr.io/v1alpha1
@@ -369,8 +436,13 @@ public class DeploymentValidationTests : IDisposable
                   value: "{env:COSMOSDB_COLLECTION|state}"
                 - name: actorStateStore
                   value: "true"
+                - name: keyPrefix
+                  value: "none"
             scopes:
+              - eventstore
+              - eventstore-admin
               - parties
+              - tenants
             """);
 
         File.WriteAllText(Path.Combine(dir, "pubsub-kafka.yaml"), """
@@ -389,11 +461,13 @@ public class DeploymentValidationTests : IDisposable
                 - name: enableDeadLetter
                   value: "true"
                 - name: publishingScopes
-                  value: "{env:SUBSCRIBER_APP_ID}="
+                  value: "eventstore=sample.parties.events;tenants=system.tenants.events;{env:SUBSCRIBER_APP_ID}="
                 - name: subscriptionScopes
                   value: "parties=system.tenants.events;{env:SUBSCRIBER_APP_ID}=acme.parties.events"
             scopes:
+              - eventstore
               - parties
+              - tenants
               - "{env:SUBSCRIBER_APP_ID}"
             """);
 
@@ -435,7 +509,7 @@ public class DeploymentValidationTests : IDisposable
             spec:
               pubsubName: pubsub
               topicName: system.tenants.events
-              commandApiAppId: parties
+              commandApiAppId: eventstore
               tenantsDependencyHealth: healthy
             """);
 
@@ -469,6 +543,117 @@ public class DeploymentValidationTests : IDisposable
                   statestore:
                     retry: defaultRetry
                     circuitBreaker: defaultBreaker
+            """);
+    }
+
+    private static void WriteSplitAccessControlFiles(string dir)
+    {
+        File.WriteAllText(Path.Combine(dir, "accesscontrol.parties.yaml"), """
+            apiVersion: dapr.io/v1alpha1
+            kind: Configuration
+            metadata:
+              name: accesscontrol-parties
+            spec:
+              accessControl:
+                defaultAction: deny
+                trustDomain: "{env:DAPR_TRUST_DOMAIN|hexalith.io}"
+                policies:
+                  - appId: eventstore
+                    defaultAction: deny
+                    trustDomain: "{env:DAPR_TRUST_DOMAIN|hexalith.io}"
+                    namespace: "{env:DAPR_NAMESPACE|hexalith}"
+                    operations:
+                      - name: /process
+                        httpVerb: ['POST']
+                        action: allow
+            """);
+
+        File.WriteAllText(Path.Combine(dir, "accesscontrol.tenants.yaml"), """
+            apiVersion: dapr.io/v1alpha1
+            kind: Configuration
+            metadata:
+              name: accesscontrol-tenants
+            spec:
+              accessControl:
+                defaultAction: deny
+                trustDomain: "{env:DAPR_TRUST_DOMAIN|hexalith.io}"
+                policies:
+                  - appId: eventstore
+                    defaultAction: deny
+                    trustDomain: "{env:DAPR_TRUST_DOMAIN|hexalith.io}"
+                    namespace: "{env:DAPR_NAMESPACE|hexalith}"
+                    operations:
+                      - name: /**
+                        httpVerb: ['POST']
+                        action: allow
+                  - appId: parties
+                    defaultAction: deny
+                    trustDomain: "{env:DAPR_TRUST_DOMAIN|hexalith.io}"
+                    namespace: "{env:DAPR_NAMESPACE|hexalith}"
+                    operations:
+                      - name: /ready
+                        httpVerb: ['GET']
+                        action: allow
+            """);
+
+        File.WriteAllText(Path.Combine(dir, "accesscontrol.eventstore-admin.yaml"), """
+            apiVersion: dapr.io/v1alpha1
+            kind: Configuration
+            metadata:
+              name: accesscontrol-eventstore-admin
+            spec:
+              accessControl:
+                defaultAction: deny
+                trustDomain: "{env:DAPR_TRUST_DOMAIN|hexalith.io}"
+                policies: []
+            """);
+    }
+
+    private static void WriteTopologyConfig(
+        string dir,
+        bool includeEventStore = true,
+        bool includeEventStoreAdmin = true,
+        bool includeEventStoreAdminUi = true,
+        bool includeParties = true,
+        bool includeTenants = true,
+        bool includePartiesMcp = true,
+        bool mcpEnabled = false,
+        bool includeSecretAnnotation = false,
+        string? secretSentinel = null)
+    {
+        List<string> appIds = [];
+        if (includeEventStore) appIds.Add("eventstore");
+        if (includeEventStoreAdmin) appIds.Add("eventstore-admin");
+        if (includeEventStoreAdminUi) appIds.Add("eventstore-admin-ui");
+        if (includeParties) appIds.Add("parties");
+        if (includeTenants) appIds.Add("tenants");
+        if (includePartiesMcp) appIds.Add("parties-mcp");
+
+        string appIdLines = string.Join(Environment.NewLine, appIds.Select(appId => $"    - {appId}"));
+        string annotation = includeSecretAnnotation
+            ? $"""
+              annotations:
+                diagnostic: "Bearer {secretSentinel} ConnectionString=Server=example;Password={secretSentinel}"
+            """
+            : string.Empty;
+
+        File.WriteAllText(Path.Combine(dir, "topology.yaml"), $$"""
+            apiVersion: hexalith.io/v1
+            kind: PartiesTopology
+            metadata:
+              name: parties-eventstore-fronted
+            {{annotation}}
+            spec:
+              appIds:
+            {{appIdLines}}
+              mcpEnabled: {{mcpEnabled.ToString().ToLowerInvariant()}}
+              eventStoreAdminUi:
+                adminServerAppId: eventstore-admin
+              domainServices:
+                - key: "*|party|v1"
+                  appId: parties
+                  methodName: process
+                  domain: party
             """);
     }
 

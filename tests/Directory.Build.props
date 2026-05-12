@@ -1,0 +1,14 @@
+<Project>
+
+  <Import Project="..\Directory.Build.props" />
+
+  <PropertyGroup>
+    <!--
+      xUnit v3 promotes xUnit1051 cancellation-token guidance across the root test
+      suite. The existing debt is tracked as deferred work; keep migration scope to
+      the framework/package move and v3 API compatibility.
+    -->
+    <NoWarn>$(NoWarn);xUnit1051</NoWarn>
+  </PropertyGroup>
+
+</Project>
