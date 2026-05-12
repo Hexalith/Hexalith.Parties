@@ -200,7 +200,7 @@ All hard gates must pass to proceed to v1.1. Soft gates inform but don't block.
 - Operational observability: alerting, monitoring dashboards, and runbooks required for production EU data deployments
 
 **v1.2 — Frontend:**
-- TypeScript admin portal (browse, search, inspect, GDPR operations)
+- FrontComposer-based Blazor/Razor admin portal (browse, search, inspect, GDPR operations), consuming the EventStore-fronted Parties client/query/command boundary
 - Embeddable party picker component for consuming app UIs
 - Composable component architecture (PartyList, PartyDetail, PartyForm, ContactChannelEditor, ConsentManager)
 

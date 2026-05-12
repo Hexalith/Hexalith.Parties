@@ -314,8 +314,18 @@ This document provides the complete epic and story breakdown for Hexalith.Partie
 
 ## Epic List
 
+### Planning Readiness Reconciliation
+
+The canonical implementation direction is now the EventStore-fronted plan recorded in `sprint-change-proposal-2026-05-07.md`, `sprint-status.yaml`, and Epic 12 story files. Earlier REST, TypeScript-admin, and upfront-contract wording in this document is retained only where it describes historical story origin. Current implementation and future story creation must follow the sequence and supersession notes below.
+
+Execution sequence:
+1. Epics 1-9: domain, discovery, integration, operations, GDPR/privacy/search foundation.
+2. Epic 11: Hexalith.Tenants integration for Parties. This is a prerequisite for admin/frontend work.
+3. Epic 12: EventStore-fronted architecture pivot and consumer migration.
+4. Epic 10: administration and picker user experience, consumed through the FrontComposer/EventStore/Parties client boundary.
+
 ### Epic 1: Domain Foundation & Party Lifecycle
-A developer can deploy the service from source with a single command, create parties (persons and organizations) with type-specific details, retrieve them by ID, and verify the full command-event cycle works — with tenant isolation, [PersonalData] markers, log sanitization, and GDPR compliance warning from day one. ALL event and command types are defined in the Contracts project (including channel/identifier types used in later epics) because events are contracts that projections and subscribers depend on.
+A developer can deploy the service from source with a single command, create parties (persons and organizations) with type-specific details, retrieve them by ID, and verify the full command-event cycle works — with tenant isolation, [PersonalData] markers, log sanitization, and GDPR compliance warning from day one. Historical Epic 1 work defined a broad contract surface; future contract additions must be sliced with the behavior that first consumes them.
 **FRs covered:** FR1, FR2, FR3, FR4, FR5, FR6, FR7, FR18, FR29, FR30, FR31, FR33, FR36, FR39, FR40, FR41, FR42, FR43, FR57, FR58, FR60, FR62
 
 ### Epic 2: Contact Channels & Identifiers
@@ -346,8 +356,8 @@ Consuming applications can subscribe to party domain events and build domain-spe
 Operators can deploy with confidence using deployment validation tooling (DAPR security config verification), monitor health and readiness signals, and trust that the service degrades gracefully when infrastructure components fail. Includes projection health monitoring with auto-rebuild on corruption (D15) and projection rebuild admin endpoint (D14).
 **FRs covered:** FR61, FR64, FR71
 
-### Epic 9: GDPR Compliance (v1.1)
-Administrators can fulfill all GDPR obligations — erasure via crypto-shredding with per-party keys, per-channel per-purpose consent management, data restriction, portability export, processing records (Article 30), and erasure verification across all data stores — with automated subscriber notification and decrypted events at publish time. Includes temporal name queries (FR72) and Hexalith.Memories-backed party search (FR16) deferred from MVP.
+### Epic 9: GDPR, Privacy, and v1.1 Search Extensions
+Administrators can fulfill GDPR obligations and the platform can support privacy-safe v1.1 search and audit extensions. GDPR erasure, consent, restriction, portability, processing records, per-party keys, erased-state behavior, and subscriber notification remain the primary compliance scope. Temporal name queries and Hexalith.Memories-backed search are explicitly v1.1 extensions and must retain privacy, erasure, and tenant-isolation guarantees.
 **FRs covered:** FR44, FR45, FR46, FR47, FR48, FR49, FR50, FR51, FR52, FR53, FR54, FR55, FR16, FR72
 
 ### Epic 11: Hexalith.Tenants Integration for Parties
@@ -355,14 +365,14 @@ Hexalith.Parties uses Hexalith.Tenants as the source of truth for tenant lifecyc
 **FRs covered:** FR39, FR40, FR41, FR75
 
 ### Epic 10: Administration & Frontend (v1.2)
-Administrators can browse, search, and inspect party records and process party-level GDPR requests (erasure, restriction, consent, export) via a TypeScript admin portal. Tenant lifecycle, membership, roles, and configuration remain owned by Hexalith.Tenants admin capabilities. Consuming application developers can embed a party picker component in their UIs for party search and selection.
+Administrators can browse, search, and inspect party records and process party-level GDPR requests via a FrontComposer-based Blazor/Razor admin portal that consumes EventStore-fronted Parties client/query/command contracts. Generic event and stream browsing is delegated to EventStore Admin UI through safe deep-links. Tenant lifecycle, membership, roles, and configuration remain owned by Hexalith.Tenants admin capabilities. Consuming application developers can embed a party picker component in their UIs for party search and selection.
 **FRs covered:** FR65, FR66, FR67
 
 ---
 
 ## Epic 1: Domain Foundation & Party Lifecycle
 
-A developer can deploy the service from source with a single command, create parties (persons and organizations) with type-specific details, retrieve them by ID, and verify the full command-event cycle works — with tenant isolation, [PersonalData] markers, log sanitization, and GDPR compliance warning from day one. ALL event and command types are defined in the Contracts project (including channel/identifier types used in later epics) because events are contracts that projections and subscribers depend on.
+A developer can deploy the service from source with a single command, create parties (persons and organizations) with type-specific details, retrieve them by ID, and verify the full command-event cycle works — with tenant isolation, [PersonalData] markers, log sanitization, and GDPR compliance warning from day one. Historical Epic 1 work defined a broad contract surface; future contract additions must be sliced with the behavior that first consumes them.
 
 ### Story 1.1: Project Scaffolding & Solution Structure
 
@@ -395,11 +405,13 @@ So that I have a consistent, buildable foundation for the party management servi
 **And** `dotnet restore Hexalith.Parties.slnx` completes without errors
 **And** `dotnet build Hexalith.Parties.slnx` compiles successfully (empty projects, no source files yet)
 
-### Story 1.2: Domain Contracts — Complete Type Definitions
+### Story 1.2: Domain Contracts — Initial Party Lifecycle Contract Slice
 
 As a developer,
-I want all party domain types (commands, events, value objects, state, models, results, enums) defined in the Contracts project,
-So that the domain model contracts are stable before aggregate and projection implementation begins.
+I want the initial party lifecycle contracts needed by the first aggregate and retrieval stories,
+So that the domain model can grow incrementally with the behavior that consumes each contract.
+
+Planning note: this story was completed historically with a broader contract surface. Do not use that historical breadth as the pattern for future stories. Contact/identifier contracts belong with Epic 2 behavior, projection query models with Epic 3 behavior, composite result contracts with Epic 4 behavior, MCP-specific schemas with Epic 5 behavior, and GDPR/privacy/search contracts with the relevant v1.1 stories.
 
 **Acceptance Criteria:**
 
@@ -511,6 +523,8 @@ So that parties can be maintained throughout their lifecycle with accurate infor
 **Then** a rejection event is returned (type mismatch)
 
 ### Story 1.5: Party Aggregate Tier 1 Unit Tests
+
+Planning note: this quality gate is attached to the related behavior stories and exists to preserve the historical sprint record. Future epics should express comparable unit, integration, accessibility, privacy, and fitness expectations as acceptance criteria or engineering tasks under the behavior story unless the test work creates a reusable independent test harness.
 
 As a developer,
 I want comprehensive Tier 1 unit tests for all party aggregate Handle/Apply methods,
@@ -718,6 +732,8 @@ So that parties carry structured legal and administrative references (VAT, SIRET
 **Then** a rejection event is returned with a clear error message
 
 ### Story 2.3: Contact Channel & Identifier Unit Tests
+
+Planning note: this quality gate is attached to the related behavior stories and exists to preserve the historical sprint record. Future epics should express comparable unit, integration, accessibility, privacy, and fitness expectations as acceptance criteria or engineering tasks under the behavior story unless the test work creates a reusable independent test harness.
 
 As a developer,
 I want comprehensive Tier 1 unit tests for all contact channel and identifier aggregate operations,
@@ -936,6 +952,8 @@ So that I can find the right party quickly and AI agents can perform confident d
 
 ### Story 3.4: Projection Unit & Integration Tests
 
+Planning note: this quality gate is attached to the related behavior stories and exists to preserve the historical sprint record. Future epics should express comparable unit, integration, accessibility, privacy, and fitness expectations as acceptance criteria or engineering tasks under the behavior story unless the test work creates a reusable independent test harness.
+
 As a developer,
 I want comprehensive tests for projection handlers and actors,
 So that read model correctness, search behavior, and eventual consistency are verified.
@@ -1106,6 +1124,8 @@ So that AI agents can make complex party modifications without multiple sequenti
 **Then** a rejection is returned with "party not found"
 
 ### Story 4.3: Composite Command Unit Tests
+
+Planning note: this quality gate is attached to the related behavior stories and exists to preserve the historical sprint record. Future epics should express comparable unit, integration, accessibility, privacy, and fitness expectations as acceptance criteria or engineering tasks under the behavior story unless the test work creates a reusable independent test harness.
 
 As a developer,
 I want a comprehensive test matrix for both composite aggregate handlers,
@@ -1344,6 +1364,8 @@ So that I can make targeted modifications without sending full party state.
 **And** zero business rules or domain validation logic
 
 ### Story 5.4: MCP Tools Tests & Architectural Fitness
+
+Planning note: this quality gate is attached to the related behavior stories and exists to preserve the historical sprint record. Future epics should express comparable unit, integration, accessibility, privacy, and fitness expectations as acceptance criteria or engineering tasks under the behavior story unless the test work creates a reusable independent test harness.
 
 As a developer,
 I want comprehensive tests for all MCP tools and a CI-enforced architectural fitness test,
@@ -1802,9 +1824,9 @@ So that read model issues are resolved automatically or with minimal operator in
 
 ---
 
-## Epic 9: GDPR Compliance (v1.1)
+## Epic 9: GDPR, Privacy, and v1.1 Search Extensions
 
-Administrators can fulfill all GDPR obligations — erasure via crypto-shredding with per-party keys, per-channel per-purpose consent management, data restriction, portability export, processing records (Article 30), and erasure verification across all data stores — with automated subscriber notification and decrypted events at publish time. Includes temporal name queries (FR72) and Hexalith.Memories-backed party search (FR16) deferred from MVP.
+Administrators can fulfill GDPR obligations and the platform can support privacy-safe v1.1 search and audit extensions. GDPR erasure, consent, restriction, portability, processing records, per-party keys, erased-state behavior, and subscriber notification remain the primary compliance scope. Temporal name queries and Hexalith.Memories-backed search are explicitly v1.1 extensions and must retain privacy, erasure, and tenant-isolation guarantees.
 
 ### Story 9.1: Per-Party Encryption Key Management
 
@@ -2146,7 +2168,9 @@ So that tenant integration is reliable in CI and local development.
 
 ## Epic 10: Administration & Frontend (v1.2)
 
-Administrators can browse, search, and inspect party records and process party-level GDPR requests (erasure, restriction, consent, export) via a TypeScript admin portal. Tenant lifecycle, membership, roles, and configuration management remain owned by Hexalith.Tenants admin capabilities; the Parties admin portal consumes active tenant context and must not duplicate Tenants management screens. Consuming application developers can embed a party picker component in their UIs for party search and selection.
+Administrators can browse, search, and inspect party records and process party-level GDPR requests via a FrontComposer-based Blazor/Razor admin portal that consumes EventStore-fronted Parties client/query/command contracts. Generic event and stream browsing is delegated to EventStore Admin UI through safe deep-links. Tenant lifecycle, membership, roles, and configuration management remain owned by Hexalith.Tenants admin capabilities; the Parties admin portal consumes active tenant context and must not duplicate Tenants management screens. Consuming application developers can embed a party picker component in their UIs for party search and selection.
+
+Planning note: Epic 10 administration and picker delivery depends on Epic 11 Tenants integration and the Epic 12 EventStore-fronted consumer boundary. Story 12.7 is the active admin portal implementation path; Story 12.8 is the active picker rewrite path. Earlier TypeScript or direct Parties REST wording in Story 10.x is historical and superseded where it conflicts with Epic 12.
 
 ### Story 10.1: Admin Portal — Browse, Search & Inspect
 
@@ -2180,8 +2204,8 @@ So that I can manage party data without using API tools or CLI commands.
 
 **Given** the admin portal architecture
 **When** reviewed
-**Then** it is a TypeScript application
-**And** it uses composable components: PartyList, PartyDetail, PartyForm, ContactChannelEditor
+**Then** it is a FrontComposer-based Blazor/Razor domain surface
+**And** it uses composable Parties-domain components for list, detail, GDPR operations, and safe EventStore Admin UI deep-links
 
 ### Story 10.2: Admin Portal — GDPR Operations
 
@@ -2219,6 +2243,8 @@ So that DPO operations are efficient and auditable through a visual interface.
 
 ### Story 10.3: Embeddable Party Picker Component
 
+Planning note: Story 10.3 / Story 12.8 party picker UX must cover embedding shape, type-ahead behavior, selected-id contract, host auth injection, stale-response clearing, accessibility, localization, and privacy-safe rendering/storage/logging. This UX source is separate from the admin portal UX artifact.
+
 As a consuming application developer,
 I want an embeddable party picker component for my UI,
 So that my users can search and select parties without building a custom party selector.
@@ -2233,9 +2259,9 @@ So that my users can search and select parties without building a custom party s
 
 **Given** the party picker component
 **When** reviewed for architecture
-**Then** it is a composable TypeScript component
-**And** it communicates with the Parties REST API
-**And** it handles authentication via configuration (token injection from host app)
+**Then** it is a composable FrontComposer/Blazor picker component
+**And** it communicates through the EventStore-fronted Parties client/query boundary
+**And** it handles host request/auth injection through the accepted Parties client/EventStore gateway configuration
 
 **Given** the party picker component
 **When** used in different consuming applications

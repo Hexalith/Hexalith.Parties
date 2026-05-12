@@ -314,7 +314,18 @@ samples/
 15. Dedicated search engine selection (v1.1)
 16. Automated projection drift detection (v1.1)
 17. Crypto-shredding activation and re-encryption mechanics (v1.1)
-18. Admin portal frontend architecture (v1.2)
+18. Admin portal frontend architecture (v1.2) — decided by the FrontComposer/EventStore course correction; see "Frontend Architecture" below.
+
+### Frontend Architecture
+
+**D20 — Administration Frontend: FrontComposer Domain Surface**
+
+- **Decision:** The Parties Admin Portal is a FrontComposer domain surface implemented with Blazor/Razor and Fluent UI Blazor.
+- **Decision:** The portal registers Parties-domain views with the FrontComposer shell, reads through EventStore query/client abstractions, routes supported commands through the typed Parties client/EventStore command boundary, and delegates generic event/stream browsing to EventStore Admin UI safe deep-links.
+- **Rationale:** This aligns the administration experience with the EventStore-fronted architecture pivot and avoids building a standalone TypeScript SPA or duplicating generic EventStore stream inspection.
+- **Consequence:** The portal must fail closed and clear sensitive state on sign-out, missing tenant, non-admin user, tenant switch, stale response, forbidden, not found, gone/erased, timeout, malformed response, and contract-unavailable failures.
+- **Consequence:** Labels, dates, counts, status messages, validation messages, and operation outcomes must be localized. Focus management, keyboard access, non-color-only state, and polite status announcements are part of the frontend architecture contract.
+- **Affects:** Administration portal, GDPR operations UI, EventStore Admin UI deep-links, FrontComposer integration, party picker UX.
 
 ### Data Architecture
 
