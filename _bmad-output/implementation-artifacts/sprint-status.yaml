@@ -54,7 +54,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-05-02
-last_updated: 2026-05-11  # story 12-6 moved review -> done after bmad-code-review applied 4 MCP compatibility patches: restored create/update aliases and partial patch merge behavior, lifecycle-plus-detail updates, searched-result type/active filtering, and temporal name lookup failure semantics. MCP tests 21/21, client tests 74/74, solution build clean.
+last_updated: 2026-05-11  # story 12-9 moved in-progress -> review after EventStore-fronted README/getting-started/sample updates and guardrails. Sample tests 52/52, sample build clean, solution build clean, full no-build regression 973 passed / 6 expected health E2E skips. Runtime Aspire proof unavailable because dotnet-aspire is not on PATH.
 # sprint_change_proposals:
 #   - sprint-change-proposal-2026-05-07.md  (EventStore-Fronted Architecture Pivot — added Epic 12; paused 10-1-1, 10-2, 10-3)
 project: Hexalith.Parties
@@ -172,6 +172,6 @@ development_status:
   12-6-parties-mcp-thin-host: done
   12-7-admin-portal-rebuild-on-frontcomposer: blocked
   12-8-picker-rewrite: blocked
-  12-9-sample-and-getting-started-doc-updates: ready-for-dev
+  12-9-sample-and-getting-started-doc-updates: review
   12-10-deployment-validation-and-topology-fitness-rewrite: ready-for-dev
   epic-12-retrospective: optional

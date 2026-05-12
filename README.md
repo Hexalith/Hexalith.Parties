@@ -1,18 +1,18 @@
 # Hexalith.Parties
 
-Hexalith.Parties is a ready-to-deploy party management microservice that lets you store, query, and manage people and organizations through a REST API, AI-friendly MCP tools, or a typed .NET client package -- so you can integrate party management into your system instead of rebuilding it.
+Hexalith.Parties is a ready-to-deploy party management domain service for people and organizations. Public command and query traffic goes through Hexalith.EventStore; the `parties` service runs the domain actor host behind that gateway, and consumers normally use the typed .NET client package.
 
 > **GDPR Notice:** This MVP does **not** include GDPR compliance features (crypto-shredding, consent management, right to erasure). **Do not store regulated EU personal data.** GDPR features are planned for v1.1 -- see the [roadmap](docs/getting-started.md#whats-next).
 
 ## Key Features
 
-- **Event-Sourced CQRS** -- Commands and queries separated with full event history via DAPR-backed event store
-- **REST API** -- Standard HTTP endpoints for creating, updating, querying, and searching parties
-- **MCP AI Tools** -- Five Model Context Protocol tools (`create_party`, `get_party`, `find_parties`, `update_party`, `delete_party`) for AI assistant integration
-- **NuGet Client Package** -- Typed `IPartiesCommandClient` and `IPartiesQueryClient` interfaces for .NET service-to-service calls
-- **Multi-Tenant** -- Tenant isolation via JWT claims plus Hexalith.Tenants membership and role checks, enforced at every layer
-- **Tenants Projection** -- Local event-fed cache of Hexalith.Tenants lifecycle, membership, role, and configuration state for fail-closed access checks
-- **.NET Aspire** -- One-command local deployment with dashboard, DAPR sidecars, and optional Keycloak
+- **EventStore gateway** -- Public command/query ingress uses `POST /api/v1/commands` and `POST /api/v1/queries` with `Domain="party"`.
+- **Parties actor host** -- The `parties` resource owns domain execution, projections, and DAPR actor hosting behind EventStore.
+- **Typed client package** -- `IPartiesCommandClient` and `IPartiesQueryClient` hide EventStore envelope plumbing for .NET consumers.
+- **Separate MCP host** -- `parties-mcp` exposes `create_party`, `get_party`, `find_parties`, `update_party`, `delete_party`, and `get_party_name_at` through the typed client boundary.
+- **DAPR event subscription** -- Subscriber apps consume EventStore-published party events with their own idempotent handlers.
+- **EventStore Admin UI** -- Use `eventstore-admin-ui` for generic stream and event browsing.
+- **.NET Aspire** -- One-command local topology with EventStore, Parties, Tenants, DAPR sidecars, Redis, and optional Keycloak.
 
 ## Quick Start
 
@@ -22,19 +22,19 @@ cd Hexalith.Parties
 dotnet aspire run --project src/Hexalith.Parties.AppHost
 ```
 
-Open the Aspire dashboard (URL shown in terminal output) to verify all resources are running.
+Open the Aspire dashboard (URL shown in terminal output) and verify these resources are running: `eventstore`, `eventstore-admin`, `eventstore-admin-ui`, `parties`, and `tenants`. The `parties-mcp` resource is present when the MCP host is included in the local AppHost.
 
-> **Prerequisite — tenant access state.** Provision or use an active Hexalith.Tenants tenant membership before the first Parties call. Parties consumes Tenants state and does not manage tenant lifecycle or roles itself.
+> **Prerequisite - tenant access state.** Provision or use an active Hexalith.Tenants tenant membership before the first Parties call. EventStore owns public authentication, tenant validation, RBAC, command/query routing, and generic response mapping. Parties consumes the authorized command/query behind the actor host and does not manage tenant lifecycle or roles itself.
 
-See the [Getting Started Guide](docs/getting-started.md) for the full walkthrough including your first API call.
+See the [Getting Started Guide](docs/getting-started.md) for the full EventStore-fronted walkthrough.
 
 ## Documentation
 
-- [Getting Started Guide](docs/getting-started.md) -- Deploy and send your first command in under 30 minutes
+- [Getting Started Guide](docs/getting-started.md) -- Deploy and send your first EventStore-fronted command in under 30 minutes
 - [Tenants Access Projection](docs/tenant-access-projection.md) -- Event-driven local tenant access state, consistency window, and fail-closed rules
 - [Embeddable Party Picker](docs/frontend/party-picker.md) -- Blazor/custom-element picker integration for consuming applications
 - [Architecture Overview](_bmad-output/planning-artifacts/architecture.md) -- System topology and design decisions
-- API Reference -- Available at `/openapi/v1.json` (Swagger UI in development mode)
+- Event streams -- Browse through the EventStore Admin UI resource in the Aspire dashboard
 
 ## Project Structure
 
@@ -42,9 +42,10 @@ See the [Getting Started Guide](docs/getting-started.md) for the full walkthroug
 Hexalith.Parties/
   src/
     Hexalith.Parties.AppHost/        # Aspire orchestration (entry point)
-    Hexalith.Parties.Client/         # NuGet client package (commands + queries)
-    Hexalith.Parties/     # REST API, MCP server, controllers
+    Hexalith.Parties.Client/         # Typed EventStore gateway client
+    Hexalith.Parties/                # Domain actor host behind EventStore
     Hexalith.Parties.Contracts/      # Shared DTOs, commands, events, value objects
+    Hexalith.Parties.Mcp/            # Separate MCP host over the typed client
     Hexalith.Parties.Projections/    # Read model projections and actors
     Hexalith.Parties.Server/         # Domain logic and event store integration
     Hexalith.Parties.ServiceDefaults/# Shared service configuration

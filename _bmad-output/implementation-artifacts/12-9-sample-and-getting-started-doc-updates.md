@@ -1,6 +1,6 @@
 # Story 12.9: Sample and Getting-Started Doc Updates
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -43,70 +43,70 @@ so that I onboard against the canonical platform pattern.
 
 ## Tasks / Subtasks
 
-- [ ] Confirm predecessor gates and current contract state. (AC: 1-10)
-  - [ ] Read `_bmad-output/implementation-artifacts/12-0-eventstore-parties-actor-invocation-feasibility-spike.md`.
-  - [ ] Read `_bmad-output/implementation-artifacts/12-1-apphost-recomposition.md`.
-  - [ ] Read `_bmad-output/implementation-artifacts/12-2-parties-actor-host.md`.
-  - [ ] Read `_bmad-output/implementation-artifacts/12-3-validation-relocation-and-tenant-auth-ownership.md`.
-  - [ ] Read `_bmad-output/implementation-artifacts/12-4-server-tier-1-tier-2-test-rewrite.md`.
-  - [ ] Read `_bmad-output/implementation-artifacts/12-5-parties-client-thin-wrapper.md`.
-  - [ ] Read `_bmad-output/implementation-artifacts/12-6-parties-mcp-thin-host.md`.
-  - [ ] Read `_bmad-output/implementation-artifacts/12-7-admin-portal-rebuild-on-frontcomposer.md` and `_bmad-output/implementation-artifacts/12-8-picker-rewrite.md` for consumer migration language.
-  - [ ] Record the dated source artifact and status used as evidence for command/query, auth/tenant, RBAC, response-mapping, and MCP tool contracts.
-  - [ ] If Story 12.5 is still blocked and no formal EventStore client/gateway contract is frozen, limit implementation to red guardrail tests, documentation placeholders with explicit blockers, and source-text cleanup that does not fabricate working commands.
-  - [ ] If Story 12.6 is not implemented or frozen, do not publish final MCP setup instructions; record a dated blocker naming the missing `parties-mcp` endpoint.
+- [x] Confirm predecessor gates and current contract state. (AC: 1-10)
+  - [x] Read `_bmad-output/implementation-artifacts/12-0-eventstore-parties-actor-invocation-feasibility-spike.md`.
+  - [x] Read `_bmad-output/implementation-artifacts/12-1-apphost-recomposition.md`.
+  - [x] Read `_bmad-output/implementation-artifacts/12-2-parties-actor-host.md`.
+  - [x] Read `_bmad-output/implementation-artifacts/12-3-validation-relocation-and-tenant-auth-ownership.md`.
+  - [x] Read `_bmad-output/implementation-artifacts/12-4-server-tier-1-tier-2-test-rewrite.md`.
+  - [x] Read `_bmad-output/implementation-artifacts/12-5-parties-client-thin-wrapper.md`.
+  - [x] Read `_bmad-output/implementation-artifacts/12-6-parties-mcp-thin-host.md`.
+  - [x] Read `_bmad-output/implementation-artifacts/12-7-admin-portal-rebuild-on-frontcomposer.md` and `_bmad-output/implementation-artifacts/12-8-picker-rewrite.md` for consumer migration language.
+  - [x] Record the dated source artifact and status used as evidence for command/query, auth/tenant, RBAC, response-mapping, and MCP tool contracts.
+  - [x] If Story 12.5 is still blocked and no formal EventStore client/gateway contract is frozen, limit implementation to red guardrail tests, documentation placeholders with explicit blockers, and source-text cleanup that does not fabricate working commands.
+  - [x] If Story 12.6 is not implemented or frozen, do not publish final MCP setup instructions; record a dated blocker naming the missing `parties-mcp` endpoint.
 
-- [ ] Update the sample project boundary. (AC: 1, 2, 3, 9)
-  - [ ] Inspect `samples/Hexalith.Parties.Sample/Hexalith.Parties.Sample.csproj`.
-  - [ ] Add `Hexalith.Parties.ServiceDefaults` only if the sample needs standard host health/telemetry wiring; keep the sample free of Parties service/server/projection references.
-  - [ ] Keep `Dapr.AspNetCore` or its accepted replacement only for the subscriber endpoint; do not add DAPR actor, DAPR client, or sidecar invocation dependencies for command/query traffic.
-  - [ ] Keep command/query calls behind `IPartiesCommandClient` and `IPartiesQueryClient`; do not call `HttpClient` directly for old Parties routes or EventStore DTOs unless Story 12.5 explicitly requires a lower-level seam.
-  - [ ] Update configuration names and comments so `Parties:BaseUrl` or its replacement clearly points to the EventStore gateway/client boundary, not the Parties actor host.
-  - [ ] Check launch settings, options binding, sample comments, and test fixtures for ambiguous endpoint names that could be interpreted as a direct Parties actor-host URL.
+- [x] Update the sample project boundary. (AC: 1, 2, 3, 9)
+  - [x] Inspect `samples/Hexalith.Parties.Sample/Hexalith.Parties.Sample.csproj`.
+  - [x] Add `Hexalith.Parties.ServiceDefaults` only if the sample needs standard host health/telemetry wiring; keep the sample free of Parties service/server/projection references.
+  - [x] Keep `Dapr.AspNetCore` or its accepted replacement only for the subscriber endpoint; do not add DAPR actor, DAPR client, or sidecar invocation dependencies for command/query traffic.
+  - [x] Keep command/query calls behind `IPartiesCommandClient` and `IPartiesQueryClient`; do not call `HttpClient` directly for old Parties routes or EventStore DTOs unless Story 12.5 explicitly requires a lower-level seam.
+  - [x] Update configuration names and comments so `Parties:BaseUrl` or its replacement clearly points to the EventStore gateway/client boundary, not the Parties actor host.
+  - [x] Check launch settings, options binding, sample comments, and test fixtures for ambiguous endpoint names that could be interpreted as a direct Parties actor-host URL.
 
-- [ ] Rewrite sample walkthrough code and comments. (AC: 2, 3, 6, 9)
-  - [ ] Update `samples/Hexalith.Parties.Sample/Program.cs` comments to remove old "REST API and MCP" positioning.
-  - [ ] Replace the bottom MCP comment block that points to `https://localhost:5001/mcp` with the Story 12.6 `parties-mcp` host guidance or a dated blocker.
-  - [ ] Keep demo output bounded and non-sensitive: correlation ids, party ids, counts, and generic statuses are acceptable; avoid printing tokens, raw payload JSON, tenant membership state, or backend ProblemDetails details.
-  - [ ] Keep the event handler sample idempotent and tolerant of unknown events. Do not turn subscriber code into command/query integration code.
-  - [ ] If sample event payload examples are updated, preserve tolerant deserialization and document that subscriber apps own their own local envelope models.
+- [x] Rewrite sample walkthrough code and comments. (AC: 2, 3, 6, 9)
+  - [x] Update `samples/Hexalith.Parties.Sample/Program.cs` comments to remove old "REST API and MCP" positioning.
+  - [x] Replace the bottom MCP comment block that points to `https://localhost:5001/mcp` with the Story 12.6 `parties-mcp` host guidance or a dated blocker.
+  - [x] Keep demo output bounded and non-sensitive: correlation ids, party ids, counts, and generic statuses are acceptable; avoid printing tokens, raw payload JSON, tenant membership state, or backend ProblemDetails details.
+  - [x] Keep the event handler sample idempotent and tolerant of unknown events. Do not turn subscriber code into command/query integration code.
+  - [x] If sample event payload examples are updated, preserve tolerant deserialization and document that subscriber apps own their own local envelope models.
 
-- [ ] Rewrite README for the pivoted topology. (AC: 4, 6, 7, 8, 9)
-  - [ ] Reframe the service as EventStore-fronted: EventStore is the public command/query gateway; `parties` is the domain actor/projection host.
-  - [ ] Replace key feature bullets for REST API, in-process MCP, and OpenAPI with EventStore command/query gateway, separate `parties-mcp` host, typed Parties client, DAPR event subscription, and EventStore Admin UI stream browsing.
-  - [ ] Update Quick Start to verify the five AppHost resources from Story 12.1 and direct users to EventStore endpoints for commands/queries.
-  - [ ] Keep the GDPR notice aligned with Story 12.2: startup warning only, no `X-GDPR-Warning` response header claim.
-  - [ ] Keep links to `docs/getting-started.md`, Tenants access projection, picker docs, architecture, and EventStore/Admin UI guidance accurate.
+- [x] Rewrite README for the pivoted topology. (AC: 4, 6, 7, 8, 9)
+  - [x] Reframe the service as EventStore-fronted: EventStore is the public command/query gateway; `parties` is the domain actor/projection host.
+  - [x] Replace key feature bullets for REST API, in-process MCP, and OpenAPI with EventStore command/query gateway, separate `parties-mcp` host, typed Parties client, DAPR event subscription, and EventStore Admin UI stream browsing.
+  - [x] Update Quick Start to verify the five AppHost resources from Story 12.1 and direct users to EventStore endpoints for commands/queries.
+  - [x] Keep the GDPR notice aligned with Story 12.2: startup warning only, no `X-GDPR-Warning` response header claim.
+  - [x] Keep links to `docs/getting-started.md`, Tenants access projection, picker docs, architecture, and EventStore/Admin UI guidance accurate.
 
-- [ ] Rewrite the getting-started command/query path. (AC: 5, 7, 8, 9)
-  - [ ] Replace `POST /api/v1/parties`, `GET /api/v1/parties/{id}`, `GET /api/v1/parties/search`, and `GET /api/v1/parties` examples with EventStore command/query gateway examples.
-  - [ ] Use `Domain="party"` and the command/query type names accepted by Story 12.5 or the frozen Wave 1 contract. Do not use the sprint proposal's older `Domain="Parties"` wording unless a later accepted decision changes the domain.
-  - [ ] Explain command acceptance versus projection/query availability without promising read-your-write behavior unless the accepted EventStore/client contract proves it.
-  - [ ] Label any non-runnable example as a dated blocker tied to the predecessor story whose contract is missing; do not mix blocker text with copy-pastable commands.
-  - [ ] Keep the non-.NET path focused on EventStore HTTP gateway calls, not old direct Parties REST.
-  - [ ] Replace API overview tables so they list command/query gateway shapes and typed client methods instead of old Parties routes.
-  - [ ] Update troubleshooting for `401`, `403`, projection lag, Tenants projection lag, and EventStore gateway readiness without telling adopters to call Parties internals.
+- [x] Rewrite the getting-started command/query path. (AC: 5, 7, 8, 9)
+  - [x] Replace `POST /api/v1/parties`, `GET /api/v1/parties/{id}`, `GET /api/v1/parties/search`, and `GET /api/v1/parties` examples with EventStore command/query gateway examples.
+  - [x] Use `Domain="party"` and the command/query type names accepted by Story 12.5 or the frozen Wave 1 contract. Do not use the sprint proposal's older `Domain="Parties"` wording unless a later accepted decision changes the domain.
+  - [x] Explain command acceptance versus projection/query availability without promising read-your-write behavior unless the accepted EventStore/client contract proves it.
+  - [x] Label any non-runnable example as a dated blocker tied to the predecessor story whose contract is missing; do not mix blocker text with copy-pastable commands.
+  - [x] Keep the non-.NET path focused on EventStore HTTP gateway calls, not old direct Parties REST.
+  - [x] Replace API overview tables so they list command/query gateway shapes and typed client methods instead of old Parties routes.
+  - [x] Update troubleshooting for `401`, `403`, projection lag, Tenants projection lag, and EventStore gateway readiness without telling adopters to call Parties internals.
 
-- [ ] Update MCP and event subscription onboarding. (AC: 3, 6, 9)
-  - [ ] Point MCP clients to the separate `parties-mcp` resource when Story 12.6 lands.
-  - [ ] Preserve canonical tool names from Story 12.6 where applicable: `create_party`, `get_party`, `find_parties`, `update_party`, `delete_party`, plus any explicit `get_party_name_at` decision.
-  - [ ] State that event subscribers consume EventStore-published DAPR events and must implement idempotent handlers.
-  - [ ] Keep `PartyErased` and future additive event guidance tolerant; unknown events should be acknowledged without redelivery loops unless the subscriber explicitly owns them.
+- [x] Update MCP and event subscription onboarding. (AC: 3, 6, 9)
+  - [x] Point MCP clients to the separate `parties-mcp` resource when Story 12.6 lands.
+  - [x] Preserve canonical tool names from Story 12.6 where applicable: `create_party`, `get_party`, `find_parties`, `update_party`, `delete_party`, plus any explicit `get_party_name_at` decision.
+  - [x] State that event subscribers consume EventStore-published DAPR events and must implement idempotent handlers.
+  - [x] Keep `PartyErased` and future additive event guidance tolerant; unknown events should be acknowledged without redelivery loops unless the subscriber explicitly owns them.
 
-- [ ] Add docs/sample regression guardrails. (AC: 1, 2, 4, 5, 6, 10)
-  - [ ] Add or update source-text tests that scan `README.md`, `docs/getting-started.md`, `samples/Hexalith.Parties.Sample/**`, and sample tests for retired route literals: `api/v1/parties`, `api/v1/parties/search`, `api/v1/admin`, `openapi/v1.json`, `Swagger`, and actor-host `/mcp` setup guidance.
-  - [ ] Allow those literals only in explicitly labeled historical story artifacts, not in current adopter docs or sample production code.
-  - [ ] Add package/reference tests proving the sample does not reference Parties service/server/projection, DAPR actor, MediatR, FluentValidation, MVC controller, Swagger/OpenAPI, or EventStore server assemblies.
-  - [ ] Update existing sample tests under `tests/Hexalith.Parties.Sample.Tests/**` so they validate EventStore-fronted comments/config and subscriber behavior rather than old direct Parties endpoint assumptions.
-  - [ ] Add a doc command-shape test or checked snippet inventory so README/getting-started examples do not drift back to old routes.
-  - [ ] Add a blocker-snippet test path so docs fail if a predecessor contract is unresolved but the docs present runnable commands, and fail if accepted contracts exist but the docs still present only blocker placeholders.
+- [x] Add docs/sample regression guardrails. (AC: 1, 2, 4, 5, 6, 10)
+  - [x] Add or update source-text tests that scan `README.md`, `docs/getting-started.md`, `samples/Hexalith.Parties.Sample/**`, and sample tests for retired route literals: `api/v1/parties`, `api/v1/parties/search`, `api/v1/admin`, `openapi/v1.json`, `Swagger`, and actor-host `/mcp` setup guidance.
+  - [x] Allow those literals only in explicitly labeled historical story artifacts, not in current adopter docs or sample production code.
+  - [x] Add package/reference tests proving the sample does not reference Parties service/server/projection, DAPR actor, MediatR, FluentValidation, MVC controller, Swagger/OpenAPI, or EventStore server assemblies.
+  - [x] Update existing sample tests under `tests/Hexalith.Parties.Sample.Tests/**` so they validate EventStore-fronted comments/config and subscriber behavior rather than old direct Parties endpoint assumptions.
+  - [x] Add a doc command-shape test or checked snippet inventory so README/getting-started examples do not drift back to old routes.
+  - [x] Add a blocker-snippet test path so docs fail if a predecessor contract is unresolved but the docs present runnable commands, and fail if accepted contracts exist but the docs still present only blocker placeholders.
 
-- [ ] Verify the docs and sample update. (AC: 1-10)
-  - [ ] Run `dotnet test tests/Hexalith.Parties.Sample.Tests/Hexalith.Parties.Sample.Tests.csproj --configuration Release`.
-  - [ ] Run the focused docs/source fitness tests added or updated by this story.
-  - [ ] Run `dotnet build samples/Hexalith.Parties.Sample/Hexalith.Parties.Sample.csproj --configuration Release`.
-  - [ ] Run `dotnet build Hexalith.Parties.slnx --configuration Release`.
-  - [ ] If `dotnet aspire run --project src/Hexalith.Parties.AppHost` or `dotnet aspire` is unavailable, record the limitation and rely on static docs/source tests plus build verification.
+- [x] Verify the docs and sample update. (AC: 1-10)
+  - [x] Run `dotnet test tests/Hexalith.Parties.Sample.Tests/Hexalith.Parties.Sample.Tests.csproj --configuration Release`.
+  - [x] Run the focused docs/source fitness tests added or updated by this story.
+  - [x] Run `dotnet build samples/Hexalith.Parties.Sample/Hexalith.Parties.Sample.csproj --configuration Release`.
+  - [x] Run `dotnet build Hexalith.Parties.slnx --configuration Release`.
+  - [x] If `dotnet aspire run --project src/Hexalith.Parties.AppHost` or `dotnet aspire` is unavailable, record the limitation and rely on static docs/source tests plus build verification.
 
 ## Dev Notes
 
@@ -216,24 +216,45 @@ so that I onboard against the canonical platform pattern.
 
 ### Agent Model Used
 
-TBD
+Codex GPT-5
 
 ### Debug Log References
 
-TBD
+- 2026-05-11: Confirmed predecessor evidence. Stories 12.0 through 12.6 are `done`; Stories 12.5 and 12.6 provide accepted EventStore command/query and `parties-mcp` contracts. Stories 12.7 and 12.8 remain blocked consumer migrations and were used only for wording/context.
+- 2026-05-11: Evidence source for command/query contract: Story 12.5 v1.1 and current `HttpPartiesCommandClient` / `HttpPartiesQueryClient` tests. Accepted routes are `POST /api/v1/commands` and `POST /api/v1/queries`; accepted domain is `party`; accepted query types are `PartyDetail`, `PartyIndex`, and `PartySearch`.
+- 2026-05-11: Evidence source for auth/tenant/RBAC/response ownership: Stories 12.2 and 12.3. EventStore owns public authentication, tenant validation, RBAC, routing, and generic response mapping; Parties owns domain execution and projections behind the actor host.
+- 2026-05-11: Evidence source for MCP contract: Story 12.6 v1.0 plus 2026-05-11 sprint close-out for review patches. `parties-mcp` is the separate host and canonical tools are `create_party`, `get_party`, `find_parties`, `update_party`, `delete_party`, and `get_party_name_at`.
+- 2026-05-11: Red/guardrail phase added `SampleOnboardingGuardrailTests`; focused filter initially failed during compilation because `ShouldNotContain` custom-message overload usage was invalid. Fixed the assertions and reran the focused guardrail filter successfully (6/6).
+- 2026-05-11: Focused sample validation passed: `dotnet test tests\Hexalith.Parties.Sample.Tests\Hexalith.Parties.Sample.Tests.csproj --configuration Release --no-restore -p:UseSharedCompilation=false` (52/52).
+- 2026-05-11: Sample build passed: `dotnet build samples\Hexalith.Parties.Sample\Hexalith.Parties.Sample.csproj --configuration Release --no-restore -p:UseSharedCompilation=false`.
+- 2026-05-11: Solution build passed: `dotnet build Hexalith.Parties.slnx --configuration Release --no-restore -p:UseSharedCompilation=false`.
+- 2026-05-11: `dotnet aspire --version` failed because `dotnet-aspire` is not installed on PATH; runtime Aspire proof was unavailable.
+- 2026-05-11: First full no-build regression attempt timed out after 10 minutes; rerun with a longer timeout passed: `dotnet test Hexalith.Parties.slnx --configuration Release --no-build -p:UseSharedCompilation=false` (973 passed, 6 expected health E2E skips).
 
 ### Completion Notes List
 
-- Ultimate context engine analysis completed - comprehensive developer guide created.
+- Rewrote `README.md` around the EventStore-fronted topology: `eventstore` is the public command/query gateway, `parties` is the actor/projection host, `parties-mcp` is a separate MCP host, and EventStore Admin UI owns generic stream/event browsing.
+- Replaced `docs/getting-started.md` direct Parties REST examples with EventStore gateway examples for `POST /api/v1/commands` and `POST /api/v1/queries` using `Domain="party"` and accepted command/query type names.
+- Removed adopter-facing OpenAPI/Swagger, direct Parties REST/admin, actor-host `/mcp`, and retired GDPR response-header positioning from current docs and sample production code.
+- Updated the sample walkthrough so command/query traffic remains behind `IPartiesCommandClient` and `IPartiesQueryClient`, `Parties:BaseUrl` is documented as the EventStore gateway URL, `Parties:Tenant` is configured, demo output is bounded to ids/counts/status, and failures do not print backend details.
+- Preserved the sample's subscriber-owned DAPR event handling pattern, idempotency, tolerant deserialization, unknown-event acknowledgement, and local envelope model.
+- Added sample onboarding guardrails that scan current adopter docs, sample production code, and sample tests for retired route literals and verify the sample project reference/package boundary, EventStore topology language, runnable snippet shape, and `parties-mcp` guidance.
 
 ### File List
 
-TBD
+- `_bmad-output/implementation-artifacts/12-9-sample-and-getting-started-doc-updates.md`
+- `_bmad-output/implementation-artifacts/sprint-status.yaml`
+- `README.md`
+- `docs/getting-started.md`
+- `samples/Hexalith.Parties.Sample/Program.cs`
+- `samples/Hexalith.Parties.Sample/appsettings.json`
+- `tests/Hexalith.Parties.Sample.Tests/SampleOnboardingGuardrailTests.cs`
 
 ## Change Log
 
 | Date | Version | Description | Author |
 |---|---:|---|---|
+| 2026-05-11 | 1.0 | Rewrote sample/docs onboarding around the EventStore gateway, separate `parties-mcp` host, typed client configuration, subscriber-owned event handling, and guardrail tests; validation passed and story moved to review. | Codex |
 | 2026-05-10 | 0.3 | Advanced elicitation completed; applied evidence-freeze, snippet-status, gateway-config, subscriber-contract, troubleshooting, and test-stability clarifications. | Codex |
 | 2026-05-10 | 0.2 | Party-mode review completed; applied gateway-boundary, source-of-truth, scan-scope, MCP, package-boundary, and documentation UX clarifications. | Codex |
 | 2026-05-10 | 0.1 | Created ready-for-dev story through BMAD pre-dev hardening automation. | Codex |

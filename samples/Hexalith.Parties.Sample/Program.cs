@@ -5,21 +5,18 @@ using Hexalith.Parties.Contracts.Models;
 using Hexalith.Parties.Contracts.ValueObjects;
 using Hexalith.Parties.Sample;
 
-// ──────────────────────────────────────────────────────────────
-// Hexalith.Parties Sample Integration Project
-// Demonstrates: commands, queries, DAPR event subscription, MCP
-// ──────────────────────────────────────────────────────────────
+// Hexalith.Parties sample integration project.
+// Demonstrates typed EventStore-fronted commands/queries plus subscriber-owned DAPR event handling.
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
-// ── One-line DI registration ─────────────────────────────────
-// Reads Parties:BaseUrl from appsettings.json (or environment variables)
-// and registers IPartiesCommandClient + IPartiesQueryClient via HttpClient.
+// One-line DI registration.
+// Reads Parties:BaseUrl as the EventStore gateway URL and Parties:Tenant as the envelope tenant.
+// Registers IPartiesCommandClient and IPartiesQueryClient via HttpClient.
 builder.Services.AddPartiesClient(builder.Configuration);
 
 WebApplication app = builder.Build();
 
-// ── DAPR pub/sub event endpoint ──────────────────────────────
 // Maps POST /events/parties to handle CloudEvents from the
 // tenant-a.parties.events topic. The subscription is defined in
 // DaprComponents/subscription-sample.yaml.
@@ -27,7 +24,6 @@ WebApplication app = builder.Build();
 // When no DAPR sidecar is present, this endpoint simply receives no traffic.
 app.MapPartyEventEndpoint();
 
-// ── Run the demo after the host starts ───────────────────────
 app.Lifetime.ApplicationStarted.Register(() =>
     _ = Task.Run(() => RunDemoAsync(app.Services, app.Lifetime.ApplicationStopping)));
 
@@ -45,14 +41,13 @@ static async Task RunDemoAsync(IServiceProvider services, CancellationToken ct)
 
     Console.WriteLine();
     Console.WriteLine("════════════════════════════════════════════════");
-    Console.WriteLine("  Hexalith.Parties — Sample Integration Demo");
+    Console.WriteLine("  Hexalith.Parties - Sample Integration Demo");
     Console.WriteLine("════════════════════════════════════════════════");
     Console.WriteLine("  Live event reception requires a DAPR sidecar with app-id 'sample'.");
     Console.WriteLine();
 
     try
     {
-        // ── COMMANDS ─────────────────────────────────────────
         // 1. Create a person party
         string partyId = Guid.NewGuid().ToString();
         Console.WriteLine($"[1] Creating person party (ID: {partyId})...");
@@ -63,8 +58,8 @@ static async Task RunDemoAsync(IServiceProvider services, CancellationToken ct)
                 Type = PartyType.Person,
                 PersonDetails = new PersonDetails
                 {
-                    FirstName = "Jean",
-                    LastName = "Dupont",
+                    FirstName = "Demo",
+                    LastName = "Contact",
                 },
             },
             ct).ConfigureAwait(false);
@@ -80,7 +75,7 @@ static async Task RunDemoAsync(IServiceProvider services, CancellationToken ct)
                 PartyId = partyId,
                 ContactChannelId = channelId,
                 Type = ContactChannelType.Email,
-                Value = "jean.dupont@example.com",
+                Value = "party-contact@example.test",
                 IsPreferred = true,
             },
             ct).ConfigureAwait(false);
@@ -96,7 +91,7 @@ static async Task RunDemoAsync(IServiceProvider services, CancellationToken ct)
                 PartyId = partyId,
                 IdentifierId = identifierId,
                 Type = IdentifierType.VAT,
-                Value = "FR12345678901",
+                Value = "DEMO-IDENTIFIER-001",
             },
             ct).ConfigureAwait(false);
         Console.WriteLine($"    -> Added. CorrelationId: {correlationId}");
@@ -106,20 +101,19 @@ static async Task RunDemoAsync(IServiceProvider services, CancellationToken ct)
         Console.WriteLine("[*] Waiting 2 seconds for eventual consistency...");
         await Task.Delay(2000, ct).ConfigureAwait(false);
 
-        // ── QUERIES ──────────────────────────────────────────
         // 4. Get party by ID
         Console.WriteLine($"[4] Querying party by ID ({partyId})...");
         PartyDetail party = await queries.GetPartyAsync(partyId, ct).ConfigureAwait(false);
-        Console.WriteLine($"    -> Found: {party.DisplayName} (Type: {party.Type}, Active: {party.IsActive})");
+        Console.WriteLine($"    -> Found party {party.Id} (Type: {party.Type}, Active: {party.IsActive})");
         Console.WriteLine($"       Contact channels: {party.ContactChannels.Count}, Identifiers: {party.Identifiers.Count}");
 
         // 5. Search by name
-        Console.WriteLine("[5] Searching for 'Dupont'...");
-        PagedResult<PartySearchResult> searchResults = await queries.SearchPartiesAsync("Dupont", 1, 10, ct).ConfigureAwait(false);
+        Console.WriteLine("[5] Searching for 'Demo'...");
+        PagedResult<PartySearchResult> searchResults = await queries.SearchPartiesAsync("Demo", 1, 10, ct).ConfigureAwait(false);
         Console.WriteLine($"    -> Found {searchResults.TotalCount} result(s)");
         foreach (PartySearchResult result in searchResults.Items)
         {
-            Console.WriteLine($"       - {result.Party.DisplayName} (ID: {result.Party.Id})");
+            Console.WriteLine($"       - Party {result.Party.Id} (Type: {result.Party.Type}, Active: {result.Party.IsActive})");
         }
 
         // 6. List with pagination
@@ -137,7 +131,7 @@ static async Task RunDemoAsync(IServiceProvider services, CancellationToken ct)
         Console.WriteLine($"    -> Page {listResults.Page}/{listResults.TotalPages}, {listResults.TotalCount} total parties");
         foreach (PartyIndexEntry entry in listResults.Items)
         {
-            Console.WriteLine($"       - {entry.DisplayName} (Active: {entry.IsActive})");
+            Console.WriteLine($"       - Party {entry.Id} (Type: {entry.Type}, Active: {entry.IsActive})");
         }
 
         Console.WriteLine();
@@ -147,22 +141,21 @@ static async Task RunDemoAsync(IServiceProvider services, CancellationToken ct)
     }
     catch (Exception ex)
     {
-        logger.LogError(ex, "Demo failed");
+        logger.LogError("Demo failed with {ExceptionType}", ex.GetType().Name);
         Console.WriteLine();
-        Console.WriteLine($"[ERROR] {ex.Message}");
-        Console.WriteLine("  Ensure the Parties service is running (dotnet aspire run).");
+        Console.WriteLine("[ERROR] Demo failed. Check EventStore gateway readiness, tenant configuration, and auth.");
     }
 
     // ── In-memory read model summary ─────────────────────────
     // If DAPR events were received during the demo, show the
-    // CustomerSummary read model state.
+    // CustomerSummary read model state. Keep output bounded to identifiers and counts.
     if (!CustomerSummaryStore.Customers.IsEmpty)
     {
         Console.WriteLine();
-        Console.WriteLine("── In-Memory CustomerSummary Read Model ──");
+        Console.WriteLine("-- In-Memory CustomerSummary Read Model --");
         foreach (CustomerSummary customer in CustomerSummaryStore.Customers.Values)
         {
-            Console.WriteLine($"  {customer.Id}: {customer.DisplayName} | Email: {customer.Email ?? "(none)"} | Active: {customer.IsActive}");
+            Console.WriteLine($"  {customer.Id}: contacts={customer.ContactChannels.Count}, identifiers={customer.IdentifierCount}, active={customer.IsActive}");
         }
     }
 
@@ -170,11 +163,10 @@ static async Task RunDemoAsync(IServiceProvider services, CancellationToken ct)
     Console.WriteLine("Press Ctrl+C to exit.");
 }
 
-// ──────────────────────────────────────────────────────────────
-// MCP Server Configuration
-// ──────────────────────────────────────────────────────────────
-// The Hexalith.Parties CommandApi exposes an MCP (Model Context Protocol)
-// endpoint at /mcp for AI assistant integration.
+// MCP host configuration
+// ----------------------
+// MCP runs in the separate parties-mcp host. Do not point clients at /mcp on the
+// parties actor host.
 //
 // Available MCP tools:
 //   - find_parties: Search for parties by name or other criteria
@@ -182,13 +174,18 @@ static async Task RunDemoAsync(IServiceProvider services, CancellationToken ct)
 //   - create_party: Create a new person or organization party
 //   - update_party: Modify party details, contacts, or identifiers
 //   - delete_party: Deactivate a party
+//   - get_party_name_at: Retrieve a historical display name when name history is available
 //
 // Claude Desktop configuration (~/.claude/claude_desktop_config.json):
 //   {
 //     "mcpServers": {
 //       "hexalith-parties": {
-//         "url": "https://localhost:5001/mcp",
-//         "headers": { "Authorization": "Bearer <token>" }
+//         "url": "https://localhost:<parties-mcp-port>/mcp",
+//         "headers": {
+//           "Authorization": "Bearer <token>",
+//           "X-Tenant-Id": "tenant-a",
+//           "X-User-Id": "<user-id>"
+//         }
 //       }
 //     }
 //   }
@@ -198,14 +195,16 @@ static async Task RunDemoAsync(IServiceProvider services, CancellationToken ct)
 //     "mcp": {
 //       "servers": {
 //         "hexalith-parties": {
-//           "url": "https://localhost:5001/mcp",
-//           "headers": { "Authorization": "Bearer <token>" }
+//           "url": "https://localhost:<parties-mcp-port>/mcp",
+//           "headers": {
+//             "Authorization": "Bearer <token>",
+//             "X-Tenant-Id": "tenant-a",
+//             "X-User-Id": "<user-id>"
+//           }
 //         }
 //       }
 //     }
 //   }
 //
-// Authentication: The MCP endpoint requires a valid bearer token
-// from the Keycloak OIDC provider (port 8180, realm "hexalith").
-// For local development, set EnableKeycloak=false to disable auth.
-// ──────────────────────────────────────────────────────────────
+// Authentication and tenant/user context are forwarded by parties-mcp to the
+// EventStore gateway through the typed Parties client boundary.

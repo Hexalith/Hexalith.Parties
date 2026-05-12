@@ -1,40 +1,34 @@
 # Getting Started with Hexalith.Parties
 
-This guide walks you through deploying Hexalith.Parties locally and sending your first commands. By the end, you will have created a party record via REST, queried it back, connected an AI assistant via MCP, and integrated the NuGet client package from code.
+This guide starts the local EventStore-fronted topology, sends a Parties command through EventStore, queries it back through EventStore, and shows the typed .NET client and separate MCP host integration paths.
 
-**Time estimate:** Under 30 minutes from clone to first round-trip.
+**Time estimate:** Under 30 minutes from clone to first command/query round-trip.
 
-> **GDPR Notice:** This MVP does **not** include GDPR compliance features (crypto-shredding, consent management, right to erasure). **Do not store regulated EU personal data.** Every API response includes an `X-GDPR-Warning` header as a reminder. For pre-v1.1 erasure requests, see [Emergency Manual Erasure](#emergency-manual-erasure).
+> **GDPR notice:** The service logs the current MVP GDPR limitation at startup. Do not store regulated personal data in local examples. The retired per-response GDPR reminder header is no longer part of the public response contract.
 
 ---
 
 ## Prerequisites
-
-Before you begin, ensure you have the following installed:
 
 | Tool | Version | Download |
 |------|---------|----------|
 | .NET SDK | 10.0.103 or later | [dot.net](https://dot.net) |
 | Docker Desktop | Latest | [docker.com](https://www.docker.com/products/docker-desktop/) |
 | Git | Any recent version | [git-scm.com](https://git-scm.com) |
-| `jq` | Latest (optional, Bash examples only) | [jqlang.org](https://jqlang.org) |
+| `jq` | Latest, optional for Bash examples | [jqlang.org](https://jqlang.org) |
 
 Verify your setup:
 
 ```bash
-dotnet --version   # Should print 10.0.103 or higher
-docker --version   # Should print Docker version XX.X.X
+dotnet --version
+docker --version
 ```
 
-> Docker Desktop must be **running** before you proceed. The Aspire host launches DAPR sidecars in containers.
-
-> **Shell note:** Every step below includes a Bash example and, where needed, a PowerShell equivalent for Windows. Use the version that matches your shell.
+Docker Desktop must be running before you start the Aspire host.
 
 ---
 
-## Step 1: Deploy Locally (< 15 minutes)
-
-Clone the repository and start the Aspire host:
+## Step 1: Deploy Locally
 
 ```bash
 git clone https://github.com/Hexalith/Hexalith.Parties.git
@@ -42,460 +36,331 @@ cd Hexalith.Parties
 dotnet aspire run --project src/Hexalith.Parties.AppHost
 ```
 
-The terminal output will display a URL for the **Aspire dashboard** (typically `https://localhost:15XXX`). Open it in your browser to verify all resources show a green **Running** status.
+Open the Aspire dashboard URL printed by the command and verify these resources are running:
 
-**What gets started:**
-- **parties** -- the REST API and MCP server
-- **Hexalith.Tenants** -- tenant lifecycle, membership, role, and configuration authority
-- **DAPR sidecar** -- event store and actor runtime
-- **Keycloak** (port 8180) -- OIDC provider for authentication (enabled by default)
+- `eventstore` - public command/query gateway
+- `eventstore-admin` - admin server used by the EventStore Admin UI
+- `eventstore-admin-ui` - generic stream and event browser
+- `parties` - Parties domain actor/projection host behind EventStore
+- `tenants` - tenant lifecycle, membership, role, and configuration authority
 
-Parties service also subscribes to Hexalith.Tenants events through DAPR pub/sub and maintains a local tenant access projection. A valid JWT tenant claim is necessary, but it is not sufficient: the authenticated user must be an active member of an active Hexalith.Tenants tenant with the required role. `TenantReader` can read and search parties, `TenantContributor` can read/search and create/update/deactivate/reactivate parties, and `TenantOwner` can also run party administration operations. Roles are cumulative, so an owner can perform reader and contributor operations too. Access checks fail closed when tenant/user state is missing, disabled, or insufficient. Because the projection is event-fed, a just-disabled tenant or removed user may remain accepted until the corresponding event is consumed unless a synchronous Tenants/EventStore authorization plugin is enabled. See [Tenants Access Projection](tenant-access-projection.md) for the operational details.
+The `parties-mcp` resource is the separate MCP host when included by the AppHost. It is not hosted by the `parties` actor host.
 
-### Provision the Local Tenant
+EventStore owns public authentication, tenant validation, RBAC, command/query routing, and generic response mapping. Parties owns domain execution and projection behavior behind the actor host. Do not call Parties internals to manage tenant lifecycle, RBAC, authorization, projection actors, or domain invocation.
 
-Before calling Parties, provision tenant access through Hexalith.Tenants:
+---
+
+## Step 2: Configure Tenant and Auth
+
+Provision or use an active Hexalith.Tenants tenant membership before the first Parties call:
 
 1. Create or use an active tenant in Hexalith.Tenants.
 2. Add the local user as a tenant member.
 3. Assign `TenantContributor` for create/update flows, or `TenantReader` for read/search-only flows.
-4. Confirm Parties is subscribed to `system.tenants.events`.
-5. Run `pwsh -NoProfile -File deploy/validate-deployment.ps1 -ConfigPath deploy/dapr`.
+4. Confirm Parties is subscribed to tenant events through DAPR pub/sub.
 
-One quick local subscription check is the Parties service DAPR sidecar metadata endpoint. Find the Parties service DAPR HTTP port in the Aspire dashboard, then run:
-
-```bash
-# With jq (recommended)
-curl -s http://localhost:<parties-dapr-http-port>/v1.0/metadata \
-  | jq '.subscriptions[] | select(.pubsubName == "pubsub" and .topic == "system.tenants.events")'
-
-# Without jq (any POSIX shell or PowerShell)
-curl -s http://localhost:<parties-dapr-http-port>/v1.0/metadata | grep -F 'system.tenants.events'
-```
-
-> **Tooling note.** `validate-deployment.ps1` requires PowerShell 7+ (`pwsh`); Windows PowerShell 5.1 does not support some multiline regex constructs the script uses. Install pwsh from <https://aka.ms/powershell> if you don't already have it.
-
-If neither command returns the row, verify `deploy/dapr/subscription-tenants.yaml` is loaded or that the local `MapTenantEventSubscription()` path is active.
-
-The JWT tenant claim selects the requested tenant context. Hexalith.Tenants membership and role authorize the operation. Tenant ids are not party command payload fields or MCP tool parameters.
-
-### Obtain an Authentication Token
-
-Keycloak is enabled by default. The AppHost imports a development realm with a public client named `hexalith-parties` and test users, so you can get a token immediately.
-
-**Default development credentials:**
-
-- Realm: `hexalith`
-- Client ID: `hexalith-parties`
-- Username: `admin-user`
-- Password: `admin-pass`
-
-Store a token for the next steps.
-
-**Bash**
+Use placeholders in scripts and logs:
 
 ```bash
-export TOKEN=$(curl -s -X POST http://localhost:8180/realms/hexalith/protocol/openid-connect/token \
-  -H "Content-Type: application/x-www-form-urlencoded" \
-  -d "grant_type=password" \
-  -d "client_id=hexalith-parties" \
-  -d "username=admin-user" \
-  -d "password=admin-pass" \
-  | jq -r '.access_token')
+export EVENTSTORE_URL=https://localhost:<eventstore-port>
+export TENANT_ID=tenant-a
+export TOKEN=<access-token>
 ```
-
-**PowerShell**
 
 ```powershell
-$tokenResponse = Invoke-RestMethod -Method Post -Uri "http://localhost:8180/realms/hexalith/protocol/openid-connect/token" `
-  -ContentType "application/x-www-form-urlencoded" `
-  -Body "grant_type=password&client_id=hexalith-parties&username=admin-user&password=admin-pass"
-$env:TOKEN = $tokenResponse.access_token
+$env:EVENTSTORE_URL = "https://localhost:<eventstore-port>"
+$env:TENANT_ID = "tenant-a"
+$env:TOKEN = "<access-token>"
 ```
 
-> If you sign in to the Keycloak admin console, use `admin/admin`. The imported realm users above are only for local development.
-> Keycloak authenticates the user and issues the tenant claim; Hexalith.Tenants membership and `TenantReader`/`TenantContributor`/`TenantOwner` roles remain the authorization source of truth for Parties.
-
-#### Alternative: Disable Keycloak
-
-If you prefer simpler auth for local development, stop the Aspire host and restart with Keycloak disabled.
-
-**Bash**
-
-```bash
-EnableKeycloak=false dotnet aspire run --project src/Hexalith.Parties.AppHost
-```
-
-**PowerShell**
-
-```powershell
-$env:EnableKeycloak = "false"
-dotnet aspire run --project src/Hexalith.Parties.AppHost
-Remove-Item Env:EnableKeycloak
-```
-
-This falls back to symmetric key JWT authentication. Set the signing key in `appsettings.Development.json` under `Authentication:JwtBearer:SigningKey` and generate tokens manually using that key.
+Keycloak is enabled by default in the local topology. If you disable Keycloak for local development, use the repository's symmetric-key development token settings and keep the issuer, audience, tenant claim, and permission claims aligned with EventStore gateway expectations.
 
 ---
 
-## Step 2: First Command -- Create a Party
+## Step 3: First Command
 
-Find the `parties` HTTP endpoint in the Aspire dashboard before sending API calls. The examples below assume `http://localhost:5000`; replace that value if your local endpoint differs.
+All public write traffic goes through EventStore:
 
-Send a `CreateParty` command via REST:
+- Method: `POST`
+- Route: `/api/v1/commands`
+- Domain: `party`
+- Command type: concrete Parties contract type, such as `Hexalith.Parties.Contracts.Commands.CreateParty`
 
 **Bash**
 
 ```bash
-curl -s -X POST http://localhost:5000/api/v1/parties \
+curl -s -X POST "$EVENTSTORE_URL/api/v1/commands" \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $TOKEN" \
   -d '{
-    "partyId": "550e8400-e29b-41d4-a716-446655440000",
-    "type": "person",
-    "personDetails": {
-      "firstName": "Jean",
-      "lastName": "Dupont"
-    }
-  }'
-```
-
-**PowerShell**
-
-```powershell
-curl.exe -s -X POST http://localhost:5000/api/v1/parties `
-  -H "Content-Type: application/json" `
-  -H "Authorization: Bearer $env:TOKEN" `
-  -d '{"partyId":"550e8400-e29b-41d4-a716-446655440000","type":"person","personDetails":{"firstName":"Jean","lastName":"Dupont"}}'
-```
-
-**Expected response** (HTTP 202 Accepted):
-
-```json
-{
-  "correlationId": "a1b2c3d4-e5f6-..."
-}
-```
-
-The `202 Accepted` status means the command was accepted for processing. The system is event-sourced, so the party will be available for query after projection processing (typically milliseconds).
-
-> You will see an `X-GDPR-Warning` header in the response. This is the GDPR middleware reminding you that this MVP does not include GDPR compliance features.
-
----
-
-## Step 3: First Query -- Retrieve and Search
-
-### Get Party by ID
-
-**Bash**
-
-```bash
-curl -s http://localhost:5000/api/v1/parties/550e8400-e29b-41d4-a716-446655440000 \
-  -H "Authorization: Bearer $TOKEN" | jq
-```
-
-**PowerShell**
-
-```powershell
-curl.exe -s http://localhost:5000/api/v1/parties/550e8400-e29b-41d4-a716-446655440000 `
-  -H "Authorization: Bearer $env:TOKEN"
-```
-
-This returns the full `PartyDetail` object with all person details, contact channels, and identifiers.
-
-### Search Parties by Name
-
-**Bash**
-
-```bash
-curl -s "http://localhost:5000/api/v1/parties/search?q=Dupont" \
-  -H "Authorization: Bearer $TOKEN" | jq
-```
-
-**PowerShell**
-
-```powershell
-curl.exe -s "http://localhost:5000/api/v1/parties/search?q=Dupont" `
-  -H "Authorization: Bearer $env:TOKEN"
-```
-
-Returns a paginated `PagedResult<PartySearchResult>` with matching parties.
-
-### List All Parties
-
-**Bash**
-
-```bash
-curl -s "http://localhost:5000/api/v1/parties?page=1&pageSize=20" \
-  -H "Authorization: Bearer $TOKEN" | jq
-```
-
-**PowerShell**
-
-```powershell
-curl.exe -s "http://localhost:5000/api/v1/parties?page=1&pageSize=20" `
-  -H "Authorization: Bearer $env:TOKEN"
-```
-
-Supports filtering by `type`, `active`, `createdAfter`, `createdBefore`, `modifiedAfter`, `modifiedBefore`.
-
----
-
-## Step 4: MCP Server -- AI Assistant Integration
-
-Hexalith.Parties exposes five MCP tools that AI assistants can use directly: `create_party`, `get_party`, `find_parties`, `update_party`, and `delete_party`.
-
-### Configure Claude Desktop
-
-Add the following to your Claude Desktop MCP configuration (`claude_desktop_config.json`):
-
-```json
-{
-  "mcpServers": {
-    "hexalith-parties": {
-      "url": "http://localhost:5000/mcp",
-      "headers": {
-        "Authorization": "Bearer <YOUR_TOKEN>"
+    "messageId": "cmd-demo-party-001",
+    "tenant": "'"$TENANT_ID"'",
+    "domain": "party",
+    "aggregateId": "party-demo-001",
+    "commandType": "Hexalith.Parties.Contracts.Commands.CreateParty",
+    "payload": {
+      "partyId": "party-demo-001",
+      "type": "Person",
+      "personDetails": {
+        "firstName": "Demo",
+        "lastName": "Contact"
       }
+    },
+    "correlationId": "cmd-demo-party-001"
+  }' | jq
+```
+
+**PowerShell**
+
+```powershell
+$body = @{
+  messageId = "cmd-demo-party-001"
+  tenant = $env:TENANT_ID
+  domain = "party"
+  aggregateId = "party-demo-001"
+  commandType = "Hexalith.Parties.Contracts.Commands.CreateParty"
+  payload = @{
+    partyId = "party-demo-001"
+    type = "Person"
+    personDetails = @{
+      firstName = "Demo"
+      lastName = "Contact"
     }
   }
-}
+  correlationId = "cmd-demo-party-001"
+} | ConvertTo-Json -Depth 8
+
+Invoke-RestMethod -Method Post -Uri "$env:EVENTSTORE_URL/api/v1/commands" `
+  -ContentType "application/json" `
+  -Headers @{ Authorization = "Bearer $env:TOKEN" } `
+  -Body $body
 ```
 
-### Configure VS Code (GitHub Copilot)
-
-Add to your VS Code `settings.json`:
-
-```json
-{
-  "mcp": {
-    "servers": {
-      "hexalith-parties": {
-        "url": "http://localhost:5000/mcp",
-        "headers": {
-          "Authorization": "Bearer <YOUR_TOKEN>"
-        }
-      }
-    }
-  }
-}
-```
-
-### First MCP Tool Call
-
-Once configured, ask your AI assistant:
-
-> "Create a party for Marie Martin, a person"
-
-The assistant will call the `create_party` tool, which auto-generates IDs and accepts forgiving input. You can then ask:
-
-> "Find all parties named Martin"
-
-The `find_parties` tool returns paginated search results.
+Expected result: EventStore accepts the command and returns a correlation id. Command acceptance is not a read-your-write guarantee; projections may need a short moment before query results reflect the event.
 
 ---
 
-## Step 5: NuGet Client Package -- .NET Integration
+## Step 4: First Queries
 
-For .NET service-to-service integration, use the typed client package instead of raw HTTP calls.
+All public read traffic goes through EventStore:
 
-### Install the Package
+- Method: `POST`
+- Route: `/api/v1/queries`
+- Domain: `party`
+
+### Get a Party
+
+**Bash**
+
+```bash
+curl -s -X POST "$EVENTSTORE_URL/api/v1/queries" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{
+    "tenant": "'"$TENANT_ID"'",
+    "domain": "party",
+    "aggregateId": "party-demo-001",
+    "queryType": "PartyDetail",
+    "entityId": "party-demo-001"
+  }' | jq
+```
+
+**PowerShell**
+
+```powershell
+$body = @{
+  tenant = $env:TENANT_ID
+  domain = "party"
+  aggregateId = "party-demo-001"
+  queryType = "PartyDetail"
+  entityId = "party-demo-001"
+} | ConvertTo-Json -Depth 6
+
+Invoke-RestMethod -Method Post -Uri "$env:EVENTSTORE_URL/api/v1/queries" `
+  -ContentType "application/json" `
+  -Headers @{ Authorization = "Bearer $env:TOKEN" } `
+  -Body $body
+```
+
+### Search Parties
+
+```bash
+curl -s -X POST "$EVENTSTORE_URL/api/v1/queries" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{
+    "tenant": "'"$TENANT_ID"'",
+    "domain": "party",
+    "aggregateId": "parties",
+    "queryType": "PartySearch",
+    "entityId": "parties",
+    "payload": {
+      "query": "Demo",
+      "page": 1,
+      "pageSize": 20
+    }
+  }' | jq
+```
+
+### List Parties
+
+```bash
+curl -s -X POST "$EVENTSTORE_URL/api/v1/queries" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{
+    "tenant": "'"$TENANT_ID"'",
+    "domain": "party",
+    "aggregateId": "parties",
+    "queryType": "PartyIndex",
+    "entityId": "parties",
+    "payload": {
+      "page": 1,
+      "pageSize": 20,
+      "active": true
+    }
+  }' | jq
+```
+
+---
+
+## Step 5: Typed .NET Client
+
+For .NET service-to-service integration, prefer the typed client package. It submits the same EventStore command/query envelopes internally.
 
 ```bash
 dotnet add package Hexalith.Parties.Client
 ```
 
-### Configure Services
-
-In your `Program.cs`:
-
 ```csharp
 builder.Services.AddPartiesClient(builder.Configuration);
 ```
 
-In `appsettings.json`:
-
 ```json
 {
   "Parties": {
-    "BaseUrl": "https://localhost:5001"
+    "BaseUrl": "https://localhost:<eventstore-port>",
+    "Tenant": "tenant-a"
   }
 }
 ```
 
-Use the HTTPS endpoint shown for `parties` in the Aspire dashboard if your local port differs.
-
-### Send Commands and Queries
+`Parties:BaseUrl` is the EventStore gateway base URL. It is not the `parties` actor-host URL.
 
 ```csharp
-public class MyService(IPartiesCommandClient commands, IPartiesQueryClient queries)
+public sealed class MyService(
+    IPartiesCommandClient commands,
+    IPartiesQueryClient queries)
 {
-    public async Task CreateAndRetrievePartyAsync()
+    public async Task RunAsync(CancellationToken cancellationToken)
     {
-        // Create a party -- returns a correlation ID
         string correlationId = await commands.CreatePartyAsync(
             new CreateParty
             {
-                PartyId = "my-party-id",
+                PartyId = "party-demo-001",
                 Type = PartyType.Person,
                 PersonDetails = new PersonDetails
                 {
-                    FirstName = "Jean",
-                    LastName = "Dupont"
+                    FirstName = "Demo",
+                    LastName = "Contact"
                 }
             },
-            CancellationToken.None);
+            cancellationToken);
 
-        // Query the party back
-        PartyDetail party = await queries.GetPartyAsync(
-            "my-party-id",
-            CancellationToken.None);
-
-        // Search parties
-        PagedResult<PartySearchResult> results = await queries.SearchPartiesAsync(
-            "Dupont", page: 1, pageSize: 20,
-            CancellationToken.None);
+        PartyDetail party = await queries.GetPartyAsync("party-demo-001", cancellationToken);
+        PagedResult<PartySearchResult> results = await queries.SearchPartiesAsync("Demo", 1, 20, cancellationToken);
     }
 }
 ```
 
-The client interfaces provide typed access to all command and query operations:
+---
 
-- **`IPartiesCommandClient`** -- `CreatePartyAsync`, `UpdatePersonDetailsAsync`, `AddContactChannelAsync`, `DeactivatePartyAsync`, and more
-- **`IPartiesQueryClient`** -- `GetPartyAsync`, `ListPartiesAsync`, `SearchPartiesAsync`
+## Step 6: MCP Host
+
+AI assistants connect to the separate `parties-mcp` host, not to `/mcp` on the `parties` actor host.
+
+Canonical tools:
+
+- `create_party`
+- `get_party`
+- `find_parties`
+- `update_party`
+- `delete_party`
+- `get_party_name_at`
+
+Use the `parties-mcp` endpoint shown in the Aspire dashboard.
+
+```json
+{
+  "mcpServers": {
+    "hexalith-parties": {
+      "url": "https://localhost:<parties-mcp-port>/mcp",
+      "headers": {
+        "Authorization": "Bearer <token>",
+        "X-Tenant-Id": "tenant-a",
+        "X-User-Id": "<user-id>"
+      }
+    }
+  }
+}
+```
+
+The MCP host forwards tenant, user, and authorization context to the EventStore gateway through the typed Parties client boundary. It does not call Parties actors, projections, validators, controllers, or DAPR service invocation directly.
+
+---
+
+## Step 7: Event Subscription
+
+Subscriber applications consume EventStore-published DAPR events. The sample app owns its subscription and local read model:
+
+- Subscription route: `/events/parties`
+- Example topic: `tenant-a.parties.events`
+- DAPR app id: `sample`
+
+Subscriber code should be idempotent, tolerate duplicate delivery, acknowledge unknown additive event types, and define its own local event envelope type matching only the fields it consumes. Unknown future events should return success unless the subscriber explicitly owns a retryable failure.
 
 ---
 
 ## Non-.NET Developer Path
 
-If you are not using .NET for your application, you can deploy Hexalith.Parties via Docker and interact exclusively through the REST API.
+Non-.NET consumers can call the EventStore HTTP gateway directly with the command/query shapes above. Keep the same boundary:
 
-### Deploy with Docker
-
-```bash
-git clone https://github.com/Hexalith/Hexalith.Parties.git
-cd Hexalith.Parties
-dotnet aspire run --project src/Hexalith.Parties.AppHost
-```
-
-> Docker Desktop is still required. The Aspire host orchestrates all containers.
-
-### Use the REST API
-
-All party operations are available via standard HTTP calls (see [Step 2](#step-2-first-command----create-a-party) and [Step 3](#step-3-first-query----retrieve-and-search) above). The API uses standard JSON with camelCase properties, string enums, and ISO 8601 dates.
-
-**Skip** Step 5 (NuGet integration) -- it is .NET-specific. Steps 1-4 work with any language or HTTP client.
-
-### API Overview
-
-| Operation | Method | Endpoint |
-|-----------|--------|----------|
-| Create party | POST | `/api/v1/parties` |
-| Get party | GET | `/api/v1/parties/{id}` |
-| Search parties | GET | `/api/v1/parties/search?q=...` |
-| List parties | GET | `/api/v1/parties` |
-| Update person | POST | `/api/v1/parties/{id}/update-person-details` |
-| Deactivate party | POST | `/api/v1/parties/{id}/deactivate` |
-| Create composite | POST | `/api/v1/parties/create-composite` |
-
-See the OpenAPI specification at `/openapi/v1.json` when running in development mode for the complete endpoint reference.
-
----
-
-## GDPR Disclaimer
-
-> **This MVP does not include GDPR compliance features.** Specifically:
->
-> - No crypto-shredding (data encryption at rest per party)
-> - No consent management
-> - No right to erasure implementation
-> - No data portability export
->
-> **Do not store regulated EU personal data** in this version.
->
-> Every API response includes an `X-GDPR-Warning` header as a reminder. GDPR compliance is planned for v1.1.
-
-### Emergency Manual Erasure
-
-If you receive an erasure request before v1.1 GDPR features are available, you must handle it manually at the data store level. This requires direct access to the underlying event store and projection databases. Consult your data protection officer and follow your organization's data breach/erasure procedures.
+| Operation | Method | Gateway route | Domain | Type |
+|-----------|--------|---------------|--------|------|
+| Submit command | POST | `/api/v1/commands` | `party` | `commandType` names a Parties command contract |
+| Submit query | POST | `/api/v1/queries` | `party` | `queryType` is `PartyDetail`, `PartyIndex`, or `PartySearch` |
+| Browse streams | Browser | EventStore Admin UI | n/a | Use `eventstore-admin-ui` from Aspire |
+| AI tool access | MCP | `parties-mcp` `/mcp` | n/a | Use canonical MCP tool names |
 
 ---
 
 ## Troubleshooting
 
-### DAPR Not Running
+### EventStore Gateway Not Ready
 
-**Symptom:** Application fails to start with connection errors to DAPR.
+Check the Aspire dashboard for `eventstore`, `eventstore-admin`, `eventstore-admin-ui`, `parties`, and `tenants`. Public command/query readiness is EventStore-owned; Parties health only proves the actor host is alive behind the gateway.
 
-**Fix:** Ensure Docker Desktop is running. DAPR sidecars run in containers managed by Aspire.
+### Authentication Errors
 
-```bash
-docker ps  # Verify Docker is responsive
-```
+`401` responses usually mean the request is missing a valid bearer token, tenant claim, or user identifier. Fix the identity provider or local development token configuration rather than calling Parties internals.
 
-### Port Conflicts
+### Authorization Errors
 
-**Symptom:** Address already in use errors on startup.
-
-**Fix:** Check for processes using the default ports:
-
-```bash
-# Check common ports
-netstat -an | grep -E "(5000|5001|8180)"
-```
-
-**PowerShell**
-
-```powershell
-Get-NetTCPConnection -LocalPort 5000,5001,8180 -ErrorAction SilentlyContinue
-```
-
-Stop conflicting processes or configure alternative ports in `launchSettings.json`.
-
-### Authentication Errors (401 Unauthorized)
-
-**Symptom:** All API calls return `401 Unauthorized`.
-
-**Fix:**
-1. Verify your JWT token is valid and not expired
-2. Ensure the token contains the required tenant claim (`eventstore:tenant`) and an authenticated user identifier (`sub`)
-3. If using Keycloak, verify the realm and client configuration at `http://localhost:8180`
-4. If Keycloak is disabled, verify `Authentication:JwtBearer:SigningKey` is set in configuration
-
-### Tenant Authorization Errors (403 Forbidden)
-
-**Symptom:** API or MCP tools return `403 Forbidden` or an error with reason codes such as `unknown-tenant`, `tenant-disabled`, `not-member`, `insufficient-role`, or `tenant-state-stale`.
-
-**Cause:** The token may identify a tenant, but Hexalith.Tenants local projection state did not authorize the user for the requested operation. Verify tenant lifecycle and membership in Hexalith.Tenants rather than adding Parties-local tenant management. Reader is enough for read/search, Contributor is required for party writes, and Owner is required for administration.
-
-| Symptom | Likely cause | Fix owner | REST/MCP behavior |
-| --- | --- | --- | --- |
-| `401 missing-tenant` | JWT lacks trusted tenant claim | Identity provider owner | REST returns 401; MCP throws `missing-tenant` |
-| `401 missing-user` | JWT lacks trusted user/subject claim | Identity provider owner | REST returns 401; MCP throws `missing-user` |
-| `403 unknown-tenant` | Tenant id is not present in the local Tenants projection | Tenant administrator | Provision the tenant in Hexalith.Tenants and wait for the subscription to converge |
-| `403 not-member` | Valid tenant claim but no active Hexalith.Tenants membership | Tenant administrator | REST returns 403; MCP throws `not-member` |
-| `403 insufficient-role` | Membership exists but role is too low | Tenant administrator | Read may pass; write/admin fails |
-| `403 tenant-disabled` | Tenant is disabled in Hexalith.Tenants | Tenant operator | All tenant-scoped access fails closed |
-| `403 not-member` after removal | User was removed from Hexalith.Tenants | Tenant administrator | Access fails after projection consumes removal |
-| `403 tenant-state-stale` | Local Tenants projection unavailable or behind | Platform operator | Operator-driven recovery: restore Tenants subscription/projection health, then retry. The response carries no `Retry-After` header today; clients should NOT auto-retry in a tight loop |
+`403` responses mean EventStore or its tenant/RBAC plug-ins rejected the request before Parties domain execution. Verify Hexalith.Tenants lifecycle, membership, and roles. `TenantReader` can read/search, `TenantContributor` can write, and `TenantOwner` can perform administration operations.
 
 ### Projection Delay
 
-**Symptom:** Party created successfully (202) but GET returns 404.
+A command can be accepted before the projection is queryable. Retry with bounded backoff and check projection freshness or EventStore Admin UI stream evidence. Do not bypass EventStore by reading projection actors directly.
 
-**Cause:** Event-sourced projections need a moment to process. Wait a few seconds and retry. If the issue persists, check the Aspire dashboard for actor health.
+### MCP Unavailable
 
-### Tenants Projection Lag
-
-**Symptom:** Tenant access decisions do not reflect a recent tenant disablement, membership removal, or role change.
-
-**Cause:** Parties service authorizes from a local Tenants projection updated by DAPR pub/sub. Verify DAPR sidecar health, the `system.tenants.events` subscription, Tenants event publishing, and projection replay/rebuild options available in your deployment.
+Verify the `parties-mcp` resource is running and configured with the EventStore gateway base URL. Do not route assistants to `/mcp` on the `parties` actor host.
 
 ---
 
 ## What's Next
 
-- **Explore the API** -- Open `/openapi/v1.json` in your browser for the complete OpenAPI specification
-- **Connect your AI assistant** -- Configure MCP tools for natural-language party management
-- **Integrate from code** -- Use the NuGet client package for typed .NET access
-- **v1.1 Roadmap** -- GDPR compliance features including crypto-shredding, consent management, and right to erasure
+- Use the typed .NET client for normal service integration.
+- Use `parties-mcp` for AI assistant integration.
+- Use EventStore Admin UI for stream/event inspection.
+- Review the picker and admin portal docs for UI embedding patterns.
