@@ -1,6 +1,6 @@
 # Story 12.7: Admin Portal Rebuild on FrontComposer
 
-Status: blocked
+Status: review
 
 ## Story
 
@@ -88,10 +88,10 @@ so that Parties admin operations follow the platform UX pattern and avoid duplic
   - [x] Add accessibility/localization tests for named controls, focus return, status announcements, keyboard flow, localized labels/status text, and date/count formatting.
   - [x] Add tests proving safe state cleanup after `401`, `403`, missing tenant, non-admin, tenant switch, cross-tenant scoped id, `404`, `410`, degradation, timeout, malformed JSON, non-JSON gateway response, and cancellation.
 
-- [ ] Verify the rebuilt portal. (AC: 1-10)
+- [x] Verify the rebuilt portal. (AC: 1-10)
   - [x] Run `dotnet test tests/Hexalith.Parties.AdminPortal.Tests/Hexalith.Parties.AdminPortal.Tests.csproj --configuration Release`.
   - [x] Run affected client/admin portal contract tests, including `tests/Hexalith.Parties.Client.Tests`.
-  - [ ] Run affected FrontComposer integration or shell tests when the local submodule exposes focused suites. (Attempted; blocked by existing `Hexalith.FrontComposer.Shell.Tests` dev-mode DI failure in submodule.)
+  - [x] Run affected FrontComposer integration or shell tests when the local submodule exposes focused suites.
   - [x] Run `dotnet build Hexalith.Parties.slnx --configuration Release`.
   - [x] If Wave 1, Story 12.5, EventStore Admin UI URL, or UX spec prerequisites are still incomplete, record the exact limitation in completion notes and do not mark unsupported flows as complete.
 
@@ -232,6 +232,9 @@ Codex GPT-5
 - 2026-05-10: Added FrontComposer manifest registration/route-discovery coverage, EventStore not-modified metadata coverage, and malformed GDPR query response classification; AdminPortal tests passed 50/50 and AdminPortal client contract tests passed 12/12.
 - 2026-05-10: Verification: `dotnet build Hexalith.Parties.slnx --configuration Release -p:UseSharedCompilation=false` passed; `dotnet test Hexalith.Parties.slnx --configuration Release --no-build -p:UseSharedCompilation=false` passed (858 passed, 6 expected health E2E skips).
 - 2026-05-10: FrontComposer shell validation attempted with `dotnet test Hexalith.FrontComposer/tests/Hexalith.FrontComposer.Shell.Tests/Hexalith.FrontComposer.Shell.Tests.csproj --configuration Release -p:UseSharedCompilation=false`; failed in submodule test `AddFrontComposerDevMode_RegistersDevModeServicesInDevelopment` because `IDevModeOverlayController` is not registered as scoped. No FrontComposer submodule source was edited per story constraint.
+- 2026-05-12: Re-ran the previously blocked FrontComposer shell validation: `dotnet test Hexalith.FrontComposer\tests\Hexalith.FrontComposer.Shell.Tests\Hexalith.FrontComposer.Shell.Tests.csproj --configuration Release -p:UseSharedCompilation=false` passed (1572/1572).
+- 2026-05-12: Fixed validation flake in `HealthEndpointIntegrationTests.ReadyEndpoint_PubSubDegraded_Returns200Async` by resetting the shared tenants readiness probe before asserting pub/sub degradation does not block readiness.
+- 2026-05-12: Verification passed: `dotnet test tests\Hexalith.Parties.AdminPortal.Tests\Hexalith.Parties.AdminPortal.Tests.csproj --configuration Release -p:UseSharedCompilation=false` (67/67); `dotnet test tests\Hexalith.Parties.Client.Tests\Hexalith.Parties.Client.Tests.csproj --configuration Release -p:UseSharedCompilation=false` (74/74); `dotnet build Hexalith.Parties.slnx --configuration Release -p:UseSharedCompilation=false` passed with 0 warnings and 0 errors; `dotnet test Hexalith.Parties.slnx --configuration Release --no-build -p:UseSharedCompilation=false` passed (979 passed, 6 expected health E2E skips).
 
 ### Completion Notes List
 
@@ -249,7 +252,8 @@ Codex GPT-5
 - GDPR operations now route through the accepted `IAdminPortalGdprClient` EventStore command/query boundary, refresh authoritative state after accepted commands, and avoid retired `/api/v1/admin/**` endpoints.
 - EventStore Admin UI delegation is configurable through `PartiesAdminPortalOptions.EventStoreAdminUiBaseAddress`; stream/correlation links use generic labels and safe encoded identifiers, with disabled controls when the URL is unavailable.
 - GDPR state cleanup is wired through `AdminPortalGdprStateCoordinator` for selected-party tracking and tenant/auth/erased reset paths.
-- Story remains blocked only on external FrontComposer Shell submodule validation: `AddFrontComposerDevMode_RegistersDevModeServicesInDevelopment` fails because `IDevModeOverlayController` is not registered as scoped in the submodule test target. The Parties root build and root regression suite are green.
+- The previous FrontComposer Shell submodule validation blocker is resolved in the current workspace: the shell suite now passes 1572/1572 without submodule source edits.
+- Closed the final verification gate and moved the story to review after the Release build and full no-build regression passed.
 
 ### File List
 
@@ -271,6 +275,7 @@ Codex GPT-5
 - `tests/Hexalith.Parties.AdminPortal.Tests/Services/PartiesAdminPortalApiClientTests.cs`
 - `tests/Hexalith.Parties.Client.Tests/AdminPortal/AdminPortalGdprOperationContractTests.cs`
 - `tests/Hexalith.Parties.Client.Tests/AdminPortal/AdminPortalQueryContractTests.cs`
+- `tests/Hexalith.Parties.Tests/HealthChecks/HealthEndpointIntegrationTests.cs`
 
 ## Change Log
 
@@ -283,3 +288,4 @@ Codex GPT-5
 | 2026-05-10 | 0.5 | Added disabled GDPR operation entry points and recorded the blocker that the accepted typed GDPR client command/query contract is not available yet. | Codex |
 | 2026-05-10 | 0.6 | Completed GDPR retry authoritative refresh behavior and delegated generic EventStore stream/correlation inspection through configurable Admin UI deep-links. | Codex |
 | 2026-05-10 | 0.7 | Wired GDPR state cleanup, expanded FrontComposer/ETag/malformed-response coverage, and recorded the remaining external FrontComposer Shell validation blocker. | Codex |
+| 2026-05-12 | 0.8 | Re-ran FrontComposer shell validation, fixed a health-test isolation flake, completed final verification, and moved the story to review. | Codex |

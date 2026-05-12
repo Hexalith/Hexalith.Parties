@@ -54,7 +54,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-05-02
-last_updated: 2026-05-12  # story 12-10 moved in-progress -> review after EventStore-fronted deployment validation and topology fitness rewrite. Deploy validation tests 40/40, AppHost topology/architectural fitness tests 29/29, deploy/dapr validation pass, AppHost build clean, solution build clean. Runtime Aspire proof unavailable because dotnet-aspire is not on PATH; full no-build regression timed out before returning results.
+last_updated: 2026-05-12  # story 12-7 moved blocked -> review after the previously blocked FrontComposer Shell validation passed (1572/1572), a shared health-test readiness isolation flake was fixed, AdminPortal tests 67/67, Client tests 74/74, Release solution build clean, and full no-build regression passed (979 passed, 6 expected health E2E skips).
 # sprint_change_proposals:
 #   - sprint-change-proposal-2026-05-07.md  (EventStore-Fronted Architecture Pivot — added Epic 12; paused 10-1-1, 10-2, 10-3)
 project: Hexalith.Parties
@@ -170,7 +170,7 @@ development_status:
   12-4-server-tier-1-tier-2-test-rewrite: done
   12-5-parties-client-thin-wrapper: done
   12-6-parties-mcp-thin-host: done
-  12-7-admin-portal-rebuild-on-frontcomposer: blocked
+  12-7-admin-portal-rebuild-on-frontcomposer: review
   12-8-picker-rewrite: blocked
   12-9-sample-and-getting-started-doc-updates: review
   12-10-deployment-validation-and-topology-fitness-rewrite: review

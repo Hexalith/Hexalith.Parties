@@ -77,6 +77,7 @@ public sealed class HealthEndpointIntegrationTests : IClassFixture<HealthEndpoin
             .Returns((string?)null);
         _factory.DaprClient.GetMetadataAsync(Arg.Any<CancellationToken>())
             .Returns(new DaprMetadata("test", [], new Dictionary<string, string>(), []));
+        _factory.TenantsReadinessProbe.IsReady = true;
 
         using HttpClient client = _factory.CreateClient();
         HttpResponseMessage response = await client.GetAsync("/ready");
