@@ -1,6 +1,6 @@
 # Story 12.8: Picker Rewrite
 
-Status: review
+Status: done
 
 ## Story
 
@@ -74,6 +74,47 @@ so that picker integration matches the platform contract after Parties public RE
   - [x] Run affected contracts/package fitness tests.
   - [x] Run `dotnet build Hexalith.Parties.slnx --configuration Release`.
   - [x] If Story 12.5 remains blocked or the EventStore query contract is not frozen, record the exact limitation and do not mark unsupported transport behavior complete.
+
+### Review Findings
+
+_Code review performed 2026-05-13 (bmad-code-review). 3 decisions resolved, 19 patches applied, 6 deferred, 8 dismissed. Picker tests 53/53, Client 74/74, Contracts 57/57, full Release solution build clean. See `_bmad-output/implementation-artifacts/deferred-work.md` for deferred items._
+
+#### Decisions (resolved 2026-05-13)
+
+- [x] [Review][Decision] Generic exception catch policy in `PartyPickerApiClient.SearchAsync` — RESOLVED: add defensive `catch (Exception)` mapping to a bounded `Error` state without leaking exception text. Converted to patch P18 below.
+- [x] [Review][Decision] `xunit.v3` framework upgrade scope creep — RESOLVED: intentional. Picker test project stays on `xunit.v3`. Upgrade of remaining test projects tracked as a separate cross-cutting concern.
+- [x] [Review][Decision] `AddHexalithPartyPicker(configuration)` double-registration risk — RESOLVED: guard with `IsRegistered<IPartiesQueryClient>()` (or `TryAdd*`) check before calling `AddPartiesClient(configuration)`. Converted to patch P19 below.
+
+#### Patches
+
+- [x] [Review][Patch] `ApiBaseUrl`/`PartyPickerSearchRequest.ApiBaseAddress` is dead code [`src/Hexalith.Parties.Picker/Components/PartyPicker.razor:88,260`, `src/Hexalith.Parties.Picker/Services/PartyPickerSearchRequest.cs:5`] — `ApiBaseAddress` is built from `ApiBaseUrl` and threaded onto `PartyPickerSearchRequest`, but the new `PartyPickerApiClient` never reads it. AC5 required either documenting the parameter or replacing it. Remove `ApiBaseAddress` from the request DTO and either delete `ApiBaseUrl` or mark it `[Obsolete]` with explanation.
+- [x] [Review][Patch] Dead `catch (HttpRequestException)` in `ScheduleSearchAsync` [`src/Hexalith.Parties.Picker/Components/PartyPicker.razor:243-254`] — `PartyPickerApiClient` catches `HttpRequestException` internally and returns a Response with SafeReason; `Task.Delay` cannot throw it. The razor catch is unreachable. Delete it.
+- [x] [Review][Patch] `Page` not sanitized on failure/auth/idle responses [`src/Hexalith.Parties.Picker/Services/PartyPickerApiClient.cs:24,117,140`] — `SearchPartiesAsync` is called with `Math.Max(1, request.Page)` but `AuthenticationRequired`, `FailureResponse`, and the empty/Idle branches return raw `request.Page`. UI page state diverges between success and failure for the same input. Apply the same `Math.Max(1, …)` everywhere or compute once.
+- [x] [Review][Patch] `payload.Items` null-deref in `ToSearchResponse` [`src/Hexalith.Parties.Picker/Services/PartyPickerApiClient.cs:157`] — `payload.Items.Count` throws `NullReferenceException` if the typed client deserializes a JSON body with `"items": null`. The `required` keyword only enforces initialization, not non-null. Null-guard `payload.Items` and map to `Empty`.
+- [x] [Review][Patch] Null `Party`/`DisplayName` in result NPE during render [`src/Hexalith.Parties.Picker/Components/PartyPicker.razor:59,63`, `PartyPickerApiClient.cs:171`] — `@result.Party.DisplayName` throws if `Party` is null. Filter null `Party` items in `ToSearchResponse` or null-coalesce in the razor template.
+- [x] [Review][Patch] `JSException` not caught in `DispatchSelectedDomEventAsync` [`src/Hexalith.Parties.Picker/Components/PartyPicker.razor:341-346`] — Only `InvalidOperationException` and `JSDisconnectedException` are caught. `Microsoft.JSInterop.JSException` (e.g., module import 404, JS-side throw) escapes and breaks the Blazor circuit. Add `catch (JSException)`.
+- [x] [Review][Patch] Clear button ignores `Disabled`/`ReadOnly` [`src/Hexalith.Parties.Picker/Components/PartyPicker.razor:19`] — `disabled="@(_selected is null && string.IsNullOrWhiteSpace(_query))"` lets the user mutate selection state via the clear button while the picker is disabled or read-only. Add `IsInteractionDisabled` to the disabled binding.
+- [x] [Review][Patch] Stub `PartyPickerSelection` from `SelectedPartyId` renders as "Active" [`src/Hexalith.Parties.Picker/Components/PartyPicker.razor:190-193,395-400`] — Host-set `SelectedPartyId` produces `new PartyPickerSelection { PartyId = … }` with null `IsActive`/`IsErased`. `StatusText` falls through to `EffectiveLabels.Active`, mislabeling erased/inactive parties. Either omit the badge for stub selections or fetch detail via `IPartiesQueryClient.GetPartyAsync`.
+- [x] [Review][Patch] Asymmetric `SearchStatus = "Unavailable"` [`src/Hexalith.Parties.Picker/Services/PartyPickerApiClient.cs:157-178`] — Ready branch sets `Metadata.SearchStatus = "Unavailable"`, Empty branch omits `Metadata`. Set consistently across both branches (or null in both) so consumers can detect "metadata unavailable" deterministically.
+- [x] [Review][Patch] Transport guardrail misses AC1 forbidden tokens [`tests/Hexalith.Parties.Picker.Tests/Services/PartyPickerTransportGuardrailTests.cs:7-15`] — AC1 enumerates DAPR actors, projection actors, `IPartySearchService`, controller routes; the guardrail only checks `api/v1/parties`, `api/v1/parties/search`, and HTTP basics. Add InlineData for `Hexalith.Parties.Server`, `Hexalith.Parties.Projections`, `PartyActor`, `IPartySearchService`, and `Dapr.Actors`.
+- [x] [Review][Patch] `PartyPickerSearchMetadata` retains dead fields [`src/Hexalith.Parties.Picker/Services/PartyPickerSearchMetadata.cs`] — `ServiceDegraded`, `StaleDataAge`, `DegradedReason` and computed `IsLocalOnly`/`IsDegraded` are never populated by the new client. Dev Notes mandate "keep only metadata the typed client actually exposes." Either prune to `{ SearchStatus }` only or mark the others `[Obsolete]` with rationale.
+- [x] [Review][Patch] `DelegateFingerprint` over-fires reset on per-render lambdas [`src/Hexalith.Parties.Picker/Components/PartyPicker.razor:281-285`] — `RuntimeHelpers.GetHashCode(Delegate)` changes when hosts pass a new lambda per render (a common Blazor pattern), flushing visible results and selection state each render. When `AuthContextKey` is set, prefer it; when both are null, document the requirement that delegates must be hoisted to fields by the host.
+- [x] [Review][Patch] `HasHostRequestContextAsync` token-provider throws not handled [`src/Hexalith.Parties.Picker/Services/PartyPickerApiClient.cs:29,82-86`] — The call is outside the try/catch in `SearchAsync`. A throwing host token provider (cache failure, MSAL refresh exception) escapes `SearchAsync` and leaves the razor on `Loading`. Wrap in try/catch and map to `AuthenticationRequired` or `Error`.
+- [x] [Review][Patch] Guardrail substring matching is brittle [`tests/Hexalith.Parties.Picker.Tests/Services/PartyPickerTransportGuardrailTests.cs:18-28`] — Whole-file substring matches on `"HttpClient"`/`"MarkupString"` will fail the build if a future XML doc comment references `<see cref="HttpClient"/>`. Strip XML doc and string comments before matching, or use a tokenized check.
+- [x] [Review][Patch] Cross-test nested-type coupling [`tests/Hexalith.Parties.Picker.Tests/Components/PartyPickerComponentTests.cs:296,334`, `tests/Hexalith.Parties.Picker.Tests/Services/PartyPickerApiClientTests.cs:203-267`] — `PartyPickerComponentTests` reaches into `PartyPickerApiClientTests.RecordingPartiesQueryClient`/`SearchCall` (nested `internal` types of another test class). Extract `RecordingPartiesQueryClient` and `SearchCall` to a top-level `Hexalith.Parties.Picker.Tests.Fakes` namespace.
+- [x] [Review][Patch] `DelayedPartiesQueryClient` does not record Last\* properties [`tests/Hexalith.Parties.Picker.Tests/Components/PartyPickerComponentTests.cs:345-357`] — Override does not call `base.SearchPartiesAsync` and only mutates `SearchCalls`, so `LastMode`/`LastCaseId`/`LastRequestCustomizer` remain null when this fake is used. Either record in the override or delegate via `base`.
+- [x] [Review][Patch] `ReadOnly` sets HTML `disabled` attribute, violating AC8 keyboard operability [`src/Hexalith.Parties.Picker/Components/PartyPicker.razor:15`] — `disabled="@IsInteractionDisabled"` where `IsInteractionDisabled = Disabled || ReadOnly` makes the input non-focusable in read-only mode. AC8 requires "disabled/read-only state remain keyboard operable". Use `readonly="@ReadOnly"` and `disabled="@Disabled"` as distinct attributes.
+- [x] [Review][Patch] P18 — Defensive `catch (Exception)` in `SearchAsync` [`src/Hexalith.Parties.Picker/Services/PartyPickerApiClient.cs:34-72`] — Resolved from D1. Add a final `catch (Exception)` after the existing handlers that maps to `PartyPickerSearchState.Error` with a bounded `SafeReason` ("The Parties client could not complete the request.") and does not include the exception message/stack in the response.
+- [x] [Review][Patch] P19 — Guard `AddHexalithPartyPicker(configuration)` against double registration [`src/Hexalith.Parties.Picker/Extensions/PartyPickerServiceCollectionExtensions.cs:11-18`] — Resolved from D3. Only call `services.AddPartiesClient(configuration)` if `IPartiesQueryClient` is not already registered (e.g., `services.Any(d => d.ServiceType == typeof(IPartiesQueryClient))`).
+
+#### Deferred
+
+- [x] [Review][Defer] `HttpRequestException` catch ignores `.StatusCode` [`src/Hexalith.Parties.Picker/Services/PartyPickerApiClient.cs:63`] — deferred, depends on `HttpPartiesQueryClient` contract guarantees owned by Story 12.5; pre-existing seam.
+- [x] [Review][Defer] `CreateRequestCustomizer` silent unauth on second token-provider call [`src/Hexalith.Parties.Picker/Services/PartyPickerApiClient.cs:100-104`] — deferred, server-side 401 recovery is acceptable UX.
+- [x] [Review][Defer] No upper bound on `request.Page` [`src/Hexalith.Parties.Picker/Services/PartyPickerApiClient.cs:39`] — deferred, server-side rejection is acceptable.
+- [x] [Review][Defer] `SelectAsync` race against newer search re-render [`src/Hexalith.Parties.Picker/Components/PartyPicker.razor:295`] — deferred, Blazor render cycle serializes onclick handlers; race is unlikely in practice.
+- [x] [Review][Defer] Substring assertions `ToString().ShouldNotContain("tenant"/"token")` [`tests/Hexalith.Parties.Picker.Tests/Components/PartyPickerComponentTests.cs:289-290,314-315`] — deferred, pre-existing test pattern; minor false-positive risk on host display names.
+- [x] [Review][Defer] Unrelated Gateway test failure `PostCommands_InvalidGatewayShape_Returns400BeforePartyInvocationAsync` — deferred, outside picker footprint; triage in EventStore Gateway routing.
 
 ## Dev Notes
 

@@ -340,6 +340,32 @@ public class DeploymentValidationTests : IDisposable
         jsonOutput.ShouldNotContain("ConnectionString=", Case.Insensitive);
     }
 
+    [Fact]
+    public async Task TopologyValidationFailure_JsonOutput_DoesNotLeakSecretLookingManifestValues()
+    {
+        // Pair the passing-case sanitized-output coverage above with a failure-case variant:
+        // remove the eventstore resource from topology.yaml so the topology check FAILS, and
+        // bake a sentinel into the (still-present) annotations to prove the failure-path
+        // formatter also sanitizes operator-supplied secrets in JSON output.
+        string sentinel = $"hexalith-failure-sentinel-{Guid.NewGuid():N}";
+        WriteValidProductionConfig(_tempDir);
+        WriteTopologyConfig(_tempDir, includeEventStore: false, includeSecretAnnotation: true, secretSentinel: sentinel);
+
+        (int consoleExitCode, string consoleOutput) = await RunValidationAsync(_tempDir);
+        (int jsonExitCode, string jsonOutput) = await RunValidationAsync(_tempDir, jsonOutput: true);
+
+        consoleExitCode.ShouldNotBe(0, $"Missing eventstore in topology should fail validation. Output:\n{consoleOutput}");
+        jsonExitCode.ShouldNotBe(0, $"Missing eventstore in topology should fail JSON validation. Output:\n{jsonOutput}");
+        consoleOutput.ShouldContain("EventStore gateway", Case.Insensitive);
+        jsonOutput.ShouldContain("EventStore gateway", Case.Insensitive);
+        consoleOutput.ShouldNotContain(sentinel, Case.Insensitive);
+        jsonOutput.ShouldNotContain(sentinel, Case.Insensitive);
+        consoleOutput.ShouldNotContain("Bearer ", Case.Insensitive);
+        jsonOutput.ShouldNotContain("Bearer ", Case.Insensitive);
+        consoleOutput.ShouldNotContain("ConnectionString=", Case.Insensitive);
+        jsonOutput.ShouldNotContain("ConnectionString=", Case.Insensitive);
+    }
+
     protected virtual void Dispose(bool disposing)
     {
         if (!_disposed)
@@ -461,7 +487,7 @@ public class DeploymentValidationTests : IDisposable
                 - name: enableDeadLetter
                   value: "true"
                 - name: publishingScopes
-                  value: "eventstore=sample.parties.events;tenants=system.tenants.events;{env:SUBSCRIBER_APP_ID}="
+                  value: "tenants=system.tenants.events;{env:SUBSCRIBER_APP_ID}="
                 - name: subscriptionScopes
                   value: "parties=system.tenants.events;{env:SUBSCRIBER_APP_ID}=acme.parties.events"
             scopes:
@@ -578,14 +604,6 @@ public class DeploymentValidationTests : IDisposable
                 defaultAction: deny
                 trustDomain: "{env:DAPR_TRUST_DOMAIN|hexalith.io}"
                 policies:
-                  - appId: eventstore
-                    defaultAction: deny
-                    trustDomain: "{env:DAPR_TRUST_DOMAIN|hexalith.io}"
-                    namespace: "{env:DAPR_NAMESPACE|hexalith}"
-                    operations:
-                      - name: /**
-                        httpVerb: ['POST']
-                        action: allow
                   - appId: parties
                     defaultAction: deny
                     trustDomain: "{env:DAPR_TRUST_DOMAIN|hexalith.io}"

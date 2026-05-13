@@ -182,13 +182,22 @@ public sealed class AppHostTenantsTopologyTests
     [Fact]
     public void AppHostProgramUsesWaitForForDependencyReadiness()
     {
-        string program = ReadAppHostProgram();
+        string program = StripCSharpComments(ReadAppHostProgram());
 
         program.ShouldContain(".WaitFor(eventStore)");
         program.ShouldContain(".WaitFor(tenants)");
         program.ShouldContain(".WaitFor(eventStoreResources.StateStore)");
         program.ShouldContain(".WaitFor(eventStoreResources.PubSub)");
         program.ShouldNotContain(".WaitForStart(");
+    }
+
+    private static string StripCSharpComments(string source)
+    {
+        // Remove block comments first, then single-line comments. This prevents fitness
+        // assertions like ShouldNotContain(".WaitForStart(") from triggering on commented-
+        // out code or XML doc references rather than live wiring.
+        string withoutBlockComments = Regex.Replace(source, @"/\*[\s\S]*?\*/", string.Empty);
+        return Regex.Replace(withoutBlockComments, @"//.*$", string.Empty, RegexOptions.Multiline);
     }
 
     private static string ReadAppHostProject()
@@ -204,11 +213,20 @@ public sealed class AppHostTenantsTopologyTests
     private static Dictionary<string, string> ExtractProjectResources(string program)
     {
         Regex addProject = new(@"AddProject<(?<project>Projects\.[^>]+)>\(""(?<name>[^""]+)""\)");
-        return addProject
+        // Group by resource name so duplicate AddProject<>("name") calls produce a clear
+        // assertion failure rather than crashing the test with ArgumentException.
+        Dictionary<string, string[]> grouped = addProject
             .Matches(program)
+            .GroupBy(match => match.Groups["name"].Value, StringComparer.Ordinal)
             .ToDictionary(
-                match => match.Groups["name"].Value,
-                match => match.Groups["project"].Value,
+                group => group.Key,
+                group => group.Select(match => match.Groups["project"].Value).ToArray(),
                 StringComparer.Ordinal);
+        string[] duplicates = grouped
+            .Where(kvp => kvp.Value.Length > 1)
+            .Select(kvp => kvp.Key)
+            .ToArray();
+        duplicates.ShouldBeEmpty($"AppHost declares duplicate resource names: [{string.Join(", ", duplicates)}].");
+        return grouped.ToDictionary(kvp => kvp.Key, kvp => kvp.Value[0], StringComparer.Ordinal);
     }
 }

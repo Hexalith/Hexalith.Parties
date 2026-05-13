@@ -6,36 +6,44 @@ namespace Hexalith.Parties.Sample.Tests;
 
 public sealed class SampleOnboardingGuardrailTests
 {
+    private static readonly string[] DocAndSampleScannedFiles =
+    [
+        "README.md",
+        "docs/getting-started.md",
+        "samples/Hexalith.Parties.Sample/Program.cs",
+        "samples/Hexalith.Parties.Sample/appsettings.json",
+        "samples/Hexalith.Parties.Sample/Properties/launchSettings.json",
+    ];
+
+    private static readonly string[] CurrentSurfaceForbiddenLiterals =
+    [
+        "api/v1/parties",
+        "api/v1/admin",
+        "openapi/v1.json",
+        "/openapi",
+        "Swagger",
+        "OpenAPI",
+        "X-GDPR-Warning",
+        "https://localhost:5001/mcp",
+        "http://localhost:5000/mcp",
+        "PartyActor",
+        "PartyDetailProjectionActor",
+        "PartyIndexProjectionActor",
+        "IPartySearchService",
+    ];
+
     [Fact]
     public void CurrentAdopterDocsAndSampleProduction_DoNotAdvertiseRetiredPartiesSurfaces()
     {
-        string[] scannedFiles =
-        [
-            "README.md",
-            "docs/getting-started.md",
-            "samples/Hexalith.Parties.Sample/Program.cs",
-            "samples/Hexalith.Parties.Sample/appsettings.json",
-            "samples/Hexalith.Parties.Sample/Properties/launchSettings.json",
-        ];
-
-        string[] forbiddenLiterals =
-        [
-            "api/v1/parties",
-            "api/v1/admin",
-            "openapi/v1.json",
-            "Swagger",
-            "X-GDPR-Warning",
-            "https://localhost:5001/mcp",
-            "http://localhost:5000/mcp",
-        ];
-
-        foreach (string relativePath in scannedFiles)
+        foreach (string relativePath in DocAndSampleScannedFiles)
         {
-            string text = File.ReadAllText(GetRepositoryFilePath(relativePath));
+            string path = GetRepositoryFilePath(relativePath);
+            File.Exists(path).ShouldBeTrue($"Required onboarding artifact is missing: {relativePath}");
+            string text = File.ReadAllText(path);
 
-            foreach (string forbiddenLiteral in forbiddenLiterals)
+            foreach (string forbiddenLiteral in CurrentSurfaceForbiddenLiterals)
             {
-                text.ShouldNotContain(forbiddenLiteral);
+                text.ShouldNotContain(forbiddenLiteral, Case.Insensitive, $"{relativePath} must not advertise retired surface '{forbiddenLiteral}'.");
             }
         }
     }
@@ -49,19 +57,21 @@ public sealed class SampleOnboardingGuardrailTests
             "api/v1/parties",
             "api/v1/admin",
             "openapi/v1.json",
+            "/openapi",
             "X-GDPR-Warning",
             "https://localhost:5001/mcp",
             "http://localhost:5000/mcp",
         ];
 
         foreach (string file in Directory.EnumerateFiles(testsRoot, "*.cs", SearchOption.AllDirectories)
-                     .Where(static file => !file.EndsWith(nameof(SampleOnboardingGuardrailTests) + ".cs", StringComparison.Ordinal)))
+                     .Where(static file => !file.EndsWith(nameof(SampleOnboardingGuardrailTests) + ".cs", StringComparison.Ordinal))
+                     .Where(static file => !IsBuildArtifact(file)))
         {
             string text = File.ReadAllText(file);
 
             foreach (string forbiddenLiteral in forbiddenLiterals)
             {
-                text.ShouldNotContain(forbiddenLiteral);
+                text.ShouldNotContain(forbiddenLiteral, Case.Insensitive, $"{file} must not assert retired surface '{forbiddenLiteral}'.");
             }
         }
     }
@@ -79,6 +89,7 @@ public sealed class SampleOnboardingGuardrailTests
             .Cast<string>()
             .ToArray();
 
+        projectReferences.ShouldNotBeEmpty("Sample must reference at least Hexalith.Parties.Client to compile against the typed gateway boundary.");
         projectReferences.ShouldAllBe(
             static include =>
                 include.EndsWith("src/Hexalith.Parties.Client/Hexalith.Parties.Client.csproj", StringComparison.Ordinal)
@@ -93,6 +104,7 @@ public sealed class SampleOnboardingGuardrailTests
             .Cast<string>()
             .ToArray();
 
+        packageReferences.ShouldNotBeEmpty("Sample must reference at least Dapr.AspNetCore for the subscriber endpoint.");
         packageReferences.ShouldAllBe(
             static include => include == "Dapr.AspNetCore",
             "Sample production packages should only include subscriber-owned DAPR ASP.NET Core support.");
@@ -147,6 +159,10 @@ public sealed class SampleOnboardingGuardrailTests
         appSettings.ShouldContain("\"BaseUrl\"");
         appSettings.ShouldContain("\"Tenant\": \"tenant-a\"");
     }
+
+    private static bool IsBuildArtifact(string path)
+        => path.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}", StringComparison.OrdinalIgnoreCase)
+            || path.Contains($"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}", StringComparison.OrdinalIgnoreCase);
 
     private static string GetRepositoryFilePath(string relativePath)
         => Path.Combine(GetRepositoryRoot(), relativePath);

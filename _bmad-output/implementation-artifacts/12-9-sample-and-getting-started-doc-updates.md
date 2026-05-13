@@ -1,6 +1,6 @@
 # Story 12.9: Sample and Getting-Started Doc Updates
 
-Status: review
+Status: done
 
 ## Story
 
@@ -107,6 +107,39 @@ so that I onboard against the canonical platform pattern.
   - [x] Run `dotnet build samples/Hexalith.Parties.Sample/Hexalith.Parties.Sample.csproj --configuration Release`.
   - [x] Run `dotnet build Hexalith.Parties.slnx --configuration Release`.
   - [x] If `dotnet aspire run --project src/Hexalith.Parties.AppHost` or `dotnet aspire` is unavailable, record the limitation and rely on static docs/source tests plus build verification.
+
+### Review Findings
+
+_Code review performed 2026-05-13 (bmad-code-review). 2 decisions resolved, 12 patches applied, 6 deferred, 12 dismissed. Sample tests 52/52, full Release solution build clean. See `_bmad-output/implementation-artifacts/deferred-work.md` for deferred items._
+
+#### Decisions (resolved 2026-05-13)
+
+- [x] [Review][Decision] README Project Structure label overlap — RESOLVED: annotate `Hexalith.Parties`, `Hexalith.Parties.Server`, `Hexalith.Parties.Projections` as internal to the actor host (not adopter-facing dependencies). Folded into patch P7 below.
+- [x] [Review][Decision] Sample `appsettings.json` `BaseUrl` value — RESOLVED: replace with the placeholder `"https://localhost:<eventstore-port>"` and add a short comment in `Program.cs` directing adopters to copy the actual port from the Aspire dashboard. Folded into patch P1 below.
+
+#### Patches
+
+- [x] [Review][Patch] `samples/Hexalith.Parties.Sample/appsettings.json` `BaseUrl` is stale legacy port [`samples/Hexalith.Parties.Sample/appsettings.json:3`] — Resolved-as-patch under D2. Replace `https://localhost:5001` with a clearly non-runnable placeholder (`https://localhost:<eventstore-port>`) or document that the value must be updated to the AppHost-assigned EventStore port.
+- [x] [Review][Patch] Guardrail `ShouldAllBe` is vacuously true on empty collections [`tests/Hexalith.Parties.Sample.Tests/SampleOnboardingGuardrailTests.cs:82-98`] — A sample csproj with zero `ProjectReference` or zero `PackageReference` would pass the guardrail. Add `projectReferences.ShouldNotBeEmpty()` and `packageReferences.ShouldNotBeEmpty()` before the `ShouldAllBe` calls.
+- [x] [Review][Patch] Demo exception logger drops exception entirely [`samples/Hexalith.Parties.Sample/Program.cs:144`] — `logger.LogError("Demo failed with {ExceptionType}", ex.GetType().Name)` discards the stack trace and inner exception from structured logs. Change to `logger.LogError(ex, "Demo failed")`; keep the bounded `Console.WriteLine` text as-is for PII safety. Structured loggers can then capture full detail without printing it to the demo console.
+- [x] [Review][Patch] Forbidden literal scan is case-sensitive [`tests/Hexalith.Parties.Sample.Tests/SampleOnboardingGuardrailTests.cs:38,64`] — `text.ShouldNotContain(forbidden)` uses ordinal case-sensitive match. Variants like `SWAGGER`, `OpenAPI`, `Api/V1/Parties` slip past. Use case-insensitive comparison (`text.ShouldNotContain(forbidden, Case.Insensitive)` or lowercase normalization).
+- [x] [Review][Patch] Markdown table row uses broken nested backticks [`docs/getting-started.md:333`] — `` `parties-mcp` `/mcp` `` renders broken because the backticks pair across the space. Rewrite as `` `parties-mcp /mcp` `` or split into two columns.
+- [x] [Review][Patch] README claims `parties-mcp` is "present when the MCP host is included in the local AppHost" [`README.md:25`] — Story 12.1 AppHost `Program.cs:42` unconditionally adds `partiesMcp`. The conditional wording is misleading. Reword to state `parties-mcp` runs alongside `parties` as a separate resource.
+- [x] [Review][Patch] README Project Structure lists internal projects without annotation [`README.md:46-50`] — `Hexalith.Parties.Projections` and `Hexalith.Parties.Server` are not adopter-facing dependencies but appear in the structure tree at the same level as `Hexalith.Parties.Client`. Annotate them as "internal to actor host — not adopter-facing dependencies" or move under an "Internal modules" subsection.
+- [x] [Review][Patch] Step 2 Bash drops the Keycloak token-fetch example [`docs/getting-started.md:64-76`] — Old doc had a complete `curl -X POST .../token` example; new doc replaces with `export TOKEN=<access-token>` and a paragraph "Keycloak is enabled by default... use the repository's symmetric-key development token settings". Add a short token-fetch snippet (curl against the local Keycloak realm + client) or link to a sibling doc so first-run adopters can complete Step 3.
+- [x] [Review][Patch] MCP JSON config examples have angle-bracket placeholders without "replace these" guidance [`docs/getting-started.md:293-306`, `samples/Hexalith.Parties.Sample/Program.cs:183,198`] — `<parties-mcp-port>`, `<token>`, `<user-id>` are angle-bracket placeholders. Add a one-line "Replace `<parties-mcp-port>` with the actual port from the Aspire dashboard, `<token>` with your bearer token, `<user-id>` with your authenticated user id."
+- [x] [Review][Patch] Curl examples lack `--fail` / HTTP-status capture / dev-cert troubleshooting [`docs/getting-started.md` Step 3-4 curl blocks; Troubleshooting section] — `curl -s ... | jq` swallows non-JSON responses with a cryptic jq parse error. Add `-w '\n[HTTP %{http_code}]\n'` (or `--fail-with-body`), and add a Troubleshooting line for "SSL certificate problem" pointing to `dotnet dev-certs https --trust`.
+- [x] [Review][Patch] Guardrail forbidden literal list missing variants [`tests/Hexalith.Parties.Sample.Tests/SampleOnboardingGuardrailTests.cs:21-30,47-55`] — Spec line 97 enumerates retired routes including `api/v1/parties/search`. While `api/v1/parties` substring covers it, `OpenAPI` (different from `openapi/v1.json`), `/openapi`, and `PartyActor` are not in the list. Add `OpenAPI`, `/openapi`, `PartyActor`, `PartyDetailProjectionActor`, `PartyIndexProjectionActor` (case-insensitive per P4).
+- [x] [Review][Patch] Guardrail test `SampleTests_DoNotAssertRetiredPartiesRoutes` enumerates `*.cs` under `tests/Hexalith.Parties.Sample.Tests/**` including `obj/` and `bin/` paths [`tests/Hexalith.Parties.Sample.Tests/SampleOnboardingGuardrailTests.cs:57-58`] — On a freshly built dev machine, MSBuild may emit generated `.cs` files under `obj/Debug/net10.0/` containing forbidden substrings (e.g., generator output referencing `openapi/v1.json` or attribute strings). Exclude `obj/` and `bin/` segments from the enumeration.
+
+#### Deferred
+
+- [x] [Review][Defer] Bash `'"$TENANT_ID"'` interpolation pattern [`docs/getting-started.md:97,160`] — deferred, valid Bash idiom; copy-paste errors are a general shell concern. Pre-existing pattern carried across multiple stories.
+- [x] [Review][Defer] Subscription topic `tenant-a.parties.events` naming convention [`samples/Hexalith.Parties.Sample/Program.cs:21`, `docs/getting-started.md:317`] — deferred, the topic name is owned by the sample's pre-existing DAPR subscription file and the EventStore publication contract. Not introduced by this story; revisit when subscription guidance is consolidated.
+- [x] [Review][Defer] `aggregateId="parties"` envelope convention for `PartySearch`/`PartyIndex` queries [`docs/getting-started.md:194,214`] — deferred, the lower-case `"party"` domain plus collection-style `"parties"` aggregateId for non-aggregate queries is a Story 12.5 envelope convention. Document or rename as part of the Client/Gateway documentation update, not this docs story.
+- [x] [Review][Defer] `get_party_name_at` MCP tool lacks parameter schema in adopter docs [`README.md:12`, `docs/getting-started.md:289`] — deferred, MCP tool parameter schemas are owned by the `parties-mcp` host (Story 12.6) and exposed via its OpenAPI/MCP manifest. Adopter docs need only list the tool name.
+- [x] [Review][Defer] Cross-shell consistency between Bash and PowerShell examples — deferred, current snippets are functional in their respective shells.
+- [x] [Review][Defer] Sample csproj does not reference `Hexalith.Parties.ServiceDefaults` [`samples/Hexalith.Parties.Sample/Hexalith.Parties.Sample.csproj`] — deferred, task said "only if needed". Sample does not currently require shared host health/telemetry wiring; revisit if Aspire integration is added to the sample.
 
 ## Dev Notes
 

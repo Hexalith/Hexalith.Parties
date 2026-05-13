@@ -45,9 +45,11 @@ spec:
       value: "true"
     - name: deadLetterTopic
       value: "deadletter"
-    # EventStore and Tenants publish only their canonical topics. Subscribers are denied publishing.
+    # tenants publishes only its canonical authority topic. eventstore is intentionally absent
+    # so it can publish to all {tenant}.parties.events topics without per-tenant listing
+    # (DAPR does not support wildcards in scoping). Subscribers are denied publishing.
     - name: publishingScopes
-      value: "eventstore=sample.parties.events;tenants=system.tenants.events;{env:SUBSCRIBER_APP_ID}=;{env:OPS_MONITOR_APP_ID}="
+      value: "tenants=system.tenants.events;{env:SUBSCRIBER_APP_ID}=;{env:OPS_MONITOR_APP_ID}="
     # MUST CUSTOMIZE: Replace example tenant.parties.events topic names below with the actual
     # tenants and topics for your deployment. The 'parties=system.tenants.events' entry is
     # NOT optional — it grants the Parties service permission to subscribe to Hexalith.Tenants

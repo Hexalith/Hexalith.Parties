@@ -199,8 +199,18 @@ function Test-ScopesContainAll {
         [string[]]$Scopes,
         [string[]]$Required
     )
+    # DAPR app-ids are case-sensitive at runtime; PowerShell's default -contains is not.
+    # Use ordinal comparison so a manifest with the wrong casing fails validation here
+    # instead of being denied silently by the sidecar at runtime.
     foreach ($requiredScope in $Required) {
-        if ($Scopes -notcontains $requiredScope) {
+        $found = $false
+        foreach ($scope in $Scopes) {
+            if ([string]::Equals($scope, $requiredScope, [System.StringComparison]::Ordinal)) {
+                $found = $true
+                break
+            }
+        }
+        if (-not $found) {
             return $false
         }
     }
@@ -213,7 +223,9 @@ function Test-AppIdListed {
         [string]$AppId
     )
     $escaped = [regex]::Escape($AppId)
-    return $Content -match "(?m)^\s*-\s*$escaped\s*$"
+    # Accept block-style (- value) with optional surrounding quotes. Flow-style sequences
+    # (appIds: [a, b]) are not in the current manifest convention; revisit if introduced.
+    return $Content -match "(?m)^\s*-\s*[`"']?$escaped[`"']?\s*$"
 }
 
 function Test-InvocationPolicy {
@@ -226,7 +238,34 @@ function Test-InvocationPolicy {
     $escapedAppId = [regex]::Escape($AppId)
     $escapedPath = [regex]::Escape($Path)
     $escapedVerb = [regex]::Escape($Verb)
-    return $Content -match "(?ms)-\s*appId:\s*[`"']?$escapedAppId[`"']?.*?operations:\s*.*?name:\s*[`"']?$escapedPath[`"']?.*?httpVerb:\s*\[[^\]]*$escapedVerb[^\]]*\].*?action:\s*allow"
+
+    # Match `- appId: <id>` and then capture everything up to (but NOT including) the next
+    # `- appId:` peer entry, or end-of-string. This prevents the non-greedy operator from
+    # spanning across unrelated policy blocks and producing a false-positive match when the
+    # requested (path, verb, action) tuple actually belongs to a different appId block in
+    # the same file. (We do not also anchor on top-level keys because legitimate child keys
+    # like `operations:` end with a colon and would prematurely terminate the body capture.)
+    $blockPattern = "(?ms)-\s*appId:\s*[`"']?$escapedAppId[`"']?(?<body>(?:(?!^\s*-\s*appId:\s*[`"']?\w).)*)"
+    $blockMatches = [regex]::Matches($Content, $blockPattern)
+    foreach ($blockMatch in $blockMatches) {
+        $body = $blockMatch.Groups["body"].Value
+        $allowPattern = "(?ms)operations:\s*.*?name:\s*[`"']?$escapedPath[`"']?.*?httpVerb:\s*\[[^\]]*$escapedVerb[^\]]*\].*?action:\s*allow"
+        if ($body -match $allowPattern) {
+            return $true
+        }
+    }
+    return $false
+}
+
+function Remove-YamlComments {
+    param([string]$Content)
+    if ([string]::IsNullOrEmpty($Content)) {
+        return ""
+    }
+    # Strip whole-line comments. Do not attempt to strip trailing comments since DAPR
+    # YAML may contain `#` inside quoted strings (e.g., URL fragments) and the cost of
+    # missing those is low compared to the cost of an incorrect quoted-string parser.
+    return ($Content -replace "(?m)^\s*#.*$", "")
 }
 
 # ---------------------------------------------------------------------------
@@ -357,7 +396,8 @@ function Test-AccessControl {
                 "Allow only appId=eventstore, method POST, path /process in accesscontrol.parties.yaml."
         }
 
-        if ($partiesContent -match "appId:\s*['`"]?\*['`"]?" -or $partiesContent -match "name:\s*['`"]?/\*\*['`"]?") {
+        $partiesPolicyBody = Remove-YamlComments $partiesContent
+        if ($partiesPolicyBody -match "appId:\s*['`"]?\*['`"]?" -or $partiesPolicyBody -match "name:\s*['`"]?/\*\*['`"]?") {
             Add-Result $Category "Parties sidecar has no wildcard invocation" "Fail" "Wildcard caller or broad Parties path is configured" `
                 "Remove wildcard app-id and broad /** operations from accesscontrol.parties.yaml."
         }
@@ -399,12 +439,22 @@ function Test-AccessControl {
                 "Add accesscontrol.eventstore-admin.yaml with deny-by-default and no peer policies."
         }
     }
-    elseif (($adminContent -match "(?m)^\s{2,4}defaultAction:\s*deny") -and ($adminContent -match "policies:\s*\[\]")) {
-        Add-Result $Category "EventStore Admin sidecar locked down" "Pass" "Admin Server receiving sidecar has no DAPR peer callers"
-    }
     else {
-        Add-Result $Category "EventStore Admin sidecar locked down" "Fail" "Admin Server sidecar is not locked down" `
-            "Keep accesscontrol.eventstore-admin.yaml deny-by-default with policies: []."
+        $adminBody = Remove-YamlComments $adminContent
+        $denyByDefault = $adminBody -match "(?m)^\s{2,4}defaultAction:\s*deny"
+        # Accept either explicit empty flow-list `policies: []` (with optional inner whitespace)
+        # or block-style `policies:` followed by null/empty (any sibling top-level key on the
+        # next non-empty line, or end of file). Both forms represent the same "no peer callers"
+        # posture; the previous strict `policies: \[\]` match rejected the equally-secure null form.
+        $hasNoPolicies = ($adminBody -match "(?m)^\s{2,4}policies:\s*\[\s*\]\s*$") -or
+            ($adminBody -match "(?ms)^\s{2,4}policies:\s*(?:#[^\r\n]*)?\r?\n(?=\s*\w+:|\z)")
+        if ($denyByDefault -and $hasNoPolicies) {
+            Add-Result $Category "EventStore Admin sidecar locked down" "Pass" "Admin Server receiving sidecar has no DAPR peer callers"
+        }
+        else {
+            Add-Result $Category "EventStore Admin sidecar locked down" "Fail" "Admin Server sidecar is not locked down" `
+                "Keep accesscontrol.eventstore-admin.yaml deny-by-default with policies: [] (or no policies entries)."
+        }
     }
 }
 
@@ -550,16 +600,27 @@ function Test-PubSub {
                     "Deny subscriber publishing: set subscriber entries to 'SUBSCRIBER_APP_ID=' (empty topics)."
             }
 
-            if (Test-TopicAllowedForApp $pubScopes "eventstore" "sample.parties.events") {
-                Add-Result $Category "eventstore can publish party events ($fileName)" "Pass" "EventStore publisher scope is configured"
+            # EventStore must be able to publish to every {tenant}.parties.events topic.
+            # DAPR does not support wildcards in publishingScopes; the architecturally
+            # correct posture is therefore to OMIT eventstore from publishingScopes
+            # (absent app = unrestricted publish). Accept either: (a) eventstore not
+            # listed, or (b) eventstore explicitly listed with at least one party-events
+            # topic. Reject only when eventstore appears with an empty topic list,
+            # which would deny publishing entirely.
+            $eventstoreEntries = @($pubScopes -split ";" | Where-Object { ($_ -split "=", 2)[0] -eq "eventstore" })
+            if ($eventstoreEntries.Count -eq 0) {
+                Add-Result $Category "eventstore can publish party events ($fileName)" "Pass" "EventStore is unrestricted in publishingScopes (multi-tenant publish posture)"
+            }
+            elseif ($eventstoreEntries | Where-Object { ($_ -split "=", 2)[1] -match "\S" }) {
+                Add-Result $Category "eventstore can publish party events ($fileName)" "Pass" "EventStore publisher scope is explicitly configured"
             }
             elseif ($isLocalDevPubSub) {
-                Add-Result $Category "eventstore can publish party events ($fileName)" "Warn" "EventStore publisher scope is not configured (local development profile)" `
-                    "Add publishingScopes entry eventstore=sample.parties.events for production."
+                Add-Result $Category "eventstore can publish party events ($fileName)" "Warn" "EventStore is listed in publishingScopes with empty topics (local development profile)" `
+                    "Remove the eventstore entry from publishingScopes to grant multi-tenant publish access for production."
             }
             else {
-                Add-Result $Category "eventstore can publish party events ($fileName)" "Fail" "EventStore publisher scope is missing" `
-                    "Add publishingScopes entry eventstore=sample.parties.events."
+                Add-Result $Category "eventstore can publish party events ($fileName)" "Fail" "EventStore is listed in publishingScopes with empty topics" `
+                    "Remove the eventstore entry from publishingScopes (absent = unrestricted publish) or list every required {tenant}.parties.events topic explicitly."
             }
 
             if (Test-TopicAllowedForApp $pubScopes "tenants" "system.tenants.events") {
@@ -1028,18 +1089,37 @@ function Test-EventStoreFrontedTopology {
                 "Declare parties-mcp when deploying the optional MCP consumer host."
         }
 
-        if ($content -match '\*\|party\|v1' -and
-            $content -match "(?m)^\s*appId:\s*parties\s*$" -and
-            $content -match "(?m)^\s*methodName:\s*process\s*$" -and
-            $content -match "(?m)^\s*domain:\s*party\s*$") {
+        # Match the domain-route triple inside a single `domainServices` list entry so
+        # that disjoint values from unrelated stanzas (e.g., `appId: parties` in
+        # `metadata.labels`) cannot satisfy the check. Allow optional quoting on all values.
+        $domainEntryPattern = "(?ms)-\s+key:\s*[`"']?\*\|party\|v1[`"']?\s*\r?\n(?<body>(?:(?!^\s*-\s+key:|^\s*\w+:\s*$).)*)"
+        $domainRouteOk = $false
+        foreach ($entry in [regex]::Matches($content, $domainEntryPattern)) {
+            $body = $entry.Groups["body"].Value
+            if (($body -match "(?m)^\s*appId:\s*[`"']?parties[`"']?\s*$") -and
+                ($body -match "(?m)^\s*methodName:\s*[`"']?process[`"']?\s*$") -and
+                ($body -match "(?m)^\s*domain:\s*[`"']?party[`"']?\s*$")) {
+                $domainRouteOk = $true
+                break
+            }
+        }
+        if ($domainRouteOk) {
             Add-Result $Category "Party domain route ($fileName)" "Pass" "Party domain route targets parties/process"
         }
         else {
             Add-Result $Category "Party domain route ($fileName)" "Fail" "Party domain route is missing or malformed" `
-                "Configure *|party|v1 with AppId=parties, MethodName=process, and Domain=party."
+                "Configure *|party|v1 with AppId=parties, MethodName=process, and Domain=party inside a single domainServices entry."
         }
 
-        if ($content -match "(?m)^\s*adminServerAppId:\s*eventstore-admin\s*$") {
+        # Anchor adminServerAppId under the `eventStoreAdminUi:` parent so a stray top-level
+        # key elsewhere in the file cannot satisfy the wiring check.
+        $adminUiPattern = "(?ms)^\s*eventStoreAdminUi:\s*\r?\n(?<body>(?:(?!^\s*\w+:\s*$).)*)"
+        $adminUiBody = $null
+        $adminUiMatch = [regex]::Match($content, $adminUiPattern)
+        if ($adminUiMatch.Success) {
+            $adminUiBody = $adminUiMatch.Groups["body"].Value
+        }
+        if ($null -ne $adminUiBody -and $adminUiBody -match "(?m)^\s*adminServerAppId:\s*[`"']?eventstore-admin[`"']?\s*$") {
             Add-Result $Category "Admin UI wiring ($fileName)" "Pass" "EventStore Admin UI targets the Admin Server resource"
         }
         else {

@@ -2,8 +2,6 @@ namespace Hexalith.Parties.Picker.Services;
 
 public sealed record PartyPickerSearchRequest
 {
-    public Uri? ApiBaseAddress { get; init; }
-
     public required string Query { get; init; }
 
     public int Page { get; init; } = 1;

@@ -1,3 +1,4 @@
+using Hexalith.Parties.Client.Abstractions;
 using Hexalith.Parties.Client.Extensions;
 using Hexalith.Parties.Picker.Services;
 
@@ -13,7 +14,11 @@ public static class PartyPickerServiceCollectionExtensions
         ArgumentNullException.ThrowIfNull(services);
         ArgumentNullException.ThrowIfNull(configuration);
 
-        services.AddPartiesClient(configuration);
+        if (!services.Any(d => d.ServiceType == typeof(IPartiesQueryClient)))
+        {
+            services.AddPartiesClient(configuration);
+        }
+
         return services.AddHexalithPartyPicker();
     }
 

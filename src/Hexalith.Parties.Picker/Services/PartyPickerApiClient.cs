@@ -15,20 +15,36 @@ public sealed class PartyPickerApiClient(IPartiesQueryClient queryClient)
     {
         ArgumentNullException.ThrowIfNull(request);
 
+        int boundedPage = Math.Max(1, request.Page);
+        int boundedPageSize = BoundPageSize(request.PageSize);
         string query = NormalizeQuery(request.Query);
         if (query.Length == 0)
         {
             return new PartyPickerSearchResponse
             {
                 State = PartyPickerSearchState.Idle,
-                Page = request.Page,
-                PageSize = BoundPageSize(request.PageSize),
+                Page = boundedPage,
+                PageSize = boundedPageSize,
             };
         }
 
-        if (!await HasHostRequestContextAsync(request, cancellationToken).ConfigureAwait(false))
+        bool hasContext;
+        try
         {
-            return AuthenticationRequired(request);
+            hasContext = await HasHostRequestContextAsync(request, cancellationToken).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (Exception)
+        {
+            return AuthenticationRequired(request, boundedPage, boundedPageSize);
+        }
+
+        if (!hasContext)
+        {
+            return AuthenticationRequired(request, boundedPage, boundedPageSize);
         }
 
         try
@@ -36,27 +52,31 @@ public sealed class PartyPickerApiClient(IPartiesQueryClient queryClient)
             PagedResult<PartySearchResult> payload = await queryClient
                 .SearchPartiesAsync(
                     query,
-                    Math.Max(1, request.Page),
-                    BoundPageSize(request.PageSize),
+                    boundedPage,
+                    boundedPageSize,
                     cancellationToken,
                     request.Mode?.ToString().ToLowerInvariant(),
                     request.CaseId,
                     CreateRequestCustomizer(request))
                 .ConfigureAwait(false);
 
-            return ToSearchResponse(request, payload);
+            return ToSearchResponse(payload, boundedPage, boundedPageSize);
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
         }
         catch (PartiesClientException ex) when (ex.Status > 0)
         {
-            return FailureResponse(request, (HttpStatusCode)ex.Status);
+            return FailureResponse(boundedPage, boundedPageSize, (HttpStatusCode)ex.Status);
         }
         catch (PartiesClientException)
         {
             return new PartyPickerSearchResponse
             {
                 State = PartyPickerSearchState.Error,
-                Page = request.Page,
-                PageSize = BoundPageSize(request.PageSize),
+                Page = boundedPage,
+                PageSize = boundedPageSize,
                 SafeReason = "The Parties client returned an invalid response.",
             };
         }
@@ -65,8 +85,18 @@ public sealed class PartyPickerApiClient(IPartiesQueryClient queryClient)
             return new PartyPickerSearchResponse
             {
                 State = PartyPickerSearchState.TransientFailure,
-                Page = request.Page,
-                PageSize = BoundPageSize(request.PageSize),
+                Page = boundedPage,
+                PageSize = boundedPageSize,
+                SafeReason = "The Parties client could not complete the request.",
+            };
+        }
+        catch (Exception)
+        {
+            return new PartyPickerSearchResponse
+            {
+                State = PartyPickerSearchState.Error,
+                Page = boundedPage,
+                PageSize = boundedPageSize,
                 SafeReason = "The Parties client could not complete the request.",
             };
         }
@@ -110,17 +140,21 @@ public sealed class PartyPickerApiClient(IPartiesQueryClient queryClient)
         };
     }
 
-    private static PartyPickerSearchResponse AuthenticationRequired(PartyPickerSearchRequest request)
+    private static PartyPickerSearchResponse AuthenticationRequired(
+        PartyPickerSearchRequest request,
+        int boundedPage,
+        int boundedPageSize)
         => new()
         {
             State = PartyPickerSearchState.AuthenticationRequired,
-            Page = request.Page,
-            PageSize = BoundPageSize(request.PageSize),
+            Page = boundedPage,
+            PageSize = boundedPageSize,
             SafeReason = "Authentication is required.",
         };
 
     private static PartyPickerSearchResponse FailureResponse(
-        PartyPickerSearchRequest request,
+        int boundedPage,
+        int boundedPageSize,
         HttpStatusCode statusCode)
         => new()
         {
@@ -137,8 +171,8 @@ public sealed class PartyPickerApiClient(IPartiesQueryClient queryClient)
                     HttpStatusCode.GatewayTimeout => PartyPickerSearchState.TransientFailure,
                 _ => PartyPickerSearchState.Error,
             },
-            Page = request.Page,
-            PageSize = BoundPageSize(request.PageSize),
+            Page = boundedPage,
+            PageSize = boundedPageSize,
             SafeReason = statusCode switch
             {
                 HttpStatusCode.Unauthorized => "Authentication is required.",
@@ -151,26 +185,35 @@ public sealed class PartyPickerApiClient(IPartiesQueryClient queryClient)
         };
 
     private static PartyPickerSearchResponse ToSearchResponse(
-        PartyPickerSearchRequest request,
-        PagedResult<PartySearchResult> payload)
+        PagedResult<PartySearchResult> payload,
+        int boundedPage,
+        int boundedPageSize)
     {
-        if (payload.Items.Count == 0)
+        IReadOnlyList<PartySearchResult> items = payload.Items is null
+            ? []
+            : [.. payload.Items.Where(static r => r?.Party is not null)];
+
+        if (items.Count == 0)
         {
             return new PartyPickerSearchResponse
             {
                 State = PartyPickerSearchState.Empty,
-                Page = payload.Page,
-                PageSize = payload.PageSize,
+                Page = payload.Page <= 0 ? boundedPage : payload.Page,
+                PageSize = payload.PageSize <= 0 ? boundedPageSize : payload.PageSize,
                 TotalCount = payload.TotalCount,
+                Metadata = new PartyPickerSearchMetadata
+                {
+                    SearchStatus = "Unavailable",
+                },
             };
         }
 
         return new PartyPickerSearchResponse
         {
             State = PartyPickerSearchState.Ready,
-            Results = payload.Items,
-            Page = payload.Page,
-            PageSize = payload.PageSize,
+            Results = items,
+            Page = payload.Page <= 0 ? boundedPage : payload.Page,
+            PageSize = payload.PageSize <= 0 ? boundedPageSize : payload.PageSize,
             TotalCount = payload.TotalCount,
             Metadata = new PartyPickerSearchMetadata
             {

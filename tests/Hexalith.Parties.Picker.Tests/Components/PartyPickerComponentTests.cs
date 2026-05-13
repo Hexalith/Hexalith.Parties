@@ -5,6 +5,7 @@ using Hexalith.Parties.Contracts.Models;
 using Hexalith.Parties.Contracts.ValueObjects;
 using Hexalith.Parties.Picker.Components;
 using Hexalith.Parties.Picker.Services;
+using Hexalith.Parties.Picker.Tests.Fakes;
 using Hexalith.Parties.Picker.Tests.Services;
 
 using Microsoft.AspNetCore.Components;
@@ -51,7 +52,7 @@ public sealed class PartyPickerComponentTests : BunitContext
     [Fact]
     public void PartyPicker_SearchSuccess_RendersEncodedResultsAndStatusText()
     {
-        var queryClient = new PartyPickerApiClientTests.RecordingPartiesQueryClient();
+        var queryClient = new RecordingPartiesQueryClient();
         queryClient.Enqueue(SearchResultPage(PartyPickerTestData.Result(name: "<script>alert(1)</script>")));
         RegisterClient(queryClient);
 
@@ -72,7 +73,7 @@ public sealed class PartyPickerComponentTests : BunitContext
     [Fact]
     public void PartyPicker_MetadataUnavailable_DoesNotClaimLocalOnlyOrDegradedSearch()
     {
-        var queryClient = new PartyPickerApiClientTests.RecordingPartiesQueryClient();
+        var queryClient = new RecordingPartiesQueryClient();
         queryClient.Enqueue(SearchResultPage(PartyPickerTestData.Result()));
         RegisterClient(queryClient);
 
@@ -94,7 +95,7 @@ public sealed class PartyPickerComponentTests : BunitContext
     [Fact]
     public void PartyPicker_MissingToken_ShowsAuthenticationRequiredWithoutRequest()
     {
-        var queryClient = new PartyPickerApiClientTests.RecordingPartiesQueryClient();
+        var queryClient = new RecordingPartiesQueryClient();
         RegisterClient(queryClient);
 
         IRenderedComponent<PartyPicker> cut = Render<PartyPicker>(parameters => parameters
@@ -110,22 +111,41 @@ public sealed class PartyPickerComponentTests : BunitContext
         });
     }
 
-    [Theory]
-    [InlineData(true, false)]
-    [InlineData(false, true)]
-    public void PartyPicker_DisabledOrReadOnly_DoesNotIssueSearch(bool disabled, bool readOnly)
+    [Fact]
+    public void PartyPicker_Disabled_SetsDisabledAttributeAndDoesNotIssueSearch()
     {
-        var queryClient = new PartyPickerApiClientTests.RecordingPartiesQueryClient();
+        var queryClient = new RecordingPartiesQueryClient();
         RegisterClient(queryClient);
 
         IRenderedComponent<PartyPicker> cut = Render<PartyPicker>(parameters => parameters
             .Add(p => p.AccessToken, "host-token")
-            .Add(p => p.Disabled, disabled)
-            .Add(p => p.ReadOnly, readOnly)
+            .Add(p => p.Disabled, true)
             .Add(p => p.DebounceMilliseconds, 1)
             .Add(p => p.DispatchDomEvents, false));
 
         cut.Find("input").HasAttribute("disabled").ShouldBeTrue();
+        cut.Find("input").HasAttribute("readonly").ShouldBeFalse();
+        cut.Find("input").Input("ada");
+
+        queryClient.SearchCalls.ShouldBeEmpty();
+        cut.FindAll("[role=\"option\"]").ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void PartyPicker_ReadOnly_SetsReadonlyAttributeKeepsKeyboardOperableAndDoesNotIssueSearch()
+    {
+        var queryClient = new RecordingPartiesQueryClient();
+        RegisterClient(queryClient);
+
+        IRenderedComponent<PartyPicker> cut = Render<PartyPicker>(parameters => parameters
+            .Add(p => p.AccessToken, "host-token")
+            .Add(p => p.ReadOnly, true)
+            .Add(p => p.DebounceMilliseconds, 1)
+            .Add(p => p.DispatchDomEvents, false));
+
+        cut.Find("input").HasAttribute("readonly").ShouldBeTrue();
+        cut.Find("input").HasAttribute("disabled").ShouldBeFalse();
+        cut.Find("input").GetAttribute("aria-readonly").ShouldBe("true");
         cut.Find("input").Input("ada");
 
         queryClient.SearchCalls.ShouldBeEmpty();
@@ -135,7 +155,7 @@ public sealed class PartyPickerComponentTests : BunitContext
     [Fact]
     public void PartyPicker_TransientFailureRetry_ReissuesSearchAndRendersResult()
     {
-        var queryClient = new PartyPickerApiClientTests.RecordingPartiesQueryClient();
+        var queryClient = new RecordingPartiesQueryClient();
         queryClient.EnqueueFailure(new HttpRequestException("temporary"));
         queryClient.Enqueue(SearchResultPage(PartyPickerTestData.Result()));
         RegisterClient(queryClient);
@@ -160,7 +180,7 @@ public sealed class PartyPickerComponentTests : BunitContext
     [Fact]
     public void PartyPicker_NotFoundOrGone_ClearsResultListAndShowsNoResults()
     {
-        var queryClient = new PartyPickerApiClientTests.RecordingPartiesQueryClient
+        var queryClient = new RecordingPartiesQueryClient
         {
             ThrowOnSearch = new PartiesClientException(410, "Gone", null, "raw erased party detail", "correlation-1"),
         };
@@ -184,7 +204,7 @@ public sealed class PartyPickerComponentTests : BunitContext
     [Fact]
     public async Task PartyPicker_ContextChange_ClearsVisibleResultsAndSelection()
     {
-        var queryClient = new PartyPickerApiClientTests.RecordingPartiesQueryClient();
+        var queryClient = new RecordingPartiesQueryClient();
         queryClient.Enqueue(SearchResultPage(PartyPickerTestData.Result()));
         RegisterClient(queryClient);
 
@@ -217,7 +237,7 @@ public sealed class PartyPickerComponentTests : BunitContext
     [Fact]
     public async Task PartyPicker_TokenChange_ClearsVisibleResultsAndSelection()
     {
-        var queryClient = new PartyPickerApiClientTests.RecordingPartiesQueryClient();
+        var queryClient = new RecordingPartiesQueryClient();
         queryClient.Enqueue(SearchResultPage(PartyPickerTestData.Result()));
         RegisterClient(queryClient);
 
@@ -293,7 +313,7 @@ public sealed class PartyPickerComponentTests : BunitContext
     [Fact]
     public async Task PartyPicker_SelectionCallback_ReturnsStablePartyIdAndPreviewOnly()
     {
-        var queryClient = new PartyPickerApiClientTests.RecordingPartiesQueryClient();
+        var queryClient = new RecordingPartiesQueryClient();
         queryClient.Enqueue(SearchResultPage(PartyPickerTestData.Result(name: "Ada Lovelace")));
         RegisterClient(queryClient);
 
@@ -315,9 +335,22 @@ public sealed class PartyPickerComponentTests : BunitContext
         selected.ToString().ShouldNotContain("token");
     }
 
-    private void RegisterClient(PartyPickerApiClientTests.RecordingPartiesQueryClient? queryClient = null)
+    [Fact]
+    public void PartyPicker_StubSelectionFromSelectedPartyId_DoesNotRenderMisleadingStatusBadge()
     {
-        queryClient ??= new PartyPickerApiClientTests.RecordingPartiesQueryClient();
+        RegisterClient();
+
+        IRenderedComponent<PartyPicker> cut = Render<PartyPicker>(parameters => parameters
+            .Add(p => p.AccessToken, "host-token")
+            .Add(p => p.SelectedPartyId, "party-1")
+            .Add(p => p.DispatchDomEvents, false));
+
+        cut.FindAll(".hx-party-picker__badge").Count.ShouldBe(0);
+    }
+
+    private void RegisterClient(RecordingPartiesQueryClient? queryClient = null)
+    {
+        queryClient ??= new RecordingPartiesQueryClient();
         Services.AddScoped(_ => new PartyPickerApiClient(queryClient));
     }
 
@@ -331,7 +364,7 @@ public sealed class PartyPickerComponentTests : BunitContext
             TotalPages = results.Length == 0 ? 0 : 1,
         };
 
-    private sealed class DelayedPartiesQueryClient : PartyPickerApiClientTests.RecordingPartiesQueryClient
+    private sealed class DelayedPartiesQueryClient : RecordingPartiesQueryClient
     {
         private readonly TaskCompletionSource<PagedResult<PartySearchResult>> _response = new();
         private readonly TaskCompletionSource _called = new();
@@ -351,7 +384,10 @@ public sealed class PartyPickerComponentTests : BunitContext
             string? caseId = null,
             Func<HttpRequestMessage, CancellationToken, ValueTask>? requestCustomizer = null)
         {
-            SearchCalls.Add(new PartyPickerApiClientTests.SearchCall(query, page, pageSize));
+            SearchCalls.Add(new SearchCall(query, page, pageSize));
+            LastMode = mode;
+            LastCaseId = caseId;
+            LastRequestCustomizer = requestCustomizer;
             _called.TrySetResult();
             return _response.Task.WaitAsync(ct);
         }

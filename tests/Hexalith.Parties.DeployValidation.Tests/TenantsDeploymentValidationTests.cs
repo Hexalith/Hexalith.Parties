@@ -401,8 +401,6 @@ public sealed class TenantsDeploymentValidationTests : IDisposable
                 defaultAction: deny
                 trustDomain: "hexalith.io"
                 policies:
-                  - appId: eventstore
-                    defaultAction: deny
                   - appId: parties
                     defaultAction: deny
                     operations:
@@ -481,7 +479,7 @@ public sealed class TenantsDeploymentValidationTests : IDisposable
                 - name: enableDeadLetter
                   value: "true"
                 - name: publishingScopes
-                  value: "eventstore=sample.parties.events;tenants=system.tenants.events;{env:SUBSCRIBER_APP_ID}="
+                  value: "tenants=system.tenants.events;{env:SUBSCRIBER_APP_ID}="
                 - name: subscriptionScopes
                   value: "{{scopes}}"
             scopes:

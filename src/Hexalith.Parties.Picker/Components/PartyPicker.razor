@@ -12,11 +12,13 @@
                placeholder="@EffectiveLabels.Placeholder"
                aria-label="@EffectiveLabels.SearchLabel"
                aria-controls="@_listElementId"
-               disabled="@IsInteractionDisabled"
+               aria-readonly="@(ReadOnly ? "true" : null)"
+               readonly="@(ReadOnly ? "readonly" : null)"
+               disabled="@(Disabled ? "disabled" : null)"
                @oninput="HandleInputAsync" />
         <button type="button"
                 class="hx-party-picker__icon-button"
-                disabled="@(_selected is null && string.IsNullOrWhiteSpace(_query))"
+                disabled="@(IsInteractionDisabled || (_selected is null && string.IsNullOrWhiteSpace(_query)))"
                 aria-label="@EffectiveLabels.ClearSelection"
                 title="@EffectiveLabels.ClearSelection"
                 @onclick="ClearAsync">x</button>
@@ -26,7 +28,10 @@
     {
         <div class="hx-party-picker__selected" aria-label="@EffectiveLabels.Selected">
             <span class="hx-party-picker__selected-name">@_selected.DisplayName</span>
-            <span class="hx-party-picker__badge">@StatusText(_selected)</span>
+            @if (HasSelectionStatus(_selected))
+            {
+                <span class="hx-party-picker__badge">@StatusText(_selected)</span>
+            }
         </div>
     }
 
@@ -84,6 +89,7 @@
     private readonly string _inputElementId = $"hx-party-picker-input-{Guid.NewGuid():N}";
     private readonly string _listElementId = $"hx-party-picker-list-{Guid.NewGuid():N}";
 
+    [Obsolete("ApiBaseUrl no longer controls picker transport. Configure the EventStore gateway base URL through Hexalith.Parties.Client (PartiesClientOptions). This parameter will be removed in a future major release.")]
     [Parameter]
     public string? ApiBaseUrl { get; set; }
 
@@ -164,7 +170,6 @@
     {
         string signature = string.Join(
             "|",
-            ApiBaseUrl,
             ContextKey,
             AuthContextKey,
             SearchMode,
@@ -173,8 +178,8 @@
             Disabled.ToString(),
             ReadOnly.ToString(),
             TokenFingerprint(AccessToken),
-            DelegateFingerprint(AccessTokenProvider),
-            DelegateFingerprint(RequestCustomizer));
+            string.IsNullOrEmpty(AuthContextKey) ? DelegateFingerprint(AccessTokenProvider) : "auth-key",
+            string.IsNullOrEmpty(AuthContextKey) ? DelegateFingerprint(RequestCustomizer) : "auth-key");
 
         if (_previousContextSignature is not null && !string.Equals(_previousContextSignature, signature, StringComparison.Ordinal))
         {
@@ -240,24 +245,11 @@
         catch (OperationCanceledException)
         {
         }
-        catch (HttpRequestException)
-        {
-            if (version == _searchVersion)
-            {
-                _search = new PartyPickerSearchResponse
-                {
-                    State = PartyPickerSearchState.TransientFailure,
-                    PageSize = PartyPickerApiClient.BoundPageSize(PageSize),
-                };
-                await InvokeAsync(StateHasChanged).ConfigureAwait(false);
-            }
-        }
     }
 
     private PartyPickerSearchRequest CreateRequest()
         => new()
         {
-            ApiBaseAddress = Uri.TryCreate(ApiBaseUrl, UriKind.Absolute, out Uri? uri) ? uri : null,
             Query = _query,
             Page = 1,
             PageSize = PageSize,
@@ -310,6 +302,11 @@
 
     private async Task ClearAsync()
     {
+        if (IsInteractionDisabled)
+        {
+            return;
+        }
+
         CancelPendingSearch();
         _query = string.Empty;
         _selected = null;
@@ -342,6 +339,12 @@
         {
         }
         catch (JSDisconnectedException)
+        {
+        }
+        catch (JSException)
+        {
+        }
+        catch (TaskCanceledException)
         {
         }
     }
@@ -392,6 +395,9 @@
     private bool IsSelected(PartySearchResult result)
         => string.Equals(_selected?.PartyId, result.Party.Id, StringComparison.Ordinal);
 
+    private static bool HasSelectionStatus(PartyPickerSelection selection)
+        => selection.IsActive.HasValue || selection.IsErased.HasValue;
+
     private string StatusText(PartyPickerSelection selection)
         => selection.IsErased == true
             ? EffectiveLabels.Erased
@@ -411,7 +417,16 @@
         CancelPendingSearch();
         if (_module is not null)
         {
-            await _module.DisposeAsync().ConfigureAwait(false);
+            try
+            {
+                await _module.DisposeAsync().ConfigureAwait(false);
+            }
+            catch (JSDisconnectedException)
+            {
+            }
+            catch (JSException)
+            {
+            }
         }
     }
 }

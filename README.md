@@ -22,7 +22,7 @@ cd Hexalith.Parties
 dotnet aspire run --project src/Hexalith.Parties.AppHost
 ```
 
-Open the Aspire dashboard (URL shown in terminal output) and verify these resources are running: `eventstore`, `eventstore-admin`, `eventstore-admin-ui`, `parties`, and `tenants`. The `parties-mcp` resource is present when the MCP host is included in the local AppHost.
+Open the Aspire dashboard (URL shown in terminal output) and verify these resources are running: `eventstore`, `eventstore-admin`, `eventstore-admin-ui`, `parties`, and `tenants`. The local AppHost also runs `parties-mcp` alongside `parties` as a separate MCP resource — AI assistants connect to that host rather than the `parties` actor host.
 
 > **Prerequisite - tenant access state.** Provision or use an active Hexalith.Tenants tenant membership before the first Parties call. EventStore owns public authentication, tenant validation, RBAC, command/query routing, and generic response mapping. Parties consumes the authorized command/query behind the actor host and does not manage tenant lifecycle or roles itself.
 
@@ -38,17 +38,21 @@ See the [Getting Started Guide](docs/getting-started.md) for the full EventStore
 
 ## Project Structure
 
+Adopter-facing packages (left column) are the only modules consumers normally reference. Modules under "Internal" are private to the actor host and not adopter-facing dependencies — do not reference them from consumer applications.
+
 ```
 Hexalith.Parties/
   src/
-    Hexalith.Parties.AppHost/        # Aspire orchestration (entry point)
-    Hexalith.Parties.Client/         # Typed EventStore gateway client
-    Hexalith.Parties/                # Domain actor host behind EventStore
+    Hexalith.Parties.AppHost/        # Aspire orchestration (entry point, dev-only)
+    # Adopter-facing
+    Hexalith.Parties.Client/         # Typed EventStore gateway client (IPartiesCommandClient / IPartiesQueryClient)
     Hexalith.Parties.Contracts/      # Shared DTOs, commands, events, value objects
-    Hexalith.Parties.Mcp/            # Separate MCP host over the typed client
-    Hexalith.Parties.Projections/    # Read model projections and actors
-    Hexalith.Parties.Server/         # Domain logic and event store integration
-    Hexalith.Parties.ServiceDefaults/# Shared service configuration
+    Hexalith.Parties.ServiceDefaults/# Shared service configuration helpers (optional)
+    Hexalith.Parties.Mcp/            # Separate parties-mcp host over the typed client
+    # Internal (actor host private — not adopter-facing dependencies)
+    Hexalith.Parties/                # Domain actor host behind EventStore
+    Hexalith.Parties.Server/         # Domain logic and event store integration (internal)
+    Hexalith.Parties.Projections/    # Read model projections and actors (internal)
     Hexalith.Parties.Testing/        # Test utilities
   tests/                             # Unit, integration, and architectural tests
   samples/

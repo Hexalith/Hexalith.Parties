@@ -12,6 +12,8 @@ WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
 // One-line DI registration.
 // Reads Parties:BaseUrl as the EventStore gateway URL and Parties:Tenant as the envelope tenant.
+// The Parties:BaseUrl in appsettings.json is a placeholder — copy the eventstore HTTPS
+// endpoint from the Aspire dashboard or override the value via environment/configuration.
 // Registers IPartiesCommandClient and IPartiesQueryClient via HttpClient.
 builder.Services.AddPartiesClient(builder.Configuration);
 
@@ -141,7 +143,9 @@ static async Task RunDemoAsync(IServiceProvider services, CancellationToken ct)
     }
     catch (Exception ex)
     {
-        logger.LogError("Demo failed with {ExceptionType}", ex.GetType().Name);
+        // Pass the exception to the structured logger so operators see the stack trace in logs,
+        // while keeping the console output bounded to a non-sensitive troubleshooting hint.
+        logger.LogError(ex, "Sample demo failed");
         Console.WriteLine();
         Console.WriteLine("[ERROR] Demo failed. Check EventStore gateway readiness, tenant configuration, and auth.");
     }
@@ -175,6 +179,11 @@ static async Task RunDemoAsync(IServiceProvider services, CancellationToken ct)
 //   - update_party: Modify party details, contacts, or identifiers
 //   - delete_party: Deactivate a party
 //   - get_party_name_at: Retrieve a historical display name when name history is available
+//
+// Replace the angle-bracket placeholders below with real values:
+//   - <parties-mcp-port> with the parties-mcp HTTPS port from the Aspire dashboard
+//   - <token> with a bearer token issued by Keycloak (or your dev token provider)
+//   - <user-id> with the authenticated user's identifier
 //
 // Claude Desktop configuration (~/.claude/claude_desktop_config.json):
 //   {

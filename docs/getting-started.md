@@ -59,21 +59,44 @@ Provision or use an active Hexalith.Tenants tenant membership before the first P
 3. Assign `TenantContributor` for create/update flows, or `TenantReader` for read/search-only flows.
 4. Confirm Parties is subscribed to tenant events through DAPR pub/sub.
 
-Use placeholders in scripts and logs:
+Set the EventStore gateway URL and tenant identifier before the first call. Copy the `eventstore` HTTPS port from the Aspire dashboard.
 
 ```bash
 export EVENTSTORE_URL=https://localhost:<eventstore-port>
 export TENANT_ID=tenant-a
-export TOKEN=<access-token>
 ```
 
 ```powershell
 $env:EVENTSTORE_URL = "https://localhost:<eventstore-port>"
 $env:TENANT_ID = "tenant-a"
-$env:TOKEN = "<access-token>"
 ```
 
-Keycloak is enabled by default in the local topology. If you disable Keycloak for local development, use the repository's symmetric-key development token settings and keep the issuer, audience, tenant claim, and permission claims aligned with EventStore gateway expectations.
+Fetch a bearer token from the local Keycloak realm. Replace `<keycloak-port>`, `<client-id>`, and `<client-secret>` with the values shown for the `keycloak` resource in the Aspire dashboard:
+
+```bash
+export TOKEN=$(curl -s -X POST \
+  "https://localhost:<keycloak-port>/realms/hexalith/protocol/openid-connect/token" \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  -d "grant_type=client_credentials" \
+  -d "client_id=<client-id>" \
+  -d "client_secret=<client-secret>" \
+  -d "scope=openid" | jq -r .access_token)
+```
+
+```powershell
+$tokenResponse = Invoke-RestMethod -Method Post `
+  -Uri "https://localhost:<keycloak-port>/realms/hexalith/protocol/openid-connect/token" `
+  -ContentType "application/x-www-form-urlencoded" `
+  -Body @{
+    grant_type    = "client_credentials"
+    client_id     = "<client-id>"
+    client_secret = "<client-secret>"
+    scope         = "openid"
+  }
+$env:TOKEN = $tokenResponse.access_token
+```
+
+If you disable Keycloak for local development, use the repository's symmetric-key development token settings and keep the issuer, audience, tenant claim, and permission claims aligned with EventStore gateway expectations. Verify the environment variables are populated (`echo $EVENTSTORE_URL $TENANT_ID` / `echo $env:EVENTSTORE_URL $env:TENANT_ID`) before running the curl examples in Step 3.
 
 ---
 
@@ -88,8 +111,10 @@ All public write traffic goes through EventStore:
 
 **Bash**
 
+The `-w` flag echoes the HTTP status alongside the body so non-JSON error responses are visible. Add `-k` only if the local dev certificate is not trusted (see Troubleshooting below for the recommended `dotnet dev-certs https --trust` fix).
+
 ```bash
-curl -s -X POST "$EVENTSTORE_URL/api/v1/commands" \
+curl --fail-with-body -sS -w '\n[HTTP %{http_code}]\n' -X POST "$EVENTSTORE_URL/api/v1/commands" \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $TOKEN" \
   -d '{
@@ -107,7 +132,7 @@ curl -s -X POST "$EVENTSTORE_URL/api/v1/commands" \
       }
     },
     "correlationId": "cmd-demo-party-001"
-  }' | jq
+  }'
 ```
 
 **PowerShell**
@@ -288,7 +313,7 @@ Canonical tools:
 - `delete_party`
 - `get_party_name_at`
 
-Use the `parties-mcp` endpoint shown in the Aspire dashboard.
+Use the `parties-mcp` endpoint shown in the Aspire dashboard. Replace `<parties-mcp-port>` with the parties-mcp HTTPS port from the Aspire dashboard, `<token>` with the bearer token from Step 2, and `<user-id>` with the authenticated user's identifier.
 
 ```json
 {
@@ -330,11 +355,15 @@ Non-.NET consumers can call the EventStore HTTP gateway directly with the comman
 | Submit command | POST | `/api/v1/commands` | `party` | `commandType` names a Parties command contract |
 | Submit query | POST | `/api/v1/queries` | `party` | `queryType` is `PartyDetail`, `PartyIndex`, or `PartySearch` |
 | Browse streams | Browser | EventStore Admin UI | n/a | Use `eventstore-admin-ui` from Aspire |
-| AI tool access | MCP | `parties-mcp` `/mcp` | n/a | Use canonical MCP tool names |
+| AI tool access | MCP | `parties-mcp /mcp` endpoint | n/a | Use canonical MCP tool names |
 
 ---
 
 ## Troubleshooting
+
+### SSL/TLS Certificate Problems
+
+Local Aspire-issued dev certificates must be trusted before curl or HttpClient can reach `https://localhost`. Run `dotnet dev-certs https --trust` once per developer machine. On WSL or CI runners without that command, add `-k` (curl) or set `HttpClientHandler.ServerCertificateCustomValidationCallback` to a development-only override.
 
 ### EventStore Gateway Not Ready
 
