@@ -50,6 +50,16 @@ public sealed class PartyPickerApiClient(IPartiesQueryClient queryClient)
         {
             return FailureResponse(request, (HttpStatusCode)ex.Status);
         }
+        catch (PartiesClientException)
+        {
+            return new PartyPickerSearchResponse
+            {
+                State = PartyPickerSearchState.Error,
+                Page = request.Page,
+                PageSize = BoundPageSize(request.PageSize),
+                SafeReason = "The Parties client returned an invalid response.",
+            };
+        }
         catch (HttpRequestException)
         {
             return new PartyPickerSearchResponse

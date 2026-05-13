@@ -1,6 +1,6 @@
 # Story 12.8: Picker Rewrite
 
-Status: blocked
+Status: review
 
 ## Story
 
@@ -33,42 +33,42 @@ so that picker integration matches the platform contract after Parties public RE
   - [x] Confirm `IPartiesQueryClient.SearchPartiesAsync` is backed by EventStore `POST /api/v1/queries`, or stop normal implementation and add only red guardrail tests/adapter seams.
   - [x] Do not edit `Hexalith.EventStore`, `Hexalith.FrontComposer`, `Hexalith.Tenants`, or `Hexalith.Memories` submodules for this story.
 
-- [ ] Replace the picker direct REST transport with the typed Parties query client. (AC: 1, 2, 3, 5, 10)
+- [x] Replace the picker direct REST transport with the typed Parties query client. (AC: 1, 2, 3, 5, 10)
   - [x] Replace `PartyPickerApiClient` or its internals so search goes through `IPartiesQueryClient.SearchPartiesAsync(query, page, pageSize, ct)` or the accepted successor method from Story 12.5.
   - [x] Remove production hard-coded old route literals such as `api/v1/parties/search`, `api/v1/parties`, and `api/v1/parties/{id}` from `src/Hexalith.Parties.Picker`.
   - [x] Keep page size bounded by `PartyPickerDefaults.MaxPageSize` and preserve query normalization that strips control characters.
   - [x] Preserve host-controlled auth/request customization by flowing it through the configured Parties client/EventStore gateway path; do not store, refresh, parse, or log JWTs in the picker.
   - [x] If rich search status metadata is not yet available through the typed client, expose a bounded `unknown/not available` state rather than fabricating local-only, degraded, semantic, hybrid, graph, email, or identifier matching.
 
-- [ ] Preserve and tighten component behavior. (AC: 2, 4, 6, 8)
-  - [ ] Keep `PartyPicker` public parameters source-compatible where practical: selected id, selected callback, disabled/read-only, debounce, labels, result template, custom-event dispatch, page size, search mode/case options where the client contract still supports them.
-  - [ ] If `ApiBaseUrl` remains, document and enforce that it points to the EventStore gateway/Parties client configuration rather than a Parties actor-host REST endpoint; otherwise replace it with a clearer options shape.
-  - [ ] Keep stale-search versioning/cancellation so older tenant/user/token/query responses cannot repopulate the result list after context changes.
-  - [ ] Keep `party-selected` or the accepted existing JavaScript custom event payload limited to party id plus non-sensitive summary; do not include query text, tenant ids, names, contacts, identifiers, raw status details, or tokens.
-  - [ ] Keep compact layout dimensions stable so loading/error text, localized labels, long names, badges, and clear/retry controls do not shift or overlap.
+- [x] Preserve and tighten component behavior. (AC: 2, 4, 6, 8)
+  - [x] Keep `PartyPicker` public parameters source-compatible where practical: selected id, selected callback, disabled/read-only, debounce, labels, result template, custom-event dispatch, page size, search mode/case options where the client contract still supports them.
+  - [x] If `ApiBaseUrl` remains, document and enforce that it points to the EventStore gateway/Parties client configuration rather than a Parties actor-host REST endpoint; otherwise replace it with a clearer options shape.
+  - [x] Keep stale-search versioning/cancellation so older tenant/user/token/query responses cannot repopulate the result list after context changes.
+  - [x] Keep `party-selected` or the accepted existing JavaScript custom event payload limited to party id plus non-sensitive summary; do not include query text, tenant ids, names, contacts, identifiers, raw status details, or tokens.
+  - [x] Keep compact layout dimensions stable so loading/error text, localized labels, long names, badges, and clear/retry controls do not shift or overlap.
 
-- [ ] Preserve privacy, authorization, and safe rendering. (AC: 3, 6, 7)
-  - [ ] Treat missing auth/request context as authentication required before any client call.
-  - [ ] Map client/EventStore authorization, forbidden, not-found, gone/erased, degradation, timeout, cancellation, malformed response, and transient transport failures into existing bounded picker states.
-  - [ ] Clear visible results and selected preview data after `401`, `403`, tenant/user/token/configuration change, sign-out, context mismatch, or stale response.
-  - [ ] Render party display names, host labels, status messages, degraded reasons, ProblemDetails details, and localization values as encoded text only.
-  - [ ] Do not log or persist party names, contact values, identifiers, consent details, search text, JWTs, claims, tenant ids, membership dictionaries, raw query payloads, or raw backend error details.
+- [x] Preserve privacy, authorization, and safe rendering. (AC: 3, 6, 7)
+  - [x] Treat missing auth/request context as authentication required before any client call.
+  - [x] Map client/EventStore authorization, forbidden, not-found, gone/erased, degradation, timeout, cancellation, malformed response, and transient transport failures into existing bounded picker states.
+  - [x] Clear visible results and selected preview data after `401`, `403`, tenant/user/token/configuration change, sign-out, context mismatch, or stale response.
+  - [x] Render party display names, host labels, status messages, degraded reasons, ProblemDetails details, and localization values as encoded text only.
+  - [x] Do not log or persist party names, contact values, identifiers, consent details, search text, JWTs, claims, tenant ids, membership dictionaries, raw query payloads, or raw backend error details.
 
-- [ ] Update package/DI registration and adopter documentation. (AC: 5, 10)
-  - [ ] Update `PartyPickerServiceCollectionExtensions` so consumers get the picker services plus the required Parties client/EventStore gateway services without direct DAPR, actor, server, MVC, MediatR, FluentValidation, or projection dependencies.
-  - [ ] Keep `Hexalith.Parties.Contracts` free of Blazor, Fluent UI, FrontComposer, custom-element, JavaScript, and EventStore transport dependencies.
-  - [ ] Keep custom-element registration in the picker package/host adapter only; do not move Parties domain UI into `Hexalith.FrontComposer`.
-  - [ ] Update picker usage docs/examples to show EventStore/Parties client configuration, selected-id persistence rules, privacy rules, and the behavior when rich search metadata is unavailable.
+- [x] Update package/DI registration and adopter documentation. (AC: 5, 10)
+  - [x] Update `PartyPickerServiceCollectionExtensions` so consumers get the picker services plus the required Parties client/EventStore gateway services without direct DAPR, actor, server, MVC, MediatR, FluentValidation, or projection dependencies.
+  - [x] Keep `Hexalith.Parties.Contracts` free of Blazor, Fluent UI, FrontComposer, custom-element, JavaScript, and EventStore transport dependencies.
+  - [x] Keep custom-element registration in the picker package/host adapter only; do not move Parties domain UI into `Hexalith.FrontComposer`.
+  - [x] Update picker usage docs/examples to show EventStore/Parties client configuration, selected-id persistence rules, privacy rules, and the behavior when rich search metadata is unavailable.
 
-- [ ] Rewrite focused tests and guardrails. (AC: 1-10)
+- [x] Rewrite focused tests and guardrails. (AC: 1-10)
   - [x] Update `tests/Hexalith.Parties.Picker.Tests/**` so service tests use `IPartiesQueryClient` fakes rather than `HttpMessageHandler` fakes for old REST URLs.
-  - [ ] Preserve tests for initial render, debounce, search success, bounded page size, loading, empty, local-only/degraded or metadata-unavailable states, unauthorized, forbidden, not-found/gone, transient failure, retry, selected, clear, disabled/read-only, configuration-change cleanup, and stale-response suppression.
-  - [ ] Preserve selection contract tests for Blazor callback and JavaScript event payload.
-  - [ ] Preserve XSS tests for display name, contact value, identifier value, host labels, degraded reasons, ProblemDetails text, and localized labels.
+  - [x] Preserve tests for initial render, debounce, search success, bounded page size, loading, empty, local-only/degraded or metadata-unavailable states, unauthorized, forbidden, not-found/gone, transient failure, retry, selected, clear, disabled/read-only, configuration-change cleanup, and stale-response suppression.
+  - [x] Preserve selection contract tests for Blazor callback and JavaScript event payload.
+  - [x] Preserve XSS tests for display name, contact value, identifier value, host labels, degraded reasons, ProblemDetails text, and localized labels.
   - [x] Add architecture/source tests proving `src/Hexalith.Parties.Picker` contains no old Parties REST route literals, no direct `HttpClient.GetAsync`/`SendAsync` transport to Parties routes, no DAPR actor/projection/search-service usage, and no raw markup APIs for untrusted values.
   - [x] Add package/reference tests proving the picker does not reference `Hexalith.Parties`, `Hexalith.Parties.Server`, `Hexalith.Parties.Projections`, DAPR, MediatR, FluentValidation, MVC controllers, Swagger/OpenAPI, or EventStore server assemblies.
 
-- [ ] Verify the rewritten picker. (AC: 1-10)
+- [x] Verify the rewritten picker. (AC: 1-10)
   - [x] Run `dotnet test tests/Hexalith.Parties.Picker.Tests/Hexalith.Parties.Picker.Tests.csproj --configuration Release`.
   - [x] Run `dotnet test tests/Hexalith.Parties.Client.Tests/Hexalith.Parties.Client.Tests.csproj --configuration Release`.
   - [x] Run affected contracts/package fitness tests.
@@ -192,6 +192,13 @@ Codex GPT-5
 - 2026-05-10: Client tests passed: `dotnet test tests/Hexalith.Parties.Client.Tests/Hexalith.Parties.Client.Tests.csproj --configuration Release` (56 passed, 6 skipped).
 - 2026-05-10: Contracts/package fitness check passed: `dotnet test tests/Hexalith.Parties.Contracts.Tests/Hexalith.Parties.Contracts.Tests.csproj --configuration Release` (42 passed, 15 skipped).
 - 2026-05-10: Solution build passed: `dotnet build Hexalith.Parties.slnx --configuration Release` (0 warnings, 0 errors).
+- 2026-05-13: Resumed normal implementation after confirming Story 12.5 is `done` and `HttpPartiesQueryClient.SearchPartiesAsync` submits EventStore `POST /api/v1/queries` requests for `Domain="party"` / `QueryType="PartySearch"`.
+- 2026-05-13: Picker focused tests passed after adding coverage for request-customizer-only hosts, malformed client responses, transient transport failures, disabled/read-only suppression, retry, gone/erased mapping, stale-response suppression, and selection callback privacy: `dotnet test tests/Hexalith.Parties.Picker.Tests/Hexalith.Parties.Picker.Tests.csproj --configuration Release --no-restore` (39/39).
+- 2026-05-13: Client tests passed: `dotnet test tests/Hexalith.Parties.Client.Tests/Hexalith.Parties.Client.Tests.csproj --configuration Release --no-restore` (74/74).
+- 2026-05-13: Contracts/package fitness tests passed: `dotnet test tests/Hexalith.Parties.Contracts.Tests/Hexalith.Parties.Contracts.Tests.csproj --configuration Release --no-restore` (57/57).
+- 2026-05-13: Release solution build passed after restore metadata refresh: `dotnet build Hexalith.Parties.slnx --configuration Release` (0 warnings, 0 errors). The first `--no-restore` build attempt failed on stale AppHost extern-alias metadata and passed after normal restore.
+- 2026-05-13: Full solution no-build regression did not complete within 15 minutes. Project/slice regression evidence: AdminPortal 67/67, MCP 21/21, Server 177/177, Projections 67/67, Security 129/129, Sample 52/52, DeployValidation 40/40, Integration 18 passed / 6 expected skips, root Tenants 5/5, Search non-performance 89/89, root Projections 15/15, HealthChecks 35/35, Fitness 38/38, ErrorHandling/Domain/Configuration/Authorization 43/43, Search performance 8/8.
+- 2026-05-13: Root Gateway slice has one reproducible unrelated failure outside this story footprint: `PostCommands_InvalidGatewayShape_Returns400BeforePartyInvocationAsync` expects `400 BadRequest` but receives `202 Accepted` (Gateway slice 13 passed / 1 failed). This story changed only picker/story tracking files and did not modify Gateway/EventStore routing code.
 
 ### Completion Notes List
 
@@ -202,6 +209,10 @@ Codex GPT-5
 - Rich search metadata is currently unavailable through the typed client seam; the picker records bounded unavailable metadata instead of fabricating local-only/degraded details.
 - Added guardrails proving production picker source has no retired Parties REST route literals, direct `HttpClient`/`GetAsync`/`SendAsync` transport markers, or raw markup markers.
 - Updated adopter docs to describe EventStore gateway/Parties client configuration and the current metadata limitation.
+- Cleared the Story 12.5 blocker and completed the normal picker rewrite over the typed EventStore-backed Parties query client.
+- Added bounded malformed-client-response handling so invalid typed client failures surface as a safe picker error state without leaking backend details.
+- Expanded picker behavior coverage for request customizers, malformed/transport failures, disabled/read-only behavior, retry, gone/erased handling, stale response suppression, and selection callback privacy.
+- Full solution build and all picker/client/contracts/story-relevant suites are green; one unrelated root Gateway test remains failing outside the picker footprint and is logged in Debug Log References.
 
 ### File List
 
@@ -219,5 +230,6 @@ Codex GPT-5
 
 | Date | Version | Description | Author |
 |---|---:|---|---|
+| 2026-05-13 | 1.0 | Completed Story 12.8 after Story 12.5 unblocked: verified EventStore-backed typed query transport, added safe malformed-client mapping, expanded picker behavior/privacy tests to 39/39, reran client/contracts/build/regression slices, and moved story to review with one unrelated Gateway failure logged. | Codex |
 | 2026-05-10 | 0.2 | Added typed-client picker adapter seam and guardrail tests, verified focused/client/contracts/build checks, and blocked full completion on Story 12.5 EventStore query contract. | Codex |
 | 2026-05-10 | 0.1 | Created ready-for-dev story through BMAD pre-dev hardening automation. | Codex |

@@ -83,6 +83,23 @@ public sealed class PartyPickerApiClientTests
     }
 
     [Fact]
+    public async Task SearchAsync_WithHostRequestCustomizerOnly_CallsTypedClient()
+    {
+        var queryClient = new RecordingPartiesQueryClient();
+        queryClient.Enqueue(SearchResultPage(PartyPickerTestData.Result()));
+        var client = new PartyPickerApiClient(queryClient);
+
+        PartyPickerSearchResponse response = await client.SearchAsync(new PartyPickerSearchRequest
+        {
+            Query = "ada",
+            RequestCustomizer = (_, _) => ValueTask.CompletedTask,
+        }, CancellationToken.None);
+
+        response.State.ShouldBe(PartyPickerSearchState.Ready);
+        queryClient.SearchCalls.ShouldBe([new SearchCall("ada", 1, PartyPickerDefaults.PageSize)]);
+    }
+
+    [Fact]
     public async Task SearchAsync_WithInvisibleOnlyQuery_DoesNotCallClient()
     {
         var queryClient = new RecordingPartiesQueryClient();
@@ -120,6 +137,41 @@ public sealed class PartyPickerApiClientTests
     }
 
     [Fact]
+    public async Task SearchAsync_MapsMalformedClientFailureToBoundedErrorState()
+    {
+        var queryClient = new RecordingPartiesQueryClient
+        {
+            ThrowOnSearch = new PartiesClientException("raw token Ada Lovelace backend detail"),
+        };
+        var client = new PartyPickerApiClient(queryClient);
+
+        PartyPickerSearchResponse response = await client.SearchAsync(Request("ada"), CancellationToken.None);
+
+        response.State.ShouldBe(PartyPickerSearchState.Error);
+        response.SafeReason.ShouldNotBeNull();
+        response.SafeReason.ShouldBe("The Parties client returned an invalid response.");
+        response.SafeReason.ShouldNotContain("token");
+        response.SafeReason.ShouldNotContain("Ada");
+    }
+
+    [Fact]
+    public async Task SearchAsync_MapsTransportFailureToTransientState()
+    {
+        var queryClient = new RecordingPartiesQueryClient
+        {
+            ThrowOnSearch = new HttpRequestException("raw token Ada Lovelace transport detail"),
+        };
+        var client = new PartyPickerApiClient(queryClient);
+
+        PartyPickerSearchResponse response = await client.SearchAsync(Request("ada"), CancellationToken.None);
+
+        response.State.ShouldBe(PartyPickerSearchState.TransientFailure);
+        response.SafeReason.ShouldNotBeNull();
+        response.SafeReason.ShouldNotContain("token");
+        response.SafeReason.ShouldNotContain("Ada");
+    }
+
+    [Fact]
     public async Task SearchAsync_EmptyTypedResult_ReturnsEmptyState()
     {
         var queryClient = new RecordingPartiesQueryClient();
@@ -150,9 +202,10 @@ public sealed class PartyPickerApiClientTests
 
     internal sealed record SearchCall(string Query, int Page, int PageSize);
 
-    internal sealed class RecordingPartiesQueryClient : IPartiesQueryClient
+    internal class RecordingPartiesQueryClient : IPartiesQueryClient
     {
         private readonly Queue<PagedResult<PartySearchResult>> _responses = [];
+        private readonly Queue<Exception> _failures = [];
 
         public List<SearchCall> SearchCalls { get; } = [];
 
@@ -160,6 +213,9 @@ public sealed class PartyPickerApiClientTests
 
         public void Enqueue(PagedResult<PartySearchResult> response)
             => _responses.Enqueue(response);
+
+        public void EnqueueFailure(Exception exception)
+            => _failures.Enqueue(exception);
 
         public Task<PartyDetail> GetPartyAsync(string partyId, CancellationToken ct)
             => throw new NotSupportedException();
@@ -182,7 +238,7 @@ public sealed class PartyPickerApiClientTests
 
         public string? LastCaseId { get; private set; }
 
-        public Task<PagedResult<PartySearchResult>> SearchPartiesAsync(
+        public virtual Task<PagedResult<PartySearchResult>> SearchPartiesAsync(
             string query,
             int page,
             int pageSize,
@@ -195,6 +251,11 @@ public sealed class PartyPickerApiClientTests
             LastMode = mode;
             LastCaseId = caseId;
             LastRequestCustomizer = requestCustomizer;
+
+            if (_failures.Count > 0)
+            {
+                throw _failures.Dequeue();
+            }
 
             if (ThrowOnSearch is not null)
             {

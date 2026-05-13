@@ -54,7 +54,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-05-02
-last_updated: 2026-05-13  # story 12-7 moved review -> done after bmad-code-review Group A: 6 patches applied (P1 CancellationToken propagation in GDPR dispatch; P2 ex.Detail stripped from command result per AC8/AC9; P3 MissingToken/MissingTenant/Forbidden/DomainRejected added to CanMutateParty exclusion list; P4 Directory.Build.targets extended with CS1591/CS1574 for FrontComposer.Contracts, csproj AdditionalProperties removed; P5 TotalPages clamped Math.Max(0,...); P6 page<1 explicit guard). D1 resolved: HTTP 501 mapped unconditionally to ContractUnavailable. D2 resolved: FrontComposer abstraction accepted. AdminPortal 67/67, Client 74/74, build 0 errors 0 warnings.
+last_updated: 2026-05-13  # story 12-8 moved in-progress -> review after completing the EventStore-fronted picker rewrite: typed Parties query client transport confirmed, malformed client failures mapped to bounded safe errors, picker behavior/privacy tests expanded to 39/39, client 74/74, contracts 57/57, Release build clean, regression slices green except one unrelated root Gateway invalid-shape failure logged in the story.
 # sprint_change_proposals:
 #   - sprint-change-proposal-2026-05-07.md  (EventStore-Fronted Architecture Pivot — added Epic 12; paused 10-1-1, 10-2, 10-3)
 project: Hexalith.Parties
@@ -171,7 +171,7 @@ development_status:
   12-5-parties-client-thin-wrapper: done
   12-6-parties-mcp-thin-host: done
   12-7-admin-portal-rebuild-on-frontcomposer: done
-  12-8-picker-rewrite: blocked
+  12-8-picker-rewrite: review
   12-9-sample-and-getting-started-doc-updates: review
   12-10-deployment-validation-and-topology-fitness-rewrite: review
   epic-12-retrospective: optional
