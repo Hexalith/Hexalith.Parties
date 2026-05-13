@@ -60,7 +60,11 @@ public sealed class AdminPortalGdprStateCoordinator
             or AdminPortalGdprOperationState.VerificationPartial
             or AdminPortalGdprOperationState.VerificationFailed
             or AdminPortalGdprOperationState.Verified
-            or AdminPortalGdprOperationState.Erased);
+            or AdminPortalGdprOperationState.Erased
+            or AdminPortalGdprOperationState.MissingToken
+            or AdminPortalGdprOperationState.MissingTenant
+            or AdminPortalGdprOperationState.Forbidden
+            or AdminPortalGdprOperationState.DomainRejected);
 
     private void Reset(AdminPortalGdprOperationState state)
     {

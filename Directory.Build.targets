@@ -2,4 +2,7 @@
   <PropertyGroup Condition="'$(MSBuildProjectName)' == 'Hexalith.FrontComposer.Shell'">
     <WarningsNotAsErrors>$(WarningsNotAsErrors);CS9113;CS0162</WarningsNotAsErrors>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(MSBuildProjectName)' == 'Hexalith.FrontComposer.Contracts'">
+    <WarningsNotAsErrors>$(WarningsNotAsErrors);CS1591;CS1574</WarningsNotAsErrors>
+  </PropertyGroup>
 </Project>

@@ -223,25 +223,25 @@ public sealed class PartiesAdminPortalApiClient : IPartiesAdminPortalApiClient
     public Task<AdminPortalGdprCommandResult> RequestErasureAsync(string partyId, CancellationToken cancellationToken)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(partyId);
-        return ExecuteGdprCommandAsync(client => client.RequestErasureAsync(partyId, cancellationToken));
+        return ExecuteGdprCommandAsync(client => client.RequestErasureAsync(partyId, cancellationToken), cancellationToken);
     }
 
     public Task<PartyErasureStatusRecord?> GetErasureStatusAsync(string partyId, CancellationToken cancellationToken)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(partyId);
-        return ExecuteGdprQueryAsync(client => client.GetErasureStatusAsync(partyId, cancellationToken));
+        return ExecuteGdprQueryAsync(client => client.GetErasureStatusAsync(partyId, cancellationToken), cancellationToken);
     }
 
     public Task<ErasureCertificate?> GetErasureCertificateAsync(string partyId, CancellationToken cancellationToken)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(partyId);
-        return ExecuteGdprQueryAsync(client => client.GetErasureCertificateAsync(partyId, cancellationToken));
+        return ExecuteGdprQueryAsync(client => client.GetErasureCertificateAsync(partyId, cancellationToken), cancellationToken);
     }
 
     public Task<AdminPortalGdprCommandResult> RetryErasureVerificationAsync(string partyId, CancellationToken cancellationToken)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(partyId);
-        return ExecuteGdprCommandAsync(client => client.RetryErasureVerificationAsync(partyId, cancellationToken));
+        return ExecuteGdprCommandAsync(client => client.RetryErasureVerificationAsync(partyId, cancellationToken), cancellationToken);
     }
 
     public Task<AdminPortalGdprCommandResult> RestrictProcessingAsync(
@@ -250,13 +250,13 @@ public sealed class PartiesAdminPortalApiClient : IPartiesAdminPortalApiClient
         CancellationToken cancellationToken)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(partyId);
-        return ExecuteGdprCommandAsync(client => client.RestrictProcessingAsync(partyId, reason, cancellationToken));
+        return ExecuteGdprCommandAsync(client => client.RestrictProcessingAsync(partyId, reason, cancellationToken), cancellationToken);
     }
 
     public Task<AdminPortalGdprCommandResult> LiftRestrictionAsync(string partyId, CancellationToken cancellationToken)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(partyId);
-        return ExecuteGdprCommandAsync(client => client.LiftRestrictionAsync(partyId, cancellationToken));
+        return ExecuteGdprCommandAsync(client => client.LiftRestrictionAsync(partyId, cancellationToken), cancellationToken);
     }
 
     public Task<AdminPortalGdprCommandResult> AddConsentAsync(
@@ -269,7 +269,7 @@ public sealed class PartiesAdminPortalApiClient : IPartiesAdminPortalApiClient
         ArgumentException.ThrowIfNullOrWhiteSpace(partyId);
         ArgumentException.ThrowIfNullOrWhiteSpace(channelId);
         ArgumentException.ThrowIfNullOrWhiteSpace(purpose);
-        return ExecuteGdprCommandAsync(client => client.AddConsentAsync(partyId, channelId, purpose, lawfulBasis, cancellationToken));
+        return ExecuteGdprCommandAsync(client => client.AddConsentAsync(partyId, channelId, purpose, lawfulBasis, cancellationToken), cancellationToken);
     }
 
     public Task<AdminPortalGdprCommandResult> RevokeConsentAsync(
@@ -279,25 +279,25 @@ public sealed class PartiesAdminPortalApiClient : IPartiesAdminPortalApiClient
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(partyId);
         ArgumentException.ThrowIfNullOrWhiteSpace(consentId);
-        return ExecuteGdprCommandAsync(client => client.RevokeConsentAsync(partyId, consentId, cancellationToken));
+        return ExecuteGdprCommandAsync(client => client.RevokeConsentAsync(partyId, consentId, cancellationToken), cancellationToken);
     }
 
     public Task<IReadOnlyList<ConsentRecord>> GetConsentAsync(string partyId, CancellationToken cancellationToken)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(partyId);
-        return ExecuteGdprQueryAsync(client => client.GetConsentAsync(partyId, cancellationToken));
+        return ExecuteGdprQueryAsync(client => client.GetConsentAsync(partyId, cancellationToken), cancellationToken);
     }
 
     public Task<AdminPortalExportDownload> ExportPartyDataAsync(string partyId, CancellationToken cancellationToken)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(partyId);
-        return ExecuteGdprQueryAsync(client => client.ExportPartyDataAsync(partyId, cancellationToken));
+        return ExecuteGdprQueryAsync(client => client.ExportPartyDataAsync(partyId, cancellationToken), cancellationToken);
     }
 
     public Task<IReadOnlyList<ProcessingActivityRecord>> GetProcessingRecordsAsync(string partyId, CancellationToken cancellationToken)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(partyId);
-        return ExecuteGdprQueryAsync(client => client.GetProcessingRecordsAsync(partyId, cancellationToken));
+        return ExecuteGdprQueryAsync(client => client.GetProcessingRecordsAsync(partyId, cancellationToken), cancellationToken);
     }
 
     private string Domain => string.IsNullOrWhiteSpace(_options.Domain) ? "party" : _options.Domain.Trim();
@@ -385,7 +385,8 @@ public sealed class PartiesAdminPortalApiClient : IPartiesAdminPortalApiClient
     }
 
     private async Task<AdminPortalGdprCommandResult> ExecuteGdprCommandAsync(
-        Func<IAdminPortalGdprClient, Task<AdminPortalGdprCommandResult>> operation)
+        Func<IAdminPortalGdprClient, Task<AdminPortalGdprCommandResult>> operation,
+        CancellationToken cancellationToken)
     {
         IAdminPortalGdprClient client = _gdprClient
             ?? throw new AdminPortalQueryException(AdminPortalQueryFailureKind.ContractUnavailable);
@@ -394,9 +395,13 @@ public sealed class PartiesAdminPortalApiClient : IPartiesAdminPortalApiClient
         {
             return await operation(client).ConfigureAwait(false);
         }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
         catch (PartiesClientException ex)
         {
-            return new AdminPortalGdprCommandResult(MapGdprOutcome(ex), ex.CorrelationId, ex.Detail);
+            return new AdminPortalGdprCommandResult(MapGdprOutcome(ex), ex.CorrelationId, Detail: null);
         }
         catch (Exception ex) when (ex is HttpRequestException
             or TimeoutException
@@ -409,7 +414,9 @@ public sealed class PartiesAdminPortalApiClient : IPartiesAdminPortalApiClient
         }
     }
 
-    private async Task<T> ExecuteGdprQueryAsync<T>(Func<IAdminPortalGdprClient, Task<T>> operation)
+    private async Task<T> ExecuteGdprQueryAsync<T>(
+        Func<IAdminPortalGdprClient, Task<T>> operation,
+        CancellationToken cancellationToken)
     {
         IAdminPortalGdprClient client = _gdprClient
             ?? throw new AdminPortalQueryException(AdminPortalQueryFailureKind.ContractUnavailable);
@@ -417,6 +424,10 @@ public sealed class PartiesAdminPortalApiClient : IPartiesAdminPortalApiClient
         try
         {
             return await operation(client).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
         }
         catch (PartiesClientException ex)
         {
@@ -446,8 +457,15 @@ public sealed class PartiesAdminPortalApiClient : IPartiesAdminPortalApiClient
 
     private static int ComputeBoundedSkip(int page, int pageSize)
     {
+        if (page < 1)
+        {
+            throw new AdminPortalQueryException(
+                AdminPortalQueryFailureKind.Validation,
+                validationDetail: "Page number must be >= 1.");
+        }
+
         long skip = ((long)page - 1) * pageSize;
-        if (skip > int.MaxValue || skip < 0)
+        if (skip > int.MaxValue)
         {
             throw new AdminPortalQueryException(
                 AdminPortalQueryFailureKind.Validation,
@@ -495,7 +513,7 @@ public sealed class PartiesAdminPortalApiClient : IPartiesAdminPortalApiClient
             404 => AdminPortalQueryFailureKind.NotFound,
             409 => AdminPortalQueryFailureKind.Conflict,
             410 => AdminPortalQueryFailureKind.Gone,
-            501 when IsContractUnavailable(ex.Title) => AdminPortalQueryFailureKind.ContractUnavailable,
+            501 => AdminPortalQueryFailureKind.ContractUnavailable,
             400 or 422 => AdminPortalQueryFailureKind.Validation,
             408 or 429 => AdminPortalQueryFailureKind.TransientFailure,
             >= 500 => AdminPortalQueryFailureKind.TransientFailure,
@@ -512,7 +530,7 @@ public sealed class PartiesAdminPortalApiClient : IPartiesAdminPortalApiClient
             404 => AdminPortalGdprOutcome.NotFound,
             409 => AdminPortalGdprOutcome.ErasureInProgress,
             410 => AdminPortalGdprOutcome.Erased,
-            501 when IsContractUnavailable(ex.Title) => AdminPortalGdprOutcome.ContractUnavailable,
+            501 => AdminPortalGdprOutcome.ContractUnavailable,
             400 or 422 => AdminPortalGdprOutcome.ValidationRejected,
             408 or 429 => AdminPortalGdprOutcome.TransientFailure,
             >= 500 => AdminPortalGdprOutcome.TransientFailure,
@@ -521,9 +539,6 @@ public sealed class PartiesAdminPortalApiClient : IPartiesAdminPortalApiClient
 
     private static bool ContainsTenant(string? value)
         => value?.Contains("tenant", StringComparison.OrdinalIgnoreCase) == true;
-
-    private static bool IsContractUnavailable(string? value)
-        => string.Equals(value, AdminPortalGdprOutcome.ContractUnavailable.ToString(), StringComparison.Ordinal);
 
     private static IReadOnlyDictionary<string, string>? BuildListFilters(AdminPortalListRequest request)
     {
@@ -581,7 +596,7 @@ public sealed class PartiesAdminPortalApiClient : IPartiesAdminPortalApiClient
             Page = page,
             PageSize = pageSize,
             TotalCount = result.TotalCount,
-            TotalPages = pageSize <= 0 ? 0 : (int)Math.Ceiling(result.TotalCount / (double)pageSize),
+            TotalPages = pageSize <= 0 ? 0 : Math.Max(0, (int)Math.Ceiling(result.TotalCount / (double)pageSize)),
         };
 
     private static AdminPortalQueryMetadata MetadataFrom<T>(QueryResult<T> result)
