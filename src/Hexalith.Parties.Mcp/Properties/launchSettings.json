@@ -1,0 +1,12 @@
+{
+  "profiles": {
+    "Hexalith.Parties.Mcp": {
+      "commandName": "Project",
+      "launchBrowser": true,
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "applicationUrl": "https://localhost:49167;http://localhost:49168"
+    }
+  }
+}

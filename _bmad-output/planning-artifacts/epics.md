@@ -1,2297 +1,1822 @@
 ---
-stepsCompleted: ['step-01-validate-prerequisites', 'step-02-design-epics', 'step-03-create-stories']
+stepsCompleted: ['step-01-requirements-extracted', 'step-02-epics-designed']
 inputDocuments:
   - prd.md
   - architecture.md
-  - prd-validation-report.md
+  - ux-admin-portal-2026-05-10.md
+  - ux-party-picker-2026-05-12.md
 ---
 
 # Hexalith.Parties - Epic Breakdown
 
 ## Overview
 
-This document provides the complete epic and story breakdown for Hexalith.Parties, decomposing the requirements from the PRD, Architecture requirements into implementable stories.
+This document provides the complete epic and story breakdown for Hexalith.Parties, decomposing the requirements from the PRD, UX Design if it exists, and Architecture requirements into implementable stories.
 
 ## Requirements Inventory
 
 ### Functional Requirements
 
-**Party Lifecycle Management (MVP) — 7 FRs**
-
-- FR1: Authorized client can create a new party as either a person or an organization with type-specific details
-- FR2: Authorized client can update person-specific details (first name, last name, date of birth, name prefix/suffix)
-- FR3: Authorized client can update organization-specific details (legal name, trading name, legal form, registration number)
-- FR4: Authorized client can deactivate a party (soft lifecycle management)
-- FR5: Authorized client can reactivate a previously deactivated party
-- FR6: System derives display name and sort name automatically from type-specific details using documented derivation rules (MVP: simple concatenation — "{FirstName} {LastName}" for persons, "{LegalName}" for organizations; locale-aware formatting deferred to v1.1)
-- FR7: Each party has a client-generated, immutable UUID as its stable identity
-
-**Contact Channel Management (MVP) — 4 FRs**
-
-- FR8: Authorized client can add a contact channel to a party with type-specific structured data (postal, email, phone, social)
-- FR9: Authorized client can update an existing contact channel on a party
-- FR10: Authorized client can remove a contact channel from a party
-- FR11: Authorized client can mark a contact channel as preferred for its type
-
-**Identifier Management (MVP) — 2 FRs**
-
-- FR12: Authorized client can add an identifier to a party (VAT, SIRET, national ID, or other jurisdiction-specific references)
-- FR13: Authorized client can remove an identifier from a party
-
-**Party Discovery & Search (MVP unless noted) — 10 FRs**
-
-- FR14: Consumer can list parties with pagination and filtering by type (person/organization) and active status
-- FR15: Consumer can search parties by display name in MVP. Email and identifier search are deferred to the dedicated search capability.
-- FR16: *(Deferred to v1.1)* Consumer can perform semantic search across parties
-- FR17: Search results include match metadata (matched field, match type) to support disambiguation by AI agents and humans. MVP emits `displayName`; future search can emit `email` and `identifier`.
-- FR18: Consumer can retrieve full party details by ID
-- FR19: Recently created or updated parties become discoverable in search results within the eventual consistency window defined by NFR6
-- FR56: System publishes auto-generated API specification documentation accessible to developers
-- FR68: Consumer can filter parties by creation date or last-modified date range
-- FR72: *(Deferred to v1.1)* Consumer can query a party's historical name at a specific point in time (temporal name query)
-
-**AI Agent Identity Resolution (MVP) — 7 FRs**
-
-- FR20: AI agent can search and resolve parties by display name via a dedicated AI-optimized interface in MVP. Email and identifier resolution requires candidate detail retrieval or the future dedicated search capability.
-- FR21: AI agent can create a complete party (type details + contact channels + identifiers) in a single composite operation
-- FR22: AI agent can update party details, add/modify/remove contact channels and identifiers via a single operation
-- FR23: AI agent can retrieve full party details and list parties via dedicated AI-optimized tools
-- FR24: AI agent party creation returns the complete created party record, not just an identifier
-- FR25: AI agent tools accept partial and incomplete input gracefully, with documented default behaviors for omitted fields, and clear validation error messages when required fields are missing
-- FR74: MCP update operations use patch semantics — only specified fields are modified; unspecified fields remain unchanged
-
-**Developer Integration (MVP) — 12 FRs**
-
-- FR26: .NET developer can integrate party management via a single package and one-line dependency registration
-- FR27: Developer can send party commands via typed client abstractions without infrastructure knowledge
-- FR28: Developer can query parties via typed client abstractions without infrastructure knowledge
-- FR29: Developer can interact with the party service via REST API from any programming language
-- FR30: System returns typed rejection responses when commands fail, including error type URI, human-readable message, and corrective action
-- FR31: Developer can deploy a running instance from source with standard container tooling
-- FR32: Getting-started documentation enables a developer to deploy and send their first command as a self-service experience
-- FR33: Contract types package has zero runtime dependencies beyond netstandard2.1
-- FR57: System supports versioned API endpoints that coexist during deprecation periods
-- FR58: System maps domain rejections to standardized HTTP error formats with a documented error catalog
-- FR59: System provides a runnable sample integration project demonstrating command, query, event subscription, and MCP usage
-- FR60: Developer can run the full system locally with a single command for development and evaluation
-- FR69: Update operations (API and MCP) return the updated party state in the response, not just a confirmation
-
-**Event-Driven Integration (MVP) — 8 FRs**
-
-- FR34: System publishes domain events when party state changes
-- FR35: Consuming application can subscribe to party events and build domain-specific read models
-- FR36: System handles duplicate commands idempotently (safe deduplication in distributed scenarios)
-- FR37: Forward-compatible event contracts (including party merge) are available to consuming applications from day one
-- FR38: Consuming application documentation includes handler patterns for erasure and dangling reference cleanup
-- FR63: System guarantees at-least-once event delivery to subscribers
-- FR70: Published domain events include tenant context for consuming application routing decisions
-- FR73: System delivers events for a single aggregate in causal order to each subscriber
-
-**Multi-Tenancy & Security (MVP) — 7 FRs**
-
-- FR39: System isolates party data by tenant at all layers — no cross-tenant data access is possible
-- FR40: System identifies tenant from authenticated credentials, never from request payloads
-- FR41: System rejects requests without valid tenant identity (fail-closed)
-- FR42: Personal data fields are architecturally marked for automated privacy enforcement without domain code changes
-- FR43: Personal data fields are excluded from all application logging
-- FR61: System provides deployment validation tooling to verify security configuration before production use
-- FR62: System displays a non-dismissable compliance warning until GDPR features are activated
-
-**GDPR Compliance (v1.1) — 12 FRs**
-
-- FR44: Administrator can trigger right-to-erasure, rendering all personal data for a party permanently unreadable
-- FR45: System verifies erasure completion across all internal data stores and reports results
-- FR46: System notifies all subscribers when a party is erased so they can clean up their references
-- FR47: Administrator can record per-channel, per-purpose consent for a specific party
-- FR48: Administrator can revoke previously recorded consent
-- FR49: Administrator can restrict processing of a party's data (freeze while complaint is investigated)
-- FR50: Administrator can lift restriction on a party's data to resume processing
-- FR51: Administrator can export all data for a specific party in a machine-readable format
-- FR52: System maintains a complete, time-stamped record of all processing activities on party data
-- FR53: System encrypts personal data in stored events and snapshots using per-party keys
-- FR54: Events published to subscribers contain readable data — subscribers never handle decryption
-- FR55: System returns an "erased" status for erased parties, not cryptographic errors
-
-**System Resilience (MVP) — 2 FRs**
-
-- FR64: System degrades gracefully when infrastructure components are unavailable — read operations continue when write-side components fail
-- FR71: System exposes health and readiness signals for infrastructure orchestration
-
-**Administration & Frontend (v1.2) — 3 FRs**
-
-- FR65: Administrator can browse, search, and inspect party records via an administration interface
-- FR66: Administrator can process GDPR requests (erasure, restriction, consent, export) via the administration interface
-- FR67: Consuming application developer can embed a party picker component in their UI for party search and selection
-
-**Total: 74 Functional Requirements (54 MVP + 14 v1.1 + 3 v1.2 + 3 deferred)**
+FR1: Authorized client can create a new party as either a person or an organization with type-specific details
+FR2: Authorized client can update person-specific details (first name, last name, date of birth, name prefix/suffix)
+FR3: Authorized client can update organization-specific details (legal name, trading name, legal form, registration number)
+FR4: Authorized client can deactivate a party (soft lifecycle management)
+FR5: Authorized client can reactivate a previously deactivated party
+FR6: System derives display name and sort name automatically from type-specific details using documented derivation rules (MVP: simple concatenation - `"{FirstName} {LastName}"` for persons, `"{LegalName}"` for organizations; locale-aware formatting deferred to v1.1)
+FR7: Each party has a client-generated, immutable UUID as its stable identity
+FR8: Authorized client can add a contact channel to a party with type-specific structured data (postal, email, phone, social)
+FR9: Authorized client can update an existing contact channel on a party
+FR10: Authorized client can remove a contact channel from a party
+FR11: Authorized client can mark a contact channel as preferred for its type
+FR12: Authorized client can add an identifier to a party (VAT, SIRET, national ID, or other jurisdiction-specific references)
+FR13: Authorized client can remove an identifier from a party
+FR14: Consumer can list parties with pagination and filtering by type (person/organization) and active status
+FR15: Consumer can search parties by display name in MVP. Email and identifier search are deferred to the dedicated search capability because the v1.0 index projection does not store those searchable fields.
+FR16: (Deferred to v1.1) Consumer can perform semantic search across parties. Display-name exact/prefix/contains search (FR15) + match metadata (FR17) are sufficient for MVP name-based lookup scenarios. Semantic search ships as a pluggable projection in v1.1.
+FR17: Search results include match metadata (matched field, match type) to support disambiguation by AI agents and humans. MVP emits `displayName`; `email` and `identifier` are reserved for the future search model.
+FR18: Consumer can retrieve full party details by ID
+FR19: Recently created or updated parties become discoverable in search results within the eventual consistency window defined by NFR6
+FR20: AI agent can search and resolve parties by display name via a dedicated AI-optimized interface in MVP. Email and identifier resolution require candidate retrieval or the future dedicated search capability.
+FR21: AI agent can create a complete party (type details + contact channels + identifiers) in a single composite operation
+FR22: AI agent can update party details, add/modify/remove contact channels and identifiers via a single operation
+FR23: AI agent can retrieve full party details and list parties via dedicated AI-optimized tools
+FR24: AI agent party creation returns the complete created party record, not just an identifier
+FR25: AI agent tools accept partial and incomplete input gracefully, with documented default behaviors for omitted fields, and clear validation error messages when required fields are missing
+FR26: .NET developer can integrate party management via a single package and one-line dependency registration
+FR27: Developer can send party commands via typed client abstractions without infrastructure knowledge
+FR28: Developer can query parties via typed client abstractions without infrastructure knowledge
+FR29: Developer can interact with the party service via REST API from any programming language
+FR30: System returns typed rejection responses when commands fail, including error type URI, human-readable message, and corrective action - enabling developers to resolve the issue without consulting documentation or debugging the service
+FR31: Developer can deploy a running instance from source with standard container tooling
+FR32: Getting-started documentation enables a developer to deploy and send their first command as a self-service experience
+FR33: Contract types package has zero runtime dependencies beyond netstandard2.1 - consuming applications inherit no infrastructure stack
+FR34: System publishes domain events when party state changes
+FR35: Consuming application can subscribe to party events and build domain-specific read models
+FR36: System handles duplicate commands idempotently (safe deduplication in distributed scenarios)
+FR37: Forward-compatible event contracts (including party merge) are available to consuming applications from day one
+FR38: Consuming application documentation includes handler patterns for erasure and dangling reference cleanup, with explicit warning that `PartyErased` subscription is mandatory for all consuming apps regardless of which other events they handle
+FR39: System isolates party data by tenant at all layers - no cross-tenant data access is possible. All API surfaces (REST and MCP) carry tenant context and receive identical tenant filtering
+FR40: System identifies tenant from authenticated credentials, never from request payloads
+FR41: System rejects requests without valid tenant identity (fail-closed)
+FR42: Personal data fields are architecturally marked for automated privacy enforcement without domain code changes
+FR43: Personal data fields are excluded from all application logging
+FR44: Administrator can trigger right-to-erasure, rendering all personal data for a party permanently unreadable
+FR45: System verifies erasure completion across all internal data stores and reports results
+FR46: System notifies all subscribers when a party is erased so they can clean up their references
+FR47: Administrator can record per-channel, per-purpose consent for a specific party
+FR48: Administrator can revoke previously recorded consent
+FR49: Administrator can restrict processing of a party's data (freeze while complaint is investigated)
+FR50: Administrator can lift restriction on a party's data to resume processing
+FR51: Administrator can export all data for a specific party in a machine-readable format
+FR52: System maintains a complete, time-stamped record of all processing activities on party data
+FR53: System encrypts personal data in stored events and snapshots using per-party keys
+FR54: Events published to subscribers contain readable data - subscribers never handle decryption
+FR55: System returns an "erased" status for erased parties, not cryptographic errors
+FR56: System publishes auto-generated API specification documentation accessible to developers
+FR57: System supports versioned API endpoints that coexist during deprecation periods
+FR58: System maps domain rejections to standardized HTTP error formats with a documented error catalog
+FR59: System provides a runnable sample integration project demonstrating command, query, event subscription, and MCP usage
+FR60: Developer can run the full system locally with a single command for development and evaluation
+FR61: System provides deployment validation tooling to verify security configuration before production use
+FR62: System displays a non-dismissable compliance warning until GDPR features are activated
+FR63: System guarantees at-least-once event delivery to subscribers
+FR64: System degrades gracefully when infrastructure components are unavailable - read operations continue when write-side components fail
+FR65: Administrator can browse, search, and inspect party records via an administration interface
+FR66: Administrator can process GDPR requests (erasure, restriction, consent, export) via the administration interface
+FR67: Consuming application developer can embed a party picker component in their UI for party search and selection
+FR68: Consumer can filter parties by creation date or last-modified date range
+FR69: Update operations (API and MCP) return the updated party state in the response, not just a confirmation
+FR70: Published domain events include tenant context for consuming application routing decisions
+FR71: System exposes health and readiness signals for infrastructure orchestration
+FR72: (Deferred to v1.1) Consumer can query a party's historical name as it was at a specific point in time (temporal name query for legal and audit purposes). Name history is preserved in the MVP event stream; the query API ships in v1.1 alongside GDPR audit features, since the primary use case is legal/audit.
+FR73: System delivers events for a single aggregate in causal order to each subscriber
+FR74: MCP update operations use patch semantics - only specified fields are modified; unspecified fields remain unchanged. AI agents never need to send full party state to make a partial update
 
 ### NonFunctional Requirements
 
-**Performance — 6 NFRs**
-
-- NFR1: Command processing (create, update, manage party) completes in < 1 second at NFR17 throughput levels; MCP tool calls complete in < 1 second end-to-end including transport
-- NFR2: Query operations (search, get by ID, list) return results in < 500ms at NFR17 throughput levels
-- NFR3: Aggregate rehydration completes in < 200ms with snapshot strategy active
-- NFR4: Search across 100K parties per tenant returns results within 500ms
-- NFR5: Service accepts requests within 30 seconds of container launch (cold start)
-- NFR6: Read projections reflect write operations within 2 seconds at NFR17 throughput levels (eventual consistency window)
-
-**Security — 7 NFRs**
-
-- NFR7: All data encrypted in transit (TLS 1.2+)
-- NFR8: Personal data fields encrypted at rest using per-party keys (activated in v1.1)
-- NFR9: Tenant isolation enforced at all layers — zero cross-tenant data leakage under any condition
-- NFR10: JWT token validation on every request; fail-closed on invalid or missing tokens
-- NFR11: Per-tenant encryption keys can be rotated without service downtime or data loss
-- NFR12: Personal data excluded from all application logs
-- NFR13: All API endpoints require authentication — no anonymous access
-
-**Scalability — 6 NFRs**
-
-- NFR14: System supports multi-tenant operation validated at 100 concurrent tenants for MVP
-- NFR14a: System architecture supports scaling beyond 100 tenants without per-tenant infrastructure changes
-- NFR15: Tenant metadata operations complete in < 50ms regardless of total tenant count
-- NFR16: System supports up to 100,000 parties per tenant (MVP validation target)
-- NFR17: System sustains 100 read requests/second and 20 write requests/second per tenant
-- NFR18: Event store performance degrades < 10% at 100K parties per tenant with snapshot strategy active
-- NFR19: Read projections remain responsive (< 500ms) at 100K parties per tenant
-
-**Reliability — 5 NFRs**
-
-- NFR20: Service recovers from crash, replays necessary event state, and accepts requests within 30 seconds of restart
-- NFR21: When event store is unreachable, read projection queries continue serving cached data with a staleness indicator
-- NFR22: No data loss on service restart — event store is the durable source of truth
-- NFR23: At-least-once event delivery to subscribers via DAPR pub/sub
-- NFR24: Idempotent command handling ensures safe retry without duplicate side effects
-
-**Integration — 5 NFRs**
-
-- NFR25: REST API conforms to auto-generated OpenAPI 3.x specification
-- NFR26: MCP server implements MCP protocol specification with 5 tools
-- NFR27: Published events follow stable, versioned contract schemas (append-only, additive changes only)
-- NFR28: Client NuGet packages impose < 10 transitive dependencies totalling < 5 MB
-- NFR29: Service has zero direct dependencies on specific state store or message broker implementations
-
-**Developer Experience — 3 NFRs**
-
-- NFR30: A developer deploys a running instance from source in < 15 minutes on first attempt
-- NFR31: NuGet client package size < 5MB with < 10 transitive dependencies
-- NFR32: (v1.2) Frontend applies output encoding to all party data fields rendered in the admin portal
-
-**Total: 33 Non-Functional Requirements**
+NFR1: Command processing (create, update, manage party) completes in < 1 second at NFR17 throughput levels; MCP tool calls complete in < 1 second end-to-end including transport
+NFR2: Query operations (search, get by ID, list) return results in < 500ms at NFR17 throughput levels
+NFR3: Aggregate rehydration completes in < 200ms with snapshot strategy active
+NFR4: Search across 100K parties per tenant returns results within 500ms
+NFR5: Service accepts requests within 30 seconds of container launch (cold start)
+NFR6: Read projections reflect write operations within 2 seconds at NFR17 throughput levels (eventual consistency window)
+NFR7: All data encrypted in transit (TLS 1.2+)
+NFR8: Personal data fields encrypted at rest using per-party keys (activated in v1.1)
+NFR9: Tenant isolation enforced at all layers - zero cross-tenant data leakage under any condition
+NFR10: JWT token validation on every request; fail-closed on invalid or missing tokens
+NFR11: Per-tenant encryption keys can be rotated without service downtime or data loss
+NFR12: Personal data excluded from all application logs
+NFR13: All API endpoints require authentication - no anonymous access
+NFR14: System supports multi-tenant operation (no per-tenant infrastructure, stateless routing, partitionable metadata) validated at 100 concurrent tenants for MVP
+NFR14a: System architecture supports scaling beyond 100 tenants without per-tenant infrastructure changes
+NFR15: Tenant metadata operations (routing, key lookup) complete in < 50ms regardless of total tenant count
+NFR16: System supports up to 100,000 parties per tenant (MVP validation target - sufficient for startups and SMBs; enterprise scale at millions of parties addressed in v2 via Elasticsearch projection and horizontal scaling)
+NFR17: System sustains 100 read requests/second and 20 write requests/second per tenant
+NFR18: Event store performance degrades < 10% at 100K parties per tenant with snapshot strategy active
+NFR19: Read projections remain responsive (< 500ms) at 100K parties per tenant
+NFR20: Service recovers from crash, replays necessary event state, and accepts requests within 30 seconds of restart
+NFR21: When event store is unreachable, read projection queries continue serving cached data with a staleness indicator
+NFR22: No data loss on service restart - event store is the durable source of truth
+NFR23: At-least-once event delivery to subscribers via DAPR pub/sub
+NFR24: Idempotent command handling ensures safe retry without duplicate side effects
+NFR25: REST API conforms to auto-generated OpenAPI 3.x specification
+NFR26: MCP server implements MCP protocol specification with 5 tools
+NFR27: Published events follow stable, versioned contract schemas (append-only, additive changes only)
+NFR28: Client NuGet packages impose < 10 transitive dependencies totalling < 5 MB (Contracts: zero runtime dependencies beyond netstandard2.1)
+NFR29: Service has zero direct dependencies on specific state store or message broker implementations
+NFR30: A developer deploys a running instance from source in < 15 minutes on first attempt using the documented getting-started guide
+NFR31: NuGet client package size < 5MB with < 10 transitive dependencies
+NFR32: (v1.2) Frontend applies output encoding to all party data fields rendered in the admin portal - no stored XSS from user-supplied or AI-created party data
 
 ### Additional Requirements
 
-**From Architecture — Starter Template:**
+- Use the EventStore solution structure pattern as the starter instead of `dotnet new webapi`; manual scaffolding must mirror EventStore conventions to validate reuse for future domain services.
+- Use `Hexalith.Parties.slnx` with `/src`, `/tests`, and `/samples`, central package management, shared build properties, MinVer, nullable enabled, warnings as errors, CRLF, UTF-8, Allman braces, and file-scoped namespaces.
+- Align with the architecture's target package/project boundaries: Contracts, Client, Server, Projections, Parties service, Aspire hosting extensions, AppHost, ServiceDefaults, Testing, and sample integration.
+- Keep `Hexalith.Parties.Contracts` free of runtime dependencies beyond the target framework and prevent dependencies on hosting, DAPR, MediatR, FluentValidation, UI, or infrastructure packages.
+- Keep `Hexalith.Parties.Client` dependent only on Contracts and HTTP/client abstractions; it must not reference Server, Projections, or the Parties service.
+- Implement read projections as DAPR actor-managed JSON state with per-party detail actors and per-tenant index actors.
+- Design the party index state behind a partitioning interface so v1.0 can use single-key storage while scale deployments can switch strategies without changing the architecture.
+- Keep projection handlers pure and DAPR-free; DAPR actor wrappers should be thin delegates to handler logic.
+- Implement `CreatePartyComposite` so MCP create operations complete in one aggregate turn and satisfy the < 1 second MCP target.
+- Implement `UpdatePartyComposite` with aggregate-side diff semantics; MCP translates forgiving patch intent into explicit command payloads without owning domain logic.
+- Make composite operations all-or-nothing in a single actor turn, with sub-operation idempotency, duplicate detection, conflict detection, and configurable maximum payload size.
+- Treat the MCP layer as a translation layer with no domain event references; enforce this boundary through architectural fitness tests.
+- Keep REST and MCP surfaces on the same command/query path and shared validation/error handling model.
+- Use URL-path API versioning (`/api/v1/parties`) and support versioned endpoints during deprecation periods.
+- Map domain rejections to standardized HTTP ProblemDetails and maintain a documented error catalog.
+- Let Hexalith.EventStore own write-side tenant validation, idempotency, event envelopes, snapshots, status tracking, pub/sub publication, and event ordering guarantees; Parties must not add write-side workarounds.
+- Parties owns projection-side tenant/access behavior; read models, search, admin views, and tenant event consumption must fail closed.
+- Mark personal data with type-dependent `[PersonalData]` attributes at MVP, including derived names and organization contact data where it can identify a person.
+- Plan for mid-lifecycle `IsNaturalPerson` reclassification and stricter v1.1 crypto-shredding behavior without breaking MVP contracts.
+- Provide deployment validation tooling for security configuration and keep DAPR access-control deny-by-default.
+- Implement projection rebuild support through replaying events into pure handlers and surface degraded responses when projection state is corrupt or rebuilding.
+- Add projection health monitoring that detects state corruption and triggers rebuild/operational alerting.
+- Batch index actor event processing with configurable batch size and time windows to protect projection consistency under bursts.
+- Provide three-tier tests: pure unit tests with no infrastructure, DAPR slim tests for actor/API/MCP integration, and full Aspire/Docker integration tests.
+- Define the composite command test matrix in story specifications before implementation begins.
+- Provide a runnable sample integration demonstrating command, query, event subscription, and MCP usage.
+- Keep EventStore Admin UI stream, event, correlation, and command-status inspection delegated to EventStore Admin UI through safe links rather than duplicating stream browsing in Parties.
 
-- Architecture specifies EventStore Solution Structure Pattern as the starter (manual scaffolding, no CLI generator). This impacts Epic 1 Story 1: project initialization must mirror EventStore conventions (Directory.Build.props, Directory.Packages.props, global.json, .editorconfig, modern XML solution format .slnx)
+### UX Design Requirements
 
-**From Architecture — Critical Architectural Decisions (19 total):**
-
-- D1: Projection data store uses DAPR actor-managed, key/value JSON (no dedicated query DB)
-- D2: Full-text search deferred to v1.1; basic key-lookup and list/filter in v1.0
-- D3: Snapshot strategy managed entirely by Hexalith.EventStore
-- D4: Hybrid projection actor granularity — per-party detail actor + per-tenant index actor
-- D5: Index actor state uses partitioned state with interface-first approach (single-key v1.0)
-- D6: Personal data scope is type-dependent (person vs. organization), with IsNaturalPerson flag for sole traders
-- D7: IsNaturalPerson reclassification is a documented v1.1 complexity hotspot
-- D8: MCP create uses composite aggregate command (CreatePartyComposite — single actor turn, atomic)
-- D9: MCP update uses composite command with aggregate-side diff (UpdatePartyComposite — explicit add/update/remove lists)
-- D10: Sub-operation idempotency — skip duplicate additions, reject invalid IDs, reject conflicting operations
-- D11: MCP layer is a translation layer (no domain logic, no event type references, enforced via CI fitness test)
-- D12: Partial failure eliminated by design — all composite operations are all-or-nothing
-- D13: Event ordering delegated entirely to EventStore
-- D14: Projection rebuild via event replay through pure handlers (manual v1.0, automated drift detection v1.1)
-- D15: Projection health monitoring with auto-rebuild on corruption
-- D16: Index actor batch event processing (configurable batch size/time)
-- D17: Maximum composite payload size limit (e.g., 100 sub-operations, configurable)
-- D18: Projection testability — pure handler classes extracted from actors (Tier 1 testable without DAPR)
-- D19: Composite command test matrix must be designed upfront in story definitions
-
-**From Architecture — Implementation Patterns & Constraints:**
-
-- 14 enforcement guidelines for AI agents (sealed records, naming, JSON conventions, etc.)
-- 8 explicit anti-patterns (positional parameters, V2 events, PII in logs, etc.)
-- 5 architectural fitness tests enforced in CI
-- Three-tier test strategy (Tier 1: no external deps, Tier 2: DAPR slim, Tier 3: full Aspire topology)
-- 10 src projects, 6 test projects, 1 sample project
-- 6 NuGet packages to publish
-- Dependency direction strict and machine-verifiable
-
-**From Architecture — Implementation Sequence Priority:**
-
-1. Project scaffolding (solution file, build props, global.json, .editorconfig)
-2. Contracts project (commands, events, state, value objects, models, results)
-3. Server project (PartyAggregate with Handle/Apply methods)
-4. Tier 1 tests for aggregate logic
-
-**From Architecture — Open Items for Story Preparation:**
-
-- `UpdateIdentifiers[]` in composite — confirm or remove (PRD only specifies add/remove, not update)
-- FR11 preferred channel marking — confirm via `UpdateContactChannel` + `PreferredContactChannelChanged` event
-- MCP tool naming: canonical tools are `find_parties`, `get_party`, `create_party`, `update_party`, and `delete_party`; `find_parties` covers search/list modes, and `delete_party` maps to soft deactivation only.
+UX-DR1: Admin portal first viewport must be the working console with global search, compact filters, tenant/auth state, result grid, and detail panel visible without a landing page or introductory screen.
+UX-DR2: Admin portal routes must support `/admin/parties`, `/admin/parties/{partyId}`, and `/admin/parties/{partyId}/gdpr` when FrontComposer route support is available.
+UX-DR3: Admin portal must generate EventStore Admin UI links only from safe identifiers such as stream id, aggregate id, command id, correlation id, or timestamp, using generic labels and disabled bounded reasons when unavailable.
+UX-DR4: Admin portal toolbar must include search input, party type filter, active filter, retry control, and EventStore Admin UI availability indicator.
+UX-DR5: Admin portal results must use server-side paging or virtualization and display display name, type, active/erased/restricted state, created/modified dates, and non-PII status indicators.
+UX-DR6: Admin portal detail panel must show selected party summary, contacts, identifiers, consent, restriction, erasure, processing records, and safe EventStore Admin UI links.
+UX-DR7: Admin portal must include a GDPR drawer or panel for erasure, restriction, consent, portability, processing records, confirmations, and operation outcomes.
+UX-DR8: Admin portal status region must announce bounded loading, empty, blocked, forbidden, timeout, degraded, malformed response, stale response, and contract-unavailable states for screen readers.
+UX-DR9: Admin portal list/detail behavior must clear sensitive detail state on sign-out, missing tenant, non-admin, tenant switch, stale response, forbidden, not found, erased/gone, timeout, malformed response, and contract-unavailable failures.
+UX-DR10: Admin portal search mode must disable unsupported filters rather than silently sending ignored filters.
+UX-DR11: Admin portal GDPR actions must remain disabled until the accepted EventStore Parties client contract exists, showing the dated blocker `Blocked on Story 12.5 EventStore Parties client contract`.
+UX-DR12: Admin portal erasure request flow must confirm by party id only, return command accepted outcome, and refresh authoritative erasure status through EventStore query.
+UX-DR13: Admin portal erasure certificate flow must expose poll/refresh, safe verification result, and certificate download filename composed from party id plus timestamp only.
+UX-DR14: Admin portal restriction flow must capture a bounded reason, show command accepted outcome, and refresh before follow-on actions.
+UX-DR15: Admin portal consent flow must handle add, revoke, and history per channel and per purpose, with no party-wide or tenant-wide consent shortcut.
+UX-DR16: Admin portal portability export must generate safe filename, content type, and payload through the accepted query/client path.
+UX-DR17: Admin portal processing records must render read-only bounded summaries with safe correlation links.
+UX-DR18: Admin portal must localize all labels, status messages, dates, booleans, counts, warning copy, validation messages, lawful-basis labels, and operation outcomes.
+UX-DR19: Admin portal accessibility must provide keyboard reachability, focus restoration, accessible grid row names/states, landmark headings, dialog focus traps, polite status announcements, and non-color-only status.
+UX-DR20: Admin portal must render all user, backend, AI-created, and operator-entered content through normal encoded Razor/component text paths and must not use raw markup or raw HTML fragments.
+UX-DR21: Admin portal privacy rules must prevent personal data in URLs, storage keys, telemetry dimensions, link labels, filenames, logs, command/query payload logs, JWTs, claims dictionaries, tenant membership payloads, sidecar names, or DAPR ports.
+UX-DR22: Party picker must be an embeddable FrontComposer/Blazor component for party search and selection, not an admin portal, editor, tenant selector, GDPR surface, or stream browser.
+UX-DR23: Party picker must support debounced type-ahead display-name search with bounded result count and stable compact layout.
+UX-DR24: Party picker must expose selected party id callback to the host application and use party id as the durable selection contract.
+UX-DR25: Party picker must support disabled and read-only states.
+UX-DR26: Party picker must handle loading, empty, retry, degraded/local-only, unauthorized, forbidden, not-found, gone/erased, and transient-failure states.
+UX-DR27: Party picker must clear stale responses when token, tenant, user, host configuration, selected id, or search options change.
+UX-DR28: Party picker must support keyboard operation, visible focus, screen-reader naming, localized labels/status text, and non-color-only status.
+UX-DR29: Party picker must render party data, host labels, backend messages, degraded reasons, and localized values through encoded rendering only.
+UX-DR30: Party picker must not place names, contacts, identifiers, consent text, search text, tenant ids, tokens, raw ProblemDetails, or raw query payloads in storage keys, telemetry dimensions, URLs, logs, filenames, DOM event names, or JavaScript event payloads.
+UX-DR31: Party picker must query through the EventStore-fronted Parties client boundary and must not call retired Parties REST endpoints, admin endpoints, DAPR actors, projection actors, local search services, controllers, or actor-host internals.
+UX-DR32: Party picker must receive request/auth context through accepted Parties client/EventStore gateway configuration and must not persist, refresh, parse for authorization, or log tokens.
 
 ### FR Coverage Map
 
-| FR | Epic | Description |
-|---|---|---|
-| FR1 | Epic 1 | Create party (person/organization) |
-| FR2 | Epic 1 | Update person details |
-| FR3 | Epic 1 | Update organization details |
-| FR4 | Epic 1 | Deactivate party |
-| FR5 | Epic 1 | Reactivate party |
-| FR6 | Epic 1 | Display name / sort name derivation |
-| FR7 | Epic 1 | Client-generated immutable UUID |
-| FR8 | Epic 2 | Add contact channel |
-| FR9 | Epic 2 | Update contact channel |
-| FR10 | Epic 2 | Remove contact channel |
-| FR11 | Epic 2 | Mark preferred contact channel |
-| FR12 | Epic 2 | Add identifier |
-| FR13 | Epic 2 | Remove identifier |
-| FR14 | Epic 3 | Paginated list with filters |
-| FR15 | Epic 3 | Display-name search in MVP; email/identifier search deferred |
-| FR16 | Epic 9 | Semantic search (v1.1) |
-| FR17 | Epic 3 | Match metadata in search results |
-| FR18 | Epic 1 | Retrieve party details by ID |
-| FR19 | Epic 3 | Eventual consistency for search |
-| FR20 | Epic 5 | AI agent search/resolve via MCP |
-| FR21 | Epic 4+5 | Composite party creation (aggregate: Epic 4, MCP: Epic 5) |
-| FR22 | Epic 4+5 | Composite party update (aggregate: Epic 4, MCP: Epic 5) |
-| FR23 | Epic 5 | AI agent get/list via MCP |
-| FR24 | Epic 5 | Complete party returned on create |
-| FR25 | Epic 5 | Forgiving input schemas |
-| FR26 | Epic 6 | Single NuGet package integration |
-| FR27 | Epic 6 | Typed command client abstractions |
-| FR28 | Epic 6 | Typed query client abstractions |
-| FR29 | Epic 1 | REST API from any language |
-| FR30 | Epic 1 | Typed rejection responses (DomainResult) |
-| FR31 | Epic 1 | Deploy from source with container tooling |
-| FR32 | Epic 6 | Getting-started documentation |
-| FR33 | Epic 1 | Zero-dep contracts package |
-| FR34 | Epic 7 | Publish domain events on state change |
-| FR35 | Epic 7 | Subscribe to events for read models |
-| FR36 | Epic 1 | Idempotent command handling |
-| FR37 | Epic 7 | Forward-compatible event contracts (PartyMerged) |
-| FR38 | Epic 7 | Handler patterns for erasure/dangling references |
-| FR39 | Epic 1 | Tenant isolation at all layers |
-| FR40 | Epic 1 | Tenant from credentials, not payloads |
-| FR41 | Epic 1 | Reject requests without valid tenant (fail-closed) |
-| FR42 | Epic 1 | [PersonalData] field attributes |
-| FR43 | Epic 1 | Personal data excluded from logs |
-| FR44 | Epic 9 | Right-to-erasure (crypto-shredding) |
-| FR45 | Epic 9 | Erasure verification |
-| FR46 | Epic 9 | Erasure notification to subscribers |
-| FR47 | Epic 9 | Per-channel per-purpose consent |
-| FR48 | Epic 9 | Consent revocation |
-| FR49 | Epic 9 | Right to restriction |
-| FR50 | Epic 9 | Lift restriction |
-| FR51 | Epic 9 | Data portability export |
-| FR52 | Epic 9 | Processing records (Article 30) |
-| FR53 | Epic 9 | Field-level encryption per-party keys |
-| FR54 | Epic 9 | Decrypted events at publish time |
-| FR55 | Epic 9 | Erased party returns "erased" status |
-| FR56 | Epic 3 | Auto-generated OpenAPI specification |
-| FR57 | Epic 1 | Versioned API endpoints |
-| FR58 | Epic 1 | Standardized HTTP error formats |
-| FR59 | Epic 6 | Sample integration project |
-| FR60 | Epic 1 | Run full system locally (single command) |
-| FR61 | Epic 8 | Deployment validation tooling |
-| FR62 | Epic 1 | Non-dismissable GDPR warning |
-| FR63 | Epic 7 | At-least-once event delivery |
-| FR64 | Epic 8 | Graceful degradation |
-| FR65 | Epic 10 | Admin browse/search/inspect |
-| FR66 | Epic 10 | Admin GDPR operations |
-| FR67 | Epic 10 | Embeddable party picker |
-| FR68 | Epic 3 | Date range filtering |
-| FR69 | Epic 4 | Return updated state in responses |
-| FR70 | Epic 7 | Tenant context in published events |
-| FR71 | Epic 8 | Health/readiness signals |
-| FR72 | Epic 9 | Temporal name query (v1.1) |
-| FR73 | Epic 7 | Causal event ordering per aggregate |
-| FR74 | Epic 5 | MCP patch semantics |
-
-**Coverage: 74/74 FRs mapped — zero gaps.**
+FR1: Epic 1 - Party Records and Lifecycle
+FR2: Epic 1 - Party Records and Lifecycle
+FR3: Epic 1 - Party Records and Lifecycle
+FR4: Epic 1 - Party Records and Lifecycle
+FR5: Epic 1 - Party Records and Lifecycle
+FR6: Epic 1 - Party Records and Lifecycle
+FR7: Epic 1 - Party Records and Lifecycle
+FR8: Epic 1 - Party Records and Lifecycle
+FR9: Epic 1 - Party Records and Lifecycle
+FR10: Epic 1 - Party Records and Lifecycle
+FR11: Epic 1 - Party Records and Lifecycle
+FR12: Epic 1 - Party Records and Lifecycle
+FR13: Epic 1 - Party Records and Lifecycle
+FR14: Epic 2 - Searchable Tenant-Safe Read Models
+FR15: Epic 2 - Searchable Tenant-Safe Read Models
+FR16: Epic 2 - Searchable Tenant-Safe Read Models
+FR17: Epic 2 - Searchable Tenant-Safe Read Models
+FR18: Epic 2 - Searchable Tenant-Safe Read Models
+FR19: Epic 2 - Searchable Tenant-Safe Read Models
+FR20: Epic 4 - AI Agent Party Management
+FR21: Epic 4 - AI Agent Party Management
+FR22: Epic 4 - AI Agent Party Management
+FR23: Epic 4 - AI Agent Party Management
+FR24: Epic 4 - AI Agent Party Management
+FR25: Epic 4 - AI Agent Party Management
+FR26: Epic 3 - Developer Integration and Local Adoption
+FR27: Epic 3 - Developer Integration and Local Adoption
+FR28: Epic 3 - Developer Integration and Local Adoption
+FR29: Epic 3 - Developer Integration and Local Adoption
+FR30: Epic 3 - Developer Integration and Local Adoption
+FR31: Epic 3 - Developer Integration and Local Adoption
+FR32: Epic 3 - Developer Integration and Local Adoption
+FR33: Epic 3 - Developer Integration and Local Adoption
+FR34: Epic 5 - Event-Driven Consumer Integration
+FR35: Epic 5 - Event-Driven Consumer Integration
+FR36: Epic 1 - Party Records and Lifecycle
+FR37: Epic 5 - Event-Driven Consumer Integration
+FR38: Epic 5 - Event-Driven Consumer Integration
+FR39: Epic 2 - Searchable Tenant-Safe Read Models
+FR40: Epic 2 - Searchable Tenant-Safe Read Models
+FR41: Epic 2 - Searchable Tenant-Safe Read Models
+FR42: Epic 1 - Party Records and Lifecycle
+FR43: Epic 1 - Party Records and Lifecycle
+FR44: Epic 6 - GDPR Compliance Operations
+FR45: Epic 6 - GDPR Compliance Operations
+FR46: Epic 6 - GDPR Compliance Operations
+FR47: Epic 6 - GDPR Compliance Operations
+FR48: Epic 6 - GDPR Compliance Operations
+FR49: Epic 6 - GDPR Compliance Operations
+FR50: Epic 6 - GDPR Compliance Operations
+FR51: Epic 6 - GDPR Compliance Operations
+FR52: Epic 6 - GDPR Compliance Operations
+FR53: Epic 6 - GDPR Compliance Operations
+FR54: Epic 6 - GDPR Compliance Operations
+FR55: Epic 6 - GDPR Compliance Operations
+FR56: Epic 3 - Developer Integration and Local Adoption
+FR57: Epic 3 - Developer Integration and Local Adoption
+FR58: Epic 3 - Developer Integration and Local Adoption
+FR59: Epic 3 - Developer Integration and Local Adoption
+FR60: Epic 3 - Developer Integration and Local Adoption
+FR61: Epic 3 - Developer Integration and Local Adoption
+FR62: Epic 3 - Developer Integration and Local Adoption
+FR63: Epic 5 - Event-Driven Consumer Integration
+FR64: Epic 2 - Searchable Tenant-Safe Read Models
+FR65: Epic 7 - Administration Console
+FR66: Epic 7 - Administration Console
+FR67: Epic 8 - Embeddable Party Picker
+FR68: Epic 2 - Searchable Tenant-Safe Read Models
+FR69: Epic 1 - Party Records and Lifecycle
+FR70: Epic 5 - Event-Driven Consumer Integration
+FR71: Epic 2 - Searchable Tenant-Safe Read Models
+FR72: Epic 2 - Searchable Tenant-Safe Read Models
+FR73: Epic 5 - Event-Driven Consumer Integration
+FR74: Epic 4 - AI Agent Party Management
 
 ## Epic List
 
-### Planning Readiness Reconciliation
+### Epic 1: Party Records and Lifecycle
 
-The canonical implementation direction is now the EventStore-fronted plan recorded in `sprint-change-proposal-2026-05-07.md`, `_bmad-output/implementation-artifacts/sprint-status.yaml`, and the Epic 12 story files under `_bmad-output/implementation-artifacts/12-*.md`. Earlier REST, TypeScript-admin, and upfront-contract wording in this document is retained only where it describes historical story origin. Current implementation and future story creation must follow the sequence and supersession notes below.
+Users can create, update, deactivate, reactivate, and identify parties as the durable source of truth for persons and organizations.
 
-MCP tool naming decision: `find_parties`, `get_party`, `create_party`, `update_party`, and `delete_party` are canonical after architecture refinement and Epic 12. `find_parties` unifies search and list modes. `delete_party` is an AI-ergonomic MCP alias for soft deactivation and must never be documented as GDPR erasure.
+**FRs covered:** FR1, FR2, FR3, FR4, FR5, FR6, FR7, FR8, FR9, FR10, FR11, FR12, FR13, FR36, FR42, FR43, FR69
 
-Historical quality-gate stories: Stories 1.5, 2.3, 3.4, 4.3, and 5.4 are retained as historical sprint records. They must not be used as the pattern for new implementation planning. Future behavior stories must include their own unit, integration, accessibility, privacy, and fitness acceptance criteria unless the test work creates a reusable independent harness.
+### Epic 2: Searchable Tenant-Safe Read Models
 
-Execution sequence:
-1. Epics 1-9: domain, discovery, integration, operations, GDPR/privacy/search foundation.
-2. Epic 11: Hexalith.Tenants integration for Parties. This is a prerequisite for admin/frontend work.
-3. Epic 12: EventStore-fronted architecture pivot and consumer migration. Epic 12 is materialized in `_bmad-output/implementation-artifacts/12-*.md`, tracked in `_bmad-output/implementation-artifacts/sprint-status.yaml`, and sourced from `sprint-change-proposal-2026-05-07.md`. The summarized Epic 12 section below is canonical for readiness and traceability.
-4. Epic 10: historical administration and picker scope. Consumer-facing admin and picker implementation is superseded by Epic 12 stories 12.7 and 12.8; Epic 10 remains for audit/history and UX lineage.
+Consumers can list, search, retrieve, filter, and reliably observe party records through tenant-safe projections.
 
-### Epic 1: Domain Foundation & Party Lifecycle
-A developer can deploy the service from source with a single command, create parties (persons and organizations) with type-specific details, retrieve them by ID, and verify the full command-event cycle works — with tenant isolation, [PersonalData] markers, log sanitization, and GDPR compliance warning from day one. Historical Epic 1 work defined a broad contract surface; future contract additions must be sliced with the behavior that first consumes them.
-**FRs covered:** FR1, FR2, FR3, FR4, FR5, FR6, FR7, FR18, FR29, FR30, FR31, FR33, FR36, FR39, FR40, FR41, FR42, FR43, FR57, FR58, FR60, FR62
+**FRs covered:** FR14, FR15, FR16, FR17, FR18, FR19, FR39, FR40, FR41, FR64, FR68, FR71, FR72
 
-### Epic 2: Contact Channels & Identifiers
-A developer can enrich parties with structured contact channels (postal, email, phone, social) and jurisdiction-specific identifiers (VAT, SIRET, national ID), including marking preferred channels. Adds all contact channel and identifier Handle/Apply implementations to the aggregate and extends the REST API.
-**FRs covered:** FR8, FR9, FR10, FR11, FR12, FR13
+### Epic 3: Developer Integration and Local Adoption
 
-### Epic 3: Party Discovery & Search (Read Projections)
-Consumers can discover parties through paginated listing, display-name search with match metadata, and filtering by type and date range — all reflecting updates within 2 seconds. Builds the entire read projection infrastructure: PartyDetailProjectionActor, PartyIndexProjectionActor, pure handler extraction (D18), partitioned index state (D5), batch event processing (D16). Query REST endpoints and OpenAPI specification. Email and identifier search are intentionally deferred because the v1.0 index projection does not store those searchable fields.
-**FRs covered:** FR14, FR15, FR17, FR19, FR56, FR68
+Developers can integrate Parties through typed packages, REST APIs, documentation, samples, deployment tooling, versioned APIs, and clear error handling.
 
-### Epic 4: Composite Commands & Advanced Aggregate Logic
-The party aggregate supports atomic composite operations — creating a full party with channels and identifiers in one command (CreatePartyComposite), and updating via explicit add/update/remove lists (UpdatePartyComposite) — with sub-operation idempotency, conflict detection, payload size limits, and complete updated state returned in responses. This isolates the most complex domain logic (D8, D9, D10, D12, D17) with the upfront test matrix (D19).
-**FRs covered:** FR21 (aggregate), FR22 (aggregate), FR69
+**FRs covered:** FR26, FR27, FR28, FR29, FR30, FR31, FR32, FR33, FR56, FR57, FR58, FR59, FR60, FR61, FR62
 
-### Epic 5: AI Agent Party Management (MCP Server)
-AI agents can perform complete party management through 5 MCP tools (create_party, find_parties, get_party, update_party, delete_party) — with forgiving input schemas, complete response payloads, patch semantics, and disambiguation support via match metadata. Focuses purely on the MCP translation layer (D11) with architectural fitness enforcement (zero domain event type references).
-**FRs covered:** FR20, FR21 (MCP), FR22 (MCP), FR23, FR24, FR25, FR74
+### Epic 4: AI Agent Party Management
 
-### Epic 6: Developer Integration & Documentation
-A .NET developer integrates party management with a single NuGet package and one-line DI registration (AddPartiesClient()). A non-.NET developer follows the getting-started guide and sends their first command in under 30 minutes. A sample integration project demonstrates command, query, event subscription, and MCP usage patterns.
-**FRs covered:** FR26, FR27, FR28, FR32, FR59
+AI agents can find, create, retrieve, update, and deactivate parties through a bounded MCP tool surface with complete responses and forgiving inputs.
 
-### Epic 7: Event-Driven Integration & Subscriber Experience
-Consuming applications can subscribe to party domain events and build domain-specific read models, with forward-compatible contracts (including PartyMerged placeholder), documented handler patterns for erasure and dangling references, at-least-once delivery verification, tenant context in events, and causal ordering documentation. Event publishing infrastructure (DAPR pub/sub) is configured in Epic 1; this epic focuses on subscriber experience, documentation, and the sample event subscription demo.
+**FRs covered:** FR20, FR21, FR22, FR23, FR24, FR25, FR74
+
+### Epic 5: Event-Driven Consumer Integration
+
+Consuming applications can receive ordered, tenant-aware party events and build their own lifecycle-aware read models.
+
 **FRs covered:** FR34, FR35, FR37, FR38, FR63, FR70, FR73
 
-### Epic 8: Operational Readiness & Production Hardening
-Operators can deploy with confidence using deployment validation tooling (DAPR security config verification), monitor health and readiness signals, and trust that the service degrades gracefully when infrastructure components fail. Includes projection health monitoring with auto-rebuild on corruption (D15) and projection rebuild admin endpoint (D14).
-**FRs covered:** FR61, FR64, FR71
+### Epic 6: GDPR Compliance Operations
 
-### Epic 9: GDPR, Privacy, and v1.1 Search Extensions
-Administrators can fulfill GDPR obligations and the platform can support privacy-safe v1.1 search and audit extensions. GDPR erasure, consent, restriction, portability, processing records, per-party keys, erased-state behavior, and subscriber notification remain the primary compliance scope. Temporal name queries and Hexalith.Memories-backed search are explicitly v1.1 extensions and must retain privacy, erasure, and tenant-isolation guarantees.
-**FRs covered:** FR44, FR45, FR46, FR47, FR48, FR49, FR50, FR51, FR52, FR53, FR54, FR55, FR16, FR72
+Administrators and DPO workflows can erase, restrict, export, verify, and audit party data with crypto-shredding and subscriber notifications.
 
-### Epic 11: Hexalith.Tenants Integration for Parties
-Hexalith.Parties uses Hexalith.Tenants as the source of truth for tenant lifecycle, membership, roles, and tenant configuration while preserving Parties-owned tenant isolation for party aggregates, projections, REST, MCP, and event publication. This cross-cutting epic is scheduled before Epic 10 so the admin portal consumes tenant context instead of duplicating tenant management.
-**FRs covered:** FR39, FR40, FR41, FR61
+**FRs covered:** FR44, FR45, FR46, FR47, FR48, FR49, FR50, FR51, FR52, FR53, FR54, FR55
 
-**Traceability note:** Epic 11 is primarily architecture- and topology-driven. It strengthens tenant lifecycle, membership, role, and configuration integration for the tenant-isolation requirements already expressed by FR39-FR41. Story 11.4 also supports FR61 through deployment validation of Tenants subscription and configuration. It does not introduce any additional numbered PRD requirement beyond FR74.
+### Epic 7: Administration Console
 
-### Epic 12: EventStore-Fronted Architecture Pivot
-Hexalith.Parties moves to the canonical platform topology: clients submit commands and queries to EventStore, which routes them to Parties-hosted actors. Parties is a thin actor/projection host, MCP runs as a separate thin host, and admin/picker surfaces consume the EventStore-fronted Parties client boundary.
+Administrators can browse, inspect, and process Parties records and GDPR operations through a privacy-safe FrontComposer admin surface.
 
-**Status:** Completed in sprint status.
-**Source:** `sprint-change-proposal-2026-05-07.md`
-**Story files:** `_bmad-output/implementation-artifacts/12-0-eventstore-parties-actor-invocation-feasibility-spike.md` through `_bmad-output/implementation-artifacts/12-10-deployment-validation-and-topology-fitness-rewrite.md`
-**FRs covered:** FR20, FR21, FR22, FR23, FR24, FR25, FR39, FR40, FR41, FR56, FR59, FR60, FR61, FR65, FR66, FR67, FR69, FR74
+**FRs covered:** FR65, FR66
 
-Stories:
-- Story 12.0: EventStore-to-Parties actor invocation feasibility spike
-- Story 12.1: AppHost recomposition
-- Story 12.2: Parties actor host cleanup
-- Story 12.3: Validation relocation and tenant-auth ownership
-- Story 12.4: Server Tier-1/Tier-2 test rewrite
-- Story 12.5: Parties client thin wrapper
-- Story 12.6: Parties MCP thin host
-- Story 12.7: Admin portal rebuild on FrontComposer and EventStore queries
-- Story 12.8: Picker rewrite
-- Story 12.9: Sample and getting-started documentation updates
-- Story 12.10: Deployment validation and topology fitness rewrite
+### Epic 8: Embeddable Party Picker
 
-### Epic 10: Administration & Frontend (v1.2)
-Administrators can browse, search, and inspect party records and process party-level GDPR requests via a FrontComposer-based Blazor/Razor admin portal that consumes EventStore-fronted Parties client/query/command contracts. Generic event and stream browsing is delegated to EventStore Admin UI through safe deep-links. Tenant lifecycle, membership, roles, and configuration remain owned by Hexalith.Tenants admin capabilities. Consuming application developers can embed a party picker component in their UIs for party search and selection.
-**FRs covered:** FR65, FR66, FR67
+Consuming application developers can embed a tenant-safe, accessible party picker component for search and selection.
 
----
+**FRs covered:** FR67
 
-## Epic 1: Domain Foundation & Party Lifecycle
+<!-- Repeat for each epic in epics_list (N = 1, 2, 3...) -->
 
-A developer can deploy the service from source with a single command, create parties (persons and organizations) with type-specific details, retrieve them by ID, and verify the full command-event cycle works — with tenant isolation, [PersonalData] markers, log sanitization, and GDPR compliance warning from day one. Historical Epic 1 work defined a broad contract surface; future contract additions must be sliced with the behavior that first consumes them.
+## Epic 1: Party Records and Lifecycle
 
-### Story 1.1: Project Scaffolding & Solution Structure
+Users can create, update, deactivate, reactivate, and identify parties as the durable source of truth for persons and organizations.
 
-As a developer,
-I want a properly structured .NET solution following EventStore conventions,
-So that I have a consistent, buildable foundation for the party management service.
+<!-- Repeat for each story (M = 1, 2, 3...) within epic N -->
+
+### Story 1.1: Create Party Aggregate with Stable Identity
+
+As an authorized client,
+I want to create a person or organization party with a client-generated stable UUID,
+So that Parties can become the durable source of truth for party identity.
 
 **Acceptance Criteria:**
 
-**Given** a clean checkout of the Hexalith.Parties repository
-**When** the solution structure is created
-**Then** the following files exist at the repository root:
-- `Hexalith.Parties.slnx` (modern XML solution format)
-- `Directory.Build.props` (net10.0, nullable, TreatWarningsAsErrors, NuGet metadata, MinVer 7.0.0)
-- `Directory.Packages.props` (central package management with all dependency versions matching architecture spec)
-- `global.json` (SDK 10.0.103, rollForward: latestPatch)
-- `.editorconfig` (Allman, 4-space, CRLF, UTF-8 — copied from EventStore)
-- `.gitignore` (copied from EventStore)
-- `LICENSE` (MIT)
-**And** all 10 source projects exist as empty .csproj stubs under `src/`:
-- Hexalith.Parties.Contracts, Client, Server, Projections, Parties service, Aspire, AppHost, ServiceDefaults, Testing
-**And** all 6 test projects exist as empty .csproj stubs under `tests/`:
-- Contracts.Tests, Client.Tests, Server.Tests, Projections.Tests, Parties.Tests, IntegrationTests
-**And** the sample project exists as an empty .csproj stub under `samples/`:
-- Hexalith.Parties.Sample
-**And** project references follow the strict dependency direction:
-- Contracts ← Client, Server, Projections
-- Contracts + Server + Projections ← Parties service
-- All src/ ← Testing
-**And** `dotnet restore Hexalith.Parties.slnx` completes without errors
-**And** `dotnet build Hexalith.Parties.slnx` compiles successfully (empty projects, no source files yet)
+**Given** an authorized command with a valid tenant context, client-generated party UUID, and person details
+**When** the client creates a person party
+**Then** the aggregate emits a party-created event for a person
+**And** the party state stores the immutable UUID, party type, person details, active status, and derived display/sort names.
 
-### Story 1.2: Domain Contracts — Initial Party Lifecycle Contract Slice
+**Given** an authorized command with a valid tenant context, client-generated party UUID, and organization details
+**When** the client creates an organization party
+**Then** the aggregate emits a party-created event for an organization
+**And** the party state stores the immutable UUID, party type, organization details, active status, and derived display/sort names.
 
-As a developer,
-I want the initial party lifecycle contracts needed by the first aggregate and retrieval stories,
-So that the domain model can grow incrementally with the behavior that consumes each contract.
-
-Planning note: Story 1.2 is a historical contract-bootstrap story, not a future slicing pattern. For any new or revised work, contracts must be introduced with the first behavior that consumes them: lifecycle in Epic 1, contact/identifier contracts in Epic 2, projection query models in Epic 3, composite result contracts in Epic 4, MCP schemas in Epic 5 or Epic 12, and GDPR/privacy/search contracts in v1.1 stories. Do not add broad public contract surface ahead of consuming behavior unless a sprint change explicitly approves it.
-
-**Acceptance Criteria:**
-
-**Given** the Contracts project from Story 1.1
-**When** all domain types are defined
-**Then** the following command types exist as sealed records with `{ get; init; }` properties:
-- `CreateParty`, `CreatePartyComposite`, `UpdatePartyComposite`
-- `UpdatePersonDetails`, `UpdateOrganizationDetails`, `SetIsNaturalPerson`
-- `AddContactChannel`, `UpdateContactChannel`, `RemoveContactChannel`
-- `AddIdentifier`, `RemoveIdentifier`
-- `DeactivateParty`, `ReactivateParty`
-**And** commands carry `PartyId` (aggregate ID) but NOT `TenantId` (extracted from request context)
-**And** entity IDs (ContactChannelId, IdentifierId) are client-generated UUIDs
-**And** the following event types exist as sealed records implementing `IEventPayload`:
-- `PartyCreated`, `PersonDetailsUpdated`, `OrganizationDetailsUpdated`
-- `ContactChannelAdded`, `ContactChannelUpdated`, `ContactChannelRemoved`, `PreferredContactChannelChanged`
-- `IdentifierAdded`, `IdentifierRemoved`
-- `IsNaturalPersonChanged`
-- `PartyDeactivated`, `PartyReactivated`
-- `PartyDisplayNameDerived`
-- `PartyMerged` (v2 forward-compatibility placeholder — FR37)
-**And** rejection events exist implementing `IRejectionEvent`:
-- `PartyCannotBeCreatedWithoutType`, `PartyCannotAddDuplicateChannel` (and other rejection scenarios)
-**And** the following value objects exist as sealed records:
-- `PersonDetails`, `OrganizationDetails`, `ContactChannel`, `PartyIdentifier`
-- `PostalAddress`, `EmailAddress`, `PhoneNumber`, `SocialMediaHandle`
-**And** enums exist: `PartyType` (Person, Organization), `ContactChannelType`, `IdentifierType`
-**And** `PartyState` exists as a sealed class with `{ get; private set; }` properties, `Apply` methods for ALL event types, and private list backing fields for collections
-**And** query models exist: `PartyDetail` (full party view), `PartyIndexEntry` (lightweight summary with CreatedAt, LastModifiedAt)
-**And** `CompositeCommandResult` extends `DomainResult` with Applied/Skipped/Rejected collections
-**And** `[PersonalData]` attributes are applied to: PersonDetails fields (first name, last name, DOB, prefix, suffix), all contact channel payloads, identifier values, and derived fields (display name, sort name) — following D6 type-dependent scope
-**And** `IsNaturalPerson` boolean exists on OrganizationDetails or PartyState — when true, elevates org to person-level encryption scope
-**And** the Contracts project has zero runtime dependencies beyond netstandard2.1 (FR33)
-**And** no positional record parameters are used (anti-pattern)
-**And** one public type per file, file name = type name
-
-### Story 1.3: Party Aggregate — Party Creation
-
-As a developer,
-I want to create new parties (persons and organizations) via the Party aggregate,
-So that the core party lifecycle begins with type-discriminated party creation and automatic display name derivation.
-
-**Acceptance Criteria:**
-
-**Given** no party exists with the specified ID
-**When** a `CreateParty` command is handled with `PartyType.Person` and `PersonDetails` (first name, last name)
-**Then** a `PartyCreated` event is emitted with the party type and person details
-**And** a `PartyDisplayNameDerived` event is emitted with display name = "{FirstName} {LastName}" and sort name = "{LastName}, {FirstName}" (FR6)
-**And** the party ID matches the client-generated UUID from the command (FR7)
-
-**Given** no party exists with the specified ID
-**When** a `CreateParty` command is handled with `PartyType.Organization` and `OrganizationDetails` (legal name)
-**Then** a `PartyCreated` event is emitted with the party type and organization details
-**And** a `PartyDisplayNameDerived` event is emitted with display name = "{LegalName}" and sort name = "{LegalName}" (FR6)
-
-**Given** a party already exists with the specified ID
-**When** a `CreateParty` command is handled with the same ID
-**Then** the command is handled idempotently — no duplicate events are emitted (FR36)
-
-**Given** a `CreateParty` command with no party type specified
+**Given** a create command with missing or invalid type-specific details
 **When** the command is handled
-**Then** a `PartyCannotBeCreatedWithoutType` rejection event is returned
-**And** the `DomainResult` indicates rejection with a clear error message
+**Then** the aggregate rejects the command with a typed rejection event
+**And** no successful party-created event is emitted.
 
-**Given** the `PartyAggregate` class
-**When** reviewed for implementation patterns
-**Then** it inherits `EventStoreAggregate<PartyState>`
-**And** the `Handle` method is synchronous (returns `DomainResult`, not `Task<DomainResult>`)
-**And** domain logic is pure — no I/O in Handle
+**Given** an existing party state for the requested party UUID
+**When** a create command is handled for the same party UUID
+**Then** the aggregate rejects or idempotently skips duplicate creation according to the command idempotency rules
+**And** the existing party identity is not changed.
 
-### Story 1.4: Party Aggregate — Update Details & Lifecycle Management
+**Given** a party has been created
+**When** the state is rehydrated from emitted events
+**Then** the rehydrated party preserves the same UUID, party type, active status, details, display name, and sort name.
 
-As a developer,
-I want to update person/organization details and manage party lifecycle (deactivate/reactivate),
-So that parties can be maintained throughout their lifecycle with accurate information.
+### Story 1.2: Update Person and Organization Details
 
-**Acceptance Criteria:**
-
-**Given** an existing person party
-**When** an `UpdatePersonDetails` command is handled with new first name and last name
-**Then** a `PersonDetailsUpdated` event is emitted with the new details (FR2)
-**And** a `PartyDisplayNameDerived` event is emitted with the re-derived display name and sort name (FR6)
-
-**Given** an existing organization party
-**When** an `UpdateOrganizationDetails` command is handled with new legal name
-**Then** an `OrganizationDetailsUpdated` event is emitted with the new details (FR3)
-**And** a `PartyDisplayNameDerived` event is emitted with the re-derived display name (FR6)
-
-**Given** an existing organization party with `IsNaturalPerson = false`
-**When** a `SetIsNaturalPerson` command is handled with `true`
-**Then** an `IsNaturalPersonChanged` event is emitted
-
-**Given** an active party
-**When** a `DeactivateParty` command is handled
-**Then** a `PartyDeactivated` event is emitted (FR4)
-**And** the party state reflects `IsActive = false`
-
-**Given** a deactivated party
-**When** a `ReactivateParty` command is handled
-**Then** a `PartyReactivated` event is emitted (FR5)
-**And** the party state reflects `IsActive = true`
-
-**Given** an already deactivated party
-**When** a `DeactivateParty` command is handled again
-**Then** the command is handled idempotently — no duplicate event
-
-**Given** a `CreateParty` command targeting a person party type
-**When** an `UpdateOrganizationDetails` command is subsequently handled
-**Then** a rejection event is returned (type mismatch)
-
-### Story 1.5: Party Aggregate Tier 1 Unit Tests
-
-Planning note: historical quality-gate story; see Planning Readiness Reconciliation.
-
-As a developer,
-I want comprehensive Tier 1 unit tests for all party aggregate Handle/Apply methods,
-So that domain logic correctness is verified without any infrastructure dependencies.
+As an authorized client,
+I want to update person-specific and organization-specific party details,
+So that party records remain accurate as real-world identity details change.
 
 **Acceptance Criteria:**
 
-**Given** the Hexalith.Parties.Server.Tests project
-**When** all aggregate tests are implemented
-**Then** the following test classes exist:
-- `PartyAggregateCreateTests` — person creation, organization creation, idempotent create, rejection scenarios
-- `PartyAggregateUpdateTests` — update person details, update organization details, type mismatch rejection, display name re-derivation
-- `PartyAggregateLifecycleTests` — deactivate, reactivate, idempotent deactivate, reactivate already active
-**And** tests follow naming convention: `{Method}_{Scenario}_{ExpectedResult}`
-**And** Shouldly assertions are used for all assertions
-**And** `PartyTestData` static class exists in the Testing project with builder methods: `ValidCreatePerson()`, `ValidCreateOrganization()`, etc.
-**And** all tests are Tier 1 compliant — zero infrastructure dependencies (no DAPR, no HTTP, no database)
-**And** all tests pass with `dotnet test tests/Hexalith.Parties.Server.Tests/`
-**And** Apply method correctness is verified — events applied to state produce the expected state mutations
+**Given** an existing active person party
+**When** the client updates person details such as first name, last name, date of birth, name prefix, or name suffix
+**Then** the aggregate emits a person-details-updated event
+**And** the party state reflects the updated person details.
 
-### Story 1.6: REST API, Error Handling & Party Retrieval
+**Given** an existing active organization party
+**When** the client updates organization details such as legal name, trading name, legal form, or registration number
+**Then** the aggregate emits an organization-details-updated event
+**And** the party state reflects the updated organization details.
 
-As a developer,
-I want REST API command endpoints for party operations and a GET endpoint to retrieve parties by ID,
-So that I can interact with the party service from any programming language and verify party creation.
+**Given** an update changes fields used for display name or sort name derivation
+**When** the update is applied
+**Then** the aggregate recalculates display name and sort name using the documented MVP derivation rules
+**And** the updated party state exposes the new derived names.
 
-**Acceptance Criteria:**
+**Given** a person-specific update is submitted for an organization party, or an organization-specific update is submitted for a person party
+**When** the command is handled
+**Then** the aggregate rejects the command with a typed rejection event
+**And** the existing party details remain unchanged.
 
-**Given** the Parties service project
-**When** the REST API is implemented
-**Then** `PartiesController` exists with route `api/v1/parties` (URL-path versioning — FR57)
-**And** POST endpoints exist for: CreateParty, UpdatePersonDetails, UpdateOrganizationDetails, SetIsNaturalPerson, DeactivateParty, ReactivateParty
-**And** `GET /api/v1/parties/{id}` returns full party details by ID (FR18)
-**And** all endpoints require authentication — no anonymous access (NFR13)
+**Given** an update command targets a party that does not exist
+**When** the command is handled
+**Then** the aggregate rejects the command with a typed not-found rejection
+**And** no successful update event is emitted.
 
-**Given** a valid `CreateParty` command sent via POST
-**When** the command is processed successfully
-**Then** the response is `202 Accepted` with a `CorrelationId`
+**Given** a party detail update succeeds
+**When** the command result is returned
+**Then** the response includes the updated party state
+**And** the returned state matches the aggregate state after applying the emitted event.
 
-**Given** a `GET /api/v1/parties/{id}` request for an existing party
-**When** the request is processed
-**Then** the response is `200 OK` with the full party state as JSON (camelCase, ISO 8601 dates, string enums, null properties omitted)
+### Story 1.3: Manage Contact Channels
 
-**Given** a `GET /api/v1/parties/{id}` request for a non-existent party
-**When** the request is processed
-**Then** the response is `404 Not Found` as ProblemDetails (RFC 9457)
-
-**Given** a command that fails FluentValidation
-**When** the command is sent
-**Then** the response is `400 Bad Request` as ProblemDetails with machine-readable error `type` URI (FR58)
-
-**Given** a command that is rejected by domain logic
-**When** the aggregate returns a rejection `DomainResult`
-**Then** the response is `422 Unprocessable Entity` as ProblemDetails with human-readable message and corrective action (FR30)
-
-**Given** a request without a valid tenant JWT claim
-**When** the request is processed
-**Then** the response is `401 Unauthorized` — fail-closed, never processed with null/default tenant (FR40, FR41)
-
-**Given** a request from Tenant A
-**When** the request tries to access Tenant B's party
-**Then** the response is `403 Forbidden` (FR39)
-
-**Given** personal data fields in party operations
-**When** application logs are written
-**Then** `[PersonalData]`-attributed fields are masked or excluded from all log output (FR43, NFR12)
-
-**And** FluentValidation uses assembly scanning (auto-discovery, no explicit registration)
-**And** content type is `application/json` for responses, `application/problem+json` for errors
-
-### Story 1.7: AppHost, Local Development & GDPR Warning
-
-As a developer,
-I want to run the full party service locally with a single command and see a clear GDPR compliance warning,
-So that I can develop and evaluate the service easily while being aware of compliance limitations.
-
-**Acceptance Criteria:**
-
-**Given** a developer with .NET 10 SDK and Docker installed
-**When** they run `dotnet aspire run` on the AppHost project
-**Then** the following components start:
-- Hexalith.Parties with DAPR sidecar
-- Redis (state store + pub/sub) for local development
-- Aspire dashboard for observability
-**And** the service accepts requests within 30 seconds of container launch (NFR5)
-
-**Given** the AppHost project
-**When** reviewed for DAPR configuration
-**Then** the following DAPR component files exist under `DaprComponents/`:
-- `statestore.yaml` (Redis for local dev)
-- `pubsub.yaml` (Redis Streams for local dev)
-- `subscription-parties.yaml` (event subscription configuration)
-**And** `launchSettings.json` exists with appropriate profiles
-
-**Given** the ServiceDefaults project
-**When** reviewed for configuration
-**Then** OpenTelemetry tracing and structured logging are configured
-**And** health check endpoints (`/health`, `/ready`) are registered
-**And** resilience patterns are configured
-
-**Given** a running instance of the party service
-**When** any API response is returned
-**Then** a non-dismissable GDPR compliance warning header is included (FR62)
-**And** the warning states that MVP does not include GDPR compliance features and regulated EU personal data should not be stored
-
-**Given** service startup
-**When** the service initializes
-**Then** the GDPR compliance warning is logged at `Warning` level in startup logs (FR62)
-
-**Given** the full local development setup
-**When** a developer follows the sequence: start service → POST CreateParty → GET party by ID
-**Then** the round-trip works end-to-end (FR60)
-**And** the party is created via the aggregate actor and retrievable via the GET endpoint
-
----
-
-## Epic 2: Contact Channels & Identifiers
-
-A developer can enrich parties with structured contact channels (postal, email, phone, social) and jurisdiction-specific identifiers (VAT, SIRET, national ID), including marking preferred channels. Adds all contact channel and identifier Handle/Apply implementations to the aggregate and extends the REST API.
-
-### Story 2.1: Party Aggregate — Contact Channel Management
-
-As a developer,
+As an authorized client,
 I want to add, update, remove, and mark preferred contact channels on a party,
-So that parties have structured, type-discriminated contact information.
+So that party records carry usable structured contact information.
 
 **Acceptance Criteria:**
 
-**Given** an existing party (person or organization)
-**When** an `AddContactChannel` command is handled with type `Email` and an `EmailAddress` payload
-**Then** a `ContactChannelAdded` event is emitted with the channel ID, type, and payload (FR8)
-**And** the party state includes the new contact channel in its collection
+**Given** an existing active party
+**When** the client adds a postal, email, phone, or social contact channel with valid type-specific data
+**Then** the aggregate emits a contact-channel-added event
+**And** the party state includes the new channel with its type-specific payload.
 
-**Given** an existing party
-**When** an `AddContactChannel` command is handled with type `Postal` and a `PostalAddress` payload
-**Then** a `ContactChannelAdded` event is emitted with structured postal address data (street, city, postal code, country)
+**Given** an existing contact channel on an active party
+**When** the client updates the channel payload or metadata
+**Then** the aggregate emits a contact-channel-updated event
+**And** the party state reflects the updated channel.
 
-**Given** an existing party
-**When** an `AddContactChannel` command is handled with type `Phone` and a `PhoneNumber` payload
-**Then** a `ContactChannelAdded` event is emitted with the phone number data
+**Given** an existing contact channel on an active party
+**When** the client removes the channel
+**Then** the aggregate emits a contact-channel-removed event
+**And** the party state no longer includes the removed channel.
 
-**Given** an existing party
-**When** an `AddContactChannel` command is handled with type `Social` and a `SocialMediaHandle` payload
-**Then** a `ContactChannelAdded` event is emitted with the social media handle data
+**Given** multiple contact channels of the same type exist for a party
+**When** the client marks one channel as preferred for that type
+**Then** the aggregate emits a preferred-contact-channel-changed event
+**And** only that channel is preferred for its type.
 
-**Given** an existing contact channel on a party
-**When** an `UpdateContactChannel` command is handled with the channel's ID and updated payload
-**Then** a `ContactChannelUpdated` event is emitted with the updated data (FR9)
-
-**Given** an existing contact channel on a party
-**When** a `RemoveContactChannel` command is handled with the channel's ID
-**Then** a `ContactChannelRemoved` event is emitted (FR10)
-**And** the party state no longer includes that channel
-
-**Given** a party with multiple email contact channels
-**When** one channel is marked as preferred via the appropriate command
-**Then** a `PreferredContactChannelChanged` event is emitted (FR11)
-**And** the previously preferred channel of that type (if any) is no longer preferred
-**And** the new channel is marked as preferred in the party state
-
-**Given** a party with an existing contact channel
-**When** an `AddContactChannel` command is handled with the same channel ID
-**Then** the command is handled idempotently — no duplicate event is emitted
-
-**Given** an `UpdateContactChannel` command referencing a non-existent channel ID
+**Given** a contact channel command targets a missing party, missing channel, invalid channel payload, or removed channel
 **When** the command is handled
-**Then** a rejection event is returned with a clear error message
+**Then** the aggregate emits a typed rejection event
+**And** no successful contact channel event is emitted.
 
-**Given** a `RemoveContactChannel` command referencing a non-existent channel ID
-**When** the command is handled
-**Then** a rejection event is returned with a clear error message
+**Given** a contact channel mutation succeeds
+**When** the command result is returned
+**Then** the response includes the updated party state
+**And** the returned state includes the applied contact channel change.
 
-### Story 2.2: Party Aggregate — Identifier Management
+### Story 1.4: Manage Party Identifiers
 
-As a developer,
+As an authorized client,
 I want to add and remove jurisdiction-specific identifiers on a party,
-So that parties carry structured legal and administrative references (VAT, SIRET, national ID).
+So that consumers can associate parties with external legal, tax, or registry references.
 
 **Acceptance Criteria:**
 
-**Given** an existing party
-**When** an `AddIdentifier` command is handled with identifier type `VAT` and a value
-**Then** an `IdentifierAdded` event is emitted with the identifier ID, type, and value (FR12)
-**And** the party state includes the new identifier in its collection
+**Given** an existing active party
+**When** the client adds a valid identifier such as VAT, SIRET, national ID, or another jurisdiction-specific reference
+**Then** the aggregate emits an identifier-added event
+**And** the party state includes the identifier type, value, jurisdiction metadata where provided, and stable identifier key.
 
-**Given** an existing party
-**When** an `AddIdentifier` command is handled with identifier type `SIRET` and a value
-**Then** an `IdentifierAdded` event is emitted with the SIRET identifier data
+**Given** an existing identifier on an active party
+**When** the client removes that identifier
+**Then** the aggregate emits an identifier-removed event
+**And** the party state no longer includes the removed identifier.
 
-**Given** an existing party
-**When** an `AddIdentifier` command is handled with identifier type `NationalId` and a value
-**Then** an `IdentifierAdded` event is emitted with the national ID data
-
-**Given** an existing identifier on a party
-**When** a `RemoveIdentifier` command is handled with the identifier's ID
-**Then** an `IdentifierRemoved` event is emitted (FR13)
-**And** the party state no longer includes that identifier
-
-**Given** a party with an existing identifier
-**When** an `AddIdentifier` command is handled with the same identifier ID
-**Then** the command is handled idempotently — no duplicate event
-
-**Given** a `RemoveIdentifier` command referencing a non-existent identifier ID
+**Given** the client adds an identifier that already exists on the party
 **When** the command is handled
-**Then** a rejection event is returned with a clear error message
+**Then** the aggregate rejects or idempotently skips the duplicate according to the command idempotency rules
+**And** the party state does not contain duplicate identifier entries.
 
-### Story 2.3: Contact Channel & Identifier Unit Tests
+**Given** an identifier command targets a missing party, missing identifier, invalid identifier payload, or removed identifier
+**When** the command is handled
+**Then** the aggregate emits a typed rejection event
+**And** no successful identifier event is emitted.
 
-Planning note: historical quality-gate story; see Planning Readiness Reconciliation.
+**Given** an identifier mutation succeeds
+**When** the command result is returned
+**Then** the response includes the updated party state
+**And** the returned state includes the applied identifier change.
 
-As a developer,
-I want comprehensive Tier 1 unit tests for all contact channel and identifier aggregate operations,
-So that domain logic correctness is verified for the full party enrichment model.
+### Story 1.5: Deactivate and Reactivate Parties
+
+As an authorized client,
+I want to deactivate and reactivate party records without deleting their history,
+So that lifecycle changes are reversible and auditable.
 
 **Acceptance Criteria:**
 
-**Given** the Hexalith.Parties.Server.Tests project
-**When** all contact channel and identifier tests are implemented
-**Then** the following test classes exist:
-- `PartyAggregateContactChannelTests` — add (all 4 types), update, remove, preferred marking, duplicate rejection, invalid ID rejection, idempotent add
-- `PartyAggregateIdentifierTests` — add (VAT, SIRET, national ID), remove, duplicate rejection, invalid ID rejection, idempotent add
-**And** tests follow naming convention: `{Method}_{Scenario}_{ExpectedResult}`
-**And** Shouldly assertions are used
-**And** `PartyTestData` is extended with builders: `ValidAddEmailChannel()`, `ValidAddPostalChannel()`, `ValidAddVatIdentifier()`, etc.
-**And** all tests are Tier 1 compliant — zero infrastructure dependencies
+**Given** an existing active party
+**When** the client deactivates the party
+**Then** the aggregate emits a party-deactivated event
+**And** the party state is marked inactive without removing party details, contact channels, identifiers, or event history.
 
-**Given** a party with 50 contact channels
-**When** the aggregate is tested at this size
-**Then** all operations (add, update, remove, preferred) work correctly at the aggregate size guideline
+**Given** an existing inactive party
+**When** the client reactivates the party
+**Then** the aggregate emits a party-reactivated event
+**And** the party state is marked active again with its prior party data preserved.
 
-**And** all tests pass with `dotnet test tests/Hexalith.Parties.Server.Tests/`
+**Given** a deactivate command targets an already inactive party
+**When** the command is handled
+**Then** the aggregate rejects or idempotently skips the duplicate lifecycle change according to the command idempotency rules
+**And** the party remains inactive.
 
-### Story 2.4: REST API — Contact Channel & Identifier Endpoints
+**Given** a reactivate command targets an already active party
+**When** the command is handled
+**Then** the aggregate rejects or idempotently skips the duplicate lifecycle change according to the command idempotency rules
+**And** the party remains active.
 
-As a developer,
-I want REST API endpoints for all contact channel and identifier operations,
-So that I can manage party contact information and identifiers from any programming language.
+**Given** a lifecycle command targets a party that does not exist
+**When** the command is handled
+**Then** the aggregate emits a typed not-found rejection
+**And** no successful lifecycle event is emitted.
+
+**Given** a lifecycle mutation succeeds
+**When** the command result is returned
+**Then** the response includes the updated party state
+**And** the returned state reflects the new active/inactive status.
+
+### Story 1.6: Idempotent Commands and Typed Rejections
+
+As a developer integrating with Parties,
+I want duplicate or invalid lifecycle commands to return stable typed outcomes,
+So that retries are safe and failures are understandable without inspecting internal service state.
 
 **Acceptance Criteria:**
 
-**Given** the PartiesController
-**When** contact channel and identifier endpoints are added
-**Then** POST endpoints exist for:
-- `AddContactChannel`, `UpdateContactChannel`, `RemoveContactChannel`
-- `AddIdentifier`, `RemoveIdentifier`
-- Preferred channel marking
-**And** all endpoints follow the same patterns established in Story 1.6:
-- `202 Accepted` on success with CorrelationId
-- ProblemDetails (RFC 9457) for errors
-- FluentValidation on entry (structural validation)
-- Domain rejection → `422` with corrective action
-- Authentication required, tenant from JWT
+**Given** a command with an idempotency key has already succeeded
+**When** the same command is retried with the same idempotency key and equivalent payload
+**Then** command handling does not create duplicate side effects
+**And** the result is stable for the retry scenario.
 
-**Given** a valid `AddContactChannel` command with type `Email`
-**When** sent via POST to the REST API
-**Then** the response is `202 Accepted`
-**And** the contact channel is added to the party aggregate
+**Given** a command conflicts with the current aggregate state, such as duplicate creation, invalid type-specific update, missing contact channel, missing identifier, or invalid lifecycle transition
+**When** the command is handled
+**Then** the aggregate emits the appropriate typed rejection event
+**And** no success event for that command is emitted.
 
-**Given** an `AddContactChannel` command with invalid payload (e.g., malformed email)
-**When** sent via POST
-**Then** the response is `400 Bad Request` with ProblemDetails describing the validation error
+**Given** rejection events are replayed during aggregate rehydration
+**When** the aggregate applies historical events
+**Then** rejection events preserve EventStore replay compatibility
+**And** rejection event apply methods do not mutate successful party state.
 
-**Given** a `RemoveContactChannel` command referencing a non-existent channel
-**When** sent via POST
-**Then** the response is `422 Unprocessable Entity` with a domain rejection message
+**Given** an invalid command is rejected
+**When** the command result is returned
+**Then** the result includes a stable rejection type/code and human-readable message suitable for mapping to external error responses
+**And** the response does not expose personal data.
 
----
+**Given** aggregate tests exercise retry and rejection paths
+**When** the test suite runs
+**Then** duplicate commands, invalid transitions, missing targets, and no-op replay behavior are covered
+**And** tests assert that persisted rejection events do not corrupt party state.
 
-## Epic 3: Party Discovery & Search (Read Projections)
+### Story 1.7: Personal Data Marking and Log-Safe Domain Model
 
-Consumers can discover parties through paginated listing, display-name search with match metadata, and filtering by type and date range — all reflecting updates within 2 seconds. Builds the entire read projection infrastructure: PartyDetailProjectionActor, PartyIndexProjectionActor, pure handler extraction (D18), partitioned index state (D5), batch event processing (D16). Query REST endpoints and OpenAPI specification. Email and identifier search are intentionally deferred because the v1.0 index projection does not store those searchable fields.
-
-### Story 3.1: Party Detail Projection Handler & Actor
-
-As a developer,
-I want a projection that maintains full party detail read models updated from domain events,
-So that consumers can retrieve complete, up-to-date party information by ID without rehydrating the aggregate.
+As a privacy-conscious operator,
+I want personal data fields to be explicitly marked and excluded from application logging,
+So that MVP domain contracts are prepared for GDPR enforcement without leaking sensitive data.
 
 **Acceptance Criteria:**
 
-**Given** a `PartyCreated` event is published
-**When** the `PartyDetailProjectionHandler` processes it
-**Then** a `PartyDetail` read model is created with party ID, type, details, display name, active status, CreatedAt timestamp
+**Given** person detail fields are defined in contracts/state
+**When** the domain model is reviewed or tested
+**Then** first name, last name, date of birth, prefix, suffix, display name, and sort name are marked as personal data where applicable
+**And** the markings are discoverable by automated privacy enforcement.
 
-**Given** a `PersonDetailsUpdated` event is published for an existing party
-**When** the handler processes it
-**Then** the `PartyDetail` read model is updated with the new person details and LastModifiedAt timestamp
+**Given** contact channel payloads are defined for postal, email, phone, and social channels
+**When** the domain model is reviewed or tested
+**Then** all contact channel payload values that may identify a person are marked as personal data
+**And** organization contact channels are treated conservatively when they can identify a natural person.
 
-**Given** a `ContactChannelAdded` event is published for an existing party
-**When** the handler processes it
-**Then** the `PartyDetail` read model includes the new contact channel in its collection
+**Given** identifier values are defined for VAT, SIRET, national ID, or other references
+**When** the domain model is reviewed or tested
+**Then** identifier values that may identify a person are marked as personal data
+**And** the model supports future type-dependent GDPR classification.
 
-**Given** a `ContactChannelUpdated` event is published
-**When** the handler processes it
-**Then** the corresponding contact channel in the `PartyDetail` is updated
+**Given** domain commands, events, rejections, or state transitions are logged
+**When** application logging occurs
+**Then** logs include safe metadata such as aggregate id, tenant/correlation metadata, command/event type, and outcome code
+**And** logs do not include personal data field values, raw command payloads, or raw event payloads.
 
-**Given** a `ContactChannelRemoved` event is published
-**When** the handler processes it
-**Then** the corresponding contact channel is removed from the `PartyDetail`
+**Given** privacy-marking tests run
+**When** they inspect known personal-data contract fields
+**Then** required fields are marked consistently
+**And** regressions in personal data marking fail the tests.
 
-**Given** an `IdentifierAdded` event is published
-**When** the handler processes it
-**Then** the `PartyDetail` includes the new identifier
+### Story 1.8: Return Updated Party State from Mutations
 
-**Given** an `IdentifierRemoved` event is published
-**When** the handler processes it
-**Then** the corresponding identifier is removed from the `PartyDetail`
-
-**Given** a `PartyDeactivated` event is published
-**When** the handler processes it
-**Then** the `PartyDetail` reflects `IsActive = false`
-
-**Given** the `PartyDetailProjectionHandler` class
-**When** reviewed for architecture compliance
-**Then** it has zero DAPR references (D18 — pure handler, Tier 1 testable)
-**And** it receives events and returns state mutations
-
-**Given** the `PartyDetailProjectionActor` class
-**When** reviewed for architecture compliance
-**Then** it is a thin DAPR wrapper that delegates to `PartyDetailProjectionHandler`
-**And** its state key follows the pattern `{tenant}:party-detail:{partyId}` (one actor per party — D4)
-**And** tenant isolation is enforced at the actor key level
-
-**Given** a domain event published via DAPR pub/sub
-**When** the projection actor receives it
-**Then** the `PartyDetail` state is updated within the eventual consistency window (< 2 seconds under normal load — FR19, NFR6)
-
-### Story 3.2: Party Index Projection Handler & Actor
-
-As a developer,
-I want a projection that maintains lightweight party summaries per tenant for listing and filtering,
-So that consumers can browse and filter parties efficiently without loading full detail records.
+As a client application,
+I want successful party mutation commands to return the resulting party state,
+So that I can update my UI or workflow without issuing an immediate follow-up query.
 
 **Acceptance Criteria:**
 
-**Given** a `PartyCreated` event is published
-**When** the `PartyIndexProjectionHandler` processes it
-**Then** a `PartyIndexEntry` is added to the tenant index with: party ID, type, display name, active status, CreatedAt, LastModifiedAt
+**Given** a create party command succeeds
+**When** the command result is returned
+**Then** the response includes the complete created party state
+**And** the party state reflects all events emitted by the command.
 
-**Given** a `PartyDisplayNameDerived` event is published
-**When** the handler processes it
-**Then** the corresponding `PartyIndexEntry` display name and sort name are updated
+**Given** a party detail, contact channel, identifier, or lifecycle mutation succeeds
+**When** the command result is returned
+**Then** the response includes the updated party state
+**And** the returned state reflects the aggregate state after applying the mutation event.
 
-**Given** a `PartyDeactivated` event is published
-**When** the handler processes it
-**Then** the corresponding `PartyIndexEntry` reflects `IsActive = false` and LastModifiedAt is updated
+**Given** a command emits multiple events in one aggregate turn
+**When** the command result is assembled
+**Then** the returned party state reflects the final aggregate state after all emitted events are applied in order
+**And** no stale pre-command state is returned.
 
-**Given** a `ContactChannelAdded` event with an email address
-**When** the handler processes it
-**Then** the `PartyIndexEntry` updates freshness metadata only, including LastModifiedAt (FR68)
-**And** no email value is stored in the v1.0 index projection
+**Given** a mutation command is rejected
+**When** the command result is returned
+**Then** no updated party state is presented as a successful mutation result
+**And** the rejection outcome remains explicit and typed.
 
-**Given** an `IdentifierAdded` event
-**When** the handler processes it
-**Then** the `PartyIndexEntry` updates freshness metadata only, including LastModifiedAt
-**And** no identifier value is stored in the v1.0 index projection
+**Given** aggregate command tests verify mutation responses
+**When** the test suite runs
+**Then** create, update, contact, identifier, deactivate, and reactivate success paths assert returned state correctness
+**And** rejection paths assert that failed mutations do not return misleading updated state.
 
-**Given** the `PartyIndexProjectionHandler` class
-**When** reviewed for architecture compliance
-**Then** it has zero DAPR references (D18 — pure handler)
+<!-- End story repeat -->
 
-**Given** the `PartyIndexProjectionActor` class
-**When** reviewed for architecture compliance
-**Then** it is a thin DAPR wrapper delegating to `PartyIndexProjectionHandler`
-**And** its state key follows the pattern `{tenant}:party-index:{partitionKey}` (one actor per tenant — D4)
-**And** it implements `IIndexPartitionStrategy` abstraction (D5 — single-key v1.0, extensible)
+## Epic 2: Searchable Tenant-Safe Read Models
 
-**Given** a burst of 100 concurrent party creation events
-**When** the index actor processes them
-**Then** events are batch-processed (D16) — state persisted in batches, not after every single event
-**And** batch size and time window are configurable via `ProjectionOptions`
+Consumers can list, search, retrieve, filter, and reliably observe party records through tenant-safe projections.
 
-**Given** the index actor state
-**When** reviewed for data format
-**Then** `PartyIndexEntry` includes `CreatedAt` and `LastModifiedAt` fields for date range filtering (FR68)
+### Story 2.1: Build Party Detail Projection
 
-### Story 3.3: Search, Match Metadata & Query Endpoints
-
-As a consumer,
-I want to search parties by display name and receive match metadata in results,
-So that I can find the right party quickly and AI agents can perform confident disambiguation.
+As a consumer of party data,
+I want each party to have a read-optimized detail projection,
+So that I can retrieve complete party details without rehydrating the aggregate on every query.
 
 **Acceptance Criteria:**
 
-**Given** a tenant with multiple parties
-**When** a `GET /api/v1/parties` request is made
-**Then** a paginated list of `PartyIndexEntry` results is returned (FR14)
-**And** pagination parameters (page, pageSize) are supported
-**And** filtering by `type` (person/organization) is supported
-**And** filtering by `active` status is supported
+**Given** party lifecycle, detail, contact channel, identifier, and lifecycle events are published for a party
+**When** the projection handler processes those events in order
+**Then** it builds a party detail projection containing party id, type, active status, person or organization details, display/sort names, contact channels, identifiers, and relevant timestamps.
 
-**Given** a tenant with parties
-**When** a `GET /api/v1/parties/search?q=Dupont` request is made
-**Then** parties matching "Dupont" by display name are returned (FR15)
-**And** each result includes match metadata: matched field `displayName` and match type (exact, prefix, contains) (FR17)
+**Given** a party detail projection handler receives a rejection event
+**When** the event is applied during normal processing or rebuild
+**Then** the handler does not mutate the successful party detail state
+**And** projection replay remains compatible with persisted rejection events.
 
-**Given** a search query matching a party by email
-**When** the v1.0 display-name search endpoint is used
-**Then** no result is returned unless the email text also appears in the display name
-**And** `email` match metadata is reserved for the future dedicated search capability
+**Given** a party detail projection is persisted through its actor wrapper
+**When** the actor stores projection state
+**Then** the DAPR actor state key uses the documented tenant/party detail convention
+**And** the handler logic remains free of DAPR dependencies.
 
-**Given** a search query matching a party by identifier value
-**When** the v1.0 display-name search endpoint is used
-**Then** no result is returned unless the identifier text also appears in the display name
-**And** `identifier` match metadata is reserved for the future dedicated search capability
+**Given** duplicate or late repeated events are delivered by pub/sub
+**When** the projection handler processes them
+**Then** processing is idempotent where event identity or sequence data allows
+**And** duplicate delivery does not create duplicate contact channels or identifiers.
 
-**Given** a `GET /api/v1/parties?createdAfter=2026-01-01&createdBefore=2026-06-01` request
-**When** the request is processed
-**Then** only parties created within the date range are returned (FR68)
+**Given** projection handler tests run without DAPR infrastructure
+**When** they replay representative party event sequences
+**Then** they verify detail state after create, update, contact channel, identifier, deactivate, and reactivate flows
+**And** they verify event ordering assumptions documented by the architecture.
 
-**Given** a `GET /api/v1/parties?modifiedAfter=2026-01-01` request
-**When** the request is processed
-**Then** only parties modified after the specified date are returned (FR68)
+### Story 2.2: Build Tenant Party Index Projection
 
-**Given** the Parties service project
-**When** the OpenAPI specification is reviewed
-**Then** it is auto-generated from endpoint definitions (FR56)
-**And** it conforms to OpenAPI 3.x (NFR25)
-**And** Swagger UI is available in development mode for API exploration
-
-**Given** all query endpoints
-**When** reviewed for security
-**Then** authentication is required on all endpoints (NFR13)
-**And** tenant filtering is enforced — results only include the requesting tenant's parties (FR39)
-
-### Story 3.4: Projection Unit & Integration Tests
-
-Planning note: historical quality-gate story; see Planning Readiness Reconciliation.
-
-As a developer,
-I want comprehensive tests for projection handlers and actors,
-So that read model correctness, search behavior, and eventual consistency are verified.
+As a consumer browsing party records,
+I want each tenant to have a read-optimized party index,
+So that I can list and filter parties without scanning aggregate event streams.
 
 **Acceptance Criteria:**
 
-**Given** the Hexalith.Parties.Projections.Tests project
-**When** all projection tests are implemented
-**Then** the following test classes exist:
-- `PartyDetailProjectionHandlerTests` — event sequence: PartyCreated → ContactChannelAdded → ContactChannelUpdated → IdentifierAdded → PartyDeactivated; verify state at each step
-- `PartyIndexProjectionHandlerTests` — entry creation, display name updates, contact/identifier event freshness updates, deactivation, date field updates
-**And** all handler tests are Tier 1 compliant — zero DAPR references
+**Given** party create, detail update, lifecycle, and identifier/contact summary events are published for a tenant
+**When** the party index projection handler processes those events
+**Then** it maintains lightweight party index entries with party id, type, display name, sort name, active status, created timestamp, last-modified timestamp, and non-PII status indicators.
 
-**Given** a multi-event sequence (PartyCreated → ContactChannelAdded × 3 → IdentifierAdded × 2)
-**When** processed by the detail projection handler
-**Then** the resulting `PartyDetail` contains all 3 contact channels and 2 identifiers with correct data
+**Given** an indexed party changes display name, sort name, type-specific details, or active status
+**When** the corresponding event is applied
+**Then** the tenant index entry is updated consistently
+**And** stale values are not retained in the index.
 
-**Given** a search scenario with 5 parties (3 persons, 2 organizations)
-**When** search tests execute queries
-**Then** match metadata correctly identifies the matched display-name field and match type
-**And** type filtering returns only the requested party type
-**And** active status filtering works correctly
-**And** date range filtering returns correct results
+**Given** a tenant has many party index entries
+**When** the index actor persists state
+**Then** it uses the architecture's partition strategy abstraction
+**And** v1.0 can use single-key storage while preserving a path to partitioned storage for larger tenants.
 
-**Given** tenant isolation test with parties from Tenant A and Tenant B
-**When** Tenant A queries parties
-**Then** zero Tenant B parties appear in results (FR39, NFR9)
+**Given** burst event delivery occurs for many party changes in the same tenant
+**When** the index actor processes events
+**Then** it can batch persistence using configurable batch size or timing
+**And** the projection consistency target remains observable.
 
-**Given** the Parties.Tests project
-**When** API integration tests are implemented
-**Then** query endpoint tests verify pagination, filtering, search, and match metadata through the REST API layer
+**Given** duplicate or repeated events are delivered
+**When** the index handler processes them
+**Then** the index remains idempotent where event identity or sequence data allows
+**And** duplicate entries are not created.
 
-**And** all tests pass with `dotnet test`
+**Given** projection handler tests run without DAPR infrastructure
+**When** they replay representative tenant event streams
+**Then** they verify create, update, deactivate, reactivate, date metadata, and duplicate delivery behavior
+**And** the handler remains free of DAPR dependencies.
 
-### Post-Epic 3 Corrective Backlog
+### Story 2.3: Query Party Details by ID
 
-The Epic 3 retrospective found that implementation and architecture align on display-name-only v1.0 search, while older planning language implied email and identifier search. The corrected scope is:
-
-- v1.0 index projection stores lightweight party summaries and supports display-name search only.
-- Detail projection stores contact channels and identifiers, but these fields are not searchable in the v1.0 index.
-- `email` and `identifier` match metadata values are reserved for the future dedicated search capability.
-
-Carry-forward action items:
-
-- Add executable no-PII logging regression coverage for command and query paths. Success criteria: tests fail if `[PersonalData]` values from party details, contact channels, identifiers, or display names are written to application logs.
-- Add composite-to-projection regression coverage. Success criteria: composite command event sequences are replayed through `PartyDetailProjectionHandler` and `PartyIndexProjectionHandler`, producing the expected detail and index state without adding email or identifier search fields.
-- Use an actor runtime readiness checklist for future projection stories. Success criteria: story review explicitly covers actor interfaces, DI registration, option binding, actor ID validation, state keys, flush behavior, and query consistency.
-- Keep projection lifecycle work explicit in operational readiness. Success criteria: D14 projection rebuild and D15 degradation behavior remain represented by Story 8.3 scope and are not treated as implicit assumptions.
-
----
-
-## Epic 4: Composite Commands & Advanced Aggregate Logic
-
-The party aggregate supports atomic composite operations — creating a full party with channels and identifiers in one command (CreatePartyComposite), and updating via explicit add/update/remove lists (UpdatePartyComposite) — with sub-operation idempotency, conflict detection, payload size limits, and complete updated state returned in responses. This isolates the most complex domain logic (D8, D9, D10, D12, D17) with the upfront test matrix (D19).
-
-### Story 4.1: CreatePartyComposite Aggregate Handler
-
-As a developer,
-I want to create a complete party with contact channels and identifiers in a single atomic command,
-So that AI agents and API consumers can create fully-enriched parties without multiple sequential commands.
+As a consumer of party data,
+I want to retrieve full party details by party id,
+So that applications and AI tools can display or use the current party record without replaying events.
 
 **Acceptance Criteria:**
 
-**Given** no party exists with the specified ID
-**When** a `CreatePartyComposite` command is handled with person details, 2 email channels, and 1 VAT identifier
-**Then** the following events are emitted atomically in a single actor turn (D8):
-- `PartyCreated` with person details
-- `PartyDisplayNameDerived` with derived display name
-- `ContactChannelAdded` × 2 (one per email channel)
-- `IdentifierAdded` × 1 (VAT)
-**And** a `CompositeCommandResult` is returned with all sub-operations in the `Applied` collection (FR21)
+**Given** a valid authenticated request with tenant context and an existing party id for that tenant
+**When** the consumer queries party details by id
+**Then** the service reads the party detail projection
+**And** returns the current party detail record for that tenant.
 
-**Given** a `CreatePartyComposite` command with organization details, 3 contact channels (postal, email, phone), and 2 identifiers (VAT, SIRET)
-**When** the command is handled
-**Then** all 7 events are emitted atomically (PartyCreated + DisplayName + 3 channels + 2 identifiers)
-**And** the `CompositeCommandResult.Applied` collection contains 7 entries
+**Given** a party detail projection exists for another tenant
+**When** a consumer from a different tenant queries the same party id
+**Then** the query fails closed
+**And** the response does not reveal whether the party exists in another tenant.
 
-**Given** a `CreatePartyComposite` command with duplicate contact channel IDs in the payload
-**When** the command is handled
-**Then** duplicate additions are skipped — not rejected (D10 — essential for MCP retry safety)
-**And** the `CompositeCommandResult.Skipped` collection contains the duplicate entries
-**And** non-duplicate entries are still applied
+**Given** the requested party id has no readable projection in the current tenant
+**When** the consumer queries party details by id
+**Then** the service returns a bounded not-found or unavailable result
+**And** no aggregate event replay is performed as an implicit query fallback.
 
-**Given** a `CreatePartyComposite` command with no party type specified
-**When** the command is handled
-**Then** the entire composite is rejected — no events emitted (D12 — all-or-nothing)
-**And** the `CompositeCommandResult` indicates rejection with specific error details
+**Given** the party has been deactivated
+**When** the consumer queries party details by id
+**Then** the returned detail record includes inactive status
+**And** the record remains inspectable unless future GDPR erasure state prevents it.
 
-**Given** a `CreatePartyComposite` command with more than 100 sub-operations
-**When** the command is handled
-**Then** the command is rejected before processing with a "payload size exceeded" error (D17)
-**And** the limit is configurable per deployment
+**Given** the projection actor reports stale, rebuilding, or degraded state
+**When** the consumer queries party details by id
+**Then** the response includes a bounded freshness/degradation indicator
+**And** personal data is not logged while handling the degraded result.
 
-**Given** a `CreatePartyComposite` command with only party details (no channels, no identifiers)
-**When** the command is handled
-**Then** only `PartyCreated` and `PartyDisplayNameDerived` events are emitted
-**And** empty channel and identifier lists are accepted gracefully
+**Given** detail query tests run
+**When** they cover success, missing tenant, cross-tenant, not-found, inactive, stale, and degraded states
+**Then** tenant isolation and bounded response behavior are verified.
 
-**Given** a party already exists with the specified ID
-**When** a `CreatePartyComposite` command is handled with the same ID
-**Then** the command is handled idempotently — no duplicate events emitted
+### Story 2.4: List and Filter Parties
 
-**Given** the `Handle(CreatePartyComposite)` method
-**When** reviewed for implementation
-**Then** it is synchronous (returns `CompositeCommandResult`, not `Task<>`)
-**And** domain logic is pure — no I/O
-
-### Story 4.2: UpdatePartyComposite Aggregate Handler
-
-As a developer,
-I want to update a party's details, channels, and identifiers in a single atomic command with explicit add/update/remove lists,
-So that AI agents can make complex party modifications without multiple sequential commands.
+As a consumer browsing party records,
+I want to list parties with pagination and filters,
+So that I can navigate a tenant's party directory efficiently.
 
 **Acceptance Criteria:**
 
-**Given** an existing person party with 2 email channels and 1 VAT identifier
-**When** an `UpdatePartyComposite` command is handled with:
-- `PersonDetails` present (replace person details)
-- `AddContactChannels` with 1 new phone channel
-- `UpdateContactChannels` with 1 existing email channel updated
-- `RemoveContactChannelIds` with 1 existing email channel removed
-- `AddIdentifiers` with 1 SIRET identifier
-**Then** the following events are emitted atomically:
-- `PersonDetailsUpdated`
-- `PartyDisplayNameDerived` (re-derived)
-- `ContactChannelAdded` × 1
-- `ContactChannelUpdated` × 1
-- `ContactChannelRemoved` × 1
-- `IdentifierAdded` × 1
-**And** a `CompositeCommandResult` is returned with all in `Applied` (FR22)
-**And** the result includes the complete updated party state (FR69)
+**Given** a valid authenticated request with tenant context
+**When** the consumer lists parties
+**Then** the service reads the tenant party index projection
+**And** returns a paginated result ordered by the documented sort behavior.
 
-**Given** an `UpdatePartyComposite` command with `PersonDetails` absent (null)
-**When** the command is handled
-**Then** person details remain unchanged — absent means "no change" (D9)
+**Given** the consumer provides a party type filter
+**When** the list query is executed
+**Then** the result includes only person or organization entries matching that filter
+**And** the filter is applied within the current tenant only.
 
-**Given** an `UpdatePartyComposite` command with `AddContactChannels` containing a channel ID that already exists
-**When** the command is handled
-**Then** the duplicate addition is skipped (D10 — idempotency)
-**And** it appears in `CompositeCommandResult.Skipped`
+**Given** the consumer provides an active status filter
+**When** the list query is executed
+**Then** the result includes only entries matching the active/inactive status
+**And** deactivated parties are not silently hidden unless the filter requests that behavior.
 
-**Given** an `UpdatePartyComposite` command with `UpdateContactChannels` referencing a non-existent channel ID
-**When** the command is handled
-**Then** the entire composite is rejected with a specific error: "channel ID not found" (D10 — reject invalid IDs)
+**Given** the consumer provides a creation date or last-modified date range
+**When** the list query is executed
+**Then** the result includes only entries whose indexed metadata matches the requested range
+**And** invalid date ranges return a bounded validation error.
 
-**Given** an `UpdatePartyComposite` command with `RemoveContactChannelIds` referencing a non-existent channel ID
-**When** the command is handled
-**Then** the entire composite is rejected with a specific error: "channel ID not found" (D10)
+**Given** a tenant has more results than one page
+**When** the consumer requests a page using the documented paging contract
+**Then** the response returns the requested page and paging metadata
+**And** the service does not return unbounded result sets.
 
-**Given** an `UpdatePartyComposite` command where the same channel ID appears in both `AddContactChannels` and `RemoveContactChannelIds`
-**When** the command is handled
-**Then** the entire composite is rejected with error: "conflicting operations on same channel ID" (D10)
+**Given** the tenant index is stale, rebuilding, or degraded
+**When** the consumer lists parties
+**Then** the response includes a bounded freshness/degradation indicator
+**And** only data proven to belong to the current tenant is returned.
 
-**Given** an `UpdatePartyComposite` command where the same identifier ID appears in both `AddIdentifiers` and `RemoveIdentifierIds`
-**When** the command is handled
-**Then** the entire composite is rejected with error: "conflicting operations on same identifier ID" (D10)
+**Given** list/filter tests run
+**When** they cover pagination, type filter, active filter, date filters, invalid ranges, empty results, stale state, and cross-tenant isolation
+**Then** all list behavior is verified against the tenant index projection.
 
-**Given** an `UpdatePartyComposite` command with all lists empty and no details present
-**When** the command is handled
-**Then** a no-op result is returned — no events emitted, no error
+### Story 2.5: Search Parties by Display Name with Match Metadata
 
-**Given** an `UpdatePartyComposite` command with more than 100 total sub-operations
-**When** the command is handled
-**Then** the command is rejected before processing with "payload size exceeded" error (D17)
-
-**Given** an `UpdatePartyComposite` command targeting a non-existent party
-**When** the command is handled
-**Then** a rejection is returned with "party not found"
-
-### Story 4.3: Composite Command Unit Tests
-
-Planning note: historical quality-gate story; see Planning Readiness Reconciliation.
-
-As a developer,
-I want a comprehensive test matrix for both composite aggregate handlers,
-So that the most complex domain logic is thoroughly verified before any consumer uses it.
+As a consumer resolving party identity,
+I want to search parties by display name with match metadata,
+So that humans and AI agents can rank candidates confidently in MVP name-based lookup scenarios.
 
 **Acceptance Criteria:**
 
-**Given** the Hexalith.Parties.Server.Tests project
-**When** the composite command test matrix (D19) is implemented
-**Then** the following test categories exist for `CreatePartyComposite`:
-- Happy path: person with channels and identifiers
-- Happy path: organization with channels and identifiers
-- Happy path: party only (no channels, no identifiers)
-- Idempotent create (party already exists)
-- Duplicate channel IDs in payload → skipped
-- Missing party type → full rejection
-- Payload size limit exceeded → rejection
-- Maximum channels (50) in single create
+**Given** a valid authenticated request with tenant context and a display-name search term
+**When** the consumer searches parties
+**Then** the service searches the tenant party index by display name
+**And** returns only matching entries for the current tenant.
 
-**And** the following test categories exist for `UpdatePartyComposite`:
-- Update person details only
-- Update organization details only
-- Add channels only
-- Update channels only
-- Remove channels only
-- Add identifiers only
-- Remove identifiers only
-- Mixed: details + add + update + remove channels + add + remove identifiers
-- Absent details → no change
-- Duplicate add → skipped
-- Invalid update channel ID → rejection
-- Invalid remove channel ID → rejection
-- Conflicting operations (same ID in add + remove) → rejection
-- No-op (all lists empty, no details) → no events
-- Non-existent party → rejection
-- Payload size limit exceeded → rejection
+**Given** the search term exactly matches a party display name
+**When** the search result is returned
+**Then** the result includes match metadata indicating `displayName` and exact match
+**And** the matched party is ranked ahead of weaker matches.
 
-**And** tests verify `CompositeCommandResult` structure:
-- `Applied` collection contains correctly applied sub-operations
-- `Skipped` collection contains idempotently skipped sub-operations
-- Rejection contains specific error details
+**Given** the search term is a prefix or contained text within display names
+**When** the search result is returned
+**Then** the result includes match metadata indicating `displayName` and the match type
+**And** results are ordered by the documented match ranking rules.
 
-**And** all tests follow naming convention: `{Method}_{Scenario}_{ExpectedResult}`
-**And** Shouldly assertions are used
-**And** `PartyTestData` extended with: `ValidCreatePersonComposite()`, `ValidUpdateComposite()`, etc.
-**And** all tests are Tier 1 compliant
-**And** estimated 20-30 test cases covering the full combinatorial matrix
+**Given** the consumer expects email or identifier search in MVP
+**When** the search query is evaluated
+**Then** the service does not pretend to search unavailable fields
+**And** the response contract reserves email and identifier match metadata for the future search model.
 
-### Story 4.4: Composite Command REST & Validation
+**Given** no parties match the display-name search
+**When** the search result is returned
+**Then** the response is an empty bounded result set
+**And** no cross-tenant or personal-data leakage occurs.
 
-As a developer,
-I want REST endpoints for composite commands with structural validation,
-So that API consumers can create and update full parties in single HTTP requests.
+**Given** the tenant index is stale, rebuilding, or degraded
+**When** the consumer searches parties
+**Then** the response includes a bounded freshness/degradation indicator
+**And** only current-tenant data is returned.
+
+**Given** search tests run
+**When** they cover exact, prefix, contains, empty, inactive, paginated, degraded, and cross-tenant cases
+**Then** match metadata and tenant isolation behavior are verified.
+
+### Story 2.6: Enforce Tenant-Safe Projection Reads
+
+As a tenant-scoped consumer,
+I want every read-side query to fail closed when tenant context is missing or mismatched,
+So that party data cannot leak across tenants through projections, search, or degraded states.
 
 **Acceptance Criteria:**
 
-**Given** the PartiesController
-**When** composite endpoints are added
-**Then** a POST endpoint exists for `CreatePartyComposite`
-**And** a POST endpoint exists for `UpdatePartyComposite`
+**Given** a read query is submitted without a valid tenant identity
+**When** the query reaches the projection read path
+**Then** the query is rejected fail-closed
+**And** no projection actor state is read.
 
-**Given** a valid `CreatePartyComposite` request
-**When** sent via POST
-**Then** the response is `202 Accepted` with CorrelationId
-**And** the response body includes the `CompositeCommandResult` showing applied/skipped sub-operations
+**Given** a query includes or implies a party id that belongs to another tenant
+**When** the current tenant attempts to retrieve, list, filter, or search
+**Then** the service returns a bounded forbidden/not-found-style result
+**And** the response does not confirm whether the party exists in another tenant.
 
-**Given** a valid `UpdatePartyComposite` request
-**When** sent via POST
-**Then** the response is `202 Accepted`
-**And** the response body includes the complete updated party state (FR69)
+**Given** a projection actor receives a request with a tenant context
+**When** actor state keys or partition keys are resolved
+**Then** they are derived from authenticated tenant context
+**And** tenant identity is never accepted from request payload filters.
 
-**Given** the `CreatePartyCompositeValidator` (FluentValidation)
-**When** reviewed
-**Then** it validates:
-- Party type is required
-- Total sub-operation count does not exceed the configurable maximum (D17)
-- Channel IDs are valid UUIDs
-- Required payload fields per channel type are present
-**And** it does NOT duplicate domain validation (e.g., duplicate detection is domain logic in Handle)
+**Given** projection state is stale, rebuilding, corrupt, or degraded
+**When** a read query is handled
+**Then** fail-closed tenant checks still run before any data is returned
+**And** degraded responses preserve only data proven to belong to the current tenant.
 
-**Given** the `UpdatePartyCompositeValidator` (FluentValidation)
-**When** reviewed
-**Then** it validates:
-- Party ID is required
-- Total sub-operation count does not exceed the configurable maximum
-- Channel/identifier IDs in update/remove lists are valid UUIDs
-**And** it does NOT check for conflicting operations (that is domain logic in Handle)
+**Given** tenant isolation tests run with multiple concurrent tenants
+**When** the tests create overlapping party ids, display names, filters, and degraded conditions
+**Then** no list, search, or detail query returns data from another tenant
+**And** missing/invalid tenant context rejects consistently.
 
-**Given** a composite command that fails FluentValidation
-**When** sent via POST
-**Then** the response is `400 Bad Request` as ProblemDetails
+**Given** application logging records projection read activity
+**When** tenant-safe reads succeed or fail
+**Then** logs include bounded metadata such as operation, tenant-safe outcome, and correlation id
+**And** logs do not include personal data, raw query payloads, or tenant membership payloads.
 
-**Given** a composite command rejected by domain logic (e.g., conflicting operations)
-**When** the aggregate returns a rejection
-**Then** the response is `422 Unprocessable Entity` as ProblemDetails with specific error details
+### Story 2.7: Handle Projection Freshness and Graceful Degradation
 
----
-
-## Epic 5: AI Agent Party Management (MCP Server)
-
-AI agents can perform complete party management through 5 MCP tools (create_party, find_parties, get_party, update_party, delete_party) — with forgiving input schemas, complete response payloads, patch semantics, and disambiguation support via match metadata. Focuses purely on the MCP translation layer (D11) with architectural fitness enforcement (zero domain event type references).
-
-### Story 5.1: MCP Server Setup & get_party / find_parties Tools
-
-As an AI agent,
-I want to search for and retrieve party details through dedicated MCP tools,
-So that I can perform identity resolution and access structured party information.
+As a consumer of eventually consistent party data,
+I want read responses to expose freshness and degradation status,
+So that my application can behave safely when projections lag or infrastructure is partially unavailable.
 
 **Acceptance Criteria:**
 
-**Given** the Parties service project
-**When** the MCP server is configured
-**Then** MCP tools are registered via `AddMcpTools()` extension method with assembly scanning
-**And** the MCP server implements the MCP protocol specification (NFR26)
-**And** the MCP server shares the same authentication pipeline as the REST API
-**And** tenant context is extracted identically to REST (FR39)
+**Given** a party mutation has been accepted and published
+**When** the corresponding projection event is processed under normal load
+**Then** the changed party becomes visible through detail, list, and search reads within the documented eventual consistency window.
 
-**Given** an AI agent calling `get_party` with a valid party ID
-**When** the tool executes
-**Then** the complete `PartyDetail` is returned (all details, contact channels, identifiers, active status)
-**And** the response shape matches what REST `GET /api/v1/parties/{id}` returns
+**Given** a read projection is current
+**When** the consumer performs detail, list, or search queries
+**Then** the response indicates normal/current projection state
+**And** no stale warning is included.
 
-**Given** an AI agent calling `get_party` with a non-existent party ID
-**When** the tool executes
-**Then** a clear error message is returned: "party not found"
+**Given** projection state is stale, rebuilding, or behind the latest known event position
+**When** the consumer performs detail, list, or search queries
+**Then** the response includes a bounded freshness indicator
+**And** the result does not silently claim to be fully current.
 
-**Given** an AI agent calling `find_parties` with query "Dupont"
-**When** the tool executes
-**Then** matching `PartyIndexEntry[]` results are returned (FR20)
-**And** each result includes display-name match metadata: matched field and match type (FR17)
-**And** results are sufficient for the AI agent to rank simple name-based candidates
+**Given** write-side components or event processing are unavailable but read projection state is still readable
+**When** the consumer performs read operations
+**Then** reads continue from cached/projection state where safe
+**And** the response includes a degraded or stale indicator.
 
-**Given** an AI agent calling `find_parties` with query "Dupont Acme"
-**When** the tool executes
-**Then** results include parties whose display names match the query terms, with match metadata indicating the display-name match
-**And** email, identifier, or organization-based resolution requires retrieving candidate party details or the future dedicated search capability
+**Given** projection state cannot be trusted for tenant-safe reads
+**When** the consumer performs read operations
+**Then** the service fails closed instead of returning potentially unsafe data
+**And** the response includes a bounded unavailable/degraded outcome.
 
-**Given** an AI agent calling `find_parties` with no query (list mode)
-**When** the tool executes
-**Then** a paginated list of parties is returned (FR23)
-**And** optional filters (type, active status) are supported
+**Given** freshness/degradation tests run
+**When** they simulate current, stale, rebuilding, unavailable write-side, unavailable projection, and unsafe projection states
+**Then** each read path returns the documented status and preserves tenant isolation.
 
-**Given** the `GetPartyMcpTool` and `FindPartiesMcpTool` classes
-**When** reviewed for naming conventions
-**Then** class names follow `{ToolName}McpTool` pattern
-**And** MCP protocol names are snake_case: `get_party`, `find_parties`
+### Story 2.8: Projection Rebuild and Health Monitoring
 
-**Given** all MCP tool calls
-**When** measured for latency
-**Then** each completes in < 1 second end-to-end including transport (NFR1)
-
-### Story 5.2: create_party MCP Tool
-
-As an AI agent,
-I want to create a complete party from a single natural-language-extracted input,
-So that I can turn "Jean Dupont at Acme Corp, email jean@acme.com" into a structured party record in one tool call.
+As an operator of the Parties service,
+I want projection corruption and rebuild state to be detected and handled predictably,
+So that read models can recover without unsafe data exposure.
 
 **Acceptance Criteria:**
 
-**Given** an AI agent calling `create_party` with full input: type "person", first name "Jean", last name "Dupont", email "jean@acme.com"
-**When** the tool executes
-**Then** the translation layer constructs a `CreatePartyComposite` command with person details and one email contact channel
-**And** the complete created `PartyDetail` is returned in the response — not just the ID (FR24)
+**Given** a projection actor activates with valid state
+**When** health checks inspect the projection
+**Then** the projection is reported healthy
+**And** normal read behavior remains available.
 
-**Given** an AI agent calling `create_party` with partial input: type "person", last name "Bernard", email "m.bernard@newcorp.fr"
-**When** the tool executes
-**Then** the tool accepts the partial input gracefully (FR25)
-**And** omitted optional fields (first name, date of birth, prefix, suffix) use documented default behaviors (empty/null)
-**And** the party is created successfully with available information
-**And** the complete `PartyDetail` is returned
+**Given** a projection actor detects corrupt, malformed, or incompatible state
+**When** it activates or attempts to read state
+**Then** it marks the projection degraded or rebuilding
+**And** unsafe party data is not returned.
 
-**Given** an AI agent calling `create_party` with type "organization", legal name "Acme Corp", VAT "FR12345678901"
-**When** the tool executes
-**Then** the translation layer constructs a `CreatePartyComposite` with organization details and one VAT identifier
-**And** the complete created party is returned
+**Given** rebuild tooling replays party events through pure projection handlers
+**When** a party detail or tenant index projection is rebuilt
+**Then** the rebuilt state matches the state produced by normal event processing
+**And** rejection events do not mutate successful projection state.
 
-**Given** an AI agent calling `create_party` with missing required fields (e.g., no party type)
-**When** the tool executes
-**Then** a clear validation error message is returned stating what's needed (FR25)
-**And** the error is actionable — the AI agent understands what to fix
+**Given** a rebuild is in progress for a tenant or party
+**When** consumers query affected detail, list, or search paths
+**Then** responses include bounded rebuilding/degraded status
+**And** tenant isolation checks still run before any data is returned.
 
-**Given** an AI agent calling `create_party` with a contact channel but no explicit channel ID
-**When** the tool executes
-**Then** the translation layer generates a UUID for the channel ID (forgiving input normalization)
+**Given** rebuild completes successfully
+**When** the projection health state is refreshed
+**Then** the projection returns to healthy/current status
+**And** subsequent reads use the rebuilt projection state.
 
-**Given** the `CreatePartyMcpTool` class
-**When** reviewed for architecture compliance (D11)
-**Then** it contains input normalization (forgiving-to-strict conversion) and response assembly
-**And** it does NOT contain business rules, domain validation, or state caching
-**And** it references only command types and query result types — zero event type references
+**Given** rebuild fails or cannot prove tenant-safe state
+**When** consumers query affected paths
+**Then** the service fails closed for unsafe reads
+**And** operational logging records bounded metadata and correlation id without personal data.
 
-### Story 5.3: update_party & delete_party MCP Tools
+**Given** projection health/rebuild tests run
+**When** they simulate healthy, corrupt, rebuilding, successful rebuild, failed rebuild, and cross-tenant conditions
+**Then** status transitions and read responses match the documented behavior.
 
-As an AI agent,
-I want to update party details and deactivate parties through MCP tools with patch semantics,
-So that I can make targeted modifications without sending full party state.
+### Story 2.9: Prepare Deferred Search and Temporal Query Extensions
 
-**Acceptance Criteria:**
-
-**Given** an AI agent calling `update_party` with party ID and only a new email address to add
-**When** the tool executes
-**Then** the translation layer constructs an `UpdatePartyComposite` command with only `AddContactChannels` populated
-**And** all other fields (PersonDetails, RemoveContactChannelIds, etc.) remain absent — patch semantics (FR74)
-**And** the complete updated `PartyDetail` is returned (FR69)
-
-**Given** an AI agent calling `update_party` with party ID, updated first name, and a channel to remove
-**When** the tool executes
-**Then** the translation layer constructs an `UpdatePartyComposite` with `PersonDetails` present and `RemoveContactChannelIds` populated
-**And** only specified fields are modified; unspecified fields remain unchanged
-
-**Given** an AI agent calling `update_party` with a channel to add but no explicit channel ID
-**When** the tool executes
-**Then** the translation layer generates a UUID for the channel ID (forgiving input)
-
-**Given** an AI agent calling `update_party` targeting a non-existent party
-**When** the tool executes
-**Then** a clear error message is returned: "party not found"
-
-**Given** an AI agent calling `update_party` with an invalid channel ID in the remove list
-**When** the tool executes
-**Then** the error from the aggregate rejection is translated into a clear MCP error message
-
-**Given** an AI agent calling `delete_party` with a party ID
-**When** the tool executes
-**Then** the translation layer maps this to a `DeactivateParty` command (soft delete — FR4)
-**And** a confirmation response is returned
-
-**Given** an AI agent calling `delete_party` for an already deactivated party
-**When** the tool executes
-**Then** the operation is handled idempotently — no error
-
-**Given** the `UpdatePartyMcpTool` and `DeletePartyMcpTool` classes
-**When** reviewed for architecture compliance (D11)
-**Then** they contain input normalization and command construction only
-**And** zero references to domain event types
-**And** zero business rules or domain validation logic
-
-### Story 5.4: MCP Tools Tests & Architectural Fitness
-
-Planning note: historical quality-gate story; see Planning Readiness Reconciliation.
-
-As a developer,
-I want comprehensive tests for all MCP tools and a CI-enforced architectural fitness test,
-So that MCP tool behavior is verified and the translation layer boundary is machine-enforced.
+As a future maintainer of Parties search and audit features,
+I want the MVP read model contracts to reserve explicit extension points for semantic search and temporal name queries,
+So that v1.1 can add those capabilities without breaking existing consumers.
 
 **Acceptance Criteria:**
 
-**Given** the Hexalith.Parties.Tests project
-**When** MCP tool tests are implemented
-**Then** the following test classes exist under `Mcp/`:
-- `CreatePartyMcpToolTests` — full input, partial input, missing required fields, generated channel IDs, complete response verification
-- `FindPartiesMcpToolTests` — search query, empty query (list mode), match metadata presence, pagination
-- `GetPartyMcpToolTests` — existing party, non-existent party, response shape
-- `UpdatePartyMcpToolTests` — patch semantics (only specified fields), add channel only, remove channel only, mixed operations, generated IDs, non-existent party error
-- `DeletePartyMcpToolTests` — active party, already deactivated (idempotent), non-existent party
+**Given** MVP display-name search responses include match metadata
+**When** response contracts are reviewed
+**Then** `displayName` is the only active searchable field in MVP
+**And** email and identifier match fields are reserved for the future search model without claiming current support.
 
-**Given** the forgiving input normalization logic
-**When** tested
-**Then** the following scenarios are covered:
-- Missing optional fields default to sensible values
-- Missing channel/identifier IDs are auto-generated as UUIDs
-- Partial person details (last name only, no first name) are accepted
-- Clear validation errors for missing required fields (party type)
+**Given** semantic search is deferred to v1.1
+**When** the MVP projection contracts and architecture notes are reviewed
+**Then** they identify semantic search as a pluggable projection/search extension
+**And** no MVP story requires a semantic search backend to function.
 
-**Given** the `FitnessTests/ArchitecturalFitnessTests.cs` file
-**When** the MCP boundary test is implemented
-**Then** it verifies via reflection or compilation test that the `Parties/Mcp/` namespace:
-- Has zero references to any type implementing `IEventPayload` or `IRejectionEvent`
-- References only command types (from Contracts/Commands/) and model types (from Contracts/Models/)
-**And** this test runs in CI and fails the build on violation (D11)
+**Given** temporal name query is deferred to v1.1
+**When** party name-changing events are persisted and projections are built
+**Then** event history preserves enough name-change information for a future temporal query API
+**And** the MVP does not expose a misleading temporal query endpoint.
 
-**Given** the architectural fitness tests
-**When** all boundary tests are reviewed
-**Then** the following additional boundaries are verified:
-- Projection handlers have zero DAPR references
-- Contracts project has zero runtime dependencies beyond netstandard2.1
-- Client project has no references to Server, Projections, or Parties service
-**And** all fitness tests are in `Parties.Tests/FitnessTests/`
+**Given** future extension placeholders are added to contracts or documentation
+**When** compatibility tests run
+**Then** existing MVP consumers remain source-compatible
+**And** no required runtime dependency on a future search engine is introduced.
 
-**And** all tests pass with `dotnet test`
+**Given** a consumer attempts to use unsupported semantic or temporal query capability in MVP
+**When** the request reaches the read/query surface
+**Then** the service returns a bounded unsupported-capability response
+**And** the response points to documented deferred capability behavior without exposing internal implementation details.
 
----
+## Epic 3: Developer Integration and Local Adoption
 
-## Epic 6: Developer Integration & Documentation
+Developers can integrate Parties through typed packages, REST APIs, documentation, samples, deployment tooling, versioned APIs, and clear error handling.
 
-A .NET developer integrates party management with a single NuGet package and one-line DI registration (AddPartiesClient()). A non-.NET developer follows the getting-started guide and sends their first command in under 30 minutes. A sample integration project demonstrates command, query, event subscription, and MCP usage patterns.
-
-### Story 6.1: Client Package — Command & Query Abstractions
+### Story 3.1: Publish Stable Contracts Package
 
 As a .NET developer,
-I want to integrate party management via a single NuGet package with one-line DI registration,
-So that I can send commands and query parties without knowing anything about DAPR, MediatR, or the service's infrastructure.
+I want a stable `Hexalith.Parties.Contracts` package,
+So that I can reference party commands, events, models, and results without inheriting service infrastructure dependencies.
 
 **Acceptance Criteria:**
 
-**Given** the Hexalith.Parties.Client project
-**When** the client abstractions are implemented
-**Then** `IPartiesCommandClient` interface exists with methods for all party commands:
-- `CreatePartyAsync`, `UpdatePersonDetailsAsync`, `UpdateOrganizationDetailsAsync`
-- `AddContactChannelAsync`, `UpdateContactChannelAsync`, `RemoveContactChannelAsync`
-- `AddIdentifierAsync`, `RemoveIdentifierAsync`
-- `DeactivatePartyAsync`, `ReactivatePartyAsync`
-- `CreatePartyCompositeAsync`, `UpdatePartyCompositeAsync`
-**And** `IPartiesQueryClient` interface exists with methods:
-- `GetPartyAsync(string partyId)` returning `PartyDetail`
-- `ListPartiesAsync(...)` returning paginated `PartyIndexEntry[]`
-- `SearchPartiesAsync(string query)` returning `PartyIndexEntry[]` with match metadata
+**Given** the Contracts project is built
+**When** package dependencies are inspected
+**Then** it has no runtime dependencies beyond the target framework and approved serialization/contract basics
+**And** it does not reference hosting, DAPR, MediatR, FluentValidation, UI, or infrastructure packages.
 
-**Given** the client project
-**When** HTTP-based implementations are created
-**Then** they communicate with the Parties REST API via standard `HttpClient`
-**And** they handle serialization (camelCase JSON, ISO 8601 dates, string enums)
-**And** they translate ProblemDetails error responses into typed exceptions or result objects
+**Given** a developer references the Contracts package
+**When** they use party commands, events, value objects, query models, rejection models, and result types
+**Then** all public contract types compile from the package
+**And** XML documentation is available for public APIs.
 
-**Given** a consuming application's `Program.cs` or `Startup.cs`
-**When** the developer adds `builder.Services.AddPartiesClient(configuration)`
-**Then** `IPartiesCommandClient` and `IPartiesQueryClient` are registered in DI (FR26)
-**And** the single line is all that's needed — no additional configuration required for basic usage
+**Given** event contracts are reviewed
+**When** future compatibility is assessed
+**Then** event shapes are append-only and additive
+**And** forward-compatible placeholders such as party merge are represented without forcing runtime behavior.
 
-**Given** the Client project's `.csproj`
-**When** reviewed for dependencies
-**Then** it references only `Hexalith.Parties.Contracts` and HTTP abstractions
-**And** it has zero references to DAPR, MediatR, FluentValidation, or any server-side infrastructure
-**And** total transitive dependencies are < 10, package size < 5MB (NFR28, NFR31)
+**Given** personal data markers are present in contracts
+**When** consuming applications inspect contract metadata
+**Then** personal data classification is visible where required
+**And** consuming applications do not need server infrastructure packages to read that metadata.
 
-**Given** the Client project
-**When** reviewed for architectural boundaries
-**Then** it has no references to Server, Projections, or Parties service projects
+**Given** package validation tests run
+**When** they inspect references and public API shape
+**Then** forbidden dependencies fail the tests
+**And** breaking public contract drift is detected before package publication.
 
-**Given** a developer using the client abstractions
-**When** they send a `CreateParty` command via `IPartiesCommandClient`
-**Then** they receive a typed result without needing infrastructure knowledge (FR27)
+### Story 3.2: Provide Typed Parties Client Registration
 
-**Given** a developer using the client abstractions
-**When** they query parties via `IPartiesQueryClient`
-**Then** they receive typed `PartyDetail` or `PartyIndexEntry[]` results without infrastructure knowledge (FR28)
-
-### Story 6.2: Getting-Started Guide & README
-
-As a developer evaluating Hexalith.Parties,
-I want clear documentation that enables self-service onboarding,
-So that I can deploy and send my first command without needing help from the core team.
+As a .NET developer,
+I want to register a typed Parties client with one DI call,
+So that I can send commands and queries without learning DAPR or service internals.
 
 **Acceptance Criteria:**
 
-**Given** the repository README
-**When** a developer reads the first paragraph
-**Then** they can explain what Hexalith.Parties does in one sentence (success criteria: one-sentence clarity test)
-**And** the value proposition is clear: "integrate, don't rebuild"
+**Given** a consuming .NET application references `Hexalith.Parties.Client`
+**When** the developer calls the documented `AddPartiesClient()` registration
+**Then** command and query client abstractions are registered in dependency injection
+**And** the consuming app does not need to reference DAPR, MediatR, FluentValidation, Server, Projections, or the Parties service project.
 
-**Given** the README
-**When** reviewed for content
-**Then** it includes:
-- Clear positioning (party management microservice, not auth, not CRM)
-- Key features summary (event-sourced, MCP, NuGet, multi-tenant)
-- GDPR disclaimer prominently placed
-- Link to getting-started guide
-- Link to architecture overview
+**Given** the typed command client is resolved from DI
+**When** the developer sends create, update, contact, identifier, deactivate, or reactivate commands
+**Then** the client sends requests through the configured EventStore-fronted gateway/API boundary
+**And** returns typed success or rejection results.
 
-**Given** the getting-started guide at `/docs/getting-started.md`
-**When** a developer follows it
-**Then** it follows this narrative arc (FR32):
-1. Prerequisites (Docker, .NET 10 SDK) — explicit list, nothing assumed
-2. Deploy: clone, `dotnet aspire run`, verify dashboard — target < 15 minutes (NFR30)
-3. First command: POST `CreateParty` via REST (curl/Postman example) — target < 30 minutes
-4. First query: GET party by ID, search by name — verify round-trip
-5. MCP server: configure AI assistant, first `create_party` tool call
-6. NuGet integration: add `Hexalith.Parties.Client`, `AddPartiesClient()`, send command from code
-**And** each step includes exact commands to copy-paste
-**And** a non-.NET developer path exists: Docker deploy + REST API only (no NuGet)
+**Given** the typed query client is resolved from DI
+**When** the developer queries by id, lists, filters, or searches parties
+**Then** the client sends read requests through the configured gateway/API boundary
+**And** returns typed query results with freshness/degradation metadata where applicable.
 
-**Given** the getting-started guide
-**When** reviewed for completeness
-**Then** the GDPR disclaimer is present (FR62 reference)
-**And** the emergency manual erasure procedure is referenced (for pre-v1.1 erasure requests)
+**Given** required client configuration such as base address or authentication context is missing
+**When** the client is registered or used
+**Then** configuration validation returns a clear developer-facing error
+**And** no request is sent with incomplete configuration.
 
-### Story 6.3: Sample Integration Project
+**Given** client package dependency tests run
+**When** package dependencies are inspected
+**Then** the Client package has fewer than 10 transitive dependencies totaling under 5 MB where measurable
+**And** forbidden service infrastructure dependencies fail the tests.
 
-As a developer,
-I want a runnable sample project demonstrating all integration patterns,
-So that I have working reference code for commands, queries, event subscriptions, and MCP usage.
+### Story 3.3: Expose Versioned REST Party API
+
+As a developer using any programming language,
+I want to interact with Parties through a versioned REST API,
+So that I can integrate party management without using the .NET client package.
 
 **Acceptance Criteria:**
 
-**Given** the `/samples/Hexalith.Parties.Sample/` project
-**When** reviewed for content
-**Then** it demonstrates the following patterns (FR59):
-1. `AddPartiesClient(configuration)` — one-line DI registration
-2. Send commands: create a person party, add an email contact channel, add a VAT identifier
-3. Query parties: get by ID, search by name, list with pagination
-4. Subscribe to party events via DAPR pub/sub and build a simple local read model (e.g., `CustomerSummary`)
-5. Handle `PartyDeactivated` event to update the local read model
-6. MCP server configuration example (commented or documented)
+**Given** an authenticated HTTP client with valid tenant credentials
+**When** it calls `/api/v1/parties` command endpoints for create, update, contact channel, identifier, deactivate, or reactivate operations
+**Then** the API routes requests through the same domain command path as typed clients
+**And** tenant identity is taken from authenticated credentials, not request payloads.
 
-**Given** the sample project
-**When** a developer runs `dotnet run` (with the Parties service already running)
-**Then** it executes successfully end-to-end
-**And** console output shows each step completing (party created, queried, event received)
+**Given** an authenticated HTTP client with valid tenant credentials
+**When** it calls `/api/v1/parties` query endpoints for get by id, list, filter, or display-name search
+**Then** the API routes requests through the tenant-safe projection query path
+**And** returns typed response bodies consistent with the Contracts package.
 
-**Given** the sample project
-**When** reviewed for CI integration
-**Then** it can be built as part of the solution (`dotnet build Hexalith.Parties.slnx`)
-**And** it does not break the CI pipeline (runnable but not requiring full infrastructure in CI)
+**Given** unsupported or future API versions are requested
+**When** the HTTP client calls the service
+**Then** the API returns a documented versioning response
+**And** supported v1 endpoints continue to coexist during future deprecation periods.
 
-**Given** the sample's event subscription handler
-**When** a `PartyDeactivated` event is received
-**Then** the local read model is updated accordingly
-**And** the pattern demonstrates idempotent event handling
+**Given** a request is missing authentication, missing tenant context, or contains mismatched tenant payload data
+**When** the API handles the request
+**Then** it rejects fail-closed before command or projection state is accessed
+**And** the response does not leak cross-tenant existence information.
 
-**Given** a developer reading the sample code
-**When** they review the event subscription section
-**Then** comments reference the dangling reference guidance for `PartyErased` (future v1.1)
-**And** the `PartyMerged` forward-compat event is mentioned as a future subscription target
+**Given** REST API tests run
+**When** they cover command, query, versioning, auth, tenant, validation, and unsupported version cases
+**Then** REST behavior is verified without introducing public REST endpoints in the actor host if architecture forbids that boundary.
 
----
+### Story 3.4: Map Domain Rejections to ProblemDetails
 
-## Epic 7: Event-Driven Integration & Subscriber Experience
-
-Consuming applications can subscribe to party domain events and build domain-specific read models, with forward-compatible contracts (including PartyMerged placeholder), documented handler patterns for erasure and dangling references, at-least-once delivery verification, tenant context in events, and causal ordering documentation. Event publishing infrastructure (DAPR pub/sub) is configured in Epic 1; this epic focuses on subscriber experience, documentation, and the sample event subscription demo.
-
-### Story 7.1: Event Publishing Verification & Configuration
-
-As an event subscriber developer,
-I want party domain events reliably published via DAPR pub/sub with tenant context,
-So that my consuming application receives structured, routable events on every party state change.
+As a developer integrating with Parties,
+I want domain rejections to map to standardized HTTP error responses,
+So that I can understand failures and corrective actions without debugging service internals.
 
 **Acceptance Criteria:**
 
-**Given** any party command that produces domain events (create, update, deactivate, etc.)
-**When** the command is processed successfully
-**Then** all resulting events are published to DAPR pub/sub (FR34)
-**And** events are wrapped in CloudEvents 1.0 envelope (inherited from EventStore)
+**Given** a domain command is rejected with a typed rejection event
+**When** the rejection reaches the REST API boundary
+**Then** it is mapped to an RFC 7807 ProblemDetails response
+**And** the response includes stable type URI, title, status, human-readable detail, and corrective action where available.
 
-**Given** a published party event
-**When** its envelope is inspected
-**Then** it includes tenant context for consuming application routing decisions (FR70)
-**And** the topic follows the pattern `{tenant}.parties.events`
+**Given** a validation failure occurs before command handling
+**When** the API returns the error response
+**Then** it uses a standardized validation ProblemDetails shape
+**And** field-level errors are bounded and encoded.
 
-**Given** a published event that fails delivery
-**When** DAPR retry policy is exhausted
-**Then** the event is routed to the dead letter topic: `deadletter.{tenant}.parties.events`
-**And** no events are lost — persist-then-publish with drain recovery on publish failure (EventStore)
+**Given** a tenant, authorization, or cross-tenant rejection occurs
+**When** the API returns the error response
+**Then** it fails closed with the documented status code
+**And** it does not reveal whether data exists in another tenant.
 
-**Given** the DAPR pub/sub configuration
-**When** reviewed for event publishing
-**Then** the subscription configuration file (`subscription-parties.yaml`) correctly routes party events
-**And** the pub/sub component is configured for the deployment target (Redis Streams for local dev)
+**Given** infrastructure or projection degradation prevents a safe response
+**When** the API returns the error response
+**Then** it uses a bounded ProblemDetails response with retry/degradation guidance
+**And** no raw exception, raw payload, or personal data is exposed.
 
-**Given** a party creation followed by contact channel addition
-**When** events are published
-**Then** both `PartyCreated` and `ContactChannelAdded` events are published in sequence
-**And** event payload JSON uses camelCase, ISO 8601 dates, string enums (consistent with API conventions)
+**Given** rejection mapping tests run
+**When** they cover duplicate creation, invalid type update, missing party, missing channel, missing identifier, invalid lifecycle transition, validation failure, auth failure, and degraded read/write failures
+**Then** each case maps to the documented ProblemDetails response
+**And** logs contain only safe metadata.
 
-**Given** multiple tenants performing party operations simultaneously
-**When** events are published
-**Then** each tenant's events are routed to their tenant-scoped topic
-**And** no cross-tenant event leakage occurs
+### Story 3.5: Generate OpenAPI and Error Catalog
 
-### Story 7.2: Subscriber Experience & At-Least-Once Delivery
-
-As an event subscriber developer,
-I want verified at-least-once delivery with clear ordering guarantees and idempotent handler patterns,
-So that my consuming application can build reliable read models from party events.
+As a developer evaluating or integrating Parties,
+I want browsable API documentation and a documented error catalog,
+So that I can understand commands, queries, responses, and failure modes without reading service code.
 
 **Acceptance Criteria:**
 
-**Given** a consuming application subscribed to party events
-**When** events are published
-**Then** at-least-once delivery is guaranteed via DAPR pub/sub (FR63, NFR23)
-**And** consuming applications must implement idempotent handlers (duplicate events possible)
+**Given** the Parties REST API is running in development/documentation mode
+**When** a developer opens the generated API specification
+**Then** the OpenAPI 3.x document includes v1 command and query endpoints, request schemas, response schemas, auth requirements, and ProblemDetails responses.
 
-**Given** the event subscription documentation
-**When** reviewed for ordering guarantees
-**Then** causal ordering guarantees per aggregate are documented per broker (FR73):
-- Redis Streams: yes (within a consumer group)
-- RabbitMQ: yes (per queue)
-- Kafka: yes (per partition, with key-based routing configured)
-**And** required broker configuration for ordering is documented
-**And** handler design requirements are specified if ordering cannot be guaranteed (sequence-checking, order-tolerant projection updates)
+**Given** the OpenAPI document is generated
+**When** contract schemas are inspected
+**Then** they align with the published Contracts package models
+**And** undocumented or unsupported future capabilities are not advertised as available.
 
-**Given** a consuming application building a local read model
-**When** it subscribes to party events
-**Then** it can selectively handle events (e.g., only `PersonDetailsUpdated`, not all events) (FR35)
-**And** it can build domain-specific projections (e.g., customer summary from party data)
+**Given** domain rejection mappings exist
+**When** the error catalog is generated or reviewed
+**Then** each stable rejection/error type includes type URI, status code, title, explanation, corrective action, and example response where appropriate.
 
-**Given** the `PartyMerged` event type in Contracts
-**When** a consuming application encounters it in the event stream
-**Then** tolerant deserialization handles it gracefully even before v2 implementation (FR37)
-**And** consuming applications can register handlers for it proactively
+**Given** compliance warning behavior is active for MVP
+**When** the API documentation is viewed
+**Then** it documents that MVP is not GDPR-compliant for regulated EU personal data until v1.1
+**And** startup/API warning behavior is visible to developers.
 
-**Given** a consuming application's event handler
-**When** it receives an unknown event type (future additive events)
-**Then** tolerant deserialization ignores unknown fields and handles missing optional fields
-**And** the handler continues processing without error (NFR27)
+**Given** API documentation tests run
+**When** they validate OpenAPI generation and error catalog coverage
+**Then** missing endpoints, missing ProblemDetails schemas, undocumented rejection types, or future capability leakage fail the tests.
 
-**Given** an integration test with a subscriber
-**When** 10 party events are published in sequence for the same aggregate
-**Then** the subscriber receives all 10 events
-**And** delivery is confirmed (no lost events)
+### Story 3.6: Enable One-Command Local Run
 
-### Story 7.3: Handler Patterns Documentation & Dangling Reference Guidance
-
-As an event subscriber developer,
-I want clear documentation with handler patterns for all event types including erasure,
-So that I know exactly how to build compliant event handlers — especially for the mandatory PartyErased subscription.
+As a developer trying Parties locally,
+I want to start the full local system with one documented command,
+So that I can evaluate and develop against the service without hand-wiring infrastructure.
 
 **Acceptance Criteria:**
 
-**Given** the Contracts package documentation (in `/docs/` or package README)
-**When** reviewed for handler patterns
-**Then** the following handler pattern documentation exists (FR38):
+**Given** a developer has documented prerequisites installed
+**When** they run the documented Aspire/AppHost command from the repository root
+**Then** the Parties service, required DAPR sidecar configuration, state/pubsub backing services, and health/readiness endpoints start for local evaluation.
 
-1. **Event handler patterns per event type:**
-   - `PartyCreated` — when to create local records vs. ignore
-   - `PersonDetailsUpdated` / `OrganizationDetailsUpdated` — update local display names
-   - `ContactChannelAdded/Updated/Removed` — keep local contact caches in sync
-   - `PartyDeactivated` / `PartyReactivated` — flag local records for review
-   - `PartyErased` (v1.1) — **MANDATORY** handler pattern with explicit warning
+**Given** the local system starts successfully
+**When** the developer opens the Aspire dashboard or equivalent local diagnostics
+**Then** Parties service resources, DAPR sidecar status, and backing service health are visible
+**And** the developer can identify the REST/API endpoint for first commands.
 
-2. **PartyErased handler pattern (explicit):**
-   - Find all local records referencing the erased `partyId`
-   - Nullify the party reference
-   - Replace display names with "[Erased Party]"
-   - Preserve records with independent legal retention requirements
-   - Log the erasure handling for audit trail
+**Given** the local system is not ready yet
+**When** health or readiness is checked
+**Then** readiness remains false until required infrastructure and the Parties service can accept requests
+**And** readiness becomes true within the documented cold-start target under normal local conditions.
 
-3. **Dangling reference guidance:**
-   - What happens when a referenced party is erased
-   - How to detect and clean up dangling references
-   - Strategies for foreign key management with party IDs
+**Given** a required local dependency is missing or misconfigured
+**When** the developer starts the system
+**Then** startup fails with actionable guidance
+**And** no silent partial configuration is treated as production-ready.
 
-**Given** the handler patterns documentation
-**When** reviewed for the `PartyErased` section
-**Then** an explicit warning states: "PartyErased subscription is mandatory for ALL consuming apps regardless of which other events they handle" (FR38)
-**And** code examples show a complete handler implementation
+**Given** local-run validation tests or scripted smoke checks run
+**When** they start the AppHost in the supported local mode
+**Then** they verify health/readiness and at least one authenticated or documented development-mode request path
+**And** they do not require recursive submodule initialization.
 
-**Given** the documentation
-**When** reviewed for tolerant deserialization guidance
-**Then** it explains:
-- How to handle unknown fields (ignore)
-- How to handle missing optional fields (documented defaults)
-- How to prepare for future event types (additive evolution)
-**And** code examples demonstrate the tolerant reader pattern
+### Story 3.7: Write Getting Started Documentation
 
-**Given** the documentation
-**When** reviewed for completeness
-**Then** it references the sample integration project (Epic 6, Story 6.3) as working reference code
-**And** it links to DAPR pub/sub configuration requirements per broker
-
----
-
-## Epic 8: Operational Readiness & Production Hardening
-
-Operators can deploy with confidence using deployment validation tooling (DAPR security config verification), monitor health and readiness signals, and trust that the service degrades gracefully when infrastructure components fail. Includes projection health monitoring with auto-rebuild on corruption (D15) and projection rebuild admin endpoint (D14).
-
-### Story 8.1: Deployment Validation Tooling
-
-As an operator,
-I want a deployment validation tool that verifies security configuration before production use,
-So that I can be confident DAPR access controls, tenant isolation, and pub/sub policies are correctly configured.
+As a developer new to Parties,
+I want a tested getting-started guide,
+So that I can deploy locally and send my first command as a self-service experience.
 
 **Acceptance Criteria:**
 
-**Given** a deployment validation script or tool
-**When** executed against a target deployment
-**Then** it verifies the following DAPR security configurations (FR61):
-- Access control policies are defined and restrict cross-tenant pub/sub access
-- State store access is scoped per tenant namespace
-- Pub/sub topic access control prevents unauthorized subscription
-- Secret store access is configured (preparation for v1.1 key management)
+**Given** a developer opens the getting-started guide
+**When** they read the prerequisites and local setup section
+**Then** they can identify required .NET, Docker/container tooling, DAPR/Aspire expectations, and supported development mode
+**And** the guide does not require recursive submodule initialization.
 
-**Given** the validation tool
-**When** a misconfiguration is detected
-**Then** the specific misconfiguration is reported with:
-- What is wrong
-- What the correct configuration should be
-- A reference to the security config checklist
+**Given** a developer follows the guide on a clean machine with documented prerequisites
+**When** they start the local system
+**Then** they can reach a healthy/readiness-confirmed Parties instance within the documented deployment target
+**And** troubleshooting steps explain common startup failures.
 
-**Given** the validation tool
-**When** all checks pass
-**Then** a "deployment validated" confirmation is output
-**And** the validation results can be logged for audit purposes
+**Given** the local system is running
+**When** the developer follows the first-command walkthrough
+**Then** they can send a successful `CreateParty` request through REST
+**And** understand the command -> event -> projection flow at a high level.
 
-**Given** the `/deploy/` directory
-**When** reviewed for deployment artifacts
-**Then** production DAPR component configurations exist for:
-- `pubsub-kafka.yaml`, `pubsub-rabbitmq.yaml`, `pubsub-servicebus.yaml`
-- `statestore-cosmosdb.yaml`, `statestore-postgresql.yaml`
-- `accesscontrol.yaml`, `resiliency.yaml`
-- `subscription-parties.yaml`
-**And** a security config checklist document exists with operator responsibilities
+**Given** the developer continues the walkthrough
+**When** they perform the first query
+**Then** they can retrieve or search for the created party
+**And** the guide explains eventual consistency and freshness indicators.
 
-**Given** the deployment documentation
-**When** reviewed for operator guidance
-**Then** it covers:
-- Required DAPR component configuration per deployment target
-- Minimum state store requirements (entry size limits for index actor — D5)
-- Backup strategy guidance that accounts for crypto-shredding (v1.1 preparation)
-- Network security and infrastructure IAM responsibilities (operator scope)
+**Given** the developer wants to integrate from .NET
+**When** they follow the client package section
+**Then** they can register `AddPartiesClient()` and send a typed command/query
+**And** the guide explains required configuration without exposing service internals.
 
-### Story 8.2: Health, Readiness & Graceful Degradation
+**Given** the guide includes MVP compliance positioning
+**When** the developer reads the warning
+**Then** it clearly states that MVP is not for regulated EU personal data until v1.1 GDPR features are active
+**And** it links to the emergency manual erasure procedure if included elsewhere.
 
-As an operator,
-I want health and readiness signals and graceful degradation under infrastructure failure,
-So that I can monitor the service in production and trust that partial failures don't cause total outage.
+**Given** documentation validation is performed
+**When** a non-author or scripted doc check follows the guide
+**Then** broken commands, missing prerequisites, stale endpoint names, or unclear first-command steps are caught.
+
+### Story 3.8: Provide Runnable Sample Integration
+
+As a developer evaluating Parties,
+I want a runnable sample consuming application,
+So that I can see command, query, event subscription, and MCP usage in one concrete integration.
 
 **Acceptance Criteria:**
 
-**Given** the running party service
-**When** a health check request is made to `/health`
-**Then** a component-level health status is returned (FR71):
-- DAPR sidecar connectivity
-- State store accessibility
-- Pub/sub connectivity
-- Projection actor responsiveness
+**Given** the sample application is built
+**When** a developer opens it
+**Then** it demonstrates `AddPartiesClient()` registration and required configuration
+**And** it does not reference Server, Projections, DAPR actors, or service internals.
 
-**Given** the running party service
-**When** a readiness check request is made to `/ready`
-**Then** the service reports whether it is ready to accept requests (FR71)
-**And** readiness is false during startup until the service can process commands
+**Given** the sample is run against a local Parties instance
+**When** the developer executes the command scenario
+**Then** it creates a party and adds representative contact/identifier data
+**And** it handles typed success and rejection outcomes.
 
-**Given** the DAPR state store becomes unavailable
-**When** write commands are sent
-**Then** commands fail gracefully with a clear error (not an unhandled exception) (FR64)
-**And** read operations from projection actors continue serving cached/last-known state
-**And** a staleness indicator is included in read responses (NFR21)
+**Given** the sample is run against a local Parties instance
+**When** the developer executes the query scenario
+**Then** it retrieves, lists, filters, and searches parties through the client/API boundary
+**And** it displays freshness/degradation metadata where applicable.
 
-**Given** the DAPR pub/sub becomes unavailable
-**When** commands are processed successfully
-**Then** events are committed to the event store but not published (FR64)
-**And** events are retried on recovery via EventStore persist-then-publish pattern
-**And** consuming apps may experience delayed event delivery but never event loss
+**Given** party events are published
+**When** the sample event subscription/read-model scenario runs
+**Then** it demonstrates how a consuming application handles party lifecycle events
+**And** it includes guidance for future `PartyErased` cleanup handling even if GDPR is deferred.
 
-**Given** the DAPR sidecar becomes unavailable
-**When** any request is sent
-**Then** the service reports unhealthy via health check
-**And** readiness reports false
-**And** the failure is logged at `Error` level
+**Given** MCP support is available in the local topology
+**When** the sample demonstrates AI agent usage
+**Then** it shows the intended MCP interaction path or configuration
+**And** it does not duplicate MCP tool implementation in the sample.
 
-**Given** the service recovers from a crash
-**When** it restarts
-**Then** it replays necessary event state and accepts requests within 30 seconds (NFR20)
-**And** no data loss occurs — event store is the durable source of truth (NFR22)
+**Given** sample validation runs in CI or a scripted check
+**When** the sample is built and smoke-tested
+**Then** it compiles, runs its documented scenarios, and remains aligned with the current client/API contracts.
 
-**Given** component failure scenarios
-**When** documented for operators
-**Then** documented behavior exists for each failure mode:
-- State store unavailable: writes fail, reads may serve stale data
-- Pub/sub unavailable: events committed but not published, retry on recovery
-- Sidecar unavailable: full degradation, unhealthy status
-**And** operational runbooks reference these failure modes
+### Story 3.9: Add Deployment Security Validation
 
-### Story 8.3: Projection Health Monitoring & Rebuild
-
-As an operator,
-I want projections that self-heal on corruption and a manual rebuild capability,
-So that read model issues are resolved automatically or with minimal operator intervention.
+As an operator preparing Parties for deployment,
+I want validation tooling for security-critical configuration,
+So that unsafe tenant, auth, and DAPR access-control settings are caught before production use.
 
 **Acceptance Criteria:**
 
-**Given** a projection actor (detail or index) activating with corrupted state
-**When** deserialization fails on actor activation
-**Then** the actor catches the deserialization failure (D15)
-**And** a corruption alert is logged at `Error` level with the affected tenant and actor key
-**And** the actor triggers an automatic rebuild from the event stream (D14)
-**And** callers receive a "service degraded" response during rebuild
+**Given** deployment validation tooling is run against a Parties deployment configuration
+**When** JWT/authentication settings are inspected
+**Then** missing issuer, audience, signing/key configuration, or fail-closed behavior is reported as a blocking validation failure.
 
-**Given** an automatic projection rebuild in progress
-**When** a query request arrives for the affected projection
-**Then** the response includes a degraded status indicator
-**And** the response does not return an error — it communicates that data may be stale or incomplete
+**Given** deployment validation tooling inspects tenant configuration
+**When** tenant resolution or tenant metadata settings are incomplete
+**Then** the tool reports a blocking validation failure
+**And** it explains that tenant identity must come from authenticated credentials, not request payloads.
 
-**Given** the rebuild completes
-**When** the projection state is restored
-**Then** subsequent queries return normal responses without degradation indicators
-**And** a "rebuild completed" event is logged at `Information` level
+**Given** deployment validation tooling inspects DAPR access-control configuration
+**When** wildcard app ids, wildcard operation paths, missing deny-by-default behavior, or missing Parties operation rules are detected
+**Then** the tool reports a blocking validation failure
+**And** the output identifies the unsafe configuration category without exposing secrets.
 
-**Given** an operator wanting to manually rebuild projections
-**When** they call the admin rebuild endpoint with a tenant ID
-**Then** a per-tenant projection rebuild is triggered (D14)
-**And** the rebuild replays events from EventStore through the pure projection handlers
-**And** the rebuild is resumable (can restart from the last successfully processed event sequence number)
+**Given** deployment validation tooling inspects transport settings
+**When** TLS or production transport requirements are not met
+**Then** it reports the issue with actionable remediation guidance
+**And** local development exceptions are clearly scoped.
 
-**Given** the admin rebuild endpoint
-**When** reviewed for security
-**Then** it requires authentication and elevated permissions
-**And** it is not exposed via the public API — admin-only endpoint
+**Given** validation output is generated
+**When** failures or warnings are reported
+**Then** output is bounded, machine-readable where useful, and safe for logs/artifacts
+**And** secrets, tokens, claims dictionaries, tenant membership payloads, and personal data are not printed.
 
-**Given** the operational documentation
-**When** reviewed for projection rebuild
-**Then** it includes:
-- Manual rebuild procedure (trigger, monitor, verify)
-- Expected rebuild time estimates based on event count
-- Impact on service availability during rebuild (queries return degraded responses)
-- When to use manual rebuild (suspected drift, after state store migration)
+**Given** validation tests run
+**When** they cover valid config, missing auth, unsafe DAPR ACLs, missing tenant settings, development-mode exceptions, and redaction
+**Then** validation behavior matches deployment security expectations.
 
----
+### Story 3.10: Display MVP Compliance Warning
 
-## Epic 9: GDPR, Privacy, and v1.1 Search Extensions
-
-Administrators can fulfill GDPR obligations and the platform can support privacy-safe v1.1 search and audit extensions. GDPR erasure, consent, restriction, portability, processing records, per-party keys, erased-state behavior, and subscriber notification remain the primary compliance scope. Temporal name queries and Hexalith.Memories-backed search are explicitly v1.1 extensions and must retain privacy, erasure, and tenant-isolation guarantees.
-
-### Story 9.1: Per-Party Encryption Key Management
-
-As an administrator,
-I want per-party encryption keys managed via DAPR secret store,
-So that each party's personal data can be independently encrypted and destroyed for GDPR erasure.
+As a developer or operator evaluating MVP Parties,
+I want a persistent compliance warning until GDPR features are active,
+So that I do not mistakenly use MVP for regulated EU personal data.
 
 **Acceptance Criteria:**
 
-**Given** a new party is created
-**When** crypto-shredding is active (v1.1)
-**Then** a per-party encryption key is created in the DAPR secret store (FR53)
-**And** keys are organized in per-tenant namespaces
+**Given** GDPR compliance features are not active
+**When** the Parties service starts
+**Then** startup logs and health/metadata surfaces expose a bounded MVP compliance warning
+**And** the warning states that MVP is not for regulated EU personal data.
 
-**Given** an existing per-party key
-**When** a key rotation is triggered
-**Then** a new versioned key is created (NFR11)
-**And** the previous key version is retained read-only for historical event decryption
-**And** re-encryption of historical events is NOT performed
-**And** each encrypted field references its key version
-**And** rotation occurs without service downtime or data loss
+**Given** a REST API response is returned while GDPR features are inactive
+**When** the response is produced
+**Then** it includes the documented non-dismissable compliance warning header or metadata
+**And** the warning does not include personal data or environment secrets.
 
-**Given** any key operation (create, read, rotate, delete)
-**When** the operation completes
-**Then** it is logged in an independent key access audit trail
-**And** the audit trail is separate from the event stream
+**Given** OpenAPI, README, and getting-started documentation are viewed
+**When** GDPR features are inactive or MVP docs are read
+**Then** the compliance warning is visible and consistent across documentation surfaces
+**And** it identifies v1.1 GDPR features as the activation point.
 
-**Given** the key caching strategy
-**When** per-party key lookups occur at command time
-**Then** lookups do not violate NFR1 (< 1 second command processing)
-**And** a caching strategy (per-request, short-TTL in-memory, or batch pre-fetch) is implemented
+**Given** GDPR features become active in a future version
+**When** the compliance-warning configuration is updated
+**Then** the MVP warning can be removed or replaced through an explicit documented switch
+**And** tests prevent accidental silent removal before activation criteria are met.
 
-### Story 9.2: Field-Level Encryption & Crypto-Shredding Activation
+**Given** compliance warning tests run
+**When** they cover startup, API metadata/header, documentation expectations, inactive mode, and activation switch behavior
+**Then** the warning remains non-dismissable until explicitly activated or replaced.
 
-As a developer,
-I want personal data fields encrypted at rest via `[PersonalData]` attributes with zero domain code changes,
-So that GDPR encryption is structural and the domain remains encryption-unaware.
+## Epic 4: AI Agent Party Management
 
-**Acceptance Criteria:**
+AI agents can find, create, retrieve, update, and deactivate parties through a bounded MCP tool surface with complete responses and forgiving inputs.
 
-**Given** a party command that writes personal data fields
-**When** the event is persisted to the event store
-**Then** all `[PersonalData]`-attributed fields are encrypted using the party's per-party key (FR53)
-**And** domain code has zero DAPR awareness — encryption is handled by infrastructure (NFR8)
+### Story 4.1: Register Bounded MCP Tool Surface
 
-**Given** encrypted events in the event store
-**When** events are published to DAPR pub/sub
-**Then** events are decrypted at publish time — subscribers receive readable data (FR54)
-**And** subscribers never handle decryption
-
-**Given** a decryption failure at publish time
-**When** the circuit breaker activates
-**Then** publication is prevented — unreadable events are never published
-**And** the failure is logged and alerted
-
-**Given** snapshots for a party
-**When** crypto-shredding is active
-**Then** snapshots participate in field-level encryption
-**And** snapshot invalidation is part of the erasure transaction
-
-**Given** type-dependent personal data classification (D6)
-**When** encryption is applied
-**Then** person parties: all PII encrypted (names, DOB, derived fields)
-**And** organization parties: entity-level fields NOT encrypted by default
-**And** all party types: contact channels and identifiers always encrypted
-**And** `IsNaturalPerson = true` organizations: elevated to person-level encryption scope
-
-### Story 9.3: Right to Erasure & Verification
-
-As an administrator,
-I want to trigger erasure that cryptographically destroys a party's personal data and verify completeness,
-So that GDPR Article 17 right-to-erasure requests are fulfilled with automated verification.
+As an AI agent integrator,
+I want Parties to expose a small, well-documented MCP tool surface,
+So that agents can reliably discover and use party management capabilities.
 
 **Acceptance Criteria:**
 
-**Given** an administrator triggers erasure for a party
-**When** the erasure command is processed
-**Then** the party's per-party encryption key is destroyed via DAPR secret store (FR44)
-**And** all personal data in events and snapshots becomes permanently unreadable
-**And** event metadata (types, timestamps, aggregate IDs) survives — personal data doesn't
+**Given** the Parties MCP capability is enabled
+**When** an MCP client lists available tools
+**Then** exactly the canonical party tools are exposed: `find_parties`, `get_party`, `create_party`, `update_party`, and `delete_party`
+**And** no internal command, projection, actor, admin, or infrastructure tools are exposed.
 
-**Given** key destruction is complete
-**When** the erasure verification job runs
-**Then** it verifies erasure across all internal data stores (FR45):
-- Projection actor states cleaned
-- Search indexes purged
-- Caches invalidated (explicit, not TTL-dependent)
-**And** a verification report is produced itemizing all cleanup results
-**And** the report is produced within 5 minutes of erasure trigger
+**Given** an MCP client inspects tool schemas
+**When** schemas are returned
+**Then** each schema includes clear descriptions, required fields, optional fields, defaults where applicable, and bounded validation guidance
+**And** schemas are optimized for AI agent use rather than mirroring every low-level domain command.
 
-**Given** erasure is complete
-**When** a `PartyErased` event is published
-**Then** all subscribers are notified (FR46)
-**And** delivery is tracked — unacknowledged erasures alert after configurable timeout
+**Given** the service has REST and typed client surfaces
+**When** MCP tools are registered
+**Then** they route through the same command/query paths as other consumers
+**And** they do not bypass validation, tenant context, authorization, or projection safeguards.
 
-**Given** an erased party
-**When** a read request is made for that party
-**Then** the response returns an "erased" status — not decryption errors (FR55)
-**And** the read path checks erasure state before attempting decryption
+**Given** an unknown or unsupported tool name is requested
+**When** the MCP server handles the request
+**Then** it rejects the request with a structured MCP error
+**And** suggests supported tool names where safe.
 
-**Given** key destruction fails
-**When** the retry policy is exhausted
-**Then** an alert is raised
-**And** erasure verification is blocked until key destruction succeeds
+**Given** MCP registration tests run
+**When** they inspect registered tools and schemas
+**Then** exactly the canonical tools are present
+**And** forbidden internal capabilities are absent.
 
-### Story 9.4: Consent Management, Restriction & Portability
+### Story 4.2: Implement AI-Friendly Find Parties Tool
 
-As an administrator,
-I want to manage per-channel per-purpose consent, restrict processing, and export party data,
-So that GDPR Articles 6, 18, and 20 obligations are fulfilled.
+As an AI agent,
+I want to find and list parties using a forgiving `find_parties` tool,
+So that I can resolve party identity from partial user-provided names.
 
 **Acceptance Criteria:**
 
-**Given** a party with contact channels
-**When** an administrator records consent for a specific channel and purpose
-**Then** a consent record is created with: channel ID, purpose, lawful basis, timestamp (FR47)
-**And** the consent record supports all lawful bases: consent, legitimate interest, contractual necessity, legal obligation
+**Given** an MCP request includes a display-name search term
+**When** `find_parties` is invoked
+**Then** it searches the tenant-safe party index by display name
+**And** returns candidates with party id, display name, party type, active status, and match metadata.
 
-**Given** an active consent record
-**When** an administrator revokes consent
-**Then** the consent is revoked with a timestamp (FR48)
-**And** the revocation is recorded in the processing activity log
+**Given** an MCP request omits a search term but requests listing behavior
+**When** `find_parties` is invoked
+**Then** it returns a bounded paginated party list for the current tenant
+**And** supports available type, active, created-date, and modified-date filters.
 
-**Given** a party under investigation
-**When** an administrator restricts processing
-**Then** the party's data is frozen — no modifications allowed while restricted (FR49)
-**And** read access continues (data is not erased, just frozen)
+**Given** partial or incomplete optional input is provided
+**When** `find_parties` normalizes the request
+**Then** omitted optional fields default sensibly
+**And** validation errors clearly state what required or invalid fields need correction.
 
-**Given** a restricted party
-**When** an administrator lifts the restriction
-**Then** processing resumes normally (FR50)
-**And** the restriction period is recorded in the processing activity log
+**Given** an AI agent expects email, identifier, or semantic search in MVP
+**When** `find_parties` handles the request
+**Then** it communicates that MVP supports display-name search only
+**And** it does not claim unsupported search fields were evaluated.
 
-**Given** a data portability request
-**When** an administrator triggers export for a party
-**Then** all party data is exported in machine-readable JSON format (FR51)
-**And** the export includes: party details, all contact channels, all identifiers, all consent records
+**Given** the tenant context is missing, invalid, or unauthorized
+**When** `find_parties` is invoked
+**Then** it fails closed with a structured MCP error
+**And** no cross-tenant existence information is exposed.
 
-**Given** any processing activity on party data
-**When** the activity completes
-**Then** a complete, time-stamped record is maintained in the event stream (FR52)
-**And** records support Article 30 compliance reporting
+**Given** the projection is stale, rebuilding, or degraded
+**When** `find_parties` returns results
+**Then** the response includes bounded freshness/degradation metadata
+**And** only current-tenant data proven safe is returned.
 
-### Story 9.5: Temporal Name Queries
+**Given** MCP tests run for `find_parties`
+**When** they cover search, list, filters, defaults, unsupported fields, empty results, degraded state, and tenant failures
+**Then** responses are predictable for AI agents and preserve tenant isolation.
 
-As a consumer,
-I want to query historical party names at a point in time,
-So that I can support legal and audit workflows without replaying the event stream on the request path.
+### Story 4.3: Implement Get Party Tool
 
-**Acceptance Criteria:**
-
-**Given** a party whose name has changed over time
-**When** a temporal name query is made with a specific point in time
-**Then** the party's name as it was at that timestamp is returned (FR72)
-**And** the query uses pre-computed name history tracked in the party detail projection
-**And** the request does not replay the event stream at query time.
-
-**Given** a party with one or more name changes
-**When** the full name history endpoint is called
-**Then** name history entries are returned in chronological order
-**And** each entry includes display name, sort name, change timestamp, and triggering event/source where available.
-
-**Given** a timestamp before the party existed
-**When** the temporal name query is made
-**Then** the API returns `404 Not Found`.
-
-**Given** a party has been erased
-**When** the temporal name query is made after erasure
-**Then** the API returns `410 Gone`
-**And** erased name history is not returned.
-
-**Given** an MCP caller
-**When** `get_party_name_at` is called
-**Then** it returns the same temporal name result and error semantics as REST.
-
-### Story 9.6: Hexalith.Memories-Backed Party Search
-
-As a consumer and AI agent,
-I want Parties search to use Hexalith.Memories for lexical, semantic, hybrid, and graph-assisted retrieval,
-So that party discovery uses the shared Hexalith search/memory module instead of a Parties-local search engine.
+As an AI agent,
+I want to retrieve complete party details by id using `get_party`,
+So that I can inspect the current party record before deciding what action to take.
 
 **Acceptance Criteria:**
 
-**Given** Hexalith.Memories integration is enabled
-**When** party events or projection changes occur
-**Then** Parties indexes searchable party memory units into Memories
-**And** indexed content includes display name, party type, contact channel values, identifier values, active/erased state, and useful event context
-**And** metadata includes tenant id, party id, aggregate id, event type, timestamps, correlation id, causation id, and source service where available.
+**Given** an MCP request includes a valid party id for the current tenant
+**When** `get_party` is invoked
+**Then** it retrieves the party detail through the tenant-safe query path
+**And** returns complete party details including type, active status, details, contact channels, identifiers, and freshness/degradation metadata where applicable.
 
-**Given** a consumer or AI agent calls party search with a natural-language query
-**When** Memories integration is healthy
-**Then** Parties uses Memories hybrid search by default
-**And** matching memory units are hydrated back to authoritative Parties projection data
-**And** response metadata includes Memories relevance, lexical, semantic, graph, and composite scores when available.
+**Given** the party id is missing or malformed
+**When** `get_party` normalizes the request
+**Then** it returns a structured validation error
+**And** the error clearly states the required party id format.
 
-**Given** a caller requests lexical-only or semantic-only search
-**When** the search mode is specified
-**Then** Parties calls Memories single-axis search with axis `syntactic` or `semantic`.
+**Given** the party does not exist or is not visible to the current tenant
+**When** `get_party` is invoked
+**Then** it returns a bounded not-found/unavailable MCP response
+**And** it does not reveal whether the party exists in another tenant.
 
-**Given** graph context is requested from a known party or memory unit
-**When** graph-assisted search executes
-**Then** Parties uses Memories traversal or graph-scoped search
-**And** hydrates related party results.
+**Given** the projection is stale, rebuilding, degraded, or cannot prove tenant-safe state
+**When** `get_party` is invoked
+**Then** it includes bounded status metadata or fails closed when unsafe
+**And** no raw projection or infrastructure error leaks to the agent.
 
-**Given** Memories is unavailable, disabled, or partially degraded
-**When** a search request arrives
-**Then** Parties falls back to local display-name search where possible
-**And** returns a degraded indicator explaining that Memories-backed rich search was unavailable.
+**Given** the party is inactive
+**When** `get_party` returns the party details
+**Then** the response clearly indicates inactive status
+**And** it does not treat soft deactivation as GDPR erasure.
 
-**Given** a party erasure is triggered
-**When** erasure verification runs
-**Then** all party-related Memories memory units and search indexes are purged or tombstoned
-**And** erasure is not reported complete until Memories cleanup succeeds or is explicitly recorded as blocked.
+**Given** MCP tests run for `get_party`
+**When** they cover success, invalid id, not found, cross-tenant, inactive, degraded, and unsafe states
+**Then** responses are structured, predictable, and tenant-safe.
 
-**Given** dependency boundaries are checked
-**When** `Hexalith.Parties.Contracts` is reviewed
-**Then** it has no dependency on Hexalith.Memories packages.
+### Story 4.4: Implement Composite Create Party Tool
 
----
-
-## Epic 11: Hexalith.Tenants Integration for Parties
-
-Hexalith.Parties uses Hexalith.Tenants as the source of truth for tenant lifecycle, membership, roles, and tenant configuration while preserving Parties-owned tenant isolation for party aggregates, projections, REST, MCP, and event publication.
-
-### Story 11.1: AppHost and Package Integration
-
-As a developer running Hexalith.Parties locally,
-I want the Parties AppHost to compose with Hexalith.Tenants,
-So that tenant lifecycle and membership are available through the same local topology as party management.
+As an AI agent,
+I want to create a complete party in one `create_party` tool call,
+So that a user's natural-language contact request becomes a usable party record without multiple fragile steps.
 
 **Acceptance Criteria:**
 
-**Given** the Parties AppHost
-**When** the local development topology is started
-**Then** the AppHost references the Tenants service/topology using the Tenants Aspire integration or equivalent local composition
-**And** Tenants service configuration is visible in the topology.
+**Given** an MCP request includes enough information to create a person with optional contact channels and identifiers
+**When** `create_party` is invoked
+**Then** the MCP layer normalizes the request into a `CreatePartyComposite` command
+**And** the aggregate processes the party details, channels, and identifiers in one actor turn.
 
-**Given** local development setup
-**When** the default sample environment is prepared
-**Then** a default active tenant is seeded or documented through Hexalith.Tenants
-**And** the sample/test user is assigned a role that permits party commands.
+**Given** an MCP request includes enough information to create an organization with optional contact channels and identifiers
+**When** `create_party` is invoked
+**Then** the MCP layer normalizes the request into a `CreatePartyComposite` command
+**And** the aggregate creates the complete organization party in one actor turn.
 
-**Given** tenant authorization is enabled
-**When** Parties starts
-**Then** startup validates that Tenants integration configuration is present
-**And** missing configuration fails fast with actionable diagnostics.
+**Given** optional fields are omitted from the MCP request
+**When** `create_party` normalizes input
+**Then** sensible documented defaults are applied where valid
+**And** missing required fields return clear structured validation errors.
 
-**Given** the Tenants service cannot be reached
-**When** Parties health and readiness are checked
-**Then** the failure is surfaced according to documented degraded behavior.
+**Given** a composite create command succeeds
+**When** `create_party` returns its MCP response
+**Then** the response includes the complete created party record, not just the id
+**And** the returned record reflects all created details, contact channels, identifiers, active status, and derived names.
 
-### Story 11.2: Tenants Event Consumption and Local Access Projection
+**Given** duplicate sub-operations, existing identifiers/channels, or conflicting payloads are submitted
+**When** the composite command is handled
+**Then** duplicate-safe/idempotent rules are applied by the aggregate
+**And** the MCP response explains skipped, applied, or rejected sub-operations without exposing internal state.
 
-As a Parties service maintainer,
-I want to consume Hexalith.Tenants lifecycle, membership, role, and configuration events,
-So that authorization decisions can be made locally without polling.
+**Given** the request exceeds configured composite payload limits
+**When** `create_party` validates the request
+**Then** it returns a structured validation error
+**And** no partial party is created.
 
-**Acceptance Criteria:**
+**Given** the command is rejected
+**When** `create_party` returns its MCP response
+**Then** no partial success is reported
+**And** the error is structured, clear, and safe for an AI agent to use in follow-up reasoning.
 
-**Given** relevant Hexalith.Tenants lifecycle, membership, role, or configuration events are published
-**When** Parties receives them through DAPR pub/sub
-**Then** Parties updates a local tenant access projection/cache.
+**Given** MCP tests run for `create_party`
+**When** they cover person, organization, optional defaults, missing required fields, duplicate sub-operations, payload limit, rejection, and complete response assembly
+**Then** one tool call produces predictable all-or-nothing behavior.
 
-**Given** the local tenant access projection/cache
-**When** queried for tenant access
-**Then** it records active tenant state, user membership, roles, and relevant tenant configuration.
+### Story 4.5: Implement Patch-Oriented Update Party Tool
 
-**Given** a tenant is disabled or a user is removed from a tenant
-**When** the corresponding Tenants event is processed by Parties
-**Then** subsequent Parties commands and MCP tools fail closed for that tenant/user.
-
-**Given** Tenants event consumption is eventually consistent
-**When** developer documentation is reviewed
-**Then** it explains the timing window
-**And** it documents the synchronous enforcement path if the Tenants authorization plugin is enabled.
-
-### Story 11.3: REST and MCP Tenant Authorization Enforcement
-
-As a platform operator,
-I want all Parties REST and MCP operations to enforce Tenants-backed access rules,
-So that users cannot manage party data for inactive or unauthorized tenants.
+As an AI agent,
+I want to update only the party fields I specify in one `update_party` tool call,
+So that I can safely modify party records without sending or reconstructing full party state.
 
 **Acceptance Criteria:**
 
-**Given** a REST command or query endpoint is called
-**When** the request reaches Parties
-**Then** the endpoint validates tenant access through `ITenantAccessService`.
+**Given** an MCP request includes a party id and person detail changes
+**When** `update_party` is invoked
+**Then** the MCP layer normalizes only the specified fields into an `UpdatePartyComposite` command
+**And** unspecified person fields remain unchanged.
 
-**Given** an MCP tool is called
-**When** the tool resolves session tenant context
-**Then** the tool validates tenant access through the same `ITenantAccessService`
-**And** it does not rely only on `McpSessionContext.Tenant`.
+**Given** an MCP request includes organization detail changes
+**When** `update_party` is invoked
+**Then** only specified organization fields are updated
+**And** unspecified organization fields remain unchanged.
 
-**Given** a Parties operation requires authorization
-**When** access is evaluated
-**Then** Reader permits read/search operations
-**And** Contributor permits create/update/deactivate/reactivate operations
-**And** Owner or a configured elevated role permits administrative party operations.
+**Given** an MCP request includes contact channel additions, updates, removals, or preferred-channel changes
+**When** `update_party` is invoked
+**Then** those sub-operations are represented explicitly in the composite command
+**And** aggregate-side rules decide applied, skipped, or rejected outcomes.
 
-**Given** a request has missing tenant, inactive tenant, missing membership, insufficient role, or stale/unknown tenant state
-**When** the request is evaluated
-**Then** Parties rejects it with standardized ProblemDetails or MCP errors.
+**Given** an MCP request includes identifier additions or removals
+**When** `update_party` is invoked
+**Then** those sub-operations are represented explicitly in the composite command
+**And** duplicate or missing identifier behavior follows aggregate-side rules.
 
-**Given** a command payload contains tenant information
-**When** the payload is validated
-**Then** tenant ID is ignored or rejected according to API contract rules
-**And** tenant identity is never accepted from command payloads.
+**Given** optional fields are omitted from the MCP request
+**When** `update_party` normalizes input
+**Then** omitted fields are treated as absent, not null updates
+**And** documented validation errors distinguish missing required fields from intentional clears where clears are supported.
 
-### Story 11.4: Tenants Integration Tests, Deployment Validation, and Documentation
+**Given** a composite update succeeds
+**When** `update_party` returns its MCP response
+**Then** the response includes the complete updated party record
+**And** the returned record reflects all applied sub-operations in final aggregate order.
 
-As a developer and operator,
-I want tests and docs proving Parties uses Hexalith.Tenants correctly,
-So that tenant integration is reliable in CI and local development.
+**Given** one sub-operation would violate aggregate rules
+**When** the composite update is handled
+**Then** the operation is all-or-nothing according to composite command design
+**And** the MCP response does not report partial success as if the party were updated.
 
-**Acceptance Criteria:**
+**Given** MCP tests run for `update_party`
+**When** they cover partial detail updates, omitted fields, contact operations, identifier operations, duplicate-safe behavior, invalid transitions, payload limits, rejection, and complete response assembly
+**Then** patch semantics are predictable for AI agents.
 
-**Given** fast tenant authorization test scenarios
-**When** tests are written
-**Then** they use `Hexalith.Tenants.Testing` where appropriate.
+### Story 4.6: Implement Delete Party as Soft Deactivation Tool
 
-**Given** integration tests for Tenants-backed access
-**When** the test suite runs
-**Then** it covers active tenant allowed, disabled tenant denied, removed user denied, insufficient role denied, and cross-tenant projection isolation.
-
-**Given** deployment validation tooling
-**When** validation runs
-**Then** it checks Tenants subscription/configuration
-**And** reports actionable errors when integration is missing or unhealthy.
-
-**Given** getting-started documentation
-**When** a developer follows the guide
-**Then** tenants are provisioned through Hexalith.Tenants.
-
-**Given** tenant troubleshooting documentation
-**When** reviewed
-**Then** it distinguishes missing JWT claims from missing Tenants membership or role.
-
----
-
-## Epic 10: Administration & Frontend (v1.2)
-
-Administrators can browse, search, and inspect party records and process party-level GDPR requests via a FrontComposer-based Blazor/Razor admin portal that consumes EventStore-fronted Parties client/query/command contracts. Generic event and stream browsing is delegated to EventStore Admin UI through safe deep-links. Tenant lifecycle, membership, roles, and configuration management remain owned by Hexalith.Tenants admin capabilities; the Parties admin portal consumes active tenant context and must not duplicate Tenants management screens. Consuming application developers can embed a party picker component in their UIs for party search and selection.
-
-Planning note: Epic 10 administration and picker delivery depends on Epic 11 Tenants integration and the Epic 12 EventStore-fronted consumer boundary. Story 12.7 is the active admin portal implementation path; Story 12.8 is the active picker rewrite path. Earlier TypeScript or direct Parties REST wording in Story 10.x is historical and superseded where it conflicts with Epic 12.
-
-### Story 10.1: Admin Portal — Browse, Search & Inspect
-
-As an administrator,
-I want a web-based admin portal to browse, search, and inspect party records,
-So that I can manage party data without using API tools or CLI commands.
+As an AI agent,
+I want a `delete_party` tool that safely removes a party from active use,
+So that user requests to delete a contact map to MVP soft deactivation rather than GDPR erasure.
 
 **Acceptance Criteria:**
 
-**Given** an authenticated administrator
-**When** they access the admin portal
-**Then** they can browse a paginated list of parties (FR65)
-**And** they can search parties by display name in the baseline experience
-**And** email or identifier search is available only when the dedicated search capability is enabled
-**And** they can filter by party type (person/organization) and active status
+**Given** an MCP request includes a valid party id for an active party
+**When** `delete_party` is invoked
+**Then** it maps to the domain soft-deactivation command
+**And** the party is marked inactive rather than erased.
 
-**Given** a party in the list
-**When** the administrator clicks to inspect
-**Then** the full party detail is displayed:
-- Party type and details (person or organization)
-- All contact channels with type, value, and preferred status
-- All identifiers with type and value
-- Consent records (if v1.1 GDPR is active)
-- Active/inactive status
-- Creation and last modification dates
+**Given** `delete_party` succeeds
+**When** the MCP response is returned
+**Then** it includes the updated party state or bounded confirmation showing inactive status
+**And** it clearly distinguishes soft deactivation from GDPR erasure.
 
-**Given** the admin portal
-**When** rendering party data fields
-**Then** output encoding is applied to all user-supplied data (NFR32)
-**And** no stored XSS from party data (user-supplied or AI-created) is possible
+**Given** an AI agent or user intent appears to request GDPR erasure
+**When** `delete_party` handles the request
+**Then** MVP behavior communicates that GDPR erasure is not performed by this tool
+**And** the response points to documented compliance limitations or future GDPR operations where appropriate.
 
-**Given** the admin portal architecture
-**When** reviewed
-**Then** it is a FrontComposer-based Blazor/Razor domain surface
-**And** it uses composable Parties-domain components for list, detail, GDPR operations, and safe EventStore Admin UI deep-links
+**Given** the party id is missing, malformed, not found, already inactive, or not visible to the tenant
+**When** `delete_party` is invoked
+**Then** it returns a structured MCP success/idempotent/rejection response according to aggregate rules
+**And** it does not expose cross-tenant existence information.
 
-### Story 10.2: Admin Portal — GDPR Operations
+**Given** the tenant context is missing, invalid, or unauthorized
+**When** `delete_party` is invoked
+**Then** it fails closed before command handling
+**And** no party state is read or mutated.
 
-As an administrator,
-I want to process GDPR requests (erasure, restriction, consent, export) via the admin portal,
-So that DPO operations are efficient and auditable through a visual interface.
+**Given** MCP tests run for `delete_party`
+**When** they cover success, already inactive, missing id, not found, cross-tenant, unauthorized, and GDPR-erasure wording
+**Then** soft-deactivation semantics are predictable and safe.
+
+### Story 4.7: Enforce MCP Boundary and Tool Safety
+
+As an architect maintaining Parties,
+I want the MCP layer to remain a translation layer with strict safety boundaries,
+So that AI agent features do not leak domain logic, internal infrastructure, or tenant data.
 
 **Acceptance Criteria:**
 
-**Given** an authenticated administrator viewing a party
-**When** they trigger "Request Erasure"
-**Then** crypto-shredding is triggered via the API (FR66)
-**And** the erasure verification report is displayed when complete
-**And** the full erasure flow (trigger → verify → confirm) completes within 15 minutes of active time
+**Given** MCP tool code is reviewed or tested
+**When** dependencies are inspected
+**Then** MCP code references command/query contracts and client abstractions only as intended
+**And** it does not reference domain event types, projection actor internals, DAPR actor internals, or server implementation details.
 
-**Given** an authenticated administrator viewing a party
-**When** they trigger "Restrict Processing"
-**Then** the party's data is frozen via the API
-**And** the restriction status is visible in the party detail view
+**Given** MCP tools normalize forgiving AI input
+**When** normalization occurs
+**Then** normalization remains translation logic only
+**And** domain invariants are enforced by aggregate/command handlers rather than duplicated in MCP tool code.
 
-**Given** an authenticated administrator viewing a party
-**When** they manage consent records
-**Then** they can add new consent (channel, purpose, lawful basis)
-**And** they can revoke existing consent
-**And** consent history is visible with timestamps
+**Given** MCP tools return responses to AI agents
+**When** responses include errors, degraded state, or validation guidance
+**Then** responses are structured, bounded, and safe for agent reasoning
+**And** they do not include raw command payloads, raw ProblemDetails details, secrets, tokens, claims dictionaries, tenant membership payloads, or personal data beyond the requested party result.
 
-**Given** an authenticated administrator
-**When** they trigger data portability export
-**Then** the party data is exported as downloadable JSON
-**And** the export is logged in the processing activity record
+**Given** an MCP request has missing or invalid tenant/auth context
+**When** any tool is invoked
+**Then** the request fails closed before command/query state is accessed
+**And** tool responses do not reveal cross-tenant existence.
 
-**Given** the admin dashboard
-**When** accessed by a DPO
-**Then** it provides: pending GDPR requests, consent status overview, and erasure audit trail
+**Given** an unknown tool, unsupported capability, or malformed payload is submitted
+**When** the MCP server handles it
+**Then** it returns a structured MCP error with safe suggestions where appropriate
+**And** it does not dispatch to internal command or infrastructure surfaces.
 
-### Story 10.3: Embeddable Party Picker Component
+**Given** architectural fitness tests run
+**When** they inspect MCP registrations, project references, namespaces, and forbidden type usage
+**Then** boundary violations fail the test suite.
 
-Planning note: Story 10.3 is historical. The active picker implementation path is Story 12.8 plus `ux-party-picker-2026-05-12.md`. Do not use npm/package wording as authoritative for implementation. Story 10.3 / Story 12.8 party picker UX must cover embedding shape, type-ahead behavior, selected-id contract, host auth injection, stale-response clearing, accessibility, localization, and privacy-safe rendering/storage/logging. This UX source is separate from the admin portal UX artifact.
+### Story 4.8: Validate MCP Latency, Errors, and Complete Responses
+
+As an AI agent integrator,
+I want MCP tools to be fast, structured, and complete,
+So that agents can use Parties without brittle retries or hidden follow-up queries.
+
+**Acceptance Criteria:**
+
+**Given** MCP command tools are invoked under target throughput conditions
+**When** `create_party`, `update_party`, or `delete_party` complete successfully
+**Then** each tool meets the documented MVP latency target where infrastructure is healthy
+**And** composite create/update operations run in a single aggregate turn rather than sequential fragile commands.
+
+**Given** MCP query tools are invoked under target throughput conditions
+**When** `find_parties` or `get_party` complete successfully
+**Then** each tool meets the documented query latency target where projections are healthy
+**And** responses include freshness/degradation metadata where applicable.
+
+**Given** `create_party` or `update_party` succeeds
+**When** the MCP response is returned
+**Then** it includes the complete created or updated party record
+**And** agents do not need an immediate follow-up `get_party` call to know the resulting state.
+
+**Given** MCP tools encounter validation, rejection, tenant, unsupported capability, degraded infrastructure, or internal failure scenarios
+**When** responses are returned
+**Then** errors are structured, predictable, and safe for agent reasoning
+**And** personal data, secrets, raw payloads, and cross-tenant existence details are not exposed.
+
+**Given** an MCP client retries the same idempotent request
+**When** the request is equivalent and uses the same idempotency context
+**Then** duplicate side effects are not created
+**And** the retry response remains stable enough for agent workflows.
+
+**Given** MCP end-to-end tests run
+**When** they cover all five tools across success, validation error, domain rejection, tenant failure, degraded projection, unsupported capability, latency, and complete response scenarios
+**Then** the tool surface is predictable and ready for AI-agent consumption.
+
+## Epic 5: Event-Driven Consumer Integration
+
+Consuming applications can receive ordered, tenant-aware party events and build their own lifecycle-aware read models.
+
+### Story 5.1: Publish Stable Party Domain Events
 
 As a consuming application developer,
-I want an embeddable party picker component for my UI,
-So that my users can search and select parties without building a custom party selector.
+I want Parties to publish stable domain events when party state changes,
+So that my application can react and maintain its own read models.
 
 **Acceptance Criteria:**
 
-**Given** the party picker component
-**When** embedded in a consuming application UI
-**Then** it provides a search input with type-ahead party search (FR67)
-**And** search results display party name, type, and key contact information
-**And** selecting a party returns the party ID to the host application
+**Given** a party is created, updated, deactivated, reactivated, or has contacts/identifiers changed
+**When** the corresponding aggregate command succeeds
+**Then** a stable party domain event is persisted and published through the EventStore event pipeline
+**And** the event payload represents the state change without requiring consumers to inspect internal aggregate state.
 
-**Given** the party picker component
-**When** reviewed for architecture
-**Then** it is a composable FrontComposer/Blazor picker component
-**And** it communicates through the EventStore-fronted Parties client/query boundary
-**And** it handles host request/auth injection through the accepted Parties client/EventStore gateway configuration
+**Given** a command is rejected
+**When** rejection events are persisted for audit/replay compatibility
+**Then** external subscriber behavior is documented for rejection events
+**And** consumers can distinguish successful state-change events from rejection events.
 
-**Given** the party picker component
-**When** used in different consuming applications
-**Then** it is delivered as a FrontComposer/Blazor picker surface through the accepted Parties client/EventStore gateway configuration
-**And** the durable selection contract is the party ID
-**And** it supports host-provided request/auth context without persisting, refreshing, parsing, or logging tokens
+**Given** event contracts are published in the Contracts package
+**When** consumers reference the package
+**Then** they can deserialize supported party events
+**And** event schemas remain append-only and additive.
+
+**Given** personal data appears in published event payloads
+**When** events are published to subscribers
+**Then** payload shape follows the architecture's MVP/v1.1 privacy rules
+**And** event publishing logs do not include raw personal data.
+
+**Given** event publication tests run
+**When** they exercise create, detail update, contact channel, identifier, deactivate, reactivate, and rejection paths
+**Then** expected event types are persisted/published
+**And** event contracts remain stable for consumers.
+
+### Story 5.2: Include Tenant Context and Envelope Metadata
+
+As a consuming application developer,
+I want party events to include tenant context and correlation metadata,
+So that I can route, audit, and process events safely in a multi-tenant system.
+
+**Acceptance Criteria:**
+
+**Given** a successful party state-change event is published
+**When** the event is delivered to subscribers
+**Then** the event envelope includes authenticated tenant context
+**And** consumers do not need to infer tenant from payload fields.
+
+**Given** a party event is published
+**When** the event envelope is inspected
+**Then** it includes correlation, causation, aggregate identity, event type, timestamp, and version metadata according to EventStore conventions
+**And** metadata fields are stable enough for consumer routing and diagnostics.
+
+**Given** a command payload contains tenant-like values
+**When** the event is emitted
+**Then** envelope tenant context remains derived from authenticated credentials
+**And** request payload tenant values are not trusted as event routing identity.
+
+**Given** events are logged during publication
+**When** logs are produced
+**Then** logs include safe envelope metadata such as tenant, aggregate id, event type, and correlation id
+**And** logs do not include raw event payloads, secrets, or personal data.
+
+**Given** event metadata tests run
+**When** they publish representative party events
+**Then** tenant context and envelope metadata are present and consistent
+**And** missing tenant context fails closed before publication.
+
+### Story 5.3: Configure At-Least-Once Event Delivery
+
+As a consuming application developer,
+I want Parties events delivered through the configured pub/sub pipeline with at-least-once semantics,
+So that my application can reliably observe party lifecycle changes.
+
+**Acceptance Criteria:**
+
+**Given** a party state-change event is persisted successfully
+**When** the EventStore publication pipeline runs
+**Then** the event is published to the configured DAPR pub/sub topic
+**And** publication uses EventStore's persist-then-publish behavior.
+
+**Given** event publication fails after persistence
+**When** recovery or drain processing runs
+**Then** the persisted event is retried for publication according to EventStore behavior
+**And** successful command handling is not treated as data loss.
+
+**Given** a subscriber receives a party event
+**When** the subscriber acknowledges processing successfully
+**Then** the event is considered delivered according to the DAPR pub/sub backend semantics
+**And** subscriber retry behavior is documented for failures.
+
+**Given** a subscriber fails before acknowledging processing
+**When** the DAPR pub/sub backend retries delivery
+**Then** the subscriber may receive the same party event more than once
+**And** documentation and samples warn consumers to implement idempotent handlers.
+
+**Given** deployment configuration is validated
+**When** DAPR pub/sub components or access-control rules are missing or unsafe
+**Then** validation reports a blocking issue
+**And** wildcard app ids or wildcard paths are not accepted as safe.
+
+**Given** event delivery tests or deployment validation run
+**When** they cover normal publish, publication retry, subscriber failure, duplicate delivery, and missing pub/sub config
+**Then** at-least-once behavior and unsafe configuration detection are verified.
+
+### Story 5.4: Document Event Ordering and Subscriber Idempotency
+
+As a consuming application developer,
+I want clear guidance for event ordering and duplicate delivery,
+So that my event handlers remain correct across supported deployment targets.
+
+**Acceptance Criteria:**
+
+**Given** Parties publishes events for a single aggregate
+**When** the architecture and deployment docs describe delivery behavior
+**Then** they state the expected per-aggregate causal ordering guarantees for supported deployment targets
+**And** they identify any broker/backend configuration required for those guarantees.
+
+**Given** a deployment target cannot guarantee per-aggregate ordering
+**When** subscriber guidance is documented
+**Then** it describes order-tolerant or sequence-checking handler patterns
+**And** it warns consumers not to assume strict ordering unless the backend configuration supports it.
+
+**Given** DAPR pub/sub delivers at-least-once
+**When** consumer handler guidance is documented
+**Then** it includes idempotency recommendations using event id, aggregate id, version/sequence, correlation id, or equivalent metadata
+**And** it explains safe duplicate handling.
+
+**Given** consumer read models process party lifecycle events
+**When** examples or tests are reviewed
+**Then** they handle duplicate and out-of-order events without corrupting local state
+**And** destructive or privacy-relevant events are treated with special care.
+
+**Given** ordering documentation tests or review checks run
+**When** docs mention supported backends or ordering behavior
+**Then** they remain aligned with EventStore/DAPR deployment guidance
+**And** unsupported guarantees are not claimed.
+
+### Story 5.5: Provide Consumer Read-Model Handler Guidance
+
+As a consuming application developer,
+I want concrete handler patterns for party events,
+So that I can build domain-specific read models safely and predictably.
+
+**Acceptance Criteria:**
+
+**Given** a consuming application wants to maintain a local party read model
+**When** it follows the handler guidance
+**Then** it can handle party created, details updated, contact channel changed, identifier changed, deactivated, and reactivated events
+**And** it stores only the fields needed for its own bounded context.
+
+**Given** handlers process duplicate events
+**When** the same event arrives more than once
+**Then** the guidance shows how to skip or safely reapply the duplicate
+**And** local read model state is not duplicated or corrupted.
+
+**Given** handlers process events that arrive out of order for a backend that does not guarantee ordering
+**When** sequence or version metadata indicates an older event
+**Then** the guidance shows how to defer, skip, or reconcile the event
+**And** it avoids overwriting newer local state with older data.
+
+**Given** the consuming application only needs references to Parties
+**When** it handles events
+**Then** guidance recommends storing stable party id and necessary metadata rather than copying unnecessary personal data
+**And** it flags privacy implications of local denormalization.
+
+**Given** sample handler code or docs are validated
+**When** representative event streams are replayed
+**Then** the example read model reaches the expected state
+**And** duplicate and out-of-order cases are covered.
+
+### Story 5.6: Prepare Forward-Compatible Party Lifecycle Events
+
+As a consuming application developer,
+I want party event contracts to anticipate future lifecycle capabilities,
+So that my integration does not break when Parties adds merge, GDPR, or richer search/audit behavior.
+
+**Acceptance Criteria:**
+
+**Given** the Contracts package includes MVP party events
+**When** event contract compatibility is reviewed
+**Then** events support additive evolution without renaming or removing existing fields
+**And** compatibility tests detect breaking event contract changes.
+
+**Given** future party merge behavior is not active in MVP
+**When** forward-compatible event contracts are reviewed
+**Then** a `PartyMerged` or equivalent placeholder contract is represented where architecture requires it
+**And** documentation states whether it can be emitted in MVP.
+
+**Given** GDPR events are deferred to v1.1
+**When** event naming and metadata conventions are reviewed
+**Then** the MVP event model leaves room for `PartyErased`, consent, restriction, export, and processing-record events
+**And** existing MVP event consumers are not forced to handle unavailable event types as if they were emitted.
+
+**Given** event deserialization is tolerant
+**When** consumers receive events with additive future fields
+**Then** existing consumers can ignore unknown fields where the serialization contract supports it
+**And** event version metadata remains available for compatibility decisions.
+
+**Given** forward-compatibility tests run
+**When** they inspect event contracts, version metadata, serialization, and placeholder docs
+**Then** future-ready contracts remain additive and consumer-safe.
