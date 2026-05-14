@@ -1310,7 +1310,7 @@ Technology versions are compatible: .NET 10, DAPR SDK 1.16.1, Aspire 13.1.2, Med
 |---|-----|----------|------------|
 | 1 | FR11 — No explicit event for marking preferred contact channel | Important | Added `PreferredContactChannelChanged` event to both Events listings |
 | 2 | FR68 — Date range filtering not addressed in key-value projection model | Important | Added `CreatedAt`/`LastModifiedAt` to `PartyIndexEntry` model documentation |
-| 3 | MCP tool naming — PRD uses `search_parties` + `list_parties`, architecture uses `find_parties` + `delete_party` | Important | Architecture is internally consistent; `find_parties` unifies search + list, `delete_party` maps to deactivation (FR4). PRD tool names were design-phase placeholders refined during architecture |
+| 3 | MCP tool naming — PRD, architecture, and Epic 12 use `find_parties`, `get_party`, `create_party`, `update_party`, and `delete_party` | Important | Resolved by making the architecture/Epic 12 names canonical. `find_parties` unifies search + list, and `delete_party` maps to soft deactivation (FR4), not GDPR erasure. |
 | 4 | FR37 — `PartyMerged` forward-compat event placeholder missing from Events listing | Minor | Added `PartyMerged.cs` to Events in both patterns and structure sections |
 
 **Observations (non-blocking):**

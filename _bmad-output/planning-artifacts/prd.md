@@ -81,7 +81,7 @@ Hexalith.Parties is also the first domain microservice built on the Hexalith.Eve
 - **Single-prompt modification:** Updating a contact channel or adding an identifier achievable through one MCP tool call
 - **MCP tool clarity:** Tools well-named, well-documented, produce predictable results — AI agents use them correctly without retry or confusion
 - **Forgiving input schemas:** MCP tools accept partial input gracefully; missing optional fields default sensibly; validation errors clearly state what's needed
-- **Search result quality:** `search_parties` results include display-name match metadata (matched field, match type) sufficient for AI agents to rank candidates in simple name-based cases. Email, identifier, and semantic search are deferred to the dedicated search capability.
+- **Search result quality:** `find_parties` results include display-name match metadata (matched field, match type) sufficient for AI agents to rank candidates in simple name-based cases. Email, identifier, and semantic search are deferred to the dedicated search capability.
 - **Transparent interaction:** End users manage contacts entirely through their AI assistant without needing to know Hexalith.Parties exists
 
 **Administrator Success (Laurent)**
@@ -158,7 +158,7 @@ The smallest version that creates real value: a party management microservice ac
 
 > **GDPR Notice:** MVP does not include GDPR compliance features. Do not store regulated EU personal data until v1.1. MVP is for development, evaluation, and non-personal/test data only. Startup warning banner is **non-dismissable** — it persists in the admin UI header and API response headers until v1.1 GDPR features are activated.
 
-> **Duplicate Notice:** MVP does not include duplicate detection. AI agents creating parties from extracted data (emails, documents) will likely create near-duplicates. `search_parties` display-name match metadata provides advisory signals only; consuming apps and operators are responsible for deduplication until v2. Consider adding near-match advisory warnings in `create_party` responses as a v1.1 enhancement.
+> **Duplicate Notice:** MVP does not include duplicate detection. AI agents creating parties from extracted data (emails, documents) will likely create near-duplicates. `find_parties` display-name match metadata provides advisory signals only; consuming apps and operators are responsible for deduplication until v2. Consider adding near-match advisory warnings in `create_party` responses as a v1.1 enhancement.
 
 **Included:**
 - Party aggregate: persons and organizations with type-specific details, contact channels (type-discriminated), identifiers, deactivation/reactivation, client-generated stable UUIDs
@@ -166,7 +166,7 @@ The smallest version that creates real value: a party management microservice ac
 - Display name / sort name derivation (simple concatenation; locale-aware deferred to v1.1)
 - REST command API with typed, self-explanatory `DomainResult` rejection responses
 - Read projection: paginated list, display-name search with match metadata, filter by type; eventual consistency < 2 seconds (email, identifier, and semantic search deferred to the dedicated search capability)
-- MCP server: 5 tools (`search_parties`, `get_party`, `create_party`, `update_party`, `list_parties`); `create_party` returns complete party; forgiving input schemas with sensible defaults and clear validation errors
+- MCP server: 5 tools (`find_parties`, `get_party`, `create_party`, `update_party`, `delete_party`); `find_parties` covers search and list modes; `delete_party` maps to soft deactivation, not GDPR erasure; `create_party` returns complete party; forgiving input schemas with sensible defaults and clear validation errors
 - NuGet packages: Hexalith.Parties.Contracts (including forward-compatible `PartyMerged` event), Hexalith.Parties.Client (`AddPartiesClient()`)
 - Via EventStore (zero additional effort): JWT auth, multi-tenancy, event publishing, idempotent commands, convention-based discovery, snapshot support
 - Documentation: README (value proposition in first paragraph, testable clarity), getting-started guide (realistic scenario, tested on clean machine by non-author, **includes non-.NET developer path: Docker deploy + REST API**), sample integration, GDPR disclaimer, **emergency manual erasure procedure** (documented steps for handling erasure requests pre-v1.1 — scope, limitations, documents destructive nature and event stream integrity trade-offs)
@@ -179,7 +179,7 @@ The smallest version that creates real value: a party management microservice ac
 | Integration gate | **Hard** | First `CreateParty` in < 30 min; developer explains command → event → projection flow | Timed walkthrough + comprehension check |
 | MCP gate | **Hard** | Single-prompt creates complete party, full party returned in response | Tested with Claude and other assistants |
 | Documentation gate | **Hard** | Guide enables self-service onboarding; README passes one-sentence clarity test | Tested by fresh developer |
-| Resolution gate | Soft | AI agent resolves "Dupont" to correct party from candidates | MCP `search_parties` with match metadata |
+| Resolution gate | Soft | AI agent resolves "Dupont" to correct party from candidates | MCP `find_parties` with match metadata |
 | EventStore validation gate | Soft | Aggregate follows conventions, no workarounds | Code review |
 
 All hard gates must pass to proceed to v1.1. Soft gates inform but don't block.
@@ -242,7 +242,7 @@ He adds `Hexalith.Parties.Client` to his case management project. One line: `bui
 
 **Opening Scene:** Aria is an AI agent processing Sophie's morning emails. An email arrives from "J. Dupont at Acme Corp" about an invoice dispute. Aria needs to link this email to the correct party in Sophie's workflow system. But who is "J. Dupont"? There are three Duponts in the system.
 
-**Rising Action:** Aria calls `search_parties` via MCP with the query "Dupont." The results come back with display-name match metadata — Jean Dupont (display-name prefix match), Jacques Dupont (display-name prefix match), and Julie Dupont (display-name prefix match, inactive). Aria calls `get_party` on the likely candidates to inspect contact channels and identifiers before linking the email.
+**Rising Action:** Aria calls `find_parties` via MCP with the query "Dupont." The results come back with display-name match metadata — Jean Dupont (display-name prefix match), Jacques Dupont (display-name prefix match), and Julie Dupont (display-name prefix match, inactive). Aria calls `get_party` on the likely candidates to inspect contact channels and identifiers before linking the email.
 
 Aria is 95% confident this is Jean Dupont. She links the email to his party ID in Sophie's task system. She drafts a response: "I've linked the invoice dispute email from Jean Dupont at Acme Corp to case #427. His billing address is 42 Rue de Rivoli, Paris."
 
@@ -250,7 +250,7 @@ Aria is 95% confident this is Jean Dupont. She links the email to his party ID i
 
 **Resolution:** Over the course of a week, Aria processes 50 emails, resolves 43 to existing parties autonomously (match metadata was sufficient), asks Sophie to disambiguate 5, and creates 2 new parties from extracted data. Sophie's contact registry grows organically, always structured, always up to date. Identity resolution is no longer a manual, error-prone task — it's a reliable, structured operation.
 
-**Requirements revealed:** MCP `search_parties` with match metadata, `create_party` with forgiving input schemas, `get_party` for full details, partial input handling, complete party in create response.
+**Requirements revealed:** MCP `find_parties` with match metadata, `create_party` with forgiving input schemas, `get_party` for full details, partial input handling, complete party in create response.
 
 ---
 
@@ -258,7 +258,7 @@ Aria is 95% confident this is Jean Dupont. She links the email to his party ID i
 
 **Opening Scene:** Sophie is preparing for a client meeting. She needs the billing address for Acme Corp and the mobile number for her contact there, Jean Dupont. Three months ago, she'd have searched Outlook, checked a shared spreadsheet, and maybe texted a colleague. Today, she asks her AI assistant.
 
-**Rising Action:** "What's the billing address for Acme Corp?" Her AI assistant calls `search_parties` for "Acme Corp", finds the organization, calls `get_party` for full details, and responds: "Acme Corp's billing address is 42 Rue de Rivoli, 75001 Paris. Their primary contact is Jean Dupont — would you like his details too?" Sophie says yes. The AI retrieves Jean's party record: mobile +33 6 12 34 56 78, email jean.dupont@acme.com.
+**Rising Action:** "What's the billing address for Acme Corp?" Her AI assistant calls `find_parties` for "Acme Corp", finds the organization, calls `get_party` for full details, and responds: "Acme Corp's billing address is 42 Rue de Rivoli, 75001 Paris. Their primary contact is Jean Dupont — would you like his details too?" Sophie says yes. The AI retrieves Jean's party record: mobile +33 6 12 34 56 78, email jean.dupont@acme.com.
 
 After the meeting, Sophie says: "Jean mentioned they moved offices. Update Acme Corp's address to 15 Avenue des Champs-Élysées, 75008 Paris." The AI calls `update_party` to update the postal contact channel. Done in seconds.
 
@@ -535,7 +535,8 @@ All commands from the Party aggregate are exposed as REST endpoints following Ev
 - **OpenAPI 3.x specification** auto-generated from endpoint definitions and published with the service
 
 **MCP Tools (5 tools):**
-- `search_parties`, `get_party`, `create_party`, `update_party`, `list_parties`
+- `find_parties`, `get_party`, `create_party`, `update_party`, `delete_party`
+- Naming decision: `find_parties` unifies search and list modes; `delete_party` is an AI-ergonomic alias for soft deactivation and is not GDPR erasure.
 - Designed for AI ergonomics, not as 1:1 command API mirrors
 
 **API Transport Decision:**

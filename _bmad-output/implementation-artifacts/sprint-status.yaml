@@ -54,12 +54,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-05-02
-last_updated: 2026-05-13  # epic 11 retrospective completed and saved as epic-11-retro-2026-05-13.md.
-last_updated: 2026-05-13  # epic 12 retrospective completed and saved as epic-12-retro-2026-05-13.md.
-last_updated: 2026-05-13  # epic 10 retrospective completed and saved as epic-10-retro-2026-05-13.md.
-last_updated: 2026-05-13  # story 12-8 advanced review -> done after bmad-code-review: 3 decisions resolved (defensive catch (Exception) accepted, xunit.v3 intentional, IsRegistered<IPartiesQueryClient>() guard accepted). 19 patches applied across PartyPickerApiClient (bounded page in all branches, null-Items guard, null-Party filter, symmetric Unavailable metadata, token-provider try/catch, defensive catch (Exception)), PartyPicker.razor (ApiBaseUrl [Obsolete], removed dead HRE catch, JSException + TaskCanceledException catches in JS dispatch + DisposeAsync, clear button respects IsInteractionDisabled, stub-selection badge suppression, AuthContextKey-aware DelegateFingerprint, readonly/disabled HTML attributes separated for AC8 a11y), PartyPickerSearchRequest (removed dead ApiBaseAddress), PartyPickerSearchMetadata ([Obsolete] dead fields), PartyPickerServiceCollectionExtensions (IsRegistered<IPartiesQueryClient> guard), guardrail tests (added DAPR/projection/IPartySearchService/server-namespace forbidden tokens, comment+string stripping, bin/obj exclusion, JS template-literal handling), test refactor (extracted RecordingPartiesQueryClient + SearchCall to Fakes namespace, split disabled/readonly tests, added negative-page, null-items, null-Party, unexpected-exception, token-provider-throw, stub-selection-badge tests). 6 items deferred to deferred-work.md. Picker 53/53, Client 74/74, Contracts 57/57, full Release solution build clean.
-last_updated: 2026-05-13  # story 12-9 advanced review -> done after bmad-code-review: 2 decisions resolved (README Project Structure annotated internal-only, sample appsettings BaseUrl set to placeholder port with Aspire-dashboard guidance). 12 patches applied across samples/Sample (appsettings BaseUrl placeholder + Program.cs gateway-URL/placeholder comments, structured logger.LogError(ex, ...) preserves stack trace, MCP placeholder-substitution note), README (parties-mcp wording corrected to match unconditional AppHost inclusion, Project Structure adopter-facing vs internal split), docs/getting-started (broken nested-backticks fixed in non-.NET table, Step 2 expanded with full Keycloak client-credentials token-fetch in Bash + PowerShell, curl examples use --fail-with-body and HTTP-status echo, dev-cert troubleshooting section added, MCP placeholder substitution note added), guardrail tests (case-insensitive forbidden literal scan, expanded forbidden list to include OpenAPI/PartyActor/projection actors/IPartySearchService variants, ShouldNotBeEmpty before ShouldAllBe, obj/bin path exclusion, required-file existence check). 6 items deferred to deferred-work.md. Sample tests 52/52, full Release solution build clean.
-last_updated: 2026-05-13  # story 12-10 advanced review -> done after bmad-code-review: 3 decisions resolved (xunit.v3 migration kept and Technical Constraints updated, Tenants accesscontrol tightened to drop eventstore /** broad scope, Coverage Matrix row 3 rewritten to accurately reflect diff). 12 patches applied across deploy-validation script (Test-InvocationPolicy regex anchored to single policy block, domain-route check anchored to single domainServices entry, Admin UI wiring anchored under eventStoreAdminUi parent, quoted-scalar handling in topology assertions, policies:[] check also accepts block-empty null form, parties-wildcard check strips YAML comments first, Test-ScopesContainAll uses ordinal case-sensitive comparison, eventstore-publish check accepts unrestricted-by-absence posture), DAPR templates (production accesscontrol.tenants.yaml drops broad eventstore /** POST; publishingScopes drops literal eventstore=sample.parties.events across kafka/rabbitmq/servicebus), fitness tests (AppHost program comment stripping before WaitForStart assertion, ExtractProjectResources groups duplicates instead of crashing), deploy-validation tests (test fixtures updated to match tightened accesscontrol.tenants.yaml + publishingScopes, new TopologyValidationFailure_JsonOutput_DoesNotLeakSecretLookingManifestValues failure-path sanitization test). 5 items deferred to deferred-work.md. Deploy-validation 41/41 (was 40/40), topology + architectural fitness 29/29, full Release solution build clean.
+last_updated: 2026-05-13  # all epics moved in-progress -> done after confirming all stories and retrospectives are done.
 # sprint_change_proposals:
 #   - sprint-change-proposal-2026-05-07.md  (EventStore-Fronted Architecture Pivot — added Epic 12; paused 10-1-1, 10-2, 10-3)
 project: Hexalith.Parties
@@ -69,7 +64,7 @@ story_location: _bmad-output/implementation-artifacts
 
 development_status:
   # Epic 1: Domain Foundation & Party Lifecycle (7 stories)
-  epic-1: in-progress
+  epic-1: done
   1-1-project-scaffolding-and-solution-structure: done
   1-2-domain-contracts-complete-type-definitions: done
   1-3-party-aggregate-party-creation: done
@@ -80,7 +75,7 @@ development_status:
   epic-1-retrospective: done
 
   # Epic 2: Contact Channels & Identifiers (4 stories)
-  epic-2: in-progress
+  epic-2: done
   2-1-party-aggregate-contact-channel-management: done
   2-2-party-aggregate-identifier-management: done
   2-3-contact-channel-and-identifier-unit-tests: done
@@ -88,7 +83,7 @@ development_status:
   epic-2-retrospective: done
 
   # Epic 3: Party Discovery & Search (Read Projections) (4 stories)
-  epic-3: in-progress
+  epic-3: done
   3-1-party-detail-projection-handler-and-actor: done
   3-2-party-index-projection-handler-and-actor: done
   3-3-search-match-metadata-and-query-endpoints: done
@@ -96,7 +91,7 @@ development_status:
   epic-3-retrospective: done
 
   # Epic 4: Composite Commands & Advanced Aggregate Logic (4 stories)
-  epic-4: in-progress
+  epic-4: done
   4-1-create-party-composite-aggregate-handler: done
   4-2-update-party-composite-aggregate-handler: done
   4-3-composite-command-unit-tests: done
@@ -104,7 +99,7 @@ development_status:
   epic-4-retrospective: done
 
   # Epic 5: AI Agent Party Management (MCP Server) (4 stories)
-  epic-5: in-progress
+  epic-5: done
   5-1-mcp-server-setup-and-get-party-find-parties-tools: done
   5-2-create-party-mcp-tool: done
   5-3-update-party-and-delete-party-mcp-tools: done
@@ -112,28 +107,28 @@ development_status:
   epic-5-retrospective: done
 
   # Epic 6: Developer Integration & Documentation (3 stories)
-  epic-6: in-progress
+  epic-6: done
   6-1-client-package-command-and-query-abstractions: done
   6-2-getting-started-guide-and-readme: done
   6-3-sample-integration-project: done
   epic-6-retrospective: done
 
   # Epic 7: Event-Driven Integration & Subscriber Experience (3 stories)
-  epic-7: in-progress
+  epic-7: done
   7-1-event-publishing-verification-and-configuration: done
   7-2-subscriber-experience-and-at-least-once-delivery: done
   7-3-handler-patterns-documentation-and-dangling-reference-guidance: done
   epic-7-retrospective: done
 
   # Epic 8: Operational Readiness & Production Hardening (3 stories)
-  epic-8: in-progress
+  epic-8: done
   8-1-deployment-validation-tooling: done
   8-2-health-readiness-and-graceful-degradation: done
   8-3-projection-health-monitoring-and-rebuild: done
   epic-8-retrospective: done
 
   # Epic 9: GDPR Compliance (v1.1) (6 stories)
-  epic-9: in-progress
+  epic-9: done
   9-1-per-party-encryption-key-management: done
   9-2-field-level-encryption-and-crypto-shredding-activation: done
   9-3-right-to-erasure-and-verification: done
@@ -143,7 +138,7 @@ development_status:
   epic-9-retrospective: done
 
   # Epic 11: Hexalith.Tenants Integration for Parties (4 stories)
-  epic-11: in-progress
+  epic-11: done
   11-1-apphost-and-package-integration: done
   11-2-tenants-event-consumption-and-local-access-projection: done
   11-3-rest-and-mcp-tenant-authorization-enforcement: done
@@ -155,7 +150,7 @@ development_status:
   # scope (admin portal + picker) is superseded by Epic 12 stories 12-7 (admin portal rebuild
   # on FrontComposer + EventStore queries) and 12-8 (picker rewrite). Status fields preserved
   # for audit per sprint-change-proposal-2026-05-07.md.
-  epic-10: in-progress
+  epic-10: done
   10-1-admin-portal-browse-search-and-inspect: done
   10-1-1-admin-portal-frontcomposer-and-tenants-integration: done         # Closed via bmad-code-review 2026-05-10 against 12-7 successor evidence
   10-2-admin-portal-gdpr-operations: done                                 # Closed after code-review chunks 2/3 patch findings applied; consumer-facing successor remains 12-7
@@ -167,7 +162,7 @@ development_status:
   # Story 12-0 is a feasibility spike and is the GATE for the rest of Epic 12.
   # Wave 1 (server pivot): 12-1..12-4. Wave 2 (consumer migration): 12-5..12-10.
   # Wave 2 cannot start until Wave 1 lands.
-  epic-12: in-progress
+  epic-12: done
   12-0-eventstore-parties-actor-invocation-feasibility-spike: done
   12-1-apphost-recomposition: done
   12-2-parties-actor-host: done
