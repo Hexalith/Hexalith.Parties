@@ -17,6 +17,7 @@ so that Parties validates the reusable domain-service starter approach before do
    - When the Parties solution structure is reviewed,
    - Then the repository uses `Hexalith.Parties.slnx` as the documented solution entry point,
    - And `/src`, `/tests`, and `/samples` are represented,
+   - And the canonical project inventory is the source, test, and sample list under **Project Structure Notes**,
    - And a generic `dotnet new webapi` scaffold is not the architectural baseline.
 
 2. **Root build configuration follows shared conventions**
@@ -29,19 +30,20 @@ so that Parties validates the reusable domain-service starter approach before do
    - Given the initial projects are present,
    - When project references are inspected,
    - Then the current source, test, and sample projects map to the approved Parties boundaries only as needed for subsequent stories,
+   - And the dependency-direction checks follow the explicit matrix under **Dependency Guardrails**,
    - And forbidden dependency directions are not introduced.
 
 4. **Starter validation runs without nested submodule recursion**
    - Given the starter setup is validated,
-   - When restore/build or structural validation runs,
-   - Then the solution can be restored and built enough to support the first domain story,
+   - When `dotnet restore Hexalith.Parties.slnx` and `dotnet build Hexalith.Parties.slnx --configuration Release` run,
+   - Then all included source, test, and sample projects restore and build with warnings-as-errors intact,
    - And validation does not require recursive nested submodule initialization.
 
 5. **Reusable starter lessons are visible**
    - Given starter setup documentation is reviewed,
    - When a future domain service uses Parties as a reference,
-   - Then intentional deviations from EventStore structure are documented,
-   - And reusable platform starter lessons are visible to future service scaffolding work.
+   - Then intentional deviations from EventStore structure are documented in this story's Dev Agent Record,
+   - And only durable recurring-automation lessons are added to `_bmad-output/process-notes/story-creation-lessons.md`.
 
 ## Tasks / Subtasks
 
@@ -53,7 +55,7 @@ so that Parties validates the reusable domain-service starter approach before do
 
 - [ ] Task 2: Validate source, test, and sample boundaries (AC: 1, 3)
   - [ ] Confirm the solution includes current Parties source projects under `src/`: `Hexalith.Parties`, `Hexalith.Parties.AdminPortal`, `Hexalith.Parties.AppHost`, `Hexalith.Parties.Client`, `Hexalith.Parties.Contracts`, `Hexalith.Parties.Mcp`, `Hexalith.Parties.Picker`, `Hexalith.Parties.Projections`, `Hexalith.Parties.Security`, `Hexalith.Parties.Server`, `Hexalith.Parties.ServiceDefaults`, and `Hexalith.Parties.Testing`.
-  - [ ] Confirm the solution includes current test projects under `tests/`, including Contracts, Client, Server, Projections, service integration, IntegrationTests, AdminPortal, Picker, MCP, Security, Sample, and DeployValidation tests.
+  - [ ] Confirm the solution includes current test projects under `tests/`: `Hexalith.Parties.AdminPortal.Tests`, `Hexalith.Parties.Client.Tests`, `Hexalith.Parties.Contracts.Tests`, `Hexalith.Parties.DeployValidation.Tests`, `Hexalith.Parties.IntegrationTests`, `Hexalith.Parties.Mcp.Tests`, `Hexalith.Parties.Picker.Tests`, `Hexalith.Parties.Projections.Tests`, `Hexalith.Parties.Sample.Tests`, `Hexalith.Parties.Security.Tests`, `Hexalith.Parties.Server.Tests`, and `Hexalith.Parties.Tests`.
   - [ ] Confirm `samples/Hexalith.Parties.Sample` remains the sample boundary and is included in the solution.
   - [ ] Do not remove later Epic 10-12 projects just because the original March scaffold listed fewer projects; later completed work legitimately expanded the structure.
 
@@ -64,13 +66,16 @@ so that Parties validates the reusable domain-service starter approach before do
   - [ ] Confirm projection handlers keep Dapr awareness in actor/wrapper infrastructure rather than pure handler logic.
   - [ ] Confirm the main `src/Hexalith.Parties` project remains the actor-host/service boundary and does not become a generic public Web API baseline.
   - [ ] Confirm `src/Hexalith.Parties.Mcp` is a thin host using client/contract abstractions and does not embed domain event handling or actor-host internals.
+  - [ ] Record the observed project-reference graph in the Dev Agent Record and call out any existing exception explicitly instead of normalizing it silently.
 
 - [ ] Task 4: Validate build and starter fitness (AC: 2, 4)
   - [ ] Run `dotnet restore Hexalith.Parties.slnx`.
   - [ ] Run `dotnet build Hexalith.Parties.slnx --configuration Release`.
+  - [ ] Confirm the build covers the solution's included source, test, and sample projects; do not treat a partial project build as satisfying AC4.
+  - [ ] Check for project-local `Version=` package references and root TFM/package metadata drift.
   - [ ] If build fails because a sibling root-level submodule is missing, initialize/update only root-level submodules; do not use recursive nested submodule initialization.
   - [ ] If build fails because of unrelated in-progress development, capture the exact blocker and avoid broad repairs outside starter structure.
-  - [ ] Run or add narrow architectural fitness coverage only if the current tests do not already guard dependency direction and package-version placement.
+  - [ ] Run existing architectural fitness coverage for solution membership, forbidden references, and package-version placement when present; add narrow coverage only when the current tests do not already guard a touched structural rule.
 
 - [ ] Task 5: Record reusable starter lessons (AC: 5)
   - [ ] Update this story's Dev Agent Record with any confirmed EventStore-to-Parties deviations that future domain services should know.
@@ -85,6 +90,7 @@ so that Parties validates the reusable domain-service starter approach before do
 - Treat the historical story as implementation intelligence, not as the canonical status artifact for this new story key. It records that the original scaffold was created and reviewed in March 2026.
 - The current repository has advanced beyond the original scaffold. Later completed work added AdminPortal, Picker, MCP, Security, DeployValidation, Sample tests, EventStore/Tenants/FrontComposer integration, and EventStore-fronted boundary changes. Do not delete those projects to match older counts.
 - This story's implementation should be an audit/reconciliation pass over the current scaffold. Create or modify files only when the current state fails the acceptance criteria.
+- Preserving later AdminPortal, Picker, MCP, Security, DeployValidation, Sample, EventStore/Tenants/FrontComposer, and EventStore-fronted boundary work is a constraint, not a request to implement new feature behavior in those areas.
 
 ### Architecture Patterns and Constraints
 
@@ -159,6 +165,19 @@ samples/
 - `src/Hexalith.Parties.Mcp` is the separate thin MCP host boundary. Preserve that separation.
 - `Hexalith.Parties.AdminPortal` and `Hexalith.Parties.Picker` are FrontComposer/Blazor consumer surfaces added by later work; they are valid current boundaries, not scaffold drift.
 
+Dependency-direction matrix for this story:
+
+| Project or surface | Allowed dependency direction | Forbidden checks for this story |
+| --- | --- | --- |
+| `Hexalith.Parties.Contracts` | Contract packages and approved EventStore contract abstractions only. | No hosting, Dapr service-hosting, MediatR, FluentValidation, UI, infrastructure, Server, Projections, AdminPortal, Picker, MCP, or sample references. |
+| `Hexalith.Parties.Client` | Contracts and accepted client abstractions only. | No Server, Projections, actor host, AdminPortal, Picker, MCP, sample, or domain-internal references. |
+| `Hexalith.Parties.Server` | Contracts, EventStore aggregate/domain abstractions, validation patterns already owned by the server boundary. | No UI, MCP host, AdminPortal, Picker, sample, AppHost, or service-host implementation references. |
+| `Hexalith.Parties.Projections` | Contracts plus projection/read-model abstractions needed for tenant-safe read models. | No coupling pure projection handlers to actor-host startup, UI, MCP host, sample, or AppHost topology. |
+| `src/Hexalith.Parties` actor host | Service/actor hosting and Dapr sidecar integration. | No public REST controllers, public minimal APIs, Swagger/OpenAPI, or in-process MCP tools. |
+| `Hexalith.Parties.Mcp` | Thin MCP host using client/contract abstractions. | No aggregate/domain event handling, actor-host internals, projection implementation ownership, or UI coupling. |
+| AdminPortal and Picker | FrontComposer/Blazor consumer surfaces. | Do not move UI code into actor host, Server, Contracts, or MCP as part of scaffold cleanup. |
+| Samples and tests | Consume public or intended integration surfaces for validation. | Do not create production dependencies from source projects back into samples or test helpers. |
+
 ### Submodule and Build Guidance
 
 - Never run `git submodule update --init --recursive` for this story.
@@ -169,6 +188,7 @@ samples/
 ### Testing Requirements
 
 - Minimum validation for this story is `dotnet restore Hexalith.Parties.slnx` and `dotnet build Hexalith.Parties.slnx --configuration Release`.
+- The `.slnx` file is the intentional entry point. Do not add a legacy `.sln` as a tooling workaround; capture unsupported local tooling as a blocker or prerequisite instead.
 - If structural or dependency-direction changes are needed, run the narrowest related fitness tests, especially tests under `tests/Hexalith.Parties.Tests/FitnessTests/` and package-boundary tests under contract/client test projects.
 - Do not require Docker, full Dapr initialization, or full Aspire topology unless the change touches AppHost/topology behavior.
 - Use xUnit v3 and Shouldly patterns already present in the repository.
@@ -208,6 +228,30 @@ samples/
 
 ### File List
 
+## Party-Mode Review
+
+- Date/time: 2026-05-15T17:05:40+02:00
+- Selected story key: `1-1-set-up-initial-project-from-eventstore-solution-structure`
+- Command/skill invocation used: `/bmad-party-mode 1-1-set-up-initial-project-from-eventstore-solution-structure; review;`
+- Participating BMAD agents: Winston (System Architect), Amelia (Senior Software Engineer), Murat (Master Test Architect and Quality Advisor), John (Product Manager)
+- Findings summary:
+  - The ready story needed a canonical solution/project membership source of truth before development.
+  - Dependency guardrails needed a concrete allowed/forbidden matrix so review does not rely on interpretation.
+  - Restore/build acceptance needed exact commands, full `.slnx` build expectations, and the root-level-only submodule constraint.
+  - Preservation of later AdminPortal, Picker, MCP, Security, DeployValidation, Sample, EventStore/Tenants/FrontComposer, and EventStore-fronted work needed to be framed as a non-goal/constraint, not implementation scope.
+  - Starter lesson recording needed a concrete destination and distinction between ordinary implementation notes and durable recurring-automation lessons.
+- Changes applied:
+  - Added AC traceability to the canonical project inventory, dependency matrix, exact restore/build commands, full included-project build expectation, Dev Agent Record destination, and lessons ledger boundary.
+  - Expanded Task 2 with exact test project names and Task 4 with full-solution build, package-version, TFM, and structural fitness checks.
+  - Added a non-goal/preservation constraint for later surfaces and integrations.
+  - Added an explicit dependency-direction matrix for Contracts, Client, Server, Projections, actor host, MCP, UI surfaces, samples, and tests.
+  - Clarified `.slnx` tooling behavior: do not add a legacy `.sln`; capture unsupported local tooling as a blocker or prerequisite.
+- Findings deferred:
+  - Automated architectural guardrail expansion remains conditional on whether existing fitness tests already cover the touched structure.
+  - Any broader architecture or product-scope change remains out of scope for this scaffold audit story.
+- Final recommendation: ready-for-dev
+
 ## Change Log
 
+- 2026-05-15: Party-mode review applied pre-dev clarifications for project inventory, dependency guardrails, validation commands, scope constraints, and starter lesson recording.
 - 2026-05-15: Story created by BMAD pre-dev hardening automation with current scaffold reconciliation context.
