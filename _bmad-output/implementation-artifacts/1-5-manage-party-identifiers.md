@@ -35,7 +35,8 @@ so that consumers can associate parties with external legal, tax, or registry re
    - Given an identifier command targets a missing party, missing identifier, invalid identifier payload, erased party, or processing-restricted party,
    - When the command is handled,
    - Then the aggregate emits the current documented typed rejection event,
-   - And no successful identifier event is emitted.
+   - And no successful identifier event is emitted,
+   - And rejection-only evidence proves the event list does not also contain `IdentifierAdded` or `IdentifierRemoved` after the rejection.
 
 5. **Returned update state includes applied identifier changes**
    - Given an identifier mutation succeeds through the current update response path,
@@ -47,7 +48,7 @@ so that consumers can associate parties with external legal, tax, or registry re
    - Given identifier values may identify natural persons or sensitive business records,
    - When commands, events, state, operation outcomes, tests, logs, or telemetry are reviewed,
    - Then identifier values are marked and handled as personal data where applicable,
-   - And raw identifier values are not placed in logs, telemetry dimensions, exception text, typed rejection text, diagnostics, or applied/skipped/rejected operation strings.
+   - And raw identifier values are not placed in logs, telemetry dimensions, exception text, typed rejection text, diagnostics, applied/skipped/rejected operation strings, assertion display names, or test output names.
 
 ## Tasks / Subtasks
 
@@ -62,8 +63,10 @@ so that consumers can associate parties with external legal, tax, or registry re
 - [ ] Task 2: Validate standalone aggregate identifier handlers (AC: 1, 2, 3, 4)
   - [ ] Confirm `PartyAggregate.Handle(AddIdentifier, PartyState?)` rejects missing parties with `PartyNotFound`, guards erasure and processing restriction before success, no-ops duplicate identifier ids, and emits `IdentifierAdded` on success.
   - [ ] Confirm duplicate add no-ops do not emit a second `IdentifierAdded` event and do not mutate state.
+  - [ ] Confirm repeated duplicate adds remain stable when replayed against already-updated state; this story should not rely on caller-side de-duplication for retry safety.
   - [ ] Confirm `PartyAggregate.Handle(RemoveIdentifier, PartyState?)` rejects missing parties with `PartyNotFound`, guards erasure and processing restriction before success, rejects missing identifier ids with `IdentifierNotFound`, and emits `IdentifierRemoved` on success.
   - [ ] Confirm missing remove paths emit only the typed rejection and never emit `IdentifierRemoved`.
+  - [ ] Confirm erasure/restriction guards take precedence over identifier-specific success behavior and do not leak the identifier value in rejection evidence.
   - [ ] Audit the "active party" wording in the ACs against current deactivated-party policy. If no accepted rejection contract exists for inactive-party identifier mutations, record the policy gap as deferred to the lifecycle story instead of inventing a new rejection event in this story.
   - [ ] Do not add identifier search, duplicate detection by identifier value, normalization, or jurisdiction-specific validation services to this story; MVP search by identifier is deferred to the dedicated search capability.
 
@@ -76,9 +79,10 @@ so that consumers can associate parties with external legal, tax, or registry re
 - [ ] Task 4: Reconcile composite command behavior and FR69 returned state (AC: 1, 2, 3, 4, 5, 6)
   - [ ] Confirm `CreatePartyComposite` emits `IdentifierAdded` events for initial identifiers and safely skips duplicate identifier ids for MCP/client retry safety.
   - [ ] Confirm `UpdatePartyComposite` rejects add/remove conflicts on the same identifier id, validates missing remove targets before emitting success events, skips duplicate additions, and skips duplicate removals without mutating state twice.
+  - [ ] Confirm add/remove conflict evidence covers the same identifier id appearing in both lists and that the result is rejection-only for the conflicting sub-operation, not an implicit ordering policy.
   - [ ] Confirm duplicate add/remove and missing identifier outcomes do not include raw identifier values in `Applied`, `Skipped`, or `Rejected` strings. Identifier ids are allowed as stable operation identifiers when they are GUID-shaped or otherwise non-PII.
   - [ ] Confirm privacy-safe outcome evidence covers logs, telemetry dimensions, exception text, typed rejection text, diagnostics, and composite operation strings.
-  - [ ] Confirm `CompositeCommandResult.UpdatedPartyDetail` is built from current state plus emitted events and includes added and removed identifiers.
+  - [ ] Confirm `CompositeCommandResult.UpdatedPartyDetail` is built from current state plus emitted events and includes added and removed identifiers in the same returned response that reports the operation outcomes.
   - [ ] Do not change simple `DomainResult` return types for standalone handlers; public "updated state" response evidence for this story is the composite update path unless the architecture explicitly changes the response contract.
 
 - [ ] Task 5: Preserve architecture, scope, and boundary constraints (AC: 1, 2, 3, 4, 5, 6)
@@ -110,6 +114,7 @@ so that consumers can associate parties with external legal, tax, or registry re
 - Standalone identifier handlers return `DomainResult`; composite create/update handlers return `CompositeCommandResult` with per-sub-operation `Applied`, `Skipped`, `Rejected`, and update-response `UpdatedPartyDetail`.
 - `UpdatePartyComposite` is the architecture-approved update response path for FR69. It uses explicit add/remove identifier lists, not MCP-side diff or generic patch semantics.
 - Duplicate add operations are retry-safe skips/no-ops. Missing remove targets are typed rejections. Conflicting add/remove operations on the same identifier id are typed `CompositeOperationConflict` rejections.
+- Treat composite operation ordering as explicit evidence, not an assumption. If a command includes both add and remove for the same identifier id, the conflict rejection path is the accepted behavior for this story; do not reinterpret the payload as add-then-remove or remove-then-add.
 - The main `src/Hexalith.Parties` project is an actor host. Do not reintroduce public REST controllers, Swagger/OpenAPI, or in-process MCP tools there while working this story.
 
 ### Current Code Surfaces To Inspect
@@ -172,6 +177,7 @@ tests/Hexalith.Parties.Contracts.Tests/
 - Keep tests pure aggregate/state/validator tests unless the implementation touches transport or topology behavior.
 - Add coverage for identifier types only where it proves current contract behavior; do not add external tax, company registry, national-id, or jurisdiction validation dependencies.
 - Include explicit evidence for duplicate add no-op/no-success-event behavior, missing remove typed rejection/no-success-event behavior, composite add/remove conflicts, invalid remove rejection, returned `UpdatedPartyDetail` after add/remove, and privacy-safe rejection/outcome strings.
+- Keep privacy tests assertion-focused: use synthetic placeholder values and assert absence of raw values from outcomes without adding real legal, tax, registry, or national identifiers to test names or diagnostics.
 - If changing `PartyState.Apply(...)` declarations, run the EventStore apply-ordering fitness test before broader suites.
 
 ### Anti-Patterns To Avoid
@@ -246,3 +252,26 @@ tests/Hexalith.Parties.Contracts.Tests/
 
 - 2026-05-15: Party-mode review applied pre-dev clarifications for duplicate no-op/no-success-event evidence, missing-remove rejection behavior, privacy-safe outcome checks, MVP jurisdiction scope, upstream authorization boundary, composite returned-state assertions, and deferred lifecycle/jurisdiction/search/API decisions.
 - 2026-05-15: Story created by BMAD pre-dev hardening automation with current identifier reconciliation context.
+
+## Advanced Elicitation
+
+- Date/time: 2026-05-15T23:11:00+02:00
+- Selected story key: `1-5-manage-party-identifiers`
+- Command/skill invocation used: `/bmad-advanced-elicitation 1-5-manage-party-identifiers`
+- Batch 1 method names: Red Team vs Blue Team; Failure Mode Analysis; Security Audit Personas; Self-Consistency Validation; Architecture Decision Records
+- Reshuffled Batch 2 method names: Pre-mortem Analysis; Chaos Monkey Scenarios; User Persona Focus Group; Critique and Refine; Expand or Contract for Audience
+- Findings summary:
+  - The story was already narrow and ready, but duplicate/retry, rejection-only, conflict, and privacy evidence needed sharper implementation-facing wording before development.
+  - The highest-risk ambiguity was treating composite add/remove ordering as implicit behavior instead of asserting the accepted `CompositeOperationConflict` path.
+  - Privacy review reinforced that raw identifier values can leak through test names and diagnostics as easily as through production outcome strings.
+  - Self-consistency review reaffirmed that FR69 returned-state proof belongs to `CompositeCommandResult.UpdatedPartyDetail`; standalone `DomainResult` contracts should not be broadened for this story.
+- Changes applied:
+  - Strengthened invalid-mutation AC evidence to require rejection-only event lists without trailing identifier success events.
+  - Added repeated duplicate-add replay stability and erasure/restriction guard precedence checks.
+  - Clarified composite same-id add/remove conflicts as rejection-only evidence, not an add/remove ordering policy.
+  - Tightened returned-state wording to require added/removed identifiers in the same composite response that reports outcomes.
+  - Extended privacy guidance to assertion display names, test output names, and synthetic placeholder test values.
+- Findings deferred:
+  - Jurisdiction persistence, identifier normalization/checksum validation, duplicate matching by value, identifier search, and tenant/RBAC enforcement remain outside this story.
+  - Any public contract change that broadens standalone handler return types or adds identifier metadata remains deferred to a separate accepted architecture/product decision.
+- Final recommendation: ready-for-dev
