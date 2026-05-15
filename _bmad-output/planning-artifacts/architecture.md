@@ -28,7 +28,7 @@ _This document builds collaboratively through step-by-step discovery. Sections a
 
 ### Requirements Overview
 
-**Functional Requirements: 54 FRs across 9 groups**
+**Functional Requirements: 74 FRs across 11 groups**
 
 | Group | FRs | Architectural Significance |
 |-------|-----|---------------------------|
@@ -326,6 +326,14 @@ samples/
 - **Consequence:** The portal must fail closed and clear sensitive state on sign-out, missing tenant, non-admin user, tenant switch, stale response, forbidden, not found, gone/erased, timeout, malformed response, and contract-unavailable failures.
 - **Consequence:** Labels, dates, counts, status messages, validation messages, and operation outcomes must be localized. Focus management, keyboard access, non-color-only state, and polite status announcements are part of the frontend architecture contract.
 - **Affects:** Administration portal, GDPR operations UI, EventStore Admin UI deep-links, FrontComposer integration, party picker UX.
+
+### Party Picker Frontend Surface
+
+The party picker is a v1.2 embeddable FrontComposer/Blazor component for tenant-safe party search and durable selection. Its durable selection contract is party id only. It must not store or emit display names, contact values, identifiers, consent text, search text, tenant ids, tokens, raw ProblemDetails, or raw query payloads as durable host keys, URLs, telemetry dimensions, filenames, DOM event names, JavaScript event payloads, or logs.
+
+The picker queries through the accepted EventStore-fronted Parties client/gateway boundary. It must not call retired Parties REST endpoints, admin endpoints, DAPR actors, projection actors, local search services, controllers, or actor-host internals. Host request/auth context is supplied through accepted client/gateway configuration; the picker does not persist, refresh, parse for authorization, or log tokens.
+
+The picker suppresses stale responses when token, tenant, user, host configuration, selected id, or search options change, and it handles loading, empty, retry, degraded/local-only, unauthorized, forbidden, not-found, gone/erased, and transient-failure states without leaking personal data.
 
 ### Data Architecture
 
@@ -1248,11 +1256,13 @@ Technology versions are compatible: .NET 10, DAPR SDK 1.16.1, Aspire 13.1.2, Med
 - 10 src projects map cleanly to all 19 architectural decisions
 - Dependency direction is strict and machine-verifiable: Client → Contracts only, MCP → no event types, Handlers → no DAPR
 - 6 NuGet packages align with project boundaries
-- FR-to-structure mapping covers all 9 FR groups
+- FR-to-structure mapping covers all 11 FR groups
 
 ### Requirements Coverage Validation
 
-**Functional Requirements Coverage: 54/54 COVERED**
+**Functional Requirements Coverage: 74/74 COVERED**
+
+Coverage is phase-aware: MVP stories implement the MVP subset, while v1.1/v1.2/future stories and architecture decisions preserve deferred roadmap coverage.
 
 | FR Group | FRs | Coverage | Resolution |
 |----------|-----|----------|------------|
@@ -1292,7 +1302,7 @@ Technology versions are compatible: .NET 10, DAPR SDK 1.16.1, Aspire 13.1.2, Med
 - Complete directory tree defined to individual `.cs` file level
 - Architectural boundaries machine-verifiable via 5 CI fitness tests
 - 6 NuGet packages with explicit dependency chains
-- FR-to-structure mapping complete for all 9 FR categories + 6 cross-cutting concerns
+- FR-to-structure mapping complete for all 11 FR categories + 6 cross-cutting concerns
 
 **Pattern Completeness: PASS**
 
@@ -1322,7 +1332,7 @@ Technology versions are compatible: .NET 10, DAPR SDK 1.16.1, Aspire 13.1.2, Med
 
 **Requirements Analysis**
 
-- [x] Project context thoroughly analyzed (54 FRs, 33 NFRs mapped)
+- [x] Project context thoroughly analyzed (74 FRs, 33 NFRs mapped)
 - [x] Scale and complexity assessed (High — event sourcing, CQRS, DAPR, multi-tenancy, GDPR, 4 surfaces)
 - [x] Technical constraints identified (EventStore conventions, DAPR dependencies, platform validation mandate)
 - [x] Cross-cutting concerns mapped (10 concerns: multi-tenancy, GDPR, schema evolution, portability, AI ergonomics, projections, observability, degradation, DX, testability)
@@ -1360,7 +1370,7 @@ The architecture has been validated through:
 - 10 advanced elicitation methods (pre-mortem, ADR, self-consistency, first principles, red team/blue team, failure mode analysis, what-if scenarios, chaos monkey, comparative analysis, Occam's razor)
 - 5 additional elicitation methods on implementation patterns (code review gauntlet, reverse engineering, self-consistency, challenge from critical perspective, critique and refine)
 - Party mode multi-agent review (2 sessions)
-- Comprehensive requirements coverage validation (54 FRs + 33 NFRs)
+- Comprehensive requirements coverage validation (74 FRs + 33 NFRs)
 - Internal coherence validation (19 decisions, patterns, structure)
 
 **Key Strengths:**

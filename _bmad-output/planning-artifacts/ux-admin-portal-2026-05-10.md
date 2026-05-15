@@ -7,7 +7,7 @@ Story: 12.7 Admin Portal Rebuild on FrontComposer
 
 The Parties Admin Portal is a FrontComposer domain surface for Parties-specific administration. It does not include a landing page, marketing hero, duplicated tenant management, or a generic EventStore stream browser. Generic event and stream inspection is delegated to EventStore Admin UI through safe deep-links.
 
-Production readiness is blocked until Wave 1 behavior is landed or formally frozen and Story 12.5 exposes the typed Parties client/query/command contract. Until then the portal may show operational shell, specification-backed layouts, and fail-closed contract-unavailable states.
+Production readiness is blocked until Wave 1 behavior is landed or formally frozen and the accepted EventStore-fronted Parties client/gateway contract exposes the required typed query and command capabilities. Until then the portal may show operational shell, specification-backed layouts, and fail-closed contract-unavailable states.
 
 ## Route Map
 
@@ -46,7 +46,7 @@ The detail panel clears on sign-out, missing tenant, non-admin, tenant switch, s
 
 ## GDPR Operation Flows
 
-GDPR actions are shown only when the accepted EventStore command/client contract is available. Until Story 12.5 exposes those methods, each action is disabled with the dated blocker: `Blocked on Story 12.5 EventStore Parties client contract`.
+GDPR actions are shown only when the accepted EventStore-fronted Parties client/gateway contract is available. Until that contract exposes the required methods, each action is disabled with the bounded blocker: `Blocked on accepted EventStore-fronted Parties client/gateway contract`.
 
 Required flows after the contract exists:
 

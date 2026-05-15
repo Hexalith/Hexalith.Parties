@@ -1,5 +1,5 @@
 ---
-stepsCompleted: ['step-01-requirements-extracted', 'step-02-epics-designed']
+stepsCompleted: ['step-01-requirements-extracted', 'step-02-epics-designed', 'step-03-stories-generated', 'step-04-final-validation-passed']
 inputDocuments:
   - prd.md
   - architecture.md
@@ -170,7 +170,7 @@ UX-DR7: Admin portal must include a GDPR drawer or panel for erasure, restrictio
 UX-DR8: Admin portal status region must announce bounded loading, empty, blocked, forbidden, timeout, degraded, malformed response, stale response, and contract-unavailable states for screen readers.
 UX-DR9: Admin portal list/detail behavior must clear sensitive detail state on sign-out, missing tenant, non-admin, tenant switch, stale response, forbidden, not found, erased/gone, timeout, malformed response, and contract-unavailable failures.
 UX-DR10: Admin portal search mode must disable unsupported filters rather than silently sending ignored filters.
-UX-DR11: Admin portal GDPR actions must remain disabled until the accepted EventStore Parties client contract exists, showing the dated blocker `Blocked on Story 12.5 EventStore Parties client contract`.
+UX-DR11: Admin portal GDPR actions must remain disabled until the accepted EventStore-fronted Parties client/gateway contract exists, showing the bounded blocker `Blocked on accepted EventStore-fronted Parties client/gateway contract`.
 UX-DR12: Admin portal erasure request flow must confirm by party id only, return command accepted outcome, and refresh authoritative erasure status through EventStore query.
 UX-DR13: Admin portal erasure certificate flow must expose poll/refresh, safe verification result, and certificate download filename composed from party id plus timestamp only.
 UX-DR14: Admin portal restriction flow must capture a bounded reason, show command accepted outcome, and refresh before follow-on actions.
@@ -270,65 +270,129 @@ FR72: Epic 2 - Searchable Tenant-Safe Read Models
 FR73: Epic 5 - Event-Driven Consumer Integration
 FR74: Epic 4 - AI Agent Party Management
 
+## Release Phase and Coverage Legend
+
+Every epic and story carries two planning fields:
+
+- `Phase`: `MVP`, `MVP preparation`, `v1.1`, `v1.1 preparation`, `v1.2`, or `future`.
+- `Coverage type`: `implemented`, `prepared`, or `deferred`.
+
+`Implemented` means the story delivers the user-visible or system-visible requirement in that phase.
+`Prepared` means the story lays contract, documentation, compatibility, or architectural groundwork but does not complete the requirement.
+`Deferred` means the PRD requirement is intentionally post-MVP and must not be scheduled as MVP implementation work.
+
 ## Epic List
 
 ### Epic 1: Party Records and Lifecycle
 
 Users can create, update, deactivate, reactivate, and identify parties as the durable source of truth for persons and organizations.
 
+**Phase:** MVP
+**Coverage type:** implemented
 **FRs covered:** FR1, FR2, FR3, FR4, FR5, FR6, FR7, FR8, FR9, FR10, FR11, FR12, FR13, FR36, FR42, FR43, FR69
 
 ### Epic 2: Searchable Tenant-Safe Read Models
 
 Consumers can list, search, retrieve, filter, and reliably observe party records through tenant-safe projections.
 
+**Phase:** MVP with v1.1 preparation in Story 2.9
+**Coverage type:** mixed
 **FRs covered:** FR14, FR15, FR16, FR17, FR18, FR19, FR39, FR40, FR41, FR64, FR68, FR71, FR72
 
 ### Epic 3: Developer Integration and Local Adoption
 
 Developers can integrate Parties through typed packages, REST APIs, documentation, samples, deployment tooling, versioned APIs, and clear error handling.
 
+**Phase:** MVP
+**Coverage type:** implemented
 **FRs covered:** FR26, FR27, FR28, FR29, FR30, FR31, FR32, FR33, FR56, FR57, FR58, FR59, FR60, FR61, FR62
 
 ### Epic 4: AI Agent Party Management
 
 AI agents can find, create, retrieve, update, and deactivate parties through a bounded MCP tool surface with complete responses and forgiving inputs.
 
+**Phase:** MVP
+**Coverage type:** implemented
 **FRs covered:** FR20, FR21, FR22, FR23, FR24, FR25, FR74
 
 ### Epic 5: Event-Driven Consumer Integration
 
 Consuming applications can receive ordered, tenant-aware party events and build their own lifecycle-aware read models.
 
+**Phase:** MVP with v1.1/future preparation in Stories 5.6 and 5.7
+**Coverage type:** mixed
 **FRs covered:** FR34, FR35, FR37, FR38, FR63, FR70, FR73
 
 ### Epic 6: GDPR Compliance Operations
 
 Administrators and DPO workflows can erase, restrict, export, verify, and audit party data with crypto-shredding and subscriber notifications.
 
+**Phase:** v1.1
+**Coverage type:** deferred for MVP implementation planning
 **FRs covered:** FR44, FR45, FR46, FR47, FR48, FR49, FR50, FR51, FR52, FR53, FR54, FR55
 
 ### Epic 7: Administration Console
 
 Administrators can browse, inspect, and process Parties records and GDPR operations through a privacy-safe FrontComposer admin surface.
 
+**Phase:** v1.2
+**Coverage type:** deferred for MVP implementation planning
 **FRs covered:** FR65, FR66
 
 ### Epic 8: Embeddable Party Picker
 
 Consuming application developers can embed a tenant-safe, accessible party picker component for search and selection.
 
+**Phase:** v1.2
+**Coverage type:** deferred for MVP implementation planning
 **FRs covered:** FR67
-
-<!-- Repeat for each epic in epics_list (N = 1, 2, 3...) -->
 
 ## Epic 1: Party Records and Lifecycle
 
 Users can create, update, deactivate, reactivate, and identify parties as the durable source of truth for persons and organizations.
 
-<!-- Repeat for each story (M = 1, 2, 3...) within epic N -->
+### Story 1.1: Set Up Initial Project from EventStore Solution Structure
 
-### Story 1.1: Create Party Aggregate with Stable Identity
+**Phase:** MVP
+**Coverage type:** implemented
+**Requirements covered:** Architecture starter setup; supports FR31, FR60
+
+As a developer starting Hexalith.Parties,
+I want the initial solution scaffold to follow the EventStore solution-structure pattern,
+So that Parties validates the reusable domain-service starter approach before domain behavior is added.
+
+**Acceptance Criteria:**
+
+**Given** the architecture selects the EventStore solution structure pattern as the starter
+**When** the initial Parties solution is created
+**Then** it includes the documented solution entry point, `/src`, `/tests`, and `/samples` structure
+**And** it does not use a generic `dotnet new webapi` scaffold as the architectural baseline.
+
+**Given** the initial project structure is created
+**When** build configuration files are reviewed
+**Then** central package management, shared build properties, nullable, warnings-as-errors, MinVer, `.editorconfig`, CRLF, UTF-8, and file-scoped namespace conventions are configured consistently with EventStore patterns
+**And** package versions are not scattered into individual project files.
+
+**Given** the initial projects are created
+**When** project references are inspected
+**Then** Contracts, Client, Server, Projections, Parties service, Aspire, AppHost, ServiceDefaults, Testing, and Sample boundaries are represented only as needed for subsequent stories
+**And** forbidden dependency directions are not introduced.
+
+**Given** the starter setup is validated
+**When** restore/build or structural validation runs
+**Then** the initial solution can be restored and built enough to support the first domain story
+**And** validation does not require recursive nested submodule initialization.
+
+**Given** starter setup documentation is reviewed
+**When** a future domain service uses Parties as a reference
+**Then** intentional deviations from EventStore structure are documented
+**And** reusable platform starter lessons are visible.
+
+### Story 1.2: Create Party Aggregate with Stable Identity
+
+**Phase:** MVP
+**Coverage type:** implemented
+**Requirements covered:** FR1, FR6, FR7
 
 As an authorized client,
 I want to create a person or organization party with a client-generated stable UUID,
@@ -360,7 +424,11 @@ So that Parties can become the durable source of truth for party identity.
 **When** the state is rehydrated from emitted events
 **Then** the rehydrated party preserves the same UUID, party type, active status, details, display name, and sort name.
 
-### Story 1.2: Update Person and Organization Details
+### Story 1.3: Update Person and Organization Details
+
+**Phase:** MVP
+**Coverage type:** implemented
+**Requirements covered:** FR2, FR3, FR6, FR69
 
 As an authorized client,
 I want to update person-specific and organization-specific party details,
@@ -398,7 +466,11 @@ So that party records remain accurate as real-world identity details change.
 **Then** the response includes the updated party state
 **And** the returned state matches the aggregate state after applying the emitted event.
 
-### Story 1.3: Manage Contact Channels
+### Story 1.4: Manage Contact Channels
+
+**Phase:** MVP
+**Coverage type:** implemented
+**Requirements covered:** FR8, FR9, FR10, FR11, FR69
 
 As an authorized client,
 I want to add, update, remove, and mark preferred contact channels on a party,
@@ -436,7 +508,11 @@ So that party records carry usable structured contact information.
 **Then** the response includes the updated party state
 **And** the returned state includes the applied contact channel change.
 
-### Story 1.4: Manage Party Identifiers
+### Story 1.5: Manage Party Identifiers
+
+**Phase:** MVP
+**Coverage type:** implemented
+**Requirements covered:** FR12, FR13, FR69
 
 As an authorized client,
 I want to add and remove jurisdiction-specific identifiers on a party,
@@ -469,7 +545,11 @@ So that consumers can associate parties with external legal, tax, or registry re
 **Then** the response includes the updated party state
 **And** the returned state includes the applied identifier change.
 
-### Story 1.5: Deactivate and Reactivate Parties
+### Story 1.6: Deactivate and Reactivate Parties
+
+**Phase:** MVP
+**Coverage type:** implemented
+**Requirements covered:** FR4, FR5, FR69
 
 As an authorized client,
 I want to deactivate and reactivate party records without deleting their history,
@@ -507,7 +587,11 @@ So that lifecycle changes are reversible and auditable.
 **Then** the response includes the updated party state
 **And** the returned state reflects the new active/inactive status.
 
-### Story 1.6: Idempotent Commands and Typed Rejections
+### Story 1.7: Idempotent Commands and Typed Rejections
+
+**Phase:** MVP
+**Coverage type:** implemented
+**Requirements covered:** FR30, FR36
 
 As a developer integrating with Parties,
 I want duplicate or invalid lifecycle commands to return stable typed outcomes,
@@ -540,7 +624,11 @@ So that retries are safe and failures are understandable without inspecting inte
 **Then** duplicate commands, invalid transitions, missing targets, and no-op replay behavior are covered
 **And** tests assert that persisted rejection events do not corrupt party state.
 
-### Story 1.7: Personal Data Marking and Log-Safe Domain Model
+### Story 1.8: Personal Data Marking and Log-Safe Domain Model
+
+**Phase:** MVP
+**Coverage type:** implemented
+**Requirements covered:** FR42, FR43
 
 As a privacy-conscious operator,
 I want personal data fields to be explicitly marked and excluded from application logging,
@@ -573,7 +661,11 @@ So that MVP domain contracts are prepared for GDPR enforcement without leaking s
 **Then** required fields are marked consistently
 **And** regressions in personal data marking fail the tests.
 
-### Story 1.8: Return Updated Party State from Mutations
+### Story 1.9: Return Updated Party State from Mutations
+
+**Phase:** MVP
+**Coverage type:** implemented
+**Requirements covered:** FR69; supports FR1-FR13
 
 As a client application,
 I want successful party mutation commands to return the resulting party state,
@@ -606,13 +698,15 @@ So that I can update my UI or workflow without issuing an immediate follow-up qu
 **Then** create, update, contact, identifier, deactivate, and reactivate success paths assert returned state correctness
 **And** rejection paths assert that failed mutations do not return misleading updated state.
 
-<!-- End story repeat -->
-
 ## Epic 2: Searchable Tenant-Safe Read Models
 
 Consumers can list, search, retrieve, filter, and reliably observe party records through tenant-safe projections.
 
 ### Story 2.1: Build Party Detail Projection
+
+**Phase:** MVP
+**Coverage type:** implemented
+**Requirements covered:** FR18; supports FR19
 
 As a consumer of party data,
 I want each party to have a read-optimized detail projection,
@@ -645,6 +739,10 @@ So that I can retrieve complete party details without rehydrating the aggregate 
 **And** they verify event ordering assumptions documented by the architecture.
 
 ### Story 2.2: Build Tenant Party Index Projection
+
+**Phase:** MVP
+**Coverage type:** implemented
+**Requirements covered:** FR14, FR19, FR68
 
 As a consumer browsing party records,
 I want each tenant to have a read-optimized party index,
@@ -683,6 +781,10 @@ So that I can list and filter parties without scanning aggregate event streams.
 
 ### Story 2.3: Query Party Details by ID
 
+**Phase:** MVP
+**Coverage type:** implemented
+**Requirements covered:** FR18, FR39, FR40, FR41, FR64
+
 As a consumer of party data,
 I want to retrieve full party details by party id,
 So that applications and AI tools can display or use the current party record without replaying events.
@@ -719,6 +821,10 @@ So that applications and AI tools can display or use the current party record wi
 **Then** tenant isolation and bounded response behavior are verified.
 
 ### Story 2.4: List and Filter Parties
+
+**Phase:** MVP
+**Coverage type:** implemented
+**Requirements covered:** FR14, FR39, FR40, FR41, FR64, FR68
 
 As a consumer browsing party records,
 I want to list parties with pagination and filters,
@@ -762,6 +868,10 @@ So that I can navigate a tenant's party directory efficiently.
 
 ### Story 2.5: Search Parties by Display Name with Match Metadata
 
+**Phase:** MVP
+**Coverage type:** implemented
+**Requirements covered:** FR15, FR17; supports FR20, FR39, FR40, FR41, FR64
+
 As a consumer resolving party identity,
 I want to search parties by display name with match metadata,
 So that humans and AI agents can rank candidates confidently in MVP name-based lookup scenarios.
@@ -804,6 +914,10 @@ So that humans and AI agents can rank candidates confidently in MVP name-based l
 
 ### Story 2.6: Enforce Tenant-Safe Projection Reads
 
+**Phase:** MVP
+**Coverage type:** implemented
+**Requirements covered:** FR39, FR40, FR41
+
 As a tenant-scoped consumer,
 I want every read-side query to fail closed when tenant context is missing or mismatched,
 So that party data cannot leak across tenants through projections, search, or degraded states.
@@ -842,6 +956,10 @@ So that party data cannot leak across tenants through projections, search, or de
 
 ### Story 2.7: Handle Projection Freshness and Graceful Degradation
 
+**Phase:** MVP
+**Coverage type:** implemented
+**Requirements covered:** FR19, FR64, FR71
+
 As a consumer of eventually consistent party data,
 I want read responses to expose freshness and degradation status,
 So that my application can behave safely when projections lag or infrastructure is partially unavailable.
@@ -877,6 +995,10 @@ So that my application can behave safely when projections lag or infrastructure 
 **Then** each read path returns the documented status and preserves tenant isolation.
 
 ### Story 2.8: Projection Rebuild and Health Monitoring
+
+**Phase:** MVP
+**Coverage type:** implemented
+**Requirements covered:** FR64, FR71
 
 As an operator of the Parties service,
 I want projection corruption and rebuild state to be detected and handled predictably,
@@ -920,6 +1042,11 @@ So that read models can recover without unsafe data exposure.
 
 ### Story 2.9: Prepare Deferred Search and Temporal Query Extensions
 
+**Phase:** v1.1 preparation
+**Coverage type:** prepared/deferred
+**Requirements prepared:** FR16, FR72; future portions of FR15, FR17
+**MVP implementation coverage:** none beyond preserving event/history and contract extension points required by earlier MVP stories
+
 As a future maintainer of Parties search and audit features,
 I want the MVP read model contracts to reserve explicit extension points for semantic search and temporal name queries,
 So that v1.1 can add those capabilities without breaking existing consumers.
@@ -957,6 +1084,10 @@ Developers can integrate Parties through typed packages, REST APIs, documentatio
 
 ### Story 3.1: Publish Stable Contracts Package
 
+**Phase:** MVP
+**Coverage type:** implemented
+**Requirements covered:** FR33; supports FR37, FR42
+
 As a .NET developer,
 I want a stable `Hexalith.Parties.Contracts` package,
 So that I can reference party commands, events, models, and results without inheriting service infrastructure dependencies.
@@ -989,6 +1120,10 @@ So that I can reference party commands, events, models, and results without inhe
 **And** breaking public contract drift is detected before package publication.
 
 ### Story 3.2: Provide Typed Parties Client Registration
+
+**Phase:** MVP
+**Coverage type:** implemented
+**Requirements covered:** FR26, FR27, FR28
 
 As a .NET developer,
 I want to register a typed Parties client with one DI call,
@@ -1023,6 +1158,10 @@ So that I can send commands and queries without learning DAPR or service interna
 
 ### Story 3.3: Expose Versioned REST Party API
 
+**Phase:** MVP
+**Coverage type:** implemented
+**Requirements covered:** FR29, FR57; supports FR27, FR28, FR39, FR40, FR41
+
 As a developer using any programming language,
 I want to interact with Parties through a versioned REST API,
 So that I can integrate party management without using the .NET client package.
@@ -1054,6 +1193,10 @@ So that I can integrate party management without using the .NET client package.
 **Then** REST behavior is verified without introducing public REST endpoints in the actor host if architecture forbids that boundary.
 
 ### Story 3.4: Map Domain Rejections to ProblemDetails
+
+**Phase:** MVP
+**Coverage type:** implemented
+**Requirements covered:** FR30, FR58
 
 As a developer integrating with Parties,
 I want domain rejections to map to standardized HTTP error responses,
@@ -1088,6 +1231,10 @@ So that I can understand failures and corrective actions without debugging servi
 
 ### Story 3.5: Generate OpenAPI and Error Catalog
 
+**Phase:** MVP
+**Coverage type:** implemented
+**Requirements covered:** FR56, FR58; supports FR29, FR30, FR57, FR62
+
 As a developer evaluating or integrating Parties,
 I want browsable API documentation and a documented error catalog,
 So that I can understand commands, queries, responses, and failure modes without reading service code.
@@ -1117,6 +1264,10 @@ So that I can understand commands, queries, responses, and failure modes without
 **Then** missing endpoints, missing ProblemDetails schemas, undocumented rejection types, or future capability leakage fail the tests.
 
 ### Story 3.6: Enable One-Command Local Run
+
+**Phase:** MVP
+**Coverage type:** implemented
+**Requirements covered:** FR31, FR60; supports FR71
 
 As a developer trying Parties locally,
 I want to start the full local system with one documented command,
@@ -1149,6 +1300,10 @@ So that I can evaluate and develop against the service without hand-wiring infra
 **And** they do not require recursive submodule initialization.
 
 ### Story 3.7: Write Getting Started Documentation
+
+**Phase:** MVP
+**Coverage type:** implemented
+**Requirements covered:** FR32; supports FR31, FR56, FR60, FR62
 
 As a developer new to Parties,
 I want a tested getting-started guide,
@@ -1192,6 +1347,10 @@ So that I can deploy locally and send my first command as a self-service experie
 
 ### Story 3.8: Provide Runnable Sample Integration
 
+**Phase:** MVP
+**Coverage type:** implemented
+**Requirements covered:** FR59; supports FR26, FR27, FR28, FR29, FR35, FR38
+
 As a developer evaluating Parties,
 I want a runnable sample consuming application,
 So that I can see command, query, event subscription, and MCP usage in one concrete integration.
@@ -1229,6 +1388,10 @@ So that I can see command, query, event subscription, and MCP usage in one concr
 
 ### Story 3.9: Add Deployment Security Validation
 
+**Phase:** MVP
+**Coverage type:** implemented
+**Requirements covered:** FR61; supports FR39, FR40, FR41
+
 As an operator preparing Parties for deployment,
 I want validation tooling for security-critical configuration,
 So that unsafe tenant, auth, and DAPR access-control settings are caught before production use.
@@ -1264,6 +1427,10 @@ So that unsafe tenant, auth, and DAPR access-control settings are caught before 
 **Then** validation behavior matches deployment security expectations.
 
 ### Story 3.10: Display MVP Compliance Warning
+
+**Phase:** MVP
+**Coverage type:** implemented
+**Requirements covered:** FR62
 
 As a developer or operator evaluating MVP Parties,
 I want a persistent compliance warning until GDPR features are active,
@@ -1301,6 +1468,10 @@ AI agents can find, create, retrieve, update, and deactivate parties through a b
 
 ### Story 4.1: Register Bounded MCP Tool Surface
 
+**Phase:** MVP
+**Coverage type:** implemented
+**Requirements covered:** FR23; supports NFR26
+
 As an AI agent integrator,
 I want Parties to expose a small, well-documented MCP tool surface,
 So that agents can reliably discover and use party management capabilities.
@@ -1333,6 +1504,10 @@ So that agents can reliably discover and use party management capabilities.
 **And** forbidden internal capabilities are absent.
 
 ### Story 4.2: Implement AI-Friendly Find Parties Tool
+
+**Phase:** MVP
+**Coverage type:** implemented
+**Requirements covered:** FR20, FR23, FR25; supports FR14, FR15, FR17
 
 As an AI agent,
 I want to find and list parties using a forgiving `find_parties` tool,
@@ -1376,6 +1551,10 @@ So that I can resolve party identity from partial user-provided names.
 
 ### Story 4.3: Implement Get Party Tool
 
+**Phase:** MVP
+**Coverage type:** implemented
+**Requirements covered:** FR23; supports FR18, FR25
+
 As an AI agent,
 I want to retrieve complete party details by id using `get_party`,
 So that I can inspect the current party record before deciding what action to take.
@@ -1412,6 +1591,10 @@ So that I can inspect the current party record before deciding what action to ta
 **Then** responses are structured, predictable, and tenant-safe.
 
 ### Story 4.4: Implement Composite Create Party Tool
+
+**Phase:** MVP
+**Coverage type:** implemented
+**Requirements covered:** FR21, FR24, FR25
 
 As an AI agent,
 I want to create a complete party in one `create_party` tool call,
@@ -1460,6 +1643,10 @@ So that a user's natural-language contact request becomes a usable party record 
 
 ### Story 4.5: Implement Patch-Oriented Update Party Tool
 
+**Phase:** MVP
+**Coverage type:** implemented
+**Requirements covered:** FR22, FR25, FR74
+
 As an AI agent,
 I want to update only the party fields I specify in one `update_party` tool call,
 So that I can safely modify party records without sending or reconstructing full party state.
@@ -1507,6 +1694,10 @@ So that I can safely modify party records without sending or reconstructing full
 
 ### Story 4.6: Implement Delete Party as Soft Deactivation Tool
 
+**Phase:** MVP
+**Coverage type:** implemented
+**Requirements covered:** FR23; supports FR4, FR25
+
 As an AI agent,
 I want a `delete_party` tool that safely removes a party from active use,
 So that user requests to delete a contact map to MVP soft deactivation rather than GDPR erasure.
@@ -1544,6 +1735,10 @@ So that user requests to delete a contact map to MVP soft deactivation rather th
 
 ### Story 4.7: Enforce MCP Boundary and Tool Safety
 
+**Phase:** MVP
+**Coverage type:** implemented
+**Requirements covered:** FR25; supports FR20, FR21, FR22, FR23, FR24, FR74
+
 As an architect maintaining Parties,
 I want the MCP layer to remain a translation layer with strict safety boundaries,
 So that AI agent features do not leak domain logic, internal infrastructure, or tenant data.
@@ -1580,6 +1775,10 @@ So that AI agent features do not leak domain logic, internal infrastructure, or 
 **Then** boundary violations fail the test suite.
 
 ### Story 4.8: Validate MCP Latency, Errors, and Complete Responses
+
+**Phase:** MVP
+**Coverage type:** implemented
+**Requirements covered:** FR24, FR25; supports FR20, FR21, FR22, FR23, FR74
 
 As an AI agent integrator,
 I want MCP tools to be fast, structured, and complete,
@@ -1622,6 +1821,10 @@ Consuming applications can receive ordered, tenant-aware party events and build 
 
 ### Story 5.1: Publish Stable Party Domain Events
 
+**Phase:** MVP
+**Coverage type:** implemented
+**Requirements covered:** FR34, FR54; supports FR37
+
 As a consuming application developer,
 I want Parties to publish stable domain events when party state changes,
 So that my application can react and maintain its own read models.
@@ -1646,7 +1849,12 @@ So that my application can react and maintain its own read models.
 **Given** personal data appears in published event payloads
 **When** events are published to subscribers
 **Then** payload shape follows the architecture's MVP/v1.1 privacy rules
-**And** event publishing logs do not include raw personal data.
+**And** subscribers receive readable event payloads without needing to handle decryption.
+
+**Given** event publication logs are produced
+**When** events containing personal data are published
+**Then** event publishing logs do not include raw personal data
+**And** logs rely on safe envelope metadata instead of payload values.
 
 **Given** event publication tests run
 **When** they exercise create, detail update, contact channel, identifier, deactivate, reactivate, and rejection paths
@@ -1654,6 +1862,10 @@ So that my application can react and maintain its own read models.
 **And** event contracts remain stable for consumers.
 
 ### Story 5.2: Include Tenant Context and Envelope Metadata
+
+**Phase:** MVP
+**Coverage type:** implemented
+**Requirements covered:** FR70; supports FR39, FR40, FR41
 
 As a consuming application developer,
 I want party events to include tenant context and correlation metadata,
@@ -1687,6 +1899,10 @@ So that I can route, audit, and process events safely in a multi-tenant system.
 **And** missing tenant context fails closed before publication.
 
 ### Story 5.3: Configure At-Least-Once Event Delivery
+
+**Phase:** MVP
+**Coverage type:** implemented
+**Requirements covered:** FR63; supports FR34, FR35
 
 As a consuming application developer,
 I want Parties events delivered through the configured pub/sub pipeline with at-least-once semantics,
@@ -1725,6 +1941,10 @@ So that my application can reliably observe party lifecycle changes.
 
 ### Story 5.4: Document Event Ordering and Subscriber Idempotency
 
+**Phase:** MVP
+**Coverage type:** implemented
+**Requirements covered:** FR73; supports FR35, FR63
+
 As a consuming application developer,
 I want clear guidance for event ordering and duplicate delivery,
 So that my event handlers remain correct across supported deployment targets.
@@ -1757,6 +1977,10 @@ So that my event handlers remain correct across supported deployment targets.
 **And** unsupported guarantees are not claimed.
 
 ### Story 5.5: Provide Consumer Read-Model Handler Guidance
+
+**Phase:** MVP
+**Coverage type:** implemented
+**Requirements covered:** FR35; supports FR34, FR38, FR63, FR73
 
 As a consuming application developer,
 I want concrete handler patterns for party events,
@@ -1791,6 +2015,11 @@ So that I can build domain-specific read models safely and predictably.
 
 ### Story 5.6: Prepare Forward-Compatible Party Lifecycle Events
 
+**Phase:** MVP preparation with future lifecycle/GDPR compatibility
+**Coverage type:** implemented for FR37 contract compatibility; prepared for future merge/GDPR event behavior
+**Requirements covered:** FR37
+**Requirements prepared:** future merge behavior and v1.1 GDPR event naming conventions
+
 As a consuming application developer,
 I want party event contracts to anticipate future lifecycle capabilities,
 So that my integration does not break when Parties adds merge, GDPR, or richer search/audit behavior.
@@ -1820,3 +2049,1036 @@ So that my integration does not break when Parties adds merge, GDPR, or richer s
 **Given** forward-compatibility tests run
 **When** they inspect event contracts, version metadata, serialization, and placeholder docs
 **Then** future-ready contracts remain additive and consumer-safe.
+
+### Story 5.7: Document Erasure Subscriber Responsibilities
+
+**Phase:** MVP documentation preparation for v1.1 GDPR
+**Coverage type:** implemented for FR38 guidance; prepared for FR46 subscriber cleanup behavior
+**Requirements covered:** FR38
+**Requirements prepared:** FR46
+
+As a consuming application developer,
+I want explicit guidance for future `PartyErased` events,
+So that my application is ready to clean up references when GDPR erasure ships.
+
+**Acceptance Criteria:**
+
+**Given** MVP does not yet activate GDPR erasure
+**When** consumer documentation discusses event handling
+**Then** it still warns that `PartyErased` handling will be mandatory for all consuming applications
+**And** it explains the difference between MVP soft deactivation and future GDPR erasure.
+
+**Given** a consuming application stores party references or denormalized party data
+**When** it reads erasure guidance
+**Then** it understands which local references or cached fields must be cleaned, anonymized, or reviewed when `PartyErased` is received
+**And** it understands dangling reference trade-offs.
+
+**Given** event handler examples are provided
+**When** future `PartyErased` handling is described
+**Then** examples show idempotent cleanup behavior
+**And** they avoid logging or preserving erased personal data.
+
+**Given** GDPR compliance is deferred to v1.1
+**When** documentation is reviewed
+**Then** it does not imply MVP performs legal erasure
+**And** it links to MVP compliance warning and emergency manual erasure procedure where applicable.
+
+**Given** documentation validation or review runs
+**When** event integration docs are checked
+**Then** erasure responsibility guidance is present wherever subscriber integration is documented
+**And** the guidance remains consistent with Contracts package event naming.
+
+## Epic 6: GDPR Compliance Operations
+
+Administrators and DPO workflows can erase, restrict, export, verify, and audit party data with crypto-shredding and subscriber notifications.
+
+### Story 6.1: Activate Per-Party Personal Data Encryption
+
+**Phase:** v1.1
+**Coverage type:** implemented when v1.1 is scheduled
+**Requirements covered:** FR53; supports FR42, FR55
+
+As a privacy-conscious operator,
+I want personal data in stored events and snapshots encrypted with per-party keys,
+So that GDPR-era storage protects personal data while preserving event-sourced behavior.
+
+**Acceptance Criteria:**
+
+**Given** GDPR encryption is enabled for a tenant
+**When** a party command persists events or snapshots containing `[PersonalData]` fields
+**Then** personal data fields are encrypted at rest using the party's encryption key
+**And** non-personal metadata needed for routing, tenant isolation, and event replay remains readable.
+
+**Given** an event or snapshot is rehydrated for authorized processing
+**When** the party key is available
+**Then** encrypted personal data is decrypted for domain processing
+**And** aggregate replay remains compatible with EventStore conventions.
+
+**Given** a party is an organization with contact channels or identifiers that may identify a natural person
+**When** encryption classification is applied
+**Then** the type-dependent personal data rules are honored
+**And** ambiguous data is treated conservatively.
+
+**Given** the party key is missing, revoked, or inaccessible
+**When** the system attempts to read encrypted personal data
+**Then** it returns a controlled privacy-preserving status
+**And** it does not expose cryptographic errors or partial personal data.
+
+**Given** encryption tests run
+**When** they cover person fields, organization fields, contact channels, identifiers, derived names, snapshots, rehydration, missing key, and classification edge cases
+**Then** personal data is encrypted/decrypted correctly
+**And** replay compatibility is preserved.
+
+### Story 6.2: Trigger Right-to-Erasure by Crypto-Shredding
+
+**Phase:** v1.1
+**Coverage type:** implemented when v1.1 is scheduled
+**Requirements covered:** FR44; supports FR55
+
+As an administrator or DPO,
+I want to trigger right-to-erasure for a party,
+So that personal data becomes permanently unreadable while the event stream remains auditable.
+
+**Acceptance Criteria:**
+
+**Given** an authorized administrator submits an erasure request for an eligible party
+**When** the erasure command is accepted
+**Then** the system revokes or destroys the party's personal data encryption key
+**And** persisted personal data for that party becomes permanently unreadable.
+
+**Given** an erasure request targets a party that is already erased
+**When** the command is handled
+**Then** the result is idempotent or returns a typed already-erased outcome
+**And** no new personal data is exposed.
+
+**Given** an erasure request targets a missing party, unauthorized tenant, restricted flow conflict, or invalid request
+**When** the command is handled
+**Then** it returns a typed rejection
+**And** the response does not leak personal data or cross-tenant existence.
+
+**Given** erasure is triggered
+**When** domain state is updated
+**Then** party status records erasure state
+**And** future reads return privacy-preserving erased status rather than decrypted personal details.
+
+**Given** erasure command tests run
+**When** they cover success, already-erased, missing party, unauthorized tenant, invalid request, and missing key scenarios
+**Then** crypto-shredding behavior is irreversible and typed outcomes are verified.
+
+### Story 6.3: Verify Erasure Across Internal Stores
+
+**Phase:** v1.1
+**Coverage type:** implemented when v1.1 is scheduled
+**Requirements covered:** FR45
+
+As an administrator or DPO,
+I want erasure verification across internal projections, caches, and indexes,
+So that I can prove the service no longer exposes erased personal data.
+
+**Acceptance Criteria:**
+
+**Given** a party erasure has been triggered
+**When** verification runs
+**Then** it checks aggregate readable state, snapshots, detail projections, index projections, caches, and search indexes that may hold party personal data
+**And** each store returns a pass, fail, pending, or not-applicable result.
+
+**Given** a projection or cache still exposes erased personal data
+**When** verification detects the issue
+**Then** verification reports a failed or partial state
+**And** it identifies the affected internal store category without logging personal data values.
+
+**Given** a projection is rebuilding or temporarily unavailable
+**When** verification runs
+**Then** it reports a pending or degraded verification state
+**And** it supports retry without creating duplicate erasure side effects.
+
+**Given** verification completes successfully
+**When** the result is returned
+**Then** it includes a bounded verification report suitable for an administrator or DPO
+**And** the report can be correlated to the erasure request without including personal data.
+
+**Given** verification tests run
+**When** they cover complete erasure, projection residue, cache residue, search residue, unavailable stores, retry, and report redaction
+**Then** verification behavior proves privacy-safe completion or actionable failure.
+
+### Story 6.4: Publish PartyErased Subscriber Notification
+
+**Phase:** v1.1
+**Coverage type:** implemented when v1.1 is scheduled
+**Requirements covered:** FR46; supports FR38
+
+As a consuming application developer,
+I want to receive a `PartyErased` notification when a party is erased,
+So that I can clean up local references and denormalized personal data.
+
+**Acceptance Criteria:**
+
+**Given** right-to-erasure completes or reaches the documented notification point
+**When** the system publishes subscriber events
+**Then** it emits a stable `PartyErased` event or equivalent erased-party notification
+**And** the event includes tenant context, party id, correlation metadata, and privacy-safe erasure status.
+
+**Given** `PartyErased` is published
+**When** subscribers receive the event
+**Then** the event contains enough information to identify local references that require cleanup
+**And** it does not include erased personal data.
+
+**Given** internal erasure verification is pending or partial
+**When** subscriber notification behavior is defined
+**Then** the event or companion status makes the notification semantics clear
+**And** consumers can distinguish accepted erasure from fully verified erasure where the architecture requires that distinction.
+
+**Given** event publication is at-least-once
+**When** a subscriber receives duplicate `PartyErased` events
+**Then** consumer guidance and sample handlers treat cleanup as idempotent
+**And** duplicate events do not reintroduce or preserve personal data.
+
+**Given** `PartyErased` publication tests run
+**When** they cover success, duplicate delivery, missing tenant, already erased, partial verification, and event redaction
+**Then** subscribers receive a stable privacy-safe event contract.
+
+### Story 6.5: Manage Per-Channel Per-Purpose Consent
+
+**Phase:** v1.1
+**Coverage type:** implemented when v1.1 is scheduled
+**Requirements covered:** FR47, FR48
+
+As an administrator or DPO,
+I want to record and revoke consent per contact channel and purpose,
+So that party communication preferences are auditable and precise.
+
+**Acceptance Criteria:**
+
+**Given** an authorized administrator records consent for a party contact channel and purpose
+**When** the consent command is accepted
+**Then** the system records consent with party id, channel id, purpose, lawful basis metadata where applicable, timestamp, source, and actor metadata
+**And** it emits a stable consent-recorded event.
+
+**Given** consent already exists for a channel and purpose
+**When** the administrator records a new consent state
+**Then** the system preserves consent history
+**And** the current consent state reflects the latest valid record.
+
+**Given** an authorized administrator revokes consent for a party contact channel and purpose
+**When** the revoke command is accepted
+**Then** the system records the revocation with timestamp, source, reason where applicable, and actor metadata
+**And** it emits a stable consent-revoked event.
+
+**Given** a consent command targets a missing party, erased party, missing channel, invalid purpose, unauthorized tenant, or unsupported party-wide shortcut
+**When** the command is handled
+**Then** it returns a typed rejection
+**And** no consent shortcut is applied across all channels or the whole tenant.
+
+**Given** consent history is queried
+**When** the administrator retrieves consent records
+**Then** the response shows bounded per-channel/per-purpose history
+**And** it excludes unrelated tenant data and avoids logging personal data.
+
+**Given** consent tests run
+**When** they cover record, revoke, history, duplicate/idempotent requests, invalid channel, invalid purpose, erased party, cross-tenant, and no-shortcut behavior
+**Then** consent management remains precise and auditable.
+
+### Story 6.6: Restrict and Resume Party Processing
+
+**Phase:** v1.1
+**Coverage type:** implemented when v1.1 is scheduled
+**Requirements covered:** FR49, FR50
+
+As an administrator or DPO,
+I want to restrict and later resume processing of a party's data,
+So that complaints or investigations can pause processing without erasing the party.
+
+**Acceptance Criteria:**
+
+**Given** an authorized administrator submits a processing restriction for an eligible party
+**When** the restriction command is accepted
+**Then** the party is marked restricted with timestamp, bounded reason, actor metadata, and correlation id
+**And** a stable processing-restricted event is emitted.
+
+**Given** a party is restricted
+**When** normal update, contact, identifier, consent, search-sensitive, or processing operations are attempted
+**Then** restricted-operation guards apply according to the documented policy
+**And** disallowed operations return typed rejections without mutating party state.
+
+**Given** an authorized administrator lifts processing restriction
+**When** the lift restriction command is accepted
+**Then** the party restriction state is cleared or marked lifted with timestamp, actor metadata, and correlation id
+**And** a stable processing-restriction-lifted event is emitted.
+
+**Given** restriction commands target a missing party, erased party, already restricted party, not-restricted party, unauthorized tenant, or invalid reason
+**When** commands are handled
+**Then** they return typed rejection or idempotent outcomes as documented
+**And** no personal data leaks through error responses.
+
+**Given** restriction status is queried
+**When** an administrator retrieves party status
+**Then** the response shows current restriction state and bounded history metadata
+**And** it does not expose unrelated tenant data.
+
+**Given** restriction tests run
+**When** they cover restrict, blocked operations, allowed operations, lift restriction, duplicate/idempotent requests, erased party, invalid reason, and cross-tenant behavior
+**Then** processing restriction behavior is enforceable and auditable.
+
+### Story 6.7: Export Party Data Portability Package
+
+**Phase:** v1.1
+**Coverage type:** implemented when v1.1 is scheduled
+**Requirements covered:** FR51
+
+As an administrator or DPO,
+I want to export all data for a specific party in a machine-readable format,
+So that the service can satisfy data portability requests.
+
+**Acceptance Criteria:**
+
+**Given** an authorized administrator requests portability export for an eligible party
+**When** the export query runs
+**Then** the system assembles a machine-readable package containing the party's readable personal data, contact channels, identifiers, consent records, restriction state, processing records, and relevant event-derived metadata
+**And** the package is scoped to the requested party and tenant.
+
+**Given** the party is erased or the personal data key is unavailable
+**When** export is requested
+**Then** the response returns privacy-preserving erased/unavailable status
+**And** it does not expose cryptographic errors or partial personal data.
+
+**Given** the party is restricted
+**When** export is requested
+**Then** the documented restriction policy is applied
+**And** the response either exports allowed data or returns a typed restricted-processing outcome.
+
+**Given** an export file or payload is generated
+**When** filename, content type, and metadata are assigned
+**Then** the filename uses party id plus timestamp only
+**And** no names, contact values, identifiers, tenant ids, or free text are embedded in filenames or telemetry dimensions.
+
+**Given** export is logged or audited
+**When** operational records are created
+**Then** they include bounded metadata such as party id, tenant, actor, timestamp, and correlation id
+**And** they do not log exported payload content.
+
+**Given** export tests run
+**When** they cover success, erased party, missing key, restricted party, missing party, cross-tenant, filename safety, payload shape, and redaction
+**Then** portability export is complete, bounded, and privacy-safe.
+
+### Story 6.8: Record Processing Activities
+
+**Phase:** v1.1
+**Coverage type:** implemented when v1.1 is scheduled
+**Requirements covered:** FR52
+
+As an administrator or DPO,
+I want a complete time-stamped record of processing activities on party data,
+So that the service can support GDPR audit and Article 30 reporting needs.
+
+**Acceptance Criteria:**
+
+**Given** a party command, query, consent change, restriction change, erasure operation, verification, export, or subscriber notification occurs
+**When** the operation qualifies as a processing activity
+**Then** the system records bounded processing metadata including operation category, party id, tenant, actor/system identity, timestamp, correlation id, and outcome.
+
+**Given** processing activity records are stored
+**When** their schema is reviewed
+**Then** they avoid raw personal data, raw command/query payloads, tokens, claims dictionaries, and exported payload content
+**And** they retain enough metadata to support audit and reporting.
+
+**Given** an administrator queries processing records for a party
+**When** the query is authorized
+**Then** the system returns a time-ordered bounded list of processing activities for that party
+**And** it excludes unrelated tenant data.
+
+**Given** a party is erased
+**When** processing records remain available
+**Then** records preserve privacy-safe audit metadata
+**And** they do not require decrypting erased personal data.
+
+**Given** processing record tests run
+**When** they cover command, query, consent, restriction, erasure, verification, export, notification, erased party, redaction, and cross-tenant cases
+**Then** activity recording is complete and privacy-safe.
+
+### Story 6.9: Return Privacy-Preserving Erased Party Status
+
+**Phase:** v1.1
+**Coverage type:** implemented when v1.1 is scheduled
+**Requirements covered:** FR55; supports FR44, FR45
+
+As a consumer or administrator querying an erased party,
+I want to receive an explicit erased status instead of cryptographic failures,
+So that applications can behave correctly without exposing erased personal data.
+
+**Acceptance Criteria:**
+
+**Given** a party has been erased and its personal data key is unavailable
+**When** a detail, list, search, export, or admin query encounters the party
+**Then** the response returns an explicit erased/no-longer-inspectable status where the surface supports it
+**And** it does not expose decrypted personal data or raw cryptographic errors.
+
+**Given** an erased party appears in an index or status view
+**When** the record is returned
+**Then** only privacy-safe identifiers/status metadata are shown
+**And** stale personal details are cleared before rendering or serialization.
+
+**Given** a command attempts to mutate an erased party
+**When** the command is handled
+**Then** the system rejects the command with a typed erased-party outcome
+**And** no new personal data is accepted for that erased party.
+
+**Given** subscribers or clients receive erased status
+**When** they handle the response or event
+**Then** the status is stable and distinguishable from not found, inactive, restricted, and transient key-store failure
+**And** documentation explains the differences.
+
+**Given** erased status tests run
+**When** they cover read paths, command paths, export, index/search, stale projections, key-store failures, and response redaction
+**Then** erased parties are handled consistently and privacy-safely.
+
+### Story 6.10: Rotate Tenant Encryption Keys
+
+**Phase:** v1.1
+**Coverage type:** implemented when v1.1 is scheduled
+**Requirements covered:** NFR11
+**Requirements supported:** FR53, FR55
+
+As an operator responsible for tenant security,
+I want tenant encryption keys to rotate without downtime or data loss,
+So that Parties can meet operational security requirements while preserving readable party data.
+
+**Acceptance Criteria:**
+
+**Given** a tenant encryption key rotation is requested
+**When** rotation begins
+**Then** the system creates or selects the new tenant key material according to the configured key provider
+**And** existing party-level keys remain available for decrypting current data during the rotation window.
+
+**Given** party-level personal data keys are protected by tenant key material
+**When** tenant key rotation is applied
+**Then** party key wrapping or equivalent key metadata is updated safely
+**And** personal data remains readable for authorized operations after rotation.
+
+**Given** key rotation is interrupted or partially fails
+**When** the system resumes or retries rotation
+**Then** rotation proceeds idempotently from the last safe state
+**And** no party personal data becomes permanently unreadable because of partial rotation.
+
+**Given** an erased party no longer has readable personal data keys
+**When** tenant key rotation runs
+**Then** erased parties remain erased
+**And** rotation does not recreate or recover destroyed personal data keys.
+
+**Given** key rotation status is queried
+**When** an operator checks progress
+**Then** the response includes bounded status metadata, counts, and failures by category
+**And** it does not expose key material, secrets, tokens, or personal data.
+
+**Given** key rotation tests run
+**When** they cover success, retry, partial failure, erased parties, missing key provider, concurrent reads, and redacted status output
+**Then** tenant key rotation preserves uptime, data readability, and erasure guarantees.
+
+## Epic 7: Administration Console
+
+Administrators can browse, inspect, and process Parties records and GDPR operations through a privacy-safe FrontComposer admin surface.
+
+### Story 7.1: Compose Admin Console Working View
+
+**Phase:** v1.2
+**Coverage type:** deferred for MVP implementation planning
+**Requirements covered:** FR65; UX-DR1, UX-DR2, UX-DR21
+
+As a Parties administrator,
+I want the admin portal to open directly to a working party management console,
+So that I can search, browse, and inspect parties without passing through a landing page.
+
+**Acceptance Criteria:**
+
+**Given** an authorized administrator navigates to `/admin/parties`
+**When** the Parties admin surface loads
+**Then** the first viewport shows the working console with search, compact filters, tenant/auth state, result grid, and detail region
+**And** no marketing, landing, hero, or introductory page is shown.
+
+**Given** the admin console layout renders
+**When** list and detail regions are displayed
+**Then** they are sibling working regions rather than nested card shells
+**And** the layout remains dense, scannable, and suitable for repeated administration work.
+
+**Given** route support is available in FrontComposer
+**When** a party row is selected
+**Then** the detail state can deep-link to `/admin/parties/{partyId}`
+**And** the route uses only the non-PII party id.
+
+**Given** GDPR route support is available in FrontComposer
+**When** an administrator opens party GDPR operations
+**Then** the route can use `/admin/parties/{partyId}/gdpr`
+**And** no names, emails, identifiers, consent text, free text, or raw errors are placed in the URL.
+
+**Given** the admin console is rendered across supported viewport sizes
+**When** the layout is inspected
+**Then** the toolbar, results, detail region, and status region remain usable without text overlap
+**And** primary workflows are visible or reachable without an explanatory feature page.
+
+### Story 7.2: Browse and Filter Party Results
+
+**Phase:** v1.2
+**Coverage type:** deferred for MVP implementation planning
+**Requirements covered:** FR65; UX-DR4, UX-DR5, UX-DR10
+
+As a Parties administrator,
+I want to browse, search, and filter party records in the admin console,
+So that I can quickly find the party I need to inspect.
+
+**Acceptance Criteria:**
+
+**Given** an authorized administrator opens `/admin/parties`
+**When** the toolbar renders
+**Then** it includes search input, party type filter, active/status filter, retry control, and EventStore Admin UI availability indicator
+**And** controls use the accepted Parties client/query contract.
+
+**Given** the administrator performs a display-name search
+**When** results are loaded
+**Then** the grid displays tenant-safe matching parties with display name, type, active/erased/restricted state, created/modified dates, and non-PII status indicators
+**And** unsupported rich-search filters are disabled rather than silently sent.
+
+**Given** the administrator filters by type, active status, created date, or modified date where supported
+**When** the query runs
+**Then** the grid displays only matching current-tenant records
+**And** invalid filters produce bounded validation feedback.
+
+**Given** the result set is large
+**When** the administrator browses results
+**Then** the grid uses server-side paging or virtualization
+**And** it does not load unbounded result sets into the UI.
+
+**Given** token, tenant, user, filters, or host configuration changes while results are in flight
+**When** the stale response returns
+**Then** stale results are suppressed
+**And** the console reloads or clears state for the current context only.
+
+**Given** browse/filter UI tests run
+**When** they cover search, filters, paging/virtualization, unsupported filters, stale response suppression, retry, and tenant switch
+**Then** the grid remains tenant-safe, scannable, and predictable.
+
+### Story 7.3: Inspect Party Detail Safely
+
+**Phase:** v1.2
+**Coverage type:** deferred for MVP implementation planning
+**Requirements covered:** FR65; UX-DR6, UX-DR9, UX-DR20, UX-DR21
+
+As a Parties administrator,
+I want to inspect a selected party's details in the admin console,
+So that I can understand its current record, contacts, identifiers, and compliance state.
+
+**Acceptance Criteria:**
+
+**Given** an administrator selects a party row
+**When** the detail panel loads
+**Then** it displays selected party summary, contacts, identifiers, consent, restriction, erasure status, processing records, and safe EventStore Admin UI links where available
+**And** the detail region remains a dense titled working region, not a decorative card shell.
+
+**Given** a party is active, inactive, restricted, or erased
+**When** the detail panel renders
+**Then** it shows the correct state with non-color-only indicators
+**And** erased parties show terminal privacy-preserving state only.
+
+**Given** the selected party is not found, forbidden, cross-tenant, gone/erased, timeout, malformed, or contract-unavailable
+**When** the detail load resolves
+**Then** sensitive detail state is cleared before rendering the status
+**And** stale personal detail is not retained in the UI.
+
+**Given** the administrator signs out, changes tenant, loses admin permission, or changes route context
+**When** context changes
+**Then** list/detail/GDPR/export state is cleared or reloaded according to the current context
+**And** in-flight detail responses are canceled or suppressed when stale.
+
+**Given** backend content, AI-created party data, operator-entered text, or ProblemDetails text is displayed
+**When** the detail panel renders it
+**Then** all content is encoded through normal Razor/component text paths
+**And** raw markup, raw HTML fragments, and JavaScript interpolation are not used.
+
+**Given** detail UI tests run
+**When** they cover selection, state indicators, erased state, forbidden/cross-tenant, malformed responses, tenant switch, sign-out, and encoded rendering
+**Then** the detail panel remains safe and predictable.
+
+### Story 7.4: Handle Admin Empty, Error, and Degraded States
+
+**Phase:** v1.2
+**Coverage type:** deferred for MVP implementation planning
+**Requirements covered:** FR65; UX-DR8, UX-DR9, UX-DR19, UX-DR21
+
+As a Parties administrator,
+I want every empty, error, and degraded admin state to be bounded and safe,
+So that I can recover from problems without stale or sensitive data staying visible.
+
+**Acceptance Criteria:**
+
+**Given** the admin console has no matching results
+**When** list or search completes successfully with no records
+**Then** the UI shows a localized empty state
+**And** it does not imply that records exist in another tenant.
+
+**Given** token, tenant, or admin permission is missing
+**When** the admin console evaluates access
+**Then** it clears sensitive list, detail, GDPR, and export state
+**And** shows the appropriate missing-token, missing-tenant, or admin-required state.
+
+**Given** a tenant switch occurs while requests are in flight
+**When** stale responses return
+**Then** the UI suppresses stale data
+**And** selected row, caches, detail state, GDPR state, and export state reset before loading the new tenant.
+
+**Given** a forbidden, cross-tenant, not-found, gone/erased, timeout, transient failure, degraded, malformed response, or contract-unavailable condition occurs
+**When** the console renders the state
+**Then** it uses bounded localized status text
+**And** raw response bodies, raw ProblemDetails details, tokens, claims, and personal data are not rendered.
+
+**Given** a retryable list failure occurs
+**When** the administrator uses retry
+**Then** the console retries the current safe request context
+**And** focus returns predictably to the initiating control or relevant status region.
+
+**Given** empty/error/degraded UI tests run
+**When** they cover all documented operator states, stale response suppression, retry, focus behavior, redaction, and tenant switch
+**Then** the console handles failures without data leakage or confusing stale state.
+
+### Story 7.5: Add Safe EventStore Admin UI Links
+
+**Phase:** v1.2
+**Coverage type:** deferred for MVP implementation planning
+**Requirements covered:** FR65; UX-DR3, UX-DR21
+
+As a Parties administrator,
+I want safe links from party records to EventStore Admin UI diagnostics,
+So that I can inspect streams, commands, and correlations without duplicating generic EventStore browsing in Parties.
+
+**Acceptance Criteria:**
+
+**Given** EventStore Admin UI is configured and available
+**When** the admin console renders diagnostic links
+**Then** it generates links only from safe identifiers such as stream id, aggregate id, command id, correlation id, or timestamp
+**And** link labels use generic text such as `Open stream`, `Open command status`, or `Open correlation`.
+
+**Given** EventStore Admin UI URL or availability is missing
+**When** diagnostic links are rendered
+**Then** the controls are disabled with a bounded localized reason
+**And** no fallback embedded browser or generic event stream browser is shown inside Parties.
+
+**Given** party data includes names, emails, identifiers, consent text, or free text
+**When** EventStore links are generated
+**Then** none of those values appear in URLs, link labels, storage keys, telemetry dimensions, or logs.
+
+**Given** an administrator activates a safe EventStore link
+**When** the navigation occurs
+**Then** focus and navigation behavior remain predictable in the FrontComposer shell
+**And** no raw payload or token is appended to the link.
+
+**Given** EventStore link tests run
+**When** they cover configured, unavailable, disabled, safe identifier, PII redaction, and navigation cases
+**Then** links remain useful without becoming a privacy or boundary leak.
+
+### Story 7.6: Gate GDPR Operations on Accepted Client Contract
+
+**Phase:** v1.2
+**Coverage type:** deferred for MVP implementation planning
+**Requirements covered:** FR66; UX-DR7, UX-DR11
+**Dependency:** Accepted EventStore-fronted Parties client/gateway contract. If the dependency is tracked outside this epics document, reference the external dependency record in implementation planning before scheduling Story 7.6.
+
+As a Parties administrator,
+I want GDPR actions disabled until the accepted Parties client command/query contract is available,
+So that the admin console does not present operations it cannot safely execute.
+
+**Acceptance Criteria:**
+
+**Given** the accepted EventStore-fronted Parties client/gateway contract is unavailable
+**When** the admin console renders GDPR actions
+**Then** erasure, restriction, consent, portability, verification, and processing-record actions are disabled
+**And** each disabled action shows the exact bounded blocker `Blocked on accepted EventStore-fronted Parties client/gateway contract`.
+
+**Given** the accepted EventStore-fronted Parties client/gateway contract becomes available
+**When** capability detection refreshes
+**Then** supported GDPR actions become enabled according to the available contract methods
+**And** unsupported actions remain disabled with bounded reasons.
+
+**Given** a contract-unavailable state occurs after an action panel was open
+**When** the state is detected
+**Then** sensitive form data and operation state are cleared
+**And** no stale command can be submitted.
+
+**Given** capability detection fails or returns malformed capability data
+**When** the console renders GDPR controls
+**Then** it fails closed by disabling affected actions
+**And** it does not render raw backend details.
+
+**Given** GDPR gating tests run
+**When** they cover contract unavailable, available, partially available, malformed, stale, and tenant switch states
+**Then** operation controls are enabled only when safe and supported.
+
+### Story 7.7: Implement GDPR Operation Panels
+
+**Phase:** v1.2
+**Coverage type:** deferred for MVP implementation planning
+**Requirements covered:** FR66; UX-DR7, UX-DR12, UX-DR13, UX-DR14, UX-DR15, UX-DR16, UX-DR17
+
+As a Parties administrator or DPO,
+I want compact GDPR operation panels for a selected party,
+So that I can trigger and monitor erasure, restriction, consent, portability, and processing-record workflows.
+
+**Acceptance Criteria:**
+
+**Given** an administrator opens the GDPR panel for a selected party
+**When** the panel renders
+**Then** it shows operation sections for erasure, erasure status/certificate, verification retry, restrict/lift restriction, consent add/revoke/history, portability export, and processing records where supported
+**And** each section uses the accepted Parties client/query/command contract.
+
+**Given** an erasure request is submitted
+**When** confirmation is required
+**Then** the confirmation displays party id only
+**And** it returns command accepted outcome before refreshing authoritative erasure status.
+
+**Given** erasure certificate or verification status is requested
+**When** the operation completes
+**Then** the panel shows safe verification results
+**And** generated filenames use party id plus timestamp only.
+
+**Given** restriction is applied or lifted
+**When** the administrator submits a bounded reason where required
+**Then** the operation returns command accepted outcome
+**And** the panel refreshes current status before enabling follow-on actions.
+
+**Given** consent is added, revoked, or viewed
+**When** the administrator uses consent controls
+**Then** consent is scoped per channel and per purpose
+**And** no party-wide or tenant-wide consent shortcut is offered.
+
+**Given** portability export or processing records are requested
+**When** the operation completes
+**Then** outputs use safe filenames, content types, bounded summaries, and safe correlation links
+**And** exported payloads or raw processing details are not logged.
+
+**Given** GDPR panel tests run
+**When** they cover all supported flows, disabled unsupported flows, safe filenames, bounded reasons, stale state, redaction, and tenant switch
+**Then** GDPR operations remain usable and privacy-safe.
+
+### Story 7.8: Localize Admin Console Text and Status
+
+**Phase:** v1.2
+**Coverage type:** deferred for MVP implementation planning
+**Requirements covered:** FR65, FR66; UX-DR18
+
+As a Parties administrator,
+I want all admin console labels and statuses localized,
+So that the admin surface is consistent with FrontComposer localization expectations.
+
+**Acceptance Criteria:**
+
+**Given** the admin console renders toolbar, grid, detail, GDPR, empty, error, and status text
+**When** labels or messages are displayed
+**Then** they come from localized resource strings or the FrontComposer localization mechanism
+**And** hard-coded user-facing strings are avoided.
+
+**Given** dates, booleans, counts, lawful-basis labels, validation messages, warning copy, and operation outcomes are displayed
+**When** locale changes or localized resources are inspected
+**Then** formatting and text follow the active localization context
+**And** fallback behavior is bounded.
+
+**Given** ProblemDetails title or detail text is displayed
+**When** the UI renders it
+**Then** the text is encoded and bounded
+**And** it is not used as a localization key.
+
+**Given** localized resources are missing
+**When** the console attempts to render affected text
+**Then** fallback text is safe and discoverable in tests
+**And** missing resource coverage can be detected before release.
+
+**Given** localization tests run
+**When** they cover core labels, status messages, validation, operation outcomes, date/number formatting, fallback, and ProblemDetails handling
+**Then** the console is localization-ready.
+
+### Story 7.9: Enforce Admin Console Accessibility
+
+**Phase:** v1.2
+**Coverage type:** deferred for MVP implementation planning
+**Requirements covered:** FR65, FR66; UX-DR19
+
+As a Parties administrator using keyboard or assistive technology,
+I want the admin console to be accessible,
+So that I can complete party administration workflows without mouse-only or color-only interactions.
+
+**Acceptance Criteria:**
+
+**Given** the admin console toolbar, grid, detail, retry controls, links, and GDPR panels render
+**When** an administrator navigates by keyboard
+**Then** all controls are reachable in logical order
+**And** visible focus is always present.
+
+**Given** search filters change or retries complete
+**When** focus should be restored
+**Then** focus returns to the search input, initiating control, or relevant status region according to the documented interaction
+**And** focus is not lost to the document body.
+
+**Given** result rows and party states render
+**When** screen-reader labels are inspected
+**Then** rows expose names and state through accessible labels
+**And** erased, restricted, degraded, blocked, and inactive states are not color-only.
+
+**Given** detail panels and dialogs render
+**When** assistive technology inspects landmarks and dialog behavior
+**Then** headings define useful landmarks
+**And** dialogs trap focus and restore focus after completion or cancellation.
+
+**Given** loading, empty, blocked, forbidden, degraded, malformed, stale, or operation outcome states occur
+**When** state changes
+**Then** a polite status region announces bounded updates
+**And** announcements do not expose personal data unnecessarily.
+
+**Given** accessibility tests run
+**When** they cover keyboard navigation, focus restoration, labels, dialogs, status announcements, forced-colors, and reduced-motion expectations
+**Then** accessibility regressions fail before release.
+
+### Story 7.10: Enforce Admin Console Privacy and Encoding Rules
+
+**Phase:** v1.2
+**Coverage type:** deferred for MVP implementation planning
+**Requirements covered:** FR65, FR66; UX-DR20, UX-DR21; NFR32
+
+As a privacy-conscious operator,
+I want the admin console to prevent personal data leakage through UI, logs, routes, storage, and telemetry,
+So that administration workflows do not create secondary privacy exposure.
+
+**Acceptance Criteria:**
+
+**Given** user, backend, AI-created, or operator-entered content is rendered
+**When** the admin console displays it
+**Then** content is rendered through encoded Razor/component text paths
+**And** raw markup, raw HTML fragments, JavaScript interpolation, and unsafe rendering APIs are not used.
+
+**Given** routes, storage keys, telemetry dimensions, filenames, logs, link labels, DOM event names, or JavaScript event payloads are generated
+**When** party data is available
+**Then** names, emails, identifiers, consent text, free text, tenant membership payloads, JWTs, claims dictionaries, sidecar names, and DAPR ports are excluded
+**And** safe identifiers are used only where explicitly allowed.
+
+**Given** backend failures, malformed responses, or ProblemDetails responses occur
+**When** the console handles them
+**Then** raw bodies and raw details are not rendered or logged
+**And** bounded localized summaries are used instead.
+
+**Given** operator actions such as erasure, export, retry, and link navigation are logged
+**When** logs or telemetry are emitted
+**Then** they include operation category, non-PII id, correlation/status id, bounded outcome code, and retry category where useful
+**And** they exclude personal data and secrets.
+
+**Given** privacy and encoding tests run
+**When** they cover malicious party data, AI-created content, ProblemDetails text, filenames, routes, telemetry, logs, storage, and DOM event payloads
+**Then** no unsafe rendering or PII leakage is detected.
+
+## Epic 8: Embeddable Party Picker
+
+Consuming application developers can embed a tenant-safe, accessible party picker component for search and selection.
+
+### Story 8.1: Compose Embeddable Party Picker Shell
+
+**Phase:** v1.2
+**Coverage type:** deferred for MVP implementation planning
+**Requirements covered:** FR67; UX-DR22, UX-DR25, UX-DR32
+
+As a consuming application developer,
+I want an embeddable FrontComposer/Blazor party picker component,
+So that my application can offer party selection without building its own party search UI.
+
+**Acceptance Criteria:**
+
+**Given** a host application references the picker component
+**When** it renders the picker
+**Then** the picker appears as an embeddable party search and selection control
+**And** it is not an admin portal, party editor, tenant selector, GDPR surface, or EventStore stream browser.
+
+**Given** the host supplies request/auth context through accepted Parties client or EventStore gateway configuration
+**When** the picker initializes
+**Then** it uses that configuration for queries
+**And** it does not persist, refresh, parse for authorization, or log tokens.
+
+**Given** the picker is disabled or read-only
+**When** it renders
+**Then** interactive search and selection controls are disabled appropriately
+**And** current selection display remains stable and accessible.
+
+**Given** the picker is embedded in different host layouts
+**When** it renders at supported viewport/container sizes
+**Then** it maintains a bounded compact layout
+**And** text and controls do not overlap or resize unpredictably.
+
+**Given** picker shell tests run
+**When** they cover enabled, disabled, read-only, missing host configuration, and embedded layout states
+**Then** the picker remains a bounded embeddable component.
+
+### Story 8.2: Implement Typeahead Search and Bounded Results
+
+**Phase:** v1.2
+**Coverage type:** deferred for MVP implementation planning
+**Requirements covered:** FR67; UX-DR23, UX-DR31
+
+As a host application user,
+I want to type ahead by display name and see bounded party results,
+So that I can quickly select the correct party.
+
+**Acceptance Criteria:**
+
+**Given** the user types a display-name query
+**When** the debounce interval completes
+**Then** the picker queries through the accepted Parties client/EventStore gateway boundary
+**And** it does not call retired REST endpoints, admin endpoints, DAPR actors, projection actors, local search services, controllers, or actor-host internals.
+
+**Given** search results return successfully
+**When** the picker displays them
+**Then** it shows a bounded result count in a stable compact layout
+**And** each result includes enough non-PII-safe visible context to choose a party.
+
+**Given** the query is empty or below the documented minimum
+**When** search would otherwise run
+**Then** the picker avoids unnecessary queries
+**And** it displays a localized idle or empty state.
+
+**Given** search returns no matches
+**When** results are displayed
+**Then** the picker shows a localized empty state
+**And** it does not imply cross-tenant records exist.
+
+**Given** typeahead tests run
+**When** they cover debounce, result bounding, empty query, no results, tenant-safe querying, and endpoint boundary violations
+**Then** the picker search remains predictable and safe.
+
+### Story 8.3: Emit Durable Selection by Party Id
+
+**Phase:** v1.2
+**Coverage type:** deferred for MVP implementation planning
+**Requirements covered:** FR67; UX-DR24, UX-DR30
+
+As a host application developer,
+I want the picker to return only the selected party id as the durable selection,
+So that my application does not accidentally persist personal display data as an identity key.
+
+**Acceptance Criteria:**
+
+**Given** a user selects a party result
+**When** the picker invokes its host callback
+**Then** it passes the selected party id
+**And** display names, contact values, identifiers, consent text, degraded reasons, search text, tenant ids, tokens, raw ProblemDetails, and raw query payloads are not included in the durable callback payload.
+
+**Given** the host provides a selected party id
+**When** the picker initializes or receives updated parameters
+**Then** it resolves display state through the accepted query boundary when needed
+**And** the durable selection remains the party id.
+
+**Given** a selected party becomes not found, forbidden, gone, erased, or unavailable
+**When** the picker refreshes selected display state
+**Then** it reports a bounded localized status
+**And** it does not replace the durable id with personal data.
+
+**Given** selection tests run
+**When** they cover selection, host callback, preselected id, unavailable selected party, and payload inspection
+**Then** only party id is durable.
+
+### Story 8.4: Handle Picker States and Stale Responses
+
+**Phase:** v1.2
+**Coverage type:** deferred for MVP implementation planning
+**Requirements covered:** FR67; UX-DR26, UX-DR27
+
+As a host application user,
+I want the picker to handle loading, empty, retry, degraded, unauthorized, forbidden, not-found, gone/erased, and transient failures,
+So that selection remains safe and understandable across changing host context.
+
+**Acceptance Criteria:**
+
+**Given** the picker is loading results or selected display state
+**When** a request is in flight
+**Then** it shows a localized loading state
+**And** previous unsafe or stale results are not presented as current.
+
+**Given** token, tenant, user, host configuration, selected id, or search options change
+**When** an in-flight response returns
+**Then** stale responses are cleared or suppressed
+**And** the picker reloads only for the current context.
+
+**Given** unauthorized, forbidden, not-found, gone/erased, degraded/local-only, or transient-failure states occur
+**When** the picker renders the state
+**Then** it shows bounded localized status text
+**And** it uses non-color-only status indicators.
+
+**Given** a retryable failure occurs
+**When** the user activates retry
+**Then** the picker retries the current safe request context
+**And** focus returns to the initiating control or relevant status region.
+
+**Given** state tests run
+**When** they cover loading, empty, retry, degraded/local-only, unauthorized, forbidden, not-found, gone/erased, transient failures, stale responses, and context changes
+**Then** the picker never shows stale cross-context data.
+
+### Story 8.5: Enforce Picker Accessibility and Localization
+
+**Phase:** v1.2
+**Coverage type:** deferred for MVP implementation planning
+**Requirements covered:** FR67; UX-DR28
+
+As a host application user using keyboard or assistive technology,
+I want the party picker to be accessible and localized,
+So that I can search and select parties without inaccessible or hard-coded interactions.
+
+**Acceptance Criteria:**
+
+**Given** the picker renders search input, result list, selection display, retry control, and status messages
+**When** a user navigates by keyboard
+**Then** all controls are reachable and operable
+**And** visible focus is always present.
+
+**Given** result options are shown
+**When** assistive technology inspects them
+**Then** each option has a useful accessible name and state
+**And** selected, disabled, degraded, erased, and unavailable states are not color-only.
+
+**Given** picker status changes
+**When** loading, empty, error, retry, selection, or degraded states occur
+**Then** localized status text is announced appropriately
+**And** announcements are bounded and privacy-safe.
+
+**Given** labels, placeholders, validation messages, state text, and counts render
+**When** localization resources are inspected
+**Then** user-facing text comes from localized strings or FrontComposer localization
+**And** missing resources are detectable in tests.
+
+**Given** accessibility/localization tests run
+**When** they cover keyboard operation, visible focus, accessible names, status announcements, non-color-only state, localization, forced-colors, and reduced-motion expectations
+**Then** the picker is accessible for embedded use.
+
+### Story 8.6: Enforce Picker Privacy and Integration Boundary
+
+**Phase:** v1.2
+**Coverage type:** deferred for MVP implementation planning
+**Requirements covered:** FR67; UX-DR29, UX-DR30, UX-DR31, UX-DR32
+
+As a privacy-conscious host application developer,
+I want the picker to avoid leaking personal data or bypassing the accepted Parties boundary,
+So that embedded selection remains safe in every consuming application.
+
+**Acceptance Criteria:**
+
+**Given** party data, host labels, backend messages, degraded reasons, localized values, or raw user search text are displayed
+**When** the picker renders content
+**Then** everything is encoded through normal component text paths
+**And** raw markup, raw HTML fragments, and unsafe JavaScript interpolation are not used.
+
+**Given** the picker creates storage keys, telemetry dimensions, URLs, logs, filenames, DOM event names, or JavaScript event payloads
+**When** party/search/context data is available
+**Then** names, contacts, identifiers, consent text, search text, tenant ids, tokens, raw ProblemDetails, and raw query payloads are excluded
+**And** only non-PII safe identifiers are used where explicitly allowed.
+
+**Given** the picker needs party data
+**When** it queries
+**Then** it goes through the EventStore-fronted Parties client boundary
+**And** it never calls retired Parties REST endpoints, admin endpoints, DAPR actors, projection actors, local search services, controllers, or actor-host internals.
+
+**Given** host auth context is provided
+**When** the picker operates
+**Then** it does not persist, refresh, parse for authorization, or log tokens
+**And** missing or invalid context fails closed.
+
+**Given** privacy/boundary tests run
+**When** they inspect rendered output, callbacks, logs, telemetry, routes, storage, JavaScript event payloads, endpoint usage, and token handling
+**Then** no PII leakage or boundary bypass is detected.
