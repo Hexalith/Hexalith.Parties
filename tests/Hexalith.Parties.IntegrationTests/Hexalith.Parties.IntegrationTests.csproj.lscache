@@ -429,7 +429,7 @@ Security/EncryptionPipelineIntegrationTests.cs
  byteaether.ulid/1.3.5/lib/net10.0/ByteAether.Ulid.dll
  castle.core/5.1.1/lib/net6.0/Castle.Core.dll
  communitytoolkit.aspire.hosting.dapr/13.0.0/lib/net10.0/CommunityToolkit.Aspire.Hosting.Dapr.dll
- dapr.actors.aspnetcore/1.17.7/lib/net10.0/Dapr.Actors.AspNetCore.dll
+ dapr.actors.aspnetcore/1.17.9/lib/net10.0/Dapr.Actors.AspNetCore.dll
  dapr.actors/1.17.9/lib/net10.0/Dapr.Actors.dll
  dapr.aspnetcore/1.17.9/lib/net10.0/Dapr.AspNetCore.dll
  dapr.client/1.17.9/lib/net10.0/Dapr.Client.dll

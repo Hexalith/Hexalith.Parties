@@ -398,11 +398,11 @@ Usings.cs
  anglesharp/1.4.0/lib/net10.0/AngleSharp.dll
  bunit/2.7.2/lib/net10.0/bunit.dll
  byteaether.ulid/1.3.5/lib/net10.0/ByteAether.Ulid.dll
- dapr.actors/1.17.7/lib/net10.0/Dapr.Actors.dll
- dapr.aspnetcore/1.17.7/lib/net10.0/Dapr.AspNetCore.dll
- dapr.client/1.17.7/lib/net10.0/Dapr.Client.dll
- dapr.common/1.17.7/lib/net10.0/Dapr.Common.dll
- dapr.protos/1.17.7/lib/net10.0/Dapr.Protos.dll
+ dapr.actors/1.17.9/lib/net10.0/Dapr.Actors.dll
+ dapr.aspnetcore/1.17.9/lib/net10.0/Dapr.AspNetCore.dll
+ dapr.client/1.17.9/lib/net10.0/Dapr.Client.dll
+ dapr.common/1.17.9/lib/net10.0/Dapr.Common.dll
+ dapr.protos/1.17.9/lib/net10.0/Dapr.Protos.dll
  diffengine/11.3.0/lib/net7.0/DiffEngine.dll
  emptyfiles/4.4.0/lib/net7.0/EmptyFiles.dll
  fluxor.blazor.web/6.9.0/lib/net10.0/Fluxor.Blazor.Web.dll

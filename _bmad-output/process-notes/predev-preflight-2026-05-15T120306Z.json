@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "produced_by": "jobs/preflight-predev-hardening.py",
-  "timestamp": "2026-05-15T17:29:38Z",
+  "timestamp": "2026-05-15T12:03:06Z",
   "repo": "D:\\Hexalith.Parties",
   "result": "pass",
   "bootstrap_actions": [],
@@ -12,7 +12,7 @@
       "path": "D:\\Hexalith.Parties\\_bmad-output\\implementation-artifacts\\sprint-status.yaml",
       "result": "pass",
       "details": "PARSE OK",
-      "file_size_bytes": 6383,
+      "file_size_bytes": 6363,
       "line_count": 144,
       "top_level_keys": [
         "development_status",
