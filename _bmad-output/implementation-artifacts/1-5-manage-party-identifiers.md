@@ -27,7 +27,8 @@ so that consumers can associate parties with external legal, tax, or registry re
 3. **Duplicate identifier additions are retry-safe**
    - Given the client adds an identifier id that already exists on the party,
    - When the command is handled directly or through the composite update path,
-   - Then the aggregate rejects or idempotently skips the duplicate according to the documented command idempotency rules,
+   - Then the aggregate idempotently skips the duplicate according to the documented command idempotency rules,
+   - And no additional `IdentifierAdded` success event is emitted for that duplicate,
    - And the party state does not contain duplicate identifier entries.
 
 4. **Invalid identifier mutations reject without success events**
@@ -46,20 +47,23 @@ so that consumers can associate parties with external legal, tax, or registry re
    - Given identifier values may identify natural persons or sensitive business records,
    - When commands, events, state, operation outcomes, tests, logs, or telemetry are reviewed,
    - Then identifier values are marked and handled as personal data where applicable,
-   - And raw identifier values are not placed in logs, telemetry dimensions, exception text, or applied/skipped/rejected operation strings.
+   - And raw identifier values are not placed in logs, telemetry dimensions, exception text, typed rejection text, diagnostics, or applied/skipped/rejected operation strings.
 
 ## Tasks / Subtasks
 
 - [ ] Task 1: Audit existing identifier contracts, validators, and payload representation (AC: 1, 2, 3, 4, 6)
   - [ ] Confirm `AddIdentifier`, `RemoveIdentifier`, `CreatePartyComposite`, `UpdatePartyComposite`, `IdentifierAdded`, `IdentifierRemoved`, `IdentifierNotFound`, `PartyCannotAddDuplicateIdentifier`, `PartyIdentifier`, `IdentifierType`, and `PartyState` match this story's scope.
   - [ ] Confirm the current MVP command/event representation is identifier id, `IdentifierType`, and `[PersonalData] string Value`; do not add broad jurisdiction metadata to commands/events unless an explicit architecture decision updates the public contract.
+  - [ ] Treat "jurisdiction-specific identifiers" in this MVP story as `IdentifierType` plus value semantics; persisted jurisdiction remains a deferred contract decision unless already accepted elsewhere.
   - [ ] Review `PartyIdentifier.Jurisdiction` as current value-object inventory. Because `AddIdentifier` and `IdentifierAdded` do not currently carry jurisdiction, treat jurisdiction persistence as a deferred contract decision unless already accepted elsewhere.
   - [ ] Verify `src/Hexalith.Parties/Validation/AddIdentifierValidator.cs`, `RemoveIdentifierValidator.cs`, `CreatePartyCompositeValidator.cs`, and `UpdatePartyCompositeValidator.cs` cover party id, identifier id, enum value, identifier value, and sub-operation limit constraints expected at the boundary.
   - [ ] Preserve the current distinction between standalone aggregate tests that use readable identifier ids and composite validators that require GUID-shaped identifier ids unless validation and tests are intentionally reconciled together.
 
 - [ ] Task 2: Validate standalone aggregate identifier handlers (AC: 1, 2, 3, 4)
   - [ ] Confirm `PartyAggregate.Handle(AddIdentifier, PartyState?)` rejects missing parties with `PartyNotFound`, guards erasure and processing restriction before success, no-ops duplicate identifier ids, and emits `IdentifierAdded` on success.
+  - [ ] Confirm duplicate add no-ops do not emit a second `IdentifierAdded` event and do not mutate state.
   - [ ] Confirm `PartyAggregate.Handle(RemoveIdentifier, PartyState?)` rejects missing parties with `PartyNotFound`, guards erasure and processing restriction before success, rejects missing identifier ids with `IdentifierNotFound`, and emits `IdentifierRemoved` on success.
+  - [ ] Confirm missing remove paths emit only the typed rejection and never emit `IdentifierRemoved`.
   - [ ] Audit the "active party" wording in the ACs against current deactivated-party policy. If no accepted rejection contract exists for inactive-party identifier mutations, record the policy gap as deferred to the lifecycle story instead of inventing a new rejection event in this story.
   - [ ] Do not add identifier search, duplicate detection by identifier value, normalization, or jurisdiction-specific validation services to this story; MVP search by identifier is deferred to the dedicated search capability.
 
@@ -73,6 +77,7 @@ so that consumers can associate parties with external legal, tax, or registry re
   - [ ] Confirm `CreatePartyComposite` emits `IdentifierAdded` events for initial identifiers and safely skips duplicate identifier ids for MCP/client retry safety.
   - [ ] Confirm `UpdatePartyComposite` rejects add/remove conflicts on the same identifier id, validates missing remove targets before emitting success events, skips duplicate additions, and skips duplicate removals without mutating state twice.
   - [ ] Confirm duplicate add/remove and missing identifier outcomes do not include raw identifier values in `Applied`, `Skipped`, or `Rejected` strings. Identifier ids are allowed as stable operation identifiers when they are GUID-shaped or otherwise non-PII.
+  - [ ] Confirm privacy-safe outcome evidence covers logs, telemetry dimensions, exception text, typed rejection text, diagnostics, and composite operation strings.
   - [ ] Confirm `CompositeCommandResult.UpdatedPartyDetail` is built from current state plus emitted events and includes added and removed identifiers.
   - [ ] Do not change simple `DomainResult` return types for standalone handlers; public "updated state" response evidence for this story is the composite update path unless the architecture explicitly changes the response contract.
 
@@ -80,6 +85,7 @@ so that consumers can associate parties with external legal, tax, or registry re
   - [ ] Keep domain behavior in pure static aggregate `Handle` methods and `PartyState.Apply(...)`; do not add Dapr, database, MediatR handler, controller, Swagger/OpenAPI, MCP tool, AdminPortal, Picker, projection, search, or sample work to this story.
   - [ ] Keep `Hexalith.Parties.Contracts` additive and dependency-light. Do not add hosting, Dapr, MediatR, FluentValidation, UI, or infrastructure dependencies to contracts.
   - [ ] Keep tenant context out of identifier commands/events for this story; aggregate identity is `PartyId`, and tenant authorization remains outside the aggregate.
+  - [ ] Treat "authorized client" as an upstream gateway/client precondition; do not add tenant/RBAC enforcement to the Parties aggregate, contracts, or validation in this story.
   - [ ] Do not add identifier-value normalization, country-specific checksum validation, or duplicate matching by value unless a separate architecture/product decision explicitly schedules it.
   - [ ] Do not broaden this story into lifecycle, contact-channel, GDPR erasure, read projection, REST, MCP, admin, or picker behavior.
 
@@ -165,6 +171,7 @@ tests/Hexalith.Parties.Contracts.Tests/
 - Prefer `PartyTestData` helpers for valid party states, identifier-rich states, composite commands, erasure-pending state, and restricted state.
 - Keep tests pure aggregate/state/validator tests unless the implementation touches transport or topology behavior.
 - Add coverage for identifier types only where it proves current contract behavior; do not add external tax, company registry, national-id, or jurisdiction validation dependencies.
+- Include explicit evidence for duplicate add no-op/no-success-event behavior, missing remove typed rejection/no-success-event behavior, composite add/remove conflicts, invalid remove rejection, returned `UpdatedPartyDetail` after add/remove, and privacy-safe rejection/outcome strings.
 - If changing `PartyState.Apply(...)` declarations, run the EventStore apply-ordering fitness test before broader suites.
 
 ### Anti-Patterns To Avoid
@@ -210,6 +217,32 @@ tests/Hexalith.Parties.Contracts.Tests/
 
 ### File List
 
+## Party-Mode Review
+
+- Date/time: 2026-05-15T19:33:18+02:00
+- Selected story key: `1-5-manage-party-identifiers`
+- Command/skill invocation used: `/bmad-party-mode 1-5-manage-party-identifiers; review;`
+- Participating BMAD agents: Winston (System Architect), Amelia (Senior Software Engineer), Murat (Master Test Architect and Quality Advisor), John (Product Manager)
+- Findings summary:
+  - Winston and Amelia considered the story ready after minor inline clarification; Murat and John recommended `needs-story-update` until duplicate, privacy, jurisdiction, and composite evidence expectations were sharper.
+  - The common risk was decision drift, not a blocker: reviewers wanted the MVP phrase "jurisdiction-specific identifiers" tied to `IdentifierType` plus value semantics while persisted jurisdiction remains deferred.
+  - Reviewers also aligned on explicit no-success-event evidence for duplicate add and missing remove paths, privacy-safe rejection/outcome text, `CompositeCommandResult.UpdatedPartyDetail` as the FR69 evidence surface, and the existing distinction between aggregate-readable ids and composite GUID-shaped ids.
+  - The review reaffirmed that tenant/RBAC, lifecycle policy, REST/OpenAPI/MCP hosting, UI, projections, search, normalization, and jurisdiction persistence must stay outside this story unless accepted elsewhere.
+- Changes applied:
+  - Clarified duplicate add as retry-safe no-op/skip behavior with no additional `IdentifierAdded` event and no duplicate state entry.
+  - Clarified missing remove and invalid mutation expectations so typed rejection paths emit no success identifier event.
+  - Added concrete privacy-safe evidence requirements for `[PersonalData]` inventory and absence of raw identifier values in rejection, diagnostic, telemetry, and composite operation strings.
+  - Clarified that MVP jurisdiction specificity is represented by `IdentifierType` plus value semantics and that persisted jurisdiction remains deferred.
+  - Clarified that authorization is an upstream precondition and this story does not add tenant/RBAC enforcement to aggregate, contracts, or validators.
+  - Added focused test evidence expectations for duplicate no-op, missing remove, composite conflicts, invalid remove, returned updated detail, and privacy-safe outcomes.
+- Findings deferred:
+  - Persisted jurisdiction modeling remains deferred unless an accepted product/architecture decision changes the public contract.
+  - Active/deactivated-party identifier policy remains deferred to lifecycle Story 1.6.
+  - Projection/search/UI/API exposure, tenant/RBAC enforcement, identifier normalization/checksum validation, and duplicate matching by identifier value remain out of scope.
+  - Reconciling readable aggregate test ids with GUID-shaped composite validation remains a deliberate future decision unless implementation finds accepted guidance elsewhere.
+- Final recommendation: ready-for-dev
+
 ## Change Log
 
+- 2026-05-15: Party-mode review applied pre-dev clarifications for duplicate no-op/no-success-event evidence, missing-remove rejection behavior, privacy-safe outcome checks, MVP jurisdiction scope, upstream authorization boundary, composite returned-state assertions, and deferred lifecycle/jurisdiction/search/API decisions.
 - 2026-05-15: Story created by BMAD pre-dev hardening automation with current identifier reconciliation context.
