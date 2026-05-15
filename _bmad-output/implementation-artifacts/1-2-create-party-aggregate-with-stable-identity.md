@@ -141,6 +141,14 @@ tests/Hexalith.Parties.Contracts.Tests/
 - Rejection `Apply` overloads are intentional no-ops and must remain before success `Apply` overloads to protect EventStore suffix-match discovery.
 - `CreatedAt` is currently derived during apply time. This story should not introduce a new timestamp contract unless architecture explicitly changes event metadata handling.
 
+### Advanced Elicitation Clarifications
+
+- Treat EventStore aggregate identity as evidence outside the `PartyCreated` payload: focused tests or implementation notes should prove `CreateParty.PartyId` is accepted as the aggregate/stream identity and that `PartyCreated` still contains only party type and details.
+- Guard against false success on rejection paths: each invalid create assertion should verify the event list contains only the expected typed rejection and contains no `PartyCreated` or `PartyDisplayNameDerived` event.
+- Keep malformed identity handling narrow for this story: blank, whitespace, and non-GUID values are in scope; tenant-scoped uniqueness, cross-stream duplicate detection, and UUID normalization policy are deferred.
+- Keep display-name evidence deterministic but privacy-local: assertions may use local test fixtures, but do not add logs, telemetry, snapshots, or exception text that expose person or organization names.
+- If reconciling code reveals existing behavior that depends on HTTP, Dapr actors, clients, projections, or composite command returned-state contracts, record it as out-of-scope evidence or deferred follow-up unless the pure aggregate creation contract itself is broken.
+
 ### Testing Requirements
 
 - Use xUnit v3 and Shouldly, following existing tests in `PartyAggregateCreateTests` and `PartyStateTests`.
@@ -218,7 +226,27 @@ tests/Hexalith.Parties.Contracts.Tests/
   - Future lifecycle, contact, identifier, GDPR, projection, public API, MCP, admin, picker, and richer display-name canonicalization behavior remain out of scope.
 - Final recommendation: ready-for-dev
 
+## Advanced Elicitation
+
+- Date/time: 2026-05-15T21:02:30+02:00
+- Selected story key: `1-2-create-party-aggregate-with-stable-identity`
+- Command/skill invocation used: `/bmad-advanced-elicitation 1-2-create-party-aggregate-with-stable-identity`
+- Batch 1 method names: Red Team vs Blue Team; Failure Mode Analysis; Security Audit Personas; Self-Consistency Validation; Architecture Decision Records
+- Batch 2 method names: Pre-mortem Analysis; Chaos Monkey Scenarios; User Persona Focus Group; Critique and Refine; Expand or Contract for Audience
+- Findings summary:
+  - The party-mode trace made the story ready, but the advanced pass found remaining implementation traps around proving EventStore identity without reshaping `PartyCreated`, accidentally accepting rejection-plus-success event sequences, and widening identity or returned-state scope.
+  - Security and privacy review found that deterministic display-name tests are acceptable only when they remain local test assertions and do not create logs, telemetry, snapshots, or exception messages containing personal data.
+  - Architecture review confirmed the story should stay on pure aggregate creation and state rehydration; HTTP, Dapr, projection, client, MCP, composite returned-state, and cross-stream uniqueness behavior are follow-up concerns unless the aggregate contract itself is broken.
+- Changes applied:
+  - Added advanced elicitation clarifications for EventStore identity evidence, rejection-only event assertions, narrow malformed identity handling, privacy-local display-name evidence, and out-of-scope dependency surfaces.
+- Findings deferred:
+  - Tenant-scoped uniqueness, cross-stream duplicate detection, and UUID normalization policy remain deferred.
+  - Direct `PartyState.PartyId` exposure and any EventStore identity mechanism gaps remain architecture decisions.
+  - Composite command returned-state, client, gateway, projection, HTTP, Dapr actor, MCP, admin, picker, lifecycle, contact-channel, identifier, and GDPR behavior remain out of scope for this story.
+- Final recommendation: ready-for-dev
+
 ## Change Log
 
+- 2026-05-15: Advanced elicitation applied EventStore identity evidence, rejection-only, privacy-local assertion, and scope-boundary clarifications.
 - 2026-05-15: Party-mode review applied pre-dev clarifications for EventStore identity source, duplicate no-op behavior, rejection evidence, focused validation, and deferred identity decisions.
 - 2026-05-15: Story created by BMAD pre-dev hardening automation with current aggregate reconciliation context.
