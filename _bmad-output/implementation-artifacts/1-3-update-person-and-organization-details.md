@@ -16,25 +16,28 @@ so that party records remain accurate as real-world identity details change.
    - Given an existing active person party,
    - When the client updates person details such as first name, last name, date of birth, name prefix, or name suffix,
    - Then the aggregate emits a `PersonDetailsUpdated` event,
-   - And `PartyState` reflects the updated person details after the event is applied.
+   - And `PartyState` reflects the updated person details after the event is applied,
+   - And organization details on the same party state remain absent or unchanged.
 
 2. **Organization detail updates emit domain events and mutate state**
    - Given an existing active organization party,
    - When the client updates organization details such as legal name, trading name, legal form, or registration number,
    - Then the aggregate emits an `OrganizationDetailsUpdated` event,
-   - And `PartyState` reflects the updated organization details after the event is applied.
+   - And `PartyState` reflects the updated organization details after the event is applied,
+   - And person details on the same party state remain absent or unchanged.
 
 3. **Display and sort names are re-derived after detail changes**
    - Given an update changes fields used for display name or sort name derivation,
    - When the update succeeds,
-   - Then the aggregate emits `PartyDisplayNameDerived`,
+   - Then the aggregate emits `PartyDisplayNameDerived` after the detail-updated event,
    - And the updated party state exposes the new derived names using MVP rules: person display name `"{FirstName} {LastName}"`, person sort name `"{LastName}, {FirstName}"`, organization display and sort names both use `LegalName`.
 
 4. **Cross-type detail updates are rejected without mutation**
    - Given a person-specific update is submitted for an organization party, or an organization-specific update is submitted for a person party,
    - When the command is handled,
    - Then the aggregate rejects the command with a typed rejection event,
-   - And existing party details, display name, and sort name remain unchanged.
+   - And existing party details, display name, and sort name remain unchanged,
+   - And no successful detail-updated or display-name event is emitted.
 
 5. **Missing party updates are rejected**
    - Given an update command targets a party that does not exist,
@@ -45,8 +48,19 @@ so that party records remain accurate as real-world identity details change.
 6. **Returned update state is reconciled with emitted events**
    - Given a party detail update succeeds through the current update response path,
    - When the command result is returned,
-   - Then the returned party detail/state matches the aggregate state after applying the emitted events,
+   - Then `CompositeCommandResult.UpdatedPartyDetail` matches the aggregate state after applying the emitted events,
    - And any direct aggregate handler that intentionally returns only `DomainResult` is documented as a domain primitive rather than a public response contract.
+
+### Acceptance Traceability
+
+| AC | Command path | Expected event/result evidence | State evidence | Focused validation target |
+| --- | --- | --- | --- | --- |
+| AC1 | `UpdatePersonDetails` and person-only `UpdatePartyComposite` detail operation | `PersonDetailsUpdated` followed by `PartyDisplayNameDerived` on success | `PartyState.Person`, `DisplayName`, and `SortName` reflect the update; organization details are not mutated | `PartyAggregateUpdateTests`, `PartyAggregateCompositeTests`, `PartyStateTests` |
+| AC2 | `UpdateOrganizationDetails` and organization-only `UpdatePartyComposite` detail operation | `OrganizationDetailsUpdated` followed by `PartyDisplayNameDerived` on success | `PartyState.Organization`, `DisplayName`, and `SortName` reflect the update; person details are not mutated | `PartyAggregateUpdateTests`, `PartyAggregateCompositeTests`, `PartyStateTests` |
+| AC3 | Successful direct and composite detail updates | Display-name event occurs after the detail-updated event | Derived names use current MVP rules after all emitted events are applied | `PartyAggregateUpdateTests`, `PartyStateTests` |
+| AC4 | Wrong-type direct and composite detail updates | Typed rejection only; no success event and no returned success detail | Existing details, display name, and sort name remain unchanged | `PartyAggregateUpdateTests`, `PartyAggregateCompositeTests` |
+| AC5 | Missing-party direct detail updates | Current typed not-found behavior only; no success event | Null or missing state remains unmutated | `PartyAggregateUpdateTests` |
+| AC6 | Successful `UpdatePartyComposite` detail operation | `CompositeCommandResult.UpdatedPartyDetail` is populated from the post-event state | Returned detail matches state after projected events | `PartyAggregateCompositeTests` |
 
 ## Tasks / Subtasks
 
@@ -55,11 +69,13 @@ so that party records remain accurate as real-world identity details change.
   - [ ] Confirm `src/Hexalith.Parties.Server/Aggregates/PartyAggregate.cs` still exposes pure static `Handle(UpdatePersonDetails, PartyState?)` and `Handle(UpdateOrganizationDetails, PartyState?)` methods through the EventStore aggregate convention.
   - [ ] Verify the current missing-party behavior for direct detail handlers. If it still uses `PartyTypeMismatch { Message = "Party does not exist." }`, either preserve it as the documented current typed rejection or migrate narrowly to `PartyNotFound` only if existing tests and downstream error mapping support that change.
   - [ ] Verify null command payloads throw `ArgumentNullException` for programmer misuse, while null detail payloads return deterministic typed rejections and do not reach `DeriveDisplayName(...)`.
+  - [ ] Treat same-value updates and broader person/organization field normalization as current-contract behavior unless existing tests already define otherwise; record any desired audit-event/no-op or normalization change as a deferred decision.
 
 - [ ] Task 2: Validate person and organization update success behavior (AC: 1, 2, 3)
   - [ ] For person updates, verify the successful event sequence is `PersonDetailsUpdated` followed by `PartyDisplayNameDerived`.
   - [ ] For organization updates, verify the successful event sequence is `OrganizationDetailsUpdated` followed by `PartyDisplayNameDerived`.
   - [ ] Apply emitted events to existing `PartyState` instances and verify detail payloads, display names, and sort names reflect the new data.
+  - [ ] Verify person updates do not mutate organization detail state and organization updates do not mutate person detail state.
   - [ ] Confirm update events do not carry `PartyId` or `TenantId`; aggregate identity and tenant context remain EventStore/request metadata concerns.
 
 - [ ] Task 3: Validate rejection, erasure, and restriction guards (AC: 4, 5)
@@ -68,10 +84,13 @@ so that party records remain accurate as real-world identity details change.
   - [ ] Verify missing-party updates reject consistently with the chosen current typed rejection and emit no success events.
   - [ ] Verify updates against erasure-pending or erased state reject with `PartyErasureInProgress`.
   - [ ] Verify updates against processing-restricted state reject with `PartyProcessingRestricted`.
+  - [ ] Verify every rejection path leaves the original state unchanged and produces no returned success detail.
+  - [ ] Do not invent deactivated-party update policy in this story. If deactivation behavior is not already represented by existing contracts/tests, record it as deferred to Story 1.6 rather than adding lifecycle semantics here.
 
 - [ ] Task 4: Reconcile FR69 returned-state behavior without broad response rewrites (AC: 6)
   - [ ] Inspect `CompositeCommandResult.UpdatedPartyDetail` and `PartyAggregate.Handle(UpdatePartyComposite, PartyState?)`, because the current composite update path already builds an updated `PartyDetail` from state plus emitted events.
-  - [ ] Confirm detail-only `UpdatePartyComposite` tests cover person and organization updates and assert `UpdatedPartyDetail` after events are projected.
+  - [ ] Confirm detail-only `UpdatePartyComposite` tests cover person and organization updates and assert `UpdatedPartyDetail` after events are projected, including updated details and derived display/sort names.
+  - [ ] Assert `UpdatedPartyDetail` is not produced for rejected detail updates.
   - [ ] Do not change simple `DomainResult` return types for `Handle(UpdatePersonDetails, ...)` or `Handle(UpdateOrganizationDetails, ...)` unless architecture explicitly requires it; these direct handlers are aggregate primitives, while public API/MCP response shape is covered by composite/update response stories.
   - [ ] If a returned-state gap remains, record the smallest follow-up against Story 1.9 rather than expanding this story into API/MCP transport work.
 
@@ -79,7 +98,7 @@ so that party records remain accurate as real-world identity details change.
   - [ ] Keep update domain behavior in pure aggregate `Handle` methods; do not add Dapr, HTTP, database, MediatR handler, REST, Swagger, MCP, AdminPortal, Picker, or sample behavior to this story.
   - [ ] Keep `Hexalith.Parties.Contracts` free of hosting, Dapr, MediatR, FluentValidation, UI, and infrastructure dependencies beyond accepted EventStore contract references.
   - [ ] Preserve `PartyState.Apply(...)` rejection-event ordering before success applies; EventStore suffix-based apply resolution depends on it.
-  - [ ] Treat person details, derived names, and organization details for sole traders as privacy-sensitive. Do not add logs, telemetry, exception messages, or operational output that leaks personal data.
+  - [ ] Treat person details, derived names, and organization details for sole traders as privacy-sensitive. Do not add logs, telemetry, exception messages, snapshots, or operational output that leaks personal data; tests should assert only the specific fields needed to prove behavior.
 
 - [ ] Task 6: Run focused validation (AC: 1, 2, 3, 4, 5, 6)
   - [ ] Run `dotnet test tests/Hexalith.Parties.Server.Tests/Hexalith.Parties.Server.Tests.csproj --configuration Release --filter FullyQualifiedName~PartyAggregateUpdateTests`.
@@ -144,6 +163,8 @@ tests/Hexalith.Parties.Contracts.Tests/
 - `PartyState.Apply(PersonDetailsUpdated)` replaces `Person`; `Apply(OrganizationDetailsUpdated)` replaces `Organization`; `Apply(PartyDisplayNameDerived)` replaces `DisplayName` and `SortName`.
 - `Handle(UpdatePartyComposite, PartyState?)` currently returns `CompositeCommandResult` with `UpdatedPartyDetail` built from current state plus emitted events. This is the current strongest evidence for FR69 on update responses.
 - Existing focused tests already cover direct person/organization success, null state, cross-type rejection, null payload rejection, display-name derivation, event application, and composite detail-only returned detail. Add or adjust tests only where the audit finds gaps.
+- Erasure and processing-restriction guards are in scope because current direct handlers already enforce them. Deactivation/reactivation policy is reserved for Story 1.6 unless existing code already defines a narrow behavior that tests can preserve without adding lifecycle semantics.
+- The story does not define new same-value update, audit-event, or name-normalization policy. Preserve current behavior unless a failing focused test proves documented drift.
 
 ### Previous Story Intelligence
 
@@ -170,6 +191,13 @@ tests/Hexalith.Parties.Contracts.Tests/
 - Do not weaken or reorder `PartyState.Apply` rejection overloads.
 - Do not log detail payload values, derived names, or rejected personal data.
 - Do not use recursive nested submodule initialization.
+
+### Deferred Decisions
+
+- Whether same-value detail updates should emit audit events, be idempotent no-ops, or be rejected.
+- Final person-name and organization-name normalization beyond the existing MVP display/sort-name rules.
+- Deactivated-party detail update policy, unless existing lifecycle behavior is already documented by Story 1.6 or current tests.
+- Whether FR69 returned-state evidence should be standardized on `CompositeCommandResult.UpdatedPartyDetail` for every later Epic 1 update story.
 
 ### References
 
@@ -199,6 +227,32 @@ tests/Hexalith.Parties.Contracts.Tests/
 
 ### File List
 
+## Party-Mode Review
+
+- Date/time: 2026-05-15T19:03:33+02:00
+- Selected story key: `1-3-update-person-and-organization-details`
+- Command/skill invocation used: `/bmad-party-mode 1-3-update-person-and-organization-details; review;`
+- Participating BMAD agents: Winston (System Architect), Amelia (Senior Software Engineer), Murat (Master Test Architect and Quality Advisor), John (Product Manager)
+- Findings summary:
+  - All reviewers initially recommended `needs-story-update`, not `blocked`, because the story needed sharper traceability before normal development.
+  - Returned-state evidence for FR69 needed to name `CompositeCommandResult.UpdatedPartyDetail` and require post-event state assertions.
+  - Rejection paths needed explicit no-success-event, no-returned-success-detail, and no-state-mutation expectations.
+  - Person and organization update success paths needed clearer event ordering and cross-type non-mutation evidence.
+  - Same-value update behavior, name normalization, and deactivated-party policy needed to be treated as deferred decisions instead of hidden implementation choices.
+- Changes applied:
+  - Added an acceptance traceability matrix mapping each AC to command paths, event/result evidence, state evidence, and focused validation targets.
+  - Clarified success event ordering for `PersonDetailsUpdated`/`OrganizationDetailsUpdated` followed by `PartyDisplayNameDerived`.
+  - Added explicit no-success-after-rejection, no returned success detail, and unchanged-state requirements for rejection paths.
+  - Tightened FR69 tasks around `CompositeCommandResult.UpdatedPartyDetail` after events are projected.
+  - Added privacy-safe test guidance and deferred decisions for same-value updates, normalization, deactivated-party policy, and future FR69 standardization.
+- Findings deferred:
+  - Same-value detail update semantics remain a product/domain decision.
+  - Name and legal-name normalization beyond MVP display/sort-name derivation remains a product/domain decision.
+  - Deactivated-party detail update behavior remains deferred to lifecycle Story 1.6 unless current tests already define a narrow behavior.
+  - Broader FR69 response-shape standardization across later Epic 1 stories remains an architecture decision.
+- Final recommendation: ready-for-dev
+
 ## Change Log
 
+- 2026-05-15: Party-mode review applied pre-dev clarifications for AC traceability, update event ordering, no-success-after-rejection evidence, FR69 returned-state assertions, privacy-safe test expectations, and deferred lifecycle/normalization decisions.
 - 2026-05-15: Story created by BMAD pre-dev hardening automation with current detail-update reconciliation context.
