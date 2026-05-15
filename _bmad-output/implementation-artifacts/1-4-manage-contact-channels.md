@@ -52,15 +52,16 @@ so that party records carry usable structured contact information.
 
 - [ ] Task 1: Audit existing contracts, validators, and payload representation (AC: 1, 2, 5)
   - [ ] Confirm `AddContactChannel`, `UpdateContactChannel`, `RemoveContactChannel`, `UpdatePartyComposite`, `ContactChannelAdded`, `ContactChannelUpdated`, `ContactChannelRemoved`, `PreferredContactChannelChanged`, `ContactChannelNotFound`, `PartyCannotAddDuplicateChannel`, `ContactChannel`, and `ContactChannelType` match this story's scope.
-  - [ ] Confirm the current MVP representation is `ContactChannelType` plus `[PersonalData] string Value`; do not replace it with a polymorphic postal/email/phone/social payload model unless an explicit architecture decision updates the public contract.
+  - [ ] Confirm the current MVP representation is a stable aggregate-local contact channel id, `ContactChannelType`, `[PersonalData] string Value`, and preferred-channel state; do not replace it with a polymorphic postal/email/phone/social payload model unless an explicit architecture decision updates the public contract.
   - [ ] Review `PostalAddress`, `EmailAddress`, `PhoneNumber`, and `SocialMediaHandle` as existing value-object inventory only. If they remain unused by commands/events, document the compatibility reason instead of wiring them into this story opportunistically.
   - [ ] Verify `src/Hexalith.Parties/Validation/AddContactChannelValidator.cs`, `UpdateContactChannelValidator.cs`, `RemoveContactChannelValidator.cs`, and `UpdatePartyCompositeValidator.cs` cover party id, channel id, enum, value, and sub-operation limit constraints expected at the boundary.
   - [ ] If stricter type-specific format validation is required beyond non-empty `Value`, keep it narrow and deterministic; do not add external address/email/phone normalization services.
 
 - [ ] Task 2: Validate standalone aggregate contact-channel handlers (AC: 1, 2, 3, 4, 5)
-  - [ ] Confirm `PartyAggregate.Handle(AddContactChannel, PartyState?)` rejects missing parties with `PartyNotFound`, no-ops duplicate channel ids, emits `ContactChannelAdded` on success, and emits `PreferredContactChannelChanged` when the added channel is preferred.
+  - [ ] Confirm `PartyAggregate.Handle(AddContactChannel, PartyState?)` rejects missing parties with `PartyNotFound`, no-ops duplicate channel ids without emitting a success event, emits `ContactChannelAdded` on success, and emits `PreferredContactChannelChanged` when the added channel is preferred.
   - [ ] Confirm `PartyAggregate.Handle(UpdateContactChannel, PartyState?)` rejects missing parties and missing channels, emits `ContactChannelUpdated`, preserves omitted nullable fields as partial updates, and emits `PreferredContactChannelChanged` only when the update explicitly changes preferred status or type-preferred ownership.
   - [ ] Confirm `PartyAggregate.Handle(RemoveContactChannel, PartyState?)` rejects missing parties and missing channels, and emits `ContactChannelRemoved` for existing channels.
+  - [ ] Treat attempts to update, remove, or prefer a previously removed channel as missing-channel behavior unless a future event-sourced history contract explicitly distinguishes removed channels.
   - [ ] Verify erasure and processing restriction guards run before successful add/update/remove events.
   - [ ] Audit the "active party" wording in the ACs against current deactivated-party policy. If no accepted rejection contract exists for inactive-party contact-channel mutations, record the policy gap as deferred to the lifecycle story instead of inventing a new rejection event in this story.
 
@@ -69,20 +70,22 @@ so that party records carry usable structured contact information.
   - [ ] Confirm `PartyState.Apply(ContactChannelUpdated)` merges only non-null `Type`, `Value`, and `IsPreferred` fields into the matching channel and ignores unknown ids defensively.
   - [ ] Confirm `PartyState.Apply(ContactChannelRemoved)` removes only the targeted channel id.
   - [ ] Confirm `PartyState.Apply(PreferredContactChannelChanged)` clears preferred flags only for the target channel's type and does not alter other channel types.
+  - [ ] Confirm preferred-channel changes resolve the target channel after earlier events in the same command/composite operation are applied, so changing preferred email cannot disturb preferred phone, postal, or social channels.
   - [ ] Preserve the no-op rejection `Apply(...)` methods before success applies; EventStore suffix-based rehydration depends on that ordering.
 
 - [ ] Task 4: Reconcile composite command behavior and FR69 returned state (AC: 1, 2, 3, 4, 5, 6)
   - [ ] Confirm `CreatePartyComposite` emits contact-channel add and preferred-change events for initial channels and safely skips duplicate channel ids for MCP/client retry safety.
   - [ ] Confirm `UpdatePartyComposite` validates missing channel updates/removals before emitting success events and rejects add/update/remove conflicts on the same channel id.
   - [ ] Confirm duplicate add/update/remove channel operations produce the current documented skipped outcomes without leaking personal data in `Applied`, `Skipped`, or `Rejected` strings.
-  - [ ] Confirm `CompositeCommandResult.UpdatedPartyDetail` is built from current state plus emitted events and includes added channels, updated nullable-field merges, removed channels, and preferred-channel changes.
+  - [ ] Confirm composite sub-results and emitted success events preserve stable operation order for mixed applied, skipped, and rejected contact-channel operations.
+  - [ ] Confirm `CompositeCommandResult.UpdatedPartyDetail` is built from current state plus emitted success events only and includes added channels, updated nullable-field merges, removed channels, and preferred-channel changes.
   - [ ] Do not change simple `DomainResult` return types for standalone handlers; public "updated state" response evidence for this story is the composite update path unless the architecture explicitly changes the response contract.
 
 - [ ] Task 5: Preserve architecture, privacy, and boundary constraints (AC: 1, 2, 3, 4, 5, 6)
   - [ ] Keep domain behavior in pure static aggregate `Handle` methods and `PartyState.Apply(...)`; do not add Dapr, database, MediatR handler, controller, Swagger/OpenAPI, MCP tool, AdminPortal, Picker, or sample work to this story.
   - [ ] Keep `Hexalith.Parties.Contracts` additive and dependency-light. Do not add hosting, Dapr, MediatR, FluentValidation, UI, or infrastructure dependencies to contracts.
   - [ ] Keep contact channel values marked as personal data in commands, events, state/model value objects, and any new tests that inspect privacy metadata.
-  - [ ] Do not log, trace, exception-message, or outcome-string raw email addresses, phone numbers, postal addresses, social handles, or derived contact payload values.
+  - [ ] Do not log, trace, exception-message, validation-message, rejection-message, or outcome-string raw email addresses, phone numbers, postal addresses, social handles, or derived contact payload values. Assert privacy by absence of raw values rather than by matching full human-readable messages.
   - [ ] Keep tenant context out of contact-channel commands/events for this story; aggregate identity is `PartyId`, and tenant authorization remains outside the aggregate.
 
 - [ ] Task 6: Run focused validation (AC: 1, 2, 3, 4, 5, 6)
@@ -91,6 +94,18 @@ so that party records carry usable structured contact information.
   - [ ] Run `dotnet test tests/Hexalith.Parties.Contracts.Tests/Hexalith.Parties.Contracts.Tests.csproj --configuration Release --filter FullyQualifiedName~PartyStateTests`.
   - [ ] Run `dotnet test tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj --configuration Release --filter FullyQualifiedName~PartyStateApplyOrderingFitnessTests` if any `PartyState.Apply` declarations move.
   - [ ] Run `dotnet build Hexalith.Parties.slnx --configuration Release` if implementation changes touch public contracts, validators, project references, or EventStore-facing surfaces.
+
+## Required Test Evidence
+
+| AC | Required evidence | Focused files/classes |
+| --- | --- | --- |
+| AC1 | Add succeeds with `ContactChannelAdded`, optional preferred-change event, post-apply state includes id/type/value/preferred state, duplicate add is skipped/no-op without a success event. | `PartyAggregateContactChannelTests`, `PartyAggregateCompositeTests`, `PartyStateTests` |
+| AC2 | Update succeeds with `ContactChannelUpdated`, nullable fields merge into state, missing or removed channel rejects with unchanged state and no success event. | `PartyAggregateContactChannelTests`, `PartyAggregateCompositeTests`, `PartyStateTests` |
+| AC3 | Remove succeeds with `ContactChannelRemoved`, state omits only the removed channel, repeated or missing remove rejects/skips according to direct versus composite rules without mutating state twice. | `PartyAggregateContactChannelTests`, `PartyAggregateCompositeTests`, `PartyStateTests` |
+| AC4 | Preferred change is type-scoped: preferring one email leaves preferred phone, postal, and social channels unchanged; preferred target must exist after prior emitted events are applied. | `PartyAggregateContactChannelTests`, `PartyAggregateCompositeTests`, `PartyStateTests` |
+| AC5 | Every invalid path asserts typed rejection, no success event, and unchanged state: missing party, missing/removed channel, invalid payload, duplicate/conflicting composite operation, erased party, and processing-restricted party. | `PartyAggregateContactChannelTests`, `PartyAggregateCompositeTests`, `PartyAggregateErasureTests`, `PartyAggregateRestrictionTests` |
+| AC6 | `CompositeCommandResult.UpdatedPartyDetail` is asserted through the current composite response path after add, update, remove, and preferred changes; tests must not reconstruct an independent expected state as the only proof. | `PartyAggregateCompositeTests` |
+| Privacy | Composite `Applied`, `Skipped`, and `Rejected` strings, rejection/validation text inspected by tests, and any log-style diagnostics must not include raw contact values. | `PartyAggregateCompositeTests`, contract privacy metadata tests when touched |
 
 ## Dev Notes
 
@@ -219,6 +234,30 @@ tests/Hexalith.Parties.Contracts.Tests/
 
 ### File List
 
+## Party-Mode Review
+
+- Date/time: 2026-05-15T19:14:59+02:00
+- Selected story key: `1-4-manage-contact-channels`
+- Command/skill invocation used: `/bmad-party-mode 1-4-manage-contact-channels; review;`
+- Participating BMAD agents: Winston (System Architect), Amelia (Senior Software Engineer), Murat (Master Test Architect and Quality Advisor), John (Product Manager)
+- Findings summary:
+  - Winston and Murat considered the story bounded enough for development, while Amelia and John recommended `needs-story-update` until evidence and product semantics were sharper.
+  - The common risk was not a new architecture decision; it was missing explicit evidence around typed rejection paths, no success events after invalid mutations, FR69 returned-state assertions, preferred-channel type scoping, stable channel identity, and privacy-safe operation outcomes.
+  - Reviewers agreed that REST/OpenAPI/MCP, UI, projection/search, tenant authorization, lifecycle policy, normalization, and richer postal/email/phone/social payload modeling must remain outside this story unless accepted elsewhere.
+- Changes applied:
+  - Clarified the MVP contact-channel field shape as stable aggregate-local id, `ContactChannelType`, `[PersonalData] string Value`, and preferred-channel state while preserving the current scalar public contract.
+  - Tightened duplicate and invalid mutation expectations to require typed rejection or no-op/skip behavior, unchanged state, and no emitted success event.
+  - Added preferred-channel evidence that type scoping is preserved and the target channel is resolved after prior emitted events in the same command/composite path.
+  - Tightened FR69 evidence so `CompositeCommandResult.UpdatedPartyDetail` is built from current state plus emitted success events only and is asserted through the composite response path.
+  - Added a required test evidence matrix mapping AC1-AC6 and privacy assertions to focused aggregate, composite, state, erasure, and restriction test surfaces.
+  - Expanded privacy guidance for validation, rejection, operation outcome, and diagnostic strings to assert absence of raw contact values.
+- Findings deferred:
+  - Inactive-party contact-channel policy remains deferred to lifecycle Story 1.6 unless current accepted tests already define narrow behavior.
+  - International postal formatting, email/phone deliverability, normalization, contact-channel visibility/consent, contact-value search/indexing, UI accessibility copy, tenant-aware rules, projections, and public host-facing REST/OpenAPI/MCP surfaces remain out of scope.
+  - Exact contact-channel uniqueness beyond stable channel id and duplicate operation handling remains governed by the existing aggregate/composite conventions unless product or architecture changes it later.
+- Final recommendation: ready-for-dev
+
 ## Change Log
 
+- 2026-05-15: Party-mode review applied pre-dev clarifications for contact-channel MVP field shape, rejection/no-success evidence, preferred-channel type scoping, FR69 returned-state assertions, privacy-safe outcome checks, focused test evidence, and deferred lifecycle/normalization/surface decisions.
 - 2026-05-15: Story created by BMAD pre-dev hardening automation with current contact-channel reconciliation context.
