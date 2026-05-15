@@ -16,13 +16,15 @@ so that Parties can become the durable source of truth for party identity.
    - Given an authorized command with a valid tenant context, client-generated party UUID, and person details,
    - When the client creates a person party,
    - Then the aggregate emits a party-created event for a person,
-   - And party state stores the immutable UUID, party type, person details, active status, and derived display/sort names.
+   - And the immutable UUID remains the EventStore aggregate/stream identity supplied by `CreateParty.PartyId`, not a `PartyCreated` payload field,
+   - And rehydrated party state stores the party type, person details, active status, and derived display/sort names.
 
 2. **Organization party creation stores stable identity and derived names**
    - Given an authorized command with a valid tenant context, client-generated party UUID, and organization details,
    - When the client creates an organization party,
    - Then the aggregate emits a party-created event for an organization,
-   - And party state stores the immutable UUID, party type, organization details, active status, and derived display/sort names.
+   - And the immutable UUID remains the EventStore aggregate/stream identity supplied by `CreateParty.PartyId`, not a `PartyCreated` payload field,
+   - And rehydrated party state stores the party type, organization details, active status, and derived display/sort names.
 
 3. **Invalid type-specific details are rejected**
    - Given a create command with missing or invalid type-specific details,
@@ -33,8 +35,9 @@ so that Parties can become the durable source of truth for party identity.
 4. **Duplicate creation does not change existing identity**
    - Given an existing party state for the requested party UUID,
    - When a create command is handled for the same party UUID,
-   - Then the aggregate rejects or idempotently skips duplicate creation according to the command idempotency rules,
-   - And the existing party identity is not changed.
+   - Then the aggregate idempotently skips duplicate creation as a no-op within that aggregate stream,
+   - And no new success or rejection events are emitted,
+   - And the existing aggregate identity and party state are not changed.
 
 5. **Rehydration preserves creation state**
    - Given a party has been created,
@@ -46,8 +49,9 @@ so that Parties can become the durable source of truth for party identity.
 - [ ] Task 1: Audit the existing creation contracts and aggregate implementation (AC: 1, 2, 3, 4)
   - [ ] Confirm `CreateParty`, `PartyCreated`, `PartyDisplayNameDerived`, creation rejection events, `PersonDetails`, `OrganizationDetails`, `PartyType`, and `PartyState` still match the current story scope.
   - [ ] Confirm `src/Hexalith.Parties.Server/Aggregates/PartyAggregate.cs` exposes pure static `Handle(CreateParty, PartyState?)` behavior through the EventStore aggregate convention.
-  - [ ] Resolve the AC wording that party state stores the immutable UUID: either prove the stable UUID is preserved through EventStore aggregate identity/metadata and read-model mapping, or add the minimal approved state exposure without putting `PartyId` on success events.
-  - [ ] Confirm `CreateParty.PartyId` remains the client-generated stable UUID command field and is not duplicated onto `PartyCreated`; aggregate identity belongs to EventStore metadata.
+  - [ ] Prove the stable UUID is preserved through EventStore aggregate identity/metadata and any read-model mapping that consumes the stream identity.
+  - [ ] Confirm `CreateParty.PartyId` remains the client-generated stable UUID command field and is not duplicated onto `PartyCreated`; aggregate identity belongs to EventStore metadata, not the success-event payload.
+  - [ ] If the current EventStore conventions cannot expose aggregate identity to the required state/read-model evidence without adding `PartyId` to `PartyCreated`, stop and record an architecture decision gap instead of inventing a new event contract.
   - [ ] Repair only verified drift; do not recreate the historical broad contract-bootstrap story.
 
 - [ ] Task 2: Validate person and organization creation behavior (AC: 1, 2, 5)
@@ -61,7 +65,10 @@ so that Parties can become the durable source of truth for party identity.
   - [ ] Reject `PartyType.Unknown` or the default enum value with `PartyCannotBeCreatedWithoutType`.
   - [ ] Reject person creation without `PersonDetails` using `PartyCannotBeCreatedWithoutPersonDetails`.
   - [ ] Reject organization creation without `OrganizationDetails` using `PartyCannotBeCreatedWithoutOrganizationDetails`.
-  - [ ] Verify duplicate creation against non-null state returns the accepted idempotent no-op behavior and emits no success events.
+  - [ ] Verify person creation does not accept organization-only details as a substitute for valid `PersonDetails`.
+  - [ ] Verify organization creation does not accept person-only details as a substitute for valid `OrganizationDetails`.
+  - [ ] Verify every invalid create path emits only the typed rejection event and no `PartyCreated` or `PartyDisplayNameDerived` success event.
+  - [ ] Verify duplicate creation against non-null state returns the accepted idempotent no-op behavior and emits no events.
 
 - [ ] Task 4: Preserve EventStore, dependency, and privacy guardrails (AC: 1, 2, 3, 4, 5)
   - [ ] Keep domain behavior in pure aggregate `Handle` methods; do not add Dapr, HTTP, database, MediatR handler, REST, Swagger, or MCP hosting behavior to this story.
@@ -90,7 +97,7 @@ so that Parties can become the durable source of truth for party identity.
 - `PartyAggregate` lives in `src/Hexalith.Parties.Server/Aggregates/PartyAggregate.cs` and derives from `EventStoreAggregate<PartyState>`.
 - `CreateParty` carries `PartyId`, `PartyType`, optional `PersonDetails`, and optional `OrganizationDetails`. Tenant context is supplied by the gateway/request pipeline, not by this aggregate story.
 - Events must remain additive public contracts. Do not add `PartyId` or `TenantId` to `PartyCreated`; aggregate identity and tenant context are EventStore/request metadata concerns.
-- The source AC says state stores the immutable UUID, while the current `PartyState` code does not expose a `PartyId` property. Treat this as a concrete reconciliation point, not as wording to ignore. Do not satisfy it by adding identity to success events; use EventStore metadata/read-model mapping if already available, or document and implement the smallest architecture-compliant state exposure.
+- The source AC originally said state stores the immutable UUID, while the current `PartyState` code does not expose a `PartyId` property. For this story, the stable UUID is the EventStore aggregate/stream identity supplied from `CreateParty.PartyId`; do not satisfy identity evidence by adding identity to success events. If direct `PartyState.PartyId` exposure is still needed after inspecting EventStore conventions, record it as an architecture decision gap unless an existing approved aggregate-identity mechanism already supports it.
 - The main `src/Hexalith.Parties` project is an actor host. Do not reintroduce public REST, Swagger/OpenAPI, controllers, or in-process MCP tools there for this story.
 
 ### Current Code Surfaces To Inspect
@@ -123,7 +130,7 @@ tests/Hexalith.Parties.Contracts.Tests/
 
 - New person creation should emit exactly the creation success event sequence the aggregate currently uses: `PartyCreated` followed by `PartyDisplayNameDerived`.
 - New organization creation should emit the same success sequence.
-- Duplicate creation against non-null `PartyState` should remain idempotent no-op unless a newer documented command-idempotency story changes that rule.
+- Duplicate creation against non-null `PartyState` should remain an idempotent no-op that emits no events unless a newer documented command-idempotency story changes that rule.
 - Invalid command input should return typed rejection events through `DomainResult.Rejection(...)`, not thrown business exceptions.
 - `ArgumentNullException` for a null command is acceptable as programmer misuse; business validation failures must be rejection events.
 
@@ -138,6 +145,9 @@ tests/Hexalith.Parties.Contracts.Tests/
 
 - Use xUnit v3 and Shouldly, following existing tests in `PartyAggregateCreateTests` and `PartyStateTests`.
 - Cover person success, organization success, display-name derivation, invalid `PartyId`, missing type, missing person details, missing organization details, duplicate creation no-op, and event application to state.
+- Focused evidence should include:
+  - `dotnet test tests/Hexalith.Parties.Server.Tests/Hexalith.Parties.Server.Tests.csproj --configuration Release --filter FullyQualifiedName~PartyAggregateCreateTests`
+  - `dotnet test tests/Hexalith.Parties.Contracts.Tests/Hexalith.Parties.Contracts.Tests.csproj --configuration Release --filter FullyQualifiedName~PartyStateTests`
 - Keep tests pure unit tests; creation behavior should not require Dapr, Aspire, actors, HTTP, databases, or full topology startup.
 - If changing public contracts, run the Contracts tests and inspect architecture fitness tests before broader suites.
 
@@ -184,6 +194,31 @@ tests/Hexalith.Parties.Contracts.Tests/
 
 ### File List
 
+## Party-Mode Review
+
+- Date/time: 2026-05-15T18:27:14+02:00
+- Selected story key: `1-2-create-party-aggregate-with-stable-identity`
+- Command/skill invocation used: `/bmad-party-mode 1-2-create-party-aggregate-with-stable-identity; review;`
+- Participating BMAD agents: Winston (System Architect), Amelia (Senior Software Engineer), Murat (Master Test Architect and Quality Advisor), John (Product Manager)
+- Findings summary:
+  - All reviewers found the story valuable and close to ready, but initially recommended `needs-story-update` because identity source and duplicate-create behavior left too much implementation decision budget.
+  - The immutable UUID acceptance wording needed to align with EventStore aggregate/stream identity and avoid pushing `PartyId` into `PartyCreated`.
+  - Duplicate creation needed one explicit observable behavior for implementation and tests.
+  - Invalid type-specific details, no-success-after-rejection evidence, deterministic derived-name assertions, and focused validation commands needed sharper wording.
+  - Scope exclusions needed to keep the story on contracts, state, aggregate behavior, and focused tests only.
+- Changes applied:
+  - Clarified AC1 and AC2 so the stable UUID remains the EventStore aggregate/stream identity supplied by `CreateParty.PartyId`, while rehydrated party state stores type, details, active status, and derived names.
+  - Tightened AC4 and the creation behavior contract to the already-documented idempotent duplicate-create no-op with no emitted events.
+  - Added an explicit identity guardrail: if EventStore conventions cannot provide the required aggregate-identity evidence without adding `PartyId` to `PartyCreated`, stop and record an architecture decision gap.
+  - Expanded rejection/idempotency tasks for type-specific detail mismatch, typed rejection-only outcomes, and no success events after invalid create commands.
+  - Added focused filtered test commands for `PartyAggregateCreateTests` and `PartyStateTests`.
+- Findings deferred:
+  - Direct `PartyState.PartyId` exposure remains an architecture decision unless an existing approved aggregate-identity mechanism already supports it.
+  - Cross-party duplicate/person matching remains out of scope; this story only covers duplicate create within the same aggregate stream.
+  - Future lifecycle, contact, identifier, GDPR, projection, public API, MCP, admin, picker, and richer display-name canonicalization behavior remain out of scope.
+- Final recommendation: ready-for-dev
+
 ## Change Log
 
+- 2026-05-15: Party-mode review applied pre-dev clarifications for EventStore identity source, duplicate no-op behavior, rejection evidence, focused validation, and deferred identity decisions.
 - 2026-05-15: Story created by BMAD pre-dev hardening automation with current aggregate reconciliation context.

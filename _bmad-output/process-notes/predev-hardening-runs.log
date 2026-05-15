@@ -64,3 +64,4 @@
 2026-05-15T15:56:26+02:00	create-story	1-4-manage-contact-channels	ok	created ready story from current contact-channel reconciliation context; preflight passed timestamp=2026-05-15T13:54:58Z
 2026-05-15T16:04:43+02:00	create-story	1-5-manage-party-identifiers	ok	Created ready-for-dev identifier reconciliation story.
 2026-05-15T17:05:40+02:00	party-mode-review	1-1-set-up-initial-project-from-eventstore-solution-structure	ok	party-mode review completed; applied project inventory, dependency guardrail, validation command, scope constraint, and starter lesson clarifications; final recommendation ready-for-dev; preflight passed timestamp=2026-05-15T15:02:24Z
+2026-05-15T18:27:14+02:00	party-mode-review	1-2-create-party-aggregate-with-stable-identity	ok	party-mode review completed; applied EventStore identity, duplicate no-op, rejection evidence, and focused validation clarifications; final recommendation ready-for-dev; preflight passed timestamp=2026-05-15T16:02:22Z
