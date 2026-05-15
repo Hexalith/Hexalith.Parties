@@ -57,6 +57,8 @@ so that Parties validates the reusable domain-service starter approach before do
   - [ ] Confirm the solution includes current Parties source projects under `src/`: `Hexalith.Parties`, `Hexalith.Parties.AdminPortal`, `Hexalith.Parties.AppHost`, `Hexalith.Parties.Client`, `Hexalith.Parties.Contracts`, `Hexalith.Parties.Mcp`, `Hexalith.Parties.Picker`, `Hexalith.Parties.Projections`, `Hexalith.Parties.Security`, `Hexalith.Parties.Server`, `Hexalith.Parties.ServiceDefaults`, and `Hexalith.Parties.Testing`.
   - [ ] Confirm the solution includes current test projects under `tests/`: `Hexalith.Parties.AdminPortal.Tests`, `Hexalith.Parties.Client.Tests`, `Hexalith.Parties.Contracts.Tests`, `Hexalith.Parties.DeployValidation.Tests`, `Hexalith.Parties.IntegrationTests`, `Hexalith.Parties.Mcp.Tests`, `Hexalith.Parties.Picker.Tests`, `Hexalith.Parties.Projections.Tests`, `Hexalith.Parties.Sample.Tests`, `Hexalith.Parties.Security.Tests`, `Hexalith.Parties.Server.Tests`, and `Hexalith.Parties.Tests`.
   - [ ] Confirm `samples/Hexalith.Parties.Sample` remains the sample boundary and is included in the solution.
+  - [ ] Capture the observed `.slnx` membership evidence in the Dev Agent Record as three lists: source projects, test projects, and sample projects.
+  - [ ] If the observed solution membership differs from this story's inventory, classify it as either a legitimate later-story boundary, a missing expected project, or a stale story inventory entry before changing files.
   - [ ] Do not remove later Epic 10-12 projects just because the original March scaffold listed fewer projects; later completed work legitimately expanded the structure.
 
 - [ ] Task 3: Enforce dependency-direction guardrails (AC: 3)
@@ -66,7 +68,8 @@ so that Parties validates the reusable domain-service starter approach before do
   - [ ] Confirm projection handlers keep Dapr awareness in actor/wrapper infrastructure rather than pure handler logic.
   - [ ] Confirm the main `src/Hexalith.Parties` project remains the actor-host/service boundary and does not become a generic public Web API baseline.
   - [ ] Confirm `src/Hexalith.Parties.Mcp` is a thin host using client/contract abstractions and does not embed domain event handling or actor-host internals.
-  - [ ] Record the observed project-reference graph in the Dev Agent Record and call out any existing exception explicitly instead of normalizing it silently.
+  - [ ] Record the observed project-reference and package-reference graph in the Dev Agent Record, including any package that looks infrastructure-facing but is already accepted by project context.
+  - [ ] Call out any existing exception explicitly instead of normalizing it silently; defer any exception that would change architecture policy, package ownership, or public surface boundaries.
 
 - [ ] Task 4: Validate build and starter fitness (AC: 2, 4)
   - [ ] Run `dotnet restore Hexalith.Parties.slnx`.
@@ -76,6 +79,10 @@ so that Parties validates the reusable domain-service starter approach before do
   - [ ] If build fails because a sibling root-level submodule is missing, initialize/update only root-level submodules; do not use recursive nested submodule initialization.
   - [ ] If build fails because of unrelated in-progress development, capture the exact blocker and avoid broad repairs outside starter structure.
   - [ ] Run existing architectural fitness coverage for solution membership, forbidden references, and package-version placement when present; add narrow coverage only when the current tests do not already guard a touched structural rule.
+  - [ ] Prefer focused guardrail commands before broader suites when structural files change:
+    - `dotnet test tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj --configuration Release --filter FullyQualifiedName~FitnessTests`
+    - `dotnet test tests/Hexalith.Parties.Client.Tests/Hexalith.Parties.Client.Tests.csproj --configuration Release --filter FullyQualifiedName~FitnessTests`
+    - `dotnet test tests/Hexalith.Parties.Mcp.Tests/Hexalith.Parties.Mcp.Tests.csproj --configuration Release --filter FullyQualifiedName~FitnessTests`
 
 - [ ] Task 5: Record reusable starter lessons (AC: 5)
   - [ ] Update this story's Dev Agent Record with any confirmed EventStore-to-Parties deviations that future domain services should know.
@@ -117,6 +124,7 @@ Use the checked-in repository versions as the source of truth for this story:
 - Testing: xUnit v3 `3.2.2`, runner `3.1.5`, Shouldly `4.3.0`, NSubstitute `5.3.0`, bUnit `2.7.2`, Testcontainers `4.10.0`, coverlet `10.0.0`.
 
 Do not upgrade packages as part of this story unless a build break proves the checked-in baseline is internally inconsistent.
+If `Directory.Packages.props` differs from `_bmad-output/project-context.md`, prefer the checked-in package file for validation evidence and record the context drift as a documentation follow-up rather than changing package versions in this scaffold audit story.
 
 ### Project Structure Notes
 
@@ -190,6 +198,7 @@ Dependency-direction matrix for this story:
 - Minimum validation for this story is `dotnet restore Hexalith.Parties.slnx` and `dotnet build Hexalith.Parties.slnx --configuration Release`.
 - The `.slnx` file is the intentional entry point. Do not add a legacy `.sln` as a tooling workaround; capture unsupported local tooling as a blocker or prerequisite instead.
 - If structural or dependency-direction changes are needed, run the narrowest related fitness tests, especially tests under `tests/Hexalith.Parties.Tests/FitnessTests/` and package-boundary tests under contract/client test projects.
+- Use the exact focused test filters from Task 4 when the affected guardrail exists; do not add duplicate guardrail tests until the existing fitness coverage is inspected and found missing.
 - Do not require Docker, full Dapr initialization, or full Aspire topology unless the change touches AppHost/topology behavior.
 - Use xUnit v3 and Shouldly patterns already present in the repository.
 
@@ -199,6 +208,7 @@ Dependency-direction matrix for this story:
 - Do not add package versions to individual `.csproj` files.
 - Do not remove later completed projects to match older March 2026 source counts.
 - Do not replace the current solution with a reconstructed solution from memory.
+- Do not treat an observed mismatch between the historical March scaffold and the current `.slnx` as a delete/rename instruction; audit the current repository first and preserve legitimate later-story boundaries.
 - Do not add public REST, Swagger/OpenAPI, or in-process MCP hosting back into `src/Hexalith.Parties` as part of starter cleanup.
 - Do not relax Dapr access-control files or use wildcard app ids/paths.
 - Do not treat Dapr sidecar-internal routes as public API surface.
@@ -253,5 +263,29 @@ Dependency-direction matrix for this story:
 
 ## Change Log
 
+- 2026-05-15: Advanced elicitation applied pre-dev clarifications for solution membership evidence, dependency/package graph evidence, focused fitness validation, package-context drift handling, and historical-scaffold mismatch handling.
 - 2026-05-15: Party-mode review applied pre-dev clarifications for project inventory, dependency guardrails, validation commands, scope constraints, and starter lesson recording.
 - 2026-05-15: Story created by BMAD pre-dev hardening automation with current scaffold reconciliation context.
+
+## Advanced Elicitation
+
+- Date/time: 2026-05-15T19:37:45+02:00
+- Selected story key: `1-1-set-up-initial-project-from-eventstore-solution-structure`
+- Command/skill invocation used: `/bmad-advanced-elicitation 1-1-set-up-initial-project-from-eventstore-solution-structure`
+- Batch 1 methods: Red Team vs Blue Team, Failure Mode Analysis, Security Audit Personas, Self-Consistency Validation, Architecture Decision Records
+- Batch 2 methods: Pre-mortem Analysis, Chaos Monkey Scenarios, User Persona Focus Group, Critique and Refine, Expand or Contract for Audience
+- Findings summary:
+  - The story was already ready for development after party-mode review, but implementation evidence could be made more explicit.
+  - Solution membership and dependency/package graph checks needed a concrete Dev Agent Record evidence shape so development does not overcorrect historical scaffold drift.
+  - Focused validation commands needed to be named for the existing architectural fitness surfaces before any broader test run or duplicate test creation.
+  - The checked-in package baseline should remain authoritative for this audit story when it differs from generated project context.
+- Changes applied:
+  - Added `.slnx` evidence capture requirements for source, test, and sample membership.
+  - Added classification guidance for observed solution membership differences before changing files.
+  - Expanded dependency guardrail evidence to include package references and deferred architecture-policy exceptions.
+  - Added focused fitness test commands for Parties, Client, and MCP guardrails.
+  - Clarified package-context drift handling and historical March scaffold mismatch handling.
+- Findings deferred:
+  - Any package upgrade, architecture-policy change, public surface change, or project rename/delete decision remains out of scope unless a failing acceptance criterion proves it is required.
+  - Additional fitness tests should be added only after existing guardrail coverage is inspected and found missing.
+- Final recommendation: ready-for-dev
