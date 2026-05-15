@@ -62,6 +62,14 @@ so that party records remain accurate as real-world identity details change.
 | AC5 | Missing-party direct detail updates | Current typed not-found behavior only; no success event | Null or missing state remains unmutated | `PartyAggregateUpdateTests` |
 | AC6 | Successful `UpdatePartyComposite` detail operation | `CompositeCommandResult.UpdatedPartyDetail` is populated from the post-event state | Returned detail matches state after projected events | `PartyAggregateCompositeTests` |
 
+### Advanced Elicitation Clarifications
+
+- Treat rejection evidence as event-list and state evidence, not message-string evidence alone. Focused tests should assert the exact rejection event type, event count where relevant, absence of `PersonDetailsUpdated`, `OrganizationDetailsUpdated`, and `PartyDisplayNameDerived`, and unchanged pre-command state without snapshotting unnecessary personal data.
+- Keep direct handler and composite handler missing-party semantics explicit. Direct `UpdatePersonDetails` / `UpdateOrganizationDetails` may preserve the current documented `PartyTypeMismatch { Message = "Party does not exist." }` behavior, while `UpdatePartyComposite` may continue returning `PartyNotFound`; any unification to `PartyNotFound` is a narrow compatibility-sensitive change, not a hidden requirement of this story.
+- Guard precedence for existing party state matters. Erasure and processing-restriction rejection paths should return before detail mutation or display-name derivation, and tests should prove they do not emit success events or build returned success detail.
+- For FR69, assert `CompositeCommandResult.UpdatedPartyDetail` as a post-event projection of the aggregate state, including updated detail fields and derived display/sort names, without expanding direct aggregate primitives into public response contracts.
+- Derived-name validation should stay at the MVP rule boundary already stated by the ACs. Do not introduce culture-specific sorting, legal-name normalization, date-of-birth policy, or personal-name formatting rules in this story.
+
 ## Tasks / Subtasks
 
 - [ ] Task 1: Audit existing update contracts and aggregate handlers (AC: 1, 2, 4, 5)
@@ -254,5 +262,39 @@ tests/Hexalith.Parties.Contracts.Tests/
 
 ## Change Log
 
+- 2026-05-15: Advanced elicitation applied pre-dev clarifications for rejection evidence, direct/composite missing-party semantics, lifecycle guard precedence, FR69 post-event returned-state assertions, privacy-safe tests, and deferred normalization/localization decisions.
 - 2026-05-15: Party-mode review applied pre-dev clarifications for AC traceability, update event ordering, no-success-after-rejection evidence, FR69 returned-state assertions, privacy-safe test expectations, and deferred lifecycle/normalization decisions.
 - 2026-05-15: Story created by BMAD pre-dev hardening automation with current detail-update reconciliation context.
+
+## Advanced Elicitation
+
+- Date/time: 2026-05-15T22:02:52+02:00
+- Selected story key: `1-3-update-person-and-organization-details`
+- Command/skill invocation used: `/bmad-advanced-elicitation 1-3-update-person-and-organization-details`
+- Batch 1 method names:
+  - Red Team vs Blue Team
+  - Failure Mode Analysis
+  - Security Audit Personas
+  - Self-Consistency Validation
+  - Architecture Decision Records
+- Batch 2 method names:
+  - Pre-mortem Analysis
+  - Chaos Monkey Scenarios
+  - User Persona Focus Group
+  - Critique and Refine
+  - Expand or Contract for Audience
+- Findings summary:
+  - The party-mode trace made the story ready, but the advanced pass found remaining implementation traps around string-only rejection assertions, ambiguous direct-versus-composite missing-party semantics, guard precedence for erasure/restriction paths, and accidental expansion of FR69 into direct aggregate response rewrites.
+  - Security and privacy review found that tests can prove unchanged state and returned-state behavior without broad snapshots, logs, or operational output containing personal details.
+  - Self-consistency and ADR review confirmed that MVP derived-name rules are sufficient for this story and that culture-specific sorting, normalization, and date-of-birth policy remain outside scope.
+- Changes applied:
+  - Added advanced elicitation clarifications for event-list rejection evidence, no-success-event assertions, and privacy-safe state checks.
+  - Clarified that direct handler missing-party behavior and composite `PartyNotFound` behavior may remain distinct unless a narrow compatibility-safe migration is intentionally made.
+  - Added guard-precedence guidance for erasure and processing-restriction rejections.
+  - Tightened FR69 returned-state guidance around `CompositeCommandResult.UpdatedPartyDetail` as post-event aggregate state evidence, without changing direct aggregate primitive return types.
+  - Reaffirmed MVP derived-name scope and deferred normalization/localization policy.
+- Findings deferred:
+  - Whether direct missing-party detail handlers should migrate from current `PartyTypeMismatch` wording to `PartyNotFound` remains a compatibility-sensitive domain/API mapping decision.
+  - Culture-aware person-name formatting, sort-name collation, date-of-birth validation policy, and legal-name normalization remain product/domain decisions outside this story.
+  - Standardizing all direct aggregate mutation handlers on public returned-state contracts remains deferred to FR69 follow-up work, primarily Story 1.9.
+- Final recommendation: ready-for-dev
