@@ -48,6 +48,15 @@ so that party records carry usable structured contact information.
    - Then the response includes the updated party state,
    - And the returned state includes the applied add, update, remove, and preferred-channel change.
 
+### Advanced Elicitation Clarifications
+
+- Treat contact-channel mutation evidence as event-list, state, and result-shape evidence, not message-string evidence alone. Focused tests should assert exact success or rejection event types, absence of success events after invalid commands, and unchanged state without snapshotting unnecessary contact values.
+- Keep validation-layer and aggregate-layer identity rules distinct. Boundary validators may require GUID-shaped party and contact-channel ids, while pure aggregate tests may continue using existing human-readable ids unless the implementation intentionally reconciles both layers together.
+- Preferred-channel edge cases should stay type-scoped and deterministic. If an update changes a channel type or preferred flag, tests should prove the current accepted behavior for the affected type only and record broader cross-type migration semantics as deferred rather than inventing them here.
+- Composite returned-state evidence must be built from current state plus emitted success events only. Skipped duplicate operations and typed rejections must not appear as applied contact-channel mutations in `CompositeCommandResult.UpdatedPartyDetail`.
+- Privacy checks should prefer absence assertions on operation outcomes, validation/rejection text inspected by tests, and diagnostic-style strings. Do not assert against raw email, phone, postal, or social values unless the field under test is explicitly the personal-data-carrying state or event payload.
+- Keep resilience/idempotency limited to the current aggregate contract: duplicate add is a no-op or skipped outcome, missing update/remove is typed rejection, and repeated remove behaves as missing-channel unless a future history-aware contract says otherwise.
+
 ## Tasks / Subtasks
 
 - [ ] Task 1: Audit existing contracts, validators, and payload representation (AC: 1, 2, 5)
@@ -257,7 +266,27 @@ tests/Hexalith.Parties.Contracts.Tests/
   - Exact contact-channel uniqueness beyond stable channel id and duplicate operation handling remains governed by the existing aggregate/composite conventions unless product or architecture changes it later.
 - Final recommendation: ready-for-dev
 
+## Advanced Elicitation
+
+- Date/time: 2026-05-15T23:08:46+02:00
+- Selected story key: `1-4-manage-contact-channels`
+- Command/skill invocation used: `/bmad-advanced-elicitation 1-4-manage-contact-channels`
+- Batch 1 method names: Red Team vs Blue Team; Failure Mode Analysis; Security Audit Personas; Self-Consistency Validation; Architecture Decision Records
+- Reshuffled Batch 2 method names: Pre-mortem Analysis; Chaos Monkey Scenarios; User Persona Focus Group; Critique and Refine; Expand or Contract for Audience
+- Findings summary:
+  - The story was already ready for development after party-mode review, but implementation evidence needed sharper separation between boundary validation, pure aggregate behavior, event-list assertions, and privacy-safe outcome checks.
+  - The highest-risk ambiguity was treating contact-channel mutation proof as message text or broad snapshots instead of exact event/result/state evidence.
+  - Preferred-channel type-change semantics and richer contact-value normalization remain decision-heavy areas and should not be silently solved during this reconciliation story.
+- Changes applied:
+  - Added advanced elicitation clarifications for event-list and no-success-event assertions, boundary-vs-aggregate id rules, type-scoped preferred-channel edge cases, FR69 composite returned-state evidence, privacy-safe absence assertions, and current idempotency boundaries.
+- Findings deferred:
+  - Cross-type preferred-channel migration semantics beyond the current accepted behavior remain deferred unless existing tests already define them.
+  - International contact validation, deliverability, normalization, visibility/consent, projections/search, UI, REST/OpenAPI, MCP, and tenant-aware policy remain out of scope.
+  - Any public contract change that replaces scalar `[PersonalData] string Value` with richer postal/email/phone/social payloads remains an architecture decision outside this story.
+- Final recommendation: ready-for-dev
+
 ## Change Log
 
+- 2026-05-15: Advanced elicitation applied pre-dev clarifications for event-list evidence, boundary-vs-aggregate id rules, preferred-channel edge cases, composite returned-state evidence, privacy-safe assertions, and current idempotency boundaries.
 - 2026-05-15: Party-mode review applied pre-dev clarifications for contact-channel MVP field shape, rejection/no-success evidence, preferred-channel type scoping, FR69 returned-state assertions, privacy-safe outcome checks, focused test evidence, and deferred lifecycle/normalization/surface decisions.
 - 2026-05-15: Story created by BMAD pre-dev hardening automation with current contact-channel reconciliation context.
