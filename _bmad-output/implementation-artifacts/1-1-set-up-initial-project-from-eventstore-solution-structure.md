@@ -84,6 +84,15 @@ so that Parties validates the reusable domain-service starter approach before do
     - `dotnet test tests/Hexalith.Parties.Client.Tests/Hexalith.Parties.Client.Tests.csproj --configuration Release --filter FullyQualifiedName~FitnessTests`
     - `dotnet test tests/Hexalith.Parties.Mcp.Tests/Hexalith.Parties.Mcp.Tests.csproj --configuration Release --filter FullyQualifiedName~FitnessTests`
 
+### Review Findings
+
+- [ ] [Review][Decision] Brittle pinned 22-package transitive list — `ClientCsproj_TransitiveDependenciesAreOnlySharedFrameworkPackages` now asserts exact set equality on 22 names AND keeps the softer prefix/allow-list check below. Duplicate signal; routine Dapr/Grpc/Microsoft.Extensions version bumps will fail this test even when architectural intent is intact. Options: (a) drop the explicit-set `ShouldBe(...)` and rely on the prefix/allow-list check only, (b) weaken to `ShouldBeSubsetOf` (catches new transitives without trapping removals), (c) keep as-is for strict pinning. [tests/Hexalith.Parties.Client.Tests/FitnessTests/ClientArchitecturalFitnessTests.cs:384-441]
+- [x] [Review][Patch] Replace `services.RemoveAll<IHostedService>()` with targeted removals — resolved 2026-05-16: replaced with a filtered loop over `IHostedService` descriptors whose `ImplementationType` matches `AdminOperationalIndexHostedService`, `DaprRateLimitConfigSync`, or `ProjectionDiscoveryHostedService`. `RemoveAll<T>()` would not work because the descriptor's ServiceType is `IHostedService`, not the concrete class. `EventStoreAuthorizationStartupValidator` is now preserved and still fails fast on auth-wiring regressions. [tests/Hexalith.Parties.Tests/Gateway/EventStoreGatewayRoutingTests.cs:411-424]
+- [x] [Review][Patch] Update the customMessage on the violations assertion — resolved 2026-05-16: both customMessages (the `ShouldBe` and the `violations.ShouldBeEmpty`) now read "Microsoft.Extensions shared framework packages plus the Dapr/Grpc/Protobuf actor-transport stack and identity infrastructure inherited through Hexalith.EventStore.Contracts." [tests/Hexalith.Parties.Client.Tests/FitnessTests/ClientArchitecturalFitnessTests.cs:415,440]
+- [x] [Review][Patch] Remove unused `using HttpClient client` local — resolved 2026-05-16: dropped the line. `factory.Services` builds the host on first access; no `CreateClient()` call needed. [tests/Hexalith.Parties.Tests/Gateway/EventStoreGatewayRoutingTests.cs:83]
+- [x] [Review][Patch] Commit the `Hexalith.EventStore` submodule pointer bump — resolved 2026-05-16: pointer committed alongside the test-side patches. AC4 is now reproducible from a fresh clone.
+- [x] [Review][Defer] `EventStore.Contracts` pulls Dapr/Grpc transitively — known architectural leak already recorded in Dev Agent Record as an accepted exception; long-term fix is to prune `EventStore.Contracts`. Out of scope for the scaffold-audit story. — deferred, pre-existing
+
 - [x] Task 5: Record reusable starter lessons (AC: 5)
   - [x] Update this story's Dev Agent Record with any confirmed EventStore-to-Parties deviations that future domain services should know.
   - [x] Record any durable lesson in `_bmad-output/process-notes/story-creation-lessons.md` only if it affects recurring story creation/review automation, not ordinary implementation notes.
@@ -294,6 +303,7 @@ OpenAI GPT-5 Codex
 
 ## Change Log
 
+- 2026-05-16: Second code-review pass (Blind Hunter, Edge Case Hunter, Acceptance Auditor) found zero new findings. Applied 4 of the 5 open prior Review Findings: targeted hosted-service removal (preserving `EventStoreAuthorizationStartupValidator`), customMessage rewording on both Client fitness assertions, dropped the unused `client` local in `DomainServiceResolver_PartyWildcardRegistration_PointsToPartiesProcessAsync`, and committed the `Hexalith.EventStore` submodule pointer. The brittle-pin Decision (option a/b/c on the exact-set `ShouldBe`) remains open.
 - 2026-05-15: Implemented scaffold audit, updated dependency guardrail tests, fixed EventStore command request validation type, optimized gateway routing test host, and moved story to review.
 - 2026-05-15: Advanced elicitation applied pre-dev clarifications for solution membership evidence, dependency/package graph evidence, focused fitness validation, package-context drift handling, and historical-scaffold mismatch handling.
 - 2026-05-15: Party-mode review applied pre-dev clarifications for project inventory, dependency guardrails, validation commands, scope constraints, and starter lesson recording.

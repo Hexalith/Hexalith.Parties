@@ -412,7 +412,7 @@ public sealed class ClientArchitecturalFitnessTests
 
         transitivePackageNames.ShouldBe(
             [.. expectedTransitivePackageNames.OrderBy(name => name, StringComparer.OrdinalIgnoreCase)],
-            customMessage: "Client transitive packages should stay limited to Microsoft.Extensions shared framework packages and EventStore contract identity infrastructure.");
+            customMessage: "Client transitive packages should stay limited to Microsoft.Extensions shared framework packages plus the Dapr/Grpc/Protobuf actor-transport stack and identity infrastructure inherited through Hexalith.EventStore.Contracts.");
 
         HashSet<string> allowedContractInfrastructurePackages =
         [
@@ -437,7 +437,7 @@ public sealed class ClientArchitecturalFitnessTests
         ];
 
         violations.ShouldBeEmpty(
-            $"Client transitive packages must remain limited to Microsoft.Extensions shared framework packages and EventStore contract identity infrastructure inherited through Hexalith.EventStore.Contracts. " +
+            $"Client transitive packages must remain limited to Microsoft.Extensions shared framework packages plus the Dapr/Grpc/Protobuf actor-transport stack and identity infrastructure inherited through Hexalith.EventStore.Contracts. " +
             $"Found unexpected: {string.Join(", ", violations)}");
     }
 }

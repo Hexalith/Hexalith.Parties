@@ -10,16 +10,19 @@ using System.Text.Json;
 
 using FluentValidation;
 
+using eventstore::Hexalith.EventStore.Configuration;
+using eventstore::Hexalith.EventStore.Indexes;
 using eventstore::Hexalith.EventStore.Models;
 
 using Hexalith.EventStore.Contracts.Commands;
 using Hexalith.EventStore.Contracts.Events;
 using Hexalith.EventStore.Contracts.Results;
-using Hexalith.EventStore.Server.Commands;
 using Hexalith.EventStore.Server.Actors;
+using Hexalith.EventStore.Server.Commands;
 using Hexalith.EventStore.Server.DomainServices;
 using Hexalith.EventStore.Server.Pipeline.Commands;
 using Hexalith.EventStore.Server.Pipeline.Queries;
+using Hexalith.EventStore.Server.Projections;
 using Hexalith.EventStore.Server.Queries;
 using Hexalith.EventStore.Testing.Fakes;
 using Hexalith.Parties.Contracts.Commands;
@@ -81,7 +84,6 @@ public sealed class EventStoreGatewayRoutingTests
     public async Task DomainServiceResolver_PartyWildcardRegistration_PointsToPartiesProcessAsync()
     {
         using var factory = new EventStoreGatewayTestFactory();
-        using HttpClient client = factory.CreateClient();
 
         IDomainServiceResolver resolver = factory.Services.GetRequiredService<IDomainServiceResolver>();
 
@@ -406,7 +408,20 @@ public sealed class EventStoreGatewayRoutingTests
 
             _ = builder.ConfigureTestServices(services =>
             {
-                services.RemoveAll<IHostedService>();
+                // Disable EventStore hosted services that interfere with isolated gateway tests
+                // (admin index priming, Dapr rate-limit sync, projection discovery scan), but
+                // preserve EventStoreAuthorizationStartupValidator so auth-wiring regressions
+                // still fail fast at host build.
+                foreach (ServiceDescriptor descriptor in services
+                    .Where(d => d.ServiceType == typeof(IHostedService)
+                        && d.ImplementationType is { } implType
+                        && (implType == typeof(AdminOperationalIndexHostedService)
+                            || implType == typeof(DaprRateLimitConfigSync)
+                            || implType == typeof(ProjectionDiscoveryHostedService)))
+                    .ToArray())
+                {
+                    services.Remove(descriptor);
+                }
 
                 services.RemoveAll<ICommandStatusStore>();
                 services.AddSingleton<ICommandStatusStore>(StatusStore);
