@@ -1,6 +1,6 @@
 # Story 1.3: Update Person and Organization Details
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -114,6 +114,23 @@ so that party records remain accurate as real-world identity details change.
   - [x] Run `dotnet test tests/Hexalith.Parties.Contracts.Tests/Hexalith.Parties.Contracts.Tests.csproj --configuration Release --filter FullyQualifiedName~PartyStateTests`.
   - [x] Run `dotnet test tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj --configuration Release --filter FullyQualifiedName~PartyStateApplyOrderingFitnessTests` if any `PartyState.Apply` declarations move.
   - [x] Run `dotnet build Hexalith.Parties.slnx --configuration Release` if implementation changes touch public contracts, project references, shared build files, or EventStore-facing surfaces.
+
+### Review Findings
+
+Bmad-code-review run on 2026-05-16 against commit `83e6548`. Acceptance Auditor: full PASS on AC1–AC6. Blind Hunter + Edge Case Hunter raised 21 findings → 6 patch, 5 defer, 10 dismissed as noise.
+
+- [x] [Review][Patch] Strengthen identity-metadata reflection to be case-insensitive and cover every public property [tests/Hexalith.Parties.Server.Tests/Aggregates/PartyAggregateUpdateTests.cs:154-170, 310-327] — `GetType().GetProperty("PartyId")` is case-sensitive and returns null for any unknown name, so a contract change introducing `partyId` (lowercase) or any renamed identity-like property would slip past. Iterate `event.GetType().GetProperties()` and assert none match `partyid`/`tenantid` case-insensitively.
+- [x] [Review][Patch] Assert rejection message on direct missing-party update tests to pin direct-vs-composite divergence [tests/Hexalith.Parties.Server.Tests/Aggregates/PartyAggregateUpdateTests.cs:36-51, 194-209] — Advanced Elicitation Clarifications explicitly preserves the documented `PartyTypeMismatch { Message = "Party does not exist." }` for direct handlers while composite uses `PartyNotFound`. Composite tests pin the type AND message; direct tests only assert the type. A regression flipping the direct rejection type would still pass — add `rejection.Message.ShouldBe("Party does not exist.");`.
+- [x] [Review][Patch] Add terminal `ErasureStatus.Erased` coverage for direct update handlers [tests/Hexalith.Parties.Server.Tests/Aggregates/PartyAggregateUpdateTests.cs] — Task 3 requires "updates against erasure-pending **or erased** state reject with `PartyErasureInProgress`". Current tests cover only `CreateErasurePendingState()`. `PartyTestData.CreateErasedState()` already exists and is used in `PartyAggregateErasureTests`. Add `Handle_UpdatePersonDetails_WhenErased_RejectsWithoutSuccessEvents` (and the org mirror) using it.
+- [x] [Review][Patch] Strengthen null-payload rejection tests with event-count and display-name-absence assertions [tests/Hexalith.Parties.Server.Tests/Aggregates/PartyAggregateUpdateTests.cs:78-96, 236-254] — `Handle_UpdatePersonDetails_NullPayload_ReturnsRejection` and the org mirror assert only `Events[0]` is `PartyTypeMismatch` with a message. They should also assert `Events.Count.ShouldBe(1)` and `Events.OfType<PartyDisplayNameDerived>().ShouldBeEmpty()` to prove no derived-name event slipped through.
+- [x] [Review][Patch] Symmetrize erasure-pending arrangement between person and organization tests [tests/Hexalith.Parties.Server.Tests/Aggregates/PartyAggregateUpdateTests.cs:329-352, 353-382] — Person test uses `PartyTestData.CreateErasurePendingState()` (factory-opaque); organization test calls `CreateOrganizationState()` + manual `state.Apply(new ErasePartyRequested { ..., RequestedAt = DateTimeOffset.UtcNow })`. The two arrangements may diverge silently and hide which fields actually matter. Pick one approach: either add `CreateErasurePendingOrganizationState()` to `PartyTestData` and use it, or build both explicitly.
+- [x] [Review][Patch] Replace `DateTimeOffset.UtcNow` with fixed instants in arrange blocks [tests/Hexalith.Parties.Server.Tests/Aggregates/PartyAggregateUpdateTests.cs:363, 418] — `RequestedAt = DateTimeOffset.UtcNow` (org erasure test) and `RestrictedAt = DateTimeOffset.UtcNow` (org restriction test) inject a wall-clock dependency into a unit test. Pin to a constant such as `new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero)` to keep arrangements deterministic.
+- [x] [Review][Defer] Same-value detail-update no-op semantics not yet pinned by tests — deferred, pre-existing. Story 1.3 Deferred Decisions explicitly defers whether same-value updates emit audit events, are idempotent no-ops, or are rejected. Pick up when that policy decision is taken.
+- [x] [Review][Defer] Whitespace-only / empty `FirstName`, `LastName`, `LegalName` payload handling — deferred, pre-existing. Story 1.3 defers name normalization beyond MVP display/sort-name rules. Currently `DeriveDisplayName` interpolates blanks verbatim. Pick up with normalization policy decision.
+- [x] [Review][Defer] Deactivated-party detail-update precedence untested — deferred, pre-existing. Story 1.3 Task 3 explicitly defers deactivated-party update policy to Story 1.6. Helpers `CreateDeactivatedPersonState()` / `CreateDeactivatedOrganizationState()` exist; pin behaviour there.
+- [x] [Review][Defer] Repeated-invocation rejection idempotency not exercised — deferred, pre-existing. Single-call rejection tests are sufficient for AC4/AC5. Multi-call idempotency proof belongs in Story 1.7 (idempotent commands and typed rejections).
+- [x] [Review][Defer] Composite rejection paths beyond missing-party / type-mismatch lack `UpdatedPartyDetail.ShouldBeNull()` — deferred, pre-existing. New composite tests pin `UpdatedPartyDetail.ShouldBeNull()` on `PartyNotFound` and `PartyTypeMismatch` paths. Composite erasure/restriction/conflict rejection tests pre-date this story and do not assert that field. Extension belongs in a follow-up composite-hardening pass.
+- [x] [Review][Defer] Grammar bug in production rejection message: `"Cannot update person details on a Organization party."` (should be "an Organization") — deferred, pre-existing. The string is emitted by production code and only newly asserted by this commit. Cosmetic; touching it would change `Hexalith.Parties.Server` production code, which is out of scope for a tests-only story.
 
 ## Dev Notes
 
@@ -277,6 +294,7 @@ GPT-5 Codex
 
 ## Change Log
 
+- 2026-05-16: Code review applied 6 test-quality patches (case-insensitive identity-property check, direct missing-party message assertion, terminal `Erased` coverage for both party types, null-payload event-count + display-name-absence assertions, symmetric erasure/restriction arrangement helpers, fixed-instant timestamps). 28 `PartyAggregateUpdateTests` and 50 `PartyAggregateCompositeTests` pass. Story closed as `done`.
 - 2026-05-16: Implemented Story 1.3 test reconciliation; added focused success, rejection, metadata-boundary, and returned-state assertions; marked story ready for review.
 - 2026-05-15: Advanced elicitation applied pre-dev clarifications for rejection evidence, direct/composite missing-party semantics, lifecycle guard precedence, FR69 post-event returned-state assertions, privacy-safe tests, and deferred normalization/localization decisions.
 - 2026-05-15: Party-mode review applied pre-dev clarifications for AC traceability, update event ordering, no-success-after-rejection evidence, FR69 returned-state assertions, privacy-safe test expectations, and deferred lifecycle/normalization decisions.

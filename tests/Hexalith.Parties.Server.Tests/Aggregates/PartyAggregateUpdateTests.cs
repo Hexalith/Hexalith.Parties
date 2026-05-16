@@ -1,3 +1,5 @@
+using System.Reflection;
+
 using Hexalith.Parties.Contracts.Commands;
 using Hexalith.Parties.Contracts.Events;
 using Hexalith.Parties.Contracts.State;
@@ -11,6 +13,91 @@ namespace Hexalith.Parties.Server.Tests.Aggregates;
 
 public class PartyAggregateUpdateTests
 {
+    private static readonly DateTimeOffset FixedInstant = new(2026, 1, 1, 0, 0, 0, TimeSpan.Zero);
+
+    private static void ShouldNotExposeIdentityProperties(object evt)
+    {
+        PropertyInfo[] properties = evt.GetType().GetProperties();
+        properties.ShouldNotContain(p => string.Equals(p.Name, "PartyId", StringComparison.OrdinalIgnoreCase));
+        properties.ShouldNotContain(p => string.Equals(p.Name, "TenantId", StringComparison.OrdinalIgnoreCase));
+    }
+
+    private static PartyState ErasurePendingPersonState()
+    {
+        PartyState state = PartyTestData.CreatePersonState();
+        state.Apply(new ErasePartyRequested
+        {
+            PartyId = PartyTestData.DefaultPartyId,
+            TenantId = PartyTestData.DefaultTenantId,
+            RequestedAt = FixedInstant,
+            RequestedBy = "admin",
+        });
+        return state;
+    }
+
+    private static PartyState ErasurePendingOrganizationState()
+    {
+        PartyState state = PartyTestData.CreateOrganizationState();
+        state.Apply(new ErasePartyRequested
+        {
+            PartyId = PartyTestData.DefaultPartyId,
+            TenantId = PartyTestData.DefaultTenantId,
+            RequestedAt = FixedInstant,
+            RequestedBy = "admin",
+        });
+        return state;
+    }
+
+    private static PartyState ErasedPersonState()
+    {
+        PartyState state = ErasurePendingPersonState();
+        state.Apply(new PartyEncryptionKeyDeleted
+        {
+            PartyId = PartyTestData.DefaultPartyId,
+            TenantId = PartyTestData.DefaultTenantId,
+            DeletedAt = FixedInstant,
+        });
+        return state;
+    }
+
+    private static PartyState ErasedOrganizationState()
+    {
+        PartyState state = ErasurePendingOrganizationState();
+        state.Apply(new PartyEncryptionKeyDeleted
+        {
+            PartyId = PartyTestData.DefaultPartyId,
+            TenantId = PartyTestData.DefaultTenantId,
+            DeletedAt = FixedInstant,
+        });
+        return state;
+    }
+
+    private static PartyState RestrictedPersonState()
+    {
+        PartyState state = PartyTestData.CreatePersonState();
+        state.Apply(new ProcessingRestricted
+        {
+            PartyId = PartyTestData.DefaultPartyId,
+            TenantId = PartyTestData.DefaultTenantId,
+            RestrictedAt = FixedInstant,
+            Reason = "Investigation pending",
+        });
+        return state;
+    }
+
+    private static PartyState RestrictedOrganizationState()
+    {
+        PartyState state = PartyTestData.CreateOrganizationState();
+        state.Apply(new ProcessingRestricted
+        {
+            PartyId = PartyTestData.DefaultPartyId,
+            TenantId = PartyTestData.DefaultTenantId,
+            RestrictedAt = FixedInstant,
+            Reason = "Investigation pending",
+        });
+        return state;
+    }
+
     // --- UpdatePersonDetails ---
 
     [Fact]
@@ -45,7 +132,8 @@ public class PartyAggregateUpdateTests
         // Assert
         result.IsRejection.ShouldBeTrue();
         result.Events.Count.ShouldBe(1);
-        result.Events[0].ShouldBeOfType<PartyTypeMismatch>();
+        PartyTypeMismatch rejection = result.Events[0].ShouldBeOfType<PartyTypeMismatch>();
+        rejection.Message.ShouldBe("Party does not exist.");
         result.Events.OfType<PersonDetailsUpdated>().ShouldBeEmpty();
         result.Events.OfType<PartyDisplayNameDerived>().ShouldBeEmpty();
     }
@@ -91,8 +179,11 @@ public class PartyAggregateUpdateTests
 
         // Assert
         result.IsRejection.ShouldBeTrue();
+        result.Events.Count.ShouldBe(1);
         PartyTypeMismatch rejection = result.Events[0].ShouldBeOfType<PartyTypeMismatch>();
         rejection.Message.ShouldBe("Person details are required.");
+        result.Events.OfType<PersonDetailsUpdated>().ShouldBeEmpty();
+        result.Events.OfType<PartyDisplayNameDerived>().ShouldBeEmpty();
     }
 
     [Fact]
@@ -162,11 +253,9 @@ public class PartyAggregateUpdateTests
 
         // Assert
         result.Events[0].ShouldBeOfType<PersonDetailsUpdated>();
-        result.Events[0].GetType().GetProperty("PartyId").ShouldBeNull();
-        result.Events[0].GetType().GetProperty("TenantId").ShouldBeNull();
+        ShouldNotExposeIdentityProperties(result.Events[0]);
         result.Events[1].ShouldBeOfType<PartyDisplayNameDerived>();
-        result.Events[1].GetType().GetProperty("PartyId").ShouldBeNull();
-        result.Events[1].GetType().GetProperty("TenantId").ShouldBeNull();
+        ShouldNotExposeIdentityProperties(result.Events[1]);
     }
 
     // --- UpdateOrganizationDetails ---
@@ -203,7 +292,8 @@ public class PartyAggregateUpdateTests
         // Assert
         result.IsRejection.ShouldBeTrue();
         result.Events.Count.ShouldBe(1);
-        result.Events[0].ShouldBeOfType<PartyTypeMismatch>();
+        PartyTypeMismatch rejection = result.Events[0].ShouldBeOfType<PartyTypeMismatch>();
+        rejection.Message.ShouldBe("Party does not exist.");
         result.Events.OfType<OrganizationDetailsUpdated>().ShouldBeEmpty();
         result.Events.OfType<PartyDisplayNameDerived>().ShouldBeEmpty();
     }
@@ -249,8 +339,11 @@ public class PartyAggregateUpdateTests
 
         // Assert
         result.IsRejection.ShouldBeTrue();
+        result.Events.Count.ShouldBe(1);
         PartyTypeMismatch rejection = result.Events[0].ShouldBeOfType<PartyTypeMismatch>();
         rejection.Message.ShouldBe("Organization details are required.");
+        result.Events.OfType<OrganizationDetailsUpdated>().ShouldBeEmpty();
+        result.Events.OfType<PartyDisplayNameDerived>().ShouldBeEmpty();
     }
 
     [Fact]
@@ -319,11 +412,9 @@ public class PartyAggregateUpdateTests
 
         // Assert
         result.Events[0].ShouldBeOfType<OrganizationDetailsUpdated>();
-        result.Events[0].GetType().GetProperty("PartyId").ShouldBeNull();
-        result.Events[0].GetType().GetProperty("TenantId").ShouldBeNull();
+        ShouldNotExposeIdentityProperties(result.Events[0]);
         result.Events[1].ShouldBeOfType<PartyDisplayNameDerived>();
-        result.Events[1].GetType().GetProperty("PartyId").ShouldBeNull();
-        result.Events[1].GetType().GetProperty("TenantId").ShouldBeNull();
+        ShouldNotExposeIdentityProperties(result.Events[1]);
     }
 
     [Fact]
@@ -331,7 +422,7 @@ public class PartyAggregateUpdateTests
     {
         // Arrange
         UpdatePersonDetails command = PartyTestData.ValidUpdatePersonDetails();
-        PartyState state = PartyTestData.CreateErasurePendingState();
+        PartyState state = ErasurePendingPersonState();
         PersonDetails? originalPerson = state.Person;
         string originalDisplayName = state.DisplayName;
         string originalSortName = state.SortName;
@@ -355,14 +446,55 @@ public class PartyAggregateUpdateTests
     {
         // Arrange
         UpdateOrganizationDetails command = PartyTestData.ValidUpdateOrganizationDetails();
-        PartyState state = PartyTestData.CreateOrganizationState();
-        state.Apply(new ErasePartyRequested
-        {
-            PartyId = PartyTestData.DefaultPartyId,
-            TenantId = PartyTestData.DefaultTenantId,
-            RequestedAt = DateTimeOffset.UtcNow,
-            RequestedBy = "admin",
-        });
+        PartyState state = ErasurePendingOrganizationState();
+        OrganizationDetails? originalOrganization = state.Organization;
+        string originalDisplayName = state.DisplayName;
+        string originalSortName = state.SortName;
+
+        // Act
+        var result = PartyAggregate.Handle(command, state);
+
+        // Assert
+        result.IsRejection.ShouldBeTrue();
+        result.Events.Count.ShouldBe(1);
+        result.Events[0].ShouldBeOfType<PartyErasureInProgress>();
+        result.Events.OfType<OrganizationDetailsUpdated>().ShouldBeEmpty();
+        result.Events.OfType<PartyDisplayNameDerived>().ShouldBeEmpty();
+        state.Organization.ShouldBe(originalOrganization);
+        state.DisplayName.ShouldBe(originalDisplayName);
+        state.SortName.ShouldBe(originalSortName);
+    }
+
+    [Fact]
+    public void Handle_UpdatePersonDetails_WhenErased_RejectsWithoutSuccessEvents()
+    {
+        // Arrange
+        UpdatePersonDetails command = PartyTestData.ValidUpdatePersonDetails();
+        PartyState state = ErasedPersonState();
+        PersonDetails? originalPerson = state.Person;
+        string originalDisplayName = state.DisplayName;
+        string originalSortName = state.SortName;
+
+        // Act
+        var result = PartyAggregate.Handle(command, state);
+
+        // Assert
+        result.IsRejection.ShouldBeTrue();
+        result.Events.Count.ShouldBe(1);
+        result.Events[0].ShouldBeOfType<PartyErasureInProgress>();
+        result.Events.OfType<PersonDetailsUpdated>().ShouldBeEmpty();
+        result.Events.OfType<PartyDisplayNameDerived>().ShouldBeEmpty();
+        state.Person.ShouldBe(originalPerson);
+        state.DisplayName.ShouldBe(originalDisplayName);
+        state.SortName.ShouldBe(originalSortName);
+    }
+
+    [Fact]
+    public void Handle_UpdateOrganizationDetails_WhenErased_RejectsWithoutSuccessEvents()
+    {
+        // Arrange
+        UpdateOrganizationDetails command = PartyTestData.ValidUpdateOrganizationDetails();
+        PartyState state = ErasedOrganizationState();
         OrganizationDetails? originalOrganization = state.Organization;
         string originalDisplayName = state.DisplayName;
         string originalSortName = state.SortName;
@@ -386,7 +518,7 @@ public class PartyAggregateUpdateTests
     {
         // Arrange
         UpdatePersonDetails command = PartyTestData.ValidUpdatePersonDetails();
-        PartyState state = PartyTestData.CreateRestrictedState();
+        PartyState state = RestrictedPersonState();
         PersonDetails? originalPerson = state.Person;
         string originalDisplayName = state.DisplayName;
         string originalSortName = state.SortName;
@@ -410,14 +542,7 @@ public class PartyAggregateUpdateTests
     {
         // Arrange
         UpdateOrganizationDetails command = PartyTestData.ValidUpdateOrganizationDetails();
-        PartyState state = PartyTestData.CreateOrganizationState();
-        state.Apply(new ProcessingRestricted
-        {
-            PartyId = PartyTestData.DefaultPartyId,
-            TenantId = PartyTestData.DefaultTenantId,
-            RestrictedAt = DateTimeOffset.UtcNow,
-            Reason = "Investigation pending",
-        });
+        PartyState state = RestrictedOrganizationState();
         OrganizationDetails? originalOrganization = state.Organization;
         string originalDisplayName = state.DisplayName;
         string originalSortName = state.SortName;

@@ -35,12 +35,14 @@ so that MVP domain contracts are prepared for GDPR enforcement without leaking s
    - Given domain commands, events, rejections, projection handling, search indexing, erasure/rebuild paths, or exception handlers emit logs or telemetry,
    - When application logging occurs,
    - Then logs include safe metadata such as tenant id, aggregate/party id, correlation id, command/event type, sequence number, outcome code, store name, and bounded failure category where useful,
+   - And for this story, log-safe means no `[PersonalData]` value, raw payload, diagnostic-enricher payload, object `ToString()` output, or serialized command/event body appears in logs or telemetry,
    - And logs do not include personal data field values, raw command payloads, raw event payloads, raw serialized JSON, raw ProblemDetails bodies, tokens, claims dictionaries, secrets, or infrastructure connection details.
 
 5. **Automated tests pin the personal-data inventory and log-safety rules**
    - Given privacy-marking and log-safety tests run,
-   - When they inspect known personal-data contract fields and representative logging paths,
+   - When they inspect known personal-data contract fields, known non-person organization fields, and representative logging paths,
    - Then required fields are marked consistently,
+   - And organization legal/display fields remain intentionally unmarked by default while organization contact channels and identifiers remain marked,
    - And tests fail on missing `[PersonalData]` coverage or direct payload logging regressions,
    - And tests use synthetic placeholders without storing real personal data in assertion messages, log captures, or snapshots.
 
@@ -55,14 +57,17 @@ so that MVP domain contracts are prepared for GDPR enforcement without leaking s
 
 - [ ] Task 2: Define or update reflection-based privacy coverage tests (AC: 1, 2, 3, 5)
   - [ ] Add or update focused tests in `tests/Hexalith.Parties.Contracts.Tests` or `tests/Hexalith.Parties.Security.Tests` that enumerate the expected `[PersonalData]` property inventory.
+  - [ ] Treat the expected inventory rule as the source of truth: person names, derived names, date of birth, contact payload values, and identifier values must be marked; organization entity fields remain unmarked by default under D6.
   - [ ] Cover nested value-object fields and top-level command/event/model fields separately so a regression in either layer is visible.
-  - [ ] Assert organization entity fields are intentionally unmarked for default corporate handling, while contact channels and identifiers remain marked for all party types.
+  - [ ] Assert organization entity fields are intentionally unmarked for default corporate handling, while organization contact channels and identifiers remain marked for all party types.
+  - [ ] Add positive and negative inventory cases so new domain contract properties fail loudly until classified as personal, non-personal, or deferred by documented D6/D7 policy.
   - [ ] Include a test name or data row for `PartyDisplayNameDerived` and `NameHistoryEntry` so derived names do not slip through future crypto-shredding or log-sanitization preparation.
   - [ ] Avoid snapshot tests that print personal data values; assert property names and types instead.
 
 - [ ] Task 3: Audit log and telemetry surfaces for payload leakage (AC: 4, 5)
   - [ ] Inspect `src/Hexalith.Parties/ErrorHandling`, `src/Hexalith.Parties/Domain`, `src/Hexalith.Parties/Extensions`, `src/Hexalith.Parties.Projections`, `src/Hexalith.Parties/Search`, and `src/Hexalith.Parties.ServiceDefaults`.
   - [ ] Confirm logger messages use bounded metadata and do not interpolate raw command/event objects, serialized payload bytes, contact values, identifier values, person names, organization natural-person names, tokens, claims dictionaries, authorization headers, Dapr ports, connection strings, or raw backend response bodies.
+  - [ ] Include diagnostic enrichers, exception detail paths, object `ToString()` paths, and generated formatted messages in the audit so log-safety is not limited to obvious direct `ILogger` calls.
   - [ ] Pay special attention to `PartiesGlobalExceptionHandler`, `PartiesValidationExceptionHandler`, `PartyProjectionUpdateOrchestrator`, `PartyDetailProjectionActor`, `PartyIndexProjectionActor`, `ProjectionRebuildService`, `PartyMemoryIndexingService`, `MemoriesPartySearchService`, `PartyMemoryCleanupService`, and `PartyMemoryUnitMappingStore`.
   - [ ] Treat party id, tenant id, event type name, command type name, correlation id, sequence number, and bounded outcome/status codes as allowed log fields.
   - [ ] If `ServiceDefaults` keeps `IncludeFormattedMessage = true`, prove generated messages do not include personal-data arguments; do not disable observability globally unless a specific leak requires it.
@@ -96,6 +101,15 @@ so that MVP domain contracts are prepared for GDPR enforcement without leaking s
 - Current source inspection shows likely derived-name gaps to verify: `PartyDisplayNameDerived.DisplayName`, `PartyDisplayNameDerived.SortName`, `NameHistoryEntry.DisplayName`, and `NameHistoryEntry.SortName` are not directly marked at story creation time.
 - `PartyDetail.NameHistory` is currently marked as a collection, but the nested `NameHistoryEntry` fields should still be tested explicitly because future serializers/scanners may inspect item properties rather than only the containing model.
 - `OrganizationDetails` fields are intentionally type-dependent under D6. Do not mark all organization entity fields globally unless a later accepted architecture decision replaces D6.
+
+### Party-Mode Review Clarifications
+
+- Keep the implementation metadata-local: domain-contract marking, focused tests, and log-surface evidence only.
+- `Log-safe` means no `[PersonalData]` value, raw command/event payload, diagnostic-enricher payload, object `ToString()` output, or serialized body reaches logs or telemetry.
+- Positive marker inventory must cover person names, derived names, date of birth, contact payload values, identifier values, `PartyDisplayNameDerived`, and `NameHistoryEntry`.
+- Negative marker inventory must protect D6: organization legal/trading/display fields are not marked by default, while organization contact channels and identifiers are still marked.
+- Reflection tests should make newly introduced domain contract properties fail loudly until they are classified as personal, non-personal, or explicitly deferred by D6/D7 policy.
+- Do not turn this story into a runtime redaction platform, serializer rewrite, middleware addition, projection/search rewrite, UI change, REST/MCP surface, or v1.1 crypto-shredding implementation.
 
 ### Architecture Patterns and Constraints
 
@@ -223,4 +237,29 @@ tests/Hexalith.Parties.Security.Tests/
 
 ## Change Log
 
+- 2026-05-16: Party-mode review applied pre-dev clarifications for log-safe meaning, positive/negative marker inventory tests, D6 organization-field protection, diagnostic-enricher/`ToString()` audit coverage, and metadata-local implementation scope.
 - 2026-05-16: Story created by BMAD pre-dev hardening automation with current personal-data marker inventory, D6 type-dependent organization scope, and log-safe domain-model reconciliation context.
+
+## Party-Mode Review
+
+- Date/time: 2026-05-16T12:01:45+02:00
+- Selected story key: `1-8-personal-data-marking-and-log-safe-domain-model`
+- Command/skill invocation used: `/bmad-party-mode 1-8-personal-data-marking-and-log-safe-domain-model; review;`
+- Participating BMAD agents: Winston (System Architect), Amelia (Senior Software Engineer), Murat (Master Test Architect and Quality Advisor), John (Product Manager)
+- Findings summary:
+  - All reviewers recommended `ready-for-dev`; no blocker was identified.
+  - The story is architecturally sound if implementation stays metadata-local: marker inventory, narrow attribute patches, and log-safety evidence.
+  - The main false-confidence risk is weak reflection coverage that checks only obvious current fields and misses derived names, name history, or future unclassified contract properties.
+  - D6 must be protected explicitly: organization entity fields stay unmarked by default, while organization contact channels and identifiers remain marked.
+  - `Log-safe` needed a testable definition covering marked values, raw payloads, diagnostic enrichers, object `ToString()` paths, and serialized command/event bodies.
+- Changes applied:
+  - Clarified AC 4 with an explicit definition of log-safe for this story.
+  - Clarified AC 5 and Task 2 to require positive and negative marker inventory tests.
+  - Added explicit D6 negative-test guidance for organization entity fields and positive guidance for organization contact channels/identifiers.
+  - Added diagnostic-enricher, exception detail, `ToString()`, and formatted-message audit guidance to Task 3.
+  - Added party-mode review clarifications and change-log entry.
+- Findings deferred:
+  - Runtime redaction, serializer/middleware behavior, EventStore platform redaction, and crypto-shredding remain outside this story unless separately accepted.
+  - Type-dependent v1.1 handling for `OrganizationDetails` when `IsNaturalPerson` changes remains governed by D6/D7.
+  - Broader projection, search, UI, REST, MCP, deployment, and documentation changes remain out of scope.
+- Final recommendation: ready-for-dev
