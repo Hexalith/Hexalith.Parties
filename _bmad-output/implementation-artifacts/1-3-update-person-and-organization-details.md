@@ -1,6 +1,6 @@
 # Story 1.3: Update Person and Organization Details
 
-Status: ready-for-dev
+Status: review
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -72,48 +72,48 @@ so that party records remain accurate as real-world identity details change.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Audit existing update contracts and aggregate handlers (AC: 1, 2, 4, 5)
-  - [ ] Confirm `UpdatePersonDetails`, `UpdateOrganizationDetails`, `PersonDetailsUpdated`, `OrganizationDetailsUpdated`, `PartyTypeMismatch`, `PartyNotFound`, `PartyDisplayNameDerived`, `PersonDetails`, `OrganizationDetails`, and `PartyState` match this story's scope.
-  - [ ] Confirm `src/Hexalith.Parties.Server/Aggregates/PartyAggregate.cs` still exposes pure static `Handle(UpdatePersonDetails, PartyState?)` and `Handle(UpdateOrganizationDetails, PartyState?)` methods through the EventStore aggregate convention.
-  - [ ] Verify the current missing-party behavior for direct detail handlers. If it still uses `PartyTypeMismatch { Message = "Party does not exist." }`, either preserve it as the documented current typed rejection or migrate narrowly to `PartyNotFound` only if existing tests and downstream error mapping support that change.
-  - [ ] Verify null command payloads throw `ArgumentNullException` for programmer misuse, while null detail payloads return deterministic typed rejections and do not reach `DeriveDisplayName(...)`.
-  - [ ] Treat same-value updates and broader person/organization field normalization as current-contract behavior unless existing tests already define otherwise; record any desired audit-event/no-op or normalization change as a deferred decision.
+- [x] Task 1: Audit existing update contracts and aggregate handlers (AC: 1, 2, 4, 5)
+  - [x] Confirm `UpdatePersonDetails`, `UpdateOrganizationDetails`, `PersonDetailsUpdated`, `OrganizationDetailsUpdated`, `PartyTypeMismatch`, `PartyNotFound`, `PartyDisplayNameDerived`, `PersonDetails`, `OrganizationDetails`, and `PartyState` match this story's scope.
+  - [x] Confirm `src/Hexalith.Parties.Server/Aggregates/PartyAggregate.cs` still exposes pure static `Handle(UpdatePersonDetails, PartyState?)` and `Handle(UpdateOrganizationDetails, PartyState?)` methods through the EventStore aggregate convention.
+  - [x] Verify the current missing-party behavior for direct detail handlers. If it still uses `PartyTypeMismatch { Message = "Party does not exist." }`, either preserve it as the documented current typed rejection or migrate narrowly to `PartyNotFound` only if existing tests and downstream error mapping support that change.
+  - [x] Verify null command payloads throw `ArgumentNullException` for programmer misuse, while null detail payloads return deterministic typed rejections and do not reach `DeriveDisplayName(...)`.
+  - [x] Treat same-value updates and broader person/organization field normalization as current-contract behavior unless existing tests already define otherwise; record any desired audit-event/no-op or normalization change as a deferred decision.
 
-- [ ] Task 2: Validate person and organization update success behavior (AC: 1, 2, 3)
-  - [ ] For person updates, verify the successful event sequence is `PersonDetailsUpdated` followed by `PartyDisplayNameDerived`.
-  - [ ] For organization updates, verify the successful event sequence is `OrganizationDetailsUpdated` followed by `PartyDisplayNameDerived`.
-  - [ ] Apply emitted events to existing `PartyState` instances and verify detail payloads, display names, and sort names reflect the new data.
-  - [ ] Verify person updates do not mutate organization detail state and organization updates do not mutate person detail state.
-  - [ ] Confirm update events do not carry `PartyId` or `TenantId`; aggregate identity and tenant context remain EventStore/request metadata concerns.
+- [x] Task 2: Validate person and organization update success behavior (AC: 1, 2, 3)
+  - [x] For person updates, verify the successful event sequence is `PersonDetailsUpdated` followed by `PartyDisplayNameDerived`.
+  - [x] For organization updates, verify the successful event sequence is `OrganizationDetailsUpdated` followed by `PartyDisplayNameDerived`.
+  - [x] Apply emitted events to existing `PartyState` instances and verify detail payloads, display names, and sort names reflect the new data.
+  - [x] Verify person updates do not mutate organization detail state and organization updates do not mutate person detail state.
+  - [x] Confirm update events do not carry `PartyId` or `TenantId`; aggregate identity and tenant context remain EventStore/request metadata concerns.
 
-- [ ] Task 3: Validate rejection, erasure, and restriction guards (AC: 4, 5)
-  - [ ] Verify person detail updates against organization state reject with `PartyTypeMismatch` and emit no success events.
-  - [ ] Verify organization detail updates against person state reject with `PartyTypeMismatch` and emit no success events.
-  - [ ] Verify missing-party updates reject consistently with the chosen current typed rejection and emit no success events.
-  - [ ] Verify updates against erasure-pending or erased state reject with `PartyErasureInProgress`.
-  - [ ] Verify updates against processing-restricted state reject with `PartyProcessingRestricted`.
-  - [ ] Verify every rejection path leaves the original state unchanged and produces no returned success detail.
-  - [ ] Do not invent deactivated-party update policy in this story. If deactivation behavior is not already represented by existing contracts/tests, record it as deferred to Story 1.6 rather than adding lifecycle semantics here.
+- [x] Task 3: Validate rejection, erasure, and restriction guards (AC: 4, 5)
+  - [x] Verify person detail updates against organization state reject with `PartyTypeMismatch` and emit no success events.
+  - [x] Verify organization detail updates against person state reject with `PartyTypeMismatch` and emit no success events.
+  - [x] Verify missing-party updates reject consistently with the chosen current typed rejection and emit no success events.
+  - [x] Verify updates against erasure-pending or erased state reject with `PartyErasureInProgress`.
+  - [x] Verify updates against processing-restricted state reject with `PartyProcessingRestricted`.
+  - [x] Verify every rejection path leaves the original state unchanged and produces no returned success detail.
+  - [x] Do not invent deactivated-party update policy in this story. If deactivation behavior is not already represented by existing contracts/tests, record it as deferred to Story 1.6 rather than adding lifecycle semantics here.
 
-- [ ] Task 4: Reconcile FR69 returned-state behavior without broad response rewrites (AC: 6)
-  - [ ] Inspect `CompositeCommandResult.UpdatedPartyDetail` and `PartyAggregate.Handle(UpdatePartyComposite, PartyState?)`, because the current composite update path already builds an updated `PartyDetail` from state plus emitted events.
-  - [ ] Confirm detail-only `UpdatePartyComposite` tests cover person and organization updates and assert `UpdatedPartyDetail` after events are projected, including updated details and derived display/sort names.
-  - [ ] Assert `UpdatedPartyDetail` is not produced for rejected detail updates.
-  - [ ] Do not change simple `DomainResult` return types for `Handle(UpdatePersonDetails, ...)` or `Handle(UpdateOrganizationDetails, ...)` unless architecture explicitly requires it; these direct handlers are aggregate primitives, while public API/MCP response shape is covered by composite/update response stories.
-  - [ ] If a returned-state gap remains, record the smallest follow-up against Story 1.9 rather than expanding this story into API/MCP transport work.
+- [x] Task 4: Reconcile FR69 returned-state behavior without broad response rewrites (AC: 6)
+  - [x] Inspect `CompositeCommandResult.UpdatedPartyDetail` and `PartyAggregate.Handle(UpdatePartyComposite, PartyState?)`, because the current composite update path already builds an updated `PartyDetail` from state plus emitted events.
+  - [x] Confirm detail-only `UpdatePartyComposite` tests cover person and organization updates and assert `UpdatedPartyDetail` after events are projected, including updated details and derived display/sort names.
+  - [x] Assert `UpdatedPartyDetail` is not produced for rejected detail updates.
+  - [x] Do not change simple `DomainResult` return types for `Handle(UpdatePersonDetails, ...)` or `Handle(UpdateOrganizationDetails, ...)` unless architecture explicitly requires it; these direct handlers are aggregate primitives, while public API/MCP response shape is covered by composite/update response stories.
+  - [x] If a returned-state gap remains, record the smallest follow-up against Story 1.9 rather than expanding this story into API/MCP transport work.
 
-- [ ] Task 5: Preserve EventStore, privacy, and dependency boundaries (AC: 1, 2, 3, 4, 5, 6)
-  - [ ] Keep update domain behavior in pure aggregate `Handle` methods; do not add Dapr, HTTP, database, MediatR handler, REST, Swagger, MCP, AdminPortal, Picker, or sample behavior to this story.
-  - [ ] Keep `Hexalith.Parties.Contracts` free of hosting, Dapr, MediatR, FluentValidation, UI, and infrastructure dependencies beyond accepted EventStore contract references.
-  - [ ] Preserve `PartyState.Apply(...)` rejection-event ordering before success applies; EventStore suffix-based apply resolution depends on it.
-  - [ ] Treat person details, derived names, and organization details for sole traders as privacy-sensitive. Do not add logs, telemetry, exception messages, snapshots, or operational output that leaks personal data; tests should assert only the specific fields needed to prove behavior.
+- [x] Task 5: Preserve EventStore, privacy, and dependency boundaries (AC: 1, 2, 3, 4, 5, 6)
+  - [x] Keep update domain behavior in pure aggregate `Handle` methods; do not add Dapr, HTTP, database, MediatR handler, REST, Swagger, MCP, AdminPortal, Picker, or sample behavior to this story.
+  - [x] Keep `Hexalith.Parties.Contracts` free of hosting, Dapr, MediatR, FluentValidation, UI, and infrastructure dependencies beyond accepted EventStore contract references.
+  - [x] Preserve `PartyState.Apply(...)` rejection-event ordering before success applies; EventStore suffix-based apply resolution depends on it.
+  - [x] Treat person details, derived names, and organization details for sole traders as privacy-sensitive. Do not add logs, telemetry, exception messages, snapshots, or operational output that leaks personal data; tests should assert only the specific fields needed to prove behavior.
 
-- [ ] Task 6: Run focused validation (AC: 1, 2, 3, 4, 5, 6)
-  - [ ] Run `dotnet test tests/Hexalith.Parties.Server.Tests/Hexalith.Parties.Server.Tests.csproj --configuration Release --filter FullyQualifiedName~PartyAggregateUpdateTests`.
-  - [ ] Run `dotnet test tests/Hexalith.Parties.Server.Tests/Hexalith.Parties.Server.Tests.csproj --configuration Release --filter FullyQualifiedName~PartyAggregateCompositeTests` if returned-state behavior is inspected or changed.
-  - [ ] Run `dotnet test tests/Hexalith.Parties.Contracts.Tests/Hexalith.Parties.Contracts.Tests.csproj --configuration Release --filter FullyQualifiedName~PartyStateTests`.
-  - [ ] Run `dotnet test tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj --configuration Release --filter FullyQualifiedName~PartyStateApplyOrderingFitnessTests` if any `PartyState.Apply` declarations move.
-  - [ ] Run `dotnet build Hexalith.Parties.slnx --configuration Release` if implementation changes touch public contracts, project references, shared build files, or EventStore-facing surfaces.
+- [x] Task 6: Run focused validation (AC: 1, 2, 3, 4, 5, 6)
+  - [x] Run `dotnet test tests/Hexalith.Parties.Server.Tests/Hexalith.Parties.Server.Tests.csproj --configuration Release --filter FullyQualifiedName~PartyAggregateUpdateTests`.
+  - [x] Run `dotnet test tests/Hexalith.Parties.Server.Tests/Hexalith.Parties.Server.Tests.csproj --configuration Release --filter FullyQualifiedName~PartyAggregateCompositeTests` if returned-state behavior is inspected or changed.
+  - [x] Run `dotnet test tests/Hexalith.Parties.Contracts.Tests/Hexalith.Parties.Contracts.Tests.csproj --configuration Release --filter FullyQualifiedName~PartyStateTests`.
+  - [x] Run `dotnet test tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj --configuration Release --filter FullyQualifiedName~PartyStateApplyOrderingFitnessTests` if any `PartyState.Apply` declarations move.
+  - [x] Run `dotnet build Hexalith.Parties.slnx --configuration Release` if implementation changes touch public contracts, project references, shared build files, or EventStore-facing surfaces.
 
 ## Dev Notes
 
@@ -227,14 +227,29 @@ tests/Hexalith.Parties.Contracts.Tests/
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+GPT-5 Codex
 
 ### Debug Log References
 
+- `dotnet test tests/Hexalith.Parties.Server.Tests/Hexalith.Parties.Server.Tests.csproj --configuration Release --filter FullyQualifiedName~PartyAggregateUpdateTests`
+- `dotnet test tests/Hexalith.Parties.Server.Tests/Hexalith.Parties.Server.Tests.csproj --configuration Release --filter FullyQualifiedName~PartyAggregateCompositeTests`
+- `dotnet test tests/Hexalith.Parties.Contracts.Tests/Hexalith.Parties.Contracts.Tests.csproj --configuration Release --filter FullyQualifiedName~PartyStateTests`
+- `dotnet test Hexalith.Parties.slnx --configuration Release`
+
 ### Completion Notes List
+
+- Audited the existing detail update contracts and aggregate handlers; direct update handlers remain pure static EventStore aggregate primitives returning `DomainResult`.
+- Preserved current direct missing-party semantics as `PartyTypeMismatch { Message = "Party does not exist." }` and composite missing-party semantics as `PartyNotFound`.
+- Added focused tests proving update events do not expose `PartyId`/`TenantId`, detail updates preserve the opposite party detail shape, rejection paths emit no success events, and rejected composite detail updates do not produce `UpdatedPartyDetail`.
+- Confirmed FR69 returned-state behavior through `CompositeCommandResult.UpdatedPartyDetail` after person and organization detail-only composite updates.
+- No public contract, aggregate implementation, transport, MCP, admin, picker, Dapr, or `PartyState.Apply` ordering changes were required.
 
 ### File List
 
+- `_bmad-output/implementation-artifacts/1-3-update-person-and-organization-details.md`
+- `_bmad-output/implementation-artifacts/sprint-status.yaml`
+- `tests/Hexalith.Parties.Server.Tests/Aggregates/PartyAggregateUpdateTests.cs`
+- `tests/Hexalith.Parties.Server.Tests/Aggregates/PartyAggregateCompositeTests.cs`
 ## Party-Mode Review
 
 - Date/time: 2026-05-15T19:03:33+02:00
@@ -262,6 +277,7 @@ tests/Hexalith.Parties.Contracts.Tests/
 
 ## Change Log
 
+- 2026-05-16: Implemented Story 1.3 test reconciliation; added focused success, rejection, metadata-boundary, and returned-state assertions; marked story ready for review.
 - 2026-05-15: Advanced elicitation applied pre-dev clarifications for rejection evidence, direct/composite missing-party semantics, lifecycle guard precedence, FR69 post-event returned-state assertions, privacy-safe tests, and deferred normalization/localization decisions.
 - 2026-05-15: Party-mode review applied pre-dev clarifications for AC traceability, update event ordering, no-success-after-rejection evidence, FR69 returned-state assertions, privacy-safe test expectations, and deferred lifecycle/normalization decisions.
 - 2026-05-15: Story created by BMAD pre-dev hardening automation with current detail-update reconciliation context.

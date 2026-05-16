@@ -385,6 +385,9 @@ public class PartyAggregateCompositeTests
         result.UpdatedPartyDetail.PersonDetails.ShouldNotBeNull();
         result.UpdatedPartyDetail.PersonDetails.FirstName.ShouldBe("Jane");
         result.UpdatedPartyDetail.PersonDetails.LastName.ShouldBe("Smith");
+        result.UpdatedPartyDetail.OrganizationDetails.ShouldBeNull();
+        result.UpdatedPartyDetail.DisplayName.ShouldBe("Jane Smith");
+        result.UpdatedPartyDetail.SortName.ShouldBe("Smith, Jane");
         result.Applied.ShouldContain("Updated person details");
         result.Applied.ShouldContain("Derived display name");
         result.Skipped.ShouldBeEmpty();
@@ -411,6 +414,13 @@ public class PartyAggregateCompositeTests
         PartyDisplayNameDerived derived = (PartyDisplayNameDerived)result.Events[1];
         derived.DisplayName.ShouldBe(orgDetails.LegalName);
         derived.SortName.ShouldBe(orgDetails.LegalName);
+        result.UpdatedPartyDetail.ShouldNotBeNull();
+        result.UpdatedPartyDetail.OrganizationDetails.ShouldNotBeNull();
+        result.UpdatedPartyDetail.OrganizationDetails.LegalName.ShouldBe(orgDetails.LegalName);
+        result.UpdatedPartyDetail.OrganizationDetails.TradingName.ShouldBe(orgDetails.TradingName);
+        result.UpdatedPartyDetail.PersonDetails.ShouldBeNull();
+        result.UpdatedPartyDetail.DisplayName.ShouldBe(orgDetails.LegalName);
+        result.UpdatedPartyDetail.SortName.ShouldBe(orgDetails.LegalName);
         result.Applied.ShouldContain("Updated organization details");
         result.Applied.ShouldContain("Derived display name");
         result.Skipped.ShouldBeEmpty();
@@ -773,6 +783,12 @@ public class PartyAggregateCompositeTests
         result.IsRejection.ShouldBeTrue();
         result.Events.Count.ShouldBe(1);
         result.Events[0].ShouldBeOfType<PartyNotFound>();
+        result.Events.OfType<PersonDetailsUpdated>().ShouldBeEmpty();
+        result.Events.OfType<OrganizationDetailsUpdated>().ShouldBeEmpty();
+        result.Events.OfType<PartyDisplayNameDerived>().ShouldBeEmpty();
+        result.UpdatedPartyDetail.ShouldBeNull();
+        result.Applied.ShouldBeEmpty();
+        result.Skipped.ShouldBeEmpty();
         result.Rejected.ShouldContain("Party does not exist.");
     }
 
@@ -939,6 +955,9 @@ public class PartyAggregateCompositeTests
     public void Handle_UpdatePartyComposite_PersonDetailsOnOrganization_ReturnsTypeMismatch()
     {
         PartyState state = PartyTestData.CreateOrganizationStateWithChannelsAndIdentifiers();
+        OrganizationDetails? originalOrganization = state.Organization;
+        string originalDisplayName = state.DisplayName;
+        string originalSortName = state.SortName;
         UpdatePartyComposite command = new()
         {
             PartyId = PartyTestData.DefaultPartyId,
@@ -950,13 +969,25 @@ public class PartyAggregateCompositeTests
         result.IsRejection.ShouldBeTrue();
         result.Events.Count.ShouldBe(1);
         result.Events[0].ShouldBeOfType<PartyTypeMismatch>();
+        result.Events.OfType<PersonDetailsUpdated>().ShouldBeEmpty();
+        result.Events.OfType<PartyDisplayNameDerived>().ShouldBeEmpty();
+        result.UpdatedPartyDetail.ShouldBeNull();
+        result.Applied.ShouldBeEmpty();
+        result.Skipped.ShouldBeEmpty();
         result.Rejected.ShouldContain("Cannot update person details on a Organization party.");
+        state.Organization.ShouldBe(originalOrganization);
+        state.Person.ShouldBeNull();
+        state.DisplayName.ShouldBe(originalDisplayName);
+        state.SortName.ShouldBe(originalSortName);
     }
 
     [Fact]
     public void Handle_UpdatePartyComposite_OrganizationDetailsOnPerson_ReturnsTypeMismatch()
     {
         PartyState state = PartyTestData.CreatePersonStateWithChannelsAndIdentifiers();
+        PersonDetails? originalPerson = state.Person;
+        string originalDisplayName = state.DisplayName;
+        string originalSortName = state.SortName;
         UpdatePartyComposite command = new()
         {
             PartyId = PartyTestData.DefaultPartyId,
@@ -968,7 +999,16 @@ public class PartyAggregateCompositeTests
         result.IsRejection.ShouldBeTrue();
         result.Events.Count.ShouldBe(1);
         result.Events[0].ShouldBeOfType<PartyTypeMismatch>();
+        result.Events.OfType<OrganizationDetailsUpdated>().ShouldBeEmpty();
+        result.Events.OfType<PartyDisplayNameDerived>().ShouldBeEmpty();
+        result.UpdatedPartyDetail.ShouldBeNull();
+        result.Applied.ShouldBeEmpty();
+        result.Skipped.ShouldBeEmpty();
         result.Rejected.ShouldContain("Cannot update organization details on a Person party.");
+        state.Person.ShouldBe(originalPerson);
+        state.Organization.ShouldBeNull();
+        state.DisplayName.ShouldBe(originalDisplayName);
+        state.SortName.ShouldBe(originalSortName);
     }
 
     [Theory]

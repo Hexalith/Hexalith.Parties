@@ -44,7 +44,10 @@ public class PartyAggregateUpdateTests
 
         // Assert
         result.IsRejection.ShouldBeTrue();
+        result.Events.Count.ShouldBe(1);
         result.Events[0].ShouldBeOfType<PartyTypeMismatch>();
+        result.Events.OfType<PersonDetailsUpdated>().ShouldBeEmpty();
+        result.Events.OfType<PartyDisplayNameDerived>().ShouldBeEmpty();
     }
 
     [Fact]
@@ -53,13 +56,23 @@ public class PartyAggregateUpdateTests
         // Arrange
         UpdatePersonDetails command = PartyTestData.ValidUpdatePersonDetails();
         PartyState state = PartyTestData.CreateOrganizationState();
+        OrganizationDetails? originalOrganization = state.Organization;
+        string originalDisplayName = state.DisplayName;
+        string originalSortName = state.SortName;
 
         // Act
         var result = PartyAggregate.Handle(command, state);
 
         // Assert
         result.IsRejection.ShouldBeTrue();
+        result.Events.Count.ShouldBe(1);
         result.Events[0].ShouldBeOfType<PartyTypeMismatch>();
+        result.Events.OfType<PersonDetailsUpdated>().ShouldBeEmpty();
+        result.Events.OfType<PartyDisplayNameDerived>().ShouldBeEmpty();
+        state.Organization.ShouldBe(originalOrganization);
+        state.Person.ShouldBeNull();
+        state.DisplayName.ShouldBe(originalDisplayName);
+        state.SortName.ShouldBe(originalSortName);
     }
 
     [Fact]
@@ -132,8 +145,28 @@ public class PartyAggregateUpdateTests
         state.Person.ShouldNotBeNull();
         state.Person.FirstName.ShouldBe("Jane");
         state.Person.LastName.ShouldBe("Smith");
+        state.Organization.ShouldBeNull();
         state.DisplayName.ShouldBe("Jane Smith");
         state.SortName.ShouldBe("Smith, Jane");
+    }
+
+    [Fact]
+    public void Handle_UpdatePersonDetails_UpdateEvents_DoNotExposeIdentityMetadata()
+    {
+        // Arrange
+        UpdatePersonDetails command = PartyTestData.ValidUpdatePersonDetails();
+        PartyState state = PartyTestData.CreatePersonState();
+
+        // Act
+        var result = PartyAggregate.Handle(command, state);
+
+        // Assert
+        result.Events[0].ShouldBeOfType<PersonDetailsUpdated>();
+        result.Events[0].GetType().GetProperty("PartyId").ShouldBeNull();
+        result.Events[0].GetType().GetProperty("TenantId").ShouldBeNull();
+        result.Events[1].ShouldBeOfType<PartyDisplayNameDerived>();
+        result.Events[1].GetType().GetProperty("PartyId").ShouldBeNull();
+        result.Events[1].GetType().GetProperty("TenantId").ShouldBeNull();
     }
 
     // --- UpdateOrganizationDetails ---
@@ -169,7 +202,10 @@ public class PartyAggregateUpdateTests
 
         // Assert
         result.IsRejection.ShouldBeTrue();
+        result.Events.Count.ShouldBe(1);
         result.Events[0].ShouldBeOfType<PartyTypeMismatch>();
+        result.Events.OfType<OrganizationDetailsUpdated>().ShouldBeEmpty();
+        result.Events.OfType<PartyDisplayNameDerived>().ShouldBeEmpty();
     }
 
     [Fact]
@@ -178,13 +214,23 @@ public class PartyAggregateUpdateTests
         // Arrange
         UpdateOrganizationDetails command = PartyTestData.ValidUpdateOrganizationDetails();
         PartyState state = PartyTestData.CreatePersonState();
+        PersonDetails? originalPerson = state.Person;
+        string originalDisplayName = state.DisplayName;
+        string originalSortName = state.SortName;
 
         // Act
         var result = PartyAggregate.Handle(command, state);
 
         // Assert
         result.IsRejection.ShouldBeTrue();
+        result.Events.Count.ShouldBe(1);
         result.Events[0].ShouldBeOfType<PartyTypeMismatch>();
+        result.Events.OfType<OrganizationDetailsUpdated>().ShouldBeEmpty();
+        result.Events.OfType<PartyDisplayNameDerived>().ShouldBeEmpty();
+        state.Person.ShouldBe(originalPerson);
+        state.Organization.ShouldBeNull();
+        state.DisplayName.ShouldBe(originalDisplayName);
+        state.SortName.ShouldBe(originalSortName);
     }
 
     [Fact]
@@ -256,8 +302,138 @@ public class PartyAggregateUpdateTests
         // Assert
         state.Organization.ShouldNotBeNull();
         state.Organization.LegalName.ShouldBe("New Legal Name");
+        state.Person.ShouldBeNull();
         state.DisplayName.ShouldBe("New Legal Name");
         state.SortName.ShouldBe("New Legal Name");
+    }
+
+    [Fact]
+    public void Handle_UpdateOrganizationDetails_UpdateEvents_DoNotExposeIdentityMetadata()
+    {
+        // Arrange
+        UpdateOrganizationDetails command = PartyTestData.ValidUpdateOrganizationDetails();
+        PartyState state = PartyTestData.CreateOrganizationState();
+
+        // Act
+        var result = PartyAggregate.Handle(command, state);
+
+        // Assert
+        result.Events[0].ShouldBeOfType<OrganizationDetailsUpdated>();
+        result.Events[0].GetType().GetProperty("PartyId").ShouldBeNull();
+        result.Events[0].GetType().GetProperty("TenantId").ShouldBeNull();
+        result.Events[1].ShouldBeOfType<PartyDisplayNameDerived>();
+        result.Events[1].GetType().GetProperty("PartyId").ShouldBeNull();
+        result.Events[1].GetType().GetProperty("TenantId").ShouldBeNull();
+    }
+
+    [Fact]
+    public void Handle_UpdatePersonDetails_WhenErasurePending_RejectsWithoutSuccessEvents()
+    {
+        // Arrange
+        UpdatePersonDetails command = PartyTestData.ValidUpdatePersonDetails();
+        PartyState state = PartyTestData.CreateErasurePendingState();
+        PersonDetails? originalPerson = state.Person;
+        string originalDisplayName = state.DisplayName;
+        string originalSortName = state.SortName;
+
+        // Act
+        var result = PartyAggregate.Handle(command, state);
+
+        // Assert
+        result.IsRejection.ShouldBeTrue();
+        result.Events.Count.ShouldBe(1);
+        result.Events[0].ShouldBeOfType<PartyErasureInProgress>();
+        result.Events.OfType<PersonDetailsUpdated>().ShouldBeEmpty();
+        result.Events.OfType<PartyDisplayNameDerived>().ShouldBeEmpty();
+        state.Person.ShouldBe(originalPerson);
+        state.DisplayName.ShouldBe(originalDisplayName);
+        state.SortName.ShouldBe(originalSortName);
+    }
+
+    [Fact]
+    public void Handle_UpdateOrganizationDetails_WhenErasurePending_RejectsWithoutSuccessEvents()
+    {
+        // Arrange
+        UpdateOrganizationDetails command = PartyTestData.ValidUpdateOrganizationDetails();
+        PartyState state = PartyTestData.CreateOrganizationState();
+        state.Apply(new ErasePartyRequested
+        {
+            PartyId = PartyTestData.DefaultPartyId,
+            TenantId = PartyTestData.DefaultTenantId,
+            RequestedAt = DateTimeOffset.UtcNow,
+            RequestedBy = "admin",
+        });
+        OrganizationDetails? originalOrganization = state.Organization;
+        string originalDisplayName = state.DisplayName;
+        string originalSortName = state.SortName;
+
+        // Act
+        var result = PartyAggregate.Handle(command, state);
+
+        // Assert
+        result.IsRejection.ShouldBeTrue();
+        result.Events.Count.ShouldBe(1);
+        result.Events[0].ShouldBeOfType<PartyErasureInProgress>();
+        result.Events.OfType<OrganizationDetailsUpdated>().ShouldBeEmpty();
+        result.Events.OfType<PartyDisplayNameDerived>().ShouldBeEmpty();
+        state.Organization.ShouldBe(originalOrganization);
+        state.DisplayName.ShouldBe(originalDisplayName);
+        state.SortName.ShouldBe(originalSortName);
+    }
+
+    [Fact]
+    public void Handle_UpdatePersonDetails_WhenRestricted_RejectsWithoutSuccessEvents()
+    {
+        // Arrange
+        UpdatePersonDetails command = PartyTestData.ValidUpdatePersonDetails();
+        PartyState state = PartyTestData.CreateRestrictedState();
+        PersonDetails? originalPerson = state.Person;
+        string originalDisplayName = state.DisplayName;
+        string originalSortName = state.SortName;
+
+        // Act
+        var result = PartyAggregate.Handle(command, state);
+
+        // Assert
+        result.IsRejection.ShouldBeTrue();
+        result.Events.Count.ShouldBe(1);
+        result.Events[0].ShouldBeOfType<PartyProcessingRestricted>();
+        result.Events.OfType<PersonDetailsUpdated>().ShouldBeEmpty();
+        result.Events.OfType<PartyDisplayNameDerived>().ShouldBeEmpty();
+        state.Person.ShouldBe(originalPerson);
+        state.DisplayName.ShouldBe(originalDisplayName);
+        state.SortName.ShouldBe(originalSortName);
+    }
+
+    [Fact]
+    public void Handle_UpdateOrganizationDetails_WhenRestricted_RejectsWithoutSuccessEvents()
+    {
+        // Arrange
+        UpdateOrganizationDetails command = PartyTestData.ValidUpdateOrganizationDetails();
+        PartyState state = PartyTestData.CreateOrganizationState();
+        state.Apply(new ProcessingRestricted
+        {
+            PartyId = PartyTestData.DefaultPartyId,
+            TenantId = PartyTestData.DefaultTenantId,
+            RestrictedAt = DateTimeOffset.UtcNow,
+            Reason = "Investigation pending",
+        });
+        OrganizationDetails? originalOrganization = state.Organization;
+        string originalDisplayName = state.DisplayName;
+        string originalSortName = state.SortName;
+
+        // Act
+        var result = PartyAggregate.Handle(command, state);
+
+        // Assert
+        result.IsRejection.ShouldBeTrue();
+        result.Events.Count.ShouldBe(1);
+        result.Events[0].ShouldBeOfType<PartyProcessingRestricted>();
+        result.Events.OfType<OrganizationDetailsUpdated>().ShouldBeEmpty();
+        result.Events.OfType<PartyDisplayNameDerived>().ShouldBeEmpty();
+        state.Organization.ShouldBe(originalOrganization);
+        state.DisplayName.ShouldBe(originalDisplayName);
+        state.SortName.ShouldBe(originalSortName);
     }
 
     // --- SetIsNaturalPerson ---
