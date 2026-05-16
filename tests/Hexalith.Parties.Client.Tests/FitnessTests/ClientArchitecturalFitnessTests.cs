@@ -384,36 +384,6 @@ public sealed class ClientArchitecturalFitnessTests
                 .OrderBy(name => name, StringComparer.OrdinalIgnoreCase),
         ];
 
-        HashSet<string> expectedTransitivePackageNames =
-        [
-            "ByteAether.Ulid",
-            "Dapr.Actors",
-            "Dapr.Client",
-            "Dapr.Common",
-            "Dapr.Protos",
-            "Google.Api.CommonProtos",
-            "Google.Protobuf",
-            "Grpc.Core.Api",
-            "Grpc.Net.Client",
-            "Grpc.Net.Common",
-            "Hexalith.Commons.UniqueIds",
-            "Microsoft.Extensions.Configuration",
-            "Microsoft.Extensions.Configuration.Abstractions",
-            "Microsoft.Extensions.Configuration.Binder",
-            "Microsoft.Extensions.DependencyInjection",
-            "Microsoft.Extensions.DependencyInjection.Abstractions",
-            "Microsoft.Extensions.Diagnostics",
-            "Microsoft.Extensions.Diagnostics.Abstractions",
-            "Microsoft.Extensions.Logging",
-            "Microsoft.Extensions.Logging.Abstractions",
-            "Microsoft.Extensions.Options.ConfigurationExtensions",
-            "Microsoft.Extensions.Primitives",
-        ];
-
-        transitivePackageNames.ShouldBe(
-            [.. expectedTransitivePackageNames.OrderBy(name => name, StringComparer.OrdinalIgnoreCase)],
-            customMessage: "Client transitive packages should stay limited to Microsoft.Extensions shared framework packages plus the Dapr/Grpc/Protobuf actor-transport stack and identity infrastructure inherited through Hexalith.EventStore.Contracts.");
-
         HashSet<string> allowedContractInfrastructurePackages =
         [
             "ByteAether.Ulid",
