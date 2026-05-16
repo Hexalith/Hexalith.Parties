@@ -58,7 +58,7 @@ development_status:
 
   # Epic 2: Searchable Tenant-Safe Read Models (9 stories)
   epic-2: in-progress
-  2-1-build-party-detail-projection: backlog
+  2-1-build-party-detail-projection: ready-for-dev
   2-2-build-tenant-party-index-projection: backlog
   2-3-query-party-details-by-id: backlog
   2-4-list-and-filter-parties: backlog
