@@ -31,7 +31,44 @@ public class PartyStateTests
 
         state.Apply(new PartyCreated { Type = PartyType.Organization, OrganizationDetails = org });
 
+        state.Type.ShouldBe(PartyType.Organization);
+        state.Organization.ShouldBe(org);
+        state.Person.ShouldBeNull();
         state.IsNaturalPerson.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void Apply_CreationEventsForPerson_PreservesRehydratedCreationState()
+    {
+        var state = new PartyState();
+        var person = new PersonDetails { FirstName = "Jane", LastName = "Doe" };
+
+        state.Apply(new PartyCreated { Type = PartyType.Person, PersonDetails = person });
+        state.Apply(new PartyDisplayNameDerived { DisplayName = "Jane Doe", SortName = "Doe, Jane" });
+
+        state.Type.ShouldBe(PartyType.Person);
+        state.Person.ShouldBe(person);
+        state.Organization.ShouldBeNull();
+        state.IsActive.ShouldBeTrue();
+        state.DisplayName.ShouldBe("Jane Doe");
+        state.SortName.ShouldBe("Doe, Jane");
+    }
+
+    [Fact]
+    public void Apply_CreationEventsForOrganization_PreservesRehydratedCreationState()
+    {
+        var state = new PartyState();
+        var organization = new OrganizationDetails { LegalName = "ACME" };
+
+        state.Apply(new PartyCreated { Type = PartyType.Organization, OrganizationDetails = organization });
+        state.Apply(new PartyDisplayNameDerived { DisplayName = "ACME", SortName = "ACME" });
+
+        state.Type.ShouldBe(PartyType.Organization);
+        state.Organization.ShouldBe(organization);
+        state.Person.ShouldBeNull();
+        state.IsActive.ShouldBeTrue();
+        state.DisplayName.ShouldBe("ACME");
+        state.SortName.ShouldBe("ACME");
     }
 
     [Fact]

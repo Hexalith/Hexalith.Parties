@@ -28,6 +28,7 @@ public class PartyAggregateCreateTests
         created.PersonDetails.ShouldNotBeNull();
         created.PersonDetails.FirstName.ShouldBe(command.PersonDetails!.FirstName);
         created.PersonDetails.LastName.ShouldBe(command.PersonDetails.LastName);
+        created.OrganizationDetails.ShouldBeNull();
         result.Events[1].ShouldBeOfType<PartyDisplayNameDerived>();
     }
 
@@ -45,9 +46,16 @@ public class PartyAggregateCreateTests
         result.Events.Count.ShouldBe(2);
         PartyCreated created = result.Events[0].ShouldBeOfType<PartyCreated>();
         created.Type.ShouldBe(PartyType.Organization);
+        created.PersonDetails.ShouldBeNull();
         created.OrganizationDetails.ShouldNotBeNull();
         created.OrganizationDetails.LegalName.ShouldBe(command.OrganizationDetails!.LegalName);
         result.Events[1].ShouldBeOfType<PartyDisplayNameDerived>();
+    }
+
+    [Fact]
+    public void PartyCreated_DoesNotDuplicateAggregateIdentity()
+    {
+        typeof(PartyCreated).GetProperty("PartyId").ShouldBeNull();
     }
 
     [Fact]
@@ -117,6 +125,8 @@ public class PartyAggregateCreateTests
         // Assert
         result.IsNoOp.ShouldBeTrue();
         result.Events.ShouldBeEmpty();
+        state.Type.ShouldBe(default);
+        state.DisplayName.ShouldBeEmpty();
     }
 
     [Fact]
@@ -134,8 +144,7 @@ public class PartyAggregateCreateTests
 
         // Assert
         result.IsRejection.ShouldBeTrue();
-        result.Events.Count.ShouldBe(1);
-        result.Events[0].ShouldBeOfType<PartyCannotBeCreatedWithoutType>();
+        AssertContainsOnlyRejection<PartyCannotBeCreatedWithoutType>(result);
     }
 
     [Fact]
@@ -153,8 +162,7 @@ public class PartyAggregateCreateTests
 
         // Assert
         result.IsRejection.ShouldBeTrue();
-        result.Events.Count.ShouldBe(1);
-        result.Events[0].ShouldBeOfType<PartyCannotBeCreatedWithoutPersonDetails>();
+        AssertContainsOnlyRejection<PartyCannotBeCreatedWithoutPersonDetails>(result);
     }
 
     [Fact]
@@ -172,8 +180,45 @@ public class PartyAggregateCreateTests
 
         // Assert
         result.IsRejection.ShouldBeTrue();
-        result.Events.Count.ShouldBe(1);
-        result.Events[0].ShouldBeOfType<PartyCannotBeCreatedWithoutOrganizationDetails>();
+        AssertContainsOnlyRejection<PartyCannotBeCreatedWithoutOrganizationDetails>(result);
+    }
+
+    [Fact]
+    public void Handle_CreatePersonWithOnlyOrganizationDetails_ReturnsRejectionOnly()
+    {
+        // Arrange
+        CreateParty command = new()
+        {
+            PartyId = PartyTestData.DefaultPartyId,
+            Type = PartyType.Person,
+            OrganizationDetails = PartyTestData.ValidOrganizationDetails(),
+        };
+
+        // Act
+        var result = PartyAggregate.Handle(command, null);
+
+        // Assert
+        result.IsRejection.ShouldBeTrue();
+        AssertContainsOnlyRejection<PartyCannotBeCreatedWithoutPersonDetails>(result);
+    }
+
+    [Fact]
+    public void Handle_CreateOrganizationWithOnlyPersonDetails_ReturnsRejectionOnly()
+    {
+        // Arrange
+        CreateParty command = new()
+        {
+            PartyId = PartyTestData.DefaultPartyId,
+            Type = PartyType.Organization,
+            PersonDetails = PartyTestData.ValidPersonDetails(),
+        };
+
+        // Act
+        var result = PartyAggregate.Handle(command, null);
+
+        // Assert
+        result.IsRejection.ShouldBeTrue();
+        AssertContainsOnlyRejection<PartyCannotBeCreatedWithoutOrganizationDetails>(result);
     }
 
     [Fact]
@@ -201,8 +246,7 @@ public class PartyAggregateCreateTests
 
         // Assert
         result.IsRejection.ShouldBeTrue();
-        result.Events.Count.ShouldBe(1);
-        result.Events[0].ShouldBeOfType<PartyCannotBeCreatedWithInvalidId>();
+        AssertContainsOnlyRejection<PartyCannotBeCreatedWithInvalidId>(result);
     }
 
     [Fact]
@@ -237,5 +281,48 @@ public class PartyAggregateCreateTests
         state.DisplayName.ShouldBe("John Doe");
         state.SortName.ShouldBe("Doe, John");
         state.IsActive.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void Handle_CreateOrganizationParty_ApplyEventsToState_ProducesCorrectState()
+    {
+        // Arrange
+        CreateParty command = PartyTestData.ValidCreateOrganization();
+
+        // Act
+        var result = PartyAggregate.Handle(command, null);
+
+        // Apply events to state
+        PartyState state = new();
+        foreach (object evt in result.Events)
+        {
+            switch (evt)
+            {
+                case PartyCreated created:
+                    state.Apply(created);
+                    break;
+                case PartyDisplayNameDerived nameDerived:
+                    state.Apply(nameDerived);
+                    break;
+            }
+        }
+
+        // Assert
+        state.Type.ShouldBe(PartyType.Organization);
+        state.Organization.ShouldNotBeNull();
+        state.Organization.LegalName.ShouldBe(command.OrganizationDetails!.LegalName);
+        state.Person.ShouldBeNull();
+        state.DisplayName.ShouldBe("Acme Corp");
+        state.SortName.ShouldBe("Acme Corp");
+        state.IsActive.ShouldBeTrue();
+    }
+
+    private static void AssertContainsOnlyRejection<TRejection>(Hexalith.EventStore.Contracts.Results.DomainResult result)
+        where TRejection : class
+    {
+        result.Events.Count.ShouldBe(1);
+        result.Events[0].ShouldBeOfType<TRejection>();
+        result.Events.OfType<PartyCreated>().ShouldBeEmpty();
+        result.Events.OfType<PartyDisplayNameDerived>().ShouldBeEmpty();
     }
 }

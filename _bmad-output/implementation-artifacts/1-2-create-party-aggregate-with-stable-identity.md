@@ -1,6 +1,6 @@
 # Story 1.2: Create Party Aggregate with Stable Identity
 
-Status: ready-for-dev
+Status: review
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -46,40 +46,40 @@ so that Parties can become the durable source of truth for party identity.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Audit the existing creation contracts and aggregate implementation (AC: 1, 2, 3, 4)
-  - [ ] Confirm `CreateParty`, `PartyCreated`, `PartyDisplayNameDerived`, creation rejection events, `PersonDetails`, `OrganizationDetails`, `PartyType`, and `PartyState` still match the current story scope.
-  - [ ] Confirm `src/Hexalith.Parties.Server/Aggregates/PartyAggregate.cs` exposes pure static `Handle(CreateParty, PartyState?)` behavior through the EventStore aggregate convention.
-  - [ ] Prove the stable UUID is preserved through EventStore aggregate identity/metadata and any read-model mapping that consumes the stream identity.
-  - [ ] Confirm `CreateParty.PartyId` remains the client-generated stable UUID command field and is not duplicated onto `PartyCreated`; aggregate identity belongs to EventStore metadata, not the success-event payload.
-  - [ ] If the current EventStore conventions cannot expose aggregate identity to the required state/read-model evidence without adding `PartyId` to `PartyCreated`, stop and record an architecture decision gap instead of inventing a new event contract.
-  - [ ] Repair only verified drift; do not recreate the historical broad contract-bootstrap story.
+- [x] Task 1: Audit the existing creation contracts and aggregate implementation (AC: 1, 2, 3, 4)
+  - [x] Confirm `CreateParty`, `PartyCreated`, `PartyDisplayNameDerived`, creation rejection events, `PersonDetails`, `OrganizationDetails`, `PartyType`, and `PartyState` still match the current story scope.
+  - [x] Confirm `src/Hexalith.Parties.Server/Aggregates/PartyAggregate.cs` exposes pure static `Handle(CreateParty, PartyState?)` behavior through the EventStore aggregate convention.
+  - [x] Prove the stable UUID is preserved through EventStore aggregate identity/metadata and any read-model mapping that consumes the stream identity.
+  - [x] Confirm `CreateParty.PartyId` remains the client-generated stable UUID command field and is not duplicated onto `PartyCreated`; aggregate identity belongs to EventStore metadata, not the success-event payload.
+  - [x] If the current EventStore conventions cannot expose aggregate identity to the required state/read-model evidence without adding `PartyId` to `PartyCreated`, stop and record an architecture decision gap instead of inventing a new event contract.
+  - [x] Repair only verified drift; do not recreate the historical broad contract-bootstrap story.
 
-- [ ] Task 2: Validate person and organization creation behavior (AC: 1, 2, 5)
-  - [ ] For person creation, verify `PartyCreated` stores `PartyType.Person` and `PersonDetails`, followed by `PartyDisplayNameDerived`.
-  - [ ] For organization creation, verify `PartyCreated` stores `PartyType.Organization` and `OrganizationDetails`, followed by `PartyDisplayNameDerived`.
-  - [ ] Verify MVP display-name rules: person display name `"{FirstName} {LastName}"`, person sort name `"{LastName}, {FirstName}"`, organization display and sort name both use `LegalName`.
-  - [ ] Apply emitted events to a fresh `PartyState` and verify type, details, active status, display name, and sort name are preserved after rehydration.
+- [x] Task 2: Validate person and organization creation behavior (AC: 1, 2, 5)
+  - [x] For person creation, verify `PartyCreated` stores `PartyType.Person` and `PersonDetails`, followed by `PartyDisplayNameDerived`.
+  - [x] For organization creation, verify `PartyCreated` stores `PartyType.Organization` and `OrganizationDetails`, followed by `PartyDisplayNameDerived`.
+  - [x] Verify MVP display-name rules: person display name `"{FirstName} {LastName}"`, person sort name `"{LastName}, {FirstName}"`, organization display and sort name both use `LegalName`.
+  - [x] Apply emitted events to a fresh `PartyState` and verify type, details, active status, display name, and sort name are preserved after rehydration.
 
-- [ ] Task 3: Validate rejection and idempotency behavior (AC: 3, 4)
-  - [ ] Reject blank, whitespace, or non-GUID `PartyId` values with `PartyCannotBeCreatedWithInvalidId`.
-  - [ ] Reject `PartyType.Unknown` or the default enum value with `PartyCannotBeCreatedWithoutType`.
-  - [ ] Reject person creation without `PersonDetails` using `PartyCannotBeCreatedWithoutPersonDetails`.
-  - [ ] Reject organization creation without `OrganizationDetails` using `PartyCannotBeCreatedWithoutOrganizationDetails`.
-  - [ ] Verify person creation does not accept organization-only details as a substitute for valid `PersonDetails`.
-  - [ ] Verify organization creation does not accept person-only details as a substitute for valid `OrganizationDetails`.
-  - [ ] Verify every invalid create path emits only the typed rejection event and no `PartyCreated` or `PartyDisplayNameDerived` success event.
-  - [ ] Verify duplicate creation against non-null state returns the accepted idempotent no-op behavior and emits no events.
+- [x] Task 3: Validate rejection and idempotency behavior (AC: 3, 4)
+  - [x] Reject blank, whitespace, or non-GUID `PartyId` values with `PartyCannotBeCreatedWithInvalidId`.
+  - [x] Reject `PartyType.Unknown` or the default enum value with `PartyCannotBeCreatedWithoutType`.
+  - [x] Reject person creation without `PersonDetails` using `PartyCannotBeCreatedWithoutPersonDetails`.
+  - [x] Reject organization creation without `OrganizationDetails` using `PartyCannotBeCreatedWithoutOrganizationDetails`.
+  - [x] Verify person creation does not accept organization-only details as a substitute for valid `PersonDetails`.
+  - [x] Verify organization creation does not accept person-only details as a substitute for valid `OrganizationDetails`.
+  - [x] Verify every invalid create path emits only the typed rejection event and no `PartyCreated` or `PartyDisplayNameDerived` success event.
+  - [x] Verify duplicate creation against non-null state returns the accepted idempotent no-op behavior and emits no events.
 
-- [ ] Task 4: Preserve EventStore, dependency, and privacy guardrails (AC: 1, 2, 3, 4, 5)
-  - [ ] Keep domain behavior in pure aggregate `Handle` methods; do not add Dapr, HTTP, database, MediatR handler, REST, Swagger, or MCP hosting behavior to this story.
-  - [ ] Keep `Hexalith.Parties.Contracts` free of hosting, Dapr, MediatR, FluentValidation, UI, and infrastructure dependencies beyond the accepted EventStore contracts reference.
-  - [ ] Preserve `PartyState.Apply(...)` rejection-event ordering before success applies; EventStore suffix-based apply resolution depends on it.
-  - [ ] Keep derived names marked as personal data and avoid adding logs, telemetry, exception messages, or assertions that expose sensitive values outside test-local expectations.
+- [x] Task 4: Preserve EventStore, dependency, and privacy guardrails (AC: 1, 2, 3, 4, 5)
+  - [x] Keep domain behavior in pure aggregate `Handle` methods; do not add Dapr, HTTP, database, MediatR handler, REST, Swagger, or MCP hosting behavior to this story.
+  - [x] Keep `Hexalith.Parties.Contracts` free of hosting, Dapr, MediatR, FluentValidation, UI, and infrastructure dependencies beyond the accepted EventStore contracts reference.
+  - [x] Preserve `PartyState.Apply(...)` rejection-event ordering before success applies; EventStore suffix-based apply resolution depends on it.
+  - [x] Keep derived names marked as personal data and avoid adding logs, telemetry, exception messages, or assertions that expose sensitive values outside test-local expectations.
 
-- [ ] Task 5: Run focused validation (AC: 1, 2, 3, 4, 5)
-  - [ ] Run `dotnet test tests/Hexalith.Parties.Server.Tests/Hexalith.Parties.Server.Tests.csproj --configuration Release`.
-  - [ ] Run `dotnet test tests/Hexalith.Parties.Contracts.Tests/Hexalith.Parties.Contracts.Tests.csproj --configuration Release`.
-  - [ ] Run `dotnet build Hexalith.Parties.slnx --configuration Release` if implementation changes touch project references, shared build files, or EventStore-facing contracts.
+- [x] Task 5: Run focused validation (AC: 1, 2, 3, 4, 5)
+  - [x] Run `dotnet test tests/Hexalith.Parties.Server.Tests/Hexalith.Parties.Server.Tests.csproj --configuration Release`.
+  - [x] Run `dotnet test tests/Hexalith.Parties.Contracts.Tests/Hexalith.Parties.Contracts.Tests.csproj --configuration Release`.
+  - [x] Run `dotnet build Hexalith.Parties.slnx --configuration Release` if implementation changes touch project references, shared build files, or EventStore-facing contracts.
 
 ## Dev Notes
 
@@ -194,13 +194,35 @@ tests/Hexalith.Parties.Contracts.Tests/
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+GPT-5 Codex
 
 ### Debug Log References
 
+- 2026-05-16: `dotnet test tests/Hexalith.Parties.Server.Tests/Hexalith.Parties.Server.Tests.csproj --configuration Release --filter FullyQualifiedName~PartyAggregateCreateTests` passed: 18 tests.
+- 2026-05-16: `dotnet test tests/Hexalith.Parties.Contracts.Tests/Hexalith.Parties.Contracts.Tests.csproj --configuration Release --filter FullyQualifiedName~PartyStateTests` initially hit a transient shared `obj` file lock when run in parallel with Server tests; rerun alone passed: 20 tests.
+- 2026-05-16: `dotnet test tests/Hexalith.Parties.Server.Tests/Hexalith.Parties.Server.Tests.csproj --configuration Release` passed: 181 tests.
+- 2026-05-16: `dotnet test tests/Hexalith.Parties.Contracts.Tests/Hexalith.Parties.Contracts.Tests.csproj --configuration Release` passed: 59 tests.
+- 2026-05-16: `dotnet build Hexalith.Parties.slnx --configuration Release` passed with 0 warnings and 0 errors.
+
+### Implementation Plan
+
+- Audit existing `CreateParty`, `PartyCreated`, display-name, rejection, value object, state, and aggregate code before changing implementation.
+- Preserve the existing pure aggregate creation behavior because it already keeps stable identity in `CreateParty.PartyId`/EventStore aggregate identity and keeps `PartyCreated` free of `PartyId`.
+- Add focused unit-test evidence for identity payload boundaries, rejection-only invalid paths, type-specific mismatch rejection, duplicate no-op behavior, and both person and organization rehydration.
+
 ### Completion Notes List
 
+- Confirmed the production aggregate already emits `PartyCreated` then `PartyDisplayNameDerived` for person and organization creation, rejects invalid create commands with typed rejection events, and returns no-op for duplicate create against existing state.
+- Added Server aggregate tests proving `PartyCreated` does not duplicate aggregate identity, invalid create paths emit only the expected rejection event with no success events, person/organization mismatch details are rejected, duplicate create leaves existing state untouched, and organization creation rehydrates correctly.
+- Added Contracts state tests covering full person and organization creation-event rehydration and strengthened organization apply assertions.
+- No production contract, aggregate, Dapr, HTTP, REST, MCP, projection, lifecycle, contact-channel, identifier, GDPR, admin, or picker behavior was changed.
+
 ### File List
+
+- `_bmad-output/implementation-artifacts/1-2-create-party-aggregate-with-stable-identity.md`
+- `_bmad-output/implementation-artifacts/sprint-status.yaml`
+- `tests/Hexalith.Parties.Server.Tests/Aggregates/PartyAggregateCreateTests.cs`
+- `tests/Hexalith.Parties.Contracts.Tests/State/PartyStateTests.cs`
 
 ## Party-Mode Review
 
@@ -247,6 +269,7 @@ tests/Hexalith.Parties.Contracts.Tests/
 
 ## Change Log
 
+- 2026-05-16: Implemented story 1.2 by auditing existing aggregate/contracts, adding focused identity/rejection/rehydration tests, and validating Server/Contracts tests plus Release solution build.
 - 2026-05-15: Advanced elicitation applied EventStore identity evidence, rejection-only, privacy-local assertion, and scope-boundary clarifications.
 - 2026-05-15: Party-mode review applied pre-dev clarifications for EventStore identity source, duplicate no-op behavior, rejection evidence, focused validation, and deferred identity decisions.
 - 2026-05-15: Story created by BMAD pre-dev hardening automation with current aggregate reconciliation context.
