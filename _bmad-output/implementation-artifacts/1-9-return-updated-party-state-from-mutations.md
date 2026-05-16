@@ -37,20 +37,27 @@ so that I can update my UI or workflow without issuing an immediate follow-up qu
    - And the rejection outcome remains explicit and typed.
    - Given a mutation command is a no-op,
    - When the result is returned,
-   - Then the response does not pretend that a state change occurred,
-   - And any no-op payload behavior is documented and covered by tests.
+   - Then the response does not include `PartyDetail` as an updated-state payload for this story,
+   - And the response does not pretend that a state change occurred.
+   - Given a command is rejected, unauthorized, failed, or non-successful,
+   - When the response, status, logs, telemetry, or exceptions are inspected,
+   - Then `PartyDetail` and other personal-data payload fields are absent outside the authorized success response.
 
 5. **API, client, and MCP consumers can access the enriched result**
-   - Given public REST command submission, the typed Parties command client, and MCP tools submit a mutation command,
-   - When the command is accepted and processed successfully in the current synchronous command path,
-   - Then consumers can read the updated `PartyDetail` without issuing a separate immediate query,
+   - Given public command submission through the existing EventStore-owned gateway, the typed Parties command client, and existing external MCP adapters submit a mutation command,
+   - When the command is processed successfully in the current synchronous command path,
+   - Then consumers can read the updated `PartyDetail` from an additive optional result payload without issuing a separate immediate query,
    - And existing correlation-id/status tracking remains available for compatibility.
+   - Given a public request path returns only `202 Accepted` or status-tracking information,
+   - When no completed synchronous command result payload is available,
+   - Then the response preserves the existing correlation/status contract and does not expose `PartyDetail` through status details.
 
 6. **Automated tests verify updated-state correctness and failure safety**
    - Given aggregate, domain-service, gateway, client, and MCP tests run,
    - When create, update, contact, identifier, deactivate, reactivate, composite, rejection, and no-op paths are exercised,
    - Then success paths assert returned detail correctness,
    - And rejection/no-op paths assert that misleading updated state is absent.
+   - And compatibility tests assert callers that ignore the optional result payload keep the previous correlation/status behavior.
 
 ## Tasks / Subtasks
 
@@ -71,6 +78,7 @@ so that I can update my UI or workflow without issuing an immediate follow-up qu
   - [ ] Support `CreateParty` and `CreatePartyComposite` when prior `PartyState` is null by deriving detail from emitted events in order.
   - [ ] Support simple commands: `UpdatePersonDetails`, `UpdateOrganizationDetails`, `AddContactChannel`, `UpdateContactChannel`, `RemoveContactChannel`, `AddIdentifier`, `RemoveIdentifier`, `DeactivateParty`, `ReactivateParty`, and `SetIsNaturalPerson`.
   - [ ] Preserve existing event emission order and `PartyState.Apply` behavior; do not mutate the incoming `PartyState` merely to assemble the response.
+  - [ ] Return a final `PartyDetail` only from committed success events for a successful command or successful composite command; partial composite failures, rejections, and non-success no-ops must not synthesize a speculative detail.
   - [ ] Keep `CreatedAt` from the existing state where available. For create responses, use a deterministic command/result-time value only if the existing contracts require one; document any unavoidable timestamp limitation in completion notes.
 
 - [ ] Task 4: Wire enriched results through the Parties host and EventStore gateway (AC: 1, 2, 3, 5)
@@ -78,6 +86,8 @@ so that I can update my UI or workflow without issuing an immediate follow-up qu
   - [ ] Ensure `DaprDomainServiceInvoker` reconstructs a `DomainResult` that preserves `ResultPayload` after deserializing `DomainServiceWireResult`.
   - [ ] Ensure aggregate actor processing copies `domainResult.ResultPayload` into `CommandProcessingResult.ResultPayload` on success paths and never on rejection unless explicitly supported by existing EventStore semantics.
   - [ ] Add `resultPayload` or a typed `payload` field to the public accepted command response only as an additive optional property; do not remove `correlationId` or change status URLs.
+  - [ ] Do not add public REST controllers, Swagger/OpenAPI, or in-process MCP hosting to `src/Hexalith.Parties`; enriched results must flow through existing EventStore-owned gateway surfaces and existing external client/MCP adapters.
+  - [ ] Preserve the existing `202 Accepted`/status-only behavior when a completed synchronous result payload is not available; do not copy `PartyDetail` into status details or idempotency/status persistence.
 
 - [ ] Task 5: Update client and MCP consumers to expose the party detail (AC: 5)
   - [ ] Evolve `IPartiesCommandClient` and `HttpPartiesCommandClient` so mutation methods can return the updated `PartyDetail` while retaining a way to access `correlationId`.
@@ -91,6 +101,8 @@ so that I can update my UI or workflow without issuing an immediate follow-up qu
   - [ ] Add contract tests for result payload serialization and backward-compatible JSON shape.
   - [ ] Add `/process` and EventStore gateway tests proving result payload survives Parties host -> Dapr wire DTO -> EventStore actor -> command response.
   - [ ] Update `HttpPartiesCommandClientTests` and `PartiesMcpToolDispatchTests` to assert updated details are surfaced without immediate query calls.
+  - [ ] Add privacy-safety assertions using synthetic personal-data values only; verify `PartyDetail` is absent from logs, telemetry, exception messages, command status details, and failure/status payloads.
+  - [ ] Add regression tests proving command status, idempotency, and rejection/error behavior remain unchanged when no enriched result payload is present.
 
 - [ ] Task 7: Run focused validation (AC: 6)
   - [ ] Run `dotnet test tests/Hexalith.Parties.Server.Tests/Hexalith.Parties.Server.Tests.csproj --configuration Release --filter FullyQualifiedName~PartyAggregate`.
@@ -111,6 +123,7 @@ so that I can update my UI or workflow without issuing an immediate follow-up qu
 - Simple command handlers currently return plain `DomainResult.Success(...)`, so they cannot expose `PartyDetail` without a new or enhanced `DomainResult` subtype.
 - Public `SubmitCommandResponse` currently exposes only `CorrelationId`; client command methods currently return `Task<string>`. Any richer response must be additive and backward-compatible where possible.
 - MCP command tools currently return `accepted` with correlation ids for create/update/delete. FR69 requires successful mutation operations to expose updated state, so MCP should surface `PartyDetail` when the command response contains it, without issuing a query as a workaround.
+- `PartyDetail` exposure is limited to authorized successful command responses where a completed synchronous result payload exists. Rejected, unauthorized, failed, no-op, status-only, and async accepted responses must not expose `PartyDetail` as a successful updated-state payload.
 
 ### Architecture Patterns and Constraints
 
@@ -182,7 +195,7 @@ tests/Hexalith.Parties.Mcp.Tests/PartiesMcpToolDispatchTests.cs
 ### Deferred Decisions
 
 - If EventStore intentionally keeps public command submission as `202 Accepted`, this story should still carry the enriched payload where the synchronous command processing result is available and document any remaining async/status endpoint limitation for a later EventStore API design story.
-- If simple no-op commands should return unchanged detail for UX convenience, that behavior needs an explicit architecture decision. Default for this story is no misleading updated-state payload on no-op.
+- If simple no-op commands should return unchanged detail for UX convenience, that behavior needs an explicit future architecture decision. Default for this story is no `PartyDetail` result payload on no-op.
 - If adding payload to `SubmitCommandResponse` is judged to be an EventStore API compatibility change beyond this story, record the exact limitation and ensure Parties `/process` plus internal result plumbing are still ready.
 
 ### References
@@ -213,4 +226,31 @@ tests/Hexalith.Parties.Mcp.Tests/PartiesMcpToolDispatchTests.cs
 
 ## Change Log
 
+- 2026-05-16: Party-mode review applied pre-dev clarifications for EventStore-owned gateway boundaries, optional payload compatibility, synchronous-only enriched responses, no-op/rejection payload absence, composite final-state semantics, and privacy-safe status/logging assertions.
 - 2026-05-16: Story created by BMAD pre-dev context workflow with FR69 result-payload propagation, aggregate final-state assembly, EventStore wire-response, client, MCP, and privacy-safe testing guidance.
+
+## Party-Mode Review
+
+- Date/time: 2026-05-16T12:45:33+02:00
+- Selected story key: `1-9-return-updated-party-state-from-mutations`
+- Command/skill invocation used: `/bmad-party-mode 1-9-return-updated-party-state-from-mutations; review;`
+- Participating BMAD agents:
+  - Winston (System Architect)
+  - Amelia (Senior Software Engineer)
+  - Murat (Master Test Architect and Quality Advisor)
+  - John (Product Manager)
+- Findings summary:
+  - All reviewers initially recommended `needs-story-update`.
+  - Common concerns were public REST/client/MCP boundary ambiguity, no-op and `202 Accepted` result behavior, composite final-state semantics, payload compatibility, and personal-data leakage into logs/status/telemetry.
+  - No reviewer identified a blocker after the story clarifies these development guardrails.
+- Changes applied:
+  - Clarified that enriched results flow through existing EventStore-owned gateway surfaces and existing external client/MCP adapters, not new Parties-host endpoints.
+  - Made the result payload additive and optional so existing correlation/status behavior remains compatible.
+  - Defined this story's baseline as no `PartyDetail` payload for rejected, unauthorized, failed, no-op, status-only, and async accepted responses.
+  - Clarified composite responses return one final `PartyDetail` only after a successful command applies emitted success events in order.
+  - Added privacy and regression test expectations for logs, telemetry, exceptions, command status details, idempotency/status behavior, and synthetic personal-data assertions.
+- Findings deferred:
+  - Future public API design for enriched payload retrieval from purely async `202 Accepted`/status endpoints remains deferred.
+  - Future UX architecture for returning unchanged detail from successful no-op commands remains deferred.
+  - Exact EventStore wire shape naming/versioning remains an implementation detail as long as it is additive and backward-compatible.
+- Final recommendation: ready-for-dev
