@@ -1,6 +1,6 @@
 # Story 1.2: Create Party Aggregate with Stable Identity
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -269,7 +269,31 @@ GPT-5 Codex
 
 ## Change Log
 
+- 2026-05-16: Code review applied 9 patches (1 critical AC4 fix, 4 major coverage gaps, 4 minor) and resolved 1 decision (D1) by adding the EventStore-integration test for AC5 positive identity evidence. 1 pre-existing `CreatedAt` design defect deferred. Status moved to `done`.
 - 2026-05-16: Implemented story 1.2 by auditing existing aggregate/contracts, adding focused identity/rejection/rehydration tests, and validating Server/Contracts tests plus Release solution build.
 - 2026-05-15: Advanced elicitation applied EventStore identity evidence, rejection-only, privacy-local assertion, and scope-boundary clarifications.
 - 2026-05-15: Party-mode review applied pre-dev clarifications for EventStore identity source, duplicate no-op behavior, rejection evidence, focused validation, and deferred identity decisions.
 - 2026-05-15: Story created by BMAD pre-dev hardening automation with current aggregate reconciliation context.
+
+## Code Review Findings
+
+Bmad-code-review on commit `87b7e9f` (tests-only diff). Blind Hunter + Edge Case Hunter + Acceptance Auditor; 13 raw findings → 1 decision, 8 patches, 1 deferred, 3 dismissed.
+
+### Review Findings
+
+- [x] [Review][Decision] **Resolved 2026-05-16:** Jérôme chose option (a) — add an EventStore-integration test. Implemented as `ProcessAsync_CreateParty_AcceptsCommandPartyIdAsStreamIdentity` in `PartyAggregateCreateTests.cs`. The test builds a real `CommandEnvelope` with `AggregateId = command.PartyId`, dispatches via `PartyAggregate.ProcessAsync`, and asserts the harness emits `PartyCreated` successfully — pinning the positive identity contract at the EventStore framework level.
+- [x] [Review][Patch] **AC4 duplicate-create-no-op test is tautological — proves nothing about "existing state unchanged"** [tests/Hexalith.Parties.Server.Tests/Aggregates/PartyAggregateCreateTests.cs:115-130]. Test arranges `PartyState state = new();` (empty) and asserts `state.Type.ShouldBe(default)` and `state.DisplayName.ShouldBeEmpty()` — these are the *initial* defaults (`PartyState.cs:15,22`), so the assertions pass regardless of `Handle`'s behavior. Fix: arrange via `PartyTestData.CreatePersonState()` (`src/Hexalith.Parties.Testing/PartyTestData.cs:97-108`), snapshot pre-call values, then assert the post-call state equals the snapshot (`Type == Person`, `Person == initial PersonDetails`, `DisplayName == "John Doe"`, `SortName == "Doe, John"`, `CreatedAt == snapshotCreatedAt`, `IsActive == true`). Severity: critical. Sources: blind+edge+auditor.
+- [x] [Review][Patch] **`PartyCreated_DoesNotDuplicateAggregateIdentity` rots silently on rename** [tests/Hexalith.Parties.Server.Tests/Aggregates/PartyAggregateCreateTests.cs:55-59]. `GetProperty("PartyId")` only checks one literal name. A rename to `Id`, `AggregateId`, `StreamId`, or `PartyIdentifier` would silently re-introduce the very duplication this test guards against. Fix: assert the public property name set equality of `PartyCreated` is exactly `{Type, PersonDetails, OrganizationDetails}`. Severity: major. Sources: blind+edge+auditor.
+- [x] [Review][Patch] **`CreatedAt` not asserted in the new rehydration tests** [tests/Hexalith.Parties.Contracts.Tests/State/PartyStateTests.cs:41-72]. Spec line 139 explicitly lists "creation time" as part of what `Apply(PartyCreated)` sets, and the tests are named `PreservesRehydratedCreationState`. Add `state.CreatedAt.ShouldNotBe(default(DateTimeOffset))` to both new tests (or assert it falls within an acceptable test window). Severity: major. Sources: edge+auditor.
+- [x] [Review][Patch] **`IsNaturalPerson` flag not asserted in the new rehydration tests** [tests/Hexalith.Parties.Contracts.Tests/State/PartyStateTests.cs:41-72]. Spec line 139 lists "natural-person flag" as Apply behavior. Add `state.IsNaturalPerson.ShouldBeFalse()` to the Person test and `state.IsNaturalPerson.ShouldBe(organization.IsNaturalPerson)` to the Organization test (per `PartyState.cs:102` semantics: `IsNaturalPerson = e.OrganizationDetails?.IsNaturalPerson ?? false`). Severity: major. Sources: auditor.
+- [x] [Review][Patch] **`AssertContainsOnlyRejection<TRejection>` generic constraint is too loose** [tests/Hexalith.Parties.Server.Tests/Aggregates/PartyAggregateCreateTests.cs:325]. `where TRejection : class` permits any reference type — a typo `AssertContainsOnlyRejection<PartyCreated>(result)` would compile. Tighten to `where TRejection : class, IRejectionEvent` (`Hexalith.EventStore.Contracts.Events.IRejectionEvent`). Severity: minor. Sources: blind+edge+auditor.
+- [x] [Review][Patch] **`AssertContainsOnlyRejection` has redundant assertions and could absorb the `IsRejection` check** [tests/Hexalith.Parties.Server.Tests/Aggregates/PartyAggregateCreateTests.cs:320-327]. After `Events.Count.ShouldBe(1)` and `Events[0].ShouldBeOfType<TRejection>()`, the two `OfType<PartyCreated>().ShouldBeEmpty()` / `OfType<PartyDisplayNameDerived>().ShouldBeEmpty()` assertions are provably unreachable. Simplify the helper, and move the `result.IsRejection.ShouldBeTrue()` callers (lines 147, 165, 183, 201, 220, 248) inside the helper so each call site becomes a single line. Severity: minor. Sources: blind+edge.
+- [x] [Review][Patch] **Hard-coded `"Acme Corp"` magic string** [tests/Hexalith.Parties.Server.Tests/Aggregates/PartyAggregateCreateTests.cs:312-313]. `Handle_CreateOrganizationParty_ApplyEventsToState_ProducesCorrectState` uses `PartyTestData.ValidCreateOrganization()` for the command but hard-codes the expected display/sort name. Replace with `command.OrganizationDetails!.LegalName`. Severity: minor. Sources: blind.
+- [x] [Review][Patch] **Fully qualified `DomainResult` type in helper signature** [tests/Hexalith.Parties.Server.Tests/Aggregates/PartyAggregateCreateTests.cs:320]. Add `using Hexalith.EventStore.Contracts.Results;` at the top of the file and drop the FQN from the helper signature. Severity: nit. Sources: blind.
+- [x] [Review][Defer] **`PartyState.Apply(PartyCreated)` sets `CreatedAt = DateTimeOffset.UtcNow`** [src/Hexalith.Parties.Contracts/State/PartyState.cs:98] — deferred, pre-existing design defect. Rehydrating an old stream stamps `CreatedAt` to the rehydration moment instead of the original creation time. This is out of scope for story 1.2 (tests-only change) and likely needs an EventStore-level decision about whether creation timestamp belongs in event metadata or the payload. Sources: edge.
+
+### Dismissed
+
+- Hard-coded `DisplayName`/`SortName` strings in rehydration tests being "pure setter/getter" — in the EventStore convention, `Apply` *is* rehydration; the tests do exercise that path. Blind hunter lacked project context.
+- Mixed `var`/explicit type style — pre-existing across this file; no project-wide convention enforced.
+- `state.Person/Organization.ShouldBeNull()` redundancy with new dedicated tests — defense-in-depth assertions, harmless.

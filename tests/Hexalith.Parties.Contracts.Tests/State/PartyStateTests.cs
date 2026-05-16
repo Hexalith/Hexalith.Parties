@@ -50,6 +50,8 @@ public class PartyStateTests
         state.Person.ShouldBe(person);
         state.Organization.ShouldBeNull();
         state.IsActive.ShouldBeTrue();
+        state.IsNaturalPerson.ShouldBeFalse();
+        state.CreatedAt.ShouldNotBe(default);
         state.DisplayName.ShouldBe("Jane Doe");
         state.SortName.ShouldBe("Doe, Jane");
     }
@@ -67,6 +69,8 @@ public class PartyStateTests
         state.Organization.ShouldBe(organization);
         state.Person.ShouldBeNull();
         state.IsActive.ShouldBeTrue();
+        state.IsNaturalPerson.ShouldBe(organization.IsNaturalPerson);
+        state.CreatedAt.ShouldNotBe(default);
         state.DisplayName.ShouldBe("ACME");
         state.SortName.ShouldBe("ACME");
     }

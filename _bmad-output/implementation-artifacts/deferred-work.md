@@ -2,6 +2,10 @@
 
 Items raised during code review that are real but not actionable in the current story. Pick up in a follow-up story or hardening sprint.
 
+## Deferred from: code review of story 1-2 create-party-aggregate-with-stable-identity (2026-05-16)
+
+- **`PartyState.Apply(PartyCreated)` derives `CreatedAt` from `DateTimeOffset.UtcNow` at apply-time, not from event metadata** — rehydrating a year-old stream stamps `CreatedAt` to today, breaking any read-model or audit query that relies on creation time. Out of scope for story 1.2 (tests-only). Likely needs an EventStore-level decision about whether creation timestamp belongs in event envelope metadata or in a dedicated payload field. [src/Hexalith.Parties.Contracts/State/PartyState.cs:98]
+
 ## Deferred from: code review of story 1-1 EventStore solution-structure scaffold audit (2026-05-16)
 
 - **`EventStore.Contracts` pulls Dapr/Grpc/Google.Protobuf transitively into the Client assets graph** — known architectural leak already disclosed as an accepted exception in Story 1.1's Dev Agent Record. The Client fitness test now pins the leaked set explicitly. Long-term cleanup is to prune `EventStore.Contracts` so it no longer drags Dapr.Actors/Dapr.Client/Grpc.* into clients; that requires an EventStore submodule story, not a Parties scaffold pass. [tests/Hexalith.Parties.Client.Tests/FitnessTests/ClientArchitecturalFitnessTests.cs:417-430]

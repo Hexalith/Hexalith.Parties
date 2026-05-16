@@ -1,3 +1,8 @@
+using System.Text.Json;
+
+using Hexalith.EventStore.Contracts.Commands;
+using Hexalith.EventStore.Contracts.Events;
+using Hexalith.EventStore.Contracts.Results;
 using Hexalith.Parties.Contracts.Commands;
 using Hexalith.Parties.Contracts.Events;
 using Hexalith.Parties.Contracts.State;
@@ -55,7 +60,42 @@ public class PartyAggregateCreateTests
     [Fact]
     public void PartyCreated_DoesNotDuplicateAggregateIdentity()
     {
-        typeof(PartyCreated).GetProperty("PartyId").ShouldBeNull();
+        // Spec line 146: aggregate identity must live in EventStore stream metadata, not in the
+        // success-event payload. Pin the exact public property set so any future addition of
+        // PartyId / AggregateId / StreamId / Id fails this test rather than silently re-introducing
+        // identity duplication via a renamed field.
+        HashSet<string> publicProperties = [.. typeof(PartyCreated)
+            .GetProperties()
+            .Select(p => p.Name)];
+        publicProperties.ShouldBe(["Type", "PersonDetails", "OrganizationDetails"], ignoreOrder: true);
+    }
+
+    [Fact]
+    public async Task ProcessAsync_CreateParty_AcceptsCommandPartyIdAsStreamIdentity()
+    {
+        // AC5 positive evidence: dispatch CreateParty through the EventStore aggregate harness
+        // with the envelope's AggregateId bound to CreateParty.PartyId, and confirm the harness
+        // accepts that binding and emits PartyCreated. This pins the contract that Parties' upstream
+        // pipeline must satisfy when constructing envelopes from CreateParty commands.
+        CreateParty command = PartyTestData.ValidCreatePerson();
+        CommandEnvelope envelope = new(
+            MessageId: Guid.NewGuid().ToString(),
+            TenantId: "test-tenant",
+            Domain: "parties",
+            AggregateId: command.PartyId,
+            CommandType: typeof(CreateParty).FullName!,
+            Payload: JsonSerializer.SerializeToUtf8Bytes(command),
+            CorrelationId: Guid.NewGuid().ToString(),
+            CausationId: null,
+            UserId: "test-user",
+            Extensions: null);
+        PartyAggregate aggregate = new();
+
+        DomainResult result = await aggregate.ProcessAsync(envelope, currentState: null);
+
+        result.IsSuccess.ShouldBeTrue();
+        result.Events[0].ShouldBeOfType<PartyCreated>();
+        envelope.AggregateId.ShouldBe(command.PartyId);
     }
 
     [Fact]
@@ -115,9 +155,18 @@ public class PartyAggregateCreateTests
     [Fact]
     public void Handle_CreatePartyWhenAlreadyExists_ReturnsNoOp()
     {
-        // Arrange
+        // Arrange — start from a fully populated state (post-creation) so the assertions below
+        // prove the duplicate handle truly leaves the existing state unchanged. A fresh
+        // `new PartyState()` would make the post-call assertions tautological against initial defaults.
+        PartyState state = PartyTestData.CreatePersonState();
+        PartyType originalType = state.Type;
+        PersonDetails? originalPerson = state.Person;
+        string originalDisplayName = state.DisplayName;
+        string originalSortName = state.SortName;
+        DateTimeOffset originalCreatedAt = state.CreatedAt;
+        bool originalIsActive = state.IsActive;
+
         CreateParty command = PartyTestData.ValidCreatePerson();
-        PartyState state = new();
 
         // Act
         var result = PartyAggregate.Handle(command, state);
@@ -125,8 +174,12 @@ public class PartyAggregateCreateTests
         // Assert
         result.IsNoOp.ShouldBeTrue();
         result.Events.ShouldBeEmpty();
-        state.Type.ShouldBe(default);
-        state.DisplayName.ShouldBeEmpty();
+        state.Type.ShouldBe(originalType);
+        state.Person.ShouldBe(originalPerson);
+        state.DisplayName.ShouldBe(originalDisplayName);
+        state.SortName.ShouldBe(originalSortName);
+        state.CreatedAt.ShouldBe(originalCreatedAt);
+        state.IsActive.ShouldBe(originalIsActive);
     }
 
     [Fact]
@@ -143,7 +196,6 @@ public class PartyAggregateCreateTests
         var result = PartyAggregate.Handle(command, null);
 
         // Assert
-        result.IsRejection.ShouldBeTrue();
         AssertContainsOnlyRejection<PartyCannotBeCreatedWithoutType>(result);
     }
 
@@ -161,7 +213,6 @@ public class PartyAggregateCreateTests
         var result = PartyAggregate.Handle(command, null);
 
         // Assert
-        result.IsRejection.ShouldBeTrue();
         AssertContainsOnlyRejection<PartyCannotBeCreatedWithoutPersonDetails>(result);
     }
 
@@ -179,7 +230,6 @@ public class PartyAggregateCreateTests
         var result = PartyAggregate.Handle(command, null);
 
         // Assert
-        result.IsRejection.ShouldBeTrue();
         AssertContainsOnlyRejection<PartyCannotBeCreatedWithoutOrganizationDetails>(result);
     }
 
@@ -198,7 +248,6 @@ public class PartyAggregateCreateTests
         var result = PartyAggregate.Handle(command, null);
 
         // Assert
-        result.IsRejection.ShouldBeTrue();
         AssertContainsOnlyRejection<PartyCannotBeCreatedWithoutPersonDetails>(result);
     }
 
@@ -217,7 +266,6 @@ public class PartyAggregateCreateTests
         var result = PartyAggregate.Handle(command, null);
 
         // Assert
-        result.IsRejection.ShouldBeTrue();
         AssertContainsOnlyRejection<PartyCannotBeCreatedWithoutOrganizationDetails>(result);
     }
 
@@ -245,7 +293,6 @@ public class PartyAggregateCreateTests
         var result = PartyAggregate.Handle(command, null);
 
         // Assert
-        result.IsRejection.ShouldBeTrue();
         AssertContainsOnlyRejection<PartyCannotBeCreatedWithInvalidId>(result);
     }
 
@@ -312,17 +359,16 @@ public class PartyAggregateCreateTests
         state.Organization.ShouldNotBeNull();
         state.Organization.LegalName.ShouldBe(command.OrganizationDetails!.LegalName);
         state.Person.ShouldBeNull();
-        state.DisplayName.ShouldBe("Acme Corp");
-        state.SortName.ShouldBe("Acme Corp");
+        state.DisplayName.ShouldBe(command.OrganizationDetails.LegalName);
+        state.SortName.ShouldBe(command.OrganizationDetails.LegalName);
         state.IsActive.ShouldBeTrue();
     }
 
-    private static void AssertContainsOnlyRejection<TRejection>(Hexalith.EventStore.Contracts.Results.DomainResult result)
-        where TRejection : class
+    private static void AssertContainsOnlyRejection<TRejection>(DomainResult result)
+        where TRejection : class, IRejectionEvent
     {
+        result.IsRejection.ShouldBeTrue();
         result.Events.Count.ShouldBe(1);
         result.Events[0].ShouldBeOfType<TRejection>();
-        result.Events.OfType<PartyCreated>().ShouldBeEmpty();
-        result.Events.OfType<PartyDisplayNameDerived>().ShouldBeEmpty();
     }
 }
