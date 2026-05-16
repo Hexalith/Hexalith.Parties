@@ -87,3 +87,4 @@
 2026-05-16T09:01:17.3575530+02:00	failed	-	failed	preflight hard-failed: working tree cleanliness dirty BMAD-owned artifact paths; timestamp=2026-05-16T07:01:05Z
 2026-05-16T10:02:05+02:00	none	-	none	ready buffer satisfied and all ready stories already have party-mode and advanced elicitation traces; preflight passed timestamp=2026-05-16T08:01:33Z
 2026-05-16T11:02:23+02:00	create-story	1-7-idempotent-commands-and-typed-rejections	ok	created story 1-7 and updated sprint status
+2026-05-16T11:53:30+02:00	create-story	1-8-personal-data-marking-and-log-safe-domain-model	ok	created story 1-8 and updated sprint status; soft working-tree warning from preflight timestamp=2026-05-16T09:50:16Z

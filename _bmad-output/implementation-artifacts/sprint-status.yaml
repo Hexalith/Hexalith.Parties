@@ -52,7 +52,7 @@ development_status:
   1-5-manage-party-identifiers: ready-for-dev
   1-6-deactivate-and-reactivate-parties: ready-for-dev
   1-7-idempotent-commands-and-typed-rejections: ready-for-dev
-  1-8-personal-data-marking-and-log-safe-domain-model: backlog
+  1-8-personal-data-marking-and-log-safe-domain-model: ready-for-dev
   1-9-return-updated-party-state-from-mutations: backlog
   epic-1-retrospective: optional
 
