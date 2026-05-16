@@ -1,6 +1,6 @@
 # Story 1.1: Set Up Initial Project from EventStore Solution Structure
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
