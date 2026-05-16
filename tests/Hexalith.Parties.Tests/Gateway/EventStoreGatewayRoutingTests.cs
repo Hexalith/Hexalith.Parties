@@ -30,9 +30,11 @@ using Hexalith.Parties.Validation;
 
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.IdentityModel.Tokens;
 
@@ -62,7 +64,7 @@ public sealed class EventStoreGatewayRoutingTests
                 PersonDetails = new PersonDetails { FirstName = "Ada", LastName = "Lovelace" },
             }));
 
-        HttpResponseMessage response = await client.PostAsJsonAsync("/api/v1/commands", request);
+        using HttpResponseMessage response = await client.PostAsJsonAsync("/api/v1/commands", request);
 
         response.StatusCode.ShouldBe(HttpStatusCode.Accepted);
         response.Headers.Location!.ToString().ShouldContain("/api/v1/commands/status/cmd-12-4-create-party");
@@ -79,7 +81,7 @@ public sealed class EventStoreGatewayRoutingTests
     public async Task DomainServiceResolver_PartyWildcardRegistration_PointsToPartiesProcessAsync()
     {
         using var factory = new EventStoreGatewayTestFactory();
-        _ = factory.CreateClient();
+        using HttpClient client = factory.CreateClient();
 
         IDomainServiceResolver resolver = factory.Services.GetRequiredService<IDomainServiceResolver>();
 
@@ -110,7 +112,7 @@ public sealed class EventStoreGatewayRoutingTests
                 PersonDetails = new PersonDetails { FirstName = "Ada", LastName = "Lovelace" },
             }));
 
-        HttpResponseMessage response = await client.PostAsJsonAsync("/api/v1/commands", request);
+        using HttpResponseMessage response = await client.PostAsJsonAsync("/api/v1/commands", request);
 
         response.StatusCode.ShouldBe(HttpStatusCode.Accepted);
         factory.PartiesCommandRouter.ShouldNotBeNull();
@@ -140,7 +142,7 @@ public sealed class EventStoreGatewayRoutingTests
             payload = new { partyId = "party-denied" },
         };
 
-        HttpResponseMessage response = await client.PostAsJsonAsync("/api/v1/commands", request);
+        using HttpResponseMessage response = await client.PostAsJsonAsync("/api/v1/commands", request);
 
         response.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
         factory.CommandActor.ReceivedCommands.ShouldBeEmpty();
@@ -159,7 +161,7 @@ public sealed class EventStoreGatewayRoutingTests
             aggregateId: "party-denied-domain",
             payload: JsonSerializer.SerializeToElement(new { PartyId = "party-denied-domain" }));
 
-        HttpResponseMessage response = await client.PostAsJsonAsync("/api/v1/commands", request);
+        using HttpResponseMessage response = await client.PostAsJsonAsync("/api/v1/commands", request);
 
         response.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
         factory.CommandActor.ReceivedCommands.ShouldBeEmpty();
@@ -178,7 +180,7 @@ public sealed class EventStoreGatewayRoutingTests
             aggregateId: "party-denied-rbac",
             payload: JsonSerializer.SerializeToElement(new { PartyId = "party-denied-rbac" }));
 
-        HttpResponseMessage response = await client.PostAsJsonAsync("/api/v1/commands", request);
+        using HttpResponseMessage response = await client.PostAsJsonAsync("/api/v1/commands", request);
 
         response.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
         factory.CommandActor.ReceivedCommands.ShouldBeEmpty();
@@ -202,7 +204,7 @@ public sealed class EventStoreGatewayRoutingTests
             payload = new { partyId = "party-invalid" },
         };
 
-        HttpResponseMessage response = await client.PostAsJsonAsync("/api/v1/commands", request);
+        using HttpResponseMessage response = await client.PostAsJsonAsync("/api/v1/commands", request);
 
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
         factory.CommandActor.ReceivedCommands.ShouldBeEmpty();
@@ -227,7 +229,7 @@ public sealed class EventStoreGatewayRoutingTests
                 PersonDetails = null,
             }));
 
-        HttpResponseMessage response = await client.PostAsJsonAsync("/api/v1/commands", request);
+        using HttpResponseMessage response = await client.PostAsJsonAsync("/api/v1/commands", request);
 
         response.StatusCode.ShouldBe(HttpStatusCode.UnprocessableEntity);
         factory.PartiesCommandRouter.ShouldNotBeNull();
@@ -262,7 +264,7 @@ public sealed class EventStoreGatewayRoutingTests
             queryType = "PartyDetail",
         };
 
-        HttpResponseMessage response = await client.PostAsJsonAsync("/api/v1/queries", request);
+        using HttpResponseMessage response = await client.PostAsJsonAsync("/api/v1/queries", request);
 
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
 
@@ -295,7 +297,7 @@ public sealed class EventStoreGatewayRoutingTests
             queryType = "PartyDetail",
         };
 
-        HttpResponseMessage response = await client.PostAsJsonAsync("/api/v1/queries", request);
+        using HttpResponseMessage response = await client.PostAsJsonAsync("/api/v1/queries", request);
 
         response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
         SubmitQuery query = factory.QueryRouter.ReceivedQueries.ShouldHaveSingleItem();
@@ -323,7 +325,7 @@ public sealed class EventStoreGatewayRoutingTests
             queryType = "PartyDetail",
         };
 
-        HttpResponseMessage response = await client.PostAsJsonAsync("/api/v1/queries", request);
+        using HttpResponseMessage response = await client.PostAsJsonAsync("/api/v1/queries", request);
 
         response.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
         SubmitQuery query = factory.QueryRouter.ReceivedQueries.ShouldHaveSingleItem();
@@ -345,7 +347,7 @@ public sealed class EventStoreGatewayRoutingTests
             queryType = "PartyDetail",
         };
 
-        HttpResponseMessage response = await client.PostAsJsonAsync("/api/v1/queries", request);
+        using HttpResponseMessage response = await client.PostAsJsonAsync("/api/v1/queries", request);
 
         response.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
         factory.QueryRouter.ReceivedQueries.ShouldBeEmpty();
@@ -365,7 +367,7 @@ public sealed class EventStoreGatewayRoutingTests
             queryType = "PartyDetail",
         };
 
-        HttpResponseMessage response = await client.PostAsJsonAsync("/api/v1/queries", request);
+        using HttpResponseMessage response = await client.PostAsJsonAsync("/api/v1/queries", request);
 
         response.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
         factory.QueryRouter.ReceivedQueries.ShouldBeEmpty();
@@ -402,8 +404,10 @@ public sealed class EventStoreGatewayRoutingTests
                 ["EventStore:DomainServices:Registrations:*|party|v1:Version"] = "v1",
             }));
 
-            _ = builder.ConfigureServices(services =>
+            _ = builder.ConfigureTestServices(services =>
             {
+                services.RemoveAll<IHostedService>();
+
                 services.RemoveAll<ICommandStatusStore>();
                 services.AddSingleton<ICommandStatusStore>(StatusStore);
 
