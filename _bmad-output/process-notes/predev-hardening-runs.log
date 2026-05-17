@@ -115,3 +115,4 @@
 2026-05-17T09:01:47+02:00	advanced-elicitation	1-7-idempotent-commands-and-typed-rejections	ok	advanced elicitation completed; low-risk clarifications applied; final recommendation ready-for-dev
 2026-05-17T09:06:45+02:00	advanced-elicitation	1-8-personal-data-marking-and-log-safe-domain-model	ok	advanced elicitation completed; metadata-only and log-safety clarifications applied; final recommendation ready-for-dev
 2026-05-17T10:04:26+02:00	advanced-elicitation	1-9-return-updated-party-state-from-mutations	ok	Applied advanced elicitation hardening for same-turn payload scope, retry/status privacy boundaries, tolerant payload handling, and fail-closed final-state assembly.
+2026-05-17T11:03:54+02:00	advanced-elicitation	2-1-build-party-detail-projection	ok	advanced elicitation completed; no-op preservation, checkpoint, timestamp, and diagnostic clarifications applied; final recommendation ready-for-dev

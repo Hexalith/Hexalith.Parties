@@ -23,6 +23,7 @@ so that I can retrieve complete party details without rehydrating the aggregate 
    - Then the handler does not mutate the successful party detail state,
    - And projection replay remains compatible with persisted rejection events.
    - And replayed rejection events do not advance projection timestamps, version-like fields, or checkpoint-derived detail fields.
+   - And a handler no-op result is interpreted as "preserve current projection state", never as "clear the stored projection".
 
 3. **Actor persistence uses documented Dapr state-key convention**
    - Given a party detail projection is persisted through its actor wrapper,
@@ -36,6 +37,7 @@ so that I can retrieve complete party details without rehydrating the aggregate 
    - Then processing is idempotent where event identity or sequence data allows,
    - And duplicate delivery does not create duplicate contact channels or identifiers.
    - And collection idempotency is defined by stable event item ids (`ChannelId`, `IdentifierId`) rather than display values, labels, or case-normalized personal data.
+   - And duplicate or no-effective-change events do not refresh `LastModifiedAt` unless a real projection field mutation is persisted.
 
 5. **Pure handler tests verify representative event replay**
    - Given projection handler tests run without Dapr infrastructure,
@@ -56,7 +58,10 @@ so that I can retrieve complete party details without rehydrating the aggregate 
   - [ ] Ensure `PartyDisplayNameDerived`, `PersonDetailsUpdated`, `OrganizationDetailsUpdated`, contact channel events, identifier events, `PartyDeactivated`, and `PartyReactivated` update only the relevant fields while preserving unrelated state.
   - [ ] Keep rejection events as projection no-ops. Add explicit coverage for representative rejection events such as `PartyCannotBeCreatedWithInvalidId`, `PartyCannotAddDuplicateChannel`, `PartyCannotAddDuplicateIdentifier`, `PartyCannotBeDeactivatedWhenInactive`, and `PartyCannotBeReactivatedWhenActive`.
   - [ ] Cover rejection events both before and after successful events so replay proves null state stays null, existing successful state stays unchanged, and timestamps are not advanced by rejection-only inputs.
+  - [ ] Treat a `null` result from `PartyDetailProjectionHandler.Apply(...)` as a no-mutation signal. The actor/replay path must preserve any existing stored detail instead of overwriting, clearing, or timestamp-refreshing it.
   - [ ] Preserve idempotent add semantics for contact channels and identifiers by stable item ids (`ChannelId`, `IdentifierId`). Duplicate add delivery must not append duplicate list entries; scalar update/detail/lifecycle events may remain last-event-wins according to aggregate replay order.
+  - [ ] Prove duplicate contact, identifier, and consent adds with the same stable id do not replace the existing item, do not append a second item, and do not advance `LastModifiedAt`.
+  - [ ] Prove missing-item update/remove events and no-effective-change updates are no-ops that leave fields and timestamps unchanged.
   - [ ] Treat update/contact/identifier events that arrive before `PartyCreated` as no-ops unless existing code already has a stricter corruption path; do not synthesize partial party detail state from child events.
   - [ ] Do not use exceptions for domain rejections and do not delete or special-case persisted rejection events out of replay.
 
@@ -66,6 +71,8 @@ so that I can retrieve complete party details without rehydrating the aggregate 
   - [ ] Test malformed actor ids and party-id mismatches as separate failure cases. They must fail fast with metadata-only diagnostics and no Dapr state write or checkpoint advancement.
   - [ ] Confirm `HandleSerializedEventAsync(...)` resolves event type names only through `PartyEventTypeResolver` and does not reintroduce `Type.GetType` or arbitrary assembly loading.
   - [ ] Preserve sequence checkpoint behavior so replay-from-zero skips already applied events, while idempotent collection handlers still protect against state/checkpoint divergence on non-transactional state stores.
+  - [ ] Distinguish accepted no-op events from invalid/dropped events in tests: accepted events that deserialize and dispatch may advance the checkpoint even when the handler returns no state mutation, while invalid event names, unsupported formats, and unreadable payload policies must follow the existing actor behavior explicitly.
+  - [ ] When accepted no-op events advance the checkpoint, assert no party detail state write occurs and no user-facing freshness/query contract is invented by this story.
   - [ ] Keep actor logs bounded to metadata such as party id, event type name, sequence, projection name, tenant id, and correlation-safe context. Do not log contact values, identifiers, display names, serialized details, or raw event payloads.
 
 - [ ] Task 4: Clarify timestamp behavior without inventing unsupported event metadata (AC: 1)
@@ -73,11 +80,14 @@ so that I can retrieve complete party details without rehydrating the aggregate 
   - [ ] Use this precedence for projection timestamps: existing event metadata or payload timestamp fields if already available on the projection path; otherwise projection processing timestamps. Document the limitation in completion notes when processing timestamps are used.
   - [ ] Do not add event-time fields to existing public event contracts unless a separate architecture decision explicitly approves an additive event schema change.
   - [ ] Ensure repeated no-op events do not accidentally advance `LastModifiedAt`.
+  - [ ] Prefer timestamp assertions that prove unchanged values for no-ops and monotonic movement for real mutations; do not assert exact wall-clock processing times.
 
 - [ ] Task 5: Strengthen pure handler and actor tests (AC: 1, 2, 3, 4, 5)
   - [ ] Extend `tests/Hexalith.Parties.Projections.Tests/Handlers/PartyDetailProjectionHandlerTests.cs` for complete create -> derived-name -> detail update -> contact add/update/remove -> preferred channel -> identifier add/remove -> deactivate -> reactivate sequences.
   - [ ] Add duplicate-delivery tests proving repeated `ContactChannelAdded` and `IdentifierAdded` do not duplicate entries, and no-op updates return no mutation.
   - [ ] Add rejection-event tests proving existing successful state is preserved, null state remains null, and interleaved rejections do not mutate detail fields or timestamps.
+  - [ ] Add handler or actor-wrapper tests proving `null` no-op results preserve the current projection state rather than clearing it.
+  - [ ] Add serialized replay tests, where already supported by the actor test harness, proving accepted no-op events can advance the sequence checkpoint without writing `PartyDetail` state.
   - [ ] Add or update actor tests for state-key convention, malformed actor ids, invalid tenant/party id segments, party-id mismatch, serialized event dispatch, non-JSON drop behavior, unknown/ambiguous event names, checkpoint skipping, and corruption/rebuild behavior.
   - [ ] Add corruption/log-safety expectations for unreadable Dapr JSON state: fail closed, preserve rebuild behavior where already implemented, and do not emit party names, identifiers, contact values, serialized `PartyDetail`, or raw event payloads in diagnostics.
   - [ ] Keep pure handler tests in `Hexalith.Parties.Projections.Tests`; keep Dapr actor/state-manager behavior in actor/integration-style tests that already use `ActorHost.CreateForTest` and NSubstitute.
@@ -159,6 +169,14 @@ tests/Hexalith.Parties.Tests/FitnessTests/ArchitecturalFitnessTests.cs
 - Story 1.8 reinforced personal-data marking and log safety. Projection code must not log raw party details, display names, contact values, identifiers, or serialized event payloads.
 - Story 1.9 reinforced reuse of `PartyDetail` as the canonical complete party shape. Avoid adding duplicate detail DTOs unless serialization forces a narrow wrapper.
 
+### Advanced Elicitation Clarifications
+
+- `PartyDetailProjectionHandler.Apply(...)` returning `null` is a no-mutation result. It must not be interpreted by actor code, rebuild code, or tests as an instruction to delete, reset, or overwrite the current stored projection.
+- Accepted no-op events and invalid dropped events have different operational meaning. Deserialized events that dispatch through the accepted event path may update the sequence checkpoint even when no detail-state write occurs; invalid event names, unsupported formats, and unreadable payloads must follow the current actor policy and be tested without inventing a public freshness contract.
+- Timestamp evidence should focus on invariants: no-op and rejection events keep existing timestamps byte-for-byte, while real mutations move `LastModifiedAt` monotonically. Exact wall-clock timestamp assertions are too brittle unless event metadata is explicitly available.
+- User/operator-observable verification for this story is test and completion-note evidence around state key, checkpoint, corruption/rebuild, and metadata-only diagnostics. It is not a license to add query APIs, dashboards, admin UI, or public freshness response fields.
+- Log-safety assertions should include exception and drop paths. Actor diagnostics may contain metadata such as tenant id, party id, projection name, event type, sequence, and reason, but not raw event payloads, serialized `PartyDetail`, display names, contact values, identifiers, or consent values.
+
 ### Latest Technical Notes
 
 - Local source of truth for package versions is `Directory.Packages.props`: .NET SDK `10.0.103`, `net10.0`, Dapr packages `1.17.9`, xUnit v3 `3.2.2`, Shouldly `4.3.0`, NSubstitute `5.3.0`, and Microsoft.NET.Test.Sdk `18.5.1`.
@@ -227,6 +245,33 @@ tests/Hexalith.Parties.Tests/FitnessTests/ArchitecturalFitnessTests.cs
 
 - 2026-05-16: Story created by BMAD pre-dev context workflow with existing projection implementation analysis, Dapr actor guardrails, pure handler testing guidance, and replay/idempotency requirements.
 - 2026-05-17: Party-mode review clarifications applied for stable idempotency keys, rejection replay no-op evidence, pre-create event ordering, actor-id failure behavior, timestamp precedence, and log-safe corruption testing.
+- 2026-05-17: Advanced elicitation clarifications applied for handler no-op preservation, accepted no-op checkpoint behavior, timestamp assertions, and metadata-only diagnostics.
+
+## Advanced Elicitation
+
+- Date/time: 2026-05-17T11:03:54+02:00
+- Selected story key: `2-1-build-party-detail-projection`
+- Command/skill invocation used: `/bmad-advanced-elicitation 2-1-build-party-detail-projection`
+- Batch 1 method names: Red Team vs Blue Team; Failure Mode Analysis; Security Audit Personas; Self-Consistency Validation; Architecture Decision Records
+- Reshuffled Batch 2 method names: Pre-mortem Analysis; Chaos Monkey Scenarios; User Persona Focus Group; Critique and Refine; Expand or Contract for Audience
+- Findings summary:
+  - The most important replay risk is confusing the handler's no-mutation `null` result with deletion or state reset in actor/rebuild paths.
+  - Accepted no-op events and invalid dropped events need distinct checkpoint and state-write expectations so replay progress does not masquerade as projection mutation or public freshness.
+  - Timestamp tests should prove unchanged no-op values and monotonic real mutations instead of relying on exact processing-time assertions.
+  - Diagnostic and corruption paths need the same privacy discipline as happy-path projection logic because projection state contains personal data.
+  - Operator-observable evidence should remain in tests and completion notes rather than expanding public read/query, admin, or dashboard surfaces.
+- Changes applied:
+  - Added AC and task language requiring handler no-op results to preserve existing projection state.
+  - Added duplicate/no-effective-change timestamp and collection-idempotency coverage.
+  - Clarified accepted no-op checkpoint behavior versus invalid/dropped event policy.
+  - Added timestamp assertion guidance and metadata-only diagnostic expectations.
+  - Added an `Advanced Elicitation Clarifications` subsection with implementation traps for dev-story execution.
+- Findings deferred:
+  - Public query/freshness response behavior remains later Epic 2 work.
+  - Dashboard/admin/operator UI surfaces remain out of scope for this story.
+  - Event-time metadata redesign and additive event schema changes remain deferred to a separate architecture decision.
+  - Projection schema migration/backfill and cross-projection consistency guarantees remain deferred.
+- Final recommendation: ready-for-dev
 
 ## Party-Mode Review
 
