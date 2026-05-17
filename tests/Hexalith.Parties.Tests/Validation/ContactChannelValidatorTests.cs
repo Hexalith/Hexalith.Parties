@@ -1,3 +1,5 @@
+using FluentValidation.Results;
+
 using Hexalith.Parties.Contracts.Commands;
 using Hexalith.Parties.Contracts.ValueObjects;
 using Hexalith.Parties.Validation;
@@ -9,7 +11,23 @@ namespace Hexalith.Parties.Tests.Validation;
 public sealed class ContactChannelValidatorTests
 {
     [Fact]
-    public void AddContactChannel_InvalidContactChannelId_ReturnsValidationFailure()
+    public void AddContactChannel_ValidGuidContactChannelId_PassesValidation()
+    {
+        AddContactChannel command = new()
+        {
+            PartyId = Guid.NewGuid().ToString("D"),
+            ContactChannelId = Guid.NewGuid().ToString("D"),
+            Type = ContactChannelType.Email,
+            Value = "person@example.com",
+        };
+
+        ValidationResult result = new AddContactChannelValidator().Validate(command);
+
+        result.IsValid.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void AddContactChannel_InvalidContactChannelId_ReturnsSingleGuidFailure()
     {
         AddContactChannel command = new()
         {
@@ -19,43 +37,112 @@ public sealed class ContactChannelValidatorTests
             Value = "person@example.com",
         };
 
-        var result = new AddContactChannelValidator().Validate(command);
+        ValidationResult result = new AddContactChannelValidator().Validate(command);
 
         result.IsValid.ShouldBeFalse();
-        result.Errors.Select(e => e.PropertyName).ShouldContain(nameof(AddContactChannel.ContactChannelId));
-        result.Errors.Select(e => e.ErrorMessage).ShouldContain("ContactChannelId must be a valid GUID.");
+        ValidationFailure[] channelErrors = result.Errors
+            .Where(e => e.PropertyName == nameof(AddContactChannel.ContactChannelId))
+            .ToArray();
+        channelErrors.Length.ShouldBe(1);
+        channelErrors[0].ErrorMessage.ShouldBe("ContactChannelId must be a valid GUID.");
     }
 
-    [Fact]
-    public void UpdateContactChannel_InvalidContactChannelId_ReturnsValidationFailure()
+    [Theory]
+    [InlineData("")]
+    [InlineData(null)]
+    public void AddContactChannel_EmptyContactChannelId_ReturnsSingleRequiredFailure(string? id)
+    {
+        AddContactChannel command = new()
+        {
+            PartyId = Guid.NewGuid().ToString("D"),
+            ContactChannelId = id!,
+            Type = ContactChannelType.Email,
+            Value = "person@example.com",
+        };
+
+        ValidationResult result = new AddContactChannelValidator().Validate(command);
+
+        result.IsValid.ShouldBeFalse();
+        ValidationFailure[] channelErrors = result.Errors
+            .Where(e => e.PropertyName == nameof(AddContactChannel.ContactChannelId))
+            .ToArray();
+        channelErrors.Length.ShouldBe(1);
+        channelErrors[0].ErrorMessage.ShouldBe("ContactChannelId is required.");
+    }
+
+    [Theory]
+    [InlineData("not-a-guid")]
+    [InlineData("ch-email-1")]
+    public void UpdateContactChannel_NonGuidContactChannelId_PassesValidation(string id)
     {
         UpdateContactChannel command = new()
         {
             PartyId = Guid.NewGuid().ToString("D"),
-            ContactChannelId = "not-a-guid",
+            ContactChannelId = id,
             Value = "person@example.com",
         };
 
-        var result = new UpdateContactChannelValidator().Validate(command);
+        ValidationResult result = new UpdateContactChannelValidator().Validate(command);
 
-        result.IsValid.ShouldBeFalse();
-        result.Errors.Select(e => e.PropertyName).ShouldContain(nameof(UpdateContactChannel.ContactChannelId));
-        result.Errors.Select(e => e.ErrorMessage).ShouldContain("ContactChannelId must be a valid GUID.");
+        result.IsValid.ShouldBeTrue();
     }
 
-    [Fact]
-    public void RemoveContactChannel_InvalidContactChannelId_ReturnsValidationFailure()
+    [Theory]
+    [InlineData("")]
+    [InlineData(null)]
+    public void UpdateContactChannel_EmptyContactChannelId_ReturnsSingleRequiredFailure(string? id)
+    {
+        UpdateContactChannel command = new()
+        {
+            PartyId = Guid.NewGuid().ToString("D"),
+            ContactChannelId = id!,
+            Value = "person@example.com",
+        };
+
+        ValidationResult result = new UpdateContactChannelValidator().Validate(command);
+
+        result.IsValid.ShouldBeFalse();
+        ValidationFailure[] channelErrors = result.Errors
+            .Where(e => e.PropertyName == nameof(UpdateContactChannel.ContactChannelId))
+            .ToArray();
+        channelErrors.Length.ShouldBe(1);
+        channelErrors[0].ErrorMessage.ShouldBe("ContactChannelId is required.");
+    }
+
+    [Theory]
+    [InlineData("not-a-guid")]
+    [InlineData("ch-email-1")]
+    public void RemoveContactChannel_NonGuidContactChannelId_PassesValidation(string id)
     {
         RemoveContactChannel command = new()
         {
             PartyId = Guid.NewGuid().ToString("D"),
-            ContactChannelId = "not-a-guid",
+            ContactChannelId = id,
         };
 
-        var result = new RemoveContactChannelValidator().Validate(command);
+        ValidationResult result = new RemoveContactChannelValidator().Validate(command);
+
+        result.IsValid.ShouldBeTrue();
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData(null)]
+    public void RemoveContactChannel_EmptyContactChannelId_ReturnsSingleRequiredFailure(string? id)
+    {
+        RemoveContactChannel command = new()
+        {
+            PartyId = Guid.NewGuid().ToString("D"),
+            ContactChannelId = id!,
+        };
+
+        ValidationResult result = new RemoveContactChannelValidator().Validate(command);
 
         result.IsValid.ShouldBeFalse();
-        result.Errors.Select(e => e.PropertyName).ShouldContain(nameof(RemoveContactChannel.ContactChannelId));
-        result.Errors.Select(e => e.ErrorMessage).ShouldContain("ContactChannelId must be a valid GUID.");
+        ValidationFailure[] channelErrors = result.Errors
+            .Where(e => e.PropertyName == nameof(RemoveContactChannel.ContactChannelId))
+            .ToArray();
+        channelErrors.Length.ShouldBe(1);
+        channelErrors[0].ErrorMessage.ShouldBe("ContactChannelId is required.");
     }
 }

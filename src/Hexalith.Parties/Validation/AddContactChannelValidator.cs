@@ -9,7 +9,9 @@ public sealed class AddContactChannelValidator : AbstractValidator<AddContactCha
     public AddContactChannelValidator()
     {
         RuleFor(x => x.PartyId)
+            .Cascade(CascadeMode.Stop)
             .NotEmpty()
+            .WithMessage("PartyId is required.")
             .Must(id => Guid.TryParse(id, out _))
             .WithMessage("PartyId must be a valid GUID.");
 

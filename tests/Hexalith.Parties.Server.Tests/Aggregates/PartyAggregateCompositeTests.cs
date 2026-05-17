@@ -454,6 +454,12 @@ public class PartyAggregateCompositeTests
         result.Applied.ShouldContain("Added contact channel: ch-phone-1 (Phone)");
         result.Skipped.ShouldBeEmpty();
         result.Rejected.ShouldBeEmpty();
+
+        result.UpdatedPartyDetail.ShouldNotBeNull();
+        ContactChannel? added = result.UpdatedPartyDetail.ContactChannels.SingleOrDefault(c => c.Id == "ch-phone-1");
+        added.ShouldNotBeNull();
+        added.Type.ShouldBe(ContactChannelType.Phone);
+        added.Value.ShouldBe("+33111111111");
     }
 
     [Fact]
@@ -482,6 +488,11 @@ public class PartyAggregateCompositeTests
         result.Applied.ShouldContain("Updated contact channel: ch-email-1");
         result.Skipped.ShouldBeEmpty();
         result.Rejected.ShouldBeEmpty();
+
+        result.UpdatedPartyDetail.ShouldNotBeNull();
+        ContactChannel? updated = result.UpdatedPartyDetail.ContactChannels.SingleOrDefault(c => c.Id == "ch-email-1");
+        updated.ShouldNotBeNull();
+        updated.Value.ShouldBe("updated@example.com");
     }
 
     [Fact]
@@ -502,6 +513,37 @@ public class PartyAggregateCompositeTests
         result.Applied.ShouldContain("Removed contact channel: ch-email-2");
         result.Skipped.ShouldBeEmpty();
         result.Rejected.ShouldBeEmpty();
+
+        result.UpdatedPartyDetail.ShouldNotBeNull();
+        result.UpdatedPartyDetail.ContactChannels.ShouldNotContain(c => c.Id == "ch-email-2");
+    }
+
+    [Fact]
+    public void Handle_UpdatePartyComposite_ChangePreferredChannel_TypeScopedReflectedInUpdatedPartyDetail()
+    {
+        PartyState state = PartyTestData.CreatePersonStateWithChannelsAndIdentifiers();
+        UpdatePartyComposite command = new()
+        {
+            PartyId = PartyTestData.DefaultPartyId,
+            UpdateContactChannels =
+            [
+                new UpdateContactChannel
+                {
+                    PartyId = PartyTestData.DefaultPartyId,
+                    ContactChannelId = "ch-email-2",
+                    IsPreferred = true,
+                },
+            ],
+        };
+
+        CompositeCommandResult result = PartyAggregate.Handle(command, state);
+
+        result.IsSuccess.ShouldBeTrue();
+        result.UpdatedPartyDetail.ShouldNotBeNull();
+        ContactChannel preferredEmail = result.UpdatedPartyDetail.ContactChannels.Single(c => c.Id == "ch-email-2");
+        preferredEmail.IsPreferred.ShouldBeTrue();
+        ContactChannel previousPreferred = result.UpdatedPartyDetail.ContactChannels.Single(c => c.Id == "ch-email-1");
+        previousPreferred.IsPreferred.ShouldBeFalse();
     }
 
     [Fact]

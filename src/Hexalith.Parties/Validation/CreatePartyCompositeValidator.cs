@@ -41,12 +41,16 @@ public sealed class CreatePartyCompositeValidator : AbstractValidator<CreatePart
         RuleForEach(x => x.ContactChannels).ChildRules(channel =>
         {
             channel.RuleFor(c => c.PartyId)
+                .Cascade(CascadeMode.Stop)
                 .NotEmpty()
+                .WithMessage("PartyId is required.")
                 .Must(id => Guid.TryParse(id, out _))
                 .WithMessage("PartyId must be a valid GUID.");
 
             channel.RuleFor(c => c.ContactChannelId)
+                .Cascade(CascadeMode.Stop)
                 .NotEmpty()
+                .WithMessage("ContactChannelId is required.")
                 .Must(id => Guid.TryParse(id, out _))
                 .WithMessage("ContactChannelId must be a valid GUID.");
 

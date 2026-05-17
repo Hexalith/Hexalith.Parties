@@ -1,6 +1,6 @@
 # Story 1.4: Manage Contact Channels
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -257,9 +257,13 @@ GPT-5 Codex
 - src/Hexalith.Parties/Validation/AddContactChannelValidator.cs
 - src/Hexalith.Parties/Validation/UpdateContactChannelValidator.cs
 - src/Hexalith.Parties/Validation/RemoveContactChannelValidator.cs
+- src/Hexalith.Parties/Validation/CreatePartyCompositeValidator.cs
+- src/Hexalith.Parties/Validation/UpdatePartyCompositeValidator.cs
 - tests/Hexalith.Parties.Tests/Validation/ContactChannelValidatorTests.cs
+- tests/Hexalith.Parties.Server.Tests/Aggregates/PartyAggregateCompositeTests.cs
 - _bmad-output/implementation-artifacts/1-4-manage-contact-channels.md
 - _bmad-output/implementation-artifacts/sprint-status.yaml
+- _bmad-output/implementation-artifacts/deferred-work.md
 
 ## Party-Mode Review
 
@@ -303,8 +307,25 @@ GPT-5 Codex
   - Any public contract change that replaces scalar `[PersonalData] string Value` with richer postal/email/phone/social payloads remains an architecture decision outside this story.
 - Final recommendation: ready-for-dev
 
+### Review Findings
+
+_Code review on 2026-05-16 (commit `e428d6d`). Layers: Blind Hunter, Edge Case Hunter, Acceptance Auditor. 9 findings after triage (6 dismissed)._
+
+- [x] [Review][Patch] Relax `UpdateContactChannelValidator` and `RemoveContactChannelValidator` to drop the GUID rule (keep Add strict) — Resolution to validator-vs-aggregate contract drift: keep GUID enforcement on `AddContactChannel` only. Drop `.Cascade(CascadeMode.Stop)` + `.Must(Guid.TryParse...)` from `UpdateContactChannelValidator` and `RemoveContactChannelValidator` so legacy non-GUID channels can still be administered. Remove the now-stale invalid-id failure tests for those two validators (replace with valid-GUID happy-path + empty-id required-message tests). [src/Hexalith.Parties/Validation/UpdateContactChannelValidator.cs, RemoveContactChannelValidator.cs, tests/Hexalith.Parties.Tests/Validation/ContactChannelValidatorTests.cs]
+- [x] [Review][Patch] Align composite child rules to `AddContactChannelValidator` shape — Resolution to composite-vs-standalone divergence: in `CreatePartyCompositeValidator.AddContactChannels[i].ContactChannelId` and `UpdatePartyCompositeValidator.AddContactChannels[i].ContactChannelId` add `.Cascade(CascadeMode.Stop)` + explicit `"ContactChannelId is required."` message so empty id produces exactly one error. Apply the same `Cascade(Stop)` + required-message shape to `UpdateContactChannels[i].ContactChannelId` and `RemoveContactChannelIds[i]` (without GUID rule, per Decision 1). [src/Hexalith.Parties/Validation/CreatePartyCompositeValidator.cs, UpdatePartyCompositeValidator.cs]
+- [x] [Review][Patch] AC6 has no test asserting `UpdatedPartyDetail.ContactChannels` in the composite response — Composite tests `Handle_UpdatePartyComposite_AddChannelsOnly_…` (line 431), `_UpdateChannelsOnly_…` (459), `_RemoveChannelsOnly_…` (487) in `tests/Hexalith.Parties.Server.Tests/Aggregates/PartyAggregateCompositeTests.cs` only assert `result.Events`/`result.Applied`; they do not touch `result.UpdatedPartyDetail`. Required Test Evidence row AC6 demands assertion through the composite response path for add/update/remove/preferred-change. Implementation logic exists at `src/Hexalith.Parties.Server/Aggregates/PartyAggregate.cs:1305-1337` but is untested at the AC6 boundary. [tests/Hexalith.Parties.Server.Tests/Aggregates/PartyAggregateCompositeTests.cs:431,459,487]
+- [x] [Review][Patch] No happy-path validator tests — inverted `Must` predicate would not be caught — All three new tests in `tests/Hexalith.Parties.Tests/Validation/ContactChannelValidatorTests.cs` use `ContactChannelId = "not-a-guid"` and assert failure. A typo like `!Guid.TryParse(id, out _)` would leave every test passing. Add one positive-case test per validator with a valid GUID. [tests/Hexalith.Parties.Tests/Validation/ContactChannelValidatorTests.cs]
+- [x] [Review][Patch] No test for empty/null/whitespace `ContactChannelId` after `Cascade(Stop)` — `Cascade(CascadeMode.Stop)` was introduced alongside the new `Must` rule. A future refactor that removes the cascade would silently start emitting two messages for the empty case. Add at least one `[Theory]` row asserting that `""` / `null` produces exactly `"ContactChannelId is required."`. [tests/Hexalith.Parties.Tests/Validation/ContactChannelValidatorTests.cs]
+- [x] [Review][Patch] Inconsistent cascade behaviour for `PartyId` vs `ContactChannelId` in the same validator — `PartyId` rule lacks `Cascade(CascadeMode.Stop)` and emits two messages (`NotEmpty` default + `"PartyId must be a valid GUID."`) for an empty id, while `ContactChannelId` now emits one. Same validator class, two different validation styles. Either add `Cascade(CascadeMode.Stop)` + a "PartyId is required." message to `PartyId`, or drop the cascade from `ContactChannelId` for symmetry. [src/Hexalith.Parties/Validation/AddContactChannelValidator.cs:11-21, UpdateContactChannelValidator.cs, RemoveContactChannelValidator.cs]
+- [x] [Review][Patch] Tests use `ShouldContain` instead of asserting error count — `result.Errors.Select(e => e.PropertyName).ShouldContain(…)` only verifies one error is present; other unrelated errors on the same command could be hiding. Tighten the assertions to also verify `result.Errors.Count(e => e.PropertyName == nameof(...ContactChannelId)) == 1` (or equivalent). [tests/Hexalith.Parties.Tests/Validation/ContactChannelValidatorTests.cs]
+- [x] [Review][Defer] GUID whitespace/brace forms accepted by validator but compared ordinally by aggregate — deferred, pre-existing — `Guid.TryParse(" {valid-guid} ", out _)` returns `true`, so the validator accepts wrapped/whitespace forms; the aggregate compares with ordinal `==` (`PartyAggregate.cs:917,959,1010`) so a later `Update` with the trimmed form silently returns `ContactChannelNotFound`. Pre-existing — this diff merely advertises GUID semantics more sharply. Pair with normalization story or a single `Guid.Parse(...).ToString("D")` pass at command construction. [src/Hexalith.Parties.Server/Aggregates/PartyAggregate.cs:917,959,1010]
+- [x] [Review][Defer] `PartyTestData` builders use non-GUID ids that future validator-running integration tests would now reject — deferred, pre-existing — `PartyTestData.DefaultChannelId = "ch-email-1"`, `"id-vat-1"`, etc. The current diff explicitly preserves the "human-readable ids in pure aggregate tests" distinction per the Advanced Elicitation Clarifications. The trap activates only if someone later wires `ValidCreatePersonComposite()` into a `WebApplicationFactory` integration test that runs the validators. Pair with the future integration-test story or replace static strings with deterministic GUID constants. [src/Hexalith.Parties.Testing/PartyTestData.cs]
+
+_Dismissed (not actionable): diff artifact on Update validator (file compiles), `UpdateContactChannel.Type` suspicion (Edge Case Hunter verified the command shape), LINQ implicit usings (tests pass), DRY/var style nits, whitespace-only-id "valid GUID" message (acceptable UX per spec)._
+
 ## Change Log
 
+- 2026-05-17: Code review patches applied. Decision 1: relaxed `UpdateContactChannelValidator` and `RemoveContactChannelValidator` to drop the GUID rule (kept Add strict) so legacy non-GUID channels remain administrable. Decision 2: aligned composite child rules in `CreatePartyCompositeValidator` and `UpdatePartyCompositeValidator` to the standalone shape (Cascade Stop + explicit "is required." message; GUID still required on composite Add). Also applied Cascade Stop + "PartyId is required." to PartyId rules for in-validator consistency. Tightened `ContactChannelValidatorTests` (happy-path, empty-id, error-count assertions) and added `UpdatedPartyDetail.ContactChannels` evidence for AC6 in `PartyAggregateCompositeTests` (add/update/remove/preferred-change). Two findings deferred (GUID whitespace/brace acceptance, `PartyTestData` non-GUID ids).
 - 2026-05-16: Implemented story 1.4 contact-channel reconciliation; added standalone validator coverage and enforced GUID-shaped contact-channel ids on add/update/remove boundary validators.
 - 2026-05-15: Advanced elicitation applied pre-dev clarifications for event-list evidence, boundary-vs-aggregate id rules, preferred-channel edge cases, composite returned-state evidence, privacy-safe assertions, and current idempotency boundaries.
 - 2026-05-15: Party-mode review applied pre-dev clarifications for contact-channel MVP field shape, rejection/no-success evidence, preferred-channel type scoping, FR69 returned-state assertions, privacy-safe outcome checks, focused test evidence, and deferred lifecycle/normalization/surface decisions.

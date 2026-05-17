@@ -21,12 +21,16 @@ public sealed class UpdatePartyCompositeValidator : AbstractValidator<UpdatePart
         RuleForEach(x => x.AddContactChannels).ChildRules(channel =>
         {
             channel.RuleFor(c => c.PartyId)
+                .Cascade(CascadeMode.Stop)
                 .NotEmpty()
+                .WithMessage("PartyId is required.")
                 .Must(id => Guid.TryParse(id, out _))
                 .WithMessage("PartyId must be a valid GUID.");
 
             channel.RuleFor(c => c.ContactChannelId)
+                .Cascade(CascadeMode.Stop)
                 .NotEmpty()
+                .WithMessage("ContactChannelId is required.")
                 .Must(id => Guid.TryParse(id, out _))
                 .WithMessage("ContactChannelId must be a valid GUID.");
 
@@ -42,19 +46,20 @@ public sealed class UpdatePartyCompositeValidator : AbstractValidator<UpdatePart
         RuleForEach(x => x.UpdateContactChannels).ChildRules(channel =>
         {
             channel.RuleFor(c => c.PartyId)
+                .Cascade(CascadeMode.Stop)
                 .NotEmpty()
+                .WithMessage("PartyId is required.")
                 .Must(id => Guid.TryParse(id, out _))
                 .WithMessage("PartyId must be a valid GUID.");
 
             channel.RuleFor(c => c.ContactChannelId)
                 .NotEmpty()
-                .Must(id => Guid.TryParse(id, out _))
-                .WithMessage("ContactChannelId must be a valid GUID.");
+                .WithMessage("ContactChannelId is required.");
         });
 
         RuleForEach(x => x.RemoveContactChannelIds)
-            .Must(id => Guid.TryParse(id, out _))
-            .WithMessage("RemoveContactChannelId must be a valid GUID.");
+            .NotEmpty()
+            .WithMessage("RemoveContactChannelId is required.");
 
         RuleForEach(x => x.AddIdentifiers).ChildRules(identifier =>
         {

@@ -2,6 +2,11 @@
 
 Items raised during code review that are real but not actionable in the current story. Pick up in a follow-up story or hardening sprint.
 
+## Deferred from: code review of story 1-4-manage-contact-channels (2026-05-16)
+
+- **GUID whitespace/brace forms accepted by validator but compared ordinally by aggregate** — `Guid.TryParse(" {valid-guid} ", out _)` returns `true`, so the validators accept wrapped/whitespace forms; the aggregate compares ids with ordinal `==` (`PartyAggregate.cs:917,959,1010`). A caller that uses `" {guid} "` on Add and the trimmed form on Update silently gets `ContactChannelNotFound`. Pre-existing — this story's tightening surfaces it but does not introduce it. Resolve by normalizing at command construction (`Guid.Parse(id).ToString("D")`) or comparing as `Guid` inside the aggregate. [src/Hexalith.Parties.Server/Aggregates/PartyAggregate.cs:917,959,1010]
+- **`PartyTestData` test builders use non-GUID channel/identifier ids that the tightened validators now reject** — `PartyTestData.DefaultChannelId = "ch-email-1"`, `"id-vat-1"`, etc. The current diff explicitly preserves the "human-readable ids in pure aggregate tests" distinction per Advanced Elicitation Clarifications. The trap activates only if someone later wires `ValidCreatePersonComposite()` into a `WebApplicationFactory` integration test that runs the validators. Pair with the future integration-test story or replace static strings with deterministic GUID constants. [src/Hexalith.Parties.Testing/PartyTestData.cs]
+
 ## Deferred from: code review of story 1-3 update-person-and-organization-details (2026-05-16)
 
 - **Same-value detail-update no-op semantics not yet pinned by tests** — Story 1.3 Deferred Decisions explicitly defers whether same-value `UpdatePersonDetails` / `UpdateOrganizationDetails` should emit an audit event, be an idempotent no-op (mirroring `Handle_SetIsNaturalPerson_SameValue_ReturnsNoOp` in the same suite), or be rejected. Production currently always emits `*DetailsUpdated` + `PartyDisplayNameDerived`. Pick up when the policy decision is taken. [tests/Hexalith.Parties.Server.Tests/Aggregates/PartyAggregateUpdateTests.cs]
