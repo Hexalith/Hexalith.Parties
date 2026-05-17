@@ -957,6 +957,42 @@ public class PartyAggregateCompositeTests
     }
 
     [Fact]
+    public void Handle_UpdatePartyComposite_DuplicateAddIdentifierInPayload_SkipsDuplicateWithoutValue()
+    {
+        PartyState state = PartyTestData.CreatePersonStateWithChannelsAndIdentifiers();
+        UpdatePartyComposite command = new()
+        {
+            PartyId = PartyTestData.DefaultPartyId,
+            AddIdentifiers =
+            [
+                new AddIdentifier
+                {
+                    PartyId = PartyTestData.DefaultPartyId,
+                    IdentifierId = "id-siret-1",
+                    Type = IdentifierType.SIRET,
+                    Value = "synthetic-siret-value",
+                },
+                new AddIdentifier
+                {
+                    PartyId = PartyTestData.DefaultPartyId,
+                    IdentifierId = "id-siret-1",
+                    Type = IdentifierType.SIRET,
+                    Value = "synthetic-other-siret-value",
+                },
+            ],
+        };
+
+        CompositeCommandResult result = PartyAggregate.Handle(command, state);
+
+        result.IsSuccess.ShouldBeTrue();
+        result.Events.OfType<IdentifierAdded>().Count().ShouldBe(1);
+        result.Skipped.ShouldContain("Duplicate identifier: id-siret-1");
+        result.Skipped.Any(x => x.Contains(command.AddIdentifiers[1].Value)).ShouldBeFalse();
+        result.UpdatedPartyDetail.ShouldNotBeNull();
+        result.UpdatedPartyDetail.Identifiers.Count(x => x.Id == "id-siret-1").ShouldBe(1);
+    }
+
+    [Fact]
     public void Handle_UpdatePartyComposite_InvalidRemoveIdentifierId_ReturnsRejection()
     {
         PartyState state = PartyTestData.CreatePersonStateWithChannelsAndIdentifiers();

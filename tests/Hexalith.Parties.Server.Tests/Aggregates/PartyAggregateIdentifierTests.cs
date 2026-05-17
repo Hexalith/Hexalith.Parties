@@ -139,6 +139,19 @@ public class PartyAggregateIdentifierTests {
     }
 
     [Fact]
+    public void Handle_RemoveIdentifier_ErasurePending_ReturnsRejectionOnly() {
+        PartyState state = PartyTestData.CreateErasurePendingState();
+        RemoveIdentifier command = PartyTestData.ValidRemoveIdentifier();
+
+        DomainResult result = PartyAggregate.Handle(command, state);
+
+        result.IsRejection.ShouldBeTrue();
+        result.Events.Count.ShouldBe(1);
+        result.Events[0].ShouldBeOfType<PartyErasureInProgress>();
+        result.Events.OfType<IdentifierRemoved>().ShouldBeEmpty();
+    }
+
+    [Fact]
     public void Handle_RemoveIdentifier_NotFound_ReturnsIdentifierNotFound() {
         PartyState state = PartyTestData.CreatePersonState();
         RemoveIdentifier command = PartyTestData.ValidRemoveIdentifier();
@@ -160,5 +173,18 @@ public class PartyAggregateIdentifierTests {
         result.IsRejection.ShouldBeTrue();
         result.Events.Count.ShouldBe(1);
         _ = result.Events[0].ShouldBeOfType<PartyNotFound>();
+    }
+
+    [Fact]
+    public void Handle_RemoveIdentifier_RestrictedParty_ReturnsRejectionOnly() {
+        PartyState state = PartyTestData.CreateRestrictedState();
+        RemoveIdentifier command = PartyTestData.ValidRemoveIdentifier();
+
+        DomainResult result = PartyAggregate.Handle(command, state);
+
+        result.IsRejection.ShouldBeTrue();
+        result.Events.Count.ShouldBe(1);
+        result.Events[0].ShouldBeOfType<PartyProcessingRestricted>();
+        result.Events.OfType<IdentifierRemoved>().ShouldBeEmpty();
     }
 }

@@ -1,6 +1,6 @@
 # Story 1.5: Manage Party Identifiers
 
-Status: ready-for-dev
+Status: review
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -52,53 +52,53 @@ so that consumers can associate parties with external legal, tax, or registry re
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Audit existing identifier contracts, validators, and payload representation (AC: 1, 2, 3, 4, 6)
-  - [ ] Confirm `AddIdentifier`, `RemoveIdentifier`, `CreatePartyComposite`, `UpdatePartyComposite`, `IdentifierAdded`, `IdentifierRemoved`, `IdentifierNotFound`, `PartyCannotAddDuplicateIdentifier`, `PartyIdentifier`, `IdentifierType`, and `PartyState` match this story's scope.
-  - [ ] Confirm the current MVP command/event representation is identifier id, `IdentifierType`, and `[PersonalData] string Value`; do not add broad jurisdiction metadata to commands/events unless an explicit architecture decision updates the public contract.
-  - [ ] Treat "jurisdiction-specific identifiers" in this MVP story as `IdentifierType` plus value semantics; persisted jurisdiction remains a deferred contract decision unless already accepted elsewhere.
-  - [ ] Review `PartyIdentifier.Jurisdiction` as current value-object inventory. Because `AddIdentifier` and `IdentifierAdded` do not currently carry jurisdiction, treat jurisdiction persistence as a deferred contract decision unless already accepted elsewhere.
-  - [ ] Verify `src/Hexalith.Parties/Validation/AddIdentifierValidator.cs`, `RemoveIdentifierValidator.cs`, `CreatePartyCompositeValidator.cs`, and `UpdatePartyCompositeValidator.cs` cover party id, identifier id, enum value, identifier value, and sub-operation limit constraints expected at the boundary.
-  - [ ] Preserve the current distinction between standalone aggregate tests that use readable identifier ids and composite validators that require GUID-shaped identifier ids unless validation and tests are intentionally reconciled together.
+- [x] Task 1: Audit existing identifier contracts, validators, and payload representation (AC: 1, 2, 3, 4, 6)
+  - [x] Confirm `AddIdentifier`, `RemoveIdentifier`, `CreatePartyComposite`, `UpdatePartyComposite`, `IdentifierAdded`, `IdentifierRemoved`, `IdentifierNotFound`, `PartyCannotAddDuplicateIdentifier`, `PartyIdentifier`, `IdentifierType`, and `PartyState` match this story's scope.
+  - [x] Confirm the current MVP command/event representation is identifier id, `IdentifierType`, and `[PersonalData] string Value`; do not add broad jurisdiction metadata to commands/events unless an explicit architecture decision updates the public contract.
+  - [x] Treat "jurisdiction-specific identifiers" in this MVP story as `IdentifierType` plus value semantics; persisted jurisdiction remains a deferred contract decision unless already accepted elsewhere.
+  - [x] Review `PartyIdentifier.Jurisdiction` as current value-object inventory. Because `AddIdentifier` and `IdentifierAdded` do not currently carry jurisdiction, treat jurisdiction persistence as a deferred contract decision unless already accepted elsewhere.
+  - [x] Verify `src/Hexalith.Parties/Validation/AddIdentifierValidator.cs`, `RemoveIdentifierValidator.cs`, `CreatePartyCompositeValidator.cs`, and `UpdatePartyCompositeValidator.cs` cover party id, identifier id, enum value, identifier value, and sub-operation limit constraints expected at the boundary.
+  - [x] Preserve the current distinction between standalone aggregate tests that use readable identifier ids and composite validators that require GUID-shaped identifier ids unless validation and tests are intentionally reconciled together.
 
-- [ ] Task 2: Validate standalone aggregate identifier handlers (AC: 1, 2, 3, 4)
-  - [ ] Confirm `PartyAggregate.Handle(AddIdentifier, PartyState?)` rejects missing parties with `PartyNotFound`, guards erasure and processing restriction before success, no-ops duplicate identifier ids, and emits `IdentifierAdded` on success.
-  - [ ] Confirm duplicate add no-ops do not emit a second `IdentifierAdded` event and do not mutate state.
-  - [ ] Confirm repeated duplicate adds remain stable when replayed against already-updated state; this story should not rely on caller-side de-duplication for retry safety.
-  - [ ] Confirm `PartyAggregate.Handle(RemoveIdentifier, PartyState?)` rejects missing parties with `PartyNotFound`, guards erasure and processing restriction before success, rejects missing identifier ids with `IdentifierNotFound`, and emits `IdentifierRemoved` on success.
-  - [ ] Confirm missing remove paths emit only the typed rejection and never emit `IdentifierRemoved`.
-  - [ ] Confirm erasure/restriction guards take precedence over identifier-specific success behavior and do not leak the identifier value in rejection evidence.
-  - [ ] Audit the "active party" wording in the ACs against current deactivated-party policy. If no accepted rejection contract exists for inactive-party identifier mutations, record the policy gap as deferred to the lifecycle story instead of inventing a new rejection event in this story.
-  - [ ] Do not add identifier search, duplicate detection by identifier value, normalization, or jurisdiction-specific validation services to this story; MVP search by identifier is deferred to the dedicated search capability.
+- [x] Task 2: Validate standalone aggregate identifier handlers (AC: 1, 2, 3, 4)
+  - [x] Confirm `PartyAggregate.Handle(AddIdentifier, PartyState?)` rejects missing parties with `PartyNotFound`, guards erasure and processing restriction before success, no-ops duplicate identifier ids, and emits `IdentifierAdded` on success.
+  - [x] Confirm duplicate add no-ops do not emit a second `IdentifierAdded` event and do not mutate state.
+  - [x] Confirm repeated duplicate adds remain stable when replayed against already-updated state; this story should not rely on caller-side de-duplication for retry safety.
+  - [x] Confirm `PartyAggregate.Handle(RemoveIdentifier, PartyState?)` rejects missing parties with `PartyNotFound`, guards erasure and processing restriction before success, rejects missing identifier ids with `IdentifierNotFound`, and emits `IdentifierRemoved` on success.
+  - [x] Confirm missing remove paths emit only the typed rejection and never emit `IdentifierRemoved`.
+  - [x] Confirm erasure/restriction guards take precedence over identifier-specific success behavior and do not leak the identifier value in rejection evidence.
+  - [x] Audit the "active party" wording in the ACs against current deactivated-party policy. If no accepted rejection contract exists for inactive-party identifier mutations, record the policy gap as deferred to the lifecycle story instead of inventing a new rejection event in this story.
+  - [x] Do not add identifier search, duplicate detection by identifier value, normalization, or jurisdiction-specific validation services to this story; MVP search by identifier is deferred to the dedicated search capability.
 
-- [ ] Task 3: Validate state rehydration and privacy metadata (AC: 1, 2, 6)
-  - [ ] Confirm `PartyState.Apply(IdentifierAdded)` appends an identifier with id, type, and value.
-  - [ ] Confirm `PartyState.Apply(IdentifierRemoved)` removes only the targeted identifier id and tolerates unknown ids defensively.
-  - [ ] Confirm `PartyIdentifier.Value`, `AddIdentifier.Value`, and `IdentifierAdded.Value` remain marked with `[PersonalData]`.
-  - [ ] Preserve the no-op rejection `Apply(...)` methods before success applies; EventStore suffix-based rehydration depends on that ordering.
+- [x] Task 3: Validate state rehydration and privacy metadata (AC: 1, 2, 6)
+  - [x] Confirm `PartyState.Apply(IdentifierAdded)` appends an identifier with id, type, and value.
+  - [x] Confirm `PartyState.Apply(IdentifierRemoved)` removes only the targeted identifier id and tolerates unknown ids defensively.
+  - [x] Confirm `PartyIdentifier.Value`, `AddIdentifier.Value`, and `IdentifierAdded.Value` remain marked with `[PersonalData]`.
+  - [x] Preserve the no-op rejection `Apply(...)` methods before success applies; EventStore suffix-based rehydration depends on that ordering.
 
-- [ ] Task 4: Reconcile composite command behavior and FR69 returned state (AC: 1, 2, 3, 4, 5, 6)
-  - [ ] Confirm `CreatePartyComposite` emits `IdentifierAdded` events for initial identifiers and safely skips duplicate identifier ids for MCP/client retry safety.
-  - [ ] Confirm `UpdatePartyComposite` rejects add/remove conflicts on the same identifier id, validates missing remove targets before emitting success events, skips duplicate additions, and skips duplicate removals without mutating state twice.
-  - [ ] Confirm add/remove conflict evidence covers the same identifier id appearing in both lists and that the result is rejection-only for the conflicting sub-operation, not an implicit ordering policy.
-  - [ ] Confirm duplicate add/remove and missing identifier outcomes do not include raw identifier values in `Applied`, `Skipped`, or `Rejected` strings. Identifier ids are allowed as stable operation identifiers when they are GUID-shaped or otherwise non-PII.
-  - [ ] Confirm privacy-safe outcome evidence covers logs, telemetry dimensions, exception text, typed rejection text, diagnostics, and composite operation strings.
-  - [ ] Confirm `CompositeCommandResult.UpdatedPartyDetail` is built from current state plus emitted events and includes added and removed identifiers in the same returned response that reports the operation outcomes.
-  - [ ] Do not change simple `DomainResult` return types for standalone handlers; public "updated state" response evidence for this story is the composite update path unless the architecture explicitly changes the response contract.
+- [x] Task 4: Reconcile composite command behavior and FR69 returned state (AC: 1, 2, 3, 4, 5, 6)
+  - [x] Confirm `CreatePartyComposite` emits `IdentifierAdded` events for initial identifiers and safely skips duplicate identifier ids for MCP/client retry safety.
+  - [x] Confirm `UpdatePartyComposite` rejects add/remove conflicts on the same identifier id, validates missing remove targets before emitting success events, skips duplicate additions, and skips duplicate removals without mutating state twice.
+  - [x] Confirm add/remove conflict evidence covers the same identifier id appearing in both lists and that the result is rejection-only for the conflicting sub-operation, not an implicit ordering policy.
+  - [x] Confirm duplicate add/remove and missing identifier outcomes do not include raw identifier values in `Applied`, `Skipped`, or `Rejected` strings. Identifier ids are allowed as stable operation identifiers when they are GUID-shaped or otherwise non-PII.
+  - [x] Confirm privacy-safe outcome evidence covers logs, telemetry dimensions, exception text, typed rejection text, diagnostics, and composite operation strings.
+  - [x] Confirm `CompositeCommandResult.UpdatedPartyDetail` is built from current state plus emitted events and includes added and removed identifiers in the same returned response that reports the operation outcomes.
+  - [x] Do not change simple `DomainResult` return types for standalone handlers; public "updated state" response evidence for this story is the composite update path unless the architecture explicitly changes the response contract.
 
-- [ ] Task 5: Preserve architecture, scope, and boundary constraints (AC: 1, 2, 3, 4, 5, 6)
-  - [ ] Keep domain behavior in pure static aggregate `Handle` methods and `PartyState.Apply(...)`; do not add Dapr, database, MediatR handler, controller, Swagger/OpenAPI, MCP tool, AdminPortal, Picker, projection, search, or sample work to this story.
-  - [ ] Keep `Hexalith.Parties.Contracts` additive and dependency-light. Do not add hosting, Dapr, MediatR, FluentValidation, UI, or infrastructure dependencies to contracts.
-  - [ ] Keep tenant context out of identifier commands/events for this story; aggregate identity is `PartyId`, and tenant authorization remains outside the aggregate.
-  - [ ] Treat "authorized client" as an upstream gateway/client precondition; do not add tenant/RBAC enforcement to the Parties aggregate, contracts, or validation in this story.
-  - [ ] Do not add identifier-value normalization, country-specific checksum validation, or duplicate matching by value unless a separate architecture/product decision explicitly schedules it.
-  - [ ] Do not broaden this story into lifecycle, contact-channel, GDPR erasure, read projection, REST, MCP, admin, or picker behavior.
+- [x] Task 5: Preserve architecture, scope, and boundary constraints (AC: 1, 2, 3, 4, 5, 6)
+  - [x] Keep domain behavior in pure static aggregate `Handle` methods and `PartyState.Apply(...)`; do not add Dapr, database, MediatR handler, controller, Swagger/OpenAPI, MCP tool, AdminPortal, Picker, projection, search, or sample work to this story.
+  - [x] Keep `Hexalith.Parties.Contracts` additive and dependency-light. Do not add hosting, Dapr, MediatR, FluentValidation, UI, or infrastructure dependencies to contracts.
+  - [x] Keep tenant context out of identifier commands/events for this story; aggregate identity is `PartyId`, and tenant authorization remains outside the aggregate.
+  - [x] Treat "authorized client" as an upstream gateway/client precondition; do not add tenant/RBAC enforcement to the Parties aggregate, contracts, or validation in this story.
+  - [x] Do not add identifier-value normalization, country-specific checksum validation, or duplicate matching by value unless a separate architecture/product decision explicitly schedules it.
+  - [x] Do not broaden this story into lifecycle, contact-channel, GDPR erasure, read projection, REST, MCP, admin, or picker behavior.
 
-- [ ] Task 6: Run focused validation (AC: 1, 2, 3, 4, 5, 6)
-  - [ ] Run `dotnet test tests/Hexalith.Parties.Server.Tests/Hexalith.Parties.Server.Tests.csproj --configuration Release --filter FullyQualifiedName~PartyAggregateIdentifierTests`.
-  - [ ] Run `dotnet test tests/Hexalith.Parties.Server.Tests/Hexalith.Parties.Server.Tests.csproj --configuration Release --filter FullyQualifiedName~PartyAggregateCompositeTests` if composite add/remove/skipped/rejected or returned-state behavior is inspected or changed.
-  - [ ] Run `dotnet test tests/Hexalith.Parties.Contracts.Tests/Hexalith.Parties.Contracts.Tests.csproj --configuration Release --filter FullyQualifiedName~PartyStateTests`.
-  - [ ] Run `dotnet test tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj --configuration Release --filter FullyQualifiedName~PartyStateApplyOrderingFitnessTests` if any `PartyState.Apply` declarations move.
-  - [ ] Run `dotnet build Hexalith.Parties.slnx --configuration Release` if implementation changes touch public contracts, validators, project references, or EventStore-facing surfaces.
+- [x] Task 6: Run focused validation (AC: 1, 2, 3, 4, 5, 6)
+  - [x] Run `dotnet test tests/Hexalith.Parties.Server.Tests/Hexalith.Parties.Server.Tests.csproj --configuration Release --filter FullyQualifiedName~PartyAggregateIdentifierTests`.
+  - [x] Run `dotnet test tests/Hexalith.Parties.Server.Tests/Hexalith.Parties.Server.Tests.csproj --configuration Release --filter FullyQualifiedName~PartyAggregateCompositeTests` if composite add/remove/skipped/rejected or returned-state behavior is inspected or changed.
+  - [x] Run `dotnet test tests/Hexalith.Parties.Contracts.Tests/Hexalith.Parties.Contracts.Tests.csproj --configuration Release --filter FullyQualifiedName~PartyStateTests`.
+  - [x] Run `dotnet test tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj --configuration Release --filter FullyQualifiedName~PartyStateApplyOrderingFitnessTests` if any `PartyState.Apply` declarations move.
+  - [x] Run `dotnet build Hexalith.Parties.slnx --configuration Release` if implementation changes touch public contracts, validators, project references, or EventStore-facing surfaces.
 
 ## Dev Notes
 
@@ -215,13 +215,34 @@ tests/Hexalith.Parties.Contracts.Tests/
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+GPT-5 Codex
 
 ### Debug Log References
 
+- 2026-05-17T12:58:14+02:00 - `dotnet test tests/Hexalith.Parties.Server.Tests/Hexalith.Parties.Server.Tests.csproj --configuration Release --filter FullyQualifiedName~PartyAggregateIdentifierTests` - Passed 13/13.
+- 2026-05-17T12:58:14+02:00 - `dotnet test tests/Hexalith.Parties.Server.Tests/Hexalith.Parties.Server.Tests.csproj --configuration Release --filter FullyQualifiedName~PartyAggregateCompositeTests` - Passed 53/53.
+- 2026-05-17T12:58:14+02:00 - `dotnet test tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj --configuration Release --filter FullyQualifiedName~IdentifierValidatorTests` - Passed 7/7.
+- 2026-05-17T12:58:14+02:00 - `dotnet test tests/Hexalith.Parties.Contracts.Tests/Hexalith.Parties.Contracts.Tests.csproj --configuration Release --filter FullyQualifiedName~PartyStateTests` - Passed 24/24.
+- 2026-05-17T12:58:14+02:00 - `dotnet build Hexalith.Parties.slnx --configuration Release` - Passed with 0 warnings and 0 errors.
+- 2026-05-17T12:58:14+02:00 - `dotnet test Hexalith.Parties.slnx --configuration Release --no-build` - One timing-sensitive unrelated performance benchmark failed once; all story-adjacent assemblies passed.
+- 2026-05-17T12:58:14+02:00 - `dotnet test tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj --configuration Release --no-build --filter FullyQualifiedName~SemanticSearchPerformanceBenchmarkTests.Search_100KEntries_ExactMatch_CompletesWithin500ms` - Passed 1/1 on rerun.
+- 2026-05-17T12:58:14+02:00 - `dotnet test tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj --configuration Release --no-build` - Passed 266/266.
+
 ### Completion Notes List
 
+- Audited identifier contracts, validators, state application, standalone aggregate handlers, and composite create/update behavior against Story 1.5 scope.
+- Added missing regression evidence for remove-identifier erasure/restriction rejection-only behavior.
+- Added composite update duplicate-add payload coverage to prove one `IdentifierAdded`, one privacy-safe skip, and one returned-state identifier entry.
+- Added identifier validator tests documenting the accepted distinction between standalone readable identifier ids and composite GUID-shaped identifier ids.
+- Kept implementation scope to tests and story tracking; no production contracts, aggregate behavior, validators, projections, REST/MCP/UI, or search code changed.
+
 ### File List
+
+- `_bmad-output/implementation-artifacts/1-5-manage-party-identifiers.md`
+- `_bmad-output/implementation-artifacts/sprint-status.yaml`
+- `tests/Hexalith.Parties.Server.Tests/Aggregates/PartyAggregateCompositeTests.cs`
+- `tests/Hexalith.Parties.Server.Tests/Aggregates/PartyAggregateIdentifierTests.cs`
+- `tests/Hexalith.Parties.Tests/Validation/IdentifierValidatorTests.cs`
 
 ## Party-Mode Review
 
@@ -250,6 +271,7 @@ tests/Hexalith.Parties.Contracts.Tests/
 
 ## Change Log
 
+- 2026-05-17: Implemented Story 1.5 audit/reconciliation guardrail tests for identifier validators, remove-identifier rejection-only behavior, and composite duplicate-add privacy-safe outcomes; focused tests and release build passed.
 - 2026-05-15: Party-mode review applied pre-dev clarifications for duplicate no-op/no-success-event evidence, missing-remove rejection behavior, privacy-safe outcome checks, MVP jurisdiction scope, upstream authorization boundary, composite returned-state assertions, and deferred lifecycle/jurisdiction/search/API decisions.
 - 2026-05-15: Story created by BMAD pre-dev hardening automation with current identifier reconciliation context.
 
