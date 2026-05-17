@@ -19,6 +19,7 @@ so that retries are safe and failures are understandable without inspecting inte
    - And the outcome is stable and retry-safe for the supported command family,
    - And "equivalent retry" means the same business command intent and aggregate target, independent of fresh EventStore `MessageId` / `CorrelationId` transport metadata,
    - And "stable outcome" means the same success/no-op or typed rejection classification plus a privacy-safe reason, not byte-identical envelope metadata,
+   - And retry safety is proven from current aggregate state and accepted duplicate semantics, not from a new Parties-owned retry ledger,
    - And this story does not add a new `IdempotencyKey` property to domain commands unless an accepted EventStore contract explicitly requires it.
 
 2. **State conflicts emit only typed rejection events**
@@ -26,7 +27,8 @@ so that retries are safe and failures are understandable without inspecting inte
    - When the command is handled,
    - Then the aggregate emits the appropriate typed rejection event,
    - And no success event for that command appears later in the same result event list,
-   - And rejection-only evidence is asserted for direct and composite command paths that this story touches.
+   - And rejection-only evidence is asserted for direct and composite command paths that this story touches,
+   - And validation-layer failures that are rejected before aggregate handling are mapped as stable external failures without pretending they produced persisted aggregate rejection events.
 
 3. **Rejection replay remains state-safe**
    - Given typed rejection events are persisted and replayed during aggregate rehydration,
@@ -54,6 +56,8 @@ so that retries are safe and failures are understandable without inspecting inte
   - [ ] Confirm direct command handlers in `PartyAggregate` already return `DomainResult.NoOp()` for existing duplicate semantics: duplicate create, same natural-person classification, duplicate add contact channel, duplicate add identifier, duplicate consent, duplicate restriction, and duplicate lifecycle state where accepted by Story 1.6.
   - [ ] Confirm composite handlers return `CompositeCommandResult` with `Applied`, `Skipped`, `Rejected`, and `UpdatedPartyDetail` only on accepted update paths.
   - [ ] Treat EventStore command-envelope `MessageId` / `CorrelationId` as platform transport metadata. Do not add `IdempotencyKey`, `MessageId`, `CorrelationId`, or tenant metadata to domain command records unless an accepted EventStore architecture decision requires it.
+  - [ ] Distinguish aggregate-emitted typed rejection events from validator or gateway failures that never enter aggregate handling; this story may verify stable mapping for both, but persisted replay requirements apply only to events that can appear in a Parties stream.
+  - [ ] Inventory the currently supported retry families before adding tests. Do not generalize retry-safe no-op semantics to commands where the accepted current behavior is a typed rejection or a validator failure.
   - [ ] Keep domain command/event contracts additive and dependency-light; do not add Dapr, MediatR, FluentValidation, ProblemDetails, HTTP, UI, or infrastructure dependencies to `Hexalith.Parties.Contracts`.
 
 - [ ] Task 2: Reconcile direct aggregate retry behavior (AC: 1, 2, 5)
@@ -62,6 +66,7 @@ so that retries are safe and failures are understandable without inspecting inte
   - [ ] Confirm duplicate lifecycle commands follow the accepted Story 1.6 behavior: existing inactive deactivate and existing active reactivate are retry-safe no-ops, while missing parties reject with `PartyNotFound`.
   - [ ] Confirm erased or processing-restricted parties reject before any duplicate no-op or success semantics for mutation commands.
   - [ ] Confirm retrying the same invalid command returns the same typed rejection classification and privacy-safe reason without adding success events or domain idempotency metadata.
+  - [ ] Confirm a retry with a changed payload, changed aggregate identity, or changed target child entity is treated as a new command intent and is not forced into equivalent-retry behavior.
   - [ ] If a direct command currently emits a state-specific rejection where Story 1.6 or this story requires `PartyNotFound`, patch the narrow handler and tests only.
 
 - [ ] Task 3: Reconcile typed rejection event evidence (AC: 2, 3, 4, 5)
@@ -69,12 +74,15 @@ so that retries are safe and failures are understandable without inspecting inte
   - [ ] Confirm missing update targets emit only the current typed rejection: `PartyNotFound`, `PartyTypeMismatch`, `ContactChannelNotFound`, `IdentifierNotFound`, `PartyErasureInProgress`, `PartyProcessingRestricted`, `PartyNotRestricted`, `ConsentNotFound`, `InvalidConsentPurpose`, or `CompositeOperationConflict` as appropriate.
   - [ ] Assert rejection event lists do not also contain success events such as `PartyCreated`, `PersonDetailsUpdated`, `OrganizationDetailsUpdated`, `ContactChannelAdded`, `ContactChannelUpdated`, `ContactChannelRemoved`, `IdentifierAdded`, `IdentifierRemoved`, `PartyDeactivated`, or `PartyReactivated`.
   - [ ] For composite rejection paths, assert the full `CompositeCommandResult` shape: `Applied`, `Skipped`, `Rejected`, emitted event order, and no success event after the first rejection.
+  - [ ] For composite outcomes, assert `Rejected` entries identify the failing operation by stable operation or child ids and typed reason, not by raw person, contact, identifier, authorization, or serialized payload data.
+  - [ ] Keep rejection assertions precise to the command or sub-operation under test so broad "no success anywhere" checks do not hide unrelated setup events that are required to build the initial state.
   - [ ] Preserve existing rejection events as event-stream payloads, not exceptions-only behavior.
   - [ ] Do not delete legacy rejection event types just because current duplicate semantics are no-op; retained event contracts protect replay and compatibility.
 
 - [ ] Task 4: Protect rejection replay and EventStore apply ordering (AC: 3, 5)
   - [ ] Confirm every persisted rejection event that can appear in a Parties stream has a no-op `PartyState.Apply(...)` overload when the EventStore rehydrator requires it.
   - [ ] Keep all rejection `Apply(...)` overloads before success-event applies in `PartyState`.
+  - [ ] If the inventory finds a rejection type that lacks an `Apply(...)` overload, add only the no-op overload and the focused replay/order test needed for that event; do not reorder existing applies for cosmetic consistency.
   - [ ] Extend `PartyStateApplyOrderingFitnessTests` only when a new suffix-collision rejection event is introduced.
   - [ ] Extend `PartyStateRejectionApplyEndToEndTests` for any newly identified replay-sensitive rejection event.
   - [ ] Do not reorder `PartyState.Apply(...)` methods through formatting, alphabetization, or broad cleanup.
@@ -82,6 +90,7 @@ so that retries are safe and failures are understandable without inspecting inte
 - [ ] Task 5: Reconcile external failure mapping without broad API work (AC: 4)
   - [ ] Audit the current client and gateway behavior that maps command failures to typed client errors or ProblemDetails-compatible responses before changing public surfaces.
   - [ ] If an accepted mapping already exists, prove rejection type/code stability with focused tests.
+  - [ ] If validation exceptions are mapped before aggregate dispatch, verify their external type/code/message stability separately from aggregate rejection-event replay tests.
   - [ ] If no accepted type URI/corrective-action catalog exists for FR30, record the gap as deferred instead of inventing a broad error catalog, REST controller, OpenAPI surface, or new public API in this story.
   - [ ] Keep rejection messages privacy-safe. Do not include raw person names, contact values, identifier values, serialized payloads, authorization headers, tokens, sidecar details, connection strings, or infrastructure exception text in rejection messages, composite outcome strings, logs, telemetry dimensions, test names, or assertion failure messages.
   - [ ] Use absence assertions for raw names, contact values, identifier values, payload text, and infrastructure secret markers in any touched failure mapping tests.
@@ -171,6 +180,7 @@ src/Hexalith.Parties/
 - For no-op retries, assert `IsNoOp`, empty event lists, and unchanged state where the state object is available.
 - For composite handlers, assert `Applied`, `Skipped`, `Rejected`, emitted event order, and `UpdatedPartyDetail` only for accepted update response paths.
 - For privacy-safe evidence, use synthetic placeholder data and assert absence of raw person names, contact values, identifier values, payload text, and infrastructure secrets from public failure strings.
+- For validator and gateway failure mapping, do not require persisted rejection replay evidence unless the failure is represented as a domain event in the Parties stream.
 - If any `PartyState.Apply(...)` declarations move or new rejection apply methods are added, run both apply-ordering and rejection-apply end-to-end fitness tests.
 
 ### Anti-Patterns To Avoid
@@ -191,6 +201,7 @@ src/Hexalith.Parties/
 - End-to-end duplicate command deduplication by command-envelope `MessageId` belongs to Hexalith.EventStore/gateway behavior unless an accepted architecture decision assigns a Parties-owned surface.
 - Whether duplicate lifecycle transitions should always no-op or sometimes emit typed lifecycle-state rejections is governed by Story 1.6 and future product decisions, not by an ad hoc policy change in this story.
 - Byte-identical retry response metadata is not required by this story; only stable domain classification and privacy-safe failure reasons are in scope.
+- A unified validator/gateway/domain error taxonomy that normalizes every failure into one public catalog remains deferred unless the current implementation already exposes an accepted mapping.
 
 ### References
 
@@ -226,6 +237,7 @@ src/Hexalith.Parties/
 
 ## Change Log
 
+- 2026-05-17: Advanced elicitation applied pre-dev clarifications for state-derived retry scope, aggregate versus validator failure boundaries, composite rejection precision, no-op replay patch scope, and deferred unified error taxonomy decisions.
 - 2026-05-16: Party-mode review applied pre-dev clarifications for equivalent retry semantics, stable outcome wording, invalid-command retry evidence, composite rejection result-shape assertions, privacy-safe absence assertions, and deferred byte-identical metadata decisions.
 - 2026-05-16: Story created by BMAD pre-dev hardening automation with current idempotency, typed rejection, replay, and privacy-safe error-mapping reconciliation context.
 
@@ -255,4 +267,30 @@ src/Hexalith.Parties/
   - Domain-level idempotency keys, Parties-owned idempotency stores, and EventStore command-envelope deduplication remain outside this story.
   - Complete FR30 external error catalog, type URI, corrective-action text, status mapping, localization, and documentation remain deferred unless already accepted by existing contracts.
   - Lifecycle duplicate transition policy remains governed by Story 1.6 and future product decisions.
+- Final recommendation: ready-for-dev
+
+## Advanced Elicitation
+
+- Date/time: 2026-05-17T09:01:47+02:00
+- Selected story key: `1-7-idempotent-commands-and-typed-rejections`
+- Command/skill invocation used: `/bmad-advanced-elicitation 1-7-idempotent-commands-and-typed-rejections`
+- Batch 1 method names: Red Team vs Blue Team; Failure Mode Analysis; Security Audit Personas; Self-Consistency Validation; Architecture Decision Records
+- Reshuffled Batch 2 method names: Pre-mortem Analysis; Chaos Monkey Scenarios; User Persona Focus Group; Critique and Refine; Expand or Contract for Audience
+- Findings summary:
+  - The story was ready, but "idempotent commands" could be over-read as a request for a Parties-owned retry ledger or byte-identical EventStore envelope behavior.
+  - The largest implementation trap is conflating aggregate-emitted typed rejection events with validation or gateway failures that never enter aggregate handling.
+  - Composite rejection tests need operation-level precision so privacy-safe outcome assertions do not accidentally inspect raw command payloads or hide legitimate setup events.
+  - Replay protection should remain a narrow no-op `Apply(...)` inventory and focused fitness-test activity, not a broad reordering or cleanup of `PartyState`.
+  - FR30 public error catalog work remains useful, but it is broader than this story unless an accepted mapping already exists in the current codebase.
+- Changes applied:
+  - Clarified that retry safety is state-derived and does not require a new Parties-owned idempotency ledger.
+  - Added explicit aggregate-event versus validator/gateway failure boundaries.
+  - Added non-equivalent retry guidance for changed payloads, aggregate targets, or child entities.
+  - Tightened composite rejection outcome expectations around stable operation ids, typed reasons, and privacy-safe messages.
+  - Added narrow replay-patch guidance for missing no-op rejection applies.
+  - Deferred unified validator/gateway/domain error taxonomy work unless current accepted mappings already exist.
+- Findings deferred:
+  - Domain-level idempotency keys, retry stores, and EventStore command-envelope deduplication remain outside this story.
+  - A complete FR30 type URI, corrective-action, localization, and documentation catalog remains a product/API decision.
+  - A single public taxonomy that normalizes validator, gateway, and domain failures remains deferred unless accepted contracts already define it.
 - Final recommendation: ready-for-dev
