@@ -51,7 +51,20 @@ so that I can list and filter parties without scanning aggregate event streams.
    - Given a tenant party index projection has been built for the current tenant,
    - When consumers list, filter, or display-name search parties through the documented read path,
    - Then results are served from the tenant-safe index with pagination, type/status/date filtering, display-name matching, and bounded match metadata where applicable,
-   - And the story demonstrates observable consumer browsing/search behavior without adding retired REST endpoints, projection actor internals, or cross-tenant shortcuts.
+   - And the story demonstrates observable consumer browsing/search behavior without adding retired REST endpoints, projection actor internals, aggregate stream details, or cross-tenant shortcuts.
+   - And missing, invalid, or mismatched tenant context fails closed with no cross-tenant result, state-key leak, diagnostic payload, or reusable cursor/token behavior.
+
+## Acceptance Evidence and Traceability
+
+| AC | Required evidence before review |
+| --- | --- |
+| AC1 | `PartyIndexProjectionHandlerTests` covers create, derived-name, lifecycle, contact, identifier, erasure, and relevant detail event streams without Dapr. |
+| AC2 | Handler/search tests prove changed or erased indexed values no longer match old list/search results and no stale durable state is retained. |
+| AC3 | Actor/fitness tests prove `IIndexPartitionStrategy` and `SingleKeyPartitionStrategy` keep deterministic tenant partition keys with no personal data in actor ids, state keys, logs, snapshots, or metadata. |
+| AC4 | Actor tests cover configured batch size/time-window flushes, explicit read/deactivation/reminder flushes, successful persistence cleanup, and checkpoint behavior without real sleeps. |
+| AC5 | Handler and actor tests cover duplicate replay, child-event-before-create, stale events, rejection-event replay, and no-effective-change paths as no mutation with unchanged projected timestamps. Checkpoint advancement must follow the existing actor policy and must never imply a visible index mutation. |
+| AC6 | Pure handler tests remain infrastructure-free; actor-owned checkpoint, reminder, batching, rebuild, corruption, and degraded-cache behavior stays in actor tests. |
+| AC7 | Query/search boundary tests show tenant A and tenant B list/search independently, pagination/filter/search metadata aligns with returned page items, erased entries are excluded, and no cross-tenant fallback leakage occurs. |
 
 ## Tasks / Subtasks
 
@@ -64,48 +77,58 @@ so that I can list and filter parties without scanning aggregate event streams.
 
 - [ ] Task 2: Complete index entry shape and event mapping (AC: 1, 2, 5)
   - [ ] Ensure `PartyCreated` initializes `PartyIndexEntry.Id`, `Type`, `IsActive`, `DisplayName`, `CreatedAt`, `LastModifiedAt`, and erasure/default status values from trusted actor/aggregate context.
-  - [ ] Reconcile the story requirement for sort/sortable name behavior with the current `PartyIndexEntry` contract. If `SortName` is absent, either add an additive public field with tests or explicitly document why current display-name ordering is the accepted v1.0 behavior.
+  - [ ] Reconcile the story requirement for sort/sortable name behavior with the current `PartyIndexEntry` contract. If `SortName` is absent, either add an additive public field with tests or explicitly document why current display-name ordering or normalized display-name ordering is the accepted v1.0 behavior.
   - [ ] Ensure `PartyDisplayNameDerived`, lifecycle events, contact-channel events, identifier events, and erasure paths update only the relevant fields while preserving unrelated entry state.
   - [ ] Do not make index state authoritative for full detail. Full details remain owned by `PartyDetail`; the index is a lightweight list/search projection.
   - [ ] Treat events arriving before `PartyCreated` as no-ops unless existing code already has a stricter corruption policy. Do not synthesize partial index entries from child events.
   - [ ] Keep rejection events as index no-ops. Add explicit representative coverage so persisted rejection events replay without mutating state or timestamps.
   - [ ] For erasure, ensure index behavior is privacy-safe: erased parties must not remain searchable/listable unless a later story explicitly defines an erased-status list contract.
+  - [ ] Ensure post-erasure index/search state, logs, metadata, exception messages, and test assertions do not retain or expose personal names, contact values, identifier values, raw payloads, or serialized index entries.
 
 - [ ] Task 3: Strengthen idempotency, timestamp, and no-op semantics (AC: 2, 5, 6)
   - [ ] Preserve duplicate `PartyCreated` behavior: existing index state must not be reset by replayed create events.
   - [ ] Deduplicate contact channels and identifiers by stable ids (`ContactChannelId`, `IdentifierId`), not by values, labels, case-normalized text, or personal data.
   - [ ] Missing-item updates/removals and no-effective-change events must return a no-mutation result and leave `LastModifiedAt` unchanged.
-  - [ ] Duplicate or no-effective-change events must not replace existing contact/identifier entries, append duplicates, or refresh timestamps.
-  - [ ] Prefer timestamp assertions that prove unchanged no-op values and monotonic movement for real mutations. Do not assert exact wall-clock processing times.
+  - [ ] Duplicate or no-effective-change events must not replace existing contact/identifier entries, append duplicates, refresh timestamps, or create search-visible duplicates.
+  - [ ] Apply no-op timestamp preservation to duplicate replay, stale events, rejection events, child-event-before-create, missing child updates/removals, and ignored cross-tenant input.
+  - [ ] Prefer timestamp assertions that prove unchanged no-op values and monotonic movement for real mutations. Distinguish event timestamp, projected `LastModifiedAt`, replay/checkpoint timestamp, and persistence timing. Do not assert exact wall-clock processing times.
   - [ ] Do not add event-time fields to existing public events unless a separate architecture decision approves an additive schema change.
 
 - [ ] Task 4: Validate actor state keys, partitioning, batching, and checkpoints (AC: 3, 4, 5)
   - [ ] Keep Dapr dependencies in `PartyIndexProjectionActor`; `PartyIndexProjectionHandler` must remain free of `Dapr.*` references.
+  - [ ] Keep checkpoint, reminder, actor state, batching, rebuild, corruption, degraded-cache, logging, and serialization side effects out of `PartyIndexProjectionHandler`; it must return deterministic projection effects only.
   - [ ] Confirm actor ids use `{tenant}:party-index` and state keys use `{tenant}:party-index:{partitionKey}` with `default` from `SingleKeyPartitionStrategy` for v1.0.
   - [ ] Confirm per-party sequence checkpoints use stable party ids and do not require rewriting the whole tenant checkpoint map on every event.
   - [ ] Verify malformed actor ids, invalid projection segments, unsupported serialization formats, unknown/ambiguous event names, unreadable payloads, and checkpoint corruption follow explicit actor behavior.
   - [ ] Prove accepted no-op events can advance the per-party checkpoint without writing changed index state when that is current actor policy.
   - [ ] Verify batch persistence uses `ProjectionOptions.BatchSize` and `BatchTimeWindowMs`, flushes on reminder/deactivation/read, and does not leave `_pendingChanges` stuck after successful persistence.
+  - [ ] Test reminders and batch timing deterministically through actor/reminder hooks or configured timing abstractions; do not use real sleeps or timing-sensitive assertions.
   - [ ] If multi-key partitioning is not implemented in v1.0, keep `SingleKeyPartitionStrategy` as the only active strategy and record multi-key behavior as deferred rather than silently changing actor activation semantics.
 
 - [ ] Task 5: Preserve tenant safety and search/list boundaries (AC: 2, 7)
   - [ ] Ensure list/search consumers obtain entries only from the tenant-scoped index actor for the current tenant context.
   - [ ] Keep write-side tenant validation in EventStore/gateway ownership; do not add Parties-side write authorization workarounds.
   - [ ] Keep projection-side tenant reads fail-closed when tenant context, authorized party ids, actor state, or query inputs cannot prove safety.
+  - [ ] Add tenant isolation proof for missing tenant context, mismatched tenant context, malformed partition keys, and reused pagination/search cursors from another tenant.
   - [ ] Keep local search bounded to display-name/type/status behavior required for MVP unless current accepted code already supports more. Do not expand email/identifier search as public MVP scope without updating the story decision trail.
+  - [ ] Preserve accepted current local fallback behavior only. Do not introduce semantic search, email search, identifier search, freshness/degradation response shapes, migration/backfill behavior, rebuild runbooks, or operational repair workflows in this story.
   - [ ] Do not expose `SearchableContactChannels` or `SearchableIdentifiers` through serialized `PartyIndexEntry` payloads or durable callbacks. They may only remain internal implementation details if tests prove they are not persisted or leaked.
   - [ ] Search/list response metadata must not include raw contact values, identifiers, tenant membership payloads, tokens, raw ProblemDetails, raw query payloads, or serialized actor state.
+  - [ ] Demonstrate user-visible behavior with at least two tenants: tenant A and tenant B can list/search independently, changed names/statuses stop matching stale values, erased entries are excluded, and results come through the accepted query/search boundary rather than aggregate stream scans.
 
 - [ ] Task 6: Strengthen focused tests (AC: 1, 2, 3, 4, 5, 6, 7)
   - [ ] Extend `tests/Hexalith.Parties.Projections.Tests/Handlers/PartyIndexProjectionHandlerTests.cs` for create -> derived name -> contact add/update/remove -> identifier add/remove -> deactivate -> reactivate -> erasure sequences.
   - [ ] Add tests for duplicate create, duplicate contact add, duplicate identifier add, missing contact/identifier update/remove, child-event-before-create, and rejection-event no-ops.
   - [ ] Add timestamp invariants proving no-op/rejection paths keep `LastModifiedAt` unchanged and real mutations move it monotonically.
   - [ ] Add or update actor tests in `tests/Hexalith.Parties.Tests/Projections/PartyIndexProjectionActorCorruptionTests.cs` or adjacent tests for malformed actor ids, partition state key resolution, batch flush, reminder flush, per-party sequence checkpoint, skipped old sequence, redacted/unreadable payload policy, and corruption/rebuild behavior.
+  - [ ] Ensure actor tests distinguish visible index mutation from checkpoint advancement, including persisted rejection replay and accepted no-op events.
   - [ ] Add tests for list/filter/search read behavior where the current query boundary exists, including pagination bounds, type filter, active filter, date filters, erased-entry exclusion, empty query behavior, stale/degraded local fallback semantics, and metadata alignment with returned page items.
+  - [ ] Add fail-closed search/list tests for missing/mismatched tenant context, malformed partition key behavior, and cross-tenant cursor or token reuse.
   - [ ] Add or preserve log-safety expectations for projection and search diagnostics. Metadata such as tenant id, party id, event type name, sequence number, projection name, case id, and bounded reason is acceptable; party names, contact values, identifier values, raw payloads, and serialized index entries are not.
 
 - [ ] Task 7: Preserve architecture fitness and package boundaries (AC: 3, 6, 7)
   - [ ] Do not add public REST controllers, Swagger/OpenAPI, or MCP tools to `src/Hexalith.Parties` for this story.
+  - [ ] Verify observable list/search behavior through existing query/search/client boundaries only; do not expose projection actor internals, aggregate stream details, or new public service surfaces.
   - [ ] Do not move query/list behavior into the aggregate or server project. Projections remain read-side infrastructure.
   - [ ] Do not make Contracts depend on Projections, Server, Dapr, MediatR, FluentValidation, UI, or infrastructure packages.
   - [ ] Do not add package versions to `.csproj`; keep versions in `Directory.Packages.props`.
@@ -133,6 +156,8 @@ so that I can list and filter parties without scanning aggregate event streams.
 - `IPartiesQueryClient.ListPartiesAsync(...)` and `SearchPartiesAsync(...)` already define consumer-facing query client shapes for pagination, type/status/date filters, and search.
 - `LocalPartySearchService` requires `AuthorizedPartyIds`, drops erased entries, materializes entries once, clamps page/page size through request normalization, and aligns metadata with current page items.
 - `LocalFuzzyPartySearchProvider` currently searches display name, type text, contact channels, and identifiers. This may exceed the MVP story language that reserves email/identifier search for later dedicated search. Reconcile the accepted current behavior with the story instead of widening public scope silently.
+- Timestamp evidence has four different concepts: source event time, projected `LastModifiedAt`, actor replay/checkpoint position, and persistence/flush timing. Tests must assert the right concept instead of treating wall-clock processing time as domain evidence.
+- Batching and replay are product-visible because burst delivery must converge to one correct tenant-scoped result set, duplicate delivery must not duplicate visible results, and stale values must stop matching after summary changes.
 
 ### Architecture Patterns and Constraints
 
@@ -218,6 +243,8 @@ tests/Hexalith.Parties.Tests/FitnessTests/ArchitecturalFitnessTests.cs
 - Dedicated semantic search, rich Memories search policy, email search, and identifier search beyond accepted current local fallback behavior remain deferred unless a separate planning decision changes MVP scope.
 - Projection schema versioning, migration/backfill strategy, and cross-projection consistency guarantees remain deferred until a later operational or compatibility story requires them.
 - Automated drift detection and operational rebuild runbooks are broader Story 2.8 concerns. Preserve current rebuild hooks without expanding scope unnecessarily.
+- Freshness/degradation public response shape remains deferred. This story may preserve existing actor degraded/rebuild primitives and accepted local fallback behavior, but it must not design a new public freshness contract.
+- New REST/OpenAPI/MCP surfaces for party index queries are out of scope; use the accepted query/search/client boundaries only.
 
 ### References
 
@@ -248,6 +275,32 @@ tests/Hexalith.Parties.Tests/FitnessTests/ArchitecturalFitnessTests.cs
 
 ### File List
 
+## Party-Mode Review
+
+- Date: 2026-05-17T14:44:05+02:00
+- Selected story key: `2-2-build-tenant-party-index-projection`
+- Command/skill invocation used: `/bmad-party-mode 2-2-build-tenant-party-index-projection; review;`
+- Participating BMAD agents: Winston (System Architect), Amelia (Senior Software Engineer), Murat (Master Test Architect and Quality Advisor), John (Product Manager)
+- Findings summary:
+  - Winston recommended `needs-story-update` until tenant fail-closed behavior, partition/state-key privacy, rejection replay, batching/checkpoint preservation, and search fallback scope were explicit.
+  - Amelia recommended `needs-story-update` for clearer AC-to-test traceability, handler purity, rejection/child-before-create no-op coverage, sort-name fallback, privacy evidence, stable-id deduplication, timestamp preservation, and validation evidence.
+  - Murat recommended `ready-for-dev` with clarifications for AC-to-test rows, no-PII diagnostics, tenant negative cases, rejection replay assertions, timestamp-source distinctions, deterministic actor timer/reminder tests, and pinned validation commands.
+  - John recommended `needs-story-update` until user-visible tenant-scoped list/search proof, stale-value proof, erasure/privacy proof, no new public surface guardrails, and deferred-boundary wording were strengthened.
+- Changes applied:
+  - Added AC7 fail-closed tenant behavior and no actor-internal or aggregate-stream leakage language.
+  - Added AC-to-test evidence table mapping every acceptance criterion to focused handler, actor, search, and fitness evidence.
+  - Clarified sort-name fallback, erasure privacy, no-op timestamp classes, handler purity, deterministic actor timing tests, checkpoint/no-mutation distinction, tenant negative cases, and two-tenant user-visible proof.
+  - Strengthened boundaries against semantic/email/identifier search expansion, public freshness/degradation response design, migration/backfill work, rebuild runbooks, REST/OpenAPI/MCP additions, and actor-internal public exposure.
+  - Added dev notes distinguishing source event time, projected `LastModifiedAt`, replay/checkpoint position, and persistence timing.
+- Findings deferred:
+  - Multi-key partitioning beyond `SingleKeyPartitionStrategy`.
+  - Public freshness/degradation response shape.
+  - Semantic search, email search, and identifier search beyond accepted current local fallback behavior.
+  - Projection schema versioning, migration/backfill, and operational rebuild runbooks.
+  - Any new external/public API surface for party index queries.
+- Final recommendation: ready-for-dev
+
 ## Change Log
 
 - 2026-05-17: Story created by BMAD pre-dev context workflow with existing tenant index projection analysis, partition/batching guardrails, search/list boundary guidance, privacy-safe diagnostics, and focused validation commands.
+- 2026-05-17: Party-mode review applied low-risk clarifications for tenant fail-closed behavior, AC-to-test traceability, no-op/rejection replay evidence, privacy-safe diagnostics, deterministic actor tests, and deferred public-scope boundaries.
