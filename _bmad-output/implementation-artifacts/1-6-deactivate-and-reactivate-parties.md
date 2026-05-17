@@ -1,6 +1,6 @@
 # Story 1.6: Deactivate and Reactivate Parties
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -109,6 +109,11 @@ so that lifecycle changes are reversible and auditable.
   - [x] Run `dotnet test tests/Hexalith.Parties.Client.Tests/Hexalith.Parties.Client.Tests.csproj --configuration Release --filter FullyQualifiedName~HttpPartiesCommandClientTests` if client command serialization is touched.
   - [x] Run `dotnet test tests/Hexalith.Parties.Mcp.Tests/Hexalith.Parties.Mcp.Tests.csproj --configuration Release --filter FullyQualifiedName~PartiesMcpToolDispatchTests` if MCP delete/reactivate wording or dispatch is touched.
   - [x] Run `dotnet build Hexalith.Parties.slnx --configuration Release` if implementation changes public contracts, validators, client abstractions, project references, or EventStore-facing surfaces.
+
+### Review Findings
+
+- [x] [Review][Defer] Erasure-state coverage matrix gap for Deactivate/Reactivate [tests/Hexalith.Parties.Server.Tests/Aggregates/PartyAggregateLifecycleTests.cs] — deferred, pre-existing. `PartyAggregateErasureTests.cs:69-81` covers `DeactivateParty` against `ErasurePending` only; no coverage for `Erased`, `KeyDestroyed`, `VerificationInProgress`, or `Verified`, and `ReactivateParty` has no erasure-state coverage at all. Guard precedence (null → erasure → restriction → idempotency → success) is now load-bearing because this story swaps the null-state rejection; future refactors that reorder guards would still pass current tests against most erasure variants. Not a regression caused by this diff — pre-existing coverage hole that this diff surfaces.
+- [x] [Review][Defer] Orphaned rejection events `PartyCannotBeDeactivatedWhenInactive` / `PartyCannotBeReactivatedWhenActive` [src/Hexalith.Parties.Contracts/Events/PartyCannotBeDeactivatedWhenInactive.cs, PartyCannotBeReactivatedWhenActive.cs] — deferred, pre-existing. After this diff there are no production emission sites for these two events; only `PartyState.Apply` overloads and `PartyPayloadProtectionServiceTests` map entries remain. The Apply overloads must stay (historical streams may still contain these events and rehydration must remain clean), but the types are now dead from an emission standpoint and may confuse new contributors. Pair with a broader rejection-event cleanup pass once Story 1.7 finalises command idempotency semantics.
 
 ## Dev Notes
 
@@ -267,6 +272,7 @@ GPT-5 Codex
 
 ## Change Log
 
+- 2026-05-17: Code review (`/bmad-code-review 1.6`) — Blind Hunter, Edge Case Hunter, Acceptance Auditor. All 7 ACs and 3 persistent constraints satisfied. 0 patch / 0 decision-needed / 2 defer (pre-existing) / 7 dismissed. Story moved to `done`.
 - 2026-05-17: Implemented lifecycle missing-party `PartyNotFound` behavior, lifecycle preservation tests, MCP soft-deactivation wording, and validation updates.
 - 2026-05-15: Party-mode review applied pre-dev clarifications for missing-party `PartyNotFound`, duplicate no-op boundaries, FR69 contract deferral, privacy-safe preservation evidence, EventStore identity, and lifecycle wording.
 - 2026-05-15: Story created by BMAD pre-dev hardening automation with current lifecycle reconciliation context.
