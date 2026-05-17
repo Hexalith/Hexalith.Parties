@@ -1,6 +1,6 @@
 # Story 1.6: Deactivate and Reactivate Parties
 
-Status: ready-for-dev
+Status: review
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -66,49 +66,49 @@ so that lifecycle changes are reversible and auditable.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Audit lifecycle contracts, validators, and current command surfaces (AC: 1, 2, 3, 4, 5, 7)
-  - [ ] Confirm `DeactivateParty`, `ReactivateParty`, `PartyDeactivated`, `PartyReactivated`, `PartyCannotBeDeactivatedWhenInactive`, `PartyCannotBeReactivatedWhenActive`, `PartyNotFound`, `PartyState`, and `PartyDetail` match this story's scope.
-  - [ ] Confirm `DeactivatePartyValidator` and `ReactivatePartyValidator` require non-empty GUID-shaped `PartyId` and do not add tenant/RBAC validation inside Parties.
-  - [ ] Treat "authorized client" as an upstream gateway/client precondition. Do not add tenant authorization to the aggregate, contracts, validators, projections, or client abstractions in this story.
-  - [ ] Confirm lifecycle success events intentionally carry no `PartyId`; aggregate identity remains EventStore metadata.
-  - [ ] Keep lifecycle as soft deactivation only. Do not wire GDPR erasure, key deletion, crypto-shredding, consent changes, or physical deletion into deactivate/reactivate commands.
+- [x] Task 1: Audit lifecycle contracts, validators, and current command surfaces (AC: 1, 2, 3, 4, 5, 7)
+  - [x] Confirm `DeactivateParty`, `ReactivateParty`, `PartyDeactivated`, `PartyReactivated`, `PartyCannotBeDeactivatedWhenInactive`, `PartyCannotBeReactivatedWhenActive`, `PartyNotFound`, `PartyState`, and `PartyDetail` match this story's scope.
+  - [x] Confirm `DeactivatePartyValidator` and `ReactivatePartyValidator` require non-empty GUID-shaped `PartyId` and do not add tenant/RBAC validation inside Parties.
+  - [x] Treat "authorized client" as an upstream gateway/client precondition. Do not add tenant authorization to the aggregate, contracts, validators, projections, or client abstractions in this story.
+  - [x] Confirm lifecycle success events intentionally carry no `PartyId`; aggregate identity remains EventStore metadata.
+  - [x] Keep lifecycle as soft deactivation only. Do not wire GDPR erasure, key deletion, crypto-shredding, consent changes, or physical deletion into deactivate/reactivate commands.
 
-- [ ] Task 2: Reconcile standalone aggregate lifecycle behavior (AC: 1, 2, 3, 4, 5, 7)
-  - [ ] Confirm `PartyAggregate.Handle(DeactivateParty, PartyState?)` rejects null state with the accepted not-found rejection contract, guards erasure and processing restriction before success, no-ops already inactive state, and emits exactly one `PartyDeactivated` event on success.
-  - [ ] Confirm `PartyAggregate.Handle(ReactivateParty, PartyState?)` rejects null state with the accepted not-found rejection contract, guards erasure and processing restriction before success, no-ops already active state, and emits exactly one `PartyReactivated` event on success.
-  - [ ] Update the current null-state lifecycle behavior if needed. At story creation time the handlers returned `PartyCannotBeDeactivatedWhenInactive` and `PartyCannotBeReactivatedWhenActive` for missing state; the story AC requires a typed not-found rejection.
-  - [ ] Keep duplicate lifecycle commands as no-op retry-safe outcomes only when the party exists and is already in the requested lifecycle state, unless an accepted Story 1.7 decision changes command idempotency globally.
-  - [ ] Preserve guard precedence for erased or processing-restricted parties: they must reject through the accepted privacy/restriction contracts before any lifecycle success event or duplicate no-op outcome is treated as successful.
-  - [ ] Ensure rejection paths never also emit `PartyDeactivated` or `PartyReactivated`.
+- [x] Task 2: Reconcile standalone aggregate lifecycle behavior (AC: 1, 2, 3, 4, 5, 7)
+  - [x] Confirm `PartyAggregate.Handle(DeactivateParty, PartyState?)` rejects null state with the accepted not-found rejection contract, guards erasure and processing restriction before success, no-ops already inactive state, and emits exactly one `PartyDeactivated` event on success.
+  - [x] Confirm `PartyAggregate.Handle(ReactivateParty, PartyState?)` rejects null state with the accepted not-found rejection contract, guards erasure and processing restriction before success, no-ops already active state, and emits exactly one `PartyReactivated` event on success.
+  - [x] Update the current null-state lifecycle behavior if needed. At story creation time the handlers returned `PartyCannotBeDeactivatedWhenInactive` and `PartyCannotBeReactivatedWhenActive` for missing state; the story AC requires a typed not-found rejection.
+  - [x] Keep duplicate lifecycle commands as no-op retry-safe outcomes only when the party exists and is already in the requested lifecycle state, unless an accepted Story 1.7 decision changes command idempotency globally.
+  - [x] Preserve guard precedence for erased or processing-restricted parties: they must reject through the accepted privacy/restriction contracts before any lifecycle success event or duplicate no-op outcome is treated as successful.
+  - [x] Ensure rejection paths never also emit `PartyDeactivated` or `PartyReactivated`.
 
-- [ ] Task 3: Prove state rehydration preserves data across lifecycle events (AC: 1, 2, 3, 4, 7)
-  - [ ] Confirm `PartyState.Apply(PartyDeactivated)` sets only `IsActive = false`.
-  - [ ] Confirm `PartyState.Apply(PartyReactivated)` sets only `IsActive = true`.
-  - [ ] Add or update state tests that start from a party with details, contact channels, identifiers, and consent records where available, apply lifecycle events, and assert all non-lifecycle data is preserved.
-  - [ ] Include a deactivate-then-reactivate round trip state test so preservation is proven across both lifecycle transitions, not only each event in isolation.
-  - [ ] Preserve the no-op rejection `Apply(...)` methods before success applies; EventStore suffix-based rehydration depends on that ordering.
-  - [ ] Do not alter display name, sort name, created timestamp, erasure status, restriction status, contact channels, identifiers, or consent records in lifecycle `Apply` methods.
+- [x] Task 3: Prove state rehydration preserves data across lifecycle events (AC: 1, 2, 3, 4, 7)
+  - [x] Confirm `PartyState.Apply(PartyDeactivated)` sets only `IsActive = false`.
+  - [x] Confirm `PartyState.Apply(PartyReactivated)` sets only `IsActive = true`.
+  - [x] Add or update state tests that start from a party with details, contact channels, identifiers, and consent records where available, apply lifecycle events, and assert all non-lifecycle data is preserved.
+  - [x] Include a deactivate-then-reactivate round trip state test so preservation is proven across both lifecycle transitions, not only each event in isolation.
+  - [x] Preserve the no-op rejection `Apply(...)` methods before success applies; EventStore suffix-based rehydration depends on that ordering.
+  - [x] Do not alter display name, sort name, created timestamp, erasure status, restriction status, contact channels, identifiers, or consent records in lifecycle `Apply` methods.
 
-- [ ] Task 4: Reconcile returned-state evidence for FR69 (AC: 6)
-  - [ ] Audit the current response path that is accepted for lifecycle mutations before changing public contracts. `BuildPartyDetailFromState(...)` already knows how to apply `PartyDeactivated` and `PartyReactivated` events, but `UpdatePartyComposite` currently has no lifecycle operation fields.
-  - [ ] If an accepted architecture/product decision already defines lifecycle in `UpdatePartyComposite`, implement that shape and prove `CompositeCommandResult.UpdatedPartyDetail.IsActive` changes after deactivate/reactivate.
-  - [ ] If no accepted decision exists, record a deferred decision instead of inventing a broad public contract shape. In that case, keep implementation focused on aggregate/state/client evidence and explicitly name the FR69 lifecycle response gap in the Dev Agent Record.
-  - [ ] If FR69 remains deferred for lifecycle commands, the Dev Agent Record must state which accepted evidence still exists (`BuildPartyDetailFromState(...)` lifecycle mapping) and which public mutation path is not yet approved.
-  - [ ] Do not change simple standalone `DomainResult` return types to carry `PartyDetail`; public updated-state behavior belongs to the accepted update response path, not ad hoc aggregate return changes.
+- [x] Task 4: Reconcile returned-state evidence for FR69 (AC: 6)
+  - [x] Audit the current response path that is accepted for lifecycle mutations before changing public contracts. `BuildPartyDetailFromState(...)` already knows how to apply `PartyDeactivated` and `PartyReactivated` events, but `UpdatePartyComposite` currently has no lifecycle operation fields.
+  - [x] If an accepted architecture/product decision already defines lifecycle in `UpdatePartyComposite`, implement that shape and prove `CompositeCommandResult.UpdatedPartyDetail.IsActive` changes after deactivate/reactivate.
+  - [x] If no accepted decision exists, record a deferred decision instead of inventing a broad public contract shape. In that case, keep implementation focused on aggregate/state/client evidence and explicitly name the FR69 lifecycle response gap in the Dev Agent Record.
+  - [x] If FR69 remains deferred for lifecycle commands, the Dev Agent Record must state which accepted evidence still exists (`BuildPartyDetailFromState(...)` lifecycle mapping) and which public mutation path is not yet approved.
+  - [x] Do not change simple standalone `DomainResult` return types to carry `PartyDetail`; public updated-state behavior belongs to the accepted update response path, not ad hoc aggregate return changes.
 
-- [ ] Task 5: Preserve client and integration boundary semantics (AC: 6, 7)
-  - [ ] Confirm `IPartiesCommandClient.DeactivatePartyAsync` and `ReactivatePartyAsync` still send typed lifecycle commands without exposing event payload types through the client boundary.
-  - [ ] Confirm `HttpPartiesCommandClient` serialization uses the existing command envelope pattern and remains correlation/response compatible with current client tests.
-  - [ ] Keep MCP `delete_party` semantics as an adapter over soft deactivation, not erasure. Do not add MCP domain logic or event-type dependencies while working this story.
-  - [ ] Do not add REST controllers, Swagger/OpenAPI, in-process MCP tools, AdminPortal UI, Picker UI, projections, search, or samples unless a focused test fails because the existing contract already depends on lifecycle wording.
+- [x] Task 5: Preserve client and integration boundary semantics (AC: 6, 7)
+  - [x] Confirm `IPartiesCommandClient.DeactivatePartyAsync` and `ReactivatePartyAsync` still send typed lifecycle commands without exposing event payload types through the client boundary.
+  - [x] Confirm `HttpPartiesCommandClient` serialization uses the existing command envelope pattern and remains correlation/response compatible with current client tests.
+  - [x] Keep MCP `delete_party` semantics as an adapter over soft deactivation, not erasure. Do not add MCP domain logic or event-type dependencies while working this story.
+  - [x] Do not add REST controllers, Swagger/OpenAPI, in-process MCP tools, AdminPortal UI, Picker UI, projections, search, or samples unless a focused test fails because the existing contract already depends on lifecycle wording.
 
-- [ ] Task 6: Run focused validation (AC: 1, 2, 3, 4, 5, 6, 7)
-  - [ ] Run `dotnet test tests/Hexalith.Parties.Server.Tests/Hexalith.Parties.Server.Tests.csproj --configuration Release --filter FullyQualifiedName~PartyAggregateLifecycleTests`.
-  - [ ] Run `dotnet test tests/Hexalith.Parties.Contracts.Tests/Hexalith.Parties.Contracts.Tests.csproj --configuration Release --filter FullyQualifiedName~PartyStateTests`.
-  - [ ] Run `dotnet test tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj --configuration Release --filter FullyQualifiedName~PartyStateApplyOrderingFitnessTests` if any `PartyState.Apply` declarations move.
-  - [ ] Run `dotnet test tests/Hexalith.Parties.Client.Tests/Hexalith.Parties.Client.Tests.csproj --configuration Release --filter FullyQualifiedName~HttpPartiesCommandClientTests` if client command serialization is touched.
-  - [ ] Run `dotnet test tests/Hexalith.Parties.Mcp.Tests/Hexalith.Parties.Mcp.Tests.csproj --configuration Release --filter FullyQualifiedName~PartiesMcpToolDispatchTests` if MCP delete/reactivate wording or dispatch is touched.
-  - [ ] Run `dotnet build Hexalith.Parties.slnx --configuration Release` if implementation changes public contracts, validators, client abstractions, project references, or EventStore-facing surfaces.
+- [x] Task 6: Run focused validation (AC: 1, 2, 3, 4, 5, 6, 7)
+  - [x] Run `dotnet test tests/Hexalith.Parties.Server.Tests/Hexalith.Parties.Server.Tests.csproj --configuration Release --filter FullyQualifiedName~PartyAggregateLifecycleTests`.
+  - [x] Run `dotnet test tests/Hexalith.Parties.Contracts.Tests/Hexalith.Parties.Contracts.Tests.csproj --configuration Release --filter FullyQualifiedName~PartyStateTests`.
+  - [x] Run `dotnet test tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj --configuration Release --filter FullyQualifiedName~PartyStateApplyOrderingFitnessTests` if any `PartyState.Apply` declarations move.
+  - [x] Run `dotnet test tests/Hexalith.Parties.Client.Tests/Hexalith.Parties.Client.Tests.csproj --configuration Release --filter FullyQualifiedName~HttpPartiesCommandClientTests` if client command serialization is touched.
+  - [x] Run `dotnet test tests/Hexalith.Parties.Mcp.Tests/Hexalith.Parties.Mcp.Tests.csproj --configuration Release --filter FullyQualifiedName~PartiesMcpToolDispatchTests` if MCP delete/reactivate wording or dispatch is touched.
+  - [x] Run `dotnet build Hexalith.Parties.slnx --configuration Release` if implementation changes public contracts, validators, client abstractions, project references, or EventStore-facing surfaces.
 
 ## Dev Notes
 
@@ -231,16 +231,43 @@ tests/Hexalith.Parties.Mcp.Tests/
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+GPT-5 Codex
 
 ### Debug Log References
 
+- 2026-05-17: Red test run confirmed null-state lifecycle commands emitted lifecycle-state rejections instead of `PartyNotFound`.
+- 2026-05-17: Focused lifecycle, state, and MCP dispatch tests passed after implementation.
+- 2026-05-17: `dotnet build Hexalith.Parties.slnx --configuration Release` passed.
+- 2026-05-17: First solution-wide `dotnet test Hexalith.Parties.slnx --configuration Release --no-build` run had one timing-only benchmark miss; the exact failed benchmark passed on rerun.
+- 2026-05-17: Second solution-wide `dotnet test Hexalith.Parties.slnx --configuration Release --no-build` run passed with 6 integration health checks skipped by test metadata.
+
+### Implementation Plan
+
+- Prove the documented missing-party gap with failing aggregate tests before changing the handlers.
+- Keep lifecycle commands as standalone `DomainResult` operations; do not add lifecycle fields to `UpdatePartyComposite` without an accepted product/architecture decision.
+- Add state preservation coverage around populated party state and the deactivate/reactivate round trip.
+- Limit MCP changes to wording so the delete-facing adapter names soft deactivation without adding erasure semantics.
+
 ### Completion Notes List
+
+- `DeactivateParty` and `ReactivateParty` now reject null aggregate state with `PartyNotFound` and do not emit lifecycle success events on that rejection path.
+- Duplicate deactivate/reactivate behavior remains retry-safe no-op behavior for existing parties already in the requested lifecycle state.
+- Added state tests proving lifecycle events preserve details, contact channels, identifiers, consent records, display/sort names, creation timestamp, erasure status, and restriction status.
+- FR69 lifecycle returned-state public mutation remains deferred: `BuildPartyDetailFromState(...)` already maps `PartyDeactivated` and `PartyReactivated`, but `UpdatePartyComposite` has no accepted lifecycle operation fields yet.
+- MCP delete-facing wording now says soft deactivation rather than soft deletion; no MCP domain behavior or event-type dependency was added.
 
 ### File List
 
+- src/Hexalith.Parties.Server/Aggregates/PartyAggregate.cs
+- src/Hexalith.Parties.Mcp/Tools/PartiesMcpTools.cs
+- tests/Hexalith.Parties.Server.Tests/Aggregates/PartyAggregateLifecycleTests.cs
+- tests/Hexalith.Parties.Contracts.Tests/State/PartyStateTests.cs
+- _bmad-output/implementation-artifacts/1-6-deactivate-and-reactivate-parties.md
+- _bmad-output/implementation-artifacts/sprint-status.yaml
+
 ## Change Log
 
+- 2026-05-17: Implemented lifecycle missing-party `PartyNotFound` behavior, lifecycle preservation tests, MCP soft-deactivation wording, and validation updates.
 - 2026-05-15: Party-mode review applied pre-dev clarifications for missing-party `PartyNotFound`, duplicate no-op boundaries, FR69 contract deferral, privacy-safe preservation evidence, EventStore identity, and lifecycle wording.
 - 2026-05-15: Story created by BMAD pre-dev hardening automation with current lifecycle reconciliation context.
 

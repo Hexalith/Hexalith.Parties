@@ -39,7 +39,9 @@ public class PartyAggregateLifecycleTests
 
         // Assert
         result.IsRejection.ShouldBeTrue();
-        result.Events[0].ShouldBeOfType<PartyCannotBeDeactivatedWhenInactive>();
+        result.Events.Count.ShouldBe(1);
+        result.Events[0].ShouldBeOfType<PartyNotFound>();
+        result.Events.ShouldNotContain(e => e is PartyDeactivated);
     }
 
     [Fact]
@@ -54,6 +56,8 @@ public class PartyAggregateLifecycleTests
 
         // Assert
         result.IsNoOp.ShouldBeTrue();
+        result.Events.ShouldNotContain(e => e is PartyDeactivated);
+        state.IsActive.ShouldBeFalse();
     }
 
     [Fact]
@@ -110,7 +114,9 @@ public class PartyAggregateLifecycleTests
 
         // Assert
         result.IsRejection.ShouldBeTrue();
-        result.Events[0].ShouldBeOfType<PartyCannotBeReactivatedWhenActive>();
+        result.Events.Count.ShouldBe(1);
+        result.Events[0].ShouldBeOfType<PartyNotFound>();
+        result.Events.ShouldNotContain(e => e is PartyReactivated);
     }
 
     [Fact]
@@ -125,6 +131,8 @@ public class PartyAggregateLifecycleTests
 
         // Assert
         result.IsNoOp.ShouldBeTrue();
+        result.Events.ShouldNotContain(e => e is PartyReactivated);
+        state.IsActive.ShouldBeTrue();
     }
 
     [Fact]

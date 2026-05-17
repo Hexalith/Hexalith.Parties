@@ -261,7 +261,7 @@ internal sealed class PartiesMcpTools(
             }).ConfigureAwait(false);
 
     [McpServerTool(Name = PartiesMcpToolNames.DeleteParty, Title = "Delete Party", Destructive = true, Idempotent = true)]
-    [Description("Deactivates or soft-deletes a Parties record while preserving idempotent already-inactive behavior when the client contract can observe it.")]
+    [Description("Soft deactivates a Parties record while preserving idempotent already-inactive behavior when the client contract can observe it.")]
     public async Task<PartiesMcpToolResult> DeleteParty(
         [Description("The party identifier to deactivate.")] string partyId,
         CancellationToken cancellationToken = default)

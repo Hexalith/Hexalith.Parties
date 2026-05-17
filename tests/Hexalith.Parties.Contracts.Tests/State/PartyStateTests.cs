@@ -1,8 +1,10 @@
 using Hexalith.Parties.Contracts;
 using Hexalith.Parties.Contracts.Commands;
 using Hexalith.Parties.Contracts.Events;
+using Hexalith.Parties.Contracts.Security;
 using Hexalith.Parties.Contracts.State;
 using Hexalith.Parties.Contracts.ValueObjects;
+using Hexalith.Parties.Testing;
 
 using Shouldly;
 
@@ -201,6 +203,31 @@ public class PartyStateTests {
     }
 
     [Fact]
+    public void Apply_PartyDeactivated_PreservesNonLifecyclePartyData() {
+        PartyState state = PartyTestData.CreateStateWithConsent();
+        DateTimeOffset createdAt = state.CreatedAt;
+        PersonDetails? person = state.Person;
+        string displayName = state.DisplayName;
+        string sortName = state.SortName;
+        IReadOnlyList<ContactChannel> contactChannels = [.. state.ContactChannels];
+        IReadOnlyList<PartyIdentifier> identifiers = [.. state.Identifiers];
+        IReadOnlyList<ConsentRecord> consentRecords = [.. state.ConsentRecords];
+
+        state.Apply(new PartyDeactivated());
+
+        state.IsActive.ShouldBeFalse();
+        state.CreatedAt.ShouldBe(createdAt);
+        state.Person.ShouldBe(person);
+        state.DisplayName.ShouldBe(displayName);
+        state.SortName.ShouldBe(sortName);
+        state.ContactChannels.ShouldBe(contactChannels);
+        state.Identifiers.ShouldBe(identifiers);
+        state.ConsentRecords.ShouldBe(consentRecords);
+        state.ErasureStatus.ShouldBe(ErasureStatus.Active);
+        state.IsRestricted.ShouldBeFalse();
+    }
+
+    [Fact]
     public void Apply_PartyDisplayNameDerived_SetsNames() {
         var state = new PartyState();
 
@@ -225,6 +252,32 @@ public class PartyStateTests {
         state.Apply(new PartyReactivated());
 
         state.IsActive.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void Apply_PartyReactivated_PreservesNonLifecyclePartyDataAfterRoundTrip() {
+        PartyState state = PartyTestData.CreateStateWithConsent();
+        DateTimeOffset createdAt = state.CreatedAt;
+        PersonDetails? person = state.Person;
+        string displayName = state.DisplayName;
+        string sortName = state.SortName;
+        IReadOnlyList<ContactChannel> contactChannels = [.. state.ContactChannels];
+        IReadOnlyList<PartyIdentifier> identifiers = [.. state.Identifiers];
+        IReadOnlyList<ConsentRecord> consentRecords = [.. state.ConsentRecords];
+
+        state.Apply(new PartyDeactivated());
+        state.Apply(new PartyReactivated());
+
+        state.IsActive.ShouldBeTrue();
+        state.CreatedAt.ShouldBe(createdAt);
+        state.Person.ShouldBe(person);
+        state.DisplayName.ShouldBe(displayName);
+        state.SortName.ShouldBe(sortName);
+        state.ContactChannels.ShouldBe(contactChannels);
+        state.Identifiers.ShouldBe(identifiers);
+        state.ConsentRecords.ShouldBe(consentRecords);
+        state.ErasureStatus.ShouldBe(ErasureStatus.Active);
+        state.IsRestricted.ShouldBeFalse();
     }
 
     [Fact]
