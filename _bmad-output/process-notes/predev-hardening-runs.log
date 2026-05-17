@@ -117,3 +117,4 @@
 2026-05-17T10:04:26+02:00	advanced-elicitation	1-9-return-updated-party-state-from-mutations	ok	Applied advanced elicitation hardening for same-turn payload scope, retry/status privacy boundaries, tolerant payload handling, and fail-closed final-state assembly.
 2026-05-17T11:03:54+02:00	advanced-elicitation	2-1-build-party-detail-projection	ok	advanced elicitation completed; no-op preservation, checkpoint, timestamp, and diagnostic clarifications applied; final recommendation ready-for-dev
 2026-05-17T12:02:24.8393752+02:00	none	-	none	all ready stories already have party-mode and advanced-elicitation traces
+2026-05-17T12:31:59+02:00	none	-	none	all ready stories already have party-mode and advanced-elicitation traces; active-dev-story soft warning from preflight 2026-05-17T10:31:17Z
