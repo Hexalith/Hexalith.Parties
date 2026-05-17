@@ -60,6 +60,38 @@ so that applications and AI tools can display or use the current party record wi
 | AC5 | Degraded/rebuilding/corrupt-state tests assert bounded status/error mapping plus absence of names, contact values, identifiers, raw payloads, tokens, and infrastructure details from logs/responses. |
 | AC6 | Focused tests cover `HttpPartiesQueryClient`, EventStore query gateway routing, projection actor extension fallback order, and any new query-handler code. |
 
+## Response Outcome Boundaries
+
+| Scenario | Expected public outcome |
+| --- | --- |
+| Authorized tenant with current readable projection | Success: return `PartyDetail` from the tenant-scoped detail projection. |
+| Missing tenant, unauthorized tenant, or unauthorized domain | EventStore query boundary blocks routing before Parties projection actor state is read. |
+| Cross-tenant party id | Not found or forbidden according to the accepted query boundary, with no existence leak and no read of another tenant's actor key. |
+| Projection missing in caller tenant | Bounded not-found/not-accessible result; terminal for the request and no aggregate/index/search fallback. |
+| Empty, malformed, corrupt, or unreadable projection payload | Bounded unavailable/degraded result; retryable or displayable as temporarily unavailable without raw actor/storage details. |
+| Inactive party with readable projection | Success: return the authorized detail with `PartyDetail.IsActive == false`. |
+| Erased or suppressed party detail | Erasure/suppression takes precedence over inactive inspectability and must not reveal historical personal data or internal erasure reason details. |
+| Stale, rebuilding, or degraded projection with safe cached detail | Preserve the accepted EventStore/query behavior; expose freshness/degradation metadata only if the current boundary already defines it and it is metadata-only. |
+| Stale, rebuilding, or degraded projection without safe detail | Bounded unavailable/degraded result; no raw exception, projection JSON, actor key, stream name, or infrastructure text. |
+| Cancellation before or during projection read | Cancellation is honored through client/gateway/projection read paths, and no aggregate replay or fallback lookup is started after cancellation. |
+
+## Required Test Matrix
+
+| Scenario | Expected proof |
+| --- | --- |
+| Authorized tenant, current projection | `IPartiesQueryClient.GetPartyAsync` or the accepted query handler returns `PartyDetail` from projection state through the EventStore query boundary. |
+| Missing tenant/auth | Gateway tests prove routing is blocked before Parties projection reads. |
+| Unauthorized tenant/domain | Gateway tests prove forbidden/closed response and no query/projection read. |
+| Cross-tenant party id | Tests prove no existence leak and no `{otherTenant}:party-detail:{partyId}` actor key is constructed, read, or serialized. |
+| Projection not found | Tests prove bounded not-found/not-accessible behavior and no aggregate, index, search, or retired REST fallback. |
+| Inactive party | A fixture with a deactivated party and readable projection returns details with `IsActive == false`. |
+| Erased party | Tests prove bounded unavailable/not-found-style behavior with no historical personal data or internal erasure reason details. |
+| Malformed JSON string | Actor extension/corruption tests prove bounded unavailable/degraded behavior and safe logs. |
+| Empty or corrupt serialized bytes | Actor extension/corruption tests prove bounded unavailable/degraded behavior and safe logs. |
+| Typed actor failure or null response | Actor extension/corruption tests prove bounded unavailable/not-found behavior without raw exception text. |
+| Stale/rebuilding/degraded | Tests assert only accepted freshness/degradation metadata or bounded error/status leaves the boundary. |
+| Cancellation during actor read | Tests prove cancellation is honored and no fallback work starts. |
+
 ## Tasks / Subtasks
 
 - [ ] Task 1: Audit and reuse current query and projection surfaces before editing (AC: 1, 3, 6)
@@ -77,18 +109,22 @@ so that applications and AI tools can display or use the current party record wi
   - [ ] Map a missing `PartyDetail` to the accepted not-found query result. Do not synthesize details from `PartyIndexEntry`, aggregate state, event streams, or command status.
   - [ ] Preserve `HttpPartiesQueryClient.GetPartyAsync` request shape unless an accepted EventStore query contract requires an additive change. If `ProjectionType`, `ProjectionActorType`, or query type naming must be supplied, make the change deliberately and update both client and gateway tests.
   - [ ] Reconcile the two current detail-query names before changing contracts: `HttpPartiesQueryClient` uses query type `PartyDetail`, while AdminPortal/FrontComposer configuration uses detail query type `GetParty` with projection type `PartyDetail`.
+  - [ ] Preserve additive compatibility for any naming cleanup. Do not silently rename the public query concept away from party detail by id through the EventStore query gateway and typed client.
 
 - [ ] Task 3: Enforce tenant fail-closed behavior (AC: 2, 3, 6)
   - [ ] Keep gateway authorization ownership in EventStore. Missing/unauthorized tenant or domain must fail before Parties projection actor state is accessed.
   - [ ] For projection-side reads, derive actor id strictly from the authenticated/request tenant and requested party id. Never accept tenant id from the party id, projection payload, search result, UI state, or client-supplied actor id.
+  - [ ] Construct the tenant-scoped projection key from the caller tenant before any actor/projection read, and do not probe alternate tenant keys, fallback actor ids, or payload-derived tenant values.
   - [ ] Add tests where tenant A has detail state and tenant B queries the same party id. The result must be forbidden or not found according to the accepted query boundary and must not disclose cross-tenant existence.
+  - [ ] Add a fake/probed actor registry, proxy factory, state manager, or equivalent assertion so tests fail if `{otherTenant}:party-detail:{partyId}` is read, constructed for lookup, serialized, or logged.
   - [ ] Add tests for missing tenant, unauthorized tenant, unauthorized domain, malformed party id/actor id, and projection segment mismatch where relevant.
-  - [ ] Ensure failures use bounded ProblemDetails/client exception fields and do not include raw party ids from other tenants, display names, contact values, identifiers, tenant membership payloads, tokens, or serialized actor state.
+  - [ ] Ensure failures use bounded ProblemDetails/client exception fields and do not include raw party ids from other tenants, display names, contact values, identifiers, tenant membership payloads, tokens, actor storage keys, stream names, stack traces, infrastructure exception text, or serialized actor state.
 
 - [ ] Task 4: Preserve inactive, erasure, and degraded-state semantics (AC: 4, 5)
   - [ ] Querying a deactivated party must return `PartyDetail` with `IsActive == false`; do not hide inactive parties through detail-by-id unless a later product decision says so.
+  - [ ] Use the same tenant authorization path for active and inactive detail reads; inactive status must not grant a support/admin override or a different visibility rule in this story.
   - [ ] Preserve existing erasure behavior: `PartyDetailProjectionActor.EraseAsync(...)` applies erased/redacted projection state or removes missing state and clears the sequence checkpoint. Do not invent a new GDPR read policy in this story.
-  - [ ] If erased-party detail response behavior is ambiguous, record it as deferred rather than silently returning personal data or designing a new erased-party DTO.
+  - [ ] Treat erased/suppressed projection state as higher precedence than inactive inspectability. If erased-party detail response behavior is ambiguous, record it as deferred rather than silently returning personal data or designing a new erased-party DTO.
   - [ ] For rebuilding/degraded actors, preserve current cached-read behavior where safe and map unsafe/unavailable state to bounded not-found or unavailable responses.
   - [ ] Ensure log messages and exception details for degraded/corrupt actor state remain metadata-only: tenant id, party id, projection name, event type, sequence, and bounded reason are acceptable; names, contact values, identifiers, raw JSON, and secrets are not.
 
@@ -102,9 +138,12 @@ so that applications and AI tools can display or use the current party record wi
   - [ ] Extend `tests/Hexalith.Parties.Client.Tests/HttpPartiesQueryClientTests.cs` for any changed `GetPartyAsync` query payload, not-found/unavailable mapping, malformed query payload, and cancellation behavior.
   - [ ] Extend `tests/Hexalith.Parties.Tests/Gateway/EventStoreGatewayRoutingTests.cs` for party detail query routing, missing tenant, unauthorized tenant/domain, query router not-found, query router forbidden, and no query routing before auth failure.
   - [ ] Add or extend tests around `PartyDetailProjectionActorExtensions.ReadDetailAsync(...)` for JSON string success, empty JSON fallback, malformed JSON fallback, serialized bytes fallback, typed actor fallback, and all-null not-found behavior.
-  - [ ] Extend `tests/Hexalith.Parties.Tests/Projections/PartyDetailProjectionActorCorruptionTests.cs` or adjacent actor tests for rebuilding/degraded reads, cached-state behavior, malformed actor id, state read failure fallback, and metadata-only logging.
+  - [ ] Extend `tests/Hexalith.Parties.Tests/Projections/PartyDetailProjectionActorCorruptionTests.cs` or adjacent actor tests for rebuilding/degraded reads, cached-state behavior, malformed actor id, state read failure fallback, malformed JSON, empty/corrupt bytes, typed actor failure/null response, and metadata-only logging.
   - [ ] Add a deactivated-party detail query test using `PartyDetail.IsActive == false`.
-  - [ ] Add privacy-safety assertions for response/error/log text touched by this story. Assert absence of synthetic raw names, contact values, identifiers, serialized detail JSON, query payloads, tokens, and infrastructure connection strings.
+  - [ ] Add erased/suppressed-party tests proving no historical personal data, internal erasure reason detail, raw projection payload, or unsafe diagnostic leaves the boundary.
+  - [ ] Add privacy-safety assertions for response/error/log text touched by this story. Assert absence of synthetic raw names, contact values, identifiers, serialized detail JSON, query payloads, bearer/access tokens, tenant secrets, actor storage keys, stream names, stack traces, and infrastructure connection strings.
+  - [ ] Add cancellation coverage for both client cancellation and cancellation during projection actor read, with assertions that no aggregate replay, index/search fallback, or retired REST lookup starts afterward.
+  - [ ] Add tests or fitness assertions that fail if `GET /api/v1/parties/{id}`, REST/OpenAPI/MCP surfaces, aggregate replay fallback, index/search fallback, or Parties-side tenant/RBAC validators are introduced for this story.
   - [ ] If project references, actor boundaries, REST/MCP exposure, or gateway authorization ownership are touched, run the architectural fitness tests.
 
 - [ ] Task 7: Run focused validation (AC: 1, 2, 3, 4, 5, 6)
@@ -135,6 +174,7 @@ so that applications and AI tools can display or use the current party record wi
 - The main `src/Hexalith.Parties` project is an actor host plus EventStore gateway integration. Do not add public REST controllers, Swagger/OpenAPI endpoints, or in-process MCP tools for this story.
 - `PartyDetail` is the canonical complete party detail shape. Do not create a parallel detail DTO unless serialization/gateway shape forces a narrow wrapper and tests prove the mapping.
 - Rebuilding/degraded responses must be bounded and privacy-safe. A stale/degraded indicator is useful only if an accepted public shape already exists; otherwise preserve existing bounded status/error behavior and defer response-shape expansion.
+- Public failure categories must stay coarse enough to avoid existence leaks. Not-found/not-accessible is terminal for the request; unavailable/rebuilding/degraded may be retryable or displayable as "details temporarily unavailable" by clients, but exact UI copy is outside this story.
 - Personal data may be returned in `PartyDetail` only to authorized consumers. Operational diagnostics, exception messages, ProblemDetails detail fields, query metadata, telemetry dimensions, and test failure strings must not include raw names, contact values, identifiers, raw payloads, tokens, or serialized detail JSON.
 
 ### Current Code Surfaces To Inspect
@@ -197,7 +237,10 @@ tests/Hexalith.Parties.Tests/FitnessTests/ArchitecturalFitnessTests.cs
 ### Deferred Decisions
 
 - A richer public freshness/degradation response contract for query responses remains deferred unless the current EventStore query boundary already defines it.
+- Exact freshness/degradation enum names, retry/backoff policy, and UI copy remain deferred unless the current EventStore query envelope already defines them.
 - Erased-party detail response shape remains governed by future GDPR stories unless current erasure behavior already defines a safe response.
+- Support/admin override behavior beyond ordinary tenant-authenticated access remains deferred.
+- Broad cleanup of `GetParty` versus `PartyDetail` naming remains deferred unless additive compatibility tests prove it is required for this story.
 - Direct REST/OpenAPI query endpoints remain outside this story; the current accepted boundary is EventStore-fronted queries and typed clients.
 - MCP `get_party` tool behavior is owned by Epic 4 and must use the accepted tenant-safe query path when that story runs.
 - Cross-projection consistency guarantees between detail and index projections remain deferred unless a later operational story explicitly defines them.
@@ -231,6 +274,32 @@ tests/Hexalith.Parties.Tests/FitnessTests/ArchitecturalFitnessTests.cs
 
 ### File List
 
+## Party-Mode Review
+
+- Date/time: 2026-05-17T16:05:11+02:00
+- Selected story key: `2-3-query-party-details-by-id`
+- Command/skill invocation used: `/bmad-party-mode 2-3-query-party-details-by-id; review;`
+- Participating BMAD agents: Winston (System Architect), Amelia (Senior Software Engineer), Murat (Master Test Architect and Quality Advisor), John (Product Manager)
+- Findings summary:
+  - Winston recommended `needs-story-update` until freshness/degradation response mapping, not-found versus unavailable boundaries, tenant actor-read prohibitions, inactive/erased precedence, query naming compatibility, and no-fallback tests were explicit.
+  - Amelia recommended `needs-story-update` for sharper AC-to-test traceability across typed client, gateway, projection actor extension, AdminPortal naming, cancellation, privacy, and anti-surface guardrails.
+  - Murat recommended `needs-story-update` because tenant isolation, corrupt actor behavior, bounded failure mapping, inactive versus erased behavior, log safety, and actor-read cancellation needed harder proof obligations.
+  - John recommended `needs-story-update` until adopter-facing response categories, privacy-safe cross-tenant/missing-party semantics, retryable degradation guidance, inactive inspectability, and contract naming were clearer.
+- Changes applied:
+  - Added response outcome boundaries covering success, auth failure, cross-tenant, missing projection, unreadable/corrupt projection, inactive, erased, stale/rebuilding/degraded, and cancellation behavior.
+  - Added a required test matrix for tenant isolation, no other-tenant actor-key reads, bounded failure mapping, corrupt payload handling, erased-party privacy, degraded-state metadata, and cancellation.
+  - Strengthened task guardrails for tenant-scoped actor key construction, no alternate-key probing, additive query-name compatibility, same authorization path for inactive parties, erasure precedence, and privacy-safe diagnostics.
+  - Expanded focused test requirements for no aggregate/index/search/REST fallback, no new REST/OpenAPI/MCP surfaces, no Parties-side tenant/RBAC validators, actor extension corruption cases, and client/projection-read cancellation.
+  - Clarified dev notes and deferred decisions for coarse public failure categories, retry/display guidance, exact freshness enum names, AdminPortal UI copy, support/admin override behavior, and `GetParty` versus `PartyDetail` cleanup.
+- Findings deferred:
+  - Exact public freshness/degradation enum names, retry/backoff policy, and UI copy unless already defined by the current EventStore query envelope.
+  - Whether freshness metadata belongs in a common EventStore query envelope or PartyDetail-specific result.
+  - Broader `GetParty` versus `PartyDetail` naming cleanup beyond additive compatibility.
+  - Support/admin override behavior beyond ordinary tenant-authenticated access.
+  - Broader erased-party public detail response shape, governed by later GDPR stories unless current erasure behavior already defines it.
+- Final recommendation: ready-for-dev
+
 ## Change Log
 
+- 2026-05-17: Party-mode review applied low-risk clarifications for response outcome mapping, tenant actor-read proof, no-fallback assertions, inactive/erased precedence, privacy-safe diagnostics, and cancellation/degraded-state tests.
 - 2026-05-17: Story created by BMAD pre-dev hardening automation with existing query client, EventStore query gateway, detail projection actor, tenant fail-closed, degraded-state, privacy, and focused validation guidance.
