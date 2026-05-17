@@ -1,5 +1,5 @@
 # generated: 2026-05-15 09:01:58 +02:00
-# last_updated: 2026-05-17 +02:00
+# last_updated: 2026-05-17 12:46:18 +02:00
 # project: Hexalith.Parties
 # project_key: NOKEY
 # tracking_system: file-system
@@ -35,12 +35,19 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-05-15 09:01:58 +02:00
-last_updated: 2026-05-17 +02:00
+last_updated: 2026-05-17 12:46:18 +02:00
 project: Hexalith.Parties
 project_key: NOKEY
 tracking_system: file-system
 story_location: _bmad-output/implementation-artifacts
 # last_updated touched 2026-05-17 by code-review closing story 1-4
+# implementation-readiness cleanup approved 2026-05-17:
+# - Epic 2 renamed to Tenant-Safe Party Search and Retrieval in planning artifacts.
+# - Stories 2-1, 2-2, and 2-8 now require user/operator-observable verification paths.
+# - Stories 2-9, 5-6, and 5-7 are preparation-only for deferred capabilities.
+# - Story 6-10 is tracked as NFR/security coverage, not FR coverage.
+# - Epic 7 and Epic 8 scheduling is gated by:
+#   _bmad-output/planning-artifacts/dependency-eventstore-fronted-parties-client-gateway-2026-05-17.md
 
 development_status:
   # Epic 1: Party Records and Lifecycle (9 stories)
@@ -49,14 +56,14 @@ development_status:
   1-2-create-party-aggregate-with-stable-identity: done
   1-3-update-person-and-organization-details: done
   1-4-manage-contact-channels: done
-  1-5-manage-party-identifiers: ready-for-dev
+  1-5-manage-party-identifiers: in-progress
   1-6-deactivate-and-reactivate-parties: ready-for-dev
   1-7-idempotent-commands-and-typed-rejections: ready-for-dev
   1-8-personal-data-marking-and-log-safe-domain-model: ready-for-dev
   1-9-return-updated-party-state-from-mutations: ready-for-dev
   epic-1-retrospective: optional
 
-  # Epic 2: Searchable Tenant-Safe Read Models (9 stories)
+  # Epic 2: Tenant-Safe Party Search and Retrieval (9 stories)
   epic-2: in-progress
   2-1-build-party-detail-projection: ready-for-dev
   2-2-build-tenant-party-index-projection: backlog

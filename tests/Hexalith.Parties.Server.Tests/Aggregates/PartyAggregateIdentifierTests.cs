@@ -1,3 +1,4 @@
+using Hexalith.EventStore.Contracts.Results;
 using Hexalith.Parties.Contracts.Commands;
 using Hexalith.Parties.Contracts.Events;
 using Hexalith.Parties.Contracts.State;
@@ -9,115 +10,155 @@ using Shouldly;
 
 namespace Hexalith.Parties.Server.Tests.Aggregates;
 
-public class PartyAggregateIdentifierTests
-{
+public class PartyAggregateIdentifierTests {
+
     [Fact]
-    public void Handle_AddIdentifier_NullState_ReturnsPartyNotFound()
-    {
+    public void Handle_AddIdentifier_DuplicateId_ReturnsNoOp() {
+        PartyState state = PartyTestData.CreatePersonStateWithIdentifier();
         AddIdentifier command = PartyTestData.ValidAddVatIdentifier();
 
-        var result = PartyAggregate.Handle(command, null);
+        DomainResult result = PartyAggregate.Handle(command, state);
+
+        result.IsNoOp.ShouldBeTrue();
+        result.Events.OfType<IdentifierAdded>().ShouldBeEmpty();
+        state.Identifiers.Count.ShouldBe(1);
+    }
+
+    [Fact]
+    public void Handle_AddIdentifier_ErasurePending_ReturnsRejectionWithoutIdentifierValue() {
+        PartyState state = PartyTestData.CreateErasurePendingState();
+        AddIdentifier command = PartyTestData.ValidAddVatIdentifier();
+
+        DomainResult result = PartyAggregate.Handle(command, state);
 
         result.IsRejection.ShouldBeTrue();
         result.Events.Count.ShouldBe(1);
-        result.Events[0].ShouldBeOfType<PartyNotFound>();
+        PartyErasureInProgress rejection = result.Events[0].ShouldBeOfType<PartyErasureInProgress>();
+        result.Events.OfType<IdentifierAdded>().ShouldBeEmpty();
+        string rejectionMessage = rejection.Message.ShouldNotBeNull();
+        rejectionMessage.ShouldNotContain(command.Value);
     }
 
     [Fact]
-    public void Handle_AddIdentifier_ValidVat_EmitsIdentifierAdded()
-    {
-        PartyState state = PartyTestData.CreatePersonState();
+    public void Handle_AddIdentifier_NullState_ReturnsPartyNotFound() {
         AddIdentifier command = PartyTestData.ValidAddVatIdentifier();
 
-        var result = PartyAggregate.Handle(command, state);
+        DomainResult result = PartyAggregate.Handle(command, null);
 
-        result.IsSuccess.ShouldBeTrue();
+        result.IsRejection.ShouldBeTrue();
         result.Events.Count.ShouldBe(1);
-        IdentifierAdded added = result.Events[0].ShouldBeOfType<IdentifierAdded>();
-        added.IdentifierId.ShouldBe("id-vat-1");
-        added.Type.ShouldBe(IdentifierType.VAT);
-        added.Value.ShouldBe("FR12345678901");
+        _ = result.Events[0].ShouldBeOfType<PartyNotFound>();
     }
 
     [Fact]
-    public void Handle_AddIdentifier_ValidSiret_EmitsIdentifierAdded()
-    {
-        PartyState state = PartyTestData.CreatePersonState();
-        AddIdentifier command = PartyTestData.ValidAddSiretIdentifier();
+    public void Handle_AddIdentifier_RepeatedDuplicateId_RemainsStable() {
+        PartyState state = PartyTestData.CreatePersonStateWithIdentifier();
+        AddIdentifier command = PartyTestData.ValidAddVatIdentifier();
 
-        var result = PartyAggregate.Handle(command, state);
+        DomainResult firstResult = PartyAggregate.Handle(command, state);
+        DomainResult secondResult = PartyAggregate.Handle(command, state);
 
-        result.IsSuccess.ShouldBeTrue();
-        result.Events.Count.ShouldBe(1);
-        IdentifierAdded added = result.Events[0].ShouldBeOfType<IdentifierAdded>();
-        added.IdentifierId.ShouldBe("id-siret-1");
-        added.Type.ShouldBe(IdentifierType.SIRET);
-        added.Value.ShouldBe("12345678901234");
+        firstResult.IsNoOp.ShouldBeTrue();
+        secondResult.IsNoOp.ShouldBeTrue();
+        firstResult.Events.OfType<IdentifierAdded>().ShouldBeEmpty();
+        secondResult.Events.OfType<IdentifierAdded>().ShouldBeEmpty();
+        state.Identifiers.Select(x => x.Id).ShouldBe(["id-vat-1"]);
     }
 
     [Fact]
-    public void Handle_AddIdentifier_ValidNationalId_EmitsIdentifierAdded()
-    {
+    public void Handle_AddIdentifier_RestrictedParty_ReturnsRejectionWithoutIdentifierValue() {
+        PartyState state = PartyTestData.CreateRestrictedState();
+        AddIdentifier command = PartyTestData.ValidAddVatIdentifier();
+
+        DomainResult result = PartyAggregate.Handle(command, state);
+
+        result.IsRejection.ShouldBeTrue();
+        result.Events.Count.ShouldBe(1);
+        PartyProcessingRestricted rejection = result.Events[0].ShouldBeOfType<PartyProcessingRestricted>();
+        result.Events.OfType<IdentifierAdded>().ShouldBeEmpty();
+        string rejectionMessage = rejection.Message.ShouldNotBeNull();
+        rejectionMessage.ShouldNotContain(command.Value);
+    }
+
+    [Fact]
+    public void Handle_AddIdentifier_ValidNationalId_EmitsIdentifierAdded() {
         PartyState state = PartyTestData.CreatePersonState();
         AddIdentifier command = PartyTestData.ValidAddNationalIdIdentifier();
 
-        var result = PartyAggregate.Handle(command, state);
+        DomainResult result = PartyAggregate.Handle(command, state);
 
         result.IsSuccess.ShouldBeTrue();
         result.Events.Count.ShouldBe(1);
         IdentifierAdded added = result.Events[0].ShouldBeOfType<IdentifierAdded>();
         added.IdentifierId.ShouldBe("id-natid-1");
         added.Type.ShouldBe(IdentifierType.NationalId);
-        added.Value.ShouldBe("850101123456789");
+        added.Value.ShouldBe("synthetic-national-id-value");
     }
 
     [Fact]
-    public void Handle_AddIdentifier_DuplicateId_ReturnsNoOp()
-    {
-        PartyState state = PartyTestData.CreatePersonStateWithIdentifier();
+    public void Handle_AddIdentifier_ValidSiret_EmitsIdentifierAdded() {
+        PartyState state = PartyTestData.CreatePersonState();
+        AddIdentifier command = PartyTestData.ValidAddSiretIdentifier();
+
+        DomainResult result = PartyAggregate.Handle(command, state);
+
+        result.IsSuccess.ShouldBeTrue();
+        result.Events.Count.ShouldBe(1);
+        IdentifierAdded added = result.Events[0].ShouldBeOfType<IdentifierAdded>();
+        added.IdentifierId.ShouldBe("id-siret-1");
+        added.Type.ShouldBe(IdentifierType.SIRET);
+        added.Value.ShouldBe("synthetic-siret-value");
+    }
+
+    [Fact]
+    public void Handle_AddIdentifier_ValidVat_EmitsIdentifierAdded() {
+        PartyState state = PartyTestData.CreatePersonState();
         AddIdentifier command = PartyTestData.ValidAddVatIdentifier();
 
-        var result = PartyAggregate.Handle(command, state);
+        DomainResult result = PartyAggregate.Handle(command, state);
 
-        result.IsNoOp.ShouldBeTrue();
-    }
-
-    [Fact]
-    public void Handle_RemoveIdentifier_NullState_ReturnsPartyNotFound()
-    {
-        RemoveIdentifier command = PartyTestData.ValidRemoveIdentifier();
-
-        var result = PartyAggregate.Handle(command, null);
-
-        result.IsRejection.ShouldBeTrue();
+        result.IsSuccess.ShouldBeTrue();
         result.Events.Count.ShouldBe(1);
-        result.Events[0].ShouldBeOfType<PartyNotFound>();
+        IdentifierAdded added = result.Events[0].ShouldBeOfType<IdentifierAdded>();
+        added.IdentifierId.ShouldBe("id-vat-1");
+        added.Type.ShouldBe(IdentifierType.VAT);
+        added.Value.ShouldBe("synthetic-vat-value");
     }
 
     [Fact]
-    public void Handle_RemoveIdentifier_NotFound_ReturnsIdentifierNotFound()
-    {
-        PartyState state = PartyTestData.CreatePersonState();
-        RemoveIdentifier command = PartyTestData.ValidRemoveIdentifier();
-
-        var result = PartyAggregate.Handle(command, state);
-
-        result.IsRejection.ShouldBeTrue();
-        result.Events.Count.ShouldBe(1);
-        result.Events[0].ShouldBeOfType<IdentifierNotFound>();
-    }
-
-    [Fact]
-    public void Handle_RemoveIdentifier_Existing_EmitsIdentifierRemoved()
-    {
+    public void Handle_RemoveIdentifier_Existing_EmitsIdentifierRemoved() {
         PartyState state = PartyTestData.CreatePersonStateWithIdentifier();
         RemoveIdentifier command = PartyTestData.ValidRemoveIdentifier();
 
-        var result = PartyAggregate.Handle(command, state);
+        DomainResult result = PartyAggregate.Handle(command, state);
 
         result.IsSuccess.ShouldBeTrue();
         result.Events.Count.ShouldBe(1);
         IdentifierRemoved removed = result.Events[0].ShouldBeOfType<IdentifierRemoved>();
         removed.IdentifierId.ShouldBe("id-vat-1");
+    }
+
+    [Fact]
+    public void Handle_RemoveIdentifier_NotFound_ReturnsIdentifierNotFound() {
+        PartyState state = PartyTestData.CreatePersonState();
+        RemoveIdentifier command = PartyTestData.ValidRemoveIdentifier();
+
+        DomainResult result = PartyAggregate.Handle(command, state);
+
+        result.IsRejection.ShouldBeTrue();
+        result.Events.Count.ShouldBe(1);
+        _ = result.Events[0].ShouldBeOfType<IdentifierNotFound>();
+        result.Events.OfType<IdentifierRemoved>().ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void Handle_RemoveIdentifier_NullState_ReturnsPartyNotFound() {
+        RemoveIdentifier command = PartyTestData.ValidRemoveIdentifier();
+
+        DomainResult result = PartyAggregate.Handle(command, null);
+
+        result.IsRejection.ShouldBeTrue();
+        result.Events.Count.ShouldBe(1);
+        _ = result.Events[0].ShouldBeOfType<PartyNotFound>();
     }
 }

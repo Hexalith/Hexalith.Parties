@@ -60,7 +60,7 @@ public static class PartyTestData {
                 PartyId = DefaultPartyId,
                 IdentifierId = "id-vat-1",
                 Type = IdentifierType.VAT,
-                Value = "FR12345678901",
+                Value = "synthetic-vat-value",
             },
         ],
     };
@@ -136,21 +136,21 @@ public static class PartyTestData {
         PartyId = DefaultPartyId,
         IdentifierId = "id-vat-1",
         Type = IdentifierType.VAT,
-        Value = "FR12345678901",
+        Value = "synthetic-vat-value",
     };
 
     public static AddIdentifier ValidAddSiretIdentifier() => new() {
         PartyId = DefaultPartyId,
         IdentifierId = "id-siret-1",
         Type = IdentifierType.SIRET,
-        Value = "12345678901234",
+        Value = "synthetic-siret-value",
     };
 
     public static AddIdentifier ValidAddNationalIdIdentifier() => new() {
         PartyId = DefaultPartyId,
         IdentifierId = "id-natid-1",
         Type = IdentifierType.NationalId,
-        Value = "850101123456789",
+        Value = "synthetic-national-id-value",
     };
 
     public static RemoveIdentifier ValidRemoveIdentifier() => new() {
@@ -163,7 +163,7 @@ public static class PartyTestData {
         state.Apply(new IdentifierAdded {
             IdentifierId = "id-vat-1",
             Type = IdentifierType.VAT,
-            Value = "FR12345678901",
+            Value = "synthetic-vat-value",
         });
         return state;
     }
@@ -186,7 +186,7 @@ public static class PartyTestData {
         state.Apply(new IdentifierAdded {
             IdentifierId = "id-vat-1",
             Type = IdentifierType.VAT,
-            Value = "FR12345678901",
+            Value = "synthetic-vat-value",
         });
         return state;
     }
@@ -203,7 +203,7 @@ public static class PartyTestData {
         state.Apply(new IdentifierAdded {
             IdentifierId = "id-vat-1",
             Type = IdentifierType.VAT,
-            Value = "FR98765432100",
+            Value = "synthetic-vat-value",
         });
         return state;
     }
@@ -229,7 +229,7 @@ public static class PartyTestData {
                 PartyId = DefaultPartyId,
                 IdentifierId = "id-vat-1",
                 Type = IdentifierType.VAT,
-                Value = "FR98765432100",
+                Value = "synthetic-vat-value",
             },
         ],
     };
@@ -264,7 +264,7 @@ public static class PartyTestData {
                 PartyId = DefaultPartyId,
                 IdentifierId = "id-siret-1",
                 Type = IdentifierType.SIRET,
-                Value = "12345678901234",
+                Value = "synthetic-siret-value",
             },
         ],
     };
@@ -395,7 +395,7 @@ public static class PartyTestData {
                     new ContactChannel { Id = "ch3", Type = ContactChannelType.Phone, Value = "+33 1 23 45 67 89" },
                     new ContactChannel { Id = "ch4", Type = ContactChannelType.PostalAddress, Value = "42 Rue de Rivoli, 75001 Paris" },
                 ],
-                SearchableIdentifiers = [new PartyIdentifier { Id = "id2", Type = IdentifierType.SIRET, Value = "12345678901234" }],
+                SearchableIdentifiers = [new PartyIdentifier { Id = "id2", Type = IdentifierType.SIRET, Value = "synthetic-siret-value" }],
                 CreatedAt = DateTimeOffset.UtcNow.AddDays(-60),
                 LastModifiedAt = DateTimeOffset.UtcNow,
             },

@@ -208,12 +208,12 @@ FR10: Epic 1 - Party Records and Lifecycle
 FR11: Epic 1 - Party Records and Lifecycle
 FR12: Epic 1 - Party Records and Lifecycle
 FR13: Epic 1 - Party Records and Lifecycle
-FR14: Epic 2 - Searchable Tenant-Safe Read Models
-FR15: Epic 2 - Searchable Tenant-Safe Read Models
-FR16: Epic 2 - Searchable Tenant-Safe Read Models
-FR17: Epic 2 - Searchable Tenant-Safe Read Models
-FR18: Epic 2 - Searchable Tenant-Safe Read Models
-FR19: Epic 2 - Searchable Tenant-Safe Read Models
+FR14: Epic 2 - Tenant-Safe Party Search and Retrieval
+FR15: Epic 2 - Tenant-Safe Party Search and Retrieval
+FR16: Epic 2 - Tenant-Safe Party Search and Retrieval
+FR17: Epic 2 - Tenant-Safe Party Search and Retrieval
+FR18: Epic 2 - Tenant-Safe Party Search and Retrieval
+FR19: Epic 2 - Tenant-Safe Party Search and Retrieval
 FR20: Epic 4 - AI Agent Party Management
 FR21: Epic 4 - AI Agent Party Management
 FR22: Epic 4 - AI Agent Party Management
@@ -233,9 +233,9 @@ FR35: Epic 5 - Event-Driven Consumer Integration
 FR36: Epic 1 - Party Records and Lifecycle
 FR37: Epic 5 - Event-Driven Consumer Integration
 FR38: Epic 5 - Event-Driven Consumer Integration
-FR39: Epic 2 - Searchable Tenant-Safe Read Models
-FR40: Epic 2 - Searchable Tenant-Safe Read Models
-FR41: Epic 2 - Searchable Tenant-Safe Read Models
+FR39: Epic 2 - Tenant-Safe Party Search and Retrieval
+FR40: Epic 2 - Tenant-Safe Party Search and Retrieval
+FR41: Epic 2 - Tenant-Safe Party Search and Retrieval
 FR42: Epic 1 - Party Records and Lifecycle
 FR43: Epic 1 - Party Records and Lifecycle
 FR44: Epic 6 - GDPR Compliance Operations
@@ -258,15 +258,15 @@ FR60: Epic 3 - Developer Integration and Local Adoption
 FR61: Epic 3 - Developer Integration and Local Adoption
 FR62: Epic 3 - Developer Integration and Local Adoption
 FR63: Epic 5 - Event-Driven Consumer Integration
-FR64: Epic 2 - Searchable Tenant-Safe Read Models
+FR64: Epic 2 - Tenant-Safe Party Search and Retrieval
 FR65: Epic 7 - Administration Console
 FR66: Epic 7 - Administration Console
 FR67: Epic 8 - Embeddable Party Picker
-FR68: Epic 2 - Searchable Tenant-Safe Read Models
+FR68: Epic 2 - Tenant-Safe Party Search and Retrieval
 FR69: Epic 1 - Party Records and Lifecycle
 FR70: Epic 5 - Event-Driven Consumer Integration
-FR71: Epic 2 - Searchable Tenant-Safe Read Models
-FR72: Epic 2 - Searchable Tenant-Safe Read Models
+FR71: Epic 2 - Tenant-Safe Party Search and Retrieval
+FR72: Epic 2 - Tenant-Safe Party Search and Retrieval
 FR73: Epic 5 - Event-Driven Consumer Integration
 FR74: Epic 4 - AI Agent Party Management
 
@@ -291,7 +291,7 @@ Users can create, update, deactivate, reactivate, and identify parties as the du
 **Coverage type:** implemented
 **FRs covered:** FR1, FR2, FR3, FR4, FR5, FR6, FR7, FR8, FR9, FR10, FR11, FR12, FR13, FR36, FR42, FR43, FR69
 
-### Epic 2: Searchable Tenant-Safe Read Models
+### Epic 2: Tenant-Safe Party Search and Retrieval
 
 Consumers can list, search, retrieve, filter, and reliably observe party records through tenant-safe projections.
 
@@ -698,7 +698,7 @@ So that I can update my UI or workflow without issuing an immediate follow-up qu
 **Then** create, update, contact, identifier, deactivate, and reactivate success paths assert returned state correctness
 **And** rejection paths assert that failed mutations do not return misleading updated state.
 
-## Epic 2: Searchable Tenant-Safe Read Models
+## Epic 2: Tenant-Safe Party Search and Retrieval
 
 Consumers can list, search, retrieve, filter, and reliably observe party records through tenant-safe projections.
 
@@ -737,6 +737,11 @@ So that I can retrieve complete party details without rehydrating the aggregate 
 **When** they replay representative party event sequences
 **Then** they verify detail state after create, update, contact channel, identifier, deactivate, and reactivate flows
 **And** they verify event ordering assumptions documented by the architecture.
+
+**Given** a party detail projection has been built for the current tenant
+**When** the same party is retrieved through the documented detail-query path
+**Then** the query returns the projected party details with active status, type-specific details, display/sort names, contacts, identifiers, and timestamps
+**And** the result proves the projection is observable through consumer-facing read behavior rather than only internal handler state.
 
 ### Story 2.2: Build Tenant Party Index Projection
 
@@ -778,6 +783,11 @@ So that I can list and filter parties without scanning aggregate event streams.
 **When** they replay representative tenant event streams
 **Then** they verify create, update, deactivate, reactivate, date metadata, and duplicate delivery behavior
 **And** the handler remains free of DAPR dependencies.
+
+**Given** a tenant party index projection has been built for the current tenant
+**When** consumers list, filter, or display-name search parties through the documented read path
+**Then** results are served from the tenant-safe index with pagination, type/status/date filtering, display-name matching, and bounded match metadata where applicable
+**And** the story demonstrates that the index enables observable consumer browsing and search behavior.
 
 ### Story 2.3: Query Party Details by ID
 
@@ -1040,10 +1050,16 @@ So that read models can recover without unsafe data exposure.
 **When** they simulate healthy, corrupt, rebuilding, successful rebuild, failed rebuild, and cross-tenant conditions
 **Then** status transitions and read responses match the documented behavior.
 
+**Given** projection health is exposed through the service readiness or operational health surface
+**When** a projection is healthy, rebuilding, degraded, or unsafe
+**Then** the health/readiness response reports the bounded projection state without personal data
+**And** detail, list, and search reads show the matching freshness/degradation behavior.
+
 ### Story 2.9: Prepare Deferred Search and Temporal Query Extensions
 
 **Phase:** v1.1 preparation
-**Coverage type:** prepared/deferred
+**Coverage type:** non-feature preparation / prepared-deferred
+**Scheduling label:** preparation-only; does not deliver active MVP runtime behavior for deferred capabilities
 **Requirements prepared:** FR16, FR72; future portions of FR15, FR17
 **MVP implementation coverage:** none beyond preserving event/history and contract extension points required by earlier MVP stories
 
@@ -2016,7 +2032,8 @@ So that I can build domain-specific read models safely and predictably.
 ### Story 5.6: Prepare Forward-Compatible Party Lifecycle Events
 
 **Phase:** MVP preparation with future lifecycle/GDPR compatibility
-**Coverage type:** implemented for FR37 contract compatibility; prepared for future merge/GDPR event behavior
+**Coverage type:** non-feature preparation / prepared-deferred; implemented for FR37 contract compatibility
+**Scheduling label:** preparation-only; does not deliver active MVP runtime behavior for future merge or GDPR lifecycle capabilities
 **Requirements covered:** FR37
 **Requirements prepared:** future merge behavior and v1.1 GDPR event naming conventions
 
@@ -2053,7 +2070,8 @@ So that my integration does not break when Parties adds merge, GDPR, or richer s
 ### Story 5.7: Document Erasure Subscriber Responsibilities
 
 **Phase:** MVP documentation preparation for v1.1 GDPR
-**Coverage type:** implemented for FR38 guidance; prepared for FR46 subscriber cleanup behavior
+**Coverage type:** non-feature preparation / prepared-deferred; implemented for FR38 guidance
+**Scheduling label:** preparation-only; does not deliver active MVP runtime behavior for future GDPR erasure
 **Requirements covered:** FR38
 **Requirements prepared:** FR46
 
@@ -2434,9 +2452,10 @@ So that applications can behave correctly without exposing erased personal data.
 ### Story 6.10: Rotate Tenant Encryption Keys
 
 **Phase:** v1.1
-**Coverage type:** implemented when v1.1 is scheduled
+**Coverage type:** operational/security NFR coverage when v1.1 is scheduled
 **Requirements covered:** NFR11
 **Requirements supported:** FR53, FR55
+**Scheduling label:** NFR/security story; not counted as functional requirement coverage
 
 As an operator responsible for tenant security,
 I want tenant encryption keys to rotate without downtime or data loss,

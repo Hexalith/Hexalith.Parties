@@ -116,7 +116,7 @@ public class PartyAggregateCompositeTests
                     PartyId = PartyTestData.DefaultPartyId,
                     IdentifierId = string.Empty,
                     Type = IdentifierType.VAT,
-                    Value = "FR12345678901",
+                    Value = "synthetic-vat-value",
                 },
             ],
         };
@@ -276,14 +276,14 @@ public class PartyAggregateCompositeTests
                     PartyId = PartyTestData.DefaultPartyId,
                     IdentifierId = "id-vat-1",
                     Type = IdentifierType.VAT,
-                    Value = "FR12345678901",
+                    Value = "synthetic-vat-value",
                 },
                 new AddIdentifier
                 {
                     PartyId = PartyTestData.DefaultPartyId,
                     IdentifierId = "id-vat-1",
                     Type = IdentifierType.VAT,
-                    Value = "FR99999999999",
+                    Value = "synthetic-other-vat-value",
                 },
             ],
         };
@@ -560,7 +560,7 @@ public class PartyAggregateCompositeTests
                     PartyId = PartyTestData.DefaultPartyId,
                     IdentifierId = "id-siret-1",
                     Type = IdentifierType.SIRET,
-                    Value = "12345678901234",
+                    Value = "synthetic-siret-value",
                 },
             ],
         };
@@ -573,6 +573,10 @@ public class PartyAggregateCompositeTests
         result.Applied.ShouldContain("Added identifier: id-siret-1 (SIRET)");
         result.Skipped.ShouldBeEmpty();
         result.Rejected.ShouldBeEmpty();
+        result.UpdatedPartyDetail.ShouldNotBeNull();
+        PartyIdentifier added = result.UpdatedPartyDetail.Identifiers.Single(x => x.Id == "id-siret-1");
+        added.Type.ShouldBe(IdentifierType.SIRET);
+        added.Value.ShouldBe("synthetic-siret-value");
     }
 
     [Fact]
@@ -593,6 +597,8 @@ public class PartyAggregateCompositeTests
         result.Applied.ShouldContain("Removed identifier: id-vat-1");
         result.Skipped.ShouldBeEmpty();
         result.Rejected.ShouldBeEmpty();
+        result.UpdatedPartyDetail.ShouldNotBeNull();
+        result.UpdatedPartyDetail.Identifiers.Any(x => x.Id == "id-vat-1").ShouldBeFalse();
     }
 
     [Fact]
@@ -635,7 +641,7 @@ public class PartyAggregateCompositeTests
                     PartyId = PartyTestData.DefaultPartyId,
                     IdentifierId = "id-siret-1",
                     Type = IdentifierType.SIRET,
-                    Value = "12345678901234",
+                    Value = "synthetic-siret-value",
                 },
             ],
         };
@@ -761,7 +767,7 @@ public class PartyAggregateCompositeTests
                     PartyId = PartyTestData.DefaultPartyId,
                     IdentifierId = "id-siret-1",
                     Type = IdentifierType.SIRET,
-                    Value = "12345678901234",
+                    Value = "synthetic-siret-value",
                 },
             ],
             RemoveIdentifierIds = ["id-siret-1"],
@@ -936,7 +942,7 @@ public class PartyAggregateCompositeTests
                     PartyId = PartyTestData.DefaultPartyId,
                     IdentifierId = "id-vat-1",
                     Type = IdentifierType.VAT,
-                    Value = "FR12345678901",
+                    Value = "synthetic-vat-value",
                 },
             ],
         };
@@ -945,7 +951,9 @@ public class PartyAggregateCompositeTests
 
         result.IsNoOp.ShouldBeTrue();
         result.Events.ShouldBeEmpty();
+        result.Events.OfType<IdentifierAdded>().ShouldBeEmpty();
         result.Skipped.ShouldContain("Duplicate identifier: id-vat-1");
+        result.Skipped.Any(x => x.Contains(command.AddIdentifiers[0].Value)).ShouldBeFalse();
     }
 
     [Fact]
@@ -963,7 +971,43 @@ public class PartyAggregateCompositeTests
         result.IsRejection.ShouldBeTrue();
         result.Events.Count.ShouldBe(1);
         result.Events[0].ShouldBeOfType<IdentifierNotFound>();
+        result.Events.OfType<IdentifierRemoved>().ShouldBeEmpty();
+        result.UpdatedPartyDetail.ShouldBeNull();
         result.Rejected.ShouldContain("Identifier 'id-missing-1' not found.");
+    }
+
+    [Fact]
+    public void Handle_UpdatePartyComposite_ConflictingIdentifierAddAndRemove_ReturnsRejectionOnly()
+    {
+        PartyState state = PartyTestData.CreatePersonStateWithChannelsAndIdentifiers();
+        UpdatePartyComposite command = new()
+        {
+            PartyId = PartyTestData.DefaultPartyId,
+            AddIdentifiers =
+            [
+                new AddIdentifier
+                {
+                    PartyId = PartyTestData.DefaultPartyId,
+                    IdentifierId = "id-vat-1",
+                    Type = IdentifierType.VAT,
+                    Value = "synthetic-vat-value",
+                },
+            ],
+            RemoveIdentifierIds = ["id-vat-1"],
+        };
+
+        CompositeCommandResult result = PartyAggregate.Handle(command, state);
+
+        result.IsRejection.ShouldBeTrue();
+        result.Events.Count.ShouldBe(1);
+        result.Events[0].ShouldBeOfType<CompositeOperationConflict>();
+        result.Events.OfType<IdentifierAdded>().ShouldBeEmpty();
+        result.Events.OfType<IdentifierRemoved>().ShouldBeEmpty();
+        result.UpdatedPartyDetail.ShouldBeNull();
+        result.Applied.ShouldBeEmpty();
+        result.Skipped.ShouldBeEmpty();
+        result.Rejected.ShouldContain("Conflicting operations on same identifier ID: id-vat-1.");
+        result.Rejected.Any(x => x.Contains(command.AddIdentifiers[0].Value)).ShouldBeFalse();
     }
 
     [Fact]
@@ -1106,7 +1150,7 @@ public class PartyAggregateCompositeTests
                         PartyId = PartyTestData.DefaultPartyId,
                         IdentifierId = " ",
                         Type = IdentifierType.VAT,
-                        Value = "FR12345678901",
+                        Value = "synthetic-vat-value",
                     },
                 ],
             },
@@ -1368,7 +1412,7 @@ public class PartyAggregateCompositeTests
         {
             IdentifierId = "id-vat-1",
             Type = IdentifierType.VAT,
-            Value = "FR12345678901",
+            Value = "synthetic-vat-value",
         });
 
         return state;
