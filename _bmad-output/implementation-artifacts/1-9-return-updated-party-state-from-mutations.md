@@ -51,6 +51,9 @@ so that I can update my UI or workflow without issuing an immediate follow-up qu
    - Given a public request path returns only `202 Accepted` or status-tracking information,
    - When no completed synchronous command result payload is available,
    - Then the response preserves the existing correlation/status contract and does not expose `PartyDetail` through status details.
+   - Given idempotent retry, duplicate command, or delayed status-read paths are exercised,
+   - When the existing EventStore response path does not already have an authorized completed success payload available,
+   - Then this story must not recompute `PartyDetail`, issue a hidden query, or persist raw party details into command status/idempotency records to manufacture an enriched response.
 
 6. **Automated tests verify updated-state correctness and failure safety**
    - Given aggregate, domain-service, gateway, client, and MCP tests run,
@@ -65,6 +68,7 @@ so that I can update my UI or workflow without issuing an immediate follow-up qu
   - [ ] Inspect `DomainResult.ResultPayload`, `DomainServiceWireResult`, `DaprDomainServiceInvoker.ToDomainResult`, `CommandProcessingResult.ResultPayload`, and `CommandsController` response assembly.
   - [ ] Verify whether `DomainServiceWireResult` still drops `DomainResult.ResultPayload`; if so, extend the existing EventStore result-payload hook instead of inventing a Parties-only side channel.
   - [ ] Verify whether `SubmitCommandResponse` needs an additive optional result payload property while preserving `correlationId` compatibility.
+  - [ ] Confirm whether result payloads are ever persisted for command status/idempotency today. Do not add raw `PartyDetail` persistence to those stores as part of this story unless an existing EventStore contract already requires it.
   - [ ] Keep EventStore-owned changes minimal and compatible; do not rework command processing status, event persistence, or actor pipeline behavior beyond carrying the existing result payload.
 
 - [ ] Task 2: Add or refine a single enriched party mutation result shape (AC: 1, 2, 3, 4)
@@ -79,6 +83,7 @@ so that I can update my UI or workflow without issuing an immediate follow-up qu
   - [ ] Support simple commands: `UpdatePersonDetails`, `UpdateOrganizationDetails`, `AddContactChannel`, `UpdateContactChannel`, `RemoveContactChannel`, `AddIdentifier`, `RemoveIdentifier`, `DeactivateParty`, `ReactivateParty`, and `SetIsNaturalPerson`.
   - [ ] Preserve existing event emission order and `PartyState.Apply` behavior; do not mutate the incoming `PartyState` merely to assemble the response.
   - [ ] Return a final `PartyDetail` only from committed success events for a successful command or successful composite command; partial composite failures, rejections, and non-success no-ops must not synthesize a speculative detail.
+  - [ ] Fail closed if payload assembly cannot produce a trustworthy final state from the current state plus emitted success events; return the normal command outcome without an enriched success payload rather than returning a partial or stale detail.
   - [ ] Keep `CreatedAt` from the existing state where available. For create responses, use a deterministic command/result-time value only if the existing contracts require one; document any unavoidable timestamp limitation in completion notes.
 
 - [ ] Task 4: Wire enriched results through the Parties host and EventStore gateway (AC: 1, 2, 3, 5)
@@ -86,6 +91,7 @@ so that I can update my UI or workflow without issuing an immediate follow-up qu
   - [ ] Ensure `DaprDomainServiceInvoker` reconstructs a `DomainResult` that preserves `ResultPayload` after deserializing `DomainServiceWireResult`.
   - [ ] Ensure aggregate actor processing copies `domainResult.ResultPayload` into `CommandProcessingResult.ResultPayload` on success paths and never on rejection unless explicitly supported by existing EventStore semantics.
   - [ ] Add `resultPayload` or a typed `payload` field to the public accepted command response only as an additive optional property; do not remove `correlationId` or change status URLs.
+  - [ ] Keep the wire shape tolerant of unknown or missing payloads, including `null`, absent JSON, and non-Parties payloads; clients must ignore unsupported payloads rather than throwing on otherwise compatible command responses.
   - [ ] Do not add public REST controllers, Swagger/OpenAPI, or in-process MCP hosting to `src/Hexalith.Parties`; enriched results must flow through existing EventStore-owned gateway surfaces and existing external client/MCP adapters.
   - [ ] Preserve the existing `202 Accepted`/status-only behavior when a completed synchronous result payload is not available; do not copy `PartyDetail` into status details or idempotency/status persistence.
 
@@ -102,6 +108,8 @@ so that I can update my UI or workflow without issuing an immediate follow-up qu
   - [ ] Add `/process` and EventStore gateway tests proving result payload survives Parties host -> Dapr wire DTO -> EventStore actor -> command response.
   - [ ] Update `HttpPartiesCommandClientTests` and `PartiesMcpToolDispatchTests` to assert updated details are surfaced without immediate query calls.
   - [ ] Add privacy-safety assertions using synthetic personal-data values only; verify `PartyDetail` is absent from logs, telemetry, exception messages, command status details, and failure/status payloads.
+  - [ ] Add retry/status-path tests proving idempotent retries, duplicate no-ops, async accepted responses, and status reads do not fabricate `PartyDetail` by recomputing state or querying projections.
+  - [ ] Add malformed/missing/unsupported payload tests proving API, client, and MCP consumers fail closed while preserving correlation/status compatibility.
   - [ ] Add regression tests proving command status, idempotency, and rejection/error behavior remain unchanged when no enriched result payload is present.
 
 - [ ] Task 7: Run focused validation (AC: 6)
@@ -172,6 +180,13 @@ tests/Hexalith.Parties.Mcp.Tests/PartiesMcpToolDispatchTests.cs
 - Story 1.7 clarified rejection/no-op semantics and typed rejection events. Rejections must not carry misleading success payloads.
 - Story 1.8 reinforced privacy-safe logging. It is acceptable to return `PartyDetail` to the caller, but not to log raw payloads, party details, contact values, identifiers, or serialized response bodies.
 - Recent commits show Epic 1 hardening has favored narrow contract and aggregate changes plus focused tests before broader solution builds.
+
+### Advanced Elicitation Clarifications
+
+- The enriched payload is a same-turn success response feature, not a projection-read fallback. If the synchronous command path cannot safely carry a completed result payload, keep the existing correlation/status response and document the limitation.
+- Treat idempotency/status persistence as a privacy boundary. Do not serialize `PartyDetail` into command status, retry, exception, log, or telemetry stores merely to make later reads look enriched.
+- Result-payload deserialization must be tolerant and fail closed. Unknown, missing, malformed, or non-Parties payloads should leave the optional enriched detail absent while preserving the existing command response contract.
+- Aggregate final-state assembly is authoritative only when it is derived from current state plus emitted success events in order. Do not return partial detail after mixed failure, stale state, rejected events, or no-op retries.
 
 ### Testing Requirements
 
@@ -253,4 +268,38 @@ tests/Hexalith.Parties.Mcp.Tests/PartiesMcpToolDispatchTests.cs
   - Future public API design for enriched payload retrieval from purely async `202 Accepted`/status endpoints remains deferred.
   - Future UX architecture for returning unchanged detail from successful no-op commands remains deferred.
   - Exact EventStore wire shape naming/versioning remains an implementation detail as long as it is additive and backward-compatible.
+- Final recommendation: ready-for-dev
+
+## Advanced Elicitation
+
+- Date/time: 2026-05-17T10:04:26+02:00
+- Selected story key: `1-9-return-updated-party-state-from-mutations`
+- Command/skill invocation used: `/bmad-advanced-elicitation 1-9-return-updated-party-state-from-mutations`
+- Batch 1 method names:
+  - Red Team vs Blue Team
+  - Failure Mode Analysis
+  - Security Audit Personas
+  - Self-Consistency Validation
+  - Architecture Decision Records
+- Reshuffled Batch 2 method names:
+  - Pre-mortem Analysis
+  - Chaos Monkey Scenarios
+  - User Persona Focus Group
+  - Critique and Refine
+  - Expand or Contract for Audience
+- Findings summary:
+  - The story was already directionally ready after party-mode review, but hidden coupling remained around idempotent retry/status behavior, result-payload persistence, malformed payload handling, and client/MCP tolerance for missing optional payloads.
+  - The highest-risk failure mode is accidentally turning a same-turn success payload into a persisted personal-data-bearing status artifact or a hidden projection query workaround.
+  - No elicitation method identified a product or architecture blocker once the story explicitly keeps enriched detail absent on async, status-only, no-op, rejected, malformed, and unsupported-payload paths.
+- Changes applied:
+  - Clarified AC5 for idempotent retry, duplicate command, delayed status-read, and hidden-query boundaries.
+  - Added Task 1 guidance to inspect existing result-payload persistence and avoid adding raw `PartyDetail` status/idempotency storage.
+  - Added Task 3 fail-closed guidance for untrustworthy final-state assembly.
+  - Added Task 4 tolerance requirements for null, absent, unknown, and non-Parties payloads.
+  - Added Task 6 tests for retry/status-path behavior and malformed/missing/unsupported payload compatibility.
+  - Added an `Advanced Elicitation Clarifications` subsection covering same-turn scope, privacy boundaries, tolerant deserialization, and authoritative final-state assembly.
+- Findings deferred:
+  - Enriched retrieval from purely async status endpoints remains deferred to a future EventStore API design story.
+  - Persisting sanitized or encrypted success payload snapshots for retry/status experiences remains deferred because it changes privacy and EventStore status semantics.
+  - A UX decision to return unchanged detail for successful no-op commands remains deferred.
 - Final recommendation: ready-for-dev
