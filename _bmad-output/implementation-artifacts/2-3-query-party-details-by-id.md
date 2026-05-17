@@ -92,6 +92,15 @@ so that applications and AI tools can display or use the current party record wi
 | Stale/rebuilding/degraded | Tests assert only accepted freshness/degradation metadata or bounded error/status leaves the boundary. |
 | Cancellation during actor read | Tests prove cancellation is honored and no fallback work starts. |
 
+### Advanced Elicitation Clarifications
+
+- **Authorization and actor-read ordering are the primary safety gate:** EventStore query authorization must reject missing tenant, unauthorized tenant, and unauthorized domain before Parties constructs, logs, probes, or serializes a projection actor key. Projection-side tests should instrument the actor proxy/factory or equivalent seam so a wrong-tenant or auth-failed request fails the test if any detail actor read is attempted.
+- **Tenant-scoped key construction is single-path:** The only projection actor key this story may construct is derived from the authenticated tenant context and requested party id. Malformed party ids, actor-id projection segment mismatches, payload tenant mismatches, and client-supplied projection metadata must not trigger alternate-key probing, tenant discovery, index/search fallback, or aggregate replay.
+- **Detail-query naming remains additive and evidence-driven:** `PartyDetail` and current `GetParty` configuration names must be reconciled by tests before any contract cleanup. This story may add compatibility where required by the accepted EventStore query envelope, but it must not silently rename the public query concept or break AdminPortal/FrontComposer mappings.
+- **Degraded-state behavior must separate safe cache from unsafe corruption:** Returning cached detail during rebuilding is acceptable only when existing actor behavior proves the cached value is tenant-scoped, readable, and not erased or suppressed. Empty, malformed, corrupt, or unreadable projection payloads must map to bounded unavailable/not-found behavior without leaking raw JSON, serialized bytes, storage keys, stack traces, contact values, identifiers, or display names.
+- **Cancellation and timeout handling must be terminal:** If cancellation occurs before or during projection read, the request must stop without starting aggregate replay, index/search lookup, retired REST fallback, or background projection recovery. Any logged cancellation metadata must remain operational and privacy-safe.
+- **Adopter-facing outcomes should stay coarse:** Tests should prove consumers can distinguish success from terminal not-found/not-accessible and retryable unavailable/degraded behavior only where the current query boundary already exposes that distinction. Exact UI copy, retry policy, freshness enum names, and richer status envelopes remain deferred.
+
 ## Tasks / Subtasks
 
 - [ ] Task 1: Audit and reuse current query and projection surfaces before editing (AC: 1, 3, 6)
@@ -244,6 +253,7 @@ tests/Hexalith.Parties.Tests/FitnessTests/ArchitecturalFitnessTests.cs
 - Direct REST/OpenAPI query endpoints remain outside this story; the current accepted boundary is EventStore-fronted queries and typed clients.
 - MCP `get_party` tool behavior is owned by Epic 4 and must use the accepted tenant-safe query path when that story runs.
 - Cross-projection consistency guarantees between detail and index projections remain deferred unless a later operational story explicitly defines them.
+- Whether unavailable/degraded detail-query outcomes should become a shared EventStore query envelope contract or stay PartyDetail-specific remains deferred.
 
 ### References
 
@@ -299,7 +309,29 @@ tests/Hexalith.Parties.Tests/FitnessTests/ArchitecturalFitnessTests.cs
   - Broader erased-party public detail response shape, governed by later GDPR stories unless current erasure behavior already defines it.
 - Final recommendation: ready-for-dev
 
+## Advanced Elicitation
+
+- Date/time: 2026-05-17T18:03:57+02:00
+- Selected story key: `2-3-query-party-details-by-id`
+- Command/skill invocation used: `/bmad-advanced-elicitation 2-3-query-party-details-by-id`
+- Batch 1 method names: Red Team vs Blue Team; Failure Mode Analysis; Security Audit Personas; Self-Consistency Validation; Architecture Decision Records.
+- Reshuffled Batch 2 method names: Pre-mortem Analysis; Chaos Monkey Scenarios; User Persona Focus Group; Critique and Refine; Expand or Contract for Audience.
+- Findings summary:
+  - The story was already directionally ready after party-mode review, but the highest residual risks were ordering bugs where actor reads happen before authorization, silent query-name drift between `PartyDetail` and `GetParty`, unsafe corrupt-payload fallbacks, cancellation paths that start secondary lookup work, and adopter confusion around terminal versus retryable failures.
+  - Security and failure-mode passes stressed that cross-tenant requests must not construct or probe other-tenant actor keys and that malformed projection metadata must not become a tenant discovery mechanism.
+  - Architecture and self-consistency passes confirmed the EventStore-fronted query boundary remains the accepted public path; no REST/OpenAPI/MCP, aggregate replay, index/search, or Parties-side tenant/RBAC expansion belongs in this story.
+- Changes applied:
+  - Added `Advanced Elicitation Clarifications` covering auth-before-actor-read ordering, single-path tenant key construction, additive query-name compatibility, safe cached degraded-state behavior, terminal cancellation, and coarse adopter-facing outcomes.
+  - Added an extra deferred decision for whether unavailable/degraded detail-query outcomes belong in a common EventStore query envelope or remain PartyDetail-specific.
+- Findings deferred:
+  - Exact public freshness/degradation enum names, retry/backoff policy, and UI copy unless already defined by the current EventStore query envelope.
+  - Broader `GetParty` versus `PartyDetail` naming cleanup beyond additive compatibility.
+  - Support/admin override behavior beyond ordinary tenant-authenticated access.
+  - Shared EventStore query envelope versus PartyDetail-specific unavailable/degraded response shape.
+- Final recommendation: ready-for-dev
+
 ## Change Log
 
+- 2026-05-17: Advanced elicitation applied low-risk clarifications for auth-before-actor-read ordering, tenant key construction, query-name compatibility, corrupt/degraded payload handling, terminal cancellation, and coarse adopter-facing outcomes.
 - 2026-05-17: Party-mode review applied low-risk clarifications for response outcome mapping, tenant actor-read proof, no-fallback assertions, inactive/erased precedence, privacy-safe diagnostics, and cancellation/degraded-state tests.
 - 2026-05-17: Story created by BMAD pre-dev hardening automation with existing query client, EventStore query gateway, detail projection actor, tenant fail-closed, degraded-state, privacy, and focused validation guidance.
