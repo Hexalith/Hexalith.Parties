@@ -22,6 +22,7 @@ so that I can retrieve complete party details without rehydrating the aggregate 
    - When the event is applied during normal processing or rebuild,
    - Then the handler does not mutate the successful party detail state,
    - And projection replay remains compatible with persisted rejection events.
+   - And replayed rejection events do not advance projection timestamps, version-like fields, or checkpoint-derived detail fields.
 
 3. **Actor persistence uses documented Dapr state-key convention**
    - Given a party detail projection is persisted through its actor wrapper,
@@ -34,6 +35,7 @@ so that I can retrieve complete party details without rehydrating the aggregate 
    - When the projection handler processes them,
    - Then processing is idempotent where event identity or sequence data allows,
    - And duplicate delivery does not create duplicate contact channels or identifiers.
+   - And collection idempotency is defined by stable event item ids (`ChannelId`, `IdentifierId`) rather than display values, labels, or case-normalized personal data.
 
 5. **Pure handler tests verify representative event replay**
    - Given projection handler tests run without Dapr infrastructure,
@@ -53,27 +55,31 @@ so that I can retrieve complete party details without rehydrating the aggregate 
   - [ ] Ensure `PartyCreated` initializes `PartyDetail.Id`, `Type`, `IsActive`, person/organization details, display/sort names, empty collections, `CreatedAt`, and `LastModifiedAt`.
   - [ ] Ensure `PartyDisplayNameDerived`, `PersonDetailsUpdated`, `OrganizationDetailsUpdated`, contact channel events, identifier events, `PartyDeactivated`, and `PartyReactivated` update only the relevant fields while preserving unrelated state.
   - [ ] Keep rejection events as projection no-ops. Add explicit coverage for representative rejection events such as `PartyCannotBeCreatedWithInvalidId`, `PartyCannotAddDuplicateChannel`, `PartyCannotAddDuplicateIdentifier`, `PartyCannotBeDeactivatedWhenInactive`, and `PartyCannotBeReactivatedWhenActive`.
-  - [ ] Preserve idempotent add semantics for contact channels and identifiers by natural ids. Duplicate add delivery must not append duplicate list entries.
+  - [ ] Cover rejection events both before and after successful events so replay proves null state stays null, existing successful state stays unchanged, and timestamps are not advanced by rejection-only inputs.
+  - [ ] Preserve idempotent add semantics for contact channels and identifiers by stable item ids (`ChannelId`, `IdentifierId`). Duplicate add delivery must not append duplicate list entries; scalar update/detail/lifecycle events may remain last-event-wins according to aggregate replay order.
+  - [ ] Treat update/contact/identifier events that arrive before `PartyCreated` as no-ops unless existing code already has a stricter corruption path; do not synthesize partial party detail state from child events.
   - [ ] Do not use exceptions for domain rejections and do not delete or special-case persisted rejection events out of replay.
 
 - [ ] Task 3: Validate actor wrapper persistence, replay, and key safety (AC: 3, 4)
   - [ ] Keep Dapr dependencies in the actor wrapper only; `PartyDetailProjectionHandler` must remain free of `Dapr.*` references.
   - [ ] Confirm `PartyDetailProjectionActor.ResolveStateContext(...)` derives the state key from actor id `{tenant}:party-detail:{partyId}` and rejects malformed projection segments or party-id mismatches.
+  - [ ] Test malformed actor ids and party-id mismatches as separate failure cases. They must fail fast with metadata-only diagnostics and no Dapr state write or checkpoint advancement.
   - [ ] Confirm `HandleSerializedEventAsync(...)` resolves event type names only through `PartyEventTypeResolver` and does not reintroduce `Type.GetType` or arbitrary assembly loading.
   - [ ] Preserve sequence checkpoint behavior so replay-from-zero skips already applied events, while idempotent collection handlers still protect against state/checkpoint divergence on non-transactional state stores.
   - [ ] Keep actor logs bounded to metadata such as party id, event type name, sequence, projection name, tenant id, and correlation-safe context. Do not log contact values, identifiers, display names, serialized details, or raw event payloads.
 
 - [ ] Task 4: Clarify timestamp behavior without inventing unsupported event metadata (AC: 1)
   - [ ] Verify whether Parties event payloads expose event-time metadata through the payload or envelope available to the projection actor.
-  - [ ] If only payload events are available to the pure handler, keep timestamps as projection processing timestamps and document the limitation in completion notes.
+  - [ ] Use this precedence for projection timestamps: existing event metadata or payload timestamp fields if already available on the projection path; otherwise projection processing timestamps. Document the limitation in completion notes when processing timestamps are used.
   - [ ] Do not add event-time fields to existing public event contracts unless a separate architecture decision explicitly approves an additive event schema change.
   - [ ] Ensure repeated no-op events do not accidentally advance `LastModifiedAt`.
 
 - [ ] Task 5: Strengthen pure handler and actor tests (AC: 1, 2, 3, 4, 5)
   - [ ] Extend `tests/Hexalith.Parties.Projections.Tests/Handlers/PartyDetailProjectionHandlerTests.cs` for complete create -> derived-name -> detail update -> contact add/update/remove -> preferred channel -> identifier add/remove -> deactivate -> reactivate sequences.
   - [ ] Add duplicate-delivery tests proving repeated `ContactChannelAdded` and `IdentifierAdded` do not duplicate entries, and no-op updates return no mutation.
-  - [ ] Add rejection-event tests proving existing successful state is preserved and null state remains null.
-  - [ ] Add or update actor tests for state-key convention, malformed actor ids, party-id mismatch, serialized event dispatch, non-JSON drop behavior, unknown/ambiguous event names, checkpoint skipping, and corruption/rebuild behavior.
+  - [ ] Add rejection-event tests proving existing successful state is preserved, null state remains null, and interleaved rejections do not mutate detail fields or timestamps.
+  - [ ] Add or update actor tests for state-key convention, malformed actor ids, invalid tenant/party id segments, party-id mismatch, serialized event dispatch, non-JSON drop behavior, unknown/ambiguous event names, checkpoint skipping, and corruption/rebuild behavior.
+  - [ ] Add corruption/log-safety expectations for unreadable Dapr JSON state: fail closed, preserve rebuild behavior where already implemented, and do not emit party names, identifiers, contact values, serialized `PartyDetail`, or raw event payloads in diagnostics.
   - [ ] Keep pure handler tests in `Hexalith.Parties.Projections.Tests`; keep Dapr actor/state-manager behavior in actor/integration-style tests that already use `ActorHost.CreateForTest` and NSubstitute.
 
 - [ ] Task 6: Preserve architecture fitness and package boundaries (AC: 3, 5)
@@ -112,6 +118,7 @@ so that I can retrieve complete party details without rehydrating the aggregate 
 - Projection-side tenant isolation is a Parties responsibility, but this story is the write/update side of the detail projection. Public tenant-safe read query behavior belongs to later Epic 2 stories.
 - Event contracts are additive and forward-compatible. Avoid changing event shapes to satisfy timestamp preferences; use envelope metadata only if it is already safely available to the projection actor path.
 - Rejection events are persisted and replayed. They are not exceptions, and projection replay must stay compatible with historical streams containing them.
+- Rejection events are durable audit facts for replay compatibility. They must be recognized where persisted event compatibility requires it, but applying them to party detail projection state is a no-op for both data fields and timestamps.
 - Keep personal data out of logs, telemetry dimensions, exception messages, and test snapshots. It is acceptable for `PartyDetail` to contain personal data as product data returned to authorized consumers, but operational diagnostics must stay metadata-only.
 
 ### Current Code Surfaces To Inspect
@@ -185,6 +192,7 @@ tests/Hexalith.Parties.Tests/FitnessTests/ArchitecturalFitnessTests.cs
 - Query responses with freshness/degradation indicators are owned by later Epic 2 stories. This story may preserve actor rebuild/degraded primitives, but should not design the public query response contract.
 - Party index projection behavior is Story 2.2. Avoid pulling tenant list/search/index requirements into this story except where shared abstractions must not be broken.
 - Automated drift detection and operational rebuild runbooks are broader Story 2.8 concerns. This story should preserve current rebuild hooks without expanding scope unnecessarily.
+- Projection schema versioning, migration/backfill strategy, and cross-projection consistency guarantees remain deferred until a later operational or compatibility story requires them.
 
 ### References
 
@@ -218,3 +226,28 @@ tests/Hexalith.Parties.Tests/FitnessTests/ArchitecturalFitnessTests.cs
 ## Change Log
 
 - 2026-05-16: Story created by BMAD pre-dev context workflow with existing projection implementation analysis, Dapr actor guardrails, pure handler testing guidance, and replay/idempotency requirements.
+- 2026-05-17: Party-mode review clarifications applied for stable idempotency keys, rejection replay no-op evidence, pre-create event ordering, actor-id failure behavior, timestamp precedence, and log-safe corruption testing.
+
+## Party-Mode Review
+
+- Date/time: 2026-05-17T08:57:48+02:00
+- Selected story: `2-1-build-party-detail-projection`
+- Command/skill invocation used: `/bmad-party-mode 2-1-build-party-detail-projection; review;`
+- Participating BMAD agents: Winston (System Architect), Amelia (Senior Software Engineer), Murat (Master Test Architect and Quality Advisor), John (Product Manager)
+- Findings summary:
+  - All reviewers recommended `ready-for-dev`; no blocker was identified.
+  - Review risk centered on replay confidence rather than product scope: deterministic idempotency keys, rejection-event no-op evidence, pre-create event ordering, actor-id parsing failures, timestamp provenance, and metadata-only diagnostics.
+  - Architecture/product boundaries remain correct: no read/query API surface, search/index behavior, event contract timestamp redesign, cross-projection consistency guarantee, or migration/backfill strategy belongs in this story.
+- Changes applied:
+  - Clarified collection idempotency by stable `ChannelId` and `IdentifierId`, while scalar/detail/lifecycle updates remain aggregate-order last-event-wins.
+  - Required rejection replay tests before, after, and interleaved with successful events, including no data-field or timestamp mutation.
+  - Clarified pre-create child events as no-ops unless existing implementation already has a stricter corruption path.
+  - Required separate malformed actor-id and party-id mismatch tests with metadata-only diagnostics and no Dapr state write or checkpoint advancement.
+  - Clarified timestamp precedence without changing event contracts.
+  - Added corruption/log-safety expectations for unreadable actor JSON state.
+- Findings deferred:
+  - Public read/query API shape and freshness response behavior remain later Epic 2 work.
+  - Search, list, tenant index projection, and cross-party projection shapes remain Story 2.2+ work.
+  - Event contract timestamp redesign and normalization semantics remain deferred unless a future architecture decision approves them.
+  - Projection schema versioning, migration/backfill, and cross-projection consistency guarantees remain deferred.
+- Final recommendation: `ready-for-dev`
