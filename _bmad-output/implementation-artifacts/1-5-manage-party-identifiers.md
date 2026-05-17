@@ -1,6 +1,6 @@
 # Story 1.5: Manage Party Identifiers
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -99,6 +99,28 @@ so that consumers can associate parties with external legal, tax, or registry re
   - [x] Run `dotnet test tests/Hexalith.Parties.Contracts.Tests/Hexalith.Parties.Contracts.Tests.csproj --configuration Release --filter FullyQualifiedName~PartyStateTests`.
   - [x] Run `dotnet test tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj --configuration Release --filter FullyQualifiedName~PartyStateApplyOrderingFitnessTests` if any `PartyState.Apply` declarations move.
   - [x] Run `dotnet build Hexalith.Parties.slnx --configuration Release` if implementation changes touch public contracts, validators, project references, or EventStore-facing surfaces.
+
+### Review Findings
+
+Code review of commit `a748bc5` — 2026-05-17. Three review layers ran: Blind Hunter (adversarial), Edge Case Hunter (branch coverage), Acceptance Auditor (AC mapping). Decisions resolved 2026-05-17 by Jérôme. Final tally: 4 patch, 4 defer, 6 dismissed.
+
+- [x] [Review][Patch] Strengthen `Handle_UpdatePartyComposite_DuplicateAddIdentifierInPayload_SkipsDuplicateWithoutValue` — Applied 2026-05-17: now asserts `Events.Count == 1`, pins `IdentifierAdded.IdentifierId`/`Type`/`Value` against the first payload entry (proves "first wins"), asserts both values absent from `Skipped` and `Applied`, and asserts `UpdatedPartyDetail.Identifiers` still contains pre-existing `id-vat-1`. [tests/Hexalith.Parties.Server.Tests/Aggregates/PartyAggregateCompositeTests.cs:985-1003]
+- [x] [Review][Patch] Strengthen new `RemoveIdentifier` erasure/restriction rejection tests — Applied 2026-05-17: `Handle_RemoveIdentifier_ErasurePending_ReturnsRejectionOnly` now captures `PartyErasureInProgress`, asserts `Message` is non-null and excludes `command.IdentifierId`; `Handle_RemoveIdentifier_RestrictedParty_ReturnsRejectionOnly` additionally asserts `rejection.PartyId == command.PartyId`. Mirrors `Handle_AddIdentifier_ErasurePending_ReturnsRejectionWithoutIdentifierValue` shape. [tests/Hexalith.Parties.Server.Tests/Aggregates/PartyAggregateIdentifierTests.cs:141-156,182-196]
+- [x] [Review][Patch] Document `RemoveIdentifierId` wording asymmetry in `UpdatePartyCompositeValidator` — Applied 2026-05-17: added a code comment above the `RuleForEach(x => x.RemoveIdentifierIds)` block explaining the deliberate singular framing and pointing to the test that pins it. [src/Hexalith.Parties/Validation/UpdatePartyCompositeValidator.cs:85-91]
+- [x] [Review][Patch] Add AC6 `Applied`-string privacy assertions on the new composite duplicate-add test — Applied 2026-05-17 (merged into the P1 patch above): both `command.AddIdentifiers[0].Value` and `command.AddIdentifiers[1].Value` are now asserted absent from `result.Applied`. [tests/Hexalith.Parties.Server.Tests/Aggregates/PartyAggregateCompositeTests.cs:996-1000]
+- [x] [Review][Defer] Validator-coverage gaps surfaced by the new audit file — `IdentifierValidatorTests` does not cover `AddIdentifierValidator` `PartyId` failure branch, empty `IdentifierId`, `RemoveIdentifierValidator` failure paths, composite child rules for `PartyId`/`Type`/`Value`, `RemoveIdentifierIds` empty/null entry, or `MaxSubOperations` cap boundary. Deferred 2026-05-17: Story 1.5 is audit/reconciliation, not coverage expansion. Pair with a dedicated validator-coverage hardening story. [tests/Hexalith.Parties.Tests/Validation/IdentifierValidatorTests.cs] — deferred, audit-scoping decision
+- [x] [Review][Defer] AC4 missing-party path: pre-existing `NullState` tests don't assert `IdentifierAdded`/`IdentifierRemoved` absence — `Handle_AddIdentifier_NullState_ReturnsPartyNotFound` and `Handle_RemoveIdentifier_NullState_ReturnsPartyNotFound` only assert event count and rejection type, not `Events.OfType<IdentifierAdded>().ShouldBeEmpty()`. AC4's rejection-only invariant is satisfied by event-count + rejection-type assertions, but the explicit no-success-event assertion is missing for these two paths. Pre-existing tests outside this diff — deferred, not introduced here. [tests/Hexalith.Parties.Server.Tests/Aggregates/PartyAggregateIdentifierTests.cs] — deferred, pre-existing
+- [x] [Review][Defer] `PartyAggregateIdentifierTests.cs` host file uses K&R brace style while the rest of the test suite uses Allman — pre-existing inconsistency in the host file (new methods follow host style). Not in this diff's scope. [tests/Hexalith.Parties.Server.Tests/Aggregates/PartyAggregateIdentifierTests.cs] — deferred, pre-existing
+- [x] [Review][Defer] Negative-cast `IdentifierType` boundary (e.g., `(IdentifierType)-1`) not exercised — `AddIdentifier_InvalidType_ReturnsIdentifierTypeFailure` casts `999` (above-range). A symmetric below-range test would harden `IsInEnum()` coverage but offers diminishing returns. — deferred, pre-existing
+
+#### Dismissed findings (recorded for traceability)
+
+- Validator standalone-vs-composite "contradiction" on readable identifier ids — intentional and spec-documented in Task 1 and the Advanced Elicitation Clarifications. The new tests correctly pin both halves of the documented distinction.
+- `PartyTestData.ValidRemoveIdentifier()` may target a non-existent id on `Erasure/Restricted` states — irrelevant because erasure/restriction guards run before identifier-existence checks per the documented `PartyAggregate.Handle(RemoveIdentifier, …)` precedence.
+- `[InlineData(null)]` with `value!` null-forgiving — compiles and runs correctly; `AddIdentifier.Value` accepts the null at construction and the validator's NotEmpty rule is what fails.
+- Hard-coded `"id-vat-1"` / `"id-siret-1"` literals across test files — readable test fixture style, not a defect.
+- `RemoveIdentifier` rejection privacy on `Message` — `RemoveIdentifier` has no `Value` field, and the spec explicitly allows `IdentifierId` in operation strings ("Identifier ids are allowed as stable operation identifiers when they are GUID-shaped or otherwise non-PII").
+- AC4 "invalid identifier payload" aggregate-level evidence — spec Task 1 delegates payload validation to the validator boundary; aggregate-level evidence for blank `IdentifierId` is already covered by existing composite tests. Informational only.
 
 ## Dev Notes
 
@@ -271,6 +293,7 @@ GPT-5 Codex
 
 ## Change Log
 
+- 2026-05-17: Code review of commit `a748bc5` applied 4 patches (composite duplicate-add test strengthened, RemoveIdentifier erasure/restriction tests strengthened, validator wording-asymmetry documented, AC6 `Applied`-string assertions added); 4 items deferred; story moved to `done`. Re-verified with `dotnet test` filters `PartyAggregateIdentifierTests|PartyAggregateCompositeTests` (66/66 passed) and `IdentifierValidatorTests` (7/7 passed).
 - 2026-05-17: Implemented Story 1.5 audit/reconciliation guardrail tests for identifier validators, remove-identifier rejection-only behavior, and composite duplicate-add privacy-safe outcomes; focused tests and release build passed.
 - 2026-05-15: Party-mode review applied pre-dev clarifications for duplicate no-op/no-success-event evidence, missing-remove rejection behavior, privacy-safe outcome checks, MVP jurisdiction scope, upstream authorization boundary, composite returned-state assertions, and deferred lifecycle/jurisdiction/search/API decisions.
 - 2026-05-15: Story created by BMAD pre-dev hardening automation with current identifier reconciliation context.

@@ -985,11 +985,19 @@ public class PartyAggregateCompositeTests
         CompositeCommandResult result = PartyAggregate.Handle(command, state);
 
         result.IsSuccess.ShouldBeTrue();
-        result.Events.OfType<IdentifierAdded>().Count().ShouldBe(1);
+        result.Events.Count.ShouldBe(1);
+        IdentifierAdded added = result.Events.OfType<IdentifierAdded>().Single();
+        added.IdentifierId.ShouldBe("id-siret-1");
+        added.Type.ShouldBe(IdentifierType.SIRET);
+        added.Value.ShouldBe(command.AddIdentifiers[0].Value);
         result.Skipped.ShouldContain("Duplicate identifier: id-siret-1");
+        result.Skipped.Any(x => x.Contains(command.AddIdentifiers[0].Value)).ShouldBeFalse();
         result.Skipped.Any(x => x.Contains(command.AddIdentifiers[1].Value)).ShouldBeFalse();
+        result.Applied.Any(x => x.Contains(command.AddIdentifiers[0].Value)).ShouldBeFalse();
+        result.Applied.Any(x => x.Contains(command.AddIdentifiers[1].Value)).ShouldBeFalse();
         result.UpdatedPartyDetail.ShouldNotBeNull();
         result.UpdatedPartyDetail.Identifiers.Count(x => x.Id == "id-siret-1").ShouldBe(1);
+        result.UpdatedPartyDetail.Identifiers.ShouldContain(x => x.Id == "id-vat-1");
     }
 
     [Fact]

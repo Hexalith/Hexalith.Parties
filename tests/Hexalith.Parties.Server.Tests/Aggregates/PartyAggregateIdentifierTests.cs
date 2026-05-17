@@ -147,8 +147,10 @@ public class PartyAggregateIdentifierTests {
 
         result.IsRejection.ShouldBeTrue();
         result.Events.Count.ShouldBe(1);
-        result.Events[0].ShouldBeOfType<PartyErasureInProgress>();
+        PartyErasureInProgress rejection = result.Events[0].ShouldBeOfType<PartyErasureInProgress>();
         result.Events.OfType<IdentifierRemoved>().ShouldBeEmpty();
+        string rejectionMessage = rejection.Message.ShouldNotBeNull();
+        rejectionMessage.ShouldNotContain(command.IdentifierId);
     }
 
     [Fact]
@@ -184,7 +186,10 @@ public class PartyAggregateIdentifierTests {
 
         result.IsRejection.ShouldBeTrue();
         result.Events.Count.ShouldBe(1);
-        result.Events[0].ShouldBeOfType<PartyProcessingRestricted>();
+        PartyProcessingRestricted rejection = result.Events[0].ShouldBeOfType<PartyProcessingRestricted>();
         result.Events.OfType<IdentifierRemoved>().ShouldBeEmpty();
+        rejection.PartyId.ShouldBe(command.PartyId);
+        string rejectionMessage = rejection.Message.ShouldNotBeNull();
+        rejectionMessage.ShouldNotContain(command.IdentifierId);
     }
 }

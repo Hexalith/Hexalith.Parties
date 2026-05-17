@@ -82,6 +82,10 @@ public sealed class UpdatePartyCompositeValidator : AbstractValidator<UpdatePart
                 .WithMessage("Value is required.");
         });
 
+        // Message frames the rule by the scalar element ("RemoveIdentifierId" singular), not the
+        // collection property ("RemoveIdentifierIds[i]"); this asymmetry with the AddIdentifiers
+        // child rule ("IdentifierId must be a valid GUID.") is intentional and pinned by
+        // IdentifierValidatorTests.UpdatePartyComposite_ReadableIdentifierId_ReturnsGuidFailure.
         RuleForEach(x => x.RemoveIdentifierIds)
             .Must(id => Guid.TryParse(id, out _))
             .WithMessage("RemoveIdentifierId must be a valid GUID.");
