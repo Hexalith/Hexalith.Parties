@@ -66,6 +66,15 @@ so that I can list and filter parties without scanning aggregate event streams.
 | AC6 | Pure handler tests remain infrastructure-free; actor-owned checkpoint, reminder, batching, rebuild, corruption, and degraded-cache behavior stays in actor tests. |
 | AC7 | Query/search boundary tests show tenant A and tenant B list/search independently, pagination/filter/search metadata aligns with returned page items, erased entries are excluded, and no cross-tenant fallback leakage occurs. |
 
+### Advanced Elicitation Clarifications
+
+- Treat authorization inputs as evidence gates, not hints. If tenant context, authorized party ids, actor state, cursor/search state, or request normalization cannot prove tenant ownership, the accepted query/search boundary must return no results and metadata-only diagnostics rather than falling back to aggregate scans, all-tenant local search, cached entries from another tenant, or projection actor internals.
+- Reconcile the existing `LocalFuzzyPartySearchProvider` contact/identifier matching as an implementation detail only. This story must either keep public MVP evidence bounded to display-name/type/status/date behavior or explicitly prove that any current contact/identifier matching is not exposed as a promised public search capability, does not leak values through metadata, and remains safe to narrow in later dedicated search stories.
+- Distinguish malformed event payloads, unreadable actor state, stale sequence events, duplicate no-op events, and persisted rejection events in tests. They may share metadata-only diagnostics, but they must not all collapse into the same branch if doing so would hide whether state mutation, checkpoint advancement, cache fallback, or rebuild scheduling occurred.
+- Keep privacy assertions structural. Tests may assert ids, counts, event type names, sequence numbers, status flags, page metadata, and bounded reason codes; they must not snapshot display names, contact values, identifiers, raw event JSON, serialized actor state, or search query text into logs, diagnostics, exception messages, or approval-style snapshots.
+- Make the no-op/write boundary observable. For duplicate replay, stale events, rejection replay, child-before-create, missing child updates/removals, ignored cross-tenant input, and unreadable payloads, tests should separately assert visible index state, `LastModifiedAt`, persisted write attempts, pending-change cleanup, and checkpoint behavior where the actor exposes or can verify those effects.
+- Avoid turning hardening into platform work. Do not add multi-partition routing, schema migration/backfill, public freshness contracts, semantic search, operational rebuild runbooks, new REST/OpenAPI/MCP surfaces, or EventStore authorization workarounds to satisfy this story; record any discovered need under deferred decisions.
+
 ## Tasks / Subtasks
 
 - [ ] Task 1: Audit and reuse existing index projection surfaces before editing (AC: 1, 3, 4, 7)
@@ -304,3 +313,37 @@ tests/Hexalith.Parties.Tests/FitnessTests/ArchitecturalFitnessTests.cs
 
 - 2026-05-17: Story created by BMAD pre-dev context workflow with existing tenant index projection analysis, partition/batching guardrails, search/list boundary guidance, privacy-safe diagnostics, and focused validation commands.
 - 2026-05-17: Party-mode review applied low-risk clarifications for tenant fail-closed behavior, AC-to-test traceability, no-op/rejection replay evidence, privacy-safe diagnostics, deterministic actor tests, and deferred public-scope boundaries.
+- 2026-05-17: Advanced elicitation applied low-risk clarifications for tenant authorization evidence gates, search fallback scope, malformed/replay/corruption branch separation, structural privacy assertions, and no-op/write-boundary proof.
+
+## Advanced Elicitation
+
+- Date: 2026-05-17T17:02:38+02:00
+- Selected story key: `2-2-build-tenant-party-index-projection`
+- Command/skill invocation used: `/bmad-advanced-elicitation 2-2-build-tenant-party-index-projection`
+- Batch 1 method names:
+  - Red Team vs Blue Team
+  - Failure Mode Analysis
+  - Security Audit Personas
+  - Self-Consistency Validation
+  - Architecture Decision Records
+- Reshuffled Batch 2 method names:
+  - Pre-mortem Analysis
+  - Chaos Monkey Scenarios
+  - User Persona Focus Group
+  - Critique and Refine
+  - Expand or Contract for Audience
+- Findings summary:
+  - Red-team/security review found that tenant context, authorized party ids, cursor/search state, and actor state needed to be treated as fail-closed evidence gates rather than advisory hints.
+  - Failure-mode and chaos review found that malformed payloads, unreadable actor state, stale sequences, duplicate no-ops, and rejection replay needed separate evidence so state mutation, checkpoint advancement, cache fallback, and rebuild scheduling cannot be conflated.
+  - Self-consistency and ADR review confirmed the existing story direction: keep `SingleKeyPartitionStrategy`, preserve pure handler boundaries, avoid new public query surfaces, and leave broader partitioning, freshness, search, migration, and rebuild policy decisions deferred.
+  - User/persona and audience review found that developer-facing tasks needed privacy-safe, structural assertion guidance and clearer wording around current local search behavior that may exceed the MVP public search promise.
+- Changes applied:
+  - Added an `Advanced Elicitation Clarifications` subsection covering authorization evidence gates, local fuzzy search scope, malformed/replay/corruption branch separation, structural privacy assertions, no-op/write-boundary evidence, and anti-scope-expansion guardrails.
+  - Added a change-log entry for the elicitation pass.
+- Findings deferred:
+  - Multi-partition routing beyond `SingleKeyPartitionStrategy`.
+  - Projection schema migration/backfill and operational rebuild runbooks.
+  - Public freshness/degradation contracts.
+  - Semantic search and public contact/identifier search promises beyond accepted current local fallback behavior.
+  - New REST/OpenAPI/MCP surfaces or EventStore authorization workarounds.
+- Final recommendation: ready-for-dev
