@@ -66,7 +66,7 @@ development_status:
   # Epic 2: Tenant-Safe Party Search and Retrieval (9 stories)
   epic-2: in-progress
   2-1-build-party-detail-projection: ready-for-dev
-  2-2-build-tenant-party-index-projection: backlog
+  2-2-build-tenant-party-index-projection: ready-for-dev
   2-3-query-party-details-by-id: backlog
   2-4-list-and-filter-parties: backlog
   2-5-search-parties-by-display-name-with-match-metadata: backlog
