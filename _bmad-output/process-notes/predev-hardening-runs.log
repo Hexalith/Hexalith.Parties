@@ -124,3 +124,4 @@
 2026-05-17T14:19:13+02:00	none	-	none	all ready stories already have party-mode and advanced-elicitation traces
 2026-05-17T14:22:56+02:00	create-story	2-2-build-tenant-party-index-projection	ok	created ready story; active-dev-story soft warning from preflight 2026-05-17T12:21:04Z with stdout=" M _bmad-output/implementation-artifacts/sprint-status.yaml\n M tests/Hexalith.Parties.Contracts.Tests/State/PartyStateTests.cs\n M tests/Hexalith.Parties.Server.Tests/Aggregates/PartyAggregateLifecycleTests.cs\n"
 2026-05-17T14:44:05+02:00	party-mode-review	2-2-build-tenant-party-index-projection	ok	applied party-mode review clarifications; preflight passed at 2026-05-17T12:41:48Z
+2026-05-17T15:06:51+02:00	create-story	2-3-query-party-details-by-id	ok	created ready-for-dev story; preflight active-dev-story soft warning at 2026-05-17T13:01:46Z
