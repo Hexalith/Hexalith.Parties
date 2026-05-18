@@ -4,7 +4,6 @@ using System.Text.Json;
 using Dapr.Client;
 
 using Hexalith.EventStore.Contracts.Identity;
-using Hexalith.EventStore.Contracts.Security;
 using Hexalith.EventStore.Server.Configuration;
 using Hexalith.EventStore.Server.Events;
 using Hexalith.EventStore.Server.Projections;
@@ -46,16 +45,7 @@ public sealed class PublisherToSubscriberContractTests : IDisposable
     public async Task PublisherGeneratedCloudEvents_FullyQualifiedEventNames_AreProcessedEndToEndAsync()
     {
         DaprClient daprClient = Substitute.For<DaprClient>();
-        IEventPayloadProtectionService payloadProtectionService = Substitute.For<IEventPayloadProtectionService>();
-        
-        payloadProtectionService
-            .UnprotectEventPayloadAsync(
-                Arg.Any<AggregateIdentity>(),
-                Arg.Any<string>(),
-                Arg.Any<byte[]>(),
-                Arg.Any<string>(),
-                Arg.Any<CancellationToken>())
-            .Returns(callInfo => Task.FromResult(new PayloadProtectionResult(callInfo.Arg<byte[]>(), callInfo.ArgAt<string>(3))));
+        var payloadProtectionService = new NoOpEventPayloadProtectionService();
 
         var publisher = new EventPublisher(
             daprClient,

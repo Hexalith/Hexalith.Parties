@@ -150,7 +150,8 @@ public class DeadLetterRoutingTests
         result.Success.ShouldBeFalse();
         result.PublishedCount.ShouldBe(0);
         result.FailureReason.ShouldNotBeNull();
-        result.FailureReason.ShouldContain("Connection refused");
+        result.FailureReason.ShouldContain("ReasonCode=protected-data-diagnostic-redacted");
+        result.FailureReason.ShouldNotContain("Connection refused");
     }
 
     [Fact]

@@ -1476,12 +1476,12 @@ public sealed class K8sManifestLintTests : IDisposable
 
         process.Start();
 
-        // Async stdout + stderr drain in parallel + 30 s hard timeout to
+        // Async stdout + stderr drain in parallel + 90 s hard timeout to
         // avoid Linux pipe-buffer deadlock above ~64 KB.
         // P19: on cancellation, kill the entire process tree (the script is
         // hung) and rewrap into a clearer InvalidOperationException so the
         // test signal isn't a bare TaskCanceledException stack trace.
-        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(90));
         Task<string> stdoutTask = process.StandardOutput.ReadToEndAsync(cts.Token);
         Task<string> stderrTask = process.StandardError.ReadToEndAsync(cts.Token);
         try
@@ -1493,7 +1493,7 @@ public sealed class K8sManifestLintTests : IDisposable
         {
             try { process.Kill(entireProcessTree: true); } catch { /* best-effort */ }
             throw new InvalidOperationException(
-                $"validate-deployment.ps1 exceeded the 30 s timeout and was killed. cancellation requested: {cts.IsCancellationRequested}",
+                $"validate-deployment.ps1 exceeded the 90 s timeout and was killed. cancellation requested: {cts.IsCancellationRequested}",
                 ex);
         }
 

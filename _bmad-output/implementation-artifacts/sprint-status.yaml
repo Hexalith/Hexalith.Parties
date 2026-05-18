@@ -35,7 +35,8 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-05-15 09:01:58 +02:00
-last_updated: 2026-05-18 20:29:50 +02:00
+last_updated: 2026-05-18 21:19:27 +02:00
+# last_updated touched 2026-05-18 by dev-story moving 1-9 to review (full Release regression suite green after stale test expectation cleanup)
 # last_updated touched 2026-05-18 by dev-story moving 1-9 to in-progress
 # last_updated touched 2026-05-18 by code-review closing story 9-2 (150/150 tests green after 34 review patches)
 # last_updated touched 2026-05-18 by dev-story moving 9-2 to review (131/131 tests green; lint extension complete)
@@ -65,7 +66,7 @@ development_status:
   1-6-deactivate-and-reactivate-parties: done
   1-7-idempotent-commands-and-typed-rejections: done
   1-8-personal-data-marking-and-log-safe-domain-model: done
-  1-9-return-updated-party-state-from-mutations: in-progress
+  1-9-return-updated-party-state-from-mutations: review
   epic-1-retrospective: optional
 
   # Epic 2: Tenant-Safe Party Search and Retrieval (9 stories)
