@@ -202,7 +202,7 @@ Manual scaffolding following EventStore conventions. No CLI generator — the ac
 ### Architectural Decisions Provided by Starter
 
 **Language & Runtime:**
-- C# on .NET 10.0 (SDK 10.0.103, pinned in `global.json`)
+- C# on .NET 10.0 (SDK 10.0.300, pinned in `global.json`)
 - File-scoped namespaces, nullable enabled, implicit usings enabled
 - Warnings as errors (`TreatWarningsAsErrors = true`)
 - Allman brace style, 4-space indentation, CRLF line endings, UTF-8
@@ -220,7 +220,7 @@ Manual scaffolding following EventStore conventions. No CLI generator — the ac
 
 | Dependency | EventStore Version | Current Latest | Parties Version | Notes |
 |------------|-------------------|----------------|-----------------|-------|
-| .NET SDK | 10.0.102 | 10.0.103 | 10.0.103 | Update to latest patch |
+| .NET SDK | 10.0.102 | 10.0.300 | 10.0.300 | Update to latest patch |
 | DAPR SDK | 1.16.1 | 1.17.0 | 1.16.1 | Match EventStore; upgrade as coordinated effort |
 | Aspire | 13.1.2 | 13.1.2 | 13.1.2 | Current |
 | MediatR | 14.0.0 | 14.0.0 | 14.0.0 | Current |
@@ -905,7 +905,7 @@ Hexalith.Parties/
 ├── README.md                              # Project overview, getting started
 ├── Directory.Build.props                  # Shared build props (net10.0, nullable, TreatWarningsAsErrors, NuGet metadata, MinVer)
 ├── Directory.Packages.props               # Central package management (all dependency versions)
-├── global.json                            # SDK 10.0.103, rollForward: latestPatch
+├── global.json                            # SDK 10.0.300, rollForward: latestPatch
 ├── Hexalith.Parties.slnx                  # Modern XML solution format
 │
 ├── .github/

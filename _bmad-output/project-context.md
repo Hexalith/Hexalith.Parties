@@ -17,7 +17,7 @@ _This file contains critical rules and patterns that AI agents must follow when 
 
 ## Technology Stack & Versions
 
-- Runtime: .NET SDK 10.0.103 via `global.json`, target framework `net10.0`.
+- Runtime: .NET SDK 10.0.300 via `global.json`, target framework `net10.0`.
 - Build defaults: nullable enabled, implicit usings enabled, `TreatWarningsAsErrors=true`, MinVer `7.0.0`, central package management through `Directory.Packages.props`.
 - Service architecture: Hexalith.Parties is a Dapr/Aspire actor-hosted domain service built on Hexalith.EventStore, with sibling root-level submodules for EventStore, Tenants, Memories, FrontComposer, and AI.Tools.
 - Dapr: `Dapr.Client` and `Dapr.AspNetCore` `1.17.7`; `Dapr.Actors` and `Dapr.Actors.AspNetCore` `1.16.1`.

@@ -12,7 +12,7 @@ This guide starts the local EventStore-fronted topology, sends a Parties command
 
 | Tool | Version | Download |
 |------|---------|----------|
-| .NET SDK | 10.0.103 or later | [dot.net](https://dot.net) |
+| .NET SDK | 10.0.300 or later | [dot.net](https://dot.net) |
 | Docker Desktop | Latest | [docker.com](https://www.docker.com/products/docker-desktop/) |
 | Git | Any recent version | [git-scm.com](https://git-scm.com) |
 | `jq` | Latest, optional for Bash examples | [jqlang.org](https://jqlang.org) |
