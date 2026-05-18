@@ -86,6 +86,16 @@ so that humans and AI agents can rank candidates confidently in MVP name-based l
 | Corrupt, malformed, null, or unreadable index payload | Bounded unavailable/degraded result or safe empty/not-accessible result; no raw actor/storage details. |
 | Cancellation before or during search | Cancellation is honored and no aggregate replay, detail fan-out, Memories expansion, retired REST call, or retry work starts afterward. |
 
+## Advanced Elicitation Clarifications
+
+- Normalize and classify matches from one canonical display-name value per `PartyIndexEntry`. Exact, prefix, contains, and any retained fuzzy path must use the same normalized value for matching, ranking, and metadata so tests cannot pass with divergent comparison rules.
+- Apply tenant authorization, erased-entry exclusion, active filtering, and display-name matching before score metadata, source metadata, paging metadata, and tie-breakers are calculated. Counts and page boundaries must never be derived from a broader pre-filtered or cross-tenant set.
+- Treat all client-carried context as untrusted for data selection. Page numbers, future cursors, `caseId`, graph context ids, mode flags, and request metadata may influence bounded behavior only after EventStore authorization, and they must not select tenant ids, actor ids, partitions, Memories scopes, or alternate indexes.
+- Keep diagnostics structurally useful but content-safe. Logs, telemetry, exceptions, degraded-state details, and source metadata may name coarse categories such as `displayName`, `exact`, `prefix`, `contains`, `localOnly`, or `degraded`, but must not echo the raw search term, display names, contact values, identifiers, serialized index rows, actor keys, stream names, cache payloads, or infrastructure exception text.
+- Make degraded-cache handling provenance-gated. Returning cached entries during stale/rebuilding/degraded states is acceptable only when tenant id, cache currency/version, partition completeness, and erased-entry filtering are proven; otherwise return the accepted bounded unavailable, degraded, or empty outcome.
+- Use negative future-field tests as a contract guard, not just implementation detail coverage. The MVP `PartySearch` path must fail a test if contact-channel, identifier, email, type, semantic, graph, duplicate, Memories-only, or party-type data participates in matching or appears in match metadata.
+- Keep cancellation terminal across client, gateway, query adapter, local search, cache, and provider layers. After cancellation is observed, no fallback aggregate replay, detail projection fan-out, Memories query, cache refresh, retry, or retired REST call may start.
+
 ## Tasks / Subtasks
 
 - [ ] Task 1: Audit and reuse current search/query surfaces before editing (AC: 1, 4, 7)
@@ -154,6 +164,7 @@ so that humans and AI agents can rank candidates confidently in MVP name-based l
 | Contains display-name match | Search tests prove `displayName` / `contains` metadata and deterministic ordering. |
 | Optional fuzzy display-name match | If retained, tests prove it applies only to display names, uses `MatchedField = "displayName"`, is ranked below exact/prefix/contains, ignores digit-heavy false positives, and emits bounded metadata. |
 | Future-reserved fields | Tests prove MVP public results do not search or emit `email`, `contactChannel`, `identifier`, `semantic`, `graph`, duplicate, `type`, party-type, or Memories-only match metadata. |
+| Normalization consistency | Tests prove exact, prefix, contains, and any retained fuzzy path use one canonical display-name normalization rule for matching, ranking, and metadata. |
 | Empty or whitespace query | Empty bounded result or accepted validation error with metadata-only diagnostics. |
 | No match | Empty bounded result with no fallback scans or cross-tenant probing. |
 | Active filter | Active-only, inactive-only, and all-status behavior follows accepted search/list policy. |
@@ -162,6 +173,7 @@ so that humans and AI agents can rank candidates confidently in MVP name-based l
 | Erased entries | `IsErased == true` entries are excluded before matching and metadata calculation. |
 | Degraded/corrupt index read | Actor/query tests prove unavailable/degraded behavior is bounded and logs stay metadata-only. |
 | Cancellation | Client, gateway, and local search paths honor cancellation without starting secondary lookup work. |
+| Untrusted request context | Tests prove page state, `caseId`, mode flags, graph context ids, and metadata cannot choose another tenant, actor key, partition, Memories scope, or alternate index. |
 
 ## Dev Notes
 
@@ -193,7 +205,7 @@ so that humans and AI agents can rank candidates confidently in MVP name-based l
 - Story 1.7 clarified bounded typed failures and privacy-safe error details. Search failures must not expose personal data or cross-tenant existence.
 - Story 1.8 reinforced personal-data marking and log safety. Search diagnostics must remain metadata-only.
 - Story 1.9 is currently in active implementation. Do not depend on unmerged 1.9 source changes unless they are already in the working tree and the implementing dev intentionally coordinates them.
-- L08 in the story-creation lessons ledger says party-mode review and advanced elicitation are separate dated traces. This story has not yet been reviewed by party mode or advanced elicitation.
+- L08 in the story-creation lessons ledger says party-mode review and advanced elicitation are separate dated traces. This story now carries both separate pre-dev hardening traces.
 
 ### Latest Technical Notes
 
@@ -301,7 +313,20 @@ tests/Hexalith.Parties.Tests/FitnessTests/ArchitecturalFitnessTests.cs
 - Findings deferred: Email/contact/identifier/semantic/graph/duplicate search, broader fuzzy strategy, duplicate/candidate clustering metadata, ranking explainability beyond basic match metadata, public freshness/degradation response shape, rebuild recovery strategy, and any public REST/OpenAPI/MCP exposure remain deferred to later accepted stories or architecture decisions.
 - Final recommendation: `ready-for-dev`
 
+## Advanced Elicitation
+
+- Date/time: 2026-05-18T22:56:45+02:00
+- Selected story key: `2-5-search-parties-by-display-name-with-match-metadata`
+- Command/skill invocation used: `/bmad-advanced-elicitation 2-5-search-parties-by-display-name-with-match-metadata`
+- Batch 1 method names: Red Team vs Blue Team; Failure Mode Analysis; Security Audit Personas; Self-Consistency Validation; Architecture Decision Records.
+- Reshuffled Batch 2 method names: Pre-mortem Analysis; Chaos Monkey Scenarios; User Persona Focus Group; Critique and Refine; Expand or Contract for Audience.
+- Findings summary: The story was directionally ready after party-mode review, but residual risks remained around divergent display-name normalization, metadata derived from pre-filtered sets, untrusted request context selecting alternate tenants or indexes, content-bearing diagnostics, unsafe degraded-cache reuse, future-field match leakage, and cancellation paths that begin fallback work.
+- Changes applied: Added `Advanced Elicitation Clarifications` covering canonical display-name normalization, filter-before-metadata ordering, untrusted client context, metadata-only diagnostics, degraded-cache provenance gates, negative future-field contract tests, and terminal cancellation. Added required test-matrix rows for normalization consistency and untrusted request context. Updated Dev Notes to reflect the separate completed party-mode and advanced elicitation traces.
+- Findings deferred: Locale-aware normalization beyond the accepted comparison policy, public freshness/degradation response shape, cursor/continuation-token design, richer ranking explainability, contact/identifier/email/semantic/graph/duplicate search, Memories-backed search, and MCP-specific party finding remain deferred to later accepted stories or architecture decisions.
+- Final recommendation: `ready-for-dev`
+
 ## Change Log
 
+- 2026-05-18: Advanced elicitation applied low-risk clarifications for normalization consistency, filter-before-metadata ordering, untrusted request context, degraded-cache provenance, diagnostics safety, future-field negative tests, and terminal cancellation.
 - 2026-05-18: Party-mode review applied low-risk clarifications for display-name-only search, optional fuzzy scope, deterministic ordering, EventStore tenant ownership, degraded-cache provenance, and future-field negative tests.
 - 2026-05-18: Story created by BMAD pre-dev hardening automation with existing typed search client, EventStore query gateway, tenant index projection, display-name match metadata, MVP future-field reservation, degraded-state, privacy, and focused validation guidance.
