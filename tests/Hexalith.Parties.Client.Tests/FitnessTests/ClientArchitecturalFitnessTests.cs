@@ -291,18 +291,31 @@ public sealed class ClientArchitecturalFitnessTests
         string[] expectedMethods =
         [
             "CreatePartyAsync",
+            "CreatePartyWithResultAsync",
             "UpdatePersonDetailsAsync",
+            "UpdatePersonDetailsWithResultAsync",
             "UpdateOrganizationDetailsAsync",
+            "UpdateOrganizationDetailsWithResultAsync",
             "AddContactChannelAsync",
+            "AddContactChannelWithResultAsync",
             "UpdateContactChannelAsync",
+            "UpdateContactChannelWithResultAsync",
             "RemoveContactChannelAsync",
+            "RemoveContactChannelWithResultAsync",
             "AddIdentifierAsync",
+            "AddIdentifierWithResultAsync",
             "RemoveIdentifierAsync",
+            "RemoveIdentifierWithResultAsync",
             "DeactivatePartyAsync",
+            "DeactivatePartyWithResultAsync",
             "ReactivatePartyAsync",
+            "ReactivatePartyWithResultAsync",
             "CreatePartyCompositeAsync",
+            "CreatePartyCompositeWithResultAsync",
             "UpdatePartyCompositeAsync",
+            "UpdatePartyCompositeWithResultAsync",
             "SetIsNaturalPersonAsync",
+            "SetIsNaturalPersonWithResultAsync",
         ];
 
         foreach (string expected in expectedMethods)
@@ -342,14 +355,18 @@ public sealed class ClientArchitecturalFitnessTests
     }
 
     [Fact]
-    public void AllCommandMethods_ReturnTaskOfString()
+    public void AllCommandMethods_ReturnExpectedTaskTypes()
     {
         Type interfaceType = typeof(Abstractions.IPartiesCommandClient);
 
         foreach (MethodInfo method in interfaceType.GetMethods())
         {
-            method.ReturnType.ShouldBe(typeof(Task<string>),
-                $"{method.Name} should return Task<string> but returns {method.ReturnType.Name}");
+            Type expectedReturnType = method.Name.EndsWith("WithResultAsync", StringComparison.Ordinal)
+                ? typeof(Task<Abstractions.PartiesCommandResult<Contracts.Models.PartyDetail>>)
+                : typeof(Task<string>);
+
+            method.ReturnType.ShouldBe(expectedReturnType,
+                $"{method.Name} should return {expectedReturnType.Name} but returns {method.ReturnType.Name}");
         }
     }
 

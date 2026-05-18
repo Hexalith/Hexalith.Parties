@@ -38,8 +38,8 @@ public sealed class PartiesMcpToolDispatchTests
     public async Task CreatePartyDispatchesCompositeCommandThroughTypedCommandClient()
     {
         IPartiesCommandClient commandClient = Substitute.For<IPartiesCommandClient>();
-        commandClient.CreatePartyCompositeAsync(Arg.Any<CreatePartyComposite>(), Arg.Any<CancellationToken>())
-            .Returns("corr-create");
+        commandClient.CreatePartyCompositeWithResultAsync(Arg.Any<CreatePartyComposite>(), Arg.Any<CancellationToken>())
+            .Returns(new PartiesCommandResult<PartyDetail>("corr-create", null));
         var tools = new PartiesMcpTools(commandClient, Substitute.For<IPartiesQueryClient>(), AuthenticatedContext());
 
         PartiesMcpToolResult result = await tools.CreateParty(
@@ -58,7 +58,7 @@ public sealed class PartiesMcpToolDispatchTests
         result.Category.ShouldBe("success");
         result.CorrelationId.ShouldBe("corr-create");
 
-        await commandClient.Received(1).CreatePartyCompositeAsync(
+        await commandClient.Received(1).CreatePartyCompositeWithResultAsync(
             Arg.Is<CreatePartyComposite>(command =>
                 command.PartyId == "party-1"
                 && command.Type == PartyType.Person
@@ -70,11 +70,41 @@ public sealed class PartiesMcpToolDispatchTests
     }
 
     [Fact]
+    public async Task CreatePartyReturnsSucceededWithUpdatedDetailWhenCommandPayloadIsAvailable()
+    {
+        var updatedDetail = new PartyDetail
+        {
+            Id = "party-1",
+            Type = PartyType.Person,
+            IsActive = true,
+            DisplayName = "Ada Lovelace",
+            SortName = "Lovelace, Ada",
+        };
+        IPartiesCommandClient commandClient = Substitute.For<IPartiesCommandClient>();
+        commandClient.CreatePartyCompositeWithResultAsync(Arg.Any<CreatePartyComposite>(), Arg.Any<CancellationToken>())
+            .Returns(new PartiesCommandResult<PartyDetail>("corr-create", updatedDetail));
+        var tools = new PartiesMcpTools(commandClient, Substitute.For<IPartiesQueryClient>(), AuthenticatedContext());
+
+        PartiesMcpToolResult result = await tools.CreateParty(
+            partyId: "party-1",
+            partyType: "person",
+            givenName: "Ada",
+            familyName: "Lovelace",
+            cancellationToken: CancellationToken.None);
+
+        result.Status.ShouldBe("succeeded");
+        result.CorrelationId.ShouldBe("corr-create");
+        JsonElement data = result.Data.ShouldBeOfType<JsonElement>();
+        data.GetProperty("id").GetString().ShouldBe("party-1");
+        data.GetProperty("displayName").GetString().ShouldBe("Ada Lovelace");
+    }
+
+    [Fact]
     public async Task CreatePartyPreservesPrePivotPersonAliasesAndPartialPersonInput()
     {
         IPartiesCommandClient commandClient = Substitute.For<IPartiesCommandClient>();
-        commandClient.CreatePartyCompositeAsync(Arg.Any<CreatePartyComposite>(), Arg.Any<CancellationToken>())
-            .Returns("corr-create");
+        commandClient.CreatePartyCompositeWithResultAsync(Arg.Any<CreatePartyComposite>(), Arg.Any<CancellationToken>())
+            .Returns(new PartiesCommandResult<PartyDetail>("corr-create", null));
         var tools = new PartiesMcpTools(commandClient, Substitute.For<IPartiesQueryClient>(), AuthenticatedContext());
 
         PartiesMcpToolResult result = await tools.CreateParty(
@@ -86,7 +116,7 @@ public sealed class PartiesMcpToolDispatchTests
             cancellationToken: CancellationToken.None);
 
         result.Status.ShouldBe("accepted");
-        await commandClient.Received(1).CreatePartyCompositeAsync(
+        await commandClient.Received(1).CreatePartyCompositeWithResultAsync(
             Arg.Is<CreatePartyComposite>(command =>
                 command.Type == PartyType.Person
                 && command.PersonDetails!.FirstName == string.Empty
@@ -107,15 +137,15 @@ public sealed class PartiesMcpToolDispatchTests
         result.Status.ShouldBe("failed");
         result.Category.ShouldBe("validation_failed");
         result.Code.ShouldBe("parties-mcp-no-change");
-        await commandClient.DidNotReceiveWithAnyArgs().UpdatePartyCompositeAsync(default!, default!, default);
+        await commandClient.DidNotReceiveWithAnyArgs().UpdatePartyCompositeWithResultAsync(default!, default!, default);
     }
 
     [Fact]
     public async Task UpdatePartyUsesRoutePartyIdAsAuthoritativeCompositeCommandId()
     {
         IPartiesCommandClient commandClient = Substitute.For<IPartiesCommandClient>();
-        commandClient.UpdatePartyCompositeAsync(Arg.Any<string>(), Arg.Any<UpdatePartyComposite>(), Arg.Any<CancellationToken>())
-            .Returns("corr-update");
+        commandClient.UpdatePartyCompositeWithResultAsync(Arg.Any<string>(), Arg.Any<UpdatePartyComposite>(), Arg.Any<CancellationToken>())
+            .Returns(new PartiesCommandResult<PartyDetail>("corr-update", null));
         var tools = new PartiesMcpTools(commandClient, Substitute.For<IPartiesQueryClient>(), AuthenticatedContext());
 
         PartiesMcpToolResult result = await tools.UpdateParty(
@@ -125,7 +155,7 @@ public sealed class PartiesMcpToolDispatchTests
             cancellationToken: CancellationToken.None);
 
         result.Status.ShouldBe("accepted");
-        await commandClient.Received(1).UpdatePartyCompositeAsync(
+        await commandClient.Received(1).UpdatePartyCompositeWithResultAsync(
             "route-party",
             Arg.Is<UpdatePartyComposite>(command =>
                 command.PartyId == "route-party"
@@ -139,8 +169,8 @@ public sealed class PartiesMcpToolDispatchTests
     {
         IPartiesCommandClient commandClient = Substitute.For<IPartiesCommandClient>();
         IPartiesQueryClient queryClient = Substitute.For<IPartiesQueryClient>();
-        commandClient.UpdatePartyCompositeAsync(Arg.Any<string>(), Arg.Any<UpdatePartyComposite>(), Arg.Any<CancellationToken>())
-            .Returns("corr-update");
+        commandClient.UpdatePartyCompositeWithResultAsync(Arg.Any<string>(), Arg.Any<UpdatePartyComposite>(), Arg.Any<CancellationToken>())
+            .Returns(new PartiesCommandResult<PartyDetail>("corr-update", null));
         queryClient.GetPartyAsync("party-1", Arg.Any<CancellationToken>())
             .Returns(new PartyDetail
             {
@@ -164,7 +194,7 @@ public sealed class PartiesMcpToolDispatchTests
             cancellationToken: CancellationToken.None);
 
         result.Status.ShouldBe("accepted");
-        await commandClient.Received(1).UpdatePartyCompositeAsync(
+        await commandClient.Received(1).UpdatePartyCompositeWithResultAsync(
             "party-1",
             Arg.Is<UpdatePartyComposite>(command =>
                 command.PersonDetails!.FirstName == "Augusta"
@@ -177,10 +207,10 @@ public sealed class PartiesMcpToolDispatchTests
     public async Task UpdatePartyHandlesLifecycleWithDetailsAndCommaSeparatedRemovals()
     {
         IPartiesCommandClient commandClient = Substitute.For<IPartiesCommandClient>();
-        commandClient.UpdatePartyCompositeAsync(Arg.Any<string>(), Arg.Any<UpdatePartyComposite>(), Arg.Any<CancellationToken>())
-            .Returns("corr-update");
-        commandClient.DeactivatePartyAsync("party-1", Arg.Any<CancellationToken>())
-            .Returns("corr-deactivate");
+        commandClient.UpdatePartyCompositeWithResultAsync(Arg.Any<string>(), Arg.Any<UpdatePartyComposite>(), Arg.Any<CancellationToken>())
+            .Returns(new PartiesCommandResult<PartyDetail>("corr-update", null));
+        commandClient.DeactivatePartyWithResultAsync("party-1", Arg.Any<CancellationToken>())
+            .Returns(new PartiesCommandResult<PartyDetail>("corr-deactivate", null));
         var tools = new PartiesMcpTools(commandClient, Substitute.For<IPartiesQueryClient>(), AuthenticatedContext());
 
         PartiesMcpToolResult result = await tools.UpdateParty(
@@ -192,7 +222,7 @@ public sealed class PartiesMcpToolDispatchTests
             cancellationToken: CancellationToken.None);
 
         result.Status.ShouldBe("accepted");
-        await commandClient.Received(1).UpdatePartyCompositeAsync(
+        await commandClient.Received(1).UpdatePartyCompositeWithResultAsync(
             "party-1",
             Arg.Is<UpdatePartyComposite>(command =>
                 command.RemoveContactChannelIds.Count == 2
@@ -202,15 +232,15 @@ public sealed class PartiesMcpToolDispatchTests
                 && command.RemoveIdentifierIds[0] == "identifier-1"
                 && command.RemoveIdentifierIds[1] == "identifier-2"),
             Arg.Any<CancellationToken>());
-        await commandClient.Received(1).DeactivatePartyAsync("party-1", Arg.Any<CancellationToken>());
+        await commandClient.Received(1).DeactivatePartyWithResultAsync("party-1", Arg.Any<CancellationToken>());
     }
 
     [Fact]
     public async Task UpdatePartyPreservesContactAndIdentifierPatchOperations()
     {
         IPartiesCommandClient commandClient = Substitute.For<IPartiesCommandClient>();
-        commandClient.UpdatePartyCompositeAsync(Arg.Any<string>(), Arg.Any<UpdatePartyComposite>(), Arg.Any<CancellationToken>())
-            .Returns("corr-update");
+        commandClient.UpdatePartyCompositeWithResultAsync(Arg.Any<string>(), Arg.Any<UpdatePartyComposite>(), Arg.Any<CancellationToken>())
+            .Returns(new PartiesCommandResult<PartyDetail>("corr-update", null));
         var tools = new PartiesMcpTools(commandClient, Substitute.For<IPartiesQueryClient>(), AuthenticatedContext());
 
         PartiesMcpToolResult result = await tools.UpdateParty(
@@ -227,7 +257,7 @@ public sealed class PartiesMcpToolDispatchTests
             cancellationToken: CancellationToken.None);
 
         result.Status.ShouldBe("accepted");
-        await commandClient.Received(1).UpdatePartyCompositeAsync(
+        await commandClient.Received(1).UpdatePartyCompositeWithResultAsync(
             "party-1",
             Arg.Is<UpdatePartyComposite>(command =>
                 command.AddContactChannels.Single().Type == ContactChannelType.Email
@@ -260,7 +290,43 @@ public sealed class PartiesMcpToolDispatchTests
         result.Status.ShouldBe("succeeded");
         result.Category.ShouldBe("success");
         result.Code.ShouldBe("parties-mcp-delete-idempotent");
-        await commandClient.DidNotReceiveWithAnyArgs().DeactivatePartyAsync(default!, default);
+        await commandClient.DidNotReceiveWithAnyArgs().DeactivatePartyWithResultAsync(default!, default);
+    }
+
+    [Fact]
+    public async Task DeletePartyReturnsSucceededWithUpdatedDetailWhenDeactivatePayloadIsAvailable()
+    {
+        IPartiesQueryClient queryClient = Substitute.For<IPartiesQueryClient>();
+        IPartiesCommandClient commandClient = Substitute.For<IPartiesCommandClient>();
+        queryClient.GetPartyAsync("party-1", Arg.Any<CancellationToken>())
+            .Returns(new PartyDetail
+            {
+                Id = "party-1",
+                Type = PartyType.Person,
+                IsActive = true,
+                DisplayName = "Active Person",
+                SortName = "Person Active",
+            });
+        commandClient.DeactivatePartyWithResultAsync("party-1", Arg.Any<CancellationToken>())
+            .Returns(new PartiesCommandResult<PartyDetail>(
+                "corr-delete",
+                new PartyDetail
+                {
+                    Id = "party-1",
+                    Type = PartyType.Person,
+                    IsActive = false,
+                    DisplayName = "Active Person",
+                    SortName = "Person Active",
+                }));
+        var tools = new PartiesMcpTools(commandClient, queryClient, AuthenticatedContext());
+
+        PartiesMcpToolResult result = await tools.DeleteParty("party-1", CancellationToken.None);
+
+        result.Status.ShouldBe("succeeded");
+        result.CorrelationId.ShouldBe("corr-delete");
+        JsonElement data = result.Data.ShouldBeOfType<JsonElement>();
+        data.GetProperty("id").GetString().ShouldBe("party-1");
+        data.GetProperty("isActive").GetBoolean().ShouldBeFalse();
     }
 
     [Fact]

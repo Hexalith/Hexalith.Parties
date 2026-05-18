@@ -150,10 +150,10 @@ internal sealed class PartiesMcpTools(
                     return ValidationFailed(PartiesMcpToolNames.CreateParty, "party details");
                 }
 
-                string correlationId = await commandClient
-                    .CreatePartyCompositeAsync(command, cancellationToken)
+                PartiesCommandResult<PartyDetail> result = await commandClient
+                    .CreatePartyCompositeWithResultAsync(command, cancellationToken)
                     .ConfigureAwait(false);
-                return PartiesMcpToolResult.Accepted(PartiesMcpToolNames.CreateParty, correlationId);
+                return ToMutationToolResult(PartiesMcpToolNames.CreateParty, result);
             }).ConfigureAwait(false);
 
     [McpServerTool(Name = PartiesMcpToolNames.UpdateParty, Title = "Update Party", Destructive = true)]
@@ -240,24 +240,22 @@ internal sealed class PartiesMcpTools(
                         "No supported update fields were provided.");
                 }
 
-                List<string> correlationIds = [];
+                List<PartiesCommandResult<PartyDetail>> commandResults = [];
                 if (command is not null)
                 {
-                    correlationIds.Add(await commandClient
-                        .UpdatePartyCompositeAsync(partyId, command, cancellationToken)
+                    commandResults.Add(await commandClient
+                        .UpdatePartyCompositeWithResultAsync(partyId, command, cancellationToken)
                         .ConfigureAwait(false));
                 }
 
                 if (active.HasValue)
                 {
-                    correlationIds.Add(active.Value
-                        ? await commandClient.ReactivatePartyAsync(partyId, cancellationToken).ConfigureAwait(false)
-                        : await commandClient.DeactivatePartyAsync(partyId, cancellationToken).ConfigureAwait(false));
+                    commandResults.Add(active.Value
+                        ? await commandClient.ReactivatePartyWithResultAsync(partyId, cancellationToken).ConfigureAwait(false)
+                        : await commandClient.DeactivatePartyWithResultAsync(partyId, cancellationToken).ConfigureAwait(false));
                 }
 
-                return correlationIds.Count == 1
-                    ? PartiesMcpToolResult.Accepted(PartiesMcpToolNames.UpdateParty, correlationIds[0])
-                    : PartiesMcpToolResult.Accepted(PartiesMcpToolNames.UpdateParty, correlationIds);
+                return ToMutationToolResult(PartiesMcpToolNames.UpdateParty, commandResults);
             }).ConfigureAwait(false);
 
     [McpServerTool(Name = PartiesMcpToolNames.DeleteParty, Title = "Delete Party", Destructive = true, Idempotent = true)]
@@ -284,8 +282,8 @@ internal sealed class PartiesMcpTools(
                         "parties-mcp-delete-idempotent");
                 }
 
-                string correlationId = await commandClient.DeactivatePartyAsync(partyId, cancellationToken).ConfigureAwait(false);
-                return PartiesMcpToolResult.Accepted(PartiesMcpToolNames.DeleteParty, correlationId);
+                PartiesCommandResult<PartyDetail> result = await commandClient.DeactivatePartyWithResultAsync(partyId, cancellationToken).ConfigureAwait(false);
+                return ToMutationToolResult(PartiesMcpToolNames.DeleteParty, result);
             }).ConfigureAwait(false);
 
     [McpServerTool(Name = PartiesMcpToolNames.GetPartyNameAt, Title = "Get Party Name At", ReadOnly = true)]
@@ -396,6 +394,29 @@ internal sealed class PartiesMcpTools(
                 "parties-mcp-downstream-failed",
                 "The downstream Parties/EventStore gateway could not be reached.");
         }
+    }
+
+    private static PartiesMcpToolResult ToMutationToolResult(
+        string toolName,
+        PartiesCommandResult<PartyDetail> result)
+        => result.Payload is null
+            ? PartiesMcpToolResult.Accepted(toolName, result.CorrelationId)
+            : PartiesMcpToolResult.Succeeded(toolName, result.Payload, correlationId: result.CorrelationId);
+
+    private static PartiesMcpToolResult ToMutationToolResult(
+        string toolName,
+        IReadOnlyList<PartiesCommandResult<PartyDetail>> results)
+    {
+        if (results.Count == 1)
+        {
+            return ToMutationToolResult(toolName, results[0]);
+        }
+
+        string[] correlationIds = [.. results.Select(result => result.CorrelationId)];
+        PartyDetail? payload = results.LastOrDefault(result => result.Payload is not null)?.Payload;
+        return payload is null
+            ? PartiesMcpToolResult.Accepted(toolName, correlationIds)
+            : PartiesMcpToolResult.Succeeded(toolName, new { correlationIds, partyDetail = payload }, correlationId: correlationIds[^1]);
     }
 
     private PartiesMcpToolResult? ValidateContextAndPartyId(string toolName, string partyId)

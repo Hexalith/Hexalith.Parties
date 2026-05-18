@@ -4,6 +4,7 @@ using System.Text.Json;
 
 using Hexalith.Parties.Client.Abstractions;
 using Hexalith.Parties.Contracts.Commands;
+using Hexalith.Parties.Contracts.Models;
 using Hexalith.Parties.Contracts.ValueObjects;
 
 using Microsoft.Extensions.Options;
@@ -46,6 +47,66 @@ public sealed class HttpPartiesCommandClientTests
         payload.GetProperty("partyId").GetString().ShouldBe("p-1");
         payload.GetProperty("type").GetString().ShouldBe("Person");
         payload.GetProperty("personDetails").GetProperty("firstName").GetString().ShouldBe("Ada");
+    }
+
+    [Fact]
+    public async Task CreatePartyWithResultAsync_WhenPayloadIsPresent_ReturnsUpdatedPartyDetailAsync()
+    {
+        string responseBody = JsonSerializer.Serialize(new
+        {
+            correlationId = "corr-with-payload",
+            resultPayload = new
+            {
+                id = "p-1",
+                type = "Person",
+                isActive = true,
+                displayName = "Ada Lovelace",
+                sortName = "Lovelace, Ada",
+            },
+        });
+        var handler = new MockHandler(HttpStatusCode.Accepted, responseBody, "application/json");
+        var httpClient = new HttpClient(handler) { BaseAddress = new Uri("https://localhost") };
+        var client = new HttpPartiesCommandClient(httpClient, Options.Create(ClientOptions()));
+
+        PartiesCommandResult<PartyDetail> result = await client.CreatePartyWithResultAsync(
+            new CreateParty
+            {
+                PartyId = "p-1",
+                Type = PartyType.Person,
+                PersonDetails = new PersonDetails { FirstName = "Ada", LastName = "Lovelace" },
+            },
+            CancellationToken.None);
+
+        result.CorrelationId.ShouldBe("corr-with-payload");
+        result.Payload.ShouldNotBeNull();
+        result.Payload.Id.ShouldBe("p-1");
+        result.Payload.Type.ShouldBe(PartyType.Person);
+        result.Payload.DisplayName.ShouldBe("Ada Lovelace");
+    }
+
+    [Fact]
+    public async Task CreatePartyWithResultAsync_WhenPayloadIsMalformed_FailsClosedAndKeepsCorrelationAsync()
+    {
+        string responseBody = JsonSerializer.Serialize(new
+        {
+            correlationId = "corr-bad-payload",
+            resultPayload = "not-a-party-detail",
+        });
+        var handler = new MockHandler(HttpStatusCode.Accepted, responseBody, "application/json");
+        var httpClient = new HttpClient(handler) { BaseAddress = new Uri("https://localhost") };
+        var client = new HttpPartiesCommandClient(httpClient, Options.Create(ClientOptions()));
+
+        PartiesCommandResult<PartyDetail> result = await client.CreatePartyWithResultAsync(
+            new CreateParty
+            {
+                PartyId = "p-1",
+                Type = PartyType.Person,
+                PersonDetails = new PersonDetails { FirstName = "Ada", LastName = "Lovelace" },
+            },
+            CancellationToken.None);
+
+        result.CorrelationId.ShouldBe("corr-bad-payload");
+        result.Payload.ShouldBeNull();
     }
 
     [Fact]

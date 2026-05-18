@@ -1,5 +1,6 @@
 using Hexalith.EventStore.Contracts.Events;
 using Hexalith.Parties.Contracts.Events;
+using Hexalith.Parties.Contracts.Models;
 using Hexalith.Parties.Contracts.Results;
 using Hexalith.Parties.Contracts.ValueObjects;
 
@@ -46,5 +47,45 @@ public class CompositeCommandResultTests
         var result = new CompositeCommandResult([], [], [], []);
 
         result.IsNoOp.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void Constructor_WithUpdatedPartyDetail_SerializesCamelCaseStringEnumResultPayload()
+    {
+        IEventPayload[] events = [new PartyCreated { Type = PartyType.Person }];
+        var detail = new PartyDetail
+        {
+            Id = "party-1",
+            Type = PartyType.Person,
+            IsActive = true,
+            DisplayName = "Ada Lovelace",
+            SortName = "Lovelace, Ada",
+        };
+
+        var result = new CompositeCommandResult(events, ["Created party"], [], [], detail);
+
+        result.ResultPayload.ShouldNotBeNullOrWhiteSpace();
+        result.ResultPayload.ShouldContain("\"displayName\":\"Ada Lovelace\"");
+        result.ResultPayload.ShouldContain("\"type\":\"Person\"");
+    }
+
+    [Fact]
+    public void PartyCommandResult_WithUpdatedPartyDetail_SerializesSamePayloadShape()
+    {
+        IEventPayload[] events = [new PartyCreated { Type = PartyType.Organization }];
+        var detail = new PartyDetail
+        {
+            Id = "party-2",
+            Type = PartyType.Organization,
+            IsActive = true,
+            DisplayName = "Acme Corp",
+            SortName = "Acme Corp",
+        };
+
+        var result = new PartyCommandResult(events, detail);
+
+        result.ResultPayload.ShouldNotBeNullOrWhiteSpace();
+        result.ResultPayload.ShouldContain("\"displayName\":\"Acme Corp\"");
+        result.ResultPayload.ShouldContain("\"type\":\"Organization\"");
     }
 }

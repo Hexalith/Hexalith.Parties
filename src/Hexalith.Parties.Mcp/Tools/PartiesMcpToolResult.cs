@@ -41,13 +41,14 @@ internal sealed record PartiesMcpToolResult(
             toolName,
             Data: JsonSerializer.SerializeToElement(new { correlationIds }, JsonOptions));
 
-    public static PartiesMcpToolResult Succeeded(string toolName, object? data = null, string? code = null)
+    public static PartiesMcpToolResult Succeeded(string toolName, object? data = null, string? code = null, string? correlationId = null)
         => new(
             "succeeded",
             "success",
             code ?? "parties-mcp-succeeded",
             "The Parties MCP tool completed successfully.",
             toolName,
+            correlationId,
             Data: data is null ? null : JsonSerializer.SerializeToElement(data, JsonOptions));
 
     public static PartiesMcpToolResult Failed(

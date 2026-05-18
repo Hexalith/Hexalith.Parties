@@ -165,7 +165,8 @@ public sealed class PartyAggregate : EventStoreAggregate<PartyState> {
             applied.Add($"Added identifier: {identifier.IdentifierId} ({identifier.Type})");
         }
 
-        return new CompositeCommandResult(events, applied, skipped, []);
+        PartyDetail updatedDetail = BuildPartyDetailFromState(command.PartyId, null, events);
+        return new CompositeCommandResult(events, applied, skipped, [], updatedDetail);
     }
 
     public static CompositeCommandResult Handle(UpdatePartyComposite command, PartyState? state) {
@@ -579,7 +580,7 @@ public sealed class PartyAggregate : EventStoreAggregate<PartyState> {
             SortName = sortName,
         };
 
-        return DomainResult.Success([created, nameDerived]);
+        return SuccessWithUpdatedPartyDetail(command.PartyId, null, [created, nameDerived]);
     }
 
     public static DomainResult Handle(UpdatePersonDetails command, PartyState? state) {
@@ -618,7 +619,7 @@ public sealed class PartyAggregate : EventStoreAggregate<PartyState> {
             SortName = sortName,
         };
 
-        return DomainResult.Success([updated, nameDerived]);
+        return SuccessWithUpdatedPartyDetail(command.PartyId, state, [updated, nameDerived]);
     }
 
     public static DomainResult Handle(UpdateOrganizationDetails command, PartyState? state) {
@@ -657,7 +658,7 @@ public sealed class PartyAggregate : EventStoreAggregate<PartyState> {
             SortName = sortName,
         };
 
-        return DomainResult.Success([updated, nameDerived]);
+        return SuccessWithUpdatedPartyDetail(command.PartyId, state, [updated, nameDerived]);
     }
 
     public static DomainResult Handle(SetIsNaturalPerson command, PartyState? state) {
@@ -690,7 +691,7 @@ public sealed class PartyAggregate : EventStoreAggregate<PartyState> {
             IsNaturalPerson = command.IsNaturalPerson,
         };
 
-        return DomainResult.Success([changed]);
+        return SuccessWithUpdatedPartyDetail(command.PartyId, state, [changed]);
     }
 
     public static DomainResult Handle(DeactivateParty command, PartyState? state) {
@@ -715,7 +716,7 @@ public sealed class PartyAggregate : EventStoreAggregate<PartyState> {
             return DomainResult.NoOp();
         }
 
-        return DomainResult.Success([new PartyDeactivated()]);
+        return SuccessWithUpdatedPartyDetail(command.PartyId, state, [new PartyDeactivated()]);
     }
 
     public static DomainResult Handle(ReactivateParty command, PartyState? state) {
@@ -740,7 +741,7 @@ public sealed class PartyAggregate : EventStoreAggregate<PartyState> {
             return DomainResult.NoOp();
         }
 
-        return DomainResult.Success([new PartyReactivated()]);
+        return SuccessWithUpdatedPartyDetail(command.PartyId, state, [new PartyReactivated()]);
     }
 
     public static DomainResult Handle(EraseParty command, PartyState? state) {
@@ -927,13 +928,13 @@ public sealed class PartyAggregate : EventStoreAggregate<PartyState> {
 
         // If marked as preferred, emit PreferredContactChannelChanged to clear others of same type
         if (command.IsPreferred) {
-            return DomainResult.Success([added, new PreferredContactChannelChanged
+            return SuccessWithUpdatedPartyDetail(command.PartyId, state, [added, new PreferredContactChannelChanged
             {
                 ContactChannelId = command.ContactChannelId,
             }]);
         }
 
-        return DomainResult.Success([added]);
+        return SuccessWithUpdatedPartyDetail(command.PartyId, state, [added]);
     }
 
     public static DomainResult Handle(UpdateContactChannel command, PartyState? state) {
@@ -980,13 +981,13 @@ public sealed class PartyAggregate : EventStoreAggregate<PartyState> {
         // 1) channel was not already preferred, or
         // 2) channel type changes (must clear preferred on the new type)
         if (command.IsPreferred == true && (!existingChannel.IsPreferred || targetType != existingChannel.Type)) {
-            return DomainResult.Success([updated, new PreferredContactChannelChanged
+            return SuccessWithUpdatedPartyDetail(command.PartyId, state, [updated, new PreferredContactChannelChanged
             {
                 ContactChannelId = command.ContactChannelId,
             }]);
         }
 
-        return DomainResult.Success([updated]);
+        return SuccessWithUpdatedPartyDetail(command.PartyId, state, [updated]);
     }
 
     public static DomainResult Handle(RemoveContactChannel command, PartyState? state) {
@@ -1011,7 +1012,7 @@ public sealed class PartyAggregate : EventStoreAggregate<PartyState> {
             return DomainResult.Rejection([new ContactChannelNotFound { Message = $"Contact channel '{command.ContactChannelId}' not found." }]);
         }
 
-        return DomainResult.Success([new ContactChannelRemoved { ContactChannelId = command.ContactChannelId }]);
+        return SuccessWithUpdatedPartyDetail(command.PartyId, state, [new ContactChannelRemoved { ContactChannelId = command.ContactChannelId }]);
     }
 
     public static DomainResult Handle(AddIdentifier command, PartyState? state) {
@@ -1042,7 +1043,7 @@ public sealed class PartyAggregate : EventStoreAggregate<PartyState> {
             Value = command.Value,
         };
 
-        return DomainResult.Success([added]);
+        return SuccessWithUpdatedPartyDetail(command.PartyId, state, [added]);
     }
 
     public static DomainResult Handle(RemoveIdentifier command, PartyState? state) {
@@ -1067,7 +1068,7 @@ public sealed class PartyAggregate : EventStoreAggregate<PartyState> {
             return DomainResult.Rejection([new IdentifierNotFound { Message = $"Identifier '{command.IdentifierId}' not found." }]);
         }
 
-        return DomainResult.Success([new IdentifierRemoved { IdentifierId = command.IdentifierId }]);
+        return SuccessWithUpdatedPartyDetail(command.PartyId, state, [new IdentifierRemoved { IdentifierId = command.IdentifierId }]);
     }
 
     public static DomainResult Handle(RecordConsent command, PartyState? state) {
@@ -1278,20 +1279,47 @@ public sealed class PartyAggregate : EventStoreAggregate<PartyState> {
     private static string NormalizeActorUserId(string? actorUserId)
         => string.IsNullOrWhiteSpace(actorUserId) ? "unknown" : actorUserId.Trim();
 
+    private static DomainResult SuccessWithUpdatedPartyDetail(
+        string partyId,
+        PartyState? state,
+        IReadOnlyList<IEventPayload> events)
+    {
+        try
+        {
+            return new PartyCommandResult(events, BuildPartyDetailFromState(partyId, state, events));
+        }
+        catch (InvalidOperationException)
+        {
+            return DomainResult.Success(events);
+        }
+    }
+
     private static PartyDetail BuildPartyDetailFromState(
         string partyId,
-        PartyState state,
+        PartyState? state,
         IReadOnlyList<IEventPayload> events) {
-        string displayName = state.DisplayName;
-        string sortName = state.SortName;
-        PersonDetails? person = state.Person;
-        OrganizationDetails? org = state.Organization;
-        bool isActive = state.IsActive;
-        List<ContactChannel> channels = [.. state.ContactChannels];
-        List<PartyIdentifier> identifiers = [.. state.Identifiers];
+        PartyType? type = state?.Type;
+        string displayName = state?.DisplayName ?? string.Empty;
+        string sortName = state?.SortName ?? string.Empty;
+        PersonDetails? person = state?.Person;
+        OrganizationDetails? org = state?.Organization;
+        bool isActive = state?.IsActive ?? true;
+        bool isRestricted = state?.IsRestricted ?? false;
+        DateTimeOffset? restrictedAt = state?.RestrictedAt;
+        bool isErased = state?.ErasureStatus is ErasureStatus.Erased;
+        DateTimeOffset? erasedAt = state?.ErasedAt;
+        List<ContactChannel> channels = state is null ? [] : [.. state.ContactChannels];
+        List<PartyIdentifier> identifiers = state is null ? [] : [.. state.Identifiers];
+        List<ConsentRecord> consentRecords = state is null ? [] : [.. state.ConsentRecords];
+        DateTimeOffset createdAt = state?.CreatedAt ?? DateTimeOffset.UtcNow;
 
         foreach (IEventPayload evt in events) {
             switch (evt) {
+                case PartyCreated e:
+                    type = e.Type;
+                    person = e.PersonDetails;
+                    org = e.OrganizationDetails;
+                    break;
                 case PersonDetailsUpdated e:
                     person = e.PersonDetails;
                     break;
@@ -1342,6 +1370,9 @@ public sealed class PartyAggregate : EventStoreAggregate<PartyState> {
                 case IdentifierRemoved e:
                     identifiers.RemoveAll(i => i.Id == e.IdentifierId);
                     break;
+                case IsNaturalPersonChanged e when org is not null:
+                    org = org with { IsNaturalPerson = e.IsNaturalPerson };
+                    break;
                 case PartyDeactivated:
                     isActive = false;
                     break;
@@ -1351,9 +1382,13 @@ public sealed class PartyAggregate : EventStoreAggregate<PartyState> {
             }
         }
 
+        if (type is null || string.IsNullOrWhiteSpace(displayName) || string.IsNullOrWhiteSpace(sortName)) {
+            throw new InvalidOperationException("Cannot build a trustworthy party detail from the supplied state and events.");
+        }
+
         return new PartyDetail {
             Id = partyId,
-            Type = state.Type,
+            Type = type.Value,
             IsActive = isActive,
             DisplayName = displayName,
             SortName = sortName,
@@ -1361,8 +1396,13 @@ public sealed class PartyAggregate : EventStoreAggregate<PartyState> {
             OrganizationDetails = org,
             ContactChannels = channels,
             Identifiers = identifiers,
-            CreatedAt = state.CreatedAt,
+            ConsentRecords = consentRecords,
+            CreatedAt = createdAt,
             LastModifiedAt = DateTimeOffset.UtcNow,
+            IsRestricted = isRestricted,
+            RestrictedAt = restrictedAt,
+            IsErased = isErased,
+            ErasedAt = erasedAt,
         };
     }
 }

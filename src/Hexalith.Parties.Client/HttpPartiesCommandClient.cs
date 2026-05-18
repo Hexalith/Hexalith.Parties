@@ -5,6 +5,7 @@ using System.Text.Json.Serialization;
 
 using Hexalith.Parties.Client.Abstractions;
 using Hexalith.Parties.Contracts.Commands;
+using Hexalith.Parties.Contracts.Models;
 
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
@@ -41,79 +42,118 @@ public sealed class HttpPartiesCommandClient : IPartiesCommandClient
         Converters = { new JsonStringEnumConverter() },
     };
 
-    public Task<string> CreatePartyAsync(CreateParty command, CancellationToken ct)
+    public async Task<string> CreatePartyAsync(CreateParty command, CancellationToken ct)
+        => (await CreatePartyWithResultAsync(command, ct).ConfigureAwait(false)).CorrelationId;
+
+    public Task<PartiesCommandResult<PartyDetail>> CreatePartyWithResultAsync(CreateParty command, CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(command);
-        return PostCommandAsync(command.PartyId, command, ct);
+        return PostCommandForResultAsync(command.PartyId, command, ct);
     }
 
-    public Task<string> UpdatePersonDetailsAsync(string partyId, UpdatePersonDetails command, CancellationToken ct)
+    public async Task<string> UpdatePersonDetailsAsync(string partyId, UpdatePersonDetails command, CancellationToken ct)
+        => (await UpdatePersonDetailsWithResultAsync(partyId, command, ct).ConfigureAwait(false)).CorrelationId;
+
+    public Task<PartiesCommandResult<PartyDetail>> UpdatePersonDetailsWithResultAsync(string partyId, UpdatePersonDetails command, CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(command);
-        return PostCommandAsync(partyId, command with { PartyId = partyId }, ct);
+        return PostCommandForResultAsync(partyId, command with { PartyId = partyId }, ct);
     }
 
-    public Task<string> UpdateOrganizationDetailsAsync(string partyId, UpdateOrganizationDetails command, CancellationToken ct)
+    public async Task<string> UpdateOrganizationDetailsAsync(string partyId, UpdateOrganizationDetails command, CancellationToken ct)
+        => (await UpdateOrganizationDetailsWithResultAsync(partyId, command, ct).ConfigureAwait(false)).CorrelationId;
+
+    public Task<PartiesCommandResult<PartyDetail>> UpdateOrganizationDetailsWithResultAsync(string partyId, UpdateOrganizationDetails command, CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(command);
-        return PostCommandAsync(partyId, command with { PartyId = partyId }, ct);
+        return PostCommandForResultAsync(partyId, command with { PartyId = partyId }, ct);
     }
 
-    public Task<string> AddContactChannelAsync(string partyId, AddContactChannel command, CancellationToken ct)
+    public async Task<string> AddContactChannelAsync(string partyId, AddContactChannel command, CancellationToken ct)
+        => (await AddContactChannelWithResultAsync(partyId, command, ct).ConfigureAwait(false)).CorrelationId;
+
+    public Task<PartiesCommandResult<PartyDetail>> AddContactChannelWithResultAsync(string partyId, AddContactChannel command, CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(command);
-        return PostCommandAsync(partyId, command with { PartyId = partyId }, ct);
+        return PostCommandForResultAsync(partyId, command with { PartyId = partyId }, ct);
     }
 
-    public Task<string> UpdateContactChannelAsync(string partyId, UpdateContactChannel command, CancellationToken ct)
+    public async Task<string> UpdateContactChannelAsync(string partyId, UpdateContactChannel command, CancellationToken ct)
+        => (await UpdateContactChannelWithResultAsync(partyId, command, ct).ConfigureAwait(false)).CorrelationId;
+
+    public Task<PartiesCommandResult<PartyDetail>> UpdateContactChannelWithResultAsync(string partyId, UpdateContactChannel command, CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(command);
-        return PostCommandAsync(partyId, command with { PartyId = partyId }, ct);
+        return PostCommandForResultAsync(partyId, command with { PartyId = partyId }, ct);
     }
 
-    public Task<string> RemoveContactChannelAsync(string partyId, RemoveContactChannel command, CancellationToken ct)
+    public async Task<string> RemoveContactChannelAsync(string partyId, RemoveContactChannel command, CancellationToken ct)
+        => (await RemoveContactChannelWithResultAsync(partyId, command, ct).ConfigureAwait(false)).CorrelationId;
+
+    public Task<PartiesCommandResult<PartyDetail>> RemoveContactChannelWithResultAsync(string partyId, RemoveContactChannel command, CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(command);
-        return PostCommandAsync(partyId, command with { PartyId = partyId }, ct);
+        return PostCommandForResultAsync(partyId, command with { PartyId = partyId }, ct);
     }
 
-    public Task<string> AddIdentifierAsync(string partyId, AddIdentifier command, CancellationToken ct)
+    public async Task<string> AddIdentifierAsync(string partyId, AddIdentifier command, CancellationToken ct)
+        => (await AddIdentifierWithResultAsync(partyId, command, ct).ConfigureAwait(false)).CorrelationId;
+
+    public Task<PartiesCommandResult<PartyDetail>> AddIdentifierWithResultAsync(string partyId, AddIdentifier command, CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(command);
-        return PostCommandAsync(partyId, command with { PartyId = partyId }, ct);
+        return PostCommandForResultAsync(partyId, command with { PartyId = partyId }, ct);
     }
 
-    public Task<string> RemoveIdentifierAsync(string partyId, RemoveIdentifier command, CancellationToken ct)
+    public async Task<string> RemoveIdentifierAsync(string partyId, RemoveIdentifier command, CancellationToken ct)
+        => (await RemoveIdentifierWithResultAsync(partyId, command, ct).ConfigureAwait(false)).CorrelationId;
+
+    public Task<PartiesCommandResult<PartyDetail>> RemoveIdentifierWithResultAsync(string partyId, RemoveIdentifier command, CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(command);
-        return PostCommandAsync(partyId, command with { PartyId = partyId }, ct);
+        return PostCommandForResultAsync(partyId, command with { PartyId = partyId }, ct);
     }
 
-    public Task<string> DeactivatePartyAsync(string partyId, CancellationToken ct)
-        => PostCommandAsync(partyId, new DeactivateParty { PartyId = partyId }, ct);
+    public async Task<string> DeactivatePartyAsync(string partyId, CancellationToken ct)
+        => (await DeactivatePartyWithResultAsync(partyId, ct).ConfigureAwait(false)).CorrelationId;
 
-    public Task<string> ReactivatePartyAsync(string partyId, CancellationToken ct)
-        => PostCommandAsync(partyId, new ReactivateParty { PartyId = partyId }, ct);
+    public Task<PartiesCommandResult<PartyDetail>> DeactivatePartyWithResultAsync(string partyId, CancellationToken ct)
+        => PostCommandForResultAsync(partyId, new DeactivateParty { PartyId = partyId }, ct);
 
-    public Task<string> CreatePartyCompositeAsync(CreatePartyComposite command, CancellationToken ct)
+    public async Task<string> ReactivatePartyAsync(string partyId, CancellationToken ct)
+        => (await ReactivatePartyWithResultAsync(partyId, ct).ConfigureAwait(false)).CorrelationId;
+
+    public Task<PartiesCommandResult<PartyDetail>> ReactivatePartyWithResultAsync(string partyId, CancellationToken ct)
+        => PostCommandForResultAsync(partyId, new ReactivateParty { PartyId = partyId }, ct);
+
+    public async Task<string> CreatePartyCompositeAsync(CreatePartyComposite command, CancellationToken ct)
+        => (await CreatePartyCompositeWithResultAsync(command, ct).ConfigureAwait(false)).CorrelationId;
+
+    public Task<PartiesCommandResult<PartyDetail>> CreatePartyCompositeWithResultAsync(CreatePartyComposite command, CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(command);
-        return PostCommandAsync(command.PartyId, command, ct);
+        return PostCommandForResultAsync(command.PartyId, command, ct);
     }
 
-    public Task<string> UpdatePartyCompositeAsync(string partyId, UpdatePartyComposite command, CancellationToken ct)
+    public async Task<string> UpdatePartyCompositeAsync(string partyId, UpdatePartyComposite command, CancellationToken ct)
+        => (await UpdatePartyCompositeWithResultAsync(partyId, command, ct).ConfigureAwait(false)).CorrelationId;
+
+    public Task<PartiesCommandResult<PartyDetail>> UpdatePartyCompositeWithResultAsync(string partyId, UpdatePartyComposite command, CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(command);
-        return PostCommandAsync(partyId, command with { PartyId = partyId }, ct);
+        return PostCommandForResultAsync(partyId, command with { PartyId = partyId }, ct);
     }
 
-    public Task<string> SetIsNaturalPersonAsync(string partyId, SetIsNaturalPerson command, CancellationToken ct)
+    public async Task<string> SetIsNaturalPersonAsync(string partyId, SetIsNaturalPerson command, CancellationToken ct)
+        => (await SetIsNaturalPersonWithResultAsync(partyId, command, ct).ConfigureAwait(false)).CorrelationId;
+
+    public Task<PartiesCommandResult<PartyDetail>> SetIsNaturalPersonWithResultAsync(string partyId, SetIsNaturalPerson command, CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(command);
-        return PostCommandAsync(partyId, command with { PartyId = partyId }, ct);
+        return PostCommandForResultAsync(partyId, command with { PartyId = partyId }, ct);
     }
 
-    private async Task<string> PostCommandAsync<TCommand>(string aggregateId, TCommand command, CancellationToken ct)
+    private async Task<PartiesCommandResult<PartyDetail>> PostCommandForResultAsync<TCommand>(string aggregateId, TCommand command, CancellationToken ct)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(aggregateId);
         ArgumentNullException.ThrowIfNull(command);
@@ -150,7 +190,9 @@ public sealed class HttpPartiesCommandClient : IPartiesCommandClient
                 string? correlationId = correlationIdElement.GetString();
                 if (!string.IsNullOrWhiteSpace(correlationId))
                 {
-                    return correlationId;
+                    return new PartiesCommandResult<PartyDetail>(
+                        correlationId,
+                        TryDeserializePartyDetail(doc.RootElement));
                 }
             }
         }
@@ -165,6 +207,24 @@ public sealed class HttpPartiesCommandClient : IPartiesCommandClient
             null,
             "Response did not contain a valid correlationId.",
             null);
+    }
+
+    private static PartyDetail? TryDeserializePartyDetail(JsonElement root)
+    {
+        if (!root.TryGetProperty("resultPayload", out JsonElement payload)
+            || payload.ValueKind is JsonValueKind.Null or JsonValueKind.Undefined)
+        {
+            return null;
+        }
+
+        try
+        {
+            return payload.Deserialize<PartyDetail>(JsonOptions);
+        }
+        catch (JsonException)
+        {
+            return null;
+        }
     }
 
     internal static async Task ThrowOnErrorAsync(HttpResponseMessage response, CancellationToken ct)

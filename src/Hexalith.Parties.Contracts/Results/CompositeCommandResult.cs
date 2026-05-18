@@ -35,4 +35,6 @@ public sealed record CompositeCommandResult : DomainResult
 
     /// <summary>Gets the updated party detail for update-composite responses (null for create-composite).</summary>
     public PartyDetail? UpdatedPartyDetail { get; }
+
+    public override string? ResultPayload => PartyCommandResult.SerializePayload(UpdatedPartyDetail);
 }

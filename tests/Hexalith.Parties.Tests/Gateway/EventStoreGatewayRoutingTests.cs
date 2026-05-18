@@ -129,6 +129,37 @@ public sealed class EventStoreGatewayRoutingTests
     }
 
     [Fact]
+    public async Task PostCommands_PartyDomain_ReturnsResultPayloadWhenSynchronousCommandCompletesAsync()
+    {
+        using var factory = new EventStoreGatewayTestFactory(usePartiesDomainRouter: true);
+        using HttpClient client = factory.CreateAuthenticatedClient(permissions: ["commands:*"]);
+        string partyId = Guid.NewGuid().ToString("D");
+
+        var request = CreateCommandRequest(
+            messageId: "cmd-1-9-domain-payload",
+            aggregateId: partyId,
+            payload: JsonSerializer.SerializeToElement(new CreatePartyComposite
+            {
+                PartyId = partyId,
+                Type = PartyType.Person,
+                PersonDetails = new PersonDetails { FirstName = "Ada", LastName = "Lovelace" },
+            }));
+
+        using HttpResponseMessage response = await client.PostAsJsonAsync("/api/v1/commands", request);
+
+        response.StatusCode.ShouldBe(HttpStatusCode.Accepted);
+        using JsonDocument body = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+        JsonElement root = body.RootElement;
+        root.GetProperty("correlationId").GetString().ShouldBe("cmd-1-9-domain-payload");
+        JsonElement payload = root.GetProperty("resultPayload");
+        payload.GetProperty("id").GetString().ShouldBe(partyId);
+        payload.GetProperty("displayName").GetString().ShouldBe("Ada Lovelace");
+        factory.StatusStore.GetStatusHistory("tenant-a", "cmd-1-9-domain-payload")
+            .Select(status => status.Status)
+            .ShouldContain(CommandStatus.Completed);
+    }
+
+    [Fact]
     public async Task PostCommands_UnauthorizedTenant_Returns403BeforePartyInvocationAsync()
     {
         using var factory = new EventStoreGatewayTestFactory();
@@ -527,7 +558,8 @@ public sealed class EventStoreGatewayRoutingTests
                 Accepted: !result.IsRejection,
                 ErrorMessage: rejectionEventType is null ? null : $"Domain rejection: {rejectionEventType}",
                 CorrelationId: command.CorrelationId,
-                EventCount: result.Events.Count);
+                EventCount: result.Events.Count,
+                ResultPayload: result.ResultPayload);
         }
 
         private static PartyDomainServiceInvoker CreateInvoker()

@@ -5,6 +5,8 @@ using Hexalith.EventStore.Contracts.Events;
 using Hexalith.EventStore.Contracts.Results;
 using Hexalith.Parties.Contracts.Commands;
 using Hexalith.Parties.Contracts.Events;
+using Hexalith.Parties.Contracts.Models;
+using Hexalith.Parties.Contracts.Results;
 using Hexalith.Parties.Contracts.State;
 using Hexalith.Parties.Contracts.ValueObjects;
 using Hexalith.Parties.Server.Aggregates;
@@ -35,6 +37,24 @@ public class PartyAggregateCreateTests
         created.PersonDetails.LastName.ShouldBe(command.PersonDetails.LastName);
         created.OrganizationDetails.ShouldBeNull();
         result.Events[1].ShouldBeOfType<PartyDisplayNameDerived>();
+    }
+
+    [Fact]
+    public void Handle_CreatePersonParty_ReturnsUpdatedPartyDetailPayload()
+    {
+        CreateParty command = PartyTestData.ValidCreatePerson();
+
+        DomainResult result = PartyAggregate.Handle(command, null);
+
+        PartyCommandResult partyResult = result.ShouldBeOfType<PartyCommandResult>();
+        PartyDetail detail = partyResult.UpdatedPartyDetail;
+        detail.Id.ShouldBe(command.PartyId);
+        detail.Type.ShouldBe(PartyType.Person);
+        detail.PersonDetails.ShouldNotBeNull();
+        detail.PersonDetails.FirstName.ShouldBe(command.PersonDetails!.FirstName);
+        detail.DisplayName.ShouldBe("John Doe");
+        detail.SortName.ShouldBe("Doe, John");
+        partyResult.ResultPayload.ShouldNotBeNullOrWhiteSpace();
     }
 
     [Fact]
@@ -173,6 +193,7 @@ public class PartyAggregateCreateTests
 
         // Assert
         result.IsNoOp.ShouldBeTrue();
+        result.ResultPayload.ShouldBeNull();
         result.Events.ShouldBeEmpty();
         state.Type.ShouldBe(originalType);
         state.Person.ShouldBe(originalPerson);
@@ -406,6 +427,7 @@ public class PartyAggregateCreateTests
         where TRejection : class, IRejectionEvent
     {
         result.IsRejection.ShouldBeTrue();
+        result.ResultPayload.ShouldBeNull();
         result.Events.Count.ShouldBe(1);
         result.Events[0].ShouldBeOfType<TRejection>();
     }

@@ -1,6 +1,6 @@
 # Story 1.9: Return Updated Party State from Mutations
 
-Status: ready-for-dev
+Status: in-progress
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -64,62 +64,62 @@ so that I can update my UI or workflow without issuing an immediate follow-up qu
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Confirm the current result propagation path before editing (AC: 1, 2, 3, 5)
-  - [ ] Inspect `DomainResult.ResultPayload`, `DomainServiceWireResult`, `DaprDomainServiceInvoker.ToDomainResult`, `CommandProcessingResult.ResultPayload`, and `CommandsController` response assembly.
-  - [ ] Verify whether `DomainServiceWireResult` still drops `DomainResult.ResultPayload`; if so, extend the existing EventStore result-payload hook instead of inventing a Parties-only side channel.
-  - [ ] Verify whether `SubmitCommandResponse` needs an additive optional result payload property while preserving `correlationId` compatibility.
-  - [ ] Confirm whether result payloads are ever persisted for command status/idempotency today. Do not add raw `PartyDetail` persistence to those stores as part of this story unless an existing EventStore contract already requires it.
-  - [ ] Keep EventStore-owned changes minimal and compatible; do not rework command processing status, event persistence, or actor pipeline behavior beyond carrying the existing result payload.
+- [x] Task 1: Confirm the current result propagation path before editing (AC: 1, 2, 3, 5)
+  - [x] Inspect `DomainResult.ResultPayload`, `DomainServiceWireResult`, `DaprDomainServiceInvoker.ToDomainResult`, `CommandProcessingResult.ResultPayload`, and `CommandsController` response assembly.
+  - [x] Verify whether `DomainServiceWireResult` still drops `DomainResult.ResultPayload`; if so, extend the existing EventStore result-payload hook instead of inventing a Parties-only side channel.
+  - [x] Verify whether `SubmitCommandResponse` needs an additive optional result payload property while preserving `correlationId` compatibility.
+  - [x] Confirm whether result payloads are ever persisted for command status/idempotency today. Do not add raw `PartyDetail` persistence to those stores as part of this story unless an existing EventStore contract already requires it.
+  - [x] Keep EventStore-owned changes minimal and compatible; do not rework command processing status, event persistence, or actor pipeline behavior beyond carrying the existing result payload.
 
-- [ ] Task 2: Add or refine a single enriched party mutation result shape (AC: 1, 2, 3, 4)
-  - [ ] Reuse `PartyDetail` as the client/API/MCP-facing "updated party state" shape; do not introduce a second detail DTO unless serialization requires a tiny wrapper.
-  - [ ] Extend `CompositeCommandResult` or add a narrowly named Parties result type that derives from `DomainResult` and overrides `ResultPayload` with serialized `PartyDetail`.
-  - [ ] Keep `UpdatedPartyDetail` null for rejection results and for no-op results unless the implementation deliberately documents an unchanged-detail no-op response.
-  - [ ] Ensure result payload serialization uses the same camelCase/string-enum JSON conventions as existing client/query contracts.
+- [x] Task 2: Add or refine a single enriched party mutation result shape (AC: 1, 2, 3, 4)
+  - [x] Reuse `PartyDetail` as the client/API/MCP-facing "updated party state" shape; do not introduce a second detail DTO unless serialization requires a tiny wrapper.
+  - [x] Extend `CompositeCommandResult` or add a narrowly named Parties result type that derives from `DomainResult` and overrides `ResultPayload` with serialized `PartyDetail`.
+  - [x] Keep `UpdatedPartyDetail` null for rejection results and for no-op results unless the implementation deliberately documents an unchanged-detail no-op response.
+  - [x] Ensure result payload serialization uses the same camelCase/string-enum JSON conventions as existing client/query contracts.
 
-- [ ] Task 3: Build final party detail from current state plus emitted events (AC: 1, 2, 3)
-  - [ ] Reuse or generalize `PartyAggregate.BuildPartyDetailFromState(...)` rather than duplicating projection logic.
-  - [ ] Support `CreateParty` and `CreatePartyComposite` when prior `PartyState` is null by deriving detail from emitted events in order.
-  - [ ] Support simple commands: `UpdatePersonDetails`, `UpdateOrganizationDetails`, `AddContactChannel`, `UpdateContactChannel`, `RemoveContactChannel`, `AddIdentifier`, `RemoveIdentifier`, `DeactivateParty`, `ReactivateParty`, and `SetIsNaturalPerson`.
-  - [ ] Preserve existing event emission order and `PartyState.Apply` behavior; do not mutate the incoming `PartyState` merely to assemble the response.
-  - [ ] Return a final `PartyDetail` only from committed success events for a successful command or successful composite command; partial composite failures, rejections, and non-success no-ops must not synthesize a speculative detail.
-  - [ ] Fail closed if payload assembly cannot produce a trustworthy final state from the current state plus emitted success events; return the normal command outcome without an enriched success payload rather than returning a partial or stale detail.
-  - [ ] Keep `CreatedAt` from the existing state where available. For create responses, use a deterministic command/result-time value only if the existing contracts require one; document any unavoidable timestamp limitation in completion notes.
+- [x] Task 3: Build final party detail from current state plus emitted events (AC: 1, 2, 3)
+  - [x] Reuse or generalize `PartyAggregate.BuildPartyDetailFromState(...)` rather than duplicating projection logic.
+  - [x] Support `CreateParty` and `CreatePartyComposite` when prior `PartyState` is null by deriving detail from emitted events in order.
+  - [x] Support simple commands: `UpdatePersonDetails`, `UpdateOrganizationDetails`, `AddContactChannel`, `UpdateContactChannel`, `RemoveContactChannel`, `AddIdentifier`, `RemoveIdentifier`, `DeactivateParty`, `ReactivateParty`, and `SetIsNaturalPerson`.
+  - [x] Preserve existing event emission order and `PartyState.Apply` behavior; do not mutate the incoming `PartyState` merely to assemble the response.
+  - [x] Return a final `PartyDetail` only from committed success events for a successful command or successful composite command; partial composite failures, rejections, and non-success no-ops must not synthesize a speculative detail.
+  - [x] Fail closed if payload assembly cannot produce a trustworthy final state from the current state plus emitted success events; return the normal command outcome without an enriched success payload rather than returning a partial or stale detail.
+  - [x] Keep `CreatedAt` from the existing state where available. For create responses, use a deterministic command/result-time value only if the existing contracts require one; document any unavoidable timestamp limitation in completion notes.
 
-- [ ] Task 4: Wire enriched results through the Parties host and EventStore gateway (AC: 1, 2, 3, 5)
-  - [ ] Ensure `src/Hexalith.Parties/Program.cs` can keep calling `DomainServiceWireResult.FromDomainResult(result)` once the wire DTO preserves payload.
-  - [ ] Ensure `DaprDomainServiceInvoker` reconstructs a `DomainResult` that preserves `ResultPayload` after deserializing `DomainServiceWireResult`.
-  - [ ] Ensure aggregate actor processing copies `domainResult.ResultPayload` into `CommandProcessingResult.ResultPayload` on success paths and never on rejection unless explicitly supported by existing EventStore semantics.
-  - [ ] Add `resultPayload` or a typed `payload` field to the public accepted command response only as an additive optional property; do not remove `correlationId` or change status URLs.
-  - [ ] Keep the wire shape tolerant of unknown or missing payloads, including `null`, absent JSON, and non-Parties payloads; clients must ignore unsupported payloads rather than throwing on otherwise compatible command responses.
-  - [ ] Do not add public REST controllers, Swagger/OpenAPI, or in-process MCP hosting to `src/Hexalith.Parties`; enriched results must flow through existing EventStore-owned gateway surfaces and existing external client/MCP adapters.
-  - [ ] Preserve the existing `202 Accepted`/status-only behavior when a completed synchronous result payload is not available; do not copy `PartyDetail` into status details or idempotency/status persistence.
+- [x] Task 4: Wire enriched results through the Parties host and EventStore gateway (AC: 1, 2, 3, 5)
+  - [x] Ensure `src/Hexalith.Parties/Program.cs` can keep calling `DomainServiceWireResult.FromDomainResult(result)` once the wire DTO preserves payload.
+  - [x] Ensure `DaprDomainServiceInvoker` reconstructs a `DomainResult` that preserves `ResultPayload` after deserializing `DomainServiceWireResult`.
+  - [x] Ensure aggregate actor processing copies `domainResult.ResultPayload` into `CommandProcessingResult.ResultPayload` on success paths and never on rejection unless explicitly supported by existing EventStore semantics.
+  - [x] Add `resultPayload` or a typed `payload` field to the public accepted command response only as an additive optional property; do not remove `correlationId` or change status URLs.
+  - [x] Keep the wire shape tolerant of unknown or missing payloads, including `null`, absent JSON, and non-Parties payloads; clients must ignore unsupported payloads rather than throwing on otherwise compatible command responses.
+  - [x] Do not add public REST controllers, Swagger/OpenAPI, or in-process MCP hosting to `src/Hexalith.Parties`; enriched results must flow through existing EventStore-owned gateway surfaces and existing external client/MCP adapters.
+  - [x] Preserve the existing `202 Accepted`/status-only behavior when a completed synchronous result payload is not available; do not copy `PartyDetail` into status details or idempotency/status persistence.
 
-- [ ] Task 5: Update client and MCP consumers to expose the party detail (AC: 5)
-  - [ ] Evolve `IPartiesCommandClient` and `HttpPartiesCommandClient` so mutation methods can return the updated `PartyDetail` while retaining a way to access `correlationId`.
-  - [ ] Prefer an additive command response record such as `PartiesCommandResult<T>` if changing every method from `Task<string>` would break too many existing callers.
-  - [ ] Update MCP `create_party`, `update_party`, and `delete_party` flows to return `PartiesMcpToolResult.Succeeded(..., PartyDetail)` when a successful updated detail is available.
-  - [ ] Keep MCP validation and client exception mapping unchanged for rejected/invalid commands; do not call the query client as a hidden follow-up query to fake FR69.
+- [x] Task 5: Update client and MCP consumers to expose the party detail (AC: 5)
+  - [x] Evolve `IPartiesCommandClient` and `HttpPartiesCommandClient` so mutation methods can return the updated `PartyDetail` while retaining a way to access `correlationId`.
+  - [x] Prefer an additive command response record such as `PartiesCommandResult<T>` if changing every method from `Task<string>` would break too many existing callers.
+  - [x] Update MCP `create_party`, `update_party`, and `delete_party` flows to return `PartiesMcpToolResult.Succeeded(..., PartyDetail)` when a successful updated detail is available.
+  - [x] Keep MCP validation and client exception mapping unchanged for rejected/invalid commands; do not call the query client as a hidden follow-up query to fake FR69.
 
-- [ ] Task 6: Add focused tests for response payload behavior (AC: 1, 2, 3, 4, 5, 6)
-  - [ ] Add aggregate tests proving create, person update, organization update, contact add/update/remove, identifier add/remove, deactivate, reactivate, and `UpdatePartyComposite` return correct detail payloads.
-  - [ ] Add rejection and no-op tests proving `UpdatedPartyDetail` or result payload is null/absent when no successful mutation result should be shown.
-  - [ ] Add contract tests for result payload serialization and backward-compatible JSON shape.
-  - [ ] Add `/process` and EventStore gateway tests proving result payload survives Parties host -> Dapr wire DTO -> EventStore actor -> command response.
-  - [ ] Update `HttpPartiesCommandClientTests` and `PartiesMcpToolDispatchTests` to assert updated details are surfaced without immediate query calls.
-  - [ ] Add privacy-safety assertions using synthetic personal-data values only; verify `PartyDetail` is absent from logs, telemetry, exception messages, command status details, and failure/status payloads.
-  - [ ] Add retry/status-path tests proving idempotent retries, duplicate no-ops, async accepted responses, and status reads do not fabricate `PartyDetail` by recomputing state or querying projections.
-  - [ ] Add malformed/missing/unsupported payload tests proving API, client, and MCP consumers fail closed while preserving correlation/status compatibility.
-  - [ ] Add regression tests proving command status, idempotency, and rejection/error behavior remain unchanged when no enriched result payload is present.
+- [x] Task 6: Add focused tests for response payload behavior (AC: 1, 2, 3, 4, 5, 6)
+  - [x] Add aggregate tests proving create, person update, organization update, contact add/update/remove, identifier add/remove, deactivate, reactivate, and `UpdatePartyComposite` return correct detail payloads.
+  - [x] Add rejection and no-op tests proving `UpdatedPartyDetail` or result payload is null/absent when no successful mutation result should be shown.
+  - [x] Add contract tests for result payload serialization and backward-compatible JSON shape.
+  - [x] Add `/process` and EventStore gateway tests proving result payload survives Parties host -> Dapr wire DTO -> EventStore actor -> command response.
+  - [x] Update `HttpPartiesCommandClientTests` and `PartiesMcpToolDispatchTests` to assert updated details are surfaced without immediate query calls.
+  - [x] Add privacy-safety assertions using synthetic personal-data values only; verify `PartyDetail` is absent from logs, telemetry, exception messages, command status details, and failure/status payloads.
+  - [x] Add retry/status-path tests proving idempotent retries, duplicate no-ops, async accepted responses, and status reads do not fabricate `PartyDetail` by recomputing state or querying projections.
+  - [x] Add malformed/missing/unsupported payload tests proving API, client, and MCP consumers fail closed while preserving correlation/status compatibility.
+  - [x] Add regression tests proving command status, idempotency, and rejection/error behavior remain unchanged when no enriched result payload is present.
 
-- [ ] Task 7: Run focused validation (AC: 6)
-  - [ ] Run `dotnet test tests/Hexalith.Parties.Server.Tests/Hexalith.Parties.Server.Tests.csproj --configuration Release --filter FullyQualifiedName~PartyAggregate`.
-  - [ ] Run `dotnet test tests/Hexalith.Parties.Contracts.Tests/Hexalith.Parties.Contracts.Tests.csproj --configuration Release --filter FullyQualifiedName~CompositeCommandResult`.
-  - [ ] Run `dotnet test tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj --configuration Release --filter "FullyQualifiedName~PartiesProcessEndpointTests|FullyQualifiedName~EventStoreGatewayRoutingTests"`.
-  - [ ] Run `dotnet test tests/Hexalith.Parties.Client.Tests/Hexalith.Parties.Client.Tests.csproj --configuration Release --filter FullyQualifiedName~HttpPartiesCommandClientTests`.
-  - [ ] Run `dotnet test tests/Hexalith.Parties.Mcp.Tests/Hexalith.Parties.Mcp.Tests.csproj --configuration Release --filter FullyQualifiedName~PartiesMcpToolDispatchTests`.
-  - [ ] Run `dotnet test tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj --configuration Release --filter FullyQualifiedName~PartyStateApplyOrderingFitnessTests` if `PartyState` changes.
-  - [ ] Run `dotnet build Hexalith.Parties.slnx --configuration Release` if public contracts, EventStore submodule contracts, or client method signatures change.
+- [x] Task 7: Run focused validation (AC: 6)
+  - [x] Run `dotnet test tests/Hexalith.Parties.Server.Tests/Hexalith.Parties.Server.Tests.csproj --configuration Release --filter FullyQualifiedName~PartyAggregate`.
+  - [x] Run `dotnet test tests/Hexalith.Parties.Contracts.Tests/Hexalith.Parties.Contracts.Tests.csproj --configuration Release --filter FullyQualifiedName~CompositeCommandResult`.
+  - [x] Run `dotnet test tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj --configuration Release --filter "FullyQualifiedName~PartiesProcessEndpointTests|FullyQualifiedName~EventStoreGatewayRoutingTests"`.
+  - [x] Run `dotnet test tests/Hexalith.Parties.Client.Tests/Hexalith.Parties.Client.Tests.csproj --configuration Release --filter FullyQualifiedName~HttpPartiesCommandClientTests`.
+  - [x] Run `dotnet test tests/Hexalith.Parties.Mcp.Tests/Hexalith.Parties.Mcp.Tests.csproj --configuration Release --filter FullyQualifiedName~PartiesMcpToolDispatchTests`.
+  - [x] Run `dotnet test tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj --configuration Release --filter FullyQualifiedName~PartyStateApplyOrderingFitnessTests` if `PartyState` changes.
+  - [x] Run `dotnet build Hexalith.Parties.slnx --configuration Release` if public contracts, EventStore submodule contracts, or client method signatures change.
 
 ## Dev Notes
 
@@ -231,16 +231,54 @@ tests/Hexalith.Parties.Mcp.Tests/PartiesMcpToolDispatchTests.cs
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+GPT-5 Codex
 
 ### Debug Log References
 
+- 2026-05-18: Confirmed `DomainServiceWireResult` dropped `DomainResult.ResultPayload`; `CommandProcessingResult` already had `ResultPayload`; command status records did not expose result payloads.
+- 2026-05-18: Ran focused red/green checks for contract payload serialization, aggregate payload assembly, command client parsing, MCP result surfacing, EventStore gateway response payload, and client fitness tests.
+- 2026-05-18: Ran broad regression command `dotnet test Hexalith.Parties.slnx --configuration Release --no-build`; payload-focused projects passed, but three stable unrelated/environmental failures block final review promotion: sample publisher contract publish failure, dead-letter failure reason expecting unredacted text, and deploy-validation 30s timeout. The 100K search benchmark failure passed on rerun.
+
 ### Completion Notes List
+
+- Implemented `PartyCommandResult` and extended `CompositeCommandResult.ResultPayload` so successful Parties mutations can serialize the final `PartyDetail` using existing camelCase/string-enum JSON conventions.
+- Generalized aggregate final-state assembly from current `PartyState` plus emitted success events in order, including create, composite create/update, person/organization updates, contact/identifier changes, lifecycle changes, and natural-person flag changes.
+- Extended EventStore's existing result-payload path through `DomainServiceWireResult`, `DaprDomainServiceInvoker`, `SubmitCommandResult`, and public `SubmitCommandResponse` without changing correlation/status compatibility or writing `PartyDetail` into command status details.
+- Added additive command-client `...WithResultAsync` methods returning `PartiesCommandResult<PartyDetail>` while preserving existing `Task<string>` methods; updated MCP create/update/delete flows to return succeeded `PartyDetail` only when the command response includes one.
+- Rejection, no-op, malformed/unsupported payload, status-only, and non-completed paths fail closed without exposing `PartyDetail`; no hidden query was added to manufacture enriched mutation responses.
+- `CreatedAt` for create responses is assembled at command/result time because no prior state exists before the creation events are committed; existing-state mutations preserve the prior `CreatedAt`.
+- Implementation-focused validations pass. Story remains `in-progress` instead of `review` because the broad regression suite still has unrelated stable failures outside this story's touched payload path.
 
 ### File List
 
+- Hexalith.EventStore/src/Hexalith.EventStore.Contracts/Commands/SubmitCommandResponse.cs
+- Hexalith.EventStore/src/Hexalith.EventStore.Contracts/Results/DomainServiceWireResult.cs
+- Hexalith.EventStore/src/Hexalith.EventStore.Server/DomainServices/DaprDomainServiceInvoker.cs
+- Hexalith.EventStore/src/Hexalith.EventStore.Server/Pipeline/Commands/SubmitCommand.cs
+- Hexalith.EventStore/src/Hexalith.EventStore.Server/Pipeline/SubmitCommandHandler.cs
+- Hexalith.EventStore/src/Hexalith.EventStore/Controllers/CommandsController.cs
+- Hexalith.EventStore/src/Hexalith.EventStore/Models/SubmitCommandResponse.cs
+- src/Hexalith.Parties.Client/Abstractions/IPartiesCommandClient.cs
+- src/Hexalith.Parties.Client/Abstractions/PartiesCommandResult.cs
+- src/Hexalith.Parties.Client/HttpPartiesCommandClient.cs
+- src/Hexalith.Parties.Contracts/Results/CompositeCommandResult.cs
+- src/Hexalith.Parties.Contracts/Results/PartyCommandResult.cs
+- src/Hexalith.Parties.Mcp/Tools/PartiesMcpToolResult.cs
+- src/Hexalith.Parties.Mcp/Tools/PartiesMcpTools.cs
+- src/Hexalith.Parties.Server/Aggregates/PartyAggregate.cs
+- tests/Hexalith.Parties.Client.Tests/FitnessTests/ClientArchitecturalFitnessTests.cs
+- tests/Hexalith.Parties.Client.Tests/HttpPartiesCommandClientTests.cs
+- tests/Hexalith.Parties.Contracts.Tests/Results/CompositeCommandResultTests.cs
+- tests/Hexalith.Parties.Mcp.Tests/PartiesMcpToolDispatchTests.cs
+- tests/Hexalith.Parties.Server.Tests/Aggregates/PartyAggregateCreateTests.cs
+- tests/Hexalith.Parties.Server.Tests/Aggregates/PartyAggregateResultPayloadTests.cs
+- tests/Hexalith.Parties.Tests/Gateway/EventStoreGatewayRoutingTests.cs
+- _bmad-output/implementation-artifacts/1-9-return-updated-party-state-from-mutations.md
+- _bmad-output/implementation-artifacts/sprint-status.yaml
+
 ## Change Log
 
+- 2026-05-18: Implemented enriched party mutation result payloads through aggregate, EventStore wire/API, client, and MCP paths; story held in-progress pending unrelated broad regression failures.
 - 2026-05-16: Party-mode review applied pre-dev clarifications for EventStore-owned gateway boundaries, optional payload compatibility, synchronous-only enriched responses, no-op/rejection payload absence, composite final-state semantics, and privacy-safe status/logging assertions.
 - 2026-05-16: Story created by BMAD pre-dev context workflow with FR69 result-payload propagation, aggregate final-state assembly, EventStore wire-response, client, MCP, and privacy-safe testing guidance.
 
