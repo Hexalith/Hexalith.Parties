@@ -33,7 +33,9 @@ public sealed record CompositeCommandResult : DomainResult
     /// <summary>Gets descriptions of sub-operations that were rejected (e.g., invalid IDs).</summary>
     public IReadOnlyList<string> Rejected { get; }
 
-    /// <summary>Gets the updated party detail for update-composite responses (null for create-composite).</summary>
+    /// <summary>Gets the updated party detail for successful composite mutation responses, including
+    /// create-composite. Null when the composite handler rejected the command, returned a no-op, or
+    /// could not assemble a trustworthy final-state detail from the emitted events.</summary>
     public PartyDetail? UpdatedPartyDetail { get; }
 
     public override string? ResultPayload => PartyCommandResult.SerializePayload(UpdatedPartyDetail);

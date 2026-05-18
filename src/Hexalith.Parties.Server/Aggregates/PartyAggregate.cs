@@ -165,7 +165,7 @@ public sealed class PartyAggregate : EventStoreAggregate<PartyState> {
             applied.Add($"Added identifier: {identifier.IdentifierId} ({identifier.Type})");
         }
 
-        PartyDetail updatedDetail = BuildPartyDetailFromState(command.PartyId, null, events);
+        PartyDetail? updatedDetail = TryBuildPartyDetail(command.PartyId, null, events);
         return new CompositeCommandResult(events, applied, skipped, [], updatedDetail);
     }
 
@@ -537,7 +537,7 @@ public sealed class PartyAggregate : EventStoreAggregate<PartyState> {
             applied.Add($"Removed identifier: {id}");
         }
 
-        PartyDetail updatedDetail = BuildPartyDetailFromState(command.PartyId, state, events);
+        PartyDetail? updatedDetail = TryBuildPartyDetail(command.PartyId, state, events);
         return new CompositeCommandResult(events, applied, skipped, [], updatedDetail);
     }
 
@@ -1284,16 +1284,34 @@ public sealed class PartyAggregate : EventStoreAggregate<PartyState> {
         PartyState? state,
         IReadOnlyList<IEventPayload> events)
     {
+        PartyDetail? detail = TryBuildPartyDetail(partyId, state, events);
+        return detail is null
+            ? DomainResult.Success(events)
+            : new PartyCommandResult(events, detail);
+    }
+
+    private static PartyDetail? TryBuildPartyDetail(
+        string partyId,
+        PartyState? state,
+        IReadOnlyList<IEventPayload> events)
+    {
         try
         {
-            return new PartyCommandResult(events, BuildPartyDetailFromState(partyId, state, events));
+            return BuildPartyDetailFromState(partyId, state, events);
         }
         catch (InvalidOperationException)
         {
-            return DomainResult.Success(events);
+            // Fail closed: aggregate produced events but a trustworthy final-state detail
+            // cannot be assembled; caller falls back to a non-enriched success outcome.
+            return null;
         }
     }
 
+    // Erasure / restriction / consent fields are sourced from current state even when this turn's
+    // events do not touch them: PartyDetail is the authoritative client-facing shape, and returning
+    // stale "false/empty" defaults would diverge from PartyState.Apply semantics. LastModifiedAt and
+    // CreatedAt (when state is null on create) use result-assembly wall clock — same limitation as
+    // documented for CreatedAt in story 1.9 completion notes.
     private static PartyDetail BuildPartyDetailFromState(
         string partyId,
         PartyState? state,

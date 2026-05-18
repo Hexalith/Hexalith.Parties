@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
   "produced_by": "jobs/preflight-predev-hardening.py",
-  "timestamp": "2026-05-18T21:02:57Z",
+  "timestamp": "2026-05-18T20:55:53Z",
   "repo": "D:\\Hexalith.Parties",
-  "result": "fail",
+  "result": "pass",
   "bootstrap_actions": [],
   "checks": [
     {
@@ -63,11 +63,11 @@
         ":(exclude)_bmad-output/process-notes/preflight-latest.json"
       ],
       "exit_code": 0,
-      "stdout": "?? _bmad-output/implementation-artifacts/.review-1-9-diff.patch\n?? _bmad-output/implementation-artifacts/.review-1-9-eventstore.patch\n",
+      "stdout": "",
       "stderr": "",
-      "dirty_path_count": 2,
-      "result": "fail",
-      "details": "2 dirty path(s)"
+      "dirty_path_count": 0,
+      "result": "pass",
+      "details": "0 dirty paths"
     }
   ],
   "note_to_llm": "This file was produced by jobs/preflight-predev-hardening.py. The recurring pre-dev hardening job MUST quote the contents of this file verbatim when reporting pre-flight results; do NOT re-run the checks yourself, paraphrase them, or summarize them in your own words."

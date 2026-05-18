@@ -413,10 +413,14 @@ internal sealed class PartiesMcpTools(
         }
 
         string[] correlationIds = [.. results.Select(result => result.CorrelationId)];
-        PartyDetail? payload = results.LastOrDefault(result => result.Payload is not null)?.Payload;
-        return payload is null
+        PartiesCommandResult<PartyDetail>? payloadCarrier = results
+            .LastOrDefault(result => result.Payload is not null);
+        return payloadCarrier?.Payload is null
             ? PartiesMcpToolResult.Accepted(toolName, correlationIds)
-            : PartiesMcpToolResult.Succeeded(toolName, new { correlationIds, partyDetail = payload }, correlationId: correlationIds[^1]);
+            : PartiesMcpToolResult.Succeeded(
+                toolName,
+                new { correlationIds, partyDetail = payloadCarrier.Payload },
+                correlationId: payloadCarrier.CorrelationId);
     }
 
     private PartiesMcpToolResult? ValidateContextAndPartyId(string toolName, string partyId)

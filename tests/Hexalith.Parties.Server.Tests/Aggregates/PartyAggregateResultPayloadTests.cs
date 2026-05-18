@@ -91,4 +91,82 @@ public sealed class PartyAggregateResultPayloadTests
         result.IsNoOp.ShouldBeTrue();
         result.ResultPayload.ShouldBeNull();
     }
+
+    [Fact]
+    public void Handle_UpdateOrganizationDetails_ReturnsFinalUpdatedPartyDetail()
+    {
+        DomainResult result = PartyAggregate.Handle(
+            PartyTestData.ValidUpdateOrganizationDetails(),
+            PartyTestData.CreateOrganizationState());
+
+        PartyDetail detail = result.ShouldBeOfType<PartyCommandResult>().UpdatedPartyDetail;
+        detail.OrganizationDetails.ShouldNotBeNull();
+        detail.OrganizationDetails.LegalName.ShouldBe("New Legal Name");
+        detail.OrganizationDetails.TradingName.ShouldBe("New Trading Name");
+        detail.DisplayName.ShouldBe("New Legal Name");
+        detail.SortName.ShouldBe("New Legal Name");
+    }
+
+    [Fact]
+    public void Handle_UpdateContactChannel_ReturnsDetailWithUpdatedChannel()
+    {
+        var command = new UpdateContactChannel
+        {
+            PartyId = PartyTestData.DefaultPartyId,
+            ContactChannelId = "ch-email-1",
+            Value = "john.updated@example.com",
+            IsPreferred = true,
+        };
+
+        DomainResult result = PartyAggregate.Handle(
+            command,
+            PartyTestData.CreatePersonStateWithChannelsAndIdentifiers());
+
+        PartyDetail detail = result.ShouldBeOfType<PartyCommandResult>().UpdatedPartyDetail;
+        ContactChannel channel = detail.ContactChannels.Single(c => c.Id == "ch-email-1");
+        channel.Value.ShouldBe("john.updated@example.com");
+        channel.IsPreferred.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void Handle_RemoveContactChannel_ReturnsDetailWithoutRemovedChannel()
+    {
+        var command = new RemoveContactChannel
+        {
+            PartyId = PartyTestData.DefaultPartyId,
+            ContactChannelId = "ch-email-2",
+        };
+
+        DomainResult result = PartyAggregate.Handle(
+            command,
+            PartyTestData.CreatePersonStateWithChannelsAndIdentifiers());
+
+        PartyDetail detail = result.ShouldBeOfType<PartyCommandResult>().UpdatedPartyDetail;
+        detail.ContactChannels.ShouldNotContain(channel => channel.Id == "ch-email-2");
+        detail.ContactChannels.ShouldContain(channel => channel.Id == "ch-email-1");
+    }
+
+    [Fact]
+    public void Handle_AddIdentifier_ReturnsDetailWithAddedIdentifier()
+    {
+        DomainResult result = PartyAggregate.Handle(
+            PartyTestData.ValidAddSiretIdentifier(),
+            PartyTestData.CreatePersonStateWithIdentifier());
+
+        PartyDetail detail = result.ShouldBeOfType<PartyCommandResult>().UpdatedPartyDetail;
+        PartyIdentifier added = detail.Identifiers.Single(id => id.Id == "id-siret-1");
+        added.Type.ShouldBe(IdentifierType.SIRET);
+        added.Value.ShouldBe("synthetic-siret-value");
+    }
+
+    [Fact]
+    public void Handle_ReactivateParty_ReturnsActivePartyDetail()
+    {
+        DomainResult result = PartyAggregate.Handle(
+            PartyTestData.ValidReactivateParty(),
+            PartyTestData.CreateDeactivatedPersonState());
+
+        PartyDetail detail = result.ShouldBeOfType<PartyCommandResult>().UpdatedPartyDetail;
+        detail.IsActive.ShouldBeTrue();
+    }
 }

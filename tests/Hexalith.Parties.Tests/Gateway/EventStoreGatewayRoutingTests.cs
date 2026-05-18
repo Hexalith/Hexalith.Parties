@@ -406,7 +406,174 @@ public sealed class EventStoreGatewayRoutingTests
         factory.QueryRouter.ReceivedQueries.ShouldBeEmpty();
     }
 
-    private sealed class EventStoreGatewayTestFactory(bool usePartiesDomainRouter = false) : WebApplicationFactory<EventStoreProgram>
+    [Fact]
+    public async Task PostCommands_PartyDomain_EnrichedPayloadDoesNotLeakPiiIntoStatusStoreAsync()
+    {
+        using var factory = new EventStoreGatewayTestFactory(usePartiesDomainRouter: true);
+        using HttpClient client = factory.CreateAuthenticatedClient(permissions: ["commands:*"]);
+        string partyId = Guid.NewGuid().ToString("D");
+        const string syntheticFirstName = "Ada";
+        const string syntheticLastName = "Lovelace";
+
+        var request = CreateCommandRequest(
+            messageId: "cmd-1-9-privacy-status",
+            aggregateId: partyId,
+            payload: JsonSerializer.SerializeToElement(new CreatePartyComposite
+            {
+                PartyId = partyId,
+                Type = PartyType.Person,
+                PersonDetails = new PersonDetails { FirstName = syntheticFirstName, LastName = syntheticLastName },
+            }));
+
+        using HttpResponseMessage response = await client.PostAsJsonAsync("/api/v1/commands", request);
+
+        response.StatusCode.ShouldBe(HttpStatusCode.Accepted);
+
+        IReadOnlyList<CommandStatusRecord> history = factory.StatusStore.GetStatusHistory("tenant-a", "cmd-1-9-privacy-status");
+        history.ShouldNotBeEmpty();
+        foreach (CommandStatusRecord record in history)
+        {
+            string serialized = JsonSerializer.Serialize(record);
+            serialized.ShouldNotContain(syntheticFirstName, Case.Insensitive);
+            serialized.ShouldNotContain(syntheticLastName, Case.Insensitive);
+        }
+    }
+
+    [Fact]
+    public async Task PostCommands_PartyDomain_DuplicateRetryDoesNotPersistPartyDetailInStatusRecordsAsync()
+    {
+        using var factory = new EventStoreGatewayTestFactory(usePartiesDomainRouter: true);
+        using HttpClient client = factory.CreateAuthenticatedClient(permissions: ["commands:*"]);
+        string partyId = Guid.NewGuid().ToString("D");
+        const string syntheticFirstName = "Ada";
+        const string syntheticLastName = "Lovelace";
+
+        var request = CreateCommandRequest(
+            messageId: "cmd-1-9-retry-status",
+            aggregateId: partyId,
+            payload: JsonSerializer.SerializeToElement(new CreatePartyComposite
+            {
+                PartyId = partyId,
+                Type = PartyType.Person,
+                PersonDetails = new PersonDetails { FirstName = syntheticFirstName, LastName = syntheticLastName },
+            }));
+
+        using HttpResponseMessage first = await client.PostAsJsonAsync("/api/v1/commands", request);
+        first.StatusCode.ShouldBe(HttpStatusCode.Accepted);
+
+        using HttpResponseMessage second = await client.PostAsJsonAsync("/api/v1/commands", request);
+        second.StatusCode.ShouldBe(HttpStatusCode.Accepted);
+
+        IReadOnlyList<CommandStatusRecord> history = factory.StatusStore.GetStatusHistory("tenant-a", "cmd-1-9-retry-status");
+        history.ShouldNotBeEmpty();
+        foreach (CommandStatusRecord record in history)
+        {
+            string serialized = JsonSerializer.Serialize(record);
+            serialized.ShouldNotContain(syntheticFirstName, Case.Insensitive);
+            serialized.ShouldNotContain(syntheticLastName, Case.Insensitive);
+        }
+    }
+
+    [Fact]
+    public async Task PostCommands_MalformedResultPayloadFromDomainService_GatewayFailsClosedAndOmitsPayloadAsync()
+    {
+        var malformedRouter = new ConfigurableCommandRouter
+        {
+            ProcessingResultFactory = command => new CommandProcessingResult(
+                Accepted: true,
+                CorrelationId: command.CorrelationId,
+                EventCount: 1,
+                ResultPayload: "this is not valid json {"),
+            StatusFactory = _ => new CommandStatusRecord(
+                CommandStatus.Completed,
+                DateTimeOffset.UtcNow,
+                "agg-malformed",
+                EventCount: 1,
+                RejectionEventType: null,
+                FailureReason: null,
+                TimeoutDuration: null),
+        };
+        using var factory = new EventStoreGatewayTestFactory(customCommandRouter: malformedRouter);
+        using HttpClient client = factory.CreateAuthenticatedClient(permissions: ["commands:*"]);
+
+        var request = CreateCommandRequest(
+            messageId: "cmd-1-9-malformed-payload",
+            aggregateId: "agg-malformed",
+            payload: JsonSerializer.SerializeToElement(new { partyId = "agg-malformed" }));
+
+        using HttpResponseMessage response = await client.PostAsJsonAsync("/api/v1/commands", request);
+
+        response.StatusCode.ShouldBe(HttpStatusCode.Accepted);
+        using JsonDocument body = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+        JsonElement root = body.RootElement;
+        root.GetProperty("correlationId").GetString().ShouldBe("cmd-1-9-malformed-payload");
+        if (root.TryGetProperty("resultPayload", out JsonElement payload))
+        {
+            payload.ValueKind.ShouldBe(JsonValueKind.Null);
+        }
+    }
+
+    [Fact]
+    public async Task PostCommands_SuccessWithoutResultPayload_PreservesAcceptedCorrelationIdContractAsync()
+    {
+        var noPayloadRouter = new ConfigurableCommandRouter
+        {
+            ProcessingResultFactory = command => new CommandProcessingResult(
+                Accepted: true,
+                CorrelationId: command.CorrelationId,
+                EventCount: 1,
+                ResultPayload: null),
+            StatusFactory = _ => new CommandStatusRecord(
+                CommandStatus.Completed,
+                DateTimeOffset.UtcNow,
+                "agg-no-payload",
+                EventCount: 1,
+                RejectionEventType: null,
+                FailureReason: null,
+                TimeoutDuration: null),
+        };
+        using var factory = new EventStoreGatewayTestFactory(customCommandRouter: noPayloadRouter);
+        using HttpClient client = factory.CreateAuthenticatedClient(permissions: ["commands:*"]);
+
+        var request = CreateCommandRequest(
+            messageId: "cmd-1-9-no-payload",
+            aggregateId: "agg-no-payload",
+            payload: JsonSerializer.SerializeToElement(new { partyId = "agg-no-payload" }));
+
+        using HttpResponseMessage response = await client.PostAsJsonAsync("/api/v1/commands", request);
+
+        response.StatusCode.ShouldBe(HttpStatusCode.Accepted);
+        using JsonDocument body = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+        JsonElement root = body.RootElement;
+        root.GetProperty("correlationId").GetString().ShouldBe("cmd-1-9-no-payload");
+        if (root.TryGetProperty("resultPayload", out JsonElement payload))
+        {
+            payload.ValueKind.ShouldBe(JsonValueKind.Null);
+        }
+    }
+
+    private sealed class ConfigurableCommandRouter : ICommandRouter
+    {
+        public required Func<SubmitCommand, CommandProcessingResult> ProcessingResultFactory { get; init; }
+
+        public required Func<SubmitCommand, CommandStatusRecord> StatusFactory { get; init; }
+
+        public ICommandStatusStore? StatusStore { get; set; }
+
+        public async Task<CommandProcessingResult> RouteCommandAsync(SubmitCommand command, CancellationToken cancellationToken = default)
+        {
+            ArgumentNullException.ThrowIfNull(command);
+            if (StatusStore is not null)
+            {
+                await StatusStore.WriteStatusAsync(command.Tenant, command.CorrelationId, StatusFactory(command), cancellationToken)
+                    .ConfigureAwait(false);
+            }
+
+            return ProcessingResultFactory(command);
+        }
+    }
+
+    private sealed class EventStoreGatewayTestFactory(bool usePartiesDomainRouter = false, ConfigurableCommandRouter? customCommandRouter = null) : WebApplicationFactory<EventStoreProgram>
     {
         public FakeAggregateActor CommandActor { get; } = new();
 
@@ -460,7 +627,13 @@ public sealed class EventStoreGatewayRoutingTests
                 services.RemoveAll<ICommandArchiveStore>();
                 services.AddSingleton<ICommandArchiveStore>(ArchiveStore);
 
-                if (usePartiesDomainRouter)
+                if (customCommandRouter is not null)
+                {
+                    customCommandRouter.StatusStore = StatusStore;
+                    services.RemoveAll<ICommandRouter>();
+                    services.AddSingleton<ICommandRouter>(customCommandRouter);
+                }
+                else if (usePartiesDomainRouter)
                 {
                     PartiesCommandRouter = new DirectPartiesCommandRouter(StatusStore);
                     services.RemoveAll<ICommandRouter>();

@@ -444,6 +444,26 @@ public sealed class PartiesMcpToolDispatchTests
         result.Message.ShouldNotContain("dapr", Case.Insensitive);
     }
 
+    [Fact]
+    public async Task CreatePartyReturnsAcceptedWhenGatewayPayloadIsMalformedOrUnsupported()
+    {
+        IPartiesCommandClient commandClient = Substitute.For<IPartiesCommandClient>();
+        commandClient.CreatePartyCompositeWithResultAsync(Arg.Any<CreatePartyComposite>(), Arg.Any<CancellationToken>())
+            .Returns(new PartiesCommandResult<PartyDetail>("corr-malformed", null));
+        var tools = new PartiesMcpTools(commandClient, Substitute.For<IPartiesQueryClient>(), AuthenticatedContext());
+
+        PartiesMcpToolResult result = await tools.CreateParty(
+            partyId: "party-malformed",
+            partyType: "person",
+            givenName: "Ada",
+            familyName: "Lovelace",
+            cancellationToken: CancellationToken.None);
+
+        result.Status.ShouldBe("accepted");
+        result.CorrelationId.ShouldBe("corr-malformed");
+        result.Data.ShouldBeNull();
+    }
+
     private static StubContextAccessor AuthenticatedContext()
         => new(new PartiesMcpRequestContext(TenantId, UserId, "Bearer safe-token"));
 
