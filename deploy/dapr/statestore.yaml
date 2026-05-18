@@ -1,0 +1,55 @@
+# DAPR State Store Component -- Local-Cluster Redis (default)
+# ===========================================================================
+# Redis-backed state store for actor state, snapshots, and command status tracking.
+# This is the default authoritative state store for the local-cluster deploy
+# (kind, k3d, minikube, docker-desktop). The backing Redis is provisioned by
+# `dapr init -k`, which installs a Redis StatefulSet in the `dapr-system`
+# namespace.
+#
+# Operators targeting a managed backend (PostgreSQL, Cosmos DB, etc.) replace
+# this file with a copy of the corresponding `statestore-*.yaml` template
+# before running `deploy-local.ps1`.
+#
+# Composite key pattern: {tenant}||{domain}||{aggregateId}
+#
+# Component Scoping:
+#   EventStore, EventStore Admin, Parties, and Tenants share this state store
+#   in the canonical EventStore-fronted topology. keyPrefix=none is deliberate
+#   and validated so each sidecar sees the same logical keys.
+#
+# actorStateStore=true is REQUIRED for DAPR actor state management on the
+# Parties actor host. Removing it breaks actor activation.
+#
+# PREREQUISITES:
+#   1. `dapr init -k` has been run on the cluster (installs Redis in
+#      `dapr-system`). The local deploy script does this automatically unless
+#      invoked with -SkipDaprInit.
+#   2. Override REDIS_HOST via env var if your DAPR install uses a non-default
+#      Redis service name; otherwise the `dapr init -k` default applies.
+apiVersion: dapr.io/v1alpha1
+kind: Component
+metadata:
+  name: statestore
+spec:
+  type: state.redis
+  version: v1
+  metadata:
+    - name: redisHost
+      # `dapr init -k` provisions a Redis StatefulSet exposed as a Service named
+      # `dapr-dev-redis-master` in the `dapr-system` namespace. Override via
+      # the REDIS_HOST env var on the operator's deploy environment if your
+      # DAPR install uses a different service name or namespace.
+      value: "{env:REDIS_HOST|dapr-dev-redis-master.dapr-system.svc.cluster.local:6379}"
+    - name: actorStateStore
+      # REQUIRED for DAPR actor state. Do not remove without an explicit ADR.
+      value: "true"
+    - name: keyPrefix
+      # Shared key space across app-ids -- deliberate and validated by
+      # deploy/validate-deployment.ps1. Do not change to `appid` or `name`
+      # without coordinated changes to every consuming app's read path.
+      value: "none"
+scopes:
+  - eventstore
+  - eventstore-admin
+  - parties
+  - tenants

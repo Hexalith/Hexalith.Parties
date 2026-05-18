@@ -2,6 +2,26 @@
 
 Items raised during code review that are real but not actionable in the current story. Pick up in a follow-up story or hardening sprint.
 
+## Deferred from: code review of story 9-1-generate-k8s-artifacts-and-deploy-full-topology-to-local-cluster (2026-05-18)
+
+- **No automated byte-determinism test for `dotnet aspirate generate`** — Required Test Matrix row 1; Completion Notes only verify it manually via `regen.ps1` + `diff -qr`. Pair with Story 9.2 (deploy lint) or a CI fitness step.
+- **DAPR control-plane detection grep `dapr-operator` is fragile** — `deploy-local.ps1:124-125` may fire `dapr init -k` on transient `dapr status -k` failures or skip init when a stale CRD leaves the substring in an error message. Replace with `kubectl get deploy -n dapr-system dapr-operator -o name`.
+- **`Get-ChildItem -Filter "*.yaml"` skips `*.yml` / `*.YAML`** — convention drift risk in `deploy-local.ps1:147` and `teardown-local.ps1:747`; not currently broken because every authoritative file uses `.yaml`.
+- **`Get-ChildItem` order is OS-dependent for `deploy/dapr/*.yaml` apply** — make apply order deterministic via explicit sort or ordering list.
+- **`regen.ps1` `$PreservedNames` whitelist is hardcoded** — any user-added top-level file in `deploy/k8s/` (overlay, override, Makefile) is silently `Remove-Item -Force`'d. Invert to a `.aspirate-generated` marker or a `.regen-ignore` file. [deploy/k8s/regen.ps1:51-56]
+- **`deploy-local.ps1` skip regex `^(statestore-|pubsub-(?!\.yaml)).*\.yaml$` has a meaningless negative lookahead** — cosmetic; tighten to `^(statestore|pubsub)-[a-z]+\.yaml$`. [deploy/k8s/deploy-local.ps1:152]
+- **Missing `Test-Path` validation that every entry in `deploy/k8s/kustomization.yaml resources:` resolves to an existing folder** — currently caught only by `kubectl apply -k` runtime error; a static fitness test would catch partial-regen drift earlier.
+- **`tenants-env` ConfigMap lacks env vars `parties-env` carries** — no `Authentication__DaprInternal__AllowedCallers__*`, no `Tenants__*`. Verify empirically against a live deploy whether the asymmetry is real. [deploy/k8s/tenants/kustomization.yaml]
+- **`AppHostProgramKeepsPublishTargetBlockOrthogonalToAspirate` grep-asserts comment text** — locks in literal phrase "orthogonal to the aspirate" forever; any typo fix breaks the test. Replace with structural assertion. [tests/Hexalith.Parties.DeployValidation.Tests/K8sManifestGenerationTests.cs]
+- **`dapr.io/enable-api-logging: 'true'` on every sidecar logs DAPR API calls** — aspirate default; addressing requires the kustomize-overlay infrastructure proposed by the AC4 decision item.
+- **`ASPNETCORE_FORWARDEDHEADERS_ENABLED=true` without `KnownProxies`/`KnownNetworks`** — trusts X-Forwarded-* from any pod. Same overlay layer as above.
+- **Story 8.1 `validate-deployment.ps1` not invoked from new `deploy-local.ps1`** — defense-in-depth would catch a `defaultAction: deny` regression before apply. Optional pre-flight integration.
+- **Required Test Matrix row 7 "Smoke check" interpretation drift** — `K8sLocalContextAllowlistTests` exercises only deploy/teardown. If spec intent was a separate `smoke-local.ps1`, it does not ship. Flag for spec clarification.
+- **`ScalarValue` cast in `K8sManifestGenerationTests.GetAnnotationsForDeployment` throws on non-scalar YAML annotations** — adds noisy stack traces on aspirate version bumps. Add an `is YamlScalarNode` guard. [tests/Hexalith.Parties.DeployValidation.Tests/K8sManifestGenerationTests.cs ~line 1613]
+- **Solution-root walk from `AppContext.BaseDirectory` may return null under non-standard `dotnet test` layouts** — only diagnostic is "Could not locate Hexalith.Parties solution root". Add env-var fallback (`GITHUB_WORKSPACE`, `BUILD_REPOSITORY_LOCALPATH`). [K8sManifestGenerationTests.cs / K8sLocalContextAllowlistTests.cs solution-root helper]
+- **Concurrent `deploy-local.ps1` from two shells races on namespace creation** — narrow operator-error scope; idempotent rewrite (apply-from-manifest) closes it.
+
+
 ## Deferred from: code review of story 1-6-deactivate-and-reactivate-parties (2026-05-17)
 
 - **Erasure-state coverage matrix gap for Deactivate/Reactivate** — `PartyAggregateErasureTests.cs:69-81` covers `DeactivateParty` against `CreateErasurePendingState` only; no coverage for `Erased`, `KeyDestroyed`, `VerificationInProgress`, or `Verified` erasure states, and `ReactivateParty` has no erasure-state coverage at all. The story swaps the null-state rejection to `PartyNotFound`, which makes the guard precedence (null → erasure → restriction → idempotency → success) load-bearing; future refactors that reorder guards would still pass all current Lifecycle/Erasure tests for most erasure variants. Pair with an erasure-coverage hardening pass; not a regression caused by this diff. [tests/Hexalith.Parties.Server.Tests/Aggregates/PartyAggregateLifecycleTests.cs, PartyAggregateErasureTests.cs]

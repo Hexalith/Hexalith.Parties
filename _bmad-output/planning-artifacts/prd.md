@@ -709,7 +709,8 @@ Each functional requirement below is traceable to user journeys and success crit
 - **FR28:** Developer can query parties via typed client abstractions without infrastructure knowledge
 - **FR29:** Developer can interact with the party service via REST API from any programming language
 - **FR30:** System returns typed rejection responses when commands fail, including error type URI, human-readable message, and corrective action — enabling developers to resolve the issue without consulting documentation or debugging the service
-- **FR31:** Developer can deploy a running instance from source with standard container tooling
+- **FR31:** Developer can deploy the full Parties topology from source to a Kubernetes target (local cluster — kind/minikube/k3d/Docker Desktop — for MVP) using artifacts generated from the Aspire AppHost
+- **FR31a:** Deployment artifacts are generated from the Aspire AppHost via aspirate (aspir8), keeping the Aspire model as the single source of truth for the Parties + sibling-submodule service graph (EventStore, Tenants, Memories, FrontComposer)
 - **FR32:** Getting-started documentation enables a developer to deploy and send their first command as a self-service experience
 - **FR33:** Contract types package has zero runtime dependencies beyond netstandard2.1 — consuming applications inherit no infrastructure stack
 - **FR57:** System supports versioned API endpoints that coexist during deprecation periods

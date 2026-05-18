@@ -1,0 +1,15 @@
+namespace: hexalith-parties
+
+resources:
+- eventstore
+- eventstore-admin
+- eventstore-admin-ui
+- parties
+- parties-mcp
+- tenants
+- namespace.yaml
+
+generatorOptions:
+  disableNameSuffixHash: true
+
+

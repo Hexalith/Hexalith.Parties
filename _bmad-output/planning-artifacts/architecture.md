@@ -472,6 +472,21 @@ The picker suppresses stale responses when token, tenant, user, host configurati
 - **Rationale:** Platform concern. EventStore defines and enforces ordering guarantees per deployment target
 - **Affects:** None directly — EventStore responsibility
 
+**D-K8s — Kubernetes Deployment via Aspirate from Aspire Model**
+
+- **Decision:** Kubernetes deployment artifacts (Deployments, Services, ConfigMaps, DAPR component CRs) are generated from `src/Hexalith.Parties.AppHost` using aspirate (aspir8). The Aspire AppHost is the single source of truth for the service graph — Parties plus sibling-submodule service projects (EventStore, Tenants, Memories, FrontComposer) that are referenced as Aspire resources. Generated YAMLs are checked into `deploy/k8s/` for review and reproducibility
+- **Rejected:**
+  - Hand-authored Helm chart — duplicates the Aspire model, drift risk
+  - Kustomize overlays only — same drift risk; no upstream Aspire awareness
+  - Direct `kubectl apply` from Aspire without aspirate — no manifest artifact to review or version
+- **Rationale:** Aspirate is the Aspire-native path to Kubernetes. It preserves the Aspire resource graph (including DAPR sidecar wiring) without manual re-modeling. Checking generated manifests into the repo enables PR review of deployment topology changes and architectural fitness tests over the artifacts. The `deploy/dapr/*.yaml` component templates remain the authoritative DAPR component source — aspirate-emitted DAPR resources are validated against them for parity
+- **Consequence:**
+  - MVP targets local clusters only (kind / minikube / k3d / Docker Desktop). Managed cloud (AKS/EKS/GKE) is out of scope until post-MVP
+  - Aspirate version is pinned in `global.json` or equivalent to keep generation deterministic
+  - `dotnet aspirate generate` is part of the documented deploy workflow, not just an ad-hoc command
+  - Sibling submodules participate in the generated topology but remain independent codebases — their own deploy stories may follow
+- **Affects:** `src/Hexalith.Parties.AppHost` (must remain aspirate-compatible — no Aspire features aspirate cannot translate), `deploy/k8s/` (generated artifact directory), `tests/Hexalith.Parties.DeployValidation.Tests` (extended to lint generated manifests), getting-started documentation (Story 3.7), Story 3.6 (Aspire local run remains valid — additive path)
+
 **D14 — Projection Rebuild Strategy: Event Replay Through Pure Handlers**
 
 - **Decision:** Projection state can be rebuilt by replaying events from EventStore through the pure projection handler classes (same handlers used in normal operation)
@@ -920,15 +935,19 @@ Hexalith.Parties/
 │       └── q-a.yml
 │
 ├── deploy/
-│   └── dapr/                              # Production DAPR component configs per backend
-│       ├── pubsub-kafka.yaml
-│       ├── pubsub-rabbitmq.yaml
-│       ├── pubsub-servicebus.yaml
-│       ├── statestore-cosmosdb.yaml
-│       ├── statestore-postgresql.yaml
-│       ├── resiliency.yaml
-│       ├── accesscontrol.yaml
-│       └── subscription-parties.yaml
+│   ├── dapr/                              # Production DAPR component configs per backend
+│   │   ├── pubsub-kafka.yaml
+│   │   ├── pubsub-rabbitmq.yaml
+│   │   ├── pubsub-servicebus.yaml
+│   │   ├── statestore-cosmosdb.yaml
+│   │   ├── statestore-postgresql.yaml
+│   │   ├── resiliency.yaml
+│   │   ├── accesscontrol.yaml
+│   │   └── subscription-parties.yaml
+│   └── k8s/                               # Aspirate-generated K8s manifests (Parties + sibling-submodule topology)
+│       ├── deployments/                   # Deployment + Service YAMLs per Aspire resource
+│       ├── dapr/                          # DAPR component CRs (parity-checked vs deploy/dapr/)
+│       └── README.md                      # Generation command, version pin, regen workflow
 │
 ├── docs/                                  # Project documentation
 │   └── (v1.0: getting-started, architecture-overview)
