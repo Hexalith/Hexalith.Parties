@@ -1,6 +1,6 @@
 # Story 1.7: Idempotent Commands and Typed Rejections
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -105,6 +105,16 @@ so that retries are safe and failures are understandable without inspecting inte
   - [x] Run `dotnet test tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj --configuration Release --filter FullyQualifiedName~PartyStateRejectionApplyEndToEndTests`.
   - [x] Run `dotnet test tests/Hexalith.Parties.Client.Tests/Hexalith.Parties.Client.Tests.csproj --configuration Release --filter FullyQualifiedName~HttpPartiesCommandClientTests` if client failure mapping is touched.
   - [x] Run `dotnet build Hexalith.Parties.slnx --configuration Release` if implementation changes public contracts, validators, client abstractions, EventStore-facing surfaces, or shared error mapping.
+
+### Review Findings
+
+- [x] [Review][Patch] Retry test only proves pure-function determinism, not idempotency [tests/Hexalith.Parties.Server.Tests/Aggregates/PartyAggregateCreateTests.cs:202-217] — `Handle_CreatePartyWithDefaultType_WhenRetried_ReturnsSameTypedRejection` calls the same pure static `PartyAggregate.Handle(command, null)` twice with identical inputs and asserts only `GetType()` equality on `Events[0]`. This is guaranteed by language semantics and does not exercise the retry surface. Strengthen by (a) asserting message text equality between `firstResult` and `secondResult`, and (b) adding a state-replay variant: run `PartyAggregate.Handle(cmd, state)` where `state` has the prior rejection event Applied — proving Apply is a no-op and the second handle still returns the same typed rejection.
+- [x] [Review][Patch] New `Apply(PartyCommandValidationRejected)` lacks the per-event runtime no-op test pattern used by siblings [tests/Hexalith.Parties.Tests/FitnessTests/PartyStateRejectionApplyEndToEndTests.cs] — Pre-existing tests `Apply_PartyNotFound_DoesNotMutateState`, `Apply_PartyProcessingRestricted_DoesNotMutateState`, and `Apply_PartyNotRestricted_DoesNotMutateState` (lines 20-76) instantiate the rejection and invoke it via `InvokeApply(...)` against a populated state, asserting state non-mutation. The generalized reflection scan at lines 79-104 only asserts the `Apply` overload *exists*. Add `Apply_PartyCommandValidationRejected_DoesNotMutateState` following the same pattern.
+- [x] [Review][Patch] Third PartyNotFound-reclassification test is under-asserted vs its two siblings [tests/Hexalith.Parties.Server.Tests/Aggregates/PartyAggregateUpdateTests.cs:591-595] — The two earlier near-identical hunks at lines 132 and 292 retain `rejection.Message.ShouldBe("Party does not exist.")`. The third test (SetIsNaturalPerson on null state) only asserts the type and event count. Add the message assertion for consistency.
+- [x] [Review][Patch] Composite privacy-absence assertions are brittle to empty `Value` and use null-forgiving operator [tests/Hexalith.Parties.Server.Tests/Aggregates/PartyAggregateCompositeTests.cs:708, 1087] — `result.Rejected.Any(x => x.Contains(command.UpdateContactChannels[0].Value!))` uses `!` to suppress nullability. If `Value` is the empty string, `Contains("")` returns true for every rejection message and the assertion fails spuriously. Add a precondition `command.UpdateContactChannels[0].Value.ShouldNotBeNullOrEmpty()` before the absence check (also at line 756, 1059 where the same pattern applies to identifier/contact values).
+- [x] [Review][Patch] Privacy absence assertions only inspect `Rejected` strings, not the persisted Event payload Message; identifier-conflict symmetry missing [tests/Hexalith.Parties.Server.Tests/Aggregates/PartyAggregateCompositeTests.cs:705-714, 762-775] — `Rejected` and `Events[i].Message` are populated independently in `CompositeCommandResult`; the persisted event Message is the durable artifact and the higher-risk privacy surface. Extend the three new absence assertions to also assert against `((ContactChannelNotFound)result.Events[0]).Message` (and equivalents). Also: `Handle_UpdatePartyComposite_ConflictingAddAndRemoveIdentifier_ReturnsRejection` at line 762 uses synthetic identifier `Value = "synthetic-siret-value"` but lacks the identifier-value absence assertion that line 1059 has — add for parallel construction with the contact channel coverage.
+- [x] [Review][Defer] [tests/Hexalith.Parties.Tests/FitnessTests/PartyStateRejectionApplyEndToEndTests.cs:81-86] PartyNotFound.Message field is inconsistent across handlers — deferred, pre-existing. Some handlers emit `new PartyNotFound { Message = "Party does not exist." }`, others emit `new PartyNotFound()` with `Message = null`. Wire format diverges for the same rejection type. Broader cleanup, outside the story's reconciliation scope.
+- [x] [Review][Defer] [src/Hexalith.Parties.Server/Aggregates/PartyAggregate.cs:878-886] `PartyNotFound` used as catch-all in `RotatePartyKey` argument validation — deferred, pre-existing. After this story's reclassification, `PartyNotFound` now also covers "invalid key version" argument failures. Could arguably be migrated to `PartyCommandValidationRejected` now that the latter exists; out of scope for this story.
 
 ## Dev Notes
 
@@ -257,6 +267,7 @@ GPT-5 Codex
 
 ## Change Log
 
+- 2026-05-18: Code review applied 5 patch findings (stronger retry test with rejection-replay variant, runtime no-op test for `PartyCommandValidationRejected`, sibling-consistent message assertion for SetIsNaturalPerson, robustness preconditions on privacy absence assertions, persisted-event-Message absence checks and identifier-conflict symmetry). 2 findings deferred to `deferred-work.md`. Focused validation passed: 102 Server.Tests, 7 fitness tests, all green.
 - 2026-05-17: Completed story 1.7 implementation; reconciled direct missing-party rejection typing, protected validation-rejection replay, added focused retry/privacy tests, and passed focused plus full regression validation.
 - 2026-05-17: Advanced elicitation applied pre-dev clarifications for state-derived retry scope, aggregate versus validator failure boundaries, composite rejection precision, no-op replay patch scope, and deferred unified error taxonomy decisions.
 - 2026-05-16: Party-mode review applied pre-dev clarifications for equivalent retry semantics, stable outcome wording, invalid-command retry evidence, composite rejection result-shape assertions, privacy-safe absence assertions, and deferred byte-identical metadata decisions.

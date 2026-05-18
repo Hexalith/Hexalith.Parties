@@ -703,9 +703,12 @@ public class PartyAggregateCompositeTests
 
         result.IsRejection.ShouldBeTrue();
         result.Events.Count.ShouldBe(1);
-        result.Events[0].ShouldBeOfType<ContactChannelNotFound>();
+        ContactChannelNotFound notFound = result.Events[0].ShouldBeOfType<ContactChannelNotFound>();
         result.Rejected.ShouldContain("Contact channel 'missing-channel' not found.");
-        result.Rejected.Any(x => x.Contains(command.UpdateContactChannels[0].Value!)).ShouldBeFalse();
+        string rawValue = command.UpdateContactChannels[0].Value!;
+        rawValue.ShouldNotBeNullOrEmpty("Privacy absence assertion requires a non-empty sentinel — empty string makes Contains() trivially true.");
+        result.Rejected.Any(x => x.Contains(rawValue)).ShouldBeFalse();
+        (notFound.Message ?? string.Empty).Contains(rawValue).ShouldBeFalse("Persisted event Message must not carry the raw contact value.");
         result.Events.OfType<ContactChannelUpdated>().ShouldBeEmpty();
     }
 
@@ -751,9 +754,12 @@ public class PartyAggregateCompositeTests
 
         result.IsRejection.ShouldBeTrue();
         result.Events.Count.ShouldBe(1);
-        result.Events[0].ShouldBeOfType<CompositeOperationConflict>();
+        CompositeOperationConflict conflict = result.Events[0].ShouldBeOfType<CompositeOperationConflict>();
         result.Rejected.ShouldContain("Conflicting operations on same channel ID: email-3.");
-        result.Rejected.Any(x => x.Contains(command.AddContactChannels[0].Value)).ShouldBeFalse();
+        string rawValue = command.AddContactChannels[0].Value;
+        rawValue.ShouldNotBeNullOrEmpty("Privacy absence assertion requires a non-empty sentinel — empty string makes Contains() trivially true.");
+        result.Rejected.Any(x => x.Contains(rawValue)).ShouldBeFalse();
+        (conflict.Message ?? string.Empty).Contains(rawValue).ShouldBeFalse("Persisted event Message must not carry the raw contact value.");
         result.Events.OfType<ContactChannelAdded>().ShouldBeEmpty();
         result.Events.OfType<ContactChannelRemoved>().ShouldBeEmpty();
     }
@@ -782,8 +788,14 @@ public class PartyAggregateCompositeTests
 
         result.IsRejection.ShouldBeTrue();
         result.Events.Count.ShouldBe(1);
-        result.Events[0].ShouldBeOfType<CompositeOperationConflict>();
+        CompositeOperationConflict conflict = result.Events[0].ShouldBeOfType<CompositeOperationConflict>();
         result.Rejected.ShouldContain("Conflicting operations on same identifier ID: id-siret-1.");
+        string rawValue = command.AddIdentifiers[0].Value;
+        rawValue.ShouldNotBeNullOrEmpty("Privacy absence assertion requires a non-empty sentinel — empty string makes Contains() trivially true.");
+        result.Rejected.Any(x => x.Contains(rawValue)).ShouldBeFalse();
+        (conflict.Message ?? string.Empty).Contains(rawValue).ShouldBeFalse("Persisted event Message must not carry the raw identifier value.");
+        result.Events.OfType<IdentifierAdded>().ShouldBeEmpty();
+        result.Events.OfType<IdentifierRemoved>().ShouldBeEmpty();
     }
 
     [Fact]
@@ -1049,14 +1061,17 @@ public class PartyAggregateCompositeTests
 
         result.IsRejection.ShouldBeTrue();
         result.Events.Count.ShouldBe(1);
-        result.Events[0].ShouldBeOfType<CompositeOperationConflict>();
+        CompositeOperationConflict conflict = result.Events[0].ShouldBeOfType<CompositeOperationConflict>();
         result.Events.OfType<IdentifierAdded>().ShouldBeEmpty();
         result.Events.OfType<IdentifierRemoved>().ShouldBeEmpty();
         result.UpdatedPartyDetail.ShouldBeNull();
         result.Applied.ShouldBeEmpty();
         result.Skipped.ShouldBeEmpty();
         result.Rejected.ShouldContain("Conflicting operations on same identifier ID: id-vat-1.");
-        result.Rejected.Any(x => x.Contains(command.AddIdentifiers[0].Value)).ShouldBeFalse();
+        string rawValue = command.AddIdentifiers[0].Value;
+        rawValue.ShouldNotBeNullOrEmpty("Privacy absence assertion requires a non-empty sentinel — empty string makes Contains() trivially true.");
+        result.Rejected.Any(x => x.Contains(rawValue)).ShouldBeFalse();
+        (conflict.Message ?? string.Empty).Contains(rawValue).ShouldBeFalse("Persisted event Message must not carry the raw identifier value.");
     }
 
     [Fact]
@@ -1082,9 +1097,12 @@ public class PartyAggregateCompositeTests
 
         result.IsRejection.ShouldBeTrue();
         result.Events.Count.ShouldBe(1);
-        result.Events[0].ShouldBeOfType<CompositeOperationConflict>();
+        CompositeOperationConflict conflict = result.Events[0].ShouldBeOfType<CompositeOperationConflict>();
         result.Rejected.ShouldContain("Conflicting operations on same channel ID: ch-email-1.");
-        result.Rejected.Any(x => x.Contains(command.UpdateContactChannels[0].Value!)).ShouldBeFalse();
+        string rawValue = command.UpdateContactChannels[0].Value!;
+        rawValue.ShouldNotBeNullOrEmpty("Privacy absence assertion requires a non-empty sentinel — empty string makes Contains() trivially true.");
+        result.Rejected.Any(x => x.Contains(rawValue)).ShouldBeFalse();
+        (conflict.Message ?? string.Empty).Contains(rawValue).ShouldBeFalse("Persisted event Message must not carry the raw contact value.");
         result.Events.OfType<ContactChannelUpdated>().ShouldBeEmpty();
         result.Events.OfType<ContactChannelRemoved>().ShouldBeEmpty();
     }

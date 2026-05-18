@@ -76,6 +76,29 @@ public sealed class PartyStateRejectionApplyEndToEndTests
     }
 
     [Fact]
+    public void Apply_PartyCommandValidationRejected_DoesNotMutateState()
+    {
+        PartyState seed = new();
+        InvokeApply(seed, new PartyCreated
+        {
+            Type = Hexalith.Parties.Contracts.ValueObjects.PartyType.Person,
+        });
+        DateTimeOffset createdAt = seed.CreatedAt;
+        bool isActive = seed.IsActive;
+        bool isRestricted = seed.IsRestricted;
+
+        InvokeApply(seed, new PartyCommandValidationRejected
+        {
+            CommandType = "CreateParty",
+            Failures = [new PartyValidationFailure { PropertyName = "PartyId", ErrorCode = "NotEmpty" }],
+        });
+
+        seed.CreatedAt.ShouldBe(createdAt);
+        seed.IsActive.ShouldBe(isActive);
+        seed.IsRestricted.ShouldBe(isRestricted);
+    }
+
+    [Fact]
     public void RejectionEvents_AreIRejectionEvent_AndApplyIsDeclaredOnPartyState()
     {
         Type[] rejections = [.. typeof(PartyNotFound).Assembly

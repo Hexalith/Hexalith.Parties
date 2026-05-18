@@ -213,7 +213,28 @@ public class PartyAggregateCreateTests
 
         AssertContainsOnlyRejection<PartyCannotBeCreatedWithoutType>(firstResult);
         AssertContainsOnlyRejection<PartyCannotBeCreatedWithoutType>(secondResult);
-        firstResult.Events[0].GetType().ShouldBe(secondResult.Events[0].GetType());
+        secondResult.Events[0].ShouldBe(firstResult.Events[0]);
+    }
+
+    [Fact]
+    public void Handle_CreatePartyWithDefaultType_AfterRejectionReplay_ReturnsNoOpWithNoDuplicateEvents()
+    {
+        CreateParty command = new()
+        {
+            PartyId = PartyTestData.DefaultPartyId,
+            Type = PartyType.Unknown,
+        };
+
+        var firstResult = PartyAggregate.Handle(command, null);
+        AssertContainsOnlyRejection<PartyCannotBeCreatedWithoutType>(firstResult);
+
+        PartyState replayedState = new();
+        replayedState.Apply((PartyCannotBeCreatedWithoutType)firstResult.Events[0]);
+
+        var retryResult = PartyAggregate.Handle(command, replayedState);
+
+        retryResult.IsNoOp.ShouldBeTrue("Replaying a rejection must yield a non-null state and a retry must produce no duplicate events.");
+        retryResult.Events.ShouldBeEmpty();
     }
 
     [Fact]

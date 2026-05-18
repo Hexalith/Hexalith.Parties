@@ -35,7 +35,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-05-15 09:01:58 +02:00
-last_updated: 2026-05-18 09:04:26 +02:00
+last_updated: 2026-05-18 12:00:00 +02:00
 project: Hexalith.Parties
 project_key: NOKEY
 tracking_system: file-system
@@ -58,7 +58,7 @@ development_status:
   1-4-manage-contact-channels: done
   1-5-manage-party-identifiers: done
   1-6-deactivate-and-reactivate-parties: done
-  1-7-idempotent-commands-and-typed-rejections: review
+  1-7-idempotent-commands-and-typed-rejections: done
   1-8-personal-data-marking-and-log-safe-domain-model: review
   1-9-return-updated-party-state-from-mutations: ready-for-dev
   epic-1-retrospective: optional

@@ -592,7 +592,8 @@ public class PartyAggregateUpdateTests
         // Assert
         result.IsRejection.ShouldBeTrue();
         result.Events.Count.ShouldBe(1);
-        result.Events[0].ShouldBeOfType<PartyNotFound>();
+        PartyNotFound rejection = result.Events[0].ShouldBeOfType<PartyNotFound>();
+        rejection.Message.ShouldBe("Party does not exist.");
         result.Events.OfType<IsNaturalPersonChanged>().ShouldBeEmpty();
     }
 
