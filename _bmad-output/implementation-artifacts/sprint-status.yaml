@@ -35,7 +35,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-05-15 09:01:58 +02:00
-last_updated: 2026-05-17 16:00:00 +02:00
+last_updated: 2026-05-18 09:04:26 +02:00
 project: Hexalith.Parties
 project_key: NOKEY
 tracking_system: file-system
@@ -68,7 +68,7 @@ development_status:
   2-1-build-party-detail-projection: ready-for-dev
   2-2-build-tenant-party-index-projection: ready-for-dev
   2-3-query-party-details-by-id: ready-for-dev
-  2-4-list-and-filter-parties: backlog
+  2-4-list-and-filter-parties: ready-for-dev
   2-5-search-parties-by-display-name-with-match-metadata: backlog
   2-6-enforce-tenant-safe-projection-reads: backlog
   2-7-handle-projection-freshness-and-graceful-degradation: backlog
