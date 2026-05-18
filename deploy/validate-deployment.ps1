@@ -2,27 +2,100 @@
 # ===========================================================================
 # Hexalith.Parties -- Deployment Validation Tool
 # ===========================================================================
-# Verifies DAPR security configuration before production use.
-# Checks access control, state store, pub/sub, subscription, resiliency,
-# and secret store configurations for security best practices.
+# Verifies DAPR security configuration AND aspirate-generated Kubernetes
+# manifests before production use. Story 8.1 created the DAPR-only checks
+# (Access Control, State Store, Pub/Sub, Subscription, Resiliency, Secret
+# Store, Authentication, Tenant, Transport, Topology). Story 9.2 added the
+# K8s-manifest lint surface (workload shape, DAPR annotations, DAPR Component/
+# Configuration/Subscription parity vs deploy/dapr/, plaintext-secret scan
+# with redaction contract, static tenant-id scan, local-cluster capability
+# allowlist, committed Secret-resource scan).
 #
-# Usage:
+# Usage (Story 8.1 — unchanged):
 #   ./validate-deployment.ps1 --config-path ./deploy/dapr
 #   ./validate-deployment.ps1 --config-path ./deploy/dapr --output json
 #
+# Usage (Story 9.2 — additive):
+#   ./validate-deployment.ps1 --config-path ./deploy/dapr -K8sPath ./deploy/k8s
+#   ./validate-deployment.ps1 -K8sPath ./deploy/k8s --output json
+#   ./validate-deployment.ps1 -K8sPath ./deploy/k8s -AllowCloudCapabilities
+#
 # Exit codes:
 #   0 = All checks passed (warnings may exist)
-#   1 = One or more checks failed
+#   1 = One or more blocking failures
 #   2 = Invalid arguments or config path not found
 #
-# Reference: docs/deployment-security-checklist.md
+# Output contract (Story 9.2 K8s findings):
+#   - K8s findings carry {category, code, severity, target, recommendation};
+#     severity in {fail, warn, pass}; sorted by (category, code, target).
+#   - Plaintext-secret findings render as <redacted:N chars at <file>:<line>>;
+#     the offending value never appears in stdout, stderr, or recommendation.
+#   - File paths are sanitized: control chars (\r \n \t \b \x00-\x1f) → '?'.
+#   - Recommendation strings are parametrized constants per category code;
+#     only {category, file, line, N} are interpolated.
+#   - Console output truncates at 50 findings per category with the marker
+#     "N additional findings suppressed — re-run with --output json for full list".
+#   - JSON output emits every finding without truncation.
+#
+# K8s category codes:
+#   Workload:    K8sWorkload-MissingImage (fail),
+#                K8sWorkload-MissingDaprAnnotation (fail),
+#                K8sWorkload-UnresolvedConfigMapRef (fail),
+#                K8sWorkload-UnresolvedKustomizationResource (fail),
+#                K8sWorkload-MissingProbes (warn),
+#                K8sWorkload-MissingResources (warn),
+#                K8sWorkload-LatestImageTag (warn)
+#   DAPR ACL:    DAPR-ACL-DefaultActionNotDeny (fail),
+#                DAPR-ACL-WildcardAppId (fail),
+#                DAPR-ACL-MissingPerServiceRule (fail)
+#   DAPR Sub:    DAPR-Subscription-MissingDeadLetter (fail),
+#                DAPR-Subscription-WrongPubsubName (fail)
+#   DAPR Comp:   DAPR-Component-MissingAuthoritativeFile (fail),
+#                DAPR-Regen-PlaceholderNotStripped (fail)
+#   Secrets:     K8sSecret-PlaintextCredential (fail),
+#                K8sSecret-UrlEmbeddedCred (fail),
+#                K8sSecret-JwtTokenLiteral (fail),
+#                K8sSecret-AwsAccessKey (fail),
+#                K8sSecret-AzureConnString (fail),
+#                K8sSecret-PrivateKey (fail),
+#                K8sSecret-StaticTenantId (fail),
+#                K8sSecret-CommittedSecretValue (fail)
+#   Local:       K8s-NonLocalClusterCapability (fail; warn under -AllowCloudCapabilities)
+#   Generic:     K8s-YamlParseError (fail), K8s-PathTraversal (fail)
+#
+# Plaintext-secret scan scope (Story 9.2 AC3):
+#   IN-SCOPE: configMapGenerator.literals, container env, envFrom/valueFrom,
+#             Secret.data/stringData, YAML anchor definitions (&anchor value).
+#   OUT-OF-SCOPE: metadata.annotations, spec.template.metadata.annotations,
+#                 metadata.labels, selector.matchLabels, YAML comments (# ...),
+#                 YAML anchor references (*anchor).
+#
+# Key-allowlist (never trigger the value regex even if value would match):
+#   services__*__http__*, Tenants__ServiceName, Tenants__PubSubName,
+#   Tenants__TopicName, Tenants__Enabled, Tenants__CommandApiAppId,
+#   EVENTSTORE_HTTP, TENANTS_HTTP, ASPNETCORE_URLS,
+#   ASPNETCORE_FORWARDEDHEADERS_ENABLED, HTTP_PORTS,
+#   OTEL_DOTNET_EXPERIMENTAL_OTLP_RETRY, dapr.io/enable-api-logging.
+#
+# Value-allowlist (placeholder set; case-insensitive, whitespace-trimmed,
+# URL-decoded): {env:*}, {env:*|*}, $(VAR), ${VAR}, valueFrom.*Ref,
+# <set-by-operator>, <placeholder>, REPLACE_ME, empty.
+#
+# Reference: docs/deployment-security-checklist.md, deploy/k8s/README.md
 # ===========================================================================
 
 [CmdletBinding()]
 param(
-    [Parameter(Mandatory = $true)]
+    [Parameter(Mandatory = $false)]
     [Alias("config-path")]
     [string]$ConfigPath,
+
+    [Parameter(Mandatory = $false)]
+    [Alias("k8s-path")]
+    [string]$K8sPath,
+
+    [Parameter(Mandatory = $false)]
+    [switch]$AllowCloudCapabilities,
 
     [Parameter(Mandatory = $false)]
     [ValidateSet("console", "json")]
@@ -1129,32 +1202,1391 @@ function Test-EventStoreFrontedTopology {
     }
 }
 
+# ===========================================================================
+# Story 9.2 -- Kubernetes manifest lint surface
+# ===========================================================================
+# Detection-only. Does not modify any manifest. Reads deploy/k8s/ for shape
+# checks (workload, DAPR annotations, secrets, cloud capabilities) and
+# deploy/dapr/ for parity (when both paths supplied). No live cluster, no
+# kubectl, no DAPR install, no aspirate invocation.
+# ---------------------------------------------------------------------------
+
+# Separate finding storage: each K8s finding is
+#   { Category, Code, Severity, Target, Recommendation }
+# Severity in {fail, warn, pass}. Target is "<relative-path>" or
+# "<relative-path>:<line>" (file-path component pre-sanitized).
+$script:K8sResults = New-Object System.Collections.ArrayList
+
+# DAPR-enabled / DAPR-excluded constants mirror
+# K8sManifestGenerationTests.daprAppToConfig (line 88-94 of that test) and
+# the documented non-DAPR exclusion set. Drift in either side fails both the
+# manifest-shape fitness test AND the lint, by design.
+$script:K8sDaprEnabledApps = @{
+    'eventstore'       = 'accesscontrol'
+    'eventstore-admin' = 'accesscontrol-eventstore-admin'
+    'parties'          = 'accesscontrol-parties'
+    'tenants'          = 'accesscontrol-tenants'
+}
+$script:K8sDaprExcludedApps = @('eventstore-admin-ui', 'parties-mcp')
+
+# Authoritative DAPR file list mirrors
+# K8sManifestGenerationTests.AuthoritativeDaprTemplatesRemainTheBackingComponentSource
+# (line 245-263). Extend in BOTH places when adding components.
+$script:K8sAuthoritativeDaprFiles = @(
+    'statestore.yaml',
+    'pubsub.yaml',
+    'statestore-cosmosdb.yaml',
+    'statestore-postgresql.yaml',
+    'pubsub-kafka.yaml',
+    'pubsub-rabbitmq.yaml',
+    'pubsub-servicebus.yaml',
+    'accesscontrol.yaml',
+    'accesscontrol.eventstore-admin.yaml',
+    'accesscontrol.parties.yaml',
+    'accesscontrol.tenants.yaml',
+    'subscription-parties.yaml',
+    'subscription-tenants.yaml',
+    'resiliency.yaml',
+    'topology.yaml',
+    'tenants-integration.yaml'
+)
+
+# Key-allowlist for plaintext-secret scan. Exact-match for full keys, '*' is
+# a glob wildcard inside service-discovery keys like services__*__http__*.
+$script:K8sSecretKeyAllowlist = @(
+    'services__*__http__*',
+    'Tenants__ServiceName',
+    'Tenants__PubSubName',
+    'Tenants__TopicName',
+    'Tenants__Enabled',
+    'Tenants__CommandApiAppId',
+    'EVENTSTORE_HTTP',
+    'TENANTS_HTTP',
+    'ASPNETCORE_URLS',
+    'ASPNETCORE_FORWARDEDHEADERS_ENABLED',
+    'HTTP_PORTS',
+    'OTEL_DOTNET_EXPERIMENTAL_OTLP_RETRY',
+    'dapr.io/enable-api-logging'
+)
+
+# Cloud-only StorageClass / IngressClass names. Names match metadata.name,
+# case-insensitively. Service.type=LoadBalancer is handled separately.
+$script:K8sCloudStorageClasses = @('managed-csi', 'gp2', 'gp3', 'azurefile', 'standard-rwo', 'pd-standard', 'pd-ssd')
+$script:K8sCloudIngressClasses = @('alb', 'nginx-aws', 'gce', 'azure/application-gateway')
+$script:K8sCloudServiceAnnotationPrefixes = @(
+    'service.beta.kubernetes.io/aws-',
+    'service.beta.kubernetes.io/azure-',
+    'cloud.google.com/'
+)
+
+# Static-tenant-id key pattern.
+# P21: tightened to exact-key matches only. The earlier `.*__TenantId$`
+# suffix wildcard accidentally matched EventStore registration shapes such
+# as `EventStore__DomainServices__Registrations__*|party|v1__TenantId`,
+# which legitimately carry `*` (any-tenant wildcard). The explicit
+# `Tenants__TenantId` already covers the intended detection surface.
+$script:K8sStaticTenantIdPattern = '^(Tenants__TenantId|TENANT_ID|DEFAULT_TENANT)$'
+
+# Truncation budget per category (console mode). JSON mode emits all findings.
+$script:K8sConsoleCategoryFindingLimit = 50
+
+function Add-K8sResult {
+    param(
+        [string]$Category,
+        [string]$Code,
+        [ValidateSet('fail', 'warn', 'pass')]
+        [string]$Severity,
+        [string]$Target,
+        [string]$Recommendation = ''
+    )
+    $finding = [PSCustomObject]@{
+        Category       = $Category
+        Code           = $Code
+        Severity       = $Severity
+        Target         = (Format-SafePath $Target)
+        Recommendation = $Recommendation
+    }
+    [void]$script:K8sResults.Add($finding)
+}
+
+function Format-SafePath {
+    # Replace control chars in file paths so a maliciously-named file
+    # `evil\n[FAKE:fail]\n.yaml` cannot inject fake findings into the output.
+    # Applies to Target field only; recommendation strings are constants.
+    # P23: also strip DEL (0x7F) and C1 control range (0x80..0x9F).
+    param([string]$Path)
+    if ([string]::IsNullOrEmpty($Path)) { return $Path }
+    $sb = New-Object System.Text.StringBuilder
+    foreach ($ch in $Path.ToCharArray()) {
+        $code = [int][char]$ch
+        if ($code -lt 32 -or $code -eq 127 -or ($code -ge 0x80 -and $code -le 0x9F)) {
+            [void]$sb.Append('?')
+        }
+        else {
+            [void]$sb.Append($ch)
+        }
+    }
+    return $sb.ToString()
+}
+
+function Get-K8sRelativePath {
+    param([string]$AbsolutePath, [string]$RootPath)
+    if ([string]::IsNullOrEmpty($AbsolutePath) -or [string]::IsNullOrEmpty($RootPath)) {
+        return $AbsolutePath
+    }
+    try {
+        $rootResolved = (Resolve-Path -LiteralPath $RootPath -ErrorAction Stop).Path
+        $absResolved = $AbsolutePath
+        if (Test-Path -LiteralPath $AbsolutePath) {
+            $absResolved = (Resolve-Path -LiteralPath $AbsolutePath -ErrorAction Stop).Path
+        }
+        $rootWithSep = $rootResolved.TrimEnd([System.IO.Path]::DirectorySeparatorChar, [System.IO.Path]::AltDirectorySeparatorChar)
+        if ($absResolved.StartsWith($rootWithSep, [System.StringComparison]::OrdinalIgnoreCase)) {
+            $rel = $absResolved.Substring($rootWithSep.Length).TrimStart([System.IO.Path]::DirectorySeparatorChar, [System.IO.Path]::AltDirectorySeparatorChar)
+            return ($rel -replace '\\', '/')
+        }
+    }
+    catch {
+        # Fall through to return raw input — caller may still sanitize.
+    }
+    return $AbsolutePath
+}
+
+function Read-K8sYamlDocuments {
+    # Multi-document YAML stream parser. Splits on `---` separators at column
+    # zero; returns array of document text blocks (each may be empty/whitespace).
+    # Designed for the regex helpers Get-YamlKind / Get-YamlValue / etc. The
+    # single-doc Read-YamlFile remains for legacy single-doc shape checks.
+    param([string]$Path)
+    if (-not (Test-Path -LiteralPath $Path)) { return @() }
+    try {
+        $raw = Get-Content -LiteralPath $Path -Raw -ErrorAction Stop
+    }
+    catch {
+        return @()
+    }
+    if ([string]::IsNullOrWhiteSpace($raw)) { return @() }
+    # P16: split on lines that contain ONLY `---` or `...` (the YAML
+    # stream-end marker), with an optional trailing comment. This matches
+    # both `--- # comment` and `...` separators.
+    $docs = [regex]::Split($raw, "(?m)^\s*(?:---|\.\.\.)\s*(?:#.*)?$") |
+        Where-Object { -not [string]::IsNullOrWhiteSpace($_) }
+    return @($docs)
+}
+
+function Test-K8sPlaceholderValue {
+    # Returns $true if $Value is a recognized placeholder shape (DAPR env-ref,
+    # K8s env-var ref, valueFrom marker, REPLACE_ME, empty, etc.).
+    # Case-insensitive, whitespace-trimmed, URL-decoded.
+    # P22: `*` / `**` are treated as placeholders ONLY for EventStore
+    # registration keys (Key starts with `EventStore__DomainServices__Registrations__`).
+    # Anywhere else, a bare `*` is a real value and should be inspected.
+    param([string]$Value, [string]$Key = '')
+    if ($null -eq $Value) { return $true }
+    $trimmed = $Value.Trim().Trim("'").Trim('"').Trim()
+    if ([string]::IsNullOrEmpty($trimmed)) { return $true }
+    # URL-decode for forms like %24%7Benv%3ADB_PASSWORD%7D.
+    try {
+        $decoded = [System.Net.WebUtility]::UrlDecode($trimmed)
+    }
+    catch {
+        $decoded = $trimmed
+    }
+    $candidate = $decoded.ToLowerInvariant().Trim()
+    # DAPR env-ref: {env:VAR}, {env:VAR|default}
+    if ($candidate -match '^\{env:[^}]+\}$') { return $true }
+    # K8s env-var ref: $(VAR) or ${VAR}
+    if ($candidate -match '^\$\([^)]+\)$') { return $true }
+    if ($candidate -match '^\$\{[^}]+\}$') { return $true }
+    # valueFrom markers (callers convert these to a sentinel value before calling)
+    if ($candidate -match '^valuefrom\.(fieldref|configmapkeyref|secretkeyref|resourcefieldref)$') { return $true }
+    # Documented placeholder strings (case-insensitive)
+    if ($candidate -in @('replace_me', '<placeholder>', '<set-by-operator>', '<redacted>', 'todo')) {
+        return $true
+    }
+    # P22: Wildcard placeholders are valid ONLY for EventStore registration keys.
+    if ($candidate -in @('*', '**')) {
+        if ($Key -and $Key.StartsWith('EventStore__DomainServices__Registrations__', [System.StringComparison]::Ordinal)) {
+            return $true
+        }
+    }
+    return $false
+}
+
+function Test-K8sSecretKeyAllowlisted {
+    param([string]$Key)
+    if ([string]::IsNullOrEmpty($Key)) { return $false }
+    foreach ($entry in $script:K8sSecretKeyAllowlist) {
+        if ($entry -eq $Key) { return $true }
+        # Glob match: convert `services__*__http__*` to regex.
+        if ($entry.Contains('*')) {
+            $pattern = '^' + ([regex]::Escape($entry) -replace '\\\*', '.*') + '$'
+            if ($Key -match $pattern) { return $true }
+        }
+    }
+    return $false
+}
+
+function Get-K8sLineNumberForLiteralKey {
+    # Best-effort line lookup. Used only for target hint; redaction never
+    # depends on it. Returns 0 if not found.
+    # P27: supports a $StartIndex offset so callers searching within a
+    # specific YAML document of a multi-doc file get correctly-rebased
+    # line numbers. The returned line number is absolute (counted from
+    # the start of $Content, not from $StartIndex).
+    param([string]$Content, [string]$Key, [int]$StartIndex = 0)
+    if ([string]::IsNullOrEmpty($Content) -or [string]::IsNullOrEmpty($Key)) { return 0 }
+    if ($StartIndex -lt 0) { $StartIndex = 0 }
+    if ($StartIndex -ge $Content.Length) { return 0 }
+    $haystack = $Content.Substring($StartIndex)
+    # Count lines before the offset so we can rebase the result.
+    $linesBefore = 0
+    if ($StartIndex -gt 0) {
+        $linesBefore = ($Content.Substring(0, $StartIndex) -split "`n").Length - 1
+    }
+    $lines = $haystack -split "`n"
+    $escaped = [regex]::Escape($Key)
+    for ($i = 0; $i -lt $lines.Length; $i++) {
+        if ($lines[$i] -match "(?i)$escaped\s*[=:]") {
+            return ($linesBefore + $i + 1)
+        }
+    }
+    return 0
+}
+
+function Get-K8sSecretRegexes {
+    # Per-regex category code map. Order matters: more specific patterns
+    # first so e.g. JWT shape does not get flagged as generic credential.
+    # Each entry: @{ Code = '...'; Pattern = '...'; Scope = 'KeyValue'|'Value' }.
+    # - 'KeyValue' patterns are applied to the reconstructed `KEY=VALUE` string.
+    # - 'Value' patterns are applied to the value only.
+    # P1: K8sSecret-PlaintextCredential allows whitespace-containing values
+    #     (quoted scalars) but still rejects placeholder leads ({, <, $, ().
+    # P2: JWT regex accepts base64 standard alphabet (+, /) and trailing
+    #     padding (=) in the final segment.
+    # P3: URL-cred scheme matches RFC 3986 (`[a-z][a-z0-9+.\-]*`).
+    # P25: Azure connection string match is case-insensitive and accepts
+    #      both http; and https; with optional whitespace around =.
+    return @(
+        @{ Code = 'K8sSecret-UrlEmbeddedCred';   Scope = 'Value'; Pattern = '(?i)[a-z][a-z0-9+.\-]*://[^/\s:@]+:[^/\s@]+@' }
+        @{ Code = 'K8sSecret-JwtTokenLiteral';   Scope = 'Value'; Pattern = 'eyJ[A-Za-z0-9_+/\-]{10,}\.[A-Za-z0-9_+/\-]{10,}\.[A-Za-z0-9_+/\-=]{10,}' }
+        @{ Code = 'K8sSecret-AwsAccessKey';      Scope = 'Value'; Pattern = 'AKIA[0-9A-Z]{16}' }
+        @{ Code = 'K8sSecret-AzureConnString';   Scope = 'Value'; Pattern = '(?i)DefaultEndpointsProtocol\s*=\s*https?;' }
+        @{ Code = 'K8sSecret-PrivateKey';        Scope = 'Value'; Pattern = '-----BEGIN [A-Z ]+ PRIVATE KEY-----' }
+        @{ Code = 'K8sSecret-PlaintextCredential'; Scope = 'KeyValue'; Pattern = '(?i)(password|pwd|passwd|secret|token|api[_-]?key|client[_-]?secret)\s*[=:]\s*(?:"[^"\r\n]+"|''[^''\r\n]+''|[^\s{<$(][^\r\n#]*)' }
+    )
+}
+
+# ---------------------------------------------------------------------------
+# K8s parsers (multi-doc aware, minimal regex)
+# ---------------------------------------------------------------------------
+
+function Get-K8sDocKind {
+    param([string]$DocText)
+    if ($DocText -match "(?m)^\s*kind:\s*([^\r\n#]+)") {
+        return (ConvertFrom-YamlScalar $Matches[1])
+    }
+    return $null
+}
+
+function Get-K8sDocMetadataName {
+    # Returns the first `metadata.name` (top-level metadata block) in $DocText.
+    param([string]$DocText)
+    if ($DocText -match "(?ms)^metadata:\s*\r?\n(?<body>(?:[ \t]+[^\r\n]+\r?\n?)+)") {
+        $body = $Matches['body']
+        if ($body -match "(?m)^\s*name:\s*([^\r\n#]+)") {
+            return (ConvertFrom-YamlScalar $Matches[1])
+        }
+    }
+    # Fallback: any indented name under metadata.
+    if ($DocText -match "(?ms)metadata:\s*\r?\n\s+name:\s*([^\r\n#]+)") {
+        return (ConvertFrom-YamlScalar $Matches[1])
+    }
+    return $null
+}
+
+function Get-K8sDocLabelApp {
+    # P13: anchor exclusively to top-level metadata.labels.app so that
+    # selector.matchLabels.app (a different conceptual key) never matches.
+    # We locate the top-level `metadata:` block, then scan its inner lines
+    # for `labels:` whose body holds `app:`. Anything outside that scope
+    # (selector.matchLabels, spec.template.metadata.labels) is ignored.
+    param([string]$DocText)
+    if ([string]::IsNullOrEmpty($DocText)) { return $null }
+    $lines = $DocText -split "`n"
+    $metadataIndent = -1
+    $i = 0
+    while ($i -lt $lines.Length) {
+        $line = $lines[$i]
+        if ($line -match '^(?<i>[ \t]*)metadata:\s*$') {
+            $metadataIndent = $Matches['i'].Length
+            $i++
+            break
+        }
+        $i++
+    }
+    if ($metadataIndent -lt 0) { return $null }
+    # Walk metadata body to find labels: at metadataIndent + N indent
+    # (anything deeper than metadataIndent, but stop at sibling key).
+    $labelsIndent = -1
+    while ($i -lt $lines.Length) {
+        $line = $lines[$i]
+        if ([string]::IsNullOrWhiteSpace($line)) { $i++; continue }
+        $indentMatch = [regex]::Match($line, '^(?<i>[ \t]*)\S')
+        if (-not $indentMatch.Success) { $i++; continue }
+        $lineIndent = $indentMatch.Groups['i'].Length
+        if ($lineIndent -le $metadataIndent) { break }
+        if ($line -match '^(?<i>[ \t]+)labels:\s*$') {
+            $labelsIndent = $Matches['i'].Length
+            $i++
+            break
+        }
+        $i++
+    }
+    if ($labelsIndent -lt 0) { return $null }
+    # Walk labels body for app:
+    while ($i -lt $lines.Length) {
+        $line = $lines[$i]
+        if ([string]::IsNullOrWhiteSpace($line)) { $i++; continue }
+        $indentMatch = [regex]::Match($line, '^(?<i>[ \t]*)\S')
+        if (-not $indentMatch.Success) { $i++; continue }
+        $lineIndent = $indentMatch.Groups['i'].Length
+        if ($lineIndent -le $labelsIndent) { break }
+        if ($line -match '^\s+app:\s*([^\r\n#]+)') {
+            return (ConvertFrom-YamlScalar $Matches[1])
+        }
+        $i++
+    }
+    return $null
+}
+
+function Get-K8sDeploymentImages {
+    # Return all container image strings in spec.template.spec.containers.
+    # Use [ \t] (not \s) for inline whitespace so a trailing-space-only `image:`
+    # line does not greedily consume the next line's content. Empty values are
+    # preserved as empty strings so callers can flag missing-image shapes.
+    param([string]$DocText)
+    $images = @()
+    foreach ($m in [regex]::Matches($DocText, "(?m)^[ \t]+image:[ \t]*([^\r\n#]*)")) {
+        $val = ConvertFrom-YamlScalar $m.Groups[1].Value
+        if ($null -eq $val) { $val = '' }
+        $images += $val
+    }
+    return , $images
+}
+
+function Get-K8sDeploymentConfigMapRefs {
+    # Return all envFrom.configMapRef.name values.
+    param([string]$DocText)
+    $names = @()
+    foreach ($m in [regex]::Matches($DocText, "(?ms)configMapRef:\s*\r?\n\s+name:\s*([^\r\n#]+)")) {
+        $val = ConvertFrom-YamlScalar $m.Groups[1].Value
+        if (-not [string]::IsNullOrEmpty($val)) {
+            $names += $val
+        }
+    }
+    return , $names
+}
+
+function Get-K8sAnnotationsBlock {
+    # Returns the annotations block text for a given anchor key
+    # (the immediate scope is `metadata:` or `spec.template.metadata:`).
+    # Strategy: locate `annotations:` headers and capture each indented body.
+    # P26: also expand flow-style `annotations: { k: v, k2: v2 }` into a
+    # block-equivalent text so callers (Test-K8sAnnotationPresent and the
+    # cloud-annotation prefix scan) see a uniform shape.
+    param([string]$DocText)
+    $blocks = @()
+    foreach ($m in [regex]::Matches($DocText, "(?ms)^(?<indent>[ \t]*)annotations:\s*\r?\n(?<body>(?:\k<indent>[ \t]+[^\r\n]+\r?\n?)+)")) {
+        $blocks += $m.Groups['body'].Value
+    }
+    # Flow-style: `annotations: { foo/bar: 'baz', x: y }`
+    foreach ($flow in [regex]::Matches($DocText, "(?m)^[ \t]*annotations:\s*\{(?<body>[^}]*)\}\s*$")) {
+        $rendered = New-Object System.Text.StringBuilder
+        foreach ($pair in ($flow.Groups['body'].Value -split ',')) {
+            $kv = $pair.Trim()
+            if ([string]::IsNullOrEmpty($kv)) { continue }
+            [void]$rendered.AppendLine("    $kv")
+        }
+        if ($rendered.Length -gt 0) {
+            $blocks += $rendered.ToString()
+        }
+    }
+    return , $blocks
+}
+
+function Test-K8sAnnotationPresent {
+    param([string[]]$AnnotationBlocks, [string]$Key)
+    $escaped = [regex]::Escape($Key)
+    foreach ($block in $AnnotationBlocks) {
+        if ($block -match "(?m)^\s+$escaped\s*:") {
+            return $true
+        }
+    }
+    return $false
+}
+
+function Get-K8sContainerSection {
+    # P12: structural line-walker. Find the first `containers:` line, capture
+    # its indent, then accumulate every subsequent line whose indent is
+    # strictly greater than the containers-indent. Stop at the first line
+    # whose indent is less-than-or-equal (i.e. a sibling key) or EOF.
+    param([string]$DocText)
+    if ([string]::IsNullOrEmpty($DocText)) { return $null }
+    $lines = $DocText -split "`n"
+    $containersIndent = -1
+    $bodyLines = New-Object System.Collections.ArrayList
+    for ($i = 0; $i -lt $lines.Length; $i++) {
+        $line = $lines[$i]
+        if ($containersIndent -lt 0) {
+            if ($line -match '^(?<i>[ \t]+)containers:\s*$') {
+                $containersIndent = $Matches['i'].Length
+            }
+            continue
+        }
+        # Skip blank lines (preserve them in the body) without changing scope.
+        if ([string]::IsNullOrWhiteSpace($line)) {
+            [void]$bodyLines.Add($line)
+            continue
+        }
+        $indentMatch = [regex]::Match($line, '^(?<i>[ \t]*)\S')
+        if (-not $indentMatch.Success) {
+            [void]$bodyLines.Add($line)
+            continue
+        }
+        $lineIndent = $indentMatch.Groups['i'].Length
+        if ($lineIndent -le $containersIndent) {
+            break
+        }
+        [void]$bodyLines.Add($line)
+    }
+    if ($containersIndent -lt 0 -or $bodyLines.Count -eq 0) { return $null }
+    return ($bodyLines -join "`n")
+}
+
+function Test-K8sContainerHasProbes {
+    param([string]$ContainerText)
+    if ([string]::IsNullOrEmpty($ContainerText)) { return $false }
+    $hasReady = $ContainerText -match "(?m)^\s+readinessProbe:"
+    $hasLive = $ContainerText -match "(?m)^\s+livenessProbe:"
+    return ($hasReady -and $hasLive)
+}
+
+function Test-K8sContainerHasResources {
+    # P12: structural walker rather than a single regex. Locate `resources:`
+    # then within it locate `requests:` and `limits:` sub-blocks (by indent),
+    # then within each assert `cpu:` and `memory:` keys are present.
+    param([string]$ContainerText)
+    if ([string]::IsNullOrEmpty($ContainerText)) { return $false }
+    $lines = $ContainerText -split "`n"
+    $resourcesIndent = -1
+    $resourcesBody = New-Object System.Collections.ArrayList
+    $insideResources = $false
+    for ($i = 0; $i -lt $lines.Length; $i++) {
+        $line = $lines[$i]
+        if (-not $insideResources) {
+            if ($line -match '^(?<i>[ \t]+)resources:\s*$') {
+                $resourcesIndent = $Matches['i'].Length
+                $insideResources = $true
+            }
+            continue
+        }
+        if ([string]::IsNullOrWhiteSpace($line)) {
+            [void]$resourcesBody.Add($line)
+            continue
+        }
+        $indentMatch = [regex]::Match($line, '^(?<i>[ \t]*)\S')
+        if (-not $indentMatch.Success) {
+            [void]$resourcesBody.Add($line)
+            continue
+        }
+        $lineIndent = $indentMatch.Groups['i'].Length
+        if ($lineIndent -le $resourcesIndent) {
+            break
+        }
+        [void]$resourcesBody.Add($line)
+    }
+    if (-not $insideResources -or $resourcesBody.Count -eq 0) { return $false }
+
+    # Locate requests: and limits: sub-blocks at the next-deeper indent.
+    function script:Get-K8sResourceSubBlock {
+        param([string[]]$Body, [string]$Header)
+        $headerIndent = -1
+        $out = New-Object System.Collections.ArrayList
+        $started = $false
+        foreach ($line in $Body) {
+            if (-not $started) {
+                if ($line -match "^(?<i>[ \t]+)$Header\s*:\s*$") {
+                    $headerIndent = $Matches['i'].Length
+                    $started = $true
+                }
+                continue
+            }
+            if ([string]::IsNullOrWhiteSpace($line)) { continue }
+            $indentMatch = [regex]::Match($line, '^(?<i>[ \t]*)\S')
+            if (-not $indentMatch.Success) { continue }
+            $lineIndent = $indentMatch.Groups['i'].Length
+            if ($lineIndent -le $headerIndent) { break }
+            [void]$out.Add($line)
+        }
+        return ($out -join "`n")
+    }
+
+    $requestsBlock = Get-K8sResourceSubBlock -Body $resourcesBody -Header 'requests'
+    $limitsBlock = Get-K8sResourceSubBlock -Body $resourcesBody -Header 'limits'
+    if ([string]::IsNullOrEmpty($requestsBlock) -or [string]::IsNullOrEmpty($limitsBlock)) {
+        return $false
+    }
+
+    $hasReqCpu = $requestsBlock -match "(?m)^\s+cpu:\s+\S"
+    $hasReqMem = $requestsBlock -match "(?m)^\s+memory:\s+\S"
+    $hasLimCpu = $limitsBlock -match "(?m)^\s+cpu:\s+\S"
+    $hasLimMem = $limitsBlock -match "(?m)^\s+memory:\s+\S"
+    return ($hasReqCpu -and $hasReqMem -and $hasLimCpu -and $hasLimMem)
+}
+
+function Get-K8sKustomizationConfigMapNames {
+    # Parse a per-app kustomization.yaml and return all
+    # configMapGenerator[*].name values.
+    param([string]$KustomizationPath)
+    if (-not (Test-Path -LiteralPath $KustomizationPath)) { return @() }
+    try {
+        $text = Get-Content -LiteralPath $KustomizationPath -Raw
+    }
+    catch {
+        return @()
+    }
+    $names = @()
+    foreach ($m in [regex]::Matches($text, "(?ms)configMapGenerator:\s*\r?\n(?<body>(?:- name:.*?\r?\n(?:\s+.+\r?\n)*)+)")) {
+        foreach ($nm in [regex]::Matches($m.Groups['body'].Value, "(?m)^\s*-\s*name:\s*([^\r\n#]+)")) {
+            $names += (ConvertFrom-YamlScalar $nm.Groups[1].Value)
+        }
+    }
+    return , $names
+}
+
+function Get-K8sKustomizationLiterals {
+    # Return @( @{ Key = ...; Value = ...; LineNumber = ... } ) for every
+    # `- KEY=VALUE` entry under a configMapGenerator[*].literals block.
+    param([string]$KustomizationPath)
+    if (-not (Test-Path -LiteralPath $KustomizationPath)) { return @() }
+    try {
+        $text = Get-Content -LiteralPath $KustomizationPath -Raw
+    }
+    catch {
+        return @()
+    }
+    $entries = @()
+    # Allow the final entry to lack a trailing newline (file may not end with `\n`).
+    foreach ($literalsMatch in [regex]::Matches($text, "(?ms)literals:\s*\r?\n(?<body>(?:\s+- [^\r\n]+(?:\r?\n|\z))+)")) {
+        foreach ($line in ($literalsMatch.Groups['body'].Value -split "`n")) {
+            $trimmed = $line.TrimEnd()
+            if ($trimmed -match '^\s*-\s*(?<k>[^=\s][^=]*)=(?<v>.*)$') {
+                $rawKey = $Matches['k'].Trim()
+                $rawVal = $Matches['v'].Trim()
+                $strippedVal = $rawVal -replace "^['""]|['""]$", ''
+                $lineNumber = Get-K8sLineNumberForLiteralKey -Content $text -Key $rawKey
+                $entries += [PSCustomObject]@{
+                    Key        = $rawKey
+                    Value      = $strippedVal
+                    LineNumber = $lineNumber
+                }
+            }
+        }
+    }
+    return , $entries
+}
+
+function Get-K8sDocContainerEnv {
+    # Return @( @{ Name = ...; Value = ...; ValueFrom = $bool; LineNumber = ... } )
+    # for every container env entry (excluding envFrom-only blocks).
+    param([string]$DocText)
+    $entries = @()
+    $lines = $DocText -split "`n"
+    $inEnv = $false
+    $envIndent = -1
+    $current = $null
+    for ($i = 0; $i -lt $lines.Length; $i++) {
+        $line = $lines[$i]
+        if ($line -match '^(\s*)env:\s*$') {
+            $inEnv = $true
+            $envIndent = $Matches[1].Length
+            continue
+        }
+        if ($inEnv) {
+            $indentMatch = [regex]::Match($line, '^(\s*)\S')
+            if (-not $indentMatch.Success) { continue }
+            $indent = $indentMatch.Groups[1].Length
+            if ($indent -le $envIndent -and -not [string]::IsNullOrWhiteSpace($line)) {
+                $inEnv = $false
+                if ($current) { $entries += $current; $current = $null }
+                continue
+            }
+            if ($line -match '^\s*-\s+name:\s*([^\r\n#]+)') {
+                if ($current) { $entries += $current }
+                $name = ConvertFrom-YamlScalar $Matches[1]
+                $current = [PSCustomObject]@{
+                    Name       = $name
+                    Value      = $null
+                    ValueFrom  = $false
+                    LineNumber = $i + 1
+                }
+            }
+            elseif ($current -and $line -match '^\s+value:\s*([^\r\n#]+)') {
+                $current.Value = ConvertFrom-YamlScalar $Matches[1]
+            }
+            elseif ($current -and $line -match '^\s+valueFrom:') {
+                $current.ValueFrom = $true
+            }
+        }
+    }
+    if ($current) { $entries += $current }
+    return , $entries
+}
+
+# ---------------------------------------------------------------------------
+# K8s lint checks
+# ---------------------------------------------------------------------------
+
+function Test-K8sWorkload {
+    param([string]$K8sRoot)
+    $Category = 'K8sWorkload'
+
+    # Per-app deployment.yaml scan (both .yaml and .yml, case-insensitive).
+    $appFolders = @(Get-ChildItem -LiteralPath $K8sRoot -Directory -ErrorAction SilentlyContinue)
+    foreach ($folder in $appFolders) {
+        $deploymentCandidates = @(
+            Get-ChildItem -LiteralPath $folder.FullName -File -ErrorAction SilentlyContinue |
+                Where-Object { $_.Name -match '(?i)^deployment\.ya?ml$' }
+        )
+        foreach ($deployFile in $deploymentCandidates) {
+            $deployPath = $deployFile.FullName
+            $relDeploy = Get-K8sRelativePath -AbsolutePath $deployPath -RootPath $K8sRoot
+            $docs = Read-K8sYamlDocuments -Path $deployPath
+            foreach ($doc in $docs) {
+                $kind = Get-K8sDocKind -DocText $doc
+                if ($kind -ne 'Deployment') { continue }
+
+                $appId = Get-K8sDocLabelApp -DocText $doc
+                if ([string]::IsNullOrEmpty($appId)) {
+                    $appId = $folder.Name
+                }
+
+                # Image check (fail when missing/empty/placeholder).
+                $images = Get-K8sDeploymentImages -DocText $doc
+                $hasNonEmptyImage = $false
+                if ($images.Count -eq 0) {
+                    Add-K8sResult -Category $Category -Code 'K8sWorkload-MissingImage' -Severity 'fail' -Target $relDeploy `
+                        -Recommendation 'Deployment.spec.template.spec.containers[].image must be a non-empty image reference (registry/name:tag or @sha256 digest pin).'
+                }
+                else {
+                    foreach ($img in $images) {
+                        $imgTrim = $img.Trim()
+                        if ([string]::IsNullOrEmpty($imgTrim) -or $imgTrim -eq '[]' -or $imgTrim -eq 'null') {
+                            Add-K8sResult -Category $Category -Code 'K8sWorkload-MissingImage' -Severity 'fail' -Target $relDeploy `
+                                -Recommendation 'Deployment.spec.template.spec.containers[].image must be a non-empty image reference (registry/name:tag or @sha256 digest pin).'
+                        }
+                        else {
+                            $hasNonEmptyImage = $true
+                            # P24: detect both explicit `:latest`, trailing-colon
+                            # (empty tag → implicit `:latest`), and no-colon
+                            # (no tag → implicit `:latest`). Skip digest-pinned
+                            # references (`@sha256:...`) which are immutable.
+                            $isDigestPinned = $imgTrim -match '@sha256:[0-9a-fA-F]{64}'
+                            $lastSlash = $imgTrim.LastIndexOf('/')
+                            $lastSeg = if ($lastSlash -ge 0) { $imgTrim.Substring($lastSlash + 1) } else { $imgTrim }
+                            $isLatest = $false
+                            if ($imgTrim -match ':latest$') { $isLatest = $true }
+                            elseif (-not $isDigestPinned -and ($lastSeg -notmatch ':' -or $imgTrim -match ':\s*$')) {
+                                $isLatest = $true
+                            }
+                            if ($isLatest -and -not $isDigestPinned) {
+                                Add-K8sResult -Category $Category -Code 'K8sWorkload-LatestImageTag' -Severity 'warn' -Target $relDeploy `
+                                    -Recommendation 'Pin container images to an immutable tag (semver, digest @sha256:, or build-id). The :latest tag (explicit or implicit when no tag is given) is mutable and breaks rollback observability.'
+                            }
+                        }
+                    }
+                }
+                # Suppress unused-variable strict-mode warning.
+                $null = $hasNonEmptyImage
+
+                # DAPR annotation check (only for DAPR-enabled app ids).
+                if ($script:K8sDaprEnabledApps.ContainsKey($appId)) {
+                    $annotationBlocks = Get-K8sAnnotationsBlock -DocText $doc
+                    foreach ($expectedKey in @('dapr.io/enabled', 'dapr.io/app-id', 'dapr.io/app-port', 'dapr.io/config')) {
+                        if (-not (Test-K8sAnnotationPresent -AnnotationBlocks $annotationBlocks -Key $expectedKey)) {
+                            Add-K8sResult -Category $Category -Code 'K8sWorkload-MissingDaprAnnotation' -Severity 'fail' -Target "$relDeploy#${appId}:$expectedKey" `
+                                -Recommendation 'DAPR-enabled Deployments must carry dapr.io/enabled, dapr.io/app-id, dapr.io/app-port, and dapr.io/config on both metadata.annotations and spec.template.metadata.annotations. Run deploy/k8s/regen.ps1 to regenerate.'
+                        }
+                    }
+                }
+                elseif ($script:K8sDaprExcludedApps -notcontains $appId -and $folder.Name -notin $script:K8sDaprExcludedApps) {
+                    # Unknown app id — neither DAPR-enabled nor explicitly excluded.
+                    # Treat as DAPR-disabled (no annotation check) but record neutrality.
+                }
+
+                # ConfigMap reference resolution.
+                $configMapRefs = Get-K8sDeploymentConfigMapRefs -DocText $doc
+                $perAppKustomization = Join-Path $folder.FullName 'kustomization.yaml'
+                $availableConfigMapNames = Get-K8sKustomizationConfigMapNames -KustomizationPath $perAppKustomization
+                foreach ($cmRef in $configMapRefs) {
+                    if ($availableConfigMapNames -notcontains $cmRef) {
+                        Add-K8sResult -Category $Category -Code 'K8sWorkload-UnresolvedConfigMapRef' -Severity 'fail' -Target "$relDeploy#${appId}:$cmRef" `
+                            -Recommendation 'envFrom.configMapRef.name must resolve to a configMapGenerator.name in the same app folder kustomization.yaml.'
+                    }
+                }
+
+                # Container shape warns.
+                $containerText = Get-K8sContainerSection -DocText $doc
+                if (-not (Test-K8sContainerHasProbes -ContainerText $containerText)) {
+                    Add-K8sResult -Category $Category -Code 'K8sWorkload-MissingProbes' -Severity 'warn' -Target $relDeploy `
+                        -Recommendation 'Add readinessProbe and livenessProbe targeting /ready and /alive (Hexalith.Parties.ServiceDefaults). Hardening deferred to Story 9.3.'
+                }
+                if (-not (Test-K8sContainerHasResources -ContainerText $containerText)) {
+                    Add-K8sResult -Category $Category -Code 'K8sWorkload-MissingResources' -Severity 'warn' -Target $relDeploy `
+                        -Recommendation 'Add resources.requests.{cpu,memory} and resources.limits.{cpu,memory}. Per-service envelopes deferred to Story 9.3 (profiling-driven sizing).'
+                }
+            }
+        }
+    }
+
+    # Top-level kustomization.yaml resources resolution.
+    $topKustomization = Join-Path $K8sRoot 'kustomization.yaml'
+    if (Test-Path -LiteralPath $topKustomization) {
+        try {
+            $topText = Get-Content -LiteralPath $topKustomization -Raw
+        }
+        catch {
+            $topText = ''
+        }
+        $inResources = $false
+        $resourceEntries = @()
+        foreach ($line in ($topText -split "`n")) {
+            if ($line -match '^\s*resources:\s*$') { $inResources = $true; continue }
+            if ($inResources) {
+                if ($line -match '^\s*-\s+([^\r\n#]+)') {
+                    $resourceEntries += (ConvertFrom-YamlScalar $Matches[1])
+                }
+                elseif ($line -match '^\s*[A-Za-z]') {
+                    $inResources = $false
+                }
+            }
+        }
+        $relTopKust = Get-K8sRelativePath -AbsolutePath $topKustomization -RootPath $K8sRoot
+        foreach ($entry in $resourceEntries) {
+            $resolved = Join-Path $K8sRoot $entry
+            if (-not (Test-Path -LiteralPath $resolved)) {
+                Add-K8sResult -Category $Category -Code 'K8sWorkload-UnresolvedKustomizationResource' -Severity 'fail' -Target "$relTopKust#$entry" `
+                    -Recommendation 'Every entry in deploy/k8s/kustomization.yaml resources: must resolve to an existing file or folder under deploy/k8s/.'
+            }
+        }
+    }
+}
+
+function Test-K8sDaprComponentParity {
+    param([string]$DaprPath, [string]$K8sRoot)
+    $Category = 'DAPR-Parity'
+
+    # Regen invariant: no deploy/k8s/dapr/statestore.yaml, no deploy/k8s/dapr/pubsub.yaml.
+    foreach ($placeholderName in @('dapr/statestore.yaml', 'dapr/pubsub.yaml')) {
+        $candidate = Join-Path $K8sRoot $placeholderName
+        if (Test-Path -LiteralPath $candidate) {
+            Add-K8sResult -Category $Category -Code 'DAPR-Regen-PlaceholderNotStripped' -Severity 'fail' -Target (Get-K8sRelativePath -AbsolutePath $candidate -RootPath $K8sRoot) `
+                -Recommendation 'deploy/k8s/regen.ps1 must strip aspirate-emitted dapr/{statestore,pubsub}.yaml placeholders. Re-run regen.ps1.'
+        }
+    }
+    # Top-level kustomization.yaml must not reference the stripped placeholders.
+    $topKust = Join-Path $K8sRoot 'kustomization.yaml'
+    if (Test-Path -LiteralPath $topKust) {
+        try {
+            $topText = Get-Content -LiteralPath $topKust -Raw
+        }
+        catch {
+            $topText = ''
+        }
+        if ($topText -match '(?m)^\s*-\s+dapr/(statestore|pubsub)\.yaml\s*$') {
+            Add-K8sResult -Category $Category -Code 'DAPR-Regen-PlaceholderNotStripped' -Severity 'fail' -Target (Get-K8sRelativePath -AbsolutePath $topKust -RootPath $K8sRoot) `
+                -Recommendation 'deploy/k8s/kustomization.yaml must not reference dapr/statestore.yaml or dapr/pubsub.yaml after regen.ps1.'
+        }
+    }
+
+    # Authoritative DAPR file list must be complete.
+    foreach ($name in $script:K8sAuthoritativeDaprFiles) {
+        $candidate = Join-Path $DaprPath $name
+        if (-not (Test-Path -LiteralPath $candidate)) {
+            Add-K8sResult -Category $Category -Code 'DAPR-Component-MissingAuthoritativeFile' -Severity 'fail' -Target $name `
+                -Recommendation 'Authoritative DAPR component file is missing from deploy/dapr/. Restore it from version control.'
+        }
+    }
+
+    # Access-control / Configuration drift checks.
+    $aclFiles = @(Get-ChildItem -LiteralPath $DaprPath -File -ErrorAction SilentlyContinue |
+            Where-Object { $_.Name -match '(?i)^accesscontrol.*\.yaml$' })
+    foreach ($aclFile in $aclFiles) {
+        $relAcl = Format-SafePath $aclFile.Name
+        $docs = Read-K8sYamlDocuments -Path $aclFile.FullName
+        foreach ($doc in $docs) {
+            $kind = Get-K8sDocKind -DocText $doc
+            if ($kind -ne 'Configuration') { continue }
+            # P14: defaultAction: deny must hold for EVERY defaultAction match,
+            # not just the first. Per-policy entries may set their own
+            # defaultAction; all must be deny.
+            $defActionMatches = [regex]::Matches($doc, "(?m)^\s{2,}defaultAction:\s*(\w+)")
+            foreach ($defMatch in $defActionMatches) {
+                $val = $defMatch.Groups[1].Value.Trim()
+                if ($val -ne 'deny') {
+                    Add-K8sResult -Category $Category -Code 'DAPR-ACL-DefaultActionNotDeny' -Severity 'fail' -Target $relAcl `
+                        -Recommendation 'spec.accessControl.defaultAction must equal deny.'
+                    break
+                }
+            }
+            if ($defActionMatches.Count -eq 0) {
+                Add-K8sResult -Category $Category -Code 'DAPR-ACL-DefaultActionNotDeny' -Severity 'fail' -Target $relAcl `
+                    -Recommendation 'spec.accessControl.defaultAction must equal deny.'
+            }
+            # P15: wildcard appId regex now accepts flow-style, tag forms, and
+            # mismatched quotes. The capture group records `*` or `**`.
+            if ($doc -match "(?m)^\s*-\s*appId:\s*(?:!!str\s+)?(?:\[)?(?:[`"']?)(\*{1,2})(?:[`"']?)(?:\])?\s*$") {
+                Add-K8sResult -Category $Category -Code 'DAPR-ACL-WildcardAppId' -Severity 'fail' -Target $relAcl `
+                    -Recommendation 'Replace wildcard appId entries (* or **) with explicit caller app ids.'
+            }
+            # P8: operation-path wildcard. `name: *` or `name: foo/*` is
+            # flagged; `name: /**` and `name: foo/**` are accepted as the
+            # canonical match-all suffix.
+            foreach ($opMatch in [regex]::Matches($doc, "(?m)^\s*-\s*name:\s*[`"']?([^`"'\r\n]+)[`"']?\s*$")) {
+                $opName = $opMatch.Groups[1].Value.Trim()
+                if ($opName.Contains('*') -and $opName -ne '/**' -and -not $opName.EndsWith('/**')) {
+                    Add-K8sResult -Category $Category -Code 'DAPR-ACL-WildcardOperation' -Severity 'fail' -Target $relAcl `
+                        -Recommendation 'Replace wildcard operation names (* or path*) with explicit paths. Only /** or trailing /** suffixes are allowed.'
+                }
+            }
+            # P6: per-service ACL shape parity. accesscontrol.yaml (umbrella)
+            # must list eventstore-admin, tenants, parties policies.
+            # accesscontrol.parties.yaml / accesscontrol.tenants.yaml must
+            # have defaultAction deny and at least one policy entry.
+            # accesscontrol.eventstore-admin.yaml must have policies absent
+            # or empty list (locked-down posture).
+            $aclLower = $aclFile.Name.ToLowerInvariant()
+            $appIdEntries = @()
+            foreach ($appMatch in [regex]::Matches($doc, "(?m)^\s*-\s*appId:\s*[`"']?([^`"'\r\n]+?)[`"']?\s*$")) {
+                $appIdEntries += $appMatch.Groups[1].Value.Trim()
+            }
+            if ($aclLower -eq 'accesscontrol.yaml') {
+                foreach ($required in @('eventstore-admin', 'tenants', 'parties')) {
+                    if ($appIdEntries -notcontains $required) {
+                        Add-K8sResult -Category $Category -Code 'DAPR-ACL-MissingPerServiceRule' -Severity 'fail' -Target $relAcl `
+                            -Recommendation 'accesscontrol.yaml must list policies for eventstore-admin, tenants, and parties as callers.'
+                        break
+                    }
+                }
+            }
+            elseif ($aclLower -eq 'accesscontrol.parties.yaml' -or $aclLower -eq 'accesscontrol.tenants.yaml') {
+                if ($appIdEntries.Count -eq 0) {
+                    Add-K8sResult -Category $Category -Code 'DAPR-ACL-MissingPerServiceRule' -Severity 'fail' -Target $relAcl `
+                        -Recommendation 'Per-service ACL must declare at least one explicit caller policy entry (appId: ...).'
+                }
+            }
+            elseif ($aclLower -eq 'accesscontrol.eventstore-admin.yaml') {
+                # Locked-down: policies absent or empty list.
+                $hasNonEmptyPolicies = $false
+                if ($appIdEntries.Count -gt 0) { $hasNonEmptyPolicies = $true }
+                if ($hasNonEmptyPolicies) {
+                    Add-K8sResult -Category $Category -Code 'DAPR-ACL-MissingPerServiceRule' -Severity 'fail' -Target $relAcl `
+                        -Recommendation 'accesscontrol.eventstore-admin.yaml must use policies: [] (locked-down posture).'
+                }
+            }
+        }
+    }
+
+    # P7: DAPR-Component shape checks (statestore.actorStateStore=true and
+    # pubsub.enableDeadLetter=true; pubsub.type matches `pubsub.<provider>`).
+    $componentFiles = @(Get-ChildItem -LiteralPath $DaprPath -File -ErrorAction SilentlyContinue |
+            Where-Object { $_.Name -match '(?i)\.yaml$' })
+    foreach ($compFile in $componentFiles) {
+        $relComp = Format-SafePath $compFile.Name
+        $docs = Read-K8sYamlDocuments -Path $compFile.FullName
+        foreach ($doc in $docs) {
+            $kind = Get-K8sDocKind -DocText $doc
+            if ($kind -ne 'Component') { continue }
+            $compName = Get-K8sDocMetadataName -DocText $doc
+            $compType = $null
+            if ($doc -match "(?m)^\s+type:\s*([^\r\n#]+)") {
+                $compType = (ConvertFrom-YamlScalar $Matches[1])
+            }
+            $isStatestore = $compName -and $compName.ToLowerInvariant().Contains('statestore')
+            $isPubsub = $compType -and $compType -match '^pubsub\.'
+            if ($isStatestore) {
+                # actorStateStore: true must appear in spec.metadata.
+                if ($doc -notmatch "(?ms)name:\s*actorStateStore\s*\r?\n\s+(?:#[^\n]*\r?\n\s+)*value:\s*[`"']?true[`"']?") {
+                    Add-K8sResult -Category $Category -Code 'DAPR-Component-MissingActorStateStore' -Severity 'fail' -Target $relComp `
+                        -Recommendation 'Statestore component must declare metadata { name: actorStateStore, value: "true" } for actor state.'
+                }
+            }
+            if ($isPubsub) {
+                if ($doc -notmatch "(?ms)name:\s*enableDeadLetter\s*\r?\n\s+(?:#[^\n]*\r?\n\s+)*value:\s*[`"']?true[`"']?") {
+                    Add-K8sResult -Category $Category -Code 'DAPR-Component-MissingEnableDeadLetter' -Severity 'fail' -Target $relComp `
+                        -Recommendation 'Pubsub component must declare metadata { name: enableDeadLetter, value: "true" } for reliable retry semantics.'
+                }
+                # Provider portion may contain further `.` segments (e.g.
+                # pubsub.azure.servicebus.topics). Reject empty or uppercase
+                # or non-letter characters in the segments.
+                if ($compType -notmatch '^pubsub\.[a-z][a-z0-9.]*$') {
+                    Add-K8sResult -Category $Category -Code 'DAPR-Component-InvalidPubsubType' -Severity 'fail' -Target $relComp `
+                        -Recommendation 'Pubsub component spec.type must match pubsub.<provider> (lowercase letters, digits, and dots only).'
+                }
+            }
+        }
+    }
+
+    # Subscription drift.
+    $subFiles = @(Get-ChildItem -LiteralPath $DaprPath -File -ErrorAction SilentlyContinue |
+            Where-Object { $_.Name -match '(?i)^subscription.*\.yaml$' })
+    foreach ($subFile in $subFiles) {
+        $relSub = Format-SafePath $subFile.Name
+        $docs = Read-K8sYamlDocuments -Path $subFile.FullName
+        foreach ($doc in $docs) {
+            $kind = Get-K8sDocKind -DocText $doc
+            if ($kind -ne 'Subscription') { continue }
+            $pubsubname = Get-YamlValue $doc 'pubsubname' -Mode TopLevel
+            if ([string]::IsNullOrEmpty($pubsubname)) {
+                # Fallback: search anywhere.
+                $pubsubname = Get-YamlValue $doc 'pubsubname'
+            }
+            if ($pubsubname -ne 'pubsub') {
+                Add-K8sResult -Category $Category -Code 'DAPR-Subscription-WrongPubsubName' -Severity 'fail' -Target $relSub `
+                    -Recommendation 'spec.pubsubname must equal "pubsub" (the authoritative pub/sub component).'
+            }
+            if ($doc -notmatch '(?m)^\s+deadLetterTopic:\s*\S') {
+                Add-K8sResult -Category $Category -Code 'DAPR-Subscription-MissingDeadLetter' -Severity 'fail' -Target $relSub `
+                    -Recommendation 'spec.deadLetterTopic must be set and non-empty for reliable retry semantics.'
+            }
+            # P9: route-shape validation. Accept either:
+            #   - `route: /something` (v1alpha1 single-route form), or
+            #   - `routes.default: /something` (v2alpha1 default form), or
+            #   - `routes.rules[].path: /something` (v2alpha1 rules form).
+            $hasRoute = $false
+            if ($doc -match "(?m)^\s+route:\s*[`"']?(/\S+)[`"']?\s*$") { $hasRoute = $true }
+            elseif ($doc -match "(?ms)^\s+routes:\s*\r?\n(?:[ \t]+[^\r\n]*\r?\n)*?[ \t]+default:\s*[`"']?(/\S+)[`"']?") { $hasRoute = $true }
+            elseif ($doc -match "(?ms)^\s+routes:\s*\r?\n(?:[ \t]+[^\r\n]*\r?\n)*?[ \t]+rules:") {
+                if ($doc -match "(?m)^\s+path:\s*[`"']?(/\S+)[`"']?") { $hasRoute = $true }
+            }
+            if (-not $hasRoute) {
+                Add-K8sResult -Category $Category -Code 'DAPR-Subscription-InvalidRouteShape' -Severity 'fail' -Target $relSub `
+                    -Recommendation 'spec.route or spec.routes.default must be a non-empty path starting with /. v2alpha1 rules form requires routes.rules[].path.'
+            }
+        }
+    }
+}
+
+function Test-K8sPlaintextSecrets {
+    param([string]$K8sRoot)
+    $Category = 'K8sSecret'
+    $regexes = Get-K8sSecretRegexes
+
+    $allYamlFiles = @(Get-ChildItem -LiteralPath $K8sRoot -Recurse -File -ErrorAction SilentlyContinue |
+            Where-Object { $_.Name -match '(?i)\.ya?ml$' })
+
+    foreach ($yamlFile in $allYamlFiles) {
+        $rel = Get-K8sRelativePath -AbsolutePath $yamlFile.FullName -RootPath $K8sRoot
+        # P10: sanitize $rel before any recommendation/target interpolation
+        # so a maliciously-named file (e.g. with embedded newline) cannot
+        # inject fake-finding lines into stdout/stderr.
+        $safeRel = Format-SafePath $rel
+        # Skip per-app kustomization.yaml when scanning containers/env; handle
+        # configMapGenerator.literals via its dedicated parser below. Skip
+        # top-level kustomization.yaml entirely (no secrets there).
+        $isKustomization = $yamlFile.Name -match '(?i)^kustomization\.ya?ml$'
+
+        if ($isKustomization) {
+            $literals = Get-K8sKustomizationLiterals -KustomizationPath $yamlFile.FullName
+            foreach ($literal in $literals) {
+                if (Test-K8sSecretKeyAllowlisted -Key $literal.Key) { continue }
+                # Static tenant id check.
+                if ($literal.Key -match $script:K8sStaticTenantIdPattern) {
+                    # P22: scope `*`/`**` wildcard-as-placeholder behaviour to
+                    # EventStore registration keys only.
+                    if (-not (Test-K8sPlaceholderValue -Value $literal.Value -Key $literal.Key)) {
+                        $line = $literal.LineNumber
+                        $n = $literal.Value.Length
+                        Add-K8sResult -Category $Category -Code 'K8sSecret-StaticTenantId' -Severity 'fail' -Target "$($safeRel):$line" `
+                            -Recommendation "Tenants__TenantId-shaped keys must reference {env:VAR} or a valueFrom-secret. Found <redacted:$n chars at $($safeRel):$line>."
+                    }
+                    continue
+                }
+                if (Test-K8sPlaceholderValue -Value $literal.Value -Key $literal.Key) { continue }
+                $keyValue = "$($literal.Key)=$($literal.Value)"
+                foreach ($entry in $regexes) {
+                    $haystack = if ($entry.Scope -eq 'KeyValue') { $keyValue } else { $literal.Value }
+                    if ($haystack -match $entry.Pattern) {
+                        $line = $literal.LineNumber
+                        $n = $literal.Value.Length
+                        Add-K8sResult -Category $Category -Code $entry.Code -Severity 'fail' -Target "$($safeRel):$line" `
+                            -Recommendation "Plaintext secret material detected. Replace with {env:VAR} or valueFrom.secretKeyRef. Found <redacted:$n chars at $($safeRel):$line>."
+                    }
+                }
+            }
+        }
+        else {
+            # Multi-doc scan: containers env + Secret.data/stringData.
+            $docs = Read-K8sYamlDocuments -Path $yamlFile.FullName
+            foreach ($doc in $docs) {
+                $kind = Get-K8sDocKind -DocText $doc
+                if ($kind -eq 'Secret') {
+                    Test-K8sCommittedSecret -DocText $doc -RelPath $rel
+                    continue
+                }
+                # Container env entries.
+                $envEntries = Get-K8sDocContainerEnv -DocText $doc
+                foreach ($envEntry in $envEntries) {
+                    if ($envEntry.ValueFrom) { continue }
+                    if (Test-K8sSecretKeyAllowlisted -Key $envEntry.Name) { continue }
+                    if ($envEntry.Name -match $script:K8sStaticTenantIdPattern) {
+                        if (-not (Test-K8sPlaceholderValue -Value $envEntry.Value -Key $envEntry.Name)) {
+                            $line = $envEntry.LineNumber
+                            $n = if ($envEntry.Value) { $envEntry.Value.Length } else { 0 }
+                            Add-K8sResult -Category $Category -Code 'K8sSecret-StaticTenantId' -Severity 'fail' -Target "$($safeRel):$line" `
+                                -Recommendation "Tenants__TenantId-shaped env vars must reference {env:VAR} or valueFrom-secret. Found <redacted:$n chars at $($safeRel):$line>."
+                        }
+                        continue
+                    }
+                    if (Test-K8sPlaceholderValue -Value $envEntry.Value -Key $envEntry.Name) { continue }
+                    $envKv = "$($envEntry.Name)=$($envEntry.Value)"
+                    foreach ($entry in $regexes) {
+                        $haystack = if ($entry.Scope -eq 'KeyValue') { $envKv } else { $envEntry.Value }
+                        if ($haystack -match $entry.Pattern) {
+                            $line = $envEntry.LineNumber
+                            $n = $envEntry.Value.Length
+                            Add-K8sResult -Category $Category -Code $entry.Code -Severity 'fail' -Target "$($safeRel):$line" `
+                                -Recommendation "Plaintext secret material detected in container env. Replace with valueFrom.secretKeyRef. Found <redacted:$n chars at $($safeRel):$line>."
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+function Test-K8sCommittedSecret {
+    # Detect a `kind: Secret` whose data/stringData contains a non-placeholder value.
+    param([string]$DocText, [string]$RelPath)
+    $kind = Get-K8sDocKind -DocText $DocText
+    if ($kind -ne 'Secret') { return }
+    $Category = 'K8sSecret'
+
+    # P10: sanitize $RelPath in recommendation strings.
+    $safeRel = Format-SafePath $RelPath
+
+    # P4: locate the start of `stringData:` / `data:` via a start-of-line
+    # anchored regex so that an inline reference such as `data:` inside a
+    # comment or string scalar does not shift the line offset. The
+    # disambiguation between `data:` and `stringData:` is via the capture
+    # group: `stringData:` matches before `data:` because the regex tests
+    # the `stringData` alternative first.
+
+    # stringData block (raw values).
+    if ($DocText -match "(?ms)^stringData:\s*\r?\n(?<body>(?:\s+[^\r\n]+\r?\n?)+)") {
+        $body = $Matches['body']
+        $lines = $body -split "`n"
+        $sdMatch = [regex]::Match($DocText, '(?m)^\s*stringData:')
+        if ($sdMatch.Success) {
+            $lineOffset = ($DocText.Substring(0, $sdMatch.Index) -split "`n").Length
+        }
+        else {
+            $lineOffset = 1
+        }
+        for ($i = 0; $i -lt $lines.Length; $i++) {
+            $line = $lines[$i]
+            if ($line -match '^\s+(?<k>[^:\s]+):\s*(?<v>.*)$') {
+                $val = $Matches['v'].Trim().Trim("'").Trim('"').Trim()
+                if (-not (Test-K8sPlaceholderValue -Value $val)) {
+                    $n = $val.Length
+                    $absLine = $lineOffset + $i
+                    Add-K8sResult -Category $Category -Code 'K8sSecret-CommittedSecretValue' -Severity 'fail' -Target "$($safeRel):$absLine" `
+                        -Recommendation "Secret.stringData must contain only placeholder values; the real value is managed by an external operator. Found <redacted:$n chars at $($safeRel):$absLine>."
+                }
+            }
+        }
+    }
+
+    # data block (base64). Use a start-of-line `data:` anchor that is NOT
+    # `stringData:` (negative look-behind via `(?<!string)`).
+    if ($DocText -match "(?ms)(?<!string)^data:\s*\r?\n(?<body>(?:\s+[^\r\n]+\r?\n?)+)") {
+        $body = $Matches['body']
+        $lines = $body -split "`n"
+        $dMatch = [regex]::Match($DocText, '(?m)^\s*(?<!string)data:')
+        if ($dMatch.Success) {
+            $lineOffset = ($DocText.Substring(0, $dMatch.Index) -split "`n").Length
+        }
+        else {
+            $lineOffset = 1
+        }
+        for ($i = 0; $i -lt $lines.Length; $i++) {
+            $line = $lines[$i]
+            if ($line -match '^\s+(?<k>[^:\s]+):\s*(?<v>.*)$') {
+                $valEncoded = $Matches['v'].Trim().Trim("'").Trim('"').Trim()
+                if ([string]::IsNullOrEmpty($valEncoded)) { continue }
+                try {
+                    $decodedBytes = [System.Convert]::FromBase64String($valEncoded)
+                    $decoded = [System.Text.Encoding]::UTF8.GetString($decodedBytes)
+                }
+                catch {
+                    $decoded = $valEncoded
+                }
+                if (-not (Test-K8sPlaceholderValue -Value $decoded)) {
+                    $n = $valEncoded.Length
+                    $absLine = $lineOffset + $i
+                    Add-K8sResult -Category $Category -Code 'K8sSecret-CommittedSecretValue' -Severity 'fail' -Target "$($safeRel):$absLine" `
+                        -Recommendation "Secret.data must contain only base64-encoded placeholder values; the real value is managed by an external operator. Found <redacted:$n chars at $($safeRel):$absLine>."
+                }
+            }
+        }
+    }
+
+    # P11: multi-line literal-scalar private-key detection. A YAML block
+    # scalar like `stringData: { cert: | \n  -----BEGIN ... -----` lives
+    # outside the line-by-line `key: value` parser above; scan the doc text
+    # for inline PEM headers (any leading whitespace, any private-key
+    # type label). Each match emits a redacted K8sSecret-PrivateKey finding.
+    foreach ($pemMatch in [regex]::Matches($DocText, '(?ms)^[ \t]+-----BEGIN [A-Z ]+ PRIVATE KEY-----')) {
+        $absLine = ($DocText.Substring(0, $pemMatch.Index) -split "`n").Length
+        $n = $pemMatch.Length
+        Add-K8sResult -Category $Category -Code 'K8sSecret-PrivateKey' -Severity 'fail' -Target "$($safeRel):$absLine" `
+            -Recommendation "Plaintext PEM private key detected in Secret block-scalar. Replace with valueFrom.secretKeyRef. Found <redacted:$n chars at $($safeRel):$absLine>."
+    }
+}
+
+function Test-K8sCloudCapabilities {
+    # P17: [switch]$Allow lets callers use `-Allow:$AllowCloudCapabilities`
+    # directly (no `.IsPresent` indirection). Internal logic uses
+    # `$Allow.IsPresent` to disambiguate from a bare $true value.
+    param([string]$K8sRoot, [switch]$Allow)
+    $Category = 'K8s-Local'
+    $sev = if ($Allow.IsPresent) { 'warn' } else { 'fail' }
+    $allYamlFiles = @(Get-ChildItem -LiteralPath $K8sRoot -Recurse -File -ErrorAction SilentlyContinue |
+            Where-Object { $_.Name -match '(?i)\.ya?ml$' })
+    foreach ($yamlFile in $allYamlFiles) {
+        $rel = Get-K8sRelativePath -AbsolutePath $yamlFile.FullName -RootPath $K8sRoot
+        $safeRel = Format-SafePath $rel
+        $docs = Read-K8sYamlDocuments -Path $yamlFile.FullName
+        foreach ($doc in $docs) {
+            $kind = Get-K8sDocKind -DocText $doc
+            $name = Get-K8sDocMetadataName -DocText $doc
+            if ($kind -eq 'StorageClass' -and $name -and ($script:K8sCloudStorageClasses -contains $name.ToLowerInvariant())) {
+                Add-K8sResult -Category $Category -Code 'K8s-NonLocalClusterCapability' -Severity $sev -Target $safeRel `
+                    -Recommendation 'Cloud-provider StorageClass detected. Local-cluster MVP must not ship cloud-only resources. See deploy/k8s/README.md "Out of MVP scope".'
+            }
+            if ($kind -eq 'IngressClass' -and $name -and ($script:K8sCloudIngressClasses -contains $name.ToLowerInvariant())) {
+                Add-K8sResult -Category $Category -Code 'K8s-NonLocalClusterCapability' -Severity $sev -Target $safeRel `
+                    -Recommendation 'Cloud-provider IngressClass detected. Local-cluster MVP must not ship cloud-only resources. See deploy/k8s/README.md "Out of MVP scope".'
+            }
+            if ($kind -eq 'Service') {
+                $serviceType = $null
+                if ($doc -match "(?m)^\s+type:\s*([^\r\n#]+)") {
+                    $serviceType = (ConvertFrom-YamlScalar $Matches[1])
+                }
+                if ($serviceType -eq 'LoadBalancer') {
+                    Add-K8sResult -Category $Category -Code 'K8s-NonLocalClusterCapability' -Severity $sev -Target $safeRel `
+                        -Recommendation 'Service of type LoadBalancer detected. Local-cluster MVP uses port-forward (see deploy/k8s/README.md "Out of MVP scope").'
+                }
+                $annotationBlocks = Get-K8sAnnotationsBlock -DocText $doc
+                foreach ($block in $annotationBlocks) {
+                    foreach ($prefix in $script:K8sCloudServiceAnnotationPrefixes) {
+                        $escaped = [regex]::Escape($prefix)
+                        if ($block -match "(?m)^\s+$escaped") {
+                            Add-K8sResult -Category $Category -Code 'K8s-NonLocalClusterCapability' -Severity $sev -Target $safeRel `
+                                -Recommendation 'Cloud-provider Service annotation detected. Local-cluster MVP must not ship cloud-only resources. See deploy/k8s/README.md "Out of MVP scope".'
+                            break
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+# P5: path-traversal detection. Symlink within $K8sRoot pointing outside
+# the root (e.g. `/etc/passwd`) is rejected: emits a K8s-PathTraversal
+# fail. Filesystem reparse points are detected via FileInfo.Attributes.
+function Test-K8sPathTraversal {
+    param([string]$K8sRoot)
+    $Category = 'K8s-Generic'
+    $rootResolved = $null
+    try {
+        $rootResolved = (Resolve-Path -LiteralPath $K8sRoot -ErrorAction Stop).Path.TrimEnd(
+            [System.IO.Path]::DirectorySeparatorChar, [System.IO.Path]::AltDirectorySeparatorChar)
+    }
+    catch {
+        return
+    }
+    $files = @()
+    try {
+        $files = @(Get-ChildItem -LiteralPath $K8sRoot -Recurse -Force -ErrorAction SilentlyContinue)
+    }
+    catch {
+        return
+    }
+    foreach ($entry in $files) {
+        $attrs = $null
+        try {
+            $attrs = [System.IO.FileInfo]::new($entry.FullName).Attributes
+        }
+        catch {
+            continue
+        }
+        $isReparsePoint = ($attrs -band [System.IO.FileAttributes]::ReparsePoint) -eq [System.IO.FileAttributes]::ReparsePoint
+        if (-not $isReparsePoint) { continue }
+        $resolvedTarget = $null
+        try {
+            $resolvedTarget = (Resolve-Path -LiteralPath $entry.FullName -ErrorAction Stop).Path
+        }
+        catch {
+            $rel = Get-K8sRelativePath -AbsolutePath $entry.FullName -RootPath $K8sRoot
+            $safeRel = Format-SafePath $rel
+            Add-K8sResult -Category $Category -Code 'K8s-PathTraversal' -Severity 'fail' -Target $safeRel `
+                -Recommendation 'Symbolic link or reparse point detected and could not be resolved. Remove symlinks from deploy/k8s/.'
+            continue
+        }
+        if (-not $resolvedTarget.StartsWith($rootResolved, [System.StringComparison]::OrdinalIgnoreCase)) {
+            $rel = Get-K8sRelativePath -AbsolutePath $entry.FullName -RootPath $K8sRoot
+            $safeRel = Format-SafePath $rel
+            Add-K8sResult -Category $Category -Code 'K8s-PathTraversal' -Severity 'fail' -Target $safeRel `
+                -Recommendation 'Symbolic link escapes deploy/k8s/. Remove symlinks to files outside the manifest root.'
+        }
+    }
+}
+
+# ---------------------------------------------------------------------------
+# K8s output emitters
+# ---------------------------------------------------------------------------
+
+function Get-SortedK8sResults {
+    # Sort ascending by (Category, Code, Target) so byte-identical output
+    # across consecutive runs is preserved. PowerShell hashtable enumeration
+    # is not trusted; sort explicitly.
+    $arr = @($script:K8sResults)
+    if ($arr.Count -eq 0) { return @() }
+    return @($arr | Sort-Object -Property Category, Code, Target)
+}
+
+function Write-K8sConsoleSummary {
+    # Console output: grouped by category code, truncated at the per-category
+    # budget. Findings of severity `pass` are not printed (no successes today;
+    # absence of fail/warn is the success signal).
+    param([array]$Results)
+    if (-not $Results -or $Results.Count -eq 0) {
+        Write-Host '--- K8s Manifest Lint ---' -ForegroundColor White
+        Write-Host '  [PASS] No K8s findings.' -ForegroundColor Green
+        Write-Host ''
+        return
+    }
+
+    Write-Host '--- K8s Manifest Lint ---' -ForegroundColor White
+    $byCategoryCode = $Results | Group-Object -Property Code
+    foreach ($group in $byCategoryCode) {
+        $items = @($group.Group)
+        $shown = [Math]::Min($items.Count, $script:K8sConsoleCategoryFindingLimit)
+        for ($i = 0; $i -lt $shown; $i++) {
+            $r = $items[$i]
+            $icon = switch ($r.Severity) {
+                'fail' { '[FAIL]' }
+                'warn' { '[WARN]' }
+                'pass' { '[PASS]' }
+            }
+            $color = switch ($r.Severity) {
+                'fail' { 'Red' }
+                'warn' { 'Yellow' }
+                'pass' { 'Green' }
+            }
+            Write-Host "  $icon $($r.Code) " -ForegroundColor $color -NoNewline
+            Write-Host "$($r.Target)"
+            if ($r.Recommendation) {
+                Write-Host "         -> $($r.Recommendation)" -ForegroundColor Yellow
+            }
+        }
+        if ($items.Count -gt $shown) {
+            $suppressed = $items.Count - $shown
+            Write-Host "  $suppressed additional findings suppressed -- re-run with --output json for full list" -ForegroundColor DarkYellow
+        }
+    }
+    Write-Host ''
+}
+
 # ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
 
-# Validate config path
-if (-not (Test-Path $ConfigPath)) {
-    if ($Output -eq "json") {
-        @{ error = "Config path not found: $ConfigPath"; timestamp = (Get-Date -Format "o"); configPath = $ConfigPath } | ConvertTo-Json
+# Validate argument set.
+# Use [Console]::Error.WriteLine instead of Write-Error so that
+# $ErrorActionPreference = 'Stop' does not short-circuit the exit code.
+if ([string]::IsNullOrEmpty($ConfigPath) -and [string]::IsNullOrEmpty($K8sPath)) {
+    if ($Output -eq 'json') {
+        @{ error = 'At least one of --config-path or -K8sPath is required.'; timestamp = (Get-Date -Format 'o') } | ConvertTo-Json
     }
     else {
-        Write-Error "Config path not found: $ConfigPath"
+        [Console]::Error.WriteLine('At least one of --config-path or -K8sPath is required.')
     }
     exit 2
 }
 
-$resolvedPath = (Resolve-Path $ConfigPath).Path
+# Validate config path (Story 8.1 mode).
+$resolvedPath = $null
+if ($ConfigPath) {
+    if (-not (Test-Path $ConfigPath)) {
+        if ($Output -eq "json") {
+            @{ error = "Config path not found: $ConfigPath"; timestamp = (Get-Date -Format "o"); configPath = $ConfigPath } | ConvertTo-Json
+        }
+        else {
+            [Console]::Error.WriteLine("Config path not found: $ConfigPath")
+        }
+        exit 2
+    }
+    $resolvedPath = (Resolve-Path $ConfigPath).Path
+}
 
-# Run all validation checks
-Test-AccessControl $resolvedPath
-Test-EventStoreFrontedTopology $resolvedPath
-Test-StateStore $resolvedPath
-Test-PubSub $resolvedPath
-Test-Subscription $resolvedPath
-Test-TenantsIntegration $resolvedPath
-Test-Resiliency $resolvedPath
-Test-SecretStore $resolvedPath
+# Validate K8s path (Story 9.2 mode).
+$resolvedK8sPath = $null
+if ($K8sPath) {
+    if (-not (Test-Path $K8sPath)) {
+        if ($Output -eq 'json') {
+            @{ error = "k8s-path not found: $K8sPath"; timestamp = (Get-Date -Format 'o'); k8sPath = $K8sPath } | ConvertTo-Json
+        }
+        else {
+            [Console]::Error.WriteLine("k8s-path not found: $K8sPath")
+        }
+        exit 2
+    }
+    $resolvedK8sPath = (Resolve-Path $K8sPath).Path
+}
+
+# Run Story 8.1 validation checks (DAPR-only).
+if ($resolvedPath) {
+    Test-AccessControl $resolvedPath
+    Test-EventStoreFrontedTopology $resolvedPath
+    Test-StateStore $resolvedPath
+    Test-PubSub $resolvedPath
+    Test-Subscription $resolvedPath
+    Test-TenantsIntegration $resolvedPath
+    Test-Resiliency $resolvedPath
+    Test-SecretStore $resolvedPath
+}
+
+# Run Story 9.2 K8s manifest lint.
+if ($resolvedK8sPath) {
+    try {
+        Test-K8sPathTraversal -K8sRoot $resolvedK8sPath
+        Test-K8sWorkload -K8sRoot $resolvedK8sPath
+        Test-K8sPlaintextSecrets -K8sRoot $resolvedK8sPath
+        Test-K8sCloudCapabilities -K8sRoot $resolvedK8sPath -Allow:$AllowCloudCapabilities
+        if ($resolvedPath) {
+            Test-K8sDaprComponentParity -DaprPath $resolvedPath -K8sRoot $resolvedK8sPath
+        }
+    }
+    catch {
+        # Bounded catch: surface category-coded message, never raw exception.
+        Add-K8sResult -Category 'K8s-Generic' -Code 'K8s-YamlParseError' -Severity 'fail' -Target 'deploy/k8s' `
+            -Recommendation 'A K8s lint pass aborted due to an unexpected parser fault. Re-run with --output json to inspect; raw exception details are intentionally suppressed.'
+    }
+}
 
 # ---------------------------------------------------------------------------
 # Output results
@@ -1165,10 +2597,20 @@ $passed = @($script:Results | Where-Object { $_.Status -eq "Pass" }).Count
 $failed = @($script:Results | Where-Object { $_.Status -eq "Fail" }).Count
 $warnings = @($script:Results | Where-Object { $_.Status -eq "Warn" }).Count
 
+# K8s findings (Story 9.2): sorted ascending by (Category, Code, Target) for
+# deterministic emission. Severity contributes to the aggregate exit code.
+$sortedK8s = @(Get-SortedK8sResults)
+$k8sFail = @($sortedK8s | Where-Object { $_.Severity -eq 'fail' }).Count
+$k8sWarn = @($sortedK8s | Where-Object { $_.Severity -eq 'warn' }).Count
+$k8sPass = @($sortedK8s | Where-Object { $_.Severity -eq 'pass' }).Count
+
+$totalFailed = $failed + $k8sFail
+$totalWarn = $warnings + $k8sWarn
+
 if ($Output -eq "json") {
     $checks = @()
     foreach ($r in $script:Results) {
-        $checks += @{
+        $checks += [ordered]@{
             category       = $r.Category
             check          = $r.Check
             status         = $r.Status
@@ -1176,26 +2618,49 @@ if ($Output -eq "json") {
             recommendation = $r.Recommendation
         }
     }
-    $jsonOutput = @{
+    # Story 9.2 K8s findings carry a different schema per AC5:
+    # { category, code, severity, target, recommendation }. No value/raw fields.
+    $k8sFindings = @()
+    foreach ($f in $sortedK8s) {
+        $k8sFindings += [ordered]@{
+            category       = $f.Category
+            code           = $f.Code
+            severity       = $f.Severity
+            target         = $f.Target
+            recommendation = $f.Recommendation
+        }
+    }
+    $jsonOutput = [ordered]@{
         timestamp  = (Get-Date -Format "o")
         configPath = $resolvedPath
-        summary    = @{
+        k8sPath    = $resolvedK8sPath
+        summary    = [ordered]@{
             total    = $totalChecks
             passed   = $passed
             failed   = $failed
             warnings = $warnings
-            result   = if ($failed -gt 0) { "FAIL" } else { "PASS" }
+            k8sFail  = $k8sFail
+            k8sWarn  = $k8sWarn
+            k8sPass  = $k8sPass
+            result   = if ($totalFailed -gt 0) { "FAIL" } else { "PASS" }
         }
-        checks     = $checks
+        checks       = $checks
+        k8sFindings  = $k8sFindings
     }
-    $jsonOutput | ConvertTo-Json -Depth 5
+    # P20: depth 16 covers worst-case finding-object nesting without truncation.
+    $jsonOutput | ConvertTo-Json -Depth 16
 }
 else {
     Write-Host ""
     Write-Host "=====================================================================" -ForegroundColor Cyan
     Write-Host " Hexalith.Parties -- Deployment Validation Report" -ForegroundColor Cyan
     Write-Host "=====================================================================" -ForegroundColor Cyan
-    Write-Host " Config Path : $resolvedPath"
+    if ($resolvedPath) {
+        Write-Host " Config Path : $resolvedPath"
+    }
+    if ($resolvedK8sPath) {
+        Write-Host " K8s Path    : $resolvedK8sPath"
+    }
     Write-Host " Timestamp   : $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
     Write-Host "=====================================================================" -ForegroundColor Cyan
     Write-Host ""
@@ -1228,10 +2693,18 @@ else {
         Write-Host ""
     }
 
-    Write-Host "=====================================================================" -ForegroundColor Cyan
-    Write-Host " SUMMARY: $totalChecks checks | $passed passed | $failed failed | $warnings warnings" -ForegroundColor Cyan
+    # Story 9.2 K8s manifest lint section (only when -K8sPath was supplied).
+    if ($resolvedK8sPath) {
+        Write-K8sConsoleSummary -Results $sortedK8s
+    }
 
-    if ($failed -gt 0) {
+    Write-Host "=====================================================================" -ForegroundColor Cyan
+    Write-Host " SUMMARY: $totalChecks DAPR checks | $passed passed | $failed failed | $warnings warnings" -ForegroundColor Cyan
+    if ($resolvedK8sPath) {
+        Write-Host " K8S LINT: $($sortedK8s.Count) findings | $k8sFail fail | $k8sWarn warn | $k8sPass pass" -ForegroundColor Cyan
+    }
+
+    if ($totalFailed -gt 0) {
         Write-Host " RESULT: FAIL -- Address failed checks before production deployment" -ForegroundColor Red
     }
     else {
@@ -1241,8 +2714,8 @@ else {
     Write-Host ""
 }
 
-# Exit code
-if ($failed -gt 0) {
+# Exit code: aggregate Story 8.1 fail + Story 9.2 K8s fail.
+if ($totalFailed -gt 0) {
     exit 1
 }
 else {
