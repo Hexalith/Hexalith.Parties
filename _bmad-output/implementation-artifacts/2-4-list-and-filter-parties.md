@@ -63,8 +63,8 @@ so that I can navigate a tenant's party directory efficiently.
 | AC2 | List/filter tests prove `PartyType.Person` and `PartyType.Organization` filters are applied inside the authenticated tenant result set. |
 | AC3 | Tests prove active, inactive, and all-status list requests behave deliberately and do not hide inactive parties by default. |
 | AC4 | Tests cover created/modified lower bounds, upper bounds, inclusive/exclusive policy as implemented, malformed values, and start-after-end validation. |
-| AC5 | Tests prove page/page-size bounds, total-count/total-pages metadata, empty pages, overflow-safe skip calculation, and no unbounded result set. |
-| AC6 | Actor/search/query tests prove stale/rebuilding/degraded/corrupt index state maps to bounded outcomes with privacy-safe diagnostics. |
+| AC5 | Tests prove page/page-size bounds, deterministic ordering, metadata calculated from the same filtered result set, empty pages, overflow-safe skip calculation, untrusted page state handling, and no unbounded result set. |
+| AC6 | Actor/search/query tests prove stale/rebuilding/degraded/corrupt index state maps to bounded outcomes with privacy-safe diagnostics and tenant/partition provenance before any cached entries are returned. |
 | AC7 | Focused validation commands cover typed client request shape, gateway authorization, local list/filter logic, actor read degradation, and privacy/fitness guardrails. |
 
 ## Response Outcome Boundaries
@@ -79,6 +79,7 @@ so that I can navigate a tenant's party directory efficiently.
 | Invalid date range | Bounded validation error with metadata-only diagnostics. |
 | Cross-tenant or reused cursor/query state | Fail closed or return no results; never construct, probe, serialize, or log another tenant's index actor key. |
 | Erased party in index state | Excluded from list results unless a later accepted erasure-list contract explicitly says otherwise. |
+| Partial, stale, or mixed-provenance cached index state | Return only entries whose current-tenant and partition provenance is proven; otherwise use the current bounded unavailable/degraded behavior. |
 | Stale/rebuilding/degraded index with safe cached entries | Preserve accepted current behavior; expose only metadata-safe degradation/local-only status if the public boundary already defines it. |
 | Corrupt, malformed, or unreadable index payload | Bounded unavailable/degraded result or safe empty/not-accessible result; no raw actor/storage details. |
 | Cancellation before or during index read/filtering | Cancellation is honored and no aggregate replay, detail fan-out, search expansion, or retired REST fallback starts afterward. |
@@ -106,9 +107,20 @@ so that I can navigate a tenant's party directory efficiently.
 | Date filters | Created/modified after/before ranges filter using `PartyIndexEntry.CreatedAt` and `PartyIndexEntry.LastModifiedAt`. |
 | Invalid date filters | Malformed values and start-after-end ranges map to bounded validation errors without raw payload echo. |
 | Pagination | Page 1, later pages, empty later page, page-size clamp/rejection, zero/negative values, and large values are covered without overflow. |
+| Page metadata consistency | Total count, total pages, and empty-page behavior are computed after tenant authorization, erasure exclusion, and all filters; unfiltered or cross-tenant counts never leak. |
+| Untrusted page state | Page numbers, future cursors/tokens, partition keys, and UI/client metadata cannot select a tenant, partition, actor key, or alternate data source. |
 | Erased entries | `IsErased == true` entries are excluded and do not leak display names, contacts, identifiers, or stale metadata. |
 | Degraded/corrupt index read | Actor/query tests prove unavailable/degraded behavior is bounded and logs stay metadata-only. |
 | Cancellation | Client, gateway, and local filter paths honor cancellation without starting secondary lookup work. |
+
+## Advanced Elicitation Clarifications
+
+- List/filter results must be a single deterministic view over authorized current-tenant index entries after erased entries and all filters are applied. `TotalCount`, `TotalPages`, empty-page behavior, and page items must come from that same filtered collection so stale unfiltered counts or cross-tenant totals cannot leak.
+- Page/page-size is the only accepted paging state for this story unless an existing boundary already defines more. Any future cursor, token, partition key, UI state, or client metadata is untrusted input and must not influence tenant identity, actor selection, partition selection, authorization, or index provenance.
+- Date filters must be culture-invariant UTC instant comparisons against `PartyIndexEntry.CreatedAt` and `PartyIndexEntry.LastModifiedAt`. Local-time display, localization, and user-entered date parsing belong outside the server-side list/filter contract unless an accepted client boundary already normalizes them before submission.
+- Degraded or cached index reads must prove current-tenant and partition provenance before returning cached entries. If the actor cannot prove provenance, partition completeness, or safe erasure filtering, the query must use the current bounded unavailable/degraded/empty behavior rather than mixing cached entries with speculative reads.
+- Bounded validation failures for malformed dates, contradictory ranges, invalid paging values, and unsupported payload shapes should short-circuit before actor reads when the current boundary allows it. Error details must remain metadata-only and must not echo raw query payloads, filters containing personal data, actor keys, storage details, or infrastructure exceptions.
+- Cancellation is terminal for this story. Once cancellation is observed, implementation must not start fallback aggregate replay, detail fan-out, search expansion, cache refresh, retired REST calls, or retry work to complete the list request.
 
 ## Tasks / Subtasks
 
@@ -126,7 +138,10 @@ so that I can navigate a tenant's party directory efficiently.
   - [ ] Use `IPartyIndexProjectionActor.GetEntriesAsync()` or the accepted extension/fallback path for index reads; do not deserialize state-store internals directly in query code.
   - [ ] Apply type, active, created-date, and modified-date filters to the tenant-scoped index entries before pagination metadata is calculated.
   - [ ] Define and test date-range inclusivity using the implemented behavior. Do not change public date semantics silently after tests pin them.
+  - [ ] Apply date filters as UTC/culture-invariant instant comparisons over `PartyIndexEntry.CreatedAt` and `PartyIndexEntry.LastModifiedAt`; do not depend on server locale or UI display formatting.
   - [ ] Normalize or reject page/page-size values consistently with current query/list conventions. If `LocalPartySearchService` clamps to `1..100`, either reuse that policy or document why list queries intentionally differ.
+  - [ ] Calculate `TotalCount`, `TotalPages`, empty-page behavior, and returned page items from the same tenant-authorized, erased-filtered, fully filtered collection.
+  - [ ] Preserve existing accepted ordering. If implementation must choose an order, use a deterministic index-backed sort key plus stable tie-breaker and pin it in tests before review.
   - [ ] Return `PagedResult<PartyIndexEntry>` only from index entries. Do not synthesize list rows from aggregate state, detail projection fan-out, Memories search, or command status records.
 
 - [ ] Task 3: Enforce tenant fail-closed behavior (AC: 1, 2, 6, 7)
@@ -134,6 +149,7 @@ so that I can navigate a tenant's party directory efficiently.
   - [ ] For projection-side reads, derive actor id strictly from authenticated/request tenant context. Never accept tenant id from query payload, page cursor, actor id, projection payload, UI state, or client-supplied metadata.
   - [ ] Add tests where tenant A has index entries and tenant B lists with identical filters. Tenant B must receive only its own entries or a closed response, with no tenant A counts, actor key, names, or metadata.
   - [ ] Add a fake/probed actor registry, proxy factory, state manager, or equivalent assertion so tests fail if `{otherTenant}:party-index` or `{otherTenant}:party-index:{partitionKey}` is constructed, read, serialized, or logged.
+  - [ ] Treat page numbers, future cursors/tokens, partition keys, AdminPortal page state, and client metadata as untrusted; none may override the authenticated tenant or choose an alternate partition/actor.
   - [ ] Treat missing tenant context, malformed partition keys, and reused pagination/search state from another tenant as fail-closed cases.
   - [ ] Ensure failures use bounded ProblemDetails/client exception fields and do not include display names, contact values, identifiers, raw query payloads, tenant membership payloads, tokens, actor storage keys, stream names, stack traces, infrastructure exception text, or serialized actor state.
 
@@ -142,6 +158,7 @@ so that I can navigate a tenant's party directory efficiently.
   - [ ] Listing with `active=false` must return inactive entries that are still authorized and not erased.
   - [ ] Exclude `PartyIndexEntry.IsErased == true` entries unless a later accepted erasure-list contract explicitly defines an erased status list.
   - [ ] Preserve current actor degraded/cache behavior where safe. If cached entries are returned during rebuilding, they must be tenant-scoped and filtered for erasure before leaving the boundary.
+  - [ ] If cached/degraded state provenance, partition completeness, or erasure filtering cannot be proven, return the current bounded unavailable/degraded/empty outcome instead of merging speculative cache data with live reads.
   - [ ] Map corrupt, malformed, null, or unreadable index actor state to bounded unavailable/degraded or safe empty/not-accessible behavior according to the current EventStore query boundary.
   - [ ] Ensure log messages, exception details, ProblemDetails details, query metadata, and telemetry dimensions stay metadata-only. Names, contact values, identifiers, raw JSON, serialized index entries, and secrets are not acceptable diagnostics.
 
@@ -157,6 +174,8 @@ so that I can navigate a tenant's party directory efficiently.
   - [ ] Extend `tests/Hexalith.Parties.Client.Tests/HttpPartiesQueryClientTests.cs` for list payload bounds, null optional filters, date serialization, query error mapping, malformed success payloads, success without payload, and cancellation.
   - [ ] Extend `tests/Hexalith.Parties.Tests/Gateway/EventStoreGatewayRoutingTests.cs` for party index query routing, missing tenant, unauthorized tenant/domain, router not-found, router forbidden, and no query routing before auth failure.
   - [ ] Add or extend query/list tests around the accepted list adapter for type, active, created-date, modified-date, invalid date range, empty result, page metadata, and overflow-safe page calculations.
+  - [ ] Add tests proving page metadata is computed after authorization, erasure exclusion, and all filters, including cases where unfiltered counts would otherwise differ from filtered counts.
+  - [ ] Add tests proving untrusted page/cursor/token/partition/UI/client metadata cannot alter tenant identity, actor key construction, partition selection, or data source selection.
   - [ ] Add or extend `tests/Hexalith.Parties.Tests/Projections/PartyIndexProjectionActorCorruptionTests.cs` for stale/rebuilding/degraded/corrupt reads and metadata-only diagnostics.
   - [ ] Add or extend `tests/Hexalith.Parties.Tests/Search/PartySearchServiceBoundaryTests.cs` or an adjacent list-filter test for tenant-authorized entries, erased-entry exclusion, active/type filter composition, metadata alignment, and page bounds if the local search/list service owns those mechanics.
   - [ ] Add privacy-safety assertions for response/error/log text touched by this story. Assert absence of synthetic raw names, contact values, identifiers, serialized index JSON, query payloads, bearer/access tokens, tenant secrets, actor storage keys, stream names, stack traces, and infrastructure connection strings.
@@ -230,7 +249,7 @@ tests/Hexalith.Parties.Tests/FitnessTests/ArchitecturalFitnessTests.cs
 - Story 1.7 clarified bounded typed failures and privacy-safe error details. List failures must not expose personal data or cross-tenant existence.
 - Story 1.8 reinforced personal-data marking and log safety. Index list diagnostics must remain metadata-only.
 - Story 1.9 reinforced `PartyDetail` as the complete party shape. Do not turn list/index rows into a parallel detail DTO or detail-query replacement.
-- L08 in the story-creation lessons ledger says party-mode review and advanced elicitation are separate dated traces. This newly created story has neither trace yet.
+- L08 in the story-creation lessons ledger says party-mode review and advanced elicitation are separate dated traces. This story now carries a party-mode trace and this pass adds the separate advanced elicitation trace.
 
 ### Latest Technical Notes
 
@@ -271,6 +290,7 @@ tests/Hexalith.Parties.Tests/FitnessTests/ArchitecturalFitnessTests.cs
 - Exact AdminPortal list UI copy, density, column behavior, and empty-state design remain outside this server/client story unless existing tests require contract alignment.
 - Whether inactive parties are included by default beyond the current accepted query behavior remains a product decision to preserve in tests rather than infer silently.
 - New REST/OpenAPI/MCP surfaces for party index list queries are out of scope; use the accepted EventStore query/client boundaries only.
+- Localized user date-entry semantics and display formatting remain client/UI concerns unless a future accepted query contract explicitly adds server-side localized date parsing.
 
 ### References
 
@@ -308,6 +328,7 @@ tests/Hexalith.Parties.Tests/FitnessTests/ArchitecturalFitnessTests.cs
 
 - 2026-05-18: Story created by BMAD pre-dev hardening automation with existing typed list client, EventStore query gateway, tenant index projection, list/filter/paging, degraded-state, privacy, and focused validation guidance.
 - 2026-05-18: Party-mode review applied low-risk clarifications for tenant-source authority, index-only result shape, active/date filter semantics, deterministic pagination, degraded-state outcome boundaries, privacy-safe diagnostics, and deferred default/sort/freshness decisions.
+- 2026-05-18: Advanced elicitation applied low-risk clarifications for metadata consistency, untrusted page state, UTC date filtering, degraded cache provenance, validation short-circuiting, and terminal cancellation.
 
 ## Party-Mode Review
 
@@ -329,4 +350,37 @@ tests/Hexalith.Parties.Tests/FitnessTests/ArchitecturalFitnessTests.cs
   - Canonical adopter-facing sort order if no accepted ordering already exists.
   - Exact public stale/rebuilding/degraded/corrupt response shape beyond current EventStore query boundary behavior.
   - Cursor/continuation-token design and expiry, unless a later accepted paging contract introduces it.
+- Final recommendation: ready-for-dev
+
+## Advanced Elicitation
+
+- Date/time: 2026-05-18T10:02:05+02:00
+- Selected story key: `2-4-list-and-filter-parties`
+- Command/skill invocation used: `/bmad-advanced-elicitation 2-4-list-and-filter-parties`
+- Batch 1 method names:
+  - Red Team vs Blue Team
+  - Failure Mode Analysis
+  - Security Audit Personas
+  - Self-Consistency Validation
+  - Architecture Decision Records
+- Reshuffled Batch 2 method names:
+  - Pre-mortem Analysis
+  - Chaos Monkey Scenarios
+  - User Persona Focus Group
+  - Critique and Refine
+  - Expand or Contract for Audience
+- Findings summary:
+  - The story was directionally ready after party-mode review, but residual risks remained around stale metadata counts, future cursor/page-state tenant poisoning, locale-sensitive date comparisons, unsafe degraded cache reuse, and fallback work after validation failure or cancellation.
+  - The strongest hardening point is to treat the list result as one deterministic, current-tenant index view: authorize first, remove erased entries, apply filters, compute metadata, then page.
+  - No elicitation method found a blocker or required product-scope expansion once cursor design, localized date semantics, richer freshness metadata, and public degraded-state categories remain deferred.
+- Changes applied:
+  - Added `Advanced Elicitation Clarifications` covering filtered metadata consistency, untrusted paging state, UTC/culture-invariant date filtering, degraded cache provenance, bounded validation short-circuiting, and terminal cancellation.
+  - Strengthened acceptance evidence and test matrix rows for deterministic pagination, provenance-safe degraded reads, post-filter metadata, and untrusted cursor/page state.
+  - Added implementation tasks for post-filter metadata calculation, stable ordering, UTC date comparison, untrusted page state, and cache provenance fail-closed behavior.
+  - Added focused test expectations for filtered metadata consistency and page/cursor/token/partition/client metadata not altering tenant or actor selection.
+- Findings deferred:
+  - Cursor and continuation-token design, including expiry and trusted server-side state, remains deferred.
+  - Localized date-entry parsing and display semantics remain client/UI concerns unless a future accepted query contract adds server-side localized parsing.
+  - Canonical adopter-facing sort order remains deferred if no existing accepted list ordering already defines it.
+  - Public freshness/degradation response categories and rebuild progress metadata remain deferred beyond current EventStore query boundary behavior.
 - Final recommendation: ready-for-dev
