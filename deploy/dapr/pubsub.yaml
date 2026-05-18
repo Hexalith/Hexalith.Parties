@@ -48,7 +48,7 @@ spec:
       # `dapr-dev-redis-master` in the `dapr-system` namespace. Override via
       # the REDIS_HOST env var on the operator's deploy environment if your
       # DAPR install uses a different service name or namespace.
-      value: "{env:REDIS_HOST|dapr-dev-redis-master.dapr-system.svc.cluster.local:6379}"
+      value: redis.hexalith-parties.svc.cluster.local:6379
     - name: enableDeadLetter
       # REQUIRED by the platform contract -- Story 8.1 validates this field.
       # Without it, undeliverable messages are dropped silently instead of

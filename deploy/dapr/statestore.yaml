@@ -39,7 +39,7 @@ spec:
       # `dapr-dev-redis-master` in the `dapr-system` namespace. Override via
       # the REDIS_HOST env var on the operator's deploy environment if your
       # DAPR install uses a different service name or namespace.
-      value: "{env:REDIS_HOST|dapr-dev-redis-master.dapr-system.svc.cluster.local:6379}"
+      value: redis.hexalith-parties.svc.cluster.local:6379
     - name: actorStateStore
       # REQUIRED for DAPR actor state. Do not remove without an explicit ADR.
       value: "true"

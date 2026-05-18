@@ -10,12 +10,12 @@ metadata:
 spec:
   accessControl:
     defaultAction: deny
-    trustDomain: "{env:DAPR_TRUST_DOMAIN|hexalith.io}"
+    trustDomain: hexalith.io
     policies:
       - appId: eventstore
         defaultAction: deny
-        trustDomain: "{env:DAPR_TRUST_DOMAIN|hexalith.io}"
-        namespace: "{env:DAPR_NAMESPACE|hexalith}"
+        trustDomain: hexalith.io
+        namespace: hexalith-parties
         operations:
           - name: /process
             httpVerb: ['POST']
