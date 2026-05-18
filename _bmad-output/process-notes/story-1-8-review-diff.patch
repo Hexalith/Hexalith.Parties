@@ -1,0 +1,759 @@
+commit 468bb54980f597fffed2f268f9b52c616fcb325e
+Author: Jérôme Piquot <jpiquot@itaneo.com>
+Date:   Mon May 18 09:48:52 2026 +0200
+
+    Add preflight check results and Personal Data Inventory tests
+    
+    - Created multiple JSON files for preflight check results, all indicating failures due to dirty paths in the working tree.
+    - Implemented `PersonalDataInventoryTests` to ensure proper classification of personal data properties and containers.
+    - Added checks for organization entity fields to remain unmarked by default.
+    - Verified that all inspected contract properties are classified correctly.
+
+diff --git a/src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj b/src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj
+index 0bdbebb..4b5213e 100644
+--- a/src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj
++++ b/src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj
+@@ -1,4 +1,4 @@
+-<Project Sdk="Aspire.AppHost.Sdk/13.2.2">
++<Project Sdk="Aspire.AppHost.Sdk/13.3.3">
+ 
+   <PropertyGroup>
+     <OutputType>Exe</OutputType>
+diff --git a/src/Hexalith.Parties.AppHost/Properties/launchSettings.json b/src/Hexalith.Parties.AppHost/Properties/launchSettings.json
+index 518460a..07f7ea0 100644
+--- a/src/Hexalith.Parties.AppHost/Properties/launchSettings.json
++++ b/src/Hexalith.Parties.AppHost/Properties/launchSettings.json
+@@ -9,6 +9,7 @@
+       "environmentVariables": {
+         "ASPNETCORE_ENVIRONMENT": "Development",
+         "DOTNET_ENVIRONMENT": "Development",
++        "ASPIRE_ALLOW_UNSECURED_TRANSPORT": "true",
+         "ASPIRE_DASHBOARD_OTLP_ENDPOINT_URL": "http://localhost:21100"
+       }
+     },
+@@ -20,6 +21,7 @@
+       "environmentVariables": {
+         "ASPNETCORE_ENVIRONMENT": "Development",
+         "DOTNET_ENVIRONMENT": "Development",
++        "ASPIRE_ALLOW_UNSECURED_TRANSPORT": "true",
+         "ASPIRE_DASHBOARD_OTLP_ENDPOINT_URL": "http://localhost:21100"
+       }
+     }
+diff --git a/src/Hexalith.Parties.Contracts/Events/PartyDisplayNameDerived.cs b/src/Hexalith.Parties.Contracts/Events/PartyDisplayNameDerived.cs
+index 1acbc1b..e3260c7 100644
+--- a/src/Hexalith.Parties.Contracts/Events/PartyDisplayNameDerived.cs
++++ b/src/Hexalith.Parties.Contracts/Events/PartyDisplayNameDerived.cs
+@@ -4,7 +4,9 @@ namespace Hexalith.Parties.Contracts.Events;
+ 
+ public sealed record PartyDisplayNameDerived : IEventPayload
+ {
++    [PersonalData]
+     public required string DisplayName { get; init; }
+ 
++    [PersonalData]
+     public required string SortName { get; init; }
+ }
+diff --git a/src/Hexalith.Parties.Contracts/State/PartyState.cs b/src/Hexalith.Parties.Contracts/State/PartyState.cs
+index 87057e9..bc9598e 100644
+--- a/src/Hexalith.Parties.Contracts/State/PartyState.cs
++++ b/src/Hexalith.Parties.Contracts/State/PartyState.cs
+@@ -90,6 +90,8 @@ public sealed class PartyState
+     public void Apply(PartyCannotAddDuplicateIdentifier e) => ArgumentNullException.ThrowIfNull(e);
+ 
+     public void Apply(CompositeOperationConflict e) => ArgumentNullException.ThrowIfNull(e);
++
++    public void Apply(PartyCommandValidationRejected e) => ArgumentNullException.ThrowIfNull(e);
+ #pragma warning restore CA1822
+ 
+     public void Apply(PartyCreated e)
+diff --git a/src/Hexalith.Parties.Contracts/ValueObjects/NameHistoryEntry.cs b/src/Hexalith.Parties.Contracts/ValueObjects/NameHistoryEntry.cs
+index 33d401d..4eae9e2 100644
+--- a/src/Hexalith.Parties.Contracts/ValueObjects/NameHistoryEntry.cs
++++ b/src/Hexalith.Parties.Contracts/ValueObjects/NameHistoryEntry.cs
+@@ -2,8 +2,10 @@ namespace Hexalith.Parties.Contracts.ValueObjects;
+ 
+ public sealed record NameHistoryEntry
+ {
++    [PersonalData]
+     public required string DisplayName { get; init; }
+ 
++    [PersonalData]
+     public required string SortName { get; init; }
+ 
+     public required DateTimeOffset ChangedAt { get; init; }
+diff --git a/src/Hexalith.Parties.Projections/Actors/PartyDetailProjectionActor.cs b/src/Hexalith.Parties.Projections/Actors/PartyDetailProjectionActor.cs
+index a9313f0..185ae9f 100644
+--- a/src/Hexalith.Parties.Projections/Actors/PartyDetailProjectionActor.cs
++++ b/src/Hexalith.Parties.Projections/Actors/PartyDetailProjectionActor.cs
+@@ -183,7 +183,7 @@ public sealed partial class PartyDetailProjectionActor : Actor, IPartyDetailProj
+             // let replay rebuild state. Infrastructure failures (state-store outage, OOM, etc.)
+             // must propagate so the orchestrator surfaces them rather than silently degrading
+             // to replay-from-zero on every command.
+-            Log.SequenceCheckpointReset(_logger, partyId, ex.Message);
++            Log.SequenceCheckpointReset(_logger, partyId, ex.GetType().Name);
+             _lastProcessedSequence = UnloadedSequenceSentinel;
+         }
+ 
+diff --git a/src/Hexalith.Parties.Projections/Actors/PartyIndexProjectionActor.cs b/src/Hexalith.Parties.Projections/Actors/PartyIndexProjectionActor.cs
+index 41f1f8d..3a92d3a 100644
+--- a/src/Hexalith.Parties.Projections/Actors/PartyIndexProjectionActor.cs
++++ b/src/Hexalith.Parties.Projections/Actors/PartyIndexProjectionActor.cs
+@@ -206,7 +206,7 @@ public sealed partial class PartyIndexProjectionActor : Actor, IPartyIndexProjec
+             // and let replay rebuild state. Infrastructure failures (state-store outage)
+             // must propagate so the orchestrator surfaces them rather than silently
+             // degrading to replay-from-zero on every command.
+-            Log.SequenceCheckpointReset(_logger, partyId, ex.Message);
++            Log.SequenceCheckpointReset(_logger, partyId, ex.GetType().Name);
+             _lastProcessedSequencePerParty[partyId] = UnloadedSequenceSentinel;
+         }
+     }
+diff --git a/src/Hexalith.Parties.Server/Aggregates/PartyAggregate.cs b/src/Hexalith.Parties.Server/Aggregates/PartyAggregate.cs
+index 932cc52..ae32db2 100644
+--- a/src/Hexalith.Parties.Server/Aggregates/PartyAggregate.cs
++++ b/src/Hexalith.Parties.Server/Aggregates/PartyAggregate.cs
+@@ -586,7 +586,7 @@ public sealed class PartyAggregate : EventStoreAggregate<PartyState> {
+         ArgumentNullException.ThrowIfNull(command);
+ 
+         if (state is null) {
+-            return DomainResult.Rejection([new PartyTypeMismatch { Message = "Party does not exist." }]);
++            return DomainResult.Rejection([new PartyNotFound { Message = "Party does not exist." }]);
+         }
+ 
+         DomainResult? erasureRejection = RejectIfErasureInProgress(state);
+@@ -625,7 +625,7 @@ public sealed class PartyAggregate : EventStoreAggregate<PartyState> {
+         ArgumentNullException.ThrowIfNull(command);
+ 
+         if (state is null) {
+-            return DomainResult.Rejection([new PartyTypeMismatch { Message = "Party does not exist." }]);
++            return DomainResult.Rejection([new PartyNotFound { Message = "Party does not exist." }]);
+         }
+ 
+         DomainResult? erasureRejection = RejectIfErasureInProgress(state);
+@@ -664,7 +664,7 @@ public sealed class PartyAggregate : EventStoreAggregate<PartyState> {
+         ArgumentNullException.ThrowIfNull(command);
+ 
+         if (state is null) {
+-            return DomainResult.Rejection([new PartyTypeMismatch { Message = "Party does not exist." }]);
++            return DomainResult.Rejection([new PartyNotFound { Message = "Party does not exist." }]);
+         }
+ 
+         DomainResult? erasureRejection = RejectIfErasureInProgress(state);
+diff --git a/src/Hexalith.Parties/ErrorHandling/PartiesGlobalExceptionHandler.cs b/src/Hexalith.Parties/ErrorHandling/PartiesGlobalExceptionHandler.cs
+index e773206..31d2759 100644
+--- a/src/Hexalith.Parties/ErrorHandling/PartiesGlobalExceptionHandler.cs
++++ b/src/Hexalith.Parties/ErrorHandling/PartiesGlobalExceptionHandler.cs
+@@ -91,7 +91,7 @@ public sealed class PartiesGlobalExceptionHandler(ILogger<PartiesGlobalException
+             Title = "Internal Server Error",
+             Type = "https://tools.ietf.org/html/rfc9457#section-3",
+             Detail = isDevelopment
+-                ? $"[{exception.GetType().Name}] {exception.Message}"
++                ? $"[{exception.GetType().Name}]"
+                 : "An unexpected error occurred while processing your request.",
+             Instance = httpContext.Request.Path,
+             Extensions = { ["correlationId"] = correlationId },
+diff --git a/src/Hexalith.Parties/Search/PartyMemoryCleanupService.cs b/src/Hexalith.Parties/Search/PartyMemoryCleanupService.cs
+index d790d97..0dc5014 100644
+--- a/src/Hexalith.Parties/Search/PartyMemoryCleanupService.cs
++++ b/src/Hexalith.Parties/Search/PartyMemoryCleanupService.cs
+@@ -75,7 +75,7 @@ internal sealed class PartyMemoryCleanupService(
+                 memoryUnitId,
+                 sourceUri,
+                 Cleaned: false,
+-                BlockedReason: $"Memories cleanup transport error: {ex.Message}");
++                BlockedReason: $"Memories cleanup transport error: {ex.GetType().Name}");
+         }
+         catch (TaskCanceledException ex)
+         {
+@@ -85,7 +85,7 @@ internal sealed class PartyMemoryCleanupService(
+                 memoryUnitId,
+                 sourceUri,
+                 Cleaned: false,
+-                BlockedReason: $"Memories cleanup timed out: {ex.Message}");
++                BlockedReason: $"Memories cleanup timed out: {ex.GetType().Name}");
+         }
+     }
+ 
+diff --git a/src/Hexalith.Parties/Search/PartyMemoryIndexingService.cs b/src/Hexalith.Parties/Search/PartyMemoryIndexingService.cs
+index 0b471ae..828c2b0 100644
+--- a/src/Hexalith.Parties/Search/PartyMemoryIndexingService.cs
++++ b/src/Hexalith.Parties/Search/PartyMemoryIndexingService.cs
+@@ -90,7 +90,7 @@ internal sealed class PartyMemoryIndexingService(
+                 unit.SourceUri,
+                 WorkflowInstanceId: null,
+                 Indexed: false,
+-                FailureReason: $"{ex.GetType().Name}: {ex.Message}");
++                FailureReason: ex.GetType().Name);
+         }
+ 
+         // P18: A misbehaving server returning a 2xx with empty/whitespace instanceId would
+@@ -136,7 +136,7 @@ internal sealed class PartyMemoryIndexingService(
+                 unit.SourceUri,
+                 WorkflowInstanceId: workflowInstanceId,
+                 Indexed: false,
+-                FailureReason: $"Mapping record failed ({ex.GetType().Name}: {ex.Message}). Compensating delete attempted.");
++                FailureReason: $"Mapping record failed ({ex.GetType().Name}). Compensating delete attempted.");
+         }
+ 
+         return new PartyMemoryIndexingResult(
+@@ -199,7 +199,7 @@ internal sealed class PartyMemoryIndexingService(
+                 workflowInstanceId,
+                 unit.TenantId,
+                 unit.PartyId,
+-                originalFailure.Message);
++                originalFailure.GetType().Name);
+         }
+     }
+ }
+diff --git a/src/Hexalith.Parties/Search/PartyMemoryUnitMappingStore.cs b/src/Hexalith.Parties/Search/PartyMemoryUnitMappingStore.cs
+index 3a02ee2..f6b30c5 100644
+--- a/src/Hexalith.Parties/Search/PartyMemoryUnitMappingStore.cs
++++ b/src/Hexalith.Parties/Search/PartyMemoryUnitMappingStore.cs
+@@ -202,7 +202,7 @@ internal sealed class PartyMemoryUnitMappingStore(
+                 tenantId,
+                 partyId);
+             throw new InvalidOperationException(
+-                $"Failed to clear memory-unit mapping for {tenantId}/{partyId}: {ex.Message}",
++                $"Failed to clear memory-unit mapping for {tenantId}/{partyId}: {ex.GetType().Name}",
+                 ex);
+         }
+     }
+@@ -242,7 +242,7 @@ internal sealed class PartyMemoryUnitMappingStore(
+                 tenantId,
+                 partyId);
+             throw new InvalidOperationException(
+-                $"Failed to replace memory-unit mapping for {tenantId}/{partyId}: {ex.Message}",
++                $"Failed to replace memory-unit mapping for {tenantId}/{partyId}: {ex.GetType().Name}",
+                 ex);
+         }
+     }
+diff --git a/tests/Hexalith.Parties.Contracts.Tests/Privacy/PersonalDataInventoryTests.cs b/tests/Hexalith.Parties.Contracts.Tests/Privacy/PersonalDataInventoryTests.cs
+new file mode 100644
+index 0000000..447c0ef
+--- /dev/null
++++ b/tests/Hexalith.Parties.Contracts.Tests/Privacy/PersonalDataInventoryTests.cs
+@@ -0,0 +1,265 @@
++using System.Reflection;
++
++using Hexalith.Parties.Contracts;
++using Hexalith.Parties.Contracts.Commands;
++using Hexalith.Parties.Contracts.Events;
++using Hexalith.Parties.Contracts.Models;
++using Hexalith.Parties.Contracts.State;
++using Hexalith.Parties.Contracts.ValueObjects;
++
++using Shouldly;
++
++namespace Hexalith.Parties.Contracts.Tests.Privacy;
++
++public sealed class PersonalDataInventoryTests
++{
++    private static readonly IReadOnlyDictionary<string, Classification> s_expectedClassifications =
++        new Dictionary<string, Classification>(StringComparer.Ordinal)
++        {
++            [Key(typeof(PersonDetails), nameof(PersonDetails.FirstName))] = Classification.PersonalData,
++            [Key(typeof(PersonDetails), nameof(PersonDetails.LastName))] = Classification.PersonalData,
++            [Key(typeof(PersonDetails), nameof(PersonDetails.DateOfBirth))] = Classification.PersonalData,
++            [Key(typeof(PersonDetails), nameof(PersonDetails.Prefix))] = Classification.PersonalData,
++            [Key(typeof(PersonDetails), nameof(PersonDetails.Suffix))] = Classification.PersonalData,
++
++            [Key(typeof(OrganizationDetails), nameof(OrganizationDetails.LegalName))] = Classification.NonPersonalByDefault,
++            [Key(typeof(OrganizationDetails), nameof(OrganizationDetails.TradingName))] = Classification.NonPersonalByDefault,
++            [Key(typeof(OrganizationDetails), nameof(OrganizationDetails.LegalForm))] = Classification.NonPersonalByDefault,
++            [Key(typeof(OrganizationDetails), nameof(OrganizationDetails.RegistrationNumber))] = Classification.NonPersonalByDefault,
++            [Key(typeof(OrganizationDetails), nameof(OrganizationDetails.IsNaturalPerson))] = Classification.NonPersonalByDefault,
++
++            [Key(typeof(ContactChannel), nameof(ContactChannel.Id))] = Classification.NonPersonalMetadata,
++            [Key(typeof(ContactChannel), nameof(ContactChannel.Type))] = Classification.NonPersonalMetadata,
++            [Key(typeof(ContactChannel), nameof(ContactChannel.Value))] = Classification.PersonalData,
++            [Key(typeof(ContactChannel), nameof(ContactChannel.IsPreferred))] = Classification.NonPersonalMetadata,
++            [Key(typeof(EmailAddress), nameof(EmailAddress.Address))] = Classification.PersonalData,
++            [Key(typeof(PostalAddress), nameof(PostalAddress.Street))] = Classification.PersonalData,
++            [Key(typeof(PostalAddress), nameof(PostalAddress.City))] = Classification.PersonalData,
++            [Key(typeof(PostalAddress), nameof(PostalAddress.Region))] = Classification.PersonalData,
++            [Key(typeof(PostalAddress), nameof(PostalAddress.PostalCode))] = Classification.PersonalData,
++            [Key(typeof(PostalAddress), nameof(PostalAddress.Country))] = Classification.PersonalData,
++            [Key(typeof(PhoneNumber), nameof(PhoneNumber.Number))] = Classification.PersonalData,
++            [Key(typeof(PhoneNumber), nameof(PhoneNumber.CountryCode))] = Classification.NonPersonalMetadata,
++            [Key(typeof(SocialMediaHandle), nameof(SocialMediaHandle.Platform))] = Classification.NonPersonalMetadata,
++            [Key(typeof(SocialMediaHandle), nameof(SocialMediaHandle.Handle))] = Classification.PersonalData,
++
++            [Key(typeof(PartyIdentifier), nameof(PartyIdentifier.Id))] = Classification.NonPersonalMetadata,
++            [Key(typeof(PartyIdentifier), nameof(PartyIdentifier.Type))] = Classification.NonPersonalMetadata,
++            [Key(typeof(PartyIdentifier), nameof(PartyIdentifier.Value))] = Classification.PersonalData,
++            [Key(typeof(PartyIdentifier), nameof(PartyIdentifier.Jurisdiction))] = Classification.NonPersonalMetadata,
++
++            [Key(typeof(NameHistoryEntry), nameof(NameHistoryEntry.DisplayName))] = Classification.PersonalData,
++            [Key(typeof(NameHistoryEntry), nameof(NameHistoryEntry.SortName))] = Classification.PersonalData,
++            [Key(typeof(NameHistoryEntry), nameof(NameHistoryEntry.ChangedAt))] = Classification.NonPersonalMetadata,
++            [Key(typeof(NameHistoryEntry), nameof(NameHistoryEntry.TriggeredBy))] = Classification.NonPersonalMetadata,
++
++            [Key(typeof(CreateParty), nameof(CreateParty.PartyId))] = Classification.NonPersonalMetadata,
++            [Key(typeof(CreateParty), nameof(CreateParty.Type))] = Classification.NonPersonalMetadata,
++            [Key(typeof(CreateParty), nameof(CreateParty.PersonDetails))] = Classification.PersonalDataContainer,
++            [Key(typeof(CreateParty), nameof(CreateParty.OrganizationDetails))] = Classification.TypeDependentContainer,
++            [Key(typeof(UpdatePersonDetails), nameof(UpdatePersonDetails.PartyId))] = Classification.NonPersonalMetadata,
++            [Key(typeof(UpdatePersonDetails), nameof(UpdatePersonDetails.PersonDetails))] = Classification.PersonalDataContainer,
++            [Key(typeof(UpdateOrganizationDetails), nameof(UpdateOrganizationDetails.PartyId))] = Classification.NonPersonalMetadata,
++            [Key(typeof(UpdateOrganizationDetails), nameof(UpdateOrganizationDetails.OrganizationDetails))] = Classification.TypeDependentContainer,
++            [Key(typeof(AddContactChannel), nameof(AddContactChannel.PartyId))] = Classification.NonPersonalMetadata,
++            [Key(typeof(AddContactChannel), nameof(AddContactChannel.ContactChannelId))] = Classification.NonPersonalMetadata,
++            [Key(typeof(AddContactChannel), nameof(AddContactChannel.Type))] = Classification.NonPersonalMetadata,
++            [Key(typeof(AddContactChannel), nameof(AddContactChannel.Value))] = Classification.PersonalData,
++            [Key(typeof(AddContactChannel), nameof(AddContactChannel.IsPreferred))] = Classification.NonPersonalMetadata,
++            [Key(typeof(UpdateContactChannel), nameof(UpdateContactChannel.PartyId))] = Classification.NonPersonalMetadata,
++            [Key(typeof(UpdateContactChannel), nameof(UpdateContactChannel.ContactChannelId))] = Classification.NonPersonalMetadata,
++            [Key(typeof(UpdateContactChannel), nameof(UpdateContactChannel.Type))] = Classification.NonPersonalMetadata,
++            [Key(typeof(UpdateContactChannel), nameof(UpdateContactChannel.Value))] = Classification.PersonalData,
++            [Key(typeof(UpdateContactChannel), nameof(UpdateContactChannel.IsPreferred))] = Classification.NonPersonalMetadata,
++            [Key(typeof(AddIdentifier), nameof(AddIdentifier.PartyId))] = Classification.NonPersonalMetadata,
++            [Key(typeof(AddIdentifier), nameof(AddIdentifier.IdentifierId))] = Classification.NonPersonalMetadata,
++            [Key(typeof(AddIdentifier), nameof(AddIdentifier.Type))] = Classification.NonPersonalMetadata,
++            [Key(typeof(AddIdentifier), nameof(AddIdentifier.Value))] = Classification.PersonalData,
++
++            [Key(typeof(PartyCreated), nameof(PartyCreated.Type))] = Classification.NonPersonalMetadata,
++            [Key(typeof(PartyCreated), nameof(PartyCreated.PersonDetails))] = Classification.PersonalDataContainer,
++            [Key(typeof(PartyCreated), nameof(PartyCreated.OrganizationDetails))] = Classification.TypeDependentContainer,
++            [Key(typeof(PersonDetailsUpdated), nameof(PersonDetailsUpdated.PersonDetails))] = Classification.PersonalDataContainer,
++            [Key(typeof(OrganizationDetailsUpdated), nameof(OrganizationDetailsUpdated.OrganizationDetails))] = Classification.TypeDependentContainer,
++            [Key(typeof(PartyDisplayNameDerived), nameof(PartyDisplayNameDerived.DisplayName))] = Classification.PersonalData,
++            [Key(typeof(PartyDisplayNameDerived), nameof(PartyDisplayNameDerived.SortName))] = Classification.PersonalData,
++            [Key(typeof(ContactChannelAdded), nameof(ContactChannelAdded.ContactChannelId))] = Classification.NonPersonalMetadata,
++            [Key(typeof(ContactChannelAdded), nameof(ContactChannelAdded.Type))] = Classification.NonPersonalMetadata,
++            [Key(typeof(ContactChannelAdded), nameof(ContactChannelAdded.Value))] = Classification.PersonalData,
++            [Key(typeof(ContactChannelAdded), nameof(ContactChannelAdded.IsPreferred))] = Classification.NonPersonalMetadata,
++            [Key(typeof(ContactChannelUpdated), nameof(ContactChannelUpdated.ContactChannelId))] = Classification.NonPersonalMetadata,
++            [Key(typeof(ContactChannelUpdated), nameof(ContactChannelUpdated.Type))] = Classification.NonPersonalMetadata,
++            [Key(typeof(ContactChannelUpdated), nameof(ContactChannelUpdated.Value))] = Classification.PersonalData,
++            [Key(typeof(ContactChannelUpdated), nameof(ContactChannelUpdated.IsPreferred))] = Classification.NonPersonalMetadata,
++            [Key(typeof(IdentifierAdded), nameof(IdentifierAdded.IdentifierId))] = Classification.NonPersonalMetadata,
++            [Key(typeof(IdentifierAdded), nameof(IdentifierAdded.Type))] = Classification.NonPersonalMetadata,
++            [Key(typeof(IdentifierAdded), nameof(IdentifierAdded.Value))] = Classification.PersonalData,
++
++            [Key(typeof(PartyState), nameof(PartyState.Type))] = Classification.NonPersonalMetadata,
++            [Key(typeof(PartyState), nameof(PartyState.IsActive))] = Classification.NonPersonalMetadata,
++            [Key(typeof(PartyState), nameof(PartyState.IsNaturalPerson))] = Classification.NonPersonalMetadata,
++            [Key(typeof(PartyState), nameof(PartyState.DisplayName))] = Classification.PersonalData,
++            [Key(typeof(PartyState), nameof(PartyState.SortName))] = Classification.PersonalData,
++            [Key(typeof(PartyState), nameof(PartyState.Person))] = Classification.PersonalDataContainer,
++            [Key(typeof(PartyState), nameof(PartyState.Organization))] = Classification.TypeDependentContainer,
++            [Key(typeof(PartyState), nameof(PartyState.ContactChannels))] = Classification.PersonalDataContainer,
++            [Key(typeof(PartyState), nameof(PartyState.Identifiers))] = Classification.PersonalDataContainer,
++            [Key(typeof(PartyState), nameof(PartyState.ConsentRecords))] = Classification.NonPersonalMetadata,
++            [Key(typeof(PartyState), nameof(PartyState.CreatedAt))] = Classification.NonPersonalMetadata,
++            [Key(typeof(PartyState), nameof(PartyState.IsRestricted))] = Classification.NonPersonalMetadata,
++            [Key(typeof(PartyState), nameof(PartyState.RestrictedAt))] = Classification.NonPersonalMetadata,
++            [Key(typeof(PartyState), nameof(PartyState.RestrictionReason))] = Classification.DeferredPrivacyDesign,
++            [Key(typeof(PartyState), nameof(PartyState.ErasureStatus))] = Classification.NonPersonalMetadata,
++            [Key(typeof(PartyState), nameof(PartyState.ErasedAt))] = Classification.NonPersonalMetadata,
++
++            [Key(typeof(PartyDetail), nameof(PartyDetail.Id))] = Classification.NonPersonalMetadata,
++            [Key(typeof(PartyDetail), nameof(PartyDetail.Type))] = Classification.NonPersonalMetadata,
++            [Key(typeof(PartyDetail), nameof(PartyDetail.IsActive))] = Classification.NonPersonalMetadata,
++            [Key(typeof(PartyDetail), nameof(PartyDetail.DisplayName))] = Classification.PersonalData,
++            [Key(typeof(PartyDetail), nameof(PartyDetail.SortName))] = Classification.PersonalData,
++            [Key(typeof(PartyDetail), nameof(PartyDetail.PersonDetails))] = Classification.PersonalDataContainer,
++            [Key(typeof(PartyDetail), nameof(PartyDetail.OrganizationDetails))] = Classification.TypeDependentContainer,
++            [Key(typeof(PartyDetail), nameof(PartyDetail.ContactChannels))] = Classification.PersonalDataContainer,
++            [Key(typeof(PartyDetail), nameof(PartyDetail.Identifiers))] = Classification.PersonalDataContainer,
++            [Key(typeof(PartyDetail), nameof(PartyDetail.ConsentRecords))] = Classification.NonPersonalMetadata,
++            [Key(typeof(PartyDetail), nameof(PartyDetail.NameHistory))] = Classification.PersonalData,
++            [Key(typeof(PartyDetail), nameof(PartyDetail.CreatedAt))] = Classification.NonPersonalMetadata,
++            [Key(typeof(PartyDetail), nameof(PartyDetail.LastModifiedAt))] = Classification.NonPersonalMetadata,
++            [Key(typeof(PartyDetail), nameof(PartyDetail.IsRestricted))] = Classification.NonPersonalMetadata,
++            [Key(typeof(PartyDetail), nameof(PartyDetail.RestrictedAt))] = Classification.NonPersonalMetadata,
++            [Key(typeof(PartyDetail), nameof(PartyDetail.IsErased))] = Classification.NonPersonalMetadata,
++            [Key(typeof(PartyDetail), nameof(PartyDetail.ErasedAt))] = Classification.NonPersonalMetadata,
++
++            [Key(typeof(PartyIndexEntry), nameof(PartyIndexEntry.Id))] = Classification.NonPersonalMetadata,
++            [Key(typeof(PartyIndexEntry), nameof(PartyIndexEntry.Type))] = Classification.NonPersonalMetadata,
++            [Key(typeof(PartyIndexEntry), nameof(PartyIndexEntry.IsActive))] = Classification.NonPersonalMetadata,
++            [Key(typeof(PartyIndexEntry), nameof(PartyIndexEntry.DisplayName))] = Classification.PersonalData,
++            [Key(typeof(PartyIndexEntry), nameof(PartyIndexEntry.SearchableContactChannels))] = Classification.PersonalDataContainer,
++            [Key(typeof(PartyIndexEntry), nameof(PartyIndexEntry.SearchableIdentifiers))] = Classification.PersonalDataContainer,
++            [Key(typeof(PartyIndexEntry), nameof(PartyIndexEntry.CreatedAt))] = Classification.NonPersonalMetadata,
++            [Key(typeof(PartyIndexEntry), nameof(PartyIndexEntry.LastModifiedAt))] = Classification.NonPersonalMetadata,
++            [Key(typeof(PartyIndexEntry), nameof(PartyIndexEntry.IsErased))] = Classification.NonPersonalMetadata,
++        };
++
++    private static readonly Type[] s_inspectedTypes =
++    [
++        typeof(PersonDetails),
++        typeof(OrganizationDetails),
++        typeof(ContactChannel),
++        typeof(EmailAddress),
++        typeof(PostalAddress),
++        typeof(PhoneNumber),
++        typeof(SocialMediaHandle),
++        typeof(PartyIdentifier),
++        typeof(NameHistoryEntry),
++        typeof(CreateParty),
++        typeof(UpdatePersonDetails),
++        typeof(UpdateOrganizationDetails),
++        typeof(AddContactChannel),
++        typeof(UpdateContactChannel),
++        typeof(AddIdentifier),
++        typeof(PartyCreated),
++        typeof(PersonDetailsUpdated),
++        typeof(OrganizationDetailsUpdated),
++        typeof(PartyDisplayNameDerived),
++        typeof(ContactChannelAdded),
++        typeof(ContactChannelUpdated),
++        typeof(IdentifierAdded),
++        typeof(PartyState),
++        typeof(PartyDetail),
++        typeof(PartyIndexEntry),
++    ];
++
++    [Fact]
++    public void PersonalDataProperties_AreMarked()
++    {
++        string[] missing = s_expectedClassifications
++            .Where(kvp => kvp.Value is Classification.PersonalData)
++            .Select(kvp => ResolveProperty(kvp.Key))
++            .Where(property => !property.IsDefined(typeof(PersonalDataAttribute), inherit: true))
++            .Select(property => $"{property.DeclaringType!.Name}.{property.Name}")
++            .Order(StringComparer.Ordinal)
++            .ToArray();
++
++        missing.ShouldBeEmpty("Required personal-data properties must be marked by type and property name.");
++    }
++
++    [Fact]
++    public void PersonalDataContainers_AreDiscoverableThroughNestedTypes()
++    {
++        string[] missing = s_expectedClassifications
++            .Where(kvp => kvp.Value is Classification.PersonalDataContainer)
++            .Select(kvp => ResolveProperty(kvp.Key))
++            .Where(property => !PropertyTypeContainsPersonalData(property.PropertyType))
++            .Select(property => $"{property.DeclaringType!.Name}.{property.Name}")
++            .Order(StringComparer.Ordinal)
++            .ToArray();
++
++        missing.ShouldBeEmpty("Container properties must remain discoverable through nested [PersonalData] metadata.");
++    }
++
++    [Fact]
++    public void OrganizationEntityFields_RemainUnmarkedByDefault()
++    {
++        string[] unexpectedlyMarked = s_expectedClassifications
++            .Where(kvp => kvp.Value is Classification.NonPersonalByDefault)
++            .Select(kvp => ResolveProperty(kvp.Key))
++            .Where(property => property.IsDefined(typeof(PersonalDataAttribute), inherit: true))
++            .Select(property => $"{property.DeclaringType!.Name}.{property.Name}")
++            .Order(StringComparer.Ordinal)
++            .ToArray();
++
++        unexpectedlyMarked.ShouldBeEmpty("D6 keeps organization entity fields unmarked until type-dependent v1.1 handling is accepted.");
++    }
++
++    [Fact]
++    public void InspectedContractProperties_AreClassified()
++    {
++        string[] unclassified = s_inspectedTypes
++            .SelectMany(type => type.GetProperties(BindingFlags.Public | BindingFlags.Instance))
++            .Select(property => Key(property.DeclaringType!, property.Name))
++            .Where(key => !s_expectedClassifications.ContainsKey(key))
++            .Order(StringComparer.Ordinal)
++            .ToArray();
++
++        unclassified.ShouldBeEmpty("Each inspected contract property must be classified as personal, non-personal, or deferred.");
++    }
++
++    private static PropertyInfo ResolveProperty(string key)
++    {
++        string[] parts = key.Split('.');
++        Type type = s_inspectedTypes.Single(t => t.Name == parts[0]);
++        return type.GetProperty(parts[1], BindingFlags.Public | BindingFlags.Instance)
++            ?? throw new InvalidOperationException($"Expected inspected property '{key}'.");
++    }
++
++    private static bool PropertyTypeContainsPersonalData(Type type)
++    {
++        Type actualType = Nullable.GetUnderlyingType(type) ?? type;
++        if (actualType == typeof(string) || actualType.IsValueType)
++        {
++            return false;
++        }
++
++        if (actualType.IsGenericType && actualType.GetGenericArguments().Length == 1)
++        {
++            actualType = actualType.GetGenericArguments()[0];
++        }
++
++        return actualType
++            .GetProperties(BindingFlags.Public | BindingFlags.Instance)
++            .Any(property => property.IsDefined(typeof(PersonalDataAttribute), inherit: true));
++    }
++
++    private static string Key(Type type, string propertyName) => $"{type.Name}.{propertyName}";
++
++    private enum Classification
++    {
++        PersonalData,
++        PersonalDataContainer,
++        TypeDependentContainer,
++        NonPersonalMetadata,
++        NonPersonalByDefault,
++        DeferredPrivacyDesign,
++    }
++}
+diff --git a/tests/Hexalith.Parties.Contracts.Tests/State/PartyStateTests.cs b/tests/Hexalith.Parties.Contracts.Tests/State/PartyStateTests.cs
+index c5ade2c..4f64843 100644
+--- a/tests/Hexalith.Parties.Contracts.Tests/State/PartyStateTests.cs
++++ b/tests/Hexalith.Parties.Contracts.Tests/State/PartyStateTests.cs
+@@ -192,16 +192,6 @@ public class PartyStateTests {
+         state.IsNaturalPerson.ShouldBeFalse();
+     }
+ 
+-    [Fact]
+-    public void Apply_PartyDeactivated_SetsIsActiveFalse() {
+-        var state = new PartyState();
+-        state.IsActive.ShouldBeTrue();
+-
+-        state.Apply(new PartyDeactivated());
+-
+-        state.IsActive.ShouldBeFalse();
+-    }
+-
+     [Fact]
+     public void Apply_PartyDeactivated_PreservesNonLifecyclePartyData() {
+         PartyState state = PartyTestData.CreateStateWithConsent();
+@@ -227,6 +217,16 @@ public class PartyStateTests {
+         state.IsRestricted.ShouldBeFalse();
+     }
+ 
++    [Fact]
++    public void Apply_PartyDeactivated_SetsIsActiveFalse() {
++        var state = new PartyState();
++        state.IsActive.ShouldBeTrue();
++
++        state.Apply(new PartyDeactivated());
++
++        state.IsActive.ShouldBeFalse();
++    }
++
+     [Fact]
+     public void Apply_PartyDisplayNameDerived_SetsNames() {
+         var state = new PartyState();
+@@ -244,16 +244,6 @@ public class PartyStateTests {
+         Should.NotThrow(() => state.Apply(new PartyMerged { SurvivorPartyId = "p1", MergedPartyId = "p2" }));
+     }
+ 
+-    [Fact]
+-    public void Apply_PartyReactivated_SetsIsActiveTrue() {
+-        var state = new PartyState();
+-        state.Apply(new PartyDeactivated());
+-
+-        state.Apply(new PartyReactivated());
+-
+-        state.IsActive.ShouldBeTrue();
+-    }
+-
+     [Fact]
+     public void Apply_PartyReactivated_PreservesNonLifecyclePartyDataAfterRoundTrip() {
+         PartyState state = PartyTestData.CreateStateWithConsent();
+@@ -280,6 +270,16 @@ public class PartyStateTests {
+         state.IsRestricted.ShouldBeFalse();
+     }
+ 
++    [Fact]
++    public void Apply_PartyReactivated_SetsIsActiveTrue() {
++        var state = new PartyState();
++        state.Apply(new PartyDeactivated());
++
++        state.Apply(new PartyReactivated());
++
++        state.IsActive.ShouldBeTrue();
++    }
++
+     [Fact]
+     public void Apply_PersonDetailsUpdated_UpdatesPerson() {
+         var state = new PartyState();
+diff --git a/tests/Hexalith.Parties.Security.Tests/PartyPayloadProtectionServiceTests.cs b/tests/Hexalith.Parties.Security.Tests/PartyPayloadProtectionServiceTests.cs
+index f904331..1f02a2c 100644
+--- a/tests/Hexalith.Parties.Security.Tests/PartyPayloadProtectionServiceTests.cs
++++ b/tests/Hexalith.Parties.Security.Tests/PartyPayloadProtectionServiceTests.cs
+@@ -659,7 +659,7 @@ public sealed class PartyPayloadProtectionServiceTests
+             [typeof(ContactChannelRemoved)] = false,
+             [typeof(IdentifierRemoved)] = false,
+             [typeof(IsNaturalPersonChanged)] = false,
+-            [typeof(PartyDisplayNameDerived)] = false, // No [PersonalData] on event fields
++            [typeof(PartyDisplayNameDerived)] = true,
+             [typeof(PartyEncryptionKeyCreated)] = false,
+             [typeof(PartyEncryptionKeyDeleted)] = false,
+             [typeof(PartyEncryptionKeyRotated)] = false,
+diff --git a/tests/Hexalith.Parties.Server.Tests/Aggregates/PartyAggregateCompositeTests.cs b/tests/Hexalith.Parties.Server.Tests/Aggregates/PartyAggregateCompositeTests.cs
+index 7a04a3f..424b291 100644
+--- a/tests/Hexalith.Parties.Server.Tests/Aggregates/PartyAggregateCompositeTests.cs
++++ b/tests/Hexalith.Parties.Server.Tests/Aggregates/PartyAggregateCompositeTests.cs
+@@ -705,6 +705,8 @@ public class PartyAggregateCompositeTests
+         result.Events.Count.ShouldBe(1);
+         result.Events[0].ShouldBeOfType<ContactChannelNotFound>();
+         result.Rejected.ShouldContain("Contact channel 'missing-channel' not found.");
++        result.Rejected.Any(x => x.Contains(command.UpdateContactChannels[0].Value!)).ShouldBeFalse();
++        result.Events.OfType<ContactChannelUpdated>().ShouldBeEmpty();
+     }
+ 
+     [Fact]
+@@ -751,6 +753,9 @@ public class PartyAggregateCompositeTests
+         result.Events.Count.ShouldBe(1);
+         result.Events[0].ShouldBeOfType<CompositeOperationConflict>();
+         result.Rejected.ShouldContain("Conflicting operations on same channel ID: email-3.");
++        result.Rejected.Any(x => x.Contains(command.AddContactChannels[0].Value)).ShouldBeFalse();
++        result.Events.OfType<ContactChannelAdded>().ShouldBeEmpty();
++        result.Events.OfType<ContactChannelRemoved>().ShouldBeEmpty();
+     }
+ 
+     [Fact]
+@@ -1079,6 +1084,9 @@ public class PartyAggregateCompositeTests
+         result.Events.Count.ShouldBe(1);
+         result.Events[0].ShouldBeOfType<CompositeOperationConflict>();
+         result.Rejected.ShouldContain("Conflicting operations on same channel ID: ch-email-1.");
++        result.Rejected.Any(x => x.Contains(command.UpdateContactChannels[0].Value!)).ShouldBeFalse();
++        result.Events.OfType<ContactChannelUpdated>().ShouldBeEmpty();
++        result.Events.OfType<ContactChannelRemoved>().ShouldBeEmpty();
+     }
+ 
+     [Fact]
+diff --git a/tests/Hexalith.Parties.Server.Tests/Aggregates/PartyAggregateCreateTests.cs b/tests/Hexalith.Parties.Server.Tests/Aggregates/PartyAggregateCreateTests.cs
+index 523d7ec..535b2d4 100644
+--- a/tests/Hexalith.Parties.Server.Tests/Aggregates/PartyAggregateCreateTests.cs
++++ b/tests/Hexalith.Parties.Server.Tests/Aggregates/PartyAggregateCreateTests.cs
+@@ -199,6 +199,23 @@ public class PartyAggregateCreateTests
+         AssertContainsOnlyRejection<PartyCannotBeCreatedWithoutType>(result);
+     }
+ 
++    [Fact]
++    public void Handle_CreatePartyWithDefaultType_WhenRetried_ReturnsSameTypedRejection()
++    {
++        CreateParty command = new()
++        {
++            PartyId = PartyTestData.DefaultPartyId,
++            Type = PartyType.Unknown,
++        };
++
++        var firstResult = PartyAggregate.Handle(command, null);
++        var secondResult = PartyAggregate.Handle(command, null);
++
++        AssertContainsOnlyRejection<PartyCannotBeCreatedWithoutType>(firstResult);
++        AssertContainsOnlyRejection<PartyCannotBeCreatedWithoutType>(secondResult);
++        firstResult.Events[0].GetType().ShouldBe(secondResult.Events[0].GetType());
++    }
++
+     [Fact]
+     public void Handle_CreatePersonWithoutPersonDetails_ReturnsRejection()
+     {
+diff --git a/tests/Hexalith.Parties.Server.Tests/Aggregates/PartyAggregateUpdateTests.cs b/tests/Hexalith.Parties.Server.Tests/Aggregates/PartyAggregateUpdateTests.cs
+index 2eff0c5..c526377 100644
+--- a/tests/Hexalith.Parties.Server.Tests/Aggregates/PartyAggregateUpdateTests.cs
++++ b/tests/Hexalith.Parties.Server.Tests/Aggregates/PartyAggregateUpdateTests.cs
+@@ -132,7 +132,7 @@ public class PartyAggregateUpdateTests
+         // Assert
+         result.IsRejection.ShouldBeTrue();
+         result.Events.Count.ShouldBe(1);
+-        PartyTypeMismatch rejection = result.Events[0].ShouldBeOfType<PartyTypeMismatch>();
++        PartyNotFound rejection = result.Events[0].ShouldBeOfType<PartyNotFound>();
+         rejection.Message.ShouldBe("Party does not exist.");
+         result.Events.OfType<PersonDetailsUpdated>().ShouldBeEmpty();
+         result.Events.OfType<PartyDisplayNameDerived>().ShouldBeEmpty();
+@@ -292,7 +292,7 @@ public class PartyAggregateUpdateTests
+         // Assert
+         result.IsRejection.ShouldBeTrue();
+         result.Events.Count.ShouldBe(1);
+-        PartyTypeMismatch rejection = result.Events[0].ShouldBeOfType<PartyTypeMismatch>();
++        PartyNotFound rejection = result.Events[0].ShouldBeOfType<PartyNotFound>();
+         rejection.Message.ShouldBe("Party does not exist.");
+         result.Events.OfType<OrganizationDetailsUpdated>().ShouldBeEmpty();
+         result.Events.OfType<PartyDisplayNameDerived>().ShouldBeEmpty();
+@@ -591,7 +591,9 @@ public class PartyAggregateUpdateTests
+ 
+         // Assert
+         result.IsRejection.ShouldBeTrue();
+-        result.Events[0].ShouldBeOfType<PartyTypeMismatch>();
++        result.Events.Count.ShouldBe(1);
++        result.Events[0].ShouldBeOfType<PartyNotFound>();
++        result.Events.OfType<IsNaturalPersonChanged>().ShouldBeEmpty();
+     }
+ 
+     [Fact]
+diff --git a/tests/Hexalith.Parties.Tests/ErrorHandling/PartiesGlobalExceptionHandlerTests.cs b/tests/Hexalith.Parties.Tests/ErrorHandling/PartiesGlobalExceptionHandlerTests.cs
+index 0973f5d..9502a73 100644
+--- a/tests/Hexalith.Parties.Tests/ErrorHandling/PartiesGlobalExceptionHandlerTests.cs
++++ b/tests/Hexalith.Parties.Tests/ErrorHandling/PartiesGlobalExceptionHandlerTests.cs
+@@ -4,6 +4,7 @@ using Hexalith.Parties.ErrorHandling;
+ 
+ using Microsoft.AspNetCore.Http;
+ using Microsoft.Extensions.DependencyInjection;
++using Microsoft.Extensions.Hosting;
+ using Microsoft.Extensions.Logging.Abstractions;
+ 
+ using Shouldly;
+@@ -55,4 +56,43 @@ public sealed class PartiesGlobalExceptionHandlerTests
+         JsonDocument payload = await JsonDocument.ParseAsync(context.Response.Body);
+         payload.RootElement.GetProperty("title").GetString().ShouldBe("Dependency Unavailable");
+     }
+-}
+\ No newline at end of file
++
++    [Fact]
++    public async Task TryHandleAsync_DevelopmentUnhandledException_DoesNotEchoExceptionMessageAsync()
++    {
++        var handler = new PartiesGlobalExceptionHandler(NullLogger<PartiesGlobalExceptionHandler>.Instance);
++        var services = new ServiceCollection();
++        services.AddSingleton<IHostEnvironment>(new TestHostEnvironment { EnvironmentName = Environments.Development });
++
++        var context = new DefaultHttpContext
++        {
++            RequestServices = services.BuildServiceProvider(),
++        };
++        context.Response.Body = new MemoryStream();
++
++        bool handled = await handler.TryHandleAsync(
++            context,
++            new InvalidOperationException("synthetic-personal-data-sentinel"),
++            CancellationToken.None);
++
++        handled.ShouldBeTrue();
++        context.Response.StatusCode.ShouldBe(StatusCodes.Status500InternalServerError);
++
++        context.Response.Body.Position = 0;
++        JsonDocument payload = await JsonDocument.ParseAsync(context.Response.Body);
++        JsonElement detail = payload.RootElement.GetProperty("detail");
++        detail.GetString().ShouldBe("[InvalidOperationException]");
++    }
++
++    private sealed class TestHostEnvironment : IHostEnvironment
++    {
++        public string EnvironmentName { get; set; } = Environments.Production;
++
++        public string ApplicationName { get; set; } = nameof(PartiesGlobalExceptionHandlerTests);
++
++        public string ContentRootPath { get; set; } = AppContext.BaseDirectory;
++
++        public Microsoft.Extensions.FileProviders.IFileProvider ContentRootFileProvider { get; set; }
++            = new Microsoft.Extensions.FileProviders.NullFileProvider();
++    }
++}
+diff --git a/tests/Hexalith.Parties.Tests/FitnessTests/PartyStateRejectionApplyEndToEndTests.cs b/tests/Hexalith.Parties.Tests/FitnessTests/PartyStateRejectionApplyEndToEndTests.cs
+index f5fa98f..180abf5 100644
+--- a/tests/Hexalith.Parties.Tests/FitnessTests/PartyStateRejectionApplyEndToEndTests.cs
++++ b/tests/Hexalith.Parties.Tests/FitnessTests/PartyStateRejectionApplyEndToEndTests.cs
+@@ -78,10 +78,14 @@ public sealed class PartyStateRejectionApplyEndToEndTests
+     [Fact]
+     public void RejectionEvents_AreIRejectionEvent_AndApplyIsDeclaredOnPartyState()
+     {
+-        // Cross-check: every rejection event in this test fixture must implement IRejectionEvent
+-        // (so the orchestrator's recognition layer routes it through the rehydrator's
+-        // suffix-match path) AND PartyState must declare an Apply overload taking it.
+-        Type[] rejections = [typeof(PartyProcessingRestricted), typeof(PartyNotRestricted), typeof(PartyNotFound)];
++        Type[] rejections = [.. typeof(PartyNotFound).Assembly
++            .GetTypes()
++            .Where(type => type.Namespace == typeof(PartyNotFound).Namespace)
++            .Where(type => type.IsClass && !type.IsAbstract)
++            .Where(type => typeof(IRejectionEvent).IsAssignableFrom(type))
++            .OrderBy(type => type.Name, StringComparer.Ordinal)];
++
++        rejections.ShouldNotBeEmpty("Parties must retain typed rejection event contracts.");
+ 
+         foreach (Type rejection in rejections)
+         {

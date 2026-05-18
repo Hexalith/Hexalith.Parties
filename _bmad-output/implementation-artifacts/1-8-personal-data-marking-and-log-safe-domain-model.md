@@ -1,6 +1,6 @@
 # Story 1.8: Personal Data Marking and Log-Safe Domain Model
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -94,6 +94,21 @@ so that MVP domain contracts are prepared for GDPR enforcement without leaking s
   - [x] Run `dotnet test tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj --configuration Release --filter FullyQualifiedName~PartyStateApplyOrderingFitnessTests` if `PartyState` changes.
   - [x] Run focused projection/search tests if a logging assertion or message in those surfaces changes.
   - [x] Run `dotnet build Hexalith.Parties.slnx --configuration Release` if public contracts, shared serialization, service defaults, or project references change.
+
+### Review Findings
+
+- [x] [Review][Decision→Defer] Aggregate `PartyTypeMismatch` → `PartyNotFound` change is out of story scope [src/Hexalith.Parties.Server/Aggregates/PartyAggregate.cs:586,625,664] — resolved 2026-05-18: split into a dedicated follow-up story so the rejection-type semantic change is owned by a typed-rejection-tightening story rather than the personal-data marking story. Change stays in main.
+- [x] [Review][Patch→Dismiss] `PartyDetail.NameHistory` classification is inconsistent [tests/Hexalith.Parties.Contracts.Tests/Privacy/PersonalDataInventoryTests.cs:125] — dismissed 2026-05-18: `Classification` enum is test-internal; the production consumer `PersonalDataGraphInspector.ContainsProtectedData` walks the graph recursively and produces the same protection result whether the property is marked directly or discovered via nested attributes. Story spec line 54 explicitly required `[PersonalData]` on `PartyDetail.NameHistory`, so the direct marker is intentional.
+- [x] [Review][Patch→Dismiss] Culture-sensitive `string.Contains` in composite PII-leak guard [tests/Hexalith.Parties.Server.Tests/Aggregates/PartyAggregateCompositeTests.cs:710-1105] — dismissed 2026-05-18: false alarm. `string.Contains(string)` defaults to `StringComparison.Ordinal` on .NET Core 2.1+ (including .NET 10). The Edge Case Hunter's Turkish-locale concern applies to .NET Framework only.
+- [x] [Review][Patch] Story 1.8 File List is incomplete [_bmad-output/implementation-artifacts/1-8-personal-data-marking-and-log-safe-domain-model.md] — applied 2026-05-18: File List extended to include `PartyState.cs`, `PartyAggregate.cs`, `PartyAggregate{Composite,Create,Update}Tests.cs`, `PartyStateRejectionApplyEndToEndTests.cs`, `PartyStateTests.cs`, `Directory.Packages.props`, and `launchSettings.json`.
+- [x] [Review][Defer] `PartyState.Apply(PartyCommandValidationRejected)` + reflection-based `PartyStateRejectionApplyEndToEndTests` sweep [src/Hexalith.Parties.Contracts/State/PartyState.cs:93, tests/Hexalith.Parties.Tests/FitnessTests/PartyStateRejectionApplyEndToEndTests.cs] — deferred, ships coherently with this story but is Story 1.7 typed-rejection plumbing scope.
+- [x] [Review][Defer] Aspire SDK bump (`13.2.2`→`13.3.3`) and `ASPIRE_ALLOW_UNSECURED_TRANSPORT=true` injected into both AppHost launch profiles [Directory.Packages.props, src/Hexalith.Parties.AppHost/Properties/launchSettings.json:12,24] — deferred, infra-config drift bundled with privacy story; the unsecured-transport toggle in particular warrants an explicit change record.
+- [x] [Review][Defer] `PropertyTypeContainsPersonalData` does not recurse beyond depth 1 [tests/Hexalith.Parties.Contracts.Tests/Privacy/PersonalDataInventoryTests.cs:236-252] — deferred, no current contract triggers the gap; future wrapper-of-PersonDetails types would silently bypass discoverability.
+- [x] [Review][Defer] Container helper unwraps only single-generic types (`Length == 1` guard) [PersonalDataInventoryTests.cs:244-247] — deferred, arrays (`T[]`), `Dictionary<K,V>`, `KeyValuePair<,>` and tuples are not handled; cosmetic refactor risk only today.
+- [x] [Review][Defer] `InspectedContractProperties_AreClassified` is closed-world over a manual `s_inspectedTypes` list [PersonalDataInventoryTests.cs:144-171,216-226] — deferred, new public contracts in `Hexalith.Parties.Contracts.*` will not auto-fail until added to the list.
+- [x] [Review][Defer] `ResolveProperty.Single(t => t.Name == parts[0])` throws on duplicate type names across namespaces [PersonalDataInventoryTests.cs:228-234] — deferred, future versioned contracts that reuse a class name will surface as an infra failure rather than a classification gap.
+- [x] [Review][Defer] `ex.GetType().Name` in projection/search/error paths still leaks backing technology (e.g., `KubernetesClientException`, `DaprException`) into `BlockedReason`/`FailureReason`/ProblemDetails [src/Hexalith.Parties/Search/PartyMemoryIndexingService.cs:93,139,202, src/Hexalith.Parties/Search/PartyMemoryUnitMappingStore.cs:205,245, src/Hexalith.Parties.Projections/Actors/PartyDetailProjectionActor.cs:186, src/Hexalith.Parties.Projections/Actors/PartyIndexProjectionActor.cs:209] — deferred, bounded MVP tradeoff per Dev Agent Record; sharper category-coded reasons belong with a follow-up redaction policy.
+- [x] [Review][Defer] Dev-mode 500 ProblemDetails `Detail` collapses to `[ExceptionTypeName]` only [src/Hexalith.Parties/ErrorHandling/PartiesGlobalExceptionHandler.cs:94] — deferred, intentional log-safety choice; pair with structured error-code documentation when the error catalog lands (Story 3.5).
 
 ## Dev Notes
 
@@ -256,17 +271,26 @@ GPT-5 Codex
 
 - _bmad-output/implementation-artifacts/1-8-personal-data-marking-and-log-safe-domain-model.md
 - _bmad-output/implementation-artifacts/sprint-status.yaml
+- Directory.Packages.props
+- src/Hexalith.Parties.AppHost/Properties/launchSettings.json
 - src/Hexalith.Parties.Contracts/Events/PartyDisplayNameDerived.cs
+- src/Hexalith.Parties.Contracts/State/PartyState.cs
 - src/Hexalith.Parties.Contracts/ValueObjects/NameHistoryEntry.cs
 - src/Hexalith.Parties/ErrorHandling/PartiesGlobalExceptionHandler.cs
 - src/Hexalith.Parties.Projections/Actors/PartyDetailProjectionActor.cs
 - src/Hexalith.Parties.Projections/Actors/PartyIndexProjectionActor.cs
+- src/Hexalith.Parties.Server/Aggregates/PartyAggregate.cs
 - src/Hexalith.Parties/Search/PartyMemoryCleanupService.cs
 - src/Hexalith.Parties/Search/PartyMemoryIndexingService.cs
 - src/Hexalith.Parties/Search/PartyMemoryUnitMappingStore.cs
 - tests/Hexalith.Parties.Contracts.Tests/Privacy/PersonalDataInventoryTests.cs
+- tests/Hexalith.Parties.Contracts.Tests/State/PartyStateTests.cs
 - tests/Hexalith.Parties.Security.Tests/PartyPayloadProtectionServiceTests.cs
+- tests/Hexalith.Parties.Server.Tests/Aggregates/PartyAggregateCompositeTests.cs
+- tests/Hexalith.Parties.Server.Tests/Aggregates/PartyAggregateCreateTests.cs
+- tests/Hexalith.Parties.Server.Tests/Aggregates/PartyAggregateUpdateTests.cs
 - tests/Hexalith.Parties.Tests/ErrorHandling/PartiesGlobalExceptionHandlerTests.cs
+- tests/Hexalith.Parties.Tests/FitnessTests/PartyStateRejectionApplyEndToEndTests.cs
 
 ## Change Log
 

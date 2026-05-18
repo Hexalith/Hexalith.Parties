@@ -44,7 +44,7 @@ project: Hexalith.Parties
 project_key: NOKEY
 tracking_system: file-system
 story_location: _bmad-output/implementation-artifacts
-# last_updated touched 2026-05-17 by code-review closing story 1-6
+# last_updated touched 2026-05-18 by code-review closing story 1-8
 # implementation-readiness cleanup approved 2026-05-17:
 # - Epic 2 renamed to Tenant-Safe Party Search and Retrieval in planning artifacts.
 # - Stories 2-1, 2-2, and 2-8 now require user/operator-observable verification paths.
@@ -63,7 +63,7 @@ development_status:
   1-5-manage-party-identifiers: done
   1-6-deactivate-and-reactivate-parties: done
   1-7-idempotent-commands-and-typed-rejections: done
-  1-8-personal-data-marking-and-log-safe-domain-model: review
+  1-8-personal-data-marking-and-log-safe-domain-model: done
   1-9-return-updated-party-state-from-mutations: ready-for-dev
   epic-1-retrospective: optional
 
