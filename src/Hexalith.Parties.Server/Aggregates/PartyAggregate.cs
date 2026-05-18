@@ -586,7 +586,7 @@ public sealed class PartyAggregate : EventStoreAggregate<PartyState> {
         ArgumentNullException.ThrowIfNull(command);
 
         if (state is null) {
-            return DomainResult.Rejection([new PartyTypeMismatch { Message = "Party does not exist." }]);
+            return DomainResult.Rejection([new PartyNotFound { Message = "Party does not exist." }]);
         }
 
         DomainResult? erasureRejection = RejectIfErasureInProgress(state);
@@ -625,7 +625,7 @@ public sealed class PartyAggregate : EventStoreAggregate<PartyState> {
         ArgumentNullException.ThrowIfNull(command);
 
         if (state is null) {
-            return DomainResult.Rejection([new PartyTypeMismatch { Message = "Party does not exist." }]);
+            return DomainResult.Rejection([new PartyNotFound { Message = "Party does not exist." }]);
         }
 
         DomainResult? erasureRejection = RejectIfErasureInProgress(state);
@@ -664,7 +664,7 @@ public sealed class PartyAggregate : EventStoreAggregate<PartyState> {
         ArgumentNullException.ThrowIfNull(command);
 
         if (state is null) {
-            return DomainResult.Rejection([new PartyTypeMismatch { Message = "Party does not exist." }]);
+            return DomainResult.Rejection([new PartyNotFound { Message = "Party does not exist." }]);
         }
 
         DomainResult? erasureRejection = RejectIfErasureInProgress(state);

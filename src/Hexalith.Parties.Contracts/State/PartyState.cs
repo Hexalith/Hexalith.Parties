@@ -90,6 +90,8 @@ public sealed class PartyState
     public void Apply(PartyCannotAddDuplicateIdentifier e) => ArgumentNullException.ThrowIfNull(e);
 
     public void Apply(CompositeOperationConflict e) => ArgumentNullException.ThrowIfNull(e);
+
+    public void Apply(PartyCommandValidationRejected e) => ArgumentNullException.ThrowIfNull(e);
 #pragma warning restore CA1822
 
     public void Apply(PartyCreated e)

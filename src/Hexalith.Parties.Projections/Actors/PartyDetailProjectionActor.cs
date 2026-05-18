@@ -183,7 +183,7 @@ public sealed partial class PartyDetailProjectionActor : Actor, IPartyDetailProj
             // let replay rebuild state. Infrastructure failures (state-store outage, OOM, etc.)
             // must propagate so the orchestrator surfaces them rather than silently degrading
             // to replay-from-zero on every command.
-            Log.SequenceCheckpointReset(_logger, partyId, ex.Message);
+            Log.SequenceCheckpointReset(_logger, partyId, ex.GetType().Name);
             _lastProcessedSequence = UnloadedSequenceSentinel;
         }
 

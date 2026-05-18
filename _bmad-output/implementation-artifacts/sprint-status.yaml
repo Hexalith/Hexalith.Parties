@@ -58,8 +58,8 @@ development_status:
   1-4-manage-contact-channels: done
   1-5-manage-party-identifiers: done
   1-6-deactivate-and-reactivate-parties: done
-  1-7-idempotent-commands-and-typed-rejections: ready-for-dev
-  1-8-personal-data-marking-and-log-safe-domain-model: ready-for-dev
+  1-7-idempotent-commands-and-typed-rejections: review
+  1-8-personal-data-marking-and-log-safe-domain-model: review
   1-9-return-updated-party-state-from-mutations: ready-for-dev
   epic-1-retrospective: optional
 

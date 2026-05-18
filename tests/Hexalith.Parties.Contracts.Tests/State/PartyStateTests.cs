@@ -193,16 +193,6 @@ public class PartyStateTests {
     }
 
     [Fact]
-    public void Apply_PartyDeactivated_SetsIsActiveFalse() {
-        var state = new PartyState();
-        state.IsActive.ShouldBeTrue();
-
-        state.Apply(new PartyDeactivated());
-
-        state.IsActive.ShouldBeFalse();
-    }
-
-    [Fact]
     public void Apply_PartyDeactivated_PreservesNonLifecyclePartyData() {
         PartyState state = PartyTestData.CreateStateWithConsent();
         DateTimeOffset createdAt = state.CreatedAt;
@@ -228,6 +218,16 @@ public class PartyStateTests {
     }
 
     [Fact]
+    public void Apply_PartyDeactivated_SetsIsActiveFalse() {
+        var state = new PartyState();
+        state.IsActive.ShouldBeTrue();
+
+        state.Apply(new PartyDeactivated());
+
+        state.IsActive.ShouldBeFalse();
+    }
+
+    [Fact]
     public void Apply_PartyDisplayNameDerived_SetsNames() {
         var state = new PartyState();
 
@@ -242,16 +242,6 @@ public class PartyStateTests {
         var state = new PartyState();
 
         Should.NotThrow(() => state.Apply(new PartyMerged { SurvivorPartyId = "p1", MergedPartyId = "p2" }));
-    }
-
-    [Fact]
-    public void Apply_PartyReactivated_SetsIsActiveTrue() {
-        var state = new PartyState();
-        state.Apply(new PartyDeactivated());
-
-        state.Apply(new PartyReactivated());
-
-        state.IsActive.ShouldBeTrue();
     }
 
     [Fact]
@@ -278,6 +268,16 @@ public class PartyStateTests {
         state.ConsentRecords.ShouldBe(consentRecords);
         state.ErasureStatus.ShouldBe(ErasureStatus.Active);
         state.IsRestricted.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void Apply_PartyReactivated_SetsIsActiveTrue() {
+        var state = new PartyState();
+        state.Apply(new PartyDeactivated());
+
+        state.Apply(new PartyReactivated());
+
+        state.IsActive.ShouldBeTrue();
     }
 
     [Fact]

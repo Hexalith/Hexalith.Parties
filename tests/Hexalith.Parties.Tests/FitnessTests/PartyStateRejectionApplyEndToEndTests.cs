@@ -78,10 +78,14 @@ public sealed class PartyStateRejectionApplyEndToEndTests
     [Fact]
     public void RejectionEvents_AreIRejectionEvent_AndApplyIsDeclaredOnPartyState()
     {
-        // Cross-check: every rejection event in this test fixture must implement IRejectionEvent
-        // (so the orchestrator's recognition layer routes it through the rehydrator's
-        // suffix-match path) AND PartyState must declare an Apply overload taking it.
-        Type[] rejections = [typeof(PartyProcessingRestricted), typeof(PartyNotRestricted), typeof(PartyNotFound)];
+        Type[] rejections = [.. typeof(PartyNotFound).Assembly
+            .GetTypes()
+            .Where(type => type.Namespace == typeof(PartyNotFound).Namespace)
+            .Where(type => type.IsClass && !type.IsAbstract)
+            .Where(type => typeof(IRejectionEvent).IsAssignableFrom(type))
+            .OrderBy(type => type.Name, StringComparer.Ordinal)];
+
+        rejections.ShouldNotBeEmpty("Parties must retain typed rejection event contracts.");
 
         foreach (Type rejection in rejections)
         {

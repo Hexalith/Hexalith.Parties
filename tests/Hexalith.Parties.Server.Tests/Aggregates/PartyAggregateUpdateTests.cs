@@ -132,7 +132,7 @@ public class PartyAggregateUpdateTests
         // Assert
         result.IsRejection.ShouldBeTrue();
         result.Events.Count.ShouldBe(1);
-        PartyTypeMismatch rejection = result.Events[0].ShouldBeOfType<PartyTypeMismatch>();
+        PartyNotFound rejection = result.Events[0].ShouldBeOfType<PartyNotFound>();
         rejection.Message.ShouldBe("Party does not exist.");
         result.Events.OfType<PersonDetailsUpdated>().ShouldBeEmpty();
         result.Events.OfType<PartyDisplayNameDerived>().ShouldBeEmpty();
@@ -292,7 +292,7 @@ public class PartyAggregateUpdateTests
         // Assert
         result.IsRejection.ShouldBeTrue();
         result.Events.Count.ShouldBe(1);
-        PartyTypeMismatch rejection = result.Events[0].ShouldBeOfType<PartyTypeMismatch>();
+        PartyNotFound rejection = result.Events[0].ShouldBeOfType<PartyNotFound>();
         rejection.Message.ShouldBe("Party does not exist.");
         result.Events.OfType<OrganizationDetailsUpdated>().ShouldBeEmpty();
         result.Events.OfType<PartyDisplayNameDerived>().ShouldBeEmpty();
@@ -591,7 +591,9 @@ public class PartyAggregateUpdateTests
 
         // Assert
         result.IsRejection.ShouldBeTrue();
-        result.Events[0].ShouldBeOfType<PartyTypeMismatch>();
+        result.Events.Count.ShouldBe(1);
+        result.Events[0].ShouldBeOfType<PartyNotFound>();
+        result.Events.OfType<IsNaturalPersonChanged>().ShouldBeEmpty();
     }
 
     [Fact]

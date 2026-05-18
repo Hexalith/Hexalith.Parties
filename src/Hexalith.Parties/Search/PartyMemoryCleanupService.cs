@@ -75,7 +75,7 @@ internal sealed class PartyMemoryCleanupService(
                 memoryUnitId,
                 sourceUri,
                 Cleaned: false,
-                BlockedReason: $"Memories cleanup transport error: {ex.Message}");
+                BlockedReason: $"Memories cleanup transport error: {ex.GetType().Name}");
         }
         catch (TaskCanceledException ex)
         {
@@ -85,7 +85,7 @@ internal sealed class PartyMemoryCleanupService(
                 memoryUnitId,
                 sourceUri,
                 Cleaned: false,
-                BlockedReason: $"Memories cleanup timed out: {ex.Message}");
+                BlockedReason: $"Memories cleanup timed out: {ex.GetType().Name}");
         }
     }
 

@@ -1,6 +1,6 @@
 # Story 1.8: Personal Data Marking and Log-Safe Domain Model
 
-Status: ready-for-dev
+Status: review
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -49,51 +49,51 @@ so that MVP domain contracts are prepared for GDPR enforcement without leaking s
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Inventory the current personal-data contract surface (AC: 1, 2, 3, 5)
-  - [ ] Inspect `PersonalDataAttribute`, value objects, commands, events, state, models, search DTOs, and security contracts before changing attributes.
-  - [ ] Confirm existing `[PersonalData]` coverage on `PersonDetails`, `PartyState.DisplayName`, `PartyState.SortName`, `PartyDetail.DisplayName`, `PartyDetail.SortName`, `PartyDetail.NameHistory`, `PartyIndexEntry.DisplayName`, `ContactChannel.Value`, `EmailAddress.Address`, `PostalAddress` fields, `PhoneNumber.Number`, `SocialMediaHandle.Handle`, `PartyIdentifier.Value`, `AddContactChannel.Value`, `UpdateContactChannel.Value`, `AddIdentifier.Value`, `ContactChannelAdded.Value`, `ContactChannelUpdated.Value`, and `IdentifierAdded.Value`.
-  - [ ] Verify whether `PartyDisplayNameDerived.DisplayName`, `PartyDisplayNameDerived.SortName`, `NameHistoryEntry.DisplayName`, and `NameHistoryEntry.SortName` are currently unmarked; if still unmarked, patch those narrow contract fields or record a clear reason if the attribute model intentionally relies on containing properties.
-  - [ ] Verify `PartyCreated.PersonDetails`, `PersonDetailsUpdated.PersonDetails`, `CreateParty.PersonDetails`, and `UpdatePersonDetails.PersonDetails` are covered through nested `PersonDetails` attributes; do not duplicate attributes on container properties unless the reflection scanner requires top-level command/event discovery.
-  - [ ] Keep `OrganizationDetails.LegalName`, `TradingName`, `LegalForm`, and `RegistrationNumber` aligned with architecture D6: organization entity fields are not marked by default for corporations; `IsNaturalPerson` is the future type-dependent escalation flag.
+- [x] Task 1: Inventory the current personal-data contract surface (AC: 1, 2, 3, 5)
+  - [x] Inspect `PersonalDataAttribute`, value objects, commands, events, state, models, search DTOs, and security contracts before changing attributes.
+  - [x] Confirm existing `[PersonalData]` coverage on `PersonDetails`, `PartyState.DisplayName`, `PartyState.SortName`, `PartyDetail.DisplayName`, `PartyDetail.SortName`, `PartyDetail.NameHistory`, `PartyIndexEntry.DisplayName`, `ContactChannel.Value`, `EmailAddress.Address`, `PostalAddress` fields, `PhoneNumber.Number`, `SocialMediaHandle.Handle`, `PartyIdentifier.Value`, `AddContactChannel.Value`, `UpdateContactChannel.Value`, `AddIdentifier.Value`, `ContactChannelAdded.Value`, `ContactChannelUpdated.Value`, and `IdentifierAdded.Value`.
+  - [x] Verify whether `PartyDisplayNameDerived.DisplayName`, `PartyDisplayNameDerived.SortName`, `NameHistoryEntry.DisplayName`, and `NameHistoryEntry.SortName` are currently unmarked; if still unmarked, patch those narrow contract fields or record a clear reason if the attribute model intentionally relies on containing properties.
+  - [x] Verify `PartyCreated.PersonDetails`, `PersonDetailsUpdated.PersonDetails`, `CreateParty.PersonDetails`, and `UpdatePersonDetails.PersonDetails` are covered through nested `PersonDetails` attributes; do not duplicate attributes on container properties unless the reflection scanner requires top-level command/event discovery.
+  - [x] Keep `OrganizationDetails.LegalName`, `TradingName`, `LegalForm`, and `RegistrationNumber` aligned with architecture D6: organization entity fields are not marked by default for corporations; `IsNaturalPerson` is the future type-dependent escalation flag.
 
-- [ ] Task 2: Define or update reflection-based privacy coverage tests (AC: 1, 2, 3, 5)
-  - [ ] Add or update focused tests in `tests/Hexalith.Parties.Contracts.Tests` or `tests/Hexalith.Parties.Security.Tests` that enumerate the expected `[PersonalData]` property inventory.
-  - [ ] Treat the expected inventory rule as the source of truth: person names, derived names, date of birth, contact payload values, and identifier values must be marked; organization entity fields remain unmarked by default under D6.
-  - [ ] Cover nested value-object fields and top-level command/event/model fields separately so a regression in either layer is visible.
-  - [ ] Assert organization entity fields are intentionally unmarked for default corporate handling, while organization contact channels and identifiers remain marked for all party types.
-  - [ ] Add positive and negative inventory cases so new domain contract properties fail loudly until classified as personal, non-personal, or deferred by documented D6/D7 policy.
-  - [ ] Record the expected inventory as property/type metadata only; do not store example names, contact values, identifier values, serialized payloads, or formatted object values in test data, snapshots, or assertion messages.
-  - [ ] Include a test name or data row for `PartyDisplayNameDerived` and `NameHistoryEntry` so derived names do not slip through future crypto-shredding or log-sanitization preparation.
-  - [ ] Avoid snapshot tests that print personal data values; assert property names and types instead.
+- [x] Task 2: Define or update reflection-based privacy coverage tests (AC: 1, 2, 3, 5)
+  - [x] Add or update focused tests in `tests/Hexalith.Parties.Contracts.Tests` or `tests/Hexalith.Parties.Security.Tests` that enumerate the expected `[PersonalData]` property inventory.
+  - [x] Treat the expected inventory rule as the source of truth: person names, derived names, date of birth, contact payload values, and identifier values must be marked; organization entity fields remain unmarked by default under D6.
+  - [x] Cover nested value-object fields and top-level command/event/model fields separately so a regression in either layer is visible.
+  - [x] Assert organization entity fields are intentionally unmarked for default corporate handling, while organization contact channels and identifiers remain marked for all party types.
+  - [x] Add positive and negative inventory cases so new domain contract properties fail loudly until classified as personal, non-personal, or deferred by documented D6/D7 policy.
+  - [x] Record the expected inventory as property/type metadata only; do not store example names, contact values, identifier values, serialized payloads, or formatted object values in test data, snapshots, or assertion messages.
+  - [x] Include a test name or data row for `PartyDisplayNameDerived` and `NameHistoryEntry` so derived names do not slip through future crypto-shredding or log-sanitization preparation.
+  - [x] Avoid snapshot tests that print personal data values; assert property names and types instead.
 
-- [ ] Task 3: Audit log and telemetry surfaces for payload leakage (AC: 4, 5)
-  - [ ] Inspect `src/Hexalith.Parties/ErrorHandling`, `src/Hexalith.Parties/Domain`, `src/Hexalith.Parties/Extensions`, `src/Hexalith.Parties.Projections`, `src/Hexalith.Parties/Search`, and `src/Hexalith.Parties.ServiceDefaults`.
-  - [ ] Confirm logger messages use bounded metadata and do not interpolate raw command/event objects, serialized payload bytes, contact values, identifier values, person names, organization natural-person names, tokens, claims dictionaries, authorization headers, Dapr ports, connection strings, or raw backend response bodies.
-  - [ ] Include diagnostic enrichers, exception detail paths, object `ToString()` paths, and generated formatted messages in the audit so log-safety is not limited to obvious direct `ILogger` calls.
-  - [ ] Include validation and ProblemDetails paths in the audit: error codes, property names, and bounded failure categories are allowed, but attempted values, raw request bodies, exception `Data`, claims dictionaries, tokens, connection strings, and backend response bodies are not.
-  - [ ] Pay special attention to `PartiesGlobalExceptionHandler`, `PartiesValidationExceptionHandler`, `PartyProjectionUpdateOrchestrator`, `PartyDetailProjectionActor`, `PartyIndexProjectionActor`, `ProjectionRebuildService`, `PartyMemoryIndexingService`, `MemoriesPartySearchService`, `PartyMemoryCleanupService`, and `PartyMemoryUnitMappingStore`.
-  - [ ] Treat party id, tenant id, event type name, command type name, correlation id, sequence number, and bounded outcome/status codes as allowed log fields.
-  - [ ] If `ServiceDefaults` keeps `IncludeFormattedMessage = true`, prove generated messages do not include personal-data arguments; do not disable observability globally unless a specific leak requires it.
+- [x] Task 3: Audit log and telemetry surfaces for payload leakage (AC: 4, 5)
+  - [x] Inspect `src/Hexalith.Parties/ErrorHandling`, `src/Hexalith.Parties/Domain`, `src/Hexalith.Parties/Extensions`, `src/Hexalith.Parties.Projections`, `src/Hexalith.Parties/Search`, and `src/Hexalith.Parties.ServiceDefaults`.
+  - [x] Confirm logger messages use bounded metadata and do not interpolate raw command/event objects, serialized payload bytes, contact values, identifier values, person names, organization natural-person names, tokens, claims dictionaries, authorization headers, Dapr ports, connection strings, or raw backend response bodies.
+  - [x] Include diagnostic enrichers, exception detail paths, object `ToString()` paths, and generated formatted messages in the audit so log-safety is not limited to obvious direct `ILogger` calls.
+  - [x] Include validation and ProblemDetails paths in the audit: error codes, property names, and bounded failure categories are allowed, but attempted values, raw request bodies, exception `Data`, claims dictionaries, tokens, connection strings, and backend response bodies are not.
+  - [x] Pay special attention to `PartiesGlobalExceptionHandler`, `PartiesValidationExceptionHandler`, `PartyProjectionUpdateOrchestrator`, `PartyDetailProjectionActor`, `PartyIndexProjectionActor`, `ProjectionRebuildService`, `PartyMemoryIndexingService`, `MemoriesPartySearchService`, `PartyMemoryCleanupService`, and `PartyMemoryUnitMappingStore`.
+  - [x] Treat party id, tenant id, event type name, command type name, correlation id, sequence number, and bounded outcome/status codes as allowed log fields.
+  - [x] If `ServiceDefaults` keeps `IncludeFormattedMessage = true`, prove generated messages do not include personal-data arguments; do not disable observability globally unless a specific leak requires it.
 
-- [ ] Task 4: Patch only narrow marking or logging gaps (AC: 1, 2, 3, 4)
-  - [ ] Add `[PersonalData]` to missing contract properties only when the field itself always carries personal data under D6 or the current MVP conservative rule.
-  - [ ] Prefer generated `LoggerMessage` or structured `ILogger` templates with safe fields when replacing unsafe logging.
-  - [ ] Do not add a new serializer, redaction framework, encryption layer, crypto-shredding runtime, key-management behavior, projection rebuild behavior, search-index erasure behavior, REST controller, MCP tool, AdminPortal UI, Picker UI, or public API surface in this story.
-  - [ ] Do not make `Hexalith.Parties.Contracts` depend on hosting, Dapr, MediatR, FluentValidation, UI, infrastructure, or logging implementation packages.
-  - [ ] Preserve EventStore aggregate identity and existing command/event contract shapes except for additive `[PersonalData]` attributes.
+- [x] Task 4: Patch only narrow marking or logging gaps (AC: 1, 2, 3, 4)
+  - [x] Add `[PersonalData]` to missing contract properties only when the field itself always carries personal data under D6 or the current MVP conservative rule.
+  - [x] Prefer generated `LoggerMessage` or structured `ILogger` templates with safe fields when replacing unsafe logging.
+  - [x] Do not add a new serializer, redaction framework, encryption layer, crypto-shredding runtime, key-management behavior, projection rebuild behavior, search-index erasure behavior, REST controller, MCP tool, AdminPortal UI, Picker UI, or public API surface in this story.
+  - [x] Do not make `Hexalith.Parties.Contracts` depend on hosting, Dapr, MediatR, FluentValidation, UI, infrastructure, or logging implementation packages.
+  - [x] Preserve EventStore aggregate identity and existing command/event contract shapes except for additive `[PersonalData]` attributes.
 
-- [ ] Task 5: Document unresolved v1.1 privacy-design questions in the Dev Agent Record (AC: 3, 4)
-  - [ ] If organization natural-person field handling cannot be represented with simple property attributes, record the exact gap and reference D6/D7 rather than changing default organization field markings.
-  - [ ] If framework-level log sanitization is not yet available in EventStore or service defaults, record the accepted MVP evidence and the remaining platform-level decision without inventing local ad hoc redaction.
-  - [ ] If reflection tests cannot see nested personal-data properties through command/event containers, record whether the scanner was extended or whether top-level container attributes were intentionally added.
-  - [ ] Record the bounded log-safety evidence gathered during implementation, including which representative logging/exception paths were inspected and which focused tests or grep-style checks were run.
+- [x] Task 5: Document unresolved v1.1 privacy-design questions in the Dev Agent Record (AC: 3, 4)
+  - [x] If organization natural-person field handling cannot be represented with simple property attributes, record the exact gap and reference D6/D7 rather than changing default organization field markings.
+  - [x] If framework-level log sanitization is not yet available in EventStore or service defaults, record the accepted MVP evidence and the remaining platform-level decision without inventing local ad hoc redaction.
+  - [x] If reflection tests cannot see nested personal-data properties through command/event containers, record whether the scanner was extended or whether top-level container attributes were intentionally added.
+  - [x] Record the bounded log-safety evidence gathered during implementation, including which representative logging/exception paths were inspected and which focused tests or grep-style checks were run.
 
-- [ ] Task 6: Run focused validation (AC: 1, 2, 3, 4, 5)
-  - [ ] Run `dotnet test tests/Hexalith.Parties.Contracts.Tests/Hexalith.Parties.Contracts.Tests.csproj --configuration Release --filter FullyQualifiedName~PersonalData`.
-  - [ ] Run `dotnet test tests/Hexalith.Parties.Security.Tests/Hexalith.Parties.Security.Tests.csproj --configuration Release --filter FullyQualifiedName~PartyPersonalDataCommandGuardTests`.
-  - [ ] Run `dotnet test tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj --configuration Release --filter FullyQualifiedName~PartyStateApplyOrderingFitnessTests` if `PartyState` changes.
-  - [ ] Run focused projection/search tests if a logging assertion or message in those surfaces changes.
-  - [ ] Run `dotnet build Hexalith.Parties.slnx --configuration Release` if public contracts, shared serialization, service defaults, or project references change.
+- [x] Task 6: Run focused validation (AC: 1, 2, 3, 4, 5)
+  - [x] Run `dotnet test tests/Hexalith.Parties.Contracts.Tests/Hexalith.Parties.Contracts.Tests.csproj --configuration Release --filter FullyQualifiedName~PersonalData`.
+  - [x] Run `dotnet test tests/Hexalith.Parties.Security.Tests/Hexalith.Parties.Security.Tests.csproj --configuration Release --filter FullyQualifiedName~PartyPersonalDataCommandGuardTests`.
+  - [x] Run `dotnet test tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj --configuration Release --filter FullyQualifiedName~PartyStateApplyOrderingFitnessTests` if `PartyState` changes.
+  - [x] Run focused projection/search tests if a logging assertion or message in those surfaces changes.
+  - [x] Run `dotnet build Hexalith.Parties.slnx --configuration Release` if public contracts, shared serialization, service defaults, or project references change.
 
 ## Dev Notes
 
@@ -233,16 +233,44 @@ tests/Hexalith.Parties.Security.Tests/
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+GPT-5 Codex
 
 ### Debug Log References
 
+- 2026-05-18: Red test run for `FullyQualifiedName~PersonalData` failed on `NameHistoryEntry.DisplayName`, `NameHistoryEntry.SortName`, `PartyDisplayNameDerived.DisplayName`, and `PartyDisplayNameDerived.SortName`.
+- 2026-05-18: Red test run for `PartiesGlobalExceptionHandlerTests` proved development 500 ProblemDetails echoed raw exception messages before the log-safety patch.
+- 2026-05-18: Full `dotnet build Hexalith.Parties.slnx --configuration Release` initially hit stale/corrupt Picker generated output; cleaned Picker project/test Release outputs and reran successfully.
+
 ### Completion Notes List
+
+- Added direct `[PersonalData]` markers to derived display/sort names on `PartyDisplayNameDerived` and `NameHistoryEntry`.
+- Added metadata-only reflection inventory coverage for personal-data, non-personal, and deferred contract fields, including D6 organization entity-field negative coverage and nested container discoverability checks.
+- Updated security payload classification so `PartyDisplayNameDerived` is treated as carrying protected data.
+- Tightened representative log/ProblemDetails surfaces by removing raw exception-message echo from development 500 details and replacing selected failure/log reason fields with bounded exception type names.
+- D6/D7 deferred gap remains: `OrganizationDetails` default corporate entity fields stay unmarked, while runtime type-dependent `IsNaturalPerson` escalation remains v1.1 design/crypto-shredding scope.
+- Framework-level automatic `[PersonalData]` log redaction remains a platform/service-defaults decision; this story preserves `IncludeFormattedMessage = true` and bounds local message arguments inspected here.
+- Reflection scanner coverage works through nested `PersonDetails`, contact-channel, identifier, and collection item types, so top-level command/event container attributes were not duplicated.
+- Validation passed: focused contract/security/error/search/projection tests, full Release solution build, and full Release solution test suite.
 
 ### File List
 
+- _bmad-output/implementation-artifacts/1-8-personal-data-marking-and-log-safe-domain-model.md
+- _bmad-output/implementation-artifacts/sprint-status.yaml
+- src/Hexalith.Parties.Contracts/Events/PartyDisplayNameDerived.cs
+- src/Hexalith.Parties.Contracts/ValueObjects/NameHistoryEntry.cs
+- src/Hexalith.Parties/ErrorHandling/PartiesGlobalExceptionHandler.cs
+- src/Hexalith.Parties.Projections/Actors/PartyDetailProjectionActor.cs
+- src/Hexalith.Parties.Projections/Actors/PartyIndexProjectionActor.cs
+- src/Hexalith.Parties/Search/PartyMemoryCleanupService.cs
+- src/Hexalith.Parties/Search/PartyMemoryIndexingService.cs
+- src/Hexalith.Parties/Search/PartyMemoryUnitMappingStore.cs
+- tests/Hexalith.Parties.Contracts.Tests/Privacy/PersonalDataInventoryTests.cs
+- tests/Hexalith.Parties.Security.Tests/PartyPayloadProtectionServiceTests.cs
+- tests/Hexalith.Parties.Tests/ErrorHandling/PartiesGlobalExceptionHandlerTests.cs
+
 ## Change Log
 
+- 2026-05-18: Implemented story 1.8 privacy inventory, derived-name `[PersonalData]` markers, bounded ProblemDetails/log reason hardening, and validation evidence.
 - 2026-05-17: Advanced elicitation applied pre-dev clarifications for metadata-only `[PersonalData]` scope, privacy-safe inventory test output, validation/ProblemDetails log-safety audit paths, derived-name versus organization D6 boundaries, and bounded evidence capture.
 - 2026-05-16: Party-mode review applied pre-dev clarifications for log-safe meaning, positive/negative marker inventory tests, D6 organization-field protection, diagnostic-enricher/`ToString()` audit coverage, and metadata-local implementation scope.
 - 2026-05-16: Story created by BMAD pre-dev hardening automation with current personal-data marker inventory, D6 type-dependent organization scope, and log-safe domain-model reconciliation context.

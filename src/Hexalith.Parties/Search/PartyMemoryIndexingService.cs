@@ -90,7 +90,7 @@ internal sealed class PartyMemoryIndexingService(
                 unit.SourceUri,
                 WorkflowInstanceId: null,
                 Indexed: false,
-                FailureReason: $"{ex.GetType().Name}: {ex.Message}");
+                FailureReason: ex.GetType().Name);
         }
 
         // P18: A misbehaving server returning a 2xx with empty/whitespace instanceId would
@@ -136,7 +136,7 @@ internal sealed class PartyMemoryIndexingService(
                 unit.SourceUri,
                 WorkflowInstanceId: workflowInstanceId,
                 Indexed: false,
-                FailureReason: $"Mapping record failed ({ex.GetType().Name}: {ex.Message}). Compensating delete attempted.");
+                FailureReason: $"Mapping record failed ({ex.GetType().Name}). Compensating delete attempted.");
         }
 
         return new PartyMemoryIndexingResult(
@@ -199,7 +199,7 @@ internal sealed class PartyMemoryIndexingService(
                 workflowInstanceId,
                 unit.TenantId,
                 unit.PartyId,
-                originalFailure.Message);
+                originalFailure.GetType().Name);
         }
     }
 }

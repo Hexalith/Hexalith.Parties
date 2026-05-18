@@ -705,6 +705,8 @@ public class PartyAggregateCompositeTests
         result.Events.Count.ShouldBe(1);
         result.Events[0].ShouldBeOfType<ContactChannelNotFound>();
         result.Rejected.ShouldContain("Contact channel 'missing-channel' not found.");
+        result.Rejected.Any(x => x.Contains(command.UpdateContactChannels[0].Value!)).ShouldBeFalse();
+        result.Events.OfType<ContactChannelUpdated>().ShouldBeEmpty();
     }
 
     [Fact]
@@ -751,6 +753,9 @@ public class PartyAggregateCompositeTests
         result.Events.Count.ShouldBe(1);
         result.Events[0].ShouldBeOfType<CompositeOperationConflict>();
         result.Rejected.ShouldContain("Conflicting operations on same channel ID: email-3.");
+        result.Rejected.Any(x => x.Contains(command.AddContactChannels[0].Value)).ShouldBeFalse();
+        result.Events.OfType<ContactChannelAdded>().ShouldBeEmpty();
+        result.Events.OfType<ContactChannelRemoved>().ShouldBeEmpty();
     }
 
     [Fact]
@@ -1079,6 +1084,9 @@ public class PartyAggregateCompositeTests
         result.Events.Count.ShouldBe(1);
         result.Events[0].ShouldBeOfType<CompositeOperationConflict>();
         result.Rejected.ShouldContain("Conflicting operations on same channel ID: ch-email-1.");
+        result.Rejected.Any(x => x.Contains(command.UpdateContactChannels[0].Value!)).ShouldBeFalse();
+        result.Events.OfType<ContactChannelUpdated>().ShouldBeEmpty();
+        result.Events.OfType<ContactChannelRemoved>().ShouldBeEmpty();
     }
 
     [Fact]

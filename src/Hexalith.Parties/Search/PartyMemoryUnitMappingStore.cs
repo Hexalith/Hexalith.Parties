@@ -202,7 +202,7 @@ internal sealed class PartyMemoryUnitMappingStore(
                 tenantId,
                 partyId);
             throw new InvalidOperationException(
-                $"Failed to clear memory-unit mapping for {tenantId}/{partyId}: {ex.Message}",
+                $"Failed to clear memory-unit mapping for {tenantId}/{partyId}: {ex.GetType().Name}",
                 ex);
         }
     }
@@ -242,7 +242,7 @@ internal sealed class PartyMemoryUnitMappingStore(
                 tenantId,
                 partyId);
             throw new InvalidOperationException(
-                $"Failed to replace memory-unit mapping for {tenantId}/{partyId}: {ex.Message}",
+                $"Failed to replace memory-unit mapping for {tenantId}/{partyId}: {ex.GetType().Name}",
                 ex);
         }
     }

@@ -91,7 +91,7 @@ public sealed class PartiesGlobalExceptionHandler(ILogger<PartiesGlobalException
             Title = "Internal Server Error",
             Type = "https://tools.ietf.org/html/rfc9457#section-3",
             Detail = isDevelopment
-                ? $"[{exception.GetType().Name}] {exception.Message}"
+                ? $"[{exception.GetType().Name}]"
                 : "An unexpected error occurred while processing your request.",
             Instance = httpContext.Request.Path,
             Extensions = { ["correlationId"] = correlationId },

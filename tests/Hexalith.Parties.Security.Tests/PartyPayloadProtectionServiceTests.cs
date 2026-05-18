@@ -659,7 +659,7 @@ public sealed class PartyPayloadProtectionServiceTests
             [typeof(ContactChannelRemoved)] = false,
             [typeof(IdentifierRemoved)] = false,
             [typeof(IsNaturalPersonChanged)] = false,
-            [typeof(PartyDisplayNameDerived)] = false, // No [PersonalData] on event fields
+            [typeof(PartyDisplayNameDerived)] = true,
             [typeof(PartyEncryptionKeyCreated)] = false,
             [typeof(PartyEncryptionKeyDeleted)] = false,
             [typeof(PartyEncryptionKeyRotated)] = false,

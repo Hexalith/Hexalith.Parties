@@ -200,6 +200,23 @@ public class PartyAggregateCreateTests
     }
 
     [Fact]
+    public void Handle_CreatePartyWithDefaultType_WhenRetried_ReturnsSameTypedRejection()
+    {
+        CreateParty command = new()
+        {
+            PartyId = PartyTestData.DefaultPartyId,
+            Type = PartyType.Unknown,
+        };
+
+        var firstResult = PartyAggregate.Handle(command, null);
+        var secondResult = PartyAggregate.Handle(command, null);
+
+        AssertContainsOnlyRejection<PartyCannotBeCreatedWithoutType>(firstResult);
+        AssertContainsOnlyRejection<PartyCannotBeCreatedWithoutType>(secondResult);
+        firstResult.Events[0].GetType().ShouldBe(secondResult.Events[0].GetType());
+    }
+
+    [Fact]
     public void Handle_CreatePersonWithoutPersonDetails_ReturnsRejection()
     {
         // Arrange
