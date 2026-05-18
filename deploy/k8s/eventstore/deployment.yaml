@@ -42,4 +42,13 @@ spec:
         envFrom:
         - configMapRef:
             name: eventstore-env
+        volumeMounts:
+        - name: domain-config
+          mountPath: /app/appsettings.Production.json
+          subPath: appsettings.Production.json
+          readOnly: true
+      volumes:
+      - name: domain-config
+        configMap:
+          name: eventstore-domain-config
       terminationGracePeriodSeconds: 180

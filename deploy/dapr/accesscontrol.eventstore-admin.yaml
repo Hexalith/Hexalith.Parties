@@ -8,5 +8,5 @@ metadata:
 spec:
   accessControl:
     defaultAction: deny
-    trustDomain: "{env:DAPR_TRUST_DOMAIN|hexalith.io}"
+    trustDomain: hexalith.io
     policies: []
