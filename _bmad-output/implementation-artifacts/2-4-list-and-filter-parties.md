@@ -83,6 +83,16 @@ so that I can navigate a tenant's party directory efficiently.
 | Corrupt, malformed, or unreadable index payload | Bounded unavailable/degraded result or safe empty/not-accessible result; no raw actor/storage details. |
 | Cancellation before or during index read/filtering | Cancellation is honored and no aggregate replay, detail fan-out, search expansion, or retired REST fallback starts afterward. |
 
+## Party-Mode Review Clarifications
+
+- The list query must derive tenant context only from the authenticated EventStore query request context. Request payloads, page state, cursors/page tokens if later introduced, AdminPortal UI state, actor ids, partition ids, and client metadata are never authoritative tenant or authorization inputs.
+- `PagedResult<PartyIndexEntry>` must remain index-only. Do not enrich list rows from `PartyDetail`, aggregate state, command status records, Memories search, contact/identifier search internals, or AdminPortal-specific view models.
+- Active filtering must cover explicit active-only, inactive-only, and all-status/null-filter behavior. If current accepted query behavior already defines the default, preserve it and pin it in tests; otherwise record default active visibility as a deferred product decision rather than inventing it during implementation.
+- Date filters use UTC `CreatedAt` and `LastModifiedAt` metadata from `PartyIndexEntry`. Tests must pin the implemented boundary behavior for lower bounds, upper bounds, one-sided ranges, combined created/modified ranges, malformed values, and start-after-end validation before review.
+- Pagination must be deterministic, bounded, and overflow-safe. Preserve any existing accepted list ordering; if the implementation must choose an order, document and test the selected index-backed sort key plus deterministic tie-breaker in this story before review. Page state and any future cursor/token value must not carry trusted tenant identity or sensitive projection internals.
+- Stale, rebuilding, degraded, corrupt, malformed, null, or unreadable index state must map to existing accepted typed query outcomes where available. Do not create new public health/freshness categories, partial-result metadata, or retry semantics here unless they already exist at the EventStore query boundary.
+- Diagnostics for list failures may include coarse operation name, bounded failure category, current-tenant-safe correlation metadata, and non-sensitive counts only when already accepted by existing boundaries. They must not include display names, contact values, identifiers, search terms, raw query payloads, raw index JSON, tenant membership payloads, actor/storage keys, stream names, tokens, stack traces, infrastructure exception text, or connection strings.
+
 ## Required Test Matrix
 
 | Scenario | Expected proof |
@@ -253,6 +263,9 @@ tests/Hexalith.Parties.Tests/FitnessTests/ArchitecturalFitnessTests.cs
 
 - Public freshness/degradation response shape remains deferred unless the current EventStore query boundary already defines it.
 - Multi-key partitioning, cursor design, continuation tokens, and projection schema migration/backfill remain deferred.
+- Default inactive-party visibility when no active filter is supplied remains a product decision unless already pinned by the accepted query/client behavior.
+- Canonical adopter-facing sort order remains a product/architecture decision unless existing list behavior already defines it; implementation must still be deterministic and test-pinned.
+- Surfacing rebuild/degraded/corrupt index state as result metadata versus typed privacy-safe failure remains deferred unless the current EventStore query boundary already defines it.
 - Dedicated display-name search with match metadata is Story 2.5. Semantic/Memories search, contact search, identifier search, and AI-oriented find behavior are later stories unless a separate planning decision changes scope.
 - Operational rebuild, health monitoring, and drift detection details are Story 2.8 concerns. This story may preserve actor degraded/rebuild primitives but should not design new runbooks.
 - Exact AdminPortal list UI copy, density, column behavior, and empty-state design remain outside this server/client story unless existing tests require contract alignment.
@@ -294,3 +307,26 @@ tests/Hexalith.Parties.Tests/FitnessTests/ArchitecturalFitnessTests.cs
 ## Change Log
 
 - 2026-05-18: Story created by BMAD pre-dev hardening automation with existing typed list client, EventStore query gateway, tenant index projection, list/filter/paging, degraded-state, privacy, and focused validation guidance.
+- 2026-05-18: Party-mode review applied low-risk clarifications for tenant-source authority, index-only result shape, active/date filter semantics, deterministic pagination, degraded-state outcome boundaries, privacy-safe diagnostics, and deferred default/sort/freshness decisions.
+
+## Party-Mode Review
+
+- Date/time: 2026-05-18T09:12:45+02:00
+- Selected story key: `2-4-list-and-filter-parties`
+- Command/skill invocation used: `/bmad-party-mode 2-4-list-and-filter-parties; review;`
+- Participating BMAD agents: Winston (System Architect), Amelia (Senior Software Engineer), Murat (Master Test Architect and Quality Advisor), John (Product Manager)
+- Findings summary:
+  - All reviewers initially recommended `needs-story-update`, not blocked.
+  - Architecture risk centered on boundary drift: tenant identity must come from the authenticated EventStore query context, list results must come only from the tenant index projection, and no REST/OpenAPI/MCP, aggregate replay, detail fan-out, or Memories fallback should be introduced.
+  - Implementation and test risk centered on ambiguous active/default behavior, date filter boundaries, deterministic pagination, degraded/corrupt index outcome mapping, and privacy-safe diagnostics.
+  - Product/adopter risk centered on inactive-party discoverability, stale/rebuilding user outcomes, and admin trust in stable pagination.
+- Changes applied:
+  - Added `Party-Mode Review Clarifications` covering tenant-source authority, index-only `PagedResult<PartyIndexEntry>` results, active/date filter proof, deterministic bounded pagination, accepted degraded-state outcomes, and metadata-only diagnostics.
+  - Extended deferred decisions for inactive default visibility, canonical sort order, and degraded/rebuild result metadata versus typed failure.
+  - Added this dated party-mode trace and a change-log row.
+- Findings deferred:
+  - Exact default inactive-party visibility when no active filter is supplied.
+  - Canonical adopter-facing sort order if no accepted ordering already exists.
+  - Exact public stale/rebuilding/degraded/corrupt response shape beyond current EventStore query boundary behavior.
+  - Cursor/continuation-token design and expiry, unless a later accepted paging contract introduces it.
+- Final recommendation: ready-for-dev
