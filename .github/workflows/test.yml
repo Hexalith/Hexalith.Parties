@@ -1,0 +1,262 @@
+name: Test Pipeline
+
+on:
+  pull_request:
+    branches: [main, develop]
+  push:
+    branches: [main, develop]
+  repository_dispatch:
+    types: [contract_requiring_verification_published]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+  SOLUTION_FILE: Hexalith.Parties.slnx
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          submodules: true
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v5
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('global.json', 'Directory.Packages.props', 'Directory.Build.props', '**/*.csproj') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+
+      - name: Restore
+        run: dotnet restore "$SOLUTION_FILE"
+
+      - name: Build with analyzers
+        run: dotnet build "$SOLUTION_FILE" --configuration Release --no-restore
+
+  test:
+    name: Test (${{ matrix.name }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    needs: lint
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: contracts-client-security-mcp
+            projects: |
+              tests/Hexalith.Parties.Contracts.Tests/Hexalith.Parties.Contracts.Tests.csproj
+              tests/Hexalith.Parties.Client.Tests/Hexalith.Parties.Client.Tests.csproj
+              tests/Hexalith.Parties.Security.Tests/Hexalith.Parties.Security.Tests.csproj
+              tests/Hexalith.Parties.Mcp.Tests/Hexalith.Parties.Mcp.Tests.csproj
+          - name: domain-server
+            projects: |
+              tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj
+              tests/Hexalith.Parties.Server.Tests/Hexalith.Parties.Server.Tests.csproj
+          - name: projections-ui
+            projects: |
+              tests/Hexalith.Parties.Projections.Tests/Hexalith.Parties.Projections.Tests.csproj
+              tests/Hexalith.Parties.AdminPortal.Tests/Hexalith.Parties.AdminPortal.Tests.csproj
+              tests/Hexalith.Parties.Picker.Tests/Hexalith.Parties.Picker.Tests.csproj
+          - name: integration-deploy
+            projects: |
+              tests/Hexalith.Parties.Sample.Tests/Hexalith.Parties.Sample.Tests.csproj
+              tests/Hexalith.Parties.IntegrationTests/Hexalith.Parties.IntegrationTests.csproj
+              tests/Hexalith.Parties.DeployValidation.Tests/Hexalith.Parties.DeployValidation.Tests.csproj
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          submodules: true
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v5
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('global.json', 'Directory.Packages.props', 'Directory.Build.props', '**/*.csproj') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+
+      - name: Restore
+        run: dotnet restore "$SOLUTION_FILE"
+
+      - name: Run test shard
+        env:
+          TEST_PROJECTS: ${{ matrix.projects }}
+          TEST_SHARD_NAME: ${{ matrix.name }}
+        run: |
+          set -euo pipefail
+          mkdir -p "TestResults/$TEST_SHARD_NAME"
+
+          while IFS= read -r project; do
+            if [ -z "$project" ]; then
+              continue
+            fi
+
+            project_name="$(basename "$project" .csproj)"
+            echo "Running $project_name"
+            dotnet test "$project" \
+              --configuration Release \
+              --logger "trx;LogFileName=$project_name.trx" \
+              --results-directory "TestResults/$TEST_SHARD_NAME" \
+              --collect "XPlat Code Coverage"
+          done <<< "$TEST_PROJECTS"
+
+      - name: Upload test artifacts
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: test-results-${{ matrix.name }}
+          path: TestResults/
+          if-no-files-found: warn
+          retention-days: 30
+
+  contract-test:
+    name: Contract Test
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    needs: test
+    if: github.actor != 'dependabot[bot]'
+
+    env:
+      PACT_BROKER_BASE_URL: ${{ secrets.PACT_BROKER_BASE_URL }}
+      PACT_BROKER_TOKEN: ${{ secrets.PACT_BROKER_TOKEN }}
+      GITHUB_SHA: ${{ github.sha }}
+      GITHUB_BRANCH: ${{ github.head_ref || github.ref_name }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          submodules: true
+
+      - name: Detect Pact.js scripts
+        id: pact-scripts
+        run: |
+          set -euo pipefail
+
+          if [ -f package.json ] &&
+             grep -q '"test:pact:consumer"' package.json &&
+             grep -q '"publish:pact"' package.json &&
+             grep -q '"test:pact:provider:remote:contract"' package.json &&
+             grep -q '"can:i:deploy:provider"' package.json; then
+            echo "available=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "available=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Report Pact readiness gap
+        if: steps.pact-scripts.outputs.available != 'true'
+        run: |
+          {
+            echo "## Contract Test"
+            echo ""
+            echo "Pact.js utilities are enabled in TEA config, but this repository does not currently expose the required root package scripts."
+            echo ""
+            echo "Expected scripts:"
+            echo "- test:pact:consumer"
+            echo "- publish:pact"
+            echo "- test:pact:provider:remote:contract"
+            echo "- can:i:deploy:provider"
+            echo ""
+            echo "Risk: CONCERNS. Contract testing is visible in CI but not yet enforceable until the Pact framework is scaffolded."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Setup Node.js
+        if: steps.pact-scripts.outputs.available == 'true'
+        uses: actions/setup-node@v5
+        with:
+          node-version: 24
+
+      - name: Install Node dependencies
+        if: steps.pact-scripts.outputs.available == 'true'
+        run: npm ci
+
+      - name: Run consumer contract determinism gate
+        if: steps.pact-scripts.outputs.available == 'true'
+        run: npm run test:pact:consumer
+
+      - name: Publish pacts
+        if: steps.pact-scripts.outputs.available == 'true' && (github.event_name == 'pull_request' || github.ref == 'refs/heads/main')
+        run: npm run publish:pact
+
+      - name: Run provider verification
+        if: steps.pact-scripts.outputs.available == 'true'
+        run: npm run test:pact:provider:remote:contract
+
+      - name: Can I deploy provider
+        if: steps.pact-scripts.outputs.available == 'true' && github.ref == 'refs/heads/main'
+        run: npm run can:i:deploy:provider
+
+  report:
+    name: Quality Gate
+    runs-on: ubuntu-latest
+    needs: [lint, test, contract-test]
+    if: always()
+
+    steps:
+      - name: Evaluate quality gate
+        env:
+          LINT_RESULT: ${{ needs.lint.result }}
+          TEST_RESULT: ${{ needs.test.result }}
+          CONTRACT_RESULT: ${{ needs.contract-test.result }}
+        run: |
+          set -euo pipefail
+          decision="PASS"
+
+          if [ "$LINT_RESULT" != "success" ]; then
+            decision="FAIL"
+          fi
+
+          if [ "$TEST_RESULT" != "success" ]; then
+            decision="FAIL"
+          fi
+
+          if [ "$CONTRACT_RESULT" != "success" ] && [ "$CONTRACT_RESULT" != "skipped" ]; then
+            decision="FAIL"
+          fi
+
+          {
+            echo "## Quality Gate"
+            echo ""
+            echo "| Stage | Result |"
+            echo "| --- | --- |"
+            echo "| Lint | $LINT_RESULT |"
+            echo "| Test shards | $TEST_RESULT |"
+            echo "| Contract test | $CONTRACT_RESULT |"
+            echo ""
+            echo "Decision: $decision"
+            echo ""
+            echo "Test and coverage artifacts are available from the workflow run artifacts when test jobs execute."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          if [ "$decision" != "PASS" ]; then
+            exit 1
+          fi
