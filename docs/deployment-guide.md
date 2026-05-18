@@ -171,6 +171,20 @@ Before every production deployment, run the validation tool:
 ./deploy/validate-deployment.ps1 --config-path <your-dapr-config-dir> --output json
 ```
 
+### K8s manifest validation (Story 9.2)
+
+Pass `-K8sPath` to additionally lint the generated Kubernetes manifests under `deploy/k8s/`. The same validator entry point covers DAPR config drift and K8s-manifest drift:
+
+```bash
+# Validate DAPR config + K8s manifests in one pass
+./deploy/validate-deployment.ps1 --config-path ./deploy/dapr -K8sPath ./deploy/k8s/
+
+# Demote cloud-only capability findings (managed-cloud opt-in)
+./deploy/validate-deployment.ps1 -K8sPath ./deploy/k8s/ -AllowCloudCapabilities
+```
+
+The K8s lint reports workload shape issues (missing image, missing DAPR annotations, unresolved ConfigMap references), DAPR ACL/Subscription drift, plaintext credential leaks in `configMapGenerator.literals` / `Secret` resources, static tenant identifiers, and cloud-only capabilities (`StorageClass`, `IngressClass`, `Service.type: LoadBalancer`). Offending values are redacted in the output. See `deploy/k8s/README.md` → "K8s manifest lint" for the complete category list.
+
 ### CI/CD Integration
 
 Add the validation step to your deployment pipeline:
@@ -179,10 +193,10 @@ Add the validation step to your deployment pipeline:
 # GitHub Actions example
 - name: Validate DAPR configuration
   run: |
-      pwsh -NoProfile -File deploy/validate-deployment.ps1 -ConfigPath deploy/dapr -Output json
+      pwsh -NoProfile -File deploy/validate-deployment.ps1 -ConfigPath deploy/dapr -K8sPath deploy/k8s -Output json
 ```
 
-The tool exits with code `0` on success and `1` on failure, making it suitable for CI gate checks.
+The tool exits with code `0` on success (warnings allowed), `1` on at least one blocking failure, and `2` on argument / path errors, making it suitable for CI gate checks.
 
 ---
 

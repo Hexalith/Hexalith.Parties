@@ -10,11 +10,19 @@ Run the deployment validation tool to automatically verify most checklist items:
 # Validate production DAPR configs
 ./deploy/validate-deployment.ps1 --config-path ./deploy/dapr
 
+# Validate generated Kubernetes manifests alongside DAPR configs (Story 9.2)
+./deploy/validate-deployment.ps1 --config-path ./deploy/dapr -K8sPath ./deploy/k8s/
+
+# Demote cloud-capability findings to warnings (post-MVP managed-cloud mode)
+./deploy/validate-deployment.ps1 -K8sPath ./deploy/k8s/ -AllowCloudCapabilities
+
 # JSON output for CI/CD integration
-./deploy/validate-deployment.ps1 --config-path ./deploy/dapr --output json
+./deploy/validate-deployment.ps1 --config-path ./deploy/dapr -K8sPath ./deploy/k8s/ --output json
 ```
 
-Exit code `0` = all checks passed. Exit code `1` = failures detected.
+Exit code `0` = all checks passed (warnings OK). Exit code `1` = at least one blocking failure. Exit code `2` = invalid arguments / config path not found.
+
+The K8s-manifest mode (`-K8sPath`) lints workload-shape issues (missing image, missing DAPR annotations, unresolved ConfigMap refs), DAPR drift (ACL `defaultAction`, wildcard `appId`, missing dead-letter, wrong `pubsubname`, regen invariant), plaintext secrets in `configMapGenerator.literals` / container env / `Secret` resources, static tenant identifiers, and cloud-only capabilities (`StorageClass`, `IngressClass`, `Service.type: LoadBalancer`). See `deploy/k8s/README.md` → "K8s manifest lint" for the full category table.
 
 ---
 

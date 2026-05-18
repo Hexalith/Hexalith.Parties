@@ -141,6 +141,49 @@ These are accepted behaviors of aspirate 9.1.0 and not regressions in the Partie
 5. **Hexalith custom CRDs (`topology.yaml`, `tenants-integration.yaml`) are skipped at apply time.** They use `apiVersion: hexalith.io/v1`, and the CRDs themselves are not shipped in story 9.1 (deferred to Story 9.3+). `deploy-local.ps1` and `teardown-local.ps1` skip these files; the deploy proceeds without the custom CRs on a vanilla local cluster. Apply manually after installing the CRDs out-of-band if you need them.
 6. **Keycloak K8s manifests are not generated.** `regen.ps1` defaults `EnableKeycloak=false` even though the AppHost defaults to keycloak enabled, because: (a) aspirate captures Keycloak's randomized admin bootstrap password into the ConfigMap each run, breaking AC1 byte-determinism; (b) shipping a randomly-generated credential value in the committed tree violates the deploy script's no-secret-values contract. Proper Keycloak deployment (pinned admin credential mounted from a `Secret`, not a `ConfigMap`) is deferred to a follow-up story. `dotnet aspire run` (Aspire local orchestration) is unaffected — it still spins keycloak with a per-process random password as Aspire's local-dev default.
 
+## K8s manifest lint
+
+Story 9.2 extends `deploy/validate-deployment.ps1` with a Kubernetes-manifest lint that runs alongside the existing DAPR config checks. It is **read-only** (no `kubectl`, no DAPR install) and inspects the aspirate-generated tree under `deploy/k8s/` plus the authoritative DAPR templates under `deploy/dapr/`.
+
+```pwsh
+pwsh deploy/validate-deployment.ps1 --config-path deploy/dapr -K8sPath deploy/k8s/
+pwsh deploy/validate-deployment.ps1 -K8sPath deploy/k8s/ --output json
+```
+
+The lint emits one finding per category code. Findings are sorted ascending by `(category, code, target)` so two consecutive runs against the unchanged tree produce byte-identical JSON modulo the `timestamp` field.
+
+| Category code | Severity | What fires |
+|---|---|---|
+| `K8sWorkload-MissingImage` | fail | Deployment container image is missing, empty, `[]`, or `null`. |
+| `K8sWorkload-MissingDaprAnnotation` | fail | DAPR-enabled app (`eventstore`, `eventstore-admin`, `parties`, `tenants`) missing one of `dapr.io/enabled`, `dapr.io/app-id`, `dapr.io/app-port`, `dapr.io/config`. |
+| `K8sWorkload-UnresolvedConfigMapRef` | fail | `envFrom.configMapRef.name` does not match any `configMapGenerator.name` in the same app folder. |
+| `K8sWorkload-UnresolvedKustomizationResource` | fail | Top-level `kustomization.yaml` `resources:` entry that does not resolve under `deploy/k8s/`. |
+| `K8sWorkload-MissingProbes` | warn | Deployment missing both `readinessProbe` and `livenessProbe`. Hardening deferred to Story 9.3. |
+| `K8sWorkload-MissingResources` | warn | Container missing `resources.requests`/`resources.limits` for `cpu` + `memory`. Hardening deferred to Story 9.3. |
+| `K8sWorkload-LatestImageTag` | warn | Container image uses `:latest`. Pin to a semver, build-id, or `@sha256:` digest. Hardening deferred to Story 9.3. |
+| `DAPR-ACL-DefaultActionNotDeny` | fail | An `accesscontrol*.yaml` Configuration CR has `defaultAction` other than `deny`. |
+| `DAPR-ACL-WildcardAppId` | fail | An ACL policy uses a wildcard `appId: '*'` / `'**'`. |
+| `DAPR-Subscription-MissingDeadLetter` | fail | A Subscription CR is missing `deadLetterTopic`. |
+| `DAPR-Subscription-WrongPubsubName` | fail | A Subscription CR uses `pubsubname` other than `pubsub`. |
+| `DAPR-Regen-PlaceholderNotStripped` | fail | `deploy/k8s/dapr/statestore.yaml` or `deploy/k8s/dapr/pubsub.yaml` re-appeared (regen invariant violated). |
+| `K8sSecret-PlaintextCredential` | fail | A `password=`/`secret=`/`token=`/`api_key=` shape with a non-placeholder value. |
+| `K8sSecret-UrlEmbeddedCred` | fail | URL with embedded user:password (`postgres://user:pw@host`). |
+| `K8sSecret-JwtTokenLiteral` | fail | JWT literal (`eyJ...` three-segment base64). |
+| `K8sSecret-AwsAccessKey` | fail | AWS access key (`AKIA[0-9A-Z]{16}`). |
+| `K8sSecret-AzureConnString` | fail | Azure connection string (`DefaultEndpointsProtocol=https;...`). |
+| `K8sSecret-PrivateKey` | fail | PEM private-key header. |
+| `K8sSecret-StaticTenantId` | fail | `Tenants__TenantId`/`TENANT_ID`/`*__TenantId` with a literal value (must use `{env:VAR}` or `valueFrom`). |
+| `K8sSecret-CommittedSecretValue` | fail | A `kind: Secret` whose `stringData`/`data` carries a non-placeholder value. |
+| `K8s-NonLocalClusterCapability` | fail (warn with `-AllowCloudCapabilities`) | Cloud-only `StorageClass`/`IngressClass`/`Service.type: LoadBalancer`. |
+| `K8s-YamlParseError` | fail | A YAML document failed to parse; the offending content is **not** echoed. |
+| `K8s-PathTraversal` | fail | A symbolic link under `deploy/k8s/` resolves outside the repo. |
+
+The lint runs in `console` and `--output json` modes (same `--output` switch as the Story 8.1 DAPR validator). The exit-code contract is unchanged: `0` = pass (warnings OK), `1` = at least one blocking failure, `2` = invalid arguments / path not found. Pass `-AllowCloudCapabilities` (or `--allow-cloud-capabilities`) to demote `K8s-NonLocalClusterCapability` findings to warn (post-MVP).
+
+**Known gap (the as-committed tree intentionally has these warns).** The aspirate-emitted Deployments today carry no probes, no resource requests/limits, and a `:latest` image tag. They surface as `K8sWorkload-MissingProbes`, `K8sWorkload-MissingResources`, and `K8sWorkload-LatestImageTag` warnings — they document the hardening gap but do not fail the lint. Patching the manifests to clear these warns is deferred to a follow-up "Aspirate output hardening" story (Story 9.3 candidate) that owns the per-service profiling and immutable-tag publishing decisions.
+
+The validator output never echoes raw env-var values, `Secret.data`/`Secret.stringData` contents, ConfigMap literal values, tenant identifiers, bearer/JWT tokens, or DAPR access-control policy bodies. Offending values are reported as `<redacted:N chars at <file>:<line>>`. Control characters in file paths are sanitized to `?`.
+
 ## Out of MVP scope
 
 The following are **out of scope** for story 9-1 and the local-cluster MVP. Future stories own them.

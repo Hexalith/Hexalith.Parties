@@ -35,7 +35,10 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-05-15 09:01:58 +02:00
-last_updated: 2026-05-18 12:00:00 +02:00
+last_updated: 2026-05-18 18:30:00 +02:00
+# last_updated touched 2026-05-18 by code-review closing story 9-2 (150/150 tests green after 34 review patches)
+# last_updated touched 2026-05-18 by dev-story moving 9-2 to review (131/131 tests green; lint extension complete)
+# last_updated touched 2026-05-18 by create-story moving 9-2 to ready-for-dev
 # last_updated touched 2026-05-18 by code-review closing story 9-1; Epic 9 in-progress
 project: Hexalith.Parties
 project_key: NOKEY
@@ -155,5 +158,5 @@ development_status:
   # Epic 9: Kubernetes Deployment (2 stories)
   epic-9: in-progress
   9-1-generate-k8s-artifacts-and-deploy-full-topology-to-local-cluster: done
-  9-2-extend-deployment-validation-to-kubernetes-manifests: backlog
+  9-2-extend-deployment-validation-to-kubernetes-manifests: done
   epic-9-retrospective: optional
