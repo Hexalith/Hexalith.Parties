@@ -431,6 +431,10 @@ test_output.txt
 # Aspire publisher output
 publish-output/
 
+# Aspirate intermediate Aspire manifest (regenerated each run alongside K8s output)
+src/Hexalith.Parties.AppHost/manifest.json
+src/Hexalith.Parties.AppHost/aspirate-state.json
+
 # Added by ggshield
 .cache_ggshield
 

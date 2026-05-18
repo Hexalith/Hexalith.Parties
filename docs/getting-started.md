@@ -12,10 +12,20 @@ This guide starts the local EventStore-fronted topology, sends a Parties command
 
 | Tool | Version | Download |
 |------|---------|----------|
-| .NET SDK | 10.0.300 or later | [dot.net](https://dot.net) |
+| .NET SDK | 10.0.300 or later (pinned in `global.json`) | [dot.net](https://dot.net) |
 | Docker Desktop | Latest | [docker.com](https://www.docker.com/products/docker-desktop/) |
 | Git | Any recent version | [git-scm.com](https://git-scm.com) |
 | `jq` | Latest, optional for Bash examples | [jqlang.org](https://jqlang.org) |
+
+**Additional prerequisites for the optional Kubernetes walkthrough (Step 1b):**
+
+| Tool | Version | Download |
+|------|---------|----------|
+| Local Kubernetes cluster | any of kind, k3d, minikube, Docker Desktop Kubernetes | [kind](https://kind.sigs.k8s.io/), [k3d](https://k3d.io/), [minikube](https://minikube.sigs.k8s.io/) |
+| `kubectl` | recent | [kubernetes.io/docs/tasks/tools/](https://kubernetes.io/docs/tasks/tools/) |
+| DAPR CLI | recent | [docs.dapr.io](https://docs.dapr.io/getting-started/install-dapr-cli/) |
+| PowerShell (`pwsh`) | 7+ | [github.com/PowerShell](https://github.com/PowerShell/PowerShell) |
+| aspirate | `9.1.0` (pinned) | Installed automatically by `dotnet tool restore`. Do not install globally. |
 
 Verify your setup:
 
@@ -47,6 +57,83 @@ Open the Aspire dashboard URL printed by the command and verify these resources 
 The `parties-mcp` resource is the separate MCP host when included by the AppHost. It is not hosted by the `parties` actor host.
 
 EventStore owns public authentication, tenant validation, RBAC, command/query routing, and generic response mapping. Parties owns domain execution and projection behavior behind the actor host. Do not call Parties internals to manage tenant lifecycle, RBAC, authorization, projection actors, or domain invocation.
+
+---
+
+## Step 1b: Deploy to a Local Kubernetes Cluster (Optional)
+
+This step is an **alternative** to Step 1 for evaluating the production-shape deployment path on a local Kubernetes cluster (kind, k3d, minikube, or Docker Desktop Kubernetes). The Aspire-mode walkthrough in Step 1 remains valid and is the default path for everyday development. Pick one mode per session — they target the same topology and are not designed to run side-by-side.
+
+**Time budget:** the entire walkthrough — `regen.ps1` through the first successful `CreateParty` command — fits inside the `< 15 min` first-deploy budget (NFR30) on a developer-class machine that already has the prerequisites installed.
+
+Restore the pinned `aspirate` tool, then regenerate `deploy/k8s/` from the AppHost:
+
+```bash
+dotnet tool restore
+pwsh deploy/k8s/regen.ps1
+```
+
+Switch `kubectl` to a local-cluster context **before** running the deploy script — managed-cloud contexts (`aks-*`, `eks-*`, `gke-*`) are rejected by design:
+
+```bash
+kubectl config use-context kind-test   # or k3d-local / minikube / docker-desktop
+pwsh deploy/k8s/deploy-local.ps1
+```
+
+The deploy script installs the DAPR control plane on the cluster if missing, applies the authoritative DAPR component CRs from `deploy/dapr/`, then applies the aspirate-generated `deploy/k8s/` workloads via kustomize. Verify pod readiness:
+
+```bash
+kubectl get pods -n hexalith-parties
+```
+
+Expect seven pods in `Running` state by default (`eventstore`, `eventstore-admin`, `eventstore-admin-ui`, `parties`, `parties-mcp`, `tenants`, `keycloak`). Only **four** of them run a `daprd` sidecar — `eventstore`, `eventstore-admin`, `parties`, and `tenants` carry `dapr.io/enabled: "true"`. `eventstore-admin-ui`, `parties-mcp`, and `keycloak` do not. Confirm the DAPR annotations on the four DAPR-enabled Deployments:
+
+```bash
+for app in eventstore eventstore-admin parties tenants; do
+  echo "--- $app ---"
+  kubectl get deployment $app -n hexalith-parties -o jsonpath='{.metadata.annotations}{"\n"}'
+done
+```
+
+Each should include `dapr.io/enabled: "true"`, `dapr.io/app-id`, `dapr.io/app-port: "8080"`, and `dapr.io/config: accesscontrol-<app-id>` (or `accesscontrol` for `eventstore`). The `dapr.io/app-port` and per-app `dapr.io/config` annotations are injected by `regen.ps1` (aspirate 9.1.0 does not emit them); see `deploy/k8s/README.md` "Known aspirate limitations".
+
+Port-forward the EventStore gateway so Step 3 (First Command) can reach it on `http://localhost:8080`:
+
+```bash
+kubectl port-forward -n hexalith-parties svc/eventstore 8080:8080
+```
+
+```powershell
+$env:EVENTSTORE_URL = "http://localhost:8080"
+```
+
+(Aspirate-emitted pods only bind the HTTP listener on port 8080. HTTPS on 8443 is not wired in the local-cluster MVP; managed-cloud TLS termination is out of scope for story 9-1.)
+
+Sanity-check the wired-up gateway with a `CreateParty` call:
+
+```bash
+# Acquire a bearer token per Step 3's authentication subsection, export as BEARER_TOKEN.
+curl -X POST "$EVENTSTORE_URL/api/v1/commands" \
+  -H "Authorization: Bearer $BEARER_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "commandType": "Hexalith.Parties.Contracts.Commands.CreateParty",
+    "tenantId": "demo",
+    "aggregateId": "01HXYZAB...",
+    "command": { "partyType": "Person", "displayName": "Ada Lovelace" }
+  }'
+```
+
+The accepted response carries a correlation id; a follow-up query against `/api/v1/queries` returns the persisted `PartyDetail`. **Step 3 (First Command) below covers the full payload, route, and authentication flow** — the K8s walkthrough mirrors that contract exactly. Use this snippet as the smoke check that the K8s deploy is reachable end-to-end.
+
+### Tearing down the local cluster deployment
+
+```bash
+pwsh deploy/k8s/teardown-local.ps1            # leaves the DAPR control plane installed
+pwsh deploy/k8s/teardown-local.ps1 -PurgeDapr # also uninstalls DAPR (slower next deploy)
+```
+
+The teardown script enforces the same local-cluster allowlist, deletes the kustomize set, removes the authoritative DAPR component CRs, and reports any residual resources before exit. Exit code `0` means the namespace is clean.
 
 ---
 

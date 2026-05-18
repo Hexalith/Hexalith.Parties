@@ -36,6 +36,7 @@
 
 generated: 2026-05-15 09:01:58 +02:00
 last_updated: 2026-05-18 12:00:00 +02:00
+# last_updated touched 2026-05-18 by code-review closing story 9-1; Epic 9 in-progress
 project: Hexalith.Parties
 project_key: NOKEY
 tracking_system: file-system
@@ -150,3 +151,9 @@ development_status:
   8-5-enforce-picker-accessibility-and-localization: backlog
   8-6-enforce-picker-privacy-and-integration-boundary: backlog
   epic-8-retrospective: optional
+
+  # Epic 9: Kubernetes Deployment (2 stories)
+  epic-9: in-progress
+  9-1-generate-k8s-artifacts-and-deploy-full-topology-to-local-cluster: done
+  9-2-extend-deployment-validation-to-kubernetes-manifests: backlog
+  epic-9-retrospective: optional

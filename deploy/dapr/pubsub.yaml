@@ -1,0 +1,62 @@
+# DAPR Pub/Sub Component -- Local-Cluster Redis Streams (default)
+# ===============================================================
+# Redis Streams-backed pub/sub for party event distribution. This is the
+# default authoritative pub/sub for the local-cluster deploy (kind, k3d,
+# minikube, docker-desktop). The backing Redis is provisioned by
+# `dapr init -k`, which installs a Redis StatefulSet in the `dapr-system`
+# namespace.
+#
+# Operators targeting a managed broker (Kafka, RabbitMQ, Azure Service Bus)
+# replace this file with a copy of the corresponding `pubsub-*.yaml` template
+# before running `deploy-local.ps1`. Kafka offers stronger ordering guarantees
+# (per-partition causal order) and should be preferred for production.
+#
+# Topic pattern: {tenant}.parties.events
+# Dead-letter topic pattern: deadletter.{tenant}.parties.events
+#
+# Component Scoping:
+#   EventStore, Parties, and Tenants share this pub/sub component.
+#   External subscribers must be added to `scopes` explicitly to publish or
+#   subscribe (DAPR rejects unscoped clients).
+#
+# ORDERING GUARANTEES (FR73):
+#   Redis Streams provides FIFO ordering per stream. Aggregate-ID-based stream
+#   keys keep all events for the same aggregate in order. Kafka would provide
+#   the same per-partition guarantee at higher throughput; this template ships
+#   the local-cluster default.
+#
+# enableDeadLetter=true is REQUIRED by the platform contract (Story 8.1
+# validates this field). Removing it breaks the documented at-least-once
+# delivery + dead-letter semantics.
+#
+# PREREQUISITES:
+#   1. `dapr init -k` has been run on the cluster (installs Redis in
+#      `dapr-system`). The local deploy script does this automatically unless
+#      invoked with -SkipDaprInit.
+#   2. Override REDIS_HOST via env var if your DAPR install uses a non-default
+#      Redis service name; otherwise the `dapr init -k` default applies.
+apiVersion: dapr.io/v1alpha1
+kind: Component
+metadata:
+  name: pubsub
+spec:
+  type: pubsub.redis
+  version: v1
+  metadata:
+    - name: redisHost
+      # `dapr init -k` provisions a Redis StatefulSet exposed as a Service named
+      # `dapr-dev-redis-master` in the `dapr-system` namespace. Override via
+      # the REDIS_HOST env var on the operator's deploy environment if your
+      # DAPR install uses a different service name or namespace.
+      value: "{env:REDIS_HOST|dapr-dev-redis-master.dapr-system.svc.cluster.local:6379}"
+    - name: enableDeadLetter
+      # REQUIRED by the platform contract -- Story 8.1 validates this field.
+      # Without it, undeliverable messages are dropped silently instead of
+      # routing to the dead-letter stream.
+      value: "true"
+    - name: deadLetterTopic
+      value: "deadletter"
+scopes:
+  - eventstore
+  - parties
+  - tenants

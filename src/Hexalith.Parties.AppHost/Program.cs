@@ -181,6 +181,11 @@ else
         .WithEnvironment("EventStore__Authentication__ClientId", "");
 }
 
+// PUBLISH_TARGET registers an Aspire-native publish environment (`dotnet aspire publish`).
+// This is orthogonal to the aspirate-based Kubernetes deploy path documented in
+// `deploy/k8s/` (story 9-1). Aspirate reads the AppHost composition directly and
+// produces its own manifests under `deploy/k8s/`; the `k8s` branch below only
+// affects Aspire's own publish pipeline if a future story opts in.
 string? publishTarget = builder.Configuration["PUBLISH_TARGET"];
 if (string.IsNullOrWhiteSpace(publishTarget))
 {

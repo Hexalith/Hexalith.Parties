@@ -347,6 +347,14 @@ Consuming application developers can embed a tenant-safe, accessible party picke
 **Coverage type:** deferred for MVP implementation planning
 **FRs covered:** FR67
 
+### Epic 9: Kubernetes Deployment
+
+Operators and developers can generate Kubernetes manifests from the Aspire AppHost via aspirate and deploy the full Parties topology to a local cluster, with validation tooling for the generated manifests.
+
+**Phase:** MVP
+**Coverage type:** implemented
+**FRs covered:** FR31, FR31a; supports FR60, FR61, NFR30
+
 ## Epic 1: Party Records and Lifecycle
 
 Users can create, update, deactivate, reactivate, and identify parties as the durable source of truth for persons and organizations.
@@ -3101,3 +3109,92 @@ So that embedded selection remains safe in every consuming application.
 **Given** privacy/boundary tests run
 **When** they inspect rendered output, callbacks, logs, telemetry, routes, storage, JavaScript event payloads, endpoint usage, and token handling
 **Then** no PII leakage or boundary bypass is detected.
+
+## Epic 9: Kubernetes Deployment
+
+Operators and developers can generate Kubernetes manifests from the Aspire AppHost via aspirate and deploy the full Parties topology to a local cluster, with validation tooling for the generated manifests.
+
+### Story 9.1: Generate Kubernetes Artifacts and Deploy Full Topology to Local Cluster
+
+**Phase:** MVP
+**Coverage type:** implemented
+**Requirements covered:** FR31, FR31a; supports FR60, NFR30
+
+As a developer (or operator) evaluating Parties,
+I want a one-command flow that generates Kubernetes manifests from the Aspire AppHost via aspirate and deploys the full Parties + sibling-submodule topology to a local cluster,
+So that I can validate the production-shape deployment path without leaving the local machine.
+
+**Acceptance Criteria:**
+
+**Given** the documented prerequisites are installed (Docker, a local Kubernetes cluster — kind / minikube / k3d / Docker Desktop —, kubectl, .NET SDK, DAPR CLI, aspirate at the pinned version)
+**When** the developer runs the documented `dotnet aspirate generate` command from `src/Hexalith.Parties.AppHost`
+**Then** Kubernetes manifests for the full Aspire topology (Parties service + sibling-submodule service projects: EventStore, Tenants, Memories, FrontComposer) are emitted into `deploy/k8s/`
+**And** the generated manifests are deterministic for a given AppHost commit and aspirate version
+**And** DAPR component CRs in `deploy/k8s/dapr/` correspond to the templates in `deploy/dapr/` (state store, pubsub, access control, subscriptions, resiliency).
+
+**Given** the developer runs the documented one-command deploy script
+**When** the script installs the DAPR control plane (if missing) and applies `deploy/k8s/` to the active kubectl context
+**Then** all generated Deployments, Services, ConfigMaps, and DAPR component CRs are applied
+**And** the script refuses to run against a non-local kubectl context (asserts context name matches the documented local-cluster allowlist).
+
+**Given** the full topology is deployed
+**When** the developer checks pod readiness and the documented health/readiness endpoints
+**Then** Parties and its sibling-submodule services reach Ready within the documented cold-start target on a developer-class machine
+**And** the DAPR sidecar status for each service is healthy.
+
+**Given** the local cluster is reachable
+**When** the developer follows the K8s-mode first-command walkthrough (port-forward or documented ingress) to send `CreateParty` and a follow-up query
+**Then** the command succeeds and the query returns the created party through the deployed REST/API boundary
+**And** end-to-end timing from `dotnet aspirate generate` through first successful command meets NFR30 (< 15 min on first attempt).
+
+**Given** the cleanup command is run
+**When** it tears down the deployed topology
+**Then** all applied resources are removed from the local cluster
+**And** no stale state-store data or DAPR sidecar leases remain that would block a clean re-deploy.
+
+**Given** local-deploy validation tests or scripted smoke checks run
+**When** they execute against the deployed local-cluster topology
+**Then** they assert pod readiness, health/readiness endpoint behavior, at least one authenticated or documented development-mode request path, and clean teardown
+**And** they do not require recursive submodule initialization
+**And** they do not run against non-local kubectl contexts.
+
+### Story 9.2: Extend Deployment Validation to Kubernetes Manifests
+
+**Phase:** MVP
+**Coverage type:** implemented
+**Requirements covered:** FR61; supports FR31, FR31a, FR39, FR40, FR41
+
+As an operator preparing Parties for deployment,
+I want deployment validation tooling to lint the aspirate-generated Kubernetes manifests as well as runtime configuration,
+So that unsafe or drifted K8s artifacts are caught before they reach a cluster.
+
+**Acceptance Criteria:**
+
+**Given** `deploy/k8s/` contains generated manifests
+**When** the deployment validation tool runs against the manifest set
+**Then** missing image references, missing or zero resource requests/limits, missing readiness/liveness probes, missing DAPR sidecar annotations on Parties/sibling services, or missing required ConfigMaps are reported as blocking validation failures.
+
+**Given** the deployment validation tool inspects DAPR component CRs in `deploy/k8s/dapr/`
+**When** it compares them against the authoritative templates in `deploy/dapr/`
+**Then** missing components, drifted access-control rules (wildcard app ids, wildcard operation paths, missing deny-by-default behavior, missing Parties operation rules), or drifted subscription routes are reported as blocking validation failures
+**And** the report identifies the unsafe or drifted configuration category without exposing secrets.
+
+**Given** the deployment validation tool inspects secret handling in the generated manifests
+**When** plaintext secrets, embedded credentials, or hard-coded tenant identifiers are detected in Deployment/ConfigMap resources
+**Then** they are reported as blocking validation failures
+**And** the report explains the expected secret-reference pattern without printing the offending values.
+
+**Given** the deployment validation tool inspects target context
+**When** a manifest set is validated for a local-cluster context allowlist
+**Then** any resource that requires a non-local-cluster capability (cloud-provider storage class, cloud-provider ingress class) is reported as a blocking validation failure for the MVP scope
+**And** the report links to the documented post-MVP escalation path.
+
+**Given** validation output is generated
+**When** failures or warnings are reported
+**Then** output is bounded, machine-readable where useful, and safe for logs/artifacts
+**And** secrets, tokens, tenant membership payloads, and personal data are not printed.
+
+**Given** validation tests run
+**When** they cover valid generated manifests, missing probes, missing resource limits, drifted DAPR ACLs, drifted subscriptions, plaintext secrets, and non-local-cluster capabilities
+**Then** validation behavior matches deployment security expectations
+**And** existing Story 3.9 configuration-validation tests continue to pass unchanged.
