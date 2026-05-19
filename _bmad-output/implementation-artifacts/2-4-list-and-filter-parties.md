@@ -1,6 +1,6 @@
 # Story 2.4: List and Filter Parties
 
-Status: ready-for-dev
+Status: review
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -124,72 +124,72 @@ so that I can navigate a tenant's party directory efficiently.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Audit and reuse current list/query surfaces before editing (AC: 1, 5, 7)
-  - [ ] Start with `src/Hexalith.Parties.Client/Abstractions/IPartiesQueryClient.cs` and `src/Hexalith.Parties.Client/HttpPartiesQueryClient.cs`; `ListPartiesAsync(...)` already posts an EventStore `SubmitQueryRequest` with query type `PartyIndex`.
-  - [ ] Inspect `tests/Hexalith.Parties.Client.Tests/HttpPartiesQueryClientTests.cs`; it already pins basic list payload shape, optional filter omission, typed payload deserialization, and query error mapping.
-  - [ ] Inspect `tests/Hexalith.Parties.Tests/Gateway/EventStoreGatewayRoutingTests.cs`; it already pins EventStore query gateway routing and auth-before-routing behavior for party-domain queries.
-  - [ ] Inspect `src/Hexalith.Parties.Projections/Actors/PartyIndexProjectionActor.cs` and `src/Hexalith.Parties.Projections/Abstractions/IPartyIndexProjectionActor.cs`; they expose `GetEntriesAsync`, JSON fallback, rebuilding state, erasure, and cached degraded behavior.
-  - [ ] Inspect `src/Hexalith.Parties/Search/LocalPartySearchService.cs`, `src/Hexalith.Parties/Search/LocalFuzzyPartySearchProvider.cs`, and `src/Hexalith.Parties/Search/PartySearchBoundary.cs`; reuse current filtering/paging primitives where they fit rather than creating a parallel list service.
-  - [ ] Treat the current EventStore-fronted query path as the accepted public boundary. Do not create `GET /api/v1/parties`, list REST controllers, OpenAPI generation, or in-process MCP tools in `src/Hexalith.Parties`.
+- [x] Task 1: Audit and reuse current list/query surfaces before editing (AC: 1, 5, 7)
+  - [x] Start with `src/Hexalith.Parties.Client/Abstractions/IPartiesQueryClient.cs` and `src/Hexalith.Parties.Client/HttpPartiesQueryClient.cs`; `ListPartiesAsync(...)` already posts an EventStore `SubmitQueryRequest` with query type `PartyIndex`.
+  - [x] Inspect `tests/Hexalith.Parties.Client.Tests/HttpPartiesQueryClientTests.cs`; it already pins basic list payload shape, optional filter omission, typed payload deserialization, and query error mapping.
+  - [x] Inspect `tests/Hexalith.Parties.Tests/Gateway/EventStoreGatewayRoutingTests.cs`; it already pins EventStore query gateway routing and auth-before-routing behavior for party-domain queries.
+  - [x] Inspect `src/Hexalith.Parties.Projections/Actors/PartyIndexProjectionActor.cs` and `src/Hexalith.Parties.Projections/Abstractions/IPartyIndexProjectionActor.cs`; they expose `GetEntriesAsync`, JSON fallback, rebuilding state, erasure, and cached degraded behavior.
+  - [x] Inspect `src/Hexalith.Parties/Search/LocalPartySearchService.cs`, `src/Hexalith.Parties/Search/LocalFuzzyPartySearchProvider.cs`, and `src/Hexalith.Parties/Search/PartySearchBoundary.cs`; reuse current filtering/paging primitives where they fit rather than creating a parallel list service.
+  - [x] Treat the current EventStore-fronted query path as the accepted public boundary. Do not create `GET /api/v1/parties`, list REST controllers, OpenAPI generation, or in-process MCP tools in `src/Hexalith.Parties`.
 
-- [ ] Task 2: Implement or reconcile the PartyIndex list query read path (AC: 1, 2, 3, 4, 5)
-  - [ ] Confirm where the EventStore query router resolves the party-domain `PartyIndex` query. If the route is already implemented, harden tests instead of duplicating it.
-  - [ ] If a Parties-owned resolver/adapter is missing, add the narrow adapter needed for `PartyIndex` list only, deriving the index actor id from the authenticated tenant and never from caller-supplied payload metadata.
-  - [ ] Use `IPartyIndexProjectionActor.GetEntriesAsync()` or the accepted extension/fallback path for index reads; do not deserialize state-store internals directly in query code.
-  - [ ] Apply type, active, created-date, and modified-date filters to the tenant-scoped index entries before pagination metadata is calculated.
-  - [ ] Define and test date-range inclusivity using the implemented behavior. Do not change public date semantics silently after tests pin them.
-  - [ ] Apply date filters as UTC/culture-invariant instant comparisons over `PartyIndexEntry.CreatedAt` and `PartyIndexEntry.LastModifiedAt`; do not depend on server locale or UI display formatting.
-  - [ ] Normalize or reject page/page-size values consistently with current query/list conventions. If `LocalPartySearchService` clamps to `1..100`, either reuse that policy or document why list queries intentionally differ.
-  - [ ] Calculate `TotalCount`, `TotalPages`, empty-page behavior, and returned page items from the same tenant-authorized, erased-filtered, fully filtered collection.
-  - [ ] Preserve existing accepted ordering. If implementation must choose an order, use a deterministic index-backed sort key plus stable tie-breaker and pin it in tests before review.
-  - [ ] Return `PagedResult<PartyIndexEntry>` only from index entries. Do not synthesize list rows from aggregate state, detail projection fan-out, Memories search, or command status records.
+- [x] Task 2: Implement or reconcile the PartyIndex list query read path (AC: 1, 2, 3, 4, 5)
+  - [x] Confirm where the EventStore query router resolves the party-domain `PartyIndex` query. If the route is already implemented, harden tests instead of duplicating it.
+  - [x] If a Parties-owned resolver/adapter is missing, add the narrow adapter needed for `PartyIndex` list only, deriving the index actor id from the authenticated tenant and never from caller-supplied payload metadata.
+  - [x] Use `IPartyIndexProjectionActor.GetEntriesAsync()` or the accepted extension/fallback path for index reads; do not deserialize state-store internals directly in query code.
+  - [x] Apply type, active, created-date, and modified-date filters to the tenant-scoped index entries before pagination metadata is calculated.
+  - [x] Define and test date-range inclusivity using the implemented behavior. Do not change public date semantics silently after tests pin them.
+  - [x] Apply date filters as UTC/culture-invariant instant comparisons over `PartyIndexEntry.CreatedAt` and `PartyIndexEntry.LastModifiedAt`; do not depend on server locale or UI display formatting.
+  - [x] Normalize or reject page/page-size values consistently with current query/list conventions. If `LocalPartySearchService` clamps to `1..100`, either reuse that policy or document why list queries intentionally differ.
+  - [x] Calculate `TotalCount`, `TotalPages`, empty-page behavior, and returned page items from the same tenant-authorized, erased-filtered, fully filtered collection.
+  - [x] Preserve existing accepted ordering. If implementation must choose an order, use a deterministic index-backed sort key plus stable tie-breaker and pin it in tests before review.
+  - [x] Return `PagedResult<PartyIndexEntry>` only from index entries. Do not synthesize list rows from aggregate state, detail projection fan-out, Memories search, or command status records.
 
-- [ ] Task 3: Enforce tenant fail-closed behavior (AC: 1, 2, 6, 7)
-  - [ ] Keep gateway authorization ownership in EventStore. Missing/unauthorized tenant or domain must fail before Parties constructs or reads an index actor key.
-  - [ ] For projection-side reads, derive actor id strictly from authenticated/request tenant context. Never accept tenant id from query payload, page cursor, actor id, projection payload, UI state, or client-supplied metadata.
-  - [ ] Add tests where tenant A has index entries and tenant B lists with identical filters. Tenant B must receive only its own entries or a closed response, with no tenant A counts, actor key, names, or metadata.
-  - [ ] Add a fake/probed actor registry, proxy factory, state manager, or equivalent assertion so tests fail if `{otherTenant}:party-index` or `{otherTenant}:party-index:{partitionKey}` is constructed, read, serialized, or logged.
-  - [ ] Treat page numbers, future cursors/tokens, partition keys, AdminPortal page state, and client metadata as untrusted; none may override the authenticated tenant or choose an alternate partition/actor.
-  - [ ] Treat missing tenant context, malformed partition keys, and reused pagination/search state from another tenant as fail-closed cases.
-  - [ ] Ensure failures use bounded ProblemDetails/client exception fields and do not include display names, contact values, identifiers, raw query payloads, tenant membership payloads, tokens, actor storage keys, stream names, stack traces, infrastructure exception text, or serialized actor state.
+- [x] Task 3: Enforce tenant fail-closed behavior (AC: 1, 2, 6, 7)
+  - [x] Keep gateway authorization ownership in EventStore. Missing/unauthorized tenant or domain must fail before Parties constructs or reads an index actor key.
+  - [x] For projection-side reads, derive actor id strictly from authenticated/request tenant context. Never accept tenant id from query payload, page cursor, actor id, projection payload, UI state, or client-supplied metadata.
+  - [x] Add tests where tenant A has index entries and tenant B lists with identical filters. Tenant B must receive only its own entries or a closed response, with no tenant A counts, actor key, names, or metadata.
+  - [x] Add a fake/probed actor registry, proxy factory, state manager, or equivalent assertion so tests fail if `{otherTenant}:party-index` or `{otherTenant}:party-index:{partitionKey}` is constructed, read, serialized, or logged.
+  - [x] Treat page numbers, future cursors/tokens, partition keys, AdminPortal page state, and client metadata as untrusted; none may override the authenticated tenant or choose an alternate partition/actor.
+  - [x] Treat missing tenant context, malformed partition keys, and reused pagination/search state from another tenant as fail-closed cases.
+  - [x] Ensure failures use bounded ProblemDetails/client exception fields and do not include display names, contact values, identifiers, raw query payloads, tenant membership payloads, tokens, actor storage keys, stream names, stack traces, infrastructure exception text, or serialized actor state.
 
-- [ ] Task 4: Preserve inactive, erased, degraded, and privacy-safe semantics (AC: 3, 6)
-  - [ ] Listing with no active filter should follow the accepted product behavior in tests; do not silently hide inactive parties if callers need a complete directory view.
-  - [ ] Listing with `active=false` must return inactive entries that are still authorized and not erased.
-  - [ ] Exclude `PartyIndexEntry.IsErased == true` entries unless a later accepted erasure-list contract explicitly defines an erased status list.
-  - [ ] Preserve current actor degraded/cache behavior where safe. If cached entries are returned during rebuilding, they must be tenant-scoped and filtered for erasure before leaving the boundary.
-  - [ ] If cached/degraded state provenance, partition completeness, or erasure filtering cannot be proven, return the current bounded unavailable/degraded/empty outcome instead of merging speculative cache data with live reads.
-  - [ ] Map corrupt, malformed, null, or unreadable index actor state to bounded unavailable/degraded or safe empty/not-accessible behavior according to the current EventStore query boundary.
-  - [ ] Ensure log messages, exception details, ProblemDetails details, query metadata, and telemetry dimensions stay metadata-only. Names, contact values, identifiers, raw JSON, serialized index entries, and secrets are not acceptable diagnostics.
+- [x] Task 4: Preserve inactive, erased, degraded, and privacy-safe semantics (AC: 3, 6)
+  - [x] Listing with no active filter should follow the accepted product behavior in tests; do not silently hide inactive parties if callers need a complete directory view.
+  - [x] Listing with `active=false` must return inactive entries that are still authorized and not erased.
+  - [x] Exclude `PartyIndexEntry.IsErased == true` entries unless a later accepted erasure-list contract explicitly defines an erased status list.
+  - [x] Preserve current actor degraded/cache behavior where safe. If cached entries are returned during rebuilding, they must be tenant-scoped and filtered for erasure before leaving the boundary.
+  - [x] If cached/degraded state provenance, partition completeness, or erasure filtering cannot be proven, return the current bounded unavailable/degraded/empty outcome instead of merging speculative cache data with live reads.
+  - [x] Map corrupt, malformed, null, or unreadable index actor state to bounded unavailable/degraded or safe empty/not-accessible behavior according to the current EventStore query boundary.
+  - [x] Ensure log messages, exception details, ProblemDetails details, query metadata, and telemetry dimensions stay metadata-only. Names, contact values, identifiers, raw JSON, serialized index entries, and secrets are not acceptable diagnostics.
 
-- [ ] Task 5: Keep AdminPortal, picker, search, and future MCP scope bounded (AC: 1, 5, 7)
-  - [ ] Preserve `IPartiesQueryClient.ListPartiesAsync(...)` as the typed client list shape unless a separate accepted contract update requires an additive overload.
-  - [ ] Keep `PartiesAdminPortalApiClient.ListPartiesAsync(...)` on the accepted FrontComposer query service path. It may call the typed client but must not call projection actors, state stores, aggregate streams, or retired REST endpoints directly.
-  - [ ] Do not add display-name search, contact/identifier search promises, semantic search, Memories ranking, picker behavior, or MCP `find_parties` behavior to this story. Dedicated search and AI stories own those surfaces.
-  - [ ] If current local search code is reused for filtering/paging, keep contact/identifier matching as an internal search implementation detail and do not make it a public list/filter promise.
-  - [ ] Do not expose `SearchableContactChannels` or `SearchableIdentifiers` through serialized list payloads, durable callbacks, logs, or metadata. They are `[JsonIgnore]` on `PartyIndexEntry` and should remain non-public implementation details.
-  - [ ] Do not add public freshness/degradation response shapes, operational rebuild runbooks, schema migrations, multi-partition routing, or projection drift detection here. Those remain later Epic 2 stories unless already accepted.
+- [x] Task 5: Keep AdminPortal, picker, search, and future MCP scope bounded (AC: 1, 5, 7)
+  - [x] Preserve `IPartiesQueryClient.ListPartiesAsync(...)` as the typed client list shape unless a separate accepted contract update requires an additive overload.
+  - [x] Keep `PartiesAdminPortalApiClient.ListPartiesAsync(...)` on the accepted FrontComposer query service path. It may call the typed client but must not call projection actors, state stores, aggregate streams, or retired REST endpoints directly.
+  - [x] Do not add display-name search, contact/identifier search promises, semantic search, Memories ranking, picker behavior, or MCP `find_parties` behavior to this story. Dedicated search and AI stories own those surfaces.
+  - [x] If current local search code is reused for filtering/paging, keep contact/identifier matching as an internal search implementation detail and do not make it a public list/filter promise.
+  - [x] Do not expose `SearchableContactChannels` or `SearchableIdentifiers` through serialized list payloads, durable callbacks, logs, or metadata. They are `[JsonIgnore]` on `PartyIndexEntry` and should remain non-public implementation details.
+  - [x] Do not add public freshness/degradation response shapes, operational rebuild runbooks, schema migrations, multi-partition routing, or projection drift detection here. Those remain later Epic 2 stories unless already accepted.
 
-- [ ] Task 6: Strengthen focused tests (AC: 1, 2, 3, 4, 5, 6, 7)
-  - [ ] Extend `tests/Hexalith.Parties.Client.Tests/HttpPartiesQueryClientTests.cs` for list payload bounds, null optional filters, date serialization, query error mapping, malformed success payloads, success without payload, and cancellation.
-  - [ ] Extend `tests/Hexalith.Parties.Tests/Gateway/EventStoreGatewayRoutingTests.cs` for party index query routing, missing tenant, unauthorized tenant/domain, router not-found, router forbidden, and no query routing before auth failure.
-  - [ ] Add or extend query/list tests around the accepted list adapter for type, active, created-date, modified-date, invalid date range, empty result, page metadata, and overflow-safe page calculations.
-  - [ ] Add tests proving page metadata is computed after authorization, erasure exclusion, and all filters, including cases where unfiltered counts would otherwise differ from filtered counts.
-  - [ ] Add tests proving untrusted page/cursor/token/partition/UI/client metadata cannot alter tenant identity, actor key construction, partition selection, or data source selection.
-  - [ ] Add or extend `tests/Hexalith.Parties.Tests/Projections/PartyIndexProjectionActorCorruptionTests.cs` for stale/rebuilding/degraded/corrupt reads and metadata-only diagnostics.
-  - [ ] Add or extend `tests/Hexalith.Parties.Tests/Search/PartySearchServiceBoundaryTests.cs` or an adjacent list-filter test for tenant-authorized entries, erased-entry exclusion, active/type filter composition, metadata alignment, and page bounds if the local search/list service owns those mechanics.
-  - [ ] Add privacy-safety assertions for response/error/log text touched by this story. Assert absence of synthetic raw names, contact values, identifiers, serialized index JSON, query payloads, bearer/access tokens, tenant secrets, actor storage keys, stream names, stack traces, and infrastructure connection strings.
-  - [ ] Add cancellation coverage for client cancellation and cancellation during projection actor read/filtering, with assertions that no aggregate replay, detail fan-out, search expansion, or retired REST lookup starts afterward.
-  - [ ] Add tests or fitness assertions that fail if list behavior introduces `GET /api/v1/parties`, REST/OpenAPI/MCP surfaces, aggregate replay fallback, detail projection fan-out, Memories-only dependency, or Parties-side tenant/RBAC validators.
+- [x] Task 6: Strengthen focused tests (AC: 1, 2, 3, 4, 5, 6, 7)
+  - [x] Extend `tests/Hexalith.Parties.Client.Tests/HttpPartiesQueryClientTests.cs` for list payload bounds, null optional filters, date serialization, query error mapping, malformed success payloads, success without payload, and cancellation.
+  - [x] Extend `tests/Hexalith.Parties.Tests/Gateway/EventStoreGatewayRoutingTests.cs` for party index query routing, missing tenant, unauthorized tenant/domain, router not-found, router forbidden, and no query routing before auth failure.
+  - [x] Add or extend query/list tests around the accepted list adapter for type, active, created-date, modified-date, invalid date range, empty result, page metadata, and overflow-safe page calculations.
+  - [x] Add tests proving page metadata is computed after authorization, erasure exclusion, and all filters, including cases where unfiltered counts would otherwise differ from filtered counts.
+  - [x] Add tests proving untrusted page/cursor/token/partition/UI/client metadata cannot alter tenant identity, actor key construction, partition selection, or data source selection.
+  - [x] Add or extend `tests/Hexalith.Parties.Tests/Projections/PartyIndexProjectionActorCorruptionTests.cs` for stale/rebuilding/degraded/corrupt reads and metadata-only diagnostics.
+  - [x] Add or extend `tests/Hexalith.Parties.Tests/Search/PartySearchServiceBoundaryTests.cs` or an adjacent list-filter test for tenant-authorized entries, erased-entry exclusion, active/type filter composition, metadata alignment, and page bounds if the local search/list service owns those mechanics.
+  - [x] Add privacy-safety assertions for response/error/log text touched by this story. Assert absence of synthetic raw names, contact values, identifiers, serialized index JSON, query payloads, bearer/access tokens, tenant secrets, actor storage keys, stream names, stack traces, and infrastructure connection strings.
+  - [x] Add cancellation coverage for client cancellation and cancellation during projection actor read/filtering, with assertions that no aggregate replay, detail fan-out, search expansion, or retired REST lookup starts afterward.
+  - [x] Add tests or fitness assertions that fail if list behavior introduces `GET /api/v1/parties`, REST/OpenAPI/MCP surfaces, aggregate replay fallback, detail projection fan-out, Memories-only dependency, or Parties-side tenant/RBAC validators.
 
-- [ ] Task 7: Run focused validation (AC: 1, 2, 3, 4, 5, 6, 7)
-  - [ ] Run `dotnet test tests/Hexalith.Parties.Client.Tests/Hexalith.Parties.Client.Tests.csproj --configuration Release --filter FullyQualifiedName~HttpPartiesQueryClientTests`.
-  - [ ] Run `dotnet test tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj --configuration Release --filter FullyQualifiedName~EventStoreGatewayRoutingTests`.
-  - [ ] Run `dotnet test tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj --configuration Release --filter FullyQualifiedName~PartyIndexProjectionActor`.
-  - [ ] Run `dotnet test tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj --configuration Release --filter FullyQualifiedName~PartySearchServiceBoundary`.
-  - [ ] Run `dotnet test tests/Hexalith.Parties.AdminPortal.Tests/Hexalith.Parties.AdminPortal.Tests.csproj --configuration Release --filter FullyQualifiedName~PartiesAdminPortalApiClientTests` if AdminPortal list/query contract mapping is touched.
-  - [ ] Run `dotnet test tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj --configuration Release --filter FullyQualifiedName~ArchitecturalFitnessTests` if boundaries, project references, Dapr exposure, REST/MCP exposure, or authorization ownership changes.
-  - [ ] Run `dotnet build Hexalith.Parties.slnx --configuration Release` if public contracts, project references, gateway routing, or package configuration change.
+- [x] Task 7: Run focused validation (AC: 1, 2, 3, 4, 5, 6, 7)
+  - [x] Run `dotnet test tests/Hexalith.Parties.Client.Tests/Hexalith.Parties.Client.Tests.csproj --configuration Release --filter FullyQualifiedName~HttpPartiesQueryClientTests`.
+  - [x] Run `dotnet test tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj --configuration Release --filter FullyQualifiedName~EventStoreGatewayRoutingTests`.
+  - [x] Run `dotnet test tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj --configuration Release --filter FullyQualifiedName~PartyIndexProjectionActor`.
+  - [x] Run `dotnet test tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj --configuration Release --filter FullyQualifiedName~PartySearchServiceBoundary`.
+  - [x] Run `dotnet test tests/Hexalith.Parties.AdminPortal.Tests/Hexalith.Parties.AdminPortal.Tests.csproj --configuration Release --filter FullyQualifiedName~PartiesAdminPortalApiClientTests` if AdminPortal list/query contract mapping is touched.
+  - [x] Run `dotnet test tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj --configuration Release --filter FullyQualifiedName~ArchitecturalFitnessTests` if boundaries, project references, Dapr exposure, REST/MCP exposure, or authorization ownership changes.
+  - [x] Run `dotnet build Hexalith.Parties.slnx --configuration Release` if public contracts, project references, gateway routing, or package configuration change.
 
 ## Dev Notes
 
@@ -316,16 +316,38 @@ tests/Hexalith.Parties.Tests/FitnessTests/ArchitecturalFitnessTests.cs
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+GPT-5 Codex
 
 ### Debug Log References
 
+- 2026-05-19: Confirmed red phase with `dotnet test tests\Hexalith.Parties.Tests\Hexalith.Parties.Tests.csproj --configuration Release --filter FullyQualifiedName~PartyIndexProjectionQueryActorTests`; failure was missing `PartyIndexProjectionQueryActor`.
+- 2026-05-19: Focused validation passed for `HttpPartiesQueryClientTests`, `EventStoreGatewayRoutingTests`, `PartyIndexProjectionActor`, `PartySearchServiceBoundary`, `BasicPartySearchProviderTests`, and `ArchitecturalFitnessTests`.
+- 2026-05-19: `dotnet build Hexalith.Parties.slnx --configuration Release` passed with 0 warnings and 0 errors.
+- 2026-05-19: Full serialized regression passed with `dotnet test Hexalith.Parties.slnx --configuration Release --no-build -m:1` (1,317 passed, 6 Dapr-sidecar integration skips).
+
 ### Completion Notes List
+
+- Added a Parties-owned `PartyIndexProjectionQueryActor` for EventStore-fronted `PartyIndex` list queries. It validates the query route, derives `tenant:party-index` only from the authenticated EventStore tenant context, reads through `IPartyIndexProjectionActor.GetEntriesAsync()`, and returns `PagedResult<PartyIndexEntry>`.
+- Updated the typed HTTP query client to route list queries with `queryType = PartyIndex`, `projectionType = party-index`, `projectionActorType = PartyIndexProjectionQueryActor`, and `entityId = parties`.
+- Hardened `PartySearchResultsBuilder.BuildPagedList(...)` for erased-entry exclusion, type/active/date filtering before metadata, inclusive UTC instant date comparisons, deterministic sort ordering, `1..100` page-size bounds, and overflow-safe skip calculation.
+- Added focused tests for client request shape/cancellation, EventStore gateway routing, tenant-safe index actor key construction, invalid date ranges, active/inactive filtering, erased exclusion, metadata-after-filtering, overflow-safe paging, privacy-safe adapter logs, cancellation propagation, and architecture boundaries.
 
 ### File List
 
+- _bmad-output/implementation-artifacts/2-4-list-and-filter-parties.md
+- _bmad-output/implementation-artifacts/sprint-status.yaml
+- src/Hexalith.Parties.Client/HttpPartiesQueryClient.cs
+- src/Hexalith.Parties/Extensions/PartiesServiceCollectionExtensions.cs
+- src/Hexalith.Parties/Queries/PartyIndexProjectionQueryActor.cs
+- src/Hexalith.Parties/Search/PartySearchResultsBuilder.cs
+- tests/Hexalith.Parties.Client.Tests/HttpPartiesQueryClientTests.cs
+- tests/Hexalith.Parties.Tests/Gateway/EventStoreGatewayRoutingTests.cs
+- tests/Hexalith.Parties.Tests/Gateway/PartyIndexProjectionQueryActorTests.cs
+- tests/Hexalith.Parties.Tests/Search/BasicPartySearchProviderTests.cs
+
 ## Change Log
 
+- 2026-05-19: Implemented PartyIndex list query adapter, tenant-scoped filtering/paging hardening, focused tests, and full regression validation.
 - 2026-05-18: Story created by BMAD pre-dev hardening automation with existing typed list client, EventStore query gateway, tenant index projection, list/filter/paging, degraded-state, privacy, and focused validation guidance.
 - 2026-05-18: Party-mode review applied low-risk clarifications for tenant-source authority, index-only result shape, active/date filter semantics, deterministic pagination, degraded-state outcome boundaries, privacy-safe diagnostics, and deferred default/sort/freshness decisions.
 - 2026-05-18: Advanced elicitation applied low-risk clarifications for metadata consistency, untrusted page state, UTC date filtering, degraded cache provenance, validation short-circuiting, and terminal cancellation.

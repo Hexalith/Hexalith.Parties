@@ -42,6 +42,8 @@ last_updated: 2026-05-19 19:30:00 +02:00
 # last_updated touched 2026-05-19 by dev-story moving 9-3 to in-progress
 # last_updated touched 2026-05-19 by create-story moving 9-3 to ready-for-dev (EventStore registration-key K8s-validity + Memories/FrontComposer composition + Keycloak SecretKeyRef + Redis emission + Dapr 1.14.4 resiliency CRD rewrite)
 # last_updated touched 2026-05-19 by correct-course adding story 9-3 (close K8s deployment spec gaps after live cluster validation revealed Memories/FrontComposer/Keycloak/Redis/Resiliency drift from Story 9.1 AC1)
+# last_updated touched 2026-05-19 by dev-story moving 2-4 to review (full serialized Release regression suite green; 1317 passed, 6 existing Dapr-sidecar integration skips)
+# last_updated touched 2026-05-19 by dev-story moving 2-4 to in-progress
 # last_updated touched 2026-05-19 by code-review closing story 2-3 (5 patches applied: P1 typed-failure-reason replacing magic string, P2 erased-party PII assertions strengthened, P3 log-safety FakeLogger test added, P4 routing literals reference public consts, P5 cancellation propagation `catch (OperationCanceledException) { throw; }` + test; 16 reviewer findings dismissed as verified false positives incl. segment-order inversion claim; 5 deferred to Epic 6 GDPR / EventStore submodule / pre-existing cache lifecycle; PartyDetailProjectionQueryActorTests 9/9, EventStoreGatewayRoutingTests 18/18, PartyDetail{Corruption,Extensions}Tests 22/22, HttpPartiesQueryClientTests 13/13, ArchitecturalFitnessTests 17/17 green; full Release build 0/0)
 # last_updated touched 2026-05-19 by dev-story moving 2-3 to review (full Release regression suite green; 1300 passed, 6 existing Dapr-sidecar integration skips)
 # last_updated touched 2026-05-19 by dev-story moving 2-3 to in-progress
@@ -93,7 +95,7 @@ development_status:
   2-1-build-party-detail-projection: done
   2-2-build-tenant-party-index-projection: done
   2-3-query-party-details-by-id: done
-  2-4-list-and-filter-parties: ready-for-dev
+  2-4-list-and-filter-parties: review
   2-5-search-parties-by-display-name-with-match-metadata: ready-for-dev
   2-6-enforce-tenant-safe-projection-reads: ready-for-dev
   2-7-handle-projection-freshness-and-graceful-degradation: ready-for-dev

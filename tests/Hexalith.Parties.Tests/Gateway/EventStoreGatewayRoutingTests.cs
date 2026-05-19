@@ -316,6 +316,53 @@ public sealed class EventStoreGatewayRoutingTests
     }
 
     [Fact]
+    public async Task PostQueries_PartyIndex_UsesEventStoreQueryGatewayAndProjectionAdapterRoutingAsync()
+    {
+        using var factory = new EventStoreGatewayTestFactory();
+        using HttpClient client = factory.CreateAuthenticatedClient(permissions: ["query:read"]);
+
+        factory.QueryRouter.ResultPayload = JsonSerializer.SerializeToElement(new
+        {
+            items = Array.Empty<object>(),
+            page = 1,
+            pageSize = 20,
+            totalCount = 0,
+            totalPages = 1,
+        });
+
+        var request = new
+        {
+            tenant = "tenant-a",
+            domain = PartyIndexProjectionQueryActor.PartyDomain,
+            aggregateId = PartyIndexProjectionQueryActor.ListAggregateId,
+            queryType = PartyIndexProjectionQueryActor.PartyIndexQueryType,
+            projectionType = PartyIndexProjectionQueryActor.ProjectionType,
+            entityId = PartyIndexProjectionQueryActor.ListAggregateId,
+            projectionActorType = PartyIndexProjectionQueryActor.ActorTypeName,
+            payload = new
+            {
+                page = 1,
+                pageSize = 20,
+                type = "Person",
+                active = true,
+            },
+        };
+
+        using HttpResponseMessage response = await client.PostAsJsonAsync("/api/v1/queries", request);
+
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+
+        SubmitQuery query = factory.QueryRouter.ReceivedQueries.Single();
+        query.Tenant.ShouldBe("tenant-a");
+        query.Domain.ShouldBe(PartyIndexProjectionQueryActor.PartyDomain);
+        query.AggregateId.ShouldBe(PartyIndexProjectionQueryActor.ListAggregateId);
+        query.QueryType.ShouldBe(PartyIndexProjectionQueryActor.PartyIndexQueryType);
+        query.EntityId.ShouldBe(PartyIndexProjectionQueryActor.ListAggregateId);
+        query.ProjectionType.ShouldBe(PartyIndexProjectionQueryActor.ProjectionType);
+        query.ProjectionActorType.ShouldBe(PartyIndexProjectionQueryActor.ActorTypeName);
+    }
+
+    [Fact]
     public async Task PostQueries_NotFound_Returns404ThroughEventStoreQueryGatewayAsync()
     {
         using var factory = new EventStoreGatewayTestFactory();

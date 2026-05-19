@@ -11,12 +11,46 @@ internal static class PartySearchResultsBuilder
         bool? activeFilter,
         int page,
         int pageSize)
-    {
-        List<PartyIndexEntry> sorted = [.. ApplyFilters(entries, typeFilter, activeFilter)
-            .OrderBy(GetSortableName, StringComparer.OrdinalIgnoreCase)
-            .ThenBy(e => e.DisplayName, StringComparer.OrdinalIgnoreCase)];
+        => BuildPagedList(
+            entries,
+            typeFilter,
+            activeFilter,
+            createdAfter: null,
+            createdBefore: null,
+            modifiedAfter: null,
+            modifiedBefore: null,
+            page,
+            pageSize);
 
-        return CreatePagedResult(sorted, page, pageSize);
+    public static PagedResult<PartyIndexEntry> BuildPagedList(
+        IEnumerable<PartyIndexEntry> entries,
+        PartyType? typeFilter,
+        bool? activeFilter,
+        DateTimeOffset? createdAfter,
+        DateTimeOffset? createdBefore,
+        DateTimeOffset? modifiedAfter,
+        DateTimeOffset? modifiedBefore,
+        int page,
+        int pageSize)
+    {
+        ArgumentNullException.ThrowIfNull(entries);
+
+        int normalizedPage = Math.Max(1, page);
+        int normalizedPageSize = Math.Clamp(pageSize, 1, 100);
+
+        List<PartyIndexEntry> sorted = [.. ApplyListFilters(
+                entries,
+                typeFilter,
+                activeFilter,
+                createdAfter,
+                createdBefore,
+                modifiedAfter,
+                modifiedBefore)
+            .OrderBy(GetSortableName, StringComparer.OrdinalIgnoreCase)
+            .ThenBy(e => e.DisplayName, StringComparer.OrdinalIgnoreCase)
+            .ThenBy(e => e.Id, StringComparer.Ordinal)];
+
+        return CreatePagedResult(sorted, normalizedPage, normalizedPageSize);
     }
 
     public static PagedResult<PartySearchResult> BuildSearchResults(
@@ -64,6 +98,41 @@ internal static class PartySearchResultsBuilder
         if (activeFilter is not null)
         {
             filtered = filtered.Where(e => e.IsActive == activeFilter.Value);
+        }
+
+        return filtered;
+    }
+
+    private static IEnumerable<PartyIndexEntry> ApplyListFilters(
+        IEnumerable<PartyIndexEntry> entries,
+        PartyType? typeFilter,
+        bool? activeFilter,
+        DateTimeOffset? createdAfter,
+        DateTimeOffset? createdBefore,
+        DateTimeOffset? modifiedAfter,
+        DateTimeOffset? modifiedBefore)
+    {
+        IEnumerable<PartyIndexEntry> filtered = ApplyFilters(entries, typeFilter, activeFilter)
+            .Where(static e => !e.IsErased);
+
+        if (createdAfter is not null)
+        {
+            filtered = filtered.Where(e => e.CreatedAt >= createdAfter.Value);
+        }
+
+        if (createdBefore is not null)
+        {
+            filtered = filtered.Where(e => e.CreatedAt <= createdBefore.Value);
+        }
+
+        if (modifiedAfter is not null)
+        {
+            filtered = filtered.Where(e => e.LastModifiedAt >= modifiedAfter.Value);
+        }
+
+        if (modifiedBefore is not null)
+        {
+            filtered = filtered.Where(e => e.LastModifiedAt <= modifiedBefore.Value);
         }
 
         return filtered;
@@ -211,7 +280,9 @@ internal static class PartySearchResultsBuilder
     {
         int totalCount = items.Count;
         int totalPages = totalCount == 0 ? 1 : (int)Math.Ceiling((double)totalCount / pageSize);
-        List<T> pagedItems = [.. items.Skip((page - 1) * pageSize).Take(pageSize)];
+        long skipLong = (long)Math.Max(0, page - 1) * Math.Max(0, pageSize);
+        int skip = skipLong > int.MaxValue ? int.MaxValue : (int)skipLong;
+        List<T> pagedItems = [.. items.Skip(skip).Take(pageSize)];
 
         return new PagedResult<T>
         {

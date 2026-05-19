@@ -88,4 +88,86 @@ public class BasicPartySearchProviderTests
 
         result.Items.Select(e => e.Id).ShouldBe(["p-zed-display", "p-alpha-display"]);
     }
+
+    [Fact]
+    public void BuildPagedList_FiltersErasedTypeActiveAndDateRangesBeforeMetadata()
+    {
+        List<PartyIndexEntry> entries =
+        [
+            Entry("p-alpha", "Alpha Person", PartyType.Person, active: true, "2026-05-03T00:00:00Z", "2026-05-06T00:00:00Z"),
+            Entry("p-beta", "Beta Person", PartyType.Person, active: true, "2026-05-04T00:00:00Z", "2026-05-07T00:00:00Z"),
+            Entry("p-inactive", "Inactive Person", PartyType.Person, active: false, "2026-05-04T00:00:00Z", "2026-05-07T00:00:00Z"),
+            Entry("p-org", "Org", PartyType.Organization, active: true, "2026-05-04T00:00:00Z", "2026-05-07T00:00:00Z"),
+            Entry("p-created-before", "Created Before", PartyType.Person, active: true, "2026-04-30T00:00:00Z", "2026-05-07T00:00:00Z"),
+            Entry("p-modified-after", "Modified After", PartyType.Person, active: true, "2026-05-04T00:00:00Z", "2026-06-01T00:00:00Z"),
+            Entry("p-erased", "Erased Person", PartyType.Person, active: true, "2026-05-04T00:00:00Z", "2026-05-07T00:00:00Z") with { IsErased = true },
+        ];
+
+        PagedResult<PartyIndexEntry> result = PartySearchResultsBuilder.BuildPagedList(
+            entries,
+            PartyType.Person,
+            activeFilter: true,
+            createdAfter: DateTimeOffset.Parse("2026-05-01T00:00:00Z"),
+            createdBefore: DateTimeOffset.Parse("2026-05-31T00:00:00Z"),
+            modifiedAfter: DateTimeOffset.Parse("2026-05-01T00:00:00Z"),
+            modifiedBefore: DateTimeOffset.Parse("2026-05-31T00:00:00Z"),
+            page: 2,
+            pageSize: 1);
+
+        result.Items.Select(static e => e.Id).ShouldBe(["p-beta"]);
+        result.TotalCount.ShouldBe(2);
+        result.TotalPages.ShouldBe(2);
+    }
+
+    [Theory]
+    [InlineData(0, 0, 1, 1)]
+    [InlineData(-10, -5, 1, 1)]
+    [InlineData(1, 500, 1, 100)]
+    public void BuildPagedList_NormalizesPageBounds(int page, int pageSize, int expectedPage, int expectedPageSize)
+    {
+        PagedResult<PartyIndexEntry> result = PartySearchResultsBuilder.BuildPagedList(
+            [Entry("p-1", "Alpha Person", PartyType.Person, active: true, "2026-05-01T00:00:00Z", "2026-05-01T00:00:00Z")],
+            null,
+            null,
+            page,
+            pageSize);
+
+        result.Page.ShouldBe(expectedPage);
+        result.PageSize.ShouldBe(expectedPageSize);
+        result.TotalCount.ShouldBe(1);
+        result.TotalPages.ShouldBe(1);
+    }
+
+    [Fact]
+    public void BuildPagedList_UsesOverflowSafeSkipForLargePage()
+    {
+        PagedResult<PartyIndexEntry> result = PartySearchResultsBuilder.BuildPagedList(
+            [Entry("p-1", "Alpha Person", PartyType.Person, active: true, "2026-05-01T00:00:00Z", "2026-05-01T00:00:00Z")],
+            null,
+            null,
+            int.MaxValue,
+            100);
+
+        result.Items.ShouldBeEmpty();
+        result.Page.ShouldBe(int.MaxValue);
+        result.TotalCount.ShouldBe(1);
+    }
+
+    private static PartyIndexEntry Entry(
+        string id,
+        string displayName,
+        PartyType type,
+        bool active,
+        string createdAt,
+        string modifiedAt)
+        => new()
+        {
+            Id = id,
+            Type = type,
+            IsActive = active,
+            DisplayName = displayName,
+            SortName = displayName,
+            CreatedAt = DateTimeOffset.Parse(createdAt, System.Globalization.CultureInfo.InvariantCulture),
+            LastModifiedAt = DateTimeOffset.Parse(modifiedAt, System.Globalization.CultureInfo.InvariantCulture),
+        };
 }

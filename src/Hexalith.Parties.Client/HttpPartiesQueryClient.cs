@@ -19,6 +19,8 @@ public sealed class HttpPartiesQueryClient : IPartiesQueryClient
     private const string PartyDetailProjectionActorType = "PartyDetailProjectionQueryActor";
     private const string PartyDetailProjectionType = "party-detail";
     private const string PartyDetailQueryType = "PartyDetail";
+    private const string PartyIndexProjectionActorType = "PartyIndexProjectionQueryActor";
+    private const string PartyIndexProjectionType = "party-index";
     private const string PartyIndexQueryType = "PartyIndex";
     private const string PartySearchQueryType = "PartySearch";
 
@@ -80,9 +82,10 @@ public sealed class HttpPartiesQueryClient : IPartiesQueryClient
             Domain: PartyDomain,
             AggregateId: ListAggregateId,
             QueryType: PartyIndexQueryType,
-            ProjectionType: null,
+            ProjectionType: PartyIndexProjectionType,
             Payload: JsonSerializer.SerializeToElement(payload, HttpPartiesCommandClient.JsonOptions),
-            EntityId: ListAggregateId);
+            EntityId: ListAggregateId,
+            ProjectionActorType: PartyIndexProjectionActorType);
 
         return PostQueryAsync<PagedResult<PartyIndexEntry>>(request, ct);
     }

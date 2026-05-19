@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "produced_by": "jobs/preflight-predev-hardening.py",
-  "timestamp": "2026-05-19T14:01:31Z",
+  "timestamp": "2026-05-19T13:01:59Z",
   "repo": "D:\\Hexalith.Parties",
   "result": "fail",
   "bootstrap_actions": [],
@@ -12,8 +12,8 @@
       "path": "D:\\Hexalith.Parties\\_bmad-output\\implementation-artifacts\\sprint-status.yaml",
       "result": "pass",
       "details": "PARSE OK",
-      "file_size_bytes": 11684,
-      "line_count": 179,
+      "file_size_bytes": 11511,
+      "line_count": 178,
       "top_level_keys": [
         "development_status",
         "generated",
@@ -63,11 +63,11 @@
         ":(exclude)_bmad-output/process-notes/preflight-latest.json"
       ],
       "exit_code": 0,
-      "stdout": " M _bmad-output/implementation-artifacts/2-4-list-and-filter-parties.md\n M _bmad-output/implementation-artifacts/sprint-status.yaml\n M src/Hexalith.Parties.Client/HttpPartiesQueryClient.cs\n M src/Hexalith.Parties/Extensions/PartiesServiceCollectionExtensions.cs\n M src/Hexalith.Parties/Search/PartySearchResultsBuilder.cs\n M tests/Hexalith.Parties.Client.Tests/HttpPartiesQueryClientTests.cs\n M tests/Hexalith.Parties.Tests/Gateway/EventStoreGatewayRoutingTests.cs\n M tests/Hexalith.Parties.Tests/Search/BasicPartySearchProviderTests.cs\n?? src/Hexalith.Parties/Queries/PartyIndexProjectionQueryActor.cs\n?? tests/Hexalith.Parties.Tests/Gateway/PartyIndexProjectionQueryActorTests.cs\n",
+      "stdout": " M _bmad-output/implementation-artifacts/sprint-status.yaml\n M src/Hexalith.Parties.Client/HttpPartiesQueryClient.cs\n M src/Hexalith.Parties/Extensions/PartiesServiceCollectionExtensions.cs\n M src/Hexalith.Parties/Search/PartySearchResultsBuilder.cs\n M tests/Hexalith.Parties.Client.Tests/HttpPartiesQueryClientTests.cs\n M tests/Hexalith.Parties.Tests/Gateway/EventStoreGatewayRoutingTests.cs\n M tests/Hexalith.Parties.Tests/Search/BasicPartySearchProviderTests.cs\n?? src/Hexalith.Parties/Queries/PartyIndexProjectionQueryActor.cs\n?? tests/Hexalith.Parties.Tests/Gateway/PartyIndexProjectionQueryActorTests.cs\n",
       "stderr": "",
-      "dirty_path_count": 10,
+      "dirty_path_count": 9,
       "result": "fail",
-      "details": "10 dirty path(s)"
+      "details": "9 dirty path(s)"
     }
   ],
   "note_to_llm": "This file was produced by jobs/preflight-predev-hardening.py. The recurring pre-dev hardening job MUST quote the contents of this file verbatim when reporting pre-flight results; do NOT re-run the checks yourself, paraphrase them, or summarize them in your own words."

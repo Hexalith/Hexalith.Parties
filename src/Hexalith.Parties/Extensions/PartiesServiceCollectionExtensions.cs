@@ -231,6 +231,7 @@ public static class PartiesServiceCollectionExtensions {
             .ValidateOnStart();
 
         services.AddActors(options => {
+            options.Actors.RegisterActor<PartyIndexProjectionQueryActor>();
             options.Actors.RegisterActor<PartyDetailProjectionQueryActor>();
             options.Actors.RegisterActor<PartyDetailProjectionActor>();
             options.Actors.RegisterActor<PartyIndexProjectionActor>();

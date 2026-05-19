@@ -101,8 +101,8 @@ public sealed class HttpPartiesQueryClientTests
         using JsonDocument body = JsonDocument.Parse(handler.LastRequestBody!);
         JsonElement root = body.RootElement;
         root.GetProperty("queryType").GetString().ShouldBe("PartyIndex");
-        root.TryGetProperty("projectionType", out _).ShouldBeFalse();
-        root.TryGetProperty("projectionActorType", out _).ShouldBeFalse();
+        root.GetProperty("projectionType").GetString().ShouldBe("party-index");
+        root.GetProperty("projectionActorType").GetString().ShouldBe("PartyIndexProjectionQueryActor");
 
         JsonElement payload = root.GetProperty("payload");
         payload.GetProperty("page").GetInt32().ShouldBe(1);
@@ -136,6 +136,18 @@ public sealed class HttpPartiesQueryClientTests
         payload.TryGetProperty("type", out _).ShouldBeFalse();
         payload.TryGetProperty("active", out _).ShouldBeFalse();
         payload.TryGetProperty("createdAfter", out _).ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task ListPartiesAsync_WhenCancelled_PropagatesCancellationAsync()
+    {
+        var httpClient = new HttpClient(new CancellationHandler()) { BaseAddress = new Uri("https://localhost") };
+        var client = new HttpPartiesQueryClient(httpClient, Options.Create(ClientOptions()));
+        using var cts = new CancellationTokenSource();
+        await cts.CancelAsync();
+
+        await Should.ThrowAsync<OperationCanceledException>(
+            () => client.ListPartiesAsync(1, 20, null, null, null, null, null, null, cts.Token));
     }
 
     [Fact]
