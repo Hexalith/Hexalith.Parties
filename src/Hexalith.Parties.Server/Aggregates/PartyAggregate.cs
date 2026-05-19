@@ -1270,12 +1270,23 @@ public sealed class PartyAggregate : EventStoreAggregate<PartyState> {
         PersonDetails? person,
         OrganizationDetails? organization) {
         return type switch {
-            PartyType.Person when person is not null =>
-                ($"{person.FirstName} {person.LastName}", $"{person.LastName}, {person.FirstName}"),
+            PartyType.Person when person is not null => DerivePersonNames(person),
             PartyType.Organization when organization is not null =>
                 (organization.LegalName, organization.LegalName),
             _ => throw new InvalidOperationException($"Unsupported party type: {type}"),
         };
+    }
+
+    // Mirrors PartyIndexProjectionHandler.DeriveSortName: trim inputs and fall back to
+    // displayName when first or last name is empty, so projection no-op idempotency holds.
+    private static (string DisplayName, string SortName) DerivePersonNames(PersonDetails person) {
+        string firstName = person.FirstName?.Trim() ?? string.Empty;
+        string lastName = person.LastName?.Trim() ?? string.Empty;
+        string displayName = string.Join(' ', new[] { firstName, lastName }).Trim();
+        string sortName = !string.IsNullOrEmpty(lastName) && !string.IsNullOrEmpty(firstName)
+            ? $"{lastName}, {firstName}"
+            : (string.IsNullOrWhiteSpace(displayName) ? string.Empty : displayName);
+        return (displayName, sortName);
     }
 
     private static string NormalizeActorUserId(string? actorUserId)

@@ -128,6 +128,16 @@ public class PartyIndexProjectionHandlerTests
         result.LastModifiedAt.ShouldBeGreaterThan(state.LastModifiedAt);
     }
 
+    [Fact]
+    public void Apply_PartyDeactivated_WhenAlreadyInactive_ReturnsNull()
+    {
+        PartyIndexEntry state = CreatePersonIndexEntry() with { IsActive = false };
+
+        PartyIndexEntry? result = PartyIndexProjectionHandler.Apply(PartyId, new PartyDeactivated(), state);
+
+        result.ShouldBeNull();
+    }
+
     // --- 5.6: PartyReactivated ---
 
     [Fact]
@@ -140,6 +150,16 @@ public class PartyIndexProjectionHandlerTests
         result.ShouldNotBeNull();
         result.IsActive.ShouldBeTrue();
         result.LastModifiedAt.ShouldBeGreaterThan(state.LastModifiedAt);
+    }
+
+    [Fact]
+    public void Apply_PartyReactivated_WhenAlreadyActive_ReturnsNull()
+    {
+        PartyIndexEntry state = CreatePersonIndexEntry();
+
+        PartyIndexEntry? result = PartyIndexProjectionHandler.Apply(PartyId, new PartyReactivated(), state);
+
+        result.ShouldBeNull();
     }
 
     // --- 5.7: ContactChannelAdded ---

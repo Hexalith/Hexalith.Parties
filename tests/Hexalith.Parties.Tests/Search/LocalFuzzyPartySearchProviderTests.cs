@@ -145,13 +145,52 @@ public class LocalFuzzyPartySearchProviderTests
     [Fact]
     public void Search_ContactAndIdentifierMatchesExposeOnlyBoundedMetadata()
     {
-        PagedResult<PartySearchResult> contactResult = _provider.Search(_entries, "example.com", null, null, 1, 20);
-        PagedResult<PartySearchResult> identifierResult = _provider.Search(_entries, "FR11111111111", null, null, 1, 20);
+        // Allowlists for structural privacy: match metadata must only carry bounded
+        // labels, never the user-supplied contact/identifier values.
+        HashSet<string> allowedFields = new(StringComparer.Ordinal)
+        {
+            "displayName",
+            "type",
+            "email",
+            "contactChannel",
+            "identifier",
+        };
+        HashSet<string> allowedMatchTypes = new(StringComparer.Ordinal)
+        {
+            "exact",
+            "prefix",
+            "contains",
+            "fuzzy",
+            string.Empty,
+        };
 
-        contactResult.Items.Single().Matches.ShouldContain(m => m.MatchedField == "email");
-        identifierResult.Items.Single().Matches.ShouldContain(m => m.MatchedField == "identifier");
-        contactResult.Items.Single().Matches.ShouldAllBe(m => !m.MatchedField.Contains('@', StringComparison.Ordinal));
-        identifierResult.Items.Single().Matches.ShouldAllBe(m => !m.MatchedField.Contains("FR", StringComparison.Ordinal));
+        const string contactQuery = "example.com";
+        const string identifierQuery = "FR11111111111";
+
+        PagedResult<PartySearchResult> contactResult = _provider.Search(_entries, contactQuery, null, null, 1, 20);
+        PagedResult<PartySearchResult> identifierResult = _provider.Search(_entries, identifierQuery, null, null, 1, 20);
+
+        IReadOnlyList<MatchMetadata> contactMatches = contactResult.Items.Single().Matches;
+        IReadOnlyList<MatchMetadata> identifierMatches = identifierResult.Items.Single().Matches;
+
+        contactMatches.ShouldContain(m => m.MatchedField == "email");
+        identifierMatches.ShouldContain(m => m.MatchedField == "identifier");
+
+        // Structural assertion: every match's labels come from the bounded allowlists,
+        // not from user data.
+        contactMatches.ShouldAllBe(m => allowedFields.Contains(m.MatchedField));
+        contactMatches.ShouldAllBe(m => allowedMatchTypes.Contains(m.MatchType));
+        identifierMatches.ShouldAllBe(m => allowedFields.Contains(m.MatchedField));
+        identifierMatches.ShouldAllBe(m => allowedMatchTypes.Contains(m.MatchType));
+
+        // Behavioural assertion: the raw query value (which is the contact/identifier
+        // value being searched for) never appears in any string field of the match
+        // metadata. Guards against a future change that adds a `MatchedText`-style
+        // field carrying the matched substring.
+        contactMatches.ShouldAllBe(m => !m.MatchedField.Contains(contactQuery, StringComparison.OrdinalIgnoreCase));
+        contactMatches.ShouldAllBe(m => !m.MatchType.Contains(contactQuery, StringComparison.OrdinalIgnoreCase));
+        identifierMatches.ShouldAllBe(m => !m.MatchedField.Contains(identifierQuery, StringComparison.OrdinalIgnoreCase));
+        identifierMatches.ShouldAllBe(m => !m.MatchType.Contains(identifierQuery, StringComparison.OrdinalIgnoreCase));
     }
 
     // 7.9 — empty/whitespace query returns empty result

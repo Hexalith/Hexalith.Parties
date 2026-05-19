@@ -134,6 +134,14 @@ public sealed class PartyIndexProjectionActorCorruptionTests
             "test-tenant:party-index:default",
             Arg.Any<Dictionary<string, PartyIndexEntry>>(),
             Arg.Any<CancellationToken>());
+        // Rejection replay advances the per-party checkpoint but must not touch the
+        // tenant manifest — a regression that drops the _pendingChanges guard or
+        // moves the manifest write outside PersistStateAsync would slip through
+        // without this assertion.
+        await stateManager.DidNotReceive().SetStateAsync(
+            "test-tenant:party-index:manifest",
+            Arg.Any<List<string>>(),
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]

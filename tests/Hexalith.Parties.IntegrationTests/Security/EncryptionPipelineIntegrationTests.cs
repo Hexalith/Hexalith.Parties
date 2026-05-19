@@ -322,8 +322,7 @@ public sealed class EncryptionPipelineIntegrationTests : IClassFixture<Encryptio
             case null:
                 return false;
             case JsonObject obj:
-                if (obj.TryGetPropertyValue("$enc", out JsonNode? encrypted)
-                    && encrypted?.GetValue<bool>() == true)
+                if (obj.TryGetPropertyValue("$enc", out JsonNode? encrypted) && IsEncryptedFlagSet(encrypted))
                 {
                     return false;
                 }
@@ -336,6 +335,34 @@ public sealed class EncryptionPipelineIntegrationTests : IClassFixture<Encryptio
             default:
                 return false;
         }
+    }
+
+    // Tolerates `$enc` serialized as a boolean, the string "true", or the integer 1
+    // so a serializer schema change does not surface as InvalidOperationException
+    // and mask real plaintext leaks behind a confusing failure mode.
+    private static bool IsEncryptedFlagSet(JsonNode? encrypted)
+    {
+        if (encrypted is not JsonValue value)
+        {
+            return false;
+        }
+
+        if (value.TryGetValue(out bool boolValue))
+        {
+            return boolValue;
+        }
+
+        if (value.TryGetValue(out string? stringValue))
+        {
+            return bool.TryParse(stringValue, out bool parsed) && parsed;
+        }
+
+        if (value.TryGetValue(out int intValue))
+        {
+            return intValue == 1;
+        }
+
+        return false;
     }
 }
 

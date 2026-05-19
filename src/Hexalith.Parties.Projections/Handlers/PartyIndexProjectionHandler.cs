@@ -61,8 +61,12 @@ public sealed class PartyIndexProjectionHandler
 
     private static PartyIndexEntry? HandleDisplayNameDerived(PartyIndexEntry state, PartyDisplayNameDerived e)
     {
+        // Legacy events emitted before SortName was added carry an empty SortName;
+        // preserve the existing projection value rather than clearing it.
+        string sortName = string.IsNullOrWhiteSpace(e.SortName) ? state.SortName : e.SortName;
+
         if (string.Equals(state.DisplayName, e.DisplayName, StringComparison.Ordinal)
-            && string.Equals(state.SortName, e.SortName, StringComparison.Ordinal))
+            && string.Equals(state.SortName, sortName, StringComparison.Ordinal))
         {
             return null;
         }
@@ -70,7 +74,7 @@ public sealed class PartyIndexProjectionHandler
         return state with
         {
             DisplayName = e.DisplayName,
-            SortName = e.SortName,
+            SortName = sortName,
             LastModifiedAt = DateTimeOffset.UtcNow,
         };
     }
