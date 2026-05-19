@@ -92,9 +92,15 @@ public sealed class PartyDetailProjectionHandler
         // Deduplicate: skip when neither DisplayName nor SortName has changed.
         // Sort-only changes (locale tweak, contracted family-name spelling) ARE tracked,
         // because directory-style queries that order by SortName need the history.
-        if (state.NameHistory.Count > 0 &&
-            string.Equals(state.NameHistory[^1].DisplayName, e.DisplayName, StringComparison.Ordinal) &&
-            string.Equals(state.NameHistory[^1].SortName, e.SortName, StringComparison.Ordinal))
+        // When NameHistory is empty (post-erasure replay, legacy snapshot) fall back to
+        // state.DisplayName/SortName so empty-history idempotency still holds.
+        bool sameAsHistory = state.NameHistory.Count > 0
+            && string.Equals(state.NameHistory[^1].DisplayName, e.DisplayName, StringComparison.Ordinal)
+            && string.Equals(state.NameHistory[^1].SortName, e.SortName, StringComparison.Ordinal);
+        bool sameAsCurrent = state.NameHistory.Count == 0
+            && string.Equals(state.DisplayName, e.DisplayName, StringComparison.Ordinal)
+            && string.Equals(state.SortName, e.SortName, StringComparison.Ordinal);
+        if (sameAsHistory || sameAsCurrent)
         {
             return null;
         }

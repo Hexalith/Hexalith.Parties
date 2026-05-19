@@ -1,6 +1,6 @@
 # Story 2.1: Build Party Detail Projection
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -259,8 +259,10 @@ GPT-5 Codex
 - `src/Hexalith.Parties.Projections/Handlers/PartyDetailProjectionHandler.cs`
 - `tests/Hexalith.Parties.Projections.Tests/Handlers/PartyDetailProjectionHandlerTests.cs`
 - `tests/Hexalith.Parties.Projections.Tests/Handlers/PartyDetailProjectionHandlerNameHistoryTests.cs`
+- `tests/Hexalith.Parties.Projections.Tests/Handlers/PartyDetailProjectionHandlerRejectionFitnessTests.cs`
 - `tests/Hexalith.Parties.Tests/Projections/PartyDetailProjectionActorCorruptionTests.cs`
 - `_bmad-output/implementation-artifacts/2-1-build-party-detail-projection.md`
+- `_bmad-output/implementation-artifacts/deferred-work.md`
 - `_bmad-output/implementation-artifacts/sprint-status.yaml`
 
 ## Change Log
@@ -269,6 +271,7 @@ GPT-5 Codex
 - 2026-05-17: Party-mode review clarifications applied for stable idempotency keys, rejection replay no-op evidence, pre-create event ordering, actor-id failure behavior, timestamp precedence, and log-safe corruption testing.
 - 2026-05-17: Advanced elicitation clarifications applied for handler no-op preservation, accepted no-op checkpoint behavior, timestamp assertions, and metadata-only diagnostics.
 - 2026-05-18: Implemented story 2.1 party detail projection hardening, no-op semantics, rejection replay coverage, actor persistence/key tests, and Release regression validation.
+- 2026-05-19: Code review (Blind/Edge/Auditor) — applied 7 patches: (P1) cleaned tautological `result ?? state` assertions across 4 rejection/idempotency tests; (P2) added `LastModifiedAt` monotonic assertion + consistent `?? state` fallback in `Apply_CompleteDetailReplay_…`; (P3) fixed `HandleNameDerived` empty-history branch to also compare `state.DisplayName/SortName`, plus two new positive/negative empty-history tests; (P4) added reflection-based `IRejectionEvent` fitness test discovering all 19 contracts rejection types and asserting `Apply` returns null for both null and populated state; (P5) added explicit tests for `PartyMerged` and `IsNaturalPersonChanged` returning null; (P6) added actor-layer `HandleEventAsync_PartyDeactivated_WhenAlreadyInactive_DoesNotWritePartyDetailStateAsync` proving no-op success event preservation parity with rejection-event variant; (P7) strengthened `HandleEventAsync_InvalidActorId_FailsBeforeStateWriteAsync` with `DidNotReceive().SetStateAsync<long>` checkpoint guarantee. 16 findings deferred (Epic 6 erasure semantics, aggregate-trust pre-existing patterns, observability improvements). Validation: PartyDetailProjectionHandler 99/99, PartyEventTypeResolver 12/12, PartyDetailProjectionActorCorruptionTests 14/14, ArchitecturalFitnessTests 17/17, full Projections.Tests 129/129.
 
 ## Advanced Elicitation
 
@@ -319,3 +322,33 @@ GPT-5 Codex
   - Event contract timestamp redesign and normalization semantics remain deferred unless a future architecture decision approves them.
   - Projection schema versioning, migration/backfill, and cross-projection consistency guarantees remain deferred.
 - Final recommendation: `ready-for-dev`
+
+### Review Findings
+
+_Code review 2026-05-19 — three parallel adversarial layers (Blind Hunter, Edge Case Hunter, Acceptance Auditor). All 5 ACs Pass; 7 patches and 16 defers raised. Baseline diff: commit `a7112f3` filtered to story 2.1 file list._
+
+- [x] [Review][Patch] Tautological assertions in rejection/idempotency tests — after `result.ShouldBeNull()` passes, `preserved = result ?? state` makes `preserved` the same reference as `state`, so the trailing `preserved.X.ShouldBe(state.X)` assertions are tautologies and document the test setup rather than handler behavior. Affects `Apply_RejectionEvent_WithExistingState_ReturnsNullAndCallerPreservesState`, `Apply_InterleavedRejection_DoesNotMutateStateOrTimestamp`, `Apply_DuplicateContactIdentifierAndConsentAdds_ReturnNullWithoutReplacingExistingItems`, and `PartyDetailProjectionHandlerNameHistoryTests` sameNameEvent test. Either rename to `_ReturnsNull` and rely on actor-layer `HandleEventAsync_RejectionNoOp_*` for "caller preserves state", or delete the redundant assertions. [tests/Hexalith.Parties.Projections.Tests/Handlers/PartyDetailProjectionHandlerTests.cs:709-714, :731-736, :817-823, PartyDetailProjectionHandlerNameHistoryTests.cs:96-100]
+- [x] [Review][Patch] `Apply_CompleteDetailReplay_…` does not assert `LastModifiedAt` monotonic and inconsistently uses `?? state` fallback — only the `PreferredContactChannelChanged` step (line 548) uses the `?? state` fallback; `PartyDeactivated` / `PartyReactivated` steps (lines 567-569) use `state.ShouldNotBeNull()`. The final assertions only check `state.CreatedAt.ShouldBe(createdAt)`. A regression removing `LastModifiedAt = DateTimeOffset.UtcNow` from one handler would not be caught. Add `state.LastModifiedAt.ShouldBeGreaterThan(createdAt)` and use `?? state` consistently for conditional-mutation steps. [tests/Hexalith.Parties.Projections.Tests/Handlers/PartyDetailProjectionHandlerTests.cs:476-583]
+- [x] [Review][Patch] `HandleNameDerived` empty-history branch silently re-populates NameHistory and bumps timestamp — the guard `state.NameHistory.Count > 0 && string.Equals(state.NameHistory[^1].…)` falls through when `NameHistory` is empty (post-erasure replay, legacy snapshot), always appending a history entry and bumping `LastModifiedAt` even when `state.DisplayName == e.DisplayName && state.SortName == e.SortName`. Extend the guard to also check `state.DisplayName`/`state.SortName` so empty-history idempotency holds. Add a sort-only-change positive test (DisplayName same, SortName different) to prove history IS appended in that path; add a no-effective-change diverged-state test where `state.DisplayName` matches the event but `NameHistory` does not. [src/Hexalith.Parties.Projections/Handlers/PartyDetailProjectionHandler.cs:95-100]
+- [x] [Review][Patch] No fitness test covers all `IRejectionEvent` types — `RepresentativeRejectionEvents` theory exercises 5 of 19 rejection types in `Hexalith.Parties.Contracts.Events`. Future rejection types are silently absorbed by the `_ => null` switch arm without test coverage. Add a reflection-based fitness test in `Hexalith.Parties.Projections.Tests` (or `Hexalith.Parties.Tests/FitnessTests`) that discovers every type implementing `IRejectionEvent`, instantiates it (`Activator.CreateInstance` with `required`-property tolerance via `RuntimeHelpers.GetUninitializedObject` if needed for `PartyCommandValidationRejected`), and asserts `PartyDetailProjectionHandler.Apply(...)` returns `null` for each. Also assert the actor-level `HandleSerializedEventAsync` advances the checkpoint without writing PartyDetail state for at least one parameterised representative per category. [tests/Hexalith.Parties.Projections.Tests/Handlers/PartyDetailProjectionHandlerTests.cs:1144-1151]
+- [x] [Review][Patch] No test asserts `PartyMerged` and `IsNaturalPersonChanged` return `null` from `Apply` — both are explicitly mapped to `null` in the switch but have no test pinning the contract. A refactor that removes either case would fall through to `_ => null` (same observable behavior) but lose the documented intent. Add `[Fact]` tests `Apply_PartyMerged_ReturnsNull` and `Apply_IsNaturalPersonChanged_ReturnsNull` against a populated state. [src/Hexalith.Parties.Projections/Handlers/PartyDetailProjectionHandler.cs:31-32]
+- [x] [Review][Patch] Already-(de)active/not-restricted no-op tests do not assert `LastModifiedAt` is unchanged — `Apply_PartyDeactivated_WhenAlreadyInactive_ReturnsNull`, `Apply_PartyReactivated_WhenAlreadyActive_ReturnsNull`, and `Apply_RestrictionLifted_WhenNotRestricted_ReturnsNull` only assert `result.ShouldBeNull()`. Pattern the new tests after `Apply_RejectionEvent_*` once that pattern is unTAUTOLOGICAL (P1) and add a `state.LastModifiedAt` invariance assertion at the actor-layer or pair with an explicit "no-op preserves prior timestamp" sub-test. [tests/Hexalith.Parties.Projections.Tests/Handlers/PartyDetailProjectionHandlerTests.cs:286-294 and siblings]
+- [x] [Review][Patch] `HandleEventAsync_InvalidActorId_FailsBeforeStateWriteAsync` does not assert checkpoint key is not written — the test only checks `DidNotReceive().SetStateAsync(string, PartyDetail, CT)`. A regression that writes `:last-sequence` before throwing would pass. Add `DidNotReceive().SetStateAsync(string, long, CT)` to fully cover "fails before state write" per Task 3. [tests/Hexalith.Parties.Tests/Projections/PartyDetailProjectionActorCorruptionTests.cs:236-249]
+- [x] [Review][Defer] `PersonDetailsUpdated`/`OrganizationDetailsUpdated` on wrong party type silently accepted [src/Hexalith.Parties.Projections/Handlers/PartyDetailProjectionHandler.cs:121-141] — pre-existing, projection trusts aggregate per "Do not synthesize partial party detail state from child events" guardrail
+- [x] [Review][Defer] `DateTimeOffset.UtcNow` same-tick collision in processing timestamps [all handlers] — documented limitation in completion notes; deferred to event-time metadata architecture decision
+- [x] [Review][Defer] `HandleProcessingRestricted` accepts `default(DateTimeOffset)` without validation [PartyDetailProjectionHandler.cs:357-369] — pre-existing pattern, trust aggregate
+- [x] [Review][Defer] `HandleProcessingRestricted` exact `==` on `DateTimeOffset` for dedup [PartyDetailProjectionHandler.cs:359] — pre-existing pattern, clock-skew/replay-recompute would silently re-write `RestrictedAt`; needs design discussion
+- [x] [Review][Defer] `RestrictionLifted` OR-check silently repairs corrupt state when `IsRestricted=false` but `RestrictedAt is not null` [PartyDetailProjectionHandler.cs:170] — pre-existing repair behavior, needs design call on no-op vs repair
+- [x] [Review][Defer] `ConsentRevoked` overwrites already-revoked records without idempotency check [PartyDetailProjectionHandler.cs:313-333] — pre-existing pattern, audit-log integrity concern; needs design call
+- [x] [Review][Defer] `HandleContactChannelAdded`/`Removed` dedup by id ignores divergent payload [PartyDetailProjectionHandler.cs:151, 203] — pre-existing pattern; no observability when projection drifts from aggregate
+- [x] [Review][Defer] `.Any(...)` on potentially-null collections in stale-snapshot replay [PartyDetailProjectionHandler.cs:151, 203, 277] — pre-existing pattern relying on init defaults; not in story scope
+- [x] [Review][Defer] PartyCreated after erasure silently ignored [PartyDetailProjectionActor.cs:60-63] — Epic 6 erasure-semantics territory
+- [x] [Review][Defer] Post-erasure replay path not exercised in `Apply_CompleteDetailReplay_…` [tests/Hexalith.Parties.Projections.Tests/Handlers/PartyDetailProjectionHandlerTests.cs:476-583] — Epic 6 erasure-semantics territory; couples to P3's empty-history fix
+- [x] [Review][Defer] `EnsureLastSequenceLoadedAsync` swallows `KeyNotFoundException` then never re-loads [PartyDetailProjectionActor.cs:166-191] — pre-existing actor flow; transient outage recovery is a broader operability concern
+- [x] [Review][Defer] HandleEventAsync / PersistLastSequenceAsync partial-failure coupling [PartyDetailProjectionActor.cs:152-211] — pre-existing actor flow; no test asserting state vs checkpoint divergence on transient failure
+- [x] [Review][Defer] `EraseAsync` keeps erased shell in static `s_lastKnownDetails` cache [PartyDetailProjectionActor.cs:217-244] — Epic 6 erasure-semantics territory
+- [x] [Review][Defer] `JsonException` from `PayloadDeserializationFailed` log path may include payload fragment [PartyDetailProjectionActor.cs:461] — pre-existing logging behavior; PII-bleed concern via exception chain
+- [x] [Review][Defer] `HandleContactChannelAdded` accepts empty/whitespace `ContactChannelId` [PartyDetailProjectionHandler.cs:151] — pre-existing pattern, trust aggregate
+- [x] [Review][Defer] No log/diagnostic for "duplicate event with divergent payload" silent drop [PartyDetailProjectionHandler.cs:151, 257, 292] — speculative observability improvement, needs design discussion
+
+

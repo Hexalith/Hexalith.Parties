@@ -1,0 +1,826 @@
+diff --git a/src/Hexalith.Parties.Projections/Handlers/PartyDetailProjectionHandler.cs b/src/Hexalith.Parties.Projections/Handlers/PartyDetailProjectionHandler.cs
+index 2d267f5..4c20f38 100644
+--- a/src/Hexalith.Parties.Projections/Handlers/PartyDetailProjectionHandler.cs
++++ b/src/Hexalith.Parties.Projections/Handlers/PartyDetailProjectionHandler.cs
+@@ -14,46 +14,20 @@ public sealed class PartyDetailProjectionHandler
+         {
+             PartyCreated e => state is null ? HandlePartyCreated(partyId, e) : state,
+             PartyDisplayNameDerived e when state is not null => HandleNameDerived(state, e),
+-            PersonDetailsUpdated e when state is not null => state with
+-            {
+-                PersonDetails = e.PersonDetails,
+-                LastModifiedAt = DateTimeOffset.UtcNow,
+-            },
+-            OrganizationDetailsUpdated e when state is not null => state with
+-            {
+-                OrganizationDetails = e.OrganizationDetails,
+-                LastModifiedAt = DateTimeOffset.UtcNow,
+-            },
++            PersonDetailsUpdated e when state is not null => HandlePersonDetailsUpdated(state, e),
++            OrganizationDetailsUpdated e when state is not null => HandleOrganizationDetailsUpdated(state, e),
+             ContactChannelAdded e when state is not null => HandleContactChannelAdded(state, e),
+             ContactChannelUpdated e when state is not null => HandleContactChannelUpdated(state, e),
+             ContactChannelRemoved e when state is not null => HandleContactChannelRemoved(state, e),
+             PreferredContactChannelChanged e when state is not null => HandlePreferredContactChannelChanged(state, e),
+             IdentifierAdded e when state is not null => HandleIdentifierAdded(state, e),
+             IdentifierRemoved e when state is not null => HandleIdentifierRemoved(state, e),
+-            PartyDeactivated when state is not null => state with
+-            {
+-                IsActive = false,
+-                LastModifiedAt = DateTimeOffset.UtcNow,
+-            },
+-            PartyReactivated when state is not null => state with
+-            {
+-                IsActive = true,
+-                LastModifiedAt = DateTimeOffset.UtcNow,
+-            },
++            PartyDeactivated when state is not null => HandlePartyDeactivated(state),
++            PartyReactivated when state is not null => HandlePartyReactivated(state),
+             ConsentRecorded e when state is not null => HandleConsentRecorded(state, e),
+             ConsentRevoked e when state is not null => HandleConsentRevoked(state, e),
+-            ProcessingRestricted e when state is not null => state with
+-            {
+-                IsRestricted = true,
+-                RestrictedAt = e.RestrictedAt,
+-                LastModifiedAt = DateTimeOffset.UtcNow,
+-            },
+-            RestrictionLifted when state is not null => state with
+-            {
+-                IsRestricted = false,
+-                RestrictedAt = null,
+-                LastModifiedAt = DateTimeOffset.UtcNow,
+-            },
++            ProcessingRestricted e when state is not null => HandleProcessingRestricted(state, e),
++            RestrictionLifted when state is not null => HandleRestrictionLifted(state),
+             IsNaturalPersonChanged => null,
+             PartyMerged => null,
+             _ => null,
+@@ -122,12 +96,7 @@ public sealed class PartyDetailProjectionHandler
+             string.Equals(state.NameHistory[^1].DisplayName, e.DisplayName, StringComparison.Ordinal) &&
+             string.Equals(state.NameHistory[^1].SortName, e.SortName, StringComparison.Ordinal))
+         {
+-            return state with
+-            {
+-                DisplayName = e.DisplayName,
+-                SortName = e.SortName,
+-                LastModifiedAt = DateTimeOffset.UtcNow,
+-            };
++            return null;
+         }
+ 
+         return state with
+@@ -149,6 +118,28 @@ public sealed class PartyDetailProjectionHandler
+         };
+     }
+ 
++    private static PartyDetail? HandlePersonDetailsUpdated(PartyDetail state, PersonDetailsUpdated e)
++    {
++        return state.PersonDetails == e.PersonDetails
++            ? null
++            : state with
++            {
++                PersonDetails = e.PersonDetails,
++                LastModifiedAt = DateTimeOffset.UtcNow,
++            };
++    }
++
++    private static PartyDetail? HandleOrganizationDetailsUpdated(PartyDetail state, OrganizationDetailsUpdated e)
++    {
++        return state.OrganizationDetails == e.OrganizationDetails
++            ? null
++            : state with
++            {
++                OrganizationDetails = e.OrganizationDetails,
++                LastModifiedAt = DateTimeOffset.UtcNow,
++            };
++    }
++
+     private static PartyDetail? HandleContactChannelAdded(PartyDetail state, ContactChannelAdded e)
+     {
+         // Idempotent on replay: if the channel id is already present, skip the append rather
+@@ -207,8 +198,13 @@ public sealed class PartyDetailProjectionHandler
+         };
+     }
+ 
+-    private static PartyDetail HandleContactChannelRemoved(PartyDetail state, ContactChannelRemoved e)
++    private static PartyDetail? HandleContactChannelRemoved(PartyDetail state, ContactChannelRemoved e)
+     {
++        if (!state.ContactChannels.Any(c => c.Id == e.ContactChannelId))
++        {
++            return null;
++        }
++
+         return state with
+         {
+             ContactChannels = state.ContactChannels.Where(c => c.Id != e.ContactChannelId).ToList(),
+@@ -276,8 +272,13 @@ public sealed class PartyDetailProjectionHandler
+         };
+     }
+ 
+-    private static PartyDetail HandleIdentifierRemoved(PartyDetail state, IdentifierRemoved e)
++    private static PartyDetail? HandleIdentifierRemoved(PartyDetail state, IdentifierRemoved e)
+     {
++        if (!state.Identifiers.Any(i => i.Id == e.IdentifierId))
++        {
++            return null;
++        }
++
+         return state with
+         {
+             Identifiers = state.Identifiers.Where(i => i.Id != e.IdentifierId).ToList(),
+@@ -331,6 +332,55 @@ public sealed class PartyDetailProjectionHandler
+         };
+     }
+ 
++    private static PartyDetail? HandlePartyDeactivated(PartyDetail state)
++    {
++        return state.IsActive
++            ? state with
++            {
++                IsActive = false,
++                LastModifiedAt = DateTimeOffset.UtcNow,
++            }
++            : null;
++    }
++
++    private static PartyDetail? HandlePartyReactivated(PartyDetail state)
++    {
++        return state.IsActive
++            ? null
++            : state with
++            {
++                IsActive = true,
++                LastModifiedAt = DateTimeOffset.UtcNow,
++            };
++    }
++
++    private static PartyDetail? HandleProcessingRestricted(PartyDetail state, ProcessingRestricted e)
++    {
++        if (state.IsRestricted && state.RestrictedAt == e.RestrictedAt)
++        {
++            return null;
++        }
++
++        return state with
++        {
++            IsRestricted = true,
++            RestrictedAt = e.RestrictedAt,
++            LastModifiedAt = DateTimeOffset.UtcNow,
++        };
++    }
++
++    private static PartyDetail? HandleRestrictionLifted(PartyDetail state)
++    {
++        return state.IsRestricted || state.RestrictedAt is not null
++            ? state with
++            {
++                IsRestricted = false,
++                RestrictedAt = null,
++                LastModifiedAt = DateTimeOffset.UtcNow,
++            }
++            : null;
++    }
++
+     private static string DeriveDisplayName(PartyCreated e)
+     {
+         if (e.Type == PartyType.Person && e.PersonDetails is not null)
+diff --git a/tests/Hexalith.Parties.Projections.Tests/Handlers/PartyDetailProjectionHandlerNameHistoryTests.cs b/tests/Hexalith.Parties.Projections.Tests/Handlers/PartyDetailProjectionHandlerNameHistoryTests.cs
+index fca612a..beaa671 100644
+--- a/tests/Hexalith.Parties.Projections.Tests/Handlers/PartyDetailProjectionHandlerNameHistoryTests.cs
++++ b/tests/Hexalith.Parties.Projections.Tests/Handlers/PartyDetailProjectionHandlerNameHistoryTests.cs
+@@ -96,10 +96,11 @@ public class PartyDetailProjectionHandlerNameHistoryTests
+             SortName = "Doe, John",
+         };
+         PartyDetail? result = PartyDetailProjectionHandler.Apply(PartyId, sameNameEvent, state);
++        PartyDetail preserved = result ?? state.ShouldNotBeNull();
+ 
+-        result.ShouldNotBeNull();
+-        result.NameHistory.Count.ShouldBe(1); // No new entry added
+-        result.DisplayName.ShouldBe("John Doe");
++        result.ShouldBeNull();
++        preserved.NameHistory.Count.ShouldBe(1); // No new entry added
++        preserved.DisplayName.ShouldBe("John Doe");
+     }
+ 
+     // Sort-only change (display name unchanged) DOES append — directory-style queries
+diff --git a/tests/Hexalith.Parties.Projections.Tests/Handlers/PartyDetailProjectionHandlerTests.cs b/tests/Hexalith.Parties.Projections.Tests/Handlers/PartyDetailProjectionHandlerTests.cs
+index 2421f22..0ee97da 100644
+--- a/tests/Hexalith.Parties.Projections.Tests/Handlers/PartyDetailProjectionHandlerTests.cs
++++ b/tests/Hexalith.Parties.Projections.Tests/Handlers/PartyDetailProjectionHandlerTests.cs
+@@ -85,6 +85,35 @@ public class PartyDetailProjectionHandlerTests
+         result.LastModifiedAt.ShouldBeGreaterThan(state.LastModifiedAt);
+     }
+ 
++    [Fact]
++    public void Apply_PartyDisplayNameDerived_NoEffectiveChange_ReturnsNull()
++    {
++        PartyDetail state = CreatePersonDetail() with
++        {
++            DisplayName = "John Doe",
++            SortName = "Doe, John",
++            NameHistory =
++            [
++                new NameHistoryEntry
++                {
++                    DisplayName = "John Doe",
++                    SortName = "Doe, John",
++                    ChangedAt = DateTimeOffset.UtcNow.AddMinutes(-4),
++                    TriggeredBy = nameof(PartyCreated),
++                },
++            ],
++        };
++        PartyDisplayNameDerived @event = new()
++        {
++            DisplayName = "John Doe",
++            SortName = "Doe, John",
++        };
++
++        PartyDetail? result = PartyDetailProjectionHandler.Apply(PartyId, @event, state);
++
++        result.ShouldBeNull();
++    }
++
+     // --- Task 3.4: PersonDetailsUpdated ---
+ 
+     [Fact]
+@@ -215,6 +244,17 @@ public class PartyDetailProjectionHandlerTests
+         result.ContactChannels.ShouldBeEmpty();
+     }
+ 
++    [Fact]
++    public void Apply_ContactChannelRemoved_UnknownChannel_ReturnsNull()
++    {
++        PartyDetail state = CreatePersonDetailWithChannel();
++        ContactChannelRemoved @event = new() { ContactChannelId = "unknown" };
++
++        PartyDetail? result = PartyDetailProjectionHandler.Apply(PartyId, @event, state);
++
++        result.ShouldBeNull();
++    }
++
+     // --- Task 3.9: PreferredContactChannelChanged ---
+ 
+     [Fact]
+@@ -288,6 +328,17 @@ public class PartyDetailProjectionHandlerTests
+         result.Identifiers.ShouldBeEmpty();
+     }
+ 
++    [Fact]
++    public void Apply_IdentifierRemoved_UnknownIdentifier_ReturnsNull()
++    {
++        PartyDetail state = CreatePersonDetailWithIdentifier();
++        IdentifierRemoved @event = new() { IdentifierId = "unknown" };
++
++        PartyDetail? result = PartyDetailProjectionHandler.Apply(PartyId, @event, state);
++
++        result.ShouldBeNull();
++    }
++
+     // --- Task 3.12: PartyDeactivated ---
+ 
+     [Fact]
+@@ -301,6 +352,16 @@ public class PartyDetailProjectionHandlerTests
+         result.IsActive.ShouldBeFalse();
+     }
+ 
++    [Fact]
++    public void Apply_PartyDeactivated_WhenAlreadyInactive_ReturnsNull()
++    {
++        PartyDetail state = CreatePersonDetail() with { IsActive = false };
++
++        PartyDetail? result = PartyDetailProjectionHandler.Apply(PartyId, new PartyDeactivated(), state);
++
++        result.ShouldBeNull();
++    }
++
+     // --- Task 3.13: PartyReactivated ---
+ 
+     [Fact]
+@@ -314,6 +375,16 @@ public class PartyDetailProjectionHandlerTests
+         result.IsActive.ShouldBeTrue();
+     }
+ 
++    [Fact]
++    public void Apply_PartyReactivated_WhenAlreadyActive_ReturnsNull()
++    {
++        PartyDetail state = CreatePersonDetail();
++
++        PartyDetail? result = PartyDetailProjectionHandler.Apply(PartyId, new PartyReactivated(), state);
++
++        result.ShouldBeNull();
++    }
++
+     // --- Task 3.14: Multi-event sequence ---
+ 
+     [Fact]
+@@ -334,7 +405,7 @@ public class PartyDetailProjectionHandlerTests
+             DisplayName = "John Doe",
+             SortName = "Doe, John",
+         };
+-        state = PartyDetailProjectionHandler.Apply(PartyId, displayName, state);
++        state = PartyDetailProjectionHandler.Apply(PartyId, displayName, state) ?? state;
+         state.ShouldNotBeNull();
+ 
+         // ContactChannelAdded x3
+@@ -401,6 +472,116 @@ public class PartyDetailProjectionHandlerTests
+         state.Identifiers[1].Id.ShouldBe("id-siret");
+     }
+ 
++    [Fact]
++    public void Apply_CompleteDetailReplay_UpdatesOnlyRelevantFieldsAndPreservesCreatedAt()
++    {
++        PartyDetail? state = PartyDetailProjectionHandler.Apply(
++            PartyId,
++            new PartyCreated
++            {
++                Type = PartyType.Person,
++                PersonDetails = PartyTestData.ValidPersonDetails(),
++            },
++            null);
++        state.ShouldNotBeNull();
++        DateTimeOffset createdAt = state.CreatedAt;
++
++        state = PartyDetailProjectionHandler.Apply(
++            PartyId,
++            new PersonDetailsUpdated
++            {
++                PersonDetails = new PersonDetails
++                {
++                    FirstName = "Jane",
++                    LastName = "Smith",
++                },
++            },
++            state);
++        state.ShouldNotBeNull();
++
++        state = PartyDetailProjectionHandler.Apply(
++            PartyId,
++            new PartyDisplayNameDerived
++            {
++                DisplayName = "Jane Smith",
++                SortName = "Smith, Jane",
++            },
++            state);
++        state.ShouldNotBeNull();
++
++        state = PartyDetailProjectionHandler.Apply(
++            PartyId,
++            new ContactChannelAdded
++            {
++                ContactChannelId = "cc-email",
++                Type = ContactChannelType.Email,
++                Value = "jane@example.invalid",
++                IsPreferred = true,
++            },
++            state);
++        state.ShouldNotBeNull();
++
++        state = PartyDetailProjectionHandler.Apply(
++            PartyId,
++            new ContactChannelAdded
++            {
++                ContactChannelId = "cc-phone",
++                Type = ContactChannelType.Phone,
++                Value = "+33000000000",
++            },
++            state);
++        state.ShouldNotBeNull();
++
++        state = PartyDetailProjectionHandler.Apply(
++            PartyId,
++            new ContactChannelUpdated
++            {
++                ContactChannelId = "cc-phone",
++                Value = "+33111111111",
++            },
++            state);
++        state.ShouldNotBeNull();
++
++        state = PartyDetailProjectionHandler.Apply(
++            PartyId,
++            new PreferredContactChannelChanged { ContactChannelId = "cc-email" },
++            state) ?? state;
++
++        state = PartyDetailProjectionHandler.Apply(
++            PartyId,
++            new IdentifierAdded
++            {
++                IdentifierId = "id-vat",
++                Type = IdentifierType.VAT,
++                Value = "FR00000000000",
++            },
++            state);
++        state.ShouldNotBeNull();
++
++        state = PartyDetailProjectionHandler.Apply(
++            PartyId,
++            new IdentifierRemoved { IdentifierId = "id-vat" },
++            state);
++        state.ShouldNotBeNull();
++
++        state = PartyDetailProjectionHandler.Apply(PartyId, new PartyDeactivated(), state);
++        state.ShouldNotBeNull();
++        state = PartyDetailProjectionHandler.Apply(PartyId, new PartyReactivated(), state);
++        state.ShouldNotBeNull();
++
++        state.Id.ShouldBe(PartyId);
++        state.Type.ShouldBe(PartyType.Person);
++        state.IsActive.ShouldBeTrue();
++        state.PersonDetails.ShouldNotBeNull();
++        state.PersonDetails.FirstName.ShouldBe("Jane");
++        state.DisplayName.ShouldBe("Jane Smith");
++        state.SortName.ShouldBe("Smith, Jane");
++        state.ContactChannels.Count.ShouldBe(2);
++        state.ContactChannels.Single(c => c.Id == "cc-phone").Value.ShouldBe("+33111111111");
++        state.Identifiers.ShouldBeEmpty();
++        state.CreatedAt.ShouldBe(createdAt);
++    }
++
+     // --- Task 3.4 AC #1: Full event sequence with intermediate state verification ---
+ 
+     [Fact]
+@@ -509,6 +690,139 @@ public class PartyDetailProjectionHandlerTests
+         result.ShouldBeNull();
+     }
+ 
++    [Theory]
++    [MemberData(nameof(RepresentativeRejectionEvents))]
++    public void Apply_RejectionEvent_WithNullState_ReturnsNull(IEventPayload rejection)
++    {
++        PartyDetail? result = PartyDetailProjectionHandler.Apply(PartyId, rejection, null);
++
++        result.ShouldBeNull();
++    }
++
++    [Theory]
++    [MemberData(nameof(RepresentativeRejectionEvents))]
++    public void Apply_RejectionEvent_WithExistingState_ReturnsNullAndCallerPreservesState(IEventPayload rejection)
++    {
++        PartyDetail state = CreatePersonDetailWithChannel();
++
++        PartyDetail? result = PartyDetailProjectionHandler.Apply(PartyId, rejection, state);
++        PartyDetail preserved = result ?? state;
++
++        result.ShouldBeNull();
++        preserved.ShouldBe(state);
++        preserved.LastModifiedAt.ShouldBe(state.LastModifiedAt);
++    }
++
++    [Fact]
++    public void Apply_InterleavedRejection_DoesNotMutateStateOrTimestamp()
++    {
++        PartyDetail state = CreatePersonDetail();
++        PartyDetail? added = PartyDetailProjectionHandler.Apply(
++            PartyId,
++            new ContactChannelAdded
++            {
++                ContactChannelId = "cc-1",
++                Type = ContactChannelType.Email,
++                Value = "john@example.com",
++            },
++            state);
++        added.ShouldNotBeNull();
++
++        PartyDetail? rejected = PartyDetailProjectionHandler.Apply(PartyId, new PartyCannotAddDuplicateChannel(), added);
++        PartyDetail preserved = rejected ?? added;
++
++        rejected.ShouldBeNull();
++        preserved.ContactChannels.Count.ShouldBe(1);
++        preserved.LastModifiedAt.ShouldBe(added.LastModifiedAt);
++    }
++
++    [Fact]
++    public void Apply_DuplicateContactIdentifierAndConsentAdds_ReturnNullWithoutReplacingExistingItems()
++    {
++        DateTimeOffset timestamp = DateTimeOffset.UtcNow.AddMinutes(-5);
++        PartyDetail state = CreatePersonDetail() with
++        {
++            LastModifiedAt = timestamp,
++            ContactChannels =
++            [
++                new ContactChannel
++                {
++                    Id = "cc-1",
++                    Type = ContactChannelType.Email,
++                    Value = "first@example.com",
++                    IsPreferred = true,
++                },
++            ],
++            Identifiers =
++            [
++                new PartyIdentifier
++                {
++                    Id = "id-vat",
++                    Type = IdentifierType.VAT,
++                    Value = "FR00000000000",
++                },
++            ],
++            ConsentRecords =
++            [
++                new ConsentRecord
++                {
++                    ConsentId = "consent-1",
++                    ChannelId = "cc-1",
++                    Purpose = "marketing",
++                    LawfulBasis = LawfulBasis.Consent,
++                    GrantedAt = timestamp,
++                    GrantedBy = "admin",
++                },
++            ],
++        };
++
++        PartyDetail? duplicateChannel = PartyDetailProjectionHandler.Apply(
++            PartyId,
++            new ContactChannelAdded
++            {
++                ContactChannelId = "cc-1",
++                Type = ContactChannelType.Phone,
++                Value = "+33000000000",
++            },
++            state);
++        PartyDetail afterChannel = duplicateChannel ?? state;
++
++        PartyDetail? duplicateIdentifier = PartyDetailProjectionHandler.Apply(
++            PartyId,
++            new IdentifierAdded
++            {
++                IdentifierId = "id-vat",
++                Type = IdentifierType.SIRET,
++                Value = "11111111111111",
++            },
++            afterChannel);
++        PartyDetail afterIdentifier = duplicateIdentifier ?? afterChannel;
++
++        PartyDetail? duplicateConsent = PartyDetailProjectionHandler.Apply(
++            PartyId,
++            new ConsentRecorded
++            {
++                PartyId = PartyId,
++                TenantId = "tenant-1",
++                ConsentId = "consent-1",
++                ChannelId = "cc-1",
++                Purpose = "support",
++                LawfulBasis = LawfulBasis.ContractualNecessity,
++                GrantedAt = DateTimeOffset.UtcNow,
++                GrantedBy = "operator",
++            },
++            afterIdentifier);
++        PartyDetail afterConsent = duplicateConsent ?? afterIdentifier;
++
++        duplicateChannel.ShouldBeNull();
++        duplicateIdentifier.ShouldBeNull();
++        duplicateConsent.ShouldBeNull();
++        afterConsent.ContactChannels.Single().Value.ShouldBe("first@example.com");
++        afterConsent.Identifiers.Single().Type.ShouldBe(IdentifierType.VAT);
++        afterConsent.ConsentRecords.Single().Purpose.ShouldBe("marketing");
++        afterConsent.LastModifiedAt.ShouldBe(timestamp);
++    }
++
+     // --- Erasure tests ---
+ 
+     [Fact]
+@@ -689,6 +1003,22 @@ public class PartyDetailProjectionHandlerTests
+         result.RestrictedAt.ShouldBeNull();
+     }
+ 
++    [Fact]
++    public void Apply_RestrictionLifted_WhenNotRestricted_ReturnsNull()
++    {
++        PartyDetail state = CreatePersonDetail();
++        RestrictionLifted @event = new()
++        {
++            PartyId = PartyId,
++            TenantId = "t1",
++            LiftedAt = DateTimeOffset.UtcNow,
++        };
++
++        PartyDetail? result = PartyDetailProjectionHandler.Apply(PartyId, @event, state);
++
++        result.ShouldBeNull();
++    }
++
+     [Fact]
+     public void ApplyErasure_ClearsConsentRecords()
+     {
+@@ -811,5 +1141,14 @@ public class PartyDetailProjectionHandlerTests
+         };
+     }
+ 
++    public static TheoryData<IEventPayload> RepresentativeRejectionEvents() =>
++    [
++        new PartyCannotBeCreatedWithInvalidId(),
++        new PartyCannotAddDuplicateChannel(),
++        new PartyCannotAddDuplicateIdentifier(),
++        new PartyCannotBeDeactivatedWhenInactive(),
++        new PartyCannotBeReactivatedWhenActive(),
++    ];
++
+     private sealed record UnrecognizedEvent : IEventPayload;
+ }
+diff --git a/tests/Hexalith.Parties.Tests/Projections/PartyDetailProjectionActorCorruptionTests.cs b/tests/Hexalith.Parties.Tests/Projections/PartyDetailProjectionActorCorruptionTests.cs
+index a05dff9..b9c8d83 100644
+--- a/tests/Hexalith.Parties.Tests/Projections/PartyDetailProjectionActorCorruptionTests.cs
++++ b/tests/Hexalith.Parties.Tests/Projections/PartyDetailProjectionActorCorruptionTests.cs
+@@ -1,9 +1,11 @@
+ using System.Reflection;
+ using System.Runtime.Serialization;
++using System.Text.Json;
+ 
+ using Dapr.Actors;
+ using Dapr.Actors.Runtime;
+ 
++using Hexalith.Parties.Contracts.Events;
+ using Hexalith.Parties.Contracts.Models;
+ using Hexalith.Parties.Contracts.ValueObjects;
+ using Hexalith.Parties.Projections.Actors;
+@@ -119,7 +121,161 @@ public sealed class PartyDetailProjectionActorCorruptionTests
+         await Should.ThrowAsync<OperationCanceledException>(() => InvokeOnActivateAsync(actor));
+     }
+ 
+-    private static (PartyDetailProjectionActor Actor, IActorStateManager StateManager) CreateActor()
++    [Fact]
++    public async Task HandleEventAsync_PartyCreated_UsesDocumentedTenantPartyDetailStateKeyAsync()
++    {
++        (PartyDetailProjectionActor actor, IActorStateManager stateManager) = CreateActor();
++
++        stateManager.TryGetStateAsync<PartyDetail>(
++                "test-tenant:party-detail:party-001",
++                Arg.Any<CancellationToken>())
++            .Returns(new ConditionalValue<PartyDetail>(false, default!));
++
++        await actor.HandleEventAsync(
++            "party-001",
++            new PartyCreated
++            {
++                Type = PartyType.Person,
++                PersonDetails = new PersonDetails
++                {
++                    FirstName = "Test",
++                    LastName = "Party",
++                },
++            });
++
++        await stateManager.Received(1).TryGetStateAsync<PartyDetail>(
++            "test-tenant:party-detail:party-001",
++            Arg.Any<CancellationToken>());
++        await stateManager.Received(1).SetStateAsync(
++            "test-tenant:party-detail:party-001",
++            Arg.Is<PartyDetail>(detail => detail.Id == "party-001"),
++            Arg.Any<CancellationToken>());
++    }
++
++    [Fact]
++    public async Task HandleEventAsync_RejectionNoOp_DoesNotWritePartyDetailStateAsync()
++    {
++        (PartyDetailProjectionActor actor, IActorStateManager stateManager) = CreateActor();
++        PartyDetail existing = CreateDetail();
++
++        stateManager.TryGetStateAsync<PartyDetail>(
++                "test-tenant:party-detail:party-001",
++                Arg.Any<CancellationToken>())
++            .Returns(new ConditionalValue<PartyDetail>(true, existing));
++
++        await actor.HandleEventAsync("party-001", new PartyCannotAddDuplicateChannel());
++
++        await stateManager.DidNotReceive().SetStateAsync(
++            "test-tenant:party-detail:party-001",
++            Arg.Any<PartyDetail>(),
++            Arg.Any<CancellationToken>());
++    }
++
++    [Fact]
++    public async Task HandleSerializedEventAsync_AcceptedRejectionNoOp_AdvancesCheckpointWithoutWritingDetailStateAsync()
++    {
++        (PartyDetailProjectionActor actor, IActorStateManager stateManager) = CreateActor();
++        byte[] payload = JsonSerializer.SerializeToUtf8Bytes(new PartyCannotBeCreatedWithInvalidId(), new JsonSerializerOptions(JsonSerializerDefaults.Web));
++
++        stateManager.TryGetStateAsync<long>(
++                "test-tenant:party-detail:party-001:last-sequence",
++                Arg.Any<CancellationToken>())
++            .Returns(new ConditionalValue<long>(false, default));
++        stateManager.TryGetStateAsync<PartyDetail>(
++                "test-tenant:party-detail:party-001",
++                Arg.Any<CancellationToken>())
++            .Returns(new ConditionalValue<PartyDetail>(true, CreateDetail()));
++
++        await actor.HandleSerializedEventAsync(
++            "party-001",
++            nameof(PartyCannotBeCreatedWithInvalidId),
++            payload,
++            "json",
++            7,
++            CancellationToken.None);
++
++        await stateManager.DidNotReceive().SetStateAsync(
++            "test-tenant:party-detail:party-001",
++            Arg.Any<PartyDetail>(),
++            Arg.Any<CancellationToken>());
++        await stateManager.Received(1).SetStateAsync(
++            "test-tenant:party-detail:party-001:last-sequence",
++            7L,
++            Arg.Any<CancellationToken>());
++    }
++
++    [Fact]
++    public async Task HandleSerializedEventAsync_AlreadyAppliedSequence_SkipsStateAndCheckpointWritesAsync()
++    {
++        (PartyDetailProjectionActor actor, IActorStateManager stateManager) = CreateActor();
++        byte[] payload = JsonSerializer.SerializeToUtf8Bytes(new PartyCannotBeCreatedWithInvalidId(), new JsonSerializerOptions(JsonSerializerDefaults.Web));
++
++        stateManager.TryGetStateAsync<long>(
++                "test-tenant:party-detail:party-001:last-sequence",
++                Arg.Any<CancellationToken>())
++            .Returns(new ConditionalValue<long>(true, 10));
++
++        await actor.HandleSerializedEventAsync(
++            "party-001",
++            nameof(PartyCannotBeCreatedWithInvalidId),
++            payload,
++            "json",
++            7,
++            CancellationToken.None);
++
++        await stateManager.DidNotReceive().SetStateAsync(
++            Arg.Any<string>(),
++            Arg.Any<PartyDetail>(),
++            Arg.Any<CancellationToken>());
++        await stateManager.DidNotReceive().SetStateAsync(
++            "test-tenant:party-detail:party-001:last-sequence",
++            Arg.Any<long>(),
++            Arg.Any<CancellationToken>());
++    }
++
++    [Theory]
++    [InlineData("test-tenant:wrong-projection:party-001")]
++    [InlineData("malformed-actor-id")]
++    public async Task HandleEventAsync_InvalidActorId_FailsBeforeStateWriteAsync(string actorId)
++    {
++        (PartyDetailProjectionActor actor, IActorStateManager stateManager) = CreateActor(actorId);
++
++        await Should.ThrowAsync<InvalidOperationException>(() => actor.HandleEventAsync("party-001", new PartyDeactivated()));
++
++        await stateManager.DidNotReceive().SetStateAsync(
++            Arg.Any<string>(),
++            Arg.Any<PartyDetail>(),
++            Arg.Any<CancellationToken>());
++    }
++
++    [Fact]
++    public async Task HandleSerializedEventAsync_PartyIdMismatch_FailsBeforeStateWriteOrCheckpointAdvanceAsync()
++    {
++        (PartyDetailProjectionActor actor, IActorStateManager stateManager) = CreateActor();
++        byte[] payload = JsonSerializer.SerializeToUtf8Bytes(new PartyCannotBeCreatedWithInvalidId(), new JsonSerializerOptions(JsonSerializerDefaults.Web));
++
++        await Should.ThrowAsync<InvalidOperationException>(() => actor.HandleSerializedEventAsync(
++            "different-party",
++            nameof(PartyCannotBeCreatedWithInvalidId),
++            payload,
++            "json",
++            7,
++            CancellationToken.None));
++
++        await stateManager.DidNotReceive().TryGetStateAsync<long>(
++            Arg.Any<string>(),
++            Arg.Any<CancellationToken>());
++        await stateManager.DidNotReceive().SetStateAsync(
++            Arg.Any<string>(),
++            Arg.Any<long>(),
++            Arg.Any<CancellationToken>());
++        await stateManager.DidNotReceive().SetStateAsync(
++            Arg.Any<string>(),
++            Arg.Any<PartyDetail>(),
++            Arg.Any<CancellationToken>());
++    }
++
++    private static (PartyDetailProjectionActor Actor, IActorStateManager StateManager) CreateActor(string actorId = ActorId)
+     {
+         IActorStateManager stateManager = Substitute.For<IActorStateManager>();
+         IProjectionRebuildService rebuildService = Substitute.For<IProjectionRebuildService>();
+@@ -128,7 +284,7 @@ public sealed class PartyDetailProjectionActorCorruptionTests
+ 
+         ActorTimerManager timerManager = Substitute.For<ActorTimerManager>();
+         var host = ActorHost.CreateForTest<PartyDetailProjectionActor>(
+-            new ActorTestOptions { ActorId = new ActorId(ActorId), TimerManager = timerManager });
++            new ActorTestOptions { ActorId = new ActorId(actorId), TimerManager = timerManager });
+         var actor = new PartyDetailProjectionActor(host, rebuildService, logger);
+ 
+         PropertyInfo? prop = typeof(Actor).GetProperty("StateManager", BindingFlags.Public | BindingFlags.Instance);
+@@ -137,6 +293,18 @@ public sealed class PartyDetailProjectionActorCorruptionTests
+         return (actor, stateManager);
+     }
+ 
++    private static PartyDetail CreateDetail() =>
++        new()
++        {
++            Id = "party-001",
++            Type = PartyType.Person,
++            IsActive = true,
++            DisplayName = "Test Party",
++            SortName = "Party, Test",
++            CreatedAt = DateTimeOffset.UtcNow.AddMinutes(-5),
++            LastModifiedAt = DateTimeOffset.UtcNow.AddMinutes(-5),
++        };
++
+     private static async Task InvokeOnActivateAsync(PartyDetailProjectionActor actor)
+     {
+         MethodInfo? method = typeof(PartyDetailProjectionActor).GetMethod(

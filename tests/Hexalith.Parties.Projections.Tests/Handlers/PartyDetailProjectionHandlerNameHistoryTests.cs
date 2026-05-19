@@ -95,12 +95,14 @@ public class PartyDetailProjectionHandlerNameHistoryTests
             DisplayName = "John Doe",
             SortName = "Doe, John",
         };
+        state.ShouldNotBeNull();
         PartyDetail? result = PartyDetailProjectionHandler.Apply(PartyId, sameNameEvent, state);
-        PartyDetail preserved = result ?? state.ShouldNotBeNull();
 
+        // Handler returns null to signal no mutation; the actor preserves the prior state.
+        // Caller-preserves-state is verified at the actor layer; here we only verify the contract.
         result.ShouldBeNull();
-        preserved.NameHistory.Count.ShouldBe(1); // No new entry added
-        preserved.DisplayName.ShouldBe("John Doe");
+        state.NameHistory.Count.ShouldBe(1); // pre-condition: PartyCreated seeded one entry
+        state.DisplayName.ShouldBe("John Doe");
     }
 
     // Sort-only change (display name unchanged) DOES append — directory-style queries
@@ -154,6 +156,64 @@ public class PartyDetailProjectionHandlerNameHistoryTests
         erasedResult.ShouldNotBeNull();
         erasedResult.NameHistory.ShouldBeEmpty();
         erasedResult.IsErased.ShouldBeTrue();
+    }
+
+    // 7.15 — Empty NameHistory + matching DisplayName/SortName returns null (post-erasure or legacy snapshot idempotency)
+    [Fact]
+    public void Apply_PartyDisplayNameDerived_EmptyHistory_SameDisplayAndSortNames_ReturnsNull()
+    {
+        PartyDetail state = new()
+        {
+            Id = PartyId,
+            Type = PartyType.Person,
+            IsActive = true,
+            DisplayName = "John Doe",
+            SortName = "Doe, John",
+            PersonDetails = PartyTestData.ValidPersonDetails(),
+            NameHistory = [],
+            CreatedAt = DateTimeOffset.UtcNow.AddMinutes(-5),
+            LastModifiedAt = DateTimeOffset.UtcNow.AddMinutes(-5),
+        };
+
+        PartyDisplayNameDerived sameNameEvent = new()
+        {
+            DisplayName = "John Doe",
+            SortName = "Doe, John",
+        };
+        PartyDetail? result = PartyDetailProjectionHandler.Apply(PartyId, sameNameEvent, state);
+
+        result.ShouldBeNull();
+    }
+
+    // 7.16 — Empty NameHistory + diverging Display/Sort names DOES append a new history entry
+    [Fact]
+    public void Apply_PartyDisplayNameDerived_EmptyHistory_DivergingNames_AppendsHistoryEntry()
+    {
+        PartyDetail state = new()
+        {
+            Id = PartyId,
+            Type = PartyType.Person,
+            IsActive = true,
+            DisplayName = "John Doe",
+            SortName = "Doe, John",
+            PersonDetails = PartyTestData.ValidPersonDetails(),
+            NameHistory = [],
+            CreatedAt = DateTimeOffset.UtcNow.AddMinutes(-5),
+            LastModifiedAt = DateTimeOffset.UtcNow.AddMinutes(-5),
+        };
+
+        PartyDisplayNameDerived changeEvent = new()
+        {
+            DisplayName = "Jane Smith",
+            SortName = "Smith, Jane",
+        };
+        PartyDetail? result = PartyDetailProjectionHandler.Apply(PartyId, changeEvent, state);
+
+        result.ShouldNotBeNull();
+        result.DisplayName.ShouldBe("Jane Smith");
+        result.SortName.ShouldBe("Smith, Jane");
+        result.NameHistory.Count.ShouldBe(1);
+        result.NameHistory[0].DisplayName.ShouldBe("Jane Smith");
     }
 
     // Additional: NameHistory preserves chronological order

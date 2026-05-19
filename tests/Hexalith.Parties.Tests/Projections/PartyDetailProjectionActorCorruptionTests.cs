@@ -233,6 +233,29 @@ public sealed class PartyDetailProjectionActorCorruptionTests
             Arg.Any<CancellationToken>());
     }
 
+    [Fact]
+    public async Task HandleEventAsync_PartyDeactivated_WhenAlreadyInactive_DoesNotWritePartyDetailStateAsync()
+    {
+        // Accepted no-op success event: PartyDeactivated against an already-inactive state
+        // returns null from the handler. The actor must preserve the stored projection (no
+        // SetStateAsync call). Complements HandleEventAsync_RejectionNoOp_…Async which covers
+        // the rejection-event variant.
+        (PartyDetailProjectionActor actor, IActorStateManager stateManager) = CreateActor();
+        PartyDetail inactive = CreateDetail() with { IsActive = false };
+
+        stateManager.TryGetStateAsync<PartyDetail>(
+                "test-tenant:party-detail:party-001",
+                Arg.Any<CancellationToken>())
+            .Returns(new ConditionalValue<PartyDetail>(true, inactive));
+
+        await actor.HandleEventAsync("party-001", new PartyDeactivated());
+
+        await stateManager.DidNotReceive().SetStateAsync(
+            "test-tenant:party-detail:party-001",
+            Arg.Any<PartyDetail>(),
+            Arg.Any<CancellationToken>());
+    }
+
     [Theory]
     [InlineData("test-tenant:wrong-projection:party-001")]
     [InlineData("malformed-actor-id")]
@@ -245,6 +268,10 @@ public sealed class PartyDetailProjectionActorCorruptionTests
         await stateManager.DidNotReceive().SetStateAsync(
             Arg.Any<string>(),
             Arg.Any<PartyDetail>(),
+            Arg.Any<CancellationToken>());
+        await stateManager.DidNotReceive().SetStateAsync(
+            Arg.Any<string>(),
+            Arg.Any<long>(),
             Arg.Any<CancellationToken>());
     }
 

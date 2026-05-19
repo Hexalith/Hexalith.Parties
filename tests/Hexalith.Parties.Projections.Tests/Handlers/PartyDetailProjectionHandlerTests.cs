@@ -564,10 +564,8 @@ public class PartyDetailProjectionHandlerTests
             state);
         state.ShouldNotBeNull();
 
-        state = PartyDetailProjectionHandler.Apply(PartyId, new PartyDeactivated(), state);
-        state.ShouldNotBeNull();
-        state = PartyDetailProjectionHandler.Apply(PartyId, new PartyReactivated(), state);
-        state.ShouldNotBeNull();
+        state = PartyDetailProjectionHandler.Apply(PartyId, new PartyDeactivated(), state) ?? state;
+        state = PartyDetailProjectionHandler.Apply(PartyId, new PartyReactivated(), state) ?? state;
 
         state.Id.ShouldBe(PartyId);
         state.Type.ShouldBe(PartyType.Person);
@@ -580,6 +578,7 @@ public class PartyDetailProjectionHandlerTests
         state.ContactChannels.Single(c => c.Id == "cc-phone").Value.ShouldBe("+33111111111");
         state.Identifiers.ShouldBeEmpty();
         state.CreatedAt.ShouldBe(createdAt);
+        state.LastModifiedAt.ShouldBeGreaterThan(createdAt);
     }
 
     // --- Task 3.4 AC #1: Full event sequence with intermediate state verification ---
@@ -690,6 +689,34 @@ public class PartyDetailProjectionHandlerTests
         result.ShouldBeNull();
     }
 
+    // Accepted no-op events: explicitly mapped to null in the handler switch. Pin the contract
+    // so a future refactor cannot quietly demote either case to the default `_ => null` arm.
+    [Fact]
+    public void Apply_PartyMerged_ReturnsNull()
+    {
+        PartyDetail state = CreatePersonDetail();
+        PartyMerged @event = new()
+        {
+            SurvivorPartyId = "survivor-party",
+            MergedPartyId = PartyId,
+        };
+
+        PartyDetail? result = PartyDetailProjectionHandler.Apply(PartyId, @event, state);
+
+        result.ShouldBeNull();
+    }
+
+    [Fact]
+    public void Apply_IsNaturalPersonChanged_ReturnsNull()
+    {
+        PartyDetail state = CreatePersonDetail();
+        IsNaturalPersonChanged @event = new() { IsNaturalPerson = false };
+
+        PartyDetail? result = PartyDetailProjectionHandler.Apply(PartyId, @event, state);
+
+        result.ShouldBeNull();
+    }
+
     [Theory]
     [MemberData(nameof(RepresentativeRejectionEvents))]
     public void Apply_RejectionEvent_WithNullState_ReturnsNull(IEventPayload rejection)
@@ -701,21 +728,25 @@ public class PartyDetailProjectionHandlerTests
 
     [Theory]
     [MemberData(nameof(RepresentativeRejectionEvents))]
-    public void Apply_RejectionEvent_WithExistingState_ReturnsNullAndCallerPreservesState(IEventPayload rejection)
+    public void Apply_RejectionEvent_WithExistingState_ReturnsNull(IEventPayload rejection)
     {
+        // Handler returns null on rejection so the actor preserves the stored projection
+        // verbatim. State preservation by the caller is verified at the actor layer in
+        // HandleEventAsync_RejectionNoOp_DoesNotWritePartyDetailStateAsync.
         PartyDetail state = CreatePersonDetailWithChannel();
 
         PartyDetail? result = PartyDetailProjectionHandler.Apply(PartyId, rejection, state);
-        PartyDetail preserved = result ?? state;
 
         result.ShouldBeNull();
-        preserved.ShouldBe(state);
-        preserved.LastModifiedAt.ShouldBe(state.LastModifiedAt);
     }
 
     [Fact]
-    public void Apply_InterleavedRejection_DoesNotMutateStateOrTimestamp()
+    public void Apply_InterleavedRejection_ReturnsNull()
     {
+        // Same caller-preservation contract as Apply_RejectionEvent_WithExistingState_ReturnsNull,
+        // exercised after a successful collection mutation to prove the rejection itself does not
+        // produce a follow-up state mutation. Caller-side timestamp preservation is asserted at
+        // the actor layer.
         PartyDetail state = CreatePersonDetail();
         PartyDetail? added = PartyDetailProjectionHandler.Apply(
             PartyId,
@@ -727,13 +758,11 @@ public class PartyDetailProjectionHandlerTests
             },
             state);
         added.ShouldNotBeNull();
+        added.ContactChannels.Count.ShouldBe(1);
 
         PartyDetail? rejected = PartyDetailProjectionHandler.Apply(PartyId, new PartyCannotAddDuplicateChannel(), added);
-        PartyDetail preserved = rejected ?? added;
 
         rejected.ShouldBeNull();
-        preserved.ContactChannels.Count.ShouldBe(1);
-        preserved.LastModifiedAt.ShouldBe(added.LastModifiedAt);
     }
 
     [Fact]
@@ -776,6 +805,9 @@ public class PartyDetailProjectionHandlerTests
             ],
         };
 
+        // Each duplicate add (same stable id, divergent payload) must return null so the actor
+        // preserves the stored item. Caller-side state preservation (no SetStateAsync write, no
+        // LastModifiedAt refresh) is verified at the actor layer.
         PartyDetail? duplicateChannel = PartyDetailProjectionHandler.Apply(
             PartyId,
             new ContactChannelAdded
@@ -785,7 +817,6 @@ public class PartyDetailProjectionHandlerTests
                 Value = "+33000000000",
             },
             state);
-        PartyDetail afterChannel = duplicateChannel ?? state;
 
         PartyDetail? duplicateIdentifier = PartyDetailProjectionHandler.Apply(
             PartyId,
@@ -795,8 +826,7 @@ public class PartyDetailProjectionHandlerTests
                 Type = IdentifierType.SIRET,
                 Value = "11111111111111",
             },
-            afterChannel);
-        PartyDetail afterIdentifier = duplicateIdentifier ?? afterChannel;
+            state);
 
         PartyDetail? duplicateConsent = PartyDetailProjectionHandler.Apply(
             PartyId,
@@ -811,16 +841,11 @@ public class PartyDetailProjectionHandlerTests
                 GrantedAt = DateTimeOffset.UtcNow,
                 GrantedBy = "operator",
             },
-            afterIdentifier);
-        PartyDetail afterConsent = duplicateConsent ?? afterIdentifier;
+            state);
 
         duplicateChannel.ShouldBeNull();
         duplicateIdentifier.ShouldBeNull();
         duplicateConsent.ShouldBeNull();
-        afterConsent.ContactChannels.Single().Value.ShouldBe("first@example.com");
-        afterConsent.Identifiers.Single().Type.ShouldBe(IdentifierType.VAT);
-        afterConsent.ConsentRecords.Single().Purpose.ShouldBe("marketing");
-        afterConsent.LastModifiedAt.ShouldBe(timestamp);
     }
 
     // --- Erasure tests ---
