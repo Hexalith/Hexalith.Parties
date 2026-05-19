@@ -88,7 +88,7 @@ development_status:
   2-5-search-parties-by-display-name-with-match-metadata: ready-for-dev
   2-6-enforce-tenant-safe-projection-reads: ready-for-dev
   2-7-handle-projection-freshness-and-graceful-degradation: ready-for-dev
-  2-8-projection-rebuild-and-health-monitoring: backlog
+  2-8-projection-rebuild-and-health-monitoring: ready-for-dev
   2-9-prepare-deferred-search-and-temporal-query-extensions: backlog
   epic-2-retrospective: optional
 
