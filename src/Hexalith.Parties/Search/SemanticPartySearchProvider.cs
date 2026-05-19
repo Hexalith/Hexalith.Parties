@@ -61,6 +61,7 @@ internal sealed class SemanticPartySearchProvider : IPartySearchProvider
             .Where(r => r is not null)
             .Select(r => r!)
             .OrderByDescending(r => r.RelevanceScore)
+            .ThenBy(r => GetSortableName(r.Party), StringComparer.OrdinalIgnoreCase)
             .ThenBy(r => r.Party.DisplayName, StringComparer.OrdinalIgnoreCase)
             .ToList();
 
@@ -196,6 +197,9 @@ internal sealed class SemanticPartySearchProvider : IPartySearchProvider
 
         return filtered;
     }
+
+    private static string GetSortableName(PartyIndexEntry entry)
+        => string.IsNullOrWhiteSpace(entry.SortName) ? entry.DisplayName : entry.SortName;
 
     private static double ComputeRelevanceScore(
         List<(string Field, double FieldWeight, double MatchScore)> fieldScores,

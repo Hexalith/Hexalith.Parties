@@ -53,8 +53,8 @@ public sealed class HttpPartiesQueryClientTests
         root.GetProperty("aggregateId").GetString().ShouldBe("p-1");
         root.GetProperty("entityId").GetString().ShouldBe("p-1");
         root.GetProperty("queryType").GetString().ShouldBe("PartyDetail");
-        root.TryGetProperty("projectionType", out _).ShouldBeFalse();
-        root.TryGetProperty("projectionActorType", out _).ShouldBeFalse();
+        root.GetProperty("projectionType").GetString().ShouldBe("party-detail");
+        root.GetProperty("projectionActorType").GetString().ShouldBe("PartyDetailProjectionQueryActor");
     }
 
     [Fact]

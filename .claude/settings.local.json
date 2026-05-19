@@ -14,7 +14,11 @@
       "WebFetch(domain:www.nuget.org)",
       "WebFetch(domain:modelcontextprotocol.github.io)",
       "WebFetch(domain:csharp.sdk.modelcontextprotocol.io)",
-      "WebFetch(domain:github.com)"
+      "WebFetch(domain:github.com)",
+      "Bash(python3 D:\\\\Hexalith.Parties\\\\_bmad\\\\scripts\\\\resolve_customization.py --skill D:\\\\Hexalith.Parties\\\\.claude\\\\skills\\\\bmad-tea --key agent)",
+      "PowerShell($env:PYTHONIOENCODING = \"utf-8\"; python3 \"D:/Hexalith.Parties/_bmad/scripts/resolve_customization.py\" --skill \"D:/Hexalith.Parties/.claude/skills/bmad-tea\" --key agent)",
+      "Skill(bmad-testarch-test-design)",
+      "Skill(bmad-testarch-test-design:*)"
     ]
   }
 }

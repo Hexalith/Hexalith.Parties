@@ -16,6 +16,8 @@ public sealed class HttpPartiesQueryClient : IPartiesQueryClient
     private const string PartyDomain = "party";
     private const string QueryGatewayPath = "api/v1/queries";
     private const string ListAggregateId = "parties";
+    private const string PartyDetailProjectionActorType = "PartyDetailProjectionQueryActor";
+    private const string PartyDetailProjectionType = "party-detail";
     private const string PartyDetailQueryType = "PartyDetail";
     private const string PartyIndexQueryType = "PartyIndex";
     private const string PartySearchQueryType = "PartySearch";
@@ -44,10 +46,10 @@ public sealed class HttpPartiesQueryClient : IPartiesQueryClient
             Domain: PartyDomain,
             AggregateId: partyId,
             QueryType: PartyDetailQueryType,
-            ProjectionType: null,
+            ProjectionType: PartyDetailProjectionType,
             Payload: null,
             EntityId: partyId,
-            ProjectionActorType: null);
+            ProjectionActorType: PartyDetailProjectionActorType);
 
         return PostQueryAsync<PartyDetail>(request, ct);
     }

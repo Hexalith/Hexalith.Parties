@@ -95,6 +95,15 @@ internal sealed class LocalFuzzyPartySearchProvider : IPartySearchProvider
                 return byScore;
             }
 
+            int bySortName = string.Compare(
+                GetSortableName(left.Party),
+                GetSortableName(right.Party),
+                StringComparison.OrdinalIgnoreCase);
+            if (bySortName != 0)
+            {
+                return bySortName;
+            }
+
             return string.Compare(left.Party.DisplayName, right.Party.DisplayName, StringComparison.OrdinalIgnoreCase);
         });
 
@@ -230,6 +239,9 @@ internal sealed class LocalFuzzyPartySearchProvider : IPartySearchProvider
 
         return filtered;
     }
+
+    private static string GetSortableName(PartyIndexEntry entry)
+        => string.IsNullOrWhiteSpace(entry.SortName) ? entry.DisplayName : entry.SortName;
 
     private static double ComputeRelevanceScore(
         List<(string Field, double FieldWeight, double MatchScore)> fieldScores,

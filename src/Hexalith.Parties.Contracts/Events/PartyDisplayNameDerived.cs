@@ -7,6 +7,9 @@ public sealed record PartyDisplayNameDerived : IEventPayload
     [PersonalData]
     public required string DisplayName { get; init; }
 
+    // Additive in story 2.2 — defaults to empty so historical events without a
+    // SortName property still deserialize. Projection handler preserves the
+    // prior SortName when an event carries an empty value.
     [PersonalData]
-    public required string SortName { get; init; }
+    public string SortName { get; init; } = string.Empty;
 }

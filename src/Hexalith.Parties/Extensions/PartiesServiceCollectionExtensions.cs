@@ -19,6 +19,7 @@ using Hexalith.Parties.Configuration;
 using Hexalith.Parties.Domain;
 using Hexalith.Parties.ErrorHandling;
 using Hexalith.Parties.HealthChecks;
+using Hexalith.Parties.Queries;
 using Hexalith.Parties.Validation;
 using Hexalith.Parties.Search;
 using Hexalith.Parties.Contracts.Search;
@@ -230,6 +231,7 @@ public static class PartiesServiceCollectionExtensions {
             .ValidateOnStart();
 
         services.AddActors(options => {
+            options.Actors.RegisterActor<PartyDetailProjectionQueryActor>();
             options.Actors.RegisterActor<PartyDetailProjectionActor>();
             options.Actors.RegisterActor<PartyIndexProjectionActor>();
             options.Actors.RegisterActor<PartyKeyRetryActor>();

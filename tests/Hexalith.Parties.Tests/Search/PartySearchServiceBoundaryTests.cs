@@ -35,6 +35,81 @@ public class PartySearchServiceBoundaryTests
     }
 
     [Fact]
+    public async Task LocalPartySearchServiceReturnsNoResultsForEmptyAuthorizedPartySet()
+    {
+        var provider = new LocalFuzzyPartySearchProvider();
+        var service = new LocalPartySearchService(provider);
+        List<PartyIndexEntry> entries = PartyTestData.CreateSearchScenarioEntries();
+
+        PartySearchResponse response = await service.SearchAsync(
+            new PartySearchRequest(
+                TenantId: "tenant-b",
+                Query: "Jean",
+                Mode: PartySearchMode.Hybrid,
+                TypeFilter: null,
+                ActiveFilter: null,
+                Page: 1,
+                PageSize: 20,
+                AuthorizedPartyIds: new HashSet<string>(StringComparer.Ordinal)),
+            entries,
+            CancellationToken.None);
+
+        response.Results.Items.ShouldBeEmpty();
+        response.ScoreMetadata.ShouldBeEmpty();
+        response.SourceMetadata.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task LocalPartySearchServiceRequiresExplicitAuthorizedPartyIds()
+    {
+        var provider = new LocalFuzzyPartySearchProvider();
+        var service = new LocalPartySearchService(provider);
+        List<PartyIndexEntry> entries = PartyTestData.CreateSearchScenarioEntries();
+
+        ArgumentException exception = await Should.ThrowAsync<ArgumentException>(() => service.SearchAsync(
+            new PartySearchRequest(
+                TenantId: "tenant-a",
+                Query: "Jean",
+                Mode: PartySearchMode.Hybrid,
+                TypeFilter: null,
+                ActiveFilter: null,
+                Page: 1,
+                PageSize: 20,
+                AuthorizedPartyIds: null),
+            entries,
+            CancellationToken.None));
+
+        exception.ParamName.ShouldBe("request");
+    }
+
+    [Fact]
+    public async Task LocalPartySearchServiceAlignsMetadataWithCurrentPage()
+    {
+        var provider = new LocalFuzzyPartySearchProvider();
+        var service = new LocalPartySearchService(provider);
+        List<PartyIndexEntry> entries = PartyTestData.CreateSearchScenarioEntries();
+
+        PartySearchResponse response = await service.SearchAsync(
+            new PartySearchRequest(
+                TenantId: "tenant-a",
+                Query: "person",
+                Mode: PartySearchMode.Hybrid,
+                TypeFilter: null,
+                ActiveFilter: null,
+                Page: 2,
+                PageSize: 1,
+                AuthorizedPartyIds: entries.Select(e => e.Id).ToHashSet(StringComparer.Ordinal)),
+            entries,
+            CancellationToken.None);
+
+        response.Results.Items.Count.ShouldBe(1);
+        response.ScoreMetadata.Count.ShouldBe(1);
+        response.SourceMetadata.Count.ShouldBe(1);
+        response.ScoreMetadata.Single().PartyId.ShouldBe(response.Results.Items.Single().Party.Id);
+        response.SourceMetadata.Single().PartyId.ShouldBe(response.Results.Items.Single().Party.Id);
+    }
+
+    [Fact]
     public void SearchRequestCapturesIntentModeAndHydrationScope()
     {
         PartySearchRequest request = new(

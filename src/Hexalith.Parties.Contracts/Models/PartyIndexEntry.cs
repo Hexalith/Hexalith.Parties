@@ -15,6 +15,9 @@ public sealed record PartyIndexEntry
     [PersonalData]
     public required string DisplayName { get; init; }
 
+    [PersonalData]
+    public string SortName { get; init; } = string.Empty;
+
     [JsonIgnore]
     public IReadOnlyList<ContactChannel> SearchableContactChannels { get; init; } = [];
 

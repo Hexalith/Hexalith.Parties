@@ -112,10 +112,10 @@ public sealed class EncryptionPipelineIntegrationTests : IClassFixture<Encryptio
         firstName["t"].ShouldNotBeNull();
         firstName["c"].ShouldNotBeNull();
 
-        // Plaintext should not be in the output
-        string protectedJson = Encoding.UTF8.GetString(result.PayloadBytes);
-        protectedJson.ShouldNotContain("Ada");
-        protectedJson.ShouldNotContain("Lovelace");
+        // Plaintext should not remain outside encrypted value envelopes. Do not scan the
+        // ciphertext itself: short strings can appear there by chance.
+        ContainsPlaintextOutsideEncryptedNodes(root, "Ada").ShouldBeFalse();
+        ContainsPlaintextOutsideEncryptedNodes(root, "Lovelace").ShouldBeFalse();
     }
 
     // ─── Task 7.2: Encrypted events decrypt correctly at publish time ───
@@ -313,6 +313,56 @@ public sealed class EncryptionPipelineIntegrationTests : IClassFixture<Encryptio
         fromEncrypted.ShouldNotBeNull();
         fromPlaintext.Value.ShouldBe("mixed@example.com");
         fromEncrypted.Value.ShouldBe("mixed@example.com");
+    }
+
+    private static bool ContainsPlaintextOutsideEncryptedNodes(JsonNode? node, string plaintext)
+    {
+        switch (node)
+        {
+            case null:
+                return false;
+            case JsonObject obj:
+                if (obj.TryGetPropertyValue("$enc", out JsonNode? encrypted) && IsEncryptedFlagSet(encrypted))
+                {
+                    return false;
+                }
+
+                return obj.Any(property => ContainsPlaintextOutsideEncryptedNodes(property.Value, plaintext));
+            case JsonArray array:
+                return array.Any(item => ContainsPlaintextOutsideEncryptedNodes(item, plaintext));
+            case JsonValue value when value.TryGetValue(out string? text):
+                return text.Contains(plaintext, StringComparison.OrdinalIgnoreCase);
+            default:
+                return false;
+        }
+    }
+
+    // Tolerates `$enc` serialized as a boolean, the string "true", or the integer 1
+    // so a serializer schema change does not surface as InvalidOperationException
+    // and mask real plaintext leaks behind a confusing failure mode.
+    private static bool IsEncryptedFlagSet(JsonNode? encrypted)
+    {
+        if (encrypted is not JsonValue value)
+        {
+            return false;
+        }
+
+        if (value.TryGetValue(out bool boolValue))
+        {
+            return boolValue;
+        }
+
+        if (value.TryGetValue(out string? stringValue))
+        {
+            return bool.TryParse(stringValue, out bool parsed) && parsed;
+        }
+
+        if (value.TryGetValue(out int intValue))
+        {
+            return intValue == 1;
+        }
+
+        return false;
     }
 }
 

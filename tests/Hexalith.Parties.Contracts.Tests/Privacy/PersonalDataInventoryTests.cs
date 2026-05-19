@@ -134,6 +134,7 @@ public sealed class PersonalDataInventoryTests
             [Key(typeof(PartyIndexEntry), nameof(PartyIndexEntry.Type))] = Classification.NonPersonalMetadata,
             [Key(typeof(PartyIndexEntry), nameof(PartyIndexEntry.IsActive))] = Classification.NonPersonalMetadata,
             [Key(typeof(PartyIndexEntry), nameof(PartyIndexEntry.DisplayName))] = Classification.PersonalData,
+            [Key(typeof(PartyIndexEntry), nameof(PartyIndexEntry.SortName))] = Classification.PersonalData,
             [Key(typeof(PartyIndexEntry), nameof(PartyIndexEntry.SearchableContactChannels))] = Classification.PersonalDataContainer,
             [Key(typeof(PartyIndexEntry), nameof(PartyIndexEntry.SearchableIdentifiers))] = Classification.PersonalDataContainer,
             [Key(typeof(PartyIndexEntry), nameof(PartyIndexEntry.CreatedAt))] = Classification.NonPersonalMetadata,

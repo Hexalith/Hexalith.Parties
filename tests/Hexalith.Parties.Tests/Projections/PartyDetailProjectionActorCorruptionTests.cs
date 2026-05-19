@@ -94,6 +94,21 @@ public sealed class PartyDetailProjectionActorCorruptionTests
         result.DisplayName.ShouldBe("Test");
     }
 
+    [Theory]
+    [InlineData("test-tenant:wrong-projection:party-001")]
+    [InlineData("test-tenant:party-detail:party-001:extra")]
+    public async Task GetDetailAsync_InvalidProjectionActorId_ReturnsNullWithoutStateReadAsync(string actorId)
+    {
+        (PartyDetailProjectionActor actor, IActorStateManager stateManager) = CreateActor(actorId);
+
+        PartyDetail? result = await actor.GetDetailAsync();
+
+        result.ShouldBeNull();
+        await stateManager.DidNotReceive().TryGetStateAsync<PartyDetail>(
+            Arg.Any<string>(),
+            Arg.Any<CancellationToken>());
+    }
+
     [Fact]
     public async Task OnActivateAsync_JsonException_SetsRebuildingFlagAsync()
     {

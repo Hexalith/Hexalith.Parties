@@ -56,4 +56,36 @@ public class BasicPartySearchProviderTests
             item.Matches.ShouldAllBe(m => m.Score == null);
         }
     }
+
+    [Fact]
+    public void BuildPagedList_UsesSortNameWhenPresent()
+    {
+        List<PartyIndexEntry> entries =
+        [
+            new PartyIndexEntry
+            {
+                Id = "p-alpha-display",
+                Type = PartyType.Person,
+                IsActive = true,
+                DisplayName = "Alpha Zed",
+                SortName = "Zed, Alpha",
+                CreatedAt = DateTimeOffset.UtcNow.AddDays(-2),
+                LastModifiedAt = DateTimeOffset.UtcNow.AddDays(-1),
+            },
+            new PartyIndexEntry
+            {
+                Id = "p-zed-display",
+                Type = PartyType.Person,
+                IsActive = true,
+                DisplayName = "Zed Alpha",
+                SortName = "Alpha, Zed",
+                CreatedAt = DateTimeOffset.UtcNow.AddDays(-2),
+                LastModifiedAt = DateTimeOffset.UtcNow.AddDays(-1),
+            },
+        ];
+
+        PagedResult<PartyIndexEntry> result = PartySearchResultsBuilder.BuildPagedList(entries, null, null, 1, 20);
+
+        result.Items.Select(e => e.Id).ShouldBe(["p-zed-display", "p-alpha-display"]);
+    }
 }
