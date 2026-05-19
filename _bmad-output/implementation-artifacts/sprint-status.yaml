@@ -21,6 +21,7 @@
 #   - ready-for-dev: Story file created in stories folder
 #   - in-progress: Developer actively working on implementation
 #   - review: Ready for code review (via Dev's code-review workflow)
+#   - blocked: Story is tracked but cannot proceed until an external dependency is resolved
 #   - done: Story completed
 #
 # Retrospective Status:
@@ -36,6 +37,7 @@
 
 generated: 2026-05-15 09:01:58 +02:00
 last_updated: 2026-05-19 19:30:00 +02:00
+# last_updated touched 2026-05-19 by predev drift fix marking 9-4 blocked because the FrontComposer deployable host dependency is not yet available
 # last_updated touched 2026-05-19 by code-review closing story 9-3 (3 decisions resolved: realm passwords → temporary:true, Memories submodule init prereq → docs/getting-started.md, 4 incidental submodule bumps reverted; 12 patches applied: P1 regen.ps1 JWT env replace-not-insert + sibling-anchored idempotency + count=1 envFrom fallback, P2 deploy-local.ps1 Steps 2a/2b reordered per AC4, P3 kustomization.yaml idempotent carve-out append, P4 memories 8443 removed, P5 ASPNETCORE_URLS trailing ;, P6 resiliency drift comment-strip + indent-backref anchor, P7 K8sTopology threshold-gate warn finding, P8 redacted decoded bytes for Secret.data, P9 stringData/data line +1 fix, P10 env block tolerates inline/comment-only lines, P11 namespace AlreadyExists tolerance, P12 test cancellation partial-pipe drain; 13 items deferred to deferred-work.md; 20 dismissed as false positives or as-spec deferrals)
 # last_updated touched 2026-05-19 by dev-story moving 9-3 to review (AC1 wildcard_party_v1 + EventStore resolver fix via cross-submodule edit; AC2 Memories composition + ACL; AC3 Outcome B FrontComposer carve-out to Story 9.4; AC4 hand-authored keycloak/ + JWT SecretKeyRef patching + deploy-local.ps1 Secret bootstrap; AC5 Redis hand-authored set; AC6 resiliency.yaml Dapr 1.14.4 rewrite + dry-run pre-flight; AC7 three new lint categories + 18 new tests; AC8 deferred to operator trait gate)
 # last_updated touched 2026-05-19 by dev-story (9-3 Task 4 Outcome B) creating 9-4-frontcomposer-deployable-host (backlog) — FrontComposer has no deployable host project today
@@ -185,5 +187,5 @@ development_status:
   9-3-close-k8s-deployment-spec-gaps: done
   # Story 9.4 carved out of Story 9.3 AC3 (Outcome B): FrontComposer has no deployable host today.
   # Epic 9 retro is gated on BOTH 9.3 done AND 9.4 done.
-  9-4-frontcomposer-deployable-host: backlog
+  9-4-frontcomposer-deployable-host: blocked
   epic-9-retrospective: optional

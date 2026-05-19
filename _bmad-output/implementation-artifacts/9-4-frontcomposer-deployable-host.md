@@ -1,6 +1,6 @@
 # Story 9.4: FrontComposer Deployable Host Project
 
-Status: backlog
+Status: blocked
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -27,6 +27,8 @@ This story is the FrontComposer follow-on carved out from Story 9.3 per **Outcom
 
 Authoring a new host project from within Story 9.3 was explicit scope creep; this story is the dedicated work item.
 
+This story remains blocked until the FrontComposer submodule exposes a deployable service host project that can be composed by the Parties AppHost. Keeping the artifact and marking it blocked preserves the Story 9.3 carve-out evidence while satisfying the sprint-status artifact invariant that `backlog` stories do not have story files.
+
 Epic 9 retro is gated on Story 9.4 done (in addition to Story 9.3 done).
 
 ## References
@@ -36,4 +38,5 @@ Epic 9 retro is gated on Story 9.4 done (in addition to Story 9.3 done).
 
 ## Change Log
 
+- 2026-05-19: Marked blocked to reconcile predev preflight status-artifact drift; dependency is the missing FrontComposer deployable service host.
 - 2026-05-19: Story created by Story 9.3 Task 4 Outcome B carve-out. FrontComposer host-readiness verified absent during Story 9.3 day-1 audit; this story tracks the upstream FrontComposer change needed to close the topology gap.
