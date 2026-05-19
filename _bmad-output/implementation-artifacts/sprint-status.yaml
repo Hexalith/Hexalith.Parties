@@ -35,7 +35,8 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-05-15 09:01:58 +02:00
-last_updated: 2026-05-19 11:30:00 +02:00
+last_updated: 2026-05-19 11:55:00 +02:00
+# last_updated touched 2026-05-19 by correct-course adding story 9-3 (close K8s deployment spec gaps after live cluster validation revealed Memories/FrontComposer/Keycloak/Redis/Resiliency drift from Story 9.1 AC1)
 # last_updated touched 2026-05-19 by create-story moving 2-7 to ready-for-dev
 # last_updated touched 2026-05-19 by code-review closing story 2-1 (7 patches applied: P1 tautological-assertion cleanup, P2 multi-event LastModifiedAt monotonic, P3 HandleNameDerived empty-history fix, P4 reflection-based IRejectionEvent fitness test, P5 PartyMerged/IsNaturalPersonChanged tests, P6 actor-layer no-op success event test, P7 InvalidActorId checkpoint assertion; 16 findings deferred to Epic 6/aggregate-trust scope; PartyDetailProjectionHandler 99/99, ActorCorruptionTests 14/14, ArchitecturalFitness 17/17, full Projections.Tests 129/129 green)
 # last_updated touched 2026-05-19 by create-story moving 2-6 to ready-for-dev
@@ -164,8 +165,9 @@ development_status:
   8-6-enforce-picker-privacy-and-integration-boundary: backlog
   epic-8-retrospective: optional
 
-  # Epic 9: Kubernetes Deployment (2 stories)
+  # Epic 9: Kubernetes Deployment (3 stories)
   epic-9: in-progress
   9-1-generate-k8s-artifacts-and-deploy-full-topology-to-local-cluster: done
   9-2-extend-deployment-validation-to-kubernetes-manifests: done
+  9-3-close-k8s-deployment-spec-gaps: backlog
   epic-9-retrospective: optional
