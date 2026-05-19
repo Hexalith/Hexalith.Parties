@@ -84,6 +84,15 @@ so that party data cannot leak across tenants through projections, search, or de
 | Corrupt, malformed, unreadable, or mixed-provenance state | Bounded unavailable/degraded/empty/not-accessible result; no raw state, key, or exception text. |
 | Cancellation before or during query/actor read | Cancellation is honored and no fallback aggregate replay, detail fan-out, search expansion, cache refresh, retired REST call, or retry work starts afterward. |
 
+## Party-Mode Review Clarifications
+
+- The authenticated tenant is resolved once at the trusted EventStore query boundary and is the only tenant authority Parties may consume. Tenant-like values from route, query, body, headers copied by clients, page state, search metadata, actor ids, partition keys, UI state, source metadata, result metadata, cache keys, or projection payloads may not widen, replace, or override that resolved tenant.
+- Tenant validation and trusted-context extraction must happen before projection actor ids, state keys, partition keys, cache keys, search partitions, list/filter entry sets, continuation tokens, or degraded-state fallback reads are constructed. Tests should fail if any detail actor, index actor, partition strategy, search provider, cache, state manager, or projection collaborator is invoked before the accepted tenant gate succeeds.
+- Cross-tenant detail probes must be non-enumerating. Where the current boundary allows a choice, prefer a not-found/not-accessible style result over a distinguishable wrong-tenant response; missing-party and wrong-tenant probes must not differ by payload, raw key, freshness/degraded status, diagnostic content, or any other observable existence hint.
+- Tenant provenance for degraded/list/search results is a positive proof requirement: the implementation must prove current authenticated tenant context, projection kind, party or partition key context, partition completeness where relevant, and erasure filtering before returning rows, counts, page metadata, match metadata, score/source metadata, degraded markers, or cached entries. If any proof is unavailable, return the accepted bounded empty, unavailable, degraded, not-found, or not-accessible outcome without rows or cross-tenant metadata.
+- Actor and cache safety must be proven at both construction time and read time. Same party identifiers, partition keys, or static cache entries under different tenants must never return shared projection data, and malformed ids, valid-but-wrong tenant segments, wrong projection segments, rebuild state, erasure paths, and stale/corrupt cache data require separate negative coverage.
+- Diagnostics tests must cover denied tenant, missing tenant, wrong-tenant detail, wrong-tenant list/search, malformed actor id, corrupt state, degraded search, rebuild/cache fallback, and erasure mismatch paths. Logger scopes, ProblemDetails extensions, validation messages, exceptions, client-visible details, and test failure output must remain metadata-only.
+
 ## Tasks / Subtasks
 
 - [ ] Task 1: Audit the accepted read boundaries before editing (AC: 1, 2, 7)
@@ -94,9 +103,11 @@ so that party data cannot leak across tenants through projections, search, or de
   - [ ] Treat the EventStore query gateway as the only accepted public read boundary. Do not add `GET /api/v1/parties`, `GET /api/v1/parties/search`, public REST controllers, OpenAPI generation, or in-process MCP tools in `src/Hexalith.Parties`.
 
 - [ ] Task 2: Enforce tenant-source authority in query adapters (AC: 1, 2, 3, 4, 5)
+  - [ ] Identify the canonical trusted tenant context value supplied by the EventStore query boundary, and use that value as the only source for Parties projection reads.
   - [ ] Derive detail actor ids from authenticated tenant plus requested party id only after EventStore authorization succeeds.
   - [ ] Derive index actor ids and partition keys from authenticated tenant plus accepted partition strategy only after EventStore authorization succeeds.
   - [ ] Ignore or reject any tenant-like payload field, page/cursor state, `caseId`, graph context id, source metadata, query mode, client header, UI state, actor id, or partition key that attempts to choose a tenant or projection store.
+  - [ ] Add negative authority tests for tenant-like values in request body, route/query values, page/search metadata, actor ids, partition keys, UI/client metadata, source metadata, and projection payloads that differ from the authenticated EventStore tenant.
   - [ ] Ensure detail, list, filter, and search adapters do not probe alternate actor ids, alternate partitions, aggregate streams, command status records, detail fan-out, Memories search, retired REST calls, or AdminPortal-specific paths after a tenant failure.
   - [ ] Preserve EventStore ownership for public request tenant/RBAC authorization. Parties may consume authenticated context for projection lookup and projection-side filtering only; do not add Parties-owned public request authorization validators.
 
@@ -116,7 +127,9 @@ so that party data cannot leak across tenants through projections, search, or de
 
 - [ ] Task 5: Keep list/filter/search metadata tenant-scoped (AC: 4, 5, 7)
   - [ ] For list/filter, calculate `TotalCount`, `TotalPages`, empty-page behavior, date/type/active filters, and returned items from one authenticated-tenant, erased-filtered collection.
+  - [ ] Assert list/filter leakage is impossible through rows, counts, page metadata, continuation tokens if present, empty-page behavior, degraded markers, filter metadata, diagnostic fields, and any observable page-state value.
   - [ ] For search, calculate match metadata, relevance scores, score metadata, source metadata, `TotalCount`, `TotalPages`, and page items after authenticated-tenant provenance and erasure filtering.
+  - [ ] For degraded search, independently prove current-tenant provenance, partition completeness, and erasure filtering before returning any rows, counts, page metadata, match metadata, score metadata, source metadata, or degraded markers.
   - [ ] Preserve `LocalPartySearchService` safety properties: materialize entries once, require `AuthorizedPartyIds`, drop erased entries, clamp page/page size to `1..100`, sanitize scores, and align score/source metadata to current page items.
   - [ ] Ensure `LocalFuzzyPartySearchProvider`, `BasicPartySearchProvider`, `MemoriesPartySearchService`, or semantic/graph providers cannot reintroduce another tenant's entries when local fallback or rich search degrades.
   - [ ] Treat cross-tenant page numbers, future cursors/tokens, graph context ids, `caseId`, Memories scopes, source URIs, and client metadata as untrusted data that cannot choose a tenant, actor, partition, index, or alternate source.
@@ -130,33 +143,41 @@ so that party data cannot leak across tenants through projections, search, or de
 
 - [ ] Task 7: Add or harden focused tests (AC: 1-7)
   - [ ] Extend gateway tests for missing tenant, unauthorized tenant, unauthorized domain, and query-type coverage across `PartyDetail`, `PartyIndex`, and `PartySearch`; assert no query routing or actor read happens before authorization failure.
+  - [ ] Add before-construction assertions so missing or invalid tenant context fails before calls to `IPartyDetailProjectionActor`, `IPartyIndexProjectionActor`, `IIndexPartitionStrategy`, search providers, cache/state collaborators, or projection read adapters where those collaborators are visible to the test harness.
   - [ ] Add query adapter or actor proxy tests proving authenticated tenant context is the only source for detail/index actor id and partition key construction.
   - [ ] Add detail tests where tenant B probes tenant A party ids and receives no payload, no existence signal, and no key/diagnostic leak.
   - [ ] Add list/filter tests where tenants share display names, dates, active states, and party types; assert rows, counts, total pages, empty pages, and diagnostics are tenant-scoped.
   - [ ] Add search tests where tenants share display names and future-field metadata; assert matches, scores, source metadata, counts, and degraded outcomes are tenant-scoped.
-  - [ ] Extend `PartyIndexProjectionActorCorruptionTests` and `PartyDetailProjectionActorCorruptionTests` for malformed ids, wrong projection segments, mismatch failures, cache fallback, rebuild, and corrupted-state behavior.
-  - [ ] Add privacy-safe diagnostics assertions for logs, ProblemDetails/client exceptions, degraded reasons, and telemetry dimensions when tenant checks fail.
+  - [ ] Extend `PartyIndexProjectionActorCorruptionTests` and `PartyDetailProjectionActorCorruptionTests` for malformed ids, valid-but-wrong tenant ids, wrong projection segments, party id mismatches, reused partition keys, cache/static-cache fallback, rebuild, erasure, and corrupted-state behavior as separate negative cases.
+  - [ ] Add privacy-safe diagnostics assertions for logs, logger scopes, ProblemDetails/client exceptions, validation messages, degraded reasons, telemetry dimensions, and test failure output when tenant checks fail.
 
 ## Required Test Matrix
 
 | Scenario | Expected proof |
 | --- | --- |
 | Missing tenant query | Gateway returns accepted auth failure before query routing and before actor id construction. |
+| Missing tenant before construction | Tests prove no projection actor, partition strategy, search provider, cache, state manager, or projection read adapter is invoked before tenant validation succeeds. |
 | Unauthorized tenant query | Gateway returns accepted 403-style outcome before Parties query adapter or projection actor access. |
 | Unauthorized domain query | Gateway returns accepted 403-style outcome before Parties query adapter or projection actor access. |
+| Forged tenant metadata | Payload tenant-like fields, route/query values, page/search metadata, actor ids, partition keys, UI/client metadata, source metadata, and projection payloads cannot override the authenticated EventStore tenant. |
 | Detail wrong tenant | Tenant B cannot infer tenant A party existence, payload, actor key, state key, or degraded state. |
+| Detail wrong tenant versus absent party | Wrong-tenant probes and absent-party probes have non-enumerating bounded result shapes and metadata-only diagnostics. |
 | Detail actor malformed id | Actor returns bounded null/empty or throws accepted internal failure before state read/write. |
+| Detail actor wrong tenant id | A valid actor id for another tenant cannot read, write, checkpoint, or return current tenant detail state. |
 | Detail party id mismatch | Actor fails before detail state write/read and before sequence checkpoint advancement. |
 | Index wrong tenant | Tenant B cannot infer tenant A entries, counts, total pages, partition keys, or cached state. |
 | Index actor malformed id | Actor fails closed or returns empty without state reads from `unknown`, default, or caller-provided tenant keys. |
+| Index actor wrong tenant or reused partition | Valid-but-wrong tenant ids and reused partition keys cannot read rows, counts, manifest state, sequence keys, or cache entries from another tenant. |
 | Static cache fallback | Cached detail/index entries are returned only for the same tenant/projection/partition/party key context. |
 | Rebuilding state | Safe cached entries require proven current-tenant provenance; otherwise bounded degraded/empty/unavailable behavior. |
 | Corrupt or unreadable state | No raw actor state, serialized JSON, keys, or infrastructure exception text reaches public responses or logs. |
 | List/filter metadata | `TotalCount`, `TotalPages`, items, filters, and empty pages are calculated after tenant and erasure filtering. |
+| List/filter metadata leakage | Rows, counts, page metadata, continuation tokens if present, empty-page behavior, degraded markers, filter metadata, and diagnostics reveal only the authenticated tenant's result set. |
 | Search metadata | match metadata, score metadata, source metadata, counts, and page metadata are calculated after tenant and erasure filtering. |
+| Degraded search proof | Search returns rows or metadata only when current-tenant provenance, partition completeness, and erasure filtering are all independently proven; otherwise no rows/counts/page metadata are returned. |
 | Untrusted request context | payload tenant-like fields, `caseId`, graph ids, page/cursor state, source URIs, and metadata cannot choose actor, partition, tenant, Memories scope, or alternate index. |
 | Erased entries | `IsErased == true` entries are excluded before list/search results and metadata. |
-| Diagnostics | logs, ProblemDetails, exceptions, and telemetry are metadata-only and contain no personal data, raw payloads, actor/state keys, stream names, or infrastructure details. |
+| Diagnostics | logs, logger scopes, ProblemDetails, validation messages, exceptions, client-visible error details, telemetry, and test failure output are metadata-only and contain no personal data, raw payloads, actor/state keys, stream names, or infrastructure details. |
 | Cancellation | cancellation prevents fallback aggregate replay, detail fan-out, search expansion, cache refresh, retired REST calls, or retry work. |
 
 ## Dev Notes
@@ -306,4 +327,28 @@ dotnet build Hexalith.Parties.slnx --configuration Release
 
 ## Change Log
 
+- 2026-05-19: Party-mode review applied low-risk clarifications for trusted tenant-source authority, before-construction proof, non-enumerating detail probes, degraded/search provenance proof, actor/cache key collision coverage, metadata leakage assertions, and diagnostics fixture breadth.
 - 2026-05-19: Story created by BMAD pre-dev hardening automation with existing EventStore query gateway, detail/index projection actors, tenant-source authority, degraded-state, privacy-safe diagnostics, and focused validation guidance.
+
+## Party-Mode Review
+
+- Date/time: 2026-05-19T08:54:54+02:00
+- Selected story key: `2-6-enforce-tenant-safe-projection-reads`
+- Command/skill invocation used: `/bmad-party-mode 2-6-enforce-tenant-safe-projection-reads; review;`
+- Participating BMAD agents: Winston (System Architect), Amelia (Senior Software Engineer), Murat (Master Test Architect and Quality Advisor), John (Product Manager)
+- Findings summary:
+  - Winston and Murat recommended `ready-for-dev`; Amelia and John recommended `needs-story-update`, not blocked, until low-risk clarifications were added.
+  - Shared architecture risk centered on split enforcement: tenant validation must happen before actor id, state key, partition key, cache key, search partition, list/filter set, continuation token, or degraded fallback construction.
+  - Implementation and test risk centered on broad AC-to-test traceability, missing before-construction proof, untrusted tenant-like request metadata, non-enumerating detail probe behavior, degraded/search proof criteria, and actor/static-cache key collisions.
+  - Product/adopter risk centered on observable cross-tenant outcomes: wrong-tenant detail, list counts, page metadata, match/source metadata, degraded markers, and diagnostics must not reveal existence or freshness state.
+- Changes applied:
+  - Added `Party-Mode Review Clarifications` for trusted EventStore tenant authority, no request metadata overrides, before-construction ordering, non-enumerating detail probes, positive provenance proof for degraded/list/search, actor/cache construction and read-time guards, and diagnostics fixture breadth.
+  - Strengthened Task 2 with canonical trusted tenant context and negative authority tests for body, route/query, page/search metadata, actor ids, partition keys, UI/client metadata, source metadata, and projection payloads.
+  - Strengthened Task 5 with list/filter leakage assertions and independently testable degraded-search proof for current-tenant provenance, partition completeness, and erasure filtering.
+  - Strengthened Task 7 and the required test matrix for before-construction assertions, forged tenant metadata, wrong-tenant versus absent-party non-enumeration, valid-but-wrong actor ids, reused partition keys, static-cache fallback, degraded-search proof, metadata leakage, and diagnostics surfaces.
+- Findings deferred:
+  - Centralized tenant-context middleware shape and shared diagnostic taxonomy across services.
+  - Whether cache provenance should become a reusable EventStore or Hexalith library concern.
+  - Public freshness/degradation response shape, rebuild progress, health monitoring, and operational repair controls, which remain primarily Story 2.7 and Story 2.8 concerns unless existing boundaries already expose a safe read-only signal.
+  - Performance/chaos coverage for partition rebuild races, stale-cache invalidation, and cancellation during rebuild, unless implementation discovers those are required for the current tenant-safety contract.
+- Final recommendation: ready-for-dev
