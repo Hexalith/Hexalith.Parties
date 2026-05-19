@@ -32,6 +32,28 @@ public class PartyAggregateCompositeTests
     }
 
     [Fact]
+    public void Handle_CreatePartyComposite_Success_ReturnsUpdatedPartyDetailReflectingAllEmittedEvents()
+    {
+        CreatePartyComposite command = PartyTestData.ValidCreatePersonComposite();
+
+        CompositeCommandResult result = PartyAggregate.Handle(command, null);
+
+        result.IsSuccess.ShouldBeTrue();
+        result.UpdatedPartyDetail.ShouldNotBeNull();
+        result.UpdatedPartyDetail.Id.ShouldBe(command.PartyId);
+        result.UpdatedPartyDetail.Type.ShouldBe(PartyType.Person);
+        result.UpdatedPartyDetail.IsActive.ShouldBeTrue();
+        result.UpdatedPartyDetail.PersonDetails.ShouldNotBeNull();
+        PartyDisplayNameDerived derived = result.Events.OfType<PartyDisplayNameDerived>().Single();
+        result.UpdatedPartyDetail.DisplayName.ShouldBe(derived.DisplayName);
+        result.UpdatedPartyDetail.SortName.ShouldBe(derived.SortName);
+        result.UpdatedPartyDetail.ContactChannels.Count.ShouldBe(2);
+        result.UpdatedPartyDetail.Identifiers.Count.ShouldBe(1);
+        result.UpdatedPartyDetail.CreatedAt.ShouldNotBe(default);
+        result.UpdatedPartyDetail.LastModifiedAt.ShouldNotBe(default);
+    }
+
+    [Fact]
     public void Handle_CreatePartyComposite_DuplicateContactChannelIds_SkipsDuplicate()
     {
         CreatePartyComposite command = PartyTestData.ValidCreatePersonComposite() with

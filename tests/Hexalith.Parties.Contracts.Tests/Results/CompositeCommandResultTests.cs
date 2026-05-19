@@ -88,4 +88,29 @@ public class CompositeCommandResultTests
         result.ResultPayload.ShouldContain("\"displayName\":\"Acme Corp\"");
         result.ResultPayload.ShouldContain("\"type\":\"Organization\"");
     }
+
+    [Fact]
+    public void CompositeCommandResult_WithNoUpdatedPartyDetail_ResultPayloadIsNull()
+    {
+        // Compatibility contract for callers ignoring `resultPayload`: when no enriched
+        // detail is available (no-op, partial composite, rejection), `ResultPayload` must
+        // be null so the existing correlationId/status-only response shape is preserved.
+        IEventPayload[] events = [new PartyCreated { Type = PartyType.Person }];
+
+        var result = new CompositeCommandResult(events, ["Created party"], [], [], updatedPartyDetail: null);
+
+        result.IsSuccess.ShouldBeTrue();
+        result.ResultPayload.ShouldBeNull();
+    }
+
+    [Fact]
+    public void CompositeCommandResult_RejectionWithoutUpdatedPartyDetail_ResultPayloadIsNull()
+    {
+        IEventPayload[] events = [new PartyCannotBeCreatedWithoutType()];
+
+        var result = new CompositeCommandResult(events, [], [], ["Missing party type"], updatedPartyDetail: null);
+
+        result.IsRejection.ShouldBeTrue();
+        result.ResultPayload.ShouldBeNull();
+    }
 }

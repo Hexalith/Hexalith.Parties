@@ -14,46 +14,20 @@ public sealed class PartyDetailProjectionHandler
         {
             PartyCreated e => state is null ? HandlePartyCreated(partyId, e) : state,
             PartyDisplayNameDerived e when state is not null => HandleNameDerived(state, e),
-            PersonDetailsUpdated e when state is not null => state with
-            {
-                PersonDetails = e.PersonDetails,
-                LastModifiedAt = DateTimeOffset.UtcNow,
-            },
-            OrganizationDetailsUpdated e when state is not null => state with
-            {
-                OrganizationDetails = e.OrganizationDetails,
-                LastModifiedAt = DateTimeOffset.UtcNow,
-            },
+            PersonDetailsUpdated e when state is not null => HandlePersonDetailsUpdated(state, e),
+            OrganizationDetailsUpdated e when state is not null => HandleOrganizationDetailsUpdated(state, e),
             ContactChannelAdded e when state is not null => HandleContactChannelAdded(state, e),
             ContactChannelUpdated e when state is not null => HandleContactChannelUpdated(state, e),
             ContactChannelRemoved e when state is not null => HandleContactChannelRemoved(state, e),
             PreferredContactChannelChanged e when state is not null => HandlePreferredContactChannelChanged(state, e),
             IdentifierAdded e when state is not null => HandleIdentifierAdded(state, e),
             IdentifierRemoved e when state is not null => HandleIdentifierRemoved(state, e),
-            PartyDeactivated when state is not null => state with
-            {
-                IsActive = false,
-                LastModifiedAt = DateTimeOffset.UtcNow,
-            },
-            PartyReactivated when state is not null => state with
-            {
-                IsActive = true,
-                LastModifiedAt = DateTimeOffset.UtcNow,
-            },
+            PartyDeactivated when state is not null => HandlePartyDeactivated(state),
+            PartyReactivated when state is not null => HandlePartyReactivated(state),
             ConsentRecorded e when state is not null => HandleConsentRecorded(state, e),
             ConsentRevoked e when state is not null => HandleConsentRevoked(state, e),
-            ProcessingRestricted e when state is not null => state with
-            {
-                IsRestricted = true,
-                RestrictedAt = e.RestrictedAt,
-                LastModifiedAt = DateTimeOffset.UtcNow,
-            },
-            RestrictionLifted when state is not null => state with
-            {
-                IsRestricted = false,
-                RestrictedAt = null,
-                LastModifiedAt = DateTimeOffset.UtcNow,
-            },
+            ProcessingRestricted e when state is not null => HandleProcessingRestricted(state, e),
+            RestrictionLifted when state is not null => HandleRestrictionLifted(state),
             IsNaturalPersonChanged => null,
             PartyMerged => null,
             _ => null,
@@ -122,12 +96,7 @@ public sealed class PartyDetailProjectionHandler
             string.Equals(state.NameHistory[^1].DisplayName, e.DisplayName, StringComparison.Ordinal) &&
             string.Equals(state.NameHistory[^1].SortName, e.SortName, StringComparison.Ordinal))
         {
-            return state with
-            {
-                DisplayName = e.DisplayName,
-                SortName = e.SortName,
-                LastModifiedAt = DateTimeOffset.UtcNow,
-            };
+            return null;
         }
 
         return state with
@@ -147,6 +116,28 @@ public sealed class PartyDetailProjectionHandler
             ],
             LastModifiedAt = DateTimeOffset.UtcNow,
         };
+    }
+
+    private static PartyDetail? HandlePersonDetailsUpdated(PartyDetail state, PersonDetailsUpdated e)
+    {
+        return state.PersonDetails == e.PersonDetails
+            ? null
+            : state with
+            {
+                PersonDetails = e.PersonDetails,
+                LastModifiedAt = DateTimeOffset.UtcNow,
+            };
+    }
+
+    private static PartyDetail? HandleOrganizationDetailsUpdated(PartyDetail state, OrganizationDetailsUpdated e)
+    {
+        return state.OrganizationDetails == e.OrganizationDetails
+            ? null
+            : state with
+            {
+                OrganizationDetails = e.OrganizationDetails,
+                LastModifiedAt = DateTimeOffset.UtcNow,
+            };
     }
 
     private static PartyDetail? HandleContactChannelAdded(PartyDetail state, ContactChannelAdded e)
@@ -207,8 +198,13 @@ public sealed class PartyDetailProjectionHandler
         };
     }
 
-    private static PartyDetail HandleContactChannelRemoved(PartyDetail state, ContactChannelRemoved e)
+    private static PartyDetail? HandleContactChannelRemoved(PartyDetail state, ContactChannelRemoved e)
     {
+        if (!state.ContactChannels.Any(c => c.Id == e.ContactChannelId))
+        {
+            return null;
+        }
+
         return state with
         {
             ContactChannels = state.ContactChannels.Where(c => c.Id != e.ContactChannelId).ToList(),
@@ -276,8 +272,13 @@ public sealed class PartyDetailProjectionHandler
         };
     }
 
-    private static PartyDetail HandleIdentifierRemoved(PartyDetail state, IdentifierRemoved e)
+    private static PartyDetail? HandleIdentifierRemoved(PartyDetail state, IdentifierRemoved e)
     {
+        if (!state.Identifiers.Any(i => i.Id == e.IdentifierId))
+        {
+            return null;
+        }
+
         return state with
         {
             Identifiers = state.Identifiers.Where(i => i.Id != e.IdentifierId).ToList(),
@@ -329,6 +330,55 @@ public sealed class PartyDetailProjectionHandler
             ConsentRecords = records,
             LastModifiedAt = DateTimeOffset.UtcNow,
         };
+    }
+
+    private static PartyDetail? HandlePartyDeactivated(PartyDetail state)
+    {
+        return state.IsActive
+            ? state with
+            {
+                IsActive = false,
+                LastModifiedAt = DateTimeOffset.UtcNow,
+            }
+            : null;
+    }
+
+    private static PartyDetail? HandlePartyReactivated(PartyDetail state)
+    {
+        return state.IsActive
+            ? null
+            : state with
+            {
+                IsActive = true,
+                LastModifiedAt = DateTimeOffset.UtcNow,
+            };
+    }
+
+    private static PartyDetail? HandleProcessingRestricted(PartyDetail state, ProcessingRestricted e)
+    {
+        if (state.IsRestricted && state.RestrictedAt == e.RestrictedAt)
+        {
+            return null;
+        }
+
+        return state with
+        {
+            IsRestricted = true,
+            RestrictedAt = e.RestrictedAt,
+            LastModifiedAt = DateTimeOffset.UtcNow,
+        };
+    }
+
+    private static PartyDetail? HandleRestrictionLifted(PartyDetail state)
+    {
+        return state.IsRestricted || state.RestrictedAt is not null
+            ? state with
+            {
+                IsRestricted = false,
+                RestrictedAt = null,
+                LastModifiedAt = DateTimeOffset.UtcNow,
+            }
+            : null;
     }
 
     private static string DeriveDisplayName(PartyCreated e)

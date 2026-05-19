@@ -85,6 +85,35 @@ public class PartyDetailProjectionHandlerTests
         result.LastModifiedAt.ShouldBeGreaterThan(state.LastModifiedAt);
     }
 
+    [Fact]
+    public void Apply_PartyDisplayNameDerived_NoEffectiveChange_ReturnsNull()
+    {
+        PartyDetail state = CreatePersonDetail() with
+        {
+            DisplayName = "John Doe",
+            SortName = "Doe, John",
+            NameHistory =
+            [
+                new NameHistoryEntry
+                {
+                    DisplayName = "John Doe",
+                    SortName = "Doe, John",
+                    ChangedAt = DateTimeOffset.UtcNow.AddMinutes(-4),
+                    TriggeredBy = nameof(PartyCreated),
+                },
+            ],
+        };
+        PartyDisplayNameDerived @event = new()
+        {
+            DisplayName = "John Doe",
+            SortName = "Doe, John",
+        };
+
+        PartyDetail? result = PartyDetailProjectionHandler.Apply(PartyId, @event, state);
+
+        result.ShouldBeNull();
+    }
+
     // --- Task 3.4: PersonDetailsUpdated ---
 
     [Fact]
@@ -215,6 +244,17 @@ public class PartyDetailProjectionHandlerTests
         result.ContactChannels.ShouldBeEmpty();
     }
 
+    [Fact]
+    public void Apply_ContactChannelRemoved_UnknownChannel_ReturnsNull()
+    {
+        PartyDetail state = CreatePersonDetailWithChannel();
+        ContactChannelRemoved @event = new() { ContactChannelId = "unknown" };
+
+        PartyDetail? result = PartyDetailProjectionHandler.Apply(PartyId, @event, state);
+
+        result.ShouldBeNull();
+    }
+
     // --- Task 3.9: PreferredContactChannelChanged ---
 
     [Fact]
@@ -288,6 +328,17 @@ public class PartyDetailProjectionHandlerTests
         result.Identifiers.ShouldBeEmpty();
     }
 
+    [Fact]
+    public void Apply_IdentifierRemoved_UnknownIdentifier_ReturnsNull()
+    {
+        PartyDetail state = CreatePersonDetailWithIdentifier();
+        IdentifierRemoved @event = new() { IdentifierId = "unknown" };
+
+        PartyDetail? result = PartyDetailProjectionHandler.Apply(PartyId, @event, state);
+
+        result.ShouldBeNull();
+    }
+
     // --- Task 3.12: PartyDeactivated ---
 
     [Fact]
@@ -301,6 +352,16 @@ public class PartyDetailProjectionHandlerTests
         result.IsActive.ShouldBeFalse();
     }
 
+    [Fact]
+    public void Apply_PartyDeactivated_WhenAlreadyInactive_ReturnsNull()
+    {
+        PartyDetail state = CreatePersonDetail() with { IsActive = false };
+
+        PartyDetail? result = PartyDetailProjectionHandler.Apply(PartyId, new PartyDeactivated(), state);
+
+        result.ShouldBeNull();
+    }
+
     // --- Task 3.13: PartyReactivated ---
 
     [Fact]
@@ -312,6 +373,16 @@ public class PartyDetailProjectionHandlerTests
 
         result.ShouldNotBeNull();
         result.IsActive.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void Apply_PartyReactivated_WhenAlreadyActive_ReturnsNull()
+    {
+        PartyDetail state = CreatePersonDetail();
+
+        PartyDetail? result = PartyDetailProjectionHandler.Apply(PartyId, new PartyReactivated(), state);
+
+        result.ShouldBeNull();
     }
 
     // --- Task 3.14: Multi-event sequence ---
@@ -334,7 +405,7 @@ public class PartyDetailProjectionHandlerTests
             DisplayName = "John Doe",
             SortName = "Doe, John",
         };
-        state = PartyDetailProjectionHandler.Apply(PartyId, displayName, state);
+        state = PartyDetailProjectionHandler.Apply(PartyId, displayName, state) ?? state;
         state.ShouldNotBeNull();
 
         // ContactChannelAdded x3
@@ -399,6 +470,116 @@ public class PartyDetailProjectionHandlerTests
         state.Identifiers.Count.ShouldBe(2);
         state.Identifiers[0].Id.ShouldBe("id-vat");
         state.Identifiers[1].Id.ShouldBe("id-siret");
+    }
+
+    [Fact]
+    public void Apply_CompleteDetailReplay_UpdatesOnlyRelevantFieldsAndPreservesCreatedAt()
+    {
+        PartyDetail? state = PartyDetailProjectionHandler.Apply(
+            PartyId,
+            new PartyCreated
+            {
+                Type = PartyType.Person,
+                PersonDetails = PartyTestData.ValidPersonDetails(),
+            },
+            null);
+        state.ShouldNotBeNull();
+        DateTimeOffset createdAt = state.CreatedAt;
+
+        state = PartyDetailProjectionHandler.Apply(
+            PartyId,
+            new PersonDetailsUpdated
+            {
+                PersonDetails = new PersonDetails
+                {
+                    FirstName = "Jane",
+                    LastName = "Smith",
+                },
+            },
+            state);
+        state.ShouldNotBeNull();
+
+        state = PartyDetailProjectionHandler.Apply(
+            PartyId,
+            new PartyDisplayNameDerived
+            {
+                DisplayName = "Jane Smith",
+                SortName = "Smith, Jane",
+            },
+            state);
+        state.ShouldNotBeNull();
+
+        state = PartyDetailProjectionHandler.Apply(
+            PartyId,
+            new ContactChannelAdded
+            {
+                ContactChannelId = "cc-email",
+                Type = ContactChannelType.Email,
+                Value = "jane@example.invalid",
+                IsPreferred = true,
+            },
+            state);
+        state.ShouldNotBeNull();
+
+        state = PartyDetailProjectionHandler.Apply(
+            PartyId,
+            new ContactChannelAdded
+            {
+                ContactChannelId = "cc-phone",
+                Type = ContactChannelType.Phone,
+                Value = "+33000000000",
+            },
+            state);
+        state.ShouldNotBeNull();
+
+        state = PartyDetailProjectionHandler.Apply(
+            PartyId,
+            new ContactChannelUpdated
+            {
+                ContactChannelId = "cc-phone",
+                Value = "+33111111111",
+            },
+            state);
+        state.ShouldNotBeNull();
+
+        state = PartyDetailProjectionHandler.Apply(
+            PartyId,
+            new PreferredContactChannelChanged { ContactChannelId = "cc-email" },
+            state) ?? state;
+
+        state = PartyDetailProjectionHandler.Apply(
+            PartyId,
+            new IdentifierAdded
+            {
+                IdentifierId = "id-vat",
+                Type = IdentifierType.VAT,
+                Value = "FR00000000000",
+            },
+            state);
+        state.ShouldNotBeNull();
+
+        state = PartyDetailProjectionHandler.Apply(
+            PartyId,
+            new IdentifierRemoved { IdentifierId = "id-vat" },
+            state);
+        state.ShouldNotBeNull();
+
+        state = PartyDetailProjectionHandler.Apply(PartyId, new PartyDeactivated(), state);
+        state.ShouldNotBeNull();
+        state = PartyDetailProjectionHandler.Apply(PartyId, new PartyReactivated(), state);
+        state.ShouldNotBeNull();
+
+        state.Id.ShouldBe(PartyId);
+        state.Type.ShouldBe(PartyType.Person);
+        state.IsActive.ShouldBeTrue();
+        state.PersonDetails.ShouldNotBeNull();
+        state.PersonDetails.FirstName.ShouldBe("Jane");
+        state.DisplayName.ShouldBe("Jane Smith");
+        state.SortName.ShouldBe("Smith, Jane");
+        state.ContactChannels.Count.ShouldBe(2);
+        state.ContactChannels.Single(c => c.Id == "cc-phone").Value.ShouldBe("+33111111111");
+        state.Identifiers.ShouldBeEmpty();
+        state.CreatedAt.ShouldBe(createdAt);
     }
 
     // --- Task 3.4 AC #1: Full event sequence with intermediate state verification ---
@@ -507,6 +688,139 @@ public class PartyDetailProjectionHandlerTests
         PartyDetail? result = PartyDetailProjectionHandler.Apply(PartyId, @event, null);
 
         result.ShouldBeNull();
+    }
+
+    [Theory]
+    [MemberData(nameof(RepresentativeRejectionEvents))]
+    public void Apply_RejectionEvent_WithNullState_ReturnsNull(IEventPayload rejection)
+    {
+        PartyDetail? result = PartyDetailProjectionHandler.Apply(PartyId, rejection, null);
+
+        result.ShouldBeNull();
+    }
+
+    [Theory]
+    [MemberData(nameof(RepresentativeRejectionEvents))]
+    public void Apply_RejectionEvent_WithExistingState_ReturnsNullAndCallerPreservesState(IEventPayload rejection)
+    {
+        PartyDetail state = CreatePersonDetailWithChannel();
+
+        PartyDetail? result = PartyDetailProjectionHandler.Apply(PartyId, rejection, state);
+        PartyDetail preserved = result ?? state;
+
+        result.ShouldBeNull();
+        preserved.ShouldBe(state);
+        preserved.LastModifiedAt.ShouldBe(state.LastModifiedAt);
+    }
+
+    [Fact]
+    public void Apply_InterleavedRejection_DoesNotMutateStateOrTimestamp()
+    {
+        PartyDetail state = CreatePersonDetail();
+        PartyDetail? added = PartyDetailProjectionHandler.Apply(
+            PartyId,
+            new ContactChannelAdded
+            {
+                ContactChannelId = "cc-1",
+                Type = ContactChannelType.Email,
+                Value = "john@example.com",
+            },
+            state);
+        added.ShouldNotBeNull();
+
+        PartyDetail? rejected = PartyDetailProjectionHandler.Apply(PartyId, new PartyCannotAddDuplicateChannel(), added);
+        PartyDetail preserved = rejected ?? added;
+
+        rejected.ShouldBeNull();
+        preserved.ContactChannels.Count.ShouldBe(1);
+        preserved.LastModifiedAt.ShouldBe(added.LastModifiedAt);
+    }
+
+    [Fact]
+    public void Apply_DuplicateContactIdentifierAndConsentAdds_ReturnNullWithoutReplacingExistingItems()
+    {
+        DateTimeOffset timestamp = DateTimeOffset.UtcNow.AddMinutes(-5);
+        PartyDetail state = CreatePersonDetail() with
+        {
+            LastModifiedAt = timestamp,
+            ContactChannels =
+            [
+                new ContactChannel
+                {
+                    Id = "cc-1",
+                    Type = ContactChannelType.Email,
+                    Value = "first@example.com",
+                    IsPreferred = true,
+                },
+            ],
+            Identifiers =
+            [
+                new PartyIdentifier
+                {
+                    Id = "id-vat",
+                    Type = IdentifierType.VAT,
+                    Value = "FR00000000000",
+                },
+            ],
+            ConsentRecords =
+            [
+                new ConsentRecord
+                {
+                    ConsentId = "consent-1",
+                    ChannelId = "cc-1",
+                    Purpose = "marketing",
+                    LawfulBasis = LawfulBasis.Consent,
+                    GrantedAt = timestamp,
+                    GrantedBy = "admin",
+                },
+            ],
+        };
+
+        PartyDetail? duplicateChannel = PartyDetailProjectionHandler.Apply(
+            PartyId,
+            new ContactChannelAdded
+            {
+                ContactChannelId = "cc-1",
+                Type = ContactChannelType.Phone,
+                Value = "+33000000000",
+            },
+            state);
+        PartyDetail afterChannel = duplicateChannel ?? state;
+
+        PartyDetail? duplicateIdentifier = PartyDetailProjectionHandler.Apply(
+            PartyId,
+            new IdentifierAdded
+            {
+                IdentifierId = "id-vat",
+                Type = IdentifierType.SIRET,
+                Value = "11111111111111",
+            },
+            afterChannel);
+        PartyDetail afterIdentifier = duplicateIdentifier ?? afterChannel;
+
+        PartyDetail? duplicateConsent = PartyDetailProjectionHandler.Apply(
+            PartyId,
+            new ConsentRecorded
+            {
+                PartyId = PartyId,
+                TenantId = "tenant-1",
+                ConsentId = "consent-1",
+                ChannelId = "cc-1",
+                Purpose = "support",
+                LawfulBasis = LawfulBasis.ContractualNecessity,
+                GrantedAt = DateTimeOffset.UtcNow,
+                GrantedBy = "operator",
+            },
+            afterIdentifier);
+        PartyDetail afterConsent = duplicateConsent ?? afterIdentifier;
+
+        duplicateChannel.ShouldBeNull();
+        duplicateIdentifier.ShouldBeNull();
+        duplicateConsent.ShouldBeNull();
+        afterConsent.ContactChannels.Single().Value.ShouldBe("first@example.com");
+        afterConsent.Identifiers.Single().Type.ShouldBe(IdentifierType.VAT);
+        afterConsent.ConsentRecords.Single().Purpose.ShouldBe("marketing");
+        afterConsent.LastModifiedAt.ShouldBe(timestamp);
     }
 
     // --- Erasure tests ---
@@ -690,6 +1004,22 @@ public class PartyDetailProjectionHandlerTests
     }
 
     [Fact]
+    public void Apply_RestrictionLifted_WhenNotRestricted_ReturnsNull()
+    {
+        PartyDetail state = CreatePersonDetail();
+        RestrictionLifted @event = new()
+        {
+            PartyId = PartyId,
+            TenantId = "t1",
+            LiftedAt = DateTimeOffset.UtcNow,
+        };
+
+        PartyDetail? result = PartyDetailProjectionHandler.Apply(PartyId, @event, state);
+
+        result.ShouldBeNull();
+    }
+
+    [Fact]
     public void ApplyErasure_ClearsConsentRecords()
     {
         PartyDetail state = CreatePersonDetail() with
@@ -810,6 +1140,15 @@ public class PartyDetailProjectionHandlerTests
             ],
         };
     }
+
+    public static TheoryData<IEventPayload> RepresentativeRejectionEvents() =>
+    [
+        new PartyCannotBeCreatedWithInvalidId(),
+        new PartyCannotAddDuplicateChannel(),
+        new PartyCannotAddDuplicateIdentifier(),
+        new PartyCannotBeDeactivatedWhenInactive(),
+        new PartyCannotBeReactivatedWhenActive(),
+    ];
 
     private sealed record UnrecognizedEvent : IEventPayload;
 }

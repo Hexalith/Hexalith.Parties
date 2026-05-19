@@ -1,9 +1,11 @@
 using System.Reflection;
 using System.Runtime.Serialization;
+using System.Text.Json;
 
 using Dapr.Actors;
 using Dapr.Actors.Runtime;
 
+using Hexalith.Parties.Contracts.Events;
 using Hexalith.Parties.Contracts.Models;
 using Hexalith.Parties.Contracts.ValueObjects;
 using Hexalith.Parties.Projections.Actors;
@@ -119,7 +121,161 @@ public sealed class PartyDetailProjectionActorCorruptionTests
         await Should.ThrowAsync<OperationCanceledException>(() => InvokeOnActivateAsync(actor));
     }
 
-    private static (PartyDetailProjectionActor Actor, IActorStateManager StateManager) CreateActor()
+    [Fact]
+    public async Task HandleEventAsync_PartyCreated_UsesDocumentedTenantPartyDetailStateKeyAsync()
+    {
+        (PartyDetailProjectionActor actor, IActorStateManager stateManager) = CreateActor();
+
+        stateManager.TryGetStateAsync<PartyDetail>(
+                "test-tenant:party-detail:party-001",
+                Arg.Any<CancellationToken>())
+            .Returns(new ConditionalValue<PartyDetail>(false, default!));
+
+        await actor.HandleEventAsync(
+            "party-001",
+            new PartyCreated
+            {
+                Type = PartyType.Person,
+                PersonDetails = new PersonDetails
+                {
+                    FirstName = "Test",
+                    LastName = "Party",
+                },
+            });
+
+        await stateManager.Received(1).TryGetStateAsync<PartyDetail>(
+            "test-tenant:party-detail:party-001",
+            Arg.Any<CancellationToken>());
+        await stateManager.Received(1).SetStateAsync(
+            "test-tenant:party-detail:party-001",
+            Arg.Is<PartyDetail>(detail => detail.Id == "party-001"),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task HandleEventAsync_RejectionNoOp_DoesNotWritePartyDetailStateAsync()
+    {
+        (PartyDetailProjectionActor actor, IActorStateManager stateManager) = CreateActor();
+        PartyDetail existing = CreateDetail();
+
+        stateManager.TryGetStateAsync<PartyDetail>(
+                "test-tenant:party-detail:party-001",
+                Arg.Any<CancellationToken>())
+            .Returns(new ConditionalValue<PartyDetail>(true, existing));
+
+        await actor.HandleEventAsync("party-001", new PartyCannotAddDuplicateChannel());
+
+        await stateManager.DidNotReceive().SetStateAsync(
+            "test-tenant:party-detail:party-001",
+            Arg.Any<PartyDetail>(),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task HandleSerializedEventAsync_AcceptedRejectionNoOp_AdvancesCheckpointWithoutWritingDetailStateAsync()
+    {
+        (PartyDetailProjectionActor actor, IActorStateManager stateManager) = CreateActor();
+        byte[] payload = JsonSerializer.SerializeToUtf8Bytes(new PartyCannotBeCreatedWithInvalidId(), new JsonSerializerOptions(JsonSerializerDefaults.Web));
+
+        stateManager.TryGetStateAsync<long>(
+                "test-tenant:party-detail:party-001:last-sequence",
+                Arg.Any<CancellationToken>())
+            .Returns(new ConditionalValue<long>(false, default));
+        stateManager.TryGetStateAsync<PartyDetail>(
+                "test-tenant:party-detail:party-001",
+                Arg.Any<CancellationToken>())
+            .Returns(new ConditionalValue<PartyDetail>(true, CreateDetail()));
+
+        await actor.HandleSerializedEventAsync(
+            "party-001",
+            nameof(PartyCannotBeCreatedWithInvalidId),
+            payload,
+            "json",
+            7,
+            CancellationToken.None);
+
+        await stateManager.DidNotReceive().SetStateAsync(
+            "test-tenant:party-detail:party-001",
+            Arg.Any<PartyDetail>(),
+            Arg.Any<CancellationToken>());
+        await stateManager.Received(1).SetStateAsync(
+            "test-tenant:party-detail:party-001:last-sequence",
+            7L,
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task HandleSerializedEventAsync_AlreadyAppliedSequence_SkipsStateAndCheckpointWritesAsync()
+    {
+        (PartyDetailProjectionActor actor, IActorStateManager stateManager) = CreateActor();
+        byte[] payload = JsonSerializer.SerializeToUtf8Bytes(new PartyCannotBeCreatedWithInvalidId(), new JsonSerializerOptions(JsonSerializerDefaults.Web));
+
+        stateManager.TryGetStateAsync<long>(
+                "test-tenant:party-detail:party-001:last-sequence",
+                Arg.Any<CancellationToken>())
+            .Returns(new ConditionalValue<long>(true, 10));
+
+        await actor.HandleSerializedEventAsync(
+            "party-001",
+            nameof(PartyCannotBeCreatedWithInvalidId),
+            payload,
+            "json",
+            7,
+            CancellationToken.None);
+
+        await stateManager.DidNotReceive().SetStateAsync(
+            Arg.Any<string>(),
+            Arg.Any<PartyDetail>(),
+            Arg.Any<CancellationToken>());
+        await stateManager.DidNotReceive().SetStateAsync(
+            "test-tenant:party-detail:party-001:last-sequence",
+            Arg.Any<long>(),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Theory]
+    [InlineData("test-tenant:wrong-projection:party-001")]
+    [InlineData("malformed-actor-id")]
+    public async Task HandleEventAsync_InvalidActorId_FailsBeforeStateWriteAsync(string actorId)
+    {
+        (PartyDetailProjectionActor actor, IActorStateManager stateManager) = CreateActor(actorId);
+
+        await Should.ThrowAsync<InvalidOperationException>(() => actor.HandleEventAsync("party-001", new PartyDeactivated()));
+
+        await stateManager.DidNotReceive().SetStateAsync(
+            Arg.Any<string>(),
+            Arg.Any<PartyDetail>(),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task HandleSerializedEventAsync_PartyIdMismatch_FailsBeforeStateWriteOrCheckpointAdvanceAsync()
+    {
+        (PartyDetailProjectionActor actor, IActorStateManager stateManager) = CreateActor();
+        byte[] payload = JsonSerializer.SerializeToUtf8Bytes(new PartyCannotBeCreatedWithInvalidId(), new JsonSerializerOptions(JsonSerializerDefaults.Web));
+
+        await Should.ThrowAsync<InvalidOperationException>(() => actor.HandleSerializedEventAsync(
+            "different-party",
+            nameof(PartyCannotBeCreatedWithInvalidId),
+            payload,
+            "json",
+            7,
+            CancellationToken.None));
+
+        await stateManager.DidNotReceive().TryGetStateAsync<long>(
+            Arg.Any<string>(),
+            Arg.Any<CancellationToken>());
+        await stateManager.DidNotReceive().SetStateAsync(
+            Arg.Any<string>(),
+            Arg.Any<long>(),
+            Arg.Any<CancellationToken>());
+        await stateManager.DidNotReceive().SetStateAsync(
+            Arg.Any<string>(),
+            Arg.Any<PartyDetail>(),
+            Arg.Any<CancellationToken>());
+    }
+
+    private static (PartyDetailProjectionActor Actor, IActorStateManager StateManager) CreateActor(string actorId = ActorId)
     {
         IActorStateManager stateManager = Substitute.For<IActorStateManager>();
         IProjectionRebuildService rebuildService = Substitute.For<IProjectionRebuildService>();
@@ -128,7 +284,7 @@ public sealed class PartyDetailProjectionActorCorruptionTests
 
         ActorTimerManager timerManager = Substitute.For<ActorTimerManager>();
         var host = ActorHost.CreateForTest<PartyDetailProjectionActor>(
-            new ActorTestOptions { ActorId = new ActorId(ActorId), TimerManager = timerManager });
+            new ActorTestOptions { ActorId = new ActorId(actorId), TimerManager = timerManager });
         var actor = new PartyDetailProjectionActor(host, rebuildService, logger);
 
         PropertyInfo? prop = typeof(Actor).GetProperty("StateManager", BindingFlags.Public | BindingFlags.Instance);
@@ -136,6 +292,18 @@ public sealed class PartyDetailProjectionActorCorruptionTests
 
         return (actor, stateManager);
     }
+
+    private static PartyDetail CreateDetail() =>
+        new()
+        {
+            Id = "party-001",
+            Type = PartyType.Person,
+            IsActive = true,
+            DisplayName = "Test Party",
+            SortName = "Party, Test",
+            CreatedAt = DateTimeOffset.UtcNow.AddMinutes(-5),
+            LastModifiedAt = DateTimeOffset.UtcNow.AddMinutes(-5),
+        };
 
     private static async Task InvokeOnActivateAsync(PartyDetailProjectionActor actor)
     {

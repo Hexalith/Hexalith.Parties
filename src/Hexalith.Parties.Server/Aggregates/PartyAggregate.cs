@@ -1,3 +1,5 @@
+using System.Text.Json;
+
 using Hexalith.EventStore.Client.Aggregates;
 using Hexalith.EventStore.Contracts.Events;
 using Hexalith.EventStore.Contracts.Results;
@@ -1299,10 +1301,11 @@ public sealed class PartyAggregate : EventStoreAggregate<PartyState> {
         {
             return BuildPartyDetailFromState(partyId, state, events);
         }
-        catch (InvalidOperationException)
+        catch (Exception ex) when (ex is InvalidOperationException or JsonException or NotSupportedException)
         {
             // Fail closed: aggregate produced events but a trustworthy final-state detail
-            // cannot be assembled; caller falls back to a non-enriched success outcome.
+            // cannot be assembled (missing invariants, serialization failure, or unsupported
+            // converter shape). Caller falls back to a non-enriched success outcome.
             return null;
         }
     }

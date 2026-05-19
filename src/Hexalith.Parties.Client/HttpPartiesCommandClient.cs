@@ -221,8 +221,10 @@ public sealed class HttpPartiesCommandClient : IPartiesCommandClient
         {
             return payload.Deserialize<PartyDetail>(JsonOptions);
         }
-        catch (JsonException)
+        catch (Exception ex) when (ex is JsonException or NotSupportedException or InvalidOperationException)
         {
+            // Fail closed on malformed, unsupported, or non-Parties payloads — caller keeps
+            // the existing correlationId-only contract rather than throwing.
             return null;
         }
     }

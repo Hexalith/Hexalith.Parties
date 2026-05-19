@@ -39,7 +39,10 @@ internal sealed record PartiesMcpToolResult(
             "parties-mcp-accepted",
             "The Parties commands were accepted by the EventStore gateway.",
             toolName,
-            Data: JsonSerializer.SerializeToElement(new { correlationIds }, JsonOptions));
+            // Surface the last correlationId on the record so observability tooling keyed on
+            // CorrelationId can recover it; the full list remains available via Data.
+            correlationIds.Count > 0 ? correlationIds[^1] : null,
+            JsonSerializer.SerializeToElement(new { correlationIds }, JsonOptions));
 
     public static PartiesMcpToolResult Succeeded(string toolName, object? data = null, string? code = null, string? correlationId = null)
         => new(

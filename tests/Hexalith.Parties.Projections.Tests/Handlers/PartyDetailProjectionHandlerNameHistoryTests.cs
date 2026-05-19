@@ -96,10 +96,11 @@ public class PartyDetailProjectionHandlerNameHistoryTests
             SortName = "Doe, John",
         };
         PartyDetail? result = PartyDetailProjectionHandler.Apply(PartyId, sameNameEvent, state);
+        PartyDetail preserved = result ?? state.ShouldNotBeNull();
 
-        result.ShouldNotBeNull();
-        result.NameHistory.Count.ShouldBe(1); // No new entry added
-        result.DisplayName.ShouldBe("John Doe");
+        result.ShouldBeNull();
+        preserved.NameHistory.Count.ShouldBe(1); // No new entry added
+        preserved.DisplayName.ShouldBe("John Doe");
     }
 
     // Sort-only change (display name unchanged) DOES append — directory-style queries
