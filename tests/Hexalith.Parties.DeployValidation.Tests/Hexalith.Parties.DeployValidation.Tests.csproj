@@ -13,6 +13,16 @@
     <PackageReference Include="xunit.runner.visualstudio" />
     <PackageReference Include="Shouldly" />
     <PackageReference Include="YamlDotNet" />
+    <!-- Story 9.3 AC1: bind AppHost-emitted env-var shape into DomainServiceOptions to assert
+         the K8s-sanitized wildcard dictionary key resolves correctly. -->
+    <PackageReference Include="Microsoft.Extensions.Configuration" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Binder" />
+    <PackageReference Include="Microsoft.Extensions.Options" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Story 9.3 AC1: roundtrip binding test references EventStore.Server types. -->
+    <ProjectReference Include="..\..\Hexalith.EventStore\src\Hexalith.EventStore.Server\Hexalith.EventStore.Server.csproj" />
   </ItemGroup>
 
   <ItemGroup>

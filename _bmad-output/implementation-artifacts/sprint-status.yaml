@@ -35,7 +35,12 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-05-15 09:01:58 +02:00
-last_updated: 2026-05-19 11:55:00 +02:00
+last_updated: 2026-05-19 19:30:00 +02:00
+# last_updated touched 2026-05-19 by code-review closing story 9-3 (3 decisions resolved: realm passwords → temporary:true, Memories submodule init prereq → docs/getting-started.md, 4 incidental submodule bumps reverted; 12 patches applied: P1 regen.ps1 JWT env replace-not-insert + sibling-anchored idempotency + count=1 envFrom fallback, P2 deploy-local.ps1 Steps 2a/2b reordered per AC4, P3 kustomization.yaml idempotent carve-out append, P4 memories 8443 removed, P5 ASPNETCORE_URLS trailing ;, P6 resiliency drift comment-strip + indent-backref anchor, P7 K8sTopology threshold-gate warn finding, P8 redacted decoded bytes for Secret.data, P9 stringData/data line +1 fix, P10 env block tolerates inline/comment-only lines, P11 namespace AlreadyExists tolerance, P12 test cancellation partial-pipe drain; 13 items deferred to deferred-work.md; 20 dismissed as false positives or as-spec deferrals)
+# last_updated touched 2026-05-19 by dev-story moving 9-3 to review (AC1 wildcard_party_v1 + EventStore resolver fix via cross-submodule edit; AC2 Memories composition + ACL; AC3 Outcome B FrontComposer carve-out to Story 9.4; AC4 hand-authored keycloak/ + JWT SecretKeyRef patching + deploy-local.ps1 Secret bootstrap; AC5 Redis hand-authored set; AC6 resiliency.yaml Dapr 1.14.4 rewrite + dry-run pre-flight; AC7 three new lint categories + 18 new tests; AC8 deferred to operator trait gate)
+# last_updated touched 2026-05-19 by dev-story (9-3 Task 4 Outcome B) creating 9-4-frontcomposer-deployable-host (backlog) — FrontComposer has no deployable host project today
+# last_updated touched 2026-05-19 by dev-story moving 9-3 to in-progress
+# last_updated touched 2026-05-19 by create-story moving 9-3 to ready-for-dev (EventStore registration-key K8s-validity + Memories/FrontComposer composition + Keycloak SecretKeyRef + Redis emission + Dapr 1.14.4 resiliency CRD rewrite)
 # last_updated touched 2026-05-19 by correct-course adding story 9-3 (close K8s deployment spec gaps after live cluster validation revealed Memories/FrontComposer/Keycloak/Redis/Resiliency drift from Story 9.1 AC1)
 # last_updated touched 2026-05-19 by create-story moving 2-7 to ready-for-dev
 # last_updated touched 2026-05-19 by code-review closing story 2-1 (7 patches applied: P1 tautological-assertion cleanup, P2 multi-event LastModifiedAt monotonic, P3 HandleNameDerived empty-history fix, P4 reflection-based IRejectionEvent fitness test, P5 PartyMerged/IsNaturalPersonChanged tests, P6 actor-layer no-op success event test, P7 InvalidActorId checkpoint assertion; 16 findings deferred to Epic 6/aggregate-trust scope; PartyDetailProjectionHandler 99/99, ActorCorruptionTests 14/14, ArchitecturalFitness 17/17, full Projections.Tests 129/129 green)
@@ -165,9 +170,12 @@ development_status:
   8-6-enforce-picker-privacy-and-integration-boundary: backlog
   epic-8-retrospective: optional
 
-  # Epic 9: Kubernetes Deployment (3 stories)
+  # Epic 9: Kubernetes Deployment (4 stories — 9.4 added 2026-05-19 by Story 9.3 Outcome B carve-out)
   epic-9: in-progress
   9-1-generate-k8s-artifacts-and-deploy-full-topology-to-local-cluster: done
   9-2-extend-deployment-validation-to-kubernetes-manifests: done
-  9-3-close-k8s-deployment-spec-gaps: backlog
+  9-3-close-k8s-deployment-spec-gaps: done
+  # Story 9.4 carved out of Story 9.3 AC3 (Outcome B): FrontComposer has no deployable host today.
+  # Epic 9 retro is gated on BOTH 9.3 done AND 9.4 done.
+  9-4-frontcomposer-deployable-host: backlog
   epic-9-retrospective: optional

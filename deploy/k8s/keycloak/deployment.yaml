@@ -1,0 +1,59 @@
+---
+# Story 9.3 AC4 / ADR 9.3-3 — Hand-authored Keycloak carve-out (path b).
+# Aspirate cannot emit Keycloak with a stable secretKeyRef admin password + WithRealmImport
+# realm bootstrap; randomized admin credentials would break the byte-determinism contract
+# (Story 9.1 Completion Notes #5). This folder is preserved by `regen.ps1` (`$PreservedNames`)
+# and is asserted on a presence-only basis (NOT byte-determinism). See `deploy/k8s/README.md`.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: keycloak
+  labels:
+    app: keycloak
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: keycloak
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: keycloak
+    spec:
+      containers:
+      - name: keycloak
+        image: quay.io/keycloak/keycloak:25.0.6
+        imagePullPolicy: IfNotPresent
+        args: ['start-dev', '--import-realm']
+        ports:
+        - name: http
+          containerPort: 8080
+        env:
+        # Admin bootstrap password sourced from a Secret bootstrapped by deploy-local.ps1
+        # (idempotent kubectl apply --dry-run=client | apply -f -). Secret name is
+        # `hexalith-keycloak-admin`; never committed to the repo.
+        - name: KEYCLOAK_ADMIN
+          value: admin
+        - name: KEYCLOAK_ADMIN_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: hexalith-keycloak-admin
+              key: KEYCLOAK_ADMIN_PASSWORD
+        - name: KC_HEALTH_ENABLED
+          value: 'true'
+        - name: KC_METRICS_ENABLED
+          value: 'true'
+        - name: KC_HOSTNAME_STRICT
+          value: 'false'
+        - name: KC_HTTP_ENABLED
+          value: 'true'
+        volumeMounts:
+        - name: realm-import
+          mountPath: /opt/keycloak/data/import
+          readOnly: true
+      volumes:
+      - name: realm-import
+        configMap:
+          name: keycloak-realm-import

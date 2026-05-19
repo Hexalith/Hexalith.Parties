@@ -8,15 +8,26 @@ string eventStoreAccessControlConfigPath = ResolveDaprConfigPath("accesscontrol.
 string adminServerAccessControlConfigPath = ResolveDaprConfigPath("accesscontrol.eventstore-admin.yaml");
 string tenantsAccessControlConfigPath = ResolveDaprConfigPath("accesscontrol.tenants.yaml");
 string partiesAccessControlConfigPath = ResolveDaprConfigPath("accesscontrol.parties.yaml");
+string memoriesAccessControlConfigPath = ResolveDaprConfigPath("accesscontrol.memories.yaml");
 string resiliencyConfigPath = ResolveDaprConfigPath("resiliency.yaml");
 
+// Registration dictionary key uses the Kubernetes-valid sanitized wildcard form `wildcard_party_v1`
+// (story 9.3 AC1 / ADR 9.3-1). ConfigMap data keys must match ^[A-Za-z0-9_.-]+$ and Pod container
+// env names must match ^[A-Za-z_][A-Za-z0-9_]*$ — both reject '*' and '|'. The sanitized form
+// (alphanumeric + underscore only) binds correctly via .NET configuration's __-separator strategy
+// AND survives aspirate emission into a ConfigMap and consumer Pod env vars. The EventStore
+// DomainServiceResolver was extended in parallel to recognize the "wildcard_<domain>_<version>"
+// shape in addition to the legacy "*|domain|version" pipe form (see
+// Hexalith.EventStore/src/Hexalith.EventStore.Server/DomainServices/DomainServiceResolver.cs).
+// The dictionary VALUE's TenantId field stays "*" — that is a value, not a key, and is valid in
+// env-var values.
 IResourceBuilder<ProjectResource> eventStore = builder.AddProject<Projects.Hexalith_EventStore>("eventstore")
     .WithEnvironment("Authentication__DaprInternal__AllowedCallers__0", "tenants")
-    .WithEnvironment("EventStore__DomainServices__Registrations__*|party|v1__AppId", "parties")
-    .WithEnvironment("EventStore__DomainServices__Registrations__*|party|v1__MethodName", "process")
-    .WithEnvironment("EventStore__DomainServices__Registrations__*|party|v1__TenantId", "*")
-    .WithEnvironment("EventStore__DomainServices__Registrations__*|party|v1__Domain", "party")
-    .WithEnvironment("EventStore__DomainServices__Registrations__*|party|v1__Version", "v1");
+    .WithEnvironment("EventStore__DomainServices__Registrations__wildcard_party_v1__AppId", "parties")
+    .WithEnvironment("EventStore__DomainServices__Registrations__wildcard_party_v1__MethodName", "process")
+    .WithEnvironment("EventStore__DomainServices__Registrations__wildcard_party_v1__TenantId", "*")
+    .WithEnvironment("EventStore__DomainServices__Registrations__wildcard_party_v1__Domain", "party")
+    .WithEnvironment("EventStore__DomainServices__Registrations__wildcard_party_v1__Version", "v1");
 IResourceBuilder<ProjectResource> adminServer = builder.AddProject<Projects.Hexalith_EventStore_Admin_Server_Host>("eventstore-admin");
 IResourceBuilder<ProjectResource> adminUI = builder.AddProject<Projects.Hexalith_EventStore_Admin_UI>("eventstore-admin-ui");
 HexalithEventStoreResources eventStoreResources = builder.AddHexalithEventStore(
@@ -87,17 +98,40 @@ _ = tenants
     .WithReference(eventStore)
     .WaitFor(eventStore);
 
+// Redis backing service: AppHost-composed for the local-cluster MVP topology (story 9.3 AC5).
+// Aspire 13.3.3 `AddRedis(...)` emits a deterministic Deployment + Service Aspirate can
+// translate. MVP scope is `emptyDir`-backed (`WithDataVolume()`); production-grade Redis
+// (StatefulSet + PVC + AUTH + TLS) is explicitly out of scope per the story Out-of-Scope list
+// and ADR D-K8s. The Service name MUST remain `redis` so the existing
+// `deploy/dapr/statestore.yaml` + `deploy/dapr/pubsub.yaml` `redisHost` references resolve
+// to `redis.hexalith-parties.svc.cluster.local:6379` without change.
+IResourceBuilder<RedisResource> redis = builder.AddRedis("redis");
+
+// Memories.Server: composed in-cluster as a first-class topology participant (story 9.3 AC2 /
+// ADR 9.3-2). The configurable external HTTP `MemoriesEndpoint` escape hatch was removed —
+// FR31a now enumerates Memories as part of the single-source-of-truth service graph. The
+// in-cluster Service URL (`http://memories:8080/`) is the only endpoint Parties uses for the
+// `MemoriesSearch` feature; `EnableMemoriesSearch` still controls feature-on/off, never the
+// endpoint location.
+IResourceBuilder<ProjectResource> memories = builder.AddProject<Projects.Hexalith_Memories_Server>("memories")
+    .WithDaprSidecar(sidecar => sidecar
+        .WithOptions(new DaprSidecarOptions
+        {
+            AppId = "memories",
+            Config = memoriesAccessControlConfigPath,
+        })
+        .WithReference(eventStoreResources.StateStore)
+        .WithReference(eventStoreResources.PubSub))
+    .WaitFor(eventStoreResources.StateStore)
+    .WaitFor(eventStoreResources.PubSub);
+
 if (string.Equals(builder.Configuration["EnableMemoriesSearch"], "true", StringComparison.OrdinalIgnoreCase))
 {
-    string memoriesEndpoint = builder.Configuration["MemoriesEndpoint"] ?? "http://localhost:5010/";
-    if (!memoriesEndpoint.EndsWith('/'))
-    {
-        memoriesEndpoint += "/";
-    }
-
     _ = parties
+        .WithReference(memories)
+        .WaitFor(memories)
         .WithEnvironment("Parties__MemoriesSearch__Enabled", "true")
-        .WithEnvironment("Parties__MemoriesSearch__Endpoint", memoriesEndpoint)
+        .WithEnvironment("Parties__MemoriesSearch__Endpoint", "http://memories:8080/")
         .WithEnvironment("Parties__MemoriesSearch__RequireApiToken", "false")
         .WithEnvironment("Parties__MemoriesSearch__TenantId", "hexalith-dev")
         .WithEnvironment("Parties__MemoriesSearch__CaseId", "parties");

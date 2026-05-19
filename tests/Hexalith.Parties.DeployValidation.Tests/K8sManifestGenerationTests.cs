@@ -91,6 +91,8 @@ public sealed class K8sManifestGenerationTests
             { "eventstore-admin", "accesscontrol-eventstore-admin" },
             { "parties", "accesscontrol-parties" },
             { "tenants", "accesscontrol-tenants" },
+            // Story 9.3 AC2 — Memories.Server composed in-cluster with deny-by-default ACL.
+            { "memories", "accesscontrol-memories" },
         };
         string k8sDir = K8sDirectory();
         foreach ((string daprAppId, string expectedConfig) in daprAppToConfig)

@@ -1,13 +1,14 @@
-# Workaround for K8s rejecting env var keys with '*' and '|' chars
-# (e.g. EventStore__DomainServices__Registrations__*|party|v1__*).
-# These come from AddProject(...).WithEnvironment(...) in
-# src/Hexalith.Parties.AppHost/Program.cs and are valid Linux env vars
-# under `dotnet aspire run`, but K8s rejects them as ConfigMap data keys
-# AND as Pod env names.
-# Workaround: mount values as appsettings.Production.json so .NET IConfiguration
-# loads them via JSON (no key-char restrictions).
-# Proper fix is to change the AppHost composition to use array-indexed
-# registration keys (Registrations__0__Key, Registrations__0__AppId, ...).
+# Story 9.3 AC1 — Sanitized registration shape (no '*' or '|' literals).
+# Background: PR #39 / merge 8bae56b2 added this file as a manual workaround because
+# K8s ConfigMap data keys reject '*' / '|' chars (the legacy AppHost env shape
+# `EventStore__DomainServices__Registrations__*|party|v1__*` was K8s-invalid). Story 9.3
+# closed the spec by rewriting the AppHost to emit the sanitized form
+# `Registrations__wildcard_party_v1__*` (Program.cs lines 13-19) and extending the
+# EventStore DomainServiceResolver to recognize the new key shape (parallel PR per
+# Hexalith.EventStore/CLAUDE.md). The appsettings.Production.json mount below uses
+# the same sanitized form; after the next `pwsh deploy/k8s/regen.ps1` run, aspirate
+# emits the registration as env vars on `eventstore-env` directly and this file
+# becomes redundant (removable in a follow-up commit).
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -18,7 +19,7 @@ data:
       "EventStore": {
         "DomainServices": {
           "Registrations": {
-            "*|party|v1": {
+            "wildcard_party_v1": {
               "AppId": "parties",
               "MethodName": "process",
               "TenantId": "*",

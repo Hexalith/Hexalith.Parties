@@ -143,6 +143,115 @@ if (-not $SkipDaprInit) {
     }
 }
 
+# Ensure the deploy namespace exists before any namespaced dry-run / Secret write.
+# Tolerate `AlreadyExists` errors on the create path (CI parallelism race).
+if (-not $script:NamespaceEnsured) {
+    & kubectl get namespace $Namespace 2>$null | Out-Null
+    if ($LASTEXITCODE -ne 0) {
+        $createOutput = & kubectl create namespace $Namespace 2>&1
+        if ($LASTEXITCODE -ne 0 -and ($createOutput -notmatch 'AlreadyExists')) {
+            Write-Error "kubectl create namespace $Namespace failed (exit $LASTEXITCODE): $createOutput"
+            exit 1
+        }
+    }
+    $script:NamespaceEnsured = $true
+}
+
+# ---------------------------------------------------------------------------
+# Step 2a (Story 9.3 AC6): server-side dry-run apply for `deploy/dapr/resiliency.yaml`.
+# Catches Dapr CRD schema drift fast — any field-name mismatch with the active
+# `resiliencies.dapr.io` CRD on the cluster surfaces here, BEFORE any namespaced
+# resource is written. Exits 1 if the dry-run rejects the manifest.
+# Sequenced BEFORE Step 2b (Secret bootstrap) per Story 9.3 spec § AC4 / Task 5 — a
+# schema-regression dry-run failure must abort before any namespaced resource is written.
+# ---------------------------------------------------------------------------
+$resiliencyPath = Join-Path $DaprComponentsPath "resiliency.yaml"
+if (Test-Path $resiliencyPath) {
+    Write-Host ""
+    Write-Host "Pre-flight: kubectl apply --dry-run=server -f deploy/dapr/resiliency.yaml"
+    $dryRunOutput = & kubectl apply --dry-run=server -f $resiliencyPath -n $Namespace 2>&1
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "ERROR: resiliency.yaml schema dry-run failed (exit $LASTEXITCODE)."
+        Write-Host "This usually means the active Dapr `resiliencies.dapr.io` CRD on '$currentContext' differs"
+        Write-Host "from the schema deploy/dapr/resiliency.yaml targets (Dapr 1.14.4 per Story 9.3 AC6)."
+        Write-Host "See _bmad-output/implementation-artifacts/9-3-close-k8s-deployment-spec-gaps.md AC6."
+        $dryRunOutput | Select-Object -First 30 | ForEach-Object { Write-Host "  $_" }
+        exit 1
+    }
+    else {
+        # Bounded passthrough — emit the resource kind/name line only.
+        $dryRunOutput | Where-Object { $_ -match '^\S+/\S+\s+\S+' } | ForEach-Object { Write-Host "  $_" }
+    }
+}
+
+# ---------------------------------------------------------------------------
+# Step 2b (Story 9.3 AC4): bootstrap operator-managed Secrets — JWT signing key + Keycloak
+# admin password. Both are generated from a cryptographically random source on the local
+# operator and applied via `kubectl apply --dry-run=client -o yaml | kubectl apply -f -`
+# (idempotent: first invocation creates, subsequent invocations leave existing Secrets in
+# place — `kubectl apply` is a server-side merge, not a re-create).
+#
+# Output is metadata-only: "Secret <name> applied" or "Secret <name> already present". The
+# random-value never appears in stdout / stderr / Get-Content output.
+# ---------------------------------------------------------------------------
+function New-RandomBase64Key {
+    param([int]$ByteLength = 32)
+    $rng = [System.Security.Cryptography.RandomNumberGenerator]::Create()
+    try {
+        $bytes = New-Object byte[] $ByteLength
+        $rng.GetBytes($bytes)
+        return [System.Convert]::ToBase64String($bytes)
+    }
+    finally {
+        $rng.Dispose()
+    }
+}
+
+function Set-OperatorSecretIfMissing {
+    param(
+        [string]$SecretName,
+        [string]$KeyName,
+        [int]$ByteLength = 32
+    )
+    & kubectl get secret $SecretName --namespace $Namespace 2>$null | Out-Null
+    if ($LASTEXITCODE -eq 0) {
+        Write-Host "  Secret $SecretName already present."
+        return
+    }
+    # Defer random-value computation until we know the Secret is missing — avoids burning
+    # CSRNG entropy and keeping a sensitive string on the heap on idempotent re-runs.
+    $value = New-RandomBase64Key -ByteLength $ByteLength
+    $manifest = & kubectl create secret generic $SecretName `
+        --namespace $Namespace `
+        --from-literal "$KeyName=$value" `
+        --dry-run=client `
+        -o yaml
+    if ($LASTEXITCODE -ne 0) {
+        Write-Error "Failed to render Secret manifest for $SecretName (exit $LASTEXITCODE)."
+        exit 1
+    }
+    $manifest | & kubectl apply -f - 2>&1 | ForEach-Object {
+        if ($_ -match '^secret/\S+\s+\S+') {
+            Write-Host "  applied: $_"
+        }
+    }
+    if ($LASTEXITCODE -ne 0) {
+        Write-Error "kubectl apply failed for Secret $SecretName (exit $LASTEXITCODE)."
+        exit 1
+    }
+}
+
+Write-Host ""
+Write-Host "Bootstrapping operator-managed Secrets..."
+Set-OperatorSecretIfMissing `
+    -SecretName 'hexalith-jwt-signing' `
+    -KeyName 'Authentication__JwtBearer__SigningKey' `
+    -ByteLength 32
+Set-OperatorSecretIfMissing `
+    -SecretName 'hexalith-keycloak-admin' `
+    -KeyName 'KEYCLOAK_ADMIN_PASSWORD' `
+    -ByteLength 24
+
 # ---------------------------------------------------------------------------
 # Step 3: Apply authoritative DAPR component CRs (deploy/dapr/)
 # ---------------------------------------------------------------------------

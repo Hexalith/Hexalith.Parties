@@ -1,0 +1,38 @@
+---
+# Story 9.3 AC5 — Hand-authored Redis carve-out (path b). MVP local-cluster scope only:
+# emptyDir-backed, no AUTH, no TLS, no PVC. Production-grade Redis (StatefulSet + PVC + AUTH +
+# TLS) is explicitly out of scope per the story Out-of-Scope list. The Service name MUST
+# remain `redis` so the Dapr Components in `deploy/dapr/{statestore,pubsub}.yaml` continue to
+# resolve `redisHost: redis:6379` (in-cluster DNS: `redis.hexalith-parties.svc.cluster.local`).
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis
+  labels:
+    app: redis
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: redis
+    spec:
+      containers:
+      - name: redis
+        image: redis:7.4-alpine
+        imagePullPolicy: IfNotPresent
+        args: ['redis-server', '--appendonly', 'no', '--save', '']
+        ports:
+        - name: redis
+          containerPort: 6379
+        volumeMounts:
+        - name: data
+          mountPath: /data
+      volumes:
+      - name: data
+        emptyDir: {}
