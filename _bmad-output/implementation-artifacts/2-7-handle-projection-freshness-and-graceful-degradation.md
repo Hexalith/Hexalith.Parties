@@ -82,6 +82,17 @@ so that my application can behave safely when projections lag or infrastructure 
 | Tenant B probes tenant A while tenant A projection is stale/degraded | Tenant B receives only tenant-B authorized outcome; no tenant-A freshness, cache age, rebuild status, counts, existence, or health signal leaks. |
 | Cancellation before or during freshness/degraded read | Cancellation is honored and no fallback aggregate replay, cache refresh, detail fan-out, Memories expansion, retired REST call, or retry work starts afterward. |
 
+## Party-Mode Review Clarifications
+
+- Minimal freshness contract: Story 2.7 may satisfy freshness visibility through existing additive query-result metadata, existing degraded response headers, or the smallest additive metadata needed by the current EventStore-fronted client surfaces. It must not require a finalized long-term typed public freshness model.
+- Bounded status vocabulary for this story is limited to coarse states such as current, stale, degraded, rebuilding, local-only, and unavailable. Exact sequence positions, stream names, actor ids, state keys, partition keys, cursor internals, tenant ids, infrastructure topology, and raw exception text must not be exposed.
+- Current means the trusted projection state is within the accepted freshness bound for the authorized tenant and query path. It is not a claim of global EventStore currentness or cross-partition completeness.
+- Unknown freshness is unsafe unless the read path can return a metadata-only degraded outcome from trusted tenant-scoped projection or cache state. Missing freshness metadata must not be treated as current by default.
+- Trusted degraded reads may return data only when the projection/cache entry was produced by the tenant-safe read path established in Story 2.6 and proves tenant, projection kind, party or partition scope, erasure filtering, and cache currency provenance.
+- Unsafe states include missing tenant/access proof, missing trusted projection or cache state, unknown tenant partition, stale state beyond the accepted safe window, rebuilding state without bounded same-tenant data, mixed-provenance cache entries, corrupt projection payloads, and infrastructure failure that prevents provenance validation.
+- `DegradedResponseMiddleware` may expose coarse service degradation but must not manufacture freshness, authorize stale data, or turn unavailable infrastructure into a safe read claim.
+- Detail, list/filter, and search paths must use identical tenant-safety rules. Search/list metadata, page counts, match metadata, and source metadata must be calculated only after tenant authorization, erasure filtering, freshness/provenance checks, and degraded-state classification.
+
 ## Tasks / Subtasks
 
 - [ ] Task 1: Audit accepted freshness/degradation surfaces before editing (AC: 1, 2, 3, 4, 7)
@@ -97,6 +108,7 @@ so that my application can behave safely when projections lag or infrastructure 
   - [ ] If freshness depends on latest known event position, define the source of that "known" position explicitly and test it. Do not claim global currentness when only a local actor checkpoint is known.
   - [ ] Ensure a healthy current projection does not emit stale warnings, and a degraded service condition is not hidden when read data is still returned.
   - [ ] Preserve forward-compatible, additive contract changes only. Existing clients must continue deserializing current `PartyDetail`, `PagedResult<PartyIndexEntry>`, and `PagedResult<PartySearchResult>` payloads unless an accepted EventStore wrapper already carries metadata outside payload.
+  - [ ] Treat absent or untrusted freshness metadata as unsafe unless the path returns a metadata-only degraded/unavailable outcome without party rows, counts, match metadata, or currentness claims.
 
 - [ ] Task 3: Harden detail freshness and degraded reads (AC: 1, 2, 3, 4, 5, 6)
   - [ ] Inspect `src/Hexalith.Parties.Projections/Actors/PartyDetailProjectionActor.cs` and `src/Hexalith.Parties.Projections/Abstractions/IPartyDetailProjectionActor.cs`.
@@ -143,12 +155,14 @@ so that my application can behave safely when projections lag or infrastructure 
 | Current list read | No stale/degraded indicator and page/count metadata calculated from current tenant index. |
 | Current search read | No stale/degraded indicator and match/score/source metadata calculated from current tenant index. |
 | Accepted mutation then projection catch-up | Detail, list, and search observe the changed party inside the documented consistency target. |
+| Missing freshness metadata | No current claim is emitted; the read either fails closed or returns only a metadata-only degraded/unavailable outcome from trusted same-tenant state. |
 | Detail actor rebuilding with same-tenant cache | Bounded stale/rebuilding/degraded status; same-tenant cached detail only if provenance is proven. |
 | Index actor rebuilding with same-tenant cache | Bounded stale/rebuilding/degraded status; rows, counts, and metadata only from proven same-tenant cache. |
 | Pub/sub degraded | Safe read responses include degraded/stale signal; no data-source fallback begins. |
 | State store unavailable with loaded actor state | Safe read responses use loaded same-tenant state and include degraded/stale signal. |
 | Projection actor unavailable | Bounded unavailable/degraded outcome; no stale data returned as current. |
 | Sidecar unavailable | No stale-read success path; readiness/health classifies the state unsafe. |
+| Unknown tenant partition | Fail closed with no tenant existence, partition, count, cache age, or rebuild-state signal. |
 | Corrupt detail projection | Bounded unavailable/null/not-found/degraded outcome with metadata-only diagnostics. |
 | Corrupt index projection | Bounded unavailable/empty/degraded outcome with no raw JSON, rows, counts, or keys leaked. |
 | Mixed-provenance static cache | Fail closed; no party rows or freshness status from another tenant. |
@@ -189,7 +203,7 @@ so that my application can behave safely when projections lag or infrastructure 
 - Story 2.4 established index-only list/filter semantics, post-filter metadata consistency, untrusted page/cursor state handling, UTC metadata filtering, degraded cache provenance, bounded validation short-circuiting, and terminal cancellation.
 - Story 2.5 established MVP display-name-only search, match metadata after current-tenant and erasure filtering, degraded-cache provenance gates, negative future-field tests, and terminal cancellation.
 - Story 2.6 established fail-closed tenant-safe projection reads across detail, list/filter, search, degraded cache, actor key shape, and metadata-only diagnostics.
-- L08 in the story-creation lessons ledger says party-mode review and advanced elicitation are separate dated traces. This story has not yet received either trace.
+- L08 in the story-creation lessons ledger says party-mode review and advanced elicitation are separate dated traces. This story now carries a completed party-mode trace and still needs a separate advanced elicitation pass before that hardening phase can be considered complete.
 
 ### Latest Technical Notes
 
@@ -273,6 +287,7 @@ dotnet build Hexalith.Parties.slnx --configuration Release
 ### Deferred Decisions
 
 - Exact typed public freshness metadata shape remains deferred unless the current EventStore query boundary already provides or accepts an additive wrapper. Existing degraded headers may be sufficient for infrastructure-level degradation.
+- Whether degraded headers are the canonical compatibility bridge, an internal transport hint, or replaced by a later typed public freshness model remains deferred. This story may only add the minimal bounded signal needed by current detail, list/filter, search, and client tests.
 - Automated projection drift detection, rebuild progress reporting, health dashboards, and operational repair controls belong primarily to Story 2.8 unless a read-only signal already exists and is required for this story's bounded response.
 - Multi-key partition freshness, cursor trust model, continuation-token freshness semantics, and partition-specific lag reporting remain deferred until partitioned index routing is accepted.
 - Dedicated search-engine freshness, semantic/Memories index freshness, graph-search freshness, contact/identifier search freshness, and duplicate advisory metadata remain deferred to later accepted search stories.
@@ -314,6 +329,31 @@ dotnet build Hexalith.Parties.slnx --configuration Release
 
 ### File List
 
+## Party-Mode Review
+
+- Date/time: 2026-05-19T16:04:53+02:00
+- Selected story key: `2-7-handle-projection-freshness-and-graceful-degradation`
+- Command/skill invocation used: `/bmad-party-mode 2-7-handle-projection-freshness-and-graceful-degradation; review;`
+- Participating BMAD agents: Winston (System Architect), Amelia (Senior Software Engineer), Murat (Master Test Architect and Quality Advisor), John (Product Manager)
+- Findings summary:
+  - All reviewers initially recommended `needs-story-update`, not blocked.
+  - Shared concerns were the underspecified minimal freshness/degradation contract, ambiguous current/unknown/unsafe state semantics, trusted degraded-cache proof, tenant-scoped non-enumerating metadata, and AC-to-test traceability.
+  - Reviewers agreed the story remains viable if it stays additive, EventStore-fronted, metadata-only, tenant-safe, and fail-closed.
+- Changes applied:
+  - Added `Party-Mode Review Clarifications` covering minimal metadata/header scope, bounded status vocabulary, currentness definition, unknown-freshness handling, trusted degraded-read proof, unsafe-state examples, middleware limits, and consistent tenant-safety rules across detail/list/search.
+  - Added required test-matrix rows for missing freshness metadata and unknown tenant partitions.
+  - Updated Dev Notes to reflect the completed party-mode trace and remaining separate advanced elicitation pass.
+  - Added a deferred decision clarifying that final header-versus-typed-metadata policy remains outside this story.
+- Findings deferred:
+  - Final typed public freshness metadata model and naming.
+  - Whether headers are canonical, transitional, or internal-only.
+  - Operational dashboards, drift reporting, repair controls, and rebuild progress UX.
+  - Multi-partition freshness and cursor semantics.
+  - Dedicated semantic/search-engine freshness model.
+  - AdminPortal/picker UI copy, localization, and tenant authorization policy changes.
+- Final recommendation: `ready-for-dev`
+
 ## Change Log
 
 - 2026-05-19: Story created by BMAD pre-dev hardening automation with existing EventStore query gateway, projection actors, degraded response middleware, health checks, tenant-safe cache provenance, privacy-safe diagnostics, and focused validation guidance.
+- 2026-05-19: Party-mode review applied low-risk freshness-contract, unsafe-state, tenant-safety, and test-traceability clarifications; final recommendation `ready-for-dev`.
