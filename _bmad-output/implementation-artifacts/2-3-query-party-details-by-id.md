@@ -1,6 +1,6 @@
 # Story 2.3: Query Party Details by ID
 
-Status: ready-for-dev
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -103,65 +103,65 @@ so that applications and AI tools can display or use the current party record wi
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Audit and reuse current query and projection surfaces before editing (AC: 1, 3, 6)
-  - [ ] Start with `src/Hexalith.Parties.Client/Abstractions/IPartiesQueryClient.cs` and `src/Hexalith.Parties.Client/HttpPartiesQueryClient.cs`; `GetPartyAsync` already posts an EventStore `SubmitQueryRequest` to `api/v1/queries` with query type `PartyDetail`.
-  - [ ] Inspect `tests/Hexalith.Parties.Client.Tests/HttpPartiesQueryClientTests.cs`; it already pins the client request shape and typed error mapping for query responses.
-  - [ ] Inspect `tests/Hexalith.Parties.Tests/Gateway/EventStoreGatewayRoutingTests.cs`; it already pins EventStore query gateway routing, tenant/domain authorization gates, not-found mapping, and default party projection routing.
-  - [ ] Inspect `src/Hexalith.Parties/Extensions/PartyDetailProjectionActorExtensions.cs`; it already contains the detail-read resilience ladder: JSON string, serialized bytes, then typed actor call.
-  - [ ] Inspect `src/Hexalith.Parties.Projections/Actors/PartyDetailProjectionActor.cs` and `src/Hexalith.Parties.Projections/Abstractions/IPartyDetailProjectionActor.cs`; they expose `GetDetailAsync`, `GetDetailJsonAsync`, `GetSerializedDetailAsync`, `IsRebuildingAsync`, and erasure behavior.
-  - [ ] Treat the current EventStore-fronted query path as the accepted public boundary. Do not create retired `GET /api/v1/parties/{id}` endpoints in `src/Hexalith.Parties`.
+- [x] Task 1: Audit and reuse current query and projection surfaces before editing (AC: 1, 3, 6)
+  - [x] Start with `src/Hexalith.Parties.Client/Abstractions/IPartiesQueryClient.cs` and `src/Hexalith.Parties.Client/HttpPartiesQueryClient.cs`; `GetPartyAsync` already posts an EventStore `SubmitQueryRequest` to `api/v1/queries` with query type `PartyDetail`.
+  - [x] Inspect `tests/Hexalith.Parties.Client.Tests/HttpPartiesQueryClientTests.cs`; it already pins the client request shape and typed error mapping for query responses.
+  - [x] Inspect `tests/Hexalith.Parties.Tests/Gateway/EventStoreGatewayRoutingTests.cs`; it already pins EventStore query gateway routing, tenant/domain authorization gates, not-found mapping, and default party projection routing.
+  - [x] Inspect `src/Hexalith.Parties/Extensions/PartyDetailProjectionActorExtensions.cs`; it already contains the detail-read resilience ladder: JSON string, serialized bytes, then typed actor call.
+  - [x] Inspect `src/Hexalith.Parties.Projections/Actors/PartyDetailProjectionActor.cs` and `src/Hexalith.Parties.Projections/Abstractions/IPartyDetailProjectionActor.cs`; they expose `GetDetailAsync`, `GetDetailJsonAsync`, `GetSerializedDetailAsync`, `IsRebuildingAsync`, and erasure behavior.
+  - [x] Treat the current EventStore-fronted query path as the accepted public boundary. Do not create retired `GET /api/v1/parties/{id}` endpoints in `src/Hexalith.Parties`.
 
-- [ ] Task 2: Implement or reconcile the party-detail query read path (AC: 1, 3, 5)
-  - [ ] Confirm where the current EventStore query router resolves a `party` domain `PartyDetail` query. If the route is already implemented, harden tests instead of duplicating it.
-  - [ ] If a Parties-owned query resolver is missing, add the narrow resolver/adapter needed for `PartyDetail` only, using `IActorProxyFactory` to create `IPartyDetailProjectionActor` with actor id `{tenant}:party-detail:{partyId}`.
-  - [ ] Use `PartyDetailProjectionActorExtensions.ReadDetailAsync(...)` when reading from the actor so legacy/remoting variants are handled consistently.
-  - [ ] Map a missing `PartyDetail` to the accepted not-found query result. Do not synthesize details from `PartyIndexEntry`, aggregate state, event streams, or command status.
-  - [ ] Preserve `HttpPartiesQueryClient.GetPartyAsync` request shape unless an accepted EventStore query contract requires an additive change. If `ProjectionType`, `ProjectionActorType`, or query type naming must be supplied, make the change deliberately and update both client and gateway tests.
-  - [ ] Reconcile the two current detail-query names before changing contracts: `HttpPartiesQueryClient` uses query type `PartyDetail`, while AdminPortal/FrontComposer configuration uses detail query type `GetParty` with projection type `PartyDetail`.
-  - [ ] Preserve additive compatibility for any naming cleanup. Do not silently rename the public query concept away from party detail by id through the EventStore query gateway and typed client.
+- [x] Task 2: Implement or reconcile the party-detail query read path (AC: 1, 3, 5)
+  - [x] Confirm where the current EventStore query router resolves a `party` domain `PartyDetail` query. If the route is already implemented, harden tests instead of duplicating it.
+  - [x] If a Parties-owned query resolver is missing, add the narrow resolver/adapter needed for `PartyDetail` only, using `IActorProxyFactory` to create `IPartyDetailProjectionActor` with actor id `{tenant}:party-detail:{partyId}`.
+  - [x] Use `PartyDetailProjectionActorExtensions.ReadDetailAsync(...)` when reading from the actor so legacy/remoting variants are handled consistently.
+  - [x] Map a missing `PartyDetail` to the accepted not-found query result. Do not synthesize details from `PartyIndexEntry`, aggregate state, event streams, or command status.
+  - [x] Preserve `HttpPartiesQueryClient.GetPartyAsync` request shape unless an accepted EventStore query contract requires an additive change. If `ProjectionType`, `ProjectionActorType`, or query type naming must be supplied, make the change deliberately and update both client and gateway tests.
+  - [x] Reconcile the two current detail-query names before changing contracts: `HttpPartiesQueryClient` uses query type `PartyDetail`, while AdminPortal/FrontComposer configuration uses detail query type `GetParty` with projection type `PartyDetail`.
+  - [x] Preserve additive compatibility for any naming cleanup. Do not silently rename the public query concept away from party detail by id through the EventStore query gateway and typed client.
 
-- [ ] Task 3: Enforce tenant fail-closed behavior (AC: 2, 3, 6)
-  - [ ] Keep gateway authorization ownership in EventStore. Missing/unauthorized tenant or domain must fail before Parties projection actor state is accessed.
-  - [ ] For projection-side reads, derive actor id strictly from the authenticated/request tenant and requested party id. Never accept tenant id from the party id, projection payload, search result, UI state, or client-supplied actor id.
-  - [ ] Construct the tenant-scoped projection key from the caller tenant before any actor/projection read, and do not probe alternate tenant keys, fallback actor ids, or payload-derived tenant values.
-  - [ ] Add tests where tenant A has detail state and tenant B queries the same party id. The result must be forbidden or not found according to the accepted query boundary and must not disclose cross-tenant existence.
-  - [ ] Add a fake/probed actor registry, proxy factory, state manager, or equivalent assertion so tests fail if `{otherTenant}:party-detail:{partyId}` is read, constructed for lookup, serialized, or logged.
-  - [ ] Add tests for missing tenant, unauthorized tenant, unauthorized domain, malformed party id/actor id, and projection segment mismatch where relevant.
-  - [ ] Ensure failures use bounded ProblemDetails/client exception fields and do not include raw party ids from other tenants, display names, contact values, identifiers, tenant membership payloads, tokens, actor storage keys, stream names, stack traces, infrastructure exception text, or serialized actor state.
+- [x] Task 3: Enforce tenant fail-closed behavior (AC: 2, 3, 6)
+  - [x] Keep gateway authorization ownership in EventStore. Missing/unauthorized tenant or domain must fail before Parties projection actor state is accessed.
+  - [x] For projection-side reads, derive actor id strictly from the authenticated/request tenant and requested party id. Never accept tenant id from the party id, projection payload, search result, UI state, or client-supplied actor id.
+  - [x] Construct the tenant-scoped projection key from the caller tenant before any actor/projection read, and do not probe alternate tenant keys, fallback actor ids, or payload-derived tenant values.
+  - [x] Add tests where tenant A has detail state and tenant B queries the same party id. The result must be forbidden or not found according to the accepted query boundary and must not disclose cross-tenant existence.
+  - [x] Add a fake/probed actor registry, proxy factory, state manager, or equivalent assertion so tests fail if `{otherTenant}:party-detail:{partyId}` is read, constructed for lookup, serialized, or logged.
+  - [x] Add tests for missing tenant, unauthorized tenant, unauthorized domain, malformed party id/actor id, and projection segment mismatch where relevant.
+  - [x] Ensure failures use bounded ProblemDetails/client exception fields and do not include raw party ids from other tenants, display names, contact values, identifiers, tenant membership payloads, tokens, actor storage keys, stream names, stack traces, infrastructure exception text, or serialized actor state.
 
-- [ ] Task 4: Preserve inactive, erasure, and degraded-state semantics (AC: 4, 5)
-  - [ ] Querying a deactivated party must return `PartyDetail` with `IsActive == false`; do not hide inactive parties through detail-by-id unless a later product decision says so.
-  - [ ] Use the same tenant authorization path for active and inactive detail reads; inactive status must not grant a support/admin override or a different visibility rule in this story.
-  - [ ] Preserve existing erasure behavior: `PartyDetailProjectionActor.EraseAsync(...)` applies erased/redacted projection state or removes missing state and clears the sequence checkpoint. Do not invent a new GDPR read policy in this story.
-  - [ ] Treat erased/suppressed projection state as higher precedence than inactive inspectability. If erased-party detail response behavior is ambiguous, record it as deferred rather than silently returning personal data or designing a new erased-party DTO.
-  - [ ] For rebuilding/degraded actors, preserve current cached-read behavior where safe and map unsafe/unavailable state to bounded not-found or unavailable responses.
-  - [ ] Ensure log messages and exception details for degraded/corrupt actor state remain metadata-only: tenant id, party id, projection name, event type, sequence, and bounded reason are acceptable; names, contact values, identifiers, raw JSON, and secrets are not.
+- [x] Task 4: Preserve inactive, erasure, and degraded-state semantics (AC: 4, 5)
+  - [x] Querying a deactivated party must return `PartyDetail` with `IsActive == false`; do not hide inactive parties through detail-by-id unless a later product decision says so.
+  - [x] Use the same tenant authorization path for active and inactive detail reads; inactive status must not grant a support/admin override or a different visibility rule in this story.
+  - [x] Preserve existing erasure behavior: `PartyDetailProjectionActor.EraseAsync(...)` applies erased/redacted projection state or removes missing state and clears the sequence checkpoint. Do not invent a new GDPR read policy in this story.
+  - [x] Treat erased/suppressed projection state as higher precedence than inactive inspectability. If erased-party detail response behavior is ambiguous, record it as deferred rather than silently returning personal data or designing a new erased-party DTO.
+  - [x] For rebuilding/degraded actors, preserve current cached-read behavior where safe and map unsafe/unavailable state to bounded not-found or unavailable responses.
+  - [x] Ensure log messages and exception details for degraded/corrupt actor state remain metadata-only: tenant id, party id, projection name, event type, sequence, and bounded reason are acceptable; names, contact values, identifiers, raw JSON, and secrets are not.
 
-- [ ] Task 5: Keep query/client/AdminPortal contracts aligned without broad surface expansion (AC: 1, 5, 6)
-  - [ ] Preserve `IPartiesQueryClient.GetPartyAsync(string partyId, CancellationToken ct)` as the typed client shape unless a separate accepted contract update requires an additive overload.
-  - [ ] Keep `PartiesAdminPortalApiClient.GetPartyAsync(...)` on the accepted FrontComposer query service path. AdminPortal may use `GetParty`/`PartyDetail` configuration, but it must not call retired Parties REST endpoints or projection actor internals.
-  - [ ] If public freshness/degradation metadata is already exposed by EventStore query results, map it without leaking personal data. If no accepted public shape exists, return the existing bounded error/status and defer the richer response contract.
-  - [ ] Do not add list/search/index behavior, MCP `get_party`, OpenAPI generation, admin UI rendering, or picker behavior in this story. Those are covered by other Epic 2, Epic 3, Epic 4, and Epic 7/8 stories.
+- [x] Task 5: Keep query/client/AdminPortal contracts aligned without broad surface expansion (AC: 1, 5, 6)
+  - [x] Preserve `IPartiesQueryClient.GetPartyAsync(string partyId, CancellationToken ct)` as the typed client shape unless a separate accepted contract update requires an additive overload.
+  - [x] Keep `PartiesAdminPortalApiClient.GetPartyAsync(...)` on the accepted FrontComposer query service path. AdminPortal may use `GetParty`/`PartyDetail` configuration, but it must not call retired Parties REST endpoints or projection actor internals.
+  - [x] If public freshness/degradation metadata is already exposed by EventStore query results, map it without leaking personal data. If no accepted public shape exists, return the existing bounded error/status and defer the richer response contract.
+  - [x] Do not add list/search/index behavior, MCP `get_party`, OpenAPI generation, admin UI rendering, or picker behavior in this story. Those are covered by other Epic 2, Epic 3, Epic 4, and Epic 7/8 stories.
 
-- [ ] Task 6: Strengthen focused tests (AC: 1, 2, 3, 4, 5, 6)
-  - [ ] Extend `tests/Hexalith.Parties.Client.Tests/HttpPartiesQueryClientTests.cs` for any changed `GetPartyAsync` query payload, not-found/unavailable mapping, malformed query payload, and cancellation behavior.
-  - [ ] Extend `tests/Hexalith.Parties.Tests/Gateway/EventStoreGatewayRoutingTests.cs` for party detail query routing, missing tenant, unauthorized tenant/domain, query router not-found, query router forbidden, and no query routing before auth failure.
-  - [ ] Add or extend tests around `PartyDetailProjectionActorExtensions.ReadDetailAsync(...)` for JSON string success, empty JSON fallback, malformed JSON fallback, serialized bytes fallback, typed actor fallback, and all-null not-found behavior.
-  - [ ] Extend `tests/Hexalith.Parties.Tests/Projections/PartyDetailProjectionActorCorruptionTests.cs` or adjacent actor tests for rebuilding/degraded reads, cached-state behavior, malformed actor id, state read failure fallback, malformed JSON, empty/corrupt bytes, typed actor failure/null response, and metadata-only logging.
-  - [ ] Add a deactivated-party detail query test using `PartyDetail.IsActive == false`.
-  - [ ] Add erased/suppressed-party tests proving no historical personal data, internal erasure reason detail, raw projection payload, or unsafe diagnostic leaves the boundary.
-  - [ ] Add privacy-safety assertions for response/error/log text touched by this story. Assert absence of synthetic raw names, contact values, identifiers, serialized detail JSON, query payloads, bearer/access tokens, tenant secrets, actor storage keys, stream names, stack traces, and infrastructure connection strings.
-  - [ ] Add cancellation coverage for both client cancellation and cancellation during projection actor read, with assertions that no aggregate replay, index/search fallback, or retired REST lookup starts afterward.
-  - [ ] Add tests or fitness assertions that fail if `GET /api/v1/parties/{id}`, REST/OpenAPI/MCP surfaces, aggregate replay fallback, index/search fallback, or Parties-side tenant/RBAC validators are introduced for this story.
-  - [ ] If project references, actor boundaries, REST/MCP exposure, or gateway authorization ownership are touched, run the architectural fitness tests.
+- [x] Task 6: Strengthen focused tests (AC: 1, 2, 3, 4, 5, 6)
+  - [x] Extend `tests/Hexalith.Parties.Client.Tests/HttpPartiesQueryClientTests.cs` for any changed `GetPartyAsync` query payload, not-found/unavailable mapping, malformed query payload, and cancellation behavior.
+  - [x] Extend `tests/Hexalith.Parties.Tests/Gateway/EventStoreGatewayRoutingTests.cs` for party detail query routing, missing tenant, unauthorized tenant/domain, query router not-found, query router forbidden, and no query routing before auth failure.
+  - [x] Add or extend tests around `PartyDetailProjectionActorExtensions.ReadDetailAsync(...)` for JSON string success, empty JSON fallback, malformed JSON fallback, serialized bytes fallback, typed actor fallback, and all-null not-found behavior.
+  - [x] Extend `tests/Hexalith.Parties.Tests/Projections/PartyDetailProjectionActorCorruptionTests.cs` or adjacent actor tests for rebuilding/degraded reads, cached-state behavior, malformed actor id, state read failure fallback, malformed JSON, empty/corrupt bytes, typed actor failure/null response, and metadata-only logging.
+  - [x] Add a deactivated-party detail query test using `PartyDetail.IsActive == false`.
+  - [x] Add erased/suppressed-party tests proving no historical personal data, internal erasure reason detail, raw projection payload, or unsafe diagnostic leaves the boundary.
+  - [x] Add privacy-safety assertions for response/error/log text touched by this story. Assert absence of synthetic raw names, contact values, identifiers, serialized detail JSON, query payloads, bearer/access tokens, tenant secrets, actor storage keys, stream names, stack traces, and infrastructure connection strings.
+  - [x] Add cancellation coverage for both client cancellation and cancellation during projection actor read, with assertions that no aggregate replay, index/search fallback, or retired REST lookup starts afterward.
+  - [x] Add tests or fitness assertions that fail if `GET /api/v1/parties/{id}`, REST/OpenAPI/MCP surfaces, aggregate replay fallback, index/search fallback, or Parties-side tenant/RBAC validators are introduced for this story.
+  - [x] If project references, actor boundaries, REST/MCP exposure, or gateway authorization ownership are touched, run the architectural fitness tests.
 
-- [ ] Task 7: Run focused validation (AC: 1, 2, 3, 4, 5, 6)
-  - [ ] Run `dotnet test tests/Hexalith.Parties.Client.Tests/Hexalith.Parties.Client.Tests.csproj --configuration Release --filter FullyQualifiedName~HttpPartiesQueryClientTests`.
-  - [ ] Run `dotnet test tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj --configuration Release --filter FullyQualifiedName~EventStoreGatewayRoutingTests`.
-  - [ ] Run `dotnet test tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj --configuration Release --filter FullyQualifiedName~PartyDetailProjectionActorCorruptionTests`.
-  - [ ] Run `dotnet test tests/Hexalith.Parties.Client.Tests/Hexalith.Parties.Client.Tests.csproj --configuration Release --filter FullyQualifiedName~AdminPortalQueryContractTests` if AdminPortal detail-query contract mapping is touched.
-  - [ ] Run `dotnet test tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj --configuration Release --filter FullyQualifiedName~ArchitecturalFitnessTests` if boundaries or project references change.
-  - [ ] Run `dotnet build Hexalith.Parties.slnx --configuration Release` if public contracts, project references, gateway routing, or package configuration change.
+- [x] Task 7: Run focused validation (AC: 1, 2, 3, 4, 5, 6)
+  - [x] Run `dotnet test tests/Hexalith.Parties.Client.Tests/Hexalith.Parties.Client.Tests.csproj --configuration Release --filter FullyQualifiedName~HttpPartiesQueryClientTests`.
+  - [x] Run `dotnet test tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj --configuration Release --filter FullyQualifiedName~EventStoreGatewayRoutingTests`.
+  - [x] Run `dotnet test tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj --configuration Release --filter FullyQualifiedName~PartyDetailProjectionActorCorruptionTests`.
+  - [x] Run `dotnet test tests/Hexalith.Parties.Client.Tests/Hexalith.Parties.Client.Tests.csproj --configuration Release --filter FullyQualifiedName~AdminPortalQueryContractTests` if AdminPortal detail-query contract mapping is touched.
+  - [x] Run `dotnet test tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj --configuration Release --filter FullyQualifiedName~ArchitecturalFitnessTests` if boundaries or project references change.
+  - [x] Run `dotnet build Hexalith.Parties.slnx --configuration Release` if public contracts, project references, gateway routing, or package configuration change.
 
 ## Dev Notes
 
@@ -276,14 +276,34 @@ tests/Hexalith.Parties.Tests/FitnessTests/ArchitecturalFitnessTests.cs
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+GPT-5 Codex
 
 ### Debug Log References
 
+- 2026-05-19: Added red tests for the missing Parties detail query adapter and projection read hardening; initial focused run failed at compile because `PartiesQueryRouter`/adapter behavior did not exist yet.
+- 2026-05-19: Implemented `PartyDetailProjectionQueryActor` as the EventStore-compatible adapter, registered it in the Parties actor host, and changed `HttpPartiesQueryClient.GetPartyAsync` to send additive `party-detail` / `PartyDetailProjectionQueryActor` routing hints.
+- 2026-05-19: Hardened `PartyDetailProjectionActor.GetDetailAsync`, activation, reminder, and write state-context resolution so malformed projection actor ids and projection-segment mismatches fail before state reads.
+- 2026-05-19: Validation passed: focused gateway/projection suite 47/47, `HttpPartiesQueryClientTests` 13/13, `AdminPortalQueryContractTests` 6/6, `ArchitecturalFitnessTests` 17/17, Release build 0 warnings/errors, full `dotnet test Hexalith.Parties.slnx --configuration Release` 1300 passed / 6 skipped.
+
 ### Completion Notes List
+
+- Added a narrow EventStore projection-query adapter actor for party detail lookups. It supports both `PartyDetail` and `GetParty`, reads only the tenant-scoped `PartyDetailProjectionActor`, maps missing detail to the accepted not-found boundary, and does not add REST, OpenAPI, MCP, aggregate replay, index, or search fallback.
+- Kept the typed client API shape unchanged while adding required routing metadata so EventStore can dispatch detail-by-id queries to the adapter actor.
+- Expanded focused tests for tenant-key construction, cross-tenant fail-closed behavior, inactive and erased detail responses, extension fallback order, malformed projection actor ids, gateway routing, client payload shape, and architectural guardrails.
 
 ### File List
 
+- src/Hexalith.Parties.Client/HttpPartiesQueryClient.cs
+- src/Hexalith.Parties/Extensions/PartiesServiceCollectionExtensions.cs
+- src/Hexalith.Parties/Queries/PartyDetailProjectionQueryActor.cs
+- src/Hexalith.Parties.Projections/Actors/PartyDetailProjectionActor.cs
+- tests/Hexalith.Parties.Client.Tests/HttpPartiesQueryClientTests.cs
+- tests/Hexalith.Parties.Tests/Gateway/EventStoreGatewayRoutingTests.cs
+- tests/Hexalith.Parties.Tests/Gateway/PartyDetailProjectionQueryActorTests.cs
+- tests/Hexalith.Parties.Tests/Projections/PartyDetailProjectionActorCorruptionTests.cs
+- tests/Hexalith.Parties.Tests/Projections/PartyDetailProjectionActorExtensionsTests.cs
+- _bmad-output/implementation-artifacts/2-3-query-party-details-by-id.md
+- _bmad-output/implementation-artifacts/sprint-status.yaml
 ## Party-Mode Review
 
 - Date/time: 2026-05-17T16:05:11+02:00
@@ -332,6 +352,38 @@ tests/Hexalith.Parties.Tests/FitnessTests/ArchitecturalFitnessTests.cs
 
 ## Change Log
 
+- 2026-05-19: Code review applied 5 patches (P1 typed-failure-reason replacing magic string, P2 erased-party PII assertions strengthened, P3 FakeLogger-equivalent log-safety test added, P4 routing literals reference public consts in gateway tests, P5 cancellation propagation `catch (OperationCanceledException) { throw; }` + test). 16 reviewer findings dismissed as verified false positives (segment-order inversion, overload mismatch, double base call, etc.). 5 deferred to Epic 6 GDPR / EventStore submodule / pre-existing cache lifecycle. Focused validation: PartyDetailProjectionQueryActorTests 9/9, EventStoreGatewayRoutingTests 18/18, PartyDetail{Corruption,Extensions}Tests 22/22, HttpPartiesQueryClientTests 13/13, ArchitecturalFitnessTests 17/17; full Release build 0 warnings/0 errors. Story moved to done.
+- 2026-05-19: Implemented tenant-safe PartyDetail query adapter actor, additive typed-client routing metadata, actor-id read hardening, and focused/detail-query validation coverage; story moved to review.
 - 2026-05-17: Advanced elicitation applied low-risk clarifications for auth-before-actor-read ordering, tenant key construction, query-name compatibility, corrupt/degraded payload handling, terminal cancellation, and coarse adopter-facing outcomes.
 - 2026-05-17: Party-mode review applied low-risk clarifications for response outcome mapping, tenant actor-read proof, no-fallback assertions, inactive/erased precedence, privacy-safe diagnostics, and cancellation/degraded-state tests.
 - 2026-05-17: Story created by BMAD pre-dev hardening automation with existing query client, EventStore query gateway, detail projection actor, tenant fail-closed, degraded-state, privacy, and focused validation guidance.
+
+## Review Findings
+
+- 2026-05-19 code review (Blind Hunter + Edge Case Hunter + Acceptance Auditor, parallel reviewers): 26 raw findings, 2 decision-needed (resolved), 5 patch, 5 defer, 16 dismissed (verified false positives or out-of-scope).
+- 2026-05-19 decisions: D1 (cancellation coverage) → resolved as patch P5 (framework-level Dapr CT test). D2 (erased-party response shape) → deferred to Epic 6 GDPR ownership; current `Success=true` with `IsErased=true`+`ErasedAt` payload preserved (no PII present).
+
+### Patch
+
+- [x] [Review][Patch] **Replace magic-string `"No projection state available"` with `QueryAdapterFailureReason.ActorNotFoundInfrastructure`** — adapter currently returns stringly-typed sentinel for both "actor address not found" and "detail is null"; contract defines a typed reason `"actor-not-found-infrastructure"` for exactly this case. Update both call sites and the corresponding test assertion. [src/Hexalith.Parties/Queries/PartyDetailProjectionQueryActor.cs:27, 56, 64; tests/Hexalith.Parties.Tests/Gateway/PartyDetailProjectionQueryActorTests.cs:101, 510]
+- [x] [Review][Patch] **Strengthen erased-party PII assertions beyond two synthetic-name substrings** — current test only checks absence of `"Ada"` and `"ada@example.test"`. Enumerate every PII-bearing payload field (displayName, sortName, firstName, lastName, contactChannels[*].Value, identifiers[*].Value, nameHistory entries) and assert each is empty/absent, so future PII surfaces are guarded automatically. [tests/Hexalith.Parties.Tests/Gateway/PartyDetailProjectionQueryActorTests.cs:158-160]
+- [x] [Review][Patch] **Add FakeLogger-based log-safety test for the new adapter actor** — Task 6 says "Add privacy-safety assertions for response/error/log text touched by this story." New `Log.PartyDetailQueryRouting/ProjectionNotFound/ProjectionReadFailed` messages are not exercised; assert log records contain only metadata (correlationId, tenantId, partyId via actorId, queryType, projectionName) and never display names, contact values, identifiers, raw payloads, or stack-trace excerpts. [src/Hexalith.Parties/Queries/PartyDetailProjectionQueryActor.cs:117-152]
+- [x] [Review][Patch] **Extract duplicated routing literals to shared constants** — `"party-detail"`, `"PartyDetailProjectionQueryActor"`, `"GetParty"`, `"PartyDetail"` appear independently across `HttpPartiesQueryClient`, `PartyDetailProjectionQueryActor`, `EventStoreGatewayRoutingTests`, `PartyDetailProjectionQueryActorTests`. The actor already exposes `ActorTypeName` and `ProjectionType` consts — make the client and gateway tests reference them so any future rename is single-touchpoint. [src/Hexalith.Parties.Client/HttpPartiesQueryClient.cs:19-20, src/Hexalith.Parties/Queries/PartyDetailProjectionQueryActor.cs:22-26, tests/Hexalith.Parties.Tests/Gateway/EventStoreGatewayRoutingTests.cs:295-313]
+- [x] [Review][Patch] **(From D1 decision) Add framework-level Dapr cancellation test for adapter** — Required Test Matrix row "Cancellation during actor read" currently uncovered. `IProjectionActor.QueryAsync(QueryEnvelope)` is structurally CT-less because Dapr propagates CT via `InvokeMethodAsync` at the framework level. Add a test that pre-cancels the CT before invocation and asserts that the adapter does not initiate a projection actor read (or that the `OperationCanceledException` short-circuits before `actorProxyFactory.CreateActorProxy` is called). [tests/Hexalith.Parties.Tests/Gateway/PartyDetailProjectionQueryActorTests.cs]
+
+### Deferred
+
+- [x] [Review][Defer] Static `s_lastKnownDetails` rebuild cache has no eviction and is not coordinated with `EraseAsync` for entries from prior actor incarnations — pre-existing in `PartyDetailProjectionActor`, only key derivation was refactored in this story. [src/Hexalith.Parties.Projections/Actors/PartyDetailProjectionActor.cs:26, 70, 256, 273, 315, 351]
+- [x] [Review][Defer] `IsProjectionActorNotFound` substring-matches English Dapr exception messages — a verbatim copy of `Hexalith.EventStore.Server.Queries.QueryRouter.IsProjectionActorNotFound`. The correct fix belongs in the EventStore submodule, per project-context rule "Before changing EventStore-owned behavior, check whether the correct fix belongs in the EventStore submodule rather than Parties". [src/Hexalith.Parties/Queries/PartyDetailProjectionQueryActor.cs:101-115, Hexalith.EventStore/src/Hexalith.EventStore.Server/Queries/QueryRouter.cs:110-123]
+- [x] [Review][Defer] `Split(':', TrimEntries|RemoveEmptyEntries)` silently normalizes whitespace and double-colons in actor-id parsing — matches the pre-existing pattern in `PartyDetailProjectionActor.TryResolveActorStateContext`. Tightening to raw-segment validation should be done consistently across both actors in a follow-up. [src/Hexalith.Parties/Queries/PartyDetailProjectionQueryActor.cs:81, src/Hexalith.Parties.Projections/Actors/PartyDetailProjectionActor.cs:403]
+- [x] [Review][Defer] Erase + rebuild race may resurrect erased payload via `s_lastKnownDetails` if a rebuild reminder fires after `EraseAsync` repopulates the dictionary entry — pre-existing static-cache lifecycle issue; Epic 6 GDPR territory. [src/Hexalith.Parties.Projections/Actors/PartyDetailProjectionActor.cs:217-244 vs 293-334]
+- [x] [Review][Defer] **(From D2 decision) Erased-party response shape — matrix says "bounded unavailable/not-found-style behavior", current behavior returns `Success=true` with `IsErased=true`+`ErasedAt`** — deferred, GDPR ownership Epic 6. Response shape contract for erased parties belongs to future GDPR stories which will define the public bounded-unavailable vs success-redacted policy; the Parties adapter preserves the current erasure projection behavior without inventing a new public policy. Test at PartyDetailProjectionQueryActorTests.cs:131-162 captures the deferred shape; payload contains no PII (DisplayName/SortName empty, PersonDetails/ContactChannels/Identifiers cleared). [src/Hexalith.Parties/Queries/PartyDetailProjectionQueryActor.cs:47-59, tests/Hexalith.Parties.Tests/Gateway/PartyDetailProjectionQueryActorTests.cs:131-162]
+
+### Dismissed (false positives — recorded for audit)
+
+- "Inverted actor-id segment ordering between `TryResolveActorRoute` and constructed `detailActorId`" (flagged Critical by all three reviewers). Verified against `Hexalith.EventStore.Server.Queries.QueryActorIdHelper.DeriveActorId`: the router activates the adapter under `{routingQueryType}:{tenant}:{entityId}` = `"party-detail:{tenant}:{partyId}"`, which is exactly what `TryResolveActorRoute` expects; the downstream state actor uses an intentionally different convention `{tenant}:party-detail:{partyId}` that the adapter constructs correctly at line 44. Two formats are deliberate, not a bug. Production routing works.
+- "`CreateActorProxy<T>(ActorId, string)` 2-arg call doesn't match the 3-arg stub in tests" (Edge Hunter High). The 3-arg overload has `ActorProxyOptions? options = null` default; the 2-arg call resolves to the same method and `Arg.Any<ActorProxyOptions?>()` matches the implicit `null`.
+- "Tests stub `GetDetailAsync` but production calls `ReadDetailAsync` extension" (Edge Hunter High). NSubstitute default-null for `GetDetailJsonAsync`/`GetSerializedDetailAsync` triggers the third-tier fallback in `ReadDetailAsync` correctly; test passes for the right reason. Brittleness covered by dedicated `PartyDetailProjectionActorExtensionsTests`.
+- "`OnActivateAsync` calls `base.OnActivateAsync()` twice on happy path" (Blind Hunter Medium). Verified: malformed-id path early-returns after one call; happy path falls through to a single call at line 367. No double call.
+- "`!= 3` rejects ids previously accepted with `< 3`" — intentional hardening; the new `[InlineData("test-tenant:party-detail:party-001:extra")]` theory explicitly asserts this rejection.
+- Plus ~12 lower-severity dismissals (speculative drift, defense-in-depth gaps, pre-existing patterns not touched by the diff, untracked-file noise, structural Dapr limitations misread as actor bugs).

@@ -1,0 +1,245 @@
+diff --git a/src/Hexalith.Parties.Client/HttpPartiesQueryClient.cs b/src/Hexalith.Parties.Client/HttpPartiesQueryClient.cs
+index ec3adcf..f5da42f 100644
+--- a/src/Hexalith.Parties.Client/HttpPartiesQueryClient.cs
++++ b/src/Hexalith.Parties.Client/HttpPartiesQueryClient.cs
+@@ -16,6 +16,8 @@ public sealed class HttpPartiesQueryClient : IPartiesQueryClient
+     private const string PartyDomain = "party";
+     private const string QueryGatewayPath = "api/v1/queries";
+     private const string ListAggregateId = "parties";
++    private const string PartyDetailProjectionActorType = "PartyDetailProjectionQueryActor";
++    private const string PartyDetailProjectionType = "party-detail";
+     private const string PartyDetailQueryType = "PartyDetail";
+     private const string PartyIndexQueryType = "PartyIndex";
+     private const string PartySearchQueryType = "PartySearch";
+@@ -44,10 +46,10 @@ public sealed class HttpPartiesQueryClient : IPartiesQueryClient
+             Domain: PartyDomain,
+             AggregateId: partyId,
+             QueryType: PartyDetailQueryType,
+-            ProjectionType: null,
++            ProjectionType: PartyDetailProjectionType,
+             Payload: null,
+             EntityId: partyId,
+-            ProjectionActorType: null);
++            ProjectionActorType: PartyDetailProjectionActorType);
+ 
+         return PostQueryAsync<PartyDetail>(request, ct);
+     }
+diff --git a/src/Hexalith.Parties.Projections/Actors/PartyDetailProjectionActor.cs b/src/Hexalith.Parties.Projections/Actors/PartyDetailProjectionActor.cs
+index 185ae9f..bab01d6 100644
+--- a/src/Hexalith.Parties.Projections/Actors/PartyDetailProjectionActor.cs
++++ b/src/Hexalith.Parties.Projections/Actors/PartyDetailProjectionActor.cs
+@@ -246,23 +246,16 @@ public sealed partial class PartyDetailProjectionActor : Actor, IPartyDetailProj
+     public async Task<PartyDetail?> GetDetailAsync()
+     {
+         string actorId = Host.Id.GetId();
+-        string[] segments = actorId.Split(':', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+-        if (segments.Length < 3)
++        if (!TryResolveActorStateContext(actorId, out string tenant, out string actorPartyId, out string stateKey))
+         {
+-            Log.MalformedActorId(_logger, actorId, ProjectionName);
+             return null;
+         }
+ 
+         if (_isRebuilding)
+         {
+-            string rebuildStateKey = $"{segments[0]}:{ProjectionName}:{segments[^1]}";
+-            return _cachedDetail ?? s_lastKnownDetails.GetValueOrDefault(rebuildStateKey);
++            return _cachedDetail ?? s_lastKnownDetails.GetValueOrDefault(stateKey);
+         }
+ 
+-        string tenant = segments[0];
+-        string actorPartyId = segments[^1];
+-        string stateKey = $"{tenant}:{ProjectionName}:{actorPartyId}";
+-
+         try
+         {
+             ConditionalValue<PartyDetail> result =
+@@ -305,22 +298,16 @@ public sealed partial class PartyDetailProjectionActor : Actor, IPartyDetailProj
+         }
+ 
+         string actorId = Host.Id.GetId();
+-        string[] segments = actorId.Split(':', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+-        if (segments.Length < 3)
++        if (!TryResolveActorStateContext(actorId, out string tenant, out string actorPartyId, out string stateKey))
+         {
+-            Log.MalformedActorId(_logger, actorId, ProjectionName);
+             return;
+         }
+ 
+-        string tenant = segments[0];
+-        string actorPartyId = segments[^1];
+-
+         try
+         {
+             await _rebuildService.RebuildDetailProjectionAsync(tenant, actorPartyId, default).ConfigureAwait(false);
+ 
+             // Reload the rebuilt state
+-            string stateKey = $"{tenant}:{ProjectionName}:{actorPartyId}";
+             ConditionalValue<PartyDetail> result = await StateManager.TryGetStateAsync<PartyDetail>(stateKey, default).ConfigureAwait(false);
+             if (result.HasValue)
+             {
+@@ -349,18 +336,12 @@ public sealed partial class PartyDetailProjectionActor : Actor, IPartyDetailProj
+     protected override async Task OnActivateAsync()
+     {
+         string actorId = Host.Id.GetId();
+-        string[] segments = actorId.Split(':', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+-        if (segments.Length < 3)
++        if (!TryResolveActorStateContext(actorId, out string tenant, out _, out string stateKey))
+         {
+-            Log.MalformedActorId(_logger, actorId, ProjectionName);
+             await base.OnActivateAsync().ConfigureAwait(false);
+             return;
+         }
+ 
+-        string tenant = segments[0];
+-        string actorPartyId = segments[^1];
+-        string stateKey = $"{tenant}:{ProjectionName}:{actorPartyId}";
+-
+         try
+         {
+             ConditionalValue<PartyDetail> result = await StateManager.TryGetStateAsync<PartyDetail>(stateKey, default).ConfigureAwait(false);
+@@ -400,27 +381,39 @@ public sealed partial class PartyDetailProjectionActor : Actor, IPartyDetailProj
+     private (string PartyId, string StateKey) ResolveStateContext(string incomingPartyId)
+     {
+         string actorId = Host.Id.GetId();
+-        string[] segments = actorId.Split(':', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+-        if (segments.Length < 3)
++        if (!TryResolveActorStateContext(actorId, out _, out string actorPartyId, out string stateKey))
+         {
+             throw new InvalidOperationException($"Invalid actor id format '{actorId}'. Expected '{{tenant}}:{ProjectionName}:{{partyId}}'.");
+         }
+ 
+-        string tenant = segments[0];
+-        string projection = segments[1];
+-        string actorPartyId = segments[^1];
+-
+-        if (!string.Equals(projection, ProjectionName, StringComparison.Ordinal))
++        if (!string.Equals(actorPartyId, incomingPartyId, StringComparison.Ordinal))
+         {
+-            throw new InvalidOperationException($"Invalid actor projection segment '{projection}'. Expected '{ProjectionName}'.");
++            throw new InvalidOperationException($"Party id mismatch. Actor id party '{actorPartyId}' does not match incoming '{incomingPartyId}'.");
+         }
+ 
+-        if (!string.Equals(actorPartyId, incomingPartyId, StringComparison.Ordinal))
++        return (actorPartyId, stateKey);
++    }
++
++    private bool TryResolveActorStateContext(
++        string actorId,
++        out string tenant,
++        out string actorPartyId,
++        out string stateKey)
++    {
++        string[] segments = actorId.Split(':', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
++        if (segments.Length != 3 || !string.Equals(segments[1], ProjectionName, StringComparison.Ordinal))
+         {
+-            throw new InvalidOperationException($"Party id mismatch. Actor id party '{actorPartyId}' does not match incoming '{incomingPartyId}'.");
++            Log.MalformedActorId(_logger, actorId, ProjectionName);
++            tenant = string.Empty;
++            actorPartyId = string.Empty;
++            stateKey = string.Empty;
++            return false;
+         }
+ 
+-        return (actorPartyId, $"{tenant}:{ProjectionName}:{actorPartyId}");
++        tenant = segments[0];
++        actorPartyId = segments[2];
++        stateKey = $"{tenant}:{ProjectionName}:{actorPartyId}";
++        return true;
+     }
+ 
+     private static partial class Log
+diff --git a/src/Hexalith.Parties/Extensions/PartiesServiceCollectionExtensions.cs b/src/Hexalith.Parties/Extensions/PartiesServiceCollectionExtensions.cs
+index 28b8e84..85e63b5 100644
+--- a/src/Hexalith.Parties/Extensions/PartiesServiceCollectionExtensions.cs
++++ b/src/Hexalith.Parties/Extensions/PartiesServiceCollectionExtensions.cs
+@@ -19,6 +19,7 @@ using Hexalith.Parties.Configuration;
+ using Hexalith.Parties.Domain;
+ using Hexalith.Parties.ErrorHandling;
+ using Hexalith.Parties.HealthChecks;
++using Hexalith.Parties.Queries;
+ using Hexalith.Parties.Validation;
+ using Hexalith.Parties.Search;
+ using Hexalith.Parties.Contracts.Search;
+@@ -230,6 +231,7 @@ public static class PartiesServiceCollectionExtensions {
+             .ValidateOnStart();
+ 
+         services.AddActors(options => {
++            options.Actors.RegisterActor<PartyDetailProjectionQueryActor>();
+             options.Actors.RegisterActor<PartyDetailProjectionActor>();
+             options.Actors.RegisterActor<PartyIndexProjectionActor>();
+             options.Actors.RegisterActor<PartyKeyRetryActor>();
+diff --git a/tests/Hexalith.Parties.Client.Tests/HttpPartiesQueryClientTests.cs b/tests/Hexalith.Parties.Client.Tests/HttpPartiesQueryClientTests.cs
+index 20bc3ef..da6f5b3 100644
+--- a/tests/Hexalith.Parties.Client.Tests/HttpPartiesQueryClientTests.cs
++++ b/tests/Hexalith.Parties.Client.Tests/HttpPartiesQueryClientTests.cs
+@@ -53,8 +53,8 @@ public sealed class HttpPartiesQueryClientTests
+         root.GetProperty("aggregateId").GetString().ShouldBe("p-1");
+         root.GetProperty("entityId").GetString().ShouldBe("p-1");
+         root.GetProperty("queryType").GetString().ShouldBe("PartyDetail");
+-        root.TryGetProperty("projectionType", out _).ShouldBeFalse();
+-        root.TryGetProperty("projectionActorType", out _).ShouldBeFalse();
++        root.GetProperty("projectionType").GetString().ShouldBe("party-detail");
++        root.GetProperty("projectionActorType").GetString().ShouldBe("PartyDetailProjectionQueryActor");
+     }
+ 
+     [Fact]
+diff --git a/tests/Hexalith.Parties.Tests/Gateway/EventStoreGatewayRoutingTests.cs b/tests/Hexalith.Parties.Tests/Gateway/EventStoreGatewayRoutingTests.cs
+index 7bd131f..6cfcd98 100644
+--- a/tests/Hexalith.Parties.Tests/Gateway/EventStoreGatewayRoutingTests.cs
++++ b/tests/Hexalith.Parties.Tests/Gateway/EventStoreGatewayRoutingTests.cs
+@@ -278,7 +278,7 @@ public sealed class EventStoreGatewayRoutingTests
+     }
+ 
+     [Fact]
+-    public async Task PostQueries_PartyDomain_UsesEventStoreQueryGatewayAndPartyProjectionDefaultsAsync()
++    public async Task PostQueries_PartyDetail_UsesEventStoreQueryGatewayAndProjectionAdapterRoutingAsync()
+     {
+         using var factory = new EventStoreGatewayTestFactory();
+         using HttpClient client = factory.CreateAuthenticatedClient();
+@@ -295,6 +295,9 @@ public sealed class EventStoreGatewayRoutingTests
+             domain = "party",
+             aggregateId = "party-12-4",
+             queryType = "PartyDetail",
++            projectionType = "party-detail",
++            entityId = "party-12-4",
++            projectionActorType = "PartyDetailProjectionQueryActor",
+         };
+ 
+         using HttpResponseMessage response = await client.PostAsJsonAsync("/api/v1/queries", request);
+@@ -307,7 +310,8 @@ public sealed class EventStoreGatewayRoutingTests
+         query.AggregateId.ShouldBe("party-12-4");
+         query.QueryType.ShouldBe("PartyDetail");
+         query.EntityId.ShouldBe("party-12-4");
+-        query.ProjectionType.ShouldBe("party");
++        query.ProjectionType.ShouldBe("party-detail");
++        query.ProjectionActorType.ShouldBe("PartyDetailProjectionQueryActor");
+     }
+ 
+     [Fact]
+diff --git a/tests/Hexalith.Parties.Tests/Projections/PartyDetailProjectionActorCorruptionTests.cs b/tests/Hexalith.Parties.Tests/Projections/PartyDetailProjectionActorCorruptionTests.cs
+index 6e512fd..1b8a1e7 100644
+--- a/tests/Hexalith.Parties.Tests/Projections/PartyDetailProjectionActorCorruptionTests.cs
++++ b/tests/Hexalith.Parties.Tests/Projections/PartyDetailProjectionActorCorruptionTests.cs
+@@ -94,6 +94,21 @@ public sealed class PartyDetailProjectionActorCorruptionTests
+         result.DisplayName.ShouldBe("Test");
+     }
+ 
++    [Theory]
++    [InlineData("test-tenant:wrong-projection:party-001")]
++    [InlineData("test-tenant:party-detail:party-001:extra")]
++    public async Task GetDetailAsync_InvalidProjectionActorId_ReturnsNullWithoutStateReadAsync(string actorId)
++    {
++        (PartyDetailProjectionActor actor, IActorStateManager stateManager) = CreateActor(actorId);
++
++        PartyDetail? result = await actor.GetDetailAsync();
++
++        result.ShouldBeNull();
++        await stateManager.DidNotReceive().TryGetStateAsync<PartyDetail>(
++            Arg.Any<string>(),
++            Arg.Any<CancellationToken>());
++    }
++
+     [Fact]
+     public async Task OnActivateAsync_JsonException_SetsRebuildingFlagAsync()
+     {

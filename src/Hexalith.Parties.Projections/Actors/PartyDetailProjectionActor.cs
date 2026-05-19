@@ -246,22 +246,15 @@ public sealed partial class PartyDetailProjectionActor : Actor, IPartyDetailProj
     public async Task<PartyDetail?> GetDetailAsync()
     {
         string actorId = Host.Id.GetId();
-        string[] segments = actorId.Split(':', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-        if (segments.Length < 3)
+        if (!TryResolveActorStateContext(actorId, out string tenant, out string actorPartyId, out string stateKey))
         {
-            Log.MalformedActorId(_logger, actorId, ProjectionName);
             return null;
         }
 
         if (_isRebuilding)
         {
-            string rebuildStateKey = $"{segments[0]}:{ProjectionName}:{segments[^1]}";
-            return _cachedDetail ?? s_lastKnownDetails.GetValueOrDefault(rebuildStateKey);
+            return _cachedDetail ?? s_lastKnownDetails.GetValueOrDefault(stateKey);
         }
-
-        string tenant = segments[0];
-        string actorPartyId = segments[^1];
-        string stateKey = $"{tenant}:{ProjectionName}:{actorPartyId}";
 
         try
         {
@@ -305,22 +298,16 @@ public sealed partial class PartyDetailProjectionActor : Actor, IPartyDetailProj
         }
 
         string actorId = Host.Id.GetId();
-        string[] segments = actorId.Split(':', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-        if (segments.Length < 3)
+        if (!TryResolveActorStateContext(actorId, out string tenant, out string actorPartyId, out string stateKey))
         {
-            Log.MalformedActorId(_logger, actorId, ProjectionName);
             return;
         }
-
-        string tenant = segments[0];
-        string actorPartyId = segments[^1];
 
         try
         {
             await _rebuildService.RebuildDetailProjectionAsync(tenant, actorPartyId, default).ConfigureAwait(false);
 
             // Reload the rebuilt state
-            string stateKey = $"{tenant}:{ProjectionName}:{actorPartyId}";
             ConditionalValue<PartyDetail> result = await StateManager.TryGetStateAsync<PartyDetail>(stateKey, default).ConfigureAwait(false);
             if (result.HasValue)
             {
@@ -349,17 +336,11 @@ public sealed partial class PartyDetailProjectionActor : Actor, IPartyDetailProj
     protected override async Task OnActivateAsync()
     {
         string actorId = Host.Id.GetId();
-        string[] segments = actorId.Split(':', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-        if (segments.Length < 3)
+        if (!TryResolveActorStateContext(actorId, out string tenant, out _, out string stateKey))
         {
-            Log.MalformedActorId(_logger, actorId, ProjectionName);
             await base.OnActivateAsync().ConfigureAwait(false);
             return;
         }
-
-        string tenant = segments[0];
-        string actorPartyId = segments[^1];
-        string stateKey = $"{tenant}:{ProjectionName}:{actorPartyId}";
 
         try
         {
@@ -400,19 +381,9 @@ public sealed partial class PartyDetailProjectionActor : Actor, IPartyDetailProj
     private (string PartyId, string StateKey) ResolveStateContext(string incomingPartyId)
     {
         string actorId = Host.Id.GetId();
-        string[] segments = actorId.Split(':', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-        if (segments.Length < 3)
+        if (!TryResolveActorStateContext(actorId, out _, out string actorPartyId, out string stateKey))
         {
             throw new InvalidOperationException($"Invalid actor id format '{actorId}'. Expected '{{tenant}}:{ProjectionName}:{{partyId}}'.");
-        }
-
-        string tenant = segments[0];
-        string projection = segments[1];
-        string actorPartyId = segments[^1];
-
-        if (!string.Equals(projection, ProjectionName, StringComparison.Ordinal))
-        {
-            throw new InvalidOperationException($"Invalid actor projection segment '{projection}'. Expected '{ProjectionName}'.");
         }
 
         if (!string.Equals(actorPartyId, incomingPartyId, StringComparison.Ordinal))
@@ -420,7 +391,29 @@ public sealed partial class PartyDetailProjectionActor : Actor, IPartyDetailProj
             throw new InvalidOperationException($"Party id mismatch. Actor id party '{actorPartyId}' does not match incoming '{incomingPartyId}'.");
         }
 
-        return (actorPartyId, $"{tenant}:{ProjectionName}:{actorPartyId}");
+        return (actorPartyId, stateKey);
+    }
+
+    private bool TryResolveActorStateContext(
+        string actorId,
+        out string tenant,
+        out string actorPartyId,
+        out string stateKey)
+    {
+        string[] segments = actorId.Split(':', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        if (segments.Length != 3 || !string.Equals(segments[1], ProjectionName, StringComparison.Ordinal))
+        {
+            Log.MalformedActorId(_logger, actorId, ProjectionName);
+            tenant = string.Empty;
+            actorPartyId = string.Empty;
+            stateKey = string.Empty;
+            return false;
+        }
+
+        tenant = segments[0];
+        actorPartyId = segments[2];
+        stateKey = $"{tenant}:{ProjectionName}:{actorPartyId}";
+        return true;
     }
 
     private static partial class Log

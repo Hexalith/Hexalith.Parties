@@ -28,6 +28,7 @@ using Hexalith.EventStore.Testing.Fakes;
 using Hexalith.Parties.Contracts.Commands;
 using Hexalith.Parties.Contracts.Events;
 using Hexalith.Parties.Contracts.ValueObjects;
+using Hexalith.Parties.Queries;
 using Hexalith.Parties.Domain;
 using Hexalith.Parties.Validation;
 
@@ -278,7 +279,7 @@ public sealed class EventStoreGatewayRoutingTests
     }
 
     [Fact]
-    public async Task PostQueries_PartyDomain_UsesEventStoreQueryGatewayAndPartyProjectionDefaultsAsync()
+    public async Task PostQueries_PartyDetail_UsesEventStoreQueryGatewayAndProjectionAdapterRoutingAsync()
     {
         using var factory = new EventStoreGatewayTestFactory();
         using HttpClient client = factory.CreateAuthenticatedClient();
@@ -292,9 +293,12 @@ public sealed class EventStoreGatewayRoutingTests
         var request = new
         {
             tenant = "tenant-a",
-            domain = "party",
+            domain = PartyDetailProjectionQueryActor.PartyDomain,
             aggregateId = "party-12-4",
-            queryType = "PartyDetail",
+            queryType = PartyDetailProjectionQueryActor.PartyDetailQueryType,
+            projectionType = PartyDetailProjectionQueryActor.ProjectionType,
+            entityId = "party-12-4",
+            projectionActorType = PartyDetailProjectionQueryActor.ActorTypeName,
         };
 
         using HttpResponseMessage response = await client.PostAsJsonAsync("/api/v1/queries", request);
@@ -303,11 +307,12 @@ public sealed class EventStoreGatewayRoutingTests
 
         SubmitQuery query = factory.QueryRouter.ReceivedQueries.Single();
         query.Tenant.ShouldBe("tenant-a");
-        query.Domain.ShouldBe("party");
+        query.Domain.ShouldBe(PartyDetailProjectionQueryActor.PartyDomain);
         query.AggregateId.ShouldBe("party-12-4");
-        query.QueryType.ShouldBe("PartyDetail");
+        query.QueryType.ShouldBe(PartyDetailProjectionQueryActor.PartyDetailQueryType);
         query.EntityId.ShouldBe("party-12-4");
-        query.ProjectionType.ShouldBe("party");
+        query.ProjectionType.ShouldBe(PartyDetailProjectionQueryActor.ProjectionType);
+        query.ProjectionActorType.ShouldBe(PartyDetailProjectionQueryActor.ActorTypeName);
     }
 
     [Fact]
