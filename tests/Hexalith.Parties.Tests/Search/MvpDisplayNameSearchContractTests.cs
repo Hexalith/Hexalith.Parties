@@ -32,9 +32,11 @@ public sealed class MvpDisplayNameSearchContractTests
         PartySearchResult exact = result.Items.ShouldHaveSingleItem();
         exact.Matches.ShouldAllBe(m => m.MatchedField == "displayName");
         exact.Matches.ShouldContain(m => m.MatchType == "exact");
-        exact.Matches.ShouldNotContain(m =>
-            m.MatchedField is "email" or "contactChannel" or "identifier" or "type"
-                or "semantic" or "graph" or "duplicate" or "partyType");
+        HashSet<string> reservedFields = new(StringComparer.Ordinal)
+        {
+            "email", "contactChannel", "identifier", "type", "semantic", "graph", "duplicate", "partyType",
+        };
+        exact.Matches.ShouldNotContain(m => reservedFields.Contains(m.MatchedField));
     }
 
     // AC4 — MVP PartySearch must not emit contact-channel match metadata even when contact
@@ -78,7 +80,7 @@ public sealed class MvpDisplayNameSearchContractTests
 
         PagedResult<PartySearchResult> result = provider.Search(entries, "Acme", null, null, 1, 20);
 
-        IReadOnlyList<PartySearchResult> ordered = result.Items.ToList();
+        List<PartySearchResult> ordered = result.Items.ToList();
         // Exact must precede prefix in ordering
         int firstPrefixIndex = ordered.FindIndex(r => r.Matches.Any(m => m.MatchType == "prefix"));
         int firstExactIndex = ordered.FindIndex(r => r.Matches.Any(m => m.MatchType == "exact"));
@@ -166,21 +168,18 @@ public sealed class MvpDisplayNameSearchContractTests
         using var cts = new CancellationTokenSource();
         cts.Cancel();
 
-        await Should.ThrowAsync<OperationCanceledException>(async () =>
-        {
-            _ = await service.SearchAsync(
-                new PartySearchRequest(
-                    TenantId: "tenant-a",
-                    Query: "Jean",
-                    Mode: PartySearchMode.Hybrid,
-                    TypeFilter: null,
-                    ActiveFilter: null,
-                    Page: 1,
-                    PageSize: 20,
-                    AuthorizedPartyIds: entries.Select(e => e.Id).ToHashSet(StringComparer.Ordinal)),
-                entries,
-                cts.Token);
-        });
+        PartySearchRequest request = new(
+            TenantId: "tenant-a",
+            Query: "Jean",
+            Mode: PartySearchMode.Hybrid,
+            TypeFilter: null,
+            ActiveFilter: null,
+            Page: 1,
+            PageSize: 20,
+            AuthorizedPartyIds: entries.Select(e => e.Id).ToHashSet(StringComparer.Ordinal));
+
+        await Should.ThrowAsync<OperationCanceledException>(
+            () => service.SearchAsync(request, entries, cts.Token));
     }
 
     // AC2/AC4 — Match metadata MatchType allowlist for the MVP path: {exact, prefix, contains}
