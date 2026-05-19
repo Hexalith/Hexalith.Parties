@@ -1,5 +1,6 @@
 # baseline-commit: 349701a5f08fd05d05d20d5e3415e305fcf68a11
 # baseline test names captured at Story 9.2 dev start (73 tests). New tests added by Story 9.2+ MUST not be deletions of these. New tests are allowed; the [Fact] enforcing this is a strict subset check.
+# Story 9.3 additions (2026-05-19): EventStoreRegistrationBindingTests (2), K8sStory93LintTests (14), K8sEndToEndDeployTests (2 [Trait("RequiresCluster", "true")]) — total 18 new fact-level tests on top of the Story 9.2 baseline. The subset semantics permit appends; renames or removals of pre-9.3 names fail the guard.
 Hexalith.Parties.DeployValidation.Tests.AppHostDaprTopologyValidationTests.AccessControlFilesUseDenyByDefaultPosture
 Hexalith.Parties.DeployValidation.Tests.AppHostDaprTopologyValidationTests.AppHostDaprComponentsContainRequiredSplitAccessControlFiles
 Hexalith.Parties.DeployValidation.Tests.AppHostDaprTopologyValidationTests.AppHostDaprComponentsDoNotContainPlainTextSecrets

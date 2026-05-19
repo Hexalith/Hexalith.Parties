@@ -1800,6 +1800,11 @@ function Get-K8sKustomizationLiterals {
 function Get-K8sDocContainerEnv {
     # Return @( @{ Name = ...; Value = ...; ValueFrom = $bool; LineNumber = ... } )
     # for every container env entry (excluding envFrom-only blocks).
+    #
+    # Story 9.3 — handle the standard Kubernetes YAML pattern where env list items are at
+    # the SAME indent as the `env:` key (the most common aspirate-emitted shape), as well as
+    # the indented-list variant. The previous parser exited the env block on the first
+    # list item at `indent == envIndent`, missing all entries.
     param([string]$DocText)
     $entries = @()
     $lines = $DocText -split "`n"
@@ -1808,16 +1813,23 @@ function Get-K8sDocContainerEnv {
     $current = $null
     for ($i = 0; $i -lt $lines.Length; $i++) {
         $line = $lines[$i]
-        if ($line -match '^(\s*)env:\s*$') {
+        # Accept optional trailing comment on the `env:` line itself (e.g., `env: # foo`).
+        if ($line -match '^(\s*)env:\s*(#.*)?$') {
             $inEnv = $true
             $envIndent = $Matches[1].Length
             continue
         }
         if ($inEnv) {
+            # Skip comment-only lines without exiting the env block.
+            if ($line -match '^\s*#') { continue }
             $indentMatch = [regex]::Match($line, '^(\s*)\S')
             if (-not $indentMatch.Success) { continue }
             $indent = $indentMatch.Groups[1].Length
-            if ($indent -le $envIndent -and -not [string]::IsNullOrWhiteSpace($line)) {
+            $isListItem = ($line -match '^\s*-\s')
+            # Exit the env block when we encounter a non-list-item line at the same or
+            # smaller indent than `env:`. List items at the same indent as `env:` are the
+            # standard K8s shape and stay inside the block.
+            if ($indent -le $envIndent -and -not $isListItem -and -not [string]::IsNullOrWhiteSpace($line)) {
                 $inEnv = $false
                 if ($current) { $entries += $current; $current = $null }
                 continue
@@ -2289,7 +2301,11 @@ function Test-K8sCommittedSecret {
         $lines = $body -split "`n"
         $sdMatch = [regex]::Match($DocText, '(?m)^\s*stringData:')
         if ($sdMatch.Success) {
-            $lineOffset = ($DocText.Substring(0, $sdMatch.Index) -split "`n").Length
+            # Story 9.3 review fix: the first body line is the line AFTER `stringData:`.
+            # ($DocText.Substring(0, idx) -split "`n").Length counts lines preceding the
+            # match (≡ the `stringData:` line index in 1-based numbering); +1 lands on the
+            # first body line.
+            $lineOffset = ($DocText.Substring(0, $sdMatch.Index) -split "`n").Length + 1
         }
         else {
             $lineOffset = 1
@@ -2315,7 +2331,8 @@ function Test-K8sCommittedSecret {
         $lines = $body -split "`n"
         $dMatch = [regex]::Match($DocText, '(?m)^\s*(?<!string)data:')
         if ($dMatch.Success) {
-            $lineOffset = ($DocText.Substring(0, $dMatch.Index) -split "`n").Length
+            # Same off-by-one fix as the stringData block above.
+            $lineOffset = ($DocText.Substring(0, $dMatch.Index) -split "`n").Length + 1
         }
         else {
             $lineOffset = 1
@@ -2333,10 +2350,13 @@ function Test-K8sCommittedSecret {
                     $decoded = $valEncoded
                 }
                 if (-not (Test-K8sPlaceholderValue -Value $decoded)) {
-                    $n = $valEncoded.Length
+                    # Story 9.3 review fix: report decoded byte length (operator-facing real
+                    # secret size), not the base64-encoded char count (~4/3 of the byte count).
+                    # Falls back to base64 length on decode failure.
+                    $n = if ($null -ne $decodedBytes) { $decodedBytes.Length } else { $valEncoded.Length }
                     $absLine = $lineOffset + $i
                     Add-K8sResult -Category $Category -Code 'K8sSecret-CommittedSecretValue' -Severity 'fail' -Target "$($safeRel):$absLine" `
-                        -Recommendation "Secret.data must contain only base64-encoded placeholder values; the real value is managed by an external operator. Found <redacted:$n chars at $($safeRel):$absLine>."
+                        -Recommendation "Secret.data must contain only base64-encoded placeholder values; the real value is managed by an external operator. Found <redacted:$n bytes at $($safeRel):$absLine>."
                 }
             }
         }
@@ -2512,6 +2532,292 @@ function Write-K8sConsoleSummary {
 }
 
 # ---------------------------------------------------------------------------
+# Story 9.3 lint categories (additive — Story 9.2 categories remain unchanged)
+# ---------------------------------------------------------------------------
+
+# Story 9.3 AC7 — Topology contract: every AppHost-composed service id MUST have a per-app
+# manifest folder under deploy/k8s/<app-id>/ AND the folder MUST contain a Deployment + a
+# Service whose selector matches the Deployment labels.
+$script:K8sTopologyExpectedAppFolders = @(
+    'eventstore'
+    'eventstore-admin'
+    'eventstore-admin-ui'
+    'parties'
+    'parties-mcp'
+    'tenants'
+    'memories'
+    'keycloak'
+    'redis'
+)
+# Service-type values that legitimately have no clusterIP / no selector and must NOT
+# trigger the missing-Service rule (Story 9.3 Outcome B FrontComposer carve-out is handled
+# by ABSENCE from the expected set above, not by Service-type exception).
+$script:K8sTopologyServiceTypeWhitelist = @('ExternalName')
+
+function Test-K8sTopology {
+    param([string]$K8sRoot)
+    $Category = 'K8sTopology'
+
+    # Threshold gate: the topology contract only applies to "full topology" trees. Synthetic
+    # fixtures used by other tests (Story 9.2 K8sManifestLintTests) typically ship 1-2 apps
+    # and would otherwise drown in spurious missing-app findings. Run the lint only when at
+    # least half of the expected apps are present in the tree, indicating the operator (or a
+    # full-topology test fixture) intended to validate the complete deploy/k8s topology.
+    $presentCount = 0
+    foreach ($appId in $script:K8sTopologyExpectedAppFolders) {
+        if (Test-Path -LiteralPath (Join-Path $K8sRoot $appId) -PathType Container) {
+            $presentCount++
+        }
+    }
+    $threshold = [int][Math]::Ceiling($script:K8sTopologyExpectedAppFolders.Count / 2.0)
+    if ($presentCount -lt $threshold) {
+        # Story 9.3 review fix: emit a warn-severity informational finding instead of a
+        # completely silent skip. A regression that wipes most of the topology would
+        # otherwise be undetectable by the lint. Operators / CI logs see the gate trip.
+        $expectedCount = $script:K8sTopologyExpectedAppFolders.Count
+        $safeRoot = Format-SafePath $K8sRoot
+        Add-K8sResult -Category $Category -Code 'K8sTopology-ThresholdGateTripped' -Severity 'warn' -Target $safeRoot `
+            -Recommendation "Topology lint skipped: only $presentCount of $expectedCount expected app folders present (threshold $threshold). Synthetic fixtures hit this path legitimately; on the full deploy tree this signals topology collapse — investigate before merging."
+        return
+    }
+
+    foreach ($appId in $script:K8sTopologyExpectedAppFolders) {
+        $appDir = Join-Path $K8sRoot $appId
+        $relApp = Get-K8sRelativePath -AbsolutePath $appDir -RootPath $K8sRoot
+        $safeRel = Format-SafePath $relApp
+
+        if (-not (Test-Path -LiteralPath $appDir -PathType Container)) {
+            Add-K8sResult -Category $Category -Code 'K8sTopology-MissingService' -Severity 'fail' -Target $safeRel `
+                -Recommendation "Expected per-app folder is missing. Story 9.3 / FR31a requires deploy/k8s/$appId/ to be emitted (aspirate) or hand-authored (carve-out). See deploy/k8s/regen.ps1 `$ExpectedAppFolders + this validator's `$K8sTopologyExpectedAppFolders constant — keep both in lockstep."
+            continue
+        }
+
+        # Read all YAML documents in the app folder (deployment.yaml + service.yaml + any
+        # kustomization.yaml siblings). Collect kinds + their selectors / labels.
+        $deploymentLabels = @{}
+        $serviceSelectors = @{}
+        $serviceTypes = @{}
+        $hasService = $false
+
+        Get-ChildItem -Path $appDir -Recurse -Include '*.yaml', '*.yml' -File | ForEach-Object {
+            $docs = Read-K8sYamlDocuments -Path $_.FullName
+            foreach ($doc in $docs) {
+                $kind = Get-K8sDocKind -DocText $doc
+                if ($kind -eq 'Deployment') {
+                    # Capture spec.selector.matchLabels.app.
+                    if ($doc -match '(?ms)^\s*selector:\s*\r?\n\s*matchLabels:\s*\r?\n(?<lbl>(?:\s+[^\r\n]+\r?\n?)+)') {
+                        $blk = $Matches['lbl']
+                        if ($blk -match '(?m)^\s+app:\s*(?<v>\S+)\s*$') {
+                            $deploymentLabels['app'] = $Matches['v']
+                        }
+                    }
+                }
+                elseif ($kind -eq 'Service') {
+                    $hasService = $true
+                    # Capture spec.type.
+                    $svcType = 'ClusterIP'
+                    if ($doc -match '(?m)^\s*type:\s*(?<t>\S+)\s*$') {
+                        $svcType = $Matches['t']
+                    }
+                    $serviceTypes['type'] = $svcType
+                    # Capture spec.selector.app.
+                    if ($doc -match '(?ms)^\s*selector:\s*\r?\n(?<sel>(?:\s+[^\r\n]+\r?\n?)+)') {
+                        $sel = $Matches['sel']
+                        if ($sel -match '(?m)^\s+app:\s*(?<v>\S+)\s*$') {
+                            $serviceSelectors['app'] = $Matches['v']
+                        }
+                    }
+                }
+            }
+        }
+
+        if (-not $hasService) {
+            Add-K8sResult -Category $Category -Code 'K8sTopology-MissingService' -Severity 'fail' -Target $safeRel `
+                -Recommendation "Per-app folder is present but contains no Service. Each app-folder must ship a Service so the in-cluster DNS name resolves (e.g., Dapr Components, peer service-invocation)."
+            continue
+        }
+
+        # If both Deployment and Service exist, the Service selector MUST match the Deployment
+        # labels. Whitelisted Service types (ExternalName / headless) are exempt — they
+        # legitimately have no selector.
+        if ($serviceTypes.ContainsKey('type') -and ($script:K8sTopologyServiceTypeWhitelist -contains $serviceTypes['type'])) {
+            continue
+        }
+        if ($deploymentLabels.ContainsKey('app') -and $serviceSelectors.ContainsKey('app') -and
+            ($deploymentLabels['app'] -ne $serviceSelectors['app'])) {
+            Add-K8sResult -Category $Category -Code 'K8sTopology-MissingService' -Severity 'fail' -Target $safeRel `
+                -Recommendation "Service selector.app=$($serviceSelectors['app']) does not match Deployment selector.matchLabels.app=$($deploymentLabels['app']) — pods will not be routed to."
+        }
+    }
+}
+
+# Story 9.3 AC7 — JWT signing-key literal scan. Any non-empty literal value for an env-var
+# key matching ^Authentication__JwtBearer__SigningKey$ in either a ConfigMap literal block,
+# a Deployment container env entry, or a Secret data/stringData entry fires this category.
+# `valueFrom.secretKeyRef` references pass (env entries with `valueFrom:` and no inline `value`).
+$script:K8sJwtSigningKeyName = 'Authentication__JwtBearer__SigningKey'
+
+function Test-K8sJwtSigningKeyLiteral {
+    param([string]$K8sRoot)
+    $Category = 'K8sSecret'
+    $keyPattern = "^$([regex]::Escape($script:K8sJwtSigningKeyName))$"
+
+    Get-ChildItem -Path $K8sRoot -Recurse -Include '*.yaml', '*.yml' -File | ForEach-Object {
+        $rel = Get-K8sRelativePath -AbsolutePath $_.FullName -RootPath $K8sRoot
+        $safeRel = Format-SafePath $rel
+        $isKustomization = ($_.Name -eq 'kustomization.yaml')
+
+        if ($isKustomization) {
+            $literals = Get-K8sKustomizationLiterals -KustomizationPath $_.FullName
+            foreach ($literal in $literals) {
+                if ($literal.Key -match $keyPattern) {
+                    if (-not [string]::IsNullOrEmpty($literal.Value)) {
+                        $n = $literal.Value.Length
+                        Add-K8sResult -Category $Category -Code 'K8sSecret-JwtSigningKeyLiteral' -Severity 'fail' -Target "$($safeRel):$($literal.LineNumber)" `
+                            -Recommendation "JWT SigningKey must be sourced via valueFrom.secretKeyRef (Secret name: hexalith-jwt-signing). Found <redacted:$n chars at $($safeRel):$($literal.LineNumber)>."
+                    }
+                }
+            }
+        }
+        else {
+            $docs = Read-K8sYamlDocuments -Path $_.FullName
+            foreach ($doc in $docs) {
+                $kind = Get-K8sDocKind -DocText $doc
+                if ($kind -eq 'Secret') {
+                    # Test stringData first, then data (base64-decoded probe).
+                    if ($doc -match "(?ms)^stringData:\s*\r?\n(?<body>(?:\s+[^\r\n]+\r?\n?)+)") {
+                        $body = $Matches['body']
+                        $sdMatch = [regex]::Match($doc, '(?m)^\s*stringData:')
+                        $offset = if ($sdMatch.Success) { ($doc.Substring(0, $sdMatch.Index) -split "`n").Length } else { 1 }
+                        $lines = $body -split "`n"
+                        for ($i = 0; $i -lt $lines.Length; $i++) {
+                            if ($lines[$i] -match '^\s+(?<k>[^:\s]+):\s*(?<v>.*)$') {
+                                $k = $Matches['k']; $v = $Matches['v'].Trim().Trim("'").Trim('"').Trim()
+                                if ($k -match $keyPattern -and -not [string]::IsNullOrEmpty($v)) {
+                                    $n = $v.Length
+                                    $absLine = $offset + $i
+                                    Add-K8sResult -Category $Category -Code 'K8sSecret-JwtSigningKeyLiteral' -Severity 'fail' -Target "$($safeRel):$absLine" `
+                                        -Recommendation "JWT SigningKey in Secret.stringData must be a placeholder (real value bootstrapped by deploy-local.ps1). Found <redacted:$n chars at $($safeRel):$absLine>."
+                                }
+                            }
+                        }
+                    }
+                    if ($doc -match "(?ms)^data:\s*\r?\n(?<body>(?:\s+[^\r\n]+\r?\n?)+)") {
+                        $body = $Matches['body']
+                        $dMatch = [regex]::Match($doc, '(?m)^\s*data:')
+                        # Story 9.3 review fix: +1 so the first body line lines up with the
+                        # first line AFTER `data:` (off-by-one was reporting the `data:` line
+                        # itself).
+                        $offset = if ($dMatch.Success) { ($doc.Substring(0, $dMatch.Index) -split "`n").Length + 1 } else { 1 }
+                        $lines = $body -split "`n"
+                        for ($i = 0; $i -lt $lines.Length; $i++) {
+                            if ($lines[$i] -match '^\s+(?<k>[^:\s]+):\s*(?<v>.*)$') {
+                                $k = $Matches['k']; $v = $Matches['v'].Trim().Trim("'").Trim('"').Trim()
+                                if ($k -match $keyPattern -and -not [string]::IsNullOrEmpty($v)) {
+                                    # Story 9.3 review fix: report decoded byte length (the
+                                    # real signing-key size operators reason about), not the
+                                    # base64-encoded char count (~4/3 inflation). Fall back to
+                                    # base64 char count if the value is not valid base64.
+                                    try {
+                                        $decodedBytes = [System.Convert]::FromBase64String($v)
+                                        $n = $decodedBytes.Length
+                                        $unit = 'bytes'
+                                    }
+                                    catch {
+                                        $n = $v.Length
+                                        $unit = 'chars'
+                                    }
+                                    $absLine = $offset + $i
+                                    Add-K8sResult -Category $Category -Code 'K8sSecret-JwtSigningKeyLiteral' -Severity 'fail' -Target "$($safeRel):$absLine" `
+                                        -Recommendation "JWT SigningKey in Secret.data (base64) must be a placeholder. Found <redacted:$n $unit at $($safeRel):$absLine>."
+                                }
+                            }
+                        }
+                    }
+                    continue
+                }
+                # Container env entries with inline `value:` (valueFrom skips).
+                $envEntries = Get-K8sDocContainerEnv -DocText $doc
+                foreach ($envEntry in $envEntries) {
+                    if ($envEntry.ValueFrom) { continue }
+                    if ($envEntry.Name -match $keyPattern -and -not [string]::IsNullOrEmpty($envEntry.Value)) {
+                        $n = $envEntry.Value.Length
+                        $line = $envEntry.LineNumber
+                        Add-K8sResult -Category $Category -Code 'K8sSecret-JwtSigningKeyLiteral' -Severity 'fail' -Target "$($safeRel):$line" `
+                            -Recommendation "JWT SigningKey container env must reference valueFrom.secretKeyRef (Secret name: hexalith-jwt-signing). Found <redacted:$n chars at $($safeRel):$line>."
+                    }
+                }
+            }
+        }
+    }
+}
+
+# Story 9.3 AC7 — Dapr resiliency CRD schema-drift static lint. Detects the legacy field
+# shapes that Dapr 1.14.4+ rejects: (a) nested `timeouts.daprSidecar.general`, and (b)
+# `targets.components.<name>.{retry,timeout,circuitBreaker}` flat shape (must be split into
+# `outbound`/`inbound` for components that have both directions). Tolerates unknown
+# `apiVersion` (warn-severity informational) for graceful CRD-version-skew handling.
+function Test-K8sResiliencyCrdSchemaDrift {
+    param([string]$DaprPath)
+    if ([string]::IsNullOrEmpty($DaprPath)) { return }
+    $Category = 'K8sDapr'
+    $resiliencyPath = Join-Path $DaprPath 'resiliency.yaml'
+    if (-not (Test-Path -LiteralPath $resiliencyPath)) { return }
+
+    $relTarget = 'deploy/dapr/resiliency.yaml'
+    $safeRel = Format-SafePath $relTarget
+    $text = Get-Content -Raw -LiteralPath $resiliencyPath
+    # Story 9.3 review fix: strip comment-only lines before structural matching so a
+    # commented-out legacy shape (or unrelated documentation prose) cannot false-fire the
+    # `K8sDapr-ResiliencyCrdSchemaDrift` regexes below. Inline comments (`field: value  # …`)
+    # are left alone since they do not affect the structural anchor.
+    $textNoComments = ($text -split "`n" | Where-Object { $_ -notmatch '^\s*#' }) -join "`n"
+
+    # apiVersion graceful skew handling.
+    if ($text -match '(?m)^apiVersion:\s*(?<v>\S+)\s*$') {
+        $apiVersion = $Matches['v']
+        if ($apiVersion -notmatch '^dapr\.io/v1alpha1$') {
+            Add-K8sResult -Category $Category -Code 'K8sDapr-ResiliencyCrdSchemaDrift' -Severity 'warn' -Target $safeRel `
+                -Recommendation "Resiliency CR uses apiVersion '$apiVersion'; this validator was authored for 'dapr.io/v1alpha1' (Dapr 1.14.4). Verify the active CRD schema against the deployed Dapr control plane."
+        }
+    }
+
+    # Legacy shape 1: nested `timeouts.daprSidecar.general`.
+    # Story 9.3 review fix: tighten the anchor by requiring `daprSidecar:` to be a direct
+    # indent-child of `timeouts:` (indent-group backreference), and run against the
+    # comment-stripped text so commented legacy shapes do not false-fire.
+    if ($textNoComments -match '(?ms)^(?<i>[ \t]*)timeouts:\s*\r?\n(?:\k<i>[ \t]+[^\r\n]*\r?\n)*?\k<i>[ \t]+daprSidecar:\s*\r?\n\k<i>[ \t]+[ \t]+general:\s*\S+') {
+        Add-K8sResult -Category $Category -Code 'K8sDapr-ResiliencyCrdSchemaDrift' -Severity 'fail' -Target $safeRel `
+            -Recommendation "spec.policies.timeouts.daprSidecar must be a Duration scalar (e.g., daprSidecar: 5s), not a nested object with a 'general' key. Dapr 1.14.4 CRD rejects the nested form."
+    }
+
+    # Legacy shape 2: `targets.components.<name>.{retry,timeout,circuitBreaker}` flat shape.
+    # The active CRD requires `outbound`/`inbound` split for component targets. Detect by
+    # finding the `components:` block and walking each named component; flag any that have
+    # `retry:` / `timeout:` / `circuitBreaker:` as a direct child instead of inside an
+    # `outbound:` or `inbound:` sub-block.
+    if ($textNoComments -match '(?ms)^\s*components:\s*\r?\n(?<body>(?:\s+[^\r\n]+\r?\n?)+)') {
+        $componentsBody = $Matches['body']
+        # Split into per-component blocks. A component is `  <name>:\n` followed by an
+        # indented sub-block until the next outdent.
+        $compMatches = [regex]::Matches($componentsBody, '(?ms)^(?<indent>\s+)(?<name>[A-Za-z0-9_-]+):\s*\r?\n(?<sub>(?:\1\s+[^\r\n]+\r?\n?)+)')
+        foreach ($cm in $compMatches) {
+            $compName = $cm.Groups['name'].Value
+            $sub = $cm.Groups['sub'].Value
+            # Flat shape detection: a `retry:` / `timeout:` / `circuitBreaker:` line at the
+            # FIRST indent level inside the component block (i.e., a sibling of `outbound`/
+            # `inbound`, not a child).
+            $firstIndent = $cm.Groups['indent'].Value + '  '
+            $flatRetry = [regex]::Match($sub, "(?m)^$([regex]::Escape($firstIndent))(retry|timeout|circuitBreaker):\s*")
+            if ($flatRetry.Success) {
+                Add-K8sResult -Category $Category -Code 'K8sDapr-ResiliencyCrdSchemaDrift' -Severity 'fail' -Target $safeRel `
+                    -Recommendation "spec.targets.components.$compName has flat {retry,timeout,circuitBreaker} keys; Dapr 1.14.4 CRD requires the outbound/inbound split for components that have both directions."
+            }
+        }
+    }
+}
+
+# ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
 
@@ -2579,6 +2885,12 @@ if ($resolvedK8sPath) {
         Test-K8sCloudCapabilities -K8sRoot $resolvedK8sPath -Allow:$AllowCloudCapabilities
         if ($resolvedPath) {
             Test-K8sDaprComponentParity -DaprPath $resolvedPath -K8sRoot $resolvedK8sPath
+        }
+        # Story 9.3 — additive lint categories.
+        Test-K8sTopology -K8sRoot $resolvedK8sPath
+        Test-K8sJwtSigningKeyLiteral -K8sRoot $resolvedK8sPath
+        if ($resolvedPath) {
+            Test-K8sResiliencyCrdSchemaDrift -DaprPath $resolvedPath
         }
     }
     catch {

@@ -43,6 +43,12 @@ Docker Desktop must be running before you start the Aspire host.
 ```bash
 git clone https://github.com/Hexalith/Hexalith.Parties.git
 cd Hexalith.Parties
+
+# Story 9.3 / ADR 9.3-2 — Memories.Server is composed in-cluster by the AppHost. Its build
+# requires nested submodules in Hexalith.Memories (Hexalith.Memories pulls Hexalith.Commons
+# and Hexalith.EventStore as its own submodules). Initialize them once before the first run:
+git -C Hexalith.Memories submodule update --init Hexalith.Commons Hexalith.EventStore
+
 dotnet aspire run --project src/Hexalith.Parties.AppHost
 ```
 
@@ -86,16 +92,26 @@ The deploy script installs the DAPR control plane on the cluster if missing, app
 kubectl get pods -n hexalith-parties
 ```
 
-Expect seven pods in `Running` state by default (`eventstore`, `eventstore-admin`, `eventstore-admin-ui`, `parties`, `parties-mcp`, `tenants`, `keycloak`). Only **four** of them run a `daprd` sidecar — `eventstore`, `eventstore-admin`, `parties`, and `tenants` carry `dapr.io/enabled: "true"`. `eventstore-admin-ui`, `parties-mcp`, and `keycloak` do not. Confirm the DAPR annotations on the four DAPR-enabled Deployments:
+Expect **nine pods** in `Running` state by default (`eventstore`, `eventstore-admin`, `eventstore-admin-ui`, `parties`, `parties-mcp`, `tenants`, `memories`, `keycloak`, `redis`). Story 9.3 closed FR31a's enumerative service-graph contract by composing Memories.Server in-cluster (Dapr-enabled), shipping Keycloak as a hand-authored carve-out (`deploy/k8s/keycloak/` — admin password via `secretKeyRef` on `hexalith-keycloak-admin`), and shipping Redis as a hand-authored backing store (`deploy/k8s/redis/`, `emptyDir`-backed). FrontComposer is carved out to Story 9.4 (`9-4-frontcomposer-deployable-host`) — no FrontComposer pod ships in this story.
+
+**Five** of the nine pods run a `daprd` sidecar — `eventstore`, `eventstore-admin`, `parties`, `tenants`, and `memories` carry `dapr.io/enabled: "true"`. `eventstore-admin-ui`, `parties-mcp`, `keycloak`, and `redis` do not. Confirm the Dapr annotations on the five Dapr-enabled Deployments:
 
 ```bash
-for app in eventstore eventstore-admin parties tenants; do
+for app in eventstore eventstore-admin parties tenants memories; do
   echo "--- $app ---"
   kubectl get deployment $app -n hexalith-parties -o jsonpath='{.metadata.annotations}{"\n"}'
 done
 ```
 
 Each should include `dapr.io/enabled: "true"`, `dapr.io/app-id`, `dapr.io/app-port: "8080"`, and `dapr.io/config: accesscontrol-<app-id>` (or `accesscontrol` for `eventstore`). The `dapr.io/app-port` and per-app `dapr.io/config` annotations are injected by `regen.ps1` (aspirate 9.1.0 does not emit them); see `deploy/k8s/README.md` "Known aspirate limitations".
+
+**JWT signing key (Story 9.3 AC4):** `deploy-local.ps1` bootstraps `hexalith-jwt-signing` and `hexalith-keycloak-admin` Secrets (idempotent random material). Verify:
+
+```bash
+kubectl get secret hexalith-jwt-signing hexalith-keycloak-admin -n hexalith-parties
+```
+
+Both Secrets must exist before any consumer Deployment becomes `Ready`. The values are never echoed by the deploy script.
 
 Port-forward the EventStore gateway so Step 3 (First Command) can reach it on `http://localhost:8080`:
 

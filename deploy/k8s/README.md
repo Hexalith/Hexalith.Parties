@@ -36,9 +36,11 @@ The set of resources emitted by `regen.ps1` is exactly what `src/Hexalith.Partie
 | `parties` | `src/Hexalith.Parties` | yes (`app-id=parties`, ACL `accesscontrol.parties.yaml`) | Domain actor host. |
 | `parties-mcp` | `src/Hexalith.Parties.Mcp` | — | Separate MCP host. |
 | `tenants` | `Hexalith.Tenants/src/Hexalith.Tenants` | yes (`app-id=tenants`, ACL `accesscontrol.tenants.yaml`) | Tenant lifecycle authority. |
-| `keycloak` | `Aspire.Hosting.Keycloak` | — | Conditional on `EnableKeycloak` (default `true` for `dotnet aspire run`; `regen.ps1` defaults to `false` to keep the manifest set hermetic — pass `-EnableKeycloak true` to include it). |
+| `memories` | `Hexalith.Memories/src/Hexalith.Memories.Server` | yes (`app-id=memories`, ACL `accesscontrol.memories.yaml`) | Memories service host. Composed in-cluster as the single endpoint (story 9.3 AC2 / ADR 9.3-2 — the configurable external HTTP `MemoriesEndpoint` escape hatch was removed). |
+| `keycloak` | hand-authored `deploy/k8s/keycloak/` (story 9.3 AC4 / ADR 9.3-3, path b) | — | Aspirate cannot emit Keycloak with a stable `secretKeyRef` admin password + realm import; subfolder is preserved by `regen.ps1` `$PreservedNames`. Admin password sourced from `hexalith-keycloak-admin` Secret bootstrapped by `deploy-local.ps1`. |
+| `redis` | hand-authored `deploy/k8s/redis/` (story 9.3 AC5) | — | Backing store for state + pubsub Dapr Components (`redis:6379`). MVP scope is `emptyDir`-backed — no PVC / AUTH / TLS. |
 
-Hexalith.Memories, Hexalith.FrontComposer, and Hexalith.AI.Tools are **not** wired into `Program.cs` and therefore are not in this manifest set. When a future story wires them, regenerate this directory and the new resources will appear automatically.
+Hexalith.FrontComposer and Hexalith.AI.Tools are **not** wired into `Program.cs` and therefore are not in this manifest set. FrontComposer was inspected by Story 9.3 Task 4 — none of `Cli` (dotnet tool), `Mcp` (library), or `Shell` (Razor library) is a deployable service host today; the topology slot is carved out to Story 9.4 `9-4-frontcomposer-deployable-host`. When AI.Tools or FrontComposer ship deployable hosts, regenerate this directory and the new resources will appear automatically.
 
 ## Layout
 
@@ -50,15 +52,15 @@ deploy/k8s/
 ├── teardown-local.ps1        # Clean teardown + residual probe
 ├── kustomization.yaml        # Top-level kustomize entry (aspirate-generated)
 ├── namespace.yaml            # `hexalith-parties` namespace
-├── dapr/                     # DAPR component CRs aspirate emits from `WithReference(...)`
-│   ├── statestore.yaml
-│   └── pubsub.yaml
 ├── eventstore/               # Per-app workload (Deployment + Service + per-app kustomization + ConfigMap generator)
 ├── eventstore-admin/
 ├── eventstore-admin-ui/
 ├── parties/
 ├── parties-mcp/
-└── tenants/
+├── tenants/
+├── memories/                 # Story 9.3 AC2 — Memories.Server (Dapr-enabled, ACL accesscontrol-memories)
+├── keycloak/                 # Story 9.3 AC4 — hand-authored carve-out, preserved by regen.ps1 (path b)
+└── redis/                    # Story 9.3 AC5 — hand-authored backing store (emptyDir, redis:6379)
 ```
 
 Aspirate's emitted layout is **per-app folders at the top level**, not the `deployments/` subfolder originally envisioned by the story spec. This is aspirate's canonical kustomize layout and the deploy script applies it via `kubectl apply -k deploy/k8s/`.
@@ -139,7 +141,25 @@ These are accepted behaviors of aspirate 9.1.0 and not regressions in the Partie
 3. **DAPR annotations are patched post-aspirate.** Aspirate 9.1.0 emits `dapr.io/enabled`, `dapr.io/app-id`, `dapr.io/config: tracing` (its hardcoded default), and `dapr.io/enable-api-logging`. It does **not** emit `dapr.io/app-port` and it does **not** translate the AppHost's `DaprSidecarOptions.Config = <accesscontrol path>` into a per-app `dapr.io/config: <Configuration-name>` annotation. `regen.ps1` patches both annotations into every DAPR-enabled Deployment (`eventstore`, `eventstore-admin`, `parties`, `tenants`) so the sidecar callbacks reach port 8080 and the per-app access-control `Configuration` CRs are actually consulted. The patch is deterministic and idempotent.
 4. **No `Subscription`, `Resiliency`, or `Configuration` CRs are emitted.** Those come from `deploy/dapr/` as described above.
 5. **Hexalith custom CRDs (`topology.yaml`, `tenants-integration.yaml`) are skipped at apply time.** They use `apiVersion: hexalith.io/v1`, and the CRDs themselves are not shipped in story 9.1 (deferred to Story 9.3+). `deploy-local.ps1` and `teardown-local.ps1` skip these files; the deploy proceeds without the custom CRs on a vanilla local cluster. Apply manually after installing the CRDs out-of-band if you need them.
-6. **Keycloak K8s manifests are not generated.** `regen.ps1` defaults `EnableKeycloak=false` even though the AppHost defaults to keycloak enabled, because: (a) aspirate captures Keycloak's randomized admin bootstrap password into the ConfigMap each run, breaking AC1 byte-determinism; (b) shipping a randomly-generated credential value in the committed tree violates the deploy script's no-secret-values contract. Proper Keycloak deployment (pinned admin credential mounted from a `Secret`, not a `ConfigMap`) is deferred to a follow-up story. `dotnet aspire run` (Aspire local orchestration) is unaffected — it still spins keycloak with a per-process random password as Aspire's local-dev default.
+6. **Keycloak K8s manifests are hand-authored, not generated (Story 9.3 AC4 / ADR 9.3-3, path b).** `regen.ps1` defaults `EnableKeycloak=false` for aspirate emission because aspirate `9.1.0` cannot express (a) Keycloak admin credential via stable `secretKeyRef` (it captures a randomized value into the emitted ConfigMap each regen — breaks byte-determinism + violates the no-secret-values contract), (b) `WithRealmImport` realm-bootstrap ConfigMap, (c) consumer-side JWT `secretKeyRef` envFrom. Story 9.3 closed the gap with a hand-authored `deploy/k8s/keycloak/` set preserved by `regen.ps1`'s `$PreservedNames` and excluded from the byte-determinism contract on that subfolder only. The admin password is sourced from a `hexalith-keycloak-admin` Secret bootstrapped by `deploy-local.ps1` (random per-deploy, idempotent, never committed). JWT signing keys are sourced via `secretKeyRef` patched into consumer Deployments by a new `regen.ps1` post-aspirate step (mirroring the existing Dapr-annotation patching block). `dotnet aspire run` (Aspire local orchestration) is unaffected — it still spins keycloak with a per-process random password as Aspire's local-dev default. This carve-out is documented as architectural debt for Epic 10 tool-choice review.
+
+## JWT signing key bootstrap (Story 9.3 AC4)
+
+`deploy-local.ps1` bootstraps two operator-managed Secrets in the `hexalith-parties` namespace immediately after `dapr init -k`:
+
+- `hexalith-jwt-signing` — 32-byte cryptographically random base64 key under the `Authentication__JwtBearer__SigningKey` data key. Consumer Deployments (`eventstore`, `eventstore-admin`, `parties`, `parties-mcp`, `tenants`) source their JWT signing key from this Secret via `valueFrom.secretKeyRef`. The Secret name is fixed; rotating it requires `kubectl rollout restart` on the consumer Deployments and is operator-facing (depth of detail beyond a one-liner is post-MVP).
+- `hexalith-keycloak-admin` — 24-byte cryptographically random base64 password under the `KEYCLOAK_ADMIN_PASSWORD` data key. The Keycloak Deployment sources its admin password from this Secret via `valueFrom.secretKeyRef`.
+
+Both Secrets are applied via `kubectl apply --dry-run=client -o yaml | kubectl apply -f -` (idempotent: first invocation creates, subsequent invocations leave existing Secrets in place). Random material is generated in-process via `System.Security.Cryptography.RandomNumberGenerator`; never echoed to stdout, stderr, or any log.
+
+## Dapr resiliency CRD schema drift (Story 9.3 AC6)
+
+`deploy/dapr/resiliency.yaml` was rewritten against the Dapr 1.14.4 `resiliencies.dapr.io` CRD. Two field-shape fixes vs the legacy form:
+
+1. `spec.policies.timeouts` is a flat `name: Duration` map (legacy nested `timeouts.daprSidecar.general: 5s` is rejected as `unknown field`).
+2. `spec.targets.components.<name>.{retry,timeout,circuitBreaker}` must be split into `outbound`/`inbound` for component targets that have both directions (statestore reads/writes, pubsub publish/subscribe).
+
+`deploy-local.ps1` runs `kubectl apply --dry-run=server -f deploy/dapr/resiliency.yaml` immediately after `dapr init -k` so any future Dapr CRD upgrade that drops or renames a field surfaces here (exit 1) before any namespaced resource is applied. The matching static lint `K8sDapr-ResiliencyCrdSchemaDrift` in `validate-deployment.ps1` catches drift in the committed file without requiring a live cluster.
 
 ## K8s manifest lint
 

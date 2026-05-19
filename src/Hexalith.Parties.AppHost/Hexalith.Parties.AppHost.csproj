@@ -15,6 +15,9 @@
     <ProjectReference Include="..\Hexalith.Parties\Hexalith.Parties.csproj" />
     <ProjectReference Include="..\Hexalith.Parties.Mcp\Hexalith.Parties.Mcp.csproj" />
     <ProjectReference Include="..\..\Hexalith.Tenants\src\Hexalith.Tenants\Hexalith.Tenants.csproj" />
+    <!-- Story 9.3 AC2 / ADR 9.3-2: Memories.Server composed in-cluster as a first-class topology
+         participant (the configurable external HTTP endpoint escape hatch was removed). -->
+    <ProjectReference Include="..\..\Hexalith.Memories\src\Hexalith.Memories.Server\Hexalith.Memories.Server.csproj" />
   </ItemGroup>
 
   <ItemGroup>
