@@ -63,14 +63,25 @@ so that read models can recover without unsafe data exposure.
 
 | AC | Required evidence before review |
 | --- | --- |
-| AC1 | Health-check tests prove responsive detail and index projection actors report healthy and do not degrade normal read behavior. |
-| AC2 | Actor corruption tests prove corrupt detail/index state enters degraded/rebuilding behavior and returns no unsafe data or raw internals. |
-| AC3 | Rebuild service tests prove detail and index rebuilds replay durable EventStore events through pure projection handlers and preserve rejection/no-op behavior. |
-| AC4 | Gateway/query/search tests prove rebuilding read paths still require tenant-safe provenance before returning detail, rows, counts, or match metadata. |
-| AC5 | Rebuild completion tests prove actors reload rebuilt state, clear rebuilding state, and health/read paths return to current behavior. |
-| AC6 | Failure tests prove missing manifest/index state, write failures, unreadable payloads, and checkpoint failures fail closed with metadata-only logging. |
-| AC7 | Health/readiness tests prove bounded status output for healthy, degraded, rebuilding, unavailable, and unsafe states. |
-| AC8 | Focused validation commands cover rebuild service, detail/index actor corruption, health checks, degraded middleware alignment, search boundary, gateway routing, and architecture fitness. |
+| AC1 | `ProjectionActorsHealthCheckTests` prove responsive detail and index projection actors report healthy and do not degrade normal read behavior. |
+| AC2 | `PartyDetailProjectionActorCorruptionTests` and `PartyIndexProjectionActorCorruptionTests` prove corrupt detail/index state enters degraded/rebuilding behavior and returns no unsafe data or raw internals. |
+| AC3 | `ProjectionRebuildServiceTests` prove detail and index rebuilds replay durable EventStore events through pure projection handlers and preserve rejection/no-op behavior. |
+| AC4 | Detail/index actor corruption tests plus gateway/list/search boundary tests only where observable read behavior changes prove rebuilding read paths still require tenant-safe provenance before returning detail, rows, counts, or match metadata. |
+| AC5 | `ProjectionRebuildServiceTests`, detail/index actor corruption tests, and `ProjectionActorsHealthCheckTests` prove actors reload trusted rebuilt state, clear rebuilding indicators only after trusted completion, and health/read paths return to current behavior. |
+| AC6 | Rebuild service and actor corruption tests prove missing manifest/index state, write failures, unreadable payloads, checkpoint failures, replay exceptions, cancellation, duplicate rebuild requests, and failed reloads fail closed with metadata-only logging. |
+| AC7 | `ProjectionActorsHealthCheckTests` and readiness/health extension tests prove bounded status output for healthy, degraded, rebuilding, unavailable, corrupt/untrusted, and failed-closed states. |
+| AC8 | Focused validation commands cover rebuild service, detail/index actor corruption, health checks, degraded middleware alignment, optional search/gateway boundary tests only for observable read changes, and architecture fitness. |
+
+## Party-Mode Review Clarifications
+
+- Projection health semantics must stay bounded and Story 2.7-aligned. Implementation may use existing names or the smallest additive names needed by current code, but tests must distinguish the equivalent of healthy/current, degraded, rebuilding, corrupt or untrusted, and failed-closed states without creating a second public status vocabulary.
+- Health and readiness output is allow-listed operational metadata only: projection/component category, bounded status, safe reason code, and correlation context when already available. It must not include raw JSON, stream names, actor ids, state keys, partition keys, tenant counts, exact stream positions, cache dictionaries, exception bodies, personal data, tenant membership payloads, Dapr URLs, tokens, or infrastructure secrets.
+- Rebuilding, corrupt, failed, canceled, interrupted, or untrusted rebuild state must keep affected reads fail-closed unless the exact stale/degraded read is already permitted by Stories 2.6 and 2.7 with proven tenant, projection kind, party or partition identity, erasure filtering, and cache provenance. Partial or speculative rebuilt state must never be surfaced as current.
+- Successful rebuild completion requires replay completion through the existing pure projection handlers, trusted persisted actor state, checkpoint/manifest consistency appropriate to the projection kind, actor reload or equivalent trust refresh, bounded health transition, and safe read availability. Do not clear degraded/rebuilding indicators merely because a rebuild command was attempted.
+- Rebuild replay must use the existing `ProjectionRebuildService`, detail/index projection actors, actor reminders, `PartyDetailProjectionHandler`, and `PartyIndexProjectionHandler` unless a focused test proves one of those existing surfaces cannot be hardened. Do not introduce a parallel rebuild framework.
+- Normal query-time reads must not replay aggregate streams, query command-status records, fan out through detail actors from index rows, or call Memories/search providers to make stale projections look current.
+- Cancellation, timeout, replay exception, validation failure, duplicate rebuild request, failed state write, failed checkpoint/manifest update, or failed reload must leave the affected projection in bounded degraded/rebuilding/failed-closed behavior and must not start follow-on writes, retries, query fallbacks, or secondary lookups after cancellation is observed.
+- Gateway, list, and search boundary tests are required only when this story changes externally observable read behavior; otherwise coverage should stay focused on rebuild service, projection actors, health checks, degraded middleware, and architecture fitness guardrails.
 
 ## Response Outcome Boundaries
 
@@ -87,6 +98,9 @@ so that read models can recover without unsafe data exposure.
 | Redacted or erased-party payload appears during rebuild | Payload is skipped or handled according to existing erasure semantics without rehydrating personal data or corrupting projections. |
 | Cross-tenant probe during another tenant rebuild | Probing tenant receives only its own authorized outcome; no existence, count, cache age, rebuild status, or actor key leaks. |
 | Cancellation during rebuild | Cancellation is honored; no follow-on actor state writes, checkpoint writes, query fallback, detail fan-out, or retries start after cancellation. |
+| Duplicate rebuild request while actor is already rebuilding | Existing rebuilding/degraded state remains authoritative; no parallel replay corrupts state, clears indicators early, or exposes partially rebuilt data. |
+| Rebuild replay throws or stops midway | Affected projection remains degraded/rebuilding/failed-closed; persisted partial state is not reported as current. |
+| Rebuild completes but trust validation, reload, manifest, checkpoint, or state consistency fails | Health/readiness remains bounded degraded or failed-closed and reads do not claim current projection state. |
 | Health output includes failures | Status includes bounded component/projection category only; no personal data, raw JSON, keys, stream names, payloads, or exception bodies. |
 
 ## Tasks / Subtasks
@@ -163,6 +177,9 @@ so that read models can recover without unsafe data exposure.
 | Rejection event replay | Rejection events do not mutate successful detail or index state. |
 | Rebuild write failure | Failure is surfaced as bounded degraded/failed state; no unsafe read success. |
 | Rebuild cancellation | Cancellation stops follow-on event reads, writes, checkpoint updates, and retry work. |
+| Duplicate rebuild request | Existing rebuilding state remains authoritative; no parallel replay clears degraded/rebuilding indicators early or exposes partial state. |
+| Replay failure midway | Failed replay leaves the affected projection degraded/rebuilding/failed-closed and does not report partially rebuilt state as current. |
+| Rebuild validation or reload failure | Completed replay without trusted persisted/reloaded state remains unsafe; health/readiness stay bounded degraded or failed-closed. |
 | Rebuilding detail read | Read path returns only accepted bounded rebuilding/degraded/current-cache outcome after tenant proof. |
 | Rebuilding list/search read | Rows, counts, and match metadata are returned only from proven same-tenant state. |
 | Cross-tenant rebuild probe | No other-tenant existence, count, cache, rebuild, actor key, or health signal leaks. |
@@ -199,7 +216,7 @@ so that read models can recover without unsafe data exposure.
 - Story 2.5 established MVP display-name-only search, match metadata after current-tenant and erasure filtering, degraded-cache provenance gates, negative future-field tests, and terminal cancellation.
 - Story 2.6 established fail-closed tenant-safe projection reads across detail, list/filter, search, degraded cache, actor key shape, and metadata-only diagnostics.
 - Story 2.7 established bounded freshness/degradation behavior for current, stale, degraded, rebuilding, and unsafe projection states.
-- L08 in the lessons ledger says party-mode review and advanced elicitation are separate dated traces. This story has not yet received either trace.
+- L08 in the lessons ledger says party-mode review and advanced elicitation are separate dated traces. This story now carries a completed party-mode trace and still needs a separate advanced elicitation pass before that hardening phase can be considered complete.
 
 ### Current Code Surfaces To Inspect
 
@@ -301,6 +318,21 @@ dotnet build Hexalith.Parties.slnx --configuration Release
 
 ### File List
 
+## Party-Mode Review
+
+- Date/time: 2026-05-19T18:04:21+02:00
+- Selected story key: `2-8-projection-rebuild-and-health-monitoring`
+- Command/skill invocation used: `/bmad-party-mode 2-8-projection-rebuild-and-health-monitoring; review;`
+- Participating BMAD agents: Winston (System Architect), Amelia (Senior Software Engineer), Murat (Master Test Architect and Quality Advisor), John (Product Manager)
+- Findings summary: Three reviewers recommended `needs-story-update` and one recommended `ready-for-dev` with the same low-risk clarifications. Shared risks were under-specified observable projection states, fail-closed read and health behavior, rebuild completion criteria, cancellation and partial replay semantics, privacy-safe health diagnostics, AC-to-test traceability, and accidental scope expansion into a second rebuild framework, public repair surface, query-time stream replay, or Parties-owned authorization.
+- Changes applied:
+  - Added `Party-Mode Review Clarifications` to define Story 2.7-aligned bounded projection states, allow-listed health/readiness metadata, fail-closed behavior for corrupt/rebuilding/canceled/failed/untrusted rebuild states, success criteria for clearing degraded/rebuilding indicators, existing-surface ownership, no query-time replay fallback, cancellation/failure semantics, and gateway/search test scope limits.
+  - Expanded the required test matrix with duplicate rebuild, replay failure, and validation/reload failure scenarios.
+  - Updated Dev Notes to record the completed party-mode trace and the remaining separate advanced elicitation pass.
+- Findings deferred: Exact enum/type names for projection state, whether degraded and rebuilding are represented as separate health dimensions or one status, whether active rebuild readiness is degraded versus unavailable, whether trusted stale reads are served during rebuild beyond Story 2.7 allowances, rebuild retry/backoff policy, operator-facing repair endpoints or dashboards, broader rebuild framework decisions, tenant-level health inventory, EventStore authorization changes, persistence shape changes for rebuild metadata, and gateway/search contract changes unless implementation changes observable read behavior.
+- Final recommendation: `ready-for-dev`
+
 ## Change Log
 
+- 2026-05-19: Party-mode review applied low-risk clarifications for bounded projection states, fail-closed rebuild/read behavior, privacy-safe health output, existing rebuild-surface ownership, failure/cancellation coverage, and AC-to-test traceability.
 - 2026-05-19: Story created by BMAD pre-dev hardening automation with existing projection rebuild service, detail/index projection actors, health checks, degraded middleware, tenant-safe cache provenance, privacy-safe diagnostics, and focused validation guidance.
