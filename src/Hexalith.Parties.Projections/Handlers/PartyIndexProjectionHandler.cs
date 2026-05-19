@@ -12,21 +12,21 @@ public sealed class PartyIndexProjectionHandler
         return @event switch
         {
             PartyCreated e => state is null ? HandlePartyCreated(partyId, e) : state,
-            PartyDisplayNameDerived e when state is not null => state with
-            {
-                DisplayName = e.DisplayName,
-                LastModifiedAt = DateTimeOffset.UtcNow,
-            },
-            PartyDeactivated when state is not null => state with
-            {
-                IsActive = false,
-                LastModifiedAt = DateTimeOffset.UtcNow,
-            },
-            PartyReactivated when state is not null => state with
-            {
-                IsActive = true,
-                LastModifiedAt = DateTimeOffset.UtcNow,
-            },
+            PartyDisplayNameDerived e when state is not null => HandleDisplayNameDerived(state, e),
+            PartyDeactivated when state is not null => state.IsActive
+                ? state with
+                {
+                    IsActive = false,
+                    LastModifiedAt = DateTimeOffset.UtcNow,
+                }
+                : null,
+            PartyReactivated when state is not null => state.IsActive
+                ? null
+                : state with
+                {
+                    IsActive = true,
+                    LastModifiedAt = DateTimeOffset.UtcNow,
+                },
             ContactChannelAdded e when state is not null => HandleContactChannelAdded(state, e),
             ContactChannelUpdated e when state is not null => HandleContactChannelUpdated(state, e),
             ContactChannelRemoved e when state is not null => HandleContactChannelRemoved(state, e),
@@ -51,6 +51,7 @@ public sealed class PartyIndexProjectionHandler
             Type = e.Type,
             IsActive = true,
             DisplayName = displayName,
+            SortName = DeriveSortName(e, displayName),
             SearchableContactChannels = [],
             SearchableIdentifiers = [],
             CreatedAt = DateTimeOffset.UtcNow,
@@ -58,7 +59,23 @@ public sealed class PartyIndexProjectionHandler
         };
     }
 
-    private static PartyIndexEntry HandleContactChannelAdded(PartyIndexEntry state, ContactChannelAdded e)
+    private static PartyIndexEntry? HandleDisplayNameDerived(PartyIndexEntry state, PartyDisplayNameDerived e)
+    {
+        if (string.Equals(state.DisplayName, e.DisplayName, StringComparison.Ordinal)
+            && string.Equals(state.SortName, e.SortName, StringComparison.Ordinal))
+        {
+            return null;
+        }
+
+        return state with
+        {
+            DisplayName = e.DisplayName,
+            SortName = e.SortName,
+            LastModifiedAt = DateTimeOffset.UtcNow,
+        };
+    }
+
+    private static PartyIndexEntry? HandleContactChannelAdded(PartyIndexEntry state, ContactChannelAdded e)
     {
         ContactChannel channel = new()
         {
@@ -67,6 +84,12 @@ public sealed class PartyIndexProjectionHandler
             Value = e.Value,
             IsPreferred = e.IsPreferred,
         };
+
+        ContactChannel? existing = state.SearchableContactChannels.FirstOrDefault(c => c.Id == e.ContactChannelId);
+        if (existing == channel)
+        {
+            return null;
+        }
 
         List<ContactChannel> channels = [.. state.SearchableContactChannels.Where(c => c.Id != e.ContactChannelId), channel];
 
@@ -95,6 +118,10 @@ public sealed class PartyIndexProjectionHandler
         };
 
         channels[index] = updated;
+        if (updated == existing)
+        {
+            return null;
+        }
 
         return state with
         {
@@ -103,8 +130,13 @@ public sealed class PartyIndexProjectionHandler
         };
     }
 
-    private static PartyIndexEntry HandleContactChannelRemoved(PartyIndexEntry state, ContactChannelRemoved e)
+    private static PartyIndexEntry? HandleContactChannelRemoved(PartyIndexEntry state, ContactChannelRemoved e)
     {
+        if (!state.SearchableContactChannels.Any(c => c.Id == e.ContactChannelId))
+        {
+            return null;
+        }
+
         return state with
         {
             SearchableContactChannels = [.. state.SearchableContactChannels.Where(c => c.Id != e.ContactChannelId)],
@@ -112,7 +144,7 @@ public sealed class PartyIndexProjectionHandler
         };
     }
 
-    private static PartyIndexEntry HandleIdentifierAdded(PartyIndexEntry state, IdentifierAdded e)
+    private static PartyIndexEntry? HandleIdentifierAdded(PartyIndexEntry state, IdentifierAdded e)
     {
         PartyIdentifier identifier = new()
         {
@@ -120,6 +152,12 @@ public sealed class PartyIndexProjectionHandler
             Type = e.Type,
             Value = e.Value,
         };
+
+        PartyIdentifier? existing = state.SearchableIdentifiers.FirstOrDefault(i => i.Id == e.IdentifierId);
+        if (existing == identifier)
+        {
+            return null;
+        }
 
         List<PartyIdentifier> identifiers = [.. state.SearchableIdentifiers.Where(i => i.Id != e.IdentifierId), identifier];
 
@@ -130,8 +168,13 @@ public sealed class PartyIndexProjectionHandler
         };
     }
 
-    private static PartyIndexEntry HandleIdentifierRemoved(PartyIndexEntry state, IdentifierRemoved e)
+    private static PartyIndexEntry? HandleIdentifierRemoved(PartyIndexEntry state, IdentifierRemoved e)
     {
+        if (!state.SearchableIdentifiers.Any(i => i.Id == e.IdentifierId))
+        {
+            return null;
+        }
+
         return state with
         {
             SearchableIdentifiers = [.. state.SearchableIdentifiers.Where(i => i.Id != e.IdentifierId)],
@@ -147,5 +190,20 @@ public sealed class PartyIndexProjectionHandler
         }
 
         return e.OrganizationDetails?.LegalName ?? string.Empty;
+    }
+
+    private static string DeriveSortName(PartyCreated e, string displayName)
+    {
+        if (e.Type == PartyType.Person && e.PersonDetails is not null)
+        {
+            string lastName = e.PersonDetails.LastName.Trim();
+            string firstName = e.PersonDetails.FirstName.Trim();
+            if (!string.IsNullOrEmpty(lastName) && !string.IsNullOrEmpty(firstName))
+            {
+                return $"{lastName}, {firstName}";
+            }
+        }
+
+        return string.IsNullOrWhiteSpace(displayName) ? string.Empty : displayName;
     }
 }

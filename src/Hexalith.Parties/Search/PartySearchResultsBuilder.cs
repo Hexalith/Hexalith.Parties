@@ -13,7 +13,8 @@ internal static class PartySearchResultsBuilder
         int pageSize)
     {
         List<PartyIndexEntry> sorted = [.. ApplyFilters(entries, typeFilter, activeFilter)
-            .OrderBy(e => e.DisplayName, StringComparer.OrdinalIgnoreCase)];
+            .OrderBy(GetSortableName, StringComparer.OrdinalIgnoreCase)
+            .ThenBy(e => e.DisplayName, StringComparer.OrdinalIgnoreCase)];
 
         return CreatePagedResult(sorted, page, pageSize);
     }
@@ -41,6 +42,7 @@ internal static class PartySearchResultsBuilder
             .OrderBy(m => m.Priority)
             .ThenByDescending(m => m.FieldCount)
             .ThenByDescending(m => m.TokenCount)
+            .ThenBy(m => GetSortableName(m.Result.Party), StringComparer.OrdinalIgnoreCase)
             .ThenBy(m => m.Result.Party.DisplayName, StringComparer.OrdinalIgnoreCase)
             .Select(m => m.Result)];
 
@@ -66,6 +68,9 @@ internal static class PartySearchResultsBuilder
 
         return filtered;
     }
+
+    private static string GetSortableName(PartyIndexEntry entry)
+        => string.IsNullOrWhiteSpace(entry.SortName) ? entry.DisplayName : entry.SortName;
 
     private static (PartySearchResult Result, int Priority, int FieldCount, int TokenCount)? EvaluateEntry(
         PartyIndexEntry entry,

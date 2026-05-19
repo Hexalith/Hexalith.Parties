@@ -106,6 +106,54 @@ public class LocalFuzzyPartySearchProviderTests
         result.Items.ShouldNotContain(r => r.Party.Id == "p5");
     }
 
+    [Fact]
+    public void Search_ChangedDisplayName_DoesNotMatchStaleDisplayName()
+    {
+        List<PartyIndexEntry> entries =
+        [
+            _entries[0] with
+            {
+                DisplayName = "Renamed Person",
+                SortName = "Person, Renamed",
+                SearchableContactChannels = [],
+                SearchableIdentifiers = [],
+            },
+        ];
+
+        PagedResult<PartySearchResult> staleResult = _provider.Search(entries, "Jean", null, null, 1, 20);
+        PagedResult<PartySearchResult> currentResult = _provider.Search(entries, "Renamed", null, null, 1, 20);
+
+        staleResult.Items.ShouldBeEmpty();
+        currentResult.Items.Single().Party.Id.ShouldBe("p1");
+    }
+
+    [Fact]
+    public void Search_TypeAndActiveFilters_ApplyBeforePagination()
+    {
+        PagedResult<PartySearchResult> result = _provider.Search(
+            _entries,
+            "person",
+            PartyType.Person,
+            false,
+            1,
+            1);
+
+        result.Items.Single().Party.Id.ShouldBe("p4");
+        result.TotalCount.ShouldBe(1);
+    }
+
+    [Fact]
+    public void Search_ContactAndIdentifierMatchesExposeOnlyBoundedMetadata()
+    {
+        PagedResult<PartySearchResult> contactResult = _provider.Search(_entries, "example.com", null, null, 1, 20);
+        PagedResult<PartySearchResult> identifierResult = _provider.Search(_entries, "FR11111111111", null, null, 1, 20);
+
+        contactResult.Items.Single().Matches.ShouldContain(m => m.MatchedField == "email");
+        identifierResult.Items.Single().Matches.ShouldContain(m => m.MatchedField == "identifier");
+        contactResult.Items.Single().Matches.ShouldAllBe(m => !m.MatchedField.Contains('@', StringComparison.Ordinal));
+        identifierResult.Items.Single().Matches.ShouldAllBe(m => !m.MatchedField.Contains("FR", StringComparison.Ordinal));
+    }
+
     // 7.9 — empty/whitespace query returns empty result
     [Theory]
     [InlineData("")]

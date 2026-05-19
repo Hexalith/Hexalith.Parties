@@ -1,10 +1,13 @@
 using System.Reflection;
 using System.Runtime.Serialization;
+using System.Text.Json;
 
 using Dapr.Actors;
 using Dapr.Actors.Runtime;
 
+using Hexalith.Parties.Contracts.Events;
 using Hexalith.Parties.Contracts.Models;
+using Hexalith.Parties.Contracts.ValueObjects;
 using Hexalith.Parties.Projections.Abstractions;
 using Hexalith.Parties.Projections.Actors;
 using Hexalith.Parties.Projections.Configuration;
@@ -56,7 +59,7 @@ public sealed class PartyIndexProjectionActorCorruptionTests
     [Fact]
     public async Task GetEntriesAsync_WhenRebuilding_ReturnsEmptyAsync()
     {
-        (PartyIndexProjectionActor actor, _) = CreateActor();
+        (PartyIndexProjectionActor actor, _) = CreateActor(actorId: "empty-tenant:party-index");
         actor.SetRebuilding(true);
 
         IReadOnlyDictionary<string, PartyIndexEntry> result = await actor.GetEntriesAsync();
@@ -78,24 +81,107 @@ public sealed class PartyIndexProjectionActorCorruptionTests
         (await actor.IsRebuildingAsync()).ShouldBeTrue();
     }
 
-    private static (PartyIndexProjectionActor Actor, IActorStateManager StateManager) CreateActor()
+    [Fact]
+    public async Task HandleEventAsync_UsesSingleKeyPartitionStateAndManifestKeysAsync()
+    {
+        (PartyIndexProjectionActor actor, IActorStateManager stateManager) =
+            CreateActor(options: new ProjectionOptions { BatchSize = 1 });
+        SetupEmptyIndexState(stateManager);
+
+        await actor.HandleEventAsync(
+            "party-1",
+            new PartyCreated
+            {
+                Type = PartyType.Person,
+                PersonDetails = new PersonDetails { FirstName = "Ada", LastName = "Lovelace" },
+            });
+
+        await stateManager.Received(1).SetStateAsync(
+            "test-tenant:party-index:default",
+            Arg.Is<Dictionary<string, PartyIndexEntry>>(state =>
+                state.ContainsKey("party-1")
+                && state["party-1"].DisplayName == "Ada Lovelace"),
+            Arg.Any<CancellationToken>());
+        await stateManager.Received(1).SetStateAsync(
+            "test-tenant:party-index:manifest",
+            Arg.Is<List<string>>(ids => ids.SequenceEqual(new[] { "party-1" })),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task HandleSerializedEventAsync_RejectionReplayAdvancesCheckpointWithoutIndexWriteAsync()
+    {
+        (PartyIndexProjectionActor actor, IActorStateManager stateManager) = CreateActor();
+        SetupEmptyIndexState(stateManager);
+        SetupMissingSequenceCheckpoint(stateManager);
+        byte[] payload = JsonSerializer.SerializeToUtf8Bytes(
+            new PartyCannotAddDuplicateChannel(),
+            new JsonSerializerOptions(JsonSerializerDefaults.Web));
+
+        await actor.HandleSerializedEventAsync(
+            "party-1",
+            nameof(PartyCannotAddDuplicateChannel),
+            payload,
+            "json",
+            7,
+            CancellationToken.None);
+
+        await stateManager.Received(1).SetStateAsync(
+            "test-tenant:party-index:party-1:last-sequence",
+            7L,
+            Arg.Any<CancellationToken>());
+        await stateManager.DidNotReceive().SetStateAsync(
+            "test-tenant:party-index:default",
+            Arg.Any<Dictionary<string, PartyIndexEntry>>(),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task GetEntriesAsync_WithMalformedActorId_ReturnsEmptyAsync()
+    {
+        (PartyIndexProjectionActor actor, _) = CreateActor(actorId: "malformed-party-index");
+
+        IReadOnlyDictionary<string, PartyIndexEntry> result = await actor.GetEntriesAsync();
+
+        result.ShouldBeEmpty();
+    }
+
+    private static (PartyIndexProjectionActor Actor, IActorStateManager StateManager) CreateActor(
+        string actorId = ActorId,
+        ProjectionOptions? options = null)
     {
         IActorStateManager stateManager = Substitute.For<IActorStateManager>();
         IIndexPartitionStrategy partitionStrategy = new SingleKeyPartitionStrategy();
-        IOptions<ProjectionOptions> options = Options.Create(new ProjectionOptions());
+        IOptions<ProjectionOptions> projectionOptions = Options.Create(options ?? new ProjectionOptions());
         IProjectionRebuildService rebuildService = Substitute.For<IProjectionRebuildService>();
         ILogger<PartyIndexProjectionActor> logger = Substitute.For<ILogger<PartyIndexProjectionActor>>();
         _ = logger.IsEnabled(Arg.Any<LogLevel>()).Returns(true);
 
         ActorTimerManager timerManager = Substitute.For<ActorTimerManager>();
         var host = ActorHost.CreateForTest<PartyIndexProjectionActor>(
-            new ActorTestOptions { ActorId = new ActorId(ActorId), TimerManager = timerManager });
-        var actor = new PartyIndexProjectionActor(host, partitionStrategy, options, rebuildService, logger);
+            new ActorTestOptions { ActorId = new ActorId(actorId), TimerManager = timerManager });
+        var actor = new PartyIndexProjectionActor(host, partitionStrategy, projectionOptions, rebuildService, logger);
 
         PropertyInfo? prop = typeof(Actor).GetProperty("StateManager", BindingFlags.Public | BindingFlags.Instance);
         prop?.SetValue(actor, stateManager);
 
         return (actor, stateManager);
+    }
+
+    private static void SetupEmptyIndexState(IActorStateManager stateManager)
+    {
+        stateManager.TryGetStateAsync<Dictionary<string, PartyIndexEntry>>(
+            Arg.Any<string>(),
+            Arg.Any<CancellationToken>())
+            .Returns(new ConditionalValue<Dictionary<string, PartyIndexEntry>>(true, []));
+    }
+
+    private static void SetupMissingSequenceCheckpoint(IActorStateManager stateManager)
+    {
+        stateManager.TryGetStateAsync<long>(
+            Arg.Any<string>(),
+            Arg.Any<CancellationToken>())
+            .Returns(new ConditionalValue<long>(false, default));
     }
 
     private static async Task InvokeOnActivateAsync(PartyIndexProjectionActor actor)
