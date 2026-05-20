@@ -9,6 +9,21 @@ This guide covers deploying the Hexalith.Parties service with DAPR in production
 - One of: Kafka, RabbitMQ, or Azure Service Bus for pub/sub
 - One of: CosmosDB, PostgreSQL for state store (Redis for development only)
 - PowerShell 5.1+ or PowerShell 7+ for the validation tool
+- `kubectl` context the operator will pass to `publish.ps1` / `teardown.ps1` via `-ConfirmContext` (Story 9.5 ADR 9.5-2 replaced the prior local-cluster regex allowlist)
+
+### Zot credentials
+
+`deploy/k8s/publish.ps1` builds and pushes container images to the Zot registry at `registry.hexalith.com` (ADR 9.5-1). The cluster pulls those images via a Kubernetes `dockerconfigjson` Secret named `zot-pull-secret` that `publish.ps1` bootstraps from the operator's `~/.docker/config.json`. Operator-side setup is a one-time `docker login`:
+
+```bash
+docker login -u parties-publisher registry.hexalith.com
+# password: captured from the infra-team secure store (Bitwarden / 1Password)
+```
+
+- **`parties-publisher`** is the dedicated build account in the cluster-side Zot `builders` group (`accessControl.groups.builders`). Human operator accounts (`jpiquot`, `qdassivignon` in the `admins` group) **are not** used for image push — they retain admin rights for repository management but stay separate from the build account stamped into every pull-secret manifest.
+- After `docker login`, `~/.docker/config.json` must carry `auths["registry.hexalith.com"]` with a plain-text `auth` field (base64-encoded `parties-publisher:<password>`). Docker credential helpers (`credsStore`, `credHelpers["registry.hexalith.com"]`) are explicitly **not supported in MVP** — `publish.ps1` exits 6 with an actionable error if it sees either directive. Workarounds: remove the directive temporarily, set `$env:DOCKER_CONFIG` to point at a helper-free config, or pre-create `zot-pull-secret` manually.
+- Cluster-side Zot configuration (htpasswd entry + `accessControl.groups.builders` membership for `parties-publisher`) is owned by the infra team. CI runners use the `kaniko` or `github-ci` builder account; that path is post-MVP and tracked in Story 9.6.
+- The operator's credential never appears in `publish.ps1` stdout, stderr, or any committed file. Step 11 of `publish.ps1` re-emits the `auths` block wholesale (Path B — never decoded) into the `zot-pull-secret` data field.
 
 ---
 
@@ -188,8 +203,8 @@ The K8s lint reports workload shape issues (missing image, missing DAPR annotati
 **Story 9.3 added three categories on top of Story 9.2:**
 
 - `K8sTopology-MissingService` (fail) — fires when an AppHost-composed app folder is missing from `deploy/k8s/<app-id>/`, or when its Service selector does not match the Deployment label. Threshold-gated to skip synthetic single-app fixtures; on the committed full-topology tree (≥ 5 app folders present) the contract is enforced.
-- `K8sSecret-JwtSigningKeyLiteral` (fail) — fires when any `ConfigMap`, `Secret`, or `Deployment` container env carries a non-empty literal value for `Authentication__JwtBearer__SigningKey`. The signing key must be sourced via `valueFrom.secretKeyRef` on the `hexalith-jwt-signing` Secret (bootstrapped by `deploy-local.ps1`).
-- `K8sDapr-ResiliencyCrdSchemaDrift` (fail / warn) — fires when `deploy/dapr/resiliency.yaml` contains the legacy nested `timeouts.daprSidecar.general` shape or the flat `components.<name>.{retry,timeout,circuitBreaker}` shape (Dapr 1.14.4 CRD requires `outbound`/`inbound` split for component targets with both directions). Unknown `apiVersion` values emit warn-severity informational findings; the live-cluster server-side dry-run lives in `deploy-local.ps1` per Story 9.3 AC6.
+- `K8sSecret-JwtSigningKeyLiteral` (fail) — fires when any `ConfigMap`, `Secret`, or `Deployment` container env carries a non-empty literal value for `Authentication__JwtBearer__SigningKey`. The signing key must be sourced via `valueFrom.secretKeyRef` on the `hexalith-jwt-signing` Secret (bootstrapped by `publish.ps1`).
+- `K8sDapr-ResiliencyCrdSchemaDrift` (fail / warn) — fires when `deploy/dapr/resiliency.yaml` contains the legacy nested `timeouts.daprSidecar.general` shape or the flat `components.<name>.{retry,timeout,circuitBreaker}` shape (Dapr 1.14.4 CRD requires `outbound`/`inbound` split for component targets with both directions). Unknown `apiVersion` values emit warn-severity informational findings; the live-cluster server-side dry-run lives in `publish.ps1` per Story 9.3 AC6.
 
 ### CI/CD Integration
 

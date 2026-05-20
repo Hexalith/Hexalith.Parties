@@ -8,7 +8,7 @@
 #
 # Operators targeting a managed backend (PostgreSQL, Cosmos DB, etc.) replace
 # this file with a copy of the corresponding `statestore-*.yaml` template
-# before running `deploy-local.ps1`.
+# before running `publish.ps1`.
 #
 # Composite key pattern: {tenant}||{domain}||{aggregateId}
 #

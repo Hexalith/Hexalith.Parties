@@ -66,27 +66,21 @@ EventStore owns public authentication, tenant validation, RBAC, command/query ro
 
 ---
 
-## Step 1b: Deploy to a Local Kubernetes Cluster (Optional)
+## Step 1b: Publish to a Kubernetes Cluster (Optional)
 
-This step is an **alternative** to Step 1 for evaluating the production-shape deployment path on a local Kubernetes cluster (kind, k3d, minikube, or Docker Desktop Kubernetes). The Aspire-mode walkthrough in Step 1 remains valid and is the default path for everyday development. Pick one mode per session — they target the same topology and are not designed to run side-by-side.
+This step is an **alternative** to Step 1 for evaluating the production-shape deployment path against a Kubernetes cluster. The deploy target may be a local cluster (kind, k3d, minikube, Docker Desktop) or the in-MVP platform cluster — the publish script accepts any context the operator confirms via `-ConfirmContext` (Story 9.5 ADR 9.5-2). The Aspire-mode walkthrough in Step 1 remains valid and is the default path for everyday development.
 
-**Time budget:** the entire walkthrough — `regen.ps1` through the first successful `CreateParty` command — fits inside the `< 15 min` first-deploy budget (NFR30) on a developer-class machine that already has the prerequisites installed.
+**Time budget:** the entire walkthrough — `publish.ps1` through the first successful `CreateParty` command — fits inside the `< 15 min` first-deploy budget (NFR30) on a developer-class machine that already has the prerequisites installed.
 
-Restore the pinned `aspirate` tool, then regenerate `deploy/k8s/` from the AppHost:
+Restore the pinned `aspirate` tool. Ensure the operator has run `docker login -u parties-publisher registry.hexalith.com` once (see `docs/deployment-guide.md` "Zot credentials"). Switch `kubectl` to the target context and run:
 
 ```bash
 dotnet tool restore
-pwsh deploy/k8s/regen.ps1
+kubectl config use-context kubernetes-admin@cluster.local   # or your local context
+pwsh deploy/k8s/publish.ps1 -ConfirmContext kubernetes-admin@cluster.local
 ```
 
-Switch `kubectl` to a local-cluster context **before** running the deploy script — managed-cloud contexts (`aks-*`, `eks-*`, `gke-*`) are rejected by design:
-
-```bash
-kubectl config use-context kind-test   # or k3d-local / minikube / docker-desktop
-pwsh deploy/k8s/deploy-local.ps1
-```
-
-The deploy script installs the DAPR control plane on the cluster if missing, applies the authoritative DAPR component CRs from `deploy/dapr/`, then applies the aspirate-generated `deploy/k8s/` workloads via kustomize. Verify pod readiness:
+`publish.ps1` resolves the MinVer version from the AppHost, runs `dotnet aspirate generate` (building and pushing container images to `registry.hexalith.com/<app-id>:<minver>`), patches the consumer Deployments (Dapr annotations + JWT `secretKeyRef` + `imagePullSecrets: zot-pull-secret`), installs the DAPR control plane if missing, bootstraps three Secrets (`hexalith-jwt-signing`, `hexalith-keycloak-admin`, `zot-pull-secret`), applies the authoritative DAPR component CRs from `deploy/dapr/`, then applies the workloads via kustomize. Verify pod readiness:
 
 ```bash
 kubectl get pods -n hexalith-parties
@@ -103,15 +97,16 @@ for app in eventstore eventstore-admin parties tenants memories; do
 done
 ```
 
-Each should include `dapr.io/enabled: "true"`, `dapr.io/app-id`, `dapr.io/app-port: "8080"`, and `dapr.io/config: accesscontrol-<app-id>` (or `accesscontrol` for `eventstore`). The `dapr.io/app-port` and per-app `dapr.io/config` annotations are injected by `regen.ps1` (aspirate 9.1.0 does not emit them); see `deploy/k8s/README.md` "Known aspirate limitations".
+Each should include `dapr.io/enabled: "true"`, `dapr.io/app-id`, `dapr.io/app-port: "8080"`, and `dapr.io/config: accesscontrol-<app-id>` (or `accesscontrol` for `eventstore`). The `dapr.io/app-port` and per-app `dapr.io/config` annotations are injected by `publish.ps1` (aspirate 9.1.0 does not emit them); see `deploy/k8s/README.md` "Known aspirate limitations".
 
-**JWT signing key (Story 9.3 AC4):** `deploy-local.ps1` bootstraps `hexalith-jwt-signing` and `hexalith-keycloak-admin` Secrets (idempotent random material). Verify:
+**Operator-managed Secrets (Story 9.3 AC4 + Story 9.5 AC2):** `publish.ps1` bootstraps `hexalith-jwt-signing`, `hexalith-keycloak-admin`, and `zot-pull-secret` (idempotent). Verify:
 
 ```bash
-kubectl get secret hexalith-jwt-signing hexalith-keycloak-admin -n hexalith-parties
+kubectl get secret hexalith-jwt-signing hexalith-keycloak-admin zot-pull-secret -n hexalith-parties
+kubectl -n hexalith-parties get secret zot-pull-secret -o jsonpath='{.type}'   # expect: kubernetes.io/dockerconfigjson
 ```
 
-Both Secrets must exist before any consumer Deployment becomes `Ready`. The values are never echoed by the deploy script.
+All three Secrets must exist before any consumer Deployment becomes `Ready`. Their values are never echoed by `publish.ps1` (operator's Docker credential is base64-emitted via Path B without decoding).
 
 Port-forward the EventStore gateway so Step 3 (First Command) can reach it on `http://localhost:8080`:
 
@@ -142,14 +137,14 @@ curl -X POST "$EVENTSTORE_URL/api/v1/commands" \
 
 The accepted response carries a correlation id; a follow-up query against `/api/v1/queries` returns the persisted `PartyDetail`. **Step 3 (First Command) below covers the full payload, route, and authentication flow** — the K8s walkthrough mirrors that contract exactly. Use this snippet as the smoke check that the K8s deploy is reachable end-to-end.
 
-### Tearing down the local cluster deployment
+### Tearing down the deployment
 
 ```bash
-pwsh deploy/k8s/teardown-local.ps1            # leaves the DAPR control plane installed
-pwsh deploy/k8s/teardown-local.ps1 -PurgeDapr # also uninstalls DAPR (slower next deploy)
+pwsh deploy/k8s/teardown.ps1 -ConfirmContext kubernetes-admin@cluster.local            # leaves the DAPR control plane installed
+pwsh deploy/k8s/teardown.ps1 -ConfirmContext kubernetes-admin@cluster.local -PurgeDapr # also uninstalls DAPR (slower next deploy)
 ```
 
-The teardown script enforces the same local-cluster allowlist, deletes the kustomize set, removes the authoritative DAPR component CRs, and reports any residual resources before exit. Exit code `0` means the namespace is clean.
+The teardown script enforces the same `-ConfirmContext` exact-match gate, deletes the kustomize set, removes the authoritative DAPR component CRs, and reports any residual resources before exit. Exit code `0` means the namespace is clean.
 
 ---
 

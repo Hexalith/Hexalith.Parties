@@ -14,4 +14,4 @@ configMapGenerator:
     - HTTP_PORTS=8080
     - Authentication__DaprInternal__AllowedCallers__0=tenants
     - ASPNETCORE_ENVIRONMENT=Production
-    - ASPNETCORE_URLS=http://+:8080;
+    - ASPNETCORE_URLS=http://+:8080

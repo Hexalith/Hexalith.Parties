@@ -7,14 +7,10 @@ resources:
 - parties
 - parties-mcp
 - tenants
-# Story 9.3 AC2 / AC4 / AC5 — Memories.Server, Keycloak (hand-authored carve-out), and Redis
-# join the topology. FrontComposer is carved out to Story 9.4 (Outcome B).
+- redis
 - memories
 - keycloak
-- redis
 - namespace.yaml
 
 generatorOptions:
   disableNameSuffixHash: true
-
-

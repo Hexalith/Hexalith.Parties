@@ -42,6 +42,7 @@
 #                K8sWorkload-MissingDaprAnnotation (fail),
 #                K8sWorkload-UnresolvedConfigMapRef (fail),
 #                K8sWorkload-UnresolvedKustomizationResource (fail),
+#                K8sWorkload-MissingImagePullSecret (fail),
 #                K8sWorkload-MissingProbes (warn),
 #                K8sWorkload-MissingResources (warn),
 #                K8sWorkload-LatestImageTag (warn)
@@ -1626,6 +1627,89 @@ function Test-K8sAnnotationPresent {
     return $false
 }
 
+function Test-K8sDeploymentHasZotPullSecret {
+    # Story 9.5 AC9 / Task 5. Walk the pod-template spec block and return $true
+    # iff `imagePullSecrets[*].name` references `zot-pull-secret`. The lint
+    # category K8sWorkload-MissingImagePullSecret fires when the container
+    # image starts with `registry.hexalith.com/` AND this helper returns $false.
+    param([string]$DocText)
+    if ([string]::IsNullOrEmpty($DocText)) { return $false }
+    # Pod-template `spec:` is always inner (indent > 0); the outer Deployment
+    # spec sits at indent 0. Anchor on the inner spec and capture the body
+    # until a sibling key at the same indent ends it.
+    $lines = $DocText -split "`n"
+    $inPodSpec = $false
+    $podSpecIndent = -1
+    $inImagePullSecrets = $false
+    $imagePullSecretsIndent = -1
+    for ($i = 0; $i -lt $lines.Length; $i++) {
+        $line = $lines[$i]
+        if (-not $inPodSpec) {
+            # Look for the pod-template spec (inner spec following template:).
+            # T10: tolerate sibling keys (serviceAccountName, securityContext,
+            # terminationGracePeriodSeconds, restartPolicy, nodeSelector, etc.)
+            # between `spec:` and `containers:`/`imagePullSecrets:`. The previous
+            # peek-ahead bailed if the FIRST non-blank child wasn't one of those
+            # two keys, false-positive-failing the lint on otherwise-correct
+            # Deployments. Now we look for ANY indented child to confirm
+            # pod-template-spec scope, then scan the full body below.
+            if ($line -match '^(?<i>[ \t]+)spec:\s*$') {
+                $candidateIndent = $Matches['i'].Length
+                # Look forward for the FIRST non-blank line; if it is indented
+                # deeper than the spec: line, treat this as a pod-template spec.
+                $j = $i + 1
+                while ($j -lt $lines.Length -and [string]::IsNullOrWhiteSpace($lines[$j])) { $j++ }
+                if ($j -lt $lines.Length) {
+                    $childMatch = [regex]::Match($lines[$j], '^(?<j>[ \t]+)\S')
+                    if ($childMatch.Success) {
+                        $childIndent = $childMatch.Groups['j'].Length
+                        if ($childIndent -gt $candidateIndent) {
+                            $inPodSpec = $true
+                            $podSpecIndent = $candidateIndent
+                        }
+                    }
+                }
+            }
+            continue
+        }
+        # End of pod spec: a non-blank line at indent <= podSpecIndent.
+        if (-not [string]::IsNullOrWhiteSpace($line)) {
+            $indentMatch = [regex]::Match($line, '^(?<i>[ \t]*)\S')
+            if ($indentMatch.Success) {
+                $lineIndent = $indentMatch.Groups['i'].Length
+                if ($lineIndent -le $podSpecIndent) {
+                    break
+                }
+            }
+        }
+        if (-not $inImagePullSecrets) {
+            if ($line -match '^(?<i>[ \t]+)imagePullSecrets:\s*$') {
+                $imagePullSecretsIndent = $Matches['i'].Length
+                $inImagePullSecrets = $true
+                continue
+            }
+        }
+        else {
+            # End of imagePullSecrets block: non-list line at <= block indent.
+            if (-not [string]::IsNullOrWhiteSpace($line)) {
+                $indentMatch = [regex]::Match($line, '^(?<i>[ \t]*)\S')
+                if ($indentMatch.Success) {
+                    $lineIndent = $indentMatch.Groups['i'].Length
+                    if ($lineIndent -le $imagePullSecretsIndent -and -not ($line -match '^\s*-\s')) {
+                        $inImagePullSecrets = $false
+                        continue
+                    }
+                }
+            }
+            if ($line -match '^\s*-\s+name:\s*([^\r\n#]+)') {
+                $name = (ConvertFrom-YamlScalar $Matches[1]).Trim()
+                if ($name -eq 'zot-pull-secret') { return $true }
+            }
+        }
+    }
+    return $false
+}
+
 function Get-K8sContainerSection {
     # P12: structural line-walker. Find the first `containers:` line, capture
     # its indent, then accumulate every subsequent line whose indent is
@@ -1916,6 +2000,17 @@ function Test-K8sWorkload {
                                 Add-K8sResult -Category $Category -Code 'K8sWorkload-LatestImageTag' -Severity 'warn' -Target $relDeploy `
                                     -Recommendation 'Pin container images to an immutable tag (semver, digest @sha256:, or build-id). The :latest tag (explicit or implicit when no tag is given) is mutable and breaks rollback observability.'
                             }
+                            # Story 9.5 AC9 / Task 5 — K8sWorkload-MissingImagePullSecret. Fires when
+                            # the container image starts with `registry.hexalith.com/` and the
+                            # pod-template `imagePullSecrets[*].name` does not include `zot-pull-secret`.
+                            # Vendor-image carve-outs (quay.io/keycloak, redis:7.4-alpine) are excluded
+                            # by the image-prefix gate.
+                            if ($imgTrim -match '^registry\.hexalith\.com/') {
+                                if (-not (Test-K8sDeploymentHasZotPullSecret -DocText $doc)) {
+                                    Add-K8sResult -Category $Category -Code 'K8sWorkload-MissingImagePullSecret' -Severity 'fail' -Target $relDeploy `
+                                        -Recommendation 'Add spec.template.spec.imagePullSecrets: [{ name: zot-pull-secret }] on every Deployment whose container image starts with registry.hexalith.com/. The Secret is bootstrapped by deploy/k8s/publish.ps1 from the operator''s ~/.docker/config.json entry. See deploy/k8s/README.md Publishing section.'
+                                }
+                            }
                         }
                     }
                 }
@@ -1928,7 +2023,7 @@ function Test-K8sWorkload {
                     foreach ($expectedKey in @('dapr.io/enabled', 'dapr.io/app-id', 'dapr.io/app-port', 'dapr.io/config')) {
                         if (-not (Test-K8sAnnotationPresent -AnnotationBlocks $annotationBlocks -Key $expectedKey)) {
                             Add-K8sResult -Category $Category -Code 'K8sWorkload-MissingDaprAnnotation' -Severity 'fail' -Target "$relDeploy#${appId}:$expectedKey" `
-                                -Recommendation 'DAPR-enabled Deployments must carry dapr.io/enabled, dapr.io/app-id, dapr.io/app-port, and dapr.io/config on both metadata.annotations and spec.template.metadata.annotations. Run deploy/k8s/regen.ps1 to regenerate.'
+                                -Recommendation 'DAPR-enabled Deployments must carry dapr.io/enabled, dapr.io/app-id, dapr.io/app-port, and dapr.io/config on both metadata.annotations and spec.template.metadata.annotations. Run deploy/k8s/publish.ps1 to regenerate.'
                         }
                     }
                 }
@@ -2004,7 +2099,7 @@ function Test-K8sDaprComponentParity {
         $candidate = Join-Path $K8sRoot $placeholderName
         if (Test-Path -LiteralPath $candidate) {
             Add-K8sResult -Category $Category -Code 'DAPR-Regen-PlaceholderNotStripped' -Severity 'fail' -Target (Get-K8sRelativePath -AbsolutePath $candidate -RootPath $K8sRoot) `
-                -Recommendation 'deploy/k8s/regen.ps1 must strip aspirate-emitted dapr/{statestore,pubsub}.yaml placeholders. Re-run regen.ps1.'
+                -Recommendation 'deploy/k8s/publish.ps1 must strip aspirate-emitted dapr/{statestore,pubsub}.yaml placeholders. Re-run publish.ps1.'
         }
     }
     # Top-level kustomization.yaml must not reference the stripped placeholders.
@@ -2018,7 +2113,7 @@ function Test-K8sDaprComponentParity {
         }
         if ($topText -match '(?m)^\s*-\s+dapr/(statestore|pubsub)\.yaml\s*$') {
             Add-K8sResult -Category $Category -Code 'DAPR-Regen-PlaceholderNotStripped' -Severity 'fail' -Target (Get-K8sRelativePath -AbsolutePath $topKust -RootPath $K8sRoot) `
-                -Recommendation 'deploy/k8s/kustomization.yaml must not reference dapr/statestore.yaml or dapr/pubsub.yaml after regen.ps1.'
+                -Recommendation 'deploy/k8s/kustomization.yaml must not reference dapr/statestore.yaml or dapr/pubsub.yaml after publish.ps1.'
         }
     }
 
@@ -2588,7 +2683,7 @@ function Test-K8sTopology {
 
         if (-not (Test-Path -LiteralPath $appDir -PathType Container)) {
             Add-K8sResult -Category $Category -Code 'K8sTopology-MissingService' -Severity 'fail' -Target $safeRel `
-                -Recommendation "Expected per-app folder is missing. Story 9.3 / FR31a requires deploy/k8s/$appId/ to be emitted (aspirate) or hand-authored (carve-out). See deploy/k8s/regen.ps1 `$ExpectedAppFolders + this validator's `$K8sTopologyExpectedAppFolders constant — keep both in lockstep."
+                -Recommendation "Expected per-app folder is missing. Story 9.3 / FR31a requires deploy/k8s/$appId/ to be emitted (aspirate) or hand-authored (carve-out). See deploy/k8s/publish.ps1 `$ExpectedAppFolders + this validator's `$K8sTopologyExpectedAppFolders constant — keep both in lockstep."
             continue
         }
 
@@ -2697,7 +2792,7 @@ function Test-K8sJwtSigningKeyLiteral {
                                     $n = $v.Length
                                     $absLine = $offset + $i
                                     Add-K8sResult -Category $Category -Code 'K8sSecret-JwtSigningKeyLiteral' -Severity 'fail' -Target "$($safeRel):$absLine" `
-                                        -Recommendation "JWT SigningKey in Secret.stringData must be a placeholder (real value bootstrapped by deploy-local.ps1). Found <redacted:$n chars at $($safeRel):$absLine>."
+                                        -Recommendation "JWT SigningKey in Secret.stringData must be a placeholder (real value bootstrapped by deploy/k8s/publish.ps1). Found <redacted:$n chars at $($safeRel):$absLine>."
                                 }
                             }
                         }

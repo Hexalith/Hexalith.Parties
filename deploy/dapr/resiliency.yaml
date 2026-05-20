@@ -20,7 +20,7 @@
 #      (statestore = read/write, pubsub = publish/subscribe). The legacy flat shape on
 #      `components.statestore` was rejected; both pubsub and statestore now carry the split.
 #
-# `deploy/k8s/deploy-local.ps1` runs `kubectl apply --dry-run=server -f` against this file
+# `deploy/k8s/publish.ps1` runs `kubectl apply --dry-run=server -f` against this file
 # immediately after `dapr init -k` so any future Dapr CRD upgrade that drops or renames a
 # field surfaces here (exit 1) before any namespaced resource is applied.
 apiVersion: dapr.io/v1alpha1

@@ -1,10 +1,11 @@
 #!/usr/bin/env pwsh
 # ===========================================================================
-# Hexalith.Parties -- Local Kubernetes Teardown
+# Hexalith.Parties -- Kubernetes Teardown
 # ===========================================================================
-# Removes Deployments, Services, ConfigMaps, and DAPR component CRs applied by
-# deploy-local.ps1 from a *local* Kubernetes cluster. Refuses to run against
-# any non-local kubectl context.
+# Removes Deployments, Services, ConfigMaps, Secrets, and DAPR component CRs
+# applied by publish.ps1 from a Kubernetes cluster. Requires the operator to
+# pass -ConfirmContext matching `kubectl config current-context` exactly
+# (ADR 9.5-2 — replaces the prior local-cluster regex allowlist).
 #
 # By default the DAPR control plane (dapr-system namespace) is preserved.
 # Pass -PurgeDapr to also uninstall it (`dapr uninstall -k`).
@@ -13,13 +14,13 @@
 # Secret values, ConfigMap data, or actor state-store payload is logged.
 #
 # Usage:
-#   pwsh deploy/k8s/teardown-local.ps1
-#   pwsh deploy/k8s/teardown-local.ps1 -PurgeDapr
+#   pwsh deploy/k8s/teardown.ps1 -ConfirmContext kubernetes-admin@cluster.local
+#   pwsh deploy/k8s/teardown.ps1 -ConfirmContext kind-foo -PurgeDapr
 #
 # Exit codes:
 #   0 = teardown clean, no residual resources
 #   1 = delete step failed or residual resources detected
-#   2 = active kubectl context not in local-cluster allowlist
+#   2 = -ConfirmContext mismatch (or missing kubectl context)
 #   3 = kubectl / dapr CLI not available
 #
 # Reference: deploy/k8s/README.md
@@ -27,6 +28,9 @@
 
 [CmdletBinding()]
 param(
+    [Parameter(Mandatory = $true)]
+    [string]$ConfirmContext,
+
     [Parameter(Mandatory = $false)]
     [string]$ManifestPath = $PSScriptRoot,
 
@@ -46,29 +50,21 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
-# ---------------------------------------------------------------------------
-# Local-cluster context allowlist (mirrors deploy-local.ps1 and smoke tests).
-# ---------------------------------------------------------------------------
-$LocalContextPatterns = @(
-    '^kind-[a-z0-9][a-z0-9-]*$',
-    '^k3d-[a-z0-9][a-z0-9-]*$',
-    '^minikube$',
-    '^docker-desktop$'
-)
-
-function Test-LocalContext {
-    param([string]$Context)
-    # Case-sensitive (-cmatch) so a renamed managed context like 'Kind-Phishing'
-    # does not bypass the gate. Mirrors deploy-local.ps1.
-    foreach ($pattern in $LocalContextPatterns) {
-        if ($Context -cmatch $pattern) { return $true }
-    }
-    return $false
-}
-
 function Test-CommandAvailable {
     param([string]$Name)
     $null -ne (Get-Command $Name -ErrorAction SilentlyContinue)
+}
+
+function Exit-WithError {
+    # Writes to stderr without triggering $ErrorActionPreference = "Stop"'s
+    # terminating-error path that Write-Error takes, then exits with the
+    # specified code. Mirrors publish.ps1's helper.
+    param(
+        [Parameter(Mandatory = $true)][string]$Message,
+        [Parameter(Mandatory = $true)][int]$Code
+    )
+    [Console]::Error.WriteLine($Message)
+    exit $Code
 }
 
 if (-not $DaprComponentsPath) {
@@ -76,34 +72,30 @@ if (-not $DaprComponentsPath) {
 }
 
 if (-not (Test-CommandAvailable "kubectl")) {
-    Write-Error "kubectl is not on PATH. Install kubectl before running teardown-local."
-    exit 3
+    Exit-WithError -Message "kubectl is not on PATH. Install kubectl before running teardown." -Code 3
 }
 
 # ---------------------------------------------------------------------------
-# Verify local context
+# Context gate — mandatory -ConfirmContext must match the active kubectl
+# context exactly (ADR 9.5-2).
 # ---------------------------------------------------------------------------
 $currentContext = $null
 try {
     $currentContext = (& kubectl config current-context 2>$null).Trim()
 }
 catch {
-    Write-Error "Failed to read active kubectl context. Ensure a kubeconfig is configured."
-    exit 2
+    Exit-WithError -Message "Failed to read active kubectl context. Ensure a kubeconfig is configured." -Code 2
 }
 
 if ([string]::IsNullOrWhiteSpace($currentContext)) {
-    Write-Error "No active kubectl context. Set a local-cluster context before running teardown-local."
-    exit 2
+    Exit-WithError -Message "No active kubectl context. Set a context before running teardown." -Code 2
 }
 
-if (-not (Test-LocalContext -Context $currentContext)) {
-    Write-Host "ERROR: Refusing to teardown against non-local kubectl context '$currentContext'."
-    Write-Host "Allowed context patterns: kind-*, k3d-*, minikube, docker-desktop"
-    exit 2
+if ($currentContext -cne $ConfirmContext) {
+    Exit-WithError -Message "expected '$ConfirmContext', got '$currentContext'. Switch context with: kubectl config use-context $ConfirmContext" -Code 2
 }
 
-Write-Host "Active kubectl context: $currentContext (local-cluster allowlist OK)"
+Write-Host "Active kubectl context: $currentContext (-ConfirmContext OK)"
 
 # ---------------------------------------------------------------------------
 # Delete via kustomize (workloads, services, ConfigMaps, aspirate-emitted DAPR placeholders)
@@ -116,6 +108,26 @@ if (Test-Path (Join-Path $ManifestPath "kustomization.yaml")) {
     foreach ($line in $deleteOutput) {
         if ($line -match '^(\S+)/(\S+)\s+(deleted|not found)') {
             Write-Host "  $line"
+        }
+    }
+}
+
+# ---------------------------------------------------------------------------
+# Delete operator-managed Secrets (T9 — Story 9.5 review).
+# kustomize-delete (above) only removes resources referenced from
+# kustomization.yaml. The Secret bootstrap in publish.ps1 Step 11 creates
+# `hexalith-jwt-signing`, `hexalith-keycloak-admin`, and `zot-pull-secret`
+# imperatively — they are NOT in any kustomization, so without explicit
+# cleanup here they survive teardown and the residual-state probe below
+# always reports them, training the operator to ignore the gate.
+# ---------------------------------------------------------------------------
+$operatorSecrets = @('hexalith-jwt-signing', 'hexalith-keycloak-admin', 'zot-pull-secret')
+Write-Host ""
+Write-Host "Deleting operator-managed Secrets in namespace '$Namespace'..."
+foreach ($secretName in $operatorSecrets) {
+    & kubectl delete secret $secretName -n $Namespace --ignore-not-found 2>&1 | ForEach-Object {
+        if ($_ -match '^secret/\S+\s+(deleted|not found)') {
+            Write-Host "  $_"
         }
     }
 }

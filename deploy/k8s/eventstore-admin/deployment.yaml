@@ -30,9 +30,11 @@ spec:
         dapr.io/app-port: '8080'
         dapr.io/enable-api-logging: 'true'
     spec:
+      imagePullSecrets:
+      - name: zot-pull-secret
       containers:
       - name: eventstore-admin
-        image: registry.hexalith.com/eventstore-admin:staging-latest
+        image: registry.hexalith.com/eventstore-admin:0.0.0-preview.0.353
         imagePullPolicy: IfNotPresent
         ports:
         - name: http

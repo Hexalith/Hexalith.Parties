@@ -18,9 +18,11 @@ spec:
       labels:
         app: eventstore-admin-ui
     spec:
+      imagePullSecrets:
+      - name: zot-pull-secret
       containers:
       - name: eventstore-admin-ui
-        image: registry.hexalith.com/eventstore-admin-ui:staging-latest
+        image: registry.hexalith.com/eventstore-admin-ui:0.0.0-preview.0.353
         imagePullPolicy: IfNotPresent
         ports:
         - name: http

@@ -18,6 +18,8 @@ spec:
       labels:
         app: parties-mcp
     spec:
+      imagePullSecrets:
+      - name: zot-pull-secret
       containers:
       - name: parties-mcp
         image: registry.hexalith.com/parties-mcp:latest

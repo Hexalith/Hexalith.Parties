@@ -302,20 +302,20 @@ public sealed class K8sStory93LintTests : IDisposable
     [Fact]
     public void RegenPs1JwtPatch_IsIdempotent_NoDoublePatchOnSecondRun()
     {
-        // This test is a static-source assertion: the regen.ps1 patch block MUST guard against
-        // double-patching by checking for the presence of the secretKeyRef sibling before
-        // injecting. Verify the guard exists in the regen.ps1 source by reading the file
-        // and asserting the documented anchor strategy. This is a Tier-1 surface assertion
-        // that protects against a future refactor that drops the idempotency guard.
-        string regenPath = Path.Combine(_solutionRoot, "deploy", "k8s", "regen.ps1");
-        File.Exists(regenPath).ShouldBeTrue($"regen.ps1 not found at {regenPath}");
-        string regenText = File.ReadAllText(regenPath);
+        // Story 9.5: regen.ps1 was consolidated into publish.ps1. The static-source
+        // assertion follows the patch block to its new home — publish.ps1 must
+        // carry the same idempotency anchor (Story 9.3 AC7 contract preserved).
+        // The method name is preserved for the baseline-subset semantics of
+        // expected-test-names.txt.
+        string publishPath = Path.Combine(_solutionRoot, "deploy", "k8s", "publish.ps1");
+        File.Exists(publishPath).ShouldBeTrue($"publish.ps1 not found at {publishPath}");
+        string publishText = File.ReadAllText(publishPath);
         // Anchor strategy: idempotency check must reference the JWT secret name AND the env key name.
-        regenText.ShouldContain("hexalith-jwt-signing");
-        regenText.ShouldContain("Authentication__JwtBearer__SigningKey");
+        publishText.ShouldContain("hexalith-jwt-signing");
+        publishText.ShouldContain("Authentication__JwtBearer__SigningKey");
         // Documented anchor + no-op clause (Story 9.3 AC7 patch-idempotency contract):
         // the patch must short-circuit when a `secretKeyRef` sibling already exists.
-        regenText.ShouldContain("Idempotency");
+        publishText.ShouldContain("Idempotency");
     }
 
     // ========================================================================
@@ -530,8 +530,8 @@ public sealed class K8sStory93LintTests : IDisposable
             // and debugging requires local reproduction.
             string partialStdout;
             string partialStderr;
-            try { partialStdout = await process.StandardOutput.ReadToEndAsync(); } catch { partialStdout = "<unavailable>"; }
-            try { partialStderr = await process.StandardError.ReadToEndAsync(); } catch { partialStderr = "<unavailable>"; }
+            try { partialStdout = await process.StandardOutput.ReadToEndAsync().ConfigureAwait(false); } catch { partialStdout = "<unavailable>"; }
+            try { partialStderr = await process.StandardError.ReadToEndAsync().ConfigureAwait(false); } catch { partialStderr = "<unavailable>"; }
             throw new InvalidOperationException(
                 $"validate-deployment.ps1 exceeded the 90 s timeout and was killed.{Environment.NewLine}" +
                 $"--- partial stdout (truncated to 4 KB) ---{Environment.NewLine}{Truncate(partialStdout, 4096)}{Environment.NewLine}" +

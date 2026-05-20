@@ -3158,6 +3158,8 @@ So that I can validate the production-shape deployment path without leaving the 
 **And** they do not require recursive submodule initialization
 **And** they do not run against non-local kubectl contexts.
 
+> **Addendum (2026-05-20, sprint-change-proposal-2026-05-20-zot-build-push):** Story 9.1 AC1's byte-identical regen contract is **superseded on the image-tag line only** by Story 9.5 AC4. Image tags now derive from MinVer per commit and vary across commits. All other lines in `deploy/k8s/<app-id>/deployment.yaml` remain byte-stable per commit (deterministic-per-commit contract). The hand-authored `keycloak/` and `redis/` carve-outs retain their original byte-determinism contract. The local-cluster regex allowlist in `deploy-local.ps1` + `teardown-local.ps1` is also superseded by the mandatory `-ConfirmContext <name>` parameter in `publish.ps1` + `teardown.ps1` (Story 9.5 ADR 9.5-2).
+
 ### Story 9.2: Extend Deployment Validation to Kubernetes Manifests
 
 **Phase:** MVP
@@ -3198,3 +3200,65 @@ So that unsafe or drifted K8s artifacts are caught before they reach a cluster.
 **When** they cover valid generated manifests, missing probes, missing resource limits, drifted DAPR ACLs, drifted subscriptions, plaintext secrets, and non-local-cluster capabilities
 **Then** validation behavior matches deployment security expectations
 **And** existing Story 3.9 configuration-validation tests continue to pass unchanged.
+
+### Story 9.5: Zot Registry Build+Push Pipeline & Script Consolidation
+
+**Phase:** MVP
+**Coverage type:** implemented
+**Requirements covered:** FR31a; supports FR31, FR60, FR61, NFR30 (added 2026-05-20 by sprint-change-proposal-2026-05-20-zot-build-push)
+
+As an operator deploying Hexalith.Parties to a real Kubernetes cluster backed by the Zot registry at `registry.hexalith.com`,
+I want a single one-command pipeline that resolves the MinVer version, builds the container images, pushes them to Zot with that tag, emits the Kubernetes manifests, bootstraps the registry pull secret, and applies the full topology,
+So that there is no separate manifest-generation / build / push / apply ceremony, no stale `:latest` references, and no script that refuses to run on the real cluster context.
+
+**Acceptance Criteria:**
+
+**Given** an operator with `docker login -u parties-publisher registry.hexalith.com` credentials in `~/.docker/config.json` and a kubectl context the operator owns,
+**When** the operator runs `pwsh deploy/k8s/publish.ps1 -ConfirmContext <name>` from a clean checkout,
+**Then** the script resolves the MinVer version (exit 5 on empty / non-SemVer; warn-and-proceed on dirty tree), invokes `dotnet aspirate generate` without `--skip-build` with `--container-image-tag <minver>` + `--container-registry registry.hexalith.com`, pushes each image to `registry.hexalith.com/<app-id>:<minver>` using the `parties-publisher` credentials, exits 0 on success
+**And** bounded stdout shows the MinVer version + per-image push metadata; credentials never appear.
+
+**Given** the operator has populated `~/.docker/config.json` `auths["registry.hexalith.com"]` via `docker login -u parties-publisher`,
+**When** `publish.ps1` reaches its Secret-bootstrap block,
+**Then** the script creates or updates `zot-pull-secret` (`kubernetes.io/dockerconfigjson`) by re-emitting the `auths["registry.hexalith.com"]` block wholesale (Path B — never decoded; never echoed; never written to disk), idempotently
+**And** the operator's password / token never appears in stdout, stderr, the rendered manifest, or any log
+**And** a missing entry, malformed JSON, or any `credsStore` / `credHelpers` directive exits 6 with an actionable error referencing `docker login` and `$env:DOCKER_CONFIG` mitigations.
+
+**Given** aspirate emits `deploy/k8s/<app-id>/deployment.yaml` for every consumer of `registry.hexalith.com/*` images,
+**When** `publish.ps1` runs its post-aspirate patch block,
+**Then** every Deployment whose container image starts with `registry.hexalith.com/` gains `spec.template.spec.imagePullSecrets: [{ name: zot-pull-secret }]` at the pod-template level
+**And** the patch is idempotent (no double-insertion on second invocation)
+**And** the patch does not touch the hand-authored `deploy/k8s/keycloak/` / `deploy/k8s/redis/` carve-outs (vendor images from public registries).
+
+**Given** the MinVer version resolved in AC1,
+**When** `publish.ps1` completes aspirate generation + post-aspirate patches,
+**Then** every `image:` line in `deploy/k8s/<app-id>/deployment.yaml` for a `registry.hexalith.com/*` repository carries the resolved MinVer tag (regex `^[0-9]+\.[0-9]+\.[0-9]+(?:-[A-Za-z0-9.-]+)?$`), not `:latest`, `:staging-latest`, or empty
+**And** identical commit + MinVer + aspirate version produces identical non-image lines across runs (deterministic-per-commit contract supersedes the Story 9.1 byte-identical contract on the image-tag line only).
+
+**Given** the existing `regen.ps1`, `deploy-local.ps1`, `teardown-local.ps1`,
+**When** Story 9.5 lands,
+**Then** `regen.ps1` and `deploy-local.ps1` are deleted (subsumed by `publish.ps1`), `teardown-local.ps1` is renamed to `teardown.ps1`, and the local-cluster regex allowlist is replaced by the mandatory `-ConfirmContext <name>` parameter (ADR 9.5-2).
+
+**Given** the publish script may target any kubectl context the operator has configured,
+**When** `publish.ps1` starts,
+**Then** the script requires `-ConfirmContext <name>` matching `kubectl config current-context` exactly; mismatch → exit 2 with `expected '<arg>', got '<active>'`. The active context name is echoed once at the start of the run — never the `~/.kube/config` cluster URL, certificate authority, or token.
+
+**Given** Story 9.1 added the dapr annotation patch and Story 9.3 AC4 added the JWT `secretKeyRef` patch,
+**When** the dev agent ports these blocks into `publish.ps1`,
+**Then** both patches remain functionally identical to their `regen.ps1` versions (same idempotency anchors)
+**And** running `publish.ps1` twice in succession on the same commit produces zero diff in `deploy/k8s/<app-id>/deployment.yaml` for all three patches (dapr annotation + JWT secretKeyRef + new imagePullSecrets) — cross-patch idempotency contract.
+
+**Given** Story 9.1 documented the `deploy/dapr/` apply order, Story 9.3 AC4 added the `hexalith-jwt-signing` + `hexalith-keycloak-admin` Secret bootstrap, and Story 9.3 AC6 added the resiliency dry-run,
+**When** `publish.ps1` runs after the build/push step,
+**Then** the script executes — in this order — the `resiliency.yaml` server-side dry-run, the operator-managed Secret bootstrap (extended with `zot-pull-secret`), `kubectl apply -f` over `deploy/dapr/*.yaml`, and `kubectl apply -k deploy/k8s/`
+**And** the bounded-summary output discipline is preserved with no broader logging of credentials, ConfigMap values, or `~/.docker/config.json` contents.
+
+**Given** Story 9.2 / 9.3 established the lint + fitness suite,
+**When** the dev agent adds Story 9.5 tests additively (no rename / removal of existing tests),
+**Then** a new test class `K8sManifestPublishTests` covers at minimum 11 deploy-lane tests + 2 trait-gated live-cluster tests (MinVer-tag emission, imagePullSecrets presence, patch idempotency, MinVer resolution edge cases, credential-leak poison sweep, cross-patch idempotency, aspirate flag preflight, byte-determinism contract)
+**And** the validator gains a new lint category `K8sWorkload-MissingImagePullSecret` (fail-severity) that fires when a `registry.hexalith.com/*` Deployment lacks `spec.template.spec.imagePullSecrets[*].name == "zot-pull-secret"`
+**And** `K8sManifestGenerationTests` byte-determinism assertion is relaxed on the image-tag line only.
+
+**Given** `deploy/k8s/README.md`, `docs/getting-started.md`, `docs/deployment-guide.md`, `prd.md`, `architecture.md`, and `epics.md`,
+**When** Story 9.5 lands,
+**Then** the documentation is updated to replace the regen + deploy + teardown framing with the publish + teardown framing (`-ConfirmContext` gate), add the Zot credentials subsection in deployment-guide.md, tighten FR31a in prd.md to enumerate the build+push step, add ADR D-K8s-2 to architecture.md, and append the Story 9.5 block + Story 9.1 addendum to epics.md.

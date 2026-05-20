@@ -27,14 +27,21 @@ public sealed class K8sManifestGenerationTests
         Directory.Exists(k8sDir).ShouldBeTrue($"deploy/k8s/ must exist (resolved to '{k8sDir}').");
 
         // Top-level scripts and docs are present and committed alongside aspirate output.
+        // Story 9.5: regen.ps1 + deploy-local.ps1 were consolidated into publish.ps1;
+        // teardown-local.ps1 was renamed to teardown.ps1.
         File.Exists(Path.Combine(k8sDir, "README.md")).ShouldBeTrue(
-            "deploy/k8s/README.md must exist and document regen + parity (AC1, AC2, AC3, AC6).");
-        File.Exists(Path.Combine(k8sDir, "regen.ps1")).ShouldBeTrue(
-            "deploy/k8s/regen.ps1 must exist as the documented regeneration entry point.");
-        File.Exists(Path.Combine(k8sDir, "deploy-local.ps1")).ShouldBeTrue(
-            "deploy/k8s/deploy-local.ps1 must exist (AC3, AC4).");
-        File.Exists(Path.Combine(k8sDir, "teardown-local.ps1")).ShouldBeTrue(
-            "deploy/k8s/teardown-local.ps1 must exist (AC6).");
+            "deploy/k8s/README.md must exist and document publish + parity (AC1, AC2, AC3, AC6 of Story 9-1 + Story 9-5).");
+        File.Exists(Path.Combine(k8sDir, "publish.ps1")).ShouldBeTrue(
+            "deploy/k8s/publish.ps1 must exist as the documented publish entry point (Story 9.5 AC1).");
+        File.Exists(Path.Combine(k8sDir, "teardown.ps1")).ShouldBeTrue(
+            "deploy/k8s/teardown.ps1 must exist (Story 9.5 AC5).");
+        // Story 9.5 AC5: the old scripts are deleted; their absence is part of the contract.
+        File.Exists(Path.Combine(k8sDir, "regen.ps1")).ShouldBeFalse(
+            "deploy/k8s/regen.ps1 must be deleted (Story 9.5 AC5 — subsumed by publish.ps1).");
+        File.Exists(Path.Combine(k8sDir, "deploy-local.ps1")).ShouldBeFalse(
+            "deploy/k8s/deploy-local.ps1 must be deleted (Story 9.5 AC5 — subsumed by publish.ps1).");
+        File.Exists(Path.Combine(k8sDir, "teardown-local.ps1")).ShouldBeFalse(
+            "deploy/k8s/teardown-local.ps1 must be renamed to teardown.ps1 (Story 9.5 AC5).");
 
         File.Exists(Path.Combine(k8sDir, "kustomization.yaml")).ShouldBeTrue(
             "Top-level kustomization.yaml must exist (aspirate-emitted).");
@@ -43,26 +50,32 @@ public sealed class K8sManifestGenerationTests
 
         // The aspirate-emitted deploy/k8s/dapr/ directory holds only broken
         // placeholders for DAPR component CRs (statestore.yaml with metadata=[],
-        // pubsub.yaml with spec.type=pubsub which is invalid). regen.ps1 strips
+        // pubsub.yaml with spec.type=pubsub which is invalid). publish.ps1 strips
         // them after aspirate emits, and removes the matching references from
         // the top-level kustomization.yaml. The authoritative DAPR Components
-        // live under deploy/dapr/ and are applied directly by deploy-local.ps1.
+        // live under deploy/dapr/ and are applied directly by publish.ps1.
         Directory.Exists(Path.Combine(k8sDir, "dapr")).ShouldBeFalse(
-            "deploy/k8s/dapr/ must NOT exist after regen.ps1 — aspirate emits "
-            + "broken placeholders that regen.ps1 strips. The authoritative DAPR "
+            "deploy/k8s/dapr/ must NOT exist after publish.ps1 — aspirate emits "
+            + "broken placeholders that publish.ps1 strips. The authoritative DAPR "
             + "Components live at deploy/dapr/statestore.yaml + deploy/dapr/pubsub.yaml.");
     }
 
     [Fact]
     public void DeploymentExistsForEveryAppHostWiredAppId()
     {
+        // Story 9.5 AC4 / AC9: MinVer-derived image tags vary per commit; non-image
+        // lines remain byte-stable. The byte-determinism contract is now scoped
+        // to non-image lines (see K8sManifestPublishTests.ByteDeterminismContract_NonImageLinesAreByteStableAcrossRuns
+        // for the positive assertion). This test only verifies presence of the
+        // expected per-app folders + manifest files; image-tag shape is asserted
+        // by K8sManifestPublishTests.CommittedTree_EveryHexalithImage_CarriesNonLatestSemverTag.
         string k8sDir = K8sDirectory();
         foreach (string appId in ExpectedAppIds)
         {
             string deploymentPath = Path.Combine(k8sDir, appId, "deployment.yaml");
             File.Exists(deploymentPath).ShouldBeTrue(
                 $"Expected aspirate to emit a Deployment for app id '{appId}' at '{deploymentPath}'. "
-                + "Re-run regen.ps1 if this fails after an AppHost change.");
+                + "Re-run publish.ps1 if this fails after an AppHost change.");
 
             string servicePath = Path.Combine(k8sDir, appId, "service.yaml");
             File.Exists(servicePath).ShouldBeTrue(
@@ -80,7 +93,7 @@ public sealed class K8sManifestGenerationTests
         // AC4: every DAPR-enabled Deployment must carry dapr.io/enabled,
         // dapr.io/app-id, dapr.io/app-port, and dapr.io/config (pointing at
         // the per-app access-control Configuration CR). app-port and the
-        // per-app config name are injected by regen.ps1 (aspirate 9.1.0 does
+        // per-app config name are injected by publish.ps1 (aspirate 9.1.0 does
         // not emit them); without those injections, sidecar callbacks fail
         // and the access-control deny-by-default contract is bypassed.
         // eventstore-admin-ui and parties-mcp are NOT DAPR-enabled and are
@@ -123,10 +136,10 @@ public sealed class K8sManifestGenerationTests
                 ScalarValue(annotations, "dapr.io/app-id").ShouldBe(daprAppId,
                     $"{daprAppId} {label}: dapr.io/app-id must equal '{daprAppId}'.");
                 ScalarValue(annotations, "dapr.io/app-port").ShouldBe("8080",
-                    $"{daprAppId} {label}: dapr.io/app-port must equal '8080' (injected by regen.ps1).");
+                    $"{daprAppId} {label}: dapr.io/app-port must equal '8080' (injected by publish.ps1).");
                 ScalarValue(annotations, "dapr.io/config").ShouldBe(expectedConfig,
                     $"{daprAppId} {label}: dapr.io/config must equal '{expectedConfig}' "
-                    + "(per-app access-control Configuration CR; injected by regen.ps1 -- "
+                    + "(per-app access-control Configuration CR; injected by publish.ps1 -- "
                     + "aspirate's default 'tracing' would silently bypass access control).");
             }
         }
@@ -139,27 +152,27 @@ public sealed class K8sManifestGenerationTests
         // (statestore.yaml with metadata=[], pubsub.yaml with spec.type=pubsub
         // which is invalid -- DAPR requires pubsub.<backend>). If applied, these
         // would override the authoritative Redis Components in deploy/dapr/.
-        // regen.ps1 strips them after aspirate emits, and removes the matching
+        // publish.ps1 strips them after aspirate emits, and removes the matching
         // references from the top-level kustomization.yaml. This test enforces
         // that contract: the placeholders MUST NOT survive into the committed
         // tree, and the kustomization MUST NOT reference them.
         string k8sDir = K8sDirectory();
         File.Exists(Path.Combine(k8sDir, "dapr", "statestore.yaml")).ShouldBeFalse(
             "deploy/k8s/dapr/statestore.yaml must NOT exist post-regen. "
-            + "If this fails, regen.ps1's post-aspirate cleanup did not run "
+            + "If this fails, publish.ps1's post-aspirate cleanup did not run "
             + "or the aspirate placeholder shape changed in a way the cleanup misses.");
         File.Exists(Path.Combine(k8sDir, "dapr", "pubsub.yaml")).ShouldBeFalse(
             "deploy/k8s/dapr/pubsub.yaml must NOT exist post-regen. "
-            + "If this fails, regen.ps1's post-aspirate cleanup did not run "
+            + "If this fails, publish.ps1's post-aspirate cleanup did not run "
             + "or the aspirate placeholder shape changed in a way the cleanup misses.");
 
         string kustomization = File.ReadAllText(Path.Combine(k8sDir, "kustomization.yaml"));
         kustomization.ShouldNotContain("dapr/statestore.yaml",
             customMessage: "Top-level kustomization.yaml must NOT reference dapr/statestore.yaml. "
-                + "regen.ps1's post-aspirate cleanup is responsible for removing this line.");
+                + "publish.ps1's post-aspirate cleanup is responsible for removing this line.");
         kustomization.ShouldNotContain("dapr/pubsub.yaml",
             customMessage: "Top-level kustomization.yaml must NOT reference dapr/pubsub.yaml. "
-                + "regen.ps1's post-aspirate cleanup is responsible for removing this line.");
+                + "publish.ps1's post-aspirate cleanup is responsible for removing this line.");
     }
 
     [Fact]
@@ -242,7 +255,7 @@ public sealed class K8sManifestGenerationTests
         // directory (variant-specific state-store / pub-sub backends, access
         // control per app id, subscriptions, resiliency, topology). The deploy
         // script applies these alongside the aspirate-emitted set; alternative
-        // backends are operator opt-in (see deploy-local.ps1 filter).
+        // backends are operator opt-in (see publish.ps1 filter).
         string daprDir = AuthoritativeDaprDirectory();
         foreach (string fileName in new[]
         {
@@ -282,24 +295,25 @@ public sealed class K8sManifestGenerationTests
             customMessage: "README.md must document the pinned aspirate version (9.1.0).");
         readme.ShouldContain("dotnet tool restore",
             customMessage: "README.md must instruct developers to restore the local tool manifest.");
-        readme.ShouldContain("regen.ps1",
-            customMessage: "README.md must reference the regen.ps1 entry point (AC1).");
-        readme.ShouldContain("deploy-local.ps1",
-            customMessage: "README.md must reference deploy-local.ps1 (AC3).");
-        readme.ShouldContain("teardown-local.ps1",
-            customMessage: "README.md must reference teardown-local.ps1 (AC6).");
+        readme.ShouldContain("publish.ps1",
+            customMessage: "README.md must reference the publish.ps1 entry point (Story 9.5 AC1, AC10).");
+        readme.ShouldContain("teardown.ps1",
+            customMessage: "README.md must reference teardown.ps1 (Story 9.5 AC5, AC10).");
     }
 
     [Fact]
     public void K8sReadmeDocumentsLocalClusterAllowlist()
     {
-        // AC3: the local-cluster allowlist must be documented in the README so
-        // operators know which kubectl contexts the deploy script will accept.
+        // Story 9.5 ADR 9.5-2: the prior local-cluster regex allowlist
+        // (kind-*, k3d-*, minikube, docker-desktop) was replaced by a mandatory
+        // -ConfirmContext gate. The method name is preserved for the baseline-
+        // subset semantics of expected-test-names.txt; the assertion now
+        // verifies the README documents the new gate instead.
         string readme = File.ReadAllText(Path.Combine(K8sDirectory(), "README.md"));
-        readme.ShouldContain("kind-", customMessage: "README must list 'kind-*' in the local allowlist.");
-        readme.ShouldContain("k3d-", customMessage: "README must list 'k3d-*' in the local allowlist.");
-        readme.ShouldContain("minikube", customMessage: "README must list 'minikube' in the local allowlist.");
-        readme.ShouldContain("docker-desktop", customMessage: "README must list 'docker-desktop' in the local allowlist.");
+        readme.ShouldContain("-ConfirmContext",
+            customMessage: "README must document the mandatory -ConfirmContext parameter (Story 9.5 ADR 9.5-2).");
+        readme.ShouldContain("kubectl config current-context",
+            customMessage: "README must explain that -ConfirmContext must match `kubectl config current-context` exactly.");
     }
 
     [Fact]

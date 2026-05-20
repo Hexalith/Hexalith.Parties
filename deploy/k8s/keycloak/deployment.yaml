@@ -2,7 +2,7 @@
 # Story 9.3 AC4 / ADR 9.3-3 — Hand-authored Keycloak carve-out (path b).
 # Aspirate cannot emit Keycloak with a stable secretKeyRef admin password + WithRealmImport
 # realm bootstrap; randomized admin credentials would break the byte-determinism contract
-# (Story 9.1 Completion Notes #5). This folder is preserved by `regen.ps1` (`$PreservedNames`)
+# (Story 9.1 Completion Notes #5). This folder is preserved by `publish.ps1` (`$PreservedNames`)
 # and is asserted on a presence-only basis (NOT byte-determinism). See `deploy/k8s/README.md`.
 apiVersion: apps/v1
 kind: Deployment
@@ -31,7 +31,7 @@ spec:
         - name: http
           containerPort: 8080
         env:
-        # Admin bootstrap password sourced from a Secret bootstrapped by deploy-local.ps1
+        # Admin bootstrap password sourced from a Secret bootstrapped by publish.ps1
         # (idempotent kubectl apply --dry-run=client | apply -f -). Secret name is
         # `hexalith-keycloak-admin`; never committed to the repo.
         - name: KEYCLOAK_ADMIN

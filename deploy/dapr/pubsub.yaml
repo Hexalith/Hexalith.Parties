@@ -8,7 +8,7 @@
 #
 # Operators targeting a managed broker (Kafka, RabbitMQ, Azure Service Bus)
 # replace this file with a copy of the corresponding `pubsub-*.yaml` template
-# before running `deploy-local.ps1`. Kafka offers stronger ordering guarantees
+# before running `publish.ps1`. Kafka offers stronger ordering guarantees
 # (per-partition causal order) and should be preferred for production.
 #
 # Topic pattern: {tenant}.parties.events
