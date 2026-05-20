@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Text.RegularExpressions;
 
 using Dapr.Actors;
 using Dapr.Actors.Client;
@@ -8,11 +9,13 @@ using Dapr.Actors.Runtime;
 
 using Hexalith.EventStore.Contracts.Queries;
 using Hexalith.Parties.Contracts.Models;
+using Hexalith.Parties.Contracts.Search;
 using Hexalith.Parties.Contracts.ValueObjects;
 using Hexalith.Parties.Projections.Abstractions;
 using Hexalith.Parties.Projections.Actors;
 using Hexalith.Parties.Search;
 
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
 namespace Hexalith.Parties.Queries;
@@ -20,6 +23,8 @@ namespace Hexalith.Parties.Queries;
 public sealed partial class PartyIndexProjectionQueryActor(
     ActorHost host,
     IActorProxyFactory actorProxyFactory,
+    IPartySearchProvider searchProvider,
+    IHostApplicationLifetime hostLifetime,
     ILogger<PartyIndexProjectionQueryActor> logger) : Actor(host), IProjectionActor
 {
     public const string ActorTypeName = nameof(PartyIndexProjectionQueryActor);
@@ -28,14 +33,28 @@ public sealed partial class PartyIndexProjectionQueryActor(
     public const string PartyIndexQueryType = "PartyIndex";
     public const string PartySearchQueryType = "PartySearch";
     public const string ProjectionType = "party-index";
-    private static readonly LocalFuzzyPartySearchProvider s_searchProvider = new();
 
-    // P13: Unknown fields fail closed so a future contributor cannot bypass tenant authority
+    // Unknown fields fail closed so a future contributor cannot bypass tenant authority
     // by adding a payload field whose name is read by the actor.
     private static readonly JsonSerializerOptions s_jsonOptions = new(JsonSerializerDefaults.Web)
     {
         UnmappedMemberHandling = JsonUnmappedMemberHandling.Disallow,
     };
+
+    // P17: ISO-8601 timestamps must carry an explicit timezone designator (Z, +HH:MM, -HH:MM, +HHMM, -HHMM).
+    // Naive timestamps like "2026-05-10T08:00:00" are rejected to prevent silent UTC assumption
+    // that skews the filter by the client's local UTC offset.
+    private static readonly Regex s_iso8601WithOffset = new(
+        @"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?(?:Z|[+-]\d{2}:?\d{2})$",
+        RegexOptions.Compiled | RegexOptions.CultureInvariant);
+
+    // P3: Tenant identifiers must contain only letters, digits, underscore, hyphen, and dot.
+    // Reject anything else (including ':' which composes the actor key separator, control chars,
+    // whitespace, or oversized values) before the value flows into actor proxy construction or
+    // log templates.
+    private static readonly Regex s_validTenantId = new(
+        @"^[A-Za-z0-9_\-\.]{1,128}$",
+        RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
     public async Task<QueryResult> QueryAsync(QueryEnvelope envelope)
     {
@@ -60,13 +79,18 @@ public sealed partial class PartyIndexProjectionQueryActor(
 
             return await QueryEntriesAsync(envelope, entries =>
             {
-                PagedResult<PartySearchResult> page = s_searchProvider.Search(
+                // P13: Forward the host's ApplicationStopping token so the in-actor matching and
+                // sort loops abort during graceful shutdown. The per-request CT path
+                // (IProjectionActor.QueryAsync gaining a CancellationToken) is tracked as a
+                // cross-submodule follow-up in deferred-work.md.
+                PagedResult<PartySearchResult> page = searchProvider.Search(
                     entries.Values,
                     payload.Query,
                     payload.Type,
                     payload.Active,
                     payload.Page,
-                    payload.PageSize);
+                    payload.PageSize,
+                    hostLifetime.ApplicationStopping);
 
                 return QueryResult.FromPayload(JsonSerializer.SerializeToElement(page, s_jsonOptions), ProjectionType);
             }).ConfigureAwait(false);
@@ -145,6 +169,14 @@ public sealed partial class PartyIndexProjectionQueryActor(
 
     private static bool TryResolveActorRoute(string actorId, QueryEnvelope envelope)
     {
+        // P3: Reject malformed tenant identifiers at the boundary. Downstream proxy calls
+        // concatenate envelope.TenantId into the actor id; a stray colon, control character,
+        // or whitespace from an unsanitized upstream gateway would corrupt routing.
+        if (!s_validTenantId.IsMatch(envelope.TenantId ?? string.Empty))
+        {
+            return false;
+        }
+
         string[] segments = actorId.Split(':', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
         if (segments.Length != 3
             || !string.Equals(segments[0], ProjectionType, StringComparison.Ordinal)
@@ -189,13 +221,25 @@ public sealed partial class PartyIndexProjectionQueryActor(
         {
             return false;
         }
+        catch (ArgumentException)
+        {
+            // P9: Malformed UTF-8, encoding errors, and constructor-binding failures from
+            // System.Text.Json surface as ArgumentException variants. Treat as InvalidEnvelope;
+            // the outer catch (Exception) in QueryEntriesAsync only protects the projection-read
+            // scope, not the payload-parse scope.
+            return false;
+        }
+        catch (NotSupportedException)
+        {
+            return false;
+        }
 
         if (wire is null)
         {
             return false;
         }
 
-        // P3: Reject negative or zero Page/PageSize at the boundary so client bugs surface
+        // Reject negative or zero Page/PageSize at the boundary so client bugs surface
         // rather than being silently coerced to defaults inside the builder.
         if ((wire.Page is { } pageValue && pageValue < 1)
             || (wire.PageSize is { } pageSizeValue && pageSizeValue < 1))
@@ -252,6 +296,15 @@ public sealed partial class PartyIndexProjectionQueryActor(
             wire = JsonSerializer.Deserialize<SearchPartiesQueryPayloadWire>(payloadBytes, s_jsonOptions);
         }
         catch (JsonException)
+        {
+            return false;
+        }
+        catch (ArgumentException)
+        {
+            // P9: See TryParseListPayload for the broadened-catch rationale.
+            return false;
+        }
+        catch (NotSupportedException)
         {
             return false;
         }
@@ -313,19 +366,24 @@ public sealed partial class PartyIndexProjectionQueryActor(
             return true;
         }
 
-        // P12: Accept any well-formed ISO-8601 representation (matches System.Text.Json default
-        // round-trip semantics). Internal clients emit the strict "O" form via HttpPartiesQueryClient,
-        // but third-party adopters commonly use Z-suffixed or fraction-less forms.
+        // P17: Require an explicit timezone designator. AssumeUniversal would silently treat
+        // a naive timestamp ("2026-05-10T08:00:00") as UTC, skewing the filter by the client's
+        // local offset. Reject naive timestamps as InvalidEnvelope so callers are unambiguous.
+        if (!s_iso8601WithOffset.IsMatch(value))
+        {
+            return false;
+        }
+
         if (!DateTimeOffset.TryParse(
             value,
             CultureInfo.InvariantCulture,
-            DateTimeStyles.RoundtripKind | DateTimeStyles.AssumeUniversal,
+            DateTimeStyles.RoundtripKind,
             out DateTimeOffset parsed))
         {
             return false;
         }
 
-        // P4: Defensive guard. ToUniversalTime on a successfully-parsed DateTimeOffset cannot
+        // Defensive guard. ToUniversalTime on a successfully-parsed DateTimeOffset cannot
         // throw in current .NET (the parser already rejects out-of-range UTC instants), but
         // wrapping is cheap insurance against a future runtime change classifying overflow as
         // an unhandled ActorException instead of a bounded InvalidEnvelope.

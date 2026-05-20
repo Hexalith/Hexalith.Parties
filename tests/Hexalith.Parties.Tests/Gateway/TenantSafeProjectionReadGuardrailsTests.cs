@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 
 using Dapr.Actors;
@@ -8,10 +9,13 @@ using Dapr.Actors.Runtime;
 
 using Hexalith.EventStore.Contracts.Queries;
 using Hexalith.Parties.Contracts.Models;
+using Hexalith.Parties.Contracts.Search;
 using Hexalith.Parties.Projections.Abstractions;
 using Hexalith.Parties.Projections.Actors;
 using Hexalith.Parties.Queries;
+using Hexalith.Parties.Search;
 
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging.Abstractions;
 
 using NSubstitute;
@@ -204,7 +208,22 @@ public sealed class TenantSafeProjectionReadGuardrailsTests
         ActorTimerManager timerManager = Substitute.For<ActorTimerManager>();
         var host = ActorHost.CreateForTest<PartyIndexProjectionQueryActor>(
             new ActorTestOptions { ActorId = new ActorId(actorId), TimerManager = timerManager });
-        return new PartyIndexProjectionQueryActor(host, proxyFactory, NullLogger<PartyIndexProjectionQueryActor>.Instance);
+        IPartySearchProvider searchProvider = new LocalFuzzyPartySearchProvider();
+        IHostApplicationLifetime hostLifetime = new StubHostApplicationLifetime();
+        return new PartyIndexProjectionQueryActor(host, proxyFactory, searchProvider, hostLifetime, NullLogger<PartyIndexProjectionQueryActor>.Instance);
+    }
+
+    private sealed class StubHostApplicationLifetime : IHostApplicationLifetime
+    {
+        public CancellationToken ApplicationStarted => CancellationToken.None;
+
+        public CancellationToken ApplicationStopping => CancellationToken.None;
+
+        public CancellationToken ApplicationStopped => CancellationToken.None;
+
+        public void StopApplication()
+        {
+        }
     }
 
     private static QueryEnvelope CreateEnvelope(string tenantId, string entityId, string queryType)

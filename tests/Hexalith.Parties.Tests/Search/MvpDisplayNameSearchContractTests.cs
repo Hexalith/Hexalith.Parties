@@ -119,19 +119,29 @@ public sealed class MvpDisplayNameSearchContractTests
 
     // AC6 — Erased entries must be excluded before match/score/source/page metadata is computed.
     // Reference: 2.5-GTW-082 / 2.6-INT-033..034 (cross-cutting with Story 2.6).
+    //
+    // P10: Strengthened assertion. Adds a non-erased twin entry sharing the same display name
+    // so TotalCount=1 (matched-and-non-erased) proves the erased entry was excluded BEFORE the
+    // matching/metadata calculation, not coincidentally after. The previous assertion
+    // `TotalCount.ShouldNotBe(entries.Count)` passed trivially when the result set was empty.
     [Fact]
     public async Task SearchAsync_ErasedEntryInScope_ExcludedBeforeMetadataCalculation()
     {
         var provider = new LocalFuzzyPartySearchProvider();
         var service = new LocalPartySearchService(provider);
         List<PartyIndexEntry> entries = PartyTestData.CreateSearchScenarioEntries();
-        // Mark one entry as erased; the search must exclude it before TotalCount calculation.
+        string sharedDisplayName = entries[0].DisplayName;
+        string erasedId = entries[0].Id;
+        // Mark the original entry as erased and add a non-erased twin sharing the same display
+        // name. The query must surface exactly the non-erased twin.
         entries[0] = entries[0] with { IsErased = true };
+        PartyIndexEntry twin = entries[0] with { Id = "p-twin", IsErased = false };
+        entries.Add(twin);
 
         PartySearchResponse response = await service.SearchAsync(
             new PartySearchRequest(
                 TenantId: "tenant-a",
-                Query: entries[0].DisplayName,
+                Query: sharedDisplayName,
                 Mode: PartySearchMode.Hybrid,
                 TypeFilter: null,
                 ActiveFilter: null,
@@ -141,8 +151,9 @@ public sealed class MvpDisplayNameSearchContractTests
             entries,
             CancellationToken.None);
 
-        response.Results.Items.ShouldNotContain(r => r.Party.Id == entries[0].Id);
-        response.Results.TotalCount.ShouldNotBe(entries.Count); // erased excluded from TotalCount
+        response.Results.Items.ShouldNotContain(r => r.Party.Id == erasedId);
+        response.Results.Items.ShouldContain(r => r.Party.Id == twin.Id);
+        response.Results.TotalCount.ShouldBe(1);
     }
 
     // AC6 — Cancellation must be terminal: no fallback aggregate replay, Memories expansion, or
@@ -185,6 +196,46 @@ public sealed class MvpDisplayNameSearchContractTests
 
         IEnumerable<MatchMetadata> allMatches = result.Items.SelectMany(r => r.Matches);
         allMatches.ShouldAllBe(m => allowedMatchTypes.Contains(m.MatchType));
+    }
+
+    // P6 — Fuzzy display-name matches MUST rank below exact/prefix/contains matches. The spec's
+    // Required Test Matrix row "Optional fuzzy display-name match" calls for this ordering proof
+    // explicitly. Without this, a future score-table tweak could silently invert the ranking.
+    [Fact]
+    public void Search_FuzzyMatchAgainstExactPrefixContains_RanksFuzzyLast()
+    {
+        var provider = new LocalFuzzyPartySearchProvider();
+        List<PartyIndexEntry> entries =
+        [
+            Entry("p-exact", "Acme"),
+            Entry("p-prefix", "Acme Corporation"),
+            Entry("p-contains", "The Acme Trust"),
+            // Jaro-Winkler similarity("Acme", "Acne") >= 0.85 — produces a fuzzy match candidate.
+            Entry("p-fuzzy", "Acne"),
+        ];
+
+        PagedResult<PartySearchResult> result = provider.Search(entries, "Acme", null, null, 1, 20);
+
+        result.Items.Select(static r => r.Party.Id).ShouldBe(["p-exact", "p-prefix", "p-contains", "p-fuzzy"]);
+        result.Items[^1].Matches.ShouldContain(m => m.MatchType == "fuzzy" && m.MatchedField == "displayName");
+        // The fuzzy result must not introduce any future-reserved match metadata.
+        result.Items[^1].Matches.ShouldAllBe(m => m.MatchedField == "displayName");
+    }
+
+    // P7 — Digit-heavy tokens must not trigger fuzzy matching. The provider short-circuits at
+    // `if (token.Any(char.IsDigit)) return false;` to avoid Jaro-Winkler false positives between
+    // identifier-like strings (e.g., Entry-50000 vs. Entry-10000). Pins that contract.
+    [Theory]
+    [InlineData("Entry-50000", "Entry-10000")]
+    [InlineData("AB-99-XY", "AB-11-XY")]
+    public void Search_DigitHeavyTokens_DoNotProduceFuzzyMatch(string queryDisplayName, string entryDisplayName)
+    {
+        var provider = new LocalFuzzyPartySearchProvider();
+        List<PartyIndexEntry> entries = [Entry("p-target", entryDisplayName)];
+
+        PagedResult<PartySearchResult> result = provider.Search(entries, queryDisplayName, null, null, 1, 20);
+
+        result.Items.ShouldBeEmpty();
     }
 
     private static PartyIndexEntry Entry(string id, string displayName)

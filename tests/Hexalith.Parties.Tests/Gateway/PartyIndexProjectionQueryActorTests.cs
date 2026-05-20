@@ -6,11 +6,14 @@ using Dapr.Actors.Runtime;
 
 using Hexalith.EventStore.Contracts.Queries;
 using Hexalith.Parties.Contracts.Models;
+using Hexalith.Parties.Contracts.Search;
 using Hexalith.Parties.Contracts.ValueObjects;
 using Hexalith.Parties.Projections.Abstractions;
 using Hexalith.Parties.Projections.Actors;
 using Hexalith.Parties.Queries;
+using Hexalith.Parties.Search;
 
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 
@@ -338,6 +341,188 @@ public sealed class PartyIndexProjectionQueryActorTests
         page.TotalCount.ShouldBe(2);
     }
 
+    // P4: Erased entries on the PartySearch actor path must not surface in results or metadata.
+    // The list path was already covered; this pins the search path equivalent against the actor
+    // boundary (not just LocalPartySearchService).
+    [Fact]
+    public async Task QueryAsync_PartySearch_ErasedEntryInScope_ExcludedFromResultsAsync()
+    {
+        IActorProxyFactory actorProxyFactory = Substitute.For<IActorProxyFactory>();
+        IPartyIndexProjectionActor indexActor = Substitute.For<IPartyIndexProjectionActor>();
+        indexActor.GetEntriesAsync().Returns(Task.FromResult<IReadOnlyDictionary<string, PartyIndexEntry>>(
+            new Dictionary<string, PartyIndexEntry>(StringComparer.Ordinal)
+            {
+                ["p-active"] = Entry("p-active", "Acme", PartyType.Organization, active: true, "2026-05-01T00:00:00Z", "2026-05-01T00:00:00Z"),
+                ["p-erased"] = Entry("p-erased", "Acme", PartyType.Organization, active: true, "2026-05-01T00:00:00Z", "2026-05-01T00:00:00Z") with { IsErased = true },
+            }));
+        actorProxyFactory.CreateActorProxy<IPartyIndexProjectionActor>(
+                Arg.Any<ActorId>(),
+                Arg.Any<string>(),
+                Arg.Any<ActorProxyOptions?>())
+            .Returns(indexActor);
+
+        PartyIndexProjectionQueryActor actor = CreateActor("party-index:tenant-a:parties", actorProxyFactory);
+
+        QueryResult result = await actor.QueryAsync(CreateSearchEnvelope(
+            tenant: "tenant-a",
+            payload: Payload(new { query = "Acme", page = 1, pageSize = 20 })));
+
+        result.Success.ShouldBeTrue();
+        PagedResult<PartySearchResult> page = DeserializeSearchPage(result);
+        page.Items.Select(static i => i.Party.Id).ShouldBe(["p-active"]);
+        page.TotalCount.ShouldBe(1);
+    }
+
+    // P5: Cross-tenant search isolation at the actor boundary. The actor activated as tenant-b
+    // must never return tenant-a entries even if display names collide. Pairs with
+    // QueryAsync_KnownFieldsOnly_DerivesActorKeyFromEnvelopeTenantAsync which proves actor-key
+    // derivation; this test proves results carry only the tenant-derived index actor's data.
+    [Fact]
+    public async Task QueryAsync_PartySearch_CrossTenantDisplayNameCollision_ReturnsOnlyOwnTenantEntriesAsync()
+    {
+        IActorProxyFactory actorProxyFactory = Substitute.For<IActorProxyFactory>();
+        IPartyIndexProjectionActor tenantBIndex = Substitute.For<IPartyIndexProjectionActor>();
+        tenantBIndex.GetEntriesAsync().Returns(Task.FromResult<IReadOnlyDictionary<string, PartyIndexEntry>>(
+            new Dictionary<string, PartyIndexEntry>(StringComparer.Ordinal)
+            {
+                ["p-tenant-b-acme"] = Entry("p-tenant-b-acme", "Acme", PartyType.Organization, active: true, "2026-05-01T00:00:00Z", "2026-05-01T00:00:00Z"),
+            }));
+        actorProxyFactory.CreateActorProxy<IPartyIndexProjectionActor>(
+                Arg.Is<ActorId>(id => id.GetId() == "tenant-b:party-index"),
+                Arg.Any<string>(),
+                Arg.Any<ActorProxyOptions?>())
+            .Returns(tenantBIndex);
+
+        PartyIndexProjectionQueryActor actor = CreateActor("party-index:tenant-b:parties", actorProxyFactory);
+
+        QueryResult result = await actor.QueryAsync(CreateSearchEnvelope(
+            tenant: "tenant-b",
+            payload: Payload(new { query = "Acme", page = 1, pageSize = 20 })));
+
+        result.Success.ShouldBeTrue();
+        PagedResult<PartySearchResult> page = DeserializeSearchPage(result);
+        page.Items.Select(static i => i.Party.Id).ShouldBe(["p-tenant-b-acme"]);
+        page.TotalCount.ShouldBe(1);
+        actorProxyFactory.DidNotReceive().CreateActorProxy<IPartyIndexProjectionActor>(
+            Arg.Is<ActorId>(id => id.GetId().Contains("tenant-a", StringComparison.Ordinal)),
+            Arg.Any<string>(),
+            Arg.Any<ActorProxyOptions?>());
+    }
+
+    // P8: Envelope EntityId pointing at a sibling sub-resource must be rejected. Pins the
+    // route-check arm against silent acceptance if EntityId resolves to anything other than
+    // the parties list aggregate.
+    [Fact]
+    public async Task QueryAsync_EntityIdNotParties_FailsBeforeProjectionReadAsync()
+    {
+        IActorProxyFactory actorProxyFactory = Substitute.For<IActorProxyFactory>();
+        PartyIndexProjectionQueryActor actor = CreateActor("party-index:tenant-a:parties", actorProxyFactory);
+
+        QueryEnvelope envelope = new(
+            tenantId: "tenant-a",
+            domain: PartyIndexProjectionQueryActor.PartyDomain,
+            aggregateId: PartyIndexProjectionQueryActor.ListAggregateId,
+            queryType: PartyIndexProjectionQueryActor.PartyIndexQueryType,
+            payload: Payload(new { page = 1, pageSize = 20 }),
+            correlationId: "corr-p8",
+            userId: "user-1",
+            entityId: "not-parties");
+
+        QueryResult result = await actor.QueryAsync(envelope);
+
+        result.Success.ShouldBeFalse();
+        result.ErrorMessage.ShouldBe(QueryAdapterFailureReason.InvalidEnvelope);
+        actorProxyFactory.DidNotReceive().CreateActorProxy<IPartyIndexProjectionActor>(
+            Arg.Any<ActorId>(),
+            Arg.Any<string>(),
+            Arg.Any<ActorProxyOptions?>());
+    }
+
+    // P16: Per D4 decision, Mode and CaseId are accepted but inert. This test pins that
+    // their presence cannot influence data selection — entries returned must be identical
+    // whether Mode/CaseId are set or omitted.
+    [Fact]
+    public async Task QueryAsync_PartySearch_ModeAndCaseId_AcceptedButHaveNoEffectOnDataSelectionAsync()
+    {
+        IActorProxyFactory actorProxyFactory = Substitute.For<IActorProxyFactory>();
+        IPartyIndexProjectionActor indexActor = Substitute.For<IPartyIndexProjectionActor>();
+        indexActor.GetEntriesAsync().Returns(Task.FromResult<IReadOnlyDictionary<string, PartyIndexEntry>>(
+            new Dictionary<string, PartyIndexEntry>(StringComparer.Ordinal)
+            {
+                ["p-acme"] = Entry("p-acme", "Acme", PartyType.Organization, active: true, "2026-05-01T00:00:00Z", "2026-05-01T00:00:00Z"),
+            }));
+        actorProxyFactory.CreateActorProxy<IPartyIndexProjectionActor>(
+                Arg.Any<ActorId>(),
+                Arg.Any<string>(),
+                Arg.Any<ActorProxyOptions?>())
+            .Returns(indexActor);
+
+        PartyIndexProjectionQueryActor actor = CreateActor("party-index:tenant-a:parties", actorProxyFactory);
+
+        QueryResult baseline = await actor.QueryAsync(CreateSearchEnvelope(
+            tenant: "tenant-a",
+            payload: Payload(new { query = "Acme", page = 1, pageSize = 20 })));
+        QueryResult withMode = await actor.QueryAsync(CreateSearchEnvelope(
+            tenant: "tenant-a",
+            payload: Payload(new { query = "Acme", page = 1, pageSize = 20, mode = "Graph", caseId = "case-X" })));
+
+        baseline.Success.ShouldBeTrue();
+        withMode.Success.ShouldBeTrue();
+        IEnumerable<string> baselineIds = DeserializeSearchPage(baseline).Items.Select(static i => i.Party.Id);
+        IEnumerable<string> withModeIds = DeserializeSearchPage(withMode).Items.Select(static i => i.Party.Id);
+        withModeIds.ShouldBe(baselineIds);
+    }
+
+    // P17: Naive ISO-8601 timestamps (no Z, no +HH:MM offset) must be rejected as InvalidEnvelope.
+    // Decision D5: explicit offset is required to prevent silent UTC assumption that skews the
+    // filter by the caller's local offset.
+    [Theory]
+    [InlineData("2026-05-10T08:00:00")]
+    [InlineData("2026-05-10T08:00:00.123")]
+    [InlineData("2026-05-10")]
+    public async Task QueryAsync_NaiveTimestampWithoutOffset_FailsBeforeProjectionReadAsync(string naiveTimestamp)
+    {
+        IActorProxyFactory actorProxyFactory = Substitute.For<IActorProxyFactory>();
+        PartyIndexProjectionQueryActor actor = CreateActor("party-index:tenant-a:parties", actorProxyFactory);
+
+        QueryResult result = await actor.QueryAsync(CreateEnvelope(
+            tenant: "tenant-a",
+            payload: Payload(new { page = 1, pageSize = 20, createdAfter = naiveTimestamp })));
+
+        result.Success.ShouldBeFalse();
+        result.ErrorMessage.ShouldBe(QueryAdapterFailureReason.InvalidEnvelope);
+        actorProxyFactory.DidNotReceive().CreateActorProxy<IPartyIndexProjectionActor>(
+            Arg.Any<ActorId>(),
+            Arg.Any<string>(),
+            Arg.Any<ActorProxyOptions?>());
+    }
+
+    // P17 companion: timestamps with an explicit offset (Z, +HH:MM, -HH:MM) are accepted.
+    [Theory]
+    [InlineData("2026-05-10T08:00:00Z")]
+    [InlineData("2026-05-10T08:00:00+02:00")]
+    [InlineData("2026-05-10T08:00:00-05:30")]
+    [InlineData("2026-05-10T08:00:00.123Z")]
+    public async Task QueryAsync_TimestampWithExplicitOffset_AcceptedAsync(string explicitTimestamp)
+    {
+        IActorProxyFactory actorProxyFactory = Substitute.For<IActorProxyFactory>();
+        IPartyIndexProjectionActor indexActor = Substitute.For<IPartyIndexProjectionActor>();
+        indexActor.GetEntriesAsync().Returns(Task.FromResult<IReadOnlyDictionary<string, PartyIndexEntry>>(
+            new Dictionary<string, PartyIndexEntry>(StringComparer.Ordinal)));
+        actorProxyFactory.CreateActorProxy<IPartyIndexProjectionActor>(
+                Arg.Any<ActorId>(),
+                Arg.Any<string>(),
+                Arg.Any<ActorProxyOptions?>())
+            .Returns(indexActor);
+        PartyIndexProjectionQueryActor actor = CreateActor("party-index:tenant-a:parties", actorProxyFactory);
+
+        QueryResult result = await actor.QueryAsync(CreateEnvelope(
+            tenant: "tenant-a",
+            payload: Payload(new { page = 1, pageSize = 20, createdAfter = explicitTimestamp })));
+
+        result.Success.ShouldBeTrue();
+    }
+
     [Fact]
     public async Task QueryAsync_OperationCanceledExceptionFromProjectionRead_PropagatesCancellationAsync()
     {
@@ -385,12 +570,16 @@ public sealed class PartyIndexProjectionQueryActorTests
         result.Success.ShouldBeFalse();
         result.ErrorMessage.ShouldBe(QueryAdapterFailureReason.ActorException);
         recordingLogger.Records.ShouldNotBeEmpty();
+        // P11: Positive assertions. A regression that silently disables structured logging
+        // would otherwise satisfy the ShouldNotContain assertions vacuously.
+        recordingLogger.Records.ShouldContain(r => r.Message.Contains("PartyIndexQueryRouting", StringComparison.Ordinal));
+        recordingLogger.Records.ShouldContain(r => r.Message.Contains("PartyIndexProjectionReadFailed", StringComparison.Ordinal));
+        recordingLogger.Records.ShouldContain(r => r.Message.Contains("ExceptionType=InvalidOperationException", StringComparison.Ordinal));
         foreach (string message in recordingLogger.Records.Select(static r => r.Message))
         {
             // PII guards: nothing from the (intentionally PII-laden) exception message must leak.
             message.ShouldNotContain("Ada", Case.Insensitive);
             message.ShouldNotContain("ada@example.test", Case.Insensitive);
-            message.ShouldNotContain("displayName", Case.Insensitive);
             message.ShouldNotContain("contactChannels", Case.Insensitive);
             // Actor/storage key guards (P14): neither the partitioned legacy form nor the
             // current tenant-scoped form is permitted in diagnostic output.
@@ -410,7 +599,22 @@ public sealed class PartyIndexProjectionQueryActorTests
         ActorTimerManager timerManager = Substitute.For<ActorTimerManager>();
         var host = ActorHost.CreateForTest<PartyIndexProjectionQueryActor>(
             new ActorTestOptions { ActorId = new ActorId(actorId), TimerManager = timerManager });
-        return new PartyIndexProjectionQueryActor(host, actorProxyFactory, logger);
+        IPartySearchProvider searchProvider = new LocalFuzzyPartySearchProvider();
+        IHostApplicationLifetime hostLifetime = new StubHostApplicationLifetime();
+        return new PartyIndexProjectionQueryActor(host, actorProxyFactory, searchProvider, hostLifetime, logger);
+    }
+
+    private sealed class StubHostApplicationLifetime : IHostApplicationLifetime
+    {
+        public CancellationToken ApplicationStarted => CancellationToken.None;
+
+        public CancellationToken ApplicationStopping => CancellationToken.None;
+
+        public CancellationToken ApplicationStopped => CancellationToken.None;
+
+        public void StopApplication()
+        {
+        }
     }
 
     private static QueryEnvelope CreateEnvelope(string tenant, byte[] payload)

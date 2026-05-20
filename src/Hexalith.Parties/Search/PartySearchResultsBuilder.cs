@@ -46,8 +46,10 @@ internal static class PartySearchResultsBuilder
                 createdBefore,
                 modifiedAfter,
                 modifiedBefore)
-            .OrderBy(GetSortableName, StringComparer.OrdinalIgnoreCase)
-            .ThenBy(e => e.DisplayName, StringComparer.OrdinalIgnoreCase)
+            // P12: Sort by normalized display name, then party id — matches the spec's
+            // "normalized display name, then party id" tie-break and the LocalFuzzyPartySearchProvider
+            // sort. Avoids the prior SortName-vs-DisplayName divergence between list and search paths.
+            .OrderBy(e => LocalFuzzyPartySearchProvider.NormalizeDiacritics(e.DisplayName), StringComparer.OrdinalIgnoreCase)
             .ThenBy(e => e.Id, StringComparer.Ordinal)];
 
         return CreatePagedResult(sorted, normalizedPage, normalizedPageSize);
@@ -76,8 +78,8 @@ internal static class PartySearchResultsBuilder
             .OrderBy(m => m.Priority)
             .ThenByDescending(m => m.FieldCount)
             .ThenByDescending(m => m.TokenCount)
-            .ThenBy(m => GetSortableName(m.Result.Party), StringComparer.OrdinalIgnoreCase)
-            .ThenBy(m => m.Result.Party.DisplayName, StringComparer.OrdinalIgnoreCase)
+            // P12: Tie-break by normalized display name then party id, matching the search provider.
+            .ThenBy(m => LocalFuzzyPartySearchProvider.NormalizeDiacritics(m.Result.Party.DisplayName), StringComparer.OrdinalIgnoreCase)
             .ThenBy(m => m.Result.Party.Id, StringComparer.Ordinal)
             .Select(m => m.Result)];
 
@@ -138,9 +140,6 @@ internal static class PartySearchResultsBuilder
 
         return filtered;
     }
-
-    private static string GetSortableName(PartyIndexEntry entry)
-        => string.IsNullOrWhiteSpace(entry.SortName) ? entry.DisplayName : entry.SortName;
 
     private static (PartySearchResult Result, int Priority, int FieldCount, int TokenCount)? EvaluateEntry(
         PartyIndexEntry entry,
@@ -234,13 +233,11 @@ internal static class PartySearchResultsBuilder
 
     private static PagedResult<T> CreatePagedResult<T>(IReadOnlyList<T> items, int page, int pageSize)
     {
-        // P10: Defensive normalization inside the helper. BuildPagedList already clamps
-        // upstream, but BuildSearchResults reaches here through callers (LocalPartySearchService)
-        // that may not normalize. Clamping here removes a latent division-by-zero risk and
-        // ensures the helper itself is safe regardless of caller discipline. The returned
-        // Page/PageSize echo the caller-supplied values so behavioral contracts pinned by
-        // existing tests (large-page input is preserved in metadata) remain unchanged.
-        int safePageSize = Math.Max(1, pageSize);
+        // P1/P15: Clamp pageSize to [1, 100] and page to [1, ...]. Returning the safe values
+        // ensures `TotalPages = ceil(TotalCount / PageSize)` is consistent with the data the
+        // client receives — the previous "echo caller-supplied" behavior produced inconsistent
+        // metadata where Items.Count would not match the advertised PageSize for pageSize > 100.
+        int safePageSize = Math.Clamp(pageSize, 1, 100);
         int safePage = Math.Max(1, page);
         int totalCount = items.Count;
         int totalPages = totalCount == 0 ? 1 : (int)Math.Ceiling((double)totalCount / safePageSize);
@@ -251,8 +248,8 @@ internal static class PartySearchResultsBuilder
         return new PagedResult<T>
         {
             Items = pagedItems,
-            Page = page,
-            PageSize = pageSize,
+            Page = safePage,
+            PageSize = safePageSize,
             TotalCount = totalCount,
             TotalPages = totalPages,
         };

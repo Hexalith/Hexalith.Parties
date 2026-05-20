@@ -57,8 +57,12 @@ public class BasicPartySearchProviderTests
         }
     }
 
+    // P12: List sort tie-break uses normalized display name then party id — unified with the
+    // search provider's tie-break per spec ("normalized display name, then party id"). The
+    // legacy SortName property is no longer consulted by the list path; the search and list
+    // paths now produce identical ordering for the same dataset.
     [Fact]
-    public void BuildPagedList_UsesSortNameWhenPresent()
+    public void BuildPagedList_SortsByNormalizedDisplayName_IgnoringSortNameProperty()
     {
         List<PartyIndexEntry> entries =
         [
@@ -68,6 +72,8 @@ public class BasicPartySearchProviderTests
                 Type = PartyType.Person,
                 IsActive = true,
                 DisplayName = "Alpha Zed",
+                // SortName is set to a value that would order this entry SECOND under the legacy
+                // SortName-based comparator. Under the new contract it must be ignored.
                 SortName = "Zed, Alpha",
                 CreatedAt = DateTimeOffset.UtcNow.AddDays(-2),
                 LastModifiedAt = DateTimeOffset.UtcNow.AddDays(-1),
@@ -86,7 +92,8 @@ public class BasicPartySearchProviderTests
 
         PagedResult<PartyIndexEntry> result = PartySearchResultsBuilder.BuildPagedList(entries, null, null, 1, 20);
 
-        result.Items.Select(e => e.Id).ShouldBe(["p-zed-display", "p-alpha-display"]);
+        // "Alpha Zed" < "Zed Alpha" by normalized display name, regardless of SortName.
+        result.Items.Select(e => e.Id).ShouldBe(["p-alpha-display", "p-zed-display"]);
     }
 
     [Fact]

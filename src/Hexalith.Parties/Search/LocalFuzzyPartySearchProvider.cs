@@ -12,6 +12,10 @@ namespace Hexalith.Parties.Search;
 /// </summary>
 internal sealed class LocalFuzzyPartySearchProvider : IPartySearchProvider
 {
+    // P1: Upper-bound clamp matches PartySearchResultsBuilder.BuildPagedList policy.
+    // Defense-in-depth against payload-size DoS — Take(int.MaxValue) over large tenants can OOM.
+    internal const int MaxPageSize = 100;
+
     public PagedResult<PartySearchResult> Search(
         IEnumerable<PartyIndexEntry> entries,
         string query,
@@ -37,11 +41,12 @@ internal sealed class LocalFuzzyPartySearchProvider : IPartySearchProvider
 
         if (string.IsNullOrWhiteSpace(query))
         {
+            // P15: Echo normalized values so paging math stays consistent across all paths.
             return new PagedResult<PartySearchResult>
             {
                 Items = [],
-                Page = page,
-                PageSize = pageSize,
+                Page = Math.Max(1, page),
+                PageSize = Math.Clamp(pageSize, 1, MaxPageSize),
                 TotalCount = 0,
                 TotalPages = 1,
             };
@@ -244,21 +249,31 @@ internal sealed class LocalFuzzyPartySearchProvider : IPartySearchProvider
 
     private static PagedResult<PartySearchResult> CreatePagedResult(IReadOnlyList<PartySearchResult> items, int page, int pageSize)
     {
+        // P1: Clamp pageSize to [1, MaxPageSize]. Take(int.MaxValue) over a populated list
+        // would force the LINQ pipeline to materialize the entire result set into a single
+        // List<T>, risking OOM on large tenants.
+        int safePageSize = Math.Clamp(pageSize, 1, MaxPageSize);
+        // P15: Math.Max(1, page) ensures the response's Page index is always valid even if
+        // the caller passed 0 or negative. Upper bound (Page > TotalPages) is left as-is so
+        // clients see exactly which out-of-range page they requested.
+        int safePage = Math.Max(1, page);
         int totalCount = items.Count;
-        int totalPages = totalCount == 0 ? 1 : (int)Math.Ceiling((double)totalCount / pageSize);
+        int totalPages = totalCount == 0 ? 1 : (int)Math.Ceiling((double)totalCount / safePageSize);
         // Use long arithmetic and clamp to int.MaxValue so a malicious or buggy caller
         // passing Page=int.MaxValue cannot overflow `(page-1)*pageSize` to a negative value
         // (Enumerable.Skip with negative returns the full sequence, producing the wrong page
         // with the advertised page index).
-        long skipLong = (long)Math.Max(0, page - 1) * Math.Max(0, pageSize);
+        long skipLong = (long)(safePage - 1) * safePageSize;
         int skip = skipLong > int.MaxValue ? int.MaxValue : (int)skipLong;
-        List<PartySearchResult> pagedItems = [.. items.Skip(skip).Take(pageSize)];
+        List<PartySearchResult> pagedItems = [.. items.Skip(skip).Take(safePageSize)];
 
         return new PagedResult<PartySearchResult>
         {
             Items = pagedItems,
-            Page = page,
-            PageSize = pageSize,
+            // P15: Echo the safe values so `TotalPages = ceil(TotalCount / PageSize)` is consistent
+            // with the data the client receives.
+            Page = safePage,
+            PageSize = safePageSize,
             TotalCount = totalCount,
             TotalPages = totalPages,
         };
