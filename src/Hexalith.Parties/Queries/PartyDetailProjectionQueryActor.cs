@@ -41,7 +41,7 @@ public sealed partial class PartyDetailProjectionQueryActor(
         }
 
         string detailActorId = $"{envelope.TenantId}:party-detail:{partyId}";
-        Log.PartyDetailQueryRouting(logger, envelope.CorrelationId, envelope.TenantId, envelope.QueryType, detailActorId);
+        Log.PartyDetailQueryRouting(logger, envelope.CorrelationId, envelope.TenantId, envelope.QueryType);
 
         try
         {
@@ -65,12 +65,12 @@ public sealed partial class PartyDetailProjectionQueryActor(
         }
         catch (Exception ex) when (IsProjectionActorNotFound(ex))
         {
-            Log.PartyDetailProjectionNotFound(logger, envelope.CorrelationId, envelope.TenantId, envelope.QueryType, detailActorId);
+            Log.PartyDetailProjectionNotFound(logger, envelope.CorrelationId, envelope.TenantId, envelope.QueryType);
             return QueryResult.Failure(QueryAdapterFailureReason.ActorNotFoundInfrastructure);
         }
         catch (Exception ex)
         {
-            Log.PartyDetailProjectionReadFailed(logger, ex, envelope.CorrelationId, envelope.TenantId, envelope.QueryType, detailActorId);
+            Log.PartyDetailProjectionReadFailed(logger, ex, envelope.CorrelationId, envelope.TenantId, envelope.QueryType);
             return QueryResult.Failure(QueryAdapterFailureReason.ActorException);
         }
     }
@@ -124,35 +124,32 @@ public sealed partial class PartyDetailProjectionQueryActor(
         [LoggerMessage(
             EventId = 8600,
             Level = LogLevel.Debug,
-            Message = "Routing party detail query: CorrelationId={CorrelationId}, TenantId={TenantId}, QueryType={QueryType}, ActorId={ActorId}, Stage=PartyDetailQueryRouting")]
+            Message = "Routing party detail query: CorrelationId={CorrelationId}, TenantId={TenantId}, QueryType={QueryType}, Stage=PartyDetailQueryRouting")]
         public static partial void PartyDetailQueryRouting(
             ILogger logger,
             string correlationId,
             string tenantId,
-            string queryType,
-            string actorId);
+            string queryType);
 
         [LoggerMessage(
             EventId = 8601,
             Level = LogLevel.Warning,
-            Message = "Party detail projection actor not found: CorrelationId={CorrelationId}, TenantId={TenantId}, QueryType={QueryType}, ActorId={ActorId}, Stage=PartyDetailProjectionNotFound")]
+            Message = "Party detail projection actor not found: CorrelationId={CorrelationId}, TenantId={TenantId}, QueryType={QueryType}, Stage=PartyDetailProjectionNotFound")]
         public static partial void PartyDetailProjectionNotFound(
             ILogger logger,
             string correlationId,
             string tenantId,
-            string queryType,
-            string actorId);
+            string queryType);
 
         [LoggerMessage(
             EventId = 8602,
             Level = LogLevel.Warning,
-            Message = "Party detail projection read failed: CorrelationId={CorrelationId}, TenantId={TenantId}, QueryType={QueryType}, ActorId={ActorId}, Stage=PartyDetailProjectionReadFailed")]
+            Message = "Party detail projection read failed: CorrelationId={CorrelationId}, TenantId={TenantId}, QueryType={QueryType}, Stage=PartyDetailProjectionReadFailed")]
         public static partial void PartyDetailProjectionReadFailed(
             ILogger logger,
             Exception exception,
             string correlationId,
             string tenantId,
-            string queryType,
-            string actorId);
+            string queryType);
     }
 }

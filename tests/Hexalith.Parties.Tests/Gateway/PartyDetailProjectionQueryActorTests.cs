@@ -204,7 +204,7 @@ public sealed class PartyDetailProjectionQueryActorTests
         // masking the cancel signal as a generic ActorException failure.
         IActorProxyFactory actorProxyFactory = Substitute.For<IActorProxyFactory>();
         IPartyDetailProjectionActor detailActor = Substitute.For<IPartyDetailProjectionActor>();
-        detailActor.GetDetailJsonAsync().Throws(new OperationCanceledException());
+        detailActor.GetDetailAsync().Throws(new OperationCanceledException());
         actorProxyFactory.CreateActorProxy<IPartyDetailProjectionActor>(
                 Arg.Any<ActorId>(),
                 Arg.Any<string>(),
@@ -236,7 +236,7 @@ public sealed class PartyDetailProjectionQueryActorTests
 
         // 2) Not-found path — exercises PartyDetailProjectionNotFound (Warning)
         IPartyDetailProjectionActor notFoundProxy = Substitute.For<IPartyDetailProjectionActor>();
-        notFoundProxy.GetDetailJsonAsync().Throws(new InvalidOperationException("did not find address for actor"));
+        notFoundProxy.GetDetailAsync().Throws(new InvalidOperationException("did not find address for actor"));
         actorProxyFactory.CreateActorProxy<IPartyDetailProjectionActor>(
                 Arg.Is<ActorId>(id => id.GetId() == "tenant-a:party-detail:p-log-missing"),
                 Arg.Any<string>(),
@@ -245,7 +245,7 @@ public sealed class PartyDetailProjectionQueryActorTests
 
         // 3) Read-failed path — exercises PartyDetailProjectionReadFailed (Warning, with exception)
         IPartyDetailProjectionActor failedProxy = Substitute.For<IPartyDetailProjectionActor>();
-        failedProxy.GetDetailJsonAsync().Throws(new InvalidOperationException("transient infrastructure failure"));
+        failedProxy.GetDetailAsync().Throws(new InvalidOperationException("transient infrastructure failure"));
         actorProxyFactory.CreateActorProxy<IPartyDetailProjectionActor>(
                 Arg.Is<ActorId>(id => id.GetId() == "tenant-a:party-detail:p-log-fail"),
                 Arg.Any<string>(),
@@ -274,6 +274,7 @@ public sealed class PartyDetailProjectionQueryActorTests
             message.ShouldNotContain("personDetails", Case.Insensitive);
             message.ShouldNotContain("contactChannels", Case.Insensitive);
             message.ShouldNotContain("\"id\":", Case.Sensitive);
+            message.ShouldNotContain("tenant-a:party-detail", Case.Insensitive);
 
             // Exception arg (if any) is allowed for diagnostics, but its message must not leak our synthetic PII
             if (exception is not null)

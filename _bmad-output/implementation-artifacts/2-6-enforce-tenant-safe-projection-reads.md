@@ -1,6 +1,6 @@
 # Story 2.6: Enforce Tenant-Safe Projection Reads
 
-Status: ready-for-dev
+Status: in-progress
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -317,16 +317,44 @@ dotnet build Hexalith.Parties.slnx --configuration Release
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+GPT-5 Codex
 
 ### Debug Log References
 
+- 2026-05-20 12:57 +02:00: Story and sprint status moved to `in-progress`.
+- 2026-05-20: Activated Story 2.6 tenant-safe projection guardrail tests and corrected detail query actor cancellation/logging test substitutes to exercise `GetDetailAsync`.
+- 2026-05-20: Hardened detail/index query and projection diagnostics to avoid actor/state key, party id, and exception text leakage while preserving coarse query/projection metadata.
+- 2026-05-20: Focused validation passed:
+  - `dotnet test tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj --configuration Release --filter "FullyQualifiedName~PartyDetailProjectionActorCorruptionTests|FullyQualifiedName~PartyIndexProjectionActorCorruptionTests|FullyQualifiedName~PartyDetailProjectionQueryActorTests|FullyQualifiedName~PartyIndexProjectionQueryActorTests|FullyQualifiedName~TenantSafeProjectionReadGuardrailsTests"`
+  - `dotnet test tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj --configuration Release --filter FullyQualifiedName~EventStoreGatewayRoutingTests`
+  - `dotnet test tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj --configuration Release --filter "FullyQualifiedName~PartyDetailProjectionActorCorruptionTests|FullyQualifiedName~PartyIndexProjectionActorCorruptionTests|FullyQualifiedName~PartySearchServiceBoundaryTests|FullyQualifiedName~ArchitecturalFitnessTests"`
+  - `dotnet test tests/Hexalith.Parties.Client.Tests/Hexalith.Parties.Client.Tests.csproj --configuration Release --filter FullyQualifiedName~HttpPartiesQueryClientTests`
+  - `dotnet test tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj --configuration Release --filter FullyQualifiedName~LocalFuzzyPartySearchProviderTests`
+  - `dotnet test tests/Hexalith.Parties.Client.Tests/Hexalith.Parties.Client.Tests.csproj --configuration Release`
+- 2026-05-20: Final workflow gate is blocked by unrelated repository state:
+  - `dotnet build Hexalith.Parties.slnx --configuration Release` fails because `Hexalith.Memories` requires nested submodule `Hexalith.Commons`; nested submodule initialization is prohibited unless explicitly requested.
+  - The same solution build also fails on unrelated CA2007 warnings in `tests/Hexalith.Parties.DeployValidation.Tests/K8sStory93LintTests.cs`.
+  - `dotnet test tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj --configuration Release` fails on pre-existing `AppHostTenantsTopologyTests.AppHostProgramMapsPartyDomainToPartiesActorHost`, which expects the legacy `*|party|v1` environment key while the AppHost currently uses the sanitized `wildcard_party_v1` key.
+
 ### Completion Notes List
+
+- Activated all previously skipped Story 2.6 guardrail tests in `TenantSafeProjectionReadGuardrailsTests` that could be materialized with existing actor/test harnesses.
+- Detail and index query adapters continue deriving projection actor ids from the authenticated EventStore `QueryEnvelope.TenantId`; forged payload tenant/partition metadata either has no effect or is rejected before actor construction.
+- Detail query adapter diagnostics no longer include constructed actor keys.
+- Detail and index projection actor diagnostics now emit coarse projection/failure metadata and exception type names, without actor keys, state keys, party ids, or raw exception text.
+- Story implementation is not marked `review` because full-suite validation is blocked by unrelated repository issues listed above.
 
 ### File List
 
+- src/Hexalith.Parties/Queries/PartyDetailProjectionQueryActor.cs
+- src/Hexalith.Parties.Projections/Actors/PartyDetailProjectionActor.cs
+- src/Hexalith.Parties.Projections/Actors/PartyIndexProjectionActor.cs
+- tests/Hexalith.Parties.Tests/Gateway/PartyDetailProjectionQueryActorTests.cs
+- tests/Hexalith.Parties.Tests/Gateway/TenantSafeProjectionReadGuardrailsTests.cs
+
 ## Change Log
 
+- 2026-05-20: Implemented tenant-safe projection read guardrail hardening and activated focused Story 2.6 tests; story remains in progress because final full-suite validation is blocked by unrelated repository state.
 - 2026-05-19: Party-mode review applied low-risk clarifications for trusted tenant-source authority, before-construction proof, non-enumerating detail probes, degraded/search provenance proof, actor/cache key collision coverage, metadata leakage assertions, and diagnostics fixture breadth.
 - 2026-05-19: Story created by BMAD pre-dev hardening automation with existing EventStore query gateway, detail/index projection actors, tenant-source authority, degraded-state, privacy-safe diagnostics, and focused validation guidance.
 
