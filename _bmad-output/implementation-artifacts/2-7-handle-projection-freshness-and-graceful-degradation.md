@@ -93,6 +93,15 @@ so that my application can behave safely when projections lag or infrastructure 
 - `DegradedResponseMiddleware` may expose coarse service degradation but must not manufacture freshness, authorize stale data, or turn unavailable infrastructure into a safe read claim.
 - Detail, list/filter, and search paths must use identical tenant-safety rules. Search/list metadata, page counts, match metadata, and source metadata must be calculated only after tenant authorization, erasure filtering, freshness/provenance checks, and degraded-state classification.
 
+## Advanced Elicitation Clarifications
+
+- EventStore query-client reads currently use `SubmitQueryRequest` over `POST api/v1/queries`; GET-only degraded headers are not sufficient evidence for typed client freshness unless the accepted gateway path explicitly maps those headers to the query response. If the implementation keeps POST query reads, prove freshness/degradation through an accepted query wrapper, additive response metadata, or another documented EventStore-fronted signal that clients can observe.
+- In-memory actor fields and static last-known caches are not provenance by themselves. Cached detail or index data can be returned only when the active actor id, state key/cache key, projection kind, party or partition scope, erasure filtering, and current request tenant are all proven before rows, counts, match metadata, or freshness status are emitted.
+- Health status semantics must stay fail-closed: `dapr-sidecar` unhealthy and `projection-actors` unhealthy are unsafe read states, even if stale data exists in memory. `dapr-pubsub` degraded or state-store unavailable may expose stale/degraded read metadata only when projection actors remain reachable and the same-tenant projection/cache provenance check succeeds.
+- `PartySearchExecutionStatus.LocalOnly` means the accepted local index/search path was used; it is not automatically a runtime degradation reason. Do not populate degraded reason, freshness warnings, or source metadata from local-only status unless a separate health/freshness check proves the service is degraded for this tenant-safe read.
+- Freshness "latest known event position" evidence must identify the local trusted source being compared, such as projection checkpoint state or per-party sequence tracking, without exposing the raw value. If that source is missing, corrupt, canceled, or only partially loaded, the read must not claim `current`.
+- Cancellation is terminal for this story's added freshness work. Once cancellation is observed, do not start health probes, projection actor calls, cache refreshes, aggregate replay, detail fan-out, search expansion, or retries to improve freshness classification.
+
 ## Tasks / Subtasks
 
 - [ ] Task 1: Audit accepted freshness/degradation surfaces before editing (AC: 1, 2, 3, 4, 7)
@@ -101,6 +110,7 @@ so that my application can behave safely when projections lag or infrastructure 
   - [ ] Inspect `src/Hexalith.Parties/Middleware/DegradedResponseMiddleware.cs`; it already emits `X-Service-Degraded` and `X-Stale-Data-Age` for safe GET responses when health indicates stale reads can continue.
   - [ ] Inspect `src/Hexalith.Parties/HealthChecks/ProjectionActorsHealthCheck.cs` and the Dapr sidecar/state-store/pub-sub health checks to understand which degraded states already map to healthy, degraded, or unhealthy.
   - [ ] Treat the existing EventStore-fronted query path and degraded response middleware as the accepted boundary unless an existing EventStore query contract already defines a typed freshness metadata envelope. Do not invent a parallel REST response shape in `src/Hexalith.Parties`.
+  - [ ] Verify whether detail/list/search consumers observe GET responses or `POST api/v1/queries` responses; do not count GET-only degraded headers as client freshness proof for POST query reads unless the gateway explicitly propagates them.
 
 - [ ] Task 2: Define the bounded freshness contract without broad public redesign (AC: 2, 3, 4, 5)
   - [ ] Reuse existing response metadata or headers when they already provide the freshness/degradation signal; otherwise add the smallest additive contract needed for detail, list, and search reads.
@@ -109,6 +119,7 @@ so that my application can behave safely when projections lag or infrastructure 
   - [ ] Ensure a healthy current projection does not emit stale warnings, and a degraded service condition is not hidden when read data is still returned.
   - [ ] Preserve forward-compatible, additive contract changes only. Existing clients must continue deserializing current `PartyDetail`, `PagedResult<PartyIndexEntry>`, and `PagedResult<PartySearchResult>` payloads unless an accepted EventStore wrapper already carries metadata outside payload.
   - [ ] Treat absent or untrusted freshness metadata as unsafe unless the path returns a metadata-only degraded/unavailable outcome without party rows, counts, match metadata, or currentness claims.
+  - [ ] Keep `PartySearchExecutionStatus.LocalOnly` separate from runtime degraded health; local-only status alone must not create degraded reasons, stale warnings, or infrastructure diagnostics.
 
 - [ ] Task 3: Harden detail freshness and degraded reads (AC: 1, 2, 3, 4, 5, 6)
   - [ ] Inspect `src/Hexalith.Parties.Projections/Actors/PartyDetailProjectionActor.cs` and `src/Hexalith.Parties.Projections/Abstractions/IPartyDetailProjectionActor.cs`.
@@ -130,6 +141,7 @@ so that my application can behave safely when projections lag or infrastructure 
   - [ ] Ensure sidecar-unavailable and projection-actor-unavailable states do not pretend stale reads are safe.
   - [ ] Ensure pub/sub degraded and state-store unavailable states expose degraded/stale metadata only when projection actors can still safely serve trusted read state.
   - [ ] Keep degraded diagnostics metadata-only: operation, query type, projection kind, coarse health category, stale age bucket if exposed, status code, and correlation id are acceptable.
+  - [ ] Assert the health registration/failure-status behavior that `DegradedResponseMiddleware` consumes, especially that sidecar-unhealthy and projection-actor-unhealthy states suppress stale-read success headers or metadata.
 
 - [ ] Task 6: Preserve adjacent boundaries and non-goals (AC: 1, 5, 6)
   - [ ] Do not add public REST controllers, Swagger/OpenAPI endpoints, MCP tools, AdminPortal-only routes, picker-specific logic, or direct projection actor calls from UI surfaces.
@@ -156,6 +168,7 @@ so that my application can behave safely when projections lag or infrastructure 
 | Current search read | No stale/degraded indicator and match/score/source metadata calculated from current tenant index. |
 | Accepted mutation then projection catch-up | Detail, list, and search observe the changed party inside the documented consistency target. |
 | Missing freshness metadata | No current claim is emitted; the read either fails closed or returns only a metadata-only degraded/unavailable outcome from trusted same-tenant state. |
+| EventStore POST query read | Freshness/degradation is observable through the accepted query response path, not only GET-only degraded middleware headers. |
 | Detail actor rebuilding with same-tenant cache | Bounded stale/rebuilding/degraded status; same-tenant cached detail only if provenance is proven. |
 | Index actor rebuilding with same-tenant cache | Bounded stale/rebuilding/degraded status; rows, counts, and metadata only from proven same-tenant cache. |
 | Pub/sub degraded | Safe read responses include degraded/stale signal; no data-source fallback begins. |
@@ -169,6 +182,7 @@ so that my application can behave safely when projections lag or infrastructure 
 | Cross-tenant stale probe | Tenant B cannot infer tenant A existence, freshness, rebuild state, counts, positions, or cache age. |
 | Healthy current after degraded interval | Degraded/stale headers or metadata are cleared for later current reads. |
 | 5xx response while degraded | Degraded headers are not added to failed server responses. |
+| Local-only search without runtime degradation | `LocalOnly` remains a search execution status with null degraded reason unless a separate trusted health/freshness signal proves degradation. |
 | Cancellation | Cancellation prevents health/freshness fallback work, aggregate replay, detail fan-out, search expansion, cache refresh, and retries. |
 | Diagnostics | logs, ProblemDetails, exceptions, telemetry, headers, and tests include only bounded metadata and no personal data or raw internals. |
 
@@ -353,7 +367,30 @@ dotnet build Hexalith.Parties.slnx --configuration Release
   - AdminPortal/picker UI copy, localization, and tenant authorization policy changes.
 - Final recommendation: `ready-for-dev`
 
+## Advanced Elicitation
+
+- Date/time: 2026-05-20T16:03:52+02:00
+- Selected story key: `2-7-handle-projection-freshness-and-graceful-degradation`
+- Command/skill invocation used: `/bmad-advanced-elicitation 2-7-handle-projection-freshness-and-graceful-degradation`
+- Batch 1 methods: Red Team vs Blue Team, Failure Mode Analysis, Security Audit Personas, Self-Consistency Validation, Architecture Decision Records
+- Batch 2 methods: Pre-mortem Analysis, Chaos Monkey Scenarios, User Persona Focus Group, Critique and Refine, Expand or Contract for Audience
+- Findings summary:
+  - The main hidden implementation trap is assuming existing GET degraded headers prove freshness for the EventStore `POST api/v1/queries` client path.
+  - Cached actor state, static last-known dictionaries, and local-only search status need explicit provenance/status boundaries so stale data does not look authorized or current by accident.
+  - Health state classification must distinguish unsafe infrastructure loss from safe degraded service conditions before any stale-read metadata or data is returned.
+  - Cancellation and latest-known-position evidence need terminal, metadata-only handling to avoid background fallback work and raw sequence leakage.
+- Changes applied:
+  - Added `Advanced Elicitation Clarifications` covering POST query observability, cache provenance, sidecar/projection actor fail-closed health semantics, local-only search status, latest-known-position evidence, and terminal cancellation behavior.
+  - Added task guidance to verify GET-versus-POST freshness proof, keep local-only separate from runtime degradation, and assert middleware health-registration behavior.
+  - Added test-matrix rows for EventStore POST query observability and local-only search without runtime degradation.
+- Findings deferred:
+  - Final typed public freshness metadata model and naming remain deferred.
+  - Whether degraded headers become canonical, transitional, or internal-only remains deferred.
+  - Operational dashboards, drift reporting, repair controls, rebuild progress UX, multi-partition freshness, cursor semantics, and UI copy remain deferred to later stories.
+- Final recommendation: `ready-for-dev`
+
 ## Change Log
 
 - 2026-05-19: Story created by BMAD pre-dev hardening automation with existing EventStore query gateway, projection actors, degraded response middleware, health checks, tenant-safe cache provenance, privacy-safe diagnostics, and focused validation guidance.
 - 2026-05-19: Party-mode review applied low-risk freshness-contract, unsafe-state, tenant-safety, and test-traceability clarifications; final recommendation `ready-for-dev`.
+- 2026-05-20: Advanced elicitation applied low-risk POST query observability, cache-provenance, health-status, local-only search, latest-known-position, and cancellation clarifications; final recommendation `ready-for-dev`.
