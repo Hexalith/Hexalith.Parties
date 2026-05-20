@@ -38,15 +38,26 @@ so that I can send commands and queries without learning Dapr or service interna
 - Dependency and package evidence must inspect direct references, transitive restore assets, packed `.nupkg`/`.nuspec`, or an equivalent repeatable script. Exact package-cache size enforcement may remain best-effort when local cache measurement is not deterministic, but forbidden service infrastructure dependencies must fail deterministically.
 - Privacy-safe tests should assert routes, envelope metadata, command/query type names, statuses, and safe reason codes. They must not snapshot full party payloads, bearer tokens, auth headers, serialized commands, tenant data, or personal-data fixture values as evidence.
 
+## Advanced Elicitation Clarifications
+
+- Treat `AddPartiesClient()` as a package-consumer boundary, not only a DI helper. A passing in-repo service-provider test is insufficient unless package/reference evidence also proves an external consumer can register the client without source-project, actor-host, Dapr sidecar, projection, server, AdminPortal, Picker, or test-only dependencies.
+- Configuration validation must prove a true zero-send path. Tests should use a counting or throwing `HttpMessageHandler` for missing tenant, blank tenant, missing base URL, relative URL, unsupported scheme, malformed URL, and pre-canceled token cases so no request object, route, body, or header is produced before validation fails.
+- The EventStore gateway route contract is exact for this story: command methods post only to `api/v1/commands`, query methods post only to `api/v1/queries`, and `Parties:BaseUrl` remains the gateway base URL. Do not add fallback probes, health pings, discovery calls, direct Parties REST paths, Dapr service invocation, actor URLs, or projection/local-search calls from the client package.
+- Command payload authority must be tested at the envelope boundary. For every update/contact/identifier/composite/lifecycle method that accepts or embeds a party id, the route or method argument remains authoritative over stale payload ids before serialization, and tests should assert the sanitized envelope shape rather than snapshotting full personal-data payload JSON.
+- Query serialization evidence must include default/null behavior and future-safe enum/string handling for list and search filters. Optional `caseId`, pagination, active/type filters, date filters, and search mode must omit nulls and preserve accepted casing without emitting deferred semantic, graph, temporal, or infrastructure metadata.
+- `PartiesClientException` diagnostics should be safe but still actionable: endpoint category, HTTP status, problem type/title when safe, correlation/request id, and bounded reason are acceptable; tenant values, bearer tokens, auth headers, command/query JSON, personal data, gateway internals, sidecar URLs, stack traces, and connection strings are not.
+- Cancellation handling needs two distinct proofs: pre-canceled tokens produce zero sends, and in-flight cancellation preserves normal cancellation semantics instead of being converted into a `PartiesClientException` or retried after cancellation.
+- Documentation and samples are part of the contract evidence. Any getting-started sample must show `Parties:BaseUrl` as the EventStore gateway URL, `Parties:Tenant` as the envelope tenant, one-line registration, and no Dapr/actor-host/service URL requirement.
+
 ## AC-to-Test Traceability
 
 | AC | Required focused evidence |
 | --- | --- |
 | 1 | DI registration tests for `AddPartiesClient(IConfiguration)`, same-collection fluent return, typed command/query client resolution, options binding, source-compatible registration behavior, and consumer fixture proof without forbidden service dependencies. |
 | 2 | Command envelope serialization tests for every public command method, `Domain="party"`, configured tenant, authoritative route aggregate id, concrete command type/discriminator, typed success, typed rejection, malformed result payload behavior, and privacy-safe problem-detail mapping. |
-| 3 | Query envelope serialization tests for `GetPartyAsync`, `ListPartiesAsync`, and `SearchPartiesAsync`, accepted gateway query shape, filter serialization, typed result deserialization, and additive-only freshness/degradation preservation where existing contracts expose it. |
+| 3 | Query envelope serialization tests for `GetPartyAsync`, `ListPartiesAsync`, and `SearchPartiesAsync`, accepted gateway query shape, default/null filter serialization, string enum and ISO date handling, typed result deserialization, and additive-only freshness/degradation preservation where existing contracts expose it. |
 | 4 | Negative tests for missing/blank tenant, missing/malformed/relative/unsupported base URL, zero-send invalid-config behavior through fake `HttpMessageHandler`, 401/403 gateway authorization mapping to `PartiesClientException`, other problem-detail statuses, malformed responses, transport failures, pre-canceled tokens sending no request, and in-flight cancellation preserving normal cancellation semantics rather than being wrapped as `PartiesClientException`. |
-| 5 | Architecture/package fitness tests that fail on Dapr, MediatR, FluentValidation, MVC/ASP.NET server packages, Swagger/OpenAPI, actor host, Server, Projections, UI, MCP host, and other infrastructure references; package proof should use `net10.0` Release restore/pack output or another documented repeatable command. |
+| 5 | Architecture/package fitness tests that fail on Dapr, MediatR, FluentValidation, MVC/ASP.NET server packages, Swagger/OpenAPI, actor host, Server, Projections, UI, MCP host, and other infrastructure references; package proof should use `net10.0` Release restore/pack output or another documented repeatable command and include a clean consumer/package-source check where practical. |
 
 ## Tasks
 
@@ -56,6 +67,7 @@ so that I can send commands and queries without learning Dapr or service interna
   - [ ] Inspect `src/Hexalith.Parties.Client/Hexalith.Parties.Client.csproj`, `Directory.Build.props`, and `Directory.Packages.props`.
   - [ ] Confirm `AddPartiesClient()` remains the one-line registration and that `Parties:BaseUrl` is documented as the EventStore gateway base URL, not the Parties actor-host URL.
   - [ ] Clarify whether any non-command/query registrations, such as `IAdminPortalGdprClient`, are incidental to the package or intentionally part of the one-line registration; do not make admin/GDPR behavior required evidence for this story.
+  - [ ] Prove registration works from a package-consumer perspective, not only from repository source references; if a clean package-source fixture is too expensive, record the repeatable package/reference inspection used instead.
 - [ ] Preserve and verify command-client behavior. (AC: 2, 4)
   - [ ] Inspect `src/Hexalith.Parties.Client/Abstractions/IPartiesCommandClient.cs` and preserve source-compatible method names, parameters, return shapes, cancellation token behavior, and nullability unless an explicit breaking-change decision is recorded.
   - [ ] Inspect `src/Hexalith.Parties.Client/HttpPartiesCommandClient.cs`.
@@ -67,6 +79,7 @@ so that I can send commands and queries without learning Dapr or service interna
   - [ ] Prove `GetPartyAsync`, `ListPartiesAsync`, and `SearchPartiesAsync` use `POST /api/v1/queries` and accepted EventStore query request shapes.
   - [ ] Preserve typed results for `PartyDetail`, `PagedResult<PartyIndexEntry>`, and `PagedResult<PartySearchResult>`.
   - [ ] Preserve pagination, list filters, active/type filters, date filters, search mode, optional case id, and `requestCustomizer` behavior where already exposed.
+  - [ ] Assert default/null omission, string enum formatting, ISO 8601 date formatting, and future-safe handling for unsupported or deferred search metadata without inventing a new freshness/degradation public model.
   - [ ] Do not add direct projection actor calls, local search calls, old Parties REST fallback routes, or query-time aggregate replay.
 - [ ] Harden configuration and safe error mapping. (AC: 4)
   - [ ] Keep local configuration validation fail-closed for missing/relative base URL and missing tenant.
@@ -74,16 +87,19 @@ so that I can send commands and queries without learning Dapr or service interna
   - [ ] Confirm authorization and authentication are supplied through the host HttpClient/gateway pipeline, not token storage or token parsing inside `Hexalith.Parties.Client`.
   - [ ] Map gateway validation, unauthorized, forbidden, not found, conflict, degraded/unavailable, malformed response, timeout, and cancellation paths to `PartiesClientException` or normal cancellation semantics.
   - [ ] Prove pre-canceled tokens send no request and in-flight cancellation is not wrapped as `PartiesClientException`.
+  - [ ] Verify problem-detail mapping keeps safe type/title/status/correlation fields while redacting tenant values, auth headers, tokens, command/query JSON, personal data, gateway internals, sidecar URLs, stack traces, and connection strings.
   - [ ] Ensure exception details redact payload values, tokens, API keys, client secrets, connection strings, sidecar internals, and personal data.
 - [ ] Prove package and architecture boundaries. (AC: 1, 5)
   - [ ] Extend or preserve `tests/Hexalith.Parties.Client.Tests/FitnessTests/ClientArchitecturalFitnessTests.cs`.
   - [ ] Assert forbidden references: `Hexalith.Parties`, `Hexalith.Parties.Server`, `Hexalith.Parties.Projections`, Dapr, MediatR, FluentValidation, ASP.NET MVC, Swagger/OpenAPI, MCP host packages, actor-host projects, and UI-only infrastructure.
   - [ ] Assert allowed production package references remain limited to `Hexalith.Parties.Contracts`, the accepted `Hexalith.EventStore.Contracts` gateway contract surface, `Microsoft.Extensions.Http`, and `Microsoft.Extensions.Options` or narrowly justified configuration abstractions required by the registration API.
   - [ ] Inspect packed output and dependency graph, not only source project references, before claiming NFR31 package size/count compliance.
+  - [ ] If `Hexalith.EventStore.Contracts` remains in the package graph, prove it is limited to the accepted gateway/query contract surface and does not bring EventStore runtime, Dapr, server, persistence, actor-host, authorization implementation, or UI dependencies.
 - [ ] Verify consumer usability. (AC: 1-5)
   - [ ] Add or preserve a minimal consumer-style test that builds a service provider from configuration, resolves command/query clients, and sends mocked command/query requests without Dapr, MediatR, FluentValidation, Server, Projections, or Parties actor-host references.
   - [ ] Include a short adopter-facing example in docs or sample coverage showing the `Parties:BaseUrl` gateway URL, `Parties:Tenant`, and one-line `AddPartiesClient()` registration.
   - [ ] Ensure docs/samples that show `AddPartiesClient()` use `Parties:BaseUrl` as the EventStore gateway URL and `Parties:Tenant` as the envelope tenant.
+  - [ ] Ensure samples do not imply that consumers must run or reference the Parties actor host, Dapr sidecar, projection service, AdminPortal, Picker, or MCP host to use the typed client package.
   - [ ] Keep any sample assertions privacy-safe and avoid logging personal-data fixture values as evidence.
 
 ## Dev Notes
@@ -105,6 +121,7 @@ Predecessor context:
 - Story 3.1 owns the stable `Hexalith.Parties.Contracts` package. This story assumes the typed client consumes those public contracts rather than redefining commands, events, models, value objects, or result types.
 - Story 12.5 already rewrote the client as a thin EventStore-fronted wrapper and retired old direct Parties REST paths. Do not resurrect `api/v1/parties`, `api/v1/admin`, Dapr actor calls, service invocation, projection actor calls, or actor-host internals.
 - Story 2.7 keeps projection freshness/degradation additive and may rely on existing query-result metadata or degraded response headers. Do not force a finalized long-term public freshness model in this story unless it already exists.
+- L08 in the lessons ledger says party-mode review and advanced elicitation are separate dated traces. This story now carries both a completed party-mode trace and a completed advanced elicitation trace.
 
 Architecture and package constraints:
 
@@ -172,6 +189,7 @@ dotnet build .\Hexalith.Parties.slnx --configuration Release
 - Rich authentication helper APIs are out of scope unless an accepted EventStore gateway/client contract already defines them; hosts may supply auth through standard `HttpClient` pipelines.
 - Exact exception taxonomy beyond `PartiesClientException` and normal cancellation semantics remains deferred unless existing client patterns already define it.
 - Whether package-size checks are strict CI gates or advisory evidence remains a tooling decision when NuGet cache size cannot be measured deterministically.
+- Whether the package-consumer proof becomes a dedicated generated fixture, a reflection/package-assets inspection, or a CI-only pack-and-consume script remains a tooling decision as long as forbidden dependencies and source-tree coupling fail deterministically.
 
 ## References
 
@@ -208,6 +226,29 @@ dotnet build .\Hexalith.Parties.slnx --configuration Release
   - Auth acquisition, retry/resilience policies, non-party domain clients, server/REST/MCP/UI expansion, and package publishing policy.
 - Final recommendation: `ready-for-dev`
 
+## Advanced Elicitation
+
+- Date/time: 2026-05-20T20:03:18+02:00
+- Selected story key: `3-2-provide-typed-parties-client-registration`
+- Command/skill invocation used: `/bmad-advanced-elicitation 3-2-provide-typed-parties-client-registration`
+- Batch 1 methods: Red Team vs Blue Team, Failure Mode Analysis, Security Audit Personas, Self-Consistency Validation, Architecture Decision Records
+- Batch 2 methods: Pre-mortem Analysis, Chaos Monkey Scenarios, User Persona Focus Group, Critique and Refine, Expand or Contract for Audience
+- Findings summary:
+  - The main hidden failure is proving in-repo DI behavior while leaving the packed client package or external consumer path coupled to source projects, actor-host internals, or forbidden infrastructure dependencies.
+  - Configuration and cancellation behavior need exact zero-send evidence so invalid local setup, unsupported URLs, and pre-canceled tokens cannot leak tenant/payload data or create outbound requests.
+  - Command and query tests should assert the EventStore gateway envelope and route contracts without snapshotting personal-data payload JSON or implying direct Parties REST/projection/search fallback behavior.
+  - Documentation and samples can accidentally change adopter expectations by treating `Parties:BaseUrl` as a Parties host or Dapr URL instead of the EventStore gateway URL.
+- Changes applied:
+  - Added `Advanced Elicitation Clarifications` for package-consumer proof, zero-send configuration validation, exact gateway route boundaries, command id authority, query serialization defaults, safe exception diagnostics, cancellation semantics, and documentation/sample consistency.
+  - Tightened AC-to-test traceability for query serialization and clean package-consumer dependency evidence.
+  - Expanded tasks for package-consumer proof, future-safe query serialization, safe problem-detail mapping, `Hexalith.EventStore.Contracts` dependency closure, and sample non-goals.
+  - Updated Dev Notes and Deferred Decisions to reflect the completed advanced elicitation trace and the remaining tooling choice for package-consumer proof.
+- Findings deferred:
+  - Exact package-consumer proof mechanism remains a tooling decision if forbidden dependency and source-coupling failures are deterministic.
+  - Exact exception taxonomy beyond `PartiesClientException` and normal cancellation remains deferred.
+  - Long-term freshness/degradation metadata model, auth acquisition helpers, retry/resilience policies, and package publishing policy remain out of scope.
+- Final recommendation: `ready-for-dev`
+
 ## Dev Agent Record
 
 ### Agent Model Used
@@ -228,5 +269,6 @@ TBD
 
 ### Change Log
 
+- 2026-05-20: Advanced elicitation applied low-risk package-consumer, zero-send validation, gateway-route, command authority, query serialization, safe diagnostics, cancellation, and sample consistency clarifications; final recommendation `ready-for-dev`.
 - 2026-05-20: Party-mode review applied low-risk clarifications for gateway-only client registration, fail-before-send configuration behavior, privacy-safe exception diagnostics, cancellation tests, package fitness evidence, and AC-to-test traceability; final recommendation `ready-for-dev`.
 - 2026-05-20: Story created by BMAD pre-dev hardening automation as a ready-for-dev typed client registration hardening story.
