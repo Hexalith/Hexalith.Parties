@@ -26,7 +26,9 @@ public sealed partial class PartyIndexProjectionQueryActor(
     public const string ListAggregateId = "parties";
     public const string PartyDomain = "party";
     public const string PartyIndexQueryType = "PartyIndex";
+    public const string PartySearchQueryType = "PartySearch";
     public const string ProjectionType = "party-index";
+    private static readonly LocalFuzzyPartySearchProvider s_searchProvider = new();
 
     // P13: Unknown fields fail closed so a future contributor cannot bypass tenant authority
     // by adding a payload field whose name is read by the actor.
@@ -49,11 +51,53 @@ public sealed partial class PartyIndexProjectionQueryActor(
             return QueryResult.Failure(QueryAdapterFailureReason.InvalidEnvelope);
         }
 
-        if (!TryParsePayload(envelope.Payload, out ListPartiesQueryPayload payload))
+        if (IsPartySearch(envelope))
+        {
+            if (!TryParseSearchPayload(envelope.Payload, out SearchPartiesQueryPayload payload))
+            {
+                return QueryResult.Failure(QueryAdapterFailureReason.InvalidEnvelope);
+            }
+
+            return await QueryEntriesAsync(envelope, entries =>
+            {
+                PagedResult<PartySearchResult> page = s_searchProvider.Search(
+                    entries.Values,
+                    payload.Query,
+                    payload.Type,
+                    payload.Active,
+                    payload.Page,
+                    payload.PageSize);
+
+                return QueryResult.FromPayload(JsonSerializer.SerializeToElement(page, s_jsonOptions), ProjectionType);
+            }).ConfigureAwait(false);
+        }
+
+        if (!TryParseListPayload(envelope.Payload, out ListPartiesQueryPayload listPayload))
         {
             return QueryResult.Failure(QueryAdapterFailureReason.InvalidEnvelope);
         }
 
+        return await QueryEntriesAsync(envelope, entries =>
+        {
+            PagedResult<PartyIndexEntry> page = PartySearchResultsBuilder.BuildPagedList(
+                entries.Values,
+                listPayload.Type,
+                listPayload.Active,
+                listPayload.CreatedAfter,
+                listPayload.CreatedBefore,
+                listPayload.ModifiedAfter,
+                listPayload.ModifiedBefore,
+                listPayload.Page,
+                listPayload.PageSize);
+
+            return QueryResult.FromPayload(JsonSerializer.SerializeToElement(page, s_jsonOptions), ProjectionType);
+        }).ConfigureAwait(false);
+    }
+
+    private async Task<QueryResult> QueryEntriesAsync(
+        QueryEnvelope envelope,
+        Func<IReadOnlyDictionary<string, PartyIndexEntry>, QueryResult> createResult)
+    {
         string indexActorId = $"{envelope.TenantId}:party-index";
 
         // P14: Log templates intentionally omit the constructed actor id. The tenant id and
@@ -68,18 +112,7 @@ public sealed partial class PartyIndexProjectionQueryActor(
                 nameof(PartyIndexProjectionActor));
 
             IReadOnlyDictionary<string, PartyIndexEntry> entries = await indexProxy.GetEntriesAsync().ConfigureAwait(false);
-            PagedResult<PartyIndexEntry> page = PartySearchResultsBuilder.BuildPagedList(
-                entries.Values,
-                payload.Type,
-                payload.Active,
-                payload.CreatedAfter,
-                payload.CreatedBefore,
-                payload.ModifiedAfter,
-                payload.ModifiedBefore,
-                payload.Page,
-                payload.PageSize);
-
-            return QueryResult.FromPayload(JsonSerializer.SerializeToElement(page, s_jsonOptions), ProjectionType);
+            return createResult(entries);
         }
         catch (OperationCanceledException)
         {
@@ -104,7 +137,11 @@ public sealed partial class PartyIndexProjectionQueryActor(
 
     private static bool CanHandle(QueryEnvelope envelope)
         => string.Equals(envelope.Domain, PartyDomain, StringComparison.Ordinal)
-            && string.Equals(envelope.QueryType, PartyIndexQueryType, StringComparison.Ordinal);
+            && (string.Equals(envelope.QueryType, PartyIndexQueryType, StringComparison.Ordinal)
+                || IsPartySearch(envelope));
+
+    private static bool IsPartySearch(QueryEnvelope envelope)
+        => string.Equals(envelope.QueryType, PartySearchQueryType, StringComparison.Ordinal);
 
     private static bool TryResolveActorRoute(string actorId, QueryEnvelope envelope)
     {
@@ -124,7 +161,7 @@ public sealed partial class PartyIndexProjectionQueryActor(
             && string.Equals(requestedEntityId, ListAggregateId, StringComparison.Ordinal);
     }
 
-    private static bool TryParsePayload(byte[] payloadBytes, out ListPartiesQueryPayload payload)
+    private static bool TryParseListPayload(byte[] payloadBytes, out ListPartiesQueryPayload payload)
     {
         payload = new ListPartiesQueryPayload(
             Page: 1,
@@ -190,6 +227,55 @@ public sealed partial class PartyIndexProjectionQueryActor(
             createdBefore,
             modifiedAfter,
             modifiedBefore);
+        return true;
+    }
+
+    private static bool TryParseSearchPayload(byte[] payloadBytes, out SearchPartiesQueryPayload payload)
+    {
+        payload = new SearchPartiesQueryPayload(
+            Query: string.Empty,
+            Page: 1,
+            PageSize: 20,
+            Type: null,
+            Active: null,
+            Mode: null,
+            CaseId: null);
+
+        if (payloadBytes.Length == 0)
+        {
+            return false;
+        }
+
+        SearchPartiesQueryPayloadWire? wire;
+        try
+        {
+            wire = JsonSerializer.Deserialize<SearchPartiesQueryPayloadWire>(payloadBytes, s_jsonOptions);
+        }
+        catch (JsonException)
+        {
+            return false;
+        }
+
+        if (wire is null)
+        {
+            return false;
+        }
+
+        if ((wire.Page is { } pageValue && pageValue < 1)
+            || (wire.PageSize is { } pageSizeValue && pageSizeValue < 1)
+            || !TryParsePartyType(wire.Type, out PartyType? type))
+        {
+            return false;
+        }
+
+        payload = new SearchPartiesQueryPayload(
+            wire.Query ?? string.Empty,
+            wire.Page ?? 1,
+            wire.PageSize ?? 20,
+            type,
+            wire.Active,
+            wire.Mode,
+            wire.CaseId);
         return true;
     }
 
@@ -290,6 +376,24 @@ public sealed partial class PartyIndexProjectionQueryActor(
         string? CreatedBefore = null,
         string? ModifiedAfter = null,
         string? ModifiedBefore = null);
+
+    private sealed record SearchPartiesQueryPayload(
+        string Query,
+        int Page,
+        int PageSize,
+        PartyType? Type,
+        bool? Active,
+        string? Mode,
+        string? CaseId);
+
+    private sealed record SearchPartiesQueryPayloadWire(
+        string? Query = null,
+        int? Page = null,
+        int? PageSize = null,
+        string? Type = null,
+        bool? Active = null,
+        string? Mode = null,
+        string? CaseId = null);
 
     private static partial class Log
     {

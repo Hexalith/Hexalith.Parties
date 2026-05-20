@@ -78,6 +78,7 @@ internal static class PartySearchResultsBuilder
             .ThenByDescending(m => m.TokenCount)
             .ThenBy(m => GetSortableName(m.Result.Party), StringComparer.OrdinalIgnoreCase)
             .ThenBy(m => m.Result.Party.DisplayName, StringComparer.OrdinalIgnoreCase)
+            .ThenBy(m => m.Result.Party.Id, StringComparer.Ordinal)
             .Select(m => m.Result)];
 
         return CreatePagedResult(sorted, page, pageSize);
@@ -158,17 +159,6 @@ internal static class PartySearchResultsBuilder
                 matchedTokens.Add(candidate);
             }
 
-            if (TryMatchContactChannel(entry.SearchableContactChannels, candidate, out int emailPriority))
-            {
-                UpsertMatch(fieldMatches, "email", emailPriority);
-                matchedTokens.Add(candidate);
-            }
-
-            if (TryMatchIdentifier(entry.SearchableIdentifiers, candidate, out int identifierPriority))
-            {
-                UpsertMatch(fieldMatches, "identifier", identifierPriority);
-                matchedTokens.Add(candidate);
-            }
         }
 
         if (fieldMatches.Count == 0)
@@ -194,40 +184,6 @@ internal static class PartySearchResultsBuilder
             fieldMatches.Values.Min(),
             fieldMatches.Count,
             matchedTokens.Count);
-    }
-
-    private static bool TryMatchContactChannel(IEnumerable<ContactChannel> channels, string candidate, out int priority)
-    {
-        priority = int.MaxValue;
-        bool matched = false;
-
-        foreach (ContactChannel channel in channels.Where(c => c.Type == ContactChannelType.Email))
-        {
-            if (TryMatchValue(channel.Value, candidate, out int currentPriority))
-            {
-                priority = Math.Min(priority, currentPriority);
-                matched = true;
-            }
-        }
-
-        return matched;
-    }
-
-    private static bool TryMatchIdentifier(IEnumerable<PartyIdentifier> identifiers, string candidate, out int priority)
-    {
-        priority = int.MaxValue;
-        bool matched = false;
-
-        foreach (PartyIdentifier identifier in identifiers)
-        {
-            if (TryMatchValue(identifier.Value, candidate, out int currentPriority))
-            {
-                priority = Math.Min(priority, currentPriority);
-                matched = true;
-            }
-        }
-
-        return matched;
     }
 
     private static bool TryMatchValue(string? source, string candidate, out int priority)

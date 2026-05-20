@@ -1,5 +1,6 @@
 using Hexalith.Parties.Search;
 using Hexalith.Parties.Contracts.Models;
+using Hexalith.Parties.Contracts.ValueObjects;
 using Hexalith.Parties.Testing;
 
 using Shouldly;
@@ -92,7 +93,7 @@ public class PartySearchServiceBoundaryTests
         PartySearchResponse response = await service.SearchAsync(
             new PartySearchRequest(
                 TenantId: "tenant-a",
-                Query: "person",
+                Query: "e",
                 Mode: PartySearchMode.Hybrid,
                 TypeFilter: null,
                 ActiveFilter: null,
@@ -107,6 +108,36 @@ public class PartySearchServiceBoundaryTests
         response.SourceMetadata.Count.ShouldBe(1);
         response.ScoreMetadata.Single().PartyId.ShouldBe(response.Results.Items.Single().Party.Id);
         response.SourceMetadata.Single().PartyId.ShouldBe(response.Results.Items.Single().Party.Id);
+    }
+
+    [Fact]
+    public async Task LocalPartySearchServiceAppliesAuthorizedIdsBeforeMatchAndMetadata()
+    {
+        var provider = new LocalFuzzyPartySearchProvider();
+        var service = new LocalPartySearchService(provider);
+        List<PartyIndexEntry> entries =
+        [
+            Entry("tenant-a-party", "Shared Display Name"),
+            Entry("tenant-b-party", "Shared Display Name"),
+        ];
+
+        PartySearchResponse response = await service.SearchAsync(
+            new PartySearchRequest(
+                TenantId: "tenant-b",
+                Query: "Shared Display Name",
+                Mode: PartySearchMode.Hybrid,
+                TypeFilter: null,
+                ActiveFilter: null,
+                Page: 1,
+                PageSize: 20,
+                AuthorizedPartyIds: new HashSet<string>(["tenant-b-party"], StringComparer.Ordinal)),
+            entries,
+            CancellationToken.None);
+
+        response.Results.Items.Select(static r => r.Party.Id).ShouldBe(["tenant-b-party"]);
+        response.Results.TotalCount.ShouldBe(1);
+        response.ScoreMetadata.Select(static m => m.PartyId).ShouldBe(["tenant-b-party"]);
+        response.SourceMetadata.Select(static m => m.PartyId).ShouldBe(["tenant-b-party"]);
     }
 
     [Fact]
@@ -166,4 +197,15 @@ public class PartySearchServiceBoundaryTests
         response.ScoreMetadata.Single().SemanticScore.ShouldBe(0.95);
         response.SourceMetadata.Single().SourceSystem.ShouldBe("Hexalith.Memories");
     }
+
+    private static PartyIndexEntry Entry(string id, string displayName)
+        => new()
+        {
+            Id = id,
+            Type = PartyType.Person,
+            IsActive = true,
+            DisplayName = displayName,
+            CreatedAt = DateTimeOffset.Parse("2026-05-01T00:00:00Z", System.Globalization.CultureInfo.InvariantCulture),
+            LastModifiedAt = DateTimeOffset.Parse("2026-05-01T00:00:00Z", System.Globalization.CultureInfo.InvariantCulture),
+        };
 }

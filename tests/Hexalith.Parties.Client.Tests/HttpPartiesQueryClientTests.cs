@@ -211,7 +211,9 @@ public sealed class HttpPartiesQueryClientTests
         using JsonDocument body = JsonDocument.Parse(handler.LastRequestBody!);
         JsonElement root = body.RootElement;
         root.GetProperty("queryType").GetString().ShouldBe("PartySearch");
-        root.TryGetProperty("projectionType", out _).ShouldBeFalse();
+        root.GetProperty("projectionType").GetString().ShouldBe("party-index");
+        root.GetProperty("projectionActorType").GetString().ShouldBe("PartyIndexProjectionQueryActor");
+        root.GetProperty("entityId").GetString().ShouldBe("parties");
         JsonElement payload = root.GetProperty("payload");
         payload.GetProperty("query").GetString().ShouldBe("acme");
         payload.GetProperty("page").GetInt32().ShouldBe(1);
@@ -220,6 +222,45 @@ public sealed class HttpPartiesQueryClientTests
         payload.GetProperty("caseId").GetString().ShouldBe("case-42");
         handler.LastRequest!.Headers.Authorization!.Scheme.ShouldBe("Bearer");
         handler.LastRequest.Headers.Authorization.Parameter.ShouldBe("host-token");
+    }
+
+    [Fact]
+    public async Task SearchPartiesAsync_OmitsNullOptionalPayloadParametersAsync()
+    {
+        var emptyResult = new PagedResult<PartySearchResult>
+        {
+            Items = [],
+            Page = 1,
+            PageSize = 10,
+            TotalCount = 0,
+            TotalPages = 1,
+        };
+
+        (HttpPartiesQueryClient client, HttpPartiesCommandClientTests.MockHandler handler) = CreateClient(
+            HttpStatusCode.OK,
+            QueryResponse(emptyResult));
+
+        await client.SearchPartiesAsync("acme", 1, 10, CancellationToken.None);
+
+        using JsonDocument body = JsonDocument.Parse(handler.LastRequestBody!);
+        JsonElement payload = body.RootElement.GetProperty("payload");
+        payload.GetProperty("query").GetString().ShouldBe("acme");
+        payload.GetProperty("page").GetInt32().ShouldBe(1);
+        payload.GetProperty("pageSize").GetInt32().ShouldBe(10);
+        payload.TryGetProperty("mode", out _).ShouldBeFalse();
+        payload.TryGetProperty("caseId", out _).ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task SearchPartiesAsync_WhenCancelled_PropagatesCancellationAsync()
+    {
+        var httpClient = new HttpClient(new CancellationHandler()) { BaseAddress = new Uri("https://localhost") };
+        var client = new HttpPartiesQueryClient(httpClient, Options.Create(ClientOptions()));
+        using var cts = new CancellationTokenSource();
+        await cts.CancelAsync();
+
+        await Should.ThrowAsync<OperationCanceledException>(
+            () => client.SearchPartiesAsync("acme", 1, 20, cts.Token));
     }
 
     [Fact]

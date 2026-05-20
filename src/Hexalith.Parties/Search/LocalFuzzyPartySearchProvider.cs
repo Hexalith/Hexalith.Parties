@@ -8,26 +8,10 @@ using Hexalith.Parties.Contracts.ValueObjects;
 namespace Hexalith.Parties.Search;
 
 /// <summary>
-/// Local fallback search provider with fuzzy matching, diacritic normalization,
-/// type-text mapping, and multi-field relevance scoring.
+/// Local fallback search provider for MVP display-name search.
 /// </summary>
 internal sealed class LocalFuzzyPartySearchProvider : IPartySearchProvider
 {
-    private static readonly Dictionary<string, PartyType> s_typeAliases = new(StringComparer.OrdinalIgnoreCase)
-    {
-        ["person"] = PartyType.Person,
-        ["individual"] = PartyType.Person,
-        ["people"] = PartyType.Person,
-        ["company"] = PartyType.Organization,
-        ["corporation"] = PartyType.Organization,
-        ["organization"] = PartyType.Organization,
-        ["organisation"] = PartyType.Organization,
-        ["org"] = PartyType.Organization,
-        ["enterprise"] = PartyType.Organization,
-        ["firm"] = PartyType.Organization,
-        ["business"] = PartyType.Organization,
-    };
-
     public PagedResult<PartySearchResult> Search(
         IEnumerable<PartyIndexEntry> entries,
         string query,
@@ -95,16 +79,16 @@ internal sealed class LocalFuzzyPartySearchProvider : IPartySearchProvider
                 return byScore;
             }
 
-            int bySortName = string.Compare(
-                GetSortableName(left.Party),
-                GetSortableName(right.Party),
+            int byDisplayName = string.Compare(
+                NormalizeDiacritics(left.Party.DisplayName),
+                NormalizeDiacritics(right.Party.DisplayName),
                 StringComparison.OrdinalIgnoreCase);
-            if (bySortName != 0)
+            if (byDisplayName != 0)
             {
-                return bySortName;
+                return byDisplayName;
             }
 
-            return string.Compare(left.Party.DisplayName, right.Party.DisplayName, StringComparison.OrdinalIgnoreCase);
+            return string.Compare(left.Party.Id, right.Party.Id, StringComparison.Ordinal);
         });
 
         return CreatePagedResult(results, page, pageSize);
@@ -240,9 +224,6 @@ internal sealed class LocalFuzzyPartySearchProvider : IPartySearchProvider
         return filtered;
     }
 
-    private static string GetSortableName(PartyIndexEntry entry)
-        => string.IsNullOrWhiteSpace(entry.SortName) ? entry.DisplayName : entry.SortName;
-
     private static double ComputeRelevanceScore(
         List<(string Field, double FieldWeight, double MatchScore)> fieldScores,
         int matchedTokenCount,
@@ -296,42 +277,9 @@ internal sealed class LocalFuzzyPartySearchProvider : IPartySearchProvider
 
         foreach (string token in candidates)
         {
-            // Match against DisplayName
             if (TryMatch(normalizedDisplayName, token, out double matchScore, out string matchType))
             {
                 UpsertFieldMatch(fieldMatches, "displayName", 1.0, matchScore, matchType);
-                _ = matchedTokens.Add(token);
-            }
-
-            // Match against ALL contact channels (not just Email)
-            // Structured fields use exact/prefix/contains only (no fuzzy — prevents false positives on email domains)
-            foreach (ContactChannel channel in entry.SearchableContactChannels)
-            {
-                string normalizedValue = NormalizeDiacritics(channel.Value);
-                if (TryMatchExact(normalizedValue, token, out double channelScore, out string channelMatchType))
-                {
-                    string fieldName = channel.Type == ContactChannelType.Email ? "email" : "contactChannel";
-                    double fieldWeight = channel.Type == ContactChannelType.Email ? 0.9 : 0.7;
-                    UpsertFieldMatch(fieldMatches, fieldName, fieldWeight, channelScore, channelMatchType);
-                    _ = matchedTokens.Add(token);
-                }
-            }
-
-            // Match against identifiers (exact/prefix/contains only — structured data)
-            foreach (PartyIdentifier identifier in entry.SearchableIdentifiers)
-            {
-                string normalizedValue = NormalizeDiacritics(identifier.Value);
-                if (TryMatchExact(normalizedValue, token, out double idScore, out string idMatchType))
-                {
-                    UpsertFieldMatch(fieldMatches, "identifier", 0.8, idScore, idMatchType);
-                    _ = matchedTokens.Add(token);
-                }
-            }
-
-            // Type-text matching (scoring boost, NOT a filter)
-            if (s_typeAliases.TryGetValue(token, out PartyType mappedType) && entry.Type == mappedType)
-            {
-                UpsertFieldMatch(fieldMatches, "type", 0.5, 1.0, "exact");
                 _ = matchedTokens.Add(token);
             }
         }
@@ -363,40 +311,6 @@ internal sealed class LocalFuzzyPartySearchProvider : IPartySearchProvider
             Matches = metadata,
             RelevanceScore = relevance,
         };
-    }
-
-    private static bool TryMatchExact(string candidate, string token, out double score, out string matchType)
-    {
-        score = 0.0;
-        matchType = string.Empty;
-
-        if (string.IsNullOrWhiteSpace(candidate) || string.IsNullOrWhiteSpace(token))
-        {
-            return false;
-        }
-
-        if (string.Equals(candidate, token, StringComparison.OrdinalIgnoreCase))
-        {
-            score = 1.0;
-            matchType = "exact";
-            return true;
-        }
-
-        if (candidate.StartsWith(token, StringComparison.OrdinalIgnoreCase))
-        {
-            score = 0.8;
-            matchType = "prefix";
-            return true;
-        }
-
-        if (candidate.Contains(token, StringComparison.OrdinalIgnoreCase))
-        {
-            score = 0.6;
-            matchType = "contains";
-            return true;
-        }
-
-        return false;
     }
 
     private static bool TryMatch(string candidate, string token, out double score, out string matchType)

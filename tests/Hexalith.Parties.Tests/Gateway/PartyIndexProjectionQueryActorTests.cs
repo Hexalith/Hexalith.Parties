@@ -105,6 +105,69 @@ public sealed class PartyIndexProjectionQueryActorTests
     }
 
     [Fact]
+    public async Task QueryAsync_PartySearch_ReadsTenantScopedIndexAndReturnsDisplayNameMetadataAsync()
+    {
+        IActorProxyFactory actorProxyFactory = Substitute.For<IActorProxyFactory>();
+        IPartyIndexProjectionActor indexActor = Substitute.For<IPartyIndexProjectionActor>();
+        indexActor.GetEntriesAsync().Returns(Task.FromResult<IReadOnlyDictionary<string, PartyIndexEntry>>(
+            new Dictionary<string, PartyIndexEntry>(StringComparer.Ordinal)
+            {
+                ["p-exact"] = Entry("p-exact", "Acme", PartyType.Organization, active: true, "2026-05-01T00:00:00Z", "2026-05-01T00:00:00Z"),
+                ["p-prefix"] = Entry("p-prefix", "Acme Corporation", PartyType.Organization, active: true, "2026-05-01T00:00:00Z", "2026-05-01T00:00:00Z"),
+                ["p-other"] = Entry("p-other", "Other Tenant Name", PartyType.Organization, active: true, "2026-05-01T00:00:00Z", "2026-05-01T00:00:00Z"),
+            }));
+        actorProxyFactory.CreateActorProxy<IPartyIndexProjectionActor>(
+                Arg.Any<ActorId>(),
+                Arg.Any<string>(),
+                Arg.Any<ActorProxyOptions?>())
+            .Returns(indexActor);
+
+        PartyIndexProjectionQueryActor actor = CreateActor("party-index:tenant-a:parties", actorProxyFactory);
+
+        QueryResult result = await actor.QueryAsync(CreateSearchEnvelope(
+            tenant: "tenant-a",
+            payload: Payload(new { query = "Acme", page = 1, pageSize = 20 })));
+
+        result.Success.ShouldBeTrue();
+        result.ProjectionType.ShouldBe(PartyIndexProjectionQueryActor.ProjectionType);
+        PagedResult<PartySearchResult> page = DeserializeSearchPage(result);
+        page.Items.Select(static i => i.Party.Id).ShouldBe(["p-exact", "p-prefix"]);
+        page.Items[0].Matches.ShouldContain(m => m.MatchedField == "displayName" && m.MatchType == "exact");
+        page.Items[1].Matches.ShouldContain(m => m.MatchedField == "displayName" && m.MatchType == "prefix");
+        page.Items.SelectMany(static i => i.Matches).ShouldAllBe(m => m.MatchedField == "displayName");
+
+        actorProxyFactory.Received(1).CreateActorProxy<IPartyIndexProjectionActor>(
+            Arg.Is<ActorId>(id => id.GetId() == "tenant-a:party-index"),
+            nameof(PartyIndexProjectionActor),
+            Arg.Any<ActorProxyOptions?>());
+    }
+
+    [Fact]
+    public async Task QueryAsync_PartySearchPayloadWithUnknownFieldsRejectedBeforeProjectionReadAsync()
+    {
+        IActorProxyFactory actorProxyFactory = Substitute.For<IActorProxyFactory>();
+        PartyIndexProjectionQueryActor actor = CreateActor("party-index:tenant-b:parties", actorProxyFactory);
+
+        QueryResult result = await actor.QueryAsync(CreateSearchEnvelope(
+            tenant: "tenant-b",
+            payload: Payload(new
+            {
+                query = "Shared Display Name",
+                page = 1,
+                pageSize = 20,
+                tenantId = "tenant-a",
+                actorId = "tenant-a:party-index",
+            })));
+
+        result.Success.ShouldBeFalse();
+        result.ErrorMessage.ShouldBe(QueryAdapterFailureReason.InvalidEnvelope);
+        actorProxyFactory.DidNotReceive().CreateActorProxy<IPartyIndexProjectionActor>(
+            Arg.Any<ActorId>(),
+            Arg.Any<string>(),
+            Arg.Any<ActorProxyOptions?>());
+    }
+
+    [Fact]
     public async Task QueryAsync_InvalidDateRange_FailsBeforeProjectionReadAsync()
     {
         IActorProxyFactory actorProxyFactory = Substitute.For<IActorProxyFactory>();
@@ -361,9 +424,24 @@ public sealed class PartyIndexProjectionQueryActorTests
             userId: "user-1",
             entityId: PartyIndexProjectionQueryActor.ListAggregateId);
 
+    private static QueryEnvelope CreateSearchEnvelope(string tenant, byte[] payload)
+        => new(
+            tenantId: tenant,
+            domain: PartyIndexProjectionQueryActor.PartyDomain,
+            aggregateId: PartyIndexProjectionQueryActor.ListAggregateId,
+            queryType: "PartySearch",
+            payload: payload,
+            correlationId: "corr-search",
+            userId: "user-1",
+            entityId: PartyIndexProjectionQueryActor.ListAggregateId);
+
     private static PagedResult<PartyIndexEntry> DeserializePage(QueryResult result)
         => result.GetPayload().Deserialize<PagedResult<PartyIndexEntry>>(JsonOptions)
             ?? throw new InvalidOperationException("Expected paged PartyIndex payload.");
+
+    private static PagedResult<PartySearchResult> DeserializeSearchPage(QueryResult result)
+        => result.GetPayload().Deserialize<PagedResult<PartySearchResult>>(JsonOptions)
+            ?? throw new InvalidOperationException("Expected paged PartySearch payload.");
 
     private static byte[] Payload<T>(T value)
         => JsonSerializer.SerializeToUtf8Bytes(value, JsonOptions);

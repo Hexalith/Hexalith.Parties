@@ -105,9 +105,10 @@ public sealed class HttpPartiesQueryClient : IPartiesQueryClient
             Domain: PartyDomain,
             AggregateId: ListAggregateId,
             QueryType: PartySearchQueryType,
-            ProjectionType: null,
+            ProjectionType: PartyIndexProjectionType,
             Payload: JsonSerializer.SerializeToElement(payload, HttpPartiesCommandClient.JsonOptions),
-            EntityId: ListAggregateId);
+            EntityId: ListAggregateId,
+            ProjectionActorType: PartyIndexProjectionActorType);
 
         return PostQueryAsync<PagedResult<PartySearchResult>>(request, ct, requestCustomizer);
     }
