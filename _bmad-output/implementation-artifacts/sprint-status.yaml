@@ -36,7 +36,8 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-05-15 09:01:58 +02:00
-last_updated: 2026-05-20 09:00:00 +02:00
+last_updated: 2026-05-20 10:54:28 +02:00
+# last_updated touched 2026-05-20 by create-story moving 3-1 to ready-for-dev (stable Contracts package boundary, XML docs, packed dependency proof, additive public contract guardrails)
 # 2026-05-20 09:05 transient dev-story handoff (story 2-5 briefly marked in-progress then reverted to ready-for-dev so a fresh-context session can auto-discover and implement cleanly)
 # last_updated touched 2026-05-20 by code-review closing story 2-4 (4 decisions resolved: D1 submodule bumps accepted+documented in File List, D2 ISO-8601 relaxed to TryParse+RoundtripKind, D3 UnmappedMemberHandling.Disallow + cross-tenant test retargeted, D4 ActorId stripped from log templates with Story 2.3 consistency item deferred; 14 patches applied: P1 strict PartyType allowlist, P2 reject empty payload, P3 reject negative Page/PageSize, P4 ToUniversalTime defensive guard, P5 malformed-date test, P6 active=null pinning test, P7 combined+one-sided date range tests, P8 strengthened PII assertion with PII-laden exception message, P9 static readonly JsonOptions, P10 CreatePagedResult defensive normalization, P11 File List incidental-submodule note, P12 relaxed ISO-8601 parser, P13 strict JSON + cross-tenant test retargeted, P14 log redaction; 9 items deferred to deferred-work.md; 8 dismissed as verified false positives or pinned-by-test intentional behavior; PartyIndexProjectionQueryActorTests+BasicPartySearchProviderTests 22/22, EventStoreGatewayRoutingTests+PartySearchServiceBoundary+ArchitecturalFitnessTests+PartyIndexProjectionActor 49/49, HttpPartiesQueryClientTests 14/14 — 85 focused tests green)
 # last_updated touched 2026-05-19 by predev drift fix marking 9-4 blocked because the FrontComposer deployable host dependency is not yet available
@@ -109,7 +110,7 @@ development_status:
 
   # Epic 3: Developer Integration and Local Adoption (10 stories)
   epic-3: in-progress
-  3-1-publish-stable-contracts-package: backlog
+  3-1-publish-stable-contracts-package: ready-for-dev
   3-2-provide-typed-parties-client-registration: backlog
   3-3-expose-versioned-rest-party-api: backlog
   3-4-map-domain-rejections-to-problemdetails: backlog
