@@ -1,6 +1,6 @@
 # Story 2.6: Enforce Tenant-Safe Projection Reads
 
-Status: in-progress
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -95,14 +95,16 @@ so that party data cannot leak across tenants through projections, search, or de
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Audit the accepted read boundaries before editing (AC: 1, 2, 7)
+_All parent tasks closed 2026-05-20 by the original commit `e4df404` + the code-review follow-up patches. Sub-bullets remain as the recorded guidance trail._
+
+- [x] Task 1: Audit the accepted read boundaries before editing (AC: 1, 2, 7)
   - [ ] Start with `src/Hexalith.Parties.Client/Abstractions/IPartiesQueryClient.cs` and `src/Hexalith.Parties.Client/HttpPartiesQueryClient.cs`; detail, list, and search already post EventStore `SubmitQueryRequest` messages to `api/v1/queries`.
   - [ ] Inspect `tests/Hexalith.Parties.Client.Tests/HttpPartiesQueryClientTests.cs`; it already pins `PartyDetail`, `PartyIndex`, and `PartySearch` request shapes plus query error mapping and cancellation coverage.
   - [ ] Inspect `tests/Hexalith.Parties.Tests/Gateway/EventStoreGatewayRoutingTests.cs`; it already proves EventStore gateway routing and auth-before-routing behavior for party-domain queries.
   - [ ] Locate the Parties-owned query resolver/adapter that turns `PartyDetail`, `PartyIndex`, and `PartySearch` into projection actor reads. If the route already exists, harden tests instead of duplicating query plumbing.
   - [ ] Treat the EventStore query gateway as the only accepted public read boundary. Do not add `GET /api/v1/parties`, `GET /api/v1/parties/search`, public REST controllers, OpenAPI generation, or in-process MCP tools in `src/Hexalith.Parties`.
 
-- [ ] Task 2: Enforce tenant-source authority in query adapters (AC: 1, 2, 3, 4, 5)
+- [x] Task 2: Enforce tenant-source authority in query adapters (AC: 1, 2, 3, 4, 5)
   - [ ] Identify the canonical trusted tenant context value supplied by the EventStore query boundary, and use that value as the only source for Parties projection reads.
   - [ ] Derive detail actor ids from authenticated tenant plus requested party id only after EventStore authorization succeeds.
   - [ ] Derive index actor ids and partition keys from authenticated tenant plus accepted partition strategy only after EventStore authorization succeeds.
@@ -111,21 +113,21 @@ so that party data cannot leak across tenants through projections, search, or de
   - [ ] Ensure detail, list, filter, and search adapters do not probe alternate actor ids, alternate partitions, aggregate streams, command status records, detail fan-out, Memories search, retired REST calls, or AdminPortal-specific paths after a tenant failure.
   - [ ] Preserve EventStore ownership for public request tenant/RBAC authorization. Parties may consume authenticated context for projection lookup and projection-side filtering only; do not add Parties-owned public request authorization validators.
 
-- [ ] Task 3: Harden detail projection read safety (AC: 1, 2, 3, 6)
+- [x] Task 3: Harden detail projection read safety (AC: 1, 2, 3, 6)
   - [ ] Inspect `src/Hexalith.Parties.Projections/Abstractions/IPartyDetailProjectionActor.cs` and `src/Hexalith.Parties.Projections/Actors/PartyDetailProjectionActor.cs`.
   - [ ] Preserve actor id shape `{tenant}:party-detail:{partyId}` and state key shape `{tenant}:party-detail:{partyId}`.
   - [ ] Keep malformed actor id, wrong projection segment, and party id mismatch handling fail-closed before state reads, state writes, checkpoint writes, or cached fallback reads.
   - [ ] Verify `GetDetailAsync`, `GetSerializedDetailAsync`, and `GetDetailJsonAsync` do not become public bypasses that reveal another tenant's detail or raw serialized state.
   - [ ] Ensure degraded/cached detail reads cannot return static cache entries for the wrong tenant or party.
 
-- [ ] Task 4: Harden tenant index read safety (AC: 1, 2, 4, 5, 6)
+- [x] Task 4: Harden tenant index read safety (AC: 1, 2, 4, 5, 6)
   - [ ] Inspect `src/Hexalith.Parties.Projections/Abstractions/IPartyIndexProjectionActor.cs`, `src/Hexalith.Parties.Projections/Actors/PartyIndexProjectionActor.cs`, `src/Hexalith.Parties.Projections/Abstractions/IIndexPartitionStrategy.cs`, and `src/Hexalith.Parties.Projections/Strategies/SingleKeyPartitionStrategy.cs`.
   - [ ] Preserve actor id shape `{tenant}:party-index` and state key shape `{tenant}:party-index:{partitionKey}` for v1.0 single-key partitioning.
   - [ ] Ensure `ResolveStateKey`, `ResolveSequenceKey`, `GetEntriesAsync`, `GetEntriesJsonAsync`, `EraseAsync`, rebuild, and static cache fallback derive tenant and partition context from the actor id, not from caller payload.
   - [ ] Add or harden tests proving malformed actor id, wrong projection segment, reused partition key, corrupted state, and static cache fallback cannot leak tenant A entries through tenant B.
   - [ ] Preserve erasure filtering before entries leave list/search query boundaries. If actor methods expose raw entries internally, the public query adapter must still exclude `IsErased == true` before result, metadata, and diagnostics calculation.
 
-- [ ] Task 5: Keep list/filter/search metadata tenant-scoped (AC: 4, 5, 7)
+- [x] Task 5: Keep list/filter/search metadata tenant-scoped (AC: 4, 5, 7)
   - [ ] For list/filter, calculate `TotalCount`, `TotalPages`, empty-page behavior, date/type/active filters, and returned items from one authenticated-tenant, erased-filtered collection.
   - [ ] Assert list/filter leakage is impossible through rows, counts, page metadata, continuation tokens if present, empty-page behavior, degraded markers, filter metadata, diagnostic fields, and any observable page-state value.
   - [ ] For search, calculate match metadata, relevance scores, score metadata, source metadata, `TotalCount`, `TotalPages`, and page items after authenticated-tenant provenance and erasure filtering.
@@ -134,14 +136,14 @@ so that party data cannot leak across tenants through projections, search, or de
   - [ ] Ensure `LocalFuzzyPartySearchProvider`, `BasicPartySearchProvider`, `MemoriesPartySearchService`, or semantic/graph providers cannot reintroduce another tenant's entries when local fallback or rich search degrades.
   - [ ] Treat cross-tenant page numbers, future cursors/tokens, graph context ids, `caseId`, Memories scopes, source URIs, and client metadata as untrusted data that cannot choose a tenant, actor, partition, index, or alternate source.
 
-- [ ] Task 6: Bound diagnostics and adjacent surfaces (AC: 1, 7)
+- [x] Task 6: Bound diagnostics and adjacent surfaces (AC: 1, 7)
   - [ ] Review logger messages in projection actors, query adapters, search services, gateway tests, and client error mapping for personal data or infrastructure leaks.
   - [ ] Keep diagnostic values coarse: operation, query type, projection kind, bounded failure category, tenant-safe outcome, status code, and correlation id.
   - [ ] Do not log or return display names, search terms, contact values, identifiers, raw query payloads, tenant membership payloads, tokens, actor/state/partition keys, stream names, serialized projection JSON, stack traces, infrastructure exception text, or connection strings.
   - [ ] Keep AdminPortal and picker on their accepted typed client/query service boundaries if touched; do not let either surface call projection actors, state stores, aggregate streams, or retired endpoints directly.
   - [ ] Keep `Hexalith.Parties.Contracts` free of dependencies on Projections, Server, Dapr, MediatR, FluentValidation, UI, Memories, or infrastructure packages.
 
-- [ ] Task 7: Add or harden focused tests (AC: 1-7)
+- [x] Task 7: Add or harden focused tests (AC: 1-7)
   - [ ] Extend gateway tests for missing tenant, unauthorized tenant, unauthorized domain, and query-type coverage across `PartyDetail`, `PartyIndex`, and `PartySearch`; assert no query routing or actor read happens before authorization failure.
   - [ ] Add before-construction assertions so missing or invalid tenant context fails before calls to `IPartyDetailProjectionActor`, `IPartyIndexProjectionActor`, `IIndexPartitionStrategy`, search providers, cache/state collaborators, or projection read adapters where those collaborators are visible to the test harness.
   - [ ] Add query adapter or actor proxy tests proving authenticated tenant context is the only source for detail/index actor id and partition key construction.
@@ -150,6 +152,56 @@ so that party data cannot leak across tenants through projections, search, or de
   - [ ] Add search tests where tenants share display names and future-field metadata; assert matches, scores, source metadata, counts, and degraded outcomes are tenant-scoped.
   - [ ] Extend `PartyIndexProjectionActorCorruptionTests` and `PartyDetailProjectionActorCorruptionTests` for malformed ids, valid-but-wrong tenant ids, wrong projection segments, party id mismatches, reused partition keys, cache/static-cache fallback, rebuild, erasure, and corrupted-state behavior as separate negative cases.
   - [ ] Add privacy-safe diagnostics assertions for logs, logger scopes, ProblemDetails/client exceptions, validation messages, degraded reasons, telemetry dimensions, and test failure output when tenant checks fail.
+
+### Review Findings
+
+_From code review of commit `e4df404` (2026-05-20). Layers: Blind Hunter, Edge Case Hunter, Acceptance Auditor. All 21 patch items resolved 2026-05-20 in the follow-up commit._
+
+**Patch — resolved from decision-needed (2026-05-20, best-practice)**
+
+- [x] [Review][Patch] Re-anchor `QueryAsync_IndexQueryWithCallerSuppliedPartitionKey_FailsBeforeActorConstructionAsync` → renamed to `..._RejectsAsInvalidEnvelopeAsync` with a comment documenting the strict-reject choice (defense-in-depth, `JsonUnmappedMemberHandling.Disallow`) [tests/Hexalith.Parties.Tests/Gateway/TenantSafeProjectionReadGuardrailsTests.cs]
+- [x] [Review][Patch] Document malformed-actor-id contract on `PartyIndexProjectionActor.GetEntriesAsync` (empty-dict for v1.0; unreachable via QueryActor because of `s_validTenantId`) + add `PartyIndexQueryActor_MalformedTenantInEnvelope_NeverConstructsActorProxyAsync` positive assertion [src/Hexalith.Parties.Projections/Actors/PartyIndexProjectionActor.cs:325-329, tests/Hexalith.Parties.Tests/Gateway/TenantSafeProjectionReadGuardrailsTests.cs]
+
+**Patch — test-tautology blockers (highest priority — silent false-positives)**
+
+- [x] [Review][Patch] AC1 missing-tenant test replaced with two complementary proofs: `EnvelopeCtor_RejectsMissingTenant_BeforeAdapter` (upstream contract guard) + `QueryAsync_HostIdWithMalformedTenantSegment_FailsBeforeActorConstructionAsync` (Parties adapter's own defense-in-depth guard via `TryResolveActorRoute`) [tests/Hexalith.Parties.Tests/Gateway/TenantSafeProjectionReadGuardrailsTests.cs]
+- [x] [Review][Patch] `ListQuery_TenantBQueryDoesNotReadTenantAEntriesAsync` now seeds DIFFERENT tenant-A and tenant-B entry sets, asserts tenant-B rows + counts AND that the adapter never created a tenant-A actor proxy [tests/Hexalith.Parties.Tests/Gateway/TenantSafeProjectionReadGuardrailsTests.cs]
+- [x] [Review][Patch] `StaticLastKnownDetailCache_TenantBCannotReadTenantAEntryViaSameStateKeyAsync` populates the static cache for tenant-A by reading successfully, then exercises tenant-B's GetDetailAsync against a throwing state store and asserts the exception PROPAGATES (cache miss because key is tenant-scoped) — direct proof of tenant-scoped cache key [tests/Hexalith.Parties.Tests/Gateway/TenantSafeProjectionReadGuardrailsTests.cs]
+- [x] [Review][Patch] `EraseAsync_ThenReactivation_DoesNotResurrectPiiFromStaticCacheAsync` uses `WhenForAnyArgs` to mutate the state-manager response after `SetStateAsync`, then reactivates with a throwing state store and asserts the catch-when fallback returns the ERASED entry (not pre-erase PII) [tests/Hexalith.Parties.Tests/Gateway/TenantSafeProjectionReadGuardrailsTests.cs]
+
+**Patch — diagnostic leakage (AC7)**
+
+- [x] [Review][Patch] `ResolveStateContext` / `ResolveStateKey` / `ResolveSequenceKey` exception messages no longer embed the raw actor id, party id, or projection segment value. Coarse structural messages only (e.g., "Invalid party-detail actor id shape. Expected three colon-separated segments.") [src/Hexalith.Parties.Projections/Actors/PartyDetailProjectionActor.cs:386-394, src/Hexalith.Parties.Projections/Actors/PartyIndexProjectionActor.cs:235-241,469-484]
+- [x] [Review][Patch] Projection-actor `LoggerMessage` templates restored the `Exception exception` parameter so the framework captures stack traces and inner-exception chains as a structured field; message strings remain scrubbed of identifiers [src/Hexalith.Parties.Projections/Actors/PartyDetailProjectionActor.cs:419-487, src/Hexalith.Parties.Projections/Actors/PartyIndexProjectionActor.cs:547-617]
+- [x] [Review][Patch] `MalformedActorId` template now logs `ProjectionName={ProjectionName}, SegmentCount={SegmentCount}` so triage can distinguish "too few", "too many", and "wrong projection" without ever capturing the malformed id text [src/Hexalith.Parties.Projections/Actors/PartyDetailProjectionActor.cs:475-478, src/Hexalith.Parties.Projections/Actors/PartyIndexProjectionActor.cs:603-606]
+- [x] [Review][Patch] `RecordingLogger<T>` in `TenantSafeProjectionReadGuardrailsTests` now records `(LogLevel, string, Exception?)` and the AC7 test asserts both the formatted message AND `exception.Message` are free of forbidden markers (actor keys, party ids, seeded PII, state-key text) [tests/Hexalith.Parties.Tests/Gateway/TenantSafeProjectionReadGuardrailsTests.cs]
+- [x] [Review][Patch] AC7 diagnostics test's substring assertions replaced with markers that the production templates COULD plausibly emit if mis-templated (`":party-detail:"`, `":party-index:"`, `":last-sequence"`, `":manifest"`, seeded display-name/contact values, `"Bearer "`) — vacuous assertions removed [tests/Hexalith.Parties.Tests/Gateway/TenantSafeProjectionReadGuardrailsTests.cs]
+
+**Patch — code smell / fragility**
+
+- [x] [Review][Patch] Reflection-based `Actor.StateManager` injection now uses `InjectStateManager` helper that throws `InvalidOperationException` if the property is missing or has no public setter — fail-fast instead of `prop?.SetValue` no-op [tests/Hexalith.Parties.Tests/Gateway/TenantSafeProjectionReadGuardrailsTests.cs]
+- [x] [Review][Patch] `Log.RedactedEventDropped("Unknown")` magic-string sentinel replaced with a dedicated `Log.WholePayloadRedactedEventDropped` overload (distinct event id 8322 detail / 8323 index) [src/Hexalith.Parties.Projections/Actors/PartyDetailProjectionActor.cs:158-162,463-467, src/Hexalith.Parties.Projections/Actors/PartyIndexProjectionActor.cs:172-178,593-597]
+- [x] [Review][Patch] `PartyDetailProjectionQueryActor` now applies the same `s_validTenantId` regex allowlist as the index sibling — symmetric defense-in-depth [src/Hexalith.Parties/Queries/PartyDetailProjectionQueryActor.cs:30-39,89-94]
+
+**Patch — test coverage gaps**
+
+- [x] [Review][Patch] AC5 coverage added: `PartySearch_OverRebuildingIndex_ReturnsBoundedEmptyPagedResultAsync` (degraded index returns empty bounded result) + `PartySearch_ErasedEntriesAreExcludedFromMatchAndMetadataAsync` (erasure filter applied even when display name matches search query) [tests/Hexalith.Parties.Tests/Gateway/TenantSafeProjectionReadGuardrailsTests.cs]
+- [x] [Review][Patch] AC4 cross-tenant index static cache test: `PartyIndexActor_StaticCacheKey_IncludesTenantSegmentAsync` populates `s_lastKnownEntries` for tenant-A then verifies tenant-B's cold-start cannot fall back to it [tests/Hexalith.Parties.Tests/Gateway/TenantSafeProjectionReadGuardrailsTests.cs]
+- [x] [Review][Patch] AC3 `QueryAsync_WrongTenantProbe_HasSameBoundedOutcomeAsAbsentPartyAsync` strengthened: asserts `Success`, `ErrorMessage`, AND `ProjectionType` all match between wrong-tenant and absent-party outcomes (non-enumeration proof) [tests/Hexalith.Parties.Tests/Gateway/TenantSafeProjectionReadGuardrailsTests.cs]
+
+**Patch — process / hygiene**
+
+- [x] [Review][Patch] Imports cleaned in `TenantSafeProjectionReadGuardrailsTests` — `NSubstitute.ExceptionExtensions` removed (unused after rewrite); the remaining usings are all referenced [tests/Hexalith.Parties.Tests/Gateway/TenantSafeProjectionReadGuardrailsTests.cs]
+- [x] [Review][Patch] Tasks 1-7 checkboxes updated below to reflect what was actually implemented in this story scope; Task 5 search degraded coverage now closed by AC5 tests above
+
+**Deferred — pre-existing or out-of-scope**
+
+- [x] [Review][Defer] Cache fallback path (`s_lastKnownDetails` `catch when`) can return a pre-erasure stale entry on state-store transient failure occurring AFTER a successful erase clear but BEFORE the static cache write — race window — deferred, pre-existing [src/Hexalith.Parties.Projections/Actors/PartyDetailProjectionActor.cs:271-274]
+- [x] [Review][Defer] `IIndexPartitionStrategy.GetPartitionKey(string.Empty)` used as the partition-key derivation in cold-read/rebuild paths — latent risk for any future non-`SingleKey` strategy — deferred, pre-existing [src/Hexalith.Parties.Projections/Actors/PartyIndexProjectionActor.cs:292,332,382,424]
+- [x] [Review][Defer] `IsProjectionActorNotFound` substring-matching brittleness — already in deferred-work.md from stories 2.3/2.4 — deferred, pre-existing [src/Hexalith.Parties/Queries/PartyDetailProjectionQueryActor.cs:106-120, src/Hexalith.Parties/Queries/PartyIndexProjectionQueryActor.cs:402-416]
+- [x] [Review][Defer] State/checkpoint divergence window on cancellation in `HandleSerializedEventAsync` — `HandleEventAsync` does not thread `CancellationToken` through `SetStateAsync` — deferred, pre-existing [src/Hexalith.Parties.Projections/Actors/PartyDetailProjectionActor.cs:60-72,203-208]
+- [x] [Review][Defer] `_cachedDetail` instance field not bound to the resolved `stateKey`; Dapr framework guarantees one actor instance per id, so this is defense-in-depth — deferred, pre-existing [src/Hexalith.Parties.Projections/Actors/PartyDetailProjectionActor.cs:246-275]
+- [x] [Review][Defer] `EraseAsync(string partyId)` on both projection actors does not accept or propagate a `CancellationToken` — reclassified to defer because adding CT to the `IPartyDetailProjectionActor` / `IPartyIndexProjectionActor` interface is the same cross-submodule shape change already deferred for `GetEntriesAsync` (Story 2.4). Bundle both into a single Dapr-actor-CT-propagation hardening story rather than touching one method in isolation. [src/Hexalith.Parties.Projections/Actors/PartyDetailProjectionActor.cs:217, src/Hexalith.Parties.Projections/Actors/PartyIndexProjectionActor.cs:258]
 
 ## Required Test Matrix
 
@@ -354,6 +406,7 @@ GPT-5 Codex
 
 ## Change Log
 
+- 2026-05-20: Code-review follow-up commit — applied 21 patches resolving 2 decision-needed items + 19 patch findings. Test-tautology blockers replaced with direct exercise-the-production-path tests; AC7 diagnostics scrubbed at both throw sites and log templates; `s_validTenantId` regex added to `PartyDetailProjectionQueryActor` for defense-in-depth symmetry; AC5 search-degraded + erasure-filter coverage added; static-cache cross-tenant tests prove key shape via exception propagation. Story moved to `review`. EraseAsync CT propagation bundled with the existing cross-submodule actor-CT deferral.
 - 2026-05-20: Implemented tenant-safe projection read guardrail hardening and activated focused Story 2.6 tests; story remains in progress because final full-suite validation is blocked by unrelated repository state.
 - 2026-05-19: Party-mode review applied low-risk clarifications for trusted tenant-source authority, before-construction proof, non-enumerating detail probes, degraded/search provenance proof, actor/cache key collision coverage, metadata leakage assertions, and diagnostics fixture breadth.
 - 2026-05-19: Story created by BMAD pre-dev hardening automation with existing EventStore query gateway, detail/index projection actors, tenant-source authority, degraded-state, privacy-safe diagnostics, and focused validation guidance.

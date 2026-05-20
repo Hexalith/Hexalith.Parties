@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.RegularExpressions;
 
 using Dapr.Actors;
 using Dapr.Actors.Client;
@@ -25,6 +26,16 @@ public sealed partial class PartyDetailProjectionQueryActor(
     public const string PartyDetailQueryType = "PartyDetail";
     public const string PartyDomain = "party";
     private static readonly JsonSerializerOptions s_jsonOptions = new(JsonSerializerDefaults.Web);
+
+    // P3 (Story 2.6, parity with PartyIndexProjectionQueryActor): tenant identifiers must
+    // contain only letters, digits, underscore, hyphen, and dot. Defense-in-depth — reject
+    // anything else (including ':' which composes the actor key separator, control chars,
+    // whitespace, or oversized values) before the value flows into actor proxy construction
+    // or log templates. The detail and index adapters share the same allowlist so an upstream
+    // gateway change can't relax one path while the other remains strict.
+    private static readonly Regex s_validTenantId = new(
+        @"^[A-Za-z0-9_\-\.]{1,128}$",
+        RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
     public async Task<QueryResult> QueryAsync(QueryEnvelope envelope)
     {
@@ -83,6 +94,15 @@ public sealed partial class PartyDetailProjectionQueryActor(
     private static bool TryResolveActorRoute(string actorId, QueryEnvelope envelope, out string partyId)
     {
         partyId = string.Empty;
+
+        // P3: Reject malformed tenant identifiers at the boundary. envelope.TenantId is concatenated
+        // into the downstream actor id; a stray colon, control character, or oversized value from
+        // an unsanitized upstream gateway would corrupt routing or escape into log templates.
+        if (!s_validTenantId.IsMatch(envelope.TenantId ?? string.Empty))
+        {
+            return false;
+        }
+
         string[] segments = actorId.Split(':', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
         if (segments.Length != 3
             || !string.Equals(segments[0], ProjectionType, StringComparison.Ordinal)

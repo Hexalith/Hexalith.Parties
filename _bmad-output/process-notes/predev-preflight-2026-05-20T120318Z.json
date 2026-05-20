@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "produced_by": "jobs/preflight-predev-hardening.py",
-  "timestamp": "2026-05-20T13:01:39Z",
+  "timestamp": "2026-05-20T12:03:18Z",
   "repo": "D:\\Hexalith.Parties",
   "result": "fail",
   "bootstrap_actions": [],
@@ -12,7 +12,7 @@
       "path": "D:\\Hexalith.Parties\\_bmad-output\\implementation-artifacts\\sprint-status.yaml",
       "result": "pass",
       "details": "PARSE OK",
-      "file_size_bytes": 7612,
+      "file_size_bytes": 7619,
       "line_count": 163,
       "top_level_keys": [
         "development_status",
@@ -63,11 +63,11 @@
         ":(exclude)_bmad-output/process-notes/preflight-latest.json"
       ],
       "exit_code": 0,
-      "stdout": " M _bmad-output/implementation-artifacts/2-6-enforce-tenant-safe-projection-reads.md\n M _bmad-output/implementation-artifacts/deferred-work.md\n M _bmad-output/implementation-artifacts/sprint-status.yaml\n M src/Hexalith.Parties.Projections/Actors/PartyDetailProjectionActor.cs\n M src/Hexalith.Parties.Projections/Actors/PartyIndexProjectionActor.cs\n M src/Hexalith.Parties/Queries/PartyDetailProjectionQueryActor.cs\n M tests/Hexalith.Parties.Tests/Gateway/TenantSafeProjectionReadGuardrailsTests.cs\n",
+      "stdout": " M _bmad-output/implementation-artifacts/2-6-enforce-tenant-safe-projection-reads.md\n M _bmad-output/implementation-artifacts/deferred-work.md\n M src/Hexalith.Parties.Projections/Actors/PartyDetailProjectionActor.cs\n?? _bmad-output/implementation-artifacts/story-2-6-review-diff.txt\n",
       "stderr": "",
-      "dirty_path_count": 7,
+      "dirty_path_count": 4,
       "result": "fail",
-      "details": "7 dirty path(s)"
+      "details": "4 dirty path(s)"
     }
   ],
   "note_to_llm": "This file was produced by jobs/preflight-predev-hardening.py. The recurring pre-dev hardening job MUST quote the contents of this file verbatim when reporting pre-flight results; do NOT re-run the checks yourself, paraphrase them, or summarize them in your own words."
