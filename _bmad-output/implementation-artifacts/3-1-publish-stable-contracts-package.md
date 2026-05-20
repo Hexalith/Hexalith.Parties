@@ -37,6 +37,16 @@ so that I can reference party commands, events, models, and results without inhe
 - XML documentation evidence must come from the package output or isolated package consumption. A source build XML file alone does not prove the published package carries usable public API documentation.
 - Personal-data metadata tests should enumerate the relevant public contract models and nested value objects through reflection, assert required `[PersonalData]` markers remain discoverable, and use redacted or synthetic non-personal fixtures so test output cannot disclose personal values.
 
+## Advanced Elicitation Clarifications
+
+- A library package may not produce a useful `.deps.json`; absence of that artifact is not a failure by itself. The required dependency proof must still inspect the `.nuspec`, `lib/net10.0` compile/runtime assets, package references visible to a clean consumer, and any generated assets that actually exist after `dotnet pack`.
+- The clean-consumer proof must consume the packed package from a local package source, not a project reference. It should fail if the consumer can compile only because the repository source tree, sibling submodules, or broad solution references are still available.
+- If `Hexalith.EventStore.Contracts` is retained, the proof must distinguish a contract-only compile dependency from a runtime dependency leak by checking both the `.nuspec` dependency graph and the consumer's transitive package/project closure. Any Dapr, hosting, actor, gateway, persistence, MediatR, FluentValidation, UI, AdminPortal, Picker, MCP, Server, or Projections dependency remains forbidden unless a later architecture decision changes AC1.
+- Public API drift evidence must cover source shape and serialized contract shape. Renaming public members, changing required constructor/property semantics, changing discriminator/type names, changing enum values, or changing serialized member names is breaking unless explicitly captured as an approved migration decision; additive optional members and placeholder-only contracts are acceptable.
+- XML documentation evidence must verify the XML file is packed next to the public assembly and can be read from the installed package by a clean consumer. A local source `bin` output, IDE tooltip, or generated file outside the `.nupkg` is insufficient.
+- Reflection-based personal-data metadata checks must run against the packaged assembly loaded by the clean consumer or an equivalent package-output path. Assertions should report type/member names only and must not print sample person names, email addresses, phone numbers, identifiers, addresses, or other personal values.
+- Package metadata inherited from `Directory.Build.props` currently describes the Dapr-native service broadly. If the Contracts package keeps that generic metadata, story completion notes must explicitly justify it; otherwise provide package-specific description/tags so consumers do not mistake the contract package for the actor host or runtime service.
+
 ## Non-Goals
 
 - Do not add party behavior, merge behavior, REST endpoints, MCP tools, UI, projections, EventStore runtime implementation, service registration, authorization policy, package publishing automation, or release pipeline changes.
@@ -47,23 +57,24 @@ so that I can reference party commands, events, models, and results without inhe
 
 - [ ] Audit the current Contracts package baseline. (AC: 1, 2)
   - [ ] Inspect `src/Hexalith.Parties.Contracts/Hexalith.Parties.Contracts.csproj`, inherited package metadata from `Directory.Build.props`, and central versions from `Directory.Packages.props`.
-  - [ ] Build and pack the Contracts project, then inspect the generated `.nupkg`, `.nuspec`, `.deps.json`, and compile assets.
+  - [ ] Build and pack the Contracts project, then inspect the generated `.nupkg`, `.nuspec`, compile assets, and any generated dependency assets that actually exist for the library package.
   - [ ] Decide whether the current `Hexalith.EventStore.Contracts` project reference is an approved contract-basic dependency or must be removed/hidden from the consumer package; record the rationale in the story completion notes.
   - [ ] If `Hexalith.EventStore.Contracts` remains, prove the packed dependency is contract-only and does not expose EventStore runtime, gateway authorization, Dapr, hosting, persistence, actor, or infrastructure implementation behavior.
 - [ ] Harden package metadata and documentation output. (AC: 2, 5)
   - [ ] Ensure `Hexalith.Parties.Contracts` has package-specific metadata where inherited defaults are too generic.
   - [ ] Generate and include XML documentation for public APIs in the packed output, and verify the XML documentation from package consumption or package artifact inspection.
+  - [ ] Verify the packed XML documentation is installed beside the public assembly and is readable from the clean package consumer path.
   - [ ] Keep MinVer/tag-driven versioning and central package management; do not add project-local package versions or manual package-version drift.
 - [ ] Prove the public contract surface is stable and additive. (AC: 2, 3, 5)
   - [ ] Add or tighten tests that enumerate public commands, events, models, results, state, value objects, search contracts, and security contract interfaces.
-  - [ ] Add compatibility guardrails, such as a checked-in public API snapshot, approval baseline, reflection baseline, or equivalent, that fail when existing public contract members are removed or renamed without an explicit migration decision.
+  - [ ] Add compatibility guardrails, such as a checked-in public API snapshot, approval baseline, reflection baseline, or equivalent, that fail when existing public contract members, serialized names, enum values, required members, or constructor shapes are removed or renamed without an explicit migration decision.
   - [ ] Confirm forward-compatible placeholders such as `PartyMerged` remain contract-only, documented, additive, serialization-compatible, and do not force server/projection/runtime behavior.
 - [ ] Prove package dependency boundaries. (AC: 1, 5)
   - [ ] Add a package/reference fitness test that fails if `Hexalith.Parties.Contracts` references Dapr, hosting, MediatR, FluentValidation, UI, Server, Projections, actor host, MCP, AdminPortal, Picker, or concrete infrastructure packages.
   - [ ] Keep test dependencies isolated to test projects; do not make the Contracts test project's own AdminPortal/UI references part of the package-boundary proof.
   - [ ] Verify the packaged dependency graph, not only project source references, by inspecting the packed `.nupkg`/`.nuspec` and, where practical, the dependency graph seen from a clean package consumer.
 - [ ] Prove consumer usability. (AC: 2, 4)
-  - [ ] Add a minimal package consumer smoke test or compile-only test that references only the packed Contracts output and uses representative commands, events, value objects, query models, result types, rejection events, and `[PersonalData]`.
+  - [ ] Add a minimal package consumer smoke test or compile-only test that references only the packed Contracts output from a local package source and uses representative commands, events, value objects, query models, result types, rejection events, and `[PersonalData]`.
   - [ ] Confirm consumers can inspect personal-data metadata without server, projection, Dapr, hosting, UI, or security implementation references.
   - [ ] Ensure no sample/test assertion logs personal data values from contract examples.
 
@@ -75,8 +86,10 @@ The current repo baseline is important:
 
 - `Directory.Build.props` targets `net10.0`, enables nullable, warnings-as-errors, MinVer package versioning, `IsPackable=true` by default, and shared package metadata.
 - `src/Hexalith.Parties.Contracts/Hexalith.Parties.Contracts.csproj` currently has a project reference to `Hexalith.EventStore.Contracts`.
+- Because `Hexalith.EventStore.Contracts` is currently a sibling submodule project reference, package validation must prove what external consumers receive after packing. Do not assume local project-reference behavior and packed NuGet dependency behavior are equivalent.
 - Planning artifacts still contain older wording about `netstandard2.1` and zero runtime dependencies. Current project context says the repo targets `.NET 10`; do not silently retarget the whole package to `netstandard2.1` unless a fresh architecture decision explicitly approves that change.
 - Treat `Hexalith.EventStore.Contracts` as the main decision point: if it remains, the story needs explicit evidence that it is an approved contract-basic dependency rather than leaked infrastructure; if it is removed, downstream types such as command results and event payload interfaces must keep compiling through a deliberate replacement or shared abstraction.
+- Clean-consumer validation should make accidental source-tree coupling visible. Prefer an isolated temporary consumer project with only the local package feed configured, then assert it can compile representative contract usage without references to the application solution, sibling submodules, actor hosts, UI, Dapr, or server projects.
 
 Existing contract surfaces include:
 
@@ -172,6 +185,7 @@ TBD
 
 ### Change Log
 
+- 2026-05-20: Advanced elicitation applied low-risk clarifications for package artifact proof, clean-consumer validation, transitive dependency leakage, serialized public API drift, XML docs from installed packages, privacy-safe reflection metadata, and package-specific metadata.
 - 2026-05-20: Party-mode review applied low-risk clarifications for packed-package proof, `Hexalith.EventStore.Contracts` dependency handling, public API drift evidence, XML documentation evidence, personal-data metadata discovery, and non-goal boundaries.
 - 2026-05-20: Story created by BMAD pre-dev hardening automation as a ready-for-dev package-boundary and contract-stability story.
 
@@ -194,4 +208,26 @@ TBD
   - Whether `Hexalith.EventStore.Contracts` is a permanent approved contract-basic dependency or should be split behind a smaller shared contract abstraction remains a package policy decision if implementation cannot satisfy AC1 cleanly and locally.
   - The canonical long-term public API baseline mechanism remains implementer-selected unless the repo already has an established preferred tool.
   - Full merge semantics for `PartyMerged` remain out of scope; this story treats it as a reserved placeholder only.
+- Final recommendation: `ready-for-dev`
+
+## Advanced Elicitation
+
+- Date/time: 2026-05-20T19:03:49+02:00
+- Selected story key: `3-1-publish-stable-contracts-package`
+- Command/skill invocation used: `/bmad-advanced-elicitation 3-1-publish-stable-contracts-package`
+- Batch 1 methods: Red Team vs Blue Team, Failure Mode Analysis, Security Audit Personas, Self-Consistency Validation, Architecture Decision Records
+- Batch 2 methods: Pre-mortem Analysis, Chaos Monkey Scenarios, User Persona Focus Group, Critique and Refine, Expand or Contract for Audience
+- Findings summary:
+  - The highest-risk hidden failure is proving the source project instead of the packed package. A broad solution build can pass while a clean external consumer still inherits unwanted dependencies, lacks XML docs, or relies on sibling source projects.
+  - The `Hexalith.EventStore.Contracts` decision needs transitive package evidence, not only local project-reference inspection, because the story's value depends on what external consumers receive from NuGet-like consumption.
+  - Public API stability must include serialized names, enum values, required member semantics, constructors, and placeholder-only event contracts, not just type presence.
+  - Personal-data metadata evidence is only adopter-relevant if it can be discovered from the packaged assembly without leaking sample personal values in test output.
+- Changes applied:
+  - Added `Advanced Elicitation Clarifications` covering library package artifact expectations, clean local-package-source consumption, `Hexalith.EventStore.Contracts` transitive dependency proof, serialized public API drift, XML docs from installed package output, privacy-safe metadata reflection, and package-specific metadata.
+  - Tightened task rows for generated dependency assets, XML documentation from the consumer path, serialized-shape compatibility baselines, and clean package consumer validation.
+  - Added Dev Notes warning that sibling submodule project-reference behavior and packed NuGet dependency behavior are not equivalent.
+- Findings deferred:
+  - Whether `Hexalith.EventStore.Contracts` remains a permanent approved contract-basic dependency or is split behind a smaller abstraction remains a package policy decision if AC1 cannot be satisfied locally.
+  - The exact public API baseline tool remains implementer-selected unless a repo-standard tool is introduced elsewhere.
+  - Any package retargeting, multi-targeting, release automation, or long-term package metadata policy remains outside this story.
 - Final recommendation: `ready-for-dev`
