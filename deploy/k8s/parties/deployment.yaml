@@ -34,7 +34,7 @@ spec:
       - name: zot-pull-secret
       containers:
       - name: parties
-        image: registry.hexalith.com/parties:0.0.0-preview.0.353
+        image: registry.hexalith.com/parties:0.1.0
         imagePullPolicy: IfNotPresent
         ports:
         - name: http

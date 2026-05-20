@@ -9,8 +9,10 @@ resources:
 - tenants
 - redis
 - memories
-- keycloak
 - namespace.yaml
 
+- keycloak
 generatorOptions:
   disableNameSuffixHash: true
+
+

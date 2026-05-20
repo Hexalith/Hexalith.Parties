@@ -1,7 +1,6 @@
 resources:
 - deployment.yaml
 - service.yaml
-- appconfig-cm.yaml
 
 generatorOptions:
   disableNameSuffixHash: true
@@ -13,5 +12,10 @@ configMapGenerator:
     - ASPNETCORE_FORWARDEDHEADERS_ENABLED=true
     - HTTP_PORTS=8080
     - Authentication__DaprInternal__AllowedCallers__0=tenants
-    - ASPNETCORE_ENVIRONMENT=Production
-    - ASPNETCORE_URLS=http://+:8080
+    - EventStore__DomainServices__Registrations__wildcard_party_v1__AppId=parties
+    - EventStore__DomainServices__Registrations__wildcard_party_v1__MethodName=process
+    - EventStore__DomainServices__Registrations__wildcard_party_v1__TenantId=*
+    - EventStore__DomainServices__Registrations__wildcard_party_v1__Domain=party
+    - EventStore__DomainServices__Registrations__wildcard_party_v1__Version=v1
+    - ASPNETCORE_URLS=http://+:8080;
+

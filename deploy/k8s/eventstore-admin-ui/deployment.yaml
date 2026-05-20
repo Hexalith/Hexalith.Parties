@@ -22,7 +22,7 @@ spec:
       - name: zot-pull-secret
       containers:
       - name: eventstore-admin-ui
-        image: registry.hexalith.com/eventstore-admin-ui:0.0.0-preview.0.353
+        image: registry.hexalith.com/eventstore-admin-ui:staging-latest
         imagePullPolicy: IfNotPresent
         ports:
         - name: http
