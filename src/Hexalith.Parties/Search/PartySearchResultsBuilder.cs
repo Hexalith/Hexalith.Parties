@@ -278,11 +278,19 @@ internal static class PartySearchResultsBuilder
 
     private static PagedResult<T> CreatePagedResult<T>(IReadOnlyList<T> items, int page, int pageSize)
     {
+        // P10: Defensive normalization inside the helper. BuildPagedList already clamps
+        // upstream, but BuildSearchResults reaches here through callers (LocalPartySearchService)
+        // that may not normalize. Clamping here removes a latent division-by-zero risk and
+        // ensures the helper itself is safe regardless of caller discipline. The returned
+        // Page/PageSize echo the caller-supplied values so behavioral contracts pinned by
+        // existing tests (large-page input is preserved in metadata) remain unchanged.
+        int safePageSize = Math.Max(1, pageSize);
+        int safePage = Math.Max(1, page);
         int totalCount = items.Count;
-        int totalPages = totalCount == 0 ? 1 : (int)Math.Ceiling((double)totalCount / pageSize);
-        long skipLong = (long)Math.Max(0, page - 1) * Math.Max(0, pageSize);
+        int totalPages = totalCount == 0 ? 1 : (int)Math.Ceiling((double)totalCount / safePageSize);
+        long skipLong = (long)(safePage - 1) * safePageSize;
         int skip = skipLong > int.MaxValue ? int.MaxValue : (int)skipLong;
-        List<T> pagedItems = [.. items.Skip(skip).Take(pageSize)];
+        List<T> pagedItems = [.. items.Skip(skip).Take(safePageSize)];
 
         return new PagedResult<T>
         {

@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 using Dapr.Actors;
 using Dapr.Actors.Client;
@@ -26,7 +27,13 @@ public sealed partial class PartyIndexProjectionQueryActor(
     public const string PartyDomain = "party";
     public const string PartyIndexQueryType = "PartyIndex";
     public const string ProjectionType = "party-index";
-    private static readonly JsonSerializerOptions s_jsonOptions = new(JsonSerializerDefaults.Web);
+
+    // P13: Unknown fields fail closed so a future contributor cannot bypass tenant authority
+    // by adding a payload field whose name is read by the actor.
+    private static readonly JsonSerializerOptions s_jsonOptions = new(JsonSerializerDefaults.Web)
+    {
+        UnmappedMemberHandling = JsonUnmappedMemberHandling.Disallow,
+    };
 
     public async Task<QueryResult> QueryAsync(QueryEnvelope envelope)
     {
@@ -48,7 +55,11 @@ public sealed partial class PartyIndexProjectionQueryActor(
         }
 
         string indexActorId = $"{envelope.TenantId}:party-index";
-        Log.PartyIndexQueryRouting(logger, envelope.CorrelationId, envelope.TenantId, envelope.QueryType, indexActorId);
+
+        // P14: Log templates intentionally omit the constructed actor id. The tenant id and
+        // query type are sufficient diagnostics; the actor key is a derivable storage identifier
+        // that the Party-Mode clarifications list as forbidden in diagnostics.
+        Log.PartyIndexQueryRouting(logger, envelope.CorrelationId, envelope.TenantId, envelope.QueryType);
 
         try
         {
@@ -76,7 +87,7 @@ public sealed partial class PartyIndexProjectionQueryActor(
         }
         catch (Exception ex) when (IsProjectionActorNotFound(ex))
         {
-            Log.PartyIndexProjectionNotFound(logger, envelope.CorrelationId, envelope.TenantId, envelope.QueryType, indexActorId);
+            Log.PartyIndexProjectionNotFound(logger, envelope.CorrelationId, envelope.TenantId, envelope.QueryType);
             return QueryResult.Failure(QueryAdapterFailureReason.ActorNotFoundInfrastructure);
         }
         catch (Exception ex)
@@ -86,7 +97,6 @@ public sealed partial class PartyIndexProjectionQueryActor(
                 envelope.CorrelationId,
                 envelope.TenantId,
                 envelope.QueryType,
-                indexActorId,
                 ex.GetType().Name);
             return QueryResult.Failure(QueryAdapterFailureReason.ActorException);
         }
@@ -126,12 +136,17 @@ public sealed partial class PartyIndexProjectionQueryActor(
             ModifiedAfter: null,
             ModifiedBefore: null);
 
+        // P2: List queries are Tier 1 (entityId-scoped) and always carry payload.
+        // An empty payload is a malformed envelope, not a "use defaults" signal.
+        if (payloadBytes.Length == 0)
+        {
+            return false;
+        }
+
         ListPartiesQueryPayloadWire? wire;
         try
         {
-            wire = payloadBytes.Length == 0
-                ? new ListPartiesQueryPayloadWire()
-                : JsonSerializer.Deserialize<ListPartiesQueryPayloadWire>(payloadBytes, s_jsonOptions);
+            wire = JsonSerializer.Deserialize<ListPartiesQueryPayloadWire>(payloadBytes, s_jsonOptions);
         }
         catch (JsonException)
         {
@@ -139,6 +154,14 @@ public sealed partial class PartyIndexProjectionQueryActor(
         }
 
         if (wire is null)
+        {
+            return false;
+        }
+
+        // P3: Reject negative or zero Page/PageSize at the boundary so client bugs surface
+        // rather than being silently coerced to defaults inside the builder.
+        if ((wire.Page is { } pageValue && pageValue < 1)
+            || (wire.PageSize is { } pageSizeValue && pageSizeValue < 1))
         {
             return false;
         }
@@ -178,9 +201,18 @@ public sealed partial class PartyIndexProjectionQueryActor(
             return true;
         }
 
-        if (Enum.TryParse(value, ignoreCase: true, out PartyType parsed) && Enum.IsDefined(parsed))
+        // P1: Strict allowlist of public party-type names. Enum.TryParse accepts numeric
+        // strings ("0", "1") and the internal `Unknown` sentinel; AC2 restricts the wire
+        // to `Person | Organization` only.
+        if (string.Equals(value, nameof(PartyType.Person), StringComparison.OrdinalIgnoreCase))
         {
-            type = parsed;
+            type = PartyType.Person;
+            return true;
+        }
+
+        if (string.Equals(value, nameof(PartyType.Organization), StringComparison.OrdinalIgnoreCase))
+        {
+            type = PartyType.Organization;
             return true;
         }
 
@@ -195,17 +227,31 @@ public sealed partial class PartyIndexProjectionQueryActor(
             return true;
         }
 
-        if (!DateTimeOffset.TryParseExact(
+        // P12: Accept any well-formed ISO-8601 representation (matches System.Text.Json default
+        // round-trip semantics). Internal clients emit the strict "O" form via HttpPartiesQueryClient,
+        // but third-party adopters commonly use Z-suffixed or fraction-less forms.
+        if (!DateTimeOffset.TryParse(
             value,
-            "O",
             CultureInfo.InvariantCulture,
-            DateTimeStyles.None,
+            DateTimeStyles.RoundtripKind | DateTimeStyles.AssumeUniversal,
             out DateTimeOffset parsed))
         {
             return false;
         }
 
-        instant = parsed.ToUniversalTime();
+        // P4: Defensive guard. ToUniversalTime on a successfully-parsed DateTimeOffset cannot
+        // throw in current .NET (the parser already rejects out-of-range UTC instants), but
+        // wrapping is cheap insurance against a future runtime change classifying overflow as
+        // an unhandled ActorException instead of a bounded InvalidEnvelope.
+        try
+        {
+            instant = parsed.ToUniversalTime();
+        }
+        catch (ArgumentOutOfRangeException)
+        {
+            return false;
+        }
+
         return true;
     }
 
@@ -247,38 +293,38 @@ public sealed partial class PartyIndexProjectionQueryActor(
 
     private static partial class Log
     {
+        // P14: Templates omit ActorId. The actor key is a structured storage identifier that
+        // Party-Mode clarifications classify as forbidden in diagnostics. Tenant + correlation
+        // + query type are sufficient for ops; the actor key is deterministic from the tenant.
         [LoggerMessage(
             EventId = 8610,
             Level = LogLevel.Debug,
-            Message = "Routing party index query: CorrelationId={CorrelationId}, TenantId={TenantId}, QueryType={QueryType}, ActorId={ActorId}, Stage=PartyIndexQueryRouting")]
+            Message = "Routing party index query: CorrelationId={CorrelationId}, TenantId={TenantId}, QueryType={QueryType}, Stage=PartyIndexQueryRouting")]
         public static partial void PartyIndexQueryRouting(
             ILogger logger,
             string correlationId,
             string tenantId,
-            string queryType,
-            string actorId);
+            string queryType);
 
         [LoggerMessage(
             EventId = 8611,
             Level = LogLevel.Warning,
-            Message = "Party index projection actor not found: CorrelationId={CorrelationId}, TenantId={TenantId}, QueryType={QueryType}, ActorId={ActorId}, Stage=PartyIndexProjectionNotFound")]
+            Message = "Party index projection actor not found: CorrelationId={CorrelationId}, TenantId={TenantId}, QueryType={QueryType}, Stage=PartyIndexProjectionNotFound")]
         public static partial void PartyIndexProjectionNotFound(
             ILogger logger,
             string correlationId,
             string tenantId,
-            string queryType,
-            string actorId);
+            string queryType);
 
         [LoggerMessage(
             EventId = 8612,
             Level = LogLevel.Warning,
-            Message = "Party index projection read failed: CorrelationId={CorrelationId}, TenantId={TenantId}, QueryType={QueryType}, ActorId={ActorId}, ExceptionType={ExceptionType}, Stage=PartyIndexProjectionReadFailed")]
+            Message = "Party index projection read failed: CorrelationId={CorrelationId}, TenantId={TenantId}, QueryType={QueryType}, ExceptionType={ExceptionType}, Stage=PartyIndexProjectionReadFailed")]
         public static partial void PartyIndexProjectionReadFailed(
             ILogger logger,
             string correlationId,
             string tenantId,
             string queryType,
-            string actorId,
             string exceptionType);
     }
 }

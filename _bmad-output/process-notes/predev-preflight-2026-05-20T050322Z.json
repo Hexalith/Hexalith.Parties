@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "produced_by": "jobs/preflight-predev-hardening.py",
-  "timestamp": "2026-05-20T08:00:58Z",
+  "timestamp": "2026-05-20T05:03:22Z",
   "repo": "D:\\Hexalith.Parties",
   "result": "fail",
   "bootstrap_actions": [],
@@ -12,8 +12,8 @@
       "path": "D:\\Hexalith.Parties\\_bmad-output\\implementation-artifacts\\sprint-status.yaml",
       "result": "pass",
       "details": "PARSE OK",
-      "file_size_bytes": 15755,
-      "line_count": 193,
+      "file_size_bytes": 14327,
+      "line_count": 191,
       "top_level_keys": [
         "development_status",
         "generated",
@@ -63,11 +63,11 @@
         ":(exclude)_bmad-output/process-notes/preflight-latest.json"
       ],
       "exit_code": 0,
-      "stdout": " M _bmad-output/implementation-artifacts/2-4-list-and-filter-parties.md\n M _bmad-output/implementation-artifacts/deferred-work.md\n M _bmad-output/implementation-artifacts/sprint-status.yaml\n M src/Hexalith.Parties/Queries/PartyIndexProjectionQueryActor.cs\n M src/Hexalith.Parties/Search/PartySearchResultsBuilder.cs\n M tests/Hexalith.Parties.Tests/Gateway/PartyIndexProjectionQueryActorTests.cs\n M tests/Hexalith.Parties.Tests/Search/BasicPartySearchProviderTests.cs\n?? _bmad-output/process-notes/story-2-4-review-diff.patch\n",
+      "stdout": " M _bmad-output/implementation-artifacts/2-4-list-and-filter-parties.md\n M _bmad-output/implementation-artifacts/deferred-work.md\n?? _bmad-output/process-notes/story-2-4-review-diff.patch\n",
       "stderr": "",
-      "dirty_path_count": 8,
+      "dirty_path_count": 3,
       "result": "fail",
-      "details": "8 dirty path(s)"
+      "details": "3 dirty path(s)"
     }
   ],
   "note_to_llm": "This file was produced by jobs/preflight-predev-hardening.py. The recurring pre-dev hardening job MUST quote the contents of this file verbatim when reporting pre-flight results; do NOT re-run the checks yourself, paraphrase them, or summarize them in your own words."

@@ -164,8 +164,33 @@ public sealed class PartyIndexProjectionQueryActorTests
             Arg.Any<ActorProxyOptions?>());
     }
 
+    // P13: Stricter contract — unknown JSON fields fail closed instead of being silently dropped.
+    // The security property (payload-supplied tenantId cannot influence routing) is now proven
+    // even more strongly: the payload is rejected before route resolution runs, and no actor
+    // proxy is constructed at all.
     [Fact]
-    public async Task QueryAsync_PayloadTenantCannotInfluenceIndexActorKeyAsync()
+    public async Task QueryAsync_PayloadWithUnknownFieldsRejectedBeforeProjectionReadAsync()
+    {
+        IActorProxyFactory actorProxyFactory = Substitute.For<IActorProxyFactory>();
+        PartyIndexProjectionQueryActor actor = CreateActor("party-index:tenant-b:parties", actorProxyFactory);
+
+        QueryResult result = await actor.QueryAsync(CreateEnvelope(
+            tenant: "tenant-b",
+            payload: Payload(new { page = 1, pageSize = 20, tenantId = "tenant-a", partitionKey = "tenant-a:party-index" })));
+
+        result.Success.ShouldBeFalse();
+        result.ErrorMessage.ShouldBe(QueryAdapterFailureReason.InvalidEnvelope);
+        actorProxyFactory.DidNotReceive().CreateActorProxy<IPartyIndexProjectionActor>(
+            Arg.Any<ActorId>(),
+            Arg.Any<string>(),
+            Arg.Any<ActorProxyOptions?>());
+    }
+
+    // P13 companion: With only known fields in the payload, routing succeeds and the actor key
+    // is derived strictly from the authenticated envelope tenant. This is the positive proof
+    // that pairs with the unknown-fields negative proof above.
+    [Fact]
+    public async Task QueryAsync_KnownFieldsOnly_DerivesActorKeyFromEnvelopeTenantAsync()
     {
         IActorProxyFactory actorProxyFactory = Substitute.For<IActorProxyFactory>();
         IPartyIndexProjectionActor indexActor = Substitute.For<IPartyIndexProjectionActor>();
@@ -184,7 +209,7 @@ public sealed class PartyIndexProjectionQueryActorTests
 
         QueryResult result = await actor.QueryAsync(CreateEnvelope(
             tenant: "tenant-b",
-            payload: Payload(new { page = 1, pageSize = 20, tenantId = "tenant-a", partitionKey = "tenant-a:party-index" })));
+            payload: Payload(new { page = 1, pageSize = 20 })));
 
         result.Success.ShouldBeTrue();
         DeserializePage(result).Items.Select(static i => i.Id).ShouldBe(["p-tenant-b"]);
@@ -196,6 +221,58 @@ public sealed class PartyIndexProjectionQueryActorTests
             Arg.Is<ActorId>(id => id.GetId().Contains("tenant-a", StringComparison.Ordinal)),
             Arg.Any<string>(),
             Arg.Any<ActorProxyOptions?>());
+    }
+
+    // P5: Malformed date string must short-circuit to InvalidEnvelope before any projection read.
+    [Fact]
+    public async Task QueryAsync_MalformedDateString_FailsBeforeProjectionReadAsync()
+    {
+        IActorProxyFactory actorProxyFactory = Substitute.For<IActorProxyFactory>();
+        PartyIndexProjectionQueryActor actor = CreateActor("party-index:tenant-a:parties", actorProxyFactory);
+
+        QueryResult result = await actor.QueryAsync(CreateEnvelope(
+            tenant: "tenant-a",
+            payload: Payload(new { page = 1, pageSize = 20, createdAfter = "not-a-date" })));
+
+        result.Success.ShouldBeFalse();
+        result.ErrorMessage.ShouldBe(QueryAdapterFailureReason.InvalidEnvelope);
+        actorProxyFactory.DidNotReceive().CreateActorProxy<IPartyIndexProjectionActor>(
+            Arg.Any<ActorId>(),
+            Arg.Any<string>(),
+            Arg.Any<ActorProxyOptions?>());
+    }
+
+    // P6: Active filter null/omitted must return BOTH active and inactive entries (excluding erased).
+    // Pins the implemented "no default active hiding" behavior so a future regression cannot
+    // silently introduce active-only as the default without test failure.
+    [Fact]
+    public async Task QueryAsync_ActiveNull_ReturnsBothActiveAndInactiveEntriesAsync()
+    {
+        IActorProxyFactory actorProxyFactory = Substitute.For<IActorProxyFactory>();
+        IPartyIndexProjectionActor indexActor = Substitute.For<IPartyIndexProjectionActor>();
+        indexActor.GetEntriesAsync().Returns(Task.FromResult<IReadOnlyDictionary<string, PartyIndexEntry>>(
+            new Dictionary<string, PartyIndexEntry>(StringComparer.Ordinal)
+            {
+                ["p-active"] = Entry("p-active", "Active Person", PartyType.Person, active: true, "2026-05-01T00:00:00Z", "2026-05-01T00:00:00Z"),
+                ["p-inactive"] = Entry("p-inactive", "Inactive Person", PartyType.Person, active: false, "2026-05-01T00:00:00Z", "2026-05-01T00:00:00Z"),
+                ["p-erased"] = Entry("p-erased", "Erased Person", PartyType.Person, active: true, "2026-05-01T00:00:00Z", "2026-05-01T00:00:00Z") with { IsErased = true },
+            }));
+        actorProxyFactory.CreateActorProxy<IPartyIndexProjectionActor>(
+                Arg.Any<ActorId>(),
+                Arg.Any<string>(),
+                Arg.Any<ActorProxyOptions?>())
+            .Returns(indexActor);
+
+        PartyIndexProjectionQueryActor actor = CreateActor("party-index:tenant-a:parties", actorProxyFactory);
+
+        QueryResult result = await actor.QueryAsync(CreateEnvelope(
+            tenant: "tenant-a",
+            payload: Payload(new { page = 1, pageSize = 10 })));
+
+        result.Success.ShouldBeTrue();
+        PagedResult<PartyIndexEntry> page = DeserializePage(result);
+        page.Items.Select(static i => i.Id).ShouldBe(["p-active", "p-inactive"], ignoreOrder: true);
+        page.TotalCount.ShouldBe(2);
     }
 
     [Fact]
@@ -215,13 +292,20 @@ public sealed class PartyIndexProjectionQueryActorTests
             () => actor.QueryAsync(CreateEnvelope("tenant-a", Payload(new { page = 1, pageSize = 20 }))));
     }
 
+    // P8 + P14: Log-safety assertion strengthened.
+    // P8: The exception message intentionally carries PII text ("Ada Lovelace") so the assertion
+    //     actually catches a regression where the logger interpolates ex.Message instead of
+    //     ex.GetType().Name. Without this, the negative-assertion was vacuously satisfied.
+    // P14: The actor key "tenant-a:party-index" is now explicitly forbidden in log output
+    //     to lock in the Party-Mode clarification that actor/storage keys are out of bounds.
     [Fact]
     public async Task QueryAsync_LogMessages_ContainOnlyBoundedMetadataOnReadFailureAsync()
     {
         var recordingLogger = new RecordingLogger<PartyIndexProjectionQueryActor>();
         IActorProxyFactory actorProxyFactory = Substitute.For<IActorProxyFactory>();
         IPartyIndexProjectionActor indexActor = Substitute.For<IPartyIndexProjectionActor>();
-        indexActor.GetEntriesAsync().Throws(new InvalidOperationException("state store failed"));
+        indexActor.GetEntriesAsync().Throws(new InvalidOperationException(
+            "state store failed while fetching entry for Ada Lovelace <ada@example.test>"));
         actorProxyFactory.CreateActorProxy<IPartyIndexProjectionActor>(
                 Arg.Any<ActorId>(),
                 Arg.Any<string>(),
@@ -240,11 +324,15 @@ public sealed class PartyIndexProjectionQueryActorTests
         recordingLogger.Records.ShouldNotBeEmpty();
         foreach (string message in recordingLogger.Records.Select(static r => r.Message))
         {
+            // PII guards: nothing from the (intentionally PII-laden) exception message must leak.
             message.ShouldNotContain("Ada", Case.Insensitive);
             message.ShouldNotContain("ada@example.test", Case.Insensitive);
             message.ShouldNotContain("displayName", Case.Insensitive);
             message.ShouldNotContain("contactChannels", Case.Insensitive);
+            // Actor/storage key guards (P14): neither the partitioned legacy form nor the
+            // current tenant-scoped form is permitted in diagnostic output.
             message.ShouldNotContain("tenant-a:party-index:all", Case.Insensitive);
+            message.ShouldNotContain("tenant-a:party-index", Case.Insensitive);
         }
     }
 
@@ -298,7 +386,9 @@ public sealed class PartyIndexProjectionQueryActorTests
             LastModifiedAt = DateTimeOffset.Parse(modifiedAt, System.Globalization.CultureInfo.InvariantCulture),
         };
 
-    private static JsonSerializerOptions JsonOptions => new(JsonSerializerDefaults.Web);
+    // P9: static readonly so System.Text.Json caches converter/metadata for the options
+    // instance across test cases instead of warming a fresh cache on every Payload(...) call.
+    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
 
     private sealed class RecordingLogger<T> : ILogger<T>
     {

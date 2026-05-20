@@ -1,6 +1,6 @@
 # Story 2.4: List and Filter Parties
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -345,8 +345,21 @@ GPT-5 Codex
 - tests/Hexalith.Parties.Tests/Gateway/PartyIndexProjectionQueryActorTests.cs
 - tests/Hexalith.Parties.Tests/Search/BasicPartySearchProviderTests.cs
 
+#### Incidental changes acknowledged in commit `8ada863` (P11, from code-review D1)
+
+The following changes were carried in the same commit as the story 2.4 implementation. They are not part of the story 2.4 acceptance scope but are accepted as incidental rather than reverted:
+
+- `Hexalith.EventStore` submodule pointer bumped (`8d740e5 → 2e68330`).
+- `Hexalith.Tenants` submodule pointer bumped (`e5b03b9 → c5469fb`).
+- `_bmad-output/process-notes/predev-preflight-2026-05-19T130159Z.json` (new).
+- `_bmad-output/process-notes/predev-preflight-2026-05-19T140131Z.json` (new).
+- `_bmad-output/process-notes/predev-preflight-latest.json` (modified).
+
+`project-context.md` discourages submodule edits unless the task crosses that boundary; these pointer bumps did not affect any consumed Parties surface (`IPartyIndexProjectionActor`, `QueryEnvelope`, `QueryActorIdHelper` are unmodified) and the full Release regression suite remained green.
+
 ## Change Log
 
+- 2026-05-19: Code-review closed (3 layers: Blind Hunter, Edge Case Hunter, Acceptance Auditor). 14 patches applied (P1 strict PartyType allowlist, P2 reject empty payload, P3 reject negative Page/PageSize, P4 ToUniversalTime defensive guard, P5 malformed-date test, P6 active=null test, P7 combined+one-sided range tests, P8 strengthened PII negative-assertion with PII-laden exception message, P9 static readonly JsonOptions, P10 defensive normalization inside CreatePagedResult, P11 incidental submodule bump acknowledgment in File List, P12 relaxed ISO-8601 parser via TryParse + RoundtripKind, P13 UnmappedMemberHandling.Disallow with retargeted cross-tenant test, P14 ActorId stripped from log templates). 9 items deferred to deferred-work.md (1 new: Story 2.3 log-redaction consistency). 8 dismissed as verified false positives or pinned-by-test intentional behavior. 4 decisions resolved (D1 submodule bumps accepted+documented, D2 best-practice ISO-8601 acceptance, D3 strict JSON, D4 strict log redaction). Focused tests: PartyIndexProjectionQueryActorTests + BasicPartySearchProviderTests 22/22, EventStoreGatewayRoutingTests + PartySearchServiceBoundary + ArchitecturalFitnessTests + PartyIndexProjectionActor 49/49, HttpPartiesQueryClientTests 14/14 — 85 tests green.
 - 2026-05-19: Implemented PartyIndex list query adapter, tenant-scoped filtering/paging hardening, focused tests, and full regression validation.
 - 2026-05-18: Story created by BMAD pre-dev hardening automation with existing typed list client, EventStore query gateway, tenant index projection, list/filter/paging, degraded-state, privacy, and focused validation guidance.
 - 2026-05-18: Party-mode review applied low-risk clarifications for tenant-source authority, index-only result shape, active/date filter semantics, deterministic pagination, degraded-state outcome boundaries, privacy-safe diagnostics, and deferred default/sort/freshness decisions.
@@ -406,3 +419,58 @@ GPT-5 Codex
   - Canonical adopter-facing sort order remains deferred if no existing accepted list ordering already defines it.
   - Public freshness/degradation response categories and rebuild progress metadata remain deferred beyond current EventStore query boundary behavior.
 - Final recommendation: ready-for-dev
+
+## Review Findings
+
+Date/time: 2026-05-19 (code-review)
+Reviewers: Blind Hunter, Edge Case Hunter, Acceptance Auditor (parallel adversarial layers)
+Diff scope: commit `8ada863` (PartyIndexProjectionQueryActor + builder hardening + tests)
+
+### Decision Needed (resolved)
+
+- [x] [Review][Decision] D1: Submodule pointer bumps `Hexalith.EventStore` and `Hexalith.Tenants` in commit `8ada863` — **Resolved: accept as incidental and document in story File List.** Becomes P11.
+- [x] [Review][Decision] D2: `TryParseInstant` strict `"O"` format — **Resolved: relax to `DateTimeOffset.TryParse(..., DateTimeStyles.RoundtripKind)` per best practice (matches System.Text.Json default ISO-8601 acceptance).** Becomes P12.
+- [x] [Review][Decision] D3: `JsonSerializerDefaults.Web` does not disallow unknown JSON fields — **Resolved: set `UnmappedMemberHandling.Disallow` and retarget cross-tenant test to assert structured rejection.** Becomes P13.
+- [x] [Review][Decision] D4: ActorId in log templates — **Resolved: strip ActorId from logs in this file; add deferred item to apply consistent pattern to `PartyDetailProjectionQueryActor` (Story 2.3).** Becomes P14. Story 2.3 consistency added to deferred-work.md.
+
+### Patches
+
+- [x] [Review][Patch] P1: Reject `PartyType.Unknown` and numeric-string party types in `TryParsePartyType`. `Enum.TryParse(..., ignoreCase: true, ...)` accepts `"0"`, `"Unknown"`, etc. as valid because `Unknown` is a defined enum member. AC2 says the type filter must include only Person or Organization entries — `Unknown` is neither. Use a strict allowlist (switch on `"Person"`/`"Organization"`) or reject when input starts with a digit. [src/Hexalith.Parties/Queries/PartyIndexProjectionQueryActor.cs:173-188]
+- [x] [Review][Patch] P2: Reject empty/whitespace/non-object payload as `InvalidEnvelope` instead of silently defaulting. Currently `payloadBytes.Length == 0` returns wire defaults. The list query has `EntityId="parties"` (Tier 1 routing) so the gateway emits a non-empty payload — an empty payload is a bug or attack probe and should fail closed. [src/Hexalith.Parties/Queries/PartyIndexProjectionQueryActor.cs:130-134]
+- [x] [Review][Patch] P3: Reject negative `Page` or `PageSize` in `TryParsePayload` rather than silently clamping in `BuildPagedList`. The wire DTO accepts negatives and propagates them as defaults; the boundary should fail closed so client bugs surface. [src/Hexalith.Parties/Queries/PartyIndexProjectionQueryActor.cs:161-169]
+- [x] [Review][Patch] P4: Wrap `parsed.ToUniversalTime()` in a guarded try-catch (or check for `DateTimeOffset.MaxValue` with negative offset / `MinValue` with positive offset) so a parseable-but-overflowing instant returns `InvalidEnvelope` rather than escaping as `ArgumentOutOfRangeException` to the outer `catch (Exception)` → `ActorException`. [src/Hexalith.Parties/Queries/PartyIndexProjectionQueryActor.cs:208]
+- [x] [Review][Patch] P5: Add `TryParseInstant` malformed-string test in `PartyIndexProjectionQueryActorTests` — current test suite covers start-after-end inversion but not unparseable date values. Spec Required Test Matrix calls for "Malformed values and start-after-end ranges map to bounded validation errors without raw payload echo." [tests/Hexalith.Parties.Tests/Gateway/PartyIndexProjectionQueryActorTests.cs]
+- [x] [Review][Patch] P6: Add `Active = null` test pinning that both active and inactive entries are returned (the current "all-status" implicit default). Party-Mode Clarification line 91 says active/null behavior must be pinned in tests OR recorded as deferred — implementation invented "all" without pinning. [tests/Hexalith.Parties.Tests/Gateway/PartyIndexProjectionQueryActorTests.cs]
+- [x] [Review][Patch] P7: Add a combined `createdAfter` + `modifiedBefore` (or one-sided-range) test. Party-Mode Clarification line 92 requires "combined created/modified ranges" be test-pinned. [tests/Hexalith.Parties.Tests/Search/BasicPartySearchProviderTests.cs]
+- [x] [Review][Patch] P8: Strengthen `QueryAsync_LogMessages_ContainOnlyBoundedMetadataOnReadFailureAsync` PII negative-assertion. Currently asserts `"Ada"` and `"ada@example.test"` are not in log output but the seed data in this specific test does not contain "Ada" — assertion passes vacuously. Seed display name `"Ada Lovelace"` into the input so a future log-template regression is actually caught. [tests/Hexalith.Parties.Tests/Gateway/PartyIndexProjectionQueryActorTests.cs:735-796]
+- [x] [Review][Patch] P9: Convert `private static JsonSerializerOptions JsonOptions => new(JsonSerializerDefaults.Web);` (auto-property returning new instance per call) to `private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);` to avoid per-call allocation and warming the System.Text.Json metadata cache repeatedly. [tests/Hexalith.Parties.Tests/Gateway/PartyIndexProjectionQueryActorTests.cs:849]
+- [x] [Review][Patch] P10: Add defensive guard in `PartySearchResultsBuilder.CreatePagedResult` so `pageSize <= 0` is clamped to ≥1 inside the helper. The new `BuildPagedList` normalizes upstream but the older `BuildSearchResults` entry point (untouched) currently depends on caller `LocalPartySearchService` to clamp. The helper itself remains division-by-zero-prone if a future caller forgets to normalize. [src/Hexalith.Parties/Search/PartySearchResultsBuilder.cs:279-295]
+- [x] [Review][Patch] P11 (from D1): Add note in `File List` section acknowledging incidental `Hexalith.EventStore` and `Hexalith.Tenants` submodule pointer bumps from commit `8ada863`. No code revert.
+- [x] [Review][Patch] P12 (from D2): Replace `DateTimeOffset.TryParseExact(value, "O", ...)` with `DateTimeOffset.TryParse(value, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind | DateTimeStyles.AssumeUniversal, out parsed)` so any well-formed ISO-8601 form is accepted (matches System.Text.Json default behavior). [src/Hexalith.Parties/Queries/PartyIndexProjectionQueryActor.cs:198-205]
+- [x] [Review][Patch] P13 (from D3): Configure `s_jsonOptions.UnmappedMemberHandling = JsonUnmappedMemberHandling.Disallow` so payloads with unknown JSON fields return `InvalidEnvelope`. Retarget `QueryAsync_PayloadTenantCannotInfluenceIndexActorKeyAsync` to send the payload WITHOUT unknown fields and assert routing still derives the actor key from envelope tenant (the route-resolution test is what truly proves tenant authority); add a new test asserting unknown-field payload is rejected. [src/Hexalith.Parties/Queries/PartyIndexProjectionQueryActor.cs:29; tests/Hexalith.Parties.Tests/Gateway/PartyIndexProjectionQueryActorTests.cs:735-746]
+- [x] [Review][Patch] P14 (from D4): Remove `ActorId={ActorId}` from the three log templates (`PartyIndexQueryRouting`, `PartyIndexProjectionNotFound`, `PartyIndexProjectionReadFailed`) and remove the `string actorId` parameter from each `LoggerMessage`. Update call sites and the log-safety test (`QueryAsync_LogMessages_ContainOnlyBoundedMetadataOnReadFailureAsync`) to assert ActorId text is NOT present. Story 2.3 `PartyDetailProjectionQueryActor` consistency item added to deferred-work.md. [src/Hexalith.Parties/Queries/PartyIndexProjectionQueryActor.cs:248-283]
+
+### Deferred (pre-existing or out of current scope)
+
+- [x] [Review][Defer] M1: `IsProjectionActorNotFound` matches Dapr "actor not found" via locale-sensitive exception-message string sniffing. Fragile across SDK upgrades but the same pattern is established in `PartyDetailProjectionQueryActor` (Story 2.3). Replace with typed Dapr exception/HTTP/gRPC status code in a follow-up. [src/Hexalith.Parties/Queries/PartyIndexProjectionQueryActor.cs:212-226]
+- [x] [Review][Defer] M2: `QueryAdapterFailureReason.InvalidEnvelope` collapses unauthorized routing, malformed payload, invalid party type, and inverted date range into one code. Distinct reasons would require a contract change in EventStore. [src/Hexalith.Parties/Queries/PartyIndexProjectionQueryActor.cs:42,47,152,158]
+- [x] [Review][Defer] M3: Date range comparisons are inclusive on both ends (`>=` and `<=`). The choice is undocumented in the wire contract; AC4 leaves "inclusive/exclusive policy as implemented" intentionally open. Document in wire DTO / OpenAPI in a follow-up. [src/Hexalith.Parties/Search/PartySearchResultsBuilder.cs:118-136]
+- [x] [Review][Defer] I1: `IPartyIndexProjectionActor.GetEntriesAsync()` has no `CancellationToken`. The query actor's `OperationCanceledException` rethrow only fires if the proxy itself propagates a sidecar-side cancellation. Adding the token requires a cross-submodule interface change in `Hexalith.Parties.Projections`. [src/Hexalith.Parties/Queries/PartyIndexProjectionQueryActor.cs:59]
+- [x] [Review][Defer] I3: `EventStoreGatewayRoutingTests.PartyIndexQuery_*` covers the happy-path only. 404 / cross-tenant / malformed-payload paths are exercised by `PartyIndexProjectionQueryActorTests` in isolation, but not at the gateway+actor wiring level. [tests/Hexalith.Parties.Tests/Gateway/EventStoreGatewayRoutingTests.cs:493-538]
+- [x] [Review][Defer] MIN1: Magic strings `"PartyIndexProjectionQueryActor"`, `"party-index"`, `"PartyIndex"`, `"parties"`, `"party"` are duplicated between `HttpPartiesQueryClient` and `PartyIndexProjectionQueryActor`. Drift risk. Move to shared Contracts constants in a follow-up. [src/Hexalith.Parties.Client/HttpPartiesQueryClient.cs:16-25, src/Hexalith.Parties/Queries/PartyIndexProjectionQueryActor.cs:24-28]
+- [x] [Review][Defer] A4: No dedicated test that proves page metadata is computed strictly post-filtering when unfiltered counts would otherwise leak. Indirectly covered by `QueryAsync_PartyIndex_ReadsTenantScopedIndexAndFiltersBeforePagingAsync` and `BuildPagedList_FiltersErasedTypeActiveAndDateRangesBeforeMetadata`. [tests/Hexalith.Parties.Tests/Gateway/PartyIndexProjectionQueryActorTests.cs, tests/Hexalith.Parties.Tests/Search/BasicPartySearchProviderTests.cs]
+- [x] [Review][Defer] A5: `PartyIndexProjectionActorCorruptionTests` not extended for the query actor's degraded path. The query actor surfaces whatever `GetEntriesAsync()` returns/throws, and the underlying actor's stale/rebuilding/cached behavior is tested in its own test class. Add a query-actor-level integration once corruption-mode contracts solidify. [tests/Hexalith.Parties.Tests/Projections/PartyIndexProjectionActorCorruptionTests.cs]
+- [x] [Review][Defer] A7: Cross-tenant probe-registry asserts only `{otherTenant}:party-index` is not constructed, not the partitioned `{otherTenant}:party-index:{partitionKey}` form. The partitioned form is unreachable in the current `SingleKeyPartitionStrategy` v1.0; defer until multi-key partitioning lands. [tests/Hexalith.Parties.Tests/Gateway/PartyIndexProjectionQueryActorTests.cs:735-746]
+
+### Dismissed (verified false positives or noise)
+
+- B1: TryParsePayload `byte[]` signature vs `JsonElement` — verified: `QueryEnvelope.Payload` IS `byte[]` per `Hexalith.EventStore.Contracts.Queries.QueryEnvelope:85`. `SubmitQueryRequest.Payload: JsonElement` is the client-side wire DTO that the gateway serializes to bytes.
+- B2: Actor route ID format mismatch — verified: `QueryActorIdHelper.DeriveActorId("party-index", tenant, "parties", payload)` produces `"party-index:{tenant}:parties"` which matches the actor's `TryResolveActorRoute` segment expectations.
+- M8: New tertiary `.ThenBy(e => e.Id, StringComparer.Ordinal)` sort is intentional for deterministic pagination per spec line 144 ("use a deterministic index-backed sort key plus stable tie-breaker").
+- M9: `ArgumentNullException.ThrowIfNull` inside an exception-filter helper is unreachable — the `catch (Exception ex)` clause filters non-null exceptions only.
+- MIN3: `totalPages = 1` when `totalCount == 0` is cosmetic and consistent with the search-result helper pattern.
+- I2: `CorrelationId` logged cleartext — correlation IDs are not PII; standard observability practice.
+- I4: `CancellationHandler` reference — verified the type exists in `tests/Hexalith.Parties.Client.Tests/HttpPartiesQueryClientTests.cs` (referenced from another test in the same project).
+- E7: `BuildPagedList` returns un-normalized `Page` in metadata — intentional; pinned by `BuildPagedList_UsesOverflowSafeSkipForLargePage` test.
+
+

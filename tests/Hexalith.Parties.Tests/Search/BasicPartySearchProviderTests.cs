@@ -153,6 +153,65 @@ public class BasicPartySearchProviderTests
         result.TotalCount.ShouldBe(1);
     }
 
+    // P7: Party-Mode clarification requires combined created/modified ranges to be test-pinned.
+    // Each range constrains a different timestamp; an entry must satisfy both ranges to be returned.
+    // Also exercises one-sided ranges (createdBefore null, modifiedAfter null) by composing two
+    // half-open intervals across different columns.
+    [Fact]
+    public void BuildPagedList_AppliesCombinedCreatedAndModifiedRangeFiltersTogether()
+    {
+        List<PartyIndexEntry> entries =
+        [
+            // Satisfies BOTH ranges: created in [May 1, May 31], modified in [May 5, May 31].
+            Entry("p-in-both-ranges", "Charlie Person", PartyType.Person, active: true, "2026-05-10T00:00:00Z", "2026-05-15T00:00:00Z"),
+            // Satisfies created range only: modified on May 1 falls before the modifiedAfter bound (May 5).
+            Entry("p-modified-too-early", "Modified Early", PartyType.Person, active: true, "2026-05-10T00:00:00Z", "2026-05-01T00:00:00Z"),
+            // Satisfies modified range only: created on April 25 falls before the createdAfter bound (May 1).
+            Entry("p-created-too-early", "Created Early", PartyType.Person, active: true, "2026-04-25T00:00:00Z", "2026-05-15T00:00:00Z"),
+        ];
+
+        PagedResult<PartyIndexEntry> result = PartySearchResultsBuilder.BuildPagedList(
+            entries,
+            typeFilter: null,
+            activeFilter: null,
+            createdAfter: DateTimeOffset.Parse("2026-05-01T00:00:00Z", System.Globalization.CultureInfo.InvariantCulture),
+            createdBefore: DateTimeOffset.Parse("2026-05-31T00:00:00Z", System.Globalization.CultureInfo.InvariantCulture),
+            modifiedAfter: DateTimeOffset.Parse("2026-05-05T00:00:00Z", System.Globalization.CultureInfo.InvariantCulture),
+            modifiedBefore: DateTimeOffset.Parse("2026-05-31T00:00:00Z", System.Globalization.CultureInfo.InvariantCulture),
+            page: 1,
+            pageSize: 20);
+
+        result.Items.Select(static e => e.Id).ShouldBe(["p-in-both-ranges"]);
+        result.TotalCount.ShouldBe(1);
+    }
+
+    // P7 (one-sided): Only createdAfter is specified; modifiedAfter, createdBefore, and
+    // modifiedBefore are null. Entries created on or after the bound must be returned regardless
+    // of LastModifiedAt.
+    [Fact]
+    public void BuildPagedList_AppliesOneSidedCreatedAfterRangeWithoutOtherDateBounds()
+    {
+        List<PartyIndexEntry> entries =
+        [
+            Entry("p-after-bound", "After Bound", PartyType.Person, active: true, "2026-05-10T00:00:00Z", "2024-01-01T00:00:00Z"),
+            Entry("p-before-bound", "Before Bound", PartyType.Person, active: true, "2026-04-25T00:00:00Z", "2026-06-01T00:00:00Z"),
+        ];
+
+        PagedResult<PartyIndexEntry> result = PartySearchResultsBuilder.BuildPagedList(
+            entries,
+            typeFilter: null,
+            activeFilter: null,
+            createdAfter: DateTimeOffset.Parse("2026-05-01T00:00:00Z", System.Globalization.CultureInfo.InvariantCulture),
+            createdBefore: null,
+            modifiedAfter: null,
+            modifiedBefore: null,
+            page: 1,
+            pageSize: 20);
+
+        result.Items.Select(static e => e.Id).ShouldBe(["p-after-bound"]);
+        result.TotalCount.ShouldBe(1);
+    }
+
     private static PartyIndexEntry Entry(
         string id,
         string displayName,
