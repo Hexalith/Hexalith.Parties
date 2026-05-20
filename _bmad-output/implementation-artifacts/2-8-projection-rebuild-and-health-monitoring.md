@@ -83,6 +83,15 @@ so that read models can recover without unsafe data exposure.
 - Cancellation, timeout, replay exception, validation failure, duplicate rebuild request, failed state write, failed checkpoint/manifest update, or failed reload must leave the affected projection in bounded degraded/rebuilding/failed-closed behavior and must not start follow-on writes, retries, query fallbacks, or secondary lookups after cancellation is observed.
 - Gateway, list, and search boundary tests are required only when this story changes externally observable read behavior; otherwise coverage should stay focused on rebuild service, projection actors, health checks, degraded middleware, and architecture fitness guardrails.
 
+## Advanced Elicitation Clarifications
+
+- Rebuild trust is a multi-step gate, not a single successful replay. A projection may report current only after event replay, state persistence, checkpoint or manifest reconciliation, actor reload or equivalent trust refresh, and health classification all agree on the same tenant/projection identity.
+- Partial rebuild artifacts are never authoritative. If replay stops midway, duplicate rebuild attempts overlap, actor reminders fire twice, or persistence succeeds but checkpoint/manifest cleanup fails, the safest observable state remains bounded degraded, rebuilding, unavailable, or failed-closed.
+- Health checks must not become tenant inventory. Healthy, degraded, rebuilding, corrupt, unavailable, and failed-closed signals may identify the projection component category, but they must not reveal whether a specific tenant, party, partition, stream, actor id, state key, row count, cache age, or manifest entry exists.
+- Cancellation is terminal for the current operation scope. Once cancellation is observed, the rebuild path must avoid later event reads, state writes, checkpoint writes, manifest edits, actor reloads, retries, query fallbacks, or delayed continuation work that could make a canceled rebuild appear successful.
+- Corrupt or incompatible manifest/index state must be treated as untrusted input. Rebuild code may use it only after proving same-tenant provenance and expected shape; otherwise it must not fabricate party ids, infer missing rows, enumerate tenant state through health, or fall back to cross-actor probing.
+- Tests should assert both positive and negative evidence for every rebuild transition: the expected bounded status is present, and raw payloads, exception text, Dapr internals, exact positions, tenant counts, actor/state keys, stream names, and personal data are absent from health output, logs, and public read outcomes.
+
 ## Response Outcome Boundaries
 
 | Scenario | Expected public outcome |
@@ -216,7 +225,7 @@ so that read models can recover without unsafe data exposure.
 - Story 2.5 established MVP display-name-only search, match metadata after current-tenant and erasure filtering, degraded-cache provenance gates, negative future-field tests, and terminal cancellation.
 - Story 2.6 established fail-closed tenant-safe projection reads across detail, list/filter, search, degraded cache, actor key shape, and metadata-only diagnostics.
 - Story 2.7 established bounded freshness/degradation behavior for current, stale, degraded, rebuilding, and unsafe projection states.
-- L08 in the lessons ledger says party-mode review and advanced elicitation are separate dated traces. This story now carries a completed party-mode trace and still needs a separate advanced elicitation pass before that hardening phase can be considered complete.
+- L08 in the lessons ledger says party-mode review and advanced elicitation are separate dated traces. This story now carries completed party-mode and advanced elicitation traces.
 
 ### Current Code Surfaces To Inspect
 
@@ -332,7 +341,22 @@ dotnet build Hexalith.Parties.slnx --configuration Release
 - Findings deferred: Exact enum/type names for projection state, whether degraded and rebuilding are represented as separate health dimensions or one status, whether active rebuild readiness is degraded versus unavailable, whether trusted stale reads are served during rebuild beyond Story 2.7 allowances, rebuild retry/backoff policy, operator-facing repair endpoints or dashboards, broader rebuild framework decisions, tenant-level health inventory, EventStore authorization changes, persistence shape changes for rebuild metadata, and gateway/search contract changes unless implementation changes observable read behavior.
 - Final recommendation: `ready-for-dev`
 
+## Advanced Elicitation
+
+- Date/time: 2026-05-20T17:03:33+02:00
+- Selected story key: `2-8-projection-rebuild-and-health-monitoring`
+- Command/skill invocation used: `/bmad-advanced-elicitation 2-8-projection-rebuild-and-health-monitoring`
+- Batch 1 method names: Red Team vs Blue Team; Failure Mode Analysis; Security Audit Personas; Self-Consistency Validation; Architecture Decision Records
+- Reshuffled Batch 2 method names: Pre-mortem Analysis; Chaos Monkey Scenarios; User Persona Focus Group; Critique and Refine; Expand or Contract for Audience
+- Findings summary: The elicitation found that the story was directionally ready but needed sharper trust-gate wording for rebuild completion, stronger fail-closed handling for partial or overlapping rebuilds, terminal cancellation semantics, health-output non-enumeration requirements, manifest/index provenance rules, and paired positive/negative test evidence.
+- Changes applied:
+  - Added `Advanced Elicitation Clarifications` requiring multi-step rebuild trust agreement before reporting current health, non-authoritative partial rebuild artifacts, non-enumerating health checks, terminal cancellation behavior, corrupt manifest/index provenance checks, and positive plus negative privacy-safe assertions.
+  - Updated Dev Notes to record that the story now has both completed party-mode and advanced elicitation traces.
+- Findings deferred: Exact status enum/type names, retry/backoff policy, tenant-level operational inventory, operator-triggered rebuild APIs or dashboards, progress metrics, alert routing, public freshness contract shape, persistence format changes for rebuild metadata, and gateway/search contract changes unless implementation proves an observable read-behavior change.
+- Final recommendation: `ready-for-dev`
+
 ## Change Log
 
+- 2026-05-20: Advanced elicitation applied low-risk clarifications for rebuild trust gates, partial rebuild failure behavior, non-enumerating health output, terminal cancellation, manifest/index provenance, and privacy-safe test assertions; final recommendation `ready-for-dev`.
 - 2026-05-19: Party-mode review applied low-risk clarifications for bounded projection states, fail-closed rebuild/read behavior, privacy-safe health output, existing rebuild-surface ownership, failure/cancellation coverage, and AC-to-test traceability.
 - 2026-05-19: Story created by BMAD pre-dev hardening automation with existing projection rebuild service, detail/index projection actors, health checks, degraded middleware, tenant-safe cache provenance, privacy-safe diagnostics, and focused validation guidance.
