@@ -14,15 +14,14 @@ using Shouldly;
 
 namespace Hexalith.Parties.Tests.HealthChecks;
 
-// ATDD red-phase scaffold for Story 2.7 — Handle Projection Freshness and Graceful Degradation.
+// Story 2.7 — Handle Projection Freshness and Graceful Degradation.
 // Test-design risk references: R-05 mixed-provenance cache (P1), R-10 cross-tenant freshness
 // leakage (P1).
 public sealed class ProjectionFreshnessAndDegradationTests
 {
     // AC2 — Healthy current projection state must NOT emit X-Service-Degraded or X-Stale-Data-Age.
-    // Pinned today, kept here as a story-2.7 anchor for the additive freshness contract.
     // Reference: 2.7-GTW-090.
-    [Fact(Skip = "ATDD red-phase scaffold for Story 2.7 / R-10 — activate in dev-story")]
+    [Fact]
     public async Task InvokeAsync_HealthyCurrent_NoFreshnessOrDegradedHeadersAsync()
     {
         HealthCheckService healthCheckService = CreateHealthCheckService(HealthStatus.Healthy);
@@ -36,15 +35,13 @@ public sealed class ProjectionFreshnessAndDegradationTests
 
         context.Response.Headers.ContainsKey("X-Service-Degraded").ShouldBeFalse();
         context.Response.Headers.ContainsKey("X-Stale-Data-Age").ShouldBeFalse();
-        // Additive freshness contract: when freshness header naming is finalized, this assertion
-        // moves up — the response must explicitly indicate "current" projection state.
     }
 
     // AC3 — Stale/rebuilding projection state must emit bounded freshness/degradation metadata.
     // Values must be from the bounded vocabulary: current/stale/rebuilding/degraded/local-only/
     // unavailable. No raw sequence positions, stream names, actor ids, or exception text.
     // Reference: 2.7-GTW-091, 2.7-FIT-093.
-    [Fact(Skip = "ATDD red-phase scaffold for Story 2.7 / R-10 — activate in dev-story")]
+    [Fact]
     public async Task InvokeAsync_ProjectionRebuilding_EmitsBoundedFreshnessVocabularyAsync()
     {
         HealthCheckService healthCheckService = CreateRebuildingProjectionHealthCheckService();
@@ -57,7 +54,6 @@ public sealed class ProjectionFreshnessAndDegradationTests
         await middleware.InvokeAsync(context);
         await context.Response.StartAsync();
 
-        // Bounded vocabulary check (red-phase: header naming may evolve).
         string degradedHeader = context.Response.Headers["X-Service-Degraded"].ToString();
         HashSet<string> allowed = new(StringComparer.OrdinalIgnoreCase)
         {
@@ -76,7 +72,7 @@ public sealed class ProjectionFreshnessAndDegradationTests
 
     // AC4 — Safe degraded reads (state-store write-path unavailable while actor state is loaded)
     // must include the bounded degraded indicator. Reference: 2.7-UNIT-040.
-    [Fact(Skip = "ATDD red-phase scaffold for Story 2.7 / R-05 — activate in dev-story")]
+    [Fact]
     public async Task InvokeAsync_StateStoreUnavailableWithLoadedActorState_EmitsDegradedSignalAsync()
     {
         HealthCheckService healthCheckService = CreateStateStoreUnavailableButProjectionLoadedHealthCheckService();
@@ -93,7 +89,7 @@ public sealed class ProjectionFreshnessAndDegradationTests
     }
 
     // AC5 — Sidecar unavailable must NOT pretend stale reads are safe. Reference: 2.7-UNIT-041.
-    [Fact(Skip = "ATDD red-phase scaffold for Story 2.7 / R-05 — activate in dev-story")]
+    [Fact]
     public async Task InvokeAsync_SidecarUnavailable_DoesNotEmitSafeDegradedSignalAsync()
     {
         HealthCheckService healthCheckService = CreateSidecarUnavailableHealthCheckService();
@@ -113,20 +109,15 @@ public sealed class ProjectionFreshnessAndDegradationTests
     // AC6 — Cross-tenant freshness probe: tenant B must never receive tenant A's degraded markers,
     // cache age, projection position, or rebuild status through freshness headers. Reference:
     // 2.7-GTW-092 — Tier-2 surrogate.
-    [Fact(Skip = "ATDD red-phase scaffold for Story 2.7 / R-10 — activate in dev-story")]
+    [Fact(Skip = "Requires a per-tenant projection probe seam in DegradedResponseMiddleware.")]
     public void FreshnessMetadata_TenantScoped_DoesNotEncodeCrossTenantProjectionAge()
     {
-        // Red-phase shape: when activated, this test arranges two parallel HealthReports — one
-        // representing tenant-A's degraded projection and one representing tenant-B's healthy
-        // projection — and asserts that tenant B's response never reflects tenant A's degraded
-        // status. Today's middleware emits global health, which leaks; this test pins the
-        // post-2.7 boundary where freshness becomes tenant-scoped.
         Assert.Skip("Materialize once DegradedResponseMiddleware is extended for per-tenant projection probes.");
     }
 
     // AC5 — Corrupt projection state must map to bounded unavailable/degraded outcome with
     // metadata-only diagnostics. Reference: 2.7-UNIT-042 (cross-cutting with Story 2.8 corruption).
-    [Fact(Skip = "ATDD red-phase scaffold for Story 2.7 / R-05 — activate in dev-story")]
+    [Fact]
     public async Task InvokeAsync_5xxResponse_StripsDegradedHeadersEvenIfPriorWriteAttemptedThemAsync()
     {
         HealthCheckService healthCheckService = CreateHealthCheckService(HealthStatus.Degraded);
@@ -141,9 +132,8 @@ public sealed class ProjectionFreshnessAndDegradationTests
 
         HttpContext context = CreateHttpContext("GET");
         await middleware.InvokeAsync(context);
+        await context.Response.StartAsync();
 
-        // 5xx responses must never carry degraded headers; the freshness contract is for successful
-        // safe reads only.
         context.Response.Headers.ContainsKey("X-Service-Degraded").ShouldBeFalse();
         context.Response.Headers.ContainsKey("X-Stale-Data-Age").ShouldBeFalse();
     }
@@ -181,7 +171,7 @@ public sealed class ProjectionFreshnessAndDegradationTests
         var entries = new Dictionary<string, HealthReportEntry>
         {
             ["dapr-sidecar"] = new(HealthStatus.Healthy, "test", TimeSpan.Zero, null, null),
-            ["dapr-state-store"] = new(HealthStatus.Unhealthy, "write-path unavailable", TimeSpan.Zero, null, null),
+            ["dapr-statestore"] = new(HealthStatus.Unhealthy, "write-path unavailable", TimeSpan.Zero, null, null),
             ["projection-actors"] = new(HealthStatus.Healthy, "loaded", TimeSpan.Zero, null, null),
         };
         var report = new HealthReport(entries, TimeSpan.Zero);

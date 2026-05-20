@@ -80,6 +80,12 @@ public sealed class DegradedResponseMiddleware(RequestDelegate next, HealthCheck
         }
 
         await next(context).ConfigureAwait(false);
+
+        if (context.Response.StatusCode >= StatusCodes.Status500InternalServerError)
+        {
+            context.Response.Headers.Remove("X-Service-Degraded");
+            context.Response.Headers.Remove("X-Stale-Data-Age");
+        }
     }
 
     private static bool CanServeStaleReads(HealthReport report)
@@ -102,7 +108,9 @@ public sealed class DegradedResponseMiddleware(RequestDelegate next, HealthCheck
             && stateStoreEntry.Status == HealthStatus.Unhealthy;
         bool pubSubDegraded = report.Entries.TryGetValue("dapr-pubsub", out HealthReportEntry pubSubEntry)
             && pubSubEntry.Status == HealthStatus.Degraded;
+        bool projectionActorsDegraded = report.Entries.TryGetValue("projection-actors", out HealthReportEntry degradedProjectionEntry)
+            && degradedProjectionEntry.Status == HealthStatus.Degraded;
 
-        return stateStoreUnavailable || pubSubDegraded;
+        return stateStoreUnavailable || pubSubDegraded || projectionActorsDegraded;
     }
 }
