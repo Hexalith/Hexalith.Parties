@@ -37,14 +37,24 @@ As a future maintainer of Parties search and audit features, I want MVP read mod
 - Compatibility proof must cover default/null behavior, serialization round trips, older-client tolerance for additive fields, future enum handling, and no required constructor/property changes for existing consumers.
 - Dependency guardrails must prove `Hexalith.Parties.Contracts` does not gain hosting, Dapr, MediatR, FluentValidation, UI, server, projection, actor-host, vector, graph, temporal database, semantic backend, or concrete infrastructure dependencies; the Parties actor host must not gain public REST/OpenAPI/MCP exposure.
 
+## Advanced Elicitation Hardening
+
+- Treat `PartySearchMode.Hybrid`, `PartySearchMode.Semantic`, and `PartySearchMode.Graph` as the highest-risk compatibility seams because their names can be mistaken for active support. This story should either make those modes unreachable from MVP callers or prove they resolve to the same bounded unsupported-capability path every time.
+- `PartySearchExecutionStatus.Rich`, score metadata, and source metadata must not be used to imply semantic, graph, hybrid, memory, or temporal enrichment in MVP. If the fields remain for future compatibility, tests should prove MVP display-name search leaves future-only score/source values absent or inert.
+- Negative unsupported-mode assertions must verify both the result shape and the absence of side effects: no projection mutation, no provider/network call, no dependency resolution attempt for future backends, no log/telemetry payload containing query text, tenant data, names, contact values, identifiers, provider names, vectors, graph paths, or stack traces.
+- `SemanticPartySearchProvider` currently performs enhanced local matching, including contact-channel, identifier, and type-text matches. Development must reconcile that implementation against the story's display-name-only MVP rule rather than assuming the provider name means deferred semantic search is already safely gated.
+- Temporal preparation must distinguish retained projection history from public temporal retrieval. `NameHistoryEntry` and `PartyDetail.NameHistory` may remain available where existing detail surfaces already expose them, but this story must not add an `asOf` query contract, route, client method, MCP argument, picker/admin filter, or documentation that describes temporal lookup as callable.
+- Compatibility evidence should include source-level or reflection-style guardrails for constructor/init-only changes, enum serialization tolerance, null/default behavior for new optional fields, and package dependency closure so older consumers do not need code or package changes to keep using current MVP search.
+- Defer any final decision that requires a new public unsupported-capability contract. If existing boundaries cannot express a bounded unsupported outcome without changing product/API semantics, record the gap instead of inventing a new cross-story policy inside this story.
+
 ## AC-to-Test Traceability
 
 | AC | Required focused evidence |
 | --- | --- |
 | 1 | Unit tests prove display-name search is the only active match path and MVP match metadata excludes email, identifier, contact-channel, semantic, graph, hybrid, temporal, historical-name, provider, vector, duplicate, and type fields. |
-| 2 | Architecture/package tests or dependency inspection prove no semantic backend, embedding model, vector store, graph provider, temporal query engine, or new runtime dependency is required by MVP wiring. |
+| 2 | Architecture/package tests or dependency inspection prove no semantic backend, embedding model, vector store, graph provider, temporal query engine, provider/network call, or new runtime dependency is required by MVP wiring. |
 | 3 | Projection/name-history tests prove name changes are retained for future preparation and erased or suppressed per privacy rules, while route/client/UI scans prove no temporal query surface is callable. |
-| 4 | Compatibility tests cover additive DTO/enum changes, optional/default-safe fields, serialization round trips, older-client tolerance, and source compatibility for current query flows. |
+| 4 | Compatibility tests cover additive DTO/enum changes, optional/default-safe fields, serialization round trips, older-client tolerance, source compatibility for current query flows, and package dependency closure. |
 | 5 | Negative tests cover `Semantic`, `Graph`, `Hybrid`, temporal, email, and identifier requests returning explicit unsupported outcomes with no empty success, fallback expansion, future-field metadata, personal data, provider internals, or tenant leakage. |
 | 6 | Architecture fitness or code-review evidence confirms no REST, OpenAPI, MCP, AdminPortal, picker, Memories, semantic runtime, graph runtime, vector runtime, or temporal-query expansion was introduced. |
 
@@ -59,6 +69,7 @@ As a future maintainer of Parties search and audit features, I want MVP read mod
   - [ ] Add or tighten tests that fail if MVP display-name search emits future-field match metadata.
   - [ ] Ensure any future-mode enum values are either unreachable from MVP paths or return bounded unsupported-capability responses.
   - [ ] Add negative tests for `Semantic`, `Graph`, `Hybrid`, temporal-name, email, and identifier paths that prove unsupported outcomes are deterministic, privacy-safe, and not empty-success fallbacks.
+  - [ ] Prove unsupported requests do not invoke semantic, graph, vector, temporal, memory, provider-network, or dependency-resolution paths.
 - [ ] Preserve temporal-query preparation without exposing a temporal feature.
   - [ ] Keep event/projection history sufficient for future name-as-of reads.
   - [ ] Verify erased parties clear or suppress name history according to existing privacy rules.
@@ -67,6 +78,7 @@ As a future maintainer of Parties search and audit features, I want MVP read mod
   - [ ] Cover additive DTO compatibility and existing `IPartiesQueryClient` search behavior.
   - [ ] Add architecture fitness checks if needed to prevent required semantic backend dependencies in MVP packages.
   - [ ] Cover serialization/source compatibility for placeholder fields and future enum values, including default/null behavior for older consumers.
+  - [ ] Cover score/source metadata defaults so MVP callers cannot observe semantic, graph, hybrid, memory, provider, or temporal provenance as active data.
   - [ ] Confirm no personal data is written to logs, telemetry, unsupported responses, or test diagnostics.
   - [ ] Confirm Contracts and Parties do not gain semantic/vector/graph/temporal runtime dependencies or public REST/OpenAPI/MCP/AdminPortal/picker/Memories expansion.
 - [ ] Update developer-facing documentation.
@@ -95,8 +107,8 @@ If UI/admin/picker text is touched only to keep unsupported behavior hidden or c
 - `src/Hexalith.Parties.Contracts/Models/MatchMetadata.cs`
 - `src/Hexalith.Parties.Contracts/Models/PartyIndexEntry.cs`
 - `src/Hexalith.Parties.Contracts/Models/TemporalNameResult.cs`
-- `src/Hexalith.Parties.Contracts/Models/NameHistoryEntry.cs`
-- `src/Hexalith.Parties.Contracts/Models/PartySearchBoundary.cs`
+- `src/Hexalith.Parties.Contracts/ValueObjects/NameHistoryEntry.cs`
+- `src/Hexalith.Parties/Search/PartySearchBoundary.cs`
 - `src/Hexalith.Parties.Client/HttpPartiesQueryClient.cs`
 - `src/Hexalith.Parties/Search/PartySearchResultsBuilder.cs`
 - `src/Hexalith.Parties/Search/BasicPartySearchProvider.cs`
@@ -104,6 +116,7 @@ If UI/admin/picker text is touched only to keep unsupported behavior hidden or c
 - `src/Hexalith.Parties.Projections/Models/PartyDetail.cs`
 - `src/Hexalith.Parties.Projections/Handlers/PartyDetailProjectionHandler.cs`
 - `tests/Hexalith.Parties.Projections.Tests/Handlers/PartyDetailProjectionHandlerNameHistoryTests.cs`
+- `tests/Hexalith.Parties.Contracts.Tests/Privacy/PersonalDataInventoryTests.cs`
 
 ## Suggested Validation
 
@@ -166,6 +179,28 @@ dotnet build Hexalith.Parties.slnx --configuration Release
   - Semantic/vector provider selection, graph/hybrid search behavior, temporal query API/indexing/authorization model, public advanced-search UI exposure, and final unsupported-capability representation remain future product/architecture decisions.
 - Final recommendation: `ready-for-dev`
 
+## Advanced Elicitation
+
+- Date/time: 2026-05-20T18:04:25+02:00
+- Selected story key: `2-9-prepare-deferred-search-and-temporal-query-extensions`
+- Command/skill invocation used: `/bmad-advanced-elicitation 2-9-prepare-deferred-search-and-temporal-query-extensions`
+- Batch 1 method names: Red Team vs Blue Team; Failure Mode Analysis; Security Audit Personas; Self-Consistency Validation; Architecture Decision Records
+- Reshuffled Batch 2 method names: Pre-mortem Analysis; Chaos Monkey Scenarios; User Persona Focus Group; Critique and Refine; Expand or Contract for Audience
+- Findings summary:
+  - Future-looking search mode names, score/source metadata, and the existing `SemanticPartySearchProvider` can be misread as active semantic, graph, hybrid, email, identifier, contact-channel, or type search support unless tests prove they are gated or inert for MVP consumers.
+  - The story needed sharper no-side-effect evidence for unsupported future capabilities: no backend/provider calls, no dependency resolution, no projection mutation, and no personal or tenant data in unsupported responses, logs, telemetry, or diagnostics.
+  - Temporal preparation needed a clearer distinction between preserved name history and a callable temporal query feature, especially because detail surfaces may already expose `PartyDetail.NameHistory`.
+  - Current-code references for `PartySearchBoundary` and `NameHistoryEntry` were stale and could send the dev agent to the wrong files.
+- Changes applied:
+  - Added `Advanced Elicitation Hardening` with explicit guardrails for deferred mode names, score/source metadata, unsupported-mode side effects, `SemanticPartySearchProvider`, temporal exposure, compatibility evidence, and deferred unsupported-capability contract policy.
+  - Tightened AC-to-test traceability for provider/network calls, dependency closure, and compatibility evidence.
+  - Expanded tasks for unsupported-mode side-effect proof and score/source metadata defaults.
+  - Corrected current-code surface paths for `PartySearchBoundary` and `NameHistoryEntry`, and added the personal-data inventory test reference.
+- Findings deferred:
+  - Final unsupported-capability contract shape remains a product/architecture decision if existing boundaries cannot express the bounded unsupported outcome safely.
+  - Semantic/vector provider selection, graph/hybrid ranking, temporal query API shape, and public adopter-facing exposure remain future decisions.
+- Final recommendation: `ready-for-dev`
+
 ## Dev Agent Record
 
 ### Agent Model Used
@@ -186,5 +221,6 @@ TBD
 
 ### Change Log
 
+- 2026-05-20: Advanced elicitation applied guardrails for deferred mode names, metadata defaults, unsupported-mode side effects, temporal exposure boundaries, compatibility proof, and corrected current-code surface paths.
 - 2026-05-20: Party-mode review applied low-risk clarifications for unsupported future capabilities, display-name-only MVP metadata, privacy-safe negative assertions, compatibility evidence, dependency guardrails, and AC-to-test traceability.
 - 2026-05-19: Story created by BMAD pre-dev hardening automation as a ready-for-dev preparation-only story for deferred search and temporal query extension guardrails.
