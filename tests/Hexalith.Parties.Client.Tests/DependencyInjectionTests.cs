@@ -12,7 +12,7 @@ namespace Hexalith.Parties.Client.Tests;
 public sealed class DependencyInjectionTests
 {
     [Fact]
-    public void AddPartiesClient_ResolvesIPartiesCommandClientAsync()
+    public void AddPartiesClient_ResolvesIPartiesCommandClient()
     {
         ServiceProvider provider = BuildProvider();
 
@@ -23,7 +23,7 @@ public sealed class DependencyInjectionTests
     }
 
     [Fact]
-    public void AddPartiesClient_ResolvesIPartiesQueryClientAsync()
+    public void AddPartiesClient_ResolvesIPartiesQueryClient()
     {
         ServiceProvider provider = BuildProvider();
 
@@ -34,7 +34,7 @@ public sealed class DependencyInjectionTests
     }
 
     [Fact]
-    public void AddPartiesClient_ReturnsServiceCollectionForFluentChainingAsync()
+    public void AddPartiesClient_ReturnsServiceCollectionForFluentChaining()
     {
         var services = new ServiceCollection();
         IConfiguration configuration = BuildConfiguration();
@@ -45,7 +45,7 @@ public sealed class DependencyInjectionTests
     }
 
     [Fact]
-    public void AddPartiesClient_RegistersResolvedOptionsAsync()
+    public void AddPartiesClient_RegistersResolvedOptions()
     {
         ServiceProvider provider = BuildProvider();
 
@@ -56,7 +56,7 @@ public sealed class DependencyInjectionTests
     }
 
     [Fact]
-    public void AddPartiesClient_ThrowsWhenBaseUrlIsMissingAsync()
+    public void AddPartiesClient_ThrowsWhenBaseUrlIsMissing()
     {
         var services = new ServiceCollection();
         IConfiguration configuration = new ConfigurationBuilder()
@@ -68,7 +68,7 @@ public sealed class DependencyInjectionTests
     }
 
     [Fact]
-    public void AddPartiesClient_ThrowsWhenBaseUrlIsRelativeAsync()
+    public void AddPartiesClient_ThrowsWhenBaseUrlIsRelative()
     {
         var services = new ServiceCollection();
         IConfiguration configuration = new ConfigurationBuilder()
@@ -84,13 +84,45 @@ public sealed class DependencyInjectionTests
     }
 
     [Fact]
-    public void AddPartiesClient_ThrowsWhenTenantIsMissingAsync()
+    public void AddPartiesClient_ThrowsWhenBaseUrlUsesUnsupportedScheme()
+    {
+        var services = new ServiceCollection();
+        IConfiguration configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["Parties:BaseUrl"] = "ftp://localhost",
+                ["Parties:Tenant"] = "tenant-a",
+            })
+            .Build();
+
+        Should.Throw<InvalidOperationException>(() => services.AddPartiesClient(configuration))
+            .Message.ShouldContain("Parties:BaseUrl must use http or https.");
+    }
+
+    [Fact]
+    public void AddPartiesClient_ThrowsWhenTenantIsMissing()
     {
         var services = new ServiceCollection();
         IConfiguration configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
                 ["Parties:BaseUrl"] = "https://localhost:5001",
+            })
+            .Build();
+
+        Should.Throw<InvalidOperationException>(() => services.AddPartiesClient(configuration))
+            .Message.ShouldContain("Parties:Tenant configuration is required.");
+    }
+
+    [Fact]
+    public void AddPartiesClient_ThrowsWhenTenantIsBlank()
+    {
+        var services = new ServiceCollection();
+        IConfiguration configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["Parties:BaseUrl"] = "https://localhost:5001",
+                ["Parties:Tenant"] = " ",
             })
             .Build();
 

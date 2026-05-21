@@ -157,6 +157,7 @@ public sealed class HttpPartiesCommandClient : IPartiesCommandClient
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(aggregateId);
         ArgumentNullException.ThrowIfNull(command);
+        ct.ThrowIfCancellationRequested();
 
         string messageId = Guid.NewGuid().ToString("N");
         var request = new EventStoreCommandRequest(
@@ -255,25 +256,10 @@ public sealed class HttpPartiesCommandClient : IPartiesCommandClient
                     status = problemStatus;
                 }
 
-                if (root.TryGetProperty("title", out JsonElement titleElement))
-                {
-                    title = titleElement.GetString();
-                }
-
-                if (root.TryGetProperty("type", out JsonElement typeElement))
-                {
-                    type = typeElement.GetString();
-                }
-
-                if (root.TryGetProperty("detail", out JsonElement detailElement))
-                {
-                    detail = SanitizeDetail(detailElement.GetString());
-                }
-
-                if (root.TryGetProperty("correlationId", out JsonElement corrElement))
-                {
-                    correlationId = corrElement.GetString();
-                }
+                title = TryGetString(root, "title");
+                type = TryGetString(root, "type");
+                detail = SanitizeDetail(TryGetString(root, "detail"));
+                correlationId = TryGetString(root, "correlationId");
             }
             catch (JsonException)
             {
@@ -288,6 +274,12 @@ public sealed class HttpPartiesCommandClient : IPartiesCommandClient
             detail,
             correlationId);
     }
+
+    private static string? TryGetString(JsonElement root, string propertyName)
+        => root.TryGetProperty(propertyName, out JsonElement element)
+            && element.ValueKind == JsonValueKind.String
+                ? element.GetString()
+                : null;
 
     private static string? SanitizeDetail(string? detail)
     {

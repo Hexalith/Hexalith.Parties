@@ -42,6 +42,7 @@ public sealed class HttpPartiesQueryClient : IPartiesQueryClient
     public Task<PartyDetail> GetPartyAsync(string partyId, CancellationToken ct)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(partyId);
+        ct.ThrowIfCancellationRequested();
 
         var request = new SubmitQueryRequest(
             Tenant: HttpPartiesCommandClient.GetValidatedTenant(_options),
@@ -67,6 +68,8 @@ public sealed class HttpPartiesQueryClient : IPartiesQueryClient
         DateTimeOffset? modifiedBefore,
         CancellationToken ct)
     {
+        ct.ThrowIfCancellationRequested();
+
         var payload = new ListPartiesQueryPayload(
             page,
             pageSize,
@@ -99,6 +102,8 @@ public sealed class HttpPartiesQueryClient : IPartiesQueryClient
         string? caseId = null,
         Func<HttpRequestMessage, CancellationToken, ValueTask>? requestCustomizer = null)
     {
+        ct.ThrowIfCancellationRequested();
+
         var payload = new SearchPartiesQueryPayload(query, page, pageSize, mode, caseId);
         var request = new SubmitQueryRequest(
             Tenant: HttpPartiesCommandClient.GetValidatedTenant(_options),
@@ -144,7 +149,8 @@ public sealed class HttpPartiesQueryClient : IPartiesQueryClient
                 await response.Content.ReadAsStreamAsync(ct).ConfigureAwait(false),
                 cancellationToken: ct).ConfigureAwait(false);
 
-            if (doc.RootElement.TryGetProperty("correlationId", out JsonElement correlationIdElement))
+            if (doc.RootElement.TryGetProperty("correlationId", out JsonElement correlationIdElement)
+                && correlationIdElement.ValueKind == JsonValueKind.String)
             {
                 correlationId = correlationIdElement.GetString();
             }

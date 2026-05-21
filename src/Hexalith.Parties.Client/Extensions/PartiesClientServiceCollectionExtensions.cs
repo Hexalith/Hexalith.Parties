@@ -24,6 +24,10 @@ public static class PartiesClientServiceCollectionExtensions
                 options => Uri.TryCreate(options.BaseUrl, UriKind.Absolute, out _),
                 "Parties:BaseUrl must be an absolute URI.")
             .Validate(
+                options => Uri.TryCreate(options.BaseUrl, UriKind.Absolute, out Uri? baseAddress)
+                    && IsHttpOrHttps(baseAddress),
+                "Parties:BaseUrl must use http or https.")
+            .Validate(
                 options => !string.IsNullOrWhiteSpace(options.Tenant),
                 "Parties:Tenant configuration is required.");
 
@@ -53,9 +57,14 @@ public static class PartiesClientServiceCollectionExtensions
             throw new InvalidOperationException("Parties:BaseUrl configuration is required.");
         }
 
-        return Uri.TryCreate(baseUrl, UriKind.Absolute, out Uri? baseAddress)
+        if (!Uri.TryCreate(baseUrl, UriKind.Absolute, out Uri? baseAddress))
+        {
+            throw new InvalidOperationException("Parties:BaseUrl must be an absolute URI.");
+        }
+
+        return IsHttpOrHttps(baseAddress)
             ? baseAddress
-            : throw new InvalidOperationException("Parties:BaseUrl must be an absolute URI.");
+            : throw new InvalidOperationException("Parties:BaseUrl must use http or https.");
     }
 
     private static string GetValidatedTenant(IConfigurationSection partiesSection)
@@ -65,4 +74,8 @@ public static class PartiesClientServiceCollectionExtensions
             ? throw new InvalidOperationException("Parties:Tenant configuration is required.")
             : tenant;
     }
+
+    private static bool IsHttpOrHttps(Uri baseAddress)
+        => string.Equals(baseAddress.Scheme, Uri.UriSchemeHttp, StringComparison.OrdinalIgnoreCase)
+            || string.Equals(baseAddress.Scheme, Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase);
 }

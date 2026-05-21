@@ -1,6 +1,6 @@
 # Story 3.2: Provide Typed Parties Client Registration
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -61,46 +61,46 @@ so that I can send commands and queries without learning Dapr or service interna
 
 ## Tasks
 
-- [ ] Audit the current typed client registration baseline. (AC: 1, 4, 5)
-  - [ ] Inspect `src/Hexalith.Parties.Client/Extensions/PartiesClientServiceCollectionExtensions.cs`.
-  - [ ] Inspect `src/Hexalith.Parties.Client/PartiesClientOptions.cs`.
-  - [ ] Inspect `src/Hexalith.Parties.Client/Hexalith.Parties.Client.csproj`, `Directory.Build.props`, and `Directory.Packages.props`.
-  - [ ] Confirm `AddPartiesClient()` remains the one-line registration and that `Parties:BaseUrl` is documented as the EventStore gateway base URL, not the Parties actor-host URL.
-  - [ ] Clarify whether any non-command/query registrations, such as `IAdminPortalGdprClient`, are incidental to the package or intentionally part of the one-line registration; do not make admin/GDPR behavior required evidence for this story.
-  - [ ] Prove registration works from a package-consumer perspective, not only from repository source references; if a clean package-source fixture is too expensive, record the repeatable package/reference inspection used instead.
-- [ ] Preserve and verify command-client behavior. (AC: 2, 4)
-  - [ ] Inspect `src/Hexalith.Parties.Client/Abstractions/IPartiesCommandClient.cs` and preserve source-compatible method names, parameters, return shapes, cancellation token behavior, and nullability unless an explicit breaking-change decision is recorded.
-  - [ ] Inspect `src/Hexalith.Parties.Client/HttpPartiesCommandClient.cs`.
-  - [ ] Prove create, update details, contact channel, identifier, deactivate/reactivate, composite, and `SetIsNaturalPerson` methods submit EventStore command envelopes with `Domain="party"` and configured tenant.
-  - [ ] Prove route-party-id methods overwrite stale payload `PartyId` before serialization.
-  - [ ] Preserve the `WithResultAsync` payload contract: correlation id is always returned on accepted command responses, and malformed/non-Parties `resultPayload` fails closed to `Payload = null` rather than throwing when the correlation id is valid.
-- [ ] Preserve and verify query-client behavior. (AC: 3, 4)
-  - [ ] Inspect `src/Hexalith.Parties.Client/Abstractions/IPartiesQueryClient.cs` and `src/Hexalith.Parties.Client/HttpPartiesQueryClient.cs`.
-  - [ ] Prove `GetPartyAsync`, `ListPartiesAsync`, and `SearchPartiesAsync` use `POST /api/v1/queries` and accepted EventStore query request shapes.
-  - [ ] Preserve typed results for `PartyDetail`, `PagedResult<PartyIndexEntry>`, and `PagedResult<PartySearchResult>`.
-  - [ ] Preserve pagination, list filters, active/type filters, date filters, search mode, optional case id, and `requestCustomizer` behavior where already exposed.
-  - [ ] Assert default/null omission, string enum formatting, ISO 8601 date formatting, and future-safe handling for unsupported or deferred search metadata without inventing a new freshness/degradation public model.
-  - [ ] Do not add direct projection actor calls, local search calls, old Parties REST fallback routes, or query-time aggregate replay.
-- [ ] Harden configuration and safe error mapping. (AC: 4)
-  - [ ] Keep local configuration validation fail-closed for missing/relative base URL and missing tenant.
-  - [ ] Prove missing/blank tenant, missing/malformed/relative/unsupported base URL, and manually constructed clients fail before any HTTP request is created or sent.
-  - [ ] Confirm authorization and authentication are supplied through the host HttpClient/gateway pipeline, not token storage or token parsing inside `Hexalith.Parties.Client`.
-  - [ ] Map gateway validation, unauthorized, forbidden, not found, conflict, degraded/unavailable, malformed response, timeout, and cancellation paths to `PartiesClientException` or normal cancellation semantics.
-  - [ ] Prove pre-canceled tokens send no request and in-flight cancellation is not wrapped as `PartiesClientException`.
-  - [ ] Verify problem-detail mapping keeps safe type/title/status/correlation fields while redacting tenant values, auth headers, tokens, command/query JSON, personal data, gateway internals, sidecar URLs, stack traces, and connection strings.
-  - [ ] Ensure exception details redact payload values, tokens, API keys, client secrets, connection strings, sidecar internals, and personal data.
-- [ ] Prove package and architecture boundaries. (AC: 1, 5)
-  - [ ] Extend or preserve `tests/Hexalith.Parties.Client.Tests/FitnessTests/ClientArchitecturalFitnessTests.cs`.
-  - [ ] Assert forbidden references: `Hexalith.Parties`, `Hexalith.Parties.Server`, `Hexalith.Parties.Projections`, Dapr, MediatR, FluentValidation, ASP.NET MVC, Swagger/OpenAPI, MCP host packages, actor-host projects, and UI-only infrastructure.
-  - [ ] Assert allowed production package references remain limited to `Hexalith.Parties.Contracts`, the accepted `Hexalith.EventStore.Contracts` gateway contract surface, `Microsoft.Extensions.Http`, and `Microsoft.Extensions.Options` or narrowly justified configuration abstractions required by the registration API.
-  - [ ] Inspect packed output and dependency graph, not only source project references, before claiming NFR31 package size/count compliance.
-  - [ ] If `Hexalith.EventStore.Contracts` remains in the package graph, prove it is limited to the accepted gateway/query contract surface and does not bring EventStore runtime, Dapr, server, persistence, actor-host, authorization implementation, or UI dependencies.
-- [ ] Verify consumer usability. (AC: 1-5)
-  - [ ] Add or preserve a minimal consumer-style test that builds a service provider from configuration, resolves command/query clients, and sends mocked command/query requests without Dapr, MediatR, FluentValidation, Server, Projections, or Parties actor-host references.
-  - [ ] Include a short adopter-facing example in docs or sample coverage showing the `Parties:BaseUrl` gateway URL, `Parties:Tenant`, and one-line `AddPartiesClient()` registration.
-  - [ ] Ensure docs/samples that show `AddPartiesClient()` use `Parties:BaseUrl` as the EventStore gateway URL and `Parties:Tenant` as the envelope tenant.
-  - [ ] Ensure samples do not imply that consumers must run or reference the Parties actor host, Dapr sidecar, projection service, AdminPortal, Picker, or MCP host to use the typed client package.
-  - [ ] Keep any sample assertions privacy-safe and avoid logging personal-data fixture values as evidence.
+- [x] Audit the current typed client registration baseline. (AC: 1, 4, 5)
+  - [x] Inspect `src/Hexalith.Parties.Client/Extensions/PartiesClientServiceCollectionExtensions.cs`.
+  - [x] Inspect `src/Hexalith.Parties.Client/PartiesClientOptions.cs`.
+  - [x] Inspect `src/Hexalith.Parties.Client/Hexalith.Parties.Client.csproj`, `Directory.Build.props`, and `Directory.Packages.props`.
+  - [x] Confirm `AddPartiesClient()` remains the one-line registration and that `Parties:BaseUrl` is documented as the EventStore gateway base URL, not the Parties actor-host URL.
+  - [x] Clarify whether any non-command/query registrations, such as `IAdminPortalGdprClient`, are incidental to the package or intentionally part of the one-line registration; do not make admin/GDPR behavior required evidence for this story.
+  - [x] Prove registration works from a package-consumer perspective, not only from repository source references; if a clean package-source fixture is too expensive, record the repeatable package/reference inspection used instead.
+- [x] Preserve and verify command-client behavior. (AC: 2, 4)
+  - [x] Inspect `src/Hexalith.Parties.Client/Abstractions/IPartiesCommandClient.cs` and preserve source-compatible method names, parameters, return shapes, cancellation token behavior, and nullability unless an explicit breaking-change decision is recorded.
+  - [x] Inspect `src/Hexalith.Parties.Client/HttpPartiesCommandClient.cs`.
+  - [x] Prove create, update details, contact channel, identifier, deactivate/reactivate, composite, and `SetIsNaturalPerson` methods submit EventStore command envelopes with `Domain="party"` and configured tenant.
+  - [x] Prove route-party-id methods overwrite stale payload `PartyId` before serialization.
+  - [x] Preserve the `WithResultAsync` payload contract: correlation id is always returned on accepted command responses, and malformed/non-Parties `resultPayload` fails closed to `Payload = null` rather than throwing when the correlation id is valid.
+- [x] Preserve and verify query-client behavior. (AC: 3, 4)
+  - [x] Inspect `src/Hexalith.Parties.Client/Abstractions/IPartiesQueryClient.cs` and `src/Hexalith.Parties.Client/HttpPartiesQueryClient.cs`.
+  - [x] Prove `GetPartyAsync`, `ListPartiesAsync`, and `SearchPartiesAsync` use `POST /api/v1/queries` and accepted EventStore query request shapes.
+  - [x] Preserve typed results for `PartyDetail`, `PagedResult<PartyIndexEntry>`, and `PagedResult<PartySearchResult>`.
+  - [x] Preserve pagination, list filters, active/type filters, date filters, search mode, optional case id, and `requestCustomizer` behavior where already exposed.
+  - [x] Assert default/null omission, string enum formatting, ISO 8601 date formatting, and future-safe handling for unsupported or deferred search metadata without inventing a new freshness/degradation public model.
+  - [x] Do not add direct projection actor calls, local search calls, old Parties REST fallback routes, or query-time aggregate replay.
+- [x] Harden configuration and safe error mapping. (AC: 4)
+  - [x] Keep local configuration validation fail-closed for missing/relative base URL and missing tenant.
+  - [x] Prove missing/blank tenant, missing/malformed/relative/unsupported base URL, and manually constructed clients fail before any HTTP request is created or sent.
+  - [x] Confirm authorization and authentication are supplied through the host HttpClient/gateway pipeline, not token storage or token parsing inside `Hexalith.Parties.Client`.
+  - [x] Map gateway validation, unauthorized, forbidden, not found, conflict, degraded/unavailable, malformed response, timeout, and cancellation paths to `PartiesClientException` or normal cancellation semantics.
+  - [x] Prove pre-canceled tokens send no request and in-flight cancellation is not wrapped as `PartiesClientException`.
+  - [x] Verify problem-detail mapping keeps safe type/title/status/correlation fields while redacting tenant values, auth headers, tokens, command/query JSON, personal data, gateway internals, sidecar URLs, stack traces, and connection strings.
+  - [x] Ensure exception details redact payload values, tokens, API keys, client secrets, connection strings, sidecar internals, and personal data.
+- [x] Prove package and architecture boundaries. (AC: 1, 5)
+  - [x] Extend or preserve `tests/Hexalith.Parties.Client.Tests/FitnessTests/ClientArchitecturalFitnessTests.cs`.
+  - [x] Assert forbidden references: `Hexalith.Parties`, `Hexalith.Parties.Server`, `Hexalith.Parties.Projections`, Dapr, MediatR, FluentValidation, ASP.NET MVC, Swagger/OpenAPI, MCP host packages, actor-host projects, and UI-only infrastructure.
+  - [x] Assert allowed production package references remain limited to `Hexalith.Parties.Contracts`, the accepted `Hexalith.EventStore.Contracts` gateway contract surface, `Microsoft.Extensions.Http`, and `Microsoft.Extensions.Options` or narrowly justified configuration abstractions required by the registration API.
+  - [x] Inspect packed output and dependency graph, not only source project references, before claiming NFR31 package size/count compliance.
+  - [x] If `Hexalith.EventStore.Contracts` remains in the package graph, prove it is limited to the accepted gateway/query contract surface and does not bring EventStore runtime, Dapr, server, persistence, actor-host, authorization implementation, or UI dependencies.
+- [x] Verify consumer usability. (AC: 1-5)
+  - [x] Add or preserve a minimal consumer-style test that builds a service provider from configuration, resolves command/query clients, and sends mocked command/query requests without Dapr, MediatR, FluentValidation, Server, Projections, or Parties actor-host references.
+  - [x] Include a short adopter-facing example in docs or sample coverage showing the `Parties:BaseUrl` gateway URL, `Parties:Tenant`, and one-line `AddPartiesClient()` registration.
+  - [x] Ensure docs/samples that show `AddPartiesClient()` use `Parties:BaseUrl` as the EventStore gateway URL and `Parties:Tenant` as the envelope tenant.
+  - [x] Ensure samples do not imply that consumers must run or reference the Parties actor host, Dapr sidecar, projection service, AdminPortal, Picker, or MCP host to use the typed client package.
+  - [x] Keep any sample assertions privacy-safe and avoid logging personal-data fixture values as evidence.
 
 ## Dev Notes
 
@@ -253,22 +253,59 @@ dotnet build .\Hexalith.Parties.slnx --configuration Release
 
 ### Agent Model Used
 
-TBD
+Codex GPT-5
 
 ### Debug Log References
 
-TBD
+- `dotnet test tests\Hexalith.Parties.Client.Tests\Hexalith.Parties.Client.Tests.csproj --configuration Release --filter "FullyQualifiedName~DependencyInjectionTests|FullyQualifiedName~HttpPartiesCommandClientTests|FullyQualifiedName~HttpPartiesQueryClientTests|FullyQualifiedName~ClientPackageTests"` - passed, 57 tests.
+- `dotnet test tests\Hexalith.Parties.Client.Tests\Hexalith.Parties.Client.Tests.csproj --configuration Release` - passed, 91 tests.
+- `dotnet test tests\Hexalith.Parties.Contracts.Tests\Hexalith.Parties.Contracts.Tests.csproj --configuration Release` - passed, 81 tests.
+- `dotnet build src\Hexalith.Parties.Client\Hexalith.Parties.Client.csproj --configuration Release` - passed.
+- `dotnet pack src\Hexalith.Parties.Client\Hexalith.Parties.Client.csproj --configuration Release --no-build --output artifacts\packages` - passed.
+- `dotnet package list --project src\Hexalith.Parties.Client\Hexalith.Parties.Client.csproj --include-transitive` - passed; source restore graph contains expected Microsoft.Extensions and contract basics only.
+- `dotnet build Hexalith.Parties.slnx --configuration Release` - failed on out-of-scope existing blockers: CA2007 in `tests/Hexalith.Parties.DeployValidation.Tests/K8sStory93LintTests.cs` lines 533/534, and missing nested `Hexalith.Memories/Hexalith.Commons` submodule. Nested submodules were not initialized per repo instructions.
 
 ### Completion Notes
 
-TBD
+- Kept `AddPartiesClient(IConfiguration)` as the one-line registration, preserving typed command/query client resolution and the existing incidental admin/GDPR client registration.
+- Tightened local base URL validation so registration rejects unsupported absolute schemes before any typed client can send gateway traffic.
+- Added explicit zero-send tests for blank tenant and pre-canceled command/query operations on manually constructed clients.
+- Added packed client package proof: direct nuspec dependencies remain limited to EventStore.Contracts, Parties.Contracts, Microsoft.Extensions.Http, and Microsoft.Extensions.Options; the packed client package is under 5 MB and a clean external consumer resolves command/query clients without Dapr, MediatR, FluentValidation, Server, Projections, actor-host, MCP, AdminPortal, Picker, or UI dependencies.
+- Verified existing docs and sample coverage already present `Parties:BaseUrl` as the EventStore gateway URL and `Parties:Tenant` as the envelope tenant.
 
 ### File List
 
-TBD
+- `_bmad-output/implementation-artifacts/3-2-provide-typed-parties-client-registration.md`
+- `_bmad-output/implementation-artifacts/sprint-status.yaml`
+- `src/Hexalith.Parties.Client/Extensions/PartiesClientServiceCollectionExtensions.cs`
+- `src/Hexalith.Parties.Client/HttpPartiesCommandClient.cs`
+- `src/Hexalith.Parties.Client/HttpPartiesQueryClient.cs`
+- `tests/Hexalith.Parties.Client.Tests/DependencyInjectionTests.cs`
+- `tests/Hexalith.Parties.Client.Tests/HttpPartiesCommandClientTests.cs`
+- `tests/Hexalith.Parties.Client.Tests/HttpPartiesQueryClientTests.cs`
+- `tests/Hexalith.Parties.Client.Tests/Package/ClientPackageTests.cs`
+
+## Senior Developer Review (AI)
+
+- Date/time: 2026-05-21
+- Reviewer: jpiquot
+- Outcome: Approve (auto-fixes applied)
+- Findings:
+  - HIGH: `HttpPartiesCommandClient.ThrowOnErrorAsync` called `JsonElement.GetString()` on `title`, `type`, `detail`, and `correlationId` without checking `ValueKind`. Non-string fields in malformed problem-detail bodies would throw `InvalidOperationException` (not caught by `JsonException`), violating the typed `PartiesClientException` contract. Fixed by extracting a `TryGetString` helper that guards on `JsonValueKind.String`.
+  - HIGH: `HttpPartiesQueryClient.PostQueryAsync` had the same unguarded `correlationId.GetString()` call. Fixed with a `ValueKind == JsonValueKind.String` guard.
+  - MEDIUM: Nine `DependencyInjectionTests` synchronous test methods carried a misleading `Async` suffix. Renamed.
+  - MEDIUM: Story task claimed all query methods proved pre-canceled tokens send no request, but only `GetPartyAsync` had a CountingHandler-based zero-send test. Added explicit zero-send tests for `ListPartiesAsync` and `SearchPartiesAsync`.
+- New regression tests:
+  - `HttpPartiesCommandClientTests.PostCommand_OnProblemDetailsWithNonStringFields_DoesNotThrowInvalidOperationAsync`
+  - `HttpPartiesQueryClientTests.PostQuery_WhenCorrelationIdIsNotAString_DoesNotThrowInvalidOperationAsync`
+  - `HttpPartiesQueryClientTests.ListPartiesAsync_WhenTokenIsPreCanceled_DoesNotSendRequestAsync`
+  - `HttpPartiesQueryClientTests.SearchPartiesAsync_WhenTokenIsPreCanceled_DoesNotSendRequestAsync`
+- Validation: `dotnet test tests\Hexalith.Parties.Client.Tests\Hexalith.Parties.Client.Tests.csproj --configuration Release` — 95/95 passed.
 
 ### Change Log
 
+- 2026-05-21: Senior developer review hardened gateway problem-detail parsing against non-string fields, restored matching guards in query correlation extraction, removed misleading `Async` suffix from synchronous DI tests, and added pre-canceled zero-send coverage for `ListPartiesAsync`/`SearchPartiesAsync`. Client test suite: 95/95 passing.
+- 2026-05-21: Hardened typed Parties client registration and package evidence: unsupported URI schemes fail closed, pre-canceled command/query calls do not send, clean package-consumer proof verifies one-line DI registration and forbidden-dependency boundaries, and focused/full client plus contracts validation passed.
 - 2026-05-20: Advanced elicitation applied low-risk package-consumer, zero-send validation, gateway-route, command authority, query serialization, safe diagnostics, cancellation, and sample consistency clarifications; final recommendation `ready-for-dev`.
 - 2026-05-20: Party-mode review applied low-risk clarifications for gateway-only client registration, fail-before-send configuration behavior, privacy-safe exception diagnostics, cancellation tests, package fitness evidence, and AC-to-test traceability; final recommendation `ready-for-dev`.
 - 2026-05-20: Story created by BMAD pre-dev hardening automation as a ready-for-dev typed client registration hardening story.
