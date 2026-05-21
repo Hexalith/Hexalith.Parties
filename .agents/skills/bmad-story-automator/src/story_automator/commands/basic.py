@@ -12,6 +12,7 @@ from ..core.stop_hooks import HookConfigError, ensure_stop_hook
 from ..core.utils import (
     get_project_slug,
     run_cmd,
+    write_atomic,
     write_json,
 )
 
@@ -30,9 +31,11 @@ def _workflow_doc_relative(doc_name: str) -> str:
 
 
 def _stop_hook_command(command: str, project_root: Path) -> str:
-    command_parts = shlex.split(command)
+    command_parts = shlex.split(command, posix=os.name != "nt")
     if not command_parts:
         return command
+    if os.name == "nt":
+        return _windows_stop_hook_command(command_parts, project_root)
     candidates = [
         _workflow_root() / "scripts" / "story-automator",
         Path(shutil.which("story-automator")) if shutil.which("story-automator") else None,
@@ -43,6 +46,26 @@ def _stop_hook_command(command: str, project_root: Path) -> str:
             command_parts[0] = str(candidate.resolve())
             return shlex.join(["env", f"PROJECT_ROOT={project_root}", *command_parts])
     return shlex.join(["env", f"PROJECT_ROOT={project_root}", shutil.which("python3") or "python3", "-m", "story_automator", *command_parts[1:]])
+
+
+def _windows_stop_hook_command(command_parts: list[str], project_root: Path) -> str:
+    try:
+        hook_args = command_parts[command_parts.index("stop-hook") :]
+    except ValueError:
+        hook_args = command_parts[1:] or ["stop-hook"]
+    python_bin = sys.executable or shutil.which("python") or "python"
+    workflow_src = _workflow_root() / "src"
+    wrapper = project_root / ".codex" / "story-automator-stop-hook.cmd"
+    wrapper.parent.mkdir(parents=True, exist_ok=True)
+    args = " ".join(hook_args)
+    write_atomic(
+        wrapper,
+        "@echo off\n"
+        f'set "PROJECT_ROOT={project_root}"\n'
+        f'set "PYTHONPATH={workflow_src}"\n'
+        f'"{python_bin}" -m story_automator {args}\n',
+    )
+    return f'cmd.exe /d /c "{wrapper}"'
 
 
 def cmd_derive_project_slug(args: list[str]) -> int:

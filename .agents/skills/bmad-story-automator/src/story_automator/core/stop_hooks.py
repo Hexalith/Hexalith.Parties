@@ -269,6 +269,8 @@ def _is_story_automator_stop_hook_command(value: str) -> bool:
     parts = _strip_env_prefix(parts)
     if not parts:
         return False
+    if any(Path(part).name == "story-automator-stop-hook.cmd" for part in parts):
+        return True
     command_name = Path(parts[0]).name
     if command_name == "story-automator":
         return len(parts) > 1 and parts[1] == "stop-hook"

@@ -70,7 +70,8 @@ def write_atomic(path: str | Path, data: str | bytes) -> None:
     fd, tmp = tempfile.mkstemp(prefix=f".{path.name}.", suffix=".tmp", dir=path.parent)
     try:
         mode = "wb" if isinstance(data, bytes) else "w"
-        with os.fdopen(fd, mode) as handle:
+        kwargs = {} if isinstance(data, bytes) else {"encoding": "utf-8", "errors": "replace"}
+        with os.fdopen(fd, mode, **kwargs) as handle:
             handle.write(data)
             handle.flush()
             os.fsync(handle.fileno())
@@ -101,6 +102,8 @@ def run_cmd(
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             text=True,
+            encoding="utf-8",
+            errors="replace",
             timeout=timeout,
             check=False,
         )

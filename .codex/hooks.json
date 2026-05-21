@@ -5,7 +5,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "env 'PROJECT_ROOT=D:\\Hexalith.Parties' 'D:\\Hexalith.Parties\\.agents\\skills\\bmad-story-automator\\scripts\\story-automator' stop-hook",
+            "command": "cmd.exe /d /c \"D:\\Hexalith.Parties\\.codex\\story-automator-stop-hook.cmd\"",
             "timeout": 10,
             "statusMessage": "Checking story automator state"
           }
