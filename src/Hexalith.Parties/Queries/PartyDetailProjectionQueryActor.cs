@@ -10,6 +10,7 @@ using Hexalith.Parties.Contracts.Models;
 using Hexalith.Parties.Extensions;
 using Hexalith.Parties.Projections.Abstractions;
 using Hexalith.Parties.Projections.Actors;
+using Hexalith.Parties.Projections.Services;
 
 using Microsoft.Extensions.Logging;
 
@@ -18,12 +19,15 @@ namespace Hexalith.Parties.Queries;
 public sealed partial class PartyDetailProjectionQueryActor(
     ActorHost host,
     IActorProxyFactory actorProxyFactory,
-    ILogger<PartyDetailProjectionQueryActor> logger) : Actor(host), IProjectionActor
+    ILogger<PartyDetailProjectionQueryActor> logger,
+    IProjectionRebuildService? projectionRebuildService = null) : Actor(host), IProjectionActor
 {
     public const string ActorTypeName = nameof(PartyDetailProjectionQueryActor);
     public const string ProjectionType = "party-detail";
+    public const string DataPortabilityProjectionType = "party-data-portability";
     public const string GetPartyQueryType = "GetParty";
     public const string PartyDetailQueryType = "PartyDetail";
+    public const string ExportPartyDataQueryType = "ExportPartyData";
     public const string PartyDomain = "party";
     private static readonly JsonSerializerOptions s_jsonOptions = new(JsonSerializerDefaults.Web);
 
@@ -67,6 +71,18 @@ public sealed partial class PartyDetailProjectionQueryActor(
             }
 
             PartyDetail detail = readResult.Detail with { Freshness = readResult.Freshness };
+            if (string.Equals(envelope.QueryType, ExportPartyDataQueryType, StringComparison.Ordinal))
+            {
+                PartyDataPortabilityPackage package = await BuildPortabilityPackageAsync(
+                    envelope,
+                    detail,
+                    readResult.Freshness).ConfigureAwait(false);
+
+                return QueryResult.FromPayload(
+                    JsonSerializer.SerializeToElement(package, s_jsonOptions),
+                    DataPortabilityProjectionType);
+            }
+
             return QueryResult.FromPayload(JsonSerializer.SerializeToElement(detail, s_jsonOptions), ProjectionType);
         }
         catch (OperationCanceledException)
@@ -90,7 +106,41 @@ public sealed partial class PartyDetailProjectionQueryActor(
     private static bool CanHandle(QueryEnvelope envelope)
         => string.Equals(envelope.Domain, PartyDomain, StringComparison.Ordinal)
             && (string.Equals(envelope.QueryType, PartyDetailQueryType, StringComparison.Ordinal)
-                || string.Equals(envelope.QueryType, GetPartyQueryType, StringComparison.Ordinal));
+                || string.Equals(envelope.QueryType, GetPartyQueryType, StringComparison.Ordinal)
+                || string.Equals(envelope.QueryType, ExportPartyDataQueryType, StringComparison.Ordinal));
+
+    private async Task<PartyDataPortabilityPackage> BuildPortabilityPackageAsync(
+        QueryEnvelope envelope,
+        PartyDetail detail,
+        ProjectionFreshnessMetadata freshness)
+    {
+        IReadOnlyList<ProcessingActivityRecord> records = projectionRebuildService is null
+            ? []
+            : await projectionRebuildService
+                .GetProcessingRecordsAsync(envelope.TenantId, detail.Id, CancellationToken.None)
+                .ConfigureAwait(false);
+
+        bool unavailable = string.IsNullOrWhiteSpace(detail.DisplayName) || string.IsNullOrWhiteSpace(detail.SortName);
+        bool erased = detail.IsErased;
+        string status = erased
+            ? "Erased"
+            : unavailable
+                ? "PersonalDataUnavailable"
+                : detail.IsRestricted ? "RestrictedExported" : "Exported";
+
+        return new PartyDataPortabilityPackage
+        {
+            PartyId = detail.Id,
+            TenantId = envelope.TenantId,
+            Status = status,
+            ExportedAt = DateTimeOffset.UtcNow,
+            ExportedBy = string.IsNullOrWhiteSpace(envelope.UserId) ? "unknown" : envelope.UserId.Trim(),
+            CorrelationId = string.IsNullOrWhiteSpace(envelope.CorrelationId) ? "unspecified" : envelope.CorrelationId.Trim(),
+            Party = erased || unavailable ? null : detail,
+            ProcessingRecords = records,
+            Freshness = freshness,
+        };
+    }
 
     private static bool TryResolveActorRoute(string actorId, QueryEnvelope envelope, out string partyId)
     {

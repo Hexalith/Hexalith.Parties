@@ -9,6 +9,7 @@ using Hexalith.Parties.Contracts.Models;
 using Hexalith.Parties.Contracts.ValueObjects;
 using Hexalith.Parties.Projections.Abstractions;
 using Hexalith.Parties.Projections.Actors;
+using Hexalith.Parties.Projections.Services;
 using Hexalith.Parties.Queries;
 
 using Microsoft.Extensions.Logging;
@@ -137,6 +138,136 @@ public sealed class PartyDetailProjectionQueryActorTests
         raw.ShouldNotContain("tenant-a:party-detail", Case.Insensitive);
         raw.ShouldNotContain("last-sequence", Case.Insensitive);
         raw.ShouldNotContain("stateKey", Case.Insensitive);
+    }
+
+    [Fact]
+    public async Task QueryAsync_ExportPartyData_ReturnsScopedPortabilityPackageAsync()
+    {
+        IActorProxyFactory actorProxyFactory = Substitute.For<IActorProxyFactory>();
+        IPartyDetailProjectionActor detailActor = Substitute.For<IPartyDetailProjectionActor>();
+        PartyDetail detail = CreateDetail("p-export") with
+        {
+            Identifiers =
+            [
+                new PartyIdentifier
+                {
+                    Id = "id-1",
+                    Type = IdentifierType.VAT,
+                    Value = "FR12345678901",
+                },
+            ],
+            ConsentRecords =
+            [
+                new ConsentRecord
+                {
+                    ConsentId = "email-1:billing",
+                    ChannelId = "email-1",
+                    Purpose = "billing",
+                    LawfulBasis = Contracts.Security.LawfulBasis.Consent,
+                    GrantedAt = DateTimeOffset.Parse("2026-05-03T00:00:00Z"),
+                    GrantedBy = "admin-user",
+                },
+            ],
+            IsRestricted = true,
+            RestrictedAt = DateTimeOffset.Parse("2026-05-04T00:00:00Z"),
+        };
+        detailActor.GetDetailReadAsync().Returns(Task.FromResult(new PartyDetailProjectionReadResult
+        {
+            Detail = detail,
+            Freshness = new ProjectionFreshnessMetadata { Status = ProjectionFreshnessStatus.Current },
+        }));
+        actorProxyFactory.CreateActorProxy<IPartyDetailProjectionActor>(
+                Arg.Any<ActorId>(),
+                Arg.Any<string>(),
+                Arg.Any<ActorProxyOptions?>())
+            .Returns(detailActor);
+        IProjectionRebuildService rebuildService = Substitute.For<IProjectionRebuildService>();
+        rebuildService.GetProcessingRecordsAsync("tenant-a", "p-export", Arg.Any<CancellationToken>())
+            .Returns([
+                new ProcessingActivityRecord
+                {
+                    SequenceNumber = 4,
+                    EventType = "ProcessingRestricted",
+                    Timestamp = DateTimeOffset.Parse("2026-05-04T00:00:00Z"),
+                    Summary = "Processing restricted.",
+                },
+            ]);
+        PartyDetailProjectionQueryActor actor = CreateActor("party-detail:tenant-a:p-export", actorProxyFactory, rebuildService);
+
+        QueryResult result = await actor.QueryAsync(CreateEnvelope("tenant-a", "p-export", "ExportPartyData"));
+
+        result.Success.ShouldBeTrue();
+        result.ProjectionType.ShouldBe("party-data-portability");
+        PartyDataPortabilityPackage package = result.GetPayload().Deserialize<PartyDataPortabilityPackage>(new JsonSerializerOptions(JsonSerializerDefaults.Web))!;
+        package.PartyId.ShouldBe("p-export");
+        package.TenantId.ShouldBe("tenant-a");
+        package.Status.ShouldBe("RestrictedExported");
+        package.ExportedBy.ShouldBe("user-1");
+        package.CorrelationId.ShouldBe("corr-p-export");
+        package.Party.ShouldNotBeNull().ContactChannels.Single().Value.ShouldBe("ada@example.test");
+        package.Party.Identifiers.Single().Value.ShouldBe("FR12345678901");
+        package.Party.ConsentRecords.Single().Purpose.ShouldBe("billing");
+        package.Party.IsRestricted.ShouldBeTrue();
+        package.ProcessingRecords.Single().EventType.ShouldBe("ProcessingRestricted");
+    }
+
+    [Fact]
+    public async Task QueryAsync_ExportPartyData_ErasedPartyDoesNotExposePersonalPayloadAsync()
+    {
+        IActorProxyFactory actorProxyFactory = Substitute.For<IActorProxyFactory>();
+        IPartyDetailProjectionActor detailActor = Substitute.For<IPartyDetailProjectionActor>();
+        detailActor.GetDetailReadAsync().Returns(Task.FromResult(new PartyDetailProjectionReadResult
+        {
+            Detail = CreateDetail("p-erased") with { IsErased = true, ErasedAt = DateTimeOffset.Parse("2026-05-05T00:00:00Z") },
+            Freshness = new ProjectionFreshnessMetadata { Status = ProjectionFreshnessStatus.Current },
+        }));
+        actorProxyFactory.CreateActorProxy<IPartyDetailProjectionActor>(
+                Arg.Any<ActorId>(),
+                Arg.Any<string>(),
+                Arg.Any<ActorProxyOptions?>())
+            .Returns(detailActor);
+        PartyDetailProjectionQueryActor actor = CreateActor("party-detail:tenant-a:p-erased", actorProxyFactory);
+
+        QueryResult result = await actor.QueryAsync(CreateEnvelope("tenant-a", "p-erased", "ExportPartyData"));
+
+        result.Success.ShouldBeTrue();
+        string raw = result.GetPayload().GetRawText();
+        raw.ShouldNotContain("Ada Lovelace");
+        raw.ShouldNotContain("ada@example.test");
+        PartyDataPortabilityPackage package = result.GetPayload().Deserialize<PartyDataPortabilityPackage>(new JsonSerializerOptions(JsonSerializerDefaults.Web))!;
+        package.Status.ShouldBe("Erased");
+        package.Party.ShouldBeNull();
+    }
+
+    [Fact]
+    public async Task QueryAsync_ExportPartyData_UnavailablePersonalDataDoesNotExposePartialPayloadAsync()
+    {
+        IActorProxyFactory actorProxyFactory = Substitute.For<IActorProxyFactory>();
+        IPartyDetailProjectionActor detailActor = Substitute.For<IPartyDetailProjectionActor>();
+        detailActor.GetDetailReadAsync().Returns(Task.FromResult(new PartyDetailProjectionReadResult
+        {
+            Detail = CreateDetail("p-unavailable") with
+            {
+                DisplayName = string.Empty,
+                SortName = string.Empty,
+            },
+            Freshness = new ProjectionFreshnessMetadata { Status = ProjectionFreshnessStatus.Current },
+        }));
+        actorProxyFactory.CreateActorProxy<IPartyDetailProjectionActor>(
+                Arg.Any<ActorId>(),
+                Arg.Any<string>(),
+                Arg.Any<ActorProxyOptions?>())
+            .Returns(detailActor);
+        PartyDetailProjectionQueryActor actor = CreateActor("party-detail:tenant-a:p-unavailable", actorProxyFactory);
+
+        QueryResult result = await actor.QueryAsync(CreateEnvelope("tenant-a", "p-unavailable", "ExportPartyData"));
+
+        result.Success.ShouldBeTrue();
+        string raw = result.GetPayload().GetRawText();
+        raw.ShouldNotContain("ada@example.test");
+        PartyDataPortabilityPackage package = result.GetPayload().Deserialize<PartyDataPortabilityPackage>(new JsonSerializerOptions(JsonSerializerDefaults.Web))!;
+        package.Status.ShouldBe("PersonalDataUnavailable");
+        package.Party.ShouldBeNull();
     }
 
     [Fact]
@@ -407,15 +538,26 @@ public sealed class PartyDetailProjectionQueryActorTests
     private static PartyDetailProjectionQueryActor CreateActor(string actorId, IActorProxyFactory actorProxyFactory)
         => CreateActorWithLogger(actorId, actorProxyFactory, NullLogger<PartyDetailProjectionQueryActor>.Instance);
 
+    private static PartyDetailProjectionQueryActor CreateActor(
+        string actorId,
+        IActorProxyFactory actorProxyFactory,
+        IProjectionRebuildService projectionRebuildService)
+        => CreateActorWithLogger(
+            actorId,
+            actorProxyFactory,
+            NullLogger<PartyDetailProjectionQueryActor>.Instance,
+            projectionRebuildService);
+
     private static PartyDetailProjectionQueryActor CreateActorWithLogger(
         string actorId,
         IActorProxyFactory actorProxyFactory,
-        ILogger<PartyDetailProjectionQueryActor> logger)
+        ILogger<PartyDetailProjectionQueryActor> logger,
+        IProjectionRebuildService? projectionRebuildService = null)
     {
         ActorTimerManager timerManager = Substitute.For<ActorTimerManager>();
         var host = ActorHost.CreateForTest<PartyDetailProjectionQueryActor>(
             new ActorTestOptions { ActorId = new ActorId(actorId), TimerManager = timerManager });
-        return new PartyDetailProjectionQueryActor(host, actorProxyFactory, logger);
+        return new PartyDetailProjectionQueryActor(host, actorProxyFactory, logger, projectionRebuildService);
     }
 
     private sealed class RecordingLogger<T> : ILogger<T>

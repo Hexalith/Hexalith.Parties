@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
+using System.Globalization;
 
 using Hexalith.EventStore.Contracts.Queries;
 using Hexalith.Parties.Contracts.Commands;
@@ -102,8 +103,19 @@ public sealed class HttpAdminPortalGdprClient : IAdminPortalGdprClient
     public async Task<AdminPortalExportDownload> ExportPartyDataAsync(string partyId, CancellationToken cancellationToken)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(partyId);
-        await Task.CompletedTask.ConfigureAwait(false);
-        throw ContractUnavailable();
+        PartyDataPortabilityPackage package = await PostQueryAsync<PartyDataPortabilityPackage>(
+            partyId,
+            queryType: "ExportPartyData",
+            projectionType: "PartyDetail",
+            projectionActorType: "PartyDetailProjectionQueryActor",
+            payload: new PartyQueryPayload(partyId),
+            cancellationToken).ConfigureAwait(false);
+
+        byte[] payload = JsonSerializer.SerializeToUtf8Bytes(package, HttpPartiesCommandClient.JsonOptions);
+        return new AdminPortalExportDownload(
+            BuildSafeExportFileName(package.PartyId, package.ExportedAt),
+            "application/json",
+            payload);
     }
 
     public Task<IReadOnlyList<ProcessingActivityRecord>> GetProcessingRecordsAsync(string partyId, CancellationToken cancellationToken)
@@ -317,6 +329,9 @@ public sealed class HttpAdminPortalGdprClient : IAdminPortalGdprClient
         string sanitized = new(chars);
         return string.IsNullOrWhiteSpace(sanitized) ? "party" : sanitized;
     }
+
+    private static string BuildSafeExportFileName(string partyId, DateTimeOffset exportedAt)
+        => $"party-{SanitizeFileToken(partyId)}-{exportedAt.UtcDateTime.ToString("yyyyMMddTHHmmssZ", CultureInfo.InvariantCulture)}.json";
 
     private sealed record PartyQueryPayload(string PartyId);
 

@@ -230,17 +230,48 @@ public sealed class AdminPortalGdprOperationContractTests
     }
 
     [Fact]
-    public async Task ExportPartyDataAsync_FailsClosedUntilAuthoritativeExportContractExistsAsync()
+    public async Task ExportPartyDataAsync_UsesAuthoritativeExportQueryAndSafeDownloadNameAsync()
     {
-        var handler = new RecordingHandler(HttpStatusCode.OK, "{}", "application/json");
+        var package = new PartyDataPortabilityPackage
+        {
+            PartyId = "party-export",
+            TenantId = "tenant-a",
+            Status = "Exported",
+            ExportedAt = DateTimeOffset.Parse("2026-05-21T20:45:00Z"),
+            ExportedBy = "admin-user",
+            CorrelationId = "corr-export",
+            Party = new PartyDetail
+            {
+                Id = "party-export",
+                Type = PartyType.Person,
+                IsActive = true,
+                DisplayName = "Ada Lovelace",
+                SortName = "Lovelace, Ada",
+                CreatedAt = DateTimeOffset.Parse("2026-05-01T00:00:00Z"),
+                LastModifiedAt = DateTimeOffset.Parse("2026-05-02T00:00:00Z"),
+            },
+        };
+        var handler = new RecordingHandler(
+            HttpStatusCode.OK,
+            JsonSerializer.Serialize(new { payload = package }, s_jsonOptions),
+            "application/json");
         var client = CreateHttpClient(handler);
 
-        PartiesClientException ex = await Should.ThrowAsync<PartiesClientException>(
-            () => client.ExportPartyDataAsync("party-1", CancellationToken.None));
+        AdminPortalExportDownload export = await client.ExportPartyDataAsync("party-export", CancellationToken.None);
 
-        ex.Status.ShouldBe((int)HttpStatusCode.NotImplemented);
-        ex.Title.ShouldBe(AdminPortalGdprOutcome.ContractUnavailable.ToString());
-        handler.LastRequest.ShouldBeNull("Export must not synthesize an export from a generic projection query.");
+        export.ContentType.ShouldBe("application/json");
+        export.FileName.ShouldBe("party-party-export-20260521T204500Z.json");
+        export.FileName.ShouldNotContain("Ada", Case.Insensitive);
+        export.FileName.ShouldNotContain("tenant-a", Case.Insensitive);
+        JsonSerializer.Deserialize<PartyDataPortabilityPackage>(export.Payload, s_jsonOptions)!
+            .Party!.DisplayName.ShouldBe("Ada Lovelace");
+
+        handler.LastRequest.ShouldNotBeNull().RequestUri!.PathAndQuery.ShouldBe("/api/v1/queries");
+        using JsonDocument body = JsonDocument.Parse(handler.LastRequestBody.ShouldNotBeNull());
+        JsonElement root = body.RootElement;
+        root.GetProperty("queryType").GetString().ShouldBe("ExportPartyData");
+        root.GetProperty("projectionType").GetString().ShouldBe("PartyDetail");
+        root.GetProperty("projectionActorType").GetString().ShouldBe("PartyDetailProjectionQueryActor");
     }
 
     private static BindingFlags PublicInstance => BindingFlags.Public | BindingFlags.Instance;
