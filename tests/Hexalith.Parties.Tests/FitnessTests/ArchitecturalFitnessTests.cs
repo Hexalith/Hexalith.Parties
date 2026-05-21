@@ -3,6 +3,7 @@ using System.Text.RegularExpressions;
 using System.Xml.Linq;
 
 using Hexalith.EventStore.Contracts.Events;
+using Hexalith.Parties.Compliance;
 using Hexalith.Parties.Projections.Handlers;
 
 using Microsoft.AspNetCore.Mvc;
@@ -97,7 +98,7 @@ public sealed class ArchitecturalFitnessTests
 
         List<string> violations = [.. forbiddenFragments.Where(fragment => source.Contains(fragment, StringComparison.Ordinal))];
         violations.ShouldBeEmpty(
-            "Program.cs must not expose REST, MCP, OpenAPI, GDPR-header middleware, or public minimal API mappings: "
+            "Program.cs must not expose REST, MCP, OpenAPI, retired GDPR-header middleware, or public minimal API mappings: "
             + string.Join(", ", violations));
 
         source.ShouldContain("app.MapActorsHandlers()");
@@ -119,6 +120,26 @@ public sealed class ArchitecturalFitnessTests
         source.ShouldContain(
             "only eventstore -> POST /process",
             customMessage: "The retained /process endpoint must be documented as DAPR service-invocation plumbing restricted by accesscontrol.parties.yaml.");
+    }
+
+    [Fact]
+    public void Program_LogsAndEmitsMvpComplianceWarningUntilActivationSwitch()
+    {
+        string program = ReadRepoFile("src", "Hexalith.Parties", "Program.cs");
+        string middleware = ReadRepoFile("src", "Hexalith.Parties", "Middleware", "MvpComplianceWarningMiddleware.cs");
+        string warning = ReadRepoFile("src", "Hexalith.Parties", "Compliance", "MvpComplianceWarning.cs");
+
+        program.ShouldContain("LogWarning");
+        program.ShouldContain(nameof(MvpComplianceWarning));
+        program.ShouldContain("UseMiddleware<MvpComplianceWarningMiddleware>");
+        middleware.ShouldContain(nameof(MvpComplianceWarning.HeaderName));
+        middleware.ShouldContain(nameof(MvpComplianceWarning.Message));
+        middleware.ShouldContain(nameof(MvpComplianceWarning.ActivationConfigurationKey));
+        warning.ShouldContain(MvpComplianceWarning.HeaderName);
+        warning.ShouldContain(MvpComplianceWarning.ActivationConfigurationKey);
+        warning.ShouldContain("not for regulated EU personal data");
+        warning.ShouldContain("v1.1 GDPR features");
+        warning.ShouldNotContain("X-GDPR-Warning");
     }
 
     [Fact]

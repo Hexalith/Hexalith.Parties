@@ -4,7 +4,7 @@ This guide starts the local EventStore-fronted topology, sends a Parties command
 
 **Time estimate:** Under 30 minutes from clone to first command/query round-trip.
 
-> **GDPR notice:** The service logs the current MVP GDPR limitation at startup. Do not store regulated personal data in local examples. The retired per-response GDPR reminder header is no longer part of the public response contract.
+> **GDPR notice:** The service logs the current MVP GDPR limitation at startup and emits `X-Hexalith-Parties-Mvp-Compliance-Warning` while `Parties:Compliance:GdprFeaturesActive` is not enabled. Do not store regulated personal data in local examples.
 
 ---
 
@@ -512,6 +512,8 @@ A command can be accepted before the projection is queryable. Retry with bounded
 ### MVP Compliance Boundary
 
 This MVP is not approved for regulated EU personal data until v1.1 GDPR features are active. For evaluation, use synthetic names and non-sensitive contact data only. If sensitive data is accidentally entered in a non-production evaluation environment, stop using that dataset and follow your operator's manual deletion or environment rebuild procedure; do not treat the MVP as an erasure-complete system.
+
+The warning remains non-dismissable in service startup logs and response metadata through `X-Hexalith-Parties-Mvp-Compliance-Warning`. It can only be removed by explicitly setting `Parties:Compliance:GdprFeaturesActive=true` after the v1.1 GDPR feature set is active.
 
 ### MCP Unavailable
 

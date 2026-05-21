@@ -2,7 +2,7 @@
 
 Hexalith.Parties is a ready-to-deploy party management domain service for people and organizations. Public command and query traffic goes through Hexalith.EventStore; the `parties` service runs the domain actor host behind that gateway, and consumers normally use the typed .NET client package.
 
-> **GDPR Notice:** This MVP does **not** include GDPR compliance features (crypto-shredding, consent management, right to erasure). **Do not store regulated EU personal data.** GDPR features are planned for v1.1 -- see the [roadmap](docs/getting-started.md#whats-next).
+> **GDPR Notice:** This MVP does **not** include GDPR compliance features (crypto-shredding, consent management, right to erasure). **Do not store regulated EU personal data.** The service logs this warning at startup and emits `X-Hexalith-Parties-Mvp-Compliance-Warning` until the explicit v1.1 activation switch is enabled. GDPR features are planned for v1.1 -- see the [roadmap](docs/getting-started.md#whats-next).
 
 ## Key Features
 

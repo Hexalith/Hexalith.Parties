@@ -36,7 +36,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-05-15 09:01:58 +02:00
-last_updated: 2026-05-21 17:36:00 +02:00
+last_updated: 2026-05-21 17:52:00 +02:00
 project: Hexalith.Parties
 project_key: NOKEY
 tracking_system: file-system
@@ -88,7 +88,7 @@ development_status:
   3-7-write-getting-started-documentation: done
   3-8-provide-runnable-sample-integration: done
   3-9-add-deployment-security-validation: done
-  3-10-display-mvp-compliance-warning: backlog
+  3-10-display-mvp-compliance-warning: done
   epic-3-retrospective: optional
 
   # Epic 4: AI Agent Party Management (8 stories)
