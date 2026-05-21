@@ -60,12 +60,13 @@ public sealed partial class PartyDetailProjectionQueryActor(
                 new ActorId(detailActorId),
                 nameof(PartyDetailProjectionActor));
 
-            PartyDetail? detail = await detailProxy.ReadDetailAsync().ConfigureAwait(false);
-            if (detail is null)
+            PartyDetailProjectionReadResult readResult = await detailProxy.ReadDetailWithFreshnessAsync().ConfigureAwait(false);
+            if (readResult.Detail is null || readResult.Freshness.Status == ProjectionFreshnessStatus.Unavailable)
             {
                 return QueryResult.Failure(QueryAdapterFailureReason.ActorNotFoundInfrastructure);
             }
 
+            PartyDetail detail = readResult.Detail with { Freshness = readResult.Freshness };
             return QueryResult.FromPayload(JsonSerializer.SerializeToElement(detail, s_jsonOptions), ProjectionType);
         }
         catch (OperationCanceledException)

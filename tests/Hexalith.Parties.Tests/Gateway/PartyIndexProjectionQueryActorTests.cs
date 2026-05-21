@@ -79,6 +79,109 @@ public sealed class PartyIndexProjectionQueryActorTests
     }
 
     [Fact]
+    public async Task QueryAsync_CurrentIndexProjection_EmitsCurrentFreshnessWithoutWarningsAsync()
+    {
+        IActorProxyFactory actorProxyFactory = Substitute.For<IActorProxyFactory>();
+        IPartyIndexProjectionActor indexActor = Substitute.For<IPartyIndexProjectionActor>();
+        indexActor.GetEntriesReadAsync().Returns(Task.FromResult(new PartyIndexProjectionReadResult
+        {
+            Entries = new Dictionary<string, PartyIndexEntry>(StringComparer.Ordinal)
+            {
+                ["p-current"] = Entry("p-current", "Current Person", PartyType.Person, active: true, "2026-05-01T00:00:00Z", "2026-05-01T00:00:00Z"),
+            },
+            Freshness = new ProjectionFreshnessMetadata { Status = ProjectionFreshnessStatus.Current },
+        }));
+        actorProxyFactory.CreateActorProxy<IPartyIndexProjectionActor>(
+                Arg.Any<ActorId>(),
+                Arg.Any<string>(),
+                Arg.Any<ActorProxyOptions?>())
+            .Returns(indexActor);
+        PartyIndexProjectionQueryActor actor = CreateActor("party-index:tenant-a:parties", actorProxyFactory);
+
+        QueryResult result = await actor.QueryAsync(CreateEnvelope(
+            tenant: "tenant-a",
+            payload: Payload(new { page = 1, pageSize = 20 })));
+
+        result.Success.ShouldBeTrue();
+        PagedResult<PartyIndexEntry> page = DeserializePage(result);
+        page.Freshness.ShouldNotBeNull();
+        page.Freshness.Status.ShouldBe(ProjectionFreshnessStatus.Current);
+        page.Freshness.WarningCodes.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task QueryAsync_StaleIndexProjection_EmitsBoundedFreshnessAfterFilteringAsync()
+    {
+        IActorProxyFactory actorProxyFactory = Substitute.For<IActorProxyFactory>();
+        IPartyIndexProjectionActor indexActor = Substitute.For<IPartyIndexProjectionActor>();
+        indexActor.GetEntriesReadAsync().Returns(Task.FromResult(new PartyIndexProjectionReadResult
+        {
+            Entries = new Dictionary<string, PartyIndexEntry>(StringComparer.Ordinal)
+            {
+                ["p-visible"] = Entry("p-visible", "Visible Person", PartyType.Person, active: true, "2026-05-01T00:00:00Z", "2026-05-01T00:00:00Z"),
+                ["p-erased"] = Entry("p-erased", "Erased Person", PartyType.Person, active: true, "2026-05-01T00:00:00Z", "2026-05-01T00:00:00Z") with { IsErased = true },
+            },
+            Freshness = new ProjectionFreshnessMetadata
+            {
+                Status = ProjectionFreshnessStatus.Stale,
+                WarningCodes = ["projection-state-store-unavailable"],
+            },
+        }));
+        actorProxyFactory.CreateActorProxy<IPartyIndexProjectionActor>(
+                Arg.Any<ActorId>(),
+                Arg.Any<string>(),
+                Arg.Any<ActorProxyOptions?>())
+            .Returns(indexActor);
+        PartyIndexProjectionQueryActor actor = CreateActor("party-index:tenant-a:parties", actorProxyFactory);
+
+        QueryResult result = await actor.QueryAsync(CreateEnvelope(
+            tenant: "tenant-a",
+            payload: Payload(new { page = 1, pageSize = 20 })));
+
+        result.Success.ShouldBeTrue();
+        PagedResult<PartyIndexEntry> page = DeserializePage(result);
+        page.Items.Select(static i => i.Id).ShouldBe(["p-visible"]);
+        page.TotalCount.ShouldBe(1);
+        page.Freshness.ShouldNotBeNull();
+        page.Freshness.Status.ShouldBe(ProjectionFreshnessStatus.Stale);
+        page.Freshness.WarningCodes.ShouldBe(["projection-state-store-unavailable"]);
+        result.GetPayload().GetRawText().ShouldNotContain("tenant-a:party-index", Case.Insensitive);
+    }
+
+    [Fact]
+    public async Task QueryAsync_UnavailableIndexProjection_FailsClosedWithoutRowsAsync()
+    {
+        IActorProxyFactory actorProxyFactory = Substitute.For<IActorProxyFactory>();
+        IPartyIndexProjectionActor indexActor = Substitute.For<IPartyIndexProjectionActor>();
+        indexActor.GetEntriesReadAsync().Returns(Task.FromResult(new PartyIndexProjectionReadResult
+        {
+            Entries = new Dictionary<string, PartyIndexEntry>(StringComparer.Ordinal)
+            {
+                ["p-unsafe"] = Entry("p-unsafe", "Unsafe Person", PartyType.Person, active: true, "2026-05-01T00:00:00Z", "2026-05-01T00:00:00Z"),
+            },
+            Freshness = new ProjectionFreshnessMetadata
+            {
+                Status = ProjectionFreshnessStatus.Unavailable,
+                WarningCodes = ["projection-context-unavailable"],
+            },
+        }));
+        actorProxyFactory.CreateActorProxy<IPartyIndexProjectionActor>(
+                Arg.Any<ActorId>(),
+                Arg.Any<string>(),
+                Arg.Any<ActorProxyOptions?>())
+            .Returns(indexActor);
+        PartyIndexProjectionQueryActor actor = CreateActor("party-index:tenant-a:parties", actorProxyFactory);
+
+        QueryResult result = await actor.QueryAsync(CreateEnvelope(
+            tenant: "tenant-a",
+            payload: Payload(new { page = 1, pageSize = 20 })));
+
+        result.Success.ShouldBeFalse();
+        result.ErrorMessage.ShouldBe(QueryAdapterFailureReason.ActorNotFoundInfrastructure);
+        result.PayloadBytes.ShouldBeNull();
+    }
+
+    [Fact]
     public async Task QueryAsync_ActiveFalse_ReturnsInactiveEntriesWithoutHidingThemAsync()
     {
         IActorProxyFactory actorProxyFactory = Substitute.For<IActorProxyFactory>();
@@ -143,6 +246,79 @@ public sealed class PartyIndexProjectionQueryActorTests
             Arg.Is<ActorId>(id => id.GetId() == "tenant-a:party-index"),
             nameof(PartyIndexProjectionActor),
             Arg.Any<ActorProxyOptions?>());
+    }
+
+    [Fact]
+    public async Task QueryAsync_PartySearch_CurrentLocalIndex_DoesNotInventDegradedMetadataAsync()
+    {
+        IActorProxyFactory actorProxyFactory = Substitute.For<IActorProxyFactory>();
+        IPartyIndexProjectionActor indexActor = Substitute.For<IPartyIndexProjectionActor>();
+        indexActor.GetEntriesReadAsync().Returns(Task.FromResult(new PartyIndexProjectionReadResult
+        {
+            Entries = new Dictionary<string, PartyIndexEntry>(StringComparer.Ordinal)
+            {
+                ["p-acme"] = Entry("p-acme", "Acme", PartyType.Organization, active: true, "2026-05-01T00:00:00Z", "2026-05-01T00:00:00Z"),
+            },
+            Freshness = new ProjectionFreshnessMetadata { Status = ProjectionFreshnessStatus.Current },
+        }));
+        actorProxyFactory.CreateActorProxy<IPartyIndexProjectionActor>(
+                Arg.Any<ActorId>(),
+                Arg.Any<string>(),
+                Arg.Any<ActorProxyOptions?>())
+            .Returns(indexActor);
+        PartyIndexProjectionQueryActor actor = CreateActor("party-index:tenant-a:parties", actorProxyFactory);
+
+        QueryResult result = await actor.QueryAsync(CreateSearchEnvelope(
+            tenant: "tenant-a",
+            payload: Payload(new { query = "Acme", page = 1, pageSize = 20 })));
+
+        result.Success.ShouldBeTrue();
+        PagedResult<PartySearchResult> page = DeserializeSearchPage(result);
+        page.Freshness.ShouldNotBeNull();
+        page.Freshness.Status.ShouldBe(ProjectionFreshnessStatus.Current);
+        page.Freshness.WarningCodes.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task QueryAsync_PartySearch_StaleIndexProjection_EmitsBoundedFreshnessAfterFilteringAsync()
+    {
+        IActorProxyFactory actorProxyFactory = Substitute.For<IActorProxyFactory>();
+        IPartyIndexProjectionActor indexActor = Substitute.For<IPartyIndexProjectionActor>();
+        indexActor.GetEntriesReadAsync().Returns(Task.FromResult(new PartyIndexProjectionReadResult
+        {
+            Entries = new Dictionary<string, PartyIndexEntry>(StringComparer.Ordinal)
+            {
+                ["p-visible"] = Entry("p-visible", "Acme", PartyType.Organization, active: true, "2026-05-01T00:00:00Z", "2026-05-01T00:00:00Z"),
+                ["p-erased"] = Entry("p-erased", "Acme", PartyType.Organization, active: true, "2026-05-01T00:00:00Z", "2026-05-01T00:00:00Z") with { IsErased = true },
+            },
+            Freshness = new ProjectionFreshnessMetadata
+            {
+                Status = ProjectionFreshnessStatus.Stale,
+                WarningCodes = ["projection-state-store-unavailable"],
+            },
+        }));
+        actorProxyFactory.CreateActorProxy<IPartyIndexProjectionActor>(
+                Arg.Any<ActorId>(),
+                Arg.Any<string>(),
+                Arg.Any<ActorProxyOptions?>())
+            .Returns(indexActor);
+        PartyIndexProjectionQueryActor actor = CreateActor("party-index:tenant-a:parties", actorProxyFactory);
+
+        QueryResult result = await actor.QueryAsync(CreateSearchEnvelope(
+            tenant: "tenant-a",
+            payload: Payload(new { query = "Acme", page = 1, pageSize = 20 })));
+
+        result.Success.ShouldBeTrue();
+        PagedResult<PartySearchResult> page = DeserializeSearchPage(result);
+        page.Items.Select(static i => i.Party.Id).ShouldBe(["p-visible"]);
+        page.TotalCount.ShouldBe(1);
+        page.Freshness.ShouldNotBeNull();
+        page.Freshness.Status.ShouldBe(ProjectionFreshnessStatus.Stale);
+        page.Freshness.WarningCodes.ShouldBe(["projection-state-store-unavailable"]);
+        string raw = result.GetPayload().GetRawText();
+        raw.ShouldNotContain("tenant-a:party-index", Case.Insensitive);
+        raw.ShouldNotContain("sequence", Case.Insensitive);
+        raw.ShouldNotContain("stateKey", Case.Insensitive);
     }
 
     [Fact]

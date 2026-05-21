@@ -49,6 +49,125 @@ public sealed class PartyDetailProjectionQueryActorTests
     }
 
     [Fact]
+    public async Task QueryAsync_CurrentDetailProjection_EmitsCurrentFreshnessWithoutWarningsAsync()
+    {
+        IActorProxyFactory actorProxyFactory = Substitute.For<IActorProxyFactory>();
+        IPartyDetailProjectionActor detailActor = Substitute.For<IPartyDetailProjectionActor>();
+        detailActor.GetDetailReadAsync().Returns(Task.FromResult(new PartyDetailProjectionReadResult
+        {
+            Detail = CreateDetail("p-current"),
+            Freshness = new ProjectionFreshnessMetadata { Status = ProjectionFreshnessStatus.Current },
+        }));
+        actorProxyFactory.CreateActorProxy<IPartyDetailProjectionActor>(
+                Arg.Any<ActorId>(),
+                Arg.Any<string>(),
+                Arg.Any<ActorProxyOptions?>())
+            .Returns(detailActor);
+        PartyDetailProjectionQueryActor actor = CreateActor("party-detail:tenant-a:p-current", actorProxyFactory);
+
+        QueryResult result = await actor.QueryAsync(CreateEnvelope("tenant-a", "p-current", "PartyDetail"));
+
+        result.Success.ShouldBeTrue();
+        JsonElement freshness = result.GetPayload().GetProperty("freshness");
+        freshness.GetProperty("status").GetString().ShouldBe("Current");
+        freshness.GetProperty("warningCodes").GetArrayLength().ShouldBe(0);
+    }
+
+    [Fact]
+    public async Task QueryAsync_RebuildingDetailProjection_EmitsBoundedFreshnessMetadataAsync()
+    {
+        IActorProxyFactory actorProxyFactory = Substitute.For<IActorProxyFactory>();
+        IPartyDetailProjectionActor detailActor = Substitute.For<IPartyDetailProjectionActor>();
+        detailActor.GetDetailReadAsync().Returns(Task.FromResult(new PartyDetailProjectionReadResult
+        {
+            Detail = CreateDetail("p-rebuilding"),
+            Freshness = new ProjectionFreshnessMetadata
+            {
+                Status = ProjectionFreshnessStatus.Rebuilding,
+                WarningCodes = ["projection-rebuilding"],
+            },
+        }));
+        actorProxyFactory.CreateActorProxy<IPartyDetailProjectionActor>(
+                Arg.Any<ActorId>(),
+                Arg.Any<string>(),
+                Arg.Any<ActorProxyOptions?>())
+            .Returns(detailActor);
+        PartyDetailProjectionQueryActor actor = CreateActor("party-detail:tenant-a:p-rebuilding", actorProxyFactory);
+
+        QueryResult result = await actor.QueryAsync(CreateEnvelope("tenant-a", "p-rebuilding", "PartyDetail"));
+
+        result.Success.ShouldBeTrue();
+        JsonElement payload = result.GetPayload();
+        payload.GetProperty("freshness").GetProperty("status").GetString().ShouldBe("Rebuilding");
+        string raw = payload.GetRawText();
+        raw.ShouldNotContain("tenant-a:party-detail", Case.Insensitive);
+        raw.ShouldNotContain("sequence", Case.Insensitive);
+        raw.ShouldNotContain("stream", Case.Insensitive);
+        raw.ShouldNotContain("stateKey", Case.Insensitive);
+    }
+
+    [Fact]
+    public async Task QueryAsync_StaleDetailProjection_EmitsBoundedFreshnessMetadataAsync()
+    {
+        IActorProxyFactory actorProxyFactory = Substitute.For<IActorProxyFactory>();
+        IPartyDetailProjectionActor detailActor = Substitute.For<IPartyDetailProjectionActor>();
+        detailActor.GetDetailReadAsync().Returns(Task.FromResult(new PartyDetailProjectionReadResult
+        {
+            Detail = CreateDetail("p-stale"),
+            Freshness = new ProjectionFreshnessMetadata
+            {
+                Status = ProjectionFreshnessStatus.Stale,
+                WarningCodes = ["projection-state-store-unavailable"],
+            },
+        }));
+        actorProxyFactory.CreateActorProxy<IPartyDetailProjectionActor>(
+                Arg.Any<ActorId>(),
+                Arg.Any<string>(),
+                Arg.Any<ActorProxyOptions?>())
+            .Returns(detailActor);
+        PartyDetailProjectionQueryActor actor = CreateActor("party-detail:tenant-a:p-stale", actorProxyFactory);
+
+        QueryResult result = await actor.QueryAsync(CreateEnvelope("tenant-a", "p-stale", "PartyDetail"));
+
+        result.Success.ShouldBeTrue();
+        JsonElement payload = result.GetPayload();
+        payload.GetProperty("freshness").GetProperty("status").GetString().ShouldBe("Stale");
+        payload.GetProperty("freshness").GetProperty("warningCodes")[0].GetString().ShouldBe("projection-state-store-unavailable");
+        string raw = payload.GetRawText();
+        raw.ShouldNotContain("tenant-a:party-detail", Case.Insensitive);
+        raw.ShouldNotContain("last-sequence", Case.Insensitive);
+        raw.ShouldNotContain("stateKey", Case.Insensitive);
+    }
+
+    [Fact]
+    public async Task QueryAsync_UnavailableDetailProjection_FailsClosedWithoutPayloadAsync()
+    {
+        IActorProxyFactory actorProxyFactory = Substitute.For<IActorProxyFactory>();
+        IPartyDetailProjectionActor detailActor = Substitute.For<IPartyDetailProjectionActor>();
+        detailActor.GetDetailReadAsync().Returns(Task.FromResult(new PartyDetailProjectionReadResult
+        {
+            Detail = CreateDetail("p-unsafe"),
+            Freshness = new ProjectionFreshnessMetadata
+            {
+                Status = ProjectionFreshnessStatus.Unavailable,
+                WarningCodes = ["projection-context-unavailable"],
+            },
+        }));
+        actorProxyFactory.CreateActorProxy<IPartyDetailProjectionActor>(
+                Arg.Any<ActorId>(),
+                Arg.Any<string>(),
+                Arg.Any<ActorProxyOptions?>())
+            .Returns(detailActor);
+        PartyDetailProjectionQueryActor actor = CreateActor("party-detail:tenant-a:p-unsafe", actorProxyFactory);
+
+        QueryResult result = await actor.QueryAsync(CreateEnvelope("tenant-a", "p-unsafe", "PartyDetail"));
+
+        result.Success.ShouldBeFalse();
+        result.ErrorMessage.ShouldBe(QueryAdapterFailureReason.ActorNotFoundInfrastructure);
+        result.PayloadBytes.ShouldBeNull();
+    }
+
+    [Fact]
     public async Task QueryAsync_GetPartyAlias_UsesSameTenantScopedProjectionActorAsync()
     {
         IActorProxyFactory actorProxyFactory = Substitute.For<IActorProxyFactory>();

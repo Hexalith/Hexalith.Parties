@@ -281,7 +281,7 @@ public sealed partial class PartyIndexProjectionActor : Actor, IPartyIndexProjec
         }
     }
 
-    public async Task<IReadOnlyDictionary<string, PartyIndexEntry>> GetEntriesAsync()
+    public async Task<PartyIndexProjectionReadResult> GetEntriesReadAsync()
     {
         if (_isRebuilding)
         {
@@ -297,31 +297,50 @@ public sealed partial class PartyIndexProjectionActor : Actor, IPartyIndexProjec
                 string cacheKey = $"{segs[0]}:{ProjectionName}:{partitionKey}";
                 if (_entries is not null)
                 {
-                    return _entries;
+                    return new PartyIndexProjectionReadResult
+                    {
+                        Entries = _entries,
+                        Freshness = Freshness(ProjectionFreshnessStatus.Rebuilding, ProjectionFreshnessMetadata.WarningProjectionRebuilding),
+                    };
                 }
 
                 if (s_lastKnownEntries.TryGetValue(cacheKey, out IReadOnlyDictionary<string, PartyIndexEntry>? cached))
                 {
-                    return cached;
+                    return new PartyIndexProjectionReadResult
+                    {
+                        Entries = cached,
+                        Freshness = Freshness(ProjectionFreshnessStatus.Rebuilding, ProjectionFreshnessMetadata.WarningProjectionRebuilding),
+                    };
                 }
             }
 
-            return new Dictionary<string, PartyIndexEntry>();
+            return new PartyIndexProjectionReadResult
+            {
+                Entries = new Dictionary<string, PartyIndexEntry>(),
+                Freshness = Freshness(ProjectionFreshnessStatus.Unavailable, ProjectionFreshnessMetadata.WarningProjectionContextUnavailable),
+            };
         }
 
+        ProjectionFreshnessMetadata freshness = Freshness(ProjectionFreshnessStatus.Current);
         try
         {
             await FlushAsync().ConfigureAwait(false);
         }
-        catch when (_entries is not null)
+        // Cancellation must propagate — do not mask a canceled flush as a Degraded success.
+        catch (Exception ex) when (ex is not OperationCanceledException && _entries is not null)
         {
             // If the backing state store is unavailable, continue serving the
             // in-memory snapshot already loaded in this actor activation.
+            freshness = Freshness(ProjectionFreshnessStatus.Degraded, ProjectionFreshnessMetadata.WarningProjectionStateStoreUnavailable);
         }
 
         if (_entries is not null)
         {
-            return _entries;
+            return new PartyIndexProjectionReadResult
+            {
+                Entries = _entries,
+                Freshness = freshness,
+            };
         }
 
         string id = Host.Id.GetId();
@@ -329,7 +348,11 @@ public sealed partial class PartyIndexProjectionActor : Actor, IPartyIndexProjec
         if (segments.Length != 2)
         {
             Log.MalformedActorId(_logger, ProjectionName, segments.Length);
-            return new Dictionary<string, PartyIndexEntry>();
+            return new PartyIndexProjectionReadResult
+            {
+                Entries = new Dictionary<string, PartyIndexEntry>(),
+                Freshness = Freshness(ProjectionFreshnessStatus.Unavailable, ProjectionFreshnessMetadata.WarningProjectionContextUnavailable),
+            };
         }
 
         string tenant = segments[0];
@@ -341,16 +364,28 @@ public sealed partial class PartyIndexProjectionActor : Actor, IPartyIndexProjec
             _entries = await LoadStateAsync(stateKey).ConfigureAwait(false);
             _activeStateKey = stateKey;
         }
-        catch when (TryGetCachedState(stateKey, out Dictionary<string, PartyIndexEntry>? cachedEntries))
+        // Cancellation must propagate — see note above on terminal-cancellation contract.
+        catch (Exception ex) when (ex is not OperationCanceledException
+            && TryGetCachedState(stateKey, out Dictionary<string, PartyIndexEntry>? cachedEntries))
         {
             // If the state store is temporarily unavailable during a cold read,
             // serve the last successfully persisted snapshot from this process.
             _entries = cachedEntries;
             _activeStateKey = stateKey;
+            freshness = Freshness(ProjectionFreshnessStatus.Stale, ProjectionFreshnessMetadata.WarningProjectionStateStoreUnavailable);
         }
 
-        return _entries ?? new Dictionary<string, PartyIndexEntry>();
+        return new PartyIndexProjectionReadResult
+        {
+            Entries = _entries ?? new Dictionary<string, PartyIndexEntry>(),
+            Freshness = _entries is null
+                ? Freshness(ProjectionFreshnessStatus.Unavailable, ProjectionFreshnessMetadata.WarningProjectionStateUnavailable)
+                : freshness,
+        };
     }
+
+    public async Task<IReadOnlyDictionary<string, PartyIndexEntry>> GetEntriesAsync()
+        => (await GetEntriesReadAsync().ConfigureAwait(false)).Entries;
 
     public async Task<string?> GetEntriesJsonAsync()
     {
@@ -465,6 +500,15 @@ public sealed partial class PartyIndexProjectionActor : Actor, IPartyIndexProjec
             or JsonException
             || (ex.InnerException is not null && IsDeserializationFailure(ex.InnerException));
     }
+
+    private static ProjectionFreshnessMetadata Freshness(
+        ProjectionFreshnessStatus status,
+        params string[] warningCodes)
+        => new()
+        {
+            Status = status,
+            WarningCodes = warningCodes,
+        };
 
     private string ResolveStateKey(string partyId)
     {

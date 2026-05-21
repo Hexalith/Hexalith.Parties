@@ -129,6 +129,7 @@ public sealed class PersonalDataInventoryTests
             [Key(typeof(PartyDetail), nameof(PartyDetail.RestrictedAt))] = Classification.NonPersonalMetadata,
             [Key(typeof(PartyDetail), nameof(PartyDetail.IsErased))] = Classification.NonPersonalMetadata,
             [Key(typeof(PartyDetail), nameof(PartyDetail.ErasedAt))] = Classification.NonPersonalMetadata,
+            [Key(typeof(PartyDetail), nameof(PartyDetail.Freshness))] = Classification.NonPersonalMetadata,
 
             [Key(typeof(PartyIndexEntry), nameof(PartyIndexEntry.Id))] = Classification.NonPersonalMetadata,
             [Key(typeof(PartyIndexEntry), nameof(PartyIndexEntry.Type))] = Classification.NonPersonalMetadata,

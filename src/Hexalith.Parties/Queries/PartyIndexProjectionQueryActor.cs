@@ -77,20 +77,23 @@ public sealed partial class PartyIndexProjectionQueryActor(
                 return QueryResult.Failure(QueryAdapterFailureReason.InvalidEnvelope);
             }
 
-            return await QueryEntriesAsync(envelope, entries =>
+            return await QueryEntriesAsync(envelope, readResult =>
             {
                 // P13: Forward the host's ApplicationStopping token so the in-actor matching and
                 // sort loops abort during graceful shutdown. The per-request CT path
                 // (IProjectionActor.QueryAsync gaining a CancellationToken) is tracked as a
                 // cross-submodule follow-up in deferred-work.md.
                 PagedResult<PartySearchResult> page = searchProvider.Search(
-                    entries.Values,
+                    readResult.Entries.Values,
                     payload.Query,
                     payload.Type,
                     payload.Active,
                     payload.Page,
                     payload.PageSize,
-                    hostLifetime.ApplicationStopping);
+                    hostLifetime.ApplicationStopping) with
+                {
+                    Freshness = readResult.Freshness,
+                };
 
                 return QueryResult.FromPayload(JsonSerializer.SerializeToElement(page, s_jsonOptions), ProjectionType);
             }).ConfigureAwait(false);
@@ -101,10 +104,10 @@ public sealed partial class PartyIndexProjectionQueryActor(
             return QueryResult.Failure(QueryAdapterFailureReason.InvalidEnvelope);
         }
 
-        return await QueryEntriesAsync(envelope, entries =>
+        return await QueryEntriesAsync(envelope, readResult =>
         {
             PagedResult<PartyIndexEntry> page = PartySearchResultsBuilder.BuildPagedList(
-                entries.Values,
+                readResult.Entries.Values,
                 listPayload.Type,
                 listPayload.Active,
                 listPayload.CreatedAfter,
@@ -112,7 +115,10 @@ public sealed partial class PartyIndexProjectionQueryActor(
                 listPayload.ModifiedAfter,
                 listPayload.ModifiedBefore,
                 listPayload.Page,
-                listPayload.PageSize);
+                listPayload.PageSize) with
+            {
+                Freshness = readResult.Freshness,
+            };
 
             return QueryResult.FromPayload(JsonSerializer.SerializeToElement(page, s_jsonOptions), ProjectionType);
         }).ConfigureAwait(false);
@@ -120,7 +126,7 @@ public sealed partial class PartyIndexProjectionQueryActor(
 
     private async Task<QueryResult> QueryEntriesAsync(
         QueryEnvelope envelope,
-        Func<IReadOnlyDictionary<string, PartyIndexEntry>, QueryResult> createResult)
+        Func<PartyIndexProjectionReadResult, QueryResult> createResult)
     {
         string indexActorId = $"{envelope.TenantId}:party-index";
 
@@ -135,8 +141,13 @@ public sealed partial class PartyIndexProjectionQueryActor(
                 new ActorId(indexActorId),
                 nameof(PartyIndexProjectionActor));
 
-            IReadOnlyDictionary<string, PartyIndexEntry> entries = await indexProxy.GetEntriesAsync().ConfigureAwait(false);
-            return createResult(entries);
+            PartyIndexProjectionReadResult readResult = await ReadEntriesWithFreshnessAsync(indexProxy).ConfigureAwait(false);
+            if (readResult.Freshness.Status == ProjectionFreshnessStatus.Unavailable)
+            {
+                return QueryResult.Failure(QueryAdapterFailureReason.ActorNotFoundInfrastructure);
+            }
+
+            return createResult(readResult);
         }
         catch (OperationCanceledException)
         {
@@ -192,6 +203,63 @@ public sealed partial class PartyIndexProjectionQueryActor(
         return string.Equals(envelope.AggregateId, ListAggregateId, StringComparison.Ordinal)
             && string.Equals(requestedEntityId, ListAggregateId, StringComparison.Ordinal);
     }
+
+    private static async Task<PartyIndexProjectionReadResult> ReadEntriesWithFreshnessAsync(IPartyIndexProjectionActor indexProxy)
+    {
+        Task<PartyIndexProjectionReadResult>? readTask = null;
+        try
+        {
+            readTask = indexProxy.GetEntriesReadAsync();
+        }
+        catch (NotImplementedException)
+        {
+        }
+
+        if (readTask is not null)
+        {
+            try
+            {
+                PartyIndexProjectionReadResult? result = await readTask.ConfigureAwait(false);
+                if (result is not null)
+                {
+                    return result;
+                }
+            }
+            catch (NotImplementedException)
+            {
+            }
+        }
+
+        IReadOnlyDictionary<string, PartyIndexEntry> entries = await indexProxy.GetEntriesAsync().ConfigureAwait(false);
+        ProjectionFreshnessStatus status = await IsRebuildingAsync(indexProxy).ConfigureAwait(false)
+            ? ProjectionFreshnessStatus.Rebuilding
+            : ProjectionFreshnessStatus.Current;
+        return new PartyIndexProjectionReadResult
+        {
+            Entries = entries,
+            Freshness = Freshness(status, status == ProjectionFreshnessStatus.Rebuilding ? ProjectionFreshnessMetadata.WarningProjectionRebuilding : null),
+        };
+    }
+
+    private static async Task<bool> IsRebuildingAsync(IPartyIndexProjectionActor indexProxy)
+    {
+        try
+        {
+            Task<bool>? task = indexProxy.IsRebuildingAsync();
+            return task is not null && await task.ConfigureAwait(false);
+        }
+        catch (NotImplementedException)
+        {
+            return false;
+        }
+    }
+
+    private static ProjectionFreshnessMetadata Freshness(ProjectionFreshnessStatus status, string? warningCode)
+        => new()
+        {
+            Status = status,
+            WarningCodes = string.IsNullOrWhiteSpace(warningCode) ? [] : [warningCode],
+        };
 
     private static bool TryParseListPayload(byte[] payloadBytes, out ListPartiesQueryPayload payload)
     {

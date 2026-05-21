@@ -244,17 +244,25 @@ public sealed partial class PartyDetailProjectionActor : Actor, IPartyDetailProj
         _lastSequenceLoaded = false;
     }
 
-    public async Task<PartyDetail?> GetDetailAsync()
+    public async Task<PartyDetailProjectionReadResult> GetDetailReadAsync()
     {
         string actorId = Host.Id.GetId();
         if (!TryResolveActorStateContext(actorId, out string tenant, out string actorPartyId, out string stateKey))
         {
-            return null;
+            return new PartyDetailProjectionReadResult
+            {
+                Detail = null,
+                Freshness = Freshness(ProjectionFreshnessStatus.Unavailable, ProjectionFreshnessMetadata.WarningProjectionContextUnavailable),
+            };
         }
 
         if (_isRebuilding)
         {
-            return _cachedDetail ?? s_lastKnownDetails.GetValueOrDefault(stateKey);
+            return new PartyDetailProjectionReadResult
+            {
+                Detail = _cachedDetail ?? s_lastKnownDetails.GetValueOrDefault(stateKey),
+                Freshness = Freshness(ProjectionFreshnessStatus.Rebuilding, ProjectionFreshnessMetadata.WarningProjectionRebuilding),
+            };
         }
 
         try
@@ -267,13 +275,27 @@ public sealed partial class PartyDetailProjectionActor : Actor, IPartyDetailProj
                 s_lastKnownDetails[stateKey] = _cachedDetail;
             }
 
-            return _cachedDetail;
+            return new PartyDetailProjectionReadResult
+            {
+                Detail = _cachedDetail,
+                Freshness = Freshness(ProjectionFreshnessStatus.Current),
+            };
         }
-        catch when (_cachedDetail is not null || s_lastKnownDetails.TryGetValue(stateKey, out _))
+        // Cancellation is terminal per story 2.7 advanced elicitation: do not coerce a canceled
+        // read into a Stale success with cached data — propagate so the caller can honor it.
+        catch (Exception ex) when (ex is not OperationCanceledException
+            && (_cachedDetail is not null || s_lastKnownDetails.TryGetValue(stateKey, out _)))
         {
-            return _cachedDetail ?? s_lastKnownDetails.GetValueOrDefault(stateKey);
+            return new PartyDetailProjectionReadResult
+            {
+                Detail = _cachedDetail ?? s_lastKnownDetails.GetValueOrDefault(stateKey),
+                Freshness = Freshness(ProjectionFreshnessStatus.Stale, ProjectionFreshnessMetadata.WarningProjectionStateStoreUnavailable),
+            };
         }
     }
+
+    public async Task<PartyDetail?> GetDetailAsync()
+        => (await GetDetailReadAsync().ConfigureAwait(false)).Detail;
 
     public async Task<byte[]?> GetSerializedDetailAsync()
     {
@@ -378,6 +400,15 @@ public sealed partial class PartyDetailProjectionActor : Actor, IPartyDetailProj
             or JsonException
             || (ex.InnerException is not null && IsDeserializationFailure(ex.InnerException));
     }
+
+    private static ProjectionFreshnessMetadata Freshness(
+        ProjectionFreshnessStatus status,
+        params string[] warningCodes)
+        => new()
+        {
+            Status = status,
+            WarningCodes = warningCodes,
+        };
 
     private (string PartyId, string StateKey) ResolveStateContext(string incomingPartyId)
     {

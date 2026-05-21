@@ -106,13 +106,40 @@ public sealed class ProjectionFreshnessAndDegradationTests
         context.Response.Headers.ContainsKey("X-Service-Degraded").ShouldBeFalse();
     }
 
-    // AC6 — Cross-tenant freshness probe: tenant B must never receive tenant A's degraded markers,
-    // cache age, projection position, or rebuild status through freshness headers. Reference:
-    // 2.7-GTW-092 — Tier-2 surrogate.
-    [Fact(Skip = "Requires a per-tenant projection probe seam in DegradedResponseMiddleware.")]
-    public void FreshnessMetadata_TenantScoped_DoesNotEncodeCrossTenantProjectionAge()
+    // AC3/AC6 — Degraded response headers must contain only bounded vocabulary: no projection
+    // identifiers, sequence positions, actor/state keys, or rebuild internals. Cross-tenant
+    // isolation at the query layer is covered by PartyDetailProjectionQueryActorTests and
+    // PartyIndexProjectionQueryActorTests; the middleware has no tenant context so this is a
+    // header-shape invariant rather than a tenant-scoping assertion.
+    [Fact]
+    public async Task InvokeAsync_DegradedHeaders_ContainOnlyBoundedMetadataAsync()
     {
-        Assert.Skip("Materialize once DegradedResponseMiddleware is extended for per-tenant projection probes.");
+        HealthCheckService healthCheckService = CreateStateStoreUnavailableButProjectionLoadedHealthCheckService();
+
+        var middleware = new DegradedResponseMiddleware(
+            context => context.Response.WriteAsync("ok"),
+            healthCheckService);
+
+        HttpContext context = CreateHttpContext("GET");
+
+        await middleware.InvokeAsync(context);
+        await context.Response.StartAsync();
+
+        string serializedHeaders = string.Join(
+            "|",
+            context.Response.Headers.Select(static h => h.Key + "=" + h.Value.ToString()));
+        serializedHeaders.ShouldNotContain("party-index", Case.Insensitive);
+        serializedHeaders.ShouldNotContain("party-detail", Case.Insensitive);
+        serializedHeaders.ShouldNotContain("position", Case.Insensitive);
+        serializedHeaders.ShouldNotContain("sequence", Case.Insensitive);
+        serializedHeaders.ShouldNotContain("rebuilding", Case.Insensitive);
+        serializedHeaders.ShouldNotContain("stateKey", Case.Insensitive);
+        serializedHeaders.ShouldNotContain("actor", Case.Insensitive);
+
+        // X-Stale-Data-Age must be a non-negative integer (bucketed seconds), not a raw position.
+        string staleAge = context.Response.Headers["X-Stale-Data-Age"].ToString();
+        long.TryParse(staleAge, System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out long ageSeconds).ShouldBeTrue();
+        ageSeconds.ShouldBeGreaterThanOrEqualTo(0);
     }
 
     // AC5 — Corrupt projection state must map to bounded unavailable/degraded outcome with

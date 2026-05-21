@@ -10,6 +10,45 @@ internal static class PartyDetailProjectionActorExtensions
 {
     private static readonly JsonSerializerOptions s_jsonOptions = new(JsonSerializerDefaults.Web);
 
+    public static async Task<PartyDetailProjectionReadResult> ReadDetailWithFreshnessAsync(this IPartyDetailProjectionActor proxy)
+    {
+        ArgumentNullException.ThrowIfNull(proxy);
+
+        Task<PartyDetailProjectionReadResult>? readTask = null;
+        try
+        {
+            readTask = proxy.GetDetailReadAsync();
+        }
+        catch (NotImplementedException)
+        {
+        }
+
+        if (readTask is not null)
+        {
+            try
+            {
+                PartyDetailProjectionReadResult? result = await readTask.ConfigureAwait(false);
+                if (result is not null)
+                {
+                    return result;
+                }
+            }
+            catch (NotImplementedException)
+            {
+            }
+        }
+
+        PartyDetail? detail = await proxy.ReadDetailAsync().ConfigureAwait(false);
+        ProjectionFreshnessStatus status = await IsRebuildingAsync(proxy).ConfigureAwait(false)
+            ? ProjectionFreshnessStatus.Rebuilding
+            : ProjectionFreshnessStatus.Current;
+        return new PartyDetailProjectionReadResult
+        {
+            Detail = detail,
+            Freshness = Freshness(status, status == ProjectionFreshnessStatus.Rebuilding ? ProjectionFreshnessMetadata.WarningProjectionRebuilding : null),
+        };
+    }
+
     public static async Task<PartyDetail?> ReadDetailAsync(this IPartyDetailProjectionActor proxy)
     {
         ArgumentNullException.ThrowIfNull(proxy);
@@ -84,6 +123,26 @@ internal static class PartyDetailProjectionActorExtensions
 
         return await proxy.GetDetailAsync().ConfigureAwait(false);
     }
+
+    private static async Task<bool> IsRebuildingAsync(IPartyDetailProjectionActor proxy)
+    {
+        try
+        {
+            Task<bool>? task = proxy.IsRebuildingAsync();
+            return task is not null && await task.ConfigureAwait(false);
+        }
+        catch (NotImplementedException)
+        {
+            return false;
+        }
+    }
+
+    private static ProjectionFreshnessMetadata Freshness(ProjectionFreshnessStatus status, string? warningCode)
+        => new()
+        {
+            Status = status,
+            WarningCodes = string.IsNullOrWhiteSpace(warningCode) ? [] : [warningCode],
+        };
 
     private static bool IsEmptyJsonString(string json)
     {

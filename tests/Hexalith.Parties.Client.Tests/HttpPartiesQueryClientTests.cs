@@ -58,6 +58,36 @@ public sealed class HttpPartiesQueryClientTests
     }
 
     [Fact]
+    public async Task GetPartyAsync_DeserializesProjectionFreshnessMetadataFromEventStorePayloadAsync()
+    {
+        var expectedDetail = new PartyDetail
+        {
+            Id = "p-stale",
+            Type = PartyType.Person,
+            IsActive = true,
+            DisplayName = "Stale Person",
+            SortName = "Person, Stale",
+            CreatedAt = DateTimeOffset.UtcNow,
+            LastModifiedAt = DateTimeOffset.UtcNow,
+            Freshness = new ProjectionFreshnessMetadata
+            {
+                Status = ProjectionFreshnessStatus.Stale,
+                WarningCodes = ["projection-state-store-unavailable"],
+            },
+        };
+
+        (HttpPartiesQueryClient client, _) = CreateClient(
+            HttpStatusCode.OK,
+            QueryResponse(expectedDetail));
+
+        PartyDetail result = await client.GetPartyAsync("p-stale", CancellationToken.None);
+
+        result.Freshness.ShouldNotBeNull();
+        result.Freshness.Status.ShouldBe(ProjectionFreshnessStatus.Stale);
+        result.Freshness.WarningCodes.ShouldBe(["projection-state-store-unavailable"]);
+    }
+
+    [Fact]
     public async Task ListPartiesAsync_SubmitsEventStoreQueryWithTypedPayloadAsync()
     {
         var expectedResult = new PagedResult<PartyIndexEntry>
@@ -111,6 +141,67 @@ public sealed class HttpPartiesQueryClientTests
         payload.GetProperty("active").GetBoolean().ShouldBeTrue();
         payload.GetProperty("createdAfter").GetString().ShouldBe("2026-03-01T10:11:12.0000000+00:00");
         payload.GetProperty("modifiedBefore").GetString().ShouldBe("2026-03-06T08:09:10.0000000+01:00");
+    }
+
+    [Fact]
+    public async Task ListPartiesAsync_DeserializesProjectionFreshnessMetadataFromEventStorePayloadAsync()
+    {
+        var expectedResult = new PagedResult<PartyIndexEntry>
+        {
+            Items = [],
+            Page = 1,
+            PageSize = 20,
+            TotalCount = 0,
+            TotalPages = 1,
+            Freshness = new ProjectionFreshnessMetadata
+            {
+                Status = ProjectionFreshnessStatus.Stale,
+                WarningCodes = ["projection-state-store-unavailable"],
+            },
+        };
+
+        (HttpPartiesQueryClient client, _) = CreateClient(
+            HttpStatusCode.OK,
+            QueryResponse(expectedResult));
+
+        PagedResult<PartyIndexEntry> result = await client.ListPartiesAsync(
+            1,
+            20,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            CancellationToken.None);
+
+        result.Freshness.ShouldNotBeNull();
+        result.Freshness.Status.ShouldBe(ProjectionFreshnessStatus.Stale);
+        result.Freshness.WarningCodes.ShouldBe(["projection-state-store-unavailable"]);
+    }
+
+    [Fact]
+    public async Task SearchPartiesAsync_DeserializesCurrentFreshnessWithoutWarningsAsync()
+    {
+        var expectedResult = new PagedResult<PartySearchResult>
+        {
+            Items = [],
+            Page = 1,
+            PageSize = 20,
+            TotalCount = 0,
+            TotalPages = 1,
+            Freshness = new ProjectionFreshnessMetadata { Status = ProjectionFreshnessStatus.Current },
+        };
+
+        (HttpPartiesQueryClient client, _) = CreateClient(
+            HttpStatusCode.OK,
+            QueryResponse(expectedResult));
+
+        PagedResult<PartySearchResult> result = await client.SearchPartiesAsync("none", 1, 20, CancellationToken.None);
+
+        result.Freshness.ShouldNotBeNull();
+        result.Freshness.Status.ShouldBe(ProjectionFreshnessStatus.Current);
+        result.Freshness.WarningCodes.ShouldBeEmpty();
     }
 
     [Fact]
