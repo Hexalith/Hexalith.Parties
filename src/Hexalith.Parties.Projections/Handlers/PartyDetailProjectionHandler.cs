@@ -313,6 +313,7 @@ public sealed class PartyDetailProjectionHandler
             LawfulBasis = e.LawfulBasis,
             GrantedAt = e.GrantedAt,
             GrantedBy = e.GrantedBy,
+            Source = e.Source,
         };
         return state with
         {
@@ -334,6 +335,8 @@ public sealed class PartyDetailProjectionHandler
         {
             RevokedAt = e.RevokedAt,
             RevokedBy = e.RevokedBy,
+            RevocationReason = e.Reason,
+            RevocationSource = e.Source,
         };
 
         return state with

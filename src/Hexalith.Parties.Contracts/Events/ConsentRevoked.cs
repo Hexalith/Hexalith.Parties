@@ -13,4 +13,8 @@ public sealed record ConsentRevoked : IEventPayload
     public required DateTimeOffset RevokedAt { get; init; }
 
     public required string RevokedBy { get; init; }
+
+    public string? Reason { get; init; }
+
+    public string Source { get; init; } = "unspecified";
 }

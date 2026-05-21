@@ -1141,6 +1141,7 @@ public sealed class PartyAggregate : EventStoreAggregate<PartyState> {
             LawfulBasis = command.LawfulBasis,
             GrantedAt = DateTimeOffset.UtcNow,
             GrantedBy = NormalizeActorUserId(command.ActorUserId),
+            Source = NormalizeMetadata(command.Source),
         }]);
     }
 
@@ -1187,6 +1188,8 @@ public sealed class PartyAggregate : EventStoreAggregate<PartyState> {
             ConsentId = command.ConsentId,
             RevokedAt = DateTimeOffset.UtcNow,
             RevokedBy = NormalizeActorUserId(command.ActorUserId),
+            Reason = NormalizeOptionalMetadata(command.Reason),
+            Source = NormalizeMetadata(command.Source),
         }]);
     }
 
@@ -1293,6 +1296,12 @@ public sealed class PartyAggregate : EventStoreAggregate<PartyState> {
 
     private static string NormalizeActorUserId(string? actorUserId)
         => string.IsNullOrWhiteSpace(actorUserId) ? "unknown" : actorUserId.Trim();
+
+    private static string NormalizeMetadata(string? value)
+        => string.IsNullOrWhiteSpace(value) ? "unspecified" : value.Trim();
+
+    private static string? NormalizeOptionalMetadata(string? value)
+        => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 
     private static DomainResult SuccessWithUpdatedPartyDetail(
         string partyId,

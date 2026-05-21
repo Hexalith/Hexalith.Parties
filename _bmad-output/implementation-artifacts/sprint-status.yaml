@@ -36,7 +36,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-05-15 09:01:58 +02:00
-last_updated: 2026-05-21 22:10:00 +02:00
+last_updated: 2026-05-21 22:25:00 +02:00
 project: Hexalith.Parties
 project_key: NOKEY
 tracking_system: file-system
@@ -120,7 +120,7 @@ development_status:
   6-2-trigger-right-to-erasure-by-crypto-shredding: done
   6-3-verify-erasure-across-internal-stores: done
   6-4-publish-partyerased-subscriber-notification: done
-  6-5-manage-per-channel-per-purpose-consent: backlog
+  6-5-manage-per-channel-per-purpose-consent: done
   6-6-restrict-and-resume-party-processing: backlog
   6-7-export-party-data-portability-package: backlog
   6-8-record-processing-activities: backlog
