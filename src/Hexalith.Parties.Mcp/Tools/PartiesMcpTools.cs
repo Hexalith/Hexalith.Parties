@@ -37,13 +37,17 @@ internal sealed class PartiesMcpTools(
             }).ConfigureAwait(false);
 
     [McpServerTool(Name = PartiesMcpToolNames.FindParties, Title = "Find Parties", ReadOnly = true)]
-    [Description("Finds parties using forgiving search, paging, type, and active filters through the Parties EventStore client boundary.")]
+    [Description("Finds parties by MVP display-name search or lists parties with paging, type, active, created-date, and modified-date filters through the Parties EventStore client boundary. Email, identifier, semantic, graph, and temporal search are not evaluated in MVP.")]
     public async Task<PartiesMcpToolResult> FindParties(
-        [Description("Search text. Empty or omitted text lists parties.")] string? query = null,
+        [Description("Display-name search text. Empty or omitted text lists parties. Email, identifier, semantic, graph, and temporal search are not available in MVP.")] string? query = null,
         [Description("One-based page number.")] int page = 1,
         [Description("Requested page size.")] int pageSize = 20,
         [Description("Optional party type filter, such as Person or Organization.")] string? type = null,
         [Description("Optional active-state filter.")] bool? active = null,
+        [Description("Optional inclusive lower created-date filter for list mode, as ISO 8601 date or date-time.")] string? createdAfter = null,
+        [Description("Optional inclusive upper created-date filter for list mode, as ISO 8601 date or date-time.")] string? createdBefore = null,
+        [Description("Optional inclusive lower modified-date filter for list mode, as ISO 8601 date or date-time.")] string? modifiedAfter = null,
+        [Description("Optional inclusive upper modified-date filter for list mode, as ISO 8601 date or date-time.")] string? modifiedBefore = null,
         CancellationToken cancellationToken = default)
         => await ExecuteAsync(
             PartiesMcpToolNames.FindParties,
@@ -79,8 +83,37 @@ internal sealed class PartiesMcpTools(
                     return ValidationFailed(PartiesMcpToolNames.FindParties, "party type");
                 }
 
+                if (!TryParseOptionalDate(createdAfter, out DateTimeOffset? createdAfterValue))
+                {
+                    return ValidationFailed(PartiesMcpToolNames.FindParties, "createdAfter");
+                }
+
+                if (!TryParseOptionalDate(createdBefore, out DateTimeOffset? createdBeforeValue))
+                {
+                    return ValidationFailed(PartiesMcpToolNames.FindParties, "createdBefore");
+                }
+
+                if (!TryParseOptionalDate(modifiedAfter, out DateTimeOffset? modifiedAfterValue))
+                {
+                    return ValidationFailed(PartiesMcpToolNames.FindParties, "modifiedAfter");
+                }
+
+                if (!TryParseOptionalDate(modifiedBefore, out DateTimeOffset? modifiedBeforeValue))
+                {
+                    return ValidationFailed(PartiesMcpToolNames.FindParties, "modifiedBefore");
+                }
+
                 PagedResult<PartyIndexEntry> listResult = await queryClient
-                    .ListPartiesAsync(page, pageSize, partyType, active, null, null, null, null, cancellationToken)
+                    .ListPartiesAsync(
+                        page,
+                        pageSize,
+                        partyType,
+                        active,
+                        createdAfterValue,
+                        createdBeforeValue,
+                        modifiedAfterValue,
+                        modifiedBeforeValue,
+                        cancellationToken)
                     .ConfigureAwait(false);
                 return PartiesMcpToolResult.Succeeded(PartiesMcpToolNames.FindParties, listResult);
             }).ConfigureAwait(false);
@@ -768,6 +801,36 @@ internal sealed class PartiesMcpTools(
             out DateTimeOffset parsed)
             ? parsed
             : throw new FormatException("Date of birth must be a valid ISO 8601 date or date-time.");
+    }
+
+    private static bool TryParseOptionalDate(string? value, out DateTimeOffset? result)
+    {
+        result = null;
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return true;
+        }
+
+        string[] supportedFormats =
+        [
+            "yyyy-MM-dd",
+            "yyyy-MM-ddTHH:mm:ssK",
+            "yyyy-MM-ddTHH:mm:ss.FFFFFFFK",
+            "O",
+        ];
+
+        if (DateTimeOffset.TryParseExact(
+            value.Trim(),
+            supportedFormats,
+            CultureInfo.InvariantCulture,
+            DateTimeStyles.AllowWhiteSpaces | DateTimeStyles.AssumeUniversal,
+            out DateTimeOffset parsed))
+        {
+            result = parsed;
+            return true;
+        }
+
+        return false;
     }
 
     private static string NewId()

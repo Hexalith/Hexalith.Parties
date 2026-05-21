@@ -339,11 +339,51 @@ public sealed class PartiesMcpToolDispatchTests
             .Returns(new PagedResult<PartyIndexEntry> { Items = [], Page = 1, PageSize = 20 });
         var tools = new PartiesMcpTools(Substitute.For<IPartiesCommandClient>(), queryClient, AuthenticatedContext());
 
-        (await tools.FindParties("ada", 2, 10, null, null, CancellationToken.None)).Status.ShouldBe("succeeded");
-        (await tools.FindParties(null, 1, 20, "organization", true, CancellationToken.None)).Status.ShouldBe("succeeded");
+        (await tools.FindParties("ada", 2, 10, null, null, cancellationToken: CancellationToken.None)).Status.ShouldBe("succeeded");
+        (await tools.FindParties(null, 1, 20, "organization", true, cancellationToken: CancellationToken.None)).Status.ShouldBe("succeeded");
 
         await queryClient.Received(1).SearchPartiesAsync("ada", 2, 10, Arg.Any<CancellationToken>());
         await queryClient.Received(1).ListPartiesAsync(1, 20, PartyType.Organization, true, null, null, null, null, Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task FindPartiesListModeParsesCreatedAndModifiedDateFilters()
+    {
+        IPartiesQueryClient queryClient = Substitute.For<IPartiesQueryClient>();
+        DateTimeOffset createdAfter = DateTimeOffset.Parse("2026-01-01T00:00:00Z");
+        DateTimeOffset createdBefore = DateTimeOffset.Parse("2026-01-31T23:59:59Z");
+        DateTimeOffset modifiedAfter = DateTimeOffset.Parse("2026-02-01T00:00:00Z");
+        DateTimeOffset modifiedBefore = DateTimeOffset.Parse("2026-02-28T23:59:59Z");
+        queryClient.ListPartiesAsync(1, 25, null, null, createdAfter, createdBefore, modifiedAfter, modifiedBefore, Arg.Any<CancellationToken>())
+            .Returns(new PagedResult<PartyIndexEntry> { Items = [], Page = 1, PageSize = 25 });
+        var tools = new PartiesMcpTools(Substitute.For<IPartiesCommandClient>(), queryClient, AuthenticatedContext());
+
+        PartiesMcpToolResult result = await tools.FindParties(
+            pageSize: 25,
+            createdAfter: "2026-01-01T00:00:00Z",
+            createdBefore: "2026-01-31T23:59:59Z",
+            modifiedAfter: "2026-02-01T00:00:00Z",
+            modifiedBefore: "2026-02-28T23:59:59Z",
+            cancellationToken: CancellationToken.None);
+
+        result.Status.ShouldBe("succeeded");
+        await queryClient.Received(1).ListPartiesAsync(1, 25, null, null, createdAfter, createdBefore, modifiedAfter, modifiedBefore, Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task FindPartiesInvalidDateFilterReturnsBoundedValidationError()
+    {
+        var tools = new PartiesMcpTools(Substitute.For<IPartiesCommandClient>(), Substitute.For<IPartiesQueryClient>(), AuthenticatedContext());
+
+        PartiesMcpToolResult result = await tools.FindParties(
+            createdAfter: "not-a-date",
+            cancellationToken: CancellationToken.None);
+
+        result.Status.ShouldBe("failed");
+        result.Category.ShouldBe("validation_failed");
+        result.Code.ShouldBe("parties-mcp-validation-failed");
+        result.Message.ShouldContain("createdAfter");
+        result.Message.ShouldNotContain("not-a-date");
     }
 
     [Fact]

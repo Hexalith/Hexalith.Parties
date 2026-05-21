@@ -79,6 +79,10 @@ public sealed class PartiesMcpToolContractTests
             "pageSize",
             "type",
             "active",
+            "createdAfter",
+            "createdBefore",
+            "modifiedAfter",
+            "modifiedBefore",
             "cancellationToken",
         ]);
         parameterNames.ShouldNotContain(name => name.Contains("semantic", StringComparison.OrdinalIgnoreCase));
@@ -87,6 +91,13 @@ public sealed class PartiesMcpToolContractTests
         parameterNames.ShouldNotContain(name => name.Contains("temporal", StringComparison.OrdinalIgnoreCase));
         parameterNames.ShouldNotContain(name => name.Contains("asOf", StringComparison.OrdinalIgnoreCase));
         parameterNames.ShouldNotContain(name => name.Contains("case", StringComparison.OrdinalIgnoreCase));
+
+        string description = findParties.GetCustomAttribute<DescriptionAttribute>()!.Description;
+        description.ShouldContain("display-name");
+        description.ShouldContain("Email");
+        description.ShouldContain("identifier");
+        description.ShouldContain("semantic");
+        description.ShouldContain("not evaluated in MVP");
     }
 
     [Fact]
