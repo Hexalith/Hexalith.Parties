@@ -714,6 +714,11 @@ public sealed class PartiesMcpToolDispatchTests
         result.Status.ShouldBe("succeeded");
         result.Category.ShouldBe("success");
         result.Code.ShouldBe("parties-mcp-delete-idempotent");
+        JsonElement data = result.Data.ShouldBeOfType<JsonElement>();
+        data.GetProperty("isActive").GetBoolean().ShouldBeFalse();
+        data.GetProperty("idempotent").GetBoolean().ShouldBeTrue();
+        data.GetProperty("operation").GetString().ShouldBe("soft-deactivation");
+        data.GetProperty("gdprErasurePerformed").GetBoolean().ShouldBeFalse();
         await commandClient.DidNotReceiveWithAnyArgs().DeactivatePartyWithResultAsync(default!, default);
     }
 
@@ -749,8 +754,91 @@ public sealed class PartiesMcpToolDispatchTests
         result.Status.ShouldBe("succeeded");
         result.CorrelationId.ShouldBe("corr-delete");
         JsonElement data = result.Data.ShouldBeOfType<JsonElement>();
-        data.GetProperty("id").GetString().ShouldBe("party-1");
-        data.GetProperty("isActive").GetBoolean().ShouldBeFalse();
+        data.GetProperty("operation").GetString().ShouldBe("soft-deactivation");
+        data.GetProperty("gdprErasurePerformed").GetBoolean().ShouldBeFalse();
+        JsonElement partyDetail = data.GetProperty("partyDetail");
+        partyDetail.GetProperty("id").GetString().ShouldBe("party-1");
+        partyDetail.GetProperty("isActive").GetBoolean().ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task DeletePartyReturnsSoftDeactivationConfirmationWhenGatewayPayloadIsUnavailable()
+    {
+        IPartiesQueryClient queryClient = Substitute.For<IPartiesQueryClient>();
+        IPartiesCommandClient commandClient = Substitute.For<IPartiesCommandClient>();
+        queryClient.GetPartyAsync("party-1", Arg.Any<CancellationToken>())
+            .Returns(new PartyDetail
+            {
+                Id = "party-1",
+                Type = PartyType.Person,
+                IsActive = true,
+                DisplayName = "Active Person",
+                SortName = "Person Active",
+            });
+        commandClient.DeactivatePartyWithResultAsync("party-1", Arg.Any<CancellationToken>())
+            .Returns(new PartiesCommandResult<PartyDetail>("corr-delete", null));
+        var tools = new PartiesMcpTools(commandClient, queryClient, AuthenticatedContext());
+
+        PartiesMcpToolResult result = await tools.DeleteParty("party-1", CancellationToken.None);
+
+        result.Status.ShouldBe("accepted");
+        result.CorrelationId.ShouldBe("corr-delete");
+        JsonElement data = result.Data.ShouldBeOfType<JsonElement>();
+        data.GetProperty("partyId").GetString().ShouldBe("party-1");
+        data.GetProperty("requestedState").GetString().ShouldBe("inactive");
+        data.GetProperty("operation").GetString().ShouldBe("soft-deactivation");
+        data.GetProperty("gdprErasurePerformed").GetBoolean().ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task DeletePartyRejectsMissingOrMalformedPartyIdBeforeQuerying()
+    {
+        IPartiesQueryClient queryClient = Substitute.For<IPartiesQueryClient>();
+        var tools = new PartiesMcpTools(Substitute.For<IPartiesCommandClient>(), queryClient, AuthenticatedContext());
+
+        PartiesMcpToolResult result = await tools.DeleteParty("party/unsafe", CancellationToken.None);
+
+        result.Status.ShouldBe("failed");
+        result.Category.ShouldBe("validation_failed");
+        result.Message.ShouldContain("partyId");
+        await queryClient.DidNotReceiveWithAnyArgs().GetPartyAsync(default!, default);
+    }
+
+    [Fact]
+    public async Task DeletePartyFailsClosedWhenContextIsMissingBeforeQuerying()
+    {
+        IPartiesQueryClient queryClient = Substitute.For<IPartiesQueryClient>();
+        var tools = new PartiesMcpTools(Substitute.For<IPartiesCommandClient>(), queryClient, new StubContextAccessor(null));
+
+        PartiesMcpToolResult result = await tools.DeleteParty("party-1", CancellationToken.None);
+
+        result.Status.ShouldBe("failed");
+        result.Category.ShouldBe("missing_context");
+        await queryClient.DidNotReceiveWithAnyArgs().GetPartyAsync(default!, default);
+    }
+
+    [Fact]
+    public async Task DeletePartyMapsNotFoundWithoutLeakingCrossTenantDetails()
+    {
+        IPartiesQueryClient queryClient = Substitute.For<IPartiesQueryClient>();
+        queryClient.GetPartyAsync("party-1", Arg.Any<CancellationToken>())
+            .ThrowsAsync(new PartiesClientException(
+                404,
+                "Not Found",
+                "https://errors.example/not-found",
+                "Tenant tenant-a cannot see party Jane Secret",
+                "corr-404"));
+        var tools = new PartiesMcpTools(Substitute.For<IPartiesCommandClient>(), queryClient, AuthenticatedContext());
+
+        PartiesMcpToolResult result = await tools.DeleteParty("party-1", CancellationToken.None);
+
+        result.Status.ShouldBe("failed");
+        result.Category.ShouldBe("not_found");
+        result.Code.ShouldBe("parties-mcp-not-found");
+        result.CorrelationId.ShouldBe("corr-404");
+        result.Data.ShouldBeNull();
+        result.Message.ShouldNotContain("tenant-a", Case.Insensitive);
+        result.Message.ShouldNotContain("Jane Secret", Case.Insensitive);
     }
 
     [Fact]

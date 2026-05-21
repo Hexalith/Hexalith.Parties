@@ -374,7 +374,7 @@ internal sealed class PartiesMcpTools(
             }).ConfigureAwait(false);
 
     [McpServerTool(Name = PartiesMcpToolNames.DeleteParty, Title = "Delete Party", Destructive = true, Idempotent = true)]
-    [Description("Soft deactivates a Parties record while preserving idempotent already-inactive behavior when the client contract can observe it.")]
+    [Description("Soft deactivates a Parties record for MVP delete intent. This tool does not perform GDPR erasure.")]
     public async Task<PartiesMcpToolResult> DeleteParty(
         [Description("The party identifier to deactivate.")] string partyId,
         CancellationToken cancellationToken = default)
@@ -393,12 +393,19 @@ internal sealed class PartiesMcpTools(
                 {
                     return PartiesMcpToolResult.Succeeded(
                         PartiesMcpToolNames.DeleteParty,
-                        new { partyId, idempotent = true },
+                        new
+                        {
+                            partyId,
+                            isActive = false,
+                            idempotent = true,
+                            operation = "soft-deactivation",
+                            gdprErasurePerformed = false,
+                        },
                         "parties-mcp-delete-idempotent");
                 }
 
                 PartiesCommandResult<PartyDetail> result = await commandClient.DeactivatePartyWithResultAsync(partyId, cancellationToken).ConfigureAwait(false);
-                return ToMutationToolResult(PartiesMcpToolNames.DeleteParty, result);
+                return ToDeleteToolResult(partyId, result);
             }).ConfigureAwait(false);
 
     private static async Task<PartiesMcpToolResult> ExecuteAsync(
@@ -453,6 +460,30 @@ internal sealed class PartiesMcpTools(
         => result.Payload is null
             ? PartiesMcpToolResult.Accepted(toolName, result.CorrelationId)
             : PartiesMcpToolResult.Succeeded(toolName, result.Payload, correlationId: result.CorrelationId);
+
+    private static PartiesMcpToolResult ToDeleteToolResult(
+        string partyId,
+        PartiesCommandResult<PartyDetail> result)
+        => result.Payload is null
+            ? PartiesMcpToolResult.Accepted(
+                PartiesMcpToolNames.DeleteParty,
+                result.CorrelationId,
+                new
+                {
+                    partyId,
+                    requestedState = "inactive",
+                    operation = "soft-deactivation",
+                    gdprErasurePerformed = false,
+                })
+            : PartiesMcpToolResult.Succeeded(
+                PartiesMcpToolNames.DeleteParty,
+                new
+                {
+                    operation = "soft-deactivation",
+                    gdprErasurePerformed = false,
+                    partyDetail = result.Payload,
+                },
+                correlationId: result.CorrelationId);
 
     private static PartiesMcpToolResult ToMutationToolResult(
         string toolName,
