@@ -5,4 +5,8 @@ public sealed record LiftRestriction
     public required string PartyId { get; init; }
 
     public required string TenantId { get; init; }
+
+    public string? ActorUserId { get; init; }
+
+    public string? CorrelationId { get; init; }
 }

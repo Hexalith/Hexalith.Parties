@@ -7,4 +7,8 @@ public sealed record RestrictProcessing
     public required string TenantId { get; init; }
 
     public string? Reason { get; init; }
+
+    public string? ActorUserId { get; init; }
+
+    public string? CorrelationId { get; init; }
 }

@@ -142,8 +142,8 @@ public sealed class PartyDomainEventPublicationContractTests
             (typeof(ErasePartyRequested), ["PartyId", "TenantId", "RequestedAt", "RequestedBy"]),
             (typeof(ConsentRecorded), ["PartyId", "TenantId", "ConsentId", "ChannelId", "Purpose", "LawfulBasis", "GrantedAt", "GrantedBy", "Source"]),
             (typeof(ConsentRevoked), ["PartyId", "TenantId", "ConsentId", "RevokedAt", "RevokedBy", "Reason", "Source"]),
-            (typeof(ProcessingRestricted), ["PartyId", "TenantId", "RestrictedAt"]),
-            (typeof(RestrictionLifted), ["PartyId", "TenantId", "LiftedAt"]),
+            (typeof(ProcessingRestricted), ["PartyId", "TenantId", "RestrictedAt", "RestrictedBy", "CorrelationId"]),
+            (typeof(RestrictionLifted), ["PartyId", "TenantId", "LiftedAt", "LiftedBy", "CorrelationId"]),
         ];
 
         foreach ((Type eventType, string[] requiredProperties) in futureContracts)

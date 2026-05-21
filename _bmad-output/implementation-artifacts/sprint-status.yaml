@@ -121,7 +121,7 @@ development_status:
   6-3-verify-erasure-across-internal-stores: done
   6-4-publish-partyerased-subscriber-notification: done
   6-5-manage-per-channel-per-purpose-consent: done
-  6-6-restrict-and-resume-party-processing: backlog
+  6-6-restrict-and-resume-party-processing: done
   6-7-export-party-data-portability-package: backlog
   6-8-record-processing-activities: backlog
   6-9-return-privacy-preserving-erased-party-status: backlog

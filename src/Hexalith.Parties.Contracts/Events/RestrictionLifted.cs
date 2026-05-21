@@ -9,4 +9,8 @@ public sealed record RestrictionLifted : IEventPayload
     public required string TenantId { get; init; }
 
     public required DateTimeOffset LiftedAt { get; init; }
+
+    public string LiftedBy { get; init; } = "unknown";
+
+    public string CorrelationId { get; init; } = "unspecified";
 }

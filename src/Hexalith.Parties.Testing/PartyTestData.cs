@@ -314,11 +314,15 @@ public static class PartyTestData {
         PartyId = DefaultPartyId,
         TenantId = DefaultTenantId,
         Reason = "Investigation pending",
+        ActorUserId = "test-admin",
+        CorrelationId = "corr-restrict-1",
     };
 
     public static LiftRestriction ValidLiftRestriction() => new() {
         PartyId = DefaultPartyId,
         TenantId = DefaultTenantId,
+        ActorUserId = "test-admin",
+        CorrelationId = "corr-lift-1",
     };
 
     public static PartyState CreateStateWithConsent() {

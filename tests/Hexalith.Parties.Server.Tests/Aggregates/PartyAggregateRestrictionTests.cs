@@ -29,6 +29,8 @@ public class PartyAggregateRestrictionTests {
         ProcessingRestricted restricted = result.Events[0].ShouldBeOfType<ProcessingRestricted>();
         restricted.PartyId.ShouldBe(PartyTestData.DefaultPartyId);
         restricted.Reason.ShouldBe("Investigation pending");
+        restricted.RestrictedBy.ShouldBe("test-admin");
+        restricted.CorrelationId.ShouldBe("corr-restrict-1");
     }
 
     // === Task 7.9 ===
@@ -60,6 +62,8 @@ public class PartyAggregateRestrictionTests {
         result.Events.Count.ShouldBe(1);
         RestrictionLifted lifted = result.Events[0].ShouldBeOfType<RestrictionLifted>();
         lifted.PartyId.ShouldBe(PartyTestData.DefaultPartyId);
+        lifted.LiftedBy.ShouldBe("test-admin");
+        lifted.CorrelationId.ShouldBe("corr-lift-1");
     }
 
     // === Task 7.11 ===
@@ -366,5 +370,45 @@ public class PartyAggregateRestrictionTests {
         // Assert
         result.IsRejection.ShouldBeTrue();
         result.Events[0].ShouldBeOfType<PartyErasureInProgress>();
+    }
+
+    [Fact]
+    public void Handle_RestrictProcessing_TrimsBoundedReasonAndDefaultsMissingMetadata() {
+        // Arrange
+        RestrictProcessing command = PartyTestData.ValidRestrictProcessing() with {
+            Reason = "  Legal hold  ",
+            ActorUserId = "  ",
+            CorrelationId = null,
+        };
+        PartyState state = PartyTestData.CreatePersonState();
+
+        // Act
+        DomainResult result = PartyAggregate.Handle(command, state);
+
+        // Assert
+        result.IsSuccess.ShouldBeTrue();
+        ProcessingRestricted restricted = result.Events[0].ShouldBeOfType<ProcessingRestricted>();
+        restricted.Reason.ShouldBe("Legal hold");
+        restricted.RestrictedBy.ShouldBe("unknown");
+        restricted.CorrelationId.ShouldBe("unspecified");
+    }
+
+    [Fact]
+    public void Handle_LiftRestriction_DefaultsMissingMetadata() {
+        // Arrange
+        LiftRestriction command = PartyTestData.ValidLiftRestriction() with {
+            ActorUserId = null,
+            CorrelationId = "  ",
+        };
+        PartyState state = PartyTestData.CreateRestrictedState();
+
+        // Act
+        DomainResult result = PartyAggregate.Handle(command, state);
+
+        // Assert
+        result.IsSuccess.ShouldBeTrue();
+        RestrictionLifted lifted = result.Events[0].ShouldBeOfType<RestrictionLifted>();
+        lifted.LiftedBy.ShouldBe("unknown");
+        lifted.CorrelationId.ShouldBe("unspecified");
     }
 }

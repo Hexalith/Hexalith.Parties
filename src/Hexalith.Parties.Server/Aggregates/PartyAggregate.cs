@@ -1214,7 +1214,9 @@ public sealed class PartyAggregate : EventStoreAggregate<PartyState> {
             PartyId = command.PartyId,
             TenantId = command.TenantId,
             RestrictedAt = DateTimeOffset.UtcNow,
-            Reason = command.Reason,
+            Reason = NormalizeOptionalMetadata(command.Reason),
+            RestrictedBy = NormalizeActorUserId(command.ActorUserId),
+            CorrelationId = NormalizeMetadata(command.CorrelationId),
         }]);
     }
 
@@ -1238,6 +1240,8 @@ public sealed class PartyAggregate : EventStoreAggregate<PartyState> {
             PartyId = command.PartyId,
             TenantId = command.TenantId,
             LiftedAt = DateTimeOffset.UtcNow,
+            LiftedBy = NormalizeActorUserId(command.ActorUserId),
+            CorrelationId = NormalizeMetadata(command.CorrelationId),
         }]);
     }
 
