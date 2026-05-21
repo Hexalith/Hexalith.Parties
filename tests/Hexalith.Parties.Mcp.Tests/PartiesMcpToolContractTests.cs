@@ -12,7 +12,7 @@ namespace Hexalith.Parties.Mcp.Tests;
 public sealed class PartiesMcpToolContractTests
 {
     [Fact]
-    public void ToolNamesPreserveCanonicalMcpSurfaceAndTemporalCompatibilityDecision()
+    public void ToolNamesPreserveCanonicalMcpSurface()
     {
         string[] toolNames = GetToolAttributes()
             .Select(attribute => attribute.Name!)
@@ -24,9 +24,10 @@ public sealed class PartiesMcpToolContractTests
             "delete_party",
             "find_parties",
             "get_party",
-            "get_party_name_at",
             "update_party",
         ]);
+
+        toolNames.ShouldNotContain("get_party_name_at");
     }
 
     [Fact]
@@ -51,7 +52,6 @@ public sealed class PartiesMcpToolContractTests
 
         attributes["get_party"].ReadOnly.ShouldBeTrue();
         attributes["find_parties"].ReadOnly.ShouldBeTrue();
-        attributes["get_party_name_at"].ReadOnly.ShouldBeTrue();
 
         attributes["create_party"].Destructive.ShouldBeTrue();
         attributes["update_party"].Destructive.ShouldBeTrue();
@@ -87,6 +87,33 @@ public sealed class PartiesMcpToolContractTests
         parameterNames.ShouldNotContain(name => name.Contains("temporal", StringComparison.OrdinalIgnoreCase));
         parameterNames.ShouldNotContain(name => name.Contains("asOf", StringComparison.OrdinalIgnoreCase));
         parameterNames.ShouldNotContain(name => name.Contains("case", StringComparison.OrdinalIgnoreCase));
+    }
+
+    [Fact]
+    public void CanonicalToolsDoNotExposeInternalActorAdminProjectionOrInfrastructureNames()
+    {
+        string[] forbiddenTerms =
+        [
+            "actor",
+            "projection",
+            "admin",
+            "infrastructure",
+            "dapr",
+            "eventstore-admin",
+            "get_party_name_at",
+        ];
+
+        foreach (MethodInfo method in GetToolMethods())
+        {
+            McpServerToolAttribute attribute = method.GetCustomAttribute<McpServerToolAttribute>()!;
+            string description = method.GetCustomAttribute<DescriptionAttribute>()?.Description ?? string.Empty;
+            string combined = $"{attribute.Name} {attribute.Title} {description}";
+
+            foreach (string forbiddenTerm in forbiddenTerms)
+            {
+                combined.ShouldNotContain(forbiddenTerm, Case.Insensitive);
+            }
+        }
     }
 
     [Fact]

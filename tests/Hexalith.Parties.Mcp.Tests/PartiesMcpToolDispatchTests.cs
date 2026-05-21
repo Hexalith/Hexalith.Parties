@@ -377,49 +377,6 @@ public sealed class PartiesMcpToolDispatchTests
     }
 
     [Fact]
-    public async Task GetPartyNameAtFailsWhenNameHistoryIsUnavailableOrNotEffective()
-    {
-        IPartiesQueryClient queryClient = Substitute.For<IPartiesQueryClient>();
-        queryClient.GetPartyAsync("party-empty", Arg.Any<CancellationToken>())
-            .Returns(new PartyDetail
-            {
-                Id = "party-empty",
-                Type = PartyType.Person,
-                IsActive = true,
-                DisplayName = "Current Name",
-                SortName = "Name Current",
-            });
-        queryClient.GetPartyAsync("party-future", Arg.Any<CancellationToken>())
-            .Returns(new PartyDetail
-            {
-                Id = "party-future",
-                Type = PartyType.Person,
-                IsActive = true,
-                DisplayName = "Current Name",
-                SortName = "Name Current",
-                NameHistory =
-                [
-                    new NameHistoryEntry
-                    {
-                        DisplayName = "Future Name",
-                        SortName = "Name Future",
-                        ChangedAt = DateTimeOffset.Parse("2026-01-01T00:00:00Z"),
-                        TriggeredBy = "PartyDisplayNameDerived",
-                    },
-                ],
-            });
-        var tools = new PartiesMcpTools(Substitute.For<IPartiesCommandClient>(), queryClient, AuthenticatedContext());
-
-        PartiesMcpToolResult empty = await tools.GetPartyNameAt("party-empty", "2025-01-01T00:00:00Z", CancellationToken.None);
-        PartiesMcpToolResult prehistory = await tools.GetPartyNameAt("party-future", "2025-01-01T00:00:00Z", CancellationToken.None);
-
-        empty.Status.ShouldBe("failed");
-        empty.Code.ShouldBe("parties-mcp-name-history-unavailable");
-        prehistory.Status.ShouldBe("failed");
-        prehistory.Code.ShouldBe("parties-mcp-name-not-effective");
-    }
-
-    [Fact]
     public async Task ClientErrorsMapToStableSanitizedCategories()
     {
         IPartiesQueryClient queryClient = Substitute.For<IPartiesQueryClient>();
