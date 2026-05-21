@@ -1,3 +1,5 @@
+using System.Xml.Linq;
+
 using Shouldly;
 
 namespace Hexalith.Parties.Mcp.Tests;
@@ -12,11 +14,34 @@ public sealed class PartiesMcpProjectFitnessTests
             "src",
             "Hexalith.Parties.Mcp",
             "Hexalith.Parties.Mcp.csproj"));
+        XDocument document = XDocument.Parse(project);
+        string[] projectReferences =
+        [
+            .. document
+                .Descendants("ProjectReference")
+                .Select(reference => reference.Attribute("Include")?.Value)
+                .Where(value => !string.IsNullOrWhiteSpace(value))
+                .Select(value => value!)
+                .OrderBy(value => value),
+        ];
+        string[] packageReferences =
+        [
+            .. document
+                .Descendants("PackageReference")
+                .Select(reference => reference.Attribute("Include")?.Value)
+                .Where(value => !string.IsNullOrWhiteSpace(value))
+                .Select(value => value!)
+                .OrderBy(value => value),
+        ];
 
-        project.ShouldContain("..\\Hexalith.Parties.Contracts\\Hexalith.Parties.Contracts.csproj");
-        project.ShouldContain("..\\Hexalith.Parties.Client\\Hexalith.Parties.Client.csproj");
-        project.ShouldContain("..\\Hexalith.Parties.ServiceDefaults\\Hexalith.Parties.ServiceDefaults.csproj");
-        project.ShouldContain("ModelContextProtocol.AspNetCore");
+        projectReferences.ShouldBe(
+            [
+                "..\\Hexalith.Parties.Client\\Hexalith.Parties.Client.csproj",
+                "..\\Hexalith.Parties.Contracts\\Hexalith.Parties.Contracts.csproj",
+                "..\\Hexalith.Parties.ServiceDefaults\\Hexalith.Parties.ServiceDefaults.csproj",
+            ],
+            ignoreOrder: true);
+        packageReferences.ShouldBe(["ModelContextProtocol.AspNetCore"]);
 
         string[] forbidden =
         [
@@ -96,5 +121,32 @@ public sealed class PartiesMcpProjectFitnessTests
 
         IEnumerable<string> violations = forbidden.Where(combinedSource.Contains);
         violations.ShouldBeEmpty("The MCP host scaffold must not depend on retired Parties REST/MCP internals.");
+    }
+
+    [Fact]
+    public void McpToolSourceDoesNotSurfaceRawErrorsSecretsOrClaimPayloads()
+    {
+        string source = File.ReadAllText(Path.Combine(
+            RepositoryRoot.Locate(),
+            "src",
+            "Hexalith.Parties.Mcp",
+            "Tools",
+            "PartiesMcpTools.cs"));
+
+        string[] forbidden =
+        [
+            "ProblemDetails",
+            "ex.Detail",
+            "ex.Message",
+            "ClaimsPrincipal",
+            "ClaimsIdentity",
+            "FindAll(",
+            "Request.Headers",
+            "Authorization\"",
+            "Bearer",
+        ];
+
+        IEnumerable<string> violations = forbidden.Where(source.Contains);
+        violations.ShouldBeEmpty("MCP tool responses must stay bounded and avoid raw errors, secrets, or claims payloads.");
     }
 }

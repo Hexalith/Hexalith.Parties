@@ -35,6 +35,36 @@ public sealed class PartiesMcpToolDispatchTests
     }
 
     [Fact]
+    public async Task ToolsFailClosedBeforeClientAccessWhenTenantOrUserContextIsMissing()
+    {
+        IPartiesCommandClient commandClient = Substitute.For<IPartiesCommandClient>();
+        IPartiesQueryClient queryClient = Substitute.For<IPartiesQueryClient>();
+        var tools = new PartiesMcpTools(commandClient, queryClient, new StubContextAccessor(null));
+
+        PartiesMcpToolResult find = await tools.FindParties("ada", cancellationToken: CancellationToken.None);
+        PartiesMcpToolResult create = await tools.CreateParty(
+            partyType: "person",
+            familyName: "Lovelace",
+            cancellationToken: CancellationToken.None);
+        PartiesMcpToolResult update = await tools.UpdateParty(
+            partyId: "party-1",
+            addEmail: "ada@example.test",
+            cancellationToken: CancellationToken.None);
+        PartiesMcpToolResult delete = await tools.DeleteParty("party-1", CancellationToken.None);
+
+        find.Category.ShouldBe("missing_context");
+        create.Category.ShouldBe("missing_context");
+        update.Category.ShouldBe("missing_context");
+        delete.Category.ShouldBe("missing_context");
+        await queryClient.DidNotReceiveWithAnyArgs().SearchPartiesAsync(default!, default, default, default);
+        await queryClient.DidNotReceiveWithAnyArgs().ListPartiesAsync(default, default, default, default, default, default, default, default, default);
+        await queryClient.DidNotReceiveWithAnyArgs().GetPartyAsync(default!, default);
+        await commandClient.DidNotReceiveWithAnyArgs().CreatePartyCompositeWithResultAsync(default!, default);
+        await commandClient.DidNotReceiveWithAnyArgs().UpdatePartyCompositeWithResultAsync(default!, default!, default);
+        await commandClient.DidNotReceiveWithAnyArgs().DeactivatePartyWithResultAsync(default!, default);
+    }
+
+    [Fact]
     public async Task GetPartyReturnsCompleteDetailWithInactiveAndFreshnessMetadata()
     {
         IPartiesQueryClient queryClient = Substitute.For<IPartiesQueryClient>();
