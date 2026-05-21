@@ -177,6 +177,18 @@ public static class PartiesServiceCollectionExtensions {
                     Status = ErasureStoreCleanupStatus.Cleaned,
                     Timestamp = DateTimeOffset.UtcNow,
                 }),
+                (tenantId, partyId, cancellationToken) => Task.FromResult(new ErasureVerificationStoreResult
+                {
+                    StoreName = "aggregate-readable-state",
+                    Status = ErasureStoreCleanupStatus.Cleaned,
+                    Timestamp = DateTimeOffset.UtcNow,
+                }),
+                (tenantId, partyId, cancellationToken) => Task.FromResult(new ErasureVerificationStoreResult
+                {
+                    StoreName = "snapshots",
+                    Status = ErasureStoreCleanupStatus.Cleaned,
+                    Timestamp = DateTimeOffset.UtcNow,
+                }),
             ];
 
             if (memorySearch.Enabled)
@@ -215,6 +227,15 @@ public static class PartiesServiceCollectionExtensions {
                         ErrorMessage = result.BlockedReason,
                     };
                 });
+            }
+            else
+            {
+                cleanups.Add((tenantId, partyId, cancellationToken) => Task.FromResult(new ErasureVerificationStoreResult
+                {
+                    StoreName = "memories-search",
+                    Status = ErasureStoreCleanupStatus.NotApplicable,
+                    Timestamp = DateTimeOffset.UtcNow,
+                }));
             }
 
             return cleanups;
