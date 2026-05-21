@@ -44,10 +44,9 @@ Docker Desktop must be running before you start the Aspire host.
 git clone https://github.com/Hexalith/Hexalith.Parties.git
 cd Hexalith.Parties
 
-# Story 9.3 / ADR 9.3-2 — Memories.Server is composed in-cluster by the AppHost. Its build
-# requires nested submodules in Hexalith.Memories (Hexalith.Memories pulls Hexalith.Commons
-# and Hexalith.EventStore as its own submodules). Initialize them once before the first run:
-git -C Hexalith.Memories submodule update --init Hexalith.Commons Hexalith.EventStore
+# Initialize only the root-level sibling submodules required by the AppHost.
+# Do not use --recursive for the default local run.
+git submodule update --init Hexalith.EventStore Hexalith.Tenants Hexalith.Memories
 
 dotnet aspire run --project src/Hexalith.Parties.AppHost
 ```
@@ -63,6 +62,8 @@ Open the Aspire dashboard URL printed by the command and verify these resources 
 The `parties-mcp` resource is the separate MCP host when included by the AppHost. It is not hosted by the `parties` actor host.
 
 EventStore owns public authentication, tenant validation, RBAC, command/query routing, and generic response mapping. Parties owns domain execution and projection behavior behind the actor host. Do not call Parties internals to manage tenant lifecycle, RBAC, authorization, projection actors, or domain invocation.
+
+If startup fails before the dashboard appears, first check that Docker Desktop is running and that the three root-level submodules above exist on disk. A missing `Hexalith.EventStore`, `Hexalith.Tenants`, or `Hexalith.Memories` directory is a setup problem, not a partial local topology that should be treated as ready.
 
 ---
 

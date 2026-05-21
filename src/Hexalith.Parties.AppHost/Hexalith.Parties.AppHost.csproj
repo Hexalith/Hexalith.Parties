@@ -4,7 +4,9 @@
     <OutputType>Exe</OutputType>
     <IsPackable>false</IsPackable>
     <IsPublishable>true</IsPublishable>
+    <HexalithEventStoreBasePath>$(MSBuildThisFileDirectory)..\..\Hexalith.EventStore\src</HexalithEventStoreBasePath>
     <HexalithTenantsBasePath>$(MSBuildThisFileDirectory)..\..\Hexalith.Tenants\src</HexalithTenantsBasePath>
+    <HexalithMemoriesBasePath>$(MSBuildThisFileDirectory)..\..\Hexalith.Memories\src</HexalithMemoriesBasePath>
   </PropertyGroup>
 
   <ItemGroup>
@@ -39,7 +41,9 @@
   </ItemGroup>
 
   <Target Name="ValidateHexalithTenantsBasePath" BeforeTargets="ResolveProjectReferences">
-    <Error Condition="!Exists('$(HexalithTenantsBasePath)')" Text="HexalithTenantsBasePath '$(HexalithTenantsBasePath)' does not exist. Ensure the Hexalith.Tenants submodule is initialized as a sibling of Hexalith.Parties." />
+    <Error Condition="!Exists('$(HexalithEventStoreBasePath)')" Text="HexalithEventStoreBasePath '$(HexalithEventStoreBasePath)' does not exist. Run 'git submodule update --init Hexalith.EventStore Hexalith.Tenants Hexalith.Memories' from the repository root. Do not use recursive submodule initialization for the default local run." />
+    <Error Condition="!Exists('$(HexalithTenantsBasePath)')" Text="HexalithTenantsBasePath '$(HexalithTenantsBasePath)' does not exist. Run 'git submodule update --init Hexalith.EventStore Hexalith.Tenants Hexalith.Memories' from the repository root. Do not use recursive submodule initialization for the default local run." />
+    <Error Condition="!Exists('$(HexalithMemoriesBasePath)')" Text="HexalithMemoriesBasePath '$(HexalithMemoriesBasePath)' does not exist. Run 'git submodule update --init Hexalith.EventStore Hexalith.Tenants Hexalith.Memories' from the repository root. Do not use recursive submodule initialization for the default local run." />
   </Target>
 
 </Project>

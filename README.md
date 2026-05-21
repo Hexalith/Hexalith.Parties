@@ -19,10 +19,13 @@ Hexalith.Parties is a ready-to-deploy party management domain service for people
 ```bash
 git clone https://github.com/Hexalith/Hexalith.Parties.git
 cd Hexalith.Parties
+git submodule update --init Hexalith.EventStore Hexalith.Tenants Hexalith.Memories
 dotnet aspire run --project src/Hexalith.Parties.AppHost
 ```
 
 Open the Aspire dashboard (URL shown in terminal output) and verify these resources are running: `eventstore`, `eventstore-admin`, `eventstore-admin-ui`, `parties`, and `tenants`. The local AppHost also runs `parties-mcp` alongside `parties` as a separate MCP resource — AI assistants connect to that host rather than the `parties` actor host.
+
+The local run path uses root-level submodules only. Do not initialize nested submodules unless a separate story or maintainer asks for that explicitly.
 
 > **Prerequisite - tenant access state.** Provision or use an active Hexalith.Tenants tenant membership before the first Parties call. EventStore owns public authentication, tenant validation, RBAC, command/query routing, and generic response mapping. Parties consumes the authorized command/query behind the actor host and does not manage tenant lifecycle or roles itself.
 

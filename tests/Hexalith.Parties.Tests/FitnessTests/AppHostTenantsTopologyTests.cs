@@ -35,6 +35,9 @@ public sealed class AppHostTenantsTopologyTests
         resources["parties"].ShouldBe("Projects.Hexalith_Parties");
         resources["tenants"].ShouldBe("Projects.Hexalith_Tenants");
         resources["parties-mcp"].ShouldBe("Projects.Hexalith_Parties_Mcp");
+        resources["memories"].ShouldBe("Projects.Hexalith_Memories_Server");
+        program.ShouldContain(@"AddRedis(""redis"")");
+        program.ShouldContain(@"AddKeycloak(""keycloak"", 8180)");
         program.ShouldContain("AddHexalithEventStore");
         program.ShouldNotContain("AddHexalithParties(");
         program.ShouldNotContain("AddHexalithTenants(");
@@ -189,6 +192,36 @@ public sealed class AppHostTenantsTopologyTests
         program.ShouldContain(".WaitFor(eventStoreResources.StateStore)");
         program.ShouldContain(".WaitFor(eventStoreResources.PubSub)");
         program.ShouldNotContain(".WaitForStart(");
+    }
+
+    [Fact]
+    public void AppHostProjectFailsMissingRootLevelSubmodulesWithActionableGuidance()
+    {
+        string project = ReadAppHostProject();
+
+        project.ShouldContain("HexalithEventStoreBasePath");
+        project.ShouldContain("HexalithTenantsBasePath");
+        project.ShouldContain("HexalithMemoriesBasePath");
+        project.ShouldContain("git submodule update --init Hexalith.EventStore Hexalith.Tenants Hexalith.Memories");
+        project.ShouldContain("Do not use recursive submodule initialization for the default local run.");
+        project.ShouldNotContain("git -C Hexalith.Memories submodule update");
+    }
+
+    [Fact]
+    public void LocalRunDocumentationUsesSingleAspireCommandAndRootLevelSubmodulesOnly()
+    {
+        string root = RepositoryRoot.Locate();
+        string readme = File.ReadAllText(Path.Combine(root, "README.md"));
+        string gettingStarted = File.ReadAllText(Path.Combine(root, "docs", "getting-started.md"));
+
+        foreach (string document in new[] { readme, gettingStarted })
+        {
+            document.ShouldContain("dotnet aspire run --project src/Hexalith.Parties.AppHost");
+            document.ShouldContain("git submodule update --init Hexalith.EventStore Hexalith.Tenants Hexalith.Memories");
+            document.ShouldNotContain("git submodule update --init --recursive");
+            document.ShouldNotContain("git submodule update --recursive");
+            document.ShouldNotContain("git -C Hexalith.Memories submodule update");
+        }
     }
 
     private static string StripCSharpComments(string source)
