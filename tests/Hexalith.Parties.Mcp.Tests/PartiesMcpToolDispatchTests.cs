@@ -441,6 +441,47 @@ public sealed class PartiesMcpToolDispatchTests
     }
 
     [Fact]
+    public async Task UpdatePartyMergesPartialOrganizationPatchThroughQueryClient()
+    {
+        IPartiesCommandClient commandClient = Substitute.For<IPartiesCommandClient>();
+        IPartiesQueryClient queryClient = Substitute.For<IPartiesQueryClient>();
+        commandClient.UpdatePartyCompositeWithResultAsync(Arg.Any<string>(), Arg.Any<UpdatePartyComposite>(), Arg.Any<CancellationToken>())
+            .Returns(new PartiesCommandResult<PartyDetail>("corr-update", null));
+        queryClient.GetPartyAsync("party-1", Arg.Any<CancellationToken>())
+            .Returns(new PartyDetail
+            {
+                Id = "party-1",
+                Type = PartyType.Organization,
+                IsActive = true,
+                DisplayName = "Hexalith SAS",
+                SortName = "Hexalith SAS",
+                OrganizationDetails = new OrganizationDetails
+                {
+                    LegalName = "Hexalith SAS",
+                    TradingName = "Hexalith",
+                    LegalForm = "SAS",
+                    RegistrationNumber = "RCS-1",
+                },
+            });
+        var tools = new PartiesMcpTools(commandClient, queryClient, AuthenticatedContext());
+
+        PartiesMcpToolResult result = await tools.UpdateParty(
+            partyId: "party-1",
+            tradingName: "Hexalith Labs",
+            cancellationToken: CancellationToken.None);
+
+        result.Status.ShouldBe("accepted");
+        await commandClient.Received(1).UpdatePartyCompositeWithResultAsync(
+            "party-1",
+            Arg.Is<UpdatePartyComposite>(command =>
+                command.OrganizationDetails!.LegalName == "Hexalith SAS"
+                && command.OrganizationDetails.TradingName == "Hexalith Labs"
+                && command.OrganizationDetails.LegalForm == "SAS"
+                && command.OrganizationDetails.RegistrationNumber == "RCS-1"),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
     public async Task UpdatePartyHandlesLifecycleWithDetailsAndCommaSeparatedRemovals()
     {
         IPartiesCommandClient commandClient = Substitute.For<IPartiesCommandClient>();
@@ -504,6 +545,152 @@ public sealed class PartiesMcpToolDispatchTests
                 && command.AddIdentifiers.Single().Type == IdentifierType.VAT
                 && command.RemoveIdentifierIds.Single() == "identifier-old"),
             Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task UpdatePartyNormalizesIdentifierAliasesToSingleSubOperation()
+    {
+        IPartiesCommandClient commandClient = Substitute.For<IPartiesCommandClient>();
+        commandClient.UpdatePartyCompositeWithResultAsync(Arg.Any<string>(), Arg.Any<UpdatePartyComposite>(), Arg.Any<CancellationToken>())
+            .Returns(new PartiesCommandResult<PartyDetail>("corr-update", null));
+        var tools = new PartiesMcpTools(commandClient, Substitute.For<IPartiesQueryClient>(), AuthenticatedContext());
+
+        PartiesMcpToolResult result = await tools.UpdateParty(
+            partyId: "party-1",
+            addVatNumber: "FR123",
+            addIdentifierType: "VAT",
+            addIdentifierValue: "FR123",
+            cancellationToken: CancellationToken.None);
+
+        result.Status.ShouldBe("accepted");
+        await commandClient.Received(1).UpdatePartyCompositeWithResultAsync(
+            "party-1",
+            Arg.Is<UpdatePartyComposite>(command =>
+                command.AddIdentifiers.Count == 1
+                && command.AddIdentifiers[0].Type == IdentifierType.VAT
+                && command.AddIdentifiers[0].Value == "FR123"),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task UpdatePartyReturnsSucceededWithCompleteUpdatedDetailWhenCommandPayloadIsAvailable()
+    {
+        var updatedDetail = new PartyDetail
+        {
+            Id = "party-1",
+            Type = PartyType.Organization,
+            IsActive = true,
+            DisplayName = "Hexalith Labs",
+            SortName = "Hexalith Labs",
+            OrganizationDetails = new OrganizationDetails
+            {
+                LegalName = "Hexalith SAS",
+                TradingName = "Hexalith Labs",
+            },
+            ContactChannels =
+            [
+                new ContactChannel
+                {
+                    Id = "contact-1",
+                    Type = ContactChannelType.Email,
+                    Value = "contact@hexalith.example",
+                    IsPreferred = true,
+                },
+            ],
+            Identifiers =
+            [
+                new PartyIdentifier
+                {
+                    Id = "identifier-1",
+                    Type = IdentifierType.VAT,
+                    Value = "FR123",
+                },
+            ],
+        };
+        IPartiesCommandClient commandClient = Substitute.For<IPartiesCommandClient>();
+        commandClient.UpdatePartyCompositeWithResultAsync(Arg.Any<string>(), Arg.Any<UpdatePartyComposite>(), Arg.Any<CancellationToken>())
+            .Returns(new PartiesCommandResult<PartyDetail>("corr-update", updatedDetail));
+        var tools = new PartiesMcpTools(commandClient, Substitute.For<IPartiesQueryClient>(), AuthenticatedContext());
+
+        PartiesMcpToolResult result = await tools.UpdateParty(
+            partyId: "party-1",
+            addEmail: "contact@hexalith.example",
+            addVatNumber: "FR123",
+            cancellationToken: CancellationToken.None);
+
+        result.Status.ShouldBe("succeeded");
+        result.CorrelationId.ShouldBe("corr-update");
+        JsonElement data = result.Data.ShouldBeOfType<JsonElement>();
+        data.GetProperty("id").GetString().ShouldBe("party-1");
+        data.GetProperty("displayName").GetString().ShouldBe("Hexalith Labs");
+        data.GetProperty("organizationDetails").GetProperty("tradingName").GetString().ShouldBe("Hexalith Labs");
+        data.GetProperty("contactChannels")[0].GetProperty("value").GetString().ShouldBe("contact@hexalith.example");
+        data.GetProperty("identifiers")[0].GetProperty("value").GetString().ShouldBe("FR123");
+    }
+
+    [Fact]
+    public async Task UpdatePartyRejectsInvalidCompositePatchEvenWhenLifecyclePatchIsPresent()
+    {
+        IPartiesCommandClient commandClient = Substitute.For<IPartiesCommandClient>();
+        var tools = new PartiesMcpTools(commandClient, Substitute.For<IPartiesQueryClient>(), AuthenticatedContext());
+
+        PartiesMcpToolResult result = await tools.UpdateParty(
+            partyId: "party-1",
+            addIdentifierType: "UnknownIdentifierType",
+            addIdentifierValue: "FR123",
+            active: false,
+            cancellationToken: CancellationToken.None);
+
+        result.Status.ShouldBe("failed");
+        result.Category.ShouldBe("validation_failed");
+        result.Message.ShouldContain("update fields");
+        await commandClient.DidNotReceiveWithAnyArgs().UpdatePartyCompositeWithResultAsync(default!, default!, default);
+        await commandClient.DidNotReceiveWithAnyArgs().DeactivatePartyWithResultAsync(default!, default);
+    }
+
+    [Fact]
+    public async Task UpdatePartyRejectsOversizedPayloadBeforeCallingClient()
+    {
+        IPartiesCommandClient commandClient = Substitute.For<IPartiesCommandClient>();
+        var tools = new PartiesMcpTools(commandClient, Substitute.For<IPartiesQueryClient>(), AuthenticatedContext());
+
+        PartiesMcpToolResult result = await tools.UpdateParty(
+            partyId: "party-1",
+            legalName: new string('A', 513),
+            cancellationToken: CancellationToken.None);
+
+        result.Status.ShouldBe("failed");
+        result.Category.ShouldBe("validation_failed");
+        result.Code.ShouldBe("parties-mcp-payload-too-large");
+        result.Message.ShouldNotContain("AAAA", Case.Insensitive);
+        await commandClient.DidNotReceiveWithAnyArgs().UpdatePartyCompositeWithResultAsync(default!, default!, default);
+    }
+
+    [Fact]
+    public async Task UpdatePartyGatewayValidationFailureReturnsSafeFailureWithoutPartialSuccess()
+    {
+        IPartiesCommandClient commandClient = Substitute.For<IPartiesCommandClient>();
+        commandClient.UpdatePartyCompositeWithResultAsync(Arg.Any<string>(), Arg.Any<UpdatePartyComposite>(), Arg.Any<CancellationToken>())
+            .ThrowsAsync(new PartiesClientException(
+                422,
+                "Validation failed",
+                "https://errors.example/validation",
+                "Payload contained conflicting contact change for Jane Secret",
+                "corr-422"));
+        var tools = new PartiesMcpTools(commandClient, Substitute.For<IPartiesQueryClient>(), AuthenticatedContext());
+
+        PartiesMcpToolResult result = await tools.UpdateParty(
+            partyId: "party-1",
+            addEmail: "new@example.test",
+            cancellationToken: CancellationToken.None);
+
+        result.Status.ShouldBe("failed");
+        result.Category.ShouldBe("validation_failed");
+        result.Code.ShouldBe("parties-mcp-validation-failed");
+        result.CorrelationId.ShouldBe("corr-422");
+        result.Data.ShouldBeNull();
+        result.Message.ShouldNotContain("conflicting", Case.Insensitive);
+        result.Message.ShouldNotContain("Jane Secret", Case.Insensitive);
     }
 
     [Fact]

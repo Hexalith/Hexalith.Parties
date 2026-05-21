@@ -17,8 +17,8 @@ internal sealed class PartiesMcpTools(
     IPartiesQueryClient queryClient,
     IPartiesMcpRequestContextAccessor contextAccessor)
 {
-    private const int MaxCreateFieldCharacters = 512;
-    private const int MaxCreateInputCharacters = 4096;
+    private const int MaxToolFieldCharacters = 512;
+    private const int MaxToolInputCharacters = 4096;
 
     [McpServerTool(Name = PartiesMcpToolNames.GetParty, Title = "Get Party", ReadOnly = true)]
     [Description("Gets a party by identifier through the Parties EventStore client boundary.")]
@@ -167,7 +167,7 @@ internal sealed class PartiesMcpTools(
                 string? effectiveIdentifierType = FirstNonEmpty(identifierType, !string.IsNullOrWhiteSpace(vatNumber) ? "VAT" : null);
                 string? effectiveIdentifierValue = FirstNonEmpty(identifierValue, vatNumber);
 
-                if (ExceedsCreatePayloadLimit(
+                if (ExceedsToolPayloadLimit(
                     partyId,
                     partyType,
                     effectiveGivenName,
@@ -277,6 +277,41 @@ internal sealed class PartiesMcpTools(
                 string? effectiveAddIdentifierValue = FirstNonEmpty(addIdentifierValue, addVatNumber);
                 string? effectiveRemoveContactIds = CombineCsv(removeContactChannelId, removeContactChannelIds);
                 string? effectiveRemoveIdentifierIds = CombineCsv(removeIdentifierId, removeIdentifierIds);
+                if (ExceedsToolPayloadLimit(
+                    partyId,
+                    effectiveGivenName,
+                    effectiveFamilyName,
+                    dateOfBirth,
+                    prefix,
+                    suffix,
+                    legalName,
+                    tradingName,
+                    legalForm,
+                    registrationNumber,
+                    addEmail,
+                    addPhone,
+                    updateContactChannelId,
+                    updateContactChannelType,
+                    updateContactChannelValue,
+                    effectiveRemoveContactIds,
+                    addVatNumber,
+                    effectiveAddIdentifierType,
+                    effectiveAddIdentifierValue,
+                    effectiveRemoveIdentifierIds))
+                {
+                    return PartiesMcpToolResult.Failed(
+                        PartiesMcpToolNames.UpdateParty,
+                        "validation_failed",
+                        "parties-mcp-payload-too-large",
+                        "The update_party request exceeds the supported MCP payload size.");
+                }
+
+                bool hasCompositeInput =
+                    HasAny(effectiveGivenName, effectiveFamilyName, dateOfBirth, prefix, suffix, legalName, tradingName, legalForm, registrationNumber)
+                    || HasAny(addEmail, addPhone)
+                    || HasAny(updateContactChannelId, updateContactChannelType, updateContactChannelValue)
+                    || updateContactChannelPreferred.HasValue
+                    || HasAny(effectiveRemoveContactIds, effectiveAddIdentifierType, effectiveAddIdentifierValue, effectiveRemoveIdentifierIds);
                 bool needsCurrentParty = HasAny(effectiveGivenName, effectiveFamilyName, dateOfBirth, prefix, suffix, legalName, tradingName, legalForm, registrationNumber)
                     || HasAny(updateContactChannelId, updateContactChannelType, updateContactChannelValue)
                     || updateContactChannelPreferred.HasValue;
@@ -306,6 +341,11 @@ internal sealed class PartiesMcpTools(
                     effectiveAddIdentifierType,
                     effectiveAddIdentifierValue,
                     effectiveRemoveIdentifierIds);
+                if (command is null && hasCompositeInput)
+                {
+                    return ValidationFailed(PartiesMcpToolNames.UpdateParty, "update fields");
+                }
+
                 if (command is null && !active.HasValue)
                 {
                     return PartiesMcpToolResult.Failed(
@@ -459,19 +499,19 @@ internal sealed class PartiesMcpTools(
             "parties-mcp-validation-failed",
             $"The {field} argument is missing or invalid.");
 
-    private static bool ExceedsCreatePayloadLimit(params string?[] values)
+    private static bool ExceedsToolPayloadLimit(params string?[] values)
     {
         int total = 0;
         foreach (string? value in values.Where(static value => !string.IsNullOrWhiteSpace(value)))
         {
             string trimmed = value!.Trim();
-            if (trimmed.Length > MaxCreateFieldCharacters)
+            if (trimmed.Length > MaxToolFieldCharacters)
             {
                 return true;
             }
 
             total += trimmed.Length;
-            if (total > MaxCreateInputCharacters)
+            if (total > MaxToolInputCharacters)
             {
                 return true;
             }
