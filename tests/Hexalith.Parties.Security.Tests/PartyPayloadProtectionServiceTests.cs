@@ -164,6 +164,33 @@ public sealed class PartyPayloadProtectionServiceTests
         protectedJson.ShouldContain("id1"); // ID remains plaintext
     }
 
+    [Fact]
+    public async Task ProtectEventPayload_PartyDisplayNameDerived_EncryptsDerivedNames()
+    {
+        SetupKey("acme", "p1", 1, MakeKey());
+        PartyDisplayNameDerived payload = new()
+        {
+            DisplayName = "Ada Lovelace",
+            SortName = "Lovelace Ada",
+        };
+
+        byte[] serialized = JsonSerializer.SerializeToUtf8Bytes(payload, s_serializerOptions);
+        PartyPayloadProtectionService service = CreateService();
+
+        PayloadProtectionResult result = await service.ProtectEventPayloadAsync(
+            PartyIdentity(), payload, typeof(PartyDisplayNameDerived).FullName!, serialized, "json");
+
+        result.SerializationFormat.ShouldBe("json+pdenc-v1");
+        JsonNode? root = JsonNode.Parse(result.PayloadBytes);
+        root.ShouldNotBeNull();
+        root["displayName"]?["$enc"]?.GetValue<bool>().ShouldBe(true);
+        root["sortName"]?["$enc"]?.GetValue<bool>().ShouldBe(true);
+
+        string protectedJson = Encoding.UTF8.GetString(result.PayloadBytes);
+        protectedJson.ShouldNotContain("Ada Lovelace");
+        protectedJson.ShouldNotContain("Lovelace Ada");
+    }
+
     // ─── Task 4.4: Organization (non-natural person) does NOT encrypt entity fields ───
 
     [Fact]
