@@ -122,6 +122,18 @@ public class DeploymentValidationTests : IDisposable
     }
 
     [Fact]
+    public async Task MissingPubSubComponent_FailsWithRecommendation()
+    {
+        WriteValidProductionConfig(_tempDir);
+        File.Delete(Path.Combine(_tempDir, "pubsub-kafka.yaml"));
+
+        (int exitCode, string output) = await RunValidationAsync(_tempDir);
+
+        exitCode.ShouldBe(1);
+        output.ShouldContain("No pubsub*.yaml files found");
+    }
+
+    [Fact]
     public async Task MissingDeadLetterConfig_FailsWithRecommendation()
     {
         WriteValidProductionConfig(_tempDir);

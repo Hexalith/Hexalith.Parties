@@ -466,7 +466,7 @@ Subscriber applications consume EventStore-published DAPR events. The sample app
 - Example topic: `tenant-a.parties.events`
 - DAPR app id: `sample`
 
-Subscriber code should be idempotent, tolerate duplicate delivery, acknowledge unknown additive event types, and define its own local event envelope type matching only the fields it consumes. Unknown future events should return success unless the subscriber explicitly owns a retryable failure.
+EventStore persists party events before publishing them to DAPR pub/sub. If publishing fails after persistence, drain/recovery processing retries the persisted event; a subscriber failure before acknowledgement can therefore result in the same envelope being delivered again. Subscriber code should persist processed event ids or otherwise be idempotent, tolerate duplicate delivery, acknowledge unknown additive event types, and define its own local event envelope type matching only the fields it consumes. Unknown future events should return success unless the subscriber explicitly owns a retryable failure.
 
 ---
 

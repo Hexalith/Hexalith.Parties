@@ -114,6 +114,8 @@ The `deploy/dapr/resiliency.yaml` defines production retry and circuit breaker p
 
 When the pub/sub circuit breaker opens, the `AggregateActor` receives immediate failure and transitions to `PublishFailed` state. The persist-then-publish pattern with drain recovery ensures no events are lost.
 
+Events are delivered with at-least-once semantics. A successful subscriber response acknowledges the event according to the configured DAPR backend. If a subscriber fails, times out, or crashes before acknowledgement, the backend may redeliver the same envelope with the same event identity. Consumers must record processed event ids or make handlers idempotent before returning success.
+
 ### Effective retry counts per broker
 
 - **Redis Streams:** 0 built-in → effective = 5 (resiliency only)

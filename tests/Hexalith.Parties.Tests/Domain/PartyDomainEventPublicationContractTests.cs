@@ -5,6 +5,7 @@ using Hexalith.EventStore.Contracts.Commands;
 using Hexalith.EventStore.Contracts.Events;
 using Hexalith.EventStore.Contracts.Identity;
 using Hexalith.EventStore.Contracts.Results;
+using Hexalith.EventStore.Server.Events;
 using Hexalith.EventStore.Testing.Fakes;
 using Hexalith.Parties.Contracts.Commands;
 using Hexalith.Parties.Contracts.Events;
@@ -157,7 +158,7 @@ public sealed class PartyDomainEventPublicationContractTests
             command,
             domainResult,
             domainServiceVersion: "v1",
-            CancellationToken.None);
+            CancellationToken.None).ConfigureAwait(true);
 
         persisted.PersistedEnvelopes.ShouldNotBeEmpty();
         foreach (var envelope in persisted.PersistedEnvelopes)
@@ -192,10 +193,130 @@ public sealed class PartyDomainEventPublicationContractTests
             payload: JsonSerializer.SerializeToUtf8Bytes(new { partyId = PartyTestData.DefaultPartyId })));
     }
 
+    [Fact]
+    public async Task PersistedPartyEventsPublishToConfiguredPubSubTopicAsync()
+    {
+        (AggregateIdentity identity, EventPersistResult persisted) = await PersistCreatedPartyEventsAsync();
+        var publisher = new FakeEventPublisher();
+
+        EventPublishResult result = await publisher.PublishEventsAsync(
+            identity,
+            persisted.PersistedEnvelopes,
+            "corr-5-3",
+            CancellationToken.None);
+
+        result.Success.ShouldBeTrue();
+        result.PublishedCount.ShouldBe(persisted.PersistedEnvelopes.Count);
+        publisher.GetPublishedTopics().ShouldBe([identity.PubSubTopic]);
+        identity.PubSubTopic.ShouldBe("tenant-authenticated.party.events");
+
+        FakeEventPublisher.PublishCall publishCall = publisher.PublishCalls.ShouldHaveSingleItem();
+        publishCall.Identity.ShouldBe(identity);
+        publishCall.Topic.ShouldBe(identity.PubSubTopic);
+        publishCall.CorrelationId.ShouldBe("corr-5-3");
+
+        IReadOnlyList<Hexalith.EventStore.Server.Events.EventEnvelope> published =
+            publisher.GetEventsForTopic(identity.PubSubTopic);
+        published.Count.ShouldBe(persisted.PersistedEnvelopes.Count);
+        published.Select(e => e.MessageId).Order().ShouldBe(
+            persisted.PersistedEnvelopes.Select(e => e.MessageId).Order());
+    }
+
+    [Fact]
+    public async Task PublicationFailureAfterPersistenceLeavesEventsAvailableForRetryAsync()
+    {
+        (AggregateIdentity identity, EventPersistResult persisted) = await PersistCreatedPartyEventsAsync();
+        var publisher = new FakeEventPublisher();
+        publisher.SetupFailure("Pub/sub unavailable");
+
+        EventPublishResult failed = await publisher.PublishEventsAsync(
+            identity,
+            persisted.PersistedEnvelopes,
+            "corr-5-3",
+            CancellationToken.None);
+
+        failed.Success.ShouldBeFalse();
+        failed.PublishedCount.ShouldBe(0);
+        publisher.TotalEventsPublished.ShouldBe(0);
+        persisted.PersistedEnvelopes.ShouldNotBeEmpty();
+
+        publisher.ClearFailure();
+        EventPublishResult retried = await publisher.PublishEventsAsync(
+            identity,
+            persisted.PersistedEnvelopes,
+            "corr-5-3-retry",
+            CancellationToken.None);
+
+        retried.Success.ShouldBeTrue();
+        retried.PublishedCount.ShouldBe(persisted.PersistedEnvelopes.Count);
+        publisher.GetEventsForTopic(identity.PubSubTopic).Count.ShouldBe(persisted.PersistedEnvelopes.Count);
+        publisher.PublishCalls.Count.ShouldBe(2);
+    }
+
+    [Fact]
+    public async Task SubscriberFailureBeforeAckMayDeliverDuplicateEventOnRetryAsync()
+    {
+        (AggregateIdentity identity, EventPersistResult persisted) = await PersistCreatedPartyEventsAsync();
+        persisted.PersistedEnvelopes.Count.ShouldBeGreaterThan(1);
+        var publisher = new FakeEventPublisher();
+        publisher.SetupPartialFailure(eventIndex: 1, failureMessage: "Subscriber failed before ack");
+
+        EventPublishResult partial = await publisher.PublishEventsAsync(
+            identity,
+            persisted.PersistedEnvelopes,
+            "corr-5-3",
+            CancellationToken.None);
+
+        partial.Success.ShouldBeFalse();
+        partial.PublishedCount.ShouldBe(1);
+
+        publisher.ClearFailure();
+        EventPublishResult retried = await publisher.PublishEventsAsync(
+            identity,
+            persisted.PersistedEnvelopes,
+            "corr-5-3-retry",
+            CancellationToken.None);
+
+        retried.Success.ShouldBeTrue();
+        IReadOnlyList<Hexalith.EventStore.Server.Events.EventEnvelope> delivered =
+            publisher.GetEventsForTopic(identity.PubSubTopic);
+        delivered.Count.ShouldBe(persisted.PersistedEnvelopes.Count + 1);
+        delivered
+            .GroupBy(e => e.MessageId)
+            .ShouldContain(g => g.Key == persisted.PersistedEnvelopes[0].MessageId && g.Count() == 2);
+    }
+
     private static PartyCreated RoundTrip(PartyCreated @event)
     {
         string json = JsonSerializer.Serialize(@event, JsonOptions);
         return JsonSerializer.Deserialize<PartyCreated>(json, JsonOptions)!;
+    }
+
+    private static async Task<(AggregateIdentity Identity, EventPersistResult Persisted)> PersistCreatedPartyEventsAsync()
+    {
+        string partyId = Guid.NewGuid().ToString("D");
+        CompositeCommandResult domainResult = PartyAggregate.Handle(new CreatePartyComposite
+        {
+            PartyId = partyId,
+            Type = PartyType.Person,
+            PersonDetails = new PersonDetails { FirstName = "Grace", LastName = "Hopper" },
+        }, state: null);
+        domainResult.IsSuccess.ShouldBeTrue();
+
+        var identity = new AggregateIdentity("tenant-authenticated", "party", partyId);
+        var persister = new FakeEventPersister();
+        EventPersistResult persisted = await persister.PersistEventsAsync(
+            identity,
+            aggregateType: "Party",
+            CreateEnvelope(
+                tenantId: identity.TenantId,
+                aggregateId: partyId,
+                payload: JsonSerializer.SerializeToUtf8Bytes(new { partyId })),
+            domainResult,
+            domainServiceVersion: "v1",
+            CancellationToken.None).ConfigureAwait(true);
+
+        return (identity, persisted);
     }
 
     private static CommandEnvelope CreateEnvelope(string tenantId, string aggregateId, byte[] payload)
