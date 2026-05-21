@@ -507,6 +507,36 @@ The picker suppresses stale responses when token, tenant, user, host configurati
   - Out-of-MVP: multi-registry support (ACR / Harbor / Docker Hub), image signing (cosign / sigstore), SBOM emission, per-image resource limits, `credsStore` / `credHelpers` indirection, pull-only `zot-puller` account
 - **Affects:** `deploy/k8s/publish.ps1` (new — subsumes `regen.ps1` + `deploy-local.ps1`), `deploy/k8s/teardown.ps1` (renamed from `teardown-local.ps1` — mandatory `-ConfirmContext` per ADR 9.5-2), `deploy/validate-deployment.ps1` (`K8sWorkload-MissingImagePullSecret` category added), `tests/Hexalith.Parties.DeployValidation.Tests/K8sManifestPublishTests.cs` (new — 11 deploy-lane tests + 2 trait-gated live-cluster tests), `docs/deployment-guide.md` (Zot credentials subsection), `docs/getting-started.md` Step 1b (renamed Publish to a Kubernetes Cluster)
 
+**D-K8s-3 — `-ConfirmContext` Gate (replaces local-cluster regex allowlist) — Epic 9 v2, 2026-05-21**
+
+- **Decision:** Both `deploy/k8s/publish.ps1` and `deploy/k8s/teardown.ps1` require a mandatory `-ConfirmContext <name>` parameter that must match `kubectl config current-context` exactly. The two scripts share a helper module `deploy/k8s/_lib/Confirm-KubeContext.ps1` exporting a single function `Assert-KubeContext -Expected <name>`. On mismatch the parent script exits 2 with `expected '<arg>', got '<active>'` and does NOT echo the cluster URL, certificate authority, or any token. The active context name is echoed exactly once at the start of the run (auditability) and never again. `validate-deployment.ps1` does NOT carry this gate — it is context-free static lint.
+- **Rejected:**
+  - Keep the legacy local-cluster regex allowlist (`kind-*`, `minikube`, `docker-desktop`, `k3d-*`) — the Zot registry now lives on a real cluster, so the pipeline must run against any operator-owned context
+  - Read the context from an env var (`HEXALITH_TARGET_CONTEXT`) instead of a CLI parameter — env vars survive between invocations and increase silent-drift risk
+  - Make `-ConfirmContext` optional with a `--yes-i-am-sure` escape — the gate must be reflexive and explicit at every invocation
+  - Embed the gate logic inline in both scripts without a shared helper — duplicates the mismatch-message-format and exit-code contract; a fix would have to touch two files
+- **Rationale:** The operator chooses the target cluster explicitly each invocation. The script is portable across local and remote clusters. The gate is human-verified, not regex-pattern-matched. Sharing the helper between `publish.ps1` and `teardown.ps1` keeps the gate contract authoritative in a single file.
+- **Consequence:**
+  - Every `publish.ps1` / `teardown.ps1` invocation requires the operator to type the current context name on the command line (typing fatigue is acceptable cost for explicit consent)
+  - The same pipeline now runs against local clusters AND real production-grade clusters with no script change
+  - The legacy regex-allowlist string set (`kind-*`, `minikube`, `docker-desktop`, `k3d-*`) is deleted from the codebase; references to it in documentation must be flagged by the `DocumentationFitnessTest` (Epic 9 v2 Story 9.7)
+- **Affects:** `deploy/k8s/publish.ps1`, `deploy/k8s/teardown.ps1`, `deploy/k8s/_lib/Confirm-KubeContext.ps1` (new shared helper), `tests/Hexalith.Parties.DeployValidation.Tests/CredentialLeakPoisonSweepTest.cs` (asserts no URL/CA/token leak from gate failures), `docs/kubernetes-deployment-architecture.md` §13 (Quick Reference notes the gate), epics.md Epic 9 v2 Stories 9.1 + 9.5 (AC + shared-contract subsection)
+
+**D-K8s-4 — Epic 9 v2 Greenfield Rewrite + Canonical Architecture Document — 2026-05-21**
+
+- **Decision:** Epic 9 (Kubernetes Deployment) is rewritten greenfield as a 7-story sequence on 2026-05-21, superseding the v1 narrative (Stories 9.1, 9.2, 9.5 + addenda + follow-ups 9.10, 9.11) and the 9-proposal patch chain (`sprint-change-proposal-2026-05-{12..20}-*.md`). The final architecture is captured in a single canonical document `docs/kubernetes-deployment-architecture.md` (13 sections: overview, operator workflow, cluster topology, Dapr control plane, image registry, operator-managed Secrets, configuration sources, build & deploy flow, network & data flow, teardown, reproducibility guarantees, MVP boundaries, quick reference). All entry-point documents (`deploy/k8s/README.md`, `docs/getting-started.md`, `docs/deployment-guide.md`, `architecture.md`) reference this canonical doc instead of duplicating its content.
+- **Rejected:**
+  - Direct Adjustment (patch the v1 narrative one more time) — the v1 story chain became unreadable; nine proposals are too many for a future maintainer to reconstruct
+  - PRD MVP Review (reduce MVP scope) — Epic 9 functionality is delivered; only its planning artefact needs the rewrite
+  - Keep the patched v1 narrative AND ship the canonical architecture doc — duplicate sources of truth invite drift
+- **Rationale:** With the architecture stable enough to write down in 281 lines, the value of preserving the chronological patch chain in `epics.md` collapses. A reader should find the architecture in `docs/kubernetes-deployment-architecture.md`, the planning intent in 7 clean stories in `epics.md`, and the audit trail in the dated SCPs (preserved on disk). The greenfield rewrite is the cheapest path back to readability.
+- **Consequence:**
+  - `deploy/k8s/`, `deploy/dapr/`, `deploy/validate-deployment.ps1`, and 10 Epic 9 v1 test files are wiped on 2026-05-21 (post SCP approval); `main` does not deploy until DEV re-implements Stories 9.1–9.7 v2
+  - The v1 story implementation files in `_bmad-output/implementation-artifacts/9-*.md` remain on disk for historical reference but are not reused as source of truth
+  - The 9 dated sprint-change-proposals remain on disk for audit
+  - Future planning conventions: when an epic's narrative has grown beyond 3 sprint-change-proposals or 1 addendum-per-story, prefer a greenfield rewrite over additional patches
+- **Affects:** `_bmad-output/planning-artifacts/epics.md` (Epic 9 sections rewritten), `_bmad-output/planning-artifacts/sprint-change-proposal-2026-05-21-epic9-greenfield-rewrite.md` (authoring document), `docs/kubernetes-deployment-architecture.md` (canonical reference), `deploy/k8s/`, `deploy/dapr/`, `deploy/validate-deployment.ps1`, `tests/Hexalith.Parties.DeployValidation.Tests/` (all wiped), `_bmad-output/planning-artifacts/prd.md` FR31a (refined), `_bmad-output/implementation-artifacts/sprint-status.yaml` (7 backlog entries)
+
 **D14 — Projection Rebuild Strategy: Event Replay Through Pure Handlers**
 
 - **Decision:** Projection state can be rebuilt by replaying events from EventStore through the pure projection handler classes (same handlers used in normal operation)

@@ -181,27 +181,38 @@ development_status:
   8-6-enforce-picker-privacy-and-integration-boundary: backlog
   epic-8-retrospective: optional
 
-  # Epic 9: Kubernetes Deployment (5 stories — 9.5 added 2026-05-20 by sprint-change-proposal-2026-05-20-zot-build-push)
-  epic-9: in-progress
-  9-1-generate-k8s-artifacts-and-deploy-full-topology-to-local-cluster: done
-  # 9-1 AC1 byte-determinism contract superseded by 9-5 (MinVer-derived image tags per commit). All other 9-1 outputs (aspirate layout, post-aspirate dapr patch, deploy/dapr/ authoritative CR source, $PreservedNames, Hexalith CRD skip) remain in force.
-  9-2-extend-deployment-validation-to-kubernetes-manifests: done
-  9-3-close-k8s-deployment-spec-gaps: done
-  # Story 9.4 carved out of Story 9.3 AC3 (Outcome B): FrontComposer has no deployable host today.
-  # Epic 9 retro is gated on ALL of 9.3 done, 9.4 done, AND 9.5 done.
-  9-4-frontcomposer-deployable-host: backlog
-  # Story 9.5 added 2026-05-20: registry.hexalith.com is a real Zot registry on the cluster (htpasswd auth, nginx Ingress HTTPS, admins=[jpiquot, qdassivignon] / builders=[kaniko, github-ci]). regen.ps1 --skip-build + deploy-local.ps1 local-cluster allowlist replaced by a single publish.ps1 (MinVer tag resolve → aspirate build+push without --skip-build → zot-pull-secret bootstrap → kustomize apply, -ConfirmContext gate). teardown-local.ps1 renamed to teardown.ps1 with same -ConfirmContext gate.
-  9-5-zot-registry-build-push-pipeline: done
-  # Story 9.6 added 2026-05-20 by party-mode review of Story 9.5: Dr. Quinn AHA — the deeper systems gap producing both 9.3 + 9.5 is the absence of an integration-verification feedback loop between planning artifacts and the actual cluster (registry.hexalith.com believed-placeholder for ~3 weeks before discovery). Story 9.6 closes the loop via CI publish + apply against an ephemeral cluster.
-  9-6-ci-integration-gate: backlog
-  # Story 9.7 added 2026-05-20 by post-9.5-review cluster verification: after Redis NOAUTH fix recovered 7/9 pods, memories-* still CrashLoopBackOff because Hexalith.Memories.Server requires ConnectionStrings__redis but AppHost composition (Program.cs:116) only adds .WithReference to Dapr-side StateStore/PubSub, not to .WithReference(redis). Pre-existing bug from Story 9.3 close (commit 68fd117), masked by NOAUTH until now. Story 9.7 picks one of three resolution paths (AppHost-side .WithReference(redis), memories-side Dapr migration, or hand-authored ConnectionStrings__redis carve-out in memories-env).
-  9-7-memories-server-redis-connection-string: backlog
-  # Story 9.8 added 2026-05-20: first publish.ps1 run revealed Aspire 13.x AddRedis() defaults to --requirepass + random REDIS_PASSWORD literal, but deploy/dapr/statestore.yaml + pubsub.yaml have no redisPassword metadata. 5 daprd sidecars CrashLoop on every publish until operator hand-edits redis to remove auth. Three paths: (A) add redisPassword to Dapr Components, (B) suppress AddRedis() password in AppHost, (C) drop AddRedis() entirely + use hand-authored carve-out.
-  9-8-aspire-redis-auth-dapr-component-alignment: backlog
-  # Story 9.9 added 2026-05-20: $PreservedNames in publish.ps1:204 lists "redis" + "keycloak" but aspirate 9.1.0 REGENERATES deploy/k8s/redis/ during Step 3 anyway, overwriting the hand-authored carve-out. The preservation contract is broken. Three paths: (A) backup-restore around aspirate, (B) aspirate --exclude-resource flag if available, (C) drop AddRedis/AddKeycloak from AppHost composition.
-  9-9-preserved-names-carve-out-reliability: backlog
-  # Story 9.10 added 2026-05-20: first publish.ps1 run with --container-image-tag 0.1.0 silently fell back to ContainerImageTag=staging-latest for the 4 services rooted in Hexalith.EventStore + Hexalith.Tenants submodules. Hexalith.EventStore/Directory.Build.targets:17 + Hexalith.Tenants/Directory.Build.targets:17 set a default of "staging-latest" that aspirate's flag does not override. Cross-submodule fix (per Story 9.3 AC1 PR pattern) OR aspirate post-build re-tag in Zot.
-  9-10-submodule-container-image-tag-override: backlog
-  # Story 9.11 added 2026-05-20: parties-mcp container push silently failed during publish.ps1. Aspirate reported (✔) Done with ContainerImageTag=0.1.0 but Zot has only :latest (no :0.1.0 manifest). The --verbosity quiet flag hides the dotnet publish error. Pod enters ImagePullBackOff. Need root cause diagnosis (csproj shape? Zot ACL? push aggregator?) + defense-in-depth post-push manifest verification in publish.ps1.
-  9-11-parties-mcp-push-silent-failure: backlog
+  # Epic 9: Kubernetes Deployment Platform (greenfield rewrite 2026-05-21, 7 stories — supersedes Epic 9 v1 per sprint-change-proposal-2026-05-21-epic9-greenfield-rewrite.md + ADR D-K8s-4)
+  # Canonical reference: docs/kubernetes-deployment-architecture.md
+  # v1 history preserved on disk (sprint-change-proposals 2026-05-{12..20}-* + implementation-artifacts 9-{1..11}-*) but not source of truth.
+  # All v1 entries (9-1..9-5, 9-10, 9-11) marked superseded; deploy/k8s, deploy/dapr, deploy/validate-deployment.ps1, and 10 K8s test files wiped on 2026-05-21.
+  epic-9: planned-greenfield
+  # --- Epic 9 v1 entries (superseded, retained for trace) ---
+  9-1-generate-k8s-artifacts-and-deploy-full-topology-to-local-cluster: superseded
+  9-2-extend-deployment-validation-to-kubernetes-manifests: superseded
+  9-3-close-k8s-deployment-spec-gaps: superseded
+  9-4-frontcomposer-deployable-host: superseded
+  9-5-zot-registry-build-push-pipeline: superseded
+  9-6-ci-integration-gate: superseded
+  9-7-memories-server-redis-connection-string: superseded
+  9-8-aspire-redis-auth-dapr-component-alignment: superseded
+  9-9-preserved-names-carve-out-reliability: superseded
+  9-10-submodule-container-image-tag-override: superseded
+  9-11-parties-mcp-push-silent-failure: superseded
+  # --- Epic 9 v2 entries (greenfield, backlog) ---
+  # Story 9.1: Zot OCI Registry & Deployment Documentation — Zot deployment + Ingress + htpasswd + tagging policy + ADRs D-K8s-3/D-K8s-4 + canonical doc pointers.
+  9-1-zot-oci-registry-and-deployment-documentation: backlog
+  # Story 9.2: Aspire AppHost → Aspirate Manifest Composition — AppHost composable + dotnet aspirate generate + 7 per-service folders + 3 patch contracts (blocked_by: 9-1).
+  9-2-aspire-apphost-to-aspirate-manifest-composition: backlog
+  # Story 9.3: Hand-Authored Carve-Outs (Redis + Keycloak) — Redis emptyDir + no AUTH; Keycloak admin via secretKeyRef; carve-outs preserved at every regen.
+  9-3-hand-authored-carve-outs-redis-and-keycloak: backlog
+  # Story 9.4: Dapr Control Plane, Components, ACL, Subscriptions — dapr init -k; 3 Components; 5 ACL deny-by-default; 2 Subscriptions; server-side dry-run (blocked_by: 9-3 — Redis Service must exist).
+  9-4-dapr-control-plane-components-acl-subscriptions: backlog
+  # Story 9.5: Operator Scripts (publish.ps1 + teardown.ps1) — shared -ConfirmContext gate + _lib/Confirm-KubeContext.ps1 helper; 13-phase publish; 7-phase teardown + residual-state probe (blocked_by: 9-2, 9-3, 9-4).
+  9-5-operator-scripts-publish-and-teardown: backlog
+  # Story 9.6: validate-deployment.ps1 Lint Tooling — 8 lint categories; BLOCKING/WARNING severity; JSON output for CI; poison sweep self-test (blocked_by: 9-2, 9-3, 9-4).
+  9-6-validate-deployment-lint-tooling: backlog
+  # Story 9.7: Deployment Fitness Tests + Live-Cluster Integration — 8 fitness classes (default pass) + 3 trait-gated LiveCluster tests; hand-curated fixtures (blocked_by: 9-5, 9-6).
+  9-7-deployment-fitness-and-live-cluster-integration: backlog
+  # Epic 9 v2 retro is gated on ALL of 9-1..9-7 v2 done.
+  epic-9-retrospective: optional
   epic-9-retrospective: optional

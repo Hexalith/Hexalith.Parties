@@ -347,13 +347,15 @@ Consuming application developers can embed a tenant-safe, accessible party picke
 **Coverage type:** deferred for MVP implementation planning
 **FRs covered:** FR67
 
-### Epic 9: Kubernetes Deployment
+### Epic 9: Kubernetes Deployment Platform
 
-Operators and developers can generate Kubernetes manifests from the Aspire AppHost via aspirate and deploy the full Parties topology to a local cluster, with validation tooling for the generated manifests.
+Operators and developers deploy the full Hexalith.Parties 9-workload topology to a Kubernetes cluster via a single `publish.ps1` command — Zot OCI registry with MinVer-stamped image tags, hand-authored Redis + Keycloak carve-outs, Dapr control plane with deny-by-default ACLs, three operator-managed Secrets bootstrapped idempotently, and a static lint + fitness-test suite that guards every contract. The architecture is fully captured in `docs/kubernetes-deployment-architecture.md` as the canonical reference.
 
 **Phase:** MVP
-**Coverage type:** implemented
+**Coverage type:** planned (greenfield rewrite, 2026-05-21, supersedes Epic 9 v1)
 **FRs covered:** FR31, FR31a; supports FR60, FR61, NFR30
+**Canonical reference:** `docs/kubernetes-deployment-architecture.md`
+**Authoring SCP:** `sprint-change-proposal-2026-05-21-epic9-greenfield-rewrite.md`
 
 ## Epic 1: Party Records and Lifecycle
 
@@ -3110,155 +3112,451 @@ So that embedded selection remains safe in every consuming application.
 **When** they inspect rendered output, callbacks, logs, telemetry, routes, storage, JavaScript event payloads, endpoint usage, and token handling
 **Then** no PII leakage or boundary bypass is detected.
 
-## Epic 9: Kubernetes Deployment
+## Epic 9: Kubernetes Deployment Platform
 
-Operators and developers can generate Kubernetes manifests from the Aspire AppHost via aspirate and deploy the full Parties topology to a local cluster, with validation tooling for the generated manifests.
+Operators and developers deploy the full Hexalith.Parties 9-workload topology to a Kubernetes cluster via a single `publish.ps1` command — Zot OCI registry with MinVer-stamped image tags, hand-authored Redis + Keycloak carve-outs, Dapr control plane with deny-by-default ACLs, three operator-managed Secrets bootstrapped idempotently, and a static lint + fitness-test suite that guards every contract. The architecture is fully captured in `docs/kubernetes-deployment-architecture.md` as the canonical reference.
 
-### Story 9.1: Generate Kubernetes Artifacts and Deploy Full Topology to Local Cluster
+**Canonical reference:** `docs/kubernetes-deployment-architecture.md`
+**Authoring SCP:** `sprint-change-proposal-2026-05-21-epic9-greenfield-rewrite.md`
+**Supersedes:** Epic 9 v1 (Stories 9.1–9.5 + addenda + follow-ups 9.10, 9.11). The historical sprint-change-proposals (`sprint-change-proposal-2026-05-{12..20}-*.md`) remain on disk for audit but are not reused as source of truth.
+
+### Story 9.1: Zot OCI Registry & Deployment Documentation
 
 **Phase:** MVP
-**Coverage type:** implemented
-**Requirements covered:** FR31, FR31a; supports FR60, NFR30
+**Coverage type:** planned
+**Requirements covered:** FR31a; supports FR31, FR60, FR61, NFR30
 
-As a developer (or operator) evaluating Parties,
-I want a one-command flow that generates Kubernetes manifests from the Aspire AppHost via aspirate and deploys the full Parties + sibling-submodule topology to a local cluster,
-So that I can validate the production-shape deployment path without leaving the local machine.
+As an operator preparing Hexalith.Parties for cluster deployment,
+I want a Zot OCI registry deployed on the target cluster with htpasswd-scoped access, a single canonical architecture reference, and decision records covering the credential pipeline and the kubectl-context gate,
+So that the build+push+apply path has one authoritative registry, one authoritative architecture document, and the rationale for non-obvious operational choices is captured in stable ADRs reviewers can cite.
 
 **Acceptance Criteria:**
 
-**Given** the documented prerequisites are installed (Docker, a local Kubernetes cluster — kind / minikube / k3d / Docker Desktop —, kubectl, .NET SDK, DAPR CLI, aspirate at the pinned version)
-**When** the developer runs the documented `dotnet aspirate generate` command from `src/Hexalith.Parties.AppHost`
-**Then** Kubernetes manifests for the full Aspire topology (Parties service + sibling-submodule service projects: EventStore, Tenants, Memories, FrontComposer) are emitted into `deploy/k8s/`
-**And** the generated manifests are deterministic for a given AppHost commit and aspirate version
-**And** DAPR component CRs in `deploy/k8s/dapr/` correspond to the templates in `deploy/dapr/` (state store, pubsub, access control, subscriptions, resiliency).
+**Given** a Kubernetes cluster reachable from the operator's workstation
+**When** the Zot deployment manifest is applied (namespace `zot`, distinct from `hexalith-parties`)
+**Then** Zot runs as a single Pod fronted by an nginx Ingress exposing `registry.hexalith.com` over HTTPS
+**And** the Ingress terminates TLS at the cluster edge (not inside Zot)
+**And** the namespace contains no Hexalith service workloads (registry concern is isolated from application concern).
 
-**Given** the developer runs the documented one-command deploy script
-**When** the script installs the DAPR control plane (if missing) and applies `deploy/k8s/` to the active kubectl context
-**Then** all generated Deployments, Services, ConfigMaps, and DAPR component CRs are applied
-**And** the script refuses to run against a non-local kubectl context (asserts context name matches the documented local-cluster allowlist).
+**Given** Zot is reachable
+**When** authentication is exercised
+**Then** access is enforced via an htpasswd file mounted from Secret `zot-auth-secret`
+**And** `accessControl.groups.admins` (members: `jpiquot`, `qdassivignon`) grants push + pull + delete
+**And** `accessControl.groups.builders` (members: `kaniko`, `github-ci`, `parties-publisher`) grants push + pull only
+**And** anonymous access is denied for all repositories.
 
-**Given** the full topology is deployed
-**When** the developer checks pod readiness and the documented health/readiness endpoints
-**Then** Parties and its sibling-submodule services reach Ready within the documented cold-start target on a developer-class machine
-**And** the DAPR sidecar status for each service is healthy.
+**Given** the credential separation policy
+**When** `publish.ps1` consumes registry credentials
+**Then** it reads the `parties-publisher` entry from `~/.docker/config.json` exclusively
+**And** human admin credentials (`jpiquot`, `qdassivignon`) are documented as out-of-band for emergency operations only
+**And** `publish.ps1` exits 6 if the `parties-publisher` entry is missing, malformed, or sources credentials through `credsStore` / `credHelpers` (Path B requirement — see ADR D-K8s-2).
 
-**Given** the local cluster is reachable
-**When** the developer follows the K8s-mode first-command walkthrough (port-forward or documented ingress) to send `CreateParty` and a follow-up query
-**Then** the command succeeds and the query returns the created party through the deployed REST/API boundary
-**And** end-to-end timing from `dotnet aspirate generate` through first successful command meets NFR30 (< 15 min on first attempt).
+**Given** the tagging policy must be deterministic per commit
+**When** image tags are produced
+**Then** the policy is documented as:
+- **git tag** form: `vMAJOR.MINOR.PATCH` on `main` for stable releases (the `v` prefix is MinVer's tag-recognition prefix only — see `docs/kubernetes-deployment-architecture.md` §13)
+- **image tag** form: `MAJOR.MINOR.PATCH` for stable releases (e.g., `0.2.0`)
+- **image tag** form: `MAJOR.MINOR.PATCH-preview.0.N` for preview commits past the last tag (N = `git rev-list --count v<last>..HEAD`)
+- **image tag** form: `MAJOR.MINOR.PATCH-preview.0.N+dirty` for uncommitted-tree builds (warn-and-proceed in `publish.ps1`; rejected by `validate-deployment.ps1` for any tag destined to ship)
 
-**Given** the cleanup command is run
-**When** it tears down the deployed topology
-**Then** all applied resources are removed from the local cluster
-**And** no stale state-store data or DAPR sidecar leases remain that would block a clean re-deploy.
+**And** the documentation explicitly forbids mutable tags (`latest`, `staging-latest`, empty tag) for any `registry.hexalith.com/*` image consumed by `deploy/k8s/`
+**And** `+dirty` build-metadata is permitted by `publish.ps1` (with warning) but rejected by `validate-deployment.ps1` as a blocking lint failure for any tag that ships to a real cluster.
 
-**Given** local-deploy validation tests or scripted smoke checks run
-**When** they execute against the deployed local-cluster topology
-**Then** they assert pod readiness, health/readiness endpoint behavior, at least one authenticated or documented development-mode request path, and clean teardown
-**And** they do not require recursive submodule initialization
-**And** they do not run against non-local kubectl contexts.
+**Given** `docs/kubernetes-deployment-architecture.md` exists in the repository
+**When** any K8s deployment reference is consulted (`deploy/k8s/README.md`, `docs/getting-started.md`, `docs/deployment-guide.md`, `architecture.md`)
+**Then** each entry-point document links to `docs/kubernetes-deployment-architecture.md` as the single canonical source of truth for cluster topology, configuration sources, and operator workflow
+**And** none of these documents duplicates the topology table, the configuration-source taxonomy, or the publish-pipeline phase list (they reference the canonical doc instead).
 
-> **Addendum (2026-05-20, sprint-change-proposal-2026-05-20-zot-build-push):** Story 9.1 AC1's byte-identical regen contract is **superseded on the image-tag line only** by Story 9.5 AC4. Image tags now derive from MinVer per commit and vary across commits. All other lines in `deploy/k8s/<app-id>/deployment.yaml` remain byte-stable per commit (deterministic-per-commit contract). The hand-authored `keycloak/` and `redis/` carve-outs retain their original byte-determinism contract. The local-cluster regex allowlist in `deploy-local.ps1` + `teardown-local.ps1` is also superseded by the mandatory `-ConfirmContext <name>` parameter in `publish.ps1` + `teardown.ps1` (Story 9.5 ADR 9.5-2).
+**Given** the Zot pull-secret pipeline is operationally non-obvious
+**When** ADR D-K8s-2 (Zot Pull-Secret Path B) is authored in `architecture.md`
+**Then** the ADR documents: (a) `publish.ps1` re-emits the `auths["registry.hexalith.com"]` block from `~/.docker/config.json` wholesale into Secret `zot-pull-secret` (Path B); (b) the operator's password / token is never decoded, never echoed to stdout/stderr/manifest YAML, never written to disk outside the Secret payload; (c) `credsStore` / `credHelpers` configurations are explicitly unsupported and the script exits with an actionable message referencing the `docker login -u parties-publisher` + `$env:DOCKER_CONFIG` mitigations; (d) rationale: keeps the credential surface minimal and auditable, and avoids re-implementing a docker credential resolver in PowerShell.
 
-### Story 9.2: Extend Deployment Validation to Kubernetes Manifests
+**Given** the publish-context gate is operationally non-obvious
+**When** ADR D-K8s-3 (`-ConfirmContext` Gate) is authored in `architecture.md`
+**Then** the ADR documents: (a) `publish.ps1` and `teardown.ps1` require a mandatory `-ConfirmContext <name>` parameter that must match `kubectl config current-context` exactly; (b) the legacy local-cluster regex allowlist (`kind-*`, `minikube`, `docker-desktop`, `k3d-*`) is removed because the registry now lives on a real cluster and the same script must run against any operator-owned context; (c) on mismatch the script exits 2 with `expected '<arg>', got '<active>'` and does not echo cluster URLs, certificate authorities, or tokens; (d) the active context name is echoed once at the start of the run (auditability) and never again.
+
+**Given** the deployment entry-point documents
+**When** `deploy/k8s/README.md`, `docs/getting-started.md`, and `docs/deployment-guide.md` are updated
+**Then** each document includes: a Zot credentials subsection citing `docker login -u parties-publisher registry.hexalith.com`, the one-command publish snippet (`pwsh deploy/k8s/publish.ps1 -ConfirmContext <name>`), the one-command teardown snippet, and a pointer to `docs/kubernetes-deployment-architecture.md` for full topology
+**And** none of these documents prints credentials, tokens, certificate authorities, or example secret values.
+
+**Given** documentation consistency is a fitness concern
+**When** a documentation-fitness test (or pre-commit hook) runs against the entry-point documents
+**Then** any of the following is flagged as a blocking failure: a `:latest` reference inside a `registry.hexalith.com/*` snippet, a stale reference to `regen.ps1` / `deploy-local.ps1` / `teardown-local.ps1` / `kind-*` / `minikube` (superseded names), a missing pointer to the canonical architecture doc, or a leaked credential pattern (`Password:`, `Bearer eyJ`, `auths.*:[^{]`).
+
+### Story 9.2: Aspire AppHost → Aspirate Manifest Composition
 
 **Phase:** MVP
-**Coverage type:** implemented
+**Coverage type:** planned
+**Requirements covered:** FR31, FR31a; supports FR60, FR61, NFR30
+
+As a developer maintaining the deployment topology,
+I want the Aspire AppHost (`src/Hexalith.Parties.AppHost/Program.cs`) to be the single source of truth for the composable Hexalith services, with `dotnet aspirate generate` emitting deterministic per-service Kubernetes manifests under `deploy/k8s/<app-id>/` stamped with the MinVer-resolved image tag,
+So that adding a service, changing a Dapr app-id, or bumping a version is a one-file edit in the AppHost — never a hand-edit in `deploy/k8s/`.
+
+**Acceptance Criteria:**
+
+**Given** the Aspire AppHost resource graph
+**When** the graph is inspected after a clean build
+**Then** it composes exactly the following composable workloads with the listed app-ids: `eventstore`, `eventstore-admin`, `eventstore-admin-ui`, `parties`, `parties-mcp`, `tenants`, `memories`
+**And** services requiring Dapr (`eventstore`, `eventstore-admin`, `parties`, `tenants`, `memories`) are declared with their daprd sidecar attached (`WithDaprSidecar`) and a stable `app-id` matching the K8s folder name
+**And** non-Dapr workloads (`eventstore-admin-ui`, `parties-mcp`) are declared without a daprd sidecar
+**And** the hand-authored carve-outs (`redis`, `keycloak`) are NOT defined in the AppHost (they live in `deploy/k8s/{redis,keycloak}/` per Story 9.3).
+
+**Given** the operator runs `dotnet aspirate generate` (invoked by `publish.ps1` — see Story 9.5)
+**When** generation completes
+**Then** the following per-service folders exist under `deploy/k8s/`: `eventstore/`, `eventstore-admin/`, `eventstore-admin-ui/`, `parties/`, `parties-mcp/`, `tenants/`, `memories/`
+**And** each folder contains at minimum `deployment.yaml`, `service.yaml`, and (where applicable) `configmap.yaml`
+**And** every `deployment.yaml` carries an image reference of shape `registry.hexalith.com/<app-id>:<MinVer>` (never `:latest`, never an empty tag)
+**And** the `<MinVer>` segment matches the regex `^[0-9]+\.[0-9]+\.[0-9]+(?:-[A-Za-z0-9.-]+)?$`.
+
+**Given** aspirate emits placeholder files some users do not need
+**When** the post-generation cleanup phase runs (`publish.ps1` step 4)
+**Then** known-orphan files (e.g., `aspirate-readme.md`, `azure.bicep`, sample-only YAMLs) are stripped
+**And** the hand-authored carve-outs in `deploy/k8s/redis/` and `deploy/k8s/keycloak/` are not touched by the cleanup
+**And** `deploy/k8s/kustomization.yaml` references all per-service folders + carve-outs.
+
+**Given** Dapr metadata is added by aspirate but needs project-specific values
+**When** the post-aspirate Dapr-annotation patch runs (`publish.ps1` step 5)
+**Then** every Dapr-equipped Deployment has `dapr.io/enabled: "true"`, `dapr.io/app-id: <service>`, `dapr.io/app-port: "8080"`, and `dapr.io/config: accesscontrol[-<service>]` annotations on its pod template
+**And** the patch is idempotent (re-running on already-patched YAML produces no diff)
+**And** the patch never injects Dapr annotations into non-Dapr workloads (`eventstore-admin-ui`, `parties-mcp`, `redis`, `keycloak`).
+
+**Given** consumer Deployments need the registry pull secret
+**When** the post-aspirate `imagePullSecrets` patch runs (`publish.ps1` step 7)
+**Then** every Deployment whose container image starts with `registry.hexalith.com/` carries `spec.template.spec.imagePullSecrets: [{ name: zot-pull-secret }]` at the pod-template level
+**And** vendor-image Deployments (`keycloak`, `redis`) do NOT receive `imagePullSecrets`
+**And** the patch is idempotent.
+
+**Given** the byte-determinism reproducibility contract from `docs/kubernetes-deployment-architecture.md` §11
+**When** `publish.ps1` runs twice in succession on the same commit on the same workstation
+**Then** for every Aspirate-emitted `deployment.yaml`, every line except the `image:` line is byte-identical across runs
+**And** the `image:` line resolves to the same MinVer tag on the same commit (allowed to differ across commits)
+**And** the hand-authored carve-outs (`redis/`, `keycloak/`) are byte-identical across runs unconditionally.
+
+**Given** the aspirate tool version is pinned
+**When** `.config/dotnet-tools.json` is inspected
+**Then** `aspirate` is pinned at `9.1.0` (or the version current at story execution, captured as the new pinned baseline) with no `--prerelease` resolution flag drift
+**And** the AppHost SDK version is captured in `docs/kubernetes-deployment-architecture.md` §13 Quick Reference (currently `13.3.3`).
+
+### Story 9.3: Hand-Authored Carve-Outs (Redis + Keycloak)
+
+**Phase:** MVP
+**Coverage type:** planned
+**Requirements covered:** FR31a; supports FR31, FR60, NFR30
+
+As a developer maintaining the deployment topology,
+I want Redis (Dapr state + pubsub backing store) and Keycloak (OIDC issuer) to live as hand-authored manifests under `deploy/k8s/redis/` and `deploy/k8s/keycloak/` outside the Aspirate composition,
+So that intentional MVP deviations from Aspire's defaults (Redis emptyDir + no AUTH; Keycloak randomized admin password from operator-managed Secret) are explicit, reviewable, and survive every `publish.ps1` regeneration.
+
+**Acceptance Criteria:**
+
+**Given** the configuration-source taxonomy in `docs/kubernetes-deployment-architecture.md` §7 Source 3
+**When** the `deploy/k8s/` tree is inspected after a fresh `publish.ps1` run
+**Then** `deploy/k8s/redis/` and `deploy/k8s/keycloak/` exist as hand-authored folders containing their own `deployment.yaml` + `service.yaml` (+ `configmap.yaml` for Keycloak)
+**And** these folders are referenced from `deploy/k8s/kustomization.yaml` alongside the aspirate-emitted per-service folders
+**And** neither folder is present in or generated by `src/Hexalith.Parties.AppHost/Program.cs` (the Aspire AppHost composes the 7 application services only — see Story 9.2).
+
+**Given** the MVP scope explicitly defers production-grade storage (doc §12 Boundaries)
+**When** the `redis` Deployment manifest is inspected
+**Then** the container image is `redis:<vendor-version>` from a public registry (no `imagePullSecrets`, no Zot reference)
+**And** persistence uses `emptyDir: {}` (no PersistentVolumeClaim, no StatefulSet)
+**And** authentication is disabled (no `--requirepass`, no Dapr `redisPassword` field referenced from the matching Component — see Story 9.4)
+**And** the Deployment exposes port `6379` via a `ClusterIP` Service named `redis`
+**And** the Deployment carries an inline comment block (5–10 lines) explicitly stating: "MVP scope — emptyDir, no AUTH. State does not survive Pod restart. Production hardening (PVC + StatefulSet + replication + AUTH) is tracked in doc §12 Boundaries and is out of scope here."
+
+**Given** Keycloak is a vendor image with operator-managed admin credentials
+**When** the `keycloak` Deployment manifest is inspected
+**Then** the container image is `quay.io/keycloak/keycloak:<vendor-version>` from a public registry (no `imagePullSecrets`, no Zot reference)
+**And** the admin user (`KEYCLOAK_ADMIN`) and admin password (`KEYCLOAK_ADMIN_PASSWORD`) are sourced from environment variables that reference Secret `hexalith-keycloak-admin` via `secretKeyRef`
+**And** the Secret `hexalith-keycloak-admin` is operator-bootstrapped (Story 9.5 — `publish.ps1` generates 24 random bytes on first publish, idempotent thereafter); the manifest itself does NOT contain a literal password
+**And** the Deployment carries an inline comment block stating: "Admin password is bootstrapped by publish.ps1 from a 24-byte random Secret. Never echo, never commit. To rotate, delete the Secret and re-run publish.ps1."
+
+**Given** Keycloak realm configuration must be explicit
+**When** the `keycloak` ConfigMap is inspected
+**Then** the realm import (if any), client definitions, and start mode (`start-dev` for MVP, `start` for production — MVP uses `start-dev` per current scope) are declared in the ConfigMap or via container args
+**And** the OIDC issuer URL pattern is documented (`http://keycloak.hexalith-parties.svc.cluster.local:8080/realms/<realm>`) in the manifest's header comment for downstream service config reference.
+
+**Given** the carve-outs must survive every regeneration
+**When** `publish.ps1` step 2 (clean) runs against `deploy/k8s/`
+**Then** the clean operation explicitly preserves `deploy/k8s/redis/`, `deploy/k8s/keycloak/`, `deploy/k8s/kustomization.yaml`, `deploy/k8s/namespace.yaml`, `deploy/k8s/README.md`, `deploy/k8s/publish.ps1`, `deploy/k8s/teardown.ps1`
+**And** all other files/folders under `deploy/k8s/` are removed before the aspirate regeneration runs
+**And** running `publish.ps1` twice in succession produces zero diff in the carve-out folders (byte-identical contract, no MinVer-tag exception applies to vendor images).
+
+**Given** the namespace separation policy
+**When** Redis and Keycloak Deployments are inspected
+**Then** both run in the `hexalith-parties` namespace alongside Hexalith services (not in a separate infrastructure namespace, to keep the MVP topology a single-namespace deploy per doc §3)
+**And** the post-aspirate `imagePullSecrets` patch (Story 9.2 AC5 + Story 9.5) explicitly skips these folders
+**And** the post-aspirate Dapr-annotation patch (Story 9.2 AC4) explicitly skips these folders (Redis and Keycloak do NOT carry a daprd sidecar — they are stateful backing services and an OIDC issuer, not Dapr-equipped applications).
+
+**Given** a fitness test guards the carve-out boundary
+**When** a `CarveOutPreservationFitnessTest` runs (delivered as part of Story 9.7)
+**Then** it asserts that after a simulated `publish.ps1` cycle: (a) `redis/deployment.yaml` byte-matches the committed version; (b) `keycloak/deployment.yaml` byte-matches the committed version; (c) neither folder contains aspirate-generated artifacts (e.g., `aspirate-readme.md`); (d) no `imagePullSecrets` block exists in either Deployment; (e) no Dapr annotations exist in either Deployment.
+
+### Story 9.4: Dapr Control Plane, Components, Access Control & Subscriptions
+
+**Phase:** MVP
+**Coverage type:** planned
+**Requirements covered:** FR31a; supports FR31, FR40, FR41, FR60, FR61, NFR30
+
+As a developer relying on Dapr for state, pub/sub, and service invocation across the 5 daprd-equipped Hexalith services,
+I want the Dapr control plane installed cluster-wide and the project-specific Components, Access Control configurations, and declarative Subscriptions hand-authored under `deploy/dapr/` (outside the Aspirate composition),
+So that the security-sensitive parts of the Dapr surface (deny-by-default ACLs, who-can-call-whom topology) are explicit, reviewable, and not at the mercy of Aspirate's emission defaults.
+
+**Acceptance Criteria:**
+
+**Given** Dapr is a cluster-wide capability shared with other projects on the same cluster
+**When** `publish.ps1` step 9 runs
+**Then** the script invokes `dapr init -k` against the active kubectl context (unless the operator passes `-SkipDaprInit`)
+**And** the Dapr control plane lands in namespace `dapr-system` (never inside `hexalith-parties`)
+**And** the pinned Dapr version (`1.14.4` per doc §13) is documented; mismatch with the installed version emits a warning but does not block (cluster-wide install may be older/newer than the project's pinned baseline).
+
+**Given** the configuration-source taxonomy in doc §7 Source 2
+**When** `deploy/dapr/` is inspected
+**Then** the folder contains EXACTLY the hand-authored Dapr CRs the project requires, with no Aspirate-emitted Dapr files
+**And** the file set is: `statestore.yaml`, `pubsub.yaml`, `resiliency.yaml`, `accesscontrol.yaml`, `accesscontrol-eventstore-admin.yaml`, `accesscontrol-parties.yaml`, `accesscontrol-tenants.yaml`, `accesscontrol-memories.yaml`, `subscription-parties.yaml`, `subscription-tenants.yaml`
+**And** alternative-backend templates (Kafka/RabbitMQ pubsub, Cosmos/Postgres state) are NOT in `deploy/dapr/` proper — they live in a sibling `deploy/dapr-alternatives/` folder and are explicitly skipped by `publish.ps1` step 12 (apply phase).
+
+**Given** the state store and pub/sub Components target Redis
+**When** `statestore.yaml` and `pubsub.yaml` are inspected
+**Then** both reference `host: redis:6379` (cluster-internal DNS, matches the Service from Story 9.3)
+**And** neither references a `redisPassword` Secret (Redis MVP has no AUTH per Story 9.3)
+**And** `pubsub.yaml` uses the Redis Streams driver (`pubsub.redis`) suitable for ordered topic delivery
+**And** `statestore.yaml` enables actor state by default (`actorStateStore: "true"` metadata).
+
+**Given** the per-service access-control configurations enforce who-can-call-whom
+**When** the 5 access-control YAML files are inspected
+**Then** each carries `defaultAction: deny` (deny-by-default contract — no wildcard app-id, no wildcard operation path)
+**And** the allowed call paths match the topology in doc §4.2 and §9: `parties` may call `tenants` + `eventstore` + `memories`; `tenants` may NOT call `parties` (asymmetric); `eventstore-admin` may call `eventstore`; `memories` may receive but not initiate cross-service calls; `parties-mcp` (non-Dapr) does not appear as an allowed caller in any config
+**And** every allowed entry enumerates explicit operations (not wildcards) — e.g., `POST/v1.0/invoke/parties/method/api/parties/v1/parties`.
+
+**Given** declarative subscriptions wire Redis Streams topics to consumer endpoints
+**When** `subscription-parties.yaml` and `subscription-tenants.yaml` are inspected
+**Then** `subscription-parties.yaml` (`parties-events-sample-tenant`) subscribes the sample consumer to `party.*` topics on the `pubsub` Component
+**And** `subscription-tenants.yaml` (`hexalith-parties-tenants-events-parties`) subscribes `parties` to tenant-lifecycle topics on the `pubsub` Component
+**And** both subscriptions specify retry/dead-letter behavior consistent with `resiliency.yaml` defaults.
+
+**Given** resiliency policy must be valid before any consumer applies
+**When** `publish.ps1` step 10 runs
+**Then** the script executes `kubectl apply -f deploy/dapr/resiliency.yaml --dry-run=server` against the active context
+**And** a server-side dry-run failure exits with code 1 and a bounded error referencing the offending CR
+**And** stdout never contains the full CR body on failure (only the validation-error summary).
+
+**Given** every Dapr-equipped Pod must reference its access-control config
+**When** the post-aspirate Dapr-annotation patch runs (Story 9.2 AC4 + Story 9.5 step 5)
+**Then** `eventstore` references config `accesscontrol`; `eventstore-admin` references `accesscontrol-eventstore-admin`; `parties` references `accesscontrol-parties`; `tenants` references `accesscontrol-tenants`; `memories` references `accesscontrol-memories`
+**And** `parties-mcp` and `eventstore-admin-ui` carry NO `dapr.io/*` annotations (they are not Dapr-equipped).
+
+**Given** the apply phase orders Components → Configurations → Subscriptions
+**When** `publish.ps1` step 12 runs `kubectl apply -f` over `deploy/dapr/*.yaml`
+**Then** Components are applied first, Configurations second, Subscriptions third (Dapr CR ordering: subscriptions depend on Components existing)
+**And** alternative-backend templates in `deploy/dapr-alternatives/` are not selected
+**And** the apply is idempotent — re-running on already-applied CRs produces no resource changes (`unchanged` status from kubectl).
+
+### Story 9.5: Operator Scripts (publish.ps1 + teardown.ps1)
+
+**Phase:** MVP
+**Coverage type:** planned
+**Requirements covered:** FR31a; supports FR31, FR60, FR61, NFR30
+
+As an operator deploying or tearing down Hexalith.Parties,
+I want two PowerShell scripts — `deploy/k8s/publish.ps1` (13-phase build+push+apply pipeline) and `deploy/k8s/teardown.ps1` (7-phase removal + residual-state probe) — that share the `-ConfirmContext` gate and a common helper module `_lib/Confirm-KubeContext.ps1`,
+So that one command takes me from clean checkout to 9 Ready pods, another command unwinds everything, and both scripts apply the same context-confirmation, credential-safety, and bounded-stdout discipline.
+
+**Acceptance Criteria (publish.ps1 — 13-phase pipeline):**
+
+**Given** the 13-phase pipeline declared in `docs/kubernetes-deployment-architecture.md` §8
+**When** `publish.ps1 -ConfirmContext <name>` is invoked
+**Then** the script executes the following phases in order, each phase bounded with a clear stdout boundary marker and a specific non-zero exit code on failure:
+- Step 0: `-ConfirmContext` gate (exit 2 on mismatch)
+- Step 1: MinVer resolution via `dotnet msbuild -getProperty:Version` (exit 5 on empty / non-SemVer; warn-and-proceed on `+dirty`)
+- Step 2: Clean `deploy/k8s/` preserving the whitelist from Story 9.3 (`redis/`, `keycloak/`, `kustomization.yaml`, `namespace.yaml`, `README.md`, `publish.ps1`, `teardown.ps1`)
+- Step 3: `dotnet aspirate generate --container-image-tag <minver> --container-registry registry.hexalith.com` (NO `--skip-build`) — builds + pushes 7 images to Zot; propagates aspirate exit code on failure
+- Step 4: Strip aspirate placeholder files (whitelist defined alongside Story 9.2 AC3)
+- Step 5: Patch Dapr annotations on the 5 Dapr-equipped Deployments (`app-id`, `app-port`, `config` per Story 9.4)
+- Step 6: Patch JWT `secretKeyRef` (`hexalith-jwt-signing`) into the 5 daprd-equipped Deployments
+- Step 7: Inject `imagePullSecrets: [{name: zot-pull-secret}]` into every Deployment whose image starts with `registry.hexalith.com/` (vendor carve-outs skipped per Story 9.3)
+- Step 8: Verify all expected per-service folders were emitted (exit 4 on any missing folder; expected set: `eventstore`, `eventstore-admin`, `eventstore-admin-ui`, `parties`, `parties-mcp`, `tenants`, `memories`)
+- Step 9: `dapr init -k` unless `-SkipDaprInit` is passed (exit 3 if dapr CLI is missing)
+- Step 10: Ensure namespace `hexalith-parties` exists + server-side dry-run of `deploy/dapr/resiliency.yaml` (exit 1 on dry-run failure)
+- Step 11: Bootstrap operator-managed Secrets (`hexalith-jwt-signing`, `hexalith-keycloak-admin`, `zot-pull-secret`), all idempotent (exit 6 if `~/.docker/config.json` `auths["registry.hexalith.com"]` is missing or `credsStore`/`credHelpers` is configured)
+- Step 12: Apply Dapr CRs from `deploy/dapr/` in Component → Configuration → Subscription order, skipping `deploy/dapr-alternatives/`
+- Step 13: `kubectl apply -k deploy/k8s/`
+
+**And** the script prints a final summary line `[publish] OK: <minver> applied to <context> in <duration>` and exits 0 on success.
+
+**Given** the MinVer resolution policy
+**When** publish step 1 runs
+**Then** the resolved version must match the regex `^[0-9]+\.[0-9]+\.[0-9]+(?:-[A-Za-z0-9.-]+)?(?:\+[A-Za-z0-9.-]+)?$` (allows `+dirty` build metadata)
+**And** an empty or malformed result exits 5 with a bounded error message
+**And** a `+dirty` resolution emits a single warning line and proceeds
+**And** the resolved version is stripped of the `v` prefix if present (defensive — MinVer should not emit it but the script asserts).
+
+**Given** the Zot pull-secret bootstrap (ADR D-K8s-2 Path B)
+**When** publish step 11 creates or updates `zot-pull-secret` (`kubernetes.io/dockerconfigjson`)
+**Then** the script re-emits the `auths["registry.hexalith.com"]` block from `~/.docker/config.json` wholesale (never decoded, never echoed, never written to disk outside the Secret payload)
+**And** a missing entry, malformed JSON, or any `credsStore`/`credHelpers` directive exits 6 with an actionable error referencing `docker login -u parties-publisher registry.hexalith.com` and `$env:DOCKER_CONFIG`
+**And** the operator's password / token never appears in stdout, stderr, the rendered manifest, or any log surface.
+
+**Given** the JWT signing Secret and Keycloak admin Secret bootstraps
+**When** publish step 11 runs for `hexalith-jwt-signing` and `hexalith-keycloak-admin`
+**Then** on first publish the script generates 32 random bytes (jwt) / 24 random bytes (keycloak) and creates the respective `Opaque` Secret
+**And** on subsequent publishes the script detects the existing Secret and does NOT regenerate (idempotent: re-publish must not invalidate a running cluster)
+**And** the generated values never appear in stdout, stderr, manifest YAML, or any log; only `[publish] Secret hexalith-jwt-signing: <created|exists>` status lines are emitted.
+
+**Given** the cross-patch idempotency contract
+**When** `publish.ps1` runs twice in succession on the same commit + same workstation
+**Then** the second run produces zero diff in `deploy/k8s/<service>/deployment.yaml` for all 3 patches (Dapr annotations + JWT secretKeyRef + imagePullSecrets) — i.e., patch anchors are detected and re-application is a no-op
+**And** the second run produces zero cluster-state diff (`kubectl apply -k` returns all resources as `unchanged`).
+
+**Acceptance Criteria (teardown.ps1 — 7-phase removal):**
+
+**Given** the documented removal scope from doc §10
+**When** `teardown.ps1 -ConfirmContext <name>` runs without optional switches
+**Then** the script asserts `-ConfirmContext` matches (shared gate with publish.ps1; exit 2 on mismatch)
+**And** the script proceeds only if the namespace `hexalith-parties` exists; if it does not, the script logs `[teardown] namespace hexalith-parties not present — nothing to delete` and exits 0
+**And** the script removes — in this order — `kubectl delete -k deploy/k8s/` (all 9 workloads), `kubectl delete -f deploy/dapr/` (all Components, Configurations, Subscriptions, Resiliency CRs), and the 3 operator-managed Secrets (`hexalith-jwt-signing`, `hexalith-keycloak-admin`, `zot-pull-secret`)
+**And** each removal block is bounded with a stdout marker and a `--ignore-not-found=true` flag (idempotent — re-running on an already-torn-down cluster exits 0).
+
+**Given** the `-PurgeNamespace` optional switch
+**When** the operator passes `-PurgeNamespace`
+**Then** the script additionally deletes the `hexalith-parties` namespace itself
+**And** the deletion uses `--wait=true` so the script returns only after the namespace is fully gone
+**And** without `-PurgeNamespace`, the namespace remains (empty) for fast re-deploy.
+
+**Given** the `-PurgeDapr` optional switch
+**When** the operator passes `-PurgeDapr`
+**Then** the script invokes `dapr uninstall -k --all` to remove the cluster-wide Dapr control plane
+**And** without `-PurgeDapr`, the Dapr control plane is left untouched (it is cluster-wide and may be shared with other projects per doc §10).
+
+**Given** the residual-state probe contract (doc §10 final paragraph)
+**When** the teardown completes (without `-PurgeNamespace`)
+**Then** the script probes the `hexalith-parties` namespace for any owned resource (Deployment, Service, ConfigMap, Secret, Dapr Component/Configuration/Subscription/Resiliency)
+**And** if any owned resource remains, the script exits 7 with a bounded summary listing the offending resource kinds + names (counted, not enumerated if > 5 of any kind) and the message: "Residual state detected — manual intervention required before next publish"
+**And** if no owned resource remains, the script prints `[teardown] OK: namespace hexalith-parties clean` and exits 0.
+
+**Acceptance Criteria (shared contract):**
+
+**Given** the two scripts share a context-resolution helper
+**When** the `deploy/k8s/_lib/` folder is inspected
+**Then** it contains `Confirm-KubeContext.ps1` consumed by BOTH `publish.ps1` and `teardown.ps1`
+**And** changes to the gate logic (exit-code mapping, mismatch message format, single-echo-at-start discipline) touch only this one file
+**And** the helper exports a single entry-point function `Assert-KubeContext -Expected <name>` returning `$null` on match and exiting the parent script on mismatch.
+
+**Given** the credential-safety contract (shared between publish + teardown + helper)
+**When** the full stdout/stderr capture of either script is inspected
+**Then** none of the following appear: a Base64-decoded password fragment, the literal `Password:`, a JWT-shaped token (`eyJ` followed by Base64), the contents of `~/.docker/config.json`, the value of any operator-managed Secret, the cluster URL, the cluster certificate authority, or any bearer token
+**And** Secret operations are reported by name only (`[publish] Secret hexalith-jwt-signing: created`, `[teardown] Secret hexalith-jwt-signing: deleted`).
+
+**Given** the duration budget from doc §2
+**When** `publish.ps1` runs against a 9-pod target on a developer-class machine
+**Then** the script completes in 5–10 minutes (cold cache; warm cache faster) and the 9 pods reach Ready within 2 minutes of step 13
+**And** the script emits per-step elapsed-time markers for diagnostics but does not enforce a hard timeout.
+
+### Story 9.6: validate-deployment.ps1 Lint Tooling
+
+**Phase:** MVP
+**Coverage type:** planned
 **Requirements covered:** FR61; supports FR31, FR31a, FR39, FR40, FR41
 
-As an operator preparing Parties for deployment,
-I want deployment validation tooling to lint the aspirate-generated Kubernetes manifests as well as runtime configuration,
-So that unsafe or drifted K8s artifacts are caught before they reach a cluster.
+As an operator preparing a deployment for review,
+I want `deploy/validate-deployment.ps1` to lint the committed `deploy/dapr/` + `deploy/k8s/` tree (or a generated tree at a candidate path) and report blocking violations across 8 well-defined categories,
+So that unsafe or drifted artefacts are caught before they reach a cluster — and the lint output is itself safe to attach to a PR or CI log.
 
 **Acceptance Criteria:**
 
-**Given** `deploy/k8s/` contains generated manifests
-**When** the deployment validation tool runs against the manifest set
-**Then** missing image references, missing or zero resource requests/limits, missing readiness/liveness probes, missing DAPR sidecar annotations on Parties/sibling services, or missing required ConfigMaps are reported as blocking validation failures.
+**Given** the invocation contract
+**When** the operator runs `pwsh deploy/validate-deployment.ps1 --config-path deploy/dapr -K8sPath deploy/k8s/`
+**Then** the script accepts both committed-tree and post-`publish.ps1` candidate-tree paths
+**And** the script does not require a kubectl context (pure static lint — no cluster reachability)
+**And** exit codes: 0 = pass, 1 = fail (at least one BLOCKING violation), 2 = invalid arguments, 3 = config-path or k8s-path not found.
 
-**Given** the deployment validation tool inspects DAPR component CRs in `deploy/k8s/dapr/`
-**When** it compares them against the authoritative templates in `deploy/dapr/`
-**Then** missing components, drifted access-control rules (wildcard app ids, wildcard operation paths, missing deny-by-default behavior, missing Parties operation rules), or drifted subscription routes are reported as blocking validation failures
-**And** the report identifies the unsafe or drifted configuration category without exposing secrets.
+**Given** the 8 lint categories
+**When** the script runs against a target tree
+**Then** the following categories are evaluated, each emitting one or more findings with severity `BLOCKING` (fail-the-build):
+- `K8sWorkload-MissingImagePullSecret`: a Deployment with `image: registry.hexalith.com/*` lacks `spec.template.spec.imagePullSecrets[*].name == "zot-pull-secret"`
+- `K8sWorkload-MissingDaprAnnotations`: a Deployment under a Dapr-equipped app-id (`eventstore`, `eventstore-admin`, `parties`, `tenants`, `memories`) lacks `dapr.io/enabled`, `dapr.io/app-id`, `dapr.io/app-port`, or `dapr.io/config`
+- `K8sWorkload-MissingProbes`: a Deployment lacks `readinessProbe` or `livenessProbe` on its primary container
+- `K8sWorkload-NonSemVerTag`: a Deployment image tag does not match `^[0-9]+\.[0-9]+\.[0-9]+(?:-[A-Za-z0-9.-]+)?$` (rejects `:latest`, empty, malformed)
+- `K8sWorkload-DirtyTagOnConsumerImage`: a Deployment image tag contains `+dirty` build metadata (rejected for any tag destined to ship)
+- `DaprACL-WildcardAppId`: an access-control configuration contains an allowed-caller entry with `appId: "*"` or empty
+- `DaprACL-WildcardOperation`: an access-control configuration contains an `operation: "*"` or path-with-trailing-`*` entry
+- `Secret-Plaintext`: any Deployment / ConfigMap / Dapr Component contains a `value` field with a high-entropy string matching a credential-shape regex (Base64-decoded token, password-prefixed line, JWT-shaped token)
 
-**Given** the deployment validation tool inspects secret handling in the generated manifests
-**When** plaintext secrets, embedded credentials, or hard-coded tenant identifiers are detected in Deployment/ConfigMap resources
-**Then** they are reported as blocking validation failures
-**And** the report explains the expected secret-reference pattern without printing the offending values.
+**Given** the output discipline
+**When** findings are reported
+**Then** each finding line is bounded (≤ 200 chars) and contains: `[<severity>] <category> at <file>:<jsonpath> — <reason>`
+**And** the offending VALUE is never reproduced (only the path and the category)
+**And** the script supports a `-Format json` flag emitting machine-readable JSON with the same fields (for CI ingestion)
+**And** the default human-readable output ends with a summary line `[validate] <N> findings (<B> blocking, <W> warnings) — <PASS|FAIL>`.
 
-**Given** the deployment validation tool inspects target context
-**When** a manifest set is validated for a local-cluster context allowlist
-**Then** any resource that requires a non-local-cluster capability (cloud-provider storage class, cloud-provider ingress class) is reported as a blocking validation failure for the MVP scope
-**And** the report links to the documented post-MVP escalation path.
+**Given** the secret-leak fail-closed contract
+**When** the lint inspects suspected credential-shaped strings
+**Then** the lint reports the category + path + a SHAPE descriptor (`base64-shaped`, `jwt-shaped`, `password-prefixed`) but never the literal value
+**And** the script's own source contains a self-test asserting it never logs a captured suspicious value (regex-based self-check at startup; fail fast if the script is tampered with to leak).
 
-**Given** validation output is generated
-**When** failures or warnings are reported
-**Then** output is bounded, machine-readable where useful, and safe for logs/artifacts
-**And** secrets, tokens, tenant membership payloads, and personal data are not printed.
+**Given** the alternative-backend templates in `deploy/dapr-alternatives/`
+**When** the lint runs against `--config-path deploy/dapr` (NOT `deploy/dapr-alternatives`)
+**Then** alternative-backend templates are skipped — they are not part of the deployed CR set and would generate false positives.
 
-**Given** validation tests run
-**When** they cover valid generated manifests, missing probes, missing resource limits, drifted DAPR ACLs, drifted subscriptions, plaintext secrets, and non-local-cluster capabilities
-**Then** validation behavior matches deployment security expectations
-**And** existing Story 3.9 configuration-validation tests continue to pass unchanged.
+**Given** the validate-deployment.ps1 + publish.ps1 + teardown.ps1 share `-ConfirmContext` patterns
+**When** `validate-deployment.ps1` is compared with the other two scripts
+**Then** validate-deployment.ps1 does NOT carry `-ConfirmContext` (it is context-free static lint)
+**And** the helper module `_lib/Confirm-KubeContext.ps1` is reused only by publish.ps1 + teardown.ps1.
 
-### Story 9.5: Zot Registry Build+Push Pipeline & Script Consolidation
+**Given** the lint is wired into CI eventually (out-of-scope for MVP, but the contract must support it)
+**When** `validate-deployment.ps1 -Format json` is consumed by an external tool
+**Then** the JSON output has a stable schema: `{ version: "1", findings: [{ severity, category, file, jsonpath, reason }], summary: { findings, blocking, warnings, status } }`
+**And** schema-breaking changes require a version bump on the `version` field.
+
+### Story 9.7: Deployment Fitness Tests + Live-Cluster Integration
 
 **Phase:** MVP
-**Coverage type:** implemented
-**Requirements covered:** FR31a; supports FR31, FR60, FR61, NFR30 (added 2026-05-20 by sprint-change-proposal-2026-05-20-zot-build-push)
+**Coverage type:** planned
+**Requirements covered:** FR61; supports FR31, FR31a, FR40, FR41
 
-As an operator deploying Hexalith.Parties to a real Kubernetes cluster backed by the Zot registry at `registry.hexalith.com`,
-I want a single one-command pipeline that resolves the MinVer version, builds the container images, pushes them to Zot with that tag, emits the Kubernetes manifests, bootstraps the registry pull secret, and applies the full topology,
-So that there is no separate manifest-generation / build / push / apply ceremony, no stale `:latest` references, and no script that refuses to run on the real cluster context.
+As a developer evolving the deployment topology,
+I want a sealed set of fitness tests in `tests/Hexalith.Parties.DeployValidation.Tests/` that guard the architectural contracts of Stories 9.1–9.6 — and a small set of trait-gated live-cluster integration tests that exercise the `publish.ps1` happy path end-to-end,
+So that the contracts (byte-determinism, idempotency, deny-by-default ACL, no credential leak, carve-out preservation, deterministic MinVer emission) are enforced in CI as code, not as policy a reviewer must remember.
 
 **Acceptance Criteria:**
 
-**Given** an operator with `docker login -u parties-publisher registry.hexalith.com` credentials in `~/.docker/config.json` and a kubectl context the operator owns,
-**When** the operator runs `pwsh deploy/k8s/publish.ps1 -ConfirmContext <name>` from a clean checkout,
-**Then** the script resolves the MinVer version (exit 5 on empty / non-SemVer; warn-and-proceed on dirty tree), invokes `dotnet aspirate generate` without `--skip-build` with `--container-image-tag <minver>` + `--container-registry registry.hexalith.com`, pushes each image to `registry.hexalith.com/<app-id>:<minver>` using the `parties-publisher` credentials, exits 0 on success
-**And** bounded stdout shows the MinVer version + per-image push metadata; credentials never appear.
+**Given** the deploy-validation test project
+**When** the project structure is inspected
+**Then** the test project `Hexalith.Parties.DeployValidation.Tests` exists with the following test classes:
+- `K8sManifestGenerationTests` — guards the byte-determinism contract per commit (non-image lines) and the per-service-folder emission contract from Story 9.2
+- `K8sManifestPublishTests` — guards the publish.ps1 pipeline contracts: MinVer regex emission on every `registry.hexalith.com/*` image, imagePullSecrets presence on every consumer Deployment, dapr-annotation patch shape, JWT secretKeyRef shape, cross-patch idempotency on second invocation
+- `DaprAccessControlFitnessTests` — asserts deny-by-default in all 5 ACL configs, asserts no wildcard appId, asserts no wildcard operation path, asserts the topology call-allowlist matches the documented map (parties→tenants OK, tenants→parties forbidden)
+- `DaprSubscriptionFitnessTests` — asserts the 2 declarative subscriptions wire the documented topics to the documented consumer endpoints, with retry/dead-letter config consistent with `resiliency.yaml`
+- `CarveOutPreservationFitnessTest` — asserts a simulated `publish.ps1` cycle does not modify `redis/deployment.yaml` or `keycloak/deployment.yaml`; asserts no `imagePullSecrets` block and no Dapr annotations land in carve-outs
+- `DocumentationFitnessTest` — asserts no `:latest` references in `registry.hexalith.com/*` snippets across entry-point docs; asserts no stale references to `regen.ps1`, `deploy-local.ps1`, `teardown-local.ps1`, `kind-*`, `minikube`, the old local-cluster regex allowlist; asserts every entry-point doc links to `docs/kubernetes-deployment-architecture.md`
+- `ValidateDeploymentLintFitnessTests` — exercises `validate-deployment.ps1` against curated fixture trees (valid baseline, each of the 8 lint categories triggered, JSON-format output schema stability)
+- `CredentialLeakPoisonSweepTest` — runs `publish.ps1` against a mocked / sandboxed target, captures full stdout/stderr, asserts none of the documented leak shapes (base64-shaped, jwt-shaped, password-prefixed, `~/.docker/config.json` body) appear in the capture.
 
-**Given** the operator has populated `~/.docker/config.json` `auths["registry.hexalith.com"]` via `docker login -u parties-publisher`,
-**When** `publish.ps1` reaches its Secret-bootstrap block,
-**Then** the script creates or updates `zot-pull-secret` (`kubernetes.io/dockerconfigjson`) by re-emitting the `auths["registry.hexalith.com"]` block wholesale (Path B — never decoded; never echoed; never written to disk), idempotently
-**And** the operator's password / token never appears in stdout, stderr, the rendered manifest, or any log
-**And** a missing entry, malformed JSON, or any `credsStore` / `credHelpers` directive exits 6 with an actionable error referencing `docker login` and `$env:DOCKER_CONFIG` mitigations.
+**Given** the unit-vs-integration boundary
+**When** the test classes are inspected
+**Then** all fitness tests above run as pure C# tests with NO cluster reachability requirement (they read committed YAML, invoke scripts in `-DryRun` mode, or operate on fixture trees)
+**And** the test classes carry NO `xunit.skip` / `Trait("Category","Integration")` markers (they run in the default test pass).
 
-**Given** aspirate emits `deploy/k8s/<app-id>/deployment.yaml` for every consumer of `registry.hexalith.com/*` images,
-**When** `publish.ps1` runs its post-aspirate patch block,
-**Then** every Deployment whose container image starts with `registry.hexalith.com/` gains `spec.template.spec.imagePullSecrets: [{ name: zot-pull-secret }]` at the pod-template level
-**And** the patch is idempotent (no double-insertion on second invocation)
-**And** the patch does not touch the hand-authored `deploy/k8s/keycloak/` / `deploy/k8s/redis/` carve-outs (vendor images from public registries).
+**Given** the trait-gated live-cluster integration tests (separate from fitness)
+**When** the integration suite is invoked with `dotnet test --filter Trait=LiveCluster`
+**Then** the suite runs at most a small set of end-to-end probes against a live cluster the operator opted into:
+- `LiveCluster_PublishHappyPath`: runs `publish.ps1 -ConfirmContext <test-context>` against a sandbox namespace, asserts 9 pods reach Ready within the doc §13 budget
+- `LiveCluster_TeardownClean`: runs `teardown.ps1 -ConfirmContext <test-context>`, asserts the residual-state probe exits 0
+- `LiveCluster_IdempotentRepublish`: runs `publish.ps1` twice in succession, asserts the second run produces zero kubectl-detected resource changes
 
-**Given** the MinVer version resolved in AC1,
-**When** `publish.ps1` completes aspirate generation + post-aspirate patches,
-**Then** every `image:` line in `deploy/k8s/<app-id>/deployment.yaml` for a `registry.hexalith.com/*` repository carries the resolved MinVer tag (regex `^[0-9]+\.[0-9]+\.[0-9]+(?:-[A-Za-z0-9.-]+)?$`), not `:latest`, `:staging-latest`, or empty
-**And** identical commit + MinVer + aspirate version produces identical non-image lines across runs (deterministic-per-commit contract supersedes the Story 9.1 byte-identical contract on the image-tag line only).
+**And** the LiveCluster suite is NEVER run in the default test pass (requires explicit opt-in via the trait filter and a `KUBECONFIG_TEST_PATH` env var pointing to a sandbox kubeconfig).
 
-**Given** the existing `regen.ps1`, `deploy-local.ps1`, `teardown-local.ps1`,
-**When** Story 9.5 lands,
-**Then** `regen.ps1` and `deploy-local.ps1` are deleted (subsumed by `publish.ps1`), `teardown-local.ps1` is renamed to `teardown.ps1`, and the local-cluster regex allowlist is replaced by the mandatory `-ConfirmContext <name>` parameter (ADR 9.5-2).
+**Given** the fitness-test boundary with existing test projects
+**When** the test set is compared with `tests/Hexalith.Parties.Architecture.Tests` and other architectural fitness tests in the repo
+**Then** deploy-validation fitness tests are scoped to the deployment surface (YAML, scripts, docs) and do NOT cross into application architecture (REST/MCP exposure guards, contract dependency rules, projection isolation — those live in the Architecture.Tests project)
+**And** no test in either project asserts the same contract twice.
 
-**Given** the publish script may target any kubectl context the operator has configured,
-**When** `publish.ps1` starts,
-**Then** the script requires `-ConfirmContext <name>` matching `kubectl config current-context` exactly; mismatch → exit 2 with `expected '<arg>', got '<active>'`. The active context name is echoed once at the start of the run — never the `~/.kube/config` cluster URL, certificate authority, or token.
+**Given** the test fixtures must be hand-curated, not auto-generated
+**When** fixture trees are inspected under `tests/Hexalith.Parties.DeployValidation.Tests/Fixtures/`
+**Then** fixtures cover: a baseline valid tree, a tree per lint category from Story 9.6 (8 negative cases), a tree exercising the carve-out boundary, a tree exercising the byte-determinism re-run, a fixture for each MinVer edge case (clean release, preview, dirty)
+**And** every fixture is < 50 KB and is reviewable as a unit (no opaque binaries; only YAML/JSON/text).
 
-**Given** Story 9.1 added the dapr annotation patch and Story 9.3 AC4 added the JWT `secretKeyRef` patch,
-**When** the dev agent ports these blocks into `publish.ps1`,
-**Then** both patches remain functionally identical to their `regen.ps1` versions (same idempotency anchors)
-**And** running `publish.ps1` twice in succession on the same commit produces zero diff in `deploy/k8s/<app-id>/deployment.yaml` for all three patches (dapr annotation + JWT secretKeyRef + new imagePullSecrets) — cross-patch idempotency contract.
-
-**Given** Story 9.1 documented the `deploy/dapr/` apply order, Story 9.3 AC4 added the `hexalith-jwt-signing` + `hexalith-keycloak-admin` Secret bootstrap, and Story 9.3 AC6 added the resiliency dry-run,
-**When** `publish.ps1` runs after the build/push step,
-**Then** the script executes — in this order — the `resiliency.yaml` server-side dry-run, the operator-managed Secret bootstrap (extended with `zot-pull-secret`), `kubectl apply -f` over `deploy/dapr/*.yaml`, and `kubectl apply -k deploy/k8s/`
-**And** the bounded-summary output discipline is preserved with no broader logging of credentials, ConfigMap values, or `~/.docker/config.json` contents.
-
-**Given** Story 9.2 / 9.3 established the lint + fitness suite,
-**When** the dev agent adds Story 9.5 tests additively (no rename / removal of existing tests),
-**Then** a new test class `K8sManifestPublishTests` covers at minimum 11 deploy-lane tests + 2 trait-gated live-cluster tests (MinVer-tag emission, imagePullSecrets presence, patch idempotency, MinVer resolution edge cases, credential-leak poison sweep, cross-patch idempotency, aspirate flag preflight, byte-determinism contract)
-**And** the validator gains a new lint category `K8sWorkload-MissingImagePullSecret` (fail-severity) that fires when a `registry.hexalith.com/*` Deployment lacks `spec.template.spec.imagePullSecrets[*].name == "zot-pull-secret"`
-**And** `K8sManifestGenerationTests` byte-determinism assertion is relaxed on the image-tag line only.
-
-**Given** `deploy/k8s/README.md`, `docs/getting-started.md`, `docs/deployment-guide.md`, `prd.md`, `architecture.md`, and `epics.md`,
-**When** Story 9.5 lands,
-**Then** the documentation is updated to replace the regen + deploy + teardown framing with the publish + teardown framing (`-ConfirmContext` gate), add the Zot credentials subsection in deployment-guide.md, tighten FR31a in prd.md to enumerate the build+push step, add ADR D-K8s-2 to architecture.md, and append the Story 9.5 block + Story 9.1 addendum to epics.md.
+**Given** test output discipline
+**When** any deploy-validation test fails
+**Then** the failure message includes the offending file path, the offending JSON-path/line, and the category — but NEVER the offending value if it is credential-shaped (the same poison-sweep rule from Story 9.6 applies to test diagnostics).
