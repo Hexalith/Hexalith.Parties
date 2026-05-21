@@ -199,6 +199,48 @@ public class DeploymentValidationTests : IDisposable
     }
 
     [Fact]
+    public async Task MissingAuthenticationSettings_FailClosedValidationBlocksProduction()
+    {
+        WriteValidProductionConfig(_tempDir);
+        WriteTopologyConfig(_tempDir, includeAuthentication: false);
+
+        (int exitCode, string output) = await RunValidationAsync(_tempDir);
+
+        exitCode.ShouldBe(1);
+        output.ShouldContain("Authentication");
+        output.ShouldContain("jwtIssuer");
+        output.ShouldContain("failClosed");
+    }
+
+    [Fact]
+    public async Task MissingTenantIdentitySettings_BlockProductionWithAuthenticatedCredentialGuidance()
+    {
+        WriteValidProductionConfig(_tempDir);
+        WriteTenantsIntegrationConfig(_tempDir, includeTenantSecurity: false);
+
+        (int exitCode, string output) = await RunValidationAsync(_tempDir);
+
+        exitCode.ShouldBe(1);
+        output.ShouldContain("Tenant identity configuration is missing or unsafe");
+        output.ShouldContain("authenticated credentials");
+        output.ShouldContain("not request payloads");
+    }
+
+    [Fact]
+    public async Task UnsafeProductionTransportSettings_BlockProductionWithTlsGuidance()
+    {
+        WriteValidProductionConfig(_tempDir);
+        WriteTopologyConfig(_tempDir, httpsRequired: false, daprMtlsRequired: false, localDevelopmentHttpAllowed: true);
+
+        (int exitCode, string output) = await RunValidationAsync(_tempDir);
+
+        exitCode.ShouldBe(1);
+        output.ShouldContain("Transport");
+        output.ShouldContain("HTTPS/TLS");
+        output.ShouldContain("DAPR sidecar mTLS");
+    }
+
+    [Fact]
     public async Task MalformedTenantsConfig_FailsWithoutSecretData()
     {
         WriteValidProductionConfig(_tempDir);
@@ -211,6 +253,9 @@ public class DeploymentValidationTests : IDisposable
               pubsubName: ""
               topicName: ""
               commandApiAppId: ""
+              tenantIdentitySource: requestPayload
+              allowTenantFromPayload: true
+              metadataRequired: false
             """);
 
         (int exitCode, string output) = await RunValidationAsync(_tempDir);
@@ -364,6 +409,36 @@ public class DeploymentValidationTests : IDisposable
         jsonOutput.ShouldNotContain("Bearer ", Case.Insensitive);
         consoleOutput.ShouldNotContain("ConnectionString=", Case.Insensitive);
         jsonOutput.ShouldNotContain("ConnectionString=", Case.Insensitive);
+    }
+
+    [Fact]
+    public async Task DeploymentSecurityValidation_RedactsAuthTenantAndPersonalDataValues()
+    {
+        string sentinel = $"hexalith-claims-membership-personal-{Guid.NewGuid():N}";
+        WriteValidProductionConfig(_tempDir);
+        WriteTopologyConfig(
+            _tempDir,
+            failClosed: false,
+            jwtIssuer: $"Bearer {sentinel}",
+            jwtAudience: $"claims:{sentinel}",
+            signingKeySecretName: sentinel,
+            signingKeySecretKey: sentinel);
+        WriteTenantsIntegrationConfig(
+            _tempDir,
+            includeTenantSecurity: false,
+            unsafeTenantDiagnosticValue: sentinel);
+
+        (int exitCode, string consoleOutput) = await RunValidationAsync(_tempDir);
+        (int jsonExitCode, string jsonOutput) = await RunValidationAsync(_tempDir, jsonOutput: true);
+
+        exitCode.ShouldBe(1);
+        jsonExitCode.ShouldBe(1);
+        consoleOutput.ShouldContain("Authentication");
+        consoleOutput.ShouldContain("Tenant identity configuration is missing or unsafe");
+        consoleOutput.ShouldNotContain(sentinel, Case.Insensitive);
+        jsonOutput.ShouldNotContain(sentinel, Case.Insensitive);
+        consoleOutput.ShouldNotContain("Bearer ", Case.Insensitive);
+        jsonOutput.ShouldNotContain("Bearer ", Case.Insensitive);
     }
 
     protected virtual void Dispose(bool disposing)
@@ -527,17 +602,7 @@ public class DeploymentValidationTests : IDisposable
               - parties
             """);
 
-        File.WriteAllText(Path.Combine(dir, "tenants-integration.yaml"), """
-            apiVersion: hexalith.io/v1
-            kind: TenantsIntegration
-            metadata:
-              name: parties-tenants
-            spec:
-              pubsubName: pubsub
-              topicName: system.tenants.events
-              commandApiAppId: eventstore
-              tenantsDependencyHealth: healthy
-            """);
+        WriteTenantsIntegrationConfig(dir);
 
         File.WriteAllText(Path.Combine(dir, "resiliency.yaml"), """
             apiVersion: dapr.io/v1alpha1
@@ -637,7 +702,16 @@ public class DeploymentValidationTests : IDisposable
         bool includePartiesMcp = true,
         bool mcpEnabled = false,
         bool includeSecretAnnotation = false,
-        string? secretSentinel = null)
+        string? secretSentinel = null,
+        bool includeAuthentication = true,
+        bool failClosed = true,
+        string jwtIssuer = "{env:AUTHENTICATION_JWTBEARER_ISSUER}",
+        string jwtAudience = "{env:AUTHENTICATION_JWTBEARER_AUDIENCE}",
+        string signingKeySecretName = "hexalith-jwt-signing",
+        string signingKeySecretKey = "Authentication__JwtBearer__SigningKey",
+        bool httpsRequired = true,
+        bool daprMtlsRequired = true,
+        bool localDevelopmentHttpAllowed = false)
     {
         List<string> appIds = [];
         if (includeEventStore) appIds.Add("eventstore");
@@ -652,6 +726,16 @@ public class DeploymentValidationTests : IDisposable
             ? $"""
               annotations:
                 diagnostic: "Bearer {secretSentinel} ConnectionString=Server=example;Password={secretSentinel}"
+            """
+            : string.Empty;
+        string authentication = includeAuthentication
+            ? $$"""
+                  authentication:
+                    jwtIssuer: "{{jwtIssuer}}"
+                    jwtAudience: "{{jwtAudience}}"
+                    signingKeySecretName: {{signingKeySecretName}}
+                    signingKeySecretKey: {{signingKeySecretKey}}
+                    failClosed: {{failClosed.ToString().ToLowerInvariant()}}
             """
             : string.Empty;
 
@@ -672,6 +756,49 @@ public class DeploymentValidationTests : IDisposable
                   appId: parties
                   methodName: process
                   domain: party
+              deploymentSecurity:
+            {{authentication}}
+                transport:
+                  httpsRequired: {{httpsRequired.ToString().ToLowerInvariant()}}
+                  daprMtlsRequired: {{daprMtlsRequired.ToString().ToLowerInvariant()}}
+                  localDevelopmentHttpAllowed: {{localDevelopmentHttpAllowed.ToString().ToLowerInvariant()}}
+            """);
+    }
+
+    private static void WriteTenantsIntegrationConfig(
+        string dir,
+        bool includeTenantSecurity = true,
+        string? unsafeTenantDiagnosticValue = null)
+    {
+        string tenantSecurity = includeTenantSecurity
+            ? """
+              tenantIdentitySource: authenticatedCredentials
+              allowTenantFromPayload: false
+              metadataRequired: true
+            """
+            : """
+              tenantIdentitySource: requestPayload
+              allowTenantFromPayload: true
+              metadataRequired: false
+            """;
+        string diagnostic = unsafeTenantDiagnosticValue is null
+            ? string.Empty
+            : $"""
+              tenantMembershipPayload: "{unsafeTenantDiagnosticValue}"
+            """;
+
+        File.WriteAllText(Path.Combine(dir, "tenants-integration.yaml"), $$"""
+            apiVersion: hexalith.io/v1
+            kind: TenantsIntegration
+            metadata:
+              name: parties-tenants
+            spec:
+              pubsubName: pubsub
+              topicName: system.tenants.events
+              commandApiAppId: eventstore
+              tenantsDependencyHealth: healthy
+            {{tenantSecurity}}
+            {{diagnostic}}
             """);
     }
 

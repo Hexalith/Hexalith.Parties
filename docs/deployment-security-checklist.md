@@ -24,6 +24,8 @@ Exit code `0` = all checks passed (warnings OK). Exit code `1` = at least one bl
 
 The K8s-manifest mode (`-K8sPath`) lints workload-shape issues (missing image, missing DAPR annotations, unresolved ConfigMap refs), DAPR drift (ACL `defaultAction`, wildcard `appId`, missing dead-letter, wrong `pubsubname`, regen invariant), plaintext secrets in `configMapGenerator.literals` / container env / `Secret` resources, static tenant identifiers, and cloud-only capabilities (`StorageClass`, `IngressClass`, `Service.type: LoadBalancer`). See `deploy/k8s/README.md` → "K8s manifest lint" for the full category table.
 
+The DAPR config mode also validates the security metadata in `topology.yaml` and `tenants-integration.yaml`. Production runs fail when JWT issuer/audience/signing-key references are missing, authentication is not marked fail-closed, tenant identity is allowed from request payloads, DAPR ACLs are broad, or HTTPS/DAPR mTLS transport policy is not enabled. JSON output is bounded and does not print tokens, signing keys, claims dictionaries, tenant membership payloads, or personal data values.
+
 ---
 
 ## Pre-Deployment Checklist
@@ -60,9 +62,25 @@ All three layers must be configured for each pub/sub component:
 - [ ] `subscription-tenants.yaml` exists for topic `system.tenants.events`
 - [ ] Tenants subscription `scopes` includes `parties`
 - [ ] Tenants subscription has `deadLetterTopic`
-- [ ] `tenants-integration.yaml` sets `pubsubName: pubsub`, `topicName: system.tenants.events`, and `commandApiAppId: parties`
+- [ ] `tenants-integration.yaml` sets `pubsubName: pubsub`, `topicName: system.tenants.events`, and `commandApiAppId: eventstore`
+- [ ] `tenants-integration.yaml` sets `tenantIdentitySource: authenticatedCredentials`, `allowTenantFromPayload: false`, and `metadataRequired: true`
 - [ ] No Parties configuration bypasses Hexalith.Tenants authorization
+- [ ] Tenant identity comes only from authenticated credentials and authoritative Tenants metadata, never from command/query request payloads
 - [ ] Troubleshooting/runbook owners are assigned for identity provider, tenant administrator, tenant operator, and platform operator issues
+
+### Authentication
+
+- [ ] `topology.yaml` `deploymentSecurity.authentication` defines `jwtIssuer` and `jwtAudience`
+- [ ] JWT signing material is referenced by `signingKeySecretName` and `signingKeySecretKey`; no inline signing key is committed
+- [ ] `failClosed` is `true` so missing/invalid JWT configuration blocks startup or deployment
+- [ ] Validation output does not include tokens, signing keys, claim dictionaries, membership payloads, or personal data
+
+### Transport
+
+- [ ] `topology.yaml` `deploymentSecurity.transport.httpsRequired` is `true`
+- [ ] `deploymentSecurity.transport.daprMtlsRequired` is `true`
+- [ ] `deploymentSecurity.transport.localDevelopmentHttpAllowed` is `false` for production manifests
+- [ ] Any HTTP exception is documented as local-development only and never promoted to production
 
 ### Secret Store
 

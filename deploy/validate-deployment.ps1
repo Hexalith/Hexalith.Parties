@@ -341,6 +341,42 @@ function Remove-YamlComments {
     return ($Content -replace "(?m)^\s*#.*$", "")
 }
 
+function Test-BlankYamlValue {
+    param([string]$Value)
+    return [string]::IsNullOrWhiteSpace($Value)
+}
+
+function Test-YamlTrue {
+    param([string]$Value)
+    if ([string]::IsNullOrWhiteSpace($Value)) { return $false }
+    return ([string]$Value).Trim().ToLowerInvariant() -eq "true"
+}
+
+function Test-YamlFalse {
+    param([string]$Value)
+    if ([string]::IsNullOrWhiteSpace($Value)) { return $false }
+    return ([string]$Value).Trim().ToLowerInvariant() -eq "false"
+}
+
+function Get-PartiesTopologyContents {
+    param([string]$ConfigPath)
+    $topologyDocs = @()
+    $topologyFiles = @(Get-ChildItem -Path $ConfigPath -Filter "*.yaml" -ErrorAction SilentlyContinue |
+        Where-Object { (Get-YamlKind (Read-YamlFile $_.FullName)) -eq "PartiesTopology" })
+
+    foreach ($topologyFile in $topologyFiles) {
+        $content = Read-YamlFile $topologyFile.FullName
+        if ($content) {
+            $topologyDocs += [PSCustomObject]@{
+                Name    = $topologyFile.Name
+                Content = $content
+            }
+        }
+    }
+
+    return , $topologyDocs
+}
+
 # ---------------------------------------------------------------------------
 # Validation checks
 # ---------------------------------------------------------------------------
@@ -883,6 +919,9 @@ function Test-TenantsIntegration {
             $topicName = Get-YamlValue $content "topicName" -Mode TopLevel
             $appId = Get-YamlValue $content "commandApiAppId" -Mode TopLevel
             $dependencyHealth = Get-YamlValue $content "tenantsDependencyHealth" -Mode TopLevel
+            $tenantIdentitySource = Get-YamlValue $content "tenantIdentitySource" -Mode TopLevel
+            $allowTenantFromPayload = Get-YamlValue $content "allowTenantFromPayload" -Mode TopLevel
+            $metadataRequired = Get-YamlValue $content "metadataRequired" -Mode TopLevel
 
             if ($pubsubName -eq $expectedPubSub -and $topicName -eq $expectedTopic -and $appId -eq $expectedCommandAppId) {
                 Add-Result $Category "Tenants configuration values ($fileName)" "Pass" "Tenants config targets EventStore-fronted command gateway"
@@ -890,6 +929,16 @@ function Test-TenantsIntegration {
             else {
                 Add-Result $Category "Tenants configuration values ($fileName)" "Fail" "Missing or malformed Tenants config values" `
                     "Set pubsubName=$expectedPubSub, topicName=$expectedTopic, and commandApiAppId=$expectedCommandAppId. Impact: tenant access projection may not receive authoritative Tenants state. Remediation target: $fileName."
+            }
+
+            if ($tenantIdentitySource -eq "authenticatedCredentials" -and
+                (Test-YamlFalse $allowTenantFromPayload) -and
+                (Test-YamlTrue $metadataRequired)) {
+                Add-Result $Category "Tenant identity source ($fileName)" "Pass" "Tenant identity is bound to authenticated credentials and metadata"
+            }
+            else {
+                Add-Result $Category "Tenant identity source ($fileName)" "Fail" "Tenant identity configuration is missing or unsafe" `
+                    "Set tenantIdentitySource=authenticatedCredentials, allowTenantFromPayload=false, and metadataRequired=true. Tenant identity must come from authenticated credentials, not request payloads."
             }
 
             # dependencyHealth signal: case-insensitive match; unknown values warn instead of silently passing.
@@ -1099,6 +1148,118 @@ function Test-SecretStore {
     }
 
     Add-Result $Category "Secret store component exists" "Pass" "Secret store component found"
+}
+
+function Test-Authentication {
+    param([string]$ConfigPath)
+    $Category = "Authentication"
+    $topologies = @(Get-PartiesTopologyContents $ConfigPath)
+
+    if ($topologies.Count -eq 0) {
+        if ($script:IsLocalDevelopment) {
+            Add-Result $Category "JWT settings present" "Warn" "No topology security metadata found (local development profile)" `
+                "Add topology.yaml deploymentSecurity.authentication before production deployment."
+        }
+        else {
+            Add-Result $Category "JWT settings present" "Fail" "No topology security metadata found" `
+                "Add topology.yaml deploymentSecurity.authentication with jwtIssuer, jwtAudience, signingKeySecretName, signingKeySecretKey, and failClosed=true."
+        }
+        return
+    }
+
+    foreach ($topology in $topologies) {
+        $content = $topology.Content
+        $fileName = $topology.Name
+        $missing = @()
+        if (Test-BlankYamlValue (Get-YamlValue $content "jwtIssuer" -Mode TopLevel)) { $missing += "jwtIssuer" }
+        if (Test-BlankYamlValue (Get-YamlValue $content "jwtAudience" -Mode TopLevel)) { $missing += "jwtAudience" }
+        if (Test-BlankYamlValue (Get-YamlValue $content "signingKeySecretName" -Mode TopLevel)) { $missing += "signingKeySecretName" }
+        if (Test-BlankYamlValue (Get-YamlValue $content "signingKeySecretKey" -Mode TopLevel)) { $missing += "signingKeySecretKey" }
+
+        $failClosed = Get-YamlValue $content "failClosed" -Mode TopLevel
+        if ($missing.Count -gt 0) {
+            Add-Result $Category "JWT issuer, audience, and signing key ($fileName)" "Fail" "Missing JWT/authentication settings: $($missing -join ', ')" `
+                "Set jwtIssuer, jwtAudience, signingKeySecretName, and signingKeySecretKey in topology.yaml deploymentSecurity.authentication. Do not place signing keys or tokens in validation output."
+        }
+        else {
+            Add-Result $Category "JWT issuer, audience, and signing key ($fileName)" "Pass" "JWT issuer, audience, and secret reference metadata are present"
+        }
+
+        if (Test-YamlTrue $failClosed) {
+            Add-Result $Category "Authentication fails closed ($fileName)" "Pass" "Authentication fail-closed behavior is enabled"
+        }
+        else {
+            Add-Result $Category "Authentication fails closed ($fileName)" "Fail" "Authentication fail-closed behavior is not enabled" `
+                "Set failClosed=true so missing or invalid JWT settings block startup instead of accepting unauthenticated traffic."
+        }
+
+        if (-not (Test-BlankYamlValue (Get-YamlValue $content "signingKey" -Mode TopLevel))) {
+            Add-Result $Category "No inline signing key ($fileName)" "Fail" "Inline JWT signing key is configured" `
+                "Use signingKeySecretName and signingKeySecretKey. Inline signing keys must not be committed or printed."
+        }
+    }
+}
+
+function Test-Transport {
+    param([string]$ConfigPath)
+    $Category = "Transport"
+    $topologies = @(Get-PartiesTopologyContents $ConfigPath)
+
+    if ($topologies.Count -eq 0) {
+        if ($script:IsLocalDevelopment) {
+            Add-Result $Category "Production transport policy present" "Warn" "No topology transport metadata found (local development profile)" `
+                "Add topology.yaml deploymentSecurity.transport before production deployment."
+        }
+        else {
+            Add-Result $Category "Production transport policy present" "Fail" "No topology transport metadata found" `
+                "Add topology.yaml deploymentSecurity.transport with httpsRequired=true, daprMtlsRequired=true, and localDevelopmentHttpAllowed=false."
+        }
+        return
+    }
+
+    foreach ($topology in $topologies) {
+        $content = $topology.Content
+        $fileName = $topology.Name
+        $httpsRequired = Get-YamlValue $content "httpsRequired" -Mode TopLevel
+        $daprMtlsRequired = Get-YamlValue $content "daprMtlsRequired" -Mode TopLevel
+        $localHttpAllowed = Get-YamlValue $content "localDevelopmentHttpAllowed" -Mode TopLevel
+
+        if (Test-YamlTrue $httpsRequired) {
+            Add-Result $Category "HTTPS required in production ($fileName)" "Pass" "Production HTTPS/TLS requirement is enabled"
+        }
+        elseif ($script:IsLocalDevelopment -and (Test-YamlTrue $localHttpAllowed)) {
+            Add-Result $Category "HTTPS required in production ($fileName)" "Warn" "HTTP transport allowed only for local development" `
+                "Set httpsRequired=true and localDevelopmentHttpAllowed=false before production deployment."
+        }
+        else {
+            Add-Result $Category "HTTPS required in production ($fileName)" "Fail" "Production HTTPS/TLS requirement is not enabled" `
+                "Set deploymentSecurity.transport.httpsRequired=true and terminate TLS at the ingress or service mesh boundary."
+        }
+
+        if (Test-YamlTrue $daprMtlsRequired) {
+            Add-Result $Category "DAPR mTLS required ($fileName)" "Pass" "DAPR sidecar mTLS requirement is enabled"
+        }
+        elseif ($script:IsLocalDevelopment -and (Test-YamlTrue $localHttpAllowed)) {
+            Add-Result $Category "DAPR mTLS required ($fileName)" "Warn" "DAPR mTLS exception is scoped to local development" `
+                "Enable DAPR Sentry/mTLS for production service invocation."
+        }
+        else {
+            Add-Result $Category "DAPR mTLS required ($fileName)" "Fail" "DAPR sidecar mTLS requirement is not enabled" `
+                "Set deploymentSecurity.transport.daprMtlsRequired=true for production service invocation."
+        }
+
+        if (Test-YamlFalse $localHttpAllowed) {
+            Add-Result $Category "Local HTTP exception disabled for production ($fileName)" "Pass" "Local HTTP exception is disabled"
+        }
+        elseif ($script:IsLocalDevelopment -and (Test-YamlTrue $localHttpAllowed)) {
+            Add-Result $Category "Local HTTP exception disabled for production ($fileName)" "Warn" "Local HTTP exception is enabled for local development only" `
+                "Set localDevelopmentHttpAllowed=false before promoting this configuration."
+        }
+        else {
+            Add-Result $Category "Local HTTP exception disabled for production ($fileName)" "Fail" "Local HTTP exception is missing or not false" `
+                "Set deploymentSecurity.transport.localDevelopmentHttpAllowed=false in production manifests."
+        }
+    }
 }
 
 function Test-EventStoreFrontedTopology {
@@ -2867,11 +3028,13 @@ if ($K8sPath) {
 # Run Story 8.1 validation checks (DAPR-only).
 if ($resolvedPath) {
     Test-AccessControl $resolvedPath
+    Test-Authentication $resolvedPath
     Test-EventStoreFrontedTopology $resolvedPath
     Test-StateStore $resolvedPath
     Test-PubSub $resolvedPath
     Test-Subscription $resolvedPath
     Test-TenantsIntegration $resolvedPath
+    Test-Transport $resolvedPath
     Test-Resiliency $resolvedPath
     Test-SecretStore $resolvedPath
 }

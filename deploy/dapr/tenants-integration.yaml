@@ -13,3 +13,6 @@ spec:
   topicName: system.tenants.events
   commandApiAppId: eventstore
   tenantsDependencyHealth: healthy
+  tenantIdentitySource: authenticatedCredentials
+  allowTenantFromPayload: false
+  metadataRequired: true

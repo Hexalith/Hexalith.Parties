@@ -22,3 +22,14 @@ spec:
       appId: parties
       methodName: process
       domain: party
+  deploymentSecurity:
+    authentication:
+      jwtIssuer: "{env:AUTHENTICATION_JWTBEARER_ISSUER}"
+      jwtAudience: "{env:AUTHENTICATION_JWTBEARER_AUDIENCE}"
+      signingKeySecretName: hexalith-jwt-signing
+      signingKeySecretKey: Authentication__JwtBearer__SigningKey
+      failClosed: true
+    transport:
+      httpsRequired: true
+      daprMtlsRequired: true
+      localDevelopmentHttpAllowed: false
