@@ -236,6 +236,9 @@ public sealed class TenantsDeploymentValidationTests : IDisposable
               topicName: system.tenants.events
               commandApiAppId: eventstore
               tenantsDependencyHealth: "healthy {{sentinel}}"
+              tenantIdentitySource: authenticatedCredentials
+              allowTenantFromPayload: false
+              metadataRequired: true
             """);
     }
 
@@ -438,6 +441,17 @@ public sealed class TenantsDeploymentValidationTests : IDisposable
                   appId: parties
                   methodName: process
                   domain: party
+              deploymentSecurity:
+                authentication:
+                  jwtIssuer: "{env:AUTHENTICATION_JWTBEARER_ISSUER}"
+                  jwtAudience: "{env:AUTHENTICATION_JWTBEARER_AUDIENCE}"
+                  signingKeySecretName: hexalith-jwt-signing
+                  signingKeySecretKey: Authentication__JwtBearer__SigningKey
+                  failClosed: true
+                transport:
+                  httpsRequired: true
+                  daprMtlsRequired: true
+                  localDevelopmentHttpAllowed: false
             """);
 
         File.WriteAllText(Path.Combine(dir, "statestore.yaml"), """
@@ -562,6 +576,9 @@ public sealed class TenantsDeploymentValidationTests : IDisposable
                   pubsubName: ""
                   topicName: ""
                   commandApiAppId: ""
+                  tenantIdentitySource: authenticatedCredentials
+                  allowTenantFromPayload: false
+                  metadataRequired: true
                 """
             : $$"""
                 apiVersion: hexalith.io/v1
@@ -575,6 +592,9 @@ public sealed class TenantsDeploymentValidationTests : IDisposable
                   topicName: system.tenants.events
                   commandApiAppId: eventstore
                   tenantsDependencyHealth: healthy
+                  tenantIdentitySource: authenticatedCredentials
+                  allowTenantFromPayload: false
+                  metadataRequired: true
                 """);
     }
 

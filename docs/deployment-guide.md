@@ -185,6 +185,8 @@ Pass `-K8sPath` to additionally lint the generated Kubernetes manifests under `d
 
 The K8s lint reports workload shape issues (missing image, missing DAPR annotations, unresolved ConfigMap references), DAPR ACL/Subscription drift, plaintext credential leaks in `configMapGenerator.literals` / `Secret` resources, static tenant identifiers, and cloud-only capabilities (`StorageClass`, `IngressClass`, `Service.type: LoadBalancer`). Offending values are redacted in the output. See `deploy/k8s/README.md` → "K8s manifest lint" for the complete category list.
 
+The DAPR config pass also validates deployment security metadata in `topology.yaml` and `tenants-integration.yaml`: JWT issuer/audience/signing-key references, fail-closed authentication behavior, tenant identity sourced from authenticated credentials, DAPR deny-by-default access control, and production HTTPS/DAPR mTLS transport posture. The output intentionally reports field names and unsafe categories only; it does not print token values, signing keys, claim dictionaries, tenant membership payloads, or personal data.
+
 **Story 9.3 added three categories on top of Story 9.2:**
 
 - `K8sTopology-MissingService` (fail) — fires when an AppHost-composed app folder is missing from `deploy/k8s/<app-id>/`, or when its Service selector does not match the Deployment label. Threshold-gated to skip synthetic single-app fixtures; on the committed full-topology tree (≥ 5 app folders present) the contract is enforced.
@@ -237,6 +239,21 @@ The tool exits with code `0` on success (warnings allowed), `1` on at least one 
 
 **Problem:** Failed messages are silently dropped.
 **Fix:** Set `enableDeadLetter: "true"` on pub/sub components and `deadLetterTopic` on subscriptions.
+
+### Missing JWT or fail-closed authentication metadata
+
+**Problem:** Production auth can start without issuer, audience, signing-key reference, or fail-closed behavior.
+**Fix:** Set `deploymentSecurity.authentication` in `topology.yaml` with `jwtIssuer`, `jwtAudience`, `signingKeySecretName`, `signingKeySecretKey`, and `failClosed: true`.
+
+### Tenant identity accepted from payloads
+
+**Problem:** Request payload tenant ids can bypass authenticated identity and authoritative Tenants metadata.
+**Fix:** Set `tenantIdentitySource: authenticatedCredentials`, `allowTenantFromPayload: false`, and `metadataRequired: true` in `tenants-integration.yaml`.
+
+### Production transport not TLS enforced
+
+**Problem:** Production traffic can run without HTTPS or DAPR sidecar mTLS.
+**Fix:** Set `deploymentSecurity.transport.httpsRequired: true`, `daprMtlsRequired: true`, and `localDevelopmentHttpAllowed: false` in `topology.yaml`.
 
 ### Missing Tenants subscription or scope
 

@@ -530,8 +530,8 @@ public sealed class K8sStory93LintTests : IDisposable
             // and debugging requires local reproduction.
             string partialStdout;
             string partialStderr;
-            try { partialStdout = await process.StandardOutput.ReadToEndAsync(); } catch { partialStdout = "<unavailable>"; }
-            try { partialStderr = await process.StandardError.ReadToEndAsync(); } catch { partialStderr = "<unavailable>"; }
+            try { partialStdout = await process.StandardOutput.ReadToEndAsync().ConfigureAwait(false); } catch { partialStdout = "<unavailable>"; }
+            try { partialStderr = await process.StandardError.ReadToEndAsync().ConfigureAwait(false); } catch { partialStderr = "<unavailable>"; }
             throw new InvalidOperationException(
                 $"validate-deployment.ps1 exceeded the 90 s timeout and was killed.{Environment.NewLine}" +
                 $"--- partial stdout (truncated to 4 KB) ---{Environment.NewLine}{Truncate(partialStdout, 4096)}{Environment.NewLine}" +
