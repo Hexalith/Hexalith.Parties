@@ -36,7 +36,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-05-15 09:01:58 +02:00
-last_updated: 2026-05-21 19:00:00 +02:00
+last_updated: 2026-05-21 19:10:00 +02:00
 project: Hexalith.Parties
 project_key: NOKEY
 tracking_system: file-system
@@ -100,7 +100,7 @@ development_status:
   4-5-implement-patch-oriented-update-party-tool: done
   4-6-implement-delete-party-as-soft-deactivation-tool: done
   4-7-enforce-mcp-boundary-and-tool-safety: done
-  4-8-validate-mcp-latency-errors-and-complete-responses: backlog
+  4-8-validate-mcp-latency-errors-and-complete-responses: done
   epic-4-retrospective: optional
 
   # Epic 5: Event-Driven Consumer Integration (7 stories)
