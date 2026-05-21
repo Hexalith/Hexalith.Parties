@@ -35,6 +35,80 @@ public sealed class PartiesMcpToolDispatchTests
     }
 
     [Fact]
+    public async Task GetPartyReturnsCompleteDetailWithInactiveAndFreshnessMetadata()
+    {
+        IPartiesQueryClient queryClient = Substitute.For<IPartiesQueryClient>();
+        queryClient.GetPartyAsync("party-1", Arg.Any<CancellationToken>())
+            .Returns(new PartyDetail
+            {
+                Id = "party-1",
+                Type = PartyType.Person,
+                IsActive = false,
+                DisplayName = "Ada Lovelace",
+                SortName = "Lovelace, Ada",
+                CreatedAt = DateTimeOffset.Parse("2026-01-01T00:00:00Z"),
+                LastModifiedAt = DateTimeOffset.Parse("2026-01-02T00:00:00Z"),
+                Freshness = ProjectionFreshnessMetadata.Create(
+                    ProjectionFreshnessStatus.Stale,
+                    ProjectionFreshnessMetadata.WarningProjectionStateStoreUnavailable),
+            });
+        var tools = new PartiesMcpTools(Substitute.For<IPartiesCommandClient>(), queryClient, AuthenticatedContext());
+
+        PartiesMcpToolResult result = await tools.GetParty("party-1", CancellationToken.None);
+
+        result.Status.ShouldBe("succeeded");
+        JsonElement data = result.Data.ShouldBeOfType<JsonElement>();
+        data.GetProperty("id").GetString().ShouldBe("party-1");
+        data.GetProperty("isActive").GetBoolean().ShouldBeFalse();
+        data.GetProperty("isErased").GetBoolean().ShouldBeFalse();
+        data.GetProperty("freshness").GetProperty("status").GetString().ShouldBe("Stale");
+        data.GetProperty("freshness").GetProperty("warningCodes")[0].GetString().ShouldBe(ProjectionFreshnessMetadata.WarningProjectionStateStoreUnavailable);
+    }
+
+    [Fact]
+    public async Task GetPartyRejectsMalformedPartyIdBeforeGatewayCall()
+    {
+        IPartiesQueryClient queryClient = Substitute.For<IPartiesQueryClient>();
+        var tools = new PartiesMcpTools(Substitute.For<IPartiesCommandClient>(), queryClient, AuthenticatedContext());
+
+        PartiesMcpToolResult result = await tools.GetParty("party id with spaces", CancellationToken.None);
+
+        result.Status.ShouldBe("failed");
+        result.Category.ShouldBe("validation_failed");
+        result.Code.ShouldBe("parties-mcp-validation-failed");
+        result.Message.ShouldContain("partyId");
+        result.Message.ShouldNotContain("party id with spaces");
+        await queryClient.DidNotReceiveWithAnyArgs().GetPartyAsync(default!, default);
+    }
+
+    [Fact]
+    public async Task GetPartyTreatsErasedPartyAsNotFoundWithoutErasureDetails()
+    {
+        IPartiesQueryClient queryClient = Substitute.For<IPartiesQueryClient>();
+        queryClient.GetPartyAsync("party-erased", Arg.Any<CancellationToken>())
+            .Returns(new PartyDetail
+            {
+                Id = "party-erased",
+                Type = PartyType.Person,
+                IsActive = false,
+                IsErased = true,
+                DisplayName = "Erased",
+                SortName = "Erased",
+                ErasedAt = DateTimeOffset.Parse("2026-01-02T00:00:00Z"),
+            });
+        var tools = new PartiesMcpTools(Substitute.For<IPartiesCommandClient>(), queryClient, AuthenticatedContext());
+
+        PartiesMcpToolResult result = await tools.GetParty("party-erased", CancellationToken.None);
+
+        result.Status.ShouldBe("failed");
+        result.Category.ShouldBe("not_found");
+        result.Code.ShouldBe("parties-mcp-party-erased");
+        result.Message.ShouldBe("The requested Parties resource was not found.");
+        result.Message.ShouldNotContain("erased", Case.Insensitive);
+        result.Data.ShouldBeNull();
+    }
+
+    [Fact]
     public async Task CreatePartyDispatchesCompositeCommandThroughTypedCommandClient()
     {
         IPartiesCommandClient commandClient = Substitute.For<IPartiesCommandClient>();

@@ -33,6 +33,15 @@ internal sealed class PartiesMcpTools(
                 }
 
                 PartyDetail party = await queryClient.GetPartyAsync(partyId, cancellationToken).ConfigureAwait(false);
+                if (party.IsErased)
+                {
+                    return PartiesMcpToolResult.Failed(
+                        PartiesMcpToolNames.GetParty,
+                        "not_found",
+                        "parties-mcp-party-erased",
+                        "The requested Parties resource was not found.");
+                }
+
                 return PartiesMcpToolResult.Succeeded(PartiesMcpToolNames.GetParty, party);
             }).ConfigureAwait(false);
 
@@ -393,7 +402,13 @@ internal sealed class PartiesMcpTools(
     }
 
     private PartiesMcpToolResult? ValidateContextAndPartyId(string toolName, string partyId)
-        => ValidateContext(toolName) ?? (string.IsNullOrWhiteSpace(partyId) ? ValidationFailed(toolName, "partyId") : null);
+        => ValidateContext(toolName) ?? (!IsSafePartyId(partyId) ? ValidationFailed(toolName, "partyId") : null);
+
+    private static bool IsSafePartyId(string? partyId)
+        => !string.IsNullOrWhiteSpace(partyId)
+            && partyId.Length <= 128
+            && partyId.AsSpan().Trim().Length == partyId.Length
+            && partyId.All(static ch => char.IsLetterOrDigit(ch) || ch is '-' or '_' or '.' or ':');
 
     private PartiesMcpToolResult? ValidateContext(string toolName)
         => contextAccessor.Current is null

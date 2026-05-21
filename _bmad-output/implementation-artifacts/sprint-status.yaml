@@ -36,7 +36,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-05-15 09:01:58 +02:00
-last_updated: 2026-05-21 18:14:00 +02:00
+last_updated: 2026-05-21 18:23:00 +02:00
 project: Hexalith.Parties
 project_key: NOKEY
 tracking_system: file-system
@@ -95,7 +95,7 @@ development_status:
   epic-4: in-progress
   4-1-register-bounded-mcp-tool-surface: done
   4-2-implement-ai-friendly-find-parties-tool: done
-  4-3-implement-get-party-tool: backlog
+  4-3-implement-get-party-tool: done
   4-4-implement-composite-create-party-tool: backlog
   4-5-implement-patch-oriented-update-party-tool: backlog
   4-6-implement-delete-party-as-soft-deactivation-tool: backlog
