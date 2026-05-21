@@ -171,8 +171,37 @@ public sealed class SampleOnboardingGuardrailTests
         program.ShouldContain("EventStore gateway URL");
         program.ShouldContain("Parties:Tenant");
         program.ShouldContain("parties-mcp host");
+        program.ShouldContain("AddPartiesClient(builder.Configuration)");
+        program.ShouldContain("CreatePartyWithResultAsync");
+        program.ShouldContain("AddContactChannelWithResultAsync");
+        program.ShouldContain("AddIdentifierWithResultAsync");
+        program.ShouldContain("PartiesClientException");
+        program.ShouldContain("ListPartiesAsync");
+        program.ShouldContain("PartyType.Person");
+        program.ShouldContain("SearchPartiesAsync");
+        program.ShouldContain("GetPartyAsync");
+        program.ShouldContain("PrintFreshness");
         appSettings.ShouldContain("\"BaseUrl\"");
         appSettings.ShouldContain("\"Tenant\": \"tenant-a\"");
+    }
+
+    [Fact]
+    public void SampleEventHandler_DemonstratesSubscriberOwnedLifecycleAndFutureErasureCleanup()
+    {
+        string handler = File.ReadAllText(GetRepositoryFilePath("samples/Hexalith.Parties.Sample/PartyEventHandler.cs"));
+        string subscription = File.ReadAllText(GetRepositoryFilePath("samples/Hexalith.Parties.Sample/DaprComponents/subscription-sample.yaml"));
+
+        handler.ShouldContain("PartyCreated");
+        handler.ShouldContain("ContactChannelAdded");
+        handler.ShouldContain("IdentifierAdded");
+        handler.ShouldContain("PartyDeactivated");
+        handler.ShouldContain("PartyReactivated");
+        handler.ShouldContain("PartyErased");
+        handler.ShouldContain("CustomerSummaryStore.Customers.TryRemove");
+        handler.ShouldContain("Unknown event type");
+        subscription.ShouldContain("tenant-a.parties.events");
+        subscription.ShouldContain("/events/parties");
+        subscription.ShouldContain("sample");
     }
 
     private static bool IsBuildArtifact(string path)

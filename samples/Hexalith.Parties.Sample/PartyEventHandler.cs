@@ -127,9 +127,15 @@ public static class PartyEventHandler
                 HandlePartyMerged(partyId, payloadJson, logger);
                 break;
 
+            // Future GDPR cleanup path: when PartyErased is introduced, consumers should
+            // remove or anonymize local read-model entries for the erased party.
+            case "PartyErased":
+                HandlePartyErased(partyId, logger);
+                break;
+
             // Unknown event types: always return 200 OK to prevent DAPR redelivery.
-            // Future additive events (e.g., PartyErased in v1.1 GDPR) will arrive here
-            // until explicit handlers are added. Tolerant deserialization ensures no errors.
+            // Other additive events will arrive here until explicit handlers are added.
+            // Tolerant deserialization ensures no errors.
             default:
                 logger.LogInformation(
                     "Unknown event type '{EventType}' (normalized as '{NormalizedEventType}') for aggregate {AggregateId} — acknowledged without processing",
@@ -459,6 +465,14 @@ public static class PartyEventHandler
         // 3. Remove or redirect the merged party's local record
         logger.LogInformation(
             "EVENT: PartyMerged -> v2 placeholder acknowledged for {PartyId} (no action taken)",
+            partyId);
+    }
+
+    private static void HandlePartyErased(string partyId, ILogger logger)
+    {
+        _ = CustomerSummaryStore.Customers.TryRemove(partyId, out _);
+        logger.LogInformation(
+            "EVENT: PartyErased -> CustomerSummary removed for {PartyId}; extend this cleanup to every subscriber-owned local read model",
             partyId);
     }
 
