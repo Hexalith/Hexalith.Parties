@@ -414,9 +414,15 @@ default:
 >
 > If your application stores **any** reference to a party ID — whether as a foreign key, a display name cache, a search index entry, or any other form — you **must** handle `PartyErased` to remain GDPR-compliant.
 
+### MVP Soft Deactivation vs. Future Erasure
+
+MVP delete operations are soft deactivations. They publish lifecycle state such as `PartyDeactivated`; they do not perform GDPR legal erasure, crypto-shredding, or subscriber cleanup. Treat `PartyDeactivated` as an active/inactive business-state change, not as permission to purge or anonymize records.
+
+`PartyErased` is the future v1.1 cleanup signal. It is emitted only after the Parties service has completed the erasure workflow and destroyed or made unrecoverable the party personal-data key. Until v1.1 GDPR features are explicitly active, follow the [MVP Compliance Boundary](getting-started.md#mvp-compliance-boundary): use synthetic data, stop using any accidental sensitive dataset, and follow operator manual deletion or environment rebuild procedures. Do not treat the MVP as an erasure-complete system.
+
 ### Background
 
-`PartyErased` is a v1.1 GDPR event. It fires **after** crypto-shredding destroys the party's per-party encryption key. The event payload contains **only** the `partyId` — no personal data is included.
+`PartyErased` is a v1.1 GDPR event. It fires **after** crypto-shredding destroys the party's per-party encryption key. The event payload contains only cleanup metadata such as party id, tenant id, and erasure timestamp — no personal data is included.
 
 When you receive `PartyErased`, you must clean up all local references to the erased party. Failure to do so creates dangling references that violate GDPR right-to-erasure requirements.
 
@@ -504,7 +510,7 @@ Dangling references can occur when:
 
 **Detection patterns:**
 
-1. **Referential integrity audits:** Periodically query your local store for party IDs that no longer exist in the Parties service. Use the `GET /api/parties/{id}` endpoint — a 404 response indicates a potentially erased party.
+1. **Referential integrity audits:** Periodically query your local store for party IDs that no longer exist in the Parties service. Use the EventStore query gateway with `PartyDetail`; a not-found or erased response indicates a potentially erased party.
 
 2. **Gap checking:** Compare your local party ID set against the Parties service's active party list. Any IDs present locally but missing from the service may be erased.
 

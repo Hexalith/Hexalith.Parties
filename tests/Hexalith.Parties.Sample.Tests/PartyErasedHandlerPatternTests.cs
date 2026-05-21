@@ -35,6 +35,23 @@ public sealed class PartyErasedHandlerPatternTests
     }
 
     [Fact]
+    public void Documentation_ShouldDistinguishMvpSoftDeactivationFromFutureErasure()
+    {
+        string documentation = File.ReadAllText(GetRepositoryFilePath(HandlerPatternsRelativePath));
+        string subscriberDocumentation = File.ReadAllText(GetRepositoryFilePath(EventSubscribingRelativePath));
+        string combined = documentation + Environment.NewLine + subscriberDocumentation;
+
+        combined.ShouldContain("MVP Soft Deactivation vs. Future Erasure");
+        combined.ShouldContain("MVP delete operations are soft deactivations");
+        combined.ShouldContain("PartyDeactivated");
+        combined.ShouldContain("not legal erasure");
+        combined.ShouldContain("MVP Compliance Boundary");
+        combined.ShouldContain("manual deletion or environment rebuild");
+        combined.ShouldContain("EventStore query gateway with `PartyDetail`");
+        combined.ShouldNotContain("GET /api/parties/{id}");
+    }
+
+    [Fact]
     public void Documentation_ShouldDescribeNormalizedEventDispatchForFullyQualifiedEventTypes()
     {
         string subscriberDocumentation = File.ReadAllText(GetRepositoryFilePath(EventSubscribingRelativePath));

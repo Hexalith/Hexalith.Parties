@@ -295,4 +295,4 @@ case "PartyMerged":
 
 ### PartyErased (v1.1 GDPR)
 
-`PartyErased` will be introduced in v1.1 for GDPR crypto-shredding. See the [Event Handler Patterns](event-handler-patterns.md#partyerased-handler-mandatory) guide for the mandatory handler implementation, dangling reference guidance, and read model cleanup strategies.
+`PartyErased` will be introduced in v1.1 for GDPR crypto-shredding. MVP soft deactivation events such as `PartyDeactivated` are not legal erasure and must not be treated as the subscriber cleanup signal. See the [Event Handler Patterns](event-handler-patterns.md#partyerased-handler-mandatory) guide for the mandatory handler implementation, dangling reference guidance, MVP compliance boundary link, and read model cleanup strategies.
