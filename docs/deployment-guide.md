@@ -1,5 +1,7 @@
 # Deployment Guide
 
+> **Canonical reference:** For the full Hexalith.Parties Kubernetes deployment topology (9-workload, Zot registry, Dapr control plane, MVP boundaries), see [Kubernetes Deployment Architecture](kubernetes-deployment-architecture.md). This guide covers application-architecture concerns (DAPR component selection, multi-tenant setup, troubleshooting); the canonical doc covers the deployed cluster shape.
+
 This guide covers deploying the Hexalith.Parties service with DAPR in production environments.
 
 ## Prerequisites
@@ -9,11 +11,11 @@ This guide covers deploying the Hexalith.Parties service with DAPR in production
 - One of: Kafka, RabbitMQ, or Azure Service Bus for pub/sub
 - One of: CosmosDB, PostgreSQL for state store (Redis for development only)
 - PowerShell 5.1+ or PowerShell 7+ for the validation tool
-- `kubectl` context the operator will pass to `publish.ps1` / `teardown.ps1` via `-ConfirmContext` (Story 9.5 ADR 9.5-2 replaced the prior local-cluster regex allowlist)
+- `kubectl` context the operator will pass to `publish.ps1` / `teardown.ps1` via `-ConfirmContext` (Story 9.5 ADR D-K8s-3 replaced the prior local-cluster regex allowlist)
 
 ### Zot credentials
 
-`deploy/k8s/publish.ps1` builds and pushes container images to the Zot registry at `registry.hexalith.com` (ADR 9.5-1). The cluster pulls those images via a Kubernetes `dockerconfigjson` Secret named `zot-pull-secret` that `publish.ps1` bootstraps from the operator's `~/.docker/config.json`. Operator-side setup is a one-time `docker login`:
+`deploy/k8s/publish.ps1` builds and pushes container images to the Zot registry at `registry.hexalith.com` (ADR D-K8s-2). The cluster pulls those images via a Kubernetes `dockerconfigjson` Secret named `zot-pull-secret` that `publish.ps1` bootstraps from the operator's `~/.docker/config.json`. Operator-side setup is a one-time `docker login`:
 
 ```bash
 docker login -u parties-publisher registry.hexalith.com
@@ -22,7 +24,7 @@ docker login -u parties-publisher registry.hexalith.com
 
 - **`parties-publisher`** is the dedicated build account in the cluster-side Zot `builders` group (`accessControl.groups.builders`). Human operator accounts (`jpiquot`, `qdassivignon` in the `admins` group) **are not** used for image push — they retain admin rights for repository management but stay separate from the build account stamped into every pull-secret manifest.
 - After `docker login`, `~/.docker/config.json` must carry `auths["registry.hexalith.com"]` with a plain-text `auth` field (base64-encoded `parties-publisher:<password>`). Docker credential helpers (`credsStore`, `credHelpers["registry.hexalith.com"]`) are explicitly **not supported in MVP** — `publish.ps1` exits 6 with an actionable error if it sees either directive. Workarounds: remove the directive temporarily, set `$env:DOCKER_CONFIG` to point at a helper-free config, or pre-create `zot-pull-secret` manually.
-- Cluster-side Zot configuration (htpasswd entry + `accessControl.groups.builders` membership for `parties-publisher`) is owned by the infra team. CI runners use the `kaniko` or `github-ci` builder account; that path is post-MVP and tracked in Story 9.6.
+- Cluster-side Zot configuration (htpasswd entry + `accessControl.groups.builders` membership for `parties-publisher`) is owned by the infra team. CI runners use the `kaniko` or `github-ci` builder account; CI-side wiring is post-MVP. The `validate-deployment.ps1` tool (Story 9.6) emits JSON output for CI consumption.
 - The operator's credential never appears in `publish.ps1` stdout, stderr, or any committed file. Step 11 of `publish.ps1` re-emits the `auths` block wholesale (Path B — never decoded) into the `zot-pull-secret` data field.
 
 ---
@@ -136,6 +138,9 @@ The Hexalith.Parties service uses tenant-scoped topics for party event isolation
 2. Add the subscriber app-id to pub/sub component `subscriptionScopes` for the tenant's topic.
 
 3. Verify configuration:
+
+    > **Status (forward reference — Story 9.6):** This validation step is part of the Story 9.6 deliverable. Until that ships, manifest correctness is verified manually against the cleanliness regex table in `_bmad-output/implementation-artifacts/9-1-zot-oci-registry-and-deployment-documentation.md` AC9.
+
     ```bash
     ./deploy/validate-deployment.ps1 --config-path <your-config-dir>
     ```
@@ -178,17 +183,25 @@ In v1.1, per-party encryption keys enable GDPR erasure via key deletion. Backup 
 
 Before every production deployment, run the validation tool:
 
+> **Status (forward reference — Story 9.6):** This validation step is part of the Story 9.6 deliverable. Until that ships, manifest correctness is verified manually against the cleanliness regex table in `_bmad-output/implementation-artifacts/9-1-zot-oci-registry-and-deployment-documentation.md` AC9.
+
 ```bash
 # Console output (human-readable)
 ./deploy/validate-deployment.ps1 --config-path <your-dapr-config-dir>
+```
 
+> **Status (forward reference — Story 9.6):** Same forward-reference applies to the JSON-output invocation below.
+
+```bash
 # JSON output (CI/CD integration)
 ./deploy/validate-deployment.ps1 --config-path <your-dapr-config-dir> --output json
 ```
 
-### K8s manifest validation (Story 9.2)
+### K8s manifest validation (Story 9.6)
 
 Pass `-K8sPath` to additionally lint the generated Kubernetes manifests under `deploy/k8s/`. The same validator entry point covers DAPR config drift and K8s-manifest drift:
+
+> **Status (forward reference — Story 9.6):** Both invocations below land with Story 9.6. The 8-category K8s lint set (`K8sWorkload-MissingImagePullSecret`, `Secret-Plaintext`, `DaprACL-WildcardAppId`, `DaprACL-WildcardOperation`, and the four legacy categories carried forward from v1) is delivered in that story — see `_bmad-output/planning-artifacts/epics.md` Epic 9 v2 Story 9.6 for the authoritative category list.
 
 ```bash
 # Validate DAPR config + K8s manifests in one pass
@@ -200,15 +213,19 @@ Pass `-K8sPath` to additionally lint the generated Kubernetes manifests under `d
 
 The K8s lint reports workload shape issues (missing image, missing DAPR annotations, unresolved ConfigMap references), DAPR ACL/Subscription drift, plaintext credential leaks in `configMapGenerator.literals` / `Secret` resources, static tenant identifiers, and cloud-only capabilities (`StorageClass`, `IngressClass`, `Service.type: LoadBalancer`). Offending values are redacted in the output. See `deploy/k8s/README.md` → "K8s manifest lint" for the complete category list.
 
-**Story 9.3 added three categories on top of Story 9.2:**
+> **Status (forward reference — Story 9.6):** The three lint categories listed below are v1-era. Story 9.6 ships a refreshed 8-category set including `K8sWorkload-MissingImagePullSecret`, `Secret-Plaintext`, `DaprACL-WildcardAppId`, `DaprACL-WildcardOperation`; see `_bmad-output/planning-artifacts/epics.md` Epic 9 v2 Story 9.6 for the authoritative category list.
+
+**Story 9.3 (v1, superseded) added three categories on top of Story 9.2 (v1, superseded):**
 
 - `K8sTopology-MissingService` (fail) — fires when an AppHost-composed app folder is missing from `deploy/k8s/<app-id>/`, or when its Service selector does not match the Deployment label. Threshold-gated to skip synthetic single-app fixtures; on the committed full-topology tree (≥ 5 app folders present) the contract is enforced.
 - `K8sSecret-JwtSigningKeyLiteral` (fail) — fires when any `ConfigMap`, `Secret`, or `Deployment` container env carries a non-empty literal value for `Authentication__JwtBearer__SigningKey`. The signing key must be sourced via `valueFrom.secretKeyRef` on the `hexalith-jwt-signing` Secret (bootstrapped by `publish.ps1`).
-- `K8sDapr-ResiliencyCrdSchemaDrift` (fail / warn) — fires when `deploy/dapr/resiliency.yaml` contains the legacy nested `timeouts.daprSidecar.general` shape or the flat `components.<name>.{retry,timeout,circuitBreaker}` shape (Dapr 1.14.4 CRD requires `outbound`/`inbound` split for component targets with both directions). Unknown `apiVersion` values emit warn-severity informational findings; the live-cluster server-side dry-run lives in `publish.ps1` per Story 9.3 AC6.
+- `K8sDapr-ResiliencyCrdSchemaDrift` (fail / warn) — fires when `deploy/dapr/resiliency.yaml` contains the legacy nested `timeouts.daprSidecar.general` shape or the flat `components.<name>.{retry,timeout,circuitBreaker}` shape (Dapr 1.14.4 CRD requires `outbound`/`inbound` split for component targets with both directions). Unknown `apiVersion` values emit warn-severity informational findings; the live-cluster server-side dry-run lives in `publish.ps1` per the v1 Story 9.3 AC6 (carried forward into v2 Story 9.5 `publish.ps1`).
 
 ### CI/CD Integration
 
 Add the validation step to your deployment pipeline:
+
+> **Status (forward reference — Story 9.6):** This pipeline snippet becomes live when Story 9.6 lands.
 
 ```yaml
 # GitHub Actions example

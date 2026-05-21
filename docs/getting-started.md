@@ -44,7 +44,7 @@ Docker Desktop must be running before you start the Aspire host.
 git clone https://github.com/Hexalith/Hexalith.Parties.git
 cd Hexalith.Parties
 
-# Story 9.3 / ADR 9.3-2 — Memories.Server is composed in-cluster by the AppHost. Its build
+# Memories.Server is composed in-cluster by the AppHost (Epic 9 v2 Story 9.2 carries this forward from v1 Story 9.3 / ADR 9.3-2). Its build
 # requires nested submodules in Hexalith.Memories (Hexalith.Memories pulls Hexalith.Commons
 # and Hexalith.EventStore as its own submodules). Initialize them once before the first run:
 git -C Hexalith.Memories submodule update --init Hexalith.Commons Hexalith.EventStore
@@ -68,7 +68,9 @@ EventStore owns public authentication, tenant validation, RBAC, command/query ro
 
 ## Step 1b: Publish to a Kubernetes Cluster (Optional)
 
-This step is an **alternative** to Step 1 for evaluating the production-shape deployment path against a Kubernetes cluster. The deploy target may be a local cluster (kind, k3d, minikube, Docker Desktop) or the in-MVP platform cluster — the publish script accepts any context the operator confirms via `-ConfirmContext` (Story 9.5 ADR 9.5-2). The Aspire-mode walkthrough in Step 1 remains valid and is the default path for everyday development.
+> **Canonical reference:** [Kubernetes Deployment Architecture](kubernetes-deployment-architecture.md) — full cluster topology and reproducibility contracts.
+
+This step is an **alternative** to Step 1 for evaluating the production-shape deployment path against a Kubernetes cluster — see [Kubernetes Deployment Architecture](kubernetes-deployment-architecture.md) for the full 9-pod topology and reproducibility contracts. The publish script accepts any context the operator confirms via `-ConfirmContext` (Story 9.5, ADR D-K8s-3); any of the local Kubernetes distributions listed in the prerequisites table is a valid target, as is the in-MVP platform cluster. The Aspire-mode walkthrough in Step 1 remains valid and is the default path for everyday development.
 
 **Time budget:** the entire walkthrough — `publish.ps1` through the first successful `CreateParty` command — fits inside the `< 15 min` first-deploy budget (NFR30) on a developer-class machine that already has the prerequisites installed.
 
@@ -86,7 +88,7 @@ pwsh deploy/k8s/publish.ps1 -ConfirmContext kubernetes-admin@cluster.local
 kubectl get pods -n hexalith-parties
 ```
 
-Expect **nine pods** in `Running` state by default (`eventstore`, `eventstore-admin`, `eventstore-admin-ui`, `parties`, `parties-mcp`, `tenants`, `memories`, `keycloak`, `redis`). Story 9.3 closed FR31a's enumerative service-graph contract by composing Memories.Server in-cluster (Dapr-enabled), shipping Keycloak as a hand-authored carve-out (`deploy/k8s/keycloak/` — admin password via `secretKeyRef` on `hexalith-keycloak-admin`), and shipping Redis as a hand-authored backing store (`deploy/k8s/redis/`, `emptyDir`-backed). FrontComposer is carved out to Story 9.4 (`9-4-frontcomposer-deployable-host`) — no FrontComposer pod ships in this story.
+Expect **nine pods** in `Running` state by default (`eventstore`, `eventstore-admin`, `eventstore-admin-ui`, `parties`, `parties-mcp`, `tenants`, `memories`, `keycloak`, `redis`). Epic 9 v2 closes FR31a's enumerative service-graph contract by composing Memories.Server in-cluster (Dapr-enabled — v2 Story 9.2), shipping Keycloak as a hand-authored carve-out (`deploy/k8s/keycloak/` — admin password via `secretKeyRef` on `hexalith-keycloak-admin` — v2 Story 9.3), and shipping Redis as a hand-authored backing store (`deploy/k8s/redis/`, `emptyDir`-backed — v2 Story 9.3). FrontComposer remains out-of-scope for the MVP — no FrontComposer pod ships in this topology.
 
 **Five** of the nine pods run a `daprd` sidecar — `eventstore`, `eventstore-admin`, `parties`, `tenants`, and `memories` carry `dapr.io/enabled: "true"`. `eventstore-admin-ui`, `parties-mcp`, `keycloak`, and `redis` do not. Confirm the Dapr annotations on the five Dapr-enabled Deployments:
 
@@ -99,7 +101,7 @@ done
 
 Each should include `dapr.io/enabled: "true"`, `dapr.io/app-id`, `dapr.io/app-port: "8080"`, and `dapr.io/config: accesscontrol-<app-id>` (or `accesscontrol` for `eventstore`). The `dapr.io/app-port` and per-app `dapr.io/config` annotations are injected by `publish.ps1` (aspirate 9.1.0 does not emit them); see `deploy/k8s/README.md` "Known aspirate limitations".
 
-**Operator-managed Secrets (Story 9.3 AC4 + Story 9.5 AC2):** `publish.ps1` bootstraps `hexalith-jwt-signing`, `hexalith-keycloak-admin`, and `zot-pull-secret` (idempotent). Verify:
+**Operator-managed Secrets (v2 Story 9.5):** `publish.ps1` bootstraps `hexalith-jwt-signing`, `hexalith-keycloak-admin`, and `zot-pull-secret` (idempotent). Verify:
 
 ```bash
 kubectl get secret hexalith-jwt-signing hexalith-keycloak-admin zot-pull-secret -n hexalith-parties

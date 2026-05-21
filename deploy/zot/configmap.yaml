@@ -1,0 +1,114 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: zot-config
+  namespace: zot
+  labels:
+    app: zot
+data:
+  config.json: |
+    {
+      "extensions": {
+        "lint": {
+          "enable": true
+        },
+        "search": {
+          "cve": {
+            "updateInterval": "2h"
+          },
+          "enable": true
+        },
+        "ui": {
+          "enable": true
+        }
+      },
+      "http": {
+        "accessControl": {
+          "adminPolicy": {
+            "actions": [
+              "read",
+              "create",
+              "update",
+              "delete"
+            ],
+            "groups": [
+              "admins"
+            ]
+          },
+          "groups": {
+            "admins": {
+              "users": [
+                "jpiquot",
+                "qdassivignon"
+              ]
+            },
+            "builders": {
+              "users": [
+                "github-ci",
+                "kaniko",
+                "parties-publisher"
+              ]
+            },
+            "readers": {
+              "users": [
+                "kubernetes"
+              ]
+            }
+          },
+          "repositories": {
+            "**": {
+              "anonymousPolicy": [],
+              "policies": [
+                {
+                  "actions": [
+                    "read",
+                    "create",
+                    "update",
+                    "delete"
+                  ],
+                  "groups": [
+                    "admins"
+                  ]
+                },
+                {
+                  "actions": [
+                    "read",
+                    "create",
+                    "update"
+                  ],
+                  "groups": [
+                    "builders"
+                  ]
+                },
+                {
+                  "actions": [
+                    "read"
+                  ],
+                  "groups": [
+                    "readers"
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        "address": "0.0.0.0",
+        "auth": {
+          "failDelay": 5,
+          "htpasswd": {
+            "path": "/etc/zot/auth/htpasswd"
+          }
+        },
+        "compat": [
+          "docker2s2"
+        ],
+        "port": "5000",
+        "realm": "registry-hexalith"
+      },
+      "log": {
+        "level": "info"
+      },
+      "storage": {
+        "rootDirectory": "/var/lib/registry"
+      }
+    }

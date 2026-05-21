@@ -130,13 +130,16 @@ The `parties-publisher` account is a dedicated build identity. Human operators (
 
 ### 5.2 Tagging policy
 
-| Tag shape | Source | Meaning |
-|---|---|---|
-| `vX.Y.Z` | git tag on `main` | Stable release |
-| `X.Y.Z-preview.0.N` | MinVer auto-bump | Commits past the last tag (N = `git rev-list --count` since tag) |
-| `*+dirty` | MinVer with uncommitted changes | Warning emitted; not safe to commit the resulting manifests |
+| Tag shape | Form | Source | Meaning |
+|---|---|---|---|
+| `vMAJOR.MINOR.PATCH` | git tag | tag on `main` (e.g. `v0.2.0`) | Stable release marker. The `v` prefix is MinVer's tag-recognition convention only — image tags drop the `v`. |
+| `MAJOR.MINOR.PATCH` | image tag | MinVer-resolved version (e.g. `0.2.0`) | Stable release image tag pushed to `registry.hexalith.com/<app-id>:0.2.0`. |
+| `MAJOR.MINOR.PATCH-preview.0.N` | image tag | MinVer auto-bump | Preview commits past the last tag. N = `git rev-list --count v<last>..HEAD`. |
+| `MAJOR.MINOR.PATCH-preview.0.N+dirty` | image tag | MinVer with uncommitted changes | `publish.ps1` warns and proceeds (operator opt-in); `validate-deployment.ps1` (Story 9.6) rejects as a blocking lint failure for any tag destined to ship to a real cluster. |
 
-Each image is built once per commit, immutable thereafter. Same commit + same MinVer + same aspirate version → byte-identical image manifest.
+Mutable tags (`latest`, `staging-latest`, empty) are explicitly forbidden for any `registry.hexalith.com/*` image consumed by `deploy/k8s/`; `validate-deployment.ps1` (Story 9.6) treats them as blocking lint failures.
+
+Each image is built once per commit, immutable thereafter (no re-tag, no overwrite). Same commit + same MinVer + same aspirate version → byte-identical image manifest. Re-pushing the same tag to Zot is benign — Zot stores the same digest under the same tag without duplication.
 
 ### 5.3 Pull credentials in the cluster
 
