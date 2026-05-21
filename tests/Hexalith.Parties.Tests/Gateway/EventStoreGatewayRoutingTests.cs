@@ -87,12 +87,25 @@ public sealed class EventStoreGatewayRoutingTests
 
         AssertRequestSchemaReferencesContract(commandPath.GetProperty("post"), "SubmitCommandRequest");
         AssertRequestSchemaReferencesContract(queryPath.GetProperty("post"), "SubmitQueryRequest");
+        AssertJsonResponseReferencesContract(commandPath.GetProperty("post"), "202", "SubmitCommandResponse");
+        AssertJsonResponseReferencesContract(queryPath.GetProperty("post"), "200", "SubmitQueryResponse");
         AssertProblemResponse(commandPath.GetProperty("post"), "400");
         AssertProblemResponse(commandPath.GetProperty("post"), "401");
         AssertProblemResponse(commandPath.GetProperty("post"), "422");
         AssertProblemResponse(queryPath.GetProperty("post"), "400");
         AssertProblemResponse(queryPath.GetProperty("post"), "401");
         AssertProblemResponse(queryPath.GetProperty("post"), "503");
+    }
+
+    [Fact]
+    public async Task OpenApiDocument_WhenDocumentationModeDisabled_IsNotExposedAsync()
+    {
+        using var factory = new EventStoreGatewayTestFactory(openApiEnabled: false);
+        using HttpClient client = factory.CreateClient();
+
+        using HttpResponseMessage response = await client.GetAsync("/openapi/v1.json");
+
+        response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
     }
 
     [Fact]
@@ -1180,6 +1193,13 @@ public sealed class EventStoreGatewayRoutingTests
         content.GetProperty("schema").ToString().ShouldContain("ProblemDetails");
     }
 
+    private static void AssertJsonResponseReferencesContract(JsonElement operation, string statusCode, string expectedSchemaName)
+    {
+        JsonElement response = operation.GetProperty("responses").GetProperty(statusCode);
+        response.GetProperty("content").TryGetProperty("application/json", out JsonElement content).ShouldBeTrue();
+        content.GetProperty("schema").ToString().ShouldContain(expectedSchemaName);
+    }
+
     private static void AssertProblemCatalogEntry(JsonElement catalog, string slug, HttpStatusCode expectedStatus)
     {
         JsonElement entry = catalog.EnumerateArray()
@@ -1201,13 +1221,24 @@ public sealed class EventStoreGatewayRoutingTests
 
     public static TheoryData<string, HttpStatusCode, string, string> PartiesDomainRejectionDocumentationData => new()
     {
+        { "composite-operation-conflict", HttpStatusCode.UnprocessableEntity, "Composite Operation Conflict", "Review the rejection detail, correct the request, and retry when appropriate." },
         { "consent-not-found", HttpStatusCode.NotFound, "Consent Not Found", "Verify the identifier and tenant context, then retry with an existing resource." },
         { "contact-channel-not-found", HttpStatusCode.NotFound, "Contact Channel Not Found", "Verify the identifier and tenant context, then retry with an existing resource." },
         { "identifier-not-found", HttpStatusCode.NotFound, "Identifier Not Found", "Verify the identifier and tenant context, then retry with an existing resource." },
+        { "invalid-consent-purpose", HttpStatusCode.UnprocessableEntity, "Invalid Consent Purpose", "Correct the command payload and retry." },
         { "party-cannot-add-duplicate-channel", HttpStatusCode.Conflict, "Party Cannot Add Duplicate Channel", "Use a different identifier or treat the existing resource as the current state." },
         { "party-cannot-add-duplicate-identifier", HttpStatusCode.Conflict, "Party Cannot Add Duplicate Identifier", "Use a different identifier or treat the existing resource as the current state." },
+        { "party-cannot-be-created-with-invalid-id", HttpStatusCode.UnprocessableEntity, "Party Cannot Be Created With Invalid Id", "Correct the command payload and retry." },
+        { "party-cannot-be-created-without-organization-details", HttpStatusCode.UnprocessableEntity, "Party Cannot Be Created Without Organization Details", "Correct the command payload and retry." },
+        { "party-cannot-be-created-without-person-details", HttpStatusCode.UnprocessableEntity, "Party Cannot Be Created Without Person Details", "Correct the command payload and retry." },
+        { "party-cannot-be-created-without-type", HttpStatusCode.UnprocessableEntity, "Party Cannot Be Created Without Type", "Correct the command payload and retry." },
+        { "party-cannot-be-deactivated-when-inactive", HttpStatusCode.UnprocessableEntity, "Party Cannot Be Deactivated When Inactive", "Correct the command payload and retry." },
+        { "party-cannot-be-reactivated-when-active", HttpStatusCode.UnprocessableEntity, "Party Cannot Be Reactivated When Active", "Correct the command payload and retry." },
         { "party-command-validation-rejected", HttpStatusCode.UnprocessableEntity, "Party Command Validation Rejected", "Review the rejection detail, correct the request, and retry when appropriate." },
+        { "party-erasure-in-progress", HttpStatusCode.UnprocessableEntity, "Party Erasure In Progress", "Review the rejection detail, correct the request, and retry when appropriate." },
         { "party-not-found", HttpStatusCode.NotFound, "Party Not Found", "Verify the identifier and tenant context, then retry with an existing resource." },
+        { "party-not-restricted", HttpStatusCode.UnprocessableEntity, "Party Not Restricted", "Review the rejection detail, correct the request, and retry when appropriate." },
+        { "party-processing-restricted", HttpStatusCode.UnprocessableEntity, "Party Processing Restricted", "Review the rejection detail, correct the request, and retry when appropriate." },
         { "party-type-mismatch", HttpStatusCode.UnprocessableEntity, "Party Type Mismatch", "Correct the command payload and retry." },
     };
 

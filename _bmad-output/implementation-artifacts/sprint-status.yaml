@@ -83,7 +83,7 @@ development_status:
   3-2-provide-typed-parties-client-registration: done
   3-3-expose-versioned-rest-party-api: done
   3-4-map-domain-rejections-to-problemdetails: done
-  3-5-generate-openapi-and-error-catalog: backlog
+  3-5-generate-openapi-and-error-catalog: done
   3-6-enable-one-command-local-run: backlog
   3-7-write-getting-started-documentation: backlog
   3-8-provide-runnable-sample-integration: backlog
