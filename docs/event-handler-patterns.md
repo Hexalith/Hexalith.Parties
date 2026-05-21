@@ -66,6 +66,25 @@ static string NormalizeEventTypeName(string eventTypeName)
 }
 ```
 
+## Read Model Scope and Privacy
+
+Subscriber-owned read models should store the smallest useful representation for their bounded context. Start with the stable `partyId`, the last processed aggregate `sequenceNumber`, and operational metadata such as `correlationId` or `timestamp`. Add display names, contact values, identifiers, or natural-person flags only when your application actually needs them.
+
+For reference-only integrations, store the stable `partyId` and your own relationship metadata instead of copying person names, contact channel values, identifier values, dates of birth, or organization details. If your application denormalizes personal data for display or search, it becomes responsible for its own retention, access control, audit, and future erasure cleanup.
+
+```csharp
+public sealed record LocalPartyReference
+{
+    public required string PartyId { get; init; }
+
+    public long LastSequenceNumber { get; set; }
+
+    public DateTimeOffset LastObservedAt { get; set; }
+
+    // Add display/contact/identifier fields only when the bounded context needs them.
+}
+```
+
 ## Handler Patterns by Event Type
 
 ### PartyCreated

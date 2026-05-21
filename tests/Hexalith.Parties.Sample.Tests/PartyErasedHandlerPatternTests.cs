@@ -58,6 +58,18 @@ public sealed class PartyErasedHandlerPatternTests
     }
 
     [Fact]
+    public void Documentation_ShouldDescribeReadModelScopeAndPrivacy()
+    {
+        string documentation = File.ReadAllText(GetRepositoryFilePath(HandlerPatternsRelativePath));
+
+        documentation.ShouldContain("Read Model Scope and Privacy");
+        documentation.ShouldContain("store the stable `partyId`");
+        documentation.ShouldContain("last processed aggregate `sequenceNumber`");
+        documentation.ShouldContain("Add display names, contact values, identifiers, or natural-person flags only when your application actually needs them");
+        documentation.ShouldContain("future erasure cleanup");
+    }
+
+    [Fact]
     public void HandlePartyErased_ShouldNullifyPartyReference()
     {
         // Arrange
