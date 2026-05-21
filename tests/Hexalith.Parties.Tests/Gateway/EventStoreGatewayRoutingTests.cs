@@ -53,6 +53,89 @@ namespace Hexalith.Parties.Tests.Gateway;
 public sealed class EventStoreGatewayRoutingTests
 {
     [Fact]
+    public async Task OpenApiDocument_InDocumentationMode_DescribesGatewayContractsAndComplianceWarningAsync()
+    {
+        using var factory = new EventStoreGatewayTestFactory(openApiEnabled: true);
+        using HttpClient client = factory.CreateClient();
+
+        using HttpResponseMessage response = await client.GetAsync("/openapi/v1.json");
+
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        response.Content.Headers.ContentType!.MediaType.ShouldBe("application/json");
+
+        JsonElement document = await response.Content.ReadFromJsonAsync<JsonElement>();
+        document.GetProperty("openapi").GetString().ShouldStartWith("3.");
+        document.GetProperty("info").GetProperty("title").GetString().ShouldBe("Hexalith EventStore Gateway API");
+        string description = document.GetProperty("info").GetProperty("description").GetString()!;
+        description.ShouldContain("GDPR");
+        description.ShouldContain("v1.1");
+
+        JsonElement paths = document.GetProperty("paths");
+        paths.TryGetProperty("/api/v1/commands", out JsonElement commandPath).ShouldBeTrue();
+        paths.TryGetProperty("/api/v1/queries", out JsonElement queryPath).ShouldBeTrue();
+
+        string[] advertisedPaths = paths.EnumerateObject().Select(static path => path.Name).ToArray();
+        advertisedPaths.ShouldNotContain("/api/v2/commands");
+        advertisedPaths.ShouldNotContain("/api/v2/queries");
+        advertisedPaths.ShouldNotContain(RetiredPartiesRoute());
+
+        JsonElement securitySchemes = document
+            .GetProperty("components")
+            .GetProperty("securitySchemes");
+        securitySchemes.TryGetProperty("Bearer", out JsonElement bearerScheme).ShouldBeTrue();
+        bearerScheme.GetProperty("scheme").GetString().ShouldBe("bearer");
+
+        AssertRequestSchemaReferencesContract(commandPath.GetProperty("post"), "SubmitCommandRequest");
+        AssertRequestSchemaReferencesContract(queryPath.GetProperty("post"), "SubmitQueryRequest");
+        AssertProblemResponse(commandPath.GetProperty("post"), "400");
+        AssertProblemResponse(commandPath.GetProperty("post"), "401");
+        AssertProblemResponse(commandPath.GetProperty("post"), "422");
+        AssertProblemResponse(queryPath.GetProperty("post"), "400");
+        AssertProblemResponse(queryPath.GetProperty("post"), "401");
+        AssertProblemResponse(queryPath.GetProperty("post"), "503");
+    }
+
+    [Fact]
+    public async Task ErrorCatalog_InDocumentationMode_ListsStableProblemTypesAndGuidanceAsync()
+    {
+        using var factory = new EventStoreGatewayTestFactory(openApiEnabled: true);
+        using HttpClient client = factory.CreateClient();
+
+        using HttpResponseMessage response = await client.GetAsync("/problems/catalog.json");
+
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        JsonElement catalog = await response.Content.ReadFromJsonAsync<JsonElement>();
+        AssertProblemCatalogEntry(catalog, "validation-error", HttpStatusCode.BadRequest);
+        AssertProblemCatalogEntry(catalog, "unsupported-api-version", HttpStatusCode.BadRequest);
+        AssertProblemCatalogEntry(catalog, "domain-rejections", HttpStatusCode.UnprocessableEntity);
+        AssertProblemCatalogEntry(catalog, "internal-server-error", HttpStatusCode.InternalServerError);
+    }
+
+    [Theory]
+    [MemberData(nameof(PartiesDomainRejectionDocumentationData))]
+    public async Task DomainRejectionCatalog_DocumentsPartiesStableRejectionTypesAsync(
+        string reasonCode,
+        HttpStatusCode expectedStatus,
+        string expectedTitle,
+        string expectedCorrectiveAction)
+    {
+        using var factory = new EventStoreGatewayTestFactory(openApiEnabled: true);
+        using HttpClient client = factory.CreateClient();
+
+        using HttpResponseMessage response = await client.GetAsync($"/problems/domain-rejections/{reasonCode}.json");
+
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        response.Content.Headers.ContentType!.MediaType.ShouldBe("application/json");
+
+        JsonElement problem = await response.Content.ReadFromJsonAsync<JsonElement>();
+        problem.GetProperty("reasonCode").GetString().ShouldBe(reasonCode);
+        problem.GetProperty("typeUri").GetString().ShouldBe($"https://hexalith.io/problems/domain-rejections/{reasonCode}");
+        problem.GetProperty("title").GetString().ShouldBe(expectedTitle);
+        problem.GetProperty("statusCode").GetInt32().ShouldBe((int)expectedStatus);
+        problem.GetProperty("correctiveAction").GetString().ShouldBe(expectedCorrectiveAction);
+    }
+
+    [Fact]
     public async Task PostCommands_NoAuth_Returns401BeforePartyInvocationAsync()
     {
         using var factory = new EventStoreGatewayTestFactory();
@@ -852,7 +935,10 @@ public sealed class EventStoreGatewayRoutingTests
         }
     }
 
-    private sealed class EventStoreGatewayTestFactory(bool usePartiesDomainRouter = false, ConfigurableCommandRouter? customCommandRouter = null) : WebApplicationFactory<EventStoreProgram>
+    private sealed class EventStoreGatewayTestFactory(
+        bool usePartiesDomainRouter = false,
+        ConfigurableCommandRouter? customCommandRouter = null,
+        bool openApiEnabled = false) : WebApplicationFactory<EventStoreProgram>
     {
         public FakeAggregateActor CommandActor { get; } = new();
 
@@ -874,7 +960,7 @@ public sealed class EventStoreGatewayRoutingTests
                 ["Authentication:JwtBearer:Audience"] = GatewayJwt.Audience,
                 ["Authentication:JwtBearer:SigningKey"] = GatewayJwt.SigningKey,
                 ["Authentication:JwtBearer:RequireHttpsMetadata"] = "false",
-                ["EventStore:OpenApi:Enabled"] = "false",
+                ["EventStore:OpenApi:Enabled"] = openApiEnabled ? "true" : "false",
                 ["EventStore:RateLimiting:PermitLimit"] = "10000",
                 ["EventStore:DomainServices:Registrations:*|party|v1:AppId"] = "parties",
                 ["EventStore:DomainServices:Registrations:*|party|v1:MethodName"] = "process",
@@ -1075,11 +1161,54 @@ public sealed class EventStoreGatewayRoutingTests
         payload,
     };
 
+    private static void AssertRequestSchemaReferencesContract(JsonElement operation, string expectedSchemaName)
+    {
+        JsonElement schema = operation
+            .GetProperty("requestBody")
+            .GetProperty("content")
+            .GetProperty("application/json")
+            .GetProperty("schema");
+
+        schema.TryGetProperty("$ref", out JsonElement reference).ShouldBeTrue();
+        reference.GetString().ShouldEndWith($"/{expectedSchemaName}");
+    }
+
+    private static void AssertProblemResponse(JsonElement operation, string statusCode)
+    {
+        JsonElement response = operation.GetProperty("responses").GetProperty(statusCode);
+        response.GetProperty("content").TryGetProperty("application/problem+json", out JsonElement content).ShouldBeTrue();
+        content.GetProperty("schema").ToString().ShouldContain("ProblemDetails");
+    }
+
+    private static void AssertProblemCatalogEntry(JsonElement catalog, string slug, HttpStatusCode expectedStatus)
+    {
+        JsonElement entry = catalog.EnumerateArray()
+            .Single(item => string.Equals(item.GetProperty("slug").GetString(), slug, StringComparison.Ordinal));
+
+        entry.GetProperty("typeUri").GetString().ShouldBe($"https://hexalith.io/problems/{slug}");
+        entry.GetProperty("statusCode").GetInt32().ShouldBe((int)expectedStatus);
+        entry.GetProperty("title").GetString().ShouldNotBeNullOrWhiteSpace();
+        entry.GetProperty("correctiveAction").GetString().ShouldNotBeNullOrWhiteSpace();
+        entry.GetProperty("exampleJson").GetString().ShouldNotBeNullOrWhiteSpace();
+    }
+
     public static TheoryData<string, string> RetiredPartiesRestRouteData => new()
     {
         { "GET", RetiredPartiesRoute() },
         { "GET", RetiredPartiesRoute("/party-3-3") },
         { "POST", RetiredPartiesRoute() },
+    };
+
+    public static TheoryData<string, HttpStatusCode, string, string> PartiesDomainRejectionDocumentationData => new()
+    {
+        { "consent-not-found", HttpStatusCode.NotFound, "Consent Not Found", "Verify the identifier and tenant context, then retry with an existing resource." },
+        { "contact-channel-not-found", HttpStatusCode.NotFound, "Contact Channel Not Found", "Verify the identifier and tenant context, then retry with an existing resource." },
+        { "identifier-not-found", HttpStatusCode.NotFound, "Identifier Not Found", "Verify the identifier and tenant context, then retry with an existing resource." },
+        { "party-cannot-add-duplicate-channel", HttpStatusCode.Conflict, "Party Cannot Add Duplicate Channel", "Use a different identifier or treat the existing resource as the current state." },
+        { "party-cannot-add-duplicate-identifier", HttpStatusCode.Conflict, "Party Cannot Add Duplicate Identifier", "Use a different identifier or treat the existing resource as the current state." },
+        { "party-command-validation-rejected", HttpStatusCode.UnprocessableEntity, "Party Command Validation Rejected", "Review the rejection detail, correct the request, and retry when appropriate." },
+        { "party-not-found", HttpStatusCode.NotFound, "Party Not Found", "Verify the identifier and tenant context, then retry with an existing resource." },
+        { "party-type-mismatch", HttpStatusCode.UnprocessableEntity, "Party Type Mismatch", "Correct the command payload and retry." },
     };
 
     // The retired Parties REST path literal is forbidden in server test sources by
