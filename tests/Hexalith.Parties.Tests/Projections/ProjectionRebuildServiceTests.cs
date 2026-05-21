@@ -228,7 +228,187 @@ public sealed class ProjectionRebuildServiceTests
             "test-tenant:party-index"));
     }
 
-    private static object CreateEnvelope(string aggregateId, long seq, IEventPayload payload)
+    [Fact]
+    public async Task RebuildIndexProjectionAsync_MissingIndexAndManifest_FailsClosedWithoutWritingAsync()
+    {
+        MockHttpMessageHandler handler = new();
+        handler.AddResponse(
+            BuildActorStateUrl("PartyIndexProjectionActor", "test-tenant:party-index", "test-tenant:rebuild-checkpoint:index"),
+            null,
+            HttpStatusCode.NotFound);
+        handler.AddResponse(
+            BuildActorStateUrl("PartyIndexProjectionActor", "test-tenant:party-index", "test-tenant:party-index:all"),
+            null,
+            HttpStatusCode.NotFound);
+        handler.AddResponse(
+            BuildActorStateUrl("PartyIndexProjectionActor", "test-tenant:party-index", "test-tenant:party-index:manifest"),
+            null,
+            HttpStatusCode.NotFound);
+
+        ProjectionRebuildService sut = CreateService(handler);
+
+        InvalidOperationException exception = await Should.ThrowAsync<InvalidOperationException>(
+            () => sut.RebuildIndexProjectionAsync("test-tenant", CancellationToken.None));
+
+        exception.Message.ShouldBe("Projection rebuild cannot enumerate trusted party ids.");
+        handler.Requests.ShouldNotContain(request => request.Method == HttpMethod.Put);
+    }
+
+    [Fact]
+    public async Task RebuildDetailProjectionAsync_TenantRebuildWithoutTrustedPartyIds_FailsClosedWithoutWritingAsync()
+    {
+        MockHttpMessageHandler handler = new();
+        handler.AddResponse(
+            BuildActorStateUrl("PartyIndexProjectionActor", "test-tenant:party-index", "test-tenant:rebuild-checkpoint:detail"),
+            null,
+            HttpStatusCode.NotFound);
+        handler.AddResponse(
+            BuildActorStateUrl("PartyIndexProjectionActor", "test-tenant:party-index", "test-tenant:party-index:all"),
+            null,
+            HttpStatusCode.NotFound);
+        handler.AddResponse(
+            BuildActorStateUrl("PartyIndexProjectionActor", "test-tenant:party-index", "test-tenant:party-index:manifest"),
+            null,
+            HttpStatusCode.NotFound);
+
+        ProjectionRebuildService sut = CreateService(handler);
+
+        InvalidOperationException exception = await Should.ThrowAsync<InvalidOperationException>(
+            () => sut.RebuildDetailProjectionAsync("test-tenant", null, CancellationToken.None));
+
+        exception.Message.ShouldBe("Projection rebuild cannot enumerate trusted party ids.");
+        handler.Requests.ShouldNotContain(request => request.Method == HttpMethod.Put);
+    }
+
+    [Fact]
+    public async Task ReadAggregateEventsAsync_UnknownEventType_SkipsPayloadAsync()
+    {
+        var metadata = new { currentSequence = 1L, lastModified = DateTimeOffset.UtcNow };
+        var envelope = new
+        {
+            aggregateId = "party-unknown",
+            tenantId = "test-tenant",
+            domain = "party",
+            sequenceNumber = 1L,
+            eventTypeName = "Hexalith.Parties.Contracts.Events.UnknownPartyEvent",
+            serializationFormat = "json",
+            payload = JsonSerializer.SerializeToUtf8Bytes(new { value = "ignored" }),
+        };
+
+        MockHttpMessageHandler handler = new();
+        handler.AddResponse(
+            BuildActorStateUrl("AggregateActor", "test-tenant:party:party-unknown", "test-tenant:party:party-unknown:metadata"),
+            JsonSerializer.Serialize(metadata));
+        handler.AddResponse(
+            BuildActorStateUrl("AggregateActor", "test-tenant:party:party-unknown", "test-tenant:party:party-unknown:events:1"),
+            JsonSerializer.Serialize(envelope));
+
+        ProjectionRebuildService sut = CreateService(handler);
+
+        IReadOnlyList<IEventPayload> events = await sut.ReadAggregateEventsAsync("test-tenant", "party-unknown", CancellationToken.None);
+
+        events.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task ReadAggregateEventsAsync_ErasedEncryptedPayload_SkipsPayloadAsync()
+    {
+        var metadata = new { currentSequence = 1L, lastModified = DateTimeOffset.UtcNow };
+        PartyCreated evt = new()
+        {
+            Type = PartyType.Person,
+            PersonDetails = new PersonDetails
+            {
+                FirstName = "Erased",
+                LastName = "Party",
+            },
+        };
+        var envelope = CreateEnvelope("party-erased", 1, evt, "json+pdenc-v1");
+        IEventPayloadProtectionService protectionService = Substitute.For<IEventPayloadProtectionService>();
+        protectionService.UnprotectEventPayloadAsync(
+                Arg.Any<AggregateIdentity>(),
+                Arg.Any<string>(),
+                Arg.Any<byte[]>(),
+                Arg.Any<string>(),
+                Arg.Any<CancellationToken>())
+            .Returns(Task.FromException<PayloadProtectionResult>(new InvalidOperationException("key unavailable")));
+
+        MockHttpMessageHandler handler = new();
+        handler.AddResponse(
+            BuildActorStateUrl("AggregateActor", "test-tenant:party:party-erased", "test-tenant:party:party-erased:metadata"),
+            JsonSerializer.Serialize(metadata));
+        handler.AddResponse(
+            BuildActorStateUrl("AggregateActor", "test-tenant:party:party-erased", "test-tenant:party:party-erased:events:1"),
+            JsonSerializer.Serialize(envelope));
+
+        ProjectionRebuildService sut = CreateService(handler, protectionService);
+
+        IReadOnlyList<IEventPayload> events = await sut.ReadAggregateEventsAsync("test-tenant", "party-erased", CancellationToken.None);
+
+        events.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task RebuildIndexProjectionAsync_CanceledBeforeStateAccess_DoesNotWriteAsync()
+    {
+        using var cts = new CancellationTokenSource();
+        await cts.CancelAsync();
+        MockHttpMessageHandler handler = new();
+        ProjectionRebuildService sut = CreateService(handler);
+
+        await Should.ThrowAsync<OperationCanceledException>(
+            () => sut.RebuildIndexProjectionAsync("test-tenant", cts.Token));
+
+        handler.Requests.ShouldNotContain(request => request.Method == HttpMethod.Put);
+    }
+
+    [Fact]
+    public async Task RebuildDetailProjectionAsync_StateWriteFailure_StopsBeforeCheckpointWriteAsync()
+    {
+        var metadata = new { currentSequence = 1L, lastModified = DateTimeOffset.UtcNow };
+        PartyCreated evt = new()
+        {
+            Type = PartyType.Person,
+            PersonDetails = new PersonDetails
+            {
+                FirstName = "Write",
+                LastName = "Failure",
+            },
+        };
+        var envelope = CreateEnvelope("party-write-failure", 1, evt);
+
+        MockHttpMessageHandler handler = new();
+        handler.AddResponse(
+            BuildActorStateUrl("PartyIndexProjectionActor", "test-tenant:party-index", "test-tenant:rebuild-checkpoint:detail:party-write-failure"),
+            null,
+            HttpStatusCode.NotFound);
+        handler.AddResponse(
+            BuildActorStateUrl("AggregateActor", "test-tenant:party:party-write-failure", "test-tenant:party:party-write-failure:metadata"),
+            JsonSerializer.Serialize(metadata));
+        handler.AddResponse(
+            BuildActorStateUrl("AggregateActor", "test-tenant:party:party-write-failure", "test-tenant:party:party-write-failure:events:1"),
+            JsonSerializer.Serialize(envelope));
+        handler.AddResponse(
+            BuildActorStateRootUrl("PartyDetailProjectionActor", "test-tenant:party-detail:party-write-failure"),
+            null,
+            HttpStatusCode.InternalServerError,
+            HttpMethod.Put);
+
+        ProjectionRebuildService sut = CreateService(handler);
+
+        await Should.ThrowAsync<HttpRequestException>(
+            () => sut.RebuildDetailProjectionAsync("test-tenant", "party-write-failure", CancellationToken.None));
+
+        handler.Requests.ShouldNotContain(request =>
+            request.Method == HttpMethod.Put
+            && request.Path == BuildActorStateRootUrl("PartyIndexProjectionActor", "test-tenant:party-index"));
+    }
+
+    private static object CreateEnvelope(
+        string aggregateId,
+        long seq,
+        IEventPayload payload,
+        string serializationFormat = "json")
     {
         string typeName = payload.GetType().FullName!;
         byte[] payloadBytes = JsonSerializer.SerializeToUtf8Bytes(payload, payload.GetType(), new JsonSerializerOptions
@@ -243,7 +423,7 @@ public sealed class ProjectionRebuildServiceTests
             domain = "party",
             sequenceNumber = seq,
             eventTypeName = typeName,
-            serializationFormat = "json",
+            serializationFormat,
             payload = payloadBytes,
         };
     }
@@ -258,20 +438,26 @@ public sealed class ProjectionRebuildServiceTests
         return $"/v1.0/actors/{actorType}/{Uri.EscapeDataString(actorId)}/state";
     }
 
-    private static ProjectionRebuildService CreateService(MockHttpMessageHandler handler)
+    private static ProjectionRebuildService CreateService(
+        MockHttpMessageHandler handler,
+        IEventPayloadProtectionService? protectionService = null)
     {
         HttpClient httpClient = new(handler) { BaseAddress = new Uri("http://localhost:3500") };
         ILogger<ProjectionRebuildService> logger = Substitute.For<ILogger<ProjectionRebuildService>>();
-        IEventPayloadProtectionService protectionService = Substitute.For<IEventPayloadProtectionService>();
-        protectionService.UnprotectEventPayloadAsync(
+        if (protectionService is null)
+        {
+            protectionService = Substitute.For<IEventPayloadProtectionService>();
+            protectionService.UnprotectEventPayloadAsync(
                 Arg.Any<AggregateIdentity>(),
                 Arg.Any<string>(),
                 Arg.Any<byte[]>(),
                 Arg.Any<string>(),
                 Arg.Any<CancellationToken>())
-            .Returns(callInfo => Task.FromResult(new PayloadProtectionResult(
-                (byte[])callInfo[2],
-                (string)callInfo[3])));
+                .Returns(callInfo => Task.FromResult(new PayloadProtectionResult(
+                    (byte[])callInfo[2],
+                    (string)callInfo[3])));
+        }
+
         return new ProjectionRebuildService(httpClient, protectionService, logger);
     }
 

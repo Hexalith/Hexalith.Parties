@@ -54,6 +54,7 @@ public sealed partial class ProjectionRebuildService : IProjectionRebuildService
         IReadOnlyList<string> partyIds = partyId is not null
             ? [partyId]
             : await GetPartyIdsForTenantAsync(tenantId, cancellationToken).ConfigureAwait(false);
+        EnsureTrustedPartyIdsAvailable(partyIds);
 
         Log.RebuildStarted(_logger, "detail", tenantId, partyIds.Count);
 
@@ -91,6 +92,8 @@ public sealed partial class ProjectionRebuildService : IProjectionRebuildService
             cancellationToken).ConfigureAwait(false);
 
         IReadOnlyList<string> partyIds = await GetPartyIdsForTenantAsync(tenantId, cancellationToken).ConfigureAwait(false);
+        EnsureTrustedPartyIdsAvailable(partyIds);
+
         Log.RebuildStarted(_logger, "index", tenantId, partyIds.Count);
 
         string indexActorId = GetIndexActorId(tenantId);
@@ -429,6 +432,14 @@ public sealed partial class ProjectionRebuildService : IProjectionRebuildService
 
     private static string GetCheckpointStateKey(string tenantId, string projectionKey)
         => $"{tenantId}:{RebuildCheckpointPrefix}:{projectionKey}";
+
+    private static void EnsureTrustedPartyIdsAvailable(IReadOnlyCollection<string> partyIds)
+    {
+        if (partyIds.Count == 0)
+        {
+            throw new InvalidOperationException("Projection rebuild cannot enumerate trusted party ids.");
+        }
+    }
 
     private static string GetDetailActorId(string tenantId, string partyId)
         => $"{tenantId}:{DetailProjectionName}:{partyId}";

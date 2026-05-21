@@ -77,13 +77,13 @@ public sealed class AppHostTenantsTopologyTests
         string program = ReadAppHostProgram();
 
         program.ShouldMatch(
-            @"WithEnvironment\(""EventStore__DomainServices__Registrations__\*\|party\|v1__AppId"",\s*""parties""\)");
+            @"WithEnvironment\(""EventStore__DomainServices__Registrations__wildcard_party_v1__AppId"",\s*""parties""\)");
         program.ShouldMatch(
-            @"WithEnvironment\(""EventStore__DomainServices__Registrations__\*\|party\|v1__MethodName"",\s*""process""\)");
+            @"WithEnvironment\(""EventStore__DomainServices__Registrations__wildcard_party_v1__MethodName"",\s*""process""\)");
         program.ShouldMatch(
-            @"WithEnvironment\(""EventStore__DomainServices__Registrations__\*\|party\|v1__Domain"",\s*""party""\)");
+            @"WithEnvironment\(""EventStore__DomainServices__Registrations__wildcard_party_v1__Domain"",\s*""party""\)");
         program.ShouldMatch(
-            @"WithEnvironment\(""EventStore__DomainServices__Registrations__\*\|party\|v1__Version"",\s*""v1""\)");
+            @"WithEnvironment\(""EventStore__DomainServices__Registrations__wildcard_party_v1__Version"",\s*""v1""\)");
     }
 
     [Fact]
