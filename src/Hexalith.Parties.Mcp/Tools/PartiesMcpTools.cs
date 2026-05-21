@@ -17,6 +17,9 @@ internal sealed class PartiesMcpTools(
     IPartiesQueryClient queryClient,
     IPartiesMcpRequestContextAccessor contextAccessor)
 {
+    private const int MaxCreateFieldCharacters = 512;
+    private const int MaxCreateInputCharacters = 4096;
+
     [McpServerTool(Name = PartiesMcpToolNames.GetParty, Title = "Get Party", ReadOnly = true)]
     [Description("Gets a party by identifier through the Parties EventStore client boundary.")]
     public async Task<PartiesMcpToolResult> GetParty(
@@ -164,6 +167,31 @@ internal sealed class PartiesMcpTools(
                 string? effectiveIdentifierType = FirstNonEmpty(identifierType, !string.IsNullOrWhiteSpace(vatNumber) ? "VAT" : null);
                 string? effectiveIdentifierValue = FirstNonEmpty(identifierValue, vatNumber);
 
+                if (ExceedsCreatePayloadLimit(
+                    partyId,
+                    partyType,
+                    effectiveGivenName,
+                    effectiveFamilyName,
+                    dateOfBirth,
+                    prefix,
+                    suffix,
+                    legalName,
+                    tradingName,
+                    legalForm,
+                    registrationNumber,
+                    email,
+                    phone,
+                    vatNumber,
+                    effectiveIdentifierType,
+                    effectiveIdentifierValue))
+                {
+                    return PartiesMcpToolResult.Failed(
+                        PartiesMcpToolNames.CreateParty,
+                        "validation_failed",
+                        "parties-mcp-payload-too-large",
+                        "The create_party request exceeds the supported MCP payload size.");
+                }
+
                 PartyType type = ResolveCreateType(partyType, effectiveGivenName, effectiveFamilyName, legalName);
                 if (type == PartyType.Unknown)
                 {
@@ -171,6 +199,11 @@ internal sealed class PartiesMcpTools(
                 }
 
                 string effectivePartyId = string.IsNullOrWhiteSpace(partyId) ? NewId() : partyId.Trim();
+                if (!IsSafePartyId(effectivePartyId))
+                {
+                    return ValidationFailed(PartiesMcpToolNames.CreateParty, "partyId");
+                }
+
                 CreatePartyComposite? command = BuildCreateCommand(
                     effectivePartyId,
                     type,
@@ -425,6 +458,27 @@ internal sealed class PartiesMcpTools(
             "validation_failed",
             "parties-mcp-validation-failed",
             $"The {field} argument is missing or invalid.");
+
+    private static bool ExceedsCreatePayloadLimit(params string?[] values)
+    {
+        int total = 0;
+        foreach (string? value in values.Where(static value => !string.IsNullOrWhiteSpace(value)))
+        {
+            string trimmed = value!.Trim();
+            if (trimmed.Length > MaxCreateFieldCharacters)
+            {
+                return true;
+            }
+
+            total += trimmed.Length;
+            if (total > MaxCreateInputCharacters)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
 
     private static PartiesMcpToolResult MapClientException(string toolName, PartiesClientException ex)
     {
