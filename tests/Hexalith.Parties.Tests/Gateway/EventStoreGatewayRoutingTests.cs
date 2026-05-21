@@ -320,6 +320,11 @@ public sealed class EventStoreGatewayRoutingTests
         using HttpResponseMessage response = await client.PostAsJsonAsync("/api/v1/commands", request);
 
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        response.Content.Headers.ContentType!.MediaType.ShouldBe("application/problem+json");
+        JsonElement body = await response.Content.ReadFromJsonAsync<JsonElement>();
+        body.GetProperty("type").GetString().ShouldBe("https://hexalith.io/problems/validation-error");
+        body.GetProperty("status").GetInt32().ShouldBe(400);
+        body.GetProperty("errors").ValueKind.ShouldBe(JsonValueKind.Object);
         factory.CommandActor.ReceivedCommands.ShouldBeEmpty();
         factory.StatusStore.GetStatusCount().ShouldBe(0);
         factory.ArchiveStore.GetArchiveCount().ShouldBe(0);
@@ -345,6 +350,15 @@ public sealed class EventStoreGatewayRoutingTests
         using HttpResponseMessage response = await client.PostAsJsonAsync("/api/v1/commands", request);
 
         response.StatusCode.ShouldBe(HttpStatusCode.UnprocessableEntity);
+        response.Content.Headers.ContentType!.MediaType.ShouldBe("application/problem+json");
+        JsonElement body = await response.Content.ReadFromJsonAsync<JsonElement>();
+        body.GetProperty("type").GetString().ShouldBe(
+            "https://hexalith.io/problems/domain-rejections/party-command-validation-rejected");
+        body.GetProperty("title").GetString().ShouldBe("Party Command Validation Rejected");
+        body.GetProperty("status").GetInt32().ShouldBe(422);
+        body.GetProperty("reasonCode").GetString().ShouldBe("party-command-validation-rejected");
+        body.GetProperty("correctiveAction").GetString().ShouldBe("Review the rejection detail, correct the request, and retry when appropriate.");
+        body.GetProperty("rejectionType").GetString().ShouldBe(typeof(PartyCommandValidationRejected).FullName);
         factory.PartiesCommandRouter.ShouldNotBeNull();
         DomainResult result = factory.PartiesCommandRouter.DomainResults.ShouldHaveSingleItem();
         result.IsRejection.ShouldBeTrue();
@@ -354,6 +368,59 @@ public sealed class EventStoreGatewayRoutingTests
         factory.StatusStore.GetStatusHistory("tenant-a", "cmd-12-4-invalid-payload")
             .Select(s => s.Status)
             .ShouldContain(CommandStatus.Rejected);
+        factory.ArchiveStore.GetArchiveCount().ShouldBe(1);
+    }
+
+    [Theory]
+    [InlineData(typeof(PartyNotFound), HttpStatusCode.NotFound, "party-not-found", "Party Not Found")]
+    [InlineData(typeof(PartyCannotAddDuplicateIdentifier), HttpStatusCode.Conflict, "party-cannot-add-duplicate-identifier", "Party Cannot Add Duplicate Identifier")]
+    [InlineData(typeof(PartyTypeMismatch), HttpStatusCode.UnprocessableEntity, "party-type-mismatch", "Party Type Mismatch")]
+    public async Task PostCommands_TypedDomainRejections_ReturnStableProblemDetailsAsync(
+        Type rejectionType,
+        HttpStatusCode expectedStatus,
+        string expectedReasonCode,
+        string expectedTitle)
+    {
+        ArgumentNullException.ThrowIfNull(rejectionType);
+
+        var rejectingRouter = new ConfigurableCommandRouter
+        {
+            ProcessingResultFactory = command => new CommandProcessingResult(
+                Accepted: false,
+                ErrorMessage: $"Domain rejection: {rejectionType.FullName}",
+                CorrelationId: command.CorrelationId,
+                EventCount: 1,
+                ResultPayload: null),
+            StatusFactory = command => new CommandStatusRecord(
+                CommandStatus.Rejected,
+                DateTimeOffset.UtcNow,
+                command.AggregateId,
+                EventCount: 1,
+                RejectionEventType: rejectionType.FullName,
+                FailureReason: null,
+                TimeoutDuration: null),
+        };
+        using var factory = new EventStoreGatewayTestFactory(customCommandRouter: rejectingRouter);
+        using HttpClient client = factory.CreateAuthenticatedClient(permissions: ["commands:*"]);
+
+        var request = CreateCommandRequest(
+            messageId: $"cmd-3-4-{expectedReasonCode}",
+            aggregateId: "party-rejected",
+            payload: JsonSerializer.SerializeToElement(new { PartyId = "party-rejected" }));
+
+        using HttpResponseMessage response = await client.PostAsJsonAsync("/api/v1/commands", request);
+
+        response.StatusCode.ShouldBe(expectedStatus);
+        response.Content.Headers.ContentType!.MediaType.ShouldBe("application/problem+json");
+
+        JsonElement body = await response.Content.ReadFromJsonAsync<JsonElement>();
+        body.GetProperty("type").GetString().ShouldBe($"https://hexalith.io/problems/domain-rejections/{expectedReasonCode}");
+        body.GetProperty("title").GetString().ShouldBe(expectedTitle);
+        body.GetProperty("status").GetInt32().ShouldBe((int)expectedStatus);
+        body.GetProperty("reasonCode").GetString().ShouldBe(expectedReasonCode);
+        body.GetProperty("rejectionType").GetString().ShouldBe(rejectionType.FullName);
+        body.GetProperty("correctiveAction").GetString().ShouldNotBeNullOrWhiteSpace();
+        body.GetProperty("detail").GetString().ShouldNotBeNull().ShouldNotContain("personDetails");
         factory.ArchiveStore.GetArchiveCount().ShouldBe(1);
     }
 
@@ -541,6 +608,41 @@ public sealed class EventStoreGatewayRoutingTests
         SubmitQuery query = factory.QueryRouter.ReceivedQueries.ShouldHaveSingleItem();
         query.AggregateId.ShouldBe("tenant-b-party");
         query.Domain.ShouldBe("party");
+    }
+
+    [Fact]
+    public async Task PostQueries_RouterFailure_ReturnsBoundedRetryableProblemDetailsAsync()
+    {
+        using var factory = new EventStoreGatewayTestFactory();
+        using HttpClient client = factory.CreateAuthenticatedClient(permissions: ["query:read"]);
+        factory.QueryRouter.Result = new QueryRouterResult(
+            Success: false,
+            Payload: null,
+            NotFound: false,
+            ErrorMessage: "ActorException",
+            ProjectionType: "party");
+
+        var request = new
+        {
+            tenant = "tenant-a",
+            domain = "party",
+            aggregateId = "party-query-failed",
+            queryType = "PartyDetail",
+        };
+
+        using HttpResponseMessage response = await client.PostAsJsonAsync("/api/v1/queries", request);
+
+        response.StatusCode.ShouldBe(HttpStatusCode.InternalServerError);
+        response.Content.Headers.ContentType!.MediaType.ShouldBe("application/problem+json");
+        response.Headers.TryGetValues("Retry-After", out IEnumerable<string>? retryAfterHeaders).ShouldBeTrue();
+        retryAfterHeaders!.ShouldContain("30");
+        JsonElement body = await response.Content.ReadFromJsonAsync<JsonElement>();
+        body.GetProperty("type").GetString().ShouldBe("https://hexalith.io/problems/internal-server-error");
+        body.GetProperty("reasonCode").GetString().ShouldBe("query_internal_error");
+        body.GetProperty("retryAfter").GetString().ShouldBe("30");
+        body.GetProperty("degradation").GetString().ShouldBe("projection-query-unavailable");
+        body.GetProperty("detail").GetString().ShouldBe("ActorException");
+        JsonSerializer.Serialize(body).ShouldNotContain("StackTrace");
     }
 
     [Fact]

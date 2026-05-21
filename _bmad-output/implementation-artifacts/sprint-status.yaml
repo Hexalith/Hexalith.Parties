@@ -36,7 +36,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-05-15 09:01:58 +02:00
-last_updated: 2026-05-21 12:00:00 +02:00
+last_updated: 2026-05-21 12:08:24 +02:00
 project: Hexalith.Parties
 project_key: NOKEY
 tracking_system: file-system
@@ -82,7 +82,7 @@ development_status:
   3-1-publish-stable-contracts-package: done
   3-2-provide-typed-parties-client-registration: done
   3-3-expose-versioned-rest-party-api: done
-  3-4-map-domain-rejections-to-problemdetails: backlog
+  3-4-map-domain-rejections-to-problemdetails: done
   3-5-generate-openapi-and-error-catalog: backlog
   3-6-enable-one-command-local-run: backlog
   3-7-write-getting-started-documentation: backlog
