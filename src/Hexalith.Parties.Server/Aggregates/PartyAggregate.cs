@@ -855,6 +855,8 @@ public sealed class PartyAggregate : EventStoreAggregate<PartyState> {
                 PartyId = command.PartyId,
                 TenantId = command.TenantId,
                 ErasedAt = command.ErasedAt,
+                ErasureStatus = ErasureStatus.Erased.ToString(),
+                VerificationStatus = ErasureVerificationOverallStatus.Complete.ToString(),
             },
         ]);
     }

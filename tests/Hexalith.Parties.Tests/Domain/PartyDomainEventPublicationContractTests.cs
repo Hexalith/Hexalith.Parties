@@ -10,6 +10,7 @@ using Hexalith.EventStore.Testing.Fakes;
 using Hexalith.Parties.Contracts.Commands;
 using Hexalith.Parties.Contracts.Events;
 using Hexalith.Parties.Contracts.Results;
+using Hexalith.Parties.Contracts.Security;
 using Hexalith.Parties.Contracts.State;
 using Hexalith.Parties.Contracts.ValueObjects;
 using Hexalith.Parties.Server.Aggregates;
@@ -137,7 +138,7 @@ public sealed class PartyDomainEventPublicationContractTests
         (Type EventType, string[] RequiredProperties)[] futureContracts =
         [
             (typeof(PartyMerged), ["SurvivorPartyId", "MergedPartyId"]),
-            (typeof(PartyErased), ["PartyId", "TenantId", "ErasedAt"]),
+            (typeof(PartyErased), ["PartyId", "TenantId", "ErasedAt", "ErasureStatus", "VerificationStatus"]),
             (typeof(ErasePartyRequested), ["PartyId", "TenantId", "RequestedAt", "RequestedBy"]),
             (typeof(ConsentRecorded), ["PartyId", "TenantId", "ConsentId", "ChannelId", "Purpose", "LawfulBasis", "GrantedAt", "GrantedBy"]),
             (typeof(ConsentRevoked), ["PartyId", "TenantId", "ConsentId", "RevokedAt", "RevokedBy"]),
@@ -177,6 +178,67 @@ public sealed class PartyDomainEventPublicationContractTests
         (handlerPatterns + subscribing).ShouldContain("v1.1");
         (handlerPatterns + subscribing).ShouldContain("Consent");
         (handlerPatterns + subscribing).ShouldContain("Restriction");
+    }
+
+    [Fact]
+    public async Task PartyErasedPublicationCarriesPrivacySafeStatusAndEnvelopeMetadataAsync()
+    {
+        PartyState state = PartyTestData.CreateErasurePendingState();
+        state.Apply(new PartyEncryptionKeyDeleted
+        {
+            PartyId = PartyTestData.DefaultPartyId,
+            TenantId = PartyTestData.DefaultTenantId,
+            DeletedAt = DateTimeOffset.UtcNow,
+        });
+        state.Apply(new ErasureVerified
+        {
+            PartyId = PartyTestData.DefaultPartyId,
+            TenantId = PartyTestData.DefaultTenantId,
+            VerifiedAt = DateTimeOffset.UtcNow,
+            VerificationReportId = "report-6-4",
+        });
+
+        CompletePartyErasure command = new()
+        {
+            PartyId = PartyTestData.DefaultPartyId,
+            TenantId = PartyTestData.DefaultTenantId,
+            ErasedAt = DateTimeOffset.UtcNow,
+        };
+        DomainResult domainResult = PartyAggregate.Handle(command, state);
+
+        domainResult.IsSuccess.ShouldBeTrue();
+        PartyErased erased = domainResult.Events.OfType<PartyErased>().ShouldHaveSingleItem();
+        erased.PartyId.ShouldBe(PartyTestData.DefaultPartyId);
+        erased.TenantId.ShouldBe(PartyTestData.DefaultTenantId);
+        erased.ErasureStatus.ShouldBe(ErasureStatus.Erased.ToString());
+        erased.VerificationStatus.ShouldBe(ErasureVerificationOverallStatus.Complete.ToString());
+        string payloadJson = JsonSerializer.Serialize(erased, JsonOptions);
+        payloadJson.ShouldNotContain("John");
+        payloadJson.ShouldNotContain("Doe");
+        payloadJson.ShouldNotContain("john.doe@example.com");
+
+        var identity = new AggregateIdentity(PartyTestData.DefaultTenantId, "party", PartyTestData.DefaultPartyId);
+        var persister = new FakeEventPersister();
+        EventPersistResult persisted = await persister.PersistEventsAsync(
+            identity,
+            aggregateType: "Party",
+            CreateEnvelope(
+                tenantId: identity.TenantId,
+                aggregateId: identity.AggregateId,
+                payload: JsonSerializer.SerializeToUtf8Bytes(command)),
+            domainResult,
+            domainServiceVersion: "v1",
+            CancellationToken.None).ConfigureAwait(true);
+
+        persisted.PersistedEnvelopes.ShouldHaveSingleItem();
+        Hexalith.EventStore.Server.Events.EventEnvelope envelope = persisted.PersistedEnvelopes[0];
+        envelope.TenantId.ShouldBe(PartyTestData.DefaultTenantId);
+        envelope.AggregateId.ShouldBe(PartyTestData.DefaultPartyId);
+        envelope.CorrelationId.ShouldBe("corr-5-2");
+        envelope.CausationId.ShouldBe("cause-5-2");
+        envelope.UserId.ShouldBe("user-a");
+        envelope.EventTypeName.ShouldBe(typeof(PartyErased).FullName);
+        envelope.Payload.Length.ShouldBeGreaterThan(0);
     }
 
     [Fact]

@@ -48,6 +48,9 @@ public sealed class PartyErasedHandlerPatternTests
         combined.ShouldContain("MVP Compliance Boundary");
         combined.ShouldContain("manual deletion or environment rebuild");
         combined.ShouldContain("EventStore query gateway with `PartyDetail`");
+        combined.ShouldContain("erasureStatus");
+        combined.ShouldContain("verificationStatus");
+        combined.ShouldContain("Pending or partial internal verification");
         combined.ShouldNotContain("GET /api/parties/{id}");
     }
 
@@ -178,6 +181,27 @@ public sealed class PartyErasedHandlerPatternTests
         string renderedLogMessage = logArguments[2]?.ToString() ?? string.Empty;
         renderedLogMessage.ShouldContain("nullified party reference in 2 invoices");
         renderedLogMessage.ShouldContain(ErasedPartyId);
+    }
+
+    [Fact]
+    public void HandlePartyErased_DuplicateDelivery_IsIdempotent()
+    {
+        _invoiceStore.Clear();
+        _invoiceStore["inv-1"] = new MockInvoice { Id = "inv-1", CustomerPartyId = ErasedPartyId, CustomerDisplayName = "Marie Dupont", Amount = 100m };
+        _invoiceStore["inv-2"] = new MockInvoice { Id = "inv-2", CustomerPartyId = "p-other", CustomerDisplayName = "Jean Martin", Amount = 50m };
+        ILogger logger = Substitute.For<ILogger>();
+
+        HandlePartyErased(ErasedPartyId, logger);
+        HandlePartyErased(ErasedPartyId, logger);
+
+        _invoiceStore["inv-1"].CustomerPartyId.ShouldBeNull();
+        _invoiceStore["inv-1"].CustomerDisplayName.ShouldBe("[Erased Party]");
+        _invoiceStore["inv-1"].Amount.ShouldBe(100m);
+        _invoiceStore["inv-2"].CustomerPartyId.ShouldBe("p-other");
+        _invoiceStore["inv-2"].CustomerDisplayName.ShouldBe("Jean Martin");
+        logger.ReceivedCalls()
+            .Count(call => call.GetMethodInfo().Name == nameof(ILogger.Log))
+            .ShouldBe(2);
     }
 
     /// <summary>

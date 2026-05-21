@@ -422,7 +422,9 @@ MVP delete operations are soft deactivations. They publish lifecycle state such 
 
 ### Background
 
-`PartyErased` is a v1.1 GDPR event. It fires **after** crypto-shredding destroys the party's per-party encryption key. The event payload contains only cleanup metadata such as party id, tenant id, and erasure timestamp — no personal data is included.
+`PartyErased` is a v1.1 GDPR event. It fires **after** crypto-shredding destroys the party's per-party encryption key and internal verification reaches the documented completion point. The event payload contains only cleanup metadata: party id, tenant id, erasure timestamp, erasure status, and verification status. No personal data is included.
+
+If internal verification is pending or partial, consumers should use the erasure status surfaces rather than treating `PartyErased` as fully verified. `PartyErased` means downstream cleanup must run; `VerificationStatus=Complete` means the service-side cleanup checks have completed. Pending or partial verification must remain visible as companion erasure status so consumers can distinguish accepted erasure from fully verified erasure.
 
 When you receive `PartyErased`, you must clean up all local references to the erased party. Failure to do so creates dangling references that violate GDPR right-to-erasure requirements.
 
@@ -497,7 +499,7 @@ Test your `PartyErased` handler by verifying:
 When a party is erased via GDPR crypto-shredding:
 
 1. The per-party encryption key is destroyed, making encrypted personal data unrecoverable
-2. `PartyErased` fires with only the `partyId` in the payload
+2. `PartyErased` fires with only cleanup metadata in the payload: `partyId`, `tenantId`, `erasedAt`, `erasureStatus`, and `verificationStatus`
 3. All subscribing applications receive the event and must clean up local references
 4. Any application that **fails to handle** `PartyErased` is left with **dangling references** — party IDs that point to erased (non-existent) parties
 
