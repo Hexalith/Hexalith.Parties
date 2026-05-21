@@ -1,0 +1,22 @@
+# DAPR Access Control Configuration -- Local Memories Service Host
+# ================================================================
+# Optional receiving-sidecar policy for Memories.Server when the AppHost
+# is launched with EnableMemoriesSearch=true. The default local Parties
+# run leaves Memories disabled and does not require the Memories submodule.
+apiVersion: dapr.io/v1alpha1
+kind: Configuration
+metadata:
+  name: accesscontrol-memories
+spec:
+  accessControl:
+    defaultAction: deny
+    trustDomain: hexalith.io
+    policies:
+      - appId: parties
+        defaultAction: deny
+        trustDomain: hexalith.io
+        namespace: hexalith-parties
+        operations:
+          - name: /process
+            httpVerb: ['POST']
+            action: allow

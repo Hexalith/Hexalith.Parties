@@ -1,6 +1,6 @@
 # Story 3.6: Enable One-Command Local Run
 
-Status: in-progress
+Status: done
 
 ## Story
 
@@ -19,15 +19,16 @@ so that I can evaluate and develop against the service without hand-wiring infra
 ## Tasks / Subtasks
 
 - [x] Verify the AppHost local topology. (AC: 1, 2)
-  - [x] Confirm stable Aspire resources exist for `eventstore`, `eventstore-admin`, `eventstore-admin-ui`, `parties`, `parties-mcp`, `tenants`, `memories`, `redis`, and optional `keycloak`.
-  - [x] Confirm Parties, Tenants, and Memories use DAPR sidecars and shared state/pubsub backing services.
+  - [x] Confirm stable Aspire resources exist for `eventstore`, `eventstore-admin`, `parties`, `tenants`, `redis`, optional `keycloak`, explicit-start `eventstore-admin-ui`/`parties-mcp`, and opt-in `memories`.
+  - [x] Confirm Parties and Tenants use DAPR sidecars and shared state/pubsub backing services; Memories joins the same backing services only when rich search is enabled.
   - [x] Confirm local health/readiness endpoints are mapped by service defaults.
 - [x] Document the default local run path. (AC: 1, 2, 4, 5)
   - [x] Document root-level submodule prerequisites only.
   - [x] Document the single AppHost run command from the repository root.
   - [x] Explicitly reject recursive/nested submodule initialization for the default local run.
 - [x] Make missing local dependencies actionable. (AC: 4)
-  - [x] Validate root-level sibling submodule paths before AppHost project references are resolved.
+  - [x] Validate required root-level sibling submodule paths before AppHost project references are resolved.
+  - [x] Keep `Hexalith.Memories` opt-in for local rich search so its nested dependencies do not block the default local Parties run.
   - [x] Emit setup guidance that points to the supported root-level submodule command.
 - [x] Add guardrail tests. (AC: 1-5)
   - [x] Assert the local topology resources and backing services are present in AppHost composition.
@@ -38,7 +39,7 @@ so that I can evaluate and develop against the service without hand-wiring infra
 
 Story 3.6 is scoped to the local Aspire/AppHost developer experience. The AppHost remains the single source of truth for the local topology; do not introduce a separate local orchestration script unless a later story explicitly needs it.
 
-The default setup path must respect the repository rule that nested submodules are not initialized unless explicitly requested. Root-level sibling submodules (`Hexalith.EventStore`, `Hexalith.Tenants`, `Hexalith.Memories`) are enough for the default AppHost local run. If a nested dependency becomes required later, it should be handled by a separate story and not smuggled into the default quick start.
+The default setup path must respect the repository rule that nested submodules are not initialized unless explicitly requested. Root-level sibling submodules `Hexalith.EventStore` and `Hexalith.Tenants` are enough for the default AppHost local run. `Hexalith.Memories` is opt-in behind `EnableMemoriesSearch=true` because its upstream build currently enforces its own nested submodule prerequisites.
 
 Relevant existing surfaces:
 
@@ -67,7 +68,13 @@ Parent-managed Codex recovery flow after nested Codex story sessions were blocke
 
 ### Completion Notes List
 
-- In progress.
+- Default AppHost build no longer evaluates `Hexalith.Memories`, avoiding its nested `Hexalith.Commons` prerequisite for the baseline local Parties run.
+- README and getting-started docs now document root-level submodule setup only and the single `dotnet aspire run --project src/Hexalith.Parties.AppHost` command.
+- Missing required root-level EventStore/Tenants submodules fail during AppHost project evaluation with actionable setup guidance.
+- `EnableMemoriesSearch=true` remains available as an opt-in path with an explicit Memories project resolver and local DAPR ACL/component scopes.
+- `eventstore-admin-ui` and `parties-mcp` are explicit-start dashboard resources so the default one-command topology starts cleanly while preserving auxiliary access.
+- Validation passed: focused AppHost topology tests, AppHost build, Aspire doctor, and AppHost startup smoke.
+- Aspire doctor warning remains environmental: multiple/older HTTPS development certificates are present; Docker and .NET SDK checks pass.
 
 ### File List
 
@@ -75,6 +82,10 @@ Parent-managed Codex recovery flow after nested Codex story sessions were blocke
 - `README.md`
 - `docs/getting-started.md`
 - `src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj`
+- `src/Hexalith.Parties.AppHost/DaprComponents/accesscontrol.memories.yaml`
+- `src/Hexalith.Parties.AppHost/DaprComponents/pubsub.yaml`
+- `src/Hexalith.Parties.AppHost/DaprComponents/statestore.yaml`
+- `src/Hexalith.Parties.AppHost/Program.cs`
 - `tests/Hexalith.Parties.Tests/FitnessTests/AppHostTenantsTopologyTests.cs`
 
 ## Change Log
@@ -82,3 +93,4 @@ Parent-managed Codex recovery flow after nested Codex story sessions were blocke
 | Date | Author | Change |
 |------|--------|--------|
 | 2026-05-21 | bmad-story-automator (AI) | Created story artifact and implemented local-run documentation/AppHost guardrails. |
+| 2026-05-21 | bmad-story-automator (AI) | Completed validation and marked story done. |

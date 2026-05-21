@@ -46,7 +46,7 @@ cd Hexalith.Parties
 
 # Initialize only the root-level sibling submodules required by the AppHost.
 # Do not use --recursive for the default local run.
-git submodule update --init Hexalith.EventStore Hexalith.Tenants Hexalith.Memories
+git submodule update --init Hexalith.EventStore Hexalith.Tenants
 
 dotnet aspire run --project src/Hexalith.Parties.AppHost
 ```
@@ -55,15 +55,19 @@ Open the Aspire dashboard URL printed by the command and verify these resources 
 
 - `eventstore` - public command/query gateway
 - `eventstore-admin` - admin server used by the EventStore Admin UI
-- `eventstore-admin-ui` - generic stream and event browser
 - `parties` - Parties domain actor/projection host behind EventStore
 - `tenants` - tenant lifecycle, membership, role, and configuration authority
+- `redis` - local DAPR state/pubsub backing service
+- `statestore` and `pubsub` - DAPR components backed by Redis
+- DAPR sidecars for `eventstore`, `eventstore-admin`, `parties`, and `tenants`
 
-The `parties-mcp` resource is the separate MCP host when included by the AppHost. It is not hosted by the `parties` actor host.
+The `eventstore-admin-ui` and `parties-mcp` resources are explicit-start auxiliaries in the dashboard. Start `eventstore-admin-ui` when you need stream browsing, and start `parties-mcp` when an AI assistant needs the MCP tool host. The MCP host is separate from the `parties` actor host.
 
 EventStore owns public authentication, tenant validation, RBAC, command/query routing, and generic response mapping. Parties owns domain execution and projection behavior behind the actor host. Do not call Parties internals to manage tenant lifecycle, RBAC, authorization, projection actors, or domain invocation.
 
-If startup fails before the dashboard appears, first check that Docker Desktop is running and that the three root-level submodules above exist on disk. A missing `Hexalith.EventStore`, `Hexalith.Tenants`, or `Hexalith.Memories` directory is a setup problem, not a partial local topology that should be treated as ready.
+If startup fails before the dashboard appears, first check that Docker Desktop is running and that the two root-level submodules above exist on disk. A missing `Hexalith.EventStore` or `Hexalith.Tenants` directory is a setup problem, not a partial local topology that should be treated as ready.
+
+Memories-backed rich search is optional for the default local Parties run. To include it, initialize the root-level `Hexalith.Memories` submodule and run the AppHost with `EnableMemoriesSearch=true`; leave it unset for the baseline one-command local topology.
 
 ---
 

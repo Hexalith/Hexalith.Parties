@@ -3,6 +3,7 @@
 # - eventstore publishes parties domain events to sample.parties.events
 # - tenants publishes tenant lifecycle events to system.tenants.events
 # - parties subscribes to system.tenants.events
+# - memories is available when EnableMemoriesSearch=true
 # - sample subscribes to sample.parties.events
 apiVersion: dapr.io/v1alpha1
 kind: Component
@@ -26,4 +27,5 @@ scopes:
   - eventstore
   - parties
   - tenants
+  - memories
   - sample
