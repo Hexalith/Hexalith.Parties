@@ -1,0 +1,43 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: memories
+  labels:
+    app: memories
+  annotations:
+    dapr.io/enabled: 'true'
+    dapr.io/config: tracing
+    dapr.io/app-id: memories
+    dapr.io/enable-api-logging: 'true'
+spec:
+  minReadySeconds: 60
+  replicas: 1
+  selector:
+    matchLabels:
+      app: memories
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: memories
+      annotations:
+        dapr.io/enabled: 'true'
+        dapr.io/config: tracing
+        dapr.io/app-id: memories
+        dapr.io/enable-api-logging: 'true'
+    spec:
+      containers:
+      - name: memories
+        image: registry.hexalith.com/memories:0.1.1-preview.0.3
+        imagePullPolicy: IfNotPresent
+        ports:
+        - name: http
+          containerPort: 8080
+        - name: https
+          containerPort: 8443
+        envFrom:
+        - configMapRef:
+            name: memories-env
+      terminationGracePeriodSeconds: 180

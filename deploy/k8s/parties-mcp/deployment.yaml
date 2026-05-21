@@ -1,0 +1,33 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: parties-mcp
+  labels:
+    app: parties-mcp
+spec:
+  minReadySeconds: 60
+  replicas: 1
+  selector:
+    matchLabels:
+      app: parties-mcp
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: parties-mcp
+    spec:
+      containers:
+      - name: parties-mcp
+        image: registry.hexalith.com/parties-mcp:0.1.1-preview.0.3
+        imagePullPolicy: IfNotPresent
+        ports:
+        - name: http
+          containerPort: 8080
+        - name: https
+          containerPort: 8443
+        envFrom:
+        - configMapRef:
+            name: parties-mcp-env
+      terminationGracePeriodSeconds: 180

@@ -1,0 +1,43 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: eventstore-admin
+  labels:
+    app: eventstore-admin
+  annotations:
+    dapr.io/enabled: 'true'
+    dapr.io/config: tracing
+    dapr.io/app-id: eventstore-admin
+    dapr.io/enable-api-logging: 'true'
+spec:
+  minReadySeconds: 60
+  replicas: 1
+  selector:
+    matchLabels:
+      app: eventstore-admin
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: eventstore-admin
+      annotations:
+        dapr.io/enabled: 'true'
+        dapr.io/config: tracing
+        dapr.io/app-id: eventstore-admin
+        dapr.io/enable-api-logging: 'true'
+    spec:
+      containers:
+      - name: eventstore-admin
+        image: registry.hexalith.com/eventstore-admin:0.1.1-preview.0.3
+        imagePullPolicy: IfNotPresent
+        ports:
+        - name: http
+          containerPort: 8080
+        - name: https
+          containerPort: 8443
+        envFrom:
+        - configMapRef:
+            name: eventstore-admin-env
+      terminationGracePeriodSeconds: 180

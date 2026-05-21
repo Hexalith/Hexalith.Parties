@@ -77,13 +77,15 @@ public sealed class AppHostTenantsTopologyTests
         string program = ReadAppHostProgram();
 
         program.ShouldMatch(
-            @"WithEnvironment\(""EventStore__DomainServices__Registrations__\*\|party\|v1__AppId"",\s*""parties""\)");
+            @"WithEnvironment\(""EventStore__DomainServices__Registrations__wildcard_party_v1__AppId"",\s*""parties""\)");
         program.ShouldMatch(
-            @"WithEnvironment\(""EventStore__DomainServices__Registrations__\*\|party\|v1__MethodName"",\s*""process""\)");
+            @"WithEnvironment\(""EventStore__DomainServices__Registrations__wildcard_party_v1__MethodName"",\s*""process""\)");
         program.ShouldMatch(
-            @"WithEnvironment\(""EventStore__DomainServices__Registrations__\*\|party\|v1__Domain"",\s*""party""\)");
+            @"WithEnvironment\(""EventStore__DomainServices__Registrations__wildcard_party_v1__TenantId"",\s*""\*""\)");
         program.ShouldMatch(
-            @"WithEnvironment\(""EventStore__DomainServices__Registrations__\*\|party\|v1__Version"",\s*""v1""\)");
+            @"WithEnvironment\(""EventStore__DomainServices__Registrations__wildcard_party_v1__Domain"",\s*""party""\)");
+        program.ShouldMatch(
+            @"WithEnvironment\(""EventStore__DomainServices__Registrations__wildcard_party_v1__Version"",\s*""v1""\)");
     }
 
     [Fact]
@@ -91,8 +93,17 @@ public sealed class AppHostTenantsTopologyTests
     {
         string program = ReadAppHostProgram();
 
-        program.ShouldContain(@"WithEnvironment(""Authentication__JwtBearer__Authority"", realmUrl)");
-        program.ShouldContain(@"WithEnvironment(""Authentication__JwtBearer__Issuer"", realmUrl)");
+        program.ShouldContain("const string KeycloakRealmUrlInCluster");
+        program.ShouldContain("PUBLISH-MODE-DNS-ANCHOR");
+        program.ShouldContain(@"WithEnvironment(""Authentication__JwtBearer__Authority"", runModeAuthority)");
+        program.ShouldContain(@"WithEnvironment(""Authentication__JwtBearer__Issuer"", runModeAuthority)");
+        program.ShouldContain(@"WithEnvironment(""Authentication__JwtBearer__Authority"", publishModeAuthority)");
+        program.ShouldContain(@"WithEnvironment(""Authentication__JwtBearer__Issuer"", publishModeAuthority)");
+        program.ShouldContain("WithJwtAuthority(eventStore, realmUrl, builder.ExecutionContext.IsPublishMode ? KeycloakRealmUrlInCluster : null)");
+        program.ShouldContain("WithJwtAuthority(adminServer, realmUrl, builder.ExecutionContext.IsPublishMode ? KeycloakRealmUrlInCluster : null)");
+        program.ShouldContain("WithJwtAuthority(parties, realmUrl, builder.ExecutionContext.IsPublishMode ? KeycloakRealmUrlInCluster : null)");
+        program.ShouldContain("WithJwtAuthority(partiesMcp, realmUrl, builder.ExecutionContext.IsPublishMode ? KeycloakRealmUrlInCluster : null)");
+        program.ShouldContain("WithJwtAuthority(tenants, realmUrl, builder.ExecutionContext.IsPublishMode ? KeycloakRealmUrlInCluster : null)");
         program.ShouldContain(@"WithEnvironment(""Authentication__JwtBearer__Audience"", ""hexalith-eventstore"")");
         program.ShouldContain(@"WithEnvironment(""Authentication__JwtBearer__Audience"", ""hexalith-parties"")");
         program.ShouldContain("eventStore.WithReference(keycloak)");
@@ -100,10 +111,10 @@ public sealed class AppHostTenantsTopologyTests
         program.ShouldContain("parties.WithReference(keycloak)");
         program.ShouldContain("tenants.WithReference(keycloak)");
         program.ShouldContain("adminUI.WithReference(keycloak)");
-        Regex adminUiSwaggerUrl = new(@"adminUI[\s\S]*?WithEnvironment\(""EventStore__AdminServer__SwaggerUrl"",\s*ReferenceExpression\.Create\(\$""\{adminServer\.GetEndpoint\(""https""\)\}/swagger/index\.html""\)\)");
+        Regex adminUiSwaggerUrl = new(@"adminUI[\s\S]*?WithEnvironment\(""EventStore__AdminServer__SwaggerUrl"",\s*ReferenceExpression\.Create\(\$""\{adminServer\.GetEndpoint\(""http""\)\}/swagger/index\.html""\)\)");
         adminUiSwaggerUrl.Matches(program).Count.ShouldBe(
-            2,
-            "EventStore Admin UI must receive the Admin Server Swagger URL in both Keycloak-on and Keycloak-off branches.");
+            1,
+            "EventStore Admin UI must receive the Admin Server Swagger URL on the unconditional path.");
 
         // SigningKey="" must be cleared on every JWT-bearing service to avoid
         // dual-mode auth conflict; assert on count rather than presence so a
@@ -176,7 +187,18 @@ public sealed class AppHostTenantsTopologyTests
         program.ShouldContain(@"AddProject<Projects.Hexalith_Parties_Mcp>(""parties-mcp"")");
         program.ShouldMatch(@"partiesMcp[\s\S]*?\.WithReference\(eventStore\)[\s\S]*?\.WaitFor\(eventStore\)");
         program.ShouldMatch(@"partiesMcp[\s\S]*?\.WithReference\(parties\)[\s\S]*?\.WaitFor\(parties\)");
-        program.ShouldContain(@"WithEnvironment(""Parties__Mcp__EventStoreGatewayBaseUrl""");
+        program.ShouldContain(
+            @"WithEnvironment(""Parties__Mcp__EventStoreGatewayBaseUrl"", ReferenceExpression.Create($""{eventStore.GetEndpoint(""http"")}""))");
+    }
+
+    [Fact]
+    public void AppHostProgramWiresRunModeRedisIntoEventStoreDaprComponents()
+    {
+        string program = ReadAppHostProgram();
+
+        program.ShouldContain(@"IResourceBuilder<RedisResource>? redis = null;");
+        program.ShouldContain(@"redis = builder.AddRedis(""redis"")");
+        program.ShouldContain("redis: redis");
     }
 
     [Fact]

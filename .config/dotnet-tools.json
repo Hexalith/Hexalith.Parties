@@ -7,7 +7,7 @@
       "commands": [
         "aspirate"
       ],
-      "rollForward": true
+      "rollForward": false
     }
   }
 }

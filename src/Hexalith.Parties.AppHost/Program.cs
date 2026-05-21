@@ -10,6 +10,11 @@ string tenantsAccessControlConfigPath = ResolveDaprConfigPath("accesscontrol.ten
 string partiesAccessControlConfigPath = ResolveDaprConfigPath("accesscontrol.parties.yaml");
 string memoriesAccessControlConfigPath = ResolveDaprConfigPath("accesscontrol.memories.yaml");
 string resiliencyConfigPath = ResolveDaprConfigPath("resiliency.yaml");
+// PUBLISH-MODE-DNS-ANCHOR - Story 9.2 publish-mode wiring; matches Story 9.3 keycloak Service shape.
+// Service name `keycloak`, namespace `hexalith-parties`, port 8080, realm `hexalith`.
+// If Story 9.3 changes the keycloak Service name, port, namespace, or realm, this constant must update.
+// Story 9.3 Definition of Done must cross-verify this value against the committed keycloak Service.
+const string KeycloakRealmUrlInCluster = "http://keycloak.hexalith-parties.svc.cluster.local:8080/realms/hexalith";
 
 // Registration dictionary key uses the Kubernetes-valid sanitized wildcard form `wildcard_party_v1`
 // (story 9.3 AC1 / ADR 9.3-1). ConfigMap data keys must match ^[A-Za-z0-9_.-]+$ and Pod container
@@ -30,13 +35,24 @@ IResourceBuilder<ProjectResource> eventStore = builder.AddProject<Projects.Hexal
     .WithEnvironment("EventStore__DomainServices__Registrations__wildcard_party_v1__Version", "v1");
 IResourceBuilder<ProjectResource> adminServer = builder.AddProject<Projects.Hexalith_EventStore_Admin_Server_Host>("eventstore-admin");
 IResourceBuilder<ProjectResource> adminUI = builder.AddProject<Projects.Hexalith_EventStore_Admin_UI>("eventstore-admin-ui");
+
+// Redis is composed in run mode only. Local Aspire dev needs the actual Redis resource wired into
+// Dapr state/pubsub metadata; publish mode gets the hand-authored carve-out under deploy/k8s/redis/
+// from Story 9.3 and must not let aspirate emit a Redis workload.
+IResourceBuilder<RedisResource>? redis = null;
+if (builder.ExecutionContext.IsRunMode)
+{
+    redis = builder.AddRedis("redis");
+}
+
 HexalithEventStoreResources eventStoreResources = builder.AddHexalithEventStore(
     eventStore,
     adminServer,
     adminUI,
     eventStoreAccessControlConfigPath,
     adminServerAccessControlConfigPath,
-    resiliencyConfigPath);
+    resiliencyConfigPath,
+    redis: redis);
 
 IResourceBuilder<ProjectResource> parties = builder.AddProject<Projects.Hexalith_Parties>("parties")
     .WithDaprSidecar(sidecar => sidecar
@@ -54,8 +70,9 @@ IResourceBuilder<ProjectResource> partiesMcp = builder.AddProject<Projects.Hexal
     .WithReference(eventStore)
     .WaitFor(eventStore)
     .WithReference(parties)
-    .WaitFor(parties)
-    .WithEnvironment("Parties__Mcp__EventStoreGatewayBaseUrl", ReferenceExpression.Create($"{eventStore.GetEndpoint("https")}"));
+    .WaitFor(parties);
+
+_ = partiesMcp.WithEnvironment("Parties__Mcp__EventStoreGatewayBaseUrl", ReferenceExpression.Create($"{eventStore.GetEndpoint("http")}"));
 
 IResourceBuilder<ProjectResource> tenants = builder.AddProject<Projects.Hexalith_Tenants>("tenants")
     .WithDaprSidecar(sidecar => sidecar
@@ -98,15 +115,6 @@ _ = tenants
     .WithReference(eventStore)
     .WaitFor(eventStore);
 
-// Redis backing service: AppHost-composed for the local-cluster MVP topology (story 9.3 AC5).
-// Aspire 13.3.3 `AddRedis(...)` emits a deterministic Deployment + Service Aspirate can
-// translate. MVP scope is `emptyDir`-backed (`WithDataVolume()`); production-grade Redis
-// (StatefulSet + PVC + AUTH + TLS) is explicitly out of scope per the story Out-of-Scope list
-// and ADR D-K8s. The Service name MUST remain `redis` so the existing
-// `deploy/dapr/statestore.yaml` + `deploy/dapr/pubsub.yaml` `redisHost` references resolve
-// to `redis.hexalith-parties.svc.cluster.local:6379` without change.
-IResourceBuilder<RedisResource> redis = builder.AddRedis("redis");
-
 // Memories.Server: composed in-cluster as a first-class topology participant (story 9.3 AC2 /
 // ADR 9.3-2). The configurable external HTTP `MemoriesEndpoint` escape hatch was removed —
 // FR31a now enumerates Memories as part of the single-source-of-truth service graph. The
@@ -125,7 +133,9 @@ IResourceBuilder<ProjectResource> memories = builder.AddProject<Projects.Hexalit
     .WaitFor(eventStoreResources.StateStore)
     .WaitFor(eventStoreResources.PubSub);
 
-if (string.Equals(builder.Configuration["EnableMemoriesSearch"], "true", StringComparison.OrdinalIgnoreCase))
+bool enableMemoriesSearch = builder.ExecutionContext.IsPublishMode
+    || string.Equals(builder.Configuration["EnableMemoriesSearch"], "true", StringComparison.OrdinalIgnoreCase);
+if (enableMemoriesSearch)
 {
     _ = parties
         .WithReference(memories)
@@ -142,67 +152,73 @@ IResourceBuilder<KeycloakResource>? keycloak = null;
 ReferenceExpression? realmUrl = null;
 if (enableKeycloak)
 {
-    keycloak = builder.AddKeycloak("keycloak", 8180)
-        .WithRealmImport("./KeycloakRealms");
+    if (builder.ExecutionContext.IsRunMode)
+    {
+        keycloak = builder.AddKeycloak("keycloak", 8180)
+            .WithRealmImport("./KeycloakRealms");
 
-    EndpointReference keycloakEndpoint = keycloak.GetEndpoint("http");
-    realmUrl = ReferenceExpression.Create($"{keycloakEndpoint}/realms/hexalith");
+        EndpointReference keycloakEndpoint = keycloak.GetEndpoint("http");
+        realmUrl = ReferenceExpression.Create($"{keycloakEndpoint}/realms/hexalith");
+    }
+}
 
-    _ = eventStore.WithReference(keycloak)
-        .WaitFor(keycloak)
-        .WithEnvironment("Authentication__JwtBearer__Authority", realmUrl)
-        .WithEnvironment("Authentication__JwtBearer__Issuer", realmUrl)
-        .WithEnvironment("Authentication__JwtBearer__Audience", "hexalith-eventstore")
-        .WithEnvironment("Authentication__JwtBearer__RequireHttpsMetadata", "false")
-        .WithEnvironment("Authentication__JwtBearer__SigningKey", "");
+if (keycloak is not null)
+{
+    _ = eventStore.WithReference(keycloak).WaitFor(keycloak);
+    _ = adminServer.WithReference(keycloak).WaitFor(keycloak);
+    _ = parties.WithReference(keycloak).WaitFor(keycloak);
+    _ = partiesMcp.WithReference(keycloak).WaitFor(keycloak);
+    _ = tenants.WithReference(keycloak).WaitFor(keycloak);
+    _ = adminUI.WithReference(keycloak).WaitFor(keycloak);
+}
 
-    _ = adminServer.WithReference(keycloak)
-        .WaitFor(keycloak)
-        .WithEnvironment("Authentication__JwtBearer__Authority", realmUrl)
-        .WithEnvironment("Authentication__JwtBearer__Issuer", realmUrl)
-        .WithEnvironment("Authentication__JwtBearer__Audience", "hexalith-eventstore")
-        .WithEnvironment("Authentication__JwtBearer__RequireHttpsMetadata", "false")
-        .WithEnvironment("Authentication__JwtBearer__SigningKey", "");
+_ = WithJwtAuthority(eventStore, realmUrl, builder.ExecutionContext.IsPublishMode ? KeycloakRealmUrlInCluster : null)
+    .WithEnvironment("Authentication__JwtBearer__Audience", "hexalith-eventstore")
+    .WithEnvironment("Authentication__JwtBearer__RequireHttpsMetadata", "false")
+    .WithEnvironment("Authentication__JwtBearer__SigningKey", "");
 
-    // Multi-audience tolerance: Parties accepts its own audience plus the
-    // EventStore audience, so tokens minted for cross-service DAPR invocations
-    // (eventstore -> parties /process) validate without per-call token exchange.
-    _ = parties.WithReference(keycloak)
-        .WaitFor(keycloak)
-        .WithEnvironment("Authentication__JwtBearer__Authority", realmUrl)
-        .WithEnvironment("Authentication__JwtBearer__Issuer", realmUrl)
-        .WithEnvironment("Authentication__JwtBearer__Audience", "hexalith-parties")
-        .WithEnvironment("Authentication__JwtBearer__TokenValidationParameters__ValidAudiences__0", "hexalith-parties")
-        .WithEnvironment("Authentication__JwtBearer__TokenValidationParameters__ValidAudiences__1", "hexalith-eventstore")
-        .WithEnvironment("Authentication__JwtBearer__RequireHttpsMetadata", "false")
-        .WithEnvironment("Authentication__JwtBearer__SigningKey", "");
+_ = WithJwtAuthority(adminServer, realmUrl, builder.ExecutionContext.IsPublishMode ? KeycloakRealmUrlInCluster : null)
+    .WithEnvironment("Authentication__JwtBearer__Audience", "hexalith-eventstore")
+    .WithEnvironment("Authentication__JwtBearer__RequireHttpsMetadata", "false")
+    .WithEnvironment("Authentication__JwtBearer__SigningKey", "");
 
-    _ = partiesMcp.WithReference(keycloak)
-        .WaitFor(keycloak)
-        .WithEnvironment("Authentication__JwtBearer__Authority", realmUrl)
-        .WithEnvironment("Authentication__JwtBearer__Issuer", realmUrl)
-        .WithEnvironment("Authentication__JwtBearer__Audience", "hexalith-parties-mcp")
-        .WithEnvironment("Authentication__JwtBearer__TokenValidationParameters__ValidAudiences__0", "hexalith-parties-mcp")
-        .WithEnvironment("Authentication__JwtBearer__TokenValidationParameters__ValidAudiences__1", "hexalith-eventstore")
-        .WithEnvironment("Authentication__JwtBearer__RequireHttpsMetadata", "false")
-        .WithEnvironment("Authentication__JwtBearer__SigningKey", "");
+// Multi-audience tolerance: Parties accepts its own audience plus the
+// EventStore audience, so tokens minted for cross-service DAPR invocations
+// (eventstore -> parties /process) validate without per-call token exchange.
+_ = WithJwtAuthority(parties, realmUrl, builder.ExecutionContext.IsPublishMode ? KeycloakRealmUrlInCluster : null)
+    .WithEnvironment("Authentication__JwtBearer__Audience", "hexalith-parties")
+    .WithEnvironment("Authentication__JwtBearer__TokenValidationParameters__ValidAudiences__0", "hexalith-parties")
+    .WithEnvironment("Authentication__JwtBearer__TokenValidationParameters__ValidAudiences__1", "hexalith-eventstore")
+    .WithEnvironment("Authentication__JwtBearer__RequireHttpsMetadata", "false")
+    .WithEnvironment("Authentication__JwtBearer__SigningKey", "");
 
-    // Multi-audience tolerance: Tenants validates its own audience and accepts
-    // EventStore-issued tokens for command-gateway invocations.
-    _ = tenants.WithReference(keycloak)
-        .WaitFor(keycloak)
-        .WithEnvironment("Authentication__JwtBearer__Authority", realmUrl)
-        .WithEnvironment("Authentication__JwtBearer__Issuer", realmUrl)
-        .WithEnvironment("Authentication__JwtBearer__Audience", "hexalith-tenants")
-        .WithEnvironment("Authentication__JwtBearer__TokenValidationParameters__ValidAudiences__0", "hexalith-tenants")
-        .WithEnvironment("Authentication__JwtBearer__TokenValidationParameters__ValidAudiences__1", "hexalith-eventstore")
-        .WithEnvironment("Authentication__JwtBearer__RequireHttpsMetadata", "false")
-        .WithEnvironment("Authentication__JwtBearer__SigningKey", "");
+_ = WithJwtAuthority(partiesMcp, realmUrl, builder.ExecutionContext.IsPublishMode ? KeycloakRealmUrlInCluster : null)
+    .WithEnvironment("Authentication__JwtBearer__Audience", "hexalith-parties-mcp")
+    .WithEnvironment("Authentication__JwtBearer__TokenValidationParameters__ValidAudiences__0", "hexalith-parties-mcp")
+    .WithEnvironment("Authentication__JwtBearer__TokenValidationParameters__ValidAudiences__1", "hexalith-eventstore")
+    .WithEnvironment("Authentication__JwtBearer__RequireHttpsMetadata", "false")
+    .WithEnvironment("Authentication__JwtBearer__SigningKey", "");
 
-    _ = adminUI.WithReference(keycloak)
-        .WaitFor(keycloak)
-        .WithEnvironment("EventStore__AdminServer__SwaggerUrl", ReferenceExpression.Create($"{adminServer.GetEndpoint("https")}/swagger/index.html"))
+// Multi-audience tolerance: Tenants validates its own audience and accepts
+// EventStore-issued tokens for command-gateway invocations.
+_ = WithJwtAuthority(tenants, realmUrl, builder.ExecutionContext.IsPublishMode ? KeycloakRealmUrlInCluster : null)
+    .WithEnvironment("Authentication__JwtBearer__Audience", "hexalith-tenants")
+    .WithEnvironment("Authentication__JwtBearer__TokenValidationParameters__ValidAudiences__0", "hexalith-tenants")
+    .WithEnvironment("Authentication__JwtBearer__TokenValidationParameters__ValidAudiences__1", "hexalith-eventstore")
+    .WithEnvironment("Authentication__JwtBearer__RequireHttpsMetadata", "false")
+    .WithEnvironment("Authentication__JwtBearer__SigningKey", "");
+
+_ = adminUI.WithEnvironment("EventStore__AdminServer__SwaggerUrl", ReferenceExpression.Create($"{adminServer.GetEndpoint("http")}/swagger/index.html"));
+if (realmUrl is not null)
+{
+    _ = adminUI
         .WithEnvironment("EventStore__Authentication__Authority", realmUrl)
+        .WithEnvironment("EventStore__Authentication__ClientId", "hexalith-eventstore");
+}
+else if (builder.ExecutionContext.IsPublishMode)
+{
+    _ = adminUI
+        .WithEnvironment("EventStore__Authentication__Authority", KeycloakRealmUrlInCluster)
         .WithEnvironment("EventStore__Authentication__ClientId", "hexalith-eventstore");
 }
 else
@@ -210,7 +226,6 @@ else
     // Keycloak disabled: explicitly clear OIDC env vars on adminUI to prevent
     // stale Authority/ClientId values from a previous launch leaking into the UI.
     _ = adminUI
-        .WithEnvironment("EventStore__AdminServer__SwaggerUrl", ReferenceExpression.Create($"{adminServer.GetEndpoint("https")}/swagger/index.html"))
         .WithEnvironment("EventStore__Authentication__Authority", "")
         .WithEnvironment("EventStore__Authentication__ClientId", "");
 }
@@ -270,4 +285,27 @@ static string ResolveDaprConfigPath(string fileName)
         $"DAPR configuration not found. Probed: '{cwdPath}', '{baseDirPath}', '{sourceTreePath}'. "
         + $"Ensure {fileName} exists in the DaprComponents directory of the running AppHost.",
         cwdPath);
+}
+
+// PUBLISH-MODE-JWT-HELPER - single-place contract for JWT authority/issuer wiring.
+static IResourceBuilder<ProjectResource> WithJwtAuthority(
+    IResourceBuilder<ProjectResource> service,
+    ReferenceExpression? runModeAuthority,
+    string? publishModeAuthority)
+{
+    if (runModeAuthority is not null)
+    {
+        return service
+            .WithEnvironment("Authentication__JwtBearer__Authority", runModeAuthority)
+            .WithEnvironment("Authentication__JwtBearer__Issuer", runModeAuthority);
+    }
+
+    if (publishModeAuthority is not null)
+    {
+        return service
+            .WithEnvironment("Authentication__JwtBearer__Authority", publishModeAuthority)
+            .WithEnvironment("Authentication__JwtBearer__Issuer", publishModeAuthority);
+    }
+
+    return service;
 }
