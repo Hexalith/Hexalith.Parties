@@ -45,7 +45,9 @@ internal static class PartyDetailProjectionActorExtensions
         return new PartyDetailProjectionReadResult
         {
             Detail = detail,
-            Freshness = Freshness(status, status == ProjectionFreshnessStatus.Rebuilding ? ProjectionFreshnessMetadata.WarningProjectionRebuilding : null),
+            Freshness = status == ProjectionFreshnessStatus.Rebuilding
+                ? ProjectionFreshnessMetadata.Create(status, ProjectionFreshnessMetadata.WarningProjectionRebuilding)
+                : ProjectionFreshnessMetadata.Create(status),
         };
     }
 
@@ -136,13 +138,6 @@ internal static class PartyDetailProjectionActorExtensions
             return false;
         }
     }
-
-    private static ProjectionFreshnessMetadata Freshness(ProjectionFreshnessStatus status, string? warningCode)
-        => new()
-        {
-            Status = status,
-            WarningCodes = string.IsNullOrWhiteSpace(warningCode) ? [] : [warningCode],
-        };
 
     private static bool IsEmptyJsonString(string json)
     {

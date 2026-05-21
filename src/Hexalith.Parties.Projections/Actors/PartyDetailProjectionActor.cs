@@ -252,7 +252,7 @@ public sealed partial class PartyDetailProjectionActor : Actor, IPartyDetailProj
             return new PartyDetailProjectionReadResult
             {
                 Detail = null,
-                Freshness = Freshness(ProjectionFreshnessStatus.Unavailable, ProjectionFreshnessMetadata.WarningProjectionContextUnavailable),
+                Freshness = ProjectionFreshnessMetadata.Create(ProjectionFreshnessStatus.Unavailable, ProjectionFreshnessMetadata.WarningProjectionContextUnavailable),
             };
         }
 
@@ -261,7 +261,7 @@ public sealed partial class PartyDetailProjectionActor : Actor, IPartyDetailProj
             return new PartyDetailProjectionReadResult
             {
                 Detail = _cachedDetail ?? s_lastKnownDetails.GetValueOrDefault(stateKey),
-                Freshness = Freshness(ProjectionFreshnessStatus.Rebuilding, ProjectionFreshnessMetadata.WarningProjectionRebuilding),
+                Freshness = ProjectionFreshnessMetadata.Create(ProjectionFreshnessStatus.Rebuilding, ProjectionFreshnessMetadata.WarningProjectionRebuilding),
             };
         }
 
@@ -278,7 +278,7 @@ public sealed partial class PartyDetailProjectionActor : Actor, IPartyDetailProj
             return new PartyDetailProjectionReadResult
             {
                 Detail = _cachedDetail,
-                Freshness = Freshness(ProjectionFreshnessStatus.Current),
+                Freshness = ProjectionFreshnessMetadata.Create(ProjectionFreshnessStatus.Current),
             };
         }
         // Cancellation is terminal per story 2.7 advanced elicitation: do not coerce a canceled
@@ -289,7 +289,7 @@ public sealed partial class PartyDetailProjectionActor : Actor, IPartyDetailProj
             return new PartyDetailProjectionReadResult
             {
                 Detail = _cachedDetail ?? s_lastKnownDetails.GetValueOrDefault(stateKey),
-                Freshness = Freshness(ProjectionFreshnessStatus.Stale, ProjectionFreshnessMetadata.WarningProjectionStateStoreUnavailable),
+                Freshness = ProjectionFreshnessMetadata.Create(ProjectionFreshnessStatus.Stale, ProjectionFreshnessMetadata.WarningProjectionStateStoreUnavailable),
             };
         }
     }
@@ -400,15 +400,6 @@ public sealed partial class PartyDetailProjectionActor : Actor, IPartyDetailProj
             or JsonException
             || (ex.InnerException is not null && IsDeserializationFailure(ex.InnerException));
     }
-
-    private static ProjectionFreshnessMetadata Freshness(
-        ProjectionFreshnessStatus status,
-        params string[] warningCodes)
-        => new()
-        {
-            Status = status,
-            WarningCodes = warningCodes,
-        };
 
     private (string PartyId, string StateKey) ResolveStateContext(string incomingPartyId)
     {

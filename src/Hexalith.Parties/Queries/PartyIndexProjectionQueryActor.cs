@@ -242,7 +242,9 @@ public sealed partial class PartyIndexProjectionQueryActor(
         return new PartyIndexProjectionReadResult
         {
             Entries = entries,
-            Freshness = Freshness(status, status == ProjectionFreshnessStatus.Rebuilding ? ProjectionFreshnessMetadata.WarningProjectionRebuilding : null),
+            Freshness = status == ProjectionFreshnessStatus.Rebuilding
+                ? ProjectionFreshnessMetadata.Create(status, ProjectionFreshnessMetadata.WarningProjectionRebuilding)
+                : ProjectionFreshnessMetadata.Create(status),
         };
     }
 
@@ -258,13 +260,6 @@ public sealed partial class PartyIndexProjectionQueryActor(
             return false;
         }
     }
-
-    private static ProjectionFreshnessMetadata Freshness(ProjectionFreshnessStatus status, string? warningCode)
-        => new()
-        {
-            Status = status,
-            WarningCodes = string.IsNullOrWhiteSpace(warningCode) ? [] : [warningCode],
-        };
 
     private static bool TryParseListPayload(byte[] payloadBytes, out ListPartiesQueryPayload payload)
     {

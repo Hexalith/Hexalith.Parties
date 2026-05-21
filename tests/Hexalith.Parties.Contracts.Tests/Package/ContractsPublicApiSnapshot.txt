@@ -362,6 +362,7 @@ type class Hexalith.Parties.Contracts.Models.ProjectionFreshnessMetadata interfa
   ctor ()
   property Hexalith.Parties.Contracts.Models.ProjectionFreshnessStatus Status required getset
   property System.Collections.Generic.IReadOnlyList<System.String> WarningCodes getset
+  method Hexalith.Parties.Contracts.Models.ProjectionFreshnessMetadata Create(Hexalith.Parties.Contracts.Models.ProjectionFreshnessStatus status, System.String[] warningCodes)
 type enum Hexalith.Parties.Contracts.Models.ProjectionFreshnessStatus base:System.Enum interfaces:System.IComparable,System.IConvertible,System.IFormattable,System.ISpanFormattable
   enum Current=0
   enum Degraded=3

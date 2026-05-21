@@ -300,7 +300,7 @@ public sealed partial class PartyIndexProjectionActor : Actor, IPartyIndexProjec
                     return new PartyIndexProjectionReadResult
                     {
                         Entries = _entries,
-                        Freshness = Freshness(ProjectionFreshnessStatus.Rebuilding, ProjectionFreshnessMetadata.WarningProjectionRebuilding),
+                        Freshness = ProjectionFreshnessMetadata.Create(ProjectionFreshnessStatus.Rebuilding, ProjectionFreshnessMetadata.WarningProjectionRebuilding),
                     };
                 }
 
@@ -309,7 +309,7 @@ public sealed partial class PartyIndexProjectionActor : Actor, IPartyIndexProjec
                     return new PartyIndexProjectionReadResult
                     {
                         Entries = cached,
-                        Freshness = Freshness(ProjectionFreshnessStatus.Rebuilding, ProjectionFreshnessMetadata.WarningProjectionRebuilding),
+                        Freshness = ProjectionFreshnessMetadata.Create(ProjectionFreshnessStatus.Rebuilding, ProjectionFreshnessMetadata.WarningProjectionRebuilding),
                     };
                 }
             }
@@ -317,11 +317,11 @@ public sealed partial class PartyIndexProjectionActor : Actor, IPartyIndexProjec
             return new PartyIndexProjectionReadResult
             {
                 Entries = new Dictionary<string, PartyIndexEntry>(),
-                Freshness = Freshness(ProjectionFreshnessStatus.Unavailable, ProjectionFreshnessMetadata.WarningProjectionContextUnavailable),
+                Freshness = ProjectionFreshnessMetadata.Create(ProjectionFreshnessStatus.Unavailable, ProjectionFreshnessMetadata.WarningProjectionContextUnavailable),
             };
         }
 
-        ProjectionFreshnessMetadata freshness = Freshness(ProjectionFreshnessStatus.Current);
+        ProjectionFreshnessMetadata freshness = ProjectionFreshnessMetadata.Create(ProjectionFreshnessStatus.Current);
         try
         {
             await FlushAsync().ConfigureAwait(false);
@@ -331,7 +331,7 @@ public sealed partial class PartyIndexProjectionActor : Actor, IPartyIndexProjec
         {
             // If the backing state store is unavailable, continue serving the
             // in-memory snapshot already loaded in this actor activation.
-            freshness = Freshness(ProjectionFreshnessStatus.Degraded, ProjectionFreshnessMetadata.WarningProjectionStateStoreUnavailable);
+            freshness = ProjectionFreshnessMetadata.Create(ProjectionFreshnessStatus.Degraded, ProjectionFreshnessMetadata.WarningProjectionStateStoreUnavailable);
         }
 
         if (_entries is not null)
@@ -351,7 +351,7 @@ public sealed partial class PartyIndexProjectionActor : Actor, IPartyIndexProjec
             return new PartyIndexProjectionReadResult
             {
                 Entries = new Dictionary<string, PartyIndexEntry>(),
-                Freshness = Freshness(ProjectionFreshnessStatus.Unavailable, ProjectionFreshnessMetadata.WarningProjectionContextUnavailable),
+                Freshness = ProjectionFreshnessMetadata.Create(ProjectionFreshnessStatus.Unavailable, ProjectionFreshnessMetadata.WarningProjectionContextUnavailable),
             };
         }
 
@@ -372,14 +372,14 @@ public sealed partial class PartyIndexProjectionActor : Actor, IPartyIndexProjec
             // serve the last successfully persisted snapshot from this process.
             _entries = cachedEntries;
             _activeStateKey = stateKey;
-            freshness = Freshness(ProjectionFreshnessStatus.Stale, ProjectionFreshnessMetadata.WarningProjectionStateStoreUnavailable);
+            freshness = ProjectionFreshnessMetadata.Create(ProjectionFreshnessStatus.Stale, ProjectionFreshnessMetadata.WarningProjectionStateStoreUnavailable);
         }
 
         return new PartyIndexProjectionReadResult
         {
             Entries = _entries ?? new Dictionary<string, PartyIndexEntry>(),
             Freshness = _entries is null
-                ? Freshness(ProjectionFreshnessStatus.Unavailable, ProjectionFreshnessMetadata.WarningProjectionStateUnavailable)
+                ? ProjectionFreshnessMetadata.Create(ProjectionFreshnessStatus.Unavailable, ProjectionFreshnessMetadata.WarningProjectionStateUnavailable)
                 : freshness,
         };
     }
@@ -500,15 +500,6 @@ public sealed partial class PartyIndexProjectionActor : Actor, IPartyIndexProjec
             or JsonException
             || (ex.InnerException is not null && IsDeserializationFailure(ex.InnerException));
     }
-
-    private static ProjectionFreshnessMetadata Freshness(
-        ProjectionFreshnessStatus status,
-        params string[] warningCodes)
-        => new()
-        {
-            Status = status,
-            WarningCodes = warningCodes,
-        };
 
     private string ResolveStateKey(string partyId)
     {
