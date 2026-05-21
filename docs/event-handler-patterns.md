@@ -646,6 +646,8 @@ T? payload = JsonSerializer.Deserialize<T>(payloadJson, _jsonOptions);
 
 **`PartyErased` (v1.1):** Will arrive as a new event type. Subscribers without a handler will hit the `default` case and return 200 OK. Subscribers that have implemented the [PartyErased handler](#partyerased-handler-mandatory) will process it immediately.
 
+**Consent, restriction, export, and processing-record events (v1.1+):** Contract naming leaves room for consent lifecycle, processing restriction, data export, and processing activity events. MVP consumers are not required to process these unavailable capabilities as active behavior; keep tolerant default handling until your integration explicitly opts into the future GDPR workflow.
+
 This additive evolution pattern means:
 - **Producers** can ship new events without coordinating with subscribers
 - **Subscribers** can add handlers at their own pace

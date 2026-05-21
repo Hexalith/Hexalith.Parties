@@ -13,6 +13,7 @@ using Hexalith.Parties.Contracts.Results;
 using Hexalith.Parties.Contracts.State;
 using Hexalith.Parties.Contracts.ValueObjects;
 using Hexalith.Parties.Server.Aggregates;
+using Hexalith.Parties.Tests.FitnessTests;
 using Hexalith.Parties.Testing;
 
 using Shouldly;
@@ -128,6 +129,54 @@ public sealed class PartyDomainEventPublicationContractTests
         string json = JsonSerializer.Serialize(contact, JsonOptions);
         json.ShouldContain("ada@example.test");
         JsonSerializer.Deserialize<ContactChannelAdded>(json, JsonOptions)!.Value.ShouldBe("ada@example.test");
+    }
+
+    [Fact]
+    public void ForwardCompatibleLifecycleEventContractsRemainAdditiveAndDocumented()
+    {
+        (Type EventType, string[] RequiredProperties)[] futureContracts =
+        [
+            (typeof(PartyMerged), ["SurvivorPartyId", "MergedPartyId"]),
+            (typeof(PartyErased), ["PartyId", "TenantId", "ErasedAt"]),
+            (typeof(ErasePartyRequested), ["PartyId", "TenantId", "RequestedAt", "RequestedBy"]),
+            (typeof(ConsentRecorded), ["PartyId", "TenantId", "ConsentId", "ChannelId", "Purpose", "LawfulBasis", "GrantedAt", "GrantedBy"]),
+            (typeof(ConsentRevoked), ["PartyId", "TenantId", "ConsentId", "RevokedAt", "RevokedBy"]),
+            (typeof(ProcessingRestricted), ["PartyId", "TenantId", "RestrictedAt"]),
+            (typeof(RestrictionLifted), ["PartyId", "TenantId", "LiftedAt"]),
+        ];
+
+        foreach ((Type eventType, string[] requiredProperties) in futureContracts)
+        {
+            eventType.Assembly.ShouldBe(typeof(PartyCreated).Assembly);
+            typeof(IEventPayload).IsAssignableFrom(eventType).ShouldBeTrue($"{eventType.Name} must remain a public EventStore event contract.");
+            foreach (string propertyName in requiredProperties)
+            {
+                eventType.GetProperty(propertyName).ShouldNotBeNull($"{eventType.Name}.{propertyName} must not be removed or renamed.");
+            }
+        }
+
+        var tolerantOptions = new JsonSerializerOptions(JsonSerializerDefaults.Web)
+        {
+            Converters = { new JsonStringEnumConverter() },
+        };
+        string json = """
+            {
+              "survivorPartyId": "party-survivor",
+              "mergedPartyId": "party-merged",
+              "futureAdditiveField": "ignored"
+            }
+            """;
+        JsonSerializer.Deserialize<PartyMerged>(json, tolerantOptions)!.SurvivorPartyId.ShouldBe("party-survivor");
+
+        string docsRoot = RepositoryRoot.Locate();
+        string handlerPatterns = File.ReadAllText(Path.Combine(docsRoot, "docs", "event-handler-patterns.md"));
+        string subscribing = File.ReadAllText(Path.Combine(docsRoot, "docs", "event-subscribing.md"));
+        (handlerPatterns + subscribing).ShouldContain("PartyMerged");
+        (handlerPatterns + subscribing).ShouldContain("v2");
+        (handlerPatterns + subscribing).ShouldContain("PartyErased");
+        (handlerPatterns + subscribing).ShouldContain("v1.1");
+        (handlerPatterns + subscribing).ShouldContain("Consent");
+        (handlerPatterns + subscribing).ShouldContain("Restriction");
     }
 
     [Fact]
