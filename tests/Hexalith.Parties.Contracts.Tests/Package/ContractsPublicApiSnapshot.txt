@@ -381,9 +381,15 @@ type class Hexalith.Parties.Contracts.Models.PartySearchResult interfaces:System
   property System.Double RelevanceScore getset
 type class Hexalith.Parties.Contracts.Models.ProcessingActivityRecord interfaces:System.IEquatable<Hexalith.Parties.Contracts.Models.ProcessingActivityRecord>
   ctor ()
+  property System.String ActorId getset
+  property System.String CorrelationId getset
   property System.String EventType required getset
+  property System.String OperationCategory getset
+  property System.String Outcome getset
+  property System.String PartyId getset
   property System.Int64 SequenceNumber required getset
   property System.String Summary required getset
+  property System.String TenantId getset
   property System.DateTimeOffset Timestamp required getset
 type class Hexalith.Parties.Contracts.Models.ProjectionFreshnessMetadata interfaces:System.IEquatable<Hexalith.Parties.Contracts.Models.ProjectionFreshnessMetadata>
   ctor ()

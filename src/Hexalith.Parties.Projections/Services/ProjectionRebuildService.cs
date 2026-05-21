@@ -192,6 +192,12 @@ public sealed partial class ProjectionRebuildService : IProjectionRebuildService
             IEventPayload? payload = DeserializeEventPayload(envelope);
             records.Add(new ProcessingActivityRecord {
                 SequenceNumber = envelope.SequenceNumber,
+                PartyId = envelope.AggregateId,
+                TenantId = envelope.TenantId,
+                ActorId = NormalizeMetadata(envelope.UserId, "system"),
+                CorrelationId = NormalizeMetadata(envelope.CorrelationId, "unspecified"),
+                OperationCategory = GetOperationCategory(envelope.EventTypeName, payload),
+                Outcome = "Succeeded",
                 EventType = GetShortEventTypeName(envelope.EventTypeName),
                 Timestamp = envelope.Timestamp,
                 Summary = CreateProcessingSummary(envelope.EventTypeName, payload),
@@ -471,17 +477,16 @@ public sealed partial class ProjectionRebuildService : IProjectionRebuildService
             PartyDisplayNameDerived => "Party display name derived.",
             PersonDetailsUpdated => "Person details updated.",
             OrganizationDetailsUpdated => "Organization details updated.",
-            ContactChannelAdded e => $"Contact channel '{e.ContactChannelId}' added.",
-            ContactChannelUpdated e => $"Contact channel '{e.ContactChannelId}' updated.",
-            ContactChannelRemoved e => $"Contact channel '{e.ContactChannelId}' removed.",
-            PreferredContactChannelChanged e => $"Preferred contact channel changed to '{e.ContactChannelId}'.",
-            IdentifierAdded e => $"Identifier '{e.IdentifierId}' added.",
-            IdentifierRemoved e => $"Identifier '{e.IdentifierId}' removed.",
+            ContactChannelAdded => "Contact channel added.",
+            ContactChannelUpdated => "Contact channel updated.",
+            ContactChannelRemoved => "Contact channel removed.",
+            PreferredContactChannelChanged => "Preferred contact channel changed.",
+            IdentifierAdded => "Identifier added.",
+            IdentifierRemoved => "Identifier removed.",
             PartyDeactivated => "Party deactivated.",
             PartyReactivated => "Party reactivated.",
-            ConsentRecorded e => $"Consent recorded for '{e.Purpose}' via channel '{e.ChannelId}'.",
-            ConsentRevoked e => $"Consent '{e.ConsentId}' revoked.",
-            ProcessingRestricted e when !string.IsNullOrWhiteSpace(e.Reason) => $"Processing restricted: {e.Reason}",
+            ConsentRecorded => "Consent recorded.",
+            ConsentRevoked => "Consent revoked.",
             ProcessingRestricted => "Processing restricted.",
             RestrictionLifted => "Processing restriction lifted.",
             ErasePartyRequested => "Party erasure requested.",
@@ -490,6 +495,21 @@ public sealed partial class ProjectionRebuildService : IProjectionRebuildService
             PartyErased => "Party erased.",
             _ => $"{GetShortEventTypeName(eventTypeName)} recorded.",
         };
+
+    private static string GetOperationCategory(string eventTypeName, IEventPayload? payload)
+        => payload switch {
+            ConsentRecorded or ConsentRevoked => "Consent",
+            ProcessingRestricted or RestrictionLifted => "Restriction",
+            ErasePartyRequested or PartyEncryptionKeyDeleted or ErasureVerified or PartyErased => "Erasure",
+            PartyCreated or PartyDisplayNameDerived or PersonDetailsUpdated or OrganizationDetailsUpdated
+                or ContactChannelAdded or ContactChannelUpdated or ContactChannelRemoved
+                or PreferredContactChannelChanged or IdentifierAdded or IdentifierRemoved
+                or PartyDeactivated or PartyReactivated => "PartyCommand",
+            _ => GetShortEventTypeName(eventTypeName),
+        };
+
+    private static string NormalizeMetadata(string? value, string fallback)
+        => string.IsNullOrWhiteSpace(value) ? fallback : value.Trim();
 
     private IEventPayload? DeserializeEventPayload(EventEnvelopeDto envelope) {
         if (envelope.Payload is null || envelope.Payload.Length == 0) {
@@ -589,6 +609,15 @@ public sealed partial class ProjectionRebuildService : IProjectionRebuildService
 
         [JsonPropertyName("payload")]
         public byte[] Payload { get; init; } = [];
+
+        [JsonPropertyName("correlationId")]
+        public string CorrelationId { get; init; } = string.Empty;
+
+        [JsonPropertyName("causationId")]
+        public string CausationId { get; init; } = string.Empty;
+
+        [JsonPropertyName("userId")]
+        public string UserId { get; init; } = string.Empty;
     }
 
     internal sealed record EventReplayRecord(long SequenceNumber, IEventPayload Payload);

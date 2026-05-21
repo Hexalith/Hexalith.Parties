@@ -274,6 +274,42 @@ public sealed class AdminPortalGdprOperationContractTests
         root.GetProperty("projectionActorType").GetString().ShouldBe("PartyDetailProjectionQueryActor");
     }
 
+    [Fact]
+    public async Task GetProcessingRecordsAsync_UsesAuthoritativeProcessingRecordsQueryAsync()
+    {
+        ProcessingActivityRecord[] records =
+        [
+            new()
+            {
+                SequenceNumber = 3,
+                PartyId = "party-1",
+                TenantId = "tenant-a",
+                ActorId = "admin-user",
+                CorrelationId = "corr-records",
+                OperationCategory = "Restriction",
+                Outcome = "Succeeded",
+                EventType = "ProcessingRestricted",
+                Timestamp = DateTimeOffset.Parse("2026-05-04T00:00:00Z"),
+                Summary = "Processing restricted.",
+            },
+        ];
+        var handler = new RecordingHandler(
+            HttpStatusCode.OK,
+            JsonSerializer.Serialize(new { payload = records }, s_jsonOptions),
+            "application/json");
+        var client = CreateHttpClient(handler);
+
+        IReadOnlyList<ProcessingActivityRecord> result = await client.GetProcessingRecordsAsync("party-1", CancellationToken.None);
+
+        result.Single().CorrelationId.ShouldBe("corr-records");
+        handler.LastRequest.ShouldNotBeNull().RequestUri!.PathAndQuery.ShouldBe("/api/v1/queries");
+        using JsonDocument body = JsonDocument.Parse(handler.LastRequestBody.ShouldNotBeNull());
+        JsonElement root = body.RootElement;
+        root.GetProperty("queryType").GetString().ShouldBe("GetProcessingRecords");
+        root.GetProperty("projectionType").GetString().ShouldBe("PartyDetail");
+        root.GetProperty("projectionActorType").GetString().ShouldBe("PartyDetailProjectionQueryActor");
+    }
+
     private static BindingFlags PublicInstance => BindingFlags.Public | BindingFlags.Instance;
 
     private static Type LoadClientType(string fullName)

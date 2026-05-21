@@ -118,10 +118,18 @@ public sealed class HttpAdminPortalGdprClient : IAdminPortalGdprClient
             payload);
     }
 
-    public Task<IReadOnlyList<ProcessingActivityRecord>> GetProcessingRecordsAsync(string partyId, CancellationToken cancellationToken)
+    public async Task<IReadOnlyList<ProcessingActivityRecord>> GetProcessingRecordsAsync(string partyId, CancellationToken cancellationToken)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(partyId);
-        return Task.FromException<IReadOnlyList<ProcessingActivityRecord>>(ContractUnavailable());
+        ProcessingActivityRecord[] records = await PostQueryAsync<ProcessingActivityRecord[]>(
+            partyId,
+            queryType: "GetProcessingRecords",
+            projectionType: "PartyDetail",
+            projectionActorType: "PartyDetailProjectionQueryActor",
+            payload: new PartyQueryPayload(partyId),
+            cancellationToken).ConfigureAwait(false);
+
+        return records;
     }
 
     private async Task<AdminPortalGdprCommandResult> PostCommandAsync<TCommand>(

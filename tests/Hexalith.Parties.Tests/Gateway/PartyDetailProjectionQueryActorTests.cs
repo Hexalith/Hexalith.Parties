@@ -271,6 +271,38 @@ public sealed class PartyDetailProjectionQueryActorTests
     }
 
     [Fact]
+    public async Task QueryAsync_GetProcessingRecords_ReturnsRecordsWithoutDetailReadAsync()
+    {
+        IActorProxyFactory actorProxyFactory = Substitute.For<IActorProxyFactory>();
+        IProjectionRebuildService rebuildService = Substitute.For<IProjectionRebuildService>();
+        rebuildService.GetProcessingRecordsAsync("tenant-a", "p-records", Arg.Any<CancellationToken>())
+            .Returns([
+                new ProcessingActivityRecord
+                {
+                    SequenceNumber = 7,
+                    PartyId = "p-records",
+                    TenantId = "tenant-a",
+                    ActorId = "admin-user",
+                    CorrelationId = "corr-records",
+                    OperationCategory = "Export",
+                    Outcome = "Succeeded",
+                    EventType = "ExportPartyData",
+                    Timestamp = DateTimeOffset.Parse("2026-05-06T00:00:00Z"),
+                    Summary = "Party data exported.",
+                },
+            ]);
+        PartyDetailProjectionQueryActor actor = CreateActor("party-detail:tenant-a:p-records", actorProxyFactory, rebuildService);
+
+        QueryResult result = await actor.QueryAsync(CreateEnvelope("tenant-a", "p-records", "GetProcessingRecords"));
+
+        result.Success.ShouldBeTrue();
+        result.ProjectionType.ShouldBe("party-processing-records");
+        ProcessingActivityRecord[] records = result.GetPayload().Deserialize<ProcessingActivityRecord[]>(new JsonSerializerOptions(JsonSerializerDefaults.Web))!;
+        records.Single().CorrelationId.ShouldBe("corr-records");
+        actorProxyFactory.DidNotReceiveWithAnyArgs().CreateActorProxy<IPartyDetailProjectionActor>(default!, default!, default);
+    }
+
+    [Fact]
     public async Task QueryAsync_UnavailableDetailProjection_FailsClosedWithoutPayloadAsync()
     {
         IActorProxyFactory actorProxyFactory = Substitute.For<IActorProxyFactory>();

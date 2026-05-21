@@ -6,6 +6,7 @@ using Hexalith.EventStore.Contracts.Identity;
 using Hexalith.EventStore.Contracts.Security;
 using Hexalith.Parties.Contracts.Events;
 using Hexalith.Parties.Contracts.Models;
+using Hexalith.Parties.Contracts.Security;
 using Hexalith.Parties.Contracts.ValueObjects;
 using Hexalith.Parties.Projections.Services;
 
@@ -349,6 +350,66 @@ public sealed class ProjectionRebuildServiceTests
     }
 
     [Fact]
+    public async Task GetProcessingRecordsAsync_ReturnsBoundedAuditMetadataWithoutPayloadTextAsync()
+    {
+        var metadata = new { currentSequence = 2L, lastModified = DateTimeOffset.UtcNow };
+        ProcessingRestricted restricted = new()
+        {
+            PartyId = "party-audit",
+            TenantId = "test-tenant",
+            RestrictedAt = DateTimeOffset.Parse("2026-05-04T00:00:00Z"),
+            Reason = "Ada Lovelace complaint contains ada@example.test",
+            RestrictedBy = "dpo-user",
+            CorrelationId = "corr-restrict",
+        };
+        ConsentRecorded consent = new()
+        {
+            PartyId = "party-audit",
+            TenantId = "test-tenant",
+            ConsentId = "email-ada@example.test:marketing",
+            ChannelId = "email-ada@example.test",
+            Purpose = "marketing-Ada-Lovelace",
+            LawfulBasis = LawfulBasis.Consent,
+            GrantedAt = DateTimeOffset.Parse("2026-05-03T00:00:00Z"),
+            GrantedBy = "dpo-user",
+        };
+        var envelope1 = CreateEnvelope("party-audit", 1, consent, userId: "dpo-user", correlationId: "corr-consent");
+        var envelope2 = CreateEnvelope("party-audit", 2, restricted, userId: "dpo-user", correlationId: "corr-restrict");
+
+        MockHttpMessageHandler handler = new();
+        handler.AddResponse(
+            BuildActorStateUrl("AggregateActor", "test-tenant:party:party-audit", "test-tenant:party:party-audit:metadata"),
+            JsonSerializer.Serialize(metadata));
+        handler.AddResponse(
+            BuildActorStateUrl("AggregateActor", "test-tenant:party:party-audit", "test-tenant:party:party-audit:events:1"),
+            JsonSerializer.Serialize(envelope1));
+        handler.AddResponse(
+            BuildActorStateUrl("AggregateActor", "test-tenant:party:party-audit", "test-tenant:party:party-audit:events:2"),
+            JsonSerializer.Serialize(envelope2));
+
+        ProjectionRebuildService sut = CreateService(handler);
+
+        IReadOnlyList<ProcessingActivityRecord> records = await sut.GetProcessingRecordsAsync("test-tenant", "party-audit", CancellationToken.None);
+
+        records.Count.ShouldBe(2);
+        records[0].ShouldSatisfyAllConditions(
+            r => r.PartyId.ShouldBe("party-audit"),
+            r => r.TenantId.ShouldBe("test-tenant"),
+            r => r.ActorId.ShouldBe("dpo-user"),
+            r => r.CorrelationId.ShouldBe("corr-consent"),
+            r => r.OperationCategory.ShouldBe("Consent"),
+            r => r.Outcome.ShouldBe("Succeeded"),
+            r => r.Summary.ShouldBe("Consent recorded."));
+        records[1].OperationCategory.ShouldBe("Restriction");
+        records[1].Summary.ShouldBe("Processing restricted.");
+
+        string serialized = JsonSerializer.Serialize(records);
+        serialized.ShouldNotContain("Ada", Case.Insensitive);
+        serialized.ShouldNotContain("ada@example.test", Case.Insensitive);
+        serialized.ShouldNotContain("marketing-Ada-Lovelace", Case.Insensitive);
+    }
+
+    [Fact]
     public async Task RebuildIndexProjectionAsync_CanceledBeforeStateAccess_DoesNotWriteAsync()
     {
         using var cts = new CancellationTokenSource();
@@ -408,7 +469,9 @@ public sealed class ProjectionRebuildServiceTests
         string aggregateId,
         long seq,
         IEventPayload payload,
-        string serializationFormat = "json")
+        string serializationFormat = "json",
+        string userId = "system",
+        string correlationId = "corr-test")
     {
         string typeName = payload.GetType().FullName!;
         byte[] payloadBytes = JsonSerializer.SerializeToUtf8Bytes(payload, payload.GetType(), new JsonSerializerOptions
@@ -425,6 +488,9 @@ public sealed class ProjectionRebuildServiceTests
             eventTypeName = typeName,
             serializationFormat,
             payload = payloadBytes,
+            userId,
+            correlationId,
+            causationId = correlationId,
         };
     }
 

@@ -28,6 +28,7 @@ public sealed partial class PartyDetailProjectionQueryActor(
     public const string GetPartyQueryType = "GetParty";
     public const string PartyDetailQueryType = "PartyDetail";
     public const string ExportPartyDataQueryType = "ExportPartyData";
+    public const string GetProcessingRecordsQueryType = "GetProcessingRecords";
     public const string PartyDomain = "party";
     private static readonly JsonSerializerOptions s_jsonOptions = new(JsonSerializerDefaults.Web);
 
@@ -53,6 +54,19 @@ public sealed partial class PartyDetailProjectionQueryActor(
         if (!TryResolveActorRoute(Host.Id.GetId(), envelope, out string partyId))
         {
             return QueryResult.Failure(QueryAdapterFailureReason.InvalidEnvelope);
+        }
+
+        if (string.Equals(envelope.QueryType, GetProcessingRecordsQueryType, StringComparison.Ordinal))
+        {
+            IReadOnlyList<ProcessingActivityRecord> records = projectionRebuildService is null
+                ? []
+                : await projectionRebuildService
+                    .GetProcessingRecordsAsync(envelope.TenantId, partyId, CancellationToken.None)
+                    .ConfigureAwait(false);
+
+            return QueryResult.FromPayload(
+                JsonSerializer.SerializeToElement(records, s_jsonOptions),
+                "party-processing-records");
         }
 
         string detailActorId = $"{envelope.TenantId}:party-detail:{partyId}";
@@ -107,7 +121,8 @@ public sealed partial class PartyDetailProjectionQueryActor(
         => string.Equals(envelope.Domain, PartyDomain, StringComparison.Ordinal)
             && (string.Equals(envelope.QueryType, PartyDetailQueryType, StringComparison.Ordinal)
                 || string.Equals(envelope.QueryType, GetPartyQueryType, StringComparison.Ordinal)
-                || string.Equals(envelope.QueryType, ExportPartyDataQueryType, StringComparison.Ordinal));
+                || string.Equals(envelope.QueryType, ExportPartyDataQueryType, StringComparison.Ordinal)
+                || string.Equals(envelope.QueryType, GetProcessingRecordsQueryType, StringComparison.Ordinal));
 
     private async Task<PartyDataPortabilityPackage> BuildPortabilityPackageAsync(
         QueryEnvelope envelope,
