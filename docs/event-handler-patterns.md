@@ -33,16 +33,26 @@ Before implementing any handler, ensure these rules are followed:
 
 1. **Always return 200 OK** — even for duplicates, unknown events, and missing aggregates. DAPR retries on non-2xx responses, causing redelivery loops.
 2. **Implement idempotent deduplication** — use `ConcurrentDictionary<string, bool>` keyed on the CloudEvents `id` header, with a `{correlationId}:{sequenceNumber}` fallback for local testing.
-3. **Use order-tolerant projection updates** — prefer idempotent `set` operations over incremental `delta` operations.
-4. **Do NOT log event payloads** — structured logging with correlation IDs only (Security Rule #5). Event payloads may contain personal data.
-5. **Handle unknown event types gracefully** — log and return 200 OK.
-6. **Normalize event type names before dispatch** — published CloudEvents usually carry fully qualified .NET type names such as `Hexalith.Parties.Contracts.Events.PartyCreated`, so convert them to their short names before switching on them.
+3. **Guard aggregate sequence** — store the highest processed `sequenceNumber` per aggregate and skip or reconcile older events, especially when the broker or subscriber deployment cannot prove per-aggregate ordering.
+4. **Use order-tolerant projection updates** — prefer idempotent `set` operations over incremental `delta` operations.
+5. **Do NOT log event payloads** — structured logging with correlation IDs only (Security Rule #5). Event payloads may contain personal data.
+6. **Handle unknown event types gracefully** — log and return 200 OK.
+7. **Normalize event type names before dispatch** — published CloudEvents usually carry fully qualified .NET type names such as `Hexalith.Parties.Contracts.Events.PartyCreated`, so convert them to their short names before switching on them.
 
 ```csharp
 // Idempotent deduplication pattern
 if (!_processedEventIds.TryAdd(eventId, true))
 {
     logger.LogInformation("Skipping already-processed event {EventId}", eventId);
+    return Results.Ok();
+}
+
+if (!TryAcceptSequence(envelope.AggregateId, envelope.SequenceNumber))
+{
+    logger.LogInformation(
+        "Skipping older event sequence {SequenceNumber} for {AggregateId}",
+        envelope.SequenceNumber,
+        envelope.AggregateId);
     return Results.Ok();
 }
 

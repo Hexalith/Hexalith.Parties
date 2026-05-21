@@ -14,8 +14,13 @@ namespace Hexalith.Parties.Sample;
 public static class PartyEventHandler
 {
     private static readonly ConcurrentDictionary<string, bool> _processedEventIds = new();
+    private static readonly ConcurrentDictionary<string, long> _lastSequenceByAggregate = new();
 
-    public static void ClearProcessedEventIds() => _processedEventIds.Clear();
+    public static void ClearProcessedEventIds()
+    {
+        _processedEventIds.Clear();
+        _lastSequenceByAggregate.Clear();
+    }
 
     private static readonly JsonSerializerOptions _jsonOptions = new()
     {
@@ -52,11 +57,16 @@ public static class PartyEventHandler
             return Results.Ok();
         }
 
+        string aggregateId = envelope.AggregateId;
+        if (!TryAcceptSequence(envelope, logger))
+        {
+            return Results.Ok();
+        }
+
         // Decode the base64 payload
         byte[] payloadBytes = Convert.FromBase64String(envelope.Payload);
         string payloadJson = Encoding.UTF8.GetString(payloadBytes);
 
-        string aggregateId = envelope.AggregateId;
         // Extract the party ID from aggregateId format "tenant:domain:partyId"
         string partyId = aggregateId.Contains(':')
             ? aggregateId[(aggregateId.LastIndexOf(':') + 1)..]
@@ -176,6 +186,34 @@ public static class PartyEventHandler
 
         envelope = body.Deserialize<EventEnvelope>(_jsonOptions);
         return envelope is not null;
+    }
+
+    private static bool TryAcceptSequence(EventEnvelope envelope, ILogger logger)
+    {
+        while (true)
+        {
+            if (_lastSequenceByAggregate.TryGetValue(envelope.AggregateId, out long lastSequence))
+            {
+                if (envelope.SequenceNumber <= lastSequence)
+                {
+                    logger.LogInformation(
+                        "Skipping out-of-order event sequence {SequenceNumber} for aggregate {AggregateId}; last processed sequence is {LastSequence}",
+                        envelope.SequenceNumber,
+                        envelope.AggregateId,
+                        lastSequence);
+                    return false;
+                }
+
+                if (_lastSequenceByAggregate.TryUpdate(envelope.AggregateId, envelope.SequenceNumber, lastSequence))
+                {
+                    return true;
+                }
+            }
+            else if (_lastSequenceByAggregate.TryAdd(envelope.AggregateId, envelope.SequenceNumber))
+            {
+                return true;
+            }
+        }
     }
 
     private static void HandlePartyCreated(string partyId, string payloadJson, ILogger logger)

@@ -197,6 +197,8 @@ public sealed class SampleOnboardingGuardrailTests
         handler.ShouldContain("PartyDeactivated");
         handler.ShouldContain("PartyReactivated");
         handler.ShouldContain("PartyErased");
+        handler.ShouldContain("TryAcceptSequence");
+        handler.ShouldContain("_lastSequenceByAggregate");
         handler.ShouldContain("CustomerSummaryStore.Customers.TryRemove");
         handler.ShouldContain("Unknown event type");
         subscription.ShouldContain("tenant-a.parties.events");

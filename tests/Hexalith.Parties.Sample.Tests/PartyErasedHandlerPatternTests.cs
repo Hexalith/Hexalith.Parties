@@ -45,6 +45,19 @@ public sealed class PartyErasedHandlerPatternTests
     }
 
     [Fact]
+    public void Documentation_ShouldDescribeOrderingGuaranteesAndSequenceGuard()
+    {
+        string subscriberDocumentation = File.ReadAllText(GetRepositoryFilePath(EventSubscribingRelativePath));
+
+        subscriberDocumentation.ShouldContain("Causal Ordering Guarantees Per Broker");
+        subscriberDocumentation.ShouldContain("Aggregate-ID-based key routing");
+        subscriberDocumentation.ShouldContain("Aggregate-ID as session key");
+        subscriberDocumentation.ShouldContain("sequenceNumber");
+        subscriberDocumentation.ShouldContain("Skipping out-of-order event");
+        subscriberDocumentation.ShouldContain("Do not let an older update event recreate data that a newer cleanup event removed");
+    }
+
+    [Fact]
     public void HandlePartyErased_ShouldNullifyPartyReference()
     {
         // Arrange

@@ -152,15 +152,16 @@ string eventId = string.IsNullOrWhiteSpace(cloudEventId)
 - **Always return 200 OK** -- even for duplicates, unknown events, and missing aggregates
 - DAPR retries on non-2xx responses, so returning errors causes redelivery loops
 - Never throw exceptions from event handlers; log and acknowledge instead
+- Store the last processed `sequenceNumber` per aggregate when your read model can receive out-of-order events, and skip or reconcile older sequences rather than overwriting newer state
 
 ## Causal Ordering Guarantees Per Broker
 
-Events for the same aggregate are published in causal order (sequence 1, 2, 3...). Whether that order is preserved at delivery depends on the broker.
+Events for the same aggregate are published in causal order (sequence 1, 2, 3...). Whether that order is preserved at delivery depends on the broker and on the deployment configuration.
 
 | Broker | Ordering Guarantee | Required Configuration |
 |--------|-------------------|----------------------|
-| Redis Streams | Causal ordering within consumer group | Default (local dev) -- no special configuration needed |
-| RabbitMQ | Causal ordering per queue | Single queue per subscription binding |
+| Redis Streams | Causal ordering within one stream/consumer-group path | Default local setup; avoid parallel handlers that update the same aggregate without a sequence guard |
+| RabbitMQ | Causal ordering per queue | Single queue per subscription binding; avoid competing consumers for order-sensitive projections |
 | Kafka | Causal ordering per partition | Aggregate-ID-based key routing (see below) |
 | Azure Service Bus | Causal ordering per session | Aggregate-ID as session key (see below) |
 
@@ -207,13 +208,15 @@ private static readonly ConcurrentDictionary<string, long> _lastSequence = new()
 long lastSeq = _lastSequence.GetOrAdd(aggregateId, 0);
 if (envelope.SequenceNumber <= lastSeq)
 {
-    // Already processed or out of order
+    // Already processed or out of order. Acknowledge and do not overwrite newer state.
     logger.LogInformation("Skipping out-of-order event seq {Seq} for {AggregateId} (last: {Last})",
         envelope.SequenceNumber, aggregateId, lastSeq);
     return Results.Ok();
 }
 _lastSequence[aggregateId] = envelope.SequenceNumber;
 ```
+
+For destructive or privacy-relevant events such as future erasure notifications, prefer a durable sequence store and a reconciliation workflow. Do not let an older update event recreate data that a newer cleanup event removed.
 
 ### Strategy 2: Order-Tolerant Projection Updates
 
