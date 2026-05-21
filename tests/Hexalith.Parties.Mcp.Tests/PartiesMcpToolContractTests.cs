@@ -60,6 +60,36 @@ public sealed class PartiesMcpToolContractTests
     }
 
     [Fact]
+    public void FindPartiesToolDoesNotExposeAdvancedSearchOrTemporalArguments()
+    {
+        MethodInfo findParties = GetToolMethods()
+            .Single(method => string.Equals(method.GetCustomAttribute<McpServerToolAttribute>()?.Name, "find_parties", StringComparison.Ordinal));
+
+        string[] parameterNames =
+        [
+            .. findParties.GetParameters()
+                .Select(parameter => parameter.Name)
+                .Where(name => !string.IsNullOrWhiteSpace(name))
+                .Select(name => name!),
+        ];
+
+        parameterNames.ShouldBe([
+            "query",
+            "page",
+            "pageSize",
+            "type",
+            "active",
+            "cancellationToken",
+        ]);
+        parameterNames.ShouldNotContain(name => name.Contains("semantic", StringComparison.OrdinalIgnoreCase));
+        parameterNames.ShouldNotContain(name => name.Contains("hybrid", StringComparison.OrdinalIgnoreCase));
+        parameterNames.ShouldNotContain(name => name.Contains("graph", StringComparison.OrdinalIgnoreCase));
+        parameterNames.ShouldNotContain(name => name.Contains("temporal", StringComparison.OrdinalIgnoreCase));
+        parameterNames.ShouldNotContain(name => name.Contains("asOf", StringComparison.OrdinalIgnoreCase));
+        parameterNames.ShouldNotContain(name => name.Contains("case", StringComparison.OrdinalIgnoreCase));
+    }
+
+    [Fact]
     public void ToolMethodsDispatchThroughInstanceInjectedClients()
     {
         MethodInfo[] toolMethods = GetToolMethods();

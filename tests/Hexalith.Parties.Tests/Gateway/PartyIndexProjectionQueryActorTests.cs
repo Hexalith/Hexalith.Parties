@@ -614,11 +614,10 @@ public sealed class PartyIndexProjectionQueryActorTests
             Arg.Any<ActorProxyOptions?>());
     }
 
-    // P16: Per D4 decision, Mode and CaseId are accepted but inert. This test pins that
-    // their presence cannot influence data selection — entries returned must be identical
-    // whether Mode/CaseId are set or omitted.
+    // Story 2.9: omitted mode and explicit Lexical/DisplayName remain the only MVP
+    // display-name search modes accepted by the query actor.
     [Fact]
-    public async Task QueryAsync_PartySearch_ModeAndCaseId_AcceptedButHaveNoEffectOnDataSelectionAsync()
+    public async Task QueryAsync_PartySearch_LexicalModeAndCaseId_AcceptedButHaveNoEffectOnDataSelectionAsync()
     {
         IActorProxyFactory actorProxyFactory = Substitute.For<IActorProxyFactory>();
         IPartyIndexProjectionActor indexActor = Substitute.For<IPartyIndexProjectionActor>();
@@ -640,13 +639,54 @@ public sealed class PartyIndexProjectionQueryActorTests
             payload: Payload(new { query = "Acme", page = 1, pageSize = 20 })));
         QueryResult withMode = await actor.QueryAsync(CreateSearchEnvelope(
             tenant: "tenant-a",
-            payload: Payload(new { query = "Acme", page = 1, pageSize = 20, mode = "Graph", caseId = "case-X" })));
+            payload: Payload(new { query = "Acme", page = 1, pageSize = 20, mode = "Lexical", caseId = "case-X" })));
+        QueryResult displayNameMode = await actor.QueryAsync(CreateSearchEnvelope(
+            tenant: "tenant-a",
+            payload: Payload(new { query = "Acme", page = 1, pageSize = 20, mode = "DisplayName" })));
 
         baseline.Success.ShouldBeTrue();
         withMode.Success.ShouldBeTrue();
+        displayNameMode.Success.ShouldBeTrue();
         IEnumerable<string> baselineIds = DeserializeSearchPage(baseline).Items.Select(static i => i.Party.Id);
         IEnumerable<string> withModeIds = DeserializeSearchPage(withMode).Items.Select(static i => i.Party.Id);
         withModeIds.ShouldBe(baselineIds);
+        DeserializeSearchPage(displayNameMode).Items.Select(static i => i.Party.Id).ShouldBe(baselineIds);
+    }
+
+    [Theory]
+    [InlineData("Hybrid")]
+    [InlineData("Semantic")]
+    [InlineData("Graph")]
+    [InlineData("Email")]
+    [InlineData("Identifier")]
+    [InlineData("TemporalName")]
+    public async Task QueryAsync_PartySearch_ReservedFutureModesReturnUnsupportedBeforeProjectionReadAsync(string mode)
+    {
+        IActorProxyFactory actorProxyFactory = Substitute.For<IActorProxyFactory>();
+        PartyIndexProjectionQueryActor actor = CreateActor("party-index:tenant-a:parties", actorProxyFactory);
+
+        QueryResult result = await actor.QueryAsync(CreateSearchEnvelope(
+            tenant: "tenant-a",
+            payload: Payload(new
+            {
+                query = "Sensitive Person",
+                page = 1,
+                pageSize = 20,
+                mode,
+                caseId = "case-secret",
+            })));
+
+        result.Success.ShouldBeFalse();
+        result.PayloadBytes.ShouldBeNull();
+        string errorMessage = result.ErrorMessage.ShouldNotBeNull();
+        errorMessage.ShouldBe(QueryAdapterFailureReason.UnsupportedQueryType);
+        errorMessage.ShouldNotContain("Sensitive", Case.Insensitive);
+        errorMessage.ShouldNotContain("tenant-a", Case.Insensitive);
+        errorMessage.ShouldNotContain("case-secret", Case.Insensitive);
+        actorProxyFactory.DidNotReceive().CreateActorProxy<IPartyIndexProjectionActor>(
+            Arg.Any<ActorId>(),
+            Arg.Any<string>(),
+            Arg.Any<ActorProxyOptions?>());
     }
 
     // P17: Naive ISO-8601 timestamps (no Z, no +HH:MM offset) must be rejected as InvalidEnvelope.

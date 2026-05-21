@@ -102,7 +102,7 @@ public sealed class MvpDisplayNameSearchContractTests
             new PartySearchRequest(
                 TenantId: "tenant-a",
                 Query: "   ",
-                Mode: PartySearchMode.Hybrid,
+                Mode: PartySearchMode.Lexical,
                 TypeFilter: null,
                 ActiveFilter: null,
                 Page: 1,
@@ -142,7 +142,7 @@ public sealed class MvpDisplayNameSearchContractTests
             new PartySearchRequest(
                 TenantId: "tenant-a",
                 Query: sharedDisplayName,
-                Mode: PartySearchMode.Hybrid,
+                Mode: PartySearchMode.Lexical,
                 TypeFilter: null,
                 ActiveFilter: null,
                 Page: 1,
@@ -171,7 +171,7 @@ public sealed class MvpDisplayNameSearchContractTests
         PartySearchRequest request = new(
             TenantId: "tenant-a",
             Query: "Jean",
-            Mode: PartySearchMode.Hybrid,
+            Mode: PartySearchMode.Lexical,
             TypeFilter: null,
             ActiveFilter: null,
             Page: 1,

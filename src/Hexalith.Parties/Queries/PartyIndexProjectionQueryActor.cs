@@ -77,6 +77,11 @@ public sealed partial class PartyIndexProjectionQueryActor(
                 return QueryResult.Failure(QueryAdapterFailureReason.InvalidEnvelope);
             }
 
+            if (IsUnsupportedSearchMode(payload.Mode))
+            {
+                return QueryResult.Failure(QueryAdapterFailureReason.UnsupportedQueryType);
+            }
+
             return await QueryEntriesAsync(envelope, readResult =>
             {
                 // P13: Forward the host's ApplicationStopping token so the in-actor matching and
@@ -398,6 +403,17 @@ public sealed partial class PartyIndexProjectionQueryActor(
             wire.Mode,
             wire.CaseId);
         return true;
+    }
+
+    private static bool IsUnsupportedSearchMode(string? mode)
+    {
+        if (string.IsNullOrWhiteSpace(mode))
+        {
+            return false;
+        }
+
+        return !string.Equals(mode, "Lexical", StringComparison.OrdinalIgnoreCase)
+            && !string.Equals(mode, "DisplayName", StringComparison.OrdinalIgnoreCase);
     }
 
     private static bool TryParsePartyType(string? value, out PartyType? type)

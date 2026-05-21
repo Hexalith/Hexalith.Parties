@@ -284,7 +284,7 @@ public sealed class HttpPartiesQueryClientTests
             1,
             20,
             CancellationToken.None,
-            mode: "Hybrid",
+            mode: "Lexical",
             caseId: "case-42",
             requestCustomizer: (request, _) =>
             {
@@ -309,7 +309,7 @@ public sealed class HttpPartiesQueryClientTests
         payload.GetProperty("query").GetString().ShouldBe("acme");
         payload.GetProperty("page").GetInt32().ShouldBe(1);
         payload.GetProperty("pageSize").GetInt32().ShouldBe(20);
-        payload.GetProperty("mode").GetString().ShouldBe("Hybrid");
+        payload.GetProperty("mode").GetString().ShouldBe("Lexical");
         payload.GetProperty("caseId").GetString().ShouldBe("case-42");
         handler.LastRequest!.Headers.Authorization!.Scheme.ShouldBe("Bearer");
         handler.LastRequest.Headers.Authorization.Parameter.ShouldBe("host-token");

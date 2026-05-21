@@ -74,7 +74,7 @@ development_status:
   2-6-enforce-tenant-safe-projection-reads: done
   2-7-handle-projection-freshness-and-graceful-degradation: done
   2-8-projection-rebuild-and-health-monitoring: done
-  2-9-prepare-deferred-search-and-temporal-query-extensions: ready-for-dev
+  2-9-prepare-deferred-search-and-temporal-query-extensions: done
   epic-2-retrospective: optional
 
   # Epic 3: Developer Integration and Local Adoption (10 stories)

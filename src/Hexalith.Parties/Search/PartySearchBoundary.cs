@@ -26,9 +26,24 @@ public sealed record PartySearchRequest(
 
 public enum PartySearchMode
 {
+    /// <summary>
+    /// Reserved for future compatibility; not available in MVP local/query search.
+    /// </summary>
     Hybrid,
+
+    /// <summary>
+    /// MVP display-name lexical search.
+    /// </summary>
     Lexical,
+
+    /// <summary>
+    /// Reserved for future compatibility; not available in MVP local/query search.
+    /// </summary>
     Semantic,
+
+    /// <summary>
+    /// Reserved for future compatibility; not available in MVP local/query search.
+    /// </summary>
     Graph,
 }
 
@@ -44,6 +59,7 @@ public enum PartySearchExecutionStatus
     Rich,
     Degraded,
     LocalOnly,
+    Unsupported,
 }
 
 public sealed record PartySearchScoreMetadata(

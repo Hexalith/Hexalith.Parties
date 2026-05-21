@@ -510,6 +510,79 @@ public sealed class ArchitecturalFitnessTests
     }
 
     [Fact]
+    public void ContractsAndPartiesDoNotGainDeferredSearchRuntimeDependencies()
+    {
+        (string ProjectPath, string[] ForbiddenReferences)[] projects =
+        [
+            (RepoPath("src", "Hexalith.Parties.Contracts", "Hexalith.Parties.Contracts.csproj"),
+            [
+                "Dapr",
+                "MediatR",
+                "FluentValidation",
+                "Aspire",
+                "ModelContextProtocol",
+                "Microsoft.AspNetCore.OpenApi",
+                "Swashbuckle",
+                "Hexalith.Memories",
+                "Qdrant",
+                "Pinecone",
+                "Weaviate",
+                "Elasticsearch",
+                "OpenSearch",
+                "Microsoft.SemanticKernel",
+            ]),
+            (RepoPath("src", "Hexalith.Parties", "Hexalith.Parties.csproj"),
+            [
+                "Qdrant",
+                "Pinecone",
+                "Weaviate",
+                "Elasticsearch",
+                "OpenSearch",
+                "Microsoft.SemanticKernel",
+                "Microsoft.AspNetCore.OpenApi",
+                "Swashbuckle",
+                "ModelContextProtocol.AspNetCore",
+            ]),
+        ];
+
+        List<string> violations = [];
+        foreach ((string projectPath, string[] forbiddenReferences) in projects)
+        {
+            XDocument project = XDocument.Load(projectPath);
+            string[] references =
+            [
+                .. project.Descendants()
+                    .Where(e => e.Name.LocalName is "ProjectReference" or "PackageReference")
+                    .Select(e => e.Attribute("Include")?.Value)
+                    .Where(value => !string.IsNullOrWhiteSpace(value))
+                    .Select(value => value!),
+            ];
+
+            foreach (string forbidden in forbiddenReferences)
+            {
+                if (references.Any(reference => reference.Contains(forbidden, StringComparison.OrdinalIgnoreCase)))
+                {
+                    violations.Add($"{Path.GetRelativePath(RepositoryRoot.Locate(), projectPath)} references {forbidden}");
+                }
+            }
+        }
+
+        violations.ShouldBeEmpty(
+            "Story 2.9 keeps semantic, graph, vector, temporal, REST/OpenAPI, and MCP runtime dependencies out of MVP packages.\n"
+            + string.Join("\n", violations));
+    }
+
+    [Fact]
+    public void MvpPartySearchPathDoesNotRegisterSemanticProvider()
+    {
+        string registrations = ReadRepoFile("src", "Hexalith.Parties", "Extensions", "PartiesServiceCollectionExtensions.cs");
+        string queryActor = ReadRepoFile("src", "Hexalith.Parties", "Queries", "PartyIndexProjectionQueryActor.cs");
+
+        StripCommentsAndStringLiterals(registrations).ShouldNotContain("SemanticPartySearchProvider");
+        StripCommentsAndStringLiterals(queryActor).ShouldNotContain("SemanticPartySearchProvider");
+    }
+
+    [Fact]
     public void ClientProject_HasNoReferencesToServerProjectionsOrPartiesService()
     {
         XDocument project = XDocument.Load(RepoPath("src", "Hexalith.Parties.Client", "Hexalith.Parties.Client.csproj"));

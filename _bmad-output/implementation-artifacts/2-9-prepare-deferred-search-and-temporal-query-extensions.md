@@ -1,6 +1,6 @@
 # Story 2.9: Prepare Deferred Search and Temporal Query Extensions
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -60,30 +60,30 @@ As a future maintainer of Parties search and audit features, I want MVP read mod
 
 ## Tasks
 
-- [ ] Audit current search and temporal contract surfaces.
-  - [ ] Confirm `PartySearchResult`, `MatchMetadata`, and related DTOs preserve display-name match metadata without enabling email or identifier search behavior.
-  - [ ] Review `PartySearchMode`, `PartySearchBoundary`, `SemanticPartySearchProvider`, and query/client wiring for feature flags or bounded unsupported behavior.
-  - [ ] Review `TemporalNameResult`, `NameHistoryEntry`, and `PartyDetail.NameHistory` for personal-data markings and erasure behavior.
-- [ ] Reserve future search extension points without broadening MVP behavior.
-  - [ ] Document `email`, `identifier`, semantic, graph, and hybrid match concepts as future/deferred where they appear.
-  - [ ] Add or tighten tests that fail if MVP display-name search emits future-field match metadata.
-  - [ ] Ensure any future-mode enum values are either unreachable from MVP paths or return bounded unsupported-capability responses.
-  - [ ] Add negative tests for `Semantic`, `Graph`, `Hybrid`, temporal-name, email, and identifier paths that prove unsupported outcomes are deterministic, privacy-safe, and not empty-success fallbacks.
-  - [ ] Prove unsupported requests do not invoke semantic, graph, vector, temporal, memory, provider-network, or dependency-resolution paths.
-- [ ] Preserve temporal-query preparation without exposing a temporal feature.
-  - [ ] Keep event/projection history sufficient for future name-as-of reads.
-  - [ ] Verify erased parties clear or suppress name history according to existing privacy rules.
-  - [ ] Avoid adding public temporal query APIs, client methods, REST routes, MCP tools, or UI affordances unless the only behavior is explicit unsupported-capability handling.
-- [ ] Add compatibility and architecture guardrails.
-  - [ ] Cover additive DTO compatibility and existing `IPartiesQueryClient` search behavior.
-  - [ ] Add architecture fitness checks if needed to prevent required semantic backend dependencies in MVP packages.
-  - [ ] Cover serialization/source compatibility for placeholder fields and future enum values, including default/null behavior for older consumers.
-  - [ ] Cover score/source metadata defaults so MVP callers cannot observe semantic, graph, hybrid, memory, provider, or temporal provenance as active data.
-  - [ ] Confirm no personal data is written to logs, telemetry, unsupported responses, or test diagnostics.
-  - [ ] Confirm Contracts and Parties do not gain semantic/vector/graph/temporal runtime dependencies or public REST/OpenAPI/MCP/AdminPortal/picker/Memories expansion.
-- [ ] Update developer-facing documentation.
-  - [ ] Record deferred semantic search and temporal query behavior in the relevant architecture or implementation notes.
-  - [ ] Explain which placeholders are reserved and which fields are active in MVP, using explicit "not available in MVP" or "reserved for future compatibility" language.
+- [x] Audit current search and temporal contract surfaces.
+  - [x] Confirm `PartySearchResult`, `MatchMetadata`, and related DTOs preserve display-name match metadata without enabling email or identifier search behavior.
+  - [x] Review `PartySearchMode`, `PartySearchBoundary`, `SemanticPartySearchProvider`, and query/client wiring for feature flags or bounded unsupported behavior.
+  - [x] Review `TemporalNameResult`, `NameHistoryEntry`, and `PartyDetail.NameHistory` for personal-data markings and erasure behavior.
+- [x] Reserve future search extension points without broadening MVP behavior.
+  - [x] Document `email`, `identifier`, semantic, graph, and hybrid match concepts as future/deferred where they appear.
+  - [x] Add or tighten tests that fail if MVP display-name search emits future-field match metadata.
+  - [x] Ensure any future-mode enum values are either unreachable from MVP paths or return bounded unsupported-capability responses.
+  - [x] Add negative tests for `Semantic`, `Graph`, `Hybrid`, temporal-name, email, and identifier paths that prove unsupported outcomes are deterministic, privacy-safe, and not empty-success fallbacks.
+  - [x] Prove unsupported requests do not invoke semantic, graph, vector, temporal, memory, provider-network, or dependency-resolution paths.
+- [x] Preserve temporal-query preparation without exposing a temporal feature.
+  - [x] Keep event/projection history sufficient for future name-as-of reads.
+  - [x] Verify erased parties clear or suppress name history according to existing privacy rules.
+  - [x] Avoid adding public temporal query APIs, client methods, REST routes, MCP tools, or UI affordances unless the only behavior is explicit unsupported-capability handling.
+- [x] Add compatibility and architecture guardrails.
+  - [x] Cover additive DTO compatibility and existing `IPartiesQueryClient` search behavior.
+  - [x] Add architecture fitness checks if needed to prevent required semantic backend dependencies in MVP packages.
+  - [x] Cover serialization/source compatibility for placeholder fields and future enum values, including default/null behavior for older consumers.
+  - [x] Cover score/source metadata defaults so MVP callers cannot observe semantic, graph, hybrid, memory, provider, or temporal provenance as active data.
+  - [x] Confirm no personal data is written to logs, telemetry, unsupported responses, or test diagnostics.
+  - [x] Confirm Contracts and Parties do not gain semantic/vector/graph/temporal runtime dependencies or public REST/OpenAPI/MCP/AdminPortal/picker/Memories expansion.
+- [x] Update developer-facing documentation.
+  - [x] Record deferred semantic search and temporal query behavior in the relevant architecture or implementation notes.
+  - [x] Explain which placeholders are reserved and which fields are active in MVP, using explicit "not available in MVP" or "reserved for future compatibility" language.
 
 ## Dev Notes
 
@@ -205,22 +205,52 @@ dotnet build Hexalith.Parties.slnx --configuration Release
 
 ### Agent Model Used
 
-TBD
+GPT-5
 
 ### Debug Log References
 
-TBD
+- 2026-05-21: Resolver script could not run because `python` was not on PATH; used the documented fallback by reading `customize.toml` files directly.
+- 2026-05-21: `dotnet` was not on PATH; validation used `C:\Program Files\dotnet\dotnet.exe`.
+- 2026-05-21: Full solution build remains blocked by unrelated existing issues in `tests/Hexalith.Parties.DeployValidation.Tests/K8sStory93LintTests.cs` (CA2007) and missing nested submodule `Hexalith.Memories/Hexalith.Commons`. Nested submodules were not initialized per repository instruction.
 
 ### Completion Notes
 
-TBD
+- Audited MVP search and temporal surfaces. The query actor's wire allowlist accepts only omitted, `"Lexical"`, or `"DisplayName"` mode strings for display-name matching; every other wire value (including `"Hybrid"`, `"Semantic"`, `"Graph"`, `"Email"`, `"Identifier"`, and `"TemporalName"`) fails closed with `UnsupportedQueryType` before the projection read. The in-process `PartySearchMode` enum keeps the wider `Hybrid`/`Lexical`/`Semantic`/`Graph` values for future v1.1 work, and `LocalPartySearchService` returns a bounded `PartySearchExecutionStatus.Unsupported` for any enum value other than `Lexical`.
+- Added bounded unsupported-capability behavior for direct local service calls, returning no results, no score/source metadata, no provider invocation, and no tenant/query data in the reason text.
+- Documented reserved match fields and deferred semantic/temporal behavior in contracts and developer docs. `TemporalNameResult.DisplayName` and `SortName` are now explicitly marked personal data.
+- Hardened erased party name-history behavior so post-erasure name-derived events cannot reconstruct historical names.
+- Added compatibility, privacy, source-surface, dependency, client, query actor, and projection guardrail tests.
+- Validation: `Hexalith.Parties.Tests` 412 passed; `Hexalith.Parties.Contracts.Tests` 75 passed; `Hexalith.Parties.Projections.Tests` 139 passed; `Hexalith.Parties.Client.Tests` 83 passed. Touched source projects build in Release. Full solution build blocked by unrelated issues listed in Debug Log References.
 
 ### File List
 
-TBD
+- `_bmad-output/implementation-artifacts/2-9-prepare-deferred-search-and-temporal-query-extensions.md`
+- `_bmad-output/implementation-artifacts/sprint-status.yaml`
+- `docs/deferred-search-and-temporal-queries.md`
+- `src/Hexalith.Parties.Contracts/Models/MatchMetadata.cs`
+- `src/Hexalith.Parties.Contracts/Models/TemporalNameResult.cs`
+- `src/Hexalith.Parties.Contracts/Search/IPartySearchProvider.cs`
+- `src/Hexalith.Parties.Projections/Handlers/PartyDetailProjectionHandler.cs`
+- `src/Hexalith.Parties/Queries/PartyIndexProjectionQueryActor.cs`
+- `src/Hexalith.Parties/Search/LocalPartySearchService.cs`
+- `src/Hexalith.Parties/Search/MemoriesPartySearchService.cs`
+- `src/Hexalith.Parties/Search/PartySearchBoundary.cs`
+- `tests/Hexalith.Parties.Client.Tests/FitnessTests/ClientArchitecturalFitnessTests.cs`
+- `tests/Hexalith.Parties.Client.Tests/HttpPartiesQueryClientTests.cs`
+- `tests/Hexalith.Parties.Contracts.Tests/Privacy/PersonalDataInventoryTests.cs`
+- `tests/Hexalith.Parties.Contracts.Tests/Search/PartySearchContractCompatibilityTests.cs`
+- `tests/Hexalith.Parties.Mcp.Tests/PartiesMcpToolContractTests.cs`
+- `tests/Hexalith.Parties.Picker.Tests/Components/PartyPickerComponentTests.cs`
+- `tests/Hexalith.Parties.Projections.Tests/Handlers/PartyDetailProjectionHandlerNameHistoryTests.cs`
+- `tests/Hexalith.Parties.Tests/FitnessTests/ArchitecturalFitnessTests.cs`
+- `tests/Hexalith.Parties.Tests/Gateway/PartyIndexProjectionQueryActorTests.cs`
+- `tests/Hexalith.Parties.Tests/Search/MvpDisplayNameSearchContractTests.cs`
+- `tests/Hexalith.Parties.Tests/Search/PartySearchServiceBoundaryTests.cs`
 
 ### Change Log
 
+- 2026-05-21: Senior review applied auto-fixes — added per-property XML docs to `TemporalNameResult`, documented the MVP wire-mode allowlist in `docs/deferred-search-and-temporal-queries.md`, included the MCP and picker guardrail test files in the story File List, and clarified the wire-vs-enum allowlist distinction in completion notes.
+- 2026-05-21: Implemented deferred search and temporal query guardrails, bounded unsupported future-mode outcomes, personal-data markings, compatibility and architecture tests, and deferred behavior documentation.
 - 2026-05-20: Advanced elicitation applied guardrails for deferred mode names, metadata defaults, unsupported-mode side effects, temporal exposure boundaries, compatibility proof, and corrected current-code surface paths.
 - 2026-05-20: Party-mode review applied low-risk clarifications for unsupported future capabilities, display-name-only MVP metadata, privacy-safe negative assertions, compatibility evidence, dependency guardrails, and AC-to-test traceability.
 - 2026-05-19: Story created by BMAD pre-dev hardening automation as a ready-for-dev preparation-only story for deferred search and temporal query extension guardrails.

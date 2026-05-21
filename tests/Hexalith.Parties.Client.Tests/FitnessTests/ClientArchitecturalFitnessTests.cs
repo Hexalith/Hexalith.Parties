@@ -355,6 +355,20 @@ public sealed class ClientArchitecturalFitnessTests
     }
 
     [Fact]
+    public void IPartiesQueryClient_DoesNotExposeTemporalOrAdvancedSearchMethods()
+    {
+        Type interfaceType = typeof(Abstractions.IPartiesQueryClient);
+
+        string[] methodNames = [.. interfaceType.GetMethods().Select(static method => method.Name)];
+
+        methodNames.ShouldNotContain(name => name.Contains("Temporal", StringComparison.OrdinalIgnoreCase));
+        methodNames.ShouldNotContain(name => name.Contains("NameAt", StringComparison.OrdinalIgnoreCase));
+        methodNames.ShouldNotContain(name => name.Contains("Semantic", StringComparison.OrdinalIgnoreCase));
+        methodNames.ShouldNotContain(name => name.Contains("Graph", StringComparison.OrdinalIgnoreCase));
+        methodNames.ShouldNotContain(name => name.Contains("Hybrid", StringComparison.OrdinalIgnoreCase));
+    }
+
+    [Fact]
     public void AllCommandMethods_ReturnExpectedTaskTypes()
     {
         Type interfaceType = typeof(Abstractions.IPartiesCommandClient);

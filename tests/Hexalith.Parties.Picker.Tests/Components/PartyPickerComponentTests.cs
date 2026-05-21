@@ -93,6 +93,46 @@ public sealed class PartyPickerComponentTests : BunitContext
     }
 
     [Fact]
+    public void PartyPicker_InitialRender_DoesNotExposeAdvancedSearchOrTemporalControls()
+    {
+        RegisterClient();
+
+        IRenderedComponent<PartyPicker> cut = Render<PartyPicker>(parameters => parameters
+            .Add(p => p.AccessToken, "host-token")
+            .Add(p => p.DispatchDomEvents, false));
+
+        cut.Markup.ShouldNotContain("semantic", Case.Insensitive);
+        cut.Markup.ShouldNotContain("hybrid", Case.Insensitive);
+        cut.Markup.ShouldNotContain("graph", Case.Insensitive);
+        cut.Markup.ShouldNotContain("temporal", Case.Insensitive);
+        cut.Markup.ShouldNotContain("as of", Case.Insensitive);
+        cut.FindAll("select").ShouldBeEmpty();
+        cut.FindAll("[role=\"radiogroup\"]").ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void PartyPicker_DefaultSearch_DoesNotForwardAdvancedModeOrCaseId()
+    {
+        var queryClient = new RecordingPartiesQueryClient();
+        queryClient.Enqueue(SearchResultPage(PartyPickerTestData.Result()));
+        RegisterClient(queryClient);
+
+        IRenderedComponent<PartyPicker> cut = Render<PartyPicker>(parameters => parameters
+            .Add(p => p.AccessToken, "host-token")
+            .Add(p => p.DebounceMilliseconds, 1)
+            .Add(p => p.DispatchDomEvents, false));
+
+        cut.Find("input").Input("ada");
+
+        cut.WaitForAssertion(() =>
+        {
+            queryClient.SearchCalls.Count.ShouldBe(1);
+            queryClient.LastMode.ShouldBeNull();
+            queryClient.LastCaseId.ShouldBeNull();
+        });
+    }
+
+    [Fact]
     public void PartyPicker_MissingToken_ShowsAuthenticationRequiredWithoutRequest()
     {
         var queryClient = new RecordingPartiesQueryClient();
