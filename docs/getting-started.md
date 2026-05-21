@@ -1,6 +1,6 @@
 # Getting Started with Hexalith.Parties
 
-This guide starts the local EventStore-fronted topology, sends a Parties command through EventStore, queries it back through EventStore, and shows the typed .NET client and separate MCP host integration paths.
+This guide starts the local EventStore-fronted topology, sends a Parties command through EventStore, queries it back through EventStore, and shows the typed .NET client and separate MCP host integration paths. The default path is Aspire-based local development; the Kubernetes section is optional and uses the same public EventStore gateway contract.
 
 **Time estimate:** Under 30 minutes from clone to first command/query round-trip.
 
@@ -16,6 +16,8 @@ This guide starts the local EventStore-fronted topology, sends a Parties command
 | Docker Desktop | Latest | [docker.com](https://www.docker.com/products/docker-desktop/) |
 | Git | Any recent version | [git-scm.com](https://git-scm.com) |
 | `jq` | Latest, optional for Bash examples | [jqlang.org](https://jqlang.org) |
+
+Aspire is used through the .NET SDK command `dotnet aspire run`; no separate local orchestration script is required for the default path. DAPR components and sidecars are composed by the AppHost for Aspire mode, so the DAPR CLI is not required unless you use the optional Kubernetes walkthrough.
 
 **Additional prerequisites for the optional Kubernetes walkthrough (Step 1b):**
 
@@ -68,6 +70,8 @@ EventStore owns public authentication, tenant validation, RBAC, command/query ro
 If startup fails before the dashboard appears, first check that Docker Desktop is running and that the two root-level submodules above exist on disk. A missing `Hexalith.EventStore` or `Hexalith.Tenants` directory is a setup problem, not a partial local topology that should be treated as ready.
 
 Memories-backed rich search is optional for the default local Parties run. To include it, initialize the root-level `Hexalith.Memories` submodule and run the AppHost with `EnableMemoriesSearch=true`; leave it unset for the baseline one-command local topology.
+
+Readiness is confirmed by the Aspire dashboard health column and by the service-default endpoints exposed by each HTTP resource: `/ready` for readiness, `/health` for full health, and `/alive` for liveness. Treat the system as usable only after `eventstore`, `parties`, and `tenants` are healthy; a live `parties` actor host alone is not enough because public traffic enters through EventStore.
 
 ---
 
@@ -271,6 +275,8 @@ Invoke-RestMethod -Method Post -Uri "$env:EVENTSTORE_URL/api/v1/commands" `
 
 Expected result: EventStore accepts the command and returns a correlation id. Command acceptance is not a read-your-write guarantee; projections may need a short moment before query results reflect the event.
 
+The command -> event -> projection flow is: EventStore authenticates and authorizes the request, routes the command envelope to the Parties domain actor host, Parties validates and emits domain events, EventStore persists and publishes those events, and the Parties projection actors update read models that queries use. Use the returned correlation id when checking logs or EventStore Admin UI evidence.
+
 ---
 
 ## Step 4: First Queries
@@ -355,6 +361,10 @@ curl -s -X POST "$EVENTSTORE_URL/api/v1/queries" \
   }' | jq
 ```
 
+### Freshness and Eventual Consistency
+
+Queries read projection state, not the write path directly. Immediately after a successful command, a first query can briefly miss the new party or include freshness metadata showing the projection is rebuilding or stale. Retry with bounded backoff, prefer the `PartyDetail` query for the created party id when checking the first round trip, and use EventStore Admin UI stream evidence when you need to distinguish a rejected command from a delayed projection.
+
 ---
 
 ## Step 5: Typed .NET Client
@@ -366,6 +376,12 @@ dotnet add package Hexalith.Parties.Client
 ```
 
 ```csharp
+using Hexalith.Parties.Client.Extensions;
+using Hexalith.Parties.Client.Abstractions;
+using Hexalith.Parties.Contracts.Commands;
+using Hexalith.Parties.Contracts.Models;
+using Hexalith.Parties.Contracts.ValueObjects;
+
 builder.Services.AddPartiesClient(builder.Configuration);
 ```
 
@@ -477,6 +493,10 @@ Local Aspire-issued dev certificates must be trusted before curl or HttpClient c
 
 Check the Aspire dashboard for `eventstore`, `eventstore-admin`, `eventstore-admin-ui`, `parties`, and `tenants`. Public command/query readiness is EventStore-owned; Parties health only proves the actor host is alive behind the gateway.
 
+### Docker or Submodule Startup Failures
+
+If Redis, Keycloak, EventStore, or Tenants fail before the dashboard reaches healthy state, confirm Docker Desktop is running and rerun `git submodule update --init Hexalith.EventStore Hexalith.Tenants` from the repository root. Do not switch to recursive submodule initialization for the default local run; missing nested submodules are not required by the baseline AppHost path.
+
 ### Authentication Errors
 
 `401` responses usually mean the request is missing a valid bearer token, tenant claim, or user identifier. Fix the identity provider or local development token configuration rather than calling Parties internals.
@@ -488,6 +508,10 @@ Check the Aspire dashboard for `eventstore`, `eventstore-admin`, `eventstore-adm
 ### Projection Delay
 
 A command can be accepted before the projection is queryable. Retry with bounded backoff and check projection freshness or EventStore Admin UI stream evidence. Do not bypass EventStore by reading projection actors directly.
+
+### MVP Compliance Boundary
+
+This MVP is not approved for regulated EU personal data until v1.1 GDPR features are active. For evaluation, use synthetic names and non-sensitive contact data only. If sensitive data is accidentally entered in a non-production evaluation environment, stop using that dataset and follow your operator's manual deletion or environment rebuild procedure; do not treat the MVP as an erasure-complete system.
 
 ### MCP Unavailable
 

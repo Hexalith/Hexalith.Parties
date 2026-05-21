@@ -136,12 +136,27 @@ public sealed class SampleOnboardingGuardrailTests
     {
         string gettingStarted = File.ReadAllText(GetRepositoryFilePath("docs/getting-started.md"));
 
+        gettingStarted.ShouldContain("dotnet aspire run --project src/Hexalith.Parties.AppHost");
+        gettingStarted.ShouldContain("git submodule update --init Hexalith.EventStore Hexalith.Tenants");
+        gettingStarted.ShouldContain("Do not use --recursive");
+        gettingStarted.ShouldContain("Aspire");
+        gettingStarted.ShouldContain("DAPR");
+        gettingStarted.ShouldContain("/ready");
+        gettingStarted.ShouldContain("Docker Desktop");
         gettingStarted.ShouldContain("\"domain\": \"party\"");
         gettingStarted.ShouldContain("\"commandType\": \"Hexalith.Parties.Contracts.Commands.CreateParty\"");
         gettingStarted.ShouldContain("\"queryType\": \"PartyDetail\"");
         gettingStarted.ShouldContain("\"queryType\": \"PartySearch\"");
         gettingStarted.ShouldContain("\"queryType\": \"PartyIndex\"");
         gettingStarted.ShouldContain("\"payload\"");
+        gettingStarted.ShouldContain("command -> event -> projection flow");
+        gettingStarted.ShouldContain("Freshness and Eventual Consistency");
+        gettingStarted.ShouldContain("AddPartiesClient(builder.Configuration)");
+        gettingStarted.ShouldContain("\"Parties\"");
+        gettingStarted.ShouldContain("\"BaseUrl\"");
+        gettingStarted.ShouldContain("\"Tenant\"");
+        gettingStarted.ShouldContain("not approved for regulated EU personal data until v1.1 GDPR features are active");
+        gettingStarted.ShouldNotContain("submodule update --init --recursive");
         gettingStarted.ShouldNotContain("contract_unavailable");
         gettingStarted.ShouldNotContain("Story 12.5 is blocked");
         gettingStarted.ShouldNotContain("Story 12.6 is blocked");

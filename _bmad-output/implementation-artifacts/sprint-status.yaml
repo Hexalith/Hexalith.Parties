@@ -85,7 +85,7 @@ development_status:
   3-4-map-domain-rejections-to-problemdetails: done
   3-5-generate-openapi-and-error-catalog: done
   3-6-enable-one-command-local-run: done
-  3-7-write-getting-started-documentation: backlog
+  3-7-write-getting-started-documentation: done
   3-8-provide-runnable-sample-integration: backlog
   3-9-add-deployment-security-validation: backlog
   3-10-display-mvp-compliance-warning: backlog
