@@ -405,6 +405,65 @@ public sealed class PartiesAdminPortalComponentTests : BunitContext
         IReadOnlyList<IRenderedComponent<FluentSelect<string, string>>> selects = cut.FindComponents<FluentSelect<string, string>>();
         (selects[0].Instance.Disabled == true).ShouldBeTrue();
         (selects[1].Instance.Disabled == true).ShouldBeTrue();
+        (FindTextInput(cut, "Created after").Instance.Disabled == true).ShouldBeTrue();
+        (FindTextInput(cut, "Created before").Instance.Disabled == true).ShouldBeTrue();
+        (FindTextInput(cut, "Modified after").Instance.Disabled == true).ShouldBeTrue();
+        (FindTextInput(cut, "Modified before").Instance.Disabled == true).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void PartiesAdminPortal_DateFilters_UseListContractAndBoundedDates()
+    {
+        var api = new RecordingAdminPortalApiClient();
+        api.EnqueueList(Page<PartyIndexEntry>());
+        api.EnqueueList(Page(IndexEntry("party-filtered", "Filtered Row", PartyType.Organization, false)));
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+
+        IRenderedComponent<PartiesAdminPortal> cut = RenderAuthorized("scope-a");
+        cut.WaitForAssertion(() => api.ListRequests.Count.ShouldBe(1));
+
+        SetTextInput(cut, "Created after", "2026-05-01");
+        SetTextInput(cut, "Created before", "2026-05-31");
+        SetTextInput(cut, "Modified after", "2026-06-01");
+        SetTextInput(cut, "Modified before", "2026-06-30");
+        ClickFluentButton(cut, "Search");
+
+        cut.WaitForAssertion(() =>
+        {
+            api.ListRequests.Count.ShouldBe(2);
+            cut.Markup.ShouldContain("Filtered Row");
+        });
+
+        AdminPortalListRequest request = api.ListRequests[1];
+        request.CreatedAfter.ShouldBe(DateTimeOffset.Parse("2026-05-01T00:00:00+00:00", CultureInfo.InvariantCulture));
+        request.CreatedBefore.ShouldBe(DateTimeOffset.Parse("2026-05-31T23:59:59.9999999+00:00", CultureInfo.InvariantCulture));
+        request.ModifiedAfter.ShouldBe(DateTimeOffset.Parse("2026-06-01T00:00:00+00:00", CultureInfo.InvariantCulture));
+        request.ModifiedBefore.ShouldBe(DateTimeOffset.Parse("2026-06-30T23:59:59.9999999+00:00", CultureInfo.InvariantCulture));
+        api.SearchRequests.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void PartiesAdminPortal_InvalidDateFilter_ShowsBoundedValidationAndDoesNotQuery()
+    {
+        var api = new RecordingAdminPortalApiClient();
+        api.EnqueueList(Page(IndexEntry("party-initial", "Initial Row", PartyType.Person, true)));
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+
+        IRenderedComponent<PartiesAdminPortal> cut = RenderAuthorized("scope-a");
+        cut.WaitForAssertion(() => api.ListRequests.Count.ShouldBe(1));
+
+        SetTextInput(cut, "Created after", "2026-06-01");
+        SetTextInput(cut, "Created before", "2026-05-01");
+        ClickFluentButton(cut, "Search");
+
+        cut.WaitForAssertion(() =>
+        {
+            cut.Markup.ShouldContain("Validation: Created date range is invalid");
+            cut.Markup.ShouldNotContain("Initial Row");
+        });
+
+        api.ListRequests.Count.ShouldBe(1);
+        api.SearchRequests.ShouldBeEmpty();
     }
 
     [Fact]
@@ -1401,6 +1460,16 @@ public sealed class PartiesAdminPortalComponentTests : BunitContext
     private static void SetSearch(IRenderedComponent<PartiesAdminPortal> cut, string value)
     {
         IRenderedComponent<FluentTextInput> input = cut.FindComponent<FluentTextInput>();
+        cut.InvokeAsync(() => input.Instance.ValueChanged.InvokeAsync(value)).GetAwaiter().GetResult();
+    }
+
+    private static IRenderedComponent<FluentTextInput> FindTextInput(IRenderedComponent<PartiesAdminPortal> cut, string label)
+        => cut.FindComponents<FluentTextInput>()
+            .Single(input => string.Equals(input.Instance.Label, label, StringComparison.Ordinal));
+
+    private static void SetTextInput(IRenderedComponent<PartiesAdminPortal> cut, string label, string value)
+    {
+        IRenderedComponent<FluentTextInput> input = FindTextInput(cut, label);
         cut.InvokeAsync(() => input.Instance.ValueChanged.InvokeAsync(value)).GetAwaiter().GetResult();
     }
 

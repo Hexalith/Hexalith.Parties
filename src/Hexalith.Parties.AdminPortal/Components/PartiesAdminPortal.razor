@@ -1,6 +1,7 @@
 @page "/admin/parties"
 @page "/admin/parties/{RoutePartyId}"
 @page "/admin/parties/{RoutePartyId}/gdpr"
+@using System.Globalization
 @inject AdminPortalPartyQueryService QueryService
 @inject PartiesAdminListCoordinator ListCoordinator
 @inject IAdminPortalAuthorizationService AuthorizationService
@@ -40,6 +41,34 @@
                       Label="@EffectiveLabels.ActiveState"
                       aria-label="@EffectiveLabels.ActiveState"
                       Disabled="@FiltersDisabledInSearchMode" />
+        <FluentTextInput Value="@_filters.CreatedAfterValue"
+                         ValueChanged="OnCreatedAfterChanged"
+                         TextInputType="TextInputType.Text"
+                         Label="@EffectiveLabels.CreatedAfter"
+                         aria-label="@EffectiveLabels.CreatedAfter"
+                         Placeholder="@EffectiveLabels.DateFilterPlaceholder"
+                         Disabled="@FiltersDisabledInSearchMode" />
+        <FluentTextInput Value="@_filters.CreatedBeforeValue"
+                         ValueChanged="OnCreatedBeforeChanged"
+                         TextInputType="TextInputType.Text"
+                         Label="@EffectiveLabels.CreatedBefore"
+                         aria-label="@EffectiveLabels.CreatedBefore"
+                         Placeholder="@EffectiveLabels.DateFilterPlaceholder"
+                         Disabled="@FiltersDisabledInSearchMode" />
+        <FluentTextInput Value="@_filters.ModifiedAfterValue"
+                         ValueChanged="OnModifiedAfterChanged"
+                         TextInputType="TextInputType.Text"
+                         Label="@EffectiveLabels.ModifiedAfter"
+                         aria-label="@EffectiveLabels.ModifiedAfter"
+                         Placeholder="@EffectiveLabels.DateFilterPlaceholder"
+                         Disabled="@FiltersDisabledInSearchMode" />
+        <FluentTextInput Value="@_filters.ModifiedBeforeValue"
+                         ValueChanged="OnModifiedBeforeChanged"
+                         TextInputType="TextInputType.Text"
+                         Label="@EffectiveLabels.ModifiedBefore"
+                         aria-label="@EffectiveLabels.ModifiedBefore"
+                         Placeholder="@EffectiveLabels.DateFilterPlaceholder"
+                         Disabled="@FiltersDisabledInSearchMode" />
         <FluentButton Appearance="ButtonAppearance.Primary" OnClick="SubmitSearchAsync">@EffectiveLabels.Submit</FluentButton>
         <FluentButton Appearance="ButtonAppearance.Outline" OnClick="ClearFiltersAsync">@EffectiveLabels.Clear</FluentButton>
         @if (RetryAvailable)
@@ -517,11 +546,23 @@
 
     private void OnActiveChanged(string value) => _filters.ActiveValue = value;
 
+    private void OnCreatedAfterChanged(string value) => _filters.CreatedAfterValue = value;
+
+    private void OnCreatedBeforeChanged(string value) => _filters.CreatedBeforeValue = value;
+
+    private void OnModifiedAfterChanged(string value) => _filters.ModifiedAfterValue = value;
+
+    private void OnModifiedBeforeChanged(string value) => _filters.ModifiedBeforeValue = value;
+
     private async Task ClearFiltersAsync()
     {
         _filters.Query = string.Empty;
         _filters.TypeValue = string.Empty;
         _filters.ActiveValue = string.Empty;
+        _filters.CreatedAfterValue = string.Empty;
+        _filters.CreatedBeforeValue = string.Empty;
+        _filters.ModifiedAfterValue = string.Empty;
+        _filters.ModifiedBeforeValue = string.Empty;
         _page = 1;
         _pendingFocus = FocusTarget.SearchInput;
         await LoadPageAsync().ConfigureAwait(false);
@@ -568,10 +609,24 @@
 
         try
         {
+            if (!_filters.TryValidateDateFilters(
+                EffectiveLabels,
+                out DateTimeOffset? createdAfter,
+                out DateTimeOffset? createdBefore,
+                out DateTimeOffset? modifiedAfter,
+                out DateTimeOffset? modifiedBefore,
+                out string? validationDetail))
+            {
+                _validationDetail = validationDetail;
+                _statusKind = StatusKind.Validation;
+                ListCoordinator.Transition(AdminPortalListState.TransientFailure);
+                return;
+            }
+
             if (string.IsNullOrWhiteSpace(_filters.Query))
             {
                 AdminPortalQueryResult<PagedResult<PartyIndexEntry>> result = await QueryService.ApiClient
-                    .ListPartiesAsync(CreateListRequest(), token)
+                    .ListPartiesAsync(CreateListRequest(createdAfter, createdBefore, modifiedAfter, modifiedBefore), token)
                     .ConfigureAwait(false);
                 await ApplyRowsAsync(result.Payload, result.Metadata, version).ConfigureAwait(false);
             }
@@ -919,12 +974,20 @@
         }
     }
 
-    private AdminPortalListRequest CreateListRequest()
+    private AdminPortalListRequest CreateListRequest(
+        DateTimeOffset? createdAfter,
+        DateTimeOffset? createdBefore,
+        DateTimeOffset? modifiedAfter,
+        DateTimeOffset? modifiedBefore)
         => new(
             AdminPortalQueryBounds.BoundPage(_page),
             AdminPortalQueryBounds.BoundPageSize(PageSize),
             _filters.Type,
-            _filters.Active);
+            _filters.Active,
+            createdAfter,
+            createdBefore,
+            modifiedAfter,
+            modifiedBefore);
 
     private AdminPortalSearchRequest CreateSearchRequest()
         => new(
@@ -1224,6 +1287,14 @@
 
         public string ActiveValue { get; set; } = string.Empty;
 
+        public string CreatedAfterValue { get; set; } = string.Empty;
+
+        public string CreatedBeforeValue { get; set; } = string.Empty;
+
+        public string ModifiedAfterValue { get; set; } = string.Empty;
+
+        public string ModifiedBeforeValue { get; set; } = string.Empty;
+
         public PartyType? Type
         {
             get
@@ -1239,5 +1310,68 @@
 
         public bool? Active
             => bool.TryParse(ActiveValue?.Trim(), out bool parsed) ? parsed : null;
+
+        public bool TryValidateDateFilters(
+            AdminPortalLabels labels,
+            out DateTimeOffset? createdAfter,
+            out DateTimeOffset? createdBefore,
+            out DateTimeOffset? modifiedAfter,
+            out DateTimeOffset? modifiedBefore,
+            out string? validationDetail)
+        {
+            createdAfter = null;
+            createdBefore = null;
+            modifiedAfter = null;
+            modifiedBefore = null;
+            validationDetail = null;
+
+            if (!TryParseDate(CreatedAfterValue, startOfDay: true, out createdAfter)
+                || !TryParseDate(CreatedBeforeValue, startOfDay: false, out createdBefore)
+                || !TryParseDate(ModifiedAfterValue, startOfDay: true, out modifiedAfter)
+                || !TryParseDate(ModifiedBeforeValue, startOfDay: false, out modifiedBefore))
+            {
+                validationDetail = labels.DateFilterInvalid;
+                return false;
+            }
+
+            if (createdAfter is not null && createdBefore is not null && createdAfter > createdBefore)
+            {
+                validationDetail = labels.CreatedDateRangeInvalid;
+                return false;
+            }
+
+            if (modifiedAfter is not null && modifiedBefore is not null && modifiedAfter > modifiedBefore)
+            {
+                validationDetail = labels.ModifiedDateRangeInvalid;
+                return false;
+            }
+
+            return true;
+        }
+
+        private static bool TryParseDate(string? value, bool startOfDay, out DateTimeOffset? parsed)
+        {
+            string trimmed = value?.Trim() ?? string.Empty;
+            if (string.IsNullOrEmpty(trimmed))
+            {
+                parsed = null;
+                return true;
+            }
+
+            if (!DateOnly.TryParseExact(
+                    trimmed,
+                    "yyyy-MM-dd",
+                    CultureInfo.InvariantCulture,
+                    DateTimeStyles.None,
+                    out DateOnly date))
+            {
+                parsed = null;
+                return false;
+            }
+
+            TimeOnly time = startOfDay ? TimeOnly.MinValue : TimeOnly.MaxValue;
+            parsed = new DateTimeOffset(date.ToDateTime(time), TimeSpan.Zero);
+            return true;
+        }
     }
 }

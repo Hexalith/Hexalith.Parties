@@ -14,6 +14,22 @@ public sealed record AdminPortalLabels
 
     public string ActiveState { get; init; } = "Active state";
 
+    public string CreatedAfter { get; init; } = "Created after";
+
+    public string CreatedBefore { get; init; } = "Created before";
+
+    public string ModifiedAfter { get; init; } = "Modified after";
+
+    public string ModifiedBefore { get; init; } = "Modified before";
+
+    public string DateFilterPlaceholder { get; init; } = "YYYY-MM-DD";
+
+    public string CreatedDateRangeInvalid { get; init; } = "Created date range is invalid";
+
+    public string ModifiedDateRangeInvalid { get; init; } = "Modified date range is invalid";
+
+    public string DateFilterInvalid { get; init; } = "Use YYYY-MM-DD for date filters";
+
     public string AllTypes { get; init; } = "All types";
 
     public string AllStates { get; init; } = "All states";
