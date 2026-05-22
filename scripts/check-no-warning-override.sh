@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-# Story 9.5 build-gate regression guard.
+# Story 9.8 build-gate regression guard.
 #
 # Fails if any active CI/build script re-introduces the
 # `-p:TreatWarningsAsErrors=false` / `-p:WarningsAsErrors=` command-line
-# workaround. Story 9.5 (2026-05-22) closed this workaround by ensuring the
+# workaround. Story 9.8 (2026-05-22) closed this workaround by ensuring the
 # solution-level build is green on clean clone. The Epic 5 retrospective
-# (action B13, 2026-05-22) escalated 9.5 to a program-level critical-path
+# (action B13, 2026-05-22) escalated 9.8 to a program-level critical-path
 # gate. This script locks the green baseline.
 #
 # Excluded from scanning (historical / policy documentation):
@@ -38,12 +38,12 @@ matches=$(grep -rIn \
   . 2>/dev/null || true)
 
 if [ -n "$matches" ]; then
-  echo "::error::Story 9.5 build-gate regression detected. Active CI/build scripts reference the warning-override workaround:"
+  echo "::error::Story 9.8 build-gate regression detected. Active CI/build scripts reference the warning-override workaround:"
   echo ""
   echo "$matches"
   echo ""
   echo "Background:"
-  echo "  Story 9.5 (2026-05-22) closed this workaround by ensuring the solution-level"
+  echo "  Story 9.8 (2026-05-22) closed this workaround by ensuring the solution-level"
   echo "  build is green on a clean clone. Re-adding the override is a regression."
   echo ""
   echo "Fix:"

@@ -1,8 +1,19 @@
-# Story 9.5: Solution Build Green on Clean Clone Before Epic 7/8 Resumes
+# Story 9.8: Solution Build Green on Clean Clone Before Epic 7/8 Resumes
 
 Status: review - 2026-05-22T18:30:00Z
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
+<!--
+  Renumber note (2026-05-22): This story was originally drafted as Story 9.5 against the
+  pre-greenfield Epic 9 v1 plan (file slug `9-5-solution-build-green-on-clean-clone`). During
+  the rebase of the Epic 3 retrospective follow-through onto Epic 9 v2 (greenfield rewrite,
+  2026-05-21), the slug was renumbered to 9-8 to avoid a semantic collision with v2 Story 9.5
+  (operator-scripts-publish-and-teardown). All in-repo references in the Epic 3/4/5 retro batch,
+  sprint-change-proposal-2026-05-22, build-gate.md, ci.md, test.yml, and the regression guard
+  script were updated to "Story 9.8" / `9-8-solution-build-green-on-clean-clone` in the same
+  follow-up commit. Other historical artifacts (submodules, deferred-work.md, prior planning
+  documents) retain the original 9.5 numbering as historical record.
+-->
 
 ## Story
 
@@ -95,13 +106,13 @@ dotnet build Hexalith.Parties.slnx --configuration Release --no-restore
                                             -> EXIT 0, 0 Warning(s), 0 Error(s), 27.29s
 ```
 
-Build logs preserved at `_bmad-output/process-notes/story-9-5-baseline/freshclone-restore.log` and `_bmad-output/process-notes/story-9-5-baseline/freshclone-build.log`. 49 projects built. No `-p:TreatWarningsAsErrors=false` or `-p:WarningsAsErrors=` override required.
+Build logs preserved at `_bmad-output/process-notes/story-9-8-baseline/freshclone-restore.log` and `_bmad-output/process-notes/story-9-8-baseline/freshclone-build.log`. 49 projects built. No `-p:TreatWarningsAsErrors=false` or `-p:WarningsAsErrors=` override required.
 
 **AC2 — Nested-submodule dependencies absent from default graph:**
 
 Fresh-clone build log inspected: zero references to `Hexalith.Memories`, `Hexalith.AI.Tools`, or `Hexalith.Commons` project assemblies in the build output. Memories/AI.Tools/Commons remain excluded from the default solution graph per Story 3.6's opt-in pattern. Note: `Hexalith.Commons` has been promoted to a root-level submodule (no longer nested under `Hexalith.Memories`) — the story Dev Notes reference to `Hexalith.Memories/Hexalith.Commons` is stale but does not affect the outcome.
 
-Opt-in path verified: `dotnet build Hexalith.Parties.slnx --configuration Release -p:EnableMemoriesSearch=true` → EXIT 0, 0 warnings, 0 errors, 20.74s. Log preserved at `_bmad-output/process-notes/story-9-5-baseline/build-memories-opt-in.log` (in the temp clone, removed after verification).
+Opt-in path verified: `dotnet build Hexalith.Parties.slnx --configuration Release -p:EnableMemoriesSearch=true` → EXIT 0, 0 warnings, 0 errors, 20.74s. Log preserved at `_bmad-output/process-notes/story-9-8-baseline/build-memories-opt-in.log` (in the temp clone, removed after verification).
 
 **AC3 — Submodule-inherited analyzer warnings:**
 
@@ -119,7 +130,7 @@ dotnet test tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj \
 
 **AC5 — CI signal locks the new baseline:**
 
-`.github/workflows/test.yml::lint` already runs the clean-clone build sequence on every PR/push to `main`/`develop` (checkout with `submodules: true` → restore → build Release). New step added: `Story 9.5 build-gate (no warning-override regression)` invokes `scripts/check-no-warning-override.sh`, which greps active CI/build scripts (`.yml`, `.yaml`, `.ps1`, `.sh`, `.cmd`, `.bat`) outside `_bmad-output/` and `docs/` for `-p:TreatWarningsAsErrors=false` and `-p:WarningsAsErrors=` patterns. The guard script excludes only itself by basename, not the whole `scripts/` directory, so a future helper in `scripts/` re-introducing the override is still caught.
+`.github/workflows/test.yml::lint` already runs the clean-clone build sequence on every PR/push to `main`/`develop` (checkout with `submodules: true` → restore → build Release). New step added: `Story 9.8 build-gate (no warning-override regression)` invokes `scripts/check-no-warning-override.sh`, which greps active CI/build scripts (`.yml`, `.yaml`, `.ps1`, `.sh`, `.cmd`, `.bat`) outside `_bmad-output/` and `docs/` for `-p:TreatWarningsAsErrors=false` and `-p:WarningsAsErrors=` patterns. The guard script excludes only itself by basename, not the whole `scripts/` directory, so a future helper in `scripts/` re-introducing the override is still caught.
 
 **Guard verified test-side:**
 
@@ -141,7 +152,7 @@ Gate policy documented at `docs/build-gate.md`, linked from `docs/ci.md::lint` j
 
 ### Debug Log
 
-- Build logs: `_bmad-output/process-notes/story-9-5-baseline/restore.log`, `build.log`, `build-noincremental.log` (showed CS0006 parallel-race during `--no-incremental` rebuild — *not* a quality regression, an MSBuild parallel-build artifact when ref assemblies are deleted), `clean.log`, `build-cold.log`, `test-5-1-no-override.log`, `freshclone-restore.log`, `freshclone-build.log`.
+- Build logs: `_bmad-output/process-notes/story-9-8-baseline/restore.log`, `build.log`, `build-noincremental.log` (showed CS0006 parallel-race during `--no-incremental` rebuild — *not* a quality regression, an MSBuild parallel-build artifact when ref assemblies are deleted), `clean.log`, `build-cold.log`, `test-5-1-no-override.log`, `freshclone-restore.log`, `freshclone-build.log`.
 - One contrived regression file (`scripts/contrived-regression.sh`) created and then removed during guard verification. Not in final tree.
 - Temp clone path `D:/temp/hexalith-9-5-clean` removed after verification.
 
@@ -151,20 +162,20 @@ Gate policy documented at `docs/build-gate.md`, linked from `docs/ci.md::lint` j
 
 - `scripts/check-no-warning-override.sh` — regression guard script invoked from CI and locally.
 - `docs/build-gate.md` — solution build-gate policy documentation.
-- `_bmad-output/process-notes/story-9-5-baseline/restore.log` — initial restore evidence.
-- `_bmad-output/process-notes/story-9-5-baseline/build.log` — initial Release build evidence (working tree).
-- `_bmad-output/process-notes/story-9-5-baseline/build-noincremental.log` — `--no-incremental` parallel-race demonstration (informational).
-- `_bmad-output/process-notes/story-9-5-baseline/clean.log` — dotnet clean evidence.
-- `_bmad-output/process-notes/story-9-5-baseline/build-cold.log` — cold rebuild from cleaned state evidence.
-- `_bmad-output/process-notes/story-9-5-baseline/test-5-1-no-override.log` — Story 5.1 focused test without override (passed).
-- `_bmad-output/process-notes/story-9-5-baseline/freshclone-restore.log` — fresh-clone restore (AC1 evidence).
-- `_bmad-output/process-notes/story-9-5-baseline/freshclone-build.log` — fresh-clone Release build (AC1 evidence — 0/0).
+- `_bmad-output/process-notes/story-9-8-baseline/restore.log` — initial restore evidence.
+- `_bmad-output/process-notes/story-9-8-baseline/build.log` — initial Release build evidence (working tree).
+- `_bmad-output/process-notes/story-9-8-baseline/build-noincremental.log` — `--no-incremental` parallel-race demonstration (informational).
+- `_bmad-output/process-notes/story-9-8-baseline/clean.log` — dotnet clean evidence.
+- `_bmad-output/process-notes/story-9-8-baseline/build-cold.log` — cold rebuild from cleaned state evidence.
+- `_bmad-output/process-notes/story-9-8-baseline/test-5-1-no-override.log` — Story 5.1 focused test without override (passed).
+- `_bmad-output/process-notes/story-9-8-baseline/freshclone-restore.log` — fresh-clone restore (AC1 evidence).
+- `_bmad-output/process-notes/story-9-8-baseline/freshclone-build.log` — fresh-clone Release build (AC1 evidence — 0/0).
 
 **Modified:**
 
-- `.github/workflows/test.yml` — added `Story 9.5 build-gate (no warning-override regression)` step to the `lint` job.
+- `.github/workflows/test.yml` — added `Story 9.8 build-gate (no warning-override regression)` step to the `lint` job.
 - `docs/ci.md` — updated `lint` job description to reference the build-gate guard and link to `docs/build-gate.md`.
-- `_bmad-output/implementation-artifacts/sprint-status.yaml` — `9-5-solution-build-green-on-clean-clone` status `ready-for-dev` → `in-progress` (B13 escalation) → `review` (this completion).
+- `_bmad-output/implementation-artifacts/sprint-status.yaml` — `9-8-solution-build-green-on-clean-clone` (originally `9-5-solution-build-green-on-clean-clone` pre-rebase, see renumber note above) status `ready-for-dev` → `in-progress` (B13 escalation) → `review` (this completion).
 
 ## Non-Goals
 
@@ -197,5 +208,5 @@ Gate policy documented at `docs/build-gate.md`, linked from `docs/ci.md::lint` j
 ## Change Log
 
 - 2026-05-22: Story created by Correct Course (action B8 from Epic 3 retrospective). Status `ready-for-dev`. Epic 7 / Epic 8 active work gated on this story reaching `done`.
-- 2026-05-22: Status `ready-for-dev` → `in-progress`. Escalated to program-level critical-path gate by Epic 5 retrospective action B13. Epic 7, 8, 9 new story work (other than 9.5 itself) blocked until this closes.
+- 2026-05-22: Status `ready-for-dev` → `in-progress`. Escalated to program-level critical-path gate by Epic 5 retrospective action B13. Epic 7, 8, 9 new story work (other than 9.8 itself) blocked until this closes.
 - 2026-05-22: Status `in-progress` → `review`. All 5 ACs satisfied. AC1–AC4 confirmed already-resolved by accumulated submodule bumps (`d986321`, `389c23f`); AC5 implemented as new artifacts: `scripts/check-no-warning-override.sh` regression guard, new step in `.github/workflows/test.yml::lint`, policy doc at `docs/build-gate.md`. Fresh-clone Release build EXIT 0, 0 warnings, 0 errors, 27.29s. Guard verified test-side (clean tree → EXIT 0; contrived regression → EXIT 1; removed → EXIT 0). Closes TD-3-A, TD-4-B, TD-5-A. Epic 7 / 8 active work gate now satisfied pending review.

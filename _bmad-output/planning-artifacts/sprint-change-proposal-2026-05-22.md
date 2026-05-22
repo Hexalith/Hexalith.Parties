@@ -9,7 +9,7 @@ related_artifacts:
   - _bmad-output/implementation-artifacts/epic-3-retro-2026-05-22.md
   - _bmad-output/process-notes/story-creation-lessons.md
   - .claude/skills/bmad-story-automator-review/checklist.md
-  - _bmad-output/implementation-artifacts/9-5-solution-build-green-on-clean-clone.md
+  - _bmad-output/implementation-artifacts/9-8-solution-build-green-on-clean-clone.md
   - _bmad-output/implementation-artifacts/sprint-status.yaml
 ---
 
@@ -27,11 +27,11 @@ Epic 3 retrospective (2026-05-22) surfaced three systemic patterns that need to 
 
 | Dimension | Impact |
 |---|---|
-| Epic Impact | Epic 9 (Kubernetes Deployment) grows from 4 to 5 stories; Story 9.5 added as prep gate before Epic 7/8 active work resumes |
-| Story Impact | Story 3.10's `-p:TreatWarningsAsErrors=false` workaround should be removed once Story 9.5 lands |
+| Epic Impact | Epic 9 (Kubernetes Deployment) grows from 4 to 5 stories; Story 9.8 added as prep gate before Epic 7/8 active work resumes |
+| Story Impact | Story 3.10's `-p:TreatWarningsAsErrors=false` workaround should be removed once Story 9.8 lands |
 | Artifact Conflicts | None — no PRD, architecture, or UX changes required |
 | Process Impact | `bmad-story-automator-review` checklist gains submodule-cleanliness gate; story-creation lessons ledger gains L09 (submodule discipline) and L10 (pivot sweep) |
-| Technical Impact | New Story 9.5 work: audit + fix solution-level build on clean clone; add CI gate |
+| Technical Impact | New Story 9.8 work: audit + fix solution-level build on clean clone; add CI gate |
 
 ## 3. Recommended Approach
 
@@ -39,7 +39,7 @@ Epic 3 retrospective (2026-05-22) surfaced three systemic patterns that need to 
 
 - B4: one checklist line + one process-note entry (done).
 - B6: one process-note entry (done).
-- B8: one new prep story (Story 9.5) authored as `ready-for-dev`; sprint-status updated; Epic 7/8 active work gated on 9.5 reaching `done`.
+- B8: one new prep story (Story 9.8) authored as `ready-for-dev`; sprint-status updated; Epic 7/8 active work gated on 9.8 reaching `done`.
 
 Rationale: B4 and B6 are template/discipline edits that take effect on the next story-automator run. B8 is a real engineering prep gate that must complete before Epic 7/8 can use CI as a quality signal. Tracking B8 as a story (not a tracker entry) preserves the Dev Agent Record, review trail, and sprint-status integration that the rest of Epic 9 already follows.
 
@@ -80,9 +80,9 @@ Rationale: B4 and B6 are template/discipline edits that take effect on the next 
 
 **Rationale:** The lessons ledger is referenced by `bmad-create-story` story Dev Notes (existing references to L08), so new entries propagate to future story-creation flows without further skill changes.
 
-### Change 3: New Story 9.5 — Solution build green on clean clone (B8)
+### Change 3: New Story 9.8 — Solution build green on clean clone (B8)
 
-**Artifact:** `_bmad-output/implementation-artifacts/9-5-solution-build-green-on-clean-clone.md`
+**Artifact:** `_bmad-output/implementation-artifacts/9-8-solution-build-green-on-clean-clone.md`
 
 **Type:** New story file, `Status: ready-for-dev`
 
@@ -92,9 +92,9 @@ Rationale: B4 and B6 are template/discipline edits that take effect on the next 
 
 **Sprint-status update:**
 - Epic 9 story count comment updated `4 stories → 5 stories`
-- Epic 9 retro gating comment updated to require `9.3 done AND 9.4 done AND 9.5 done`
-- New entry: `9-5-solution-build-green-on-clean-clone: ready-for-dev`
-- Added comment: `Epic 7 / Epic 8 active work is gated on 9.5 done so CI can serve as a quality signal`
+- Epic 9 retro gating comment updated to require `9.3 done AND 9.4 done AND 9.8 done`
+- New entry: `9-8-solution-build-green-on-clean-clone: ready-for-dev`
+- Added comment: `Epic 7 / Epic 8 active work is gated on 9.8 done so CI can serve as a quality signal`
 
 **Rationale:** Carving as a story (rather than a tracker entry) preserves the Dev Agent Record discipline applied to every other Epic 9 story (compare 9.4's blocked-but-tracked artifact). Placing under Epic 9 (deployment / infrastructure) matches the work category — solution build is a deployment-adjacent quality signal — and keeps the new gating relationship visible in the same epic that already houses 9.4's blocked status.
 
@@ -110,7 +110,7 @@ Rationale: B4 and B6 are template/discipline edits that take effect on the next 
 **B8 (handed off to dev pickup):**
 - Owner: open (`ready-for-dev`); recommended pickup by Charlie (Senior Dev) per Epic 3 retro action assignment.
 - Success criterion: `dotnet build .\Hexalith.Parties.slnx --configuration Release` exits zero on a fresh clone with `git submodule update --init` (root-level only), no `-p:TreatWarningsAsErrors=false` overrides remain in scripts/docs/stories, and a CI check gates regression.
-- Gating relationship: Epic 7 Story 7.7 (currently blocked on EventStore-fronted client/gateway contract acceptance) and all Epic 8 stories (currently blocked on the same dependency) gain Story 9.5 as a *second* gate before resumption — CI signal is the prerequisite for relying on integration tests.
+- Gating relationship: Epic 7 Story 7.7 (currently blocked on EventStore-fronted client/gateway contract acceptance) and all Epic 8 stories (currently blocked on the same dependency) gain Story 9.8 as a *second* gate before resumption — CI signal is the prerequisite for relying on integration tests.
 
 ## 6. Status
 

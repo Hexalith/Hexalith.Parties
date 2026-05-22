@@ -250,12 +250,13 @@ development_status:
   # Story 9.7: Deployment Fitness Tests + Live-Cluster Integration — 8 fitness classes (default pass) + 3 trait-gated LiveCluster tests; hand-curated fixtures (blocked_by: 9-5, 9-6).
   9-7-deployment-fitness-and-live-cluster-integration: done
   # Story 9.8 added 2026-05-22 by Epic 3 retrospective action B8 (carried in via the Epic 3 follow-through
-  # sprint change proposal). Originally drafted as Story 9.5 against the pre-greenfield Epic 9 v1 plan
-  # and authored as such across sprint-change-proposal-2026-05-22.md, epic-3/4/5 retros, docs/build-gate.md,
-  # docs/ci.md, and .github/workflows/test.yml. Renumbered to 9.8 during the rebase onto Epic 9 v2 to avoid
-  # a semantic collision with v2 Story 9.5 (operator-scripts-publish-and-teardown). The story file path
-  # `_bmad-output/implementation-artifacts/9-5-solution-build-green-on-clean-clone.md` is retained for
-  # historical trace; all narrative "Story 9.5" labels in the artifacts above refer to this entry.
+  # sprint change proposal). Originally drafted as Story 9.5 against the pre-greenfield Epic 9 v1 plan;
+  # renumbered to 9.8 during the rebase onto Epic 9 v2 to avoid a semantic collision with v2 Story 9.5
+  # (operator-scripts-publish-and-teardown). The story file, sprint-change-proposal-2026-05-22.md,
+  # epic-4/5 retros, docs/build-gate.md, docs/ci.md, .github/workflows/test.yml, and the regression guard
+  # script were all updated to the 9.8 numbering in the same follow-up commit; the renumber note in the
+  # story file header documents the rebase-time renumber. Other historical artifacts (submodules,
+  # deferred-work.md, prior planning docs) retain the original 9.5 numbering.
   # Epic 7 / Epic 8 active work is gated on 9.8 done so CI can serve as a quality signal.
   # Escalated to program-level critical-path gate by Epic 5 retro action B13 (2026-05-22).
   9-8-solution-build-green-on-clean-clone: review
