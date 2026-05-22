@@ -11,9 +11,6 @@ resources:
   - parties
   - parties-mcp
   - tenants
-  # Hand-authored carve-outs - added by Story 9.3. Uncomment THESE TWO LINES when Story 9.3 lands its
-  # deploy/k8s/redis/ and deploy/k8s/keycloak/ folders. AC11 row C12 grep-asserts they remain commented
-  # at Story 9.2 close; Story 9.3's Definition of Done MUST flip them to uncommented + assert
-  # `kubectl kustomize deploy/k8s/ --dry-run=client` exits 0.
-  # - redis
-  # - keycloak
+  # Hand-authored carve-outs - Story 9.3:
+  - redis
+  - keycloak

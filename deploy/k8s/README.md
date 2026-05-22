@@ -5,9 +5,10 @@
 > [Kubernetes Deployment Architecture](../../docs/kubernetes-deployment-architecture.md).
 
 This folder is the operator entry-point for deploying Hexalith.Parties to a Kubernetes
-cluster. Today on `main`, the folder contains only this README — the application manifests,
-operator scripts, and shared helpers are filled in across **Stories 9.2 → 9.5** (see the
-roadmap callout below).
+cluster. Today on `main`, it contains the Story 9.2 Aspirate-emitted application service
+folders, the Story 9.3 hand-authored Redis and Keycloak carve-outs, and top-level namespace
+and Kustomize wiring. Operator scripts and shared helpers are filled in by **Story 9.5**
+(see the roadmap callout below).
 
 The image substrate (Zot OCI registry serving `registry.hexalith.com`) is delivered by
 **Story 9.1** — see [`../zot/README.md`](../zot/README.md).
@@ -46,9 +47,8 @@ by the infra team — see [`../zot/README.md`](../zot/README.md) "Out-of-band Se
 ## Publish + teardown (one-command flow)
 
 > **Status (forward reference — Story 9.5):** This command becomes available when Story 9.5
-> lands. Until then, manifests under `deploy/k8s/` are intentionally empty pending Stories
-> 9.2 / 9.3 / 9.4 / 9.5; manifest correctness is verified manually against the cleanliness
-> regex table in `_bmad-output/implementation-artifacts/9-1-zot-oci-registry-and-deployment-documentation.md` AC9.
+> lands. Until then, committed manifests under `deploy/k8s/` are validated manually with
+> `kubectl kustomize deploy/k8s/` and the story-specific cleanliness checks.
 
 ```pwsh
 pwsh deploy/k8s/publish.ps1 -ConfirmContext <name>
@@ -67,21 +67,63 @@ The active context is echoed once at the start of every run for auditability (pe
 
 ---
 
-<!-- This folder listing anticipates Stories 9.2–9.5; entries are not present on main until that story ships. -->
-
 > **🗺️ Roadmap — this folder fills in across Stories 9.2 → 9.5**
->
-> Today on `main`, this folder contains only this README. The following entries land in
-> subsequent v2 stories:
 >
 > | Path | Owning story | Purpose |
 > |---|---|---|
-> | `eventstore/`, `eventstore-admin/`, `eventstore-admin-ui/`, `parties/`, `parties-mcp/`, `tenants/`, `memories/` | Story 9.2 | Aspirate-emitted per-service manifests |
-> | `redis/`, `keycloak/` | Story 9.3 | Hand-authored carve-outs |
-> | `namespace.yaml`, `kustomization.yaml` | Story 9.2 | Top-level wiring |
-> | `publish.ps1`, `teardown.ps1`, `_lib/Confirm-KubeContext.ps1` | Story 9.5 | Operator scripts + shared context-gate helper |
+> | `../zot/` | Story 9.1 | Delivered: Zot OCI registry, credentials, and deployment documentation |
+> | `eventstore/`, `eventstore-admin/`, `eventstore-admin-ui/`, `parties/`, `parties-mcp/`, `tenants/`, `memories/` | Story 9.2 | Delivered: Aspirate-emitted per-service manifests |
+> | `namespace.yaml`, `kustomization.yaml` | Story 9.2 | Delivered: top-level namespace and Kustomize wiring |
+> | `redis/`, `keycloak/` | Story 9.3 | Delivered: hand-authored vendor carve-outs outside Aspirate regeneration |
+> | `deploy/dapr/` control-plane CRs | Story 9.4 | Forward reference: Dapr Components, ACL, Subscriptions, and Resiliency |
+> | `publish.ps1`, `teardown.ps1`, `_lib/Confirm-KubeContext.ps1` | Story 9.5 | Forward reference: operator scripts + shared context-gate helper |
 >
 > Track progress in `_bmad-output/implementation-artifacts/sprint-status.yaml`.
+
+---
+
+## Hand-authored carve-outs
+
+`redis/` and `keycloak/` are intentionally hand-authored vendor carve-outs. They are not
+Aspirate-emitted application folders and should survive every future publish regeneration.
+
+The Story 9.5 clean phase must preserve:
+
+- `deploy/k8s/redis/`
+- `deploy/k8s/keycloak/`
+- `deploy/k8s/kustomization.yaml`
+- `deploy/k8s/namespace.yaml`
+- `deploy/k8s/README.md`
+- `deploy/k8s/publish.ps1`
+- `deploy/k8s/teardown.ps1`
+
+All other files and folders under `deploy/k8s/` are eligible for cleanup before Aspirate
+regeneration, except the seven application service folders after they are regenerated.
+
+Redis is MVP/non-production only: it uses `emptyDir` storage, no AUTH, no replication, and no
+HA shape. Data is lost when the Pod is recreated or rescheduled. Production persistence,
+AUTH, network policy, and HA hardening are deferred to
+[Kubernetes Deployment Architecture](../../docs/kubernetes-deployment-architecture.md)
+section 12.
+
+Keycloak admin credentials are not committed as YAML. Story 9.5 bootstraps the
+`hexalith-keycloak-admin` Secret imperatively. It creates
+`KC_BOOTSTRAP_ADMIN_USERNAME=admin` and a random 24-byte
+`KC_BOOTSTRAP_ADMIN_PASSWORD` on first publish, then preserves both values on re-publish.
+Until that script exists, operators may temporarily precreate the Secret without printing
+or committing real values:
+
+```bash
+KEYCLOAK_ADMIN_PASSWORD="$(openssl rand -base64 24)"
+kubectl create secret generic hexalith-keycloak-admin --dry-run=client -o yaml \
+  --from-literal=KC_BOOTSTRAP_ADMIN_USERNAME=admin \
+  --from-file=KC_BOOTSTRAP_ADMIN_PASSWORD=<(printf '%s' "$KEYCLOAK_ADMIN_PASSWORD") \
+  -n hexalith-parties |
+  kubectl apply -f -
+unset KEYCLOAK_ADMIN_PASSWORD
+```
+
+Do not put real values in docs, shell history, manifests, Kustomize generators, or env files.
 
 ---
 
