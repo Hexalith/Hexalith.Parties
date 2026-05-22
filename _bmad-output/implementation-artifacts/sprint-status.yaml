@@ -149,7 +149,7 @@ development_status:
   8-3-emit-durable-selection-by-party-id: blocked
   8-4-handle-picker-states-and-stale-responses: blocked
   8-5-enforce-picker-accessibility-and-localization: blocked
-  8-6-enforce-picker-privacy-and-integration-boundary: backlog
+  8-6-enforce-picker-privacy-and-integration-boundary: blocked
   epic-8-retrospective: optional
 
   # Epic 9: Kubernetes Deployment (4 stories — 9.4 added 2026-05-19 by Story 9.3 Outcome B carve-out)
