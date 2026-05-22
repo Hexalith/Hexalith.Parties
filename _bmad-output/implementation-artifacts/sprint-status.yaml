@@ -127,7 +127,7 @@ development_status:
   1-7-idempotent-commands-and-typed-rejections: done
   1-8-personal-data-marking-and-log-safe-domain-model: done
   1-9-return-updated-party-state-from-mutations: done
-  epic-1-retrospective: optional
+  epic-1-retrospective: done
 
   # Epic 2: Tenant-Safe Party Search and Retrieval (9 stories)
   epic-2: in-progress
@@ -140,7 +140,7 @@ development_status:
   2-7-handle-projection-freshness-and-graceful-degradation: done
   2-8-projection-rebuild-and-health-monitoring: done
   2-9-prepare-deferred-search-and-temporal-query-extensions: done
-  epic-2-retrospective: optional
+  epic-2-retrospective: done
 
   # Epic 3: Developer Integration and Local Adoption (10 stories)
   epic-3: in-progress
@@ -154,7 +154,7 @@ development_status:
   3-8-provide-runnable-sample-integration: done
   3-9-add-deployment-security-validation: done
   3-10-display-mvp-compliance-warning: done
-  epic-3-retrospective: optional
+  epic-3-retrospective: done
 
   # Epic 4: AI Agent Party Management (8 stories)
   epic-4: in-progress
@@ -166,7 +166,7 @@ development_status:
   4-6-implement-delete-party-as-soft-deactivation-tool: done
   4-7-enforce-mcp-boundary-and-tool-safety: done
   4-8-validate-mcp-latency-errors-and-complete-responses: done
-  epic-4-retrospective: optional
+  epic-4-retrospective: done
 
   # Epic 5: Event-Driven Consumer Integration (7 stories)
   epic-5: in-progress
@@ -177,7 +177,7 @@ development_status:
   5-5-provide-consumer-read-model-handler-guidance: done
   5-6-prepare-forward-compatible-party-lifecycle-events: done
   5-7-document-erasure-subscriber-responsibilities: done
-  epic-5-retrospective: optional
+  epic-5-retrospective: done
 
   # Epic 6: GDPR Compliance Operations (10 stories)
   epic-6: in-progress
@@ -249,5 +249,15 @@ development_status:
   9-6-validate-deployment-lint-tooling: done
   # Story 9.7: Deployment Fitness Tests + Live-Cluster Integration — 8 fitness classes (default pass) + 3 trait-gated LiveCluster tests; hand-curated fixtures (blocked_by: 9-5, 9-6).
   9-7-deployment-fitness-and-live-cluster-integration: done
-  # Epic 9 v2 retro is gated on ALL of 9-1..9-7 v2 done.
+  # Story 9.8 added 2026-05-22 by Epic 3 retrospective action B8 (carried in via the Epic 3 follow-through
+  # sprint change proposal). Originally drafted as Story 9.5 against the pre-greenfield Epic 9 v1 plan
+  # and authored as such across sprint-change-proposal-2026-05-22.md, epic-3/4/5 retros, docs/build-gate.md,
+  # docs/ci.md, and .github/workflows/test.yml. Renumbered to 9.8 during the rebase onto Epic 9 v2 to avoid
+  # a semantic collision with v2 Story 9.5 (operator-scripts-publish-and-teardown). The story file path
+  # `_bmad-output/implementation-artifacts/9-5-solution-build-green-on-clean-clone.md` is retained for
+  # historical trace; all narrative "Story 9.5" labels in the artifacts above refer to this entry.
+  # Epic 7 / Epic 8 active work is gated on 9.8 done so CI can serve as a quality signal.
+  # Escalated to program-level critical-path gate by Epic 5 retro action B13 (2026-05-22).
+  9-8-solution-build-green-on-clean-clone: review
+  # Epic 9 v2 retro is gated on ALL of 9-1..9-7 v2 done AND 9-8 done.
   epic-9-retrospective: optional

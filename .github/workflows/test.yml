@@ -52,6 +52,9 @@ jobs:
       - name: Build with analyzers
         run: dotnet build "$SOLUTION_FILE" --configuration Release --no-restore
 
+      - name: Story 9.5 build-gate (no warning-override regression)
+        run: bash scripts/check-no-warning-override.sh
+
   test:
     name: Test (${{ matrix.name }})
     runs-on: ubuntu-latest

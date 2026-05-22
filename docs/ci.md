@@ -10,7 +10,7 @@ Hexalith.Parties uses GitHub Actions for the main quality pipeline in `.github/w
 
 ## Jobs
 
-- `lint`: checks out root-level submodules, restores the solution, and runs a Release build with analyzers.
+- `lint`: checks out root-level submodules, restores the solution, runs a Release build with analyzers, and runs the Story 9.5 build-gate regression guard (`scripts/check-no-warning-override.sh`). See [`docs/build-gate.md`](build-gate.md) for the gate policy.
 - `test`: runs the .NET test projects in four matrix shards with `fail-fast: false`.
 - `contract-test`: runs Pact.js contract scripts when they exist. Until the Pact framework is scaffolded, the job records a readiness gap in the GitHub step summary.
 - `Quality Gate`: fails the workflow unless lint/build and test shards pass, and contract tests either pass or are intentionally skipped.
