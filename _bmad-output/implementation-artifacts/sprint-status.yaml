@@ -133,7 +133,7 @@ development_status:
   7-1-compose-admin-console-working-view: done
   7-2-browse-and-filter-party-results: done
   7-3-inspect-party-detail-safely: done
-  7-4-handle-admin-empty-error-and-degraded-states: backlog
+  7-4-handle-admin-empty-error-and-degraded-states: done
   7-5-add-safe-eventstore-admin-ui-links: backlog
   7-6-gate-gdpr-operations-on-accepted-client-contract: backlog
   7-7-implement-gdpr-operation-panels: backlog

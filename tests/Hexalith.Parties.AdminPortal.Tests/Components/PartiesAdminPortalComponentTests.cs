@@ -467,6 +467,31 @@ public sealed class PartiesAdminPortalComponentTests : BunitContext
     }
 
     [Fact]
+    public void PartiesAdminPortal_EmptySearch_UsesLocalizedTenantNeutralNoMatches()
+    {
+        var api = new RecordingAdminPortalApiClient();
+        api.EnqueueList(Page(IndexEntry("party-existing", "Existing Row", PartyType.Person, true)));
+        api.EnqueueSearch(Page<PartySearchResult>());
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+
+        IRenderedComponent<PartiesAdminPortal> cut = RenderAuthorized("scope-a");
+        cut.WaitForAssertion(() => cut.Markup.ShouldContain("Existing Row"));
+
+        SetSearch(cut, "missing@example.test");
+        ClickFluentButton(cut, "Search");
+
+        cut.WaitForAssertion(() =>
+        {
+            cut.Find(".hx-parties-admin__status").TextContent.ShouldContain("Parties loaded");
+            cut.Find(".hx-parties-admin__empty").TextContent.Trim().ShouldBe("No parties match the current filters");
+            cut.Markup.ShouldNotContain("Existing Row");
+            cut.Markup.ShouldNotContain("another tenant", Case.Insensitive);
+            cut.Markup.ShouldNotContain("scope-a");
+        });
+        api.SearchRequests.Single().Query.ShouldBe("missing@example.test");
+    }
+
+    [Fact]
     public void PartiesAdminPortal_HealthyRichSearchProbe_EnablesRichSearchModesForCircuit()
     {
         var api = new RecordingAdminPortalApiClient();
@@ -506,6 +531,28 @@ public sealed class PartiesAdminPortalComponentTests : BunitContext
             cut.Markup.ShouldNotContain("Display-name search only");
             FindFluentButton(cut, "Email").HasAttribute("disabled").ShouldBeTrue();
             FindFluentButton(cut, "Identifier").HasAttribute("disabled").ShouldBeTrue();
+        });
+    }
+
+    [Fact]
+    public void PartiesAdminPortal_DegradedListMetadata_ShowsBoundedStatusWithoutRawReason()
+    {
+        var api = new RecordingAdminPortalApiClient();
+        api.EnqueueList(
+            Page(IndexEntry("party-degraded-list", "Degraded List Row", PartyType.Person, true)),
+            new AdminPortalQueryMetadata(
+                ServiceDegraded: true,
+                SearchDegradedReason: "raw backend says ada@example.test is stale and tenant scope-a failed"));
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+
+        IRenderedComponent<PartiesAdminPortal> cut = RenderAuthorized("scope-a");
+
+        cut.WaitForAssertion(() =>
+        {
+            cut.Markup.ShouldContain("Degraded List Row");
+            cut.Find(".hx-parties-admin__status").TextContent.ShouldContain("Data may be stale or degraded");
+            cut.Markup.ShouldNotContain("ada@example.test");
+            cut.Markup.ShouldNotContain("scope-a failed");
         });
     }
 
@@ -1278,6 +1325,88 @@ public sealed class PartiesAdminPortalComponentTests : BunitContext
 
         cut.WaitForAssertion(() => cut.Markup.ShouldContain("Retry Success"));
         api.ListRequests.Count.ShouldBe(2);
+    }
+
+    [Fact]
+    public void PartiesAdminPortal_ListContractUnavailable_ClearsSensitiveDetailAndShowsBoundedFailure()
+    {
+        var api = new RecordingAdminPortalApiClient();
+        api.EnqueueList(Page(IndexEntry("party-before-failure", "Before Failure", PartyType.Person, true)));
+        api.EnqueueDetail(Detail("party-before-failure", "Before Failure", PartyType.Person, isActive: true) with
+        {
+            ContactChannels = [new ContactChannel { Id = "contact-before", Type = ContactChannelType.Email, Value = "before-failure@example.test", IsPreferred = true }],
+        });
+        api.EnqueueListFailure(AdminPortalQueryFailureKind.ContractUnavailable);
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+
+        IRenderedComponent<PartiesAdminPortal> cut = RenderAuthorized("scope-a");
+        cut.WaitForAssertion(() => cut.Markup.ShouldContain("Before Failure"));
+        ClickFluentButton(cut, "Before Failure");
+        cut.WaitForAssertion(() => cut.Find("aside.hx-parties-admin__detail").TextContent.ShouldContain("before-failure@example.test"));
+
+        ClickFluentButton(cut, "Search");
+
+        cut.WaitForAssertion(() =>
+        {
+            cut.Find(".hx-parties-admin__status").TextContent.ShouldContain("Party data could not be loaded");
+            cut.Find("aside.hx-parties-admin__detail").TextContent.ShouldContain("Select a party");
+            cut.Markup.ShouldNotContain("before-failure@example.test");
+            cut.Markup.ShouldNotContain("ContractUnavailable");
+            cut.FindAll("fluent-button").Any(button => button.TextContent.Contains("Retry", StringComparison.Ordinal)).ShouldBeFalse();
+        });
+    }
+
+    [Fact]
+    public void PartiesAdminPortal_ListUnknownFailure_UsesRetryAndDoesNotRenderRawParserText()
+    {
+        var api = new RecordingAdminPortalApiClient();
+        api.EnqueueListFailure(AdminPortalQueryFailureKind.Unknown);
+        api.EnqueueList(Page(IndexEntry("party-recovered", "Recovered Row", PartyType.Organization, true)));
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+
+        IRenderedComponent<PartiesAdminPortal> cut = RenderAuthorized("scope-a");
+
+        cut.WaitForAssertion(() =>
+        {
+            cut.Find(".hx-parties-admin__status").TextContent.ShouldContain("Party data could not be loaded");
+            cut.Markup.ShouldNotContain("System.Text.Json");
+            cut.Markup.ShouldNotContain("ProblemDetails");
+            FindFluentButton(cut, "Retry");
+        });
+        ClickFluentButton(cut, "Retry");
+
+        cut.WaitForAssertion(() =>
+        {
+            cut.Markup.ShouldContain("Recovered Row");
+            api.ListRequests.Count.ShouldBe(2);
+        });
+    }
+
+    [Fact]
+    public void PartiesAdminPortal_MissingTenantAfterDetail_ClearsSensitiveState()
+    {
+        var api = new RecordingAdminPortalApiClient();
+        api.EnqueueList(Page(IndexEntry("party-sensitive", "Sensitive Row", PartyType.Person, true)));
+        api.EnqueueDetail(Detail("party-sensitive", "Sensitive Row", PartyType.Person, isActive: true) with
+        {
+            ContactChannels = [new ContactChannel { Id = "contact-sensitive", Type = ContactChannelType.Email, Value = "sensitive@example.test", IsPreferred = true }],
+        });
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+
+        IRenderedComponent<PartiesAdminPortal> cut = RenderAuthorized("scope-a");
+        cut.WaitForAssertion(() => cut.Markup.ShouldContain("Sensitive Row"));
+        ClickFluentButton(cut, "Sensitive Row");
+        cut.WaitForAssertion(() => cut.Find("aside.hx-parties-admin__detail").TextContent.ShouldContain("sensitive@example.test"));
+
+        cut.InvokeAsync(() => _authProvider.SetAuthenticated(AdminUserId, "scope-missing"));
+
+        cut.WaitForAssertion(() =>
+        {
+            cut.Find(".hx-parties-admin__status").TextContent.ShouldContain("Tenant context is unavailable");
+            cut.Find("aside.hx-parties-admin__detail").TextContent.ShouldContain("Tenant context is unavailable");
+            cut.Markup.ShouldNotContain("Sensitive Row");
+            cut.Markup.ShouldNotContain("sensitive@example.test");
+        });
     }
 
     [Fact]
