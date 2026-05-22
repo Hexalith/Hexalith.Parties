@@ -139,7 +139,7 @@ development_status:
   7-7-implement-gdpr-operation-panels: blocked
   7-8-localize-admin-console-text-and-status: done
   7-9-enforce-admin-console-accessibility: done
-  7-10-enforce-admin-console-privacy-and-encoding-rules: backlog
+  7-10-enforce-admin-console-privacy-and-encoding-rules: done
   epic-7-retrospective: optional
 
   # Epic 8: Embeddable Party Picker (6 stories)

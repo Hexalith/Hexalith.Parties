@@ -3,6 +3,7 @@ using Bunit;
 using AngleSharp.Dom;
 
 using System.Globalization;
+using System.IO;
 using System.Security.Claims;
 
 using Hexalith.Parties.AdminPortal.Components;
@@ -621,6 +622,78 @@ public sealed class PartiesAdminPortalComponentTests : BunitContext
             cut.Markup.ShouldNotContain("<script>alert(1)</script>");
             cut.Markup.ShouldNotContain("<b>Ada</b>");
         });
+    }
+
+    [Fact]
+    public void PartiesAdminPortal_RowAccessibilityAttributes_DoNotLeakPartyIdOrRawName()
+    {
+        var api = new RecordingAdminPortalApiClient();
+        api.EnqueueList(Page(IndexEntry(
+            "tenant-a:party:pii-123",
+            "<script>alert(1)</script>",
+            PartyType.Person,
+            true)));
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+
+        IRenderedComponent<PartiesAdminPortal> cut = RenderAuthorized("scope-a");
+
+        cut.WaitForAssertion(() =>
+        {
+            IElement button = FindFluentButton(cut, "alert");
+            string describedBy = button.GetAttribute("aria-describedby")!;
+            describedBy.ShouldNotContain("tenant-a");
+            describedBy.ShouldNotContain("pii-123");
+            describedBy.ShouldNotContain("script", Case.Insensitive);
+            cut.Find($"#{describedBy}").TextContent.Trim().ShouldBe("Active");
+            cut.Markup.ShouldContain("&lt;script&gt;alert(1)&lt;/script&gt;");
+            cut.Markup.ShouldNotContain("<script>alert(1)</script>");
+            cut.Markup.ShouldNotContain("tenant-a:party:pii-123");
+        });
+    }
+
+    [Fact]
+    public void PartiesAdminPortal_SourceDoesNotUseUnsafeRenderingStorageLoggingOrTelemetryApis()
+    {
+        string root = LocateRepositoryRoot();
+        string sourceRoot = Path.Combine(root, "src", "Hexalith.Parties.AdminPortal");
+        string[] forbiddenTokens =
+        [
+            "MarkupString",
+            "AddMarkupContent",
+            "RenderTreeBuilder",
+            "innerHTML",
+            "outerHTML",
+            "localStorage",
+            "sessionStorage",
+            "ILogger",
+            "LoggerMessage",
+            "TelemetryClient",
+            "ActivitySource",
+        ];
+
+        List<string> offenders = [];
+        foreach (string path in Directory.EnumerateFiles(sourceRoot, "*.*", SearchOption.AllDirectories)
+            .Where(static path => path.EndsWith(".razor", StringComparison.OrdinalIgnoreCase)
+                || path.EndsWith(".cs", StringComparison.OrdinalIgnoreCase)))
+        {
+            string relative = Path.GetRelativePath(root, path);
+            if (relative.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}", StringComparison.Ordinal)
+                || relative.Contains($"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}", StringComparison.Ordinal))
+            {
+                continue;
+            }
+
+            string text = File.ReadAllText(path);
+            foreach (string token in forbiddenTokens)
+            {
+                if (text.Contains(token, StringComparison.Ordinal))
+                {
+                    offenders.Add($"{relative}: {token}");
+                }
+            }
+        }
+
+        offenders.ShouldBeEmpty("AdminPortal must not render raw markup, persist browser storage data, or add logging/telemetry before a bounded privacy design exists.");
     }
 
     [Fact]
@@ -2217,6 +2290,22 @@ public sealed class PartiesAdminPortalComponentTests : BunitContext
         };
         state.Members[userId] = role;
         _tenantStore.SaveAsync(state).GetAwaiter().GetResult();
+    }
+
+    private static string LocateRepositoryRoot()
+    {
+        DirectoryInfo? directory = new(AppContext.BaseDirectory);
+        while (directory is not null)
+        {
+            if (File.Exists(Path.Combine(directory.FullName, "Hexalith.Parties.slnx")))
+            {
+                return directory.FullName;
+            }
+
+            directory = directory.Parent;
+        }
+
+        throw new InvalidOperationException("Repository root not found.");
     }
 
     private static PartyIndexEntry IndexEntry(string id, string name, PartyType type, bool active) => new()
