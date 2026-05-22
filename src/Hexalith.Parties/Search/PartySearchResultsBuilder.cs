@@ -11,12 +11,48 @@ internal static class PartySearchResultsBuilder
         bool? activeFilter,
         int page,
         int pageSize)
-    {
-        List<PartyIndexEntry> sorted = [.. ApplyFilters(entries, typeFilter, activeFilter)
-            .OrderBy(GetSortableName, StringComparer.OrdinalIgnoreCase)
-            .ThenBy(e => e.DisplayName, StringComparer.OrdinalIgnoreCase)];
+        => BuildPagedList(
+            entries,
+            typeFilter,
+            activeFilter,
+            createdAfter: null,
+            createdBefore: null,
+            modifiedAfter: null,
+            modifiedBefore: null,
+            page,
+            pageSize);
 
-        return CreatePagedResult(sorted, page, pageSize);
+    public static PagedResult<PartyIndexEntry> BuildPagedList(
+        IEnumerable<PartyIndexEntry> entries,
+        PartyType? typeFilter,
+        bool? activeFilter,
+        DateTimeOffset? createdAfter,
+        DateTimeOffset? createdBefore,
+        DateTimeOffset? modifiedAfter,
+        DateTimeOffset? modifiedBefore,
+        int page,
+        int pageSize)
+    {
+        ArgumentNullException.ThrowIfNull(entries);
+
+        int normalizedPage = Math.Max(1, page);
+        int normalizedPageSize = Math.Clamp(pageSize, 1, 100);
+
+        List<PartyIndexEntry> sorted = [.. ApplyListFilters(
+                entries,
+                typeFilter,
+                activeFilter,
+                createdAfter,
+                createdBefore,
+                modifiedAfter,
+                modifiedBefore)
+            // P12: Sort by normalized display name, then party id — matches the spec's
+            // "normalized display name, then party id" tie-break and the LocalFuzzyPartySearchProvider
+            // sort. Avoids the prior SortName-vs-DisplayName divergence between list and search paths.
+            .OrderBy(e => LocalFuzzyPartySearchProvider.NormalizeDiacritics(e.DisplayName), StringComparer.OrdinalIgnoreCase)
+            .ThenBy(e => e.Id, StringComparer.Ordinal)];
+
+        return CreatePagedResult(sorted, normalizedPage, normalizedPageSize);
     }
 
     public static PagedResult<PartySearchResult> BuildSearchResults(
@@ -42,8 +78,9 @@ internal static class PartySearchResultsBuilder
             .OrderBy(m => m.Priority)
             .ThenByDescending(m => m.FieldCount)
             .ThenByDescending(m => m.TokenCount)
-            .ThenBy(m => GetSortableName(m.Result.Party), StringComparer.OrdinalIgnoreCase)
-            .ThenBy(m => m.Result.Party.DisplayName, StringComparer.OrdinalIgnoreCase)
+            // P12: Tie-break by normalized display name then party id, matching the search provider.
+            .ThenBy(m => LocalFuzzyPartySearchProvider.NormalizeDiacritics(m.Result.Party.DisplayName), StringComparer.OrdinalIgnoreCase)
+            .ThenBy(m => m.Result.Party.Id, StringComparer.Ordinal)
             .Select(m => m.Result)];
 
         return CreatePagedResult(sorted, page, pageSize);
@@ -69,8 +106,40 @@ internal static class PartySearchResultsBuilder
         return filtered;
     }
 
-    private static string GetSortableName(PartyIndexEntry entry)
-        => string.IsNullOrWhiteSpace(entry.SortName) ? entry.DisplayName : entry.SortName;
+    private static IEnumerable<PartyIndexEntry> ApplyListFilters(
+        IEnumerable<PartyIndexEntry> entries,
+        PartyType? typeFilter,
+        bool? activeFilter,
+        DateTimeOffset? createdAfter,
+        DateTimeOffset? createdBefore,
+        DateTimeOffset? modifiedAfter,
+        DateTimeOffset? modifiedBefore)
+    {
+        IEnumerable<PartyIndexEntry> filtered = ApplyFilters(entries, typeFilter, activeFilter)
+            .Where(static e => !e.IsErased);
+
+        if (createdAfter is not null)
+        {
+            filtered = filtered.Where(e => e.CreatedAt >= createdAfter.Value);
+        }
+
+        if (createdBefore is not null)
+        {
+            filtered = filtered.Where(e => e.CreatedAt <= createdBefore.Value);
+        }
+
+        if (modifiedAfter is not null)
+        {
+            filtered = filtered.Where(e => e.LastModifiedAt >= modifiedAfter.Value);
+        }
+
+        if (modifiedBefore is not null)
+        {
+            filtered = filtered.Where(e => e.LastModifiedAt <= modifiedBefore.Value);
+        }
+
+        return filtered;
+    }
 
     private static (PartySearchResult Result, int Priority, int FieldCount, int TokenCount)? EvaluateEntry(
         PartyIndexEntry entry,
@@ -89,17 +158,6 @@ internal static class PartySearchResultsBuilder
                 matchedTokens.Add(candidate);
             }
 
-            if (TryMatchContactChannel(entry.SearchableContactChannels, candidate, out int emailPriority))
-            {
-                UpsertMatch(fieldMatches, "email", emailPriority);
-                matchedTokens.Add(candidate);
-            }
-
-            if (TryMatchIdentifier(entry.SearchableIdentifiers, candidate, out int identifierPriority))
-            {
-                UpsertMatch(fieldMatches, "identifier", identifierPriority);
-                matchedTokens.Add(candidate);
-            }
         }
 
         if (fieldMatches.Count == 0)
@@ -125,40 +183,6 @@ internal static class PartySearchResultsBuilder
             fieldMatches.Values.Min(),
             fieldMatches.Count,
             matchedTokens.Count);
-    }
-
-    private static bool TryMatchContactChannel(IEnumerable<ContactChannel> channels, string candidate, out int priority)
-    {
-        priority = int.MaxValue;
-        bool matched = false;
-
-        foreach (ContactChannel channel in channels.Where(c => c.Type == ContactChannelType.Email))
-        {
-            if (TryMatchValue(channel.Value, candidate, out int currentPriority))
-            {
-                priority = Math.Min(priority, currentPriority);
-                matched = true;
-            }
-        }
-
-        return matched;
-    }
-
-    private static bool TryMatchIdentifier(IEnumerable<PartyIdentifier> identifiers, string candidate, out int priority)
-    {
-        priority = int.MaxValue;
-        bool matched = false;
-
-        foreach (PartyIdentifier identifier in identifiers)
-        {
-            if (TryMatchValue(identifier.Value, candidate, out int currentPriority))
-            {
-                priority = Math.Min(priority, currentPriority);
-                matched = true;
-            }
-        }
-
-        return matched;
     }
 
     private static bool TryMatchValue(string? source, string candidate, out int priority)
@@ -209,15 +233,23 @@ internal static class PartySearchResultsBuilder
 
     private static PagedResult<T> CreatePagedResult<T>(IReadOnlyList<T> items, int page, int pageSize)
     {
+        // P1/P15: Clamp pageSize to [1, 100] and page to [1, ...]. Returning the safe values
+        // ensures `TotalPages = ceil(TotalCount / PageSize)` is consistent with the data the
+        // client receives — the previous "echo caller-supplied" behavior produced inconsistent
+        // metadata where Items.Count would not match the advertised PageSize for pageSize > 100.
+        int safePageSize = Math.Clamp(pageSize, 1, 100);
+        int safePage = Math.Max(1, page);
         int totalCount = items.Count;
-        int totalPages = totalCount == 0 ? 1 : (int)Math.Ceiling((double)totalCount / pageSize);
-        List<T> pagedItems = [.. items.Skip((page - 1) * pageSize).Take(pageSize)];
+        int totalPages = totalCount == 0 ? 1 : (int)Math.Ceiling((double)totalCount / safePageSize);
+        long skipLong = (long)(safePage - 1) * safePageSize;
+        int skip = skipLong > int.MaxValue ? int.MaxValue : (int)skipLong;
+        List<T> pagedItems = [.. items.Skip(skip).Take(safePageSize)];
 
         return new PagedResult<T>
         {
             Items = pagedItems,
-            Page = page,
-            PageSize = pageSize,
+            Page = safePage,
+            PageSize = safePageSize,
             TotalCount = totalCount,
             TotalPages = totalPages,
         };

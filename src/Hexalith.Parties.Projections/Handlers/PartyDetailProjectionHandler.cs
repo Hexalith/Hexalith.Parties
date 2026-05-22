@@ -89,6 +89,11 @@ public sealed class PartyDetailProjectionHandler
 
     private static PartyDetail? HandleNameDerived(PartyDetail state, PartyDisplayNameDerived e)
     {
+        if (state.IsErased)
+        {
+            return null;
+        }
+
         // Deduplicate: skip when neither DisplayName nor SortName has changed.
         // Sort-only changes (locale tweak, contracted family-name spelling) ARE tracked,
         // because directory-style queries that order by SortName need the history.
@@ -308,6 +313,7 @@ public sealed class PartyDetailProjectionHandler
             LawfulBasis = e.LawfulBasis,
             GrantedAt = e.GrantedAt,
             GrantedBy = e.GrantedBy,
+            Source = e.Source,
         };
         return state with
         {
@@ -329,6 +335,8 @@ public sealed class PartyDetailProjectionHandler
         {
             RevokedAt = e.RevokedAt,
             RevokedBy = e.RevokedBy,
+            RevocationReason = e.Reason,
+            RevocationSource = e.Source,
         };
 
         return state with

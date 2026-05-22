@@ -264,6 +264,60 @@ public class KeyManagementIntegrationTests
         cert2.VerificationStatus.ShouldBe(ErasureVerificationStatus.Verified);
     }
 
+    [Fact]
+    public async Task DeleteKeyAsync_DestroyedKeyMakesPreviouslyEncryptedPayloadUnreadable()
+    {
+        LocalDevKeyStorageBackend backend = new();
+        DaprClient daprClient = Substitute.For<DaprClient>();
+        ConfigureAuditMock(daprClient);
+        KeyOperationAuditService auditService = new(daprClient);
+        CorrelationContextAccessor correlationAccessor = new();
+        PartyKeyManagementService keyService = new(backend, auditService, correlationAccessor);
+        IPartyKeyRetryScheduler retryScheduler = Substitute.For<IPartyKeyRetryScheduler>();
+        PartyKeyLifecycleService lifecycleService = new(keyService, retryScheduler, NullLogger<PartyKeyLifecycleService>.Instance);
+        IOptionsMonitor<CryptoShreddingOptions> cryptoOptions = Substitute.For<IOptionsMonitor<CryptoShreddingOptions>>();
+        cryptoOptions.CurrentValue.Returns(new CryptoShreddingOptions());
+        PartyPayloadProtectionService protectionService = new(
+            keyService,
+            backend,
+            lifecycleService,
+            new DecryptionCircuitBreaker(NullLogger<DecryptionCircuitBreaker>.Instance),
+            cryptoOptions,
+            NullLogger<PartyPayloadProtectionService>.Instance);
+
+        await keyService.CreateKeyAsync("acme", "p1");
+        ContactChannelAdded payload = new()
+        {
+            ContactChannelId = "cc-erase",
+            Type = ContactChannelType.Email,
+            Value = "erase-me@example.com",
+        };
+        byte[] serialized = JsonSerializer.SerializeToUtf8Bytes(payload);
+        AggregateIdentity identity = new("acme", "party", "p1");
+        PayloadProtectionResult encrypted = await protectionService.ProtectEventPayloadAsync(
+            identity,
+            payload,
+            typeof(ContactChannelAdded).FullName!,
+            serialized,
+            "json");
+
+        ErasureCertificate certificate = await keyService.DeleteKeyAsync("acme", "p1");
+
+        certificate.VerificationStatus.ShouldBe(ErasureVerificationStatus.Verified);
+        certificate.KeyVersionsDestroyed.ShouldBe([1]);
+        (await backend.ListKeyVersionsAsync("acme", "p1")).ShouldBeEmpty();
+        string encryptedJson = Encoding.UTF8.GetString(encrypted.PayloadBytes);
+        encryptedJson.ShouldNotContain("erase-me@example.com");
+
+        PartyEncryptionKeyDestroyedException ex = await Should.ThrowAsync<PartyEncryptionKeyDestroyedException>(
+            () => protectionService.UnprotectEventPayloadAsync(
+                identity,
+                typeof(ContactChannelAdded).FullName!,
+                encrypted.PayloadBytes,
+                encrypted.SerializationFormat));
+        ex.Message.ShouldNotContain("erase-me@example.com");
+    }
+
     /// <summary>
     /// 8.4: Key caching performance — cache hit returns in under 50ms
     /// even when backend has simulated latency.

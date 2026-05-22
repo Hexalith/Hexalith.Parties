@@ -15,6 +15,8 @@ public interface IPartyDetailProjectionActor : IActor
 
     Task<PartyDetail?> GetDetailAsync();
 
+    Task<PartyDetailProjectionReadResult> GetDetailReadAsync();
+
     Task<string?> GetDetailJsonAsync();
 
     Task<byte[]?> GetSerializedDetailAsync();

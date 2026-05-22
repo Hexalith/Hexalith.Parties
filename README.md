@@ -2,7 +2,7 @@
 
 Hexalith.Parties is a ready-to-deploy party management domain service for people and organizations. Public command and query traffic goes through Hexalith.EventStore; the `parties` service runs the domain actor host behind that gateway, and consumers normally use the typed .NET client package.
 
-> **GDPR Notice:** This MVP does **not** include GDPR compliance features (crypto-shredding, consent management, right to erasure). **Do not store regulated EU personal data.** GDPR features are planned for v1.1 -- see the [roadmap](docs/getting-started.md#whats-next).
+> **GDPR Notice:** This MVP does **not** include GDPR compliance features (crypto-shredding, consent management, right to erasure). **Do not store regulated EU personal data.** The service logs this warning at startup and emits `X-Hexalith-Parties-Mvp-Compliance-Warning` until the explicit v1.1 activation switch is enabled. GDPR features are planned for v1.1 -- see the [roadmap](docs/getting-started.md#whats-next).
 
 ## Key Features
 
@@ -19,10 +19,13 @@ Hexalith.Parties is a ready-to-deploy party management domain service for people
 ```bash
 git clone https://github.com/Hexalith/Hexalith.Parties.git
 cd Hexalith.Parties
+git submodule update --init Hexalith.EventStore Hexalith.Tenants
 dotnet aspire run --project src/Hexalith.Parties.AppHost
 ```
 
-Open the Aspire dashboard (URL shown in terminal output) and verify these resources are running: `eventstore`, `eventstore-admin`, `eventstore-admin-ui`, `parties`, and `tenants`. The local AppHost also runs `parties-mcp` alongside `parties` as a separate MCP resource — AI assistants connect to that host rather than the `parties` actor host.
+Open the Aspire dashboard (URL shown in terminal output) and verify these resources are running: `eventstore`, `eventstore-admin`, `parties`, `tenants`, `redis`, the DAPR sidecars, `statestore`, and `pubsub`. The AppHost also declares `eventstore-admin-ui` and `parties-mcp` as explicit-start auxiliary resources; start them from the dashboard when you need stream browsing or MCP access. AI assistants connect to `parties-mcp` rather than the `parties` actor host.
+
+The default local run path uses root-level submodules only. Do not initialize nested submodules unless a separate story or maintainer asks for that explicitly. Rich Memories-backed search is optional for local development; enable it separately with `EnableMemoriesSearch=true` after initializing the root-level `Hexalith.Memories` submodule.
 
 > **Prerequisite - tenant access state.** Provision or use an active Hexalith.Tenants tenant membership before the first Parties call. EventStore owns public authentication, tenant validation, RBAC, command/query routing, and generic response mapping. Parties consumes the authorized command/query behind the actor host and does not manage tenant lifecycle or roles itself.
 

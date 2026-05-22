@@ -1,6 +1,7 @@
 using Hexalith.EventStore.Contracts.Commands;
 using Hexalith.EventStore.Contracts.Results;
 using Hexalith.EventStore.Server.DomainServices;
+using Hexalith.Parties.Compliance;
 using Hexalith.Parties.Extensions;
 using Hexalith.Parties.HealthChecks;
 using Hexalith.Parties.Middleware;
@@ -25,12 +26,14 @@ WebApplication app = builder.Build();
 
 // GDPR compliance warning (FR62) — non-dismissable, logged at startup
 ILogger startupLogger = app.Services.GetRequiredService<ILoggerFactory>().CreateLogger("Hexalith.Parties");
-startupLogger.LogWarning(
-    "GDPR Notice: Personal-data encryption at rest is enabled for protected fields, but full GDPR workflows "
-    + "(consent management and erasure verification) are not complete. Treat this service as partially compliant only.");
+if (!app.Configuration.GetValue<bool>(MvpComplianceWarning.ActivationConfigurationKey))
+{
+    startupLogger.LogWarning("{ComplianceWarning}", MvpComplianceWarning.Message);
+}
 
 // Middleware pipeline (order matters)
 app.UseMiddleware<CorrelationIdMiddleware>();
+app.UseMiddleware<MvpComplianceWarningMiddleware>();
 app.UseExceptionHandler();
 app.UseMiddleware<DegradedResponseMiddleware>();
 app.UseAuthentication();

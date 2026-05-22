@@ -249,6 +249,21 @@ The tool exits with code `0` on success, `1` on at least one blocking failure, `
 **Problem:** Failed messages are silently dropped.
 **Fix:** Set `enableDeadLetter: "true"` on pub/sub components and `deadLetterTopic` on subscriptions.
 
+### Missing JWT or fail-closed authentication metadata
+
+**Problem:** Production auth can start without issuer, audience, signing-key reference, or fail-closed behavior.
+**Fix:** Set `deploymentSecurity.authentication` in `topology.yaml` with `jwtIssuer`, `jwtAudience`, `signingKeySecretName`, `signingKeySecretKey`, and `failClosed: true`.
+
+### Tenant identity accepted from payloads
+
+**Problem:** Request payload tenant ids can bypass authenticated identity and authoritative Tenants metadata.
+**Fix:** Set `tenantIdentitySource: authenticatedCredentials`, `allowTenantFromPayload: false`, and `metadataRequired: true` in `tenants-integration.yaml`.
+
+### Production transport not TLS enforced
+
+**Problem:** Production traffic can run without HTTPS or DAPR sidecar mTLS.
+**Fix:** Set `deploymentSecurity.transport.httpsRequired: true`, `daprMtlsRequired: true`, and `localDevelopmentHttpAllowed: false` in `topology.yaml`.
+
 ### Missing Tenants subscription or scope
 
 **Problem:** Parties does not receive `system.tenants.events`, so local tenant access state is missing or stale.

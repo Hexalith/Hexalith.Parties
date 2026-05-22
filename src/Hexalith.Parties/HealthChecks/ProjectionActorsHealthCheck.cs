@@ -33,35 +33,51 @@ public sealed class ProjectionActorsHealthCheck(
 
         try
         {
+            cancellationToken.ThrowIfCancellationRequested();
+
             IPartyIndexProjectionActor indexProxy = _actorProxyFactory.CreateActorProxy<IPartyIndexProjectionActor>(
                 s_indexActorId,
                 nameof(PartyIndexProjectionActor));
 
             // Use remoting-safe ping methods so the health probe validates actor routing
             // and responsiveness without depending on collection serialization details.
+            // IsRebuildingAsync is invoked here for contract-completeness: the static probe
+            // actor instances (health:party-index, health:party-detail:probe) carry per-instance
+            // _isRebuilding flags that are not shared with real tenant actors, so this branch
+            // primarily guards the probe activations themselves. Detecting tenant-actor
+            // rebuilding state from this surface would require enumerating tenants, which is
+            // forbidden by the story's non-enumeration rule for health output.
             _ = await indexProxy.PingAsync().WaitAsync(cancellationToken).ConfigureAwait(false);
+            bool indexRebuilding = await indexProxy.IsRebuildingAsync().WaitAsync(cancellationToken).ConfigureAwait(false);
 
             IPartyDetailProjectionActor detailProxy = _actorProxyFactory.CreateActorProxy<IPartyDetailProjectionActor>(
                 s_detailActorId,
                 nameof(PartyDetailProjectionActor));
             _ = await detailProxy.PingAsync().WaitAsync(cancellationToken).ConfigureAwait(false);
+            bool detailRebuilding = await detailProxy.IsRebuildingAsync().WaitAsync(cancellationToken).ConfigureAwait(false);
+
+            if (indexRebuilding || detailRebuilding)
+            {
+                return new HealthCheckResult(
+                    context.Registration.FailureStatus,
+                    "Projection actors are rebuilding.");
+            }
 
             return HealthCheckResult.Healthy("Projection actors are responsive.");
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
-            _logger.LogWarning("Projection actor health probe timed out.");
+            _logger.LogWarning("Projection actor health probe canceled or timed out.");
             return new HealthCheckResult(
                 context.Registration.FailureStatus,
-                "Projection actor health check timed out.");
+                "Projection actor health check canceled or timed out.");
         }
         catch (Exception ex) when (!cancellationToken.IsCancellationRequested)
         {
             _logger.LogError(ex, "Projection actor health probe failed.");
             return new HealthCheckResult(
                 context.Registration.FailureStatus,
-                $"Projection actor health check failed: {ex.GetType().Name}",
-                exception: ex);
+                "Projection actor health check failed.");
         }
     }
 }

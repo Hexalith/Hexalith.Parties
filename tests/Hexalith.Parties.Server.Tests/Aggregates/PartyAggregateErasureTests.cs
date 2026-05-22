@@ -1,5 +1,6 @@
 using Hexalith.Parties.Contracts.Commands;
 using Hexalith.Parties.Contracts.Events;
+using Hexalith.Parties.Contracts.Results;
 using Hexalith.Parties.Contracts.Security;
 using Hexalith.Parties.Contracts.State;
 using Hexalith.Parties.Server.Aggregates;
@@ -77,7 +78,9 @@ public class PartyAggregateErasureTests {
 
         // Assert
         result.IsRejection.ShouldBeTrue();
-        result.Events[0].ShouldBeOfType<PartyErasureInProgress>();
+        PartyErasureInProgress rejection = result.Events[0].ShouldBeOfType<PartyErasureInProgress>();
+        rejection.Status.ShouldBe("ErasureInProgress");
+        rejection.Message.ShouldBe("Party erasure in progress. No modifications allowed.");
     }
 
     [Fact]
@@ -91,7 +94,30 @@ public class PartyAggregateErasureTests {
 
         // Assert
         result.IsRejection.ShouldBeTrue();
-        result.Events[0].ShouldBeOfType<PartyErasureInProgress>();
+        PartyErasureInProgress rejection = result.Events[0].ShouldBeOfType<PartyErasureInProgress>();
+        rejection.Status.ShouldBe("Erased");
+        rejection.Message.ShouldBe("Party is erased and no longer inspectable.");
+        rejection.Message.ShouldNotBeNull();
+        rejection.Message!.ShouldNotContain("key", Case.Insensitive);
+        rejection.Message!.ShouldNotContain("decrypt", Case.Insensitive);
+    }
+
+    [Fact]
+    public void Handle_UpdateComposite_WhenErased_ReturnsStableErasedStatus()
+    {
+        // Arrange
+        PartyState state = PartyTestData.CreateErasedState();
+        UpdatePartyComposite command = PartyTestData.ValidUpdatePersonComposite();
+
+        // Act
+        CompositeCommandResult result = PartyAggregate.Handle(command, state);
+
+        // Assert
+        result.IsRejection.ShouldBeTrue();
+        PartyErasureInProgress rejection = result.Events[0].ShouldBeOfType<PartyErasureInProgress>();
+        rejection.PartyId.ShouldBe(PartyTestData.DefaultPartyId);
+        rejection.Status.ShouldBe("Erased");
+        result.Rejected.ShouldBe(["Party is erased and no longer inspectable."]);
     }
 
     [Fact]

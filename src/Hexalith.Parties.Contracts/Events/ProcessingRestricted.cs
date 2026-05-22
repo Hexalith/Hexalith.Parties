@@ -11,4 +11,8 @@ public sealed record ProcessingRestricted : IEventPayload
     public required DateTimeOffset RestrictedAt { get; init; }
 
     public string? Reason { get; init; }
+
+    public string RestrictedBy { get; init; } = "unknown";
+
+    public string CorrelationId { get; init; } = "unspecified";
 }

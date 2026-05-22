@@ -1,0 +1,2049 @@
+diff --git a/src/Hexalith.Parties.Client/HttpPartiesQueryClient.cs b/src/Hexalith.Parties.Client/HttpPartiesQueryClient.cs
+index f5da42f..aa22081 100644
+--- a/src/Hexalith.Parties.Client/HttpPartiesQueryClient.cs
++++ b/src/Hexalith.Parties.Client/HttpPartiesQueryClient.cs
+@@ -19,6 +19,8 @@ public sealed class HttpPartiesQueryClient : IPartiesQueryClient
+     private const string PartyDetailProjectionActorType = "PartyDetailProjectionQueryActor";
+     private const string PartyDetailProjectionType = "party-detail";
+     private const string PartyDetailQueryType = "PartyDetail";
++    private const string PartyIndexProjectionActorType = "PartyIndexProjectionQueryActor";
++    private const string PartyIndexProjectionType = "party-index";
+     private const string PartyIndexQueryType = "PartyIndex";
+     private const string PartySearchQueryType = "PartySearch";
+ 
+@@ -80,9 +82,10 @@ public sealed class HttpPartiesQueryClient : IPartiesQueryClient
+             Domain: PartyDomain,
+             AggregateId: ListAggregateId,
+             QueryType: PartyIndexQueryType,
+-            ProjectionType: null,
++            ProjectionType: PartyIndexProjectionType,
+             Payload: JsonSerializer.SerializeToElement(payload, HttpPartiesCommandClient.JsonOptions),
+-            EntityId: ListAggregateId);
++            EntityId: ListAggregateId,
++            ProjectionActorType: PartyIndexProjectionActorType);
+ 
+         return PostQueryAsync<PagedResult<PartyIndexEntry>>(request, ct);
+     }
+@@ -102,9 +105,10 @@ public sealed class HttpPartiesQueryClient : IPartiesQueryClient
+             Domain: PartyDomain,
+             AggregateId: ListAggregateId,
+             QueryType: PartySearchQueryType,
+-            ProjectionType: null,
++            ProjectionType: PartyIndexProjectionType,
+             Payload: JsonSerializer.SerializeToElement(payload, HttpPartiesCommandClient.JsonOptions),
+-            EntityId: ListAggregateId);
++            EntityId: ListAggregateId,
++            ProjectionActorType: PartyIndexProjectionActorType);
+ 
+         return PostQueryAsync<PagedResult<PartySearchResult>>(request, ct, requestCustomizer);
+     }
+diff --git a/src/Hexalith.Parties/Extensions/PartiesServiceCollectionExtensions.cs b/src/Hexalith.Parties/Extensions/PartiesServiceCollectionExtensions.cs
+index 85e63b5..31628f6 100644
+--- a/src/Hexalith.Parties/Extensions/PartiesServiceCollectionExtensions.cs
++++ b/src/Hexalith.Parties/Extensions/PartiesServiceCollectionExtensions.cs
+@@ -231,6 +231,7 @@ public static class PartiesServiceCollectionExtensions {
+             .ValidateOnStart();
+ 
+         services.AddActors(options => {
++            options.Actors.RegisterActor<PartyIndexProjectionQueryActor>();
+             options.Actors.RegisterActor<PartyDetailProjectionQueryActor>();
+             options.Actors.RegisterActor<PartyDetailProjectionActor>();
+             options.Actors.RegisterActor<PartyIndexProjectionActor>();
+diff --git a/src/Hexalith.Parties/Queries/PartyIndexProjectionQueryActor.cs b/src/Hexalith.Parties/Queries/PartyIndexProjectionQueryActor.cs
+new file mode 100644
+index 0000000..a65a3f2
+--- /dev/null
++++ b/src/Hexalith.Parties/Queries/PartyIndexProjectionQueryActor.cs
+@@ -0,0 +1,434 @@
++using System.Globalization;
++using System.Text.Json;
++using System.Text.Json.Serialization;
++
++using Dapr.Actors;
++using Dapr.Actors.Client;
++using Dapr.Actors.Runtime;
++
++using Hexalith.EventStore.Contracts.Queries;
++using Hexalith.Parties.Contracts.Models;
++using Hexalith.Parties.Contracts.ValueObjects;
++using Hexalith.Parties.Projections.Abstractions;
++using Hexalith.Parties.Projections.Actors;
++using Hexalith.Parties.Search;
++
++using Microsoft.Extensions.Logging;
++
++namespace Hexalith.Parties.Queries;
++
++public sealed partial class PartyIndexProjectionQueryActor(
++    ActorHost host,
++    IActorProxyFactory actorProxyFactory,
++    ILogger<PartyIndexProjectionQueryActor> logger) : Actor(host), IProjectionActor
++{
++    public const string ActorTypeName = nameof(PartyIndexProjectionQueryActor);
++    public const string ListAggregateId = "parties";
++    public const string PartyDomain = "party";
++    public const string PartyIndexQueryType = "PartyIndex";
++    public const string PartySearchQueryType = "PartySearch";
++    public const string ProjectionType = "party-index";
++    private static readonly LocalFuzzyPartySearchProvider s_searchProvider = new();
++
++    // P13: Unknown fields fail closed so a future contributor cannot bypass tenant authority
++    // by adding a payload field whose name is read by the actor.
++    private static readonly JsonSerializerOptions s_jsonOptions = new(JsonSerializerDefaults.Web)
++    {
++        UnmappedMemberHandling = JsonUnmappedMemberHandling.Disallow,
++    };
++
++    public async Task<QueryResult> QueryAsync(QueryEnvelope envelope)
++    {
++        ArgumentNullException.ThrowIfNull(envelope);
++
++        if (!CanHandle(envelope))
++        {
++            return QueryResult.Failure(QueryAdapterFailureReason.UnsupportedQueryType);
++        }
++
++        if (!TryResolveActorRoute(Host.Id.GetId(), envelope))
++        {
++            return QueryResult.Failure(QueryAdapterFailureReason.InvalidEnvelope);
++        }
++
++        if (IsPartySearch(envelope))
++        {
++            if (!TryParseSearchPayload(envelope.Payload, out SearchPartiesQueryPayload payload))
++            {
++                return QueryResult.Failure(QueryAdapterFailureReason.InvalidEnvelope);
++            }
++
++            return await QueryEntriesAsync(envelope, entries =>
++            {
++                PagedResult<PartySearchResult> page = s_searchProvider.Search(
++                    entries.Values,
++                    payload.Query,
++                    payload.Type,
++                    payload.Active,
++                    payload.Page,
++                    payload.PageSize);
++
++                return QueryResult.FromPayload(JsonSerializer.SerializeToElement(page, s_jsonOptions), ProjectionType);
++            }).ConfigureAwait(false);
++        }
++
++        if (!TryParseListPayload(envelope.Payload, out ListPartiesQueryPayload listPayload))
++        {
++            return QueryResult.Failure(QueryAdapterFailureReason.InvalidEnvelope);
++        }
++
++        return await QueryEntriesAsync(envelope, entries =>
++        {
++            PagedResult<PartyIndexEntry> page = PartySearchResultsBuilder.BuildPagedList(
++                entries.Values,
++                listPayload.Type,
++                listPayload.Active,
++                listPayload.CreatedAfter,
++                listPayload.CreatedBefore,
++                listPayload.ModifiedAfter,
++                listPayload.ModifiedBefore,
++                listPayload.Page,
++                listPayload.PageSize);
++
++            return QueryResult.FromPayload(JsonSerializer.SerializeToElement(page, s_jsonOptions), ProjectionType);
++        }).ConfigureAwait(false);
++    }
++
++    private async Task<QueryResult> QueryEntriesAsync(
++        QueryEnvelope envelope,
++        Func<IReadOnlyDictionary<string, PartyIndexEntry>, QueryResult> createResult)
++    {
++        string indexActorId = $"{envelope.TenantId}:party-index";
++
++        // P14: Log templates intentionally omit the constructed actor id. The tenant id and
++        // query type are sufficient diagnostics; the actor key is a derivable storage identifier
++        // that the Party-Mode clarifications list as forbidden in diagnostics.
++        Log.PartyIndexQueryRouting(logger, envelope.CorrelationId, envelope.TenantId, envelope.QueryType);
++
++        try
++        {
++            IPartyIndexProjectionActor indexProxy = actorProxyFactory.CreateActorProxy<IPartyIndexProjectionActor>(
++                new ActorId(indexActorId),
++                nameof(PartyIndexProjectionActor));
++
++            IReadOnlyDictionary<string, PartyIndexEntry> entries = await indexProxy.GetEntriesAsync().ConfigureAwait(false);
++            return createResult(entries);
++        }
++        catch (OperationCanceledException)
++        {
++            throw;
++        }
++        catch (Exception ex) when (IsProjectionActorNotFound(ex))
++        {
++            Log.PartyIndexProjectionNotFound(logger, envelope.CorrelationId, envelope.TenantId, envelope.QueryType);
++            return QueryResult.Failure(QueryAdapterFailureReason.ActorNotFoundInfrastructure);
++        }
++        catch (Exception ex)
++        {
++            Log.PartyIndexProjectionReadFailed(
++                logger,
++                envelope.CorrelationId,
++                envelope.TenantId,
++                envelope.QueryType,
++                ex.GetType().Name);
++            return QueryResult.Failure(QueryAdapterFailureReason.ActorException);
++        }
++    }
++
++    private static bool CanHandle(QueryEnvelope envelope)
++        => string.Equals(envelope.Domain, PartyDomain, StringComparison.Ordinal)
++            && (string.Equals(envelope.QueryType, PartyIndexQueryType, StringComparison.Ordinal)
++                || IsPartySearch(envelope));
++
++    private static bool IsPartySearch(QueryEnvelope envelope)
++        => string.Equals(envelope.QueryType, PartySearchQueryType, StringComparison.Ordinal);
++
++    private static bool TryResolveActorRoute(string actorId, QueryEnvelope envelope)
++    {
++        string[] segments = actorId.Split(':', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
++        if (segments.Length != 3
++            || !string.Equals(segments[0], ProjectionType, StringComparison.Ordinal)
++            || !string.Equals(segments[1], envelope.TenantId, StringComparison.Ordinal)
++            || !string.Equals(segments[2], ListAggregateId, StringComparison.Ordinal))
++        {
++            return false;
++        }
++
++        string requestedEntityId = string.IsNullOrWhiteSpace(envelope.EntityId)
++            ? envelope.AggregateId
++            : envelope.EntityId;
++        return string.Equals(envelope.AggregateId, ListAggregateId, StringComparison.Ordinal)
++            && string.Equals(requestedEntityId, ListAggregateId, StringComparison.Ordinal);
++    }
++
++    private static bool TryParseListPayload(byte[] payloadBytes, out ListPartiesQueryPayload payload)
++    {
++        payload = new ListPartiesQueryPayload(
++            Page: 1,
++            PageSize: 20,
++            Type: null,
++            Active: null,
++            CreatedAfter: null,
++            CreatedBefore: null,
++            ModifiedAfter: null,
++            ModifiedBefore: null);
++
++        // P2: List queries are Tier 1 (entityId-scoped) and always carry payload.
++        // An empty payload is a malformed envelope, not a "use defaults" signal.
++        if (payloadBytes.Length == 0)
++        {
++            return false;
++        }
++
++        ListPartiesQueryPayloadWire? wire;
++        try
++        {
++            wire = JsonSerializer.Deserialize<ListPartiesQueryPayloadWire>(payloadBytes, s_jsonOptions);
++        }
++        catch (JsonException)
++        {
++            return false;
++        }
++
++        if (wire is null)
++        {
++            return false;
++        }
++
++        // P3: Reject negative or zero Page/PageSize at the boundary so client bugs surface
++        // rather than being silently coerced to defaults inside the builder.
++        if ((wire.Page is { } pageValue && pageValue < 1)
++            || (wire.PageSize is { } pageSizeValue && pageSizeValue < 1))
++        {
++            return false;
++        }
++
++        if (!TryParsePartyType(wire.Type, out PartyType? type)
++            || !TryParseInstant(wire.CreatedAfter, out DateTimeOffset? createdAfter)
++            || !TryParseInstant(wire.CreatedBefore, out DateTimeOffset? createdBefore)
++            || !TryParseInstant(wire.ModifiedAfter, out DateTimeOffset? modifiedAfter)
++            || !TryParseInstant(wire.ModifiedBefore, out DateTimeOffset? modifiedBefore))
++        {
++            return false;
++        }
++
++        if ((createdAfter is not null && createdBefore is not null && createdAfter.Value > createdBefore.Value)
++            || (modifiedAfter is not null && modifiedBefore is not null && modifiedAfter.Value > modifiedBefore.Value))
++        {
++            return false;
++        }
++
++        payload = new ListPartiesQueryPayload(
++            wire.Page ?? 1,
++            wire.PageSize ?? 20,
++            type,
++            wire.Active,
++            createdAfter,
++            createdBefore,
++            modifiedAfter,
++            modifiedBefore);
++        return true;
++    }
++
++    private static bool TryParseSearchPayload(byte[] payloadBytes, out SearchPartiesQueryPayload payload)
++    {
++        payload = new SearchPartiesQueryPayload(
++            Query: string.Empty,
++            Page: 1,
++            PageSize: 20,
++            Type: null,
++            Active: null,
++            Mode: null,
++            CaseId: null);
++
++        if (payloadBytes.Length == 0)
++        {
++            return false;
++        }
++
++        SearchPartiesQueryPayloadWire? wire;
++        try
++        {
++            wire = JsonSerializer.Deserialize<SearchPartiesQueryPayloadWire>(payloadBytes, s_jsonOptions);
++        }
++        catch (JsonException)
++        {
++            return false;
++        }
++
++        if (wire is null)
++        {
++            return false;
++        }
++
++        if ((wire.Page is { } pageValue && pageValue < 1)
++            || (wire.PageSize is { } pageSizeValue && pageSizeValue < 1)
++            || !TryParsePartyType(wire.Type, out PartyType? type))
++        {
++            return false;
++        }
++
++        payload = new SearchPartiesQueryPayload(
++            wire.Query ?? string.Empty,
++            wire.Page ?? 1,
++            wire.PageSize ?? 20,
++            type,
++            wire.Active,
++            wire.Mode,
++            wire.CaseId);
++        return true;
++    }
++
++    private static bool TryParsePartyType(string? value, out PartyType? type)
++    {
++        type = null;
++        if (string.IsNullOrWhiteSpace(value))
++        {
++            return true;
++        }
++
++        // P1: Strict allowlist of public party-type names. Enum.TryParse accepts numeric
++        // strings ("0", "1") and the internal `Unknown` sentinel; AC2 restricts the wire
++        // to `Person | Organization` only.
++        if (string.Equals(value, nameof(PartyType.Person), StringComparison.OrdinalIgnoreCase))
++        {
++            type = PartyType.Person;
++            return true;
++        }
++
++        if (string.Equals(value, nameof(PartyType.Organization), StringComparison.OrdinalIgnoreCase))
++        {
++            type = PartyType.Organization;
++            return true;
++        }
++
++        return false;
++    }
++
++    private static bool TryParseInstant(string? value, out DateTimeOffset? instant)
++    {
++        instant = null;
++        if (string.IsNullOrWhiteSpace(value))
++        {
++            return true;
++        }
++
++        // P12: Accept any well-formed ISO-8601 representation (matches System.Text.Json default
++        // round-trip semantics). Internal clients emit the strict "O" form via HttpPartiesQueryClient,
++        // but third-party adopters commonly use Z-suffixed or fraction-less forms.
++        if (!DateTimeOffset.TryParse(
++            value,
++            CultureInfo.InvariantCulture,
++            DateTimeStyles.RoundtripKind | DateTimeStyles.AssumeUniversal,
++            out DateTimeOffset parsed))
++        {
++            return false;
++        }
++
++        // P4: Defensive guard. ToUniversalTime on a successfully-parsed DateTimeOffset cannot
++        // throw in current .NET (the parser already rejects out-of-range UTC instants), but
++        // wrapping is cheap insurance against a future runtime change classifying overflow as
++        // an unhandled ActorException instead of a bounded InvalidEnvelope.
++        try
++        {
++            instant = parsed.ToUniversalTime();
++        }
++        catch (ArgumentOutOfRangeException)
++        {
++            return false;
++        }
++
++        return true;
++    }
++
++    private static bool IsProjectionActorNotFound(Exception exception)
++    {
++        ArgumentNullException.ThrowIfNull(exception);
++
++        return ContainsNotFoundMarker(exception.Message)
++            || ContainsNotFoundMarker(exception.InnerException?.Message);
++
++        static bool ContainsNotFoundMarker(string? message)
++            => !string.IsNullOrWhiteSpace(message)
++                && (message.Contains("actor type not registered", StringComparison.OrdinalIgnoreCase)
++                    || message.Contains("did not find address for actor", StringComparison.OrdinalIgnoreCase)
++                    || message.Contains("could not find address for actor", StringComparison.OrdinalIgnoreCase)
++                    || message.Contains("no address found for actor", StringComparison.OrdinalIgnoreCase)
++                    || message.Contains("actor not found", StringComparison.OrdinalIgnoreCase));
++    }
++
++    private sealed record ListPartiesQueryPayload(
++        int Page,
++        int PageSize,
++        PartyType? Type,
++        bool? Active,
++        DateTimeOffset? CreatedAfter,
++        DateTimeOffset? CreatedBefore,
++        DateTimeOffset? ModifiedAfter,
++        DateTimeOffset? ModifiedBefore);
++
++    private sealed record ListPartiesQueryPayloadWire(
++        int? Page = null,
++        int? PageSize = null,
++        string? Type = null,
++        bool? Active = null,
++        string? CreatedAfter = null,
++        string? CreatedBefore = null,
++        string? ModifiedAfter = null,
++        string? ModifiedBefore = null);
++
++    private sealed record SearchPartiesQueryPayload(
++        string Query,
++        int Page,
++        int PageSize,
++        PartyType? Type,
++        bool? Active,
++        string? Mode,
++        string? CaseId);
++
++    private sealed record SearchPartiesQueryPayloadWire(
++        string? Query = null,
++        int? Page = null,
++        int? PageSize = null,
++        string? Type = null,
++        bool? Active = null,
++        string? Mode = null,
++        string? CaseId = null);
++
++    private static partial class Log
++    {
++        // P14: Templates omit ActorId. The actor key is a structured storage identifier that
++        // Party-Mode clarifications classify as forbidden in diagnostics. Tenant + correlation
++        // + query type are sufficient for ops; the actor key is deterministic from the tenant.
++        [LoggerMessage(
++            EventId = 8610,
++            Level = LogLevel.Debug,
++            Message = "Routing party index query: CorrelationId={CorrelationId}, TenantId={TenantId}, QueryType={QueryType}, Stage=PartyIndexQueryRouting")]
++        public static partial void PartyIndexQueryRouting(
++            ILogger logger,
++            string correlationId,
++            string tenantId,
++            string queryType);
++
++        [LoggerMessage(
++            EventId = 8611,
++            Level = LogLevel.Warning,
++            Message = "Party index projection actor not found: CorrelationId={CorrelationId}, TenantId={TenantId}, QueryType={QueryType}, Stage=PartyIndexProjectionNotFound")]
++        public static partial void PartyIndexProjectionNotFound(
++            ILogger logger,
++            string correlationId,
++            string tenantId,
++            string queryType);
++
++        [LoggerMessage(
++            EventId = 8612,
++            Level = LogLevel.Warning,
++            Message = "Party index projection read failed: CorrelationId={CorrelationId}, TenantId={TenantId}, QueryType={QueryType}, ExceptionType={ExceptionType}, Stage=PartyIndexProjectionReadFailed")]
++        public static partial void PartyIndexProjectionReadFailed(
++            ILogger logger,
++            string correlationId,
++            string tenantId,
++            string queryType,
++            string exceptionType);
++    }
++}
+diff --git a/src/Hexalith.Parties/Search/LocalFuzzyPartySearchProvider.cs b/src/Hexalith.Parties/Search/LocalFuzzyPartySearchProvider.cs
+index d883167..719a0ac 100644
+--- a/src/Hexalith.Parties/Search/LocalFuzzyPartySearchProvider.cs
++++ b/src/Hexalith.Parties/Search/LocalFuzzyPartySearchProvider.cs
+@@ -8,26 +8,10 @@ using Hexalith.Parties.Contracts.ValueObjects;
+ namespace Hexalith.Parties.Search;
+ 
+ /// <summary>
+-/// Local fallback search provider with fuzzy matching, diacritic normalization,
+-/// type-text mapping, and multi-field relevance scoring.
++/// Local fallback search provider for MVP display-name search.
+ /// </summary>
+ internal sealed class LocalFuzzyPartySearchProvider : IPartySearchProvider
+ {
+-    private static readonly Dictionary<string, PartyType> s_typeAliases = new(StringComparer.OrdinalIgnoreCase)
+-    {
+-        ["person"] = PartyType.Person,
+-        ["individual"] = PartyType.Person,
+-        ["people"] = PartyType.Person,
+-        ["company"] = PartyType.Organization,
+-        ["corporation"] = PartyType.Organization,
+-        ["organization"] = PartyType.Organization,
+-        ["organisation"] = PartyType.Organization,
+-        ["org"] = PartyType.Organization,
+-        ["enterprise"] = PartyType.Organization,
+-        ["firm"] = PartyType.Organization,
+-        ["business"] = PartyType.Organization,
+-    };
+-
+     public PagedResult<PartySearchResult> Search(
+         IEnumerable<PartyIndexEntry> entries,
+         string query,
+@@ -95,16 +79,16 @@ internal sealed class LocalFuzzyPartySearchProvider : IPartySearchProvider
+                 return byScore;
+             }
+ 
+-            int bySortName = string.Compare(
+-                GetSortableName(left.Party),
+-                GetSortableName(right.Party),
++            int byDisplayName = string.Compare(
++                NormalizeDiacritics(left.Party.DisplayName),
++                NormalizeDiacritics(right.Party.DisplayName),
+                 StringComparison.OrdinalIgnoreCase);
+-            if (bySortName != 0)
++            if (byDisplayName != 0)
+             {
+-                return bySortName;
++                return byDisplayName;
+             }
+ 
+-            return string.Compare(left.Party.DisplayName, right.Party.DisplayName, StringComparison.OrdinalIgnoreCase);
++            return string.Compare(left.Party.Id, right.Party.Id, StringComparison.Ordinal);
+         });
+ 
+         return CreatePagedResult(results, page, pageSize);
+@@ -240,9 +224,6 @@ internal sealed class LocalFuzzyPartySearchProvider : IPartySearchProvider
+         return filtered;
+     }
+ 
+-    private static string GetSortableName(PartyIndexEntry entry)
+-        => string.IsNullOrWhiteSpace(entry.SortName) ? entry.DisplayName : entry.SortName;
+-
+     private static double ComputeRelevanceScore(
+         List<(string Field, double FieldWeight, double MatchScore)> fieldScores,
+         int matchedTokenCount,
+@@ -296,44 +277,11 @@ internal sealed class LocalFuzzyPartySearchProvider : IPartySearchProvider
+ 
+         foreach (string token in candidates)
+         {
+-            // Match against DisplayName
+             if (TryMatch(normalizedDisplayName, token, out double matchScore, out string matchType))
+             {
+                 UpsertFieldMatch(fieldMatches, "displayName", 1.0, matchScore, matchType);
+                 _ = matchedTokens.Add(token);
+             }
+-
+-            // Match against ALL contact channels (not just Email)
+-            // Structured fields use exact/prefix/contains only (no fuzzy — prevents false positives on email domains)
+-            foreach (ContactChannel channel in entry.SearchableContactChannels)
+-            {
+-                string normalizedValue = NormalizeDiacritics(channel.Value);
+-                if (TryMatchExact(normalizedValue, token, out double channelScore, out string channelMatchType))
+-                {
+-                    string fieldName = channel.Type == ContactChannelType.Email ? "email" : "contactChannel";
+-                    double fieldWeight = channel.Type == ContactChannelType.Email ? 0.9 : 0.7;
+-                    UpsertFieldMatch(fieldMatches, fieldName, fieldWeight, channelScore, channelMatchType);
+-                    _ = matchedTokens.Add(token);
+-                }
+-            }
+-
+-            // Match against identifiers (exact/prefix/contains only — structured data)
+-            foreach (PartyIdentifier identifier in entry.SearchableIdentifiers)
+-            {
+-                string normalizedValue = NormalizeDiacritics(identifier.Value);
+-                if (TryMatchExact(normalizedValue, token, out double idScore, out string idMatchType))
+-                {
+-                    UpsertFieldMatch(fieldMatches, "identifier", 0.8, idScore, idMatchType);
+-                    _ = matchedTokens.Add(token);
+-                }
+-            }
+-
+-            // Type-text matching (scoring boost, NOT a filter)
+-            if (s_typeAliases.TryGetValue(token, out PartyType mappedType) && entry.Type == mappedType)
+-            {
+-                UpsertFieldMatch(fieldMatches, "type", 0.5, 1.0, "exact");
+-                _ = matchedTokens.Add(token);
+-            }
+         }
+ 
+         if (fieldMatches.Count == 0)
+@@ -365,40 +313,6 @@ internal sealed class LocalFuzzyPartySearchProvider : IPartySearchProvider
+         };
+     }
+ 
+-    private static bool TryMatchExact(string candidate, string token, out double score, out string matchType)
+-    {
+-        score = 0.0;
+-        matchType = string.Empty;
+-
+-        if (string.IsNullOrWhiteSpace(candidate) || string.IsNullOrWhiteSpace(token))
+-        {
+-            return false;
+-        }
+-
+-        if (string.Equals(candidate, token, StringComparison.OrdinalIgnoreCase))
+-        {
+-            score = 1.0;
+-            matchType = "exact";
+-            return true;
+-        }
+-
+-        if (candidate.StartsWith(token, StringComparison.OrdinalIgnoreCase))
+-        {
+-            score = 0.8;
+-            matchType = "prefix";
+-            return true;
+-        }
+-
+-        if (candidate.Contains(token, StringComparison.OrdinalIgnoreCase))
+-        {
+-            score = 0.6;
+-            matchType = "contains";
+-            return true;
+-        }
+-
+-        return false;
+-    }
+-
+     private static bool TryMatch(string candidate, string token, out double score, out string matchType)
+     {
+         score = 0.0;
+diff --git a/src/Hexalith.Parties/Search/PartySearchResultsBuilder.cs b/src/Hexalith.Parties/Search/PartySearchResultsBuilder.cs
+index 2898e0f..4d84c64 100644
+--- a/src/Hexalith.Parties/Search/PartySearchResultsBuilder.cs
++++ b/src/Hexalith.Parties/Search/PartySearchResultsBuilder.cs
+@@ -11,12 +11,46 @@ internal static class PartySearchResultsBuilder
+         bool? activeFilter,
+         int page,
+         int pageSize)
++        => BuildPagedList(
++            entries,
++            typeFilter,
++            activeFilter,
++            createdAfter: null,
++            createdBefore: null,
++            modifiedAfter: null,
++            modifiedBefore: null,
++            page,
++            pageSize);
++
++    public static PagedResult<PartyIndexEntry> BuildPagedList(
++        IEnumerable<PartyIndexEntry> entries,
++        PartyType? typeFilter,
++        bool? activeFilter,
++        DateTimeOffset? createdAfter,
++        DateTimeOffset? createdBefore,
++        DateTimeOffset? modifiedAfter,
++        DateTimeOffset? modifiedBefore,
++        int page,
++        int pageSize)
+     {
+-        List<PartyIndexEntry> sorted = [.. ApplyFilters(entries, typeFilter, activeFilter)
++        ArgumentNullException.ThrowIfNull(entries);
++
++        int normalizedPage = Math.Max(1, page);
++        int normalizedPageSize = Math.Clamp(pageSize, 1, 100);
++
++        List<PartyIndexEntry> sorted = [.. ApplyListFilters(
++                entries,
++                typeFilter,
++                activeFilter,
++                createdAfter,
++                createdBefore,
++                modifiedAfter,
++                modifiedBefore)
+             .OrderBy(GetSortableName, StringComparer.OrdinalIgnoreCase)
+-            .ThenBy(e => e.DisplayName, StringComparer.OrdinalIgnoreCase)];
++            .ThenBy(e => e.DisplayName, StringComparer.OrdinalIgnoreCase)
++            .ThenBy(e => e.Id, StringComparer.Ordinal)];
+ 
+-        return CreatePagedResult(sorted, page, pageSize);
++        return CreatePagedResult(sorted, normalizedPage, normalizedPageSize);
+     }
+ 
+     public static PagedResult<PartySearchResult> BuildSearchResults(
+@@ -44,6 +78,7 @@ internal static class PartySearchResultsBuilder
+             .ThenByDescending(m => m.TokenCount)
+             .ThenBy(m => GetSortableName(m.Result.Party), StringComparer.OrdinalIgnoreCase)
+             .ThenBy(m => m.Result.Party.DisplayName, StringComparer.OrdinalIgnoreCase)
++            .ThenBy(m => m.Result.Party.Id, StringComparer.Ordinal)
+             .Select(m => m.Result)];
+ 
+         return CreatePagedResult(sorted, page, pageSize);
+@@ -69,6 +104,41 @@ internal static class PartySearchResultsBuilder
+         return filtered;
+     }
+ 
++    private static IEnumerable<PartyIndexEntry> ApplyListFilters(
++        IEnumerable<PartyIndexEntry> entries,
++        PartyType? typeFilter,
++        bool? activeFilter,
++        DateTimeOffset? createdAfter,
++        DateTimeOffset? createdBefore,
++        DateTimeOffset? modifiedAfter,
++        DateTimeOffset? modifiedBefore)
++    {
++        IEnumerable<PartyIndexEntry> filtered = ApplyFilters(entries, typeFilter, activeFilter)
++            .Where(static e => !e.IsErased);
++
++        if (createdAfter is not null)
++        {
++            filtered = filtered.Where(e => e.CreatedAt >= createdAfter.Value);
++        }
++
++        if (createdBefore is not null)
++        {
++            filtered = filtered.Where(e => e.CreatedAt <= createdBefore.Value);
++        }
++
++        if (modifiedAfter is not null)
++        {
++            filtered = filtered.Where(e => e.LastModifiedAt >= modifiedAfter.Value);
++        }
++
++        if (modifiedBefore is not null)
++        {
++            filtered = filtered.Where(e => e.LastModifiedAt <= modifiedBefore.Value);
++        }
++
++        return filtered;
++    }
++
+     private static string GetSortableName(PartyIndexEntry entry)
+         => string.IsNullOrWhiteSpace(entry.SortName) ? entry.DisplayName : entry.SortName;
+ 
+@@ -89,17 +159,6 @@ internal static class PartySearchResultsBuilder
+                 matchedTokens.Add(candidate);
+             }
+ 
+-            if (TryMatchContactChannel(entry.SearchableContactChannels, candidate, out int emailPriority))
+-            {
+-                UpsertMatch(fieldMatches, "email", emailPriority);
+-                matchedTokens.Add(candidate);
+-            }
+-
+-            if (TryMatchIdentifier(entry.SearchableIdentifiers, candidate, out int identifierPriority))
+-            {
+-                UpsertMatch(fieldMatches, "identifier", identifierPriority);
+-                matchedTokens.Add(candidate);
+-            }
+         }
+ 
+         if (fieldMatches.Count == 0)
+@@ -127,40 +186,6 @@ internal static class PartySearchResultsBuilder
+             matchedTokens.Count);
+     }
+ 
+-    private static bool TryMatchContactChannel(IEnumerable<ContactChannel> channels, string candidate, out int priority)
+-    {
+-        priority = int.MaxValue;
+-        bool matched = false;
+-
+-        foreach (ContactChannel channel in channels.Where(c => c.Type == ContactChannelType.Email))
+-        {
+-            if (TryMatchValue(channel.Value, candidate, out int currentPriority))
+-            {
+-                priority = Math.Min(priority, currentPriority);
+-                matched = true;
+-            }
+-        }
+-
+-        return matched;
+-    }
+-
+-    private static bool TryMatchIdentifier(IEnumerable<PartyIdentifier> identifiers, string candidate, out int priority)
+-    {
+-        priority = int.MaxValue;
+-        bool matched = false;
+-
+-        foreach (PartyIdentifier identifier in identifiers)
+-        {
+-            if (TryMatchValue(identifier.Value, candidate, out int currentPriority))
+-            {
+-                priority = Math.Min(priority, currentPriority);
+-                matched = true;
+-            }
+-        }
+-
+-        return matched;
+-    }
+-
+     private static bool TryMatchValue(string? source, string candidate, out int priority)
+     {
+         priority = int.MaxValue;
+@@ -209,9 +234,19 @@ internal static class PartySearchResultsBuilder
+ 
+     private static PagedResult<T> CreatePagedResult<T>(IReadOnlyList<T> items, int page, int pageSize)
+     {
++        // P10: Defensive normalization inside the helper. BuildPagedList already clamps
++        // upstream, but BuildSearchResults reaches here through callers (LocalPartySearchService)
++        // that may not normalize. Clamping here removes a latent division-by-zero risk and
++        // ensures the helper itself is safe regardless of caller discipline. The returned
++        // Page/PageSize echo the caller-supplied values so behavioral contracts pinned by
++        // existing tests (large-page input is preserved in metadata) remain unchanged.
++        int safePageSize = Math.Max(1, pageSize);
++        int safePage = Math.Max(1, page);
+         int totalCount = items.Count;
+-        int totalPages = totalCount == 0 ? 1 : (int)Math.Ceiling((double)totalCount / pageSize);
+-        List<T> pagedItems = [.. items.Skip((page - 1) * pageSize).Take(pageSize)];
++        int totalPages = totalCount == 0 ? 1 : (int)Math.Ceiling((double)totalCount / safePageSize);
++        long skipLong = (long)(safePage - 1) * safePageSize;
++        int skip = skipLong > int.MaxValue ? int.MaxValue : (int)skipLong;
++        List<T> pagedItems = [.. items.Skip(skip).Take(safePageSize)];
+ 
+         return new PagedResult<T>
+         {
+diff --git a/tests/Hexalith.Parties.Client.Tests/HttpPartiesQueryClientTests.cs b/tests/Hexalith.Parties.Client.Tests/HttpPartiesQueryClientTests.cs
+index da6f5b3..d8d9743 100644
+--- a/tests/Hexalith.Parties.Client.Tests/HttpPartiesQueryClientTests.cs
++++ b/tests/Hexalith.Parties.Client.Tests/HttpPartiesQueryClientTests.cs
+@@ -101,8 +101,8 @@ public sealed class HttpPartiesQueryClientTests
+         using JsonDocument body = JsonDocument.Parse(handler.LastRequestBody!);
+         JsonElement root = body.RootElement;
+         root.GetProperty("queryType").GetString().ShouldBe("PartyIndex");
+-        root.TryGetProperty("projectionType", out _).ShouldBeFalse();
+-        root.TryGetProperty("projectionActorType", out _).ShouldBeFalse();
++        root.GetProperty("projectionType").GetString().ShouldBe("party-index");
++        root.GetProperty("projectionActorType").GetString().ShouldBe("PartyIndexProjectionQueryActor");
+ 
+         JsonElement payload = root.GetProperty("payload");
+         payload.GetProperty("page").GetInt32().ShouldBe(1);
+@@ -138,6 +138,18 @@ public sealed class HttpPartiesQueryClientTests
+         payload.TryGetProperty("createdAfter", out _).ShouldBeFalse();
+     }
+ 
++    [Fact]
++    public async Task ListPartiesAsync_WhenCancelled_PropagatesCancellationAsync()
++    {
++        var httpClient = new HttpClient(new CancellationHandler()) { BaseAddress = new Uri("https://localhost") };
++        var client = new HttpPartiesQueryClient(httpClient, Options.Create(ClientOptions()));
++        using var cts = new CancellationTokenSource();
++        await cts.CancelAsync();
++
++        await Should.ThrowAsync<OperationCanceledException>(
++            () => client.ListPartiesAsync(1, 20, null, null, null, null, null, null, cts.Token));
++    }
++
+     [Fact]
+     public async Task SearchPartiesAsync_SubmitsEventStoreSearchQueryAsync()
+     {
+@@ -199,7 +211,9 @@ public sealed class HttpPartiesQueryClientTests
+         using JsonDocument body = JsonDocument.Parse(handler.LastRequestBody!);
+         JsonElement root = body.RootElement;
+         root.GetProperty("queryType").GetString().ShouldBe("PartySearch");
+-        root.TryGetProperty("projectionType", out _).ShouldBeFalse();
++        root.GetProperty("projectionType").GetString().ShouldBe("party-index");
++        root.GetProperty("projectionActorType").GetString().ShouldBe("PartyIndexProjectionQueryActor");
++        root.GetProperty("entityId").GetString().ShouldBe("parties");
+         JsonElement payload = root.GetProperty("payload");
+         payload.GetProperty("query").GetString().ShouldBe("acme");
+         payload.GetProperty("page").GetInt32().ShouldBe(1);
+@@ -210,6 +224,45 @@ public sealed class HttpPartiesQueryClientTests
+         handler.LastRequest.Headers.Authorization.Parameter.ShouldBe("host-token");
+     }
+ 
++    [Fact]
++    public async Task SearchPartiesAsync_OmitsNullOptionalPayloadParametersAsync()
++    {
++        var emptyResult = new PagedResult<PartySearchResult>
++        {
++            Items = [],
++            Page = 1,
++            PageSize = 10,
++            TotalCount = 0,
++            TotalPages = 1,
++        };
++
++        (HttpPartiesQueryClient client, HttpPartiesCommandClientTests.MockHandler handler) = CreateClient(
++            HttpStatusCode.OK,
++            QueryResponse(emptyResult));
++
++        await client.SearchPartiesAsync("acme", 1, 10, CancellationToken.None);
++
++        using JsonDocument body = JsonDocument.Parse(handler.LastRequestBody!);
++        JsonElement payload = body.RootElement.GetProperty("payload");
++        payload.GetProperty("query").GetString().ShouldBe("acme");
++        payload.GetProperty("page").GetInt32().ShouldBe(1);
++        payload.GetProperty("pageSize").GetInt32().ShouldBe(10);
++        payload.TryGetProperty("mode", out _).ShouldBeFalse();
++        payload.TryGetProperty("caseId", out _).ShouldBeFalse();
++    }
++
++    [Fact]
++    public async Task SearchPartiesAsync_WhenCancelled_PropagatesCancellationAsync()
++    {
++        var httpClient = new HttpClient(new CancellationHandler()) { BaseAddress = new Uri("https://localhost") };
++        var client = new HttpPartiesQueryClient(httpClient, Options.Create(ClientOptions()));
++        using var cts = new CancellationTokenSource();
++        await cts.CancelAsync();
++
++        await Should.ThrowAsync<OperationCanceledException>(
++            () => client.SearchPartiesAsync("acme", 1, 20, cts.Token));
++    }
++
+     [Fact]
+     public async Task GetPartyAsync_OnNotFound_ThrowsPartiesClientExceptionAsync()
+     {
+diff --git a/tests/Hexalith.Parties.Tests/Gateway/EventStoreGatewayRoutingTests.cs b/tests/Hexalith.Parties.Tests/Gateway/EventStoreGatewayRoutingTests.cs
+index 873a79d..20d5569 100644
+--- a/tests/Hexalith.Parties.Tests/Gateway/EventStoreGatewayRoutingTests.cs
++++ b/tests/Hexalith.Parties.Tests/Gateway/EventStoreGatewayRoutingTests.cs
+@@ -315,6 +315,99 @@ public sealed class EventStoreGatewayRoutingTests
+         query.ProjectionActorType.ShouldBe(PartyDetailProjectionQueryActor.ActorTypeName);
+     }
+ 
++    [Fact]
++    public async Task PostQueries_PartyIndex_UsesEventStoreQueryGatewayAndProjectionAdapterRoutingAsync()
++    {
++        using var factory = new EventStoreGatewayTestFactory();
++        using HttpClient client = factory.CreateAuthenticatedClient(permissions: ["query:read"]);
++
++        factory.QueryRouter.ResultPayload = JsonSerializer.SerializeToElement(new
++        {
++            items = Array.Empty<object>(),
++            page = 1,
++            pageSize = 20,
++            totalCount = 0,
++            totalPages = 1,
++        });
++
++        var request = new
++        {
++            tenant = "tenant-a",
++            domain = PartyIndexProjectionQueryActor.PartyDomain,
++            aggregateId = PartyIndexProjectionQueryActor.ListAggregateId,
++            queryType = PartyIndexProjectionQueryActor.PartyIndexQueryType,
++            projectionType = PartyIndexProjectionQueryActor.ProjectionType,
++            entityId = PartyIndexProjectionQueryActor.ListAggregateId,
++            projectionActorType = PartyIndexProjectionQueryActor.ActorTypeName,
++            payload = new
++            {
++                page = 1,
++                pageSize = 20,
++                type = "Person",
++                active = true,
++            },
++        };
++
++        using HttpResponseMessage response = await client.PostAsJsonAsync("/api/v1/queries", request);
++
++        response.StatusCode.ShouldBe(HttpStatusCode.OK);
++
++        SubmitQuery query = factory.QueryRouter.ReceivedQueries.Single();
++        query.Tenant.ShouldBe("tenant-a");
++        query.Domain.ShouldBe(PartyIndexProjectionQueryActor.PartyDomain);
++        query.AggregateId.ShouldBe(PartyIndexProjectionQueryActor.ListAggregateId);
++        query.QueryType.ShouldBe(PartyIndexProjectionQueryActor.PartyIndexQueryType);
++        query.EntityId.ShouldBe(PartyIndexProjectionQueryActor.ListAggregateId);
++        query.ProjectionType.ShouldBe(PartyIndexProjectionQueryActor.ProjectionType);
++        query.ProjectionActorType.ShouldBe(PartyIndexProjectionQueryActor.ActorTypeName);
++    }
++
++    [Fact]
++    public async Task PostQueries_PartySearch_UsesEventStoreQueryGatewayAndIndexProjectionAdapterRoutingAsync()
++    {
++        using var factory = new EventStoreGatewayTestFactory();
++        using HttpClient client = factory.CreateAuthenticatedClient(permissions: ["query:read"]);
++
++        factory.QueryRouter.ResultPayload = JsonSerializer.SerializeToElement(new
++        {
++            items = Array.Empty<object>(),
++            page = 1,
++            pageSize = 20,
++            totalCount = 0,
++            totalPages = 1,
++        });
++
++        var request = new
++        {
++            tenant = "tenant-a",
++            domain = PartyIndexProjectionQueryActor.PartyDomain,
++            aggregateId = PartyIndexProjectionQueryActor.ListAggregateId,
++            queryType = PartyIndexProjectionQueryActor.PartySearchQueryType,
++            projectionType = PartyIndexProjectionQueryActor.ProjectionType,
++            entityId = PartyIndexProjectionQueryActor.ListAggregateId,
++            projectionActorType = PartyIndexProjectionQueryActor.ActorTypeName,
++            payload = new
++            {
++                query = "Acme",
++                page = 1,
++                pageSize = 20,
++            },
++        };
++
++        using HttpResponseMessage response = await client.PostAsJsonAsync("/api/v1/queries", request);
++
++        response.StatusCode.ShouldBe(HttpStatusCode.OK);
++
++        SubmitQuery query = factory.QueryRouter.ReceivedQueries.Single();
++        query.Tenant.ShouldBe("tenant-a");
++        query.Domain.ShouldBe(PartyIndexProjectionQueryActor.PartyDomain);
++        query.AggregateId.ShouldBe(PartyIndexProjectionQueryActor.ListAggregateId);
++        query.QueryType.ShouldBe(PartyIndexProjectionQueryActor.PartySearchQueryType);
++        query.EntityId.ShouldBe(PartyIndexProjectionQueryActor.ListAggregateId);
++        query.ProjectionType.ShouldBe(PartyIndexProjectionQueryActor.ProjectionType);
++        query.ProjectionActorType.ShouldBe(PartyIndexProjectionQueryActor.ActorTypeName);
++    }
++
+     [Fact]
+     public async Task PostQueries_NotFound_Returns404ThroughEventStoreQueryGatewayAsync()
+     {
+diff --git a/tests/Hexalith.Parties.Tests/Gateway/PartyIndexProjectionQueryActorTests.cs b/tests/Hexalith.Parties.Tests/Gateway/PartyIndexProjectionQueryActorTests.cs
+new file mode 100644
+index 0000000..8384296
+--- /dev/null
++++ b/tests/Hexalith.Parties.Tests/Gateway/PartyIndexProjectionQueryActorTests.cs
+@@ -0,0 +1,490 @@
++using System.Text.Json;
++
++using Dapr.Actors;
++using Dapr.Actors.Client;
++using Dapr.Actors.Runtime;
++
++using Hexalith.EventStore.Contracts.Queries;
++using Hexalith.Parties.Contracts.Models;
++using Hexalith.Parties.Contracts.ValueObjects;
++using Hexalith.Parties.Projections.Abstractions;
++using Hexalith.Parties.Projections.Actors;
++using Hexalith.Parties.Queries;
++
++using Microsoft.Extensions.Logging;
++using Microsoft.Extensions.Logging.Abstractions;
++
++using NSubstitute;
++using NSubstitute.ExceptionExtensions;
++
++using Shouldly;
++
++namespace Hexalith.Parties.Tests.Gateway;
++
++public sealed class PartyIndexProjectionQueryActorTests
++{
++    [Fact]
++    public async Task QueryAsync_PartyIndex_ReadsTenantScopedIndexAndFiltersBeforePagingAsync()
++    {
++        IActorProxyFactory actorProxyFactory = Substitute.For<IActorProxyFactory>();
++        IPartyIndexProjectionActor indexActor = Substitute.For<IPartyIndexProjectionActor>();
++        indexActor.GetEntriesAsync().Returns(Task.FromResult<IReadOnlyDictionary<string, PartyIndexEntry>>(
++            new Dictionary<string, PartyIndexEntry>(StringComparer.Ordinal)
++            {
++                ["p-alpha"] = Entry("p-alpha", "Alpha Person", PartyType.Person, active: true, "2026-05-03T00:00:00Z", "2026-05-05T00:00:00Z"),
++                ["p-beta"] = Entry("p-beta", "Beta Person", PartyType.Person, active: true, "2026-05-04T00:00:00Z", "2026-05-06T00:00:00Z"),
++                ["p-inactive"] = Entry("p-inactive", "Inactive Person", PartyType.Person, active: false, "2026-05-04T00:00:00Z", "2026-05-06T00:00:00Z"),
++                ["p-org"] = Entry("p-org", "Org", PartyType.Organization, active: true, "2026-05-04T00:00:00Z", "2026-05-06T00:00:00Z"),
++                ["p-outside"] = Entry("p-outside", "Outside Person", PartyType.Person, active: true, "2026-04-30T00:00:00Z", "2026-05-06T00:00:00Z"),
++                ["p-erased"] = Entry("p-erased", "Erased Person", PartyType.Person, active: true, "2026-05-04T00:00:00Z", "2026-05-06T00:00:00Z") with { IsErased = true },
++            }));
++        actorProxyFactory.CreateActorProxy<IPartyIndexProjectionActor>(
++                Arg.Any<ActorId>(),
++                Arg.Any<string>(),
++                Arg.Any<ActorProxyOptions?>())
++            .Returns(indexActor);
++
++        PartyIndexProjectionQueryActor actor = CreateActor("party-index:tenant-a:parties", actorProxyFactory);
++
++        QueryResult result = await actor.QueryAsync(CreateEnvelope(
++            tenant: "tenant-a",
++            payload: Payload(new
++            {
++                page = 1,
++                pageSize = 1,
++                type = "Person",
++                active = true,
++                createdAfter = "2026-05-01T00:00:00.0000000+00:00",
++                createdBefore = "2026-05-31T00:00:00.0000000+00:00",
++                modifiedAfter = "2026-05-01T00:00:00.0000000+00:00",
++                modifiedBefore = "2026-05-31T00:00:00.0000000+00:00",
++            })));
++
++        result.Success.ShouldBeTrue();
++        result.ProjectionType.ShouldBe(PartyIndexProjectionQueryActor.ProjectionType);
++        PagedResult<PartyIndexEntry> page = DeserializePage(result);
++        page.Page.ShouldBe(1);
++        page.PageSize.ShouldBe(1);
++        page.TotalCount.ShouldBe(2);
++        page.TotalPages.ShouldBe(2);
++        page.Items.Select(static i => i.Id).ShouldBe(["p-alpha"]);
++
++        actorProxyFactory.Received(1).CreateActorProxy<IPartyIndexProjectionActor>(
++            Arg.Is<ActorId>(id => id.GetId() == "tenant-a:party-index"),
++            nameof(PartyIndexProjectionActor),
++            Arg.Any<ActorProxyOptions?>());
++    }
++
++    [Fact]
++    public async Task QueryAsync_ActiveFalse_ReturnsInactiveEntriesWithoutHidingThemAsync()
++    {
++        IActorProxyFactory actorProxyFactory = Substitute.For<IActorProxyFactory>();
++        IPartyIndexProjectionActor indexActor = Substitute.For<IPartyIndexProjectionActor>();
++        indexActor.GetEntriesAsync().Returns(Task.FromResult<IReadOnlyDictionary<string, PartyIndexEntry>>(
++            new Dictionary<string, PartyIndexEntry>(StringComparer.Ordinal)
++            {
++                ["p-active"] = Entry("p-active", "Active Person", PartyType.Person, active: true, "2026-05-01T00:00:00Z", "2026-05-01T00:00:00Z"),
++                ["p-inactive"] = Entry("p-inactive", "Inactive Person", PartyType.Person, active: false, "2026-05-01T00:00:00Z", "2026-05-01T00:00:00Z"),
++            }));
++        actorProxyFactory.CreateActorProxy<IPartyIndexProjectionActor>(
++                Arg.Any<ActorId>(),
++                Arg.Any<string>(),
++                Arg.Any<ActorProxyOptions?>())
++            .Returns(indexActor);
++
++        PartyIndexProjectionQueryActor actor = CreateActor("party-index:tenant-a:parties", actorProxyFactory);
++
++        QueryResult result = await actor.QueryAsync(CreateEnvelope(
++            tenant: "tenant-a",
++            payload: Payload(new { page = 1, pageSize = 10, active = false })));
++
++        result.Success.ShouldBeTrue();
++        PagedResult<PartyIndexEntry> page = DeserializePage(result);
++        page.Items.Select(static i => i.Id).ShouldBe(["p-inactive"]);
++        page.TotalCount.ShouldBe(1);
++    }
++
++    [Fact]
++    public async Task QueryAsync_PartySearch_ReadsTenantScopedIndexAndReturnsDisplayNameMetadataAsync()
++    {
++        IActorProxyFactory actorProxyFactory = Substitute.For<IActorProxyFactory>();
++        IPartyIndexProjectionActor indexActor = Substitute.For<IPartyIndexProjectionActor>();
++        indexActor.GetEntriesAsync().Returns(Task.FromResult<IReadOnlyDictionary<string, PartyIndexEntry>>(
++            new Dictionary<string, PartyIndexEntry>(StringComparer.Ordinal)
++            {
++                ["p-exact"] = Entry("p-exact", "Acme", PartyType.Organization, active: true, "2026-05-01T00:00:00Z", "2026-05-01T00:00:00Z"),
++                ["p-prefix"] = Entry("p-prefix", "Acme Corporation", PartyType.Organization, active: true, "2026-05-01T00:00:00Z", "2026-05-01T00:00:00Z"),
++                ["p-other"] = Entry("p-other", "Other Tenant Name", PartyType.Organization, active: true, "2026-05-01T00:00:00Z", "2026-05-01T00:00:00Z"),
++            }));
++        actorProxyFactory.CreateActorProxy<IPartyIndexProjectionActor>(
++                Arg.Any<ActorId>(),
++                Arg.Any<string>(),
++                Arg.Any<ActorProxyOptions?>())
++            .Returns(indexActor);
++
++        PartyIndexProjectionQueryActor actor = CreateActor("party-index:tenant-a:parties", actorProxyFactory);
++
++        QueryResult result = await actor.QueryAsync(CreateSearchEnvelope(
++            tenant: "tenant-a",
++            payload: Payload(new { query = "Acme", page = 1, pageSize = 20 })));
++
++        result.Success.ShouldBeTrue();
++        result.ProjectionType.ShouldBe(PartyIndexProjectionQueryActor.ProjectionType);
++        PagedResult<PartySearchResult> page = DeserializeSearchPage(result);
++        page.Items.Select(static i => i.Party.Id).ShouldBe(["p-exact", "p-prefix"]);
++        page.Items[0].Matches.ShouldContain(m => m.MatchedField == "displayName" && m.MatchType == "exact");
++        page.Items[1].Matches.ShouldContain(m => m.MatchedField == "displayName" && m.MatchType == "prefix");
++        page.Items.SelectMany(static i => i.Matches).ShouldAllBe(m => m.MatchedField == "displayName");
++
++        actorProxyFactory.Received(1).CreateActorProxy<IPartyIndexProjectionActor>(
++            Arg.Is<ActorId>(id => id.GetId() == "tenant-a:party-index"),
++            nameof(PartyIndexProjectionActor),
++            Arg.Any<ActorProxyOptions?>());
++    }
++
++    [Fact]
++    public async Task QueryAsync_PartySearchPayloadWithUnknownFieldsRejectedBeforeProjectionReadAsync()
++    {
++        IActorProxyFactory actorProxyFactory = Substitute.For<IActorProxyFactory>();
++        PartyIndexProjectionQueryActor actor = CreateActor("party-index:tenant-b:parties", actorProxyFactory);
++
++        QueryResult result = await actor.QueryAsync(CreateSearchEnvelope(
++            tenant: "tenant-b",
++            payload: Payload(new
++            {
++                query = "Shared Display Name",
++                page = 1,
++                pageSize = 20,
++                tenantId = "tenant-a",
++                actorId = "tenant-a:party-index",
++            })));
++
++        result.Success.ShouldBeFalse();
++        result.ErrorMessage.ShouldBe(QueryAdapterFailureReason.InvalidEnvelope);
++        actorProxyFactory.DidNotReceive().CreateActorProxy<IPartyIndexProjectionActor>(
++            Arg.Any<ActorId>(),
++            Arg.Any<string>(),
++            Arg.Any<ActorProxyOptions?>());
++    }
++
++    [Fact]
++    public async Task QueryAsync_InvalidDateRange_FailsBeforeProjectionReadAsync()
++    {
++        IActorProxyFactory actorProxyFactory = Substitute.For<IActorProxyFactory>();
++        PartyIndexProjectionQueryActor actor = CreateActor("party-index:tenant-a:parties", actorProxyFactory);
++
++        QueryResult result = await actor.QueryAsync(CreateEnvelope(
++            tenant: "tenant-a",
++            payload: Payload(new
++            {
++                page = 1,
++                pageSize = 20,
++                createdAfter = "2026-05-31T00:00:00.0000000+00:00",
++                createdBefore = "2026-05-01T00:00:00.0000000+00:00",
++            })));
++
++        result.Success.ShouldBeFalse();
++        result.ErrorMessage.ShouldBe(QueryAdapterFailureReason.InvalidEnvelope);
++        actorProxyFactory.DidNotReceive().CreateActorProxy<IPartyIndexProjectionActor>(
++            Arg.Any<ActorId>(),
++            Arg.Any<string>(),
++            Arg.Any<ActorProxyOptions?>());
++    }
++
++    [Fact]
++    public async Task QueryAsync_InvalidPartyType_FailsBeforeProjectionReadAsync()
++    {
++        IActorProxyFactory actorProxyFactory = Substitute.For<IActorProxyFactory>();
++        PartyIndexProjectionQueryActor actor = CreateActor("party-index:tenant-a:parties", actorProxyFactory);
++
++        QueryResult result = await actor.QueryAsync(CreateEnvelope(
++            tenant: "tenant-a",
++            payload: Payload(new { page = 1, pageSize = 20, type = "999" })));
++
++        result.Success.ShouldBeFalse();
++        result.ErrorMessage.ShouldBe(QueryAdapterFailureReason.InvalidEnvelope);
++        actorProxyFactory.DidNotReceive().CreateActorProxy<IPartyIndexProjectionActor>(
++            Arg.Any<ActorId>(),
++            Arg.Any<string>(),
++            Arg.Any<ActorProxyOptions?>());
++    }
++
++    [Fact]
++    public async Task QueryAsync_CrossTenantActorRoute_FailsBeforeProjectionReadAsync()
++    {
++        IActorProxyFactory actorProxyFactory = Substitute.For<IActorProxyFactory>();
++        PartyIndexProjectionQueryActor actor = CreateActor("party-index:tenant-a:parties", actorProxyFactory);
++
++        QueryResult result = await actor.QueryAsync(CreateEnvelope(
++            tenant: "tenant-b",
++            payload: Payload(new { page = 1, pageSize = 20 })));
++
++        result.Success.ShouldBeFalse();
++        result.ErrorMessage.ShouldBe(QueryAdapterFailureReason.InvalidEnvelope);
++        actorProxyFactory.DidNotReceive().CreateActorProxy<IPartyIndexProjectionActor>(
++            Arg.Any<ActorId>(),
++            Arg.Any<string>(),
++            Arg.Any<ActorProxyOptions?>());
++    }
++
++    // P13: Stricter contract — unknown JSON fields fail closed instead of being silently dropped.
++    // The security property (payload-supplied tenantId cannot influence routing) is now proven
++    // even more strongly: the payload is rejected before route resolution runs, and no actor
++    // proxy is constructed at all.
++    [Fact]
++    public async Task QueryAsync_PayloadWithUnknownFieldsRejectedBeforeProjectionReadAsync()
++    {
++        IActorProxyFactory actorProxyFactory = Substitute.For<IActorProxyFactory>();
++        PartyIndexProjectionQueryActor actor = CreateActor("party-index:tenant-b:parties", actorProxyFactory);
++
++        QueryResult result = await actor.QueryAsync(CreateEnvelope(
++            tenant: "tenant-b",
++            payload: Payload(new { page = 1, pageSize = 20, tenantId = "tenant-a", partitionKey = "tenant-a:party-index" })));
++
++        result.Success.ShouldBeFalse();
++        result.ErrorMessage.ShouldBe(QueryAdapterFailureReason.InvalidEnvelope);
++        actorProxyFactory.DidNotReceive().CreateActorProxy<IPartyIndexProjectionActor>(
++            Arg.Any<ActorId>(),
++            Arg.Any<string>(),
++            Arg.Any<ActorProxyOptions?>());
++    }
++
++    // P13 companion: With only known fields in the payload, routing succeeds and the actor key
++    // is derived strictly from the authenticated envelope tenant. This is the positive proof
++    // that pairs with the unknown-fields negative proof above.
++    [Fact]
++    public async Task QueryAsync_KnownFieldsOnly_DerivesActorKeyFromEnvelopeTenantAsync()
++    {
++        IActorProxyFactory actorProxyFactory = Substitute.For<IActorProxyFactory>();
++        IPartyIndexProjectionActor indexActor = Substitute.For<IPartyIndexProjectionActor>();
++        indexActor.GetEntriesAsync().Returns(Task.FromResult<IReadOnlyDictionary<string, PartyIndexEntry>>(
++            new Dictionary<string, PartyIndexEntry>(StringComparer.Ordinal)
++            {
++                ["p-tenant-b"] = Entry("p-tenant-b", "Tenant B Person", PartyType.Person, active: true, "2026-05-01T00:00:00Z", "2026-05-01T00:00:00Z"),
++            }));
++        actorProxyFactory.CreateActorProxy<IPartyIndexProjectionActor>(
++                Arg.Any<ActorId>(),
++                Arg.Any<string>(),
++                Arg.Any<ActorProxyOptions?>())
++            .Returns(indexActor);
++
++        PartyIndexProjectionQueryActor actor = CreateActor("party-index:tenant-b:parties", actorProxyFactory);
++
++        QueryResult result = await actor.QueryAsync(CreateEnvelope(
++            tenant: "tenant-b",
++            payload: Payload(new { page = 1, pageSize = 20 })));
++
++        result.Success.ShouldBeTrue();
++        DeserializePage(result).Items.Select(static i => i.Id).ShouldBe(["p-tenant-b"]);
++        actorProxyFactory.Received(1).CreateActorProxy<IPartyIndexProjectionActor>(
++            Arg.Is<ActorId>(id => id.GetId() == "tenant-b:party-index"),
++            nameof(PartyIndexProjectionActor),
++            Arg.Any<ActorProxyOptions?>());
++        actorProxyFactory.DidNotReceive().CreateActorProxy<IPartyIndexProjectionActor>(
++            Arg.Is<ActorId>(id => id.GetId().Contains("tenant-a", StringComparison.Ordinal)),
++            Arg.Any<string>(),
++            Arg.Any<ActorProxyOptions?>());
++    }
++
++    // P5: Malformed date string must short-circuit to InvalidEnvelope before any projection read.
++    [Fact]
++    public async Task QueryAsync_MalformedDateString_FailsBeforeProjectionReadAsync()
++    {
++        IActorProxyFactory actorProxyFactory = Substitute.For<IActorProxyFactory>();
++        PartyIndexProjectionQueryActor actor = CreateActor("party-index:tenant-a:parties", actorProxyFactory);
++
++        QueryResult result = await actor.QueryAsync(CreateEnvelope(
++            tenant: "tenant-a",
++            payload: Payload(new { page = 1, pageSize = 20, createdAfter = "not-a-date" })));
++
++        result.Success.ShouldBeFalse();
++        result.ErrorMessage.ShouldBe(QueryAdapterFailureReason.InvalidEnvelope);
++        actorProxyFactory.DidNotReceive().CreateActorProxy<IPartyIndexProjectionActor>(
++            Arg.Any<ActorId>(),
++            Arg.Any<string>(),
++            Arg.Any<ActorProxyOptions?>());
++    }
++
++    // P6: Active filter null/omitted must return BOTH active and inactive entries (excluding erased).
++    // Pins the implemented "no default active hiding" behavior so a future regression cannot
++    // silently introduce active-only as the default without test failure.
++    [Fact]
++    public async Task QueryAsync_ActiveNull_ReturnsBothActiveAndInactiveEntriesAsync()
++    {
++        IActorProxyFactory actorProxyFactory = Substitute.For<IActorProxyFactory>();
++        IPartyIndexProjectionActor indexActor = Substitute.For<IPartyIndexProjectionActor>();
++        indexActor.GetEntriesAsync().Returns(Task.FromResult<IReadOnlyDictionary<string, PartyIndexEntry>>(
++            new Dictionary<string, PartyIndexEntry>(StringComparer.Ordinal)
++            {
++                ["p-active"] = Entry("p-active", "Active Person", PartyType.Person, active: true, "2026-05-01T00:00:00Z", "2026-05-01T00:00:00Z"),
++                ["p-inactive"] = Entry("p-inactive", "Inactive Person", PartyType.Person, active: false, "2026-05-01T00:00:00Z", "2026-05-01T00:00:00Z"),
++                ["p-erased"] = Entry("p-erased", "Erased Person", PartyType.Person, active: true, "2026-05-01T00:00:00Z", "2026-05-01T00:00:00Z") with { IsErased = true },
++            }));
++        actorProxyFactory.CreateActorProxy<IPartyIndexProjectionActor>(
++                Arg.Any<ActorId>(),
++                Arg.Any<string>(),
++                Arg.Any<ActorProxyOptions?>())
++            .Returns(indexActor);
++
++        PartyIndexProjectionQueryActor actor = CreateActor("party-index:tenant-a:parties", actorProxyFactory);
++
++        QueryResult result = await actor.QueryAsync(CreateEnvelope(
++            tenant: "tenant-a",
++            payload: Payload(new { page = 1, pageSize = 10 })));
++
++        result.Success.ShouldBeTrue();
++        PagedResult<PartyIndexEntry> page = DeserializePage(result);
++        page.Items.Select(static i => i.Id).ShouldBe(["p-active", "p-inactive"], ignoreOrder: true);
++        page.TotalCount.ShouldBe(2);
++    }
++
++    [Fact]
++    public async Task QueryAsync_OperationCanceledExceptionFromProjectionRead_PropagatesCancellationAsync()
++    {
++        IActorProxyFactory actorProxyFactory = Substitute.For<IActorProxyFactory>();
++        IPartyIndexProjectionActor indexActor = Substitute.For<IPartyIndexProjectionActor>();
++        indexActor.GetEntriesAsync().Throws(new OperationCanceledException());
++        actorProxyFactory.CreateActorProxy<IPartyIndexProjectionActor>(
++                Arg.Any<ActorId>(),
++                Arg.Any<string>(),
++                Arg.Any<ActorProxyOptions?>())
++            .Returns(indexActor);
++        PartyIndexProjectionQueryActor actor = CreateActor("party-index:tenant-a:parties", actorProxyFactory);
++
++        await Should.ThrowAsync<OperationCanceledException>(
++            () => actor.QueryAsync(CreateEnvelope("tenant-a", Payload(new { page = 1, pageSize = 20 }))));
++    }
++
++    // P8 + P14: Log-safety assertion strengthened.
++    // P8: The exception message intentionally carries PII text ("Ada Lovelace") so the assertion
++    //     actually catches a regression where the logger interpolates ex.Message instead of
++    //     ex.GetType().Name. Without this, the negative-assertion was vacuously satisfied.
++    // P14: The actor key "tenant-a:party-index" is now explicitly forbidden in log output
++    //     to lock in the Party-Mode clarification that actor/storage keys are out of bounds.
++    [Fact]
++    public async Task QueryAsync_LogMessages_ContainOnlyBoundedMetadataOnReadFailureAsync()
++    {
++        var recordingLogger = new RecordingLogger<PartyIndexProjectionQueryActor>();
++        IActorProxyFactory actorProxyFactory = Substitute.For<IActorProxyFactory>();
++        IPartyIndexProjectionActor indexActor = Substitute.For<IPartyIndexProjectionActor>();
++        indexActor.GetEntriesAsync().Throws(new InvalidOperationException(
++            "state store failed while fetching entry for Ada Lovelace <ada@example.test>"));
++        actorProxyFactory.CreateActorProxy<IPartyIndexProjectionActor>(
++                Arg.Any<ActorId>(),
++                Arg.Any<string>(),
++                Arg.Any<ActorProxyOptions?>())
++            .Returns(indexActor);
++
++        PartyIndexProjectionQueryActor actor = CreateActorWithLogger(
++            "party-index:tenant-a:parties",
++            actorProxyFactory,
++            recordingLogger);
++
++        QueryResult result = await actor.QueryAsync(CreateEnvelope("tenant-a", Payload(new { page = 1, pageSize = 20 })));
++
++        result.Success.ShouldBeFalse();
++        result.ErrorMessage.ShouldBe(QueryAdapterFailureReason.ActorException);
++        recordingLogger.Records.ShouldNotBeEmpty();
++        foreach (string message in recordingLogger.Records.Select(static r => r.Message))
++        {
++            // PII guards: nothing from the (intentionally PII-laden) exception message must leak.
++            message.ShouldNotContain("Ada", Case.Insensitive);
++            message.ShouldNotContain("ada@example.test", Case.Insensitive);
++            message.ShouldNotContain("displayName", Case.Insensitive);
++            message.ShouldNotContain("contactChannels", Case.Insensitive);
++            // Actor/storage key guards (P14): neither the partitioned legacy form nor the
++            // current tenant-scoped form is permitted in diagnostic output.
++            message.ShouldNotContain("tenant-a:party-index:all", Case.Insensitive);
++            message.ShouldNotContain("tenant-a:party-index", Case.Insensitive);
++        }
++    }
++
++    private static PartyIndexProjectionQueryActor CreateActor(string actorId, IActorProxyFactory actorProxyFactory)
++        => CreateActorWithLogger(actorId, actorProxyFactory, NullLogger<PartyIndexProjectionQueryActor>.Instance);
++
++    private static PartyIndexProjectionQueryActor CreateActorWithLogger(
++        string actorId,
++        IActorProxyFactory actorProxyFactory,
++        ILogger<PartyIndexProjectionQueryActor> logger)
++    {
++        ActorTimerManager timerManager = Substitute.For<ActorTimerManager>();
++        var host = ActorHost.CreateForTest<PartyIndexProjectionQueryActor>(
++            new ActorTestOptions { ActorId = new ActorId(actorId), TimerManager = timerManager });
++        return new PartyIndexProjectionQueryActor(host, actorProxyFactory, logger);
++    }
++
++    private static QueryEnvelope CreateEnvelope(string tenant, byte[] payload)
++        => new(
++            tenantId: tenant,
++            domain: PartyIndexProjectionQueryActor.PartyDomain,
++            aggregateId: PartyIndexProjectionQueryActor.ListAggregateId,
++            queryType: PartyIndexProjectionQueryActor.PartyIndexQueryType,
++            payload: payload,
++            correlationId: "corr-list",
++            userId: "user-1",
++            entityId: PartyIndexProjectionQueryActor.ListAggregateId);
++
++    private static QueryEnvelope CreateSearchEnvelope(string tenant, byte[] payload)
++        => new(
++            tenantId: tenant,
++            domain: PartyIndexProjectionQueryActor.PartyDomain,
++            aggregateId: PartyIndexProjectionQueryActor.ListAggregateId,
++            queryType: "PartySearch",
++            payload: payload,
++            correlationId: "corr-search",
++            userId: "user-1",
++            entityId: PartyIndexProjectionQueryActor.ListAggregateId);
++
++    private static PagedResult<PartyIndexEntry> DeserializePage(QueryResult result)
++        => result.GetPayload().Deserialize<PagedResult<PartyIndexEntry>>(JsonOptions)
++            ?? throw new InvalidOperationException("Expected paged PartyIndex payload.");
++
++    private static PagedResult<PartySearchResult> DeserializeSearchPage(QueryResult result)
++        => result.GetPayload().Deserialize<PagedResult<PartySearchResult>>(JsonOptions)
++            ?? throw new InvalidOperationException("Expected paged PartySearch payload.");
++
++    private static byte[] Payload<T>(T value)
++        => JsonSerializer.SerializeToUtf8Bytes(value, JsonOptions);
++
++    private static PartyIndexEntry Entry(
++        string id,
++        string displayName,
++        PartyType type,
++        bool active,
++        string createdAt,
++        string modifiedAt)
++        => new()
++        {
++            Id = id,
++            Type = type,
++            IsActive = active,
++            DisplayName = displayName,
++            SortName = displayName,
++            CreatedAt = DateTimeOffset.Parse(createdAt, System.Globalization.CultureInfo.InvariantCulture),
++            LastModifiedAt = DateTimeOffset.Parse(modifiedAt, System.Globalization.CultureInfo.InvariantCulture),
++        };
++
++    // P9: static readonly so System.Text.Json caches converter/metadata for the options
++    // instance across test cases instead of warming a fresh cache on every Payload(...) call.
++    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
++
++    private sealed class RecordingLogger<T> : ILogger<T>
++    {
++        public List<(LogLevel Level, string Message)> Records { get; } = [];
++
++        IDisposable? ILogger.BeginScope<TState>(TState state) => null;
++
++        public bool IsEnabled(LogLevel logLevel) => true;
++
++        public void Log<TState>(
++            LogLevel logLevel,
++            EventId eventId,
++            TState state,
++            Exception? exception,
++            Func<TState, Exception?, string> formatter)
++        {
++            ArgumentNullException.ThrowIfNull(formatter);
++            Records.Add((logLevel, formatter(state, exception)));
++        }
++    }
++}
+diff --git a/tests/Hexalith.Parties.Tests/Search/BasicPartySearchProviderTests.cs b/tests/Hexalith.Parties.Tests/Search/BasicPartySearchProviderTests.cs
+index 4200c32..9201402 100644
+--- a/tests/Hexalith.Parties.Tests/Search/BasicPartySearchProviderTests.cs
++++ b/tests/Hexalith.Parties.Tests/Search/BasicPartySearchProviderTests.cs
+@@ -88,4 +88,145 @@ public class BasicPartySearchProviderTests
+ 
+         result.Items.Select(e => e.Id).ShouldBe(["p-zed-display", "p-alpha-display"]);
+     }
++
++    [Fact]
++    public void BuildPagedList_FiltersErasedTypeActiveAndDateRangesBeforeMetadata()
++    {
++        List<PartyIndexEntry> entries =
++        [
++            Entry("p-alpha", "Alpha Person", PartyType.Person, active: true, "2026-05-03T00:00:00Z", "2026-05-06T00:00:00Z"),
++            Entry("p-beta", "Beta Person", PartyType.Person, active: true, "2026-05-04T00:00:00Z", "2026-05-07T00:00:00Z"),
++            Entry("p-inactive", "Inactive Person", PartyType.Person, active: false, "2026-05-04T00:00:00Z", "2026-05-07T00:00:00Z"),
++            Entry("p-org", "Org", PartyType.Organization, active: true, "2026-05-04T00:00:00Z", "2026-05-07T00:00:00Z"),
++            Entry("p-created-before", "Created Before", PartyType.Person, active: true, "2026-04-30T00:00:00Z", "2026-05-07T00:00:00Z"),
++            Entry("p-modified-after", "Modified After", PartyType.Person, active: true, "2026-05-04T00:00:00Z", "2026-06-01T00:00:00Z"),
++            Entry("p-erased", "Erased Person", PartyType.Person, active: true, "2026-05-04T00:00:00Z", "2026-05-07T00:00:00Z") with { IsErased = true },
++        ];
++
++        PagedResult<PartyIndexEntry> result = PartySearchResultsBuilder.BuildPagedList(
++            entries,
++            PartyType.Person,
++            activeFilter: true,
++            createdAfter: DateTimeOffset.Parse("2026-05-01T00:00:00Z"),
++            createdBefore: DateTimeOffset.Parse("2026-05-31T00:00:00Z"),
++            modifiedAfter: DateTimeOffset.Parse("2026-05-01T00:00:00Z"),
++            modifiedBefore: DateTimeOffset.Parse("2026-05-31T00:00:00Z"),
++            page: 2,
++            pageSize: 1);
++
++        result.Items.Select(static e => e.Id).ShouldBe(["p-beta"]);
++        result.TotalCount.ShouldBe(2);
++        result.TotalPages.ShouldBe(2);
++    }
++
++    [Theory]
++    [InlineData(0, 0, 1, 1)]
++    [InlineData(-10, -5, 1, 1)]
++    [InlineData(1, 500, 1, 100)]
++    public void BuildPagedList_NormalizesPageBounds(int page, int pageSize, int expectedPage, int expectedPageSize)
++    {
++        PagedResult<PartyIndexEntry> result = PartySearchResultsBuilder.BuildPagedList(
++            [Entry("p-1", "Alpha Person", PartyType.Person, active: true, "2026-05-01T00:00:00Z", "2026-05-01T00:00:00Z")],
++            null,
++            null,
++            page,
++            pageSize);
++
++        result.Page.ShouldBe(expectedPage);
++        result.PageSize.ShouldBe(expectedPageSize);
++        result.TotalCount.ShouldBe(1);
++        result.TotalPages.ShouldBe(1);
++    }
++
++    [Fact]
++    public void BuildPagedList_UsesOverflowSafeSkipForLargePage()
++    {
++        PagedResult<PartyIndexEntry> result = PartySearchResultsBuilder.BuildPagedList(
++            [Entry("p-1", "Alpha Person", PartyType.Person, active: true, "2026-05-01T00:00:00Z", "2026-05-01T00:00:00Z")],
++            null,
++            null,
++            int.MaxValue,
++            100);
++
++        result.Items.ShouldBeEmpty();
++        result.Page.ShouldBe(int.MaxValue);
++        result.TotalCount.ShouldBe(1);
++    }
++
++    // P7: Party-Mode clarification requires combined created/modified ranges to be test-pinned.
++    // Each range constrains a different timestamp; an entry must satisfy both ranges to be returned.
++    // Also exercises one-sided ranges (createdBefore null, modifiedAfter null) by composing two
++    // half-open intervals across different columns.
++    [Fact]
++    public void BuildPagedList_AppliesCombinedCreatedAndModifiedRangeFiltersTogether()
++    {
++        List<PartyIndexEntry> entries =
++        [
++            // Satisfies BOTH ranges: created in [May 1, May 31], modified in [May 5, May 31].
++            Entry("p-in-both-ranges", "Charlie Person", PartyType.Person, active: true, "2026-05-10T00:00:00Z", "2026-05-15T00:00:00Z"),
++            // Satisfies created range only: modified on May 1 falls before the modifiedAfter bound (May 5).
++            Entry("p-modified-too-early", "Modified Early", PartyType.Person, active: true, "2026-05-10T00:00:00Z", "2026-05-01T00:00:00Z"),
++            // Satisfies modified range only: created on April 25 falls before the createdAfter bound (May 1).
++            Entry("p-created-too-early", "Created Early", PartyType.Person, active: true, "2026-04-25T00:00:00Z", "2026-05-15T00:00:00Z"),
++        ];
++
++        PagedResult<PartyIndexEntry> result = PartySearchResultsBuilder.BuildPagedList(
++            entries,
++            typeFilter: null,
++            activeFilter: null,
++            createdAfter: DateTimeOffset.Parse("2026-05-01T00:00:00Z", System.Globalization.CultureInfo.InvariantCulture),
++            createdBefore: DateTimeOffset.Parse("2026-05-31T00:00:00Z", System.Globalization.CultureInfo.InvariantCulture),
++            modifiedAfter: DateTimeOffset.Parse("2026-05-05T00:00:00Z", System.Globalization.CultureInfo.InvariantCulture),
++            modifiedBefore: DateTimeOffset.Parse("2026-05-31T00:00:00Z", System.Globalization.CultureInfo.InvariantCulture),
++            page: 1,
++            pageSize: 20);
++
++        result.Items.Select(static e => e.Id).ShouldBe(["p-in-both-ranges"]);
++        result.TotalCount.ShouldBe(1);
++    }
++
++    // P7 (one-sided): Only createdAfter is specified; modifiedAfter, createdBefore, and
++    // modifiedBefore are null. Entries created on or after the bound must be returned regardless
++    // of LastModifiedAt.
++    [Fact]
++    public void BuildPagedList_AppliesOneSidedCreatedAfterRangeWithoutOtherDateBounds()
++    {
++        List<PartyIndexEntry> entries =
++        [
++            Entry("p-after-bound", "After Bound", PartyType.Person, active: true, "2026-05-10T00:00:00Z", "2024-01-01T00:00:00Z"),
++            Entry("p-before-bound", "Before Bound", PartyType.Person, active: true, "2026-04-25T00:00:00Z", "2026-06-01T00:00:00Z"),
++        ];
++
++        PagedResult<PartyIndexEntry> result = PartySearchResultsBuilder.BuildPagedList(
++            entries,
++            typeFilter: null,
++            activeFilter: null,
++            createdAfter: DateTimeOffset.Parse("2026-05-01T00:00:00Z", System.Globalization.CultureInfo.InvariantCulture),
++            createdBefore: null,
++            modifiedAfter: null,
++            modifiedBefore: null,
++            page: 1,
++            pageSize: 20);
++
++        result.Items.Select(static e => e.Id).ShouldBe(["p-after-bound"]);
++        result.TotalCount.ShouldBe(1);
++    }
++
++    private static PartyIndexEntry Entry(
++        string id,
++        string displayName,
++        PartyType type,
++        bool active,
++        string createdAt,
++        string modifiedAt)
++        => new()
++        {
++            Id = id,
++            Type = type,
++            IsActive = active,
++            DisplayName = displayName,
++            SortName = displayName,
++            CreatedAt = DateTimeOffset.Parse(createdAt, System.Globalization.CultureInfo.InvariantCulture),
++            LastModifiedAt = DateTimeOffset.Parse(modifiedAt, System.Globalization.CultureInfo.InvariantCulture),
++        };
+ }
+diff --git a/tests/Hexalith.Parties.Tests/Search/LocalFuzzyPartySearchProviderTests.cs b/tests/Hexalith.Parties.Tests/Search/LocalFuzzyPartySearchProviderTests.cs
+index 12bffcf..b661951 100644
+--- a/tests/Hexalith.Parties.Tests/Search/LocalFuzzyPartySearchProviderTests.cs
++++ b/tests/Hexalith.Parties.Tests/Search/LocalFuzzyPartySearchProviderTests.cs
+@@ -48,16 +48,13 @@ public class LocalFuzzyPartySearchProviderTests
+         match.RelevanceScore.ShouldBeGreaterThan(0.0);
+     }
+ 
+-    // 7.4 — type text match ("company" finds Organization parties)
++    // 7.4 — type text is not searched in the MVP display-name path
+     [Fact]
+-    public void Search_TypeTextMatch_FindsOrganizationParties()
++    public void Search_TypeTextMatch_DoesNotFindOrganizationParties()
+     {
+         PagedResult<PartySearchResult> result = _provider.Search(_entries, "company", null, null, 1, 20);
+ 
+-        result.Items.ShouldNotBeEmpty();
+-        result.Items.ShouldContain(r => r.Party.Id == "p2");
+-        PartySearchResult orgMatch = result.Items.First(r => r.Party.Id == "p2");
+-        orgMatch.Matches.ShouldContain(m => m.MatchedField == "type");
++        result.Items.ShouldBeEmpty();
+     }
+ 
+     // 7.5 — multi-token query ("Jean Dupont") matches across fields
+@@ -71,15 +68,13 @@ public class LocalFuzzyPartySearchProviderTests
+         match.RelevanceScore.ShouldBeGreaterThan(0.5);
+     }
+ 
+-    // 7.6 — all contact channel types searched (not just Email)
++    // 7.6 — contact channel values are not searched by the MVP display-name path
+     [Fact]
+-    public void Search_AllContactChannelTypes_SearchedNotJustEmail()
++    public void Search_ContactChannelValues_AreNotSearched()
+     {
+-        // "Paris" should match the postal address of Acme Corporation
+         PagedResult<PartySearchResult> result = _provider.Search(_entries, "Paris", null, null, 1, 20);
+ 
+-        result.Items.ShouldNotBeEmpty();
+-        result.Items.ShouldContain(r => r.Party.Id == "p2");
++        result.Items.ShouldBeEmpty();
+     }
+ 
+     // 7.7 — results sorted by RelevanceScore descending
+@@ -143,54 +138,16 @@ public class LocalFuzzyPartySearchProviderTests
+     }
+ 
+     [Fact]
+-    public void Search_ContactAndIdentifierMatchesExposeOnlyBoundedMetadata()
++    public void Search_ContactAndIdentifierValues_DoNotMatchMvpDisplayNameSearch()
+     {
+-        // Allowlists for structural privacy: match metadata must only carry bounded
+-        // labels, never the user-supplied contact/identifier values.
+-        HashSet<string> allowedFields = new(StringComparer.Ordinal)
+-        {
+-            "displayName",
+-            "type",
+-            "email",
+-            "contactChannel",
+-            "identifier",
+-        };
+-        HashSet<string> allowedMatchTypes = new(StringComparer.Ordinal)
+-        {
+-            "exact",
+-            "prefix",
+-            "contains",
+-            "fuzzy",
+-            string.Empty,
+-        };
+-
+         const string contactQuery = "example.com";
+-        const string identifierQuery = "FR11111111111";
++        const string identifierQuery = "synthetic-siret-value";
+ 
+         PagedResult<PartySearchResult> contactResult = _provider.Search(_entries, contactQuery, null, null, 1, 20);
+         PagedResult<PartySearchResult> identifierResult = _provider.Search(_entries, identifierQuery, null, null, 1, 20);
+ 
+-        IReadOnlyList<MatchMetadata> contactMatches = contactResult.Items.Single().Matches;
+-        IReadOnlyList<MatchMetadata> identifierMatches = identifierResult.Items.Single().Matches;
+-
+-        contactMatches.ShouldContain(m => m.MatchedField == "email");
+-        identifierMatches.ShouldContain(m => m.MatchedField == "identifier");
+-
+-        // Structural assertion: every match's labels come from the bounded allowlists,
+-        // not from user data.
+-        contactMatches.ShouldAllBe(m => allowedFields.Contains(m.MatchedField));
+-        contactMatches.ShouldAllBe(m => allowedMatchTypes.Contains(m.MatchType));
+-        identifierMatches.ShouldAllBe(m => allowedFields.Contains(m.MatchedField));
+-        identifierMatches.ShouldAllBe(m => allowedMatchTypes.Contains(m.MatchType));
+-
+-        // Behavioural assertion: the raw query value (which is the contact/identifier
+-        // value being searched for) never appears in any string field of the match
+-        // metadata. Guards against a future change that adds a `MatchedText`-style
+-        // field carrying the matched substring.
+-        contactMatches.ShouldAllBe(m => !m.MatchedField.Contains(contactQuery, StringComparison.OrdinalIgnoreCase));
+-        contactMatches.ShouldAllBe(m => !m.MatchType.Contains(contactQuery, StringComparison.OrdinalIgnoreCase));
+-        identifierMatches.ShouldAllBe(m => !m.MatchedField.Contains(identifierQuery, StringComparison.OrdinalIgnoreCase));
+-        identifierMatches.ShouldAllBe(m => !m.MatchType.Contains(identifierQuery, StringComparison.OrdinalIgnoreCase));
++        contactResult.Items.ShouldBeEmpty();
++        identifierResult.Items.ShouldBeEmpty();
+     }
+ 
+     // 7.9 — empty/whitespace query returns empty result
+diff --git a/tests/Hexalith.Parties.Tests/Search/MvpDisplayNameSearchContractTests.cs b/tests/Hexalith.Parties.Tests/Search/MvpDisplayNameSearchContractTests.cs
+new file mode 100644
+index 0000000..e734bad
+--- /dev/null
++++ b/tests/Hexalith.Parties.Tests/Search/MvpDisplayNameSearchContractTests.cs
+@@ -0,0 +1,200 @@
++using System.Collections.Generic;
++using System.Linq;
++using System.Threading;
++using System.Threading.Tasks;
++
++using Hexalith.Parties.Contracts.Models;
++using Hexalith.Parties.Contracts.ValueObjects;
++using Hexalith.Parties.Search;
++using Hexalith.Parties.Testing;
++
++using Shouldly;
++
++namespace Hexalith.Parties.Tests.Search;
++
++// ATDD tests for Story 2.5 — Search Parties by Display Name with Match Metadata.
++// Test-design risk references: R-06 SortName additive contract, R-08 MVP search scope creep,
++// R-21 pagination tie-break determinism.
++public sealed class MvpDisplayNameSearchContractTests
++{
++    // AC2/AC4 — Exact display-name match emits MatchedField="displayName" / MatchType="exact" and
++    // the MVP PartySearch path never emits future-reserved fields (email/contactChannel/identifier/
++    // type/semantic/graph/duplicate). Reference: 2.5-UNIT-070, 2.5-FIT-072.
++    [Fact]
++    public void Search_MvpExactDisplayName_OnlyEmitsDisplayNameMatchedField()
++    {
++        var provider = new LocalFuzzyPartySearchProvider();
++        List<PartyIndexEntry> entries = PartyTestData.CreateSearchScenarioEntries();
++
++        PagedResult<PartySearchResult> result = provider.Search(entries, "Jean Dupont", null, null, 1, 20);
++
++        PartySearchResult exact = result.Items.ShouldHaveSingleItem();
++        exact.Matches.ShouldAllBe(m => m.MatchedField == "displayName");
++        exact.Matches.ShouldContain(m => m.MatchType == "exact");
++        HashSet<string> reservedFields = new(StringComparer.Ordinal)
++        {
++            "email", "contactChannel", "identifier", "type", "semantic", "graph", "duplicate", "partyType",
++        };
++        exact.Matches.ShouldNotContain(m => reservedFields.Contains(m.MatchedField));
++    }
++
++    // AC4 — MVP PartySearch must not emit contact-channel match metadata even when contact
++    // values would match. The legacy LocalFuzzyPartySearchProvider currently broadens to contact
++    // channels and identifiers; the MVP path must constrain that. Reference: 2.5-FIT-073.
++    [Fact]
++    public void Search_MvpContactValueQuery_DoesNotEmitContactChannelMatch()
++    {
++        var provider = new LocalFuzzyPartySearchProvider();
++        List<PartyIndexEntry> entries = PartyTestData.CreateSearchScenarioEntries();
++
++        // A query that hits a contact channel value in the broader fuzzy provider must not
++        // produce a contactChannel-typed match through the MVP PartySearch boundary.
++        PagedResult<PartySearchResult> result = provider.Search(entries, "jean@example.com", null, null, 1, 20);
++
++        result.Items.SelectMany(r => r.Matches)
++              .ShouldAllBe(m => m.MatchedField != "contactChannel" && m.MatchedField != "email");
++    }
++
++    // AC4 — Identifier-only query must not yield a match in the MVP path.
++    // Reference: 2.5-FIT-072 (future-field reservation).
++    [Fact]
++    public void Search_MvpIdentifierValueQuery_DoesNotEmitIdentifierMatch()
++    {
++        var provider = new LocalFuzzyPartySearchProvider();
++        List<PartyIndexEntry> entries = PartyTestData.CreateSearchScenarioEntries();
++
++        PagedResult<PartySearchResult> result = provider.Search(entries, "synthetic-siret-value", null, null, 1, 20);
++
++        result.Items.SelectMany(r => r.Matches)
++              .ShouldAllBe(m => m.MatchedField != "identifier" && m.MatchedField != "type");
++    }
++
++    // AC3 — Prefix matches must rank below exact, and tie-break deterministically by normalized
++    // display name then party id. Reference: 2.5-UNIT-071, 2.5-UNIT-200 (R-21 closes Story 2.2 defer).
++    [Fact]
++    public void Search_ExactAndPrefixCollision_RanksExactAheadOfPrefixThenByIdTieBreaker()
++    {
++        var provider = new LocalFuzzyPartySearchProvider();
++        List<PartyIndexEntry> entries =
++        [
++            Entry("p-b", "Acme"),
++            Entry("p-a", "Acme"),
++            Entry("p-prefix", "Acme Corporation"),
++            Entry("p-contains", "The Acme Trust"),
++        ];
++
++        PagedResult<PartySearchResult> result = provider.Search(entries, "Acme", null, null, 1, 20);
++
++        result.Items.Select(static r => r.Party.Id).ShouldBe(["p-a", "p-b", "p-prefix", "p-contains"]);
++        result.Items.Select(static r => r.Matches.Single().MatchType).ShouldBe(["exact", "exact", "prefix", "contains"]);
++    }
++
++    // AC5 — Empty/whitespace queries return bounded empty result without leaking metadata or
++    // probing cross-tenant state. Reference: 2.5-UNIT-052.
++    [Fact]
++    public async Task SearchAsync_WhitespaceQuery_ReturnsBoundedEmptyResult()
++    {
++        var provider = new LocalFuzzyPartySearchProvider();
++        var service = new LocalPartySearchService(provider);
++        List<PartyIndexEntry> entries = PartyTestData.CreateSearchScenarioEntries();
++
++        PartySearchResponse response = await service.SearchAsync(
++            new PartySearchRequest(
++                TenantId: "tenant-a",
++                Query: "   ",
++                Mode: PartySearchMode.Hybrid,
++                TypeFilter: null,
++                ActiveFilter: null,
++                Page: 1,
++                PageSize: 20,
++                AuthorizedPartyIds: entries.Select(e => e.Id).ToHashSet(StringComparer.Ordinal)),
++            entries,
++            CancellationToken.None);
++
++        response.Results.Items.ShouldBeEmpty();
++        response.Results.TotalCount.ShouldBe(0);
++        response.ScoreMetadata.ShouldBeEmpty();
++        response.SourceMetadata.ShouldBeEmpty();
++    }
++
++    // AC6 — Erased entries must be excluded before match/score/source/page metadata is computed.
++    // Reference: 2.5-GTW-082 / 2.6-INT-033..034 (cross-cutting with Story 2.6).
++    [Fact]
++    public async Task SearchAsync_ErasedEntryInScope_ExcludedBeforeMetadataCalculation()
++    {
++        var provider = new LocalFuzzyPartySearchProvider();
++        var service = new LocalPartySearchService(provider);
++        List<PartyIndexEntry> entries = PartyTestData.CreateSearchScenarioEntries();
++        // Mark one entry as erased; the search must exclude it before TotalCount calculation.
++        entries[0] = entries[0] with { IsErased = true };
++
++        PartySearchResponse response = await service.SearchAsync(
++            new PartySearchRequest(
++                TenantId: "tenant-a",
++                Query: entries[0].DisplayName,
++                Mode: PartySearchMode.Hybrid,
++                TypeFilter: null,
++                ActiveFilter: null,
++                Page: 1,
++                PageSize: 20,
++                AuthorizedPartyIds: entries.Select(e => e.Id).ToHashSet(StringComparer.Ordinal)),
++            entries,
++            CancellationToken.None);
++
++        response.Results.Items.ShouldNotContain(r => r.Party.Id == entries[0].Id);
++        response.Results.TotalCount.ShouldNotBe(entries.Count); // erased excluded from TotalCount
++    }
++
++    // AC6 — Cancellation must be terminal: no fallback aggregate replay, Memories expansion, or
++    // retry after the token fires. Reference: 2.5-UNIT-050 (cancellation propagation).
++    [Fact]
++    public async Task SearchAsync_CancellationRequested_PropagatesWithoutFallbackWork()
++    {
++        var provider = new LocalFuzzyPartySearchProvider();
++        var service = new LocalPartySearchService(provider);
++        List<PartyIndexEntry> entries = PartyTestData.CreateSearchScenarioEntries();
++
++        using var cts = new CancellationTokenSource();
++        cts.Cancel();
++
++        PartySearchRequest request = new(
++            TenantId: "tenant-a",
++            Query: "Jean",
++            Mode: PartySearchMode.Hybrid,
++            TypeFilter: null,
++            ActiveFilter: null,
++            Page: 1,
++            PageSize: 20,
++            AuthorizedPartyIds: entries.Select(e => e.Id).ToHashSet(StringComparer.Ordinal));
++
++        await Should.ThrowAsync<OperationCanceledException>(
++            () => service.SearchAsync(request, entries, cts.Token));
++    }
++
++    // AC2/AC4 — Match metadata MatchType allowlist for the MVP path: {exact, prefix, contains}
++    // plus optional {fuzzy} for display-name-only fuzzy. Anything else is a contract violation.
++    // Reference: 2.5-FIT-072 (allowlist), 2.5-FIT-073 (provider reachability).
++    [Fact]
++    public void Search_MvpResults_OnlyEmitAllowedMatchTypeVocabulary()
++    {
++        var provider = new LocalFuzzyPartySearchProvider();
++        List<PartyIndexEntry> entries = PartyTestData.CreateSearchScenarioEntries();
++        HashSet<string> allowedMatchTypes = new(StringComparer.Ordinal) { "exact", "prefix", "contains", "fuzzy" };
++
++        PagedResult<PartySearchResult> result = provider.Search(entries, "Acme", null, null, 1, 20);
++
++        IEnumerable<MatchMetadata> allMatches = result.Items.SelectMany(r => r.Matches);
++        allMatches.ShouldAllBe(m => allowedMatchTypes.Contains(m.MatchType));
++    }
++
++    private static PartyIndexEntry Entry(string id, string displayName)
++        => new()
++        {
++            Id = id,
++            Type = PartyType.Organization,
++            IsActive = true,
++            DisplayName = displayName,
++            CreatedAt = DateTimeOffset.Parse("2026-05-01T00:00:00Z", System.Globalization.CultureInfo.InvariantCulture),
++            LastModifiedAt = DateTimeOffset.Parse("2026-05-01T00:00:00Z", System.Globalization.CultureInfo.InvariantCulture),
++        };
++}
+diff --git a/tests/Hexalith.Parties.Tests/Search/PartySearchServiceBoundaryTests.cs b/tests/Hexalith.Parties.Tests/Search/PartySearchServiceBoundaryTests.cs
+index 89cb1de..f001f12 100644
+--- a/tests/Hexalith.Parties.Tests/Search/PartySearchServiceBoundaryTests.cs
++++ b/tests/Hexalith.Parties.Tests/Search/PartySearchServiceBoundaryTests.cs
+@@ -1,5 +1,6 @@
+ using Hexalith.Parties.Search;
+ using Hexalith.Parties.Contracts.Models;
++using Hexalith.Parties.Contracts.ValueObjects;
+ using Hexalith.Parties.Testing;
+ 
+ using Shouldly;
+@@ -92,7 +93,7 @@ public class PartySearchServiceBoundaryTests
+         PartySearchResponse response = await service.SearchAsync(
+             new PartySearchRequest(
+                 TenantId: "tenant-a",
+-                Query: "person",
++                Query: "e",
+                 Mode: PartySearchMode.Hybrid,
+                 TypeFilter: null,
+                 ActiveFilter: null,
+@@ -109,6 +110,36 @@ public class PartySearchServiceBoundaryTests
+         response.SourceMetadata.Single().PartyId.ShouldBe(response.Results.Items.Single().Party.Id);
+     }
+ 
++    [Fact]
++    public async Task LocalPartySearchServiceAppliesAuthorizedIdsBeforeMatchAndMetadata()
++    {
++        var provider = new LocalFuzzyPartySearchProvider();
++        var service = new LocalPartySearchService(provider);
++        List<PartyIndexEntry> entries =
++        [
++            Entry("tenant-a-party", "Shared Display Name"),
++            Entry("tenant-b-party", "Shared Display Name"),
++        ];
++
++        PartySearchResponse response = await service.SearchAsync(
++            new PartySearchRequest(
++                TenantId: "tenant-b",
++                Query: "Shared Display Name",
++                Mode: PartySearchMode.Hybrid,
++                TypeFilter: null,
++                ActiveFilter: null,
++                Page: 1,
++                PageSize: 20,
++                AuthorizedPartyIds: new HashSet<string>(["tenant-b-party"], StringComparer.Ordinal)),
++            entries,
++            CancellationToken.None);
++
++        response.Results.Items.Select(static r => r.Party.Id).ShouldBe(["tenant-b-party"]);
++        response.Results.TotalCount.ShouldBe(1);
++        response.ScoreMetadata.Select(static m => m.PartyId).ShouldBe(["tenant-b-party"]);
++        response.SourceMetadata.Select(static m => m.PartyId).ShouldBe(["tenant-b-party"]);
++    }
++
+     [Fact]
+     public void SearchRequestCapturesIntentModeAndHydrationScope()
+     {
+@@ -166,4 +197,15 @@ public class PartySearchServiceBoundaryTests
+         response.ScoreMetadata.Single().SemanticScore.ShouldBe(0.95);
+         response.SourceMetadata.Single().SourceSystem.ShouldBe("Hexalith.Memories");
+     }
++
++    private static PartyIndexEntry Entry(string id, string displayName)
++        => new()
++        {
++            Id = id,
++            Type = PartyType.Person,
++            IsActive = true,
++            DisplayName = displayName,
++            CreatedAt = DateTimeOffset.Parse("2026-05-01T00:00:00Z", System.Globalization.CultureInfo.InvariantCulture),
++            LastModifiedAt = DateTimeOffset.Parse("2026-05-01T00:00:00Z", System.Globalization.CultureInfo.InvariantCulture),
++        };
+ }

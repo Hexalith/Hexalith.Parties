@@ -1,0 +1,755 @@
+type class Hexalith.Parties.Contracts.Commands.AddContactChannel interfaces:System.IEquatable<Hexalith.Parties.Contracts.Commands.AddContactChannel>
+  ctor ()
+  property System.String ContactChannelId required getset
+  property System.Boolean IsPreferred getset
+  property System.String PartyId required getset
+  property Hexalith.Parties.Contracts.ValueObjects.ContactChannelType Type required getset
+  property System.String Value required getset
+type class Hexalith.Parties.Contracts.Commands.AddIdentifier interfaces:System.IEquatable<Hexalith.Parties.Contracts.Commands.AddIdentifier>
+  ctor ()
+  property System.String IdentifierId required getset
+  property System.String PartyId required getset
+  property Hexalith.Parties.Contracts.ValueObjects.IdentifierType Type required getset
+  property System.String Value required getset
+type class Hexalith.Parties.Contracts.Commands.CompletePartyErasure interfaces:System.IEquatable<Hexalith.Parties.Contracts.Commands.CompletePartyErasure>
+  ctor ()
+  property System.DateTimeOffset ErasedAt required getset
+  property System.String PartyId required getset
+  property System.String TenantId required getset
+type class Hexalith.Parties.Contracts.Commands.CreateParty interfaces:System.IEquatable<Hexalith.Parties.Contracts.Commands.CreateParty>
+  ctor ()
+  property Hexalith.Parties.Contracts.ValueObjects.OrganizationDetails OrganizationDetails getset
+  property System.String PartyId required getset
+  property Hexalith.Parties.Contracts.ValueObjects.PersonDetails PersonDetails getset
+  property Hexalith.Parties.Contracts.ValueObjects.PartyType Type required getset
+type class Hexalith.Parties.Contracts.Commands.CreatePartyComposite interfaces:System.IEquatable<Hexalith.Parties.Contracts.Commands.CreatePartyComposite>
+  ctor ()
+  property System.Collections.Generic.IReadOnlyList<Hexalith.Parties.Contracts.Commands.AddContactChannel> ContactChannels getset
+  property System.Collections.Generic.IReadOnlyList<Hexalith.Parties.Contracts.Commands.AddIdentifier> Identifiers getset
+  property Hexalith.Parties.Contracts.ValueObjects.OrganizationDetails OrganizationDetails getset
+  property System.String PartyId required getset
+  property Hexalith.Parties.Contracts.ValueObjects.PersonDetails PersonDetails getset
+  property Hexalith.Parties.Contracts.ValueObjects.PartyType Type required getset
+type class Hexalith.Parties.Contracts.Commands.DeactivateParty interfaces:System.IEquatable<Hexalith.Parties.Contracts.Commands.DeactivateParty>
+  ctor ()
+  property System.String PartyId required getset
+type class Hexalith.Parties.Contracts.Commands.EraseParty interfaces:System.IEquatable<Hexalith.Parties.Contracts.Commands.EraseParty>
+  ctor ()
+  property System.String PartyId required getset
+  property System.String TenantId required getset
+type class Hexalith.Parties.Contracts.Commands.LiftRestriction interfaces:System.IEquatable<Hexalith.Parties.Contracts.Commands.LiftRestriction>
+  ctor ()
+  property System.String ActorUserId getset
+  property System.String CorrelationId getset
+  property System.String PartyId required getset
+  property System.String TenantId required getset
+type class Hexalith.Parties.Contracts.Commands.MarkErasureVerified interfaces:System.IEquatable<Hexalith.Parties.Contracts.Commands.MarkErasureVerified>
+  ctor ()
+  property System.String PartyId required getset
+  property System.String TenantId required getset
+  property System.String VerificationReportId required getset
+  property System.DateTimeOffset VerifiedAt required getset
+type class Hexalith.Parties.Contracts.Commands.MarkPartyEncryptionKeyDeleted interfaces:System.IEquatable<Hexalith.Parties.Contracts.Commands.MarkPartyEncryptionKeyDeleted>
+  ctor ()
+  property System.DateTimeOffset DeletedAt required getset
+  property System.String PartyId required getset
+  property System.String TenantId required getset
+type class Hexalith.Parties.Contracts.Commands.ReactivateParty interfaces:System.IEquatable<Hexalith.Parties.Contracts.Commands.ReactivateParty>
+  ctor ()
+  property System.String PartyId required getset
+type class Hexalith.Parties.Contracts.Commands.RecordConsent interfaces:System.IEquatable<Hexalith.Parties.Contracts.Commands.RecordConsent>
+  ctor ()
+  property System.String ActorUserId getset
+  property System.String ChannelId required getset
+  property Hexalith.Parties.Contracts.Security.LawfulBasis LawfulBasis required getset
+  property System.String PartyId required getset
+  property System.String Purpose required getset
+  property System.String Source getset
+  property System.String TenantId required getset
+type class Hexalith.Parties.Contracts.Commands.RemoveContactChannel interfaces:System.IEquatable<Hexalith.Parties.Contracts.Commands.RemoveContactChannel>
+  ctor ()
+  property System.String ContactChannelId required getset
+  property System.String PartyId required getset
+type class Hexalith.Parties.Contracts.Commands.RemoveIdentifier interfaces:System.IEquatable<Hexalith.Parties.Contracts.Commands.RemoveIdentifier>
+  ctor ()
+  property System.String IdentifierId required getset
+  property System.String PartyId required getset
+type class Hexalith.Parties.Contracts.Commands.RestrictProcessing interfaces:System.IEquatable<Hexalith.Parties.Contracts.Commands.RestrictProcessing>
+  ctor ()
+  property System.String ActorUserId getset
+  property System.String CorrelationId getset
+  property System.String PartyId required getset
+  property System.String Reason getset
+  property System.String TenantId required getset
+type class Hexalith.Parties.Contracts.Commands.RevokeConsent interfaces:System.IEquatable<Hexalith.Parties.Contracts.Commands.RevokeConsent>
+  ctor ()
+  property System.String ActorUserId getset
+  property System.String ConsentId required getset
+  property System.String PartyId required getset
+  property System.String Reason getset
+  property System.String Source getset
+  property System.String TenantId required getset
+type class Hexalith.Parties.Contracts.Commands.RotatePartyKey interfaces:System.IEquatable<Hexalith.Parties.Contracts.Commands.RotatePartyKey>
+  ctor ()
+  property System.Int32 NewKeyVersion required getset
+  property System.String PartyId required getset
+  property System.Int32 PreviousKeyVersion required getset
+type class Hexalith.Parties.Contracts.Commands.SetIsNaturalPerson interfaces:System.IEquatable<Hexalith.Parties.Contracts.Commands.SetIsNaturalPerson>
+  ctor ()
+  property System.Boolean IsNaturalPerson required getset
+  property System.String PartyId required getset
+type class Hexalith.Parties.Contracts.Commands.UpdateContactChannel interfaces:System.IEquatable<Hexalith.Parties.Contracts.Commands.UpdateContactChannel>
+  ctor ()
+  property System.String ContactChannelId required getset
+  property System.Nullable<System.Boolean> IsPreferred getset
+  property System.String PartyId required getset
+  property System.Nullable<Hexalith.Parties.Contracts.ValueObjects.ContactChannelType> Type getset
+  property System.String Value getset
+type class Hexalith.Parties.Contracts.Commands.UpdateOrganizationDetails interfaces:System.IEquatable<Hexalith.Parties.Contracts.Commands.UpdateOrganizationDetails>
+  ctor ()
+  property Hexalith.Parties.Contracts.ValueObjects.OrganizationDetails OrganizationDetails required getset
+  property System.String PartyId required getset
+type class Hexalith.Parties.Contracts.Commands.UpdatePartyComposite interfaces:System.IEquatable<Hexalith.Parties.Contracts.Commands.UpdatePartyComposite>
+  ctor ()
+  property System.Collections.Generic.IReadOnlyList<Hexalith.Parties.Contracts.Commands.AddContactChannel> AddContactChannels getset
+  property System.Collections.Generic.IReadOnlyList<Hexalith.Parties.Contracts.Commands.AddIdentifier> AddIdentifiers getset
+  property Hexalith.Parties.Contracts.ValueObjects.OrganizationDetails OrganizationDetails getset
+  property System.String PartyId required getset
+  property Hexalith.Parties.Contracts.ValueObjects.PersonDetails PersonDetails getset
+  property System.Collections.Generic.IReadOnlyList<System.String> RemoveContactChannelIds getset
+  property System.Collections.Generic.IReadOnlyList<System.String> RemoveIdentifierIds getset
+  property System.Collections.Generic.IReadOnlyList<Hexalith.Parties.Contracts.Commands.UpdateContactChannel> UpdateContactChannels getset
+type class Hexalith.Parties.Contracts.Commands.UpdatePersonDetails interfaces:System.IEquatable<Hexalith.Parties.Contracts.Commands.UpdatePersonDetails>
+  ctor ()
+  property System.String PartyId required getset
+  property Hexalith.Parties.Contracts.ValueObjects.PersonDetails PersonDetails required getset
+type class Hexalith.Parties.Contracts.Events.CompositeOperationConflict interfaces:Hexalith.EventStore.Contracts.Events.IEventPayload,Hexalith.EventStore.Contracts.Events.IRejectionEvent,System.IEquatable<Hexalith.Parties.Contracts.Events.CompositeOperationConflict>
+  ctor ()
+  property System.String Message getset
+type class Hexalith.Parties.Contracts.Events.ConsentNotFound interfaces:Hexalith.EventStore.Contracts.Events.IEventPayload,Hexalith.EventStore.Contracts.Events.IRejectionEvent,System.IEquatable<Hexalith.Parties.Contracts.Events.ConsentNotFound>
+  ctor ()
+  property System.String ConsentId required getset
+  property System.String Message getset
+  property System.String PartyId required getset
+  property System.String TenantId required getset
+type class Hexalith.Parties.Contracts.Events.ConsentRecorded interfaces:Hexalith.EventStore.Contracts.Events.IEventPayload,System.IEquatable<Hexalith.Parties.Contracts.Events.ConsentRecorded>
+  ctor ()
+  property System.String ChannelId required getset
+  property System.String ConsentId required getset
+  property System.DateTimeOffset GrantedAt required getset
+  property System.String GrantedBy required getset
+  property Hexalith.Parties.Contracts.Security.LawfulBasis LawfulBasis required getset
+  property System.String PartyId required getset
+  property System.String Purpose required getset
+  property System.String Source getset
+  property System.String TenantId required getset
+type class Hexalith.Parties.Contracts.Events.ConsentRevoked interfaces:Hexalith.EventStore.Contracts.Events.IEventPayload,System.IEquatable<Hexalith.Parties.Contracts.Events.ConsentRevoked>
+  ctor ()
+  property System.String ConsentId required getset
+  property System.String PartyId required getset
+  property System.String Reason getset
+  property System.DateTimeOffset RevokedAt required getset
+  property System.String RevokedBy required getset
+  property System.String Source getset
+  property System.String TenantId required getset
+type class Hexalith.Parties.Contracts.Events.ContactChannelAdded interfaces:Hexalith.EventStore.Contracts.Events.IEventPayload,System.IEquatable<Hexalith.Parties.Contracts.Events.ContactChannelAdded>
+  ctor ()
+  property System.String ContactChannelId required getset
+  property System.Boolean IsPreferred getset
+  property Hexalith.Parties.Contracts.ValueObjects.ContactChannelType Type required getset
+  property System.String Value required getset
+type class Hexalith.Parties.Contracts.Events.ContactChannelNotFound interfaces:Hexalith.EventStore.Contracts.Events.IEventPayload,Hexalith.EventStore.Contracts.Events.IRejectionEvent,System.IEquatable<Hexalith.Parties.Contracts.Events.ContactChannelNotFound>
+  ctor ()
+  property System.String Message getset
+type class Hexalith.Parties.Contracts.Events.ContactChannelRemoved interfaces:Hexalith.EventStore.Contracts.Events.IEventPayload,System.IEquatable<Hexalith.Parties.Contracts.Events.ContactChannelRemoved>
+  ctor ()
+  property System.String ContactChannelId required getset
+type class Hexalith.Parties.Contracts.Events.ContactChannelUpdated interfaces:Hexalith.EventStore.Contracts.Events.IEventPayload,System.IEquatable<Hexalith.Parties.Contracts.Events.ContactChannelUpdated>
+  ctor ()
+  property System.String ContactChannelId required getset
+  property System.Nullable<System.Boolean> IsPreferred getset
+  property System.Nullable<Hexalith.Parties.Contracts.ValueObjects.ContactChannelType> Type getset
+  property System.String Value getset
+type class Hexalith.Parties.Contracts.Events.ErasePartyRequested interfaces:Hexalith.EventStore.Contracts.Events.IEventPayload,System.IEquatable<Hexalith.Parties.Contracts.Events.ErasePartyRequested>
+  ctor ()
+  property System.String PartyId required getset
+  property System.DateTimeOffset RequestedAt required getset
+  property System.String RequestedBy required getset
+  property System.String TenantId required getset
+type class Hexalith.Parties.Contracts.Events.ErasureVerified interfaces:Hexalith.EventStore.Contracts.Events.IEventPayload,System.IEquatable<Hexalith.Parties.Contracts.Events.ErasureVerified>
+  ctor ()
+  property System.String PartyId required getset
+  property System.String TenantId required getset
+  property System.String VerificationReportId required getset
+  property System.DateTimeOffset VerifiedAt required getset
+type class Hexalith.Parties.Contracts.Events.IdentifierAdded interfaces:Hexalith.EventStore.Contracts.Events.IEventPayload,System.IEquatable<Hexalith.Parties.Contracts.Events.IdentifierAdded>
+  ctor ()
+  property System.String IdentifierId required getset
+  property Hexalith.Parties.Contracts.ValueObjects.IdentifierType Type required getset
+  property System.String Value required getset
+type class Hexalith.Parties.Contracts.Events.IdentifierNotFound interfaces:Hexalith.EventStore.Contracts.Events.IEventPayload,Hexalith.EventStore.Contracts.Events.IRejectionEvent,System.IEquatable<Hexalith.Parties.Contracts.Events.IdentifierNotFound>
+  ctor ()
+  property System.String Message getset
+type class Hexalith.Parties.Contracts.Events.IdentifierRemoved interfaces:Hexalith.EventStore.Contracts.Events.IEventPayload,System.IEquatable<Hexalith.Parties.Contracts.Events.IdentifierRemoved>
+  ctor ()
+  property System.String IdentifierId required getset
+type class Hexalith.Parties.Contracts.Events.InvalidConsentPurpose interfaces:Hexalith.EventStore.Contracts.Events.IEventPayload,Hexalith.EventStore.Contracts.Events.IRejectionEvent,System.IEquatable<Hexalith.Parties.Contracts.Events.InvalidConsentPurpose>
+  ctor ()
+  property System.String Message getset
+  property System.String PartyId required getset
+  property System.String Purpose getset
+  property System.String TenantId required getset
+type class Hexalith.Parties.Contracts.Events.IsNaturalPersonChanged interfaces:Hexalith.EventStore.Contracts.Events.IEventPayload,System.IEquatable<Hexalith.Parties.Contracts.Events.IsNaturalPersonChanged>
+  ctor ()
+  property System.Boolean IsNaturalPerson required getset
+type class Hexalith.Parties.Contracts.Events.OrganizationDetailsUpdated interfaces:Hexalith.EventStore.Contracts.Events.IEventPayload,System.IEquatable<Hexalith.Parties.Contracts.Events.OrganizationDetailsUpdated>
+  ctor ()
+  property Hexalith.Parties.Contracts.ValueObjects.OrganizationDetails OrganizationDetails required getset
+type class Hexalith.Parties.Contracts.Events.PartyCannotAddDuplicateChannel interfaces:Hexalith.EventStore.Contracts.Events.IEventPayload,Hexalith.EventStore.Contracts.Events.IRejectionEvent,System.IEquatable<Hexalith.Parties.Contracts.Events.PartyCannotAddDuplicateChannel>
+  ctor ()
+type class Hexalith.Parties.Contracts.Events.PartyCannotAddDuplicateIdentifier interfaces:Hexalith.EventStore.Contracts.Events.IEventPayload,Hexalith.EventStore.Contracts.Events.IRejectionEvent,System.IEquatable<Hexalith.Parties.Contracts.Events.PartyCannotAddDuplicateIdentifier>
+  ctor ()
+type class Hexalith.Parties.Contracts.Events.PartyCannotBeCreatedWithInvalidId interfaces:Hexalith.EventStore.Contracts.Events.IEventPayload,Hexalith.EventStore.Contracts.Events.IRejectionEvent,System.IEquatable<Hexalith.Parties.Contracts.Events.PartyCannotBeCreatedWithInvalidId>
+  ctor ()
+type class Hexalith.Parties.Contracts.Events.PartyCannotBeCreatedWithoutOrganizationDetails interfaces:Hexalith.EventStore.Contracts.Events.IEventPayload,Hexalith.EventStore.Contracts.Events.IRejectionEvent,System.IEquatable<Hexalith.Parties.Contracts.Events.PartyCannotBeCreatedWithoutOrganizationDetails>
+  ctor ()
+type class Hexalith.Parties.Contracts.Events.PartyCannotBeCreatedWithoutPersonDetails interfaces:Hexalith.EventStore.Contracts.Events.IEventPayload,Hexalith.EventStore.Contracts.Events.IRejectionEvent,System.IEquatable<Hexalith.Parties.Contracts.Events.PartyCannotBeCreatedWithoutPersonDetails>
+  ctor ()
+type class Hexalith.Parties.Contracts.Events.PartyCannotBeCreatedWithoutType interfaces:Hexalith.EventStore.Contracts.Events.IEventPayload,Hexalith.EventStore.Contracts.Events.IRejectionEvent,System.IEquatable<Hexalith.Parties.Contracts.Events.PartyCannotBeCreatedWithoutType>
+  ctor ()
+type class Hexalith.Parties.Contracts.Events.PartyCannotBeDeactivatedWhenInactive interfaces:Hexalith.EventStore.Contracts.Events.IEventPayload,Hexalith.EventStore.Contracts.Events.IRejectionEvent,System.IEquatable<Hexalith.Parties.Contracts.Events.PartyCannotBeDeactivatedWhenInactive>
+  ctor ()
+type class Hexalith.Parties.Contracts.Events.PartyCannotBeReactivatedWhenActive interfaces:Hexalith.EventStore.Contracts.Events.IEventPayload,Hexalith.EventStore.Contracts.Events.IRejectionEvent,System.IEquatable<Hexalith.Parties.Contracts.Events.PartyCannotBeReactivatedWhenActive>
+  ctor ()
+type class Hexalith.Parties.Contracts.Events.PartyCommandValidationRejected interfaces:Hexalith.EventStore.Contracts.Events.IEventPayload,Hexalith.EventStore.Contracts.Events.IRejectionEvent,System.IEquatable<Hexalith.Parties.Contracts.Events.PartyCommandValidationRejected>
+  ctor ()
+  property System.String CommandType required getset
+  property System.Collections.Generic.IReadOnlyList<Hexalith.Parties.Contracts.Events.PartyValidationFailure> Failures required getset
+type class Hexalith.Parties.Contracts.Events.PartyCreated interfaces:Hexalith.EventStore.Contracts.Events.IEventPayload,System.IEquatable<Hexalith.Parties.Contracts.Events.PartyCreated>
+  ctor ()
+  property Hexalith.Parties.Contracts.ValueObjects.OrganizationDetails OrganizationDetails getset
+  property Hexalith.Parties.Contracts.ValueObjects.PersonDetails PersonDetails getset
+  property Hexalith.Parties.Contracts.ValueObjects.PartyType Type required getset
+type class Hexalith.Parties.Contracts.Events.PartyDeactivated interfaces:Hexalith.EventStore.Contracts.Events.IEventPayload,System.IEquatable<Hexalith.Parties.Contracts.Events.PartyDeactivated>
+  ctor ()
+type class Hexalith.Parties.Contracts.Events.PartyDisplayNameDerived interfaces:Hexalith.EventStore.Contracts.Events.IEventPayload,System.IEquatable<Hexalith.Parties.Contracts.Events.PartyDisplayNameDerived>
+  ctor ()
+  property System.String DisplayName required getset
+  property System.String SortName getset
+type class Hexalith.Parties.Contracts.Events.PartyEncryptionKeyCreated interfaces:Hexalith.EventStore.Contracts.Events.IEventPayload,System.IEquatable<Hexalith.Parties.Contracts.Events.PartyEncryptionKeyCreated>
+  ctor ()
+  property System.DateTimeOffset CreatedAt required getset
+  property System.Int32 KeyVersion required getset
+  property System.String PartyId required getset
+  property System.String TenantId required getset
+type class Hexalith.Parties.Contracts.Events.PartyEncryptionKeyDeleted interfaces:Hexalith.EventStore.Contracts.Events.IEventPayload,System.IEquatable<Hexalith.Parties.Contracts.Events.PartyEncryptionKeyDeleted>
+  ctor ()
+  property System.DateTimeOffset DeletedAt required getset
+  property System.String PartyId required getset
+  property System.String TenantId required getset
+type class Hexalith.Parties.Contracts.Events.PartyEncryptionKeyRotated interfaces:Hexalith.EventStore.Contracts.Events.IEventPayload,System.IEquatable<Hexalith.Parties.Contracts.Events.PartyEncryptionKeyRotated>
+  ctor ()
+  property System.Int32 NewKeyVersion required getset
+  property System.String PartyId required getset
+  property System.Int32 PreviousKeyVersion required getset
+  property System.DateTimeOffset RotatedAt required getset
+type class Hexalith.Parties.Contracts.Events.PartyErased interfaces:Hexalith.EventStore.Contracts.Events.IEventPayload,System.IEquatable<Hexalith.Parties.Contracts.Events.PartyErased>
+  ctor ()
+  property System.DateTimeOffset ErasedAt required getset
+  property System.String ErasureStatus getset
+  property System.String PartyId required getset
+  property System.String TenantId required getset
+  property System.String VerificationStatus getset
+type class Hexalith.Parties.Contracts.Events.PartyErasureInProgress interfaces:Hexalith.EventStore.Contracts.Events.IEventPayload,Hexalith.EventStore.Contracts.Events.IRejectionEvent,System.IEquatable<Hexalith.Parties.Contracts.Events.PartyErasureInProgress>
+  ctor ()
+  property System.String Message getset
+  property System.String PartyId getset
+  property System.String Status getset
+  property System.String TenantId getset
+type class Hexalith.Parties.Contracts.Events.PartyMerged interfaces:Hexalith.EventStore.Contracts.Events.IEventPayload,System.IEquatable<Hexalith.Parties.Contracts.Events.PartyMerged>
+  ctor ()
+  property System.String MergedPartyId required getset
+  property System.String SurvivorPartyId required getset
+type class Hexalith.Parties.Contracts.Events.PartyNotFound interfaces:Hexalith.EventStore.Contracts.Events.IEventPayload,Hexalith.EventStore.Contracts.Events.IRejectionEvent,System.IEquatable<Hexalith.Parties.Contracts.Events.PartyNotFound>
+  ctor ()
+  property System.String Message getset
+type class Hexalith.Parties.Contracts.Events.PartyNotRestricted interfaces:Hexalith.EventStore.Contracts.Events.IEventPayload,Hexalith.EventStore.Contracts.Events.IRejectionEvent,System.IEquatable<Hexalith.Parties.Contracts.Events.PartyNotRestricted>
+  ctor ()
+  property System.String Message getset
+  property System.String PartyId required getset
+  property System.String TenantId required getset
+type class Hexalith.Parties.Contracts.Events.PartyProcessingRestricted interfaces:Hexalith.EventStore.Contracts.Events.IEventPayload,Hexalith.EventStore.Contracts.Events.IRejectionEvent,System.IEquatable<Hexalith.Parties.Contracts.Events.PartyProcessingRestricted>
+  ctor ()
+  property System.String Message getset
+  property System.String PartyId required getset
+  property System.String TenantId required getset
+type class Hexalith.Parties.Contracts.Events.PartyReactivated interfaces:Hexalith.EventStore.Contracts.Events.IEventPayload,System.IEquatable<Hexalith.Parties.Contracts.Events.PartyReactivated>
+  ctor ()
+type class Hexalith.Parties.Contracts.Events.PartyTypeMismatch interfaces:Hexalith.EventStore.Contracts.Events.IEventPayload,Hexalith.EventStore.Contracts.Events.IRejectionEvent,System.IEquatable<Hexalith.Parties.Contracts.Events.PartyTypeMismatch>
+  ctor ()
+  property System.String Message getset
+type class Hexalith.Parties.Contracts.Events.PartyValidationFailure interfaces:System.IEquatable<Hexalith.Parties.Contracts.Events.PartyValidationFailure>
+  ctor ()
+  property System.String ErrorCode required getset
+  property System.String PropertyName required getset
+type class Hexalith.Parties.Contracts.Events.PersonDetailsUpdated interfaces:Hexalith.EventStore.Contracts.Events.IEventPayload,System.IEquatable<Hexalith.Parties.Contracts.Events.PersonDetailsUpdated>
+  ctor ()
+  property Hexalith.Parties.Contracts.ValueObjects.PersonDetails PersonDetails required getset
+type class Hexalith.Parties.Contracts.Events.PreferredContactChannelChanged interfaces:Hexalith.EventStore.Contracts.Events.IEventPayload,System.IEquatable<Hexalith.Parties.Contracts.Events.PreferredContactChannelChanged>
+  ctor ()
+  property System.String ContactChannelId required getset
+type class Hexalith.Parties.Contracts.Events.ProcessingRestricted interfaces:Hexalith.EventStore.Contracts.Events.IEventPayload,System.IEquatable<Hexalith.Parties.Contracts.Events.ProcessingRestricted>
+  ctor ()
+  property System.String CorrelationId getset
+  property System.String PartyId required getset
+  property System.String Reason getset
+  property System.DateTimeOffset RestrictedAt required getset
+  property System.String RestrictedBy getset
+  property System.String TenantId required getset
+type class Hexalith.Parties.Contracts.Events.RestrictionLifted interfaces:Hexalith.EventStore.Contracts.Events.IEventPayload,System.IEquatable<Hexalith.Parties.Contracts.Events.RestrictionLifted>
+  ctor ()
+  property System.String CorrelationId getset
+  property System.DateTimeOffset LiftedAt required getset
+  property System.String LiftedBy getset
+  property System.String PartyId required getset
+  property System.String TenantId required getset
+type class Hexalith.Parties.Contracts.Models.MatchMetadata interfaces:System.IEquatable<Hexalith.Parties.Contracts.Models.MatchMetadata>
+  ctor ()
+  property System.String MatchType required getset
+  property System.String MatchedField required getset
+  property System.Nullable<System.Double> Score getset
+type class Hexalith.Parties.Contracts.Models.PagedResult`1 interfaces:System.IEquatable<Hexalith.Parties.Contracts.Models.PagedResult<T>>
+  ctor ()
+  property Hexalith.Parties.Contracts.Models.ProjectionFreshnessMetadata Freshness getset
+  property System.Collections.Generic.IReadOnlyList<T> Items required getset
+  property System.Int32 Page getset
+  property System.Int32 PageSize getset
+  property System.Int32 TotalCount getset
+  property System.Int32 TotalPages getset
+type class Hexalith.Parties.Contracts.Models.PartyDataPortabilityPackage interfaces:System.IEquatable<Hexalith.Parties.Contracts.Models.PartyDataPortabilityPackage>
+  ctor ()
+  property System.String CorrelationId required getset
+  property System.DateTimeOffset ExportedAt required getset
+  property System.String ExportedBy required getset
+  property Hexalith.Parties.Contracts.Models.ProjectionFreshnessMetadata Freshness getset
+  property Hexalith.Parties.Contracts.Models.PartyDetail Party getset
+  property System.String PartyId required getset
+  property System.Collections.Generic.IReadOnlyList<Hexalith.Parties.Contracts.Models.ProcessingActivityRecord> ProcessingRecords getset
+  property System.String Status required getset
+  property System.String TenantId required getset
+type class Hexalith.Parties.Contracts.Models.PartyDetail interfaces:System.IEquatable<Hexalith.Parties.Contracts.Models.PartyDetail>
+  ctor ()
+  property System.Collections.Generic.IReadOnlyList<Hexalith.Parties.Contracts.ValueObjects.ConsentRecord> ConsentRecords getset
+  property System.Collections.Generic.IReadOnlyList<Hexalith.Parties.Contracts.ValueObjects.ContactChannel> ContactChannels getset
+  property System.DateTimeOffset CreatedAt getset
+  property System.String DisplayName required getset
+  property System.Nullable<System.DateTimeOffset> ErasedAt getset
+  property Hexalith.Parties.Contracts.Models.ProjectionFreshnessMetadata Freshness getset
+  property System.String Id required getset
+  property System.Collections.Generic.IReadOnlyList<Hexalith.Parties.Contracts.ValueObjects.PartyIdentifier> Identifiers getset
+  property System.Boolean IsActive getset
+  property System.Boolean IsErased getset
+  property System.Boolean IsRestricted getset
+  property System.DateTimeOffset LastModifiedAt getset
+  property System.Collections.Generic.IReadOnlyList<Hexalith.Parties.Contracts.ValueObjects.NameHistoryEntry> NameHistory getset
+  property Hexalith.Parties.Contracts.ValueObjects.OrganizationDetails OrganizationDetails getset
+  property Hexalith.Parties.Contracts.ValueObjects.PersonDetails PersonDetails getset
+  property System.Nullable<System.DateTimeOffset> RestrictedAt getset
+  property System.String SortName required getset
+  property Hexalith.Parties.Contracts.ValueObjects.PartyType Type required getset
+type class Hexalith.Parties.Contracts.Models.PartyDetailProjectionReadResult interfaces:System.IEquatable<Hexalith.Parties.Contracts.Models.PartyDetailProjectionReadResult>
+  ctor ()
+  property Hexalith.Parties.Contracts.Models.PartyDetail Detail getset
+  property Hexalith.Parties.Contracts.Models.ProjectionFreshnessMetadata Freshness required getset
+type class Hexalith.Parties.Contracts.Models.PartyIndexEntry interfaces:System.IEquatable<Hexalith.Parties.Contracts.Models.PartyIndexEntry>
+  ctor ()
+  property System.DateTimeOffset CreatedAt getset
+  property System.String DisplayName required getset
+  property System.String Id required getset
+  property System.Boolean IsActive getset
+  property System.Boolean IsErased getset
+  property System.DateTimeOffset LastModifiedAt getset
+  property System.Collections.Generic.IReadOnlyList<Hexalith.Parties.Contracts.ValueObjects.ContactChannel> SearchableContactChannels getset
+  property System.Collections.Generic.IReadOnlyList<Hexalith.Parties.Contracts.ValueObjects.PartyIdentifier> SearchableIdentifiers getset
+  property System.String SortName getset
+  property Hexalith.Parties.Contracts.ValueObjects.PartyType Type required getset
+type class Hexalith.Parties.Contracts.Models.PartyIndexProjectionReadResult interfaces:System.IEquatable<Hexalith.Parties.Contracts.Models.PartyIndexProjectionReadResult>
+  ctor ()
+  property System.Collections.Generic.IReadOnlyDictionary<System.String,Hexalith.Parties.Contracts.Models.PartyIndexEntry> Entries required getset
+  property Hexalith.Parties.Contracts.Models.ProjectionFreshnessMetadata Freshness required getset
+type class Hexalith.Parties.Contracts.Models.PartySearchResult interfaces:System.IEquatable<Hexalith.Parties.Contracts.Models.PartySearchResult>
+  ctor ()
+  property System.Collections.Generic.IReadOnlyList<Hexalith.Parties.Contracts.Models.MatchMetadata> Matches required getset
+  property Hexalith.Parties.Contracts.Models.PartyIndexEntry Party required getset
+  property System.Double RelevanceScore getset
+type class Hexalith.Parties.Contracts.Models.ProcessingActivityRecord interfaces:System.IEquatable<Hexalith.Parties.Contracts.Models.ProcessingActivityRecord>
+  ctor ()
+  property System.String ActorId getset
+  property System.String CorrelationId getset
+  property System.String EventType required getset
+  property System.String OperationCategory getset
+  property System.String Outcome getset
+  property System.String PartyId getset
+  property System.Int64 SequenceNumber required getset
+  property System.String Summary required getset
+  property System.String TenantId getset
+  property System.DateTimeOffset Timestamp required getset
+type class Hexalith.Parties.Contracts.Models.ProjectionFreshnessMetadata interfaces:System.IEquatable<Hexalith.Parties.Contracts.Models.ProjectionFreshnessMetadata>
+  ctor ()
+  property Hexalith.Parties.Contracts.Models.ProjectionFreshnessStatus Status required getset
+  property System.Collections.Generic.IReadOnlyList<System.String> WarningCodes getset
+  method Hexalith.Parties.Contracts.Models.ProjectionFreshnessMetadata Create(Hexalith.Parties.Contracts.Models.ProjectionFreshnessStatus status, System.String[] warningCodes)
+type enum Hexalith.Parties.Contracts.Models.ProjectionFreshnessStatus base:System.Enum interfaces:System.IComparable,System.IConvertible,System.IFormattable,System.ISpanFormattable
+  enum Current=0
+  enum Degraded=3
+  enum LocalOnly=5
+  enum Rebuilding=2
+  enum Stale=1
+  enum Unavailable=4
+type class Hexalith.Parties.Contracts.Models.TemporalNameResult interfaces:System.IEquatable<Hexalith.Parties.Contracts.Models.TemporalNameResult>
+  ctor ()
+  property System.DateTimeOffset AsOf required getset
+  property System.String DisplayName required getset
+  property System.String PartyId required getset
+  property System.String SortName required getset
+type class Hexalith.Parties.Contracts.PersonalDataAttribute base:System.Attribute interfaces:
+  ctor ()
+type class Hexalith.Parties.Contracts.Results.CompositeCommandResult base:Hexalith.EventStore.Contracts.Results.DomainResult interfaces:System.IEquatable<Hexalith.EventStore.Contracts.Results.DomainResult>,System.IEquatable<Hexalith.Parties.Contracts.Results.CompositeCommandResult>
+  ctor (System.Collections.Generic.IReadOnlyList<Hexalith.EventStore.Contracts.Events.IEventPayload> events, System.Collections.Generic.IReadOnlyList<System.String> applied, System.Collections.Generic.IReadOnlyList<System.String> skipped, System.Collections.Generic.IReadOnlyList<System.String> rejected, Hexalith.Parties.Contracts.Models.PartyDetail updatedPartyDetail)
+  property System.Collections.Generic.IReadOnlyList<System.String> Applied get
+  property System.Collections.Generic.IReadOnlyList<System.String> Rejected get
+  property System.String ResultPayload get
+  property System.Collections.Generic.IReadOnlyList<System.String> Skipped get
+  property Hexalith.Parties.Contracts.Models.PartyDetail UpdatedPartyDetail get
+type class Hexalith.Parties.Contracts.Results.PartyCommandResult base:Hexalith.EventStore.Contracts.Results.DomainResult interfaces:System.IEquatable<Hexalith.EventStore.Contracts.Results.DomainResult>,System.IEquatable<Hexalith.Parties.Contracts.Results.PartyCommandResult>
+  ctor (System.Collections.Generic.IReadOnlyList<Hexalith.EventStore.Contracts.Events.IEventPayload> events, Hexalith.Parties.Contracts.Models.PartyDetail updatedPartyDetail)
+  property System.String ResultPayload get
+  property Hexalith.Parties.Contracts.Models.PartyDetail UpdatedPartyDetail get
+type interface Hexalith.Parties.Contracts.Search.IPartySearchProvider interfaces:
+  method Hexalith.Parties.Contracts.Models.PagedResult<Hexalith.Parties.Contracts.Models.PartySearchResult> Search(System.Collections.Generic.IEnumerable<Hexalith.Parties.Contracts.Models.PartyIndexEntry> entries, System.String query, System.Nullable<Hexalith.Parties.Contracts.ValueObjects.PartyType> typeFilter, System.Nullable<System.Boolean> activeFilter, System.Int32 page, System.Int32 pageSize, System.Threading.CancellationToken cancellationToken)
+type class Hexalith.Parties.Contracts.Security.CryptoShreddingOptions interfaces:System.IEquatable<Hexalith.Parties.Contracts.Security.CryptoShreddingOptions>
+  ctor ()
+  property System.TimeSpan CircuitBreakerBreakDuration getset
+  property System.Int32 CircuitBreakerFailureThreshold getset
+  property System.TimeSpan CircuitBreakerMaxOpenDuration getset
+  property System.Int32 DrainRecoveryBatchSize getset
+  property System.TimeSpan DrainRecoveryDelayBetweenEvents getset
+  property System.Boolean IsEnabled getset
+type enum Hexalith.Parties.Contracts.Security.EncryptionAlgorithm base:System.Enum interfaces:System.IComparable,System.IConvertible,System.IFormattable,System.ISpanFormattable
+  enum AES256GCM=0
+type class Hexalith.Parties.Contracts.Security.ErasureCertificate interfaces:System.IEquatable<Hexalith.Parties.Contracts.Security.ErasureCertificate>
+  ctor ()
+  property System.Collections.Generic.IReadOnlyList<System.Int32> KeyVersionsDestroyed required getset
+  property System.String PartyId required getset
+  property System.String TenantId required getset
+  property System.DateTimeOffset Timestamp required getset
+  property Hexalith.Parties.Contracts.Security.ErasureVerificationStatus VerificationStatus required getset
+type enum Hexalith.Parties.Contracts.Security.ErasureStatus base:System.Enum interfaces:System.IComparable,System.IConvertible,System.IFormattable,System.ISpanFormattable
+  enum Active=0
+  enum Erased=5
+  enum ErasurePending=1
+  enum KeyDestroyed=2
+  enum VerificationInProgress=3
+  enum Verified=4
+type enum Hexalith.Parties.Contracts.Security.ErasureStoreCleanupStatus base:System.Enum interfaces:System.IComparable,System.IConvertible,System.IFormattable,System.ISpanFormattable
+  enum Cleaned=0
+  enum Failed=1
+  enum NotApplicable=4
+  enum Pending=3
+  enum Skipped=2
+type enum Hexalith.Parties.Contracts.Security.ErasureVerificationOverallStatus base:System.Enum interfaces:System.IComparable,System.IConvertible,System.IFormattable,System.ISpanFormattable
+  enum Complete=0
+  enum Failed=3
+  enum Partial=2
+  enum Pending=1
+type class Hexalith.Parties.Contracts.Security.ErasureVerificationReport interfaces:System.IEquatable<Hexalith.Parties.Contracts.Security.ErasureVerificationReport>
+  ctor ()
+  property Hexalith.Parties.Contracts.Security.ErasureVerificationOverallStatus OverallStatus required getset
+  property System.String PartyId required getset
+  property System.Collections.Generic.IReadOnlyList<Hexalith.Parties.Contracts.Security.ErasureVerificationStoreResult> StoreResults required getset
+  property System.String TenantId required getset
+  property System.DateTimeOffset Timestamp required getset
+type enum Hexalith.Parties.Contracts.Security.ErasureVerificationStatus base:System.Enum interfaces:System.IComparable,System.IConvertible,System.IFormattable,System.ISpanFormattable
+  enum Failed=2
+  enum Pending=0
+  enum Verified=1
+type class Hexalith.Parties.Contracts.Security.ErasureVerificationStoreResult interfaces:System.IEquatable<Hexalith.Parties.Contracts.Security.ErasureVerificationStoreResult>
+  ctor ()
+  property System.String ErrorMessage getset
+  property Hexalith.Parties.Contracts.Security.ErasureStoreCleanupStatus Status required getset
+  property System.String StoreName required getset
+  property System.DateTimeOffset Timestamp required getset
+type interface Hexalith.Parties.Contracts.Security.ICryptoStatusProvider interfaces:
+  method System.Threading.Tasks.Task<System.Boolean> IsCryptoPendingAsync(System.String tenantId, System.String partyId, System.Threading.CancellationToken cancellationToken)
+type interface Hexalith.Parties.Contracts.Security.IErasureVerificationService interfaces:
+  method System.Threading.Tasks.Task<Hexalith.Parties.Contracts.Security.ErasureVerificationReport> VerifyErasureAsync(System.String tenantId, System.String partyId, Hexalith.Parties.Contracts.Security.ErasureCertificate erasureCertificate, System.Threading.CancellationToken cancellationToken)
+type interface Hexalith.Parties.Contracts.Security.IKeyOperationAuditService interfaces:
+  method System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<Hexalith.Parties.Contracts.Security.KeyOperationAuditEntry>> GetAuditTrailAsync(System.String tenantId, System.String partyId, System.Threading.CancellationToken cancellationToken)
+  method System.Threading.Tasks.Task RecordOperationAsync(Hexalith.Parties.Contracts.Security.KeyOperationAuditEntry entry, System.Threading.CancellationToken cancellationToken)
+type interface Hexalith.Parties.Contracts.Security.IKeyStorageBackend interfaces:
+  method System.Threading.Tasks.Task CreateSecretAsync(System.String keyPath, System.Byte[] keyMaterial, System.Threading.CancellationToken cancellationToken)
+  method System.Threading.Tasks.Task DeleteAllVersionsAsync(System.String tenantId, System.String partyId, System.Threading.CancellationToken cancellationToken)
+  method System.Threading.Tasks.Task DeleteSecretAsync(System.String keyPath, System.Threading.CancellationToken cancellationToken)
+  method System.Threading.Tasks.Task<Hexalith.Parties.Contracts.Security.TenantKeyMetadata> GetOrCreateTenantKeyAsync(System.String tenantId, System.String operationId, System.Threading.CancellationToken cancellationToken)
+  method System.Threading.Tasks.Task<Hexalith.Parties.Contracts.Security.PartyKeyWrappingMetadata> GetPartyKeyWrappingMetadataAsync(System.String tenantId, System.String partyId, System.Int32 keyVersion, System.Threading.CancellationToken cancellationToken)
+  method System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<System.Int32>> ListKeyVersionsAsync(System.String tenantId, System.String partyId, System.Threading.CancellationToken cancellationToken)
+  method System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<Hexalith.Parties.Contracts.Security.PartyKeyRecord>> ListPartyKeyRecordsAsync(System.String tenantId, System.Threading.CancellationToken cancellationToken)
+  method System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<Hexalith.Parties.Contracts.Security.TenantKeyMetadata>> ListTenantKeysAsync(System.String tenantId, System.Threading.CancellationToken cancellationToken)
+  method System.Threading.Tasks.Task<System.Byte[]> ReadSecretAsync(System.String keyPath, System.Threading.CancellationToken cancellationToken)
+  method System.Threading.Tasks.Task SetPartyKeyWrappingMetadataAsync(Hexalith.Parties.Contracts.Security.PartyKeyWrappingMetadata metadata, System.Threading.CancellationToken cancellationToken)
+type interface Hexalith.Parties.Contracts.Security.IPartyErasureRecordStore interfaces:
+  method System.Threading.Tasks.Task<Hexalith.Parties.Contracts.Security.ErasureCertificate> GetCertificateAsync(System.String tenantId, System.String partyId, System.Threading.CancellationToken cancellationToken)
+  method System.Threading.Tasks.Task<Hexalith.Parties.Contracts.Security.PartyErasureStatusRecord> GetStatusAsync(System.String tenantId, System.String partyId, System.Threading.CancellationToken cancellationToken)
+  method System.Threading.Tasks.Task<Hexalith.Parties.Contracts.Security.ErasureVerificationReport> GetVerificationReportAsync(System.String tenantId, System.String partyId, System.Threading.CancellationToken cancellationToken)
+  method System.Threading.Tasks.Task SaveCertificateAsync(Hexalith.Parties.Contracts.Security.ErasureCertificate certificate, System.Threading.CancellationToken cancellationToken)
+  method System.Threading.Tasks.Task SaveStatusAsync(Hexalith.Parties.Contracts.Security.PartyErasureStatusRecord status, System.Threading.CancellationToken cancellationToken)
+  method System.Threading.Tasks.Task SaveVerificationReportAsync(Hexalith.Parties.Contracts.Security.ErasureVerificationReport report, System.Threading.CancellationToken cancellationToken)
+type interface Hexalith.Parties.Contracts.Security.IPartyKeyLifecycleService interfaces:Hexalith.Parties.Contracts.Security.ICryptoStatusProvider
+  method System.Threading.Tasks.Task ClearCryptoPendingAsync(System.String tenantId, System.String partyId, System.Threading.CancellationToken cancellationToken)
+  method System.Threading.Tasks.Task MarkCryptoPendingAsync(System.String tenantId, System.String partyId, System.String reason, System.Threading.CancellationToken cancellationToken)
+  method System.Threading.Tasks.Task OnPartyCreatedAsync(System.String tenantId, System.String partyId, System.Threading.CancellationToken cancellationToken)
+  method System.Threading.Tasks.Task RetryPendingKeyCreationAsync(System.String tenantId, System.String partyId, System.Threading.CancellationToken cancellationToken)
+type interface Hexalith.Parties.Contracts.Security.IPartyKeyManagementService interfaces:
+  method System.Threading.Tasks.Task<Hexalith.Parties.Contracts.Security.PartyKeyInfo> CreateKeyAsync(System.String tenantId, System.String partyId, System.Threading.CancellationToken cancellationToken)
+  method System.Threading.Tasks.Task<Hexalith.Parties.Contracts.Security.ErasureCertificate> DeleteKeyAsync(System.String tenantId, System.String partyId, System.Threading.CancellationToken cancellationToken)
+  method System.Threading.Tasks.Task<System.Byte[]> GetKeyAsync(System.String tenantId, System.String partyId, System.Threading.CancellationToken cancellationToken)
+  method System.Threading.Tasks.Task<System.Byte[]> GetKeyVersionAsync(System.String tenantId, System.String partyId, System.Int32 version, System.Threading.CancellationToken cancellationToken)
+  method System.Threading.Tasks.Task<Hexalith.Parties.Contracts.Security.PartyKeyInfo> RotateKeyAsync(System.String tenantId, System.String partyId, System.Threading.CancellationToken cancellationToken)
+type interface Hexalith.Parties.Contracts.Security.IPersonalDataCommandGuard interfaces:
+  method System.Threading.Tasks.Task<System.String> GetBlockingReasonAsync(System.String tenantId, System.String partyId, System.Object command, System.Threading.CancellationToken cancellationToken)
+type interface Hexalith.Parties.Contracts.Security.ITenantKeyRotationService interfaces:
+  method System.Threading.Tasks.Task<Hexalith.Parties.Contracts.Security.TenantKeyRotationStatus> GetStatusAsync(System.String tenantId, System.String operationId, System.Threading.CancellationToken cancellationToken)
+  method System.Threading.Tasks.Task<Hexalith.Parties.Contracts.Security.TenantKeyRotationStatus> RotateAsync(Hexalith.Parties.Contracts.Security.TenantKeyRotationRequest request, System.Threading.CancellationToken cancellationToken)
+type class Hexalith.Parties.Contracts.Security.KeyOperationAuditEntry interfaces:System.IEquatable<Hexalith.Parties.Contracts.Security.KeyOperationAuditEntry>
+  ctor ()
+  property System.String CorrelationId required getset
+  property System.Nullable<System.Int32> FailedCount getset
+  property System.Nullable<Hexalith.Parties.Contracts.Security.TenantKeyRotationFailureCategory> FailureCategory getset
+  property System.Int32 KeyVersion required getset
+  property System.String OperationId getset
+  property Hexalith.Parties.Contracts.Security.KeyOperationType OperationType required getset
+  property System.String Outcome getset
+  property System.String PartyId required getset
+  property System.Nullable<System.Int32> ProcessedCount getset
+  property System.Nullable<System.Int32> SkippedCount getset
+  property System.String TenantId required getset
+  property System.DateTimeOffset Timestamp required getset
+type enum Hexalith.Parties.Contracts.Security.KeyOperationType base:System.Enum interfaces:System.IComparable,System.IConvertible,System.IFormattable,System.ISpanFormattable
+  enum Create=0
+  enum Delete=3
+  enum Read=1
+  enum Rotate=2
+  enum TenantRotate=4
+type enum Hexalith.Parties.Contracts.Security.LawfulBasis base:System.Enum interfaces:System.IComparable,System.IConvertible,System.IFormattable,System.ISpanFormattable
+  enum Consent=0
+  enum ContractualNecessity=2
+  enum LegalObligation=3
+  enum LegitimateInterest=1
+type class Hexalith.Parties.Contracts.Security.PartyErasureStatusRecord interfaces:System.IEquatable<Hexalith.Parties.Contracts.Security.PartyErasureStatusRecord>
+  ctor ()
+  property System.Nullable<System.DateTimeOffset> ErasedAt getset
+  property System.String ErrorMessage getset
+  property System.String PartyId required getset
+  property System.String Status required getset
+  property System.String TenantId required getset
+  property System.DateTimeOffset UpdatedAt required getset
+type class Hexalith.Parties.Contracts.Security.PartyKeyInfo interfaces:System.IEquatable<Hexalith.Parties.Contracts.Security.PartyKeyInfo>
+  ctor ()
+  property Hexalith.Parties.Contracts.Security.EncryptionAlgorithm Algorithm required getset
+  property System.DateTimeOffset CreatedAt required getset
+  property System.String KeyId required getset
+  property System.String PartyId required getset
+  property System.String TenantId required getset
+  property System.Int32 Version required getset
+type class Hexalith.Parties.Contracts.Security.PartyKeyRecord interfaces:System.IEquatable<Hexalith.Parties.Contracts.Security.PartyKeyRecord>
+  ctor ()
+  property System.String KeyPath required getset
+  property System.String PartyId required getset
+  property System.String TenantId required getset
+  property System.Int32 Version required getset
+type class Hexalith.Parties.Contracts.Security.PartyKeyWrappingMetadata interfaces:System.IEquatable<Hexalith.Parties.Contracts.Security.PartyKeyWrappingMetadata>
+  ctor ()
+  property System.Int32 KeyVersion required getset
+  property System.String PartyId required getset
+  property System.String RotationId required getset
+  property System.String TenantId required getset
+  property System.String TenantKeyId required getset
+  property System.Int32 TenantKeyVersion required getset
+  property System.DateTimeOffset WrappedAt required getset
+type class Hexalith.Parties.Contracts.Security.TenantKeyMetadata interfaces:System.IEquatable<Hexalith.Parties.Contracts.Security.TenantKeyMetadata>
+  ctor ()
+  property System.DateTimeOffset CreatedAt required getset
+  property System.String KeyId required getset
+  property System.String OperationId required getset
+  property System.String ProviderName required getset
+  property System.String TenantId required getset
+  property System.Int32 Version required getset
+type enum Hexalith.Parties.Contracts.Security.TenantKeyRotationFailureCategory base:System.Enum interfaces:System.IComparable,System.IConvertible,System.IFormattable,System.ISpanFormattable
+  enum BackendUnavailable=2
+  enum ConcurrencyConflict=4
+  enum ErasedParty=3
+  enum MissingKeyProvider=1
+  enum None=0
+type enum Hexalith.Parties.Contracts.Security.TenantKeyRotationPhase base:System.Enum interfaces:System.IComparable,System.IConvertible,System.IFormattable,System.ISpanFormattable
+  enum Completed=2
+  enum Failed=3
+  enum InProgress=1
+  enum NotStarted=0
+type class Hexalith.Parties.Contracts.Security.TenantKeyRotationRequest interfaces:System.IEquatable<Hexalith.Parties.Contracts.Security.TenantKeyRotationRequest>
+  ctor ()
+  property System.String CorrelationId getset
+  property System.String OperationId required getset
+  property System.String TenantId required getset
+type class Hexalith.Parties.Contracts.Security.TenantKeyRotationStatus interfaces:System.IEquatable<Hexalith.Parties.Contracts.Security.TenantKeyRotationStatus>
+  ctor ()
+  property System.Nullable<System.DateTimeOffset> CompletedAt getset
+  property System.String CorrelationId getset
+  property System.Int32 FailedCount required getset
+  property System.Collections.Generic.IReadOnlyDictionary<Hexalith.Parties.Contracts.Security.TenantKeyRotationFailureCategory,System.Int32> FailureCategories required getset
+  property System.String OperationId required getset
+  property Hexalith.Parties.Contracts.Security.TenantKeyRotationPhase Phase required getset
+  property System.Int32 ProcessedCount required getset
+  property System.Int32 SkippedCount required getset
+  property System.DateTimeOffset StartedAt required getset
+  property System.String TenantId required getset
+  property System.Int32 TotalCount required getset
+type class Hexalith.Parties.Contracts.State.PartyState interfaces:
+  ctor ()
+  property System.Collections.Generic.IReadOnlyList<Hexalith.Parties.Contracts.ValueObjects.ConsentRecord> ConsentRecords get
+  property System.Collections.Generic.IReadOnlyList<Hexalith.Parties.Contracts.ValueObjects.ContactChannel> ContactChannels get
+  property System.DateTimeOffset CreatedAt getset
+  property System.String DisplayName getset
+  property System.Nullable<System.DateTimeOffset> ErasedAt getset
+  property Hexalith.Parties.Contracts.Security.ErasureStatus ErasureStatus getset
+  property System.Collections.Generic.IReadOnlyList<Hexalith.Parties.Contracts.ValueObjects.PartyIdentifier> Identifiers get
+  property System.Boolean IsActive getset
+  property System.Boolean IsNaturalPerson getset
+  property System.Boolean IsRestricted getset
+  property Hexalith.Parties.Contracts.ValueObjects.OrganizationDetails Organization getset
+  property Hexalith.Parties.Contracts.ValueObjects.PersonDetails Person getset
+  property System.Nullable<System.DateTimeOffset> RestrictedAt getset
+  property System.String RestrictionReason getset
+  property System.String SortName getset
+  property Hexalith.Parties.Contracts.ValueObjects.PartyType Type getset
+  method System.Void Apply(Hexalith.Parties.Contracts.Events.PartyNotFound e)
+  method System.Void Apply(Hexalith.Parties.Contracts.Events.PartyTypeMismatch e)
+  method System.Void Apply(Hexalith.Parties.Contracts.Events.PartyCannotBeCreatedWithInvalidId e)
+  method System.Void Apply(Hexalith.Parties.Contracts.Events.PartyCannotBeCreatedWithoutType e)
+  method System.Void Apply(Hexalith.Parties.Contracts.Events.PartyCannotBeCreatedWithoutPersonDetails e)
+  method System.Void Apply(Hexalith.Parties.Contracts.Events.PartyCannotBeCreatedWithoutOrganizationDetails e)
+  method System.Void Apply(Hexalith.Parties.Contracts.Events.PartyCannotBeDeactivatedWhenInactive e)
+  method System.Void Apply(Hexalith.Parties.Contracts.Events.PartyCannotBeReactivatedWhenActive e)
+  method System.Void Apply(Hexalith.Parties.Contracts.Events.PartyErasureInProgress e)
+  method System.Void Apply(Hexalith.Parties.Contracts.Events.PartyProcessingRestricted e)
+  method System.Void Apply(Hexalith.Parties.Contracts.Events.PartyNotRestricted e)
+  method System.Void Apply(Hexalith.Parties.Contracts.Events.ContactChannelNotFound e)
+  method System.Void Apply(Hexalith.Parties.Contracts.Events.IdentifierNotFound e)
+  method System.Void Apply(Hexalith.Parties.Contracts.Events.ConsentNotFound e)
+  method System.Void Apply(Hexalith.Parties.Contracts.Events.InvalidConsentPurpose e)
+  method System.Void Apply(Hexalith.Parties.Contracts.Events.PartyCannotAddDuplicateChannel e)
+  method System.Void Apply(Hexalith.Parties.Contracts.Events.PartyCannotAddDuplicateIdentifier e)
+  method System.Void Apply(Hexalith.Parties.Contracts.Events.CompositeOperationConflict e)
+  method System.Void Apply(Hexalith.Parties.Contracts.Events.PartyCommandValidationRejected e)
+  method System.Void Apply(Hexalith.Parties.Contracts.Events.PartyCreated e)
+  method System.Void Apply(Hexalith.Parties.Contracts.Events.PersonDetailsUpdated e)
+  method System.Void Apply(Hexalith.Parties.Contracts.Events.OrganizationDetailsUpdated e)
+  method System.Void Apply(Hexalith.Parties.Contracts.Events.ContactChannelAdded e)
+  method System.Void Apply(Hexalith.Parties.Contracts.Events.ContactChannelUpdated e)
+  method System.Void Apply(Hexalith.Parties.Contracts.Events.ContactChannelRemoved e)
+  method System.Void Apply(Hexalith.Parties.Contracts.Events.PreferredContactChannelChanged e)
+  method System.Void Apply(Hexalith.Parties.Contracts.Events.IdentifierAdded e)
+  method System.Void Apply(Hexalith.Parties.Contracts.Events.IdentifierRemoved e)
+  method System.Void Apply(Hexalith.Parties.Contracts.Events.IsNaturalPersonChanged e)
+  method System.Void Apply(Hexalith.Parties.Contracts.Events.PartyDeactivated e)
+  method System.Void Apply(Hexalith.Parties.Contracts.Events.PartyReactivated e)
+  method System.Void Apply(Hexalith.Parties.Contracts.Events.PartyDisplayNameDerived e)
+  method System.Void Apply(Hexalith.Parties.Contracts.Events.ConsentRecorded e)
+  method System.Void Apply(Hexalith.Parties.Contracts.Events.ConsentRevoked e)
+  method System.Void Apply(Hexalith.Parties.Contracts.Events.ProcessingRestricted e)
+  method System.Void Apply(Hexalith.Parties.Contracts.Events.RestrictionLifted e)
+  method System.Void Apply(Hexalith.Parties.Contracts.Events.ErasePartyRequested e)
+  method System.Void Apply(Hexalith.Parties.Contracts.Events.PartyEncryptionKeyDeleted e)
+  method System.Void Apply(Hexalith.Parties.Contracts.Events.PartyEncryptionKeyRotated e)
+  method System.Void Apply(Hexalith.Parties.Contracts.Events.ErasureVerified e)
+  method System.Void Apply(Hexalith.Parties.Contracts.Events.PartyErased e)
+  method System.Void Apply(Hexalith.Parties.Contracts.Events.PartyMerged e)
+type class Hexalith.Parties.Contracts.ValueObjects.ConsentRecord interfaces:System.IEquatable<Hexalith.Parties.Contracts.ValueObjects.ConsentRecord>
+  ctor ()
+  property System.String ChannelId required getset
+  property System.String ConsentId required getset
+  property System.DateTimeOffset GrantedAt required getset
+  property System.String GrantedBy required getset
+  property System.Boolean IsActive get
+  property Hexalith.Parties.Contracts.Security.LawfulBasis LawfulBasis required getset
+  property System.String Purpose required getset
+  property System.String RevocationReason getset
+  property System.String RevocationSource getset
+  property System.Nullable<System.DateTimeOffset> RevokedAt getset
+  property System.String RevokedBy getset
+  property System.String Source getset
+type class Hexalith.Parties.Contracts.ValueObjects.ContactChannel interfaces:System.IEquatable<Hexalith.Parties.Contracts.ValueObjects.ContactChannel>
+  ctor ()
+  property System.String Id required getset
+  property System.Boolean IsPreferred getset
+  property Hexalith.Parties.Contracts.ValueObjects.ContactChannelType Type required getset
+  property System.String Value required getset
+type enum Hexalith.Parties.Contracts.ValueObjects.ContactChannelType base:System.Enum interfaces:System.IComparable,System.IConvertible,System.IFormattable,System.ISpanFormattable
+  enum Email=0
+  enum Phone=1
+  enum PostalAddress=2
+  enum SocialMedia=3
+type class Hexalith.Parties.Contracts.ValueObjects.EmailAddress interfaces:System.IEquatable<Hexalith.Parties.Contracts.ValueObjects.EmailAddress>
+  ctor ()
+  property System.String Address required getset
+type enum Hexalith.Parties.Contracts.ValueObjects.IdentifierType base:System.Enum interfaces:System.IComparable,System.IConvertible,System.IFormattable,System.ISpanFormattable
+  enum CompanyRegistration=3
+  enum NationalId=2
+  enum Other=5
+  enum SIRET=1
+  enum TaxId=4
+  enum VAT=0
+type class Hexalith.Parties.Contracts.ValueObjects.NameHistoryEntry interfaces:System.IEquatable<Hexalith.Parties.Contracts.ValueObjects.NameHistoryEntry>
+  ctor ()
+  property System.DateTimeOffset ChangedAt required getset
+  property System.String DisplayName required getset
+  property System.String SortName required getset
+  property System.String TriggeredBy getset
+type class Hexalith.Parties.Contracts.ValueObjects.OrganizationDetails interfaces:System.IEquatable<Hexalith.Parties.Contracts.ValueObjects.OrganizationDetails>
+  ctor ()
+  property System.Boolean IsNaturalPerson getset
+  property System.String LegalForm getset
+  property System.String LegalName required getset
+  property System.String RegistrationNumber getset
+  property System.String TradingName getset
+type class Hexalith.Parties.Contracts.ValueObjects.PartyIdentifier interfaces:System.IEquatable<Hexalith.Parties.Contracts.ValueObjects.PartyIdentifier>
+  ctor ()
+  property System.String Id required getset
+  property System.String Jurisdiction getset
+  property Hexalith.Parties.Contracts.ValueObjects.IdentifierType Type required getset
+  property System.String Value required getset
+type enum Hexalith.Parties.Contracts.ValueObjects.PartyType base:System.Enum interfaces:System.IComparable,System.IConvertible,System.IFormattable,System.ISpanFormattable
+  enum Organization=2
+  enum Person=1
+  enum Unknown=0
+type class Hexalith.Parties.Contracts.ValueObjects.PersonDetails interfaces:System.IEquatable<Hexalith.Parties.Contracts.ValueObjects.PersonDetails>
+  ctor ()
+  property System.Nullable<System.DateTimeOffset> DateOfBirth getset
+  property System.String FirstName required getset
+  property System.String LastName required getset
+  property System.String Prefix getset
+  property System.String Suffix getset
+type class Hexalith.Parties.Contracts.ValueObjects.PhoneNumber interfaces:System.IEquatable<Hexalith.Parties.Contracts.ValueObjects.PhoneNumber>
+  ctor ()
+  property System.String CountryCode getset
+  property System.String Number required getset
+type class Hexalith.Parties.Contracts.ValueObjects.PostalAddress interfaces:System.IEquatable<Hexalith.Parties.Contracts.ValueObjects.PostalAddress>
+  ctor ()
+  property System.String City getset
+  property System.String Country getset
+  property System.String PostalCode getset
+  property System.String Region getset
+  property System.String Street getset
+type class Hexalith.Parties.Contracts.ValueObjects.SocialMediaHandle interfaces:System.IEquatable<Hexalith.Parties.Contracts.ValueObjects.SocialMediaHandle>
+  ctor ()
+  property System.String Handle required getset
+  property System.String Platform required getset

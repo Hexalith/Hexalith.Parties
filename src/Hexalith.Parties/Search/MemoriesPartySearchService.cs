@@ -289,7 +289,7 @@ internal sealed class MemoriesPartySearchService(
         // advertise (e.g.) "Mode=Semantic, Status=Degraded" while the local provider ran
         // the same fuzzy lexical pipeline regardless of mode. Remap so the response mode and
         // the actual local behavior agree.
-        PartySearchRequest localRequest = request with { Mode = PartySearchMode.Hybrid };
+        PartySearchRequest localRequest = request with { Mode = PartySearchMode.Lexical };
 
         PartySearchResponse local = await localFallback
             .SearchAsync(localRequest, entries, cancellationToken)

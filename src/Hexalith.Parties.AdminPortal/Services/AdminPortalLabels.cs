@@ -1,6 +1,6 @@
 namespace Hexalith.Parties.AdminPortal.Services;
 
-public sealed record AdminPortalLabels
+public record AdminPortalLabels
 {
     public string Title { get; init; } = "Parties";
 
@@ -13,6 +13,22 @@ public sealed record AdminPortalLabels
     public string PartyType { get; init; } = "Party type";
 
     public string ActiveState { get; init; } = "Active state";
+
+    public string CreatedAfter { get; init; } = "Created after";
+
+    public string CreatedBefore { get; init; } = "Created before";
+
+    public string ModifiedAfter { get; init; } = "Modified after";
+
+    public string ModifiedBefore { get; init; } = "Modified before";
+
+    public string DateFilterPlaceholder { get; init; } = "YYYY-MM-DD";
+
+    public string CreatedDateRangeInvalid { get; init; } = "Created date range is invalid";
+
+    public string ModifiedDateRangeInvalid { get; init; } = "Modified date range is invalid";
+
+    public string DateFilterInvalid { get; init; } = "Use YYYY-MM-DD for date filters";
 
     public string AllTypes { get; init; } = "All types";
 
@@ -155,6 +171,9 @@ public sealed record AdminPortalLabels
     public string GdprOperationsUnavailable { get; init; } =
         "GDPR operations are unavailable until the EventStore GDPR client contract is available.";
 
+    public string GdprOperationContractBlocked { get; init; } =
+        AdminPortalGdprCapability.ContractUnavailableReason;
+
     public string GdprOperationalSummary { get; init; } = "Operational summary";
 
     public string GdprRestrictionReason { get; init; } = "Restriction reason";
@@ -279,14 +298,16 @@ public sealed record AdminPortalLabels
         _ => typeName,
     };
 
-    // The four enum-translation hooks below are virtual seams for hosts that need to localize
+    // The enum-translation hooks below are virtual seams for hosts that need to localize
     // contract enum values. Default implementation is identity; overriding requires a derived
     // record. Kept as instance methods (not static) so a subclass record can override them.
 #pragma warning disable CA1822 // Members do not access instance data — intentional for override seam.
-    public string ContactChannelTypeLabel(string typeName) => typeName;
+    public virtual string ContactChannelTypeLabel(string typeName) => typeName;
 
-    public string IdentifierTypeLabel(string typeName) => typeName;
+    public virtual string IdentifierTypeLabel(string typeName) => typeName;
 
-    public string ConsentPurposeLabel(string purposeName) => purposeName;
+    public virtual string ConsentPurposeLabel(string purposeName) => purposeName;
+
+    public virtual string LawfulBasisLabel(string lawfulBasisName) => lawfulBasisName;
 #pragma warning restore CA1822
 }

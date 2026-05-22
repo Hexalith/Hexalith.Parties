@@ -48,16 +48,13 @@ public class LocalFuzzyPartySearchProviderTests
         match.RelevanceScore.ShouldBeGreaterThan(0.0);
     }
 
-    // 7.4 — type text match ("company" finds Organization parties)
+    // 7.4 — type text is not searched in the MVP display-name path
     [Fact]
-    public void Search_TypeTextMatch_FindsOrganizationParties()
+    public void Search_TypeTextMatch_DoesNotFindOrganizationParties()
     {
         PagedResult<PartySearchResult> result = _provider.Search(_entries, "company", null, null, 1, 20);
 
-        result.Items.ShouldNotBeEmpty();
-        result.Items.ShouldContain(r => r.Party.Id == "p2");
-        PartySearchResult orgMatch = result.Items.First(r => r.Party.Id == "p2");
-        orgMatch.Matches.ShouldContain(m => m.MatchedField == "type");
+        result.Items.ShouldBeEmpty();
     }
 
     // 7.5 — multi-token query ("Jean Dupont") matches across fields
@@ -71,15 +68,13 @@ public class LocalFuzzyPartySearchProviderTests
         match.RelevanceScore.ShouldBeGreaterThan(0.5);
     }
 
-    // 7.6 — all contact channel types searched (not just Email)
+    // 7.6 — contact channel values are not searched by the MVP display-name path
     [Fact]
-    public void Search_AllContactChannelTypes_SearchedNotJustEmail()
+    public void Search_ContactChannelValues_AreNotSearched()
     {
-        // "Paris" should match the postal address of Acme Corporation
         PagedResult<PartySearchResult> result = _provider.Search(_entries, "Paris", null, null, 1, 20);
 
-        result.Items.ShouldNotBeEmpty();
-        result.Items.ShouldContain(r => r.Party.Id == "p2");
+        result.Items.ShouldBeEmpty();
     }
 
     // 7.7 — results sorted by RelevanceScore descending
@@ -143,54 +138,16 @@ public class LocalFuzzyPartySearchProviderTests
     }
 
     [Fact]
-    public void Search_ContactAndIdentifierMatchesExposeOnlyBoundedMetadata()
+    public void Search_ContactAndIdentifierValues_DoNotMatchMvpDisplayNameSearch()
     {
-        // Allowlists for structural privacy: match metadata must only carry bounded
-        // labels, never the user-supplied contact/identifier values.
-        HashSet<string> allowedFields = new(StringComparer.Ordinal)
-        {
-            "displayName",
-            "type",
-            "email",
-            "contactChannel",
-            "identifier",
-        };
-        HashSet<string> allowedMatchTypes = new(StringComparer.Ordinal)
-        {
-            "exact",
-            "prefix",
-            "contains",
-            "fuzzy",
-            string.Empty,
-        };
-
         const string contactQuery = "example.com";
-        const string identifierQuery = "FR11111111111";
+        const string identifierQuery = "synthetic-siret-value";
 
         PagedResult<PartySearchResult> contactResult = _provider.Search(_entries, contactQuery, null, null, 1, 20);
         PagedResult<PartySearchResult> identifierResult = _provider.Search(_entries, identifierQuery, null, null, 1, 20);
 
-        IReadOnlyList<MatchMetadata> contactMatches = contactResult.Items.Single().Matches;
-        IReadOnlyList<MatchMetadata> identifierMatches = identifierResult.Items.Single().Matches;
-
-        contactMatches.ShouldContain(m => m.MatchedField == "email");
-        identifierMatches.ShouldContain(m => m.MatchedField == "identifier");
-
-        // Structural assertion: every match's labels come from the bounded allowlists,
-        // not from user data.
-        contactMatches.ShouldAllBe(m => allowedFields.Contains(m.MatchedField));
-        contactMatches.ShouldAllBe(m => allowedMatchTypes.Contains(m.MatchType));
-        identifierMatches.ShouldAllBe(m => allowedFields.Contains(m.MatchedField));
-        identifierMatches.ShouldAllBe(m => allowedMatchTypes.Contains(m.MatchType));
-
-        // Behavioural assertion: the raw query value (which is the contact/identifier
-        // value being searched for) never appears in any string field of the match
-        // metadata. Guards against a future change that adds a `MatchedText`-style
-        // field carrying the matched substring.
-        contactMatches.ShouldAllBe(m => !m.MatchedField.Contains(contactQuery, StringComparison.OrdinalIgnoreCase));
-        contactMatches.ShouldAllBe(m => !m.MatchType.Contains(contactQuery, StringComparison.OrdinalIgnoreCase));
-        identifierMatches.ShouldAllBe(m => !m.MatchedField.Contains(identifierQuery, StringComparison.OrdinalIgnoreCase));
-        identifierMatches.ShouldAllBe(m => !m.MatchType.Contains(identifierQuery, StringComparison.OrdinalIgnoreCase));
+        contactResult.Items.ShouldBeEmpty();
+        identifierResult.Items.ShouldBeEmpty();
     }
 
     // 7.9 — empty/whitespace query returns empty result

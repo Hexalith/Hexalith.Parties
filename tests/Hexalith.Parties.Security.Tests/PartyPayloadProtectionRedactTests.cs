@@ -220,4 +220,37 @@ public sealed class PartyPayloadProtectionRedactTests
         result.SerializationFormat.ShouldNotBe("json");
         result.SerializationFormat.ShouldNotBe(ProtectedFormat);
     }
+
+    [Fact]
+    public void RedactProtectedPayload_MissingKeyFallback_ReturnsControlledPrivacyStatusWithoutPlaintext()
+    {
+        byte[] payload = Encoding.UTF8.GetBytes(
+            """
+            {
+              "personDetails": {
+                "firstName": {"$enc":true,"alg":"AES256GCM","kv":1,"n":"x","t":"y","c":"z"},
+                "lastName": {"$enc":true,"alg":"AES256GCM","kv":1,"n":"x","t":"y","c":"z"}
+              },
+              "type": "person",
+              "tenantId": "tenant-a",
+              "partyId": "party-1"
+            }
+            """);
+
+        PayloadProtectionResult result = PartyPayloadProtectionService.RedactProtectedPayload(payload, ProtectedFormat);
+
+        result.SerializationFormat.ShouldBe(RedactedFormat);
+        string redactedJson = Encoding.UTF8.GetString(result.PayloadBytes);
+        redactedJson.ShouldNotContain("CryptographicException");
+        redactedJson.ShouldNotContain("AES256GCM");
+        redactedJson.ShouldNotContain("\"c\"");
+        redactedJson.ShouldContain("tenant-a");
+        redactedJson.ShouldContain("party-1");
+
+        using JsonDocument doc = JsonDocument.Parse(result.PayloadBytes);
+        JsonElement personDetails = doc.RootElement.GetProperty("personDetails");
+        personDetails.GetProperty("firstName").ValueKind.ShouldBe(JsonValueKind.Null);
+        personDetails.GetProperty("lastName").ValueKind.ShouldBe(JsonValueKind.Null);
+        doc.RootElement.GetProperty("type").GetString().ShouldBe("person");
+    }
 }

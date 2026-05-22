@@ -16,9 +16,15 @@ public sealed record ConsentRecord
 
     public required string GrantedBy { get; init; }
 
+    public string Source { get; init; } = "unspecified";
+
     public DateTimeOffset? RevokedAt { get; init; }
 
     public string? RevokedBy { get; init; }
+
+    public string? RevocationReason { get; init; }
+
+    public string? RevocationSource { get; init; }
 
     public bool IsActive => RevokedAt is null;
 }

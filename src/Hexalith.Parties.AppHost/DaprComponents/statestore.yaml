@@ -1,6 +1,7 @@
 # DAPR State Store Component -- Local Development.
 # Redis-backed shared state for EventStore, Admin Server, Parties actor hosting,
-# and Tenants. keyPrefix=none preserves shared key visibility across sidecars.
+# Tenants, and optional Memories rich search. keyPrefix=none preserves shared
+# key visibility across sidecars.
 apiVersion: dapr.io/v1alpha1
 kind: Component
 metadata:
@@ -22,3 +23,4 @@ scopes:
   - eventstore-admin
   - parties
   - tenants
+  - memories

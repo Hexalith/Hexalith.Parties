@@ -9,4 +9,8 @@ public sealed record PartyErased : IEventPayload
     public required string TenantId { get; init; }
 
     public required DateTimeOffset ErasedAt { get; init; }
+
+    public string ErasureStatus { get; init; } = "Erased";
+
+    public string VerificationStatus { get; init; } = "Complete";
 }

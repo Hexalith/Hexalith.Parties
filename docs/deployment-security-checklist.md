@@ -20,6 +20,8 @@ Exit code `0` = all checks passed. Exit code `1` = at least one blocking finding
 
 The K8s-manifest mode (`-K8sPath`) lints the eight Story 9.6 blocking categories: `DaprACL-WildcardAppId`, `DaprACL-WildcardOperation`, `K8sWorkload-DirtyTagOnConsumerImage`, `K8sWorkload-MissingDaprAnnotations`, `K8sWorkload-MissingImagePullSecret`, `K8sWorkload-MissingProbes`, `K8sWorkload-NonSemVerTag`, and `Secret-Plaintext`. JSON output uses schema version `1` and fields `{ severity, category, file, jsonpath, reason }` plus summary `{ findings, blocking, warnings, status }`.
 
+The DAPR config mode also validates the security metadata in `topology.yaml` and `tenants-integration.yaml`. Production runs fail when JWT issuer/audience/signing-key references are missing, authentication is not marked fail-closed, tenant identity is allowed from request payloads, DAPR ACLs are broad, or HTTPS/DAPR mTLS transport policy is not enabled. JSON output is bounded and does not print tokens, signing keys, claims dictionaries, tenant membership payloads, or personal data values.
+
 ---
 
 ## Pre-Deployment Checklist
@@ -55,9 +57,25 @@ All three layers must be configured for each pub/sub component:
 - [ ] `subscription-tenants.yaml` exists for topic `system.tenants.events`
 - [ ] Tenants subscription `scopes` includes `parties`
 - [ ] Tenants subscription has `deadLetterTopic`
-- [ ] `tenants-integration.yaml` sets `pubsubName: pubsub`, `topicName: system.tenants.events`, and `commandApiAppId: parties`
+- [ ] `tenants-integration.yaml` sets `pubsubName: pubsub`, `topicName: system.tenants.events`, and `commandApiAppId: eventstore`
+- [ ] `tenants-integration.yaml` sets `tenantIdentitySource: authenticatedCredentials`, `allowTenantFromPayload: false`, and `metadataRequired: true`
 - [ ] No Parties configuration bypasses Hexalith.Tenants authorization
+- [ ] Tenant identity comes only from authenticated credentials and authoritative Tenants metadata, never from command/query request payloads
 - [ ] Troubleshooting/runbook owners are assigned for identity provider, tenant administrator, tenant operator, and platform operator issues
+
+### Authentication
+
+- [ ] `topology.yaml` `deploymentSecurity.authentication` defines `jwtIssuer` and `jwtAudience`
+- [ ] JWT signing material is referenced by `signingKeySecretName` and `signingKeySecretKey`; no inline signing key is committed
+- [ ] `failClosed` is `true` so missing/invalid JWT configuration blocks startup or deployment
+- [ ] Validation output does not include tokens, signing keys, claim dictionaries, membership payloads, or personal data
+
+### Transport
+
+- [ ] `topology.yaml` `deploymentSecurity.transport.httpsRequired` is `true`
+- [ ] `deploymentSecurity.transport.daprMtlsRequired` is `true`
+- [ ] `deploymentSecurity.transport.localDevelopmentHttpAllowed` is `false` for production manifests
+- [ ] Any HTTP exception is documented as local-development only and never promoted to production
 
 ### Secret Store
 
@@ -136,9 +154,13 @@ Parties does not create tenant lifecycle, membership, role, global administrator
 
 - [ ] Secret store component deployed and accessible
 - [ ] Key management infrastructure provisioned (Azure Key Vault, HashiCorp Vault, etc.)
-- [ ] Per-tenant key namespace strategy defined
-- [ ] Backup procedures account for crypto-shredding (key deletion = data erasure)
-- [ ] Key rotation policy established
+- [ ] Tenant key provider can create or select tenant key material without returning raw tenant keys to status, logs, metrics, or audit records
+- [ ] Per-tenant key namespace strategy defined, including tenant key metadata separate from party ids and party key paths
+- [ ] Party-level key paths preserve `{tenant}/parties/{partyId}/v{version}` unless a tested migration is explicitly planned
+- [ ] Rotation policy defines operation ids, retry/resume expectations, maximum operator-visible status retention, and bounded failure categories
+- [ ] Backup procedures account for crypto-shredding (party key deletion = party personal data erasure) and tenant key rotation (rewrap metadata is recoverable operational state)
+- [ ] Rollback plan confirms interrupted tenant rotations can resume from recorded progress and that old tenant wrapping metadata remains readable until each party key is safely rewrapped
+- [ ] Status, audit, and metrics validation confirms no tenant key material, wrapped party key bytes, tokens, raw provider errors, or personal data are emitted
 
 ---
 

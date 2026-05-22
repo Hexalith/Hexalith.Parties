@@ -21,6 +21,7 @@
 #   - ready-for-dev: Story file created in stories folder
 #   - in-progress: Developer actively working on implementation
 #   - review: Ready for code review (via Dev's code-review workflow)
+#   - blocked: Story is tracked but cannot proceed until an external dependency is resolved
 #   - done: Story completed
 # last_updated touched 2026-05-21 by code-review closing story 9-2 v2 — 8 patches applied: stripped aspirate-emitted deploy/k8s/dapr folder from committed baseline; wired run-mode Redis into EventStore Dapr component metadata; restored parties-mcp EventStore gateway resource expression; fixed Admin UI Swagger URL emission to eventstore-admin HTTP endpoint; changed JWT secretKeyRef contract to create-or-upsert env entry when aspirate emits only envFrom; corrected AC4/AC9/AC10/Subtask 4.2 aspirate command contract with --project-path, --include-dashboard false, --image-pull-policy IfNotPresent, ContainerImageTags and DOTNET_ROLL_FORWARD; replaced stale --publisher manifest smoke with aspirate throwaway emission; added KeycloakRealmUrlInCluster drift warning + Story 9.3 cross-check. Verification: AppHost Release build green; AppHostTenantsTopologyTests 13/13 green; kubectl kustomize deploy/k8s green; folder/image/localhost/dapr cleanliness checks green. Status: review → done.
 #
@@ -133,87 +134,87 @@ development_status:
   2-1-build-party-detail-projection: done
   2-2-build-tenant-party-index-projection: done
   2-3-query-party-details-by-id: done
-  2-4-list-and-filter-parties: ready-for-dev
-  2-5-search-parties-by-display-name-with-match-metadata: ready-for-dev
-  2-6-enforce-tenant-safe-projection-reads: ready-for-dev
-  2-7-handle-projection-freshness-and-graceful-degradation: ready-for-dev
-  2-8-projection-rebuild-and-health-monitoring: ready-for-dev
-  2-9-prepare-deferred-search-and-temporal-query-extensions: ready-for-dev
+  2-4-list-and-filter-parties: done
+  2-5-search-parties-by-display-name-with-match-metadata: done
+  2-6-enforce-tenant-safe-projection-reads: done
+  2-7-handle-projection-freshness-and-graceful-degradation: done
+  2-8-projection-rebuild-and-health-monitoring: done
+  2-9-prepare-deferred-search-and-temporal-query-extensions: done
   epic-2-retrospective: optional
 
   # Epic 3: Developer Integration and Local Adoption (10 stories)
   epic-3: in-progress
-  3-1-publish-stable-contracts-package: backlog
-  3-2-provide-typed-parties-client-registration: backlog
-  3-3-expose-versioned-rest-party-api: backlog
-  3-4-map-domain-rejections-to-problemdetails: backlog
-  3-5-generate-openapi-and-error-catalog: backlog
-  3-6-enable-one-command-local-run: backlog
-  3-7-write-getting-started-documentation: backlog
-  3-8-provide-runnable-sample-integration: backlog
-  3-9-add-deployment-security-validation: backlog
-  3-10-display-mvp-compliance-warning: backlog
+  3-1-publish-stable-contracts-package: done
+  3-2-provide-typed-parties-client-registration: done
+  3-3-expose-versioned-rest-party-api: done
+  3-4-map-domain-rejections-to-problemdetails: done
+  3-5-generate-openapi-and-error-catalog: done
+  3-6-enable-one-command-local-run: done
+  3-7-write-getting-started-documentation: done
+  3-8-provide-runnable-sample-integration: done
+  3-9-add-deployment-security-validation: done
+  3-10-display-mvp-compliance-warning: done
   epic-3-retrospective: optional
 
   # Epic 4: AI Agent Party Management (8 stories)
   epic-4: in-progress
-  4-1-register-bounded-mcp-tool-surface: backlog
-  4-2-implement-ai-friendly-find-parties-tool: backlog
-  4-3-implement-get-party-tool: backlog
-  4-4-implement-composite-create-party-tool: backlog
-  4-5-implement-patch-oriented-update-party-tool: backlog
-  4-6-implement-delete-party-as-soft-deactivation-tool: backlog
-  4-7-enforce-mcp-boundary-and-tool-safety: backlog
-  4-8-validate-mcp-latency-errors-and-complete-responses: backlog
+  4-1-register-bounded-mcp-tool-surface: done
+  4-2-implement-ai-friendly-find-parties-tool: done
+  4-3-implement-get-party-tool: done
+  4-4-implement-composite-create-party-tool: done
+  4-5-implement-patch-oriented-update-party-tool: done
+  4-6-implement-delete-party-as-soft-deactivation-tool: done
+  4-7-enforce-mcp-boundary-and-tool-safety: done
+  4-8-validate-mcp-latency-errors-and-complete-responses: done
   epic-4-retrospective: optional
 
   # Epic 5: Event-Driven Consumer Integration (7 stories)
   epic-5: in-progress
-  5-1-publish-stable-party-domain-events: backlog
-  5-2-include-tenant-context-and-envelope-metadata: backlog
-  5-3-configure-at-least-once-event-delivery: backlog
-  5-4-document-event-ordering-and-subscriber-idempotency: backlog
-  5-5-provide-consumer-read-model-handler-guidance: backlog
-  5-6-prepare-forward-compatible-party-lifecycle-events: backlog
-  5-7-document-erasure-subscriber-responsibilities: backlog
+  5-1-publish-stable-party-domain-events: done
+  5-2-include-tenant-context-and-envelope-metadata: done
+  5-3-configure-at-least-once-event-delivery: done
+  5-4-document-event-ordering-and-subscriber-idempotency: done
+  5-5-provide-consumer-read-model-handler-guidance: done
+  5-6-prepare-forward-compatible-party-lifecycle-events: done
+  5-7-document-erasure-subscriber-responsibilities: done
   epic-5-retrospective: optional
 
   # Epic 6: GDPR Compliance Operations (10 stories)
   epic-6: in-progress
-  6-1-activate-per-party-personal-data-encryption: backlog
-  6-2-trigger-right-to-erasure-by-crypto-shredding: backlog
-  6-3-verify-erasure-across-internal-stores: backlog
-  6-4-publish-partyerased-subscriber-notification: backlog
-  6-5-manage-per-channel-per-purpose-consent: backlog
-  6-6-restrict-and-resume-party-processing: backlog
-  6-7-export-party-data-portability-package: backlog
-  6-8-record-processing-activities: backlog
-  6-9-return-privacy-preserving-erased-party-status: backlog
-  6-10-rotate-tenant-encryption-keys: backlog
+  6-1-activate-per-party-personal-data-encryption: done
+  6-2-trigger-right-to-erasure-by-crypto-shredding: done
+  6-3-verify-erasure-across-internal-stores: done
+  6-4-publish-partyerased-subscriber-notification: done
+  6-5-manage-per-channel-per-purpose-consent: done
+  6-6-restrict-and-resume-party-processing: done
+  6-7-export-party-data-portability-package: done
+  6-8-record-processing-activities: done
+  6-9-return-privacy-preserving-erased-party-status: done
+  6-10-rotate-tenant-encryption-keys: done
   epic-6-retrospective: optional
 
   # Epic 7: Administration Console (10 stories)
   epic-7: in-progress
-  7-1-compose-admin-console-working-view: backlog
-  7-2-browse-and-filter-party-results: backlog
-  7-3-inspect-party-detail-safely: backlog
-  7-4-handle-admin-empty-error-and-degraded-states: backlog
-  7-5-add-safe-eventstore-admin-ui-links: backlog
-  7-6-gate-gdpr-operations-on-accepted-client-contract: backlog
-  7-7-implement-gdpr-operation-panels: backlog
-  7-8-localize-admin-console-text-and-status: backlog
-  7-9-enforce-admin-console-accessibility: backlog
-  7-10-enforce-admin-console-privacy-and-encoding-rules: backlog
+  7-1-compose-admin-console-working-view: done
+  7-2-browse-and-filter-party-results: done
+  7-3-inspect-party-detail-safely: done
+  7-4-handle-admin-empty-error-and-degraded-states: done
+  7-5-add-safe-eventstore-admin-ui-links: done
+  7-6-gate-gdpr-operations-on-accepted-client-contract: done
+  7-7-implement-gdpr-operation-panels: blocked
+  7-8-localize-admin-console-text-and-status: done
+  7-9-enforce-admin-console-accessibility: done
+  7-10-enforce-admin-console-privacy-and-encoding-rules: done
   epic-7-retrospective: optional
 
   # Epic 8: Embeddable Party Picker (6 stories)
   epic-8: in-progress
-  8-1-compose-embeddable-party-picker-shell: backlog
-  8-2-implement-typeahead-search-and-bounded-results: backlog
-  8-3-emit-durable-selection-by-party-id: backlog
-  8-4-handle-picker-states-and-stale-responses: backlog
-  8-5-enforce-picker-accessibility-and-localization: backlog
-  8-6-enforce-picker-privacy-and-integration-boundary: backlog
+  8-1-compose-embeddable-party-picker-shell: blocked
+  8-2-implement-typeahead-search-and-bounded-results: blocked
+  8-3-emit-durable-selection-by-party-id: blocked
+  8-4-handle-picker-states-and-stale-responses: blocked
+  8-5-enforce-picker-accessibility-and-localization: blocked
+  8-6-enforce-picker-privacy-and-integration-boundary: blocked
   epic-8-retrospective: optional
 
   # Epic 9: Kubernetes Deployment Platform (greenfield rewrite 2026-05-21, 7 stories — supersedes Epic 9 v1 per sprint-change-proposal-2026-05-21-epic9-greenfield-rewrite.md + ADR D-K8s-4)

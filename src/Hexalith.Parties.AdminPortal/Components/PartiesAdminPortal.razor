@@ -1,10 +1,14 @@
 @page "/admin/parties"
+@page "/admin/parties/{RoutePartyId}"
+@page "/admin/parties/{RoutePartyId}/gdpr"
+@using System.Globalization
 @inject AdminPortalPartyQueryService QueryService
 @inject PartiesAdminListCoordinator ListCoordinator
 @inject IAdminPortalAuthorizationService AuthorizationService
 @inject AdminPortalEventStoreAdminLinks EventStoreLinks
 @inject AdminPortalGdprStateCoordinator GdprCoordinator
 @inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager NavigationManager
 @implements IDisposable
 
 <section class="hx-parties-admin" aria-labelledby="@($"hx-parties-admin-title-{_instanceId}")">
@@ -37,11 +41,43 @@
                       Label="@EffectiveLabels.ActiveState"
                       aria-label="@EffectiveLabels.ActiveState"
                       Disabled="@FiltersDisabledInSearchMode" />
+        <FluentTextInput Value="@_filters.CreatedAfterValue"
+                         ValueChanged="OnCreatedAfterChanged"
+                         TextInputType="TextInputType.Text"
+                         Label="@EffectiveLabels.CreatedAfter"
+                         aria-label="@EffectiveLabels.CreatedAfter"
+                         Placeholder="@EffectiveLabels.DateFilterPlaceholder"
+                         Disabled="@FiltersDisabledInSearchMode" />
+        <FluentTextInput Value="@_filters.CreatedBeforeValue"
+                         ValueChanged="OnCreatedBeforeChanged"
+                         TextInputType="TextInputType.Text"
+                         Label="@EffectiveLabels.CreatedBefore"
+                         aria-label="@EffectiveLabels.CreatedBefore"
+                         Placeholder="@EffectiveLabels.DateFilterPlaceholder"
+                         Disabled="@FiltersDisabledInSearchMode" />
+        <FluentTextInput Value="@_filters.ModifiedAfterValue"
+                         ValueChanged="OnModifiedAfterChanged"
+                         TextInputType="TextInputType.Text"
+                         Label="@EffectiveLabels.ModifiedAfter"
+                         aria-label="@EffectiveLabels.ModifiedAfter"
+                         Placeholder="@EffectiveLabels.DateFilterPlaceholder"
+                         Disabled="@FiltersDisabledInSearchMode" />
+        <FluentTextInput Value="@_filters.ModifiedBeforeValue"
+                         ValueChanged="OnModifiedBeforeChanged"
+                         TextInputType="TextInputType.Text"
+                         Label="@EffectiveLabels.ModifiedBefore"
+                         aria-label="@EffectiveLabels.ModifiedBefore"
+                         Placeholder="@EffectiveLabels.DateFilterPlaceholder"
+                         Disabled="@FiltersDisabledInSearchMode" />
         <FluentButton Appearance="ButtonAppearance.Primary" OnClick="SubmitSearchAsync">@EffectiveLabels.Submit</FluentButton>
         <FluentButton Appearance="ButtonAppearance.Outline" OnClick="ClearFiltersAsync">@EffectiveLabels.Clear</FluentButton>
         @if (RetryAvailable)
         {
-            <FluentButton Appearance="ButtonAppearance.Outline" OnClick="RetryAsync">@EffectiveLabels.Retry</FluentButton>
+            <FluentButton Appearance="ButtonAppearance.Outline"
+                          AutoFocus="@(_pendingFocus == FocusTarget.RetryButton)"
+                          OnClick="RetryAsync">
+                @EffectiveLabels.Retry
+            </FluentButton>
         }
     </div>
 
@@ -58,7 +94,9 @@
                             DisplayMode="DataGridDisplayMode.Table"
                             aria-label="@EffectiveLabels.PartiesGrid">
                 <TemplateColumn Title="@EffectiveLabels.DisplayNameColumn" Context="row">
-                    <FluentButton Appearance="ButtonAppearance.Subtle" OnClick="() => SelectPartyAsync(row.Id)">
+                    <FluentButton Appearance="ButtonAppearance.Subtle"
+                                  aria-describedby="@RowStatusId(row)"
+                                  OnClick="() => SelectPartyAsync(row.Id)">
                         @row.DisplayName
                     </FluentButton>
                 </TemplateColumn>
@@ -66,7 +104,9 @@
                     @EffectiveLabels.PartyTypeLabel(row.Type.ToString())
                 </TemplateColumn>
                 <TemplateColumn Title="@EffectiveLabels.StateColumn" Context="row">
-                    <span class="hx-parties-admin__badge" aria-label="@StatusLabel(row)">
+                    <span id="@RowStatusId(row)"
+                          class="hx-parties-admin__badge"
+                          aria-label="@StatusLabel(row)">
                         @StatusLabel(row)
                     </span>
                 </TemplateColumn>
@@ -80,7 +120,7 @@
 
             @if (!_isLoading && _rows.Count == 0)
             {
-                <p class="hx-parties-admin__empty">@EmptyText</p>
+                <p class="hx-parties-admin__empty" role="status" aria-live="polite">@EmptyText</p>
             }
 
             <nav class="hx-parties-admin__paging" aria-label="@EffectiveLabels.PagingRegion">
@@ -97,14 +137,14 @@
             }
             else if (_detail is null)
             {
-                <p>@DetailEmptyText</p>
+                <p role="status" aria-live="polite">@DetailEmptyText</p>
             }
             else
             {
                 <h2>@_detail.DisplayName</h2>
                 @if (_detailMetadata?.StaleDataAge is not null)
                 {
-                    <p class="hx-parties-admin__status" role="status">@EffectiveLabels.DataAge: @_detailMetadata.StaleDataAge</p>
+                    <p class="hx-parties-admin__status" role="status" aria-live="polite">@EffectiveLabels.DataAge: @_detailMetadata.StaleDataAge</p>
                 }
 
                 <section aria-labelledby="@($"party-summary-heading-{_instanceId}")">
@@ -223,7 +263,7 @@
                     <h3 id="@($"eventstore-links-heading-{_instanceId}")">@EffectiveLabels.EventStoreLinks</h3>
                     @if (EventStoreLinks.BuildStreamLink(_detail.Id) is { } streamLink)
                     {
-                        <a href="@streamLink" target="_blank" rel="noopener noreferrer">@EffectiveLabels.OpenEventStoreStream</a>
+                        <a href="@streamLink.AbsoluteUri" target="_blank" rel="noopener noreferrer">@EffectiveLabels.OpenEventStoreStream</a>
                     }
                     else
                     {
@@ -313,6 +353,9 @@
 
     [Parameter]
     public string? ContextKey { get; set; }
+
+    [Parameter]
+    public string? RoutePartyId { get; set; }
 
     [Parameter]
     public int PageSize { get; set; } = AdminPortalQueryBounds.DefaultPageSize;
@@ -412,6 +455,7 @@
             PageSize);
         if (string.Equals(_previousContextSignature, signature, StringComparison.Ordinal))
         {
+            await ApplyRoutePartySelectionAsync().ConfigureAwait(false);
             return;
         }
 
@@ -460,6 +504,7 @@
         }
 
         await LoadPageAsync().ConfigureAwait(false);
+        await ApplyRoutePartySelectionAsync().ConfigureAwait(false);
     }
 
     private void OnAuthenticationStateChanged(Task<AuthenticationState> task)
@@ -509,11 +554,23 @@
 
     private void OnActiveChanged(string value) => _filters.ActiveValue = value;
 
+    private void OnCreatedAfterChanged(string value) => _filters.CreatedAfterValue = value;
+
+    private void OnCreatedBeforeChanged(string value) => _filters.CreatedBeforeValue = value;
+
+    private void OnModifiedAfterChanged(string value) => _filters.ModifiedAfterValue = value;
+
+    private void OnModifiedBeforeChanged(string value) => _filters.ModifiedBeforeValue = value;
+
     private async Task ClearFiltersAsync()
     {
         _filters.Query = string.Empty;
         _filters.TypeValue = string.Empty;
         _filters.ActiveValue = string.Empty;
+        _filters.CreatedAfterValue = string.Empty;
+        _filters.CreatedBeforeValue = string.Empty;
+        _filters.ModifiedAfterValue = string.Empty;
+        _filters.ModifiedBeforeValue = string.Empty;
         _page = 1;
         _pendingFocus = FocusTarget.SearchInput;
         await LoadPageAsync().ConfigureAwait(false);
@@ -560,10 +617,24 @@
 
         try
         {
+            if (!_filters.TryValidateDateFilters(
+                EffectiveLabels,
+                out DateTimeOffset? createdAfter,
+                out DateTimeOffset? createdBefore,
+                out DateTimeOffset? modifiedAfter,
+                out DateTimeOffset? modifiedBefore,
+                out string? validationDetail))
+            {
+                _validationDetail = validationDetail;
+                _statusKind = StatusKind.Validation;
+                ListCoordinator.Transition(AdminPortalListState.TransientFailure);
+                return;
+            }
+
             if (string.IsNullOrWhiteSpace(_filters.Query))
             {
                 AdminPortalQueryResult<PagedResult<PartyIndexEntry>> result = await QueryService.ApiClient
-                    .ListPartiesAsync(CreateListRequest(), token)
+                    .ListPartiesAsync(CreateListRequest(createdAfter, createdBefore, modifiedAfter, modifiedBefore), token)
                     .ConfigureAwait(false);
                 await ApplyRowsAsync(result.Payload, result.Metadata, version).ConfigureAwait(false);
             }
@@ -662,7 +733,7 @@
         _richSearchCapabilityContextSignature = contextSignature;
     }
 
-    private async Task SelectPartyAsync(string partyId)
+    private async Task SelectPartyAsync(string partyId, bool updateRoute = true)
     {
         if (Volatile.Read(ref _disposed) != 0)
         {
@@ -670,6 +741,11 @@
         }
 
         _selectedPartyId = partyId;
+        if (updateRoute)
+        {
+            NavigateToPartyDetailRoute(partyId);
+        }
+
         long version = SwapDetailCts(out CancellationToken token);
         _isDetailLoading = true;
         await SafeStateHasChangedAsync().ConfigureAwait(false);
@@ -756,7 +832,112 @@
     private Task RefreshSelectedPartyAsync()
         => string.IsNullOrWhiteSpace(_selectedPartyId)
             ? Task.CompletedTask
-            : SelectPartyAsync(_selectedPartyId);
+            : SelectPartyAsync(_selectedPartyId, updateRoute: false);
+
+    private async Task ApplyRoutePartySelectionAsync()
+    {
+        if (!_authorizationState.IsAuthenticated
+            || !_authorizationState.HasTenantContext
+            || !_authorizationState.IsAdmin)
+        {
+            return;
+        }
+
+        string? routePartyId = NormalizeRoutePartyId(RoutePartyId);
+        if (routePartyId is null)
+        {
+            return;
+        }
+
+        if (!IsSafeRoutePartyId(routePartyId))
+        {
+            _selectedPartyId = null;
+            _detail = null;
+            _detailMetadata = null;
+            _detailEmptyKind = DetailEmptyKind.DetailUnavailable;
+            await SafeStateHasChangedAsync().ConfigureAwait(false);
+            return;
+        }
+
+        if (string.Equals(_selectedPartyId, routePartyId, StringComparison.Ordinal)
+            && (_detail is not null || _isDetailLoading))
+        {
+            return;
+        }
+
+        await SelectPartyAsync(routePartyId, updateRoute: false).ConfigureAwait(false);
+    }
+
+    private void NavigateToPartyDetailRoute(string partyId)
+    {
+        if (!IsSafeRoutePartyId(partyId))
+        {
+            return;
+        }
+
+        string target = PartiesAdminPortalManifest.DetailRoute.Replace(
+            "{partyId}",
+            Uri.EscapeDataString(partyId),
+            StringComparison.Ordinal);
+        // Compare paths only; ToBaseRelativePath includes query/fragment which would force
+        // a redundant navigation when the URL carries any ?query or #hash.
+        string relative = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
+        int separator = relative.IndexOfAny(['?', '#']);
+        string currentPath = "/" + (separator >= 0 ? relative[..separator] : relative);
+        if (!string.Equals(currentPath, target, StringComparison.Ordinal))
+        {
+            NavigationManager.NavigateTo(target);
+        }
+    }
+
+    private static string? NormalizeRoutePartyId(string? routePartyId)
+    {
+        if (string.IsNullOrWhiteSpace(routePartyId))
+        {
+            return null;
+        }
+
+        try
+        {
+            return Uri.UnescapeDataString(routePartyId.Trim());
+        }
+        catch (UriFormatException)
+        {
+            return routePartyId.Trim();
+        }
+    }
+
+    private static bool IsSafeRoutePartyId(string partyId)
+    {
+        if (string.IsNullOrWhiteSpace(partyId) || partyId.Length > 128)
+        {
+            return false;
+        }
+
+        // Reject path-traversal-shaped segments even though Blazor routing would treat them
+        // as literals — keeps the URL surface free of "." / ".." party ids that look like
+        // navigation tokens to humans reading logs.
+        if (partyId is "." or "..")
+        {
+            return false;
+        }
+
+        foreach (char c in partyId)
+        {
+            if (!IsSafeRoutePartyIdCharacter(c))
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private static bool IsSafeRoutePartyIdCharacter(char c)
+        => (c >= 'a' && c <= 'z')
+            || (c >= 'A' && c <= 'Z')
+            || (c >= '0' && c <= '9')
+            || c is '-' or '_' or '.' or '~';
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -801,12 +982,20 @@
         }
     }
 
-    private AdminPortalListRequest CreateListRequest()
+    private AdminPortalListRequest CreateListRequest(
+        DateTimeOffset? createdAfter,
+        DateTimeOffset? createdBefore,
+        DateTimeOffset? modifiedAfter,
+        DateTimeOffset? modifiedBefore)
         => new(
             AdminPortalQueryBounds.BoundPage(_page),
             AdminPortalQueryBounds.BoundPageSize(PageSize),
             _filters.Type,
-            _filters.Active);
+            _filters.Active,
+            createdAfter,
+            createdBefore,
+            modifiedAfter,
+            modifiedBefore);
 
     private AdminPortalSearchRequest CreateSearchRequest()
         => new(
@@ -998,6 +1187,23 @@
         return row.IsActive ? EffectiveLabels.Active : EffectiveLabels.Inactive;
     }
 
+    private string RowStatusId(PartyIndexEntry row)
+        => $"party-row-state-{_instanceId}-{SafeDomToken(row.Id)}";
+
+    private static string SafeDomToken(string value)
+    {
+        const uint offsetBasis = 2166136261;
+        const uint prime = 16777619;
+        uint hash = offsetBasis;
+        foreach (char c in value)
+        {
+            hash ^= c;
+            hash *= prime;
+        }
+
+        return hash.ToString("x8", CultureInfo.InvariantCulture);
+    }
+
     private string DetailStatus(PartyDetail detail)
     {
         if (detail.IsErased)
@@ -1106,6 +1312,14 @@
 
         public string ActiveValue { get; set; } = string.Empty;
 
+        public string CreatedAfterValue { get; set; } = string.Empty;
+
+        public string CreatedBeforeValue { get; set; } = string.Empty;
+
+        public string ModifiedAfterValue { get; set; } = string.Empty;
+
+        public string ModifiedBeforeValue { get; set; } = string.Empty;
+
         public PartyType? Type
         {
             get
@@ -1121,5 +1335,68 @@
 
         public bool? Active
             => bool.TryParse(ActiveValue?.Trim(), out bool parsed) ? parsed : null;
+
+        public bool TryValidateDateFilters(
+            AdminPortalLabels labels,
+            out DateTimeOffset? createdAfter,
+            out DateTimeOffset? createdBefore,
+            out DateTimeOffset? modifiedAfter,
+            out DateTimeOffset? modifiedBefore,
+            out string? validationDetail)
+        {
+            createdAfter = null;
+            createdBefore = null;
+            modifiedAfter = null;
+            modifiedBefore = null;
+            validationDetail = null;
+
+            if (!TryParseDate(CreatedAfterValue, startOfDay: true, out createdAfter)
+                || !TryParseDate(CreatedBeforeValue, startOfDay: false, out createdBefore)
+                || !TryParseDate(ModifiedAfterValue, startOfDay: true, out modifiedAfter)
+                || !TryParseDate(ModifiedBeforeValue, startOfDay: false, out modifiedBefore))
+            {
+                validationDetail = labels.DateFilterInvalid;
+                return false;
+            }
+
+            if (createdAfter is not null && createdBefore is not null && createdAfter > createdBefore)
+            {
+                validationDetail = labels.CreatedDateRangeInvalid;
+                return false;
+            }
+
+            if (modifiedAfter is not null && modifiedBefore is not null && modifiedAfter > modifiedBefore)
+            {
+                validationDetail = labels.ModifiedDateRangeInvalid;
+                return false;
+            }
+
+            return true;
+        }
+
+        private static bool TryParseDate(string? value, bool startOfDay, out DateTimeOffset? parsed)
+        {
+            string trimmed = value?.Trim() ?? string.Empty;
+            if (string.IsNullOrEmpty(trimmed))
+            {
+                parsed = null;
+                return true;
+            }
+
+            if (!DateOnly.TryParseExact(
+                    trimmed,
+                    "yyyy-MM-dd",
+                    CultureInfo.InvariantCulture,
+                    DateTimeStyles.None,
+                    out DateOnly date))
+            {
+                parsed = null;
+                return false;
+            }
+
+            TimeOnly time = startOfDay ? TimeOnly.MinValue : TimeOnly.MaxValue;
+            parsed = new DateTimeOffset(date.ToDateTime(time), TimeSpan.Zero);
+            return true;
+        }
     }
 }

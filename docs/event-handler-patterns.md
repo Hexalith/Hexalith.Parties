@@ -33,16 +33,26 @@ Before implementing any handler, ensure these rules are followed:
 
 1. **Always return 200 OK** — even for duplicates, unknown events, and missing aggregates. DAPR retries on non-2xx responses, causing redelivery loops.
 2. **Implement idempotent deduplication** — use `ConcurrentDictionary<string, bool>` keyed on the CloudEvents `id` header, with a `{correlationId}:{sequenceNumber}` fallback for local testing.
-3. **Use order-tolerant projection updates** — prefer idempotent `set` operations over incremental `delta` operations.
-4. **Do NOT log event payloads** — structured logging with correlation IDs only (Security Rule #5). Event payloads may contain personal data.
-5. **Handle unknown event types gracefully** — log and return 200 OK.
-6. **Normalize event type names before dispatch** — published CloudEvents usually carry fully qualified .NET type names such as `Hexalith.Parties.Contracts.Events.PartyCreated`, so convert them to their short names before switching on them.
+3. **Guard aggregate sequence** — store the highest processed `sequenceNumber` per aggregate and skip or reconcile older events, especially when the broker or subscriber deployment cannot prove per-aggregate ordering.
+4. **Use order-tolerant projection updates** — prefer idempotent `set` operations over incremental `delta` operations.
+5. **Do NOT log event payloads** — structured logging with correlation IDs only (Security Rule #5). Event payloads may contain personal data.
+6. **Handle unknown event types gracefully** — log and return 200 OK.
+7. **Normalize event type names before dispatch** — published CloudEvents usually carry fully qualified .NET type names such as `Hexalith.Parties.Contracts.Events.PartyCreated`, so convert them to their short names before switching on them.
 
 ```csharp
 // Idempotent deduplication pattern
 if (!_processedEventIds.TryAdd(eventId, true))
 {
     logger.LogInformation("Skipping already-processed event {EventId}", eventId);
+    return Results.Ok();
+}
+
+if (!TryAcceptSequence(envelope.AggregateId, envelope.SequenceNumber))
+{
+    logger.LogInformation(
+        "Skipping older event sequence {SequenceNumber} for {AggregateId}",
+        envelope.SequenceNumber,
+        envelope.AggregateId);
     return Results.Ok();
 }
 
@@ -53,6 +63,25 @@ static string NormalizeEventTypeName(string eventTypeName)
 {
     int separator = eventTypeName.LastIndexOf('.');
     return separator >= 0 ? eventTypeName[(separator + 1)..] : eventTypeName;
+}
+```
+
+## Read Model Scope and Privacy
+
+Subscriber-owned read models should store the smallest useful representation for their bounded context. Start with the stable `partyId`, the last processed aggregate `sequenceNumber`, and operational metadata such as `correlationId` or `timestamp`. Add display names, contact values, identifiers, or natural-person flags only when your application actually needs them.
+
+For reference-only integrations, store the stable `partyId` and your own relationship metadata instead of copying person names, contact channel values, identifier values, dates of birth, or organization details. If your application denormalizes personal data for display or search, it becomes responsible for its own retention, access control, audit, and future erasure cleanup.
+
+```csharp
+public sealed record LocalPartyReference
+{
+    public required string PartyId { get; init; }
+
+    public long LastSequenceNumber { get; set; }
+
+    public DateTimeOffset LastObservedAt { get; set; }
+
+    // Add display/contact/identifier fields only when the bounded context needs them.
 }
 ```
 
@@ -385,9 +414,17 @@ default:
 >
 > If your application stores **any** reference to a party ID — whether as a foreign key, a display name cache, a search index entry, or any other form — you **must** handle `PartyErased` to remain GDPR-compliant.
 
+### MVP Soft Deactivation vs. Future Erasure
+
+MVP delete operations are soft deactivations. They publish lifecycle state such as `PartyDeactivated`; they do not perform GDPR legal erasure, crypto-shredding, or subscriber cleanup. Treat `PartyDeactivated` as an active/inactive business-state change, not as permission to purge or anonymize records.
+
+`PartyErased` is the future v1.1 cleanup signal. It is emitted only after the Parties service has completed the erasure workflow and destroyed or made unrecoverable the party personal-data key. Until v1.1 GDPR features are explicitly active, follow the [MVP Compliance Boundary](getting-started.md#mvp-compliance-boundary): use synthetic data, stop using any accidental sensitive dataset, and follow operator manual deletion or environment rebuild procedures. Do not treat the MVP as an erasure-complete system.
+
 ### Background
 
-`PartyErased` is a v1.1 GDPR event. It fires **after** crypto-shredding destroys the party's per-party encryption key. The event payload contains **only** the `partyId` — no personal data is included.
+`PartyErased` is a v1.1 GDPR event. It fires **after** crypto-shredding destroys the party's per-party encryption key and internal verification reaches the documented completion point. The event payload contains only cleanup metadata: party id, tenant id, erasure timestamp, erasure status, and verification status. No personal data is included.
+
+If internal verification is pending or partial, consumers should use the erasure status surfaces rather than treating `PartyErased` as fully verified. `PartyErased` means downstream cleanup must run; `VerificationStatus=Complete` means the service-side cleanup checks have completed. Pending or partial verification must remain visible as companion erasure status so consumers can distinguish accepted erasure from fully verified erasure.
 
 When you receive `PartyErased`, you must clean up all local references to the erased party. Failure to do so creates dangling references that violate GDPR right-to-erasure requirements.
 
@@ -462,7 +499,7 @@ Test your `PartyErased` handler by verifying:
 When a party is erased via GDPR crypto-shredding:
 
 1. The per-party encryption key is destroyed, making encrypted personal data unrecoverable
-2. `PartyErased` fires with only the `partyId` in the payload
+2. `PartyErased` fires with only cleanup metadata in the payload: `partyId`, `tenantId`, `erasedAt`, `erasureStatus`, and `verificationStatus`
 3. All subscribing applications receive the event and must clean up local references
 4. Any application that **fails to handle** `PartyErased` is left with **dangling references** — party IDs that point to erased (non-existent) parties
 
@@ -475,7 +512,7 @@ Dangling references can occur when:
 
 **Detection patterns:**
 
-1. **Referential integrity audits:** Periodically query your local store for party IDs that no longer exist in the Parties service. Use the `GET /api/parties/{id}` endpoint — a 404 response indicates a potentially erased party.
+1. **Referential integrity audits:** Periodically query your local store for party IDs that no longer exist in the Parties service. Use the EventStore query gateway with `PartyDetail`; a not-found or erased response indicates a potentially erased party.
 
 2. **Gap checking:** Compare your local party ID set against the Parties service's active party list. Any IDs present locally but missing from the service may be erased.
 
@@ -616,6 +653,8 @@ T? payload = JsonSerializer.Deserialize<T>(payloadJson, _jsonOptions);
 **`PartyMerged` (v2):** Already present in the contracts as a placeholder. Current subscribers acknowledge it without processing. When v2 ships, subscribers add a handler in the `switch` statement — no breaking changes.
 
 **`PartyErased` (v1.1):** Will arrive as a new event type. Subscribers without a handler will hit the `default` case and return 200 OK. Subscribers that have implemented the [PartyErased handler](#partyerased-handler-mandatory) will process it immediately.
+
+**Consent, restriction, export, and processing-record events (v1.1+):** Contract naming leaves room for consent lifecycle, processing restriction, data export, and processing activity events. MVP consumers are not required to process these unavailable capabilities as active behavior; keep tolerant default handling until your integration explicitly opts into the future GDPR workflow.
 
 This additive evolution pattern means:
 - **Producers** can ship new events without coordinating with subscribers

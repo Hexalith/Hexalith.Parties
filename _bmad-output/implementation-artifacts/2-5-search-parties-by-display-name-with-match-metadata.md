@@ -1,6 +1,6 @@
 # Story 2.5: Search Parties by Display Name with Match Metadata
 
-Status: ready-for-dev
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -98,59 +98,98 @@ so that humans and AI agents can rank candidates confidently in MVP name-based l
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Audit and reuse current search/query surfaces before editing (AC: 1, 4, 7)
-  - [ ] Start with `src/Hexalith.Parties.Client/Abstractions/IPartiesQueryClient.cs` and `src/Hexalith.Parties.Client/HttpPartiesQueryClient.cs`; `SearchPartiesAsync(...)` already posts an EventStore `SubmitQueryRequest` with query type `PartySearch`.
-  - [ ] Inspect `tests/Hexalith.Parties.Client.Tests/HttpPartiesQueryClientTests.cs`; it already pins basic search payload shape, optional mode/case id, request customization, response deserialization, and error mapping.
-  - [ ] Inspect `tests/Hexalith.Parties.Tests/Gateway/EventStoreGatewayRoutingTests.cs`; it already proves EventStore query gateway routing and auth-before-routing behavior for party-domain queries.
-  - [ ] Inspect `src/Hexalith.Parties/Search/LocalPartySearchService.cs`, `src/Hexalith.Parties/Search/LocalFuzzyPartySearchProvider.cs`, `src/Hexalith.Parties/Search/PartySearchBoundary.cs`, `src/Hexalith.Parties/Search/BasicPartySearchProvider.cs`, and any query router/adapter that resolves `PartySearch`.
-  - [ ] Inspect `src/Hexalith.Parties.Contracts/Models/PartySearchResult.cs`, `src/Hexalith.Parties.Contracts/Models/MatchMetadata.cs`, and `src/Hexalith.Parties.Contracts/Models/PartyIndexEntry.cs` before changing public result shapes.
-  - [ ] Treat the current EventStore-fronted query path as the accepted public boundary. Do not create `GET /api/v1/parties/search`, list/search REST controllers, OpenAPI generation, or in-process MCP tools in `src/Hexalith.Parties`.
+- [x] Task 1: Audit and reuse current search/query surfaces before editing (AC: 1, 4, 7)
+  - [x] Start with `src/Hexalith.Parties.Client/Abstractions/IPartiesQueryClient.cs` and `src/Hexalith.Parties.Client/HttpPartiesQueryClient.cs`; `SearchPartiesAsync(...)` already posts an EventStore `SubmitQueryRequest` with query type `PartySearch`.
+  - [x] Inspect `tests/Hexalith.Parties.Client.Tests/HttpPartiesQueryClientTests.cs`; it already pins basic search payload shape, optional mode/case id, request customization, response deserialization, and error mapping.
+  - [x] Inspect `tests/Hexalith.Parties.Tests/Gateway/EventStoreGatewayRoutingTests.cs`; it already proves EventStore query gateway routing and auth-before-routing behavior for party-domain queries.
+  - [x] Inspect `src/Hexalith.Parties/Search/LocalPartySearchService.cs`, `src/Hexalith.Parties/Search/LocalFuzzyPartySearchProvider.cs`, `src/Hexalith.Parties/Search/PartySearchBoundary.cs`, `src/Hexalith.Parties/Search/BasicPartySearchProvider.cs`, and any query router/adapter that resolves `PartySearch`.
+  - [x] Inspect `src/Hexalith.Parties.Contracts/Models/PartySearchResult.cs`, `src/Hexalith.Parties.Contracts/Models/MatchMetadata.cs`, and `src/Hexalith.Parties.Contracts/Models/PartyIndexEntry.cs` before changing public result shapes.
+  - [x] Treat the current EventStore-fronted query path as the accepted public boundary. Do not create `GET /api/v1/parties/search`, list/search REST controllers, OpenAPI generation, or in-process MCP tools in `src/Hexalith.Parties`.
 
-- [ ] Task 2: Reconcile display-name-only MVP search behavior (AC: 1, 2, 3, 4)
-  - [ ] Confirm where the EventStore query router resolves the party-domain `PartySearch` query. If the route is already implemented, harden tests instead of duplicating it.
-  - [ ] If a Parties-owned resolver/adapter is missing, add the narrow adapter needed for `PartySearch` only, deriving the index actor id from the authenticated tenant and never from caller-supplied payload metadata.
-  - [ ] Use `IPartyIndexProjectionActor.GetEntriesAsync()` or the accepted projection abstraction for index reads; do not deserialize state-store internals directly in query code.
-  - [ ] Search only `PartyIndexEntry.DisplayName` for the MVP public `PartySearch` result. If an existing local provider currently matches `SearchableContactChannels`, `SearchableIdentifiers`, type text, semantic, graph, or Memories fields, either constrain that behavior behind a non-MVP rich-search mode or update it so public MVP results emit only display-name metadata.
-  - [ ] Remove or disable MVP matching against contact channels, identifiers, type text, email, semantic, graph, duplicate signals, and Memories-only fields; negative tests must prove those fields cannot participate in matching or metadata.
-  - [ ] Define and test the normalization policy used for exact, prefix, contains, and fuzzy matching. Preserve diacritic/case normalization only if tests pin it as accepted behavior.
-  - [ ] Ensure `MatchMetadata.MatchedField` values for this story are `displayName` only. Do not emit future-reserved field names from the MVP path.
-  - [ ] Ensure `MatchMetadata.MatchType` values are bounded and documented by tests, such as `exact`, `prefix`, `contains`, and optionally `fuzzy` if the implementation intentionally retains fuzzy display-name matching.
-  - [ ] If fuzzy matching is retained in this story, it must be display-name-only, use `MatchedField = "displayName"`, emit no future-field metadata, rank below exact/prefix/contains, and use deterministic tie-breakers.
-  - [ ] Rank exact above prefix, prefix above contains, and any retained fuzzy match below deterministic lexical matches. Use stable tie-breakers: normalized display name, then party id, unless an existing accepted contract defines a stricter order.
+- [x] Task 2: Reconcile display-name-only MVP search behavior (AC: 1, 2, 3, 4)
+  - [x] Confirm where the EventStore query router resolves the party-domain `PartySearch` query. If the route is already implemented, harden tests instead of duplicating it.
+  - [x] If a Parties-owned resolver/adapter is missing, add the narrow adapter needed for `PartySearch` only, deriving the index actor id from the authenticated tenant and never from caller-supplied payload metadata.
+  - [x] Use `IPartyIndexProjectionActor.GetEntriesAsync()` or the accepted projection abstraction for index reads; do not deserialize state-store internals directly in query code.
+  - [x] Search only `PartyIndexEntry.DisplayName` for the MVP public `PartySearch` result. If an existing local provider currently matches `SearchableContactChannels`, `SearchableIdentifiers`, type text, semantic, graph, or Memories fields, either constrain that behavior behind a non-MVP rich-search mode or update it so public MVP results emit only display-name metadata.
+  - [x] Remove or disable MVP matching against contact channels, identifiers, type text, email, semantic, graph, duplicate signals, and Memories-only fields; negative tests must prove those fields cannot participate in matching or metadata.
+  - [x] Define and test the normalization policy used for exact, prefix, contains, and fuzzy matching. Preserve diacritic/case normalization only if tests pin it as accepted behavior.
+  - [x] Ensure `MatchMetadata.MatchedField` values for this story are `displayName` only. Do not emit future-reserved field names from the MVP path.
+  - [x] Ensure `MatchMetadata.MatchType` values are bounded and documented by tests, such as `exact`, `prefix`, `contains`, and optionally `fuzzy` if the implementation intentionally retains fuzzy display-name matching.
+  - [x] If fuzzy matching is retained in this story, it must be display-name-only, use `MatchedField = "displayName"`, emit no future-field metadata, rank below exact/prefix/contains, and use deterministic tie-breakers.
+  - [x] Rank exact above prefix, prefix above contains, and any retained fuzzy match below deterministic lexical matches. Use stable tie-breakers: normalized display name, then party id, unless an existing accepted contract defines a stricter order.
 
-- [ ] Task 3: Preserve tenant, paging, inactive, and erasure semantics (AC: 1, 3, 5, 6)
-  - [ ] Keep gateway authorization ownership in EventStore. Missing/unauthorized tenant or domain must fail before Parties constructs or reads an index actor key.
-  - [ ] Treat EventStore as the source of public request tenant authentication and authorization. Parties may consume the authenticated tenant context for projection lookup/filtering only; do not add Parties-owned public request authorization or tenant validators.
-  - [ ] Derive actor id strictly from authenticated/request tenant context. Never accept tenant id from query payload, page state, case id, graph context ids, actor ids, projection payload, UI state, or client-supplied metadata.
-  - [ ] Apply erased-entry exclusion before matching, scoring, paging metadata, score metadata, and source metadata are calculated.
-  - [ ] Preserve active filter behavior from `PartySearchRequest.ActiveFilter` and existing accepted query conventions. Do not silently hide inactive parties unless the caller requested active-only.
-  - [ ] Normalize or reject page/page-size values consistently with current search/list conventions. `LocalPartySearchService` currently clamps page/page size to `1..100`; preserve that policy unless a stronger accepted boundary already exists.
-  - [ ] Calculate `TotalCount`, `TotalPages`, returned page items, score metadata, and source metadata from the same tenant-authorized, erased-filtered, display-name-matched result set.
-  - [ ] Ensure page numbers, future cursors/tokens, `caseId`, `GraphContextPartyId`, `GraphContextMemoryUnitId`, partition keys, and client metadata cannot select a tenant, partition, actor key, alternate data source, or Memories graph scope.
+- [x] Task 3: Preserve tenant, paging, inactive, and erasure semantics (AC: 1, 3, 5, 6)
+  - [x] Keep gateway authorization ownership in EventStore. Missing/unauthorized tenant or domain must fail before Parties constructs or reads an index actor key.
+  - [x] Treat EventStore as the source of public request tenant authentication and authorization. Parties may consume the authenticated tenant context for projection lookup/filtering only; do not add Parties-owned public request authorization or tenant validators.
+  - [x] Derive actor id strictly from authenticated/request tenant context. Never accept tenant id from query payload, page state, case id, graph context ids, actor ids, projection payload, UI state, or client-supplied metadata.
+  - [x] Apply erased-entry exclusion before matching, scoring, paging metadata, score metadata, and source metadata are calculated.
+  - [x] Preserve active filter behavior from `PartySearchRequest.ActiveFilter` and existing accepted query conventions. Do not silently hide inactive parties unless the caller requested active-only.
+  - [x] Normalize or reject page/page-size values consistently with current search/list conventions. `LocalPartySearchService` currently clamps page/page size to `1..100`; preserve that policy unless a stronger accepted boundary already exists.
+  - [x] Calculate `TotalCount`, `TotalPages`, returned page items, score metadata, and source metadata from the same tenant-authorized, erased-filtered, display-name-matched result set.
+  - [x] Ensure page numbers, future cursors/tokens, `caseId`, `GraphContextPartyId`, `GraphContextMemoryUnitId`, partition keys, and client metadata cannot select a tenant, partition, actor key, alternate data source, or Memories graph scope.
 
-- [ ] Task 4: Bound degraded behavior and diagnostics (AC: 5, 6, 7)
-  - [ ] Preserve current actor degraded/cache behavior where safe. If cached entries are returned during rebuilding, they must have proven tenant id provenance, cache currency/version, and erasure filtering before leaving the boundary.
-  - [ ] If cached/degraded state provenance, cache currency/version, partition completeness, or erasure filtering cannot be proven, return the current bounded unavailable/degraded/empty outcome instead of merging speculative cache data with live reads.
-  - [ ] Map corrupt, malformed, null, or unreadable index actor state to bounded unavailable/degraded or safe empty/not-accessible behavior according to the current EventStore query boundary.
-  - [ ] Keep log messages, exception details, ProblemDetails details, query metadata, telemetry dimensions, score metadata, and source metadata metadata-only. Display names may appear only inside authorized result rows, not diagnostics.
-  - [ ] Do not echo raw query strings, raw query payloads, serialized index entries, contact values, identifiers, tenant membership payloads, tokens, actor/storage keys, stream names, stack traces, infrastructure exception text, or connection strings.
-  - [ ] Make cancellation terminal. Once cancellation is observed, no fallback aggregate replay, detail fan-out, Memories search, cache refresh, retired REST call, or retry work starts afterward.
+- [x] Task 4: Bound degraded behavior and diagnostics (AC: 5, 6, 7)
+  - [x] Preserve current actor degraded/cache behavior where safe. If cached entries are returned during rebuilding, they must have proven tenant id provenance, cache currency/version, and erasure filtering before leaving the boundary.
+  - [x] If cached/degraded state provenance, cache currency/version, partition completeness, or erasure filtering cannot be proven, return the current bounded unavailable/degraded/empty outcome instead of merging speculative cache data with live reads.
+  - [x] Map corrupt, malformed, null, or unreadable index actor state to bounded unavailable/degraded or safe empty/not-accessible behavior according to the current EventStore query boundary.
+  - [x] Keep log messages, exception details, ProblemDetails details, query metadata, telemetry dimensions, score metadata, and source metadata metadata-only. Display names may appear only inside authorized result rows, not diagnostics.
+  - [x] Do not echo raw query strings, raw query payloads, serialized index entries, contact values, identifiers, tenant membership payloads, tokens, actor/storage keys, stream names, stack traces, infrastructure exception text, or connection strings.
+  - [x] Make cancellation terminal. Once cancellation is observed, no fallback aggregate replay, detail fan-out, Memories search, cache refresh, retired REST call, or retry work starts afterward.
 
-- [ ] Task 5: Keep adjacent surfaces bounded (AC: 1, 4, 7)
-  - [ ] Preserve `IPartiesQueryClient.SearchPartiesAsync(...)` as the typed client search shape unless a separate accepted contract update requires an additive overload.
-  - [ ] Keep AdminPortal and picker behavior on their accepted query/client boundaries if touched. This story does not redesign AdminPortal search, picker typeahead, durable selection, localization, or accessibility behavior.
-  - [ ] Do not add contact search, identifier search, semantic search, graph search, duplicate advisory warnings, AI disambiguation workflows, MCP tool behavior, REST/OpenAPI search endpoints, or Memories indexing changes unless needed only to prevent the current MVP public path from leaking future-reserved metadata.
-  - [ ] Keep `Hexalith.Parties.Contracts` free of dependencies on Projections, Server, Dapr, MediatR, FluentValidation, UI, Memories, or infrastructure packages.
-  - [ ] Preserve architectural fitness tests for actor-host boundaries, retired public surfaces, client dependency direction, and privacy inventory.
+- [x] Task 5: Keep adjacent surfaces bounded (AC: 1, 4, 7)
+  - [x] Preserve `IPartiesQueryClient.SearchPartiesAsync(...)` as the typed client search shape unless a separate accepted contract update requires an additive overload.
+  - [x] Keep AdminPortal and picker behavior on their accepted query/client boundaries if touched. This story does not redesign AdminPortal search, picker typeahead, durable selection, localization, or accessibility behavior.
+  - [x] Do not add contact search, identifier search, semantic search, graph search, duplicate advisory warnings, AI disambiguation workflows, MCP tool behavior, REST/OpenAPI search endpoints, or Memories indexing changes unless needed only to prevent the current MVP public path from leaking future-reserved metadata.
+  - [x] Keep `Hexalith.Parties.Contracts` free of dependencies on Projections, Server, Dapr, MediatR, FluentValidation, UI, Memories, or infrastructure packages.
+  - [x] Preserve architectural fitness tests for actor-host boundaries, retired public surfaces, client dependency direction, and privacy inventory.
 
-- [ ] Task 6: Add or harden focused tests (AC: 1-7)
-  - [ ] Extend `HttpPartiesQueryClientTests` for omitted optional search fields, cancellation, malformed payload handling if not already covered, and field reservation expectations if response samples are updated.
-  - [ ] Extend `LocalFuzzyPartySearchProviderTests` or add a display-name-specific provider test suite proving exact, prefix, contains, optional display-name-only fuzzy, deterministic ranking, tie-breaking, pagination, empty query, and no future-reserved fields in MVP mode.
-  - [ ] Add negative provider/query tests proving contact channels, identifiers, email, type text, semantic, graph, duplicate, and Memories-only fields do not produce matches or match metadata in the MVP `PartySearch` path.
-  - [ ] Extend `PartySearchServiceBoundaryTests` for `AuthorizedPartyIds` enforcement, erased-entry exclusion before metadata, score/source metadata alignment to current page, page bounds, cancellation, and metadata-only local/degraded status.
-  - [ ] Extend EventStore gateway/query tests to prove `PartySearch` routes through `api/v1/queries`, uses authenticated tenant context, and fails before query routing on unauthorized tenant/domain.
-  - [ ] Add cross-tenant tests where tenants share display names and party ids differ. Tenant B must not infer tenant A entries, counts, actor keys, source metadata, or match metadata.
-  - [ ] Add degraded/corrupt/rebuilding tests against `PartyIndexProjectionActor` or its accepted query adapter so unsafe cached state does not leak.
+- [x] Task 6: Add or harden focused tests (AC: 1-7)
+  - [x] Extend `HttpPartiesQueryClientTests` for omitted optional search fields, cancellation, malformed payload handling if not already covered, and field reservation expectations if response samples are updated.
+  - [x] Extend `LocalFuzzyPartySearchProviderTests` or add a display-name-specific provider test suite proving exact, prefix, contains, optional display-name-only fuzzy, deterministic ranking, tie-breaking, pagination, empty query, and no future-reserved fields in MVP mode.
+  - [x] Add negative provider/query tests proving contact channels, identifiers, email, type text, semantic, graph, duplicate, and Memories-only fields do not produce matches or match metadata in the MVP `PartySearch` path.
+  - [x] Extend `PartySearchServiceBoundaryTests` for `AuthorizedPartyIds` enforcement, erased-entry exclusion before metadata, score/source metadata alignment to current page, page bounds, cancellation, and metadata-only local/degraded status.
+  - [x] Extend EventStore gateway/query tests to prove `PartySearch` routes through `api/v1/queries`, uses authenticated tenant context, and fails before query routing on unauthorized tenant/domain.
+  - [x] Add cross-tenant tests where tenants share display names and party ids differ. Tenant B must not infer tenant A entries, counts, actor keys, source metadata, or match metadata.
+  - [x] Add degraded/corrupt/rebuilding tests against `PartyIndexProjectionActor` or its accepted query adapter so unsafe cached state does not leak.
+
+### Review Findings
+
+_Code review performed 2026-05-20 against commits `8ada863..6e21849` (12 files, ~1772 lines). Three review layers — Blind Hunter, Edge Case Hunter, Acceptance Auditor — produced 77 raw findings; the consolidated list below reflects deduplication and triage._
+
+#### Decision-needed (resolved 2026-05-20)
+
+- [x] [Review][Decision] D1 Cancellation contract scope → **patch in Parties + open follow-up for the abstractions** (see P13).
+- [x] [Review][Decision] D2 Static singleton vs DI for `IPartySearchProvider` → **inject `IPartySearchProvider` into the actor** (see P14).
+- [x] [Review][Decision] D3 `PagedResult.Page`/`PageSize` echo vs normalize → **normalize** (consistent paging math; new test already matches; update misleading comment) (see P15).
+- [x] [Review][Decision] D4 `Mode`/`CaseId` silent drop in PartySearch → **accept and ignore + add regression test pinning no effect on data selection** (see P16).
+- [x] [Review][Decision] D5 `TryParseInstant` `AssumeUniversal` silent UTC → **strict — require explicit offset, reject no-offset timestamps as InvalidEnvelope** (see P17).
+
+#### Patch
+
+- [x] [Review][Patch] Enforce upper bound on `PageSize` in PartySearch path [src/Hexalith.Parties/Search/LocalFuzzyPartySearchProvider.cs:256-264, src/Hexalith.Parties/Queries/PartyIndexProjectionQueryActor.cs:321-323] — `TryParseSearchPayload` and `LocalFuzzyPartySearchProvider.Search` lack an upper bound; `Take(int.MaxValue)` over large lists can OOM. Clamp `pageSize` to `1..100` consistently with the list path policy.
+- [x] [Review][Patch] Add upper bound for `Page` input [src/Hexalith.Parties/Queries/PartyIndexProjectionQueryActor.cs:200-204, 264-269] — Only floor check `< 1`. Add a sanity cap to prevent `Page = int.MaxValue` echoes through downstream metadata.
+- [x] [Review][Patch] Strictly validate `envelope.TenantId` format before downstream actor-id construction [src/Hexalith.Parties/Queries/PartyIndexProjectionQueryActor.cs:146-162] — Reject tenant ids containing colons, control characters, or whitespace as `InvalidEnvelope`. Defense-in-depth in case an upstream gateway ever fails to sanitize.
+- [x] [Review][Patch] Add erased-entry test on PartySearch actor path [tests/Hexalith.Parties.Tests/Gateway/PartyIndexProjectionQueryActorTests.cs] — `QueryAsync_PartyIndex_*` covers erasure for the list flow; add `QueryAsync_PartySearch_ErasedEntryInScope_ExcludedFromResults` covering the search flow against the actor (not just `LocalPartySearchService`).
+- [x] [Review][Patch] Add cross-tenant isolation test on PartySearch actor path [tests/Hexalith.Parties.Tests/Gateway/PartyIndexProjectionQueryActorTests.cs] — Activate as tenant-b, seed entries matching tenant-a display names, assert no tenant-a entries leak. Required Test Matrix row "Cross-tenant isolation" is only proved at the local service today.
+- [x] [Review][Patch] Add fuzzy-vs-deterministic ranking test in `MvpDisplayNameSearchContractTests` [tests/Hexalith.Parties.Tests/Search/MvpDisplayNameSearchContractTests.cs] — Mix a fuzzy match (e.g., "Acne" vs. "Acme") with exact/prefix/contains. Assert fuzzy ranks below all deterministic types. Required Test Matrix row "Optional fuzzy display-name match" is unsatisfied.
+- [x] [Review][Patch] Add digit-heavy fuzzy false-positive suppression test [tests/Hexalith.Parties.Tests/Search/LocalFuzzyPartySearchProviderTests.cs or MvpDisplayNameSearchContractTests.cs] — `LocalFuzzyPartySearchProvider.JaroWinklerSimilarity` short-circuits on `token.Any(char.IsDigit)`. Required Test Matrix row "ignores digit-heavy false positives" has no diff test.
+- [x] [Review][Patch] Add `EntityId != "parties"` rejection test [tests/Hexalith.Parties.Tests/Gateway/PartyIndexProjectionQueryActorTests.cs] — `TryResolveActorRoute` rejects mismatched `EntityId`, but no test pins it.
+- [x] [Review][Patch] Broaden `TryParseListPayload`/`TryParseSearchPayload` catch (or document narrow catch) [src/Hexalith.Parties/Queries/PartyIndexProjectionQueryActor.cs:240-248, 306-314] — Only `JsonException` is caught around `JsonSerializer.Deserialize`. Malformed UTF-8 / constructor binding failures may escape as `ArgumentException` / `DecoderFallbackException` and bubble out of `QueryAsync` as `ActorException` rather than `InvalidEnvelope`.
+- [x] [Review][Patch] Strengthen `SearchAsync_ErasedEntryInScope_ExcludedBeforeMetadataCalculation` [tests/Hexalith.Parties.Tests/Search/MvpDisplayNameSearchContractTests.cs:144-145] — Current assertion `TotalCount.ShouldNotBe(entries.Count)` passes trivially if the result is empty. Add a non-erased matching entry and assert `TotalCount == 1` plus the erased entry is absent from `Items`.
+- [x] [Review][Patch] Pin positive diagnostic-logging assertions in PII-leak tests [tests/Hexalith.Parties.Tests/Gateway/PartyIndexProjectionQueryActorTests.cs:1393-1428] — `RecordingLogger` tests assert only `ShouldNotContain`. Add at least one `ShouldContain` for the expected structured-logging event (e.g., `PartyIndexQueryRouting`) so a regression that silently disables logging is caught.
+- [x] [Review][Patch] Reconcile sort tie-breaker between `LocalFuzzyPartySearchProvider.Search` and `PartySearchResultsBuilder.BuildSearchResults` [src/Hexalith.Parties/Search/LocalFuzzyPartySearchProvider.cs:524-544, src/Hexalith.Parties/Search/PartySearchResultsBuilder.cs:699] — Provider uses `NormalizeDiacritics(DisplayName) → Id`; builder uses `GetSortableName → DisplayName → Id`. Pick one (prefer the spec's "normalized display name, then party id") and apply consistently. Decide the fate of the orphaned `PartyIndexEntry.SortName` property.
+- [x] [Review][Patch] P13 Plumb `CancellationToken` into `LocalFuzzyPartySearchProvider.Search` and forward the actor host CT [src/Hexalith.Parties/Search/LocalFuzzyPartySearchProvider.cs, src/Hexalith.Parties/Queries/PartyIndexProjectionQueryActor.cs] — From D1: in-Parties patch only. Open a follow-up issue to extend `IProjectionActor.QueryAsync(QueryEnvelope, CancellationToken)` (EventStore) and `IPartyIndexProjectionActor.GetEntriesAsync(CancellationToken)` (Projections).
+- [x] [Review][Patch] P14 Inject `IPartySearchProvider` into `PartyIndexProjectionQueryActor` [src/Hexalith.Parties/Queries/PartyIndexProjectionQueryActor.cs:88, src/Hexalith.Parties/Extensions/PartiesServiceCollectionExtensions.cs] — From D2: replace the `static readonly LocalFuzzyPartySearchProvider s_searchProvider = new();` with constructor-injected `IPartySearchProvider`. Verify Dapr actor DI activation works with this constructor shape.
+- [x] [Review][Patch] P15 Normalize `PagedResult.Page` / `PagedResult.PageSize` in `CreatePagedResult` [src/Hexalith.Parties/Search/PartySearchResultsBuilder.cs:808-828] — From D3: return `safePage` / `safePageSize` (not the caller-supplied values). Update the misleading "echo caller-supplied" comment to document the normalization decision. The existing `BuildPagedList_NormalizesPageBounds` test already matches this behavior.
+- [x] [Review][Patch] P16 Add regression test pinning Mode/CaseId silent drop has no effect on data selection [tests/Hexalith.Parties.Tests/Gateway/PartyIndexProjectionQueryActorTests.cs] — From D4: add `QueryAsync_PartySearch_ModeAndCaseIdAccepted_NoEffectOnDataSelection` test where envelopes with and without `mode="Graph"` / `caseId="case-X"` produce identical results.
+- [x] [Review][Patch] P17 Reject no-offset timestamps in `TryParseInstant` as `InvalidEnvelope` [src/Hexalith.Parties/Queries/PartyIndexProjectionQueryActor.cs:308-342] — From D5: change parsing to require explicit timezone (`Z` or `±HH:MM`). Reject `"2026-05-10T08:00:00"` as `InvalidEnvelope`. Update tests to cover both rejection and explicit-offset acceptance.
+
+#### Defer
+
+- [x] [Review][Defer] `ProjectionActorType` / `ProjectionType` wire-contract addition without external-consumer compatibility test [src/Hexalith.Parties.Client/HttpPartiesQueryClient.cs:17-36] — deferred, pending SDK consumer review.
+- [x] [Review][Defer] `IsProjectionActorNotFound` substring-matching fragility [src/Hexalith.Parties/Queries/PartyIndexProjectionQueryActor.cs:344-358] — deferred, pre-existing pattern carried from Story 2.3/2.4; consolidate when Dapr SDK exposes typed exception.
+- [x] [Review][Defer] Per-comparison `NormalizeDiacritics` allocation in sort comparator [src/Hexalith.Parties/Search/LocalFuzzyPartySearchProvider.cs:82-85] — deferred, perf-tuning pass (O(n log n × name length) hot path under load).
+- [x] [Review][Defer] `Type` and `Active` fields on `SearchPartiesQueryPayloadWire` unreachable from typed client [src/Hexalith.Parties/Queries/PartyIndexProjectionQueryActor.cs:389-396, src/Hexalith.Parties.Client/HttpPartiesQueryClient.cs:93-114] — deferred until OpenAPI/SDK surface is published; track typed-client/actor wire alignment then.
 
 ## Required Test Matrix
 
@@ -294,13 +333,37 @@ tests/Hexalith.Parties.Tests/FitnessTests/ArchitecturalFitnessTests.cs
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+GPT-5 Codex
 
 ### Debug Log References
 
+- Red phase: `dotnet test .\tests\Hexalith.Parties.Tests\Hexalith.Parties.Tests.csproj -c Release --filter "FullyQualifiedName~MvpDisplayNameSearchContractTests|FullyQualifiedName~PartyIndexProjectionQueryActorTests"` failed on future-field metadata and missing `PartySearch` query adapter as expected.
+- Green focused search/gateway pass: `dotnet test .\tests\Hexalith.Parties.Tests\Hexalith.Parties.Tests.csproj -c Release --filter "FullyQualifiedName~EventStoreGatewayRoutingTests|FullyQualifiedName~PartyIndexProjectionQueryActorTests|FullyQualifiedName~MvpDisplayNameSearchContractTests|FullyQualifiedName~LocalFuzzyPartySearchProviderTests|FullyQualifiedName~BasicPartySearchProviderTests|FullyQualifiedName~PartySearchServiceBoundaryTests"` passed: 84 passed.
+- Client focused pass: `dotnet test .\tests\Hexalith.Parties.Client.Tests\Hexalith.Parties.Client.Tests.csproj -c Release --filter "FullyQualifiedName~HttpPartiesQueryClientTests"` passed: 16 passed.
+- Broad Parties pass excluding unrelated AppHost topology blocker: `dotnet test .\tests\Hexalith.Parties.Tests\Hexalith.Parties.Tests.csproj -c Release --filter "FullyQualifiedName!~AppHostTenantsTopologyTests.AppHostProgramMapsPartyDomainToPartiesActorHost"` passed: 339 passed, 22 skipped.
+- Full solution attempt: `dotnet test .\Hexalith.Parties.slnx -c Release` was blocked by unrelated pre-existing failures: deploy-validation CA2007 warnings in `K8sStory93LintTests.cs`, missing nested `Hexalith.Memories\Hexalith.Commons`, and the AppHost topology wildcard-key expectation.
+
 ### Completion Notes List
 
+- Routed typed `SearchPartiesAsync(...)` requests to the EventStore query gateway with `QueryType = "PartySearch"`, `ProjectionType = "party-index"`, `EntityId = "parties"`, and `PartyIndexProjectionQueryActor`.
+- Added `PartySearch` handling to `PartyIndexProjectionQueryActor`, reading the authenticated tenant's `IPartyIndexProjectionActor.GetEntriesAsync()` projection only and rejecting unknown payload fields before actor construction.
+- Reconciled local MVP search to display-name-only matching: exact, prefix, contains, and retained fuzzy all emit `MatchedField = "displayName"` only; contact channel, email, identifier, type, semantic, graph, duplicate, and Memories-only metadata are not emitted by the MVP path.
+- Preserved erasure filtering, authorized-id filtering, active filters, page bounds, metadata alignment, cancellation propagation, and metadata-only diagnostics; no REST, OpenAPI, MCP, AdminPortal, Picker, Contracts dependency, or Memories indexing surface was added.
+
 ### File List
+
+- `_bmad-output/implementation-artifacts/2-5-search-parties-by-display-name-with-match-metadata.md`
+- `_bmad-output/implementation-artifacts/sprint-status.yaml`
+- `src/Hexalith.Parties.Client/HttpPartiesQueryClient.cs`
+- `src/Hexalith.Parties/Queries/PartyIndexProjectionQueryActor.cs`
+- `src/Hexalith.Parties/Search/LocalFuzzyPartySearchProvider.cs`
+- `src/Hexalith.Parties/Search/PartySearchResultsBuilder.cs`
+- `tests/Hexalith.Parties.Client.Tests/HttpPartiesQueryClientTests.cs`
+- `tests/Hexalith.Parties.Tests/Gateway/EventStoreGatewayRoutingTests.cs`
+- `tests/Hexalith.Parties.Tests/Gateway/PartyIndexProjectionQueryActorTests.cs`
+- `tests/Hexalith.Parties.Tests/Search/LocalFuzzyPartySearchProviderTests.cs`
+- `tests/Hexalith.Parties.Tests/Search/MvpDisplayNameSearchContractTests.cs`
+- `tests/Hexalith.Parties.Tests/Search/PartySearchServiceBoundaryTests.cs`
 
 ## Party-Mode Review
 
@@ -327,6 +390,8 @@ tests/Hexalith.Parties.Tests/FitnessTests/ArchitecturalFitnessTests.cs
 
 ## Change Log
 
+- 2026-05-20: Code review complete. 5 decision-needed resolved (cancellation plumbing in Parties + cross-submodule follow-up, IPartySearchProvider DI injection, PagedResult normalization, Mode/CaseId silent-drop regression test, strict ISO-8601 offset requirement). 17 patches applied across actor, search provider, and result builder; 4 items deferred to deferred-work.md. All 353 focused Parties tests pass (22 skipped, same pre-existing topology blocker). Status moved to `done`.
+- 2026-05-20: Implemented Story 2.5 display-name-only PartySearch through the EventStore query boundary, added the PartyIndex query adapter route, hardened future-field negative tests, and moved the story to review with focused validation green; full solution remains blocked by unrelated pre-existing suite issues noted in Dev Agent Record.
 - 2026-05-18: Advanced elicitation applied low-risk clarifications for normalization consistency, filter-before-metadata ordering, untrusted request context, degraded-cache provenance, diagnostics safety, future-field negative tests, and terminal cancellation.
 - 2026-05-18: Party-mode review applied low-risk clarifications for display-name-only search, optional fuzzy scope, deterministic ordering, EventStore tenant ownership, degraded-cache provenance, and future-field negative tests.
 - 2026-05-18: Story created by BMAD pre-dev hardening automation with existing typed search client, EventStore query gateway, tenant index projection, display-name match metadata, MVP future-field reservation, degraded-state, privacy, and focused validation guidance.

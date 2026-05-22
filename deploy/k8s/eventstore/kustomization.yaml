@@ -22,4 +22,3 @@ configMapGenerator:
     - Authentication__JwtBearer__Audience=hexalith-eventstore
     - Authentication__JwtBearer__RequireHttpsMetadata=false
     - ASPNETCORE_URLS=http://+:8080;
-

@@ -14,8 +14,13 @@ namespace Hexalith.Parties.Sample;
 public static class PartyEventHandler
 {
     private static readonly ConcurrentDictionary<string, bool> _processedEventIds = new();
+    private static readonly ConcurrentDictionary<string, long> _lastSequenceByAggregate = new();
 
-    public static void ClearProcessedEventIds() => _processedEventIds.Clear();
+    public static void ClearProcessedEventIds()
+    {
+        _processedEventIds.Clear();
+        _lastSequenceByAggregate.Clear();
+    }
 
     private static readonly JsonSerializerOptions _jsonOptions = new()
     {
@@ -52,11 +57,16 @@ public static class PartyEventHandler
             return Results.Ok();
         }
 
+        string aggregateId = envelope.AggregateId;
+        if (!TryAcceptSequence(envelope, logger))
+        {
+            return Results.Ok();
+        }
+
         // Decode the base64 payload
         byte[] payloadBytes = Convert.FromBase64String(envelope.Payload);
         string payloadJson = Encoding.UTF8.GetString(payloadBytes);
 
-        string aggregateId = envelope.AggregateId;
         // Extract the party ID from aggregateId format "tenant:domain:partyId"
         string partyId = aggregateId.Contains(':')
             ? aggregateId[(aggregateId.LastIndexOf(':') + 1)..]
@@ -127,9 +137,15 @@ public static class PartyEventHandler
                 HandlePartyMerged(partyId, payloadJson, logger);
                 break;
 
+            // Future GDPR cleanup path: when PartyErased is introduced, consumers should
+            // remove or anonymize local read-model entries for the erased party.
+            case "PartyErased":
+                HandlePartyErased(partyId, logger);
+                break;
+
             // Unknown event types: always return 200 OK to prevent DAPR redelivery.
-            // Future additive events (e.g., PartyErased in v1.1 GDPR) will arrive here
-            // until explicit handlers are added. Tolerant deserialization ensures no errors.
+            // Other additive events will arrive here until explicit handlers are added.
+            // Tolerant deserialization ensures no errors.
             default:
                 logger.LogInformation(
                     "Unknown event type '{EventType}' (normalized as '{NormalizedEventType}') for aggregate {AggregateId} — acknowledged without processing",
@@ -170,6 +186,34 @@ public static class PartyEventHandler
 
         envelope = body.Deserialize<EventEnvelope>(_jsonOptions);
         return envelope is not null;
+    }
+
+    private static bool TryAcceptSequence(EventEnvelope envelope, ILogger logger)
+    {
+        while (true)
+        {
+            if (_lastSequenceByAggregate.TryGetValue(envelope.AggregateId, out long lastSequence))
+            {
+                if (envelope.SequenceNumber <= lastSequence)
+                {
+                    logger.LogInformation(
+                        "Skipping out-of-order event sequence {SequenceNumber} for aggregate {AggregateId}; last processed sequence is {LastSequence}",
+                        envelope.SequenceNumber,
+                        envelope.AggregateId,
+                        lastSequence);
+                    return false;
+                }
+
+                if (_lastSequenceByAggregate.TryUpdate(envelope.AggregateId, envelope.SequenceNumber, lastSequence))
+                {
+                    return true;
+                }
+            }
+            else if (_lastSequenceByAggregate.TryAdd(envelope.AggregateId, envelope.SequenceNumber))
+            {
+                return true;
+            }
+        }
     }
 
     private static void HandlePartyCreated(string partyId, string payloadJson, ILogger logger)
@@ -459,6 +503,14 @@ public static class PartyEventHandler
         // 3. Remove or redirect the merged party's local record
         logger.LogInformation(
             "EVENT: PartyMerged -> v2 placeholder acknowledged for {PartyId} (no action taken)",
+            partyId);
+    }
+
+    private static void HandlePartyErased(string partyId, ILogger logger)
+    {
+        _ = CustomerSummaryStore.Customers.TryRemove(partyId, out _);
+        logger.LogInformation(
+            "EVENT: PartyErased -> CustomerSummary removed for {PartyId}; extend this cleanup to every subscriber-owned local read model",
             partyId);
     }
 

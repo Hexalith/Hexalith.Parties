@@ -48,7 +48,9 @@ public sealed class ProjectionActorsHealthCheckTests
     public async Task CheckHealthAsync_ProjectionActorsResponsive_ReturnsHealthyAsync()
     {
         _indexActor.PingAsync().Returns(Task.FromResult(true));
+        _indexActor.IsRebuildingAsync().Returns(Task.FromResult(false));
         _detailActor.PingAsync().Returns(Task.FromResult(true));
+        _detailActor.IsRebuildingAsync().Returns(Task.FromResult(false));
 
         var sut = new ProjectionActorsHealthCheck(_actorProxyFactory, NullLogger<ProjectionActorsHealthCheck>.Instance);
 
@@ -68,7 +70,56 @@ public sealed class ProjectionActorsHealthCheckTests
         HealthCheckResult result = await sut.CheckHealthAsync(_context);
 
         result.Status.ShouldBe(HealthStatus.Degraded);
-        result.Description.ShouldNotBeNull().ShouldContain("HttpRequestException");
-        result.Exception.ShouldNotBeNull();
+        result.Description.ShouldBe("Projection actor health check failed.");
+        result.Exception.ShouldBeNull();
+    }
+
+    [Fact]
+    public async Task CheckHealthAsync_IndexActorRebuilding_ReturnsDegradedWithBoundedDescriptionAsync()
+    {
+        _indexActor.PingAsync().Returns(Task.FromResult(true));
+        _indexActor.IsRebuildingAsync().Returns(Task.FromResult(true));
+        _detailActor.PingAsync().Returns(Task.FromResult(true));
+        _detailActor.IsRebuildingAsync().Returns(Task.FromResult(false));
+
+        var sut = new ProjectionActorsHealthCheck(_actorProxyFactory, NullLogger<ProjectionActorsHealthCheck>.Instance);
+
+        HealthCheckResult result = await sut.CheckHealthAsync(_context);
+
+        result.Status.ShouldBe(HealthStatus.Degraded);
+        result.Description.ShouldBe("Projection actors are rebuilding.");
+        result.Exception.ShouldBeNull();
+    }
+
+    [Fact]
+    public async Task CheckHealthAsync_DetailActorRebuilding_ReturnsDegradedWithBoundedDescriptionAsync()
+    {
+        _indexActor.PingAsync().Returns(Task.FromResult(true));
+        _indexActor.IsRebuildingAsync().Returns(Task.FromResult(false));
+        _detailActor.PingAsync().Returns(Task.FromResult(true));
+        _detailActor.IsRebuildingAsync().Returns(Task.FromResult(true));
+
+        var sut = new ProjectionActorsHealthCheck(_actorProxyFactory, NullLogger<ProjectionActorsHealthCheck>.Instance);
+
+        HealthCheckResult result = await sut.CheckHealthAsync(_context);
+
+        result.Status.ShouldBe(HealthStatus.Degraded);
+        result.Description.ShouldBe("Projection actors are rebuilding.");
+        result.Exception.ShouldBeNull();
+    }
+
+    [Fact]
+    public async Task CheckHealthAsync_ProbeTimeout_ReturnsFailureStatusWithoutExceptionLeakAsync()
+    {
+        using var cts = new CancellationTokenSource();
+        await cts.CancelAsync();
+
+        var sut = new ProjectionActorsHealthCheck(_actorProxyFactory, NullLogger<ProjectionActorsHealthCheck>.Instance);
+
+        HealthCheckResult result = await sut.CheckHealthAsync(_context, cts.Token);
+
+        result.Status.ShouldBe(HealthStatus.Degraded);
+        result.Description.ShouldBe("Projection actor health check canceled or timed out.");
+        result.Exception.ShouldBeNull();
     }
 }

@@ -78,6 +78,66 @@ public sealed class PartyDomainServiceInvokerValidationTests
     }
 
     [Fact]
+    public async Task InvokeAsync_InvalidErasePartyPayload_ReturnsRejectionResultWithoutRehydration()
+    {
+        IEventPayloadProtectionService protection = Substitute.For<IEventPayloadProtectionService>();
+        PartyDomainServiceInvoker invoker = CreateInvoker(protection);
+        CommandEnvelope command = CreateCommand(new EraseParty
+        {
+            PartyId = string.Empty,
+            TenantId = string.Empty,
+        });
+        DomainServiceCurrentState currentState = CreateCurrentStateWithProtectedSnapshot(command);
+
+        DomainResult result = await invoker.InvokeAsync(command, currentState, CancellationToken.None);
+
+        result.IsRejection.ShouldBeTrue();
+        PartyCommandValidationRejected rejection = result.Events
+            .OfType<PartyCommandValidationRejected>()
+            .ShouldHaveSingleItem();
+        rejection.CommandType.ShouldBe(typeof(EraseParty).FullName);
+        rejection.Failures.Select(f => f.PropertyName).ShouldContain("PartyId");
+        rejection.Failures.Select(f => f.PropertyName).ShouldContain("TenantId");
+        rejection.Failures.ShouldAllBe(f => !f.ErrorCode.Contains("Ada", StringComparison.OrdinalIgnoreCase));
+        rejection.Failures.ShouldAllBe(f => !f.ErrorCode.Contains("Lovelace", StringComparison.OrdinalIgnoreCase));
+
+        await protection.DidNotReceiveWithAnyArgs().UnprotectSnapshotStateAsync(default!, default!, default);
+        await protection.DidNotReceiveWithAnyArgs().UnprotectEventPayloadAsync(default!, default!, default!, default!, default);
+    }
+
+    [Fact]
+    public async Task InvokeAsync_InvalidRestrictProcessingPayload_ReturnsBoundedRejectionWithoutRehydration()
+    {
+        IEventPayloadProtectionService protection = Substitute.For<IEventPayloadProtectionService>();
+        PartyDomainServiceInvoker invoker = CreateInvoker(protection);
+        CommandEnvelope command = CreateCommand(new RestrictProcessing
+        {
+            PartyId = string.Empty,
+            TenantId = string.Empty,
+            Reason = new string('x', RestrictProcessingValidator.MaximumReasonLength + 1),
+            ActorUserId = "Ada Lovelace",
+            CorrelationId = "corr-sensitive",
+        });
+        DomainServiceCurrentState currentState = CreateCurrentStateWithProtectedSnapshot(command);
+
+        DomainResult result = await invoker.InvokeAsync(command, currentState, CancellationToken.None);
+
+        result.IsRejection.ShouldBeTrue();
+        PartyCommandValidationRejected rejection = result.Events
+            .OfType<PartyCommandValidationRejected>()
+            .ShouldHaveSingleItem();
+        rejection.CommandType.ShouldBe(typeof(RestrictProcessing).FullName);
+        rejection.Failures.Select(f => f.PropertyName).ShouldContain("PartyId");
+        rejection.Failures.Select(f => f.PropertyName).ShouldContain("TenantId");
+        rejection.Failures.Select(f => f.PropertyName).ShouldContain("Reason");
+        rejection.Failures.ShouldAllBe(f => !f.ErrorCode.Contains("Ada", StringComparison.OrdinalIgnoreCase));
+        rejection.Failures.ShouldAllBe(f => !f.ErrorCode.Contains("corr-sensitive", StringComparison.OrdinalIgnoreCase));
+
+        await protection.DidNotReceiveWithAnyArgs().UnprotectSnapshotStateAsync(default!, default!, default);
+        await protection.DidNotReceiveWithAnyArgs().UnprotectEventPayloadAsync(default!, default!, default!, default!, default);
+    }
+
+    [Fact]
     public async Task InvokeAsync_ValidCreatePartyPayload_ProducesDomainEvents()
     {
         PartyDomainServiceInvoker invoker = CreateInvoker(Substitute.For<IEventPayloadProtectionService>());

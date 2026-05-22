@@ -1,10 +1,10 @@
 # Getting Started with Hexalith.Parties
 
-This guide starts the local EventStore-fronted topology, sends a Parties command through EventStore, queries it back through EventStore, and shows the typed .NET client and separate MCP host integration paths.
+This guide starts the local EventStore-fronted topology, sends a Parties command through EventStore, queries it back through EventStore, and shows the typed .NET client and separate MCP host integration paths. The default path is Aspire-based local development; the Kubernetes section is optional and uses the same public EventStore gateway contract.
 
 **Time estimate:** Under 30 minutes from clone to first command/query round-trip.
 
-> **GDPR notice:** The service logs the current MVP GDPR limitation at startup. Do not store regulated personal data in local examples. The retired per-response GDPR reminder header is no longer part of the public response contract.
+> **GDPR notice:** The service logs the current MVP GDPR limitation at startup and emits `X-Hexalith-Parties-Mvp-Compliance-Warning` while `Parties:Compliance:GdprFeaturesActive` is not enabled. Do not store regulated personal data in local examples.
 
 ---
 
@@ -16,6 +16,8 @@ This guide starts the local EventStore-fronted topology, sends a Parties command
 | Docker Desktop | Latest | [docker.com](https://www.docker.com/) |
 | Git | Any recent version | [git-scm.com](https://git-scm.com) |
 | `jq` | Latest, optional for Bash examples | [jqlang.org](https://jqlang.org) |
+
+Aspire is used through the .NET SDK command `dotnet aspire run`; no separate local orchestration script is required for the default path. DAPR components and sidecars are composed by the AppHost for Aspire mode, so the DAPR CLI is not required unless you use the optional Kubernetes walkthrough.
 
 **Additional prerequisites for the optional Kubernetes walkthrough (Step 1b):**
 
@@ -56,13 +58,21 @@ Open the Aspire dashboard URL printed by the command and verify these resources 
 
 - `eventstore` - public command/query gateway
 - `eventstore-admin` - admin server used by the EventStore Admin UI
-- `eventstore-admin-ui` - generic stream and event browser
 - `parties` - Parties domain actor/projection host behind EventStore
 - `tenants` - tenant lifecycle, membership, role, and configuration authority
+- `redis` - local DAPR state/pubsub backing service
+- `statestore` and `pubsub` - DAPR components backed by Redis
+- DAPR sidecars for `eventstore`, `eventstore-admin`, `parties`, and `tenants`
 
-The `parties-mcp` resource is the separate MCP host when included by the AppHost. It is not hosted by the `parties` actor host.
+The `eventstore-admin-ui` and `parties-mcp` resources are explicit-start auxiliaries in the dashboard. Start `eventstore-admin-ui` when you need stream browsing, and start `parties-mcp` when an AI assistant needs the MCP tool host. The MCP host is separate from the `parties` actor host.
 
 EventStore owns public authentication, tenant validation, RBAC, command/query routing, and generic response mapping. Parties owns domain execution and projection behavior behind the actor host. Do not call Parties internals to manage tenant lifecycle, RBAC, authorization, projection actors, or domain invocation.
+
+If startup fails before the dashboard appears, first check that Docker Desktop is running and that the two root-level submodules above exist on disk. A missing `Hexalith.EventStore` or `Hexalith.Tenants` directory is a setup problem, not a partial local topology that should be treated as ready.
+
+Memories-backed rich search is optional for the default local Parties run. To include it, initialize the root-level `Hexalith.Memories` submodule and run the AppHost with `EnableMemoriesSearch=true`; leave it unset for the baseline one-command local topology.
+
+Readiness is confirmed by the Aspire dashboard health column and by the service-default endpoints exposed by each HTTP resource: `/ready` for readiness, `/health` for full health, and `/alive` for liveness. Treat the system as usable only after `eventstore`, `parties`, and `tenants` are healthy; a live `parties` actor host alone is not enough because public traffic enters through EventStore.
 
 ---
 
@@ -264,6 +274,8 @@ Invoke-RestMethod -Method Post -Uri "$env:EVENTSTORE_URL/api/v1/commands" `
 
 Expected result: EventStore accepts the command and returns a correlation id. Command acceptance is not a read-your-write guarantee; projections may need a short moment before query results reflect the event.
 
+The command -> event -> projection flow is: EventStore authenticates and authorizes the request, routes the command envelope to the Parties domain actor host, Parties validates and emits domain events, EventStore persists and publishes those events, and the Parties projection actors update read models that queries use. Use the returned correlation id when checking logs or EventStore Admin UI evidence.
+
 ---
 
 ## Step 4: First Queries
@@ -348,6 +360,10 @@ curl -s -X POST "$EVENTSTORE_URL/api/v1/queries" \
   }' | jq
 ```
 
+### Freshness and Eventual Consistency
+
+Queries read projection state, not the write path directly. Immediately after a successful command, a first query can briefly miss the new party or include freshness metadata showing the projection is rebuilding or stale. Retry with bounded backoff, prefer the `PartyDetail` query for the created party id when checking the first round trip, and use EventStore Admin UI stream evidence when you need to distinguish a rejected command from a delayed projection.
+
 ---
 
 ## Step 5: Typed .NET Client
@@ -359,6 +375,12 @@ dotnet add package Hexalith.Parties.Client
 ```
 
 ```csharp
+using Hexalith.Parties.Client.Extensions;
+using Hexalith.Parties.Client.Abstractions;
+using Hexalith.Parties.Contracts.Commands;
+using Hexalith.Parties.Contracts.Models;
+using Hexalith.Parties.Contracts.ValueObjects;
+
 builder.Services.AddPartiesClient(builder.Configuration);
 ```
 
@@ -443,7 +465,7 @@ Subscriber applications consume EventStore-published DAPR events. The sample app
 - Example topic: `tenant-a.parties.events`
 - DAPR app id: `sample`
 
-Subscriber code should be idempotent, tolerate duplicate delivery, acknowledge unknown additive event types, and define its own local event envelope type matching only the fields it consumes. Unknown future events should return success unless the subscriber explicitly owns a retryable failure.
+EventStore persists party events before publishing them to DAPR pub/sub. If publishing fails after persistence, drain/recovery processing retries the persisted event; a subscriber failure before acknowledgement can therefore result in the same envelope being delivered again. Subscriber code should persist processed event ids or otherwise be idempotent, tolerate duplicate delivery, acknowledge unknown additive event types, and define its own local event envelope type matching only the fields it consumes. Unknown future events should return success unless the subscriber explicitly owns a retryable failure.
 
 ---
 
@@ -470,6 +492,10 @@ Local Aspire-issued dev certificates must be trusted before curl or HttpClient c
 
 Check the Aspire dashboard for `eventstore`, `eventstore-admin`, `eventstore-admin-ui`, `parties`, and `tenants`. Public command/query readiness is EventStore-owned; Parties health only proves the actor host is alive behind the gateway.
 
+### Docker or Submodule Startup Failures
+
+If Redis, Keycloak, EventStore, or Tenants fail before the dashboard reaches healthy state, confirm Docker Desktop is running and rerun `git submodule update --init Hexalith.EventStore Hexalith.Tenants` from the repository root. Do not switch to recursive submodule initialization for the default local run; missing nested submodules are not required by the baseline AppHost path.
+
 ### Authentication Errors
 
 `401` responses usually mean the request is missing a valid bearer token, tenant claim, or user identifier. Fix the identity provider or local development token configuration rather than calling Parties internals.
@@ -481,6 +507,12 @@ Check the Aspire dashboard for `eventstore`, `eventstore-admin`, `eventstore-adm
 ### Projection Delay
 
 A command can be accepted before the projection is queryable. Retry with bounded backoff and check projection freshness or EventStore Admin UI stream evidence. Do not bypass EventStore by reading projection actors directly.
+
+### MVP Compliance Boundary
+
+This MVP is not approved for regulated EU personal data until v1.1 GDPR features are active. For evaluation, use synthetic names and non-sensitive contact data only. If sensitive data is accidentally entered in a non-production evaluation environment, stop using that dataset and follow your operator's manual deletion or environment rebuild procedure; do not treat the MVP as an erasure-complete system.
+
+The warning remains non-dismissable in service startup logs and response metadata through `X-Hexalith-Parties-Mvp-Compliance-Warning`. It can only be removed by explicitly setting `Parties:Compliance:GdprFeaturesActive=true` after the v1.1 GDPR feature set is active.
 
 ### MCP Unavailable
 

@@ -8,7 +8,6 @@ string eventStoreAccessControlConfigPath = ResolveDaprConfigPath("accesscontrol.
 string adminServerAccessControlConfigPath = ResolveDaprConfigPath("accesscontrol.eventstore-admin.yaml");
 string tenantsAccessControlConfigPath = ResolveDaprConfigPath("accesscontrol.tenants.yaml");
 string partiesAccessControlConfigPath = ResolveDaprConfigPath("accesscontrol.parties.yaml");
-string memoriesAccessControlConfigPath = ResolveDaprConfigPath("accesscontrol.memories.yaml");
 string resiliencyConfigPath = ResolveDaprConfigPath("resiliency.yaml");
 // PUBLISH-MODE-DNS-ANCHOR - Story 9.2 publish-mode wiring; matches Story 9.3 keycloak Service shape.
 // Service name `keycloak`, namespace `hexalith-parties`, port 8080, realm `hexalith`.
@@ -67,6 +66,7 @@ IResourceBuilder<ProjectResource> parties = builder.AddProject<Projects.Hexalith
     .WaitFor(eventStoreResources.PubSub);
 
 IResourceBuilder<ProjectResource> partiesMcp = builder.AddProject<Projects.Hexalith_Parties_Mcp>("parties-mcp")
+    .WithExplicitStart()
     .WithReference(eventStore)
     .WaitFor(eventStore)
     .WithReference(parties)
@@ -137,6 +137,27 @@ bool enableMemoriesSearch = builder.ExecutionContext.IsPublishMode
     || string.Equals(builder.Configuration["EnableMemoriesSearch"], "true", StringComparison.OrdinalIgnoreCase);
 if (enableMemoriesSearch)
 {
+    string memoriesProjectPath = ResolveOptionalSiblingProjectPath(
+        "Hexalith.Memories",
+        Path.Combine("src", "Hexalith.Memories.Server", "Hexalith.Memories.Server.csproj"),
+        "EnableMemoriesSearch");
+    string memoriesAccessControlConfigPath = ResolveDaprConfigPath("accesscontrol.memories.yaml");
+
+    // Memories.Server is optional for the default one-command local Parties run. Enabling
+    // `EnableMemoriesSearch=true` composes it as a first-class DAPR resource and keeps the
+    // in-cluster URL as the only rich-search endpoint Parties uses.
+    IResourceBuilder<ProjectResource> memories = builder.AddProject("memories", memoriesProjectPath)
+        .WithDaprSidecar(sidecar => sidecar
+            .WithOptions(new DaprSidecarOptions
+            {
+                AppId = "memories",
+                Config = memoriesAccessControlConfigPath,
+            })
+            .WithReference(eventStoreResources.StateStore)
+            .WithReference(eventStoreResources.PubSub))
+        .WaitFor(eventStoreResources.StateStore)
+        .WaitFor(eventStoreResources.PubSub);
+
     _ = parties
         .WithReference(memories)
         .WaitFor(memories)

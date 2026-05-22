@@ -17,6 +17,9 @@ internal sealed class PartiesMcpTools(
     IPartiesQueryClient queryClient,
     IPartiesMcpRequestContextAccessor contextAccessor)
 {
+    private const int MaxToolFieldCharacters = 512;
+    private const int MaxToolInputCharacters = 4096;
+
     [McpServerTool(Name = PartiesMcpToolNames.GetParty, Title = "Get Party", ReadOnly = true)]
     [Description("Gets a party by identifier through the Parties EventStore client boundary.")]
     public async Task<PartiesMcpToolResult> GetParty(
@@ -33,17 +36,30 @@ internal sealed class PartiesMcpTools(
                 }
 
                 PartyDetail party = await queryClient.GetPartyAsync(partyId, cancellationToken).ConfigureAwait(false);
+                if (party.IsErased)
+                {
+                    return PartiesMcpToolResult.Failed(
+                        PartiesMcpToolNames.GetParty,
+                        "not_found",
+                        "parties-mcp-party-erased",
+                        "The requested Parties resource was not found.");
+                }
+
                 return PartiesMcpToolResult.Succeeded(PartiesMcpToolNames.GetParty, party);
             }).ConfigureAwait(false);
 
     [McpServerTool(Name = PartiesMcpToolNames.FindParties, Title = "Find Parties", ReadOnly = true)]
-    [Description("Finds parties using forgiving search, paging, type, and active filters through the Parties EventStore client boundary.")]
+    [Description("Finds parties by MVP display-name search or lists parties with paging, type, active, created-date, and modified-date filters through the Parties EventStore client boundary. Email, identifier, semantic, graph, and temporal search are not evaluated in MVP.")]
     public async Task<PartiesMcpToolResult> FindParties(
-        [Description("Search text. Empty or omitted text lists parties.")] string? query = null,
+        [Description("Display-name search text. Empty or omitted text lists parties. Email, identifier, semantic, graph, and temporal search are not available in MVP.")] string? query = null,
         [Description("One-based page number.")] int page = 1,
         [Description("Requested page size.")] int pageSize = 20,
         [Description("Optional party type filter, such as Person or Organization.")] string? type = null,
         [Description("Optional active-state filter.")] bool? active = null,
+        [Description("Optional inclusive lower created-date filter for list mode, as ISO 8601 date or date-time.")] string? createdAfter = null,
+        [Description("Optional inclusive upper created-date filter for list mode, as ISO 8601 date or date-time.")] string? createdBefore = null,
+        [Description("Optional inclusive lower modified-date filter for list mode, as ISO 8601 date or date-time.")] string? modifiedAfter = null,
+        [Description("Optional inclusive upper modified-date filter for list mode, as ISO 8601 date or date-time.")] string? modifiedBefore = null,
         CancellationToken cancellationToken = default)
         => await ExecuteAsync(
             PartiesMcpToolNames.FindParties,
@@ -79,8 +95,37 @@ internal sealed class PartiesMcpTools(
                     return ValidationFailed(PartiesMcpToolNames.FindParties, "party type");
                 }
 
+                if (!TryParseOptionalDate(createdAfter, out DateTimeOffset? createdAfterValue))
+                {
+                    return ValidationFailed(PartiesMcpToolNames.FindParties, "createdAfter");
+                }
+
+                if (!TryParseOptionalDate(createdBefore, out DateTimeOffset? createdBeforeValue))
+                {
+                    return ValidationFailed(PartiesMcpToolNames.FindParties, "createdBefore");
+                }
+
+                if (!TryParseOptionalDate(modifiedAfter, out DateTimeOffset? modifiedAfterValue))
+                {
+                    return ValidationFailed(PartiesMcpToolNames.FindParties, "modifiedAfter");
+                }
+
+                if (!TryParseOptionalDate(modifiedBefore, out DateTimeOffset? modifiedBeforeValue))
+                {
+                    return ValidationFailed(PartiesMcpToolNames.FindParties, "modifiedBefore");
+                }
+
                 PagedResult<PartyIndexEntry> listResult = await queryClient
-                    .ListPartiesAsync(page, pageSize, partyType, active, null, null, null, null, cancellationToken)
+                    .ListPartiesAsync(
+                        page,
+                        pageSize,
+                        partyType,
+                        active,
+                        createdAfterValue,
+                        createdBeforeValue,
+                        modifiedAfterValue,
+                        modifiedBeforeValue,
+                        cancellationToken)
                     .ConfigureAwait(false);
                 return PartiesMcpToolResult.Succeeded(PartiesMcpToolNames.FindParties, listResult);
             }).ConfigureAwait(false);
@@ -122,6 +167,31 @@ internal sealed class PartiesMcpTools(
                 string? effectiveIdentifierType = FirstNonEmpty(identifierType, !string.IsNullOrWhiteSpace(vatNumber) ? "VAT" : null);
                 string? effectiveIdentifierValue = FirstNonEmpty(identifierValue, vatNumber);
 
+                if (ExceedsToolPayloadLimit(
+                    partyId,
+                    partyType,
+                    effectiveGivenName,
+                    effectiveFamilyName,
+                    dateOfBirth,
+                    prefix,
+                    suffix,
+                    legalName,
+                    tradingName,
+                    legalForm,
+                    registrationNumber,
+                    email,
+                    phone,
+                    vatNumber,
+                    effectiveIdentifierType,
+                    effectiveIdentifierValue))
+                {
+                    return PartiesMcpToolResult.Failed(
+                        PartiesMcpToolNames.CreateParty,
+                        "validation_failed",
+                        "parties-mcp-payload-too-large",
+                        "The create_party request exceeds the supported MCP payload size.");
+                }
+
                 PartyType type = ResolveCreateType(partyType, effectiveGivenName, effectiveFamilyName, legalName);
                 if (type == PartyType.Unknown)
                 {
@@ -129,6 +199,11 @@ internal sealed class PartiesMcpTools(
                 }
 
                 string effectivePartyId = string.IsNullOrWhiteSpace(partyId) ? NewId() : partyId.Trim();
+                if (!IsSafePartyId(effectivePartyId))
+                {
+                    return ValidationFailed(PartiesMcpToolNames.CreateParty, "partyId");
+                }
+
                 CreatePartyComposite? command = BuildCreateCommand(
                     effectivePartyId,
                     type,
@@ -202,6 +277,41 @@ internal sealed class PartiesMcpTools(
                 string? effectiveAddIdentifierValue = FirstNonEmpty(addIdentifierValue, addVatNumber);
                 string? effectiveRemoveContactIds = CombineCsv(removeContactChannelId, removeContactChannelIds);
                 string? effectiveRemoveIdentifierIds = CombineCsv(removeIdentifierId, removeIdentifierIds);
+                if (ExceedsToolPayloadLimit(
+                    partyId,
+                    effectiveGivenName,
+                    effectiveFamilyName,
+                    dateOfBirth,
+                    prefix,
+                    suffix,
+                    legalName,
+                    tradingName,
+                    legalForm,
+                    registrationNumber,
+                    addEmail,
+                    addPhone,
+                    updateContactChannelId,
+                    updateContactChannelType,
+                    updateContactChannelValue,
+                    effectiveRemoveContactIds,
+                    addVatNumber,
+                    effectiveAddIdentifierType,
+                    effectiveAddIdentifierValue,
+                    effectiveRemoveIdentifierIds))
+                {
+                    return PartiesMcpToolResult.Failed(
+                        PartiesMcpToolNames.UpdateParty,
+                        "validation_failed",
+                        "parties-mcp-payload-too-large",
+                        "The update_party request exceeds the supported MCP payload size.");
+                }
+
+                bool hasCompositeInput =
+                    HasAny(effectiveGivenName, effectiveFamilyName, dateOfBirth, prefix, suffix, legalName, tradingName, legalForm, registrationNumber)
+                    || HasAny(addEmail, addPhone)
+                    || HasAny(updateContactChannelId, updateContactChannelType, updateContactChannelValue)
+                    || updateContactChannelPreferred.HasValue
+                    || HasAny(effectiveRemoveContactIds, effectiveAddIdentifierType, effectiveAddIdentifierValue, effectiveRemoveIdentifierIds);
                 bool needsCurrentParty = HasAny(effectiveGivenName, effectiveFamilyName, dateOfBirth, prefix, suffix, legalName, tradingName, legalForm, registrationNumber)
                     || HasAny(updateContactChannelId, updateContactChannelType, updateContactChannelValue)
                     || updateContactChannelPreferred.HasValue;
@@ -231,6 +341,11 @@ internal sealed class PartiesMcpTools(
                     effectiveAddIdentifierType,
                     effectiveAddIdentifierValue,
                     effectiveRemoveIdentifierIds);
+                if (command is null && hasCompositeInput)
+                {
+                    return ValidationFailed(PartiesMcpToolNames.UpdateParty, "update fields");
+                }
+
                 if (command is null && !active.HasValue)
                 {
                     return PartiesMcpToolResult.Failed(
@@ -259,7 +374,7 @@ internal sealed class PartiesMcpTools(
             }).ConfigureAwait(false);
 
     [McpServerTool(Name = PartiesMcpToolNames.DeleteParty, Title = "Delete Party", Destructive = true, Idempotent = true)]
-    [Description("Soft deactivates a Parties record while preserving idempotent already-inactive behavior when the client contract can observe it.")]
+    [Description("Soft deactivates a Parties record for MVP delete intent. This tool does not perform GDPR erasure.")]
     public async Task<PartiesMcpToolResult> DeleteParty(
         [Description("The party identifier to deactivate.")] string partyId,
         CancellationToken cancellationToken = default)
@@ -278,76 +393,19 @@ internal sealed class PartiesMcpTools(
                 {
                     return PartiesMcpToolResult.Succeeded(
                         PartiesMcpToolNames.DeleteParty,
-                        new { partyId, idempotent = true },
+                        new
+                        {
+                            partyId,
+                            isActive = false,
+                            idempotent = true,
+                            operation = "soft-deactivation",
+                            gdprErasurePerformed = false,
+                        },
                         "parties-mcp-delete-idempotent");
                 }
 
                 PartiesCommandResult<PartyDetail> result = await commandClient.DeactivatePartyWithResultAsync(partyId, cancellationToken).ConfigureAwait(false);
-                return ToMutationToolResult(PartiesMcpToolNames.DeleteParty, result);
-            }).ConfigureAwait(false);
-
-    [McpServerTool(Name = PartiesMcpToolNames.GetPartyNameAt, Title = "Get Party Name At", ReadOnly = true)]
-    [Description("Compatibility tool for Parties temporal name lookup through the Parties EventStore query client path.")]
-    public async Task<PartiesMcpToolResult> GetPartyNameAt(
-        [Description("The party identifier to inspect.")] string partyId,
-        [Description("The instant for the temporal lookup, as an ISO 8601 value.")] string asOf,
-        CancellationToken cancellationToken = default)
-        => await ExecuteAsync(
-            PartiesMcpToolNames.GetPartyNameAt,
-            async () =>
-            {
-                PartiesMcpToolResult? validation = ValidateContextAndPartyId(PartiesMcpToolNames.GetPartyNameAt, partyId);
-                if (validation is not null)
-                {
-                    return validation;
-                }
-
-                if (!DateTimeOffset.TryParse(asOf, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out DateTimeOffset instant))
-                {
-                    return ValidationFailed(PartiesMcpToolNames.GetPartyNameAt, "asOf");
-                }
-
-                PartyDetail party = await queryClient.GetPartyAsync(partyId, cancellationToken).ConfigureAwait(false);
-                if (party.IsErased)
-                {
-                    return PartiesMcpToolResult.Failed(
-                        PartiesMcpToolNames.GetPartyNameAt,
-                        "not_found",
-                        "parties-mcp-party-erased",
-                        "The requested Parties resource was not found.");
-                }
-
-                if (party.NameHistory.Count == 0)
-                {
-                    return PartiesMcpToolResult.Failed(
-                        PartiesMcpToolNames.GetPartyNameAt,
-                        "not_found",
-                        "parties-mcp-name-history-unavailable",
-                        "Name history is not available for the requested Parties resource.");
-                }
-
-                NameHistoryEntry? history = party.NameHistory
-                    .Where(entry => entry.ChangedAt <= instant)
-                    .OrderByDescending(entry => entry.ChangedAt)
-                    .FirstOrDefault();
-                if (history is null)
-                {
-                    return PartiesMcpToolResult.Failed(
-                        PartiesMcpToolNames.GetPartyNameAt,
-                        "not_found",
-                        "parties-mcp-name-not-effective",
-                        "The Parties resource did not have an effective name at the requested instant.");
-                }
-
-                return PartiesMcpToolResult.Succeeded(
-                    PartiesMcpToolNames.GetPartyNameAt,
-                    new TemporalNameResult
-                    {
-                        PartyId = party.Id,
-                        AsOf = instant,
-                        DisplayName = history.DisplayName,
-                        SortName = history.SortName,
-                    });
+                return ToDeleteToolResult(partyId, result);
             }).ConfigureAwait(false);
 
     private static async Task<PartiesMcpToolResult> ExecuteAsync(
@@ -403,6 +461,30 @@ internal sealed class PartiesMcpTools(
             ? PartiesMcpToolResult.Accepted(toolName, result.CorrelationId)
             : PartiesMcpToolResult.Succeeded(toolName, result.Payload, correlationId: result.CorrelationId);
 
+    private static PartiesMcpToolResult ToDeleteToolResult(
+        string partyId,
+        PartiesCommandResult<PartyDetail> result)
+        => result.Payload is null
+            ? PartiesMcpToolResult.Accepted(
+                PartiesMcpToolNames.DeleteParty,
+                result.CorrelationId,
+                new
+                {
+                    partyId,
+                    requestedState = "inactive",
+                    operation = "soft-deactivation",
+                    gdprErasurePerformed = false,
+                })
+            : PartiesMcpToolResult.Succeeded(
+                PartiesMcpToolNames.DeleteParty,
+                new
+                {
+                    operation = "soft-deactivation",
+                    gdprErasurePerformed = false,
+                    partyDetail = result.Payload,
+                },
+                correlationId: result.CorrelationId);
+
     private static PartiesMcpToolResult ToMutationToolResult(
         string toolName,
         IReadOnlyList<PartiesCommandResult<PartyDetail>> results)
@@ -424,7 +506,13 @@ internal sealed class PartiesMcpTools(
     }
 
     private PartiesMcpToolResult? ValidateContextAndPartyId(string toolName, string partyId)
-        => ValidateContext(toolName) ?? (string.IsNullOrWhiteSpace(partyId) ? ValidationFailed(toolName, "partyId") : null);
+        => ValidateContext(toolName) ?? (!IsSafePartyId(partyId) ? ValidationFailed(toolName, "partyId") : null);
+
+    private static bool IsSafePartyId(string? partyId)
+        => !string.IsNullOrWhiteSpace(partyId)
+            && partyId.Length <= 128
+            && partyId.AsSpan().Trim().Length == partyId.Length
+            && partyId.All(static ch => char.IsLetterOrDigit(ch) || ch is '-' or '_' or '.' or ':');
 
     private PartiesMcpToolResult? ValidateContext(string toolName)
         => contextAccessor.Current is null
@@ -441,6 +529,27 @@ internal sealed class PartiesMcpTools(
             "validation_failed",
             "parties-mcp-validation-failed",
             $"The {field} argument is missing or invalid.");
+
+    private static bool ExceedsToolPayloadLimit(params string?[] values)
+    {
+        int total = 0;
+        foreach (string? value in values.Where(static value => !string.IsNullOrWhiteSpace(value)))
+        {
+            string trimmed = value!.Trim();
+            if (trimmed.Length > MaxToolFieldCharacters)
+            {
+                return true;
+            }
+
+            total += trimmed.Length;
+            if (total > MaxToolInputCharacters)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
 
     private static PartiesMcpToolResult MapClientException(string toolName, PartiesClientException ex)
     {
@@ -832,6 +941,36 @@ internal sealed class PartiesMcpTools(
             out DateTimeOffset parsed)
             ? parsed
             : throw new FormatException("Date of birth must be a valid ISO 8601 date or date-time.");
+    }
+
+    private static bool TryParseOptionalDate(string? value, out DateTimeOffset? result)
+    {
+        result = null;
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return true;
+        }
+
+        string[] supportedFormats =
+        [
+            "yyyy-MM-dd",
+            "yyyy-MM-ddTHH:mm:ssK",
+            "yyyy-MM-ddTHH:mm:ss.FFFFFFFK",
+            "O",
+        ];
+
+        if (DateTimeOffset.TryParseExact(
+            value.Trim(),
+            supportedFormats,
+            CultureInfo.InvariantCulture,
+            DateTimeStyles.AllowWhiteSpaces | DateTimeStyles.AssumeUniversal,
+            out DateTimeOffset parsed))
+        {
+            result = parsed;
+            return true;
+        }
+
+        return false;
     }
 
     private static string NewId()

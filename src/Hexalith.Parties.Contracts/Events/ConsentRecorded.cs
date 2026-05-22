@@ -20,4 +20,6 @@ public sealed record ConsentRecorded : IEventPayload
     public required DateTimeOffset GrantedAt { get; init; }
 
     public required string GrantedBy { get; init; }
+
+    public string Source { get; init; } = "unspecified";
 }

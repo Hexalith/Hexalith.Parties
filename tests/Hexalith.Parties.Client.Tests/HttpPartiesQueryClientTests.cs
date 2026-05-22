@@ -58,6 +58,36 @@ public sealed class HttpPartiesQueryClientTests
     }
 
     [Fact]
+    public async Task GetPartyAsync_DeserializesProjectionFreshnessMetadataFromEventStorePayloadAsync()
+    {
+        var expectedDetail = new PartyDetail
+        {
+            Id = "p-stale",
+            Type = PartyType.Person,
+            IsActive = true,
+            DisplayName = "Stale Person",
+            SortName = "Person, Stale",
+            CreatedAt = DateTimeOffset.UtcNow,
+            LastModifiedAt = DateTimeOffset.UtcNow,
+            Freshness = new ProjectionFreshnessMetadata
+            {
+                Status = ProjectionFreshnessStatus.Stale,
+                WarningCodes = ["projection-state-store-unavailable"],
+            },
+        };
+
+        (HttpPartiesQueryClient client, _) = CreateClient(
+            HttpStatusCode.OK,
+            QueryResponse(expectedDetail));
+
+        PartyDetail result = await client.GetPartyAsync("p-stale", CancellationToken.None);
+
+        result.Freshness.ShouldNotBeNull();
+        result.Freshness.Status.ShouldBe(ProjectionFreshnessStatus.Stale);
+        result.Freshness.WarningCodes.ShouldBe(["projection-state-store-unavailable"]);
+    }
+
+    [Fact]
     public async Task ListPartiesAsync_SubmitsEventStoreQueryWithTypedPayloadAsync()
     {
         var expectedResult = new PagedResult<PartyIndexEntry>
@@ -101,8 +131,8 @@ public sealed class HttpPartiesQueryClientTests
         using JsonDocument body = JsonDocument.Parse(handler.LastRequestBody!);
         JsonElement root = body.RootElement;
         root.GetProperty("queryType").GetString().ShouldBe("PartyIndex");
-        root.TryGetProperty("projectionType", out _).ShouldBeFalse();
-        root.TryGetProperty("projectionActorType", out _).ShouldBeFalse();
+        root.GetProperty("projectionType").GetString().ShouldBe("party-index");
+        root.GetProperty("projectionActorType").GetString().ShouldBe("PartyIndexProjectionQueryActor");
 
         JsonElement payload = root.GetProperty("payload");
         payload.GetProperty("page").GetInt32().ShouldBe(1);
@@ -111,6 +141,67 @@ public sealed class HttpPartiesQueryClientTests
         payload.GetProperty("active").GetBoolean().ShouldBeTrue();
         payload.GetProperty("createdAfter").GetString().ShouldBe("2026-03-01T10:11:12.0000000+00:00");
         payload.GetProperty("modifiedBefore").GetString().ShouldBe("2026-03-06T08:09:10.0000000+01:00");
+    }
+
+    [Fact]
+    public async Task ListPartiesAsync_DeserializesProjectionFreshnessMetadataFromEventStorePayloadAsync()
+    {
+        var expectedResult = new PagedResult<PartyIndexEntry>
+        {
+            Items = [],
+            Page = 1,
+            PageSize = 20,
+            TotalCount = 0,
+            TotalPages = 1,
+            Freshness = new ProjectionFreshnessMetadata
+            {
+                Status = ProjectionFreshnessStatus.Stale,
+                WarningCodes = ["projection-state-store-unavailable"],
+            },
+        };
+
+        (HttpPartiesQueryClient client, _) = CreateClient(
+            HttpStatusCode.OK,
+            QueryResponse(expectedResult));
+
+        PagedResult<PartyIndexEntry> result = await client.ListPartiesAsync(
+            1,
+            20,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            CancellationToken.None);
+
+        result.Freshness.ShouldNotBeNull();
+        result.Freshness.Status.ShouldBe(ProjectionFreshnessStatus.Stale);
+        result.Freshness.WarningCodes.ShouldBe(["projection-state-store-unavailable"]);
+    }
+
+    [Fact]
+    public async Task SearchPartiesAsync_DeserializesCurrentFreshnessWithoutWarningsAsync()
+    {
+        var expectedResult = new PagedResult<PartySearchResult>
+        {
+            Items = [],
+            Page = 1,
+            PageSize = 20,
+            TotalCount = 0,
+            TotalPages = 1,
+            Freshness = new ProjectionFreshnessMetadata { Status = ProjectionFreshnessStatus.Current },
+        };
+
+        (HttpPartiesQueryClient client, _) = CreateClient(
+            HttpStatusCode.OK,
+            QueryResponse(expectedResult));
+
+        PagedResult<PartySearchResult> result = await client.SearchPartiesAsync("none", 1, 20, CancellationToken.None);
+
+        result.Freshness.ShouldNotBeNull();
+        result.Freshness.Status.ShouldBe(ProjectionFreshnessStatus.Current);
+        result.Freshness.WarningCodes.ShouldBeEmpty();
     }
 
     [Fact]
@@ -136,6 +227,18 @@ public sealed class HttpPartiesQueryClientTests
         payload.TryGetProperty("type", out _).ShouldBeFalse();
         payload.TryGetProperty("active", out _).ShouldBeFalse();
         payload.TryGetProperty("createdAfter", out _).ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task ListPartiesAsync_WhenCancelled_PropagatesCancellationAsync()
+    {
+        var httpClient = new HttpClient(new CancellationHandler()) { BaseAddress = new Uri("https://localhost") };
+        var client = new HttpPartiesQueryClient(httpClient, Options.Create(ClientOptions()));
+        using var cts = new CancellationTokenSource();
+        await cts.CancelAsync();
+
+        await Should.ThrowAsync<OperationCanceledException>(
+            () => client.ListPartiesAsync(1, 20, null, null, null, null, null, null, cts.Token));
     }
 
     [Fact]
@@ -181,7 +284,7 @@ public sealed class HttpPartiesQueryClientTests
             1,
             20,
             CancellationToken.None,
-            mode: "Hybrid",
+            mode: "Lexical",
             caseId: "case-42",
             requestCustomizer: (request, _) =>
             {
@@ -199,15 +302,56 @@ public sealed class HttpPartiesQueryClientTests
         using JsonDocument body = JsonDocument.Parse(handler.LastRequestBody!);
         JsonElement root = body.RootElement;
         root.GetProperty("queryType").GetString().ShouldBe("PartySearch");
-        root.TryGetProperty("projectionType", out _).ShouldBeFalse();
+        root.GetProperty("projectionType").GetString().ShouldBe("party-index");
+        root.GetProperty("projectionActorType").GetString().ShouldBe("PartyIndexProjectionQueryActor");
+        root.GetProperty("entityId").GetString().ShouldBe("parties");
         JsonElement payload = root.GetProperty("payload");
         payload.GetProperty("query").GetString().ShouldBe("acme");
         payload.GetProperty("page").GetInt32().ShouldBe(1);
         payload.GetProperty("pageSize").GetInt32().ShouldBe(20);
-        payload.GetProperty("mode").GetString().ShouldBe("Hybrid");
+        payload.GetProperty("mode").GetString().ShouldBe("Lexical");
         payload.GetProperty("caseId").GetString().ShouldBe("case-42");
         handler.LastRequest!.Headers.Authorization!.Scheme.ShouldBe("Bearer");
         handler.LastRequest.Headers.Authorization.Parameter.ShouldBe("host-token");
+    }
+
+    [Fact]
+    public async Task SearchPartiesAsync_OmitsNullOptionalPayloadParametersAsync()
+    {
+        var emptyResult = new PagedResult<PartySearchResult>
+        {
+            Items = [],
+            Page = 1,
+            PageSize = 10,
+            TotalCount = 0,
+            TotalPages = 1,
+        };
+
+        (HttpPartiesQueryClient client, HttpPartiesCommandClientTests.MockHandler handler) = CreateClient(
+            HttpStatusCode.OK,
+            QueryResponse(emptyResult));
+
+        await client.SearchPartiesAsync("acme", 1, 10, CancellationToken.None);
+
+        using JsonDocument body = JsonDocument.Parse(handler.LastRequestBody!);
+        JsonElement payload = body.RootElement.GetProperty("payload");
+        payload.GetProperty("query").GetString().ShouldBe("acme");
+        payload.GetProperty("page").GetInt32().ShouldBe(1);
+        payload.GetProperty("pageSize").GetInt32().ShouldBe(10);
+        payload.TryGetProperty("mode", out _).ShouldBeFalse();
+        payload.TryGetProperty("caseId", out _).ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task SearchPartiesAsync_WhenCancelled_PropagatesCancellationAsync()
+    {
+        var httpClient = new HttpClient(new CancellationHandler()) { BaseAddress = new Uri("https://localhost") };
+        var client = new HttpPartiesQueryClient(httpClient, Options.Create(ClientOptions()));
+        using var cts = new CancellationTokenSource();
+        await cts.CancelAsync();
+
+        await Should.ThrowAsync<OperationCanceledException>(
+            () => client.SearchPartiesAsync("acme", 1, 20, cts.Token));
     }
 
     [Fact]
@@ -309,6 +453,85 @@ public sealed class HttpPartiesQueryClientTests
 
         await Should.ThrowAsync<OperationCanceledException>(
             () => client.GetPartyAsync("p-cancel", cts.Token));
+    }
+
+    [Fact]
+    public async Task GetPartyAsync_WhenTenantIsMissing_DoesNotSendRequestAsync()
+    {
+        var handler = new HttpPartiesCommandClientTests.CountingHandler();
+        var httpClient = new HttpClient(handler) { BaseAddress = new Uri("https://localhost") };
+        var client = new HttpPartiesQueryClient(
+            httpClient,
+            Options.Create(new PartiesClientOptions { BaseUrl = "https://localhost", Tenant = " " }));
+
+        InvalidOperationException exception = await Should.ThrowAsync<InvalidOperationException>(
+            () => client.GetPartyAsync("p-no-tenant", CancellationToken.None));
+
+        exception.Message.ShouldBe("Parties:Tenant configuration is required.");
+        handler.SendCount.ShouldBe(0);
+    }
+
+    [Fact]
+    public async Task GetPartyAsync_WhenTokenIsPreCanceled_DoesNotSendRequestAsync()
+    {
+        var handler = new HttpPartiesCommandClientTests.CountingHandler();
+        var httpClient = new HttpClient(handler) { BaseAddress = new Uri("https://localhost") };
+        var client = new HttpPartiesQueryClient(httpClient, Options.Create(ClientOptions()));
+        using var cts = new CancellationTokenSource();
+        await cts.CancelAsync();
+
+        await Should.ThrowAsync<OperationCanceledException>(
+            () => client.GetPartyAsync("p-cancel", cts.Token));
+
+        handler.SendCount.ShouldBe(0);
+    }
+
+    [Fact]
+    public async Task ListPartiesAsync_WhenTokenIsPreCanceled_DoesNotSendRequestAsync()
+    {
+        var handler = new HttpPartiesCommandClientTests.CountingHandler();
+        var httpClient = new HttpClient(handler) { BaseAddress = new Uri("https://localhost") };
+        var client = new HttpPartiesQueryClient(httpClient, Options.Create(ClientOptions()));
+        using var cts = new CancellationTokenSource();
+        await cts.CancelAsync();
+
+        await Should.ThrowAsync<OperationCanceledException>(
+            () => client.ListPartiesAsync(1, 20, null, null, null, null, null, null, cts.Token));
+
+        handler.SendCount.ShouldBe(0);
+    }
+
+    [Fact]
+    public async Task SearchPartiesAsync_WhenTokenIsPreCanceled_DoesNotSendRequestAsync()
+    {
+        var handler = new HttpPartiesCommandClientTests.CountingHandler();
+        var httpClient = new HttpClient(handler) { BaseAddress = new Uri("https://localhost") };
+        var client = new HttpPartiesQueryClient(httpClient, Options.Create(ClientOptions()));
+        using var cts = new CancellationTokenSource();
+        await cts.CancelAsync();
+
+        await Should.ThrowAsync<OperationCanceledException>(
+            () => client.SearchPartiesAsync("acme", 1, 20, cts.Token));
+
+        handler.SendCount.ShouldBe(0);
+    }
+
+    [Fact]
+    public async Task PostQuery_WhenCorrelationIdIsNotAString_DoesNotThrowInvalidOperationAsync()
+    {
+        // Defends against JsonElement.GetString() InvalidOperationException for non-string
+        // correlationId values; caller must still surface a typed PartiesClientException.
+        string responseBody = "{\"correlationId\": 42}";
+        (HttpPartiesQueryClient client, _) = CreateClient(
+            HttpStatusCode.OK,
+            responseBody,
+            "application/json");
+
+        PartiesClientException exception = await Should.ThrowAsync<PartiesClientException>(
+            () => client.GetPartyAsync("p-bad-corr", CancellationToken.None));
+
+        exception.Status.ShouldBe(200);
+        exception.CorrelationId.ShouldBeNull();
     }
 
     private static (HttpPartiesQueryClient Client, HttpPartiesCommandClientTests.MockHandler Handler) CreateClient(

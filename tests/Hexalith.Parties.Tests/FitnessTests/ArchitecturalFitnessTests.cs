@@ -3,6 +3,7 @@ using System.Text.RegularExpressions;
 using System.Xml.Linq;
 
 using Hexalith.EventStore.Contracts.Events;
+using Hexalith.Parties.Compliance;
 using Hexalith.Parties.Projections.Handlers;
 
 using Microsoft.AspNetCore.Mvc;
@@ -97,7 +98,7 @@ public sealed class ArchitecturalFitnessTests
 
         List<string> violations = [.. forbiddenFragments.Where(fragment => source.Contains(fragment, StringComparison.Ordinal))];
         violations.ShouldBeEmpty(
-            "Program.cs must not expose REST, MCP, OpenAPI, GDPR-header middleware, or public minimal API mappings: "
+            "Program.cs must not expose REST, MCP, OpenAPI, retired GDPR-header middleware, or public minimal API mappings: "
             + string.Join(", ", violations));
 
         source.ShouldContain("app.MapActorsHandlers()");
@@ -119,6 +120,26 @@ public sealed class ArchitecturalFitnessTests
         source.ShouldContain(
             "only eventstore -> POST /process",
             customMessage: "The retained /process endpoint must be documented as DAPR service-invocation plumbing restricted by accesscontrol.parties.yaml.");
+    }
+
+    [Fact]
+    public void Program_LogsAndEmitsMvpComplianceWarningUntilActivationSwitch()
+    {
+        string program = ReadRepoFile("src", "Hexalith.Parties", "Program.cs");
+        string middleware = ReadRepoFile("src", "Hexalith.Parties", "Middleware", "MvpComplianceWarningMiddleware.cs");
+        string warning = ReadRepoFile("src", "Hexalith.Parties", "Compliance", "MvpComplianceWarning.cs");
+
+        program.ShouldContain("LogWarning");
+        program.ShouldContain(nameof(MvpComplianceWarning));
+        program.ShouldContain("UseMiddleware<MvpComplianceWarningMiddleware>");
+        middleware.ShouldContain(nameof(MvpComplianceWarning.HeaderName));
+        middleware.ShouldContain(nameof(MvpComplianceWarning.Message));
+        middleware.ShouldContain(nameof(MvpComplianceWarning.ActivationConfigurationKey));
+        warning.ShouldContain(MvpComplianceWarning.HeaderName);
+        warning.ShouldContain(MvpComplianceWarning.ActivationConfigurationKey);
+        warning.ShouldContain("not for regulated EU personal data");
+        warning.ShouldContain("v1.1 GDPR features");
+        warning.ShouldNotContain("X-GDPR-Warning");
     }
 
     [Fact]
@@ -507,6 +528,79 @@ public sealed class ArchitecturalFitnessTests
         violations.ShouldBeEmpty(
             $"Contracts project should only depend on netstandard, System.*, and Hexalith.EventStore.Contracts. "
             + $"Found: {string.Join(", ", violations)}");
+    }
+
+    [Fact]
+    public void ContractsAndPartiesDoNotGainDeferredSearchRuntimeDependencies()
+    {
+        (string ProjectPath, string[] ForbiddenReferences)[] projects =
+        [
+            (RepoPath("src", "Hexalith.Parties.Contracts", "Hexalith.Parties.Contracts.csproj"),
+            [
+                "Dapr",
+                "MediatR",
+                "FluentValidation",
+                "Aspire",
+                "ModelContextProtocol",
+                "Microsoft.AspNetCore.OpenApi",
+                "Swashbuckle",
+                "Hexalith.Memories",
+                "Qdrant",
+                "Pinecone",
+                "Weaviate",
+                "Elasticsearch",
+                "OpenSearch",
+                "Microsoft.SemanticKernel",
+            ]),
+            (RepoPath("src", "Hexalith.Parties", "Hexalith.Parties.csproj"),
+            [
+                "Qdrant",
+                "Pinecone",
+                "Weaviate",
+                "Elasticsearch",
+                "OpenSearch",
+                "Microsoft.SemanticKernel",
+                "Microsoft.AspNetCore.OpenApi",
+                "Swashbuckle",
+                "ModelContextProtocol.AspNetCore",
+            ]),
+        ];
+
+        List<string> violations = [];
+        foreach ((string projectPath, string[] forbiddenReferences) in projects)
+        {
+            XDocument project = XDocument.Load(projectPath);
+            string[] references =
+            [
+                .. project.Descendants()
+                    .Where(e => e.Name.LocalName is "ProjectReference" or "PackageReference")
+                    .Select(e => e.Attribute("Include")?.Value)
+                    .Where(value => !string.IsNullOrWhiteSpace(value))
+                    .Select(value => value!),
+            ];
+
+            foreach (string forbidden in forbiddenReferences)
+            {
+                if (references.Any(reference => reference.Contains(forbidden, StringComparison.OrdinalIgnoreCase)))
+                {
+                    violations.Add($"{Path.GetRelativePath(RepositoryRoot.Locate(), projectPath)} references {forbidden}");
+                }
+            }
+        }
+
+        violations.ShouldBeEmpty(
+            "Story 2.9 keeps semantic, graph, vector, temporal, REST/OpenAPI, and MCP runtime dependencies out of MVP packages.\n"
+            + string.Join("\n", violations));
+    }
+
+    [Fact]
+    public void MvpPartySearchPathDoesNotRegisterSemanticProvider()
+    {
+        string registrations = ReadRepoFile("src", "Hexalith.Parties", "Extensions", "PartiesServiceCollectionExtensions.cs");
+        string queryActor = ReadRepoFile("src", "Hexalith.Parties", "Queries", "PartyIndexProjectionQueryActor.cs");
+
+        StripCommentsAndStringLiterals(registrations).ShouldNotContain("SemanticPartySearchProvider");
+        StripCommentsAndStringLiterals(queryActor).ShouldNotContain("SemanticPartySearchProvider");
     }
 
     [Fact]

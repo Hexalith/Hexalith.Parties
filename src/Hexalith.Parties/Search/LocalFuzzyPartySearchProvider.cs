@@ -8,25 +8,13 @@ using Hexalith.Parties.Contracts.ValueObjects;
 namespace Hexalith.Parties.Search;
 
 /// <summary>
-/// Local fallback search provider with fuzzy matching, diacritic normalization,
-/// type-text mapping, and multi-field relevance scoring.
+/// Local fallback search provider for MVP display-name search.
 /// </summary>
 internal sealed class LocalFuzzyPartySearchProvider : IPartySearchProvider
 {
-    private static readonly Dictionary<string, PartyType> s_typeAliases = new(StringComparer.OrdinalIgnoreCase)
-    {
-        ["person"] = PartyType.Person,
-        ["individual"] = PartyType.Person,
-        ["people"] = PartyType.Person,
-        ["company"] = PartyType.Organization,
-        ["corporation"] = PartyType.Organization,
-        ["organization"] = PartyType.Organization,
-        ["organisation"] = PartyType.Organization,
-        ["org"] = PartyType.Organization,
-        ["enterprise"] = PartyType.Organization,
-        ["firm"] = PartyType.Organization,
-        ["business"] = PartyType.Organization,
-    };
+    // P1: Upper-bound clamp matches PartySearchResultsBuilder.BuildPagedList policy.
+    // Defense-in-depth against payload-size DoS — Take(int.MaxValue) over large tenants can OOM.
+    internal const int MaxPageSize = 100;
 
     public PagedResult<PartySearchResult> Search(
         IEnumerable<PartyIndexEntry> entries,
@@ -53,11 +41,12 @@ internal sealed class LocalFuzzyPartySearchProvider : IPartySearchProvider
 
         if (string.IsNullOrWhiteSpace(query))
         {
+            // P15: Echo normalized values so paging math stays consistent across all paths.
             return new PagedResult<PartySearchResult>
             {
                 Items = [],
-                Page = page,
-                PageSize = pageSize,
+                Page = Math.Max(1, page),
+                PageSize = Math.Clamp(pageSize, 1, MaxPageSize),
                 TotalCount = 0,
                 TotalPages = 1,
             };
@@ -95,16 +84,16 @@ internal sealed class LocalFuzzyPartySearchProvider : IPartySearchProvider
                 return byScore;
             }
 
-            int bySortName = string.Compare(
-                GetSortableName(left.Party),
-                GetSortableName(right.Party),
+            int byDisplayName = string.Compare(
+                NormalizeDiacritics(left.Party.DisplayName),
+                NormalizeDiacritics(right.Party.DisplayName),
                 StringComparison.OrdinalIgnoreCase);
-            if (bySortName != 0)
+            if (byDisplayName != 0)
             {
-                return bySortName;
+                return byDisplayName;
             }
 
-            return string.Compare(left.Party.DisplayName, right.Party.DisplayName, StringComparison.OrdinalIgnoreCase);
+            return string.Compare(left.Party.Id, right.Party.Id, StringComparison.Ordinal);
         });
 
         return CreatePagedResult(results, page, pageSize);
@@ -240,9 +229,6 @@ internal sealed class LocalFuzzyPartySearchProvider : IPartySearchProvider
         return filtered;
     }
 
-    private static string GetSortableName(PartyIndexEntry entry)
-        => string.IsNullOrWhiteSpace(entry.SortName) ? entry.DisplayName : entry.SortName;
-
     private static double ComputeRelevanceScore(
         List<(string Field, double FieldWeight, double MatchScore)> fieldScores,
         int matchedTokenCount,
@@ -263,21 +249,31 @@ internal sealed class LocalFuzzyPartySearchProvider : IPartySearchProvider
 
     private static PagedResult<PartySearchResult> CreatePagedResult(IReadOnlyList<PartySearchResult> items, int page, int pageSize)
     {
+        // P1: Clamp pageSize to [1, MaxPageSize]. Take(int.MaxValue) over a populated list
+        // would force the LINQ pipeline to materialize the entire result set into a single
+        // List<T>, risking OOM on large tenants.
+        int safePageSize = Math.Clamp(pageSize, 1, MaxPageSize);
+        // P15: Math.Max(1, page) ensures the response's Page index is always valid even if
+        // the caller passed 0 or negative. Upper bound (Page > TotalPages) is left as-is so
+        // clients see exactly which out-of-range page they requested.
+        int safePage = Math.Max(1, page);
         int totalCount = items.Count;
-        int totalPages = totalCount == 0 ? 1 : (int)Math.Ceiling((double)totalCount / pageSize);
+        int totalPages = totalCount == 0 ? 1 : (int)Math.Ceiling((double)totalCount / safePageSize);
         // Use long arithmetic and clamp to int.MaxValue so a malicious or buggy caller
         // passing Page=int.MaxValue cannot overflow `(page-1)*pageSize` to a negative value
         // (Enumerable.Skip with negative returns the full sequence, producing the wrong page
         // with the advertised page index).
-        long skipLong = (long)Math.Max(0, page - 1) * Math.Max(0, pageSize);
+        long skipLong = (long)(safePage - 1) * safePageSize;
         int skip = skipLong > int.MaxValue ? int.MaxValue : (int)skipLong;
-        List<PartySearchResult> pagedItems = [.. items.Skip(skip).Take(pageSize)];
+        List<PartySearchResult> pagedItems = [.. items.Skip(skip).Take(safePageSize)];
 
         return new PagedResult<PartySearchResult>
         {
             Items = pagedItems,
-            Page = page,
-            PageSize = pageSize,
+            // P15: Echo the safe values so `TotalPages = ceil(TotalCount / PageSize)` is consistent
+            // with the data the client receives.
+            Page = safePage,
+            PageSize = safePageSize,
             TotalCount = totalCount,
             TotalPages = totalPages,
         };
@@ -296,42 +292,9 @@ internal sealed class LocalFuzzyPartySearchProvider : IPartySearchProvider
 
         foreach (string token in candidates)
         {
-            // Match against DisplayName
             if (TryMatch(normalizedDisplayName, token, out double matchScore, out string matchType))
             {
                 UpsertFieldMatch(fieldMatches, "displayName", 1.0, matchScore, matchType);
-                _ = matchedTokens.Add(token);
-            }
-
-            // Match against ALL contact channels (not just Email)
-            // Structured fields use exact/prefix/contains only (no fuzzy — prevents false positives on email domains)
-            foreach (ContactChannel channel in entry.SearchableContactChannels)
-            {
-                string normalizedValue = NormalizeDiacritics(channel.Value);
-                if (TryMatchExact(normalizedValue, token, out double channelScore, out string channelMatchType))
-                {
-                    string fieldName = channel.Type == ContactChannelType.Email ? "email" : "contactChannel";
-                    double fieldWeight = channel.Type == ContactChannelType.Email ? 0.9 : 0.7;
-                    UpsertFieldMatch(fieldMatches, fieldName, fieldWeight, channelScore, channelMatchType);
-                    _ = matchedTokens.Add(token);
-                }
-            }
-
-            // Match against identifiers (exact/prefix/contains only — structured data)
-            foreach (PartyIdentifier identifier in entry.SearchableIdentifiers)
-            {
-                string normalizedValue = NormalizeDiacritics(identifier.Value);
-                if (TryMatchExact(normalizedValue, token, out double idScore, out string idMatchType))
-                {
-                    UpsertFieldMatch(fieldMatches, "identifier", 0.8, idScore, idMatchType);
-                    _ = matchedTokens.Add(token);
-                }
-            }
-
-            // Type-text matching (scoring boost, NOT a filter)
-            if (s_typeAliases.TryGetValue(token, out PartyType mappedType) && entry.Type == mappedType)
-            {
-                UpsertFieldMatch(fieldMatches, "type", 0.5, 1.0, "exact");
                 _ = matchedTokens.Add(token);
             }
         }
@@ -363,40 +326,6 @@ internal sealed class LocalFuzzyPartySearchProvider : IPartySearchProvider
             Matches = metadata,
             RelevanceScore = relevance,
         };
-    }
-
-    private static bool TryMatchExact(string candidate, string token, out double score, out string matchType)
-    {
-        score = 0.0;
-        matchType = string.Empty;
-
-        if (string.IsNullOrWhiteSpace(candidate) || string.IsNullOrWhiteSpace(token))
-        {
-            return false;
-        }
-
-        if (string.Equals(candidate, token, StringComparison.OrdinalIgnoreCase))
-        {
-            score = 1.0;
-            matchType = "exact";
-            return true;
-        }
-
-        if (candidate.StartsWith(token, StringComparison.OrdinalIgnoreCase))
-        {
-            score = 0.8;
-            matchType = "prefix";
-            return true;
-        }
-
-        if (candidate.Contains(token, StringComparison.OrdinalIgnoreCase))
-        {
-            score = 0.6;
-            matchType = "contains";
-            return true;
-        }
-
-        return false;
     }
 
     private static bool TryMatch(string candidate, string token, out double score, out string matchType)

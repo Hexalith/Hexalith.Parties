@@ -5,6 +5,9 @@ namespace Hexalith.Parties.Search;
 
 internal sealed class LocalPartySearchService(IPartySearchProvider localSearchProvider) : IPartySearchService
 {
+    internal const string UnsupportedCapabilityReason =
+        "The requested party search capability is reserved for future compatibility and is not available in MVP.";
+
     // P41: The previously-declared `LocalFallbackReason` constant was dead code; AC4 was
     // reconciled in the third-pass review (spec line 532) to NOT populate `DegradedReason`
     // when the response is `Status=LocalOnly` (Memories integration disabled, not a runtime
@@ -19,6 +22,12 @@ internal sealed class LocalPartySearchService(IPartySearchProvider localSearchPr
         ArgumentNullException.ThrowIfNull(entries);
 
         cancellationToken.ThrowIfCancellationRequested();
+
+        if (request.Mode != PartySearchMode.Lexical)
+        {
+            return Task.FromResult(UnsupportedCapability(request));
+        }
+
         request = NormalizeRequest(request);
 
         // Materialize once at the boundary so the filter chain below does not re-enumerate a
@@ -123,6 +132,25 @@ internal sealed class LocalPartySearchService(IPartySearchProvider localSearchPr
             DegradedReason: null,
             scores,
             sources));
+    }
+
+    private static PartySearchResponse UnsupportedCapability(PartySearchRequest request)
+    {
+        int page = Math.Max(1, request.Page);
+        int pageSize = Math.Clamp(request.PageSize, 1, 100);
+        return new PartySearchResponse(
+            new PagedResult<PartySearchResult>
+            {
+                Items = [],
+                Page = page,
+                PageSize = pageSize,
+                TotalCount = 0,
+                TotalPages = 1,
+            },
+            PartySearchExecutionStatus.Unsupported,
+            UnsupportedCapabilityReason,
+            ScoreMetadata: [],
+            SourceMetadata: []);
     }
 
     private static PartySearchRequest NormalizeRequest(PartySearchRequest request)

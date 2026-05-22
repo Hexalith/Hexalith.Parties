@@ -5,4 +5,6 @@ public enum ErasureStoreCleanupStatus
     Cleaned,
     Failed,
     Skipped,
+    Pending,
+    NotApplicable,
 }

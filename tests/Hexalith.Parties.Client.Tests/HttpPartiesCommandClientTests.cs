@@ -280,6 +280,24 @@ public sealed class HttpPartiesCommandClientTests
     }
 
     [Fact]
+    public async Task PostCommand_OnProblemDetailsWithNonStringFields_DoesNotThrowInvalidOperationAsync()
+    {
+        // Defends against JsonElement.GetString() InvalidOperationException when problem-detail
+        // fields arrive with unexpected JSON types; surfaces a typed PartiesClientException.
+        string problemJson = "{\"status\": 503, \"title\": 1, \"type\": false, \"detail\": null, \"correlationId\": 99}";
+        var handler = new MockHandler(HttpStatusCode.ServiceUnavailable, problemJson, "application/problem+json");
+        var httpClient = new HttpClient(handler) { BaseAddress = new Uri("https://localhost") };
+        var client = new HttpPartiesCommandClient(httpClient, Options.Create(ClientOptions()));
+
+        PartiesClientException exception = await Should.ThrowAsync<PartiesClientException>(
+            () => client.DeactivatePartyAsync("p-bad-fields", CancellationToken.None));
+
+        exception.Status.ShouldBe(503);
+        exception.Title.ShouldNotBeNull();
+        exception.CorrelationId.ShouldBeNull();
+    }
+
+    [Fact]
     public async Task PostCommand_OnMalformedAcceptedResponse_ThrowsPartiesClientExceptionAsync()
     {
         var handler = new MockHandler(
@@ -306,6 +324,37 @@ public sealed class HttpPartiesCommandClientTests
 
         await Should.ThrowAsync<OperationCanceledException>(
             () => client.DeactivatePartyAsync("p-cancel", cts.Token));
+    }
+
+    [Fact]
+    public async Task DeactivatePartyAsync_WhenTenantIsMissing_DoesNotSendRequestAsync()
+    {
+        var handler = new CountingHandler();
+        var httpClient = new HttpClient(handler) { BaseAddress = new Uri("https://localhost") };
+        var client = new HttpPartiesCommandClient(
+            httpClient,
+            Options.Create(new PartiesClientOptions { BaseUrl = "https://localhost", Tenant = " " }));
+
+        InvalidOperationException exception = await Should.ThrowAsync<InvalidOperationException>(
+            () => client.DeactivatePartyAsync("p-no-tenant", CancellationToken.None));
+
+        exception.Message.ShouldBe("Parties:Tenant configuration is required.");
+        handler.SendCount.ShouldBe(0);
+    }
+
+    [Fact]
+    public async Task DeactivatePartyAsync_WhenTokenIsPreCanceled_DoesNotSendRequestAsync()
+    {
+        var handler = new CountingHandler();
+        var httpClient = new HttpClient(handler) { BaseAddress = new Uri("https://localhost") };
+        var client = new HttpPartiesCommandClient(httpClient, Options.Create(ClientOptions()));
+        using var cts = new CancellationTokenSource();
+        await cts.CancelAsync();
+
+        await Should.ThrowAsync<OperationCanceledException>(
+            () => client.DeactivatePartyAsync("p-cancel", cts.Token));
+
+        handler.SendCount.ShouldBe(0);
     }
 
     private static async Task InvokeRouteMethodAsync(HttpPartiesCommandClient client, string methodName)
@@ -428,6 +477,20 @@ public sealed class HttpPartiesCommandClientTests
         {
             cancellationToken.ThrowIfCancellationRequested();
             return Task.FromResult(new HttpResponseMessage(HttpStatusCode.Accepted));
+        }
+    }
+
+    internal sealed class CountingHandler : HttpMessageHandler
+    {
+        public int SendCount { get; private set; }
+
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            SendCount++;
+            return Task.FromResult(new HttpResponseMessage(HttpStatusCode.Accepted)
+            {
+                Content = new StringContent(JsonSerializer.Serialize(new { correlationId = "corr-count" }), Encoding.UTF8, "application/json"),
+            });
         }
     }
 }

@@ -225,6 +225,7 @@ public sealed class PartyState
             LawfulBasis = e.LawfulBasis,
             GrantedAt = e.GrantedAt,
             GrantedBy = e.GrantedBy,
+            Source = e.Source,
         });
     }
 
@@ -238,6 +239,8 @@ public sealed class PartyState
             {
                 RevokedAt = e.RevokedAt,
                 RevokedBy = e.RevokedBy,
+                RevocationReason = e.Reason,
+                RevocationSource = e.Source,
             };
         }
     }

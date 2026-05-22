@@ -20,7 +20,7 @@
         {
             <p>@Labels.GdprErasureWarning</p>
             <FluentButton Appearance="ButtonAppearance.Primary"
-                          Disabled="@_isBusy"
+                          Disabled="@(!CanConfirmErasure)"
                           OnClick="ConfirmErasureAsync">
                 @Labels.GdprConfirmErasure
             </FluentButton>
@@ -39,10 +39,14 @@
             </FluentButton>
         }
         <FluentButton Appearance="ButtonAppearance.Outline"
-                      Disabled="@_isBusy"
-                      OnClick="RefreshErasureStatusAsync">
+                      Disabled="@(!CanRefreshErasureStatus)"
+                      OnClick="RefreshErasureStatusFromUiAsync">
             @Labels.GdprRefreshStatus
         </FluentButton>
+        @if (!string.IsNullOrWhiteSpace(ErasureDisabledReason))
+        {
+            <p role="status" aria-live="polite">@ErasureDisabledReason</p>
+        }
         @if (CanRetryVerification)
         {
             <FluentButton Appearance="ButtonAppearance.Outline"
@@ -78,6 +82,7 @@
                              ReasonChanged="value => _restrictionReason = value"
                              CanRestrict="@CanRestrict"
                              CanLift="@CanLiftRestriction"
+                             DisabledReason="@RestrictionDisabledReason"
                              Restrict="RestrictAsync"
                              Lift="LiftRestrictionAsync" />
 
@@ -92,7 +97,8 @@
                             LawfulBasisValueChanged="value => _lawfulBasisValue = value"
                             LawfulBasisOptions="@_lawfulBasisOptions"
                             CanAdd="@CanAddConsent"
-                            CanRevoke="@(!_isBusy)"
+                            CanRevoke="@CanRevokeConsent"
+                            DisabledReason="@ConsentDisabledReason"
                             Add="AddConsentAsync"
                             Revoke="RevokeConsentAsync" />
 
@@ -100,11 +106,14 @@
                             InstanceId="@_instanceId"
                             CanExport="@CanExport"
                             FileName="@_exportFileName"
+                            DisabledReason="@ExportDisabledReason"
                             Export="ExportAsync" />
 
     <ProcessingRecordsPanel Labels="Labels"
                             InstanceId="@_instanceId"
                             Records="@_processingRecords"
+                            CanRefresh="@CanLoadProcessingRecords"
+                            DisabledReason="@ProcessingRecordsDisabledReason"
                             Refresh="LoadProcessingRecordsAsync" />
 </section>
 
@@ -115,14 +124,18 @@
     private PartyErasureStatusRecord? _erasureStatus;
     private ErasureCertificate? _erasureCertificate;
     private string? _previousPartyId;
+    private string? _gdprCapabilityPartyId;
+    private string? _gdprCapabilityTenantSignature;
     private string? _correlationId;
     private string? _restrictionReason;
     private string? _consentChannelId;
     private string? _consentPurpose;
     private string _lawfulBasisValue = LawfulBasis.Consent.ToString();
     private string? _exportFileName;
+    private AdminPortalGdprCapability _gdprCapability = AdminPortalGdprCapability.Unavailable();
     private AdminPortalGdprOutcome? _lastOutcome;
     private AdminPortalGdprOutcome? _focusedOutcome;
+    private long _capabilityVersion;
     private bool _confirmErasure;
     private bool _isBusy;
     private CancellationTokenSource? _cts;
@@ -165,30 +178,67 @@
         => Party.IsErased || _erasureStatus?.Status is "ErasurePending" or "KeyDestroyed" or "VerificationInProgress" or "Verified";
 
     private bool CanRequestErasure
-        => !_isBusy && !Party.IsErased && !IsErasurePending;
+        => _gdprCapability.CanRequestErasure && !_isBusy && !Party.IsErased && !IsErasurePending;
+
+    private bool CanConfirmErasure
+        => _gdprCapability.CanRequestErasure && !_isBusy;
+
+    private bool CanRefreshErasureStatus
+        => _gdprCapability.CanReadErasureStatus && !_isBusy;
 
     private bool CanRestrict
-        => !_isBusy && !Party.IsRestricted && !Party.IsErased && !IsErasurePending;
+        => _gdprCapability.CanRestrictProcessing && !_isBusy && !Party.IsRestricted && !Party.IsErased && !IsErasurePending;
 
     private bool CanLiftRestriction
-        => !_isBusy && Party.IsRestricted && !Party.IsErased;
+        => _gdprCapability.CanLiftRestriction && !_isBusy && Party.IsRestricted && !Party.IsErased;
 
     private bool CanAddConsent
-        => !_isBusy
+        => _gdprCapability.CanManageConsent
+            && !_isBusy
             && !Party.IsErased
             && !IsErasurePending
             && !string.IsNullOrWhiteSpace(_consentChannelId)
             && !string.IsNullOrWhiteSpace(_consentPurpose);
 
+    private bool CanRevokeConsent
+        => _gdprCapability.CanManageConsent && !_isBusy;
+
     private bool CanExport
-        => !_isBusy && !Party.IsErased && !IsErasurePending;
+        => _gdprCapability.CanExportData && !_isBusy && !Party.IsErased && !IsErasurePending;
 
     private bool CanRetryVerification
-        => !_isBusy && _erasureStatus?.Status is "VerificationPartial" or "VerificationFailed" or "Partial" or "Failed";
+        => _gdprCapability.CanRetryVerification
+            && !_isBusy
+            && _erasureStatus?.Status is "VerificationPartial" or "VerificationFailed" or "Partial" or "Failed";
+
+    private bool CanLoadProcessingRecords
+        => _gdprCapability.CanReadProcessingRecords && !_isBusy;
+
+    private string? ErasureDisabledReason
+        => _gdprCapability.CanRequestErasure && _gdprCapability.CanReadErasureStatus && _gdprCapability.CanRetryVerification
+            ? null
+            : CapabilityReason;
+
+    private string? RestrictionDisabledReason
+        => _gdprCapability.CanRestrictProcessing && _gdprCapability.CanLiftRestriction ? null : CapabilityReason;
+
+    private string? ConsentDisabledReason
+        => _gdprCapability.CanManageConsent ? null : CapabilityReason;
+
+    private string? ExportDisabledReason
+        => _gdprCapability.CanExportData ? null : CapabilityReason;
+
+    private string? ProcessingRecordsDisabledReason
+        => _gdprCapability.CanReadProcessingRecords ? null : CapabilityReason;
+
+    private string CapabilityReason
+        => _gdprCapability.Reason == AdminPortalGdprCapability.ContractUnavailableReason
+            ? Labels.GdprOperationContractBlocked
+            : Labels.GdprOperationContractUnavailable;
 
     protected override void OnInitialized() => _cts = new CancellationTokenSource();
 
-    protected override void OnParametersSet()
+    protected override async Task OnParametersSetAsync()
     {
         if (!string.Equals(_previousPartyId, Party.Id, StringComparison.Ordinal))
         {
@@ -197,16 +247,15 @@
             CancelInFlight();
             _cts = new CancellationTokenSource();
             _previousPartyId = Party.Id;
-            _confirmErasure = false;
-            _correlationId = null;
-            _erasureStatus = null;
-            _erasureCertificate = null;
-            _processingRecords = [];
-            _exportFileName = null;
-            _lastOutcome = null;
-            _focusedOutcome = null;
+            ClearSensitiveOperationState();
+            _gdprCapability = AdminPortalGdprCapability.Unavailable();
+            _gdprCapabilityPartyId = null;
+            _gdprCapabilityTenantSignature = null;
+            _capabilityVersion++;
             GdprCoordinator.Track(TenantContextSignature, Party.Id);
         }
+
+        await RefreshGdprCapabilityAsync().ConfigureAwait(false);
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -227,6 +276,81 @@
                 // Element not yet rendered or detached; outcome status announcement still fires via aria-live.
             }
         }
+    }
+
+    private async Task RefreshGdprCapabilityAsync()
+    {
+        string partyId = Party.Id;
+        string? tenantSignature = TenantContextSignature;
+        if (string.Equals(_gdprCapabilityPartyId, partyId, StringComparison.Ordinal)
+            && string.Equals(_gdprCapabilityTenantSignature, tenantSignature, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        CancellationToken token = Token;
+        AdminPortalGdprCapability capability;
+        try
+        {
+            capability = await QueryService.ApiClient
+                .GetGdprCapabilityAsync(token)
+                .ConfigureAwait(false);
+        }
+        catch (OperationCanceledException) when (token.IsCancellationRequested)
+        {
+            return;
+        }
+        catch (Exception ex) when (ex is AdminPortalQueryException
+            or HttpRequestException
+            or TimeoutException
+            or System.Text.Json.JsonException
+            or NotSupportedException
+            or TaskCanceledException
+            or OperationCanceledException)
+        {
+            capability = AdminPortalGdprCapability.Degraded();
+        }
+
+        if (!IsCurrentCapabilityTarget(partyId, tenantSignature, token))
+        {
+            return;
+        }
+
+        ApplyCapability(capability ?? AdminPortalGdprCapability.Degraded());
+        _gdprCapabilityPartyId = partyId;
+        _gdprCapabilityTenantSignature = tenantSignature;
+    }
+
+    private void ApplyCapability(AdminPortalGdprCapability capability)
+    {
+        if (capability == _gdprCapability)
+        {
+            return;
+        }
+
+        bool wasSupported = _gdprCapability.HasAnySupport;
+        _gdprCapability = capability;
+        _capabilityVersion++;
+        if (wasSupported && !capability.HasAnySupport)
+        {
+            ClearSensitiveOperationState();
+        }
+    }
+
+    private void ClearSensitiveOperationState()
+    {
+        _confirmErasure = false;
+        _correlationId = null;
+        _restrictionReason = null;
+        _consentChannelId = null;
+        _consentPurpose = null;
+        _lawfulBasisValue = LawfulBasis.Consent.ToString();
+        _erasureStatus = null;
+        _erasureCertificate = null;
+        _processingRecords = [];
+        _exportFileName = null;
+        _lastOutcome = null;
+        _focusedOutcome = null;
     }
 
     public void Dispose()
@@ -252,6 +376,11 @@
 
     private void BeginErasureConfirmation()
     {
+        if (!CanRequestErasure)
+        {
+            return;
+        }
+
         _confirmErasure = true;
         _lastOutcome = null;
     }
@@ -260,36 +389,48 @@
 
     private async Task ConfirmErasureAsync()
     {
+        if (!CanConfirmErasure)
+        {
+            return;
+        }
+
         string partyId = Party.Id;
         string? tenantSignature = TenantContextSignature;
         CancellationToken token = Token;
+        long capabilityVersion = _capabilityVersion;
         await RunCommandAsync(async () =>
         {
             AdminPortalGdprCommandResult result = await QueryService.ApiClient
                 .RequestErasureAsync(partyId, token)
                 .ConfigureAwait(false);
-            if (!IsCurrentOperation(partyId, tenantSignature, token))
+            if (!IsCurrentOperation(partyId, tenantSignature, capabilityVersion, token))
             {
                 return result;
             }
 
             _confirmErasure = false;
-            await RefreshErasureStatusAsync().ConfigureAwait(false);
+            await RefreshErasureStatusAsync(allowWhileBusy: true).ConfigureAwait(false);
             return result;
         }).ConfigureAwait(false);
     }
 
-    private async Task RefreshErasureStatusAsync()
+    private async Task RefreshErasureStatusAsync(bool allowWhileBusy = false)
     {
+        if (!_gdprCapability.CanReadErasureStatus || (!allowWhileBusy && _isBusy))
+        {
+            return;
+        }
+
         string partyId = Party.Id;
         string? tenantSignature = TenantContextSignature;
         CancellationToken token = Token;
+        long capabilityVersion = _capabilityVersion;
         await RunQueryAsync(async () =>
         {
             PartyErasureStatusRecord? status = await QueryService.ApiClient
                 .GetErasureStatusAsync(partyId, token)
                 .ConfigureAwait(false);
-            if (!IsCurrentOperation(partyId, tenantSignature, token))
+            if (!IsCurrentOperation(partyId, tenantSignature, capabilityVersion, token))
             {
                 return;
             }
@@ -300,7 +441,7 @@
                 ErasureCertificate? certificate = await QueryService.ApiClient
                     .GetErasureCertificateAsync(partyId, token)
                     .ConfigureAwait(false);
-                if (!IsCurrentOperation(partyId, tenantSignature, token))
+                if (!IsCurrentOperation(partyId, tenantSignature, capabilityVersion, token))
                 {
                     return;
                 }
@@ -310,19 +451,28 @@
         }).ConfigureAwait(false);
     }
 
+    private Task RefreshErasureStatusFromUiAsync()
+        => RefreshErasureStatusAsync();
+
     private async Task RetryVerificationAsync()
     {
+        if (!CanRetryVerification)
+        {
+            return;
+        }
+
         string partyId = Party.Id;
         string? tenantSignature = TenantContextSignature;
         CancellationToken token = Token;
+        long capabilityVersion = _capabilityVersion;
         await RunCommandAsync(async () =>
         {
             AdminPortalGdprCommandResult result = await QueryService.ApiClient
                 .RetryErasureVerificationAsync(partyId, token)
                 .ConfigureAwait(false);
-            if (IsCurrentOperation(partyId, tenantSignature, token))
+            if (IsCurrentOperation(partyId, tenantSignature, capabilityVersion, token))
             {
-                await RefreshErasureStatusAsync().ConfigureAwait(false);
+                await RefreshErasureStatusAsync(allowWhileBusy: true).ConfigureAwait(false);
             }
 
             return result;
@@ -331,15 +481,21 @@
 
     private async Task RestrictAsync()
     {
+        if (!CanRestrict)
+        {
+            return;
+        }
+
         string partyId = Party.Id;
         string? tenantSignature = TenantContextSignature;
         CancellationToken token = Token;
+        long capabilityVersion = _capabilityVersion;
         await RunCommandAsync(async () =>
         {
             AdminPortalGdprCommandResult result = await QueryService.ApiClient
                 .RestrictProcessingAsync(partyId, _restrictionReason, token)
                 .ConfigureAwait(false);
-            if (IsCurrentOperation(partyId, tenantSignature, token))
+            if (IsCurrentOperation(partyId, tenantSignature, capabilityVersion, token))
             {
                 await RefreshParty.InvokeAsync().ConfigureAwait(false);
             }
@@ -350,15 +506,21 @@
 
     private async Task LiftRestrictionAsync()
     {
+        if (!CanLiftRestriction)
+        {
+            return;
+        }
+
         string partyId = Party.Id;
         string? tenantSignature = TenantContextSignature;
         CancellationToken token = Token;
+        long capabilityVersion = _capabilityVersion;
         await RunCommandAsync(async () =>
         {
             AdminPortalGdprCommandResult result = await QueryService.ApiClient
                 .LiftRestrictionAsync(partyId, token)
                 .ConfigureAwait(false);
-            if (IsCurrentOperation(partyId, tenantSignature, token))
+            if (IsCurrentOperation(partyId, tenantSignature, capabilityVersion, token))
             {
                 await RefreshParty.InvokeAsync().ConfigureAwait(false);
             }
@@ -369,6 +531,11 @@
 
     private async Task AddConsentAsync()
     {
+        if (!CanAddConsent)
+        {
+            return;
+        }
+
         if (!Enum.TryParse(_lawfulBasisValue, out LawfulBasis lawfulBasis))
         {
             lawfulBasis = LawfulBasis.Consent;
@@ -377,12 +544,13 @@
         string partyId = Party.Id;
         string? tenantSignature = TenantContextSignature;
         CancellationToken token = Token;
+        long capabilityVersion = _capabilityVersion;
         await RunCommandAsync(async () =>
         {
             AdminPortalGdprCommandResult result = await QueryService.ApiClient
                 .AddConsentAsync(partyId, _consentChannelId!, _consentPurpose!, lawfulBasis, token)
                 .ConfigureAwait(false);
-            if (IsCurrentOperation(partyId, tenantSignature, token))
+            if (IsCurrentOperation(partyId, tenantSignature, capabilityVersion, token))
             {
                 await RefreshParty.InvokeAsync().ConfigureAwait(false);
             }
@@ -393,15 +561,21 @@
 
     private async Task RevokeConsentAsync(string consentId)
     {
+        if (!CanRevokeConsent)
+        {
+            return;
+        }
+
         string partyId = Party.Id;
         string? tenantSignature = TenantContextSignature;
         CancellationToken token = Token;
+        long capabilityVersion = _capabilityVersion;
         await RunCommandAsync(async () =>
         {
             AdminPortalGdprCommandResult result = await QueryService.ApiClient
                 .RevokeConsentAsync(partyId, consentId, token)
                 .ConfigureAwait(false);
-            if (IsCurrentOperation(partyId, tenantSignature, token))
+            if (IsCurrentOperation(partyId, tenantSignature, capabilityVersion, token))
             {
                 await RefreshParty.InvokeAsync().ConfigureAwait(false);
             }
@@ -412,15 +586,21 @@
 
     private async Task ExportAsync()
     {
+        if (!CanExport)
+        {
+            return;
+        }
+
         string partyId = Party.Id;
         string? tenantSignature = TenantContextSignature;
         CancellationToken token = Token;
+        long capabilityVersion = _capabilityVersion;
         await RunQueryAsync(async () =>
         {
             AdminPortalExportDownload export = await QueryService.ApiClient
                 .ExportPartyDataAsync(partyId, token)
                 .ConfigureAwait(false);
-            if (!IsCurrentOperation(partyId, tenantSignature, token))
+            if (!IsCurrentOperation(partyId, tenantSignature, capabilityVersion, token))
             {
                 return;
             }
@@ -461,15 +641,21 @@
 
     private async Task LoadProcessingRecordsAsync()
     {
+        if (!CanLoadProcessingRecords)
+        {
+            return;
+        }
+
         string partyId = Party.Id;
         string? tenantSignature = TenantContextSignature;
         CancellationToken token = Token;
+        long capabilityVersion = _capabilityVersion;
         await RunQueryAsync(async () =>
         {
             IReadOnlyList<ProcessingActivityRecord> records = await QueryService.ApiClient
                 .GetProcessingRecordsAsync(partyId, token)
                 .ConfigureAwait(false);
-            if (IsCurrentOperation(partyId, tenantSignature, token))
+            if (IsCurrentOperation(partyId, tenantSignature, capabilityVersion, token))
             {
                 _processingRecords = records;
             }
@@ -481,11 +667,12 @@
         string partyId = Party.Id;
         string? tenantSignature = TenantContextSignature;
         CancellationToken token = Token;
+        long capabilityVersion = _capabilityVersion;
         _isBusy = true;
         try
         {
             AdminPortalGdprCommandResult result = await action().ConfigureAwait(false);
-            if (!IsCurrentOperation(partyId, tenantSignature, token))
+            if (!IsCurrentOperation(partyId, tenantSignature, capabilityVersion, token))
             {
                 return;
             }
@@ -500,7 +687,7 @@
         }
         catch (AdminPortalQueryException ex)
         {
-            if (!IsCurrentOperation(partyId, tenantSignature, token))
+            if (!IsCurrentOperation(partyId, tenantSignature, capabilityVersion, token))
             {
                 return;
             }
@@ -513,7 +700,7 @@
         }
         finally
         {
-            if (IsCurrentOperation(partyId, tenantSignature, token))
+            if (IsCurrentOperation(partyId, tenantSignature, capabilityVersion, token))
             {
                 _isBusy = false;
             }
@@ -525,11 +712,12 @@
         string partyId = Party.Id;
         string? tenantSignature = TenantContextSignature;
         CancellationToken token = Token;
+        long capabilityVersion = _capabilityVersion;
         _isBusy = true;
         try
         {
             await action().ConfigureAwait(false);
-            if (!IsCurrentOperation(partyId, tenantSignature, token))
+            if (!IsCurrentOperation(partyId, tenantSignature, capabilityVersion, token))
             {
                 return;
             }
@@ -538,7 +726,7 @@
         }
         catch (AdminPortalQueryException ex)
         {
-            if (!IsCurrentOperation(partyId, tenantSignature, token))
+            if (!IsCurrentOperation(partyId, tenantSignature, capabilityVersion, token))
             {
                 return;
             }
@@ -551,14 +739,20 @@
         }
         finally
         {
-            if (IsCurrentOperation(partyId, tenantSignature, token))
+            if (IsCurrentOperation(partyId, tenantSignature, capabilityVersion, token))
             {
                 _isBusy = false;
             }
         }
     }
 
-    private bool IsCurrentOperation(string partyId, string? tenantSignature, CancellationToken token)
+    private bool IsCurrentOperation(string partyId, string? tenantSignature, long capabilityVersion, CancellationToken token)
+        => !token.IsCancellationRequested
+            && string.Equals(Party.Id, partyId, StringComparison.Ordinal)
+            && string.Equals(TenantContextSignature, tenantSignature, StringComparison.Ordinal)
+            && _capabilityVersion == capabilityVersion;
+
+    private bool IsCurrentCapabilityTarget(string partyId, string? tenantSignature, CancellationToken token)
         => !token.IsCancellationRequested
             && string.Equals(Party.Id, partyId, StringComparison.Ordinal)
             && string.Equals(TenantContextSignature, tenantSignature, StringComparison.Ordinal);

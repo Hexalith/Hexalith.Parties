@@ -12,4 +12,3 @@ configMapGenerator:
     - ASPNETCORE_FORWARDEDHEADERS_ENABLED=true
     - HTTP_PORTS=8080
     - ASPNETCORE_URLS=http://+:8080;
-

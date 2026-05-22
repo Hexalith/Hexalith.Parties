@@ -129,8 +129,11 @@ public static class PartiesServiceCollectionExtensions {
         _ = services.AddSingleton<IPartyKeyRetryScheduler, ActorBackedPartyKeyRetryScheduler>();
         _ = services.AddSingleton<PartyKeyLifecycleService>();
         _ = services.AddSingleton<IPartyKeyLifecycleService>(sp => sp.GetRequiredService<PartyKeyLifecycleService>());
-        _ = services.AddSingleton<IPartyKeyManagementService>(sp =>
+        _ = services.AddSingleton<CachedPartyKeyManagementService>(sp =>
             new CachedPartyKeyManagementService(sp.GetRequiredService<PartyKeyManagementService>()));
+        _ = services.AddSingleton<IPartyKeyManagementService>(sp => sp.GetRequiredService<CachedPartyKeyManagementService>());
+        _ = services.AddSingleton<ITenantKeyRotationCacheInvalidator>(sp => sp.GetRequiredService<CachedPartyKeyManagementService>());
+        _ = services.AddSingleton<ITenantKeyRotationService, TenantKeyRotationService>();
         _ = services.AddSingleton<ICryptoStatusProvider>(sp => sp.GetRequiredService<PartyKeyLifecycleService>());
         _ = services.AddSingleton<DecryptionCircuitBreaker>();
         _ = services.AddSingleton<IEventPayloadProtectionService, PartyPayloadProtectionService>();
@@ -177,6 +180,18 @@ public static class PartiesServiceCollectionExtensions {
                     Status = ErasureStoreCleanupStatus.Cleaned,
                     Timestamp = DateTimeOffset.UtcNow,
                 }),
+                (tenantId, partyId, cancellationToken) => Task.FromResult(new ErasureVerificationStoreResult
+                {
+                    StoreName = "aggregate-readable-state",
+                    Status = ErasureStoreCleanupStatus.Cleaned,
+                    Timestamp = DateTimeOffset.UtcNow,
+                }),
+                (tenantId, partyId, cancellationToken) => Task.FromResult(new ErasureVerificationStoreResult
+                {
+                    StoreName = "snapshots",
+                    Status = ErasureStoreCleanupStatus.Cleaned,
+                    Timestamp = DateTimeOffset.UtcNow,
+                }),
             ];
 
             if (memorySearch.Enabled)
@@ -216,6 +231,15 @@ public static class PartiesServiceCollectionExtensions {
                     };
                 });
             }
+            else
+            {
+                cleanups.Add((tenantId, partyId, cancellationToken) => Task.FromResult(new ErasureVerificationStoreResult
+                {
+                    StoreName = "memories-search",
+                    Status = ErasureStoreCleanupStatus.NotApplicable,
+                    Timestamp = DateTimeOffset.UtcNow,
+                }));
+            }
 
             return cleanups;
         });
@@ -231,6 +255,7 @@ public static class PartiesServiceCollectionExtensions {
             .ValidateOnStart();
 
         services.AddActors(options => {
+            options.Actors.RegisterActor<PartyIndexProjectionQueryActor>();
             options.Actors.RegisterActor<PartyDetailProjectionQueryActor>();
             options.Actors.RegisterActor<PartyDetailProjectionActor>();
             options.Actors.RegisterActor<PartyIndexProjectionActor>();

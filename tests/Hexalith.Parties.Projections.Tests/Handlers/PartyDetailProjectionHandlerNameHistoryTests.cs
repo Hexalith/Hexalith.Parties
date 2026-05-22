@@ -158,6 +158,32 @@ public class PartyDetailProjectionHandlerNameHistoryTests
         erasedResult.IsErased.ShouldBeTrue();
     }
 
+    [Fact]
+    public void Apply_PartyDisplayNameDerived_AfterErasure_DoesNotReconstructNameHistory()
+    {
+        PartyCreated createEvent = new()
+        {
+            Type = PartyType.Person,
+            PersonDetails = PartyTestData.ValidPersonDetails(),
+        };
+        PartyDetail? state = PartyDetailProjectionHandler.Apply(PartyId, createEvent, null);
+        state = PartyDetailProjectionHandler.ApplyErasure(PartyId, state);
+        state.ShouldNotBeNull();
+
+        PartyDisplayNameDerived postErasureNameEvent = new()
+        {
+            DisplayName = "Jane Smith",
+            SortName = "Smith, Jane",
+        };
+        PartyDetail? result = PartyDetailProjectionHandler.Apply(PartyId, postErasureNameEvent, state);
+
+        result.ShouldBeNull();
+        state.NameHistory.ShouldBeEmpty();
+        state.DisplayName.ShouldBeEmpty();
+        state.SortName.ShouldBeEmpty();
+        state.IsErased.ShouldBeTrue();
+    }
+
     // 7.15 — Empty NameHistory + matching DisplayName/SortName returns null (post-erasure or legacy snapshot idempotency)
     [Fact]
     public void Apply_PartyDisplayNameDerived_EmptyHistory_SameDisplayAndSortNames_ReturnsNull()

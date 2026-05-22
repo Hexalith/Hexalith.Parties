@@ -175,6 +175,14 @@ public sealed class PartiesAdminPortalApiClient : IPartiesAdminPortalApiClient
         }
     }
 
+    public Task<AdminPortalGdprCapability> GetGdprCapabilityAsync(CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        return Task.FromResult(_gdprClient is null
+            ? AdminPortalGdprCapability.Unavailable()
+            : AdminPortalGdprCapability.Available());
+    }
+
     public async Task<AdminPortalQueryResult<PartyDetail>> GetPartyAsync(string partyId, CancellationToken cancellationToken)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(partyId);

@@ -53,6 +53,11 @@ public sealed class PersonalDataInventoryTests
             [Key(typeof(NameHistoryEntry), nameof(NameHistoryEntry.ChangedAt))] = Classification.NonPersonalMetadata,
             [Key(typeof(NameHistoryEntry), nameof(NameHistoryEntry.TriggeredBy))] = Classification.NonPersonalMetadata,
 
+            [Key(typeof(TemporalNameResult), nameof(TemporalNameResult.PartyId))] = Classification.NonPersonalMetadata,
+            [Key(typeof(TemporalNameResult), nameof(TemporalNameResult.AsOf))] = Classification.NonPersonalMetadata,
+            [Key(typeof(TemporalNameResult), nameof(TemporalNameResult.DisplayName))] = Classification.PersonalData,
+            [Key(typeof(TemporalNameResult), nameof(TemporalNameResult.SortName))] = Classification.PersonalData,
+
             [Key(typeof(CreateParty), nameof(CreateParty.PartyId))] = Classification.NonPersonalMetadata,
             [Key(typeof(CreateParty), nameof(CreateParty.Type))] = Classification.NonPersonalMetadata,
             [Key(typeof(CreateParty), nameof(CreateParty.PersonDetails))] = Classification.PersonalDataContainer,
@@ -129,6 +134,7 @@ public sealed class PersonalDataInventoryTests
             [Key(typeof(PartyDetail), nameof(PartyDetail.RestrictedAt))] = Classification.NonPersonalMetadata,
             [Key(typeof(PartyDetail), nameof(PartyDetail.IsErased))] = Classification.NonPersonalMetadata,
             [Key(typeof(PartyDetail), nameof(PartyDetail.ErasedAt))] = Classification.NonPersonalMetadata,
+            [Key(typeof(PartyDetail), nameof(PartyDetail.Freshness))] = Classification.NonPersonalMetadata,
 
             [Key(typeof(PartyIndexEntry), nameof(PartyIndexEntry.Id))] = Classification.NonPersonalMetadata,
             [Key(typeof(PartyIndexEntry), nameof(PartyIndexEntry.Type))] = Classification.NonPersonalMetadata,
@@ -168,6 +174,7 @@ public sealed class PersonalDataInventoryTests
         typeof(IdentifierAdded),
         typeof(PartyState),
         typeof(PartyDetail),
+        typeof(TemporalNameResult),
         typeof(PartyIndexEntry),
     ];
 

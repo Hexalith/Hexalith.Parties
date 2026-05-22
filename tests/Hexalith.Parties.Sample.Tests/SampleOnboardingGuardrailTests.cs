@@ -136,12 +136,27 @@ public sealed class SampleOnboardingGuardrailTests
     {
         string gettingStarted = File.ReadAllText(GetRepositoryFilePath("docs/getting-started.md"));
 
+        gettingStarted.ShouldContain("dotnet aspire run --project src/Hexalith.Parties.AppHost");
+        gettingStarted.ShouldContain("git submodule update --init Hexalith.EventStore Hexalith.Tenants");
+        gettingStarted.ShouldContain("Do not use --recursive");
+        gettingStarted.ShouldContain("Aspire");
+        gettingStarted.ShouldContain("DAPR");
+        gettingStarted.ShouldContain("/ready");
+        gettingStarted.ShouldContain("Docker Desktop");
         gettingStarted.ShouldContain("\"domain\": \"party\"");
         gettingStarted.ShouldContain("\"commandType\": \"Hexalith.Parties.Contracts.Commands.CreateParty\"");
         gettingStarted.ShouldContain("\"queryType\": \"PartyDetail\"");
         gettingStarted.ShouldContain("\"queryType\": \"PartySearch\"");
         gettingStarted.ShouldContain("\"queryType\": \"PartyIndex\"");
         gettingStarted.ShouldContain("\"payload\"");
+        gettingStarted.ShouldContain("command -> event -> projection flow");
+        gettingStarted.ShouldContain("Freshness and Eventual Consistency");
+        gettingStarted.ShouldContain("AddPartiesClient(builder.Configuration)");
+        gettingStarted.ShouldContain("\"Parties\"");
+        gettingStarted.ShouldContain("\"BaseUrl\"");
+        gettingStarted.ShouldContain("\"Tenant\"");
+        gettingStarted.ShouldContain("not approved for regulated EU personal data until v1.1 GDPR features are active");
+        gettingStarted.ShouldNotContain("submodule update --init --recursive");
         gettingStarted.ShouldNotContain("contract_unavailable");
         gettingStarted.ShouldNotContain("Story 12.5 is blocked");
         gettingStarted.ShouldNotContain("Story 12.6 is blocked");
@@ -156,8 +171,39 @@ public sealed class SampleOnboardingGuardrailTests
         program.ShouldContain("EventStore gateway URL");
         program.ShouldContain("Parties:Tenant");
         program.ShouldContain("parties-mcp host");
+        program.ShouldContain("AddPartiesClient(builder.Configuration)");
+        program.ShouldContain("CreatePartyWithResultAsync");
+        program.ShouldContain("AddContactChannelWithResultAsync");
+        program.ShouldContain("AddIdentifierWithResultAsync");
+        program.ShouldContain("PartiesClientException");
+        program.ShouldContain("ListPartiesAsync");
+        program.ShouldContain("PartyType.Person");
+        program.ShouldContain("SearchPartiesAsync");
+        program.ShouldContain("GetPartyAsync");
+        program.ShouldContain("PrintFreshness");
         appSettings.ShouldContain("\"BaseUrl\"");
         appSettings.ShouldContain("\"Tenant\": \"tenant-a\"");
+    }
+
+    [Fact]
+    public void SampleEventHandler_DemonstratesSubscriberOwnedLifecycleAndFutureErasureCleanup()
+    {
+        string handler = File.ReadAllText(GetRepositoryFilePath("samples/Hexalith.Parties.Sample/PartyEventHandler.cs"));
+        string subscription = File.ReadAllText(GetRepositoryFilePath("samples/Hexalith.Parties.Sample/DaprComponents/subscription-sample.yaml"));
+
+        handler.ShouldContain("PartyCreated");
+        handler.ShouldContain("ContactChannelAdded");
+        handler.ShouldContain("IdentifierAdded");
+        handler.ShouldContain("PartyDeactivated");
+        handler.ShouldContain("PartyReactivated");
+        handler.ShouldContain("PartyErased");
+        handler.ShouldContain("TryAcceptSequence");
+        handler.ShouldContain("_lastSequenceByAggregate");
+        handler.ShouldContain("CustomerSummaryStore.Customers.TryRemove");
+        handler.ShouldContain("Unknown event type");
+        subscription.ShouldContain("tenant-a.parties.events");
+        subscription.ShouldContain("/events/parties");
+        subscription.ShouldContain("sample");
     }
 
     private static bool IsBuildArtifact(string path)

@@ -14,4 +14,6 @@ public sealed record RecordConsent {
     public required LawfulBasis LawfulBasis { get; init; }
 
     public string? ActorUserId { get; init; }
+
+    public string? Source { get; init; }
 }

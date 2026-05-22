@@ -33,6 +33,7 @@ public class PartyAggregateConsentTests {
         recorded.LawfulBasis.ShouldBe(LawfulBasis.Consent);
         recorded.ConsentId.ShouldBe($"{PartyTestData.DefaultChannelId}:{PartyTestData.DefaultConsentPurpose}");
         recorded.GrantedBy.ShouldBe("test-admin");
+        recorded.Source.ShouldBe("admin-portal");
     }
 
     // === Task 7.2 ===
@@ -70,6 +71,28 @@ public class PartyAggregateConsentTests {
         result.Events[0].ShouldBeOfType<ContactChannelNotFound>();
     }
 
+    [Fact]
+    public void Handle_RecordConsent_PartyWideShortcut_RejectsWithoutApplyingConsent()
+    {
+        RecordConsent command = new()
+        {
+            PartyId = PartyTestData.DefaultPartyId,
+            TenantId = PartyTestData.DefaultTenantId,
+            ChannelId = "*",
+            Purpose = "all",
+            LawfulBasis = LawfulBasis.Consent,
+            ActorUserId = "test-admin",
+            Source = "admin-portal",
+        };
+        PartyState state = PartyTestData.CreatePersonStateWithChannelsAndIdentifiers();
+
+        DomainResult result = PartyAggregate.Handle(command, state);
+
+        result.IsRejection.ShouldBeTrue();
+        result.Events[0].ShouldBeOfType<ContactChannelNotFound>();
+        state.ConsentRecords.ShouldBeEmpty();
+    }
+
     // === Task 7.4 ===
     [Fact]
     public void Handle_RecordConsent_WhenRestricted_Succeeds() {
@@ -102,6 +125,8 @@ public class PartyAggregateConsentTests {
         ConsentRevoked revoked = result.Events[0].ShouldBeOfType<ConsentRevoked>();
         revoked.ConsentId.ShouldBe(consentId);
         revoked.RevokedBy.ShouldBe("test-admin");
+        revoked.Reason.ShouldBe("withdrawn");
+        revoked.Source.ShouldBe("admin-portal");
     }
 
     // === Task 7.6 ===
@@ -159,6 +184,7 @@ public class PartyAggregateConsentTests {
             LawfulBasis = LawfulBasis.Consent,
             GrantedAt = DateTimeOffset.UtcNow,
             GrantedBy = "admin",
+            Source = "api",
         };
 
         // Act
@@ -168,6 +194,7 @@ public class PartyAggregateConsentTests {
         state.ConsentRecords.Count.ShouldBe(1);
         state.ConsentRecords[0].ConsentId.ShouldBe("ch-1:marketing");
         state.ConsentRecords[0].IsActive.ShouldBeTrue();
+        state.ConsentRecords[0].Source.ShouldBe("api");
     }
 
     // === Task 7.16 ===
@@ -183,6 +210,8 @@ public class PartyAggregateConsentTests {
             ConsentId = consentId,
             RevokedAt = revokedAt,
             RevokedBy = "admin",
+            Reason = "withdrawn",
+            Source = "admin-portal",
         };
 
         // Act
@@ -192,6 +221,8 @@ public class PartyAggregateConsentTests {
         ConsentRecord consent = state.ConsentRecords.First(c => c.ConsentId == consentId);
         consent.RevokedAt.ShouldBe(revokedAt);
         consent.IsActive.ShouldBeFalse();
+        consent.RevocationReason.ShouldBe("withdrawn");
+        consent.RevocationSource.ShouldBe("admin-portal");
     }
 
     // === Task 7.19 ===
@@ -218,6 +249,7 @@ public class PartyAggregateConsentTests {
             LawfulBasis = LawfulBasis.Consent,
             GrantedAt = DateTimeOffset.UtcNow.AddDays(-10),
             GrantedBy = "admin",
+            Source = "api",
         });
         state.Apply(new ConsentRevoked {
             PartyId = "p1",
@@ -225,6 +257,8 @@ public class PartyAggregateConsentTests {
             ConsentId = "ch-1:marketing",
             RevokedAt = DateTimeOffset.UtcNow.AddDays(-5),
             RevokedBy = "admin",
+            Reason = "withdrawn",
+            Source = "api",
         });
         state.Apply(new ConsentRecorded {
             PartyId = "p1",
@@ -235,6 +269,7 @@ public class PartyAggregateConsentTests {
             LawfulBasis = LawfulBasis.ContractualNecessity,
             GrantedAt = DateTimeOffset.UtcNow,
             GrantedBy = "admin",
+            Source = "api",
         });
 
         // Assert
@@ -242,8 +277,10 @@ public class PartyAggregateConsentTests {
         ConsentRecord revoked = state.ConsentRecords.First(c => c.ConsentId == "ch-1:marketing");
         revoked.IsActive.ShouldBeFalse();
         revoked.RevokedAt.ShouldNotBeNull();
+        revoked.RevocationReason.ShouldBe("withdrawn");
         ConsentRecord active = state.ConsentRecords.First(c => c.ConsentId == "ch-1:billing");
         active.IsActive.ShouldBeTrue();
+        active.Source.ShouldBe("api");
     }
 
     [Fact]
@@ -273,6 +310,7 @@ public class PartyAggregateConsentTests {
             LawfulBasis = LawfulBasis.Consent,
             GrantedAt = DateTimeOffset.UtcNow,
             GrantedBy = "admin",
+            Source = "api",
         });
         RevokeConsent command = PartyTestData.ValidRevokeConsent("ch-email-1:marketing");
 

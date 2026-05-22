@@ -8,4 +8,8 @@ public sealed record RevokeConsent {
     public required string ConsentId { get; init; }
 
     public string? ActorUserId { get; init; }
+
+    public string? Reason { get; init; }
+
+    public string? Source { get; init; }
 }

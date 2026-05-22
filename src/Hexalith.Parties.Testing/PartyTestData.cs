@@ -298,6 +298,7 @@ public static class PartyTestData {
         Purpose = DefaultConsentPurpose,
         LawfulBasis = LawfulBasis.Consent,
         ActorUserId = "test-admin",
+        Source = "admin-portal",
     };
 
     public static RevokeConsent ValidRevokeConsent(string? consentId = null) => new() {
@@ -305,17 +306,23 @@ public static class PartyTestData {
         TenantId = DefaultTenantId,
         ConsentId = consentId ?? $"{DefaultChannelId}:{DefaultConsentPurpose}",
         ActorUserId = "test-admin",
+        Reason = "withdrawn",
+        Source = "admin-portal",
     };
 
     public static RestrictProcessing ValidRestrictProcessing() => new() {
         PartyId = DefaultPartyId,
         TenantId = DefaultTenantId,
         Reason = "Investigation pending",
+        ActorUserId = "test-admin",
+        CorrelationId = "corr-restrict-1",
     };
 
     public static LiftRestriction ValidLiftRestriction() => new() {
         PartyId = DefaultPartyId,
         TenantId = DefaultTenantId,
+        ActorUserId = "test-admin",
+        CorrelationId = "corr-lift-1",
     };
 
     public static PartyState CreateStateWithConsent() {

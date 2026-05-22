@@ -444,3 +444,5 @@ src/Hexalith.Parties.AppHost/aspirate-state.json
 
 # Lychee link checker cache
 .lycheecache
+.agents\.story-automator-active
+.agents/.story-automator-active

@@ -194,7 +194,7 @@ public sealed class PartyEventHandlerTests : IDisposable
     }
 
     [Fact]
-    public async Task HandlePartyCreated_WithDifferentCloudEventId_ShouldProcessAgainAsync()
+    public async Task HandlePartyCreated_WithDifferentCloudEventIdAndSameSequence_ShouldSkipReplayAsync()
     {
         EventEnvelope envelope = CreateEnvelope(
             "tenant-a:parties:p-800",
@@ -211,7 +211,7 @@ public sealed class PartyEventHandlerTests : IDisposable
         HttpResponseMessage secondResponse = await PostEventAsync("event-2", envelope);
         secondResponse.StatusCode.ShouldBe(HttpStatusCode.OK);
 
-        CustomerSummaryStore.Customers["p-800"].DisplayName.ShouldBe("Jean Replay");
+        CustomerSummaryStore.Customers["p-800"].DisplayName.ShouldBe("Changed Between Deliveries");
     }
 
     [Fact]
@@ -235,6 +235,38 @@ public sealed class PartyEventHandlerTests : IDisposable
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
         CustomerSummaryStore.Customers["p-900"].DisplayName.ShouldBe("Marie Martin");
         CustomerSummaryStore.Customers["p-900"].LastUpdated.ShouldNotBeNull();
+    }
+
+    [Fact]
+    public async Task HandleOlderSequenceAfterNewerSequence_ShouldNotOverwriteLocalStateAsync()
+    {
+        CustomerSummaryStore.Customers["p-out-of-order"] = new CustomerSummary
+        {
+            Id = "p-out-of-order",
+            DisplayName = "Initial",
+        };
+
+        EventEnvelope newer = CreateEnvelope(
+            "tenant-a:parties:p-out-of-order",
+            "PartyDisplayNameDerived",
+            new { displayName = "Newest Name", sortName = "Newest Name" },
+            correlationId: "corr-order",
+            sequenceNumber: 3);
+
+        HttpResponseMessage newerResponse = await PostEventAsync("corr-order:3", newer);
+        newerResponse.StatusCode.ShouldBe(HttpStatusCode.OK);
+        CustomerSummaryStore.Customers["p-out-of-order"].DisplayName.ShouldBe("Newest Name");
+
+        EventEnvelope older = CreateEnvelope(
+            "tenant-a:parties:p-out-of-order",
+            "PersonDetailsUpdated",
+            new { personDetails = new { firstName = "Older", lastName = "Name" } },
+            correlationId: "corr-order",
+            sequenceNumber: 2);
+
+        HttpResponseMessage olderResponse = await PostEventAsync("corr-order:2", older);
+        olderResponse.StatusCode.ShouldBe(HttpStatusCode.OK);
+        CustomerSummaryStore.Customers["p-out-of-order"].DisplayName.ShouldBe("Newest Name");
     }
 
     [Fact]

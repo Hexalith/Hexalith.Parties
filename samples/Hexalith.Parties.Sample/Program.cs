@@ -1,5 +1,6 @@
 using Hexalith.Parties.Client.Abstractions;
 using Hexalith.Parties.Client.Extensions;
+using Hexalith.Parties.Client;
 using Hexalith.Parties.Contracts.Commands;
 using Hexalith.Parties.Contracts.Models;
 using Hexalith.Parties.Contracts.ValueObjects;
@@ -53,7 +54,7 @@ static async Task RunDemoAsync(IServiceProvider services, CancellationToken ct)
         // 1. Create a person party
         string partyId = Guid.NewGuid().ToString();
         Console.WriteLine($"[1] Creating person party (ID: {partyId})...");
-        string correlationId = await commands.CreatePartyAsync(
+        PartiesCommandResult<PartyDetail> createResult = await commands.CreatePartyWithResultAsync(
             new CreateParty
             {
                 PartyId = partyId,
@@ -65,12 +66,12 @@ static async Task RunDemoAsync(IServiceProvider services, CancellationToken ct)
                 },
             },
             ct).ConfigureAwait(false);
-        Console.WriteLine($"    -> Created. CorrelationId: {correlationId}");
+        PrintCommandResult("Created", createResult);
 
         // 2. Add an email contact channel
         string channelId = Guid.NewGuid().ToString();
         Console.WriteLine($"[2] Adding email contact channel (ID: {channelId})...");
-        correlationId = await commands.AddContactChannelAsync(
+        PartiesCommandResult<PartyDetail> contactResult = await commands.AddContactChannelWithResultAsync(
             partyId,
             new AddContactChannel
             {
@@ -81,12 +82,12 @@ static async Task RunDemoAsync(IServiceProvider services, CancellationToken ct)
                 IsPreferred = true,
             },
             ct).ConfigureAwait(false);
-        Console.WriteLine($"    -> Added. CorrelationId: {correlationId}");
+        PrintCommandResult("Added contact channel", contactResult);
 
         // 3. Add a VAT identifier
         string identifierId = Guid.NewGuid().ToString();
         Console.WriteLine($"[3] Adding VAT identifier (ID: {identifierId})...");
-        correlationId = await commands.AddIdentifierAsync(
+        PartiesCommandResult<PartyDetail> identifierResult = await commands.AddIdentifierWithResultAsync(
             partyId,
             new AddIdentifier
             {
@@ -96,7 +97,29 @@ static async Task RunDemoAsync(IServiceProvider services, CancellationToken ct)
                 Value = "DEMO-IDENTIFIER-001",
             },
             ct).ConfigureAwait(false);
-        Console.WriteLine($"    -> Added. CorrelationId: {correlationId}");
+        PrintCommandResult("Added identifier", identifierResult);
+
+        // 3b. Demonstrate typed rejection/problem handling without depending on internals.
+        Console.WriteLine("[3b] Demonstrating typed rejection/problem handling...");
+        try
+        {
+            await commands.CreatePartyWithResultAsync(
+                new CreateParty
+                {
+                    PartyId = partyId,
+                    Type = PartyType.Person,
+                    PersonDetails = new PersonDetails
+                    {
+                        FirstName = "Duplicate",
+                        LastName = "Contact",
+                    },
+                },
+                ct).ConfigureAwait(false);
+        }
+        catch (PartiesClientException ex)
+        {
+            PrintClientProblem(ex);
+        }
 
         // Allow eventual consistency before querying
         Console.WriteLine();
@@ -108,29 +131,32 @@ static async Task RunDemoAsync(IServiceProvider services, CancellationToken ct)
         PartyDetail party = await queries.GetPartyAsync(partyId, ct).ConfigureAwait(false);
         Console.WriteLine($"    -> Found party {party.Id} (Type: {party.Type}, Active: {party.IsActive})");
         Console.WriteLine($"       Contact channels: {party.ContactChannels.Count}, Identifiers: {party.Identifiers.Count}");
+        PrintFreshness(party.Freshness);
 
         // 5. Search by name
         Console.WriteLine("[5] Searching for 'Demo'...");
         PagedResult<PartySearchResult> searchResults = await queries.SearchPartiesAsync("Demo", 1, 10, ct).ConfigureAwait(false);
         Console.WriteLine($"    -> Found {searchResults.TotalCount} result(s)");
+        PrintFreshness(searchResults.Freshness);
         foreach (PartySearchResult result in searchResults.Items)
         {
             Console.WriteLine($"       - Party {result.Party.Id} (Type: {result.Party.Type}, Active: {result.Party.IsActive})");
         }
 
         // 6. List with pagination
-        Console.WriteLine("[6] Listing parties (page 1, size 10)...");
+        Console.WriteLine("[6] Listing active person parties (page 1, size 10)...");
         PagedResult<PartyIndexEntry> listResults = await queries.ListPartiesAsync(
             page: 1,
             pageSize: 10,
-            type: null,
-            active: null,
+            type: PartyType.Person,
+            active: true,
             createdAfter: null,
             createdBefore: null,
             modifiedAfter: null,
             modifiedBefore: null,
             ct).ConfigureAwait(false);
         Console.WriteLine($"    -> Page {listResults.Page}/{listResults.TotalPages}, {listResults.TotalCount} total parties");
+        PrintFreshness(listResults.Freshness);
         foreach (PartyIndexEntry entry in listResults.Items)
         {
             Console.WriteLine($"       - Party {entry.Id} (Type: {entry.Type}, Active: {entry.IsActive})");
@@ -165,6 +191,44 @@ static async Task RunDemoAsync(IServiceProvider services, CancellationToken ct)
 
     Console.WriteLine();
     Console.WriteLine("Press Ctrl+C to exit.");
+}
+
+static void PrintCommandResult(string label, PartiesCommandResult<PartyDetail> result)
+{
+    Console.WriteLine($"    -> {label}. CorrelationId: {result.CorrelationId}");
+    if (result.Payload is not null)
+    {
+        Console.WriteLine($"       Updated party payload: {result.Payload.Id} ({result.Payload.Type}, Active: {result.Payload.IsActive})");
+        PrintFreshness(result.Payload.Freshness);
+    }
+}
+
+static void PrintClientProblem(PartiesClientException ex)
+{
+    Console.WriteLine($"    -> Rejected/problem response. Status: {ex.Status}, Title: {ex.Title ?? ex.Message}");
+    if (!string.IsNullOrWhiteSpace(ex.Type))
+    {
+        Console.WriteLine($"       Type: {ex.Type}");
+    }
+
+    if (!string.IsNullOrWhiteSpace(ex.CorrelationId))
+    {
+        Console.WriteLine($"       CorrelationId: {ex.CorrelationId}");
+    }
+}
+
+static void PrintFreshness(ProjectionFreshnessMetadata? freshness)
+{
+    if (freshness is null)
+    {
+        Console.WriteLine("       Freshness: not supplied by this response");
+        return;
+    }
+
+    string warnings = freshness.WarningCodes.Count == 0
+        ? "none"
+        : string.Join(", ", freshness.WarningCodes);
+    Console.WriteLine($"       Freshness: {freshness.Status}; warnings: {warnings}");
 }
 
 // MCP host configuration

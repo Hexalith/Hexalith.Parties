@@ -35,6 +35,9 @@ public sealed class AppHostTenantsTopologyTests
         resources["parties"].ShouldBe("Projects.Hexalith_Parties");
         resources["tenants"].ShouldBe("Projects.Hexalith_Tenants");
         resources["parties-mcp"].ShouldBe("Projects.Hexalith_Parties_Mcp");
+        program.ShouldContain(@"AddRedis(""redis"")");
+        program.ShouldContain(@"AddKeycloak(""keycloak"", 8180)");
+        program.ShouldMatch(@"adminUI\s*=\s*builder\.AddProject<Projects\.Hexalith_EventStore_Admin_UI>\(""eventstore-admin-ui""\)\s*\.WithExplicitStart\(\)");
         program.ShouldContain("AddHexalithEventStore");
         program.ShouldNotContain("AddHexalithParties(");
         program.ShouldNotContain("AddHexalithTenants(");
@@ -49,6 +52,7 @@ public sealed class AppHostTenantsTopologyTests
         program.ShouldContain(@"ResolveDaprConfigPath(""accesscontrol.eventstore-admin.yaml"")");
         program.ShouldContain(@"ResolveDaprConfigPath(""accesscontrol.tenants.yaml"")");
         program.ShouldContain(@"ResolveDaprConfigPath(""accesscontrol.parties.yaml"")");
+        program.ShouldContain(@"ResolveDaprConfigPath(""accesscontrol.memories.yaml"")");
         program.ShouldContain(@"ResolveDaprConfigPath(""resiliency.yaml"")");
         program.ShouldContain("eventStoreAccessControlConfigPath");
         program.ShouldContain("adminServerAccessControlConfigPath");
@@ -185,6 +189,7 @@ public sealed class AppHostTenantsTopologyTests
         string program = ReadAppHostProgram();
 
         program.ShouldContain(@"AddProject<Projects.Hexalith_Parties_Mcp>(""parties-mcp"")");
+        program.ShouldMatch(@"partiesMcp\s*=\s*builder\.AddProject<Projects\.Hexalith_Parties_Mcp>\(""parties-mcp""\)\s*\.WithExplicitStart\(\)");
         program.ShouldMatch(@"partiesMcp[\s\S]*?\.WithReference\(eventStore\)[\s\S]*?\.WaitFor\(eventStore\)");
         program.ShouldMatch(@"partiesMcp[\s\S]*?\.WithReference\(parties\)[\s\S]*?\.WaitFor\(parties\)");
         program.ShouldContain(
@@ -202,6 +207,25 @@ public sealed class AppHostTenantsTopologyTests
     }
 
     [Fact]
+    public void AppHostProgramComposesMemoriesOnlyWhenRichSearchIsEnabled()
+    {
+        string program = StripCSharpComments(ReadAppHostProgram());
+
+        program.ShouldContain(@"builder.Configuration[""EnableMemoriesSearch""]");
+        program.ShouldContain(@"AddProject(""memories"", memoriesProjectPath)");
+        program.ShouldContain("ResolveOptionalSiblingProjectPath");
+        program.ShouldContain("Run 'git submodule update --init {submoduleName}'");
+        program.ShouldContain("Do not use recursive submodule initialization for the default local run.");
+        program.ShouldMatch(@"if\s*\(string\.Equals\(builder\.Configuration\[""EnableMemoriesSearch""\][\s\S]*?AddProject\(""memories"", memoriesProjectPath\)");
+        program.ShouldNotContain(@"AddProject<Projects.Hexalith_Memories_Server>(""memories"")");
+
+        string daprDir = Path.Combine(RepositoryRoot.Locate(), "src", "Hexalith.Parties.AppHost", "DaprComponents");
+        File.Exists(Path.Combine(daprDir, "accesscontrol.memories.yaml")).ShouldBeTrue();
+        File.ReadAllText(Path.Combine(daprDir, "statestore.yaml")).ShouldContain("- memories");
+        File.ReadAllText(Path.Combine(daprDir, "pubsub.yaml")).ShouldContain("- memories");
+    }
+
+    [Fact]
     public void AppHostProgramUsesWaitForForDependencyReadiness()
     {
         string program = StripCSharpComments(ReadAppHostProgram());
@@ -211,6 +235,36 @@ public sealed class AppHostTenantsTopologyTests
         program.ShouldContain(".WaitFor(eventStoreResources.StateStore)");
         program.ShouldContain(".WaitFor(eventStoreResources.PubSub)");
         program.ShouldNotContain(".WaitForStart(");
+    }
+
+    [Fact]
+    public void AppHostProjectFailsMissingRootLevelSubmodulesWithActionableGuidance()
+    {
+        string project = ReadAppHostProject();
+
+        project.ShouldContain("HexalithEventStoreBasePath");
+        project.ShouldContain("HexalithTenantsBasePath");
+        project.ShouldNotContain("HexalithMemoriesBasePath");
+        project.ShouldContain("git submodule update --init Hexalith.EventStore Hexalith.Tenants");
+        project.ShouldContain("Do not use recursive submodule initialization for the default local run.");
+        project.ShouldNotContain("git -C Hexalith.Memories submodule update");
+    }
+
+    [Fact]
+    public void LocalRunDocumentationUsesSingleAspireCommandAndRootLevelSubmodulesOnly()
+    {
+        string root = RepositoryRoot.Locate();
+        string readme = File.ReadAllText(Path.Combine(root, "README.md"));
+        string gettingStarted = File.ReadAllText(Path.Combine(root, "docs", "getting-started.md"));
+
+        foreach (string document in new[] { readme, gettingStarted })
+        {
+            document.ShouldContain("dotnet aspire run --project src/Hexalith.Parties.AppHost");
+            document.ShouldContain("git submodule update --init Hexalith.EventStore Hexalith.Tenants");
+            document.ShouldNotContain("git submodule update --init --recursive");
+            document.ShouldNotContain("git submodule update --recursive");
+            document.ShouldNotContain("git -C Hexalith.Memories submodule update");
+        }
     }
 
     private static string StripCSharpComments(string source)

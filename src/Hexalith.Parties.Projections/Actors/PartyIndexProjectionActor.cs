@@ -69,7 +69,7 @@ public sealed partial class PartyIndexProjectionActor : Actor, IPartyIndexProjec
         // entry in this case; logging here gives observability without changing semantics.
         if (@event is PartyCreated && existingEntry is not null)
         {
-            Log.PartyCreatedReceivedForExistingState(_logger, partyId);
+            Log.PartyCreatedReceivedForExistingState(_logger);
         }
 
         PartyIndexEntry? newEntry = PartyIndexProjectionHandler.Apply(partyId, @event, existingEntry);
@@ -123,7 +123,7 @@ public sealed partial class PartyIndexProjectionActor : Actor, IPartyIndexProjec
         bool isRedacted = string.Equals(serializationFormat, RedactedFormat, StringComparison.OrdinalIgnoreCase);
         if (!isJson)
         {
-            Log.NonJsonEventDropped(_logger, partyId, eventTypeName, serializationFormat);
+            Log.NonJsonEventDropped(_logger, eventTypeName, serializationFormat);
             return;
         }
 
@@ -132,11 +132,11 @@ public sealed partial class PartyIndexProjectionActor : Actor, IPartyIndexProjec
         {
             if (PartyEventTypeResolver.IsAmbiguousShortName(eventTypeName))
             {
-                Log.AmbiguousEventTypeDropped(_logger, partyId, eventTypeName);
+                Log.AmbiguousEventTypeDropped(_logger, eventTypeName);
             }
             else
             {
-                Log.UnknownEventTypeDropped(_logger, partyId, eventTypeName);
+                Log.UnknownEventTypeDropped(_logger, eventTypeName);
             }
 
             return;
@@ -153,11 +153,11 @@ public sealed partial class PartyIndexProjectionActor : Actor, IPartyIndexProjec
             // distinct from live deserialization failures so dashboards can separate signals.
             if (isRedacted)
             {
-                Log.RedactedEventDropped(_logger, partyId, eventTypeName, sequenceNumber, ex);
+                Log.RedactedEventDropped(_logger, ex, eventTypeName, sequenceNumber);
             }
             else
             {
-                Log.PayloadDeserializationFailed(_logger, partyId, eventTypeName, ex);
+                Log.PayloadDeserializationFailed(_logger, ex, eventTypeName);
             }
 
             // Advance the checkpoint past the un-deserializable event so it is not retried.
@@ -172,7 +172,10 @@ public sealed partial class PartyIndexProjectionActor : Actor, IPartyIndexProjec
         }
         else if (isRedacted)
         {
-            Log.RedactedEventDropped(_logger, partyId, eventTypeName, sequenceNumber, null);
+            // Whole-payload redaction yields a default-valued instance that may not implement
+            // IEventPayload. Advance the checkpoint via a distinct event id so dashboards can
+            // separate "whole-payload redaction" from "redacted-but-broken-deserialization".
+            Log.WholePayloadRedactedEventDropped(_logger, eventTypeName, sequenceNumber);
             await PersistLastSequenceAsync(partyId, sequenceNumber, cancellationToken).ConfigureAwait(false);
         }
     }
@@ -206,7 +209,7 @@ public sealed partial class PartyIndexProjectionActor : Actor, IPartyIndexProjec
             // and let replay rebuild state. Infrastructure failures (state-store outage)
             // must propagate so the orchestrator surfaces them rather than silently
             // degrading to replay-from-zero on every command.
-            Log.SequenceCheckpointReset(_logger, partyId, ex.GetType().Name);
+            Log.SequenceCheckpointReset(_logger, ex);
             _lastProcessedSequencePerParty[partyId] = UnloadedSequenceSentinel;
         }
     }
@@ -228,12 +231,13 @@ public sealed partial class PartyIndexProjectionActor : Actor, IPartyIndexProjec
         string[] segments = actorId.Split(':', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
         if (segments.Length < 1 || string.IsNullOrEmpty(segments[0]))
         {
-            // Throwing here is safer than the previous "unknown" fallback: a malformed actor
-            // id with that fallback would silently route every malformed-id activation across
-            // tenants into the same `unknown:party-index:{partyId}:last-sequence` state key,
-            // cross-contaminating tenant projection state.
+            // AC7: do not echo the raw actor id in the exception message; the structured log
+            // emitted by callers already carries the projection name + coarse segment count.
+            // Throwing is still safer than the previous "unknown" fallback because that fallback
+            // would silently cross-contaminate tenants by routing all malformed activations into
+            // the same `unknown:party-index:{partyId}:last-sequence` state key.
             throw new InvalidOperationException(
-                $"Unable to derive tenant from actor id '{actorId}'. Expected '{{tenant}}:{ProjectionName}'.");
+                $"Unable to derive tenant from {ProjectionName} actor id. Expected '{{tenant}}:{ProjectionName}' shape.");
         }
 
         string tenant = segments[0];
@@ -277,7 +281,7 @@ public sealed partial class PartyIndexProjectionActor : Actor, IPartyIndexProjec
         }
     }
 
-    public async Task<IReadOnlyDictionary<string, PartyIndexEntry>> GetEntriesAsync()
+    public async Task<PartyIndexProjectionReadResult> GetEntriesReadAsync()
     {
         if (_isRebuilding)
         {
@@ -285,7 +289,7 @@ public sealed partial class PartyIndexProjectionActor : Actor, IPartyIndexProjec
             string[] segs = actorId.Split(':', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
             if (segs.Length != 2)
             {
-                Log.MalformedActorId(_logger, actorId, ProjectionName);
+                Log.MalformedActorId(_logger, ProjectionName, segs.Length);
             }
             else
             {
@@ -293,39 +297,62 @@ public sealed partial class PartyIndexProjectionActor : Actor, IPartyIndexProjec
                 string cacheKey = $"{segs[0]}:{ProjectionName}:{partitionKey}";
                 if (_entries is not null)
                 {
-                    return _entries;
+                    return new PartyIndexProjectionReadResult
+                    {
+                        Entries = _entries,
+                        Freshness = ProjectionFreshnessMetadata.Create(ProjectionFreshnessStatus.Rebuilding, ProjectionFreshnessMetadata.WarningProjectionRebuilding),
+                    };
                 }
 
                 if (s_lastKnownEntries.TryGetValue(cacheKey, out IReadOnlyDictionary<string, PartyIndexEntry>? cached))
                 {
-                    return cached;
+                    return new PartyIndexProjectionReadResult
+                    {
+                        Entries = cached,
+                        Freshness = ProjectionFreshnessMetadata.Create(ProjectionFreshnessStatus.Rebuilding, ProjectionFreshnessMetadata.WarningProjectionRebuilding),
+                    };
                 }
             }
 
-            return new Dictionary<string, PartyIndexEntry>();
+            return new PartyIndexProjectionReadResult
+            {
+                Entries = new Dictionary<string, PartyIndexEntry>(),
+                Freshness = ProjectionFreshnessMetadata.Create(ProjectionFreshnessStatus.Unavailable, ProjectionFreshnessMetadata.WarningProjectionContextUnavailable),
+            };
         }
 
+        ProjectionFreshnessMetadata freshness = ProjectionFreshnessMetadata.Create(ProjectionFreshnessStatus.Current);
         try
         {
             await FlushAsync().ConfigureAwait(false);
         }
-        catch when (_entries is not null)
+        // Cancellation must propagate — do not mask a canceled flush as a Degraded success.
+        catch (Exception ex) when (ex is not OperationCanceledException && _entries is not null)
         {
             // If the backing state store is unavailable, continue serving the
             // in-memory snapshot already loaded in this actor activation.
+            freshness = ProjectionFreshnessMetadata.Create(ProjectionFreshnessStatus.Degraded, ProjectionFreshnessMetadata.WarningProjectionStateStoreUnavailable);
         }
 
         if (_entries is not null)
         {
-            return _entries;
+            return new PartyIndexProjectionReadResult
+            {
+                Entries = _entries,
+                Freshness = freshness,
+            };
         }
 
         string id = Host.Id.GetId();
         string[] segments = id.Split(':', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
         if (segments.Length != 2)
         {
-            Log.MalformedActorId(_logger, id, ProjectionName);
-            return new Dictionary<string, PartyIndexEntry>();
+            Log.MalformedActorId(_logger, ProjectionName, segments.Length);
+            return new PartyIndexProjectionReadResult
+            {
+                Entries = new Dictionary<string, PartyIndexEntry>(),
+                Freshness = ProjectionFreshnessMetadata.Create(ProjectionFreshnessStatus.Unavailable, ProjectionFreshnessMetadata.WarningProjectionContextUnavailable),
+            };
         }
 
         string tenant = segments[0];
@@ -337,16 +364,28 @@ public sealed partial class PartyIndexProjectionActor : Actor, IPartyIndexProjec
             _entries = await LoadStateAsync(stateKey).ConfigureAwait(false);
             _activeStateKey = stateKey;
         }
-        catch when (TryGetCachedState(stateKey, out Dictionary<string, PartyIndexEntry>? cachedEntries))
+        // Cancellation must propagate — see note above on terminal-cancellation contract.
+        catch (Exception ex) when (ex is not OperationCanceledException
+            && TryGetCachedState(stateKey, out Dictionary<string, PartyIndexEntry>? cachedEntries))
         {
             // If the state store is temporarily unavailable during a cold read,
             // serve the last successfully persisted snapshot from this process.
             _entries = cachedEntries;
             _activeStateKey = stateKey;
+            freshness = ProjectionFreshnessMetadata.Create(ProjectionFreshnessStatus.Stale, ProjectionFreshnessMetadata.WarningProjectionStateStoreUnavailable);
         }
 
-        return _entries ?? new Dictionary<string, PartyIndexEntry>();
+        return new PartyIndexProjectionReadResult
+        {
+            Entries = _entries ?? new Dictionary<string, PartyIndexEntry>(),
+            Freshness = _entries is null
+                ? ProjectionFreshnessMetadata.Create(ProjectionFreshnessStatus.Unavailable, ProjectionFreshnessMetadata.WarningProjectionStateUnavailable)
+                : freshness,
+        };
     }
+
+    public async Task<IReadOnlyDictionary<string, PartyIndexEntry>> GetEntriesAsync()
+        => (await GetEntriesReadAsync().ConfigureAwait(false)).Entries;
 
     public async Task<string?> GetEntriesJsonAsync()
     {
@@ -389,7 +428,7 @@ public sealed partial class PartyIndexProjectionActor : Actor, IPartyIndexProjec
             }
             catch (Exception ex) when (IsDeserializationFailure(ex))
             {
-                Log.CorruptionDetected(_logger, actorId, tenant, ex);
+                Log.CorruptionDetected(_logger, ex);
                 _isRebuilding = true;
 
                 // Schedule rebuild via reminder (non-blocking, runs in next actor turn)
@@ -410,7 +449,7 @@ public sealed partial class PartyIndexProjectionActor : Actor, IPartyIndexProjec
         string[] segments = actorId.Split(':', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
         if (segments.Length != 2)
         {
-            Log.MalformedActorId(_logger, actorId, ProjectionName);
+            Log.MalformedActorId(_logger, ProjectionName, segments.Length);
             return;
         }
 
@@ -427,11 +466,11 @@ public sealed partial class PartyIndexProjectionActor : Actor, IPartyIndexProjec
             _activeStateKey = stateKey;
 
             _isRebuilding = false;
-            Log.RebuildCompleted(_logger, actorId);
+            Log.RebuildCompleted(_logger);
         }
         catch (Exception ex)
         {
-            Log.RebuildFailed(_logger, actorId, ex);
+            Log.RebuildFailed(_logger, ex);
         }
 
         try
@@ -468,7 +507,9 @@ public sealed partial class PartyIndexProjectionActor : Actor, IPartyIndexProjec
         string[] segments = actorId.Split(':', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
         if (segments.Length != 2)
         {
-            throw new InvalidOperationException($"Invalid actor id format '{actorId}'. Expected '{{tenant}}:{ProjectionName}'.");
+            // AC7: exception message does not embed the raw actor id; structured log captured the
+            // coarse segment count.
+            throw new InvalidOperationException($"Invalid {ProjectionName} actor id shape. Expected two colon-separated segments.");
         }
 
         string tenant = segments[0];
@@ -476,7 +517,9 @@ public sealed partial class PartyIndexProjectionActor : Actor, IPartyIndexProjec
 
         if (!string.Equals(projection, ProjectionName, StringComparison.Ordinal))
         {
-            throw new InvalidOperationException($"Invalid actor projection segment '{projection}'. Expected '{ProjectionName}'.");
+            // AC7: do not echo the malformed projection segment value; the diagnostic fact is
+            // enough.
+            throw new InvalidOperationException($"Invalid {ProjectionName} actor projection segment.");
         }
 
         string partitionKey = _partitionStrategy.GetPartitionKey(partyId);
@@ -546,70 +589,81 @@ public sealed partial class PartyIndexProjectionActor : Actor, IPartyIndexProjec
 
     private static partial class Log
     {
+        // AC7 — same structured-logging contract as PartyDetailProjectionActor: messages carry
+        // only projection name + coarse counts; Exception args are passed positionally so the
+        // logging framework attaches stack traces as a structured field. Exception.Message
+        // strings are scrubbed at their throw sites in ResolveStateKey / ResolveSequenceKey.
+
         [LoggerMessage(
             EventId = 8310,
             Level = LogLevel.Error,
-            Message = "Projection state corruption detected for actor {ActorKey} in tenant {TenantId}. Triggering auto-rebuild.")]
-        public static partial void CorruptionDetected(ILogger logger, string actorKey, string tenantId, Exception exception);
+            Message = "PartyIndex projection state corruption detected. Stage=ProjectionCorruptionDetected")]
+        public static partial void CorruptionDetected(ILogger logger, Exception exception);
 
         [LoggerMessage(
             EventId = 8311,
             Level = LogLevel.Information,
-            Message = "Projection rebuild completed for actor {ActorKey}.")]
-        public static partial void RebuildCompleted(ILogger logger, string actorKey);
+            Message = "PartyIndex projection rebuild completed. Stage=ProjectionRebuildCompleted")]
+        public static partial void RebuildCompleted(ILogger logger);
 
         [LoggerMessage(
             EventId = 8312,
             Level = LogLevel.Error,
-            Message = "Projection rebuild failed for actor {ActorKey}.")]
-        public static partial void RebuildFailed(ILogger logger, string actorKey, Exception exception);
+            Message = "PartyIndex projection rebuild failed. Stage=ProjectionRebuildFailed")]
+        public static partial void RebuildFailed(ILogger logger, Exception exception);
 
         [LoggerMessage(
             EventId = 8313,
             Level = LogLevel.Warning,
-            Message = "PartyIndex projection received event {EventTypeName} for {PartyId} with non-JSON serialization format '{SerializationFormat}'. Event dropped.")]
-        public static partial void NonJsonEventDropped(ILogger logger, string partyId, string eventTypeName, string serializationFormat);
+            Message = "PartyIndex projection received event {EventTypeName} with non-JSON serialization format '{SerializationFormat}'. Event dropped.")]
+        public static partial void NonJsonEventDropped(ILogger logger, string eventTypeName, string serializationFormat);
 
         [LoggerMessage(
             EventId = 8314,
             Level = LogLevel.Warning,
-            Message = "PartyIndex projection could not resolve event type '{EventTypeName}' for {PartyId}. Event dropped.")]
-        public static partial void UnknownEventTypeDropped(ILogger logger, string partyId, string eventTypeName);
+            Message = "PartyIndex projection could not resolve event type '{EventTypeName}'. Event dropped.")]
+        public static partial void UnknownEventTypeDropped(ILogger logger, string eventTypeName);
 
         [LoggerMessage(
             EventId = 8315,
             Level = LogLevel.Warning,
-            Message = "PartyIndex projection failed to deserialize event {EventTypeName} for {PartyId}. Event dropped.")]
-        public static partial void PayloadDeserializationFailed(ILogger logger, string partyId, string eventTypeName, Exception exception);
+            Message = "PartyIndex projection failed to deserialize event {EventTypeName}. Event dropped.")]
+        public static partial void PayloadDeserializationFailed(ILogger logger, Exception exception, string eventTypeName);
 
         [LoggerMessage(
             EventId = 8316,
             Level = LogLevel.Error,
-            Message = "PartyIndex projection found an ambiguous short event-type name '{EventTypeName}' for {PartyId} (multiple types share this short name). Event dropped — promote the emitter to a full-name event type to dispatch safely.")]
-        public static partial void AmbiguousEventTypeDropped(ILogger logger, string partyId, string eventTypeName);
+            Message = "PartyIndex projection found an ambiguous short event-type name '{EventTypeName}' (multiple types share this short name). Event dropped.")]
+        public static partial void AmbiguousEventTypeDropped(ILogger logger, string eventTypeName);
 
         [LoggerMessage(
             EventId = 8317,
             Level = LogLevel.Warning,
-            Message = "PartyIndex projection dropped redacted event {EventTypeName} for {PartyId} at sequence {SequenceNumber} (post-erasure deserialization failure). Checkpoint advanced.")]
-        public static partial void RedactedEventDropped(ILogger logger, string partyId, string eventTypeName, long sequenceNumber, Exception? exception);
+            Message = "PartyIndex projection dropped redacted event {EventTypeName} at sequence {SequenceNumber} (post-erasure deserialization failure). Checkpoint advanced.")]
+        public static partial void RedactedEventDropped(ILogger logger, Exception exception, string eventTypeName, long sequenceNumber);
+
+        [LoggerMessage(
+            EventId = 8323,
+            Level = LogLevel.Warning,
+            Message = "PartyIndex projection dropped whole-payload-redacted event {EventTypeName} at sequence {SequenceNumber} (no deserialization error). Checkpoint advanced.")]
+        public static partial void WholePayloadRedactedEventDropped(ILogger logger, string eventTypeName, long sequenceNumber);
 
         [LoggerMessage(
             EventId = 8318,
             Level = LogLevel.Warning,
-            Message = "PartyIndex projection sequence checkpoint reset for {PartyId} (state-store read failed: {Reason}). Replay-from-zero will rebuild state.")]
-        public static partial void SequenceCheckpointReset(ILogger logger, string partyId, string reason);
+            Message = "PartyIndex projection sequence checkpoint reset. Replay-from-zero will rebuild state.")]
+        public static partial void SequenceCheckpointReset(ILogger logger, Exception exception);
 
         [LoggerMessage(
             EventId = 8319,
             Level = LogLevel.Warning,
-            Message = "PartyIndex projection actor id '{ActorId}' does not match expected '{{tenant}}:{ProjectionName}' shape. Operation aborted.")]
-        public static partial void MalformedActorId(ILogger logger, string actorId, string projectionName);
+            Message = "PartyIndex projection actor id does not match expected projection shape. ProjectionName={ProjectionName}, SegmentCount={SegmentCount}. Operation aborted.")]
+        public static partial void MalformedActorId(ILogger logger, string projectionName, int segmentCount);
 
         [LoggerMessage(
             EventId = 8321,
             Level = LogLevel.Warning,
-            Message = "PartyCreated event received for {PartyId} but index entry already exists. Existing entry preserved (replay-safe), but a non-replay duplicate or post-erasure re-create may indicate a bug.")]
-        public static partial void PartyCreatedReceivedForExistingState(ILogger logger, string partyId);
+            Message = "PartyCreated event received but index entry already exists. Existing entry preserved (replay-safe).")]
+        public static partial void PartyCreatedReceivedForExistingState(ILogger logger);
     }
 }

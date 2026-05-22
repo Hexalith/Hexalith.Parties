@@ -13,6 +13,7 @@
                       Items="@LawfulBasisOptions"
                       Value="@LawfulBasisValue"
                       ValueChanged="LawfulBasisValueChanged"
+                      OptionText="Labels.LawfulBasisLabel"
                       Label="@Labels.GdprLawfulBasis"
                       aria-label="@Labels.GdprLawfulBasis" />
         <FluentButton Appearance="ButtonAppearance.Outline"
@@ -21,6 +22,10 @@
             @Labels.AddConsent
         </FluentButton>
     </div>
+    @if (!string.IsNullOrWhiteSpace(DisabledReason))
+    {
+        <p role="status" aria-live="polite">@DisabledReason</p>
+    }
 
     @if (ConsentRecords.Count == 0)
     {
@@ -32,7 +37,7 @@
             @foreach (ConsentRecord consent in ConsentRecords)
             {
                 <li>
-                    @consent.ChannelId - @Labels.ConsentPurposeLabel(consent.Purpose): @consent.LawfulBasis
+                    @consent.ChannelId - @Labels.ConsentPurposeLabel(consent.Purpose): @Labels.LawfulBasisLabel(consent.LawfulBasis.ToString())
                     (@(consent.IsActive ? Labels.ConsentActive : Labels.ConsentRevoked))
                     <dl>
                         <dt>@Labels.ChangedAt</dt>
@@ -97,6 +102,9 @@
 
     [Parameter]
     public bool CanRevoke { get; set; }
+
+    [Parameter]
+    public string? DisabledReason { get; set; }
 
     [Parameter]
     public EventCallback Add { get; set; }

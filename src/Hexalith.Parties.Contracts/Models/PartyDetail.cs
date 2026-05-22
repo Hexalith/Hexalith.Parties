@@ -40,4 +40,6 @@ public sealed record PartyDetail
     public bool IsErased { get; init; }
 
     public DateTimeOffset? ErasedAt { get; init; }
+
+    public ProjectionFreshnessMetadata? Freshness { get; init; }
 }
