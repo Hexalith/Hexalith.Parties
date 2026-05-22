@@ -628,6 +628,87 @@ public sealed class PartiesAdminPortalComponentTests : BunitContext
     }
 
     [Fact]
+    public void PartiesAdminPortal_DetailStatus_RendersNonColorOnlyStateText()
+    {
+        var api = new RecordingAdminPortalApiClient();
+        api.EnqueueList(new PagedResult<PartyIndexEntry>
+        {
+            Items =
+            [
+                IndexEntry("party-active", "Active Detail", PartyType.Person, true),
+                IndexEntry("party-restricted", "Restricted Detail", PartyType.Person, true),
+                IndexEntry("party-inactive", "Inactive Detail", PartyType.Organization, false),
+            ],
+            Page = 1,
+            PageSize = 20,
+            TotalCount = 3,
+            TotalPages = 1,
+        });
+        api.EnqueueDetail(Detail("party-active", "Active Detail", PartyType.Person, isActive: true));
+        api.EnqueueDetail(Detail("party-restricted", "Restricted Detail", PartyType.Person, isActive: true) with
+        {
+            IsRestricted = true,
+            RestrictedAt = DateTimeOffset.Parse("2026-05-03T10:15:00Z"),
+        });
+        api.EnqueueDetail(Detail("party-inactive", "Inactive Detail", PartyType.Organization, isActive: false));
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+
+        IRenderedComponent<PartiesAdminPortal> cut = RenderAuthorized("scope-a");
+        cut.WaitForAssertion(() => cut.Markup.ShouldContain("Active Detail"));
+
+        ClickFluentButton(cut, "Active Detail");
+        cut.WaitForAssertion(() => cut.Find("aside.hx-parties-admin__detail").TextContent.ShouldContain("Active"));
+
+        ClickFluentButton(cut, "Restricted Detail");
+        cut.WaitForAssertion(() => cut.Find("aside.hx-parties-admin__detail").TextContent.ShouldContain("Active, restricted"));
+
+        ClickFluentButton(cut, "Inactive Detail");
+        cut.WaitForAssertion(() => cut.Find("aside.hx-parties-admin__detail").TextContent.ShouldContain("Inactive"));
+    }
+
+    [Fact]
+    public void PartiesAdminPortal_ErasedDetailPayload_ShowsTerminalStateOnlyAndClearsSensitiveSections()
+    {
+        var coordinator = new AdminPortalGdprStateCoordinator();
+        Services.AddSingleton(coordinator);
+
+        var api = new RecordingAdminPortalApiClient();
+        api.EnqueueList(Page(IndexEntry("party-erased-payload", "Erased Detail Payload", PartyType.Person, true)));
+        api.EnqueueDetail(new PartyDetail
+        {
+            Id = "party-erased-payload",
+            Type = PartyType.Person,
+            IsActive = false,
+            IsErased = true,
+            ErasedAt = DateTimeOffset.Parse("2026-05-03T00:00:00Z"),
+            DisplayName = "Erased Detail Payload",
+            SortName = "Payload, Erased",
+            ContactChannels = [new ContactChannel { Id = "contact-secret", Type = ContactChannelType.Email, Value = "erased@example.test", IsPreferred = true }],
+            Identifiers = [new PartyIdentifier { Id = "identifier-secret", Type = IdentifierType.Other, Value = "SECRET-ID" }],
+            ConsentRecords = [new ConsentRecord { ConsentId = "consent-secret", ChannelId = "contact-secret", Purpose = "marketing-secret", LawfulBasis = LawfulBasis.Consent, GrantedAt = DateTimeOffset.Parse("2026-05-02T00:00:00Z"), GrantedBy = "operator-secret" }],
+            NameHistory = [new NameHistoryEntry { DisplayName = "Previous Secret Name", SortName = "Secret", ChangedAt = DateTimeOffset.Parse("2026-05-01T00:00:00Z") }],
+            CreatedAt = DateTimeOffset.Parse("2026-05-01T00:00:00Z"),
+            LastModifiedAt = DateTimeOffset.Parse("2026-05-03T00:00:00Z"),
+        });
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+
+        IRenderedComponent<PartiesAdminPortal> cut = RenderAuthorized("scope-a");
+        cut.WaitForAssertion(() => cut.Markup.ShouldContain("Erased Detail Payload"));
+        ClickFluentButton(cut, "Erased Detail Payload");
+
+        cut.WaitForAssertion(() =>
+        {
+            IElement detail = cut.Find("aside.hx-parties-admin__detail");
+            detail.TextContent.ShouldContain("erased or no longer inspectable");
+            detail.TextContent.ShouldNotContain("erased@example.test");
+            detail.TextContent.ShouldNotContain("SECRET-ID");
+            detail.TextContent.ShouldNotContain("Previous Secret Name");
+            cut.Markup.ShouldNotContain("Erased Detail Payload");
+            coordinator.State.ShouldBe(AdminPortalGdprOperationState.Erased);
+        });
+    }
+
+    [Fact]
     public void PartiesAdminPortal_GdprOperations_SurfaceUsesEventStoreClientContract()
     {
         var api = new RecordingAdminPortalApiClient();
@@ -1056,6 +1137,130 @@ public sealed class PartiesAdminPortalComponentTests : BunitContext
             cut.Markup.ShouldContain("Access denied");
             cut.Markup.ShouldContain("Tenant Scoped");
             cut.Markup.ShouldNotContain("party-forbidden</dd>");
+        });
+    }
+
+    [Fact]
+    public void PartiesAdminPortal_DetailContractUnavailable_ClearsPreviousDetailWithoutRawFailureText()
+    {
+        var api = new RecordingAdminPortalApiClient();
+        api.EnqueueList(new PagedResult<PartyIndexEntry>
+        {
+            Items =
+            [
+                IndexEntry("party-loaded", "Loaded Detail", PartyType.Person, true),
+                IndexEntry("party-broken", "Broken Detail", PartyType.Organization, true),
+            ],
+            Page = 1,
+            PageSize = 20,
+            TotalCount = 2,
+            TotalPages = 1,
+        });
+        api.EnqueueDetail(Detail("party-loaded", "Loaded Detail", PartyType.Person, isActive: true) with
+        {
+            ContactChannels = [new ContactChannel { Id = "contact-loaded", Type = ContactChannelType.Email, Value = "loaded@example.test", IsPreferred = true }],
+        });
+        api.EnqueueDetailFailure(AdminPortalQueryFailureKind.ContractUnavailable);
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+
+        IRenderedComponent<PartiesAdminPortal> cut = RenderAuthorized("scope-a");
+        cut.WaitForAssertion(() => cut.Markup.ShouldContain("Loaded Detail"));
+        ClickFluentButton(cut, "Loaded Detail");
+        cut.WaitForAssertion(() => cut.Find("aside.hx-parties-admin__detail").TextContent.ShouldContain("loaded@example.test"));
+
+        ClickFluentButton(cut, "Broken Detail");
+
+        cut.WaitForAssertion(() =>
+        {
+            IElement detail = cut.Find("aside.hx-parties-admin__detail");
+            detail.TextContent.ShouldContain("Detail could not be loaded");
+            detail.TextContent.ShouldNotContain("loaded@example.test");
+            detail.TextContent.ShouldNotContain("Loaded Detail");
+            detail.TextContent.ShouldNotContain("ContractUnavailable");
+        });
+    }
+
+    [Fact]
+    public void PartiesAdminPortal_DetailMalformedFailure_ClearsPreviousDetailWithoutParserText()
+    {
+        var api = new RecordingAdminPortalApiClient();
+        api.EnqueueList(new PagedResult<PartyIndexEntry>
+        {
+            Items =
+            [
+                IndexEntry("party-prior", "Prior Detail", PartyType.Person, true),
+                IndexEntry("party-malformed", "Malformed Detail", PartyType.Organization, true),
+            ],
+            Page = 1,
+            PageSize = 20,
+            TotalCount = 2,
+            TotalPages = 1,
+        });
+        api.EnqueueDetail(Detail("party-prior", "Prior Detail", PartyType.Person, isActive: true) with
+        {
+            Identifiers = [new PartyIdentifier { Id = "identifier-prior", Type = IdentifierType.Other, Value = "PRIOR-SECRET" }],
+        });
+        api.EnqueueDetailFailure(AdminPortalQueryFailureKind.Unknown);
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+
+        IRenderedComponent<PartiesAdminPortal> cut = RenderAuthorized("scope-a");
+        cut.WaitForAssertion(() => cut.Markup.ShouldContain("Prior Detail"));
+        ClickFluentButton(cut, "Prior Detail");
+        cut.WaitForAssertion(() => cut.Find("aside.hx-parties-admin__detail").TextContent.ShouldContain("PRIOR-SECRET"));
+
+        ClickFluentButton(cut, "Malformed Detail");
+
+        cut.WaitForAssertion(() =>
+        {
+            IElement detail = cut.Find("aside.hx-parties-admin__detail");
+            detail.TextContent.ShouldContain("Detail could not be loaded");
+            detail.TextContent.ShouldNotContain("PRIOR-SECRET");
+            detail.TextContent.ShouldNotContain("System.Text.Json");
+            detail.TextContent.ShouldNotContain("Malformed");
+        });
+    }
+
+    [Fact]
+    public void PartiesAdminPortal_TenantSwitch_CancelsDelayedDetailAndSuppressesPreviousTenantPayload()
+    {
+        var api = new RecordingAdminPortalApiClient();
+        api.EnqueueList(Page(IndexEntry("party-old-tenant", "Old Tenant Row", PartyType.Person, true)));
+        api.EnqueueList(Page(IndexEntry("party-new-tenant", "New Tenant Row", PartyType.Organization, true)));
+        var delayed = new TaskCompletionSource<AdminPortalQueryResult<PartyDetail>>();
+        var canceled = false;
+        api.EnqueueDetail(ct =>
+        {
+            ct.Register(() => canceled = true);
+            return delayed.Task;
+        });
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+
+        IRenderedComponent<PartiesAdminPortal> cut = RenderAuthorized("scope-a");
+        cut.WaitForAssertion(() => cut.Markup.ShouldContain("Old Tenant Row"));
+        ClickFluentButton(cut, "Old Tenant Row");
+        cut.WaitForAssertion(() => api.DetailRequests.Single().ShouldBe("party-old-tenant"));
+
+        SeedTenant("scope-b", AdminUserId, TenantRole.TenantOwner);
+        cut.InvokeAsync(() => _authProvider.SetAuthenticated(AdminUserId, "scope-b"));
+
+        cut.WaitForAssertion(() =>
+        {
+            canceled.ShouldBeTrue();
+            cut.Markup.ShouldContain("New Tenant Row");
+            cut.Find("aside.hx-parties-admin__detail").TextContent.ShouldContain("Select a party");
+        });
+        delayed.TrySetResult(new AdminPortalQueryResult<PartyDetail>(
+            Detail("party-old-tenant", "Old Tenant Secret", PartyType.Person, isActive: true) with
+            {
+                ContactChannels = [new ContactChannel { Id = "contact-old", Type = ContactChannelType.Email, Value = "old-tenant@example.test", IsPreferred = true }],
+            },
+            AdminPortalQueryMetadata.Empty));
+
+        cut.WaitForAssertion(() =>
+        {
+            cut.Markup.ShouldContain("New Tenant Row");
+            cut.Markup.ShouldNotContain("Old Tenant Secret");
+            cut.Markup.ShouldNotContain("old-tenant@example.test");
         });
     }
 
@@ -1490,6 +1695,21 @@ public sealed class PartiesAdminPortalComponentTests : BunitContext
         Type = type,
         IsActive = active,
         DisplayName = name,
+        CreatedAt = DateTimeOffset.Parse("2026-05-01T00:00:00Z"),
+        LastModifiedAt = DateTimeOffset.Parse("2026-05-02T00:00:00Z"),
+    };
+
+    private static PartyDetail Detail(string id, string name, PartyType type, bool isActive) => new()
+    {
+        Id = id,
+        Type = type,
+        IsActive = isActive,
+        DisplayName = name,
+        SortName = name,
+        ContactChannels = [],
+        Identifiers = [],
+        ConsentRecords = [],
+        NameHistory = [],
         CreatedAt = DateTimeOffset.Parse("2026-05-01T00:00:00Z"),
         LastModifiedAt = DateTimeOffset.Parse("2026-05-02T00:00:00Z"),
     };

@@ -69,6 +69,9 @@ internal sealed class RecordingAdminPortalApiClient : IPartiesAdminPortalApiClie
     public void EnqueueDetailFailure(AdminPortalQueryFailureKind kind)
         => _detailResponses.Enqueue(_ => Task.FromException<AdminPortalQueryResult<PartyDetail>>(new AdminPortalQueryException(kind)));
 
+    public void EnqueueDetail(Func<CancellationToken, Task<AdminPortalQueryResult<PartyDetail>>> response)
+        => _detailResponses.Enqueue(response);
+
     public void EnqueueErasureStatus(PartyErasureStatusRecord status)
         => _erasureStatusResponses.Enqueue(_ => Task.FromResult<PartyErasureStatusRecord?>(status));
 
