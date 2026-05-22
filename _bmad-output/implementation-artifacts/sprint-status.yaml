@@ -145,7 +145,7 @@ development_status:
   # Epic 8: Embeddable Party Picker (6 stories)
   epic-8: in-progress
   8-1-compose-embeddable-party-picker-shell: blocked
-  8-2-implement-typeahead-search-and-bounded-results: backlog
+  8-2-implement-typeahead-search-and-bounded-results: blocked
   8-3-emit-durable-selection-by-party-id: backlog
   8-4-handle-picker-states-and-stale-responses: backlog
   8-5-enforce-picker-accessibility-and-localization: backlog
