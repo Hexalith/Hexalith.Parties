@@ -21,6 +21,10 @@
             @Labels.AddConsent
         </FluentButton>
     </div>
+    @if (!string.IsNullOrWhiteSpace(DisabledReason))
+    {
+        <p role="status" aria-live="polite">@DisabledReason</p>
+    }
 
     @if (ConsentRecords.Count == 0)
     {
@@ -97,6 +101,9 @@
 
     [Parameter]
     public bool CanRevoke { get; set; }
+
+    [Parameter]
+    public string? DisabledReason { get; set; }
 
     [Parameter]
     public EventCallback Add { get; set; }

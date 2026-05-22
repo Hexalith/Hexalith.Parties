@@ -171,6 +171,9 @@ public sealed record AdminPortalLabels
     public string GdprOperationsUnavailable { get; init; } =
         "GDPR operations are unavailable until the EventStore GDPR client contract is available.";
 
+    public string GdprOperationContractBlocked { get; init; } =
+        AdminPortalGdprCapability.ContractUnavailableReason;
+
     public string GdprOperationalSummary { get; init; } = "Operational summary";
 
     public string GdprRestrictionReason { get; init; } = "Restriction reason";

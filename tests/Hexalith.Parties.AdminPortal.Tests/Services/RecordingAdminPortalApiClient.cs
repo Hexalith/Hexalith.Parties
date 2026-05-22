@@ -11,6 +11,7 @@ internal sealed class RecordingAdminPortalApiClient : IPartiesAdminPortalApiClie
     private readonly Queue<Func<CancellationToken, Task<AdminPortalQueryResult<PagedResult<PartyIndexEntry>>>>> _listResponses = [];
     private readonly Queue<Func<CancellationToken, Task<AdminPortalQueryResult<PagedResult<PartySearchResult>>>>> _searchResponses = [];
     private readonly Queue<Func<CancellationToken, Task<AdminPortalRichSearchCapability>>> _richSearchCapabilities = [];
+    private readonly Queue<Func<CancellationToken, Task<AdminPortalGdprCapability>>> _gdprCapabilities = [];
     private readonly Queue<Func<CancellationToken, Task<AdminPortalQueryResult<PartyDetail>>>> _detailResponses = [];
     private readonly Queue<Func<CancellationToken, Task<PartyErasureStatusRecord?>>> _erasureStatusResponses = [];
     private readonly Queue<Func<CancellationToken, Task<ErasureCertificate?>>> _erasureCertificateResponses = [];
@@ -48,6 +49,8 @@ internal sealed class RecordingAdminPortalApiClient : IPartiesAdminPortalApiClie
 
     public int RichSearchCapabilityProbeCount { get; private set; }
 
+    public int GdprCapabilityProbeCount { get; private set; }
+
     public void EnqueueList(PagedResult<PartyIndexEntry> page, AdminPortalQueryMetadata? metadata = null)
         => _listResponses.Enqueue(_ => Task.FromResult(new AdminPortalQueryResult<PagedResult<PartyIndexEntry>>(page, metadata ?? AdminPortalQueryMetadata.Empty)));
 
@@ -62,6 +65,12 @@ internal sealed class RecordingAdminPortalApiClient : IPartiesAdminPortalApiClie
 
     public void EnqueueRichSearchCapability(AdminPortalRichSearchCapability capability)
         => _richSearchCapabilities.Enqueue(_ => Task.FromResult(capability));
+
+    public void EnqueueGdprCapability(AdminPortalGdprCapability capability)
+        => _gdprCapabilities.Enqueue(_ => Task.FromResult(capability));
+
+    public void EnqueueGdprCapability(Func<CancellationToken, Task<AdminPortalGdprCapability>> capability)
+        => _gdprCapabilities.Enqueue(capability);
 
     public void EnqueueDetail(PartyDetail detail, AdminPortalQueryMetadata? metadata = null)
         => _detailResponses.Enqueue(_ => Task.FromResult(new AdminPortalQueryResult<PartyDetail>(detail, metadata ?? AdminPortalQueryMetadata.Empty)));
@@ -112,6 +121,14 @@ internal sealed class RecordingAdminPortalApiClient : IPartiesAdminPortalApiClie
         return _richSearchCapabilities.Count == 0
             ? Task.FromResult(AdminPortalRichSearchCapability.LocalOnly())
             : _richSearchCapabilities.Dequeue()(cancellationToken);
+    }
+
+    public Task<AdminPortalGdprCapability> GetGdprCapabilityAsync(CancellationToken cancellationToken)
+    {
+        GdprCapabilityProbeCount++;
+        return _gdprCapabilities.Count == 0
+            ? Task.FromResult(AdminPortalGdprCapability.Available())
+            : _gdprCapabilities.Dequeue()(cancellationToken);
     }
 
     public Task<AdminPortalQueryResult<PartyDetail>> GetPartyAsync(string partyId, CancellationToken cancellationToken)

@@ -18,6 +18,9 @@ public interface IPartiesAdminPortalApiClient
     Task<AdminPortalRichSearchCapability> GetRichSearchCapabilityAsync(
         CancellationToken cancellationToken);
 
+    Task<AdminPortalGdprCapability> GetGdprCapabilityAsync(
+        CancellationToken cancellationToken);
+
     Task<AdminPortalQueryResult<PartyDetail>> GetPartyAsync(
         string partyId,
         CancellationToken cancellationToken);

@@ -794,6 +794,230 @@ public sealed class PartiesAdminPortalComponentTests : BunitContext
     }
 
     [Fact]
+    public void PartiesAdminPortal_GdprOperations_DisableActionsWhenClientContractUnavailable()
+    {
+        var api = new RecordingAdminPortalApiClient();
+        api.EnqueueList(Page(IndexEntry("party-gdpr-blocked", "GDPR Blocked", PartyType.Person, true)));
+        api.EnqueueDetail(new PartyDetail
+        {
+            Id = "party-gdpr-blocked",
+            Type = PartyType.Person,
+            IsActive = true,
+            DisplayName = "GDPR Blocked",
+            SortName = "Blocked, GDPR",
+            ContactChannels = [],
+            Identifiers = [],
+            ConsentRecords = [],
+            CreatedAt = DateTimeOffset.Parse("2026-05-01T00:00:00Z"),
+            LastModifiedAt = DateTimeOffset.Parse("2026-05-02T00:00:00Z"),
+        });
+        api.EnqueueGdprCapability(AdminPortalGdprCapability.Unavailable());
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+
+        IRenderedComponent<PartiesAdminPortal> cut = RenderAuthorized("scope-a");
+        cut.WaitForAssertion(() => cut.Markup.ShouldContain("GDPR Blocked"));
+        ClickFluentButton(cut, "GDPR Blocked");
+
+        cut.WaitForAssertion(() =>
+        {
+            cut.Markup.ShouldContain(AdminPortalGdprCapability.ContractUnavailableReason);
+            FindFluentButton(cut, "Request erasure").HasAttribute("disabled").ShouldBeTrue();
+            FindFluentButton(cut, "Refresh erasure status").HasAttribute("disabled").ShouldBeTrue();
+            FindFluentButton(cut, "Restrict processing").HasAttribute("disabled").ShouldBeTrue();
+            FindFluentButton(cut, "Lift restriction").HasAttribute("disabled").ShouldBeTrue();
+            FindFluentButton(cut, "Add consent").HasAttribute("disabled").ShouldBeTrue();
+            FindFluentButton(cut, "Export party data").HasAttribute("disabled").ShouldBeTrue();
+            FindFluentButton(cut, "Processing records").HasAttribute("disabled").ShouldBeTrue();
+            api.GdprCapabilityProbeCount.ShouldBe(1);
+        });
+    }
+
+    [Fact]
+    public void PartiesAdminPortal_GdprOperations_EnableOnlySupportedPartialContractActions()
+    {
+        var api = new RecordingAdminPortalApiClient();
+        api.EnqueueList(Page(IndexEntry("party-gdpr-partial", "GDPR Partial", PartyType.Person, true)));
+        api.EnqueueDetail(new PartyDetail
+        {
+            Id = "party-gdpr-partial",
+            Type = PartyType.Person,
+            IsActive = true,
+            DisplayName = "GDPR Partial",
+            SortName = "Partial, GDPR",
+            ContactChannels = [],
+            Identifiers = [],
+            ConsentRecords = [],
+            CreatedAt = DateTimeOffset.Parse("2026-05-01T00:00:00Z"),
+            LastModifiedAt = DateTimeOffset.Parse("2026-05-02T00:00:00Z"),
+        });
+        api.EnqueueGdprCapability(AdminPortalGdprCapability.Partial(
+            canExportData: true,
+            canReadProcessingRecords: true));
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+
+        IRenderedComponent<PartiesAdminPortal> cut = RenderAuthorized("scope-a");
+        cut.WaitForAssertion(() => cut.Markup.ShouldContain("GDPR Partial"));
+        ClickFluentButton(cut, "GDPR Partial");
+
+        cut.WaitForAssertion(() =>
+        {
+            FindFluentButton(cut, "Request erasure").HasAttribute("disabled").ShouldBeTrue();
+            FindFluentButton(cut, "Restrict processing").HasAttribute("disabled").ShouldBeTrue();
+            FindFluentButton(cut, "Add consent").HasAttribute("disabled").ShouldBeTrue();
+            FindFluentButton(cut, "Export party data").HasAttribute("disabled").ShouldBeFalse();
+            FindFluentButton(cut, "Processing records").HasAttribute("disabled").ShouldBeFalse();
+            cut.Markup.ShouldContain("GDPR operations are temporarily unavailable");
+        });
+    }
+
+    [Fact]
+    public void PartiesAdminPortal_GdprOperations_MalformedCapabilityFailsClosedWithoutRawDetails()
+    {
+        var api = new RecordingAdminPortalApiClient();
+        api.EnqueueList(Page(IndexEntry("party-gdpr-malformed", "GDPR Malformed", PartyType.Person, true)));
+        api.EnqueueDetail(new PartyDetail
+        {
+            Id = "party-gdpr-malformed",
+            Type = PartyType.Person,
+            IsActive = true,
+            DisplayName = "GDPR Malformed",
+            SortName = "Malformed, GDPR",
+            ContactChannels = [],
+            Identifiers = [],
+            ConsentRecords = [],
+            CreatedAt = DateTimeOffset.Parse("2026-05-01T00:00:00Z"),
+            LastModifiedAt = DateTimeOffset.Parse("2026-05-02T00:00:00Z"),
+        });
+        api.EnqueueGdprCapability(_ => Task.FromException<AdminPortalGdprCapability>(
+            new System.Text.Json.JsonException("raw-token backend parser detail")));
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+
+        IRenderedComponent<PartiesAdminPortal> cut = RenderAuthorized("scope-a");
+        cut.WaitForAssertion(() => cut.Markup.ShouldContain("GDPR Malformed"));
+        ClickFluentButton(cut, "GDPR Malformed");
+
+        cut.WaitForAssertion(() =>
+        {
+            FindFluentButton(cut, "Request erasure").HasAttribute("disabled").ShouldBeTrue();
+            FindFluentButton(cut, "Processing records").HasAttribute("disabled").ShouldBeTrue();
+            cut.Markup.ShouldContain("GDPR operations are temporarily unavailable");
+            cut.Markup.ShouldNotContain("raw-token");
+            cut.Markup.ShouldNotContain("JsonException");
+            cut.Markup.ShouldNotContain("parser detail");
+        });
+    }
+
+    [Fact]
+    public void PartiesAdminPortal_GdprOperations_NullCapabilityFailsClosed()
+    {
+        var api = new RecordingAdminPortalApiClient();
+        api.EnqueueList(Page(IndexEntry("party-gdpr-null", "GDPR Null", PartyType.Person, true)));
+        api.EnqueueDetail(Detail("party-gdpr-null", "GDPR Null", PartyType.Person, isActive: true));
+        api.EnqueueGdprCapability(_ => Task.FromResult<AdminPortalGdprCapability>(null!));
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+
+        IRenderedComponent<PartiesAdminPortal> cut = RenderAuthorized("scope-a");
+        cut.WaitForAssertion(() => cut.Markup.ShouldContain("GDPR Null"));
+        ClickFluentButton(cut, "GDPR Null");
+
+        cut.WaitForAssertion(() =>
+        {
+            FindFluentButton(cut, "Request erasure").HasAttribute("disabled").ShouldBeTrue();
+            FindFluentButton(cut, "Export party data").HasAttribute("disabled").ShouldBeTrue();
+            cut.Markup.ShouldContain("GDPR operations are temporarily unavailable");
+        });
+    }
+
+    [Fact]
+    public void PartiesAdminPortal_GdprOperations_TenantSwitchInvalidatesCapability()
+    {
+        var api = new RecordingAdminPortalApiClient();
+        api.EnqueueList(Page(IndexEntry("party-gdpr-tenant-a", "GDPR Tenant A", PartyType.Person, true)));
+        api.EnqueueDetail(Detail("party-gdpr-tenant-a", "GDPR Tenant A", PartyType.Person, isActive: true));
+        api.EnqueueGdprCapability(AdminPortalGdprCapability.Available());
+        api.EnqueueList(Page(IndexEntry("party-gdpr-tenant-b", "GDPR Tenant B", PartyType.Person, true)));
+        api.EnqueueDetail(Detail("party-gdpr-tenant-b", "GDPR Tenant B", PartyType.Person, isActive: true));
+        api.EnqueueGdprCapability(AdminPortalGdprCapability.Unavailable());
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+
+        IRenderedComponent<PartiesAdminPortal> cut = RenderAuthorized("scope-a");
+        cut.WaitForAssertion(() => cut.Markup.ShouldContain("GDPR Tenant A"));
+        ClickFluentButton(cut, "GDPR Tenant A");
+        cut.WaitForAssertion(() => FindFluentButton(cut, "Request erasure").HasAttribute("disabled").ShouldBeFalse());
+
+        SeedTenant("scope-b", AdminUserId, TenantRole.TenantOwner);
+        cut.InvokeAsync(() => _authProvider.SetAuthenticated(AdminUserId, "scope-b"));
+        cut.WaitForAssertion(() => cut.Markup.ShouldContain("GDPR Tenant B"));
+        ClickFluentButton(cut, "GDPR Tenant B");
+
+        cut.WaitForAssertion(() =>
+        {
+            FindFluentButton(cut, "Request erasure").HasAttribute("disabled").ShouldBeTrue();
+            cut.Markup.ShouldContain(AdminPortalGdprCapability.ContractUnavailableReason);
+            api.GdprCapabilityProbeCount.ShouldBe(2);
+        });
+    }
+
+    [Fact]
+    public void PartiesAdminPortal_GdprOperations_ClearOpenStateWhenCapabilityCloses()
+    {
+        var api = new RecordingAdminPortalApiClient();
+        api.EnqueueList(Page(
+            IndexEntry("party-gdpr-open", "GDPR Open", PartyType.Person, true),
+            IndexEntry("party-gdpr-closed", "GDPR Closed", PartyType.Person, true)));
+        api.EnqueueDetail(new PartyDetail
+        {
+            Id = "party-gdpr-open",
+            Type = PartyType.Person,
+            IsActive = true,
+            DisplayName = "GDPR Open",
+            SortName = "Open, GDPR",
+            ContactChannels = [],
+            Identifiers = [],
+            ConsentRecords = [],
+            CreatedAt = DateTimeOffset.Parse("2026-05-01T00:00:00Z"),
+            LastModifiedAt = DateTimeOffset.Parse("2026-05-02T00:00:00Z"),
+        });
+        api.EnqueueDetail(new PartyDetail
+        {
+            Id = "party-gdpr-closed",
+            Type = PartyType.Person,
+            IsActive = true,
+            DisplayName = "GDPR Closed",
+            SortName = "Closed, GDPR",
+            ContactChannels = [],
+            Identifiers = [],
+            ConsentRecords = [],
+            CreatedAt = DateTimeOffset.Parse("2026-05-01T00:00:00Z"),
+            LastModifiedAt = DateTimeOffset.Parse("2026-05-02T00:00:00Z"),
+        });
+        api.EnqueueGdprCapability(AdminPortalGdprCapability.Available());
+        api.EnqueueGdprCapability(AdminPortalGdprCapability.Unavailable());
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+
+        IRenderedComponent<PartiesAdminPortal> cut = RenderAuthorized("scope-a");
+        cut.WaitForAssertion(() => cut.Markup.ShouldContain("GDPR Open"));
+        ClickFluentButton(cut, "GDPR Open");
+        cut.WaitForAssertion(() => FindFluentButton(cut, "Request erasure").HasAttribute("disabled").ShouldBeFalse());
+        ClickFluentButton(cut, "Request erasure");
+        cut.WaitForAssertion(() => cut.Markup.ShouldContain("irreversible verification"));
+        SetTextInput(cut, "Restriction reason", "contains-sensitive-operator-note");
+
+        ClickFluentButton(cut, "GDPR Closed");
+
+        cut.WaitForAssertion(() =>
+        {
+            FindFluentButton(cut, "Request erasure").HasAttribute("disabled").ShouldBeTrue();
+            cut.Markup.ShouldContain(AdminPortalGdprCapability.ContractUnavailableReason);
+            cut.Markup.ShouldNotContain("irreversible verification");
+            cut.Markup.ShouldNotContain("contains-sensitive-operator-note");
+            api.ErasureRequests.ShouldBeEmpty();
+            api.RestrictionRequests.ShouldBeEmpty();
+            api.GdprCapabilityProbeCount.ShouldBe(2);
+        });
+    }
+
+    [Fact]
     public void PartiesAdminPortal_DetailShowsSafeEventStoreAdminLinksWhenConfigured()
     {
         var api = new RecordingAdminPortalApiClient();
@@ -940,10 +1164,18 @@ public sealed class PartiesAdminPortalComponentTests : BunitContext
         IRenderedComponent<PartiesAdminPortal> cut = RenderAuthorized("scope-a");
         cut.WaitForAssertion(() => cut.Markup.ShouldContain("Erase Candidate"));
         ClickFluentButton(cut, "Erase Candidate");
-        cut.WaitForAssertion(() => cut.Markup.ShouldContain("GDPR operations"));
+        cut.WaitForAssertion(() =>
+        {
+            cut.Markup.ShouldContain("GDPR operations");
+            FindFluentButton(cut, "Request erasure").HasAttribute("disabled").ShouldBeFalse();
+        });
 
         ClickFluentButton(cut, "Request erasure");
-        cut.WaitForAssertion(() => cut.Markup.ShouldContain("irreversible verification"));
+        cut.WaitForAssertion(() =>
+        {
+            cut.Markup.ShouldContain("irreversible verification");
+            FindFluentButton(cut, "Confirm erasure").HasAttribute("disabled").ShouldBeFalse();
+        });
         ClickFluentButton(cut, "Confirm erasure");
 
         cut.WaitForAssertion(() =>
@@ -992,7 +1224,11 @@ public sealed class PartiesAdminPortalComponentTests : BunitContext
         IRenderedComponent<PartiesAdminPortal> cut = RenderAuthorized("scope-a");
         cut.WaitForAssertion(() => cut.Markup.ShouldContain("Retry Erasure"));
         ClickFluentButton(cut, "Retry Erasure");
-        cut.WaitForAssertion(() => cut.Markup.ShouldContain("GDPR operations"));
+        cut.WaitForAssertion(() =>
+        {
+            cut.Markup.ShouldContain("GDPR operations");
+            FindFluentButton(cut, "Refresh erasure status").HasAttribute("disabled").ShouldBeFalse();
+        });
 
         ClickFluentButton(cut, "Refresh erasure status");
         cut.WaitForAssertion(() =>
@@ -1001,6 +1237,7 @@ public sealed class PartiesAdminPortalComponentTests : BunitContext
             cut.Markup.ShouldContain("VerificationFailed");
         });
 
+        cut.WaitForAssertion(() => FindFluentButton(cut, "Retry verification").HasAttribute("disabled").ShouldBeFalse());
         ClickFluentButton(cut, "Retry verification");
 
         cut.WaitForAssertion(() =>
