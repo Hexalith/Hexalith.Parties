@@ -1795,6 +1795,113 @@ public sealed class PartiesAdminPortalComponentTests : BunitContext
     }
 
     [Fact]
+    public void PartiesAdminPortal_UsesSuppliedLabelsForValidationAndGdprOutcomes()
+    {
+        var api = new RecordingAdminPortalApiClient();
+        api.EnqueueList(Page(IndexEntry("party-localized-gdpr", "Localized GDPR", PartyType.Person, true)));
+        api.EnqueueList(Page(IndexEntry("party-localized-gdpr", "Localized GDPR", PartyType.Person, true)));
+        api.EnqueueDetail(Detail("party-localized-gdpr", "Localized GDPR", PartyType.Person, isActive: true));
+        api.EnqueueExport(new AdminPortalExportDownload("server-name.json", "application/json", [0x7B, 0x7D]));
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+        SeedTenant("scope-a", AdminUserId, TenantRole.TenantOwner);
+        _authProvider.SetAuthenticated(AdminUserId, "scope-a");
+
+        var labels = new AdminPortalLabels
+        {
+            ValidationProblemPrefix = "Controle",
+            DateFilterInvalid = "Date invalide",
+            GdprOperations = "Operations RGPD",
+            ExportPartyData = "Exporter les donnees",
+            GdprOperationCompleted = "Operation terminee",
+        };
+        IRenderedComponent<PartiesAdminPortal> cut = Render<PartiesAdminPortal>(p => p
+            .Add(x => x.ContextKey, "scope-a")
+            .Add(x => x.Labels, labels));
+
+        SetTextInput(cut, "Created after", "not-a-date");
+        ClickFluentButton(cut, "Search");
+        cut.WaitForAssertion(() =>
+        {
+            cut.Markup.ShouldContain("Controle: Date invalide");
+            cut.Markup.ShouldNotContain("Validation: Use YYYY-MM-DD");
+        });
+
+        SetTextInput(cut, "Created after", string.Empty);
+        ClickFluentButton(cut, "Search");
+        cut.WaitForAssertion(() => cut.Markup.ShouldContain("Localized GDPR"));
+        ClickFluentButton(cut, "Localized GDPR");
+        cut.WaitForAssertion(() => cut.Markup.ShouldContain("Operations RGPD"));
+
+        ClickFluentButton(cut, "Exporter les donnees");
+
+        cut.WaitForAssertion(() =>
+        {
+            cut.Markup.ShouldContain("Operation terminee");
+            api.ExportRequests.Single().ShouldBe("party-localized-gdpr");
+        });
+    }
+
+    [Fact]
+    public void PartiesAdminPortal_UsesLocalizedEnumLabelOverrides()
+    {
+        var api = new RecordingAdminPortalApiClient();
+        api.EnqueueList(Page(IndexEntry("party-localized-enums", "Localized Enums", PartyType.Person, true)));
+        api.EnqueueDetail(Detail("party-localized-enums", "Localized Enums", PartyType.Person, isActive: true) with
+        {
+            ContactChannels =
+            [
+                new ContactChannel
+                {
+                    Id = "contact-email",
+                    Type = ContactChannelType.Email,
+                    Value = "localized@example.test",
+                    IsPreferred = true,
+                },
+            ],
+            Identifiers =
+            [
+                new PartyIdentifier
+                {
+                    Id = "identifier-other",
+                    Type = IdentifierType.Other,
+                    Value = "safe-id",
+                },
+            ],
+            ConsentRecords =
+            [
+                new ConsentRecord
+                {
+                    ConsentId = "consent-1",
+                    ChannelId = "email-main",
+                    Purpose = "Marketing",
+                    LawfulBasis = LawfulBasis.LegitimateInterest,
+                    GrantedAt = DateTimeOffset.Parse("2026-05-01T00:00:00Z"),
+                    GrantedBy = "system",
+                },
+            ],
+        });
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+        SeedTenant("scope-a", AdminUserId, TenantRole.TenantOwner);
+        _authProvider.SetAuthenticated(AdminUserId, "scope-a");
+
+        IRenderedComponent<PartiesAdminPortal> cut = Render<PartiesAdminPortal>(p => p
+            .Add(x => x.ContextKey, "scope-a")
+            .Add(x => x.Labels, new LocalizedEnumLabels()));
+
+        cut.WaitForAssertion(() => cut.Markup.ShouldContain("Localized Enums"));
+        ClickFluentButton(cut, "Localized Enums");
+
+        cut.WaitForAssertion(() =>
+        {
+            cut.Markup.ShouldContain("Courriel");
+            cut.Markup.ShouldContain("Autre identifiant");
+            cut.Markup.ShouldContain("Prospection");
+            cut.Markup.ShouldContain("Interet legitime");
+            cut.Find("aside.hx-parties-admin__detail").TextContent.ShouldNotContain("LegitimateInterest");
+        });
+    }
+
+    [Fact]
     public void PartiesAdminPortal_CrossTenantScopedId_DetailReturnsForbiddenAndRowIsHidden()
     {
         // Task line 100: cross-tenant scoped ids must be rejected or hidden consistent with
@@ -2152,5 +2259,20 @@ public sealed class PartiesAdminPortalComponentTests : BunitContext
             _state = new AuthenticationState(new ClaimsPrincipal(new ClaimsIdentity(claims, "Test")));
             NotifyAuthenticationStateChanged(GetAuthenticationStateAsync());
         }
+    }
+
+    private sealed record LocalizedEnumLabels : AdminPortalLabels
+    {
+        public override string ContactChannelTypeLabel(string typeName)
+            => typeName == ContactChannelType.Email.ToString() ? "Courriel" : typeName;
+
+        public override string IdentifierTypeLabel(string typeName)
+            => typeName == IdentifierType.Other.ToString() ? "Autre identifiant" : typeName;
+
+        public override string ConsentPurposeLabel(string purposeName)
+            => purposeName == "Marketing" ? "Prospection" : purposeName;
+
+        public override string LawfulBasisLabel(string lawfulBasisName)
+            => lawfulBasisName == LawfulBasis.LegitimateInterest.ToString() ? "Interet legitime" : lawfulBasisName;
     }
 }

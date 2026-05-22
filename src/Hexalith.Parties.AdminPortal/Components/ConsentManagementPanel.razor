@@ -13,6 +13,7 @@
                       Items="@LawfulBasisOptions"
                       Value="@LawfulBasisValue"
                       ValueChanged="LawfulBasisValueChanged"
+                      OptionText="Labels.LawfulBasisLabel"
                       Label="@Labels.GdprLawfulBasis"
                       aria-label="@Labels.GdprLawfulBasis" />
         <FluentButton Appearance="ButtonAppearance.Outline"
@@ -36,7 +37,7 @@
             @foreach (ConsentRecord consent in ConsentRecords)
             {
                 <li>
-                    @consent.ChannelId - @Labels.ConsentPurposeLabel(consent.Purpose): @consent.LawfulBasis
+                    @consent.ChannelId - @Labels.ConsentPurposeLabel(consent.Purpose): @Labels.LawfulBasisLabel(consent.LawfulBasis.ToString())
                     (@(consent.IsActive ? Labels.ConsentActive : Labels.ConsentRevoked))
                     <dl>
                         <dt>@Labels.ChangedAt</dt>

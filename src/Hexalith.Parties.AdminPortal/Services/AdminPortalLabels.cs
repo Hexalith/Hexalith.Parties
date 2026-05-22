@@ -1,6 +1,6 @@
 namespace Hexalith.Parties.AdminPortal.Services;
 
-public sealed record AdminPortalLabels
+public record AdminPortalLabels
 {
     public string Title { get; init; } = "Parties";
 
@@ -298,14 +298,16 @@ public sealed record AdminPortalLabels
         _ => typeName,
     };
 
-    // The four enum-translation hooks below are virtual seams for hosts that need to localize
+    // The enum-translation hooks below are virtual seams for hosts that need to localize
     // contract enum values. Default implementation is identity; overriding requires a derived
     // record. Kept as instance methods (not static) so a subclass record can override them.
 #pragma warning disable CA1822 // Members do not access instance data — intentional for override seam.
-    public string ContactChannelTypeLabel(string typeName) => typeName;
+    public virtual string ContactChannelTypeLabel(string typeName) => typeName;
 
-    public string IdentifierTypeLabel(string typeName) => typeName;
+    public virtual string IdentifierTypeLabel(string typeName) => typeName;
 
-    public string ConsentPurposeLabel(string purposeName) => purposeName;
+    public virtual string ConsentPurposeLabel(string purposeName) => purposeName;
+
+    public virtual string LawfulBasisLabel(string lawfulBasisName) => lawfulBasisName;
 #pragma warning restore CA1822
 }

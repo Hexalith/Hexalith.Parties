@@ -137,7 +137,7 @@ development_status:
   7-5-add-safe-eventstore-admin-ui-links: done
   7-6-gate-gdpr-operations-on-accepted-client-contract: done
   7-7-implement-gdpr-operation-panels: blocked
-  7-8-localize-admin-console-text-and-status: backlog
+  7-8-localize-admin-console-text-and-status: done
   7-9-enforce-admin-console-accessibility: backlog
   7-10-enforce-admin-console-privacy-and-encoding-rules: backlog
   epic-7-retrospective: optional
