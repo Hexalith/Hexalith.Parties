@@ -1,10 +1,10 @@
 {
   "epic": "1",
-  "currentStory": "3.9",
-  "storiesRemaining": 50,
+  "currentStory": "6.9",
+  "storiesRemaining": 25,
   "stateFile": "D:\\Hexalith.Parties\\_bmad-output\\story-automator\\orchestration-1-20260521-062818.md",
-  "createdAt": "2026-05-21T15:17:44Z",
-  "heartbeat": "2026-05-21T15:17:44Z",
+  "createdAt": "2026-05-21T17:05:39Z",
+  "heartbeat": "2026-05-21T17:05:39Z",
   "pid": 0,
   "projectSlug": ""
 }

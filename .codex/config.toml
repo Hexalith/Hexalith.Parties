@@ -1,5 +1,5 @@
 [features]
-codex_hooks = true
+hooks = true
 
 [projects."D:\\Hexalith.Parties"]
 trust_level = "trusted"
