@@ -146,7 +146,7 @@ development_status:
   epic-8: in-progress
   8-1-compose-embeddable-party-picker-shell: blocked
   8-2-implement-typeahead-search-and-bounded-results: blocked
-  8-3-emit-durable-selection-by-party-id: backlog
+  8-3-emit-durable-selection-by-party-id: blocked
   8-4-handle-picker-states-and-stale-responses: backlog
   8-5-enforce-picker-accessibility-and-localization: backlog
   8-6-enforce-picker-privacy-and-integration-boundary: backlog
