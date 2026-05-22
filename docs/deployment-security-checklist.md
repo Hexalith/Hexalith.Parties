@@ -2,27 +2,23 @@
 
 This checklist covers the security configuration requirements for deploying the Hexalith.Parties service with DAPR. Complete all items before promoting to production.
 
+Canonical reference: [Kubernetes Deployment Architecture](kubernetes-deployment-architecture.md).
+
 ## Automated Verification
 
 Run the deployment validation tool to automatically verify most checklist items:
 
 ```bash
-# Validate production DAPR configs
-./deploy/validate-deployment.ps1 --config-path ./deploy/dapr
-
-# Validate generated Kubernetes manifests alongside DAPR configs (Story 9.2)
+# Validate generated Kubernetes manifests alongside DAPR configs
 ./deploy/validate-deployment.ps1 --config-path ./deploy/dapr -K8sPath ./deploy/k8s/
 
-# Demote cloud-capability findings to warnings (post-MVP managed-cloud mode)
-./deploy/validate-deployment.ps1 -K8sPath ./deploy/k8s/ -AllowCloudCapabilities
-
 # JSON output for CI/CD integration
-./deploy/validate-deployment.ps1 --config-path ./deploy/dapr -K8sPath ./deploy/k8s/ --output json
+./deploy/validate-deployment.ps1 --config-path ./deploy/dapr -K8sPath ./deploy/k8s/ -Format json
 ```
 
-Exit code `0` = all checks passed (warnings OK). Exit code `1` = at least one blocking failure. Exit code `2` = invalid arguments / config path not found.
+Exit code `0` = all checks passed. Exit code `1` = at least one blocking finding. Exit code `2` = invalid arguments or redaction self-check failure. Exit code `3` = missing config or Kubernetes manifest path.
 
-The K8s-manifest mode (`-K8sPath`) lints workload-shape issues (missing image, missing DAPR annotations, unresolved ConfigMap refs), DAPR drift (ACL `defaultAction`, wildcard `appId`, missing dead-letter, wrong `pubsubname`, regen invariant), plaintext secrets in `configMapGenerator.literals` / container env / `Secret` resources, static tenant identifiers, and cloud-only capabilities (`StorageClass`, `IngressClass`, `Service.type: LoadBalancer`). See `deploy/k8s/README.md` → "K8s manifest lint" for the full category table.
+The K8s-manifest mode (`-K8sPath`) lints the eight Story 9.6 blocking categories: `DaprACL-WildcardAppId`, `DaprACL-WildcardOperation`, `K8sWorkload-DirtyTagOnConsumerImage`, `K8sWorkload-MissingDaprAnnotations`, `K8sWorkload-MissingImagePullSecret`, `K8sWorkload-MissingProbes`, `K8sWorkload-NonSemVerTag`, and `Secret-Plaintext`. JSON output uses schema version `1` and fields `{ severity, category, file, jsonpath, reason }` plus summary `{ findings, blocking, warnings, status }`.
 
 The DAPR config mode also validates the security metadata in `topology.yaml` and `tenants-integration.yaml`. Production runs fail when JWT issuer/audience/signing-key references are missing, authentication is not marked fail-closed, tenant identity is allowed from request payloads, DAPR ACLs are broad, or HTTPS/DAPR mTLS transport policy is not enabled. JSON output is bounded and does not print tokens, signing keys, claims dictionaries, tenant membership payloads, or personal data values.
 
@@ -37,14 +33,13 @@ The DAPR config mode also validates the security metadata in `topology.yaml` and
 - [ ] `trustDomain` is set to a real SPIFFE domain (NOT `public`)
 - [ ] `namespace` matches the Kubernetes namespace for the deployment
 - [ ] Policies restrict operations to known `appId` values only
-- [ ] Only `parties` has `/**` POST access; other services have `deny` default
+- [ ] No ACL uses global wildcard operations (`*` or `/**`); documented EventStore gateway prefix routes may use `/api/v1/.../**`
 
 ### State Store Scoping
 
 - [ ] State store component has `actorStateStore: "true"` metadata
 - [ ] `scopes` list contains ONLY `parties` (no other app-ids)
-- [ ] Connection string uses `{env:VAR_NAME}` reference (never hardcoded)
-- [ ] Database/container is provisioned and accessible from the deployment environment
+- [ ] Redis uses the Story 9.3 passwordless in-cluster Service contract until the production managed-store follow-up replaces the MVP carve-out
 
 ### Pub/Sub Scoping (Three-Layer Architecture)
 
@@ -55,7 +50,7 @@ All three layers must be configured for each pub/sub component:
 - [ ] **Layer 3 -- Subscription Scoping:** `subscriptionScopes` restricts subscribers to authorized tenant topics only
 - [ ] `subscriptionScopes` includes `parties=system.tenants.events` for the Parties Tenants event consumer
 - [ ] `enableDeadLetter` is set to `"true"`
-- [ ] Connection string/brokers use `{env:VAR_NAME}` references (never hardcoded)
+- [ ] Redis-backed MVP pub/sub uses `redis:6379` with no plaintext password metadata
 
 ### Hexalith.Tenants Integration
 
@@ -149,7 +144,7 @@ For each new tenant:
 - [ ] Add subscriber app-id to pub/sub component `scopes` (if not already present)
 - [ ] Add subscriber to `subscriptionScopes` with the tenant's topic
 - [ ] Do NOT add subscriber to `publishingScopes` (subscribers should not publish)
-- [ ] Verify with validation tool: `./deploy/validate-deployment.ps1 --config-path <config-dir>`
+- [ ] Verify with validation tool: `./deploy/validate-deployment.ps1 --config-path <config-dir> -K8sPath <k8s-dir>`
 
 Parties does not create tenant lifecycle, membership, role, global administrator, or configuration authority state. The JWT tenant claim selects context; Hexalith.Tenants membership and role authorize access.
 

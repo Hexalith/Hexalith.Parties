@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: latest-tag
+spec:
+  template:
+    spec:
+      imagePullSecrets:
+        - name: zot-pull-secret
+      containers:
+        - name: latest-tag
+          image: registry.hexalith.com/latest-tag:latest
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080

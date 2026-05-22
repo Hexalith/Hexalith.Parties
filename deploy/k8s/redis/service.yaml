@@ -1,14 +1,10 @@
 ---
-# Story 9.3 AC5 — Redis in-cluster Service. Name = `redis` so Dapr Component `redisHost`
-# references resolve without change (existing `deploy/dapr/statestore.yaml`,
-# `deploy/dapr/pubsub.yaml`).
 apiVersion: v1
 kind: Service
 metadata:
   name: redis
-  labels:
-    app: redis
 spec:
+  type: ClusterIP
   selector:
     app: redis
   ports:

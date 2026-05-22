@@ -7,7 +7,7 @@ metadata:
     app: eventstore
   annotations:
     dapr.io/enabled: 'true'
-    dapr.io/config: accesscontrol
+    dapr.io/config: tracing
     dapr.io/app-id: eventstore
     dapr.io/app-port: '8080'
     dapr.io/enable-api-logging: 'true'
@@ -25,15 +25,23 @@ spec:
         app: eventstore
       annotations:
         dapr.io/enabled: 'true'
-        dapr.io/config: accesscontrol
+        dapr.io/config: tracing
         dapr.io/app-id: eventstore
         dapr.io/app-port: '8080'
         dapr.io/enable-api-logging: 'true'
     spec:
       containers:
       - name: eventstore
-        image: registry.hexalith.com/eventstore:staging-latest
+        image: registry.hexalith.com/eventstore:0.1.1-preview.0.3
         imagePullPolicy: IfNotPresent
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: http
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: http
         ports:
         - name: http
           containerPort: 8080
@@ -42,13 +50,6 @@ spec:
         envFrom:
         - configMapRef:
             name: eventstore-env
-        volumeMounts:
-        - name: domain-config
-          mountPath: /app/appsettings.Production.json
-          subPath: appsettings.Production.json
-          readOnly: true
-      volumes:
-      - name: domain-config
-        configMap:
-          name: eventstore-domain-config
+      imagePullSecrets:
+      - name: zot-pull-secret
       terminationGracePeriodSeconds: 180

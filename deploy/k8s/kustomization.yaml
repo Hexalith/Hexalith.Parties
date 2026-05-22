@@ -1,20 +1,16 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
 namespace: hexalith-parties
-
 resources:
-- eventstore
-- eventstore-admin
-- eventstore-admin-ui
-- parties
-- parties-mcp
-- tenants
-# Story 9.3 AC2 / AC4 / AC5 — Memories.Server, Keycloak (hand-authored carve-out), and Redis
-# join the topology. FrontComposer is carved out to Story 9.4 (Outcome B).
-- memories
-- keycloak
-- redis
-- namespace.yaml
-
-generatorOptions:
-  disableNameSuffixHash: true
-
-
+  - namespace.yaml
+  # Aspirate-emitted application services (Story 9.2 - alphabetical order):
+  - eventstore
+  - eventstore-admin
+  - eventstore-admin-ui
+  - memories
+  - parties
+  - parties-mcp
+  - tenants
+  # Hand-authored carve-outs - Story 9.3:
+  - redis
+  - keycloak

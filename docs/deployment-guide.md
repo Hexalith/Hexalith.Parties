@@ -1,5 +1,7 @@
 # Deployment Guide
 
+> **Canonical reference:** For the full Hexalith.Parties Kubernetes deployment topology (9-workload, Zot registry, Dapr control plane, MVP boundaries), see [Kubernetes Deployment Architecture](kubernetes-deployment-architecture.md). This guide covers application-architecture concerns (DAPR component selection, multi-tenant setup, troubleshooting); the canonical doc covers the deployed cluster shape.
+
 This guide covers deploying the Hexalith.Parties service with DAPR in production environments.
 
 ## Prerequisites
@@ -8,7 +10,22 @@ This guide covers deploying the Hexalith.Parties service with DAPR in production
 - Kubernetes cluster with DAPR operator (for Kubernetes deployments)
 - One of: Kafka, RabbitMQ, or Azure Service Bus for pub/sub
 - One of: CosmosDB, PostgreSQL for state store (Redis for development only)
-- PowerShell 5.1+ or PowerShell 7+ for the validation tool
+- PowerShell 7+ (`pwsh`) for `deploy/k8s/publish.ps1`, `deploy/k8s/teardown.ps1`, and the read-only `deploy/validate-deployment.ps1` validator
+- `kubectl` context the operator will pass to `publish.ps1` / `teardown.ps1` via `-ConfirmContext` (Story 9.5 ADR D-K8s-3 replaced the prior local-cluster regex allowlist)
+
+### Zot credentials
+
+`deploy/k8s/publish.ps1` builds and pushes container images to the Zot registry at `registry.hexalith.com` (ADR D-K8s-2). The cluster pulls those images via a Kubernetes `dockerconfigjson` Secret named `zot-pull-secret` that `publish.ps1` bootstraps from the operator's `~/.docker/config.json`. Operator-side setup is a one-time `docker login`:
+
+```bash
+docker login -u parties-publisher registry.hexalith.com
+# password: captured from the infra-team secure store (Bitwarden / 1Password)
+```
+
+- **`parties-publisher`** is the dedicated build account in the cluster-side Zot `builders` group (`accessControl.groups.builders`). Human operator accounts (`jpiquot`, `qdassivignon` in the `admins` group) **are not** used for image push — they retain admin rights for repository management but stay separate from the build account stamped into every pull-secret manifest.
+- After `docker login`, `~/.docker/config.json` must carry `auths["registry.hexalith.com"]` with a plain-text `auth` field (base64-encoded `parties-publisher:<password>`). Docker credential helpers (`credsStore`, `credHelpers["registry.hexalith.com"]`) are explicitly **not supported in MVP** — `publish.ps1` exits 6 with an actionable error if it sees either directive. Workarounds: remove the directive temporarily, set `$env:DOCKER_CONFIG` to point at a helper-free config, or pre-create `zot-pull-secret` manually.
+- Cluster-side Zot configuration (htpasswd entry + `accessControl.groups.builders` membership for `parties-publisher`) is owned by the infra team. CI runners use the `kaniko` or `github-ci` builder account; CI-side wiring is post-MVP. `validate-deployment.ps1` emits JSON output for CI consumption.
+- The operator's credential never appears in `publish.ps1` stdout, stderr, or any committed file. Step 11 of `publish.ps1` re-emits the `auths` block wholesale (Path B — never decoded) into the `zot-pull-secret` data field.
 
 ---
 
@@ -120,9 +137,10 @@ The Hexalith.Parties service uses tenant-scoped topics for party event isolation
 
 2. Add the subscriber app-id to pub/sub component `subscriptionScopes` for the tenant's topic.
 
-3. Verify configuration:
+3. Verify configuration with the static validator:
+
     ```bash
-    ./deploy/validate-deployment.ps1 --config-path <your-config-dir>
+    pwsh deploy/validate-deployment.ps1 -ConfigPath <your-config-dir> -K8sPath deploy/k8s/
     ```
 
 ### Hexalith.Tenants Authority Subscription
@@ -161,37 +179,28 @@ In v1.1, per-party encryption keys enable GDPR erasure via key deletion. Backup 
 
 ## Running the Validation Tool
 
-Before every production deployment, run the validation tool:
+Before every production deployment, run the static validation tool. It reads the supplied Dapr and Kubernetes manifest folders, does not require a Kubernetes context, and does not mutate files.
 
 ```bash
 # Console output (human-readable)
-./deploy/validate-deployment.ps1 --config-path <your-dapr-config-dir>
-
-# JSON output (CI/CD integration)
-./deploy/validate-deployment.ps1 --config-path <your-dapr-config-dir> --output json
+pwsh deploy/validate-deployment.ps1 -ConfigPath deploy/dapr -K8sPath deploy/k8s/
 ```
 
-### K8s manifest validation (Story 9.2)
+```bash
+# JSON output (CI/CD integration)
+pwsh deploy/validate-deployment.ps1 -ConfigPath deploy/dapr -K8sPath deploy/k8s/ -Format json
+```
 
-Pass `-K8sPath` to additionally lint the generated Kubernetes manifests under `deploy/k8s/`. The same validator entry point covers DAPR config drift and K8s-manifest drift:
+### K8s manifest validation (Story 9.6)
+
+Pass `-K8sPath` to lint the Kubernetes manifests under `deploy/k8s/`. The same validator entry point covers Dapr config drift and K8s-manifest drift. It also accepts the epic's compatibility spelling `--config-path` and the compatibility alias `-Output json`, but new docs should use `-ConfigPath`, `-K8sPath`, and `-Format json`.
 
 ```bash
 # Validate DAPR config + K8s manifests in one pass
-./deploy/validate-deployment.ps1 --config-path ./deploy/dapr -K8sPath ./deploy/k8s/
-
-# Demote cloud-only capability findings (managed-cloud opt-in)
-./deploy/validate-deployment.ps1 -K8sPath ./deploy/k8s/ -AllowCloudCapabilities
+pwsh deploy/validate-deployment.ps1 -ConfigPath deploy/dapr -K8sPath deploy/k8s/
 ```
 
-The K8s lint reports workload shape issues (missing image, missing DAPR annotations, unresolved ConfigMap references), DAPR ACL/Subscription drift, plaintext credential leaks in `configMapGenerator.literals` / `Secret` resources, static tenant identifiers, and cloud-only capabilities (`StorageClass`, `IngressClass`, `Service.type: LoadBalancer`). Offending values are redacted in the output. See `deploy/k8s/README.md` → "K8s manifest lint" for the complete category list.
-
-The DAPR config pass also validates deployment security metadata in `topology.yaml` and `tenants-integration.yaml`: JWT issuer/audience/signing-key references, fail-closed authentication behavior, tenant identity sourced from authenticated credentials, DAPR deny-by-default access control, and production HTTPS/DAPR mTLS transport posture. The output intentionally reports field names and unsafe categories only; it does not print token values, signing keys, claim dictionaries, tenant membership payloads, or personal data.
-
-**Story 9.3 added three categories on top of Story 9.2:**
-
-- `K8sTopology-MissingService` (fail) — fires when an AppHost-composed app folder is missing from `deploy/k8s/<app-id>/`, or when its Service selector does not match the Deployment label. Threshold-gated to skip synthetic single-app fixtures; on the committed full-topology tree (≥ 5 app folders present) the contract is enforced.
-- `K8sSecret-JwtSigningKeyLiteral` (fail) — fires when any `ConfigMap`, `Secret`, or `Deployment` container env carries a non-empty literal value for `Authentication__JwtBearer__SigningKey`. The signing key must be sourced via `valueFrom.secretKeyRef` on the `hexalith-jwt-signing` Secret (bootstrapped by `deploy-local.ps1`).
-- `K8sDapr-ResiliencyCrdSchemaDrift` (fail / warn) — fires when `deploy/dapr/resiliency.yaml` contains the legacy nested `timeouts.daprSidecar.general` shape or the flat `components.<name>.{retry,timeout,circuitBreaker}` shape (Dapr 1.14.4 CRD requires `outbound`/`inbound` split for component targets with both directions). Unknown `apiVersion` values emit warn-severity informational findings; the live-cluster server-side dry-run lives in `deploy-local.ps1` per Story 9.3 AC6.
+The validator reports one BLOCKING finding per concrete violation across these categories: `K8sWorkload-MissingImagePullSecret`, `K8sWorkload-MissingDaprAnnotations`, `K8sWorkload-MissingProbes`, `K8sWorkload-NonSemVerTag`, `K8sWorkload-DirtyTagOnConsumerImage`, `DaprACL-WildcardAppId`, `DaprACL-WildcardOperation`, and `Secret-Plaintext`. Offending credential-shaped values are redacted in human and JSON output.
 
 ### CI/CD Integration
 
@@ -201,10 +210,10 @@ Add the validation step to your deployment pipeline:
 # GitHub Actions example
 - name: Validate DAPR configuration
   run: |
-      pwsh -NoProfile -File deploy/validate-deployment.ps1 -ConfigPath deploy/dapr -K8sPath deploy/k8s -Output json
+      pwsh -NoProfile -File deploy/validate-deployment.ps1 -ConfigPath deploy/dapr -K8sPath deploy/k8s -Format json
 ```
 
-The tool exits with code `0` on success (warnings allowed), `1` on at least one blocking failure, and `2` on argument / path errors, making it suitable for CI gate checks.
+The tool exits with code `0` on success, `1` on at least one blocking failure, `2` on invalid arguments, unsupported format, parse failure, or internal self-check failure, and `3` when either supplied path does not exist.
 
 ---
 

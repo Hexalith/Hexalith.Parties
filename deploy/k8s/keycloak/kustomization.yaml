@@ -1,16 +1,4 @@
 resources:
+- configmap.yaml
 - deployment.yaml
 - service.yaml
-
-generatorOptions:
-  disableNameSuffixHash: true
-
-# Story 9.3 AC4 — Realm bootstrap from the committed `hexalith-realm.json` in this folder.
-# The source-of-truth realm JSON lives at
-# `src/Hexalith.Parties.AppHost/KeycloakRealms/hexalith-realm.json` and is copied here as
-# part of the path-(b) hand-authored carve-out. `deploy-local.ps1` refreshes the copy before
-# `kubectl apply -k deploy/k8s/` to keep the two in sync.
-configMapGenerator:
-- name: keycloak-realm-import
-  files:
-  - hexalith-realm.json

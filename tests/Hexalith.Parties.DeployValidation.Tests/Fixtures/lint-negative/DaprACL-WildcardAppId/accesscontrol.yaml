@@ -1,0 +1,13 @@
+apiVersion: dapr.io/v1alpha1
+kind: Configuration
+metadata:
+  name: accesscontrol-wildcard
+spec:
+  accessControl:
+    defaultAction: deny
+    policies:
+      - appId: '*'
+        defaultAction: deny
+        operations:
+          - name: /api/v1/commands
+            action: allow

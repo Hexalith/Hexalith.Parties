@@ -1,8 +1,13 @@
-# DAPR Access Control Configuration -- Local Memories Service Host
-# ================================================================
-# Optional receiving-sidecar policy for Memories.Server when the AppHost
-# is launched with EnableMemoriesSearch=true. The default local Parties
-# run leaves Memories disabled and does not require the Memories submodule.
+# DAPR Access Control Configuration -- Production Memories Service Host
+# ====================================================================
+# Receiving-sidecar policy for the Memories service host. Story 9.3 AC2 / ADR 9.3-2:
+# Memories.Server is composed in-cluster only; the configurable external HTTP endpoint
+# escape hatch is removed. Currently the Parties service is the only DAPR service-invocation
+# caller (via the MemoriesSearch feature flag → in-cluster `memories` Service URL).
+#
+# Per-caller allowed operations mirror the `accesscontrol.parties.yaml` shape: one explicit
+# allow per HTTP verb + path, deny-by-default everywhere else. The `/process` operation is
+# the documented Memories command-processing entry point.
 apiVersion: dapr.io/v1alpha1
 kind: Configuration
 metadata:

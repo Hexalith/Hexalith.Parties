@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: zot
+  namespace: zot
+  labels:
+    app: zot
+spec:
+  # ClusterIP — the live-cluster NodePort 30500 is intentionally NOT propagated
+  # to the committed manifest (Story 9.1 AC1). The Ingress at registry.hexalith.com
+  # is the supported access path. See deploy/zot/README.md "Pre-apply NodePort
+  # consumer audit" before applying against the live cluster.
+  type: ClusterIP
+  selector:
+    app: zot
+  ports:
+    - name: zot-http
+      port: 5000
+      targetPort: zot-http
+      protocol: TCP

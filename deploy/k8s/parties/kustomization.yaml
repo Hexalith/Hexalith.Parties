@@ -20,5 +20,18 @@ configMapGenerator:
     - Tenants__CommandApiAppId=eventstore
     - Tenants__PubSubName=pubsub
     - Tenants__TopicName=system.tenants.events
+    - MEMORIES_HTTP=http://memories:8080
+    - services__memories__http__0=http://memories:8080
+    - Parties__MemoriesSearch__Enabled=true
+    - Parties__MemoriesSearch__Endpoint=http://memories:8080/
+    - Parties__MemoriesSearch__RequireApiToken=false
+    - Parties__MemoriesSearch__TenantId=hexalith-dev
+    - Parties__MemoriesSearch__CaseId=parties
+    - Authentication__JwtBearer__Authority=http://keycloak.hexalith-parties.svc.cluster.local:8080/realms/hexalith
+    - Authentication__JwtBearer__Issuer=http://keycloak.hexalith-parties.svc.cluster.local:8080/realms/hexalith
+    - Authentication__JwtBearer__Audience=hexalith-parties
+    - Authentication__JwtBearer__TokenValidationParameters__ValidAudiences__0=hexalith-parties
+    - Authentication__JwtBearer__TokenValidationParameters__ValidAudiences__1=hexalith-eventstore
+    - Authentication__JwtBearer__RequireHttpsMetadata=false
     - ASPNETCORE_URLS=http://+:8080;
 

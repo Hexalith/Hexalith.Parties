@@ -1,9 +1,4 @@
 ---
-# Story 9.3 AC5 — Hand-authored Redis carve-out (path b). MVP local-cluster scope only:
-# emptyDir-backed, no AUTH, no TLS, no PVC. Production-grade Redis (StatefulSet + PVC + AUTH +
-# TLS) is explicitly out of scope per the story Out-of-Scope list. The Service name MUST
-# remain `redis` so the Dapr Components in `deploy/dapr/{statestore,pubsub}.yaml` continue to
-# resolve `redisHost: redis:6379` (in-cluster DNS: `redis.hexalith-parties.svc.cluster.local`).
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -22,17 +17,29 @@ spec:
       labels:
         app: redis
     spec:
+      automountServiceAccountToken: false
       containers:
       - name: redis
-        image: redis:7.4-alpine
+        image: redis:8.6.3
         imagePullPolicy: IfNotPresent
-        args: ['redis-server', '--appendonly', 'no', '--save', '']
+        readinessProbe:
+          tcpSocket:
+            port: redis
+        livenessProbe:
+          tcpSocket:
+            port: redis
         ports:
         - name: redis
           containerPort: 6379
         volumeMounts:
-        - name: data
+        - name: redis-data
           mountPath: /data
       volumes:
-      - name: data
+      # MVP boundary:
+      # - emptyDir keeps the deployment simple for local-cluster validation.
+      # - Data is lost whenever the Pod is recreated or rescheduled.
+      # - Redis AUTH, network policy, replication, and persistent storage are intentionally absent.
+      # - Production hardening is deferred to docs/kubernetes-deployment-architecture.md section 12.
+      # - Story 9.4 Dapr Components must target redis:6379 without a credential field.
+      - name: redis-data
         emptyDir: {}

@@ -1,9 +1,4 @@
 ---
-# Story 9.3 AC2 — Memories.Server deployment placeholder. The authoritative shape is
-# emitted by `pwsh deploy/k8s/regen.ps1` (aspirate); this committed copy reflects the
-# expected post-regen state so the committed-tree validation passes before the next
-# aspirate run. Aspirate will overwrite this file deterministically on the next regen
-# (the per-app folder is NOT in `$PreservedNames`).
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -12,7 +7,7 @@ metadata:
     app: memories
   annotations:
     dapr.io/enabled: 'true'
-    dapr.io/config: accesscontrol-memories
+    dapr.io/config: tracing
     dapr.io/app-id: memories
     dapr.io/app-port: '8080'
     dapr.io/enable-api-logging: 'true'
@@ -30,19 +25,31 @@ spec:
         app: memories
       annotations:
         dapr.io/enabled: 'true'
-        dapr.io/config: accesscontrol-memories
+        dapr.io/config: tracing
         dapr.io/app-id: memories
         dapr.io/app-port: '8080'
         dapr.io/enable-api-logging: 'true'
     spec:
       containers:
       - name: memories
-        image: registry.hexalith.com/memories:latest
+        image: registry.hexalith.com/memories:0.1.1-preview.0.3
         imagePullPolicy: IfNotPresent
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: http
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: http
         ports:
         - name: http
           containerPort: 8080
+        - name: https
+          containerPort: 8443
         envFrom:
         - configMapRef:
             name: memories-env
+      imagePullSecrets:
+      - name: zot-pull-secret
       terminationGracePeriodSeconds: 180

@@ -1,0 +1,18 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: missing-pull-secret
+spec:
+  template:
+    spec:
+      containers:
+        - name: missing-pull-secret
+          image: registry.hexalith.com/missing-pull-secret:1.2.3
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
