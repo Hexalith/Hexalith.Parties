@@ -7,8 +7,9 @@
 This folder is the operator entry-point for deploying Hexalith.Parties to a Kubernetes
 cluster. Today on `main`, it contains the Story 9.2 Aspirate-emitted application service
 folders, the Story 9.3 hand-authored Redis and Keycloak carve-outs, Story 9.4's Dapr CR
-set under `../dapr/`, top-level namespace and Kustomize wiring, and the Story 9.5
-operator scripts plus shared context helper.
+set under `../dapr/`, top-level namespace and Kustomize wiring, the Story 9.5
+operator scripts plus shared context helper, and the Story 9.6 static validator at
+`../validate-deployment.ps1`.
 
 The image substrate (Zot OCI registry serving `registry.hexalith.com`) is delivered by
 **Story 9.1** — see [`../zot/README.md`](../zot/README.md).
@@ -84,8 +85,24 @@ every run for auditability (per ADR D-K8s-3).
 > | `redis/`, `keycloak/` | Story 9.3 | Delivered: hand-authored vendor carve-outs outside Aspirate regeneration |
 > | `deploy/dapr/` control-plane CRs | Story 9.4 | Delivered: Dapr Components, ACL, Subscriptions, and Resiliency |
 > | `publish.ps1`, `teardown.ps1`, `_lib/Confirm-KubeContext.ps1` | Story 9.5 | Delivered: operator scripts + shared context-gate helper |
+> | `../validate-deployment.ps1` | Story 9.6 | Delivered: context-free lint for the Dapr and Kubernetes manifest tree |
 >
 > Track progress in `_bmad-output/implementation-artifacts/sprint-status.yaml`.
+
+---
+
+## Static validation
+
+Run the validator before publishing or attaching manifests to a review:
+
+```pwsh
+pwsh deploy/validate-deployment.ps1 -ConfigPath deploy/dapr -K8sPath deploy/k8s/
+pwsh deploy/validate-deployment.ps1 -ConfigPath deploy/dapr -K8sPath deploy/k8s/ -Format json
+```
+
+The validator is read-only and does not use `kubectl`, `helm`, `dapr`, kubeconfig, or
+`-ConfirmContext`. It also accepts `--config-path deploy/dapr` for compatibility with the
+epic text. Findings use exact category strings and redact credential-shaped values.
 
 ---
 

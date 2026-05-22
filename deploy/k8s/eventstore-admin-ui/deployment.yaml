@@ -22,6 +22,14 @@ spec:
       - name: eventstore-admin-ui
         image: registry.hexalith.com/eventstore-admin-ui:0.1.1-preview.0.3
         imagePullPolicy: IfNotPresent
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: http
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: http
         ports:
         - name: http
           containerPort: 8080
@@ -30,4 +38,6 @@ spec:
         envFrom:
         - configMapRef:
             name: eventstore-admin-ui-env
+      imagePullSecrets:
+      - name: zot-pull-secret
       terminationGracePeriodSeconds: 180

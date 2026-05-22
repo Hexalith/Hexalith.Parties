@@ -9,6 +9,7 @@ metadata:
     dapr.io/enabled: 'true'
     dapr.io/config: tracing
     dapr.io/app-id: tenants
+    dapr.io/app-port: '8080'
     dapr.io/enable-api-logging: 'true'
 spec:
   minReadySeconds: 60
@@ -26,12 +27,21 @@ spec:
         dapr.io/enabled: 'true'
         dapr.io/config: tracing
         dapr.io/app-id: tenants
+        dapr.io/app-port: '8080'
         dapr.io/enable-api-logging: 'true'
     spec:
       containers:
       - name: tenants
         image: registry.hexalith.com/tenants:0.1.1-preview.0.3
         imagePullPolicy: IfNotPresent
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: http
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: http
         ports:
         - name: http
           containerPort: 8080
@@ -40,4 +50,6 @@ spec:
         envFrom:
         - configMapRef:
             name: tenants-env
+      imagePullSecrets:
+      - name: zot-pull-secret
       terminationGracePeriodSeconds: 180

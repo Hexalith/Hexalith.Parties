@@ -24,6 +24,25 @@ spec:
       - name: keycloak
         image: quay.io/keycloak/keycloak:26.6.2
         imagePullPolicy: IfNotPresent
+        readinessProbe:
+          httpGet:
+            path: /realms/hexalith
+            port: http
+          periodSeconds: 10
+          failureThreshold: 12
+        livenessProbe:
+          httpGet:
+            path: /realms/hexalith
+            port: http
+          initialDelaySeconds: 120
+          periodSeconds: 20
+          failureThreshold: 6
+        startupProbe:
+          httpGet:
+            path: /realms/hexalith
+            port: http
+          periodSeconds: 10
+          failureThreshold: 30
         args:
         - start-dev
         - --import-realm
