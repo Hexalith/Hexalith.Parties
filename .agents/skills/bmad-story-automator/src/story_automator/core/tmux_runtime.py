@@ -507,13 +507,19 @@ def _spawn_legacy(session: str, command: str, selected_agent: str, project_root:
     )
     if code != 0:
         return (output, code)
-    if len(command) > 500:
-        if os.name == "nt":
-            _write_private_text(paths.command, command + "\n", 0o700)
-            run_cmd("tmux", "send-keys", "-t", session, f'powershell -ExecutionPolicy Bypass -File "{paths.command}"', "Enter")
-        else:
-            _write_private_text(paths.command, "#!/bin/bash\n" + command + "\n", 0o700)
-            run_cmd("tmux", "send-keys", "-t", session, f"bash {paths.command}", "Enter")
+    if os.name == "nt":
+        _write_private_text(paths.command, command.rstrip() + "\n", 0o700)
+        run_cmd(
+            "tmux",
+            "send-keys",
+            "-t",
+            session,
+            f'powershell.exe -NoProfile -ExecutionPolicy Bypass -File "{paths.command}"',
+            "Enter",
+        )
+    elif len(command) > 500:
+        _write_private_text(paths.command, "#!/bin/bash\n" + command + "\n", 0o700)
+        run_cmd("tmux", "send-keys", "-t", session, f"bash {paths.command}", "Enter")
     else:
         run_cmd("tmux", "send-keys", "-t", session, command, "Enter")
     return ("", 0)

@@ -237,7 +237,7 @@ def _render_step_prompt(contract: dict[str, object], story_id: str, story_prefix
     }
     for key, value in replacements.items():
         template = template.replace(key, value)
-    return template
+    return template.rstrip() + "\n\nDo not browse or search the web. Do not run date/time commands; use only dates already present in the repository or provided context if a date is required.\n"
 
 
 def _prompt_line(prefix: str, value: str) -> str:
