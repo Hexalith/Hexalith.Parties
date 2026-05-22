@@ -1,0 +1,25 @@
+# Dapr Redis Streams pub/sub Component -- Story 9.4 production CR.
+# Redis no-AUTH is inherited from Story 9.3. The sample party-events
+# Subscription is committed as reference-only and is not granted component scope
+# in the 9-pod MVP runtime topology.
+apiVersion: dapr.io/v1alpha1
+kind: Component
+metadata:
+  name: pubsub
+  namespace: hexalith-parties
+spec:
+  type: pubsub.redis
+  version: v1
+  metadata:
+    - name: redisHost
+      value: redis:6379
+    - name: enableDeadLetter
+      value: "true"
+    - name: publishingScopes
+      value: "eventstore=tenant-a.parties.events;tenants=system.tenants.events"
+    - name: subscriptionScopes
+      value: "parties=system.tenants.events"
+scopes:
+  - eventstore
+  - parties
+  - tenants

@@ -1,0 +1,14 @@
+# Dapr access-control Configuration for the Memories receiving sidecar.
+# Current Parties integration uses the in-cluster Memories HTTP API through the
+# Kubernetes Service URL, not Dapr service invocation. Keep peer invocation denied
+# until a concrete Dapr caller/route contract is introduced.
+apiVersion: dapr.io/v1alpha1
+kind: Configuration
+metadata:
+  name: accesscontrol-memories
+  namespace: hexalith-parties
+spec:
+  accessControl:
+    defaultAction: deny
+    trustDomain: hexalith.io
+    policies: []

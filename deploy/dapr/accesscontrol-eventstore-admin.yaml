@@ -1,0 +1,13 @@
+# Dapr access-control Configuration for the EventStore Admin Server receiving sidecar.
+# Admin Server is HTTP-facing and invokes EventStore as a caller. No peer app has
+# a proven need to invoke the Admin Server through Dapr in the Story 9.4 topology.
+apiVersion: dapr.io/v1alpha1
+kind: Configuration
+metadata:
+  name: accesscontrol-eventstore-admin
+  namespace: hexalith-parties
+spec:
+  accessControl:
+    defaultAction: deny
+    trustDomain: hexalith.io
+    policies: []

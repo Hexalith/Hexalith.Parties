@@ -1,0 +1,46 @@
+# Dapr access-control Configuration for the EventStore receiving sidecar.
+# Story 9.4 tightens the local AppHost broad route shape to EventStore gateway
+# prefixes. These prefix wildcards are intentional because EventStore command,
+# query, replay, status, validation, and admin route catalogues live across the
+# EventStore submodule and are still guarded in Story 9.6 linting. Bare /**
+# remains forbidden.
+apiVersion: dapr.io/v1alpha1
+kind: Configuration
+metadata:
+  name: accesscontrol
+  namespace: hexalith-parties
+spec:
+  accessControl:
+    defaultAction: deny
+    trustDomain: hexalith.io
+    policies:
+      - appId: eventstore-admin
+        defaultAction: deny
+        trustDomain: hexalith.io
+        namespace: hexalith-parties
+        operations:
+          - name: /api/v1/admin/**
+            httpVerb: ['GET', 'POST', 'PUT']
+            action: allow
+          - name: /api/v1/commands/**
+            httpVerb: ['GET', 'POST']
+            action: allow
+          - name: /api/v1/queries/**
+            httpVerb: ['POST']
+            action: allow
+      - appId: tenants
+        defaultAction: deny
+        trustDomain: hexalith.io
+        namespace: hexalith-parties
+        operations:
+          - name: /api/v1/commands
+            httpVerb: ['POST']
+            action: allow
+      - appId: parties
+        defaultAction: deny
+        trustDomain: hexalith.io
+        namespace: hexalith-parties
+        operations:
+          - name: /api/v1/commands
+            httpVerb: ['POST']
+            action: allow
