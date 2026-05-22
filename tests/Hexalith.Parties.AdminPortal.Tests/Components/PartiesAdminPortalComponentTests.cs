@@ -67,6 +67,231 @@ public sealed class PartiesAdminPortalComponentTests : BunitContext
     }
 
     [Fact]
+    public void PartiesAdminPortal_FirstViewport_RendersWorkingConsoleRegionsWithoutLandingShell()
+    {
+        var api = new RecordingAdminPortalApiClient();
+        api.EnqueueList(Page(IndexEntry("party-console", "Console Row", PartyType.Person, true)));
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+
+        IRenderedComponent<PartiesAdminPortal> cut = RenderAuthorized("scope-a");
+
+        cut.WaitForAssertion(() =>
+        {
+            IElement root = cut.Find("section.hx-parties-admin");
+            root.QuerySelector("header.hx-parties-admin__header h1")!.TextContent.Trim().ShouldBe("Parties");
+            root.QuerySelector(".hx-parties-admin__status[role='status']")!.TextContent.Trim().ShouldNotBeEmpty();
+            cut.FindComponent<FluentTextInput>();
+            cut.FindComponents<FluentSelect<string, string>>().Count.ShouldBe(2);
+            root.QuerySelector(".hx-parties-admin__search-modes").ShouldNotBeNull();
+            cut.FindComponent<FluentDataGrid<PartyIndexEntry>>();
+            root.QuerySelector("aside.hx-parties-admin__detail")!.TextContent.ShouldContain("Select a party");
+            root.TextContent.ShouldContain("Console Row");
+
+            IElement layout = root.QuerySelector(".hx-parties-admin__layout")!;
+            layout.Children.Length.ShouldBe(2);
+            layout.Children[0].ClassList.ShouldContain("hx-parties-admin__list");
+            layout.Children[1].ClassList.ShouldContain("hx-parties-admin__detail");
+            layout.ParentElement!.ClassList.ShouldContain("hx-parties-admin");
+
+            root.QuerySelector("[class*='hero']").ShouldBeNull();
+            root.QuerySelector("[class*='landing']").ShouldBeNull();
+            root.QuerySelector("[class*='marketing']").ShouldBeNull();
+            root.QuerySelector("[class*='intro']").ShouldBeNull();
+            root.QuerySelector("[class*='card-shell']").ShouldBeNull();
+        });
+    }
+
+    [Fact]
+    public void PartiesAdminPortal_EmptyFirstViewport_KeepsToolbarGridPagingAndDetailReachable()
+    {
+        var api = new RecordingAdminPortalApiClient();
+        api.EnqueueList(Page<PartyIndexEntry>());
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+
+        IRenderedComponent<PartiesAdminPortal> cut = RenderAuthorized("scope-a");
+
+        cut.WaitForAssertion(() =>
+        {
+            cut.Find(".hx-parties-admin__toolbar").TextContent.ShouldContain("Search");
+            cut.Find("table").GetAttribute("aria-label").ShouldBe("Parties");
+            cut.Find(".hx-parties-admin__empty").TextContent.Trim().ShouldBe("No parties");
+            cut.Find("nav.hx-parties-admin__paging").TextContent.ShouldContain("Page");
+            cut.Find("aside.hx-parties-admin__detail").TextContent.ShouldContain("Select a party");
+        });
+    }
+
+    [Fact]
+    public void PartiesAdminPortal_SelectParty_NavigatesToSafeDetailRouteUsingOnlyPartyId()
+    {
+        var api = new RecordingAdminPortalApiClient();
+        api.EnqueueList(Page(IndexEntry("party-route-1", "Route Party", PartyType.Person, true)));
+        api.EnqueueDetail(new PartyDetail
+        {
+            Id = "party-route-1",
+            Type = PartyType.Person,
+            IsActive = true,
+            DisplayName = "Route Party",
+            SortName = "Party, Route",
+            ContactChannels = [],
+            Identifiers = [],
+            ConsentRecords = [],
+            CreatedAt = DateTimeOffset.Parse("2026-05-01T00:00:00Z"),
+            LastModifiedAt = DateTimeOffset.Parse("2026-05-02T00:00:00Z"),
+        });
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+        NavigationManager navigation = Services.GetRequiredService<NavigationManager>();
+
+        IRenderedComponent<PartiesAdminPortal> cut = RenderAuthorized("scope-a");
+        cut.WaitForAssertion(() => FindFluentButton(cut, "Route Party").TextContent.ShouldContain("Route Party"));
+        ClickFluentButton(cut, "Route Party");
+
+        cut.WaitForAssertion(() =>
+        {
+            navigation.ToBaseRelativePath(navigation.Uri).ShouldBe("admin/parties/party-route-1");
+            navigation.Uri.ShouldNotContain("scope-a");
+            navigation.Uri.ShouldNotContain("Route%20Party");
+            api.DetailRequests.Single().ShouldBe("party-route-1");
+            cut.Find("aside.hx-parties-admin__detail").TextContent.ShouldContain("Route Party");
+        });
+    }
+
+    [Fact]
+    public void PartiesAdminPortal_SelectScopedPartyId_DoesNotWriteTenantScopedIdentifierToRoute()
+    {
+        var api = new RecordingAdminPortalApiClient();
+        api.EnqueueList(Page(IndexEntry("tenant-a:parties:party-route-2", "Scoped Route Party", PartyType.Person, true)));
+        api.EnqueueDetail(new PartyDetail
+        {
+            Id = "tenant-a:parties:party-route-2",
+            Type = PartyType.Person,
+            IsActive = true,
+            DisplayName = "Scoped Route Party",
+            SortName = "Party, Scoped",
+            ContactChannels = [],
+            Identifiers = [],
+            ConsentRecords = [],
+            CreatedAt = DateTimeOffset.Parse("2026-05-01T00:00:00Z"),
+            LastModifiedAt = DateTimeOffset.Parse("2026-05-02T00:00:00Z"),
+        });
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+        NavigationManager navigation = Services.GetRequiredService<NavigationManager>();
+
+        IRenderedComponent<PartiesAdminPortal> cut = RenderAuthorized("scope-a");
+        cut.WaitForAssertion(() => FindFluentButton(cut, "Scoped Route Party").TextContent.ShouldContain("Scoped Route Party"));
+        ClickFluentButton(cut, "Scoped Route Party");
+
+        cut.WaitForAssertion(() =>
+        {
+            navigation.Uri.ShouldNotContain("tenant-a");
+            navigation.Uri.ShouldNotContain("parties:party-route-2");
+            api.DetailRequests.Single().ShouldBe("tenant-a:parties:party-route-2");
+            cut.Find("aside.hx-parties-admin__detail").TextContent.ShouldContain("Scoped Route Party");
+        });
+    }
+
+    [Fact]
+    public void PartiesAdminPortal_DetailRoute_LoadsPartyDetailFromNonPiiRouteParameter()
+    {
+        var api = new RecordingAdminPortalApiClient();
+        api.EnqueueList(Page(IndexEntry("party-route-3", "Route Loaded Party", PartyType.Person, true)));
+        api.EnqueueDetail(new PartyDetail
+        {
+            Id = "party-route-3",
+            Type = PartyType.Person,
+            IsActive = true,
+            DisplayName = "Route Loaded Party",
+            SortName = "Party, Route Loaded",
+            ContactChannels = [],
+            Identifiers = [],
+            ConsentRecords = [],
+            CreatedAt = DateTimeOffset.Parse("2026-05-01T00:00:00Z"),
+            LastModifiedAt = DateTimeOffset.Parse("2026-05-02T00:00:00Z"),
+        });
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+
+        IRenderedComponent<PartiesAdminPortal> cut = RenderAuthorized("scope-a", routePartyId: "party-route-3");
+
+        cut.WaitForAssertion(() =>
+        {
+            api.DetailRequests.Single().ShouldBe("party-route-3");
+            cut.Find("aside.hx-parties-admin__detail").TextContent.ShouldContain("Route Loaded Party");
+        });
+    }
+
+    [Fact]
+    public void PartiesAdminPortal_GdprRouteVariant_LoadsPartyDetailWithGdprPanelVisible()
+    {
+        var api = new RecordingAdminPortalApiClient();
+        api.EnqueueList(Page(IndexEntry("party-route-gdpr", "Gdpr Route Party", PartyType.Person, true)));
+        api.EnqueueDetail(new PartyDetail
+        {
+            Id = "party-route-gdpr",
+            Type = PartyType.Person,
+            IsActive = true,
+            DisplayName = "Gdpr Route Party",
+            SortName = "Party, Gdpr",
+            ContactChannels = [],
+            Identifiers = [],
+            ConsentRecords = [],
+            CreatedAt = DateTimeOffset.Parse("2026-05-01T00:00:00Z"),
+            LastModifiedAt = DateTimeOffset.Parse("2026-05-02T00:00:00Z"),
+        });
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+
+        // The /gdpr route variant resolves to the same component with the party id as the
+        // route parameter. The GDPR operations panel must be reachable from that URL.
+        IRenderedComponent<PartiesAdminPortal> cut = RenderAuthorized("scope-a", routePartyId: "party-route-gdpr");
+
+        cut.WaitForAssertion(() =>
+        {
+            api.DetailRequests.Single().ShouldBe("party-route-gdpr");
+            cut.Find("aside.hx-parties-admin__detail").TextContent.ShouldContain("Gdpr Route Party");
+            cut.Find("aside.hx-parties-admin__detail").TextContent.ShouldContain("GDPR operations");
+        });
+    }
+
+    [Fact]
+    public void PartiesAdminPortal_UnsafeRoutePartyId_RejectsDetailFetchAndDoesNotLeakIdentifier()
+    {
+        var api = new RecordingAdminPortalApiClient();
+        api.EnqueueList(Page(IndexEntry("party-route-safe", "Safe Party", PartyType.Person, true)));
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+
+        // A scoped/tenant-prefixed party id pasted into the URL must not trigger a detail
+        // fetch and must not be echoed into the user-visible detail region.
+        IRenderedComponent<PartiesAdminPortal> cut = RenderAuthorized(
+            "scope-a",
+            routePartyId: "tenant-a:parties:hostile");
+
+        cut.WaitForAssertion(() =>
+        {
+            api.DetailRequests.ShouldBeEmpty();
+            IElement detail = cut.Find("aside.hx-parties-admin__detail");
+            detail.TextContent.ShouldNotContain("tenant-a");
+            detail.TextContent.ShouldNotContain("hostile");
+            detail.TextContent.ShouldContain("The selected party is unavailable");
+        });
+    }
+
+    [Fact]
+    public void PartiesAdminPortal_PathTraversalRoutePartyId_IsRejected()
+    {
+        var api = new RecordingAdminPortalApiClient();
+        api.EnqueueList(Page(IndexEntry("party-route-safe", "Safe Party", PartyType.Person, true)));
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+
+        // `.` and `..` would pass an unreserved-character validator but must be rejected
+        // so they never reach the detail fetch pipeline or surface in operator logs.
+        IRenderedComponent<PartiesAdminPortal> cut = RenderAuthorized("scope-a", routePartyId: "..");
+
+        cut.WaitForAssertion(() =>
+        {
+            api.DetailRequests.ShouldBeEmpty();
+            cut.Find("aside.hx-parties-admin__detail").TextContent.ShouldContain("The selected party is unavailable");
+        });
+    }
+
+    [Fact]
     public void PartiesAdminPortal_BrowseSurface_UsesFluentComponentsInsteadOfRawHtmlControls()
     {
         var api = new RecordingAdminPortalApiClient();
@@ -1144,13 +1369,17 @@ public sealed class PartiesAdminPortalComponentTests : BunitContext
         });
     }
 
-    private IRenderedComponent<PartiesAdminPortal> RenderAuthorized(string contextKey, int pageSize = AdminPortalQueryBounds.DefaultPageSize)
+    private IRenderedComponent<PartiesAdminPortal> RenderAuthorized(
+        string contextKey,
+        int pageSize = AdminPortalQueryBounds.DefaultPageSize,
+        string? routePartyId = null)
     {
         SeedTenant(contextKey, AdminUserId, TenantRole.TenantOwner);
         _authProvider.SetAuthenticated(AdminUserId, contextKey);
         return Render<PartiesAdminPortal>(p => p
             .Add(x => x.ContextKey, contextKey)
-            .Add(x => x.PageSize, pageSize));
+            .Add(x => x.PageSize, pageSize)
+            .Add(x => x.RoutePartyId, routePartyId));
     }
 
     private static IElement FindFluentButton(IRenderedComponent<PartiesAdminPortal> cut, string text)

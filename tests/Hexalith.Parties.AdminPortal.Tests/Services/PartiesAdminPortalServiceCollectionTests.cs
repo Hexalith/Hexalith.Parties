@@ -47,6 +47,8 @@ public sealed class PartiesAdminPortalServiceCollectionTests
         manifest.BoundedContext.ShouldBe("Parties");
         manifest.Projections.ShouldContain(typeof(PartiesAdminPortal).FullName!);
         PartiesAdminPortalManifest.Route.ShouldBe("/admin/parties");
+        PartiesAdminPortalManifest.DetailRoute.ShouldBe("/admin/parties/{partyId}");
+        PartiesAdminPortalManifest.GdprRoute.ShouldBe("/admin/parties/{partyId}/gdpr");
     }
 
     [Fact]

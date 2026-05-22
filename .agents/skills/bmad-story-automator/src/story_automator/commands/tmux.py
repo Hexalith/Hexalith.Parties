@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import os
-import re
 import shlex
 import time
 from pathlib import Path
@@ -190,21 +189,9 @@ def _build_cmd(args: list[str]) -> int:
     else:
         cli = "codex exec"
     quoted_prompt = shlex.quote(prompt)
-    if agent == "codex" and not ai_command and os.name == "nt":
-        codex_home = f"$env:TEMP\\sa-codex-home-{project_hash(root)}"
-        auth_src = os.path.expanduser("~/.codex/auth.json")
-        print(
-            f'$codexHome = "{codex_home}"; '
-            + 'New-Item -ItemType Directory -Force -Path $codexHome | Out-Null; '
-            + f'if (Test-Path {_ps_quote(auth_src)}) {{ Copy-Item -Force {_ps_quote(auth_src)} "$codexHome\\auth.json" }}; '
-            + '$env:CODEX_HOME = $codexHome; '
-            + "codex exec -s workspace-write -c 'approval_policy=\"never\"'"
-            + " -c 'model_reasoning_effort=\"high\"'"
-            + f" --disable plugins --disable sqlite --disable shell_snapshot {_ps_quote(prompt)}"
-        )
-    elif agent == "codex" and not ai_command:
+    if agent == "codex" and not ai_command:
         codex_home = f"/tmp/sa-codex-home-{project_hash(root)}"
-        auth_src = _bash_path(os.path.expanduser("~/.codex/auth.json"))
+        auth_src = os.path.expanduser("~/.codex/auth.json")
         print(
             f'mkdir -p "{codex_home}"'
             + f' && if [ -f "{auth_src}" ]; then ln -sf "{auth_src}" "{codex_home}/auth.json"; fi'
@@ -213,10 +200,7 @@ def _build_cmd(args: list[str]) -> int:
             + f" --disable plugins --disable sqlite --disable shell_snapshot {quoted_prompt}"
         )
     else:
-        if os.name == "nt":
-            print(f"$env:CLAUDECODE = $null; {cli} {_ps_quote(prompt)}")
-        else:
-            print(f"unset CLAUDECODE && {cli} {quoted_prompt}")
+        print(f"unset CLAUDECODE && {cli} {quoted_prompt}")
     return 0
 
 
@@ -237,7 +221,7 @@ def _render_step_prompt(contract: dict[str, object], story_id: str, story_prefix
     }
     for key, value in replacements.items():
         template = template.replace(key, value)
-    return template.rstrip() + "\n\nDo not browse or search the web. Do not run date/time commands; use only dates already present in the repository or provided context if a date is required.\n"
+    return template
 
 
 def _prompt_line(prefix: str, value: str) -> str:
@@ -503,17 +487,3 @@ def _infer_agent_from_command(command: str) -> str:
     if "claude" in executable:
         return "claude"
     return ""
-
-
-def _bash_path(path: str) -> str:
-    if os.name != "nt":
-        return path
-    normalized = path.replace("\\", "/")
-    match = re.match(r"^([A-Za-z]):/(.*)$", normalized)
-    if match:
-        return f"/mnt/{match.group(1).lower()}/{match.group(2)}"
-    return normalized
-
-
-def _ps_quote(value: str) -> str:
-    return "'" + value.replace("'", "''") + "'"

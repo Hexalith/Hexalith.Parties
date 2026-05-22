@@ -101,10 +101,9 @@ def session_paths(session: str, project_root: str | None = None) -> SessionPaths
     session = _validated_session_name(session)
     hash_value = project_hash(project_root)
     base = _artifact_base_dir()
-    command_suffix = ".ps1" if os.name == "nt" else ".sh"
     return SessionPaths(
         state=base / f".sa-{hash_value}-session-{session}-state.json",
-        command=base / f".sa-{hash_value}-session-{session}-command{command_suffix}",
+        command=base / f".sa-{hash_value}-session-{session}-command.sh",
         runner=base / f".sa-{hash_value}-session-{session}-runner.sh",
         output=base / f"sa-{hash_value}-output-{session}.txt",
     )
@@ -388,7 +387,6 @@ def _spawn_runner(session: str, command: str, selected_agent: str, project_root:
     _write_private_text(paths.command, _command_file_content(command), 0o700)
     _write_private_text(paths.runner, _runner_file_content(paths, bash_path, command_shell, str(root)), 0o700)
 
-    tmux_cwd = "." if os.name == "nt" else str(root)
     create_out, create_code = run_cmd(
         "tmux",
         "new-session",
@@ -400,7 +398,7 @@ def _spawn_runner(session: str, command: str, selected_agent: str, project_root:
         "-y",
         str(DEFAULT_HEIGHT),
         "-c",
-        tmux_cwd,
+        str(root),
         "-e",
         "STORY_AUTOMATOR_CHILD=true",
         "-e",
@@ -409,7 +407,7 @@ def _spawn_runner(session: str, command: str, selected_agent: str, project_root:
         "CLAUDECODE=",
         "-e",
         "BASH_ENV=",
-        *_placeholder_command(),
+        *PLACEHOLDER_COMMAND,
     )
     if create_code != 0:
         cleanup_runtime_artifacts(session, str(root))
@@ -485,7 +483,6 @@ def _spawn_legacy(session: str, command: str, selected_agent: str, project_root:
     root = project_root or get_project_root()
     paths = session_paths(session, root)
     paths.state.unlink(missing_ok=True)
-    tmux_cwd = "." if os.name == "nt" else root
     output, code = run_cmd(
         "tmux",
         "new-session",
@@ -497,7 +494,7 @@ def _spawn_legacy(session: str, command: str, selected_agent: str, project_root:
         "-y",
         str(DEFAULT_HEIGHT),
         "-c",
-        tmux_cwd,
+        root,
         "-e",
         "STORY_AUTOMATOR_CHILD=true",
         "-e",
@@ -507,17 +504,7 @@ def _spawn_legacy(session: str, command: str, selected_agent: str, project_root:
     )
     if code != 0:
         return (output, code)
-    if os.name == "nt":
-        _write_private_text(paths.command, command.rstrip() + "\n", 0o700)
-        run_cmd(
-            "tmux",
-            "send-keys",
-            "-t",
-            session,
-            f'powershell.exe -NoProfile -ExecutionPolicy Bypass -File "{paths.command}"',
-            "Enter",
-        )
-    elif len(command) > 500:
+    if len(command) > 500:
         _write_private_text(paths.command, "#!/bin/bash\n" + command + "\n", 0o700)
         run_cmd("tmux", "send-keys", "-t", session, f"bash {paths.command}", "Enter")
     else:
@@ -935,8 +922,8 @@ def _legacy_heartbeat_check(session: str, selected_agent: str) -> tuple[str, flo
         return ("error", 0.0, "", "session_not_found")
     capture = _capture_text(session, start=-40)
     lines = capture.splitlines()
-    last_line = next((line.rstrip() for line in reversed(lines) if line.strip()), "")
-    prompt = "true" if re.search(r"(❯|\$|#|%|PS .+>)\s*$", last_line) else "false"
+    last_line = lines[-1] if lines else ""
+    prompt = "true" if re.search(r"(❯|\$|#|%)\s*$", last_line) else "false"
     pane_pid = _safe_int(tmux_display(session, "#{pane_pid}"))
     if pane_pid <= 0:
         return ("completed" if prompt == "true" else "dead", 0.0, "", prompt)
@@ -971,11 +958,11 @@ def _resolve_spawn_mode(mode: str | None) -> str:
 
 
 def _runner_file_content(paths: SessionPaths, bash_path: str, command_shell: str, project_root: str) -> str:
-    state_file = shlex.quote(_bash_path(str(paths.state)))
-    command_file = shlex.quote(_bash_path(str(paths.command)))
-    resolved_command_shell = shlex.quote("bash" if os.name == "nt" else command_shell)
-    root = shlex.quote(_bash_path(project_root))
-    python_bin = shlex.quote("python3" if os.name == "nt" else sys.executable)
+    state_file = shlex.quote(str(paths.state))
+    command_file = shlex.quote(str(paths.command))
+    resolved_command_shell = shlex.quote(command_shell)
+    root = shlex.quote(project_root)
+    python_bin = shlex.quote(sys.executable)
     return f"""#!/usr/bin/env bash
 set -euo pipefail
 
@@ -1108,22 +1095,6 @@ def _command_file_content(command: str) -> str:
     return command.rstrip() + "\n"
 
 
-def _placeholder_command() -> tuple[str, ...]:
-    if os.name == "nt":
-        return ("powershell", "-NoExit")
-    return PLACEHOLDER_COMMAND
-
-
-def _bash_path(path: str) -> str:
-    if os.name != "nt":
-        return path
-    normalized = path.replace("\\", "/")
-    match = re.match(r"^([A-Za-z]):/(.*)$", normalized)
-    if match:
-        return f"/mnt/{match.group(1).lower()}/{match.group(2)}"
-    return normalized
-
-
 def _write_private_text(path: Path, data: str, mode: int) -> None:
     atomic_write(path, data)
     path.chmod(mode)
@@ -1253,7 +1224,7 @@ def _check_prompt_visible(session: str) -> str:
             continue
         if re.search(r"❯\s*([0-9]+[smh]\s*)?[0-9]{1,2}:[0-9]{2}:[0-9]{2}\s*$", current):
             return "true"
-        if re.search(r"(❯|\$|#|%|PS .+>)\s*$", current):
+        if re.search(r"(❯|\$|#|%)\s*$", current):
             return "true"
     return "false"
 
