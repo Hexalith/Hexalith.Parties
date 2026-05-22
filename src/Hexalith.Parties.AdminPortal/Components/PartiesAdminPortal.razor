@@ -73,7 +73,11 @@
         <FluentButton Appearance="ButtonAppearance.Outline" OnClick="ClearFiltersAsync">@EffectiveLabels.Clear</FluentButton>
         @if (RetryAvailable)
         {
-            <FluentButton Appearance="ButtonAppearance.Outline" OnClick="RetryAsync">@EffectiveLabels.Retry</FluentButton>
+            <FluentButton Appearance="ButtonAppearance.Outline"
+                          AutoFocus="@(_pendingFocus == FocusTarget.RetryButton)"
+                          OnClick="RetryAsync">
+                @EffectiveLabels.Retry
+            </FluentButton>
         }
     </div>
 
@@ -90,7 +94,9 @@
                             DisplayMode="DataGridDisplayMode.Table"
                             aria-label="@EffectiveLabels.PartiesGrid">
                 <TemplateColumn Title="@EffectiveLabels.DisplayNameColumn" Context="row">
-                    <FluentButton Appearance="ButtonAppearance.Subtle" OnClick="() => SelectPartyAsync(row.Id)">
+                    <FluentButton Appearance="ButtonAppearance.Subtle"
+                                  aria-describedby="@RowStatusId(row)"
+                                  OnClick="() => SelectPartyAsync(row.Id)">
                         @row.DisplayName
                     </FluentButton>
                 </TemplateColumn>
@@ -98,7 +104,9 @@
                     @EffectiveLabels.PartyTypeLabel(row.Type.ToString())
                 </TemplateColumn>
                 <TemplateColumn Title="@EffectiveLabels.StateColumn" Context="row">
-                    <span class="hx-parties-admin__badge" aria-label="@StatusLabel(row)">
+                    <span id="@RowStatusId(row)"
+                          class="hx-parties-admin__badge"
+                          aria-label="@StatusLabel(row)">
                         @StatusLabel(row)
                     </span>
                 </TemplateColumn>
@@ -112,7 +120,7 @@
 
             @if (!_isLoading && _rows.Count == 0)
             {
-                <p class="hx-parties-admin__empty">@EmptyText</p>
+                <p class="hx-parties-admin__empty" role="status" aria-live="polite">@EmptyText</p>
             }
 
             <nav class="hx-parties-admin__paging" aria-label="@EffectiveLabels.PagingRegion">
@@ -129,14 +137,14 @@
             }
             else if (_detail is null)
             {
-                <p>@DetailEmptyText</p>
+                <p role="status" aria-live="polite">@DetailEmptyText</p>
             }
             else
             {
                 <h2>@_detail.DisplayName</h2>
                 @if (_detailMetadata?.StaleDataAge is not null)
                 {
-                    <p class="hx-parties-admin__status" role="status">@EffectiveLabels.DataAge: @_detailMetadata.StaleDataAge</p>
+                    <p class="hx-parties-admin__status" role="status" aria-live="polite">@EffectiveLabels.DataAge: @_detailMetadata.StaleDataAge</p>
                 }
 
                 <section aria-labelledby="@($"party-summary-heading-{_instanceId}")">
@@ -1177,6 +1185,23 @@
         }
 
         return row.IsActive ? EffectiveLabels.Active : EffectiveLabels.Inactive;
+    }
+
+    private string RowStatusId(PartyIndexEntry row)
+        => $"party-row-state-{_instanceId}-{SafeDomToken(row.Id)}";
+
+    private static string SafeDomToken(string value)
+    {
+        const uint offsetBasis = 2166136261;
+        const uint prime = 16777619;
+        uint hash = offsetBasis;
+        foreach (char c in value)
+        {
+            hash ^= c;
+            hash *= prime;
+        }
+
+        return hash.ToString("x8", CultureInfo.InvariantCulture);
     }
 
     private string DetailStatus(PartyDetail detail)

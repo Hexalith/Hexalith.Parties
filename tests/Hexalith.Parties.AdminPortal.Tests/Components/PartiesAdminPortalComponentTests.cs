@@ -115,8 +115,11 @@ public sealed class PartiesAdminPortalComponentTests : BunitContext
             cut.Find(".hx-parties-admin__toolbar").TextContent.ShouldContain("Search");
             cut.Find("table").GetAttribute("aria-label").ShouldBe("Parties");
             cut.Find(".hx-parties-admin__empty").TextContent.Trim().ShouldBe("No parties");
+            cut.Find(".hx-parties-admin__empty").GetAttribute("role").ShouldBe("status");
+            cut.Find(".hx-parties-admin__empty").GetAttribute("aria-live").ShouldBe("polite");
             cut.Find("nav.hx-parties-admin__paging").TextContent.ShouldContain("Page");
             cut.Find("aside.hx-parties-admin__detail").TextContent.ShouldContain("Select a party");
+            cut.Find("aside.hx-parties-admin__detail p[role='status']").GetAttribute("aria-live").ShouldBe("polite");
         });
     }
 
@@ -662,6 +665,7 @@ public sealed class PartiesAdminPortalComponentTests : BunitContext
         {
             cut.Markup.ShouldContain("Data age");
             cut.Markup.ShouldContain("PT12S");
+            cut.Find("aside.hx-parties-admin__detail .hx-parties-admin__status").GetAttribute("aria-live").ShouldBe("polite");
             cut.Markup.ShouldContain("Restrictions");
             cut.Markup.ShouldContain("Restricted at");
             cut.Markup.ShouldContain("System metadata");
@@ -1605,6 +1609,7 @@ public sealed class PartiesAdminPortalComponentTests : BunitContext
 
         IRenderedComponent<PartiesAdminPortal> cut = RenderAuthorized("scope-a");
         cut.WaitForAssertion(() => cut.Markup.ShouldContain("Party data is temporarily unavailable"));
+        FindFluentButton(cut, "Retry").HasAttribute("autofocus").ShouldBeTrue();
         ClickFluentButton(cut, "Retry");
 
         cut.WaitForAssertion(() => cut.Markup.ShouldContain("Retry Success"));
@@ -1987,6 +1992,11 @@ public sealed class PartiesAdminPortalComponentTests : BunitContext
         var badges = cut.FindAll("td span.hx-parties-admin__badge").Select(b => b.TextContent.Trim()).ToList();
         badges.ShouldContain("Active");
         badges.ShouldContain("Inactive");
+
+        string activeDescription = FindFluentButton(cut, "Active Row").GetAttribute("aria-describedby")!;
+        string inactiveDescription = FindFluentButton(cut, "Inactive Row").GetAttribute("aria-describedby")!;
+        cut.Find($"#{activeDescription}").TextContent.Trim().ShouldBe("Active");
+        cut.Find($"#{inactiveDescription}").TextContent.Trim().ShouldBe("Inactive");
 
         // Each badge has aria-label matching its visible text — screen readers read the same content.
         foreach (var badge in cut.FindAll("td span.hx-parties-admin__badge"))
