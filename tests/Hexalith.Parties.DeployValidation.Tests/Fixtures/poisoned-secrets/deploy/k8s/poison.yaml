@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: poison-values
+data:
+  jwt: "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJwb2lzb24ifQ.signature"
+  encoded: "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+  password: "Password=CorrectHorseBatteryStaple"
+  secret: "client_secret=super-secret-value"
+  bearer: "Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.redacted"
+  kubeconfig: "certificate-authority-data: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA client-key-data: BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB"
+  redis: "redis://default:plain-password@redis:6379"
+  docker: '{"auths":{"registry.hexalith.com":{"auth":"ZG9ja2VyOnBvaXNvbg=="}}}'

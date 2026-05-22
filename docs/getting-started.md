@@ -13,7 +13,7 @@ This guide starts the local EventStore-fronted topology, sends a Parties command
 | Tool | Version | Download |
 |------|---------|----------|
 | .NET SDK | 10.0.300 or later (pinned in `global.json`) | [dot.net](https://dot.net) |
-| Docker Desktop | Latest | [docker.com](https://www.docker.com/products/docker-desktop/) |
+| Docker Desktop | Latest | [docker.com](https://www.docker.com/) |
 | Git | Any recent version | [git-scm.com](https://git-scm.com) |
 | `jq` | Latest, optional for Bash examples | [jqlang.org](https://jqlang.org) |
 
@@ -21,7 +21,7 @@ This guide starts the local EventStore-fronted topology, sends a Parties command
 
 | Tool | Version | Download |
 |------|---------|----------|
-| Local Kubernetes cluster | any of kind, k3d, minikube, Docker Desktop Kubernetes | [kind](https://kind.sigs.k8s.io/), [k3d](https://k3d.io/), [minikube](https://minikube.sigs.k8s.io/) |
+| Sandbox Kubernetes cluster | any operator-controlled context isolated from production | Use your platform team's approved local or sandbox cluster setup |
 | `kubectl` | recent | [kubernetes.io/docs/tasks/tools/](https://kubernetes.io/docs/tasks/tools/) |
 | DAPR CLI | recent | [docs.dapr.io](https://docs.dapr.io/getting-started/install-dapr-cli/) |
 | PowerShell (`pwsh`) | 7+ | [github.com/PowerShell](https://github.com/PowerShell/PowerShell) |
@@ -70,7 +70,7 @@ EventStore owns public authentication, tenant validation, RBAC, command/query ro
 
 > **Canonical reference:** [Kubernetes Deployment Architecture](kubernetes-deployment-architecture.md) — full cluster topology and reproducibility contracts.
 
-This step is an **alternative** to Step 1 for evaluating the production-shape deployment path against a Kubernetes cluster — see [Kubernetes Deployment Architecture](kubernetes-deployment-architecture.md) for the full 9-pod topology and reproducibility contracts. The publish script accepts any context the operator confirms via `-ConfirmContext` (Story 9.5, ADR D-K8s-3); any of the local Kubernetes distributions listed in the prerequisites table is a valid target, as is the in-MVP platform cluster. The Aspire-mode walkthrough in Step 1 remains valid and is the default path for everyday development.
+This step is an **alternative** to Step 1 for evaluating the production-shape deployment path against a Kubernetes cluster — see [Kubernetes Deployment Architecture](kubernetes-deployment-architecture.md) for the full 9-pod topology and reproducibility contracts. The publish script accepts only the context the operator confirms via `-ConfirmContext` (Story 9.5, ADR D-K8s-3); use an operator-controlled sandbox context or the in-MVP platform cluster. The Aspire-mode walkthrough in Step 1 remains valid and is the default path for everyday development.
 
 **Time budget:** the entire walkthrough — `publish.ps1` through the first successful `CreateParty` command — fits inside the `< 15 min` first-deploy budget (NFR30) on a developer-class machine that already has the prerequisites installed.
 

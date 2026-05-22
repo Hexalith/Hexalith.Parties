@@ -328,6 +328,51 @@ public sealed class OperatorScriptValidationTests : IDisposable
     }
 
     [Fact]
+    public void PublishCanRunTwiceWithoutDuplicatingPatchArtifactsOrChangingCarveOuts()
+    {
+        using ScriptWorkspace workspace = CreateScriptWorkspace(includeLiteralJwt: true);
+        Dictionary<string, string> carveOutBaselines = new(StringComparer.Ordinal)
+        {
+            ["redis"] = File.ReadAllText(Path.Combine(workspace.K8sRoot, "redis", "deployment.yaml")),
+            ["keycloak"] = File.ReadAllText(Path.Combine(workspace.K8sRoot, "keycloak", "deployment.yaml")),
+        };
+
+        for (int i = 0; i < 2; i++)
+        {
+            ProcessResult result = RunPwshScriptPath(
+                workspace.PublishScript,
+                workspace.BinDirectory,
+                workspace.Environment,
+                "-ConfirmContext",
+                "safe-context",
+                "-SkipDaprInit");
+
+            result.ExitCode.ShouldBe(0, result.Output);
+        }
+
+        string eventstore = File.ReadAllText(Path.Combine(workspace.K8sRoot, "eventstore", "deployment.yaml"));
+        CountOccurrences(eventstore, "dapr.io/enabled: \"true\"").ShouldBe(1);
+        CountOccurrences(eventstore, "dapr.io/app-id: eventstore").ShouldBe(1);
+        CountOccurrences(eventstore, "dapr.io/app-port: '8080'").ShouldBe(1);
+        CountOccurrences(eventstore, "dapr.io/config: accesscontrol").ShouldBe(1);
+        CountOccurrences(eventstore, "imagePullSecrets:").ShouldBe(1);
+        CountOccurrences(eventstore, "- name: zot-pull-secret").ShouldBe(1);
+        CountOccurrences(eventstore, "Authentication__JwtBearer__SigningKey").ShouldBe(1);
+        CountOccurrences(eventstore, "secretKeyRef:").ShouldBe(1);
+        eventstore.ShouldNotContain("value: literal-secret");
+
+        foreach ((string folder, string baseline) in carveOutBaselines)
+        {
+            string deployment = File.ReadAllText(Path.Combine(workspace.K8sRoot, folder, "deployment.yaml"));
+            deployment.ShouldBe(baseline, $"{folder} must remain byte-identical after repeated publish cleanup and patch cycles.");
+            deployment.ShouldNotContain("dapr.io/");
+            deployment.ShouldNotContain("Authentication__JwtBearer__SigningKey");
+            deployment.ShouldNotContain("zot-pull-secret");
+            deployment.ShouldNotContain("imagePullSecrets:");
+        }
+    }
+
+    [Fact]
     public void PublishFailsOnUnexpectedTopLevelFileEmittedByAspirate()
     {
         using ScriptWorkspace workspace = CreateScriptWorkspace(emitUnexpectedTopLevelFile: true);
@@ -441,6 +486,19 @@ public sealed class OperatorScriptValidationTests : IDisposable
         process.WaitForExit();
 
         return new ProcessResult(process.ExitCode, stdout + stderr);
+    }
+
+    private static int CountOccurrences(string text, string value)
+    {
+        int count = 0;
+        int index = 0;
+        while ((index = text.IndexOf(value, index, StringComparison.Ordinal)) >= 0)
+        {
+            count++;
+            index += value.Length;
+        }
+
+        return count;
     }
 
     private ScriptWorkspace CreateScriptWorkspace(

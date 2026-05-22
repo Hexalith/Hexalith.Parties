@@ -220,7 +220,7 @@ Two minutes after step 13, the 9 pods reach `Ready`.
 3. The `parties` app validates the request, then invokes its daprd sidecar on `localhost:3500`.
 4. The daprd sidecar:
    - Validates the call against `accesscontrol-parties`.
-   - Routes service-invocations: `parties` → `tenants` (tenant lookup), `parties` → `eventstore` (event append), `parties` → `memories` (search index update if `EnableMemoriesSearch=true`).
+   - Routes service-invocations: `parties` → `tenants` (tenant lookup) and `parties` → `eventstore` (event append). Memories search-index updates use the in-cluster Memories Service URL when `EnableMemoriesSearch=true`; `accesscontrol-memories` intentionally denies peer Dapr invocation until a concrete route contract is introduced.
    - Persists actor state via the `statestore` Component to Redis.
    - Publishes domain events via the `pubsub` Component to Redis Streams.
 5. Subscribers (declarative subscriptions on Redis Streams) wake up and process the events asynchronously.

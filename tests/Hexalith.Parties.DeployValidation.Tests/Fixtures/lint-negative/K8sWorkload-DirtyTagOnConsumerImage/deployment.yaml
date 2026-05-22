@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dirty-tag
+spec:
+  template:
+    spec:
+      imagePullSecrets:
+        - name: zot-pull-secret
+      containers:
+        - name: dirty-tag
+          image: registry.hexalith.com/dirty-tag:1.2.3+dirty
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080

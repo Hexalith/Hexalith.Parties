@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: eventstore
+spec:
+  template:
+    metadata:
+      annotations:
+        dapr.io/enabled: 'true'
+        dapr.io/app-id: eventstore
+        dapr.io/app-port: '8080'
+        dapr.io/config: accesscontrol
+    spec:
+      imagePullSecrets:
+        - name: zot-pull-secret
+      containers:
+        - name: eventstore
+          image: registry.hexalith.com/eventstore:1.2.3-preview.4
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080

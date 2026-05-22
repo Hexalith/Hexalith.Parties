@@ -1,0 +1,11 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: parties
+spec:
+  template:
+    spec:
+      containers:
+        - name: parties
+          image: registry.hexalith.com/parties:1.2.3-preview.5
+          imagePullPolicy: IfNotPresent

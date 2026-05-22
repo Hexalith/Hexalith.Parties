@@ -1,0 +1,62 @@
+namespace Hexalith.Parties.DeployValidation.Tests;
+
+[Collection("DeployValidation")]
+public sealed class K8sManifestPublishTests
+{
+    private static readonly string[] s_daprApps = ["eventstore", "eventstore-admin", "parties", "tenants", "memories"];
+
+    private static readonly string[] s_nonDaprApps = ["eventstore-admin-ui", "parties-mcp", "redis", "keycloak"];
+
+    [Fact]
+    public void PublishScriptDeclaresMinVerAspirateAndPatchContracts()
+    {
+        string publish = DeploymentTestPaths.ReadRepoFile("deploy/k8s/publish.ps1");
+
+        publish.ShouldContain("dotnet msbuild $AppHostProject -t:Build -p:Configuration=Release -getProperty:Version");
+        publish.ShouldContain("^[0-9]+\\.[0-9]+\\.[0-9]+(?:-[A-Za-z0-9.-]+)?(?:\\+[A-Za-z0-9.-]+)?$");
+        publish.ShouldContain("$normalized.Contains('+dirty')");
+        publish.ShouldContain("--container-registry', $Registry");
+        publish.ShouldContain("--container-image-tag', $ImageTag");
+        publish.ShouldContain("--include-dashboard', 'false'");
+        publish.ShouldContain("--image-pull-policy', 'IfNotPresent'");
+        publish.ShouldContain("DOTNET_ROLL_FORWARD");
+        publish.ShouldContain("ContainerImageTags");
+        publish.ShouldContain("PUBLISH_TARGET must be unset before aspirate generate");
+    }
+
+    [Fact]
+    public void PublishScriptPatchesOnlyDocumentedDaprAndJwtTargets()
+    {
+        string publish = DeploymentTestPaths.ReadRepoFile("deploy/k8s/publish.ps1");
+
+        foreach (string app in s_daprApps)
+        {
+            publish.Contains($"'{app}' = 'accesscontrol", StringComparison.Ordinal).ShouldBeTrue($"{app} must have an explicit Dapr config patch target.");
+        }
+
+        foreach (string app in s_nonDaprApps)
+        {
+            publish.Contains(app, StringComparison.Ordinal).ShouldBeTrue($"{app} must be named so tests can guard accidental patch target expansion.");
+        }
+
+        publish.ShouldContain("$ForbiddenDaprTargets = @('eventstore-admin-ui', 'parties-mcp', 'redis', 'keycloak')");
+        publish.ShouldContain("Authentication__JwtBearer__SigningKey");
+        publish.ShouldContain("secretKeyRef:");
+        publish.ShouldContain("name: $JwtSecretName");
+        publish.ShouldContain("Ensure-JwtSecretRef");
+    }
+
+    [Fact]
+    public void PublishScriptDeclaresImagePullSecretPatchContract()
+    {
+        string publish = DeploymentTestPaths.ReadRepoFile("deploy/k8s/publish.ps1");
+
+        publish.ShouldContain("imagePullSecrets:");
+        publish.ShouldContain("zot-pull-secret");
+        publish.ShouldContain("$usesRegistry = $content -match \"image:\\s*$([regex]::Escape($Registry))/\"");
+        publish.ShouldContain("Test-PodTemplateImagePullSecret");
+        publish.ShouldContain("name:\\s*$([regex]::Escape($ZotSecretName))");
+        publish.ShouldContain("Write-Host \"[publish] imagePullSecrets patch targets:");
+        publish.ShouldNotContain("FromBase64String");
+    }
+}
