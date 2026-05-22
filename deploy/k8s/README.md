@@ -7,8 +7,8 @@
 This folder is the operator entry-point for deploying Hexalith.Parties to a Kubernetes
 cluster. Today on `main`, it contains the Story 9.2 Aspirate-emitted application service
 folders, the Story 9.3 hand-authored Redis and Keycloak carve-outs, Story 9.4's Dapr CR
-set under `../dapr/`, and top-level namespace and Kustomize wiring. Operator scripts and
-shared helpers are filled in by **Story 9.5** (see the roadmap callout below).
+set under `../dapr/`, top-level namespace and Kustomize wiring, and the Story 9.5
+operator scripts plus shared context helper.
 
 The image substrate (Zot OCI registry serving `registry.hexalith.com`) is delivered by
 **Story 9.1** — see [`../zot/README.md`](../zot/README.md).
@@ -46,25 +46,31 @@ by the infra team — see [`../zot/README.md`](../zot/README.md) "Out-of-band Se
 
 ## Publish + teardown (one-command flow)
 
-> **Status (forward reference — Story 9.5):** This command becomes available when Story 9.5
-> lands. Until then, committed manifests under `deploy/k8s/` and `deploy/dapr/` are
-> validated manually with `kubectl kustomize deploy/k8s/`, Dapr CR client dry-runs, and
-> the story-specific cleanliness checks.
+`publish.ps1` confirms the active kubectl context, resolves the MinVer image tag, regenerates
+the seven Aspirate-owned service folders, preserves Redis/Keycloak carve-outs, patches Dapr
+annotations/JWT references/image pull secrets, initializes Dapr when needed, bootstraps
+operator-managed Secrets, applies `deploy/dapr/` in dependency order, then applies this
+Kustomize tree.
 
 ```pwsh
 pwsh deploy/k8s/publish.ps1 -ConfirmContext <name>
 ```
 
-> **Status (forward reference — Story 9.5):** The teardown command becomes available when
-> Story 9.5 lands. The shared `-ConfirmContext` gate (delivered via
-> `deploy/k8s/_lib/Confirm-KubeContext.ps1`) compares the active `kubectl config current-context`
-> against `<name>` and exits 2 on mismatch — see ADR D-K8s-3.
+`teardown.ps1` uses the same shared `-ConfirmContext` gate, deletes the Kustomize workload
+set, removes Dapr CRs, deletes operator-managed Secrets, then probes for residual owned
+state. Add `-PurgeNamespace` only when the namespace contains no non-story resources. Add
+`-PurgeDapr` only when the cluster-wide Dapr control plane should be uninstalled.
 
 ```pwsh
 pwsh deploy/k8s/teardown.ps1 -ConfirmContext <name>
+pwsh deploy/k8s/teardown.ps1 -ConfirmContext <name> -PurgeNamespace
+pwsh deploy/k8s/teardown.ps1 -ConfirmContext <name> -PurgeDapr
 ```
 
-The active context is echoed once at the start of every run for auditability (per ADR D-K8s-3).
+The shared `deploy/k8s/_lib/Confirm-KubeContext.ps1` helper compares the active
+`kubectl config current-context` against `<name>` and exits 2 on mismatch before cleanup,
+publish, delete, Secret, or Dapr mutation. The active context is echoed once at the start of
+every run for auditability (per ADR D-K8s-3).
 
 ---
 
@@ -77,7 +83,7 @@ The active context is echoed once at the start of every run for auditability (pe
 > | `namespace.yaml`, `kustomization.yaml` | Story 9.2 | Delivered: top-level namespace and Kustomize wiring |
 > | `redis/`, `keycloak/` | Story 9.3 | Delivered: hand-authored vendor carve-outs outside Aspirate regeneration |
 > | `deploy/dapr/` control-plane CRs | Story 9.4 | Delivered: Dapr Components, ACL, Subscriptions, and Resiliency |
-> | `publish.ps1`, `teardown.ps1`, `_lib/Confirm-KubeContext.ps1` | Story 9.5 | Forward reference: operator scripts + shared context-gate helper |
+> | `publish.ps1`, `teardown.ps1`, `_lib/Confirm-KubeContext.ps1` | Story 9.5 | Delivered: operator scripts + shared context-gate helper |
 >
 > Track progress in `_bmad-output/implementation-artifacts/sprint-status.yaml`.
 
@@ -87,11 +93,11 @@ The active context is echoed once at the start of every run for auditability (pe
 
 `deploy/dapr/` is Source 2 from the canonical
 [Kubernetes Deployment Architecture](../../docs/kubernetes-deployment-architecture.md).
-Story 9.4 delivers the committed production CR set only; Story 9.5 applies it in this order:
+Story 9.4 delivers the committed production CR set only; `publish.ps1` applies it in this order:
 Components -> Resiliency -> Configurations -> Subscriptions. Do not add the Dapr CRs to
 `deploy/k8s/kustomization.yaml`.
 
-Story 9.5 also owns the control-plane install and runtime activation steps:
+`publish.ps1` also owns the control-plane install and runtime activation steps:
 
 - Run `dapr init -k` against the active `kubectl` context unless `-SkipDaprInit` is passed.
 - Keep the Dapr control plane in `dapr-system`, never in `hexalith-parties`.
@@ -130,6 +136,7 @@ The Story 9.5 clean phase must preserve:
 - `deploy/k8s/README.md`
 - `deploy/k8s/publish.ps1`
 - `deploy/k8s/teardown.ps1`
+- `deploy/k8s/_lib/`
 
 All other files and folders under `deploy/k8s/` are eligible for cleanup before Aspirate
 regeneration, except the seven application service folders after they are regenerated.
@@ -144,18 +151,9 @@ Keycloak admin credentials are not committed as YAML. Story 9.5 bootstraps the
 `hexalith-keycloak-admin` Secret imperatively. It creates
 `KC_BOOTSTRAP_ADMIN_USERNAME=admin` and a random 24-byte
 `KC_BOOTSTRAP_ADMIN_PASSWORD` on first publish, then preserves both values on re-publish.
-Until that script exists, operators may temporarily precreate the Secret without printing
-or committing real values:
-
-```bash
-KEYCLOAK_ADMIN_PASSWORD="$(openssl rand -base64 24)"
-kubectl create secret generic hexalith-keycloak-admin --dry-run=client -o yaml \
-  --from-literal=KC_BOOTSTRAP_ADMIN_USERNAME=admin \
-  --from-file=KC_BOOTSTRAP_ADMIN_PASSWORD=<(printf '%s' "$KEYCLOAK_ADMIN_PASSWORD") \
-  -n hexalith-parties |
-  kubectl apply -f -
-unset KEYCLOAK_ADMIN_PASSWORD
-```
+Operators verify the Secret by name only with
+`kubectl get secret hexalith-keycloak-admin -n hexalith-parties`; do not decode or print
+the stored values during normal operations.
 
 Do not put real values in docs, shell history, manifests, Kustomize generators, or env files.
 

@@ -143,6 +143,7 @@ The accepted response carries a correlation id; a follow-up query against `/api/
 
 ```bash
 pwsh deploy/k8s/teardown.ps1 -ConfirmContext kubernetes-admin@cluster.local            # leaves the DAPR control plane installed
+pwsh deploy/k8s/teardown.ps1 -ConfirmContext kubernetes-admin@cluster.local -PurgeNamespace # also removes the app namespace after residual checks pass
 pwsh deploy/k8s/teardown.ps1 -ConfirmContext kubernetes-admin@cluster.local -PurgeDapr # also uninstalls DAPR (slower next deploy)
 ```
 

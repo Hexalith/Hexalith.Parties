@@ -10,7 +10,7 @@ This guide covers deploying the Hexalith.Parties service with DAPR in production
 - Kubernetes cluster with DAPR operator (for Kubernetes deployments)
 - One of: Kafka, RabbitMQ, or Azure Service Bus for pub/sub
 - One of: CosmosDB, PostgreSQL for state store (Redis for development only)
-- PowerShell 5.1+ or PowerShell 7+ for the validation tool
+- PowerShell 7+ (`pwsh`) for `deploy/k8s/publish.ps1` and `deploy/k8s/teardown.ps1`; the validation tool remains a separate Story 9.6 entry point
 - `kubectl` context the operator will pass to `publish.ps1` / `teardown.ps1` via `-ConfirmContext` (Story 9.5 ADR D-K8s-3 replaced the prior local-cluster regex allowlist)
 
 ### Zot credentials
