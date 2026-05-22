@@ -833,6 +833,53 @@ public sealed class PartiesAdminPortalComponentTests : BunitContext
     }
 
     [Fact]
+    public void PartiesAdminPortal_EventStoreLink_UsesGenericLabelAndExcludesPartyData()
+    {
+        var api = new RecordingAdminPortalApiClient();
+        api.EnqueueList(Page(IndexEntry("party-link-redaction", "Private Person", PartyType.Person, true)));
+        api.EnqueueDetail(new PartyDetail
+        {
+            Id = "tenant-a:party:party link redaction",
+            Type = PartyType.Person,
+            IsActive = true,
+            DisplayName = "Private Person",
+            SortName = "Person, Private",
+            ContactChannels = [new ContactChannel { Id = "contact-private", Type = ContactChannelType.Email, Value = "private@example.test", IsPreferred = true }],
+            Identifiers = [new PartyIdentifier { Id = "identifier-private", Type = IdentifierType.Other, Value = "SSN-123-45-6789" }],
+            ConsentRecords = [new ConsentRecord { ConsentId = "consent-private", ChannelId = "contact-private", Purpose = "marketing-private", LawfulBasis = LawfulBasis.Consent, GrantedAt = DateTimeOffset.Parse("2026-05-03T00:00:00Z"), GrantedBy = "operator-private" }],
+            NameHistory = [new NameHistoryEntry { DisplayName = "Prior Private Name", SortName = "Private", ChangedAt = DateTimeOffset.Parse("2026-05-01T00:00:00Z") }],
+            CreatedAt = DateTimeOffset.Parse("2026-05-01T00:00:00Z"),
+            LastModifiedAt = DateTimeOffset.Parse("2026-05-02T00:00:00Z"),
+        });
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+        Services.Configure<PartiesAdminPortalOptions>(options =>
+        {
+            options.EventStoreAdminUiBaseAddress = new Uri("https://admin.example/ui/?shell=frontcomposer");
+        });
+
+        IRenderedComponent<PartiesAdminPortal> cut = RenderAuthorized("scope-a");
+        cut.WaitForAssertion(() => cut.Markup.ShouldContain("Private Person"));
+        ClickFluentButton(cut, "Private Person");
+
+        cut.WaitForAssertion(() =>
+        {
+            IElement link = cut.Find("a[href*='aggregateId=tenant-a%3Aparty%3Aparty%20link%20redaction']");
+            link.TextContent.Trim().ShouldBe("Open EventStore stream");
+            link.TextContent.ShouldNotContain("Private Person");
+            string href = link.GetAttribute("href")!;
+            href.ShouldStartWith("https://admin.example/ui/streams?shell=frontcomposer&aggregateId=");
+            href.ShouldNotContain("party link redaction");
+            href.ShouldNotContain("Private Person");
+            href.ShouldNotContain("private@example.test");
+            href.ShouldNotContain("SSN-123-45-6789");
+            href.ShouldNotContain("marketing-private");
+            href.ShouldNotContain("Prior Private Name");
+            href.ShouldNotContain("token", Case.Insensitive);
+            href.ShouldNotContain("payload", Case.Insensitive);
+        });
+    }
+
+    [Fact]
     public void PartiesAdminPortal_DetailDisablesEventStoreAdminLinksWhenUrlIsUnavailable()
     {
         var api = new RecordingAdminPortalApiClient();

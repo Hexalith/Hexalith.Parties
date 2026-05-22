@@ -70,6 +70,26 @@ public sealed class PartiesAdminPortalServiceCollectionTests
     }
 
     [Fact]
+    public void EventStoreAdminLinks_PreserveBaseQueryAndCustomPathsWithEncodedIdentifiers()
+    {
+        var options = Microsoft.Extensions.Options.Options.Create(new PartiesAdminPortalOptions
+        {
+            EventStoreAdminUiBaseAddress = new Uri("https://admin.example/base/?theme=dark"),
+            EventStoreAdminUiStreamPath = "/diagnostics/streams/",
+            EventStoreAdminUiCorrelationPath = "/diagnostics/correlations/",
+        });
+        var links = new AdminPortalEventStoreAdminLinks(options);
+
+        Uri? stream = links.BuildStreamLink("tenant-a:party:party 123");
+        Uri? correlation = links.BuildCorrelationLink("corr/123?unsafe=true");
+
+        stream!.AbsoluteUri.ShouldBe("https://admin.example/base/diagnostics/streams/?theme=dark&aggregateId=tenant-a%3Aparty%3Aparty%20123");
+        correlation!.AbsoluteUri.ShouldBe("https://admin.example/base/diagnostics/correlations/?theme=dark&correlationId=corr%2F123%3Funsafe%3Dtrue");
+        stream.AbsoluteUri.ShouldNotContain("party 123");
+        correlation.AbsoluteUri.ShouldNotContain("unsafe=true");
+    }
+
+    [Fact]
     public void EventStoreAdminLinks_ReturnNullWhenBaseAddressIsUnavailable()
     {
         var links = new AdminPortalEventStoreAdminLinks(
@@ -77,6 +97,21 @@ public sealed class PartiesAdminPortalServiceCollectionTests
 
         links.BuildStreamLink("party-1").ShouldBeNull();
         links.BuildCorrelationLink("corr-1").ShouldBeNull();
+    }
+
+    [Fact]
+    public void EventStoreAdminLinks_ReturnNullForBlankIdentifiers()
+    {
+        var links = new AdminPortalEventStoreAdminLinks(
+            Microsoft.Extensions.Options.Options.Create(new PartiesAdminPortalOptions
+            {
+                EventStoreAdminUiBaseAddress = new Uri("https://admin.example/"),
+            }));
+
+        links.BuildStreamLink(string.Empty).ShouldBeNull();
+        links.BuildStreamLink("   ").ShouldBeNull();
+        links.BuildCorrelationLink(string.Empty).ShouldBeNull();
+        links.BuildCorrelationLink("   ").ShouldBeNull();
     }
 
     private sealed class RecordingFrontComposerRegistry : IFrontComposerRegistry

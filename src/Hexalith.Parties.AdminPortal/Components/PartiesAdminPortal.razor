@@ -255,7 +255,7 @@
                     <h3 id="@($"eventstore-links-heading-{_instanceId}")">@EffectiveLabels.EventStoreLinks</h3>
                     @if (EventStoreLinks.BuildStreamLink(_detail.Id) is { } streamLink)
                     {
-                        <a href="@streamLink" target="_blank" rel="noopener noreferrer">@EffectiveLabels.OpenEventStoreStream</a>
+                        <a href="@streamLink.AbsoluteUri" target="_blank" rel="noopener noreferrer">@EffectiveLabels.OpenEventStoreStream</a>
                     }
                     else
                     {
