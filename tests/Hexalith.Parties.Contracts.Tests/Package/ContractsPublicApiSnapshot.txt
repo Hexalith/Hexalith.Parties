@@ -490,8 +490,13 @@ type interface Hexalith.Parties.Contracts.Security.IKeyStorageBackend interfaces
   method System.Threading.Tasks.Task CreateSecretAsync(System.String keyPath, System.Byte[] keyMaterial, System.Threading.CancellationToken cancellationToken)
   method System.Threading.Tasks.Task DeleteAllVersionsAsync(System.String tenantId, System.String partyId, System.Threading.CancellationToken cancellationToken)
   method System.Threading.Tasks.Task DeleteSecretAsync(System.String keyPath, System.Threading.CancellationToken cancellationToken)
+  method System.Threading.Tasks.Task<Hexalith.Parties.Contracts.Security.TenantKeyMetadata> GetOrCreateTenantKeyAsync(System.String tenantId, System.String operationId, System.Threading.CancellationToken cancellationToken)
+  method System.Threading.Tasks.Task<Hexalith.Parties.Contracts.Security.PartyKeyWrappingMetadata> GetPartyKeyWrappingMetadataAsync(System.String tenantId, System.String partyId, System.Int32 keyVersion, System.Threading.CancellationToken cancellationToken)
   method System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<System.Int32>> ListKeyVersionsAsync(System.String tenantId, System.String partyId, System.Threading.CancellationToken cancellationToken)
+  method System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<Hexalith.Parties.Contracts.Security.PartyKeyRecord>> ListPartyKeyRecordsAsync(System.String tenantId, System.Threading.CancellationToken cancellationToken)
+  method System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<Hexalith.Parties.Contracts.Security.TenantKeyMetadata>> ListTenantKeysAsync(System.String tenantId, System.Threading.CancellationToken cancellationToken)
   method System.Threading.Tasks.Task<System.Byte[]> ReadSecretAsync(System.String keyPath, System.Threading.CancellationToken cancellationToken)
+  method System.Threading.Tasks.Task SetPartyKeyWrappingMetadataAsync(Hexalith.Parties.Contracts.Security.PartyKeyWrappingMetadata metadata, System.Threading.CancellationToken cancellationToken)
 type interface Hexalith.Parties.Contracts.Security.IPartyErasureRecordStore interfaces:
   method System.Threading.Tasks.Task<Hexalith.Parties.Contracts.Security.ErasureCertificate> GetCertificateAsync(System.String tenantId, System.String partyId, System.Threading.CancellationToken cancellationToken)
   method System.Threading.Tasks.Task<Hexalith.Parties.Contracts.Security.PartyErasureStatusRecord> GetStatusAsync(System.String tenantId, System.String partyId, System.Threading.CancellationToken cancellationToken)
@@ -512,12 +517,21 @@ type interface Hexalith.Parties.Contracts.Security.IPartyKeyManagementService in
   method System.Threading.Tasks.Task<Hexalith.Parties.Contracts.Security.PartyKeyInfo> RotateKeyAsync(System.String tenantId, System.String partyId, System.Threading.CancellationToken cancellationToken)
 type interface Hexalith.Parties.Contracts.Security.IPersonalDataCommandGuard interfaces:
   method System.Threading.Tasks.Task<System.String> GetBlockingReasonAsync(System.String tenantId, System.String partyId, System.Object command, System.Threading.CancellationToken cancellationToken)
+type interface Hexalith.Parties.Contracts.Security.ITenantKeyRotationService interfaces:
+  method System.Threading.Tasks.Task<Hexalith.Parties.Contracts.Security.TenantKeyRotationStatus> GetStatusAsync(System.String tenantId, System.String operationId, System.Threading.CancellationToken cancellationToken)
+  method System.Threading.Tasks.Task<Hexalith.Parties.Contracts.Security.TenantKeyRotationStatus> RotateAsync(Hexalith.Parties.Contracts.Security.TenantKeyRotationRequest request, System.Threading.CancellationToken cancellationToken)
 type class Hexalith.Parties.Contracts.Security.KeyOperationAuditEntry interfaces:System.IEquatable<Hexalith.Parties.Contracts.Security.KeyOperationAuditEntry>
   ctor ()
   property System.String CorrelationId required getset
+  property System.Nullable<System.Int32> FailedCount getset
+  property System.Nullable<Hexalith.Parties.Contracts.Security.TenantKeyRotationFailureCategory> FailureCategory getset
   property System.Int32 KeyVersion required getset
+  property System.String OperationId getset
   property Hexalith.Parties.Contracts.Security.KeyOperationType OperationType required getset
+  property System.String Outcome getset
   property System.String PartyId required getset
+  property System.Nullable<System.Int32> ProcessedCount getset
+  property System.Nullable<System.Int32> SkippedCount getset
   property System.String TenantId required getset
   property System.DateTimeOffset Timestamp required getset
 type enum Hexalith.Parties.Contracts.Security.KeyOperationType base:System.Enum interfaces:System.IComparable,System.IConvertible,System.IFormattable,System.ISpanFormattable
@@ -525,6 +539,7 @@ type enum Hexalith.Parties.Contracts.Security.KeyOperationType base:System.Enum 
   enum Delete=3
   enum Read=1
   enum Rotate=2
+  enum TenantRotate=4
 type enum Hexalith.Parties.Contracts.Security.LawfulBasis base:System.Enum interfaces:System.IComparable,System.IConvertible,System.IFormattable,System.ISpanFormattable
   enum Consent=0
   enum ContractualNecessity=2
@@ -546,6 +561,58 @@ type class Hexalith.Parties.Contracts.Security.PartyKeyInfo interfaces:System.IE
   property System.String PartyId required getset
   property System.String TenantId required getset
   property System.Int32 Version required getset
+type class Hexalith.Parties.Contracts.Security.PartyKeyRecord interfaces:System.IEquatable<Hexalith.Parties.Contracts.Security.PartyKeyRecord>
+  ctor ()
+  property System.String KeyPath required getset
+  property System.String PartyId required getset
+  property System.String TenantId required getset
+  property System.Int32 Version required getset
+type class Hexalith.Parties.Contracts.Security.PartyKeyWrappingMetadata interfaces:System.IEquatable<Hexalith.Parties.Contracts.Security.PartyKeyWrappingMetadata>
+  ctor ()
+  property System.Int32 KeyVersion required getset
+  property System.String PartyId required getset
+  property System.String RotationId required getset
+  property System.String TenantId required getset
+  property System.String TenantKeyId required getset
+  property System.Int32 TenantKeyVersion required getset
+  property System.DateTimeOffset WrappedAt required getset
+type class Hexalith.Parties.Contracts.Security.TenantKeyMetadata interfaces:System.IEquatable<Hexalith.Parties.Contracts.Security.TenantKeyMetadata>
+  ctor ()
+  property System.DateTimeOffset CreatedAt required getset
+  property System.String KeyId required getset
+  property System.String OperationId required getset
+  property System.String ProviderName required getset
+  property System.String TenantId required getset
+  property System.Int32 Version required getset
+type enum Hexalith.Parties.Contracts.Security.TenantKeyRotationFailureCategory base:System.Enum interfaces:System.IComparable,System.IConvertible,System.IFormattable,System.ISpanFormattable
+  enum BackendUnavailable=2
+  enum ConcurrencyConflict=4
+  enum ErasedParty=3
+  enum MissingKeyProvider=1
+  enum None=0
+type enum Hexalith.Parties.Contracts.Security.TenantKeyRotationPhase base:System.Enum interfaces:System.IComparable,System.IConvertible,System.IFormattable,System.ISpanFormattable
+  enum Completed=2
+  enum Failed=3
+  enum InProgress=1
+  enum NotStarted=0
+type class Hexalith.Parties.Contracts.Security.TenantKeyRotationRequest interfaces:System.IEquatable<Hexalith.Parties.Contracts.Security.TenantKeyRotationRequest>
+  ctor ()
+  property System.String CorrelationId getset
+  property System.String OperationId required getset
+  property System.String TenantId required getset
+type class Hexalith.Parties.Contracts.Security.TenantKeyRotationStatus interfaces:System.IEquatable<Hexalith.Parties.Contracts.Security.TenantKeyRotationStatus>
+  ctor ()
+  property System.Nullable<System.DateTimeOffset> CompletedAt getset
+  property System.String CorrelationId getset
+  property System.Int32 FailedCount required getset
+  property System.Collections.Generic.IReadOnlyDictionary<Hexalith.Parties.Contracts.Security.TenantKeyRotationFailureCategory,System.Int32> FailureCategories required getset
+  property System.String OperationId required getset
+  property Hexalith.Parties.Contracts.Security.TenantKeyRotationPhase Phase required getset
+  property System.Int32 ProcessedCount required getset
+  property System.Int32 SkippedCount required getset
+  property System.DateTimeOffset StartedAt required getset
+  property System.String TenantId required getset
+  property System.Int32 TotalCount required getset
 type class Hexalith.Parties.Contracts.State.PartyState interfaces:
   ctor ()
   property System.Collections.Generic.IReadOnlyList<Hexalith.Parties.Contracts.ValueObjects.ConsentRecord> ConsentRecords get

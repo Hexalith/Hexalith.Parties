@@ -125,7 +125,7 @@ development_status:
   6-7-export-party-data-portability-package: done
   6-8-record-processing-activities: done
   6-9-return-privacy-preserving-erased-party-status: done
-  6-10-rotate-tenant-encryption-keys: backlog
+  6-10-rotate-tenant-encryption-keys: done
   epic-6-retrospective: optional
 
   # Epic 7: Administration Console (10 stories)

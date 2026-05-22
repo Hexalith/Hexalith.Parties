@@ -129,8 +129,11 @@ public static class PartiesServiceCollectionExtensions {
         _ = services.AddSingleton<IPartyKeyRetryScheduler, ActorBackedPartyKeyRetryScheduler>();
         _ = services.AddSingleton<PartyKeyLifecycleService>();
         _ = services.AddSingleton<IPartyKeyLifecycleService>(sp => sp.GetRequiredService<PartyKeyLifecycleService>());
-        _ = services.AddSingleton<IPartyKeyManagementService>(sp =>
+        _ = services.AddSingleton<CachedPartyKeyManagementService>(sp =>
             new CachedPartyKeyManagementService(sp.GetRequiredService<PartyKeyManagementService>()));
+        _ = services.AddSingleton<IPartyKeyManagementService>(sp => sp.GetRequiredService<CachedPartyKeyManagementService>());
+        _ = services.AddSingleton<ITenantKeyRotationCacheInvalidator>(sp => sp.GetRequiredService<CachedPartyKeyManagementService>());
+        _ = services.AddSingleton<ITenantKeyRotationService, TenantKeyRotationService>();
         _ = services.AddSingleton<ICryptoStatusProvider>(sp => sp.GetRequiredService<PartyKeyLifecycleService>());
         _ = services.AddSingleton<DecryptionCircuitBreaker>();
         _ = services.AddSingleton<IEventPayloadProtectionService, PartyPayloadProtectionService>();

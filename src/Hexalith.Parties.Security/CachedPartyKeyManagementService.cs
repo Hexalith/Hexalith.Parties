@@ -6,7 +6,7 @@ using Hexalith.Parties.Contracts.Security;
 
 namespace Hexalith.Parties.Security;
 
-public sealed class CachedPartyKeyManagementService(IPartyKeyManagementService inner) : IPartyKeyManagementService
+public sealed class CachedPartyKeyManagementService(IPartyKeyManagementService inner) : IPartyKeyManagementService, ITenantKeyRotationCacheInvalidator
 {
     private static readonly TimeSpan MinTtl = TimeSpan.FromMinutes(4);
     private static readonly TimeSpan TtlJitter = TimeSpan.FromMinutes(2);
@@ -85,6 +85,12 @@ public sealed class CachedPartyKeyManagementService(IPartyKeyManagementService i
         ErasureCertificate result = await inner.DeleteKeyAsync(tenantId, partyId, cancellationToken).ConfigureAwait(false);
         EvictAllForParty(tenantId, partyId);
         return result;
+    }
+
+    public ValueTask InvalidatePartyAsync(string tenantId, string partyId, CancellationToken cancellationToken = default)
+    {
+        EvictAllForParty(tenantId, partyId);
+        return ValueTask.CompletedTask;
     }
 
     private void EvictAllForParty(string tenantId, string partyId)

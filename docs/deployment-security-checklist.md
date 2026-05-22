@@ -159,9 +159,13 @@ Parties does not create tenant lifecycle, membership, role, global administrator
 
 - [ ] Secret store component deployed and accessible
 - [ ] Key management infrastructure provisioned (Azure Key Vault, HashiCorp Vault, etc.)
-- [ ] Per-tenant key namespace strategy defined
-- [ ] Backup procedures account for crypto-shredding (key deletion = data erasure)
-- [ ] Key rotation policy established
+- [ ] Tenant key provider can create or select tenant key material without returning raw tenant keys to status, logs, metrics, or audit records
+- [ ] Per-tenant key namespace strategy defined, including tenant key metadata separate from party ids and party key paths
+- [ ] Party-level key paths preserve `{tenant}/parties/{partyId}/v{version}` unless a tested migration is explicitly planned
+- [ ] Rotation policy defines operation ids, retry/resume expectations, maximum operator-visible status retention, and bounded failure categories
+- [ ] Backup procedures account for crypto-shredding (party key deletion = party personal data erasure) and tenant key rotation (rewrap metadata is recoverable operational state)
+- [ ] Rollback plan confirms interrupted tenant rotations can resume from recorded progress and that old tenant wrapping metadata remains readable until each party key is safely rewrapped
+- [ ] Status, audit, and metrics validation confirms no tenant key material, wrapped party key bytes, tokens, raw provider errors, or personal data are emitted
 
 ---
 

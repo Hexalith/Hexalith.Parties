@@ -6,4 +6,5 @@ public enum KeyOperationType
     Read,
     Rotate,
     Delete,
+    TenantRotate,
 }

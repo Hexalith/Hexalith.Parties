@@ -13,4 +13,16 @@ public sealed record KeyOperationAuditEntry
     public required DateTimeOffset Timestamp { get; init; }
 
     public required string CorrelationId { get; init; }
+
+    public string? OperationId { get; init; }
+
+    public string? Outcome { get; init; }
+
+    public int? ProcessedCount { get; init; }
+
+    public int? SkippedCount { get; init; }
+
+    public int? FailedCount { get; init; }
+
+    public TenantKeyRotationFailureCategory? FailureCategory { get; init; }
 }

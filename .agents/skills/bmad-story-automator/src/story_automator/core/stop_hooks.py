@@ -3,10 +3,14 @@ from __future__ import annotations
 import json
 import re
 import shlex
-import tomllib
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
+
+try:
+    import tomllib
+except ModuleNotFoundError:
+    import tomli as tomllib
 
 from .utils import ensure_dir, write_atomic
 
