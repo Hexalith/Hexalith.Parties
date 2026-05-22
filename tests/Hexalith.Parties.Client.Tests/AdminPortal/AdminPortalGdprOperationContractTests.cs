@@ -310,6 +310,37 @@ public sealed class AdminPortalGdprOperationContractTests
         root.GetProperty("projectionActorType").GetString().ShouldBe("PartyDetailProjectionQueryActor");
     }
 
+    [Fact]
+    public async Task GetErasureStatusAsync_ErasedDetailReturnsStableErasedStatusAsync()
+    {
+        var detail = new PartyDetail
+        {
+            Id = "party-erased",
+            Type = PartyType.Person,
+            IsActive = true,
+            DisplayName = string.Empty,
+            SortName = string.Empty,
+            CreatedAt = DateTimeOffset.Parse("2026-05-01T00:00:00Z"),
+            LastModifiedAt = DateTimeOffset.Parse("2026-05-02T00:00:00Z"),
+            IsErased = true,
+            ErasedAt = DateTimeOffset.Parse("2026-05-03T00:00:00Z"),
+        };
+        var handler = new RecordingHandler(
+            HttpStatusCode.OK,
+            JsonSerializer.Serialize(new { payload = detail }, s_jsonOptions),
+            "application/json");
+        var client = CreateHttpClient(handler);
+
+        PartyErasureStatusRecord? status = await client.GetErasureStatusAsync("party-erased", CancellationToken.None);
+
+        status.ShouldNotBeNull();
+        status.Status.ShouldBe("Erased");
+        status.PartyId.ShouldBe("party-erased");
+        status.TenantId.ShouldBe("tenant-a");
+        status.ErasedAt.ShouldBe(DateTimeOffset.Parse("2026-05-03T00:00:00Z"));
+        JsonSerializer.Serialize(status, s_jsonOptions).ShouldNotContain("decrypt", Case.Insensitive);
+    }
+
     private static BindingFlags PublicInstance => BindingFlags.Public | BindingFlags.Instance;
 
     private static Type LoadClientType(string fullName)

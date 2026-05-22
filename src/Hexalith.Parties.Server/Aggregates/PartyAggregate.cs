@@ -206,11 +206,23 @@ public sealed class PartyAggregate : EventStoreAggregate<PartyState> {
 
         // Erasure guard — reject modifications during/after erasure
         if (state.ErasureStatus is not ErasureStatus.Active) {
+            string erasureStatus = state.ErasureStatus == ErasureStatus.Erased
+                ? ErasureStatus.Erased.ToString()
+                : "ErasureInProgress";
+            string message = state.ErasureStatus == ErasureStatus.Erased
+                ? "Party is erased and no longer inspectable."
+                : "Party erasure in progress. No modifications allowed.";
+
             return new CompositeCommandResult(
-                [new PartyErasureInProgress { Message = "Party erasure in progress or completed. No modifications allowed." }],
+                [new PartyErasureInProgress
+                {
+                    PartyId = command.PartyId,
+                    Status = erasureStatus,
+                    Message = message,
+                }],
                 applied: [],
                 skipped: [],
-                rejected: ["Party erasure in progress or completed. No modifications allowed."]);
+                rejected: [message]);
         }
 
         // Restriction guard — reject modifications during restriction
@@ -788,6 +800,9 @@ public sealed class PartyAggregate : EventStoreAggregate<PartyState> {
         if (state.ErasureStatus != ErasureStatus.ErasurePending) {
             return DomainResult.Rejection([new PartyErasureInProgress
             {
+                PartyId = command.PartyId,
+                TenantId = command.TenantId,
+                Status = state.ErasureStatus.ToString(),
                 Message = $"Cannot mark key deletion while erasure status is '{state.ErasureStatus}'.",
             }]);
         }
@@ -816,6 +831,9 @@ public sealed class PartyAggregate : EventStoreAggregate<PartyState> {
         if (state.ErasureStatus != ErasureStatus.KeyDestroyed) {
             return DomainResult.Rejection([new PartyErasureInProgress
             {
+                PartyId = command.PartyId,
+                TenantId = command.TenantId,
+                Status = state.ErasureStatus.ToString(),
                 Message = $"Cannot mark erasure verified while erasure status is '{state.ErasureStatus}'.",
             }]);
         }
@@ -845,6 +863,9 @@ public sealed class PartyAggregate : EventStoreAggregate<PartyState> {
         if (state.ErasureStatus != ErasureStatus.Verified) {
             return DomainResult.Rejection([new PartyErasureInProgress
             {
+                PartyId = command.PartyId,
+                TenantId = command.TenantId,
+                Status = state.ErasureStatus.ToString(),
                 Message = $"Cannot complete erasure while erasure status is '{state.ErasureStatus}'.",
             }]);
         }
@@ -1265,9 +1286,17 @@ public sealed class PartyAggregate : EventStoreAggregate<PartyState> {
 
         if (state.ErasureStatus is ErasureStatus.ErasurePending or ErasureStatus.KeyDestroyed
             or ErasureStatus.VerificationInProgress or ErasureStatus.Verified or ErasureStatus.Erased) {
+            string erasureStatus = state.ErasureStatus == ErasureStatus.Erased
+                ? ErasureStatus.Erased.ToString()
+                : "ErasureInProgress";
+            string message = state.ErasureStatus == ErasureStatus.Erased
+                ? "Party is erased and no longer inspectable."
+                : "Party erasure in progress. No modifications allowed.";
+
             return DomainResult.Rejection([new PartyErasureInProgress
             {
-                Message = "Party erasure in progress or completed. No modifications allowed.",
+                Status = erasureStatus,
+                Message = message,
             }]);
         }
 

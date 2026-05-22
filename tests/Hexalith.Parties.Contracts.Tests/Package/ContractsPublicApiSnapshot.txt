@@ -263,6 +263,9 @@ type class Hexalith.Parties.Contracts.Events.PartyErased interfaces:Hexalith.Eve
 type class Hexalith.Parties.Contracts.Events.PartyErasureInProgress interfaces:Hexalith.EventStore.Contracts.Events.IEventPayload,Hexalith.EventStore.Contracts.Events.IRejectionEvent,System.IEquatable<Hexalith.Parties.Contracts.Events.PartyErasureInProgress>
   ctor ()
   property System.String Message getset
+  property System.String PartyId getset
+  property System.String Status getset
+  property System.String TenantId getset
 type class Hexalith.Parties.Contracts.Events.PartyMerged interfaces:Hexalith.EventStore.Contracts.Events.IEventPayload,System.IEquatable<Hexalith.Parties.Contracts.Events.PartyMerged>
   ctor ()
   property System.String MergedPartyId required getset
