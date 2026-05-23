@@ -1,6 +1,6 @@
 # Story 9.8: Solution Build Green on Clean Clone Before Epic 7/8 Resumes
 
-Status: review - 2026-05-22T18:30:00Z
+Status: done - 2026-05-23 (code-review: 7 patches applied to scripts/check-no-warning-override.sh + docs/build-gate.md; 2 deferred; 8 dismissed)
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 <!--
@@ -87,6 +87,20 @@ Implementation guidance:
   - [x] Add or update a CI workflow / scripted check that runs the clean-clone build sequence on every PR.
   - [x] Verify the check fails when a contrived regression is introduced (e.g., a test PR that re-adds `-p:TreatWarningsAsErrors=false` to a build script).
   - [x] Document the check in `docs/` so Epic 7/8 story authors can rely on it as the gating signal.
+
+### Review Findings (2026-05-23)
+
+- [x] [Review][Patch] AC5 — Nested-submodule-initialization regression not caught by guard [scripts/check-no-warning-override.sh:36-37] — Spec AC5 demands the gate fail on regressions that "re-introduce a warnings-as-errors override at the command line, **or that requires nested-submodule initialization**." The guard only greps for the override patterns; it does not check for `git submodule update --init --recursive`, `submodules: recursive`, or related forms. Add a second pattern set covering nested-submodule re-initialization in active CI/build scripts. (Source: auditor)
+- [x] [Review][Patch] Guard silently passes outside a git repo [scripts/check-no-warning-override.sh:24] — `cd "$(git rev-parse --show-toplevel)"` resolves to `cd ""` outside a repo because `git rev-parse` writes the `fatal:` message to stderr and returns empty stdout. `set -e` does not stop the empty-arg `cd`; the script then scans `$PWD` and reports OK with exit 0. CI is safe (actions/checkout sets up the repo) but `docs/build-gate.md` Local parity section advertises local pre-push use, and any container/tarball invocation will silently pass. Fix: capture the result first and exit ≠ 0 if empty. (Source: blind+edge — Edge Case Hunter empirically reproduced the silent-OK behavior)
+- [x] [Review][Patch] `2>/dev/null || true` masks real grep errors (exit ≥ 2) [scripts/check-no-warning-override.sh:38] — The `|| true` is required to suppress grep's exit 1 on zero matches under `set -e`, but it also swallows exit 2+ (unreadable file, broken pipe, invalid regex). Combined with `2>/dev/null`, a permission error or unreadable symlink under a submodule could silently mask a real override hit. Fix: capture exit code separately and tolerate only 0/1. (Source: blind+edge)
+- [x] [Review][Patch] Pattern `-p:WarningsAsErrors=` substring-matches legitimate typed opt-ins [scripts/check-no-warning-override.sh:37] — `-p:WarningsAsErrors=CA2007` (Microsoft-recommended narrowing form: add a single ID to WAE) is matched identically to the empty disable form. No current scripts use the typed form, but the "What to do if the gate fails" section recommends narrow suppression, and a contributor using the CLI escape valve gets blocked with no explanation. Fix: anchor the pattern to the empty form only (`-p:WarningsAsErrors=` followed by end-of-line, whitespace, or quote) and/or document the substring trap in `docs/build-gate.md`. (Source: blind+edge)
+- [x] [Review][Patch] MSBuild-equivalent forms `/p:`, `-property:`, `--property` not covered [scripts/check-no-warning-override.sh:36-37] — `dotnet build /p:TreatWarningsAsErrors=false`, `-property:TreatWarningsAsErrors=false`, and `--property TreatWarningsAsErrors=false` all bypass the guard. Verified no current uses; the `/p:` form is in active developer vocabulary in submodule story notes and could leak into a future helper script. Fix: extend the regex to accept `[-/]p:` and `[-/]{1,2}property[ :=]`. (Source: edge)
+- [x] [Review][Patch] Case-insensitive override variants slip through [scripts/check-no-warning-override.sh:36-37] — `grep` is case-sensitive by default; `-p:treatwarningsaserrors=false` in a `.ps1` (PowerShell is case-insensitive on case-insensitive filesystems) would not be caught. No current variants in repo. Fix: add `-i` to the grep call. (Source: edge)
+- [x] [Review][Patch] `docs/build-gate.md` "CI enforcement" lists 4 steps; the lint job has 6 [docs/build-gate.md:19-24 vs .github/workflows/test.yml:30-56] — Doc enumerates Checkout/Restore/Build/Guard but omits Setup .NET (lines 36-39) and Cache NuGet packages (lines 41-47). Either add the missing steps or rephrase to "runs the following enforcement steps in addition to setup and cache". (Source: edge)
+- [x] [Review][Defer] `grep -r` does not respect `.gitignore` [scripts/check-no-warning-override.sh:26-38] — deferred, pre-existing behavior choice. Untracked dirs (`.vs/`, `TestResults/`, locally created folders) are scanned, which can yield local false positives that do not reproduce in CI. Migrating to `git grep` would scan tracked files only.
+- [x] [Review][Defer] No portability note for BSD grep on macOS contributors [scripts/check-no-warning-override.sh:1 + docs/build-gate.md:67] — deferred, pre-existing scope. `grep --include`/`--exclude-dir` are GNU-grep extensions; macOS system grep is BSD. Docs cover Windows (Git Bash bundles GNU) but not macOS contributors who must `brew install grep`. CI is ubuntu-latest so the gate itself works.
+
+**Review summary (2026-05-23):** 7 `patch`, 2 `defer`, 8 `dismiss` (no `decision-needed`). All three review layers (Blind Hunter, Edge Case Hunter, Acceptance Auditor) returned findings successfully. Spec ACs were cross-checked; AC1/AC2/AC3/AC4 already-satisfied claims confirmed via Dev Notes fresh-clone evidence (excluded from patch list as out of scope for the current diff).
 
 ## Dev Agent Record
 

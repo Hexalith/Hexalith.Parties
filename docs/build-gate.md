@@ -12,18 +12,24 @@ dotnet restore Hexalith.Parties.slnx
 dotnet build Hexalith.Parties.slnx --configuration Release
 ```
 
-All four steps must exit zero with **no** `-p:TreatWarningsAsErrors=false` or `-p:WarningsAsErrors=` overrides at the command line.
+All four steps must exit zero with **no** command-line warnings-as-errors override and **no** nested-submodule initialization. The gate blocks:
+
+- `-p:TreatWarningsAsErrors=false` (and MSBuild-equivalent `/p:`, `-property:`, `--property` forms; matched case-insensitively).
+- `-p:WarningsAsErrors=` with an *empty* value (the full disable). The narrowing form `-p:WarningsAsErrors=<RuleId>` (which adds a single ID to the warnings-as-errors set) is intentionally allowed as a recommended escape valve.
+- `git submodule update ... --recursive` and `submodules: recursive` in GitHub Actions checkout — root-level submodules only is the default per Story 3.6.
 
 ## CI enforcement
 
-`.github/workflows/test.yml::lint` runs the build sequence on every PR and push to `main` / `develop`:
+`.github/workflows/test.yml::lint` runs the following steps on every PR and push to `main` / `develop`:
 
 1. Checkout with `submodules: true` (root-level only, not recursive).
-2. `dotnet restore Hexalith.Parties.slnx`.
-3. `dotnet build "$SOLUTION_FILE" --configuration Release --no-restore`.
-4. `bash scripts/check-no-warning-override.sh` (the regression guard).
+2. Setup .NET SDK via `actions/setup-dotnet`.
+3. Cache NuGet packages keyed by `global.json`, `Directory.Packages.props`, `Directory.Build.props`, and every `*.csproj`.
+4. `dotnet restore Hexalith.Parties.slnx`.
+5. `dotnet build "$SOLUTION_FILE" --configuration Release --no-restore`.
+6. `bash scripts/check-no-warning-override.sh` (the regression guard).
 
-`scripts/check-no-warning-override.sh` greps active CI/build scripts (`.yml`, `.yaml`, `.ps1`, `.sh`, `.cmd`, `.bat`) outside `_bmad-output/` and `docs/` for the override patterns. Only the guard script itself is excluded by basename; the rest of `scripts/` is scanned so a future helper script in `scripts/` that re-introduces the override is still caught. If a match is found, the lint job fails with a clear message and the entire workflow fails (downstream `test`, `contract-test`, and `Quality Gate` jobs depend on `lint`).
+`scripts/check-no-warning-override.sh` greps active CI/build scripts (`.yml`, `.yaml`, `.ps1`, `.sh`, `.cmd`, `.bat`) outside `_bmad-output/`, `docs/`, `node_modules/`, `bin/`, and `obj/` for the override and nested-submodule patterns. Only the guard script itself is excluded by basename; the rest of `scripts/` is scanned so a future helper script that re-introduces a regression is still caught. The guard requires a git working tree (it refuses to run against an extracted tarball) and surfaces real grep errors (exit ≥ 2) instead of swallowing them. If any match is found, the lint job fails with a clear message and the entire workflow fails (downstream `test`, `contract-test`, and `Quality Gate` jobs depend on `lint`).
 
 ## Why this gate exists
 
@@ -53,6 +59,10 @@ A submodule pointer bump may re-introduce a warning class:
 1. **Preferred**: bump the submodule to a fixed upstream commit, or land the upstream fix in the submodule and then bump.
 2. **Acceptable**: add a narrow `<NoWarn>RuleId</NoWarn>` in the consuming project with an issue link tracking the upstream fix.
 3. **Not acceptable**: re-add the command-line override.
+
+### Case 4: the nested-submodule guard fails
+
+`scripts/check-no-warning-override.sh` found a `git submodule update --recursive` or `submodules: recursive` reference in an active CI or build script. Story 9.8 AC5 requires the default build path to use root-level submodules only (per Story 3.6). Remove `--recursive` and set the checkout `submodules:` option to `true` (root-level only). If a project genuinely needs nested submodules, make it opt-in following the `EnableMemoriesSearch=true` pattern (see `_bmad-output/implementation-artifacts/3-6-enable-one-command-local-run.md`).
 
 ## Local parity
 
