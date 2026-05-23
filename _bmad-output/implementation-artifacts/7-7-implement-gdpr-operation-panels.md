@@ -22,17 +22,17 @@ so that I can trigger and monitor erasure, restriction, consent, portability, an
 
 ## Blocking Status
 
-Story 7.7 must not be scheduled for implementation yet.
+Story 7.7 must not be scheduled for implementation yet. Both gates were re-verified on 2026-05-23 and remain live.
 
 Primary gate:
 
-- `_bmad-output/planning-artifacts/dependency-eventstore-fronted-parties-client-gateway-2026-05-17.md` is still `status: Required`.
+- `_bmad-output/planning-artifacts/dependency-eventstore-fronted-parties-client-gateway-2026-05-17.md` is still `status: Required` (confirmed 2026-05-23).
 - That dependency says Story 7.7 must not be scheduled until the accepted EventStore-fronted Parties client/gateway contract is updated to `Satisfied` or `Risk Accepted` and linked from sprint planning.
 
 Secondary gate:
 
 - `_bmad-output/planning-artifacts/sprint-change-proposal-2026-05-22.md` adds Story 9.8 as a second gate before Epic 7 / Epic 8 active work resumes.
-- `_bmad-output/implementation-artifacts/sprint-status.yaml` currently tracks `9-8-solution-build-green-on-clean-clone: review`, not `done`.
+- `_bmad-output/implementation-artifacts/sprint-status.yaml` still tracks `9-8-solution-build-green-on-clean-clone: review` (not `done`) as of 2026-05-23.
 - Epic 5 retrospective escalates Story 9.8 to a program-level critical-path gate before any new story work in Epics 7, 8, or 9 except Story 9.8 itself.
 
 Story 7.6 already implemented the fail-closed capability gate for this condition. Implementing Story 7.7 now would bypass the planning gate and would require guessing the accepted typed command/query contract.
@@ -112,6 +112,7 @@ Use this snapshot after the gates are satisfied. Do not recreate these pieces fr
 |---|---:|---|---|
 | 2026-05-22 | 0.1 | Created blocked story artifact because the accepted EventStore-fronted Parties client/gateway contract remains unsatisfied. | Codex |
 | 2026-05-22 | 0.2 | Refreshed blocked story context with Story 9.8 second gate, current AdminPortal/GDPR implementation snapshot, prior Epic 7 guardrails, and post-unblock test requirements. | Codex |
+| 2026-05-23 | 0.3 | Re-verified both gates remain live: primary dependency record still `Required`; Story 9.8 still `review` (not `done`). Confirmed zero source drift since v0.2 across the eight cited AdminPortal/Client/Tests files. Story remains `blocked` — no sprint-status flip. | Claude Opus 4.7 |
 
 ## Dev Agent Record
 
@@ -126,6 +127,7 @@ Codex GPT-5
 - Confirmed readiness follow-up explicitly requires the dependency to be `Satisfied` or `Risk Accepted` before scheduling Story 7.6 or Story 7.7.
 - Refreshed 2026-05-22: loaded sprint-change proposal for Story 9.8, sprint status, Story 7.6, Stories 7.8-7.10, architecture D20, admin UX, current AdminPortal GDPR components/services, and AdminPortal component/API test coverage.
 - Checked Fluent UI Blazor documentation metadata; available MCP docs target `5.0.0.26098`, while this project pins `5.0.0-rc.2-26098.1`, so local patterns remain authoritative.
+- Re-verified 2026-05-23: dependency record `dependency-eventstore-fronted-parties-client-gateway-2026-05-17.md` still `status: Required` (line 4). Story `9-8-solution-build-green-on-clean-clone` still `review` (sprint-status.yaml line 262). `git log --since=2026-05-22` on `src/Hexalith.Parties.AdminPortal`, `src/Hexalith.Parties.Client/AdminPortal`, and `tests/Hexalith.Parties.AdminPortal.Tests` shows no commits after the v0.2 refresh — Story 7.6/7.8/7.9/7.10 implementations landed on 2026-05-22 and are already reflected in this artifact. Spot-checked `AdminPortalGdprCapability.cs` (the `ContractUnavailableReason` const matches the UX-mandated blocker string exactly), `GdprExportFileNameBuilder.cs` (re-derives `party-{token}-export-{yyyyMMddHHmmss}Z.json` from party id + UTC timestamp, sanitized + 64-char bounded), and `AdminPortalGdprStateCoordinator.cs` (tracks `ActiveTenantId`/`ActivePartyId`/`RequestVersion` with `TryApplyResponse` stale-response rejection); snapshot section remains accurate.
 
 ### Completion Notes List
 
