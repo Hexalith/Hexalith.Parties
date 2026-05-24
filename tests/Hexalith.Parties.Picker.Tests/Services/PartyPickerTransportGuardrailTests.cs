@@ -50,6 +50,84 @@ public sealed class PartyPickerTransportGuardrailTests
         Regex.IsMatch(combinedSource, forbiddenPattern, RegexOptions.IgnoreCase).ShouldBeFalse();
     }
 
+    [Theory]
+    [InlineData("TokenFingerprint")]
+    [InlineData("GetHashCode(token)")]
+    [InlineData("ParseJwt")]
+    [InlineData("JwtSecurityToken")]
+    [InlineData("System.IdentityModel.Tokens.Jwt")]
+    public void ProductionPickerSource_DoesNotFingerprintOrParseHostTokens(string forbidden)
+    {
+        string combinedSource = string.Join(
+            Environment.NewLine,
+            GetProductionPickerSourceFiles()
+                .Select(path => StripCommentsAndStrings(File.ReadAllText(path), path)));
+
+        combinedSource.ShouldNotContain(forbidden);
+    }
+
+    [Theory]
+    [InlineData("ILogger")]
+    [InlineData("LoggerMessage")]
+    [InlineData("LogDebug")]
+    [InlineData("LogInformation")]
+    [InlineData("LogWarning")]
+    [InlineData("LogError")]
+    [InlineData("ActivitySource")]
+    [InlineData("System.Diagnostics.Metrics")]
+    [InlineData("new Meter(")]
+    [InlineData("Counter<")]
+    [InlineData("Histogram<")]
+    [InlineData("NavigationManager")]
+    [InlineData("window.location")]
+    [InlineData("location.href")]
+    [InlineData("location.hash")]
+    [InlineData("history.pushState")]
+    [InlineData("history.replaceState")]
+    [InlineData("URL.createObjectURL")]
+    [InlineData("download")]
+    public void ProductionPickerSource_DoesNotUseLoggingTelemetryRoutesOrFileSideEffects(string forbidden)
+    {
+        string combinedSource = string.Join(
+            Environment.NewLine,
+            GetProductionPickerSourceFiles()
+                .Select(path => StripCommentsAndStrings(File.ReadAllText(path), path)));
+
+        combinedSource.ShouldNotContain(forbidden);
+    }
+
+    [Fact]
+    public void PickerJavascript_DispatchesOnlyWhitelistedEventDetailFields()
+    {
+        string sourceRoot = FindRepositoryRoot();
+        string scriptPath = Path.Combine(
+            sourceRoot,
+            "src",
+            "Hexalith.Parties.Picker",
+            "wwwroot",
+            "hexalith-parties-picker.js");
+        string script = File.ReadAllText(scriptPath);
+
+        script.ShouldContain("const safeDetail");
+        script.ShouldContain("partyId:");
+        script.ShouldContain("partyType:");
+        script.ShouldContain("status:");
+        script.ShouldContain("detail: safeDetail");
+        script.ShouldNotContain("detail: detail");
+    }
+
+    [Fact]
+    public void ProductionPickerSourceScan_ExcludesGeneratedCacheAndBuildArtifacts()
+    {
+        string[] scannedFiles = [.. GetProductionPickerSourceFiles()];
+
+        scannedFiles.ShouldNotBeEmpty();
+        scannedFiles.ShouldAllBe(path => !path.Contains($"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}", StringComparison.OrdinalIgnoreCase));
+        scannedFiles.ShouldAllBe(path => !path.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}", StringComparison.OrdinalIgnoreCase));
+        scannedFiles.ShouldAllBe(path => !path.EndsWith(".lscache", StringComparison.OrdinalIgnoreCase));
+        scannedFiles.ShouldAllBe(path => !path.Contains($"{Path.DirectorySeparatorChar}.lscache{Path.DirectorySeparatorChar}", StringComparison.OrdinalIgnoreCase));
+    }
+
     [Fact]
     public void PickerProject_ReferencesTypedPartiesClientButNoForbiddenServerPackages()
     {
@@ -76,7 +154,9 @@ public sealed class PartyPickerTransportGuardrailTests
                 || path.EndsWith(".razor", StringComparison.OrdinalIgnoreCase)
                 || path.EndsWith(".js", StringComparison.OrdinalIgnoreCase))
                 && !path.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}", StringComparison.OrdinalIgnoreCase)
-                && !path.Contains($"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}", StringComparison.OrdinalIgnoreCase));
+                && !path.Contains($"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}", StringComparison.OrdinalIgnoreCase)
+                && !path.EndsWith(".lscache", StringComparison.OrdinalIgnoreCase)
+                && !path.Contains($"{Path.DirectorySeparatorChar}.lscache{Path.DirectorySeparatorChar}", StringComparison.OrdinalIgnoreCase));
     }
 
     private static string StripComments(string source, string path)

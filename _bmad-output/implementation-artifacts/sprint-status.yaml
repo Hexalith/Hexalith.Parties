@@ -37,7 +37,10 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-05-15 09:01:58 +02:00
-last_updated: 2026-05-24 17:04:00 +02:00
+last_updated: 2026-05-24 17:36:33 +02:00
+# last_updated touched 2026-05-24 by code-review closing 8-6-enforce-picker-privacy-and-integration-boundary — 2 medium fixes applied: added token-value-change same-presence selection lookup guard test; strengthened JavaScript event-detail whitelist assertion from whitespace-pattern check to direct detail:detail pass-through check. 0 critical/high issues remain; all ACs verified. Picker tests 162/162 green. Status: review → done.
+# last_updated touched 2026-05-24 by dev-story moving 8-6-enforce-picker-privacy-and-integration-boundary to review — privacy/integration-boundary hardening complete: token-value fingerprinting removed from picker context signatures; party-selected JavaScript detail re-whitelisted to partyId/partyType/status; guardrails extended for token parsing/fingerprinting, event payload shape, generated/cache scan exclusions, package refs, storage/cookies, raw markup, and forbidden transport symbols; host docs updated. Focused picker tests 137/137 green. Full solution regression attempted and failed outside picker scope (AppHost/sample/deploy-validation/search benchmark/file-lock issues recorded in story Debug Log).
+# last_updated touched 2026-05-24 by dev-story moving 8-6-enforce-picker-privacy-and-integration-boundary to in-progress — privacy/integration-boundary hardening started under scoped Epic 8 risk acceptance; implementation remains inside Hexalith.Parties.Picker and IPartiesQueryClient.
 # last_updated touched 2026-05-24 by code-review closing 8-5-enforce-picker-accessibility-and-localization — 4 fixes applied: added role="combobox" + aria-haspopup="listbox" to search input (ARIA combobox pattern completion, AC1/AC2); removed dead TryFocusStatusAsync() method + _statusElement ref + tabindex="-1"; corrected docs focus-target for selected-party retry; updated test assertion to role selector. 0 critical/high issues remain; all ACs verified. Picker tests 130/130 green. Status: review → done.
 # last_updated touched 2026-05-24 by dev-story/automate moving 8-5-enforce-picker-accessibility-and-localization to review — accessibility/localization hardening complete: ARIA relationships, localized result-list and party-type labels, atomic bounded status announcements, forced-colors/reduced-motion CSS guards, host docs, automate guardrails, and focused picker tests 130/130 green.
 # last_updated touched 2026-05-24 by dev-story moving 8-5-enforce-picker-accessibility-and-localization to in-progress — accessibility/localization hardening started under the scoped Epic 8 risk acceptance; implementation remains inside Hexalith.Parties.Picker and IPartiesQueryClient.
@@ -237,7 +240,7 @@ development_status:
   8-3-emit-durable-selection-by-party-id: done
   8-4-handle-picker-states-and-stale-responses: done
   8-5-enforce-picker-accessibility-and-localization: done
-  8-6-enforce-picker-privacy-and-integration-boundary: ready-for-dev
+  8-6-enforce-picker-privacy-and-integration-boundary: done
   epic-8-retrospective: optional
 
   # Epic 9: Kubernetes Deployment Platform (greenfield rewrite 2026-05-21, 7 stories — supersedes Epic 9 v1 per sprint-change-proposal-2026-05-21-epic9-greenfield-rewrite.md + ADR D-K8s-4)

@@ -293,10 +293,8 @@
         return ValueTask.FromResult(AccessToken);
     }
 
-    private static string TokenFingerprint(string? token)
-        => string.IsNullOrWhiteSpace(token)
-            ? "none"
-            : StringComparer.Ordinal.GetHashCode(token).ToString(System.Globalization.CultureInfo.InvariantCulture);
+    private static string AccessTokenPresence(string? token)
+        => string.IsNullOrWhiteSpace(token) ? "none" : "provided";
 
     private static string DelegateFingerprint(Delegate? handler)
         => handler is null
@@ -314,7 +312,7 @@
             PageSize.ToString(System.Globalization.CultureInfo.InvariantCulture),
             Disabled.ToString(),
             ReadOnly.ToString(),
-            TokenFingerprint(AccessToken),
+            AccessTokenPresence(AccessToken),
             string.IsNullOrEmpty(AuthContextKey) ? DelegateFingerprint(AccessTokenProvider) : "auth-key",
             string.IsNullOrEmpty(AuthContextKey) ? DelegateFingerprint(RequestCustomizer) : "auth-key");
 

@@ -47,6 +47,26 @@ public sealed class PartyPickerApiClientTests
         queryClient.GetCalls.ShouldBeEmpty();
     }
 
+    [Theory]
+    [InlineData("")]
+    [InlineData("   ")]
+    public async Task ResolveSelectedPartyAsync_WithBlankHostToken_ReturnsAuthenticationRequiredWithoutCallingClient(string token)
+    {
+        var queryClient = new RecordingPartiesQueryClient();
+        var client = new PartyPickerApiClient(queryClient);
+
+        PartyPickerSelection response = await client.ResolveSelectedPartyAsync(new PartyPickerSelectedPartyRequest
+        {
+            PartyId = "party-1",
+            AccessTokenProvider = _ => ValueTask.FromResult<string?>(token),
+        }, CancellationToken.None);
+
+        response.PartyId.ShouldBe("party-1");
+        response.State.ShouldBe(PartyPickerSelectionState.AuthenticationRequired);
+        response.SafeReason.ShouldBe("Authentication is required.");
+        queryClient.GetCalls.ShouldBeEmpty();
+    }
+
     [Fact]
     public async Task ResolveSelectedPartyAsync_UsesTypedPartiesQueryClientAndHostAuth()
     {
@@ -173,6 +193,25 @@ public sealed class PartyPickerApiClientTests
         }, CancellationToken.None);
 
         response.State.ShouldBe(PartyPickerSearchState.AuthenticationRequired);
+        queryClient.SearchCalls.ShouldBeEmpty();
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("   ")]
+    public async Task SearchAsync_WithBlankHostToken_ReturnsAuthenticationRequiredWithoutCallingClient(string token)
+    {
+        var queryClient = new RecordingPartiesQueryClient();
+        var client = new PartyPickerApiClient(queryClient);
+
+        PartyPickerSearchResponse response = await client.SearchAsync(new PartyPickerSearchRequest
+        {
+            Query = "ada",
+            AccessTokenProvider = _ => ValueTask.FromResult<string?>(token),
+        }, CancellationToken.None);
+
+        response.State.ShouldBe(PartyPickerSearchState.AuthenticationRequired);
+        response.SafeReason.ShouldBe("Authentication is required.");
         queryClient.SearchCalls.ShouldBeEmpty();
     }
 

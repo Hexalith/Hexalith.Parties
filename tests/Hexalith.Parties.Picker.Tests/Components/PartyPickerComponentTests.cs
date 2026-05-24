@@ -56,6 +56,43 @@ public sealed class PartyPickerComponentTests : BunitContext
     }
 
     [Fact]
+    public void PartyPicker_LocalizedLabels_RenderThroughEncodedTextAndAttributePaths()
+    {
+        var queryClient = new RecordingPartiesQueryClient();
+        queryClient.Enqueue(SearchResultPage(PartyPickerTestData.Result(name: "Ada Lovelace")));
+        RegisterClient(queryClient);
+
+        IRenderedComponent<PartyPicker> cut = Render<PartyPicker>(parameters => parameters
+            .Add(p => p.AccessToken, "host-token")
+            .Add(p => p.Labels, new PartyPickerLabels
+            {
+                SearchLabel = "<img src=x onerror=alert(1)>",
+                Placeholder = "<svg onload=alert(2)>",
+                Results = "<script>results()</script>",
+                Active = "<b>Active</b>",
+            })
+            .Add(p => p.DebounceMilliseconds, 1)
+            .Add(p => p.DispatchDomEvents, false));
+
+        cut.Find("input").GetAttribute("aria-label").ShouldBe("<img src=x onerror=alert(1)>");
+        cut.Find("input").GetAttribute("placeholder").ShouldBe("<svg onload=alert(2)>");
+        cut.Markup.ShouldContain("&lt;img src=x onerror=alert(1)&gt;");
+        cut.FindAll("img").ShouldBeEmpty();
+        cut.FindAll("svg").ShouldBeEmpty();
+
+        cut.Find("input").Input("ada");
+
+        cut.WaitForAssertion(() =>
+        {
+            cut.Find("[role=\"listbox\"]").GetAttribute("aria-label").ShouldBe("<script>results()</script>");
+            cut.Find(".hx-party-picker__badge").TextContent.ShouldBe("<b>Active</b>");
+            cut.Markup.ShouldContain("&lt;b&gt;Active&lt;/b&gt;");
+            cut.FindAll("script").ShouldBeEmpty();
+            cut.FindAll(".hx-party-picker__badge b").ShouldBeEmpty();
+        });
+    }
+
+    [Fact]
     public void PartyPicker_SearchResults_ExposeAccessibleRelationshipsAndLocalizedOptionText()
     {
         var queryClient = new RecordingPartiesQueryClient();
@@ -724,7 +761,7 @@ public sealed class PartyPickerComponentTests : BunitContext
     }
 
     [Fact]
-    public async Task PartyPicker_TokenChange_ClearsVisibleResultsAndSelection()
+    public async Task PartyPicker_AuthContextKeyChange_ClearsVisibleResultsAndSelection()
     {
         var queryClient = new RecordingPartiesQueryClient();
         queryClient.Enqueue(SearchResultPage(PartyPickerTestData.Result()));
@@ -732,6 +769,7 @@ public sealed class PartyPickerComponentTests : BunitContext
 
         IRenderedComponent<PartyPicker> cut = Render<PartyPicker>(parameters => parameters
             .Add(p => p.AccessToken, "host-token-a")
+            .Add(p => p.AuthContextKey, "auth-version-a")
             .Add(p => p.DebounceMilliseconds, 1)
             .Add(p => p.DispatchDomEvents, false));
 
@@ -742,12 +780,45 @@ public sealed class PartyPickerComponentTests : BunitContext
         await cut.InvokeAsync(() => cut.Instance.SetParametersAsync(ParameterView.FromDictionary(new Dictionary<string, object?>
         {
             [nameof(PartyPicker.AccessToken)] = "host-token-b",
+            [nameof(PartyPicker.AuthContextKey)] = "auth-version-b",
             [nameof(PartyPicker.DebounceMilliseconds)] = 1,
             [nameof(PartyPicker.DispatchDomEvents)] = false,
         })));
 
         cut.FindAll("[role=\"option\"]").ShouldBeEmpty();
         cut.Markup.ShouldNotContain("Ada Lovelace");
+    }
+
+    [Fact]
+    public async Task PartyPicker_AccessTokenValueChange_WithSamePresence_DoesNotReissueSelectionLookup()
+    {
+        var queryClient = new RecordingPartiesQueryClient();
+        queryClient.EnqueueDetail(PartyDetail(id: "party-1", name: "Ada Lovelace"));
+        RegisterClient(queryClient);
+
+        IRenderedComponent<PartyPicker> cut = Render<PartyPicker>(parameters => parameters
+            .Add(p => p.AccessToken, "token-version-a")
+            .Add(p => p.SelectedPartyId, "party-1")
+            .Add(p => p.PageSize, 10)
+            .Add(p => p.DispatchDomEvents, false));
+
+        cut.WaitForAssertion(() =>
+        {
+            queryClient.GetCalls.Count.ShouldBe(1);
+            cut.Find(".hx-party-picker__selected-name").TextContent.ShouldBe("Ada Lovelace");
+        });
+
+        await cut.InvokeAsync(() => cut.Instance.SetParametersAsync(ParameterView.FromDictionary(new Dictionary<string, object?>
+        {
+            [nameof(PartyPicker.AccessToken)] = "token-version-b",
+            [nameof(PartyPicker.SelectedPartyId)] = "party-1",
+            [nameof(PartyPicker.PageSize)] = 10,
+            [nameof(PartyPicker.DispatchDomEvents)] = false,
+        })));
+
+        // Token VALUE changed but presence ("provided") is identical → context signature unchanged → no re-lookup
+        queryClient.GetCalls.Count.ShouldBe(1);
+        cut.Find(".hx-party-picker__selected-name").TextContent.ShouldBe("Ada Lovelace");
     }
 
     [Fact]

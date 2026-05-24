@@ -2,38 +2,30 @@
 
 ## Story
 
-- Story 8.5: Enforce Picker Accessibility and Localization
+- Story 8.6: Enforce Picker Privacy and Integration Boundary
 
 ## Generated Tests
 
 ### API Tests
 
-- [x] `tests/Hexalith.Parties.Picker.Tests/Services/PartyPickerApiClientTests.cs` - Existing picker API-client tests cover typed-client routing, host auth, bounded error states, freshness mapping, and non-leaking selected-party failures for the Story 8.5 API-facing behaviors. No new API test file was needed.
+- [x] `tests/Hexalith.Parties.Picker.Tests/Services/PartyPickerApiClientTests.cs` - Added fail-closed coverage for blank host tokens on search and selected-party lookup, verifying no typed-client call is made.
 
 ### E2E Tests
 
-- [x] `tests/Hexalith.Parties.Picker.Tests/Components/PartyPickerComponentTests.cs` - Added bUnit workflow coverage for native keyboard-operable picker controls, selected result `aria-selected` state, erased result state text, clear control button semantics, and retry control accessible name/title semantics.
+- [x] `tests/Hexalith.Parties.Picker.Tests/Components/PartyPickerComponentTests.cs` - Added bUnit workflow coverage proving hostile localized labels render through text/attribute paths without creating executable DOM elements.
+
+### Static Guardrail Tests
+
+- [x] `tests/Hexalith.Parties.Picker.Tests/Services/PartyPickerTransportGuardrailTests.cs` - Added source guardrails for logging, telemetry, route mutation, URL/file, and download side-effect surfaces that could leak party, search, or auth data.
 
 ## Coverage
 
-- Picker keyboard operation and native control semantics: covered by component tests for search input, clear button, retry button, and result option buttons.
-- Accessible names and relationships: covered by component tests for search input, status region, listbox, options, selected display, clear control, and retry control.
-- Selected, disabled, degraded, erased, unavailable, and retryable state text: covered by component tests and picker API-client state mapping tests.
-- Localized labels, placeholders, counts, state text, party types, selection, retry, and clear labels: covered by component tests plus default-label completeness reflection.
-- Privacy-safe bounded status announcements and callback payloads: covered by component and API-client tests.
-- Forced-colors, reduced-motion, visible focus, bounded badges, and no CSS-generated state content: covered by static CSS guard tests.
-
-## Checklist Validation
-
-- [x] API tests generated if applicable.
-- [x] E2E/UI tests generated for the picker.
-- [x] Tests use standard xUnit, Shouldly, and bUnit APIs already present in the repo.
-- [x] Tests cover happy path and critical error/state cases.
-- [x] Tests use semantic roles and accessible selectors where the component exposes them.
-- [x] No hardcoded waits or sleeps added.
-- [x] Generated tests are independent and do not depend on execution order.
-- [x] Test summary created with coverage metrics.
+- API boundary: 2/2 picker query paths covered (`SearchPartiesAsync`, `GetPartyAsync`) through `PartyPickerApiClient`/`IPartiesQueryClient`; blank and missing host auth fail closed without backend calls.
+- UI privacy rendering: Story 8.6 rendered-content criteria covered by bUnit tests for party labels, localized labels, status text, degraded reasons, search results, selected display, and backend failure text.
+- Callback/event payloads: DOM callback DTO and JavaScript dispatcher guardrails cover the approved `partyId`, `partyType`, `status` payload only.
+- Integration boundary: static guardrails cover retired REST/admin endpoints, DAPR actors, projection actors, local search services, server/projection references, package references, storage/cookies, token parsing/fingerprinting, logging, telemetry, route, URL, and file surfaces.
+- Checklist result: all applicable QA automate checklist items pass for Story 8.6.
 
 ## Validation
 
-- [x] `dotnet test tests\Hexalith.Parties.Picker.Tests\Hexalith.Parties.Picker.Tests.csproj --configuration Release` - Passed 130/130.
+- [x] `dotnet test tests\Hexalith.Parties.Picker.Tests\Hexalith.Parties.Picker.Tests.csproj --configuration Release` - Passed 161/161.
