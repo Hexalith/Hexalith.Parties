@@ -7,11 +7,16 @@
     <div class="hx-party-picker__input-row">
         <input id="@_inputElementId"
                @ref="_inputElement"
+               role="combobox"
                class="hx-party-picker__input"
                value="@_query"
                placeholder="@EffectiveLabels.Placeholder"
                aria-label="@EffectiveLabels.SearchLabel"
                aria-controls="@_listElementId"
+               aria-describedby="@_statusElementId"
+               aria-autocomplete="list"
+               aria-haspopup="listbox"
+               aria-expanded="@(_search.HasResults ? "true" : "false")"
                aria-readonly="@(ReadOnly ? "true" : null)"
                readonly="@(ReadOnly ? "readonly" : null)"
                disabled="@(Disabled ? "disabled" : null)"
@@ -26,7 +31,7 @@
 
     @if (_selected is not null)
     {
-        <div class="hx-party-picker__selected" aria-label="@EffectiveLabels.Selected" tabindex="-1" @ref="_selectedElement">
+        <div class="hx-party-picker__selected" role="group" aria-label="@EffectiveLabels.Selected" tabindex="-1" @ref="_selectedElement">
             <span class="hx-party-picker__selected-name">@SelectionDisplayText(_selected)</span>
             @if (HasSelectionStatus(_selected))
             {
@@ -35,23 +40,26 @@
         </div>
     }
 
-    <div class="hx-party-picker__status" role="status" aria-live="polite" tabindex="-1" @ref="_statusElement">
+    <div id="@_statusElementId" class="hx-party-picker__status" role="status" aria-live="polite" aria-atomic="true">
         @StatusMessage
     </div>
 
     @if (CanRetry)
     {
-        <button type="button" class="hx-party-picker__retry" @onclick="RetryAsync">@RetryLabel</button>
+        <button type="button" class="hx-party-picker__retry" aria-label="@RetryLabel" title="@RetryLabel" @onclick="RetryAsync">@RetryLabel</button>
     }
 
     @if (_search.HasResults)
     {
-        <ul id="@_listElementId" class="hx-party-picker__results" role="listbox" aria-label="@EffectiveLabels.SearchLabel">
-            @foreach (PartySearchResult result in _search.Results)
+        <ul id="@_listElementId" class="hx-party-picker__results" role="listbox" aria-label="@EffectiveLabels.Results" aria-describedby="@_statusElementId">
+            @foreach ((PartySearchResult result, int index) in _search.Results.Select((result, index) => (result, index)))
             {
-                <li class="hx-party-picker__result" role="option" aria-selected="@IsSelected(result)">
+                <li class="hx-party-picker__result" role="presentation">
                     <button type="button"
                             class="hx-party-picker__result-button"
+                            role="option"
+                            aria-selected="@(IsSelected(result) ? "true" : "false")"
+                            aria-describedby="@ResultStatusElementId(index)"
                             disabled="@IsInteractionDisabled"
                             @onclick="() => SelectAsync(result)">
                         @if (ResultTemplate is not null)
@@ -62,10 +70,10 @@
                         {
                             <span class="hx-party-picker__result-main">
                                 <span class="hx-party-picker__result-name">@result.Party.DisplayName</span>
-                                <span class="hx-party-picker__result-type">@result.Party.Type</span>
+                                <span class="hx-party-picker__result-type">@PartyTypeText(result.Party.Type)</span>
                             </span>
                             <span class="hx-party-picker__result-status">
-                                <span class="hx-party-picker__badge">@StatusText(result.Party)</span>
+                                <span id="@ResultStatusElementId(index)" class="hx-party-picker__badge">@StatusText(result.Party)</span>
                             </span>
                         }
                     </button>
@@ -81,7 +89,6 @@
     private CancellationTokenSource? _selectionCts;
     private IJSObjectReference? _module;
     private ElementReference _inputElement;
-    private ElementReference _statusElement;
     private ElementReference _selectedElement;
     private string _query = string.Empty;
     private PartyPickerSearchResponse _search = new() { State = PartyPickerSearchState.Idle, PageSize = PartyPickerDefaults.PageSize };
@@ -93,6 +100,7 @@
     private readonly string _hostElementId = $"hx-party-picker-{Guid.NewGuid():N}";
     private readonly string _inputElementId = $"hx-party-picker-input-{Guid.NewGuid():N}";
     private readonly string _listElementId = $"hx-party-picker-list-{Guid.NewGuid():N}";
+    private readonly string _statusElementId = $"hx-party-picker-status-{Guid.NewGuid():N}";
 
     [Obsolete("ApiBaseUrl no longer controls picker transport. Configure the EventStore gateway base URL through Hexalith.Parties.Client (PartiesClientOptions). This parameter will be removed in a future major release.")]
     [Parameter]
@@ -503,20 +511,6 @@
         }
     }
 
-    private async Task TryFocusStatusAsync()
-    {
-        try
-        {
-            await _statusElement.FocusAsync().ConfigureAwait(false);
-        }
-        catch (InvalidOperationException)
-        {
-        }
-        catch (JSDisconnectedException)
-        {
-        }
-    }
-
     private async Task TryFocusSelectedAsync()
     {
         try
@@ -558,6 +552,9 @@
     private bool IsSelected(PartySearchResult result)
         => string.Equals(_selected?.PartyId, result.Party.Id, StringComparison.Ordinal);
 
+    private string ResultStatusElementId(int index)
+        => $"{_listElementId}-option-{index.ToString(System.Globalization.CultureInfo.InvariantCulture)}-status";
+
     private static bool HasSelectionStatus(PartyPickerSelection selection)
         => selection.State != PartyPickerSelectionState.Available
             || selection.IsActive.HasValue
@@ -592,6 +589,14 @@
             : party.IsActive
                 ? EffectiveLabels.Active
                 : EffectiveLabels.Inactive;
+
+    private string PartyTypeText(Hexalith.Parties.Contracts.ValueObjects.PartyType type)
+        => type switch
+        {
+            Hexalith.Parties.Contracts.ValueObjects.PartyType.Person => EffectiveLabels.PersonType,
+            Hexalith.Parties.Contracts.ValueObjects.PartyType.Organization => EffectiveLabels.OrganizationType,
+            _ => EffectiveLabels.UnknownType,
+        };
 
     public async ValueTask DisposeAsync()
     {

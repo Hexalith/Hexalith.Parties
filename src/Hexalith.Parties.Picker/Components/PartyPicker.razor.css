@@ -129,3 +129,31 @@
   padding: 0.125rem 0.5rem;
   white-space: normal;
 }
+
+@media (forced-colors: active) {
+  .hx-party-picker__result-button:focus-visible,
+  .hx-party-picker__input:focus-visible,
+  .hx-party-picker__icon-button:focus-visible,
+  .hx-party-picker__retry:focus-visible {
+    forced-color-adjust: none;
+    outline-color: Highlight;
+  }
+
+  .hx-party-picker__badge,
+  .hx-party-picker__selected,
+  .hx-party-picker__input,
+  .hx-party-picker__icon-button,
+  .hx-party-picker__retry,
+  .hx-party-picker__result-button {
+    border-color: CanvasText;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hx-party-picker,
+  .hx-party-picker * {
+    animation-duration: 0.01ms;
+    scroll-behavior: auto;
+    transition-duration: 0.01ms;
+  }
+}

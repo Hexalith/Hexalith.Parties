@@ -6,6 +6,8 @@ public sealed record PartyPickerLabels
 
     public string Placeholder { get; init; } = "Search parties";
 
+    public string Results { get; init; } = "Party search results";
+
     public string Loading { get; init; } = "Searching parties";
 
     public string Idle { get; init; } = "Enter a party name to search";
@@ -45,6 +47,12 @@ public sealed record PartyPickerLabels
     public string Inactive { get; init; } = "Inactive";
 
     public string Erased { get; init; } = "Erased";
+
+    public string PersonType { get; init; } = "Person";
+
+    public string OrganizationType { get; init; } = "Organization";
+
+    public string UnknownType { get; init; } = "Unknown party type";
 
     public string SelectedLoading { get; init; } = "Loading selected party";
 

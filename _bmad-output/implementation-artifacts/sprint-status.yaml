@@ -37,7 +37,10 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-05-15 09:01:58 +02:00
-last_updated: 2026-05-24 16:39:33 +02:00
+last_updated: 2026-05-24 17:04:00 +02:00
+# last_updated touched 2026-05-24 by code-review closing 8-5-enforce-picker-accessibility-and-localization — 4 fixes applied: added role="combobox" + aria-haspopup="listbox" to search input (ARIA combobox pattern completion, AC1/AC2); removed dead TryFocusStatusAsync() method + _statusElement ref + tabindex="-1"; corrected docs focus-target for selected-party retry; updated test assertion to role selector. 0 critical/high issues remain; all ACs verified. Picker tests 130/130 green. Status: review → done.
+# last_updated touched 2026-05-24 by dev-story/automate moving 8-5-enforce-picker-accessibility-and-localization to review — accessibility/localization hardening complete: ARIA relationships, localized result-list and party-type labels, atomic bounded status announcements, forced-colors/reduced-motion CSS guards, host docs, automate guardrails, and focused picker tests 130/130 green.
+# last_updated touched 2026-05-24 by dev-story moving 8-5-enforce-picker-accessibility-and-localization to in-progress — accessibility/localization hardening started under the scoped Epic 8 risk acceptance; implementation remains inside Hexalith.Parties.Picker and IPartiesQueryClient.
 # last_updated touched 2026-05-24 by code-review closing 8-4-handle-picker-states-and-stale-responses — 5 fixes applied: StatusMessage bounded fallback; selected-display retry focus corrected to _selectedElement; NormalizeQuery null-safe; DelayedSelectedPartiesQueryClient/DelayedPartiesQueryClient RunContinuationsAsynchronously; added stale-selected-display-on-partyid-change test. 0 critical/high issues; all ACs verified. Picker tests 126/126 green. Status: review → done.
 # last_updated touched 2026-05-24 by dev-story moving 8-4-handle-picker-states-and-stale-responses to review — bounded loading clears previous results; stale search/selected-display responses stay suppressed by current context; localized bounded unauthorized/forbidden/not-found/gone/degraded/local-only/transient/unavailable/malformed states render without raw backend details; retry covers current safe search and selected-display contexts; host docs updated. Verification: Picker tests 125/125 green; full solution regression attempted and failed outside picker scope (recorded in story Debug Log).
 # last_updated touched 2026-05-24 by code-review closing 8-3-emit-durable-selection-by-party-id — 2 medium fixes: (1) PartiesAdminPortalApiClientTests.cs added to File List (IPartiesQueryClient.GetPartyAsync signature update); (2) added ResolveSelectedPartyAsync_WithBlankOrControlOnlyPartyId test (3 cases). 1 low fix: test count 105→106 corrected in Debug Log. 0 critical/high issues; all ACs verified implemented. Verification: Picker tests 109/109 green. Status: review → done.
@@ -233,7 +236,7 @@ development_status:
   8-2-implement-typeahead-search-and-bounded-results: done
   8-3-emit-durable-selection-by-party-id: done
   8-4-handle-picker-states-and-stale-responses: done
-  8-5-enforce-picker-accessibility-and-localization: ready-for-dev
+  8-5-enforce-picker-accessibility-and-localization: done
   8-6-enforce-picker-privacy-and-integration-boundary: ready-for-dev
   epic-8-retrospective: optional
 

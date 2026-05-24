@@ -85,6 +85,16 @@ The picker is a single, bounded embeddable search-and-selection control. It is n
 
 The compact layout contract lives in `PartyPicker.razor.css`: a bounded `max-width`, a stable input row, long display names that wrap (`overflow-wrap: anywhere`) instead of overflowing, visible `:focus-visible` outlines, and status that is conveyed by text (not color alone). The clear control is an accessible icon button: its accessible name comes from the localized `ClearSelection` label while the visible `×` glyph is decorative (`aria-hidden`).
 
+## Accessibility And Localization
+
+The picker exposes a labeled search input, localized result-list name, polite atomic status region, localized retry and clear controls, native keyboard-operable result buttons, and a named selected-party region. Search results expose selected state through `aria-selected`; each option includes localized party-type and state text so selected, inactive, erased, local-only, degraded, unavailable, retryable, and loading states are not color-only.
+
+Every user-facing picker string is supplied by `PartyPickerLabels` or by the host-provided `Labels` parameter. This includes labels, placeholders, result-list names, status messages, count summaries, retry and clear text, selected-display state text, and party-type display text. Hosts can replace these labels with FrontComposer/localized values without changing the durable selection contract.
+
+The status region is intentionally bounded and privacy-safe. It announces loading, empty, error, retry, degraded/local-only, selected-display, and result-count changes without rendering tokens, tenant ids, query payloads, backend problem details, contact data, identifiers, correlation ids, or stale display data.
+
+The stylesheet includes visible `:focus-visible` outlines, forced-colors focus/border handling, reduced-motion guards, and no CSS-generated state labels. State indicators are rendered as text from labels instead of relying on color, pseudo-content, animation, or host-specific visual tokens.
+
 ## Privacy And State
 
 Hosts must provide either an access-token provider, an in-memory token property for the custom element, or a request customizer. The picker does not refresh tokens and does not persist tokens.
@@ -93,7 +103,7 @@ Use `ContextKey` to represent tenant, signed-in user, and host configuration cha
 
 When a host supplies `SelectedPartyId`, the picker resolves display preview state through `IPartiesQueryClient.GetPartyAsync` using the same host-supplied access token provider or request customizer pattern as search. If the selected party is unavailable, unauthorized, forbidden, not found, gone, erased, or transiently unavailable, the component keeps the durable party id and renders a bounded localized selected-state label instead of replacing the id with display text or backend details.
 
-Selected-party display lookup also has a localized loading label. If a selected-display response arrives after `SelectedPartyId`, `ContextKey`, `AuthContextKey`, token identity, request customizer identity, disabled/read-only state, or picker options change, it is ignored. Retry for selected-party transient/unavailable failures re-resolves only the current selected id and current host request context, then returns focus to the status region.
+Selected-party display lookup also has a localized loading label. If a selected-display response arrives after `SelectedPartyId`, `ContextKey`, `AuthContextKey`, token identity, request customizer identity, disabled/read-only state, or picker options change, it is ignored. Retry for selected-party transient/unavailable failures re-resolves only the current selected id and current host request context, then returns focus to the selected display region.
 
 `ApiBaseUrl` remains on the component for source compatibility with existing hosts, but request routing is owned by the configured `Hexalith.Parties.Client` service. Do not point `ApiBaseUrl` at a Parties actor-host REST endpoint or rely on it for transport selection.
 
