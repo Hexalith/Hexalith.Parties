@@ -21,13 +21,13 @@
                 disabled="@(IsInteractionDisabled || (_selected is null && string.IsNullOrWhiteSpace(_query)))"
                 aria-label="@EffectiveLabels.ClearSelection"
                 title="@EffectiveLabels.ClearSelection"
-                @onclick="ClearAsync">x</button>
+                @onclick="ClearAsync"><span class="hx-party-picker__icon" aria-hidden="true">&times;</span></button>
     </div>
 
     @if (_selected is not null)
     {
         <div class="hx-party-picker__selected" aria-label="@EffectiveLabels.Selected">
-            <span class="hx-party-picker__selected-name">@_selected.DisplayName</span>
+            <span class="hx-party-picker__selected-name">@SelectionDisplayText(_selected)</span>
             @if (HasSelectionStatus(_selected))
             {
                 <span class="hx-party-picker__badge">@StatusText(_selected)</span>
@@ -200,14 +200,14 @@
 
     private async Task HandleInputAsync(ChangeEventArgs args)
     {
-        _query = args.Value?.ToString() ?? string.Empty;
-        _selected = null;
-        await SelectedPartyChanged.InvokeAsync(null).ConfigureAwait(false);
-
         if (IsInteractionDisabled)
         {
             return;
         }
+
+        _query = args.Value?.ToString() ?? string.Empty;
+        _selected = null;
+        await SelectedPartyChanged.InvokeAsync(null).ConfigureAwait(false);
 
         await ScheduleSearchAsync().ConfigureAwait(false);
     }
@@ -397,6 +397,11 @@
 
     private static bool HasSelectionStatus(PartyPickerSelection selection)
         => selection.IsActive.HasValue || selection.IsErased.HasValue;
+
+    private static string SelectionDisplayText(PartyPickerSelection selection)
+        => string.IsNullOrWhiteSpace(selection.DisplayName)
+            ? selection.PartyId ?? string.Empty
+            : selection.DisplayName;
 
     private string StatusText(PartyPickerSelection selection)
         => selection.IsErased == true

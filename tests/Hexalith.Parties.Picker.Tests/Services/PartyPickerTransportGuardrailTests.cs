@@ -23,21 +23,31 @@ public sealed class PartyPickerTransportGuardrailTests
     [InlineData("Dapr.Actors")]
     [InlineData("Hexalith.Parties.Server")]
     [InlineData("Hexalith.Parties.Projections")]
+    [InlineData("localStorage")]
+    [InlineData("sessionStorage")]
+    [InlineData("indexedDB")]
+    [InlineData("document.cookie")]
     public void ProductionPickerSource_DoesNotContainRetiredTransportOrRawMarkupMarkers(string forbidden)
     {
-        string sourceRoot = FindRepositoryRoot();
-        string pickerRoot = Path.Combine(sourceRoot, "src", "Hexalith.Parties.Picker");
         string combinedSource = string.Join(
             Environment.NewLine,
-            Directory.GetFiles(pickerRoot, "*.*", SearchOption.AllDirectories)
-                .Where(path => (path.EndsWith(".cs", StringComparison.OrdinalIgnoreCase)
-                    || path.EndsWith(".razor", StringComparison.OrdinalIgnoreCase)
-                    || path.EndsWith(".js", StringComparison.OrdinalIgnoreCase))
-                    && !path.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}", StringComparison.OrdinalIgnoreCase)
-                    && !path.Contains($"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}", StringComparison.OrdinalIgnoreCase))
+            GetProductionPickerSourceFiles()
                 .Select(path => StripCommentsAndStrings(File.ReadAllText(path), path)));
 
         combinedSource.ShouldNotContain(forbidden);
+    }
+
+    [Theory]
+    [InlineData(@"\b(?:globalThis|self|window)\s*\[\s*[""'](?:localStorage|sessionStorage|indexedDB)[""']\s*\]")]
+    [InlineData(@"\bdocument\s*\[\s*[""']cookie[""']\s*\]")]
+    public void ProductionPickerSource_DoesNotContainStringIndexedBrowserStorageAccess(string forbiddenPattern)
+    {
+        string combinedSource = string.Join(
+            Environment.NewLine,
+            GetProductionPickerSourceFiles()
+                .Select(path => StripComments(File.ReadAllText(path), path)));
+
+        Regex.IsMatch(combinedSource, forbiddenPattern, RegexOptions.IgnoreCase).ShouldBeFalse();
     }
 
     [Fact]
@@ -55,6 +65,30 @@ public sealed class PartyPickerTransportGuardrailTests
         project.ShouldNotContain("MediatR");
         project.ShouldNotContain("FluentValidation");
         project.ShouldNotContain("Microsoft.AspNetCore.Mvc");
+    }
+
+    private static IEnumerable<string> GetProductionPickerSourceFiles()
+    {
+        string sourceRoot = FindRepositoryRoot();
+        string pickerRoot = Path.Combine(sourceRoot, "src", "Hexalith.Parties.Picker");
+        return Directory.GetFiles(pickerRoot, "*.*", SearchOption.AllDirectories)
+            .Where(path => (path.EndsWith(".cs", StringComparison.OrdinalIgnoreCase)
+                || path.EndsWith(".razor", StringComparison.OrdinalIgnoreCase)
+                || path.EndsWith(".js", StringComparison.OrdinalIgnoreCase))
+                && !path.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}", StringComparison.OrdinalIgnoreCase)
+                && !path.Contains($"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}", StringComparison.OrdinalIgnoreCase));
+    }
+
+    private static string StripComments(string source, string path)
+    {
+        string withoutBlockComments = Regex.Replace(source, @"/\*[\s\S]*?\*/", string.Empty);
+        string withoutLineComments = Regex.Replace(withoutBlockComments, @"//.*$", string.Empty, RegexOptions.Multiline);
+        if (!path.EndsWith(".js", StringComparison.OrdinalIgnoreCase))
+        {
+            withoutLineComments = Regex.Replace(withoutLineComments, @"^\s*///.*$", string.Empty, RegexOptions.Multiline);
+        }
+
+        return withoutLineComments;
     }
 
     private static string StripCommentsAndStrings(string source, string path)

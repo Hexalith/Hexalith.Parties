@@ -10,6 +10,7 @@ public sealed record AdminPortalGdprCapability
     private AdminPortalGdprCapability(
         bool canRequestErasure,
         bool canReadErasureStatus,
+        bool canReadErasureCertificate,
         bool canRetryVerification,
         bool canRestrictProcessing,
         bool canLiftRestriction,
@@ -20,6 +21,7 @@ public sealed record AdminPortalGdprCapability
     {
         CanRequestErasure = canRequestErasure;
         CanReadErasureStatus = canReadErasureStatus;
+        CanReadErasureCertificate = canReadErasureCertificate;
         CanRetryVerification = canRetryVerification;
         CanRestrictProcessing = canRestrictProcessing;
         CanLiftRestriction = canLiftRestriction;
@@ -32,6 +34,8 @@ public sealed record AdminPortalGdprCapability
     public bool CanRequestErasure { get; }
 
     public bool CanReadErasureStatus { get; }
+
+    public bool CanReadErasureCertificate { get; }
 
     public bool CanRetryVerification { get; }
 
@@ -50,6 +54,7 @@ public sealed record AdminPortalGdprCapability
     public bool HasAnySupport
         => CanRequestErasure
             || CanReadErasureStatus
+            || CanReadErasureCertificate
             || CanRetryVerification
             || CanRestrictProcessing
             || CanLiftRestriction
@@ -61,6 +66,7 @@ public sealed record AdminPortalGdprCapability
         => new(
             canRequestErasure: true,
             canReadErasureStatus: true,
+            canReadErasureCertificate: true,
             canRetryVerification: true,
             canRestrictProcessing: true,
             canLiftRestriction: true,
@@ -73,6 +79,7 @@ public sealed record AdminPortalGdprCapability
         => new(
             canRequestErasure: false,
             canReadErasureStatus: false,
+            canReadErasureCertificate: false,
             canRetryVerification: false,
             canRestrictProcessing: false,
             canLiftRestriction: false,
@@ -85,6 +92,7 @@ public sealed record AdminPortalGdprCapability
         => new(
             canRequestErasure: false,
             canReadErasureStatus: false,
+            canReadErasureCertificate: false,
             canRetryVerification: false,
             canRestrictProcessing: false,
             canLiftRestriction: false,
@@ -92,6 +100,23 @@ public sealed record AdminPortalGdprCapability
             canExportData: false,
             canReadProcessingRecords: false,
             reason: TemporarilyUnavailableReason);
+
+    // Honest surface of the accepted provisional EventStore-fronted Parties client/gateway bridge:
+    // the seven operations whose provisional methods genuinely work are enabled, while erasure
+    // certificate retrieval and verification retry stay disabled with the exact bounded blocker
+    // (ContractUnavailableReason) because the provisional client reports them contract-unavailable.
+    public static AdminPortalGdprCapability ProvisionalBridge()
+        => new(
+            canRequestErasure: true,
+            canReadErasureStatus: true,
+            canReadErasureCertificate: false,
+            canRetryVerification: false,
+            canRestrictProcessing: true,
+            canLiftRestriction: true,
+            canManageConsent: true,
+            canExportData: true,
+            canReadProcessingRecords: true,
+            reason: ContractUnavailableReason);
 
     public static AdminPortalGdprCapability Partial(
         bool canRequestErasure = false,
@@ -101,10 +126,12 @@ public sealed record AdminPortalGdprCapability
         bool canLiftRestriction = false,
         bool canManageConsent = false,
         bool canExportData = false,
-        bool canReadProcessingRecords = false)
+        bool canReadProcessingRecords = false,
+        bool canReadErasureCertificate = false)
         => new(
             canRequestErasure,
             canReadErasureStatus,
+            canReadErasureCertificate,
             canRetryVerification,
             canRestrictProcessing,
             canLiftRestriction,

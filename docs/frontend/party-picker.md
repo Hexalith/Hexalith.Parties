@@ -59,6 +59,18 @@ Empty or invisible-only queries do not call the backend. The picker does not cal
 
 Until Story 12.5 exposes/freeze rich search metadata through the typed client, metadata unavailable from `IPartiesQueryClient` is treated as bounded unavailable state. The picker must not fabricate local-only, degraded, semantic, hybrid, graph, email, or identifier matching details.
 
+## Shell Boundary And Layout
+
+The picker is a single, bounded embeddable search-and-selection control. It is not an admin portal, party editor, tenant selector, GDPR surface, or EventStore stream browser. Host applications embed it inside their own layouts; it renders one compact control surface (label, input row, optional selected preview, polite status region, and an optional results listbox).
+
+`Disabled` and `ReadOnly` are independent host inputs:
+
+- `Disabled` removes interaction entirely (the input is disabled, no search is issued, and the clear control is inert).
+- `ReadOnly` keeps the input keyboard-reachable but does not mutate search or selection.
+- In both states, a host-supplied current selection (`SelectedPartyId`) keeps its display present and accessible.
+
+The compact layout contract lives in `PartyPicker.razor.css`: a bounded `max-width`, a stable input row, long display names that wrap (`overflow-wrap: anywhere`) instead of overflowing, visible `:focus-visible` outlines, and status that is conveyed by text (not color alone). The clear control is an accessible icon button: its accessible name comes from the localized `ClearSelection` label while the visible `×` glyph is decorative (`aria-hidden`).
+
 ## Privacy And State
 
 Hosts must provide either an access-token provider, an in-memory token property for the custom element, or a request customizer. The picker does not refresh tokens and does not persist tokens.

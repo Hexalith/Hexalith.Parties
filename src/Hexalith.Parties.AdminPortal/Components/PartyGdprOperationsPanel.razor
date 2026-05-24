@@ -19,6 +19,7 @@
         @if (_confirmErasure)
         {
             <p>@Labels.GdprErasureWarning</p>
+            <p>@Labels.PartyId: <code>@Party.Id</code></p>
             <FluentButton Appearance="ButtonAppearance.Primary"
                           Disabled="@(!CanConfirmErasure)"
                           OnClick="ConfirmErasureAsync">
@@ -118,6 +119,8 @@
 </section>
 
 @code {
+    private const string GdprExportContentType = "application/json";
+
     private readonly string[] _lawfulBasisOptions = Enum.GetNames<LawfulBasis>();
     private readonly string _instanceId = Guid.NewGuid().ToString("N").Substring(0, 8);
     private IReadOnlyList<ProcessingActivityRecord> _processingRecords = [];
@@ -215,7 +218,10 @@
         => _gdprCapability.CanReadProcessingRecords && !_isBusy;
 
     private string? ErasureDisabledReason
-        => _gdprCapability.CanRequestErasure && _gdprCapability.CanReadErasureStatus && _gdprCapability.CanRetryVerification
+        => _gdprCapability.CanRequestErasure
+            && _gdprCapability.CanReadErasureStatus
+            && _gdprCapability.CanReadErasureCertificate
+            && _gdprCapability.CanRetryVerification
             ? null
             : CapabilityReason;
 
@@ -329,8 +335,14 @@
         }
 
         bool wasSupported = _gdprCapability.HasAnySupport;
+        bool hadCertificateSupport = _gdprCapability.CanReadErasureCertificate;
         _gdprCapability = capability;
         _capabilityVersion++;
+        if (hadCertificateSupport && !capability.CanReadErasureCertificate)
+        {
+            _erasureCertificate = null;
+        }
+
         if (wasSupported && !capability.HasAnySupport)
         {
             ClearSensitiveOperationState();
@@ -436,18 +448,28 @@
             }
 
             _erasureStatus = status;
-            if (status?.Status is "Verified" or "Complete" or "Erased")
+            bool shouldFetchCertificate = _gdprCapability.CanReadErasureCertificate
+                && status?.Status is "Verified" or "Complete" or "Erased";
+            // Only fetch the certificate when the capability genuinely supports it. Against the
+            // provisional bridge the certificate query is contract-unavailable, so refreshing an
+            // erased party would otherwise surface a misleading failure outcome. When skipped,
+            // _erasureCertificate stays null and the report panel renders the safe
+            // "Certificate unavailable" fallback instead.
+            if (!shouldFetchCertificate)
             {
-                ErasureCertificate? certificate = await QueryService.ApiClient
-                    .GetErasureCertificateAsync(partyId, token)
-                    .ConfigureAwait(false);
-                if (!IsCurrentOperation(partyId, tenantSignature, capabilityVersion, token))
-                {
-                    return;
-                }
-
-                _erasureCertificate = certificate;
+                _erasureCertificate = null;
+                return;
             }
+
+            ErasureCertificate? certificate = await QueryService.ApiClient
+                .GetErasureCertificateAsync(partyId, token)
+                .ConfigureAwait(false);
+            if (!IsCurrentOperation(partyId, tenantSignature, capabilityVersion, token))
+            {
+                return;
+            }
+
+            _erasureCertificate = certificate;
         }).ConfigureAwait(false);
     }
 
@@ -619,7 +641,7 @@
                 await JsRuntime.InvokeVoidAsync(
                     "HexalithPartiesAdminPortal.downloadJson",
                     safeFileName,
-                    export.ContentType,
+                    GdprExportContentType,
                     Convert.ToBase64String(export.Payload)).ConfigureAwait(false);
                 _exportFileName = safeFileName;
             }

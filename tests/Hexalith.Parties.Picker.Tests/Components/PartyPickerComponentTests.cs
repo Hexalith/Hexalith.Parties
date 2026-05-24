@@ -388,10 +388,226 @@ public sealed class PartyPickerComponentTests : BunitContext
         cut.FindAll(".hx-party-picker__badge").Count.ShouldBe(0);
     }
 
+    [Fact]
+    public void PartyPicker_Enabled_ExposesInteractiveControlsAndRoutesQueryThroughTypedClient()
+    {
+        var queryClient = new RecordingPartiesQueryClient();
+        queryClient.Enqueue(SearchResultPage(PartyPickerTestData.Result()));
+        RegisterClient(queryClient);
+
+        IRenderedComponent<PartyPicker> cut = Render<PartyPicker>(parameters => parameters
+            .Add(p => p.AccessToken, "host-token")
+            .Add(p => p.DebounceMilliseconds, 1)
+            .Add(p => p.DispatchDomEvents, false));
+
+        cut.Find("input").HasAttribute("disabled").ShouldBeFalse();
+        cut.Find("input").HasAttribute("readonly").ShouldBeFalse();
+        cut.Find("input").GetAttribute("aria-controls").ShouldNotBeNullOrWhiteSpace();
+
+        cut.Find("input").Input("ada");
+
+        cut.WaitForAssertion(() =>
+        {
+            queryClient.SearchCalls.Count.ShouldBe(1);
+            queryClient.SearchCalls[0].Query.ShouldBe("ada");
+            queryClient.SearchCalls[0].Page.ShouldBe(1);
+            queryClient.SearchCalls[0].PageSize.ShouldBe(10);
+            cut.FindAll("[role=\"option\"]").Count.ShouldBe(1);
+        });
+    }
+
+    [Fact]
+    public void PartyPicker_CompactLayout_RendersSingleBoundedRootAndWrapsLongNames()
+    {
+        var queryClient = new RecordingPartiesQueryClient();
+        queryClient.Enqueue(SearchResultPage(PartyPickerTestData.Result(
+            name: "Maximilian Alexander Bartholomew Featherstonehaugh-Worthington III")));
+        RegisterClient(queryClient);
+
+        IRenderedComponent<PartyPicker> cut = Render<PartyPicker>(parameters => parameters
+            .Add(p => p.AccessToken, "host-token")
+            .Add(p => p.DebounceMilliseconds, 1)
+            .Add(p => p.DispatchDomEvents, false));
+
+        // A single bounded embeddable root - not a multi-pane admin surface.
+        cut.FindAll("section.hx-party-picker").Count.ShouldBe(1);
+        cut.FindAll(".hx-party-picker__label").Count.ShouldBe(1);
+        cut.FindAll(".hx-party-picker__input-row").Count.ShouldBe(1);
+
+        cut.Find("input").Input("max");
+
+        cut.WaitForAssertion(() =>
+        {
+            // Long names render inside the wrap-enabled name slot so the compact layout cannot overflow.
+            cut.Find(".hx-party-picker__result-name").TextContent
+                .ShouldContain("Featherstonehaugh-Worthington");
+            cut.FindAll("section.hx-party-picker").Count.ShouldBe(1);
+        });
+    }
+
+    [Fact]
+    public void PartyPicker_CompactLayout_RendersBoundedBadgeForLongLocalizedStatus()
+    {
+        var queryClient = new RecordingPartiesQueryClient();
+        queryClient.Enqueue(SearchResultPage(PartyPickerTestData.Result(name: "Northwind Trading")));
+        RegisterClient(queryClient);
+
+        IRenderedComponent<PartyPicker> cut = Render<PartyPicker>(parameters => parameters
+            .Add(p => p.AccessToken, "host-token")
+            .Add(p => p.Labels, new PartyPickerLabels
+            {
+                Active = "Selection status requiring several localized words",
+            })
+            .Add(p => p.DebounceMilliseconds, 1)
+            .Add(p => p.DispatchDomEvents, false));
+
+        cut.Find("input").Input("northwind");
+
+        cut.WaitForAssertion(() =>
+        {
+            cut.Find(".hx-party-picker__badge").TextContent
+                .ShouldBe("Selection status requiring several localized words");
+        });
+    }
+
+    [Fact]
+    public void PartyPicker_LayoutCss_DeclaresBoundedCompactContract()
+    {
+        string cssPath = Path.Combine(
+            FindRepositoryRoot(),
+            "src",
+            "Hexalith.Parties.Picker",
+            "Components",
+            "PartyPicker.razor.css");
+        string css = File.ReadAllText(cssPath);
+
+        css.ShouldContain("grid-template-columns: minmax(0, 1fr) 2.25rem");
+        css.ShouldContain("max-width: min(100%, 32rem)");
+        css.ShouldContain("max-width");
+        css.ShouldContain("overflow-wrap: anywhere");
+        css.ShouldContain(":focus-visible");
+        css.ShouldContain("max-width: min(100%, 8rem)");
+        css.ShouldContain("white-space: normal");
+        css.ShouldNotContain("white-space: nowrap");
+    }
+
+    [Fact]
+    public void PartyPicker_BackendContractUnavailable_ShowsBoundedUnavailableStateWithRetryAndNoLeak()
+    {
+        var queryClient = new RecordingPartiesQueryClient
+        {
+            ThrowOnSearch = new InvalidOperationException("raw 0xCAFEF00D backend stack Lovelace detail"),
+        };
+        RegisterClient(queryClient);
+
+        IRenderedComponent<PartyPicker> cut = Render<PartyPicker>(parameters => parameters
+            .Add(p => p.AccessToken, "host-token")
+            .Add(p => p.DebounceMilliseconds, 1)
+            .Add(p => p.DispatchDomEvents, false));
+
+        cut.Find("input").Input("northwind");
+
+        cut.WaitForAssertion(() =>
+        {
+            cut.Find(".hx-party-picker__status").TextContent.ShouldBe("Parties search is unavailable");
+            cut.FindAll(".hx-party-picker__retry").Count.ShouldBe(1);
+            cut.FindAll("[role=\"option\"]").ShouldBeEmpty();
+            // The raw backend exception detail must never reach the rendered shell.
+            cut.Markup.ShouldNotContain("0xCAFEF00D");
+            cut.Markup.ShouldNotContain("Lovelace");
+            cut.Markup.ShouldNotContain("backend stack");
+        });
+    }
+
+    [Fact]
+    public void PartyPicker_DisabledWithSelectedPartyId_KeepsSelectionDisplayStableAndAccessible()
+    {
+        var queryClient = new RecordingPartiesQueryClient();
+        RegisterClient(queryClient);
+
+        IRenderedComponent<PartyPicker> cut = Render<PartyPicker>(parameters => parameters
+            .Add(p => p.AccessToken, "host-token")
+            .Add(p => p.SelectedPartyId, "party-1")
+            .Add(p => p.Disabled, true)
+            .Add(p => p.DispatchDomEvents, false));
+
+        // Selection display stays present and carries an accessible region name while disabled.
+        cut.Find(".hx-party-picker__selected").GetAttribute("aria-label").ShouldBe("Selected party");
+        cut.Find(".hx-party-picker__selected-name").TextContent.ShouldBe("party-1");
+        cut.Find("input").HasAttribute("disabled").ShouldBeTrue();
+        cut.Find(".hx-party-picker__icon-button").HasAttribute("disabled").ShouldBeTrue();
+        queryClient.SearchCalls.ShouldBeEmpty();
+    }
+
+    [Theory]
+    [InlineData(true, false)]
+    [InlineData(false, true)]
+    public void PartyPicker_DisabledOrReadOnlyInputEvent_DoesNotClearSelectionOrNotifyHost(
+        bool disabled,
+        bool readOnly)
+    {
+        var queryClient = new RecordingPartiesQueryClient();
+        RegisterClient(queryClient);
+        List<PartyPickerSelection?> callbacks = [];
+
+        IRenderedComponent<PartyPicker> cut = Render<PartyPicker>(parameters =>
+        {
+            parameters.Add(p => p.AccessToken, "host-token");
+            parameters.Add(p => p.SelectedPartyId, "party-1");
+            parameters.Add(p => p.Disabled, disabled);
+            parameters.Add(p => p.ReadOnly, readOnly);
+            parameters.Add(p => p.DispatchDomEvents, false);
+            parameters.Add(p => p.SelectedPartyChanged, callbacks.Add);
+        });
+
+        cut.Find("input").Input("ada");
+
+        cut.Find(".hx-party-picker__selected-name").TextContent.ShouldBe("party-1");
+        callbacks.ShouldBeEmpty();
+        queryClient.SearchCalls.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void PartyPicker_ClearButton_UsesAccessibleDecorativeIconPattern()
+    {
+        RegisterClient();
+
+        IRenderedComponent<PartyPicker> cut = Render<PartyPicker>(parameters => parameters
+            .Add(p => p.AccessToken, "host-token")
+            .Add(p => p.DispatchDomEvents, false));
+
+        var clearButton = cut.Find(".hx-party-picker__icon-button");
+
+        // Accessible name comes from the localized label, not the decorative glyph.
+        clearButton.GetAttribute("aria-label").ShouldBe("Clear selected party");
+        clearButton.GetAttribute("title").ShouldBe("Clear selected party");
+
+        // The visible glyph is a decorative close icon hidden from assistive technology.
+        var glyph = cut.Find(".hx-party-picker__icon-button .hx-party-picker__icon");
+        glyph.GetAttribute("aria-hidden").ShouldBe("true");
+        clearButton.TextContent.Trim().ShouldBe("×");
+    }
+
     private void RegisterClient(RecordingPartiesQueryClient? queryClient = null)
     {
         queryClient ??= new RecordingPartiesQueryClient();
         Services.AddScoped(_ => new PartyPickerApiClient(queryClient));
+    }
+
+    private static string FindRepositoryRoot()
+    {
+        DirectoryInfo? current = new(AppContext.BaseDirectory);
+        while (current is not null)
+        {
+            if (File.Exists(Path.Combine(current.FullName, "Hexalith.Parties.slnx")))
+            {
+                return current.FullName;
+            }
+
+            current = current.Parent;
+        }
+
+        throw new DirectoryNotFoundException("Could not locate Hexalith.Parties.slnx from test output directory.");
     }
 
     private static PagedResult<PartySearchResult> SearchResultPage(params PartySearchResult[] results)

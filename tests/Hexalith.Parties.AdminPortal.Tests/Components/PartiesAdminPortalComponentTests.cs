@@ -948,6 +948,31 @@ public sealed class PartiesAdminPortalComponentTests : BunitContext
     }
 
     [Fact]
+    public void PartiesAdminPortal_GdprOperations_ErasureSectionShowsBlockerWhenCertificateIsUnsupported()
+    {
+        var api = new RecordingAdminPortalApiClient();
+        api.EnqueueList(Page(IndexEntry("party-gdpr-certificate-blocked", "Certificate Blocked", PartyType.Person, true)));
+        api.EnqueueDetail(Detail("party-gdpr-certificate-blocked", "Certificate Blocked", PartyType.Person, isActive: true));
+        api.EnqueueGdprCapability(AdminPortalGdprCapability.Partial(
+            canRequestErasure: true,
+            canReadErasureStatus: true,
+            canRetryVerification: true,
+            canReadErasureCertificate: false));
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+
+        IRenderedComponent<PartiesAdminPortal> cut = RenderAuthorized("scope-a");
+        cut.WaitForAssertion(() => cut.Markup.ShouldContain("Certificate Blocked"));
+        ClickFluentButton(cut, "Certificate Blocked");
+
+        cut.WaitForAssertion(() =>
+        {
+            FindFluentButton(cut, "Request erasure").HasAttribute("disabled").ShouldBeFalse();
+            FindFluentButton(cut, "Refresh erasure status").HasAttribute("disabled").ShouldBeFalse();
+            cut.Markup.ShouldContain("GDPR operations are temporarily unavailable");
+        });
+    }
+
+    [Fact]
     public void PartiesAdminPortal_GdprOperations_MalformedCapabilityFailsClosedWithoutRawDetails()
     {
         var api = new RecordingAdminPortalApiClient();
@@ -1092,6 +1117,193 @@ public sealed class PartiesAdminPortalComponentTests : BunitContext
             api.RestrictionRequests.ShouldBeEmpty();
             api.GdprCapabilityProbeCount.ShouldBe(2);
         });
+    }
+
+    [Fact]
+    public void PartiesAdminPortal_GdprOperations_ProvisionalBridge_EnablesSupportedOperationsAndBlocksContractUnavailableOnes()
+    {
+        var api = new RecordingAdminPortalApiClient();
+        api.EnqueueList(Page(IndexEntry("party-gdpr-bridge", "GDPR Bridge", PartyType.Person, true)));
+        api.EnqueueDetail(Detail("party-gdpr-bridge", "GDPR Bridge", PartyType.Person, isActive: true));
+        api.EnqueueGdprCapability(AdminPortalGdprCapability.ProvisionalBridge());
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+
+        IRenderedComponent<PartiesAdminPortal> cut = RenderAuthorized("scope-a");
+        cut.WaitForAssertion(() => cut.Markup.ShouldContain("GDPR Bridge"));
+        ClickFluentButton(cut, "GDPR Bridge");
+        cut.WaitForAssertion(() => cut.Markup.ShouldContain("GDPR operations"));
+
+        // Supply consent inputs so the Add consent button reflects the enabled capability rather
+        // than the empty-input guard.
+        SetTextInput(cut, "Channel id", "news-email");
+        SetTextInput(cut, "Purpose", "newsletter");
+
+        cut.WaitForAssertion(() =>
+        {
+            FindFluentButton(cut, "Request erasure").HasAttribute("disabled").ShouldBeFalse();
+            FindFluentButton(cut, "Refresh erasure status").HasAttribute("disabled").ShouldBeFalse();
+            FindFluentButton(cut, "Restrict processing").HasAttribute("disabled").ShouldBeFalse();
+            FindFluentButton(cut, "Add consent").HasAttribute("disabled").ShouldBeFalse();
+            FindFluentButton(cut, "Export party data").HasAttribute("disabled").ShouldBeFalse();
+            FindFluentButton(cut, "Processing records").HasAttribute("disabled").ShouldBeFalse();
+
+            // Retry verification is contract-unavailable, so its button is never rendered.
+            cut.FindAll("fluent-button")
+                .Any(button => button.TextContent.Contains("Retry verification", StringComparison.Ordinal))
+                .ShouldBeFalse();
+
+            // The erasure section carries the exact bounded blocker for the two unavailable operations.
+            cut.Markup.ShouldContain(AdminPortalGdprCapability.ContractUnavailableReason);
+        });
+    }
+
+    [Fact]
+    public void PartiesAdminPortal_GdprOperations_ProvisionalBridge_RefreshErasedPartySkipsCertificateAndAvoidsFailure()
+    {
+        var api = new RecordingAdminPortalApiClient();
+        api.EnqueueList(Page(IndexEntry("party-gdpr-erased", "GDPR Erased", PartyType.Person, true)));
+        api.EnqueueDetail(Detail("party-gdpr-erased", "GDPR Erased", PartyType.Person, isActive: true));
+        api.EnqueueGdprCapability(AdminPortalGdprCapability.ProvisionalBridge());
+        api.EnqueueErasureStatus(new PartyErasureStatusRecord
+        {
+            PartyId = "party-gdpr-erased",
+            TenantId = "scope-a",
+            Status = "Erased",
+            UpdatedAt = DateTimeOffset.Parse("2026-05-03T00:00:00Z"),
+            ErasedAt = DateTimeOffset.Parse("2026-05-03T00:00:00Z"),
+        });
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+
+        IRenderedComponent<PartiesAdminPortal> cut = RenderAuthorized("scope-a");
+        cut.WaitForAssertion(() => cut.Markup.ShouldContain("GDPR Erased"));
+        ClickFluentButton(cut, "GDPR Erased");
+        cut.WaitForAssertion(() => FindFluentButton(cut, "Refresh erasure status").HasAttribute("disabled").ShouldBeFalse());
+
+        ClickFluentButton(cut, "Refresh erasure status");
+
+        cut.WaitForAssertion(() =>
+        {
+            api.ErasureStatusRequests.ShouldContain("party-gdpr-erased");
+            // The certificate fetch is gated off for the provisional bridge: it must never be
+            // attempted, so refreshing an erased party cannot surface a contract-unavailable failure.
+            api.ErasureCertificateRequests.ShouldBeEmpty();
+            cut.Markup.ShouldContain("Erased");
+            cut.Markup.ShouldContain("Certificate unavailable");
+            cut.Markup.ShouldContain("Operation completed");
+            cut.Markup.ShouldNotContain("Operation failed");
+        });
+    }
+
+    [Fact]
+    public void PartiesAdminPortal_GdprOperations_AddAndRevokeConsentRouteThroughAcceptedContractPerChannelPurpose()
+    {
+        var api = new RecordingAdminPortalApiClient();
+        api.EnqueueList(Page(IndexEntry("party-consent", "Consent Party", PartyType.Person, true)));
+        api.EnqueueDetail(Detail("party-consent", "Consent Party", PartyType.Person, isActive: true));
+        api.EnqueueGdprCapability(AdminPortalGdprCapability.ProvisionalBridge());
+        api.EnqueueDetail(new PartyDetail
+        {
+            Id = "party-consent",
+            Type = PartyType.Person,
+            IsActive = true,
+            DisplayName = "Consent Party",
+            SortName = "Party, Consent",
+            ContactChannels = [],
+            Identifiers = [],
+            ConsentRecords =
+            [
+                new ConsentRecord
+                {
+                    ConsentId = "consent-1",
+                    ChannelId = "news-email",
+                    Purpose = "newsletter",
+                    LawfulBasis = LawfulBasis.Consent,
+                    GrantedAt = DateTimeOffset.Parse("2026-05-03T00:00:00Z"),
+                    GrantedBy = "admin-user",
+                },
+            ],
+            NameHistory = [],
+            CreatedAt = DateTimeOffset.Parse("2026-05-01T00:00:00Z"),
+            LastModifiedAt = DateTimeOffset.Parse("2026-05-03T00:00:00Z"),
+        });
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+
+        IRenderedComponent<PartiesAdminPortal> cut = RenderAuthorized("scope-a");
+        cut.WaitForAssertion(() => cut.Markup.ShouldContain("Consent Party"));
+        ClickFluentButton(cut, "Consent Party");
+        cut.WaitForAssertion(() => cut.Markup.ShouldContain("GDPR operations"));
+
+        SetTextInput(cut, "Channel id", "news-email");
+        SetTextInput(cut, "Purpose", "newsletter");
+        cut.WaitForAssertion(() => FindFluentButton(cut, "Add consent").HasAttribute("disabled").ShouldBeFalse());
+        ClickFluentButton(cut, "Add consent");
+
+        cut.WaitForAssertion(() =>
+        {
+            (string PartyId, string ChannelId, string Purpose, LawfulBasis LawfulBasis) added = api.AddConsentRequests.Single();
+            added.PartyId.ShouldBe("party-consent");
+            added.ChannelId.ShouldBe("news-email");
+            added.Purpose.ShouldBe("newsletter");
+            // History renders the per-channel/per-purpose consent and offers a revoke control.
+            cut.Markup.ShouldContain("news-email");
+            FindFluentButton(cut, "Revoke consent").HasAttribute("disabled").ShouldBeFalse();
+        });
+
+        ClickFluentButton(cut, "Revoke consent");
+
+        cut.WaitForAssertion(() =>
+        {
+            (string PartyId, string ConsentId) revoked = api.RevokeConsentRequests.Single();
+            revoked.PartyId.ShouldBe("party-consent");
+            revoked.ConsentId.ShouldBe("consent-1");
+        });
+    }
+
+    [Fact]
+    public void PartiesAdminPortal_GdprOperations_RestrictThenLiftRouteThroughAcceptedContractWithReason()
+    {
+        var api = new RecordingAdminPortalApiClient();
+        api.EnqueueList(Page(IndexEntry("party-restrict", "Restrict Party", PartyType.Person, true)));
+        api.EnqueueDetail(Detail("party-restrict", "Restrict Party", PartyType.Person, isActive: true));
+        api.EnqueueGdprCapability(AdminPortalGdprCapability.ProvisionalBridge());
+        api.EnqueueDetail(new PartyDetail
+        {
+            Id = "party-restrict",
+            Type = PartyType.Person,
+            IsActive = true,
+            DisplayName = "Restrict Party",
+            SortName = "Party, Restrict",
+            IsRestricted = true,
+            RestrictedAt = DateTimeOffset.Parse("2026-05-03T00:00:00Z"),
+            ContactChannels = [],
+            Identifiers = [],
+            ConsentRecords = [],
+            NameHistory = [],
+            CreatedAt = DateTimeOffset.Parse("2026-05-01T00:00:00Z"),
+            LastModifiedAt = DateTimeOffset.Parse("2026-05-03T00:00:00Z"),
+        });
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+
+        IRenderedComponent<PartiesAdminPortal> cut = RenderAuthorized("scope-a");
+        cut.WaitForAssertion(() => cut.Markup.ShouldContain("Restrict Party"));
+        ClickFluentButton(cut, "Restrict Party");
+        cut.WaitForAssertion(() => FindFluentButton(cut, "Restrict processing").HasAttribute("disabled").ShouldBeFalse());
+
+        SetTextInput(cut, "Restriction reason", "court-order-2026");
+        ClickFluentButton(cut, "Restrict processing");
+
+        cut.WaitForAssertion(() =>
+        {
+            (string PartyId, string? Reason) restriction = api.RestrictionRequests.Single();
+            restriction.PartyId.ShouldBe("party-restrict");
+            restriction.Reason.ShouldBe("court-order-2026");
+            // After the refreshed (restricted) detail loads, lifting becomes available.
+            FindFluentButton(cut, "Lift restriction").HasAttribute("disabled").ShouldBeFalse();
+        });
+
+        ClickFluentButton(cut, "Lift restriction");
+
+        cut.WaitForAssertion(() => api.LiftRestrictionRequests.Single().ShouldBe("party-restrict"));
     }
 
     [Fact]
@@ -1251,6 +1463,9 @@ public sealed class PartiesAdminPortalComponentTests : BunitContext
         cut.WaitForAssertion(() =>
         {
             cut.Markup.ShouldContain("irreversible verification");
+            IElement erasureSection = cut.Find("section[aria-labelledby^='erasure-actions-heading-']");
+            erasureSection.TextContent.ShouldContain("Party id: party-erase");
+            erasureSection.TextContent.ShouldNotContain("Erase Candidate");
             FindFluentButton(cut, "Confirm erasure").HasAttribute("disabled").ShouldBeFalse();
         });
         ClickFluentButton(cut, "Confirm erasure");
@@ -1349,6 +1564,13 @@ public sealed class PartiesAdminPortalComponentTests : BunitContext
             EventType = "ConsentRecorded",
             Timestamp = DateTimeOffset.Parse("2026-05-03T00:00:00Z"),
             Summary = "<script>alert(1)</script>",
+        },
+        new ProcessingActivityRecord
+        {
+            SequenceNumber = 8,
+            EventType = "LongProcessingRecord",
+            Timestamp = DateTimeOffset.Parse("2026-05-04T00:00:00Z"),
+            Summary = new string('A', 200),
         });
         Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
 
@@ -1365,6 +1587,8 @@ public sealed class PartiesAdminPortalComponentTests : BunitContext
             cut.Markup.ShouldContain("ConsentRecorded");
             cut.Markup.ShouldContain("&lt;script&gt;alert(1)&lt;/script&gt;");
             cut.Markup.ShouldNotContain("<script>alert(1)</script>");
+            cut.Markup.ShouldContain(new string('A', 160) + "...");
+            cut.Markup.ShouldNotContain(new string('A', 200));
         });
     }
 
@@ -1388,7 +1612,7 @@ public sealed class PartiesAdminPortalComponentTests : BunitContext
         });
         // Server-supplied FileName is intentionally an attacker-style PII-leaking name to prove
         // the UI re-derives a safe non-PII filename via GdprExportFileNameBuilder (D2 defense-in-depth).
-        api.EnqueueExport(new AdminPortalExportDownload("attacker-Export Party-leak.json", "application/json", [0x7B, 0x7D]));
+        api.EnqueueExport(new AdminPortalExportDownload("attacker-Export Party-leak.json", "text/html", [0x7B, 0x7D]));
         Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
 
         IRenderedComponent<PartiesAdminPortal> cut = RenderAuthorized("scope-a");
@@ -1408,6 +1632,9 @@ public sealed class PartiesAdminPortalComponentTests : BunitContext
             cut.Markup.ShouldNotContain("attacker-Export Party-leak.json");
             cut.Markup.ShouldNotContain("attacker");
             cut.Markup.ShouldNotContain("leak");
+            var invocation = JSInterop.Invocations.Single(invocation =>
+                invocation.Identifier == "HexalithPartiesAdminPortal.downloadJson");
+            invocation.Arguments[1].ShouldBe("application/json");
         });
     }
 

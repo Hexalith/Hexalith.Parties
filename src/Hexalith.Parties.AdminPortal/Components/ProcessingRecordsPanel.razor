@@ -24,7 +24,7 @@
                         <dt>@Labels.ChangedAt</dt>
                         <dd>@FormatDate(record.Timestamp)</dd>
                         <dt>@Labels.Summary</dt>
-                        <dd>@record.Summary</dd>
+                        <dd>@FormatSummary(record.Summary)</dd>
                     </dl>
                 </li>
             }
@@ -33,6 +33,8 @@
 </section>
 
 @code {
+    private const int MaxSummaryLength = 160;
+
     [Parameter, EditorRequired]
     public AdminPortalLabels Labels { get; set; } = new();
 
@@ -55,4 +57,17 @@
         => date == default
             ? Labels.MissingDate
             : date.ToString("g", System.Globalization.CultureInfo.CurrentCulture);
+
+    private static string FormatSummary(string? summary)
+    {
+        if (string.IsNullOrWhiteSpace(summary))
+        {
+            return string.Empty;
+        }
+
+        string trimmed = summary.Trim();
+        return trimmed.Length <= MaxSummaryLength
+            ? trimmed
+            : trimmed[..MaxSummaryLength] + "...";
+    }
 }

@@ -45,6 +45,11 @@
   color: var(--hx-picker-text);
 }
 
+.hx-party-picker__icon {
+  font-size: 1.125rem;
+  line-height: 1;
+}
+
 .hx-party-picker__status {
   color: var(--hx-picker-muted);
   min-height: 1.25rem;
@@ -116,7 +121,11 @@
 .hx-party-picker__badge {
   border: 1px solid var(--hx-picker-border);
   border-radius: 999px;
+  display: inline-block;
   font-size: 0.75rem;
+  max-width: min(100%, 8rem);
+  min-width: 0;
+  overflow-wrap: anywhere;
   padding: 0.125rem 0.5rem;
-  white-space: nowrap;
+  white-space: normal;
 }

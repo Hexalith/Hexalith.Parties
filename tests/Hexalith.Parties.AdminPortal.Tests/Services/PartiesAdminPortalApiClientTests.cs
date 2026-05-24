@@ -540,6 +540,69 @@ public sealed class PartiesAdminPortalApiClientTests
     }
 
     [Fact]
+    public async Task GetGdprCapabilityAsync_WithoutGdprClient_FailsClosedToUnavailableAsync()
+    {
+        var queryService = new RecordingQueryService();
+        PartiesAdminPortalApiClient client = new(
+            queryService,
+            Options.Create(new PartiesAdminPortalOptions()));
+
+        AdminPortalGdprCapability capability = await client.GetGdprCapabilityAsync(CancellationToken.None);
+
+        capability.CanRequestErasure.ShouldBeFalse();
+        capability.CanReadErasureStatus.ShouldBeFalse();
+        capability.CanReadErasureCertificate.ShouldBeFalse();
+        capability.CanRetryVerification.ShouldBeFalse();
+        capability.CanRestrictProcessing.ShouldBeFalse();
+        capability.CanLiftRestriction.ShouldBeFalse();
+        capability.CanManageConsent.ShouldBeFalse();
+        capability.CanExportData.ShouldBeFalse();
+        capability.CanReadProcessingRecords.ShouldBeFalse();
+        capability.HasAnySupport.ShouldBeFalse();
+        capability.Reason.ShouldBe(AdminPortalGdprCapability.ContractUnavailableReason);
+    }
+
+    [Fact]
+    public async Task GetGdprCapabilityAsync_WithProvisionalGdprClient_ReportsHonestProvisionalBridgeAsync()
+    {
+        using var httpClient = new HttpClient { BaseAddress = new Uri("https://localhost/") };
+        using ServiceProvider serviceProvider = new ServiceCollection()
+            .AddSingleton<IAdminPortalGdprClient>(new HttpAdminPortalGdprClient(httpClient))
+            .BuildServiceProvider();
+        PartiesAdminPortalApiClient client = new(
+            serviceProvider,
+            Options.Create(new PartiesAdminPortalOptions()));
+
+        AdminPortalGdprCapability capability = await client.GetGdprCapabilityAsync(CancellationToken.None);
+
+        // The seven genuinely-working provisional operations stay enabled.
+        capability.CanRequestErasure.ShouldBeTrue();
+        capability.CanReadErasureStatus.ShouldBeTrue();
+        capability.CanRestrictProcessing.ShouldBeTrue();
+        capability.CanLiftRestriction.ShouldBeTrue();
+        capability.CanManageConsent.ShouldBeTrue();
+        capability.CanExportData.ShouldBeTrue();
+        capability.CanReadProcessingRecords.ShouldBeTrue();
+
+        // Certificate + retry verification are contract-unavailable on the provisional client and
+        // must stay disabled with the exact bounded blocker (the Story 7.6 fail-closed gate).
+        capability.CanReadErasureCertificate.ShouldBeFalse();
+        capability.CanRetryVerification.ShouldBeFalse();
+        capability.HasAnySupport.ShouldBeTrue();
+        capability.Reason.ShouldBe(AdminPortalGdprCapability.ContractUnavailableReason);
+    }
+
+    [Fact]
+    public void GdprCapability_WithOnlyCertificateSupport_CountsAsSupported()
+    {
+        AdminPortalGdprCapability capability = AdminPortalGdprCapability.Partial(
+            canReadErasureCertificate: true);
+
+        capability.CanReadErasureCertificate.ShouldBeTrue();
+        capability.HasAnySupport.ShouldBeTrue();
+    }
+
+    [Fact]
     public async Task GetRichSearchCapabilityAsync_WithoutProbeWiring_ReturnsLocalOnlyAsync()
     {
         var queryService = new RecordingQueryService();
