@@ -483,9 +483,6 @@ def _spawn_legacy(session: str, command: str, selected_agent: str, project_root:
     root = project_root or get_project_root()
     paths = session_paths(session, root)
     paths.state.unlink(missing_ok=True)
-    # win32 tmux (3.6a) fails to spawn a pane when -c is given an absolute
-    # Windows path (e.g. D:\proj). Pass "." and pin the working directory via
-    # cwd so the pane starts in the project root regardless of caller cwd.
     output, code = run_cmd(
         "tmux",
         "new-session",
@@ -497,25 +494,19 @@ def _spawn_legacy(session: str, command: str, selected_agent: str, project_root:
         "-y",
         str(DEFAULT_HEIGHT),
         "-c",
-        ".",
+        root,
         "-e",
         "STORY_AUTOMATOR_CHILD=true",
         "-e",
         f"AI_AGENT={selected_agent}",
         "-e",
         "CLAUDECODE=",
-        cwd=root,
     )
     if code != 0:
         return (output, code)
     if len(command) > 500:
         _write_private_text(paths.command, "#!/bin/bash\n" + command + "\n", 0o700)
-        # On this Windows host the pane's default-shell is Git bash, but a bare
-        # `bash` resolves to WSL (C:\Windows\System32\bash) which cannot read a
-        # C:/... Windows path. `source` runs the file in the current Git-bash
-        # pane. Forward-slash the path so send-keys does not strip backslashes.
-        sourced_command_path = str(paths.command).replace("\\", "/")
-        run_cmd("tmux", "send-keys", "-t", session, f"source {sourced_command_path}", "Enter")
+        run_cmd("tmux", "send-keys", "-t", session, f"bash {paths.command}", "Enter")
     else:
         run_cmd("tmux", "send-keys", "-t", session, command, "Enter")
     return ("", 0)

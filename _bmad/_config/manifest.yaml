@@ -1,26 +1,26 @@
 installation:
   version: 6.7.1
   installDate: 2026-03-01T17:03:40.209Z
-  lastUpdated: 2026-05-22T08:23:48.383Z
+  lastUpdated: 2026-05-24T11:51:08.879Z
 modules:
   - name: core
     version: 6.7.1
     installDate: 2026-03-01T17:03:39.312Z
-    lastUpdated: 2026-05-22T08:23:48.379Z
+    lastUpdated: 2026-05-24T11:51:08.870Z
     source: built-in
     npmPackage: null
     repoUrl: null
   - name: bmm
     version: 6.7.1
     installDate: 2026-03-01T17:03:33.543Z
-    lastUpdated: 2026-05-22T08:23:48.379Z
+    lastUpdated: 2026-05-24T11:51:08.872Z
     source: built-in
     npmPackage: null
     repoUrl: null
   - name: tea
     version: v1.19.0
     installDate: 2026-03-01T17:03:37.012Z
-    lastUpdated: 2026-05-22T08:23:48.381Z
+    lastUpdated: 2026-05-24T11:51:08.874Z
     source: external
     npmPackage: bmad-method-test-architecture-enterprise
     repoUrl: https://github.com/bmad-code-org/bmad-method-test-architecture-enterprise
@@ -29,16 +29,16 @@ modules:
   - name: automator
     version: main
     installDate: 2026-05-21T06:11:28.779Z
-    lastUpdated: 2026-05-22T08:23:48.382Z
+    lastUpdated: 2026-05-24T11:51:08.876Z
     source: external
     npmPackage: bmad-story-automator
     repoUrl: https://github.com/bmad-code-org/bmad-automator
     channel: next
-    sha: 33601b9757383c526d120f112a03190f0c990762
+    sha: 3b01cfd309707389887e4c7ee1388a579a8d039b
   - name: cis
     version: v0.2.1
     installDate: 2026-03-01T17:03:35.523Z
-    lastUpdated: 2026-05-22T08:23:48.383Z
+    lastUpdated: 2026-05-24T11:51:08.879Z
     source: external
     npmPackage: bmad-creative-intelligence-suite
     repoUrl: https://github.com/bmad-code-org/bmad-module-creative-intelligence-suite
