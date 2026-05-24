@@ -38,6 +38,8 @@ public sealed record PartyPickerLabels
 
     public string Retry { get; init; } = "Retry search";
 
+    public string SelectedRetry { get; init; } = "Retry selected party";
+
     public string Active { get; init; } = "Active";
 
     public string Inactive { get; init; } = "Inactive";

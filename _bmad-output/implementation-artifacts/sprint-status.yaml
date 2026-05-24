@@ -37,7 +37,9 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-05-15 09:01:58 +02:00
-last_updated: 2026-05-24 16:00:00 +02:00
+last_updated: 2026-05-24 16:39:33 +02:00
+# last_updated touched 2026-05-24 by code-review closing 8-4-handle-picker-states-and-stale-responses — 5 fixes applied: StatusMessage bounded fallback; selected-display retry focus corrected to _selectedElement; NormalizeQuery null-safe; DelayedSelectedPartiesQueryClient/DelayedPartiesQueryClient RunContinuationsAsynchronously; added stale-selected-display-on-partyid-change test. 0 critical/high issues; all ACs verified. Picker tests 126/126 green. Status: review → done.
+# last_updated touched 2026-05-24 by dev-story moving 8-4-handle-picker-states-and-stale-responses to review — bounded loading clears previous results; stale search/selected-display responses stay suppressed by current context; localized bounded unauthorized/forbidden/not-found/gone/degraded/local-only/transient/unavailable/malformed states render without raw backend details; retry covers current safe search and selected-display contexts; host docs updated. Verification: Picker tests 125/125 green; full solution regression attempted and failed outside picker scope (recorded in story Debug Log).
 # last_updated touched 2026-05-24 by code-review closing 8-3-emit-durable-selection-by-party-id — 2 medium fixes: (1) PartiesAdminPortalApiClientTests.cs added to File List (IPartiesQueryClient.GetPartyAsync signature update); (2) added ResolveSelectedPartyAsync_WithBlankOrControlOnlyPartyId test (3 cases). 1 low fix: test count 105→106 corrected in Debug Log. 0 critical/high issues; all ACs verified implemented. Verification: Picker tests 109/109 green. Status: review → done.
 # last_updated touched 2026-05-24 by code-review closing 8-2-implement-typeahead-search-and-bounded-results — 4 fixes applied: (1) binary-encoding bug fixed in PartyPickerApiClientTests.cs (literal null bytes replaced with Unicode escape sequences \u0000/\u0001); (2) dead HttpResponseMessage factory methods removed from PartyPickerTestData.cs; (3) test count corrected to 84 in completion notes; (4) HttpPartiesQueryClientTests.cs added to File List. Binding picker gate verified: data access via IPartiesQueryClient only; host-supplied auth; PII-safe DOM callback (partyId/partyType/status only); fail-closed states; transport/privacy guardrail tests green. Verification: Picker tests 84/84 green. Status: review -> done.
 # last_updated touched 2026-05-24 by correct-course applying approved scoped risk acceptance for Epic 8 Stories 8.2-8.6 (sprint-change-proposal-2026-05-24-epic8-picker-gate-remaining.md). dependency-eventstore-fronted-parties-client-gateway-2026-05-17.md now risk-accepts all Epic 8 picker stories against the existing Hexalith.Parties.Picker + IPartiesQueryClient temporary bridge; the full EventStore-fronted client/gateway contract is still NOT globally Satisfied. development_status[8-2..8-6]: blocked -> ready-for-dev. No code changed.
@@ -230,7 +232,7 @@ development_status:
   # 2026-05-24 correct-course: scoped risk acceptance extended to Stories 8.2-8.6 per sprint-change-proposal-2026-05-24-epic8-picker-gate-remaining.md. Accepts the existing Hexalith.Parties.Picker + IPartiesQueryClient temporary bridge with binding fail-closed/privacy/boundary conditions; the full EventStore-fronted client/gateway contract is still NOT globally Satisfied. blocked -> ready-for-dev.
   8-2-implement-typeahead-search-and-bounded-results: done
   8-3-emit-durable-selection-by-party-id: done
-  8-4-handle-picker-states-and-stale-responses: ready-for-dev
+  8-4-handle-picker-states-and-stale-responses: done
   8-5-enforce-picker-accessibility-and-localization: ready-for-dev
   8-6-enforce-picker-privacy-and-integration-boundary: ready-for-dev
   epic-8-retrospective: optional

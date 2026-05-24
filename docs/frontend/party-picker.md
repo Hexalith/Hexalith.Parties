@@ -63,6 +63,12 @@ Search results are displayed from the bounded visible page only. When the typed 
 
 No-result searches render `No matching parties in the current authorized context`. The wording is intentionally tenant-safe: it does not imply records exist outside the host-supplied authorization context.
 
+While a search request is in flight, the picker clears the previous result list and renders the localized loading status instead of presenting old results as current. Delayed responses are accepted only for the current query, host context, authentication context, search options, and page-size state; responses from superseded contexts are ignored.
+
+Unauthorized, forbidden, not-found, gone/erased, transient, unavailable, malformed, local-only, and degraded search states render bounded localized status text through the component status region. Backend problem details, correlation ids, tenant ids, access tokens, query payloads, and stale party display data are not rendered. Local-only and degraded results remain usable only as bounded current-context results and are identified by text, not color alone.
+
+Retry is shown only for retryable search failures. Activating it reissues the current safe request context using the latest host-supplied token provider/request customizer and returns focus to the initiating input when the retry completes.
+
 The picker does not call Hexalith.Memories directly and does not emulate semantic, hybrid, graph, email, or identifier search in the browser.
 
 Until Story 12.5 exposes/freeze rich search metadata through the typed client, metadata unavailable from `IPartiesQueryClient` is treated as bounded unavailable state. The picker must not fabricate local-only, degraded, semantic, hybrid, graph, email, or identifier matching details.
@@ -86,6 +92,8 @@ Hosts must provide either an access-token provider, an in-memory token property 
 Use `ContextKey` to represent tenant, signed-in user, and host configuration changes. Use `AuthContextKey` for a non-sensitive authentication version when the host uses a token provider whose delegate instance does not change. When either key changes, the picker clears visible results, selected preview data, and pending requests before searching again.
 
 When a host supplies `SelectedPartyId`, the picker resolves display preview state through `IPartiesQueryClient.GetPartyAsync` using the same host-supplied access token provider or request customizer pattern as search. If the selected party is unavailable, unauthorized, forbidden, not found, gone, erased, or transiently unavailable, the component keeps the durable party id and renders a bounded localized selected-state label instead of replacing the id with display text or backend details.
+
+Selected-party display lookup also has a localized loading label. If a selected-display response arrives after `SelectedPartyId`, `ContextKey`, `AuthContextKey`, token identity, request customizer identity, disabled/read-only state, or picker options change, it is ignored. Retry for selected-party transient/unavailable failures re-resolves only the current selected id and current host request context, then returns focus to the status region.
 
 `ApiBaseUrl` remains on the component for source compatibility with existing hosts, but request routing is owned by the configured `Hexalith.Parties.Client` service. Do not point `ApiBaseUrl` at a Parties actor-host REST endpoint or rely on it for transport selection.
 

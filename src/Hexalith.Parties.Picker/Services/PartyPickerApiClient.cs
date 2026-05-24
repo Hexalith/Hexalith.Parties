@@ -341,6 +341,20 @@ public sealed class PartyPickerApiClient(IPartiesQueryClient queryClient)
             ? boundedPageSize
             : Math.Min(BoundPageSize(payload.PageSize), boundedPageSize);
 
+        PartyPickerSearchMetadata metadata = ToSearchMetadata(payload.Freshness);
+        PartyPickerSearchState state = ToSearchState(payload.Freshness, items.Count);
+        if (state == PartyPickerSearchState.Error)
+        {
+            return new PartyPickerSearchResponse
+            {
+                State = PartyPickerSearchState.Error,
+                Page = page,
+                PageSize = pageSize,
+                Metadata = metadata,
+                SafeReason = "Parties search is unavailable.",
+            };
+        }
+
         if (items.Count == 0)
         {
             return new PartyPickerSearchResponse
@@ -349,27 +363,50 @@ public sealed class PartyPickerApiClient(IPartiesQueryClient queryClient)
                 Page = page,
                 PageSize = pageSize,
                 TotalCount = payload.TotalCount,
-                Metadata = new PartyPickerSearchMetadata
-                {
-                    SearchStatus = "Unavailable",
-                },
+                Metadata = metadata,
             };
         }
 
         return new PartyPickerSearchResponse
         {
-            State = PartyPickerSearchState.Ready,
+            State = state,
             Results = items,
             Page = page,
             PageSize = pageSize,
             TotalCount = payload.TotalCount,
-            Metadata = new PartyPickerSearchMetadata
-            {
-                SearchStatus = "Unavailable",
-            },
+            Metadata = metadata,
+            SafeReason = state is PartyPickerSearchState.LocalOnly or PartyPickerSearchState.Degraded
+                ? "Search results may be limited for the current context."
+                : null,
         };
     }
 
-    private static string NormalizeQuery(string query)
-        => string.Concat(query.Where(c => !char.IsControl(c))).Trim();
+    private static PartyPickerSearchMetadata ToSearchMetadata(ProjectionFreshnessMetadata? freshness)
+        => new()
+        {
+            SearchStatus = freshness?.Status switch
+            {
+                ProjectionFreshnessStatus.Current => "Current",
+                ProjectionFreshnessStatus.LocalOnly => "LocalOnly",
+                ProjectionFreshnessStatus.Degraded or
+                    ProjectionFreshnessStatus.Stale or
+                    ProjectionFreshnessStatus.Rebuilding => "Degraded",
+                ProjectionFreshnessStatus.Unavailable => "Unavailable",
+                _ => "Unavailable",
+            },
+        };
+
+    private static PartyPickerSearchState ToSearchState(ProjectionFreshnessMetadata? freshness, int visibleCount)
+        => freshness?.Status switch
+        {
+            ProjectionFreshnessStatus.LocalOnly when visibleCount > 0 => PartyPickerSearchState.LocalOnly,
+            ProjectionFreshnessStatus.Degraded or
+                ProjectionFreshnessStatus.Stale or
+                ProjectionFreshnessStatus.Rebuilding when visibleCount > 0 => PartyPickerSearchState.Degraded,
+            ProjectionFreshnessStatus.Unavailable => PartyPickerSearchState.Error,
+            _ => visibleCount == 0 ? PartyPickerSearchState.Empty : PartyPickerSearchState.Ready,
+        };
+
+    private static string NormalizeQuery(string? query)
+        => query is null ? string.Empty : string.Concat(query.Where(c => !char.IsControl(c))).Trim();
 }

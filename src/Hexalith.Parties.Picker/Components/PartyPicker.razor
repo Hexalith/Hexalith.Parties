@@ -26,7 +26,7 @@
 
     @if (_selected is not null)
     {
-        <div class="hx-party-picker__selected" aria-label="@EffectiveLabels.Selected">
+        <div class="hx-party-picker__selected" aria-label="@EffectiveLabels.Selected" tabindex="-1" @ref="_selectedElement">
             <span class="hx-party-picker__selected-name">@SelectionDisplayText(_selected)</span>
             @if (HasSelectionStatus(_selected))
             {
@@ -35,13 +35,13 @@
         </div>
     }
 
-    <div class="hx-party-picker__status" role="status" aria-live="polite">
+    <div class="hx-party-picker__status" role="status" aria-live="polite" tabindex="-1" @ref="_statusElement">
         @StatusMessage
     </div>
 
     @if (CanRetry)
     {
-        <button type="button" class="hx-party-picker__retry" @onclick="RetryAsync">@EffectiveLabels.Retry</button>
+        <button type="button" class="hx-party-picker__retry" @onclick="RetryAsync">@RetryLabel</button>
     }
 
     @if (_search.HasResults)
@@ -81,6 +81,8 @@
     private CancellationTokenSource? _selectionCts;
     private IJSObjectReference? _module;
     private ElementReference _inputElement;
+    private ElementReference _statusElement;
+    private ElementReference _selectedElement;
     private string _query = string.Empty;
     private PartyPickerSearchResponse _search = new() { State = PartyPickerSearchState.Idle, PageSize = PartyPickerDefaults.PageSize };
     private PartyPickerSelection? _selected;
@@ -152,9 +154,22 @@
     private bool IsInteractionDisabled => Disabled || ReadOnly;
 
     private bool CanRetry
+        => CanRetrySearch || CanRetrySelectedDisplay;
+
+    private bool CanRetrySearch
         => !IsInteractionDisabled
             && HasVisibleSearchText(_query)
             && (_search.State is PartyPickerSearchState.TransientFailure or PartyPickerSearchState.Error);
+
+    private bool CanRetrySelectedDisplay
+        => !IsInteractionDisabled
+            && _selected?.State is PartyPickerSelectionState.TransientFailure or PartyPickerSelectionState.Unavailable
+            && !string.IsNullOrWhiteSpace(_selected.PartyId);
+
+    private string RetryLabel
+        => CanRetrySelectedDisplay && !CanRetrySearch
+            ? EffectiveLabels.SelectedRetry
+            : EffectiveLabels.Retry;
 
     private string StatusMessage
         => _search.State switch
@@ -171,23 +186,12 @@
             PartyPickerSearchState.TransientFailure => EffectiveLabels.TransientFailure,
             PartyPickerSearchState.NotFound or PartyPickerSearchState.Gone => EffectiveLabels.Empty,
             PartyPickerSearchState.Error => EffectiveLabels.Error,
-            _ => string.Empty,
+            _ => EffectiveLabels.Error,
         };
 
     protected override void OnParametersSet()
     {
-        string signature = string.Join(
-            "|",
-            ContextKey,
-            AuthContextKey,
-            SearchMode,
-            CaseId,
-            PageSize.ToString(System.Globalization.CultureInfo.InvariantCulture),
-            Disabled.ToString(),
-            ReadOnly.ToString(),
-            TokenFingerprint(AccessToken),
-            string.IsNullOrEmpty(AuthContextKey) ? DelegateFingerprint(AccessTokenProvider) : "auth-key",
-            string.IsNullOrEmpty(AuthContextKey) ? DelegateFingerprint(RequestCustomizer) : "auth-key");
+        string signature = BuildContextSignature();
 
         if (_previousContextSignature is not null && !string.Equals(_previousContextSignature, signature, StringComparison.Ordinal))
         {
@@ -231,6 +235,7 @@
         }
 
         _search = _search with { State = PartyPickerSearchState.Loading, Results = [] };
+        await InvokeAsync(StateHasChanged).ConfigureAwait(false);
         long version = ++_searchVersion;
         _searchCts = new CancellationTokenSource();
         CancellationToken token = _searchCts.Token;
@@ -242,8 +247,11 @@
             PartyPickerSearchResponse response = await ApiClient.SearchAsync(CreateRequest(), token).ConfigureAwait(false);
             if (version == _searchVersion && !token.IsCancellationRequested)
             {
-                _search = response;
-                await InvokeAsync(StateHasChanged).ConfigureAwait(false);
+                await InvokeAsync(() =>
+                {
+                    _search = response;
+                    StateHasChanged();
+                }).ConfigureAwait(false);
             }
         }
         catch (OperationCanceledException)
@@ -288,11 +296,34 @@
             : System.Runtime.CompilerServices.RuntimeHelpers.GetHashCode(handler)
                 .ToString(System.Globalization.CultureInfo.InvariantCulture);
 
+    private string BuildContextSignature()
+        => string.Join(
+            "|",
+            ContextKey,
+            AuthContextKey,
+            SearchMode,
+            CaseId,
+            PageSize.ToString(System.Globalization.CultureInfo.InvariantCulture),
+            Disabled.ToString(),
+            ReadOnly.ToString(),
+            TokenFingerprint(AccessToken),
+            string.IsNullOrEmpty(AuthContextKey) ? DelegateFingerprint(AccessTokenProvider) : "auth-key",
+            string.IsNullOrEmpty(AuthContextKey) ? DelegateFingerprint(RequestCustomizer) : "auth-key");
+
     private async Task RetryAsync()
     {
-        if (HasVisibleSearchText(_query))
+        if (CanRetrySearch)
         {
             await ScheduleSearchAsync().ConfigureAwait(false);
+            await TryFocusInputAsync().ConfigureAwait(false);
+            return;
+        }
+
+        if (CanRetrySelectedDisplay)
+        {
+            _previousSelectionSignature = null;
+            SynchronizeSelectedParty(_previousContextSignature ?? BuildContextSignature());
+            await TryFocusSelectedAsync().ConfigureAwait(false);
         }
     }
 
@@ -443,8 +474,11 @@
                 && string.Equals(_previousSelectionSignature, selectionSignature, StringComparison.Ordinal)
                 && !cancellationToken.IsCancellationRequested)
             {
-                _selected = selection with { PartyId = partyId };
-                await InvokeAsync(StateHasChanged).ConfigureAwait(false);
+                await InvokeAsync(() =>
+                {
+                    _selected = selection with { PartyId = partyId };
+                    StateHasChanged();
+                }).ConfigureAwait(false);
             }
         }
         catch (OperationCanceledException)
@@ -460,6 +494,34 @@
         try
         {
             await _inputElement.FocusAsync().ConfigureAwait(false);
+        }
+        catch (InvalidOperationException)
+        {
+        }
+        catch (JSDisconnectedException)
+        {
+        }
+    }
+
+    private async Task TryFocusStatusAsync()
+    {
+        try
+        {
+            await _statusElement.FocusAsync().ConfigureAwait(false);
+        }
+        catch (InvalidOperationException)
+        {
+        }
+        catch (JSDisconnectedException)
+        {
+        }
+    }
+
+    private async Task TryFocusSelectedAsync()
+    {
+        try
+        {
+            await _selectedElement.FocusAsync().ConfigureAwait(false);
         }
         catch (InvalidOperationException)
         {

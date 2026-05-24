@@ -325,6 +325,34 @@ public sealed class PartyPickerApiClientTests
     }
 
     [Theory]
+    [InlineData(ProjectionFreshnessStatus.LocalOnly, PartyPickerSearchState.LocalOnly, "LocalOnly")]
+    [InlineData(ProjectionFreshnessStatus.Degraded, PartyPickerSearchState.Degraded, "Degraded")]
+    [InlineData(ProjectionFreshnessStatus.Stale, PartyPickerSearchState.Degraded, "Degraded")]
+    [InlineData(ProjectionFreshnessStatus.Rebuilding, PartyPickerSearchState.Degraded, "Degraded")]
+    public async Task SearchAsync_MapsFreshnessToBoundedSearchState(
+        ProjectionFreshnessStatus freshnessStatus,
+        PartyPickerSearchState expectedState,
+        string expectedSearchStatus)
+    {
+        var queryClient = new RecordingPartiesQueryClient();
+        queryClient.Enqueue(SearchResultPage(
+            1,
+            ProjectionFreshnessMetadata.Create(freshnessStatus, "raw tenant token backend detail"),
+            PartyPickerTestData.Result()));
+        var client = new PartyPickerApiClient(queryClient);
+
+        PartyPickerSearchResponse response = await client.SearchAsync(Request("ada"), CancellationToken.None);
+
+        response.State.ShouldBe(expectedState);
+        response.Metadata.SearchStatus.ShouldBe(expectedSearchStatus);
+        response.Results.Count.ShouldBe(1);
+        response.SafeReason.ShouldNotBeNullOrWhiteSpace();
+        response.SafeReason!.ShouldNotContain("raw");
+        response.SafeReason.ShouldNotContain("tenant");
+        response.SafeReason.ShouldNotContain("token");
+    }
+
+    [Theory]
     [InlineData(-1)]
     [InlineData(0)]
     [InlineData(1)]
@@ -509,6 +537,12 @@ public sealed class PartyPickerApiClientTests
         => SearchResultPage(results.Length, results);
 
     private static PagedResult<PartySearchResult> SearchResultPage(int totalCount, params PartySearchResult[] results)
+        => SearchResultPage(totalCount, null, results);
+
+    private static PagedResult<PartySearchResult> SearchResultPage(
+        int totalCount,
+        ProjectionFreshnessMetadata? freshness,
+        params PartySearchResult[] results)
         => new()
         {
             Items = results,
@@ -516,5 +550,6 @@ public sealed class PartyPickerApiClientTests
             PageSize = Math.Max(1, results.Length),
             TotalCount = totalCount,
             TotalPages = results.Length == 0 ? 0 : 1,
+            Freshness = freshness,
         };
 }
