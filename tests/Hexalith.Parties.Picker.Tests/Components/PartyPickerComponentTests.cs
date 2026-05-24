@@ -1,3 +1,5 @@
+using System.Text.Json;
+
 using Bunit;
 
 using Hexalith.Parties.Client;
@@ -175,8 +177,10 @@ public sealed class PartyPickerComponentTests : BunitContext
 
         cut.WaitForAssertion(() =>
         {
-            cut.Find(".hx-party-picker__status").TextContent.ShouldBe("Showing 2 matching parties");
-            cut.Markup.ShouldNotContain("-1");
+            string statusText = cut.Find(".hx-party-picker__status").TextContent;
+            statusText.ShouldBe("Showing 2 matching parties");
+            statusText.ShouldNotContain("-1");
+            cut.FindAll("[role=\"option\"]").Count.ShouldBe(2);
         });
     }
 
@@ -539,10 +543,119 @@ public sealed class PartyPickerComponentTests : BunitContext
             IsActive = true,
         });
 
+        string json = JsonSerializer.Serialize(detail);
         detail.PartyId.ShouldBe("party-1");
-        detail.ToString().ShouldNotContain("Ada");
-        detail.ToString().ShouldNotContain("tenant");
-        detail.ToString().ShouldNotContain("token");
+        json.ShouldNotContain("Ada");
+        json.ShouldNotContain("tenant", Case.Insensitive);
+        json.ShouldNotContain("token", Case.Insensitive);
+    }
+
+    [Fact]
+    public void PartyPickerEventDetail_SerializesOnlyDurableIdAndBoundedState()
+    {
+        var detail = PartyPickerEventDetail.FromSelection(new PartyPickerSelection
+        {
+            PartyId = "party-1",
+            DisplayName = "Ada Lovelace",
+            PartyType = PartyType.Person,
+            IsActive = true,
+            SafeReason = "raw ProblemDetails token tenant searchText consent identifier contact degradedReason queryPayload",
+        });
+
+        string payload = JsonSerializer.Serialize(detail);
+        string[] propertyNames = typeof(PartyPickerEventDetail)
+            .GetProperties()
+            .Select(static property => property.Name)
+            .ToArray();
+
+        propertyNames.ShouldBe(["PartyId", "PartyType", "Status"], ignoreOrder: true);
+        payload.ShouldContain("party-1");
+        payload.ShouldContain("Person");
+        payload.ShouldContain("active");
+
+        foreach (string forbidden in new[]
+        {
+            "Ada",
+            "DisplayName",
+            "contact",
+            "identifier",
+            "consent",
+            "degraded",
+            "searchText",
+            "tenant",
+            "token",
+            "ProblemDetails",
+            "queryPayload",
+            "SafeReason",
+        })
+        {
+            payload.ShouldNotContain(forbidden, Case.Insensitive);
+        }
+    }
+
+    [Fact]
+    public async Task PartyPicker_SelectionCallbacks_EmitDurableIdOnlyAndPreviewSeparately()
+    {
+        var queryClient = new RecordingPartiesQueryClient();
+        queryClient.Enqueue(SearchResultPage(PartyPickerTestData.Result(
+            id: "party-1",
+            name: "Ada Lovelace")));
+        RegisterClient(queryClient);
+
+        string? durablePartyId = null;
+        PartyPickerSelection? preview = null;
+        IRenderedComponent<PartyPicker> cut = Render<PartyPicker>(parameters => parameters
+            .Add(p => p.AccessToken, "host-token")
+            .Add(p => p.DebounceMilliseconds, 1)
+            .Add(p => p.DispatchDomEvents, false)
+            .Add(p => p.SelectedPartyIdChanged, value => durablePartyId = value)
+            .Add(p => p.SelectedPartyChanged, value => preview = value));
+
+        cut.Find("input").Input("ada");
+        cut.WaitForAssertion(() => cut.FindAll("[role=\"option\"]").Count.ShouldBe(1));
+        await cut.InvokeAsync(() => cut.Find(".hx-party-picker__result-button").Click());
+
+        durablePartyId.ShouldBe("party-1");
+        durablePartyId.ShouldNotBeNull();
+        durablePartyId!.ShouldNotContain("Ada");
+        durablePartyId.ShouldNotContain("tenant");
+        durablePartyId.ShouldNotContain("token");
+        preview.ShouldNotBeNull();
+        preview.PartyId.ShouldBe("party-1");
+        preview.DisplayName.ShouldBe("Ada Lovelace");
+    }
+
+    [Fact]
+    public async Task PartyPicker_ClearSelection_EmitsNullDurableIdWithoutPreviewData()
+    {
+        var queryClient = new RecordingPartiesQueryClient();
+        queryClient.Enqueue(SearchResultPage(PartyPickerTestData.Result(
+            id: "party-1",
+            name: "Ada Lovelace")));
+        RegisterClient(queryClient);
+
+        List<string?> durableIds = [];
+        List<PartyPickerSelection?> previews = [];
+        IRenderedComponent<PartyPicker> cut = Render<PartyPicker>(parameters => parameters
+            .Add(p => p.AccessToken, "host-token")
+            .Add(p => p.DebounceMilliseconds, 1)
+            .Add(p => p.DispatchDomEvents, false)
+            .Add(p => p.SelectedPartyIdChanged, durableIds.Add)
+            .Add(p => p.SelectedPartyChanged, previews.Add));
+
+        cut.Find("input").Input("ada");
+        cut.WaitForAssertion(() => cut.FindAll("[role=\"option\"]").Count.ShouldBe(1));
+        await cut.InvokeAsync(() => cut.Find(".hx-party-picker__result-button").Click());
+        await cut.InvokeAsync(() => cut.Find(".hx-party-picker__icon-button").Click());
+
+        durableIds.ShouldBe([null, "party-1", null]);
+        durableIds.Where(static id => id is not null).ShouldAllBe(static id => !id!.Contains("Ada", StringComparison.OrdinalIgnoreCase));
+        previews.Count.ShouldBe(3);
+        previews[0].ShouldBeNull();
+        previews[1].ShouldNotBeNull();
+        previews[1]!.PartyId.ShouldBe("party-1");
+        previews[1]!.DisplayName.ShouldBe("Ada Lovelace");
+        previews[2].ShouldBeNull();
     }
 
     [Fact]
@@ -571,16 +684,151 @@ public sealed class PartyPickerComponentTests : BunitContext
     }
 
     [Fact]
-    public void PartyPicker_StubSelectionFromSelectedPartyId_DoesNotRenderMisleadingStatusBadge()
+    public void PartyPicker_PreselectedPartyIdWithoutAuth_RendersBoundedStateWithoutLookup()
     {
-        RegisterClient();
+        var queryClient = new RecordingPartiesQueryClient();
+        RegisterClient(queryClient);
+
+        IRenderedComponent<PartyPicker> cut = Render<PartyPicker>(parameters => parameters
+            .Add(p => p.SelectedPartyId, "party-1")
+            .Add(p => p.DispatchDomEvents, false));
+
+        cut.WaitForAssertion(() =>
+        {
+            queryClient.GetCalls.ShouldBeEmpty();
+            cut.Find(".hx-party-picker__selected-name").TextContent.ShouldBe("party-1");
+            cut.Find(".hx-party-picker__badge").TextContent.ShouldBe("Authentication is required to view the selected party");
+        });
+    }
+
+    [Fact]
+    public void PartyPicker_PreselectedPartyId_ResolvesDisplayThroughTypedClient()
+    {
+        var queryClient = new RecordingPartiesQueryClient();
+        queryClient.EnqueueDetail(PartyDetail(id: "party-1", name: "Ada Lovelace"));
+        RegisterClient(queryClient);
 
         IRenderedComponent<PartyPicker> cut = Render<PartyPicker>(parameters => parameters
             .Add(p => p.AccessToken, "host-token")
             .Add(p => p.SelectedPartyId, "party-1")
             .Add(p => p.DispatchDomEvents, false));
 
-        cut.FindAll(".hx-party-picker__badge").Count.ShouldBe(0);
+        cut.WaitForAssertion(() =>
+        {
+            queryClient.GetCalls.ShouldBe(["party-1"]);
+            cut.Find(".hx-party-picker__selected-name").TextContent.ShouldBe("Ada Lovelace");
+            cut.Find(".hx-party-picker__badge").TextContent.ShouldBe("Active");
+        });
+    }
+
+    [Fact]
+    public void PartyPicker_PreselectedErasedParty_KeepsDurableIdAndRendersBoundedStatus()
+    {
+        var queryClient = new RecordingPartiesQueryClient();
+        queryClient.EnqueueDetail(PartyDetail(id: "party-erased", name: string.Empty, erased: true));
+        RegisterClient(queryClient);
+
+        IRenderedComponent<PartyPicker> cut = Render<PartyPicker>(parameters => parameters
+            .Add(p => p.AccessToken, "host-token")
+            .Add(p => p.SelectedPartyId, "party-erased")
+            .Add(p => p.DispatchDomEvents, false));
+
+        cut.WaitForAssertion(() =>
+        {
+            queryClient.GetCalls.ShouldBe(["party-erased"]);
+            cut.Find(".hx-party-picker__selected-name").TextContent.ShouldBe("party-erased");
+            cut.Find(".hx-party-picker__badge").TextContent.ShouldBe("Erased");
+        });
+    }
+
+    [Theory]
+    [InlineData(401, "Sign in again to view the selected party")]
+    [InlineData(403, "Selected party is not available in this authorized context")]
+    [InlineData(404, "Selected party was not found")]
+    [InlineData(410, "Selected party is no longer available")]
+    [InlineData(503, "Selected party details are temporarily unavailable")]
+    public void PartyPicker_PreselectedPartyUnavailable_RendersBoundedStateWithoutReplacingDurableId(
+        int statusCode,
+        string expectedLabel)
+    {
+        var queryClient = new RecordingPartiesQueryClient
+        {
+            ThrowOnGet = new PartiesClientException(
+                statusCode,
+                "Problem title",
+                "problem-type",
+                "raw token Ada Lovelace backend selected detail",
+                "correlation-1"),
+        };
+        RegisterClient(queryClient);
+
+        IRenderedComponent<PartyPicker> cut = Render<PartyPicker>(parameters => parameters
+            .Add(p => p.AccessToken, "host-token")
+            .Add(p => p.SelectedPartyId, "party-raw")
+            .Add(p => p.DispatchDomEvents, false));
+
+        cut.WaitForAssertion(() =>
+        {
+            queryClient.GetCalls.ShouldBe(["party-raw"]);
+            cut.Find(".hx-party-picker__selected-name").TextContent.ShouldBe("party-raw");
+            cut.Find(".hx-party-picker__badge").TextContent.ShouldBe(expectedLabel);
+            cut.Markup.ShouldNotContain("raw token");
+            cut.Markup.ShouldNotContain("Ada Lovelace");
+            cut.Markup.ShouldNotContain("correlation-1");
+        });
+    }
+
+    [Fact]
+    public async Task PartyPicker_StaleSelectedDisplayResponse_DoesNotRepopulateAfterContextChange()
+    {
+        var queryClient = new DelayedSelectedPartiesQueryClient();
+        RegisterClient(queryClient);
+
+        IRenderedComponent<PartyPicker> cut = Render<PartyPicker>(parameters => parameters
+            .Add(p => p.AccessToken, "host-token")
+            .Add(p => p.ContextKey, "tenant-a:user-a")
+            .Add(p => p.SelectedPartyId, "party-1")
+            .Add(p => p.DispatchDomEvents, false));
+
+        await queryClient.WaitForGetCallAsync(0);
+
+        await cut.InvokeAsync(() => cut.Instance.SetParametersAsync(ParameterView.FromDictionary(new Dictionary<string, object?>
+        {
+            [nameof(PartyPicker.AccessToken)] = "host-token",
+            [nameof(PartyPicker.ContextKey)] = "tenant-b:user-b",
+            [nameof(PartyPicker.SelectedPartyId)] = "party-2",
+            [nameof(PartyPicker.DispatchDomEvents)] = false,
+        })));
+
+        queryClient.CompleteGet(0, PartyDetail(id: "party-1", name: "Ada Lovelace"));
+
+        cut.WaitForAssertion(() =>
+        {
+            cut.Find(".hx-party-picker__selected-name").TextContent.ShouldBe("party-2");
+            cut.Markup.ShouldNotContain("Ada Lovelace");
+        });
+    }
+
+    [Fact]
+    public void PartyPicker_SelectedPartyIdLookupFailure_DoesNotRenderMisleadingActiveBadge()
+    {
+        var queryClient = new RecordingPartiesQueryClient
+        {
+            ThrowOnGet = new PartiesClientException(404, "Not Found", null, "raw detail", "correlation-1"),
+        };
+        RegisterClient(queryClient);
+
+        IRenderedComponent<PartyPicker> cut = Render<PartyPicker>(parameters => parameters
+            .Add(p => p.AccessToken, "host-token")
+            .Add(p => p.SelectedPartyId, "party-1")
+            .Add(p => p.DispatchDomEvents, false));
+
+        cut.WaitForAssertion(() =>
+        {
+            cut.Find(".hx-party-picker__selected-name").TextContent.ShouldBe("party-1");
+            cut.Find(".hx-party-picker__badge").TextContent.ShouldBe("Selected party was not found");
+            cut.Markup.ShouldNotContain("Active");
+        });
     }
 
     [Fact]
@@ -743,7 +991,8 @@ public sealed class PartyPickerComponentTests : BunitContext
     {
         var queryClient = new RecordingPartiesQueryClient();
         RegisterClient(queryClient);
-        List<PartyPickerSelection?> callbacks = [];
+        List<PartyPickerSelection?> previewCallbacks = [];
+        List<string?> durableCallbacks = [];
 
         IRenderedComponent<PartyPicker> cut = Render<PartyPicker>(parameters =>
         {
@@ -752,13 +1001,15 @@ public sealed class PartyPickerComponentTests : BunitContext
             parameters.Add(p => p.Disabled, disabled);
             parameters.Add(p => p.ReadOnly, readOnly);
             parameters.Add(p => p.DispatchDomEvents, false);
-            parameters.Add(p => p.SelectedPartyChanged, callbacks.Add);
+            parameters.Add(p => p.SelectedPartyChanged, previewCallbacks.Add);
+            parameters.Add(p => p.SelectedPartyIdChanged, durableCallbacks.Add);
         });
 
         cut.Find("input").Input("ada");
 
         cut.Find(".hx-party-picker__selected-name").TextContent.ShouldBe("party-1");
-        callbacks.ShouldBeEmpty();
+        previewCallbacks.ShouldBeEmpty();
+        durableCallbacks.ShouldBeEmpty();
         queryClient.SearchCalls.ShouldBeEmpty();
     }
 
@@ -818,6 +1069,24 @@ public sealed class PartyPickerComponentTests : BunitContext
             TotalPages = results.Length == 0 ? 0 : 1,
         };
 
+    private static PartyDetail PartyDetail(
+        string id = "party-1",
+        string name = "Ada Lovelace",
+        PartyType type = PartyType.Person,
+        bool active = true,
+        bool erased = false)
+        => new()
+        {
+            Id = id,
+            Type = type,
+            IsActive = active,
+            DisplayName = name,
+            SortName = name,
+            CreatedAt = DateTimeOffset.Parse("2026-05-05T00:00:00Z"),
+            LastModifiedAt = DateTimeOffset.Parse("2026-05-05T00:00:00Z"),
+            IsErased = erased,
+        };
+
     private sealed class DelayedPartiesQueryClient : RecordingPartiesQueryClient
     {
         private readonly TaskCompletionSource<PagedResult<PartySearchResult>> _response = new();
@@ -844,6 +1113,46 @@ public sealed class PartyPickerComponentTests : BunitContext
             LastRequestCustomizer = requestCustomizer;
             _called.TrySetResult();
             return _response.Task.WaitAsync(ct);
+        }
+    }
+
+    private sealed class DelayedSelectedPartiesQueryClient : RecordingPartiesQueryClient
+    {
+        private readonly List<TaskCompletionSource<PartyDetail>> _responses = [];
+        private readonly List<TaskCompletionSource> _calls = [];
+
+        public Task WaitForGetCallAsync(int index)
+        {
+            EnsureSlot(index);
+            return _calls[index].Task;
+        }
+
+        public void CompleteGet(int index, PartyDetail detail)
+        {
+            EnsureSlot(index);
+            _responses[index].TrySetResult(detail);
+        }
+
+        public override Task<PartyDetail> GetPartyAsync(
+            string partyId,
+            CancellationToken ct,
+            Func<HttpRequestMessage, CancellationToken, ValueTask>? requestCustomizer = null)
+        {
+            int index = GetCalls.Count;
+            EnsureSlot(index);
+            GetCalls.Add(partyId);
+            LastRequestCustomizer = requestCustomizer;
+            _calls[index].TrySetResult();
+            return _responses[index].Task.WaitAsync(ct);
+        }
+
+        private void EnsureSlot(int index)
+        {
+            while (_responses.Count <= index)
+            {
+                _responses.Add(new TaskCompletionSource<PartyDetail>());
+                _calls.Add(new TaskCompletionSource());
+            }
         }
     }
 }

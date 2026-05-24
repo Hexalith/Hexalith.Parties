@@ -745,7 +745,10 @@ public sealed class PartiesAdminPortalApiClientTests
 
         public int DetailCallCount { get; private set; }
 
-        public Task<PartyDetail> GetPartyAsync(string partyId, CancellationToken ct)
+        public Task<PartyDetail> GetPartyAsync(
+            string partyId,
+            CancellationToken ct,
+            Func<HttpRequestMessage, CancellationToken, ValueTask>? requestCustomizer = null)
         {
             ct.ThrowIfCancellationRequested();
             DetailCallCount++;

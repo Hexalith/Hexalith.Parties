@@ -23,6 +23,8 @@ Render the component with host-owned authentication:
 
 The selected value contract is the stable party id. Display names and status labels are preview data only and must not become route keys, storage keys, telemetry dimensions, log values, or durable foreign keys.
 
+For Blazor hosts, bind durable storage to `SelectedPartyId`/`SelectedPartyIdChanged`. The source-compatible `SelectedPartyChanged` callback may include preview display fields for rendering convenience, but `PartyId` is the only stable value in that model and preview fields are not required for host persistence.
+
 ## JavaScript Host Usage
 
 Register the custom element in the Blazor host:
@@ -49,7 +51,7 @@ picker.addEventListener("party-selected", event => {
 });
 ```
 
-The DOM `party-selected` detail intentionally contains only `partyId`, `partyType`, and status. It does not include tenant ids, JWTs, search text, names, contact values, identifiers, or backend problem details.
+The DOM `party-selected` detail intentionally contains only `partyId`, `partyType`, and bounded status. It does not include tenant ids, JWTs, search text, names, contact values, identifiers, consent text, degraded reasons, raw query payloads, or backend problem details.
 
 ## Search Behavior
 
@@ -82,6 +84,8 @@ The compact layout contract lives in `PartyPicker.razor.css`: a bounded `max-wid
 Hosts must provide either an access-token provider, an in-memory token property for the custom element, or a request customizer. The picker does not refresh tokens and does not persist tokens.
 
 Use `ContextKey` to represent tenant, signed-in user, and host configuration changes. Use `AuthContextKey` for a non-sensitive authentication version when the host uses a token provider whose delegate instance does not change. When either key changes, the picker clears visible results, selected preview data, and pending requests before searching again.
+
+When a host supplies `SelectedPartyId`, the picker resolves display preview state through `IPartiesQueryClient.GetPartyAsync` using the same host-supplied access token provider or request customizer pattern as search. If the selected party is unavailable, unauthorized, forbidden, not found, gone, erased, or transiently unavailable, the component keeps the durable party id and renders a bounded localized selected-state label instead of replacing the id with display text or backend details.
 
 `ApiBaseUrl` remains on the component for source compatibility with existing hosts, but request routing is owned by the configured `Hexalith.Parties.Client` service. Do not point `ApiBaseUrl` at a Parties actor-host REST endpoint or rely on it for transport selection.
 

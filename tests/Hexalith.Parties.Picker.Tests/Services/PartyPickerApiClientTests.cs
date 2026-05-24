@@ -11,6 +11,156 @@ namespace Hexalith.Parties.Picker.Tests.Services;
 
 public sealed class PartyPickerApiClientTests
 {
+    [Theory]
+    [InlineData("")]
+    [InlineData("   ")]
+    [InlineData("\u0000\u0001")]
+    public async Task ResolveSelectedPartyAsync_WithBlankOrControlOnlyPartyId_ReturnsNotFoundWithoutCallingClient(string partyId)
+    {
+        var queryClient = new RecordingPartiesQueryClient();
+        var client = new PartyPickerApiClient(queryClient);
+
+        PartyPickerSelection response = await client.ResolveSelectedPartyAsync(new PartyPickerSelectedPartyRequest
+        {
+            PartyId = partyId,
+            AccessTokenProvider = _ => ValueTask.FromResult<string?>("host-token"),
+        }, CancellationToken.None);
+
+        response.State.ShouldBe(PartyPickerSelectionState.NotFound);
+        response.SafeReason.ShouldNotBeNullOrWhiteSpace();
+        queryClient.GetCalls.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task ResolveSelectedPartyAsync_WithoutAuthProvider_ReturnsAuthenticationRequiredWithoutCallingClient()
+    {
+        var queryClient = new RecordingPartiesQueryClient();
+        var client = new PartyPickerApiClient(queryClient);
+
+        PartyPickerSelection response = await client.ResolveSelectedPartyAsync(new PartyPickerSelectedPartyRequest
+        {
+            PartyId = "party-1",
+        }, CancellationToken.None);
+
+        response.PartyId.ShouldBe("party-1");
+        response.State.ShouldBe(PartyPickerSelectionState.AuthenticationRequired);
+        queryClient.GetCalls.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task ResolveSelectedPartyAsync_UsesTypedPartiesQueryClientAndHostAuth()
+    {
+        var queryClient = new RecordingPartiesQueryClient();
+        queryClient.EnqueueDetail(PartyDetail(id: "party-1", name: "Ada Lovelace"));
+        var client = new PartyPickerApiClient(queryClient);
+
+        PartyPickerSelection response = await client.ResolveSelectedPartyAsync(new PartyPickerSelectedPartyRequest
+        {
+            PartyId = "party-1",
+            AccessTokenProvider = _ => ValueTask.FromResult<string?>("token-from-host"),
+            RequestCustomizer = (message, _) =>
+            {
+                message.Headers.Add("X-Host-Context", "tenant-a");
+                return ValueTask.CompletedTask;
+            },
+        }, CancellationToken.None);
+
+        response.PartyId.ShouldBe("party-1");
+        response.DisplayName.ShouldBe("Ada Lovelace");
+        response.State.ShouldBe(PartyPickerSelectionState.Available);
+        queryClient.GetCalls.ShouldBe(["party-1"]);
+        queryClient.LastRequestCustomizer.ShouldNotBeNull();
+
+        using var message = new HttpRequestMessage(HttpMethod.Post, "https://localhost/api/v1/queries");
+        await queryClient.LastRequestCustomizer(message, CancellationToken.None);
+        message.Headers.Authorization!.Scheme.ShouldBe("Bearer");
+        message.Headers.Authorization.Parameter.ShouldBe("token-from-host");
+        message.Headers.GetValues("X-Host-Context").ShouldBe(["tenant-a"]);
+    }
+
+    [Fact]
+    public async Task ResolveSelectedPartyAsync_WithRequestCustomizerOnly_CallsTypedClient()
+    {
+        var queryClient = new RecordingPartiesQueryClient();
+        queryClient.EnqueueDetail(PartyDetail(id: "party-1", name: "Ada Lovelace"));
+        var client = new PartyPickerApiClient(queryClient);
+
+        PartyPickerSelection response = await client.ResolveSelectedPartyAsync(new PartyPickerSelectedPartyRequest
+        {
+            PartyId = "party-1",
+            RequestCustomizer = (_, _) => ValueTask.CompletedTask,
+        }, CancellationToken.None);
+
+        response.PartyId.ShouldBe("party-1");
+        response.DisplayName.ShouldBe("Ada Lovelace");
+        response.State.ShouldBe(PartyPickerSelectionState.Available);
+        queryClient.GetCalls.ShouldBe(["party-1"]);
+    }
+
+    [Theory]
+    [InlineData(401, PartyPickerSelectionState.Unauthorized)]
+    [InlineData(403, PartyPickerSelectionState.Forbidden)]
+    [InlineData(404, PartyPickerSelectionState.NotFound)]
+    [InlineData(410, PartyPickerSelectionState.Gone)]
+    [InlineData(503, PartyPickerSelectionState.TransientFailure)]
+    public async Task ResolveSelectedPartyAsync_MapsClientFailuresToNonLeakingStates(
+        int statusCode,
+        PartyPickerSelectionState expectedState)
+    {
+        var queryClient = new RecordingPartiesQueryClient
+        {
+            ThrowOnGet = new PartiesClientException(
+                statusCode,
+                "Problem title",
+                "problem-type",
+                "token party Ada Lovelace backend detail",
+                "correlation-1"),
+        };
+        var client = new PartyPickerApiClient(queryClient);
+
+        PartyPickerSelection response = await client.ResolveSelectedPartyAsync(SelectedRequest("party-1"), CancellationToken.None);
+
+        response.PartyId.ShouldBe("party-1");
+        response.State.ShouldBe(expectedState);
+        response.SafeReason.ShouldNotBeNullOrWhiteSpace();
+        response.SafeReason.ShouldNotContain("token");
+        response.SafeReason.ShouldNotContain("Ada");
+    }
+
+    [Fact]
+    public async Task ResolveSelectedPartyAsync_MalformedClientFailureReturnsBoundedUnavailableState()
+    {
+        var queryClient = new RecordingPartiesQueryClient
+        {
+            ThrowOnGet = new PartiesClientException("raw token Ada Lovelace backend detail"),
+        };
+        var client = new PartyPickerApiClient(queryClient);
+
+        PartyPickerSelection response = await client.ResolveSelectedPartyAsync(SelectedRequest("party-1"), CancellationToken.None);
+
+        response.State.ShouldBe(PartyPickerSelectionState.Unavailable);
+        response.SafeReason.ShouldNotBeNull();
+        response.SafeReason!.ShouldNotContain("token");
+        response.SafeReason.ShouldNotContain("Ada");
+    }
+
+    [Fact]
+    public async Task ResolveSelectedPartyAsync_TransportFailureReturnsTransientState()
+    {
+        var queryClient = new RecordingPartiesQueryClient
+        {
+            ThrowOnGet = new HttpRequestException("raw token Ada Lovelace transport detail"),
+        };
+        var client = new PartyPickerApiClient(queryClient);
+
+        PartyPickerSelection response = await client.ResolveSelectedPartyAsync(SelectedRequest("party-1"), CancellationToken.None);
+
+        response.State.ShouldBe(PartyPickerSelectionState.TransientFailure);
+        response.SafeReason.ShouldNotBeNull();
+        response.SafeReason!.ShouldNotContain("token");
+        response.SafeReason.ShouldNotContain("Ada");
+    }
+
     [Fact]
     public async Task SearchAsync_WithoutAuthProvider_ReturnsAuthenticationRequiredWithoutCallingClient()
     {
@@ -329,6 +479,30 @@ public sealed class PartyPickerApiClientTests
         {
             Query = query,
             AccessTokenProvider = _ => ValueTask.FromResult<string?>("host-token"),
+        };
+
+    private static PartyPickerSelectedPartyRequest SelectedRequest(string partyId)
+        => new()
+        {
+            PartyId = partyId,
+            AccessTokenProvider = _ => ValueTask.FromResult<string?>("host-token"),
+        };
+
+    private static PartyDetail PartyDetail(
+        string id = "party-1",
+        string name = "Ada Lovelace",
+        bool active = true,
+        bool erased = false)
+        => new()
+        {
+            Id = id,
+            Type = Hexalith.Parties.Contracts.ValueObjects.PartyType.Person,
+            IsActive = active,
+            DisplayName = name,
+            SortName = name,
+            CreatedAt = DateTimeOffset.Parse("2026-05-05T00:00:00Z"),
+            LastModifiedAt = DateTimeOffset.Parse("2026-05-05T00:00:00Z"),
+            IsErased = erased,
         };
 
     private static PagedResult<PartySearchResult> SearchResultPage(params PartySearchResult[] results)

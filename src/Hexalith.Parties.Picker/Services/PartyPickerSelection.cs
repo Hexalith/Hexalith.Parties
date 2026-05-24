@@ -6,6 +6,8 @@ public sealed record PartyPickerSelection
 {
     public required string PartyId { get; init; }
 
+    public PartyPickerSelectionState State { get; init; } = PartyPickerSelectionState.Available;
+
     public string? DisplayName { get; init; }
 
     public PartyType? PartyType { get; init; }
@@ -13,4 +15,6 @@ public sealed record PartyPickerSelection
     public bool? IsActive { get; init; }
 
     public bool? IsErased { get; init; }
+
+    public string? SafeReason { get; init; }
 }

@@ -5,7 +5,10 @@ namespace Hexalith.Parties.Client.Abstractions;
 
 public interface IPartiesQueryClient
 {
-    Task<PartyDetail> GetPartyAsync(string partyId, CancellationToken ct);
+    Task<PartyDetail> GetPartyAsync(
+        string partyId,
+        CancellationToken ct,
+        Func<HttpRequestMessage, CancellationToken, ValueTask>? requestCustomizer = null);
 
     Task<PagedResult<PartyIndexEntry>> ListPartiesAsync(
         int page,

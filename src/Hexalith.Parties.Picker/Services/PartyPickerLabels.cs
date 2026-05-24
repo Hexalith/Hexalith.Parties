@@ -43,4 +43,20 @@ public sealed record PartyPickerLabels
     public string Inactive { get; init; } = "Inactive";
 
     public string Erased { get; init; } = "Erased";
+
+    public string SelectedLoading { get; init; } = "Loading selected party";
+
+    public string SelectedAuthenticationRequired { get; init; } = "Authentication is required to view the selected party";
+
+    public string SelectedUnauthorized { get; init; } = "Sign in again to view the selected party";
+
+    public string SelectedForbidden { get; init; } = "Selected party is not available in this authorized context";
+
+    public string SelectedNotFound { get; init; } = "Selected party was not found";
+
+    public string SelectedGone { get; init; } = "Selected party is no longer available";
+
+    public string SelectedTransientFailure { get; init; } = "Selected party details are temporarily unavailable";
+
+    public string SelectedUnavailable { get; init; } = "Selected party details are unavailable";
 }

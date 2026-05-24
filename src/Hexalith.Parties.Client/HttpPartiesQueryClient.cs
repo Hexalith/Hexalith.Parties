@@ -39,7 +39,10 @@ public sealed class HttpPartiesQueryClient : IPartiesQueryClient
         _options = options?.Value ?? throw new ArgumentNullException(nameof(options));
     }
 
-    public Task<PartyDetail> GetPartyAsync(string partyId, CancellationToken ct)
+    public Task<PartyDetail> GetPartyAsync(
+        string partyId,
+        CancellationToken ct,
+        Func<HttpRequestMessage, CancellationToken, ValueTask>? requestCustomizer = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(partyId);
         ct.ThrowIfCancellationRequested();
@@ -54,7 +57,7 @@ public sealed class HttpPartiesQueryClient : IPartiesQueryClient
             EntityId: partyId,
             ProjectionActorType: PartyDetailProjectionActorType);
 
-        return PostQueryAsync<PartyDetail>(request, ct);
+        return PostQueryAsync<PartyDetail>(request, ct, requestCustomizer);
     }
 
     public Task<PagedResult<PartyIndexEntry>> ListPartiesAsync(

@@ -78,13 +78,16 @@
 @code {
     private readonly TimeSpan _defaultDebounce = TimeSpan.FromMilliseconds(PartyPickerDefaults.DebounceMilliseconds);
     private CancellationTokenSource? _searchCts;
+    private CancellationTokenSource? _selectionCts;
     private IJSObjectReference? _module;
     private ElementReference _inputElement;
     private string _query = string.Empty;
     private PartyPickerSearchResponse _search = new() { State = PartyPickerSearchState.Idle, PageSize = PartyPickerDefaults.PageSize };
     private PartyPickerSelection? _selected;
     private string? _previousContextSignature;
+    private string? _previousSelectionSignature;
     private long _searchVersion;
+    private long _selectionVersion;
     private readonly string _hostElementId = $"hx-party-picker-{Guid.NewGuid():N}";
     private readonly string _inputElementId = $"hx-party-picker-input-{Guid.NewGuid():N}";
     private readonly string _listElementId = $"hx-party-picker-list-{Guid.NewGuid():N}";
@@ -110,6 +113,9 @@
 
     [Parameter]
     public string? SelectedPartyId { get; set; }
+
+    [Parameter]
+    public EventCallback<string?> SelectedPartyIdChanged { get; set; }
 
     [Parameter]
     public EventCallback<PartyPickerSelection?> SelectedPartyChanged { get; set; }
@@ -186,18 +192,12 @@
         if (_previousContextSignature is not null && !string.Equals(_previousContextSignature, signature, StringComparison.Ordinal))
         {
             ResetEphemeralState();
+            _previousSelectionSignature = null;
         }
 
         _previousContextSignature = signature;
 
-        if (string.IsNullOrWhiteSpace(SelectedPartyId))
-        {
-            _selected = null;
-        }
-        else if (_selected?.PartyId != SelectedPartyId)
-        {
-            _selected = new PartyPickerSelection { PartyId = SelectedPartyId };
-        }
+        SynchronizeSelectedParty(signature);
     }
 
     private async Task HandleInputAsync(ChangeEventArgs args)
@@ -208,7 +208,9 @@
         }
 
         _query = args.Value?.ToString() ?? string.Empty;
+        CancelPendingSelection();
         _selected = null;
+        await SelectedPartyIdChanged.InvokeAsync(null).ConfigureAwait(false);
         await SelectedPartyChanged.InvokeAsync(null).ConfigureAwait(false);
 
         await ScheduleSearchAsync().ConfigureAwait(false);
@@ -261,6 +263,14 @@
             RequestCustomizer = RequestCustomizer,
         };
 
+    private PartyPickerSelectedPartyRequest CreateSelectedPartyRequest(string partyId)
+        => new()
+        {
+            PartyId = partyId,
+            AccessTokenProvider = AccessTokenProvider ?? (string.IsNullOrWhiteSpace(AccessToken) ? null : ResolveAccessTokenAsync),
+            RequestCustomizer = RequestCustomizer,
+        };
+
     private ValueTask<string?> ResolveAccessTokenAsync(CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
@@ -288,15 +298,18 @@
 
     private async Task SelectAsync(PartySearchResult result)
     {
+        CancelPendingSelection();
         _selected = new PartyPickerSelection
         {
             PartyId = result.Party.Id,
+            State = PartyPickerSelectionState.Available,
             DisplayName = result.Party.DisplayName,
             PartyType = result.Party.Type,
             IsActive = result.Party.IsActive,
             IsErased = result.Party.IsErased,
         };
 
+        await SelectedPartyIdChanged.InvokeAsync(_selected.PartyId).ConfigureAwait(false);
         await SelectedPartyChanged.InvokeAsync(_selected).ConfigureAwait(false);
         await DispatchSelectedDomEventAsync(_selected).ConfigureAwait(false);
         await TryFocusInputAsync().ConfigureAwait(false);
@@ -310,6 +323,7 @@
         }
 
         CancelPendingSearch();
+        CancelPendingSelection();
         _query = string.Empty;
         _selected = null;
         _search = new PartyPickerSearchResponse
@@ -317,6 +331,7 @@
             State = PartyPickerSearchState.Idle,
             PageSize = PartyPickerApiClient.BoundPageSize(PageSize),
         };
+        await SelectedPartyIdChanged.InvokeAsync(null).ConfigureAwait(false);
         await SelectedPartyChanged.InvokeAsync(null).ConfigureAwait(false);
         await TryFocusInputAsync().ConfigureAwait(false);
     }
@@ -354,6 +369,7 @@
     private void ResetEphemeralState()
     {
         CancelPendingSearch();
+        CancelPendingSelection();
         _query = string.Empty;
         _selected = null;
         _search = new PartyPickerSearchResponse
@@ -369,6 +385,74 @@
         _searchCts?.Cancel();
         _searchCts?.Dispose();
         _searchCts = null;
+    }
+
+    private void CancelPendingSelection()
+    {
+        _selectionVersion++;
+        _selectionCts?.Cancel();
+        _selectionCts?.Dispose();
+        _selectionCts = null;
+    }
+
+    private void SynchronizeSelectedParty(string contextSignature)
+    {
+        if (string.IsNullOrWhiteSpace(SelectedPartyId))
+        {
+            CancelPendingSelection();
+            _previousSelectionSignature = null;
+            _selected = null;
+            return;
+        }
+
+        string partyId = SelectedPartyId.Trim();
+        string selectionSignature = string.Join("|", partyId, contextSignature);
+        if (string.Equals(_previousSelectionSignature, selectionSignature, StringComparison.Ordinal)
+            && string.Equals(_selected?.PartyId, partyId, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        CancelPendingSelection();
+        _previousSelectionSignature = selectionSignature;
+        _selected = new PartyPickerSelection
+        {
+            PartyId = partyId,
+            State = PartyPickerSelectionState.Pending,
+        };
+
+        _selectionCts = new CancellationTokenSource();
+        long version = ++_selectionVersion;
+        CancellationToken token = _selectionCts.Token;
+        _ = ResolveSelectedDisplayAsync(partyId, selectionSignature, version, token);
+    }
+
+    private async Task ResolveSelectedDisplayAsync(
+        string partyId,
+        string selectionSignature,
+        long version,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            PartyPickerSelection selection = await ApiClient
+                .ResolveSelectedPartyAsync(CreateSelectedPartyRequest(partyId), cancellationToken)
+                .ConfigureAwait(false);
+
+            if (version == _selectionVersion
+                && string.Equals(_previousSelectionSignature, selectionSignature, StringComparison.Ordinal)
+                && !cancellationToken.IsCancellationRequested)
+            {
+                _selected = selection with { PartyId = partyId };
+                await InvokeAsync(StateHasChanged).ConfigureAwait(false);
+            }
+        }
+        catch (OperationCanceledException)
+        {
+        }
+        catch (ObjectDisposedException)
+        {
+        }
     }
 
     private async Task TryFocusInputAsync()
@@ -413,7 +497,9 @@
         => string.Equals(_selected?.PartyId, result.Party.Id, StringComparison.Ordinal);
 
     private static bool HasSelectionStatus(PartyPickerSelection selection)
-        => selection.IsActive.HasValue || selection.IsErased.HasValue;
+        => selection.State != PartyPickerSelectionState.Available
+            || selection.IsActive.HasValue
+            || selection.IsErased.HasValue;
 
     private static string SelectionDisplayText(PartyPickerSelection selection)
         => string.IsNullOrWhiteSpace(selection.DisplayName)
@@ -421,11 +507,22 @@
             : selection.DisplayName;
 
     private string StatusText(PartyPickerSelection selection)
-        => selection.IsErased == true
-            ? EffectiveLabels.Erased
-            : selection.IsActive == false
-                ? EffectiveLabels.Inactive
-                : EffectiveLabels.Active;
+        => selection.State switch
+        {
+            PartyPickerSelectionState.Pending => EffectiveLabels.SelectedLoading,
+            PartyPickerSelectionState.AuthenticationRequired => EffectiveLabels.SelectedAuthenticationRequired,
+            PartyPickerSelectionState.Unauthorized => EffectiveLabels.SelectedUnauthorized,
+            PartyPickerSelectionState.Forbidden => EffectiveLabels.SelectedForbidden,
+            PartyPickerSelectionState.NotFound => EffectiveLabels.SelectedNotFound,
+            PartyPickerSelectionState.Gone => EffectiveLabels.SelectedGone,
+            PartyPickerSelectionState.TransientFailure => EffectiveLabels.SelectedTransientFailure,
+            PartyPickerSelectionState.Unavailable => EffectiveLabels.SelectedUnavailable,
+            _ => selection.IsErased == true
+                ? EffectiveLabels.Erased
+                : selection.IsActive == false
+                    ? EffectiveLabels.Inactive
+                    : EffectiveLabels.Active,
+        };
 
     private string StatusText(PartyIndexEntry party)
         => party.IsErased
@@ -437,6 +534,7 @@
     public async ValueTask DisposeAsync()
     {
         CancelPendingSearch();
+        CancelPendingSelection();
         if (_module is not null)
         {
             try

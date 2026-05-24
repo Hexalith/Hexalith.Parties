@@ -58,6 +58,39 @@ public sealed class HttpPartiesQueryClientTests
     }
 
     [Fact]
+    public async Task GetPartyAsync_AppliesHostRequestCustomizerAsync()
+    {
+        var expectedDetail = new PartyDetail
+        {
+            Id = "p-1",
+            Type = PartyType.Person,
+            IsActive = true,
+            DisplayName = "John Doe",
+            SortName = "Doe, John",
+            CreatedAt = DateTimeOffset.UtcNow,
+            LastModifiedAt = DateTimeOffset.UtcNow,
+        };
+
+        (HttpPartiesQueryClient client, HttpPartiesCommandClientTests.MockHandler handler) = CreateClient(
+            HttpStatusCode.OK,
+            QueryResponse(expectedDetail));
+
+        await client.GetPartyAsync(
+            "p-1",
+            CancellationToken.None,
+            (request, _) =>
+            {
+                request.Headers.Authorization = new("Bearer", "host-token");
+                request.Headers.Add("X-Host-Context", "tenant-a");
+                return ValueTask.CompletedTask;
+            });
+
+        handler.LastRequest!.Headers.Authorization!.Scheme.ShouldBe("Bearer");
+        handler.LastRequest.Headers.Authorization.Parameter.ShouldBe("host-token");
+        handler.LastRequest.Headers.GetValues("X-Host-Context").ShouldBe(["tenant-a"]);
+    }
+
+    [Fact]
     public async Task GetPartyAsync_DeserializesProjectionFreshnessMetadataFromEventStorePayloadAsync()
     {
         var expectedDetail = new PartyDetail
