@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import os
+import re
 import shlex
+import shutil
 import time
 from pathlib import Path
 
@@ -191,11 +193,19 @@ def _build_cmd(args: list[str]) -> int:
     quoted_prompt = shlex.quote(prompt)
     if agent == "codex" and not ai_command:
         codex_home = f"/tmp/sa-codex-home-{project_hash(root)}"
-        auth_src = os.path.expanduser("~/.codex/auth.json")
+        auth_src = _msys_path(os.path.expanduser("~/.codex/auth.json"))
+        config_src = _msys_path(os.path.join(root, ".codex", "config.toml"))
+        node = shutil.which("node")
+        node_dir = _windows_short_msys_path(Path(node).parent) if node else ""
+        node_path = f'PATH="{node_dir}:$PATH" ' if node_dir else ""
+        codex_js = Path(os.path.expanduser("~/AppData/Roaming/npm/node_modules/@openai/codex/bin/codex.js"))
+        codex_cli = f'"{_windows_short_msys_path(node)}" "{_msys_path(codex_js)}"' if node and codex_js.is_file() else "codex"
         print(
             f'mkdir -p "{codex_home}"'
             + f' && if [ -f "{auth_src}" ]; then ln -sf "{auth_src}" "{codex_home}/auth.json"; fi'
-            + f' && CODEX_HOME="{codex_home}" codex exec -s workspace-write -c \'approval_policy="never"\''
+            + f' && if [ -f "{config_src}" ]; then ln -sf "{config_src}" "{codex_home}/config.toml"; fi'
+            + f' && {node_path}CODEX_HOME="{codex_home}" {codex_cli} exec -c \'approval_policy="never"\''
+            + f' -c \'sandbox_mode="danger-full-access"\''
             + f' -c \'model_reasoning_effort="high"\''
             + f" --disable plugins --disable sqlite --disable shell_snapshot {quoted_prompt}"
         )
@@ -222,6 +232,19 @@ def _render_step_prompt(contract: dict[str, object], story_id: str, story_prefix
     for key, value in replacements.items():
         template = template.replace(key, value)
     return template
+
+
+def _msys_path(path: str | Path) -> str:
+    value = str(Path(path).expanduser().resolve()).replace("\\", "/")
+    match = re.match(r"^([A-Za-z]):/(.*)$", value)
+    if match:
+        return f"/{match.group(1).lower()}/{match.group(2)}"
+    return value
+
+
+def _windows_short_msys_path(path: str | Path) -> str:
+    value = _msys_path(path)
+    return value.replace("/c/Program Files/", "/c/PROGRA~1/")
 
 
 def _prompt_line(prefix: str, value: str) -> str:

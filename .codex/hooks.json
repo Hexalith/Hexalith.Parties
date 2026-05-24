@@ -10,16 +10,6 @@
             "statusMessage": "Checking story automator state"
           }
         ]
-      },
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "env PROJECT_ROOT=/mnt/d/Hexalith.Parties /mnt/d/Hexalith.Parties/.agents/skills/bmad-story-automator/scripts/story-automator python3 -m story_automator stop-hook",
-            "timeout": 10,
-            "statusMessage": "Checking story automator state"
-          }
-        ]
       }
     ]
   }

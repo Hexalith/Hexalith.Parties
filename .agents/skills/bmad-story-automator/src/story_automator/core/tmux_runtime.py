@@ -480,7 +480,7 @@ def _spawn_runner(session: str, command: str, selected_agent: str, project_root:
 def _spawn_legacy(session: str, command: str, selected_agent: str, project_root: str | None) -> tuple[str, int]:
     if not command_exists("tmux"):
         return ("tmux not found\n", 1)
-    root = project_root or get_project_root()
+    root = str(Path(project_root or get_project_root()).resolve())
     paths = session_paths(session, root)
     paths.state.unlink(missing_ok=True)
     output, code = run_cmd(
@@ -494,22 +494,32 @@ def _spawn_legacy(session: str, command: str, selected_agent: str, project_root:
         "-y",
         str(DEFAULT_HEIGHT),
         "-c",
-        root,
+        ".",
         "-e",
         "STORY_AUTOMATOR_CHILD=true",
         "-e",
         f"AI_AGENT={selected_agent}",
         "-e",
         "CLAUDECODE=",
+        cwd=root,
     )
     if code != 0:
         return (output, code)
     if len(command) > 500:
         _write_private_text(paths.command, "#!/bin/bash\n" + command + "\n", 0o700)
-        run_cmd("tmux", "send-keys", "-t", session, f"bash {paths.command}", "Enter")
+        command_file = _git_bash_path(paths.command)
+        run_cmd("tmux", "send-keys", "-t", session, f"source {shlex.quote(command_file)}", "Enter", cwd=root)
     else:
-        run_cmd("tmux", "send-keys", "-t", session, command, "Enter")
+        run_cmd("tmux", "send-keys", "-t", session, command, "Enter", cwd=root)
     return ("", 0)
+
+
+def _git_bash_path(path: str | Path) -> str:
+    value = str(Path(path).resolve()).replace("\\", "/")
+    match = re.match(r"^([A-Za-z]):/(.*)$", value)
+    if match:
+        return f"/{match.group(1).lower()}/{match.group(2)}"
+    return value
 
 
 def _runner_session_status(
@@ -1096,7 +1106,7 @@ def _command_file_content(command: str) -> str:
 
 
 def _write_private_text(path: Path, data: str, mode: int) -> None:
-    atomic_write(path, data)
+    atomic_write(path, data.encode("utf-8"))
     path.chmod(mode)
 
 

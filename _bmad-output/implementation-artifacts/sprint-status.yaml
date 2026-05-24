@@ -37,7 +37,8 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-05-15 09:01:58 +02:00
-last_updated: 2026-05-24 17:41:11 +02:00
+last_updated: 2026-05-24 19:01:54 +02:00
+# last_updated touched 2026-05-24 by bmad-retrospective closing Epic 9 retrospective - retrospective saved to _bmad-output/implementation-artifacts/epic-9-retro-2026-05-24.md; current Epic 9 v2 stories 9-1 through 9-8 are done, v1 entries remain superseded and excluded from completion count. Status: optional -> done.
 # last_updated touched 2026-05-24 by bmad-retrospective closing Epic 8 retrospective — retrospective saved to _bmad-output/implementation-artifacts/epic-8-retro-2026-05-24.md; documentation audit saved to _bmad-output/implementation-artifacts/epic-8-documentation-audit-2026-05-24.md; verified docs updated only where code/docs diverged (picker durable binding example and README picker package listing). Status: optional → done.
 # last_updated touched 2026-05-24 by code-review closing 8-6-enforce-picker-privacy-and-integration-boundary — 2 medium fixes applied: added token-value-change same-presence selection lookup guard test; strengthened JavaScript event-detail whitelist assertion from whitespace-pattern check to direct detail:detail pass-through check. 0 critical/high issues remain; all ACs verified. Picker tests 162/162 green. Status: review → done.
 # last_updated touched 2026-05-24 by dev-story moving 8-6-enforce-picker-privacy-and-integration-boundary to review — privacy/integration-boundary hardening complete: token-value fingerprinting removed from picker context signatures; party-selected JavaScript detail re-whitelisted to partyId/partyType/status; guardrails extended for token parsing/fingerprinting, event payload shape, generated/cache scan exclusions, package refs, storage/cookies, raw markup, and forbidden transport symbols; host docs updated. Focused picker tests 137/137 green. Full solution regression attempted and failed outside picker scope (AppHost/sample/deploy-validation/search benchmark/file-lock issues recorded in story Debug Log).
@@ -288,4 +289,4 @@ development_status:
   # Escalated to program-level critical-path gate by Epic 5 retro action B13 (2026-05-22).
   9-8-solution-build-green-on-clean-clone: done
   # Epic 9 v2 retro is gated on ALL of 9-1..9-7 v2 done AND 9-8 done.
-  epic-9-retrospective: optional
+  epic-9-retrospective: done

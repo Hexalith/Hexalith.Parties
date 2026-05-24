@@ -4,6 +4,7 @@ import json
 import os
 import shlex
 import shutil
+import subprocess
 import sys
 from pathlib import Path
 
@@ -29,10 +30,40 @@ def _workflow_doc_relative(doc_name: str) -> str:
         return str(doc_path.resolve())
 
 
-def _stop_hook_command(command: str, project_root: Path) -> str:
+def _story_automator_command_args(command_parts: list[str]) -> list[str]:
+    if len(command_parts) > 3 and command_parts[1] == "-m" and command_parts[2] == "story_automator":
+        return command_parts[3:]
+    return command_parts[1:]
+
+
+def _write_windows_stop_hook_wrapper(command_parts: list[str], project_root: Path, provider: str) -> str:
+    runtime_dir = project_root / (".codex" if provider == "codex" else ".claude")
+    runtime_dir.mkdir(parents=True, exist_ok=True)
+    wrapper = runtime_dir / "story-automator-stop-hook.cmd"
+    python = Path(sys.executable).resolve()
+    source = _workflow_root() / "src"
+    args = _story_automator_command_args(command_parts) or ["stop-hook"]
+    wrapper.write_text(
+        "\n".join(
+            [
+                "@echo off",
+                f'set "PROJECT_ROOT={project_root}"',
+                f'set "PYTHONPATH={source}"',
+                f'"{python}" -m story_automator {subprocess.list2cmdline(args)}',
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    return f'cmd.exe /d /c "{wrapper}"'
+
+
+def _stop_hook_command(command: str, project_root: Path, provider: str) -> str:
     command_parts = shlex.split(command)
     if not command_parts:
         return command
+    if os.name == "nt":
+        return _write_windows_stop_hook_wrapper(command_parts, project_root, provider)
     candidates = [
         _workflow_root() / "scripts" / "story-automator",
         Path(shutil.which("story-automator")) if shutil.which("story-automator") else None,
@@ -115,7 +146,7 @@ def cmd_ensure_stop_hook(args: list[str]) -> int:
     if provider == "claude" and not settings:
         write_json({"ok": False, "error": "missing_required_args"})
         return 1
-    command = _stop_hook_command(command, project_root)
+    command = _stop_hook_command(command, project_root, provider)
     settings_path = Path(settings).expanduser().resolve() if settings else None
     try:
         result = ensure_stop_hook(
