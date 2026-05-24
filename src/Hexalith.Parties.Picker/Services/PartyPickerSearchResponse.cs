@@ -23,4 +23,8 @@ public sealed record PartyPickerSearchResponse
     public HttpStatusCode? StatusCode { get; init; }
 
     public bool HasResults => Results.Count > 0;
+
+    public int VisibleCount => Results.Count;
+
+    public bool HasReliableTotalCount => TotalCount >= VisibleCount;
 }

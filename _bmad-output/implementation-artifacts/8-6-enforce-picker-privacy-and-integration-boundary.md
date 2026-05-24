@@ -1,6 +1,6 @@
 # Story 8.6: Enforce Picker Privacy and Integration Boundary
 
-Status: blocked
+Status: ready-for-dev
 
 ## Story
 
@@ -16,25 +16,26 @@ so that embedded selection remains safe in every consuming application.
 4. Given host auth context is provided, when the picker operates, then it does not persist, refresh, parse for authorization, or log tokens, and missing or invalid context fails closed.
 5. Given privacy/boundary tests run, when they inspect rendered output, callbacks, logs, telemetry, routes, storage, JavaScript event payloads, endpoint usage, and token handling, then no PII leakage or boundary bypass is detected.
 
-## Blocker
+## Gate Resolution (2026-05-24)
 
-Story 8.6 is blocked by `_bmad-output/planning-artifacts/dependency-eventstore-fronted-parties-client-gateway-2026-05-17.md`.
+The Epic 8 scheduling gate for this story is resolved by a SCOPED RISK ACCEPTANCE, not a fully satisfied contract. Per `sprint-change-proposal-2026-05-24-epic8-picker-gate-remaining.md` (approved by Jérôme), `_bmad-output/planning-artifacts/dependency-eventstore-fronted-parties-client-gateway-2026-05-17.md` now records a Risk Acceptance covering Epic 8 Stories 8.2–8.6 against the existing temporary picker bridge (`Hexalith.Parties.Picker` + `IPartiesQueryClient`). The full EventStore-fronted Parties client/gateway contract is still NOT globally `Satisfied`.
 
-That dependency is still `status: Required` and explicitly lists Story 8.6 as affected. It also gates all Epic 8 implementation scheduling until the accepted EventStore-fronted Parties client/gateway contract is `Satisfied` or `Risk Accepted`.
+Implementation proceeds under BINDING conditions (see the dependency record's "Risk Acceptance (2026-05-24 - Stories 8.2-8.6)" section):
 
-Implementing privacy and boundary enforcement now would require guessing the accepted picker integration boundary, query API, telemetry/storage rules, and token handling expectations.
+- All data access routes through `IPartiesQueryClient`; no retired REST/admin endpoints, DAPR actors, projection actors, local search services, controllers, or actor-host internals.
+- Host-supplied auth context only; never persist/refresh/parse/log tokens.
+- Narrow, PII-safe DOM callback payloads; fail-closed failure states.
+- Existing picker transport/privacy guardrail tests remain binding before close.
+- When the formal contract is accepted, this scope reconciles or replaces the provisional bridge.
 
-## Required To Unblock
-
-- Update `_bmad-output/planning-artifacts/dependency-eventstore-fronted-parties-client-gateway-2026-05-17.md` to `Satisfied` or `Risk Accepted`.
-- Link the accepted picker integration contract from sprint planning or story metadata.
-- Confirm the accepted contract covers endpoint usage, callback payload shape, telemetry/storage boundaries, token handling, and privacy-safe rendered output.
+This story (8.6) is the privacy/integration-boundary enforcer for the picker; its acceptance criteria directly encode the binding conditions above as tested guarantees.
 
 ## Change Log
 
 | Date | Version | Description | Author |
 |---|---:|---|---|
 | 2026-05-22 | 0.1 | Created blocked story artifact because the accepted EventStore-fronted Parties client/gateway contract remains unsatisfied. | Codex |
+| 2026-05-24 | 0.2 | Gate resolved via scoped risk acceptance for Stories 8.2–8.6 (sprint-change-proposal-2026-05-24-epic8-picker-gate-remaining.md); status blocked → ready-for-dev. | correct-course |
 
 ## Dev Agent Record
 

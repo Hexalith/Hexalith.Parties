@@ -299,6 +299,10 @@ public sealed class HttpPartiesQueryClientTests
         result.Items[0].Matches[0].MatchedField.ShouldBe("displayName");
         result.Items[0].Matches[0].MatchType.ShouldBe("prefix");
 
+        handler.LastRequest!.Method.ShouldBe(HttpMethod.Post);
+        handler.LastRequest.RequestUri!.PathAndQuery.ShouldBe("/api/v1/queries");
+        handler.LastRequest.RequestUri.PathAndQuery.ShouldNotContain("api/v1/parties");
+
         using JsonDocument body = JsonDocument.Parse(handler.LastRequestBody!);
         JsonElement root = body.RootElement;
         root.GetProperty("queryType").GetString().ShouldBe("PartySearch");
@@ -311,7 +315,7 @@ public sealed class HttpPartiesQueryClientTests
         payload.GetProperty("pageSize").GetInt32().ShouldBe(20);
         payload.GetProperty("mode").GetString().ShouldBe("Lexical");
         payload.GetProperty("caseId").GetString().ShouldBe("case-42");
-        handler.LastRequest!.Headers.Authorization!.Scheme.ShouldBe("Bearer");
+        handler.LastRequest.Headers.Authorization!.Scheme.ShouldBe("Bearer");
         handler.LastRequest.Headers.Authorization.Parameter.ShouldBe("host-token");
     }
 

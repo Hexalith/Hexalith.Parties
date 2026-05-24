@@ -192,10 +192,18 @@ def _build_cmd(args: list[str]) -> int:
     if agent == "codex" and not ai_command:
         codex_home = f"/tmp/sa-codex-home-{project_hash(root)}"
         auth_src = os.path.expanduser("~/.codex/auth.json")
+        config_src = os.path.expanduser("~/.codex/config.toml")
+        # Symlink BOTH auth.json and config.toml into the isolated CODEX_HOME.
+        # Without config.toml the host's project trust_level + sandbox_mode are
+        # lost, so on Windows codex degrades to a read-only sandbox and refuses
+        # to write. Honor the user's configured sandbox_mode (do not force
+        # -s workspace-write, which resolves to read-only on this host).
         print(
             f'mkdir -p "{codex_home}"'
             + f' && if [ -f "{auth_src}" ]; then ln -sf "{auth_src}" "{codex_home}/auth.json"; fi'
-            + f' && CODEX_HOME="{codex_home}" codex exec -s workspace-write -c \'approval_policy="never"\''
+            + f' && if [ -f "{config_src}" ]; then ln -sf "{config_src}" "{codex_home}/config.toml"; fi'
+            + f' && CODEX_HOME="{codex_home}" codex exec -c \'approval_policy="never"\''
+            + f' -c \'sandbox_mode="danger-full-access"\''
             + f' -c \'model_reasoning_effort="high"\''
             + f" --disable plugins --disable sqlite --disable shell_snapshot {quoted_prompt}"
         )

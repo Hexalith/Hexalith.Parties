@@ -8,7 +8,15 @@ public sealed record PartyPickerLabels
 
     public string Loading { get; init; } = "Searching parties";
 
+    public string Idle { get; init; } = "Enter a party name to search";
+
     public string Empty { get; init; } = "No matching parties";
+
+    public string NoResults { get; init; } = "No matching parties in the current authorized context";
+
+    public string ResultsSummary { get; init; } = "Showing {0} of {1} matching parties";
+
+    public string VisibleResultsSummary { get; init; } = "Showing {0} matching parties";
 
     public string AuthenticationRequired { get; init; } = "Authentication is required";
 

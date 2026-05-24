@@ -1,24 +1,29 @@
 ---
 project: Hexalith.Parties
 date: 2026-05-17
-status: Risk Accepted (scoped — Epic 7 Story 7.7 and Epic 8 Story 8.1; remaining Epic 8 picker stories remain Required)
+status: Risk Accepted (scoped — Epic 7 Story 7.7 and all Epic 8 picker stories 8.1–8.6; dependency NOT globally Satisfied)
 dependency_type: External contract / scheduling gate
 required_before:
-  - Epic 8 Stories 8.2-8.6 implementation scheduling
+  - (none remaining — all affected Epic 7/8 stories risk-accepted; dependency still not globally Satisfied)
 risk_accepted_for:
   - Epic 7 Story 7.7 (Implement GDPR Operation Panels)
   - Epic 8 Story 8.1 (Compose Embeddable Party Picker Shell)
-risk_accepted_date: 2026-05-23
+  - Epic 8 Story 8.2 (Implement Typeahead Search and Bounded Results)
+  - Epic 8 Story 8.3 (Emit Durable Selection by Party Id)
+  - Epic 8 Story 8.4 (Handle Picker States and Stale Responses)
+  - Epic 8 Story 8.5 (Enforce Picker Accessibility and Localization)
+  - Epic 8 Story 8.6 (Enforce Picker Privacy and Integration Boundary)
+risk_accepted_date: 2026-05-24
 risk_accepted_by: Jérôme (project lead)
 source: sprint-change-proposal-2026-05-17.md
-risk_acceptance_source: sprint-change-proposal-2026-05-23.md; sprint-change-proposal-2026-05-23-epic8-picker-gate.md
+risk_acceptance_source: sprint-change-proposal-2026-05-23.md; sprint-change-proposal-2026-05-23-epic8-picker-gate.md; sprint-change-proposal-2026-05-24-epic8-picker-gate-remaining.md
 ---
 
 # Dependency: Accepted EventStore-Fronted Parties Client/Gateway Contract
 
 ## Status
 
-**Risk Accepted (2026-05-23) for Epic 7 Story 7.7 and Epic 8 Story 8.1 only.** Remaining Epic 8 picker implementation stories (8.2-8.6) remain **Required** unless separately risk-accepted or the full dependency is marked `Satisfied`. (Original gate text — Required before scheduling Epic 7 or Epic 8 v1.2 UI implementation work — is superseded for Story 7.7 and Story 8.1 by the scoped risk acceptances below.)
+**Risk Accepted (scoped) for Epic 7 Story 7.7 and ALL Epic 8 picker stories 8.1–8.6.** As of 2026-05-24 there are no remaining `Required` stories under this gate: Story 7.7 and Story 8.1 were scoped-accepted on 2026-05-23, and Stories 8.2–8.6 were scoped-accepted on 2026-05-24. The full EventStore-fronted Parties client/gateway contract is still **NOT globally `Satisfied`** — every acceptance is against the existing temporary bridge and carries binding conditions. (Original gate text — Required before scheduling Epic 7 or Epic 8 v1.2 UI implementation work — is superseded by the scoped risk acceptances below.)
 
 ## Risk Acceptance (2026-05-23 - Story 7.7)
 
@@ -79,6 +84,39 @@ Linked contract-of-record (temporary picker bridge):
 - `docs/frontend/party-picker.md`
 - `tests/Hexalith.Parties.Picker.Tests/Services/PartyPickerTransportGuardrailTests.cs`
 
+## Risk Acceptance (2026-05-24 - Stories 8.2-8.6)
+
+Decided by: Jérôme (project lead) via `sprint-change-proposal-2026-05-24-epic8-picker-gate-remaining.md`.
+Scope: Epic 8 Stories 8.2, 8.3, 8.4, 8.5, and 8.6. Completes the scoped acceptance of all Epic 8 picker stories against the existing temporary bridge. The full EventStore-fronted Parties client/gateway contract is still **NOT** globally marked `Satisfied`.
+
+Decision: No fully-built, formally accepted contract exists yet. The existing `Hexalith.Parties.Picker` Razor class library and the `IPartiesQueryClient` query boundary (the same temporary picker bridge accepted for Story 8.1) are accepted for implementing typeahead search and bounded results (8.2), durable selection by party id (8.3), picker states and stale-response handling (8.4), accessibility and localization (8.5), and privacy/integration-boundary enforcement (8.6).
+
+Residual risks accepted:
+
+- Implementation churn across all five stories when the formal picker query/configuration contract is frozen.
+- Story 8.3 specifically: the .NET `PartyPickerSelection` model currently carries more display metadata than the narrow DOM `party-selected` event detail; the durable callback contract may need reconciliation when the formal contract lands.
+- Selected-display resolution, stale-response hardening, accessibility/localization, and privacy-boundary rules are validated per-story but against a provisional client surface.
+
+Conditions of acceptance (BINDING on Stories 8.2-8.6 implementation):
+
+- All data access stays routed through `IPartiesQueryClient` (e.g. `SearchPartiesAsync`); no retired Parties REST endpoints, admin endpoints, DAPR actors, projection actors, local search services, controllers, or actor-host internals may be introduced.
+- Host request/auth context remains host-supplied through picker/client configuration; the picker must not persist, refresh, parse for authorization, or log tokens.
+- Durable DOM callback payloads remain narrow and must not include tenant ids, JWTs, search text, display names, contact values, identifiers, consent text, backend problem details, or raw query payloads.
+- Failure states remain bounded and PII-safe for unauthorized, forbidden, unavailable, malformed, timeout, degraded, not found, gone/erased, and stale responses.
+- Existing picker transport/privacy guardrail tests remain binding before any of Stories 8.2-8.6 can be closed.
+- When the formal contract is accepted, this record flips to `Satisfied` and the provisional bridge is reconciled or replaced across all picker stories.
+
+Linked contract-of-record (temporary picker bridge — same as Story 8.1):
+
+- `src/Hexalith.Parties.Picker/Components/PartyPicker.razor`
+- `src/Hexalith.Parties.Picker/Extensions/PartyPickerServiceCollectionExtensions.cs`
+- `src/Hexalith.Parties.Picker/Services/PartyPickerApiClient.cs`
+- `src/Hexalith.Parties.Client/Abstractions/IPartiesQueryClient.cs`
+- `src/Hexalith.Parties.Client/HttpPartiesQueryClient.cs`
+- `src/Hexalith.Parties.Client/PartiesClientOptions.cs`
+- `docs/frontend/party-picker.md`
+- `tests/Hexalith.Parties.Picker.Tests/Services/PartyPickerTransportGuardrailTests.cs`
+
 ## Affected Stories
 
 - Story 7.6: Gate GDPR Operations on Accepted Client Contract
@@ -106,7 +144,7 @@ The accepted contract must include:
 
 ## Scheduling Gate
 
-No affected Epic 7 or Epic 8 implementation story should be scheduled until this dependency is either satisfied or explicitly accepted as a blocking risk by product and architecture owners. Current exceptions: Story 7.7 and Story 8.1 are risk-accepted under the scoped decisions above.
+No affected Epic 7 or Epic 8 implementation story should be scheduled until this dependency is either satisfied or explicitly accepted as a blocking risk by product and architecture owners. As of 2026-05-24, all affected stories are scoped risk-accepted: Story 7.7 and Story 8.1 (2026-05-23) and Stories 8.2-8.6 (2026-05-24). No story remains gated; the dependency is still not globally `Satisfied`.
 
 ## Verification
 

@@ -1,6 +1,6 @@
 # Story 8.3: Emit Durable Selection by Party Id
 
-Status: blocked
+Status: ready-for-dev
 
 ## Story
 
@@ -15,25 +15,26 @@ so that my application does not accidentally persist personal display data as an
 3. Given a selected party becomes not found, forbidden, gone, erased, or unavailable, when the picker refreshes selected display state, then it reports a bounded localized status, and it does not replace the durable id with personal data.
 4. Given selection tests run, when they cover selection, host callback, preselected id, unavailable selected party, and payload inspection, then only party id is durable.
 
-## Blocker
+## Gate Resolution (2026-05-24)
 
-Story 8.3 is blocked by `_bmad-output/planning-artifacts/dependency-eventstore-fronted-parties-client-gateway-2026-05-17.md`.
+The Epic 8 scheduling gate for this story is resolved by a SCOPED RISK ACCEPTANCE, not a fully satisfied contract. Per `sprint-change-proposal-2026-05-24-epic8-picker-gate-remaining.md` (approved by Jérôme), `_bmad-output/planning-artifacts/dependency-eventstore-fronted-parties-client-gateway-2026-05-17.md` now records a Risk Acceptance covering Epic 8 Stories 8.2–8.6 against the existing temporary picker bridge (`Hexalith.Parties.Picker` + `IPartiesQueryClient`). The full EventStore-fronted Parties client/gateway contract is still NOT globally `Satisfied`.
 
-That dependency is still `status: Required` and explicitly lists Story 8.3 as affected. The scheduling gate says no Epic 8 implementation story should be scheduled until the accepted EventStore-fronted Parties client/gateway contract is updated to `Satisfied` or `Risk Accepted`.
+Implementation proceeds under BINDING conditions (see the dependency record's "Risk Acceptance (2026-05-24 - Stories 8.2-8.6)" section):
 
-Implementing durable selection now would require guessing the accepted selected-display resolution contract and callback privacy rules.
+- All data access routes through `IPartiesQueryClient`; no retired REST/admin endpoints, DAPR actors, projection actors, local search services, controllers, or actor-host internals.
+- Host-supplied auth context only; never persist/refresh/parse/log tokens.
+- Narrow, PII-safe DOM callback payloads; fail-closed failure states.
+- Existing picker transport/privacy guardrail tests remain binding before close.
+- When the formal contract is accepted, this scope reconciles or replaces the provisional bridge.
 
-## Required To Unblock
-
-- Update `_bmad-output/planning-artifacts/dependency-eventstore-fronted-parties-client-gateway-2026-05-17.md` to `Satisfied` or `Risk Accepted`.
-- Link the accepted selected-display query and callback contract from sprint planning or story metadata.
-- Confirm the accepted contract covers selection payload shape, preselected id resolution, unavailable selected-party states, and callback privacy rules.
+STORY-SPECIFIC RISK (accepted): the .NET `PartyPickerSelection` model currently carries more display metadata than the narrow DOM `party-selected` event detail. The durable callback payload MUST remain party-id-only; the richer .NET model may need reconciliation when the formal contract is frozen.
 
 ## Change Log
 
 | Date | Version | Description | Author |
 |---|---:|---|---|
 | 2026-05-22 | 0.1 | Created blocked story artifact because the accepted EventStore-fronted Parties client/gateway contract remains unsatisfied. | Codex |
+| 2026-05-24 | 0.2 | Gate resolved via scoped risk acceptance for Stories 8.2–8.6 (sprint-change-proposal-2026-05-24-epic8-picker-gate-remaining.md); status blocked → ready-for-dev. | correct-course |
 
 ## Dev Agent Record
 

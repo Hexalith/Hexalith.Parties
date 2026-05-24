@@ -53,9 +53,15 @@ The DOM `party-selected` detail intentionally contains only `partyId`, `partyTyp
 
 ## Search Behavior
 
-The picker normalizes the type-ahead text, caps `pageSize` at `100`, and calls `IPartiesQueryClient.SearchPartiesAsync(query, page, pageSize, cancellationToken)`. The picker package must not construct old Parties REST URLs, call DAPR actors, or reach into Parties server/projection internals.
+The picker normalizes the type-ahead text by trimming whitespace and removing control characters. The minimum query is one visible non-control character; empty, whitespace-only, or control-character-only queries do not call the backend and render the localized idle state.
 
-Empty or invisible-only queries do not call the backend. The picker does not call Hexalith.Memories directly and does not emulate semantic, hybrid, graph, email, or identifier search in the browser.
+For visible queries, the picker caps `pageSize` at `100` and calls `IPartiesQueryClient.SearchPartiesAsync(query, page, pageSize, cancellationToken, mode, caseId, requestCustomizer)`. The picker package must not construct old Parties REST URLs, call DAPR actors, or reach into Parties server/projection internals.
+
+Search results are displayed from the bounded visible page only. When the typed client provides consistent total-count metadata, the status text can say `Showing {visible} of {total} matching parties`. If total-count metadata is absent, negative, or inconsistent with the visible page, the picker falls back to `Showing {visible} matching parties` and does not render raw backend count metadata.
+
+No-result searches render `No matching parties in the current authorized context`. The wording is intentionally tenant-safe: it does not imply records exist outside the host-supplied authorization context.
+
+The picker does not call Hexalith.Memories directly and does not emulate semantic, hybrid, graph, email, or identifier search in the browser.
 
 Until Story 12.5 exposes/freeze rich search metadata through the typed client, metadata unavailable from `IPartiesQueryClient` is treated as bounded unavailable state. The picker must not fabricate local-only, degraded, semantic, hybrid, graph, email, or identifier matching details.
 

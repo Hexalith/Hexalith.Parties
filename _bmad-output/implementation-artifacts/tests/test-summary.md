@@ -1,25 +1,39 @@
 # Test Automation Summary
 
+## Story
+
+- Story 8.2: Implement Typeahead Search and Bounded Results
+
 ## Generated Tests
 
 ### API Tests
-- [x] Not applicable for story 6.10: tenant encryption key rotation is intentionally service-level only, with no public REST, OpenAPI, MCP, or actor-host endpoint added.
-- [x] `tests/Hexalith.Parties.Security.Tests/TenantKeyRotationServiceTests.cs` - Added queried rotation status coverage through `GetStatusAsync`, including bounded metadata and redaction assertions.
+
+- [x] `tests/Hexalith.Parties.Client.Tests/HttpPartiesQueryClientTests.cs` - Strengthened `SearchPartiesAsync_SubmitsEventStoreSearchQueryAsync` to assert the typeahead search request posts to `/api/v1/queries` and does not route through retired `api/v1/parties` paths.
 
 ### E2E Tests
-- [x] `tests/Hexalith.Parties.Security.Tests/TenantKeyRotationServiceTests.cs` - Added service-level end-to-end coverage proving party key reads remain available while tenant rewrap is in progress.
-- [x] `tests/Hexalith.Parties.Security.Tests/TenantKeyRotationServiceTests.cs` - Added retry/resume coverage for a mixed erased-party skip plus backend failure, verifying final status counts remain bounded and separated.
+
+- [x] `tests/Hexalith.Parties.Picker.Tests/Components/PartyPickerComponentTests.cs` - Added bUnit workflow coverage proving empty and whitespace-only typeahead input stays idle, renders no results, and never calls the typed Parties client.
 
 ## Coverage
-- Tenant key rotation workflows: 10 focused tests cover success, idempotent retry, partial backend failure, retry from safe state, erased parties, missing key provider, concurrent reads, cache invalidation, tenant isolation, queried status, and redacted status output.
-- Security/key-management regression scope: 52 tests cover tenant rotation, key management, integration-style key flows, and cache behavior.
-- Contract security scope: 11 tests cover security contracts and additive tenant rotation metadata.
-- Public API surface: 0 endpoints expected and 0 endpoints added for story 6.10.
+
+- Typeahead debounce and coalescing: covered by picker component tests.
+- Empty, whitespace-only, and control-only query suppression: covered by picker component tests and API-client tests.
+- Bounded result rendering and count semantics: covered by picker component tests and API-client tests.
+- No-results tenant-safe wording: covered by picker component tests.
+- Tenant/auth-safe query path: covered by picker API-client tests for host token and request customizer behavior.
+- Endpoint boundary violations: covered by picker transport guardrail tests plus the strengthened client query endpoint assertion.
+
+## Checklist Validation
+
+- [x] API tests generated where applicable.
+- [x] E2E/UI workflow tests generated for the picker.
+- [x] Tests use standard xUnit, Shouldly, and bUnit APIs already present in the repo.
+- [x] Tests cover happy path, empty input, no results, bounded results, and critical failure/boundary cases.
+- [x] Tests use semantic roles/selectors where the component exposes them.
+- [x] No hardcoded waits or sleeps added.
+- [x] Generated tests are independent and do not depend on execution order.
 
 ## Validation
-- [x] `dotnet test tests\Hexalith.Parties.Security.Tests\Hexalith.Parties.Security.Tests.csproj --filter "FullyQualifiedName~TenantKeyRotation" -p:TreatWarningsAsErrors=false -p:WarningsAsErrors=` - Passed 10/10.
-- [x] `dotnet test tests\Hexalith.Parties.Security.Tests\Hexalith.Parties.Security.Tests.csproj --filter "FullyQualifiedName~TenantKeyRotation|FullyQualifiedName~KeyManagement|FullyQualifiedName~CachedKeyManagement" -p:TreatWarningsAsErrors=false -p:WarningsAsErrors=` - Passed 52/52.
-- [x] `dotnet test tests\Hexalith.Parties.Contracts.Tests\Hexalith.Parties.Contracts.Tests.csproj --filter "FullyQualifiedName~Security" -p:TreatWarningsAsErrors=false -p:WarningsAsErrors=` - Passed 11/11.
 
-## Notes
-- The generated retry/resume test exposed a status-count drift where skipped records were counted as processed on resume. `TenantKeyRotationService` now resumes from the persisted processed count so processed, skipped, and failed totals remain bounded.
+- [x] `dotnet test tests\Hexalith.Parties.Picker.Tests\Hexalith.Parties.Picker.Tests.csproj --configuration Release` - Passed 84/84.
+- [x] `dotnet test tests\Hexalith.Parties.Client.Tests\Hexalith.Parties.Client.Tests.csproj --configuration Release` - Passed 97/97.

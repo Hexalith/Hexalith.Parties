@@ -1,10 +1,10 @@
 {
-  "epic": "1",
-  "currentStory": "6.9",
-  "storiesRemaining": 25,
-  "stateFile": "_bmad-output/story-automator/orchestration-1-20260521-062818.md",
-  "createdAt": "2026-05-22T04:04:53Z",
-  "heartbeat": "2026-05-22T00:00:00Z",
-  "pid": 0,
-  "projectSlug": "project"
+  "epic": "8",
+  "currentStory": "8.2",
+  "storiesRemaining": 5,
+  "stateFile": "D:/Hexalith.Parties/_bmad-output/story-automator/orchestration-8-20260524-082438.md",
+  "createdAt": "2026-05-24T10:03:15Z",
+  "heartbeat": "2026-05-24T10:03:14Z",
+  "pid": 942153,
+  "projectSlug": "hexalith"
 }

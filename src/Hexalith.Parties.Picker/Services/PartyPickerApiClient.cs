@@ -191,15 +191,22 @@ public sealed class PartyPickerApiClient(IPartiesQueryClient queryClient)
     {
         IReadOnlyList<PartySearchResult> items = payload.Items is null
             ? []
-            : [.. payload.Items.Where(static r => r?.Party is not null)];
+            : [.. payload.Items
+                .Where(static r => r?.Party is not null)
+                .Take(boundedPageSize)];
+
+        int page = payload.Page <= 0 ? boundedPage : payload.Page;
+        int pageSize = payload.PageSize <= 0
+            ? boundedPageSize
+            : Math.Min(BoundPageSize(payload.PageSize), boundedPageSize);
 
         if (items.Count == 0)
         {
             return new PartyPickerSearchResponse
             {
                 State = PartyPickerSearchState.Empty,
-                Page = payload.Page <= 0 ? boundedPage : payload.Page,
-                PageSize = payload.PageSize <= 0 ? boundedPageSize : payload.PageSize,
+                Page = page,
+                PageSize = pageSize,
                 TotalCount = payload.TotalCount,
                 Metadata = new PartyPickerSearchMetadata
                 {
@@ -212,8 +219,8 @@ public sealed class PartyPickerApiClient(IPartiesQueryClient queryClient)
         {
             State = PartyPickerSearchState.Ready,
             Results = items,
-            Page = payload.Page <= 0 ? boundedPage : payload.Page,
-            PageSize = payload.PageSize <= 0 ? boundedPageSize : payload.PageSize,
+            Page = page,
+            PageSize = pageSize,
             TotalCount = payload.TotalCount,
             Metadata = new PartyPickerSearchMetadata
             {

@@ -18,7 +18,7 @@
                @oninput="HandleInputAsync" />
         <button type="button"
                 class="hx-party-picker__icon-button"
-                disabled="@(IsInteractionDisabled || (_selected is null && string.IsNullOrWhiteSpace(_query)))"
+                disabled="@(IsInteractionDisabled || (_selected is null && !HasVisibleSearchText(_query)))"
                 aria-label="@EffectiveLabels.ClearSelection"
                 title="@EffectiveLabels.ClearSelection"
                 @onclick="ClearAsync"><span class="hx-party-picker__icon" aria-hidden="true">&times;</span></button>
@@ -147,15 +147,17 @@
 
     private bool CanRetry
         => !IsInteractionDisabled
-            && !string.IsNullOrWhiteSpace(_query)
+            && HasVisibleSearchText(_query)
             && (_search.State is PartyPickerSearchState.TransientFailure or PartyPickerSearchState.Error);
 
     private string StatusMessage
         => _search.State switch
         {
+            PartyPickerSearchState.Idle => EffectiveLabels.Idle,
             PartyPickerSearchState.Loading => EffectiveLabels.Loading,
             PartyPickerSearchState.AuthenticationRequired => EffectiveLabels.AuthenticationRequired,
-            PartyPickerSearchState.Empty => EffectiveLabels.Empty,
+            PartyPickerSearchState.Empty => EffectiveLabels.NoResults,
+            PartyPickerSearchState.Ready => ResultCountMessage(),
             PartyPickerSearchState.LocalOnly => EffectiveLabels.LocalOnly,
             PartyPickerSearchState.Degraded => EffectiveLabels.Degraded,
             PartyPickerSearchState.Unauthorized => EffectiveLabels.Unauthorized,
@@ -216,7 +218,7 @@
     {
         CancelPendingSearch();
 
-        if (string.IsNullOrWhiteSpace(_query))
+        if (!HasVisibleSearchText(_query))
         {
             _search = new PartyPickerSearchResponse
             {
@@ -278,7 +280,7 @@
 
     private async Task RetryAsync()
     {
-        if (!string.IsNullOrWhiteSpace(_query))
+        if (HasVisibleSearchText(_query))
         {
             await ScheduleSearchAsync().ConfigureAwait(false);
         }
@@ -391,6 +393,21 @@
             "hybrid" => PartyPickerSearchMode.Hybrid,
             _ => null,
         };
+
+    private static bool HasVisibleSearchText(string query)
+        => query.Any(static c => !char.IsControl(c) && !char.IsWhiteSpace(c));
+
+    private string ResultCountMessage()
+        => _search.HasReliableTotalCount
+            ? string.Format(
+                System.Globalization.CultureInfo.CurrentCulture,
+                EffectiveLabels.ResultsSummary,
+                _search.VisibleCount,
+                _search.TotalCount)
+            : string.Format(
+                System.Globalization.CultureInfo.CurrentCulture,
+                EffectiveLabels.VisibleResultsSummary,
+                _search.VisibleCount);
 
     private bool IsSelected(PartySearchResult result)
         => string.Equals(_selected?.PartyId, result.Party.Id, StringComparison.Ordinal);

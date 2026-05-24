@@ -1,6 +1,6 @@
 # Story 8.5: Enforce Picker Accessibility and Localization
 
-Status: blocked
+Status: ready-for-dev
 
 ## Story
 
@@ -16,25 +16,26 @@ so that I can search and select parties without inaccessible or hard-coded inter
 4. Given labels, placeholders, validation messages, state text, and counts render, when localization resources are inspected, then user-facing text comes from localized strings or FrontComposer localization, and missing resources are detectable in tests.
 5. Given accessibility/localization tests run, when they cover keyboard operation, visible focus, accessible names, status announcements, non-color-only state, localization, forced-colors, and reduced-motion expectations, then the picker is accessible for embedded use.
 
-## Blocker
+## Gate Resolution (2026-05-24)
 
-Story 8.5 is blocked by `_bmad-output/planning-artifacts/dependency-eventstore-fronted-parties-client-gateway-2026-05-17.md`.
+The Epic 8 scheduling gate for this story is resolved by a SCOPED RISK ACCEPTANCE, not a fully satisfied contract. Per `sprint-change-proposal-2026-05-24-epic8-picker-gate-remaining.md` (approved by Jérôme), `_bmad-output/planning-artifacts/dependency-eventstore-fronted-parties-client-gateway-2026-05-17.md` now records a Risk Acceptance covering Epic 8 Stories 8.2–8.6 against the existing temporary picker bridge (`Hexalith.Parties.Picker` + `IPartiesQueryClient`). The full EventStore-fronted Parties client/gateway contract is still NOT globally `Satisfied`.
 
-That dependency is still `status: Required` and gates all Epic 8 implementation scheduling. Story 8.5 also depends on the picker shell and state model from Stories 8.1 through 8.4, which are blocked.
+Predecessor stories 8.1–8.4 are now accepted/ready, so the picker shell, result model, state model, and selection callback exist to validate against.
 
-Implementing accessibility and localization enforcement now would require inventing the picker component surface, result/state semantics, and localization ownership before the accepted boundary exists.
+Implementation proceeds under BINDING conditions (see the dependency record's "Risk Acceptance (2026-05-24 - Stories 8.2-8.6)" section):
 
-## Required To Unblock
-
-- Update `_bmad-output/planning-artifacts/dependency-eventstore-fronted-parties-client-gateway-2026-05-17.md` to `Satisfied` or `Risk Accepted`.
-- Unblock or explicitly risk-accept Stories 8.1 through 8.4 so there is a picker shell, result model, state model, and selection callback to validate.
-- Confirm the accepted picker surface covers keyboard operation, accessible names, status announcements, localization resources, forced-colors behavior, and reduced-motion expectations.
+- All data access routes through `IPartiesQueryClient`; no retired REST/admin endpoints, DAPR actors, projection actors, local search services, controllers, or actor-host internals.
+- Host-supplied auth context only; never persist/refresh/parse/log tokens.
+- Narrow, PII-safe DOM callback payloads; fail-closed failure states.
+- Existing picker transport/privacy guardrail tests remain binding before close.
+- When the formal contract is accepted, this scope reconciles or replaces the provisional bridge.
 
 ## Change Log
 
 | Date | Version | Description | Author |
 |---|---:|---|---|
 | 2026-05-22 | 0.1 | Created blocked story artifact because the accepted EventStore-fronted Parties client/gateway contract and predecessor picker shell remain unsatisfied. | Codex |
+| 2026-05-24 | 0.2 | Gate resolved via scoped risk acceptance for Stories 8.2–8.6 (sprint-change-proposal-2026-05-24-epic8-picker-gate-remaining.md); status blocked → ready-for-dev. | correct-course |
 
 ## Dev Agent Record
 

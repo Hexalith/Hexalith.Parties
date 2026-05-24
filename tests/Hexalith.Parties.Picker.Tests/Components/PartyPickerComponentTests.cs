@@ -71,6 +71,165 @@ public sealed class PartyPickerComponentTests : BunitContext
     }
 
     [Fact]
+    public void PartyPicker_RapidInput_CoalescesToCurrentDebouncedQuery()
+    {
+        var queryClient = new RecordingPartiesQueryClient();
+        queryClient.Enqueue(SearchResultPage(PartyPickerTestData.Result(name: "Ada Lovelace")));
+        RegisterClient(queryClient);
+
+        IRenderedComponent<PartyPicker> cut = Render<PartyPicker>(parameters => parameters
+            .Add(p => p.AccessToken, "host-token")
+            .Add(p => p.DebounceMilliseconds, 50)
+            .Add(p => p.DispatchDomEvents, false));
+
+        cut.Find("input").Input("a");
+        cut.Find("input").Input("ad");
+        cut.Find("input").Input("ada");
+
+        cut.WaitForAssertion(() =>
+        {
+            queryClient.SearchCalls.ShouldBe([new SearchCall("ada", 1, PartyPickerDefaults.PageSize)]);
+            cut.FindAll("[role=\"option\"]").Count.ShouldBe(1);
+        });
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("   ")]
+    [InlineData("\t\r\n")]
+    public void PartyPicker_EmptyOrWhitespaceQuery_DoesNotShowLoadingOrCallClient(string query)
+    {
+        var queryClient = new RecordingPartiesQueryClient();
+        RegisterClient(queryClient);
+
+        IRenderedComponent<PartyPicker> cut = Render<PartyPicker>(parameters => parameters
+            .Add(p => p.AccessToken, "host-token")
+            .Add(p => p.DebounceMilliseconds, 1)
+            .Add(p => p.DispatchDomEvents, false));
+
+        cut.Find("input").Input(query);
+
+        cut.Find(".hx-party-picker__status").TextContent.ShouldBe("Enter a party name to search");
+        cut.FindAll("[role=\"option\"]").ShouldBeEmpty();
+        queryClient.SearchCalls.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void PartyPicker_InvisibleOnlyQuery_DoesNotShowLoadingOrCallClient()
+    {
+        var queryClient = new RecordingPartiesQueryClient();
+        RegisterClient(queryClient);
+
+        IRenderedComponent<PartyPicker> cut = Render<PartyPicker>(parameters => parameters
+            .Add(p => p.AccessToken, "host-token")
+            .Add(p => p.DebounceMilliseconds, 1)
+            .Add(p => p.DispatchDomEvents, false));
+
+        cut.Find("input").Input("\u0000\u0001");
+
+        cut.Find(".hx-party-picker__status").TextContent.ShouldBe("Enter a party name to search");
+        cut.FindAll("[role=\"option\"]").ShouldBeEmpty();
+        queryClient.SearchCalls.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void PartyPicker_SearchSuccess_RendersBoundedResultCountFromSafeMetadata()
+    {
+        var queryClient = new RecordingPartiesQueryClient();
+        queryClient.Enqueue(SearchResultPage(
+            42,
+            PartyPickerTestData.Result(id: "party-1", name: "Ada Lovelace"),
+            PartyPickerTestData.Result(id: "party-2", name: "Ada Byron")));
+        RegisterClient(queryClient);
+
+        IRenderedComponent<PartyPicker> cut = Render<PartyPicker>(parameters => parameters
+            .Add(p => p.AccessToken, "host-token")
+            .Add(p => p.DebounceMilliseconds, 1)
+            .Add(p => p.DispatchDomEvents, false));
+
+        cut.Find("input").Input("ada");
+
+        cut.WaitForAssertion(() =>
+        {
+            cut.Find(".hx-party-picker__status").TextContent.ShouldBe("Showing 2 of 42 matching parties");
+            cut.FindAll("[role=\"option\"]").Count.ShouldBe(2);
+        });
+    }
+
+    [Fact]
+    public void PartyPicker_SearchSuccess_WithInconsistentCountRendersVisibleCountOnly()
+    {
+        var queryClient = new RecordingPartiesQueryClient();
+        queryClient.Enqueue(SearchResultPage(
+            -1,
+            PartyPickerTestData.Result(id: "party-1", name: "Ada Lovelace"),
+            PartyPickerTestData.Result(id: "party-2", name: "Ada Byron")));
+        RegisterClient(queryClient);
+
+        IRenderedComponent<PartyPicker> cut = Render<PartyPicker>(parameters => parameters
+            .Add(p => p.AccessToken, "host-token")
+            .Add(p => p.DebounceMilliseconds, 1)
+            .Add(p => p.DispatchDomEvents, false));
+
+        cut.Find("input").Input("ada");
+
+        cut.WaitForAssertion(() =>
+        {
+            cut.Find(".hx-party-picker__status").TextContent.ShouldBe("Showing 2 matching parties");
+            cut.Markup.ShouldNotContain("-1");
+        });
+    }
+
+    [Fact]
+    public void PartyPicker_SearchSuccess_RendersOnlyBoundedPageResults()
+    {
+        var queryClient = new RecordingPartiesQueryClient();
+        queryClient.Enqueue(SearchResultPage(
+            3,
+            PartyPickerTestData.Result(id: "party-1", name: "Ada One"),
+            PartyPickerTestData.Result(id: "party-2", name: "Ada Two"),
+            PartyPickerTestData.Result(id: "party-3", name: "Ada Three")));
+        RegisterClient(queryClient);
+
+        IRenderedComponent<PartyPicker> cut = Render<PartyPicker>(parameters => parameters
+            .Add(p => p.AccessToken, "host-token")
+            .Add(p => p.PageSize, 2)
+            .Add(p => p.DebounceMilliseconds, 1)
+            .Add(p => p.DispatchDomEvents, false));
+
+        cut.Find("input").Input("ada");
+
+        cut.WaitForAssertion(() =>
+        {
+            queryClient.SearchCalls.ShouldBe([new SearchCall("ada", 1, 2)]);
+            cut.FindAll("[role=\"option\"]").Count.ShouldBe(2);
+            cut.Markup.ShouldNotContain("Ada Three");
+        });
+    }
+
+    [Fact]
+    public void PartyPicker_SearchNoResults_RendersAuthorizedContextEmptyState()
+    {
+        var queryClient = new RecordingPartiesQueryClient();
+        queryClient.Enqueue(SearchResultPage());
+        RegisterClient(queryClient);
+
+        IRenderedComponent<PartyPicker> cut = Render<PartyPicker>(parameters => parameters
+            .Add(p => p.AccessToken, "host-token")
+            .Add(p => p.DebounceMilliseconds, 1)
+            .Add(p => p.DispatchDomEvents, false));
+
+        cut.Find("input").Input("missing");
+
+        cut.WaitForAssertion(() =>
+        {
+            cut.Find(".hx-party-picker__status").TextContent.ShouldBe("No matching parties in the current authorized context");
+            cut.Markup.ShouldNotContain("tenant", Case.Insensitive);
+            cut.FindAll("[role=\"option\"]").ShouldBeEmpty();
+        });
+    }
+
+    [Fact]
     public void PartyPicker_MetadataUnavailable_DoesNotClaimLocalOnlyOrDegradedSearch()
     {
         var queryClient = new RecordingPartiesQueryClient();
@@ -86,7 +245,7 @@ public sealed class PartyPickerComponentTests : BunitContext
 
         cut.WaitForAssertion(() =>
         {
-            cut.Find(".hx-party-picker__status").TextContent.ShouldBeEmpty();
+            cut.Find(".hx-party-picker__status").TextContent.ShouldBe("Showing 1 of 1 matching parties");
             cut.Markup.ShouldNotContain("Local search results");
             cut.Markup.ShouldNotContain("Limited search results");
         });
@@ -320,6 +479,42 @@ public sealed class PartyPickerComponentTests : BunitContext
         {
             [nameof(PartyPicker.AccessToken)] = "host-token",
             [nameof(PartyPicker.ContextKey)] = "tenant-b:user-b",
+            [nameof(PartyPicker.DebounceMilliseconds)] = 1,
+            [nameof(PartyPicker.DispatchDomEvents)] = false,
+        })));
+
+        queryClient.Complete(SearchResultPage(PartyPickerTestData.Result()));
+
+        cut.WaitForAssertion(() =>
+        {
+            cut.FindAll("[role=\"option\"]").ShouldBeEmpty();
+            cut.Markup.ShouldNotContain("Ada Lovelace");
+        });
+    }
+
+    [Fact]
+    public async Task PartyPicker_StaleSearchResponse_DoesNotRepopulateAfterSearchOptionsChange()
+    {
+        var queryClient = new DelayedPartiesQueryClient();
+        RegisterClient(queryClient);
+
+        IRenderedComponent<PartyPicker> cut = Render<PartyPicker>(parameters => parameters
+            .Add(p => p.AccessToken, "host-token")
+            .Add(p => p.SearchMode, "lexical")
+            .Add(p => p.CaseId, "case-a")
+            .Add(p => p.PageSize, 10)
+            .Add(p => p.DebounceMilliseconds, 1)
+            .Add(p => p.DispatchDomEvents, false));
+
+        cut.Find("input").Input("ada");
+        await queryClient.WaitForCallAsync();
+
+        await cut.InvokeAsync(() => cut.Instance.SetParametersAsync(ParameterView.FromDictionary(new Dictionary<string, object?>
+        {
+            [nameof(PartyPicker.AccessToken)] = "host-token",
+            [nameof(PartyPicker.SearchMode)] = "lexical",
+            [nameof(PartyPicker.CaseId)] = "case-b",
+            [nameof(PartyPicker.PageSize)] = 5,
             [nameof(PartyPicker.DebounceMilliseconds)] = 1,
             [nameof(PartyPicker.DispatchDomEvents)] = false,
         })));
@@ -611,12 +806,15 @@ public sealed class PartyPickerComponentTests : BunitContext
     }
 
     private static PagedResult<PartySearchResult> SearchResultPage(params PartySearchResult[] results)
+        => SearchResultPage(results.Length, results);
+
+    private static PagedResult<PartySearchResult> SearchResultPage(int totalCount, params PartySearchResult[] results)
         => new()
         {
             Items = results,
             Page = 1,
-            PageSize = 10,
-            TotalCount = results.Length,
+            PageSize = Math.Max(1, results.Length),
+            TotalCount = totalCount,
             TotalPages = results.Length == 0 ? 0 : 1,
         };
 
