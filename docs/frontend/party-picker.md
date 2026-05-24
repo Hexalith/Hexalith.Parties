@@ -18,12 +18,13 @@ Render the component with host-owned authentication:
              AccessTokenProvider="GetAccessTokenAsync"
              SearchMode="hybrid"
              PageSize="10"
-             SelectedPartyChanged="OnPartySelected" />
+             SelectedPartyId="@SelectedPartyId"
+             SelectedPartyIdChanged="OnSelectedPartyIdChanged" />
 ```
 
 The selected value contract is the stable party id. Display names and status labels are preview data only and must not become route keys, storage keys, telemetry dimensions, log values, or durable foreign keys.
 
-For Blazor hosts, bind durable storage to `SelectedPartyId`/`SelectedPartyIdChanged`. The source-compatible `SelectedPartyChanged` callback may include preview display fields for rendering convenience, but `PartyId` is the only stable value in that model and preview fields are not required for host persistence.
+For Blazor hosts, bind durable storage to `SelectedPartyId`/`SelectedPartyIdChanged`. The source-compatible `SelectedPartyChanged` callback may be added when the host needs preview display fields for rendering convenience, but `PartyId` is the only stable value in that model and preview fields are not required for host persistence.
 
 ## JavaScript Host Usage
 
