@@ -160,6 +160,12 @@ NFR32: (v1.2) Frontend applies output encoding to all party data fields rendered
 
 ### UX Design Requirements
 
+> **Canonical traceability note:** The numbered `UX-DR1`–`UX-DR32` identifiers below are the
+> **canonical** machine-traceable extraction of the UX requirements. The source UX documents
+> (`ux-admin-portal-2026-05-10.md`, `ux-party-picker-2026-05-12.md`) express the same
+> requirements in prose/tables and are intentionally **not** re-numbered. Cite `UX-DR<n>` from
+> this document for traceability; consult the UX source docs for design rationale and visuals.
+
 UX-DR1: Admin portal first viewport must be the working console with global search, compact filters, tenant/auth state, result grid, and detail panel visible without a landing page or introductory screen.
 UX-DR2: Admin portal routes must support `/admin/parties`, `/admin/parties/{partyId}`, and `/admin/parties/{partyId}/gdpr` when FrontComposer route support is available.
 UX-DR3: Admin portal must generate EventStore Admin UI links only from safe identifiers such as stream id, aggregate id, command id, correlation id, or timestamp, using generic labels and disabled bounded reasons when unavailable.
@@ -226,6 +232,7 @@ FR28: Epic 3 - Developer Integration and Local Adoption
 FR29: Epic 3 - Developer Integration and Local Adoption
 FR30: Epic 3 - Developer Integration and Local Adoption
 FR31: Epic 3 - Developer Integration and Local Adoption
+FR31a: Epic 9 - Kubernetes Deployment Platform
 FR32: Epic 3 - Developer Integration and Local Adoption
 FR33: Epic 3 - Developer Integration and Local Adoption
 FR34: Epic 5 - Event-Driven Consumer Integration
@@ -280,6 +287,26 @@ Every epic and story carries two planning fields:
 `Implemented` means the story delivers the user-visible or system-visible requirement in that phase.
 `Prepared` means the story lays contract, documentation, compatibility, or architectural groundwork but does not complete the requirement.
 `Deferred` means the PRD requirement is intentionally post-MVP and must not be scheduled as MVP implementation work.
+
+## Implementation Status & Sequence (as-built, 2026-05-25)
+
+All nine epics are delivered: every story is `done` and every epic retrospective is
+complete or optional (source of truth: `_bmad-output/implementation-artifacts/sprint-status.yaml`).
+The release phase below — not the epic number — is authoritative for sequencing. Epic
+numbers are historical and are intentionally **not** renumbered, because they are
+referenced throughout `sprint-status.yaml`, commit history, story files, and retrospectives.
+
+| Phase (authoritative) | Epics (historical numbering) | As-built status |
+|---|---|---|
+| MVP | 1, 2, 3, 4, 5, 9 | All stories `done`; retrospectives `done` |
+| v1.1 | 6 | All stories `done`; retrospective `done` |
+| v1.2 | 7, 8 | All stories `done`; retrospective `done`/optional |
+
+> **Note on Epic 9 ordering:** Epic 9 (Kubernetes Deployment Platform) is **MVP** scope
+> despite its numeric position after the v1.1 (Epic 6) and v1.2 (Epic 7, 8) epics. Its high
+> number is historical — it was rewritten greenfield on 2026-05-21 (superseding Epic 9 v1).
+> It was delivered in the MVP lane, not after the deferred epics. When reading this document,
+> sort by `Phase`, never by epic number.
 
 ## Epic List
 
@@ -385,12 +412,12 @@ So that Parties validates the reusable domain-service starter approach before do
 
 **Given** the initial projects are created
 **When** project references are inspected
-**Then** Contracts, Client, Server, Projections, Parties service, Aspire, AppHost, ServiceDefaults, Testing, and Sample boundaries are represented only as needed for subsequent stories
+**Then** Contracts, Client, Server, Projections, Parties service, Aspire, AppHost, ServiceDefaults, Testing, and Sample project boundaries exist as compiling stubs with correct dependency directions; infrastructure-bearing projects are fleshed out by the later stories that first require them
 **And** forbidden dependency directions are not introduced.
 
 **Given** the starter setup is validated
 **When** restore/build or structural validation runs
-**Then** the initial solution can be restored and built enough to support the first domain story
+**Then** the initial solution restores and builds green (zero warnings under `TreatWarningsAsErrors`), enabling Story 1.2 (Create Party Aggregate with Stable Identity) to begin
 **And** validation does not require recursive nested submodule initialization.
 
 **Given** starter setup documentation is reviewed
@@ -3119,6 +3146,10 @@ Operators and developers deploy the full Hexalith.Parties 9-workload topology to
 **Canonical reference:** `docs/kubernetes-deployment-architecture.md`
 **Authoring SCP:** `sprint-change-proposal-2026-05-21-epic9-greenfield-rewrite.md`
 **Supersedes:** Epic 9 v1 (Stories 9.1–9.5 + addenda + follow-ups 9.10, 9.11). The historical sprint-change-proposals (`sprint-change-proposal-2026-05-{12..20}-*.md`) remain on disk for audit but are not reused as source of truth.
+
+**Implementation status (as-built, 2026-05-25):** DELIVERED. Stories 9.1–9.8 are `done` and the Epic 9 retrospective is complete (see `_bmad-output/implementation-artifacts/sprint-status.yaml` and `epic-9-retro-2026-05-24.md`). The `deploy/k8s/`, `deploy/dapr/`, `deploy/validate-deployment.ps1`, and `tests/Hexalith.Parties.DeployValidation.Tests/` artifacts exist on disk and were code-reviewed at closure.
+
+> **Reading the acceptance criteria below:** the cross-references between stories (e.g. "invoked by `publish.ps1` — see Story 9.5", "delivered as part of Story 9.7") describe how the single integrated `publish.ps1` pipeline is composed. They were delivered in **backward-safe `blocked_by` order** (9-1 → 9-2 → 9-3 → 9-4 → {9-5, 9-6} → 9-7, plus the CI gate 9-8), recorded in `sprint-status.yaml`. They are **cross-references within a completed epic, not unmet forward dependencies** — the 2026-05-24 readiness report flagged them as forward dependencies because it assessed the plan in isolation, before observing that every story had already shipped in dependency order.
 
 ### Story 9.1: Zot OCI Registry & Deployment Documentation
 
