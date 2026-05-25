@@ -47,7 +47,8 @@ FR27: Developer can send party commands via typed client abstractions without in
 FR28: Developer can query parties via typed client abstractions without infrastructure knowledge
 FR29: Developer can interact with the party service via REST API from any programming language
 FR30: System returns typed rejection responses when commands fail, including error type URI, human-readable message, and corrective action - enabling developers to resolve the issue without consulting documentation or debugging the service
-FR31: Developer can deploy a running instance from source with standard container tooling
+FR31: Developer can deploy the full Parties topology from source to a Kubernetes target (local cluster - kind/minikube/k3d/Docker Desktop - for MVP) using artifacts generated from the Aspire AppHost
+FR31a: A single PowerShell pipeline (`pwsh deploy/k8s/publish.ps1 -ConfirmContext <name>`) takes the operator from a clean checkout to a healthy 9-pod cluster in one command. The pipeline (Epic 9 v2, 2026-05-21) resolves the MinVer-stamped image tag, builds and pushes 7 container images to the self-hosted Zot OCI registry at `registry.hexalith.com` (ADR D-K8s-1), regenerates Kubernetes manifests via `dotnet aspirate generate`, applies three idempotent post-aspirate patches (Dapr annotations + JWT `secretKeyRef` + Zot `imagePullSecrets`), bootstraps three operator-managed Secrets (`hexalith-jwt-signing`, `hexalith-keycloak-admin`, `zot-pull-secret` - ADR D-K8s-2 Path B), applies Dapr CRs from `deploy/dapr/` (Components -> Configurations -> Subscriptions), then applies the Kustomization under `deploy/k8s/`. The topology is enumerative: 7 Aspirate-composed services (`eventstore`, `eventstore-admin`, `eventstore-admin-ui`, `parties`, `parties-mcp`, `tenants`, `memories`) plus 2 hand-authored carve-outs (`redis` MVP emptyDir + no AUTH; `keycloak` with randomized admin from Secret), totalling 9 workloads in namespace `hexalith-parties`. Image tags carry the MinVer-resolved version (regex `^[0-9]+\.[0-9]+\.[0-9]+(?:-[A-Za-z0-9.-]+)?$`) and are immutable per commit; mutable tags (`latest`, `staging-latest`, empty) are explicitly forbidden by `validate-deployment.ps1`. The `-ConfirmContext` gate (ADR D-K8s-3) replaces the legacy local-cluster regex allowlist so the same pipeline runs against any operator-owned kubectl context. The canonical architecture reference is `docs/kubernetes-deployment-architecture.md` (13 sections covering topology, configuration sources, operator workflow, reproducibility guarantees, and MVP boundaries). NFR30 (< 15 min from clean checkout to first successful query) remains in force.
 FR32: Getting-started documentation enables a developer to deploy and send their first command as a self-service experience
 FR33: Contract types package has zero runtime dependencies beyond netstandard2.1 - consuming applications inherit no infrastructure stack
 FR34: System publishes domain events when party state changes
@@ -231,7 +232,7 @@ FR27: Epic 3 - Developer Integration and Local Adoption
 FR28: Epic 3 - Developer Integration and Local Adoption
 FR29: Epic 3 - Developer Integration and Local Adoption
 FR30: Epic 3 - Developer Integration and Local Adoption
-FR31: Epic 3 - Developer Integration and Local Adoption
+FR31: Epic 3 - Developer Integration and Local Adoption (local container run); Epic 9 - Kubernetes Deployment Platform (K8s topology)
 FR31a: Epic 9 - Kubernetes Deployment Platform
 FR32: Epic 3 - Developer Integration and Local Adoption
 FR33: Epic 3 - Developer Integration and Local Adoption

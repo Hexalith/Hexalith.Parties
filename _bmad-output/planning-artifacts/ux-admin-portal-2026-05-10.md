@@ -1,7 +1,8 @@
 # UX Specification: Parties Admin Portal
 
 Date: 2026-05-10  
-Story: 12.7 Admin Portal Rebuild on FrontComposer
+Epic: 7 — Administration Console (FrontComposer rebuild)  
+Note: legacy `Story 12.x` numbering was superseded by the 2026-05-21 epic reorg; the canonical machine-traceable extraction is `UX-DR1`–`UX-DR21` in `epics.md`.
 
 ## Scope
 
@@ -74,7 +75,7 @@ Required flows after the contract exists:
 | Degraded | Preserve only data proven to belong to the current tenant and show non-color-only degraded indicator. |
 | Timeout or transient failure | Clear stale detail for detail loads; allow retry for list loads. |
 | Malformed/non-JSON response | Treat as load failure or auth redirect depending on classifier; never render raw body. |
-| Contract unavailable | Disable unsupported reads/actions and show the exact Story 12.4/12.5 blocker. |
+| Contract unavailable | Disable unsupported reads/actions and show the exact contract-unavailable blocker `Blocked on accepted EventStore-fronted Parties client/gateway contract` (Epic 7 Story 7.6 gate; legacy Story 12.4/12.5). |
 
 ## Localization
 
