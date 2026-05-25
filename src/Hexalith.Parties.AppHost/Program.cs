@@ -35,23 +35,17 @@ IResourceBuilder<ProjectResource> eventStore = builder.AddProject<Projects.Hexal
 IResourceBuilder<ProjectResource> adminServer = builder.AddProject<Projects.Hexalith_EventStore_Admin_Server_Host>("eventstore-admin");
 IResourceBuilder<ProjectResource> adminUI = builder.AddProject<Projects.Hexalith_EventStore_Admin_UI>("eventstore-admin-ui");
 
-// Redis is composed in run mode only. Local Aspire dev needs the actual Redis resource wired into
-// Dapr state/pubsub metadata; publish mode gets the hand-authored carve-out under deploy/k8s/redis/
-// from Story 9.3 and must not let aspirate emit a Redis workload.
-IResourceBuilder<RedisResource>? redis = null;
-if (builder.ExecutionContext.IsRunMode)
-{
-    redis = builder.AddRedis("redis");
-}
-
+// Persistence is the DAPR state store / pub-sub layer. Redis is provided by `dapr init` at
+// 127.0.0.1:6379 and wired into the statestore/pubsub component metadata by AddHexalithEventStore —
+// it is not managed by Aspire. The AppHost intentionally does not compose an Aspire Redis resource;
+// in publish mode the hand-authored carve-out under deploy/k8s/redis/ (Story 9.3) provides Redis.
 HexalithEventStoreResources eventStoreResources = builder.AddHexalithEventStore(
     eventStore,
     adminServer,
     adminUI,
     eventStoreAccessControlConfigPath,
     adminServerAccessControlConfigPath,
-    resiliencyConfigPath,
-    redis: redis);
+    resiliencyConfigPath);
 
 IResourceBuilder<ProjectResource> parties = builder.AddProject<Projects.Hexalith_Parties>("parties")
     .WithDaprSidecar(sidecar => sidecar
@@ -115,24 +109,11 @@ _ = tenants
     .WithReference(eventStore)
     .WaitFor(eventStore);
 
-// Memories.Server: composed in-cluster as a first-class topology participant (story 9.3 AC2 /
-// ADR 9.3-2). The configurable external HTTP `MemoriesEndpoint` escape hatch was removed —
-// FR31a now enumerates Memories as part of the single-source-of-truth service graph. The
-// in-cluster Service URL (`http://memories:8080/`) is the only endpoint Parties uses for the
-// `MemoriesSearch` feature; `EnableMemoriesSearch` still controls feature-on/off, never the
-// endpoint location.
-IResourceBuilder<ProjectResource> memories = builder.AddProject<Projects.Hexalith_Memories_Server>("memories")
-    .WithDaprSidecar(sidecar => sidecar
-        .WithOptions(new DaprSidecarOptions
-        {
-            AppId = "memories",
-            Config = memoriesAccessControlConfigPath,
-        })
-        .WithReference(eventStoreResources.StateStore)
-        .WithReference(eventStoreResources.PubSub))
-    .WaitFor(eventStoreResources.StateStore)
-    .WaitFor(eventStoreResources.PubSub);
-
+// Memories.Server is an OPTIONAL sibling submodule. It is composed as a first-class DAPR resource
+// in publish mode (FR31a single-source-of-truth service graph) and on demand in run mode when
+// `EnableMemoriesSearch=true`; the default one-command local Parties run does not require the
+// Hexalith.Memories submodule to be initialized. The project is resolved by path (not a compile-time
+// Projects.* reference) so the AppHost csproj carries no hard Memories dependency.
 bool enableMemoriesSearch = builder.ExecutionContext.IsPublishMode
     || string.Equals(builder.Configuration["EnableMemoriesSearch"], "true", StringComparison.OrdinalIgnoreCase);
 if (enableMemoriesSearch)
@@ -306,6 +287,23 @@ static string ResolveDaprConfigPath(string fileName)
         $"DAPR configuration not found. Probed: '{cwdPath}', '{baseDirPath}', '{sourceTreePath}'. "
         + $"Ensure {fileName} exists in the DaprComponents directory of the running AppHost.",
         cwdPath);
+}
+
+// Resolves an optional sibling submodule project by path so the AppHost carries no compile-time
+// ProjectReference to it. Used for Memories.Server, which is only needed when rich search is enabled.
+static string ResolveOptionalSiblingProjectPath(string submoduleName, string relativeProjectPath, string featureFlagName)
+{
+    string projectPath = Path.GetFullPath(
+        Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "..", submoduleName, relativeProjectPath));
+    if (File.Exists(projectPath))
+    {
+        return projectPath;
+    }
+
+    throw new InvalidOperationException(
+        $"{featureFlagName}=true requires the root-level {submoduleName} submodule. "
+        + $"Run 'git submodule update --init {submoduleName}' from the repository root, or unset {featureFlagName} for the default local Parties run. "
+        + "Do not use recursive submodule initialization for the default local run.");
 }
 
 // PUBLISH-MODE-JWT-HELPER - single-place contract for JWT authority/issuer wiring.

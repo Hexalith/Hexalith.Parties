@@ -37,7 +37,8 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-05-15 09:01:58 +02:00
-last_updated: 2026-05-25 14:05:00 +02:00
+last_updated: 2026-05-25 16:30:00 +02:00
+# last_updated touched 2026-05-25 by bmad-sprint-planning reconciling epic-level status to as-built. Cross-checked all 76 stories defined in epics.md (Epics 1-9) against development_status: every story is present and done, and all 9 epic retrospectives are done. The only drift was the 9 epic-level keys (epic-1..epic-9) still reading in-progress while every child story + retrospective is done; per the state machine (in-progress -> done when all stories complete) and the epics.md as-built "Implementation Status & Sequence" table, these were stale. Transitioned epic-1..epic-9: in-progress -> done (upgrade only, no downgrades). Preserved all Epic 9 v1 superseded trace entries and the retro-added 9-8-solution-build-green-on-clean-clone. No story statuses changed; no code changed.
 # last_updated touched 2026-05-25 by correct-course (sprint-change-proposal-2026-05-25-contract-risk-acceptance-tracking.md) establishing durable closure tracking for the EventStore-fronted Parties client/gateway risk acceptance. No status transitions — all Epic 7/8 stories remain done; the as-built fail-closed behavior is correct. The full contract was never globally Satisfied: Story 7.7 + all Epic 8 picker stories (8.1-8.6) shipped against a temporary IAdminPortalGdprClient/IPartiesQueryClient bridge under 3 scoped, lead-approved acceptances (SCPs 2026-05-23, -23-epic8-picker-gate, -24-epic8-picker-gate-remaining). Story 7.6 gate keeps erasure-certificate + retry-verification disabled with the exact bounded blocker. Added a consolidated "Closure Procedure" checklist to dependency-eventstore-fronted-parties-client-gateway-2026-05-17.md (frontmatter closure_status: OPEN) and a discoverable open item to deferred-work.md, so the 3 acceptances are formally closed when the real contract lands. No code changed.
 # last_updated touched 2026-05-25 by bmad-retrospective closing Epic 7 retrospective - retrospective saved to _bmad-output/implementation-artifacts/epic-7-retro-2026-05-25.md. All 10 Epic 7 (Administration Console) stories 7-1..7-10 confirmed done; 25 net-new AdminPortal component tests (75->100); 13 review patches across 5 stories; 5 stories clean approves; 3 stories (7.3/7.4/7.10) delivered test-only regression pins; bounded-blocker-string + capability-honesty patterns from 7.6/7.7 captured as forward-only action items D1-D4. Epic 6 follow-through: C4/C5 effectively applied, C2 (stale-artifact index) escalated to D1, C3 (env-friction note) remains carry-forward. Stakeholder acceptance treated as inferred from downstream Epic 8/9 completion per project lead direction. Status: optional -> done. With this close, Hexalith.Parties is feature-complete against the current 9-epic plan (all 9 epic retrospectives now done).
 # last_updated touched 2026-05-25 by correct-course (sprint-change-proposal-2026-05-25-readiness-reconcile.md) reconciling epics.md to as-built after implementation-readiness-report-2026-05-24.md (NEEDS WORK). No status transitions — all 9 epics' stories + retros already done; the report's 2 "blocking" Epic 9 issues were stale (it assessed the plan as pre-implementation, but 9-1..9-8 are done with retro). epics.md edits: (1) Epic 9 as-built DELIVERED header + reading note reframing 9.x cross-refs as backward-safe blocked_by order (resolves report Critical #1); (2) new Implementation Status & Sequence section, Phase authoritative, Epic 9=MVP, no renumber (resolves Critical #2); (3) FR31a added to FR Coverage Map; (4) Story 1.1 vague ACs tightened to verifiable conditions; (5) canonical UX-DR source note. Report Major items (rename/split Epic 9, 7.6/7.7 dependency, prepared-deferred distinction) intentionally not actioned — delivered/moot/already-tracked. No code changed.
@@ -144,7 +145,7 @@ story_location: _bmad-output/implementation-artifacts
 
 development_status:
   # Epic 1: Party Records and Lifecycle (9 stories)
-  epic-1: in-progress
+  epic-1: done
   1-1-set-up-initial-project-from-eventstore-solution-structure: done
   1-2-create-party-aggregate-with-stable-identity: done
   1-3-update-person-and-organization-details: done
@@ -157,7 +158,7 @@ development_status:
   epic-1-retrospective: done
 
   # Epic 2: Tenant-Safe Party Search and Retrieval (9 stories)
-  epic-2: in-progress
+  epic-2: done
   2-1-build-party-detail-projection: done
   2-2-build-tenant-party-index-projection: done
   2-3-query-party-details-by-id: done
@@ -170,7 +171,7 @@ development_status:
   epic-2-retrospective: done
 
   # Epic 3: Developer Integration and Local Adoption (10 stories)
-  epic-3: in-progress
+  epic-3: done
   3-1-publish-stable-contracts-package: done
   3-2-provide-typed-parties-client-registration: done
   3-3-expose-versioned-rest-party-api: done
@@ -184,7 +185,7 @@ development_status:
   epic-3-retrospective: done
 
   # Epic 4: AI Agent Party Management (8 stories)
-  epic-4: in-progress
+  epic-4: done
   4-1-register-bounded-mcp-tool-surface: done
   4-2-implement-ai-friendly-find-parties-tool: done
   4-3-implement-get-party-tool: done
@@ -196,7 +197,7 @@ development_status:
   epic-4-retrospective: done
 
   # Epic 5: Event-Driven Consumer Integration (7 stories)
-  epic-5: in-progress
+  epic-5: done
   5-1-publish-stable-party-domain-events: done
   5-2-include-tenant-context-and-envelope-metadata: done
   5-3-configure-at-least-once-event-delivery: done
@@ -207,7 +208,7 @@ development_status:
   epic-5-retrospective: done
 
   # Epic 6: GDPR Compliance Operations (10 stories)
-  epic-6: in-progress
+  epic-6: done
   6-1-activate-per-party-personal-data-encryption: done
   6-2-trigger-right-to-erasure-by-crypto-shredding: done
   6-3-verify-erasure-across-internal-stores: done
@@ -221,7 +222,7 @@ development_status:
   epic-6-retrospective: done
 
   # Epic 7: Administration Console (10 stories)
-  epic-7: in-progress
+  epic-7: done
   7-1-compose-admin-console-working-view: done
   7-2-browse-and-filter-party-results: done
   7-3-inspect-party-detail-safely: done
@@ -237,7 +238,7 @@ development_status:
   epic-7-retrospective: done
 
   # Epic 8: Embeddable Party Picker (6 stories)
-  epic-8: in-progress
+  epic-8: done
   # 8.1 scoped risk acceptance approved 2026-05-23 per sprint-change-proposal-2026-05-23-epic8-picker-gate.md. This accepts only the existing picker/client temporary bridge for shell composition; 8.2-8.6 remain gated.
   # 2026-05-23 dev-story: ready-for-dev -> in-progress -> review. Reconciled the existing Hexalith.Parties.Picker RCL against the accepted IPartiesQueryClient temporary bridge (scoped Story 8.1 risk acceptance) — no rebuild. Shell-only delivery: confirmed bounded embeddable control + host-supplied auth (no token persist/refresh/parse/log); refined the clear control to an accessible decorative-icon button; locked compact-layout / disabled / read-only / contract-unavailable / missing-config / stale-context guarantees with new component tests; hardened transport guardrail against browser storage (localStorage/sessionStorage/indexedDB/document.cookie); documented the shell boundary in docs/frontend/party-picker.md. Focused picker suite 65/65 green (Release, TreatWarningsAsErrors). Picker has no production consumers and no shared client/solution wiring changed, so the focused suite is the full regression boundary; full-solution build not run (known-unrelated AppHost EventStore/Memories submodule-drift, out of scope). 8.2-8.6 remain blocked/Required.
   8-1-compose-embeddable-party-picker-shell: done
@@ -253,7 +254,7 @@ development_status:
   # Canonical reference: docs/kubernetes-deployment-architecture.md
   # v1 history preserved on disk (sprint-change-proposals 2026-05-{12..20}-* + implementation-artifacts 9-{1..11}-*) but not source of truth.
   # All v1 entries (9-1..9-5, 9-10, 9-11) marked superseded; deploy/k8s, deploy/dapr, deploy/validate-deployment.ps1, and 10 K8s test files wiped on 2026-05-21.
-  epic-9: in-progress
+  epic-9: done
   # --- Epic 9 v1 entries (superseded, retained for trace) ---
   9-1-generate-k8s-artifacts-and-deploy-full-topology-to-local-cluster: superseded
   9-2-extend-deployment-validation-to-kubernetes-manifests: superseded

@@ -35,7 +35,6 @@ public sealed class AppHostTenantsTopologyTests
         resources["parties"].ShouldBe("Projects.Hexalith_Parties");
         resources["tenants"].ShouldBe("Projects.Hexalith_Tenants");
         resources["parties-mcp"].ShouldBe("Projects.Hexalith_Parties_Mcp");
-        program.ShouldContain(@"AddRedis(""redis"")");
         program.ShouldContain(@"AddKeycloak(""keycloak"", 8180)");
         program.ShouldMatch(@"adminUI\s*=\s*builder\.AddProject<Projects\.Hexalith_EventStore_Admin_UI>\(""eventstore-admin-ui""\)\s*\.WithExplicitStart\(\)");
         program.ShouldContain("AddHexalithEventStore");
@@ -197,13 +196,19 @@ public sealed class AppHostTenantsTopologyTests
     }
 
     [Fact]
-    public void AppHostProgramWiresRunModeRedisIntoEventStoreDaprComponents()
+    public void AppHostProgramDoesNotManageAspireRedisAndReliesOnDaprPersistence()
     {
-        string program = ReadAppHostProgram();
+        string program = StripCSharpComments(ReadAppHostProgram());
 
-        program.ShouldContain(@"IResourceBuilder<RedisResource>? redis = null;");
-        program.ShouldContain(@"redis = builder.AddRedis(""redis"")");
-        program.ShouldContain("redis: redis");
+        // Persistence is the DAPR state store / pub-sub layer. Redis is provided by `dapr init` at
+        // 127.0.0.1:6379 and wired into the statestore/pubsub component metadata by
+        // AddHexalithEventStore — it is NOT managed by Aspire. The AppHost must not compose an
+        // Aspire Redis resource nor pass a redis argument to AddHexalithEventStore.
+        program.ShouldNotContain("AddRedis(");
+        program.ShouldNotContain("RedisResource");
+        program.ShouldNotContain("redis: redis");
+        program.ShouldContain("WithReference(eventStoreResources.StateStore)");
+        program.ShouldContain("WithReference(eventStoreResources.PubSub)");
     }
 
     [Fact]
