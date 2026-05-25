@@ -36,4 +36,16 @@
     <None Include="$(MSBuildThisFileDirectory)README.md" Pack="true" PackagePath="\" />
   </ItemGroup>
 
+  <!-- Microsoft.Extensions.Telemetry.Abstractions (pulled transitively by
+       Microsoft.Extensions.Http.Resilience) ships the Microsoft.Gen.Logging source
+       generator, which also processes [LoggerMessage] and collides with the in-box
+       Microsoft.Extensions.Logging.Generators, emitting duplicate partial-method
+       implementations (CS0757). We use only plain [LoggerMessage] (no R9 redaction /
+       [LogProperties] features), so drop the telemetry generator and keep the in-box one. -->
+  <Target Name="RemoveDuplicateLoggingSourceGenerator" BeforeTargets="CoreCompile">
+    <ItemGroup>
+      <Analyzer Remove="@(Analyzer)" Condition="'%(Filename)' == 'Microsoft.Gen.Logging'" />
+    </ItemGroup>
+  </Target>
+
 </Project>

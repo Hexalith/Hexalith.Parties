@@ -81,6 +81,78 @@
           }
         }
       ]
+    },
+    {
+      "clientId": "hexalith-eventstore",
+      "name": "Hexalith EventStore",
+      "description": "EventStore Admin API client for local development and documentation quickstarts",
+      "enabled": true,
+      "publicClient": true,
+      "directAccessGrantsEnabled": true,
+      "standardFlowEnabled": false,
+      "serviceAccountsEnabled": false,
+      "fullScopeAllowed": true,
+      "protocolMappers": [
+        {
+          "name": "audience-mapper",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "consentRequired": false,
+          "config": {
+            "included.client.audience": "hexalith-eventstore",
+            "id.token.claim": "false",
+            "access.token.claim": "true"
+          }
+        },
+        {
+          "name": "tenants-mapper",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "consentRequired": false,
+          "config": {
+            "user.attribute": "tenants",
+            "claim.name": "eventstore:tenant",
+            "jsonType.label": "String",
+            "multivalued": "true",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "true",
+            "aggregate.attrs": "true"
+          }
+        },
+        {
+          "name": "domains-mapper",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "consentRequired": false,
+          "config": {
+            "user.attribute": "domains",
+            "claim.name": "eventstore:domain",
+            "jsonType.label": "String",
+            "multivalued": "true",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "true",
+            "aggregate.attrs": "true"
+          }
+        },
+        {
+          "name": "permissions-mapper",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "consentRequired": false,
+          "config": {
+            "user.attribute": "permissions",
+            "claim.name": "eventstore:permission",
+            "jsonType.label": "String",
+            "multivalued": "true",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "true",
+            "aggregate.attrs": "true"
+          }
+        }
+      ]
     }
   ],
   "users": [
@@ -102,7 +174,7 @@
       "attributes": {
         "tenants": ["tenant-a", "tenant-b"],
         "domains": ["party"],
-        "permissions": ["command:submit", "command:query"]
+        "permissions": ["command:submit", "command:query", "admin:read", "admin:write"]
       }
     },
     {
