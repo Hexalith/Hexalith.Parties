@@ -17,6 +17,8 @@ risk_accepted_date: 2026-05-24
 risk_accepted_by: Jérôme (project lead)
 source: sprint-change-proposal-2026-05-17.md
 risk_acceptance_source: sprint-change-proposal-2026-05-23.md; sprint-change-proposal-2026-05-23-epic8-picker-gate.md; sprint-change-proposal-2026-05-24-epic8-picker-gate-remaining.md
+closure_status: OPEN — see "Closure Procedure" section; tracked in deferred-work.md; to be formally closed when the real EventStore-fronted contract lands
+closure_tracking_source: sprint-change-proposal-2026-05-25-contract-risk-acceptance-tracking.md
 ---
 
 # Dependency: Accepted EventStore-Fronted Parties Client/Gateway Contract
@@ -154,3 +156,29 @@ Before scheduling affected stories, planning review must confirm:
 - The accepted contract reference is linked from sprint planning or story metadata.
 - Story acceptance criteria still fail closed when the contract is unavailable or malformed.
 - QA traceability includes UX-DR identifiers as well as FR/NFR identifiers.
+
+## Closure Procedure (how to formally close the scoped risk acceptances)
+
+> **Status as of 2026-05-25:** OPEN. All Epic 7/8 picker/GDPR stories are `done` against the
+> temporary bridge; the three scoped risk acceptances above are accepted but **not yet closed**.
+> Closure is intentionally deferred until a real contract exists — this section makes the closure
+> obligation explicit so it is not lost. Tracked from `deferred-work.md` and flagged by
+> `implementation-readiness-report-2026-05-25-v2.md` (recommendation #3).
+
+**Trigger:** A fully-built, formally accepted EventStore-fronted Parties client/gateway contract
+lands that satisfies the **Dependency Definition** above (typed query + command methods, capability
+detection, FrontComposer routes, failure semantics, boundary rules, and privacy rules).
+
+When that trigger occurs, perform and check off every step before declaring the acceptances closed:
+
+- [ ] Flip this record's `status` frontmatter from `Risk Accepted (scoped …)` to `Satisfied`, and add the accepted-contract reference + acceptance date.
+- [ ] Reconcile or replace the **admin GDPR temporary bridge**: `src/Hexalith.Parties.Client/AdminPortal/IAdminPortalGdprClient.cs`, `HttpAdminPortalGdprClient.cs`, and `AdminPortalGdprRoutes` against the accepted command/query contract.
+- [ ] Reconcile or replace the **picker/query temporary bridge**: `src/Hexalith.Parties.Picker/*` (`PartyPicker.razor`, service-collection extension, `PartyPickerApiClient`) and `src/Hexalith.Parties.Client/Abstractions/IPartiesQueryClient.cs` / `HttpPartiesQueryClient.cs` / `PartiesClientOptions.cs`. Reconcile the `PartyPickerSelection` ↔ narrow DOM `party-selected` payload divergence noted in the 8.x acceptances.
+- [ ] Re-evaluate the **Story 7.6 fail-closed gate**: enable the two currently-disabled GDPR operations — **erasure-certificate** and **retry-verification** — through the accepted contract's capability methods. Remove the exact bounded blocker `Blocked on accepted EventStore-fronted Parties client/gateway contract` **only** for operations the real contract genuinely supports; anything still unsupported must remain capability-gated with bounded reasons (never faked).
+- [ ] Update the Story 7.7 `ProvisionalBridge()` capability surface so the enabled/disabled set reflects the accepted contract instead of the provisional bridge.
+- [ ] Preserve all fail-closed, tenant-safety, privacy/encoding (UX-DR11, Story 7.10), and accessibility (Story 7.9) guardrails and existing tests; add contract-available capability tests for the newly enabled operations.
+- [ ] Verify: focused AdminPortal + Picker suites green and `dotnet build Hexalith.Parties.slnx --configuration Release` clean.
+- [ ] Append a closure audit comment to `_bmad-output/implementation-artifacts/sprint-status.yaml` and remove the matching open item from `deferred-work.md`.
+
+**Owner:** Jérôme (project lead) jointly with whoever lands the EventStore-fronted contract.
+Until every box is checked, this dependency is **not** globally `Satisfied`.
