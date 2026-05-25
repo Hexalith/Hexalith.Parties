@@ -37,7 +37,8 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-05-15 09:01:58 +02:00
-last_updated: 2026-05-24 19:01:54 +02:00
+last_updated: 2026-05-24 19:22:50 +02:00
+# last_updated touched 2026-05-24 by bmad-retrospective closing Epic 6 retrospective - retrospective saved to _bmad-output/implementation-artifacts/epic-6-retro-2026-05-24.md; current Epic 6 GDPR stories 6-1 through 6-10 are done; stale 2026-05-02 Epic 6 retrospective belongs to a previous Developer Integration epoch and was not modified. Status: optional -> done.
 # last_updated touched 2026-05-24 by bmad-retrospective closing Epic 9 retrospective - retrospective saved to _bmad-output/implementation-artifacts/epic-9-retro-2026-05-24.md; current Epic 9 v2 stories 9-1 through 9-8 are done, v1 entries remain superseded and excluded from completion count. Status: optional -> done.
 # last_updated touched 2026-05-24 by bmad-retrospective closing Epic 8 retrospective — retrospective saved to _bmad-output/implementation-artifacts/epic-8-retro-2026-05-24.md; documentation audit saved to _bmad-output/implementation-artifacts/epic-8-documentation-audit-2026-05-24.md; verified docs updated only where code/docs diverged (picker durable binding example and README picker package listing). Status: optional → done.
 # last_updated touched 2026-05-24 by code-review closing 8-6-enforce-picker-privacy-and-integration-boundary — 2 medium fixes applied: added token-value-change same-presence selection lookup guard test; strengthened JavaScript event-detail whitelist assertion from whitespace-pattern check to direct detail:detail pass-through check. 0 critical/high issues remain; all ACs verified. Picker tests 162/162 green. Status: review → done.
@@ -214,7 +215,7 @@ development_status:
   6-8-record-processing-activities: done
   6-9-return-privacy-preserving-erased-party-status: done
   6-10-rotate-tenant-encryption-keys: done
-  epic-6-retrospective: optional
+  epic-6-retrospective: done
 
   # Epic 7: Administration Console (10 stories)
   epic-7: in-progress
