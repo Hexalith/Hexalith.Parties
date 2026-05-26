@@ -94,7 +94,7 @@ public sealed class DaprManifestValidationTests
             YamlMappingNode accessControl = Mapping(Mapping(root, "spec"), "accessControl");
 
             Scalar(accessControl, "defaultAction").ShouldBe("deny", fileName);
-            if (fileName is "accesscontrol-eventstore-admin.yaml" or "accesscontrol-memories.yaml")
+            if (fileName is "accesscontrol-memories.yaml")
             {
                 Sequence(accessControl, "policies").Children.ShouldBeEmpty($"{fileName} must deny all peer invocation until a concrete Dapr route contract exists.");
             }
@@ -104,13 +104,21 @@ public sealed class DaprManifestValidationTests
                 string appId = Scalar(policy, "appId");
                 appId.ShouldNotBe("*", fileName);
                 appId.ShouldNotBe("parties-mcp", fileName);
-                appId.ShouldNotBe("eventstore-admin-ui", fileName);
                 appId.ShouldNotBe("redis", fileName);
                 appId.ShouldNotBe("keycloak", fileName);
+                if (appId == "eventstore-admin-ui")
+                {
+                    fileName.ShouldBe("accesscontrol-eventstore-admin.yaml", "Admin UI may invoke only Admin Server through Dapr.");
+                }
 
                 foreach (YamlMappingNode operation in Sequence(policy, "operations").OfType<YamlMappingNode>())
                 {
-                    Scalar(operation, "name").ShouldNotBe("/**", fileName);
+                    string route = Scalar(operation, "name");
+                    route.ShouldNotBe("/**", fileName);
+                    if (route.EndsWith("/**", StringComparison.Ordinal))
+                    {
+                        route.StartsWith("/api/v1/", StringComparison.Ordinal).ShouldBeTrue($"{fileName} may use only documented API prefix wildcards.");
+                    }
                 }
             }
         }

@@ -5,6 +5,10 @@ metadata:
   name: eventstore-admin-ui
   labels:
     app: eventstore-admin-ui
+  annotations:
+    dapr.io/enabled: "true"
+    dapr.io/app-id: eventstore-admin-ui
+    dapr.io/enable-api-logging: 'true'
 spec:
   minReadySeconds: 60
   replicas: 1
@@ -17,12 +21,16 @@ spec:
     metadata:
       labels:
         app: eventstore-admin-ui
+      annotations:
+        dapr.io/enabled: "true"
+        dapr.io/app-id: eventstore-admin-ui
+        dapr.io/enable-api-logging: 'true'
     spec:
       imagePullSecrets:
       - name: zot-pull-secret
       containers:
       - name: eventstore-admin-ui
-        image: registry.hexalith.com/eventstore-admin-ui:0.0.0-preview.0.474
+        image: registry.hexalith.com/eventstore-admin-ui:0.0.0-preview.0.500
         imagePullPolicy: IfNotPresent
         readinessProbe:
           httpGet:

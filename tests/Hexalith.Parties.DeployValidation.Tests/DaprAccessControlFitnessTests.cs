@@ -11,7 +11,7 @@ public sealed class DaprAccessControlFitnessTests
             ["accesscontrol.yaml"] = ["eventstore-admin", "parties", "tenants"],
             ["accesscontrol-parties.yaml"] = ["eventstore"],
             ["accesscontrol-tenants.yaml"] = ["eventstore", "parties"],
-            ["accesscontrol-eventstore-admin.yaml"] = [],
+            ["accesscontrol-eventstore-admin.yaml"] = ["eventstore-admin-ui"],
             ["accesscontrol-memories.yaml"] = [],
         };
 
@@ -30,7 +30,7 @@ public sealed class DaprAccessControlFitnessTests
                 .ToArray();
 
             actualCallers.ShouldBe(callers.Order(StringComparer.Ordinal).ToArray(), $"{fileName} has a documented caller set.");
-            actualCallers.ShouldAllBe(static appId => appId != "*" && appId != "parties-mcp" && appId != "eventstore-admin-ui" && appId != "redis" && appId != "keycloak" && appId != "falkordb");
+            actualCallers.ShouldAllBe(static appId => appId != "*" && appId != "parties-mcp" && appId != "redis" && appId != "keycloak" && appId != "falkordb");
         }
     }
 
@@ -83,9 +83,9 @@ public sealed class DaprAccessControlFitnessTests
 
         allowedReceiversByCaller["parties"].Order(StringComparer.Ordinal).ToArray().ShouldBe(["eventstore", "tenants"], "Memories search updates use the in-cluster Memories Service URL, not Dapr service invocation.");
         allowedReceiversByCaller["tenants"].ShouldBe(["eventstore"]);
+        allowedReceiversByCaller["eventstore-admin-ui"].ShouldBe(["eventstore-admin"]);
         allowedReceiversByCaller.Values.SelectMany(static receivers => receivers).ShouldNotContain("memories");
         allowedReceiversByCaller.ShouldNotContainKey("parties-mcp");
-        allowedReceiversByCaller.ShouldNotContainKey("eventstore-admin-ui");
     }
 
     private static YamlMappingNode Load(string fileName)

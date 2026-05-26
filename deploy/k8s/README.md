@@ -128,6 +128,10 @@ Components -> Resiliency -> Configurations -> Subscriptions. Do not add the Dapr
   configuration names: `eventstore` -> `accesscontrol`, `eventstore-admin` ->
   `accesscontrol-eventstore-admin`, `parties` -> `accesscontrol-parties`, `tenants` ->
   `accesscontrol-tenants`, and `memories` -> `accesscontrol-memories`.
+- Preserve `eventstore-admin-ui` as Dapr client-only: it carries `dapr.io/enabled: "true"`
+  and `dapr.io/app-id: eventstore-admin-ui`, but no `dapr.io/app-port` and no
+  `dapr.io/config`. `parties-mcp`, `redis`, `keycloak`, and `falkordb` remain true
+  non-Dapr workloads.
 
 Runtime smoke tests for Story 9.5:
 

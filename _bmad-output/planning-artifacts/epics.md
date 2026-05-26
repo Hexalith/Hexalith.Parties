@@ -48,7 +48,7 @@ FR28: Developer can query parties via typed client abstractions without infrastr
 FR29: Developer can interact with the party service via REST API from any programming language
 FR30: System returns typed rejection responses when commands fail, including error type URI, human-readable message, and corrective action - enabling developers to resolve the issue without consulting documentation or debugging the service
 FR31: Developer can deploy the full Parties topology from source to a Kubernetes target (local cluster - kind/minikube/k3d/Docker Desktop - for MVP) using artifacts generated from the Aspire AppHost
-FR31a: A single PowerShell pipeline (`pwsh deploy/k8s/publish.ps1 -ConfirmContext <name>`) takes the operator from a clean checkout to a healthy 9-pod cluster in one command. The pipeline (Epic 9 v2, 2026-05-21) resolves the MinVer-stamped image tag, builds and pushes 7 container images to the self-hosted Zot OCI registry at `registry.hexalith.com` (ADR D-K8s-1), regenerates Kubernetes manifests via `dotnet aspirate generate`, applies three idempotent post-aspirate patches (Dapr annotations + JWT `secretKeyRef` + Zot `imagePullSecrets`), bootstraps three operator-managed Secrets (`hexalith-jwt-signing`, `hexalith-keycloak-admin`, `zot-pull-secret` - ADR D-K8s-2 Path B), applies Dapr CRs from `deploy/dapr/` (Components -> Configurations -> Subscriptions), then applies the Kustomization under `deploy/k8s/`. The topology is enumerative: 7 Aspirate-composed services (`eventstore`, `eventstore-admin`, `eventstore-admin-ui`, `parties`, `parties-mcp`, `tenants`, `memories`) plus 2 hand-authored carve-outs (`redis` MVP emptyDir + no AUTH; `keycloak` with randomized admin from Secret), totalling 9 workloads in namespace `hexalith-parties`. Image tags carry the MinVer-resolved version (regex `^[0-9]+\.[0-9]+\.[0-9]+(?:-[A-Za-z0-9.-]+)?$`) and are immutable per commit; mutable tags (`latest`, `staging-latest`, empty) are explicitly forbidden by `validate-deployment.ps1`. The `-ConfirmContext` gate (ADR D-K8s-3) replaces the legacy local-cluster regex allowlist so the same pipeline runs against any operator-owned kubectl context. The canonical architecture reference is `docs/kubernetes-deployment-architecture.md` (13 sections covering topology, configuration sources, operator workflow, reproducibility guarantees, and MVP boundaries). NFR30 (< 15 min from clean checkout to first successful query) remains in force.
+FR31a: A single PowerShell pipeline (`pwsh deploy/k8s/publish.ps1 -ConfirmContext <name>`) takes the operator from a clean checkout to a healthy 10-pod cluster in one command. The pipeline (Epic 9 v2, 2026-05-21) resolves the MinVer-stamped image tag, builds and pushes 7 container images to the self-hosted Zot OCI registry at `registry.hexalith.com` (ADR D-K8s-1), regenerates Kubernetes manifests via `dotnet aspirate generate`, applies three idempotent post-aspirate patches (Dapr annotations + JWT `secretKeyRef` + Zot `imagePullSecrets`), bootstraps three operator-managed Secrets (`hexalith-jwt-signing`, `hexalith-keycloak-admin`, `zot-pull-secret` - ADR D-K8s-2 Path B), applies Dapr CRs from `deploy/dapr/` (Components -> Configurations -> Subscriptions), then applies the Kustomization under `deploy/k8s/`. The topology is enumerative: 7 Aspirate-composed services (`eventstore`, `eventstore-admin`, `eventstore-admin-ui`, `parties`, `parties-mcp`, `tenants`, `memories`) plus 3 hand-authored carve-outs (`redis` MVP emptyDir + no AUTH; `keycloak` with randomized admin from Secret; `falkordb` graph backing store), totalling 10 workloads in namespace `hexalith-parties`. Dapr-equipped workloads include `eventstore`, `eventstore-admin`, `eventstore-admin-ui` (service-invocation client only), `parties`, `tenants`, and `memories`; `parties-mcp`, `redis`, `keycloak`, and `falkordb` remain non-Dapr. Image tags carry the MinVer-resolved version (regex `^[0-9]+\.[0-9]+\.[0-9]+(?:-[A-Za-z0-9.-]+)?$`) and are immutable per commit; mutable tags (`latest`, `staging-latest`, empty) are explicitly forbidden by `validate-deployment.ps1`. The `-ConfirmContext` gate (ADR D-K8s-3) replaces the legacy local-cluster regex allowlist so the same pipeline runs against any operator-owned kubectl context. The canonical architecture reference is `docs/kubernetes-deployment-architecture.md` (13 sections covering topology, configuration sources, operator workflow, reproducibility guarantees, and MVP boundaries). NFR30 (< 15 min from clean checkout to first successful query) remains in force.
 FR32: Getting-started documentation enables a developer to deploy and send their first command as a self-service experience
 FR33: Contract types package has zero runtime dependencies beyond netstandard2.1 - consuming applications inherit no infrastructure stack
 FR34: System publishes domain events when party state changes
@@ -3142,13 +3142,13 @@ So that embedded selection remains safe in every consuming application.
 
 ## Epic 9: Kubernetes Deployment Platform
 
-Operators and developers deploy the full Hexalith.Parties 9-workload topology to a Kubernetes cluster via a single `publish.ps1` command — Zot OCI registry with MinVer-stamped image tags, hand-authored Redis + Keycloak carve-outs, Dapr control plane with deny-by-default ACLs, three operator-managed Secrets bootstrapped idempotently, and a static lint + fitness-test suite that guards every contract. The architecture is fully captured in `docs/kubernetes-deployment-architecture.md` as the canonical reference.
+Operators and developers deploy the full Hexalith.Parties 10-workload topology to a Kubernetes cluster via a single `publish.ps1` command — Zot OCI registry with MinVer-stamped image tags, hand-authored Redis + Keycloak + FalkorDB carve-outs, Dapr control plane with deny-by-default ACLs, three operator-managed Secrets bootstrapped idempotently, and a static lint + fitness-test suite that guards every contract. The architecture is fully captured in `docs/kubernetes-deployment-architecture.md` as the canonical reference.
 
 **Canonical reference:** `docs/kubernetes-deployment-architecture.md`
 **Authoring SCP:** `sprint-change-proposal-2026-05-21-epic9-greenfield-rewrite.md`
 **Supersedes:** Epic 9 v1 (Stories 9.1–9.5 + addenda + follow-ups 9.10, 9.11). The historical sprint-change-proposals (`sprint-change-proposal-2026-05-{12..20}-*.md`) remain on disk for audit but are not reused as source of truth.
 
-**Implementation status (as-built, 2026-05-25):** DELIVERED. Stories 9.1–9.8 are `done` and the Epic 9 retrospective is complete (see `_bmad-output/implementation-artifacts/sprint-status.yaml` and `epic-9-retro-2026-05-24.md`). The `deploy/k8s/`, `deploy/dapr/`, `deploy/validate-deployment.ps1`, and `tests/Hexalith.Parties.DeployValidation.Tests/` artifacts exist on disk and were code-reviewed at closure.
+**Implementation status (as-built, 2026-05-26):** DELIVERED. Stories 9.1–9.8 are `done`, the Epic 9 retrospective is complete (see `_bmad-output/implementation-artifacts/sprint-status.yaml` and `epic-9-retro-2026-05-24.md`), and post-retro runtime correction Story 9.12 is `done`. The `deploy/k8s/`, `deploy/dapr/`, `deploy/validate-deployment.ps1`, and `tests/Hexalith.Parties.DeployValidation.Tests/` artifacts exist on disk and were code-reviewed at closure.
 
 > **Reading the acceptance criteria below:** the cross-references between stories (e.g. "invoked by `publish.ps1` — see Story 9.5", "delivered as part of Story 9.7") describe how the single integrated `publish.ps1` pipeline is composed. They were delivered in **backward-safe `blocked_by` order** (9-1 → 9-2 → 9-3 → 9-4 → {9-5, 9-6} → 9-7, plus the CI gate 9-8), recorded in `sprint-status.yaml`. They are **cross-references within a completed epic, not unmet forward dependencies** — the 2026-05-24 readiness report flagged them as forward dependencies because it assessed the plan in isolation, before observing that every story had already shipped in dependency order.
 
@@ -3231,9 +3231,10 @@ So that adding a service, changing a Dapr app-id, or bumping a version is a one-
 **Given** the Aspire AppHost resource graph
 **When** the graph is inspected after a clean build
 **Then** it composes exactly the following composable workloads with the listed app-ids: `eventstore`, `eventstore-admin`, `eventstore-admin-ui`, `parties`, `parties-mcp`, `tenants`, `memories`
-**And** services requiring Dapr (`eventstore`, `eventstore-admin`, `parties`, `tenants`, `memories`) are declared with their daprd sidecar attached (`WithDaprSidecar`) and a stable `app-id` matching the K8s folder name
-**And** non-Dapr workloads (`eventstore-admin-ui`, `parties-mcp`) are declared without a daprd sidecar
-**And** the hand-authored carve-outs (`redis`, `keycloak`) are NOT defined in the AppHost (they live in `deploy/k8s/{redis,keycloak}/` per Story 9.3).
+**And** full Dapr workloads (`eventstore`, `eventstore-admin`, `parties`, `tenants`, `memories`) are declared with their daprd sidecar attached (`WithDaprSidecar`) and a stable `app-id` matching the K8s folder name
+**And** `eventstore-admin-ui` is declared with a Dapr client-only sidecar for Admin UI -> Admin Server service invocation
+**And** true non-Dapr workloads (`parties-mcp`, `redis`, `keycloak`, `falkordb`) are declared or maintained without a daprd sidecar
+**And** the hand-authored carve-outs (`redis`, `keycloak`, `falkordb`) are NOT defined in the AppHost (they live in `deploy/k8s/{redis,keycloak,falkordb}/` per Story 9.3 and Story 9.8).
 
 **Given** the operator runs `dotnet aspirate generate` (invoked by `publish.ps1` — see Story 9.5)
 **When** generation completes
@@ -3250,9 +3251,10 @@ So that adding a service, changing a Dapr app-id, or bumping a version is a one-
 
 **Given** Dapr metadata is added by aspirate but needs project-specific values
 **When** the post-aspirate Dapr-annotation patch runs (`publish.ps1` step 5)
-**Then** every Dapr-equipped Deployment has `dapr.io/enabled: "true"`, `dapr.io/app-id: <service>`, `dapr.io/app-port: "8080"`, and `dapr.io/config: accesscontrol[-<service>]` annotations on its pod template
+**Then** every full Dapr Deployment has `dapr.io/enabled: "true"`, `dapr.io/app-id: <service>`, `dapr.io/app-port: "8080"`, and `dapr.io/config: accesscontrol[-<service>]` annotations on its pod template
+**And** `eventstore-admin-ui` has client-only Dapr annotations (`dapr.io/enabled: "true"` and `dapr.io/app-id: eventstore-admin-ui`) without `dapr.io/app-port` or `dapr.io/config`
 **And** the patch is idempotent (re-running on already-patched YAML produces no diff)
-**And** the patch never injects Dapr annotations into non-Dapr workloads (`eventstore-admin-ui`, `parties-mcp`, `redis`, `keycloak`).
+**And** the patch never injects Dapr annotations into true non-Dapr workloads (`parties-mcp`, `redis`, `keycloak`, `falkordb`).
 
 **Given** consumer Deployments need the registry pull secret
 **When** the post-aspirate `imagePullSecrets` patch runs (`publish.ps1` step 7)
@@ -3377,7 +3379,8 @@ So that the security-sensitive parts of the Dapr surface (deny-by-default ACLs, 
 **Given** every Dapr-equipped Pod must reference its access-control config
 **When** the post-aspirate Dapr-annotation patch runs (Story 9.2 AC4 + Story 9.5 step 5)
 **Then** `eventstore` references config `accesscontrol`; `eventstore-admin` references `accesscontrol-eventstore-admin`; `parties` references `accesscontrol-parties`; `tenants` references `accesscontrol-tenants`; `memories` references `accesscontrol-memories`
-**And** `parties-mcp` and `eventstore-admin-ui` carry NO `dapr.io/*` annotations (they are not Dapr-equipped).
+**And** only true non-Dapr workloads (`parties-mcp`, `redis`, `keycloak`, `falkordb`) carry no `dapr.io/*` annotations.
+**And** `eventstore-admin-ui` carries the client-only Dapr annotations required for service invocation.
 
 **Given** the apply phase orders Components → Configurations → Subscriptions
 **When** `publish.ps1` step 12 runs `kubectl apply -f` over `deploy/dapr/*.yaml`
@@ -3405,7 +3408,7 @@ So that one command takes me from clean checkout to 9 Ready pods, another comman
 - Step 2: Clean `deploy/k8s/` preserving the whitelist from Story 9.3 (`redis/`, `keycloak/`, `kustomization.yaml`, `namespace.yaml`, `README.md`, `publish.ps1`, `teardown.ps1`)
 - Step 3: `dotnet aspirate generate --container-image-tag <minver> --container-registry registry.hexalith.com` (NO `--skip-build`) — builds + pushes 7 images to Zot; propagates aspirate exit code on failure
 - Step 4: Strip aspirate placeholder files (whitelist defined alongside Story 9.2 AC3)
-- Step 5: Patch Dapr annotations on the 5 Dapr-equipped Deployments (`app-id`, `app-port`, `config` per Story 9.4)
+- Step 5: Patch Dapr annotations on the 5 full Dapr Deployments (`app-id`, `app-port`, `config` per Story 9.4) and preserve `eventstore-admin-ui` as client-only Dapr (`enabled`, `app-id`)
 - Step 6: Patch JWT `secretKeyRef` (`hexalith-jwt-signing`) into the 5 daprd-equipped Deployments
 - Step 7: Inject `imagePullSecrets: [{name: zot-pull-secret}]` into every Deployment whose image starts with `registry.hexalith.com/` (vendor carve-outs skipped per Story 9.3)
 - Step 8: Verify all expected per-service folders were emitted (exit 4 on any missing folder; expected set: `eventstore`, `eventstore-admin`, `eventstore-admin-ui`, `parties`, `parties-mcp`, `tenants`, `memories`)
@@ -3447,7 +3450,7 @@ So that one command takes me from clean checkout to 9 Ready pods, another comman
 **When** `teardown.ps1 -ConfirmContext <name>` runs without optional switches
 **Then** the script asserts `-ConfirmContext` matches (shared gate with publish.ps1; exit 2 on mismatch)
 **And** the script proceeds only if the namespace `hexalith-parties` exists; if it does not, the script logs `[teardown] namespace hexalith-parties not present — nothing to delete` and exits 0
-**And** the script removes — in this order — `kubectl delete -k deploy/k8s/` (all 9 workloads), `kubectl delete -f deploy/dapr/` (all Components, Configurations, Subscriptions, Resiliency CRs), and the 3 operator-managed Secrets (`hexalith-jwt-signing`, `hexalith-keycloak-admin`, `zot-pull-secret`)
+**And** the script removes — in this order — `kubectl delete -k deploy/k8s/` (all 10 workloads), `kubectl delete -f deploy/dapr/` (all Components, Configurations, Subscriptions, Resiliency CRs), and the 3 operator-managed Secrets (`hexalith-jwt-signing`, `hexalith-keycloak-admin`, `zot-pull-secret`)
 **And** each removal block is bounded with a stdout marker and a `--ignore-not-found=true` flag (idempotent — re-running on an already-torn-down cluster exits 0).
 
 **Given** the `-PurgeNamespace` optional switch
@@ -3481,8 +3484,8 @@ So that one command takes me from clean checkout to 9 Ready pods, another comman
 **And** Secret operations are reported by name only (`[publish] Secret hexalith-jwt-signing: created`, `[teardown] Secret hexalith-jwt-signing: deleted`).
 
 **Given** the duration budget from doc §2
-**When** `publish.ps1` runs against a 9-pod target on a developer-class machine
-**Then** the script completes in 5–10 minutes (cold cache; warm cache faster) and the 9 pods reach Ready within 2 minutes of step 13
+**When** `publish.ps1` runs against a 10-pod target on a developer-class machine
+**Then** the script completes in 5–10 minutes (cold cache; warm cache faster) and the 10 pods reach Ready within 2 minutes of step 13
 **And** the script emits per-step elapsed-time markers for diagnostics but does not enforce a hard timeout.
 
 ### Story 9.6: validate-deployment.ps1 Lint Tooling
@@ -3507,7 +3510,7 @@ So that unsafe or drifted artefacts are caught before they reach a cluster — a
 **When** the script runs against a target tree
 **Then** the following categories are evaluated, each emitting one or more findings with severity `BLOCKING` (fail-the-build):
 - `K8sWorkload-MissingImagePullSecret`: a Deployment with `image: registry.hexalith.com/*` lacks `spec.template.spec.imagePullSecrets[*].name == "zot-pull-secret"`
-- `K8sWorkload-MissingDaprAnnotations`: a Deployment under a Dapr-equipped app-id (`eventstore`, `eventstore-admin`, `parties`, `tenants`, `memories`) lacks `dapr.io/enabled`, `dapr.io/app-id`, `dapr.io/app-port`, or `dapr.io/config`
+- `K8sWorkload-MissingDaprAnnotations`: a Deployment under a full Dapr app-id (`eventstore`, `eventstore-admin`, `parties`, `tenants`, `memories`) lacks `dapr.io/enabled`, `dapr.io/app-id`, `dapr.io/app-port`, or `dapr.io/config`; or the client-only Admin UI lacks `dapr.io/enabled`/`dapr.io/app-id` or carries server-only `dapr.io/app-port`/`dapr.io/config`
 - `K8sWorkload-MissingProbes`: a Deployment lacks `readinessProbe` or `livenessProbe` on its primary container
 - `K8sWorkload-NonSemVerTag`: a Deployment image tag does not match `^[0-9]+\.[0-9]+\.[0-9]+(?:-[A-Za-z0-9.-]+)?$` (rejects `:latest`, empty, malformed)
 - `K8sWorkload-DirtyTagOnConsumerImage`: a Deployment image tag contains `+dirty` build metadata (rejected for any tag destined to ship)
@@ -3644,3 +3647,39 @@ So that a reported successful publish means the cluster can actually pull the Mi
 **When** workloads start
 **Then** Memories has real required backing-service connection strings
 **And** the story either adds a FalkorDB carve-out or proves a supported no-graph mode with non-degraded health.
+
+### Story 9.12: EventStore Admin UI Dapr Topology Correction
+
+**Phase:** MVP
+**Coverage type:** planned
+**Requirements covered:** FR31, FR31a, FR60, FR61, NFR30
+**Authoring SCP:** `sprint-change-proposal-2026-05-26-admin-ui-dapr-topology.md`
+
+As an operator publishing Hexalith.Parties to Kubernetes,
+I want `eventstore-admin-ui` modeled as a Dapr client-only workload,
+So that Admin UI can invoke `eventstore-admin` through Dapr service invocation while true non-Dapr workloads remain protected from accidental sidecar injection.
+
+**Acceptance Criteria:**
+
+**Given** `eventstore-admin-ui` is generated with a Dapr sidecar
+**When** `publish.ps1` patches Dapr annotations
+**Then** it preserves `dapr.io/enabled: "true"` and `dapr.io/app-id: eventstore-admin-ui`
+**And** it removes or rejects server-only Admin UI annotations (`dapr.io/app-port`, `dapr.io/config`).
+
+**Given** true non-Dapr workloads are inspected
+**When** `publish.ps1` sees `parties-mcp`, `redis`, `keycloak`, or `falkordb`
+**Then** any `dapr.io/*` annotation remains a blocking publish error.
+
+**Given** deployment validation runs
+**When** it validates Dapr annotations
+**Then** full Dapr workloads require `enabled/app-id/app-port/config`
+**And** `eventstore-admin-ui` requires only client-only `enabled/app-id` and forbids `app-port/config`.
+
+**Given** Admin UI invokes Admin Server through Dapr
+**When** `accesscontrol-eventstore-admin` is applied
+**Then** caller app-id `eventstore-admin-ui` is allowed on documented Admin API routes without wildcard callers.
+
+**Given** the operator deletes the `hexalith-parties` namespace
+**When** `publish.ps1 -ConfirmContext kubernetes-admin@cluster.local` runs
+**Then** all 10 deployments become Ready
+**And** `eventstore-admin-ui` runs `2/2` with the app container and `daprd`.

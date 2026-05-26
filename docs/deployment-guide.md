@@ -200,7 +200,7 @@ Pass `-K8sPath` to lint the Kubernetes manifests under `deploy/k8s/`. The same v
 pwsh deploy/validate-deployment.ps1 -ConfigPath deploy/dapr -K8sPath deploy/k8s/
 ```
 
-The validator reports one BLOCKING finding per concrete violation across these categories: `K8sWorkload-MissingImagePullSecret`, `K8sWorkload-MissingDaprAnnotations`, `K8sWorkload-MissingProbes`, `K8sWorkload-NonSemVerTag`, `K8sWorkload-DirtyTagOnConsumerImage`, `DaprACL-WildcardAppId`, `DaprACL-WildcardOperation`, and `Secret-Plaintext`. Offending credential-shaped values are redacted in human and JSON output.
+The validator reports one BLOCKING finding per concrete violation across these categories: `K8sWorkload-MissingImagePullSecret`, `K8sWorkload-MissingDaprAnnotations`, `K8sWorkload-MissingProbes`, `K8sWorkload-NonSemVerTag`, `K8sWorkload-DirtyTagOnConsumerImage`, `DaprACL-WildcardAppId`, `DaprACL-WildcardOperation`, and `Secret-Plaintext`. `K8sWorkload-MissingDaprAnnotations` covers full Dapr services missing `enabled/app-id/app-port/config` and the client-only Admin UI missing `enabled/app-id` or carrying server-only `app-port/config`. Offending credential-shaped values are redacted in human and JSON output.
 
 ### CI/CD Integration
 
