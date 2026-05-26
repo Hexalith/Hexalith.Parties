@@ -5,7 +5,9 @@ public sealed class K8sManifestPublishTests
 {
     private static readonly string[] s_daprApps = ["eventstore", "eventstore-admin", "parties", "tenants", "memories"];
 
-    private static readonly string[] s_nonDaprApps = ["eventstore-admin-ui", "parties-mcp", "redis", "keycloak", "falkordb"];
+    private static readonly string[] s_daprClientOnlyApps = ["eventstore-admin-ui"];
+
+    private static readonly string[] s_nonDaprApps = ["parties-mcp", "redis", "keycloak", "falkordb"];
 
     [Fact]
     public void PublishScriptDeclaresMinVerAspirateAndPatchContracts()
@@ -49,7 +51,13 @@ public sealed class K8sManifestPublishTests
             publish.Contains(app, StringComparison.Ordinal).ShouldBeTrue($"{app} must be named so tests can guard accidental patch target expansion.");
         }
 
-        publish.ShouldContain("$ForbiddenDaprTargets = @('eventstore-admin-ui', 'parties-mcp', 'redis', 'keycloak', 'falkordb')");
+        foreach (string app in s_daprClientOnlyApps)
+        {
+            publish.Contains(app, StringComparison.Ordinal).ShouldBeTrue($"{app} must be named as a Dapr client-only patch target.");
+        }
+
+        publish.ShouldContain("$DaprClientOnlyTargets = @('eventstore-admin-ui')");
+        publish.ShouldContain("$ForbiddenDaprTargets = @('parties-mcp', 'redis', 'keycloak', 'falkordb')");
         publish.ShouldContain("Authentication__JwtBearer__SigningKey");
         publish.ShouldContain("EventStore__Authentication__SigningKey");
         publish.ShouldContain("secretKeyRef:");

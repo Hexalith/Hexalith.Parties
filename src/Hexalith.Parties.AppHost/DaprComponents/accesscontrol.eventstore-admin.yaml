@@ -1,13 +1,21 @@
 # DAPR Access Control Configuration for the EventStore Admin Server sidecar.
-# defaultAction: deny + empty policies - Admin Server is HTTP-facing and
-# delegates to EventStore through HTTP, not DAPR. No peer should invoke it
-# through the DAPR sidecar.
+# Admin.UI invokes Admin.Server through Dapr service invocation. Local
+# self-hosted Dapr does not always expose caller identity without mTLS, so this
+# run-mode config remains allow-by-default while documenting the intended caller.
 apiVersion: dapr.io/v1alpha1
 kind: Configuration
 metadata:
   name: accesscontrol-eventstore-admin
 spec:
   accessControl:
-    defaultAction: deny
+    defaultAction: allow
     trustDomain: "public"
-    policies: []
+    policies:
+      - appId: eventstore-admin-ui
+        defaultAction: deny
+        trustDomain: "public"
+        namespace: "default"
+        operations:
+          - name: /**
+            httpVerb: ['GET', 'POST', 'PUT', 'DELETE']
+            action: allow

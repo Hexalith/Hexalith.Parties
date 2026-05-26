@@ -9,6 +9,7 @@ $JsonVersion = '1'
 $ValidFormats = @('human', 'json')
 $RegistryPrefix = 'registry.hexalith.com/'
 $DaprAppIds = @('eventstore', 'eventstore-admin', 'parties', 'tenants', 'memories')
+$DaprClientOnlyAppIds = @('eventstore-admin-ui')
 $SemVerPattern = '^[0-9]+\.[0-9]+\.[0-9]+(?:-[A-Za-z0-9.-]+)?$'
 
 function Get-RepoRoot {
@@ -465,6 +466,51 @@ function Test-HasAllDaprAnnotations {
     $true
 }
 
+function Test-HasClientOnlyDaprAnnotations {
+    param([string[]]$Lines)
+
+    $templateIndex = Find-LineIndex -Lines $Lines -Pattern '^\s*template:\s*$' -StartIndex 0 -EndIndex ($Lines.Count - 1)
+    if ($templateIndex -lt 0) {
+        return $false
+    }
+
+    $templateIndent = Get-LineIndent $Lines[$templateIndex]
+    $templateEnd = Get-BlockEndIndex -Lines $Lines -StartIndex $templateIndex -ParentIndent $templateIndent
+    $metadataIndex = -1
+    for ($i = $templateIndex + 1; $i -le $templateEnd; $i++) {
+        if ($Lines[$i] -cmatch '^\s*metadata:\s*$' -and (Get-LineIndent $Lines[$i]) -eq ($templateIndent + 2)) {
+            $metadataIndex = $i
+            break
+        }
+    }
+
+    if ($metadataIndex -lt 0) {
+        return $false
+    }
+
+    $metadataEnd = Get-BlockEndIndex -Lines $Lines -StartIndex $metadataIndex -ParentIndent (Get-LineIndent $Lines[$metadataIndex])
+    $annotationsIndex = Find-LineIndex -Lines $Lines -Pattern '^\s*annotations:\s*$' -StartIndex ($metadataIndex + 1) -EndIndex $metadataEnd
+    if ($annotationsIndex -lt 0) {
+        return $false
+    }
+
+    $annotationsEnd = Get-BlockEndIndex -Lines $Lines -StartIndex $annotationsIndex -ParentIndent (Get-LineIndent $Lines[$annotationsIndex])
+    $annotationText = ($Lines[($annotationsIndex + 1)..$annotationsEnd] -join "`n")
+    foreach ($annotation in @('dapr.io/enabled', 'dapr.io/app-id')) {
+        if ($annotationText -cnotmatch "(?m)^\s*$([regex]::Escape($annotation)):\s*") {
+            return $false
+        }
+    }
+
+    foreach ($annotation in @('dapr.io/app-port', 'dapr.io/config')) {
+        if ($annotationText -cmatch "(?m)^\s*$([regex]::Escape($annotation)):\s*") {
+            return $false
+        }
+    }
+
+    $true
+}
+
 function Get-ContainerBlocks {
     param([string[]]$Lines)
 
@@ -579,6 +625,10 @@ function Find-K8sWorkloadFindings {
 
             if ($DaprAppIds -ccontains $deploymentName -and -not (Test-HasAllDaprAnnotations -Lines $lines)) {
                 $findings.Add((New-Finding -Severity 'BLOCKING' -Category 'K8sWorkload-MissingDaprAnnotations' -File $relative -JsonPath '$.spec.template.metadata.annotations' -Reason 'Dapr app is missing required pod annotations'))
+            }
+
+            if ($DaprClientOnlyAppIds -ccontains $deploymentName -and -not (Test-HasClientOnlyDaprAnnotations -Lines $lines)) {
+                $findings.Add((New-Finding -Severity 'BLOCKING' -Category 'K8sWorkload-MissingDaprAnnotations' -File $relative -JsonPath '$.spec.template.metadata.annotations' -Reason 'Dapr client-only app is missing required pod annotations or carries server-only annotations'))
             }
 
             if ($registryImageCount -gt 0 -and

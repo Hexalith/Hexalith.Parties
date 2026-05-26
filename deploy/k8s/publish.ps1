@@ -87,7 +87,8 @@ $DaprPatchMap = [ordered]@{
     'memories' = 'accesscontrol-memories'
 }
 
-$ForbiddenDaprTargets = @('eventstore-admin-ui', 'parties-mcp', 'redis', 'keycloak', 'falkordb')
+$DaprClientOnlyTargets = @('eventstore-admin-ui')
+$ForbiddenDaprTargets = @('parties-mcp', 'redis', 'keycloak', 'falkordb')
 
 . (Join-Path $K8sRoot '_lib/Confirm-KubeContext.ps1')
 
@@ -414,6 +415,13 @@ function Upsert-TemplateAnnotation([string] $Content, [string] $Key, [string] $V
         1)
 }
 
+function Remove-Annotation([string] $Content, [string] $Key) {
+    return [regex]::Replace(
+        $Content,
+        "(?m)^\s*$([regex]::Escape($Key)):\s*.*`r?`n?",
+        '')
+}
+
 function Assert-DaprTemplateAnnotations([string] $Content, [string] $Name, [string] $Config) {
     $block = Get-TemplateAnnotationBlock $Content
     if ($null -eq $block) {
@@ -430,6 +438,30 @@ function Assert-DaprTemplateAnnotations([string] $Content, [string] $Name, [stri
     foreach ($entry in $expected.GetEnumerator()) {
         if ($block -notmatch "(?m)^\s{8}$([regex]::Escape($entry.Key)):\s*$([regex]::Escape($entry.Value))\s*$") {
             Fail $ExitGeneral "pod-template Dapr annotation $($entry.Key) missing or incorrect in $Name"
+        }
+    }
+}
+
+function Assert-DaprClientOnlyTemplateAnnotations([string] $Content, [string] $Name) {
+    $block = Get-TemplateAnnotationBlock $Content
+    if ($null -eq $block) {
+        Fail $ExitGeneral "missing pod-template annotations block in $Name"
+    }
+
+    $expected = [ordered]@{
+        'dapr.io/enabled' = '"true"'
+        'dapr.io/app-id' = $Name
+    }
+
+    foreach ($entry in $expected.GetEnumerator()) {
+        if ($block -notmatch "(?m)^\s{8}$([regex]::Escape($entry.Key)):\s*$([regex]::Escape($entry.Value))\s*$") {
+            Fail $ExitGeneral "client-only Dapr annotation $($entry.Key) missing or incorrect in $Name"
+        }
+    }
+
+    foreach ($forbidden in @('dapr.io/app-port', 'dapr.io/config')) {
+        if ($block -match "(?m)^\s{8}$([regex]::Escape($forbidden)):\s*") {
+            Fail $ExitGeneral "client-only Dapr annotation $forbidden must be absent in $Name"
         }
     }
 }
@@ -460,7 +492,22 @@ function Patch-DaprAnnotations {
         Set-Content -LiteralPath $path -Value $content -NoNewline
     }
 
+    foreach ($name in $DaprClientOnlyTargets) {
+        $tuple = Read-DeploymentFile $name
+        $path = $tuple[0]
+        $content = $tuple[1]
+        $content = $content -replace "(?m)^(\s*)dapr\.io/enabled:\s*.+$", '$1dapr.io/enabled: "true"'
+        $content = $content -replace "(?m)^(\s*)dapr\.io/app-id:\s*.+$", "`$1dapr.io/app-id: $name"
+        $content = Remove-Annotation $content 'dapr.io/config'
+        $content = Remove-Annotation $content 'dapr.io/app-port'
+        $content = Upsert-TemplateAnnotation $content 'dapr.io/enabled' '"true"'
+        $content = Upsert-TemplateAnnotation $content 'dapr.io/app-id' $name
+        Assert-DaprClientOnlyTemplateAnnotations $content $name
+        Set-Content -LiteralPath $path -Value $content -NoNewline
+    }
+
     Write-Host "[publish] Dapr annotation patch targets: $($DaprPatchMap.Keys -join ', ')"
+    Write-Host "[publish] Dapr client-only annotation targets: $($DaprClientOnlyTargets -join ', ')"
 }
 
 function Ensure-JwtSecretRef {

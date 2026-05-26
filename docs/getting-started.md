@@ -75,7 +75,7 @@ Readiness is confirmed by the Aspire dashboard health column and by the service-
 
 > **Canonical reference:** [Kubernetes Deployment Architecture](kubernetes-deployment-architecture.md) — full cluster topology and reproducibility contracts.
 
-This step is an **alternative** to Step 1 for evaluating the production-shape deployment path against a Kubernetes cluster — see [Kubernetes Deployment Architecture](kubernetes-deployment-architecture.md) for the full 9-pod topology and reproducibility contracts. The publish script accepts only the context the operator confirms via `-ConfirmContext` (Story 9.5, ADR D-K8s-3); use an operator-controlled sandbox context or the in-MVP platform cluster. The Aspire-mode walkthrough in Step 1 remains valid and is the default path for everyday development.
+This step is an **alternative** to Step 1 for evaluating the production-shape deployment path against a Kubernetes cluster — see [Kubernetes Deployment Architecture](kubernetes-deployment-architecture.md) for the full 10-pod topology and reproducibility contracts. The publish script accepts only the context the operator confirms via `-ConfirmContext` (Story 9.5, ADR D-K8s-3); use an operator-controlled sandbox context or the in-MVP platform cluster. The Aspire-mode walkthrough in Step 1 remains valid and is the default path for everyday development.
 
 **Time budget:** the entire walkthrough — `publish.ps1` through the first successful `CreateParty` command — fits inside the `< 15 min` first-deploy budget (NFR30) on a developer-class machine that already has the prerequisites installed.
 
@@ -95,16 +95,16 @@ kubectl get pods -n hexalith-parties
 
 Expect **ten pods** in `Running` state by default (`eventstore`, `eventstore-admin`, `eventstore-admin-ui`, `parties`, `parties-mcp`, `tenants`, `memories`, `keycloak`, `redis`, `falkordb`). Epic 9 v2 closes FR31a's enumerative service-graph contract by composing Memories.Server in-cluster (Dapr-enabled — v2 Story 9.2), shipping Keycloak as a hand-authored carve-out (`deploy/k8s/keycloak/` — admin password via `secretKeyRef` on `hexalith-keycloak-admin` — v2 Story 9.3), shipping Redis as a hand-authored Dapr backing store (`deploy/k8s/redis/`, `emptyDir`-backed — v2 Story 9.3), and shipping FalkorDB as the Memories graph backing store (`deploy/k8s/falkordb/`, `emptyDir`-backed — v2 Story 9.8). FrontComposer remains out-of-scope for the MVP — no FrontComposer pod ships in this topology.
 
-**Five** of the ten pods run a `daprd` sidecar — `eventstore`, `eventstore-admin`, `parties`, `tenants`, and `memories` carry `dapr.io/enabled: "true"`. `eventstore-admin-ui`, `parties-mcp`, `keycloak`, `redis`, and `falkordb` do not. Confirm the Dapr annotations on the five Dapr-enabled Deployments:
+**Six** of the ten pods run a `daprd` sidecar. `eventstore`, `eventstore-admin`, `parties`, `tenants`, and `memories` are full Dapr services. `eventstore-admin-ui` is Dapr client-only for Admin UI -> Admin Server service invocation. `parties-mcp`, `keycloak`, `redis`, and `falkordb` do not run Dapr. Confirm the Dapr annotations:
 
 ```bash
-for app in eventstore eventstore-admin parties tenants memories; do
+for app in eventstore eventstore-admin eventstore-admin-ui parties tenants memories; do
   echo "--- $app ---"
   kubectl get deployment $app -n hexalith-parties -o jsonpath='{.metadata.annotations}{"\n"}'
 done
 ```
 
-Each should include `dapr.io/enabled: "true"`, `dapr.io/app-id`, `dapr.io/app-port: "8080"`, and `dapr.io/config: accesscontrol-<app-id>` (or `accesscontrol` for `eventstore`). The `dapr.io/app-port` and per-app `dapr.io/config` annotations are injected by `publish.ps1` (aspirate 9.1.0 does not emit them); see `deploy/k8s/README.md` "Known aspirate limitations".
+The five full Dapr services should include `dapr.io/enabled: "true"`, `dapr.io/app-id`, `dapr.io/app-port: "8080"`, and `dapr.io/config: accesscontrol-<app-id>` (or `accesscontrol` for `eventstore`). `eventstore-admin-ui` should include only `dapr.io/enabled: "true"` and `dapr.io/app-id: eventstore-admin-ui`; it should not carry `dapr.io/app-port` or `dapr.io/config`. The `dapr.io/app-port` and per-app `dapr.io/config` annotations are injected by `publish.ps1` for full Dapr services (aspirate 9.1.0 does not emit them); see `deploy/k8s/README.md` "Known aspirate limitations".
 
 **Operator-managed Secrets (v2 Story 9.5):** `publish.ps1` bootstraps `hexalith-jwt-signing`, `hexalith-keycloak-admin`, and `zot-pull-secret` (idempotent). Verify:
 

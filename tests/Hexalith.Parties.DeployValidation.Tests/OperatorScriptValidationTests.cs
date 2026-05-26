@@ -188,7 +188,8 @@ public sealed class OperatorScriptValidationTests : IDisposable
         publish.ShouldContain("'parties' = 'accesscontrol-parties'");
         publish.ShouldContain("'tenants' = 'accesscontrol-tenants'");
         publish.ShouldContain("'memories' = 'accesscontrol-memories'");
-        publish.ShouldContain("$ForbiddenDaprTargets = @('eventstore-admin-ui', 'parties-mcp', 'redis', 'keycloak', 'falkordb')");
+        publish.ShouldContain("$DaprClientOnlyTargets = @('eventstore-admin-ui')");
+        publish.ShouldContain("$ForbiddenDaprTargets = @('parties-mcp', 'redis', 'keycloak', 'falkordb')");
         publish.ShouldContain("Authentication__JwtBearer__SigningKey");
         publish.ShouldContain("EventStore__Authentication__SigningKey");
         publish.ShouldContain("imagePullSecrets");
@@ -325,7 +326,10 @@ public sealed class OperatorScriptValidationTests : IDisposable
         eventstore.ShouldNotContain("value: literal-secret");
 
         string adminUi = File.ReadAllText(Path.Combine(workspace.K8sRoot, "eventstore-admin-ui", "deployment.yaml"));
-        adminUi.ShouldNotContain("dapr.io/app-id");
+        adminUi.ShouldContain("dapr.io/enabled: \"true\"");
+        adminUi.ShouldContain("dapr.io/app-id: eventstore-admin-ui");
+        adminUi.ShouldNotContain("dapr.io/app-port");
+        adminUi.ShouldNotContain("dapr.io/config");
         adminUi.ShouldContain("imagePullSecrets:");
         adminUi.ShouldContain("EventStore__Authentication__SigningKey");
         adminUi.ShouldContain("secretKeyRef:");
@@ -390,6 +394,10 @@ public sealed class OperatorScriptValidationTests : IDisposable
         eventstore.ShouldNotContain("value: literal-secret");
 
         string adminUi = File.ReadAllText(Path.Combine(workspace.K8sRoot, "eventstore-admin-ui", "deployment.yaml"));
+        CountOccurrences(adminUi, "dapr.io/enabled: \"true\"").ShouldBe(1);
+        CountOccurrences(adminUi, "dapr.io/app-id: eventstore-admin-ui").ShouldBe(1);
+        adminUi.ShouldNotContain("dapr.io/app-port");
+        adminUi.ShouldNotContain("dapr.io/config");
         CountOccurrences(adminUi, "EventStore__Authentication__SigningKey").ShouldBe(1);
         CountOccurrences(adminUi, "secretKeyRef:").ShouldBe(1);
         CountOccurrences(adminUi, "name: hexalith-jwt-signing").ShouldBe(1);
@@ -844,7 +852,7 @@ if [ "$1 $2 $3 $4 $5 $6" = "tool run --allow-roll-forward aspirate -- generate" 
     mkdir -p "$out/$name"
     include_dapr=0
     case "$name" in
-      eventstore|eventstore-admin|parties|tenants|memories) include_dapr=1 ;;
+      eventstore|eventstore-admin|eventstore-admin-ui|parties|tenants|memories) include_dapr=1 ;;
     esac
     literal_jwt=0
     if [ "$name" = "eventstore" ] && [ "{{(includeLiteralJwt ? "1" : "0")}}" = "1" ]; then literal_jwt=1; fi

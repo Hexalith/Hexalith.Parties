@@ -31,8 +31,8 @@ namespace: hexalith-parties
 │                                                                        │
 │  ┌──────────────┐                          ┌──────────────────────┐  │
 │  │   keycloak   │                          │ eventstore-admin-ui  │  │
-│  │   1/1 Pod    │                          │       1/1 Pod        │  │
-│  │ (vendor img) │                          │   (no Dapr sidecar)  │  │
+│  │   1/1 Pod    │                          │       2/2 Pod        │  │
+│  │ (vendor img) │                          │ Dapr client-only     │  │
 │  └──────┬───────┘                          └─────────┬────────────┘  │
 │         │ OIDC                                       │ HTTP UI       │
 │         │                                            │                │
@@ -83,7 +83,7 @@ namespace: hexalith-parties
 | `keycloak` | 1 | `quay.io/keycloak/keycloak` (vendor) | — | Identity provider + OIDC issuer |
 | `eventstore` | 2 (app + daprd) | `registry.hexalith.com/eventstore` | Yes | Event store + projection host |
 | `eventstore-admin` | 2 (app + daprd) | `registry.hexalith.com/eventstore-admin` | Yes | Administrative commands on the event store |
-| `eventstore-admin-ui` | 1 | `registry.hexalith.com/eventstore-admin-ui` | — | Browser UI shell (HTTP only) |
+| `eventstore-admin-ui` | 2 (app + daprd) | `registry.hexalith.com/eventstore-admin-ui` | Client-only | Browser UI shell; invokes Admin Server through Dapr |
 | `parties` | 2 (app + daprd) | `registry.hexalith.com/parties` | Yes | Party aggregate, REST API, primary service |
 | `parties-mcp` | 1 | `registry.hexalith.com/parties-mcp` | — | MCP gateway for AI agents |
 | `tenants` | 2 (app + daprd) | `registry.hexalith.com/tenants` | Yes | Tenant management surface |
@@ -93,7 +93,7 @@ namespace: hexalith-parties
 
 ## 4. Dapr Control Plane
 
-Dapr runs cluster-wide in the `dapr-system` namespace (installed once via `dapr init -k`). Each Hexalith service that needs state or pubsub carries a daprd sidecar in its pod.
+Dapr runs cluster-wide in the `dapr-system` namespace (installed once via `dapr init -k`). Each Hexalith service that needs state, pub/sub, actors, or Dapr service invocation carries a daprd sidecar in its pod. `eventstore-admin-ui` uses a client-only sidecar for Admin UI -> Admin Server invocation and does not reference state or pub/sub components directly.
 
 ### 4.1 Components
 
@@ -105,7 +105,7 @@ Dapr runs cluster-wide in the `dapr-system` namespace (installed once via `dapr 
 
 ### 4.2 Access Control configurations
 
-Each daprd-equipped service has its own access-control configuration scoping allowed callers and verbs:
+Each full daprd-equipped service has its own access-control configuration scoping allowed callers and verbs:
 
 - `accesscontrol` (eventstore)
 - `accesscontrol-eventstore-admin`
@@ -113,7 +113,7 @@ Each daprd-equipped service has its own access-control configuration scoping all
 - `accesscontrol-tenants`
 - `accesscontrol-memories`
 
-These configurations prevent arbitrary cross-service invocation; only the topology-prescribed call paths are allowed (e.g., `parties` → `tenants`, `parties` → `eventstore`, but never `tenants` → `parties`).
+These configurations prevent arbitrary cross-service invocation; only the topology-prescribed call paths are allowed (e.g., `parties` -> `tenants`, `parties` -> `eventstore`, but never `tenants` -> `parties`). `accesscontrol-eventstore-admin` also allows `eventstore-admin-ui` to invoke the Admin Server API through Dapr.
 
 ### 4.3 Declarative subscriptions
 
@@ -211,7 +211,7 @@ There are exactly three sources of truth for the deployed topology. Each one own
 | 2 | Clean `deploy/k8s/` (preserves carve-outs, scripts, README) | — |
 | 3 | `dotnet aspirate generate` builds + pushes 7 container images to Zot | Propagates aspirate exit code |
 | 4 | Strip aspirate placeholder files | — |
-| 5 | Patch Dapr annotations (`app-id`, `app-port`, per-service config) | — |
+| 5 | Patch Dapr annotations: full services get `app-id`, `app-port`, and per-service config; `eventstore-admin-ui` gets client-only `enabled` + `app-id` | — |
 | 6 | Patch JWT `secretKeyRef` (`hexalith-jwt-signing`) into 5 consumer Deployments | — |
 | 7 | Patch `/health` readiness/liveness probes into generated app Deployments | Exit 1 on patch failure |
 | 8 | Inject `imagePullSecrets: [{name: zot-pull-secret}]` into Hexalith Deployments | — |
