@@ -35,6 +35,10 @@ See "Out-of-band Secret creation" below for the one-time bootstrap commands.
 > TLS cert provisioning, `accessControl.groups.builders` membership) is an infra-team task,
 > not a developer task. The commands below capture the manifest shape that infra applied;
 > manifest re-application on a fresh cluster is the documented operator path.
+> The committed `configmap.yaml` grants the `builders` group read/create/update on `**`,
+> which covers every image `publish.ps1` verifies before workload apply:
+> `eventstore`, `eventstore-admin`, `eventstore-admin-ui`, `parties`, `parties-mcp`,
+> `tenants`, and `memories`. The `parties-publisher` user must remain in that group.
 
 ### Pre-apply NodePort consumer audit (required before any apply against the live cluster)
 

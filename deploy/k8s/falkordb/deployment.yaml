@@ -1,0 +1,43 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: falkordb
+  labels:
+    app: falkordb
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: falkordb
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: falkordb
+    spec:
+      automountServiceAccountToken: false
+      containers:
+      - name: falkordb
+        image: falkordb/falkordb:v4.18.6
+        imagePullPolicy: IfNotPresent
+        readinessProbe:
+          tcpSocket:
+            port: redis
+        livenessProbe:
+          tcpSocket:
+            port: redis
+        ports:
+        - name: redis
+          containerPort: 6379
+        volumeMounts:
+        - name: falkordb-data
+          mountPath: /data
+      volumes:
+      # MVP boundary:
+      # - emptyDir keeps graph backing storage aligned with Redis' local-cluster scope.
+      # - Data is lost whenever the Pod is recreated or rescheduled.
+      # - Auth, TLS, network policy, replication, and persistent storage are deferred.
+      - name: falkordb-data
+        emptyDir: {}

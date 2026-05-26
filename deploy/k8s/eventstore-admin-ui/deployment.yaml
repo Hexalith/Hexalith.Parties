@@ -18,26 +18,40 @@ spec:
       labels:
         app: eventstore-admin-ui
     spec:
+      imagePullSecrets:
+      - name: zot-pull-secret
       containers:
       - name: eventstore-admin-ui
-        image: registry.hexalith.com/eventstore-admin-ui:0.1.1-preview.0.3
+        image: registry.hexalith.com/eventstore-admin-ui:0.0.0-preview.0.474
         imagePullPolicy: IfNotPresent
         readinessProbe:
           httpGet:
             path: /health
             port: http
+          initialDelaySeconds: 10
+          timeoutSeconds: 10
+          periodSeconds: 10
+          failureThreshold: 30
         livenessProbe:
           httpGet:
             path: /health
             port: http
+          initialDelaySeconds: 120
+          timeoutSeconds: 10
+          periodSeconds: 10
+          failureThreshold: 30
         ports:
         - name: http
           containerPort: 8080
         - name: https
           containerPort: 8443
+        env:
+        - name: EventStore__Authentication__SigningKey
+          valueFrom:
+            secretKeyRef:
+              name: hexalith-jwt-signing
+              key: value
         envFrom:
         - configMapRef:
             name: eventstore-admin-ui-env
-      imagePullSecrets:
-      - name: zot-pull-secret
       terminationGracePeriodSeconds: 180

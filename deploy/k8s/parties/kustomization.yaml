@@ -27,11 +27,11 @@ configMapGenerator:
     - Parties__MemoriesSearch__RequireApiToken=false
     - Parties__MemoriesSearch__TenantId=hexalith-dev
     - Parties__MemoriesSearch__CaseId=parties
-    - Authentication__JwtBearer__Authority=http://keycloak.hexalith-parties.svc.cluster.local:8080/realms/hexalith
-    - Authentication__JwtBearer__Issuer=http://keycloak.hexalith-parties.svc.cluster.local:8080/realms/hexalith
+    - ASPNETCORE_ENVIRONMENT=Development
+    - DOTNET_ENVIRONMENT=Development
+    - Authentication__JwtBearer__Issuer=hexalith-dev
     - Authentication__JwtBearer__Audience=hexalith-parties
     - Authentication__JwtBearer__TokenValidationParameters__ValidAudiences__0=hexalith-parties
     - Authentication__JwtBearer__TokenValidationParameters__ValidAudiences__1=hexalith-eventstore
     - Authentication__JwtBearer__RequireHttpsMetadata=false
     - ASPNETCORE_URLS=http://+:8080;
-

@@ -16,11 +16,11 @@ configMapGenerator:
     - PARTIES_HTTP=http://parties:8080
     - services__parties__http__0=http://parties:8080
     - Parties__Mcp__EventStoreGatewayBaseUrl=http://eventstore:8080
-    - Authentication__JwtBearer__Authority=http://keycloak.hexalith-parties.svc.cluster.local:8080/realms/hexalith
-    - Authentication__JwtBearer__Issuer=http://keycloak.hexalith-parties.svc.cluster.local:8080/realms/hexalith
+    - ASPNETCORE_ENVIRONMENT=Development
+    - DOTNET_ENVIRONMENT=Development
+    - Authentication__JwtBearer__Issuer=hexalith-dev
     - Authentication__JwtBearer__Audience=hexalith-parties-mcp
     - Authentication__JwtBearer__TokenValidationParameters__ValidAudiences__0=hexalith-parties-mcp
     - Authentication__JwtBearer__TokenValidationParameters__ValidAudiences__1=hexalith-eventstore
     - Authentication__JwtBearer__RequireHttpsMetadata=false
     - ASPNETCORE_URLS=http://+:8080;
-

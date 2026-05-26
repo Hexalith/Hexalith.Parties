@@ -8,7 +8,7 @@ public sealed class CarveOutPreservationFitnessTest
     {
         string publish = DeploymentTestPaths.ReadRepoFile("deploy/k8s/publish.ps1");
 
-        foreach (string preserved in new[] { "redis", "keycloak", "kustomization.yaml", "namespace.yaml", "README.md", "publish.ps1", "teardown.ps1", "_lib" })
+        foreach (string preserved in new[] { "redis", "keycloak", "falkordb", "kustomization.yaml", "namespace.yaml", "README.md", "publish.ps1", "teardown.ps1", "_lib" })
         {
             publish.ShouldContain($"'{preserved}'");
         }
@@ -23,6 +23,7 @@ public sealed class CarveOutPreservationFitnessTest
     [Theory]
     [InlineData("redis")]
     [InlineData("keycloak")]
+    [InlineData("falkordb")]
     public void CarveOutDeploymentManifestsDoNotCarryDaprJwtOrZotPatchArtifacts(string folder)
     {
         string deployment = File.ReadAllText(Path.Combine(DeploymentTestPaths.K8sDirectory, folder, "deployment.yaml"));
@@ -52,7 +53,7 @@ public sealed class CarveOutPreservationFitnessTest
                 }
             }
 
-            foreach (string folder in new[] { "redis", "keycloak" })
+            foreach (string folder in new[] { "redis", "keycloak", "falkordb" })
             {
                 string baseline = File.ReadAllText(Path.Combine(fixtureRoot, "baseline", folder, "deployment.yaml"));
                 string preserved = File.ReadAllText(Path.Combine(tempWorkspace, folder, "deployment.yaml"));

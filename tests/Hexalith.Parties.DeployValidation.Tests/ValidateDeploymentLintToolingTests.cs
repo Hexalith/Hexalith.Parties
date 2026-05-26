@@ -514,11 +514,11 @@ exit 99
             lines.Add("        readinessProbe:");
             lines.Add("          httpGet:");
             lines.Add("            path: /health");
-            lines.Add("            port: 8080");
+            lines.Add("            port: http");
             lines.Add("        livenessProbe:");
             lines.Add("          httpGet:");
             lines.Add("            path: /health");
-            lines.Add("            port: 8080");
+            lines.Add("            port: http");
         }
 
         return string.Join("\n", lines) + "\n";

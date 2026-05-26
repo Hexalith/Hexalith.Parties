@@ -1,6 +1,6 @@
 # Deployment Guide
 
-> **Canonical reference:** For the full Hexalith.Parties Kubernetes deployment topology (9-workload, Zot registry, Dapr control plane, MVP boundaries), see [Kubernetes Deployment Architecture](kubernetes-deployment-architecture.md). This guide covers application-architecture concerns (DAPR component selection, multi-tenant setup, troubleshooting); the canonical doc covers the deployed cluster shape.
+> **Canonical reference:** For the full Hexalith.Parties Kubernetes deployment topology (10-workload, Zot registry, Dapr control plane, MVP boundaries), see [Kubernetes Deployment Architecture](kubernetes-deployment-architecture.md). This guide covers application-architecture concerns (DAPR component selection, multi-tenant setup, troubleshooting); the canonical doc covers the deployed cluster shape.
 
 This guide covers deploying the Hexalith.Parties service with DAPR in production environments.
 

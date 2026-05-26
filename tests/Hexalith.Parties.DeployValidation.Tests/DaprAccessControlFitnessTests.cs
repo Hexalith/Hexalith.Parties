@@ -30,7 +30,7 @@ public sealed class DaprAccessControlFitnessTests
                 .ToArray();
 
             actualCallers.ShouldBe(callers.Order(StringComparer.Ordinal).ToArray(), $"{fileName} has a documented caller set.");
-            actualCallers.ShouldAllBe(static appId => appId != "*" && appId != "parties-mcp" && appId != "eventstore-admin-ui" && appId != "redis" && appId != "keycloak");
+            actualCallers.ShouldAllBe(static appId => appId != "*" && appId != "parties-mcp" && appId != "eventstore-admin-ui" && appId != "redis" && appId != "keycloak" && appId != "falkordb");
         }
     }
 

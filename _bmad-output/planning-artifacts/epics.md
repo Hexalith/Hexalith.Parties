@@ -377,7 +377,7 @@ Consuming application developers can embed a tenant-safe, accessible party picke
 
 ### Epic 9: Kubernetes Deployment Platform
 
-Operators and developers deploy the full Hexalith.Parties 9-workload topology to a Kubernetes cluster via a single `publish.ps1` command — Zot OCI registry with MinVer-stamped image tags, hand-authored Redis + Keycloak carve-outs, Dapr control plane with deny-by-default ACLs, three operator-managed Secrets bootstrapped idempotently, and a static lint + fitness-test suite that guards every contract. The architecture is fully captured in `docs/kubernetes-deployment-architecture.md` as the canonical reference.
+Operators and developers deploy the full Hexalith.Parties Kubernetes topology to a Kubernetes cluster via a single `publish.ps1` command — Zot OCI registry with MinVer-stamped image tags, hand-authored backing-service carve-outs, Dapr control plane with deny-by-default ACLs, operator-managed Secrets bootstrapped idempotently, and a static lint + fitness-test suite that guards every contract. The architecture is fully captured in `docs/kubernetes-deployment-architecture.md` as the canonical reference.
 
 **Phase:** MVP
 **Coverage type:** planned (greenfield rewrite, 2026-05-21, supersedes Epic 9 v1)
@@ -3592,3 +3592,55 @@ So that the contracts (byte-determinism, idempotency, deny-by-default ACL, no cr
 **Given** test output discipline
 **When** any deploy-validation test fails
 **Then** the failure message includes the offending file path, the offending JSON-path/line, and the category — but NEVER the offending value if it is credential-shaped (the same poison-sweep rule from Story 9.6 applies to test diagnostics).
+
+### Story 9.8: Publish Runtime Hardening, Registry Verification, and Memories Backing Services
+
+**Phase:** MVP
+**Coverage type:** planned
+**Requirements covered:** FR31, FR31a, FR60, FR61, NFR30
+**Authoring SCP:** `sprint-change-proposal-2026-05-22-deployment-publish-correction.md`
+
+As an operator publishing Hexalith.Parties to Kubernetes,
+I want `publish.ps1` to verify the real registry, Dapr, generated manifest, Secret, and Memories backing-service preconditions before applying workloads,
+So that a reported successful publish means the cluster can actually pull the MinVer images and all expected pods reach Ready without manual rescue.
+
+**Acceptance Criteria:**
+
+**Given** the post-Story 9.7 baseline
+**When** the AppHost builds for publish
+**Then** MinVer resolution succeeds
+**And** Memories is composed without typed generated `Projects.Hexalith_Memories_Server` references
+**And** publish mode provides explicit Memories backing-service connection strings.
+
+**Given** .NET 10 SDK container publishing
+**When** `publish.ps1` invokes aspirate
+**Then** the script does not provide both `ContainerImageTags` and `ContainerImageTag`
+**And** all submodule projects receive the same MinVer image tag without falling back to `staging-latest`.
+
+**Given** aspirate reports build/push success
+**When** publish proceeds
+**Then** `publish.ps1` verifies every expected Zot manifest exists before any Kubernetes workload apply
+**And** missing or unauthorized manifests fail with bounded diagnostics.
+
+**Given** Dapr is already installed and healthy
+**When** publish reaches Dapr initialization
+**Then** the healthy existing control plane is accepted instead of failing with a Helm release reuse error.
+
+**Given** aspirate regenerates top-level Kustomize output
+**When** cleanup completes
+**Then** `deploy/k8s/kustomization.yaml` is restored to the canonical namespace + service-folder + carve-out contract
+**And** it contains no stale `dapr/*` resources.
+
+**Given** operator-managed Secrets already exist
+**When** required keys are missing
+**Then** publish patches the missing keys idempotently and never prints secret values.
+
+**Given** generated app Deployments are patched
+**When** static validation runs
+**Then** every primary app container has liveness/readiness probes
+**And** validation runs before `kubectl apply -k`.
+
+**Given** Memories runs in publish mode
+**When** workloads start
+**Then** Memories has real required backing-service connection strings
+**And** the story either adds a FalkorDB carve-out or proves a supported no-graph mode with non-degraded health.

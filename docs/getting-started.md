@@ -46,11 +46,6 @@ Docker Desktop must be running before you start the Aspire host.
 git clone https://github.com/Hexalith/Hexalith.Parties.git
 cd Hexalith.Parties
 
-# Memories.Server is composed in-cluster by the AppHost (Epic 9 v2 Story 9.2 carries this forward from v1 Story 9.3 / ADR 9.3-2). Its build
-# requires nested submodules in Hexalith.Memories (Hexalith.Memories pulls Hexalith.Commons
-# and Hexalith.EventStore as its own submodules). Initialize them once before the first run:
-git -C Hexalith.Memories submodule update --init Hexalith.Commons Hexalith.EventStore
-
 dotnet aspire run --project src/Hexalith.Parties.AppHost
 ```
 
@@ -92,15 +87,15 @@ kubectl config use-context kubernetes-admin@cluster.local   # or your local cont
 pwsh deploy/k8s/publish.ps1 -ConfirmContext kubernetes-admin@cluster.local
 ```
 
-`publish.ps1` resolves the MinVer version from the AppHost, runs `dotnet aspirate generate` (building and pushing container images to `registry.hexalith.com/<app-id>:<minver>`), patches the consumer Deployments (Dapr annotations + JWT `secretKeyRef` + `imagePullSecrets: zot-pull-secret`), installs the DAPR control plane if missing, bootstraps three Secrets (`hexalith-jwt-signing`, `hexalith-keycloak-admin`, `zot-pull-secret`), applies the authoritative DAPR component CRs from `deploy/dapr/`, then applies the workloads via kustomize. Verify pod readiness:
+`publish.ps1` resolves the MinVer version from the AppHost, runs `dotnet aspirate generate` (building and pushing container images to `registry.hexalith.com/<app-id>:<minver>`), patches the consumer Deployments (Dapr annotations + JWT `secretKeyRef` + health probes + `imagePullSecrets: zot-pull-secret`), verifies the reported image manifests exist in Zot, runs the static deployment validator, installs DAPR only when no healthy control plane exists, bootstraps or patches three Secrets (`hexalith-jwt-signing`, `hexalith-keycloak-admin`, `zot-pull-secret`), applies the authoritative DAPR component CRs from `deploy/dapr/`, then applies the workloads via kustomize. Verify pod readiness:
 
 ```bash
 kubectl get pods -n hexalith-parties
 ```
 
-Expect **nine pods** in `Running` state by default (`eventstore`, `eventstore-admin`, `eventstore-admin-ui`, `parties`, `parties-mcp`, `tenants`, `memories`, `keycloak`, `redis`). Epic 9 v2 closes FR31a's enumerative service-graph contract by composing Memories.Server in-cluster (Dapr-enabled — v2 Story 9.2), shipping Keycloak as a hand-authored carve-out (`deploy/k8s/keycloak/` — admin password via `secretKeyRef` on `hexalith-keycloak-admin` — v2 Story 9.3), and shipping Redis as a hand-authored backing store (`deploy/k8s/redis/`, `emptyDir`-backed — v2 Story 9.3). FrontComposer remains out-of-scope for the MVP — no FrontComposer pod ships in this topology.
+Expect **ten pods** in `Running` state by default (`eventstore`, `eventstore-admin`, `eventstore-admin-ui`, `parties`, `parties-mcp`, `tenants`, `memories`, `keycloak`, `redis`, `falkordb`). Epic 9 v2 closes FR31a's enumerative service-graph contract by composing Memories.Server in-cluster (Dapr-enabled — v2 Story 9.2), shipping Keycloak as a hand-authored carve-out (`deploy/k8s/keycloak/` — admin password via `secretKeyRef` on `hexalith-keycloak-admin` — v2 Story 9.3), shipping Redis as a hand-authored Dapr backing store (`deploy/k8s/redis/`, `emptyDir`-backed — v2 Story 9.3), and shipping FalkorDB as the Memories graph backing store (`deploy/k8s/falkordb/`, `emptyDir`-backed — v2 Story 9.8). FrontComposer remains out-of-scope for the MVP — no FrontComposer pod ships in this topology.
 
-**Five** of the nine pods run a `daprd` sidecar — `eventstore`, `eventstore-admin`, `parties`, `tenants`, and `memories` carry `dapr.io/enabled: "true"`. `eventstore-admin-ui`, `parties-mcp`, `keycloak`, and `redis` do not. Confirm the Dapr annotations on the five Dapr-enabled Deployments:
+**Five** of the ten pods run a `daprd` sidecar — `eventstore`, `eventstore-admin`, `parties`, `tenants`, and `memories` carry `dapr.io/enabled: "true"`. `eventstore-admin-ui`, `parties-mcp`, `keycloak`, `redis`, and `falkordb` do not. Confirm the Dapr annotations on the five Dapr-enabled Deployments:
 
 ```bash
 for app in eventstore eventstore-admin parties tenants memories; do

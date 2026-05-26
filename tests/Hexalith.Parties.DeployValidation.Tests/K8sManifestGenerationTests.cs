@@ -19,7 +19,7 @@ public sealed class K8sManifestGenerationTests
     {
         string[] generatedFolders = Directory.EnumerateDirectories(DeploymentTestPaths.K8sDirectory)
             .Select(Path.GetFileName)
-            .Where(static name => name is not "redis" and not "keycloak" and not "_lib")
+            .Where(static name => name is not "redis" and not "keycloak" and not "falkordb" and not "_lib")
             .Order(StringComparer.Ordinal)
             .ToArray()!;
 

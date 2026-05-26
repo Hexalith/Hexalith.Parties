@@ -96,17 +96,19 @@ public sealed class AppHostTenantsTopologyTests
     {
         string program = ReadAppHostProgram();
 
-        program.ShouldContain("const string KeycloakRealmUrlInCluster");
-        program.ShouldContain("PUBLISH-MODE-DNS-ANCHOR");
+        program.ShouldContain("const string PublishModeJwtIssuer");
+        program.ShouldContain("Publish mode uses the shared JWT Secret");
         program.ShouldContain(@"WithEnvironment(""Authentication__JwtBearer__Authority"", runModeAuthority)");
         program.ShouldContain(@"WithEnvironment(""Authentication__JwtBearer__Issuer"", runModeAuthority)");
-        program.ShouldContain(@"WithEnvironment(""Authentication__JwtBearer__Authority"", publishModeAuthority)");
-        program.ShouldContain(@"WithEnvironment(""Authentication__JwtBearer__Issuer"", publishModeAuthority)");
-        program.ShouldContain("WithJwtAuthority(eventStore, realmUrl, builder.ExecutionContext.IsPublishMode ? KeycloakRealmUrlInCluster : null)");
-        program.ShouldContain("WithJwtAuthority(adminServer, realmUrl, builder.ExecutionContext.IsPublishMode ? KeycloakRealmUrlInCluster : null)");
-        program.ShouldContain("WithJwtAuthority(parties, realmUrl, builder.ExecutionContext.IsPublishMode ? KeycloakRealmUrlInCluster : null)");
-        program.ShouldContain("WithJwtAuthority(partiesMcp, realmUrl, builder.ExecutionContext.IsPublishMode ? KeycloakRealmUrlInCluster : null)");
-        program.ShouldContain("WithJwtAuthority(tenants, realmUrl, builder.ExecutionContext.IsPublishMode ? KeycloakRealmUrlInCluster : null)");
+        program.ShouldContain(@"WithEnvironment(""Authentication__JwtBearer__Authority"", """")");
+        program.ShouldContain(@"WithEnvironment(""Authentication__JwtBearer__Issuer"", publishModeIssuer)");
+        program.ShouldContain(@"WithEnvironment(""ASPNETCORE_ENVIRONMENT"", ""Development"")");
+        program.ShouldContain(@"WithEnvironment(""DOTNET_ENVIRONMENT"", ""Development"")");
+        program.ShouldContain("WithJwtAuthentication(eventStore, realmUrl, builder.ExecutionContext.IsPublishMode ? PublishModeJwtIssuer : null)");
+        program.ShouldContain("WithJwtAuthentication(adminServer, realmUrl, builder.ExecutionContext.IsPublishMode ? PublishModeJwtIssuer : null)");
+        program.ShouldContain("WithJwtAuthentication(parties, realmUrl, builder.ExecutionContext.IsPublishMode ? PublishModeJwtIssuer : null)");
+        program.ShouldContain("WithJwtAuthentication(partiesMcp, realmUrl, builder.ExecutionContext.IsPublishMode ? PublishModeJwtIssuer : null)");
+        program.ShouldContain("WithJwtAuthentication(tenants, realmUrl, builder.ExecutionContext.IsPublishMode ? PublishModeJwtIssuer : null)");
         program.ShouldContain(@"WithEnvironment(""Authentication__JwtBearer__Audience"", ""hexalith-eventstore"")");
         program.ShouldContain(@"WithEnvironment(""Authentication__JwtBearer__Audience"", ""hexalith-parties"")");
         program.ShouldContain("eventStore.WithReference(keycloak)");
@@ -114,6 +116,10 @@ public sealed class AppHostTenantsTopologyTests
         program.ShouldContain("parties.WithReference(keycloak)");
         program.ShouldContain("tenants.WithReference(keycloak)");
         program.ShouldContain("adminUI.WithReference(keycloak)");
+        Regex adminUiBaseUrl = new(@"adminUI[\s\S]*?WithEnvironment\(""EventStore__AdminServer__BaseUrl"",\s*ReferenceExpression\.Create\(\$""\{adminServer\.GetEndpoint\(""http""\)\}""\)\)");
+        adminUiBaseUrl.Matches(program).Count.ShouldBe(
+            1,
+            "EventStore Admin UI must receive the Admin Server HTTP base URL on the unconditional path.");
         Regex adminUiSwaggerUrl = new(@"adminUI[\s\S]*?WithEnvironment\(""EventStore__AdminServer__SwaggerUrl"",\s*ReferenceExpression\.Create\(\$""\{adminServer\.GetEndpoint\(""http""\)\}/swagger/index\.html""\)\)");
         adminUiSwaggerUrl.Matches(program).Count.ShouldBe(
             1,
@@ -154,6 +160,9 @@ public sealed class AppHostTenantsTopologyTests
         string program = ReadAppHostProgram();
 
         program.ShouldContain(@"WithEnvironment(""EventStore__Authentication__Authority"", """")");
+        program.ShouldContain(@"WithEnvironment(""EventStore__Authentication__Issuer"", PublishModeJwtIssuer)");
+        program.ShouldContain(@"WithEnvironment(""EventStore__Authentication__Audience"", ""hexalith-eventstore"")");
+        program.ShouldContain(@"WithEnvironment(""EventStore__Authentication__GlobalAdmin"", ""true"")");
         program.ShouldContain(@"WithEnvironment(""EventStore__Authentication__ClientId"", """")");
     }
 
@@ -221,7 +230,8 @@ public sealed class AppHostTenantsTopologyTests
         program.ShouldContain("ResolveOptionalSiblingProjectPath");
         program.ShouldContain("Run 'git submodule update --init {submoduleName}'");
         program.ShouldContain("Do not use recursive submodule initialization for the default local run.");
-        program.ShouldMatch(@"if\s*\(string\.Equals\(builder\.Configuration\[""EnableMemoriesSearch""\][\s\S]*?AddProject\(""memories"", memoriesProjectPath\)");
+        program.ShouldContain(@"WithEnvironment(""ConnectionStrings__falkordb"", ""falkordb:6379"")");
+        program.ShouldMatch(@"if\s*\(builder\.ExecutionContext\.IsPublishMode[\s\S]*?string\.Equals\(builder\.Configuration\[""EnableMemoriesSearch""\][\s\S]*?AddProject\(""memories"", memoriesProjectPath\)");
         program.ShouldNotContain(@"AddProject<Projects.Hexalith_Memories_Server>(""memories"")");
 
         string daprDir = Path.Combine(RepositoryRoot.Locate(), "src", "Hexalith.Parties.AppHost", "DaprComponents");

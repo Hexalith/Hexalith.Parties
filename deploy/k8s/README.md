@@ -48,8 +48,8 @@ by the infra team — see [`../zot/README.md`](../zot/README.md) "Out-of-band Se
 ## Publish + teardown (one-command flow)
 
 `publish.ps1` confirms the active kubectl context, resolves the MinVer image tag, regenerates
-the seven Aspirate-owned service folders, preserves Redis/Keycloak carve-outs, patches Dapr
-annotations/JWT references/image pull secrets, initializes Dapr when needed, bootstraps
+the seven Aspirate-owned service folders, preserves Redis/Keycloak/FalkorDB carve-outs, patches Dapr
+annotations/JWT references/health probes/image pull secrets, verifies Zot image manifests, runs the static deployment validator, initializes Dapr when needed, bootstraps
 operator-managed Secrets, applies `deploy/dapr/` in dependency order, then applies this
 Kustomize tree.
 
@@ -75,7 +75,7 @@ every run for auditability (per ADR D-K8s-3).
 
 ---
 
-> **🗺️ Roadmap — this folder fills in across Stories 9.2 → 9.5**
+> **🗺️ Roadmap — this folder fills in across Stories 9.2 → 9.8**
 >
 > | Path | Owning story | Purpose |
 > |---|---|---|
@@ -83,6 +83,7 @@ every run for auditability (per ADR D-K8s-3).
 > | `eventstore/`, `eventstore-admin/`, `eventstore-admin-ui/`, `parties/`, `parties-mcp/`, `tenants/`, `memories/` | Story 9.2 | Delivered: Aspirate-emitted per-service manifests |
 > | `namespace.yaml`, `kustomization.yaml` | Story 9.2 | Delivered: top-level namespace and Kustomize wiring |
 > | `redis/`, `keycloak/` | Story 9.3 | Delivered: hand-authored vendor carve-outs outside Aspirate regeneration |
+> | `falkordb/` | Story 9.8 | Delivered: Memories graph backing-service carve-out outside Aspirate regeneration |
 > | `deploy/dapr/` control-plane CRs | Story 9.4 | Delivered: Dapr Components, ACL, Subscriptions, and Resiliency |
 > | `publish.ps1`, `teardown.ps1`, `_lib/Confirm-KubeContext.ps1` | Story 9.5 | Delivered: operator scripts + shared context-gate helper |
 > | `../validate-deployment.ps1` | Story 9.6 | Delivered: context-free lint for the Dapr and Kubernetes manifest tree |
@@ -141,13 +142,14 @@ Runtime smoke tests for Story 9.5:
 
 ## Hand-authored carve-outs
 
-`redis/` and `keycloak/` are intentionally hand-authored vendor carve-outs. They are not
+`redis/`, `keycloak/`, and `falkordb/` are intentionally hand-authored vendor carve-outs. They are not
 Aspirate-emitted application folders and should survive every future publish regeneration.
 
 The Story 9.5 clean phase must preserve:
 
 - `deploy/k8s/redis/`
 - `deploy/k8s/keycloak/`
+- `deploy/k8s/falkordb/`
 - `deploy/k8s/kustomization.yaml`
 - `deploy/k8s/namespace.yaml`
 - `deploy/k8s/README.md`
@@ -163,6 +165,11 @@ HA shape. Data is lost when the Pod is recreated or rescheduled. Production pers
 AUTH, network policy, and HA hardening are deferred to
 [Kubernetes Deployment Architecture](../../docs/kubernetes-deployment-architecture.md)
 section 12.
+
+FalkorDB is also MVP/non-production only: it uses the pinned `falkordb/falkordb:v4.18.6`
+container image with `emptyDir` storage and exposes the Redis protocol on `falkordb:6379`.
+Memories receives `ConnectionStrings__falkordb=falkordb:6379`; do not point it at the MVP
+Redis service.
 
 Keycloak admin credentials are not committed as YAML. Story 9.5 bootstraps the
 `hexalith-keycloak-admin` Secret imperatively. It creates

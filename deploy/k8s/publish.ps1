@@ -61,6 +61,7 @@ $GeneratedServiceFolders = @(
 $PreservedEntries = @(
     'redis',
     'keycloak',
+    'falkordb',
     'kustomization.yaml',
     'namespace.yaml',
     'README.md',
@@ -73,6 +74,7 @@ $KnownAspiratePlaceholders = @(
     'aspirate-state.json',
     'aspirate-manifest.json',
     'dashboard.yaml',
+    'dapr',
     'components',
     'secrets'
 )
@@ -85,7 +87,7 @@ $DaprPatchMap = [ordered]@{
     'memories' = 'accesscontrol-memories'
 }
 
-$ForbiddenDaprTargets = @('eventstore-admin-ui', 'parties-mcp', 'redis', 'keycloak')
+$ForbiddenDaprTargets = @('eventstore-admin-ui', 'parties-mcp', 'redis', 'keycloak', 'falkordb')
 
 . (Join-Path $K8sRoot '_lib/Confirm-KubeContext.ps1')
 
@@ -120,10 +122,17 @@ function Invoke-Checked {
         [string] $WorkingDirectory = $RepoRoot
     )
 
-    $output = & $FilePath @Arguments 2>&1
-    $exitCode = $LASTEXITCODE
+    Push-Location $WorkingDirectory
+    try {
+        $output = & $FilePath @Arguments 2>&1
+        $exitCode = $LASTEXITCODE
+    }
+    finally {
+        Pop-Location
+    }
+
     if ($exitCode -ne 0) {
-        $bounded = ($output | Select-Object -First 20) -join [Environment]::NewLine
+        $bounded = ($output | Where-Object { -not [string]::IsNullOrWhiteSpace([string] $_) } | Select-Object -Last 30) -join [Environment]::NewLine
         Fail $FailureCode "$FailureMessage (exit $exitCode). $bounded"
     }
 
@@ -246,6 +255,7 @@ function Invoke-AspirateGenerate([string] $ImageTag) {
     Require-Command 'dotnet'
 
     $previousRollForward = $env:DOTNET_ROLL_FORWARD
+    $previousContainerImageTag = $env:ContainerImageTag
     $previousContainerImageTags = $env:ContainerImageTags
     $previousPublishTarget = $env:PUBLISH_TARGET
     try {
@@ -254,7 +264,8 @@ function Invoke-AspirateGenerate([string] $ImageTag) {
         }
 
         $env:DOTNET_ROLL_FORWARD = 'Major'
-        $env:ContainerImageTags = $ImageTag
+        $env:ContainerImageTag = $ImageTag
+        Remove-Item Env:ContainerImageTags -ErrorAction SilentlyContinue
         $arguments = @(
             'tool', 'run', '--allow-roll-forward', 'aspirate', '--', 'generate',
             '--project-path', $AppHostProject,
@@ -269,20 +280,18 @@ function Invoke-AspirateGenerate([string] $ImageTag) {
         )
 
         Write-Host "[publish] aspirate command: dotnet $($arguments -join ' ')"
-        Push-Location $AppHostRoot
-        try {
-            & dotnet @arguments
-            if ($LASTEXITCODE -ne 0) {
-                exit $LASTEXITCODE
-            }
-        }
-        finally {
-            Pop-Location
-        }
+        [void](Invoke-Checked 'dotnet' $arguments $ExitGeneral 'aspirate generate failed' $AppHostRoot)
     }
     finally {
         $env:DOTNET_ROLL_FORWARD = $previousRollForward
-        $env:ContainerImageTags = $previousContainerImageTags
+        $env:ContainerImageTag = $previousContainerImageTag
+        if ($null -eq $previousContainerImageTags) {
+            Remove-Item Env:ContainerImageTags -ErrorAction SilentlyContinue
+        }
+        else {
+            $env:ContainerImageTags = $previousContainerImageTags
+        }
+
         $env:PUBLISH_TARGET = $previousPublishTarget
     }
 }
@@ -298,6 +307,26 @@ function Remove-AspiratePlaceholders {
     }
 
     Write-Host "[publish] stripped aspirate placeholders: $($removed.Count)"
+
+    $kustomizationPath = Join-Path $K8sRoot 'kustomization.yaml'
+    @"
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: $Namespace
+resources:
+  - namespace.yaml
+  - eventstore
+  - eventstore-admin
+  - eventstore-admin-ui
+  - memories
+  - parties
+  - parties-mcp
+  - tenants
+  - redis
+  - keycloak
+  - falkordb
+"@ | Set-Content -LiteralPath $kustomizationPath -Encoding UTF8
+    Write-Host '[publish] restored canonical kustomization.yaml'
 }
 
 function Assert-ServiceFolders {
@@ -311,6 +340,21 @@ function Assert-ServiceFolders {
     }
 
     Write-Host "[publish] expected service folders present: $($GeneratedServiceFolders -join ', ')"
+}
+
+function Normalize-GeneratedKustomizations {
+    foreach ($folder in $GeneratedServiceFolders) {
+        $path = Join-Path $K8sRoot "$folder/kustomization.yaml"
+        if (-not (Test-Path -LiteralPath $path)) {
+            continue
+        }
+
+        $content = Get-Content -Raw -LiteralPath $path
+        $normalized = $content -replace "(\r?\n\s*)+\z", [Environment]::NewLine
+        Set-Content -LiteralPath $path -Value $normalized -NoNewline
+    }
+
+    Write-Host "[publish] normalized generated kustomization.yaml files"
 }
 
 function Read-DeploymentFile([string] $Name) {
@@ -510,6 +554,57 @@ function Ensure-JwtSecretRef {
     Write-Host "[publish] JWT secretKeyRef patch targets: $($DaprPatchMap.Keys -join ', ')"
 }
 
+function Ensure-AdminUiJwtSecretRef {
+    $name = 'eventstore-admin-ui'
+    $envBlock = @"
+        env:
+        - name: EventStore__Authentication__SigningKey
+          valueFrom:
+            secretKeyRef:
+              name: $JwtSecretName
+              key: value
+"@
+    $envItem = @"
+        - name: EventStore__Authentication__SigningKey
+          valueFrom:
+            secretKeyRef:
+              name: $JwtSecretName
+              key: value
+"@
+
+    $tuple = Read-DeploymentFile $name
+    $path = $tuple[0]
+    $content = $tuple[1]
+
+    if ($content -match "EventStore__Authentication__SigningKey" -and
+        $content -match "secretKeyRef:\s*`r?`n\s*name:\s*$JwtSecretName\s*`r?`n\s*key:\s*value") {
+        Write-Host "[publish] Admin UI JWT secretKeyRef patch target: $name"
+        return
+    }
+
+    if ($content -match "EventStore__Authentication__SigningKey") {
+        $literalPattern = "(?m)^\s*-\s+name:\s*EventStore__Authentication__SigningKey\s*`r?`n\s*value:\s*.*$"
+        $content = [regex]::Replace($content, $literalPattern, $envItem, 1)
+    }
+    elseif ($content -match "(?m)^\s{8}envFrom:\s*$") {
+        $content = $content -replace "(?m)^(\s*)envFrom:\s*$", "$envBlock`n`$1envFrom:"
+    }
+    elseif ($content -match "(?m)^\s{6}terminationGracePeriodSeconds:\s*") {
+        $content = $content -replace "(?m)^(\s*)terminationGracePeriodSeconds:\s*", "$envBlock`n`$1terminationGracePeriodSeconds:"
+    }
+    else {
+        Fail $ExitGeneral "unable to locate insertion point for Admin UI JWT signing env entry"
+    }
+
+    if ($content -notmatch "EventStore__Authentication__SigningKey" -or
+        $content -notmatch "secretKeyRef:\s*`r?`n\s*name:\s*$JwtSecretName\s*`r?`n\s*key:\s*value") {
+        Fail $ExitGeneral "Admin UI JWT secretKeyRef postcondition failed"
+    }
+
+    Set-Content -LiteralPath $path -Value $content -NoNewline
+    Write-Host "[publish] Admin UI JWT secretKeyRef patch target: $name"
+}
+
 function Ensure-ImagePullSecrets {
     $patched = @()
     foreach ($folder in $GeneratedServiceFolders) {
@@ -539,6 +634,120 @@ function Ensure-ImagePullSecrets {
     Write-Host "[publish] imagePullSecrets patch targets: $($patched -join ', ')"
 }
 
+function Assert-ZotImageManifests([string] $ImageTag) {
+    $entry = Read-ZotAuthBlock
+    $headers = @{
+        Accept = 'application/vnd.oci.image.index.v1+json, application/vnd.oci.image.manifest.v1+json, application/vnd.docker.distribution.manifest.v2+json, application/vnd.docker.distribution.manifest.list.v2+json'
+        Authorization = "Basic $($entry.auth)"
+    }
+
+    foreach ($repository in $GeneratedServiceFolders) {
+        if ($env:SCRIPT_TEST_LOG) {
+            Add-Content -LiteralPath $env:SCRIPT_TEST_LOG -Value "zot manifest $repository $ImageTag"
+            continue
+        }
+
+        $uri = "https://$Registry/v2/$repository/manifests/$ImageTag"
+        try {
+            $response = Invoke-WebRequest -Uri $uri -Method Head -Headers $headers -MaximumRedirection 0 -SkipHttpErrorCheck -TimeoutSec 30
+        }
+        catch {
+            Fail $ExitZotAuth "Zot manifest verification failed for ${repository}:$ImageTag"
+        }
+
+        if ($response.StatusCode -lt 200 -or $response.StatusCode -ge 300) {
+            Fail $ExitZotAuth "Zot manifest verification failed for ${repository}:$ImageTag with HTTP $($response.StatusCode)"
+        }
+    }
+
+    Write-Host "[publish] verified Zot manifests: $($GeneratedServiceFolders -join ', ')"
+}
+
+function Set-PrimaryContainerHealthProbes([string] $Content) {
+    $lines = [System.Collections.Generic.List[string]]::new()
+    $inputLines = $Content -split "`r?`n"
+    $index = 0
+    while ($index -lt $inputLines.Count) {
+        $line = $inputLines[$index]
+        if ($line -match '^\s{8}(readinessProbe|livenessProbe):\s*$') {
+            $index++
+            while ($index -lt $inputLines.Count) {
+                $next = $inputLines[$index]
+                if ($next -match '^\s{8}\S' -or
+                    $next -match '^\s{6}\S' -or
+                    $next -match '^\s{4}\S' -or
+                    $next -match '^\s{2}\S') {
+                    break
+                }
+
+                $index++
+            }
+
+            continue
+        }
+
+        $lines.Add($line)
+        if ($line -match '^\s{8}imagePullPolicy:\s*IfNotPresent\s*$') {
+            $lines.Add('        readinessProbe:')
+            $lines.Add('          httpGet:')
+            $lines.Add('            path: /health')
+            $lines.Add('            port: http')
+            $lines.Add('          initialDelaySeconds: 10')
+            $lines.Add('          timeoutSeconds: 10')
+            $lines.Add('          periodSeconds: 10')
+            $lines.Add('          failureThreshold: 30')
+            $lines.Add('        livenessProbe:')
+            $lines.Add('          httpGet:')
+            $lines.Add('            path: /health')
+            $lines.Add('            port: http')
+            $lines.Add('          initialDelaySeconds: 120')
+            $lines.Add('          timeoutSeconds: 10')
+            $lines.Add('          periodSeconds: 10')
+            $lines.Add('          failureThreshold: 30')
+        }
+
+        $index++
+    }
+
+    return ($lines -join [Environment]::NewLine)
+}
+
+function Test-PrimaryContainerHealthProbes([string] $Content) {
+    return $Content -match "(?m)^\s{8}readinessProbe:[ \t]*`r?`n\s{10}httpGet:[ \t]*`r?`n\s{12}path:[ \t]*/health[ \t]*`r?`n\s{12}port:[ \t]*http[ \t]*$" -and
+        $Content -match "(?m)^\s{10}timeoutSeconds:[ \t]*10[ \t]*$" -and
+        $Content -match "(?m)^\s{8}livenessProbe:[ \t]*`r?`n\s{10}httpGet:[ \t]*`r?`n\s{12}path:[ \t]*/health[ \t]*`r?`n\s{12}port:[ \t]*http[ \t]*$" -and
+        (([regex]::Matches($Content, "(?m)^\s{10}timeoutSeconds:[ \t]*10[ \t]*$")).Count -ge 2)
+}
+
+function Ensure-HealthProbes {
+    $patched = @()
+    foreach ($folder in $GeneratedServiceFolders) {
+        $tuple = Read-DeploymentFile $folder
+        $path = $tuple[0]
+        $content = $tuple[1]
+        if (Test-PrimaryContainerHealthProbes $content) {
+            continue
+        }
+
+        $content = Set-PrimaryContainerHealthProbes $content
+        if (-not (Test-PrimaryContainerHealthProbes $content)) {
+            Fail $ExitGeneral "unable to patch health probes in $folder"
+        }
+
+        Set-Content -LiteralPath $path -Value $content -NoNewline
+        $patched += $folder
+    }
+
+    Write-Host "[publish] health probe patch targets: $($patched -join ', ')"
+}
+
+function Invoke-DeploymentValidator {
+    Require-Command 'pwsh'
+    $validatorPath = Join-Path $DeployRoot 'validate-deployment.ps1'
+    [void](Invoke-Checked 'pwsh' @('-NoProfile', '-File', $validatorPath, '--config-path', $DaprRoot, '-K8sPath', $K8sRoot) $ExitGeneral 'deployment validator failed')
+    Write-Host '[publish] deployment validator passed'
+}
+
 function Test-PodTemplateImagePullSecret([string] $Content) {
     return $Content -match "(?ms)^\s{4}spec:\s*`r?`n(?:(?!^\s{4}\S).)*?^\s{6}imagePullSecrets:\s*`r?`n\s{6,8}-\s+name:\s*$([regex]::Escape($ZotSecretName))\s*$"
 }
@@ -555,20 +764,56 @@ metadata:
 }
 
 function Ensure-DaprControlPlane {
-    if ($SkipDaprInit) {
+    function Assert-DaprCrds {
         $crds = @('components.dapr.io', 'configurations.dapr.io', 'subscriptions.dapr.io', 'resiliencies.dapr.io')
         [void](Invoke-Checked 'kubectl' (@('get', 'crd') + $crds) $ExitGeneral 'required Dapr CRDs are missing')
+    }
+
+    if ($SkipDaprInit) {
+        Assert-DaprCrds
         Write-Host '[publish] Dapr init skipped; required CRDs verified'
         return
     }
 
     Require-Command 'dapr'
+    $status = & dapr status -k 2>&1
+    if ($LASTEXITCODE -eq 0) {
+        Assert-DaprCrds
+        Write-Host '[publish] existing Dapr control plane is healthy'
+        return
+    }
+
+    $existingDaprNamespace = & kubectl get namespace dapr-system --ignore-not-found=true -o name 2>$null
+    if ($LASTEXITCODE -eq 0 -and -not [string]::IsNullOrWhiteSpace(($existingDaprNamespace | Out-String).Trim())) {
+        $bounded = ($status | Select-Object -First 20) -join [Environment]::NewLine
+        Fail $ExitGeneral "existing Dapr control plane is unhealthy. $bounded"
+    }
+
     & dapr init -k --wait --timeout 300
     if ($LASTEXITCODE -ne 0) {
         Fail $ExitGeneral 'dapr init -k failed or existing install is unhealthy'
     }
 
+    Assert-DaprCrds
     Write-Host '[publish] Dapr control plane initialized or already healthy'
+}
+
+function Wait-WorkloadsReady {
+    $expectedDeployments = $GeneratedServiceFolders + @('redis', 'keycloak', 'falkordb')
+    foreach ($deployment in $expectedDeployments) {
+        [void](Invoke-Checked 'kubectl' @('rollout', 'status', "deployment/$deployment", '-n', $Namespace, '--timeout=600s') $ExitGeneral "deployment $deployment did not become Ready")
+    }
+
+    [void](Invoke-Checked 'kubectl' @('wait', '--for=condition=Ready', 'pod', '-n', $Namespace, '--all', '--timeout=600s') $ExitGeneral 'not all pods became Ready')
+    Write-Host "[publish] workloads Ready: $($expectedDeployments -join ', ')"
+}
+
+function Restart-GeneratedDeployments {
+    foreach ($deployment in $GeneratedServiceFolders) {
+        [void](Invoke-Checked 'kubectl' @('rollout', 'restart', "deployment/$deployment", '-n', $Namespace) $ExitGeneral "deployment $deployment restart failed")
+    }
+
+    Write-Host "[publish] rollout restart targets: $($GeneratedServiceFolders -join ', ')"
 }
 
 function Apply-DaprResources {
@@ -613,6 +858,22 @@ function Apply-SecretYaml([string] $Yaml, [string] $Name, [string] $Verb) {
 
 function Ensure-OpaqueSecretIfMissing([string] $Name, [hashtable] $Data) {
     if (Test-SecretExists $Name) {
+        $json = Invoke-Checked 'kubectl' @('get', 'secret', $Name, '-n', $Namespace, '-o', 'json') $ExitGeneral "secret $Name read failed"
+        $secret = ($json | Out-String) | ConvertFrom-Json -Depth 20
+        $missing = [ordered]@{}
+        foreach ($key in $Data.Keys) {
+            if ($null -eq $secret.data -or -not ($secret.data.PSObject.Properties.Name -contains $key)) {
+                $missing[$key] = $Data[$key]
+            }
+        }
+
+        if ($missing.Count -gt 0) {
+            $patch = @{ data = $missing } | ConvertTo-Json -Depth 5 -Compress
+            [void](Invoke-Checked 'kubectl' @('patch', 'secret', $Name, '-n', $Namespace, '--type', 'merge', '-p', $patch) $ExitGeneral "secret $Name patch failed")
+            Write-Host "[publish] secret $Name patched missing keys"
+            return
+        }
+
         Write-Host "[publish] secret $Name exists"
         return
     }
@@ -754,12 +1015,23 @@ Patch-DaprAnnotations
 
 Write-Step 'Patch JWT secretKeyRef'
 Ensure-JwtSecretRef
+Ensure-AdminUiJwtSecretRef
+
+Write-Step 'Patch health probes'
+Ensure-HealthProbes
 
 Write-Step 'Patch imagePullSecrets'
 Ensure-ImagePullSecrets
+Normalize-GeneratedKustomizations
 
 Write-Step 'Verify expected service folders'
 Assert-ServiceFolders
+
+Write-Step 'Verify Zot image manifests'
+Assert-ZotImageManifests $imageTag
+
+Write-Step 'Run static deployment validator'
+Invoke-DeploymentValidator
 
 Write-Step 'Install or verify Dapr control plane'
 Ensure-DaprControlPlane
@@ -777,6 +1049,12 @@ Apply-DaprResources
 
 Write-Step 'Apply Kubernetes workloads'
 [void](Invoke-Checked 'kubectl' @('apply', '-k', $K8sRoot) $ExitGeneral 'kustomize apply failed')
+
+Write-Step 'Restart generated workloads'
+Restart-GeneratedDeployments
+
+Write-Step 'Wait for workloads to become Ready'
+Wait-WorkloadsReady
 
 $Script:Started.Stop()
 Write-Host "[publish] OK: $imageTag applied to $ConfirmContext in $($Script:Started.Elapsed)"

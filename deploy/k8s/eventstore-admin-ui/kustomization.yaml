@@ -13,8 +13,11 @@ configMapGenerator:
     - HTTP_PORTS=8080
     - EVENTSTORE_ADMIN_HTTP=http://eventstore-admin:8080
     - services__eventstore-admin__http__0=http://eventstore-admin:8080
+    - EventStore__AdminServer__BaseUrl=http://eventstore-admin:8080
     - EventStore__AdminServer__SwaggerUrl=http://eventstore-admin:8080/swagger/index.html
-    - EventStore__Authentication__Authority=http://keycloak.hexalith-parties.svc.cluster.local:8080/realms/hexalith
-    - EventStore__Authentication__ClientId=hexalith-eventstore
+    - ASPNETCORE_ENVIRONMENT=Development
+    - DOTNET_ENVIRONMENT=Development
+    - EventStore__Authentication__Issuer=hexalith-dev
+    - EventStore__Authentication__Audience=hexalith-eventstore
+    - EventStore__Authentication__GlobalAdmin=true
     - ASPNETCORE_URLS=http://+:8080;
-

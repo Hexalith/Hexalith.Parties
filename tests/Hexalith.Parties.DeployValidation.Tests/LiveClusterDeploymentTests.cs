@@ -22,7 +22,7 @@ public sealed class LiveClusterDeploymentTests
         publish.ExitCode.ShouldBe(0, publish.CombinedOutput);
         ProcessResult wait = RunKubectl(kubeconfig, "wait", "--for=condition=Ready", "pod", "-n", "hexalith-parties", "--all", "--timeout=600s");
         wait.ExitCode.ShouldBe(0, wait.CombinedOutput);
-        AssertNinePodsReady(kubeconfig);
+        AssertTenPodsReady(kubeconfig);
     }
 
     [Fact]
@@ -119,13 +119,14 @@ public sealed class LiveClusterDeploymentTests
         return Run(start);
     }
 
-    private static void AssertNinePodsReady(string kubeconfig)
+    private static void AssertTenPodsReady(string kubeconfig)
     {
         ProcessResult result = RunKubectl(kubeconfig, "get", "pods", "-n", "hexalith-parties", "--no-headers");
         result.ExitCode.ShouldBe(0, result.CombinedOutput);
 
         string[] podLines = result.Stdout.ReplaceLineEndings("\n").Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-        podLines.Length.ShouldBe(9, $"Expected the Story 9.7 topology to have 9 Ready pods, but got {podLines.Length}:{Environment.NewLine}{result.Stdout}");
+        podLines.Length.ShouldBe(10, $"Expected the Story 9.8 topology to have 10 Ready pods, but got {podLines.Length}:{Environment.NewLine}{result.Stdout}");
+        podLines.ShouldContain(line => line.StartsWith("falkordb-", StringComparison.Ordinal), result.Stdout);
     }
 
     private static void AssertNoResidualStoryResources(string kubeconfig)

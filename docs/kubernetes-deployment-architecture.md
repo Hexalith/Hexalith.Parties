@@ -4,7 +4,7 @@ This document describes the final structure of the Hexalith.Parties deployment o
 
 ## 1. Overview
 
-Hexalith.Parties is deployed as a 9-workload topology inside a single Kubernetes namespace (`hexalith-parties`). The platform sits on a vanilla Kubernetes cluster (no managed-service dependencies) with a Dapr control plane handling state, pub/sub, and service-invocation. Container images live in a self-hosted Zot OCI registry. A single PowerShell script (`publish.ps1`) takes the operator from a clean checkout to a healthy cluster in one command.
+Hexalith.Parties is deployed as a 10-workload topology inside a single Kubernetes namespace (`hexalith-parties`). The platform sits on a vanilla Kubernetes cluster (no managed-service dependencies) with a Dapr control plane handling state, pub/sub, and service-invocation. Container images live in a self-hosted Zot OCI registry. A single PowerShell script (`publish.ps1`) takes the operator from a clean checkout to a healthy cluster in one command.
 
 ## 2. Operator Workflow
 
@@ -17,7 +17,7 @@ Each release:
   $ pwsh deploy/k8s/publish.ps1 -ConfirmContext kubernetes-admin@cluster.local
 
 Result (≈5-10 minutes later):
-  9 pods running in the hexalith-parties namespace at tag v0.2.0
+  10 pods running in the hexalith-parties namespace at tag v0.2.0
 ```
 
 No separate build / push / generate-manifest / apply ceremony. No `:latest` ambiguity. The MinVer-resolved version stamps every image; the same commit produces the same tag every time.
@@ -65,6 +65,14 @@ namespace: hexalith-parties
 │  │   • Calls parties via in-cluster HTTP                         │    │
 │  └──────────────────────────────────────────────────────────────┘    │
 │                                                                        │
+│  ┌──────────────────────────────────────────────────────────────┐    │
+│  │   falkordb (1/1, vendor image)                                 │    │
+│  │   ─────────────────────────                                    │    │
+│  │   • Port: 6379                                                 │    │
+│  │   • Storage: emptyDir (MVP — no PVC)                          │    │
+│  │   • Graph backing store for Memories.Server                   │    │
+│  └──────────────────────────────────────────────────────────────┘    │
+│                                                                        │
 └──────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -81,6 +89,7 @@ namespace: hexalith-parties
 | `tenants` | 2 (app + daprd) | `registry.hexalith.com/tenants` | Yes | Tenant management surface |
 | `memories` | 2 (app + daprd) | `registry.hexalith.com/memories` | Yes | Vector search backend |
 | `redis` | 1 | `redis` (vendor) | — | State + pub/sub backing store |
+| `falkordb` | 1 | `falkordb/falkordb` (vendor) | — | Graph backing store for Memories |
 
 ## 4. Dapr Control Plane
 
@@ -143,7 +152,7 @@ Each image is built once per commit, immutable thereafter (no re-tag, no overwri
 
 ### 5.3 Pull credentials in the cluster
 
-A Secret `zot-pull-secret` (type `kubernetes.io/dockerconfigjson`) is bootstrapped by `publish.ps1` from the operator's `~/.docker/config.json`. Every Deployment whose container image starts with `registry.hexalith.com/` carries an `imagePullSecrets: [{ name: zot-pull-secret }]` reference. Vendor-image carve-outs (`keycloak`, `redis`) do not need it.
+A Secret `zot-pull-secret` (type `kubernetes.io/dockerconfigjson`) is bootstrapped by `publish.ps1` from the operator's `~/.docker/config.json`. Every Deployment whose container image starts with `registry.hexalith.com/` carries an `imagePullSecrets: [{ name: zot-pull-secret }]` reference. Vendor-image carve-outs (`keycloak`, `redis`, `falkordb`) do not need it.
 
 ## 6. Operator-Managed Secrets
 
@@ -181,18 +190,19 @@ There are exactly three sources of truth for the deployed topology. Each one own
 └─────────────────────────────────────────────────────────────────────┘
 
 ┌─────────────────────────────────────────────────────────────────────┐
-│  Source 3: deploy/k8s/{redis,keycloak}/ (hand-authored carve-outs)   │
+│  Source 3: deploy/k8s/{redis,keycloak,falkordb}/ (hand-authored carve-outs) │
 │  ───────────────────────────────────────────────                    │
 │  Workloads aspirate either cannot emit cleanly or whose shape must  │
 │  diverge from Aspire's defaults (Redis MVP scope: no AUTH / no PVC; │
-│  Keycloak randomized admin password). publish.ps1 preserves these   │
+│  Keycloak randomized admin password; FalkorDB graph backing store). │
+│  publish.ps1 preserves these                                        │
 │  across regenerations.                                               │
 └─────────────────────────────────────────────────────────────────────┘
 ```
 
 ## 8. Build & Deploy Flow
 
-`publish.ps1` executes 13 phases in order. Each phase is bounded — failures surface a clear error and a specific exit code without partial state.
+`publish.ps1` executes 16 phases in order. Each phase is bounded — failures surface a clear error and a specific exit code without partial state.
 
 | Step | Action | Failure mode |
 |---|---|---|
@@ -203,15 +213,18 @@ There are exactly three sources of truth for the deployed topology. Each one own
 | 4 | Strip aspirate placeholder files | — |
 | 5 | Patch Dapr annotations (`app-id`, `app-port`, per-service config) | — |
 | 6 | Patch JWT `secretKeyRef` (`hexalith-jwt-signing`) into 5 consumer Deployments | — |
-| 7 | Inject `imagePullSecrets: [{name: zot-pull-secret}]` into Hexalith Deployments | — |
-| 8 | Verify all expected per-service folders were emitted | Exit 4 on missing folders |
-| 9 | Run `dapr init -k` (unless `-SkipDaprInit`) | Exit 3 on dapr CLI missing |
-| 10 | Ensure namespace + server dry-run of `deploy/dapr/resiliency.yaml` | Exit 1 on dry-run failure |
-| 11 | Bootstrap operator-managed Secrets (idempotent) | Exit 6 on missing credentials |
-| 12 | Apply Dapr CRs from `deploy/dapr/` (skipping alternative-backend templates) | — |
-| 13 | `kubectl apply -k deploy/k8s/` | — |
+| 7 | Patch `/health` readiness/liveness probes into generated app Deployments | Exit 1 on patch failure |
+| 8 | Inject `imagePullSecrets: [{name: zot-pull-secret}]` into Hexalith Deployments | — |
+| 9 | Verify all expected per-service folders were emitted | Exit 4 on missing folders |
+| 10 | Verify all 7 MinVer image manifests exist in Zot | Exit 6 on missing/unauthorized manifests |
+| 11 | Run `deploy/validate-deployment.ps1` against the patched tree | Exit 1 on blocking findings |
+| 12 | Run `dapr status -k`, or `dapr init -k` if no healthy control plane exists | Exit 3 on dapr CLI missing |
+| 13 | Ensure namespace + server dry-run of `deploy/dapr/resiliency.yaml` | Exit 1 on dry-run failure |
+| 14 | Bootstrap or patch operator-managed Secrets (idempotent) | Exit 6 on missing credentials |
+| 15 | Apply Dapr CRs from `deploy/dapr/` (skipping alternative-backend templates) | — |
+| 16 | `kubectl apply -k deploy/k8s/` | — |
 
-Two minutes after step 13, the 9 pods reach `Ready`.
+Two minutes after step 16, the 10 pods reach `Ready`.
 
 ## 9. Network & Data Flow (Example: "Create Party")
 
@@ -237,7 +250,7 @@ $ pwsh deploy/k8s/teardown.ps1 -ConfirmContext kubernetes-admin@cluster.local
 ```
 
 This removes:
-- All 9 workloads via `kubectl delete -k`.
+- All 10 workloads via `kubectl delete -k`.
 - All Dapr Components, Configurations, Subscriptions, Resiliency CRs.
 - The 3 operator-managed Secrets.
 - The namespace itself (optional `-PurgeNamespace` switch).
@@ -252,7 +265,7 @@ For a given commit on the `main` branch:
 
 1. **Image tags are deterministic** — the MinVer-resolved version is the same for everyone who runs `publish.ps1` on that commit. Same tag → same image content (subject to identical build chain).
 2. **Manifest YAMLs are byte-stable** — for every line except the image-tag line, `kustomize build deploy/k8s/` produces the same bytes across runs at the same commit on the same machine (cross-platform byte-stability is best-effort).
-3. **Hand-authored carve-outs survive regeneration** — `redis/` and `keycloak/` Deployments + Services are preserved across `publish.ps1` runs; only the Aspire-composed services are regenerated.
+3. **Hand-authored carve-outs survive regeneration** — `redis/`, `keycloak/`, and `falkordb/` Deployments + Services are preserved across `publish.ps1` runs; only the Aspire-composed services are regenerated.
 4. **Idempotent re-publish** — re-running `publish.ps1` on an unchanged commit produces zero diff in the cluster.
 
 ## 12. Boundaries (Not in the Current Architecture)

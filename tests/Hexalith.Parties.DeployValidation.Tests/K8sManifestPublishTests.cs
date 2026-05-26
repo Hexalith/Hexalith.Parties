@@ -5,7 +5,7 @@ public sealed class K8sManifestPublishTests
 {
     private static readonly string[] s_daprApps = ["eventstore", "eventstore-admin", "parties", "tenants", "memories"];
 
-    private static readonly string[] s_nonDaprApps = ["eventstore-admin-ui", "parties-mcp", "redis", "keycloak"];
+    private static readonly string[] s_nonDaprApps = ["eventstore-admin-ui", "parties-mcp", "redis", "keycloak", "falkordb"];
 
     [Fact]
     public void PublishScriptDeclaresMinVerAspirateAndPatchContracts()
@@ -20,8 +20,18 @@ public sealed class K8sManifestPublishTests
         publish.ShouldContain("--include-dashboard', 'false'");
         publish.ShouldContain("--image-pull-policy', 'IfNotPresent'");
         publish.ShouldContain("DOTNET_ROLL_FORWARD");
-        publish.ShouldContain("ContainerImageTags");
+        publish.ShouldContain("$env:ContainerImageTag = $ImageTag");
+        publish.ShouldContain("Remove-Item Env:ContainerImageTags");
+        publish.ShouldNotContain("$env:ContainerImageTags = $ImageTag");
         publish.ShouldContain("PUBLISH_TARGET must be unset before aspirate generate");
+        publish.ShouldContain("Assert-ZotImageManifests $imageTag");
+        publish.ShouldContain("Invoke-WebRequest -Uri $uri -Method Head");
+        publish.ShouldContain("-TimeoutSec 30");
+        publish.ShouldContain("Zot manifest verification failed for ${repository}:$ImageTag");
+        publish.ShouldContain("Invoke-DeploymentValidator");
+        publish.ShouldContain("Normalize-GeneratedKustomizations");
+        publish.ShouldContain("Restart-GeneratedDeployments");
+        publish.ShouldContain("Wait-WorkloadsReady");
     }
 
     [Fact]
@@ -39,11 +49,13 @@ public sealed class K8sManifestPublishTests
             publish.Contains(app, StringComparison.Ordinal).ShouldBeTrue($"{app} must be named so tests can guard accidental patch target expansion.");
         }
 
-        publish.ShouldContain("$ForbiddenDaprTargets = @('eventstore-admin-ui', 'parties-mcp', 'redis', 'keycloak')");
+        publish.ShouldContain("$ForbiddenDaprTargets = @('eventstore-admin-ui', 'parties-mcp', 'redis', 'keycloak', 'falkordb')");
         publish.ShouldContain("Authentication__JwtBearer__SigningKey");
+        publish.ShouldContain("EventStore__Authentication__SigningKey");
         publish.ShouldContain("secretKeyRef:");
         publish.ShouldContain("name: $JwtSecretName");
         publish.ShouldContain("Ensure-JwtSecretRef");
+        publish.ShouldContain("Ensure-AdminUiJwtSecretRef");
     }
 
     [Fact]
@@ -58,5 +70,15 @@ public sealed class K8sManifestPublishTests
         publish.ShouldContain("name:\\s*$([regex]::Escape($ZotSecretName))");
         publish.ShouldContain("Write-Host \"[publish] imagePullSecrets patch targets:");
         publish.ShouldNotContain("FromBase64String");
+    }
+
+    [Fact]
+    public void PartiesMcpProjectIsPublishableForContainerEmission()
+    {
+        string project = DeploymentTestPaths.ReadRepoFile("src/Hexalith.Parties.Mcp/Hexalith.Parties.Mcp.csproj");
+
+        project.ShouldContain("<IsPublishable>true</IsPublishable>");
+        project.ShouldContain("<EnableContainer>true</EnableContainer>");
+        project.ShouldContain("<ContainerRepository>parties-mcp</ContainerRepository>");
     }
 }

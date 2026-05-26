@@ -45,7 +45,8 @@ $KustomizeResourceFolders = @(
     'parties-mcp',
     'tenants',
     'redis',
-    'keycloak'
+    'keycloak',
+    'falkordb'
 )
 $OwnedResourceNames = @(
     'deployment.apps/eventstore',
@@ -57,6 +58,7 @@ $OwnedResourceNames = @(
     'deployment.apps/memories',
     'deployment.apps/keycloak',
     'deployment.apps/redis',
+    'deployment.apps/falkordb',
     'service/eventstore',
     'service/eventstore-admin',
     'service/eventstore-admin-ui',
@@ -66,6 +68,7 @@ $OwnedResourceNames = @(
     'service/memories',
     'service/keycloak',
     'service/redis',
+    'service/falkordb',
     'configmap/eventstore-env',
     'configmap/eventstore-admin-env',
     'configmap/eventstore-admin-ui-env',

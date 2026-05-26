@@ -1,5 +1,5 @@
 # Reference-only Dapr declarative subscription for the sample party-events consumer.
-# The sample app is not one of the 9 MVP Kubernetes workloads, so this manifest is
+# The sample app is not one of the 10 MVP Kubernetes workloads, so this manifest is
 # scoped to app-id "sample" and should not block the production topology when no
 # sample sidecar exists. Story 9.5 applies the CR set; runtime sample enablement is
 # separate from the production workload count.

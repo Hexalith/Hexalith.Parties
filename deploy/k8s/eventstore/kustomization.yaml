@@ -17,8 +17,9 @@ configMapGenerator:
     - EventStore__DomainServices__Registrations__wildcard_party_v1__TenantId=*
     - EventStore__DomainServices__Registrations__wildcard_party_v1__Domain=party
     - EventStore__DomainServices__Registrations__wildcard_party_v1__Version=v1
-    - Authentication__JwtBearer__Authority=http://keycloak.hexalith-parties.svc.cluster.local:8080/realms/hexalith
-    - Authentication__JwtBearer__Issuer=http://keycloak.hexalith-parties.svc.cluster.local:8080/realms/hexalith
+    - ASPNETCORE_ENVIRONMENT=Development
+    - DOTNET_ENVIRONMENT=Development
+    - Authentication__JwtBearer__Issuer=hexalith-dev
     - Authentication__JwtBearer__Audience=hexalith-eventstore
     - Authentication__JwtBearer__RequireHttpsMetadata=false
     - ASPNETCORE_URLS=http://+:8080;

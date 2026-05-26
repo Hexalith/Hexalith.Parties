@@ -146,13 +146,17 @@ public sealed class OperatorScriptValidationTests : IDisposable
             "Strip Aspirate placeholder files",
             "Patch Dapr annotations",
             "Patch JWT secretKeyRef",
+            "Patch health probes",
             "Patch imagePullSecrets",
             "Verify expected service folders",
+            "Verify Zot image manifests",
+            "Run static deployment validator",
             "Install or verify Dapr control plane",
             "Ensure namespace and dry-run resiliency CR",
             "Bootstrap operator-managed Secrets",
             "Apply Dapr CRs",
             "Apply Kubernetes workloads",
+            "Wait for workloads to become Ready",
         ];
 
         int previous = -1;
@@ -169,7 +173,7 @@ public sealed class OperatorScriptValidationTests : IDisposable
     {
         string publish = ReadRepoFile("deploy/k8s/publish.ps1");
 
-        foreach (string preserved in new[] { "redis", "keycloak", "kustomization.yaml", "namespace.yaml", "README.md", "publish.ps1", "teardown.ps1", "_lib" })
+        foreach (string preserved in new[] { "redis", "keycloak", "falkordb", "kustomization.yaml", "namespace.yaml", "README.md", "publish.ps1", "teardown.ps1", "_lib" })
         {
             publish.ShouldContain($"'{preserved}'");
         }
@@ -184,10 +188,13 @@ public sealed class OperatorScriptValidationTests : IDisposable
         publish.ShouldContain("'parties' = 'accesscontrol-parties'");
         publish.ShouldContain("'tenants' = 'accesscontrol-tenants'");
         publish.ShouldContain("'memories' = 'accesscontrol-memories'");
-        publish.ShouldContain("$ForbiddenDaprTargets = @('eventstore-admin-ui', 'parties-mcp', 'redis', 'keycloak')");
+        publish.ShouldContain("$ForbiddenDaprTargets = @('eventstore-admin-ui', 'parties-mcp', 'redis', 'keycloak', 'falkordb')");
         publish.ShouldContain("Authentication__JwtBearer__SigningKey");
+        publish.ShouldContain("EventStore__Authentication__SigningKey");
         publish.ShouldContain("imagePullSecrets");
         publish.ShouldContain("zot-pull-secret");
+        publish.ShouldContain("Assert-ZotImageManifests");
+        publish.ShouldContain("Invoke-DeploymentValidator");
         publish.ShouldContain("credsStore");
         publish.ShouldContain("credHelpers");
         publish.ShouldNotContain("FromBase64String");
@@ -307,6 +314,11 @@ public sealed class OperatorScriptValidationTests : IDisposable
         eventstore.ShouldContain("dapr.io/config: accesscontrol");
         eventstore.ShouldContain("imagePullSecrets:");
         eventstore.ShouldContain("- name: zot-pull-secret");
+        eventstore.ShouldContain("readinessProbe:");
+        eventstore.ShouldContain("path: /health");
+        eventstore.ShouldContain("port: http");
+        CountOccurrences(eventstore, "timeoutSeconds: 10").ShouldBe(2);
+        eventstore.ShouldContain("livenessProbe:");
         eventstore.ShouldContain("Authentication__JwtBearer__SigningKey");
         eventstore.ShouldContain("secretKeyRef:");
         eventstore.ShouldContain("name: hexalith-jwt-signing");
@@ -315,16 +327,26 @@ public sealed class OperatorScriptValidationTests : IDisposable
         string adminUi = File.ReadAllText(Path.Combine(workspace.K8sRoot, "eventstore-admin-ui", "deployment.yaml"));
         adminUi.ShouldNotContain("dapr.io/app-id");
         adminUi.ShouldContain("imagePullSecrets:");
+        adminUi.ShouldContain("EventStore__Authentication__SigningKey");
+        adminUi.ShouldContain("secretKeyRef:");
+        adminUi.ShouldContain("name: hexalith-jwt-signing");
 
+        workspace.LogLines.ShouldContain("zot manifest eventstore 0.1.1-preview.0.7");
+        workspace.LogLines.ShouldContain("zot manifest memories 0.1.1-preview.0.7");
+        workspace.LogLines.ShouldContain(line => line.StartsWith("validator --config-path ", StringComparison.Ordinal));
         workspace.LogLines.Count(line => line.Contains("resiliency.yaml --dry-run=server", StringComparison.Ordinal)).ShouldBe(1);
         int statestore = Array.FindIndex(workspace.LogLines, line => line.Contains("statestore.yaml", StringComparison.Ordinal));
         int pubsub = Array.FindIndex(workspace.LogLines, line => line.Contains("pubsub.yaml", StringComparison.Ordinal));
         int resiliency = Array.FindIndex(workspace.LogLines, line => line.Contains("resiliency.yaml", StringComparison.Ordinal) && !line.Contains("--dry-run=server", StringComparison.Ordinal));
         int workloads = Array.FindIndex(workspace.LogLines, line => line == $"kubectl apply -k {workspace.K8sRoot}");
+        int restart = Array.FindIndex(workspace.LogLines, line => line.Contains("rollout restart deployment/eventstore", StringComparison.Ordinal));
+        int ready = Array.FindIndex(workspace.LogLines, line => line.Contains("rollout status deployment/eventstore", StringComparison.Ordinal));
         statestore.ShouldBeGreaterThan(0);
         pubsub.ShouldBeGreaterThan(statestore);
         resiliency.ShouldBeGreaterThan(pubsub);
         workloads.ShouldBeGreaterThan(resiliency);
+        restart.ShouldBeGreaterThan(workloads);
+        ready.ShouldBeGreaterThan(restart);
     }
 
     [Fact]
@@ -335,6 +357,7 @@ public sealed class OperatorScriptValidationTests : IDisposable
         {
             ["redis"] = File.ReadAllText(Path.Combine(workspace.K8sRoot, "redis", "deployment.yaml")),
             ["keycloak"] = File.ReadAllText(Path.Combine(workspace.K8sRoot, "keycloak", "deployment.yaml")),
+            ["falkordb"] = File.ReadAllText(Path.Combine(workspace.K8sRoot, "falkordb", "deployment.yaml")),
         };
 
         for (int i = 0; i < 2; i++)
@@ -359,7 +382,17 @@ public sealed class OperatorScriptValidationTests : IDisposable
         CountOccurrences(eventstore, "- name: zot-pull-secret").ShouldBe(1);
         CountOccurrences(eventstore, "Authentication__JwtBearer__SigningKey").ShouldBe(1);
         CountOccurrences(eventstore, "secretKeyRef:").ShouldBe(1);
+        CountOccurrences(eventstore, "readinessProbe:").ShouldBe(1);
+        CountOccurrences(eventstore, "livenessProbe:").ShouldBe(1);
+        CountOccurrences(eventstore, "timeoutSeconds: 10").ShouldBe(2);
+        eventstore.ShouldContain("path: /health");
+        eventstore.ShouldContain("port: http");
         eventstore.ShouldNotContain("value: literal-secret");
+
+        string adminUi = File.ReadAllText(Path.Combine(workspace.K8sRoot, "eventstore-admin-ui", "deployment.yaml"));
+        CountOccurrences(adminUi, "EventStore__Authentication__SigningKey").ShouldBe(1);
+        CountOccurrences(adminUi, "secretKeyRef:").ShouldBe(1);
+        CountOccurrences(adminUi, "name: hexalith-jwt-signing").ShouldBe(1);
 
         foreach ((string folder, string baseline) in carveOutBaselines)
         {
@@ -370,6 +403,66 @@ public sealed class OperatorScriptValidationTests : IDisposable
             deployment.ShouldNotContain("zot-pull-secret");
             deployment.ShouldNotContain("imagePullSecrets:");
         }
+    }
+
+    [Fact]
+    public void PublishClearsInheritedPluralContainerImageTagsBeforeAspirate()
+    {
+        using ScriptWorkspace workspace = CreateScriptWorkspace(inheritedPluralContainerImageTags: "staging-latest");
+
+        ProcessResult result = RunPwshScriptPath(
+            workspace.PublishScript,
+            workspace.BinDirectory,
+            workspace.Environment,
+            "-ConfirmContext",
+            "safe-context",
+            "-SkipDaprInit");
+
+        result.ExitCode.ShouldBe(0, result.Output);
+        workspace.LogLines.ShouldNotContain("plural ContainerImageTags leaked into aspirate");
+    }
+
+    [Fact]
+    public void PublishReplacesReadinessOnlyGeneratedProbeWithoutDuplicatingKeys()
+    {
+        using ScriptWorkspace workspace = CreateScriptWorkspace(generatedReadinessOnlyProbe: true);
+
+        ProcessResult result = RunPwshScriptPath(
+            workspace.PublishScript,
+            workspace.BinDirectory,
+            workspace.Environment,
+            "-ConfirmContext",
+            "safe-context",
+            "-SkipDaprInit");
+
+        result.ExitCode.ShouldBe(0, result.Output);
+
+        string eventstore = File.ReadAllText(Path.Combine(workspace.K8sRoot, "eventstore", "deployment.yaml"));
+        CountOccurrences(eventstore, "readinessProbe:").ShouldBe(1);
+        CountOccurrences(eventstore, "livenessProbe:").ShouldBe(1);
+        CountOccurrences(eventstore, "timeoutSeconds: 10").ShouldBe(2);
+        eventstore.ShouldContain("path: /health");
+        eventstore.ShouldContain("port: http");
+        eventstore.ShouldNotContain("tcpSocket:");
+    }
+
+    [Fact]
+    public void PublishFailsWhenExistingDaprNamespaceIsUnhealthy()
+    {
+        using ScriptWorkspace workspace = CreateScriptWorkspace(daprStatusFailsExistingInstall: true);
+
+        ProcessResult result = RunPwshScriptPath(
+            workspace.PublishScript,
+            workspace.BinDirectory,
+            workspace.Environment,
+            "-ConfirmContext",
+            "safe-context");
+
+        result.ExitCode.ShouldBe(1, result.Output);
+        result.Output.ShouldContain("existing Dapr control plane is unhealthy");
+        workspace.LogLines.ShouldContain("dapr status -k");
+        workspace.LogLines.ShouldContain("kubectl get namespace dapr-system --ignore-not-found=true -o name");
+        workspace.LogLines.ShouldNotContain("dapr init -k --wait --timeout 300");
     }
 
     [Fact]
@@ -505,6 +598,9 @@ public sealed class OperatorScriptValidationTests : IDisposable
         bool failNamespaceResourceEnumeration = false,
         bool includeLiteralJwt = false,
         bool emitUnexpectedTopLevelFile = false,
+        bool generatedReadinessOnlyProbe = false,
+        bool daprStatusFailsExistingInstall = false,
+        string? inheritedPluralContainerImageTags = null,
         string dockerConfigJson = """{"auths":{"registry.hexalith.com":{"auth":"dXNlcjpwYXNz"}}}""")
     {
         string root = Path.Combine(_tempRoot, Guid.NewGuid().ToString("N"));
@@ -519,6 +615,12 @@ public sealed class OperatorScriptValidationTests : IDisposable
         Directory.CreateDirectory(bin);
         Directory.CreateDirectory(docker);
 
+        File.Copy(Path.Combine(RepositoryRoot, "global.json"), Path.Combine(root, "global.json"));
+        File.WriteAllText(Path.Combine(root, "deploy", "validate-deployment.ps1"), """
+#Requires -Version 7
+Add-Content -LiteralPath $env:SCRIPT_TEST_LOG -Value "validator $($args -join ' ')"
+exit 0
+""");
         File.Copy(Path.Combine(RepositoryRoot, "deploy", "k8s", "publish.ps1"), Path.Combine(k8sRoot, "publish.ps1"));
         File.Copy(Path.Combine(RepositoryRoot, "deploy", "k8s", "teardown.ps1"), Path.Combine(k8sRoot, "teardown.ps1"));
         File.Copy(Path.Combine(RepositoryRoot, "deploy", "k8s", "_lib", "Confirm-KubeContext.ps1"), Path.Combine(k8sRoot, "_lib", "Confirm-KubeContext.ps1"));
@@ -537,11 +639,12 @@ resources:
   - tenants
   - redis
   - keycloak
+  - falkordb
 """);
         File.WriteAllText(Path.Combine(k8sRoot, "namespace.yaml"), "apiVersion: v1\nkind: Namespace\nmetadata:\n  name: hexalith-parties\n");
         File.WriteAllText(Path.Combine(k8sRoot, "README.md"), "test\n");
 
-        foreach (string folder in new[] { "redis", "keycloak" })
+        foreach (string folder in new[] { "redis", "keycloak", "falkordb" })
         {
             Directory.CreateDirectory(Path.Combine(k8sRoot, folder));
             File.WriteAllText(Path.Combine(k8sRoot, folder, "deployment.yaml"), DeploymentYaml(folder, $"quay.io/{folder}/{folder}:test", includeDapr: false, includeLiteralJwt: false));
@@ -568,15 +671,19 @@ resources:
         File.WriteAllText(Path.Combine(docker, "config.json"), dockerConfigJson);
 
         string logPath = Path.Combine(root, "commands.log");
-        WriteKubectlShim(bin, logPath, failNamespaceResourceEnumeration);
-        WriteDotnetShim(bin, logPath, includeLiteralJwt, emitUnexpectedTopLevelFile);
-        WriteDaprShim(bin, logPath);
+        WriteKubectlShim(bin, logPath, failNamespaceResourceEnumeration, daprStatusFailsExistingInstall);
+        WriteDotnetShim(bin, logPath, includeLiteralJwt, emitUnexpectedTopLevelFile, generatedReadinessOnlyProbe);
+        WriteDaprShim(bin, logPath, daprStatusFailsExistingInstall);
 
         Dictionary<string, string> environment = new(StringComparer.Ordinal)
         {
             ["SCRIPT_TEST_LOG"] = logPath,
             ["DOCKER_CONFIG"] = docker,
         };
+        if (!string.IsNullOrEmpty(inheritedPluralContainerImageTags))
+        {
+            environment["ContainerImageTags"] = inheritedPluralContainerImageTags;
+        }
 
         return new ScriptWorkspace(root, k8sRoot, bin, logPath, environment);
     }
@@ -625,7 +732,7 @@ exit 1
         return new ShimWorkspace(root, bin, logPath);
     }
 
-    private static void WriteKubectlShim(string binDirectory, string logPath, bool failNamespaceResourceEnumeration)
+    private static void WriteKubectlShim(string binDirectory, string logPath, bool failNamespaceResourceEnumeration, bool daprStatusFailsExistingInstall)
     {
         string kubectlPath = Path.Combine(binDirectory, RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "kubectl.cmd" : "kubectl");
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
@@ -638,6 +745,10 @@ if "%1 %2"=="config current-context" (
   exit /b 0
 )
 if "%1 %2 %3"=="get namespace hexalith-parties" exit /b 0
+if "%1 %2 %3"=="get namespace dapr-system" (
+  echo namespace/dapr-system
+  exit /b {(daprStatusFailsExistingInstall ? 0 : 1)}
+)
 if "%1 %2"=="api-resources --verbs=list" (
   echo pods
   echo services
@@ -667,6 +778,10 @@ fi
 if [ "$1 $2 $3" = "get namespace hexalith-parties" ]; then
   exit 0
 fi
+if [ "$1 $2 $3" = "get namespace dapr-system" ]; then
+  printf '%s\n' namespace/dapr-system
+  exit {(daprStatusFailsExistingInstall ? 0 : 1)}
+fi
 if [ "$1" = "api-resources" ]; then
   printf '%s\n' pods services configmaps
   exit 0
@@ -695,7 +810,7 @@ exit 0
         }
     }
 
-    private static void WriteDotnetShim(string binDirectory, string logPath, bool includeLiteralJwt, bool emitUnexpectedTopLevelFile)
+    private static void WriteDotnetShim(string binDirectory, string logPath, bool includeLiteralJwt, bool emitUnexpectedTopLevelFile, bool generatedReadinessOnlyProbe)
     {
         string dotnetPath = Path.Combine(binDirectory, RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "dotnet.cmd" : "dotnet");
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
@@ -720,6 +835,10 @@ if [ "$1" = "msbuild" ]; then
   exit 0
 fi
 if [ "$1 $2 $3 $4 $5 $6" = "tool run --allow-roll-forward aspirate -- generate" ]; then
+  if [ -n "${ContainerImageTags:-}" ]; then
+    printf '%s\n' "plural ContainerImageTags leaked into aspirate" >> "{{logPath}}"
+    exit 42
+  fi
   out="$PWD/../../deploy/k8s"
   for name in eventstore eventstore-admin eventstore-admin-ui parties parties-mcp tenants memories; do
     mkdir -p "$out/$name"
@@ -735,6 +854,7 @@ path, name, include_dapr, literal_jwt = sys.argv[1], sys.argv[2], sys.argv[3] ==
 image = f"registry.hexalith.com/{name}:0.1.1-preview.0.7"
 annotations = "        dapr.io/enabled: 'true'\n        dapr.io/app-id: " + name + "\n" if include_dapr else "        example.com/placeholder: none\n"
 jwt = "        env:\n        - name: Authentication__JwtBearer__SigningKey\n          value: literal-secret\n" if literal_jwt else ""
+probe = "        readinessProbe:\n          tcpSocket:\n            port: 8080\n" if "{{(generatedReadinessOnlyProbe ? "1" : "0")}}" == "1" else ""
 open(path, "w", encoding="utf-8").write(f'''---
 apiVersion: apps/v1
 kind: Deployment
@@ -751,7 +871,7 @@ spec:
       - name: {name}
         image: {image}
         imagePullPolicy: IfNotPresent
-{jwt}        envFrom:
+{probe}{jwt}        envFrom:
         - configMapRef:
             name: {name}-env
       terminationGracePeriodSeconds: 180
@@ -769,7 +889,7 @@ exit 1
         File.SetUnixFileMode(dotnetPath, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
     }
 
-    private static void WriteDaprShim(string binDirectory, string logPath)
+    private static void WriteDaprShim(string binDirectory, string logPath, bool failStatus)
     {
         string daprPath = Path.Combine(binDirectory, RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "dapr.cmd" : "dapr");
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
@@ -777,6 +897,7 @@ exit 1
             File.WriteAllText(daprPath, $"""
 @echo off
 echo dapr %*>> "{logPath}"
+if "%1 %2"=="status -k" exit /b {(failStatus ? 1 : 0)}
 exit /b 0
 """);
         }
@@ -785,6 +906,10 @@ exit /b 0
             File.WriteAllText(daprPath, $"""
 #!/usr/bin/env bash
 printf 'dapr %s\n' "$*" >> "{logPath}"
+if [ "$1 $2" = "status -k" ]; then
+  printf '%s\n' "dapr status unhealthy"
+  exit {(failStatus ? 1 : 0)}
+fi
 exit 0
 """);
             File.SetUnixFileMode(daprPath, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
@@ -817,6 +942,12 @@ spec:
       - name: {{name}}
         image: {{image}}
         imagePullPolicy: IfNotPresent
+        readinessProbe:
+          tcpSocket:
+            port: 8080
+        livenessProbe:
+          tcpSocket:
+            port: 8080
 {{jwt}}        envFrom:
         - configMapRef:
             name: {{name}}-env

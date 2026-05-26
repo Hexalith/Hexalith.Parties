@@ -505,6 +505,16 @@ function Get-ContainerBlocks {
     $containers.ToArray()
 }
 
+function Test-HasRequiredHealthProbe {
+    param(
+        [Parameter(Mandatory = $true)][string]$ContainerText,
+        [Parameter(Mandatory = $true)][string]$ProbeName
+    )
+
+    $pattern = "(?m)^\s*$([regex]::Escape($ProbeName)):[ \t]*`r?`n\s*httpGet:[ \t]*`r?`n\s*path:[ \t]*/health[ \t]*`r?`n\s*port:[ \t]*http[ \t]*$"
+    $ContainerText -cmatch $pattern
+}
+
 function Get-ImageTag {
     param([Parameter(Mandatory = $true)][string]$Image)
 
@@ -571,8 +581,11 @@ function Find-K8sWorkloadFindings {
                 $findings.Add((New-Finding -Severity 'BLOCKING' -Category 'K8sWorkload-MissingDaprAnnotations' -File $relative -JsonPath '$.spec.template.metadata.annotations' -Reason 'Dapr app is missing required pod annotations'))
             }
 
-            if ($containers.Count -eq 0 -or $containers[0].Text -cnotmatch '(?m)^\s*readinessProbe:\s*$' -or $containers[0].Text -cnotmatch '(?m)^\s*livenessProbe:\s*$') {
-                $findings.Add((New-Finding -Severity 'BLOCKING' -Category 'K8sWorkload-MissingProbes' -File $relative -JsonPath '$.spec.template.spec.containers[0]' -Reason 'primary container requires readinessProbe and livenessProbe'))
+            if ($registryImageCount -gt 0 -and
+                ($containers.Count -eq 0 -or
+                -not (Test-HasRequiredHealthProbe -ContainerText $containers[0].Text -ProbeName 'readinessProbe') -or
+                -not (Test-HasRequiredHealthProbe -ContainerText $containers[0].Text -ProbeName 'livenessProbe'))) {
+                $findings.Add((New-Finding -Severity 'BLOCKING' -Category 'K8sWorkload-MissingProbes' -File $relative -JsonPath '$.spec.template.spec.containers[0]' -Reason 'primary container requires readinessProbe and livenessProbe using httpGet /health on port http'))
             }
 
         }
