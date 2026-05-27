@@ -90,6 +90,35 @@ public class CompositeCommandResultTests
     }
 
     [Fact]
+    public void PartyCommandResult_ResultPayload_IsMemoizedAndPreservesValueEquality()
+    {
+        // ResultPayload is now serialized once at construction. Two value-equal results must expose
+        // an equal payload, and reading the memoized payload on one must not break record equality
+        // (the cache field is a private readonly field included in the synthesized Equals).
+        IEventPayload[] events = [new PartyCreated { Type = PartyType.Person }];
+        var detail = new PartyDetail
+        {
+            Id = "party-3",
+            Type = PartyType.Person,
+            IsActive = true,
+            DisplayName = "Grace Hopper",
+            SortName = "Hopper, Grace",
+        };
+
+        var first = new PartyCommandResult(events, detail);
+        var second = new PartyCommandResult(events, detail);
+
+        string firstPayload = first.ResultPayload.ShouldNotBeNull();
+        string secondPayload = second.ResultPayload.ShouldNotBeNull();
+        firstPayload.ShouldBe(secondPayload);
+        firstPayload.ShouldContain("\"displayName\":\"Grace Hopper\"");
+
+        // Equality must still hold after the memoized payload has been read.
+        first.ShouldBe(second);
+        first.GetHashCode().ShouldBe(second.GetHashCode());
+    }
+
+    [Fact]
     public void CompositeCommandResult_WithNoUpdatedPartyDetail_ResultPayloadIsNull()
     {
         // Compatibility contract for callers ignoring `resultPayload`: when no enriched

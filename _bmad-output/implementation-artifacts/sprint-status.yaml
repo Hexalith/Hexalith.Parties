@@ -264,7 +264,7 @@ development_status:
   # --- Epic 9 v1 entries (superseded, retained for trace) ---
   9-1-generate-k8s-artifacts-and-deploy-full-topology-to-local-cluster: superseded
   9-2-extend-deployment-validation-to-kubernetes-manifests: superseded
-  9-3-close-k8s-deployment-spec-gaps: superseded
+  9-3-close-k8s-deployment-spec-gaps: stopsuperseded
   9-4-frontcomposer-deployable-host: superseded
   9-5-zot-registry-build-push-pipeline: superseded
   9-6-ci-integration-gate: superseded
@@ -304,4 +304,4 @@ development_status:
   # Story 9.12: EventStore Admin UI Dapr Topology Correction — Admin UI is Dapr client-only for service invocation to eventstore-admin; publish/validator/docs/ACL corrected and live publish proven after namespace deletion.
   9-12-eventstore-admin-ui-dapr-topology-correction: done
   # Epic 9 v2 retro is done for the as-built 9-1..9-8 set; post-retro publish hardening is tracked as an additional closed runtime correction.
-  epic-9-retrospective: done
+   epic-9-retrospective: done

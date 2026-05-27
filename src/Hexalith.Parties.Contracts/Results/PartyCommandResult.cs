@@ -19,15 +19,24 @@ public sealed record PartyCommandResult : DomainResult
         Converters = { new JsonStringEnumConverter() },
     };
 
+    private readonly string _resultPayload;
+
     public PartyCommandResult(IReadOnlyList<IEventPayload> events, PartyDetail updatedPartyDetail)
         : base(events)
     {
         UpdatedPartyDetail = updatedPartyDetail ?? throw new ArgumentNullException(nameof(updatedPartyDetail));
+
+        // Serialize once at construction rather than on every ResultPayload read. The producer
+        // (DomainServiceWireResult.FromDomainResult) and the command handler each read the property,
+        // so a getter-time serialize ran at least twice per command. A readonly field keeps record
+        // value-equality intact — it is derived deterministically from UpdatedPartyDetail, so equal
+        // instances carry an equal payload — and moves any serialization failure out of a property getter.
+        _resultPayload = JsonSerializer.Serialize(UpdatedPartyDetail, JsonOptions);
     }
 
     public PartyDetail UpdatedPartyDetail { get; }
 
-    public override string? ResultPayload => JsonSerializer.Serialize(UpdatedPartyDetail, JsonOptions);
+    public override string? ResultPayload => _resultPayload;
 
     internal static string? SerializePayload(PartyDetail? updatedPartyDetail)
         => updatedPartyDetail is null ? null : JsonSerializer.Serialize(updatedPartyDetail, JsonOptions);

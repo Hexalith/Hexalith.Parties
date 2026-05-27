@@ -193,7 +193,7 @@ public sealed class HttpPartiesCommandClient : IPartiesCommandClient
                 {
                     return new PartiesCommandResult<PartyDetail>(
                         correlationId,
-                        TryDeserializePartyDetail(doc.RootElement));
+                        TryDeserializePartyDetail(doc.RootElement, aggregateId));
                 }
             }
         }
@@ -210,7 +210,7 @@ public sealed class HttpPartiesCommandClient : IPartiesCommandClient
             null);
     }
 
-    private static PartyDetail? TryDeserializePartyDetail(JsonElement root)
+    private static PartyDetail? TryDeserializePartyDetail(JsonElement root, string aggregateId)
     {
         if (!root.TryGetProperty("resultPayload", out JsonElement payload)
             || payload.ValueKind is JsonValueKind.Null or JsonValueKind.Undefined)
@@ -220,7 +220,14 @@ public sealed class HttpPartiesCommandClient : IPartiesCommandClient
 
         try
         {
-            return payload.Deserialize<PartyDetail>(JsonOptions);
+            PartyDetail? detail = payload.Deserialize<PartyDetail>(JsonOptions);
+
+            // Defense-in-depth: a buggy or compromised gateway could echo a payload for a different
+            // party. Only trust an enriched result whose id matches the aggregate we submitted;
+            // otherwise fail closed to the correlationId-only contract.
+            return detail is not null && string.Equals(detail.Id, aggregateId, StringComparison.Ordinal)
+                ? detail
+                : null;
         }
         catch (Exception ex) when (ex is JsonException or NotSupportedException or InvalidOperationException)
         {

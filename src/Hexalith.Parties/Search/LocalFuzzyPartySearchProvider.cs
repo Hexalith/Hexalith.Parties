@@ -76,27 +76,30 @@ internal sealed class LocalFuzzyPartySearchProvider : IPartySearchProvider
             }
         }
 
-        results.Sort((left, right) =>
+        // Precompute the diacritic-normalized display name once per result. The previous comparator
+        // re-ran NormalizeDiacritics (a FormD normalization that allocates a StringBuilder) on both
+        // operands of every comparison — O(n log n) normalizations on a hot path for large tenants.
+        List<(PartySearchResult Result, string SortKey)> decorated =
+            [.. results.Select(r => (r, NormalizeDiacritics(r.Party.DisplayName)))];
+
+        decorated.Sort((left, right) =>
         {
-            int byScore = right.RelevanceScore.CompareTo(left.RelevanceScore);
+            int byScore = right.Result.RelevanceScore.CompareTo(left.Result.RelevanceScore);
             if (byScore != 0)
             {
                 return byScore;
             }
 
-            int byDisplayName = string.Compare(
-                NormalizeDiacritics(left.Party.DisplayName),
-                NormalizeDiacritics(right.Party.DisplayName),
-                StringComparison.OrdinalIgnoreCase);
+            int byDisplayName = string.Compare(left.SortKey, right.SortKey, StringComparison.OrdinalIgnoreCase);
             if (byDisplayName != 0)
             {
                 return byDisplayName;
             }
 
-            return string.Compare(left.Party.Id, right.Party.Id, StringComparison.Ordinal);
+            return string.Compare(left.Result.Party.Id, right.Result.Party.Id, StringComparison.Ordinal);
         });
 
-        return CreatePagedResult(results, page, pageSize);
+        return CreatePagedResult([.. decorated.Select(d => d.Result)], page, pageSize);
     }
 
     internal static double JaroWinklerSimilarity(string s1, string s2)

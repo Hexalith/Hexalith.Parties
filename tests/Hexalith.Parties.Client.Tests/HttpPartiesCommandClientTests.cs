@@ -110,6 +110,41 @@ public sealed class HttpPartiesCommandClientTests
     }
 
     [Fact]
+    public async Task CreatePartyWithResultAsync_WhenPayloadPartyIdDoesNotMatch_FailsClosedAndKeepsCorrelationAsync()
+    {
+        // A structurally valid PartyDetail whose id does not match the submitted aggregate id
+        // (spoofed or buggy gateway) must not be trusted as the enriched result; the client falls
+        // back to the correlationId-only contract instead of returning another party's data.
+        string responseBody = JsonSerializer.Serialize(new
+        {
+            correlationId = "corr-id-mismatch",
+            resultPayload = new
+            {
+                id = "p-999",
+                type = "Person",
+                isActive = true,
+                displayName = "Ada Lovelace",
+                sortName = "Lovelace, Ada",
+            },
+        });
+        var handler = new MockHandler(HttpStatusCode.Accepted, responseBody, "application/json");
+        var httpClient = new HttpClient(handler) { BaseAddress = new Uri("https://localhost") };
+        var client = new HttpPartiesCommandClient(httpClient, Options.Create(ClientOptions()));
+
+        PartiesCommandResult<PartyDetail> result = await client.CreatePartyWithResultAsync(
+            new CreateParty
+            {
+                PartyId = "p-1",
+                Type = PartyType.Person,
+                PersonDetails = new PersonDetails { FirstName = "Ada", LastName = "Lovelace" },
+            },
+            CancellationToken.None);
+
+        result.CorrelationId.ShouldBe("corr-id-mismatch");
+        result.Payload.ShouldBeNull();
+    }
+
+    [Fact]
     public async Task UpdatePersonDetailsAsync_ReplacesBodyPartyIdWithRoutePartyIdInEventStorePayloadAsync()
     {
         (HttpPartiesCommandClient client, MockHandler handler) = CreateClient("corr-456");

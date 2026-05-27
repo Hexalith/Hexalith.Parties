@@ -63,6 +63,10 @@ internal sealed class SemanticPartySearchProvider : IPartySearchProvider
             .OrderByDescending(r => r.RelevanceScore)
             .ThenBy(r => GetSortableName(r.Party), StringComparer.OrdinalIgnoreCase)
             .ThenBy(r => r.Party.DisplayName, StringComparer.OrdinalIgnoreCase)
+            // Final deterministic tie-breaker on party id so pagination is stable across hosts and
+            // matches LocalFuzzyPartySearchProvider / PartySearchResultsBuilder when score, sortable
+            // name, and display name all collide.
+            .ThenBy(r => r.Party.Id, StringComparer.Ordinal)
             .ToList();
 
         return CreatePagedResult(results, page, pageSize);
