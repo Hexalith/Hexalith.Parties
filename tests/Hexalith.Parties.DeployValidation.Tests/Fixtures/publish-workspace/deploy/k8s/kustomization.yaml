@@ -4,4 +4,3 @@ namespace: hexalith-parties
 resources:
   - namespace.yaml
   - redis
-  - keycloak

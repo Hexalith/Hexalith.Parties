@@ -17,8 +17,10 @@ configMapGenerator:
     - services__sample__http__0=http://sample:8080
     - EventStore__EventStoreUrl=http://eventstore:8080
     - EventStore__SignalR__HubUrl=http://eventstore:8080/hubs/projection-changes
+    - EventStore__Authentication__Authority=http://auth.tache.ai:8080/realms/tache
+    - EventStore__Authentication__ClientId=hexalith-eventstore
     - EventStore__Authentication__Subject=sample-blazor-ui
-    - EventStore__Authentication__Issuer=hexalith-dev
+    - EventStore__Authentication__Issuer=http://auth.tache.ai:8080/realms/tache
     - EventStore__Authentication__Audience=hexalith-eventstore
     - EventStore__Authentication__Tenants__0=tenant-a
     - EventStore__Authentication__Domains__0=counter

@@ -3,11 +3,11 @@ namespace Hexalith.Parties.DeployValidation.Tests;
 [Collection("DeployValidation")]
 public sealed class K8sManifestPublishTests
 {
-    private static readonly string[] s_daprApps = ["eventstore", "eventstore-admin", "parties", "tenants", "memories"];
+    private static readonly string[] s_daprApps = ["eventstore", "eventstore-admin", "sample", "parties", "tenants", "memories"];
 
-    private static readonly string[] s_daprClientOnlyApps = ["eventstore-admin-ui"];
+    private static readonly string[] s_daprClientOnlyApps = ["eventstore-admin-ui", "sample-blazor-ui"];
 
-    private static readonly string[] s_nonDaprApps = ["parties-mcp", "redis", "keycloak", "falkordb"];
+    private static readonly string[] s_nonDaprApps = ["parties-mcp", "redis", "falkordb"];
 
     [Fact]
     public void PublishScriptDeclaresMinVerAspirateAndPatchContracts()
@@ -56,14 +56,24 @@ public sealed class K8sManifestPublishTests
             publish.Contains(app, StringComparison.Ordinal).ShouldBeTrue($"{app} must be named as a Dapr client-only patch target.");
         }
 
-        publish.ShouldContain("$DaprClientOnlyTargets = @('eventstore-admin-ui')");
-        publish.ShouldContain("$ForbiddenDaprTargets = @('parties-mcp', 'redis', 'keycloak', 'falkordb')");
-        publish.ShouldContain("Authentication__JwtBearer__SigningKey");
-        publish.ShouldContain("EventStore__Authentication__SigningKey");
+        publish.ShouldContain("$DaprClientOnlyTargets = @('eventstore-admin-ui', 'sample-blazor-ui')");
+        publish.ShouldContain("$ForbiddenDaprTargets = @('parties-mcp', 'redis', 'falkordb')");
+        publish.ShouldContain("http://auth.tache.ai:8080/realms/tache");
+        publish.ShouldContain("$UiCredentialsSecretName = 'hexalith-tache-ui-credentials'");
+        publish.ShouldContain("EventStore__Authentication__Username");
+        publish.ShouldContain("EventStore__Authentication__Password");
+        publish.ShouldContain("Patch-KeycloakHostAlias");
+        publish.ShouldContain("Test-KeycloakTacheRealmContract");
+        publish.ShouldContain("Assert-KeycloakTokenContract");
+        publish.ShouldContain("Reconcile-LegacyLocalKeycloakResources");
+        publish.ShouldContain("deployment/keycloak");
+        publish.ShouldContain("hexalith-keycloak-admin");
         publish.ShouldContain("secretKeyRef:");
-        publish.ShouldContain("name: $JwtSecretName");
-        publish.ShouldContain("Ensure-JwtSecretRef");
-        publish.ShouldContain("Ensure-AdminUiJwtSecretRef");
+        publish.ShouldContain("name: $UiCredentialsSecretName");
+        publish.ShouldContain("Validate-UiCredentialsSecret");
+        publish.ShouldContain("Assert-NoSigningKeyReferences");
+        publish.ShouldNotContain("Ensure-JwtSecretRef");
+        publish.ShouldNotContain("Ensure-UiJwtSecretRefs");
     }
 
     [Fact]
@@ -77,7 +87,6 @@ public sealed class K8sManifestPublishTests
         publish.ShouldContain("Test-PodTemplateImagePullSecret");
         publish.ShouldContain("name:\\s*$([regex]::Escape($ZotSecretName))");
         publish.ShouldContain("Write-Host \"[publish] imagePullSecrets patch targets:");
-        publish.ShouldNotContain("FromBase64String");
     }
 
     [Fact]

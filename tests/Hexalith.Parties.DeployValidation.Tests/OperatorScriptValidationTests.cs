@@ -140,21 +140,24 @@ public sealed class OperatorScriptValidationTests : IDisposable
         string[] orderedMarkers =
         [
             "Confirm Kubernetes context",
+            "Ensure namespace and preflight external auth",
             "Resolve MinVer image tag",
             "Clean generated deploy/k8s entries",
             "Run dotnet aspirate generate",
             "Strip Aspirate placeholder files",
             "Patch Dapr annotations",
-            "Patch JWT secretKeyRef",
+            "Patch Keycloak host alias",
+            "Patch UI credential secretKeyRefs",
             "Patch health probes",
             "Patch imagePullSecrets",
             "Verify expected service folders",
             "Verify Zot image manifests",
             "Run static deployment validator",
             "Install or verify Dapr control plane",
-            "Ensure namespace and dry-run resiliency CR",
-            "Bootstrap operator-managed Secrets",
+            "Dry-run resiliency CR",
+            "Ensure Zot pull Secret",
             "Apply Dapr CRs",
+            "Reconcile legacy local Keycloak resources",
             "Apply Kubernetes workloads",
             "Wait for workloads to become Ready",
         ];
@@ -173,12 +176,12 @@ public sealed class OperatorScriptValidationTests : IDisposable
     {
         string publish = ReadRepoFile("deploy/k8s/publish.ps1");
 
-        foreach (string preserved in new[] { "redis", "keycloak", "falkordb", "kustomization.yaml", "namespace.yaml", "README.md", "publish.ps1", "teardown.ps1", "_lib" })
+        foreach (string preserved in new[] { "redis", "falkordb", "kustomization.yaml", "namespace.yaml", "README.md", "publish.ps1", "teardown.ps1", "_lib" })
         {
             publish.ShouldContain($"'{preserved}'");
         }
 
-        foreach (string generated in new[] { "eventstore", "eventstore-admin", "eventstore-admin-ui", "parties", "parties-mcp", "tenants", "memories" })
+        foreach (string generated in new[] { "eventstore", "eventstore-admin", "eventstore-admin-ui", "sample", "sample-blazor-ui", "parties", "parties-mcp", "tenants", "memories" })
         {
             publish.ShouldContain($"'{generated}'");
         }
@@ -188,17 +191,17 @@ public sealed class OperatorScriptValidationTests : IDisposable
         publish.ShouldContain("'parties' = 'accesscontrol-parties'");
         publish.ShouldContain("'tenants' = 'accesscontrol-tenants'");
         publish.ShouldContain("'memories' = 'accesscontrol-memories'");
-        publish.ShouldContain("$DaprClientOnlyTargets = @('eventstore-admin-ui')");
-        publish.ShouldContain("$ForbiddenDaprTargets = @('parties-mcp', 'redis', 'keycloak', 'falkordb')");
-        publish.ShouldContain("Authentication__JwtBearer__SigningKey");
-        publish.ShouldContain("EventStore__Authentication__SigningKey");
+        publish.ShouldContain("$DaprClientOnlyTargets = @('eventstore-admin-ui', 'sample-blazor-ui')");
+        publish.ShouldContain("$ForbiddenDaprTargets = @('parties-mcp', 'redis', 'falkordb')");
+        publish.ShouldContain("http://auth.tache.ai:8080/realms/tache");
+        publish.ShouldContain("EventStore__Authentication__Username");
+        publish.ShouldContain("EventStore__Authentication__Password");
         publish.ShouldContain("imagePullSecrets");
         publish.ShouldContain("zot-pull-secret");
         publish.ShouldContain("Assert-ZotImageManifests");
         publish.ShouldContain("Invoke-DeploymentValidator");
         publish.ShouldContain("credsStore");
         publish.ShouldContain("credHelpers");
-        publish.ShouldNotContain("FromBase64String");
         publish.ShouldContain("Docker config uses credsStore");
         publish.ShouldContain("helper-backed auth is not supported");
     }
@@ -223,6 +226,7 @@ public sealed class OperatorScriptValidationTests : IDisposable
             "resiliency.yaml",
             "accesscontrol.yaml",
             "accesscontrol-eventstore-admin.yaml",
+            "accesscontrol-sample.yaml",
             "accesscontrol-parties.yaml",
             "accesscontrol-tenants.yaml",
             "accesscontrol-memories.yaml",
@@ -252,6 +256,10 @@ public sealed class OperatorScriptValidationTests : IDisposable
         teardown.ShouldContain("kubectl' @('delete', '-k'");
         teardown.ShouldContain("kubectl' @('delete', '-f'");
         teardown.ShouldContain("Residual state detected - manual intervention required before next publish");
+        teardown.ShouldContain("hexalith-keycloak-admin");
+        teardown.ShouldContain("deployment.apps/keycloak");
+        teardown.ShouldContain("service/keycloak");
+        teardown.ShouldContain("configmap/keycloak-realm");
         teardown.ShouldContain("$PurgeNamespace");
         teardown.ShouldContain("$PurgeDapr");
         teardown.ShouldContain("'dapr' @('uninstall', '-k', '--all')");
@@ -320,9 +328,14 @@ public sealed class OperatorScriptValidationTests : IDisposable
         eventstore.ShouldContain("port: http");
         CountOccurrences(eventstore, "timeoutSeconds: 10").ShouldBe(2);
         eventstore.ShouldContain("livenessProbe:");
-        eventstore.ShouldContain("Authentication__JwtBearer__SigningKey");
-        eventstore.ShouldContain("secretKeyRef:");
-        eventstore.ShouldContain("name: hexalith-jwt-signing");
+        eventstore.ShouldContain("hostAliases:");
+        eventstore.ShouldContain("ip: 10.96.42.17");
+        eventstore.ShouldContain("auth.tache.ai");
+        eventstore.ShouldContain("internal.example");
+        eventstore.ShouldContain("envFrom:");
+        eventstore.ShouldContain("terminationGracePeriodSeconds: 180");
+        eventstore.ShouldNotContain("Authentication__JwtBearer__SigningKey");
+        eventstore.ShouldNotContain("hexalith-jwt-signing");
         eventstore.ShouldNotContain("value: literal-secret");
 
         string adminUi = File.ReadAllText(Path.Combine(workspace.K8sRoot, "eventstore-admin-ui", "deployment.yaml"));
@@ -331,12 +344,17 @@ public sealed class OperatorScriptValidationTests : IDisposable
         adminUi.ShouldNotContain("dapr.io/app-port");
         adminUi.ShouldNotContain("dapr.io/config");
         adminUi.ShouldContain("imagePullSecrets:");
-        adminUi.ShouldContain("EventStore__Authentication__SigningKey");
+        adminUi.ShouldContain("hostAliases:");
+        adminUi.ShouldContain("auth.tache.ai");
+        adminUi.ShouldContain("EventStore__Authentication__Username");
+        adminUi.ShouldContain("EventStore__Authentication__Password");
         adminUi.ShouldContain("secretKeyRef:");
-        adminUi.ShouldContain("name: hexalith-jwt-signing");
+        adminUi.ShouldContain("name: hexalith-tache-ui-credentials");
 
         workspace.LogLines.ShouldContain("zot manifest eventstore 0.1.1-preview.0.7");
         workspace.LogLines.ShouldContain("zot manifest memories 0.1.1-preview.0.7");
+        workspace.LogLines.ShouldContain(line => line.Contains("run keycloak-tache-preflight", StringComparison.Ordinal));
+        workspace.LogLines.ShouldContain(line => line.Contains("delete deployment/keycloak service/keycloak configmap/keycloak-realm secret/hexalith-keycloak-admin", StringComparison.Ordinal));
         workspace.LogLines.ShouldContain(line => line.StartsWith("validator --config-path ", StringComparison.Ordinal));
         workspace.LogLines.Count(line => line.Contains("resiliency.yaml --dry-run=server", StringComparison.Ordinal)).ShouldBe(1);
         int statestore = Array.FindIndex(workspace.LogLines, line => line.Contains("statestore.yaml", StringComparison.Ordinal));
@@ -360,7 +378,6 @@ public sealed class OperatorScriptValidationTests : IDisposable
         Dictionary<string, string> carveOutBaselines = new(StringComparer.Ordinal)
         {
             ["redis"] = File.ReadAllText(Path.Combine(workspace.K8sRoot, "redis", "deployment.yaml")),
-            ["keycloak"] = File.ReadAllText(Path.Combine(workspace.K8sRoot, "keycloak", "deployment.yaml")),
             ["falkordb"] = File.ReadAllText(Path.Combine(workspace.K8sRoot, "falkordb", "deployment.yaml")),
         };
 
@@ -384,8 +401,14 @@ public sealed class OperatorScriptValidationTests : IDisposable
         CountOccurrences(eventstore, "dapr.io/config: accesscontrol").ShouldBe(1);
         CountOccurrences(eventstore, "imagePullSecrets:").ShouldBe(1);
         CountOccurrences(eventstore, "- name: zot-pull-secret").ShouldBe(1);
-        CountOccurrences(eventstore, "Authentication__JwtBearer__SigningKey").ShouldBe(1);
-        CountOccurrences(eventstore, "secretKeyRef:").ShouldBe(1);
+        CountOccurrences(eventstore, "hostAliases:").ShouldBe(1);
+        CountOccurrences(eventstore, "auth.tache.ai").ShouldBe(1);
+        CountOccurrences(eventstore, "internal.example").ShouldBe(1);
+        eventstore.ShouldContain("envFrom:");
+        eventstore.ShouldContain("terminationGracePeriodSeconds: 180");
+        eventstore.ShouldNotContain("Authentication__JwtBearer__SigningKey");
+        eventstore.ShouldNotContain("hexalith-jwt-signing");
+        CountOccurrences(eventstore, "secretKeyRef:").ShouldBe(0);
         CountOccurrences(eventstore, "readinessProbe:").ShouldBe(1);
         CountOccurrences(eventstore, "livenessProbe:").ShouldBe(1);
         CountOccurrences(eventstore, "timeoutSeconds: 10").ShouldBe(2);
@@ -398,9 +421,11 @@ public sealed class OperatorScriptValidationTests : IDisposable
         CountOccurrences(adminUi, "dapr.io/app-id: eventstore-admin-ui").ShouldBe(1);
         adminUi.ShouldNotContain("dapr.io/app-port");
         adminUi.ShouldNotContain("dapr.io/config");
-        CountOccurrences(adminUi, "EventStore__Authentication__SigningKey").ShouldBe(1);
-        CountOccurrences(adminUi, "secretKeyRef:").ShouldBe(1);
-        CountOccurrences(adminUi, "name: hexalith-jwt-signing").ShouldBe(1);
+        CountOccurrences(adminUi, "hostAliases:").ShouldBe(1);
+        CountOccurrences(adminUi, "EventStore__Authentication__Username").ShouldBe(1);
+        CountOccurrences(adminUi, "EventStore__Authentication__Password").ShouldBe(1);
+        CountOccurrences(adminUi, "secretKeyRef:").ShouldBe(2);
+        CountOccurrences(adminUi, "name: hexalith-tache-ui-credentials").ShouldBe(2);
 
         foreach ((string folder, string baseline) in carveOutBaselines)
         {
@@ -428,6 +453,65 @@ public sealed class OperatorScriptValidationTests : IDisposable
 
         result.ExitCode.ShouldBe(0, result.Output);
         workspace.LogLines.ShouldNotContain("plural ContainerImageTags leaked into aspirate");
+    }
+
+    [Theory]
+    [InlineData("username")]
+    [InlineData("password")]
+    public void PublishFailsBeforeGenerateWhenUiCredentialSecretKeyIsMissing(string missingKey)
+    {
+        using ScriptWorkspace workspace = CreateScriptWorkspace(missingUiCredentialKey: missingKey);
+
+        ProcessResult result = RunPwshScriptPath(
+            workspace.PublishScript,
+            workspace.BinDirectory,
+            workspace.Environment,
+            "-ConfirmContext",
+            "safe-context",
+            "-SkipDaprInit");
+
+        result.ExitCode.ShouldBe(1, result.Output);
+        result.Output.ShouldContain($"required UI credential Secret hexalith-tache-ui-credentials key '{missingKey}' is missing");
+        workspace.LogLines.ShouldNotContain(line => line.StartsWith("dotnet ", StringComparison.Ordinal));
+    }
+
+    [Theory]
+    [InlineData(null, "read failed")]
+    [InlineData("None", "has no clusterIP")]
+    [InlineData("not-an-ip", "invalid clusterIP")]
+    public void PublishFailsBeforeGenerateWhenKeycloakServicePreflightFails(string? clusterIp, string expectedMessage)
+    {
+        using ScriptWorkspace workspace = CreateScriptWorkspace(keycloakClusterIp: clusterIp);
+
+        ProcessResult result = RunPwshScriptPath(
+            workspace.PublishScript,
+            workspace.BinDirectory,
+            workspace.Environment,
+            "-ConfirmContext",
+            "safe-context",
+            "-SkipDaprInit");
+
+        result.ExitCode.ShouldBe(1, result.Output);
+        result.Output.ShouldContain(expectedMessage);
+        workspace.LogLines.ShouldNotContain(line => line.StartsWith("dotnet ", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void PublishFailsBeforeGenerateWhenKeycloakTokenContractIsInvalid()
+    {
+        using ScriptWorkspace workspace = CreateScriptWorkspace(invalidKeycloakToken: true);
+
+        ProcessResult result = RunPwshScriptPath(
+            workspace.PublishScript,
+            workspace.BinDirectory,
+            workspace.Environment,
+            "-ConfirmContext",
+            "safe-context",
+            "-SkipDaprInit");
+
+        result.ExitCode.ShouldBe(1, result.Output);
+        result.Output.ShouldContain("Keycloak token claim 'aud' does not include required value 'hexalith-eventstore'");
+        workspace.LogLines.ShouldNotContain(line => line.StartsWith("dotnet ", StringComparison.Ordinal));
     }
 
     [Fact]
@@ -608,6 +692,9 @@ public sealed class OperatorScriptValidationTests : IDisposable
         bool emitUnexpectedTopLevelFile = false,
         bool generatedReadinessOnlyProbe = false,
         bool daprStatusFailsExistingInstall = false,
+        string? keycloakClusterIp = "10.96.42.17",
+        string? missingUiCredentialKey = null,
+        bool invalidKeycloakToken = false,
         string? inheritedPluralContainerImageTags = null,
         string dockerConfigJson = """{"auths":{"registry.hexalith.com":{"auth":"dXNlcjpwYXNz"}}}""")
     {
@@ -646,13 +733,12 @@ resources:
   - parties-mcp
   - tenants
   - redis
-  - keycloak
   - falkordb
 """);
         File.WriteAllText(Path.Combine(k8sRoot, "namespace.yaml"), "apiVersion: v1\nkind: Namespace\nmetadata:\n  name: hexalith-parties\n");
         File.WriteAllText(Path.Combine(k8sRoot, "README.md"), "test\n");
 
-        foreach (string folder in new[] { "redis", "keycloak", "falkordb" })
+        foreach (string folder in new[] { "redis", "falkordb" })
         {
             Directory.CreateDirectory(Path.Combine(k8sRoot, folder));
             File.WriteAllText(Path.Combine(k8sRoot, folder, "deployment.yaml"), DeploymentYaml(folder, $"quay.io/{folder}/{folder}:test", includeDapr: false, includeLiteralJwt: false));
@@ -679,7 +765,7 @@ resources:
         File.WriteAllText(Path.Combine(docker, "config.json"), dockerConfigJson);
 
         string logPath = Path.Combine(root, "commands.log");
-        WriteKubectlShim(bin, logPath, failNamespaceResourceEnumeration, daprStatusFailsExistingInstall);
+        WriteKubectlShim(bin, logPath, failNamespaceResourceEnumeration, daprStatusFailsExistingInstall, keycloakClusterIp, missingUiCredentialKey, invalidKeycloakToken);
         WriteDotnetShim(bin, logPath, includeLiteralJwt, emitUnexpectedTopLevelFile, generatedReadinessOnlyProbe);
         WriteDaprShim(bin, logPath, daprStatusFailsExistingInstall);
 
@@ -740,9 +826,24 @@ exit 1
         return new ShimWorkspace(root, bin, logPath);
     }
 
-    private static void WriteKubectlShim(string binDirectory, string logPath, bool failNamespaceResourceEnumeration, bool daprStatusFailsExistingInstall)
+    private static void WriteKubectlShim(
+        string binDirectory,
+        string logPath,
+        bool failNamespaceResourceEnumeration,
+        bool daprStatusFailsExistingInstall,
+        string? keycloakClusterIp,
+        string? missingUiCredentialKey,
+        bool invalidKeycloakToken)
     {
         string kubectlPath = Path.Combine(binDirectory, RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "kubectl.cmd" : "kubectl");
+        string validPayload = "eyJpc3MiOiJodHRwOi8vYXV0aC50YWNoZS5haTo4MDgwL3JlYWxtcy90YWNoZSIsImF1ZCI6WyJoZXhhbGl0aC1ldmVudHN0b3JlIl0sImV2ZW50c3RvcmU6dGVuYW50IjpbInRlbmFudC1hIl0sImV2ZW50c3RvcmU6ZG9tYWluIjpbInBhcnR5Il0sImV2ZW50c3RvcmU6cGVybWlzc2lvbiI6WyJxdWVyeTpyZWFkIl19";
+        string invalidPayload = "eyJpc3MiOiJodHRwOi8vYXV0aC50YWNoZS5haTo4MDgwL3JlYWxtcy90YWNoZSIsImF1ZCI6WyJvdGhlciJdLCJldmVudHN0b3JlOnRlbmFudCI6WyJ0ZW5hbnQtYSJdLCJldmVudHN0b3JlOmRvbWFpbiI6WyJwYXJ0eSJdLCJldmVudHN0b3JlOnBlcm1pc3Npb24iOlsicXVlcnk6cmVhZCJdfQ";
+        string tokenPayload = invalidKeycloakToken ? invalidPayload : validPayload;
+        string keycloakServiceExit = keycloakClusterIp is null ? "1" : "0";
+        string keycloakServiceOutput = keycloakClusterIp ?? string.Empty;
+        string usernameSecretExit = string.Equals(missingUiCredentialKey, "username", StringComparison.Ordinal) ? "1" : "0";
+        string passwordSecretExit = string.Equals(missingUiCredentialKey, "password", StringComparison.Ordinal) ? "1" : "0";
+        string tokenJson = "{\"access_token\":\"eyJhbGciOiJub25lIn0." + tokenPayload + ".signature\"}";
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
             File.WriteAllText(kubectlPath, $"""
@@ -756,6 +857,30 @@ if "%1 %2 %3"=="get namespace hexalith-parties" exit /b 0
 if "%1 %2 %3"=="get namespace dapr-system" (
   echo namespace/dapr-system
   exit /b {(daprStatusFailsExistingInstall ? 0 : 1)}
+)
+if "%1 %2 %3"=="get service keycloak" (
+  echo {keycloakServiceOutput}
+  exit /b {keycloakServiceExit}
+)
+if "%1 %2 %3"=="get secret hexalith-tache-ui-credentials" (
+  echo %* | findstr username > nul
+  if not errorlevel 1 (
+    if "{usernameSecretExit}"=="1" exit /b 1
+    echo dXNlcg==
+    exit /b 0
+  )
+  echo %* | findstr password > nul
+  if not errorlevel 1 (
+    if "{passwordSecretExit}"=="1" exit /b 1
+    echo dXNlcg==
+    exit /b 0
+  )
+  echo dXNlcg==
+  exit /b 0
+)
+if "%1"=="run" (
+  echo {tokenJson}
+  exit /b 0
 )
 if "%1 %2"=="api-resources --verbs=list" (
   echo pods
@@ -789,6 +914,30 @@ fi
 if [ "$1 $2 $3" = "get namespace dapr-system" ]; then
   printf '%s\n' namespace/dapr-system
   exit {(daprStatusFailsExistingInstall ? 0 : 1)}
+fi
+if [ "$1 $2 $3" = "get service keycloak" ]; then
+  printf '%s\n' "{keycloakServiceOutput}"
+  exit {keycloakServiceExit}
+fi
+if [ "$1 $2 $3" = "get secret hexalith-tache-ui-credentials" ]; then
+  case "$*" in
+    *username*)
+      if [ "{usernameSecretExit}" = "1" ]; then exit 1; fi
+      printf '%s\n' "dXNlcg=="
+      exit 0
+      ;;
+    *password*)
+      if [ "{passwordSecretExit}" = "1" ]; then exit 1; fi
+      printf '%s\n' "dXNlcg=="
+      exit 0
+      ;;
+  esac
+  printf '%s\n' "dXNlcg=="
+  exit 0
+fi
+if [ "$1" = "run" ]; then
+  printf '%s\n' '{tokenJson}'
+  exit 0
 fi
 if [ "$1" = "api-resources" ]; then
   printf '%s\n' pods services configmaps
@@ -848,11 +997,11 @@ if [ "$1 $2 $3 $4 $5 $6" = "tool run --allow-roll-forward aspirate -- generate" 
     exit 42
   fi
   out="$PWD/../../deploy/k8s"
-  for name in eventstore eventstore-admin eventstore-admin-ui parties parties-mcp tenants memories; do
+  for name in eventstore eventstore-admin eventstore-admin-ui sample sample-blazor-ui parties parties-mcp tenants memories; do
     mkdir -p "$out/$name"
     include_dapr=0
     case "$name" in
-      eventstore|eventstore-admin|eventstore-admin-ui|parties|tenants|memories) include_dapr=1 ;;
+      eventstore|eventstore-admin|eventstore-admin-ui|sample|sample-blazor-ui|parties|tenants|memories) include_dapr=1 ;;
     esac
     literal_jwt=0
     if [ "$name" = "eventstore" ] && [ "{{(includeLiteralJwt ? "1" : "0")}}" = "1" ]; then literal_jwt=1; fi
@@ -863,6 +1012,7 @@ image = f"registry.hexalith.com/{name}:0.1.1-preview.0.7"
 annotations = "        dapr.io/enabled: 'true'\n        dapr.io/app-id: " + name + "\n" if include_dapr else "        example.com/placeholder: none\n"
 jwt = "        env:\n        - name: Authentication__JwtBearer__SigningKey\n          value: literal-secret\n" if literal_jwt else ""
 probe = "        readinessProbe:\n          tcpSocket:\n            port: 8080\n" if "{{(generatedReadinessOnlyProbe ? "1" : "0")}}" == "1" else ""
+host_aliases = "      hostAliases:\n      - ip: 127.0.0.1\n        hostnames:\n        - internal.example\n"
 open(path, "w", encoding="utf-8").write(f'''---
 apiVersion: apps/v1
 kind: Deployment
@@ -875,6 +1025,7 @@ spec:
         app: {name}
       annotations:
 {annotations}    spec:
+{host_aliases}
       containers:
       - name: {name}
         image: {image}

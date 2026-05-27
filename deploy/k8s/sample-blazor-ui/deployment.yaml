@@ -26,11 +26,15 @@ spec:
         dapr.io/app-id: sample-blazor-ui
         dapr.io/enable-api-logging: 'true'
     spec:
+      hostAliases:
+      - ip: 10.233.41.235
+        hostnames:
+        - auth.tache.ai
       imagePullSecrets:
       - name: zot-pull-secret
       containers:
       - name: sample-blazor-ui
-        image: registry.hexalith.com/sample-blazor-ui:0.0.0-preview.0.504
+        image: registry.hexalith.com/sample-blazor-ui:0.0.0-preview.0.505
         imagePullPolicy: IfNotPresent
         readinessProbe:
           httpGet:
@@ -54,11 +58,16 @@ spec:
         - name: https
           containerPort: 8443
         env:
-        - name: EventStore__Authentication__SigningKey
+        - name: EventStore__Authentication__Username
           valueFrom:
             secretKeyRef:
-              name: hexalith-jwt-signing
-              key: value
+              name: hexalith-tache-ui-credentials
+              key: username
+        - name: EventStore__Authentication__Password
+          valueFrom:
+            secretKeyRef:
+              name: hexalith-tache-ui-credentials
+              key: password
         envFrom:
         - configMapRef:
             name: sample-blazor-ui-env

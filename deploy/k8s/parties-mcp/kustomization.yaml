@@ -18,7 +18,8 @@ configMapGenerator:
     - Parties__Mcp__EventStoreGatewayBaseUrl=http://eventstore:8080
     - ASPNETCORE_ENVIRONMENT=Development
     - DOTNET_ENVIRONMENT=Development
-    - Authentication__JwtBearer__Issuer=hexalith-dev
+    - Authentication__JwtBearer__Authority=http://auth.tache.ai:8080/realms/tache
+    - Authentication__JwtBearer__Issuer=http://auth.tache.ai:8080/realms/tache
     - Authentication__JwtBearer__Audience=hexalith-parties-mcp
     - Authentication__JwtBearer__TokenValidationParameters__ValidAudiences__0=hexalith-parties-mcp
     - Authentication__JwtBearer__TokenValidationParameters__ValidAudiences__1=hexalith-eventstore
