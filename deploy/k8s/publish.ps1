@@ -52,6 +52,8 @@ $GeneratedServiceFolders = @(
     'eventstore',
     'eventstore-admin',
     'eventstore-admin-ui',
+    'sample',
+    'sample-blazor-ui',
     'parties',
     'parties-mcp',
     'tenants',
@@ -62,6 +64,7 @@ $PreservedEntries = @(
     'redis',
     'keycloak',
     'falkordb',
+    'ingress.yaml',
     'kustomization.yaml',
     'namespace.yaml',
     'README.md',
@@ -82,12 +85,13 @@ $KnownAspiratePlaceholders = @(
 $DaprPatchMap = [ordered]@{
     'eventstore' = 'accesscontrol'
     'eventstore-admin' = 'accesscontrol-eventstore-admin'
+    'sample' = 'accesscontrol-sample'
     'parties' = 'accesscontrol-parties'
     'tenants' = 'accesscontrol-tenants'
     'memories' = 'accesscontrol-memories'
 }
 
-$DaprClientOnlyTargets = @('eventstore-admin-ui')
+$DaprClientOnlyTargets = @('eventstore-admin-ui', 'sample-blazor-ui')
 $ForbiddenDaprTargets = @('parties-mcp', 'redis', 'keycloak', 'falkordb')
 
 . (Join-Path $K8sRoot '_lib/Confirm-KubeContext.ps1')
@@ -319,6 +323,8 @@ resources:
   - eventstore
   - eventstore-admin
   - eventstore-admin-ui
+  - sample
+  - sample-blazor-ui
   - memories
   - parties
   - parties-mcp
@@ -326,6 +332,7 @@ resources:
   - redis
   - keycloak
   - falkordb
+  - ingress.yaml
 "@ | Set-Content -LiteralPath $kustomizationPath -Encoding UTF8
     Write-Host '[publish] restored canonical kustomization.yaml'
 }
@@ -601,8 +608,8 @@ function Ensure-JwtSecretRef {
     Write-Host "[publish] JWT secretKeyRef patch targets: $($DaprPatchMap.Keys -join ', ')"
 }
 
-function Ensure-AdminUiJwtSecretRef {
-    $name = 'eventstore-admin-ui'
+function Ensure-UiJwtSecretRefs {
+    $names = @('eventstore-admin-ui', 'sample-blazor-ui')
     $envBlock = @"
         env:
         - name: EventStore__Authentication__SigningKey
@@ -619,37 +626,39 @@ function Ensure-AdminUiJwtSecretRef {
               key: value
 "@
 
-    $tuple = Read-DeploymentFile $name
-    $path = $tuple[0]
-    $content = $tuple[1]
+    foreach ($name in $names) {
+        $tuple = Read-DeploymentFile $name
+        $path = $tuple[0]
+        $content = $tuple[1]
 
-    if ($content -match "EventStore__Authentication__SigningKey" -and
-        $content -match "secretKeyRef:\s*`r?`n\s*name:\s*$JwtSecretName\s*`r?`n\s*key:\s*value") {
-        Write-Host "[publish] Admin UI JWT secretKeyRef patch target: $name"
-        return
+        if ($content -match "EventStore__Authentication__SigningKey" -and
+            $content -match "secretKeyRef:\s*`r?`n\s*name:\s*$JwtSecretName\s*`r?`n\s*key:\s*value") {
+            continue
+        }
+
+        if ($content -match "EventStore__Authentication__SigningKey") {
+            $literalPattern = "(?m)^\s*-\s+name:\s*EventStore__Authentication__SigningKey\s*`r?`n\s*value:\s*.*$"
+            $content = [regex]::Replace($content, $literalPattern, $envItem, 1)
+        }
+        elseif ($content -match "(?m)^\s{8}envFrom:\s*$") {
+            $content = $content -replace "(?m)^(\s*)envFrom:\s*$", "$envBlock`n`$1envFrom:"
+        }
+        elseif ($content -match "(?m)^\s{6}terminationGracePeriodSeconds:\s*") {
+            $content = $content -replace "(?m)^(\s*)terminationGracePeriodSeconds:\s*", "$envBlock`n`$1terminationGracePeriodSeconds:"
+        }
+        else {
+            Fail $ExitGeneral "unable to locate insertion point for UI JWT signing env entry in $name"
+        }
+
+        if ($content -notmatch "EventStore__Authentication__SigningKey" -or
+            $content -notmatch "secretKeyRef:\s*`r?`n\s*name:\s*$JwtSecretName\s*`r?`n\s*key:\s*value") {
+            Fail $ExitGeneral "UI JWT secretKeyRef postcondition failed in $name"
+        }
+
+        Set-Content -LiteralPath $path -Value $content -NoNewline
     }
 
-    if ($content -match "EventStore__Authentication__SigningKey") {
-        $literalPattern = "(?m)^\s*-\s+name:\s*EventStore__Authentication__SigningKey\s*`r?`n\s*value:\s*.*$"
-        $content = [regex]::Replace($content, $literalPattern, $envItem, 1)
-    }
-    elseif ($content -match "(?m)^\s{8}envFrom:\s*$") {
-        $content = $content -replace "(?m)^(\s*)envFrom:\s*$", "$envBlock`n`$1envFrom:"
-    }
-    elseif ($content -match "(?m)^\s{6}terminationGracePeriodSeconds:\s*") {
-        $content = $content -replace "(?m)^(\s*)terminationGracePeriodSeconds:\s*", "$envBlock`n`$1terminationGracePeriodSeconds:"
-    }
-    else {
-        Fail $ExitGeneral "unable to locate insertion point for Admin UI JWT signing env entry"
-    }
-
-    if ($content -notmatch "EventStore__Authentication__SigningKey" -or
-        $content -notmatch "secretKeyRef:\s*`r?`n\s*name:\s*$JwtSecretName\s*`r?`n\s*key:\s*value") {
-        Fail $ExitGeneral "Admin UI JWT secretKeyRef postcondition failed"
-    }
-
-    Set-Content -LiteralPath $path -Value $content -NoNewline
-    Write-Host "[publish] Admin UI JWT secretKeyRef patch target: $name"
+    Write-Host "[publish] UI JWT secretKeyRef patch targets: $($names -join ', ')"
 }
 
 function Ensure-ImagePullSecrets {
@@ -870,6 +879,7 @@ function Apply-DaprResources {
         'resiliency.yaml',
         'accesscontrol.yaml',
         'accesscontrol-eventstore-admin.yaml',
+        'accesscontrol-sample.yaml',
         'accesscontrol-parties.yaml',
         'accesscontrol-tenants.yaml',
         'accesscontrol-memories.yaml',
@@ -1062,7 +1072,7 @@ Patch-DaprAnnotations
 
 Write-Step 'Patch JWT secretKeyRef'
 Ensure-JwtSecretRef
-Ensure-AdminUiJwtSecretRef
+Ensure-UiJwtSecretRefs
 
 Write-Step 'Patch health probes'
 Ensure-HealthProbes

@@ -4,6 +4,7 @@
 # - eventstore-admin: admin operations (HTTP verbs reflect read/write surface)
 # - tenants: tenant lifecycle commands routed through EventStore
 # - parties: tenant API and reactor commands routed through EventStore
+# - sample-blazor-ui: EventStore sample UI commands and queries
 apiVersion: dapr.io/v1alpha1
 kind: Configuration
 metadata:
@@ -36,4 +37,12 @@ spec:
         operations:
           - name: /**
             httpVerb: ['POST']
+            action: allow
+      - appId: sample-blazor-ui
+        defaultAction: deny
+        trustDomain: "public"
+        namespace: "default"
+        operations:
+          - name: /**
+            httpVerb: ['GET', 'POST']
             action: allow

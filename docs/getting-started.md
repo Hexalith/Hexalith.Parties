@@ -93,18 +93,18 @@ pwsh deploy/k8s/publish.ps1 -ConfirmContext kubernetes-admin@cluster.local
 kubectl get pods -n hexalith-parties
 ```
 
-Expect **ten pods** in `Running` state by default (`eventstore`, `eventstore-admin`, `eventstore-admin-ui`, `parties`, `parties-mcp`, `tenants`, `memories`, `keycloak`, `redis`, `falkordb`). Epic 9 v2 closes FR31a's enumerative service-graph contract by composing Memories.Server in-cluster (Dapr-enabled — v2 Story 9.2), shipping Keycloak as a hand-authored carve-out (`deploy/k8s/keycloak/` — admin password via `secretKeyRef` on `hexalith-keycloak-admin` — v2 Story 9.3), shipping Redis as a hand-authored Dapr backing store (`deploy/k8s/redis/`, `emptyDir`-backed — v2 Story 9.3), and shipping FalkorDB as the Memories graph backing store (`deploy/k8s/falkordb/`, `emptyDir`-backed — v2 Story 9.8). FrontComposer remains out-of-scope for the MVP — no FrontComposer pod ships in this topology.
+Expect **twelve pods** in `Running` state by default (`eventstore`, `eventstore-admin`, `eventstore-admin-ui`, `sample`, `sample-blazor-ui`, `parties`, `parties-mcp`, `tenants`, `memories`, `keycloak`, `redis`, `falkordb`). Epic 9 v2 closes FR31a's enumerative service-graph contract by composing Memories.Server in-cluster (Dapr-enabled — v2 Story 9.2), shipping Keycloak as a hand-authored carve-out (`deploy/k8s/keycloak/` — admin password via `secretKeyRef` on `hexalith-keycloak-admin` — v2 Story 9.3), shipping Redis as a hand-authored Dapr backing store (`deploy/k8s/redis/`, `emptyDir`-backed — v2 Story 9.3), shipping FalkorDB as the Memories graph backing store (`deploy/k8s/falkordb/`, `emptyDir`-backed — v2 Story 9.8), and exposing the EventStore Admin UI plus sample Blazor UI through `deploy/k8s/ingress.yaml`. FrontComposer remains out-of-scope for the MVP — no FrontComposer pod ships in this topology.
 
-**Six** of the ten pods run a `daprd` sidecar. `eventstore`, `eventstore-admin`, `parties`, `tenants`, and `memories` are full Dapr services. `eventstore-admin-ui` is Dapr client-only for Admin UI -> Admin Server service invocation. `parties-mcp`, `keycloak`, `redis`, and `falkordb` do not run Dapr. Confirm the Dapr annotations:
+**Eight** of the twelve pods run a `daprd` sidecar. `eventstore`, `eventstore-admin`, `sample`, `parties`, `tenants`, and `memories` are full Dapr services. `eventstore-admin-ui` and `sample-blazor-ui` are Dapr client-only for UI -> backend service invocation. `parties-mcp`, `keycloak`, `redis`, and `falkordb` do not run Dapr. Confirm the Dapr annotations:
 
 ```bash
-for app in eventstore eventstore-admin eventstore-admin-ui parties tenants memories; do
+for app in eventstore eventstore-admin eventstore-admin-ui sample sample-blazor-ui parties tenants memories; do
   echo "--- $app ---"
   kubectl get deployment $app -n hexalith-parties -o jsonpath='{.metadata.annotations}{"\n"}'
 done
 ```
 
-The five full Dapr services should include `dapr.io/enabled: "true"`, `dapr.io/app-id`, `dapr.io/app-port: "8080"`, and `dapr.io/config: accesscontrol-<app-id>` (or `accesscontrol` for `eventstore`). `eventstore-admin-ui` should include only `dapr.io/enabled: "true"` and `dapr.io/app-id: eventstore-admin-ui`; it should not carry `dapr.io/app-port` or `dapr.io/config`. The `dapr.io/app-port` and per-app `dapr.io/config` annotations are injected by `publish.ps1` for full Dapr services (aspirate 9.1.0 does not emit them); see `deploy/k8s/README.md` "Known aspirate limitations".
+The six full Dapr services should include `dapr.io/enabled: "true"`, `dapr.io/app-id`, `dapr.io/app-port: "8080"`, and `dapr.io/config: accesscontrol-<app-id>` (or `accesscontrol` for `eventstore`). `eventstore-admin-ui` and `sample-blazor-ui` should include only `dapr.io/enabled: "true"` and their `dapr.io/app-id`; they should not carry `dapr.io/app-port` or `dapr.io/config`. The `dapr.io/app-port` and per-app `dapr.io/config` annotations are injected by `publish.ps1` for full Dapr services (aspirate 9.1.0 does not emit them); see `deploy/k8s/README.md` "Known aspirate limitations".
 
 **Operator-managed Secrets (v2 Story 9.5):** `publish.ps1` bootstraps `hexalith-jwt-signing`, `hexalith-keycloak-admin`, and `zot-pull-secret` (idempotent). Verify:
 

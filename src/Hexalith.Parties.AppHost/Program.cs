@@ -6,6 +6,7 @@ IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder(ar
 
 string eventStoreAccessControlConfigPath = ResolveDaprConfigPath("accesscontrol.yaml");
 string adminServerAccessControlConfigPath = ResolveDaprConfigPath("accesscontrol.eventstore-admin.yaml");
+string sampleAccessControlConfigPath = ResolveDaprConfigPath("accesscontrol.sample.yaml");
 string tenantsAccessControlConfigPath = ResolveDaprConfigPath("accesscontrol.tenants.yaml");
 string partiesAccessControlConfigPath = ResolveDaprConfigPath("accesscontrol.parties.yaml");
 string memoriesAccessControlConfigPath = ResolveDaprConfigPath("accesscontrol.memories.yaml");
@@ -152,6 +153,50 @@ if (builder.ExecutionContext.IsPublishMode
         .WithEnvironment("Parties__MemoriesSearch__RequireApiToken", "false")
         .WithEnvironment("Parties__MemoriesSearch__TenantId", "hexalith-dev")
         .WithEnvironment("Parties__MemoriesSearch__CaseId", "parties");
+}
+
+if (builder.ExecutionContext.IsPublishMode
+    || string.Equals(builder.Configuration["EnableEventStoreSampleUi"], "true", StringComparison.OrdinalIgnoreCase))
+{
+    string sampleProjectPath = ResolveOptionalSiblingProjectPath(
+        "Hexalith.EventStore",
+        Path.Combine("samples", "Hexalith.EventStore.Sample", "Hexalith.EventStore.Sample.csproj"),
+        "EnableEventStoreSampleUi");
+    string sampleBlazorUiProjectPath = ResolveOptionalSiblingProjectPath(
+        "Hexalith.EventStore",
+        Path.Combine("samples", "Hexalith.EventStore.Sample.BlazorUI", "Hexalith.EventStore.Sample.BlazorUI.csproj"),
+        "EnableEventStoreSampleUi");
+
+    _ = eventStore.WithEnvironment("EventStore__SignalR__Enabled", "true");
+
+    IResourceBuilder<ProjectResource> sample = builder.AddProject("sample", sampleProjectPath)
+        .WithDaprSidecar(sidecar => sidecar
+            .WithOptions(new DaprSidecarOptions
+            {
+                AppId = "sample",
+                Config = sampleAccessControlConfigPath,
+            }));
+
+    _ = builder.AddProject("sample-blazor-ui", sampleBlazorUiProjectPath)
+        .WithReference(eventStore)
+        .WaitFor(eventStore)
+        .WithReference(sample)
+        .WaitFor(sample)
+        .WithDaprSidecar(sidecar => sidecar
+            .WithOptions(new DaprSidecarOptions
+            {
+                AppId = "sample-blazor-ui",
+            }))
+        .WithEnvironment("EventStore__EventStoreUrl", ReferenceExpression.Create($"{eventStore.GetEndpoint("http")}"))
+        .WithEnvironment("EventStore__SignalR__HubUrl", ReferenceExpression.Create($"{eventStore.GetEndpoint("http")}/hubs/projection-changes"))
+        .WithEnvironment("EventStore__Authentication__Subject", "sample-blazor-ui")
+        .WithEnvironment("EventStore__Authentication__Issuer", PublishModeJwtIssuer)
+        .WithEnvironment("EventStore__Authentication__Audience", "hexalith-eventstore")
+        .WithEnvironment("EventStore__Authentication__SigningKey", "")
+        .WithEnvironment("EventStore__Authentication__Tenants__0", "tenant-a")
+        .WithEnvironment("EventStore__Authentication__Domains__0", "counter")
+        .WithEnvironment("EventStore__Authentication__Permissions__0", "command:submit")
+        .WithEnvironment("EventStore__Authentication__Permissions__1", "query:read");
 }
 
 bool enableKeycloak = !bool.TryParse(builder.Configuration["EnableKeycloak"], out bool parsed) || parsed;

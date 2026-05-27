@@ -33,7 +33,7 @@ spec:
       - name: zot-pull-secret
       containers:
       - name: memories
-        image: registry.hexalith.com/memories:0.0.0-preview.0.500
+        image: registry.hexalith.com/memories:0.0.0-preview.0.504
         imagePullPolicy: IfNotPresent
         readinessProbe:
           httpGet:

@@ -17,6 +17,7 @@ configMapGenerator:
     - EventStore__DomainServices__Registrations__wildcard_party_v1__TenantId=*
     - EventStore__DomainServices__Registrations__wildcard_party_v1__Domain=party
     - EventStore__DomainServices__Registrations__wildcard_party_v1__Version=v1
+    - EventStore__SignalR__Enabled=true
     - ASPNETCORE_ENVIRONMENT=Development
     - DOTNET_ENVIRONMENT=Development
     - Authentication__JwtBearer__Issuer=hexalith-dev

@@ -80,8 +80,8 @@ every run for auditability (per ADR D-K8s-3).
 > | Path | Owning story | Purpose |
 > |---|---|---|
 > | `../zot/` | Story 9.1 | Delivered: Zot OCI registry, credentials, and deployment documentation |
-> | `eventstore/`, `eventstore-admin/`, `eventstore-admin-ui/`, `parties/`, `parties-mcp/`, `tenants/`, `memories/` | Story 9.2 | Delivered: Aspirate-emitted per-service manifests |
-> | `namespace.yaml`, `kustomization.yaml` | Story 9.2 | Delivered: top-level namespace and Kustomize wiring |
+> | `eventstore/`, `eventstore-admin/`, `eventstore-admin-ui/`, `sample/`, `sample-blazor-ui/`, `parties/`, `parties-mcp/`, `tenants/`, `memories/` | Story 9.2 + 2026-05-27 correction | Delivered: Aspirate-emitted per-service manifests |
+> | `namespace.yaml`, `kustomization.yaml`, `ingress.yaml` | Story 9.2 + 2026-05-27 correction | Delivered: top-level namespace, Kustomize wiring, and UI host ingress |
 > | `redis/`, `keycloak/` | Story 9.3 | Delivered: hand-authored vendor carve-outs outside Aspirate regeneration |
 > | `falkordb/` | Story 9.8 | Delivered: Memories graph backing-service carve-out outside Aspirate regeneration |
 > | `deploy/dapr/` control-plane CRs | Story 9.4 | Delivered: Dapr Components, ACL, Subscriptions, and Resiliency |
@@ -126,10 +126,10 @@ Components -> Resiliency -> Configurations -> Subscriptions. Do not add the Dapr
   exit code 1 on validation errors using bounded output.
 - Patch generated Deployment annotations from `dapr.io/config: tracing` to the per-service
   configuration names: `eventstore` -> `accesscontrol`, `eventstore-admin` ->
-  `accesscontrol-eventstore-admin`, `parties` -> `accesscontrol-parties`, `tenants` ->
+  `accesscontrol-eventstore-admin`, `sample` -> `accesscontrol-sample`, `parties` -> `accesscontrol-parties`, `tenants` ->
   `accesscontrol-tenants`, and `memories` -> `accesscontrol-memories`.
-- Preserve `eventstore-admin-ui` as Dapr client-only: it carries `dapr.io/enabled: "true"`
-  and `dapr.io/app-id: eventstore-admin-ui`, but no `dapr.io/app-port` and no
+- Preserve `eventstore-admin-ui` and `sample-blazor-ui` as Dapr client-only: each carries
+  `dapr.io/enabled: "true"` and `dapr.io/app-id`, but no `dapr.io/app-port` and no
   `dapr.io/config`. `parties-mcp`, `redis`, `keycloak`, and `falkordb` remain true
   non-Dapr workloads.
 

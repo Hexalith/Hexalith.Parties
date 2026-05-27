@@ -40,6 +40,8 @@ $KustomizeResourceFolders = @(
     'eventstore',
     'eventstore-admin',
     'eventstore-admin-ui',
+    'sample',
+    'sample-blazor-ui',
     'memories',
     'parties',
     'parties-mcp',
@@ -52,6 +54,8 @@ $OwnedResourceNames = @(
     'deployment.apps/eventstore',
     'deployment.apps/eventstore-admin',
     'deployment.apps/eventstore-admin-ui',
+    'deployment.apps/sample',
+    'deployment.apps/sample-blazor-ui',
     'deployment.apps/parties',
     'deployment.apps/parties-mcp',
     'deployment.apps/tenants',
@@ -62,6 +66,8 @@ $OwnedResourceNames = @(
     'service/eventstore',
     'service/eventstore-admin',
     'service/eventstore-admin-ui',
+    'service/sample',
+    'service/sample-blazor-ui',
     'service/parties',
     'service/parties-mcp',
     'service/tenants',
@@ -72,6 +78,8 @@ $OwnedResourceNames = @(
     'configmap/eventstore-env',
     'configmap/eventstore-admin-env',
     'configmap/eventstore-admin-ui-env',
+    'configmap/sample-env',
+    'configmap/sample-blazor-ui-env',
     'configmap/memories-env',
     'configmap/parties-env',
     'configmap/parties-mcp-env',
@@ -84,12 +92,14 @@ $OwnedResourceNames = @(
     'component.dapr.io/pubsub',
     'configuration.dapr.io/accesscontrol',
     'configuration.dapr.io/accesscontrol-eventstore-admin',
+    'configuration.dapr.io/accesscontrol-sample',
     'configuration.dapr.io/accesscontrol-parties',
     'configuration.dapr.io/accesscontrol-tenants',
     'configuration.dapr.io/accesscontrol-memories',
     'subscription.dapr.io/parties-events-reference',
     'subscription.dapr.io/tenant-lifecycle-events',
-    'resiliency.dapr.io/resiliency'
+    'resiliency.dapr.io/resiliency',
+    'ingress.networking.k8s.io/hexalith-pages-ingress'
 )
 
 . (Join-Path $K8sRoot '_lib/Confirm-KubeContext.ps1')

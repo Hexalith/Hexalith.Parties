@@ -8,8 +8,8 @@ $ExitMissingPath = 3
 $JsonVersion = '1'
 $ValidFormats = @('human', 'json')
 $RegistryPrefix = 'registry.hexalith.com/'
-$DaprAppIds = @('eventstore', 'eventstore-admin', 'parties', 'tenants', 'memories')
-$DaprClientOnlyAppIds = @('eventstore-admin-ui')
+$DaprAppIds = @('eventstore', 'eventstore-admin', 'sample', 'parties', 'tenants', 'memories')
+$DaprClientOnlyAppIds = @('eventstore-admin-ui', 'sample-blazor-ui')
 $SemVerPattern = '^[0-9]+\.[0-9]+\.[0-9]+(?:-[A-Za-z0-9.-]+)?$'
 
 function Get-RepoRoot {

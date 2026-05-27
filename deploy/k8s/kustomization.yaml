@@ -6,6 +6,8 @@ resources:
   - eventstore
   - eventstore-admin
   - eventstore-admin-ui
+  - sample
+  - sample-blazor-ui
   - memories
   - parties
   - parties-mcp
@@ -13,3 +15,4 @@ resources:
   - redis
   - keycloak
   - falkordb
+  - ingress.yaml

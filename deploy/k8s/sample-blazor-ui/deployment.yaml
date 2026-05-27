@@ -2,27 +2,35 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: parties-mcp
+  name: sample-blazor-ui
   labels:
-    app: parties-mcp
+    app: sample-blazor-ui
+  annotations:
+    dapr.io/enabled: "true"
+    dapr.io/app-id: sample-blazor-ui
+    dapr.io/enable-api-logging: 'true'
 spec:
   minReadySeconds: 60
   replicas: 1
   selector:
     matchLabels:
-      app: parties-mcp
+      app: sample-blazor-ui
   strategy:
     type: Recreate
   template:
     metadata:
       labels:
-        app: parties-mcp
+        app: sample-blazor-ui
+      annotations:
+        dapr.io/enabled: "true"
+        dapr.io/app-id: sample-blazor-ui
+        dapr.io/enable-api-logging: 'true'
     spec:
       imagePullSecrets:
       - name: zot-pull-secret
       containers:
-      - name: parties-mcp
-        image: registry.hexalith.com/parties-mcp:0.0.0-preview.0.504
+      - name: sample-blazor-ui
+        image: registry.hexalith.com/sample-blazor-ui:0.0.0-preview.0.504
         imagePullPolicy: IfNotPresent
         readinessProbe:
           httpGet:
@@ -45,7 +53,13 @@ spec:
           containerPort: 8080
         - name: https
           containerPort: 8443
+        env:
+        - name: EventStore__Authentication__SigningKey
+          valueFrom:
+            secretKeyRef:
+              name: hexalith-jwt-signing
+              key: value
         envFrom:
         - configMapRef:
-            name: parties-mcp-env
+            name: sample-blazor-ui-env
       terminationGracePeriodSeconds: 180

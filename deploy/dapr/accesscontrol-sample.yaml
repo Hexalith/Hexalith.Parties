@@ -1,0 +1,30 @@
+# DAPR access-control Configuration for the EventStore sample receiving sidecar.
+# The sample domain service is invoked by EventStore only; it has no direct
+# state-store or pub/sub component access in the Kubernetes topology.
+apiVersion: dapr.io/v1alpha1
+kind: Configuration
+metadata:
+  name: accesscontrol-sample
+  namespace: hexalith-parties
+spec:
+  accessControl:
+    defaultAction: deny
+    trustDomain: hexalith.io
+    policies:
+      - appId: eventstore
+        defaultAction: deny
+        trustDomain: hexalith.io
+        namespace: hexalith-parties
+        operations:
+          - name: /process
+            httpVerb: ['POST']
+            action: allow
+          - name: /project
+            httpVerb: ['POST']
+            action: allow
+          - name: /replay-state
+            httpVerb: ['POST']
+            action: allow
+          - name: /admin/operational-index-metadata
+            httpVerb: ['POST']
+            action: allow

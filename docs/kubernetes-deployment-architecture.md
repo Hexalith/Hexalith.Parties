@@ -4,7 +4,7 @@ This document describes the final structure of the Hexalith.Parties deployment o
 
 ## 1. Overview
 
-Hexalith.Parties is deployed as a 10-workload topology inside a single Kubernetes namespace (`hexalith-parties`). The platform sits on a vanilla Kubernetes cluster (no managed-service dependencies) with a Dapr control plane handling state, pub/sub, and service-invocation. Container images live in a self-hosted Zot OCI registry. A single PowerShell script (`publish.ps1`) takes the operator from a clean checkout to a healthy cluster in one command.
+Hexalith.Parties is deployed as a 12-workload topology inside a single Kubernetes namespace (`hexalith-parties`). The platform sits on a vanilla Kubernetes cluster (no managed-service dependencies) with a Dapr control plane handling state, pub/sub, and service-invocation. Container images live in a self-hosted Zot OCI registry. A single PowerShell script (`publish.ps1`) takes the operator from a clean checkout to a healthy cluster in one command.
 
 ## 2. Operator Workflow
 
@@ -17,7 +17,7 @@ Each release:
   $ pwsh deploy/k8s/publish.ps1 -ConfirmContext kubernetes-admin@cluster.local
 
 Result (≈5-10 minutes later):
-  10 pods running in the hexalith-parties namespace at tag v0.2.0
+  12 pods running in the hexalith-parties namespace at tag v0.2.0
 ```
 
 No separate build / push / generate-manifest / apply ceremony. No `:latest` ambiguity. The MinVer-resolved version stamps every image; the same commit produces the same tag every time.
@@ -84,6 +84,8 @@ namespace: hexalith-parties
 | `eventstore` | 2 (app + daprd) | `registry.hexalith.com/eventstore` | Yes | Event store + projection host |
 | `eventstore-admin` | 2 (app + daprd) | `registry.hexalith.com/eventstore-admin` | Yes | Administrative commands on the event store |
 | `eventstore-admin-ui` | 2 (app + daprd) | `registry.hexalith.com/eventstore-admin-ui` | Client-only | Browser UI shell; invokes Admin Server through Dapr |
+| `sample` | 2 (app + daprd) | `registry.hexalith.com/sample` | Yes | EventStore counter sample domain service |
+| `sample-blazor-ui` | 2 (app + daprd) | `registry.hexalith.com/sample-blazor-ui` | Client-only | Browser UI shell for the EventStore sample |
 | `parties` | 2 (app + daprd) | `registry.hexalith.com/parties` | Yes | Party aggregate, REST API, primary service |
 | `parties-mcp` | 1 | `registry.hexalith.com/parties-mcp` | — | MCP gateway for AI agents |
 | `tenants` | 2 (app + daprd) | `registry.hexalith.com/tenants` | Yes | Tenant management surface |
@@ -93,7 +95,7 @@ namespace: hexalith-parties
 
 ## 4. Dapr Control Plane
 
-Dapr runs cluster-wide in the `dapr-system` namespace (installed once via `dapr init -k`). Each Hexalith service that needs state, pub/sub, actors, or Dapr service invocation carries a daprd sidecar in its pod. `eventstore-admin-ui` uses a client-only sidecar for Admin UI -> Admin Server invocation and does not reference state or pub/sub components directly.
+Dapr runs cluster-wide in the `dapr-system` namespace (installed once via `dapr init -k`). Each Hexalith service that needs state, pub/sub, actors, or Dapr service invocation carries a daprd sidecar in its pod. `eventstore-admin-ui` and `sample-blazor-ui` use client-only sidecars for UI -> backend invocation and do not reference state or pub/sub components directly.
 
 ### 4.1 Components
 
@@ -109,6 +111,7 @@ Each full daprd-equipped service has its own access-control configuration scopin
 
 - `accesscontrol` (eventstore)
 - `accesscontrol-eventstore-admin`
+- `accesscontrol-sample`
 - `accesscontrol-parties`
 - `accesscontrol-tenants`
 - `accesscontrol-memories`
@@ -209,14 +212,14 @@ There are exactly three sources of truth for the deployed topology. Each one own
 | 0 | `-ConfirmContext` gate against `kubectl current-context` | Exit 2 on mismatch |
 | 1 | Resolve MinVer version via `dotnet msbuild` | Exit 5 on empty / non-SemVer |
 | 2 | Clean `deploy/k8s/` (preserves carve-outs, scripts, README) | — |
-| 3 | `dotnet aspirate generate` builds + pushes 7 container images to Zot | Propagates aspirate exit code |
+| 3 | `dotnet aspirate generate` builds + pushes 9 container images to Zot | Propagates aspirate exit code |
 | 4 | Strip aspirate placeholder files | — |
-| 5 | Patch Dapr annotations: full services get `app-id`, `app-port`, and per-service config; `eventstore-admin-ui` gets client-only `enabled` + `app-id` | — |
-| 6 | Patch JWT `secretKeyRef` (`hexalith-jwt-signing`) into 5 consumer Deployments | — |
+| 5 | Patch Dapr annotations: full services get `app-id`, `app-port`, and per-service config; UI services get client-only `enabled` + `app-id` | — |
+| 6 | Patch JWT `secretKeyRef` (`hexalith-jwt-signing`) into API and UI consumer Deployments | — |
 | 7 | Patch `/health` readiness/liveness probes into generated app Deployments | Exit 1 on patch failure |
 | 8 | Inject `imagePullSecrets: [{name: zot-pull-secret}]` into Hexalith Deployments | — |
 | 9 | Verify all expected per-service folders were emitted | Exit 4 on missing folders |
-| 10 | Verify all 7 MinVer image manifests exist in Zot | Exit 6 on missing/unauthorized manifests |
+| 10 | Verify all 9 MinVer image manifests exist in Zot | Exit 6 on missing/unauthorized manifests |
 | 11 | Run `deploy/validate-deployment.ps1` against the patched tree | Exit 1 on blocking findings |
 | 12 | Run `dapr status -k`, or `dapr init -k` if no healthy control plane exists | Exit 3 on dapr CLI missing |
 | 13 | Ensure namespace + server dry-run of `deploy/dapr/resiliency.yaml` | Exit 1 on dry-run failure |
@@ -224,7 +227,7 @@ There are exactly three sources of truth for the deployed topology. Each one own
 | 15 | Apply Dapr CRs from `deploy/dapr/` (skipping alternative-backend templates) | — |
 | 16 | `kubectl apply -k deploy/k8s/` | — |
 
-Two minutes after step 16, the 10 pods reach `Ready`.
+Two minutes after step 16, the 12 pods reach `Ready`.
 
 ## 9. Network & Data Flow (Example: "Create Party")
 
@@ -250,7 +253,7 @@ $ pwsh deploy/k8s/teardown.ps1 -ConfirmContext kubernetes-admin@cluster.local
 ```
 
 This removes:
-- All 10 workloads via `kubectl delete -k`.
+- All 12 workloads and the UI Ingress via `kubectl delete -k`.
 - All Dapr Components, Configurations, Subscriptions, Resiliency CRs.
 - The 3 operator-managed Secrets.
 - The namespace itself (optional `-PurgeNamespace` switch).
@@ -273,7 +276,7 @@ For a given commit on the `main` branch:
 These are intentionally outside the current platform shape:
 
 - **Production-grade storage**: Redis is `emptyDir`-backed. State does not survive a Redis pod restart. PVC + StatefulSet + replication are out of scope.
-- **External Ingress**: No public Ingress is provisioned for the Hexalith services. Access is via `kubectl port-forward` or a network you add yourself. Only Zot (the registry) and Keycloak (when an Ingress is configured) have external endpoints.
+- **External Ingress**: Only browser UI ingress is provisioned: `eventstore.hexalith.com` -> `eventstore-admin-ui` and `sample.hexalith.com` -> `sample-blazor-ui`. API/data-path services remain cluster-internal unless an operator adds a separate gateway.
 - **TLS termination on Hexalith services**: Services accept HTTP on port 8080. TLS is terminated at the cluster edge by whatever Ingress controller you bring.
 - **Resource limits & autoscaling**: Pods run with default resource requests / limits. HorizontalPodAutoscaler, PodDisruptionBudget, and per-service envelope sizing are deferred to a hardening pass.
 - **Observability stack**: OpenTelemetry is wired into the services but no collector (Prometheus, Loki, Tempo, Grafana) is deployed.
