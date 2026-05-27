@@ -310,4 +310,4 @@ development_status:
   # Story 9.14: Public UI Subdomain Access for Admin and Sample Pages — route eventstore.hexalith.com to Admin UI and sample.hexalith.com to the sample Blazor UI, with sample workloads and Dapr ACLs tracked separately from auth migration.
   9-14-public-ui-subdomain-access: ready-for-dev
   # Epic 9 v2 retro is done for the as-built 9-1..9-8 set; post-retro publish hardening is tracked as an additional closed runtime correction.
-   epic-9-retrospective: done
+  epic-9-retrospective: done
