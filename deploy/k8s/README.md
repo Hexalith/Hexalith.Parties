@@ -6,7 +6,8 @@
 
 This folder is the operator entry-point for deploying Hexalith.Parties to a Kubernetes
 cluster. Today on `main`, it contains the Story 9.2 Aspirate-emitted application service
-folders, the Story 9.3 hand-authored Redis and Keycloak carve-outs, Story 9.4's Dapr CR
+folders, the Story 9.3 hand-authored Redis carve-out, Story 9.8's FalkorDB carve-out,
+Story 9.13's external Keycloak `tache` realm wiring, Story 9.4's Dapr CR
 set under `../dapr/`, top-level namespace and Kustomize wiring, the Story 9.5
 operator scripts plus shared context helper, and the Story 9.6 static validator at
 `../validate-deployment.ps1`.
@@ -48,9 +49,10 @@ by the infra team — see [`../zot/README.md`](../zot/README.md) "Out-of-band Se
 ## Publish + teardown (one-command flow)
 
 `publish.ps1` confirms the active kubectl context, resolves the MinVer image tag, regenerates
-the seven Aspirate-owned service folders, preserves Redis/Keycloak/FalkorDB carve-outs, patches Dapr
-annotations/JWT references/health probes/image pull secrets, verifies Zot image manifests, runs the static deployment validator, initializes Dapr when needed, bootstraps
-operator-managed Secrets, applies `deploy/dapr/` in dependency order, then applies this
+the nine Aspirate-owned service folders, preserves Redis/FalkorDB carve-outs, patches Dapr
+annotations, Keycloak host aliases, UI credential Secret refs, health probes, and image pull
+secrets, verifies Zot image manifests, runs the static deployment validator, initializes Dapr
+when needed, validates operator-managed Secrets, applies `deploy/dapr/` in dependency order, then applies this
 Kustomize tree.
 
 ```pwsh
@@ -80,9 +82,10 @@ every run for auditability (per ADR D-K8s-3).
 > | Path | Owning story | Purpose |
 > |---|---|---|
 > | `../zot/` | Story 9.1 | Delivered: Zot OCI registry, credentials, and deployment documentation |
-> | `eventstore/`, `eventstore-admin/`, `eventstore-admin-ui/`, `parties/`, `parties-mcp/`, `tenants/`, `memories/` | Story 9.2 | Delivered: Aspirate-emitted per-service manifests |
-> | `namespace.yaml`, `kustomization.yaml` | Story 9.2 | Delivered: top-level namespace and Kustomize wiring |
-> | `redis/`, `keycloak/` | Story 9.3 | Delivered: hand-authored vendor carve-outs outside Aspirate regeneration |
+> | `eventstore/`, `eventstore-admin/`, `eventstore-admin-ui/`, `sample/`, `sample-blazor-ui/`, `parties/`, `parties-mcp/`, `tenants/`, `memories/` | Story 9.2 + 2026-05-27 correction | Delivered: Aspirate-emitted per-service manifests |
+> | `namespace.yaml`, `kustomization.yaml`, `ingress.yaml` | Story 9.2 + 2026-05-27 correction | Delivered: top-level namespace, Kustomize wiring, and UI host ingress |
+> | `redis/` | Story 9.3 | Delivered: hand-authored Redis carve-out outside Aspirate regeneration |
+> | external `keycloak/keycloak` realm `tache` | Story 9.13 | Delivered: platform Keycloak reused outside the Parties namespace |
 > | `falkordb/` | Story 9.8 | Delivered: Memories graph backing-service carve-out outside Aspirate regeneration |
 > | `deploy/dapr/` control-plane CRs | Story 9.4 | Delivered: Dapr Components, ACL, Subscriptions, and Resiliency |
 > | `publish.ps1`, `teardown.ps1`, `_lib/Confirm-KubeContext.ps1` | Story 9.5 | Delivered: operator scripts + shared context-gate helper |
@@ -126,11 +129,11 @@ Components -> Resiliency -> Configurations -> Subscriptions. Do not add the Dapr
   exit code 1 on validation errors using bounded output.
 - Patch generated Deployment annotations from `dapr.io/config: tracing` to the per-service
   configuration names: `eventstore` -> `accesscontrol`, `eventstore-admin` ->
-  `accesscontrol-eventstore-admin`, `parties` -> `accesscontrol-parties`, `tenants` ->
+  `accesscontrol-eventstore-admin`, `sample` -> `accesscontrol-sample`, `parties` -> `accesscontrol-parties`, `tenants` ->
   `accesscontrol-tenants`, and `memories` -> `accesscontrol-memories`.
-- Preserve `eventstore-admin-ui` as Dapr client-only: it carries `dapr.io/enabled: "true"`
-  and `dapr.io/app-id: eventstore-admin-ui`, but no `dapr.io/app-port` and no
-  `dapr.io/config`. `parties-mcp`, `redis`, `keycloak`, and `falkordb` remain true
+- Preserve `eventstore-admin-ui` and `sample-blazor-ui` as Dapr client-only: each carries
+  `dapr.io/enabled: "true"` and `dapr.io/app-id`, but no `dapr.io/app-port` and no
+  `dapr.io/config`. `parties-mcp`, `redis`, and `falkordb` remain true
   non-Dapr workloads.
 
 Runtime smoke tests for Story 9.5:
@@ -146,13 +149,12 @@ Runtime smoke tests for Story 9.5:
 
 ## Hand-authored carve-outs
 
-`redis/`, `keycloak/`, and `falkordb/` are intentionally hand-authored vendor carve-outs. They are not
+`redis/` and `falkordb/` are intentionally hand-authored vendor carve-outs. They are not
 Aspirate-emitted application folders and should survive every future publish regeneration.
 
 The Story 9.5 clean phase must preserve:
 
 - `deploy/k8s/redis/`
-- `deploy/k8s/keycloak/`
 - `deploy/k8s/falkordb/`
 - `deploy/k8s/kustomization.yaml`
 - `deploy/k8s/namespace.yaml`
@@ -162,7 +164,7 @@ The Story 9.5 clean phase must preserve:
 - `deploy/k8s/_lib/`
 
 All other files and folders under `deploy/k8s/` are eligible for cleanup before Aspirate
-regeneration, except the seven application service folders after they are regenerated.
+regeneration, except the nine application service folders after they are regenerated.
 
 Redis is MVP/non-production only: it uses `emptyDir` storage, no AUTH, no replication, and no
 HA shape. Data is lost when the Pod is recreated or rescheduled. Production persistence,
@@ -175,13 +177,17 @@ container image with `emptyDir` storage and exposes the Redis protocol on `falko
 Memories receives `ConnectionStrings__falkordb=falkordb:6379`; do not point it at the MVP
 Redis service.
 
-Keycloak admin credentials are not committed as YAML. Story 9.5 bootstraps the
-`hexalith-keycloak-admin` Secret imperatively. It creates
-`KC_BOOTSTRAP_ADMIN_USERNAME=admin` and a random 24-byte
-`KC_BOOTSTRAP_ADMIN_PASSWORD` on first publish, then preserves both values on re-publish.
-Operators verify the Secret by name only with
-`kubectl get secret hexalith-keycloak-admin -n hexalith-parties`; do not decode or print
-the stored values during normal operations.
+Keycloak is external to this kustomization. The platform-owned service is
+`keycloak/keycloak` on port `8080`, and the realm is `tache` with issuer
+`http://auth.tache.ai:8080/realms/tache`. `publish.ps1` reads the Keycloak service ClusterIP
+and patches `hostAliases` for `auth.tache.ai` into the generated Parties workloads so OIDC
+discovery and JWKS retrieval stay pod-reachable while issuer validation remains unchanged.
+
+`eventstore-admin-ui` and `sample-blazor-ui` use server-side Keycloak direct-access grants.
+Operators must pre-create Secret `hexalith-tache-ui-credentials` in namespace
+`hexalith-parties` with keys `username` and `password`. `publish.ps1` validates those keys
+and patches them as `EventStore__Authentication__Username` and
+`EventStore__Authentication__Password` without printing values.
 
 Do not put real values in docs, shell history, manifests, Kustomize generators, or env files.
 

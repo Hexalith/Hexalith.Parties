@@ -1,7 +1,7 @@
 # Dapr Redis Streams pub/sub Component -- Story 9.4 production CR.
 # Redis no-AUTH is inherited from Story 9.3. The sample party-events
 # Subscription is committed as reference-only and is not granted component scope
-# in the 10-pod MVP runtime topology.
+# in the Kubernetes runtime topology.
 apiVersion: dapr.io/v1alpha1
 kind: Component
 metadata:

@@ -11,6 +11,8 @@ public sealed class K8sManifestGenerationTests
         "memories",
         "parties",
         "parties-mcp",
+        "sample",
+        "sample-blazor-ui",
         "tenants",
     ];
 
@@ -19,11 +21,11 @@ public sealed class K8sManifestGenerationTests
     {
         string[] generatedFolders = Directory.EnumerateDirectories(DeploymentTestPaths.K8sDirectory)
             .Select(Path.GetFileName)
-            .Where(static name => name is not "redis" and not "keycloak" and not "falkordb" and not "_lib")
+            .Where(static name => name is not "redis" and not "falkordb" and not "_lib")
             .Order(StringComparer.Ordinal)
             .ToArray()!;
 
-        generatedFolders.ShouldBe(s_expectedGeneratedFolders, "Story 9.2 owns exactly seven generated application folders; carve-outs are tested separately.");
+        generatedFolders.ShouldBe(s_expectedGeneratedFolders, "The publish topology owns the generated application folders; carve-outs are tested separately.");
     }
 
     [Fact]

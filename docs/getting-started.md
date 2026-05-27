@@ -87,33 +87,33 @@ kubectl config use-context kubernetes-admin@cluster.local   # or your local cont
 pwsh deploy/k8s/publish.ps1 -ConfirmContext kubernetes-admin@cluster.local
 ```
 
-`publish.ps1` resolves the MinVer version from the AppHost, runs `dotnet aspirate generate` (building and pushing container images to `registry.hexalith.com/<app-id>:<minver>`), patches the consumer Deployments (Dapr annotations + JWT `secretKeyRef` + health probes + `imagePullSecrets: zot-pull-secret`), verifies the reported image manifests exist in Zot, runs the static deployment validator, installs DAPR only when no healthy control plane exists, bootstraps or patches three Secrets (`hexalith-jwt-signing`, `hexalith-keycloak-admin`, `zot-pull-secret`), applies the authoritative DAPR component CRs from `deploy/dapr/`, then applies the workloads via kustomize. Verify pod readiness:
+`publish.ps1` resolves the MinVer version from the AppHost, runs `dotnet aspirate generate` (building and pushing container images to `registry.hexalith.com/<app-id>:<minver>`), patches the consumer Deployments (Dapr annotations, Keycloak host alias, UI credential Secret refs, health probes, and `imagePullSecrets: zot-pull-secret`), verifies the reported image manifests exist in Zot, runs the static deployment validator, installs DAPR only when no healthy control plane exists, validates Secret `hexalith-tache-ui-credentials`, bootstraps `zot-pull-secret`, applies the authoritative DAPR component CRs from `deploy/dapr/`, then applies the workloads via kustomize. Verify pod readiness:
 
 ```bash
 kubectl get pods -n hexalith-parties
 ```
 
-Expect **ten pods** in `Running` state by default (`eventstore`, `eventstore-admin`, `eventstore-admin-ui`, `parties`, `parties-mcp`, `tenants`, `memories`, `keycloak`, `redis`, `falkordb`). Epic 9 v2 closes FR31a's enumerative service-graph contract by composing Memories.Server in-cluster (Dapr-enabled — v2 Story 9.2), shipping Keycloak as a hand-authored carve-out (`deploy/k8s/keycloak/` — admin password via `secretKeyRef` on `hexalith-keycloak-admin` — v2 Story 9.3), shipping Redis as a hand-authored Dapr backing store (`deploy/k8s/redis/`, `emptyDir`-backed — v2 Story 9.3), and shipping FalkorDB as the Memories graph backing store (`deploy/k8s/falkordb/`, `emptyDir`-backed — v2 Story 9.8). FrontComposer remains out-of-scope for the MVP — no FrontComposer pod ships in this topology.
+Expect **eleven Parties-owned pods** in `Running` state by default (`eventstore`, `eventstore-admin`, `eventstore-admin-ui`, `sample`, `sample-blazor-ui`, `parties`, `parties-mcp`, `tenants`, `memories`, `redis`, `falkordb`). Authentication uses the existing platform Keycloak service in namespace `keycloak`, realm `tache`, with issuer `http://auth.tache.ai:8080/realms/tache`; no Keycloak workload is deployed in `hexalith-parties`. Epic 9 v2 closes FR31a's enumerative service-graph contract by composing Memories.Server in-cluster, shipping Redis as a hand-authored Dapr backing store, shipping FalkorDB as the Memories graph backing store, and exposing the EventStore Admin UI plus sample Blazor UI through `deploy/k8s/ingress.yaml`.
 
-**Six** of the ten pods run a `daprd` sidecar. `eventstore`, `eventstore-admin`, `parties`, `tenants`, and `memories` are full Dapr services. `eventstore-admin-ui` is Dapr client-only for Admin UI -> Admin Server service invocation. `parties-mcp`, `keycloak`, `redis`, and `falkordb` do not run Dapr. Confirm the Dapr annotations:
+**Eight** of the eleven Parties-owned pods run a `daprd` sidecar. `eventstore`, `eventstore-admin`, `sample`, `parties`, `tenants`, and `memories` are full Dapr services. `eventstore-admin-ui` and `sample-blazor-ui` are Dapr client-only for UI -> backend service invocation. `parties-mcp`, `redis`, and `falkordb` do not run Dapr. Confirm the Dapr annotations:
 
 ```bash
-for app in eventstore eventstore-admin eventstore-admin-ui parties tenants memories; do
+for app in eventstore eventstore-admin eventstore-admin-ui sample sample-blazor-ui parties tenants memories; do
   echo "--- $app ---"
   kubectl get deployment $app -n hexalith-parties -o jsonpath='{.metadata.annotations}{"\n"}'
 done
 ```
 
-The five full Dapr services should include `dapr.io/enabled: "true"`, `dapr.io/app-id`, `dapr.io/app-port: "8080"`, and `dapr.io/config: accesscontrol-<app-id>` (or `accesscontrol` for `eventstore`). `eventstore-admin-ui` should include only `dapr.io/enabled: "true"` and `dapr.io/app-id: eventstore-admin-ui`; it should not carry `dapr.io/app-port` or `dapr.io/config`. The `dapr.io/app-port` and per-app `dapr.io/config` annotations are injected by `publish.ps1` for full Dapr services (aspirate 9.1.0 does not emit them); see `deploy/k8s/README.md` "Known aspirate limitations".
+The six full Dapr services should include `dapr.io/enabled: "true"`, `dapr.io/app-id`, `dapr.io/app-port: "8080"`, and `dapr.io/config: accesscontrol-<app-id>` (or `accesscontrol` for `eventstore`). `eventstore-admin-ui` and `sample-blazor-ui` should include only `dapr.io/enabled: "true"` and their `dapr.io/app-id`; they should not carry `dapr.io/app-port` or `dapr.io/config`. The `dapr.io/app-port` and per-app `dapr.io/config` annotations are injected by `publish.ps1` for full Dapr services (aspirate 9.1.0 does not emit them); see `deploy/k8s/README.md` "Known aspirate limitations".
 
-**Operator-managed Secrets (v2 Story 9.5):** `publish.ps1` bootstraps `hexalith-jwt-signing`, `hexalith-keycloak-admin`, and `zot-pull-secret` (idempotent). Verify:
+**Operator-managed Secrets:** pre-create `hexalith-tache-ui-credentials` with keys `username` and `password` for the UI direct-access grant, then let `publish.ps1` create/update `zot-pull-secret` from Docker credentials. Verify names and types only:
 
 ```bash
-kubectl get secret hexalith-jwt-signing hexalith-keycloak-admin zot-pull-secret -n hexalith-parties
+kubectl get secret hexalith-tache-ui-credentials zot-pull-secret -n hexalith-parties
 kubectl -n hexalith-parties get secret zot-pull-secret -o jsonpath='{.type}'   # expect: kubernetes.io/dockerconfigjson
 ```
 
-All three Secrets must exist before any consumer Deployment becomes `Ready`. Their values are never echoed by `publish.ps1` (operator's Docker credential is base64-emitted via Path B without decoding).
+The UI credential values are never printed by `publish.ps1`; missing Secret keys fail fast with only the Secret/key names in the diagnostic.
 
 Port-forward the EventStore gateway so Step 3 (First Command) can reach it on `http://localhost:8080`:
 

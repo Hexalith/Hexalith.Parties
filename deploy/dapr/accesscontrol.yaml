@@ -44,3 +44,14 @@ spec:
           - name: /api/v1/commands
             httpVerb: ['POST']
             action: allow
+      - appId: sample-blazor-ui
+        defaultAction: deny
+        trustDomain: hexalith.io
+        namespace: hexalith-parties
+        operations:
+          - name: /api/v1/commands
+            httpVerb: ['POST']
+            action: allow
+          - name: /api/v1/queries
+            httpVerb: ['POST']
+            action: allow

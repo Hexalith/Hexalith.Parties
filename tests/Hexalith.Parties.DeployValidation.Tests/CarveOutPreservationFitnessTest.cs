@@ -8,12 +8,12 @@ public sealed class CarveOutPreservationFitnessTest
     {
         string publish = DeploymentTestPaths.ReadRepoFile("deploy/k8s/publish.ps1");
 
-        foreach (string preserved in new[] { "redis", "keycloak", "falkordb", "kustomization.yaml", "namespace.yaml", "README.md", "publish.ps1", "teardown.ps1", "_lib" })
+        foreach (string preserved in new[] { "redis", "falkordb", "kustomization.yaml", "namespace.yaml", "README.md", "publish.ps1", "teardown.ps1", "_lib" })
         {
             publish.ShouldContain($"'{preserved}'");
         }
 
-        foreach (string generated in new[] { "eventstore", "eventstore-admin", "eventstore-admin-ui", "parties", "parties-mcp", "tenants", "memories" })
+        foreach (string generated in new[] { "eventstore", "eventstore-admin", "eventstore-admin-ui", "sample", "sample-blazor-ui", "parties", "parties-mcp", "tenants", "memories" })
         {
             publish.ShouldContain($"Remove-Item -LiteralPath $path -Recurse -Force");
             publish.ShouldContain($"'{generated}'");
@@ -22,7 +22,6 @@ public sealed class CarveOutPreservationFitnessTest
 
     [Theory]
     [InlineData("redis")]
-    [InlineData("keycloak")]
     [InlineData("falkordb")]
     public void CarveOutDeploymentManifestsDoNotCarryDaprJwtOrZotPatchArtifacts(string folder)
     {
@@ -44,7 +43,7 @@ public sealed class CarveOutPreservationFitnessTest
         try
         {
             CopyDirectory(Path.Combine(fixtureRoot, "generated-workspace"), tempWorkspace);
-            foreach (string generatedFolder in new[] { "eventstore", "eventstore-admin", "eventstore-admin-ui", "parties", "parties-mcp", "tenants", "memories" })
+            foreach (string generatedFolder in new[] { "eventstore", "eventstore-admin", "eventstore-admin-ui", "sample", "sample-blazor-ui", "parties", "parties-mcp", "tenants", "memories" })
             {
                 string path = Path.Combine(tempWorkspace, generatedFolder);
                 if (Directory.Exists(path))
@@ -53,7 +52,7 @@ public sealed class CarveOutPreservationFitnessTest
                 }
             }
 
-            foreach (string folder in new[] { "redis", "keycloak", "falkordb" })
+            foreach (string folder in new[] { "redis", "falkordb" })
             {
                 string baseline = File.ReadAllText(Path.Combine(fixtureRoot, "baseline", folder, "deployment.yaml"));
                 string preserved = File.ReadAllText(Path.Combine(tempWorkspace, folder, "deployment.yaml"));

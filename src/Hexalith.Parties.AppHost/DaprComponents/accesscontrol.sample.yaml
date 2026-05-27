@@ -1,0 +1,20 @@
+# DAPR Access Control Configuration for the EventStore sample sidecar.
+# Bound only to the sample workload; EventStore may invoke the sample domain
+# service and projection endpoints through DAPR service invocation.
+apiVersion: dapr.io/v1alpha1
+kind: Configuration
+metadata:
+  name: accesscontrol-sample
+spec:
+  accessControl:
+    defaultAction: deny
+    trustDomain: "public"
+    policies:
+      - appId: eventstore
+        defaultAction: deny
+        trustDomain: "public"
+        namespace: "default"
+        operations:
+          - name: /**
+            httpVerb: ['POST']
+            action: allow

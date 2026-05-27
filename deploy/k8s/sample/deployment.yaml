@@ -2,28 +2,31 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: eventstore-admin-ui
+  name: sample
   labels:
-    app: eventstore-admin-ui
+    app: sample
   annotations:
     dapr.io/enabled: "true"
-    dapr.io/app-id: eventstore-admin-ui
+    dapr.io/config: accesscontrol-sample
+    dapr.io/app-id: sample
     dapr.io/enable-api-logging: 'true'
 spec:
   minReadySeconds: 60
   replicas: 1
   selector:
     matchLabels:
-      app: eventstore-admin-ui
+      app: sample
   strategy:
     type: Recreate
   template:
     metadata:
       labels:
-        app: eventstore-admin-ui
+        app: sample
       annotations:
+        dapr.io/app-port: '8080'
         dapr.io/enabled: "true"
-        dapr.io/app-id: eventstore-admin-ui
+        dapr.io/config: accesscontrol-sample
+        dapr.io/app-id: sample
         dapr.io/enable-api-logging: 'true'
     spec:
       hostAliases:
@@ -33,8 +36,8 @@ spec:
       imagePullSecrets:
       - name: zot-pull-secret
       containers:
-      - name: eventstore-admin-ui
-        image: registry.hexalith.com/eventstore-admin-ui:0.0.0-preview.0.505
+      - name: sample
+        image: registry.hexalith.com/sample:0.0.0-preview.0.505
         imagePullPolicy: IfNotPresent
         readinessProbe:
           httpGet:
@@ -57,18 +60,7 @@ spec:
           containerPort: 8080
         - name: https
           containerPort: 8443
-        env:
-        - name: EventStore__Authentication__Username
-          valueFrom:
-            secretKeyRef:
-              name: hexalith-tache-ui-credentials
-              key: username
-        - name: EventStore__Authentication__Password
-          valueFrom:
-            secretKeyRef:
-              name: hexalith-tache-ui-credentials
-              key: password
         envFrom:
         - configMapRef:
-            name: eventstore-admin-ui-env
+            name: sample-env
       terminationGracePeriodSeconds: 180

@@ -97,18 +97,18 @@ public sealed class AppHostTenantsTopologyTests
         string program = ReadAppHostProgram();
 
         program.ShouldContain("const string PublishModeJwtIssuer");
-        program.ShouldContain("Publish mode uses the shared JWT Secret");
+        program.ShouldContain("http://auth.tache.ai:8080/realms/tache");
         program.ShouldContain(@"WithEnvironment(""Authentication__JwtBearer__Authority"", runModeAuthority)");
         program.ShouldContain(@"WithEnvironment(""Authentication__JwtBearer__Issuer"", runModeAuthority)");
-        program.ShouldContain(@"WithEnvironment(""Authentication__JwtBearer__Authority"", """")");
+        program.ShouldContain(@"WithEnvironment(""Authentication__JwtBearer__Authority"", publishModeAuthority ?? publishModeIssuer)");
         program.ShouldContain(@"WithEnvironment(""Authentication__JwtBearer__Issuer"", publishModeIssuer)");
         program.ShouldContain(@"WithEnvironment(""ASPNETCORE_ENVIRONMENT"", ""Development"")");
         program.ShouldContain(@"WithEnvironment(""DOTNET_ENVIRONMENT"", ""Development"")");
-        program.ShouldContain("WithJwtAuthentication(eventStore, realmUrl, builder.ExecutionContext.IsPublishMode ? PublishModeJwtIssuer : null)");
-        program.ShouldContain("WithJwtAuthentication(adminServer, realmUrl, builder.ExecutionContext.IsPublishMode ? PublishModeJwtIssuer : null)");
-        program.ShouldContain("WithJwtAuthentication(parties, realmUrl, builder.ExecutionContext.IsPublishMode ? PublishModeJwtIssuer : null)");
-        program.ShouldContain("WithJwtAuthentication(partiesMcp, realmUrl, builder.ExecutionContext.IsPublishMode ? PublishModeJwtIssuer : null)");
-        program.ShouldContain("WithJwtAuthentication(tenants, realmUrl, builder.ExecutionContext.IsPublishMode ? PublishModeJwtIssuer : null)");
+        program.ShouldContain("WithJwtAuthentication(eventStore, realmUrl, publishModeAuthority, builder.ExecutionContext.IsPublishMode ? PublishModeJwtIssuer : null)");
+        program.ShouldContain("WithJwtAuthentication(adminServer, realmUrl, publishModeAuthority, builder.ExecutionContext.IsPublishMode ? PublishModeJwtIssuer : null)");
+        program.ShouldContain("WithJwtAuthentication(parties, realmUrl, publishModeAuthority, builder.ExecutionContext.IsPublishMode ? PublishModeJwtIssuer : null)");
+        program.ShouldContain("WithJwtAuthentication(partiesMcp, realmUrl, publishModeAuthority, builder.ExecutionContext.IsPublishMode ? PublishModeJwtIssuer : null)");
+        program.ShouldContain("WithJwtAuthentication(tenants, realmUrl, publishModeAuthority, builder.ExecutionContext.IsPublishMode ? PublishModeJwtIssuer : null)");
         program.ShouldContain(@"WithEnvironment(""Authentication__JwtBearer__Audience"", ""hexalith-eventstore"")");
         program.ShouldContain(@"WithEnvironment(""Authentication__JwtBearer__Audience"", ""hexalith-parties"")");
         program.ShouldContain("eventStore.WithReference(keycloak)");
@@ -159,11 +159,10 @@ public sealed class AppHostTenantsTopologyTests
         // leak into the dashboard wiring.
         string program = ReadAppHostProgram();
 
-        program.ShouldContain(@"WithEnvironment(""EventStore__Authentication__Authority"", """")");
+        program.ShouldContain(@"WithEnvironment(""EventStore__Authentication__Authority"", PublishModeJwtAuthority)");
         program.ShouldContain(@"WithEnvironment(""EventStore__Authentication__Issuer"", PublishModeJwtIssuer)");
         program.ShouldContain(@"WithEnvironment(""EventStore__Authentication__Audience"", ""hexalith-eventstore"")");
-        program.ShouldContain(@"WithEnvironment(""EventStore__Authentication__GlobalAdmin"", ""true"")");
-        program.ShouldContain(@"WithEnvironment(""EventStore__Authentication__ClientId"", """")");
+        program.ShouldContain(@"WithEnvironment(""EventStore__Authentication__ClientId"", ""hexalith-eventstore"")");
     }
 
     [Fact]
