@@ -8,8 +8,9 @@ public sealed class DaprAccessControlFitnessTests
     private static readonly IReadOnlyDictionary<string, string[]> s_expectedCallersByConfig =
         new Dictionary<string, string[]>(StringComparer.Ordinal)
         {
-            ["accesscontrol.yaml"] = ["eventstore-admin", "parties", "tenants"],
+            ["accesscontrol.yaml"] = ["eventstore-admin", "parties", "sample-blazor-ui", "tenants"],
             ["accesscontrol-parties.yaml"] = ["eventstore"],
+            ["accesscontrol-sample.yaml"] = ["eventstore"],
             ["accesscontrol-tenants.yaml"] = ["eventstore", "parties"],
             ["accesscontrol-eventstore-admin.yaml"] = ["eventstore-admin-ui"],
             ["accesscontrol-memories.yaml"] = [],
@@ -69,6 +70,7 @@ public sealed class DaprAccessControlFitnessTests
                 "accesscontrol-eventstore-admin.yaml" => "eventstore-admin",
                 "accesscontrol-memories.yaml" => "memories",
                 "accesscontrol-parties.yaml" => "parties",
+                "accesscontrol-sample.yaml" => "sample",
                 "accesscontrol-tenants.yaml" => "tenants",
                 _ => throw new InvalidOperationException(fileName),
             };
@@ -84,6 +86,7 @@ public sealed class DaprAccessControlFitnessTests
         allowedReceiversByCaller["parties"].Order(StringComparer.Ordinal).ToArray().ShouldBe(["eventstore", "tenants"], "Memories search updates use the in-cluster Memories Service URL, not Dapr service invocation.");
         allowedReceiversByCaller["tenants"].ShouldBe(["eventstore"]);
         allowedReceiversByCaller["eventstore-admin-ui"].ShouldBe(["eventstore-admin"]);
+        allowedReceiversByCaller["sample-blazor-ui"].ShouldBe(["eventstore"]);
         allowedReceiversByCaller.Values.SelectMany(static receivers => receivers).ShouldNotContain("memories");
         allowedReceiversByCaller.ShouldNotContainKey("parties-mcp");
     }

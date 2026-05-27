@@ -413,7 +413,6 @@ spec:
         Directory.CreateDirectory(k8sPath);
         Directory.CreateDirectory(Path.Combine(k8sPath, "eventstore"));
         Directory.CreateDirectory(Path.Combine(k8sPath, "redis"));
-        Directory.CreateDirectory(Path.Combine(k8sPath, "keycloak"));
 
         File.WriteAllText(Path.Combine(configPath, "accesscontrol.yaml"), DaprAccessControlYaml("parties", "/api/v1/commands"));
         File.WriteAllText(Path.Combine(configPath, "statestore.yaml"), """
@@ -429,7 +428,6 @@ spec:
 """);
         File.WriteAllText(Path.Combine(k8sPath, "eventstore", "deployment.yaml"), DeploymentYaml("eventstore", "registry.hexalith.com/eventstore:1.2.3-preview.4", includePullSecret: true, includeDapr: true, includeProbes: true));
         File.WriteAllText(Path.Combine(k8sPath, "redis", "deployment.yaml"), DeploymentYaml("redis", "redis:8.6.3", includePullSecret: false, includeDapr: false, includeProbes: true));
-        File.WriteAllText(Path.Combine(k8sPath, "keycloak", "deployment.yaml"), DeploymentYaml("keycloak", "quay.io/keycloak/keycloak:26.6.2", includePullSecret: false, includeDapr: false, includeProbes: true));
 
         return new FixtureTree(root, configPath, k8sPath);
     }

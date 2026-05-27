@@ -44,9 +44,13 @@ $AppHostRoot = Join-Path $RepoRoot 'src/Hexalith.Parties.AppHost'
 $AppHostProject = 'Hexalith.Parties.AppHost.csproj'
 $Namespace = 'hexalith-parties'
 $Registry = 'registry.hexalith.com'
-$JwtSecretName = 'hexalith-jwt-signing'
-$KeycloakSecretName = 'hexalith-keycloak-admin'
+$TacheIssuer = 'http://auth.tache.ai:8080/realms/tache'
+$TacheIssuerHost = 'auth.tache.ai'
+$KeycloakNamespace = 'keycloak'
+$KeycloakServiceName = 'keycloak'
+$UiCredentialsSecretName = 'hexalith-tache-ui-credentials'
 $ZotSecretName = 'zot-pull-secret'
+$Script:KeycloakClusterIp = $null
 
 $GeneratedServiceFolders = @(
     'eventstore',
@@ -62,7 +66,6 @@ $GeneratedServiceFolders = @(
 
 $PreservedEntries = @(
     'redis',
-    'keycloak',
     'falkordb',
     'ingress.yaml',
     'kustomization.yaml',
@@ -92,7 +95,13 @@ $DaprPatchMap = [ordered]@{
 }
 
 $DaprClientOnlyTargets = @('eventstore-admin-ui', 'sample-blazor-ui')
-$ForbiddenDaprTargets = @('parties-mcp', 'redis', 'keycloak', 'falkordb')
+$ForbiddenDaprTargets = @('parties-mcp', 'redis', 'falkordb')
+$LegacyLocalKeycloakResources = @(
+    'deployment/keycloak',
+    'service/keycloak',
+    'configmap/keycloak-realm',
+    'secret/hexalith-keycloak-admin'
+)
 
 . (Join-Path $K8sRoot '_lib/Confirm-KubeContext.ps1')
 
@@ -330,7 +339,6 @@ resources:
   - parties-mcp
   - tenants
   - redis
-  - keycloak
   - falkordb
   - ingress.yaml
 "@ | Set-Content -LiteralPath $kustomizationPath -Encoding UTF8
@@ -385,7 +393,7 @@ function Add-DaprAppPortAfterAppId([string] $Content, [string] $AppId) {
     }
 
     $lines = [System.Collections.Generic.List[string]]::new()
-    foreach ($line in ($Content -split "`r?`n", -1)) {
+    foreach ($line in ($Content -split "`r?`n")) {
         $lines.Add($line)
         if ($line -match "^(\s*)dapr\.io/app-id:\s*['""]?$([regex]::Escape($AppId))['""]?\s*$") {
             $lines.Add("$($Matches[1])dapr.io/app-port: '8080'")
@@ -517,148 +525,257 @@ function Patch-DaprAnnotations {
     Write-Host "[publish] Dapr client-only annotation targets: $($DaprClientOnlyTargets -join ', ')"
 }
 
-function Ensure-JwtSecretRef {
-    $envBlock = @"
-        env:
-        - name: Authentication__JwtBearer__SigningKey
-          valueFrom:
-            secretKeyRef:
-              name: $JwtSecretName
-              key: value
-"@
-    $envItem = @"
-        - name: Authentication__JwtBearer__SigningKey
-          valueFrom:
-            secretKeyRef:
-              name: $JwtSecretName
-              key: value
-"@
+function Remove-EnvEntry([string] $Content, [string] $Name) {
+    $escaped = [regex]::Escape($Name)
+    $lines = $Content -split "`r?`n"
+    $kept = [System.Collections.Generic.List[string]]::new()
 
-    function Replace-JwtSigningEntry([string] $Content, [string] $Replacement) {
-        $lines = $Content -split "`r?`n", -1
-        $output = [System.Collections.Generic.List[string]]::new()
-        $replacementLines = $Replacement -split "`r?`n"
-        $index = 0
-        while ($index -lt $lines.Count) {
-            $line = $lines[$index]
-            if ($line -match '^\s{8}-\s+name:\s*Authentication__JwtBearer__SigningKey\s*$') {
-                foreach ($replacementLine in $replacementLines) {
-                    $output.Add($replacementLine)
-                }
-
-                $index++
-                while ($index -lt $lines.Count) {
-                    $next = $lines[$index]
-                    if ($next -match '^\s{8}(-\s+name:|envFrom:)\s*' -or
-                        $next -match '^\s{6}\S' -or
-                        $next -match '^\s{4}\S' -or
-                        $next -match '^\s{2}\S') {
-                        break
-                    }
-
-                    $index++
-                }
-
-                continue
-            }
-
-            $output.Add($line)
-            $index++
-        }
-
-        return ($output -join [Environment]::NewLine)
-    }
-
-    foreach ($name in $DaprPatchMap.Keys) {
-        $tuple = Read-DeploymentFile $name
-        $path = $tuple[0]
-        $content = $tuple[1]
-        $matches = [regex]::Matches($content, 'Authentication__JwtBearer__SigningKey')
-        if ($matches.Count -gt 1) {
-            Fail $ExitGeneral "duplicate JWT signing env entries in $name"
-        }
-
-        if ($content -match "Authentication__JwtBearer__SigningKey" -and $content -match "secretKeyRef:\s*`r?`n\s*name:\s*$JwtSecretName") {
+    for ($index = 0; $index -lt $lines.Count; $index++) {
+        $line = $lines[$index]
+        if ($line -notmatch "^\s{8}-\s+name:\s*$escaped\s*$") {
+            $kept.Add($line)
             continue
         }
 
-        if ($content -match "Authentication__JwtBearer__SigningKey") {
-            $literalPattern = "(?m)^\s*-\s+name:\s*Authentication__JwtBearer__SigningKey\s*`r?`n\s*value:\s*.*$"
-            $replaced = [regex]::Replace($content, $literalPattern, $envItem, 1)
-            $content = if ($replaced -ne $content) { $replaced } else { Replace-JwtSigningEntry $content $envItem }
-        }
-        elseif ($content -match "(?m)^\s{8}envFrom:\s*$") {
-            $content = $content -replace "(?m)^(\s*)envFrom:\s*$", "$envBlock`n`$1envFrom:"
-        }
-        elseif ($content -match "(?m)^\s{6}terminationGracePeriodSeconds:\s*") {
-            $content = $content -replace "(?m)^(\s*)terminationGracePeriodSeconds:\s*", "$envBlock`n`$1terminationGracePeriodSeconds:"
-        }
-        else {
-            Fail $ExitGeneral "unable to locate insertion point for JWT signing env entry in $name"
-        }
+        $index++
+        while ($index -lt $lines.Count) {
+            $next = $lines[$index]
+            if ($next -match '^\s{8}-\s+name:\s*' -or
+                $next -match '^\s{8}envFrom:\s*$' -or
+                $next -match '^\s{6}\S' -or
+                $next -match '^\s{4}\S' -or
+                $next -match '^\s{2}\S') {
+                $index--
+                break
+            }
 
-        if ($content -notmatch "Authentication__JwtBearer__SigningKey" -or
-            $content -notmatch "secretKeyRef:\s*`r?`n\s*name:\s*$JwtSecretName\s*`r?`n\s*key:\s*value") {
-            Fail $ExitGeneral "JWT secretKeyRef postcondition failed in $name"
+            $index++
         }
+    }
 
+    return ($kept -join [Environment]::NewLine)
+}
+
+function Remove-SigningKeyEnvEntries {
+    foreach ($name in $GeneratedServiceFolders) {
+        $tuple = Read-DeploymentFile $name
+        $path = $tuple[0]
+        $content = $tuple[1]
+        $content = Remove-EnvEntry $content 'Authentication__JwtBearer__SigningKey'
+        $content = Remove-EnvEntry $content 'EventStore__Authentication__SigningKey'
+        $content = $content -replace "(?m)^\s{8}env:\s*`r?`n\s{8}envFrom:", '        envFrom:'
         Set-Content -LiteralPath $path -Value $content -NoNewline
     }
 
-    Write-Host "[publish] JWT secretKeyRef patch targets: $($DaprPatchMap.Keys -join ', ')"
+    Write-Host "[publish] removed symmetric signing-key env entries"
 }
 
-function Ensure-UiJwtSecretRefs {
+function Ensure-UiCredentialSecretRefs {
     $names = @('eventstore-admin-ui', 'sample-blazor-ui')
     $envBlock = @"
         env:
-        - name: EventStore__Authentication__SigningKey
+        - name: EventStore__Authentication__Username
           valueFrom:
             secretKeyRef:
-              name: $JwtSecretName
-              key: value
-"@
-    $envItem = @"
-        - name: EventStore__Authentication__SigningKey
+              name: $UiCredentialsSecretName
+              key: username
+        - name: EventStore__Authentication__Password
           valueFrom:
             secretKeyRef:
-              name: $JwtSecretName
-              key: value
+              name: $UiCredentialsSecretName
+              key: password
 "@
 
     foreach ($name in $names) {
         $tuple = Read-DeploymentFile $name
         $path = $tuple[0]
         $content = $tuple[1]
+        $content = Remove-EnvEntry $content 'EventStore__Authentication__SigningKey'
+        $content = Remove-EnvEntry $content 'EventStore__Authentication__Username'
+        $content = Remove-EnvEntry $content 'EventStore__Authentication__Password'
+        $content = $content -replace "(?m)^\s{8}env:\s*`r?`n\s{8}envFrom:", '        envFrom:'
 
-        if ($content -match "EventStore__Authentication__SigningKey" -and
-            $content -match "secretKeyRef:\s*`r?`n\s*name:\s*$JwtSecretName\s*`r?`n\s*key:\s*value") {
-            continue
-        }
-
-        if ($content -match "EventStore__Authentication__SigningKey") {
-            $literalPattern = "(?m)^\s*-\s+name:\s*EventStore__Authentication__SigningKey\s*`r?`n\s*value:\s*.*$"
-            $content = [regex]::Replace($content, $literalPattern, $envItem, 1)
-        }
-        elseif ($content -match "(?m)^\s{8}envFrom:\s*$") {
+        if ($content -match "(?m)^\s{8}envFrom:\s*$") {
             $content = $content -replace "(?m)^(\s*)envFrom:\s*$", "$envBlock`n`$1envFrom:"
         }
         elseif ($content -match "(?m)^\s{6}terminationGracePeriodSeconds:\s*") {
             $content = $content -replace "(?m)^(\s*)terminationGracePeriodSeconds:\s*", "$envBlock`n`$1terminationGracePeriodSeconds:"
         }
         else {
-            Fail $ExitGeneral "unable to locate insertion point for UI JWT signing env entry in $name"
+            Fail $ExitGeneral "unable to locate insertion point for UI credential env entries in $name"
         }
 
-        if ($content -notmatch "EventStore__Authentication__SigningKey" -or
-            $content -notmatch "secretKeyRef:\s*`r?`n\s*name:\s*$JwtSecretName\s*`r?`n\s*key:\s*value") {
-            Fail $ExitGeneral "UI JWT secretKeyRef postcondition failed in $name"
+        if ($content -notmatch "EventStore__Authentication__Username" -or
+            $content -notmatch "EventStore__Authentication__Password" -or
+            $content -notmatch "secretKeyRef:\s*`r?`n\s*name:\s*$UiCredentialsSecretName\s*`r?`n\s*key:\s*username" -or
+            $content -notmatch "secretKeyRef:\s*`r?`n\s*name:\s*$UiCredentialsSecretName\s*`r?`n\s*key:\s*password") {
+            Fail $ExitGeneral "UI credential secretKeyRef postcondition failed in $name"
         }
 
         Set-Content -LiteralPath $path -Value $content -NoNewline
     }
 
-    Write-Host "[publish] UI JWT secretKeyRef patch targets: $($names -join ', ')"
+    Write-Host "[publish] UI credential secretKeyRef patch targets: $($names -join ', ')"
+}
+
+function Assert-NoSigningKeyReferences {
+    foreach ($name in $GeneratedServiceFolders) {
+        foreach ($fileName in @('deployment.yaml', 'kustomization.yaml')) {
+            $path = Join-Path $K8sRoot "$name/$fileName"
+            if (-not (Test-Path -LiteralPath $path)) {
+                continue
+            }
+
+            $content = Get-Content -Raw -LiteralPath $path
+            if ($content -match 'Authentication__JwtBearer__SigningKey' -or
+                $content -match 'EventStore__Authentication__SigningKey' -or
+                $content -match 'hexalith-jwt-signing') {
+                Fail $ExitGeneral "symmetric signing-key reference remains in $name/$fileName"
+            }
+        }
+    }
+
+    Write-Host '[publish] symmetric signing-key references absent from generated manifests'
+}
+
+function Resolve-KeycloakServiceClusterIp {
+    if (-not [string]::IsNullOrWhiteSpace($Script:KeycloakClusterIp)) {
+        return $Script:KeycloakClusterIp
+    }
+
+    $ip = Invoke-Checked 'kubectl' @('get', 'service', $KeycloakServiceName, '-n', $KeycloakNamespace, '-o', 'jsonpath={.spec.clusterIP}') $ExitGeneral "Keycloak service $KeycloakNamespace/$KeycloakServiceName read failed"
+    $normalized = ($ip | Out-String).Trim()
+    if ([string]::IsNullOrWhiteSpace($normalized) -or $normalized -eq 'None') {
+        Fail $ExitGeneral "Keycloak service $KeycloakNamespace/$KeycloakServiceName has no clusterIP"
+    }
+
+    $parsedIp = $null
+    if (-not [System.Net.IPAddress]::TryParse($normalized, [ref] $parsedIp)) {
+        Fail $ExitGeneral "Keycloak service $KeycloakNamespace/$KeycloakServiceName returned invalid clusterIP '$normalized'"
+    }
+
+    $Script:KeycloakClusterIp = $normalized
+    return $Script:KeycloakClusterIp
+}
+
+function Set-HostAliasEntry([string] $Content, [string] $HostName, [string] $IpAddress) {
+    $aliasLines = @(
+        "      - ip: $IpAddress",
+        "        hostnames:",
+        "        - $HostName"
+    )
+    $lines = [System.Collections.Generic.List[string]]::new()
+    foreach ($line in ($Content -split "`r?`n")) {
+        $lines.Add($line)
+    }
+
+    $hostAliasesIndex = -1
+    for ($index = 0; $index -lt $lines.Count; $index++) {
+        if ($lines[$index] -match '^\s+hostAliases:\s*$') {
+            $hostAliasesIndex = $index
+            break
+        }
+    }
+
+    if ($hostAliasesIndex -lt 0) {
+        for ($index = 0; $index -lt $lines.Count; $index++) {
+            if ($lines[$index] -match '^(\s+)(imagePullSecrets|containers):\s*$') {
+                $indent = $Matches[1]
+                $insertLines = @(
+                    "${indent}hostAliases:",
+                    "${indent}- ip: $IpAddress",
+                    "$indent  hostnames:",
+                    "$indent  - $HostName"
+                )
+                for ($aliasIndex = 0; $aliasIndex -lt $insertLines.Count; $aliasIndex++) {
+                    $lines.Insert($index + $aliasIndex, $insertLines[$aliasIndex])
+                }
+
+                return ($lines -join [Environment]::NewLine)
+            }
+        }
+
+        Fail $ExitGeneral "unable to locate pod spec insertion point for Keycloak host alias"
+    }
+
+    $blockEnd = $hostAliasesIndex + 1
+    while ($blockEnd -lt $lines.Count) {
+        $line = $lines[$blockEnd]
+        if ($line -match '^\s{6}\S' -and $line -notmatch '^\s{6}-\s+') {
+            break
+        }
+
+        if ($line -match '^\s{4}\S' -or $line -match '^\s{2}\S') {
+            break
+        }
+
+        $blockEnd++
+    }
+
+    $newBlock = [System.Collections.Generic.List[string]]::new()
+    $newBlock.Add($lines[$hostAliasesIndex])
+    foreach ($aliasLine in $aliasLines) {
+        $newBlock.Add($aliasLine)
+    }
+
+    $entry = [System.Collections.Generic.List[string]]::new()
+    for ($index = $hostAliasesIndex + 1; $index -lt $blockEnd; $index++) {
+        $line = $lines[$index]
+        if ($line -match '^\s{6}-\s+' -and $entry.Count -gt 0) {
+            if (-not (($entry -join [Environment]::NewLine) -match "(?m)^\s{8,}-\s*$([regex]::Escape($HostName))\s*$")) {
+                foreach ($entryLine in $entry) {
+                    $newBlock.Add($entryLine)
+                }
+            }
+
+            $entry.Clear()
+        }
+
+        $entry.Add($line)
+    }
+
+    if ($entry.Count -gt 0 -and
+        -not (($entry -join [Environment]::NewLine) -match "(?m)^\s{8,}-\s*$([regex]::Escape($HostName))\s*$")) {
+        foreach ($entryLine in $entry) {
+            $newBlock.Add($entryLine)
+        }
+    }
+
+    $rebuilt = [System.Collections.Generic.List[string]]::new()
+    for ($index = 0; $index -lt $hostAliasesIndex; $index++) {
+        $rebuilt.Add($lines[$index])
+    }
+
+    foreach ($blockLine in $newBlock) {
+        $rebuilt.Add($blockLine)
+    }
+
+    for ($index = $blockEnd; $index -lt $lines.Count; $index++) {
+        $rebuilt.Add($lines[$index])
+    }
+
+    return ($rebuilt -join [Environment]::NewLine)
+}
+
+function Patch-KeycloakHostAlias {
+    $clusterIp = Resolve-KeycloakServiceClusterIp
+
+    foreach ($name in $GeneratedServiceFolders) {
+        $tuple = Read-DeploymentFile $name
+        $path = $tuple[0]
+        $content = $tuple[1]
+        $content = Set-HostAliasEntry $content $TacheIssuerHost $clusterIp
+
+        if ($content -notmatch "hostAliases:" -or
+            $content -notmatch "ip:\s*$([regex]::Escape($clusterIp))" -or
+            $content -notmatch $TacheIssuerHost) {
+            Fail $ExitGeneral "Keycloak host alias postcondition failed in $name"
+        }
+
+        Set-Content -LiteralPath $path -Value $content -NoNewline
+    }
+
+    Write-Host "[publish] Keycloak host alias: $TacheIssuerHost -> $KeycloakNamespace/$KeycloakServiceName ($clusterIp)"
 }
 
 function Ensure-ImagePullSecrets {
@@ -819,6 +936,158 @@ metadata:
     Write-Host "[publish] namespace $Namespace exists"
 }
 
+function ConvertFrom-Base64UrlJson([string] $Value) {
+    $normalized = $Value.Replace('-', '+').Replace('_', '/')
+    switch ($normalized.Length % 4) {
+        2 { $normalized += '==' }
+        3 { $normalized += '=' }
+        0 { }
+        default { Fail $ExitGeneral 'Keycloak token payload is not valid base64url' }
+    }
+
+    try {
+        $json = [System.Text.Encoding]::UTF8.GetString([Convert]::FromBase64String($normalized))
+        return $json | ConvertFrom-Json -Depth 20
+    }
+    catch {
+        Fail $ExitGeneral 'Keycloak token payload could not be decoded'
+    }
+}
+
+function Test-JsonPropertyHasValue($Object, [string] $Name) {
+    if ($null -eq $Object -or -not ($Object.PSObject.Properties.Name -contains $Name)) {
+        return $false
+    }
+
+    $value = $Object.PSObject.Properties[$Name].Value
+    if ($null -eq $value) {
+        return $false
+    }
+
+    if ($value -is [array]) {
+        return @($value | Where-Object { -not [string]::IsNullOrWhiteSpace([string] $_) }).Count -gt 0
+    }
+
+    return -not [string]::IsNullOrWhiteSpace([string] $value)
+}
+
+function Assert-TokenContainsValue($Payload, [string] $ClaimName, [string] $ExpectedValue) {
+    if (-not (Test-JsonPropertyHasValue $Payload $ClaimName)) {
+        Fail $ExitGeneral "Keycloak token is missing required claim '$ClaimName'"
+    }
+
+    $value = $Payload.PSObject.Properties[$ClaimName].Value
+    $values = if ($value -is [array]) { @($value) } else { @($value) }
+    if (-not ($values | Where-Object { [string] $_ -eq $ExpectedValue })) {
+        Fail $ExitGeneral "Keycloak token claim '$ClaimName' does not include required value '$ExpectedValue'"
+    }
+}
+
+function Assert-KeycloakTokenContract([string] $TokenJson) {
+    try {
+        $response = $TokenJson | ConvertFrom-Json -Depth 20
+    }
+    catch {
+        Fail $ExitGeneral 'Keycloak token response was not valid JSON'
+    }
+
+    if ($null -eq $response -or -not ($response.PSObject.Properties.Name -contains 'access_token')) {
+        Fail $ExitGeneral 'Keycloak token response did not include access_token'
+    }
+
+    $accessToken = [string] $response.access_token
+    $parts = $accessToken.Split('.')
+    if ($parts.Count -lt 2) {
+        Fail $ExitGeneral 'Keycloak access token is not a JWT'
+    }
+
+    $payload = ConvertFrom-Base64UrlJson $parts[1]
+    if ([string] $payload.iss -ne $TacheIssuer) {
+        Fail $ExitGeneral 'Keycloak token issuer does not match the configured tache issuer'
+    }
+
+    Assert-TokenContainsValue $payload 'aud' 'hexalith-eventstore'
+    Assert-TokenContainsValue $payload 'eventstore:tenant' 'tenant-a'
+    Assert-TokenContainsValue $payload 'eventstore:domain' 'party'
+    Assert-TokenContainsValue $payload 'eventstore:permission' 'query:read'
+}
+
+function Invoke-KeycloakPreflightPod {
+    $clusterIp = Resolve-KeycloakServiceClusterIp
+    $podName = "keycloak-tache-preflight-$([Guid]::NewGuid().ToString('N').Substring(0, 8))"
+    $overrides = [ordered]@{
+        spec = [ordered]@{
+            restartPolicy = 'Never'
+            hostAliases = @(
+                [ordered]@{
+                    ip = $clusterIp
+                    hostnames = @($TacheIssuerHost)
+                }
+            )
+            containers = @(
+                [ordered]@{
+                    name = $podName
+                    image = 'curlimages/curl'
+                    env = @(
+                        [ordered]@{
+                            name = 'KEYCLOAK_USERNAME'
+                            valueFrom = [ordered]@{
+                                secretKeyRef = [ordered]@{
+                                    name = $UiCredentialsSecretName
+                                    key = 'username'
+                                }
+                            }
+                        },
+                        [ordered]@{
+                            name = 'KEYCLOAK_PASSWORD'
+                            valueFrom = [ordered]@{
+                                secretKeyRef = [ordered]@{
+                                    name = $UiCredentialsSecretName
+                                    key = 'password'
+                                }
+                            }
+                        }
+                    )
+                }
+            )
+        }
+    } | ConvertTo-Json -Depth 20 -Compress
+
+    $script = @"
+set -eu
+issuer="$TacheIssuer"
+curl -fsS "`$issuer/.well-known/openid-configuration" | grep -q '"issuer":"'$TacheIssuer'"'
+curl -fsS "`$issuer/protocol/openid-connect/certs" >/dev/null
+curl -fsS -X POST "`$issuer/protocol/openid-connect/token" \
+  -H 'Content-Type: application/x-www-form-urlencoded' \
+  -d 'grant_type=password' \
+  -d 'client_id=hexalith-eventstore' \
+  --data-urlencode "username=`$KEYCLOAK_USERNAME" \
+  --data-urlencode "password=`$KEYCLOAK_PASSWORD"
+"@
+
+    return Invoke-Checked 'kubectl' @(
+        'run', $podName,
+        '-n', $Namespace,
+        '--rm',
+        '-i',
+        '--restart=Never',
+        '--image=curlimages/curl',
+        "--overrides=$overrides",
+        '--command',
+        '--',
+        'sh',
+        '-c',
+        $script
+    ) $ExitGeneral 'Keycloak tache realm preflight failed'
+}
+
+function Test-KeycloakTacheRealmContract {
+    $tokenJson = Invoke-KeycloakPreflightPod
+    Assert-KeycloakTokenContract (($tokenJson | Out-String).Trim())
+    Write-Host '[publish] Keycloak tache realm preflight passed: discovery, JWKS, token issuer, audience, and EventStore claims'
+}
+
 function Ensure-DaprControlPlane {
     function Assert-DaprCrds {
         $crds = @('components.dapr.io', 'configurations.dapr.io', 'subscriptions.dapr.io', 'resiliencies.dapr.io')
@@ -854,8 +1123,13 @@ function Ensure-DaprControlPlane {
     Write-Host '[publish] Dapr control plane initialized or already healthy'
 }
 
+function Reconcile-LegacyLocalKeycloakResources {
+    [void](Invoke-Checked 'kubectl' (@('delete') + $LegacyLocalKeycloakResources + @('-n', $Namespace, '--ignore-not-found=true')) $ExitGeneral 'legacy local Keycloak resource cleanup failed')
+    Write-Host "[publish] legacy local Keycloak resources absent: $($LegacyLocalKeycloakResources -join ', ')"
+}
+
 function Wait-WorkloadsReady {
-    $expectedDeployments = $GeneratedServiceFolders + @('redis', 'keycloak', 'falkordb')
+    $expectedDeployments = $GeneratedServiceFolders + @('redis', 'falkordb')
     foreach ($deployment in $expectedDeployments) {
         [void](Invoke-Checked 'kubectl' @('rollout', 'status', "deployment/$deployment", '-n', $Namespace, '--timeout=600s') $ExitGeneral "deployment $deployment did not become Ready")
     }
@@ -1035,13 +1309,15 @@ data:
     Apply-SecretYaml $yaml $ZotSecretName 'created-or-updated'
 }
 
-function Ensure-OperatorSecrets {
-    Ensure-OpaqueSecretIfMissing $JwtSecretName @{ value = New-RandomPrintableSecretData 32 }
-    Ensure-OpaqueSecretIfMissing $KeycloakSecretName @{
-        KC_BOOTSTRAP_ADMIN_USERNAME = ConvertTo-SecretDataValue 'admin'
-        KC_BOOTSTRAP_ADMIN_PASSWORD = New-RandomPrintableSecretData 24
+function Validate-UiCredentialsSecret {
+    foreach ($key in @('username', 'password')) {
+        $value = Invoke-Checked 'kubectl' @('get', 'secret', $UiCredentialsSecretName, '-n', $Namespace, '-o', "jsonpath={.data.$key}") $ExitGeneral "required UI credential Secret $UiCredentialsSecretName key '$key' is missing"
+        if ([string]::IsNullOrWhiteSpace(($value | Out-String).Trim())) {
+            Fail $ExitGeneral "required UI credential Secret $UiCredentialsSecretName key '$key' is missing"
+        }
     }
-    Ensure-ZotPullSecret
+
+    Write-Host "[publish] UI credential Secret validated: $UiCredentialsSecretName keys username,password"
 }
 
 Require-Command 'kubectl'
@@ -1054,6 +1330,11 @@ catch {
     Write-Host "[publish] ERROR: $($_.Exception.Message)"
     exit $ExitContext
 }
+
+Write-Step 'Ensure namespace and preflight external auth'
+Ensure-Namespace
+Validate-UiCredentialsSecret
+Test-KeycloakTacheRealmContract
 
 Write-Step 'Resolve MinVer image tag'
 $imageTag = Resolve-MinVerTag
@@ -1070,9 +1351,13 @@ Remove-AspiratePlaceholders
 Write-Step 'Patch Dapr annotations'
 Patch-DaprAnnotations
 
-Write-Step 'Patch JWT secretKeyRef'
-Ensure-JwtSecretRef
-Ensure-UiJwtSecretRefs
+Write-Step 'Patch Keycloak host alias'
+Patch-KeycloakHostAlias
+
+Write-Step 'Patch UI credential secretKeyRefs'
+Remove-SigningKeyEnvEntries
+Ensure-UiCredentialSecretRefs
+Assert-NoSigningKeyReferences
 
 Write-Step 'Patch health probes'
 Ensure-HealthProbes
@@ -1093,16 +1378,18 @@ Invoke-DeploymentValidator
 Write-Step 'Install or verify Dapr control plane'
 Ensure-DaprControlPlane
 
-Write-Step 'Ensure namespace and dry-run resiliency CR'
-Ensure-Namespace
+Write-Step 'Dry-run resiliency CR'
 [void](Invoke-Checked 'kubectl' @('apply', '-f', (Join-Path $DaprRoot 'resiliency.yaml'), '--dry-run=server') $ExitGeneral 'Dapr resiliency server-side dry-run failed')
 Write-Host '[publish] Dapr resiliency dry-run OK: resiliency.yaml'
 
-Write-Step 'Bootstrap operator-managed Secrets'
-Ensure-OperatorSecrets
+Write-Step 'Ensure Zot pull Secret'
+Ensure-ZotPullSecret
 
 Write-Step 'Apply Dapr CRs'
 Apply-DaprResources
+
+Write-Step 'Reconcile legacy local Keycloak resources'
+Reconcile-LegacyLocalKeycloakResources
 
 Write-Step 'Apply Kubernetes workloads'
 [void](Invoke-Checked 'kubectl' @('apply', '-k', $K8sRoot) $ExitGeneral 'kustomize apply failed')

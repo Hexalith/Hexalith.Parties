@@ -13,6 +13,5 @@ resources:
   - parties-mcp
   - tenants
   - redis
-  - keycloak
   - falkordb
   - ingress.yaml

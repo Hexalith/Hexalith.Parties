@@ -17,7 +17,8 @@ configMapGenerator:
     - EventStore__AdminServer__SwaggerUrl=http://eventstore-admin:8080/swagger/index.html
     - ASPNETCORE_ENVIRONMENT=Development
     - DOTNET_ENVIRONMENT=Development
-    - EventStore__Authentication__Issuer=hexalith-dev
+    - EventStore__Authentication__Authority=http://auth.tache.ai:8080/realms/tache
+    - EventStore__Authentication__Issuer=http://auth.tache.ai:8080/realms/tache
     - EventStore__Authentication__Audience=hexalith-eventstore
-    - EventStore__Authentication__GlobalAdmin=true
+    - EventStore__Authentication__ClientId=hexalith-eventstore
     - ASPNETCORE_URLS=http://+:8080;

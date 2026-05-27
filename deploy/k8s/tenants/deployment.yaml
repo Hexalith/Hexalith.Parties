@@ -29,11 +29,15 @@ spec:
         dapr.io/app-id: tenants
         dapr.io/enable-api-logging: 'true'
     spec:
+      hostAliases:
+      - ip: 10.233.41.235
+        hostnames:
+        - auth.tache.ai
       imagePullSecrets:
       - name: zot-pull-secret
       containers:
       - name: tenants
-        image: registry.hexalith.com/tenants:0.0.0-preview.0.504
+        image: registry.hexalith.com/tenants:0.0.0-preview.0.505
         imagePullPolicy: IfNotPresent
         readinessProbe:
           httpGet:
@@ -56,12 +60,6 @@ spec:
           containerPort: 8080
         - name: https
           containerPort: 8443
-        env:
-        - name: Authentication__JwtBearer__SigningKey
-          valueFrom:
-            secretKeyRef:
-              name: hexalith-jwt-signing
-              key: value
         envFrom:
         - configMapRef:
             name: tenants-env
