@@ -15,6 +15,15 @@ spec:
         trustDomain: "public"
         namespace: "default"
         operations:
-          - name: /**
+          - name: /process
+            httpVerb: ['POST']
+            action: allow
+          - name: /project
+            httpVerb: ['POST']
+            action: allow
+          - name: /replay-state
+            httpVerb: ['POST']
+            action: allow
+          - name: /admin/operational-index-metadata
             httpVerb: ['POST']
             action: allow

@@ -10,6 +10,7 @@ $ValidFormats = @('human', 'json')
 $RegistryPrefix = 'registry.hexalith.com/'
 $DaprAppIds = @('eventstore', 'eventstore-admin', 'sample', 'parties', 'tenants', 'memories')
 $DaprClientOnlyAppIds = @('eventstore-admin-ui', 'sample-blazor-ui')
+$PublicIngressAllowedServices = @('eventstore-admin-ui', 'sample-blazor-ui')
 $SemVerPattern = '^[0-9]+\.[0-9]+\.[0-9]+(?:-[A-Za-z0-9.-]+)?$'
 
 function Get-RepoRoot {
@@ -713,6 +714,135 @@ function Find-DaprAclFindings {
     $findings.ToArray()
 }
 
+function Find-K8sIngressFindings {
+    param(
+        [Parameter(Mandatory = $true)][string]$K8sPath,
+        [Parameter(Mandatory = $true)][string]$RepositoryRoot
+    )
+
+    $findings = [System.Collections.Generic.List[object]]::new()
+    $requiredRoutes = [ordered]@{
+        'eventstore.hexalith.com' = 'eventstore-admin-ui'
+        'sample.hexalith.com' = 'sample-blazor-ui'
+    }
+    $seenRoutes = @{}
+    foreach ($requiredHost in $requiredRoutes.Keys) {
+        $seenRoutes[$requiredHost] = $false
+    }
+
+    $ingressCount = 0
+    foreach ($file in Get-YamlFiles $K8sPath) {
+        $text = Get-Content -LiteralPath $file.FullName -Raw
+        $relative = ConvertTo-DisplayPath -PathValue $file.FullName -RepositoryRoot $RepositoryRoot
+        foreach ($document in @(Split-YamlDocuments -Text $text)) {
+            if ($document.Text -cnotmatch '(?m)^kind:\s*Ingress\s*$') {
+                continue
+            }
+
+            $ingressCount++
+            $lines = [string[]]$document.Lines
+            $routes = [System.Collections.Generic.List[object]]::new()
+            $currentHost = $null
+            $currentPath = $null
+            $currentPathType = $null
+            if ($document.Text -cnotmatch '(?m)^\s*name:\s*hexalith-pages-ingress\s*$') {
+                $findings.Add((New-Finding -Severity 'BLOCKING' -Category 'K8sIngress-InvalidPublicRoute' -File $relative -JsonPath '$.metadata.name' -Reason 'public UI ingress must be named hexalith-pages-ingress'))
+            }
+            if ($document.Text -cnotmatch '(?m)^\s*ingressClassName:\s*nginx\s*$') {
+                $findings.Add((New-Finding -Severity 'BLOCKING' -Category 'K8sIngress-InvalidPublicRoute' -File $relative -JsonPath '$.spec.ingressClassName' -Reason 'public UI ingress must use nginx ingress class'))
+            }
+            if ($document.Text -cnotmatch '(?m)^\s*secretName:\s*hexalith-pages-tls\s*$') {
+                $findings.Add((New-Finding -Severity 'BLOCKING' -Category 'K8sIngress-InvalidPublicRoute' -File $relative -JsonPath '$.spec.tls[*].secretName' -Reason 'public UI ingress must use hexalith-pages-tls'))
+            }
+
+            for ($i = 0; $i -lt $lines.Count; $i++) {
+                if ($lines[$i] -cmatch '^\s*-\s*host:\s*[''"]?([^''"#\s]+)') {
+                    $currentHost = $Matches[1]
+                    $currentPath = $null
+                    $currentPathType = $null
+                    continue
+                }
+                if ($lines[$i] -cmatch '^\s*host:\s*[''"]?([^''"#\s]+)') {
+                    $currentHost = $Matches[1]
+                    $currentPath = $null
+                    $currentPathType = $null
+                    continue
+                }
+                if ($lines[$i] -cmatch '^\s*-\s*path:\s*[''"]?([^''"#\s]+)') {
+                    $currentPath = $Matches[1]
+                    $currentPathType = $null
+                    continue
+                }
+                if ($lines[$i] -cmatch '^\s*pathType:\s*[''"]?([^''"#\s]+)') {
+                    $currentPathType = $Matches[1]
+                    continue
+                }
+                if ($lines[$i] -cnotmatch '^\s*service:\s*$') {
+                    continue
+                }
+
+                $serviceIndent = Get-LineIndent $lines[$i]
+                $serviceEnd = Get-BlockEndIndex -Lines $lines -StartIndex $i -ParentIndent $serviceIndent
+                $serviceName = $null
+                $servicePort = $null
+                for ($j = $i + 1; $j -le $serviceEnd; $j++) {
+                    if ($lines[$j] -cmatch '^\s*name:\s*[''"]?([^''"#\s]+)') {
+                        $serviceName = $Matches[1]
+                    }
+                    if ($lines[$j] -cmatch '^\s*number:\s*[''"]?([^''"#\s]+)') {
+                        $servicePort = $Matches[1]
+                    }
+                }
+
+                $routes.Add([pscustomobject]@{
+                    Host = $currentHost
+                    Path = $currentPath
+                    PathType = $currentPathType
+                    ServiceName = $serviceName
+                    ServicePort = $servicePort
+                })
+            }
+
+            foreach ($route in $routes) {
+                if ($null -eq $route.ServiceName) {
+                    $findings.Add((New-Finding -Severity 'BLOCKING' -Category 'K8sIngress-InvalidPublicRoute' -File $relative -JsonPath '$.spec.rules[*].http.paths[*].backend.service.name' -Reason 'public ingress route is missing a backend service name'))
+                    continue
+                }
+
+                $expectedService = $requiredRoutes[$route.Host]
+                $isRequiredRoute = $null -ne $expectedService `
+                    -and $route.Path -ceq '/' `
+                    -and $route.PathType -ceq 'Prefix' `
+                    -and $route.ServiceName -ceq $expectedService `
+                    -and [string] $route.ServicePort -ceq '8080'
+
+                if ($isRequiredRoute) {
+                    $seenRoutes[$route.Host] = $true
+                    continue
+                }
+
+                if ($PublicIngressAllowedServices -ccontains $route.ServiceName) {
+                    $findings.Add((New-Finding -Severity 'BLOCKING' -Category 'K8sIngress-InvalidPublicRoute' -File $relative -JsonPath '$.spec.rules[*].http.paths[*]' -Reason "public ingress route '$($route.Host)$($route.Path)' targets UI service '$($route.ServiceName)' but does not match the documented host, root path, Prefix path type, and port 8080"))
+                }
+                else {
+                    $findings.Add((New-Finding -Severity 'BLOCKING' -Category 'K8sIngress-InvalidPublicRoute' -File $relative -JsonPath '$.spec.rules[*].http.paths[*].backend.service.name' -Reason "public ingress targets non-UI backend service '$($route.ServiceName)'"))
+                }
+            }
+        }
+    }
+
+    if ($ingressCount -eq 0) {
+        $findings.Add((New-Finding -Severity 'BLOCKING' -Category 'K8sIngress-InvalidPublicRoute' -File (ConvertTo-DisplayPath -PathValue $K8sPath -RepositoryRoot $RepositoryRoot) -JsonPath '$.spec.rules' -Reason 'public UI ingress is missing'))
+    }
+    foreach ($requiredHost in $requiredRoutes.Keys) {
+        if (-not $seenRoutes[$requiredHost]) {
+            $findings.Add((New-Finding -Severity 'BLOCKING' -Category 'K8sIngress-InvalidPublicRoute' -File (ConvertTo-DisplayPath -PathValue $K8sPath -RepositoryRoot $RepositoryRoot) -JsonPath '$.spec.rules' -Reason "public UI ingress route for $requiredHost is missing or points to the wrong service/port"))
+        }
+    }
+
+    $findings.ToArray()
+}
+
 function Find-SecretFindings {
     param(
         [Parameter(Mandatory = $true)][string]$Path,
@@ -788,6 +918,9 @@ function Invoke-Validation {
 
     $findings = [System.Collections.Generic.List[object]]::new()
     foreach ($finding in @(Find-K8sWorkloadFindings -K8sPath $k8sPath -RepositoryRoot $repositoryRoot)) {
+        $findings.Add($finding)
+    }
+    foreach ($finding in @(Find-K8sIngressFindings -K8sPath $k8sPath -RepositoryRoot $repositoryRoot)) {
         $findings.Add($finding)
     }
     foreach ($finding in @(Find-DaprAclFindings -ConfigPath $configPath -RepositoryRoot $repositoryRoot)) {

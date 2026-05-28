@@ -56,6 +56,40 @@ public sealed class K8sManifestGenerationTests
         }
     }
 
+    [Fact]
+    public void PublicIngressRoutesOnlyBrowserUiServicesWithNginxTls()
+    {
+        string ingress = File.ReadAllText(Path.Combine(DeploymentTestPaths.K8sDirectory, "ingress.yaml"));
+
+        ingress.ShouldContain("name: hexalith-pages-ingress");
+        ingress.ShouldContain("ingressClassName: nginx");
+        ingress.ShouldContain("secretName: hexalith-pages-tls");
+        ingress.ShouldContain("host: eventstore.hexalith.com");
+        ingress.ShouldContain("name: eventstore-admin-ui");
+        ingress.ShouldContain("host: sample.hexalith.com");
+        ingress.ShouldContain("name: sample-blazor-ui");
+        ingress.ShouldNotContain("name: eventstore\n");
+        ingress.ShouldNotContain("name: eventstore-admin\n");
+        ingress.ShouldNotContain("name: parties\n");
+        ingress.ShouldNotContain("name: tenants\n");
+        ingress.ShouldNotContain("name: sample\n");
+    }
+
+    [Fact]
+    public void SampleWorkloadsUseFullAndClientOnlyDaprAnnotations()
+    {
+        string sample = File.ReadAllText(Path.Combine(DeploymentTestPaths.K8sDirectory, "sample", "deployment.yaml"));
+        string sampleUi = File.ReadAllText(Path.Combine(DeploymentTestPaths.K8sDirectory, "sample-blazor-ui", "deployment.yaml"));
+
+        sample.ShouldContain("dapr.io/app-id: sample");
+        sample.ShouldContain("dapr.io/app-port: '8080'");
+        sample.ShouldContain("dapr.io/config: accesscontrol-sample");
+
+        sampleUi.ShouldContain("dapr.io/app-id: sample-blazor-ui");
+        sampleUi.ShouldNotContain("dapr.io/app-port");
+        sampleUi.ShouldNotContain("dapr.io/config");
+    }
+
     private static string[] NormalizeNonImageLines(string text)
         => text.ReplaceLineEndings("\n")
             .Split('\n')

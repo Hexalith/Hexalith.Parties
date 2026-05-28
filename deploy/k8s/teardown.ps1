@@ -201,6 +201,9 @@ foreach ($folder in $KustomizeResourceFolders) {
     [void](Invoke-Checked 'kubectl' @('delete', '-k', (Join-Path $K8sRoot $folder), '--ignore-not-found=true') $ExitGeneral "kustomize delete failed for $folder")
 }
 
+Write-Step 'Delete UI ingress'
+[void](Invoke-Checked 'kubectl' @('delete', '-f', (Join-Path $K8sRoot 'ingress.yaml'), '-n', $Namespace, '--ignore-not-found=true') $ExitGeneral 'UI ingress delete failed')
+
 Write-Step 'Delete Dapr CRs'
 [void](Invoke-Checked 'kubectl' @('delete', '-f', $DaprRoot, '--ignore-not-found=true') $ExitGeneral 'Dapr CR delete failed')
 

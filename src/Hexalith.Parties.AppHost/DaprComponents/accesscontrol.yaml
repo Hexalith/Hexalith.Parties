@@ -43,6 +43,9 @@ spec:
         trustDomain: "public"
         namespace: "default"
         operations:
-          - name: /**
-            httpVerb: ['GET', 'POST']
+          - name: /api/v1/commands
+            httpVerb: ['POST']
+            action: allow
+          - name: /api/v1/queries
+            httpVerb: ['POST']
             action: allow

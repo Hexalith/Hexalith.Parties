@@ -1,0 +1,17 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: hexalith-pages-ingress
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: eventstore.hexalith.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: eventstore
+                port:
+                  number: 8080

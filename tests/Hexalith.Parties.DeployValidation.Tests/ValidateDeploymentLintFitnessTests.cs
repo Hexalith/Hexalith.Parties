@@ -11,6 +11,7 @@ public sealed class ValidateDeploymentLintFitnessTests : IDisposable
     [
         "DaprACL-WildcardAppId",
         "DaprACL-WildcardOperation",
+        "K8sIngress-InvalidPublicRoute",
         "K8sWorkload-DirtyTagOnConsumerImage",
         "K8sWorkload-MissingDaprAnnotations",
         "K8sWorkload-MissingImagePullSecret",

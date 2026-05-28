@@ -200,7 +200,20 @@ Pass `-K8sPath` to lint the Kubernetes manifests under `deploy/k8s/`. The same v
 pwsh deploy/validate-deployment.ps1 -ConfigPath deploy/dapr -K8sPath deploy/k8s/
 ```
 
-The validator reports one BLOCKING finding per concrete violation across these categories: `K8sWorkload-MissingImagePullSecret`, `K8sWorkload-MissingDaprAnnotations`, `K8sWorkload-MissingProbes`, `K8sWorkload-NonSemVerTag`, `K8sWorkload-DirtyTagOnConsumerImage`, `DaprACL-WildcardAppId`, `DaprACL-WildcardOperation`, and `Secret-Plaintext`. `K8sWorkload-MissingDaprAnnotations` covers full Dapr services missing `enabled/app-id/app-port/config` and the client-only Admin UI missing `enabled/app-id` or carrying server-only `app-port/config`. Offending credential-shaped values are redacted in human and JSON output.
+The validator reports one BLOCKING finding per concrete violation across these categories: `K8sWorkload-MissingImagePullSecret`, `K8sWorkload-MissingDaprAnnotations`, `K8sWorkload-MissingProbes`, `K8sWorkload-NonSemVerTag`, `K8sWorkload-DirtyTagOnConsumerImage`, `K8sIngress-InvalidPublicRoute`, `DaprACL-WildcardAppId`, `DaprACL-WildcardOperation`, and `Secret-Plaintext`. `K8sWorkload-MissingDaprAnnotations` covers full Dapr services missing `enabled/app-id/app-port/config` and the client-only Admin UI or sample UI missing `enabled/app-id` or carrying server-only `app-port/config`. `K8sIngress-InvalidPublicRoute` covers missing UI ingress, missing `nginx` class, missing `hexalith-pages-tls`, missing UI host routes, and any public Ingress backend that points at backend/internal services. Offending credential-shaped values are redacted in human and JSON output.
+
+### Public UI DNS and TLS
+
+The committed Kubernetes Ingress source of truth is `deploy/k8s/ingress.yaml`.
+
+- `eventstore.hexalith.com` routes only to `service/eventstore-admin-ui` port `8080`.
+- `sample.hexalith.com` routes only to `service/sample-blazor-ui` port `8080`.
+- The Ingress uses class `nginx` and TLS Secret `hexalith-pages-tls` in namespace `hexalith-parties`.
+- DNS for both hosts must resolve to the nginx ingress endpoint before live validation.
+
+If the cluster does not yet have an ingress controller, a host-level nginx bridge may be used only as a temporary operator-owned bridge. Upstreams must be the Kubernetes Services `eventstore-admin-ui.hexalith-parties.svc.cluster.local:8080` and `sample-blazor-ui.hexalith-parties.svc.cluster.local:8080`; the bridge owner is the cluster operator; the exit condition is an installed in-cluster nginx ingress controller serving `deploy/k8s/ingress.yaml`. The committed Ingress remains the durable deployment model.
+
+Authentication is a separate dependency. A routed page shell can still show backend or login errors until Story 9.13 external Keycloak wiring, the `hexalith-tache-ui-credentials` Secret, and EventStore authorization claims are valid. Do not treat authenticated browser workflows as proven unless token acquisition and backend authorization have also been verified.
 
 ### CI/CD Integration
 

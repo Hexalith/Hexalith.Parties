@@ -37,10 +37,12 @@ namespace: hexalith-parties
 │                                             │ HTTP UI / OIDC          │
 │         │                                            │                │
 │  ┌──────▼────────────────────────────────────────────▼────────────┐  │
-│  │   Hexalith Core Services (5 pods, each 2/2 — app + daprd)       │  │
+│  │   Hexalith Dapr Services (7 pods, each 2/2 — app + daprd)       │  │
 │  │   ────────────────────────────────────────                      │  │
 │  │   • eventstore         (event store + projections)               │  │
 │  │   • eventstore-admin   (admin commands)                          │  │
+│  │   • sample             (EventStore counter sample service)        │  │
+│  │   • sample-blazor-ui   (sample browser UI, client-only daprd)     │  │
 │  │   • parties        ★   (party aggregate + REST API)              │  │
 │  │   • tenants            (tenant management)                       │  │
 │  │   • memories           (vector search backend)                   │  │
@@ -256,7 +258,8 @@ $ pwsh deploy/k8s/teardown.ps1 -ConfirmContext kubernetes-admin@cluster.local
 ```
 
 This removes:
-- All 11 Parties-owned workloads and the UI Ingress via `kubectl delete -k`.
+- All 11 Parties-owned workloads via per-folder `kubectl delete -k`.
+- The UI Ingress `hexalith-pages-ingress` via an explicit `kubectl delete -f deploy/k8s/ingress.yaml`.
 - All Dapr Components, Configurations, Subscriptions, Resiliency CRs.
 - The Parties-owned operator-managed Secrets.
 - The namespace itself (optional `-PurgeNamespace` switch).
@@ -287,7 +290,22 @@ These are intentionally outside the current platform shape:
 - **Multi-cluster / multi-region**: The platform is a single-cluster deploy.
 - **Tenant isolation at the infrastructure layer**: All tenants share the same namespace, Redis instance, and EventStore. Per-tenant namespacing is a future concern.
 
-## 13. Quick Reference
+## 13. Public UI Routing
+
+`deploy/k8s/ingress.yaml` is the durable source of truth for browser access:
+
+| Host | Kubernetes backend | TLS |
+|---|---|---|
+| `eventstore.hexalith.com` | `service/eventstore-admin-ui:8080` | `hexalith-pages-tls` |
+| `sample.hexalith.com` | `service/sample-blazor-ui:8080` | `hexalith-pages-tls` |
+
+No backend service is public-routeable through this Ingress. `eventstore`, `eventstore-admin`, `parties`, `tenants`, `sample`, Dapr sidecars, Redis, FalkorDB, and Memories stay internal. The sample UI uses `EventStore__SignalR__HubUrl=http://eventstore:8080/hubs/projection-changes`; that is in-cluster service traffic and is not governed by Dapr ACLs or exposed through public Ingress.
+
+DNS must point both hosts to the nginx ingress endpoint, and Secret `hexalith-pages-tls` must exist in namespace `hexalith-parties` before HTTPS validation. If no in-cluster ingress controller is installed yet, a host-level nginx bridge is allowed only as a temporary operator-owned bridge to `eventstore-admin-ui.hexalith-parties.svc.cluster.local:8080` and `sample-blazor-ui.hexalith-parties.svc.cluster.local:8080`. The exit condition is installing the nginx ingress controller and serving this committed Ingress unchanged.
+
+Routing validation proves only the page shell and host mapping. Authenticated backend workflows remain dependent on Story 9.13 external Keycloak `tache` realm wiring and the `hexalith-tache-ui-credentials` Secret.
+
+## 14. Quick Reference
 
 ```
 Namespace:              hexalith-parties

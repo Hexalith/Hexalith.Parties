@@ -2,6 +2,10 @@
 
 Items raised during code review that are real but not actionable in the current story. Pick up in a follow-up story or hardening sprint.
 
+## Deferred from: code review of 9-14-public-ui-subdomain-access (2026-05-28)
+
+- AppHost EventStore access-control still has pre-existing bare `/**` routes for `eventstore-admin`, `tenants`, and `parties`. Story 9.14 tightened the sample UI policies and production Dapr ACLs, but the AppHost-local broad routes remain a separate local-topology hardening item. [src/Hexalith.Parties.AppHost/DaprComponents/accesscontrol.yaml:17]
+
 ## ✅ Resolved 2026-05-27 — correct-course "safe in-repo batch"
 
 A `bmad-correct-course` pass implemented the deferred items that were self-contained, in-`src/Hexalith.Parties.*`, and needed no design decision. Each is marked **✅ RESOLVED 2026-05-27** inline below; all changes shipped with tests and a clean Release build (TreatWarningsAsErrors). Verified: Contracts.Tests 85/85, Client.Tests 99/99, Server.Tests `~ResultPayload` 11/11, Parties.Tests `~Search` 151/151.

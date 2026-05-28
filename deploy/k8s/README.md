@@ -60,9 +60,9 @@ pwsh deploy/k8s/publish.ps1 -ConfirmContext <name>
 ```
 
 `teardown.ps1` uses the same shared `-ConfirmContext` gate, deletes the Kustomize workload
-set, removes Dapr CRs, deletes operator-managed Secrets, then probes for residual owned
-state. Add `-PurgeNamespace` only when the namespace contains no non-story resources. Add
-`-PurgeDapr` only when the cluster-wide Dapr control plane should be uninstalled.
+set, deletes `ingress.yaml`, removes Dapr CRs, deletes operator-managed Secrets, then probes
+for residual owned state. Add `-PurgeNamespace` only when the namespace contains no non-story
+resources. Add `-PurgeDapr` only when the cluster-wide Dapr control plane should be uninstalled.
 
 ```pwsh
 pwsh deploy/k8s/teardown.ps1 -ConfirmContext <name>
@@ -107,6 +107,10 @@ pwsh deploy/validate-deployment.ps1 -ConfigPath deploy/dapr -K8sPath deploy/k8s/
 The validator is read-only and does not use `kubectl`, `helm`, `dapr`, kubeconfig, or
 `-ConfirmContext`. It also accepts `--config-path deploy/dapr` for compatibility with the
 epic text. Findings use exact category strings and redact credential-shaped values.
+`K8sIngress-InvalidPublicRoute` is the guardrail for `ingress.yaml`: the only public
+backends allowed are `eventstore-admin-ui:8080` for `eventstore.hexalith.com` and
+`sample-blazor-ui:8080` for `sample.hexalith.com`, with class `nginx` and TLS Secret
+`hexalith-pages-tls`.
 
 ---
 
@@ -190,6 +194,27 @@ and patches them as `EventStore__Authentication__Username` and
 `EventStore__Authentication__Password` without printing values.
 
 Do not put real values in docs, shell history, manifests, Kustomize generators, or env files.
+
+## Public UI hosts
+
+`ingress.yaml` publishes only browser UI workloads:
+
+- `eventstore.hexalith.com` -> `eventstore-admin-ui` service port `8080`
+- `sample.hexalith.com` -> `sample-blazor-ui` service port `8080`
+
+Before live HTTPS checks, DNS for both hosts must point at the nginx ingress endpoint and
+Secret `hexalith-pages-tls` must exist in namespace `hexalith-parties`. If the cluster does
+not yet have an ingress controller, a host-level nginx bridge may temporarily proxy to
+`eventstore-admin-ui.hexalith-parties.svc.cluster.local:8080` and
+`sample-blazor-ui.hexalith-parties.svc.cluster.local:8080`; the cluster operator owns that
+bridge, and it must be removed once the in-cluster nginx ingress controller serves the
+committed Ingress.
+
+The sample Blazor UI keeps SignalR on the internal Kubernetes URL
+`http://eventstore:8080/hubs/projection-changes`. That path is not exposed through public
+Ingress and is outside Dapr ACL enforcement. Page routing does not prove authenticated
+backend operation; Story 9.13 external Keycloak `tache` wiring and
+`hexalith-tache-ui-credentials` must also be healthy.
 
 ---
 
