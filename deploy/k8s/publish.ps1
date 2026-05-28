@@ -984,6 +984,11 @@ function Assert-TokenContainsValue($Payload, [string] $ClaimName, [string] $Expe
 }
 
 function Assert-KeycloakTokenContract([string] $TokenJson) {
+    $jsonMatch = [regex]::Matches($TokenJson, '\{[^{}]*"access_token"\s*:[^{}]*\}') | Select-Object -Last 1
+    if ($null -ne $jsonMatch) {
+        $TokenJson = $jsonMatch.Value
+    }
+
     try {
         $response = $TokenJson | ConvertFrom-Json -Depth 20
     }
@@ -1008,13 +1013,25 @@ function Assert-KeycloakTokenContract([string] $TokenJson) {
 
     Assert-TokenContainsValue $payload 'aud' 'hexalith-eventstore'
     Assert-TokenContainsValue $payload 'eventstore:tenant' 'tenant-a'
-    Assert-TokenContainsValue $payload 'eventstore:domain' 'party'
-    Assert-TokenContainsValue $payload 'eventstore:permission' 'query:read'
+    Assert-TokenContainsValue $payload 'eventstore:domain' 'counter'
+    Assert-TokenContainsValue $payload 'eventstore:permission' 'commands:*'
 }
 
 function Invoke-KeycloakPreflightPod {
     $clusterIp = Resolve-KeycloakServiceClusterIp
     $podName = "keycloak-tache-preflight-$([Guid]::NewGuid().ToString('N').Substring(0, 8))"
+    $script = @"
+set -eu
+issuer="$TacheIssuer"
+curl -fsS "`$issuer/.well-known/openid-configuration" | grep -q '"issuer":"'$TacheIssuer'"'
+curl -fsS "`$issuer/protocol/openid-connect/certs" >/dev/null
+curl -fsS -X POST "`$issuer/protocol/openid-connect/token" \
+  -H 'Content-Type: application/x-www-form-urlencoded' \
+  -d 'grant_type=password' \
+  -d 'client_id=hexalith-eventstore' \
+  --data-urlencode "username=`$KEYCLOAK_USERNAME" \
+  --data-urlencode "password=`$KEYCLOAK_PASSWORD"
+"@
     $overrides = [ordered]@{
         spec = [ordered]@{
             restartPolicy = 'Never'
@@ -1028,6 +1045,8 @@ function Invoke-KeycloakPreflightPod {
                 [ordered]@{
                     name = $podName
                     image = 'curlimages/curl'
+                    command = @('/bin/sh', '-c')
+                    args = @($script)
                     env = @(
                         [ordered]@{
                             name = 'KEYCLOAK_USERNAME'
@@ -1053,19 +1072,6 @@ function Invoke-KeycloakPreflightPod {
         }
     } | ConvertTo-Json -Depth 20 -Compress
 
-    $script = @"
-set -eu
-issuer="$TacheIssuer"
-curl -fsS "`$issuer/.well-known/openid-configuration" | grep -q '"issuer":"'$TacheIssuer'"'
-curl -fsS "`$issuer/protocol/openid-connect/certs" >/dev/null
-curl -fsS -X POST "`$issuer/protocol/openid-connect/token" \
-  -H 'Content-Type: application/x-www-form-urlencoded' \
-  -d 'grant_type=password' \
-  -d 'client_id=hexalith-eventstore' \
-  --data-urlencode "username=`$KEYCLOAK_USERNAME" \
-  --data-urlencode "password=`$KEYCLOAK_PASSWORD"
-"@
-
     return Invoke-Checked 'kubectl' @(
         'run', $podName,
         '-n', $Namespace,
@@ -1073,12 +1079,7 @@ curl -fsS -X POST "`$issuer/protocol/openid-connect/token" \
         '-i',
         '--restart=Never',
         '--image=curlimages/curl',
-        "--overrides=$overrides",
-        '--command',
-        '--',
-        'sh',
-        '-c',
-        $script
+        "--overrides=$overrides"
     ) $ExitGeneral 'Keycloak tache realm preflight failed'
 }
 

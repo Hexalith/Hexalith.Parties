@@ -5,6 +5,12 @@ namespace Hexalith.Parties.DeployValidation.Tests;
 [Collection("DeployValidation")]
 public sealed class DaprAccessControlFitnessTests
 {
+    private static readonly string s_appHostDaprDirectory = Path.Combine(
+        DeploymentTestPaths.RepositoryRoot,
+        "src",
+        "Hexalith.Parties.AppHost",
+        "DaprComponents");
+
     private static readonly IReadOnlyDictionary<string, string[]> s_expectedCallersByConfig =
         new Dictionary<string, string[]>(StringComparer.Ordinal)
         {
@@ -91,9 +97,66 @@ public sealed class DaprAccessControlFitnessTests
         allowedReceiversByCaller.ShouldNotContainKey("parties-mcp");
     }
 
-    private static YamlMappingNode Load(string fileName)
+    [Fact]
+    public void SampleUiAclOperationsMatchDocumentedMatrixInDeployAndAppHostConfigurations()
     {
-        using StreamReader reader = File.OpenText(Path.Combine(DeploymentTestPaths.DaprDirectory, fileName));
+        foreach (string directory in new[] { DeploymentTestPaths.DaprDirectory, s_appHostDaprDirectory })
+        {
+            AssertOperations(
+                directory,
+                "accesscontrol.yaml",
+                "sample-blazor-ui",
+                [
+                    ("POST", "/api/v1/commands"),
+                    ("POST", "/api/v1/queries"),
+                ]);
+            AssertOperations(
+                directory,
+                directory == DeploymentTestPaths.DaprDirectory ? "accesscontrol-sample.yaml" : "accesscontrol.sample.yaml",
+                "eventstore",
+                [
+                    ("POST", "/process"),
+                    ("POST", "/project"),
+                    ("POST", "/replay-state"),
+                    ("POST", "/admin/operational-index-metadata"),
+                ]);
+        }
+    }
+
+    private static void AssertOperations(string directory, string fileName, string caller, (string Verb, string Route)[] expected)
+    {
+        YamlMappingNode accessControl = Mapping(Mapping(Load(directory, fileName), "spec"), "accessControl");
+        YamlMappingNode policy = Sequence(accessControl, "policies")
+            .OfType<YamlMappingNode>()
+            .Single(policy => Scalar(policy, "appId") == caller);
+
+        (string Verb, string Route, string Action)[] actual = Sequence(policy, "operations")
+            .OfType<YamlMappingNode>()
+            .SelectMany(static operation => Sequence(operation, "httpVerb")
+                .OfType<YamlScalarNode>()
+                .Select(verb => (
+                    Verb: Scalar(verb),
+                    Route: Scalar(operation, "name"),
+                    Action: Scalar(operation, "action"))))
+            .OrderBy(static operation => operation.Route, StringComparer.Ordinal)
+            .ThenBy(static operation => operation.Verb, StringComparer.Ordinal)
+            .ToArray();
+
+        (string Verb, string Route, string Action)[] expectedOperations = expected
+            .Select(static operation => (operation.Verb, operation.Route, Action: "allow"))
+            .OrderBy(static operation => operation.Route, StringComparer.Ordinal)
+            .ThenBy(static operation => operation.Verb, StringComparer.Ordinal)
+            .ToArray();
+
+        actual.ShouldBe(expectedOperations, $"{Path.Combine(directory, fileName)} must match the public UI ACL matrix for {caller}.");
+    }
+
+    private static YamlMappingNode Load(string fileName)
+        => Load(DeploymentTestPaths.DaprDirectory, fileName);
+
+    private static YamlMappingNode Load(string directory, string fileName)
+    {
+        using StreamReader reader = File.OpenText(Path.Combine(directory, fileName));
         YamlStream stream = new();
         stream.Load(reader);
         return (YamlMappingNode)stream.Documents[0].RootNode;
@@ -106,6 +169,9 @@ public sealed class DaprAccessControlFitnessTests
         => mapping.Children.TryGetValue(new YamlScalarNode(key), out YamlNode? value)
             ? (YamlSequenceNode)value
             : [];
+
+    private static string Scalar(YamlScalarNode scalar)
+        => scalar.Value!;
 
     private static string Scalar(YamlMappingNode mapping, string key)
         => ((YamlScalarNode)mapping.Children[new YamlScalarNode(key)]).Value!;

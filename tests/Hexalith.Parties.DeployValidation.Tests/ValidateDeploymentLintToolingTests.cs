@@ -13,6 +13,7 @@ public sealed class ValidateDeploymentLintToolingTests : IDisposable
     [
         "DaprACL-WildcardAppId",
         "DaprACL-WildcardOperation",
+        "K8sIngress-InvalidPublicRoute",
         "K8sWorkload-DirtyTagOnConsumerImage",
         "K8sWorkload-MissingDaprAnnotations",
         "K8sWorkload-MissingImagePullSecret",
@@ -107,7 +108,7 @@ public sealed class ValidateDeploymentLintToolingTests : IDisposable
     }
 
     [Fact]
-    public void AllEightCategoriesAreReportedWithStableJsonContractAndRedactedReasons()
+    public void AllCategoriesAreReportedWithStableJsonContractAndRedactedReasons()
     {
         using FixtureTree tree = CreateFixtureTree();
         File.WriteAllText(Path.Combine(tree.K8sPath, "missing-pull-secret.yaml"), DeploymentYaml("missing-pull-secret", "registry.hexalith.com/missing-pull-secret:1.2.3", includePullSecret: false, includeDapr: false, includeProbes: true));
@@ -115,6 +116,7 @@ public sealed class ValidateDeploymentLintToolingTests : IDisposable
         File.WriteAllText(Path.Combine(tree.K8sPath, "missing-probes.yaml"), DeploymentYaml("missing-probes", "registry.hexalith.com/missing-probes:1.2.3", includePullSecret: true, includeDapr: false, includeProbes: false));
         File.WriteAllText(Path.Combine(tree.K8sPath, "latest-tag.yaml"), DeploymentYaml("latest-tag", "registry.hexalith.com/latest-tag:latest", includePullSecret: true, includeDapr: false, includeProbes: true));
         File.WriteAllText(Path.Combine(tree.K8sPath, "dirty-tag.yaml"), DeploymentYaml("dirty-tag", "registry.hexalith.com/dirty-tag:1.2.3+dirty", includePullSecret: true, includeDapr: false, includeProbes: true));
+        File.WriteAllText(Path.Combine(tree.K8sPath, "unsafe-ingress.yaml"), UnsafeIngressYaml());
         File.WriteAllText(Path.Combine(tree.K8sPath, "secret-configmap.yaml"), SecretConfigMapYaml(Poison));
         File.WriteAllText(Path.Combine(tree.ConfigPath, "accesscontrol-wildcard.yaml"), DaprAccessControlYaml("*", "/api/v1/commands"));
         File.WriteAllText(Path.Combine(tree.ConfigPath, "accesscontrol-operation.yaml"), DaprAccessControlYaml("parties", "/**"));
@@ -260,6 +262,35 @@ spec:
         string[] categories = CategoriesFrom(invalid.Stdout);
         categories.ShouldContain("DaprACL-WildcardAppId");
         categories.ShouldContain("DaprACL-WildcardOperation");
+    }
+
+    [Fact]
+    public void IngressChecksRejectBackendRoutesAndMissingTls()
+    {
+        using FixtureTree invalidTree = CreateFixtureTree();
+        File.WriteAllText(Path.Combine(invalidTree.K8sPath, "ingress.yaml"), UnsafeIngressYaml());
+
+        ProcessResult invalid = RunValidator(RepositoryRoot, null, "-ConfigPath", invalidTree.ConfigPath, "-K8sPath", invalidTree.K8sPath, "-Format", "json");
+
+        invalid.ExitCode.ShouldBe(1, invalid.CombinedOutput);
+        CategoriesFrom(invalid.Stdout).ShouldContain("K8sIngress-InvalidPublicRoute");
+    }
+
+    [Theory]
+    [InlineData("eventstore.hexalith.com", "sample-blazor-ui", "/", "Prefix", "8080")]
+    [InlineData("preview.hexalith.com", "eventstore-admin-ui", "/", "Prefix", "8080")]
+    [InlineData("eventstore.hexalith.com", "eventstore-admin-ui", "/ui", "Prefix", "8080")]
+    [InlineData("eventstore.hexalith.com", "eventstore-admin-ui", "/", "Exact", "8080")]
+    [InlineData("eventstore.hexalith.com", "eventstore-admin-ui", "/", "Prefix", "8443")]
+    public void IngressChecksRejectUiRoutesThatDoNotMatchTheExactPublicContract(string host, string service, string path, string pathType, string port)
+    {
+        using FixtureTree invalidTree = CreateFixtureTree();
+        File.WriteAllText(Path.Combine(invalidTree.K8sPath, "ingress.yaml"), IngressYaml(host, service, path, pathType, port));
+
+        ProcessResult invalid = RunValidator(RepositoryRoot, null, "-ConfigPath", invalidTree.ConfigPath, "-K8sPath", invalidTree.K8sPath, "-Format", "json");
+
+        invalid.ExitCode.ShouldBe(1, invalid.CombinedOutput);
+        CategoriesFrom(invalid.Stdout).ShouldContain("K8sIngress-InvalidPublicRoute");
     }
 
     [Fact]
@@ -428,6 +459,7 @@ spec:
 """);
         File.WriteAllText(Path.Combine(k8sPath, "eventstore", "deployment.yaml"), DeploymentYaml("eventstore", "registry.hexalith.com/eventstore:1.2.3-preview.4", includePullSecret: true, includeDapr: true, includeProbes: true));
         File.WriteAllText(Path.Combine(k8sPath, "redis", "deployment.yaml"), DeploymentYaml("redis", "redis:8.6.3", includePullSecret: false, includeDapr: false, includeProbes: true));
+        File.WriteAllText(Path.Combine(k8sPath, "ingress.yaml"), SafeIngressYaml());
 
         return new FixtureTree(root, configPath, k8sPath);
     }
@@ -537,6 +569,89 @@ spec:
       operations:
       - name: "{{operation}}"
         action: allow
+""";
+
+    private static string UnsafeIngressYaml()
+        => """
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: hexalith-pages-ingress
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: eventstore.hexalith.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: eventstore
+                port:
+                  number: 8080
+""";
+
+    private static string SafeIngressYaml()
+        => """
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: hexalith-pages-ingress
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: eventstore.hexalith.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: eventstore-admin-ui
+                port:
+                  number: 8080
+    - host: sample.hexalith.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: sample-blazor-ui
+                port:
+                  number: 8080
+  tls:
+    - hosts:
+        - eventstore.hexalith.com
+        - sample.hexalith.com
+      secretName: hexalith-pages-tls
+""";
+
+    private static string IngressYaml(string host, string service, string path, string pathType, string port)
+        => $$"""
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: hexalith-pages-ingress
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: {{host}}
+      http:
+        paths:
+          - path: {{path}}
+            pathType: {{pathType}}
+            backend:
+              service:
+                name: {{service}}
+                port:
+                  number: {{port}}
+  tls:
+    - hosts:
+        - eventstore.hexalith.com
+        - sample.hexalith.com
+      secretName: hexalith-pages-tls
 """;
 
     private static string DaprAccessControlWithoutAppIdYaml(string operation)

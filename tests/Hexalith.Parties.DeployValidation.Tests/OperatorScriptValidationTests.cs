@@ -279,6 +279,7 @@ public sealed class OperatorScriptValidationTests : IDisposable
 
         result.ExitCode.ShouldBe(0, result.Output);
         workspace.LogLines.ShouldContain(line => line.Contains("delete -k", StringComparison.Ordinal) && line.Contains("/eventstore", StringComparison.Ordinal));
+        workspace.LogLines.ShouldContain(line => line.Contains("delete -f", StringComparison.Ordinal) && line.Contains("ingress.yaml", StringComparison.Ordinal));
         workspace.LogLines.ShouldNotContain(line => line == $"kubectl delete -k {workspace.K8sRoot} --ignore-not-found=true");
         workspace.LogLines.ShouldNotContain(line => line.Contains("delete namespace hexalith-parties", StringComparison.Ordinal));
     }
@@ -836,7 +837,7 @@ exit 1
         bool invalidKeycloakToken)
     {
         string kubectlPath = Path.Combine(binDirectory, RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "kubectl.cmd" : "kubectl");
-        string validPayload = "eyJpc3MiOiJodHRwOi8vYXV0aC50YWNoZS5haTo4MDgwL3JlYWxtcy90YWNoZSIsImF1ZCI6WyJoZXhhbGl0aC1ldmVudHN0b3JlIl0sImV2ZW50c3RvcmU6dGVuYW50IjpbInRlbmFudC1hIl0sImV2ZW50c3RvcmU6ZG9tYWluIjpbInBhcnR5Il0sImV2ZW50c3RvcmU6cGVybWlzc2lvbiI6WyJxdWVyeTpyZWFkIl19";
+        string validPayload = "eyJpc3MiOiJodHRwOi8vYXV0aC50YWNoZS5haTo4MDgwL3JlYWxtcy90YWNoZSIsImF1ZCI6WyJoZXhhbGl0aC1ldmVudHN0b3JlIl0sImV2ZW50c3RvcmU6dGVuYW50IjpbInRlbmFudC1hIl0sImV2ZW50c3RvcmU6ZG9tYWluIjpbImNvdW50ZXIiXSwiZXZlbnRzdG9yZTpwZXJtaXNzaW9uIjpbImNvbW1hbmRzOioiXX0";
         string invalidPayload = "eyJpc3MiOiJodHRwOi8vYXV0aC50YWNoZS5haTo4MDgwL3JlYWxtcy90YWNoZSIsImF1ZCI6WyJvdGhlciJdLCJldmVudHN0b3JlOnRlbmFudCI6WyJ0ZW5hbnQtYSJdLCJldmVudHN0b3JlOmRvbWFpbiI6WyJwYXJ0eSJdLCJldmVudHN0b3JlOnBlcm1pc3Npb24iOlsicXVlcnk6cmVhZCJdfQ";
         string tokenPayload = invalidKeycloakToken ? invalidPayload : validPayload;
         string keycloakServiceExit = keycloakClusterIp is null ? "1" : "0";

@@ -34,7 +34,7 @@ spec:
       - name: zot-pull-secret
       containers:
       - name: eventstore-admin-ui
-        image: registry.hexalith.com/eventstore-admin-ui:0.0.0-preview.0.505
+        image: registry.hexalith.com/eventstore-admin-ui:0.0.0-preview.0.506
         imagePullPolicy: IfNotPresent
         readinessProbe:
           httpGet:

@@ -9,6 +9,7 @@ metadata:
     dapr.io/enabled: "true"
     dapr.io/config: accesscontrol-sample
     dapr.io/app-id: sample
+    dapr.io/app-port: '8080'
     dapr.io/enable-api-logging: 'true'
 spec:
   minReadySeconds: 60
@@ -23,10 +24,10 @@ spec:
       labels:
         app: sample
       annotations:
-        dapr.io/app-port: '8080'
         dapr.io/enabled: "true"
         dapr.io/config: accesscontrol-sample
         dapr.io/app-id: sample
+        dapr.io/app-port: '8080'
         dapr.io/enable-api-logging: 'true'
     spec:
       hostAliases:
@@ -37,7 +38,7 @@ spec:
       - name: zot-pull-secret
       containers:
       - name: sample
-        image: registry.hexalith.com/sample:0.0.0-preview.0.505
+        image: registry.hexalith.com/sample:0.0.0-preview.0.506
         imagePullPolicy: IfNotPresent
         readinessProbe:
           httpGet:
