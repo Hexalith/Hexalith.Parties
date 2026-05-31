@@ -1,7 +1,12 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
+  <PropertyGroup>
+    <HexalithEventStoreRoot Condition="'$(HexalithEventStoreRoot)' == '' and Exists('..\..\..\Hexalith.EventStore\src\Hexalith.EventStore.Contracts')">..\..\..\Hexalith.EventStore</HexalithEventStoreRoot>
+    <HexalithEventStoreRoot Condition="'$(HexalithEventStoreRoot)' == '' and Exists('..\..\Hexalith.EventStore\src\Hexalith.EventStore.Contracts')">..\..\Hexalith.EventStore</HexalithEventStoreRoot>
+  </PropertyGroup>
+
   <ItemGroup>
-    <ProjectReference Include="..\..\Hexalith.EventStore\src\Hexalith.EventStore.Contracts\Hexalith.EventStore.Contracts.csproj" />
+    <ProjectReference Include="$(HexalithEventStoreRoot)\src\Hexalith.EventStore.Contracts\Hexalith.EventStore.Contracts.csproj" />
     <ProjectReference Include="..\Hexalith.Parties.Contracts\Hexalith.Parties.Contracts.csproj" />
   </ItemGroup>
 
