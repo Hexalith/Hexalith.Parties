@@ -1,11 +1,11 @@
 {
   "workflow_version": "1.2.0",
   "timestamps": {
-    "started": "2026-06-02T12:49:32Z",
-    "last_updated": "2026-06-02T13:02:52Z",
-    "completed": "2026-06-02T13:02:52Z"
+    "started": "2026-06-02T16:10:38Z",
+    "last_updated": "2026-06-02T16:30:05Z",
+    "completed": "2026-06-02T16:30:05Z"
   },
-  "mode": "initial_scan",
+  "mode": "full_rescan",
   "scan_level": "deep",
   "project_root": "/home/administrator/projects/hexalith/parties",
   "project_knowledge": "/home/administrator/projects/hexalith/parties/docs",
@@ -19,30 +19,38 @@
   ],
   "emphasis": ["domain-and-event-sourcing", "api-and-client-contracts"],
   "completed_steps": [
-    { "step": "step_1", "status": "completed", "timestamp": "2026-06-02T12:49:32Z", "summary": "Classified as monolith (single cohesive .NET 10 solution), project_type_id=backend; 12 source + 12 test projects; embedded Blazor UI (Picker, AdminPortal). User-confirmed." },
-    { "step": "step_2", "status": "completed", "timestamp": "2026-06-02T12:49:32Z", "summary": "Found ~19 existing docs under docs/; no index.md. Existing deployment-guide.md/kubernetes-deployment-architecture.md comprehensive — linked, not overwritten. User emphasis: domain/event-sourcing + API/client contracts." },
-    { "step": "step_3", "status": "completed", "timestamp": "2026-06-02T12:49:32Z", "summary": "Tech stack: .NET 10 (SDK 10.0.300), Aspire 13.3.x, DAPR 1.17/1.18, Hexalith.EventStore gateway, FluentValidation 12.1.1, MediatR 14.1.0, FluentUI 5.0-rc, MCP 1.x, xUnit v3. Pattern: event sourcing + CQRS + DAPR actors behind EventStore." },
-    { "step": "step_4", "status": "completed", "timestamp": "2026-06-02T12:49:32Z", "summary": "Deep analysis via 6 parallel agents over src/ (contracts, domain execution, client+MCP, security, Blazor, build/deploy/tests). Findings cross-verified; key discrepancies recorded (crypto-shredding enabled-by-default vs README; MCP=5 tools)." },
-    { "step": "step_5", "status": "completed", "timestamp": "2026-06-02T12:55:00Z", "summary": "Source tree annotated → source-tree-analysis.md." },
-    { "step": "step_6", "status": "completed", "timestamp": "2026-06-02T12:58:00Z", "summary": "Dev/build/test/CI extracted → development-guide.md. Deployment summarized in architecture.md §12 and linked to existing deployment-guide.md (not regenerated)." },
-    { "step": "step_8", "status": "completed", "timestamp": "2026-06-02T12:54:00Z", "summary": "Single-part architecture.md generated (topology, write/read paths, actors, security, GDPR, decisions). No per-part files (monolith)." },
-    { "step": "step_9", "status": "completed", "timestamp": "2026-06-02T13:00:00Z", "summary": "Supporting docs: project-overview.md, data-models.md, api-contracts.md, component-inventory.md. No project-parts.json/integration-architecture.md (single-part)." },
-    { "step": "step_10", "status": "completed", "timestamp": "2026-06-02T13:01:00Z", "summary": "Master index.md generated; links all generated + existing docs; no '(To be generated)' markers (all docs produced)." },
-    { "step": "step_11", "status": "completed", "timestamp": "2026-06-02T13:02:52Z", "summary": "Validation: 8 docs + state file present; zero incomplete markers; all internal .md links resolve; checklist satisfied for single-part backend." },
-    { "step": "step_12", "status": "completed", "timestamp": "2026-06-02T13:02:52Z", "summary": "Finalized. workflow.on_complete resolved empty — no terminal instruction." }
+    { "step": "step_0.5", "status": "completed", "timestamp": "2026-06-02T16:10:38Z", "summary": "Loaded documentation-requirements.csv (12 project types). Part 'parties' → backend." },
+    { "step": "step_0.6", "status": "completed", "timestamp": "2026-06-02T16:10:38Z", "summary": "index.md present → user chose full_rescan/deep after being informed src/ is byte-identical to prior generation (only Directory.Packages.props versions changed)." },
+    { "step": "step_1", "status": "completed", "timestamp": "2026-06-02T16:21:58Z", "summary": "Monolith confirmed: Hexalith.Parties.slnx, 12 src + 12 test projects. Submodules now checked out but external deps, not parts." },
+    { "step": "step_2", "status": "completed", "timestamp": "2026-06-02T16:21:58Z", "summary": "~25 existing docs inventoried; hand-maintained ones (getting-started, event-*, gdpr-*, deployment-*, kubernetes-*, tenant-access, frontend/, spikes/) linked not overwritten. Emphasis: domain/event-sourcing + API/contracts." },
+    { "step": "step_3", "status": "completed", "timestamp": "2026-06-02T16:21:58Z", "summary": "Tech stack refreshed from Directory.Packages.props: Aspire 13.4.0 (AppHost SDK 13.3.3 skew), Dapr 1.18.0-rc02/1.17.9, MCP 1.3.0, Testcontainers 4.12.0 (unused), etc." },
+    { "step": "step_4", "status": "completed", "timestamp": "2026-06-02T16:21:58Z", "summary": "Deep analysis via 6 parallel agents, cross-verified. Catalog: 22 commands, 43 events (24+19), 5 Parties actors + AggregateActor, 5 MCP tools. New defects found (see findings.new_discrepancies)." },
+    { "step": "step_5", "status": "completed", "timestamp": "2026-06-02T16:30:05Z", "summary": "source-tree-analysis.md refreshed: exact counts (22 cmds / 24+19 events), submodules-now-checked-out section corrected." },
+    { "step": "step_6", "status": "completed", "timestamp": "2026-06-02T16:30:05Z", "summary": "development-guide.md refreshed (Testcontainers-unused correction). Deployment summarized in architecture.md §12 and linked to hand-maintained deployment-guide.md / kubernetes-deployment-architecture.md (not regenerated)." },
+    { "step": "step_8", "status": "completed", "timestamp": "2026-06-02T16:30:05Z", "summary": "Single-part architecture.md regenerated: versions refreshed; §8 strengthened with LocalDevKeyStorageBackend production-data-loss risk; §13 gotchas expanded with index-rebuild key bug, README MCP-tools error, Aspire SDK skew, AdminPortal stubs, unenforced Pact gate. No per-part files (monolith)." },
+    { "step": "step_9", "status": "completed", "timestamp": "2026-06-02T16:30:05Z", "summary": "Supporting docs refreshed: project-overview.md, data-models.md (22 cmds/43 events re-verified), api-contracts.md (5 MCP tools re-verified), component-inventory.md (index-bug pointer + version refresh). Also refreshed _bmad-output/project-context.md version table. No project-parts.json/integration-architecture.md (single-part)." },
+    { "step": "step_10", "status": "completed", "timestamp": "2026-06-02T16:30:05Z", "summary": "index.md regenerated; Known discrepancies section expanded (5 items incl. LocalDev KMS risk, README MCP error, index-rebuild bug, Aspire skew, submodule status). Zero '(To be generated)' markers." },
+    { "step": "step_11", "status": "completed", "timestamp": "2026-06-02T16:30:05Z", "summary": "Validation: 8 generated docs + index present; zero incomplete markers; no stale version stragglers (10.0.300 = correct SDK pin); all internal .md links resolve; state file valid JSON; checklist satisfied for single-part backend." },
+    { "step": "step_12", "status": "completed", "timestamp": "2026-06-02T16:30:05Z", "summary": "Finalized. workflow.on_complete resolved empty — no terminal instruction." }
   ],
   "current_step": "completed",
   "findings": {
-    "project_classification": "Monolith / single cohesive .NET 10 solution; backend event-sourced domain service with embedded Blazor UI.",
-    "technology_stack": ".NET 10 + Aspire 13.3 + DAPR actors/pubsub + Hexalith.EventStore + Blazor/FluentUI",
-    "domain": "Single Party aggregate (Person|Organization); ~22 commands; ~24 events + rejection events; CQRS read models PartyDetail & PartyIndex; 6 DAPR actors",
-    "api": "EventStore gateway POST /api/v1/commands & /api/v1/queries (Domain=party); typed .NET client; parties-mcp host with 5 tools",
-    "discrepancies": [
-      "GDPR crypto-shredding implemented & enabled-by-default (Parties:CryptoShredding:IsEnabled=true) despite README 'not in MVP' notice; separate from Parties:Compliance:GdprFeaturesActive warning switch.",
-      "parties-mcp exposes 5 tools; get_party_name_at (named in getting-started) does NOT exist; temporal name queries deferred.",
-      "Submodules (EventStore/Tenants) not checked out in working copy; referenced by path."
+    "project_classification": "Monolith / single cohesive .NET 10 solution; backend event-sourced party domain service with embedded Blazor UI; behind a Hexalith.EventStore gateway.",
+    "technology_stack": ".NET 10 (SDK 10.0.300) + Aspire 13.4.0 + DAPR 1.18/1.17 + Hexalith.EventStore + Blazor/FluentUI 5.0-rc.3; CPM on; TreatWarningsAsErrors; MinVer.",
+    "domain": "Single Party aggregate (Person|Organization); 22 commands; 43 events (24 state-change + 19 rejection); CQRS read models PartyDetail & PartyIndexEntry; markers IEventPayload / IRejectionEvent.",
+    "api": "EventStore gateway POST /api/v1/commands & /api/v1/queries (Domain=party); typed client (Command/Query/AdminPortalGdpr); parties-mcp = exactly 5 stateless HTTP tools.",
+    "new_discrepancies": [
+      "README.md:17 + getting-started.md claim parties-mcp has 6 tools incl get_party_name_at — FALSE. Ground truth = 5 tools (create_party,get_party,find_parties,update_party,delete_party). RECOMMEND fixing README + getting-started.",
+      "BUG: PartyIndexProjectionActor live state key {tenant}:party-index:default vs ProjectionRebuildService {tenant}:party-index:all (ProjectionRebuildService.cs:460) — rebuild diverges from live index.",
+      "RISK: LocalDevKeyStorageBackend (in-memory) is the only registered IKeyStorageBackend, no prod guard/warning; with CryptoShredding:IsEnabled=true default, prod restart destroys all key material.",
+      "README 'GDPR not in MVP' contradicts default-ON crypto-shredding + working consent/restriction/erasure handlers (warning switch GdprFeaturesActive default false is the real referent).",
+      "Aspire SDK/package skew: AppHost SDK 13.3.3 vs packages 13.4.0.",
+      "AdminPortal GDPR client GetErasureCertificateAsync + RetryErasureVerificationAsync are inert ContractUnavailable (501) stubs.",
+      "Testcontainers 4.12.0 declared in CPM, referenced by zero test projects.",
+      "CI contract-test (Pact) job unenforced — root Pact scripts absent; self-reports CONCERNS and is skipped.",
+      "DAPR client/runtime gap: Dapr.Client/Actors 1.18.0-rc02 vs Dapr.AspNetCore 1.17.9 vs runtime baseline 1.14.4 (intentional)."
     ],
-    "counts": { "source_projects": 12, "test_projects": 12, "csharp_files_src": 326, "csharp_files_tests": 184, "razor_files": 12 }
+    "counts": { "source_projects": 12, "test_projects": 12, "commands": 22, "events_total": 43, "events_state_change": 24, "events_rejection": 19, "parties_actors": 5, "mcp_tools": 5, "ci_shards": 4 }
   },
   "outputs_generated": [
     "project-scan-report.json",
@@ -55,5 +63,15 @@
     "development-guide.md",
     "component-inventory.md"
   ],
-  "resume_instructions": "Workflow complete. To refresh, re-run /bmad-document-project (it will detect index.md and offer rescan or deep-dive). Existing hand-maintained docs (deployment-guide.md, event-*.md, gdpr-*.md, getting-started.md) were linked, not overwritten."
+  "also_updated": ["_bmad-output/project-context.md (version table refresh)"],
+  "applied_source_fixes": [
+    "README.md:13 + docs/getting-started.md:432 — removed phantom get_party_name_at; MCP tool list now correctly lists 5 tools."
+  ],
+  "recommended_source_fixes_not_applied": [
+    "docs/getting-started.md + docs/kubernetes-deployment-architecture.md: stale package versions (hand-maintained; left untouched).",
+    "src/Hexalith.Parties.Projections/Services/ProjectionRebuildService.cs:460: index rebuild key (:all) vs live actor key (:default).",
+    "src/Hexalith.Parties.Security: add a production guard/warning for LocalDevKeyStorageBackend.",
+    "README.md:5 GDPR notice still says crypto-shredding 'not in MVP' while it ships enabled-by-default (left as-is; scoped out of this fix)."
+  ],
+  "resume_instructions": "Full rescan complete (2026-06-02). All generated docs refreshed in place; hand-maintained docs linked not overwritten. To refresh again, re-run /bmad-document-project (detects index.md → offers rescan/deep-dive)."
 }

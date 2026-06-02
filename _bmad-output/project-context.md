@@ -28,15 +28,15 @@ _This file contains critical rules and patterns that AI agents must follow when 
 **Core stack:**
 | Concern | Package | Version |
 |---|---|---|
-| Orchestration | .NET Aspire (AppHost SDK / hosting) | `13.3.3` / `13.3.5` |
+| Orchestration | .NET Aspire (packages / AppHost SDK) | `13.4.0` / SDK pinned `13.3.3` (skew) |
 | Actors & pub/sub | `Dapr.Actors` / `Dapr.Client` | `1.18.0-rc02` |
 | | `Dapr.AspNetCore` / `Dapr.Actors.AspNetCore` | `1.17.9` |
 | Validation | FluentValidation | `12.1.1` |
 | Mediation | MediatR | `14.1.0` |
 | AuthN | Microsoft.AspNetCore.Authentication.JwtBearer | `10.0.8` |
-| MCP | ModelContextProtocol / .AspNetCore | `1.0.0` / `1.3.0` |
+| MCP | ModelContextProtocol / .AspNetCore | `1.3.0` / `1.3.0` |
 | UI | FluentUI Blazor / CustomElements | `5.0.0-rc.3` / `10.0.8` |
-| Testing | xUnit **v3** / Shouldly / NSubstitute / bunit / Testcontainers | `3.2.2` / `4.3.0` / `5.3.0` / `2.7.2` / `4.10.0` |
+| Testing | xUnit **v3** / Shouldly / NSubstitute / bunit / Testcontainers | `3.2.2` / `4.3.0` / `5.3.0` / `2.7.2` / `4.12.0` (declared, unused) |
 
 **Constraints agents must respect:**
 - **`Hexalith.EventStore` and `Hexalith.Tenants` are sibling submodules referenced by PROJECT path**,

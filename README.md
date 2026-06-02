@@ -10,7 +10,7 @@ Hexalith.Parties is a ready-to-deploy party management domain service for people
 - **Parties actor host** -- The `parties` resource owns domain execution, projections, and DAPR actor hosting behind EventStore.
 - **Typed client package** -- `IPartiesCommandClient` and `IPartiesQueryClient` hide EventStore envelope plumbing for .NET consumers.
 - **Embeddable party picker** -- `Hexalith.Parties.Picker` provides a Blazor/custom-element selector that searches through `IPartiesQueryClient` and emits durable party-id selections.
-- **Separate MCP host** -- `parties-mcp` exposes `create_party`, `get_party`, `find_parties`, `update_party`, `delete_party`, and `get_party_name_at` through the typed client boundary.
+- **Separate MCP host** -- `parties-mcp` exposes `create_party`, `get_party`, `find_parties`, `update_party`, and `delete_party` through the typed client boundary.
 - **DAPR event subscription** -- Subscriber apps consume EventStore-published party events with their own idempotent handlers.
 - **EventStore Admin UI** -- Use `eventstore-admin-ui` for generic stream and event browsing.
 - **.NET Aspire** -- One-command local topology with EventStore, Parties, Tenants, DAPR sidecars, Redis, and optional Keycloak.

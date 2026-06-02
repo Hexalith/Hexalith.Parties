@@ -429,7 +429,6 @@ Canonical tools:
 - `find_parties`
 - `update_party`
 - `delete_party`
-- `get_party_name_at`
 
 Use the `parties-mcp` endpoint shown in the Aspire dashboard. Replace `<parties-mcp-port>` with the parties-mcp HTTPS port from the Aspire dashboard, `<token>` with the bearer token from Step 2, and `<user-id>` with the authenticated user's identifier.
 
