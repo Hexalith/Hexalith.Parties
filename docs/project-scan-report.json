@@ -1,0 +1,59 @@
+{
+  "workflow_version": "1.2.0",
+  "timestamps": {
+    "started": "2026-06-02T12:49:32Z",
+    "last_updated": "2026-06-02T13:02:52Z",
+    "completed": "2026-06-02T13:02:52Z"
+  },
+  "mode": "initial_scan",
+  "scan_level": "deep",
+  "project_root": "/home/administrator/projects/hexalith/parties",
+  "project_knowledge": "/home/administrator/projects/hexalith/parties/docs",
+  "repository_type": "monolith",
+  "project_types": [
+    {
+      "part_id": "parties",
+      "project_type_id": "backend",
+      "display_name": "Hexalith.Parties — .NET 10 event-sourced party domain service"
+    }
+  ],
+  "emphasis": ["domain-and-event-sourcing", "api-and-client-contracts"],
+  "completed_steps": [
+    { "step": "step_1", "status": "completed", "timestamp": "2026-06-02T12:49:32Z", "summary": "Classified as monolith (single cohesive .NET 10 solution), project_type_id=backend; 12 source + 12 test projects; embedded Blazor UI (Picker, AdminPortal). User-confirmed." },
+    { "step": "step_2", "status": "completed", "timestamp": "2026-06-02T12:49:32Z", "summary": "Found ~19 existing docs under docs/; no index.md. Existing deployment-guide.md/kubernetes-deployment-architecture.md comprehensive — linked, not overwritten. User emphasis: domain/event-sourcing + API/client contracts." },
+    { "step": "step_3", "status": "completed", "timestamp": "2026-06-02T12:49:32Z", "summary": "Tech stack: .NET 10 (SDK 10.0.300), Aspire 13.3.x, DAPR 1.17/1.18, Hexalith.EventStore gateway, FluentValidation 12.1.1, MediatR 14.1.0, FluentUI 5.0-rc, MCP 1.x, xUnit v3. Pattern: event sourcing + CQRS + DAPR actors behind EventStore." },
+    { "step": "step_4", "status": "completed", "timestamp": "2026-06-02T12:49:32Z", "summary": "Deep analysis via 6 parallel agents over src/ (contracts, domain execution, client+MCP, security, Blazor, build/deploy/tests). Findings cross-verified; key discrepancies recorded (crypto-shredding enabled-by-default vs README; MCP=5 tools)." },
+    { "step": "step_5", "status": "completed", "timestamp": "2026-06-02T12:55:00Z", "summary": "Source tree annotated → source-tree-analysis.md." },
+    { "step": "step_6", "status": "completed", "timestamp": "2026-06-02T12:58:00Z", "summary": "Dev/build/test/CI extracted → development-guide.md. Deployment summarized in architecture.md §12 and linked to existing deployment-guide.md (not regenerated)." },
+    { "step": "step_8", "status": "completed", "timestamp": "2026-06-02T12:54:00Z", "summary": "Single-part architecture.md generated (topology, write/read paths, actors, security, GDPR, decisions). No per-part files (monolith)." },
+    { "step": "step_9", "status": "completed", "timestamp": "2026-06-02T13:00:00Z", "summary": "Supporting docs: project-overview.md, data-models.md, api-contracts.md, component-inventory.md. No project-parts.json/integration-architecture.md (single-part)." },
+    { "step": "step_10", "status": "completed", "timestamp": "2026-06-02T13:01:00Z", "summary": "Master index.md generated; links all generated + existing docs; no '(To be generated)' markers (all docs produced)." },
+    { "step": "step_11", "status": "completed", "timestamp": "2026-06-02T13:02:52Z", "summary": "Validation: 8 docs + state file present; zero incomplete markers; all internal .md links resolve; checklist satisfied for single-part backend." },
+    { "step": "step_12", "status": "completed", "timestamp": "2026-06-02T13:02:52Z", "summary": "Finalized. workflow.on_complete resolved empty — no terminal instruction." }
+  ],
+  "current_step": "completed",
+  "findings": {
+    "project_classification": "Monolith / single cohesive .NET 10 solution; backend event-sourced domain service with embedded Blazor UI.",
+    "technology_stack": ".NET 10 + Aspire 13.3 + DAPR actors/pubsub + Hexalith.EventStore + Blazor/FluentUI",
+    "domain": "Single Party aggregate (Person|Organization); ~22 commands; ~24 events + rejection events; CQRS read models PartyDetail & PartyIndex; 6 DAPR actors",
+    "api": "EventStore gateway POST /api/v1/commands & /api/v1/queries (Domain=party); typed .NET client; parties-mcp host with 5 tools",
+    "discrepancies": [
+      "GDPR crypto-shredding implemented & enabled-by-default (Parties:CryptoShredding:IsEnabled=true) despite README 'not in MVP' notice; separate from Parties:Compliance:GdprFeaturesActive warning switch.",
+      "parties-mcp exposes 5 tools; get_party_name_at (named in getting-started) does NOT exist; temporal name queries deferred.",
+      "Submodules (EventStore/Tenants) not checked out in working copy; referenced by path."
+    ],
+    "counts": { "source_projects": 12, "test_projects": 12, "csharp_files_src": 326, "csharp_files_tests": 184, "razor_files": 12 }
+  },
+  "outputs_generated": [
+    "project-scan-report.json",
+    "index.md",
+    "project-overview.md",
+    "architecture.md",
+    "data-models.md",
+    "api-contracts.md",
+    "source-tree-analysis.md",
+    "development-guide.md",
+    "component-inventory.md"
+  ],
+  "resume_instructions": "Workflow complete. To refresh, re-run /bmad-document-project (it will detect index.md and offer rescan or deep-dive). Existing hand-maintained docs (deployment-guide.md, event-*.md, gdpr-*.md, getting-started.md) were linked, not overwritten."
+}
