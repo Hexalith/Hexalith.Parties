@@ -20,7 +20,7 @@ public sealed partial class PartyDetailProjectionQueryActor(
     ActorHost host,
     IActorProxyFactory actorProxyFactory,
     ILogger<PartyDetailProjectionQueryActor> logger,
-    IProjectionRebuildService? projectionRebuildService = null) : Actor(host), IProjectionActor
+    IProjectionRebuildService? projectionRebuildService = null) : Actor(host), IPartyProjectionQueryActor, IProjectionActor
 {
     public const string ActorTypeName = nameof(PartyDetailProjectionQueryActor);
     public const string ProjectionType = "party-detail";

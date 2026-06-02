@@ -25,7 +25,7 @@ public sealed partial class PartyIndexProjectionQueryActor(
     IActorProxyFactory actorProxyFactory,
     IPartySearchProvider searchProvider,
     IHostApplicationLifetime hostLifetime,
-    ILogger<PartyIndexProjectionQueryActor> logger) : Actor(host), IProjectionActor
+    ILogger<PartyIndexProjectionQueryActor> logger) : Actor(host), IPartyProjectionQueryActor, IProjectionActor
 {
     public const string ActorTypeName = nameof(PartyIndexProjectionQueryActor);
     public const string ListAggregateId = "parties";
