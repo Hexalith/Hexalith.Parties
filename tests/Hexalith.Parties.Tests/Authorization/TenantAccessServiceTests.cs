@@ -1,7 +1,7 @@
+using Hexalith.EventStore.Client.Subscriptions;
 using Hexalith.Parties.Authorization;
 using Hexalith.Tenants.Client.Projections;
 using Hexalith.Tenants.Client.Registration;
-using Hexalith.Tenants.Client.Subscription;
 using Hexalith.Tenants.Contracts.Enums;
 using Hexalith.Tenants.Contracts.Events;
 
@@ -155,7 +155,7 @@ public class TenantAccessServiceTests {
         // AC3 round-trip: tenant active and member allowed,
         // then TenantDisabled event flows through the Tenants client pipeline,
         // then the same access check fails closed with DisabledTenant.
-        (TenantEventProcessor processor, ITenantProjectionStore store, ServiceProvider provider) = BuildTenantsPipeline();
+        (EventStoreDomainEventProcessor processor, ITenantProjectionStore store, ServiceProvider provider) = BuildTenantsPipeline();
         using (provider) {
             await processor.ProcessAsync(Envelope("m-1", new TenantCreated("tenant-1", "Tenant One", null, DateTimeOffset.UtcNow)));
             await processor.ProcessAsync(Envelope("m-2", new UserAddedToTenant("tenant-1", "user-1", TenantRole.TenantContributor)));
@@ -176,7 +176,7 @@ public class TenantAccessServiceTests {
     public async Task CheckAccessAsyncDeniesAfterUserRemovedFromTenantEventIsProcessed() {
         // AC3 round-trip: user added then removed via Tenants events,
         // access check after removal fails closed with MissingMember.
-        (TenantEventProcessor processor, ITenantProjectionStore store, ServiceProvider provider) = BuildTenantsPipeline();
+        (EventStoreDomainEventProcessor processor, ITenantProjectionStore store, ServiceProvider provider) = BuildTenantsPipeline();
         using (provider) {
             await processor.ProcessAsync(Envelope("m-1", new TenantCreated("tenant-1", "Tenant One", null, DateTimeOffset.UtcNow)));
             await processor.ProcessAsync(Envelope("m-2", new UserAddedToTenant("tenant-1", "user-1", TenantRole.TenantContributor)));
@@ -193,18 +193,18 @@ public class TenantAccessServiceTests {
         }
     }
 
-    private static (TenantEventProcessor Processor, ITenantProjectionStore Store, ServiceProvider Provider) BuildTenantsPipeline() {
+    private static (EventStoreDomainEventProcessor Processor, ITenantProjectionStore Store, ServiceProvider Provider) BuildTenantsPipeline() {
         ServiceCollection services = new();
         services.AddLogging();
         services.AddHexalithTenants();
         ServiceProvider provider = services.BuildServiceProvider();
         return (
-            provider.GetRequiredService<TenantEventProcessor>(),
+            provider.GetRequiredService<EventStoreDomainEventProcessor>(),
             provider.GetRequiredService<ITenantProjectionStore>(),
             provider);
     }
 
-    private static TenantEventEnvelope Envelope<TEvent>(string messageId, TEvent @event)
+    private static EventStoreDomainEventEnvelope Envelope<TEvent>(string messageId, TEvent @event)
         => new(
             messageId,
             "tenant-1",
