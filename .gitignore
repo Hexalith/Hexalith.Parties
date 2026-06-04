@@ -447,3 +447,5 @@ src/Hexalith.Parties.AppHost/aspirate-state.json
 .agents\.story-automator-active
 .agents/.story-automator-active
 .claude\.story-automator-active
+
+.fake
