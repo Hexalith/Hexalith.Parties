@@ -1,12 +1,12 @@
 using Hexalith.EventStore.Contracts.Commands;
 using Hexalith.EventStore.Contracts.Results;
+using Hexalith.EventStore.DomainService;
 using Hexalith.EventStore.Server.DomainServices;
 using Hexalith.Parties.Compliance;
 using Hexalith.Parties.Extensions;
 using Hexalith.Parties.HealthChecks;
 using Hexalith.Parties.Middleware;
 using Hexalith.Parties.ServiceDefaults;
-using Hexalith.Tenants.Client.Subscription;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
@@ -44,7 +44,7 @@ app.UseCloudEvents();
 //   - app.MapSubscribeHandler() exposes POST /dapr/subscribe, the DAPR pub/sub
 //     subscription-discovery callback. The Parties sidecar invokes it at startup to
 //     learn which topics this app subscribes to. Never called by external clients.
-//   - app.MapTenantEventSubscription() exposes POST /tenants/events, the Tenants
+//   - app.MapEventStoreDomainEvents() exposes POST /tenants/events, the Tenants
 //     pub/sub event-delivery callback. The Parties sidecar delivers Tenants lifecycle
 //     events here after the Tenants app publishes on the shared pubsub component.
 //     Delivery is enforced by the pubsub component (scoped to parties + tenants in
@@ -53,7 +53,7 @@ app.UseCloudEvents();
 // accesscontrol.parties.yaml (defaultAction: deny; only eventstore -> POST /process).
 // EventStore is the public command/query gateway after Story 12.2.
 app.MapSubscribeHandler();
-app.MapTenantEventSubscription();
+app.MapEventStoreDomainEvents();
 app.MapPost("/process", static async (
     DomainServiceRequest request,
     IDomainServiceInvoker invoker,

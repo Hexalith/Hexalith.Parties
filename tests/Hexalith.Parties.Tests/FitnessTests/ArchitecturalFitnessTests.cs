@@ -104,7 +104,7 @@ public sealed class ArchitecturalFitnessTests
         source.ShouldContain("app.MapActorsHandlers()");
         source.ShouldContain("app.MapDefaultEndpoints()");
         source.ShouldContain("app.MapSubscribeHandler()");
-        source.ShouldContain("app.MapTenantEventSubscription()");
+        source.ShouldContain("app.MapEventStoreDomainEvents()");
         source.ShouldContain("app.MapPost(\"/process\"");
         source.ShouldContain("DAPR sidecar-internal");
         source.ShouldContain("accesscontrol.parties.yaml");
@@ -116,7 +116,7 @@ public sealed class ArchitecturalFitnessTests
             customMessage: "MapSubscribeHandler exception must name the route it exposes (POST /dapr/subscribe).");
         source.ShouldContain(
             "/tenants/events",
-            customMessage: "MapTenantEventSubscription exception must name the route it exposes (POST /tenants/events).");
+            customMessage: "MapEventStoreDomainEvents exception must name the route it exposes (POST /tenants/events).");
         source.ShouldContain(
             "only eventstore -> POST /process",
             customMessage: "The retained /process endpoint must be documented as DAPR service-invocation plumbing restricted by accesscontrol.parties.yaml.");

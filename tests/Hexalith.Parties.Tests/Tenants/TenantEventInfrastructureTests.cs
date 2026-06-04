@@ -2,12 +2,13 @@ using System.Text.Json;
 
 using Dapr;
 
+using Hexalith.EventStore.Client.Subscriptions;
+using Hexalith.EventStore.DomainService;
 using Hexalith.Parties.Authorization;
 using Hexalith.Parties.Extensions;
 using Hexalith.Tenants.Client.Configuration;
 using Hexalith.Tenants.Client.Projections;
 using Hexalith.Tenants.Client.Registration;
-using Hexalith.Tenants.Client.Subscription;
 using Hexalith.Tenants.Contracts.Enums;
 using Hexalith.Tenants.Contracts.Events;
 
@@ -40,7 +41,7 @@ public class TenantEventInfrastructureTests {
 
         using ServiceProvider provider = services.BuildServiceProvider();
         provider.GetRequiredService<ITenantProjectionStore>().ShouldNotBeNull();
-        provider.GetRequiredService<TenantEventProcessor>().ShouldNotBeNull();
+        provider.GetRequiredService<EventStoreDomainEventProcessor>().ShouldNotBeNull();
         provider.GetRequiredService<ITenantAccessService>().ShouldNotBeNull();
         HexalithTenantsOptions options = provider.GetRequiredService<IOptions<HexalithTenantsOptions>>().Value;
         options.PubSubName.ShouldBe("pubsub");
@@ -54,16 +55,16 @@ public class TenantEventInfrastructureTests {
         services.AddLogging();
         services.AddHexalithTenants();
         using ServiceProvider provider = services.BuildServiceProvider();
-        TenantEventProcessor processor = provider.GetRequiredService<TenantEventProcessor>();
+        EventStoreDomainEventProcessor processor = provider.GetRequiredService<EventStoreDomainEventProcessor>();
 
         (await processor.ProcessAsync(Envelope("message-1", new TenantCreated("tenant-1", "Tenant One", null, DateTimeOffset.UtcNow))))
-            .ShouldBe(TenantEventProcessingResult.Processed);
+            .ShouldBe(EventStoreDomainEventProcessingResult.Processed);
         (await processor.ProcessAsync(Envelope("message-2", new UserAddedToTenant("tenant-1", "user-1", TenantRole.TenantContributor))))
-            .ShouldBe(TenantEventProcessingResult.Processed);
+            .ShouldBe(EventStoreDomainEventProcessingResult.Processed);
         (await processor.ProcessAsync(Envelope("message-2", new UserAddedToTenant("tenant-1", "user-1", TenantRole.TenantReader))))
-            .ShouldBe(TenantEventProcessingResult.Duplicate);
+            .ShouldBe(EventStoreDomainEventProcessingResult.Duplicate);
         (await processor.ProcessAsync(Envelope("message-3", new TenantDisabled("tenant-1", DateTimeOffset.UtcNow))))
-            .ShouldBe(TenantEventProcessingResult.Processed);
+            .ShouldBe(EventStoreDomainEventProcessingResult.Processed);
 
         TenantLocalState state = (await provider.GetRequiredService<ITenantProjectionStore>().GetAsync("tenant-1"))!;
         state.Status.ShouldBe(TenantStatus.Disabled);
@@ -76,13 +77,13 @@ public class TenantEventInfrastructureTests {
         services.AddLogging();
         services.AddHexalithTenants();
         using ServiceProvider provider = services.BuildServiceProvider();
-        TenantEventProcessor processor = provider.GetRequiredService<TenantEventProcessor>();
+        EventStoreDomainEventProcessor processor = provider.GetRequiredService<EventStoreDomainEventProcessor>();
 
         _ = await processor.ProcessAsync(Envelope("message-1", new TenantCreated("tenant-1", "Tenant One", null, DateTimeOffset.UtcNow)));
         _ = await processor.ProcessAsync(Envelope("message-2", new UserAddedToTenant("tenant-1", "user-1", TenantRole.TenantOwner)));
         (await processor.ProcessAsync(Envelope("message-3", new UserRemovedFromTenant("tenant-1", "user-1"))))
-            .ShouldBe(TenantEventProcessingResult.Processed);
-        (await processor.ProcessAsync(new TenantEventEnvelope(
+            .ShouldBe(EventStoreDomainEventProcessingResult.Processed);
+        (await processor.ProcessAsync(new EventStoreDomainEventEnvelope(
             "bad-message",
             "tenant-1",
             "system",
@@ -92,9 +93,9 @@ public class TenantEventInfrastructureTests {
             "correlation-1",
             "json",
             "{ not-json"u8.ToArray())))
-            .ShouldBe(TenantEventProcessingResult.FailedInvalidPayload);
+            .ShouldBe(EventStoreDomainEventProcessingResult.FailedInvalidPayload);
         (await processor.ProcessAsync(Envelope("unknown-message", "Hexalith.Tenants.Contracts.Events.DoesNotExist", "{}"u8.ToArray())))
-            .ShouldBe(TenantEventProcessingResult.SkippedUnknownEventType);
+            .ShouldBe(EventStoreDomainEventProcessingResult.SkippedUnknownEventType);
 
         TenantLocalState state = (await provider.GetRequiredService<ITenantProjectionStore>().GetAsync("tenant-1"))!;
         state.Members.ContainsKey("user-1").ShouldBeFalse();
@@ -119,7 +120,7 @@ public class TenantEventInfrastructureTests {
 
         await using WebApplication app = builder.Build();
         app.MapSubscribeHandler();
-        app.MapTenantEventSubscription();
+        app.MapEventStoreDomainEvents();
 
         RouteEndpoint endpoint = ((IEndpointRouteBuilder)app)
             .DataSources
@@ -136,7 +137,7 @@ public class TenantEventInfrastructureTests {
     [Fact]
     public async Task ProcessorRestartReprocessesSameMessageIdAgainstSharedStore() {
         // Documents the in-memory dedup limitation: deduplication is per-processor instance.
-        // After a restart (new TenantEventProcessor), the same MessageId is processed again
+        // After a restart (new EventStoreDomainEventProcessor), the same MessageId is processed again
         // unless a durable deduplication store is configured.
         InMemoryTenantProjectionStore store = new();
         ServiceCollection services = new();
@@ -145,21 +146,21 @@ public class TenantEventInfrastructureTests {
         services.AddHexalithTenants();
         using ServiceProvider provider = services.BuildServiceProvider();
 
-        TenantEventProcessor first = provider.GetRequiredService<TenantEventProcessor>();
+        EventStoreDomainEventProcessor first = provider.GetRequiredService<EventStoreDomainEventProcessor>();
         (await first.ProcessAsync(Envelope("message-1", new TenantCreated("tenant-1", "Tenant One", null, DateTimeOffset.UtcNow))))
-            .ShouldBe(TenantEventProcessingResult.Processed);
+            .ShouldBe(EventStoreDomainEventProcessingResult.Processed);
         (await first.ProcessAsync(Envelope("message-1", new TenantCreated("tenant-1", "Tenant One", null, DateTimeOffset.UtcNow))))
-            .ShouldBe(TenantEventProcessingResult.Duplicate);
+            .ShouldBe(EventStoreDomainEventProcessingResult.Duplicate);
 
-        TenantEventProcessor restarted = ActivatorUtilities.CreateInstance<TenantEventProcessor>(provider);
+        EventStoreDomainEventProcessor restarted = ActivatorUtilities.CreateInstance<EventStoreDomainEventProcessor>(provider);
         (await restarted.ProcessAsync(Envelope("message-1", new TenantCreated("tenant-1", "Tenant One", null, DateTimeOffset.UtcNow))))
-            .ShouldBe(TenantEventProcessingResult.Processed);
+            .ShouldBe(EventStoreDomainEventProcessingResult.Processed);
     }
 
-    private static TenantEventEnvelope Envelope<TEvent>(string messageId, TEvent @event)
+    private static EventStoreDomainEventEnvelope Envelope<TEvent>(string messageId, TEvent @event)
         => Envelope(messageId, typeof(TEvent).FullName!, JsonSerializer.SerializeToUtf8Bytes(@event));
 
-    private static TenantEventEnvelope Envelope(string messageId, string eventTypeName, byte[] payload)
+    private static EventStoreDomainEventEnvelope Envelope(string messageId, string eventTypeName, byte[] payload)
         => new(
             messageId,
             "tenant-1",
