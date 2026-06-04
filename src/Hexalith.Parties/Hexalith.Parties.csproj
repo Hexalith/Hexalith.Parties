@@ -27,7 +27,11 @@
     <PackageReference Include="FluentValidation.DependencyInjectionExtensions" />
     <PackageReference Include="MediatR" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
-    <PackageReference Include="Hexalith.Memories.Client.Rest" />
+    <PackageReference Include="Hexalith.Memories.Client.Rest" Condition="'$(HexalithMemoriesRoot)' == ''" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(HexalithMemoriesRoot)' != ''">
+    <ProjectReference Include="$(HexalithMemoriesRoot)\src\Hexalith.Memories.Client.Rest\Hexalith.Memories.Client.Rest.csproj" />
   </ItemGroup>
 
 </Project>
