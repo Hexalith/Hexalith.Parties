@@ -163,7 +163,7 @@ public sealed class PartyDetailProjectionActorCorruptionTests
             Arg.Any<CancellationToken>());
         await stateManager.Received(1).SetStateAsync(
             "test-tenant:party-detail:party-001",
-            Arg.Is<PartyDetail>(detail => detail.Id == "party-001"),
+            Arg.Is<PartyDetail>(detail => detail != null && detail.Id == "party-001"),
             Arg.Any<CancellationToken>());
     }
 

@@ -127,11 +127,11 @@ public sealed class TenantSafeProjectionReadGuardrailsTests
 
         // The authenticated envelope tenant (tenant-b) is authoritative; payload field is ignored.
         proxyFactory.Received(1).CreateActorProxy<IPartyDetailProjectionActor>(
-            Arg.Is<ActorId>(id => id.GetId() == "tenant-b:party-detail:p-1"),
+            Arg.Is<ActorId>(id => id != null && id.GetId() == "tenant-b:party-detail:p-1"),
             nameof(PartyDetailProjectionActor),
             Arg.Any<ActorProxyOptions?>());
         proxyFactory.DidNotReceive().CreateActorProxy<IPartyDetailProjectionActor>(
-            Arg.Is<ActorId>(id => id.GetId().StartsWith("tenant-a:", StringComparison.Ordinal)),
+            Arg.Is<ActorId>(id => id != null && id.GetId().StartsWith("tenant-a:", StringComparison.Ordinal)),
             Arg.Any<string>(),
             Arg.Any<ActorProxyOptions?>());
     }
@@ -317,12 +317,12 @@ public sealed class TenantSafeProjectionReadGuardrailsTests
             }));
 
         proxyFactory.CreateActorProxy<IPartyIndexProjectionActor>(
-                Arg.Is<ActorId>(id => id.GetId().StartsWith("tenant-b:", StringComparison.Ordinal)),
+                Arg.Is<ActorId>(id => id != null && id.GetId().StartsWith("tenant-b:", StringComparison.Ordinal)),
                 Arg.Any<string>(),
                 Arg.Any<ActorProxyOptions?>())
             .Returns(tenantBActor);
         proxyFactory.CreateActorProxy<IPartyIndexProjectionActor>(
-                Arg.Is<ActorId>(id => id.GetId().StartsWith("tenant-a:", StringComparison.Ordinal)),
+                Arg.Is<ActorId>(id => id != null && id.GetId().StartsWith("tenant-a:", StringComparison.Ordinal)),
                 Arg.Any<string>(),
                 Arg.Any<ActorProxyOptions?>())
             .Returns(tenantAActor);
@@ -342,7 +342,7 @@ public sealed class TenantSafeProjectionReadGuardrailsTests
         page.TotalPages.ShouldBe(1);
         // The adapter never reached for tenant-A entries.
         proxyFactory.DidNotReceive().CreateActorProxy<IPartyIndexProjectionActor>(
-            Arg.Is<ActorId>(id => id.GetId().StartsWith("tenant-a:", StringComparison.Ordinal)),
+            Arg.Is<ActorId>(id => id != null && id.GetId().StartsWith("tenant-a:", StringComparison.Ordinal)),
             Arg.Any<string>(),
             Arg.Any<ActorProxyOptions?>());
     }

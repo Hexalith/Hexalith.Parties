@@ -73,7 +73,7 @@ public sealed class PartyIndexProjectionQueryActorTests
         page.Items.Select(static i => i.Id).ShouldBe(["p-alpha"]);
 
         actorProxyFactory.Received(1).CreateActorProxy<IPartyIndexProjectionActor>(
-            Arg.Is<ActorId>(id => id.GetId() == "tenant-a:party-index"),
+            Arg.Is<ActorId>(id => id != null && id.GetId() == "tenant-a:party-index"),
             nameof(PartyIndexProjectionActor),
             Arg.Any<ActorProxyOptions?>());
     }
@@ -243,7 +243,7 @@ public sealed class PartyIndexProjectionQueryActorTests
         page.Items.SelectMany(static i => i.Matches).ShouldAllBe(m => m.MatchedField == "displayName");
 
         actorProxyFactory.Received(1).CreateActorProxy<IPartyIndexProjectionActor>(
-            Arg.Is<ActorId>(id => id.GetId() == "tenant-a:party-index"),
+            Arg.Is<ActorId>(id => id != null && id.GetId() == "tenant-a:party-index"),
             nameof(PartyIndexProjectionActor),
             Arg.Any<ActorProxyOptions?>());
     }
@@ -456,11 +456,11 @@ public sealed class PartyIndexProjectionQueryActorTests
         result.Success.ShouldBeTrue();
         DeserializePage(result).Items.Select(static i => i.Id).ShouldBe(["p-tenant-b"]);
         actorProxyFactory.Received(1).CreateActorProxy<IPartyIndexProjectionActor>(
-            Arg.Is<ActorId>(id => id.GetId() == "tenant-b:party-index"),
+            Arg.Is<ActorId>(id => id != null && id.GetId() == "tenant-b:party-index"),
             nameof(PartyIndexProjectionActor),
             Arg.Any<ActorProxyOptions?>());
         actorProxyFactory.DidNotReceive().CreateActorProxy<IPartyIndexProjectionActor>(
-            Arg.Is<ActorId>(id => id.GetId().Contains("tenant-a", StringComparison.Ordinal)),
+            Arg.Is<ActorId>(id => id != null && id.GetId().Contains("tenant-a", StringComparison.Ordinal)),
             Arg.Any<string>(),
             Arg.Any<ActorProxyOptions?>());
     }
@@ -564,7 +564,7 @@ public sealed class PartyIndexProjectionQueryActorTests
                 ["p-tenant-b-acme"] = Entry("p-tenant-b-acme", "Acme", PartyType.Organization, active: true, "2026-05-01T00:00:00Z", "2026-05-01T00:00:00Z"),
             }));
         actorProxyFactory.CreateActorProxy<IPartyIndexProjectionActor>(
-                Arg.Is<ActorId>(id => id.GetId() == "tenant-b:party-index"),
+                Arg.Is<ActorId>(id => id != null && id.GetId() == "tenant-b:party-index"),
                 Arg.Any<string>(),
                 Arg.Any<ActorProxyOptions?>())
             .Returns(tenantBIndex);
@@ -580,7 +580,7 @@ public sealed class PartyIndexProjectionQueryActorTests
         page.Items.Select(static i => i.Party.Id).ShouldBe(["p-tenant-b-acme"]);
         page.TotalCount.ShouldBe(1);
         actorProxyFactory.DidNotReceive().CreateActorProxy<IPartyIndexProjectionActor>(
-            Arg.Is<ActorId>(id => id.GetId().Contains("tenant-a", StringComparison.Ordinal)),
+            Arg.Is<ActorId>(id => id != null && id.GetId().Contains("tenant-a", StringComparison.Ordinal)),
             Arg.Any<string>(),
             Arg.Any<ActorProxyOptions?>());
     }

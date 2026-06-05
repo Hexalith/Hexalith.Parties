@@ -44,7 +44,7 @@ public sealed class PartyDetailProjectionQueryActorTests
         result.GetPayload().GetProperty("id").GetString().ShouldBe("p-1");
         result.GetPayload().GetProperty("displayName").GetString().ShouldBe("Ada Lovelace");
         actorProxyFactory.Received(1).CreateActorProxy<IPartyDetailProjectionActor>(
-            Arg.Is<ActorId>(id => id.GetId() == "tenant-a:party-detail:p-1"),
+            Arg.Is<ActorId>(id => id != null && id.GetId() == "tenant-a:party-detail:p-1"),
             nameof(PartyDetailProjectionActor),
             Arg.Any<ActorProxyOptions?>());
     }
@@ -347,7 +347,7 @@ public sealed class PartyDetailProjectionQueryActorTests
 
         result.Success.ShouldBeTrue();
         actorProxyFactory.Received(1).CreateActorProxy<IPartyDetailProjectionActor>(
-            Arg.Is<ActorId>(id => id.GetId() == "tenant-a:party-detail:p-2"),
+            Arg.Is<ActorId>(id => id != null && id.GetId() == "tenant-a:party-detail:p-2"),
             nameof(PartyDetailProjectionActor),
             Arg.Any<ActorProxyOptions?>());
     }
@@ -386,11 +386,11 @@ public sealed class PartyDetailProjectionQueryActorTests
         result.Success.ShouldBeFalse();
         result.ErrorMessage.ShouldBe(QueryAdapterFailureReason.ActorNotFoundInfrastructure);
         actorProxyFactory.Received(1).CreateActorProxy<IPartyDetailProjectionActor>(
-            Arg.Is<ActorId>(id => id.GetId() == "tenant-b:party-detail:p-tenant-a"),
+            Arg.Is<ActorId>(id => id != null && id.GetId() == "tenant-b:party-detail:p-tenant-a"),
             nameof(PartyDetailProjectionActor),
             Arg.Any<ActorProxyOptions?>());
         actorProxyFactory.DidNotReceive().CreateActorProxy<IPartyDetailProjectionActor>(
-            Arg.Is<ActorId>(id => id.GetId().Contains("tenant-a:party-detail", StringComparison.Ordinal)),
+            Arg.Is<ActorId>(id => id != null && id.GetId().Contains("tenant-a:party-detail", StringComparison.Ordinal)),
             Arg.Any<string>(),
             Arg.Any<ActorProxyOptions?>());
     }
@@ -511,7 +511,7 @@ public sealed class PartyDetailProjectionQueryActorTests
         IPartyDetailProjectionActor successProxy = Substitute.For<IPartyDetailProjectionActor>();
         successProxy.GetDetailAsync().Returns(Task.FromResult<PartyDetail?>(CreateDetail("p-log-success")));
         actorProxyFactory.CreateActorProxy<IPartyDetailProjectionActor>(
-                Arg.Is<ActorId>(id => id.GetId() == "tenant-a:party-detail:p-log-success"),
+                Arg.Is<ActorId>(id => id != null && id.GetId() == "tenant-a:party-detail:p-log-success"),
                 Arg.Any<string>(),
                 Arg.Any<ActorProxyOptions?>())
             .Returns(successProxy);
@@ -520,7 +520,7 @@ public sealed class PartyDetailProjectionQueryActorTests
         IPartyDetailProjectionActor notFoundProxy = Substitute.For<IPartyDetailProjectionActor>();
         notFoundProxy.GetDetailAsync().Throws(new InvalidOperationException("did not find address for actor"));
         actorProxyFactory.CreateActorProxy<IPartyDetailProjectionActor>(
-                Arg.Is<ActorId>(id => id.GetId() == "tenant-a:party-detail:p-log-missing"),
+                Arg.Is<ActorId>(id => id != null && id.GetId() == "tenant-a:party-detail:p-log-missing"),
                 Arg.Any<string>(),
                 Arg.Any<ActorProxyOptions?>())
             .Returns(notFoundProxy);
@@ -529,7 +529,7 @@ public sealed class PartyDetailProjectionQueryActorTests
         IPartyDetailProjectionActor failedProxy = Substitute.For<IPartyDetailProjectionActor>();
         failedProxy.GetDetailAsync().Throws(new InvalidOperationException("transient infrastructure failure"));
         actorProxyFactory.CreateActorProxy<IPartyDetailProjectionActor>(
-                Arg.Is<ActorId>(id => id.GetId() == "tenant-a:party-detail:p-log-fail"),
+                Arg.Is<ActorId>(id => id != null && id.GetId() == "tenant-a:party-detail:p-log-fail"),
                 Arg.Any<string>(),
                 Arg.Any<ActorProxyOptions?>())
             .Returns(failedProxy);

@@ -611,6 +611,41 @@ public sealed class OperatorScriptValidationTests : IDisposable
 
     private static string PwshPath => RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "pwsh.exe" : "pwsh";
 
+    private static string DotnetPath =>
+        Environment.GetEnvironmentVariable("DOTNET_HOST_PATH") is { Length: > 0 } hostPath
+            ? hostPath
+            : ResolveCommandPath(RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "dotnet.exe" : "dotnet");
+
+    private static string ResolveCommandPath(string command)
+    {
+        if (Path.IsPathFullyQualified(command) && File.Exists(command))
+        {
+            return command;
+        }
+
+        string[] names = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && Path.GetExtension(command).Length == 0
+            ? [command, $"{command}.exe", $"{command}.cmd", $"{command}.bat"]
+            : [command];
+        foreach (string directory in (Environment.GetEnvironmentVariable("PATH") ?? string.Empty).Split(Path.PathSeparator))
+        {
+            if (string.IsNullOrWhiteSpace(directory))
+            {
+                continue;
+            }
+
+            foreach (string name in names)
+            {
+                string candidate = Path.Combine(directory, name);
+                if (File.Exists(candidate))
+                {
+                    return candidate;
+                }
+            }
+        }
+
+        return command;
+    }
+
     private static ProcessResult RunPwshScript(string relativeScriptPath, string argumentName, string argumentValue, string shimBinDirectory)
     {
         ProcessStartInfo start = new()
@@ -971,10 +1006,15 @@ exit 0
     private static void WriteDotnetShim(string binDirectory, string logPath, bool includeLiteralJwt, bool emitUnexpectedTopLevelFile, bool generatedReadinessOnlyProbe)
     {
         string dotnetPath = Path.Combine(binDirectory, RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "dotnet.cmd" : "dotnet");
+        string realDotnetPath = DotnetPath;
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
             File.WriteAllText(dotnetPath, $"""
 @echo off
+if /I "%~nx1"=="pwsh.dll" (
+  "{realDotnetPath}" %*
+  exit /b %ERRORLEVEL%
+)
 echo dotnet %*>> "{logPath}"
 if "%1"=="msbuild" (
   echo 0.1.1-preview.0.7
@@ -985,8 +1025,13 @@ exit /b 1
             return;
         }
 
+        string shellDotnetPath = realDotnetPath.Replace("'", "'\"'\"'");
         File.WriteAllText(dotnetPath, $$"""
 #!/usr/bin/env bash
+real_dotnet='{{shellDotnetPath}}'
+if [ "${1:-}" != "" ] && [ "$(basename "$1")" = "pwsh.dll" ]; then
+  exec "$real_dotnet" "$@"
+fi
 printf 'dotnet %s\n' "$*" >> "{{logPath}}"
 if [ "$1" = "msbuild" ]; then
   printf '%s\n' "0.1.1-preview.0.7"

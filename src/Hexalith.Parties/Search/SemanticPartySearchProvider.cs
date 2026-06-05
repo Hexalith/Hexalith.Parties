@@ -394,6 +394,13 @@ internal sealed class SemanticPartySearchProvider : IPartySearchProvider
             return true;
         }
 
+        // Identifier-like tokens with digits create excessive false positives under Jaro-Winkler
+        // (for example Entry-50000 vs Entry-10000). Keep them to deterministic matching.
+        if (token.Any(char.IsDigit))
+        {
+            return false;
+        }
+
         // Fuzzy match (Jaro-Winkler) — only when exact/prefix/contains fail
         double similarity = JaroWinklerSimilarity(candidate, token);
         if (similarity >= 0.85)

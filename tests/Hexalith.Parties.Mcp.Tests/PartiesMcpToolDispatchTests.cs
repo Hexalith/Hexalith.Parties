@@ -164,7 +164,7 @@ public sealed class PartiesMcpToolDispatchTests
 
         await commandClient.Received(1).CreatePartyCompositeWithResultAsync(
             Arg.Is<CreatePartyComposite>(command =>
-                command.PartyId == "party-1"
+                command != null && command.PartyId == "party-1"
                 && command.Type == PartyType.Person
                 && command.PersonDetails!.FirstName == "Ada"
                 && command.PersonDetails.LastName == "Lovelace"
@@ -249,7 +249,7 @@ public sealed class PartiesMcpToolDispatchTests
         result.Status.ShouldBe("accepted");
         await commandClient.Received(1).CreatePartyCompositeWithResultAsync(
             Arg.Is<CreatePartyComposite>(command =>
-                command.Type == PartyType.Person
+                command != null && command.Type == PartyType.Person
                 && command.PersonDetails!.FirstName == string.Empty
                 && command.PersonDetails.LastName == "Lovelace"
                 && command.PersonDetails.DateOfBirth == new DateTimeOffset(1815, 12, 10, 0, 0, 0, TimeSpan.Zero)
@@ -276,7 +276,7 @@ public sealed class PartiesMcpToolDispatchTests
         result.Status.ShouldBe("accepted");
         await commandClient.Received(1).CreatePartyCompositeWithResultAsync(
             Arg.Is<CreatePartyComposite>(command =>
-                command.Type == PartyType.Organization
+                command != null && command.Type == PartyType.Organization
                 && command.OrganizationDetails!.LegalName == "Hexalith SAS"
                 && command.OrganizationDetails.TradingName == "Hexalith"
                 && command.ContactChannels.Count == 2
@@ -309,7 +309,7 @@ public sealed class PartiesMcpToolDispatchTests
         result.Status.ShouldBe("accepted");
         await commandClient.Received(1).CreatePartyCompositeWithResultAsync(
             Arg.Is<CreatePartyComposite>(command =>
-                command.Identifiers.Count == 1
+                command != null && command.Identifiers.Count == 1
                 && command.Identifiers[0].Type == IdentifierType.VAT
                 && command.Identifiers[0].Value == "FR123456789"),
             Arg.Any<CancellationToken>());
@@ -425,7 +425,7 @@ public sealed class PartiesMcpToolDispatchTests
         await commandClient.Received(1).UpdatePartyCompositeWithResultAsync(
             "route-party",
             Arg.Is<UpdatePartyComposite>(command =>
-                command.PartyId == "route-party"
+                command != null && command.PartyId == "route-party"
                 && command.PersonDetails!.FirstName == "Grace"
                 && command.PersonDetails.LastName == "Hopper"),
             Arg.Any<CancellationToken>());
@@ -464,7 +464,7 @@ public sealed class PartiesMcpToolDispatchTests
         await commandClient.Received(1).UpdatePartyCompositeWithResultAsync(
             "party-1",
             Arg.Is<UpdatePartyComposite>(command =>
-                command.PersonDetails!.FirstName == "Augusta"
+                command != null && command.PersonDetails!.FirstName == "Augusta"
                 && command.PersonDetails.LastName == "Lovelace"
                 && command.PersonDetails.Prefix == "Countess"),
             Arg.Any<CancellationToken>());
@@ -504,7 +504,7 @@ public sealed class PartiesMcpToolDispatchTests
         await commandClient.Received(1).UpdatePartyCompositeWithResultAsync(
             "party-1",
             Arg.Is<UpdatePartyComposite>(command =>
-                command.OrganizationDetails!.LegalName == "Hexalith SAS"
+                command != null && command.OrganizationDetails!.LegalName == "Hexalith SAS"
                 && command.OrganizationDetails.TradingName == "Hexalith Labs"
                 && command.OrganizationDetails.LegalForm == "SAS"
                 && command.OrganizationDetails.RegistrationNumber == "RCS-1"),
@@ -533,7 +533,7 @@ public sealed class PartiesMcpToolDispatchTests
         await commandClient.Received(1).UpdatePartyCompositeWithResultAsync(
             "party-1",
             Arg.Is<UpdatePartyComposite>(command =>
-                command.RemoveContactChannelIds.Count == 2
+                command != null && command.RemoveContactChannelIds.Count == 2
                 && command.RemoveContactChannelIds[0] == "contact-1"
                 && command.RemoveContactChannelIds[1] == "contact-2"
                 && command.RemoveIdentifierIds.Count == 2
@@ -568,7 +568,7 @@ public sealed class PartiesMcpToolDispatchTests
         await commandClient.Received(1).UpdatePartyCompositeWithResultAsync(
             "party-1",
             Arg.Is<UpdatePartyComposite>(command =>
-                command.AddContactChannels.Single().Type == ContactChannelType.Email
+                command != null && command.AddContactChannels.Single().Type == ContactChannelType.Email
                 && command.UpdateContactChannels.Single().ContactChannelId == "contact-1"
                 && command.UpdateContactChannels.Single().Type == ContactChannelType.Phone
                 && command.RemoveContactChannelIds.Single() == "contact-old"
@@ -596,7 +596,7 @@ public sealed class PartiesMcpToolDispatchTests
         await commandClient.Received(1).UpdatePartyCompositeWithResultAsync(
             "party-1",
             Arg.Is<UpdatePartyComposite>(command =>
-                command.AddIdentifiers.Count == 1
+                command != null && command.AddIdentifiers.Count == 1
                 && command.AddIdentifiers[0].Type == IdentifierType.VAT
                 && command.AddIdentifiers[0].Value == "FR123"),
             Arg.Any<CancellationToken>());

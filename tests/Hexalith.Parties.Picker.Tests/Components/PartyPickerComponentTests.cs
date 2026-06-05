@@ -191,7 +191,7 @@ public sealed class PartyPickerComponentTests : BunitContext
     }
 
     [Fact]
-    public void PartyPicker_LocalizedLabels_DriveStatusCountsRetrySelectionAndStateText()
+    public async Task PartyPicker_LocalizedLabels_DriveStatusCountsRetrySelectionAndStateText()
     {
         var queryClient = new RecordingPartiesQueryClient();
         queryClient.Enqueue(SearchResultPage(
@@ -234,7 +234,7 @@ public sealed class PartyPickerComponentTests : BunitContext
             cut.Find("[role=\"option\"]").TextContent.ShouldContain("L-Inactive");
         });
 
-        cut.Find("[role=\"option\"]").Click();
+        await cut.InvokeAsync(() => cut.Find("[role=\"option\"]").Click());
 
         cut.WaitForAssertion(() =>
         {

@@ -26,6 +26,7 @@ public sealed partial class PartyDetailProjectionActor : Actor, IPartyDetailProj
     private static readonly ConcurrentDictionary<string, PartyDetail> s_lastKnownDetails = new(StringComparer.Ordinal);
     private readonly ILogger<PartyDetailProjectionActor> _logger;
     private readonly IProjectionRebuildService _rebuildService;
+    private readonly SemaphoreSlim _rebuildGate = new(1, 1);
     private PartyDetail? _cachedDetail;
 
     // Sentinel for "checkpoint not yet loaded from state store"; long.MinValue is used so that a
@@ -326,33 +327,41 @@ public sealed partial class PartyDetailProjectionActor : Actor, IPartyDetailProj
             return;
         }
 
+        await _rebuildGate.WaitAsync().ConfigureAwait(false);
         try
         {
-            await _rebuildService.RebuildDetailProjectionAsync(tenant, actorPartyId, default).ConfigureAwait(false);
-
-            // Reload the rebuilt state
-            ConditionalValue<PartyDetail> result = await StateManager.TryGetStateAsync<PartyDetail>(stateKey, default).ConfigureAwait(false);
-            if (result.HasValue)
+            try
             {
-                _cachedDetail = result.Value;
-                s_lastKnownDetails[stateKey] = result.Value;
+                await _rebuildService.RebuildDetailProjectionAsync(tenant, actorPartyId, default).ConfigureAwait(false);
+
+                // Reload the rebuilt state
+                ConditionalValue<PartyDetail> result = await StateManager.TryGetStateAsync<PartyDetail>(stateKey, default).ConfigureAwait(false);
+                if (result.HasValue)
+                {
+                    _cachedDetail = result.Value;
+                    s_lastKnownDetails[stateKey] = result.Value;
+                }
+
+                _isRebuilding = false;
+                Log.RebuildCompleted(_logger);
+            }
+            catch (Exception ex)
+            {
+                Log.RebuildFailed(_logger, ex);
             }
 
-            _isRebuilding = false;
-            Log.RebuildCompleted(_logger);
+            try
+            {
+                await UnregisterReminderAsync(RebuildReminderName).ConfigureAwait(false);
+            }
+            catch
+            {
+                // Best-effort unregister; reminder has no repeat so it won't fire again
+            }
         }
-        catch (Exception ex)
+        finally
         {
-            Log.RebuildFailed(_logger, ex);
-        }
-
-        try
-        {
-            await UnregisterReminderAsync(RebuildReminderName).ConfigureAwait(false);
-        }
-        catch
-        {
-            // Best-effort unregister; reminder has no repeat so it won't fire again
+            _rebuildGate.Release();
         }
     }
 

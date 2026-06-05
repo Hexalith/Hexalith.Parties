@@ -943,6 +943,6 @@ public sealed class ArchitecturalFitnessTests
         }
 
         string? ns = checkType.Namespace;
-        return ns is not null && ns.StartsWith("Dapr", StringComparison.Ordinal);
+        return ns != null && ns.StartsWith("Dapr", StringComparison.Ordinal);
     }
 }

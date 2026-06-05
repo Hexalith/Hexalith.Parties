@@ -152,16 +152,16 @@ public sealed class ClientArchitecturalFitnessTests
                 .Where(e => e.Name.LocalName == "ProjectReference")
                 .Select(e => e.Attribute("Include")?.Value)
                 .Where(value => !string.IsNullOrWhiteSpace(value))
-                .Select(value => value!),
+                .Select(value => value!.Replace('\\', '/')),
         ];
 
         projectReferences.ShouldContain(reference =>
             reference.EndsWith(
-                Path.Combine("Hexalith.EventStore.Contracts", "Hexalith.EventStore.Contracts.csproj"),
+                "Hexalith.EventStore.Contracts/Hexalith.EventStore.Contracts.csproj",
                 StringComparison.OrdinalIgnoreCase));
         projectReferences.ShouldNotContain(reference =>
             reference.EndsWith(
-                Path.Combine("Hexalith.EventStore", "Hexalith.EventStore.csproj"),
+                "Hexalith.EventStore/Hexalith.EventStore.csproj",
                 StringComparison.OrdinalIgnoreCase));
     }
 

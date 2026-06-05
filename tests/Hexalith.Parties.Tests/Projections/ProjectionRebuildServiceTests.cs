@@ -519,9 +519,15 @@ public sealed class ProjectionRebuildServiceTests
                 Arg.Any<byte[]>(),
                 Arg.Any<string>(),
                 Arg.Any<CancellationToken>())
-                .Returns(callInfo => Task.FromResult(new PayloadProtectionResult(
-                    (byte[])callInfo[2],
-                    (string)callInfo[3])));
+                .Returns(callInfo =>
+                {
+                    if (callInfo[2] is not byte[] payloadBytes || callInfo[3] is not string serializationFormat)
+                    {
+                        throw new InvalidOperationException("Expected serialized payload bytes and format.");
+                    }
+
+                    return Task.FromResult(new PayloadProtectionResult(payloadBytes, serializationFormat));
+                });
         }
 
         return new ProjectionRebuildService(httpClient, protectionService, logger);

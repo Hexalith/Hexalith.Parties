@@ -17,8 +17,8 @@ namespace Hexalith.Parties.Sample.Tests;
 public sealed class PartyErasedHandlerPatternTests
 {
     private const string ErasedPartyId = "p-erased-001";
-    private const string HandlerPatternsRelativePath = "docs\\event-handler-patterns.md";
-    private const string EventSubscribingRelativePath = "docs\\event-subscribing.md";
+    private static readonly string HandlerPatternsRelativePath = Path.Combine("docs", "event-handler-patterns.md");
+    private static readonly string EventSubscribingRelativePath = Path.Combine("docs", "event-subscribing.md");
 
     private static readonly ConcurrentDictionary<string, MockInvoice> _invoiceStore = new();
 

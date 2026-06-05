@@ -23,7 +23,12 @@ public class PartyKeyManagementServiceTests
         _backend.CreateSecretAsync(Arg.Any<string>(), Arg.Any<byte[]>(), Arg.Any<CancellationToken>())
             .Returns(ci =>
             {
-                capturedKey = (byte[])((byte[])ci[1]).Clone();
+                if (ci[1] is not byte[] key)
+                {
+                    throw new InvalidOperationException("Expected generated key bytes.");
+                }
+
+                capturedKey = (byte[])key.Clone();
                 return Task.CompletedTask;
             });
 
@@ -55,7 +60,7 @@ public class PartyKeyManagementServiceTests
 
         await _auditService.Received(1).RecordOperationAsync(
             Arg.Is<KeyOperationAuditEntry>(e =>
-                e.OperationType == KeyOperationType.Create &&
+                e != null && e.OperationType == KeyOperationType.Create &&
                 e.TenantId == "acme" &&
                 e.PartyId == "p1" &&
                 e.KeyVersion == 1),
@@ -70,7 +75,7 @@ public class PartyKeyManagementServiceTests
         await CreateService().CreateKeyAsync("acme", "p1");
 
         await _auditService.Received(1).RecordOperationAsync(
-            Arg.Is<KeyOperationAuditEntry>(e => e.CorrelationId == "corr-123"),
+            Arg.Is<KeyOperationAuditEntry>(e => e != null && e.CorrelationId == "corr-123"),
             Arg.Any<CancellationToken>());
     }
 
@@ -103,7 +108,7 @@ public class PartyKeyManagementServiceTests
 
         await _auditService.Received(1).RecordOperationAsync(
             Arg.Is<KeyOperationAuditEntry>(e =>
-                e.OperationType == KeyOperationType.Read
+                e != null && e.OperationType == KeyOperationType.Read
                 && e.TenantId == "acme"
                 && e.PartyId == "p1"
                 && e.KeyVersion == 2),
@@ -137,7 +142,7 @@ public class PartyKeyManagementServiceTests
             Arg.Any<byte[]>(),
             Arg.Any<CancellationToken>());
         await _auditService.DidNotReceive().RecordOperationAsync(
-            Arg.Is<KeyOperationAuditEntry>(e => e.OperationType == KeyOperationType.Create),
+            Arg.Is<KeyOperationAuditEntry>(e => e != null && e.OperationType == KeyOperationType.Create),
             Arg.Any<CancellationToken>());
     }
 
@@ -166,7 +171,7 @@ public class PartyKeyManagementServiceTests
             Arg.Any<CancellationToken>());
         // Old versions should NOT be deleted
         await _backend.DidNotReceive().DeleteSecretAsync(
-            Arg.Is<string>(s => s.Contains("v1") || s.Contains("v2")),
+            Arg.Is<string>(s => s != null && (s.Contains("v1") || s.Contains("v2"))),
             Arg.Any<CancellationToken>());
     }
 
@@ -180,7 +185,7 @@ public class PartyKeyManagementServiceTests
 
         await _auditService.Received(1).RecordOperationAsync(
             Arg.Is<KeyOperationAuditEntry>(e =>
-                e.OperationType == KeyOperationType.Rotate &&
+                e != null && e.OperationType == KeyOperationType.Rotate &&
                 e.TenantId == "acme" &&
                 e.PartyId == "p1" &&
                 e.KeyVersion == 2),
@@ -242,7 +247,7 @@ public class PartyKeyManagementServiceTests
 
         await _auditService.Received(1).RecordOperationAsync(
             Arg.Is<KeyOperationAuditEntry>(e =>
-                e.OperationType == KeyOperationType.Delete &&
+                e != null && e.OperationType == KeyOperationType.Delete &&
                 e.TenantId == "acme" &&
                 e.PartyId == "p1"),
             Arg.Any<CancellationToken>());
@@ -254,7 +259,7 @@ public class PartyKeyManagementServiceTests
         await CreateService().CreateKeyAsync("tenant-a", "p1");
 
         await _backend.Received(1).CreateSecretAsync(
-            Arg.Is<string>(s => s.StartsWith("tenant-a/parties/")),
+            Arg.Is<string>(s => s != null && s.StartsWith("tenant-a/parties/")),
             Arg.Any<byte[]>(),
             Arg.Any<CancellationToken>());
     }
@@ -266,7 +271,12 @@ public class PartyKeyManagementServiceTests
         _backend.CreateSecretAsync(Arg.Any<string>(), Arg.Any<byte[]>(), Arg.Any<CancellationToken>())
             .Returns(ci =>
             {
-                capturedKeys.Add((byte[])((byte[])ci[1]).Clone());
+                if (ci[1] is not byte[] key)
+                {
+                    throw new InvalidOperationException("Expected generated key bytes.");
+                }
+
+                capturedKeys.Add((byte[])key.Clone());
                 return Task.CompletedTask;
             });
 
@@ -316,7 +326,12 @@ public class PartyKeyManagementServiceTests
         _backend.CreateSecretAsync(Arg.Any<string>(), Arg.Any<byte[]>(), Arg.Any<CancellationToken>())
             .Returns(ci =>
             {
-                capturedKey = (byte[])ci[1]; // Reference, NOT clone
+                if (ci[1] is not byte[] key)
+                {
+                    throw new InvalidOperationException("Expected generated key bytes.");
+                }
+
+                capturedKey = key; // Reference, NOT clone
                 return Task.CompletedTask;
             });
 

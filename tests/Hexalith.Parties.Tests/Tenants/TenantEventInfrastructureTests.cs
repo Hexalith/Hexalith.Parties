@@ -2,21 +2,22 @@ using System.Text.Json;
 
 using Dapr;
 
+using Hexalith.EventStore.Contracts.Events;
 using Hexalith.EventStore.Client.Subscriptions;
 using Hexalith.EventStore.DomainService;
 using Hexalith.Parties.Authorization;
 using Hexalith.Parties.Extensions;
-using Hexalith.Tenants.Client.Configuration;
 using Hexalith.Tenants.Client.Projections;
 using Hexalith.Tenants.Client.Registration;
 using Hexalith.Tenants.Contracts.Enums;
 using Hexalith.Tenants.Contracts.Events;
 
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Microsoft.AspNetCore.Routing;
 
 using Shouldly;
 
@@ -30,7 +31,6 @@ public class TenantEventInfrastructureTests {
             {
                 ["Tenants:PubSubName"] = "pubsub",
                 ["Tenants:TopicName"] = "system.tenants.events",
-                ["Tenants:CommandApiAppId"] = "parties",
             })
             .Build();
         ServiceCollection services = new();
@@ -43,10 +43,11 @@ public class TenantEventInfrastructureTests {
         provider.GetRequiredService<ITenantProjectionStore>().ShouldNotBeNull();
         provider.GetRequiredService<EventStoreDomainEventProcessor>().ShouldNotBeNull();
         provider.GetRequiredService<ITenantAccessService>().ShouldNotBeNull();
-        HexalithTenantsOptions options = provider.GetRequiredService<IOptions<HexalithTenantsOptions>>().Value;
+        EventStoreDomainEventsOptions options = provider.GetRequiredService<IOptions<EventStoreDomainEventsOptions>>().Value;
         options.PubSubName.ShouldBe("pubsub");
         options.TopicName.ShouldBe("system.tenants.events");
-        options.CommandApiAppId.ShouldBe("parties");
+        options.SubscriptionRoute.ShouldBe(TenantServiceCollectionExtensions.SubscriptionRoute);
+        options.PayloadAggregateIdPropertyName.ShouldBe("TenantId");
     }
 
     [Fact]
@@ -152,10 +153,20 @@ public class TenantEventInfrastructureTests {
         (await first.ProcessAsync(Envelope("message-1", new TenantCreated("tenant-1", "Tenant One", null, DateTimeOffset.UtcNow))))
             .ShouldBe(EventStoreDomainEventProcessingResult.Duplicate);
 
-        EventStoreDomainEventProcessor restarted = ActivatorUtilities.CreateInstance<EventStoreDomainEventProcessor>(provider);
+        EventStoreDomainEventProcessor restarted = new(
+            provider.GetRequiredService<IServiceScopeFactory>(),
+            BuildTenantEventTypeRegistry(),
+            provider.GetRequiredService<ILogger<EventStoreDomainEventProcessor>>(),
+            provider.GetRequiredService<IOptions<EventStoreDomainEventsOptions>>().Value.PayloadAggregateIdPropertyName);
         (await restarted.ProcessAsync(Envelope("message-1", new TenantCreated("tenant-1", "Tenant One", null, DateTimeOffset.UtcNow))))
             .ShouldBe(EventStoreDomainEventProcessingResult.Processed);
     }
+
+    private static IReadOnlyDictionary<string, Type> BuildTenantEventTypeRegistry()
+        => typeof(TenantCreated).Assembly
+            .GetTypes()
+            .Where(t => t is { IsClass: true, IsAbstract: false } && typeof(IEventPayload).IsAssignableFrom(t))
+            .ToDictionary(t => t.FullName!, t => t, StringComparer.Ordinal);
 
     private static EventStoreDomainEventEnvelope Envelope<TEvent>(string messageId, TEvent @event)
         => Envelope(messageId, typeof(TEvent).FullName!, JsonSerializer.SerializeToUtf8Bytes(@event));

@@ -13,6 +13,9 @@ namespace Hexalith.Parties.Contracts.Tests.Package;
 
 public sealed class ContractsPackageTests : IClassFixture<ContractsPackageFixture>
 {
+    internal const string LocalVersionOverride = "0.0.0-local.0";
+    internal const string LocalPackVersionProperties = $"-p:MinVerVersionOverride={LocalVersionOverride} -p:PackageVersion={LocalVersionOverride}";
+
     private readonly ContractsPackageFixture _fixture;
 
     private static readonly string[] s_forbiddenDependencyTerms =
@@ -322,13 +325,17 @@ public sealed class ContractsPackageFixture : IDisposable
         string repoRoot = FindRepoRoot();
         string workingDirectory = Path.Combine(Path.GetTempPath(), "hexalith-parties-contracts-package-tests", Guid.NewGuid().ToString("N"));
         string feedDirectory = Path.Combine(workingDirectory, "feed");
+        string artifactsDirectory = Path.Combine(workingDirectory, "artifacts");
         Directory.CreateDirectory(feedDirectory);
 
         ContractsPackageTests.RunDotnet(
-            $"pack \"{Path.Combine(repoRoot, "Hexalith.EventStore", "src", "Hexalith.EventStore.Contracts", "Hexalith.EventStore.Contracts.csproj")}\" --configuration Release --output \"{feedDirectory}\"",
+            $"pack \"{Path.Combine(repoRoot, "Hexalith.Commons", "src", "libraries", "Hexalith.Commons.UniqueIds", "Hexalith.Commons.UniqueIds.csproj")}\" --configuration Release --output \"{feedDirectory}\" --artifacts-path \"{artifactsDirectory}\" {ContractsPackageTests.LocalPackVersionProperties}",
             repoRoot);
         ContractsPackageTests.RunDotnet(
-            $"pack \"{Path.Combine(repoRoot, "src", "Hexalith.Parties.Contracts", "Hexalith.Parties.Contracts.csproj")}\" --configuration Release --output \"{feedDirectory}\"",
+            $"pack \"{Path.Combine(repoRoot, "Hexalith.EventStore", "src", "Hexalith.EventStore.Contracts", "Hexalith.EventStore.Contracts.csproj")}\" --configuration Release --output \"{feedDirectory}\" --artifacts-path \"{artifactsDirectory}\" {ContractsPackageTests.LocalPackVersionProperties}",
+            repoRoot);
+        ContractsPackageTests.RunDotnet(
+            $"pack \"{Path.Combine(repoRoot, "src", "Hexalith.Parties.Contracts", "Hexalith.Parties.Contracts.csproj")}\" --configuration Release --output \"{feedDirectory}\" --artifacts-path \"{artifactsDirectory}\" {ContractsPackageTests.LocalPackVersionProperties}",
             repoRoot);
 
         string partiesPackage = Directory

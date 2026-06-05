@@ -49,7 +49,7 @@ public class KeyOperationAuditServiceTests
 
         await _daprClient.Received(1).TrySaveStateAsync(
             "statestore",
-            Arg.Is<string>(k => k.Contains("acme") && k.Contains("p1")),
+            Arg.Is<string>(k => k != null && k.Contains("acme") && k.Contains("p1")),
             Arg.Any<List<KeyOperationAuditEntry>>(),
             Arg.Any<string>(),
             cancellationToken: Arg.Any<CancellationToken>());
@@ -144,7 +144,7 @@ public class KeyOperationAuditServiceTests
         await _daprClient.Received(1).TrySaveStateAsync(
             "statestore",
             Arg.Any<string>(),
-            Arg.Is<List<KeyOperationAuditEntry>>(list => list.Count == 2),
+            Arg.Is<List<KeyOperationAuditEntry>>(list => list != null && list.Count == 2),
             "etag-1",
             cancellationToken: Arg.Any<CancellationToken>());
     }

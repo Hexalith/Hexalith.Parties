@@ -16,7 +16,7 @@ function Invoke-TestProject {
     )
 
     $fullPath = Join-Path $RepositoryRoot $ProjectPath
-    dotnet test $fullPath --configuration $Configuration --verbosity minimal
+    dotnet test --project $fullPath --configuration $Configuration --verbosity minimal
 }
 
 $unitProjects = @(
@@ -53,9 +53,9 @@ switch ($Lane) {
         Invoke-TestProject -ProjectPath "tests/Hexalith.Parties.DeployValidation.Tests/Hexalith.Parties.DeployValidation.Tests.csproj"
     }
     "all" {
-        dotnet test (Join-Path $RepositoryRoot "Hexalith.Parties.slnx") --configuration $Configuration --verbosity minimal
+        dotnet test --solution (Join-Path $RepositoryRoot "Hexalith.Parties.slnx") --configuration $Configuration --verbosity minimal
     }
     "coverage" {
-        dotnet test (Join-Path $RepositoryRoot "Hexalith.Parties.slnx") --configuration $Configuration --collect:"XPlat Code Coverage" --verbosity minimal
+        dotnet test --solution (Join-Path $RepositoryRoot "Hexalith.Parties.slnx") --configuration $Configuration --collect:"XPlat Code Coverage" --verbosity minimal
     }
 }

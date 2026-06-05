@@ -77,7 +77,7 @@ public sealed class TenantKeyRotationServiceTests
         IKeyStorageBackend backend = Substitute.For<IKeyStorageBackend>();
         WireBackendPassthrough(backend, realBackend);
         backend.SetPartyKeyWrappingMetadataAsync(
-                Arg.Is<PartyKeyWrappingMetadata>(m => m.PartyId == "p2"),
+                Arg.Is<PartyKeyWrappingMetadata>(m => m != null && m.PartyId == "p2"),
                 Arg.Any<CancellationToken>())
             .ThrowsAsync(new InvalidOperationException("vault secret token unreachable"));
         DaprClient daprClient = ConfigureProgressStateStore();
@@ -92,7 +92,7 @@ public sealed class TenantKeyRotationServiceTests
         };
         TenantKeyRotationStatus failed = await service.RotateAsync(request);
         backend.SetPartyKeyWrappingMetadataAsync(
-                Arg.Is<PartyKeyWrappingMetadata>(m => m.PartyId == "p2"),
+                Arg.Is<PartyKeyWrappingMetadata>(m => m != null && m.PartyId == "p2"),
                 Arg.Any<CancellationToken>())
             .Returns(call => realBackend.SetPartyKeyWrappingMetadataAsync(call.ArgAt<PartyKeyWrappingMetadata>(0)));
         TenantKeyRotationStatus retried = await service.RotateAsync(request);
@@ -136,7 +136,7 @@ public sealed class TenantKeyRotationServiceTests
             .Returns(call => realBackend.GetPartyKeyWrappingMetadataAsync(call.ArgAt<string>(0), call.ArgAt<string>(1), call.ArgAt<int>(2)));
         bool failActivePartyRewrap = true;
         backend.SetPartyKeyWrappingMetadataAsync(
-                Arg.Is<PartyKeyWrappingMetadata>(m => m.PartyId == "p-active"),
+                Arg.Is<PartyKeyWrappingMetadata>(m => m != null && m.PartyId == "p-active"),
                 Arg.Any<CancellationToken>())
             .Returns(call =>
             {
@@ -273,7 +273,7 @@ public sealed class TenantKeyRotationServiceTests
         TaskCompletionSource rewrapStarted = new(TaskCreationOptions.RunContinuationsAsynchronously);
         TaskCompletionSource allowRewrapToComplete = new(TaskCreationOptions.RunContinuationsAsynchronously);
         backend.SetPartyKeyWrappingMetadataAsync(
-                Arg.Is<PartyKeyWrappingMetadata>(m => m.PartyId == "p2"),
+                Arg.Is<PartyKeyWrappingMetadata>(m => m != null && m.PartyId == "p2"),
                 Arg.Any<CancellationToken>())
             .Returns(async call =>
             {

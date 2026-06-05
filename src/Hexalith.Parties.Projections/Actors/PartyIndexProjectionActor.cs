@@ -32,6 +32,7 @@ public sealed partial class PartyIndexProjectionActor : Actor, IPartyIndexProjec
     private readonly ProjectionOptions _options;
     private readonly ILogger<PartyIndexProjectionActor> _logger;
     private readonly IProjectionRebuildService _rebuildService;
+    private readonly SemaphoreSlim _rebuildGate = new(1, 1);
     private Dictionary<string, PartyIndexEntry>? _entries;
     private Dictionary<string, long>? _lastProcessedSequencePerParty;
     private string? _activeStateKey;
@@ -455,31 +456,39 @@ public sealed partial class PartyIndexProjectionActor : Actor, IPartyIndexProjec
 
         string tenant = segments[0];
 
+        await _rebuildGate.WaitAsync().ConfigureAwait(false);
         try
         {
-            await _rebuildService.RebuildIndexProjectionAsync(tenant, default).ConfigureAwait(false);
+            try
+            {
+                await _rebuildService.RebuildIndexProjectionAsync(tenant, default).ConfigureAwait(false);
 
-            // Reload the rebuilt state
-            string partitionKey = _partitionStrategy.GetPartitionKey(string.Empty);
-            string stateKey = $"{tenant}:{ProjectionName}:{partitionKey}";
-            _entries = await LoadStateAsync(stateKey).ConfigureAwait(false);
-            _activeStateKey = stateKey;
+                // Reload the rebuilt state
+                string partitionKey = _partitionStrategy.GetPartitionKey(string.Empty);
+                string stateKey = $"{tenant}:{ProjectionName}:{partitionKey}";
+                _entries = await LoadStateAsync(stateKey).ConfigureAwait(false);
+                _activeStateKey = stateKey;
 
-            _isRebuilding = false;
-            Log.RebuildCompleted(_logger);
-        }
-        catch (Exception ex)
-        {
-            Log.RebuildFailed(_logger, ex);
-        }
+                _isRebuilding = false;
+                Log.RebuildCompleted(_logger);
+            }
+            catch (Exception ex)
+            {
+                Log.RebuildFailed(_logger, ex);
+            }
 
-        try
-        {
-            await UnregisterReminderAsync(RebuildReminderName).ConfigureAwait(false);
+            try
+            {
+                await UnregisterReminderAsync(RebuildReminderName).ConfigureAwait(false);
+            }
+            catch
+            {
+                // Best-effort unregister
+            }
         }
-        catch
+        finally
         {
-            // Best-effort unregister
+            _rebuildGate.Release();
         }
     }
 

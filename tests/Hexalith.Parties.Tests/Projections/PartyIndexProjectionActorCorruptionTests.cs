@@ -99,12 +99,12 @@ public sealed class PartyIndexProjectionActorCorruptionTests
         await stateManager.Received(1).SetStateAsync(
             "test-tenant:party-index:default",
             Arg.Is<Dictionary<string, PartyIndexEntry>>(state =>
-                state.ContainsKey("party-1")
+                state != null && state.ContainsKey("party-1")
                 && state["party-1"].DisplayName == "Ada Lovelace"),
             Arg.Any<CancellationToken>());
         await stateManager.Received(1).SetStateAsync(
             "test-tenant:party-index:manifest",
-            Arg.Is<List<string>>(ids => ids.SequenceEqual(new[] { "party-1" })),
+            Arg.Is<List<string>>(ids => ids != null && ids.SequenceEqual(new[] { "party-1" })),
             Arg.Any<CancellationToken>());
     }
 

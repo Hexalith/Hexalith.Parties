@@ -57,7 +57,8 @@ public static class PartiesClientServiceCollectionExtensions
             throw new InvalidOperationException("Parties:BaseUrl configuration is required.");
         }
 
-        if (!Uri.TryCreate(baseUrl, UriKind.Absolute, out Uri? baseAddress))
+        if (!Uri.TryCreate(baseUrl, UriKind.RelativeOrAbsolute, out Uri? baseAddress)
+            || !baseAddress.IsAbsoluteUri)
         {
             throw new InvalidOperationException("Parties:BaseUrl must be an absolute URI.");
         }

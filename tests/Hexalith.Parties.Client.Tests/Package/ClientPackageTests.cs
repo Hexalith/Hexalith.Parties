@@ -8,6 +8,8 @@ namespace Hexalith.Parties.Client.Tests.Package;
 
 public sealed class ClientPackageTests : IDisposable
 {
+    private const string LocalVersionOverride = "0.0.0-local.0";
+    private const string LocalPackVersionProperties = $"-p:MinVerVersionOverride={LocalVersionOverride} -p:PackageVersion={LocalVersionOverride}";
     private const long MaxPackedClientPackageBytes = 5L * 1024L * 1024L;
 
     private static readonly string[] s_forbiddenDependencyTerms =
@@ -157,19 +159,24 @@ public sealed class ClientPackageTests : IDisposable
     {
         string repoRoot = LocateRepositoryRoot();
         string feedDirectory = Path.Combine(_workDirectory, "feed");
+        string artifactsDirectory = Path.Combine(_workDirectory, "artifacts");
         Directory.CreateDirectory(feedDirectory);
 
         RunDotnet(
             "pack",
-            $"\"{Path.Combine(repoRoot, "Hexalith.EventStore", "src", "Hexalith.EventStore.Contracts", "Hexalith.EventStore.Contracts.csproj")}\" --configuration Release --output \"{feedDirectory}\"",
+            $"\"{Path.Combine(repoRoot, "Hexalith.Commons", "src", "libraries", "Hexalith.Commons.UniqueIds", "Hexalith.Commons.UniqueIds.csproj")}\" --configuration Release --output \"{feedDirectory}\" --artifacts-path \"{artifactsDirectory}\" {LocalPackVersionProperties}",
             repoRoot);
         RunDotnet(
             "pack",
-            $"\"{Path.Combine(repoRoot, "src", "Hexalith.Parties.Contracts", "Hexalith.Parties.Contracts.csproj")}\" --configuration Release --output \"{feedDirectory}\"",
+            $"\"{Path.Combine(repoRoot, "Hexalith.EventStore", "src", "Hexalith.EventStore.Contracts", "Hexalith.EventStore.Contracts.csproj")}\" --configuration Release --output \"{feedDirectory}\" --artifacts-path \"{artifactsDirectory}\" {LocalPackVersionProperties}",
             repoRoot);
         RunDotnet(
             "pack",
-            $"\"{Path.Combine(repoRoot, "src", "Hexalith.Parties.Client", "Hexalith.Parties.Client.csproj")}\" --configuration Release --output \"{feedDirectory}\"",
+            $"\"{Path.Combine(repoRoot, "src", "Hexalith.Parties.Contracts", "Hexalith.Parties.Contracts.csproj")}\" --configuration Release --output \"{feedDirectory}\" --artifacts-path \"{artifactsDirectory}\" {LocalPackVersionProperties}",
+            repoRoot);
+        RunDotnet(
+            "pack",
+            $"\"{Path.Combine(repoRoot, "src", "Hexalith.Parties.Client", "Hexalith.Parties.Client.csproj")}\" --configuration Release --output \"{feedDirectory}\" --artifacts-path \"{artifactsDirectory}\" {LocalPackVersionProperties}",
             repoRoot);
 
         string clientPackagePath = Directory

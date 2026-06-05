@@ -488,7 +488,7 @@ Check the Aspire dashboard for `eventstore`, `eventstore-admin`, `eventstore-adm
 
 ### Docker or Submodule Startup Failures
 
-If Redis, Keycloak, EventStore, or Tenants fail before the dashboard reaches healthy state, confirm Docker Desktop is running and rerun `git submodule update --init Hexalith.EventStore Hexalith.Tenants` from the repository root. Do not switch to recursive submodule initialization for the default local run; missing nested submodules are not required by the baseline AppHost path.
+If Redis, Keycloak, EventStore, or Tenants fail before the dashboard reaches healthy state, confirm Docker Desktop is running and rerun `git submodule update --init Hexalith.EventStore Hexalith.Tenants` from the repository root. Do not use --recursive for the default local run; missing nested submodules are not required by the baseline AppHost path.
 
 ### Authentication Errors
 
