@@ -5,7 +5,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\samples\Hexalith.Parties.Sample\Hexalith.Parties.Sample.csproj" />
-    <ProjectReference Include="..\..\Hexalith.EventStore\src\Hexalith.EventStore.Server\Hexalith.EventStore.Server.csproj" />
+    <ProjectReference Include="$(HexalithEventStoreRoot)\src\Hexalith.EventStore.Server\Hexalith.EventStore.Server.csproj" />
   </ItemGroup>
 
   <ItemGroup>

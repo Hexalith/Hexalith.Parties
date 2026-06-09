@@ -9,13 +9,13 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Hexalith.EventStore\src\Hexalith.EventStore\Hexalith.EventStore.csproj" />
-    <ProjectReference Include="..\..\Hexalith.EventStore\src\Hexalith.EventStore.Admin.Server.Host\Hexalith.EventStore.Admin.Server.Host.csproj" AdditionalProperties="HexalithTenantsBasePath=$(HexalithTenantsBasePath)" />
-    <ProjectReference Include="..\..\Hexalith.EventStore\src\Hexalith.EventStore.Admin.UI\Hexalith.EventStore.Admin.UI.csproj" />
-    <ProjectReference Include="..\..\Hexalith.EventStore\src\Hexalith.EventStore.Aspire\Hexalith.EventStore.Aspire.csproj" IsAspireProjectResource="false" />
+    <ProjectReference Include="$(HexalithEventStoreRoot)\src\Hexalith.EventStore\Hexalith.EventStore.csproj" />
+    <ProjectReference Include="$(HexalithEventStoreRoot)\src\Hexalith.EventStore.Admin.Server.Host\Hexalith.EventStore.Admin.Server.Host.csproj" AdditionalProperties="HexalithTenantsBasePath=$(HexalithTenantsBasePath)" />
+    <ProjectReference Include="$(HexalithEventStoreRoot)\src\Hexalith.EventStore.Admin.UI\Hexalith.EventStore.Admin.UI.csproj" />
+    <ProjectReference Include="$(HexalithEventStoreRoot)\src\Hexalith.EventStore.Aspire\Hexalith.EventStore.Aspire.csproj" IsAspireProjectResource="false" />
     <ProjectReference Include="..\Hexalith.Parties\Hexalith.Parties.csproj" />
     <ProjectReference Include="..\Hexalith.Parties.Mcp\Hexalith.Parties.Mcp.csproj" />
-    <ProjectReference Include="..\..\Hexalith.Tenants\src\Hexalith.Tenants\Hexalith.Tenants.csproj" />
+    <ProjectReference Include="$(HexalithTenantsRoot)\src\Hexalith.Tenants\Hexalith.Tenants.csproj" />
   </ItemGroup>
 
   <ItemGroup>

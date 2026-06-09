@@ -22,7 +22,7 @@
 
   <ItemGroup>
     <!-- Story 9.3 AC1: roundtrip binding test references EventStore.Server types. -->
-    <ProjectReference Include="..\..\Hexalith.EventStore\src\Hexalith.EventStore.Server\Hexalith.EventStore.Server.csproj" />
+    <ProjectReference Include="$(HexalithEventStoreRoot)\src\Hexalith.EventStore.Server\Hexalith.EventStore.Server.csproj" />
   </ItemGroup>
 
   <ItemGroup>
