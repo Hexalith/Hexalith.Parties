@@ -1,4 +1,14 @@
 {
   "version": "1.0.0",
-  "presets": []
+  "presets": [
+    {
+      "name": "opus-codex-fallback",
+      "createdAt": "2026-06-09T20:57:17Z",
+      "config": {
+        "defaultPrimary": "claude",
+        "defaultFallback": "codex",
+        "defaultModel": "opus"
+      }
+    }
+  ]
 }

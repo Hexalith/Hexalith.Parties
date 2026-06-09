@@ -31,6 +31,7 @@
     <Project Path="src/Hexalith.Parties.Server/Hexalith.Parties.Server.csproj" />
     <Project Path="src/Hexalith.Parties.ServiceDefaults/Hexalith.Parties.ServiceDefaults.csproj" />
     <Project Path="src/Hexalith.Parties.Testing/Hexalith.Parties.Testing.csproj" />
+    <Project Path="src/Hexalith.Parties.UI/Hexalith.Parties.UI.csproj" />
   </Folder>
   <Folder Name="/Hexalith.EventStore/">
     <Project Path="Hexalith.EventStore/src/Hexalith.EventStore/Hexalith.EventStore.csproj" />
@@ -75,5 +76,6 @@
     <Project Path="tests/Hexalith.Parties.Server.Tests/Hexalith.Parties.Server.Tests.csproj" />
     <Project Path="tests/Hexalith.Parties.Sample.Tests/Hexalith.Parties.Sample.Tests.csproj" />
     <Project Path="tests/Hexalith.Parties.DeployValidation.Tests/Hexalith.Parties.DeployValidation.Tests.csproj" />
+    <Project Path="tests/Hexalith.Parties.UI.Tests/Hexalith.Parties.UI.Tests.csproj" />
   </Folder>
 </Solution>

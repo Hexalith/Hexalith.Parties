@@ -109,6 +109,16 @@ _ = tenants
     .WithReference(eventStore)
     .WaitFor(eventStore);
 
+// parties-ui: Blazor Server BFF over HTTP/SignalR — NO DAPR sidecar (like parties-mcp /
+// eventstore-admin-ui). Auto-starts (no WithExplicitStart) so AC2 — "healthy once eventstore/
+// tenants are healthy" — is observable on `aspire run`. OIDC/Keycloak wiring is Story 1.2;
+// ServiceDefaults health-check endpoints are Story 1.10.
+_ = builder.AddProject<Projects.Hexalith_Parties_UI>("parties-ui")
+    .WithReference(eventStore)
+    .WaitFor(eventStore)
+    .WithReference(tenants)
+    .WaitFor(tenants);
+
 // Memories.Server is an OPTIONAL sibling submodule. It is composed as a first-class DAPR resource
 // in publish mode (FR31a single-source-of-truth service graph) and on demand in run mode when
 // `EnableMemoriesSearch=true`; the default one-command local Parties run does not require the

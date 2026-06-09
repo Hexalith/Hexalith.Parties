@@ -29,4 +29,14 @@
   <ItemGroup>
     <Using Include="Xunit" />
   </ItemGroup>
+
+  <ItemGroup>
+    <!-- Copy the AppHost's DAPR component configs into the test output so the AppHost's
+         Program.cs (which probes AppContext.BaseDirectory/DaprComponents via ResolveDaprConfigPath)
+         can construct the distributed-application model in-process for the parties-ui topology
+         assertions — no Docker or running DAPR required (the model is inspected, never started). -->
+    <Content Include="..\..\src\Hexalith.Parties.AppHost\DaprComponents\**\*"
+             Link="DaprComponents\%(RecursiveDir)%(Filename)%(Extension)"
+             CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
 </Project>
