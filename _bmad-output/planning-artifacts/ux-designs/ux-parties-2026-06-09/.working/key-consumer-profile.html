@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Parties UI — Consumer · My profile + Edit (key screen)</title>
+<style>
+/* ===========================================================================
+   Governs: EXPERIENCE.md › IA (My profile, Edit my profile) · Voice and Tone ·
+   Component Patterns (Command result toast) · State Patterns
+   (Accepted-but-processing, Validation rejected) · Foundation (Consumer roomy/16px).
+   DESIGN.md › typography.body-consumer (16px), colors.accent.
+   =========================================================================== */
+:root{--accent:#0097A7;--fg1:#242424;--fg2:#424242;--fg3:#616161;--bg1:#fff;--bg2:#fafafa;
+  --stroke1:#e0e0e0;--stroke2:#d1d1d1;--success:#0e700e;--info:#115ea3;--danger:#b10e1c;
+  --r-sm:2px;--r-md:4px;--r-lg:6px;--r-full:9999px;--shadow8:0 4px 8px rgba(0,0,0,.14),0 0 2px rgba(0,0,0,.12);
+  --font:'Segoe UI','Segoe UI Web (West European)',-apple-system,BlinkMacSystemFont,Roboto,Arial,sans-serif;}
+*{box-sizing:border-box}
+body{margin:0;background:#eceff1;font-family:var(--font);color:var(--fg1);display:flex;gap:40px;flex-wrap:wrap;justify-content:center;padding:40px 24px}
+.caption{width:100%;text-align:center;color:#37474f;font-size:13px;margin:-12px 0 8px}
+.phone{width:390px;background:var(--bg1);border-radius:28px;box-shadow:var(--shadow8);overflow:hidden;border:1px solid var(--stroke2)}
+.state{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:#607d8b;text-align:center;margin:10px 0 0}
+.appbar{height:48px;display:flex;align-items:center;gap:10px;padding:0 12px;border-bottom:1px solid var(--stroke1)}
+.appbar .ham{font-size:18px;color:var(--fg2);width:28px;text-align:center}.appbar .title{font-weight:600;font-size:15px;flex:1}
+.appbar .avatar{width:28px;height:28px;border-radius:var(--r-full);background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600}
+.page{padding:20px 18px 26px;font-size:16px;line-height:1.5}
+h1{font-size:22px;font-weight:600;margin:4px 0 14px}
+.fresh{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--fg3);margin-bottom:16px}
+.dot{width:8px;height:8px;border-radius:var(--r-full);display:inline-block}.dot.ok{background:var(--success)}.dot.info{background:var(--info)}
+.card{border:1px solid var(--stroke1);border-radius:var(--r-lg);padding:16px;margin-bottom:16px}
+.row{padding:11px 0;border-bottom:1px solid var(--stroke1)}.row:last-child{border-bottom:0}
+.row .k{font-size:13px;color:var(--fg3)}.row .v{font-size:16px;font-weight:600;margin-top:2px}
+.btn{font-family:var(--font);font-size:15px;font-weight:600;border-radius:var(--r-md);padding:11px 14px;cursor:pointer;border:1px solid transparent;width:100%;text-align:center}
+.btn.primary{background:var(--accent);color:#fff}.btn.outline{background:var(--bg1);border:1px solid var(--stroke2);color:var(--fg1)}
+label{display:block;font-size:13px;font-weight:600;color:var(--fg2);margin:0 0 5px}
+.input{width:100%;border:1px solid var(--stroke2);border-radius:var(--r-sm);padding:10px 12px;font-size:16px;font-family:var(--font)}
+.field{margin-bottom:14px}
+.toast{margin:0 0 14px;border-radius:var(--r-md);padding:10px 13px;font-size:14px;background:#0b3b15;color:#eafaef}
+.note{font-size:13px;color:var(--fg3);margin-top:4px}
+</style>
+</head>
+<body>
+<p class="caption">Consumer · <strong>My profile</strong>. Left: view (roomy, 16px). Right: edit, just saved — optimistic "Saving…" with the change already showing.</p>
+
+<!-- VIEW -->
+<div class="phone">
+  <div class="appbar"><span class="ham">☰</span><span class="title">Parties</span><span class="avatar">M</span></div>
+  <p class="state">view</p>
+  <div class="page">
+    <h1>My profile</h1>
+    <span class="fresh"><span class="dot ok"></span> Up to date</span>
+    <div class="card">
+      <div class="row"><div class="k">Name</div><div class="v">Marc Delacroix</div></div>
+      <div class="row"><div class="k">Email</div><div class="v">marc@example.com</div></div>
+      <div class="row"><div class="k">Phone</div><div class="v">+33 6 12 34 56 78</div></div>
+      <div class="row"><div class="k">Language</div><div class="v">Français</div></div>
+    </div>
+    <button class="btn primary" style="margin-bottom:10px">Edit my profile</button>
+    <button class="btn outline">My data &amp; privacy</button>
+    <p class="note">Your data is yours. Change it any time, or ask us to export or erase it.</p>
+  </div>
+</div>
+
+<!-- EDIT + SAVING -->
+<div class="phone">
+  <div class="appbar"><span class="ham">☰</span><span class="title">Parties</span><span class="avatar">M</span></div>
+  <p class="state">edit · saving</p>
+  <div class="page">
+    <h1>Edit my profile</h1>
+    <div class="toast" role="status" aria-live="polite">Saved — updating…</div>
+    <span class="fresh"><span class="dot info"></span> Saving your changes…</span>
+    <div class="field"><label>Name</label><input class="input" value="Marc Delacroix"></div>
+    <div class="field"><label>Email</label><input class="input" value="marc.delacroix@example.com"></div>
+    <div class="field"><label>Phone</label><input class="input" value="+33 6 12 34 56 78"></div>
+    <button class="btn primary" style="margin-bottom:10px">Save changes</button>
+    <button class="btn outline">Cancel</button>
+  </div>
+</div>
+</body>
+</html>

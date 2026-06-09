@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Parties UI — Consumer · My data &amp; privacy (key screen)</title>
+<style>
+/* ===========================================================================
+   Governs / check against:
+   EXPERIENCE.md › Information Architecture (My data & privacy, My consent)
+   EXPERIENCE.md › Voice and Tone (plain GDPR; start-not-finish erasure; lawful-basis split)
+   EXPERIENCE.md › Component Patterns (Consent control role=switch default-Off,
+                    GDPR action button, Freshness indicator, Command result toast)
+   EXPERIENCE.md › State Patterns (Accepted-but-processing, Stale read,
+                    Erasure requested/in-progress)
+   EXPERIENCE.md › Accessibility Floor (politeness split, real switch semantics, contrast)
+   EXPERIENCE.md › Key Flows 1 (export) & 2 (withdraw consent)
+   DESIGN.md › typography.body-consumer (16px), colors.brand-fill (AA-safe button),
+               colors.accent (non-text only), components.{freshness,gdpr}
+   Reflects reviewer fixes: filled buttons use --brand-fill (#00767f, AA), not raw
+   accent (3.51:1); consent defaults Off; erasure copy states start + permanence;
+   "Things you control" vs "Things we keep" split; erasure ack is neutral, not green.
+   =========================================================================== */
+:root{
+  --accent:#0097A7;          /* NON-TEXT accent only (3.51:1 on white) */
+  --brand-fill:#00767f;      /* AA-safe (~5.4:1) — filled buttons + initials */
+  --fg1:#242424;--fg2:#424242;--fg3:#616161;--bg1:#fff;--bg2:#fafafa;--bg3:#f5f5f5;
+  --stroke1:#e0e0e0;--stroke2:#d1d1d1;--success:#0e700e;--warning:#bc4b09;--danger:#b10e1c;--info:#115ea3;
+  --r-sm:2px;--r-md:4px;--r-lg:6px;--r-xl:8px;--r-full:9999px;
+  --shadow8:0 4px 8px rgba(0,0,0,.14),0 0 2px rgba(0,0,0,.12);
+  --font:'Segoe UI','Segoe UI Web (West European)',-apple-system,BlinkMacSystemFont,Roboto,Helvetica,Arial,sans-serif;
+}
+*{box-sizing:border-box}
+body{margin:0;background:#eceff1;font-family:var(--font);color:var(--fg1);
+     display:flex;gap:40px;flex-wrap:wrap;justify-content:center;padding:40px 24px}
+.caption{width:100%;text-align:center;color:#37474f;font-size:13px;margin:-12px 0 8px}
+.phone{width:390px;background:var(--bg1);border-radius:28px;box-shadow:var(--shadow8);overflow:hidden;border:1px solid var(--stroke2)}
+.state{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:#607d8b;text-align:center;margin:10px 0 0}
+.appbar{height:48px;display:flex;align-items:center;gap:10px;padding:0 12px;border-bottom:1px solid var(--stroke1)}
+.appbar .ham{font-size:18px;color:var(--fg2);width:28px;text-align:center}.appbar .title{font-weight:600;font-size:15px;flex:1}
+.appbar .avatar{width:28px;height:28px;border-radius:var(--r-full);background:var(--brand-fill);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600}
+.page{padding:20px 18px 26px;font-size:16px;line-height:1.5}
+.page h1{font-size:22px;font-weight:600;margin:4px 0 2px}
+.fresh{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--fg3);margin-bottom:18px}
+.dot{width:8px;height:8px;border-radius:var(--r-full);display:inline-block}
+.dot.ok{background:var(--success)}.dot.stale{background:var(--warning)}.dot.info{background:var(--info)}
+.card{border:1px solid var(--stroke1);border-radius:var(--r-lg);background:var(--bg1);padding:16px;margin-bottom:16px}
+.card h3{font-size:14px;font-weight:600;color:var(--fg2);margin:0 0 4px}
+.card .lead{font-size:13px;color:var(--fg3);margin:0 0 12px}
+.datum{padding:10px 0;border-bottom:1px solid var(--stroke1)}.datum:last-child{border-bottom:0;padding-bottom:0}
+.datum .k{font-weight:600;font-size:15px}.datum .basis{font-size:13px;color:var(--fg3);margin-top:2px}
+.datum .obj{margin-top:8px}
+.actions{display:flex;flex-direction:column;gap:10px}
+.btn{font-family:var(--font);font-size:15px;font-weight:600;border-radius:var(--r-md);padding:11px 14px;cursor:pointer;border:1px solid transparent;text-align:center}
+.btn.primary{background:var(--brand-fill);color:#fff}
+.btn.outline{background:var(--bg1);border-color:var(--stroke2);color:var(--fg1)}
+.btn.danger-outline{background:var(--bg1);border-color:var(--danger);color:var(--danger)}
+.btn.small{font-size:13px;padding:7px 12px}
+.toggle-row{display:flex;align-items:flex-start;gap:12px;padding:12px 0;border-bottom:1px solid var(--stroke1)}.toggle-row:last-child{border-bottom:0}
+.toggle-row .meta{flex:1}.toggle-row .meta .k{font-weight:600;font-size:15px}.toggle-row .meta .sub{font-size:13px;color:var(--fg3);margin-top:2px}
+.sw{width:40px;height:22px;border-radius:var(--r-full);position:relative;flex:none;margin-top:2px;border:0;cursor:pointer}
+.sw.on{background:var(--brand-fill)}.sw.off{background:#8a8a8a}
+.sw::after{content:"";position:absolute;top:2px;width:18px;height:18px;border-radius:var(--r-full);background:#fff}
+.sw.on::after{left:20px}.sw.off::after{left:2px}
+.banner{border-radius:var(--r-md);padding:12px 14px;font-size:14px;line-height:1.45;margin-bottom:16px}
+.banner.info{background:#eef4fb;border:1px solid #cfe0f3;color:#0c3d6b}
+.banner strong{display:block;margin-bottom:2px}
+.toast{margin:0 0 16px;border-radius:var(--r-md);padding:11px 14px;font-size:14px;background:#1f2937;color:#eef2f7;box-shadow:var(--shadow8)}
+.tomb{color:var(--fg3)}
+.link{color:var(--brand-fill);font-size:14px;text-decoration:none;font-weight:600}
+</style>
+</head>
+<body>
+<p class="caption">Consumer · <strong>My data &amp; privacy</strong> — phone-first. Left: at rest (consent defaults Off; control vs. keep split). Right: deletion started (start-not-finish + permanence, neutral tone, stale read).</p>
+
+<!-- ============ STATE A — AT REST ============ -->
+<div class="phone">
+  <div class="appbar"><span class="ham">☰</span><span class="title">Parties</span><span class="avatar">M</span></div>
+  <p class="state">A · at rest</p>
+  <div class="page">
+    <h1>My data &amp; privacy</h1>
+    <span class="fresh"><span class="dot ok"></span> Up to date</span>
+
+    <div class="card">
+      <h3>Things you control</h3>
+      <p class="lead">Consent is yours to give or take back, any time.</p>
+      <div class="toggle-row">
+        <div class="meta"><label id="c1" class="k">Product updates</label><div class="sub">Off — you won't get product emails.</div></div>
+        <button class="sw off" role="switch" aria-checked="false" aria-labelledby="c1"></button>
+      </div>
+      <div class="toggle-row">
+        <div class="meta"><label id="c2" class="k">Marketing emails</label><div class="sub">Off — no offers unless you turn this on.</div></div>
+        <button class="sw off" role="switch" aria-checked="false" aria-labelledby="c2"></button>
+      </div>
+      <a class="link" href="#consent">Manage all consent →</a>
+    </div>
+
+    <div class="card">
+      <h3>Things we keep to run your account</h3>
+      <p class="lead">We need these to provide the service — they aren't consent toggles.</p>
+      <div class="datum"><div class="k">Name &amp; contact</div><div class="basis">To manage your account · basis: contract</div></div>
+      <div class="datum"><div class="k">Sign-in history</div><div class="basis">To keep your account secure · basis: legitimate interest</div>
+        <button class="btn outline small obj">Object to this use</button></div>
+    </div>
+
+    <div class="card">
+      <h3>Your data, in your hands</h3>
+      <div class="actions">
+        <button class="btn primary">Export my data</button>
+        <button class="btn danger-outline">Delete my data</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ STATE B — DELETION STARTED + STALE READ ============ -->
+<div class="phone">
+  <div class="appbar"><span class="ham">☰</span><span class="title">Parties</span><span class="avatar">M</span></div>
+  <p class="state">B · deletion started · stale</p>
+  <div class="page">
+    <h1>My data &amp; privacy</h1>
+    <span class="fresh"><span class="dot stale"></span> Showing what we last knew — refreshing…</span>
+
+    <div class="toast" role="status" aria-live="polite">We've started deleting your data — updating…</div>
+
+    <div class="banner info">
+      <strong>We've started deleting your data.</strong>
+      We'll confirm when it's done — usually within 30 days. You can cancel until
+      deletion begins; once it's done, it's permanent and we can't undo it.
+    </div>
+
+    <div class="card">
+      <h3>What's being deleted</h3>
+      <div class="datum"><div class="k">Name &amp; contact</div><div class="basis tomb">Scheduled for deletion</div></div>
+      <div class="datum"><div class="k">Sign-in history</div><div class="basis tomb">Scheduled for deletion</div></div>
+    </div>
+
+    <div class="card">
+      <h3>Changed your mind?</h3>
+      <p class="lead">You can still stop this — until deletion begins.</p>
+      <div class="actions"><button class="btn outline">Cancel deletion</button></div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

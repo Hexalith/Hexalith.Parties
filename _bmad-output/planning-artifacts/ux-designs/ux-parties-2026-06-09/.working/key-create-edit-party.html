@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Parties UI — Admin · Create/Edit party + picker (key screen)</title>
+<style>
+/* ===========================================================================
+   Governs: EXPERIENCE.md › IA (Create/Edit party) · Component Patterns
+   (Party picker combobox, GDPR/action buttons) · State Patterns
+   (Validation rejected, Accepted-but-processing) · Key Flow 4 (link a party).
+   DESIGN.md › Shapes (inputs r-sm), colors.accent, components.party-state-badge.
+   Tokens = Fluent 2 values; comment names map to --colorXxx props.
+   =========================================================================== */
+:root{--accent:#0097A7;--fg1:#242424;--fg2:#424242;--fg3:#616161;--bg1:#fff;--bg2:#fafafa;
+  --bg-nav:#f3f3f3;--stroke1:#e0e0e0;--stroke2:#d1d1d1;--success:#0e700e;--warning:#bc4b09;
+  --danger:#b10e1c;--info:#115ea3;--r-sm:2px;--r-md:4px;--r-lg:6px;--r-xl:8px;--r-full:9999px;
+  --shadow8:0 4px 8px rgba(0,0,0,.14),0 0 2px rgba(0,0,0,.12);
+  --font:'Segoe UI','Segoe UI Web (West European)',-apple-system,BlinkMacSystemFont,Roboto,Arial,sans-serif;}
+*{box-sizing:border-box}
+body{margin:0;background:#eceff1;font-family:var(--font);color:var(--fg1);padding:28px;font-size:14px}
+.caption{text-align:center;color:#37474f;font-size:13px;margin:0 0 16px}
+.win{max-width:980px;margin:0 auto 30px;border-radius:var(--r-xl);overflow:hidden;box-shadow:var(--shadow8);border:1px solid var(--stroke2);background:var(--bg1)}
+.chrome{height:34px;background:#e8eaed;display:flex;align-items:center;gap:8px;padding:0 12px;border-bottom:1px solid var(--stroke1)}
+.chrome .url{flex:1;background:#fff;border-radius:var(--r-full);height:21px;font-size:12px;color:var(--fg3);display:flex;align-items:center;padding:0 12px;border:1px solid var(--stroke1)}
+.state-label{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:#607d8b;padding:8px 16px 0}
+.hdr{height:48px;display:flex;align-items:center;gap:12px;padding:0 16px;border-bottom:1px solid var(--stroke1)}
+.hdr .brand{font-weight:600;font-size:15px;flex:1}.hdr .avatar{width:28px;height:28px;border-radius:var(--r-full);background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600}
+.body{display:grid;grid-template-columns:1fr 1fr;gap:0}
+.col{padding:20px 22px}.col+.col{border-left:1px solid var(--stroke1);background:var(--bg2)}
+h1{font-size:19px;margin:0 0 16px}
+.field{margin-bottom:15px}
+label{display:block;font-size:13px;font-weight:600;color:var(--fg2);margin-bottom:5px}
+.req{color:var(--danger)}
+.input{width:100%;border:1px solid var(--stroke2);border-radius:var(--r-sm);padding:8px 11px;font-size:14px;font-family:var(--font);color:var(--fg1);background:var(--bg1)}
+.input.bad{border-color:var(--danger);border-width:1px;outline:2px solid #f7d6d9}
+.err{color:var(--danger);font-size:12px;margin-top:5px;display:flex;gap:6px;align-items:center}
+.seg{display:flex;gap:8px}
+.seg .opt{flex:1;border:1px solid var(--stroke2);border-radius:var(--r-md);padding:9px;text-align:center;font-size:13px;cursor:pointer;color:var(--fg2)}
+.seg .opt.on{border-color:var(--accent);background:#e1f4f6;color:#0b5b65;font-weight:600}
+/* picker combobox */
+.picker{position:relative}
+.combo{display:flex;align-items:center;border:1px solid var(--accent);border-radius:var(--r-sm);padding:8px 11px;background:var(--bg1);gap:8px}
+.combo input{border:0;outline:0;flex:1;font-size:14px;font-family:var(--font)}
+.combo .clear{color:var(--fg3);cursor:pointer}
+.listbox{border:1px solid var(--stroke1);border-radius:var(--r-md);margin-top:4px;box-shadow:var(--shadow8);background:var(--bg1);overflow:hidden}
+.listbox .o{padding:9px 12px;font-size:13px;display:flex;align-items:center;gap:8px;cursor:pointer}
+.listbox .o.act{background:#e1f4f6}
+.listbox .o .ty{color:var(--fg3);margin-left:auto;font-size:12px}
+.badge-state{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;border-radius:var(--r-full);padding:1px 8px}
+.b-active{background:#e7f3e7;color:var(--success)}
+.hint{font-size:12px;color:var(--fg3);margin-top:6px}
+.btn{font-family:var(--font);font-size:14px;font-weight:600;border-radius:var(--r-md);padding:9px 16px;cursor:pointer;border:1px solid transparent}
+.btn.primary{background:var(--accent);color:#fff}.btn.subtle{background:transparent;color:var(--fg2)}
+.footer{display:flex;justify-content:flex-end;gap:8px;margin-top:8px}
+.toast{margin:0 0 14px;border-radius:var(--r-md);padding:9px 13px;font-size:13px;background:#0b3b15;color:#eafaef}
+.banner.warn{border-radius:var(--r-md);padding:10px 13px;font-size:13px;background:#fff4ec;border:1px solid #f3d4bd;color:#8a3a06;margin-bottom:14px}
+</style>
+</head>
+<body>
+<p class="caption">Admin · <strong>Create / Edit party</strong>. Left: editing with the in-form party picker open (Flow 4). Right: same form rejected by server-side validation (rejection event, input preserved).</p>
+
+<div class="win">
+  <div class="chrome"><span class="url">parties-ui.example.com/admin/parties/new</span></div>
+  <div class="state-label">Editing · picker open</div>
+  <div class="hdr"><span class="brand">Parties</span><span class="avatar">P</span></div>
+  <div class="body">
+    <!-- LEFT: happy edit + picker -->
+    <div class="col">
+      <h1>New party</h1>
+      <div class="field"><label>Type <span class="req">*</span></label>
+        <div class="seg"><div class="opt">Person</div><div class="opt on">Organization</div></div></div>
+      <div class="field"><label>Legal name <span class="req">*</span></label>
+        <input class="input" value="Acme Holdings Ltd"></div>
+      <div class="field picker"><label>Primary contact</label>
+        <div class="combo"><input value="acme cfo" aria-expanded="true" aria-autocomplete="list"><span class="clear">✕</span><span>▾</span></div>
+        <div class="listbox" role="listbox">
+          <div class="o act" role="option"><span>Marc Delacroix</span><span class="badge-state b-active">● Active</span><span class="ty">Person</span></div>
+          <div class="o" role="option"><span>Maria Acosta</span><span class="ty">Person</span></div>
+          <div class="o" role="option"><span>Acme Treasury (dept.)</span><span class="ty">Organization</span></div>
+        </div>
+        <div class="hint">Type to search · ↓↑ to move · Enter to link · Esc to close</div>
+      </div>
+      <div class="footer"><button class="btn subtle">Cancel</button><button class="btn primary">Create party</button></div>
+    </div>
+    <!-- RIGHT: validation rejected -->
+    <div class="col">
+      <div class="state-label" style="padding:0 0 8px">Validation rejected</div>
+      <h1>New party</h1>
+      <div class="banner warn">We couldn't save this party. Fix the highlighted field and try again — nothing you typed was lost.</div>
+      <div class="field"><label>Type <span class="req">*</span></label>
+        <div class="seg"><div class="opt on">Person</div><div class="opt">Organization</div></div></div>
+      <div class="field"><label>Legal name <span class="req">*</span></label>
+        <input class="input bad" value="">
+        <div class="err">⚠ A name is required for a Person party.</div></div>
+      <div class="field"><label>Email</label>
+        <input class="input bad" value="marc@@example">
+        <div class="err">⚠ That doesn't look like an email address.</div></div>
+      <div class="footer"><button class="btn subtle">Cancel</button><button class="btn primary">Create party</button></div>
+    </div>
+  </div>
+</div>
+</body>
+</html>
