@@ -1,0 +1,93 @@
+# generated: 2026-06-09
+# last_updated: 2026-06-09
+# project: parties
+# project_key: NOKEY
+# tracking_system: file-system
+# story_location: {project-root}/_bmad-output/implementation-artifacts
+
+# STATUS DEFINITIONS:
+# ==================
+# Epic Status:
+#   - backlog: Epic not yet started
+#   - in-progress: Epic actively being worked on
+#   - done: All stories in epic completed
+#
+# Epic Status Transitions:
+#   - backlog → in-progress: Automatically when first story is created (via create-story)
+#   - in-progress → done: Manually when all stories reach 'done' status
+#
+# Story Status:
+#   - backlog: Story only exists in epic file
+#   - ready-for-dev: Story file created in stories folder
+#   - in-progress: Developer actively working on implementation
+#   - review: Ready for code review (via Dev's code-review workflow)
+#   - done: Story completed
+#
+# Retrospective Status:
+#   - optional: Can be completed but not required
+#   - done: Retrospective has been completed
+#
+# WORKFLOW NOTES:
+# ===============
+# - Epic transitions to 'in-progress' automatically when first story is created
+# - Stories can be worked in parallel if team capacity allows
+# - Developer typically creates next story after previous one is 'done' to incorporate learnings
+# - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
+
+generated: 2026-06-09
+last_updated: 2026-06-09
+project: parties
+project_key: NOKEY
+tracking_system: file-system
+story_location: "{project-root}/_bmad-output/implementation-artifacts"
+
+development_status:
+  # ── Epic 1: App Foundation & Secure Sign-In ──────────────────────────────
+  epic-1: backlog
+  1-1-stand-up-the-hexalith-parties-ui-blazor-server-host: backlog
+  1-2-host-owned-oidc-sign-in-server-side-tokens-never-reach-the-browser: backlog
+  1-3-role-based-landing-and-policy-gated-navigation: backlog
+  1-4-fail-closed-party-id-claim-resolution: backlog
+  1-5-consumer-own-data-self-authorization-defense-in-depth: backlog
+  1-6-canonical-statuskind-ui-mapping-with-aria-live-politeness-split: backlog
+  1-7-live-freshness-via-signalr-shared-optimistic-reconcile-effect: backlog
+  1-8-shared-domain-components-party-state-badge-freshness-indicator-gdpr-destructive-button: backlog
+  1-9-accessibility-foundation-and-ci-a11y-gate-wcag-2-2-aa: backlog
+  1-10-deploy-parties-ui-container-k8s-with-production-kms-prerequisite-gate: backlog
+  epic-1-retrospective: optional
+
+  # ── Epic 2: Admin — Party Records Management ─────────────────────────────
+  epic-2: backlog
+  2-1-embed-the-admin-area-behind-the-admin-policy: backlog
+  2-2-parties-list-with-search-filters-and-paging-fr-admin-1: backlog
+  2-3-party-detail-fr-admin-2: backlog
+  2-4-create-and-edit-a-party-with-validation-fr-admin-3: backlog
+  2-5-party-picker-re-skin-full-wai-aria-combobox-d11-ux-dr7: backlog
+  epic-2-retrospective: optional
+
+  # ── Epic 3: Admin — GDPR / DPO Operations ────────────────────────────────
+  epic-3: backlog
+  3-1-gdpr-operations-page: backlog
+  3-2-erase-a-party-with-typed-name-confirmation: backlog
+  3-3-restrict-lift-restriction-and-record-revoke-consent: backlog
+  3-4-data-export-art-20-and-processing-records-art-30: backlog
+  3-5-eventstore-erasure-verification-contract-backend-cross-submodule-approval-gated: backlog
+  3-6-admin-erasure-verification-report-ui-consumes-the-d7-contract: backlog
+  epic-3-retrospective: optional
+
+  # ── Epic 4: Consumer — Identity Binding & My Profile ─────────────────────
+  epic-4: backlog
+  4-1-decide-the-consumer-identity-party-id-binding-mechanism-design-spike-adr: backlog
+  4-2-implement-the-chosen-party-id-binding-provisioning-mechanism: backlog
+  4-3-stand-up-the-consumerportal-rcl-and-consumer-area: backlog
+  4-4-my-profile-fr-consumer-1: backlog
+  4-5-edit-my-profile-fr-consumer-2: backlog
+  epic-4-retrospective: optional
+
+  # ── Epic 5: Consumer — Consent, Data Export & Erasure ────────────────────
+  epic-5: backlog
+  5-1-my-consent-grant-withdraw-with-honest-lawful-basis-split-fr-consumer-3: backlog
+  5-2-my-data-privacy-export-my-data-fr-consumer-4: backlog
+  5-3-my-data-privacy-request-cancel-erasure-fr-consumer-4: backlog
+  5-4-my-data-privacy-see-whats-processed-about-me-fr-consumer-4: backlog
+  epic-5-retrospective: optional
