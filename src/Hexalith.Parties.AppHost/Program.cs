@@ -113,7 +113,7 @@ _ = tenants
 // eventstore-admin-ui). Auto-starts (no WithExplicitStart) so AC2 — "healthy once eventstore/
 // tenants are healthy" — is observable on `aspire run`. OIDC/Keycloak wiring is Story 1.2;
 // ServiceDefaults health-check endpoints are Story 1.10.
-_ = builder.AddProject<Projects.Hexalith_Parties_UI>("parties-ui")
+IResourceBuilder<ProjectResource> partiesUi = builder.AddProject<Projects.Hexalith_Parties_UI>("parties-ui")
     .WithReference(eventStore)
     .WaitFor(eventStore)
     .WithReference(tenants)
@@ -232,6 +232,7 @@ if (keycloak is not null)
     _ = partiesMcp.WithReference(keycloak).WaitFor(keycloak);
     _ = tenants.WithReference(keycloak).WaitFor(keycloak);
     _ = adminUI.WithReference(keycloak).WaitFor(keycloak);
+    _ = partiesUi.WithReference(keycloak).WaitFor(keycloak);
 }
 
 string? publishModeAuthority = builder.ExecutionContext.IsPublishMode
@@ -300,6 +301,34 @@ else
     _ = adminUI
         .WithEnvironment("EventStore__Authentication__Authority", "")
         .WithEnvironment("EventStore__Authentication__ClientId", "");
+}
+
+// parties-ui is an OIDC relying party (Story 1.2 / AR-D5): authorization-code sign-in into a
+// server-side cookie session — NOT a JWT bearer resource server, so it uses
+// Authentication__OpenIdConnect__* and is deliberately NOT routed through WithJwtAuthentication.
+// Mirrors the adminUI realm/publish conditional above; parties-ui references and waits for keycloak
+// in the `if (keycloak is not null)` block.
+if (realmUrl is not null)
+{
+    // Run mode: interactive sign-in against the local dev Keycloak. The dev-only client secret
+    // matches the Hexalith.Tenants.UI precedent — a throwaway local-realm secret, NOT under deploy/
+    // and NOT a production credential.
+    _ = partiesUi
+        .WithEnvironment("Authentication__OpenIdConnect__Authority", realmUrl)
+        .WithEnvironment("Authentication__OpenIdConnect__ClientId", "hexalith-parties-ui")
+        .WithEnvironment("Authentication__OpenIdConnect__ClientSecret", "parties-ui-dev-secret")
+        .WithEnvironment("Authentication__OpenIdConnect__Audience", "hexalith-eventstore");
+}
+else if (builder.ExecutionContext.IsPublishMode)
+{
+    // Publish: tache realm. The client secret MUST come from configuration / a secret store, never
+    // a committed literal — source it from builder.Configuration (env / user-secrets).
+    _ = partiesUi
+        .WithEnvironment("ASPNETCORE_ENVIRONMENT", "Development")
+        .WithEnvironment("Authentication__OpenIdConnect__Authority", PublishModeJwtAuthority)
+        .WithEnvironment("Authentication__OpenIdConnect__ClientId", "hexalith-parties-ui")
+        .WithEnvironment("Authentication__OpenIdConnect__ClientSecret", builder.Configuration["PartiesUi:OidcClientSecret"] ?? "")
+        .WithEnvironment("Authentication__OpenIdConnect__Audience", "hexalith-eventstore");
 }
 
 // PUBLISH_TARGET registers an Aspire-native publish environment (`dotnet aspire publish`).
