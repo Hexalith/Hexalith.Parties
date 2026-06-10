@@ -1,0 +1,11 @@
+.parties-accessibility-specimen {
+    display: grid;
+    gap: var(--spacingVerticalL);
+}
+
+.parties-accessibility-specimen__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
+    gap: var(--spacingHorizontalL);
+    align-items: start;
+}

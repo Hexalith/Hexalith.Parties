@@ -1,3 +1,25 @@
 @inherits LayoutComponentBase
 @using Hexalith.FrontComposer.Shell.Components.Layout
-<FrontComposerShell>@Body</FrontComposerShell>
+
+<a class="parties-skip-link" href="#parties-main-content">Skip to content</a>
+<a class="parties-skip-link" href="#parties-app-navigation">Skip to navigation</a>
+
+<FrontComposerShell Navigation="PartiesNavigation">
+    <div id="parties-main-content"
+         class="parties-main-content"
+         role="main"
+         aria-label="Main content"
+         tabindex="-1">
+        @Body
+    </div>
+</FrontComposerShell>
+
+@code {
+    private static RenderFragment PartiesNavigation => @<div id="parties-app-navigation"
+                                                            class="parties-navigation-target"
+                                                            role="navigation"
+                                                            aria-label="Application navigation"
+                                                            tabindex="-1">
+        <FrontComposerNavigation />
+    </div>;
+}

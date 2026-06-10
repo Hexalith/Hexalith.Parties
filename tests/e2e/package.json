@@ -1,0 +1,24 @@
+{
+  "name": "hexalith-parties-e2e",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Playwright E2E accessibility and visual gate for Hexalith.Parties UI",
+  "type": "module",
+  "scripts": {
+    "test": "playwright test",
+    "test:a11y": "playwright test specs/parties-accessibility.spec.ts --project=chromium",
+    "test:visual": "playwright test specs/parties-accessibility.spec.ts --project=chromium --grep \"visual baseline\"",
+    "test:visual:update": "playwright test specs/parties-accessibility.spec.ts --project=chromium --grep \"visual baseline\" --update-snapshots",
+    "install:browsers": "playwright install chromium --with-deps",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "^4.10.0",
+    "@playwright/test": "^1.49.0",
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  },
+  "engines": {
+    "node": ">=24.0.0"
+  }
+}

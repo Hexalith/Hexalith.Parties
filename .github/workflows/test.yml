@@ -79,6 +79,7 @@ jobs:
             projects: |
               tests/Hexalith.Parties.Projections.Tests/Hexalith.Parties.Projections.Tests.csproj
               tests/Hexalith.Parties.AdminPortal.Tests/Hexalith.Parties.AdminPortal.Tests.csproj
+              tests/Hexalith.Parties.UI.Tests/Hexalith.Parties.UI.Tests.csproj
               tests/Hexalith.Parties.Picker.Tests/Hexalith.Parties.Picker.Tests.csproj
           - name: integration-deploy
             projects: |
@@ -140,11 +141,80 @@ jobs:
           if-no-files-found: warn
           retention-days: 30
 
+  ui-a11y:
+    name: UI Accessibility Gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    needs: lint
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          submodules: true
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 10.0.300
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v5
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('global.json', 'Directory.Packages.props', 'Directory.Build.props', '**/*.csproj') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+
+      - name: Restore
+        run: dotnet restore "$SOLUTION_FILE"
+
+      - name: Build Parties UI
+        run: dotnet build src/Hexalith.Parties.UI/Hexalith.Parties.UI.csproj --configuration Release --no-restore -m:1
+
+      - name: Build Parties UI bUnit tests
+        run: dotnet build tests/Hexalith.Parties.UI.Tests/Hexalith.Parties.UI.Tests.csproj --configuration Release --no-restore -m:1
+
+      - name: Run Parties UI bUnit tests
+        run: dotnet test tests/Hexalith.Parties.UI.Tests/Hexalith.Parties.UI.Tests.csproj --configuration Release --no-build --logger "trx;LogFileName=Hexalith.Parties.UI.Tests.trx" --results-directory TestResults/ui
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: tests/e2e/package-lock.json
+
+      - name: Install Playwright workspace
+        working-directory: tests/e2e
+        run: npm ci
+
+      - name: Install Chromium dependencies
+        working-directory: tests/e2e
+        run: npm run install:browsers
+
+      - name: Run Playwright a11y and visual gate
+        working-directory: tests/e2e
+        run: npm run test:a11y
+
+      - name: Upload UI test artifacts
+        if: failure()
+        uses: actions/upload-artifact@v6
+        with:
+          name: ui-a11y-artifacts
+          path: |
+            TestResults/ui/
+            tests/e2e/playwright-report/
+            tests/e2e/test-results/
+          if-no-files-found: warn
+          retention-days: 30
+
   contract-test:
     name: Contract Test
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    needs: test
+    needs: [test, ui-a11y]
     if: github.actor != 'dependabot[bot]'
 
     env:
@@ -221,7 +291,7 @@ jobs:
   report:
     name: Quality Gate
     runs-on: ubuntu-latest
-    needs: [lint, test, contract-test]
+    needs: [lint, test, ui-a11y, contract-test]
     if: always()
 
     steps:
@@ -229,6 +299,7 @@ jobs:
         env:
           LINT_RESULT: ${{ needs.lint.result }}
           TEST_RESULT: ${{ needs.test.result }}
+          UI_A11Y_RESULT: ${{ needs.ui-a11y.result }}
           CONTRACT_RESULT: ${{ needs.contract-test.result }}
         run: |
           set -euo pipefail
@@ -239,6 +310,10 @@ jobs:
           fi
 
           if [ "$TEST_RESULT" != "success" ]; then
+            decision="FAIL"
+          fi
+
+          if [ "$UI_A11Y_RESULT" != "success" ]; then
             decision="FAIL"
           fi
 
@@ -253,6 +328,7 @@ jobs:
             echo "| --- | --- |"
             echo "| Lint | $LINT_RESULT |"
             echo "| Test shards | $TEST_RESULT |"
+            echo "| UI accessibility | $UI_A11Y_RESULT |"
             echo "| Contract test | $CONTRACT_RESULT |"
             echo ""
             echo "Decision: $decision"

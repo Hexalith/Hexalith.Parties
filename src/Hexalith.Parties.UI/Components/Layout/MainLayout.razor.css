@@ -1,0 +1,44 @@
+.parties-skip-link {
+    position: absolute;
+    inset-block-start: 0;
+    inset-inline-start: -100vw;
+    z-index: 10000;
+    padding: var(--spacingVerticalS) var(--spacingHorizontalM);
+    background: var(--colorNeutralBackground1);
+    border: var(--strokeWidthThick) solid var(--colorStrokeFocus2);
+    color: var(--colorNeutralForeground1);
+    text-decoration: none;
+    transition: inset-inline-start 120ms ease-out;
+}
+
+.parties-skip-link:focus-visible {
+    inset-inline-start: var(--spacingHorizontalM);
+    outline: var(--strokeWidthThick) solid var(--colorStrokeFocus2);
+    outline-offset: var(--spacingHorizontalXS);
+}
+
+.parties-navigation-target:focus-visible,
+.parties-main-content:focus-visible,
+.parties-main-content ::deep :where(a, button, input, select, textarea, summary, [tabindex]:not([tabindex="-1"])):focus-visible {
+    outline: var(--strokeWidthThick) solid var(--colorStrokeFocus2);
+    outline-offset: var(--spacingHorizontalXS);
+}
+
+@media (forced-colors: active) {
+    .parties-skip-link,
+    .parties-skip-link:focus-visible,
+    .parties-navigation-target:focus-visible,
+    .parties-main-content:focus-visible,
+    .parties-main-content ::deep :where(a, button, input, select, textarea, summary, [tabindex]:not([tabindex="-1"])):focus-visible {
+        background: Canvas;
+        border-color: Highlight;
+        color: CanvasText;
+        outline-color: Highlight;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .parties-skip-link {
+        transition-duration: 1ms;
+    }
+}

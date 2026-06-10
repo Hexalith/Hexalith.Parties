@@ -1,0 +1,48 @@
+@using Hexalith.Parties.Contracts.Models
+@using Hexalith.Parties.UI.Components.Shared
+@using Hexalith.Parties.UI.Status
+@using Microsoft.AspNetCore.Hosting
+@using Microsoft.FluentUI.AspNetCore.Components
+@attribute [Route(PartiesAccessibilitySpecimenRoutes.ShellSpecimen)]
+@inject IConfiguration Configuration
+@inject IWebHostEnvironment Environment
+
+@if (PartiesAccessibilitySpecimenRoutes.IsEnabled(Configuration, Environment))
+{
+    <section class="parties-accessibility-specimen" data-testid="parties-accessibility-specimen" aria-labelledby="parties-accessibility-specimen-title">
+        <h1 id="parties-accessibility-specimen-title">Parties accessibility specimen</h1>
+        <p data-testid="parties-accessibility-specimen-ready">Synthetic shell accessibility surface ready.</p>
+
+        <StatusLiveRegion Kind="StatusKind.AcceptedProcessing" Message="Synthetic status update queued." />
+
+        <div class="parties-accessibility-specimen__grid">
+            <div>
+                <h2>Representative controls</h2>
+                <FluentButton Appearance="ButtonAppearance.Primary" data-testid="parties-specimen-primary-action">
+                    Save synthetic party
+                </FluentButton>
+                <a href="#parties-accessibility-reference" data-testid="parties-specimen-link">Read accessibility reference</a>
+            </div>
+
+            <div>
+                <h2>Status indicators</h2>
+                <DataFreshnessIndicator Freshness="ProjectionFreshnessMetadata.Create(ProjectionFreshnessStatus.Current)" />
+                <PartyStateBadge State="PartyLifecycleState.Restricted" />
+            </div>
+
+            <div>
+                <h2>Confirmation</h2>
+                <GdprDestructiveButton IsIrreversible="false"
+                                       ButtonText="Restrict synthetic party"
+                                       Confirmed="HandleSyntheticConfirmationAsync" />
+            </div>
+        </div>
+
+        <p id="parties-accessibility-reference">All displayed values are deterministic synthetic labels.</p>
+    </section>
+}
+
+@code {
+    private static Task HandleSyntheticConfirmationAsync()
+        => Task.CompletedTask;
+}

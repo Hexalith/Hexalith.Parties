@@ -26,6 +26,7 @@ $unitProjects = @(
     "tests/Hexalith.Parties.Projections.Tests/Hexalith.Parties.Projections.Tests.csproj",
     "tests/Hexalith.Parties.Security.Tests/Hexalith.Parties.Security.Tests.csproj",
     "tests/Hexalith.Parties.AdminPortal.Tests/Hexalith.Parties.AdminPortal.Tests.csproj",
+    "tests/Hexalith.Parties.UI.Tests/Hexalith.Parties.UI.Tests.csproj",
     "tests/Hexalith.Parties.Picker.Tests/Hexalith.Parties.Picker.Tests.csproj",
     "tests/Hexalith.Parties.Mcp.Tests/Hexalith.Parties.Mcp.Tests.csproj"
 )

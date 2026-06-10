@@ -1,0 +1,32 @@
+{
+  "route": "/__parties/specimens/accessibility",
+  "viewport": {
+    "width": 1280,
+    "height": 900
+  },
+  "skipLinks": [
+    "Skip to content",
+    "Skip to navigation"
+  ],
+  "landmarks": {
+    "main": "Main content",
+    "navigation": "Application navigation"
+  },
+  "specimenSections": [
+    "Parties accessibility specimen",
+    "Representative controls",
+    "Status indicators",
+    "Confirmation"
+  ],
+  "representativeControls": {
+    "primaryButtonVisible": true,
+    "normalLinkVisible": true,
+    "statusRegionVisible": true,
+    "freshnessVisible": true,
+    "stateBadgeVisible": true,
+    "destructiveButtonVisible": true
+  },
+  "primaryButton": {
+    "avoidsRawTeal": true
+  }
+}
