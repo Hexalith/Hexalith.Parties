@@ -1,73 +1,59 @@
-# Test Automation Summary — Story 1.1 (Stand up the Hexalith.Parties.UI Blazor Server host)
+# Test Automation Summary — Story 1.6 (Canonical StatusKind→UI mapping + aria-live politeness split)
 
+**Date:** 2026-06-10
 **Workflow:** `bmad-qa-generate-e2e-tests`
-**Story:** `_bmad-output/implementation-artifacts/1-1-stand-up-the-hexalith-parties-ui-blazor-server-host.md`
-**Framework (existing, reused):** xUnit v3 (3.2.2) · Shouldly · NSubstitute · bUnit · Aspire.Hosting.Testing
+**Story:** `_bmad-output/implementation-artifacts/1-6-canonical-statuskind-ui-mapping-with-aria-live-politeness-split.md`
+**Feature under test:** `Hexalith.Parties.UI.Status.StatusPresentation` (pure mapper) + `Hexalith.Parties.UI.Components.Shared.StatusLiveRegion` (semantics-only Blazor primitive)
+**Framework (existing, reused):** xUnit v3 `3.2.2` + Shouldly `4.3.0` + bUnit `2.7.2` — no new packages
 **Mode:** Auto-apply all discovered gaps.
 
-## Context
+## Scope note
 
-Story 1.1 stands up a deliberately minimal, bootable FrontComposer shell host plus its Aspire
-AppHost resource — nothing routable yet (`GET /` → 404 until Stories 1.3 / 2.x add pages). So the
-meaningful automated coverage at this stage is **host DI-composition** and **AppHost topology**,
-not page-level browser E2E (which legitimately belongs to Story 1.3 when routes/components land).
-Existing coverage was 2 boot smoke tests; this run closes the gaps below.
+This story ships **pure UI-tier logic + one Blazor component** — there are **no HTTP endpoints, controllers, or actor surfaces** (the `parties` host exposes only `POST /process` to the EventStore gateway, unrelated to this feature). Therefore **API tests do not apply**; the appropriate automation is component/logic tests (bUnit + xUnit), which is what this QA pass extended.
+
+The story arrived in `review` with strong existing coverage (56 tests across the two new classes). The QA pass acted as a coverage auditor and **auto-applied 9 gap tests** for untested public surface and behavioral guarantees.
 
 ## Gaps Discovered → Closed
 
 | # | AC | Gap in existing tests | Fix |
 |---|----|----|----|
-| 1 | AC1 | Composition test omitted `AddFluentUIComponents()` — which AC1 explicitly mandates. | New test composes the AC1 chain **including FluentUI** and asserts FluentUI services are registered. |
-| 2 | AC1 | `ValidateScopes=true` (ADR-030) was validated only at `BuildServiceProvider`, never **exercised in a scope** — the captive-dependency failure it guards only surfaces on scoped resolution. | New test opens an `IServiceScope` and resolves `IFrontComposerRegistry` from both root and scope. |
-| 3 | AC2 | **Zero automated coverage** of the AppHost `parties-ui` resource (no DAPR sidecar / WaitFor eventstore+tenants / auto-start). Verified live only — no regression guard. | New `DistributedApplicationTestingBuilder` model-inspection test (no Docker; model is inspected, never started). |
+| 1 | AC2/AC5 | `StatusLiveRegion.ChildContent` (a public `RenderFragment?` rendered into the live region via `@Message@ChildContent`) had **zero** coverage. | bUnit test renders `ChildContent` and asserts it lands as real DOM inside the correctly-polite region. |
+| 2 | AC2 | `Message` + `ChildContent` concatenation untested — nothing pinned that both surface together. | bUnit test asserts both render inside an assertive region. |
+| 3 | AC2 | The `SignInRequired` "render nothing" guarantee was never proven **when content is supplied** — a stray live region for sign-in is the named anti-pattern. | bUnit test passes both `Message` and `ChildContent` to `SignInRequired` and asserts no region renders. |
+| 4 | AC4 | `FromException` was only proven for `408 → TransientFailure`; it was never asserted to route a **non-408** `PartiesClientException` through the **full** `FromClientException` mapping (incl. the `403` tenant split) — the exact path AC4 broad-catch call sites depend on. | `[Theory]` over `401→SignInRequired`, `403-tenant→TenantUnavailable`, `403-role→Forbidden`, `404→Gone`, `500→LoadFailure` via `FromException`. |
+| 5 | AC3 | A `403` carrying **no** `Title`/`Detail` was untested — the tenant heuristic's null-safety (`Contains(null)` → no NRE → `Forbidden`) was unproven. | `Fact` asserts a `403` with null problem text degrades to `Forbidden`, not a crash. |
 
 ## Generated / Modified Tests
 
-### Host composition (AC1) — `tests/Hexalith.Parties.UI.Tests/PartiesUiHostCompositionTests.cs`
-- [x] `HostServiceChain_WithFluentUi_ComposesAndResolvesRegistryWithinScope` — composes the
-  AC1-pinned chain (`AddFluentUIComponents()` + FrontComposer Quickstart + `AddHexalithDomain<PartiesUiDomainMarker>()`),
-  builds under `ValidateScopes=true`, and resolves `IFrontComposerRegistry` from both the root
-  provider **and a created scope** (captive-dependency / ADR-030 guard).
-- [x] `HostComposition_RegistersFluentUiComponentServices` — asserts `AddFluentUIComponents()`
-  actually contributes `Microsoft.FluentUI.*` services to the container.
-- (pre-existing, retained) `QuickstartChainWithDomainMarker_ComposesUnderValidateScopes`,
-  `PartiesUiDomainMarker_DeclaresPartiesBoundedContext`.
+### Component (bUnit) — `tests/Hexalith.Parties.UI.Tests/StatusLiveRegionTests.cs`
+- [x] `ChildContent_renders_as_markup_inside_the_live_region` — child `RenderFragment` renders as real DOM inside the `role=status`/`aria-live=polite` region
+- [x] `Message_and_ChildContent_both_render_together` — both surface inside the `role=alert`/`aria-live=assertive` region
+- [x] `SignInRequired_renders_nothing_even_with_child_content` — no-announce contract holds regardless of supplied content
+- (pre-existing, retained) polite-kinds / assertive-kinds DOM assertions, `SignInRequired_renders_no_live_region`, `NullKind_renders_no_live_region`
 
-### AppHost topology (AC2) — `tests/Hexalith.Parties.IntegrationTests/Topology/PartiesUiTopologyTests.cs`
-- [x] `PartiesUiResource_HasNoDaprSidecar_WaitsForDependencies_AndAutoStarts` — builds the
-  distributed-application model in-process and asserts the `parties-ui` resource:
-  - is a `ProjectResource`;
-  - has **no DAPR sidecar** (contrast: `parties` + `tenants` *do* — self-validating);
-  - **waits for** `eventstore` and `tenants` (`WaitAnnotation`);
-  - **auto-starts** — no `ExplicitStartupAnnotation` (contrast: `parties-mcp` *is* explicit-start).
-  - Skips gracefully (`Assert.Skip`) if the model can't be constructed in the environment.
-- Support change: `Hexalith.Parties.IntegrationTests.csproj` now copies the AppHost's
-  `DaprComponents/**` into the test output so the model builds in-process **without Docker/DAPR**.
+### Logic (xUnit) — `tests/Hexalith.Parties.UI.Tests/StatusPresentationTests.cs`
+- [x] `FromException_routes_a_client_exception_through_the_full_mapping` — `[Theory]`, 5 cases (broad-catch preserves the whole mapping incl. the `403` tenant split)
+- [x] `FromClientException_treats_a_403_with_no_problem_text_as_Forbidden` — null-safe tenant heuristic
+- (pre-existing, retained) every HTTP status arm, both `403` branches, every `ProjectionFreshnessStatus`, every `StatusKind`→politeness, the AC4 timeout/cancellation matrix, `LiveRegionAttributes`
 
 ## Results
 
 | Suite | Total | Passed | Failed | Skipped |
 |---|---|---|---|---|
-| `Hexalith.Parties.UI.Tests` | 4 | 4 | 0 | 0 |
-| `Hexalith.Parties.IntegrationTests` › `PartiesUiTopologyTests` | 1 | 1 | 0 | 0 |
+| `StatusPresentationTests` + `StatusLiveRegionTests` (affected) | 65 | 65 | 0 | 0 |
+| `Hexalith.Parties.UI.Tests` (full regression) | 174 | 174 | 0 | 0 |
 
-- Builds: `Hexalith.Parties.UI.Tests` and `Hexalith.Parties.IntegrationTests` compile **0 warnings**
-  in Release under solution-wide `TreatWarningsAsErrors` (`-m:1`).
-- Build gate `scripts/check-no-warning-override.sh` → **OK** (no warning override added; no `NoWarn`).
+- Build: `dotnet build tests/Hexalith.Parties.UI.Tests -c Release -m:1` → **Build succeeded, 0 Warning(s), 0 Error(s)** under solution-wide `TreatWarningsAsErrors`.
+- Test runner: UI test EXE directly (xUnit v3 MTP; `dotnet test --filter` returns "Zero tests ran" and is **not** used).
+- Build gate `scripts/check-no-warning-override.sh` → **OK** (exit 0; no warning override, no nested-submodule regression).
 
 ## Coverage
 
-- **AC1 (host composition + FluentUI + ValidateScopes):** covered — 4 unit tests (2 new + 2 existing).
-- **AC2 (AppHost `parties-ui`: no sidecar, WaitFor eventstore+tenants, auto-start):** covered — 1 model-inspection test.
-- **AC3 (build gate, 0 warnings, no `Version=`, no override):** validated by the 0-warning Release
-  builds + `check-no-warning-override.sh` (a build-gate concern, not a runtime test).
-- **API tests:** N/A — the `parties-ui` host exposes **no public API** in Story 1.1 (BFF; the public
-  surface is the EventStore gateway, owned by other suites).
-- **Browser/page E2E:** intentionally **deferred to Story 1.3** — the 1.1 host registers no routable
-  pages yet (`GET /` → 404), and shell rendering is already covered by FrontComposer's own
-  `LayoutComponentTestBase`. Pre-building it here would duplicate that and cross story scope.
+- **`StatusPresentation` public surface:** **7/7 methods** — `FromHttpStatus`, `FromClientException`, both `FromFreshness` overloads, `FromException`, `PolitenessFor`, `LiveRegionAttributes`; including every status arm, every freshness value, every `StatusKind`→politeness, the AC4 timeout/cancellation cases, and now the broad-catch full-mapping path + null-safe `403`.
+- **`StatusLiveRegion` parameters:** **3/3** — `Kind`, `Message`, `ChildContent`; polite/assertive DOM `role`+`aria-live`, the three absent-region cases, and `Message`/`ChildContent` rendering.
+- **API tests:** N/A — no public HTTP/actor surface in this feature.
 
 ## Next Steps
 
-- Story 1.3: add bUnit routing/role-landing + page-level E2E once routes and the `Consumer` policy land.
-- Run the topology test in CI; it executes without Docker and guards the AC2 wiring against regressions.
+- No further action required for Story 1.6 — coverage is complete for the shipped surface.
+- The user-initiated-cancellation **filtering** contract (AC4) is verified at the **call site** when Story 1.7 wires the optimistic-reconcile effect — out of scope here (no call sites exist yet).

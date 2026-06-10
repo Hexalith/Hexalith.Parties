@@ -1,0 +1,30 @@
+@namespace Hexalith.Parties.UI.Components.Shared
+@using Hexalith.Parties.UI.Status
+
+@*
+    Story 1.6 (AC2/AC5) — the minimal, semantics-only primitive that renders a StatusKind into the
+    correctly-polite aria-live region. This is the single DOM source for the politeness split: the (role,
+    aria-live) attributes come from StatusPresentation, never hard-coded here. SignInRequired (politeness
+    None) and a null Kind render NOTHING — no stray live region. No CSS/tokens here (Story 1.8/1.9 add
+    visual treatment); keep the element a plain <div> so a later DataFreshnessIndicator can compose it.
+*@
+
+@if (Kind is { } kind && StatusPresentation.PolitenessFor(kind) is var politeness and not LiveRegionPoliteness.None)
+{
+    var (role, ariaLive) = StatusPresentation.LiveRegionAttributes(politeness);
+    <div role="@role" aria-live="@ariaLive">@Message@ChildContent</div>
+}
+
+@code {
+    /// <summary>The mapped UI state to announce. <c>null</c> (or <see cref="StatusKind.SignInRequired"/>) renders nothing.</summary>
+    [Parameter]
+    public StatusKind? Kind { get; set; }
+
+    /// <summary>Optional text to render inside the live region.</summary>
+    [Parameter]
+    public string? Message { get; set; }
+
+    /// <summary>Optional composed content rendered inside the live region (alternative/in addition to <see cref="Message"/>).</summary>
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+}
