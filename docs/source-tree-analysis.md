@@ -4,7 +4,7 @@
 
 ```
 Hexalith.Parties/
-├── Hexalith.Parties.slnx              # Solution (13 src + 13 test projects + EventStore/Tenants submodule refs)
+├── Hexalith.Parties.slnx              # Solution (14 src projects + 15 test/e2e folders + EventStore/Tenants submodule refs)
 ├── Directory.Build.props              # net10.0, Nullable, ImplicitUsings, TreatWarningsAsErrors=true, MinVer
 ├── Directory.Build.targets            # shared MSBuild targets
 ├── Directory.Packages.props           # central package versions (ManagePackageVersionsCentrally)
@@ -48,9 +48,14 @@ Hexalith.Parties/
 │   │   ├── Components/                #   PartiesAdminPortal.razor, CreateEditPartyPage.razor + GDPR sub-panels
 │   │   ├── Services/                  #   API client, command/query/list/GDPR coordinators, authorization, manifest
 │   │   └── Extensions/                #   AddHexalithPartiesAdminPortal, RegisterHexalithPartiesAdminPortal
+│   ├── Hexalith.Parties.ConsumerPortal/ # 📦 FrontComposer-hosted Blazor consumer `/me*` RCL
+│   │   ├── Components/                #   MyProfilePage, EditMyProfilePage, freshness/profile field components
+│   │   ├── Services/                  #   Consumer-owned profile data/edit ports and DTOs
+│   │   └── Resources/                 #   resource-backed Consumer/GDPR copy
 │   ├── Hexalith.Parties.UI/           # 🔒 Blazor Server browser UI/BFF (`parties-ui`)
-│   │   ├── Components/                #   Routes, account/area pages, shared UI primitives, accessibility specimens
-│   │   ├── Authentication/ Services/  #   OIDC, role policies, party_id claim resolution, self-scope, fixtures
+│   │   ├── Components/                #   Routes, account pages, shared UI primitives, accessibility specimens
+│   │   ├── Authentication/ Services/  #   OIDC, role policies, party_id claim resolution, self-scope, ConsumerPortal adapters, fixtures
+│   │   ├── IdentityBinding/           #   admin-link binding provisioning, audit store, IdP party-attribute adapter
 │   │   └── wwwroot/                   #   UI/static assets and JS bridges
 │   ├── Hexalith.Parties.Mcp/          # 📦 parties-mcp host (separate process; AI tool boundary)
 │   │   ├── Program.cs                 #   MapMcp() stateless; per-request typed clients; context forwarding
@@ -84,19 +89,20 @@ Hexalith.Parties/
 │   │   │                              #   erasure verification, key-op audit, PartyKeyRetryActor
 │   └── Hexalith.Parties.Testing/      # 🔒 shared test utilities
 │
-├── tests/                             # 12 xUnit v3 projects (see component-inventory.md §Tests)
+├── tests/                             # 14 .NET test projects + Playwright e2e workspace (see component-inventory.md §Tests)
 │   ├── Hexalith.Parties.Tests/                 # largest — health, rebuild, search, architectural fitness
 │   ├── Hexalith.Parties.IntegrationTests/      # full Aspire topology E2E (Aspire.Hosting.Testing)
 │   ├── Hexalith.Parties.DeployValidation.Tests/# static validation of deploy/ manifests + leak sweep
-│   ├── Hexalith.Parties.{Contracts,Client,Server,Projections,Security,AdminPortal,Picker,Mcp,UI}.Tests/
+│   ├── Hexalith.Parties.{Contracts,Client,Server,Projections,Security,AdminPortal,ConsumerPortal,Picker,Mcp,UI}.Tests/
 │   ├── Hexalith.Parties.Sample.Tests/          # subscriber integration
+│   ├── e2e/                                     # Playwright route/a11y specs for parties-ui
 │   └── Directory.Build.props                    # imports root props; NoWarn=xUnit1051
 │
 ├── samples/
 │   └── Hexalith.Parties.Sample/       # reference DAPR subscriber (PartyEventHandler.cs at /events/parties)
 │
 ├── deploy/
-│   ├── k8s/                           # Kustomize tree (namespace hexalith-parties) — 11 service subfolders
+│   ├── k8s/                           # Kustomize tree (namespace hexalith-parties) — generated services + backing-store carve-outs
 │   │   ├── kustomization.yaml · namespace.yaml · ingress.yaml
 │   │   ├── eventstore/ eventstore-admin/ eventstore-admin-ui/   # gateway + admin + UI
 │   │   ├── parties/ parties-mcp/ tenants/ memories/             # core services

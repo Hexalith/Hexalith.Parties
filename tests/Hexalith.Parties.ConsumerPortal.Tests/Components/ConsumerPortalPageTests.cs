@@ -10,29 +10,20 @@ namespace Hexalith.Parties.ConsumerPortal.Tests.Components;
 
 public sealed class ConsumerPortalPageTests : BunitContext
 {
-    [Theory]
-    [InlineData(typeof(MyConsentPage), "Consent")]
-    [InlineData(typeof(MyPrivacyPage), "Data privacy")]
-    public void ConsumerPortalRouteShell_RendersPlainConsumerCopy(Type component, string expectedHeading)
+    [Fact]
+    public void ConsumerPortalRouteShell_RendersPlainPrivacyCopy()
     {
-        ArgumentNullException.ThrowIfNull(component);
-        ArgumentException.ThrowIfNullOrWhiteSpace(expectedHeading);
+        RenderedConsumerPortalPage page = RenderConsumerPortalPage(typeof(MyPrivacyPage));
 
-        RenderedConsumerPortalPage page = RenderConsumerPortalPage(component);
-
-        page.Heading.ShouldContain(expectedHeading);
+        page.Heading.ShouldContain("Data privacy");
         page.Status.ShouldNotBeNullOrWhiteSpace();
         page.Markup.ShouldContain("hx-parties-consumer");
     }
 
-    [Theory]
-    [InlineData(typeof(MyConsentPage))]
-    [InlineData(typeof(MyPrivacyPage))]
-    public void ConsumerPortalRouteShell_DoesNotRenderBannedRegulatedPromises(Type component)
+    [Fact]
+    public void ConsumerPortalRouteShell_DoesNotRenderBannedRegulatedPromises()
     {
-        ArgumentNullException.ThrowIfNull(component);
-
-        string markup = RenderConsumerPortalPage(component).Markup;
+        string markup = RenderConsumerPortalPage(typeof(MyPrivacyPage)).Markup;
 
         markup.ShouldNotContain("within 30 days", Case.Insensitive);
         markup.ShouldNotContain("pre-checked", Case.Insensitive);
@@ -44,7 +35,6 @@ public sealed class ConsumerPortalPageTests : BunitContext
         => component.Name switch
         {
             nameof(EditMyProfilePage) => Capture(Render<EditMyProfilePage>()),
-            nameof(MyConsentPage) => Capture(Render<MyConsentPage>()),
             nameof(MyPrivacyPage) => Capture(Render<MyPrivacyPage>()),
             _ => throw new ArgumentOutOfRangeException(nameof(component), component, "Unknown ConsumerPortal page type."),
         };

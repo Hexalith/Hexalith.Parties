@@ -1,5 +1,6 @@
-import { expect, test, type APIRequestContext, type BrowserContext, type Page } from '@playwright/test';
+import { expect, test, type APIRequestContext, type BrowserContext, type Locator, type Page } from '@playwright/test';
 
+const ADMIN_COOKIE = 'parties-admin-e2e';
 const CONSUMER_COOKIE = 'parties-consumer-e2e';
 const REQUESTS_ROUTE = '/__parties/specimens/admin-portal/requests';
 const RESET_ROUTE = '/__parties/specimens/admin-portal/reset';
@@ -8,7 +9,7 @@ const BASE_URL = process.env.BASE_URL ?? 'http://127.0.0.1:5072';
 const CONSUMER_ROUTES = [
   { path: '/me', heading: 'My profile', status: 'Up to date' },
   { path: '/me/edit', heading: 'Edit profile', status: 'Up to date' },
-  { path: '/me/consent', heading: 'Consent', status: 'Consent choices are not changed in this setup screen.' },
+  { path: '/me/consent', heading: 'Consent', status: 'Up to date' },
   { path: '/me/privacy', heading: 'Data privacy', status: 'Privacy requests are not started in this setup screen.' },
 ] as const;
 
@@ -39,6 +40,11 @@ test.describe('Consumer portal route shells', () => {
         await expect(page.getByText('Consumer E2E')).toBeVisible();
         await expect(page.getByRole('heading', { name: 'Editable details' })).toBeVisible();
         await expect(page.getByRole('button', { name: 'Save changes' })).toBeVisible();
+      } else if (route.path === '/me/consent') {
+        await expect(page.getByRole('heading', { name: 'Things you control' })).toBeVisible();
+        await expect(page.getByRole('heading', { name: 'Things we keep to run your account' })).toBeVisible();
+        await expect(page.getByRole('switch', { name: 'Marketing emails' })).toHaveAttribute('aria-checked', 'false');
+        await expect(page.getByRole('button', { name: 'Object (Art. 21)' })).toBeVisible();
       } else {
         await expect(page.getByRole('heading', { name: 'What will be available here' })).toBeVisible();
       }
@@ -63,6 +69,21 @@ test.describe('Consumer portal route shells', () => {
       expect(browserVisibleDataRequests).toEqual([]);
     });
   }
+
+  test('Admin-only user cannot open /me/consent or see Consumer consent data', async ({ context, page, request }) => {
+    await enableAdminFixture(context);
+    const browserVisibleDataRequests = captureBrowserVisiblePartiesDataRequests(page);
+
+    await page.goto('/me/consent');
+
+    await expect(page.getByRole('heading', { name: 'Forbidden' })).toBeVisible();
+    await expect(page.getByText('You are not authorized to view this area.')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Consent' })).toHaveCount(0);
+    await expect(page.getByRole('switch')).toHaveCount(0);
+    await expect.poll(async () => (await gdprRequestCounts(request)).addConsent).toBe(0);
+    await expect.poll(async () => (await gdprRequestCounts(request)).revokeConsent).toBe(0);
+    expect(browserVisibleDataRequests).toEqual([]);
+  });
 
   test('bound Consumer saves editable profile details through the self-scoped command path', async ({ context, page, request }) => {
     await enableConsumerFixture(context);
@@ -104,7 +125,74 @@ test.describe('Consumer portal route shells', () => {
     await expect(page.getByText('Saved - updating')).toHaveCount(0);
     expect(browserVisibleDataRequests).toEqual([]);
   });
+
+  test('bound Consumer consent surface exposes semantic switches and honest lawful-basis split', async ({ context, page }) => {
+    await enableConsumerFixture(context);
+    const browserVisibleDataRequests = captureBrowserVisiblePartiesDataRequests(page);
+
+    await page.goto('/me/consent');
+
+    await expect(page.getByRole('heading', { name: 'Things you control' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Things we keep to run your account' })).toBeVisible();
+    await expect(page.getByRole('switch')).toHaveCount(2);
+    await expectConsentSwitchDescription(page.getByRole('switch', { name: 'Marketing emails' }), [
+      'Messages about offers and campaigns.',
+      'Lawful basis: consent.',
+    ]);
+    await expectConsentSwitchDescription(page.getByRole('switch', { name: 'Product updates' }), [
+      'Messages about new or changed product features.',
+      'Lawful basis: consent.',
+    ]);
+    await expect(page.getByText('Lawful basis: contract.')).toBeVisible();
+    await expect(page.getByText('Lawful basis: legal obligation.')).toBeVisible();
+    await expect(page.getByText('Lawful basis: legitimate interest.')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Object (Art. 21)' })).toBeDisabled();
+    await expect(page.getByRole('button', { name: 'Withdraw consent' })).toHaveCount(0);
+    await expect(page.getByText('consumer@example.test')).toHaveCount(0);
+    expect(browserVisibleDataRequests).toEqual([]);
+  });
+
+  test('bound Consumer grants and withdraws consent through the self-scoped command path', async ({ context, page, request }) => {
+    await enableConsumerFixture(context);
+    const browserVisibleDataRequests = captureBrowserVisiblePartiesDataRequests(page);
+
+    await page.goto('/me/consent');
+    const marketing = page.getByRole('switch', { name: 'Marketing emails' });
+    await expect(marketing).toHaveAttribute('aria-checked', 'false');
+
+    await marketing.click();
+
+    await expect.poll(async () => (await latestAddConsentRequest(request))?.partyId ?? null).toBe('party-bound-001');
+    await expect(page.getByRole('status')).toHaveCount(1);
+    await expect(page.getByRole('status')).toContainText('Saved');
+    await expect(marketing).toHaveAttribute('aria-checked', 'true');
+    await expect(page.getByText('consumer@example.test')).toHaveCount(0);
+
+    await marketing.click();
+
+    await expect.poll(async () => (await latestRevokeConsentRequest(request))?.partyId ?? null).toBe('party-bound-001');
+    await expect(page.getByRole('status')).toHaveCount(1);
+    await expect(page.getByRole('status')).toContainText('Saved');
+    await expect(marketing).toHaveAttribute('aria-checked', 'false');
+    await expect.poll(async () => await gdprRequestCounts(request)).toEqual({
+      addConsent: 1,
+      revokeConsent: 1,
+    });
+    expect(new URL(page.url()).pathname).toBe('/me/consent');
+    expect(browserVisibleDataRequests).toEqual([]);
+  });
 });
+
+const enableAdminFixture = async (context: BrowserContext): Promise<void> => {
+  await context.addCookies([
+    {
+      name: ADMIN_COOKIE,
+      value: 'enabled',
+      url: BASE_URL,
+      sameSite: 'Lax',
+    },
+  ]);
+};
 
 const enableConsumerFixture = async (context: BrowserContext): Promise<void> => {
   await context.addCookies([
@@ -139,22 +227,64 @@ const latestUpdateRequest = async (request: APIRequestContext): Promise<AdminPor
   return snapshot.updateRequests.at(-1);
 };
 
+const latestAddConsentRequest = async (request: APIRequestContext): Promise<AdminPortalRequestCapture | undefined> => {
+  const snapshot = await requestSnapshot(request);
+  return snapshot.addConsentRequests.at(-1);
+};
+
+const latestRevokeConsentRequest = async (request: APIRequestContext): Promise<AdminPortalRequestCapture | undefined> => {
+  const snapshot = await requestSnapshot(request);
+  return snapshot.revokeConsentRequests.at(-1);
+};
+
+const gdprRequestCounts = async (request: APIRequestContext): Promise<GdprRequestCounts> => {
+  const snapshot = await requestSnapshot(request);
+  return {
+    addConsent: snapshot.addConsentRequests.length,
+    revokeConsent: snapshot.revokeConsentRequests.length,
+  };
+};
+
 const requestSnapshot = async (request: APIRequestContext): Promise<AdminPortalE2eSnapshot> => {
   const response = await request.get(REQUESTS_ROUTE);
   expect(response.ok()).toBe(true);
   return await response.json() as AdminPortalE2eSnapshot;
 };
 
+const expectConsentSwitchDescription = async (control: Locator, expectedTextParts: string[]): Promise<void> => {
+  await expect(control).toHaveAttribute('role', 'switch');
+  await expect(control).toHaveAttribute('aria-checked', 'false');
+  const describedBy = await control.getAttribute('aria-describedby');
+  expect(describedBy, 'Consent switch must describe both purpose and lawful basis.').toBeTruthy();
+
+  const descriptionText = await control.page().evaluate((ids) =>
+    ids
+      .split(/\s+/)
+      .map((id) => document.getElementById(id)?.textContent?.trim() ?? '')
+      .join(' '), describedBy ?? '');
+
+  for (const expected of expectedTextParts) {
+    expect(descriptionText).toContain(expected);
+  }
+};
+
 interface AdminPortalE2eSnapshot {
   updateRequests: AdminPortalRequestCapture[];
+  addConsentRequests: AdminPortalRequestCapture[];
+  revokeConsentRequests: AdminPortalRequestCapture[];
 }
 
 interface AdminPortalRequestCapture {
-  kind: 'update';
+  kind: 'update' | 'add-consent' | 'revoke-consent';
   query: string | null;
   page: number;
   pageSize: number;
   type: string | null;
   active: boolean | null;
   partyId: string | null;
+}
+
+interface GdprRequestCounts {
+  addConsent: number;
+  revokeConsent: number;
 }

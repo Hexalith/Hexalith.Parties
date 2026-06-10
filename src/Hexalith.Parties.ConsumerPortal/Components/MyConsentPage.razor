@@ -1,15 +1,436 @@
 @page "/me/consent"
 @attribute [Authorize(Policy = "Consumer")]
+@implements IDisposable
+@using Hexalith.Parties.Contracts.Models
+@using Hexalith.Parties.Contracts.Security
+@using Hexalith.Parties.Contracts.ValueObjects
 
-<ConsumerRouteShell Title="@ConsumerPortalLabels.ConsentTitle"
-                    Summary="@ConsumerPortalLabels.ConsentSummary"
-                    Status="@ConsumerPortalLabels.ConsentStatus"
-                    Items="@_items" />
+@inject IConsumerConsentClient ConsentClient
+
+<section class="hx-parties-profile hx-parties-consent" aria-labelledby="@_titleId">
+    <header class="hx-parties-profile__header">
+        <p class="hx-parties-profile__eyebrow">@ConsumerPortalLabels.AreaLabel</p>
+        <h1 id="@_titleId">@ConsumerPortalLabels.ConsentTitle</h1>
+        <p class="hx-parties-profile__summary">@ConsumerPortalLabels.ConsentSummary</p>
+        @if (!string.IsNullOrWhiteSpace(_statusMessage))
+        {
+            <p class="hx-parties-profile__freshness" role="status" aria-live="polite">@_statusMessage</p>
+        }
+        else if (_overview is not null)
+        {
+            <FreshnessStatus Freshness="@_overview.Freshness" />
+        }
+        else if (_isLoading)
+        {
+            <p class="hx-parties-profile__freshness" role="status" aria-live="polite">
+                @ConsumerPortalLabels.ConsentLoadingStatus
+            </p>
+        }
+    </header>
+
+    @if (_isLoading)
+    {
+        <section class="hx-parties-profile__section hx-parties-profile__skeleton" aria-labelledby="@_loadingId" aria-busy="true">
+            <h2 id="@_loadingId">@ConsumerPortalLabels.ConsentLoadingHeading</h2>
+            <span class="hx-parties-profile__loading-line hx-parties-profile__loading-line--long" aria-hidden="true"></span>
+            <span class="hx-parties-profile__loading-line hx-parties-profile__loading-line--short" aria-hidden="true"></span>
+        </section>
+    }
+    else if (_loadFailed)
+    {
+        <section class="hx-parties-profile__section hx-parties-profile__notice" role="alert" aria-labelledby="@_failureId">
+            <h2 id="@_failureId">@ConsumerPortalLabels.ConsentFailureTitle</h2>
+            <p>@ConsumerPortalLabels.ConsentFailureMessage</p>
+            <FluentButton Class="hx-parties-profile__retry"
+                          Appearance="ButtonAppearance.Outline"
+                          OnClick="RetryAsync">
+                @ConsumerPortalLabels.MyProfileRetry
+            </FluentButton>
+        </section>
+    }
+    else if (_overview is { IsErased: true })
+    {
+        <section class="hx-parties-profile__section hx-parties-profile__notice" aria-labelledby="@_deletedId">
+            <h2 id="@_deletedId">@ConsumerPortalLabels.ConsentDeletedTitle</h2>
+            <p>@ConsumerPortalLabels.ConsentDeletedMessage</p>
+        </section>
+    }
+    else if (_overview is not null)
+    {
+        <div class="hx-parties-profile__content">
+            <section class="hx-parties-profile__section hx-parties-consent__section" aria-labelledby="@_controlledId">
+                <h2 id="@_controlledId">@ConsumerPortalLabels.ConsentControlledTitle</h2>
+                <ul class="hx-parties-consent__list">
+                    @foreach (ConsentToggleState row in _toggles)
+                    {
+                        <li class="hx-parties-consent__choice">
+                            <div class="hx-parties-consent__switch-row">
+                                <FluentSwitch Label="@row.Purpose.Label"
+                                              Value="@row.CurrentValue"
+                                              ValueChanged="@(value => ToggleConsentAsync(row.Purpose.Key, value))"
+                                              Disabled="@row.IsDisabled"
+                                              AdditionalAttributes="@SwitchAttributes(row)" />
+                            </div>
+                            <p id="@PurposeId(row.Purpose.Key)" class="hx-parties-consent__description">@row.Purpose.Description</p>
+                            <p id="@BasisId(row.Purpose.Key)" class="hx-parties-consent__basis">@row.Purpose.Basis</p>
+                            @if (row.ChannelId is null)
+                            {
+                                <p class="hx-parties-consent__basis">@ConsumerPortalLabels.ConsentNoChannel</p>
+                            }
+                            @if (row.IsPendingConfirmation)
+                            {
+                                <p class="hx-parties-consent__basis">@ConsumerPortalLabels.ConsentPendingConfirmation</p>
+                            }
+                            @if (!string.IsNullOrWhiteSpace(row.Alert))
+                            {
+                                <p class="hx-parties-consent__alert" role="alert">@row.Alert</p>
+                            }
+                        </li>
+                    }
+                </ul>
+            </section>
+
+            <section class="hx-parties-profile__section hx-parties-consent__section" aria-labelledby="@_keptId">
+                <h2 id="@_keptId">@ConsumerPortalLabels.ConsentKeptTitle</h2>
+                <ul class="hx-parties-consent__list">
+                    @foreach (ReadOnlyBasisRow row in ReadOnlyRows)
+                    {
+                        <li class="hx-parties-consent__readonly">
+                            <div>
+                                <h3>@row.Title</h3>
+                                <p class="hx-parties-consent__description">@row.Description</p>
+                                <p class="hx-parties-consent__basis">@row.Basis</p>
+                            </div>
+                            @if (row.ShowObjectAction)
+                            {
+                                <FluentButton Appearance="ButtonAppearance.Outline"
+                                              Disabled="true">
+                                    @ConsumerPortalLabels.ConsentObjectAction
+                                </FluentButton>
+                            }
+                        </li>
+                    }
+                </ul>
+            </section>
+        </div>
+    }
+</section>
 
 @code {
-    private static readonly IReadOnlyList<string> _items =
+    private static int s_nextInstanceId;
+
+    private static readonly IReadOnlyList<ConsentPurpose> Purposes =
     [
-        ConsumerPortalLabels.ConsentNextChoices,
-        ConsumerPortalLabels.ConsentNextRecords,
+        new(
+            "marketing_emails",
+            ConsumerPortalLabels.ConsentMarketingEmailsTitle,
+            ConsumerPortalLabels.ConsentMarketingEmailsDescription,
+            ConsumerPortalLabels.ConsentBasisConsent,
+            ContactChannelType.Email),
+        new(
+            "product_updates",
+            ConsumerPortalLabels.ConsentProductUpdatesTitle,
+            ConsumerPortalLabels.ConsentProductUpdatesDescription,
+            ConsumerPortalLabels.ConsentBasisConsent,
+            ContactChannelType.Email),
     ];
+
+    private static readonly IReadOnlyList<ReadOnlyBasisRow> ReadOnlyRows =
+    [
+        new(
+            ConsumerPortalLabels.ConsentAccountServiceTitle,
+            ConsumerPortalLabels.ConsentAccountServiceDescription,
+            ConsumerPortalLabels.ConsentBasisContract,
+            false),
+        new(
+            ConsumerPortalLabels.ConsentLegalRecordsTitle,
+            ConsumerPortalLabels.ConsentLegalRecordsDescription,
+            ConsumerPortalLabels.ConsentBasisLegal,
+            false),
+        new(
+            ConsumerPortalLabels.ConsentLegitimateInterestTitle,
+            ConsumerPortalLabels.ConsentLegitimateInterestDescription,
+            ConsumerPortalLabels.ConsentBasisLegitimateInterest,
+            true),
+    ];
+
+    private readonly int _instanceId = System.Threading.Interlocked.Increment(ref s_nextInstanceId);
+    private readonly List<ConsentToggleState> _toggles = [];
+    private CancellationTokenSource? _loadCts;
+    private CancellationTokenSource? _saveCts;
+    private ConsumerConsentOverview? _overview;
+    private bool _isLoading = true;
+    private bool _loadFailed;
+    private string? _statusMessage;
+
+    private string _titleId => $"hx-parties-consent-title-{_instanceId}";
+    private string _loadingId => $"hx-parties-consent-loading-{_instanceId}";
+    private string _failureId => $"hx-parties-consent-failure-{_instanceId}";
+    private string _deletedId => $"hx-parties-consent-deleted-{_instanceId}";
+    private string _controlledId => $"hx-parties-consent-controlled-{_instanceId}";
+    private string _keptId => $"hx-parties-consent-kept-{_instanceId}";
+
+    protected override Task OnInitializedAsync()
+        => LoadConsentAsync();
+
+    private Task RetryAsync()
+        => LoadConsentAsync();
+
+    private async Task LoadConsentAsync()
+    {
+        _loadCts?.Cancel();
+        _loadCts?.Dispose();
+        _loadCts = new CancellationTokenSource();
+        CancellationToken token = _loadCts.Token;
+
+        _isLoading = true;
+        _loadFailed = false;
+        _statusMessage = null;
+
+        try
+        {
+            ConsumerConsentOverview overview = await ConsentClient.GetMyConsentOverviewAsync(token).ConfigureAwait(false);
+            if (token.IsCancellationRequested)
+            {
+                return;
+            }
+
+            ApplyOverview(overview, preservePending: false);
+        }
+        catch (OperationCanceledException) when (token.IsCancellationRequested)
+        {
+        }
+        catch
+        {
+            if (!token.IsCancellationRequested)
+            {
+                _loadFailed = true;
+            }
+        }
+        finally
+        {
+            if (!token.IsCancellationRequested)
+            {
+                _isLoading = false;
+            }
+        }
+    }
+
+    private async Task ToggleConsentAsync(string purposeKey, bool requestedValue)
+    {
+        ConsentToggleState? row = _toggles.SingleOrDefault(t => string.Equals(t.Purpose.Key, purposeKey, StringComparison.Ordinal));
+        if (row is null || row.IsBusy || _overview is null || _overview.IsErased)
+        {
+            return;
+        }
+
+        if (requestedValue && row.ChannelId is null)
+        {
+            return;
+        }
+
+        row.Alert = null;
+        row.IsBusy = true;
+        row.OptimisticValue = requestedValue;
+        row.IsPendingConfirmation = true;
+        _statusMessage = ConsumerPortalLabels.ConsentSaving;
+
+        _saveCts?.Cancel();
+        _saveCts?.Dispose();
+        _saveCts = new CancellationTokenSource();
+        CancellationToken token = _saveCts.Token;
+
+        try
+        {
+            ConsumerConsentOperationResult result = requestedValue
+                ? await ConsentClient
+                    .GrantMyConsentAsync(
+                        new ConsumerConsentGrantRequest(row.ChannelId!, row.Purpose.Key, LawfulBasis.Consent),
+                        token)
+                    .ConfigureAwait(false)
+                : await WithdrawAsync(row, token).ConfigureAwait(false);
+
+            if (token.IsCancellationRequested)
+            {
+                return;
+            }
+
+            if (result.Outcome == ConsumerConsentOperationOutcome.Accepted)
+            {
+                _statusMessage = ConsumerPortalLabels.ConsentSavedUpdating;
+                await ReconcileAsync(row.Purpose.Key, requestedValue).ConfigureAwait(false);
+            }
+            else
+            {
+                Revert(row);
+            }
+        }
+        catch (OperationCanceledException) when (token.IsCancellationRequested)
+        {
+        }
+        catch
+        {
+            if (!token.IsCancellationRequested)
+            {
+                Revert(row);
+            }
+        }
+        finally
+        {
+            if (!token.IsCancellationRequested)
+            {
+                row.IsBusy = false;
+            }
+        }
+    }
+
+    private async Task<ConsumerConsentOperationResult> WithdrawAsync(ConsentToggleState row, CancellationToken token)
+    {
+        if (string.IsNullOrWhiteSpace(row.ActiveConsentId))
+        {
+            return new ConsumerConsentOperationResult(ConsumerConsentOperationOutcome.ValidationRejected);
+        }
+
+        return await ConsentClient
+            .WithdrawMyConsentAsync(new ConsumerConsentWithdrawRequest(row.ActiveConsentId), token)
+            .ConfigureAwait(false);
+    }
+
+    private async Task ReconcileAsync(string purposeKey, bool requestedValue)
+    {
+        CancellationTokenSource? cts = _saveCts;
+        if (cts is null)
+        {
+            return;
+        }
+
+        CancellationToken token = cts.Token;
+
+        try
+        {
+            ConsumerConsentOverview overview = await ConsentClient.GetMyConsentOverviewAsync(token).ConfigureAwait(false);
+            if (token.IsCancellationRequested)
+            {
+                return;
+            }
+
+            ApplyOverview(overview, preservePending: true, purposeKey, requestedValue);
+            _statusMessage = overview.Freshness?.Status == ProjectionFreshnessStatus.Current
+                ? ConsumerPortalLabels.ConsentSaved
+                : ConsumerPortalLabels.ConsentSavedLatestAvailable;
+        }
+        catch (OperationCanceledException) when (token.IsCancellationRequested)
+        {
+        }
+        catch
+        {
+            ConsentToggleState? row = _toggles.SingleOrDefault(t => string.Equals(t.Purpose.Key, purposeKey, StringComparison.Ordinal));
+            if (row is not null)
+            {
+                row.IsPendingConfirmation = true;
+                row.OptimisticValue = requestedValue;
+            }
+
+            _statusMessage = ConsumerPortalLabels.ConsentSavedLatestAvailable;
+        }
+    }
+
+    private void ApplyOverview(
+        ConsumerConsentOverview overview,
+        bool preservePending,
+        string? pendingPurpose = null,
+        bool pendingValue = false)
+    {
+        _overview = overview;
+        _toggles.Clear();
+
+        foreach (ConsentPurpose purpose in Purposes)
+        {
+            ConsentRecord? active = overview.ConsentRecords.FirstOrDefault(record =>
+                record.IsActive
+                && record.LawfulBasis == LawfulBasis.Consent
+                && string.Equals(record.Purpose, purpose.Key, StringComparison.Ordinal));
+            ConsumerConsentChannel? channel = overview.ContactChannels.FirstOrDefault(c => c.Type == purpose.ChannelType);
+            bool isCurrent = overview.Freshness?.Status == ProjectionFreshnessStatus.Current;
+            bool shouldPreserve = preservePending
+                && !isCurrent
+                && string.Equals(pendingPurpose, purpose.Key, StringComparison.Ordinal)
+                && active is null == pendingValue;
+
+            _toggles.Add(new ConsentToggleState(purpose)
+            {
+                ActiveConsentId = active?.ConsentId,
+                ChannelId = channel?.ChannelId,
+                IsActive = active is not null,
+                OptimisticValue = shouldPreserve ? pendingValue : null,
+                IsPendingConfirmation = shouldPreserve,
+            });
+        }
+    }
+
+    private void Revert(ConsentToggleState row)
+    {
+        row.OptimisticValue = null;
+        row.IsPendingConfirmation = false;
+        row.Alert = ConsumerPortalLabels.ConsentSaveFailure;
+        _statusMessage = null;
+    }
+
+    private IReadOnlyDictionary<string, object> SwitchAttributes(ConsentToggleState row)
+        => new Dictionary<string, object>(StringComparer.Ordinal)
+        {
+            ["role"] = "switch",
+            ["aria-checked"] = row.CurrentValue ? "true" : "false",
+            ["aria-describedby"] = $"{PurposeId(row.Purpose.Key)} {BasisId(row.Purpose.Key)}",
+        };
+
+    private string PurposeId(string purposeKey)
+        => $"hx-parties-consent-purpose-{_instanceId}-{purposeKey}";
+
+    private string BasisId(string purposeKey)
+        => $"hx-parties-consent-basis-{_instanceId}-{purposeKey}";
+
+    public void Dispose()
+    {
+        _loadCts?.Cancel();
+        _loadCts?.Dispose();
+        _saveCts?.Cancel();
+        _saveCts?.Dispose();
+    }
+
+    private sealed record ConsentPurpose(
+        string Key,
+        string Label,
+        string Description,
+        string Basis,
+        ContactChannelType ChannelType);
+
+    private sealed record ReadOnlyBasisRow(
+        string Title,
+        string Description,
+        string Basis,
+        bool ShowObjectAction);
+
+    private sealed class ConsentToggleState(ConsentPurpose purpose)
+    {
+        public ConsentPurpose Purpose { get; } = purpose;
+
+        public string? ChannelId { get; init; }
+
+        public string? ActiveConsentId { get; init; }
+
+        public bool IsActive { get; init; }
+
+        public bool? OptimisticValue { get; set; }
+
+        public bool IsPendingConfirmation { get; set; }
+
+        public bool IsBusy { get; set; }
+
+        public string? Alert { get; set; }
+
+        public bool CurrentValue => OptimisticValue ?? IsActive;
+
+        public bool IsDisabled => IsBusy || (!CurrentValue && ChannelId is null);
+    }
 }

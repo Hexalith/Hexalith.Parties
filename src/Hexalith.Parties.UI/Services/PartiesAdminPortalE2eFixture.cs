@@ -330,6 +330,16 @@ internal sealed class PartiesAdminPortalE2eFixtureState
         }
     }
 
+    public IReadOnlyList<ConsentRecord> GetConsentRecords(string partyId)
+    {
+        lock (_sync)
+        {
+            return _details.TryGetValue(partyId, out PartyDetail? detail)
+                ? [.. detail.ConsentRecords]
+                : [];
+        }
+    }
+
     public void CaptureExport(string partyId)
     {
         lock (_sync)
@@ -434,6 +444,25 @@ internal sealed class PartiesAdminPortalE2eFixtureState
     {
         Dictionary<string, PartyDetail> details = CreateEntries()
             .ToDictionary(static entry => entry.Id, DetailFromEntry, StringComparer.Ordinal);
+        details["party-bound-001"] = DetailFromEntry(Entry(
+            "party-bound-001",
+            PartyType.Person,
+            true,
+            "Consumer E2E",
+            "Consumer",
+            0)) with
+        {
+            ContactChannels =
+            [
+                new ContactChannel
+                {
+                    Id = "consumer-e2e-email",
+                    Type = ContactChannelType.Email,
+                    Value = "consumer@example.test",
+                    IsPreferred = true,
+                },
+            ],
+        };
         details["erased-route"] = DetailFromEntry(Entry(
             "erased-route",
             PartyType.Person,
@@ -811,7 +840,7 @@ internal sealed class PartiesAdminPortalE2eApiClient(
     public Task<IReadOnlyList<ConsentRecord>> GetConsentAsync(string partyId, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        return Task.FromResult<IReadOnlyList<ConsentRecord>>([]);
+        return Task.FromResult(state.GetConsentRecords(partyId));
     }
 
     public Task<AdminPortalExportDownload> ExportPartyDataAsync(string partyId, CancellationToken cancellationToken)

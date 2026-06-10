@@ -8,11 +8,11 @@ Hexalith.Parties is a **ready-to-deploy party-management domain service** for pe
 
 It is **not** an auth provider, CRM, or identity server — it is the party/contact data backbone behind your own application logic.
 
-**Integration surfaces:** a typed .NET client (`Hexalith.Parties.Client`), the `parties-ui` Blazor Server browser UI/BFF, a separate MCP host for AI assistants (`parties-mcp`, 5 tools), DAPR pub/sub event subscription for downstream read models, and embeddable Blazor UI (`Picker`, `AdminPortal`).
+**Integration surfaces:** a typed .NET client (`Hexalith.Parties.Client`), the `parties-ui` Blazor Server browser UI/BFF, a separate MCP host for AI assistants (`parties-mcp`, 5 tools), DAPR pub/sub event subscription for downstream read models, and embeddable Blazor UI (`Picker`, `AdminPortal`, `ConsumerPortal`).
 
 | Attribute | Value |
 |-----------|-------|
-| Repository type | Monolith — single cohesive .NET solution (`Hexalith.Parties.slnx`), 13 source + 13 test projects |
+| Repository type | Monolith — single cohesive .NET solution (`Hexalith.Parties.slnx`), 14 source projects + 15 test/e2e project folders |
 | Primary language | C# / **.NET 10** (SDK pinned `10.0.300`) |
 | Architecture style | Event sourcing + CQRS + DAPR actors, gateway-fronted (EventStore) |
 | Orchestration | .NET Aspire 13.4 (`dotnet aspire run`) |
@@ -157,6 +157,8 @@ EventStore owns public authn, tenant validation, and RBAC. Within `parties` (def
 
 - **JWT bearer** auth (`Authentication:JwtBearer`): OIDC `Authority` (prod) or symmetric `SigningKey` (dev, ≥32 chars); `MapInboundClaims=false`; RFC 9457 problem+json challenges. A single `"Admin"` authorization policy. `PartiesClaimsTransformation` normalises tenant claims to `eventstore:tenant`.
 - **Tenant access projection** (`ITenantAccessService`, `src/Hexalith.Parties/Authorization/`): fed by Tenants pub/sub events; **fails closed**; role mapping `TenantReader`/`Contributor`/`Owner` → Read/Write/Admin. Eventually consistent (after a restart, in-memory projection starts empty and denies `UnknownTenant` until replay). **Used projection-side only — never on the gateway request path** (pinned by a fitness test). See [tenant-access-projection.md](tenant-access-projection.md).
+- **Consumer own-data scope** (`parties-ui` BFF): a Consumer reaches `/me*` only with the `Consumer` policy and exactly one non-empty `party_id` claim. Runtime profile reads and writes use ConsumerPortal-owned ports (`IConsumerProfileDataClient.GetMyPartyAsync()` and `IConsumerProfileEditClient.UpdateMyProfileAsync(...)`) that the UI host adapts to `ISelfScopedPartiesClient`. That self-scoped accessor resolves the bound `party_id` fail-closed, injects it into `IPartiesQueryClient.GetPartyAsync(...)` or `IPartiesCommandClient.UpdatePartyCompositeWithResultAsync(...)`, and exposes no list/search or caller-supplied party-id surface.
+- **Consumer identity binding provisioning** (`src/Hexalith.Parties.UI/IdentityBinding/`): Story 4.2 implemented an admin-link provisioning service outside the Parties event stream. The MVP store and IdP attribute adapter are in-memory host services; the runtime source of truth remains the IdP-emitted `party_id` claim. The service records bounded operator audit metadata, version-checks updates, rolls back store state when IdP attribute writes fail, and detects store/IdP drift without granting runtime access from the store alone.
 - **Middleware pipeline** (`Program.cs`, order-sensitive): `CorrelationId → MvpComplianceWarning → ExceptionHandler → DegradedResponse → AuthN → AuthZ → CloudEvents`.
 
 ### GDPR / crypto-shredding
@@ -192,6 +194,7 @@ src/
   Hexalith.Parties.Contracts/      # commands, events, value objects, read models (no infra deps)
   Hexalith.Parties.Picker/         # embeddable Blazor/custom-element party picker
   Hexalith.Parties.AdminPortal/    # protected Admin records/GDPR RCL
+  Hexalith.Parties.ConsumerPortal/ # protected Consumer /me profile RCL
   Hexalith.Parties.UI/             # Blazor Server browser UI/BFF (`parties-ui`)
   Hexalith.Parties.Mcp/            # parties-mcp host (5 tools)
   Hexalith.Parties.ServiceDefaults/# shared Aspire defaults
@@ -210,7 +213,7 @@ deploy/   # k8s (kustomize), dapr (component CRs), zot (OCI registry)
 
 ## 11. Testing & CI
 
-- **12 test projects**, uniformly **xUnit v3** (Shouldly + NSubstitute; bunit for Blazor; Testcontainers; YamlDotNet for manifest validation). Lanes via `scripts/test.ps1 -Lane {unit|integration|topology|deploy|all|coverage}`. `Hexalith.Parties.IntegrationTests` spins up the **full Aspire topology** (`Aspire.Hosting.Testing`), gracefully skipping when Docker/DAPR is absent; `Hexalith.Parties.DeployValidation.Tests` statically validates the real `deploy/` manifests (incl. a credential-leak poison-sweep). Architectural fitness tests pin contract/dependency boundaries.
+- **14 .NET test projects plus the Playwright e2e workspace**, uniformly **xUnit v3** for .NET tests (Shouldly + NSubstitute; bunit for Blazor; YamlDotNet for manifest validation). Lanes via `scripts/test.ps1 -Lane {unit|integration|topology|deploy|all|coverage}`. `Hexalith.Parties.IntegrationTests` spins up the **full Aspire topology** (`Aspire.Hosting.Testing`), gracefully skipping when Docker/DAPR is absent; `Hexalith.Parties.DeployValidation.Tests` statically validates the real `deploy/` manifests (incl. a credential-leak poison-sweep). Architectural fitness tests pin contract/dependency boundaries.
 - **CI:** `.github/workflows/test.yml` — `lint` (build with warnings-as-errors + build-gate script) → `test` (4 parallel shards) → `contract-test` (Pact readiness) → `report` (quality gate). Submodules checked out **root-level only, never recursive**. See [ci.md](ci.md), [build-gate.md](build-gate.md), [ci-secrets-checklist.md](ci-secrets-checklist.md).
 
 ---

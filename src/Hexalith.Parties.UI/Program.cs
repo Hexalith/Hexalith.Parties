@@ -75,6 +75,7 @@ builder.Services.AddPartiesUiClaimsResolution();
 builder.Services.AddSelfScopedPartiesClient();
 builder.Services.AddScoped<IConsumerProfileDataClient, ConsumerProfileDataClient>();
 builder.Services.AddScoped<IConsumerProfileEditClient, ConsumerProfileEditClient>();
+builder.Services.AddScoped<IConsumerConsentClient, ConsumerConsentClient>();
 
 // Story 4.2 — host-owned admin-link identity binding provisioning. This stays outside the Parties
 // command/event/projection stream: the runtime source remains the IdP party_id claim, while this service

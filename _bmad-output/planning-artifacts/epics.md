@@ -520,7 +520,7 @@ So that own-data-only holds even if the BFF is bypassed.
 
 **Given** a Consumer principal
 **When** any consumer data operation is issued
-**Then** it flows through the single `ISelfScopedPartiesClient` accessor, which injects the resolved `party_id` and only ever issues self-scoped operations (`GetPartyAsync(myPartyId)`, consumer GDPR commands on `myPartyId`) — a Consumer principal **never** calls list/search.
+**Then** it flows through the single `ISelfScopedPartiesClient` accessor, which injects the resolved `party_id` and only ever issues self-scoped operations (`GetMyPartyAsync()`, `UpdateMyProfileAsync(...)`, consumer GDPR methods with no caller-supplied party id) — a Consumer principal **never** calls list/search.
 
 **Given** the Parties host
 **When** a request reaches the domain for a Consumer principal
@@ -925,7 +925,7 @@ So that I know what is held about me.
 
 **Given** a signed-in, bound consumer
 **When** they open `/me`
-**Then** `MyProfilePage` fetches data **only** via `ISelfScopedPartiesClient.GetPartyAsync(myPartyId)` (never list/search), renders a calm roomy layout, and shows a freshness dot reading "Up to date" when fresh.
+**Then** `MyProfilePage` fetches data **only** through the no-caller-id self-scoped profile path (`IConsumerProfileDataClient.GetMyPartyAsync()` in ConsumerPortal, adapted by the UI host to `ISelfScopedPartiesClient.GetMyPartyAsync()`; never list/search), renders a calm roomy layout, and shows a freshness dot reading "Up to date" when fresh.
 
 **Given** a stale/degraded read
 **When** the profile renders
@@ -943,7 +943,7 @@ So that what is held about me is accurate.
 
 **Given** `/me/edit`
 **When** I edit and save
-**Then** the validated `Update*` command is issued via the self-scoped accessor, and the **prefilled value is identical to the stored value** across view↔edit (no silent drift).
+**Then** the validated profile update command is issued through the no-caller-id ConsumerPortal edit port and UI-host `ISelfScopedPartiesClient.UpdateMyProfileAsync(...)` adapter, and the **prefilled value is identical to the stored value** across view↔edit (no silent drift).
 
 **Given** a validation failure
 **When** `PartyCommandValidationRejected` returns

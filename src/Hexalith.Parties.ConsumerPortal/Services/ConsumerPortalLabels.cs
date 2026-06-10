@@ -179,6 +179,66 @@ public static class ConsumerPortalLabels
 
     public static string ConsentNextRecords => Get(nameof(ConsentNextRecords));
 
+    public static string ConsentLoadingStatus => Get(nameof(ConsentLoadingStatus));
+
+    public static string ConsentLoadingHeading => Get(nameof(ConsentLoadingHeading));
+
+    public static string ConsentFailureTitle => Get(nameof(ConsentFailureTitle));
+
+    public static string ConsentFailureMessage => Get(nameof(ConsentFailureMessage));
+
+    public static string ConsentDeletedTitle => Get(nameof(ConsentDeletedTitle));
+
+    public static string ConsentDeletedMessage => Get(nameof(ConsentDeletedMessage));
+
+    public static string ConsentControlledTitle => Get(nameof(ConsentControlledTitle));
+
+    public static string ConsentKeptTitle => Get(nameof(ConsentKeptTitle));
+
+    public static string ConsentMarketingEmailsTitle => Get(nameof(ConsentMarketingEmailsTitle));
+
+    public static string ConsentMarketingEmailsDescription => Get(nameof(ConsentMarketingEmailsDescription));
+
+    public static string ConsentProductUpdatesTitle => Get(nameof(ConsentProductUpdatesTitle));
+
+    public static string ConsentProductUpdatesDescription => Get(nameof(ConsentProductUpdatesDescription));
+
+    public static string ConsentBasisConsent => Get(nameof(ConsentBasisConsent));
+
+    public static string ConsentBasisContract => Get(nameof(ConsentBasisContract));
+
+    public static string ConsentBasisLegal => Get(nameof(ConsentBasisLegal));
+
+    public static string ConsentBasisLegitimateInterest => Get(nameof(ConsentBasisLegitimateInterest));
+
+    public static string ConsentAccountServiceTitle => Get(nameof(ConsentAccountServiceTitle));
+
+    public static string ConsentAccountServiceDescription => Get(nameof(ConsentAccountServiceDescription));
+
+    public static string ConsentLegalRecordsTitle => Get(nameof(ConsentLegalRecordsTitle));
+
+    public static string ConsentLegalRecordsDescription => Get(nameof(ConsentLegalRecordsDescription));
+
+    public static string ConsentLegitimateInterestTitle => Get(nameof(ConsentLegitimateInterestTitle));
+
+    public static string ConsentLegitimateInterestDescription => Get(nameof(ConsentLegitimateInterestDescription));
+
+    public static string ConsentObjectAction => Get(nameof(ConsentObjectAction));
+
+    public static string ConsentNoChannel => Get(nameof(ConsentNoChannel));
+
+    public static string ConsentPendingConfirmation => Get(nameof(ConsentPendingConfirmation));
+
+    public static string ConsentSaving => Get(nameof(ConsentSaving));
+
+    public static string ConsentSavedUpdating => Get(nameof(ConsentSavedUpdating));
+
+    public static string ConsentSaved => Get(nameof(ConsentSaved));
+
+    public static string ConsentSavedLatestAvailable => Get(nameof(ConsentSavedLatestAvailable));
+
+    public static string ConsentSaveFailure => Get(nameof(ConsentSaveFailure));
+
     public static string PrivacyTitle => Get(nameof(PrivacyTitle));
 
     public static string PrivacySummary => Get(nameof(PrivacySummary));

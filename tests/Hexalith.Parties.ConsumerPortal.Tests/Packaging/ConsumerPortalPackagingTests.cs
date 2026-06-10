@@ -88,6 +88,7 @@ public sealed class ConsumerPortalPackagingTests
         allSource.ShouldNotContain("IAdminPortalGdprClient", Case.Sensitive);
         allSource.ShouldNotContain("Hexalith.Parties.UI", Case.Sensitive);
         allSource.ShouldContain("IConsumerProfileEditClient", Case.Sensitive);
+        allSource.ShouldContain("IConsumerConsentClient", Case.Sensitive);
         allSource.ShouldNotContain("IPartiesCommandClient", Case.Sensitive);
     }
 
@@ -114,9 +115,31 @@ public sealed class ConsumerPortalPackagingTests
         (portSource + requestSource).ShouldNotContain("UpdatePartyComposite", Case.Sensitive);
     }
 
+    [Fact]
+    public void ConsumerConsentPort_DoesNotExposeCallerSuppliedIdentityOrListSearch()
+    {
+        string sourceRoot = ProjectRoot("src/Hexalith.Parties.ConsumerPortal");
+        string serviceSource = string.Join(Environment.NewLine, Directory.GetFiles(Path.Combine(sourceRoot, "Services"), "*Consent*.cs")
+            .Select(File.ReadAllText));
+
+        serviceSource.ShouldContain("GetMyConsentOverviewAsync", Case.Sensitive);
+        serviceSource.ShouldContain("GrantMyConsentAsync", Case.Sensitive);
+        serviceSource.ShouldContain("WithdrawMyConsentAsync", Case.Sensitive);
+        serviceSource.ShouldNotContain("partyId", Case.Insensitive);
+        serviceSource.ShouldNotContain("PagedResult", Case.Sensitive);
+        serviceSource.ShouldNotContain("ListParties", Case.Sensitive);
+        serviceSource.ShouldNotContain("SearchParties", Case.Sensitive);
+        serviceSource.ShouldNotContain("ListMy", Case.Sensitive);
+        serviceSource.ShouldNotContain("SearchMy", Case.Sensitive);
+        serviceSource.ShouldNotContain("IPartiesQueryClient", Case.Sensitive);
+        serviceSource.ShouldNotContain("IAdminPortalGdprClient", Case.Sensitive);
+        serviceSource.ShouldNotContain("ISelfScopedPartiesClient", Case.Sensitive);
+    }
+
     [Theory]
     [InlineData("MyProfilePage.razor")]
     [InlineData("EditMyProfilePage.razor")]
+    [InlineData("MyConsentPage.razor")]
     public void ConsumerProfilePages_DoNotUseLoggingOrTelemetryApis(string fileName)
     {
         string sourceRoot = ProjectRoot("src/Hexalith.Parties.ConsumerPortal");
@@ -139,6 +162,23 @@ public sealed class ConsumerPortalPackagingTests
         editSource.ShouldContain("role=\"status\"", Case.Sensitive);
         editSource.ShouldNotContain("Toast", Case.Sensitive);
         editSource.ShouldNotContain("ConsumerRouteShell", Case.Sensitive);
+    }
+
+    [Fact]
+    public void MyConsentPage_UsesOneVisibleSaveStatusSourceAndNoRawIdentifiers()
+    {
+        string sourceRoot = ProjectRoot("src/Hexalith.Parties.ConsumerPortal");
+        string source = File.ReadAllText(Path.Combine(sourceRoot, "Components", "MyConsentPage.razor"));
+
+        source.ShouldContain("_statusMessage", Case.Sensitive);
+        source.ShouldContain("role=\"status\"", Case.Sensitive);
+        source.ShouldContain("role=\"alert\"", Case.Sensitive);
+        source.ShouldContain("FluentSwitch", Case.Sensitive);
+        source.ShouldNotContain("Toast", Case.Sensitive);
+        source.ShouldNotContain("ConsumerRouteShell", Case.Sensitive);
+        source.ShouldNotContain("Console.", Case.Sensitive);
+        source.ShouldNotContain("ILogger", Case.Sensitive);
+        source.ShouldNotContain("correlation", Case.Insensitive);
     }
 
     [Fact]

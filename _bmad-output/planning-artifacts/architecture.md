@@ -304,8 +304,9 @@ wiring + the FrontComposer quickstart chain) should be the **first implementatio
   (`<FluentNav>` entries gated by `<AuthorizeView Policy>` — never cross-render).
 - **D3 — Own-data authorization (Parties-side self-scope + BFF), defense-in-depth:**
   1. The UI BFF resolves `party_id` and **only ever issues self-scoped operations**
-     for a Consumer (`GetPartyAsync(myPartyId)`, consumer GDPR commands on `myPartyId`)
-     — it never calls list/search for a Consumer.
+     for a Consumer (`GetMyPartyAsync()`, `UpdateMyProfileAsync(...)`, and
+     consumer GDPR methods with no caller-supplied party id) — it never calls
+     list/search for a Consumer.
   2. The Parties host adds a **data-subject self-authorization** (new `Consumer`
      policy / `IDataSubjectAccessService`, analogous to `ITenantAccessService`,
      **fail-closed**): for a Consumer principal the request's `aggregateId` **must
@@ -464,6 +465,14 @@ The rules below target the **~10 UI-tier divergence points** these don't cover.
   them directly, decide whether to promote these primitives into a shared UI
   package or keep mapping at the host composition boundary. Do not make an RCL
   reference the UI host just to reach these types.
+- **Implementation note from Epic 4 retrospective (2026-06-10):** ConsumerPortal
+  kept dependency direction valid by owning narrow caller-id-free ports and local
+  display components. `IConsumerProfileDataClient.GetMyPartyAsync()` and
+  `IConsumerProfileEditClient.UpdateMyProfileAsync(...)` live in ConsumerPortal;
+  `Hexalith.Parties.UI` registers scoped adapters that delegate to
+  `ISelfScopedPartiesClient.GetMyPartyAsync()` and
+  `ISelfScopedPartiesClient.UpdateMyProfileAsync(...)`. Do not make ConsumerPortal
+  reference the UI host for profile access, freshness display, or edit behavior.
 
 ### Communication Patterns
 
@@ -502,8 +511,9 @@ The rules below target the **~10 UI-tier divergence points** these don't cover.
 
 - **Self-scoping (security-critical, pinned):** a Consumer principal **never** calls
   list/search. All consumer gateway calls go through **one** self-scoped accessor that
-  injects the resolved `party_id` and asserts `aggregateId == party_id`. Admin uses the
-  tenant-scoped client. Bypassing the accessor is a defect.
+  injects the resolved `party_id` and asserts `aggregateId == party_id`. ConsumerPortal
+  reaches that accessor only through RCL-owned ports adapted by the UI host. Admin uses
+  the tenant-scoped client. Bypassing the accessor is a defect.
 - **Auth flow:** host-owned OIDC; tokens **server-side only**; admin-link provisioning
   writes the IdP user attribute that becomes the `party_id` claim; claim resolution is
   **fail-closed** (no/empty/ambiguous claim -> onboarding/error route, never a data screen).
@@ -622,7 +632,7 @@ src/
 
 tests/
 ├── Hexalith.Parties.UI.Tests/                    ★ bUnit — routing, role-landing, claim resolver, self-scope, StatusKind map
-├── Hexalith.Parties.ConsumerPortal.Tests/        ★ bUnit — consent toggle a11y, erasure two-state, export states
+├── Hexalith.Parties.ConsumerPortal.Tests/        ★ bUnit — route auth, profile read/edit states, boundary guards
 ├── Hexalith.Parties.AdminPortal.Tests/           ◆ bUnit — new admin pages
 └── e2e/                                          ★ Playwright a11y/visual gate (WCAG 2.2 AA) — FrontComposer pattern
 

@@ -143,13 +143,14 @@ public sealed class PartiesUiHostCompositionTests
     }
 
     [Fact]
-    public void Program_RegistersConsumerProfileAdapterAfterSelfScopedClient()
+    public void Program_RegistersConsumerPortalAdaptersAfterSelfScopedClient()
     {
         string source = File.ReadAllText(ProjectRoot("src/Hexalith.Parties.UI/Program.cs"));
 
         source.ShouldContain("using Hexalith.Parties.ConsumerPortal.Services;");
         source.ShouldContain("builder.Services.AddScoped<IConsumerProfileDataClient, ConsumerProfileDataClient>();");
         source.ShouldContain("builder.Services.AddScoped<IConsumerProfileEditClient, ConsumerProfileEditClient>();");
+        source.ShouldContain("builder.Services.AddScoped<IConsumerConsentClient, ConsumerConsentClient>();");
         source.IndexOf("builder.Services.AddSelfScopedPartiesClient();", StringComparison.Ordinal)
             .ShouldBeLessThan(source.IndexOf(
                 "builder.Services.AddScoped<IConsumerProfileDataClient, ConsumerProfileDataClient>();",
@@ -157,6 +158,10 @@ public sealed class PartiesUiHostCompositionTests
         source.IndexOf("builder.Services.AddSelfScopedPartiesClient();", StringComparison.Ordinal)
             .ShouldBeLessThan(source.IndexOf(
                 "builder.Services.AddScoped<IConsumerProfileEditClient, ConsumerProfileEditClient>();",
+                StringComparison.Ordinal));
+        source.IndexOf("builder.Services.AddSelfScopedPartiesClient();", StringComparison.Ordinal)
+            .ShouldBeLessThan(source.IndexOf(
+                "builder.Services.AddScoped<IConsumerConsentClient, ConsumerConsentClient>();",
                 StringComparison.Ordinal));
     }
 

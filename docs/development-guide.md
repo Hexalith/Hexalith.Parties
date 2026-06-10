@@ -72,7 +72,7 @@ Or use the **lane runner** (`scripts/test.ps1 -Lane <lane>`, default `unit`, Rel
 
 | Lane | Scope |
 |------|-------|
-| `unit` | Contracts, Client, Server, Projections, Security, AdminPortal, Picker, Mcp, UI |
+| `unit` | Contracts, Client, Server, Projections, Security, AdminPortal, ConsumerPortal, Picker, Mcp, UI |
 | `integration` | Hexalith.Parties.Tests + Sample.Tests |
 | `topology` | Hexalith.Parties.IntegrationTests (full Aspire topology — needs Docker/DAPR; skips gracefully if absent) |
 | `deploy` | Hexalith.Parties.DeployValidation.Tests (static `deploy/` validation) |

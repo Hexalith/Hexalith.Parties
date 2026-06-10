@@ -9,7 +9,7 @@
 - **Architecture:** Event sourcing + CQRS + DAPR virtual actors, fronted by the **Hexalith.EventStore** gateway
 - **Orchestration:** .NET Aspire 13.4 (`dotnet aspire run --project src/Hexalith.Parties.AppHost`)
 - **Public surface:** EventStore `POST /api/v1/commands` & `/api/v1/queries` (`Domain="party"`); typed .NET client; `parties-mcp` (5 tools)
-- **Scale:** 13 source projects (~430 C# files), 13 test projects (~326 C# files), 28 Blazor `.razor` files
+- **Scale:** 14 source project folders (351 source C# files), 15 test/e2e folders (201 test C# files), 36 source Blazor `.razor` files
 
 ## Quick reference
 
