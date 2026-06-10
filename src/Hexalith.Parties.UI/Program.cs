@@ -32,6 +32,14 @@ builder.Services.AddHexalithDomain<PartiesUiDomainMarker>();
 // degraded boot). Mirrors Hexalith.Tenants.UI's unconditional AddAuthorizationCore(AddPolicy(...)).
 builder.Services.AddPartiesUiAuthorization();
 
+// Story 1.4 (AR-D2) — register the fail-closed party_id claim-resolution services UNCONDITIONALLY
+// (not gated on authEnabled), mirroring AddPartiesUiAuthorization above. The Scoped PartyIdClaimResolver
+// must resolve in every boot mode (tests, degraded boot, full sign-in) so RoleLandingRedirect can divert
+// an unbound Consumer away from /me. The IClaimsTransformation it also registers is only INVOKED when
+// UseAuthentication is wired, so unconditional registration is harmless. Both are Scoped (ADR-030):
+// ValidateScopes=true (line 13) fails the boot if a Singleton captures them.
+builder.Services.AddPartiesUiClaimsResolution();
+
 // AR-D5 — host-owned OIDC sign-in. When an OIDC provider is configured (the AppHost supplies the
 // Keycloak authority/client in run mode against the dev realm, the tache realm in publish), wire
 // the FrontComposer auth bridge: authorization-code login into a server-side cookie session. The
@@ -50,7 +58,7 @@ if (authEnabled)
         oidcAuthority!,
         builder.Configuration["Authentication:OpenIdConnect:ClientId"]!,
         builder.Configuration["Authentication:OpenIdConnect:ClientSecret"]!,
-        tenantClaimType: "eventstore:tenant",
+        tenantClaimType: PartiesUiAuthorization.TenantClaimType,
         userClaimType: "sub"));
 }
 

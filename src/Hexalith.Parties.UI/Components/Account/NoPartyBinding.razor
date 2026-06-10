@@ -1,0 +1,22 @@
+@page "/no-party-binding"
+@attribute [Authorize(Policy = PartiesUiAuthorization.ConsumerPolicy)]
+
+@*
+    Story 1.4 — fail-closed Consumer data-binding state. An authenticated Consumer whose principal
+    carries no single valid party_id binding is diverted HERE by RoleLandingRedirect instead of the /me
+    data area. This is NOT a data screen: it renders only static onboarding/error copy and never fetches
+    or displays party data (no PII). Gated on the Consumer policy (the unbound user IS an authenticated
+    Consumer); enforcement comes from <AuthorizeRouteView> in Routes.razor. The <h1> is the focus target
+    for <FocusOnNavigate Selector="h1">. The copy register is plain / reassuring, neutral-info (never
+    success-green). Distinct from the role-less "No area assigned" state in RoleLandingRedirect.
+
+    Not yet localized — mirrors the hardcoded-English stub style of the predecessor scaffold pages
+    (RoleLandingRedirect's no-area block). Do not introduce IStringLocalizer here; stay consistent with
+    the predecessor until the area is localized as a whole.
+*@
+
+<h1>We're still setting up your profile</h1>
+<p>
+    Your account isn't linked to a profile yet. This can take a little while after you first sign in.
+    Please contact your administrator or support, and they'll get you set up.
+</p>

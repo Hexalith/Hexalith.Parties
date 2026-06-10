@@ -41,6 +41,15 @@ public sealed class PartiesUiAreaAuthorizationTests
     }
 
     [Fact]
+    public void NoPartyBinding_Routes_NoPartyBinding_AndRequires_ConsumerPolicy()
+    {
+        // Story 1.4 — the fail-closed Consumer binding state is itself gated on the Consumer policy
+        // (keeps non-Consumers out) and enforced by the same AuthorizeRouteView.
+        RouteTemplates(typeof(NoPartyBinding)).ShouldContain("/no-party-binding");
+        RequiredPolicy(typeof(NoPartyBinding)).ShouldBe(PartiesUiAuthorization.ConsumerPolicy);
+    }
+
+    [Fact]
     public void RoleLandingRedirect_RoutesAppEntry_AndRequiresAuthenticationButNoPolicy()
     {
         RouteTemplates(typeof(RoleLandingRedirect)).ShouldContain("/");

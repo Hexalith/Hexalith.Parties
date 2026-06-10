@@ -1,3 +1,5 @@
+using System.Security.Claims;
+
 using Bunit;
 using Bunit.TestDoubles;
 
@@ -21,6 +23,12 @@ namespace Hexalith.Parties.UI.Tests;
 /// </summary>
 public sealed class RoleLandingRedirectTests : BunitContext
 {
+    // Story 1.4 — RoleLandingRedirect now injects PartyIdClaimResolver to fail-closed-check the Consumer
+    // party binding. Register it for every test so the component resolves; the Admin / no-role paths never
+    // invoke it, and the Consumer-landing cases supply a party_id claim so a *bound* Consumer still lands
+    // on /me. The unbound/ambiguous negatives are proven in NoPartyBindingRoutingTests.
+    public RoleLandingRedirectTests() => Services.AddPartiesUiClaimsResolution();
+
     [Fact]
     public void AdminRole_LandsOnAdminArea()
     {
@@ -53,6 +61,7 @@ public sealed class RoleLandingRedirectTests : BunitContext
         BunitAuthorizationContext auth = AddAuthorization();
         auth.SetAuthorized("consumer");
         auth.SetRoles("Consumer");
+        auth.SetClaims(new Claim(PartiesUiAuthorization.PartyIdClaimType, "party-123"));
 
         IRenderedComponent<RoleLandingRedirect> cut = Render<RoleLandingRedirect>();
 
@@ -102,6 +111,7 @@ public sealed class RoleLandingRedirectTests : BunitContext
         BunitAuthorizationContext auth = AddAuthorization();
         auth.SetAuthorized("consumer");
         auth.SetRoles(roleName);
+        auth.SetClaims(new Claim(PartiesUiAuthorization.PartyIdClaimType, "party-123"));
 
         IRenderedComponent<RoleLandingRedirect> cut = Render<RoleLandingRedirect>();
 

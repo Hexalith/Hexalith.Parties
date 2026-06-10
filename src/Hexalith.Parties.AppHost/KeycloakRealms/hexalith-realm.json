@@ -254,6 +254,21 @@
             "access.token.claim": "true",
             "userinfo.token.claim": "true"
           }
+        },
+        {
+          "name": "party-id-mapper",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "consentRequired": false,
+          "config": {
+            "user.attribute": "party_id",
+            "claim.name": "party_id",
+            "jsonType.label": "String",
+            "multivalued": "false",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "true"
+          }
         }
       ]
     }
@@ -342,7 +357,8 @@
       "attributes": {
         "tenants": ["tenant-a"],
         "domains": ["party"],
-        "permissions": ["command:query"]
+        "permissions": ["command:query"],
+        "party_id": ["party-readonly-001"]
       }
     }
   ]

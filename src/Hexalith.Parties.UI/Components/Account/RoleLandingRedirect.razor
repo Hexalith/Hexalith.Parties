@@ -2,6 +2,7 @@
 @attribute [Authorize]
 @inject AuthenticationStateProvider AuthState
 @inject NavigationManager Nav
+@inject PartyIdClaimResolver Resolver
 
 @*
     Story 1.3 — role-based landing. The app entry. [Authorize] (no policy = any authenticated user)
@@ -33,8 +34,11 @@
         }
         else if (PartiesUiAuthorization.ConsumerRoleNames.Any(authState.User.IsInRole))
         {
-            // Consumer → Consumer area.
-            Nav.NavigateTo("/me");
+            // Consumer → fail-closed party-binding check (Story 1.4). A Consumer bound to exactly one
+            // party_id reaches the /me data area; an unbound (or ambiguously bound) Consumer is diverted
+            // to NoPartyBinding — never a data screen.
+            PartyBindingResult binding = Resolver.Resolve(authState.User);
+            Nav.NavigateTo(binding.IsBound ? "/me" : "/no-party-binding");
         }
         else
         {
