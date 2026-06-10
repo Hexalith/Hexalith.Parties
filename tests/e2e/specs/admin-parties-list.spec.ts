@@ -279,6 +279,73 @@ test.describe('Admin parties list', () => {
     await expect(page.getByText('Ada Lovelace')).toHaveCount(0);
   });
 
+  test('direct GDPR route for an erased party keeps export and records available without PII', async ({ page, request, context }) => {
+    const nativeDialogs: string[] = [];
+    const browserVisibleDataRequests: string[] = [];
+    page.on('dialog', async dialog => {
+      nativeDialogs.push(dialog.type());
+      await dialog.dismiss();
+    });
+    context.on('request', routeRequest => {
+      if (isBrowserVisiblePartiesDataRequest(routeRequest.url())) {
+        browserVisibleDataRequests.push(routeRequest.url());
+      }
+    });
+
+    await page.goto(`${ADMIN_ROUTE}/erased-route/gdpr`);
+
+    const detail = page.getByLabel('Party detail');
+    await expect(detail.getByRole('heading', { name: 'GDPR operations' })).toBeFocused();
+    await expect(detail.getByText('The selected party is unavailable')).toBeVisible();
+    await expect(detail.getByText('Erased Route Secret')).toHaveCount(0);
+    await expect(detail.getByText('erased-route@example.test')).toHaveCount(0);
+    await expect(detail.getByText('ERASED-SECRET-ID')).toHaveCount(0);
+    await expect(detail.getByRole('button', { name: 'Request erasure' })).toBeDisabled();
+    await expect(detail.getByRole('button', { name: 'Restrict processing' })).toBeDisabled();
+
+    await detail.getByRole('button', { name: 'Export party data' }).click();
+    await expect(detail.getByRole('status').filter({ hasText: 'Export prepared' })).toBeVisible();
+    await expect(detail.getByText(/party-erased-route-export-.*Z\.json/)).toBeVisible();
+    await expect.poll(async () => {
+      const snapshot = await requestSnapshot(request);
+      return snapshot.exportRequests.at(-1)?.partyId ?? null;
+    }).toBe('erased-route');
+    await expect.poll(async () => (await gdprRequestCounts(request)).export).toBe(1);
+    await expect(detail.getByText('Erased Route Secret')).toHaveCount(0);
+    await expect(detail.getByText('erased-route@example.test')).toHaveCount(0);
+    expect(page.url()).not.toContain('Erased');
+    expect(page.url()).not.toContain('erased-route%40example.test');
+
+    await detail.getByRole('button', { name: 'Processing records' }).click();
+    await expect(detail.getByText('Party id')).toBeVisible();
+    await expect(detail.getByText('Tenant id')).toBeVisible();
+    await expect(detail.getByText('Sequence number')).toBeVisible();
+    await expect(detail.getByText('Event type')).toBeVisible();
+    await expect(detail.getByText('Operation category')).toBeVisible();
+    await expect(detail.getByText('Timestamp')).toBeVisible();
+    await expect(detail.getByText('Actor id')).toBeVisible();
+    await expect(detail.getByText('Correlation id')).toBeVisible();
+    await expect(detail.getByText('Outcome')).toBeVisible();
+    await expect(detail.getByText('erased-route')).toBeVisible();
+    await expect(detail.getByText('test-tenant')).toBeVisible();
+    await expect(detail.getByText('admin-e2e')).toBeVisible();
+    await expect(detail.getByText('corr-gdpr-e2e')).toBeVisible();
+    await expect(detail.getByText('Completed')).toBeVisible();
+    await expect(detail.getByText('Bounded GDPR operation record')).toBeVisible();
+    await expect.poll(async () => {
+      const snapshot = await requestSnapshot(request);
+      return snapshot.processingRecordRequests.at(-1)?.partyId ?? null;
+    }).toBe('erased-route');
+    await expect.poll(async () => (await gdprRequestCounts(request)).processingRecords).toBe(1);
+
+    await page.setViewportSize({ width: 320, height: 900 });
+    await page.addStyleTag({ content: 'html { zoom: 2; }' });
+    const overflow = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth);
+    expect(overflow).toBe(false);
+    expect(nativeDialogs).toEqual([]);
+    expect(browserVisibleDataRequests).toEqual([]);
+  });
+
   test('direct GDPR route rejects unsafe scoped ids before fetching party data', async ({ page, request }) => {
     await page.goto(`${ADMIN_ROUTE}/tenant-a%3Aparty%3Asecret/gdpr`);
 
@@ -531,6 +598,8 @@ const gdprRequestCounts = async (request: APIRequestContext): Promise<GdprReques
     liftRestriction: snapshot.liftRestrictionRequests.length,
     addConsent: snapshot.addConsentRequests.length,
     revokeConsent: snapshot.revokeConsentRequests.length,
+    export: snapshot.exportRequests.length,
+    processingRecords: snapshot.processingRecordRequests.length,
   };
 };
 
@@ -567,10 +636,12 @@ interface AdminPortalE2eSnapshot {
   liftRestrictionRequests: AdminPortalRequestCapture[];
   addConsentRequests: AdminPortalRequestCapture[];
   revokeConsentRequests: AdminPortalRequestCapture[];
+  exportRequests: AdminPortalRequestCapture[];
+  processingRecordRequests: AdminPortalRequestCapture[];
 }
 
 interface AdminPortalRequestCapture {
-  kind: 'list' | 'search' | 'detail' | 'create' | 'update' | 'erasure' | 'restriction' | 'lift-restriction' | 'add-consent' | 'revoke-consent';
+  kind: 'list' | 'search' | 'detail' | 'create' | 'update' | 'erasure' | 'restriction' | 'lift-restriction' | 'add-consent' | 'revoke-consent' | 'export' | 'processing-records';
   query: string | null;
   page: number;
   pageSize: number;
@@ -584,4 +655,6 @@ interface GdprRequestCounts {
   liftRestriction: number;
   addConsent: number;
   revokeConsent: number;
+  export: number;
+  processingRecords: number;
 }

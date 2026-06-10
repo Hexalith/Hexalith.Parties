@@ -21,8 +21,24 @@
                 <li>
                     <strong>@record.EventType</strong>
                     <dl>
-                        <dt>@Labels.ChangedAt</dt>
+                        <dt>@Labels.PartyId</dt>
+                        <dd>@record.PartyId</dd>
+                        <dt>@Labels.TenantId</dt>
+                        <dd>@record.TenantId</dd>
+                        <dt>@Labels.SequenceNumber</dt>
+                        <dd>@record.SequenceNumber</dd>
+                        <dt>@Labels.EventType</dt>
+                        <dd>@record.EventType</dd>
+                        <dt>@Labels.OperationCategory</dt>
+                        <dd>@record.OperationCategory</dd>
+                        <dt>@Labels.Timestamp</dt>
                         <dd>@FormatDate(record.Timestamp)</dd>
+                        <dt>@Labels.ActorId</dt>
+                        <dd>@record.ActorId</dd>
+                        <dt>@Labels.CorrelationId</dt>
+                        <dd>@record.CorrelationId</dd>
+                        <dt>@Labels.Outcome</dt>
+                        <dd>@record.Outcome</dd>
                         <dt>@Labels.Summary</dt>
                         <dd>@FormatSummary(record.Summary)</dd>
                     </dl>

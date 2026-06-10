@@ -180,6 +180,11 @@
                     </div>
                 </div>
 
+                @if (IsTerminalGdprDetail)
+                {
+                    <p role="status" aria-live="polite">@EffectiveLabels.DetailUnavailable</p>
+                }
+
                 @if (IsBoundedGdprPartialRoute)
                 {
                     <p role="status" aria-live="polite">@EffectiveLabels.DetailUnavailable</p>
@@ -524,8 +529,15 @@
     private bool IsBoundedGdprPartialRoute
         => IsGdprRoute && IsPartialDetail;
 
+    private bool IsTerminalGdprDetail
+        => IsGdprRoute
+            && _detail is { IsErased: true } detail
+            && string.IsNullOrWhiteSpace(detail.DisplayName)
+            && detail.CreatedAt == default
+            && detail.LastModifiedAt == default;
+
     private string DetailHeadingText
-        => IsBoundedGdprPartialRoute || _detail is null
+        => IsBoundedGdprPartialRoute || IsTerminalGdprDetail || _detail is null
             ? EffectiveLabels.DetailUnavailable
             : _detail.DisplayName;
 
@@ -994,9 +1006,10 @@
             {
                 if (result.Payload.IsErased)
                 {
-                    // P30: align 200-with-erased path to the 410 path — remove the row from
-                    // the visible list so the user cannot click it again.
-                    _detail = null;
+                    // P30: align 200-with-erased path to the 410 path by removing the row.
+                    // For direct GDPR routes, keep only a bounded terminal shell so Art.20
+                    // export and Art.30 records can still run without restoring personal data.
+                    _detail = IsGdprRoute ? TerminalGdprDetail(partyId) : null;
                     _detailMetadata = result.Metadata;
                     _detailEmptyKind = DetailEmptyKind.DetailErased;
                     GdprCoordinator.ResetForErasedTerminalState();
@@ -1041,6 +1054,12 @@
 
                 if (ex.Kind is AdminPortalQueryFailureKind.Gone)
                 {
+                    if (IsGdprRoute)
+                    {
+                        _detail = TerminalGdprDetail(partyId);
+                        _detailEmptyKind = DetailEmptyKind.DetailErased;
+                    }
+
                     GdprCoordinator.ResetForErasedTerminalState();
                 }
                 else if (ex.Kind is AdminPortalQueryFailureKind.AuthenticationRequired)
@@ -1072,6 +1091,21 @@
         => string.IsNullOrWhiteSpace(_selectedPartyId)
             ? Task.CompletedTask
             : SelectPartyAsync(_selectedPartyId, updateRoute: false, trackOrigin: false, focusDetail: false);
+
+    private static PartyDetail TerminalGdprDetail(string partyId) => new()
+    {
+        Id = partyId,
+        Type = PartyType.Person,
+        IsActive = false,
+        IsErased = true,
+        DisplayName = string.Empty,
+        SortName = string.Empty,
+        ContactChannels = [],
+        Identifiers = [],
+        ConsentRecords = [],
+        CreatedAt = default,
+        LastModifiedAt = default,
+    };
 
     private async Task ApplyOptimisticRestrictionStateAsync(bool isRestricted)
     {

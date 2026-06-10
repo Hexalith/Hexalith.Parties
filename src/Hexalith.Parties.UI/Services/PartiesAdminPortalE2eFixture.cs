@@ -96,6 +96,8 @@ internal sealed class PartiesAdminPortalE2eFixtureState
     private readonly List<AdminPortalRequestCapture> _liftRestrictionRequests = [];
     private readonly List<AdminPortalRequestCapture> _addConsentRequests = [];
     private readonly List<AdminPortalRequestCapture> _revokeConsentRequests = [];
+    private readonly List<AdminPortalRequestCapture> _exportRequests = [];
+    private readonly List<AdminPortalRequestCapture> _processingRecordRequests = [];
     private readonly List<AdminPortalRequestCapture> _pickerSearchRequests = [];
     private readonly List<AdminPortalRequestCapture> _pickerDetailRequests = [];
     private readonly Dictionary<string, PartyDetail> _details = CreateInitialDetails();
@@ -274,6 +276,22 @@ internal sealed class PartiesAdminPortalE2eFixtureState
         }
     }
 
+    public void CaptureExport(string partyId)
+    {
+        lock (_sync)
+        {
+            _exportRequests.Add(AdminPortalRequestCapture.FromExport(partyId));
+        }
+    }
+
+    public void CaptureProcessingRecords(string partyId)
+    {
+        lock (_sync)
+        {
+            _processingRecordRequests.Add(AdminPortalRequestCapture.FromProcessingRecords(partyId));
+        }
+    }
+
     public PartyDetail? Detail(string partyId)
     {
         lock (_sync)
@@ -296,6 +314,8 @@ internal sealed class PartiesAdminPortalE2eFixtureState
             _liftRestrictionRequests.Clear();
             _addConsentRequests.Clear();
             _revokeConsentRequests.Clear();
+            _exportRequests.Clear();
+            _processingRecordRequests.Clear();
             _pickerSearchRequests.Clear();
             _pickerDetailRequests.Clear();
             _details.Clear();
@@ -321,13 +341,49 @@ internal sealed class PartiesAdminPortalE2eFixtureState
                 [.. _liftRestrictionRequests],
                 [.. _addConsentRequests],
                 [.. _revokeConsentRequests],
+                [.. _exportRequests],
+                [.. _processingRecordRequests],
                 [.. _pickerSearchRequests],
                 [.. _pickerDetailRequests]);
         }
     }
 
     private static Dictionary<string, PartyDetail> CreateInitialDetails()
-        => CreateEntries().ToDictionary(static entry => entry.Id, DetailFromEntry, StringComparer.Ordinal);
+    {
+        Dictionary<string, PartyDetail> details = CreateEntries()
+            .ToDictionary(static entry => entry.Id, DetailFromEntry, StringComparer.Ordinal);
+        details["erased-route"] = DetailFromEntry(Entry(
+            "erased-route",
+            PartyType.Person,
+            false,
+            "Erased Route Secret",
+            "Secret, Erased",
+            9)) with
+        {
+            IsErased = true,
+            ErasedAt = BaseDate,
+            ContactChannels =
+            [
+                new ContactChannel
+                {
+                    Id = "erased-email",
+                    Type = ContactChannelType.Email,
+                    Value = "erased-route@example.test",
+                    IsPreferred = true,
+                },
+            ],
+            Identifiers =
+            [
+                new PartyIdentifier
+                {
+                    Id = "erased-identifier",
+                    Type = IdentifierType.Other,
+                    Value = "ERASED-SECRET-ID",
+                },
+            ],
+        };
+        return details;
+    }
 
     private static PartyDetail DetailFromEntry(PartyIndexEntry entry)
         => new()
@@ -625,17 +681,28 @@ internal sealed class PartiesAdminPortalE2eApiClient(PartiesAdminPortalE2eFixtur
     public Task<AdminPortalExportDownload> ExportPartyDataAsync(string partyId, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        return Task.FromResult(new AdminPortalExportDownload("party-export.json", "application/json", [(byte)'{', (byte)'}']));
+        state.CaptureExport(partyId);
+        return Task.FromResult(new AdminPortalExportDownload(
+            "party-export.json",
+            "application/json",
+            $$"""{"partyId":"{{partyId}}","tenantId":"test-tenant","status":"Erased","party":null,"processingRecords":[]}"""u8.ToArray()));
     }
 
     public Task<IReadOnlyList<ProcessingActivityRecord>> GetProcessingRecordsAsync(string partyId, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
+        state.CaptureProcessingRecords(partyId);
         return Task.FromResult<IReadOnlyList<ProcessingActivityRecord>>(
         [
             new ProcessingActivityRecord
             {
                 SequenceNumber = 1,
+                PartyId = partyId,
+                TenantId = "test-tenant",
+                ActorId = "admin-e2e",
+                CorrelationId = "corr-gdpr-e2e",
+                OperationCategory = "Read",
+                Outcome = "Completed",
                 EventType = "GdprOperationRecorded",
                 Timestamp = BaseDate,
                 Summary = "Bounded GDPR operation record",
@@ -898,6 +965,8 @@ internal sealed record AdminPortalE2eSnapshot(
     IReadOnlyList<AdminPortalRequestCapture> LiftRestrictionRequests,
     IReadOnlyList<AdminPortalRequestCapture> AddConsentRequests,
     IReadOnlyList<AdminPortalRequestCapture> RevokeConsentRequests,
+    IReadOnlyList<AdminPortalRequestCapture> ExportRequests,
+    IReadOnlyList<AdminPortalRequestCapture> ProcessingRecordRequests,
     IReadOnlyList<AdminPortalRequestCapture> PickerSearchRequests,
     IReadOnlyList<AdminPortalRequestCapture> PickerDetailRequests);
 
@@ -945,4 +1014,10 @@ internal sealed record AdminPortalRequestCapture(
 
     public static AdminPortalRequestCapture FromRevokeConsent(string partyId)
         => new("revoke-consent", null, 0, 0, null, null, partyId);
+
+    public static AdminPortalRequestCapture FromExport(string partyId)
+        => new("export", null, 0, 0, null, null, partyId);
+
+    public static AdminPortalRequestCapture FromProcessingRecords(string partyId)
+        => new("processing-records", null, 0, 0, null, null, partyId);
 }

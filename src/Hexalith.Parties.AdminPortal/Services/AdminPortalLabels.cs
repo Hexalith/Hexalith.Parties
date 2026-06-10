@@ -337,6 +337,22 @@ public record AdminPortalLabels
 
     public string PartyId { get; init; } = "Party id";
 
+    public string TenantId { get; init; } = "Tenant id";
+
+    public string SequenceNumber { get; init; } = "Sequence number";
+
+    public string EventType { get; init; } = "Event type";
+
+    public string OperationCategory { get; init; } = "Operation category";
+
+    public string Timestamp { get; init; } = "Timestamp";
+
+    public string ActorId { get; init; } = "Actor id";
+
+    public string CorrelationId { get; init; } = "Correlation id";
+
+    public string Outcome { get; init; } = "Outcome";
+
     public string SortName { get; init; } = "Sort name";
 
     public string NameHistory { get; init; } = "Name history";

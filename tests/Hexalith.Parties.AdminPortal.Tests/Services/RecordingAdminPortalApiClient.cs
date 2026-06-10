@@ -129,8 +129,20 @@ internal sealed class RecordingAdminPortalApiClient : IPartiesAdminPortalApiClie
     public void EnqueueExport(AdminPortalExportDownload export)
         => _exportResponses.Enqueue(_ => Task.FromResult(export));
 
+    public void EnqueueExport(Func<CancellationToken, Task<AdminPortalExportDownload>> export)
+        => _exportResponses.Enqueue(export);
+
+    public void EnqueueExportFailure(AdminPortalQueryFailureKind kind)
+        => _exportResponses.Enqueue(_ => Task.FromException<AdminPortalExportDownload>(new AdminPortalQueryException(kind)));
+
     public void EnqueueProcessingRecords(params ProcessingActivityRecord[] records)
         => _processingRecordResponses.Enqueue(_ => Task.FromResult<IReadOnlyList<ProcessingActivityRecord>>(records));
+
+    public void EnqueueProcessingRecords(Func<CancellationToken, Task<IReadOnlyList<ProcessingActivityRecord>>> records)
+        => _processingRecordResponses.Enqueue(records);
+
+    public void EnqueueProcessingRecordsFailure(AdminPortalQueryFailureKind kind)
+        => _processingRecordResponses.Enqueue(_ => Task.FromException<IReadOnlyList<ProcessingActivityRecord>>(new AdminPortalQueryException(kind)));
 
     public Task<AdminPortalQueryResult<PagedResult<PartyIndexEntry>>> ListPartiesAsync(AdminPortalListRequest request, CancellationToken cancellationToken)
     {

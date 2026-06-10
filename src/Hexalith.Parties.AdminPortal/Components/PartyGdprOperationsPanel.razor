@@ -275,7 +275,7 @@
         => _gdprCapability.CanManageConsent && !_isBusy && !Party.IsErased && !IsErasurePending;
 
     private bool CanExport
-        => _gdprCapability.CanExportData && !_isBusy && !Party.IsErased && !IsErasurePending;
+        => _gdprCapability.CanExportData && !_isBusy;
 
     private bool CanRetryVerification
         => _gdprCapability.CanRetryVerification
@@ -769,6 +769,7 @@
             return;
         }
 
+        _exportFileName = null;
         string partyId = Party.Id;
         string? tenantSignature = TenantContextSignature;
         CancellationToken token = Token;
@@ -902,6 +903,7 @@
             }
 
             _lastOutcome = AdminPortalGdprOutcome.Completed;
+            _correlationId = null;
         }
         catch (AdminPortalQueryException ex)
         {
@@ -911,6 +913,8 @@
             }
 
             _lastOutcome = OutcomeFromFailure(ex.Kind);
+            _correlationId = null;
+            _exportFileName = null;
         }
         catch (OperationCanceledException) when (token.IsCancellationRequested)
         {
