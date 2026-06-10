@@ -108,8 +108,7 @@ test.describe('Admin parties list', () => {
     await expect(detail.getByRole('heading', { name: 'Ada Lovelace' })).toBeVisible();
     await expect(detail.locator('.party-state-badge', { hasText: 'Active' })).toBeVisible();
     await expect(detail.locator('.data-freshness-indicator [role="status"]')).toHaveText('Up to date');
-    await expect(detail.getByRole('button', { name: 'Edit' })).toBeDisabled();
-    await expect(detail.getByText('Edit is unavailable until party editing is enabled.')).toBeVisible();
+    await expect(detail.getByRole('button', { name: 'Edit' })).toBeEnabled();
     await expect(detail.getByText('GDPR operations')).toBeVisible();
     await expect.poll(async () => (await latestDetailRequest(request))?.partyId).toBe('ada-lovelace');
 
@@ -117,6 +116,90 @@ test.describe('Admin parties list', () => {
     await expect(detail.getByRole('heading', { name: 'Grace Hopper' })).toBeVisible();
     await expect(detail.getByRole('heading', { name: 'Grace Hopper' })).toBeFocused();
     await expect.poll(async () => (await latestDetailRequest(request))?.partyId).toBe('grace-hopper');
+  });
+
+  test('create form submits and navigates with optimistic status', async ({ page, request }) => {
+    await gotoAdmin(page);
+
+    await page.getByRole('button', { name: 'Create party' }).click();
+    await page.waitForURL('**/admin/parties/new');
+    await expect(page.getByRole('heading', { name: 'Create party' })).toBeVisible();
+    await expect(page.getByRole('radiogroup', { name: 'Party type' })).toBeVisible();
+    await page.getByLabel('First name').fill('Katherine');
+    await page.getByLabel('Last name').fill('Johnson');
+    await chooseOption(page, 'Contact type', 'Email');
+    await page.getByLabel('Contact value').fill('katherine@example.test');
+
+    await page.getByRole('button', { name: 'Create party' }).click();
+
+    await expect(page.getByText('Saved - updating...')).toBeVisible();
+    await expect.poll(async () => {
+      const latest = await latestCreateRequest(request);
+      return latest?.type ?? null;
+    }).toBe('Person');
+    const created = await latestCreateRequest(request);
+    expect(created?.partyId).toMatch(/^[0-9a-f-]{36}$/);
+    await page.waitForURL(/\/admin\/parties\/[0-9a-f-]{36}$/);
+  });
+
+  test('edit form uses detail edit action and submits route-authoritative update', async ({ page, request }) => {
+    await gotoAdmin(page);
+
+    await page.getByRole('button', { name: 'Ada Lovelace' }).click();
+    await page.waitForURL('**/admin/parties/ada-lovelace');
+    await page.getByRole('button', { name: 'Edit' }).click();
+    await page.waitForURL('**/admin/parties/ada-lovelace/edit');
+    await expect(page.getByRole('heading', { name: 'Edit party' })).toBeVisible();
+    await expect(page.getByLabel('First name')).toHaveValue('Ada');
+    await page.getByLabel('Last name').fill('Byron');
+
+    await page.getByRole('button', { name: 'Save changes' }).click();
+
+    await expect(page.getByText('Saved - updating...')).toBeVisible();
+    await expect.poll(async () => (await latestUpdateRequest(request))?.partyId).toBe('ada-lovelace');
+    await page.waitForURL('**/admin/parties/ada-lovelace');
+  });
+
+  test('validation alert is assertive and preserves entered values', async ({ page }) => {
+    await page.goto(`${ADMIN_ROUTE}/new`);
+    await expect(page.getByRole('heading', { name: 'Create party' })).toBeVisible();
+    await page.getByLabel('First name').fill('Katherine');
+
+    await page.getByRole('button', { name: 'Create party' }).click();
+
+    await expect(page.getByRole('alert').filter({ hasText: 'Fix the highlighted fields and retry.' })).toBeVisible();
+    await expect(page.getByLabel('First name')).toHaveValue('Katherine');
+  });
+
+  test('gateway validation rejection is announced without losing entered values', async ({ page }) => {
+    await page.goto(`${ADMIN_ROUTE}/new`);
+    await expect(page.getByRole('heading', { name: 'Create party' })).toBeVisible();
+    await page.getByLabel('First name').fill('Katherine');
+    await page.getByLabel('Last name').fill('Reject');
+
+    await page.getByRole('button', { name: 'Create party' }).click();
+
+    await expect(page.getByRole('alert').filter({ hasText: 'Fix the highlighted fields and retry.' })).toBeVisible();
+    await expect(page.getByLabel('First name')).toHaveValue('Katherine');
+    await expect(page.getByLabel('Last name')).toHaveValue('Reject');
+    await expect(page).toHaveURL(/\/admin\/parties\/new$/);
+    await expect(page.getByText('corr-validation')).toHaveCount(0);
+    await expect(page.getByText('PersonDetails.LastName')).toHaveCount(0);
+  });
+
+  test('phone and zoom form layout avoids horizontal overflow', async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 640 });
+    await page.goto(`${ADMIN_ROUTE}/new`);
+    await expect(page.getByRole('heading', { name: 'Create party' })).toBeVisible();
+
+    await page.evaluate(() => {
+      document.documentElement.style.zoom = '2';
+    });
+
+    await expect(page.getByLabel('First name')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Create party' })).toBeVisible();
+    const overflow = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth);
+    expect(overflow).toBe(false);
   });
 
   test('phone detail behaves as a full-screen sheet and restores row focus on close', async ({ page }) => {
@@ -216,6 +299,16 @@ const latestDetailRequest = async (request: APIRequestContext): Promise<AdminPor
   return snapshot.detailRequests.at(-1);
 };
 
+const latestCreateRequest = async (request: APIRequestContext): Promise<AdminPortalRequestCapture | undefined> => {
+  const snapshot = await requestSnapshot(request);
+  return snapshot.createRequests.at(-1);
+};
+
+const latestUpdateRequest = async (request: APIRequestContext): Promise<AdminPortalRequestCapture | undefined> => {
+  const snapshot = await requestSnapshot(request);
+  return snapshot.updateRequests.at(-1);
+};
+
 const requestSnapshot = async (request: APIRequestContext): Promise<AdminPortalE2eSnapshot> => {
   const response = await request.get(REQUESTS_ROUTE);
   expect(response.ok()).toBe(true);
@@ -226,10 +319,12 @@ interface AdminPortalE2eSnapshot {
   listRequests: AdminPortalRequestCapture[];
   searchRequests: AdminPortalRequestCapture[];
   detailRequests: AdminPortalRequestCapture[];
+  createRequests: AdminPortalRequestCapture[];
+  updateRequests: AdminPortalRequestCapture[];
 }
 
 interface AdminPortalRequestCapture {
-  kind: 'list' | 'search';
+  kind: 'list' | 'search' | 'detail' | 'create' | 'update';
   query: string | null;
   page: number;
   pageSize: number;

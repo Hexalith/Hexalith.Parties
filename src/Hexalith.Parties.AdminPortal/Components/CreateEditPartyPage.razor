@@ -1,0 +1,888 @@
+@page "/admin/parties/new"
+@page "/admin/parties/{RoutePartyId}/edit"
+@attribute [Authorize(Policy = "Admin")]
+@using System.ComponentModel.DataAnnotations
+@using System.Globalization
+@using Microsoft.AspNetCore.Authorization
+@using Hexalith.Parties.Contracts.Commands
+@inject AdminPortalPartyQueryService QueryService
+@inject IAdminPortalAuthorizationService AuthorizationService
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
+@implements IDisposable
+
+<section class="hx-party-form" aria-labelledby="@TitleId">
+    <header class="hx-party-form__header">
+        <h1 id="@TitleId">@PageTitle</h1>
+        <p class="hx-party-form__status" role="status" aria-live="polite">@_statusMessage</p>
+    </header>
+
+    @if (!string.IsNullOrWhiteSpace(_blockingMessage))
+    {
+        <div class="hx-party-form__alert" role="alert" tabindex="-1" @ref="_alertRef">@_blockingMessage</div>
+    }
+
+    @if (_isLoading)
+    {
+        <p role="status" aria-live="polite">@EffectiveLabels.DetailLoading</p>
+    }
+    else if (_canRenderForm)
+    {
+        <EditForm EditContext="_editContext" FormName="@FormName" OnSubmit="SubmitAsync" class="hx-party-form__body">
+            <DataAnnotationsValidator />
+
+            @if (!string.IsNullOrWhiteSpace(_formAlert))
+            {
+                <div id="@FormAlertId" class="hx-party-form__alert" role="alert" tabindex="-1" @ref="_alertRef">
+                    <p>@_formAlert</p>
+                    <p>@EffectiveLabels.ValidationRetry</p>
+                </div>
+            }
+
+            <fieldset class="hx-party-form__group" disabled="@_submitting">
+                <legend>@EffectiveLabels.PartyType</legend>
+                <FluentRadioGroup Value="@_model.TypeValue"
+                                  ValueChanged="@((string value) => OnTypeChanged(value))"
+                                  TValue="string"
+                                  Name="@($"party-type-{_instanceId}")"
+                                  aria-label="@EffectiveLabels.PartyType"
+                                  aria-describedby="@ErrorId(nameof(PartyFormModel.TypeValue))">
+                    <FluentRadio Value="@PersonTypeValue">@EffectiveLabels.PersonOption</FluentRadio>
+                    <FluentRadio Value="@OrganizationTypeValue">@EffectiveLabels.OrganizationOption</FluentRadio>
+                </FluentRadioGroup>
+                @FieldError(nameof(PartyFormModel.TypeValue))
+            </fieldset>
+
+            @if (_model.SelectedType == PartyType.Person)
+            {
+                <fieldset class="hx-party-form__group" disabled="@(_submitting || _detailsUnavailable)">
+                    <legend>@EffectiveLabels.PersonDetails</legend>
+                    <div class="hx-party-form__grid">
+                        @TextField(nameof(PartyFormModel.PersonPrefix), EffectiveLabels.Prefix, _model.PersonPrefix, OnPersonPrefixChanged)
+                        @TextField(nameof(PartyFormModel.PersonFirstName), EffectiveLabels.FirstName, _model.PersonFirstName, OnPersonFirstNameChanged)
+                        @TextField(nameof(PartyFormModel.PersonLastName), EffectiveLabels.LastName, _model.PersonLastName, OnPersonLastNameChanged)
+                        @TextField(nameof(PartyFormModel.PersonSuffix), EffectiveLabels.Suffix, _model.PersonSuffix, OnPersonSuffixChanged)
+                        @TextField(nameof(PartyFormModel.PersonDateOfBirth), EffectiveLabels.DateOfBirth, _model.PersonDateOfBirth, OnPersonDateOfBirthChanged, EffectiveLabels.DateFilterPlaceholder)
+                    </div>
+                </fieldset>
+            }
+            else
+            {
+                <fieldset class="hx-party-form__group" disabled="@(_submitting || _detailsUnavailable)">
+                    <legend>@EffectiveLabels.OrganizationDetails</legend>
+                    <div class="hx-party-form__grid">
+                        @TextField(nameof(PartyFormModel.OrganizationLegalName), EffectiveLabels.LegalName, _model.OrganizationLegalName, OnOrganizationLegalNameChanged)
+                        @TextField(nameof(PartyFormModel.OrganizationTradingName), EffectiveLabels.TradingName, _model.OrganizationTradingName, OnOrganizationTradingNameChanged)
+                        @TextField(nameof(PartyFormModel.OrganizationLegalForm), EffectiveLabels.LegalForm, _model.OrganizationLegalForm, OnOrganizationLegalFormChanged)
+                        @TextField(nameof(PartyFormModel.OrganizationRegistrationNumber), EffectiveLabels.RegistrationNumber, _model.OrganizationRegistrationNumber, OnOrganizationRegistrationNumberChanged)
+                        <FluentCheckbox Value="@_model.OrganizationIsNaturalPerson"
+                                        ValueChanged="OnOrganizationIsNaturalPersonChanged"
+                                        Label="@EffectiveLabels.NaturalPerson" />
+                    </div>
+                </fieldset>
+            }
+
+            <fieldset class="hx-party-form__group" disabled="@(_submitting || _detailsUnavailable)">
+                <legend>@EffectiveLabels.ContactChannels</legend>
+                <div class="hx-party-form__grid">
+                    <FluentSelect TOption="string" TValue="string"
+                                  Items="@_contactTypeOptions"
+                                  Value="@_model.ContactTypeValue"
+                                  ValueChanged="OnContactTypeChanged"
+                                  OptionText="ContactTypeOptionLabel"
+                                  Label="@EffectiveLabels.ContactType"
+                                  aria-describedby="@ErrorId(nameof(PartyFormModel.ContactValue))" />
+                    @TextField(nameof(PartyFormModel.ContactValue), EffectiveLabels.ContactValue, _model.ContactValue, OnContactValueChanged)
+                    <FluentCheckbox Value="@_model.ContactPreferred"
+                                    ValueChanged="OnContactPreferredChanged"
+                                    Label="@EffectiveLabels.Preferred" />
+                </div>
+            </fieldset>
+
+            <fieldset class="hx-party-form__group" disabled="@(_submitting || _detailsUnavailable)">
+                <legend>@EffectiveLabels.Identifiers</legend>
+                <div class="hx-party-form__grid">
+                    <FluentSelect TOption="string" TValue="string"
+                                  Items="@_identifierTypeOptions"
+                                  Value="@_model.IdentifierTypeValue"
+                                  ValueChanged="OnIdentifierTypeChanged"
+                                  OptionText="IdentifierTypeOptionLabel"
+                                  Label="@EffectiveLabels.IdentifierTypeField"
+                                  aria-describedby="@ErrorId(nameof(PartyFormModel.IdentifierValue))" />
+                    @TextField(nameof(PartyFormModel.IdentifierValue), EffectiveLabels.IdentifierValue, _model.IdentifierValue, OnIdentifierValueChanged)
+                </div>
+            </fieldset>
+
+            <fieldset class="hx-party-form__group" disabled="@_submitting">
+                <legend>@EffectiveLabels.RelatedParty</legend>
+                <p class="hx-party-form__hint">@EffectiveLabels.RelatedPartyHelp</p>
+                <hexalith-party-picker @ref="_pickerElement"></hexalith-party-picker>
+                @if (_relatedParty is not null)
+                {
+                    <p class="hx-party-form__hint" role="status" aria-live="polite">
+                        @_relatedParty.PartyType @_relatedParty.Status
+                    </p>
+                }
+            </fieldset>
+
+            <div class="hx-party-form__actions">
+                <FluentButton Appearance="ButtonAppearance.Primary"
+                              Type="ButtonType.Submit"
+                              Disabled="@(_submitting || _detailsUnavailable)">
+                    @SubmitLabel
+                </FluentButton>
+                <FluentButton Appearance="ButtonAppearance.Outline" OnClick="CancelAsync" Disabled="@_submitting">
+                    @EffectiveLabels.Cancel
+                </FluentButton>
+            </div>
+        </EditForm>
+    }
+</section>
+
+@code {
+    private const string PersonTypeValue = "Person";
+    private const string OrganizationTypeValue = "Organization";
+
+    private readonly PartyFormModel _model = new();
+    private readonly string[] _contactTypeOptions = ["", "Email", "Phone", "PostalAddress", "SocialMedia"];
+    private readonly string[] _identifierTypeOptions = ["", "VAT", "SIRET", "NationalId", "CompanyRegistration", "TaxId", "Other"];
+    private readonly string _instanceId = Guid.NewGuid().ToString("N").Substring(0, 8);
+    private readonly CancellationTokenSource _lifetimeCts = new();
+    private EditContext? _editContext;
+    private ValidationMessageStore? _messages;
+    private ElementReference _alertRef;
+    private ElementReference _pickerElement;
+    private DotNetObjectReference<CreateEditPartyPage>? _dotNetRef;
+    private IJSObjectReference? _pickerModule;
+    private bool _pickerAttached;
+    private RelatedPartySelection? _relatedParty;
+    private AdminPortalAuthorizationState _authorizationState = AdminPortalAuthorizationState.Unauthenticated;
+    private PartyDetail? _loadedDetail;
+    private string? _loadedRouteKey;
+    private string? _normalizedRoutePartyId;
+    private string? _blockingMessage;
+    private string? _formAlert;
+    private string? _statusMessage;
+    private bool _canRenderForm;
+    private bool _isLoading;
+    private bool _submitting;
+    private bool _detailsUnavailable;
+    private bool _pendingAlertFocus;
+
+    [Parameter]
+    public string? RoutePartyId { get; set; }
+
+    [Parameter]
+    public AdminPortalLabels? Labels { get; set; }
+
+    private AdminPortalLabels EffectiveLabels => Labels ?? new AdminPortalLabels();
+
+    private bool IsEdit => !string.IsNullOrWhiteSpace(RoutePartyId);
+
+    private string TitleId => $"party-form-title-{_instanceId}";
+
+    private string FormAlertId => $"party-form-alert-{_instanceId}";
+
+    private string FormName => IsEdit ? $"edit-party-{_instanceId}" : $"create-party-{_instanceId}";
+
+    private string PageTitle => IsEdit ? EffectiveLabels.EditPartyTitle : EffectiveLabels.CreatePartyTitle;
+
+    private string SubmitLabel => IsEdit ? EffectiveLabels.SaveChanges : EffectiveLabels.CreateParty;
+
+    protected override void OnInitialized()
+    {
+        _editContext = new EditContext(_model);
+        _messages = new ValidationMessageStore(_editContext);
+        _editContext.OnFieldChanged += OnFieldChanged;
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        string routeKey = RoutePartyId?.Trim() ?? string.Empty;
+        if (string.Equals(routeKey, _loadedRouteKey, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        _loadedRouteKey = routeKey;
+        ResetFormState();
+        await LoadAsync().ConfigureAwait(false);
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (_canRenderForm && !_pickerAttached)
+        {
+            await AttachPickerAsync().ConfigureAwait(false);
+        }
+
+        if (!_pendingAlertFocus)
+        {
+            return;
+        }
+
+        _pendingAlertFocus = false;
+        try
+        {
+            await _alertRef.FocusAsync().ConfigureAwait(false);
+        }
+        catch (InvalidOperationException)
+        {
+        }
+        catch (JSException)
+        {
+        }
+    }
+
+    private async Task AttachPickerAsync()
+    {
+        try
+        {
+            _dotNetRef ??= DotNetObjectReference.Create(this);
+            _pickerModule ??= await JSRuntime
+                .InvokeAsync<IJSObjectReference>("import", "./_content/Hexalith.Parties.AdminPortal/party-form-picker.js")
+                .ConfigureAwait(false);
+            if (_pickerModule is not null)
+            {
+                await _pickerModule
+                    .InvokeVoidAsync("attachPartyPicker", _pickerElement, _dotNetRef)
+                    .ConfigureAwait(false);
+                _pickerAttached = true;
+            }
+        }
+        catch (InvalidOperationException)
+        {
+        }
+        catch (JSException)
+        {
+        }
+    }
+
+    [JSInvokable]
+    public Task OnRelatedPartySelectedAsync(string? partyId, string? partyType, string? status)
+    {
+        if (!string.IsNullOrWhiteSpace(partyId))
+        {
+            _relatedParty = new RelatedPartySelection(
+                partyId.Trim(),
+                string.IsNullOrWhiteSpace(partyType) ? "Unknown" : partyType.Trim(),
+                string.IsNullOrWhiteSpace(status) ? "Unknown" : status.Trim());
+        }
+
+        return InvokeAsync(StateHasChanged);
+    }
+
+    private async Task LoadAsync()
+    {
+        _isLoading = true;
+        _statusMessage = EffectiveLabels.Loading;
+        _blockingMessage = null;
+        _formAlert = null;
+        _canRenderForm = false;
+
+        _authorizationState = await AuthorizationService
+            .GetAuthorizationStateAsync(_lifetimeCts.Token)
+            .ConfigureAwait(false);
+
+        if (!_authorizationState.IsAuthenticated)
+        {
+            Block(EffectiveLabels.SignInRequired);
+            return;
+        }
+
+        if (!_authorizationState.HasTenantContext)
+        {
+            Block(EffectiveLabels.TenantUnavailable);
+            return;
+        }
+
+        if (!_authorizationState.IsAdmin)
+        {
+            Block(EffectiveLabels.AccessDenied);
+            return;
+        }
+
+        if (!IsEdit)
+        {
+            _model.TypeValue = PersonTypeValue;
+            _canRenderForm = true;
+            _statusMessage = EffectiveLabels.Loaded;
+            _isLoading = false;
+            return;
+        }
+
+        _normalizedRoutePartyId = AdminPortalRouteIds.Normalize(RoutePartyId);
+        if (!AdminPortalRouteIds.IsSafe(_normalizedRoutePartyId))
+        {
+            Block(EffectiveLabels.DetailUnavailable);
+            return;
+        }
+
+        try
+        {
+            AdminPortalQueryResult<PartyDetail> result = await QueryService.ApiClient
+                .GetPartyAsync(_normalizedRoutePartyId!, _lifetimeCts.Token)
+                .ConfigureAwait(false);
+            _loadedDetail = NormalizeDetail(result.Payload);
+            if (_loadedDetail.IsErased)
+            {
+                Block(EffectiveLabels.DetailErased);
+                return;
+            }
+
+            PopulateFromDetail(_loadedDetail);
+            _detailsUnavailable = IsPartialDetail(_loadedDetail);
+            _canRenderForm = true;
+            _statusMessage = _detailsUnavailable ? EffectiveLabels.DetailSectionStillLoading : EffectiveLabels.Loaded;
+        }
+        catch (AdminPortalQueryException ex)
+        {
+            Block(ex.Kind switch
+            {
+                AdminPortalQueryFailureKind.AuthenticationRequired => EffectiveLabels.SignInRequired,
+                AdminPortalQueryFailureKind.TenantRequired => EffectiveLabels.TenantUnavailable,
+                AdminPortalQueryFailureKind.Forbidden => EffectiveLabels.AccessDenied,
+                AdminPortalQueryFailureKind.Gone => EffectiveLabels.DetailErased,
+                AdminPortalQueryFailureKind.NotFound => EffectiveLabels.DetailUnavailable,
+                _ => EffectiveLabels.DetailLoadFailure,
+            });
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private void Block(string message)
+    {
+        _blockingMessage = message;
+        _statusMessage = message;
+        _canRenderForm = false;
+        _isLoading = false;
+        _pendingAlertFocus = true;
+    }
+
+    private async Task SubmitAsync()
+    {
+        if (_editContext is null || _messages is null)
+        {
+            return;
+        }
+
+        _submitting = true;
+        _formAlert = null;
+        _messages.Clear();
+        if (!ValidateClient())
+        {
+            ApplyValidationFailure();
+            _submitting = false;
+            return;
+        }
+
+        string commandPartyId = IsEdit
+            ? _normalizedRoutePartyId!
+            : Guid.NewGuid().ToString("D", CultureInfo.InvariantCulture);
+        AdminPortalCommandResult result = IsEdit
+            ? await QueryService.ApiClient.UpdatePartyCompositeAsync(commandPartyId, BuildUpdateCommand(commandPartyId), _lifetimeCts.Token).ConfigureAwait(false)
+            : await QueryService.ApiClient.CreatePartyCompositeAsync(BuildCreateCommand(commandPartyId), _lifetimeCts.Token).ConfigureAwait(false);
+
+        if (result.Outcome == AdminPortalCommandOutcome.Accepted)
+        {
+            _statusMessage = EffectiveLabels.SavedUpdating;
+            _loadedDetail = result.Detail is null ? BuildOptimisticDetail(commandPartyId) : NormalizeDetail(result.Detail);
+            string target = PartiesAdminPortalManifest.DetailRoute.Replace(
+                "{partyId}",
+                Uri.EscapeDataString(commandPartyId),
+                StringComparison.Ordinal);
+            if (AdminPortalRouteIds.IsSafe(commandPartyId))
+            {
+                NavigationManager.NavigateTo(target);
+            }
+        }
+        else if (result.Outcome == AdminPortalCommandOutcome.ValidationRejected)
+        {
+            MapServerValidation(result.ValidationFailures ?? []);
+            ApplyValidationFailure();
+        }
+        else
+        {
+            _formAlert = SafeCommandFailure(result.Outcome);
+            _pendingAlertFocus = true;
+        }
+
+        _submitting = false;
+    }
+
+    private bool ValidateClient()
+    {
+        if (_messages is null || _editContext is null)
+        {
+            return false;
+        }
+
+        bool valid = true;
+        if (_model.SelectedType == PartyType.Person)
+        {
+            valid &= Required(nameof(PartyFormModel.PersonFirstName), _model.PersonFirstName);
+            valid &= Required(nameof(PartyFormModel.PersonLastName), _model.PersonLastName);
+            if (!string.IsNullOrWhiteSpace(_model.PersonDateOfBirth)
+                && !DateTimeOffset.TryParse(_model.PersonDateOfBirth, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal, out _))
+            {
+                AddError(nameof(PartyFormModel.PersonDateOfBirth), EffectiveLabels.ValidationDate);
+                valid = false;
+            }
+        }
+        else if (_model.SelectedType == PartyType.Organization)
+        {
+            valid &= Required(nameof(PartyFormModel.OrganizationLegalName), _model.OrganizationLegalName);
+        }
+        else
+        {
+            AddError(nameof(PartyFormModel.TypeValue), EffectiveLabels.ValidationRequired);
+            valid = false;
+        }
+
+        if (!string.IsNullOrWhiteSpace(_model.ContactValue) && string.IsNullOrWhiteSpace(_model.ContactTypeValue))
+        {
+            AddError(nameof(PartyFormModel.ContactValue), EffectiveLabels.ValidationRequired);
+            valid = false;
+        }
+
+        if (!string.IsNullOrWhiteSpace(_model.IdentifierValue) && string.IsNullOrWhiteSpace(_model.IdentifierTypeValue))
+        {
+            AddError(nameof(PartyFormModel.IdentifierValue), EffectiveLabels.ValidationRequired);
+            valid = false;
+        }
+
+        _editContext.NotifyValidationStateChanged();
+        return valid;
+    }
+
+    private bool Required(string propertyName, string? value)
+    {
+        if (!string.IsNullOrWhiteSpace(value))
+        {
+            return true;
+        }
+
+        AddError(propertyName, EffectiveLabels.ValidationRequired);
+        return false;
+    }
+
+    private void AddError(string propertyName, string message)
+        => _messages?.Add(_editContext!.Field(propertyName), message);
+
+    private void ApplyValidationFailure()
+    {
+        _formAlert = EffectiveLabels.ValidationRetry;
+        _statusMessage = EffectiveLabels.ValidationRetry;
+        _pendingAlertFocus = true;
+    }
+
+    private void MapServerValidation(IReadOnlyList<AdminPortalCommandValidationFailure> failures)
+    {
+        if (failures.Count == 0)
+        {
+            AddError(nameof(PartyFormModel.TypeValue), EffectiveLabels.ValidationRequired);
+            return;
+        }
+
+        foreach (AdminPortalCommandValidationFailure failure in failures)
+        {
+            AddError(MapPropertyName(failure.PropertyName), SafeValidationMessage(failure));
+        }
+    }
+
+    private string SafeCommandFailure(AdminPortalCommandOutcome outcome)
+        => outcome switch
+        {
+            AdminPortalCommandOutcome.AuthenticationRequired => EffectiveLabels.SignInRequired,
+            AdminPortalCommandOutcome.MissingTenant => EffectiveLabels.TenantUnavailable,
+            AdminPortalCommandOutcome.Forbidden => EffectiveLabels.AccessDenied,
+            AdminPortalCommandOutcome.NotFound => EffectiveLabels.DetailUnavailable,
+            AdminPortalCommandOutcome.Erased => EffectiveLabels.DetailErased,
+            _ => EffectiveLabels.CommandFailure,
+        };
+
+    private string SafeValidationMessage(AdminPortalCommandValidationFailure failure)
+        => string.IsNullOrWhiteSpace(failure.ErrorCode)
+            ? EffectiveLabels.ValidationRequired
+            : EffectiveLabels.ValidationRequired;
+
+    private string MapPropertyName(string propertyName)
+    {
+        if (propertyName.Contains("PersonDetails.FirstName", StringComparison.Ordinal)
+            || propertyName.EndsWith("FirstName", StringComparison.Ordinal))
+        {
+            return nameof(PartyFormModel.PersonFirstName);
+        }
+
+        if (propertyName.Contains("PersonDetails.LastName", StringComparison.Ordinal)
+            || propertyName.EndsWith("LastName", StringComparison.Ordinal))
+        {
+            return nameof(PartyFormModel.PersonLastName);
+        }
+
+        if (propertyName.Contains("OrganizationDetails.LegalName", StringComparison.Ordinal)
+            || propertyName.EndsWith("LegalName", StringComparison.Ordinal))
+        {
+            return nameof(PartyFormModel.OrganizationLegalName);
+        }
+
+        if (propertyName.Contains("Contact", StringComparison.Ordinal))
+        {
+            return nameof(PartyFormModel.ContactValue);
+        }
+
+        if (propertyName.Contains("Identifier", StringComparison.Ordinal))
+        {
+            return nameof(PartyFormModel.IdentifierValue);
+        }
+
+        return nameof(PartyFormModel.TypeValue);
+    }
+
+    private CreatePartyComposite BuildCreateCommand(string partyId)
+        => new()
+        {
+            PartyId = partyId,
+            Type = _model.SelectedType,
+            PersonDetails = _model.SelectedType == PartyType.Person ? BuildPersonDetails() : null,
+            OrganizationDetails = _model.SelectedType == PartyType.Organization ? BuildOrganizationDetails() : null,
+            ContactChannels = BuildContactAdds(partyId),
+            Identifiers = BuildIdentifierAdds(partyId),
+        };
+
+    private UpdatePartyComposite BuildUpdateCommand(string partyId)
+        => new()
+        {
+            PartyId = partyId,
+            PersonDetails = _model.SelectedType == PartyType.Person ? BuildPersonDetails() : null,
+            OrganizationDetails = _model.SelectedType == PartyType.Organization ? BuildOrganizationDetails() : null,
+            AddContactChannels = BuildContactAdds(partyId),
+            AddIdentifiers = BuildIdentifierAdds(partyId),
+        };
+
+    private PersonDetails BuildPersonDetails()
+        => new()
+        {
+            FirstName = _model.PersonFirstName.Trim(),
+            LastName = _model.PersonLastName.Trim(),
+            Prefix = TrimToNull(_model.PersonPrefix),
+            Suffix = TrimToNull(_model.PersonSuffix),
+            DateOfBirth = DateTimeOffset.TryParse(_model.PersonDateOfBirth, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal, out DateTimeOffset value)
+                ? value
+                : null,
+        };
+
+    private OrganizationDetails BuildOrganizationDetails()
+        => new()
+        {
+            LegalName = _model.OrganizationLegalName.Trim(),
+            TradingName = TrimToNull(_model.OrganizationTradingName),
+            LegalForm = TrimToNull(_model.OrganizationLegalForm),
+            RegistrationNumber = TrimToNull(_model.OrganizationRegistrationNumber),
+            IsNaturalPerson = _model.OrganizationIsNaturalPerson,
+        };
+
+    private IReadOnlyList<AddContactChannel> BuildContactAdds(string partyId)
+    {
+        if (string.IsNullOrWhiteSpace(_model.ContactValue)
+            || !Enum.TryParse(_model.ContactTypeValue, out ContactChannelType type))
+        {
+            return [];
+        }
+
+        return
+        [
+            new AddContactChannel
+            {
+                PartyId = partyId,
+                ContactChannelId = Guid.NewGuid().ToString("D", CultureInfo.InvariantCulture),
+                Type = type,
+                Value = _model.ContactValue.Trim(),
+                IsPreferred = _model.ContactPreferred,
+            },
+        ];
+    }
+
+    private IReadOnlyList<AddIdentifier> BuildIdentifierAdds(string partyId)
+    {
+        if (string.IsNullOrWhiteSpace(_model.IdentifierValue)
+            || !Enum.TryParse(_model.IdentifierTypeValue, out IdentifierType type))
+        {
+            return [];
+        }
+
+        return
+        [
+            new AddIdentifier
+            {
+                PartyId = partyId,
+                IdentifierId = Guid.NewGuid().ToString("D", CultureInfo.InvariantCulture),
+                Type = type,
+                Value = _model.IdentifierValue.Trim(),
+            },
+        ];
+    }
+
+    private PartyDetail BuildOptimisticDetail(string partyId)
+        => new()
+        {
+            Id = partyId,
+            Type = _model.SelectedType,
+            IsActive = _loadedDetail?.IsActive ?? true,
+            DisplayName = _model.SelectedType == PartyType.Person
+                ? $"{_model.PersonFirstName} {_model.PersonLastName}".Trim()
+                : _model.OrganizationLegalName.Trim(),
+            SortName = _model.SelectedType == PartyType.Person
+                ? $"{_model.PersonLastName}, {_model.PersonFirstName}".Trim(' ', ',')
+                : _model.OrganizationLegalName.Trim(),
+            PersonDetails = _model.SelectedType == PartyType.Person ? BuildPersonDetails() : null,
+            OrganizationDetails = _model.SelectedType == PartyType.Organization ? BuildOrganizationDetails() : null,
+            ContactChannels = _loadedDetail?.ContactChannels ?? [],
+            Identifiers = _loadedDetail?.Identifiers ?? [],
+            ConsentRecords = _loadedDetail?.ConsentRecords ?? [],
+            NameHistory = _loadedDetail?.NameHistory ?? [],
+            CreatedAt = _loadedDetail?.CreatedAt ?? default,
+            LastModifiedAt = _loadedDetail?.LastModifiedAt ?? default,
+        };
+
+    private void PopulateFromDetail(PartyDetail detail)
+    {
+        _model.TypeValue = detail.Type == PartyType.Organization ? OrganizationTypeValue : PersonTypeValue;
+        if (detail.PersonDetails is { } person)
+        {
+            _model.PersonFirstName = person.FirstName;
+            _model.PersonLastName = person.LastName;
+            _model.PersonPrefix = person.Prefix;
+            _model.PersonSuffix = person.Suffix;
+            _model.PersonDateOfBirth = person.DateOfBirth?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+        }
+
+        if (detail.OrganizationDetails is { } organization)
+        {
+            _model.OrganizationLegalName = organization.LegalName;
+            _model.OrganizationTradingName = organization.TradingName;
+            _model.OrganizationLegalForm = organization.LegalForm;
+            _model.OrganizationRegistrationNumber = organization.RegistrationNumber;
+            _model.OrganizationIsNaturalPerson = organization.IsNaturalPerson;
+        }
+    }
+
+    private void OnFieldChanged(object? sender, FieldChangedEventArgs e)
+    {
+        _messages?.Clear(e.FieldIdentifier);
+        _formAlert = null;
+        _editContext?.NotifyValidationStateChanged();
+    }
+
+    private void OnTypeChanged(string value)
+    {
+        _model.TypeValue = string.Equals(value, OrganizationTypeValue, StringComparison.Ordinal) ? OrganizationTypeValue : PersonTypeValue;
+        Notify(nameof(PartyFormModel.TypeValue));
+    }
+
+    private void OnPersonPrefixChanged(string value) => Change(nameof(PartyFormModel.PersonPrefix), () => _model.PersonPrefix = value);
+
+    private void OnPersonFirstNameChanged(string value) => Change(nameof(PartyFormModel.PersonFirstName), () => _model.PersonFirstName = value);
+
+    private void OnPersonLastNameChanged(string value) => Change(nameof(PartyFormModel.PersonLastName), () => _model.PersonLastName = value);
+
+    private void OnPersonSuffixChanged(string value) => Change(nameof(PartyFormModel.PersonSuffix), () => _model.PersonSuffix = value);
+
+    private void OnPersonDateOfBirthChanged(string value) => Change(nameof(PartyFormModel.PersonDateOfBirth), () => _model.PersonDateOfBirth = value);
+
+    private void OnOrganizationLegalNameChanged(string value) => Change(nameof(PartyFormModel.OrganizationLegalName), () => _model.OrganizationLegalName = value);
+
+    private void OnOrganizationTradingNameChanged(string value) => Change(nameof(PartyFormModel.OrganizationTradingName), () => _model.OrganizationTradingName = value);
+
+    private void OnOrganizationLegalFormChanged(string value) => Change(nameof(PartyFormModel.OrganizationLegalForm), () => _model.OrganizationLegalForm = value);
+
+    private void OnOrganizationRegistrationNumberChanged(string value) => Change(nameof(PartyFormModel.OrganizationRegistrationNumber), () => _model.OrganizationRegistrationNumber = value);
+
+    private void OnOrganizationIsNaturalPersonChanged(bool value) => Change(nameof(PartyFormModel.OrganizationIsNaturalPerson), () => _model.OrganizationIsNaturalPerson = value);
+
+    private void OnContactTypeChanged(string value) => Change(nameof(PartyFormModel.ContactTypeValue), () => _model.ContactTypeValue = value);
+
+    private void OnContactValueChanged(string value) => Change(nameof(PartyFormModel.ContactValue), () => _model.ContactValue = value);
+
+    private void OnContactPreferredChanged(bool value) => Change(nameof(PartyFormModel.ContactPreferred), () => _model.ContactPreferred = value);
+
+    private void OnIdentifierTypeChanged(string value) => Change(nameof(PartyFormModel.IdentifierTypeValue), () => _model.IdentifierTypeValue = value);
+
+    private void OnIdentifierValueChanged(string value) => Change(nameof(PartyFormModel.IdentifierValue), () => _model.IdentifierValue = value);
+
+    private void Change(string propertyName, Action update)
+    {
+        update();
+        Notify(propertyName);
+    }
+
+    private void Notify(string propertyName)
+        => _editContext?.NotifyFieldChanged(_editContext.Field(propertyName));
+
+    private Task CancelAsync()
+    {
+        string target = IsEdit && AdminPortalRouteIds.IsSafe(_normalizedRoutePartyId)
+            ? PartiesAdminPortalManifest.DetailRoute.Replace("{partyId}", Uri.EscapeDataString(_normalizedRoutePartyId!), StringComparison.Ordinal)
+            : PartiesAdminPortalManifest.Route;
+        NavigationManager.NavigateTo(target);
+        return Task.CompletedTask;
+    }
+
+    private RenderFragment TextField(string propertyName, string label, string? value, Action<string> changed, string? placeholder = null)
+        => builder =>
+        {
+            builder.OpenComponent<FluentTextInput>(0);
+            builder.AddAttribute(1, "Value", value ?? string.Empty);
+            builder.AddAttribute(2, "ValueChanged", EventCallback.Factory.Create<string>(this, changed));
+            builder.AddAttribute(3, "TextInputType", TextInputType.Text);
+            builder.AddAttribute(4, "Label", label);
+            builder.AddAttribute(5, "Placeholder", placeholder);
+            builder.AddAttribute(6, "AdditionalAttributes", FieldAttributes(propertyName));
+            builder.CloseComponent();
+            builder.AddContent(7, FieldError(propertyName));
+        };
+
+    private RenderFragment FieldError(string propertyName)
+        => builder =>
+        {
+            string id = ErrorId(propertyName);
+            builder.OpenElement(0, "div");
+            builder.AddAttribute(1, "id", id);
+            builder.AddAttribute(2, "class", "hx-party-form__field-error");
+            builder.AddAttribute(3, "role", "alert");
+            builder.AddContent(4, string.Join(" ", _editContext?.GetValidationMessages(_editContext.Field(propertyName)) ?? []));
+            builder.CloseElement();
+        };
+
+    private IReadOnlyDictionary<string, object> FieldAttributes(string propertyName)
+        => new Dictionary<string, object>(StringComparer.Ordinal)
+        {
+            ["aria-describedby"] = ErrorId(propertyName),
+            ["aria-invalid"] = (_editContext?.GetValidationMessages(_editContext.Field(propertyName)).Any() == true).ToString().ToLowerInvariant(),
+        };
+
+    private string ErrorId(string propertyName) => $"party-form-{_instanceId}-{propertyName}-error";
+
+    private string ContactTypeOptionLabel(string value)
+        => string.IsNullOrWhiteSpace(value) ? EffectiveLabels.No : value;
+
+    private string IdentifierTypeOptionLabel(string value)
+        => string.IsNullOrWhiteSpace(value) ? EffectiveLabels.No : value;
+
+    private static string? TrimToNull(string? value)
+        => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+
+    private static PartyDetail NormalizeDetail(PartyDetail detail)
+        => detail with
+        {
+            ContactChannels = detail.ContactChannels ?? [],
+            Identifiers = detail.Identifiers ?? [],
+            ConsentRecords = detail.ConsentRecords ?? [],
+            NameHistory = detail.NameHistory ?? [],
+        };
+
+    private static bool IsPartialDetail(PartyDetail detail)
+        => !string.IsNullOrWhiteSpace(detail.DisplayName)
+            && detail.CreatedAt == default
+            && detail.LastModifiedAt == default
+            && detail.PersonDetails is null
+            && detail.OrganizationDetails is null
+            && detail.ContactChannels.Count == 0
+            && detail.Identifiers.Count == 0
+            && detail.ConsentRecords.Count == 0
+            && detail.NameHistory.Count == 0;
+
+    public void Dispose()
+    {
+        if (_editContext is not null)
+        {
+            _editContext.OnFieldChanged -= OnFieldChanged;
+        }
+
+        _lifetimeCts.Cancel();
+        _lifetimeCts.Dispose();
+        _dotNetRef?.Dispose();
+    }
+
+    private void ResetFormState()
+    {
+        _messages?.Clear();
+        _editContext?.NotifyValidationStateChanged();
+        _pickerAttached = false;
+        _relatedParty = null;
+        _authorizationState = AdminPortalAuthorizationState.Unauthenticated;
+        _loadedDetail = null;
+        _normalizedRoutePartyId = null;
+        _blockingMessage = null;
+        _formAlert = null;
+        _statusMessage = null;
+        _canRenderForm = false;
+        _isLoading = false;
+        _submitting = false;
+        _detailsUnavailable = false;
+        _pendingAlertFocus = false;
+
+        _model.TypeValue = PersonTypeValue;
+        _model.PersonPrefix = null;
+        _model.PersonFirstName = string.Empty;
+        _model.PersonLastName = string.Empty;
+        _model.PersonSuffix = null;
+        _model.PersonDateOfBirth = null;
+        _model.OrganizationLegalName = string.Empty;
+        _model.OrganizationTradingName = null;
+        _model.OrganizationLegalForm = null;
+        _model.OrganizationRegistrationNumber = null;
+        _model.OrganizationIsNaturalPerson = false;
+        _model.ContactTypeValue = string.Empty;
+        _model.ContactValue = string.Empty;
+        _model.ContactPreferred = false;
+        _model.IdentifierTypeValue = string.Empty;
+        _model.IdentifierValue = string.Empty;
+    }
+
+    private sealed record RelatedPartySelection(string PartyId, string PartyType, string Status);
+
+    private sealed class PartyFormModel
+    {
+        [Required]
+        public string TypeValue { get; set; } = PersonTypeValue;
+
+        public string? PersonPrefix { get; set; }
+
+        public string PersonFirstName { get; set; } = string.Empty;
+
+        public string PersonLastName { get; set; } = string.Empty;
+
+        public string? PersonSuffix { get; set; }
+
+        public string? PersonDateOfBirth { get; set; }
+
+        public string OrganizationLegalName { get; set; } = string.Empty;
+
+        public string? OrganizationTradingName { get; set; }
+
+        public string? OrganizationLegalForm { get; set; }
+
+        public string? OrganizationRegistrationNumber { get; set; }
+
+        public bool OrganizationIsNaturalPerson { get; set; }
+
+        public string ContactTypeValue { get; set; } = string.Empty;
+
+        public string ContactValue { get; set; } = string.Empty;
+
+        public bool ContactPreferred { get; set; }
+
+        public string IdentifierTypeValue { get; set; } = string.Empty;
+
+        public string IdentifierValue { get; set; } = string.Empty;
+
+        public PartyType SelectedType
+            => string.Equals(TypeValue, OrganizationTypeValue, StringComparison.Ordinal)
+                ? PartyType.Organization
+                : PartyType.Person;
+    }
+}

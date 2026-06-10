@@ -4,6 +4,7 @@ using Hexalith.FrontComposer.Contracts.Communication;
 using Hexalith.Parties.Client;
 using Hexalith.Parties.Client.Abstractions;
 using Hexalith.Parties.Client.AdminPortal;
+using Hexalith.Parties.Contracts.Commands;
 using Hexalith.Parties.Contracts.Models;
 using Hexalith.Parties.Contracts.Security;
 using Hexalith.Parties.Contracts.ValueObjects;
@@ -24,6 +25,7 @@ public sealed class PartiesAdminPortalApiClient : IPartiesAdminPortalApiClient
     private const string RichSearchUnavailableUserMessage = "Rich search is not currently configured for this admin portal.";
 
     private readonly IPartiesQueryClient? _partiesQueryClient;
+    private readonly IPartiesCommandClient? _partiesCommandClient;
     private readonly IAdminPortalGdprClient? _gdprClient;
     private readonly IQueryService? _queryService;
     private readonly IHttpClientFactory? _httpClientFactory;
@@ -33,6 +35,7 @@ public sealed class PartiesAdminPortalApiClient : IPartiesAdminPortalApiClient
     public PartiesAdminPortalApiClient(IServiceProvider serviceProvider, IOptions<PartiesAdminPortalOptions> options)
         : this(
             (serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider))).GetService<IPartiesQueryClient>(),
+            serviceProvider.GetService<IPartiesCommandClient>(),
             serviceProvider.GetService<IAdminPortalGdprClient>(),
             serviceProvider.GetService<IQueryService>(),
             serviceProvider.GetService<IHttpClientFactory>(),
@@ -41,12 +44,13 @@ public sealed class PartiesAdminPortalApiClient : IPartiesAdminPortalApiClient
     }
 
     public PartiesAdminPortalApiClient(IQueryService queryService, IOptions<PartiesAdminPortalOptions> options)
-        : this(null, null, queryService, null, options)
+        : this(null, null, null, queryService, null, options)
     {
     }
 
     private PartiesAdminPortalApiClient(
         IPartiesQueryClient? partiesQueryClient,
+        IPartiesCommandClient? partiesCommandClient,
         IAdminPortalGdprClient? gdprClient,
         IQueryService? queryService,
         IHttpClientFactory? httpClientFactory,
@@ -54,6 +58,7 @@ public sealed class PartiesAdminPortalApiClient : IPartiesAdminPortalApiClient
     {
         ArgumentNullException.ThrowIfNull(options);
         _partiesQueryClient = partiesQueryClient;
+        _partiesCommandClient = partiesCommandClient;
         _gdprClient = gdprClient;
         _queryService = queryService;
         _httpClientFactory = httpClientFactory;
@@ -243,6 +248,28 @@ public sealed class PartiesAdminPortalApiClient : IPartiesAdminPortalApiClient
         return new(NormalizeDetail(detail), MetadataFrom(result));
     }
 
+    public Task<AdminPortalCommandResult> CreatePartyCompositeAsync(
+        CreatePartyComposite command,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(command);
+        return ExecutePartiesCommandAsync(
+            client => client.CreatePartyCompositeWithResultAsync(command, cancellationToken),
+            cancellationToken);
+    }
+
+    public Task<AdminPortalCommandResult> UpdatePartyCompositeAsync(
+        string partyId,
+        UpdatePartyComposite command,
+        CancellationToken cancellationToken)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(partyId);
+        ArgumentNullException.ThrowIfNull(command);
+        return ExecutePartiesCommandAsync(
+            client => client.UpdatePartyCompositeWithResultAsync(partyId, command, cancellationToken),
+            cancellationToken);
+    }
+
     public Task<AdminPortalGdprCommandResult> RequestErasureAsync(string partyId, CancellationToken cancellationToken)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(partyId);
@@ -407,6 +434,47 @@ public sealed class PartiesAdminPortalApiClient : IPartiesAdminPortalApiClient
         }
     }
 
+    private async Task<AdminPortalCommandResult> ExecutePartiesCommandAsync(
+        Func<IPartiesCommandClient, Task<PartiesCommandResult<PartyDetail>>> operation,
+        CancellationToken cancellationToken)
+    {
+        if (_partiesCommandClient is null)
+        {
+            return new(AdminPortalCommandOutcome.ContractUnavailable, CorrelationId: null, Detail: null, ValidationFailures: []);
+        }
+
+        try
+        {
+            PartiesCommandResult<PartyDetail> result = await operation(_partiesCommandClient).ConfigureAwait(false);
+            return new(
+                AdminPortalCommandOutcome.Accepted,
+                result.CorrelationId,
+                result.Payload is null ? null : NormalizeDetail(result.Payload),
+                []);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (PartiesClientException ex)
+        {
+            return new(
+                MapCommandOutcome(ex),
+                ex.CorrelationId,
+                Detail: null,
+                ValidationFailures: []);
+        }
+        catch (Exception ex) when (ex is HttpRequestException
+            or TimeoutException
+            or JsonException
+            or NotSupportedException
+            or TaskCanceledException
+            or OperationCanceledException)
+        {
+            return new(AdminPortalCommandOutcome.TransientFailure, CorrelationId: null, Detail: null, ValidationFailures: []);
+        }
+    }
+
     private async Task<AdminPortalGdprCommandResult> ExecuteGdprCommandAsync(
         Func<IAdminPortalGdprClient, Task<AdminPortalGdprCommandResult>> operation,
         CancellationToken cancellationToken)
@@ -558,6 +626,23 @@ public sealed class PartiesAdminPortalApiClient : IPartiesAdminPortalApiClient
             408 or 429 => AdminPortalGdprOutcome.TransientFailure,
             >= 500 => AdminPortalGdprOutcome.TransientFailure,
             _ => AdminPortalGdprOutcome.Unknown,
+        };
+
+    private static AdminPortalCommandOutcome MapCommandOutcome(PartiesClientException ex)
+        => ex.Status switch
+        {
+            401 => AdminPortalCommandOutcome.AuthenticationRequired,
+            403 => ContainsTenant(ex.Title) || ContainsTenant(ex.Detail)
+                ? AdminPortalCommandOutcome.MissingTenant
+                : AdminPortalCommandOutcome.Forbidden,
+            404 => AdminPortalCommandOutcome.NotFound,
+            409 => AdminPortalCommandOutcome.Conflict,
+            410 => AdminPortalCommandOutcome.Erased,
+            501 => AdminPortalCommandOutcome.ContractUnavailable,
+            400 or 422 => AdminPortalCommandOutcome.ValidationRejected,
+            408 or 429 => AdminPortalCommandOutcome.TransientFailure,
+            >= 500 => AdminPortalCommandOutcome.TransientFailure,
+            _ => AdminPortalCommandOutcome.Unknown,
         };
 
     private static bool ContainsTenant(string? value)

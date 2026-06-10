@@ -88,7 +88,49 @@ public record AdminPortalLabels
 
     public string EditParty { get; init; } = "Edit";
 
-    public string EditPartyUnavailable { get; init; } = "Edit is unavailable until party editing is enabled.";
+    public string EditPartyUnavailable { get; init; } = "Edit is unavailable for this party state.";
+
+    public string CreateParty { get; init; } = "Create party";
+
+    public string CreatePartyTitle { get; init; } = "Create party";
+
+    public string EditPartyTitle { get; init; } = "Edit party";
+
+    public string SaveChanges { get; init; } = "Save changes";
+
+    public string Cancel { get; init; } = "Cancel";
+
+    public string SavedUpdating { get; init; } = "Saved - updating...";
+
+    public string ValidationRetry { get; init; } = "Fix the highlighted fields and retry.";
+
+    public string CommandFailure { get; init; } = "The party could not be saved. Retry when the service is available.";
+
+    public string ValidationRequired { get; init; } = "This field is required.";
+
+    public string ValidationDate { get; init; } = "Use YYYY-MM-DD.";
+
+    public string RelatedParty { get; init; } = "Related party";
+
+    public string RelatedPartyHelp { get; init; } = "Optional relationship input";
+
+    public string RegistrationNumber { get; init; } = "Registration number";
+
+    public string NaturalPerson { get; init; } = "Natural person";
+
+    public string Prefix { get; init; } = "Prefix";
+
+    public string Suffix { get; init; } = "Suffix";
+
+    public string DateOfBirth { get; init; } = "Date of birth";
+
+    public string ContactType { get; init; } = "Contact type";
+
+    public string ContactValue { get; init; } = "Contact value";
+
+    public string IdentifierTypeField { get; init; } = "Identifier type";
+
+    public string IdentifierValue { get; init; } = "Identifier value";
 
     public string Loading { get; init; } = "Loading parties";
 

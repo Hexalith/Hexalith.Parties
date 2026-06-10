@@ -5,6 +5,7 @@ using Hexalith.Parties.Client;
 using Hexalith.Parties.Client.AdminPortal;
 using Hexalith.Parties.Client.Abstractions;
 using Hexalith.Parties.AdminPortal.Services;
+using Hexalith.Parties.Contracts.Commands;
 using Hexalith.Parties.Contracts.Models;
 using Hexalith.Parties.Contracts.Security;
 using Hexalith.Parties.Contracts.ValueObjects;
@@ -148,6 +149,119 @@ public sealed class PartiesAdminPortalApiClientTests
         result.Payload.Identifiers.ShouldNotBeNull().ShouldBeEmpty();
         result.Payload.ConsentRecords.ShouldNotBeNull().ShouldBeEmpty();
         result.Payload.NameHistory.ShouldNotBeNull().ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task CreatePartyCompositeAsync_UsesTypedCommandClientAndNormalizesPayloadAsync()
+    {
+        var commandClient = new RecordingPartiesCommandClient
+        {
+            Result = new PartiesCommandResult<PartyDetail>("corr-create", new PartyDetail
+            {
+                Id = "p-1",
+                Type = PartyType.Person,
+                IsActive = true,
+                DisplayName = "Ada Lovelace",
+                SortName = "Lovelace, Ada",
+                ContactChannels = null!,
+                Identifiers = null!,
+                ConsentRecords = null!,
+                NameHistory = null!,
+            }),
+        };
+        using ServiceProvider serviceProvider = new ServiceCollection()
+            .AddSingleton<IPartiesCommandClient>(commandClient)
+            .BuildServiceProvider();
+        PartiesAdminPortalApiClient client = new(
+            serviceProvider,
+            Options.Create(new PartiesAdminPortalOptions()));
+        var command = new CreatePartyComposite
+        {
+            PartyId = Guid.NewGuid().ToString("D"),
+            Type = PartyType.Person,
+            PersonDetails = new PersonDetails { FirstName = "Ada", LastName = "Lovelace" },
+        };
+
+        AdminPortalCommandResult result = await client.CreatePartyCompositeAsync(command, CancellationToken.None);
+
+        commandClient.CreateComposite.ShouldBe(command);
+        result.Outcome.ShouldBe(AdminPortalCommandOutcome.Accepted);
+        result.CorrelationId.ShouldBe("corr-create");
+        result.Detail.ShouldNotBeNull().ContactChannels.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task UpdatePartyCompositeAsync_UsesRoutePartyIdAsTypedClientArgumentAsync()
+    {
+        var commandClient = new RecordingPartiesCommandClient
+        {
+            Result = new PartiesCommandResult<PartyDetail>("corr-update", null),
+        };
+        using ServiceProvider serviceProvider = new ServiceCollection()
+            .AddSingleton<IPartiesCommandClient>(commandClient)
+            .BuildServiceProvider();
+        PartiesAdminPortalApiClient client = new(
+            serviceProvider,
+            Options.Create(new PartiesAdminPortalOptions()));
+        var command = new UpdatePartyComposite
+        {
+            PartyId = "payload-id",
+            PersonDetails = new PersonDetails { FirstName = "Ada", LastName = "Byron" },
+        };
+
+        AdminPortalCommandResult result = await client.UpdatePartyCompositeAsync("route-id", command, CancellationToken.None);
+
+        commandClient.UpdatePartyId.ShouldBe("route-id");
+        commandClient.UpdateComposite.ShouldBe(command);
+        result.Outcome.ShouldBe(AdminPortalCommandOutcome.Accepted);
+    }
+
+    [Fact]
+    public async Task CreatePartyCompositeAsync_WhenTypedCommandClientIsMissing_ReturnsContractUnavailableOutcomeAsync()
+    {
+        using ServiceProvider serviceProvider = new ServiceCollection().BuildServiceProvider();
+        PartiesAdminPortalApiClient client = new(
+            serviceProvider,
+            Options.Create(new PartiesAdminPortalOptions()));
+        var command = new CreatePartyComposite
+        {
+            PartyId = Guid.NewGuid().ToString("D"),
+            Type = PartyType.Person,
+            PersonDetails = new PersonDetails { FirstName = "Ada", LastName = "Lovelace" },
+        };
+
+        AdminPortalCommandResult result = await client.CreatePartyCompositeAsync(command, CancellationToken.None);
+
+        result.Outcome.ShouldBe(AdminPortalCommandOutcome.ContractUnavailable);
+        result.CorrelationId.ShouldBeNull();
+        result.ValidationFailures.ShouldNotBeNull().ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task CommandValidationFailure_MapsToSafeValidationOutcomeAsync()
+    {
+        var commandClient = new RecordingPartiesCommandClient
+        {
+            ExceptionToThrow = new PartiesClientException(422, "Validation failed", null, "raw backend detail", "corr-validation"),
+        };
+        using ServiceProvider serviceProvider = new ServiceCollection()
+            .AddSingleton<IPartiesCommandClient>(commandClient)
+            .BuildServiceProvider();
+        PartiesAdminPortalApiClient client = new(
+            serviceProvider,
+            Options.Create(new PartiesAdminPortalOptions()));
+        var command = new CreatePartyComposite
+        {
+            PartyId = Guid.NewGuid().ToString("D"),
+            Type = PartyType.Organization,
+            OrganizationDetails = new OrganizationDetails { LegalName = "Acme" },
+        };
+
+        AdminPortalCommandResult result = await client.CreatePartyCompositeAsync(command, CancellationToken.None);
+
+        result.Outcome.ShouldBe(AdminPortalCommandOutcome.ValidationRejected);
+        result.CorrelationId.ShouldBe("corr-validation");
+        result.Detail.ShouldBeNull();
     }
 
     [Fact]
@@ -809,6 +923,92 @@ public sealed class PartiesAdminPortalApiClientTests
 
             return Task.FromResult(SearchResult ?? new PagedResult<PartySearchResult> { Items = [] });
         }
+    }
+
+    private sealed class RecordingPartiesCommandClient : IPartiesCommandClient
+    {
+        public PartiesCommandResult<PartyDetail>? Result { get; init; }
+
+        public Exception? ExceptionToThrow { get; init; }
+
+        public CreatePartyComposite? CreateComposite { get; private set; }
+
+        public string? UpdatePartyId { get; private set; }
+
+        public UpdatePartyComposite? UpdateComposite { get; private set; }
+
+        public Task<PartiesCommandResult<PartyDetail>> CreatePartyCompositeWithResultAsync(CreatePartyComposite command, CancellationToken ct)
+        {
+            ct.ThrowIfCancellationRequested();
+            CreateComposite = command;
+            if (ExceptionToThrow is not null)
+            {
+                throw ExceptionToThrow;
+            }
+
+            return Task.FromResult(Result ?? new PartiesCommandResult<PartyDetail>("corr", null));
+        }
+
+        public Task<PartiesCommandResult<PartyDetail>> UpdatePartyCompositeWithResultAsync(string partyId, UpdatePartyComposite command, CancellationToken ct)
+        {
+            ct.ThrowIfCancellationRequested();
+            UpdatePartyId = partyId;
+            UpdateComposite = command;
+            if (ExceptionToThrow is not null)
+            {
+                throw ExceptionToThrow;
+            }
+
+            return Task.FromResult(Result ?? new PartiesCommandResult<PartyDetail>("corr", null));
+        }
+
+        public Task<string> CreatePartyAsync(CreateParty command, CancellationToken ct) => throw new NotImplementedException();
+
+        public Task<PartiesCommandResult<PartyDetail>> CreatePartyWithResultAsync(CreateParty command, CancellationToken ct) => throw new NotImplementedException();
+
+        public Task<string> UpdatePersonDetailsAsync(string partyId, UpdatePersonDetails command, CancellationToken ct) => throw new NotImplementedException();
+
+        public Task<PartiesCommandResult<PartyDetail>> UpdatePersonDetailsWithResultAsync(string partyId, UpdatePersonDetails command, CancellationToken ct) => throw new NotImplementedException();
+
+        public Task<string> UpdateOrganizationDetailsAsync(string partyId, UpdateOrganizationDetails command, CancellationToken ct) => throw new NotImplementedException();
+
+        public Task<PartiesCommandResult<PartyDetail>> UpdateOrganizationDetailsWithResultAsync(string partyId, UpdateOrganizationDetails command, CancellationToken ct) => throw new NotImplementedException();
+
+        public Task<string> AddContactChannelAsync(string partyId, AddContactChannel command, CancellationToken ct) => throw new NotImplementedException();
+
+        public Task<PartiesCommandResult<PartyDetail>> AddContactChannelWithResultAsync(string partyId, AddContactChannel command, CancellationToken ct) => throw new NotImplementedException();
+
+        public Task<string> UpdateContactChannelAsync(string partyId, UpdateContactChannel command, CancellationToken ct) => throw new NotImplementedException();
+
+        public Task<PartiesCommandResult<PartyDetail>> UpdateContactChannelWithResultAsync(string partyId, UpdateContactChannel command, CancellationToken ct) => throw new NotImplementedException();
+
+        public Task<string> RemoveContactChannelAsync(string partyId, RemoveContactChannel command, CancellationToken ct) => throw new NotImplementedException();
+
+        public Task<PartiesCommandResult<PartyDetail>> RemoveContactChannelWithResultAsync(string partyId, RemoveContactChannel command, CancellationToken ct) => throw new NotImplementedException();
+
+        public Task<string> AddIdentifierAsync(string partyId, AddIdentifier command, CancellationToken ct) => throw new NotImplementedException();
+
+        public Task<PartiesCommandResult<PartyDetail>> AddIdentifierWithResultAsync(string partyId, AddIdentifier command, CancellationToken ct) => throw new NotImplementedException();
+
+        public Task<string> RemoveIdentifierAsync(string partyId, RemoveIdentifier command, CancellationToken ct) => throw new NotImplementedException();
+
+        public Task<PartiesCommandResult<PartyDetail>> RemoveIdentifierWithResultAsync(string partyId, RemoveIdentifier command, CancellationToken ct) => throw new NotImplementedException();
+
+        public Task<string> DeactivatePartyAsync(string partyId, CancellationToken ct) => throw new NotImplementedException();
+
+        public Task<PartiesCommandResult<PartyDetail>> DeactivatePartyWithResultAsync(string partyId, CancellationToken ct) => throw new NotImplementedException();
+
+        public Task<string> ReactivatePartyAsync(string partyId, CancellationToken ct) => throw new NotImplementedException();
+
+        public Task<PartiesCommandResult<PartyDetail>> ReactivatePartyWithResultAsync(string partyId, CancellationToken ct) => throw new NotImplementedException();
+
+        public Task<string> CreatePartyCompositeAsync(CreatePartyComposite command, CancellationToken ct) => throw new NotImplementedException();
+
+        public Task<string> UpdatePartyCompositeAsync(string partyId, UpdatePartyComposite command, CancellationToken ct) => throw new NotImplementedException();
+
+        public Task<string> SetIsNaturalPersonAsync(string partyId, SetIsNaturalPerson command, CancellationToken ct) => throw new NotImplementedException();
+
+        public Task<PartiesCommandResult<PartyDetail>> SetIsNaturalPersonWithResultAsync(string partyId, SetIsNaturalPerson command, CancellationToken ct) => throw new NotImplementedException();
     }
 
     private sealed record ListRequestSnapshot(

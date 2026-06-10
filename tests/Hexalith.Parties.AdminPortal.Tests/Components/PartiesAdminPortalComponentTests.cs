@@ -1158,12 +1158,13 @@ public sealed class PartiesAdminPortalComponentTests : BunitContext
     }
 
     [Fact]
-    public void PartiesAdminPortal_DetailActions_RenderBackEditUnavailableAndActiveRowCue()
+    public void PartiesAdminPortal_DetailActions_RenderBackEditAndActiveRowCue()
     {
         var api = new RecordingAdminPortalApiClient();
         api.EnqueueList(Page(IndexEntry("party-actions", "Action Party", PartyType.Person, true)));
         api.EnqueueDetail(Detail("party-actions", "Action Party", PartyType.Person, isActive: true));
         Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+        NavigationManager navigation = Services.GetRequiredService<NavigationManager>();
 
         IRenderedComponent<PartiesAdminPortal> cut = RenderAuthorized("scope-actions");
         cut.WaitForAssertion(() => cut.Markup.ShouldContain("Action Party"));
@@ -1175,9 +1176,11 @@ public sealed class PartiesAdminPortalComponentTests : BunitContext
             selected.GetAttribute("aria-current").ShouldBe("page");
             (selected.GetAttribute("class") ?? string.Empty).ShouldContain("hx-parties-admin__row-button--selected");
             FindFluentButton(cut, "Back to list");
-            FindFluentButton(cut, "Edit").HasAttribute("disabled").ShouldBeTrue();
-            cut.Find("aside.hx-parties-admin__detail").TextContent.ShouldContain("Edit is unavailable");
+            FindFluentButton(cut, "Edit").HasAttribute("disabled").ShouldBeFalse();
         });
+
+        ClickFluentButton(cut, "Edit");
+        navigation.ToBaseRelativePath(navigation.Uri).ShouldBe("admin/parties/party-actions/edit");
 
         ClickFluentButton(cut, "Back to list");
 

@@ -26,9 +26,31 @@ public sealed class PartiesAdminPortalAuthorizationTests
     }
 
     [Fact]
+    public void CreateEditPartyPage_RoutesCreateAndEditEntryPoints()
+    {
+        IReadOnlyCollection<string> routes = typeof(CreateEditPartyPage)
+            .GetCustomAttributes<RouteAttribute>(inherit: false)
+            .Select(static route => route.Template)
+            .ToList();
+
+        routes.ShouldContain("/admin/parties/new");
+        routes.ShouldContain("/admin/parties/{RoutePartyId}/edit");
+    }
+
+    [Fact]
     public void PartiesAdminPortal_RequiresExactlyTheAdminPolicyAtRouteLevel()
     {
         AuthorizeAttribute authorize = typeof(PartiesAdminPortal)
+            .GetCustomAttributes<AuthorizeAttribute>(inherit: false)
+            .ShouldHaveSingleItem();
+
+        authorize.Policy.ShouldBe("Admin");
+    }
+
+    [Fact]
+    public void CreateEditPartyPage_RequiresExactlyTheAdminPolicyAtRouteLevel()
+    {
+        AuthorizeAttribute authorize = typeof(CreateEditPartyPage)
             .GetCustomAttributes<AuthorizeAttribute>(inherit: false)
             .ShouldHaveSingleItem();
 

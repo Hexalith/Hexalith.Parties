@@ -2,6 +2,7 @@ using System.Security.Claims;
 
 using Hexalith.Parties.AdminPortal.Services;
 using Hexalith.Parties.Client.AdminPortal;
+using Hexalith.Parties.Contracts.Commands;
 using Hexalith.Parties.Contracts.Models;
 using Hexalith.Parties.Contracts.Security;
 using Hexalith.Parties.Contracts.ValueObjects;
@@ -80,10 +81,15 @@ internal sealed class PartiesAdminPortalE2eAuthorizationService(IHttpContextAcce
 
 internal sealed class PartiesAdminPortalE2eFixtureState
 {
+    private static readonly DateTimeOffset BaseDate = new(2026, 06, 10, 10, 00, 00, TimeSpan.Zero);
+
     private readonly object _sync = new();
     private readonly List<AdminPortalRequestCapture> _listRequests = [];
     private readonly List<AdminPortalRequestCapture> _searchRequests = [];
     private readonly List<AdminPortalRequestCapture> _detailRequests = [];
+    private readonly List<AdminPortalRequestCapture> _createRequests = [];
+    private readonly List<AdminPortalRequestCapture> _updateRequests = [];
+    private readonly Dictionary<string, PartyDetail> _details = CreateInitialDetails();
 
     public void CaptureList(AdminPortalListRequest request)
     {
@@ -109,6 +115,50 @@ internal sealed class PartiesAdminPortalE2eFixtureState
         }
     }
 
+    public PartyDetail CaptureCreate(CreatePartyComposite command)
+    {
+        lock (_sync)
+        {
+            PartyDetail detail = DetailFromCreate(command);
+            _details[detail.Id] = detail;
+            _createRequests.Add(AdminPortalRequestCapture.FromCreate(command));
+            return detail;
+        }
+    }
+
+    public PartyDetail CaptureUpdate(string partyId, UpdatePartyComposite command)
+    {
+        lock (_sync)
+        {
+            PartyDetail current = _details.TryGetValue(partyId, out PartyDetail? existing)
+                ? existing
+                : new PartyDetail
+                {
+                    Id = partyId,
+                    Type = command.OrganizationDetails is null ? PartyType.Person : PartyType.Organization,
+                    IsActive = true,
+                    DisplayName = partyId,
+                    SortName = partyId,
+                    ContactChannels = [],
+                    Identifiers = [],
+                    ConsentRecords = [],
+                    NameHistory = [],
+                };
+            PartyDetail updated = DetailFromUpdate(current, command);
+            _details[partyId] = updated;
+            _updateRequests.Add(AdminPortalRequestCapture.FromUpdate(partyId, command));
+            return updated;
+        }
+    }
+
+    public PartyDetail? Detail(string partyId)
+    {
+        lock (_sync)
+        {
+            return _details.TryGetValue(partyId, out PartyDetail? detail) ? detail : null;
+        }
+    }
+
     public void Reset()
     {
         lock (_sync)
@@ -116,6 +166,13 @@ internal sealed class PartiesAdminPortalE2eFixtureState
             _listRequests.Clear();
             _searchRequests.Clear();
             _detailRequests.Clear();
+            _createRequests.Clear();
+            _updateRequests.Clear();
+            _details.Clear();
+            foreach ((string key, PartyDetail detail) in CreateInitialDetails())
+            {
+                _details[key] = detail;
+            }
         }
     }
 
@@ -123,9 +180,129 @@ internal sealed class PartiesAdminPortalE2eFixtureState
     {
         lock (_sync)
         {
-            return new AdminPortalE2eSnapshot([.. _listRequests], [.. _searchRequests], [.. _detailRequests]);
+            return new AdminPortalE2eSnapshot([.. _listRequests], [.. _searchRequests], [.. _detailRequests], [.. _createRequests], [.. _updateRequests]);
         }
     }
+
+    private static Dictionary<string, PartyDetail> CreateInitialDetails()
+        => CreateEntries().ToDictionary(static entry => entry.Id, DetailFromEntry, StringComparer.Ordinal);
+
+    private static PartyDetail DetailFromEntry(PartyIndexEntry entry)
+        => new()
+        {
+            Id = entry.Id,
+            Type = entry.Type,
+            IsActive = entry.IsActive,
+            DisplayName = entry.DisplayName,
+            SortName = entry.SortName,
+            PersonDetails = entry.Type == PartyType.Person
+                ? new PersonDetails { FirstName = entry.DisplayName.Split(' ')[0], LastName = entry.SortName }
+                : null,
+            OrganizationDetails = entry.Type == PartyType.Organization
+                ? new OrganizationDetails { LegalName = entry.DisplayName, TradingName = entry.DisplayName, LegalForm = "SAS" }
+                : null,
+            ContactChannels = [],
+            Identifiers = [],
+            ConsentRecords = [],
+            NameHistory = [],
+            CreatedAt = entry.CreatedAt,
+            LastModifiedAt = entry.LastModifiedAt,
+        };
+
+    private static IReadOnlyList<PartyIndexEntry> CreateEntries()
+    {
+        List<PartyIndexEntry> entries =
+        [
+            Entry("ada-lovelace", PartyType.Person, true, "Ada Lovelace", "Lovelace", 0),
+            Entry("grace-hopper", PartyType.Person, true, "Grace Hopper", "Hopper", 1),
+            Entry("marie-curie", PartyType.Person, false, "Marie Curie", "Curie", 2),
+            Entry("inactive-labs", PartyType.Organization, false, "Inactive Labs", "Inactive Labs", 3),
+        ];
+
+        for (int i = 1; i <= 25; i++)
+        {
+            entries.Add(Entry(
+                $"paging-party-{i:00}",
+                PartyType.Organization,
+                true,
+                $"Paging Party {i:00}",
+                $"Paging Party {i:00}",
+                10 + i));
+        }
+
+        return entries;
+    }
+
+    private static PartyIndexEntry Entry(
+        string id,
+        PartyType type,
+        bool active,
+        string displayName,
+        string sortName,
+        int dayOffset)
+        => new()
+        {
+            Id = id,
+            Type = type,
+            IsActive = active,
+            DisplayName = displayName,
+            SortName = sortName,
+            CreatedAt = BaseDate.AddDays(-dayOffset),
+            LastModifiedAt = BaseDate.AddDays(-dayOffset).AddHours(1),
+        };
+
+    private static PartyDetail DetailFromCreate(CreatePartyComposite command)
+        => new()
+        {
+            Id = command.PartyId,
+            Type = command.Type,
+            IsActive = true,
+            DisplayName = DisplayName(command.Type, command.PersonDetails, command.OrganizationDetails),
+            SortName = SortName(command.Type, command.PersonDetails, command.OrganizationDetails),
+            PersonDetails = command.Type == PartyType.Person ? command.PersonDetails : null,
+            OrganizationDetails = command.Type == PartyType.Organization ? command.OrganizationDetails : null,
+            ContactChannels = [.. command.ContactChannels.Select(static channel => new ContactChannel
+            {
+                Id = channel.ContactChannelId,
+                Type = channel.Type,
+                Value = channel.Value,
+                IsPreferred = channel.IsPreferred,
+            })],
+            Identifiers = [.. command.Identifiers.Select(static identifier => new PartyIdentifier
+            {
+                Id = identifier.IdentifierId,
+                Type = identifier.Type,
+                Value = identifier.Value,
+            })],
+            ConsentRecords = [],
+            NameHistory = [],
+            CreatedAt = DateTimeOffset.UtcNow,
+            LastModifiedAt = DateTimeOffset.UtcNow,
+        };
+
+    private static PartyDetail DetailFromUpdate(PartyDetail current, UpdatePartyComposite command)
+    {
+        PartyType type = command.OrganizationDetails is not null ? PartyType.Organization : PartyType.Person;
+        return current with
+        {
+            Type = type,
+            DisplayName = DisplayName(type, command.PersonDetails, command.OrganizationDetails),
+            SortName = SortName(type, command.PersonDetails, command.OrganizationDetails),
+            PersonDetails = type == PartyType.Person ? command.PersonDetails : null,
+            OrganizationDetails = type == PartyType.Organization ? command.OrganizationDetails : null,
+            LastModifiedAt = DateTimeOffset.UtcNow,
+        };
+    }
+
+    private static string DisplayName(PartyType type, PersonDetails? person, OrganizationDetails? organization)
+        => type == PartyType.Person
+            ? $"{person?.FirstName} {person?.LastName}".Trim()
+            : organization?.LegalName ?? string.Empty;
+
+    private static string SortName(PartyType type, PersonDetails? person, OrganizationDetails? organization)
+        => type == PartyType.Person
+            ? $"{person?.LastName}, {person?.FirstName}".Trim(' ', ',')
+            : organization?.LegalName ?? string.Empty;
 }
 
 internal sealed class PartiesAdminPortalE2eApiClient(PartiesAdminPortalE2eFixtureState state) : IPartiesAdminPortalApiClient
@@ -201,15 +378,42 @@ internal sealed class PartiesAdminPortalE2eApiClient(PartiesAdminPortalE2eFixtur
         cancellationToken.ThrowIfCancellationRequested();
         state.CaptureDetail(partyId);
 
-        PartyIndexEntry? entry = Entries.FirstOrDefault(row => string.Equals(row.Id, partyId, StringComparison.Ordinal));
-        if (entry is null)
+        PartyDetail? detail = state.Detail(partyId);
+        if (detail is null)
         {
             throw new AdminPortalQueryException(AdminPortalQueryFailureKind.NotFound);
         }
 
         return Task.FromResult(new AdminPortalQueryResult<PartyDetail>(
-            DetailFromEntry(entry),
+            detail,
             AdminPortalQueryMetadata.Empty));
+    }
+
+    public Task<AdminPortalCommandResult> CreatePartyCompositeAsync(
+        CreatePartyComposite command,
+        CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        if (string.Equals(command.PersonDetails?.LastName, "Reject", StringComparison.OrdinalIgnoreCase))
+        {
+            return Task.FromResult(new AdminPortalCommandResult(
+                AdminPortalCommandOutcome.ValidationRejected,
+                "corr-validation",
+                ValidationFailures: [new AdminPortalCommandValidationFailure("PersonDetails.LastName", "Rejected")]));
+        }
+
+        PartyDetail detail = state.CaptureCreate(command);
+        return Task.FromResult(new AdminPortalCommandResult(AdminPortalCommandOutcome.Accepted, "corr-create", detail));
+    }
+
+    public Task<AdminPortalCommandResult> UpdatePartyCompositeAsync(
+        string partyId,
+        UpdatePartyComposite command,
+        CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        PartyDetail detail = state.CaptureUpdate(partyId, command);
+        return Task.FromResult(new AdminPortalCommandResult(AdminPortalCommandOutcome.Accepted, "corr-update", detail));
     }
 
     public Task<AdminPortalGdprCommandResult> RequestErasureAsync(string partyId, CancellationToken cancellationToken)
@@ -381,7 +585,9 @@ internal sealed class PartiesAdminPortalE2eApiClient(PartiesAdminPortalE2eFixtur
 internal sealed record AdminPortalE2eSnapshot(
     IReadOnlyList<AdminPortalRequestCapture> ListRequests,
     IReadOnlyList<AdminPortalRequestCapture> SearchRequests,
-    IReadOnlyList<AdminPortalRequestCapture> DetailRequests);
+    IReadOnlyList<AdminPortalRequestCapture> DetailRequests,
+    IReadOnlyList<AdminPortalRequestCapture> CreateRequests,
+    IReadOnlyList<AdminPortalRequestCapture> UpdateRequests);
 
 internal sealed record AdminPortalRequestCapture(
     string Kind,
@@ -400,4 +606,10 @@ internal sealed record AdminPortalRequestCapture(
 
     public static AdminPortalRequestCapture FromDetail(string partyId)
         => new("detail", null, 0, 0, null, null, partyId);
+
+    public static AdminPortalRequestCapture FromCreate(CreatePartyComposite command)
+        => new("create", null, 0, 0, command.Type.ToString(), null, command.PartyId);
+
+    public static AdminPortalRequestCapture FromUpdate(string partyId, UpdatePartyComposite command)
+        => new("update", null, 0, 0, command.OrganizationDetails is null ? "Person" : "Organization", null, partyId);
 }

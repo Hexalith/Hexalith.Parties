@@ -1,5 +1,6 @@
 using Hexalith.Parties.AdminPortal.Services;
 using Hexalith.Parties.Client.AdminPortal;
+using Hexalith.Parties.Contracts.Commands;
 using Hexalith.Parties.Contracts.Models;
 using Hexalith.Parties.Contracts.Security;
 using Hexalith.Parties.Contracts.ValueObjects;
@@ -13,6 +14,8 @@ internal sealed class RecordingAdminPortalApiClient : IPartiesAdminPortalApiClie
     private readonly Queue<Func<CancellationToken, Task<AdminPortalRichSearchCapability>>> _richSearchCapabilities = [];
     private readonly Queue<Func<CancellationToken, Task<AdminPortalGdprCapability>>> _gdprCapabilities = [];
     private readonly Queue<Func<CancellationToken, Task<AdminPortalQueryResult<PartyDetail>>>> _detailResponses = [];
+    private readonly Queue<Func<CancellationToken, Task<AdminPortalCommandResult>>> _createResponses = [];
+    private readonly Queue<Func<CancellationToken, Task<AdminPortalCommandResult>>> _updateResponses = [];
     private readonly Queue<Func<CancellationToken, Task<PartyErasureStatusRecord?>>> _erasureStatusResponses = [];
     private readonly Queue<Func<CancellationToken, Task<ErasureCertificate?>>> _erasureCertificateResponses = [];
     private readonly Queue<Func<CancellationToken, Task<IReadOnlyList<ConsentRecord>>>> _consentResponses = [];
@@ -24,6 +27,10 @@ internal sealed class RecordingAdminPortalApiClient : IPartiesAdminPortalApiClie
     public List<AdminPortalSearchRequest> SearchRequests { get; } = [];
 
     public List<string> DetailRequests { get; } = [];
+
+    public List<CreatePartyComposite> CreateRequests { get; } = [];
+
+    public List<(string PartyId, UpdatePartyComposite Command)> UpdateRequests { get; } = [];
 
     public List<string> ErasureRequests { get; } = [];
 
@@ -84,6 +91,12 @@ internal sealed class RecordingAdminPortalApiClient : IPartiesAdminPortalApiClie
     public void EnqueueDetail(Func<CancellationToken, Task<AdminPortalQueryResult<PartyDetail>>> response)
         => _detailResponses.Enqueue(response);
 
+    public void EnqueueCreate(AdminPortalCommandResult result)
+        => _createResponses.Enqueue(_ => Task.FromResult(result));
+
+    public void EnqueueUpdate(AdminPortalCommandResult result)
+        => _updateResponses.Enqueue(_ => Task.FromResult(result));
+
     public void EnqueueErasureStatus(PartyErasureStatusRecord status)
         => _erasureStatusResponses.Enqueue(_ => Task.FromResult<PartyErasureStatusRecord?>(status));
 
@@ -140,6 +153,27 @@ internal sealed class RecordingAdminPortalApiClient : IPartiesAdminPortalApiClie
         return _detailResponses.Count == 0
             ? Task.FromResult(new AdminPortalQueryResult<PartyDetail>(EmptyDetail(partyId), AdminPortalQueryMetadata.Empty))
             : _detailResponses.Dequeue()(cancellationToken);
+    }
+
+    public Task<AdminPortalCommandResult> CreatePartyCompositeAsync(
+        CreatePartyComposite command,
+        CancellationToken cancellationToken)
+    {
+        CreateRequests.Add(command);
+        return _createResponses.Count == 0
+            ? Task.FromResult(new AdminPortalCommandResult(AdminPortalCommandOutcome.Accepted, "corr-create"))
+            : _createResponses.Dequeue()(cancellationToken);
+    }
+
+    public Task<AdminPortalCommandResult> UpdatePartyCompositeAsync(
+        string partyId,
+        UpdatePartyComposite command,
+        CancellationToken cancellationToken)
+    {
+        UpdateRequests.Add((partyId, command));
+        return _updateResponses.Count == 0
+            ? Task.FromResult(new AdminPortalCommandResult(AdminPortalCommandOutcome.Accepted, "corr-update"))
+            : _updateResponses.Dequeue()(cancellationToken);
     }
 
     public Task<AdminPortalGdprCommandResult> RequestErasureAsync(string partyId, CancellationToken cancellationToken)

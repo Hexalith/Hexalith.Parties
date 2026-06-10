@@ -1,4 +1,5 @@
 using Hexalith.Parties.Client.AdminPortal;
+using Hexalith.Parties.Contracts.Commands;
 using Hexalith.Parties.Contracts.Models;
 using Hexalith.Parties.Contracts.Security;
 using Hexalith.Parties.Contracts.ValueObjects;
@@ -23,6 +24,15 @@ public interface IPartiesAdminPortalApiClient
 
     Task<AdminPortalQueryResult<PartyDetail>> GetPartyAsync(
         string partyId,
+        CancellationToken cancellationToken);
+
+    Task<AdminPortalCommandResult> CreatePartyCompositeAsync(
+        CreatePartyComposite command,
+        CancellationToken cancellationToken);
+
+    Task<AdminPortalCommandResult> UpdatePartyCompositeAsync(
+        string partyId,
+        UpdatePartyComposite command,
         CancellationToken cancellationToken);
 
     Task<AdminPortalGdprCommandResult> RequestErasureAsync(string partyId, CancellationToken cancellationToken);

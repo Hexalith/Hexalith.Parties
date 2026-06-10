@@ -69,6 +69,7 @@
                          aria-label="@EffectiveLabels.ModifiedBefore"
                          Placeholder="@EffectiveLabels.DateFilterPlaceholder"
                          Disabled="@FiltersDisabledInSearchMode" />
+        <FluentButton Appearance="ButtonAppearance.Primary" OnClick="NavigateToCreateParty">@EffectiveLabels.CreateParty</FluentButton>
         <FluentButton Appearance="ButtonAppearance.Primary" OnClick="SubmitSearchAsync">@EffectiveLabels.Submit</FluentButton>
         <FluentButton Appearance="ButtonAppearance.Outline" OnClick="ClearFiltersAsync">@EffectiveLabels.Clear</FluentButton>
         @if (RetryAvailable)
@@ -162,8 +163,15 @@
                     <h2 tabindex="-1" @ref="_detailHeadingRef">@_detail.DisplayName</h2>
                     <div class="hx-parties-admin__detail-actions">
                         <FluentButton Appearance="ButtonAppearance.Outline" OnClick="CloseDetailAsync">@EffectiveLabels.DetailClose</FluentButton>
-                        <FluentButton Appearance="ButtonAppearance.Outline" Disabled="true">@EffectiveLabels.EditParty</FluentButton>
-                        <span class="hx-parties-admin__edit-unavailable">@EffectiveLabels.EditPartyUnavailable</span>
+                        <FluentButton Appearance="ButtonAppearance.Outline"
+                                      Disabled="@(!CanEditSelectedParty)"
+                                      OnClick="NavigateToEditParty">
+                            @EffectiveLabels.EditParty
+                        </FluentButton>
+                        @if (!CanEditSelectedParty)
+                        {
+                            <span class="hx-parties-admin__edit-unavailable">@EffectiveLabels.EditPartyUnavailable</span>
+                        }
                     </div>
                 </div>
 
@@ -486,6 +494,12 @@
             && detail.Identifiers.Count == 0
             && detail.ConsentRecords.Count == 0
             && detail.NameHistory.Count == 0;
+
+    private bool CanEditSelectedParty
+        => _detail is not null
+            && !IsPartialDetail
+            && !_detail.IsErased
+            && AdminPortalRouteIds.IsSafe(_detail.Id);
 
     private string StatusText => _statusKind switch
     {
@@ -1105,54 +1119,28 @@
         }
     }
 
-    private static string? NormalizeRoutePartyId(string? routePartyId)
+    private void NavigateToCreateParty()
+        => NavigationManager.NavigateTo(PartiesAdminPortalManifest.CreateRoute);
+
+    private void NavigateToEditParty()
     {
-        if (string.IsNullOrWhiteSpace(routePartyId))
+        if (_detail is null || !CanEditSelectedParty)
         {
-            return null;
+            return;
         }
 
-        try
-        {
-            return Uri.UnescapeDataString(routePartyId.Trim());
-        }
-        catch (UriFormatException)
-        {
-            return routePartyId.Trim();
-        }
+        string target = PartiesAdminPortalManifest.EditRoute.Replace(
+            "{partyId}",
+            Uri.EscapeDataString(_detail.Id),
+            StringComparison.Ordinal);
+        NavigationManager.NavigateTo(target);
     }
+
+    private static string? NormalizeRoutePartyId(string? routePartyId)
+        => AdminPortalRouteIds.Normalize(routePartyId);
 
     private static bool IsSafeRoutePartyId(string partyId)
-    {
-        if (string.IsNullOrWhiteSpace(partyId) || partyId.Length > 128)
-        {
-            return false;
-        }
-
-        // Reject path-traversal-shaped segments even though Blazor routing would treat them
-        // as literals — keeps the URL surface free of "." / ".." party ids that look like
-        // navigation tokens to humans reading logs.
-        if (partyId is "." or "..")
-        {
-            return false;
-        }
-
-        foreach (char c in partyId)
-        {
-            if (!IsSafeRoutePartyIdCharacter(c))
-            {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    private static bool IsSafeRoutePartyIdCharacter(char c)
-        => (c >= 'a' && c <= 'z')
-            || (c >= 'A' && c <= 'Z')
-            || (c >= '0' && c <= '9')
-            || c is '-' or '_' or '.' or '~';
+        => AdminPortalRouteIds.IsSafe(partyId);
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
