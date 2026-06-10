@@ -124,7 +124,7 @@ Events flow back into projections via **`PartyProjectionUpdateOrchestrator`** (r
 
 Each actor keeps a **last-processed sequence checkpoint** so replay-from-zero is idempotent, plus apply-level dedup (set semantics) so a crash between state and checkpoint writes still converges. The index actor **batches** writes (`BatchSize` default 50; flush via a `flush-batch` reminder). Both register an `auto-rebuild` reminder on detected state corruption, calling `ProjectionRebuildService` (which reads the persisted stream directly over the DAPR actor-state HTTP API, with resumable checkpoints).
 
-**Query path:** `PartyDetailProjectionQueryActor` / `PartyIndexProjectionQueryActor` implement EventStore's `IProjectionActor.QueryAsync` and serve `PartyDetail`/`GetParty`, `PartyIndex` (paged+filtered), `PartySearch` (via `IPartySearchProvider`), and GDPR reads (`ExportPartyData` Art.20, `GetProcessingRecords` Art.30). Every read carries `ProjectionFreshnessMetadata`; stale/degraded reads fall back to a static last-known cache. Search defaults to `LocalFuzzyPartySearchProvider`; when `Parties:MemoriesSearch:Enabled=true` it swaps to `MemoriesPartySearchService` (Memories REST + local fallback) — see [memories-backed-party-search.md](memories-backed-party-search.md).
+**Query path:** `PartyDetailProjectionQueryActor` / `PartyIndexProjectionQueryActor` implement EventStore's `IProjectionActor.QueryAsync` and serve `PartyDetail`/`GetParty`, `PartyIndex` (paged+filtered), `PartySearch` (via `IPartySearchProvider`), and GDPR reads (`ExportPartyData` Art.20, `GetProcessingRecords` Art.30, `GetErasureCertificate` erasure proof). Every read carries `ProjectionFreshnessMetadata`; stale/degraded reads fall back to a static last-known cache. Search defaults to `LocalFuzzyPartySearchProvider`; when `Parties:MemoriesSearch:Enabled=true` it swaps to `MemoriesPartySearchService` (Memories REST + local fallback) — see [memories-backed-party-search.md](memories-backed-party-search.md).
 
 ### Actor inventory
 
@@ -132,7 +132,7 @@ Each actor keeps a **last-processed sequence checkpoint** so replay-from-zero is
 |-------|---------|----------------|
 | `PartyDetailProjectionActor` | Projections | per-party `PartyDetail` read model |
 | `PartyIndexProjectionActor` | Projections | per-tenant searchable index |
-| `PartyDetailProjectionQueryActor` | Hexalith.Parties | query adapter (detail/export/processing) |
+| `PartyDetailProjectionQueryActor` | Hexalith.Parties | query adapter (detail/export/processing/certificate) |
 | `PartyIndexProjectionQueryActor` | Hexalith.Parties | query adapter (list/search) |
 | `PartyKeyRetryActor` | Security | GDPR key-creation retry scheduling |
 | `AggregateActor` | EventStore.Server | event-stream host (registered by `AddEventStoreServer`) |
@@ -237,5 +237,5 @@ Production shape is Kubernetes via **aspirate** (pinned `9.1.0`): `pwsh deploy/k
 - **MCP exposes exactly 5 tools** (`create_party`, `get_party`, `find_parties`, `update_party`, `delete_party`); **`get_party_name_at` does not exist** (temporal name-as-of queries are reserved, not implemented). The README + `getting-started.md` previously listed a phantom 6th `get_party_name_at` tool — **corrected in this rescan.**
 - **Projection-index rebuild key mismatch (bug):** the live `PartyIndexProjectionActor` reads/writes state key `{tenant}:party-index:default`, but `ProjectionRebuildService.GetIndexStateKey` uses `{tenant}:party-index:all` (`src/Hexalith.Parties.Projections/Services/ProjectionRebuildService.cs:460`). An index rebuild writes to a different key than the live actor reads — the two can diverge. (Detail-projection and manifest keys agree.)
 - **Aspire SDK/package skew** (§3): AppHost SDK pinned `13.3.3` vs packages `13.4.0`.
-- **AdminPortal GDPR client stubs:** `GetErasureCertificateAsync` and `RetryErasureVerificationAsync` are inert `ContractUnavailable` (501) placeholders pending an EventStore contract.
+- **AdminPortal erasure verification is implemented through existing gateway seams:** `GetErasureCertificateAsync` posts the `GetErasureCertificate` projection query handled by `PartyDetailProjectionQueryActor`; `RetryErasureVerificationAsync` posts the additive `RetryErasureVerification` command and reuses the Parties erasure orchestrator. No public `parties` API, EventStore submodule route, or DAPR `/query` service-invocation ACL was added.
 - **CI `contract-test` (Pact) job is unenforced** — the root Pact scripts don't exist, so it self-reports "CONCERNS" and is skipped; the quality gate passes it as `skipped`.

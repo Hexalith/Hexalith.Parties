@@ -42,7 +42,7 @@ Envelope (camelCase JSON):
 
 Response carries a `correlationId` (and optionally a `resultPayload` echoing the updated `PartyDetail`). **Acceptance is not read-your-write** — projections are eventually consistent.
 
-**Command types accepted** (the `commandType` field): every command in [data-models.md §3](data-models.md) — `CreateParty`, `CreatePartyComposite`, `UpdatePartyComposite`, `UpdatePersonDetails`, `UpdateOrganizationDetails`, `SetIsNaturalPerson`, `AddContactChannel`, `UpdateContactChannel`, `RemoveContactChannel`, `AddIdentifier`, `RemoveIdentifier`, `DeactivateParty`, `ReactivateParty`, and the GDPR commands (`RecordConsent`, `RevokeConsent`, `RestrictProcessing`, `LiftRestriction`, `EraseParty`, …).
+**Command types accepted** (the `commandType` field): every command in [data-models.md §3](data-models.md) — `CreateParty`, `CreatePartyComposite`, `UpdatePartyComposite`, `UpdatePersonDetails`, `UpdateOrganizationDetails`, `SetIsNaturalPerson`, `AddContactChannel`, `UpdateContactChannel`, `RemoveContactChannel`, `AddIdentifier`, `RemoveIdentifier`, `DeactivateParty`, `ReactivateParty`, and the GDPR commands (`RecordConsent`, `RevokeConsent`, `RestrictProcessing`, `LiftRestriction`, `EraseParty`, `RetryErasureVerification`, …).
 
 ### Queries — `POST /api/v1/queries`
 
@@ -53,6 +53,9 @@ Envelope fields: `tenant`, `domain="party"`, `aggregateId`, `queryType`, `entity
 | `PartyDetail` | the partyId | — | `PartyDetail` |
 | `PartyIndex` | `"parties"` | `{ page, pageSize, type?, active?, created/modified after/before }` | `PagedResult<PartyIndexEntry>` |
 | `PartySearch` | `"parties"` | `{ query, page, pageSize, mode? }` | `PagedResult<PartySearchResult>` |
+| `ExportPartyData` | the partyId | `{ partyId }` | `PartyDataPortabilityPackage` |
+| `GetProcessingRecords` | the partyId | `{ partyId }` | `ProcessingActivityRecord[]` |
+| `GetErasureCertificate` | the partyId | `{ partyId }` | `ErasureCertificate?` |
 
 #### `PartySearch` wire-mode allowlist (fail-closed)
 
@@ -119,7 +122,9 @@ AdminPortal uses the optional `type` and `active` parameters to keep debounced d
 
 ### `IAdminPortalGdprClient`
 
-`src/Hexalith.Parties.Client/AdminPortal/IAdminPortalGdprClient.cs` — a GDPR-focused client over the same gateway, used by the AdminPortal. Methods: `RequestErasureAsync` (→ `EraseParty`), `GetErasureStatusAsync` (derived from `PartyDetail`), `RestrictProcessingAsync`/`LiftRestrictionAsync`, `AddConsentAsync` (→ `RecordConsent`) / `RevokeConsentAsync`, `GetConsentAsync`, `ExportPartyDataAsync` (→ `ExportPartyData` → JSON download), `GetProcessingRecordsAsync` (→ `GetProcessingRecords`). Results map to an `AdminPortalGdprOutcome` enum (Accepted/Completed/ValidationRejected/Forbidden/…). Two methods are intentionally non-functional pending an EventStore contract: `GetErasureCertificateAsync` (faults 501 `ContractUnavailable`) and `RetryErasureVerificationAsync` (stub).
+`src/Hexalith.Parties.Client/AdminPortal/IAdminPortalGdprClient.cs` — a GDPR-focused client over the same gateway, used by the AdminPortal. Methods: `RequestErasureAsync` (→ `EraseParty`), `GetErasureStatusAsync` (derived from `PartyDetail`), `RestrictProcessingAsync`/`LiftRestrictionAsync`, `AddConsentAsync` (→ `RecordConsent`) / `RevokeConsentAsync`, `GetConsentAsync`, `ExportPartyDataAsync` (→ `ExportPartyData` → JSON download), `GetProcessingRecordsAsync` (→ `GetProcessingRecords`), `GetErasureCertificateAsync` (→ `GetErasureCertificate`), and `RetryErasureVerificationAsync` (→ `RetryErasureVerification`). Results map to an `AdminPortalGdprOutcome` enum (Accepted/Completed/ValidationRejected/Forbidden/ContractUnavailable/…).
+
+The erasure certificate path uses the existing `PartyDetailProjectionQueryActor` query route; it does not add a public `parties` endpoint or a DAPR `/query` service-invocation allowance. `RetryErasureVerification` is an EventStore command that the Parties domain service handles through the existing erasure orchestrator and record store.
 
 ### Transport details
 

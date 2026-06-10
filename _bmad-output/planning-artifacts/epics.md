@@ -161,10 +161,10 @@ existing event-sourced / CQRS / EventStore-gateway-fronted Parties domain servic
 
 - **AR-D1 Render model:** Blazor **Interactive Server** (`AddInteractiveServerComponents`),
   `ValidateScopes=true` (ADR-030).
-- **AR-D2 Consumer identity binding:** verified IdP `party_id` claim maps subject →
-  exactly one `Party`; resolution **fail-closed**. *(Gap: the provisioning mechanism —
-  admin-link / self-registration / IdP federation — is undesigned and gates the
-  Consumer area; see AR-Gap-Binding.)*
+- **AR-D2 Consumer identity binding:** admin-link provisioning writes a verified IdP
+  `party_id` claim that maps subject → exactly one `Party`; resolution **fail-closed**.
+  The accepted ADR records the rejected self-registration / IdP federation alternatives
+  and the small binding-store audit shape outside the Parties event stream.
 - **AR-D3 Own-data authorization:** UI BFF only ever issues self-scoped operations for
   a Consumer (never list/search) via a **single `ISelfScopedPartiesClient` accessor**;
   Parties host adds a fail-closed **`IDataSubjectAccessService`** asserting
@@ -180,11 +180,11 @@ existing event-sourced / CQRS / EventStore-gateway-fronted Parties domain servic
 - **AR-D6 Live freshness:** subscribe to EventStore projection updates over **SignalR**
   (`Hexalith.EventStore.SignalR` + `Microsoft.AspNetCore.SignalR.Client` 10.0.8) to
   reconcile optimistic UI; polling/freshness-metadata fallback when degraded.
-- **AR-D7 GDPR-stub completion:** `GetErasureCertificateAsync` /
-  `RetryErasureVerificationAsync` are inert **501 stubs** pending an **EventStore
-  contract** (cross-submodule, requires explicit approval); the Admin
-  erasure-verification report depends on it — define as a **backend story** preceding
-  that UI.
+- **AR-D7 GDPR erasure-verification completion:** `GetErasureCertificateAsync`
+  uses the existing EventStore projection-query actor route and
+  `RetryErasureVerificationAsync` uses the EventStore command path plus the Parties
+  erasure orchestrator. The approved implementation did not require an EventStore
+  submodule route, a public `parties` endpoint, or a DAPR `/query` ACL.
 - **AR-D8 Portability export delivery:** `ExportPartyData` → `PartyDataPortabilityPackage`
   (JSON); happy path = synchronous download with progress; slow/large = async
   "preparing → ready" with SignalR/poll signal + in-app download; **no time promise** in copy.
@@ -236,15 +236,16 @@ existing event-sourced / CQRS / EventStore-gateway-fronted Parties domain servic
 - **AR-Client:** `IPartiesCommandClient` (Create/Update*/Add/Remove/De-Reactivate),
   `IPartiesQueryClient` (`GetPartyAsync`, `ListPartiesAsync`, `SearchPartiesAsync` —
   display-name/Lexical mode only, fail-closed allowlist), and `IAdminPortalGdprClient`
-  (erasure/restrict/consent/export/processing-records; two 501 stubs) already exist and
-  are the building blocks. The browser talks **only** to the UI host; the UI never calls
+  (erasure/restrict/consent/export/processing-records/erasure-certificate/retry-verification)
+  already exist and are the building blocks. The browser talks **only** to the UI host; the UI never calls
   the `parties` actor host directly.
 
 **Known gaps to resolve as scoped stories (from architecture gap analysis):**
 
-- **AR-Gap-Binding:** the `party_id` claim/binding **provisioning mechanism** is undesigned
-  and **gates the entire Consumer area** — needs a short onboarding/binding design story
-  before Consumer implementation. Admin + host/self-scope plumbing are unaffected.
+- **AR-Gap-Binding:** design is closed by the accepted Consumer identity binding ADR:
+  admin-link provisioning writes the IdP `party_id` attribute/claim and records operator
+  audit/reconciliation in a small binding store outside the Parties event stream. Story
+  4.2 implements the flow. Admin + host/self-scope plumbing are unaffected.
 - **AR-Gap-D7:** the EventStore GDPR contract (erasure certificate / retry-verify) is a
   cross-submodule backend story gating FR-Admin-4's verification report.
 - **AR-Gap-KMS:** production KMS for crypto-shredding (pre-existing prerequisite).
@@ -407,7 +408,8 @@ two-state erasure panel (UX-DR13), plain-verbs / single-status (UX-DR16) — all
 
 `1 → {2, 4}` · `2 → 3` · `4 → 5`. Each epic is standalone once its predecessors ship.
 Epic 3 additionally depends on the D7 EventStore contract (cross-submodule, approval
-required); Epic 4 additionally depends on the AR-Gap-Binding provisioning design.
+required); Epic 4 additionally depends on Story 4.2 implementing the accepted
+admin-link binding ADR.
 **Intra-epic sequencing:** Story 4.2 (binding build) depends on Story 4.1 (binding
 decision / ADR); Story 3.6 (verification report UI) depends on Story 3.5 (D7 backend
 contract, approval-gated).
@@ -875,23 +877,27 @@ So that the Consumer area can be estimated and built against a known design.
 
 **And** this is a **decision spike**, not an implementation story; it produces a decision artifact only and is the **predecessor of Story 4.2** and all of Epics 4–5. _(Resolves readiness finding M1.)_
 
-### Story 4.2: Implement the chosen `party_id` binding-provisioning mechanism
+### Story 4.2: Implement admin-link `party_id` binding provisioning
 
 As a product owner,
-I want the binding mechanism chosen in Story 4.1 implemented end-to-end,
+I want the admin-link binding mechanism from the accepted Consumer identity binding ADR implemented end-to-end,
 So that consumers can be provisioned and the Consumer area becomes reachable.
 
 **Acceptance Criteria:**
 
-**Given** the mechanism selected in Story 4.1 (ADR)
-**When** it is implemented
-**Then** a verified `party_id` claim is issued and/or stored per the ADR (IdP claim and/or binding store — **never in the event stream**), and a consumer can be provisioned through the defined flow.
+**Given** the accepted ADR `_bmad-output/planning-artifacts/adr-consumer-party-id-binding.md`
+**When** Story 4.2 implements provisioning
+**Then** an authorized Admin, TenantOwner, or support operator can link an existing IdP user to an existing Party through the admin-link flow, the IdP user attribute `party_id` is set for the verified Party, and a small identity-binding audit store records `{tenant, idp_issuer, idp_subject, party_id, status, operator, timestamps, verification_reference, reason_code, version}` outside the Parties event stream.
 
 **Given** a newly provisioned consumer
 **When** they sign in
-**Then** their `party_id` claim resolves (consumed by Story 1.4) and they reach `/me`; an **unbound** consumer sees the `NoPartyBinding` onboarding/error UX rather than any data screen.
+**Then** the Keycloak/tache mapper emits exactly one `party_id` claim (`multivalued=false`) consumed by `PartyIdClaimResolver`, `RoleLandingRedirect` sends the bound Consumer to `/me`, and an unbound, empty, duplicated, suspended, or removed binding sends the Consumer to `NoPartyBinding` rather than any data screen.
 
-**And** integration tests cover a bound consumer (reaches `/me`) and an unbound one (fails closed). _This story unblocks the rest of Epic 4 and Epic 5._
+**Given** the implementation scope
+**When** files are changed
+**Then** likely changes are limited to Keycloak/tache realm configuration and topology tests, the identity-binding provisioning surface/service, operator authorization, and host/flow tests for bound and unbound Consumers; no Parties command, event, projection, actor, DAPR ACL expansion, public actor-host endpoint, browser token flow, or Parties event-stream mapping is introduced.
+
+**And** tests cover mapper shape, a bound Consumer (reaches `/me`), unbound/removed/ambiguous Consumers (fail closed to `NoPartyBinding`), duplicate active binding rejection, rotation, suspend/remove, unauthorized operator denial, and audit-store/IdP-attribute drift handling. _This story unblocks the rest of Epic 4 and Epic 5._
 
 ### Story 4.3: Stand up the ConsumerPortal RCL and Consumer area
 

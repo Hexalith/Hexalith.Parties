@@ -66,19 +66,19 @@ development_status:
   epic-2-retrospective: done
 
   # ── Epic 3: Admin — GDPR / DPO Operations ────────────────────────────────
-  epic-3: in-progress
+  epic-3: done
   3-1-gdpr-operations-page: done
   3-2-erase-a-party-with-typed-name-confirmation: done
   3-3-restrict-lift-restriction-and-record-revoke-consent: done
   3-4-data-export-art-20-and-processing-records-art-30: done
   3-5-eventstore-erasure-verification-contract-backend-cross-submodule-approval-gated: done
   3-6-admin-erasure-verification-report-ui-consumes-the-d7-contract: done
-  epic-3-retrospective: optional
+  epic-3-retrospective: done
 
   # ── Epic 4: Consumer — Identity Binding & My Profile ─────────────────────
-  epic-4: backlog
-  4-1-decide-the-consumer-identity-party-id-binding-mechanism-design-spike-adr: backlog
-  4-2-implement-the-chosen-party-id-binding-provisioning-mechanism: backlog
+  epic-4: in-progress
+  4-1-decide-the-consumer-identity-party-id-binding-mechanism-design-spike-adr: done
+  4-2-implement-admin-link-party-id-binding-provisioning: backlog
   4-3-stand-up-the-consumerportal-rcl-and-consumer-area: backlog
   4-4-my-profile-fr-consumer-1: backlog
   4-5-edit-my-profile-fr-consumer-2: backlog

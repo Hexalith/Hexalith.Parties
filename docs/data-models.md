@@ -189,8 +189,9 @@ Read models are materialised by DAPR actors from the event stream and stored per
 | `PagedResult<T>` | `Items[]`, `Page`, `PageSize`, `TotalCount`, `TotalPages`, `Freshness?` |
 | `ProjectionFreshnessMetadata` | `Status: ProjectionFreshnessStatus` + `WarningCodes[]` (consts: `projection-rebuilding`, `…-state-store-unavailable`, `…-context-unavailable`, `…-state-unavailable`) |
 | `PartyDetailProjectionReadResult` / `PartyIndexProjectionReadResult` | actor read envelopes (detail + freshness / entries + freshness) |
-| `ProcessingActivityRecord` | GDPR Art.30 processing-log row (`SequenceNumber`, `PartyId`, `TenantId`, `ActorId`, `EventType`, `Outcome`, `Timestamp`, `Summary`) |
+| `ProcessingActivityRecord` | GDPR Art.30 processing-log row (`SequenceNumber`, `PartyId`, `TenantId`, `ActorId`, `CorrelationId`, `OperationCategory`, `EventType`, `Outcome`, `Timestamp`, `Summary`) |
 | `PartyDataPortabilityPackage` | GDPR Art.20 export (`Party: PartyDetail?` + `ProcessingRecords[]` + status) |
+| `ErasureCertificate` | GDPR erasure proof (`PartyId`, `TenantId`, `Timestamp`, `KeyVersionsDestroyed`, `VerificationStatus`) returned through the AdminPortal erasure-certificate query |
 
 For projection actor mechanics (checkpointing, idempotency, rebuild, batching), see **[architecture.md](architecture.md) §4** and `src/Hexalith.Parties.Projections/`.
 

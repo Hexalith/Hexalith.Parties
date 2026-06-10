@@ -152,9 +152,9 @@ role-gated areas. Nav auto-populates from domain manifests, gated by
   Read/Write/Admin) via a fail-closed, eventually-consistent, **projection-side-only**
   tenant-access projection — no "Consumer" data-subject role or own-data scoping
   exists yet.
-- **GDPR backend is mostly present but**: `GetErasureCertificateAsync` /
-  `RetryErasureVerificationAsync` are inert 501 stubs pending an EventStore
-  contract; crypto-shredding is ON by default with only `LocalDevKeyStorageBackend`
+- **GDPR backend is implemented for Admin DPO flows**: `GetErasureCertificateAsync`
+  posts the `GetErasureCertificate` projection query and `RetryErasureVerificationAsync`
+  posts the additive `RetryErasureVerification` command; crypto-shredding is ON by default with only `LocalDevKeyStorageBackend`
   (in-memory, dev-only — production KMS gap).
 - **Search is fail-closed allowlisted** to `Lexical`/`DisplayName` in MVP;
   temporal name-as-of queries do not exist (reserved).
@@ -278,9 +278,10 @@ wiring + the FrontComposer quickstart chain) should be the **first implementatio
   `ProjectionFreshnessMetadata`; **render last-known on stale/degraded, never blank
   or throw** (matches existing `DegradedResponseMiddleware` + freshness model).
   Acceptance is **not** read-your-write → optimistic echo + reconcile (see D6).
-- **No new persistence** introduced by the UI tier. The consumer identity→party
-  **binding** (D2) is the only new stored mapping; it lives in the IdP (claim) and/or
-  a small binding store, **not** in the event stream.
+- **No new Parties persistence** introduced by the UI tier. The consumer identity→party
+  **binding** (D2) uses the accepted admin-link ADR: the runtime binding lives in the
+  IdP `party_id` claim and operator audit/reconciliation lives in a small binding store
+  outside the Parties event stream.
 
 ### Authentication & Security
 
@@ -289,9 +290,12 @@ wiring + the FrontComposer quickstart chain) should be the **first implementatio
   pattern) against **Keycloak** (run mode) / the external **`tache` realm** (publish).
   Server-side cookie session; **OIDC tokens never leave the server** — the browser
   holds no bearer token, so it cannot call the EventStore gateway directly.
-- **D2 — Consumer identity = `party_id` claim binding.** A verified IdP claim
-  (`party_id`) maps the authenticated subject to exactly one `Party`. Resolution is
-  **fail-closed**: a Consumer with no `party_id` claim is routed to an
+- **D2 — Consumer identity = admin-linked `party_id` claim binding.** ADR
+  `_bmad-output/planning-artifacts/adr-consumer-party-id-binding.md` selects an
+  admin-link provisioning flow: an authorized operator links an existing IdP user to
+  an existing Party, the IdP emits exactly one verified `party_id` claim, and a small
+  binding store records audit/reconciliation state outside the Parties event stream.
+  Resolution is **fail-closed**: a Consumer with no `party_id` claim is routed to an
   onboarding/error state, never to a data screen. Tenant claim (`eventstore:tenant`,
   normalized by `PartiesClaimsTransformation`) is carried as today; the consumer's
   effective scope is `{tenant, party_id}`.
@@ -337,11 +341,11 @@ wiring + the FrontComposer quickstart chain) should be the **first implementatio
   TenantUnavailable, 404/410→Gone, ≥500→LoadFailure, timeout→TransientFailure);
   **politeness split** — status/freshness `aria-live=polite`, validation/failure
   `role=alert`.
-- **D7 — GDPR-stub completion:** `GetErasureCertificateAsync` /
-  `RetryErasureVerificationAsync` are 501 stubs pending an EventStore contract; the
-  Admin **erasure-verification report** (Flow 3 climax) depends on them. Define the
-  EventStore contract + Parties implementation as a **backend story** preceding the
-  Admin GDPR verification UI.
+- **D7 — GDPR erasure-verification completion:** `GetErasureCertificateAsync`
+  uses the existing `PartyDetailProjectionQueryActor` route and
+  `RetryErasureVerificationAsync` uses the EventStore command path plus Parties
+  erasure orchestrator. The approved implementation did not require an EventStore
+  submodule route, a public `parties` endpoint, or a DAPR `/query` ACL.
 - **D8 — Portability-export delivery:** `ExportPartyData` → `PartyDataPortabilityPackage`
   (JSON). Happy path = synchronous download with progress; for slow/large exports,
   async "preparing → ready" with a SignalR/poll signal and an in-app download when
@@ -500,8 +504,9 @@ The rules below target the **~10 UI-tier divergence points** these don't cover.
   list/search. All consumer gateway calls go through **one** self-scoped accessor that
   injects the resolved `party_id` and asserts `aggregateId == party_id`. Admin uses the
   tenant-scoped client. Bypassing the accessor is a defect.
-- **Auth flow:** host-owned OIDC; tokens **server-side only**; `party_id`-claim
-  resolution is **fail-closed** (no claim → onboarding/error route, never a data screen).
+- **Auth flow:** host-owned OIDC; tokens **server-side only**; admin-link provisioning
+  writes the IdP user attribute that becomes the `party_id` claim; claim resolution is
+  **fail-closed** (no/empty/ambiguous claim -> onboarding/error route, never a data screen).
 - **DI lifetime (ADR-030, pinned):** storage / effects / auth / tenant / self accessors
   are **Scoped**, never captured by singletons; `ValidateScopes=true` fails such capture
   at boot.
@@ -625,10 +630,11 @@ src/Hexalith.Parties.AppHost/Program.cs           ◆ add builder.AddProject<Pro
 deploy/k8s/                                        ◆ parties-ui Deployment/Service/ingress + OIDC config (11 → 12 pods)
 ```
 
-> **Cross-submodule (D7, requires explicit approval):** completing
-> `GetErasureCertificate` / `RetryErasureVerification` needs an **EventStore contract**
-> (in the `Hexalith.EventStore` submodule) plus the Parties-side wiring in
-> `Hexalith.Parties.Client/AdminPortal/`. Treat as a separate, approved backend story.
+> **D7 implementation note:** `GetErasureCertificate` and
+> `RetryErasureVerification` were completed through existing EventStore-fronted
+> Parties seams: the projection-query actor for certificate reads and the command
+> domain service path for retry. No EventStore submodule route or DAPR ACL expansion
+> was required.
 
 ### Architectural Boundaries
 
@@ -656,7 +662,7 @@ deploy/k8s/                                        ◆ parties-ui Deployment/Ser
 | Own-data authz (D3) | `UI/Services/SelfScopedPartiesClient` + `Hexalith.Parties/Authorization/` |
 | Live freshness (D6) | `UI/Services/PartiesProjectionSubscription` + per-slice Effects |
 | Picker re-skin + ARIA (D11) | `Hexalith.Parties.Picker/` |
-| GDPR verification (D7) | EventStore contract + `Client/AdminPortal/` (backend story) |
+| GDPR verification (D7) | `PartyDetailProjectionQueryActor`, `PartyDomainServiceInvoker`, `Client/AdminPortal/`, `AdminPortal/Components` |
 
 ### Integration Points & Data Flow
 
@@ -704,9 +710,9 @@ self-scope choke point, picker re-skin, host Authorization extension. Boundaries
 
 **Functional coverage:**
 - FR-Shell ✅ · FR-Admin-1/2/3 ✅ · FR-Consumer-1/2/3/4 ✅ (structurally placed).
-- **FR-Admin-4 (GDPR) — partial:** restrict/consent/export/processing-records reuse
-  existing AdminPortal panels ✅; the **erasure-verification report depends on D7**
-  (EventStore contract — 501 stubs today).
+- **FR-Admin-4 (GDPR):** restrict/consent/export/processing-records reuse
+  existing AdminPortal panels ✅; erasure certificate and verification retry are
+  implemented through the D7 projection-query and command seams ✅.
 
 **Non-functional coverage:**
 - Accessibility (WCAG 2.2 AA) ✅ — D9 + bUnit + Playwright a11y gate.
@@ -728,13 +734,16 @@ process patterns with examples and enforcement.
 decided path.
 
 **Important Gaps (resolve before the dependent flow ships):**
-1. **D2 binding provisioning (gates the Consumer area):** the *mechanism* by which a
-   consumer obtains the `party_id` claim/binding (admin-link · self-registration ·
-   IdP federation) is undesigned. Recommend a short onboarding/binding design before
-   Consumer implementation. The Admin area and all host/self-scope plumbing are
-   unaffected.
-2. **D7 EventStore GDPR contract (gates FR-Admin-4 verification report):** define the
-   contract + Parties wiring as an approved backend story; cross-submodule.
+1. **D2 binding provisioning implementation (gates the Consumer area):** the mechanism is
+   now decided by `_bmad-output/planning-artifacts/adr-consumer-party-id-binding.md`:
+   admin-link provisioning writes the IdP `party_id` attribute/claim and records operator
+   audit/reconciliation in a small binding store outside the Parties event stream. Story
+   4.2 implements that flow. The Admin area, host-owned OIDC, fail-closed
+   `PartyIdClaimResolver`, `NoPartyBinding`, `ISelfScopedPartiesClient`, BFF self-scope,
+   Parties-side defense-in-depth, and the deferred gateway self-principal risk remain
+   unchanged.
+2. **D7 EventStore GDPR contract:** resolved through the existing projection-query
+   actor and command seams; no EventStore submodule route or DAPR ACL expansion was needed.
 3. **Production KMS (pre-existing prerequisite):** crypto-shredding is ON by default with
    only `LocalDevKeyStorageBackend`; provision a real KMS before any real EU PII.
 4. **RCL status/freshness boundary (discovered in Epic 1):** host-owned
@@ -781,9 +790,9 @@ async export-ready notification channel detail; Blazor Server circuit scaling
 
 ### Architecture Readiness Assessment
 
-**Overall Status:** READY WITH MINOR GAPS — chosen deliberately (conservative). The
-foundation + Admin path are implementable now; the Consumer path needs the D2
-binding-provisioning design first, and FR-Admin-4 verification needs D7.
+**Overall Status:** READY WITH KNOWN IMPLEMENTATION DEPENDENCIES — chosen deliberately
+(conservative). The foundation + Admin path are implementable now; the Consumer path
+needs Story 4.2 to implement the accepted D2 admin-link binding ADR.
 
 **Confidence Level:** medium-high — strong fit to the existing system; the open items are
 scoped dependencies, not unknowns.
@@ -813,5 +822,5 @@ scoped dependencies, not unknowns.
 **First Implementation Priority:** Stand up the `Hexalith.Parties.UI` host (Sdk.Web,
 FrontComposer Quickstart chain + OIDC + `AddPartiesClient` + SignalR + self-scope DI),
 add it to `Hexalith.Parties.slnx` and the AppHost — then role routing + `party_id`
-resolution. (Resolve the **D2 binding-provisioning design** before building the Consumer
-area.)
+resolution. Consumer implementation depends on Story 4.2 implementing the accepted
+admin-link binding ADR.

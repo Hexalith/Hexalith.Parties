@@ -30,7 +30,7 @@
 |-------|---------|----------|----------------|
 | `PartyDetailProjectionActor` | Projections | `{tenant}:party-detail:{partyId}` | per-party `PartyDetail` read model (event apply + checkpoint) |
 | `PartyIndexProjectionActor` | Projections | `{tenant}:party-index` | per-tenant searchable index (batched writes, flush reminder) — ⚠️ live state key is `…:default`; `ProjectionRebuildService` uses `…:all` ([architecture.md §13](architecture.md)) |
-| `PartyDetailProjectionQueryActor` | Hexalith.Parties | `party-detail:{tenant}:{partyId}` | query adapter — detail / export / processing records |
+| `PartyDetailProjectionQueryActor` | Hexalith.Parties | `party-detail:{tenant}:{partyId}` | query adapter — detail / export / processing records / erasure certificate |
 | `PartyIndexProjectionQueryActor` | Hexalith.Parties | `party-index:{tenant}:parties` | query adapter — list / search |
 | `PartyKeyRetryActor` | Security | (key-retry id) | GDPR key-creation retry scheduling |
 | `AggregateActor` | EventStore.Server | (stream id) | event-stream host (registered by `AddEventStoreServer`) |
@@ -49,7 +49,7 @@ Supporting services: `PartyPickerApiClient` (the only bridge to `IPartiesQueryCl
 
 ### Admin Portal (`Hexalith.Parties.AdminPortal`)
 
-FrontComposer-hosted **FluentUI** RCL (render mode owned by the host shell). Routed at `/admin/parties`, `/admin/parties/{id}`, `/admin/parties/{id}/gdpr`, `/admin/parties/new`, and `/admin/parties/{id}/edit`. Talks to the backend via `IPartiesQueryClient` (preferred) or the FrontComposer `IQueryService`, `IPartiesCommandClient` through the AdminPortal adapter for create/edit, and `IAdminPortalGdprClient` for GDPR. Admin functions: tenant-scoped browse (debounced server search, filters, paging), responsive party detail, create/edit with validation, related-party picker binding, EventStore-admin deep links, and GDPR surfaces for erasure, restriction, consent, portability export, and processing records. Erasure verification remains gated by the pending EventStore D7 contract.
+FrontComposer-hosted **FluentUI** RCL (render mode owned by the host shell). Routed at `/admin/parties`, `/admin/parties/{id}`, `/admin/parties/{id}/gdpr`, `/admin/parties/new`, and `/admin/parties/{id}/edit`. Talks to the backend via `IPartiesQueryClient` (preferred) or the FrontComposer `IQueryService`, `IPartiesCommandClient` through the AdminPortal adapter for create/edit, and `IAdminPortalGdprClient` for GDPR. Admin functions: tenant-scoped browse (debounced server search, filters, paging), responsive party detail, create/edit with validation, related-party picker binding, EventStore-admin deep links, and GDPR surfaces for erasure, restriction, consent, portability export, processing records, erasure certificate display, and verification retry.
 
 | Component | Category | Purpose |
 |-----------|----------|---------|
@@ -58,7 +58,7 @@ FrontComposer-hosted **FluentUI** RCL (render mode owned by the host shell). Rou
 | `PartyGdprOperationsPanel.razor` | Container | orchestrates capability-gated GDPR actions |
 | `DpoOperationalSummaryPanel.razor` | Display | DPO summary (erasure/restriction/consent/audit counts) |
 | `ErasureStatusPanel.razor` | Display | erasure status + nested certificate |
-| `ErasureVerificationReportPanel.razor` | Display | erasure certificate verification status |
+| `ErasureVerificationReportPanel.razor` | Display | bounded DPO erasure-verification report |
 | `RestrictionActionsPanel.razor` | Form | restrict / lift processing |
 | `ConsentManagementPanel.razor` | Form / Display | add / revoke consent + list |
 | `PortabilityExportPanel.razor` | Form | GDPR data export (JSON download) |
