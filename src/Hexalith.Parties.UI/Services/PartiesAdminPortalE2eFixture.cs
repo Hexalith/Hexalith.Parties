@@ -92,6 +92,10 @@ internal sealed class PartiesAdminPortalE2eFixtureState
     private readonly List<AdminPortalRequestCapture> _createRequests = [];
     private readonly List<AdminPortalRequestCapture> _updateRequests = [];
     private readonly List<AdminPortalRequestCapture> _erasureRequests = [];
+    private readonly List<AdminPortalRequestCapture> _restrictionRequests = [];
+    private readonly List<AdminPortalRequestCapture> _liftRestrictionRequests = [];
+    private readonly List<AdminPortalRequestCapture> _addConsentRequests = [];
+    private readonly List<AdminPortalRequestCapture> _revokeConsentRequests = [];
     private readonly List<AdminPortalRequestCapture> _pickerSearchRequests = [];
     private readonly List<AdminPortalRequestCapture> _pickerDetailRequests = [];
     private readonly Dictionary<string, PartyDetail> _details = CreateInitialDetails();
@@ -180,6 +184,96 @@ internal sealed class PartiesAdminPortalE2eFixtureState
         }
     }
 
+    public void CaptureRestriction(string partyId)
+    {
+        lock (_sync)
+        {
+            _restrictionRequests.Add(AdminPortalRequestCapture.FromRestriction(partyId));
+            if (_details.TryGetValue(partyId, out PartyDetail? detail))
+            {
+                _details[partyId] = detail with
+                {
+                    IsRestricted = true,
+                    RestrictedAt = BaseDate,
+                    LastModifiedAt = BaseDate,
+                };
+            }
+        }
+    }
+
+    public void CaptureLiftRestriction(string partyId)
+    {
+        lock (_sync)
+        {
+            _liftRestrictionRequests.Add(AdminPortalRequestCapture.FromLiftRestriction(partyId));
+            if (_details.TryGetValue(partyId, out PartyDetail? detail))
+            {
+                _details[partyId] = detail with
+                {
+                    IsRestricted = false,
+                    RestrictedAt = null,
+                    LastModifiedAt = BaseDate,
+                };
+            }
+        }
+    }
+
+    public void CaptureAddConsent(string partyId, string channelId, string purpose, LawfulBasis lawfulBasis)
+    {
+        lock (_sync)
+        {
+            _addConsentRequests.Add(AdminPortalRequestCapture.FromAddConsent(partyId));
+            if (_details.TryGetValue(partyId, out PartyDetail? detail))
+            {
+                string consentId = $"{channelId}:{purpose}";
+                ConsentRecord record = new()
+                {
+                    ConsentId = consentId,
+                    ChannelId = channelId,
+                    Purpose = purpose,
+                    LawfulBasis = lawfulBasis,
+                    GrantedAt = BaseDate,
+                    GrantedBy = "admin-e2e",
+                };
+                IReadOnlyList<ConsentRecord> records = detail.ConsentRecords
+                    .Where(consent => !string.Equals(consent.ConsentId, consentId, StringComparison.Ordinal))
+                    .Append(record)
+                    .ToArray();
+                _details[partyId] = detail with
+                {
+                    ConsentRecords = records,
+                    LastModifiedAt = BaseDate,
+                };
+            }
+        }
+    }
+
+    public void CaptureRevokeConsent(string partyId, string consentId)
+    {
+        lock (_sync)
+        {
+            _revokeConsentRequests.Add(AdminPortalRequestCapture.FromRevokeConsent(partyId));
+            if (_details.TryGetValue(partyId, out PartyDetail? detail))
+            {
+                _details[partyId] = detail with
+                {
+                    ConsentRecords =
+                    [
+                        .. detail.ConsentRecords.Select(consent =>
+                            string.Equals(consent.ConsentId, consentId, StringComparison.Ordinal)
+                                ? consent with
+                                {
+                                    RevokedAt = BaseDate,
+                                    RevokedBy = "admin-e2e",
+                                }
+                                : consent),
+                    ],
+                    LastModifiedAt = BaseDate,
+                };
+            }
+        }
+    }
+
     public PartyDetail? Detail(string partyId)
     {
         lock (_sync)
@@ -198,6 +292,10 @@ internal sealed class PartiesAdminPortalE2eFixtureState
             _createRequests.Clear();
             _updateRequests.Clear();
             _erasureRequests.Clear();
+            _restrictionRequests.Clear();
+            _liftRestrictionRequests.Clear();
+            _addConsentRequests.Clear();
+            _revokeConsentRequests.Clear();
             _pickerSearchRequests.Clear();
             _pickerDetailRequests.Clear();
             _details.Clear();
@@ -219,6 +317,10 @@ internal sealed class PartiesAdminPortalE2eFixtureState
                 [.. _createRequests],
                 [.. _updateRequests],
                 [.. _erasureRequests],
+                [.. _restrictionRequests],
+                [.. _liftRestrictionRequests],
+                [.. _addConsentRequests],
+                [.. _revokeConsentRequests],
                 [.. _pickerSearchRequests],
                 [.. _pickerDetailRequests]);
         }
@@ -484,12 +586,14 @@ internal sealed class PartiesAdminPortalE2eApiClient(PartiesAdminPortalE2eFixtur
     public Task<AdminPortalGdprCommandResult> RestrictProcessingAsync(string partyId, string? reason, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
+        state.CaptureRestriction(partyId);
         return Task.FromResult(new AdminPortalGdprCommandResult(AdminPortalGdprOutcome.Accepted, "corr-restriction"));
     }
 
     public Task<AdminPortalGdprCommandResult> LiftRestrictionAsync(string partyId, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
+        state.CaptureLiftRestriction(partyId);
         return Task.FromResult(new AdminPortalGdprCommandResult(AdminPortalGdprOutcome.Accepted, "corr-lift-restriction"));
     }
 
@@ -501,12 +605,14 @@ internal sealed class PartiesAdminPortalE2eApiClient(PartiesAdminPortalE2eFixtur
         CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
+        state.CaptureAddConsent(partyId, channelId, purpose, lawfulBasis);
         return Task.FromResult(new AdminPortalGdprCommandResult(AdminPortalGdprOutcome.Accepted, "corr-add-consent"));
     }
 
     public Task<AdminPortalGdprCommandResult> RevokeConsentAsync(string partyId, string consentId, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
+        state.CaptureRevokeConsent(partyId, consentId);
         return Task.FromResult(new AdminPortalGdprCommandResult(AdminPortalGdprOutcome.Accepted, "corr-revoke-consent"));
     }
 
@@ -788,6 +894,10 @@ internal sealed record AdminPortalE2eSnapshot(
     IReadOnlyList<AdminPortalRequestCapture> CreateRequests,
     IReadOnlyList<AdminPortalRequestCapture> UpdateRequests,
     IReadOnlyList<AdminPortalRequestCapture> ErasureRequests,
+    IReadOnlyList<AdminPortalRequestCapture> RestrictionRequests,
+    IReadOnlyList<AdminPortalRequestCapture> LiftRestrictionRequests,
+    IReadOnlyList<AdminPortalRequestCapture> AddConsentRequests,
+    IReadOnlyList<AdminPortalRequestCapture> RevokeConsentRequests,
     IReadOnlyList<AdminPortalRequestCapture> PickerSearchRequests,
     IReadOnlyList<AdminPortalRequestCapture> PickerDetailRequests);
 
@@ -823,4 +933,16 @@ internal sealed record AdminPortalRequestCapture(
 
     public static AdminPortalRequestCapture FromErasure(string partyId)
         => new("erasure", null, 0, 0, null, null, partyId);
+
+    public static AdminPortalRequestCapture FromRestriction(string partyId)
+        => new("restriction", null, 0, 0, null, null, partyId);
+
+    public static AdminPortalRequestCapture FromLiftRestriction(string partyId)
+        => new("lift-restriction", null, 0, 0, null, null, partyId);
+
+    public static AdminPortalRequestCapture FromAddConsent(string partyId)
+        => new("add-consent", null, 0, 0, null, null, partyId);
+
+    public static AdminPortalRequestCapture FromRevokeConsent(string partyId)
+        => new("revoke-consent", null, 0, 0, null, null, partyId);
 }

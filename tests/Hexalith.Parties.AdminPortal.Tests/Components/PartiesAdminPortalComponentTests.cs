@@ -1823,6 +1823,8 @@ public sealed class PartiesAdminPortalComponentTests : BunitContext
         cut.WaitForAssertion(() => FindFluentButton(cut, "Restrict processing").HasAttribute("disabled").ShouldBeFalse());
 
         ClickFluentButton(cut, "Restrict processing");
+        cut.WaitForAssertion(() => cut.Markup.ShouldContain("Confirm restriction"));
+        ClickFluentButton(cut, "Confirm");
         cut.WaitForAssertion(() => cut.Markup.ShouldContain("corr-restrict"));
 
         ClickFluentButton(cut, "Request erasure");
@@ -1891,18 +1893,76 @@ public sealed class PartiesAdminPortalComponentTests : BunitContext
             added.PartyId.ShouldBe("party-consent");
             added.ChannelId.ShouldBe("news-email");
             added.Purpose.ShouldBe("newsletter");
-            // History renders the per-channel/per-purpose consent and offers a revoke control.
-            cut.Markup.ShouldContain("news-email");
+            // History renders bounded consent status and offers a revoke control.
+            cut.Markup.ShouldContain("newsletter");
+            IElement region = cut.Find("[data-gdpr-operation-announcement]");
+            region.TextContent.Trim().ShouldBe("Saved - updating...");
+            region.GetAttribute("role").ShouldBe("status");
+            region.GetAttribute("aria-live").ShouldBe("polite");
             FindFluentButton(cut, "Revoke consent").HasAttribute("disabled").ShouldBeFalse();
         });
 
         ClickFluentButton(cut, "Revoke consent");
+        api.RevokeConsentRequests.ShouldBeEmpty();
+        cut.WaitForAssertion(() =>
+        {
+            IElement confirmation = ConfirmationGroup(cut, "Confirm revoke consent");
+            confirmation.TextContent.ShouldContain("Revoke this active consent record?");
+            confirmation.TextContent.ShouldNotContain("Consent Party");
+        });
+
+        ClickFluentButton(cut, "Confirm");
 
         cut.WaitForAssertion(() =>
         {
             (string PartyId, string ConsentId) revoked = api.RevokeConsentRequests.Single();
             revoked.PartyId.ShouldBe("party-consent");
             revoked.ConsentId.ShouldBe("consent-1");
+            IElement region = cut.Find("[data-gdpr-operation-announcement]");
+            region.TextContent.Trim().ShouldBe("Saved - updating...");
+            region.GetAttribute("role").ShouldBe("status");
+            region.GetAttribute("aria-live").ShouldBe("polite");
+        });
+    }
+
+    [Fact]
+    public void PartiesAdminPortal_GdprOperations_ConsentLedgerDoesNotEchoRawChannelOrOperatorIds()
+    {
+        var api = new RecordingAdminPortalApiClient();
+        api.EnqueueList(Page(IndexEntry("party-consent-private", "Consent Private", PartyType.Person, true)));
+        api.EnqueueDetail(Detail("party-consent-private", "Consent Private", PartyType.Person, isActive: true) with
+        {
+            ConsentRecords =
+            [
+                new ConsentRecord
+                {
+                    ConsentId = "consent-secret-id",
+                    ChannelId = "contact-secret-channel-id",
+                    Purpose = "newsletter",
+                    LawfulBasis = LawfulBasis.Consent,
+                    GrantedAt = DateTimeOffset.Parse("2026-05-03T00:00:00Z"),
+                    GrantedBy = "tenant-user-secret",
+                    RevokedAt = DateTimeOffset.Parse("2026-05-04T00:00:00Z"),
+                    RevokedBy = "tenant-user-revoker",
+                },
+            ],
+        });
+        api.EnqueueGdprCapability(AdminPortalGdprCapability.ProvisionalBridge());
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+
+        IRenderedComponent<PartiesAdminPortal> cut = RenderAuthorized("scope-a");
+        cut.WaitForAssertion(() => cut.Markup.ShouldContain("Consent Private"));
+        ClickFluentButton(cut, "Consent Private");
+
+        cut.WaitForAssertion(() =>
+        {
+            cut.Markup.ShouldContain("newsletter");
+            cut.Markup.ShouldContain("Consent");
+            cut.Markup.ShouldContain("Revoked");
+            cut.Markup.ShouldNotContain("consent-secret-id");
+            cut.Markup.ShouldNotContain("contact-secret-channel-id");
+            cut.Markup.ShouldNotContain("tenant-user-secret");
+            cut.Markup.ShouldNotContain("tenant-user-revoker");
         });
     }
 
@@ -1938,19 +1998,222 @@ public sealed class PartiesAdminPortalComponentTests : BunitContext
 
         SetTextInput(cut, "Restriction reason", "court-order-2026");
         ClickFluentButton(cut, "Restrict processing");
+        api.RestrictionRequests.ShouldBeEmpty();
+        cut.WaitForAssertion(() =>
+        {
+            IElement confirmation = ConfirmationGroup(cut, "Confirm restriction");
+            confirmation.TextContent.ShouldContain("Restrict processing for the selected party?");
+            confirmation.TextContent.ShouldNotContain("court-order-2026");
+            cut.FindAll("[role='dialog']").ShouldBeEmpty();
+        });
+
+        ClickFluentButton(cut, "Confirm");
 
         cut.WaitForAssertion(() =>
         {
             (string PartyId, string? Reason) restriction = api.RestrictionRequests.Single();
             restriction.PartyId.ShouldBe("party-restrict");
             restriction.Reason.ShouldBe("court-order-2026");
+            IElement region = cut.Find("[data-gdpr-operation-announcement]");
+            region.TextContent.Trim().ShouldBe("Saved - updating...");
+            region.GetAttribute("role").ShouldBe("status");
+            region.GetAttribute("aria-live").ShouldBe("polite");
+            IElement badge = cut.Find("aside.hx-parties-admin__detail .party-state-badge");
+            badge.TextContent.Trim().ShouldBe("Restricted");
             // After the refreshed (restricted) detail loads, lifting becomes available.
             FindFluentButton(cut, "Lift restriction").HasAttribute("disabled").ShouldBeFalse();
         });
 
         ClickFluentButton(cut, "Lift restriction");
+        api.LiftRestrictionRequests.ShouldBeEmpty();
+        cut.WaitForAssertion(() =>
+        {
+            IElement confirmation = ConfirmationGroup(cut, "Confirm lift restriction");
+            confirmation.TextContent.ShouldContain("Lift processing restriction for the selected party?");
+            confirmation.TextContent.ShouldNotContain("Restrict Party");
+        });
 
-        cut.WaitForAssertion(() => api.LiftRestrictionRequests.Single().ShouldBe("party-restrict"));
+        ClickFluentButton(cut, "Confirm");
+
+        cut.WaitForAssertion(() =>
+        {
+            api.LiftRestrictionRequests.Single().ShouldBe("party-restrict");
+            IElement region = cut.Find("[data-gdpr-operation-announcement]");
+            region.TextContent.Trim().ShouldBe("Saved - updating...");
+            region.GetAttribute("role").ShouldBe("status");
+        });
+    }
+
+    [Fact]
+    public void PartiesAdminPortal_GdprOperations_CancelRestrictionAndRevokeConfirmationsSendNoCommand()
+    {
+        var api = new RecordingAdminPortalApiClient();
+        api.EnqueueList(Page(
+            IndexEntry("party-cancel-restrict", "Cancel Restrict", PartyType.Person, true),
+            IndexEntry("party-cancel-gdpr", "Cancel GDPR", PartyType.Person, true)));
+        api.EnqueueDetail(Detail("party-cancel-restrict", "Cancel Restrict", PartyType.Person, isActive: true));
+        api.EnqueueDetail(new PartyDetail
+        {
+            Id = "party-cancel-gdpr",
+            Type = PartyType.Person,
+            IsActive = true,
+            IsRestricted = true,
+            DisplayName = "Cancel GDPR",
+            SortName = "GDPR, Cancel",
+            ContactChannels = [],
+            Identifiers = [],
+            ConsentRecords =
+            [
+                new ConsentRecord
+                {
+                    ConsentId = "consent-cancel",
+                    ChannelId = "email",
+                    Purpose = "newsletter",
+                    LawfulBasis = LawfulBasis.Consent,
+                    GrantedAt = DateTimeOffset.Parse("2026-05-03T00:00:00Z"),
+                    GrantedBy = "admin-user",
+                },
+            ],
+            NameHistory = [],
+            CreatedAt = DateTimeOffset.Parse("2026-05-01T00:00:00Z"),
+            LastModifiedAt = DateTimeOffset.Parse("2026-05-03T00:00:00Z"),
+        });
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+
+        IRenderedComponent<PartiesAdminPortal> cut = RenderAuthorized("scope-a");
+        cut.WaitForAssertion(() => cut.Markup.ShouldContain("Cancel Restrict"));
+        ClickFluentButton(cut, "Cancel Restrict");
+        cut.WaitForAssertion(() => FindFluentButton(cut, "Restrict processing").HasAttribute("disabled").ShouldBeFalse());
+
+        SetTextInput(cut, "Restriction reason", "cancelled-reason");
+        ClickFluentButton(cut, "Restrict processing");
+        cut.WaitForAssertion(() => cut.Markup.ShouldContain("Confirm restriction"));
+        ClickFluentButton(cut, "Cancel");
+
+        cut.WaitForAssertion(() =>
+        {
+            api.RestrictionRequests.ShouldBeEmpty();
+            cut.Markup.ShouldNotContain("Confirm restriction");
+        });
+
+        cut.WaitForAssertion(() => cut.Markup.ShouldContain("Cancel GDPR"));
+        ClickFluentButton(cut, "Cancel GDPR");
+        cut.WaitForAssertion(() => FindFluentButton(cut, "Lift restriction").HasAttribute("disabled").ShouldBeFalse());
+
+        ClickFluentButton(cut, "Lift restriction");
+        cut.WaitForAssertion(() => cut.Markup.ShouldContain("Confirm lift restriction"));
+        ClickFluentButton(cut, "Cancel");
+
+        cut.WaitForAssertion(() =>
+        {
+            api.LiftRestrictionRequests.ShouldBeEmpty();
+            cut.Markup.ShouldNotContain("Confirm lift restriction");
+        });
+
+        ClickFluentButton(cut, "Revoke consent");
+        cut.WaitForAssertion(() => cut.Markup.ShouldContain("Confirm revoke consent"));
+        ClickFluentButton(cut, "Cancel");
+
+        cut.WaitForAssertion(() =>
+        {
+            api.RevokeConsentRequests.ShouldBeEmpty();
+            cut.Markup.ShouldNotContain("Confirm revoke consent");
+        });
+    }
+
+    [Fact]
+    public void PartiesAdminPortal_GdprOperations_PartySwitchClearsPendingConfirmationsBeforeMutation()
+    {
+        var api = new RecordingAdminPortalApiClient();
+        api.EnqueueList(Page(
+            IndexEntry("party-switch-a", "Switch A", PartyType.Person, true),
+            IndexEntry("party-switch-b", "Switch B", PartyType.Person, true)));
+        api.EnqueueDetail(Detail("party-switch-a", "Switch A", PartyType.Person, isActive: true));
+        api.EnqueueGdprCapability(AdminPortalGdprCapability.ProvisionalBridge());
+        api.EnqueueDetail(Detail("party-switch-b", "Switch B", PartyType.Person, isActive: true) with
+        {
+            ConsentRecords =
+            [
+                new ConsentRecord
+                {
+                    ConsentId = "switch-consent",
+                    ChannelId = "switch-channel",
+                    Purpose = "newsletter",
+                    LawfulBasis = LawfulBasis.Consent,
+                    GrantedAt = DateTimeOffset.Parse("2026-05-03T00:00:00Z"),
+                    GrantedBy = "admin-user",
+                },
+            ],
+        });
+        api.EnqueueGdprCapability(AdminPortalGdprCapability.ProvisionalBridge());
+        api.EnqueueDetail(Detail("party-switch-a", "Switch A", PartyType.Person, isActive: true));
+        api.EnqueueGdprCapability(AdminPortalGdprCapability.ProvisionalBridge());
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+
+        IRenderedComponent<PartiesAdminPortal> cut = RenderAuthorized("scope-a");
+        cut.WaitForAssertion(() => cut.Markup.ShouldContain("Switch A"));
+        ClickFluentButton(cut, "Switch A");
+        cut.WaitForAssertion(() => FindFluentButton(cut, "Restrict processing").HasAttribute("disabled").ShouldBeFalse());
+
+        ClickFluentButton(cut, "Restrict processing");
+        cut.WaitForAssertion(() => cut.Markup.ShouldContain("Confirm restriction"));
+        ClickFluentButton(cut, "Switch B");
+
+        cut.WaitForAssertion(() =>
+        {
+            cut.Markup.ShouldContain("Switch B");
+            cut.Markup.ShouldNotContain("Confirm restriction");
+            api.RestrictionRequests.ShouldBeEmpty();
+        });
+
+        ClickFluentButton(cut, "Revoke consent");
+        cut.WaitForAssertion(() => cut.Markup.ShouldContain("Confirm revoke consent"));
+        ClickFluentButton(cut, "Switch A");
+
+        cut.WaitForAssertion(() =>
+        {
+            cut.Markup.ShouldContain("Switch A");
+            cut.Markup.ShouldNotContain("Confirm revoke consent");
+            api.RevokeConsentRequests.ShouldBeEmpty();
+        });
+    }
+
+    [Fact]
+    public void PartiesAdminPortal_GdprOperations_AssertiveRestrictionFailureClearsSuccessCorrelationAndBoundedCopy()
+    {
+        var api = new RecordingAdminPortalApiClient();
+        api.EnqueueList(Page(IndexEntry("party-restrict-fail", "Restrict Failure", PartyType.Person, true)));
+        api.EnqueueDetail(Detail("party-restrict-fail", "Restrict Failure", PartyType.Person, isActive: true));
+        api.EnqueueGdprCapability(AdminPortalGdprCapability.ProvisionalBridge());
+        api.EnqueueRestrictionResult(new AdminPortalGdprCommandResult(AdminPortalGdprOutcome.Accepted, "corr-restrict-success"));
+        api.EnqueueDetail(Detail("party-restrict-fail", "Restrict Failure", PartyType.Person, isActive: true, isRestricted: true));
+        api.EnqueueLiftRestrictionResult(new AdminPortalGdprCommandResult(AdminPortalGdprOutcome.ValidationRejected, "corr-lift-rejected"));
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+
+        IRenderedComponent<PartiesAdminPortal> cut = RenderAuthorized("scope-a");
+        cut.WaitForAssertion(() => cut.Markup.ShouldContain("Restrict Failure"));
+        ClickFluentButton(cut, "Restrict Failure");
+        cut.WaitForAssertion(() => FindFluentButton(cut, "Restrict processing").HasAttribute("disabled").ShouldBeFalse());
+
+        SetTextInput(cut, "Restriction reason", "sensitive-free-text");
+        ClickFluentButton(cut, "Restrict processing");
+        ClickFluentButton(cut, "Confirm");
+        cut.WaitForAssertion(() => cut.Markup.ShouldContain("corr-restrict-success"));
+
+        ClickFluentButton(cut, "Lift restriction");
+        ClickFluentButton(cut, "Confirm");
+
+        cut.WaitForAssertion(() =>
+        {
+            IElement region = cut.Find("[data-gdpr-operation-announcement]");
+            region.TextContent.Trim().ShouldBe("Operation rejected");
+            region.GetAttribute("role").ShouldBe("alert");
+            region.GetAttribute("aria-live").ShouldBe("assertive");
+            region.TextContent.ShouldNotContain("sensitive-free-text");
+            cut.Markup.ShouldNotContain("corr-restrict-success");
+            cut.Markup.ShouldNotContain("corr-lift-rejected");
+            cut.Markup.ShouldNotContain("Open EventStore correlation");
+        });
     }
 
     [Fact]
@@ -2240,6 +2503,16 @@ public sealed class PartiesAdminPortalComponentTests : BunitContext
             FindFluentButton(cut, "Revoke consent").HasAttribute("disabled").ShouldBeFalse();
         });
 
+        ClickFluentButton(cut, "Lift restriction");
+        ClickFluentButton(cut, "Revoke consent");
+        cut.WaitForAssertion(() =>
+        {
+            cut.Markup.ShouldContain("Confirm lift restriction");
+            cut.Markup.ShouldContain("Confirm revoke consent");
+            api.LiftRestrictionRequests.ShouldBeEmpty();
+            api.RevokeConsentRequests.ShouldBeEmpty();
+        });
+
         ClickFluentButton(cut, "Request erasure");
         SetTextInput(cut, "Type the selected party display name", "typed-secret-pending");
         ClickFluentButton(cut, "Refresh erasure status");
@@ -2250,6 +2523,8 @@ public sealed class PartiesAdminPortalComponentTests : BunitContext
             api.ErasureRequests.ShouldBeEmpty();
             cut.FindAll("[role='dialog'][aria-modal='true']").ShouldBeEmpty();
             cut.Markup.ShouldNotContain("typed-secret-pending");
+            cut.Markup.ShouldNotContain("Confirm lift restriction");
+            cut.Markup.ShouldNotContain("Confirm revoke consent");
             cut.Markup.ShouldContain("ErasurePending");
             FindFluentButton(cut, "Request erasure").HasAttribute("disabled").ShouldBeTrue();
             FindFluentButton(cut, "Lift restriction").HasAttribute("disabled").ShouldBeTrue();
@@ -3272,6 +3547,10 @@ public sealed class PartiesAdminPortalComponentTests : BunitContext
 
     private static void ClickFluentButton(IRenderedComponent<PartiesAdminPortal> cut, string text)
         => FindFluentButton(cut, text).Click();
+
+    private static IElement ConfirmationGroup(IRenderedComponent<PartiesAdminPortal> cut, string title)
+        => cut.FindAll(".hx-parties-admin__gdpr-confirmation")
+            .Single(group => group.TextContent.Contains(title, StringComparison.Ordinal));
 
     private static readonly string[] GdprMutationControlLabels =
     [

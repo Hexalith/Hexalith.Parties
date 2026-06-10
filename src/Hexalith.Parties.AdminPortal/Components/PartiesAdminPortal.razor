@@ -346,6 +346,7 @@
                                               Labels="EffectiveLabels"
                                               TenantContextSignature="_authorizationState.ContextSignature"
                                               RefreshParty="RefreshSelectedPartyAsync"
+                                              RestrictionStateChanged="ApplyOptimisticRestrictionStateAsync"
                                               AutoFocusOperations="@IsGdprRoute" />
                 }
 
@@ -1071,6 +1072,28 @@
         => string.IsNullOrWhiteSpace(_selectedPartyId)
             ? Task.CompletedTask
             : SelectPartyAsync(_selectedPartyId, updateRoute: false, trackOrigin: false, focusDetail: false);
+
+    private async Task ApplyOptimisticRestrictionStateAsync(bool isRestricted)
+    {
+        if (_detail is null || string.IsNullOrWhiteSpace(_selectedPartyId))
+        {
+            return;
+        }
+
+        if (!string.Equals(_detail.Id, _selectedPartyId, StringComparison.Ordinal)
+            || _detail.IsErased
+            || _detail.IsRestricted == isRestricted)
+        {
+            return;
+        }
+
+        _detail = _detail with
+        {
+            IsRestricted = isRestricted,
+            RestrictedAt = isRestricted ? (_detail.RestrictedAt ?? DateTimeOffset.UtcNow) : null,
+        };
+        await SafeStateHasChangedAsync().ConfigureAwait(false);
+    }
 
     private async Task ApplyRoutePartySelectionAsync()
     {

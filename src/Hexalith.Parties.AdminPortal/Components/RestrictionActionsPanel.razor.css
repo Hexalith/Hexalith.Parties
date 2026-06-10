@@ -1,0 +1,19 @@
+.hx-parties-admin__gdpr-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--spacingHorizontalS, .5rem);
+}
+
+.hx-parties-admin__gdpr-confirmation {
+    display: grid;
+    gap: var(--spacingVerticalS, .5rem);
+    margin-block-start: var(--spacingVerticalS, .5rem);
+    inline-size: min(100%, 32rem);
+    max-inline-size: calc(100vw - 2rem);
+    overflow-wrap: anywhere;
+}
+
+.hx-parties-admin__gdpr-confirmation p {
+    margin-block: 0;
+}

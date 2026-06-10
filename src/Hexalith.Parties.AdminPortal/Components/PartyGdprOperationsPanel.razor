@@ -120,6 +120,7 @@
 
     <RestrictionActionsPanel Labels="Labels"
                              InstanceId="@_instanceId"
+                             ResetKey="@ConfirmationResetKey"
                              Reason="@_restrictionReason"
                              ReasonChanged="value => _restrictionReason = value"
                              CanRestrict="@CanRestrict"
@@ -130,6 +131,7 @@
 
     <ConsentManagementPanel Labels="Labels"
                             InstanceId="@_instanceId"
+                            ResetKey="@ConfirmationResetKey"
                             ConsentRecords="@ConsentRecords"
                             ChannelId="@_consentChannelId"
                             ChannelIdChanged="value => _consentChannelId = value"
@@ -201,6 +203,9 @@
 
     [Parameter]
     public EventCallback RefreshParty { get; set; }
+
+    [Parameter]
+    public EventCallback<bool> RestrictionStateChanged { get; set; }
 
     [Parameter]
     public bool AutoFocusOperations { get; set; }
@@ -310,6 +315,9 @@
     private string ErasureInputId => $"erasure-confirm-input-{_instanceId}";
 
     private string ErasureWarningId => $"erasure-warning-{_instanceId}";
+
+    private string ConfirmationResetKey
+        => $"{TenantContextSignature}|{Party.Id}|{_capabilityVersion}|{Party.IsErased}|{IsErasurePending}";
 
     protected override void OnInitialized() => _cts = new CancellationTokenSource();
 
@@ -657,6 +665,11 @@
                 .ConfigureAwait(false);
             if (IsCurrentOperation(partyId, tenantSignature, capabilityVersion, token))
             {
+                if (IsPoliteSuccess(result.Outcome))
+                {
+                    await RestrictionStateChanged.InvokeAsync(true).ConfigureAwait(false);
+                }
+
                 await RefreshParty.InvokeAsync().ConfigureAwait(false);
             }
 
@@ -682,6 +695,11 @@
                 .ConfigureAwait(false);
             if (IsCurrentOperation(partyId, tenantSignature, capabilityVersion, token))
             {
+                if (IsPoliteSuccess(result.Outcome))
+                {
+                    await RestrictionStateChanged.InvokeAsync(false).ConfigureAwait(false);
+                }
+
                 await RefreshParty.InvokeAsync().ConfigureAwait(false);
             }
 
@@ -941,4 +959,7 @@
             or AdminPortalGdprOutcome.AuthenticationRequired
             or AdminPortalGdprOutcome.NotFound
             or AdminPortalGdprOutcome.Unknown;
+
+    private static bool IsPoliteSuccess(AdminPortalGdprOutcome outcome)
+        => outcome is AdminPortalGdprOutcome.Accepted or AdminPortalGdprOutcome.Completed;
 }

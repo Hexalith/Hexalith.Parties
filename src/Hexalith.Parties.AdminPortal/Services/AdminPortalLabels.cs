@@ -252,6 +252,25 @@ public record AdminPortalLabels
 
     public string GdprEraseEnabledAnnouncement { get; init; } = "Erase action enabled.";
 
+    public string GdprConfirmRestrictTitle { get; init; } = "Confirm restriction";
+
+    public string GdprConfirmRestrictMessage { get; init; } =
+        "Restrict processing for the selected party?";
+
+    public string GdprConfirmLiftTitle { get; init; } = "Confirm lift restriction";
+
+    public string GdprConfirmLiftMessage { get; init; } =
+        "Lift processing restriction for the selected party?";
+
+    public string GdprConfirmRevokeConsentTitle { get; init; } = "Confirm revoke consent";
+
+    public string GdprConfirmRevokeConsentMessage { get; init; } =
+        "Revoke this active consent record?";
+
+    public string GdprConfirmationOpened { get; init; } = "Confirmation opened.";
+
+    public string GdprConfirm { get; init; } = "Confirm";
+
     public string GdprCorrelationId { get; init; } = "Correlation id";
 
     public string GdprErasureStatus { get; init; } = "Erasure status";

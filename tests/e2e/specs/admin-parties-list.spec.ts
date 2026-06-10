@@ -150,6 +150,7 @@ test.describe('Admin parties list', () => {
     await detail.getByLabel('Channel id').fill('news-email');
     await detail.getByLabel('Purpose').fill('newsletter');
     await expect(detail.getByRole('button', { name: 'Add consent' })).toBeEnabled();
+    await detail.getByLabel('Restriction reason').fill('contains-sensitive-operator-note');
 
     await detail.getByRole('button', { name: 'Processing records' }).click();
     await expect(detail.getByRole('status').filter({ hasText: 'Operation completed' })).toBeVisible();
@@ -158,6 +159,67 @@ test.describe('Admin parties list', () => {
     await page.evaluate(() => {
       document.documentElement.style.zoom = '2';
     });
+
+    await detail.getByRole('button', { name: 'Restrict processing' }).click();
+    const restrictConfirmation = detail.getByRole('group', { name: 'Confirm restriction' });
+    await expect(restrictConfirmation).toBeVisible();
+    await expect(restrictConfirmation.getByRole('status')).toHaveText('Confirmation opened.');
+    await expect(page.getByRole('dialog')).toHaveCount(0);
+    await expect(detail.getByText('Restrict processing for the selected party?')).toBeVisible();
+    await expect(detail.getByText('contains-sensitive-operator-note')).toHaveCount(0);
+    await detail.getByRole('button', { name: 'Cancel' }).click();
+    await expect(restrictConfirmation).toHaveCount(0);
+    await expect.poll(async () => (await latestRestrictionRequest(request))?.partyId ?? null).toBe(null);
+    await expect.poll(async () => (await gdprRequestCounts(request)).restriction).toBe(0);
+
+    await detail.getByRole('button', { name: 'Restrict processing' }).click();
+    await expect(detail.getByRole('group', { name: 'Confirm restriction' })).toBeVisible();
+    await detail.getByRole('group', { name: 'Confirm restriction' }).getByRole('button', { name: 'Confirm' }).click();
+    await expect(detail.getByRole('status').filter({ hasText: 'Saved - updating...' })).toBeVisible();
+    await expect(detail.locator('.party-state-badge', { hasText: 'Restricted' })).toBeVisible();
+    await expect.poll(async () => (await latestRestrictionRequest(request))?.partyId).toBe('grace-hopper');
+    await expect.poll(async () => (await gdprRequestCounts(request)).restriction).toBe(1);
+    expect(JSON.stringify(await requestSnapshot(request))).not.toContain('contains-sensitive-operator-note');
+    await expect(detail.getByText('contains-sensitive-operator-note')).toHaveCount(0);
+
+    await detail.getByRole('button', { name: 'Lift restriction' }).click();
+    const liftConfirmation = detail.getByRole('group', { name: 'Confirm lift restriction' });
+    await expect(liftConfirmation).toBeVisible();
+    await expect(liftConfirmation.getByRole('status')).toHaveText('Confirmation opened.');
+    await expect(page.getByRole('dialog')).toHaveCount(0);
+    await detail.getByRole('button', { name: 'Cancel' }).click();
+    await expect(liftConfirmation).toHaveCount(0);
+    await expect.poll(async () => (await latestLiftRestrictionRequest(request))?.partyId ?? null).toBe(null);
+    await expect.poll(async () => (await gdprRequestCounts(request)).liftRestriction).toBe(0);
+
+    await detail.getByRole('button', { name: 'Lift restriction' }).click();
+    await expect(detail.getByRole('group', { name: 'Confirm lift restriction' })).toBeVisible();
+    await detail.getByRole('group', { name: 'Confirm lift restriction' }).getByRole('button', { name: 'Confirm' }).click();
+    await expect(detail.getByRole('status').filter({ hasText: 'Saved - updating...' })).toBeVisible();
+    await expect(detail.locator('.party-state-badge', { hasText: 'Active' })).toBeVisible();
+    await expect.poll(async () => (await latestLiftRestrictionRequest(request))?.partyId).toBe('grace-hopper');
+    await expect.poll(async () => (await gdprRequestCounts(request)).liftRestriction).toBe(1);
+
+    await detail.getByRole('button', { name: 'Add consent' }).click();
+    await expect(detail.getByRole('status').filter({ hasText: 'Saved - updating...' })).toBeVisible();
+    await expect.poll(async () => (await latestAddConsentRequest(request))?.partyId).toBe('grace-hopper');
+    await expect.poll(async () => (await gdprRequestCounts(request)).addConsent).toBe(1);
+    await expect(detail.getByRole('button', { name: 'Revoke consent' })).toBeVisible();
+    await detail.getByRole('button', { name: 'Revoke consent' }).click();
+    const revokeConfirmation = detail.getByRole('group', { name: 'Confirm revoke consent' });
+    await expect(revokeConfirmation).toBeVisible();
+    await expect(revokeConfirmation.getByRole('status')).toHaveText('Confirmation opened.');
+    await expect(page.getByRole('dialog')).toHaveCount(0);
+    await detail.getByRole('button', { name: 'Cancel' }).click();
+    await expect(revokeConfirmation).toHaveCount(0);
+    await expect.poll(async () => (await latestRevokeConsentRequest(request))?.partyId ?? null).toBe(null);
+    await expect.poll(async () => (await gdprRequestCounts(request)).revokeConsent).toBe(0);
+    await detail.getByRole('button', { name: 'Revoke consent' }).click();
+    await expect(detail.getByRole('group', { name: 'Confirm revoke consent' })).toBeVisible();
+    await detail.getByRole('group', { name: 'Confirm revoke consent' }).getByRole('button', { name: 'Confirm' }).click();
+    await expect(detail.getByRole('status').filter({ hasText: 'Saved - updating...' })).toBeVisible();
+    await expect.poll(async () => (await latestRevokeConsentRequest(request))?.partyId).toBe('grace-hopper');
+    await expect.poll(async () => (await gdprRequestCounts(request)).revokeConsent).toBe(1);
 
     await expect(detail.getByRole('button', { name: 'Request erasure' })).toBeVisible();
     await detail.getByRole('button', { name: 'Request erasure' }).click();
@@ -436,10 +498,40 @@ const latestErasureRequest = async (request: APIRequestContext): Promise<AdminPo
   return snapshot.erasureRequests.at(-1);
 };
 
+const latestRestrictionRequest = async (request: APIRequestContext): Promise<AdminPortalRequestCapture | undefined> => {
+  const snapshot = await requestSnapshot(request);
+  return snapshot.restrictionRequests.at(-1);
+};
+
+const latestLiftRestrictionRequest = async (request: APIRequestContext): Promise<AdminPortalRequestCapture | undefined> => {
+  const snapshot = await requestSnapshot(request);
+  return snapshot.liftRestrictionRequests.at(-1);
+};
+
+const latestAddConsentRequest = async (request: APIRequestContext): Promise<AdminPortalRequestCapture | undefined> => {
+  const snapshot = await requestSnapshot(request);
+  return snapshot.addConsentRequests.at(-1);
+};
+
+const latestRevokeConsentRequest = async (request: APIRequestContext): Promise<AdminPortalRequestCapture | undefined> => {
+  const snapshot = await requestSnapshot(request);
+  return snapshot.revokeConsentRequests.at(-1);
+};
+
 const requestSnapshot = async (request: APIRequestContext): Promise<AdminPortalE2eSnapshot> => {
   const response = await request.get(REQUESTS_ROUTE);
   expect(response.ok()).toBe(true);
   return await response.json() as AdminPortalE2eSnapshot;
+};
+
+const gdprRequestCounts = async (request: APIRequestContext): Promise<GdprRequestCounts> => {
+  const snapshot = await requestSnapshot(request);
+  return {
+    restriction: snapshot.restrictionRequests.length,
+    liftRestriction: snapshot.liftRestrictionRequests.length,
+    addConsent: snapshot.addConsentRequests.length,
+    revokeConsent: snapshot.revokeConsentRequests.length,
+  };
 };
 
 const isBrowserVisiblePartiesDataRequest = (url: string): boolean => {
@@ -471,14 +563,25 @@ interface AdminPortalE2eSnapshot {
   createRequests: AdminPortalRequestCapture[];
   updateRequests: AdminPortalRequestCapture[];
   erasureRequests: AdminPortalRequestCapture[];
+  restrictionRequests: AdminPortalRequestCapture[];
+  liftRestrictionRequests: AdminPortalRequestCapture[];
+  addConsentRequests: AdminPortalRequestCapture[];
+  revokeConsentRequests: AdminPortalRequestCapture[];
 }
 
 interface AdminPortalRequestCapture {
-  kind: 'list' | 'search' | 'detail' | 'create' | 'update' | 'erasure';
+  kind: 'list' | 'search' | 'detail' | 'create' | 'update' | 'erasure' | 'restriction' | 'lift-restriction' | 'add-consent' | 'revoke-consent';
   query: string | null;
   page: number;
   pageSize: number;
   type: string | null;
   active: boolean | null;
   partyId: string | null;
+}
+
+interface GdprRequestCounts {
+  restriction: number;
+  liftRestriction: number;
+  addConsent: number;
+  revokeConsent: number;
 }

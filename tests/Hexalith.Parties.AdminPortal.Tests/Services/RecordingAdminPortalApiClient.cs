@@ -22,6 +22,10 @@ internal sealed class RecordingAdminPortalApiClient : IPartiesAdminPortalApiClie
     private readonly Queue<Func<CancellationToken, Task<AdminPortalExportDownload>>> _exportResponses = [];
     private readonly Queue<Func<CancellationToken, Task<IReadOnlyList<ProcessingActivityRecord>>>> _processingRecordResponses = [];
     private readonly Queue<Func<CancellationToken, Task<AdminPortalGdprCommandResult>>> _erasureResponses = [];
+    private readonly Queue<Func<CancellationToken, Task<AdminPortalGdprCommandResult>>> _restrictionResponses = [];
+    private readonly Queue<Func<CancellationToken, Task<AdminPortalGdprCommandResult>>> _liftRestrictionResponses = [];
+    private readonly Queue<Func<CancellationToken, Task<AdminPortalGdprCommandResult>>> _addConsentResponses = [];
+    private readonly Queue<Func<CancellationToken, Task<AdminPortalGdprCommandResult>>> _revokeConsentResponses = [];
 
     public List<AdminPortalListRequest> ListRequests { get; } = [];
 
@@ -103,6 +107,18 @@ internal sealed class RecordingAdminPortalApiClient : IPartiesAdminPortalApiClie
 
     public void EnqueueErasureResult(AdminPortalGdprCommandResult result)
         => _erasureResponses.Enqueue(_ => Task.FromResult(result));
+
+    public void EnqueueRestrictionResult(AdminPortalGdprCommandResult result)
+        => _restrictionResponses.Enqueue(_ => Task.FromResult(result));
+
+    public void EnqueueLiftRestrictionResult(AdminPortalGdprCommandResult result)
+        => _liftRestrictionResponses.Enqueue(_ => Task.FromResult(result));
+
+    public void EnqueueAddConsentResult(AdminPortalGdprCommandResult result)
+        => _addConsentResponses.Enqueue(_ => Task.FromResult(result));
+
+    public void EnqueueRevokeConsentResult(AdminPortalGdprCommandResult result)
+        => _revokeConsentResponses.Enqueue(_ => Task.FromResult(result));
 
     public void EnqueueErasureCertificate(ErasureCertificate certificate)
         => _erasureCertificateResponses.Enqueue(_ => Task.FromResult<ErasureCertificate?>(certificate));
@@ -216,13 +232,17 @@ internal sealed class RecordingAdminPortalApiClient : IPartiesAdminPortalApiClie
         CancellationToken cancellationToken)
     {
         RestrictionRequests.Add((partyId, reason));
-        return Task.FromResult(new AdminPortalGdprCommandResult(AdminPortalGdprOutcome.Accepted, "corr-restrict"));
+        return _restrictionResponses.Count == 0
+            ? Task.FromResult(new AdminPortalGdprCommandResult(AdminPortalGdprOutcome.Accepted, "corr-restrict"))
+            : _restrictionResponses.Dequeue()(cancellationToken);
     }
 
     public Task<AdminPortalGdprCommandResult> LiftRestrictionAsync(string partyId, CancellationToken cancellationToken)
     {
         LiftRestrictionRequests.Add(partyId);
-        return Task.FromResult(new AdminPortalGdprCommandResult(AdminPortalGdprOutcome.Accepted, "corr-lift"));
+        return _liftRestrictionResponses.Count == 0
+            ? Task.FromResult(new AdminPortalGdprCommandResult(AdminPortalGdprOutcome.Accepted, "corr-lift"))
+            : _liftRestrictionResponses.Dequeue()(cancellationToken);
     }
 
     public Task<AdminPortalGdprCommandResult> AddConsentAsync(
@@ -233,7 +253,9 @@ internal sealed class RecordingAdminPortalApiClient : IPartiesAdminPortalApiClie
         CancellationToken cancellationToken)
     {
         AddConsentRequests.Add((partyId, channelId, purpose, lawfulBasis));
-        return Task.FromResult(new AdminPortalGdprCommandResult(AdminPortalGdprOutcome.Accepted, "corr-consent"));
+        return _addConsentResponses.Count == 0
+            ? Task.FromResult(new AdminPortalGdprCommandResult(AdminPortalGdprOutcome.Accepted, "corr-consent"))
+            : _addConsentResponses.Dequeue()(cancellationToken);
     }
 
     public Task<AdminPortalGdprCommandResult> RevokeConsentAsync(
@@ -242,7 +264,9 @@ internal sealed class RecordingAdminPortalApiClient : IPartiesAdminPortalApiClie
         CancellationToken cancellationToken)
     {
         RevokeConsentRequests.Add((partyId, consentId));
-        return Task.FromResult(new AdminPortalGdprCommandResult(AdminPortalGdprOutcome.Accepted, "corr-revoke"));
+        return _revokeConsentResponses.Count == 0
+            ? Task.FromResult(new AdminPortalGdprCommandResult(AdminPortalGdprOutcome.Accepted, "corr-revoke"))
+            : _revokeConsentResponses.Dequeue()(cancellationToken);
     }
 
     public Task<IReadOnlyList<ConsentRecord>> GetConsentAsync(string partyId, CancellationToken cancellationToken)

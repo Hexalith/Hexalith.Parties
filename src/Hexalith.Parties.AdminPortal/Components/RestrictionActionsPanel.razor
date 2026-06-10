@@ -7,15 +7,35 @@
     <div class="hx-parties-admin__gdpr-actions">
         <FluentButton Appearance="ButtonAppearance.Outline"
                       Disabled="@(!CanRestrict)"
-                      OnClick="Restrict">
+                      OnClick="@(() => BeginConfirmation(RestrictionAction.Restrict))">
             @Labels.RestrictProcessing
         </FluentButton>
         <FluentButton Appearance="ButtonAppearance.Outline"
                       Disabled="@(!CanLift)"
-                      OnClick="Lift">
+                      OnClick="@(() => BeginConfirmation(RestrictionAction.Lift))">
             @Labels.LiftRestriction
         </FluentButton>
     </div>
+    @if (_pendingAction is { } pendingAction)
+    {
+        <div class="hx-parties-admin__gdpr-confirmation" role="group" aria-labelledby="@ConfirmationTitleId">
+            <p id="@ConfirmationTitleId">@ConfirmationTitle(pendingAction)</p>
+            <p>@ConfirmationMessage(pendingAction)</p>
+            <p role="status" aria-live="polite" data-gdpr-confirmation-live>@Labels.GdprConfirmationOpened</p>
+            <div class="hx-parties-admin__gdpr-actions">
+                <FluentButton Appearance="ButtonAppearance.Outline"
+                              Disabled="@IsPendingActionDisabled(pendingAction)"
+                              OnClick="CancelConfirmation">
+                    @Labels.GdprCancel
+                </FluentButton>
+                <FluentButton Appearance="ButtonAppearance.Outline"
+                              Disabled="@IsPendingActionDisabled(pendingAction)"
+                              OnClick="ConfirmPendingActionAsync">
+                    @Labels.GdprConfirm
+                </FluentButton>
+            </div>
+        </div>
+    }
     @if (!string.IsNullOrWhiteSpace(DisabledReason))
     {
         <p role="status" aria-live="polite">@DisabledReason</p>
@@ -23,11 +43,17 @@
 </section>
 
 @code {
+    private string? _previousResetKey;
+    private RestrictionAction? _pendingAction;
+
     [Parameter, EditorRequired]
     public AdminPortalLabels Labels { get; set; } = new();
 
     [Parameter]
     public string InstanceId { get; set; } = Guid.NewGuid().ToString("N");
+
+    [Parameter]
+    public string? ResetKey { get; set; }
 
     [Parameter]
     public string? Reason { get; set; }
@@ -49,4 +75,68 @@
 
     [Parameter]
     public EventCallback Lift { get; set; }
+
+    protected override void OnParametersSet()
+    {
+        if (!string.Equals(_previousResetKey, ResetKey, StringComparison.Ordinal))
+        {
+            _previousResetKey = ResetKey;
+            _pendingAction = null;
+        }
+
+        if (_pendingAction is { } pendingAction && IsPendingActionDisabled(pendingAction))
+        {
+            _pendingAction = null;
+        }
+    }
+
+    private string ConfirmationTitleId => $"restriction-confirm-title-{InstanceId}";
+
+    private void BeginConfirmation(RestrictionAction action)
+    {
+        if (IsPendingActionDisabled(action))
+        {
+            return;
+        }
+
+        _pendingAction = action;
+    }
+
+    private void CancelConfirmation() => _pendingAction = null;
+
+    private async Task ConfirmPendingActionAsync()
+    {
+        if (_pendingAction is not { } pendingAction || IsPendingActionDisabled(pendingAction))
+        {
+            return;
+        }
+
+        _pendingAction = null;
+        if (pendingAction == RestrictionAction.Restrict)
+        {
+            await Restrict.InvokeAsync().ConfigureAwait(false);
+            return;
+        }
+
+        await Lift.InvokeAsync().ConfigureAwait(false);
+    }
+
+    private bool IsPendingActionDisabled(RestrictionAction action)
+        => action == RestrictionAction.Restrict ? !CanRestrict : !CanLift;
+
+    private string ConfirmationTitle(RestrictionAction action)
+        => action == RestrictionAction.Restrict
+            ? Labels.GdprConfirmRestrictTitle
+            : Labels.GdprConfirmLiftTitle;
+
+    private string ConfirmationMessage(RestrictionAction action)
+        => action == RestrictionAction.Restrict
+            ? Labels.GdprConfirmRestrictMessage
+            : Labels.GdprConfirmLiftMessage;
+
+    private enum RestrictionAction
+    {
+        Restrict,
+        Lift,
+    }
 }

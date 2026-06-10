@@ -37,28 +37,44 @@
             @foreach (ConsentRecord consent in ConsentRecords)
             {
                 <li>
-                    @consent.ChannelId - @Labels.ConsentPurposeLabel(consent.Purpose): @Labels.LawfulBasisLabel(consent.LawfulBasis.ToString())
+                    @Labels.ConsentPurposeLabel(consent.Purpose): @Labels.LawfulBasisLabel(consent.LawfulBasis.ToString())
                     (@(consent.IsActive ? Labels.ConsentActive : Labels.ConsentRevoked))
                     <dl>
                         <dt>@Labels.ChangedAt</dt>
                         <dd>@FormatDate(consent.GrantedAt)</dd>
-                        <dt>@Labels.TriggeredBy</dt>
-                        <dd>@consent.GrantedBy</dd>
                         @if (!consent.IsActive)
                         {
                             <dt>@Labels.Revoked</dt>
                             <dd>@FormatNullableDate(consent.RevokedAt)</dd>
-                            <dt>@Labels.TriggeredBy</dt>
-                            <dd>@(consent.RevokedBy ?? Labels.MissingDate)</dd>
                         }
                     </dl>
                     @if (consent.IsActive)
                     {
                         <FluentButton Appearance="ButtonAppearance.Subtle"
                                       Disabled="@(!CanRevoke)"
-                                      OnClick="() => Revoke.InvokeAsync(consent.ConsentId)">
+                                      OnClick="@(() => BeginRevokeConfirmation(consent.ConsentId))">
                             @Labels.RevokeConsent
                         </FluentButton>
+                        @if (string.Equals(_pendingRevokeConsentId, consent.ConsentId, StringComparison.Ordinal))
+                        {
+                            <div class="hx-parties-admin__gdpr-confirmation" role="group" aria-labelledby="@RevokeConfirmationTitleId">
+                                <p id="@RevokeConfirmationTitleId">@Labels.GdprConfirmRevokeConsentTitle</p>
+                                <p>@Labels.GdprConfirmRevokeConsentMessage</p>
+                                <p role="status" aria-live="polite" data-gdpr-confirmation-live>@Labels.GdprConfirmationOpened</p>
+                                <div class="hx-parties-admin__gdpr-actions">
+                                    <FluentButton Appearance="ButtonAppearance.Outline"
+                                                  Disabled="@(!CanRevoke)"
+                                                  OnClick="CancelRevokeConfirmation">
+                                        @Labels.GdprCancel
+                                    </FluentButton>
+                                    <FluentButton Appearance="ButtonAppearance.Outline"
+                                                  Disabled="@(!CanRevoke)"
+                                                  OnClick="ConfirmRevokeAsync">
+                                        @Labels.GdprConfirm
+                                    </FluentButton>
+                                </div>
+                            </div>
+                        }
                     }
                 </li>
             }
@@ -67,11 +83,17 @@
 </section>
 
 @code {
+    private string? _previousResetKey;
+    private string? _pendingRevokeConsentId;
+
     [Parameter, EditorRequired]
     public AdminPortalLabels Labels { get; set; } = new();
 
     [Parameter]
     public string InstanceId { get; set; } = Guid.NewGuid().ToString("N");
+
+    [Parameter]
+    public string? ResetKey { get; set; }
 
     [Parameter]
     public IReadOnlyList<ConsentRecord> ConsentRecords { get; set; } = [];
@@ -111,6 +133,48 @@
 
     [Parameter]
     public EventCallback<string> Revoke { get; set; }
+
+    protected override void OnParametersSet()
+    {
+        if (!string.Equals(_previousResetKey, ResetKey, StringComparison.Ordinal))
+        {
+            _previousResetKey = ResetKey;
+            _pendingRevokeConsentId = null;
+        }
+
+        if (_pendingRevokeConsentId is not null
+            && (!CanRevoke || !ConsentRecords.Any(consent =>
+                consent.IsActive && string.Equals(consent.ConsentId, _pendingRevokeConsentId, StringComparison.Ordinal))))
+        {
+            _pendingRevokeConsentId = null;
+        }
+    }
+
+    private string RevokeConfirmationTitleId => $"revoke-consent-confirm-title-{InstanceId}";
+
+    private void BeginRevokeConfirmation(string consentId)
+    {
+        if (!CanRevoke)
+        {
+            return;
+        }
+
+        _pendingRevokeConsentId = consentId;
+    }
+
+    private void CancelRevokeConfirmation() => _pendingRevokeConsentId = null;
+
+    private async Task ConfirmRevokeAsync()
+    {
+        if (_pendingRevokeConsentId is null || !CanRevoke)
+        {
+            return;
+        }
+
+        string consentId = _pendingRevokeConsentId;
+        _pendingRevokeConsentId = null;
+        await Revoke.InvokeAsync(consentId).ConfigureAwait(false);
+    }
 
     private string FormatDate(DateTimeOffset date)
         => date == default
