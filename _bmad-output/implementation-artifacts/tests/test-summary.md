@@ -1,59 +1,86 @@
-# Test Automation Summary — Story 1.6 (Canonical StatusKind→UI mapping + aria-live politeness split)
+# Test Automation Summary - Story 1.8
 
-**Date:** 2026-06-10
-**Workflow:** `bmad-qa-generate-e2e-tests`
-**Story:** `_bmad-output/implementation-artifacts/1-6-canonical-statuskind-ui-mapping-with-aria-live-politeness-split.md`
-**Feature under test:** `Hexalith.Parties.UI.Status.StatusPresentation` (pure mapper) + `Hexalith.Parties.UI.Components.Shared.StatusLiveRegion` (semantics-only Blazor primitive)
-**Framework (existing, reused):** xUnit v3 `3.2.2` + Shouldly `4.3.0` + bUnit `2.7.2` — no new packages
-**Mode:** Auto-apply all discovered gaps.
+**Workflow:** `bmad-qa-generate-e2e-tests`  
+**Date:** 2026-06-10  
+**Story:** `_bmad-output/implementation-artifacts/1-8-shared-domain-components-party-state-badge-freshness-indicator-gdpr-destructive-button.md`  
+**Feature under test:** shared UI domain components for party lifecycle state, projection freshness, and GDPR destructive actions.  
+**Framework detected and reused:** xUnit v3 + Shouldly + bUnit + FluentUI Blazor test services.
 
-## Scope note
+## Scope
 
-This story ships **pure UI-tier logic + one Blazor component** — there are **no HTTP endpoints, controllers, or actor surfaces** (the `parties` host exposes only `POST /process` to the EventStore gateway, unrelated to this feature). Therefore **API tests do not apply**; the appropriate automation is component/logic tests (bUnit + xUnit), which is what this QA pass extended.
+Story 1.8 ships host-owned Blazor components and a small UI value model. It does not add HTTP endpoints, gateway calls, routes, pages, Fluxor state, SignalR wiring, or command handlers. API tests are therefore not applicable for this story; the correct automation is component and UI-contract tests.
 
-The story arrived in `review` with strong existing coverage (56 tests across the two new classes). The QA pass acted as a coverage auditor and **auto-applied 9 gap tests** for untested public surface and behavioral guarantees.
+The story already had broad bUnit coverage. This QA pass audited it against the skill checklist and auto-applied the discovered gaps in tests.
 
-## Gaps Discovered → Closed
+## Gaps Discovered and Closed
 
-| # | AC | Gap in existing tests | Fix |
-|---|----|----|----|
-| 1 | AC2/AC5 | `StatusLiveRegion.ChildContent` (a public `RenderFragment?` rendered into the live region via `@Message@ChildContent`) had **zero** coverage. | bUnit test renders `ChildContent` and asserts it lands as real DOM inside the correctly-polite region. |
-| 2 | AC2 | `Message` + `ChildContent` concatenation untested — nothing pinned that both surface together. | bUnit test asserts both render inside an assertive region. |
-| 3 | AC2 | The `SignInRequired` "render nothing" guarantee was never proven **when content is supplied** — a stray live region for sign-in is the named anti-pattern. | bUnit test passes both `Message` and `ChildContent` to `SignInRequired` and asserts no region renders. |
-| 4 | AC4 | `FromException` was only proven for `408 → TransientFailure`; it was never asserted to route a **non-408** `PartiesClientException` through the **full** `FromClientException` mapping (incl. the `403` tenant split) — the exact path AC4 broad-catch call sites depend on. | `[Theory]` over `401→SignInRequired`, `403-tenant→TenantUnavailable`, `403-role→Forbidden`, `404→Gone`, `500→LoadFailure` via `FromException`. |
-| 5 | AC3 | A `403` carrying **no** `Title`/`Detail` was untested — the tenant heuristic's null-safety (`Contains(null)` → no NRE → `Forbidden`) was unproven. | `Fact` asserts a `403` with null problem text degrades to `Forbidden`, not a crash. |
+| Gap | Fix |
+|---|---|
+| The erased badge PII guard only checked display/sort/id values. | Expanded the erased-detail fixture to include contact channel value, identifier value, name history, and person details, then asserted those values do not render. |
+| The freshness canonical-mapping test re-derived the mapping locally. | Changed it to use `StatusPresentation.FromFreshness(...)` as the expected source, pinning the component to the canonical mapper. |
+| The irreversible GDPR test checked that `aria-describedby` existed, but not that it pointed to real warning copy. | Added DOM assertion that the described element exists and contains the irreversible warning text. |
+| The irreversible GDPR test did not directly invoke the disabled button click guard. | Added an explicit disabled-button click invocation and asserted the callback is not fired. |
 
-## Generated / Modified Tests
+## Generated / Strengthened Tests
 
-### Component (bUnit) — `tests/Hexalith.Parties.UI.Tests/StatusLiveRegionTests.cs`
-- [x] `ChildContent_renders_as_markup_inside_the_live_region` — child `RenderFragment` renders as real DOM inside the `role=status`/`aria-live=polite` region
-- [x] `Message_and_ChildContent_both_render_together` — both surface inside the `role=alert`/`aria-live=assertive` region
-- [x] `SignInRequired_renders_nothing_even_with_child_content` — no-announce contract holds regardless of supplied content
-- (pre-existing, retained) polite-kinds / assertive-kinds DOM assertions, `SignInRequired_renders_no_live_region`, `NullKind_renders_no_live_region`
+### E2E / Component Tests
 
-### Logic (xUnit) — `tests/Hexalith.Parties.UI.Tests/StatusPresentationTests.cs`
-- [x] `FromException_routes_a_client_exception_through_the_full_mapping` — `[Theory]`, 5 cases (broad-catch preserves the whole mapping incl. the `403` tenant split)
-- [x] `FromClientException_treats_a_403_with_no_problem_text_as_Forbidden` — null-safe tenant heuristic
-- (pre-existing, retained) every HTTP status arm, both `403` branches, every `ProjectionFreshnessStatus`, every `StatusKind`→politeness, the AC4 timeout/cancellation matrix, `LiveRegionAttributes`
+- [x] `tests/Hexalith.Parties.UI.Tests/PartyStateBadgeTests.cs`
+  - Party state labels and Fluent badge appearance/color/shape.
+  - Label override behavior.
+  - Erased-state tombstone output with expanded PII absence checks.
+  - Detail/list lifecycle precedence.
 
-## Results
+- [x] `tests/Hexalith.Parties.UI.Tests/DataFreshnessIndicatorTests.cs`
+  - Every `ProjectionFreshnessStatus` renders visible text plus decorative dot.
+  - Stale timestamp renders `as of HH:mm`.
+  - Freshness text is `role="status"` with `aria-live="polite"`.
+  - Null freshness renders degraded last-known copy.
+  - Current/degraded class choice follows `StatusPresentation.FromFreshness(...)`.
 
-| Suite | Total | Passed | Failed | Skipped |
-|---|---|---|---|---|
-| `StatusPresentationTests` + `StatusLiveRegionTests` (affected) | 65 | 65 | 0 | 0 |
-| `Hexalith.Parties.UI.Tests` (full regression) | 174 | 174 | 0 | 0 |
+- [x] `tests/Hexalith.Parties.UI.Tests/GdprDestructiveButtonTests.cs`
+  - Irreversible actions require exact ordinal typed confirmation.
+  - Labeled input has `aria-describedby` wired to warning text.
+  - Disabled clicks, focus, blur, and input changes do not fire the callback.
+  - Reversible actions use `ButtonAppearance.Outline`, no typed input, and no danger-fill class.
 
-- Build: `dotnet build tests/Hexalith.Parties.UI.Tests -c Release -m:1` → **Build succeeded, 0 Warning(s), 0 Error(s)** under solution-wide `TreatWarningsAsErrors`.
-- Test runner: UI test EXE directly (xUnit v3 MTP; `dotnet test --filter` returns "Zero tests ran" and is **not** used).
-- Build gate `scripts/check-no-warning-override.sh` → **OK** (exit 0; no warning override, no nested-submodule regression).
+- [x] `tests/Hexalith.Parties.UI.Tests/SharedDomainComponentStyleTests.cs`
+  - Story 1.8 component files contain no hard-coded hex/rgb/hsl color literals.
+  - Raw brand teal `#0097A7` is forbidden.
+
+### API Tests
+
+- [x] Not applicable: Story 1.8 has no API endpoint, service endpoint, command handler, or gateway surface.
 
 ## Coverage
 
-- **`StatusPresentation` public surface:** **7/7 methods** — `FromHttpStatus`, `FromClientException`, both `FromFreshness` overloads, `FromException`, `PolitenessFor`, `LiveRegionAttributes`; including every status arm, every freshness value, every `StatusKind`→politeness, the AC4 timeout/cancellation cases, and now the broad-catch full-mapping path + null-safe `403`.
-- **`StatusLiveRegion` parameters:** **3/3** — `Kind`, `Message`, `ChildContent`; polite/assertive DOM `role`+`aria-live`, the three absent-region cases, and `Message`/`ChildContent` rendering.
-- **API tests:** N/A — no public HTTP/actor surface in this feature.
+- Party lifecycle UI states: 4/4 covered (`Active`, `Inactive`, `Restricted`, `Erased`).
+- Freshness statuses: 6/6 covered (`Current`, `Stale`, `Rebuilding`, `Degraded`, `Unavailable`, `LocalOnly`).
+- GDPR modes: 2/2 covered (irreversible typed confirmation, reversible explicit click).
+- Accessibility contracts: live-region attributes, typed-confirm label, typed-confirm description wiring, decorative freshness dot.
+- Token guard: component markup/CSS scanned for forbidden hard-coded color literals.
 
-## Next Steps
+## Validation
 
-- No further action required for Story 1.6 — coverage is complete for the shipped surface.
-- The user-initiated-cancellation **filtering** contract (AC4) is verified at the **call site** when Story 1.7 wires the optimistic-reconcile effect — out of scope here (no call sites exist yet).
+- [x] `dotnet build src/Hexalith.Parties.UI -c Release -m:1` - passed, 0 warnings, 0 errors.
+- [x] `dotnet build tests/Hexalith.Parties.UI.Tests -c Release -m:1` - passed, 0 warnings, 0 errors.
+- [x] Direct xUnit v3 executable run for Story 1.8 classes - 27 total, 27 passed, 0 failed, 0 skipped.
+- [x] Direct xUnit v3 executable run for full `Hexalith.Parties.UI.Tests` project - 235 total, 235 passed, 0 failed, 0 skipped.
+- [x] `bash scripts/check-no-warning-override.sh` - passed.
+- [x] `dotnet test tests/Hexalith.Parties.UI.Tests -c Release --no-build --filter ...` - not usable in this sandbox; failed before test execution with named-pipe IPC `SocketException (13): Permission denied`. Direct xUnit executable run was used as the valid test signal, consistent with the story notes.
+
+## Checklist Result
+
+- [x] API tests generated if applicable.
+- [x] E2E/component tests generated for UI.
+- [x] Standard test framework APIs used.
+- [x] Happy paths covered.
+- [x] Critical error/edge cases covered.
+- [x] Generated tests run successfully through the direct xUnit executable.
+- [x] Semantic and accessible locators/DOM assertions used where relevant.
+- [x] Clear test descriptions.
+- [x] No hardcoded waits or sleeps.
+- [x] Tests are independent.
+- [x] Summary created at the workflow output path.
+- [x] Tests saved under the existing `tests/Hexalith.Parties.UI.Tests/` project.
+- [x] Summary includes coverage metrics.

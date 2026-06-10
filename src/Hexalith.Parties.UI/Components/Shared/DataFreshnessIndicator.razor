@@ -1,0 +1,46 @@
+@namespace Hexalith.Parties.UI.Components.Shared
+@using System.Globalization
+@using Hexalith.Parties.Contracts.Models
+@using Hexalith.Parties.UI.Status
+
+<span class="data-freshness-indicator @StatusClass">
+    <span class="data-freshness-indicator__dot" aria-hidden="true"></span>
+    <span role="@LiveRegionRole" aria-live="@LiveRegionAriaLive">@Message</span>
+</span>
+
+@code {
+    [Parameter]
+    public ProjectionFreshnessMetadata? Freshness { get; set; }
+
+    [Parameter]
+    public DateTimeOffset? AsOf { get; set; }
+
+    private ProjectionFreshnessStatus? FreshnessStatus => Freshness?.Status;
+
+    private string? LiveRegionAriaLive
+        => StatusPresentation.LiveRegionAttributes(LiveRegionPoliteness.Polite).AriaLive;
+
+    private string? LiveRegionRole
+        => StatusPresentation.LiveRegionAttributes(LiveRegionPoliteness.Polite).Role;
+
+    private bool IsCurrent
+        => Freshness is not null && StatusPresentation.FromFreshness(Freshness) is null;
+
+    private string StatusClass
+        => IsCurrent
+            ? "data-freshness-indicator--current"
+            : "data-freshness-indicator--degraded";
+
+    private string Message
+        => FreshnessStatus switch
+        {
+            ProjectionFreshnessStatus.Current => "Up to date",
+            ProjectionFreshnessStatus.Stale => StaleMessage,
+            _ => "Showing last known",
+        };
+
+    private string StaleMessage
+        => AsOf is { } asOf
+            ? $"Showing what we last knew - refreshing as of {asOf.ToString("HH:mm", CultureInfo.InvariantCulture)}"
+            : "Showing what we last knew - refreshing";
+}

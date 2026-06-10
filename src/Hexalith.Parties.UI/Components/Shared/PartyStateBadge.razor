@@ -1,0 +1,44 @@
+@namespace Hexalith.Parties.UI.Components.Shared
+@using Microsoft.FluentUI.AspNetCore.Components
+
+<FluentBadge Appearance="BadgeAppearance.Tint"
+             Shape="BadgeShape.Rounded"
+             Color="@BadgeColor"
+             Class="party-state-badge">
+    @Label
+</FluentBadge>
+
+@code {
+    [Parameter]
+    public PartyLifecycleState State { get; set; } = PartyLifecycleState.Active;
+
+    [Parameter]
+    public string ActiveLabel { get; set; } = "Active";
+
+    [Parameter]
+    public string InactiveLabel { get; set; } = "Inactive";
+
+    [Parameter]
+    public string RestrictedLabel { get; set; } = "Restricted";
+
+    [Parameter]
+    public string ErasedLabel { get; set; } = "Erased";
+
+    private string Label
+        => State == PartyLifecycleState.Erased
+            ? ErasedLabel
+            : State == PartyLifecycleState.Restricted
+                ? RestrictedLabel
+                : State == PartyLifecycleState.Inactive
+                    ? InactiveLabel
+                    : ActiveLabel;
+
+    private BadgeColor BadgeColor
+        => State == PartyLifecycleState.Erased
+            ? BadgeColor.Danger
+            : State == PartyLifecycleState.Restricted
+                ? BadgeColor.Warning
+                : State == PartyLifecycleState.Inactive
+                    ? BadgeColor.Subtle
+                    : BadgeColor.Success;
+}

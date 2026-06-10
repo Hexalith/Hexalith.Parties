@@ -1,0 +1,75 @@
+@namespace Hexalith.Parties.UI.Components.Shared
+@using Microsoft.FluentUI.AspNetCore.Components
+
+<div class="gdpr-destructive-button">
+    @if (IsIrreversible)
+    {
+        <FluentTextInput Id="@InputId"
+                         Value="@CurrentConfirmationValue"
+                         ValueChanged="CurrentConfirmationValueChanged"
+                         Label="@ConfirmationLabel"
+                         aria-describedby="@DescriptionId"
+                         autocomplete="off" />
+        <p id="@DescriptionId" class="gdpr-destructive-button__description">
+            @ConfirmationDescription
+        </p>
+    }
+
+    <FluentButton Appearance="@ButtonAppearance"
+                  Class="@ButtonClass"
+                  Disabled="@IsButtonDisabled"
+                  OnClick="ConfirmAsync">
+        @ButtonText
+    </FluentButton>
+</div>
+
+@code {
+    [Parameter]
+    public bool IsIrreversible { get; set; }
+
+    [Parameter]
+    public bool Disabled { get; set; }
+
+    [Parameter]
+    public string ButtonText { get; set; } = "Confirm";
+
+    [Parameter]
+    public string ConfirmationLabel { get; set; } = "Type the confirmation value";
+
+    [Parameter]
+    public string ConfirmationDescription { get; set; } = "This action cannot be undone.";
+
+    [Parameter]
+    public string ExpectedConfirmationValue { get; set; } = string.Empty;
+
+    [Parameter]
+    public string? CurrentConfirmationValue { get; set; }
+
+    [Parameter]
+    public EventCallback<string?> CurrentConfirmationValueChanged { get; set; }
+
+    [Parameter]
+    public EventCallback Confirmed { get; set; }
+
+    private string InstanceId { get; } = Guid.NewGuid().ToString("N");
+
+    private string DescriptionId => $"gdpr-destructive-button-description-{InstanceId}";
+
+    private string InputId => $"gdpr-destructive-button-confirmation-{InstanceId}";
+
+    private ButtonAppearance ButtonAppearance
+        => IsIrreversible ? ButtonAppearance.Primary : ButtonAppearance.Outline;
+
+    private string? ButtonClass
+        => IsIrreversible ? "gdpr-destructive-button__button gdpr-destructive-button__button--danger" : null;
+
+    private bool HasMatchingConfirmation
+        => !IsIrreversible
+            || (!string.IsNullOrWhiteSpace(ExpectedConfirmationValue)
+                && string.Equals(CurrentConfirmationValue, ExpectedConfirmationValue, StringComparison.Ordinal));
+
+    private bool IsButtonDisabled => Disabled || !HasMatchingConfirmation;
+
+    private Task ConfirmAsync()
+        => IsButtonDisabled ? Task.CompletedTask : Confirmed.InvokeAsync();
+}

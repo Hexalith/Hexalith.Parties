@@ -1,0 +1,29 @@
+.data-freshness-indicator {
+    align-items: center;
+    display: inline-flex;
+    gap: var(--spacingHorizontalXS);
+}
+
+.data-freshness-indicator__dot {
+    block-size: 0.625rem;
+    border-radius: var(--borderRadiusCircular);
+    display: inline-block;
+    inline-size: 0.625rem;
+}
+
+.data-freshness-indicator--current .data-freshness-indicator__dot {
+    background: var(--colorStatusSuccessBackground1);
+    border: var(--strokeWidthThin) solid var(--colorStatusSuccessForeground1);
+}
+
+.data-freshness-indicator--degraded .data-freshness-indicator__dot {
+    background: var(--colorStatusWarningBackground1);
+    border: var(--strokeWidthThin) solid var(--colorStatusWarningForeground1);
+}
+
+@media (forced-colors: active) {
+    .data-freshness-indicator__dot {
+        background: CanvasText;
+        border-color: CanvasText;
+    }
+}

@@ -1,0 +1,23 @@
+.gdpr-destructive-button {
+    display: grid;
+    gap: var(--spacingVerticalS);
+}
+
+.gdpr-destructive-button__description {
+    color: var(--colorStatusDangerForeground1);
+    margin-block: 0;
+}
+
+.gdpr-destructive-button__button--danger::part(control) {
+    background: var(--colorStatusDangerBackground3);
+    border-color: var(--colorStatusDangerForeground1);
+    color: var(--colorStatusDangerForegroundInverted);
+}
+
+.gdpr-destructive-button__button--danger:hover::part(control) {
+    background: var(--colorStatusDangerBackground3Hover);
+}
+
+.gdpr-destructive-button__button--danger:active::part(control) {
+    background: var(--colorStatusDangerBackground3Pressed);
+}

@@ -51,7 +51,7 @@ development_status:
   1-5-consumer-own-data-self-authorization-defense-in-depth: done
   1-6-canonical-statuskind-ui-mapping-with-aria-live-politeness-split: done
   1-7-live-freshness-via-signalr-shared-optimistic-reconcile-effect: done
-  1-8-shared-domain-components-party-state-badge-freshness-indicator-gdpr-destructive-button: backlog
+  1-8-shared-domain-components-party-state-badge-freshness-indicator-gdpr-destructive-button: done
   1-9-accessibility-foundation-and-ci-a11y-gate-wcag-2-2-aa: backlog
   1-10-deploy-parties-ui-container-k8s-with-production-kms-prerequisite-gate: backlog
   epic-1-retrospective: optional
