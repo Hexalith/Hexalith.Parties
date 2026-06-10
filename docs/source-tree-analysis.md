@@ -4,7 +4,7 @@
 
 ```
 Hexalith.Parties/
-├── Hexalith.Parties.slnx              # Solution (12 src + 12 test projects + EventStore/Tenants submodule refs)
+├── Hexalith.Parties.slnx              # Solution (13 src + 13 test projects + EventStore/Tenants submodule refs)
 ├── Directory.Build.props              # net10.0, Nullable, ImplicitUsings, TreatWarningsAsErrors=true, MinVer
 ├── Directory.Build.targets            # shared MSBuild targets
 ├── Directory.Packages.props           # central package versions (ManagePackageVersionsCentrally)
@@ -45,9 +45,13 @@ Hexalith.Parties/
 │   │   ├── Extensions/                #   AddHexalithPartyPicker, RegisterHexalithPartyPickerCustomElement
 │   │   └── wwwroot/hexalith-parties-picker.js   # DOM `party-selected` CustomEvent dispatch
 │   ├── Hexalith.Parties.AdminPortal/  # 📦 FrontComposer-hosted Blazor admin (FluentUI) — incl. GDPR ops
-│   │   ├── Components/                #   PartiesAdminPortal.razor + 8 GDPR sub-panels
-│   │   ├── Services/                  #   API client, query/list/GDPR coordinators, authorization, manifest
+│   │   ├── Components/                #   PartiesAdminPortal.razor, CreateEditPartyPage.razor + GDPR sub-panels
+│   │   ├── Services/                  #   API client, command/query/list/GDPR coordinators, authorization, manifest
 │   │   └── Extensions/                #   AddHexalithPartiesAdminPortal, RegisterHexalithPartiesAdminPortal
+│   ├── Hexalith.Parties.UI/           # 🔒 Blazor Server browser UI/BFF (`parties-ui`)
+│   │   ├── Components/                #   Routes, account/area pages, shared UI primitives, accessibility specimens
+│   │   ├── Authentication/ Services/  #   OIDC, role policies, party_id claim resolution, self-scope, fixtures
+│   │   └── wwwroot/                   #   UI/static assets and JS bridges
 │   ├── Hexalith.Parties.Mcp/          # 📦 parties-mcp host (separate process; AI tool boundary)
 │   │   ├── Program.cs                 #   MapMcp() stateless; per-request typed clients; context forwarding
 │   │   └── Tools/                     #   PartiesMcpTools (5 tools), tool names, result envelope
@@ -84,7 +88,7 @@ Hexalith.Parties/
 │   ├── Hexalith.Parties.Tests/                 # largest — health, rebuild, search, architectural fitness
 │   ├── Hexalith.Parties.IntegrationTests/      # full Aspire topology E2E (Aspire.Hosting.Testing)
 │   ├── Hexalith.Parties.DeployValidation.Tests/# static validation of deploy/ manifests + leak sweep
-│   ├── Hexalith.Parties.{Contracts,Client,Server,Projections,Security,AdminPortal,Picker,Mcp}.Tests/
+│   ├── Hexalith.Parties.{Contracts,Client,Server,Projections,Security,AdminPortal,Picker,Mcp,UI}.Tests/
 │   ├── Hexalith.Parties.Sample.Tests/          # subscriber integration
 │   └── Directory.Build.props                    # imports root props; NoWarn=xUnit1051
 │

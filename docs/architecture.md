@@ -8,11 +8,11 @@ Hexalith.Parties is a **ready-to-deploy party-management domain service** for pe
 
 It is **not** an auth provider, CRM, or identity server — it is the party/contact data backbone behind your own application logic.
 
-**Integration surfaces:** a typed .NET client (`Hexalith.Parties.Client`), a separate MCP host for AI assistants (`parties-mcp`, 5 tools), DAPR pub/sub event subscription for downstream read models, and embeddable Blazor UI (`Picker`, `AdminPortal`).
+**Integration surfaces:** a typed .NET client (`Hexalith.Parties.Client`), the `parties-ui` Blazor Server browser UI/BFF, a separate MCP host for AI assistants (`parties-mcp`, 5 tools), DAPR pub/sub event subscription for downstream read models, and embeddable Blazor UI (`Picker`, `AdminPortal`).
 
 | Attribute | Value |
 |-----------|-------|
-| Repository type | Monolith — single cohesive .NET solution (`Hexalith.Parties.slnx`), 12 source + 12 test projects |
+| Repository type | Monolith — single cohesive .NET solution (`Hexalith.Parties.slnx`), 13 source + 13 test projects |
 | Primary language | C# / **.NET 10** (SDK pinned `10.0.300`) |
 | Architecture style | Event sourcing + CQRS + DAPR actors, gateway-fronted (EventStore) |
 | Orchestration | .NET Aspire 13.4 (`dotnet aspire run`) |
@@ -191,7 +191,8 @@ src/
   Hexalith.Parties.Client/         # typed EventStore gateway client
   Hexalith.Parties.Contracts/      # commands, events, value objects, read models (no infra deps)
   Hexalith.Parties.Picker/         # embeddable Blazor/custom-element party picker
-  Hexalith.Parties.AdminPortal/    # FrontComposer-hosted Blazor admin (incl. GDPR ops)
+  Hexalith.Parties.AdminPortal/    # protected Admin records/GDPR RCL
+  Hexalith.Parties.UI/             # Blazor Server browser UI/BFF (`parties-ui`)
   Hexalith.Parties.Mcp/            # parties-mcp host (5 tools)
   Hexalith.Parties.ServiceDefaults/# shared Aspire defaults
   # Internal (actor host private)

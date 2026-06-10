@@ -28,7 +28,7 @@ Public command and query traffic goes through **Hexalith.EventStore**; the `part
 - **Typed client package** — `IPartiesCommandClient` / `IPartiesQueryClient` hide the EventStore envelope.
 - **Parties UI/BFF** — `Hexalith.Parties.UI` provides the FrontComposer/FluentUI Blazor Server host, host-owned OIDC, role-gated Admin/Consumer shell, accessibility guardrails, and live freshness foundations.
 - **Embeddable party picker** — Blazor / custom-element selector (`<hexalith-party-picker>`).
-- **Admin portal** — FrontComposer-hosted Blazor admin with a full GDPR operations suite.
+- **Admin portal** — FrontComposer-hosted Blazor admin records management with GDPR operations surfaces; erasure verification remains gated by the pending EventStore D7 contract.
 - **Separate MCP host** — `parties-mcp` exposes `create_party`, `get_party`, `find_parties`, `update_party`, `delete_party`.
 - **DAPR event subscription** — downstream apps consume party events with idempotent handlers.
 - **.NET Aspire** — one-command local topology (EventStore, Parties, Parties UI, Tenants, DAPR sidecars, Redis, optional Keycloak).

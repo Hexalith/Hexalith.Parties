@@ -109,9 +109,11 @@ Registration (`Extensions/PartiesClientServiceCollectionExtensions.cs`) eagerly 
 |--------|---------|-------|
 | `GetPartyAsync(string partyId, ct, requestCustomizer?)` | `PartyDetail` | party-detail projection |
 | `ListPartiesAsync(page, pageSize, PartyType? type, bool? active, createdAfter?, createdBefore?, modifiedAfter?, modifiedBefore?, ct)` | `PagedResult<PartyIndexEntry>` | filtered list |
-| `SearchPartiesAsync(string query, page, pageSize, ct, string? mode = null, string? caseId = null, requestCustomizer?)` | `PagedResult<PartySearchResult>` | display-name search |
+| `SearchPartiesAsync(string query, page, pageSize, ct, string? mode = null, string? caseId = null, requestCustomizer?, PartyType? type = null, bool? active = null)` | `PagedResult<PartySearchResult>` | display-name search with optional type/active filters |
 
 `requestCustomizer: Func<HttpRequestMessage, CancellationToken, ValueTask>` lets direct consumers add auth/tenant headers before send.
+
+AdminPortal uses the optional `type` and `active` parameters to keep debounced display-name search, Person/Organization filtering, active filtering, and server paging in one EventStore query instead of filtering a returned page in the browser.
 
 > **No temporal "name-at" query exists.** Temporal name data is only the `NameHistory` list inside `PartyDetail`; there is no as-of resolution method (reserved — see [deferred-search-and-temporal-queries.md](deferred-search-and-temporal-queries.md)).
 
