@@ -15,6 +15,8 @@ using Hexalith.Parties.Contracts.Commands;
 using Hexalith.Parties.Contracts.Events;
 using Hexalith.Parties.Security;
 using Hexalith.Parties.Server.Aggregates;
+using Hexalith.Parties.Contracts.Security;
+using Hexalith.Parties.Contracts.State;
 
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -24,7 +26,9 @@ namespace Hexalith.Parties.Domain;
 internal sealed partial class PartyDomainServiceInvoker(
     IEventPayloadProtectionService payloadProtectionService,
     IServiceScopeFactory serviceScopeFactory,
-    ILogger<PartyDomainServiceInvoker> logger) : IDomainServiceInvoker
+    ILogger<PartyDomainServiceInvoker> logger,
+    IPartyErasureRecordStore? erasureRecordStore = null,
+    PartyErasureOrchestrator? erasureOrchestrator = null) : IDomainServiceInvoker
 {
     private const string PartyDomain = "party";
 
@@ -75,7 +79,251 @@ internal sealed partial class PartyDomainServiceInvoker(
         // long-running for parties with thousands of events, and the framework's ProcessAsync
         // may not natively observe cancellation.
         cancellationToken.ThrowIfCancellationRequested();
+        if (ResolveCommandType(command.CommandType) == typeof(RetryErasureVerification))
+        {
+            return await InvokeRetryErasureVerificationAsync(command, unprotectedState, cancellationToken)
+                .ConfigureAwait(false);
+        }
+
         return await aggregate.ProcessAsync(command, unprotectedState).ConfigureAwait(false);
+    }
+
+    private async Task<DomainResult> InvokeRetryErasureVerificationAsync(
+        CommandEnvelope envelope,
+        object? currentState,
+        CancellationToken cancellationToken)
+    {
+        RetryErasureVerification command = JsonSerializer.Deserialize<RetryErasureVerification>(envelope.Payload, PayloadJsonOptions)
+            ?? throw new InvalidOperationException("Validated RetryErasureVerification payload deserialized to null.");
+
+        if (!string.Equals(command.TenantId, envelope.TenantId, StringComparison.Ordinal)
+            || !string.Equals(command.PartyId, envelope.AggregateId, StringComparison.Ordinal))
+        {
+            return RejectionFor(envelope.CommandType, "Route", "RouteMismatch");
+        }
+
+        PartyState? state = RehydratePartyState(currentState);
+        if (state is null)
+        {
+            return DomainResult.Rejection([new PartyNotFound { Message = "Party does not exist." }]);
+        }
+
+        if (state.ErasureStatus is ErasureStatus.Erased)
+        {
+            return DomainResult.NoOp();
+        }
+
+        if (state.ErasureStatus is not (ErasureStatus.KeyDestroyed or ErasureStatus.VerificationInProgress or ErasureStatus.Verified))
+        {
+            return DomainResult.Rejection([new PartyErasureInProgress
+            {
+                PartyId = command.PartyId,
+                TenantId = command.TenantId,
+                Status = state.ErasureStatus.ToString(),
+                Message = "Erasure verification retry is not available for the current party state.",
+            }]);
+        }
+
+        if (erasureRecordStore is null || erasureOrchestrator is null)
+        {
+            return RejectionFor(envelope.CommandType, "Contract", "ContractUnavailable");
+        }
+
+        ErasureCertificate? certificate = await erasureRecordStore
+            .GetCertificateAsync(command.TenantId, command.PartyId, cancellationToken)
+            .ConfigureAwait(false);
+        if (certificate is null)
+        {
+            return RejectionFor(envelope.CommandType, "Certificate", "CertificateUnavailable");
+        }
+
+        ErasureVerificationReport report = await erasureOrchestrator
+            .ExecuteVerificationAsync(command.TenantId, command.PartyId, certificate, cancellationToken)
+            .ConfigureAwait(false);
+        await erasureRecordStore.SaveVerificationReportAsync(report, cancellationToken).ConfigureAwait(false);
+
+        ErasureVerificationStatus certificateStatus = report.OverallStatus == ErasureVerificationOverallStatus.Complete
+            ? ErasureVerificationStatus.Verified
+            : report.OverallStatus == ErasureVerificationOverallStatus.Pending
+                ? ErasureVerificationStatus.Pending
+                : ErasureVerificationStatus.Failed;
+        await erasureRecordStore
+            .SaveCertificateAsync(certificate with { Timestamp = report.Timestamp, VerificationStatus = certificateStatus }, cancellationToken)
+            .ConfigureAwait(false);
+        await erasureRecordStore
+            .SaveStatusAsync(
+                new PartyErasureStatusRecord
+                {
+                    PartyId = command.PartyId,
+                    TenantId = command.TenantId,
+                    Status = report.OverallStatus == ErasureVerificationOverallStatus.Complete
+                        ? ErasureStatus.Verified.ToString()
+                        : report.OverallStatus.ToString(),
+                    UpdatedAt = report.Timestamp,
+                    ErrorMessage = report.OverallStatus == ErasureVerificationOverallStatus.Complete
+                        ? null
+                        : "Erasure verification did not complete.",
+                },
+                cancellationToken)
+            .ConfigureAwait(false);
+
+        if (report.OverallStatus != ErasureVerificationOverallStatus.Complete)
+        {
+            return DomainResult.NoOp();
+        }
+
+        List<IEventPayload> events = [];
+        if (state.ErasureStatus is ErasureStatus.KeyDestroyed or ErasureStatus.VerificationInProgress)
+        {
+            events.Add(new ErasureVerified
+            {
+                PartyId = command.PartyId,
+                TenantId = command.TenantId,
+                VerifiedAt = report.Timestamp,
+                VerificationReportId = string.IsNullOrWhiteSpace(envelope.CorrelationId)
+                    ? "retry-erasure-verification"
+                    : envelope.CorrelationId,
+            });
+        }
+
+        events.Add(new PartyErased
+        {
+            PartyId = command.PartyId,
+            TenantId = command.TenantId,
+            ErasedAt = report.Timestamp,
+            ErasureStatus = ErasureStatus.Erased.ToString(),
+            VerificationStatus = report.OverallStatus.ToString(),
+        });
+
+        return DomainResult.Success(events);
+    }
+
+    private static PartyState? RehydratePartyState(object? currentState)
+    {
+        if (currentState is null)
+        {
+            return null;
+        }
+
+        if (currentState is PartyState typed)
+        {
+            return typed;
+        }
+
+        if (currentState is DomainServiceCurrentState snapshotAware)
+        {
+            PartyState? state = snapshotAware.SnapshotState switch
+            {
+                null when snapshotAware.Events.Count == 0 => null,
+                null => new PartyState(),
+                PartyState snapshot => snapshot,
+                JsonElement json when json.ValueKind == JsonValueKind.Null && snapshotAware.Events.Count == 0 => null,
+                JsonElement json when json.ValueKind == JsonValueKind.Object => ReadPartyStateSnapshot(json),
+                _ => ReadPartyStateSnapshot(JsonSerializer.SerializeToElement(snapshotAware.SnapshotState, PayloadJsonOptions)),
+            };
+
+            if (state is null)
+            {
+                return null;
+            }
+
+            foreach (EventEnvelope historicalEvent in snapshotAware.Events)
+            {
+                ApplyHistoricalEvent(state, historicalEvent);
+            }
+
+            return state;
+        }
+
+        if (currentState is JsonElement element && element.ValueKind == JsonValueKind.Object)
+        {
+            return ReadPartyStateSnapshot(element);
+        }
+
+        return null;
+    }
+
+    private static PartyState ReadPartyStateSnapshot(JsonElement snapshot)
+    {
+        PartyState state = new();
+        if (TryGetProperty(snapshot, nameof(PartyState.ErasureStatus), out JsonElement erasureStatus)
+            && TryReadErasureStatus(erasureStatus, out ErasureStatus status))
+        {
+            SetPrivateProperty(state, nameof(PartyState.ErasureStatus), status);
+        }
+
+        if (TryGetProperty(snapshot, nameof(PartyState.ErasedAt), out JsonElement erasedAt)
+            && erasedAt.ValueKind == JsonValueKind.String
+            && erasedAt.TryGetDateTimeOffset(out DateTimeOffset value))
+        {
+            SetPrivateProperty(state, nameof(PartyState.ErasedAt), value);
+        }
+
+        if (TryGetProperty(snapshot, nameof(PartyState.IsRestricted), out JsonElement isRestricted)
+            && isRestricted.ValueKind is JsonValueKind.True or JsonValueKind.False)
+        {
+            SetPrivateProperty(state, nameof(PartyState.IsRestricted), isRestricted.GetBoolean());
+        }
+
+        return state;
+    }
+
+    private static bool TryGetProperty(JsonElement snapshot, string propertyName, out JsonElement value)
+    {
+        if (snapshot.TryGetProperty(propertyName, out value))
+        {
+            return true;
+        }
+
+        string camelCase = JsonNamingPolicy.CamelCase.ConvertName(propertyName);
+        return snapshot.TryGetProperty(camelCase, out value);
+    }
+
+    private static bool TryReadErasureStatus(JsonElement element, out ErasureStatus status)
+    {
+        if (element.ValueKind == JsonValueKind.String
+            && Enum.TryParse(element.GetString(), ignoreCase: true, out status))
+        {
+            return true;
+        }
+
+        if (element.ValueKind == JsonValueKind.Number
+            && element.TryGetInt32(out int numeric)
+            && Enum.IsDefined(typeof(ErasureStatus), numeric))
+        {
+            status = (ErasureStatus)numeric;
+            return true;
+        }
+
+        status = ErasureStatus.Active;
+        return false;
+    }
+
+    private static void SetPrivateProperty<T>(PartyState state, string propertyName, T value)
+    {
+        PropertyInfo property = typeof(PartyState).GetProperty(propertyName)
+            ?? throw new InvalidOperationException($"PartyState property '{propertyName}' was not found.");
+        property.SetValue(state, value);
+    }
+
+    private static void ApplyHistoricalEvent(PartyState state, EventEnvelope historicalEvent)
+    {
+        string eventTypeName = historicalEvent.Metadata.EventTypeName.Split(',', 2)[0].Trim();
+        Type? eventType = ContractsAssembly.GetType(eventTypeName, throwOnError: false)
+            ?? ContractsAssembly.GetTypes().SingleOrDefault(type => string.Equals(type.Name, eventTypeName, StringComparison.Ordinal));
+        if (eventType is null)
+        {
+            return;
+        }
+
+        object? payload = JsonSerializer.Deserialize(historicalEvent.Payload, eventType, PayloadJsonOptions);
+        if (payload is null)
+        {
+            return;
+        }
+
+        MethodInfo? apply = typeof(PartyState).GetMethod(nameof(PartyState.Apply), [eventType]);
+        _ = apply?.Invoke(state, [payload]);
     }
 
     private async Task<DomainResult?> TryRejectInvalidPayloadAsync(

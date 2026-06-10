@@ -1,7 +1,7 @@
+using System.Globalization;
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
-using System.Globalization;
 
 using Hexalith.EventStore.Contracts.Queries;
 using Hexalith.Parties.Contracts.Commands;
@@ -46,13 +46,23 @@ public sealed class HttpAdminPortalGdprClient : IAdminPortalGdprClient
         => GetErasureStatusFromPartyDetailAsync(partyId, cancellationToken);
 
     public Task<ErasureCertificate?> GetErasureCertificateAsync(string partyId, CancellationToken cancellationToken)
-        => Task.FromException<ErasureCertificate?>(ContractUnavailable());
-
-    public Task<AdminPortalGdprCommandResult> RetryErasureVerificationAsync(string partyId, CancellationToken cancellationToken)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(partyId);
-        return Task.FromResult(new AdminPortalGdprCommandResult(AdminPortalGdprOutcome.ContractUnavailable, null));
+        return PostNullableQueryAsync<ErasureCertificate>(
+            partyId,
+            queryType: "GetErasureCertificate",
+            projectionType: "PartyDetail",
+            projectionActorType: "PartyDetailProjectionQueryActor",
+            payload: new PartyQueryPayload(partyId),
+            cancellationToken);
     }
+
+    public Task<AdminPortalGdprCommandResult> RetryErasureVerificationAsync(string partyId, CancellationToken cancellationToken)
+        => PostCommandAsync(
+            partyId,
+            new RetryErasureVerification { PartyId = partyId, TenantId = _options.Tenant },
+            AdminPortalGdprRoutes.RetryVerification,
+            cancellationToken);
 
     public Task<AdminPortalGdprCommandResult> RestrictProcessingAsync(
         string partyId,
@@ -208,6 +218,49 @@ public sealed class HttpAdminPortalGdprClient : IAdminPortalGdprClient
         throw new PartiesClientException((int)response.StatusCode, "OK", null, "Response did not contain a query payload.", null);
     }
 
+    private async Task<T?> PostNullableQueryAsync<T>(
+        string aggregateId,
+        string queryType,
+        string projectionType,
+        string? projectionActorType,
+        object? payload,
+        CancellationToken cancellationToken)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(aggregateId);
+
+        var request = new SubmitQueryRequest(
+            Tenant: _options.Tenant,
+            Domain: PartyDomain,
+            AggregateId: aggregateId,
+            QueryType: queryType,
+            ProjectionType: projectionType,
+            Payload: payload is null ? null : JsonSerializer.SerializeToElement(payload, HttpPartiesCommandClient.JsonOptions),
+            EntityId: aggregateId,
+            ProjectionActorType: projectionActorType);
+
+        using HttpResponseMessage response = await _httpClient
+            .PostAsJsonAsync(QueryGatewayPath, request, HttpPartiesCommandClient.JsonOptions, cancellationToken)
+            .ConfigureAwait(false);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            await ThrowQueryErrorAsync(response, cancellationToken).ConfigureAwait(false);
+        }
+
+        using JsonDocument doc = await JsonDocument.ParseAsync(
+            await response.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false),
+            cancellationToken: cancellationToken).ConfigureAwait(false);
+
+        if (doc.RootElement.TryGetProperty("payload", out JsonElement payloadElement))
+        {
+            return payloadElement.ValueKind is JsonValueKind.Null or JsonValueKind.Undefined
+                ? default
+                : payloadElement.Deserialize<T>(HttpPartiesCommandClient.JsonOptions);
+        }
+
+        return default;
+    }
+
     private async Task<PartyDetail> GetPartyDetailAsync(string partyId, CancellationToken cancellationToken)
         => await PostQueryAsync<PartyDetail>(
             partyId,
@@ -270,23 +323,24 @@ public sealed class HttpAdminPortalGdprClient : IAdminPortalGdprClient
         HttpResponseMessage response,
         CancellationToken cancellationToken)
     {
-        string? detail = await TryReadSafeDetailAsync(response, cancellationToken).ConfigureAwait(false);
+        string? rawDetail = await TryReadDetailAsync(response, cancellationToken).ConfigureAwait(false);
         AdminPortalGdprOutcome outcome = response.StatusCode switch
         {
             HttpStatusCode.Unauthorized => AdminPortalGdprOutcome.AuthenticationRequired,
-            HttpStatusCode.Forbidden => ContainsTenant(detail)
+            HttpStatusCode.Forbidden => ContainsTenant(rawDetail)
                 ? AdminPortalGdprOutcome.MissingTenant
                 : AdminPortalGdprOutcome.Forbidden,
             HttpStatusCode.NotFound => AdminPortalGdprOutcome.NotFound,
             HttpStatusCode.Conflict => AdminPortalGdprOutcome.ErasureInProgress,
             HttpStatusCode.Gone => AdminPortalGdprOutcome.Erased,
             HttpStatusCode.BadRequest or HttpStatusCode.UnprocessableEntity => AdminPortalGdprOutcome.ValidationRejected,
+            HttpStatusCode.NotImplemented => AdminPortalGdprOutcome.ContractUnavailable,
             HttpStatusCode.RequestTimeout or HttpStatusCode.TooManyRequests => AdminPortalGdprOutcome.TransientFailure,
             >= HttpStatusCode.InternalServerError => AdminPortalGdprOutcome.TransientFailure,
             _ => AdminPortalGdprOutcome.Unknown,
         };
 
-        return new AdminPortalGdprCommandResult(outcome, null, detail);
+        return new AdminPortalGdprCommandResult(outcome, null, SanitizeDetail(rawDetail));
     }
 
     private static async Task ThrowQueryErrorAsync(HttpResponseMessage response, CancellationToken cancellationToken)
@@ -300,7 +354,7 @@ public sealed class HttpAdminPortalGdprClient : IAdminPortalGdprClient
             result.CorrelationId);
     }
 
-    private static async Task<string?> TryReadSafeDetailAsync(HttpResponseMessage response, CancellationToken cancellationToken)
+    private static async Task<string?> TryReadDetailAsync(HttpResponseMessage response, CancellationToken cancellationToken)
     {
         try
         {
@@ -311,7 +365,7 @@ public sealed class HttpAdminPortalGdprClient : IAdminPortalGdprClient
             if (doc.RootElement.TryGetProperty("detail", out JsonElement detail)
                 && detail.ValueKind == JsonValueKind.String)
             {
-                return SanitizeDetail(detail.GetString());
+                return detail.GetString();
             }
         }
         catch (JsonException)
@@ -342,14 +396,6 @@ public sealed class HttpAdminPortalGdprClient : IAdminPortalGdprClient
         => $"party-{SanitizeFileToken(partyId)}-{exportedAt.UtcDateTime.ToString("yyyyMMddTHHmmssZ", CultureInfo.InvariantCulture)}.json";
 
     private sealed record PartyQueryPayload(string PartyId);
-
-    private static PartiesClientException ContractUnavailable()
-        => new(
-            (int)HttpStatusCode.NotImplemented,
-            AdminPortalGdprOutcome.ContractUnavailable.ToString(),
-            null,
-            "No EventStore GDPR query contract is available for this operation.",
-            null);
 
     private sealed record EventStoreCommandRequest(
         string MessageId,

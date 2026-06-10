@@ -176,15 +176,25 @@ public sealed class AdminPortalGdprOperationContractTests
     }
 
     [Fact]
-    public async Task RetryVerificationAsync_FailsClosedUntilBackendContractExistsAsync()
+    public async Task RetryVerificationAsync_SubmitsRetryVerificationCommandContractAsync()
     {
-        var handler = new RecordingHandler(HttpStatusCode.Accepted, "{}", "application/json");
+        var handler = new RecordingHandler(
+            HttpStatusCode.Accepted,
+            JsonSerializer.Serialize(new { correlationId = "corr-retry" }),
+            "application/json");
         var client = CreateHttpClient(handler);
 
         AdminPortalGdprCommandResult result = await client.RetryErasureVerificationAsync("party-1", CancellationToken.None);
 
-        result.Outcome.ShouldBe(AdminPortalGdprOutcome.ContractUnavailable);
-        handler.LastRequest.ShouldBeNull("Retry must not submit a private client-only command type.");
+        result.Outcome.ShouldBe(AdminPortalGdprOutcome.Accepted);
+        result.CorrelationId.ShouldBe("corr-retry");
+        handler.LastRequest.ShouldNotBeNull().RequestUri!.PathAndQuery.ShouldBe("/api/v1/commands");
+        using JsonDocument body = JsonDocument.Parse(handler.LastRequestBody.ShouldNotBeNull());
+        JsonElement root = body.RootElement;
+        root.GetProperty("commandType").GetString().ShouldBe(typeof(RetryErasureVerification).FullName);
+        root.GetProperty("aggregateId").GetString().ShouldBe("party-1");
+        root.GetProperty("payload").GetProperty("partyId").GetString().ShouldBe("party-1");
+        root.GetProperty("payload").GetProperty("tenantId").GetString().ShouldBe("tenant-a");
     }
 
     [Fact]
@@ -308,6 +318,93 @@ public sealed class AdminPortalGdprOperationContractTests
         root.GetProperty("queryType").GetString().ShouldBe("GetProcessingRecords");
         root.GetProperty("projectionType").GetString().ShouldBe("PartyDetail");
         root.GetProperty("projectionActorType").GetString().ShouldBe("PartyDetailProjectionQueryActor");
+    }
+
+    [Fact]
+    public async Task GetErasureCertificateAsync_UsesAuthoritativeCertificateQueryAndAllowsNullPayloadAsync()
+    {
+        var certificate = new ErasureCertificate
+        {
+            PartyId = "party-erased",
+            TenantId = "tenant-a",
+            Timestamp = DateTimeOffset.Parse("2026-05-21T20:45:00Z"),
+            KeyVersionsDestroyed = [1, 2],
+            VerificationStatus = ErasureVerificationStatus.Verified,
+        };
+        var handler = new RecordingHandler(
+            HttpStatusCode.OK,
+            JsonSerializer.Serialize(new { payload = certificate }, s_jsonOptions),
+            "application/json");
+        var client = CreateHttpClient(handler);
+
+        ErasureCertificate? result = await client.GetErasureCertificateAsync("party-erased", CancellationToken.None);
+
+        result.ShouldNotBeNull();
+        result.PartyId.ShouldBe("party-erased");
+        result.TenantId.ShouldBe("tenant-a");
+        result.VerificationStatus.ShouldBe(ErasureVerificationStatus.Verified);
+        handler.LastRequest.ShouldNotBeNull().RequestUri!.PathAndQuery.ShouldBe("/api/v1/queries");
+        using JsonDocument body = JsonDocument.Parse(handler.LastRequestBody.ShouldNotBeNull());
+        JsonElement root = body.RootElement;
+        root.GetProperty("queryType").GetString().ShouldBe("GetErasureCertificate");
+        root.GetProperty("projectionType").GetString().ShouldBe("PartyDetail");
+        root.GetProperty("projectionActorType").GetString().ShouldBe("PartyDetailProjectionQueryActor");
+
+        string serialized = JsonSerializer.Serialize(result, s_jsonOptions);
+        serialized.ShouldNotContain("Ada", Case.Insensitive);
+        serialized.ShouldNotContain("ada@example.test", Case.Insensitive);
+        serialized.ShouldNotContain("stateKey", Case.Insensitive);
+    }
+
+    [Fact]
+    public async Task GetErasureCertificateAsync_NullPayloadReturnsNullWithoutProblemDetailsLeakAsync()
+    {
+        var handler = new RecordingHandler(
+            HttpStatusCode.OK,
+            JsonSerializer.Serialize(new { payload = (ErasureCertificate?)null }, s_jsonOptions),
+            "application/json");
+        var client = CreateHttpClient(handler);
+
+        ErasureCertificate? result = await client.GetErasureCertificateAsync("party-missing", CancellationToken.None);
+
+        result.ShouldBeNull();
+    }
+
+    [Fact]
+    public async Task RetryVerificationAsync_ForbiddenTenantDetailMapsToMissingTenantWithoutLeakAsync()
+    {
+        var handler = new RecordingHandler(
+            HttpStatusCode.Forbidden,
+            JsonSerializer.Serialize(new { detail = "tenant=other party=p-99 ProblemDetails" }),
+            "application/json");
+        var client = CreateHttpClient(handler);
+
+        AdminPortalGdprCommandResult result = await client.RetryErasureVerificationAsync("party-1", CancellationToken.None);
+
+        result.Outcome.ShouldBe(AdminPortalGdprOutcome.MissingTenant);
+        result.Detail.ShouldNotBeNull();
+        result.Detail.ShouldNotContain("tenant=other", Case.Insensitive);
+        result.Detail.ShouldNotContain("p-99", Case.Insensitive);
+        result.Detail.ShouldNotContain("ProblemDetails", Case.Insensitive);
+    }
+
+    [Fact]
+    public async Task GetErasureCertificateAsync_NotImplementedMapsToContractUnavailableWithoutDetailLeakAsync()
+    {
+        var handler = new RecordingHandler(
+            HttpStatusCode.NotImplemented,
+            JsonSerializer.Serialize(new { detail = "No EventStore GDPR query contract is available for tenant=other party=p-99." }),
+            "application/json");
+        var client = CreateHttpClient(handler);
+
+        PartiesClientException ex = await Should.ThrowAsync<PartiesClientException>(
+            () => client.GetErasureCertificateAsync("party-1", CancellationToken.None));
+
+        ex.Status.ShouldBe((int)HttpStatusCode.NotImplemented);
+        ex.Title.ShouldBe(AdminPortalGdprOutcome.ContractUnavailable.ToString());
+        ex.Detail.ShouldNotBeNull();
+        ex.Detail.ShouldNotContain("tenant=other", Case.Insensitive);
+        ex.Detail.ShouldNotContain("p-99", Case.Insensitive);
     }
 
     [Fact]

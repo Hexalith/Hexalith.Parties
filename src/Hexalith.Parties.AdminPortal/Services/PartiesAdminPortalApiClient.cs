@@ -193,14 +193,12 @@ public sealed class PartiesAdminPortalApiClient : IPartiesAdminPortalApiClient
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        // No GDPR client wired → Story 7.6 fail-closed gate: everything stays disabled.
-        // When the provisional bridge IS wired, report its honest surface rather than
-        // Available(): the registered HttpAdminPortalGdprClient reports erasure-certificate
-        // and verification-retry as contract-unavailable, so those two stay disabled with the
-        // exact bounded blocker while the seven genuinely-working operations stay enabled.
-        return Task.FromResult(_gdprClient is null
-            ? AdminPortalGdprCapability.Unavailable()
-            : AdminPortalGdprCapability.ProvisionalBridge());
+        return Task.FromResult(_gdprClient switch
+        {
+            null => AdminPortalGdprCapability.Unavailable(),
+            HttpAdminPortalGdprClient => AdminPortalGdprCapability.Available(),
+            _ => AdminPortalGdprCapability.ProvisionalBridge(),
+        });
     }
 
     public async Task<AdminPortalQueryResult<PartyDetail>> GetPartyAsync(string partyId, CancellationToken cancellationToken)

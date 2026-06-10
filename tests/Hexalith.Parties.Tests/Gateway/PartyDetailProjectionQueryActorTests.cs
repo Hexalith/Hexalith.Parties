@@ -6,6 +6,7 @@ using Dapr.Actors.Runtime;
 
 using Hexalith.EventStore.Contracts.Queries;
 using Hexalith.Parties.Contracts.Models;
+using Hexalith.Parties.Contracts.Security;
 using Hexalith.Parties.Contracts.ValueObjects;
 using Hexalith.Parties.Projections.Abstractions;
 using Hexalith.Parties.Projections.Actors;
@@ -303,6 +304,67 @@ public sealed class PartyDetailProjectionQueryActorTests
     }
 
     [Fact]
+    public async Task QueryAsync_GetErasureCertificate_ReturnsPersistedCertificateWithoutDetailReadAsync()
+    {
+        IActorProxyFactory actorProxyFactory = Substitute.For<IActorProxyFactory>();
+        IPartyErasureRecordStore recordStore = Substitute.For<IPartyErasureRecordStore>();
+        recordStore.GetCertificateAsync("tenant-a", "p-erased", Arg.Any<CancellationToken>())
+            .Returns(new ErasureCertificate
+            {
+                PartyId = "p-erased",
+                TenantId = "tenant-a",
+                Timestamp = DateTimeOffset.Parse("2026-05-21T20:45:00Z"),
+                KeyVersionsDestroyed = [1],
+                VerificationStatus = ErasureVerificationStatus.Verified,
+            });
+        PartyDetailProjectionQueryActor actor = CreateActor("party-detail:tenant-a:p-erased", actorProxyFactory, recordStore: recordStore);
+
+        QueryResult result = await actor.QueryAsync(CreateEnvelope("tenant-a", "p-erased", "GetErasureCertificate"));
+
+        result.Success.ShouldBeTrue();
+        result.ProjectionType.ShouldBe("party-erasure-certificate");
+        ErasureCertificate certificate = result.GetPayload().Deserialize<ErasureCertificate>(new JsonSerializerOptions(JsonSerializerDefaults.Web))!;
+        certificate.PartyId.ShouldBe("p-erased");
+        certificate.TenantId.ShouldBe("tenant-a");
+        certificate.VerificationStatus.ShouldBe(ErasureVerificationStatus.Verified);
+        string raw = result.GetPayload().GetRawText();
+        raw.ShouldNotContain("Ada", Case.Insensitive);
+        raw.ShouldNotContain("ada@example.test", Case.Insensitive);
+        raw.ShouldNotContain("stateKey", Case.Insensitive);
+        actorProxyFactory.DidNotReceiveWithAnyArgs().CreateActorProxy<IPartyDetailProjectionActor>(default!, default!, default);
+    }
+
+    [Fact]
+    public async Task QueryAsync_GetErasureCertificate_NullCertificateReturnsJsonNullAsync()
+    {
+        IActorProxyFactory actorProxyFactory = Substitute.For<IActorProxyFactory>();
+        IPartyErasureRecordStore recordStore = Substitute.For<IPartyErasureRecordStore>();
+        recordStore.GetCertificateAsync("tenant-a", "p-missing", Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<ErasureCertificate?>(null));
+        PartyDetailProjectionQueryActor actor = CreateActor("party-detail:tenant-a:p-missing", actorProxyFactory, recordStore: recordStore);
+
+        QueryResult result = await actor.QueryAsync(CreateEnvelope("tenant-a", "p-missing", "GetErasureCertificate"));
+
+        result.Success.ShouldBeTrue();
+        result.GetPayload().ValueKind.ShouldBe(JsonValueKind.Null);
+    }
+
+    [Fact]
+    public async Task QueryAsync_GetErasureCertificate_CrossTenantMismatchFailsBeforeStoreReadAsync()
+    {
+        IActorProxyFactory actorProxyFactory = Substitute.For<IActorProxyFactory>();
+        IPartyErasureRecordStore recordStore = Substitute.For<IPartyErasureRecordStore>();
+        PartyDetailProjectionQueryActor actor = CreateActor("party-detail:tenant-a:p-1", actorProxyFactory, recordStore: recordStore);
+
+        QueryResult result = await actor.QueryAsync(CreateEnvelope("tenant-b", "p-1", "GetErasureCertificate"));
+
+        result.Success.ShouldBeFalse();
+        result.ErrorMessage.ShouldBe(QueryAdapterFailureReason.InvalidEnvelope);
+        await recordStore.DidNotReceiveWithAnyArgs().GetCertificateAsync(default!, default!, default);
+        actorProxyFactory.DidNotReceiveWithAnyArgs().CreateActorProxy<IPartyDetailProjectionActor>(default!, default!, default);
+    }
+
+    [Fact]
     public async Task QueryAsync_UnavailableDetailProjection_FailsClosedWithoutPayloadAsync()
     {
         IActorProxyFactory actorProxyFactory = Substitute.For<IActorProxyFactory>();
@@ -580,16 +642,27 @@ public sealed class PartyDetailProjectionQueryActorTests
             NullLogger<PartyDetailProjectionQueryActor>.Instance,
             projectionRebuildService);
 
+    private static PartyDetailProjectionQueryActor CreateActor(
+        string actorId,
+        IActorProxyFactory actorProxyFactory,
+        IPartyErasureRecordStore recordStore)
+        => CreateActorWithLogger(
+            actorId,
+            actorProxyFactory,
+            NullLogger<PartyDetailProjectionQueryActor>.Instance,
+            erasureRecordStore: recordStore);
+
     private static PartyDetailProjectionQueryActor CreateActorWithLogger(
         string actorId,
         IActorProxyFactory actorProxyFactory,
         ILogger<PartyDetailProjectionQueryActor> logger,
-        IProjectionRebuildService? projectionRebuildService = null)
+        IProjectionRebuildService? projectionRebuildService = null,
+        IPartyErasureRecordStore? erasureRecordStore = null)
     {
         ActorTimerManager timerManager = Substitute.For<ActorTimerManager>();
         var host = ActorHost.CreateForTest<PartyDetailProjectionQueryActor>(
             new ActorTestOptions { ActorId = new ActorId(actorId), TimerManager = timerManager });
-        return new PartyDetailProjectionQueryActor(host, actorProxyFactory, logger, projectionRebuildService);
+        return new PartyDetailProjectionQueryActor(host, actorProxyFactory, logger, projectionRebuildService, erasureRecordStore);
     }
 
     private sealed class RecordingLogger<T> : ILogger<T>

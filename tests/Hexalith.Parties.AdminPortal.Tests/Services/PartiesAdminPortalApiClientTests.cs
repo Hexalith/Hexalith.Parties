@@ -682,7 +682,7 @@ public sealed class PartiesAdminPortalApiClientTests
     }
 
     [Fact]
-    public async Task GetGdprCapabilityAsync_WithProvisionalGdprClient_ReportsHonestProvisionalBridgeAsync()
+    public async Task GetGdprCapabilityAsync_WithRealGdprClient_ReportsCertificateAndRetryAvailableAsync()
     {
         using var httpClient = new HttpClient { BaseAddress = new Uri("https://localhost/") };
         using ServiceProvider serviceProvider = new ServiceCollection()
@@ -694,7 +694,6 @@ public sealed class PartiesAdminPortalApiClientTests
 
         AdminPortalGdprCapability capability = await client.GetGdprCapabilityAsync(CancellationToken.None);
 
-        // The seven genuinely-working provisional operations stay enabled.
         capability.CanRequestErasure.ShouldBeTrue();
         capability.CanReadErasureStatus.ShouldBeTrue();
         capability.CanRestrictProcessing.ShouldBeTrue();
@@ -702,9 +701,31 @@ public sealed class PartiesAdminPortalApiClientTests
         capability.CanManageConsent.ShouldBeTrue();
         capability.CanExportData.ShouldBeTrue();
         capability.CanReadProcessingRecords.ShouldBeTrue();
+        capability.CanReadErasureCertificate.ShouldBeTrue();
+        capability.CanRetryVerification.ShouldBeTrue();
+        capability.HasAnySupport.ShouldBeTrue();
+        capability.Reason.ShouldBe(string.Empty);
+    }
 
-        // Certificate + retry verification are contract-unavailable on the provisional client and
-        // must stay disabled with the exact bounded blocker (the Story 7.6 fail-closed gate).
+    [Fact]
+    public async Task GetGdprCapabilityAsync_WithProvisionalGdprClient_KeepsCertificateAndRetryDisabledAsync()
+    {
+        using ServiceProvider serviceProvider = new ServiceCollection()
+            .AddSingleton<IAdminPortalGdprClient>(new ContractUnavailableGdprClient())
+            .BuildServiceProvider();
+        PartiesAdminPortalApiClient client = new(
+            serviceProvider,
+            Options.Create(new PartiesAdminPortalOptions()));
+
+        AdminPortalGdprCapability capability = await client.GetGdprCapabilityAsync(CancellationToken.None);
+
+        capability.CanRequestErasure.ShouldBeTrue();
+        capability.CanReadErasureStatus.ShouldBeTrue();
+        capability.CanRestrictProcessing.ShouldBeTrue();
+        capability.CanLiftRestriction.ShouldBeTrue();
+        capability.CanManageConsent.ShouldBeTrue();
+        capability.CanExportData.ShouldBeTrue();
+        capability.CanReadProcessingRecords.ShouldBeTrue();
         capability.CanReadErasureCertificate.ShouldBeFalse();
         capability.CanRetryVerification.ShouldBeFalse();
         capability.HasAnySupport.ShouldBeTrue();

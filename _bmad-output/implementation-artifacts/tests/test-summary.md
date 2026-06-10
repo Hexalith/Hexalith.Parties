@@ -1,47 +1,44 @@
 # Test Automation Summary
 
-Story: 3.4 - Data export (Art.20) and processing records (Art.30)
+Story: 3.5 - EventStore erasure-verification contract
 
 ## Generated Tests
 
 ### API Tests
-- [x] `src/Hexalith.Parties.UI/Services/PartiesAdminPortalE2eFixture.cs` - extends the AdminPortal E2E fixture with export and processing-record request capture.
-- [x] The fixture now returns a bounded JSON portability package and bounded Art.30 records without personal fields.
-- [x] Browser request hooks continue to fail the scenario if `/api/v1/commands` or `/api/v1/queries` appears in browser-visible traffic.
+- [x] Existing Story 3.5 API/contract tests cover `GetErasureCertificateAsync`, `RetryErasureVerificationAsync`, bounded error mapping, projection-query routing, capability transitions, retry handler behavior, and DAPR ACL static validation.
+- [x] `src/Hexalith.Parties.UI/Services/PartiesAdminPortalE2eFixture.cs` now captures erasure-certificate and retry-verification requests for the AdminPortal E2E seam.
+- [x] The fixture keeps the default provisional bridge disabled for certificate/retry and adds an opt-in Story 3.5 real-contract mode for UI workflow tests.
 
 ### E2E Tests
-- [x] `tests/e2e/specs/admin-parties-list.spec.ts` - adds direct erased-party GDPR route coverage for Art.20 export and Art.30 processing records.
-- [x] The scenario asserts export and records remain available while mutation controls are disabled, no native dialogs open, and no browser-visible EventStore calls are made.
-- [x] The scenario asserts safe filename/status copy, single export and records fixture requests, bounded Art.30 labels and values, 320px/200% zoom overflow safety, and no erased personal data in UI or URL.
+- [x] `tests/e2e/specs/admin-gdpr-erasure-verification.spec.ts` - verifies the real-contract GDPR panel flow: refresh failed verification status, retry verification, refresh to complete status, render bounded certificate state, and capture certificate/retry requests.
+- [x] The scenario asserts no browser-visible `/api/v1/commands` or `/api/v1/queries` calls, no raw ProblemDetails/state-key/destroyed-key text, and no key-material leakage in fixture snapshots.
 
 ## Coverage
 
-- API/request boundary: 2/2 Story 3.4 read/export paths covered through AdminPortal fixture request capture.
-- UI workflows: 2/2 covered for direct erased GDPR route export and processing-record retrieval.
-- Happy path: non-empty portability export and processing-record rendering covered.
-- Critical error cases: existing bUnit coverage covers empty export payload, JS helper failure, contract failure, stale export suppression, gone route, and unsafe route IDs.
-- Accessibility/privacy assertions: semantic role/label locators, live status checks, no hardcoded waits, no native dialogs, no browser-visible gateway calls, safe filename derivation, and narrow/zoom overflow coverage.
+- API/client contract paths: existing focused Story 3.5 tests cover certificate query and retry command envelopes, nullable certificate semantics, sanitized failure mapping, capability true/false transitions, projection query actor certificate routing, and retry domain invocation.
+- UI workflows: 1/1 discovered Story 3.5 E2E gap covered for the AdminPortal certificate/retry consumption seam.
+- Happy path: retryable verification-failed state transitions to completed status with a verified certificate.
+- Critical error/fallback cases: provisional bridge remains covered by existing E2E fallback assertions and existing bUnit/API tests cover contract-unavailable and sanitized failure outcomes.
 
 ## Validation
 
-- [x] `dotnet build tests/Hexalith.Parties.AdminPortal.Tests/Hexalith.Parties.AdminPortal.Tests.csproj -c Release --no-restore -m:1 -v:minimal`
-- [x] `tests/Hexalith.Parties.AdminPortal.Tests/bin/Release/net10.0/Hexalith.Parties.AdminPortal.Tests` - 162 passed, 0 failed, 0 skipped.
+- [x] `dotnet build src/Hexalith.Parties.UI/Hexalith.Parties.UI.csproj -c Release --no-restore -m:1 -v:minimal`
 - [x] `cd tests/e2e && npm run typecheck`
-- [x] `cd tests/e2e && npx playwright test --list` - discovered 32 specs, including the new Story 3.4 erased-party GDPR route scenario.
-- [ ] `cd tests/e2e && npx playwright test specs/admin-parties-list.spec.ts -g "direct GDPR route for an erased party keeps export and records available without PII" --project chromium` - blocked before Playwright test execution because the sandbox denies local Kestrel socket binding: `System.Net.Sockets.SocketException (13): Permission denied`.
+- [x] `cd tests/e2e && npx playwright test specs/admin-gdpr-erasure-verification.spec.ts --project=chromium --list` - discovered 1 generated test.
 - [x] `bash scripts/check-no-warning-override.sh`
+- [ ] `cd tests/e2e && npm run test -- specs/admin-gdpr-erasure-verification.spec.ts --project=chromium` - blocked before test execution because this sandbox denies local Kestrel socket binding: `System.Net.Sockets.SocketException (13): Permission denied`.
 
 ## Checklist Result
 
-- API tests generated if applicable: yes, via the gated AdminPortal E2E fixture and existing bUnit client/component coverage.
+- API tests generated if applicable: yes, existing focused Story 3.5 API/contract lanes were already present; this run added missing E2E fixture request capture.
 - E2E tests generated if UI exists: yes.
-- Tests use standard framework APIs: yes, Playwright `test`/`expect`, bUnit, xUnit v3, and existing fixture patterns.
+- Tests use standard framework APIs: yes, Playwright `test`/`expect` plus the existing AdminPortal E2E fixture pattern.
 - Happy path covered: yes.
-- Critical error cases covered: yes through existing focused bUnit tests plus unsafe/missing route E2E coverage.
-- Proper locators: yes, roles and labels scoped to the detail surface.
+- Critical error cases covered: yes through the existing fallback/sanitization tests and the preserved provisional E2E behavior.
+- Proper locators: yes, role/label locators scoped to the party detail surface.
 - Clear descriptions: yes.
 - No hardcoded waits or sleeps: yes.
-- Tests independent: yes, fixture state resets in `beforeEach`.
+- Tests independent: yes, fixture state resets in `beforeEach` and Story 3.5 real-contract mode is enabled by a test-only cookie.
 - Tests saved to appropriate directories: yes.
 - Summary includes coverage metrics: yes.
 

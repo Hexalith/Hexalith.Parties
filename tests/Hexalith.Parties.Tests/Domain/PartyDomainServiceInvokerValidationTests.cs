@@ -8,8 +8,11 @@ using Hexalith.EventStore.Contracts.Results;
 using Hexalith.EventStore.Contracts.Security;
 using Hexalith.Parties.Contracts.Commands;
 using Hexalith.Parties.Contracts.Events;
+using Hexalith.Parties.Contracts.Security;
+using Hexalith.Parties.Contracts.State;
 using Hexalith.Parties.Contracts.ValueObjects;
 using Hexalith.Parties.Domain;
+using Hexalith.Parties.Security;
 using Hexalith.Parties.Validation;
 
 using Microsoft.Extensions.DependencyInjection;
@@ -259,7 +262,90 @@ public sealed class PartyDomainServiceInvokerValidationTests
         result.Events.ShouldContain(e => e is PartyCreated);
     }
 
-    private static PartyDomainServiceInvoker CreateInvoker(IEventPayloadProtectionService protection)
+    [Fact]
+    public async Task InvokeAsync_RetryErasureVerification_KeyDestroyedRunsExistingOrchestratorAndPersistsBoundedRecords()
+    {
+        string partyId = Guid.NewGuid().ToString("D");
+        IEventPayloadProtectionService protection = Substitute.For<IEventPayloadProtectionService>();
+        IPartyErasureRecordStore recordStore = Substitute.For<IPartyErasureRecordStore>();
+        ErasureCertificate certificate = new()
+        {
+            PartyId = partyId,
+            TenantId = "tenant-a",
+            Timestamp = DateTimeOffset.Parse("2026-05-21T20:45:00Z"),
+            KeyVersionsDestroyed = [1],
+            VerificationStatus = ErasureVerificationStatus.Failed,
+        };
+        recordStore.GetCertificateAsync("tenant-a", partyId, Arg.Any<CancellationToken>())
+            .Returns(certificate);
+        IErasureVerificationService verificationService = Substitute.For<IErasureVerificationService>();
+        verificationService.VerifyErasureAsync("tenant-a", partyId, certificate, Arg.Any<CancellationToken>())
+            .Returns(new ErasureVerificationReport
+            {
+                PartyId = partyId,
+                TenantId = "tenant-a",
+                Timestamp = DateTimeOffset.Parse("2026-05-21T20:50:00Z"),
+                OverallStatus = ErasureVerificationOverallStatus.Complete,
+                StoreResults =
+                [
+                    new ErasureVerificationStoreResult
+                    {
+                        StoreName = "detail-projection",
+                        Status = ErasureStoreCleanupStatus.Cleaned,
+                        Timestamp = DateTimeOffset.Parse("2026-05-21T20:50:00Z"),
+                    },
+                ],
+            });
+        PartyDomainServiceInvoker invoker = CreateInvoker(protection, recordStore, CreateOrchestrator(verificationService));
+        PartyState state = PartyTestState(partyId, ErasureStatus.KeyDestroyed);
+        CommandEnvelope command = CreateCommand(new RetryErasureVerification { PartyId = partyId, TenantId = "tenant-a" });
+
+        DomainResult result = await invoker.InvokeAsync(command, state, CancellationToken.None);
+
+        result.IsSuccess.ShouldBeTrue();
+        result.Events.OfType<ErasureVerified>().ShouldHaveSingleItem();
+        result.Events.OfType<PartyErased>().ShouldHaveSingleItem();
+        await verificationService.Received(1).VerifyErasureAsync("tenant-a", partyId, certificate, Arg.Any<CancellationToken>());
+        await recordStore.Received(1).SaveVerificationReportAsync(
+            Arg.Is<ErasureVerificationReport>(report => report != null && report.OverallStatus == ErasureVerificationOverallStatus.Complete),
+            Arg.Any<CancellationToken>());
+        await recordStore.Received(1).SaveCertificateAsync(
+            Arg.Is<ErasureCertificate>(saved => saved != null && saved.VerificationStatus == ErasureVerificationStatus.Verified),
+            Arg.Any<CancellationToken>());
+        await recordStore.Received(1).SaveStatusAsync(
+            Arg.Is<PartyErasureStatusRecord>(saved => saved != null && saved.Status == ErasureStatus.Verified.ToString() && saved.ErrorMessage == null),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task InvokeAsync_RetryErasureVerification_ActivePartyIsBoundedRejectionWithoutStoreMutation()
+    {
+        string partyId = Guid.NewGuid().ToString("D");
+        IPartyErasureRecordStore recordStore = Substitute.For<IPartyErasureRecordStore>();
+        IErasureVerificationService verificationService = Substitute.For<IErasureVerificationService>();
+        PartyDomainServiceInvoker invoker = CreateInvoker(
+            Substitute.For<IEventPayloadProtectionService>(),
+            recordStore,
+            CreateOrchestrator(verificationService));
+        CommandEnvelope command = CreateCommand(new RetryErasureVerification { PartyId = partyId, TenantId = "tenant-a" });
+
+        DomainResult result = await invoker.InvokeAsync(command, PartyTestState(partyId, ErasureStatus.Active), CancellationToken.None);
+
+        result.IsRejection.ShouldBeTrue();
+        PartyErasureInProgress rejection = result.Events.OfType<PartyErasureInProgress>().ShouldHaveSingleItem();
+        rejection.Status.ShouldBe(ErasureStatus.Active.ToString());
+        string rejectionMessage = rejection.Message.ShouldNotBeNull();
+        rejectionMessage.ShouldNotContain("key", Case.Insensitive);
+        rejectionMessage.ShouldNotContain("decrypt", Case.Insensitive);
+        await recordStore.DidNotReceiveWithAnyArgs().SaveCertificateAsync(default!, default);
+        await recordStore.DidNotReceiveWithAnyArgs().SaveVerificationReportAsync(default!, default);
+        await verificationService.DidNotReceiveWithAnyArgs().VerifyErasureAsync(default!, default!, default!, default);
+    }
+
+    private static PartyDomainServiceInvoker CreateInvoker(
+        IEventPayloadProtectionService protection,
+        IPartyErasureRecordStore? erasureRecordStore = null,
+        PartyErasureOrchestrator? erasureOrchestrator = null)
     {
         // Mirror the production registration shape: assembly scan picks up every IValidator<T> in
         // the validators assembly, so adding a new validator does not silently bypass the test
@@ -271,7 +357,68 @@ public sealed class PartyDomainServiceInvokerValidationTests
         return new PartyDomainServiceInvoker(
             protection,
             provider.GetRequiredService<IServiceScopeFactory>(),
-            NullLogger<PartyDomainServiceInvoker>.Instance);
+            NullLogger<PartyDomainServiceInvoker>.Instance,
+            erasureRecordStore,
+            erasureOrchestrator);
+    }
+
+    private static PartyErasureOrchestrator CreateOrchestrator(IErasureVerificationService verificationService)
+        => new(
+            Substitute.For<IPartyKeyManagementService>(),
+            verificationService,
+            NullLogger<PartyErasureOrchestrator>.Instance);
+
+    private static PartyState PartyTestState(string partyId, ErasureStatus status)
+    {
+        PartyState state = new();
+        state.Apply(new PartyCreated { Type = PartyType.Person });
+        if (status is ErasureStatus.Active)
+        {
+            return state;
+        }
+
+        state.Apply(new ErasePartyRequested
+        {
+            PartyId = partyId,
+            TenantId = "tenant-a",
+            RequestedAt = DateTimeOffset.Parse("2026-05-21T20:40:00Z"),
+            RequestedBy = "admin",
+        });
+        if (status is ErasureStatus.ErasurePending)
+        {
+            return state;
+        }
+
+        state.Apply(new PartyEncryptionKeyDeleted
+        {
+            PartyId = partyId,
+            TenantId = "tenant-a",
+            DeletedAt = DateTimeOffset.Parse("2026-05-21T20:45:00Z"),
+        });
+        if (status is ErasureStatus.KeyDestroyed or ErasureStatus.VerificationInProgress)
+        {
+            return state;
+        }
+
+        state.Apply(new ErasureVerified
+        {
+            PartyId = partyId,
+            TenantId = "tenant-a",
+            VerifiedAt = DateTimeOffset.Parse("2026-05-21T20:50:00Z"),
+            VerificationReportId = "report-1",
+        });
+        if (status is ErasureStatus.Verified)
+        {
+            return state;
+        }
+
+        state.Apply(new PartyErased
+        {
+            PartyId = partyId,
+            TenantId = "tenant-a",
+            ErasedAt = DateTimeOffset.Parse("2026-05-21T20:55:00Z"),
+        });
+        return state;
     }
 
     private static CommandEnvelope CreateCommand<TCommand>(TCommand payload)
@@ -282,6 +429,7 @@ public sealed class PartyDomainServiceInvokerValidationTests
             CreateParty command => command.PartyId,
             CreatePartyComposite command => command.PartyId,
             UpdatePartyComposite command => command.PartyId,
+            RetryErasureVerification command => command.PartyId,
             _ => Guid.NewGuid().ToString("D"),
         };
 

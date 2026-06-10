@@ -7,6 +7,7 @@ using Dapr.Actors.Runtime;
 
 using Hexalith.EventStore.Contracts.Queries;
 using Hexalith.Parties.Contracts.Models;
+using Hexalith.Parties.Contracts.Security;
 using Hexalith.Parties.Extensions;
 using Hexalith.Parties.Projections.Abstractions;
 using Hexalith.Parties.Projections.Actors;
@@ -20,7 +21,8 @@ public sealed partial class PartyDetailProjectionQueryActor(
     ActorHost host,
     IActorProxyFactory actorProxyFactory,
     ILogger<PartyDetailProjectionQueryActor> logger,
-    IProjectionRebuildService? projectionRebuildService = null) : Actor(host), IPartyProjectionQueryActor, IProjectionActor
+    IProjectionRebuildService? projectionRebuildService = null,
+    IPartyErasureRecordStore? erasureRecordStore = null) : Actor(host), IPartyProjectionQueryActor, IProjectionActor
 {
     public const string ActorTypeName = nameof(PartyDetailProjectionQueryActor);
     public const string ProjectionType = "party-detail";
@@ -29,6 +31,7 @@ public sealed partial class PartyDetailProjectionQueryActor(
     public const string PartyDetailQueryType = "PartyDetail";
     public const string ExportPartyDataQueryType = "ExportPartyData";
     public const string GetProcessingRecordsQueryType = "GetProcessingRecords";
+    public const string GetErasureCertificateQueryType = "GetErasureCertificate";
     public const string PartyDomain = "party";
     private static readonly JsonSerializerOptions s_jsonOptions = new(JsonSerializerDefaults.Web);
 
@@ -67,6 +70,22 @@ public sealed partial class PartyDetailProjectionQueryActor(
             return QueryResult.FromPayload(
                 JsonSerializer.SerializeToElement(records, s_jsonOptions),
                 "party-processing-records");
+        }
+
+        if (string.Equals(envelope.QueryType, GetErasureCertificateQueryType, StringComparison.Ordinal))
+        {
+            if (erasureRecordStore is null)
+            {
+                return QueryResult.Failure(QueryAdapterFailureReason.UnsupportedQueryType);
+            }
+
+            ErasureCertificate? certificate = await erasureRecordStore
+                .GetCertificateAsync(envelope.TenantId, partyId, CancellationToken.None)
+                .ConfigureAwait(false);
+
+            return QueryResult.FromPayload(
+                JsonSerializer.SerializeToElement(certificate, s_jsonOptions),
+                "party-erasure-certificate");
         }
 
         string detailActorId = $"{envelope.TenantId}:party-detail:{partyId}";
@@ -122,7 +141,8 @@ public sealed partial class PartyDetailProjectionQueryActor(
             && (string.Equals(envelope.QueryType, PartyDetailQueryType, StringComparison.Ordinal)
                 || string.Equals(envelope.QueryType, GetPartyQueryType, StringComparison.Ordinal)
                 || string.Equals(envelope.QueryType, ExportPartyDataQueryType, StringComparison.Ordinal)
-                || string.Equals(envelope.QueryType, GetProcessingRecordsQueryType, StringComparison.Ordinal));
+                || string.Equals(envelope.QueryType, GetProcessingRecordsQueryType, StringComparison.Ordinal)
+                || string.Equals(envelope.QueryType, GetErasureCertificateQueryType, StringComparison.Ordinal));
 
     private async Task<PartyDataPortabilityPackage> BuildPortabilityPackageAsync(
         QueryEnvelope envelope,

@@ -20,6 +20,7 @@ internal static class PartiesAdminPortalE2eFixture
 {
     public const string EnabledConfigurationKey = "Hexalith:Parties:AdminPortalE2E:Enabled";
     public const string AdminCookieName = "parties-admin-e2e";
+    public const string Story35RealContractCookieName = "parties-admin-e2e-story-3-5";
     public const string RequestsRoute = "/__parties/specimens/admin-portal/requests";
     public const string ResetRoute = "/__parties/specimens/admin-portal/reset";
 
@@ -35,6 +36,12 @@ internal static class PartiesAdminPortalE2eFixture
     public static bool IsAdminFixtureCookiePresent(IHttpContextAccessor httpContextAccessor)
         => string.Equals(
             httpContextAccessor.HttpContext?.Request.Cookies[AdminCookieName],
+            "enabled",
+            StringComparison.Ordinal);
+
+    public static bool IsStory35RealContractCookiePresent(IHttpContextAccessor httpContextAccessor)
+        => string.Equals(
+            httpContextAccessor.HttpContext?.Request.Cookies[Story35RealContractCookieName],
             "enabled",
             StringComparison.Ordinal);
 }
@@ -98,6 +105,8 @@ internal sealed class PartiesAdminPortalE2eFixtureState
     private readonly List<AdminPortalRequestCapture> _revokeConsentRequests = [];
     private readonly List<AdminPortalRequestCapture> _exportRequests = [];
     private readonly List<AdminPortalRequestCapture> _processingRecordRequests = [];
+    private readonly List<AdminPortalRequestCapture> _erasureCertificateRequests = [];
+    private readonly List<AdminPortalRequestCapture> _retryVerificationRequests = [];
     private readonly List<AdminPortalRequestCapture> _pickerSearchRequests = [];
     private readonly List<AdminPortalRequestCapture> _pickerDetailRequests = [];
     private readonly Dictionary<string, PartyDetail> _details = CreateInitialDetails();
@@ -292,6 +301,30 @@ internal sealed class PartiesAdminPortalE2eFixtureState
         }
     }
 
+    public void CaptureErasureCertificate(string partyId)
+    {
+        lock (_sync)
+        {
+            _erasureCertificateRequests.Add(AdminPortalRequestCapture.FromErasureCertificate(partyId));
+        }
+    }
+
+    public void CaptureRetryVerification(string partyId)
+    {
+        lock (_sync)
+        {
+            _retryVerificationRequests.Add(AdminPortalRequestCapture.FromRetryVerification(partyId));
+        }
+    }
+
+    public bool HasRetriedVerification(string partyId)
+    {
+        lock (_sync)
+        {
+            return _retryVerificationRequests.Any(request => string.Equals(request.PartyId, partyId, StringComparison.Ordinal));
+        }
+    }
+
     public PartyDetail? Detail(string partyId)
     {
         lock (_sync)
@@ -316,6 +349,8 @@ internal sealed class PartiesAdminPortalE2eFixtureState
             _revokeConsentRequests.Clear();
             _exportRequests.Clear();
             _processingRecordRequests.Clear();
+            _erasureCertificateRequests.Clear();
+            _retryVerificationRequests.Clear();
             _pickerSearchRequests.Clear();
             _pickerDetailRequests.Clear();
             _details.Clear();
@@ -343,6 +378,8 @@ internal sealed class PartiesAdminPortalE2eFixtureState
                 [.. _revokeConsentRequests],
                 [.. _exportRequests],
                 [.. _processingRecordRequests],
+                [.. _erasureCertificateRequests],
+                [.. _retryVerificationRequests],
                 [.. _pickerSearchRequests],
                 [.. _pickerDetailRequests]);
         }
@@ -381,6 +418,19 @@ internal sealed class PartiesAdminPortalE2eFixtureState
                     Value = "ERASED-SECRET-ID",
                 },
             ],
+        };
+        details["erasure-retry"] = DetailFromEntry(Entry(
+            "erasure-retry",
+            PartyType.Person,
+            false,
+            "Erasure Retry",
+            "Retry, Erasure",
+            8)) with
+        {
+            ContactChannels = [],
+            Identifiers = [],
+            ConsentRecords = [],
+            NameHistory = [],
         };
         return details;
     }
@@ -503,7 +553,9 @@ internal sealed class PartiesAdminPortalE2eFixtureState
             : organization?.LegalName ?? string.Empty;
 }
 
-internal sealed class PartiesAdminPortalE2eApiClient(PartiesAdminPortalE2eFixtureState state) : IPartiesAdminPortalApiClient
+internal sealed class PartiesAdminPortalE2eApiClient(
+    PartiesAdminPortalE2eFixtureState state,
+    IHttpContextAccessor httpContextAccessor) : IPartiesAdminPortalApiClient
 {
     private static readonly DateTimeOffset BaseDate = new(2026, 06, 10, 10, 00, 00, TimeSpan.Zero);
     private static readonly IReadOnlyList<PartyIndexEntry> Entries = CreateEntries();
@@ -568,7 +620,10 @@ internal sealed class PartiesAdminPortalE2eApiClient(PartiesAdminPortalE2eFixtur
     public Task<AdminPortalGdprCapability> GetGdprCapabilityAsync(CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        return Task.FromResult(AdminPortalGdprCapability.ProvisionalBridge());
+        return Task.FromResult(
+            PartiesAdminPortalE2eFixture.IsStory35RealContractCookiePresent(httpContextAccessor)
+                ? AdminPortalGdprCapability.Available()
+                : AdminPortalGdprCapability.ProvisionalBridge());
     }
 
     public Task<AdminPortalQueryResult<PartyDetail>> GetPartyAsync(string partyId, CancellationToken cancellationToken)
@@ -624,18 +679,54 @@ internal sealed class PartiesAdminPortalE2eApiClient(PartiesAdminPortalE2eFixtur
     public Task<PartyErasureStatusRecord?> GetErasureStatusAsync(string partyId, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
+        if (PartiesAdminPortalE2eFixture.IsStory35RealContractCookiePresent(httpContextAccessor)
+            && string.Equals(partyId, "erasure-retry", StringComparison.Ordinal))
+        {
+            bool completed = state.HasRetriedVerification(partyId);
+            return Task.FromResult<PartyErasureStatusRecord?>(new PartyErasureStatusRecord
+            {
+                PartyId = partyId,
+                TenantId = "test-tenant",
+                Status = completed ? "Complete" : "VerificationFailed",
+                UpdatedAt = completed ? BaseDate.AddMinutes(5) : BaseDate,
+                ErasedAt = BaseDate.AddMinutes(-5),
+            });
+        }
+
         return Task.FromResult<PartyErasureStatusRecord?>(null);
     }
 
     public Task<ErasureCertificate?> GetErasureCertificateAsync(string partyId, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
+        state.CaptureErasureCertificate(partyId);
+        if (PartiesAdminPortalE2eFixture.IsStory35RealContractCookiePresent(httpContextAccessor)
+            && string.Equals(partyId, "erasure-retry", StringComparison.Ordinal)
+            && state.HasRetriedVerification(partyId))
+        {
+            return Task.FromResult<ErasureCertificate?>(new ErasureCertificate
+            {
+                PartyId = partyId,
+                TenantId = "test-tenant",
+                Timestamp = BaseDate.AddMinutes(5),
+                VerificationStatus = ErasureVerificationStatus.Verified,
+                KeyVersionsDestroyed = [3],
+            });
+        }
+
         return Task.FromResult<ErasureCertificate?>(null);
     }
 
     public Task<AdminPortalGdprCommandResult> RetryErasureVerificationAsync(string partyId, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
+        if (PartiesAdminPortalE2eFixture.IsStory35RealContractCookiePresent(httpContextAccessor)
+            && string.Equals(partyId, "erasure-retry", StringComparison.Ordinal))
+        {
+            state.CaptureRetryVerification(partyId);
+            return Task.FromResult(new AdminPortalGdprCommandResult(AdminPortalGdprOutcome.Completed, "corr-retry-e2e"));
+        }
+
         return Task.FromResult(new AdminPortalGdprCommandResult(AdminPortalGdprOutcome.ContractUnavailable, null));
     }
 
@@ -685,7 +776,8 @@ internal sealed class PartiesAdminPortalE2eApiClient(PartiesAdminPortalE2eFixtur
         return Task.FromResult(new AdminPortalExportDownload(
             "party-export.json",
             "application/json",
-            $$"""{"partyId":"{{partyId}}","tenantId":"test-tenant","status":"Erased","party":null,"processingRecords":[]}"""u8.ToArray()));
+            System.Text.Encoding.UTF8.GetBytes(
+                $$"""{"partyId":"{{partyId}}","tenantId":"test-tenant","status":"Erased","party":null,"processingRecords":[]}""")));
     }
 
     public Task<IReadOnlyList<ProcessingActivityRecord>> GetProcessingRecordsAsync(string partyId, CancellationToken cancellationToken)
@@ -967,6 +1059,8 @@ internal sealed record AdminPortalE2eSnapshot(
     IReadOnlyList<AdminPortalRequestCapture> RevokeConsentRequests,
     IReadOnlyList<AdminPortalRequestCapture> ExportRequests,
     IReadOnlyList<AdminPortalRequestCapture> ProcessingRecordRequests,
+    IReadOnlyList<AdminPortalRequestCapture> ErasureCertificateRequests,
+    IReadOnlyList<AdminPortalRequestCapture> RetryVerificationRequests,
     IReadOnlyList<AdminPortalRequestCapture> PickerSearchRequests,
     IReadOnlyList<AdminPortalRequestCapture> PickerDetailRequests);
 
@@ -1020,4 +1114,10 @@ internal sealed record AdminPortalRequestCapture(
 
     public static AdminPortalRequestCapture FromProcessingRecords(string partyId)
         => new("processing-records", null, 0, 0, null, null, partyId);
+
+    public static AdminPortalRequestCapture FromErasureCertificate(string partyId)
+        => new("erasure-certificate", null, 0, 0, null, null, partyId);
+
+    public static AdminPortalRequestCapture FromRetryVerification(string partyId)
+        => new("retry-verification", null, 0, 0, null, null, partyId);
 }

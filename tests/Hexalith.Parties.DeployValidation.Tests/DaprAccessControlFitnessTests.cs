@@ -123,6 +123,21 @@ public sealed class DaprAccessControlFitnessTests
         }
     }
 
+    [Fact]
+    public void PartiesAclUsesProjectionQueryActorRouteWithoutQueryServiceInvocation()
+    {
+        foreach (string directory in new[] { DeploymentTestPaths.DaprDirectory, s_appHostDaprDirectory })
+        {
+            AssertOperations(
+                directory,
+                directory == DeploymentTestPaths.DaprDirectory ? "accesscontrol-parties.yaml" : "accesscontrol.parties.yaml",
+                "eventstore",
+                [
+                    ("POST", "/process"),
+                ]);
+        }
+    }
+
     private static void AssertOperations(string directory, string fileName, string caller, (string Verb, string Route)[] expected)
     {
         YamlMappingNode accessControl = Mapping(Mapping(Load(directory, fileName), "spec"), "accessControl");
