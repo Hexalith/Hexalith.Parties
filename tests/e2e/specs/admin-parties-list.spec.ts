@@ -1,4 +1,4 @@
-import { expect, test, type APIRequestContext, type BrowserContext, type Page } from '@playwright/test';
+import { expect, test, type APIRequestContext, type BrowserContext, type Locator, type Page } from '@playwright/test';
 
 const ADMIN_ROUTE = '/admin/parties';
 const ADMIN_COOKIE = 'parties-admin-e2e';
@@ -116,6 +116,82 @@ test.describe('Admin parties list', () => {
     await expect(detail.getByRole('heading', { name: 'Grace Hopper' })).toBeVisible();
     await expect(detail.getByRole('heading', { name: 'Grace Hopper' })).toBeFocused();
     await expect.poll(async () => (await latestDetailRequest(request))?.partyId).toBe('grace-hopper');
+  });
+
+  test('direct GDPR route opens operations destination without browser-visible command/query calls or overflow', async ({ page, request }) => {
+    const browserVisibleDataRequests: string[] = [];
+    page.on('request', (browserRequest) => {
+      if (isBrowserVisiblePartiesDataRequest(browserRequest.url())) {
+        browserVisibleDataRequests.push(browserRequest.url());
+      }
+    });
+
+    await page.setViewportSize({ width: 320, height: 640 });
+    await page.goto(`${ADMIN_ROUTE}/grace-hopper/gdpr`);
+
+    const detail = page.getByLabel('Party detail');
+    await expect(detail.getByRole('heading', { name: 'GDPR operations' })).toBeVisible();
+    await expect(detail.getByRole('heading', { name: 'GDPR operations' })).toBeFocused();
+    await expect.poll(async () => (await latestDetailRequest(request))?.partyId).toBe('grace-hopper');
+    await expect(detail.getByRole('button', { name: 'Request erasure' })).toBeEnabled();
+    await expect(detail.getByRole('button', { name: 'Refresh erasure status' })).toBeEnabled();
+    await expect(detail.getByRole('button', { name: 'Restrict processing' })).toBeEnabled();
+    await expect(detail.getByRole('button', { name: 'Export party data' })).toBeEnabled();
+    await expect(detail.getByRole('button', { name: 'Processing records' })).toBeEnabled();
+    await expect(detail.getByRole('button', { name: 'Retry verification' })).toHaveCount(0);
+    await expect(detail.getByText('Certificate unavailable')).toBeVisible();
+    await expect(detail.getByText('Blocked on accepted EventStore-fronted Parties client/gateway contract')).toBeVisible();
+
+    await detail.getByLabel('Channel id').fill('news-email');
+    await detail.getByLabel('Purpose').fill('newsletter');
+    await expect(detail.getByRole('button', { name: 'Add consent' })).toBeEnabled();
+
+    await detail.getByRole('button', { name: 'Processing records' }).click();
+    await expect(detail.getByRole('status').filter({ hasText: 'Operation completed' })).toBeVisible();
+    await expect(detail.getByText('GdprOperationRecorded')).toBeVisible();
+
+    await page.evaluate(() => {
+      document.documentElement.style.zoom = '2';
+    });
+
+    await expect(detail.getByRole('button', { name: 'Request erasure' })).toBeVisible();
+    const overflow = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth);
+    expect(overflow).toBe(false);
+    expect(browserVisibleDataRequests).toEqual([]);
+  });
+
+  test('direct GDPR route for a missing party renders bounded state with no mutation controls', async ({ page, request }) => {
+    await page.goto(`${ADMIN_ROUTE}/missing-party/gdpr`);
+
+    const detail = page.getByLabel('Party detail');
+    await expect(detail.getByText('The selected party is unavailable')).toBeVisible();
+    await expect(detail.getByText('GDPR operations')).toHaveCount(0);
+    await expectNoGdprMutationControls(detail);
+    await expect.poll(async () => (await latestDetailRequest(request))?.partyId).toBe('missing-party');
+    await expect(page.getByText('Ada Lovelace')).toHaveCount(0);
+  });
+
+  test('direct GDPR route rejects unsafe scoped ids before fetching party data', async ({ page, request }) => {
+    await page.goto(`${ADMIN_ROUTE}/tenant-a%3Aparty%3Asecret/gdpr`);
+
+    const detail = page.getByLabel('Party detail');
+    await expect(detail.getByText('The selected party is unavailable')).toBeVisible();
+    await expectNoGdprMutationControls(detail);
+    await expect.poll(async () => (await latestDetailRequest(request))?.partyId ?? null).toBe(null);
+    await expect(page.getByText('tenant-a:party:secret')).toHaveCount(0);
+  });
+
+  test('detail GDPR action navigates to the party-scoped operations route', async ({ page }) => {
+    await gotoAdmin(page);
+
+    await page.getByRole('button', { name: 'Ada Lovelace' }).click();
+    await page.waitForURL('**/admin/parties/ada-lovelace');
+    await page.getByLabel('Party detail').getByRole('button', { name: 'GDPR operations' }).click();
+
+    await page.waitForURL('**/admin/parties/ada-lovelace/gdpr');
+    await expect(page.getByRole('heading', { name: 'GDPR operations' })).toBeFocused();
+    expect(page.url()).not.toContain('scope');
+    expect(page.url()).not.toContain('Ada');
   });
 
   test('create form submits and navigates with optimistic status', async ({ page, request }) => {
@@ -313,6 +389,28 @@ const requestSnapshot = async (request: APIRequestContext): Promise<AdminPortalE
   const response = await request.get(REQUESTS_ROUTE);
   expect(response.ok()).toBe(true);
   return await response.json() as AdminPortalE2eSnapshot;
+};
+
+const isBrowserVisiblePartiesDataRequest = (url: string): boolean => {
+  const parsed = new URL(url);
+  return parsed.pathname.includes('/api/v1/commands')
+    || parsed.pathname.includes('/api/v1/queries');
+};
+
+const expectNoGdprMutationControls = async (detail: Locator): Promise<void> => {
+  for (const name of [
+    'Request erasure',
+    'Refresh erasure status',
+    'Restrict processing',
+    'Lift restriction',
+    'Add consent',
+    'Revoke consent',
+    'Export party data',
+    'Processing records',
+    'Retry verification',
+  ]) {
+    await expect(detail.getByRole('button', { name })).toHaveCount(0);
+  }
 };
 
 interface AdminPortalE2eSnapshot {

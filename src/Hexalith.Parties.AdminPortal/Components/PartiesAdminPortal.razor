@@ -160,13 +160,18 @@
             else
             {
                 <div class="hx-parties-admin__detail-header">
-                    <h2 tabindex="-1" @ref="_detailHeadingRef">@_detail.DisplayName</h2>
+                    <h2 tabindex="-1" @ref="_detailHeadingRef">@DetailHeadingText</h2>
                     <div class="hx-parties-admin__detail-actions">
                         <FluentButton Appearance="ButtonAppearance.Outline" OnClick="CloseDetailAsync">@EffectiveLabels.DetailClose</FluentButton>
                         <FluentButton Appearance="ButtonAppearance.Outline"
                                       Disabled="@(!CanEditSelectedParty)"
                                       OnClick="NavigateToEditParty">
                             @EffectiveLabels.EditParty
+                        </FluentButton>
+                        <FluentButton Appearance="ButtonAppearance.Outline"
+                                      Disabled="@(!CanNavigateSelectedPartyGdpr)"
+                                      OnClick="NavigateToGdprParty">
+                            @EffectiveLabels.GdprOperations
                         </FluentButton>
                         @if (!CanEditSelectedParty)
                         {
@@ -175,9 +180,15 @@
                     </div>
                 </div>
 
-                @RenderFreshness()
+                @if (IsBoundedGdprPartialRoute)
+                {
+                    <p role="status" aria-live="polite">@EffectiveLabels.DetailUnavailable</p>
+                }
+                else
+                {
+                    @RenderFreshness()
 
-                <section aria-labelledby="@($"party-summary-heading-{_instanceId}")">
+                    <section aria-labelledby="@($"party-summary-heading-{_instanceId}")">
                     <h3 id="@($"party-summary-heading-{_instanceId}")">@EffectiveLabels.Summary</h3>
                     <dl>
                         <dt>@EffectiveLabels.TypeColumn</dt>
@@ -334,10 +345,11 @@
                     <PartyGdprOperationsPanel Party="_detail"
                                               Labels="EffectiveLabels"
                                               TenantContextSignature="_authorizationState.ContextSignature"
-                                              RefreshParty="RefreshSelectedPartyAsync" />
+                                              RefreshParty="RefreshSelectedPartyAsync"
+                                              AutoFocusOperations="@IsGdprRoute" />
                 }
 
-                <section aria-labelledby="@($"eventstore-links-heading-{_instanceId}")">
+                    <section aria-labelledby="@($"eventstore-links-heading-{_instanceId}")">
                     <h3 id="@($"eventstore-links-heading-{_instanceId}")">@EffectiveLabels.EventStoreLinks</h3>
                     @if (EventStoreLinks.BuildStreamLink(_detail.Id) is { } streamLink)
                     {
@@ -354,7 +366,7 @@
                 @* P-pass-2 D3.1: scoped party id is intentionally not displayed as a user-facing
                     label per Story 10.1 task line 60 ("do not display tenant:domain:aggregateId
                     scoped ids as user-facing labels"). *@
-                <section aria-labelledby="@($"system-metadata-heading-{_instanceId}")">
+                    <section aria-labelledby="@($"system-metadata-heading-{_instanceId}")">
                     <h3 id="@($"system-metadata-heading-{_instanceId}")">@EffectiveLabels.SystemMetadata</h3>
                     @if (IsPartialDetail)
                     {
@@ -369,7 +381,7 @@
                     }
                 </section>
 
-                <section aria-labelledby="@($"name-history-heading-{_instanceId}")">
+                    <section aria-labelledby="@($"name-history-heading-{_instanceId}")">
                     <h3 id="@($"name-history-heading-{_instanceId}")">@EffectiveLabels.NameHistory</h3>
                     @if (IsPartialDetail)
                     {
@@ -401,7 +413,8 @@
                             }
                         </ul>
                     }
-                </section>
+                    </section>
+                }
             }
         </aside>
     </div>
@@ -500,6 +513,33 @@
             && !IsPartialDetail
             && !_detail.IsErased
             && AdminPortalRouteIds.IsSafe(_detail.Id);
+
+    private bool CanNavigateSelectedPartyGdpr
+        => _detail is not null
+            && !IsPartialDetail
+            && !_detail.IsErased
+            && AdminPortalRouteIds.IsSafe(_detail.Id);
+
+    private bool IsBoundedGdprPartialRoute
+        => IsGdprRoute && IsPartialDetail;
+
+    private string DetailHeadingText
+        => IsBoundedGdprPartialRoute || _detail is null
+            ? EffectiveLabels.DetailUnavailable
+            : _detail.DisplayName;
+
+    private bool IsGdprRoute
+        => string.Equals(CurrentPath, GdprPathForRoutePartyId(), StringComparison.Ordinal);
+
+    private string CurrentPath
+    {
+        get
+        {
+            string relative = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
+            int separator = relative.IndexOfAny(['?', '#']);
+            return "/" + (separator >= 0 ? relative[..separator] : relative);
+        }
+    }
 
     private string StatusText => _statusKind switch
     {
@@ -1063,7 +1103,7 @@
             return;
         }
 
-        await SelectPartyAsync(routePartyId, updateRoute: false, trackOrigin: false).ConfigureAwait(false);
+        await SelectPartyAsync(routePartyId, updateRoute: false, trackOrigin: false, focusDetail: !IsGdprRoute).ConfigureAwait(false);
     }
 
     private async Task CloseDetailAsync()
@@ -1104,16 +1144,10 @@
             return;
         }
 
-        string target = PartiesAdminPortalManifest.DetailRoute.Replace(
-            "{partyId}",
-            Uri.EscapeDataString(partyId),
-            StringComparison.Ordinal);
+        string target = BuildPartyRoute(PartiesAdminPortalManifest.DetailRoute, partyId);
         // Compare paths only; ToBaseRelativePath includes query/fragment which would force
         // a redundant navigation when the URL carries any ?query or #hash.
-        string relative = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
-        int separator = relative.IndexOfAny(['?', '#']);
-        string currentPath = "/" + (separator >= 0 ? relative[..separator] : relative);
-        if (!string.Equals(currentPath, target, StringComparison.Ordinal))
+        if (!string.Equals(CurrentPath, target, StringComparison.Ordinal))
         {
             NavigationManager.NavigateTo(target);
         }
@@ -1129,12 +1163,34 @@
             return;
         }
 
-        string target = PartiesAdminPortalManifest.EditRoute.Replace(
-            "{partyId}",
-            Uri.EscapeDataString(_detail.Id),
-            StringComparison.Ordinal);
+        string target = BuildPartyRoute(PartiesAdminPortalManifest.EditRoute, _detail.Id);
         NavigationManager.NavigateTo(target);
     }
+
+    private void NavigateToGdprParty()
+    {
+        if (_detail is null || !CanNavigateSelectedPartyGdpr)
+        {
+            return;
+        }
+
+        string target = BuildPartyRoute(PartiesAdminPortalManifest.GdprRoute, _detail.Id);
+        NavigationManager.NavigateTo(target);
+    }
+
+    private string? GdprPathForRoutePartyId()
+    {
+        string? routePartyId = NormalizeRoutePartyId(RoutePartyId);
+        return routePartyId is null || !IsSafeRoutePartyId(routePartyId)
+            ? null
+            : BuildPartyRoute(PartiesAdminPortalManifest.GdprRoute, routePartyId);
+    }
+
+    private static string BuildPartyRoute(string template, string partyId)
+        => template.Replace(
+            "{partyId}",
+            Uri.EscapeDataString(partyId),
+            StringComparison.Ordinal);
 
     private static string? NormalizeRoutePartyId(string? routePartyId)
         => AdminPortalRouteIds.Normalize(routePartyId);

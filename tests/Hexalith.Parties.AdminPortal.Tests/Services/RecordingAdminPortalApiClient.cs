@@ -21,6 +21,7 @@ internal sealed class RecordingAdminPortalApiClient : IPartiesAdminPortalApiClie
     private readonly Queue<Func<CancellationToken, Task<IReadOnlyList<ConsentRecord>>>> _consentResponses = [];
     private readonly Queue<Func<CancellationToken, Task<AdminPortalExportDownload>>> _exportResponses = [];
     private readonly Queue<Func<CancellationToken, Task<IReadOnlyList<ProcessingActivityRecord>>>> _processingRecordResponses = [];
+    private readonly Queue<Func<CancellationToken, Task<AdminPortalGdprCommandResult>>> _erasureResponses = [];
 
     public List<AdminPortalListRequest> ListRequests { get; } = [];
 
@@ -99,6 +100,9 @@ internal sealed class RecordingAdminPortalApiClient : IPartiesAdminPortalApiClie
 
     public void EnqueueErasureStatus(PartyErasureStatusRecord status)
         => _erasureStatusResponses.Enqueue(_ => Task.FromResult<PartyErasureStatusRecord?>(status));
+
+    public void EnqueueErasureResult(AdminPortalGdprCommandResult result)
+        => _erasureResponses.Enqueue(_ => Task.FromResult(result));
 
     public void EnqueueErasureCertificate(ErasureCertificate certificate)
         => _erasureCertificateResponses.Enqueue(_ => Task.FromResult<ErasureCertificate?>(certificate));
@@ -179,7 +183,9 @@ internal sealed class RecordingAdminPortalApiClient : IPartiesAdminPortalApiClie
     public Task<AdminPortalGdprCommandResult> RequestErasureAsync(string partyId, CancellationToken cancellationToken)
     {
         ErasureRequests.Add(partyId);
-        return Task.FromResult(new AdminPortalGdprCommandResult(AdminPortalGdprOutcome.Accepted, "corr-erasure"));
+        return _erasureResponses.Count == 0
+            ? Task.FromResult(new AdminPortalGdprCommandResult(AdminPortalGdprOutcome.Accepted, "corr-erasure"))
+            : _erasureResponses.Dequeue()(cancellationToken);
     }
 
     public Task<PartyErasureStatusRecord?> GetErasureStatusAsync(string partyId, CancellationToken cancellationToken)

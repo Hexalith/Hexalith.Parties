@@ -1,41 +1,45 @@
 # Test Automation Summary
 
-Story: 2.5 - Party picker re-skin + full WAI-ARIA combobox (D11 / UX-DR7)
+Story: 3.1 - GDPR operations page
 
 ## Generated Tests
 
 ### API Tests
-- [x] `src/Hexalith.Parties.UI/Services/PartiesAdminPortalE2eFixture.cs` - adds a Test-environment-only `IPartiesQueryClient` fixture for picker search and selected-display requests, with request capture for Playwright assertions.
-- [x] No public API endpoints were added; picker traffic remains through `PartyPickerApiClient -> IPartiesQueryClient`.
+- [x] `src/Hexalith.Parties.UI/Services/PartiesAdminPortalE2eFixture.cs` - aligns the gated Test-environment AdminPortal fixture with `AdminPortalGdprCapability.ProvisionalBridge()`, accepted provisional commands, non-empty export payloads, and bounded processing-record responses for browser assertions.
+- [x] No public API endpoints were added; browser-visible command/query calls remain forbidden by Playwright request capture.
+
+### Component Tests
+- [x] `tests/Hexalith.Parties.AdminPortal.Tests/Components/PartiesAdminPortalComponentTests.cs` - adds review regression coverage for direct GDPR partial-detail routes rendering bounded no-PII state with no mutation controls, empty initial GDPR operation live-region behavior, and stale correlation cleanup after assertive GDPR command failures.
 
 ### E2E Tests
-- [x] `src/Hexalith.Parties.UI/Components/Specimens/PartyPickerSpecimen.razor` - adds a gated test specimen route for the real Blazor `PartyPicker` with a server-side access-token provider.
-- [x] `tests/e2e/specs/party-picker.spec.ts` - covers input-owned combobox focus, `aria-controls`, `aria-expanded`, `aria-activedescendant`, non-tabstop options, keyboard selection, bounded `party-selected` detail, degraded-result Escape behavior, and AdminPortal bridge compatibility.
+- [x] `tests/e2e/specs/admin-parties-list.spec.ts` - extends direct `/admin/parties/{id}/gdpr` coverage for primary focus, provisional operation availability, D7 certificate/retry bounded fallback, processing-record completion, no browser-visible `/api/v1/commands` or `/api/v1/queries`, 320px plus 200% zoom overflow, missing-party bounded state, unsafe scoped-id no-fetch behavior, and detail action navigation.
+- [x] `tests/e2e/specs/admin-area-authorization.spec.ts` - existing coverage includes unauthenticated `/admin/parties/{id}/gdpr` challenge with return URL preservation and no data leakage.
 
 ## Coverage
 
-- API/client paths: picker search and selected-display resolution through typed `IPartiesQueryClient`; no browser REST transport introduced.
-- UI features: 3/3 targeted Story 2.5 browser behaviors covered: combobox keyboard selection, degraded popup close, and AdminPortal `party-selected` bridge binding.
-- Happy path: keyboard search/select for `Ada Lovelace`, selected-party display, input focus retention, bounded event payload.
-- Critical cases: degraded result text plus Escape close without durable selection mutation; bridge ignores extra event fields in displayed output.
-- Accessibility assertions: semantic Playwright roles/labels, listbox relationship checks, active-descendant assertions, no hardcoded waits.
+- API/client paths: AdminPortal fixture exercises direct party detail lookup and GDPR operations through `IPartiesAdminPortalApiClient`; no browser REST transport introduced.
+- UI features: 4/4 targeted Story 3.1 browser behaviors covered: direct GDPR route, detail entry action, auth challenge, and bounded non-happy direct routes.
+- Happy path: direct GDPR route loads the operations destination, focuses the GDPR heading, enables supported provisional controls, and completes processing-record refresh.
+- Critical cases: missing and partial party routes render bounded state with no mutation controls; unsafe scoped route id is rejected before fetch; unauthenticated route preserves return URL; D7 certificate/retry remains bounded unavailable.
+- Accessibility assertions: semantic roles/labels, focused primary heading, live status for operation completion, no hardcoded waits.
+- Privacy assertions: rejected GDPR command correlations and stale prior command correlations are not echoed beside assertive failure announcements.
 
 ## Validation
 
-- [x] `dotnet build src/Hexalith.Parties.UI/Hexalith.Parties.UI.csproj -c Release -m:1 -p:NuGetAudit=false`
+- [x] `dotnet build src/Hexalith.Parties.UI/Hexalith.Parties.UI.csproj -c Release --no-restore -m:1`
+- [x] `dotnet build tests/Hexalith.Parties.AdminPortal.Tests/Hexalith.Parties.AdminPortal.Tests.csproj -c Release --no-restore -m:1`
+- [x] `DiffEngine_Disabled=true tests/Hexalith.Parties.AdminPortal.Tests/bin/Release/net10.0/Hexalith.Parties.AdminPortal.Tests` - 150 tests passed.
 - [x] `cd tests/e2e && npm run typecheck`
-- [x] `dotnet build tests/Hexalith.Parties.UI.Tests/Hexalith.Parties.UI.Tests.csproj -c Release -m:1 -p:NuGetAudit=false`
-- [x] `dotnet build tests/Hexalith.Parties.AdminPortal.Tests/Hexalith.Parties.AdminPortal.Tests.csproj -c Release -m:1 -p:NuGetAudit=false`
-- [x] `DiffEngine_Disabled=true tests/Hexalith.Parties.UI.Tests/bin/Release/net10.0/Hexalith.Parties.UI.Tests` - 258 tests passed.
-- [ ] `cd tests/e2e && npm run test -- specs/party-picker.spec.ts --project=chromium` - blocked before test execution in this sandbox because Kestrel cannot bind a local socket: `System.Net.Sockets.SocketException (13): Permission denied`.
+- [x] `cd tests/e2e && npx playwright test specs/admin-parties-list.spec.ts --list`
+- [ ] `cd tests/e2e && npx playwright test specs/admin-parties-list.spec.ts --project=chromium --grep "direct GDPR|detail GDPR action"` - blocked before test execution in this sandbox because Kestrel cannot bind a local socket: `System.Net.Sockets.SocketException (13): Permission denied`.
 
 ## Checklist Result
 
-- API tests generated if applicable: yes, via the typed-client E2E fixture and request capture; no public endpoints added.
+- API tests generated if applicable: yes, via typed-client E2E fixture and request capture; no public endpoints added.
 - E2E tests generated if UI exists: yes.
 - Tests use standard framework APIs: yes, Playwright `test`/`expect` and existing .NET fixture patterns.
 - Happy path covered: yes.
-- Critical error/degraded cases covered: yes.
+- Critical error cases covered: yes.
 - Proper locators: yes, semantic roles and labels.
 - Clear descriptions: yes.
 - No hardcoded waits or sleeps: yes.
@@ -45,4 +49,4 @@ Story: 2.5 - Party picker re-skin + full WAI-ARIA combobox (D11 / UX-DR7)
 
 ## Next Steps
 
-- Run `cd tests/e2e && npm run test -- specs/party-picker.spec.ts --project=chromium` in an environment that permits local Kestrel socket binding.
+- Run the focused Playwright command above in an environment that permits local Kestrel socket binding.

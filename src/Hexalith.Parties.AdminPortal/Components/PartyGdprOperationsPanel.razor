@@ -5,8 +5,17 @@
 @inject IJSRuntime JsRuntime
 
 <section aria-labelledby="@($"gdpr-operations-heading-{_instanceId}")">
-    <h3 id="@($"gdpr-operations-heading-{_instanceId}")" tabindex="-1" @ref="_operationsHeading">@Labels.GdprOperations</h3>
-    <p role="status" aria-live="polite">@OperationMessage</p>
+    <h3 id="@($"gdpr-operations-heading-{_instanceId}")"
+        tabindex="-1"
+        data-primary-destination="@(AutoFocusOperations ? "gdpr" : null)"
+        @ref="_operationsHeading">@Labels.GdprOperations</h3>
+    <p role="@OperationAnnouncementRole"
+       aria-live="@OperationAnnouncementPoliteness"
+       tabindex="@OperationAnnouncementTabIndex"
+       data-gdpr-operation-announcement
+       @ref="_operationAnnouncement">
+        @OperationMessage
+    </p>
 
     <DpoOperationalSummaryPanel Party="Party"
                                 Labels="Labels"
@@ -138,11 +147,13 @@
     private AdminPortalGdprCapability _gdprCapability = AdminPortalGdprCapability.Unavailable();
     private AdminPortalGdprOutcome? _lastOutcome;
     private AdminPortalGdprOutcome? _focusedOutcome;
+    private bool _focusedInitialOperations;
     private long _capabilityVersion;
     private bool _confirmErasure;
     private bool _isBusy;
     private CancellationTokenSource? _cts;
     private ElementReference _operationsHeading;
+    private ElementReference _operationAnnouncement;
 
     [Parameter, EditorRequired]
     public PartyDetail Party { get; set; } = default!;
@@ -155,6 +166,9 @@
 
     [Parameter]
     public EventCallback RefreshParty { get; set; }
+
+    [Parameter]
+    public bool AutoFocusOperations { get; set; }
 
     private IReadOnlyList<ConsentRecord> ConsentRecords
         => Party.ConsentRecords ?? [];
@@ -174,8 +188,17 @@
             AdminPortalGdprOutcome.NotFound => Labels.GdprOperationNotFound,
             AdminPortalGdprOutcome.ContractUnavailable => Labels.GdprOperationContractUnavailable,
             AdminPortalGdprOutcome.Unknown => Labels.GdprOperationFailed,
-            _ => Labels.GdprOperationFailed,
+            _ => string.Empty,
         };
+
+    private string OperationAnnouncementRole
+        => IsAssertiveOutcome(_lastOutcome) ? "alert" : "status";
+
+    private string OperationAnnouncementPoliteness
+        => IsAssertiveOutcome(_lastOutcome) ? "assertive" : "polite";
+
+    private string? OperationAnnouncementTabIndex
+        => IsAssertiveOutcome(_lastOutcome) ? "-1" : null;
 
     private bool IsErasurePending
         => Party.IsErased || _erasureStatus?.Status is "ErasurePending" or "KeyDestroyed" or "VerificationInProgress" or "Verified";
@@ -246,13 +269,19 @@
 
     protected override async Task OnParametersSetAsync()
     {
+        if (!AutoFocusOperations)
+        {
+            _focusedInitialOperations = false;
+        }
+
         if (!string.Equals(_previousPartyId, Party.Id, StringComparison.Ordinal))
         {
             // Cancel any in-flight requests bound to the previous party so their continuations
-                // do not mutate state that now refers to a different party.
+            // do not mutate state that now refers to a different party.
             CancelInFlight();
             _cts = new CancellationTokenSource();
             _previousPartyId = Party.Id;
+            _focusedInitialOperations = false;
             ClearSensitiveOperationState();
             _gdprCapability = AdminPortalGdprCapability.Unavailable();
             _gdprCapabilityPartyId = null;
@@ -266,12 +295,29 @@
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (_lastOutcome is not null && _lastOutcome != _focusedOutcome)
+        if (AutoFocusOperations && !_focusedInitialOperations)
+        {
+            _focusedInitialOperations = true;
+            try
+            {
+                await _operationsHeading.FocusAsync().ConfigureAwait(false);
+            }
+            catch (JSDisconnectedException)
+            {
+                // Circuit disconnect: nothing to focus on.
+            }
+            catch (JSException)
+            {
+                // Element not yet rendered or detached; the heading remains keyboard reachable.
+            }
+        }
+
+        if (_lastOutcome is not null && _lastOutcome != _focusedOutcome && IsAssertiveOutcome(_lastOutcome))
         {
             _focusedOutcome = _lastOutcome;
             try
             {
-                await _operationsHeading.FocusAsync().ConfigureAwait(false);
+                await _operationAnnouncement.FocusAsync().ConfigureAwait(false);
             }
             catch (JSDisconnectedException)
             {
@@ -701,11 +747,11 @@
 
             _lastOutcome = result.Outcome;
             // Refresh correlation per command so auditors see the most recent operation,
-            // not the first one ever recorded for this party.
-            if (!string.IsNullOrWhiteSpace(result.CorrelationId))
-            {
-                _correlationId = result.CorrelationId;
-            }
+            // not the first one ever recorded for this party. Assertive failures must not
+            // leave a stale success correlation beside the failure message.
+            _correlationId = !IsAssertiveOutcome(result.Outcome) && !string.IsNullOrWhiteSpace(result.CorrelationId)
+                ? result.CorrelationId
+                : null;
         }
         catch (AdminPortalQueryException ex)
         {
@@ -715,6 +761,7 @@
             }
 
             _lastOutcome = OutcomeFromFailure(ex.Kind);
+            _correlationId = null;
         }
         catch (OperationCanceledException) when (token.IsCancellationRequested)
         {
@@ -793,4 +840,13 @@
             AdminPortalQueryFailureKind.ContractUnavailable => AdminPortalGdprOutcome.ContractUnavailable,
             _ => AdminPortalGdprOutcome.Unknown,
         };
+
+    private static bool IsAssertiveOutcome(AdminPortalGdprOutcome? outcome)
+        => outcome is AdminPortalGdprOutcome.ValidationRejected
+            or AdminPortalGdprOutcome.Forbidden
+            or AdminPortalGdprOutcome.MissingTenant
+            or AdminPortalGdprOutcome.TransientFailure
+            or AdminPortalGdprOutcome.AuthenticationRequired
+            or AdminPortalGdprOutcome.NotFound
+            or AdminPortalGdprOutcome.Unknown;
 }

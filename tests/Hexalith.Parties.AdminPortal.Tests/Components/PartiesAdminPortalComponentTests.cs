@@ -256,6 +256,121 @@ public sealed class PartiesAdminPortalComponentTests : BunitContext
     }
 
     [Fact]
+    public void PartiesAdminPortal_GdprEntryAction_NavigatesToManifestRouteUsingSafePartyIdOnly()
+    {
+        var api = new RecordingAdminPortalApiClient();
+        api.EnqueueList(Page(IndexEntry("party-gdpr-action", "Action GDPR Party", PartyType.Person, true)));
+        api.EnqueueDetail(Detail("party-gdpr-action", "Action GDPR Party", PartyType.Person, isActive: true));
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+        NavigationManager navigation = Services.GetRequiredService<NavigationManager>();
+
+        IRenderedComponent<PartiesAdminPortal> cut = RenderAuthorized("scope-a");
+        cut.WaitForAssertion(() => cut.Markup.ShouldContain("Action GDPR Party"));
+        ClickFluentButton(cut, "Action GDPR Party");
+        cut.WaitForAssertion(() => FindFluentButton(cut, "GDPR operations").HasAttribute("disabled").ShouldBeFalse());
+
+        ClickFluentButton(cut, "GDPR operations");
+
+        navigation.ToBaseRelativePath(navigation.Uri).ShouldBe("admin/parties/party-gdpr-action/gdpr");
+        navigation.Uri.ShouldNotContain("scope-a");
+        navigation.Uri.ShouldNotContain("Action%20GDPR%20Party");
+    }
+
+    [Fact]
+    public void PartiesAdminPortal_GdprEntryAction_DisabledForUnsafePartyId()
+    {
+        var api = new RecordingAdminPortalApiClient();
+        api.EnqueueList(Page(IndexEntry("tenant-a:parties:party-gdpr-action", "Scoped GDPR Party", PartyType.Person, true)));
+        api.EnqueueDetail(Detail("tenant-a:parties:party-gdpr-action", "Scoped GDPR Party", PartyType.Person, isActive: true));
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+
+        IRenderedComponent<PartiesAdminPortal> cut = RenderAuthorized("scope-a");
+        cut.WaitForAssertion(() => cut.Markup.ShouldContain("Scoped GDPR Party"));
+        ClickFluentButton(cut, "Scoped GDPR Party");
+
+        cut.WaitForAssertion(() => FindFluentButton(cut, "GDPR operations").HasAttribute("disabled").ShouldBeTrue());
+    }
+
+    [Fact]
+    public void PartiesAdminPortal_GdprDirectRoute_MarksOperationsHeadingAsPrimaryDestination()
+    {
+        var api = new RecordingAdminPortalApiClient();
+        api.EnqueueList(Page(IndexEntry("party-gdpr-focus", "Focus GDPR Party", PartyType.Person, true)));
+        api.EnqueueDetail(Detail("party-gdpr-focus", "Focus GDPR Party", PartyType.Person, isActive: true));
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+        Services.GetRequiredService<NavigationManager>().NavigateTo("/admin/parties/party-gdpr-focus/gdpr");
+
+        IRenderedComponent<PartiesAdminPortal> cut = RenderAuthorized("scope-a", routePartyId: "party-gdpr-focus");
+
+        cut.WaitForAssertion(() =>
+        {
+            IElement heading = cut.Find("h3[data-primary-destination='gdpr']");
+            heading.TextContent.Trim().ShouldBe("GDPR operations");
+            heading.GetAttribute("tabindex").ShouldBe("-1");
+            api.DetailRequests.Single().ShouldBe("party-gdpr-focus");
+        });
+    }
+
+    [Fact]
+    public void PartiesAdminPortal_UnsafeGdprRoutePartyId_RejectsDetailFetchAndDoesNotLeakIdentifier()
+    {
+        var api = new RecordingAdminPortalApiClient();
+        api.EnqueueList(Page(IndexEntry("party-route-safe", "Safe Party", PartyType.Person, true)));
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+        Services.GetRequiredService<NavigationManager>().NavigateTo("/admin/parties/tenant-a%3Aparties%3Ahostile/gdpr");
+
+        IRenderedComponent<PartiesAdminPortal> cut = RenderAuthorized(
+            "scope-a",
+            routePartyId: "tenant-a%3Aparties%3Ahostile");
+
+        cut.WaitForAssertion(() =>
+        {
+            api.DetailRequests.ShouldBeEmpty();
+            IElement detail = cut.Find("aside.hx-parties-admin__detail");
+            detail.TextContent.ShouldContain("The selected party is unavailable");
+            detail.TextContent.ShouldNotContain("tenant-a");
+            detail.TextContent.ShouldNotContain("hostile");
+        });
+    }
+
+    [Fact]
+    public void PartiesAdminPortal_PartialGdprRoute_RendersBoundedStateWithoutPartyDataOrMutationControls()
+    {
+        var api = new RecordingAdminPortalApiClient();
+        api.EnqueueList(Page<PartyIndexEntry>());
+        api.EnqueueDetail(new PartyDetail
+        {
+            Id = "party-partial-gdpr",
+            Type = PartyType.Person,
+            IsActive = true,
+            DisplayName = "Partial GDPR Secret",
+            SortName = string.Empty,
+            ContactChannels = [],
+            Identifiers = [],
+            ConsentRecords = [],
+            NameHistory = [],
+            CreatedAt = default,
+            LastModifiedAt = default,
+        });
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+        Services.GetRequiredService<NavigationManager>().NavigateTo("/admin/parties/party-partial-gdpr/gdpr");
+
+        IRenderedComponent<PartiesAdminPortal> cut = RenderAuthorized("scope-a", routePartyId: "party-partial-gdpr");
+
+        cut.WaitForAssertion(() =>
+        {
+            api.DetailRequests.Single().ShouldBe("party-partial-gdpr");
+            IElement detail = cut.Find("aside.hx-parties-admin__detail");
+            detail.TextContent.ShouldContain("The selected party is unavailable");
+            detail.TextContent.ShouldNotContain("Partial GDPR Secret");
+            foreach (string mutationControl in GdprMutationControlLabels)
+            {
+                detail.TextContent.ShouldNotContain(mutationControl);
+            }
+        });
+    }
+
+    [Fact]
     public void PartiesAdminPortal_UnsafeRoutePartyId_RejectsDetailFetchAndDoesNotLeakIdentifier()
     {
         var api = new RecordingAdminPortalApiClient();
@@ -1268,6 +1383,7 @@ public sealed class PartiesAdminPortalComponentTests : BunitContext
             FindFluentButton(cut, "Export party data").HasAttribute("disabled").ShouldBeFalse();
             FindFluentButton(cut, "Processing records").HasAttribute("disabled").ShouldBeFalse();
             cut.Markup.ShouldNotContain("api/v1/admin");
+            cut.Find("[data-gdpr-operation-announcement]").TextContent.Trim().ShouldBeEmpty();
         });
     }
 
@@ -1592,6 +1708,133 @@ public sealed class PartiesAdminPortalComponentTests : BunitContext
             cut.Markup.ShouldContain("Certificate unavailable");
             cut.Markup.ShouldContain("Operation completed");
             cut.Markup.ShouldNotContain("Operation failed");
+        });
+    }
+
+    [Fact]
+    public void PartiesAdminPortal_GdprOutcomeAccepted_UsesPoliteStatusWithoutFocusableAlert()
+    {
+        var api = new RecordingAdminPortalApiClient();
+        api.EnqueueList(Page(IndexEntry("party-gdpr-accepted", "GDPR Accepted", PartyType.Person, true)));
+        api.EnqueueDetail(Detail("party-gdpr-accepted", "GDPR Accepted", PartyType.Person, isActive: true));
+        api.EnqueueErasureStatus(new PartyErasureStatusRecord
+        {
+            PartyId = "party-gdpr-accepted",
+            TenantId = "scope-a",
+            Status = "ErasurePending",
+            UpdatedAt = DateTimeOffset.Parse("2026-05-03T00:00:00Z"),
+        });
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+
+        IRenderedComponent<PartiesAdminPortal> cut = RenderAuthorized("scope-a");
+        cut.WaitForAssertion(() => cut.Markup.ShouldContain("GDPR Accepted"));
+        ClickFluentButton(cut, "GDPR Accepted");
+        cut.WaitForAssertion(() => FindFluentButton(cut, "Request erasure").HasAttribute("disabled").ShouldBeFalse());
+
+        ClickFluentButton(cut, "Request erasure");
+        cut.WaitForAssertion(() => FindFluentButton(cut, "Confirm erasure").HasAttribute("disabled").ShouldBeFalse());
+        ClickFluentButton(cut, "Confirm erasure");
+
+        cut.WaitForAssertion(() =>
+        {
+            IElement region = cut.Find("[data-gdpr-operation-announcement]");
+            region.TextContent.Trim().ShouldBe("Operation accepted");
+            region.GetAttribute("role").ShouldBe("status");
+            region.GetAttribute("aria-live").ShouldBe("polite");
+            region.HasAttribute("tabindex").ShouldBeFalse();
+        });
+    }
+
+    [Fact]
+    public void PartiesAdminPortal_GdprOutcomeCompleted_UsesPoliteStatusWithoutFocusableAlert()
+    {
+        var api = new RecordingAdminPortalApiClient();
+        api.EnqueueList(Page(IndexEntry("party-gdpr-completed", "GDPR Completed", PartyType.Person, true)));
+        api.EnqueueDetail(Detail("party-gdpr-completed", "GDPR Completed", PartyType.Person, isActive: true));
+        api.EnqueueProcessingRecords();
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+
+        IRenderedComponent<PartiesAdminPortal> cut = RenderAuthorized("scope-a");
+        cut.WaitForAssertion(() => cut.Markup.ShouldContain("GDPR Completed"));
+        ClickFluentButton(cut, "GDPR Completed");
+        cut.WaitForAssertion(() => FindFluentButton(cut, "Processing records").HasAttribute("disabled").ShouldBeFalse());
+
+        ClickFluentButton(cut, "Processing records");
+
+        cut.WaitForAssertion(() =>
+        {
+            IElement region = cut.Find("[data-gdpr-operation-announcement]");
+            region.TextContent.Trim().ShouldBe("Operation completed");
+            region.GetAttribute("role").ShouldBe("status");
+            region.GetAttribute("aria-live").ShouldBe("polite");
+            region.HasAttribute("tabindex").ShouldBeFalse();
+        });
+    }
+
+    [Fact]
+    public void PartiesAdminPortal_GdprOutcomeValidationRejected_UsesAssertiveFocusableAlert()
+    {
+        var api = new RecordingAdminPortalApiClient();
+        api.EnqueueList(Page(IndexEntry("party-gdpr-validation", "GDPR Validation", PartyType.Person, true)));
+        api.EnqueueDetail(Detail("party-gdpr-validation", "GDPR Validation", PartyType.Person, isActive: true));
+        api.EnqueueErasureResult(new AdminPortalGdprCommandResult(AdminPortalGdprOutcome.ValidationRejected, "corr-rejected"));
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+
+        IRenderedComponent<PartiesAdminPortal> cut = RenderAuthorized("scope-a");
+        cut.WaitForAssertion(() => cut.Markup.ShouldContain("GDPR Validation"));
+        ClickFluentButton(cut, "GDPR Validation");
+        cut.WaitForAssertion(() => FindFluentButton(cut, "Request erasure").HasAttribute("disabled").ShouldBeFalse());
+
+        ClickFluentButton(cut, "Request erasure");
+        cut.WaitForAssertion(() => FindFluentButton(cut, "Confirm erasure").HasAttribute("disabled").ShouldBeFalse());
+        ClickFluentButton(cut, "Confirm erasure");
+
+        cut.WaitForAssertion(() =>
+        {
+            IElement region = cut.Find("[data-gdpr-operation-announcement]");
+            region.TextContent.Trim().ShouldBe("Operation rejected");
+            region.GetAttribute("role").ShouldBe("alert");
+            region.GetAttribute("aria-live").ShouldBe("assertive");
+            region.GetAttribute("tabindex").ShouldBe("-1");
+            cut.Markup.ShouldNotContain("corr-rejected");
+        });
+    }
+
+    [Fact]
+    public void PartiesAdminPortal_GdprOutcomeValidationRejected_ClearsPriorCommandCorrelation()
+    {
+        var api = new RecordingAdminPortalApiClient();
+        api.EnqueueList(Page(IndexEntry("party-gdpr-stale-correlation", "GDPR Stale Correlation", PartyType.Person, true)));
+        api.EnqueueDetail(Detail("party-gdpr-stale-correlation", "GDPR Stale Correlation", PartyType.Person, isActive: true));
+        api.EnqueueDetail(Detail(
+            "party-gdpr-stale-correlation",
+            "GDPR Stale Correlation",
+            PartyType.Person,
+            isActive: true,
+            isRestricted: true));
+        api.EnqueueErasureResult(new AdminPortalGdprCommandResult(AdminPortalGdprOutcome.ValidationRejected, "corr-rejected"));
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+
+        IRenderedComponent<PartiesAdminPortal> cut = RenderAuthorized("scope-a");
+        cut.WaitForAssertion(() => cut.Markup.ShouldContain("GDPR Stale Correlation"));
+        ClickFluentButton(cut, "GDPR Stale Correlation");
+        cut.WaitForAssertion(() => FindFluentButton(cut, "Restrict processing").HasAttribute("disabled").ShouldBeFalse());
+
+        ClickFluentButton(cut, "Restrict processing");
+        cut.WaitForAssertion(() => cut.Markup.ShouldContain("corr-restrict"));
+
+        ClickFluentButton(cut, "Request erasure");
+        cut.WaitForAssertion(() => FindFluentButton(cut, "Confirm erasure").HasAttribute("disabled").ShouldBeFalse());
+        ClickFluentButton(cut, "Confirm erasure");
+
+        cut.WaitForAssertion(() =>
+        {
+            IElement region = cut.Find("[data-gdpr-operation-announcement]");
+            region.TextContent.Trim().ShouldBe("Operation rejected");
+            region.GetAttribute("role").ShouldBe("alert");
+            cut.Markup.ShouldNotContain("corr-rejected");
+            cut.Markup.ShouldNotContain("corr-restrict");
+            cut.Markup.ShouldNotContain("Open EventStore correlation");
         });
     }
 
@@ -2895,6 +3138,19 @@ public sealed class PartiesAdminPortalComponentTests : BunitContext
     private static void ClickFluentButton(IRenderedComponent<PartiesAdminPortal> cut, string text)
         => FindFluentButton(cut, text).Click();
 
+    private static readonly string[] GdprMutationControlLabels =
+    [
+        "Request erasure",
+        "Refresh erasure status",
+        "Restrict processing",
+        "Lift restriction",
+        "Add consent",
+        "Revoke consent",
+        "Export party data",
+        "Processing records",
+        "Retry verification",
+    ];
+
     private static void SetSearch(IRenderedComponent<PartiesAdminPortal> cut, string value)
     {
         IRenderedComponent<FluentTextInput> input = cut.FindComponent<FluentTextInput>();
@@ -2955,11 +3211,12 @@ public sealed class PartiesAdminPortalComponentTests : BunitContext
         LastModifiedAt = DateTimeOffset.Parse("2026-05-02T00:00:00Z"),
     };
 
-    private static PartyDetail Detail(string id, string name, PartyType type, bool isActive) => new()
+    private static PartyDetail Detail(string id, string name, PartyType type, bool isActive, bool isRestricted = false) => new()
     {
         Id = id,
         Type = type,
         IsActive = isActive,
+        IsRestricted = isRestricted,
         DisplayName = name,
         SortName = name,
         ContactChannels = [],
