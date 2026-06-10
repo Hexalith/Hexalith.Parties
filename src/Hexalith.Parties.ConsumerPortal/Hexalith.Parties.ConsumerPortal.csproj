@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+  <PropertyGroup>
+    <PackageId>Hexalith.Parties.ConsumerPortal</PackageId>
+    <Description>FrontComposer-hosted Blazor consumer portal for Hexalith.Parties.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <PackageReference Include="Microsoft.FluentUI.AspNetCore.Components" />
+    <ProjectReference Include="..\Hexalith.Parties.Client\Hexalith.Parties.Client.csproj" />
+    <ProjectReference Include="..\Hexalith.Parties.Contracts\Hexalith.Parties.Contracts.csproj" />
+    <ProjectReference Include="$(HexalithFrontComposerRoot)\src\Hexalith.FrontComposer.Shell\Hexalith.FrontComposer.Shell.csproj" />
+  </ItemGroup>
+
+</Project>

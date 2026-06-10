@@ -1,0 +1,15 @@
+@page "/me"
+@attribute [Authorize(Policy = "Consumer")]
+
+<ConsumerRouteShell Title="@ConsumerPortalLabels.MyProfileTitle"
+                    Summary="@ConsumerPortalLabels.MyProfileSummary"
+                    Status="@ConsumerPortalLabels.MyProfileStatus"
+                    Items="@_items" />
+
+@code {
+    private static readonly IReadOnlyList<string> _items =
+    [
+        ConsumerPortalLabels.MyProfileNextIdentity,
+        ConsumerPortalLabels.MyProfileNextData,
+    ];
+}

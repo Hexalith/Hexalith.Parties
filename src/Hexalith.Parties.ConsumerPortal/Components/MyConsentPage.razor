@@ -1,0 +1,15 @@
+@page "/me/consent"
+@attribute [Authorize(Policy = "Consumer")]
+
+<ConsumerRouteShell Title="@ConsumerPortalLabels.ConsentTitle"
+                    Summary="@ConsumerPortalLabels.ConsentSummary"
+                    Status="@ConsumerPortalLabels.ConsentStatus"
+                    Items="@_items" />
+
+@code {
+    private static readonly IReadOnlyList<string> _items =
+    [
+        ConsumerPortalLabels.ConsentNextChoices,
+        ConsumerPortalLabels.ConsentNextRecords,
+    ];
+}

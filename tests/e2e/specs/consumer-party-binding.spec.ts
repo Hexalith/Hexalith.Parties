@@ -22,7 +22,7 @@ test.describe('Consumer party binding landing', () => {
     await page.goto('/');
     await page.waitForURL('**/me');
 
-    await expect(page.getByRole('heading', { name: 'My space' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'My profile' })).toBeVisible();
     await expect(page.getByText("Your account isn't linked to a profile yet.")).toHaveCount(0);
     expect(browserVisibleDataRequests).toEqual([]);
   });
@@ -37,7 +37,7 @@ test.describe('Consumer party binding landing', () => {
 
       await expect(page.getByRole('heading', { name: "We're still setting up your profile" })).toBeVisible();
       await expect(page.getByText("Your account isn't linked to a profile yet.")).toBeVisible();
-      await expect(page.getByRole('heading', { name: 'My space' })).toHaveCount(0);
+      await expect(page.getByRole('heading', { name: 'My profile' })).toHaveCount(0);
       expect(new URL(page.url()).pathname).toBe('/no-party-binding');
       expect(browserVisibleDataRequests).toEqual([]);
     });

@@ -1,0 +1,15 @@
+@page "/me/edit"
+@attribute [Authorize(Policy = "Consumer")]
+
+<ConsumerRouteShell Title="@ConsumerPortalLabels.EditProfileTitle"
+                    Summary="@ConsumerPortalLabels.EditProfileSummary"
+                    Status="@ConsumerPortalLabels.EditProfileStatus"
+                    Items="@_items" />
+
+@code {
+    private static readonly IReadOnlyList<string> _items =
+    [
+        ConsumerPortalLabels.EditProfileNextReview,
+        ConsumerPortalLabels.EditProfileNextSubmit,
+    ];
+}

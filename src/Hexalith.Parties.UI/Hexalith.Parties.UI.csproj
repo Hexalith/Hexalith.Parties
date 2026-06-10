@@ -37,6 +37,7 @@
          (Hexalith.Parties, .Server, .Projections, .Security, .Testing) — that crosses the
          fitness-pinned boundary. Same-repo siblings, so relative paths (not $(HexalithFrontComposerRoot)). -->
     <ProjectReference Include="..\Hexalith.Parties.AdminPortal\Hexalith.Parties.AdminPortal.csproj" />
+    <ProjectReference Include="..\Hexalith.Parties.ConsumerPortal\Hexalith.Parties.ConsumerPortal.csproj" />
     <ProjectReference Include="..\Hexalith.Parties.Client\Hexalith.Parties.Client.csproj" />
     <ProjectReference Include="..\Hexalith.Parties.Contracts\Hexalith.Parties.Contracts.csproj" />
     <ProjectReference Include="..\Hexalith.Parties.Picker\Hexalith.Parties.Picker.csproj" />

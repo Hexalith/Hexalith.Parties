@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="AreaLabel" xml:space="preserve">
+    <value>Consumer area</value>
+  </data>
+  <data name="NextStepsTitle" xml:space="preserve">
+    <value>What will be available here</value>
+  </data>
+  <data name="MyProfileTitle" xml:space="preserve">
+    <value>My profile</value>
+  </data>
+  <data name="MyProfileSummary" xml:space="preserve">
+    <value>You will be able to review the profile information linked to your signed-in account.</value>
+  </data>
+  <data name="MyProfileStatus" xml:space="preserve">
+    <value>Profile details are not loaded in this setup screen.</value>
+  </data>
+  <data name="MyProfileNextIdentity" xml:space="preserve">
+    <value>Show the party profile connected to your identity.</value>
+  </data>
+  <data name="MyProfileNextData" xml:space="preserve">
+    <value>Keep personal data access scoped to your own party record.</value>
+  </data>
+  <data name="EditProfileTitle" xml:space="preserve">
+    <value>Edit profile</value>
+  </data>
+  <data name="EditProfileSummary" xml:space="preserve">
+    <value>You will be able to request corrections to profile details that can be changed through self-service.</value>
+  </data>
+  <data name="EditProfileStatus" xml:space="preserve">
+    <value>Profile updates are not submitted in this setup screen.</value>
+  </data>
+  <data name="EditProfileNextReview" xml:space="preserve">
+    <value>Review editable fields before submitting a correction.</value>
+  </data>
+  <data name="EditProfileNextSubmit" xml:space="preserve">
+    <value>Send changes through the protected host workflow.</value>
+  </data>
+  <data name="ConsentTitle" xml:space="preserve">
+    <value>Consent</value>
+  </data>
+  <data name="ConsentSummary" xml:space="preserve">
+    <value>You will be able to see choices that depend on consent and change them where consent is the legal basis.</value>
+  </data>
+  <data name="ConsentStatus" xml:space="preserve">
+    <value>Consent choices are not changed in this setup screen.</value>
+  </data>
+  <data name="ConsentNextChoices" xml:space="preserve">
+    <value>Separate consent choices from contract or legitimate-interest processing.</value>
+  </data>
+  <data name="ConsentNextRecords" xml:space="preserve">
+    <value>Record changes without using pre-selected choices.</value>
+  </data>
+  <data name="PrivacyTitle" xml:space="preserve">
+    <value>Data privacy</value>
+  </data>
+  <data name="PrivacySummary" xml:space="preserve">
+    <value>You will be able to request a copy of your data and start privacy requests from this protected area.</value>
+  </data>
+  <data name="PrivacyStatus" xml:space="preserve">
+    <value>Privacy requests are not started in this setup screen.</value>
+  </data>
+  <data name="PrivacyNextExport" xml:space="preserve">
+    <value>Prepare a data export request with clear progress messaging.</value>
+  </data>
+  <data name="PrivacyNextErasure" xml:space="preserve">
+    <value>Explain erasure effects before a destructive request is submitted.</value>
+  </data>
+</root>

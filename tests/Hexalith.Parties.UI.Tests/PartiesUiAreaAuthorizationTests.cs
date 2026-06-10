@@ -2,6 +2,7 @@ using System.Reflection;
 
 using Bunit;
 
+using Hexalith.Parties.ConsumerPortal.Components;
 using Hexalith.Parties.AdminPortal.Services;
 using Hexalith.Parties.UI.Authentication;
 using Hexalith.Parties.UI.Components.Account;
@@ -23,7 +24,7 @@ namespace Hexalith.Parties.UI.Tests;
 /// compiled routable components and pins, statically (no render), that:
 /// <list type="bullet">
 /// <item><c>/admin</c> (AdminLanding) requires the <c>Admin</c> policy,</item>
-/// <item><c>/me</c> (ConsumerLanding) requires the <c>Consumer</c> policy,</item>
+/// <item><c>/me</c> (MyProfilePage) requires the <c>Consumer</c> policy,</item>
 /// <item><c>/</c> (RoleLandingRedirect) requires authentication only (no policy) so anonymous hits fall to
 /// the router's NotAuthorized → OIDC challenge path.</item>
 /// </list>
@@ -60,10 +61,10 @@ public sealed class PartiesUiAreaAuthorizationTests : BunitContext
     }
 
     [Fact]
-    public void ConsumerLanding_Routes_Me_AndRequires_ConsumerPolicy()
+    public void ConsumerPortalMyProfilePage_Routes_Me_AndRequires_ConsumerPolicy()
     {
-        RouteTemplates(typeof(ConsumerLanding)).ShouldContain("/me");
-        RequiredPolicy(typeof(ConsumerLanding)).ShouldBe(PartiesUiAuthorization.ConsumerPolicy);
+        RouteTemplates(typeof(MyProfilePage)).ShouldContain("/me");
+        RequiredPolicy(typeof(MyProfilePage)).ShouldBe(PartiesUiAuthorization.ConsumerPolicy);
     }
 
     [Fact]

@@ -1,0 +1,38 @@
+<section class="hx-parties-consumer" aria-labelledby="@_titleId">
+    <header class="hx-parties-consumer__header">
+        <p class="hx-parties-consumer__eyebrow">@ConsumerPortalLabels.AreaLabel</p>
+        <h1 id="@_titleId">@Title</h1>
+        <p class="hx-parties-consumer__summary">@Summary</p>
+        <p class="hx-parties-consumer__status" role="status" aria-live="polite">@Status</p>
+    </header>
+
+    <section class="hx-parties-consumer__panel" aria-labelledby="@_nextStepsId">
+        <h2 id="@_nextStepsId">@ConsumerPortalLabels.NextStepsTitle</h2>
+        <ul class="hx-parties-consumer__list">
+            @foreach (string item in Items)
+            {
+                <li>@item</li>
+            }
+        </ul>
+    </section>
+</section>
+
+@code {
+    private static int s_nextInstanceId;
+
+    private readonly int _instanceId = System.Threading.Interlocked.Increment(ref s_nextInstanceId);
+    private string _titleId => $"hx-parties-consumer-title-{_instanceId}";
+    private string _nextStepsId => $"hx-parties-consumer-next-{_instanceId}";
+
+    [Parameter]
+    public string Title { get; set; } = string.Empty;
+
+    [Parameter]
+    public string Summary { get; set; } = string.Empty;
+
+    [Parameter]
+    public string Status { get; set; } = string.Empty;
+
+    [Parameter]
+    public IReadOnlyList<string> Items { get; set; } = [];
+}

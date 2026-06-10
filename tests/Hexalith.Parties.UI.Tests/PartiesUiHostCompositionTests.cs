@@ -107,6 +107,16 @@ public sealed class PartiesUiHostCompositionTests
     }
 
     [Fact]
+    public void UiHostProject_ReferencesConsumerPortalRcl()
+    {
+        XDocument project = XDocument.Load(ProjectRoot("src/Hexalith.Parties.UI/Hexalith.Parties.UI.csproj"));
+
+        project.Descendants("ProjectReference")
+            .Select(static reference => reference.Attribute("Include")?.Value)
+            .ShouldContain(@"..\Hexalith.Parties.ConsumerPortal\Hexalith.Parties.ConsumerPortal.csproj");
+    }
+
+    [Fact]
     public void Program_RegistersAdminPortalServices()
     {
         string source = File.ReadAllText(ProjectRoot("src/Hexalith.Parties.UI/Program.cs"));
@@ -120,18 +130,36 @@ public sealed class PartiesUiHostCompositionTests
     {
         string source = File.ReadAllText(ProjectRoot("src/Hexalith.Parties.UI/Program.cs"));
 
-        source.ShouldContain(".AddAdditionalAssemblies(typeof(Hexalith.Parties.AdminPortal.Components.PartiesAdminPortal).Assembly)");
+        source.ShouldContain(".AddAdditionalAssemblies(");
+        source.ShouldContain("typeof(Hexalith.Parties.AdminPortal.Components.PartiesAdminPortal).Assembly");
     }
 
     [Fact]
-    public void Routes_AddsAdminPortalAssemblyAndKeepsAuthorizeRouteView()
+    public void Program_AddsConsumerPortalAssemblyToStaticRazorComponentDiscovery()
+    {
+        string source = File.ReadAllText(ProjectRoot("src/Hexalith.Parties.UI/Program.cs"));
+
+        source.ShouldContain("typeof(Hexalith.Parties.ConsumerPortal.Components.MyProfilePage).Assembly");
+    }
+
+    [Fact]
+    public void Routes_AddsPortalAssembliesAndKeepsAuthorizeRouteView()
     {
         string source = File.ReadAllText(ProjectRoot("src/Hexalith.Parties.UI/Components/Routes.razor"));
 
         source.ShouldContain("AdditionalAssemblies");
         source.ShouldContain("typeof(Hexalith.Parties.AdminPortal.Components.PartiesAdminPortal).Assembly");
+        source.ShouldContain("typeof(Hexalith.Parties.ConsumerPortal.Components.MyProfilePage).Assembly");
         source.ShouldContain("<AuthorizeRouteView");
         source.ShouldNotContain("<RouteView");
+    }
+
+    [Fact]
+    public void HostLocalConsumerLandingStub_NoLongerDeclaresMeRoute()
+    {
+        string source = File.ReadAllText(ProjectRoot("src/Hexalith.Parties.UI/Components/Areas/ConsumerLanding.razor"));
+
+        source.ShouldNotContain("@page \"/me\"");
     }
 
     [Fact]

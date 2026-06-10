@@ -21,6 +21,7 @@
   <Folder Name="/src/">
     <Project Path="src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj" />
     <Project Path="src/Hexalith.Parties.AdminPortal/Hexalith.Parties.AdminPortal.csproj" />
+    <Project Path="src/Hexalith.Parties.ConsumerPortal/Hexalith.Parties.ConsumerPortal.csproj" />
     <Project Path="src/Hexalith.Parties.Client/Hexalith.Parties.Client.csproj" />
     <Project Path="src/Hexalith.Parties.Mcp/Hexalith.Parties.Mcp.csproj" />
     <Project Path="src/Hexalith.Parties/Hexalith.Parties.csproj" />
@@ -66,6 +67,7 @@
   <Folder Name="/tests/">
     <Project Path="tests/Hexalith.Parties.Client.Tests/Hexalith.Parties.Client.Tests.csproj" />
     <Project Path="tests/Hexalith.Parties.AdminPortal.Tests/Hexalith.Parties.AdminPortal.Tests.csproj" />
+    <Project Path="tests/Hexalith.Parties.ConsumerPortal.Tests/Hexalith.Parties.ConsumerPortal.Tests.csproj" />
     <Project Path="tests/Hexalith.Parties.Mcp.Tests/Hexalith.Parties.Mcp.Tests.csproj" />
     <Project Path="tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj" />
     <Project Path="tests/Hexalith.Parties.Contracts.Tests/Hexalith.Parties.Contracts.Tests.csproj" />

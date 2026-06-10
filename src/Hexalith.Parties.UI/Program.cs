@@ -176,7 +176,9 @@ app.UseAntiforgery();
 
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode()
-    .AddAdditionalAssemblies(typeof(Hexalith.Parties.AdminPortal.Components.PartiesAdminPortal).Assembly);
+    .AddAdditionalAssemblies(
+        typeof(Hexalith.Parties.AdminPortal.Components.PartiesAdminPortal).Assembly,
+        typeof(Hexalith.Parties.ConsumerPortal.Components.MyProfilePage).Assembly);
 
 if (authEnabled)
 {

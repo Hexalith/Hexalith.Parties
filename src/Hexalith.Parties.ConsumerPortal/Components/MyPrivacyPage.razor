@@ -1,0 +1,15 @@
+@page "/me/privacy"
+@attribute [Authorize(Policy = "Consumer")]
+
+<ConsumerRouteShell Title="@ConsumerPortalLabels.PrivacyTitle"
+                    Summary="@ConsumerPortalLabels.PrivacySummary"
+                    Status="@ConsumerPortalLabels.PrivacyStatus"
+                    Items="@_items" />
+
+@code {
+    private static readonly IReadOnlyList<string> _items =
+    [
+        ConsumerPortalLabels.PrivacyNextExport,
+        ConsumerPortalLabels.PrivacyNextErasure,
+    ];
+}
