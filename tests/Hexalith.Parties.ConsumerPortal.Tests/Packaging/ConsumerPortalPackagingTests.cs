@@ -89,6 +89,7 @@ public sealed class ConsumerPortalPackagingTests
         allSource.ShouldNotContain("Hexalith.Parties.UI", Case.Sensitive);
         allSource.ShouldContain("IConsumerProfileEditClient", Case.Sensitive);
         allSource.ShouldContain("IConsumerConsentClient", Case.Sensitive);
+        allSource.ShouldContain("IConsumerPrivacyExportClient", Case.Sensitive);
         allSource.ShouldNotContain("IPartiesCommandClient", Case.Sensitive);
     }
 
@@ -136,10 +137,31 @@ public sealed class ConsumerPortalPackagingTests
         serviceSource.ShouldNotContain("ISelfScopedPartiesClient", Case.Sensitive);
     }
 
+    [Fact]
+    public void ConsumerPrivacyExportPort_DoesNotExposeCallerSuppliedIdentityOrListSearch()
+    {
+        string sourceRoot = ProjectRoot("src/Hexalith.Parties.ConsumerPortal");
+        string serviceSource = string.Join(Environment.NewLine, Directory.GetFiles(Path.Combine(sourceRoot, "Services"), "*Privacy*Export*.cs")
+            .Select(File.ReadAllText));
+
+        serviceSource.ShouldContain("ExportMyDataAsync", Case.Sensitive);
+        serviceSource.ShouldNotContain("partyId", Case.Insensitive);
+        serviceSource.ShouldNotContain("tenantId", Case.Insensitive);
+        serviceSource.ShouldNotContain("correlationId", Case.Insensitive);
+        serviceSource.ShouldNotContain("PagedResult", Case.Sensitive);
+        serviceSource.ShouldNotContain("ListParties", Case.Sensitive);
+        serviceSource.ShouldNotContain("SearchParties", Case.Sensitive);
+        serviceSource.ShouldNotContain("GetPartyAsync", Case.Sensitive);
+        serviceSource.ShouldNotContain("IPartiesQueryClient", Case.Sensitive);
+        serviceSource.ShouldNotContain("IAdminPortalGdprClient", Case.Sensitive);
+        serviceSource.ShouldNotContain("ISelfScopedPartiesClient", Case.Sensitive);
+    }
+
     [Theory]
     [InlineData("MyProfilePage.razor")]
     [InlineData("EditMyProfilePage.razor")]
     [InlineData("MyConsentPage.razor")]
+    [InlineData("MyPrivacyPage.razor")]
     public void ConsumerProfilePages_DoNotUseLoggingOrTelemetryApis(string fileName)
     {
         string sourceRoot = ProjectRoot("src/Hexalith.Parties.ConsumerPortal");
@@ -178,6 +200,25 @@ public sealed class ConsumerPortalPackagingTests
         source.ShouldNotContain("ConsumerRouteShell", Case.Sensitive);
         source.ShouldNotContain("Console.", Case.Sensitive);
         source.ShouldNotContain("ILogger", Case.Sensitive);
+        source.ShouldNotContain("correlation", Case.Insensitive);
+    }
+
+    [Fact]
+    public void MyPrivacyPage_UsesOneVisibleExportStatusSourceAndNoRawIdentifiers()
+    {
+        string sourceRoot = ProjectRoot("src/Hexalith.Parties.ConsumerPortal");
+        string source = File.ReadAllText(Path.Combine(sourceRoot, "Components", "MyPrivacyPage.razor"));
+
+        source.ShouldContain("StatusMessage", Case.Sensitive);
+        source.ShouldContain("role=\"status\"", Case.Sensitive);
+        source.ShouldContain("role=\"alert\"", Case.Sensitive);
+        source.ShouldContain("DotNetStreamReference", Case.Sensitive);
+        source.ShouldNotContain("Toast", Case.Sensitive);
+        source.ShouldNotContain("ConsumerRouteShell", Case.Sensitive);
+        source.ShouldNotContain("Console.", Case.Sensitive);
+        source.ShouldNotContain("ILogger", Case.Sensitive);
+        source.ShouldNotContain("partyId", Case.Insensitive);
+        source.ShouldNotContain("tenantId", Case.Insensitive);
         source.ShouldNotContain("correlation", Case.Insensitive);
     }
 

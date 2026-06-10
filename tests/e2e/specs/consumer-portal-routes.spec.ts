@@ -10,7 +10,7 @@ const CONSUMER_ROUTES = [
   { path: '/me', heading: 'My profile', status: 'Up to date' },
   { path: '/me/edit', heading: 'Edit profile', status: 'Up to date' },
   { path: '/me/consent', heading: 'Consent', status: 'Up to date' },
-  { path: '/me/privacy', heading: 'Data privacy', status: 'Privacy requests are not started in this setup screen.' },
+  { path: '/me/privacy', heading: 'Data privacy', status: 'Ready to prepare your export.' },
 ] as const;
 
 test.describe('Consumer portal route shells', () => {
@@ -46,7 +46,10 @@ test.describe('Consumer portal route shells', () => {
         await expect(page.getByRole('switch', { name: 'Marketing emails' })).toHaveAttribute('aria-checked', 'false');
         await expect(page.getByRole('button', { name: 'Object (Art. 21)' })).toBeVisible();
       } else {
-        await expect(page.getByRole('heading', { name: 'What will be available here' })).toBeVisible();
+        await expect(page.getByRole('heading', { name: 'Export my data' })).toBeVisible();
+        await expect(page.getByText('Machine-readable JSON')).toBeVisible();
+        await expect(page.getByRole('button', { name: 'Export my data' })).toBeVisible();
+        await expect(page.getByText('under one minute')).toHaveCount(0);
       }
       expect(new URL(page.url()).pathname).toBe(route.path);
       expect(browserVisibleDataRequests).toEqual([]);
@@ -82,6 +85,20 @@ test.describe('Consumer portal route shells', () => {
     await expect(page.getByRole('switch')).toHaveCount(0);
     await expect.poll(async () => (await gdprRequestCounts(request)).addConsent).toBe(0);
     await expect.poll(async () => (await gdprRequestCounts(request)).revokeConsent).toBe(0);
+    expect(browserVisibleDataRequests).toEqual([]);
+  });
+
+  test('Admin-only user cannot open /me/privacy or see Consumer export data', async ({ context, page, request }) => {
+    await enableAdminFixture(context);
+    const browserVisibleDataRequests = captureBrowserVisiblePartiesDataRequests(page);
+
+    await page.goto('/me/privacy');
+
+    await expect(page.getByRole('heading', { name: 'Forbidden' })).toBeVisible();
+    await expect(page.getByText('You are not authorized to view this area.')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Data privacy' })).toHaveCount(0);
+    await expect(page.getByRole('button', { name: 'Export my data' })).toHaveCount(0);
+    await expect.poll(async () => (await gdprRequestCounts(request)).exportData).toBe(0);
     expect(browserVisibleDataRequests).toEqual([]);
   });
 
@@ -177,8 +194,69 @@ test.describe('Consumer portal route shells', () => {
     await expect.poll(async () => await gdprRequestCounts(request)).toEqual({
       addConsent: 1,
       revokeConsent: 1,
+      exportData: 0,
     });
     expect(new URL(page.url()).pathname).toBe('/me/consent');
+    expect(browserVisibleDataRequests).toEqual([]);
+  });
+
+  test('bound Consumer exports own data through the self-scoped path', async ({ context, page, request }) => {
+    await enableConsumerFixture(context);
+    const browserVisibleDataRequests = captureBrowserVisiblePartiesDataRequests(page);
+
+    await page.goto('/me/privacy');
+    await page.evaluate(() => {
+      window.HexalithPartiesConsumerPortal = {
+        downloadJson: async (fileName: string, contentType: string) => {
+          window.__consumerPrivacyExportDownload = { fileName, contentType };
+        },
+      };
+    });
+
+    await expect(page.getByRole('heading', { name: 'Export my data' })).toBeVisible();
+    await expect(page.getByText('Machine-readable JSON')).toBeVisible();
+    await page.getByRole('button', { name: 'Export my data' }).click();
+
+    await expect(page.getByRole('status')).toContainText('Your JSON export is ready.');
+    await expect.poll(async () => (await latestExportRequest(request))?.partyId ?? null).toBe('party-bound-001');
+    await expect(page.getByText('Preparing your export - this can take a little while.')).toHaveCount(0);
+    await expect(page.getByText('under one minute')).toHaveCount(0);
+    await expect(page.getByText('party-bound-001')).toHaveCount(0);
+    await page.getByRole('button', { name: 'Download JSON' }).click();
+    await expect.poll(async () => await page.evaluate(() => window.__consumerPrivacyExportDownload?.contentType ?? null))
+      .toBe('application/json');
+    await expect.poll(async () => await page.evaluate(() => window.__consumerPrivacyExportDownload?.fileName ?? null))
+      .toContain('my-data-export-');
+    expect(new URL(page.url()).pathname).toBe('/me/privacy');
+    expect(browserVisibleDataRequests).toEqual([]);
+  });
+
+  test('bound Consumer sees retry guidance when the JSON download helper fails', async ({ context, page, request }) => {
+    await enableConsumerFixture(context);
+    const browserVisibleDataRequests = captureBrowserVisiblePartiesDataRequests(page);
+
+    await page.goto('/me/privacy');
+    await page.evaluate(() => {
+      window.HexalithPartiesConsumerPortal = {
+        downloadJson: async () => {
+          throw new Error('download unavailable');
+        },
+      };
+    });
+
+    await page.getByRole('button', { name: 'Export my data' }).click();
+    await expect(page.getByRole('status')).toContainText('Your JSON export is ready.');
+    await expect.poll(async () => (await latestExportRequest(request))?.partyId ?? null).toBe('party-bound-001');
+
+    await page.getByRole('button', { name: 'Download JSON' }).click();
+
+    await expect(page.getByRole('alert')).toHaveCount(1);
+    await expect(page.getByRole('alert')).toContainText('Your data is safe - try again.');
+    await expect(page.getByText('Wait a short time, then retry the export.')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Download JSON' })).toBeVisible();
+    await expect(page.getByText('completed')).toHaveCount(0);
+    await expect.poll(async () => (await gdprRequestCounts(request)).exportData).toBe(1);
+    expect(new URL(page.url()).pathname).toBe('/me/privacy');
     expect(browserVisibleDataRequests).toEqual([]);
   });
 });
@@ -237,11 +315,17 @@ const latestRevokeConsentRequest = async (request: APIRequestContext): Promise<A
   return snapshot.revokeConsentRequests.at(-1);
 };
 
+const latestExportRequest = async (request: APIRequestContext): Promise<AdminPortalRequestCapture | undefined> => {
+  const snapshot = await requestSnapshot(request);
+  return snapshot.exportRequests.at(-1);
+};
+
 const gdprRequestCounts = async (request: APIRequestContext): Promise<GdprRequestCounts> => {
   const snapshot = await requestSnapshot(request);
   return {
     addConsent: snapshot.addConsentRequests.length,
     revokeConsent: snapshot.revokeConsentRequests.length,
+    exportData: snapshot.exportRequests.length,
   };
 };
 
@@ -272,10 +356,11 @@ interface AdminPortalE2eSnapshot {
   updateRequests: AdminPortalRequestCapture[];
   addConsentRequests: AdminPortalRequestCapture[];
   revokeConsentRequests: AdminPortalRequestCapture[];
+  exportRequests: AdminPortalRequestCapture[];
 }
 
 interface AdminPortalRequestCapture {
-  kind: 'update' | 'add-consent' | 'revoke-consent';
+  kind: 'update' | 'add-consent' | 'revoke-consent' | 'export';
   query: string | null;
   page: number;
   pageSize: number;
@@ -287,4 +372,17 @@ interface AdminPortalRequestCapture {
 interface GdprRequestCounts {
   addConsent: number;
   revokeConsent: number;
+  exportData: number;
+}
+
+declare global {
+  interface Window {
+    HexalithPartiesConsumerPortal?: {
+      downloadJson: (fileName: string, contentType: string, streamReference?: unknown) => Promise<void>;
+    };
+    __consumerPrivacyExportDownload?: {
+      fileName: string;
+      contentType: string;
+    };
+  }
 }

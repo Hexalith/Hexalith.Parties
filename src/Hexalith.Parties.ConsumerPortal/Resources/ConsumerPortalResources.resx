@@ -408,4 +408,49 @@
   <data name="PrivacyNextErasure" xml:space="preserve">
     <value>Explain erasure effects before a destructive request is submitted.</value>
   </data>
+  <data name="PrivacyExportTitle" xml:space="preserve">
+    <value>Export my data</value>
+  </data>
+  <data name="PrivacyExportFormat" xml:space="preserve">
+    <value>Machine-readable JSON</value>
+  </data>
+  <data name="PrivacyExportDescription" xml:space="preserve">
+    <value>Prepare a JSON package for the data connected to your signed-in account.</value>
+  </data>
+  <data name="PrivacyExportIdleStatus" xml:space="preserve">
+    <value>Ready to prepare your export.</value>
+  </data>
+  <data name="PrivacyExportAction" xml:space="preserve">
+    <value>Export my data</value>
+  </data>
+  <data name="PrivacyExportPreparing" xml:space="preserve">
+    <value>Preparing your export - this can take a little while. We'll show it here the moment it's ready.</value>
+  </data>
+  <data name="PrivacyExportReady" xml:space="preserve">
+    <value>Your JSON export is ready.</value>
+  </data>
+  <data name="PrivacyExportRestrictedReady" xml:space="preserve">
+    <value>Your JSON export is ready. Some data may be limited.</value>
+  </data>
+  <data name="PrivacyExportErasedReady" xml:space="preserve">
+    <value>Your JSON export is ready. Only status information is available for this profile.</value>
+  </data>
+  <data name="PrivacyExportUnavailableReady" xml:space="preserve">
+    <value>Your JSON export is ready. Personal data is unavailable right now.</value>
+  </data>
+  <data name="PrivacyExportDownload" xml:space="preserve">
+    <value>Download JSON</value>
+  </data>
+  <data name="PrivacyExportFailureTitle" xml:space="preserve">
+    <value>Your data is safe - try again.</value>
+  </data>
+  <data name="PrivacyExportFailureMessage" xml:space="preserve">
+    <value>Wait a short time, then retry the export.</value>
+  </data>
+  <data name="PrivacyErasurePreviewTitle" xml:space="preserve">
+    <value>Erasure requests</value>
+  </data>
+  <data name="PrivacyErasurePreviewMessage" xml:space="preserve">
+    <value>Erasure request controls will appear here after the export experience is complete.</value>
+  </data>
 </root>

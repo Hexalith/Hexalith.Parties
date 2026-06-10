@@ -151,6 +151,7 @@ public sealed class PartiesUiHostCompositionTests
         source.ShouldContain("builder.Services.AddScoped<IConsumerProfileDataClient, ConsumerProfileDataClient>();");
         source.ShouldContain("builder.Services.AddScoped<IConsumerProfileEditClient, ConsumerProfileEditClient>();");
         source.ShouldContain("builder.Services.AddScoped<IConsumerConsentClient, ConsumerConsentClient>();");
+        source.ShouldContain("builder.Services.AddScoped<IConsumerPrivacyExportClient, ConsumerPrivacyExportClient>();");
         source.IndexOf("builder.Services.AddSelfScopedPartiesClient();", StringComparison.Ordinal)
             .ShouldBeLessThan(source.IndexOf(
                 "builder.Services.AddScoped<IConsumerProfileDataClient, ConsumerProfileDataClient>();",
@@ -163,6 +164,35 @@ public sealed class PartiesUiHostCompositionTests
             .ShouldBeLessThan(source.IndexOf(
                 "builder.Services.AddScoped<IConsumerConsentClient, ConsumerConsentClient>();",
                 StringComparison.Ordinal));
+        source.IndexOf("builder.Services.AddSelfScopedPartiesClient();", StringComparison.Ordinal)
+            .ShouldBeLessThan(source.IndexOf(
+                "builder.Services.AddScoped<IConsumerPrivacyExportClient, ConsumerPrivacyExportClient>();",
+                StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void App_LoadsConsumerPrivacyExportDownloadHelperAtHostBoundary()
+    {
+        string source = File.ReadAllText(ProjectRoot("src/Hexalith.Parties.UI/Components/App.razor"));
+
+        source.ShouldContain("<script src=\"consumer-privacy-export.js\"></script>");
+    }
+
+    [Fact]
+    public void ConsumerPrivacyExportDownloadHelper_CleansUpObjectUrlWithoutLoggingPayload()
+    {
+        string source = File.ReadAllText(ProjectRoot("src/Hexalith.Parties.UI/wwwroot/consumer-privacy-export.js"));
+
+        source.ShouldContain("HexalithPartiesConsumerPortal.downloadJson");
+        source.ShouldContain("streamReference.arrayBuffer()");
+        source.ShouldContain("new Blob([arrayBuffer]");
+        source.ShouldContain("try");
+        source.ShouldContain("finally");
+        source.ShouldContain("anchor.remove()");
+        source.ShouldContain("URL.revokeObjectURL(url)");
+        source.ShouldNotContain("console.", Case.Insensitive);
+        source.ShouldNotContain("localStorage", Case.Insensitive);
+        source.ShouldNotContain("sessionStorage", Case.Insensitive);
     }
 
     [Fact]

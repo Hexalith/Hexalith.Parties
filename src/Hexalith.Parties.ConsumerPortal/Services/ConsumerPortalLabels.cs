@@ -249,6 +249,36 @@ public static class ConsumerPortalLabels
 
     public static string PrivacyNextErasure => Get(nameof(PrivacyNextErasure));
 
+    public static string PrivacyExportTitle => Get(nameof(PrivacyExportTitle));
+
+    public static string PrivacyExportFormat => Get(nameof(PrivacyExportFormat));
+
+    public static string PrivacyExportDescription => Get(nameof(PrivacyExportDescription));
+
+    public static string PrivacyExportIdleStatus => Get(nameof(PrivacyExportIdleStatus));
+
+    public static string PrivacyExportAction => Get(nameof(PrivacyExportAction));
+
+    public static string PrivacyExportPreparing => Get(nameof(PrivacyExportPreparing));
+
+    public static string PrivacyExportReady => Get(nameof(PrivacyExportReady));
+
+    public static string PrivacyExportRestrictedReady => Get(nameof(PrivacyExportRestrictedReady));
+
+    public static string PrivacyExportErasedReady => Get(nameof(PrivacyExportErasedReady));
+
+    public static string PrivacyExportUnavailableReady => Get(nameof(PrivacyExportUnavailableReady));
+
+    public static string PrivacyExportDownload => Get(nameof(PrivacyExportDownload));
+
+    public static string PrivacyExportFailureTitle => Get(nameof(PrivacyExportFailureTitle));
+
+    public static string PrivacyExportFailureMessage => Get(nameof(PrivacyExportFailureMessage));
+
+    public static string PrivacyErasurePreviewTitle => Get(nameof(PrivacyErasurePreviewTitle));
+
+    public static string PrivacyErasurePreviewMessage => Get(nameof(PrivacyErasurePreviewMessage));
+
     public static string ContactChannelTypeLabel(ContactChannelType type)
         => Get($"{nameof(ContactChannelTypeLabel)}{type}");
 

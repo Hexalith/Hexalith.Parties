@@ -1,15 +1,183 @@
 @page "/me/privacy"
 @attribute [Authorize(Policy = "Consumer")]
+@implements IDisposable
+@using Microsoft.JSInterop
 
-<ConsumerRouteShell Title="@ConsumerPortalLabels.PrivacyTitle"
-                    Summary="@ConsumerPortalLabels.PrivacySummary"
-                    Status="@ConsumerPortalLabels.PrivacyStatus"
-                    Items="@_items" />
+@inject IConsumerPrivacyExportClient ExportClient
+@inject IJSRuntime JsRuntime
+
+<section class="hx-parties-profile hx-parties-privacy" aria-labelledby="@_titleId">
+    <header class="hx-parties-profile__header">
+        <p class="hx-parties-profile__eyebrow">@ConsumerPortalLabels.AreaLabel</p>
+        <h1 id="@_titleId">@ConsumerPortalLabels.PrivacyTitle</h1>
+        <p class="hx-parties-profile__summary">@ConsumerPortalLabels.PrivacySummary</p>
+        @if (!_failureVisible)
+        {
+            <p class="hx-parties-profile__freshness" role="status" aria-live="polite">@StatusMessage</p>
+        }
+    </header>
+
+    <div class="hx-parties-profile__content">
+        <section class="hx-parties-profile__section hx-parties-privacy__export" aria-labelledby="@_exportId">
+            <div class="hx-parties-privacy__section-header">
+                <h2 id="@_exportId">@ConsumerPortalLabels.PrivacyExportTitle</h2>
+                <p class="hx-parties-privacy__format">@ConsumerPortalLabels.PrivacyExportFormat</p>
+            </div>
+            <p>@ConsumerPortalLabels.PrivacyExportDescription</p>
+
+            @if (_failureVisible)
+            {
+                <div class="hx-parties-profile__notice" role="alert" aria-labelledby="@_failureId">
+                    <h3 id="@_failureId">@ConsumerPortalLabels.PrivacyExportFailureTitle</h3>
+                    <p>@ConsumerPortalLabels.PrivacyExportFailureMessage</p>
+                </div>
+            }
+
+            <div class="hx-parties-privacy__actions">
+                <FluentButton Appearance="ButtonAppearance.Primary"
+                              Disabled="@_isPreparing"
+                              OnClick="PrepareExportAsync">
+                    @ConsumerPortalLabels.PrivacyExportAction
+                </FluentButton>
+
+                @if (CanDownload)
+                {
+                    <FluentButton Appearance="ButtonAppearance.Outline"
+                                  Disabled="@_isDownloading"
+                                  OnClick="DownloadAsync">
+                        @ConsumerPortalLabels.PrivacyExportDownload
+                    </FluentButton>
+                }
+            </div>
+        </section>
+
+        <section class="hx-parties-profile__section" aria-labelledby="@_erasurePreviewId">
+            <h2 id="@_erasurePreviewId">@ConsumerPortalLabels.PrivacyErasurePreviewTitle</h2>
+            <p>@ConsumerPortalLabels.PrivacyErasurePreviewMessage</p>
+        </section>
+    </div>
+</section>
 
 @code {
-    private static readonly IReadOnlyList<string> _items =
-    [
-        ConsumerPortalLabels.PrivacyNextExport,
-        ConsumerPortalLabels.PrivacyNextErasure,
-    ];
+    private static int s_nextInstanceId;
+
+    private readonly int _instanceId = System.Threading.Interlocked.Increment(ref s_nextInstanceId);
+    private CancellationTokenSource? _exportCts;
+    private ConsumerPrivacyExportResult? _download;
+    private bool _isPreparing;
+    private bool _isDownloading;
+    private bool _failureVisible;
+
+    private string _titleId => $"hx-parties-privacy-title-{_instanceId}";
+    private string _exportId => $"hx-parties-privacy-export-{_instanceId}";
+    private string _failureId => $"hx-parties-privacy-failure-{_instanceId}";
+    private string _erasurePreviewId => $"hx-parties-privacy-erasure-preview-{_instanceId}";
+
+    private bool CanDownload
+        => _download is { Payload.Length: > 0 }
+            && !_isPreparing
+            && _download.Outcome is ConsumerPrivacyExportOutcome.Ready
+                or ConsumerPrivacyExportOutcome.Restricted
+                or ConsumerPrivacyExportOutcome.Erased
+                or ConsumerPrivacyExportOutcome.Unavailable;
+
+    private string StatusMessage
+        => _isPreparing
+            ? ConsumerPortalLabels.PrivacyExportPreparing
+            : _download?.Outcome switch
+            {
+                ConsumerPrivacyExportOutcome.Restricted => ConsumerPortalLabels.PrivacyExportRestrictedReady,
+                ConsumerPrivacyExportOutcome.Erased => ConsumerPortalLabels.PrivacyExportErasedReady,
+                ConsumerPrivacyExportOutcome.Unavailable => ConsumerPortalLabels.PrivacyExportUnavailableReady,
+                ConsumerPrivacyExportOutcome.Ready => ConsumerPortalLabels.PrivacyExportReady,
+                _ => ConsumerPortalLabels.PrivacyExportIdleStatus,
+            };
+
+    private async Task PrepareExportAsync()
+    {
+        _exportCts?.Cancel();
+        _exportCts?.Dispose();
+        _exportCts = new CancellationTokenSource();
+        CancellationToken token = _exportCts.Token;
+
+        _isPreparing = true;
+        _failureVisible = false;
+
+        try
+        {
+            ConsumerPrivacyExportResult result = await ExportClient.ExportMyDataAsync(token).ConfigureAwait(false);
+            if (token.IsCancellationRequested)
+            {
+                return;
+            }
+
+            if (result.Payload.Length == 0
+                || result.Outcome is ConsumerPrivacyExportOutcome.TransientFailure
+                    or ConsumerPrivacyExportOutcome.Forbidden
+                    or ConsumerPrivacyExportOutcome.Failed)
+            {
+                _failureVisible = true;
+                return;
+            }
+
+            _download = result;
+        }
+        catch (OperationCanceledException) when (token.IsCancellationRequested)
+        {
+        }
+        catch
+        {
+            if (!token.IsCancellationRequested)
+            {
+                _failureVisible = true;
+            }
+        }
+        finally
+        {
+            if (!token.IsCancellationRequested)
+            {
+                _isPreparing = false;
+            }
+        }
+    }
+
+    private async Task DownloadAsync()
+    {
+        if (!CanDownload || _download is null)
+        {
+            return;
+        }
+
+        _isDownloading = true;
+        _failureVisible = false;
+
+        try
+        {
+            await using var stream = new MemoryStream(_download.Payload, writable: false);
+            using var streamReference = new DotNetStreamReference(stream);
+            await JsRuntime.InvokeVoidAsync(
+                "HexalithPartiesConsumerPortal.downloadJson",
+                _download.SafeFileName,
+                _download.ContentType,
+                streamReference).ConfigureAwait(false);
+        }
+        catch (JSDisconnectedException)
+        {
+            _failureVisible = true;
+        }
+        catch (JSException)
+        {
+            _failureVisible = true;
+        }
+        finally
+        {
+            _isDownloading = false;
+        }
+    }
+
+    public void Dispose()
+    {
+        _exportCts?.Cancel();
+        _exportCts?.Dispose();
+    }
 }

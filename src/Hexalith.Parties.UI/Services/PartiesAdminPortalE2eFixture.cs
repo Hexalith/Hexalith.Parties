@@ -851,7 +851,7 @@ internal sealed class PartiesAdminPortalE2eApiClient(
             "party-export.json",
             "application/json",
             System.Text.Encoding.UTF8.GetBytes(
-                $$"""{"partyId":"{{partyId}}","tenantId":"test-tenant","status":"Erased","party":null,"processingRecords":[]}""")));
+                $$"""{"partyId":"{{partyId}}","tenantId":"test-tenant","status":"Erased","exportedAt":"2026-06-10T10:00:00Z","exportedBy":"consumer-e2e","correlationId":"corr-export-e2e","party":null,"processingRecords":[]}""")));
     }
 
     public Task<IReadOnlyList<ProcessingActivityRecord>> GetProcessingRecordsAsync(string partyId, CancellationToken cancellationToken)
