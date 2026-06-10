@@ -13,7 +13,7 @@
 | `Hexalith.Parties.Contracts` | 📦 | yes | Commands, Events, ValueObjects, Models, `PartyState`, `PersonalDataAttribute` — **no infra deps** |
 | `Hexalith.Parties.Picker` | 📦 | yes | `PartyPicker.razor` + `<hexalith-party-picker>` custom element |
 | `Hexalith.Parties.AdminPortal` | 📦 | yes | FrontComposer-hosted Blazor admin (FluentUI) + GDPR ops |
-| `Hexalith.Parties.ConsumerPortal` | 📦 | yes | FrontComposer-hosted Consumer `/me*` RCL; owns profile route components and ConsumerPortal data/edit ports |
+| `Hexalith.Parties.ConsumerPortal` | 📦 | yes | FrontComposer-hosted Consumer `/me*` RCL; owns profile, consent, privacy, erasure, export, and processing-transparency ports |
 | `Hexalith.Parties.Mcp` | 📦 | yes | `parties-mcp` host; `PartiesMcpTools` (5 tools) |
 | `Hexalith.Parties.ServiceDefaults` | 📦 | yes | Aspire defaults (OTel, health, resilience, discovery) |
 | `Hexalith.Parties.UI` | internal app | no | Blazor Server browser UI/BFF; embeds AdminPortal, owns OIDC, route discovery, and UI specimens |
@@ -31,7 +31,7 @@
 |-------|---------|----------|----------------|
 | `PartyDetailProjectionActor` | Projections | `{tenant}:party-detail:{partyId}` | per-party `PartyDetail` read model (event apply + checkpoint) |
 | `PartyIndexProjectionActor` | Projections | `{tenant}:party-index` | per-tenant searchable index (batched writes, flush reminder) — ⚠️ live state key is `…:default`; `ProjectionRebuildService` uses `…:all` ([architecture.md §13](architecture.md)) |
-| `PartyDetailProjectionQueryActor` | Hexalith.Parties | `party-detail:{tenant}:{partyId}` | query adapter — detail / export / processing records / erasure certificate |
+| `PartyDetailProjectionQueryActor` | Hexalith.Parties | `party-detail:{tenant}:{partyId}` | query adapter — detail / export / processing records / erasure status / erasure certificate |
 | `PartyIndexProjectionQueryActor` | Hexalith.Parties | `party-index:{tenant}:parties` | query adapter — list / search |
 | `PartyKeyRetryActor` | Security | (key-retry id) | GDPR key-creation retry scheduling |
 | `AggregateActor` | EventStore.Server | (stream id) | event-stream host (registered by `AddEventStoreServer`) |
@@ -69,12 +69,16 @@ FrontComposer-hosted **FluentUI** RCL (render mode owned by the host shell). Rou
 
 ### Consumer Portal (`Hexalith.Parties.ConsumerPortal`)
 
-FrontComposer-hosted **FluentUI** Consumer RCL. Routed at `/me`, `/me/edit`, `/me/consent`, and `/me/privacy`; every route carries `Authorize(Policy = "Consumer")`. The implemented Epic 4 surfaces are read-only My Profile and Edit My Profile. Consent and privacy routes are protected shells for Epic 5.
+FrontComposer-hosted **FluentUI** Consumer RCL. Routed at `/me`, `/me/edit`, `/me/consent`, and `/me/privacy`; every route carries `Authorize(Policy = "Consumer")`. The implemented surfaces include My Profile, Edit My Profile, consent grant/withdraw, data export, erasure request/cancel, and processing-transparency summary.
 
 ConsumerPortal does not reference `Hexalith.Parties.UI` and does not use gateway clients directly. It owns narrow caller-id-free ports:
 
 - `IConsumerProfileDataClient.GetMyPartyAsync(...)`
 - `IConsumerProfileEditClient.UpdateMyProfileAsync(...)`
+- `IConsumerConsentClient.GetMyConsentOverviewAsync(...)`, `GrantMyConsentAsync(...)`, `WithdrawMyConsentAsync(...)`
+- `IConsumerPrivacyExportClient.ExportMyDataAsync(...)`
+- `IConsumerPrivacyErasureClient.GetMyErasureStatusAsync(...)`, `RequestMyErasureAsync(...)`, `CancelMyErasureAsync(...)`
+- `IConsumerPrivacyProcessingClient.GetMyProcessingSummaryAsync(...)`
 
 The `parties-ui` host registers scoped adapters for those ports and delegates to `ISelfScopedPartiesClient`, which injects the resolved `party_id` and forbids list/search or arbitrary party ids.
 
@@ -82,6 +86,8 @@ The `parties-ui` host registers scoped adapters for those ports and delegates to
 |-----------|----------|---------|
 | `MyProfilePage.razor` | Page (routable) | self-profile read, freshness cue, stale/degraded handling, erased tombstone |
 | `EditMyProfilePage.razor` | Page (routable) | self-profile edit for Person/Organization details with validation and one polite save status source |
+| `MyConsentPage.razor` | Page (routable) | consent grant/withdraw with lawful-basis separation, default-Off controls, optimistic save, and bounded alerts |
+| `MyPrivacyPage.razor` | Page (routable) | self-scoped export, erasure request/cancel, processing summary, and consent deep link |
 | `FreshnessStatus.razor` | Display | dot plus text freshness indicator with polite live-region semantics |
 | `ProfileField.razor` | Display | reusable profile label/value rendering |
 
@@ -95,7 +101,7 @@ The `parties-ui` host registers scoped adapters for those ports and delegates to
 | `Projections.Tests` | unit | detail/index handlers, name-history, rejection fitness, event-type resolver |
 | `Security.Tests` | unit + integration | payload protection/redaction, key mgmt (cached/local-dev), circuit breaker, erasure, audit |
 | `AdminPortal.Tests` | unit + bunit | components, API client, DI |
-| `ConsumerPortal.Tests` | unit + bunit | `/me*` authorization, profile read/edit states, ConsumerPortal packaging and boundary guards |
+| `ConsumerPortal.Tests` | unit + bunit | `/me*` authorization, profile read/edit, consent, privacy/export/erasure/processing states, ConsumerPortal packaging and boundary guards |
 | `Picker.Tests` | unit + bunit | picker component, API client, transport guardrails, packaging |
 | `UI.Tests` | unit + bunit | UI host composition, auth/nav routing, shared UI primitives, AdminPortal fixture guardrails |
 | `Mcp.Tests` | unit + fitness | tool dispatch, tool contracts, project fitness |

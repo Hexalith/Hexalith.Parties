@@ -11,7 +11,7 @@ Hexalith.Parties is a ready-to-deploy party management domain service for people
 - **Typed client package** -- `IPartiesCommandClient` and `IPartiesQueryClient` hide EventStore envelope plumbing for .NET consumers.
 - **Parties UI/BFF** -- `parties-ui` is a Blazor Server host with FrontComposer, FluentUI, host-owned OIDC, role-gated Admin/Consumer areas, accessibility gates, and server-side token handling.
 - **Admin portal RCL** -- `Hexalith.Parties.AdminPortal` provides the protected `/admin/parties*` browse/detail/create/edit/GDPR surfaces embedded by `parties-ui`.
-- **Consumer portal RCL** -- `Hexalith.Parties.ConsumerPortal` provides the protected `/me*` Consumer My Profile and Edit My Profile surfaces embedded by `parties-ui`.
+- **Consumer portal RCL** -- `Hexalith.Parties.ConsumerPortal` provides the protected `/me*` Consumer profile, consent, data export, erasure, and processing-transparency surfaces embedded by `parties-ui`.
 - **Embeddable party picker** -- `Hexalith.Parties.Picker` provides a Blazor/custom-element selector that searches through `IPartiesQueryClient` and emits durable party-id selections.
 - **Separate MCP host** -- `parties-mcp` exposes `create_party`, `get_party`, `find_parties`, `update_party`, and `delete_party` through the typed client boundary.
 - **DAPR event subscription** -- Subscriber apps consume EventStore-published party events with their own idempotent handlers.
@@ -56,7 +56,7 @@ Hexalith.Parties/
     Hexalith.Parties.Client/         # Typed EventStore gateway client (IPartiesCommandClient / IPartiesQueryClient)
     Hexalith.Parties.Contracts/      # Shared DTOs, commands, events, value objects
     Hexalith.Parties.AdminPortal/    # Protected Admin party records and GDPR RCL
-    Hexalith.Parties.ConsumerPortal/ # Protected Consumer /me profile RCL
+    Hexalith.Parties.ConsumerPortal/ # Protected Consumer /me self-service RCL
     Hexalith.Parties.Picker/         # Embeddable Blazor/custom-element party picker
     Hexalith.Parties.UI/             # Blazor Server browser UI/BFF for Admin and Consumer experiences
     Hexalith.Parties.ServiceDefaults/# Shared service configuration helpers (optional)

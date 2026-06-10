@@ -85,9 +85,9 @@ development_status:
   epic-4-retrospective: done
 
   # ── Epic 5: Consumer — Consent, Data Export & Erasure ────────────────────
-  epic-5: in-progress
+  epic-5: done
   5-1-my-consent-grant-withdraw-with-honest-lawful-basis-split-fr-consumer-3: done
   5-2-my-data-privacy-export-my-data-fr-consumer-4: done
   5-3-my-data-privacy-request-cancel-erasure-fr-consumer-4: done
   5-4-my-data-privacy-see-whats-processed-about-me-fr-consumer-4: done
-  epic-5-retrospective: optional
+  epic-5-retrospective: done

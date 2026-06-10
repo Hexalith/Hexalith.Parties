@@ -330,7 +330,8 @@ wiring + the FrontComposer quickstart chain) should be the **first implementatio
   `Hexalith.Parties.Client` (`AddPartiesClient(config)`), injecting the user's token +
   tenant via the client's `requestCustomizer` hook. GDPR ops reuse
   `IAdminPortalGdprClient`; a consumer-facing slice reuses the same gateway commands
-  (`RecordConsent`/`RevokeConsent`/`EraseParty`/`ExportPartyData`/`GetProcessingRecords`)
+  and queries
+  (`RecordConsent`/`RevokeConsent`/`EraseParty`/`CancelPartyErasure`/`ExportPartyData`/`GetErasureStatus`/`GetProcessingRecords`)
   scoped to `myPartyId`.
 - **D6 — Live freshness:** subscribe to EventStore projection updates via **SignalR**
   (`Hexalith.EventStore.SignalR` + `Microsoft.AspNetCore.SignalR.Client` 10.0.8 — the
@@ -473,6 +474,14 @@ The rules below target the **~10 UI-tier divergence points** these don't cover.
   `ISelfScopedPartiesClient.GetMyPartyAsync()` and
   `ISelfScopedPartiesClient.UpdateMyProfileAsync(...)`. Do not make ConsumerPortal
   reference the UI host for profile access, freshness display, or edit behavior.
+- **Implementation note from Epic 5 retrospective (2026-06-10):** the same
+  ConsumerPortal port/adapter boundary now covers consent, export, erasure, and
+  processing transparency through `IConsumerConsentClient`,
+  `IConsumerPrivacyExportClient`, `IConsumerPrivacyErasureClient`, and
+  `IConsumerPrivacyProcessingClient`. Consumer erasure cancellation is an additive
+  contract (`CancelPartyErasure` -> `PartyErasureCancelled`), and
+  `GetErasureStatus` must use authoritative lifecycle status for pending/cancellable
+  states rather than deriving only terminal erased state from `PartyDetail`.
 
 ### Communication Patterns
 
@@ -632,7 +641,7 @@ src/
 
 tests/
 ├── Hexalith.Parties.UI.Tests/                    ★ bUnit — routing, role-landing, claim resolver, self-scope, StatusKind map
-├── Hexalith.Parties.ConsumerPortal.Tests/        ★ bUnit — route auth, profile read/edit states, boundary guards
+├── Hexalith.Parties.ConsumerPortal.Tests/        ★ bUnit — route auth, profile, consent, privacy, and boundary guards
 ├── Hexalith.Parties.AdminPortal.Tests/           ◆ bUnit — new admin pages
 └── e2e/                                          ★ Playwright a11y/visual gate (WCAG 2.2 AA) — FrontComposer pattern
 
