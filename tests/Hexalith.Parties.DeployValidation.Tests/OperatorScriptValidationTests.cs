@@ -181,7 +181,7 @@ public sealed class OperatorScriptValidationTests : IDisposable
             publish.ShouldContain($"'{preserved}'");
         }
 
-        foreach (string generated in new[] { "eventstore", "eventstore-admin", "eventstore-admin-ui", "sample", "sample-blazor-ui", "parties", "parties-mcp", "tenants", "memories" })
+        foreach (string generated in new[] { "eventstore", "eventstore-admin", "eventstore-admin-ui", "sample", "sample-blazor-ui", "parties", "parties-mcp", "parties-ui", "tenants", "memories" })
         {
             publish.ShouldContain($"'{generated}'");
         }
@@ -192,10 +192,12 @@ public sealed class OperatorScriptValidationTests : IDisposable
         publish.ShouldContain("'tenants' = 'accesscontrol-tenants'");
         publish.ShouldContain("'memories' = 'accesscontrol-memories'");
         publish.ShouldContain("$DaprClientOnlyTargets = @('eventstore-admin-ui', 'sample-blazor-ui')");
-        publish.ShouldContain("$ForbiddenDaprTargets = @('parties-mcp', 'redis', 'falkordb')");
+        publish.ShouldContain("$ForbiddenDaprTargets = @('parties-mcp', 'parties-ui', 'redis', 'falkordb')");
         publish.ShouldContain("http://auth.tache.ai:8080/realms/tache");
         publish.ShouldContain("EventStore__Authentication__Username");
         publish.ShouldContain("EventStore__Authentication__Password");
+        publish.ShouldContain("Authentication__OpenIdConnect__ClientSecret");
+        publish.ShouldContain("hexalith-parties-ui-oidc-client");
         publish.ShouldContain("imagePullSecrets");
         publish.ShouldContain("zot-pull-secret");
         publish.ShouldContain("Assert-ZotImageManifests");
@@ -352,8 +354,19 @@ public sealed class OperatorScriptValidationTests : IDisposable
         adminUi.ShouldContain("secretKeyRef:");
         adminUi.ShouldContain("name: hexalith-tache-ui-credentials");
 
+        string partiesUi = File.ReadAllText(Path.Combine(workspace.K8sRoot, "parties-ui", "deployment.yaml"));
+        partiesUi.ShouldNotContain("dapr.io/enabled");
+        partiesUi.ShouldNotContain("dapr.io/app-id");
+        partiesUi.ShouldNotContain("dapr.io/app-port");
+        partiesUi.ShouldNotContain("dapr.io/config");
+        partiesUi.ShouldContain("Authentication__OpenIdConnect__ClientSecret");
+        partiesUi.ShouldContain("secretKeyRef:");
+        partiesUi.ShouldContain("name: hexalith-parties-ui-oidc-client");
+        partiesUi.ShouldContain("key: client-secret");
+
         workspace.LogLines.ShouldContain("zot manifest eventstore 0.1.1-preview.0.7");
         workspace.LogLines.ShouldContain("zot manifest memories 0.1.1-preview.0.7");
+        workspace.LogLines.ShouldContain("zot manifest parties-ui 0.1.1-preview.0.7");
         workspace.LogLines.ShouldContain(line => line.Contains("run keycloak-tache-preflight", StringComparison.Ordinal));
         workspace.LogLines.ShouldContain(line => line.Contains("delete deployment/keycloak service/keycloak configmap/keycloak-realm secret/hexalith-keycloak-admin", StringComparison.Ordinal));
         workspace.LogLines.ShouldContain(line => line.StartsWith("validator --config-path ", StringComparison.Ordinal));
@@ -428,6 +441,12 @@ public sealed class OperatorScriptValidationTests : IDisposable
         CountOccurrences(adminUi, "secretKeyRef:").ShouldBe(2);
         CountOccurrences(adminUi, "name: hexalith-tache-ui-credentials").ShouldBe(2);
 
+        string partiesUi = File.ReadAllText(Path.Combine(workspace.K8sRoot, "parties-ui", "deployment.yaml"));
+        CountOccurrences(partiesUi, "Authentication__OpenIdConnect__ClientSecret").ShouldBe(1);
+        CountOccurrences(partiesUi, "secretKeyRef:").ShouldBe(1);
+        CountOccurrences(partiesUi, "name: hexalith-parties-ui-oidc-client").ShouldBe(1);
+        partiesUi.ShouldNotContain("dapr.io/");
+
         foreach ((string folder, string baseline) in carveOutBaselines)
         {
             string deployment = File.ReadAllText(Path.Combine(workspace.K8sRoot, folder, "deployment.yaml"));
@@ -473,6 +492,24 @@ public sealed class OperatorScriptValidationTests : IDisposable
 
         result.ExitCode.ShouldBe(1, result.Output);
         result.Output.ShouldContain($"required UI credential Secret hexalith-tache-ui-credentials key '{missingKey}' is missing");
+        workspace.LogLines.ShouldNotContain(line => line.StartsWith("dotnet ", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void PublishFailsBeforeGenerateWhenPartiesUiOidcClientSecretKeyIsMissing()
+    {
+        using ScriptWorkspace workspace = CreateScriptWorkspace(missingPartiesUiOidcSecret: true);
+
+        ProcessResult result = RunPwshScriptPath(
+            workspace.PublishScript,
+            workspace.BinDirectory,
+            workspace.Environment,
+            "-ConfirmContext",
+            "safe-context",
+            "-SkipDaprInit");
+
+        result.ExitCode.ShouldBe(1, result.Output);
+        result.Output.ShouldContain("required parties-ui OIDC Secret hexalith-parties-ui-oidc-client key 'client-secret' is missing");
         workspace.LogLines.ShouldNotContain(line => line.StartsWith("dotnet ", StringComparison.Ordinal));
     }
 
@@ -732,6 +769,7 @@ public sealed class OperatorScriptValidationTests : IDisposable
         string? missingUiCredentialKey = null,
         bool invalidKeycloakToken = false,
         string? inheritedPluralContainerImageTags = null,
+        bool missingPartiesUiOidcSecret = false,
         string dockerConfigJson = """{"auths":{"registry.hexalith.com":{"auth":"dXNlcjpwYXNz"}}}""")
     {
         string root = Path.Combine(_tempRoot, Guid.NewGuid().ToString("N"));
@@ -767,6 +805,7 @@ resources:
   - memories
   - parties
   - parties-mcp
+  - parties-ui
   - tenants
   - redis
   - falkordb
@@ -801,7 +840,7 @@ resources:
         File.WriteAllText(Path.Combine(docker, "config.json"), dockerConfigJson);
 
         string logPath = Path.Combine(root, "commands.log");
-        WriteKubectlShim(bin, logPath, failNamespaceResourceEnumeration, daprStatusFailsExistingInstall, keycloakClusterIp, missingUiCredentialKey, invalidKeycloakToken);
+        WriteKubectlShim(bin, logPath, failNamespaceResourceEnumeration, daprStatusFailsExistingInstall, keycloakClusterIp, missingUiCredentialKey, invalidKeycloakToken, missingPartiesUiOidcSecret);
         WriteDotnetShim(bin, logPath, includeLiteralJwt, emitUnexpectedTopLevelFile, generatedReadinessOnlyProbe);
         WriteDaprShim(bin, logPath, daprStatusFailsExistingInstall);
 
@@ -869,7 +908,8 @@ exit 1
         bool daprStatusFailsExistingInstall,
         string? keycloakClusterIp,
         string? missingUiCredentialKey,
-        bool invalidKeycloakToken)
+        bool invalidKeycloakToken,
+        bool missingPartiesUiOidcSecret)
     {
         string kubectlPath = Path.Combine(binDirectory, RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "kubectl.cmd" : "kubectl");
         string validPayload = "eyJpc3MiOiJodHRwOi8vYXV0aC50YWNoZS5haTo4MDgwL3JlYWxtcy90YWNoZSIsImF1ZCI6WyJoZXhhbGl0aC1ldmVudHN0b3JlIl0sImV2ZW50c3RvcmU6dGVuYW50IjpbInRlbmFudC1hIl0sImV2ZW50c3RvcmU6ZG9tYWluIjpbImNvdW50ZXIiXSwiZXZlbnRzdG9yZTpwZXJtaXNzaW9uIjpbImNvbW1hbmRzOioiXX0";
@@ -879,6 +919,7 @@ exit 1
         string keycloakServiceOutput = keycloakClusterIp ?? string.Empty;
         string usernameSecretExit = string.Equals(missingUiCredentialKey, "username", StringComparison.Ordinal) ? "1" : "0";
         string passwordSecretExit = string.Equals(missingUiCredentialKey, "password", StringComparison.Ordinal) ? "1" : "0";
+        string partiesUiSecretExit = missingPartiesUiOidcSecret ? "1" : "0";
         string tokenJson = "{\"access_token\":\"eyJhbGciOiJub25lIn0." + tokenPayload + ".signature\"}";
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
@@ -912,6 +953,11 @@ if "%1 %2 %3"=="get secret hexalith-tache-ui-credentials" (
     exit /b 0
   )
   echo dXNlcg==
+  exit /b 0
+)
+if "%1 %2 %3"=="get secret hexalith-parties-ui-oidc-client" (
+  if "{partiesUiSecretExit}"=="1" exit /b 1
+  echo present
   exit /b 0
 )
 if "%1"=="run" (
@@ -969,6 +1015,11 @@ if [ "$1 $2 $3" = "get secret hexalith-tache-ui-credentials" ]; then
       ;;
   esac
   printf '%s\n' "dXNlcg=="
+  exit 0
+fi
+if [ "$1 $2 $3" = "get secret hexalith-parties-ui-oidc-client" ]; then
+  if [ "{partiesUiSecretExit}" = "1" ]; then exit 1; fi
+  printf '%s\n' "present"
   exit 0
 fi
 if [ "$1" = "run" ]; then
@@ -1043,7 +1094,7 @@ if [ "$1 $2 $3 $4 $5 $6" = "tool run --allow-roll-forward aspirate -- generate" 
     exit 42
   fi
   out="$PWD/../../deploy/k8s"
-  for name in eventstore eventstore-admin eventstore-admin-ui sample sample-blazor-ui parties parties-mcp tenants memories; do
+  for name in eventstore eventstore-admin eventstore-admin-ui sample sample-blazor-ui parties parties-mcp parties-ui tenants memories; do
     mkdir -p "$out/$name"
     include_dapr=0
     case "$name" in

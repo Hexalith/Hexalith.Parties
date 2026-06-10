@@ -10,7 +10,8 @@ $ValidFormats = @('human', 'json')
 $RegistryPrefix = 'registry.hexalith.com/'
 $DaprAppIds = @('eventstore', 'eventstore-admin', 'sample', 'parties', 'tenants', 'memories')
 $DaprClientOnlyAppIds = @('eventstore-admin-ui', 'sample-blazor-ui')
-$PublicIngressAllowedServices = @('eventstore-admin-ui', 'sample-blazor-ui')
+$ForbiddenDaprAppIds = @('parties-mcp', 'parties-ui', 'redis', 'falkordb')
+$PublicIngressAllowedServices = @('eventstore-admin-ui', 'sample-blazor-ui', 'parties-ui')
 $SemVerPattern = '^[0-9]+\.[0-9]+\.[0-9]+(?:-[A-Za-z0-9.-]+)?$'
 
 function Get-RepoRoot {
@@ -257,6 +258,33 @@ function Get-LineIndent {
     }
 
     ($Line.Length - $Line.TrimStart(' ').Length)
+}
+
+function Test-IsUnderValueFromBlock {
+    param(
+        [Parameter(Mandatory = $true)][AllowEmptyCollection()][AllowEmptyString()][string[]]$Lines,
+        [Parameter(Mandatory = $true)][int]$Index
+    )
+
+    if ($Lines.Count -eq 0 -or $Index -lt 0 -or $Index -ge $Lines.Count) {
+        return $false
+    }
+
+    $lineIndent = Get-LineIndent $Lines[$Index]
+    for ($i = $Index - 1; $i -ge 0; $i--) {
+        if ([string]::IsNullOrWhiteSpace($Lines[$i])) {
+            continue
+        }
+
+        $candidateIndent = Get-LineIndent $Lines[$i]
+        if ($candidateIndent -ge $lineIndent) {
+            continue
+        }
+
+        return $Lines[$i] -cmatch '^\s*(valueFrom|secretKeyRef):\s*$'
+    }
+
+    return $false
 }
 
 function Get-ScalarValue {
@@ -512,6 +540,39 @@ function Test-HasClientOnlyDaprAnnotations {
     $true
 }
 
+function Test-HasAnyDaprAnnotations {
+    param([string[]]$Lines)
+
+    $templateIndex = Find-LineIndex -Lines $Lines -Pattern '^\s*template:\s*$' -StartIndex 0 -EndIndex ($Lines.Count - 1)
+    if ($templateIndex -lt 0) {
+        return $false
+    }
+
+    $templateIndent = Get-LineIndent $Lines[$templateIndex]
+    $templateEnd = Get-BlockEndIndex -Lines $Lines -StartIndex $templateIndex -ParentIndent $templateIndent
+    $metadataIndex = -1
+    for ($i = $templateIndex + 1; $i -le $templateEnd; $i++) {
+        if ($Lines[$i] -cmatch '^\s*metadata:\s*$' -and (Get-LineIndent $Lines[$i]) -eq ($templateIndent + 2)) {
+            $metadataIndex = $i
+            break
+        }
+    }
+
+    if ($metadataIndex -lt 0) {
+        return $false
+    }
+
+    $metadataEnd = Get-BlockEndIndex -Lines $Lines -StartIndex $metadataIndex -ParentIndent (Get-LineIndent $Lines[$metadataIndex])
+    $annotationsIndex = Find-LineIndex -Lines $Lines -Pattern '^\s*annotations:\s*$' -StartIndex ($metadataIndex + 1) -EndIndex $metadataEnd
+    if ($annotationsIndex -lt 0) {
+        return $false
+    }
+
+    $annotationsEnd = Get-BlockEndIndex -Lines $Lines -StartIndex $annotationsIndex -ParentIndent (Get-LineIndent $Lines[$annotationsIndex])
+    $annotationText = ($Lines[($annotationsIndex + 1)..$annotationsEnd] -join "`n")
+    $annotationText -cmatch "(?m)^\s*dapr\.io/[A-Za-z0-9_.-]+:\s*"
+}
+
 function Get-ContainerBlocks {
     param([string[]]$Lines)
 
@@ -632,6 +693,10 @@ function Find-K8sWorkloadFindings {
                 $findings.Add((New-Finding -Severity 'BLOCKING' -Category 'K8sWorkload-MissingDaprAnnotations' -File $relative -JsonPath '$.spec.template.metadata.annotations' -Reason 'Dapr client-only app is missing required pod annotations or carries server-only annotations'))
             }
 
+            if ($ForbiddenDaprAppIds -ccontains $deploymentName -and (Test-HasAnyDaprAnnotations -Lines $lines)) {
+                $findings.Add((New-Finding -Severity 'BLOCKING' -Category 'K8sWorkload-MissingDaprAnnotations' -File $relative -JsonPath '$.spec.template.metadata.annotations' -Reason 'non-Dapr workload must not carry Dapr annotations'))
+            }
+
             if ($registryImageCount -gt 0 -and
                 ($containers.Count -eq 0 -or
                 -not (Test-HasRequiredHealthProbe -ContainerText $containers[0].Text -ProbeName 'readinessProbe') -or
@@ -724,6 +789,7 @@ function Find-K8sIngressFindings {
     $requiredRoutes = [ordered]@{
         'eventstore.hexalith.com' = 'eventstore-admin-ui'
         'sample.hexalith.com' = 'sample-blazor-ui'
+        'parties.hexalith.com' = 'parties-ui'
     }
     $seenRoutes = @{}
     foreach ($requiredHost in $requiredRoutes.Keys) {
@@ -878,9 +944,7 @@ function Find-SecretFindings {
             continue
         }
 
-        $contextStart = [Math]::Max(0, $i - 6)
-        $context = ($lines[$contextStart..$i] -join "`n")
-        if ($context -cmatch 'secretKeyRef:\s*$' -or $context -cmatch 'valueFrom:\s*$') {
+        if (Test-IsUnderValueFromBlock -Lines $lines -Index $i) {
             continue
         }
 

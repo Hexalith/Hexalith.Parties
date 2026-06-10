@@ -243,6 +243,28 @@ spec:
     }
 
     [Fact]
+    public void WorkloadChecksRejectDaprAnnotationsOnPartiesUi()
+    {
+        using FixtureTree tree = CreateFixtureTree();
+        File.WriteAllText(
+            Path.Combine(tree.K8sPath, "parties-ui.yaml"),
+            DeploymentYaml("parties-ui", "registry.hexalith.com/parties-ui:1.2.3", includePullSecret: true, includeDapr: true, includeProbes: true));
+
+        ProcessResult result = RunValidator(RepositoryRoot, null, "-ConfigPath", tree.ConfigPath, "-K8sPath", tree.K8sPath, "-Format", "json");
+
+        result.ExitCode.ShouldBe(1, result.CombinedOutput);
+        using JsonDocument document = JsonDocument.Parse(result.Stdout);
+        JsonElement finding = document.RootElement.GetProperty("findings").EnumerateArray()
+            .Where(static f =>
+                f.GetProperty("category").GetString() == "K8sWorkload-MissingDaprAnnotations"
+                && f.GetProperty("reason").GetString() == "non-Dapr workload must not carry Dapr annotations")
+            .ShouldHaveSingleItem();
+
+        finding.GetProperty("file").GetString().ShouldBe("deploy/k8s/parties-ui.yaml");
+        finding.GetProperty("jsonpath").GetString().ShouldBe("$.spec.template.metadata.annotations");
+    }
+
+    [Fact]
     public void DaprAclChecksCatchMissingAppIdButAllowDocumentedPrefixWildcards()
     {
         using FixtureTree cleanTree = CreateFixtureTree();
@@ -278,6 +300,7 @@ spec:
 
     [Theory]
     [InlineData("eventstore.hexalith.com", "sample-blazor-ui", "/", "Prefix", "8080")]
+    [InlineData("parties.hexalith.com", "sample-blazor-ui", "/", "Prefix", "8080")]
     [InlineData("preview.hexalith.com", "eventstore-admin-ui", "/", "Prefix", "8080")]
     [InlineData("eventstore.hexalith.com", "eventstore-admin-ui", "/ui", "Prefix", "8080")]
     [InlineData("eventstore.hexalith.com", "eventstore-admin-ui", "/", "Exact", "8080")]
@@ -310,6 +333,16 @@ stringData:
         - name: Authentication__JwtBearer__SigningKey
           value: changeme
 """);
+        File.WriteAllText(Path.Combine(tree.K8sPath, "deployment-secretref-near-secret.yaml"), DeploymentYaml("parties-ui", "registry.hexalith.com/parties-ui:1.2.3", includePullSecret: true, includeDapr: false, includeProbes: true) + """
+        env:
+        - name: Authentication__OpenIdConnect__ClientSecret
+          valueFrom:
+            secretKeyRef:
+              name: hexalith-parties-ui-oidc-client
+              key: client-secret
+        - name: Authentication__JwtBearer__SigningKey
+          value: changeme
+""");
         File.WriteAllText(Path.Combine(tree.ConfigPath, "component-secret.yaml"), """
 apiVersion: dapr.io/v1alpha1
 kind: Component
@@ -327,11 +360,12 @@ spec:
         result.ExitCode.ShouldBe(1, result.CombinedOutput);
         result.CombinedOutput.ShouldNotContain("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
         result.CombinedOutput.ShouldNotContain("changeme");
+        result.Stdout.ShouldContain("deployment-secretref-near-secret.yaml");
         using JsonDocument document = JsonDocument.Parse(result.Stdout);
         JsonElement[] secretFindings = document.RootElement.GetProperty("findings").EnumerateArray()
             .Where(static f => f.GetProperty("category").GetString() == "Secret-Plaintext")
             .ToArray();
-        secretFindings.Length.ShouldBeGreaterThanOrEqualTo(3);
+        secretFindings.Length.ShouldBeGreaterThanOrEqualTo(4);
     }
 
     [Fact]
@@ -621,10 +655,21 @@ spec:
                 name: sample-blazor-ui
                 port:
                   number: 8080
+    - host: parties.hexalith.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: parties-ui
+                port:
+                  number: 8080
   tls:
     - hosts:
         - eventstore.hexalith.com
         - sample.hexalith.com
+        - parties.hexalith.com
       secretName: hexalith-pages-tls
 """;
 
@@ -651,6 +696,7 @@ spec:
     - hosts:
         - eventstore.hexalith.com
         - sample.hexalith.com
+        - parties.hexalith.com
       secretName: hexalith-pages-tls
 """;
 

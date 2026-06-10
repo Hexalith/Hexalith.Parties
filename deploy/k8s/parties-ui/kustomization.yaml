@@ -1,0 +1,23 @@
+resources:
+- deployment.yaml
+- service.yaml
+
+generatorOptions:
+  disableNameSuffixHash: true
+
+configMapGenerator:
+- name: parties-ui-env
+  literals:
+    - OTEL_DOTNET_EXPERIMENTAL_OTLP_RETRY=in_memory
+    - ASPNETCORE_FORWARDEDHEADERS_ENABLED=true
+    - HTTP_PORTS=8080
+    - EVENTSTORE_HTTP=http://eventstore:8080
+    - services__eventstore__http__0=http://eventstore:8080
+    - TENANTS_HTTP=http://tenants:8080
+    - services__tenants__http__0=http://tenants:8080
+    - EventStore__SignalR__HubUrl=http://eventstore:8080/hubs/projection-changes
+    - ASPNETCORE_ENVIRONMENT=Development
+    - Authentication__OpenIdConnect__Authority=http://auth.tache.ai:8080/realms/tache
+    - Authentication__OpenIdConnect__ClientId=hexalith-parties-ui
+    - Authentication__OpenIdConnect__Audience=hexalith-eventstore
+    - ASPNETCORE_URLS=http://+:8080;

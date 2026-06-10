@@ -1,6 +1,6 @@
 # Deployment Guide
 
-> **Canonical reference:** For the full Hexalith.Parties Kubernetes deployment topology (11 Parties-owned workloads, external Keycloak `tache` realm, Zot registry, Dapr control plane, UI ingress, MVP boundaries), see [Kubernetes Deployment Architecture](kubernetes-deployment-architecture.md). This guide covers application-architecture concerns (DAPR component selection, multi-tenant setup, troubleshooting); the canonical doc covers the deployed cluster shape.
+> **Canonical reference:** For the full Hexalith.Parties Kubernetes deployment topology (12 Parties-owned workloads, external Keycloak `tache` realm, Zot registry, Dapr control plane, UI ingress, MVP boundaries), see [Kubernetes Deployment Architecture](kubernetes-deployment-architecture.md). This guide covers application-architecture concerns (DAPR component selection, multi-tenant setup, troubleshooting); the canonical doc covers the deployed cluster shape.
 
 This guide covers deploying the Hexalith.Parties service with DAPR in production environments.
 
@@ -208,12 +208,13 @@ The committed Kubernetes Ingress source of truth is `deploy/k8s/ingress.yaml`.
 
 - `eventstore.hexalith.com` routes only to `service/eventstore-admin-ui` port `8080`.
 - `sample.hexalith.com` routes only to `service/sample-blazor-ui` port `8080`.
+- `parties.hexalith.com` routes only to `service/parties-ui` port `8080`.
 - The Ingress uses class `nginx` and TLS Secret `hexalith-pages-tls` in namespace `hexalith-parties`.
-- DNS for both hosts must resolve to the nginx ingress endpoint before live validation.
+- DNS for all three hosts must resolve to the nginx ingress endpoint before live validation.
 
-If the cluster does not yet have an ingress controller, a host-level nginx bridge may be used only as a temporary operator-owned bridge. Upstreams must be the Kubernetes Services `eventstore-admin-ui.hexalith-parties.svc.cluster.local:8080` and `sample-blazor-ui.hexalith-parties.svc.cluster.local:8080`; the bridge owner is the cluster operator; the exit condition is an installed in-cluster nginx ingress controller serving `deploy/k8s/ingress.yaml`. The committed Ingress remains the durable deployment model.
+If the cluster does not yet have an ingress controller, a host-level nginx bridge may be used only as a temporary operator-owned bridge. Upstreams must be the Kubernetes Services `eventstore-admin-ui.hexalith-parties.svc.cluster.local:8080`, `sample-blazor-ui.hexalith-parties.svc.cluster.local:8080`, and `parties-ui.hexalith-parties.svc.cluster.local:8080`; the bridge owner is the cluster operator; the exit condition is an installed in-cluster nginx ingress controller serving `deploy/k8s/ingress.yaml`. The committed Ingress remains the durable deployment model.
 
-Authentication is a separate dependency. A routed page shell can still show backend or login errors until Story 9.13 external Keycloak wiring, the `hexalith-tache-ui-credentials` Secret, and EventStore authorization claims are valid. Do not treat authenticated browser workflows as proven unless token acquisition and backend authorization have also been verified.
+Authentication is a separate dependency. A routed page shell can still show backend or login errors until external Keycloak wiring, the `hexalith-tache-ui-credentials` Secret, the `hexalith-parties-ui-oidc-client` Secret, and EventStore authorization claims are valid. Do not treat authenticated browser workflows as proven unless token acquisition and backend authorization have also been verified.
 
 ### CI/CD Integration
 

@@ -216,7 +216,7 @@ deploy/   # k8s (kustomize), dapr (component CRs), zot (OCI registry)
 
 ## 12. Deployment
 
-Production shape is Kubernetes via **aspirate** (pinned `9.1.0`): `pwsh deploy/k8s/publish.ps1 -ConfirmContext <ctx>`. Expect **11 pods** (`eventstore`, `eventstore-admin`, `eventstore-admin-ui`, `parties`, `parties-mcp`, `tenants`, `memories`, `sample`, `sample-blazor-ui`, `redis`, `falkordb`); 8 run a `daprd` sidecar. Authoritative DAPR CRs in `deploy/dapr/`; OCI registry in `deploy/zot/`. **Authoritative references** (not regenerated here): [deployment-guide.md](deployment-guide.md) and [kubernetes-deployment-architecture.md](kubernetes-deployment-architecture.md), plus [deployment-security-checklist.md](deployment-security-checklist.md).
+Production shape is Kubernetes via **aspirate** (pinned `9.1.0`): `pwsh deploy/k8s/publish.ps1 -ConfirmContext <ctx>`. Expect **12 pods** (`eventstore`, `eventstore-admin`, `eventstore-admin-ui`, `parties`, `parties-mcp`, `parties-ui`, `tenants`, `memories`, `sample`, `sample-blazor-ui`, `redis`, `falkordb`); 8 run a `daprd` sidecar. `parties-ui` is the browser UI/BFF workload and does not run Dapr. Authoritative DAPR CRs in `deploy/dapr/`; OCI registry in `deploy/zot/`. **Authoritative references** (not regenerated here): [deployment-guide.md](deployment-guide.md) and [kubernetes-deployment-architecture.md](kubernetes-deployment-architecture.md), plus [deployment-security-checklist.md](deployment-security-checklist.md).
 
 ---
 

@@ -98,6 +98,9 @@ public sealed class ValidateDeploymentLintFitnessTests : IDisposable
         source.ShouldContain("$JsonVersion = '1'");
         source.ShouldContain("^-Output$");
         source.ShouldContain("^--config-path$");
+        source.ShouldContain("$ForbiddenDaprAppIds = @('parties-mcp', 'parties-ui', 'redis', 'falkordb')");
+        source.ShouldContain("Test-HasAnyDaprAnnotations");
+        source.ShouldContain("non-Dapr workload must not carry Dapr annotations");
         foreach (string category in s_expectedCategories)
         {
             source.ShouldContain(category);

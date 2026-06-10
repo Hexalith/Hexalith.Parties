@@ -49,7 +49,7 @@ by the infra team — see [`../zot/README.md`](../zot/README.md) "Out-of-band Se
 ## Publish + teardown (one-command flow)
 
 `publish.ps1` confirms the active kubectl context, resolves the MinVer image tag, regenerates
-the nine Aspirate-owned service folders, preserves Redis/FalkorDB carve-outs, patches Dapr
+the ten Aspirate-owned application service folders, preserves Redis/FalkorDB carve-outs, patches Dapr
 annotations, Keycloak host aliases, UI credential Secret refs, health probes, and image pull
 secrets, verifies Zot image manifests, runs the static deployment validator, initializes Dapr
 when needed, validates operator-managed Secrets, applies `deploy/dapr/` in dependency order, then applies this
@@ -82,7 +82,7 @@ every run for auditability (per ADR D-K8s-3).
 > | Path | Owning story | Purpose |
 > |---|---|---|
 > | `../zot/` | Story 9.1 | Delivered: Zot OCI registry, credentials, and deployment documentation |
-> | `eventstore/`, `eventstore-admin/`, `eventstore-admin-ui/`, `sample/`, `sample-blazor-ui/`, `parties/`, `parties-mcp/`, `tenants/`, `memories/` | Story 9.2 + 2026-05-27 correction | Delivered: Aspirate-emitted per-service manifests |
+> | `eventstore/`, `eventstore-admin/`, `eventstore-admin-ui/`, `sample/`, `sample-blazor-ui/`, `parties/`, `parties-mcp/`, `parties-ui/`, `tenants/`, `memories/` | Story 9.2 + 2026-05-27 correction + Story 1.10 | Delivered: Aspirate-emitted per-service manifests |
 > | `namespace.yaml`, `kustomization.yaml`, `ingress.yaml` | Story 9.2 + 2026-05-27 correction | Delivered: top-level namespace, Kustomize wiring, and UI host ingress |
 > | `redis/` | Story 9.3 | Delivered: hand-authored Redis carve-out outside Aspirate regeneration |
 > | external `keycloak/keycloak` realm `tache` | Story 9.13 | Delivered: platform Keycloak reused outside the Parties namespace |
@@ -109,7 +109,8 @@ The validator is read-only and does not use `kubectl`, `helm`, `dapr`, kubeconfi
 epic text. Findings use exact category strings and redact credential-shaped values.
 `K8sIngress-InvalidPublicRoute` is the guardrail for `ingress.yaml`: the only public
 backends allowed are `eventstore-admin-ui:8080` for `eventstore.hexalith.com` and
-`sample-blazor-ui:8080` for `sample.hexalith.com`, with class `nginx` and TLS Secret
+`sample-blazor-ui:8080` for `sample.hexalith.com`, and `parties-ui:8080` for
+`parties.hexalith.com`, with class `nginx` and TLS Secret
 `hexalith-pages-tls`.
 
 ---
@@ -137,7 +138,7 @@ Components -> Resiliency -> Configurations -> Subscriptions. Do not add the Dapr
   `accesscontrol-tenants`, and `memories` -> `accesscontrol-memories`.
 - Preserve `eventstore-admin-ui` and `sample-blazor-ui` as Dapr client-only: each carries
   `dapr.io/enabled: "true"` and `dapr.io/app-id`, but no `dapr.io/app-port` and no
-  `dapr.io/config`. `parties-mcp`, `redis`, and `falkordb` remain true
+  `dapr.io/config`. `parties-ui`, `parties-mcp`, `redis`, and `falkordb` remain true
   non-Dapr workloads.
 
 Runtime smoke tests for Story 9.5:
@@ -168,7 +169,7 @@ The Story 9.5 clean phase must preserve:
 - `deploy/k8s/_lib/`
 
 All other files and folders under `deploy/k8s/` are eligible for cleanup before Aspirate
-regeneration, except the nine application service folders after they are regenerated.
+regeneration, except the ten application service folders after they are regenerated.
 
 Redis is MVP/non-production only: it uses `emptyDir` storage, no AUTH, no replication, and no
 HA shape. Data is lost when the Pod is recreated or rescheduled. Production persistence,
@@ -193,6 +194,12 @@ Operators must pre-create Secret `hexalith-tache-ui-credentials` in namespace
 and patches them as `EventStore__Authentication__Username` and
 `EventStore__Authentication__Password` without printing values.
 
+`parties-ui` is a confidential OIDC relying party. Operators must pre-create Secret
+`hexalith-parties-ui-oidc-client` in namespace `hexalith-parties` with key `client-secret`.
+`publish.ps1` validates only that the key exists, removes any generated inline
+`Authentication__OpenIdConnect__ClientSecret` value, and patches a `secretKeyRef` into
+`parties-ui/deployment.yaml`.
+
 Do not put real values in docs, shell history, manifests, Kustomize generators, or env files.
 
 ## Public UI hosts
@@ -201,20 +208,28 @@ Do not put real values in docs, shell history, manifests, Kustomize generators, 
 
 - `eventstore.hexalith.com` -> `eventstore-admin-ui` service port `8080`
 - `sample.hexalith.com` -> `sample-blazor-ui` service port `8080`
+- `parties.hexalith.com` -> `parties-ui` service port `8080`
 
-Before live HTTPS checks, DNS for both hosts must point at the nginx ingress endpoint and
+Before live HTTPS checks, DNS for all three hosts must point at the nginx ingress endpoint and
 Secret `hexalith-pages-tls` must exist in namespace `hexalith-parties`. If the cluster does
 not yet have an ingress controller, a host-level nginx bridge may temporarily proxy to
 `eventstore-admin-ui.hexalith-parties.svc.cluster.local:8080` and
-`sample-blazor-ui.hexalith-parties.svc.cluster.local:8080`; the cluster operator owns that
+`sample-blazor-ui.hexalith-parties.svc.cluster.local:8080`, and
+`parties-ui.hexalith-parties.svc.cluster.local:8080`; the cluster operator owns that
 bridge, and it must be removed once the in-cluster nginx ingress controller serves the
 committed Ingress.
 
-The sample Blazor UI keeps SignalR on the internal Kubernetes URL
+The sample Blazor UI and `parties-ui` keep SignalR on the internal Kubernetes URL
 `http://eventstore:8080/hubs/projection-changes`. That path is not exposed through public
 Ingress and is outside Dapr ACL enforcement. Page routing does not prove authenticated
 backend operation; Story 9.13 external Keycloak `tache` wiring and
 `hexalith-tache-ui-credentials` must also be healthy.
+
+Production KMS is a release gate, not a feature delivered by this deployment story.
+`Parties:CryptoShredding:IsEnabled` remains enabled by default, but
+`LocalDevKeyStorageBackend` is in-memory and dev-only. Replace it with a production KMS or
+secret-store-backed provider before processing real EU PII; use synthetic data only until
+that gate is met.
 
 ---
 

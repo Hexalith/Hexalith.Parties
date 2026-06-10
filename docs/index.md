@@ -58,7 +58,7 @@
 
 ### Deployment & CI
 - [Deployment Guide](./deployment-guide.md) — full Kubernetes/aspirate deployment (canonical)
-- [Kubernetes Deployment Architecture](./kubernetes-deployment-architecture.md) — 11-pod cluster topology & reproducibility contracts
+- [Kubernetes Deployment Architecture](./kubernetes-deployment-architecture.md) — 12-pod cluster topology & reproducibility contracts
 - [CI](./ci.md) · [Build Gate](./build-gate.md) · [CI Secrets Checklist](./ci-secrets-checklist.md)
 
 ### Frontend

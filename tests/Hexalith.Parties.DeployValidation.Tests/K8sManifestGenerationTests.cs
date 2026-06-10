@@ -11,6 +11,7 @@ public sealed class K8sManifestGenerationTests
         "memories",
         "parties",
         "parties-mcp",
+        "parties-ui",
         "sample",
         "sample-blazor-ui",
         "tenants",
@@ -68,6 +69,8 @@ public sealed class K8sManifestGenerationTests
         ingress.ShouldContain("name: eventstore-admin-ui");
         ingress.ShouldContain("host: sample.hexalith.com");
         ingress.ShouldContain("name: sample-blazor-ui");
+        ingress.ShouldContain("host: parties.hexalith.com");
+        ingress.ShouldContain("name: parties-ui");
         ingress.ShouldNotContain("name: eventstore\n");
         ingress.ShouldNotContain("name: eventstore-admin\n");
         ingress.ShouldNotContain("name: parties\n");
@@ -88,6 +91,38 @@ public sealed class K8sManifestGenerationTests
         sampleUi.ShouldContain("dapr.io/app-id: sample-blazor-ui");
         sampleUi.ShouldNotContain("dapr.io/app-port");
         sampleUi.ShouldNotContain("dapr.io/config");
+    }
+
+    [Fact]
+    public void PartiesUiIsBrowserOnlyNonDaprWorkloadWithOidcSecretReference()
+    {
+        string deployment = File.ReadAllText(Path.Combine(DeploymentTestPaths.K8sDirectory, "parties-ui", "deployment.yaml"));
+        string service = File.ReadAllText(Path.Combine(DeploymentTestPaths.K8sDirectory, "parties-ui", "service.yaml"));
+        string kustomization = File.ReadAllText(Path.Combine(DeploymentTestPaths.K8sDirectory, "parties-ui", "kustomization.yaml"));
+
+        deployment.ShouldContain("name: parties-ui");
+        deployment.ShouldContain("image: registry.hexalith.com/parties-ui:");
+        deployment.ShouldContain("name: zot-pull-secret");
+        deployment.ShouldContain("path: /health");
+        deployment.ShouldContain("port: http");
+        deployment.ShouldNotContain("dapr.io/enabled");
+        deployment.ShouldNotContain("dapr.io/app-id");
+        deployment.ShouldNotContain("dapr.io/app-port");
+        deployment.ShouldNotContain("dapr.io/config");
+        deployment.ShouldContain("name: Authentication__OpenIdConnect__ClientSecret");
+        deployment.ShouldContain("secretKeyRef:");
+        deployment.ShouldContain("name: hexalith-parties-ui-oidc-client");
+        deployment.ShouldContain("key: client-secret");
+        deployment.ShouldNotContain("value: Authentication__OpenIdConnect__ClientSecret");
+
+        service.ShouldContain("name: parties-ui");
+        service.ShouldContain("port: 8080");
+        service.ShouldContain("targetPort: 8080");
+
+        kustomization.ShouldContain("Authentication__OpenIdConnect__Authority=http://auth.tache.ai:8080/realms/tache");
+        kustomization.ShouldContain("Authentication__OpenIdConnect__ClientId=hexalith-parties-ui");
+        kustomization.ShouldContain("Authentication__OpenIdConnect__Audience=hexalith-eventstore");
+        kustomization.ShouldNotContain("Authentication__OpenIdConnect__ClientSecret=");
     }
 
     private static string[] NormalizeNonImageLines(string text)

@@ -2,6 +2,7 @@ using Hexalith.FrontComposer.Shell.Extensions;
 using Hexalith.Parties.Client.Abstractions;
 using Hexalith.Parties.Client.AdminPortal;
 using Hexalith.Parties.Client.Extensions;
+using Hexalith.Parties.ServiceDefaults;
 using Hexalith.Parties.UI;
 using Hexalith.Parties.UI.Authentication;
 using Hexalith.Parties.UI.Components;
@@ -11,6 +12,7 @@ using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.FluentUI.AspNetCore.Components;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
+builder.AddServiceDefaults();
 
 // ADR-030 — ValidateScopes=true so a Singleton capturing a Scoped service fails at boot
 // (not silently leak across tenants). MUST sit on the host builder before service resolution.
@@ -158,5 +160,7 @@ if (authEnabled)
 {
     _ = app.MapHexalithFrontComposerAuthenticationEndpoints();
 }
+
+app.MapDefaultEndpoints();
 
 app.Run();

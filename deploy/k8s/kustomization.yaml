@@ -11,6 +11,7 @@ resources:
   - memories
   - parties
   - parties-mcp
+  - parties-ui
   - tenants
   - redis
   - falkordb

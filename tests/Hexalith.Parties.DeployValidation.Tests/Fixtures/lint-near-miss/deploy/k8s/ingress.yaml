@@ -25,8 +25,19 @@ spec:
                 name: sample-blazor-ui
                 port:
                   number: 8080
+    - host: parties.hexalith.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: parties-ui
+                port:
+                  number: 8080
   tls:
     - hosts:
         - eventstore.hexalith.com
         - sample.hexalith.com
+        - parties.hexalith.com
       secretName: hexalith-pages-tls

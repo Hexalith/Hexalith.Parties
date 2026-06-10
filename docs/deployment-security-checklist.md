@@ -152,6 +152,9 @@ Parties does not create tenant lifecycle, membership, role, global administrator
 
 ## v1.1 Preparation (Secret Store & Key Management)
 
+- [ ] `Parties:CryptoShredding:IsEnabled` remains enabled; do not disable it to bypass deployment readiness
+- [ ] `LocalDevKeyStorageBackend` is replaced before any real EU PII is processed; it is in-memory/dev-only and can lose key material on restart
+- [ ] Real EU PII is blocked until a production KMS/secret-store-backed key provider is deployed and validated; synthetic data only before that gate
 - [ ] Secret store component deployed and accessible
 - [ ] Key management infrastructure provisioned (Azure Key Vault, HashiCorp Vault, etc.)
 - [ ] Tenant key provider can create or select tenant key material without returning raw tenant keys to status, logs, metrics, or audit records

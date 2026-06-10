@@ -53,7 +53,7 @@ development_status:
   1-7-live-freshness-via-signalr-shared-optimistic-reconcile-effect: done
   1-8-shared-domain-components-party-state-badge-freshness-indicator-gdpr-destructive-button: done
   1-9-accessibility-foundation-and-ci-a11y-gate-wcag-2-2-aa: done
-  1-10-deploy-parties-ui-container-k8s-with-production-kms-prerequisite-gate: backlog
+  1-10-deploy-parties-ui-container-k8s-with-production-kms-prerequisite-gate: done
   epic-1-retrospective: optional
 
   # ── Epic 2: Admin — Party Records Management ─────────────────────────────

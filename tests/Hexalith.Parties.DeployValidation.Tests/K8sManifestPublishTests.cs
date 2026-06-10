@@ -7,7 +7,7 @@ public sealed class K8sManifestPublishTests
 
     private static readonly string[] s_daprClientOnlyApps = ["eventstore-admin-ui", "sample-blazor-ui"];
 
-    private static readonly string[] s_nonDaprApps = ["parties-mcp", "redis", "falkordb"];
+    private static readonly string[] s_nonDaprApps = ["parties-mcp", "parties-ui", "redis", "falkordb"];
 
     [Fact]
     public void PublishScriptDeclaresMinVerAspirateAndPatchContracts()
@@ -57,11 +57,14 @@ public sealed class K8sManifestPublishTests
         }
 
         publish.ShouldContain("$DaprClientOnlyTargets = @('eventstore-admin-ui', 'sample-blazor-ui')");
-        publish.ShouldContain("$ForbiddenDaprTargets = @('parties-mcp', 'redis', 'falkordb')");
+        publish.ShouldContain("$ForbiddenDaprTargets = @('parties-mcp', 'parties-ui', 'redis', 'falkordb')");
         publish.ShouldContain("http://auth.tache.ai:8080/realms/tache");
         publish.ShouldContain("$UiCredentialsSecretName = 'hexalith-tache-ui-credentials'");
+        publish.ShouldContain("$PartiesUiOidcSecretName = 'hexalith-parties-ui-oidc-client'");
+        publish.ShouldContain("$PartiesUiOidcSecretKey = 'client-secret'");
         publish.ShouldContain("EventStore__Authentication__Username");
         publish.ShouldContain("EventStore__Authentication__Password");
+        publish.ShouldContain("Authentication__OpenIdConnect__ClientSecret");
         publish.ShouldContain("Patch-KeycloakHostAlias");
         publish.ShouldContain("Test-KeycloakTacheRealmContract");
         publish.ShouldContain("Assert-KeycloakTokenContract");
@@ -71,6 +74,11 @@ public sealed class K8sManifestPublishTests
         publish.ShouldContain("secretKeyRef:");
         publish.ShouldContain("name: $UiCredentialsSecretName");
         publish.ShouldContain("Validate-UiCredentialsSecret");
+        publish.ShouldContain("Validate-PartiesUiOidcClientSecret");
+        publish.ShouldContain("$presenceTemplate = \"{{- if index .data `\"$PartiesUiOidcSecretKey`\" -}}present{{- end -}}\"");
+        publish.ShouldContain("go-template=$presenceTemplate");
+        publish.ShouldNotContain("jsonpath={.data.$PartiesUiOidcSecretKey}");
+        publish.ShouldContain("Ensure-PartiesUiOidcClientSecretRef");
         publish.ShouldContain("Assert-NoSigningKeyReferences");
         publish.ShouldNotContain("Ensure-JwtSecretRef");
         publish.ShouldNotContain("Ensure-UiJwtSecretRefs");
@@ -97,5 +105,21 @@ public sealed class K8sManifestPublishTests
         project.ShouldContain("<IsPublishable>true</IsPublishable>");
         project.ShouldContain("<EnableContainer>true</EnableContainer>");
         project.ShouldContain("<ContainerRepository>parties-mcp</ContainerRepository>");
+    }
+
+    [Fact]
+    public void PartiesUiProjectIsPublishableForContainerEmissionAndServiceDefaults()
+    {
+        string project = DeploymentTestPaths.ReadRepoFile("src/Hexalith.Parties.UI/Hexalith.Parties.UI.csproj");
+        string program = DeploymentTestPaths.ReadRepoFile("src/Hexalith.Parties.UI/Program.cs");
+
+        project.ShouldContain("<IsPublishable>true</IsPublishable>");
+        project.ShouldContain("<EnableContainer>true</EnableContainer>");
+        project.ShouldContain("<ContainerRepository>parties-ui</ContainerRepository>");
+        project.ShouldContain("..\\Hexalith.Parties.ServiceDefaults\\Hexalith.Parties.ServiceDefaults.csproj");
+        project.ShouldNotContain("Version=");
+        program.ShouldContain("using Hexalith.Parties.ServiceDefaults;");
+        program.ShouldContain("builder.AddServiceDefaults();");
+        program.ShouldContain("app.MapDefaultEndpoints();");
     }
 }

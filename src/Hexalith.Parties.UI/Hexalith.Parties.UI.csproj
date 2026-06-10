@@ -3,6 +3,8 @@
   <PropertyGroup>
     <IsPackable>false</IsPackable>
     <IsPublishable>true</IsPublishable>
+    <EnableContainer>true</EnableContainer>
+    <ContainerRepository>parties-ui</ContainerRepository>
     <!-- TargetFramework (net10.0), Nullable, ImplicitUsings, TreatWarningsAsErrors all inherited
          from Directory.Build.props — DO NOT redeclare. -->
     <!-- HFC1001 (FrontComposer.SourceTools analyzer, Warning): "No [Command] or [Projection]
@@ -36,6 +38,7 @@
          fitness-pinned boundary. Same-repo siblings, so relative paths (not $(HexalithFrontComposerRoot)). -->
     <ProjectReference Include="..\Hexalith.Parties.Client\Hexalith.Parties.Client.csproj" />
     <ProjectReference Include="..\Hexalith.Parties.Contracts\Hexalith.Parties.Contracts.csproj" />
+    <ProjectReference Include="..\Hexalith.Parties.ServiceDefaults\Hexalith.Parties.ServiceDefaults.csproj" />
     <!-- Story 1.7 (AR-D6) — the low-level EventStore SignalR transport (EventStoreSignalRClient) the
          host-owned PartiesProjectionSubscription wraps for live projection-freshness. Deliberately NOT
          FrontComposer's high-level AddHexalithEventStore (which would swap the typed Parties.Client) —

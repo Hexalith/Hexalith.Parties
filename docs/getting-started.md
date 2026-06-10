@@ -75,7 +75,7 @@ Readiness is confirmed by the Aspire dashboard health column and by the service-
 
 > **Canonical reference:** [Kubernetes Deployment Architecture](kubernetes-deployment-architecture.md) — full cluster topology and reproducibility contracts.
 
-This step is an **alternative** to Step 1 for evaluating the production-shape deployment path against a Kubernetes cluster — see [Kubernetes Deployment Architecture](kubernetes-deployment-architecture.md) for the full 10-pod topology and reproducibility contracts. The publish script accepts only the context the operator confirms via `-ConfirmContext` (Story 9.5, ADR D-K8s-3); use an operator-controlled sandbox context or the in-MVP platform cluster. The Aspire-mode walkthrough in Step 1 remains valid and is the default path for everyday development.
+This step is an **alternative** to Step 1 for evaluating the production-shape deployment path against a Kubernetes cluster — see [Kubernetes Deployment Architecture](kubernetes-deployment-architecture.md) for the full 12-pod topology and reproducibility contracts. The publish script accepts only the context the operator confirms via `-ConfirmContext` (Story 9.5, ADR D-K8s-3); use an operator-controlled sandbox context or the in-MVP platform cluster. The Aspire-mode walkthrough in Step 1 remains valid and is the default path for everyday development.
 
 **Time budget:** the entire walkthrough — `publish.ps1` through the first successful `CreateParty` command — fits inside the `< 15 min` first-deploy budget (NFR30) on a developer-class machine that already has the prerequisites installed.
 
@@ -87,15 +87,15 @@ kubectl config use-context kubernetes-admin@cluster.local   # or your local cont
 pwsh deploy/k8s/publish.ps1 -ConfirmContext kubernetes-admin@cluster.local
 ```
 
-`publish.ps1` resolves the MinVer version from the AppHost, runs `dotnet aspirate generate` (building and pushing container images to `registry.hexalith.com/<app-id>:<minver>`), patches the consumer Deployments (Dapr annotations, Keycloak host alias, UI credential Secret refs, health probes, and `imagePullSecrets: zot-pull-secret`), verifies the reported image manifests exist in Zot, runs the static deployment validator, installs DAPR only when no healthy control plane exists, validates Secret `hexalith-tache-ui-credentials`, bootstraps `zot-pull-secret`, applies the authoritative DAPR component CRs from `deploy/dapr/`, then applies the workloads via kustomize. Verify pod readiness:
+`publish.ps1` resolves the MinVer version from the AppHost, runs `dotnet aspirate generate` (building and pushing container images to `registry.hexalith.com/<app-id>:<minver>`), patches the consumer Deployments (Dapr annotations, Keycloak host alias, UI credential Secret refs, health probes, and `imagePullSecrets: zot-pull-secret`), verifies the reported image manifests exist in Zot, runs the static deployment validator, installs DAPR only when no healthy control plane exists, validates Secrets `hexalith-tache-ui-credentials` and `hexalith-parties-ui-oidc-client`, bootstraps `zot-pull-secret`, applies the authoritative DAPR component CRs from `deploy/dapr/`, then applies the workloads via kustomize. Verify pod readiness:
 
 ```bash
 kubectl get pods -n hexalith-parties
 ```
 
-Expect **eleven Parties-owned pods** in `Running` state by default (`eventstore`, `eventstore-admin`, `eventstore-admin-ui`, `sample`, `sample-blazor-ui`, `parties`, `parties-mcp`, `tenants`, `memories`, `redis`, `falkordb`). Authentication uses the existing platform Keycloak service in namespace `keycloak`, realm `tache`, with issuer `http://auth.tache.ai:8080/realms/tache`; no Keycloak workload is deployed in `hexalith-parties`. Epic 9 v2 closes FR31a's enumerative service-graph contract by composing Memories.Server in-cluster, shipping Redis as a hand-authored Dapr backing store, shipping FalkorDB as the Memories graph backing store, and exposing the EventStore Admin UI plus sample Blazor UI through `deploy/k8s/ingress.yaml`.
+Expect **twelve Parties-owned pods** in `Running` state by default (`eventstore`, `eventstore-admin`, `eventstore-admin-ui`, `sample`, `sample-blazor-ui`, `parties`, `parties-mcp`, `parties-ui`, `tenants`, `memories`, `redis`, `falkordb`). Authentication uses the existing platform Keycloak service in namespace `keycloak`, realm `tache`, with issuer `http://auth.tache.ai:8080/realms/tache`; no Keycloak workload is deployed in `hexalith-parties`. Epic 9 v2 closes FR31a's enumerative service-graph contract by composing Memories.Server in-cluster, shipping Redis as a hand-authored Dapr backing store, shipping FalkorDB as the Memories graph backing store, and exposing the EventStore Admin UI, sample Blazor UI, and Parties UI through `deploy/k8s/ingress.yaml`.
 
-**Eight** of the eleven Parties-owned pods run a `daprd` sidecar. `eventstore`, `eventstore-admin`, `sample`, `parties`, `tenants`, and `memories` are full Dapr services. `eventstore-admin-ui` and `sample-blazor-ui` are Dapr client-only for UI -> backend service invocation. `parties-mcp`, `redis`, and `falkordb` do not run Dapr. Confirm the Dapr annotations:
+**Eight** of the twelve Parties-owned pods run a `daprd` sidecar. `eventstore`, `eventstore-admin`, `sample`, `parties`, `tenants`, and `memories` are full Dapr services. `eventstore-admin-ui` and `sample-blazor-ui` are Dapr client-only for UI -> backend service invocation. `parties-ui`, `parties-mcp`, `redis`, and `falkordb` do not run Dapr. Confirm the Dapr annotations:
 
 ```bash
 for app in eventstore eventstore-admin eventstore-admin-ui sample sample-blazor-ui parties tenants memories; do
@@ -104,16 +104,16 @@ for app in eventstore eventstore-admin eventstore-admin-ui sample sample-blazor-
 done
 ```
 
-The six full Dapr services should include `dapr.io/enabled: "true"`, `dapr.io/app-id`, `dapr.io/app-port: "8080"`, and `dapr.io/config: accesscontrol-<app-id>` (or `accesscontrol` for `eventstore`). `eventstore-admin-ui` and `sample-blazor-ui` should include only `dapr.io/enabled: "true"` and their `dapr.io/app-id`; they should not carry `dapr.io/app-port` or `dapr.io/config`. The `dapr.io/app-port` and per-app `dapr.io/config` annotations are injected by `publish.ps1` for full Dapr services (aspirate 9.1.0 does not emit them); see `deploy/k8s/README.md` "Known aspirate limitations".
+The six full Dapr services should include `dapr.io/enabled: "true"`, `dapr.io/app-id`, `dapr.io/app-port: "8080"`, and `dapr.io/config: accesscontrol-<app-id>` (or `accesscontrol` for `eventstore`). `eventstore-admin-ui` and `sample-blazor-ui` should include only `dapr.io/enabled: "true"` and their `dapr.io/app-id`; they should not carry `dapr.io/app-port` or `dapr.io/config`. `parties-ui` must not carry any Dapr annotations. The `dapr.io/app-port` and per-app `dapr.io/config` annotations are injected by `publish.ps1` for full Dapr services (aspirate 9.1.0 does not emit them); see `deploy/k8s/README.md` "Known aspirate limitations".
 
-**Operator-managed Secrets:** pre-create `hexalith-tache-ui-credentials` with keys `username` and `password` for the UI direct-access grant, then let `publish.ps1` create/update `zot-pull-secret` from Docker credentials. Verify names and types only:
+**Operator-managed Secrets:** pre-create `hexalith-tache-ui-credentials` with keys `username` and `password` for the EventStore UI direct-access grant, and `hexalith-parties-ui-oidc-client` with key `client-secret` for the Parties UI confidential OIDC client. Then let `publish.ps1` create/update `zot-pull-secret` from Docker credentials. Verify names and types only:
 
 ```bash
-kubectl get secret hexalith-tache-ui-credentials zot-pull-secret -n hexalith-parties
+kubectl get secret hexalith-tache-ui-credentials hexalith-parties-ui-oidc-client zot-pull-secret -n hexalith-parties
 kubectl -n hexalith-parties get secret zot-pull-secret -o jsonpath='{.type}'   # expect: kubernetes.io/dockerconfigjson
 ```
 
-The UI credential values are never printed by `publish.ps1`; missing Secret keys fail fast with only the Secret/key names in the diagnostic.
+The UI credential and OIDC client-secret values are never printed by `publish.ps1`; missing Secret keys fail fast with only the Secret/key names in the diagnostic.
 
 Port-forward the EventStore gateway so Step 3 (First Command) can reach it on `http://localhost:8080`:
 
@@ -504,7 +504,7 @@ A command can be accepted before the projection is queryable. Retry with bounded
 
 ### MVP Compliance Boundary
 
-This MVP is not approved for regulated EU personal data until v1.1 GDPR features are active. For evaluation, use synthetic names and non-sensitive contact data only. If sensitive data is accidentally entered in a non-production evaluation environment, stop using that dataset and follow your operator's manual deletion or environment rebuild procedure; do not treat the MVP as an erasure-complete system.
+This MVP is not approved for regulated EU personal data until the production KMS gate is met. `Parties:CryptoShredding:IsEnabled` is already enabled by default, but the current `LocalDevKeyStorageBackend` is in-memory and dev-only; a production KMS or secret-store-backed key provider must replace it before any real EU PII is processed. For evaluation, use synthetic names and non-sensitive contact data only. If sensitive data is accidentally entered in a non-production evaluation environment, stop using that dataset and follow your operator's manual deletion or environment rebuild procedure; do not treat the MVP as an erasure-complete system.
 
 The warning remains non-dismissable in service startup logs and response metadata through `X-Hexalith-Parties-Mvp-Compliance-Warning`. It can only be removed by explicitly setting `Parties:Compliance:GdprFeaturesActive=true` after the v1.1 GDPR feature set is active.
 

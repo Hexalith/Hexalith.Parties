@@ -49,6 +49,8 @@ $TacheIssuerHost = 'auth.tache.ai'
 $KeycloakNamespace = 'keycloak'
 $KeycloakServiceName = 'keycloak'
 $UiCredentialsSecretName = 'hexalith-tache-ui-credentials'
+$PartiesUiOidcSecretName = 'hexalith-parties-ui-oidc-client'
+$PartiesUiOidcSecretKey = 'client-secret'
 $ZotSecretName = 'zot-pull-secret'
 $Script:KeycloakClusterIp = $null
 
@@ -60,6 +62,7 @@ $GeneratedServiceFolders = @(
     'sample-blazor-ui',
     'parties',
     'parties-mcp',
+    'parties-ui',
     'tenants',
     'memories'
 )
@@ -95,7 +98,7 @@ $DaprPatchMap = [ordered]@{
 }
 
 $DaprClientOnlyTargets = @('eventstore-admin-ui', 'sample-blazor-ui')
-$ForbiddenDaprTargets = @('parties-mcp', 'redis', 'falkordb')
+$ForbiddenDaprTargets = @('parties-mcp', 'parties-ui', 'redis', 'falkordb')
 $LegacyLocalKeycloakResources = @(
     'deployment/keycloak',
     'service/keycloak',
@@ -229,7 +232,7 @@ function Resolve-MinVerTag {
     Write-Host "[publish] MinVer command: dotnet msbuild $AppHostProject -t:Build -p:Configuration=Release -getProperty:Version"
     Write-Host "[publish] MinVer raw: $raw"
     Write-Host "[publish] MinVer normalized image tag: $normalized"
-    Write-Host "[publish] Image proof: $Registry/parties:$normalized"
+    Write-Host "[publish] Image proof: $Registry/parties:$normalized and $Registry/parties-ui:$normalized"
     return $normalized
 }
 
@@ -337,6 +340,7 @@ resources:
   - memories
   - parties
   - parties-mcp
+  - parties-ui
   - tenants
   - redis
   - falkordb
@@ -616,6 +620,61 @@ function Ensure-UiCredentialSecretRefs {
     }
 
     Write-Host "[publish] UI credential secretKeyRef patch targets: $($names -join ', ')"
+}
+
+function Remove-ConfigMapLiteral([string] $Content, [string] $Name) {
+    return [regex]::Replace(
+        $Content,
+        "(?m)^\s+-\s*$([regex]::Escape($Name))=.*`r?`n?",
+        '')
+}
+
+function Ensure-PartiesUiOidcClientSecretRef {
+    $name = 'parties-ui'
+    $tuple = Read-DeploymentFile $name
+    $path = $tuple[0]
+    $content = $tuple[1]
+    $content = Remove-EnvEntry $content 'Authentication__OpenIdConnect__ClientSecret'
+    $content = $content -replace "(?m)^\s{8}env:\s*`r?`n\s{8}envFrom:", '        envFrom:'
+
+    $envBlock = @"
+        env:
+        - name: Authentication__OpenIdConnect__ClientSecret
+          valueFrom:
+            secretKeyRef:
+              name: $PartiesUiOidcSecretName
+              key: $PartiesUiOidcSecretKey
+"@
+
+    if ($content -match "(?m)^\s{8}envFrom:\s*$") {
+        $content = $content -replace "(?m)^(\s*)envFrom:\s*$", "$envBlock`n`$1envFrom:"
+    }
+    elseif ($content -match "(?m)^\s{6}terminationGracePeriodSeconds:\s*") {
+        $content = $content -replace "(?m)^(\s*)terminationGracePeriodSeconds:\s*", "$envBlock`n`$1terminationGracePeriodSeconds:"
+    }
+    else {
+        Fail $ExitGeneral "unable to locate insertion point for parties-ui OIDC client-secret env entry"
+    }
+
+    if ($content -notmatch "Authentication__OpenIdConnect__ClientSecret" -or
+        $content -notmatch "secretKeyRef:\s*`r?`n\s*name:\s*$PartiesUiOidcSecretName\s*`r?`n\s*key:\s*$PartiesUiOidcSecretKey") {
+        Fail $ExitGeneral 'parties-ui OIDC client-secret secretKeyRef postcondition failed'
+    }
+
+    Set-Content -LiteralPath $path -Value $content -NoNewline
+
+    $kustomizationPath = Join-Path $K8sRoot "$name/kustomization.yaml"
+    if (Test-Path -LiteralPath $kustomizationPath) {
+        $kustomization = Get-Content -Raw -LiteralPath $kustomizationPath
+        $kustomization = Remove-ConfigMapLiteral $kustomization 'Authentication__OpenIdConnect__ClientSecret'
+        if ($kustomization -match 'Authentication__OpenIdConnect__ClientSecret=') {
+            Fail $ExitGeneral 'parties-ui generated kustomization still contains an inline OIDC client secret'
+        }
+
+        Set-Content -LiteralPath $kustomizationPath -Value $kustomization -NoNewline
+    }
+
+    Write-Host "[publish] parties-ui OIDC client secretKeyRef: $PartiesUiOidcSecretName/$PartiesUiOidcSecretKey"
 }
 
 function Assert-NoSigningKeyReferences {
@@ -1321,6 +1380,16 @@ function Validate-UiCredentialsSecret {
     Write-Host "[publish] UI credential Secret validated: $UiCredentialsSecretName keys username,password"
 }
 
+function Validate-PartiesUiOidcClientSecret {
+    $presenceTemplate = "{{- if index .data `"$PartiesUiOidcSecretKey`" -}}present{{- end -}}"
+    $presence = Invoke-Checked 'kubectl' @('get', 'secret', $PartiesUiOidcSecretName, '-n', $Namespace, '-o', "go-template=$presenceTemplate") $ExitGeneral "required parties-ui OIDC Secret $PartiesUiOidcSecretName key '$PartiesUiOidcSecretKey' is missing"
+    if (($presence | Out-String).Trim() -ne 'present') {
+        Fail $ExitGeneral "required parties-ui OIDC Secret $PartiesUiOidcSecretName key '$PartiesUiOidcSecretKey' is missing"
+    }
+
+    Write-Host "[publish] parties-ui OIDC Secret validated: $PartiesUiOidcSecretName key $PartiesUiOidcSecretKey"
+}
+
 Require-Command 'kubectl'
 
 try {
@@ -1335,6 +1404,7 @@ catch {
 Write-Step 'Ensure namespace and preflight external auth'
 Ensure-Namespace
 Validate-UiCredentialsSecret
+Validate-PartiesUiOidcClientSecret
 Test-KeycloakTacheRealmContract
 
 Write-Step 'Resolve MinVer image tag'
@@ -1358,6 +1428,7 @@ Patch-KeycloakHostAlias
 Write-Step 'Patch UI credential secretKeyRefs'
 Remove-SigningKeyEnvEntries
 Ensure-UiCredentialSecretRefs
+Ensure-PartiesUiOidcClientSecretRef
 Assert-NoSigningKeyReferences
 
 Write-Step 'Patch health probes'
