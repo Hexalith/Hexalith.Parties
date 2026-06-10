@@ -88,7 +88,11 @@ The compact layout contract lives in `PartyPicker.razor.css`: a bounded `max-wid
 
 ## Accessibility And Localization
 
-The picker exposes a labeled search input, localized result-list name, polite atomic status region, localized retry and clear controls, native keyboard-operable result buttons, and a named selected-party region. Search results expose selected state through `aria-selected`; each option includes localized party-type and state text so selected, inactive, erased, local-only, degraded, unavailable, retryable, and loading states are not color-only.
+The picker exposes a labeled editable combobox input, localized result-list name, polite atomic status region, localized retry and clear controls, non-tabstop listbox options, and a named selected-party region. The input owns focus with `role="combobox"`, `aria-autocomplete="list"`, `aria-controls` pointing at the listbox id, `aria-expanded` reflecting whether the popup is visible, and `aria-activedescendant` pointing at the active option while keyboard navigation is inside the popup.
+
+The popup uses `role="listbox"` and each rendered result uses `role="option"` with a stable id derived from the current listbox id and result index. `ArrowDown` and `ArrowUp` move the active option while DOM focus remains on the input. `Enter` selects the active option, `Escape` closes the popup without changing the durable selection, and `Backspace` on an empty input clears the current selection through the same path as the clear button. Tab leaves the picker instead of walking every result.
+
+Search results expose active or selected state through `aria-selected`; each option includes localized party-type and state text so selected, inactive, erased, local-only, degraded, unavailable, retryable, and loading states are not color-only.
 
 Every user-facing picker string is supplied by `PartyPickerLabels` or by the host-provided `Labels` parameter. This includes labels, placeholders, result-list names, status messages, count summaries, retry and clear text, selected-display state text, and party-type display text. Hosts can replace these labels with FrontComposer/localized values without changing the durable selection contract.
 
@@ -112,15 +116,20 @@ The component renders all party data, labels, degraded states, and problem summa
 
 ## Theming
 
-The picker uses CSS custom properties that can be mapped to FrontComposer or Fluent UI tokens:
+The picker uses private `--hx-picker-*` aliases that resolve from Fluent 2/FrontComposer token inputs. Host shells can provide the Fluent tokens directly:
 
 ```css
 hexalith-party-picker {
-  --neutral-stroke-rest: var(--neutral-stroke-rest);
-  --neutral-layer-1: var(--neutral-layer-1);
-  --neutral-foreground-rest: var(--neutral-foreground-rest);
-  --accent-fill-rest: var(--accent-fill-rest);
+  --colorNeutralStroke1: var(--colorNeutralStroke1);
+  --colorNeutralBackground1: var(--colorNeutralBackground1);
+  --colorNeutralBackground2: var(--colorNeutralBackground2);
+  --colorNeutralForeground1: var(--colorNeutralForeground1);
+  --colorNeutralForeground3: var(--colorNeutralForeground3);
+  --colorBrandStroke1: var(--colorBrandStroke1);
+  --colorStatusDangerForeground1: var(--colorStatusDangerForeground1);
 }
 ```
+
+The production picker stylesheet does not use legacy FAST token names. Failure text is the only normal path that uses `--colorStatusDangerForeground1`; ordinary focus and active-option cues use brand/accent tokens plus shape/border changes so state is not color-only.
 
 No changes to the `Hexalith.FrontComposer` submodule are required.

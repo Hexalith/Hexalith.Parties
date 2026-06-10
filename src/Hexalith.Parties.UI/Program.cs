@@ -44,6 +44,7 @@ if (adminPortalE2eFixtureEnabled)
     builder.Services.Replace(ServiceDescriptor.Scoped<AuthenticationStateProvider, PartiesAdminPortalE2eAuthenticationStateProvider>());
     builder.Services.Replace(ServiceDescriptor.Scoped<IAdminPortalAuthorizationService, PartiesAdminPortalE2eAuthorizationService>());
     builder.Services.Replace(ServiceDescriptor.Scoped<IPartiesAdminPortalApiClient, PartiesAdminPortalE2eApiClient>());
+    builder.Services.Replace(ServiceDescriptor.Scoped<IPartiesQueryClient, PartiesAdminPortalE2ePartiesQueryClient>());
 }
 
 // Story 1.3 (AR-D2) — register the role-claim Admin + Consumer policies UNCONDITIONALLY (not gated

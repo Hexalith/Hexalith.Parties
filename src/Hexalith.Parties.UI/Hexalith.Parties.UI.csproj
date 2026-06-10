@@ -39,6 +39,7 @@
     <ProjectReference Include="..\Hexalith.Parties.AdminPortal\Hexalith.Parties.AdminPortal.csproj" />
     <ProjectReference Include="..\Hexalith.Parties.Client\Hexalith.Parties.Client.csproj" />
     <ProjectReference Include="..\Hexalith.Parties.Contracts\Hexalith.Parties.Contracts.csproj" />
+    <ProjectReference Include="..\Hexalith.Parties.Picker\Hexalith.Parties.Picker.csproj" />
     <ProjectReference Include="..\Hexalith.Parties.ServiceDefaults\Hexalith.Parties.ServiceDefaults.csproj" />
     <!-- Story 1.7 (AR-D6) — the low-level EventStore SignalR transport (EventStoreSignalRClient) the
          host-owned PartiesProjectionSubscription wraps for live projection-freshness. Deliberately NOT

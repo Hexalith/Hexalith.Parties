@@ -1,0 +1,26 @@
+@using Hexalith.Parties.Picker.Components
+@using Microsoft.AspNetCore.Hosting
+@attribute [Route(PartiesAccessibilitySpecimenRoutes.PartyPickerSpecimen)]
+@inject IConfiguration Configuration
+@inject IWebHostEnvironment Environment
+
+@if (PartiesAccessibilitySpecimenRoutes.IsEnabled(Configuration, Environment))
+{
+    <section class="parties-picker-specimen" data-testid="parties-picker-specimen" aria-labelledby="parties-picker-specimen-title">
+        <h1 id="parties-picker-specimen-title">Party picker specimen</h1>
+        <p data-testid="parties-picker-specimen-ready">Synthetic party picker ready.</p>
+
+        <PartyPicker AccessTokenProvider="GetAccessTokenAsync"
+                     ContextKey="party-picker-e2e"
+                     AuthContextKey="admin-e2e"
+                     DebounceMilliseconds="1" />
+    </section>
+}
+
+@code {
+    private static ValueTask<string?> GetAccessTokenAsync(CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        return ValueTask.FromResult<string?>("party-picker-e2e-token");
+    }
+}

@@ -4,7 +4,8 @@
 
 <section id="@_hostElementId" class="hx-party-picker" data-state="@_search.State.ToString().ToLowerInvariant()">
     <label class="hx-party-picker__label" for="@_inputElementId">@EffectiveLabels.SearchLabel</label>
-    <div class="hx-party-picker__input-row">
+    <div class="hx-party-picker__input-row"
+         onkeydown="const input=event.target;if(!input||!input.classList||!input.classList.contains('hx-party-picker__input')){return;}const host=input.closest('.hx-party-picker');const state=host?host.getAttribute('data-state'):'';const hasResults=state==='ready'||state==='localonly'||state==='degraded';if((((event.key==='ArrowDown'||event.key==='ArrowUp')&&hasResults)||(event.key==='Enter'&&input.getAttribute('aria-activedescendant'))||(event.key==='Escape'&&input.getAttribute('aria-expanded')==='true')||(event.key==='Backspace'&&input.value===''&&host&&host.querySelector('.hx-party-picker__selected')))){event.preventDefault();}">
         <input id="@_inputElementId"
                @ref="_inputElement"
                role="combobox"
@@ -16,11 +17,13 @@
                aria-describedby="@_statusElementId"
                aria-autocomplete="list"
                aria-haspopup="listbox"
-               aria-expanded="@(_search.HasResults ? "true" : "false")"
+               aria-expanded="@(IsPopupVisible ? "true" : "false")"
+               aria-activedescendant="@ActiveDescendantId"
                aria-readonly="@(ReadOnly ? "true" : null)"
                readonly="@(ReadOnly ? "readonly" : null)"
                disabled="@(Disabled ? "disabled" : null)"
-               @oninput="HandleInputAsync" />
+               @oninput="HandleInputAsync"
+               @onkeydown="HandleKeyDownAsync" />
         <button type="button"
                 class="hx-party-picker__icon-button"
                 disabled="@(IsInteractionDisabled || (_selected is null && !HasVisibleSearchText(_query)))"
@@ -49,16 +52,18 @@
         <button type="button" class="hx-party-picker__retry" aria-label="@RetryLabel" title="@RetryLabel" @onclick="RetryAsync">@RetryLabel</button>
     }
 
-    @if (_search.HasResults)
+    @if (IsPopupVisible)
     {
         <ul id="@_listElementId" class="hx-party-picker__results" role="listbox" aria-label="@EffectiveLabels.Results" aria-describedby="@_statusElementId">
             @foreach ((PartySearchResult result, int index) in _search.Results.Select((result, index) => (result, index)))
             {
                 <li class="hx-party-picker__result" role="presentation">
                     <button type="button"
+                            id="@OptionElementId(index)"
                             class="hx-party-picker__result-button"
                             role="option"
-                            aria-selected="@(IsSelected(result) ? "true" : "false")"
+                            tabindex="-1"
+                            aria-selected="@(IsActiveOrSelected(result, index) ? "true" : "false")"
                             aria-describedby="@ResultStatusElementId(index)"
                             disabled="@IsInteractionDisabled"
                             @onclick="() => SelectAsync(result)">
@@ -95,6 +100,8 @@
     private PartyPickerSelection? _selected;
     private string? _previousContextSignature;
     private string? _previousSelectionSignature;
+    private int _activeResultIndex = -1;
+    private bool _isPopupClosed;
     private long _searchVersion;
     private long _selectionVersion;
     private readonly string _hostElementId = $"hx-party-picker-{Guid.NewGuid():N}";
@@ -161,6 +168,13 @@
 
     private bool IsInteractionDisabled => Disabled || ReadOnly;
 
+    private bool IsPopupVisible => _search.HasResults && !_isPopupClosed;
+
+    private string? ActiveDescendantId
+        => IsPopupVisible && IsValidActiveResultIndex(_activeResultIndex)
+            ? OptionElementId(_activeResultIndex)
+            : null;
+
     private bool CanRetry
         => CanRetrySearch || CanRetrySelectedDisplay;
 
@@ -220,6 +234,8 @@
         }
 
         _query = args.Value?.ToString() ?? string.Empty;
+        _isPopupClosed = false;
+        ResetActiveResult();
         CancelPendingSelection();
         _selected = null;
         await SelectedPartyIdChanged.InvokeAsync(null).ConfigureAwait(false);
@@ -239,10 +255,12 @@
                 State = PartyPickerSearchState.Idle,
                 PageSize = PartyPickerApiClient.BoundPageSize(PageSize),
             };
+            ResetActiveResult();
             return;
         }
 
         _search = _search with { State = PartyPickerSearchState.Loading, Results = [] };
+        ResetActiveResult();
         await InvokeAsync(StateHasChanged).ConfigureAwait(false);
         long version = ++_searchVersion;
         _searchCts = new CancellationTokenSource();
@@ -258,6 +276,7 @@
                 await InvokeAsync(() =>
                 {
                     _search = response;
+                    ResetActiveResult();
                     StateHasChanged();
                 }).ConfigureAwait(false);
             }
@@ -336,6 +355,8 @@
     private async Task SelectAsync(PartySearchResult result)
     {
         CancelPendingSelection();
+        _isPopupClosed = true;
+        ResetActiveResult();
         _selected = new PartyPickerSelection
         {
             PartyId = result.Party.Id,
@@ -363,6 +384,8 @@
         CancelPendingSelection();
         _query = string.Empty;
         _selected = null;
+        _isPopupClosed = false;
+        ResetActiveResult();
         _search = new PartyPickerSearchResponse
         {
             State = PartyPickerSearchState.Idle,
@@ -409,6 +432,8 @@
         CancelPendingSelection();
         _query = string.Empty;
         _selected = null;
+        _isPopupClosed = false;
+        ResetActiveResult();
         _search = new PartyPickerSearchResponse
         {
             State = PartyPickerSearchState.Idle,
@@ -439,6 +464,7 @@
             CancelPendingSelection();
             _previousSelectionSignature = null;
             _selected = null;
+            ResetActiveResult();
             return;
         }
 
@@ -451,6 +477,7 @@
         }
 
         CancelPendingSelection();
+        ResetActiveResult();
         _previousSelectionSignature = selectionSignature;
         _selected = new PartyPickerSelection
         {
@@ -550,8 +577,69 @@
     private bool IsSelected(PartySearchResult result)
         => string.Equals(_selected?.PartyId, result.Party.Id, StringComparison.Ordinal);
 
+    private bool IsActiveOrSelected(PartySearchResult result, int index)
+        => IsValidActiveResultIndex(_activeResultIndex)
+            ? index == _activeResultIndex
+            : IsSelected(result);
+
+    private bool IsValidActiveResultIndex(int index)
+        => index >= 0 && index < _search.Results.Count;
+
+    private void ResetActiveResult()
+        => _activeResultIndex = -1;
+
+    private void MoveActiveResult(int delta)
+    {
+        if (!IsPopupVisible)
+        {
+            _isPopupClosed = false;
+        }
+
+        if (!_search.HasResults)
+        {
+            ResetActiveResult();
+            return;
+        }
+
+        int count = _search.Results.Count;
+        _activeResultIndex = !IsValidActiveResultIndex(_activeResultIndex)
+            ? delta >= 0 ? 0 : count - 1
+            : (_activeResultIndex + delta + count) % count;
+    }
+
+    private async Task HandleKeyDownAsync(KeyboardEventArgs args)
+    {
+        if (IsInteractionDisabled)
+        {
+            return;
+        }
+
+        switch (args.Key)
+        {
+            case "ArrowDown":
+                MoveActiveResult(1);
+                break;
+            case "ArrowUp":
+                MoveActiveResult(-1);
+                break;
+            case "Enter" when IsPopupVisible && IsValidActiveResultIndex(_activeResultIndex):
+                await SelectAsync(_search.Results[_activeResultIndex]).ConfigureAwait(false);
+                break;
+            case "Escape":
+                _isPopupClosed = true;
+                ResetActiveResult();
+                break;
+            case "Backspace" when !HasVisibleSearchText(_query) && _selected is not null:
+                await ClearAsync().ConfigureAwait(false);
+                break;
+        }
+    }
+
     private string ResultStatusElementId(int index)
         => $"{_listElementId}-option-{index.ToString(System.Globalization.CultureInfo.InvariantCulture)}-status";
+
+    private string OptionElementId(int index)
+        => $"{_listElementId}-option-{index.ToString(System.Globalization.CultureInfo.InvariantCulture)}";
 
     private static bool HasSelectionStatus(PartyPickerSelection selection)
         => selection.State != PartyPickerSelectionState.Available

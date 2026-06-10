@@ -13,6 +13,7 @@ using Hexalith.Parties.Picker.Tests.Fakes;
 using Hexalith.Parties.Picker.Tests.Services;
 
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Web;
 using Microsoft.Extensions.DependencyInjection;
 
 using Shouldly;
@@ -129,18 +130,25 @@ public sealed class PartyPickerComponentTests : BunitContext
             status.GetAttribute("aria-atomic").ShouldBe("true");
             list.GetAttribute("aria-label").ShouldBe("Resultats");
             list.GetAttribute("aria-describedby").ShouldBe(status.Id);
+            input.GetAttribute("aria-controls").ShouldBe(list.Id);
+            input.GetAttribute("aria-expanded").ShouldBe("true");
+            input.GetAttribute("aria-activedescendant").ShouldBeNull();
             options.Count.ShouldBe(2);
+            options[0].Id.ShouldNotBeNullOrWhiteSpace();
+            options[0].GetAttribute("tabindex").ShouldBe("-1");
             options[0].TextContent.ShouldContain("Personne");
             options[0].TextContent.ShouldContain("Actif");
             options[0].GetAttribute("aria-selected").ShouldBe("false");
             options[0].GetAttribute("aria-describedby").ShouldNotBeNullOrWhiteSpace();
+            options[1].Id.ShouldNotBeNullOrWhiteSpace();
+            options[1].GetAttribute("tabindex").ShouldBe("-1");
             options[1].TextContent.ShouldContain("Organisation");
             options[1].TextContent.ShouldContain("Inactif");
         });
     }
 
     [Fact]
-    public async Task PartyPicker_SearchResults_UseNativeKeyboardControlsAndExposeSelectedAndErasedState()
+    public async Task PartyPicker_SearchResults_UseInputOwnedListboxOptionsAndExposeSelectedAndErasedState()
     {
         var queryClient = new RecordingPartiesQueryClient();
         queryClient.Enqueue(SearchResultPage(
@@ -167,7 +175,7 @@ public sealed class PartyPickerComponentTests : BunitContext
             clear.HasAttribute("disabled").ShouldBeFalse();
             options.Count.ShouldBe(2);
             options.ShouldAllBe(option => option.GetAttribute("type") == "button");
-            options.ShouldAllBe(option => !option.HasAttribute("tabindex"));
+            options.ShouldAllBe(option => option.GetAttribute("tabindex") == "-1");
             options.ShouldAllBe(option => !option.HasAttribute("disabled"));
 
             string? erasedDescriptionId = options[1].GetAttribute("aria-describedby");
@@ -182,11 +190,262 @@ public sealed class PartyPickerComponentTests : BunitContext
 
         cut.WaitForAssertion(() =>
         {
-            IReadOnlyList<IElement> options = cut.FindAll("button[role=\"option\"]");
-            options[0].GetAttribute("aria-selected").ShouldBe("false");
-            options[1].GetAttribute("aria-selected").ShouldBe("true");
+            cut.Find("input").GetAttribute("aria-expanded").ShouldBe("false");
+            cut.Find("input").GetAttribute("aria-activedescendant").ShouldBeNull();
+            cut.FindAll("button[role=\"option\"]").ShouldBeEmpty();
             cut.Find(".hx-party-picker__selected").GetAttribute("role").ShouldBe("group");
             cut.Find(".hx-party-picker__badge").TextContent.ShouldBe("Erased");
+        });
+    }
+
+    [Fact]
+    public void PartyPicker_InputGuardsOnlyHandledComboboxKeysAtTheDomBoundary()
+    {
+        RegisterClient();
+
+        IRenderedComponent<PartyPicker> cut = Render<PartyPicker>(parameters => parameters
+            .Add(p => p.AccessToken, "host-token")
+            .Add(p => p.DispatchDomEvents, false));
+
+        string guard = cut.Find(".hx-party-picker__input-row").GetAttribute("onkeydown") ?? string.Empty;
+
+        guard.ShouldContain("preventDefault()");
+        guard.ShouldContain("hx-party-picker__input");
+        guard.ShouldContain("ArrowDown");
+        guard.ShouldContain("ArrowUp");
+        guard.ShouldContain("aria-activedescendant");
+        guard.ShouldContain("Escape");
+        guard.ShouldContain("Backspace");
+        guard.ShouldNotContain("event.key.length");
+        guard.ShouldNotContain("keypress");
+    }
+
+    [Fact]
+    public void PartyPicker_ArrowKeys_MoveActiveOptionWithInputOwnedFocus()
+    {
+        var queryClient = new RecordingPartiesQueryClient();
+        queryClient.Enqueue(SearchResultPage(
+            PartyPickerTestData.Result(id: "party-1", name: "Ada Lovelace"),
+            PartyPickerTestData.Result(id: "party-2", name: "Grace Hopper")));
+        RegisterClient(queryClient);
+
+        IRenderedComponent<PartyPicker> cut = Render<PartyPicker>(parameters => parameters
+            .Add(p => p.AccessToken, "host-token")
+            .Add(p => p.DebounceMilliseconds, 1)
+            .Add(p => p.DispatchDomEvents, false));
+
+        IElement input = cut.Find("input");
+        input.Input("a");
+        cut.WaitForAssertion(() => cut.FindAll("[role=\"option\"]").Count.ShouldBe(2));
+
+        input.KeyDown(new KeyboardEventArgs { Key = "ArrowDown" });
+
+        cut.WaitForAssertion(() =>
+        {
+            IElement refreshedInput = cut.Find("input");
+            IReadOnlyList<IElement> options = cut.FindAll("[role=\"option\"]");
+            refreshedInput.GetAttribute("aria-activedescendant").ShouldBe(options[0].Id);
+            options[0].GetAttribute("aria-selected").ShouldBe("true");
+            options[1].GetAttribute("aria-selected").ShouldBe("false");
+            options.ShouldAllBe(option => option.GetAttribute("tabindex") == "-1");
+        });
+
+        cut.Find("input").KeyDown(new KeyboardEventArgs { Key = "ArrowDown" });
+
+        cut.WaitForAssertion(() =>
+        {
+            IElement refreshedInput = cut.Find("input");
+            IReadOnlyList<IElement> options = cut.FindAll("[role=\"option\"]");
+            refreshedInput.GetAttribute("aria-activedescendant").ShouldBe(options[1].Id);
+            options[0].GetAttribute("aria-selected").ShouldBe("false");
+            options[1].GetAttribute("aria-selected").ShouldBe("true");
+        });
+
+        cut.Find("input").KeyDown(new KeyboardEventArgs { Key = "ArrowUp" });
+
+        cut.WaitForAssertion(() =>
+        {
+            IElement refreshedInput = cut.Find("input");
+            IReadOnlyList<IElement> options = cut.FindAll("[role=\"option\"]");
+            refreshedInput.GetAttribute("aria-activedescendant").ShouldBe(options[0].Id);
+            options[0].GetAttribute("aria-selected").ShouldBe("true");
+            options[1].GetAttribute("aria-selected").ShouldBe("false");
+        });
+    }
+
+    [Fact]
+    public void PartyPicker_Escape_ClosesPopupWithoutChangingSelection()
+    {
+        var queryClient = new RecordingPartiesQueryClient();
+        queryClient.Enqueue(SearchResultPage(PartyPickerTestData.Result(id: "party-1", name: "Ada Lovelace")));
+        RegisterClient(queryClient);
+        List<string?> durableIds = [];
+
+        IRenderedComponent<PartyPicker> cut = Render<PartyPicker>(parameters => parameters
+            .Add(p => p.AccessToken, "host-token")
+            .Add(p => p.DebounceMilliseconds, 1)
+            .Add(p => p.DispatchDomEvents, false)
+            .Add(p => p.SelectedPartyIdChanged, durableIds.Add));
+
+        cut.Find("input").Input("ada");
+        cut.WaitForAssertion(() => cut.FindAll("[role=\"option\"]").Count.ShouldBe(1));
+        cut.Find("input").KeyDown(new KeyboardEventArgs { Key = "ArrowDown" });
+        cut.Find("input").KeyDown(new KeyboardEventArgs { Key = "Escape" });
+
+        cut.WaitForAssertion(() =>
+        {
+            cut.Find("input").GetAttribute("aria-expanded").ShouldBe("false");
+            cut.Find("input").GetAttribute("aria-activedescendant").ShouldBeNull();
+            cut.FindAll("[role=\"listbox\"]").ShouldBeEmpty();
+        });
+        durableIds.ShouldBe([null]);
+    }
+
+    [Fact]
+    public async Task PartyPicker_Enter_SelectsActiveOptionThroughSameCallbackShapeAsPointer()
+    {
+        var queryClient = new RecordingPartiesQueryClient();
+        queryClient.Enqueue(SearchResultPage(
+            PartyPickerTestData.Result(id: "party-1", name: "Ada Lovelace"),
+            PartyPickerTestData.Result(id: "party-2", name: "Grace Hopper", type: PartyType.Person, active: false)));
+        RegisterClient(queryClient);
+        List<string?> durableIds = [];
+        List<PartyPickerSelection?> previews = [];
+
+        IRenderedComponent<PartyPicker> cut = Render<PartyPicker>(parameters => parameters
+            .Add(p => p.AccessToken, "host-token")
+            .Add(p => p.DebounceMilliseconds, 1)
+            .Add(p => p.DispatchDomEvents, false)
+            .Add(p => p.SelectedPartyIdChanged, durableIds.Add)
+            .Add(p => p.SelectedPartyChanged, previews.Add));
+
+        cut.Find("input").Input("g");
+        cut.WaitForAssertion(() => cut.FindAll("[role=\"option\"]").Count.ShouldBe(2));
+        cut.Find("input").KeyDown(new KeyboardEventArgs { Key = "ArrowDown" });
+        cut.Find("input").KeyDown(new KeyboardEventArgs { Key = "ArrowDown" });
+        await cut.InvokeAsync(() => cut.Find("input").KeyDown(new KeyboardEventArgs { Key = "Enter" }));
+
+        cut.WaitForAssertion(() =>
+        {
+            durableIds.ShouldBe([null, "party-2"]);
+            previews.Count.ShouldBe(2);
+            previews[1].ShouldNotBeNull();
+            previews[1]!.PartyId.ShouldBe("party-2");
+            previews[1]!.DisplayName.ShouldBe("Grace Hopper");
+            cut.Find(".hx-party-picker__selected-name").TextContent.ShouldBe("Grace Hopper");
+            cut.Find("input").GetAttribute("aria-activedescendant").ShouldBeNull();
+        });
+    }
+
+    [Fact]
+    public async Task PartyPicker_PointerAndKeyboardSelection_DispatchSameBoundedDomEventShape()
+    {
+        JSInterop.Mode = JSRuntimeMode.Loose;
+        BunitJSModuleInterop pickerModule = JSInterop.SetupModule("./_content/Hexalith.Parties.Picker/hexalith-parties-picker.js");
+        pickerModule.SetupVoid("dispatchPartySelected", _ => true);
+        var queryClient = new RecordingPartiesQueryClient();
+        queryClient.Enqueue(SearchResultPage(PartyPickerTestData.Result(
+            id: "party-pointer",
+            name: "Ada Lovelace",
+            type: PartyType.Person,
+            active: true)));
+        queryClient.Enqueue(SearchResultPage(PartyPickerTestData.Result(
+            id: "party-keyboard",
+            name: "Grace Hopper",
+            type: PartyType.Organization,
+            active: false)));
+        RegisterClient(queryClient);
+
+        IRenderedComponent<PartyPicker> cut = Render<PartyPicker>(parameters => parameters
+            .Add(p => p.AccessToken, "host-token")
+            .Add(p => p.DebounceMilliseconds, 1));
+
+        cut.Find("input").Input("ada");
+        cut.WaitForAssertion(() => cut.FindAll("[role=\"option\"]").Count.ShouldBe(1));
+        await cut.InvokeAsync(() => cut.Find("[role=\"option\"]").Click());
+
+        cut.Find("input").Input("grace");
+        cut.WaitForAssertion(() => cut.FindAll("[role=\"option\"]").Count.ShouldBe(1));
+        cut.Find("input").KeyDown(new KeyboardEventArgs { Key = "ArrowDown" });
+        cut.Find("input").KeyDown(new KeyboardEventArgs { Key = "Enter" });
+
+        cut.WaitForAssertion(() =>
+        {
+            IReadOnlyList<JSRuntimeInvocation> invocations = JSInterop.Invocations
+                .Where(invocation => invocation.Identifier == "dispatchPartySelected")
+                .ToArray();
+            invocations.Count.ShouldBe(2);
+
+            string pointerDetail = JsonSerializer.Serialize(invocations[0].Arguments[1]);
+            string keyboardDetail = JsonSerializer.Serialize(invocations[1].Arguments[1]);
+            pointerDetail.ShouldContain("party-pointer");
+            keyboardDetail.ShouldContain("party-keyboard");
+
+            foreach (string payload in new[] { pointerDetail, keyboardDetail })
+            {
+                payload.ShouldContain("partyId", Case.Insensitive);
+                payload.ShouldContain("partyType", Case.Insensitive);
+                payload.ShouldContain("status", Case.Insensitive);
+                payload.ShouldNotContain("Ada");
+                payload.ShouldNotContain("Grace");
+                payload.ShouldNotContain("tenant", Case.Insensitive);
+                payload.ShouldNotContain("token", Case.Insensitive);
+                payload.ShouldNotContain("query", Case.Insensitive);
+                payload.ShouldNotContain("problem", Case.Insensitive);
+            }
+        });
+    }
+
+    [Theory]
+    [InlineData(ProjectionFreshnessStatus.LocalOnly)]
+    [InlineData(ProjectionFreshnessStatus.Degraded)]
+    public void PartyPicker_LocalOnlyAndDegradedResults_CanBeSelectedByKeyboard(ProjectionFreshnessStatus freshnessStatus)
+    {
+        var queryClient = new RecordingPartiesQueryClient();
+        queryClient.Enqueue(SearchResultPage(
+            1,
+            ProjectionFreshnessMetadata.Create(freshnessStatus, "safe freshness status"),
+            PartyPickerTestData.Result(id: "party-1", name: "Ada Lovelace")));
+        RegisterClient(queryClient);
+        string? durablePartyId = null;
+
+        IRenderedComponent<PartyPicker> cut = Render<PartyPicker>(parameters => parameters
+            .Add(p => p.AccessToken, "host-token")
+            .Add(p => p.DebounceMilliseconds, 1)
+            .Add(p => p.DispatchDomEvents, false)
+            .Add(p => p.SelectedPartyIdChanged, value => durablePartyId = value));
+
+        cut.Find("input").Input("ada");
+        cut.WaitForAssertion(() => cut.FindAll("[role=\"option\"]").Count.ShouldBe(1));
+        cut.Find("input").KeyDown(new KeyboardEventArgs { Key = "ArrowDown" });
+        cut.Find("input").KeyDown(new KeyboardEventArgs { Key = "Enter" });
+
+        cut.WaitForAssertion(() => durablePartyId.ShouldBe("party-1"));
+    }
+
+    [Fact]
+    public void PartyPicker_EmptyBackspace_ClearsCurrentSelection()
+    {
+        var queryClient = new RecordingPartiesQueryClient();
+        RegisterClient(queryClient);
+        List<string?> durableIds = [];
+        List<PartyPickerSelection?> previews = [];
+
+        IRenderedComponent<PartyPicker> cut = Render<PartyPicker>(parameters => parameters
+            .Add(p => p.AccessToken, "host-token")
+            .Add(p => p.SelectedPartyId, "party-1")
+            .Add(p => p.DispatchDomEvents, false)
+            .Add(p => p.SelectedPartyIdChanged, durableIds.Add)
+            .Add(p => p.SelectedPartyChanged, previews.Add));
+
+        cut.WaitForAssertion(() => cut.Find(".hx-party-picker__selected-name").TextContent.ShouldBe("party-1"));
+        cut.Find("input").KeyDown(new KeyboardEventArgs { Key = "Backspace" });
+
+        cut.WaitForAssertion(() =>
+        {
+            durableIds.ShouldBe([null]);
+            previews.ShouldBe([null]);
+            cut.FindAll(".hx-party-picker__selected").ShouldBeEmpty();
         });
     }
 
@@ -1241,7 +1500,7 @@ public sealed class PartyPickerComponentTests : BunitContext
         {
             cut.Find(".hx-party-picker__selected-name").TextContent.ShouldBe("party-1");
             cut.Find(".hx-party-picker__badge").TextContent.ShouldBe("Selected party was not found");
-            cut.Markup.ShouldNotContain("Active");
+            cut.Find(".hx-party-picker__badge").TextContent.ShouldNotBe("Active");
         });
     }
 
@@ -1339,6 +1598,11 @@ public sealed class PartyPickerComponentTests : BunitContext
         string css = File.ReadAllText(cssPath);
 
         css.ShouldContain("grid-template-columns: minmax(0, 1fr) 2.25rem");
+        css.ShouldContain("--colorNeutralStroke1");
+        css.ShouldContain("--colorNeutralBackground1");
+        css.ShouldContain("--colorNeutralForeground1");
+        css.ShouldContain("--colorBrandStroke1");
+        css.ShouldContain("--colorStatusDangerForeground1");
         css.ShouldContain("max-width: min(100%, 32rem)");
         css.ShouldContain("max-width");
         css.ShouldContain("overflow-wrap: anywhere");
@@ -1348,8 +1612,41 @@ public sealed class PartyPickerComponentTests : BunitContext
         css.ShouldContain("@media (prefers-reduced-motion: reduce)");
         css.ShouldContain("max-width: min(100%, 8rem)");
         css.ShouldContain("white-space: normal");
+        css.ShouldContain("[aria-selected=\"true\"]");
         css.ShouldNotContain("white-space: nowrap");
         css.ShouldNotContain("content:");
+        css.ShouldNotContain("--neutral-stroke-rest");
+        css.ShouldNotContain("--neutral-layer-1");
+        css.ShouldNotContain("--neutral-layer-2");
+        css.ShouldNotContain("--neutral-foreground-rest");
+        css.ShouldNotContain("--neutral-foreground-hint");
+        css.ShouldNotContain("--accent-fill-rest");
+        css.ShouldNotContain("--error-fill-rest");
+    }
+
+    [Fact]
+    public void PartyPickerDocumentation_DescribesFluentTokensAndComboboxActiveDescendantContract()
+    {
+        string docsPath = Path.Combine(FindRepositoryRoot(), "docs", "frontend", "party-picker.md");
+        string docs = File.ReadAllText(docsPath);
+
+        docs.ShouldContain("--colorNeutralStroke1");
+        docs.ShouldContain("--colorNeutralBackground1");
+        docs.ShouldContain("--colorNeutralForeground1");
+        docs.ShouldContain("--colorStatusDangerForeground1");
+        docs.ShouldContain("aria-activedescendant");
+        docs.ShouldContain("role=\"listbox\"");
+        docs.ShouldContain("role=\"option\"");
+        docs.ShouldContain("partyId");
+        docs.ShouldContain("partyType");
+        docs.ShouldContain("status");
+        docs.ShouldNotContain("--neutral-stroke-rest");
+        docs.ShouldNotContain("--neutral-layer-1");
+        docs.ShouldNotContain("--neutral-layer-2");
+        docs.ShouldNotContain("--neutral-foreground-rest");
+        docs.ShouldNotContain("--neutral-foreground-hint");
+        docs.ShouldNotContain("--accent-fill-rest");
+        docs.ShouldNotContain("--error-fill-rest");
     }
 
     [Fact]

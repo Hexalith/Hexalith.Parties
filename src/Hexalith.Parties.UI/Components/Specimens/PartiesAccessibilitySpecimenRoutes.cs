@@ -14,6 +14,9 @@ public static class PartiesAccessibilitySpecimenRoutes
     /// <summary>Route for the deterministic shell accessibility specimen.</summary>
     public const string ShellSpecimen = "/__parties/specimens/accessibility";
 
+    /// <summary>Route for the deterministic party picker accessibility specimen.</summary>
+    public const string PartyPickerSpecimen = "/__parties/specimens/party-picker";
+
     /// <summary>
     /// Returns whether the host may expose specimen content.
     /// </summary>

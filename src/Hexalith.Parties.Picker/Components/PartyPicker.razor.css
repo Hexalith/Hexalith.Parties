@@ -1,11 +1,11 @@
 .hx-party-picker {
-  --hx-picker-border: var(--neutral-stroke-rest, #8a8f98);
-  --hx-picker-surface: var(--neutral-layer-1, #ffffff);
-  --hx-picker-surface-subtle: var(--neutral-layer-2, #f6f7f9);
-  --hx-picker-text: var(--neutral-foreground-rest, #1f2328);
-  --hx-picker-muted: var(--neutral-foreground-hint, #5b6573);
-  --hx-picker-accent: var(--accent-fill-rest, #0067b8);
-  --hx-picker-danger: var(--error-fill-rest, #b42318);
+  --hx-picker-border: var(--colorNeutralStroke1, #8a8f98);
+  --hx-picker-surface: var(--colorNeutralBackground1, #ffffff);
+  --hx-picker-surface-subtle: var(--colorNeutralBackground2, #f6f7f9);
+  --hx-picker-text: var(--colorNeutralForeground1, #1f2328);
+  --hx-picker-muted: var(--colorNeutralForeground3, #5b6573);
+  --hx-picker-accent: var(--colorBrandStroke1, var(--colorBrandForeground1, #0067b8));
+  --hx-picker-danger: var(--colorStatusDangerForeground1, #b42318);
   color: var(--hx-picker-text);
   display: grid;
   gap: 0.5rem;
@@ -97,6 +97,11 @@
   cursor: pointer;
   text-align: left;
   width: 100%;
+}
+
+.hx-party-picker__result-button[aria-selected="true"] {
+  border-color: var(--hx-picker-accent);
+  box-shadow: inset 0.25rem 0 0 var(--hx-picker-accent);
 }
 
 .hx-party-picker__result-button:focus-visible,

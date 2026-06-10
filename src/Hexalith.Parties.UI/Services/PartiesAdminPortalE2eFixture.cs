@@ -1,6 +1,8 @@
 using System.Security.Claims;
 
 using Hexalith.Parties.AdminPortal.Services;
+using Hexalith.Parties.Client;
+using Hexalith.Parties.Client.Abstractions;
 using Hexalith.Parties.Client.AdminPortal;
 using Hexalith.Parties.Contracts.Commands;
 using Hexalith.Parties.Contracts.Models;
@@ -89,6 +91,8 @@ internal sealed class PartiesAdminPortalE2eFixtureState
     private readonly List<AdminPortalRequestCapture> _detailRequests = [];
     private readonly List<AdminPortalRequestCapture> _createRequests = [];
     private readonly List<AdminPortalRequestCapture> _updateRequests = [];
+    private readonly List<AdminPortalRequestCapture> _pickerSearchRequests = [];
+    private readonly List<AdminPortalRequestCapture> _pickerDetailRequests = [];
     private readonly Dictionary<string, PartyDetail> _details = CreateInitialDetails();
 
     public void CaptureList(AdminPortalListRequest request)
@@ -107,11 +111,27 @@ internal sealed class PartiesAdminPortalE2eFixtureState
         }
     }
 
+    public void CapturePickerSearch(string query, int page, int pageSize)
+    {
+        lock (_sync)
+        {
+            _pickerSearchRequests.Add(AdminPortalRequestCapture.FromPickerSearch(query, page, pageSize));
+        }
+    }
+
     public void CaptureDetail(string partyId)
     {
         lock (_sync)
         {
             _detailRequests.Add(AdminPortalRequestCapture.FromDetail(partyId));
+        }
+    }
+
+    public void CapturePickerDetail(string partyId)
+    {
+        lock (_sync)
+        {
+            _pickerDetailRequests.Add(AdminPortalRequestCapture.FromPickerDetail(partyId));
         }
     }
 
@@ -168,6 +188,8 @@ internal sealed class PartiesAdminPortalE2eFixtureState
             _detailRequests.Clear();
             _createRequests.Clear();
             _updateRequests.Clear();
+            _pickerSearchRequests.Clear();
+            _pickerDetailRequests.Clear();
             _details.Clear();
             foreach ((string key, PartyDetail detail) in CreateInitialDetails())
             {
@@ -180,7 +202,14 @@ internal sealed class PartiesAdminPortalE2eFixtureState
     {
         lock (_sync)
         {
-            return new AdminPortalE2eSnapshot([.. _listRequests], [.. _searchRequests], [.. _detailRequests], [.. _createRequests], [.. _updateRequests]);
+            return new AdminPortalE2eSnapshot(
+                [.. _listRequests],
+                [.. _searchRequests],
+                [.. _detailRequests],
+                [.. _createRequests],
+                [.. _updateRequests],
+                [.. _pickerSearchRequests],
+                [.. _pickerDetailRequests]);
         }
     }
 
@@ -582,12 +611,163 @@ internal sealed class PartiesAdminPortalE2eApiClient(PartiesAdminPortalE2eFixtur
         };
 }
 
+internal sealed class PartiesAdminPortalE2ePartiesQueryClient(PartiesAdminPortalE2eFixtureState state) : IPartiesQueryClient
+{
+    private static readonly DateTimeOffset BaseDate = new(2026, 06, 10, 10, 00, 00, TimeSpan.Zero);
+    private static readonly IReadOnlyList<PartyIndexEntry> Entries =
+    [
+        Entry("ada-lovelace", PartyType.Person, true, "Ada Lovelace", "Lovelace", 0),
+        Entry("grace-hopper", PartyType.Person, true, "Grace Hopper", "Hopper", 1),
+        Entry("local-only-partners", PartyType.Organization, true, "Local Only Partners", "Local Only Partners", 2),
+        Entry("degraded-partners", PartyType.Organization, false, "Degraded Partners", "Degraded Partners", 3),
+    ];
+
+    public Task<PartyDetail> GetPartyAsync(
+        string partyId,
+        CancellationToken ct,
+        Func<HttpRequestMessage, CancellationToken, ValueTask>? requestCustomizer = null)
+    {
+        ct.ThrowIfCancellationRequested();
+        state.CapturePickerDetail(partyId);
+
+        PartyIndexEntry? entry = Entries.FirstOrDefault(item => string.Equals(item.Id, partyId, StringComparison.Ordinal));
+        if (entry is null)
+        {
+            throw new PartiesClientException(404, "Not Found", null, "The selected party was not found.", null);
+        }
+
+        return Task.FromResult(DetailFromEntry(entry));
+    }
+
+    public Task<PagedResult<PartyIndexEntry>> ListPartiesAsync(
+        int page,
+        int pageSize,
+        PartyType? type,
+        bool? active,
+        DateTimeOffset? createdAfter,
+        DateTimeOffset? createdBefore,
+        DateTimeOffset? modifiedAfter,
+        DateTimeOffset? modifiedBefore,
+        CancellationToken ct)
+    {
+        ct.ThrowIfCancellationRequested();
+        return Task.FromResult(Page(Entries, page, pageSize));
+    }
+
+    public Task<PagedResult<PartySearchResult>> SearchPartiesAsync(
+        string query,
+        int page,
+        int pageSize,
+        CancellationToken ct,
+        string? mode = null,
+        string? caseId = null,
+        Func<HttpRequestMessage, CancellationToken, ValueTask>? requestCustomizer = null,
+        PartyType? type = null,
+        bool? active = null)
+    {
+        ct.ThrowIfCancellationRequested();
+        state.CapturePickerSearch(query, page, pageSize);
+
+        IReadOnlyList<PartyIndexEntry> matches = QueryEntries(query, type, active);
+        ProjectionFreshnessMetadata? freshness = query.Trim().ToLowerInvariant() switch
+        {
+            "local" => ProjectionFreshnessMetadata.Create(ProjectionFreshnessStatus.LocalOnly),
+            "degraded" => ProjectionFreshnessMetadata.Create(
+                ProjectionFreshnessStatus.Degraded,
+                ProjectionFreshnessMetadata.WarningProjectionRebuilding),
+            _ => null,
+        };
+
+        return Task.FromResult(Page([.. matches.Select(static entry => new PartySearchResult
+        {
+            Party = entry,
+            Matches = [],
+            RelevanceScore = 1,
+        })], page, pageSize) with { Freshness = freshness });
+    }
+
+    private static IReadOnlyList<PartyIndexEntry> QueryEntries(string query, PartyType? type, bool? active)
+    {
+        string normalized = query.Trim();
+        IEnumerable<PartyIndexEntry> results = Entries;
+        if (type is not null)
+        {
+            results = results.Where(entry => entry.Type == type);
+        }
+
+        if (active is not null)
+        {
+            results = results.Where(entry => entry.IsActive == active);
+        }
+
+        return normalized.ToLowerInvariant() switch
+        {
+            "local" => results.Where(static entry => entry.Id == "local-only-partners").ToArray(),
+            "degraded" => results.Where(static entry => entry.Id == "degraded-partners").ToArray(),
+            _ => results.Where(entry => entry.DisplayName.Contains(normalized, StringComparison.OrdinalIgnoreCase)).ToArray(),
+        };
+    }
+
+    private static PagedResult<T> Page<T>(IReadOnlyList<T> rows, int page, int pageSize)
+    {
+        int boundedPage = Math.Max(page, 1);
+        int boundedPageSize = Math.Clamp(pageSize, 1, 100);
+        int totalPages = rows.Count == 0 ? 0 : (int)Math.Ceiling(rows.Count / (double)boundedPageSize);
+        return new PagedResult<T>
+        {
+            Items = [.. rows.Skip((boundedPage - 1) * boundedPageSize).Take(boundedPageSize)],
+            Page = rows.Count == 0 ? 1 : Math.Min(boundedPage, totalPages),
+            PageSize = boundedPageSize,
+            TotalCount = rows.Count,
+            TotalPages = totalPages,
+        };
+    }
+
+    private static PartyDetail DetailFromEntry(PartyIndexEntry entry)
+        => new()
+        {
+            Id = entry.Id,
+            Type = entry.Type,
+            IsActive = entry.IsActive,
+            DisplayName = entry.DisplayName,
+            SortName = entry.SortName,
+            PersonDetails = entry.Type == PartyType.Person
+                ? new PersonDetails { FirstName = entry.DisplayName.Split(' ')[0], LastName = entry.SortName }
+                : null,
+            OrganizationDetails = entry.Type == PartyType.Organization
+                ? new OrganizationDetails { LegalName = entry.DisplayName, TradingName = entry.DisplayName, LegalForm = "SAS" }
+                : null,
+            CreatedAt = entry.CreatedAt,
+            LastModifiedAt = entry.LastModifiedAt,
+        };
+
+    private static PartyIndexEntry Entry(
+        string id,
+        PartyType type,
+        bool active,
+        string displayName,
+        string sortName,
+        int dayOffset)
+        => new()
+        {
+            Id = id,
+            Type = type,
+            IsActive = active,
+            DisplayName = displayName,
+            SortName = sortName,
+            CreatedAt = BaseDate.AddDays(-dayOffset),
+            LastModifiedAt = BaseDate.AddDays(-dayOffset).AddHours(1),
+        };
+}
+
 internal sealed record AdminPortalE2eSnapshot(
     IReadOnlyList<AdminPortalRequestCapture> ListRequests,
     IReadOnlyList<AdminPortalRequestCapture> SearchRequests,
     IReadOnlyList<AdminPortalRequestCapture> DetailRequests,
     IReadOnlyList<AdminPortalRequestCapture> CreateRequests,
-    IReadOnlyList<AdminPortalRequestCapture> UpdateRequests);
+    IReadOnlyList<AdminPortalRequestCapture> UpdateRequests,
+    IReadOnlyList<AdminPortalRequestCapture> PickerSearchRequests,
+    IReadOnlyList<AdminPortalRequestCapture> PickerDetailRequests);
 
 internal sealed record AdminPortalRequestCapture(
     string Kind,
@@ -604,8 +784,14 @@ internal sealed record AdminPortalRequestCapture(
     public static AdminPortalRequestCapture FromSearch(AdminPortalSearchRequest request)
         => new("search", request.Query, request.Page, request.PageSize, request.Type?.ToString(), request.Active, null);
 
+    public static AdminPortalRequestCapture FromPickerSearch(string query, int page, int pageSize)
+        => new("picker-search", query, page, pageSize, null, null, null);
+
     public static AdminPortalRequestCapture FromDetail(string partyId)
         => new("detail", null, 0, 0, null, null, partyId);
+
+    public static AdminPortalRequestCapture FromPickerDetail(string partyId)
+        => new("picker-detail", null, 0, 0, null, null, partyId);
 
     public static AdminPortalRequestCapture FromCreate(CreatePartyComposite command)
         => new("create", null, 0, 0, command.Type.ToString(), null, command.PartyId);
