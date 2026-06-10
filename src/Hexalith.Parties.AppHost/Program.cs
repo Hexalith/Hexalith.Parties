@@ -31,6 +31,12 @@ IResourceBuilder<ProjectResource> eventStore = builder.AddProject<Projects.Hexal
     .WithEnvironment("EventStore__DomainServices__Registrations__wildcard_party_v1__TenantId", "*")
     .WithEnvironment("EventStore__DomainServices__Registrations__wildcard_party_v1__Domain", "party")
     .WithEnvironment("EventStore__DomainServices__Registrations__wildcard_party_v1__Version", "v1");
+
+// Story 1.7 (AR-D6) — enable the EventStore projection-changes SignalR hub UNCONDITIONALLY (previously set
+// only inside the EventStore-sample block) so parties-ui's live-freshness subscription has a hub whenever
+// the topology runs. The hub path is /hubs/projection-changes (ProjectionChangedHub.HubPath); server-side
+// enablement is the EventStore host's EventStore:SignalR:Enabled (AddEventStoreSignalR).
+_ = eventStore.WithEnvironment("EventStore__SignalR__Enabled", "true");
 IResourceBuilder<ProjectResource> adminServer = builder.AddProject<Projects.Hexalith_EventStore_Admin_Server_Host>("eventstore-admin");
 IResourceBuilder<ProjectResource> adminUI = builder.AddProject<Projects.Hexalith_EventStore_Admin_UI>("eventstore-admin-ui")
     .WithExplicitStart();
@@ -117,7 +123,13 @@ IResourceBuilder<ProjectResource> partiesUi = builder.AddProject<Projects.Hexali
     .WithReference(eventStore)
     .WaitFor(eventStore)
     .WithReference(tenants)
-    .WaitFor(tenants);
+    .WaitFor(tenants)
+    // Story 1.7 (AR-D6) — inject the EventStore projection-changes hub URL so the host-side live-freshness
+    // subscription connects server-side (the browser still talks only to the UI host). Mirrors the
+    // parties-mcp EventStoreGatewayBaseUrl pattern + the sample-blazor-ui hub-URL composition.
+    .WithEnvironment(
+        "EventStore__SignalR__HubUrl",
+        ReferenceExpression.Create($"{eventStore.GetEndpoint("http")}/hubs/projection-changes"));
 
 // Memories.Server is an OPTIONAL sibling submodule. It is composed as a first-class DAPR resource
 // in publish mode (FR31a single-source-of-truth service graph) and on demand in run mode when
@@ -175,7 +187,7 @@ if (builder.ExecutionContext.IsPublishMode
         Path.Combine("samples", "Hexalith.EventStore.Sample.BlazorUI", "Hexalith.EventStore.Sample.BlazorUI.csproj"),
         "EnableEventStoreSampleUi");
 
-    _ = eventStore.WithEnvironment("EventStore__SignalR__Enabled", "true");
+    // EventStore__SignalR__Enabled is now set unconditionally near the eventstore definition (Story 1.7).
 
     IResourceBuilder<ProjectResource> sample = builder.AddProject("sample", sampleProjectPath)
         .WithDaprSidecar(sidecar => sidecar

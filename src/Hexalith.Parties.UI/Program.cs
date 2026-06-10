@@ -1,4 +1,6 @@
 using Hexalith.FrontComposer.Shell.Extensions;
+using Hexalith.Parties.Client.Abstractions;
+using Hexalith.Parties.Client.AdminPortal;
 using Hexalith.Parties.Client.Extensions;
 using Hexalith.Parties.UI;
 using Hexalith.Parties.UI.Authentication;
@@ -52,6 +54,16 @@ builder.Services.AddPartiesUiClaimsResolution();
 // composes cleanly even in a no-Parties:BaseUrl (degraded/test) boot.
 builder.Services.AddSelfScopedPartiesClient();
 
+// Story 1.7 (AR-D6 / ADR-030) — register the shared live-freshness mechanism (SignalR projection
+// subscription + the optimistic-reconcile primitive + the degraded fallback) UNCONDITIONALLY (not gated
+// on partiesClientEnabled), mirroring AddSelfScopedPartiesClient above. All services are Scoped
+// (per-circuit; the multi-tenant BFF must never share one tenant/token Singleton connection across users),
+// so ValidateScopes=true (line 13) fails the boot if a Singleton captures them. Composition is lazy/inert:
+// the stream stays inert when EventStore:SignalR:HubUrl is empty/whitespace (test/degraded boot → nothing
+// connects, IsConnected=false → polling fallback) and nothing resolves until a screen consumes the
+// primitive (no page does yet — this story ships the mechanism + tests). No page/route/[Command] here.
+builder.Services.AddPartiesProjectionFreshness(builder.Configuration);
+
 // Register the UNDERLYING typed gateway clients (IPartiesQueryClient / IAdminPortalGdprClient) only when
 // configured. AddPartiesClient throws at REGISTRATION time when Parties:BaseUrl is absent
 // (GetValidatedBaseAddress), so gate it exactly like the authEnabled block below — calling it
@@ -64,6 +76,17 @@ bool partiesClientEnabled = !string.IsNullOrWhiteSpace(builder.Configuration["Pa
 if (partiesClientEnabled)
 {
     builder.Services.AddPartiesClient(builder.Configuration);
+
+    // Story 1.7 (AR-D6 / NFR8) — capture the Parties host's degradation headers
+    // (X-Service-Degraded / X-Stale-Data-Age, set on GET responses by DegradedResponseMiddleware) into the
+    // per-circuit IDegradedStateAccessor. Gated INSIDE the Parties:BaseUrl block (alongside AddPartiesClient)
+    // so degraded/test boot is unaffected. Attached by the typed clients' default names (nameof(TClient));
+    // POST responses carry no such headers (the handler only inspects GETs). The primary degraded signal
+    // remains ProjectionFreshnessMetadata on PartyDetail.Freshness — this header seam is the secondary,
+    // transport-level signal, captured when the gateway relays it (verify-live; see Dev Agent Record).
+    builder.Services.AddTransient<DegradedResponseHeaderHandler>();
+    builder.Services.AddHttpClient(nameof(IPartiesQueryClient)).AddHttpMessageHandler<DegradedResponseHeaderHandler>();
+    builder.Services.AddHttpClient(nameof(IAdminPortalGdprClient)).AddHttpMessageHandler<DegradedResponseHeaderHandler>();
 }
 
 // AR-D5 — host-owned OIDC sign-in. When an OIDC provider is configured (the AppHost supplies the

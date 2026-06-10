@@ -36,6 +36,14 @@
          fitness-pinned boundary. Same-repo siblings, so relative paths (not $(HexalithFrontComposerRoot)). -->
     <ProjectReference Include="..\Hexalith.Parties.Client\Hexalith.Parties.Client.csproj" />
     <ProjectReference Include="..\Hexalith.Parties.Contracts\Hexalith.Parties.Contracts.csproj" />
+    <!-- Story 1.7 (AR-D6) — the low-level EventStore SignalR transport (EventStoreSignalRClient) the
+         host-owned PartiesProjectionSubscription wraps for live projection-freshness. Deliberately NOT
+         FrontComposer's high-level AddHexalithEventStore (which would swap the typed Parties.Client) —
+         see the story's KEY DECISION. Microsoft.AspNetCore.SignalR.Client (10.0.8) flows TRANSITIVELY
+         through this ref (and through Hexalith.FrontComposer.Shell), so NO explicit PackageReference and
+         NO Directory.Packages.props edit is needed. $(HexalithEventStoreRoot) is the same sibling-submodule
+         root the AppHost uses (Directory.Build.props). -->
+    <ProjectReference Include="$(HexalithEventStoreRoot)\src\Hexalith.EventStore.SignalR\Hexalith.EventStore.SignalR.csproj" />
     <ProjectReference Include="$(HexalithFrontComposerRoot)\src\Hexalith.FrontComposer.Shell\Hexalith.FrontComposer.Shell.csproj" />
     <ProjectReference Include="$(HexalithFrontComposerRoot)\src\Hexalith.FrontComposer.Mcp\Hexalith.FrontComposer.Mcp.csproj" />
     <!-- SourceTools analyzer: discovers [Projection]/[Command]/[ProjectionTemplate] markers; emits
