@@ -8,6 +8,7 @@ using Hexalith.Parties.AdminPortal.Extensions;
 using Hexalith.Parties.AdminPortal.Services;
 using Hexalith.Parties.Client.Abstractions;
 using Hexalith.Parties.Client.AdminPortal;
+using Hexalith.Parties.UI.IdentityBinding;
 
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.FluentUI.AspNetCore.Components;
@@ -143,7 +144,9 @@ public sealed class PartiesUiHostCompositionTests
         services.AddHexalithDomain<PartiesUiDomainMarker>();
         services.AddSingleton(Substitute.For<IPartiesQueryClient>());
         services.AddSingleton(Substitute.For<IAdminPortalGdprClient>());
+        services.AddSingleton(Substitute.For<IAdminPortalAuthorizationService>());
         services.AddHexalithPartiesAdminPortal();
+        services.AddIdentityBindingProvisioning();
 
         using ServiceProvider provider = services.BuildServiceProvider(
             new ServiceProviderOptions { ValidateScopes = true });
@@ -151,6 +154,7 @@ public sealed class PartiesUiHostCompositionTests
         using IServiceScope scope = provider.CreateScope();
         scope.ServiceProvider.GetRequiredService<AdminPortalPartyQueryService>().ShouldNotBeNull();
         scope.ServiceProvider.GetRequiredService<IPartiesAdminPortalApiClient>().ShouldNotBeNull();
+        scope.ServiceProvider.GetRequiredService<IIdentityBindingProvisioningService>().ShouldNotBeNull();
     }
 
     private static string ProjectRoot(string relativePath)

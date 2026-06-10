@@ -8,6 +8,7 @@ using Hexalith.Parties.ServiceDefaults;
 using Hexalith.Parties.UI;
 using Hexalith.Parties.UI.Authentication;
 using Hexalith.Parties.UI.Components;
+using Hexalith.Parties.UI.IdentityBinding;
 using Hexalith.Parties.UI.Services;
 
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
@@ -70,6 +71,11 @@ builder.Services.AddPartiesUiClaimsResolution();
 // accessor until a consumer data page exists (today /me is an empty stub), so unconditional registration
 // composes cleanly even in a no-Parties:BaseUrl (degraded/test) boot.
 builder.Services.AddSelfScopedPartiesClient();
+
+// Story 4.2 — host-owned admin-link identity binding provisioning. This stays outside the Parties
+// command/event/projection stream: the runtime source remains the IdP party_id claim, while this service
+// owns operator audit metadata, optimistic version checks, IdP attribute updates, and reconciliation.
+builder.Services.AddIdentityBindingProvisioning();
 
 // Story 1.7 (AR-D6 / ADR-030) — register the shared live-freshness mechanism (SignalR projection
 // subscription + the optimistic-reconcile primitive + the degraded fallback) UNCONDITIONALLY (not gated

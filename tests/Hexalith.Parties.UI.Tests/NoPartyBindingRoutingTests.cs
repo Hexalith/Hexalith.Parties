@@ -77,4 +77,21 @@ public sealed class NoPartyBindingRoutingTests : BunitContext
         cut.WaitForAssertion(() => nav.Uri.ShouldEndWith("/no-party-binding"));
         nav.Uri.ShouldNotEndWith("/me");
     }
+
+    [Fact]
+    public void ConsumerWithEmptyPartyId_IsRoutedToNoPartyBinding_NeverToMe()
+    {
+        Services.AddPartiesUiClaimsResolution();
+
+        BunitAuthorizationContext auth = AddAuthorization();
+        auth.SetAuthorized("consumer");
+        auth.SetRoles("Consumer");
+        auth.SetClaims(new Claim(PartiesUiAuthorization.PartyIdClaimType, " "));
+
+        IRenderedComponent<RoleLandingRedirect> cut = Render<RoleLandingRedirect>();
+
+        NavigationManager nav = Services.GetRequiredService<NavigationManager>();
+        cut.WaitForAssertion(() => nav.Uri.ShouldEndWith("/no-party-binding"));
+        nav.Uri.ShouldNotEndWith("/me");
+    }
 }

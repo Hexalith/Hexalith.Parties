@@ -8,6 +8,7 @@ using Hexalith.Parties.Contracts.Commands;
 using Hexalith.Parties.Contracts.Models;
 using Hexalith.Parties.Contracts.Security;
 using Hexalith.Parties.Contracts.ValueObjects;
+using Hexalith.Parties.UI.Authentication;
 
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -20,6 +21,7 @@ internal static class PartiesAdminPortalE2eFixture
 {
     public const string EnabledConfigurationKey = "Hexalith:Parties:AdminPortalE2E:Enabled";
     public const string AdminCookieName = "parties-admin-e2e";
+    public const string ConsumerCookieName = "parties-consumer-e2e";
     public const string Story35RealContractCookieName = "parties-admin-e2e-story-3-5";
     public const string RequestsRoute = "/__parties/specimens/admin-portal/requests";
     public const string ResetRoute = "/__parties/specimens/admin-portal/reset";
@@ -44,6 +46,9 @@ internal static class PartiesAdminPortalE2eFixture
             httpContextAccessor.HttpContext?.Request.Cookies[Story35RealContractCookieName],
             "enabled",
             StringComparison.Ordinal);
+
+    public static string? ConsumerFixtureState(IHttpContextAccessor httpContextAccessor)
+        => httpContextAccessor.HttpContext?.Request.Cookies[ConsumerCookieName];
 }
 
 internal sealed class PartiesAdminPortalE2eAuthenticationStateProvider(IHttpContextAccessor httpContextAccessor) : AuthenticationStateProvider
@@ -63,10 +68,50 @@ internal sealed class PartiesAdminPortalE2eAuthenticationStateProvider(IHttpCont
 
     public override Task<AuthenticationState> GetAuthenticationStateAsync()
     {
-        return Task.FromResult(new AuthenticationState(
-            PartiesAdminPortalE2eFixture.IsAdminFixtureCookiePresent(httpContextAccessor)
-                ? AdminPrincipal
-                : AnonymousPrincipal));
+        if (PartiesAdminPortalE2eFixture.IsAdminFixtureCookiePresent(httpContextAccessor))
+        {
+            return Task.FromResult(new AuthenticationState(AdminPrincipal));
+        }
+
+        string? consumerState = PartiesAdminPortalE2eFixture.ConsumerFixtureState(httpContextAccessor);
+        if (!string.IsNullOrWhiteSpace(consumerState))
+        {
+            return Task.FromResult(new AuthenticationState(CreateConsumerPrincipal(consumerState)));
+        }
+
+        return Task.FromResult(new AuthenticationState(AnonymousPrincipal));
+    }
+
+    private static ClaimsPrincipal CreateConsumerPrincipal(string consumerState)
+    {
+        List<Claim> claims =
+        [
+            new(ClaimTypes.NameIdentifier, "consumer-e2e"),
+            new(ClaimTypes.Name, "Consumer E2E"),
+            new("sub", "consumer-e2e"),
+            new("roles", "Consumer"),
+            new(PartiesUiAuthorization.TenantClaimType, "test-tenant"),
+        ];
+
+        switch (consumerState)
+        {
+            case "bound":
+                claims.Add(new Claim(PartiesUiAuthorization.PartyIdClaimType, "party-bound-001"));
+                break;
+            case "empty":
+                claims.Add(new Claim(PartiesUiAuthorization.PartyIdClaimType, " "));
+                break;
+            case "ambiguous":
+                claims.Add(new Claim(PartiesUiAuthorization.PartyIdClaimType, "party-bound-001"));
+                claims.Add(new Claim(PartiesUiAuthorization.PartyIdClaimType, "party-other-001"));
+                break;
+        }
+
+        return new ClaimsPrincipal(new ClaimsIdentity(
+            claims,
+            authenticationType: "PartiesConsumerE2E",
+            nameType: ClaimTypes.Name,
+            roleType: "roles"));
     }
 }
 

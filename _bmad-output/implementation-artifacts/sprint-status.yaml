@@ -78,7 +78,7 @@ development_status:
   # ── Epic 4: Consumer — Identity Binding & My Profile ─────────────────────
   epic-4: in-progress
   4-1-decide-the-consumer-identity-party-id-binding-mechanism-design-spike-adr: done
-  4-2-implement-admin-link-party-id-binding-provisioning: backlog
+  4-2-implement-admin-link-party-id-binding-provisioning: done
   4-3-stand-up-the-consumerportal-rcl-and-consumer-area: backlog
   4-4-my-profile-fr-consumer-1: backlog
   4-5-edit-my-profile-fr-consumer-2: backlog
