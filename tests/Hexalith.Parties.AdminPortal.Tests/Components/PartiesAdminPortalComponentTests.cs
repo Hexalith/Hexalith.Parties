@@ -1706,9 +1706,226 @@ public sealed class PartiesAdminPortalComponentTests : BunitContext
             // attempted, so refreshing an erased party cannot surface a contract-unavailable failure.
             api.ErasureCertificateRequests.ShouldBeEmpty();
             cut.Markup.ShouldContain("Erased");
-            cut.Markup.ShouldContain("Certificate unavailable");
+            cut.Markup.ShouldContain("Verification not yet available");
             cut.Markup.ShouldContain("Operation completed");
             cut.Markup.ShouldNotContain("Operation failed");
+        });
+    }
+
+    [Fact]
+    public void PartiesAdminPortal_GdprOperations_VerifiedCertificateRendersBoundedDpoReport()
+    {
+        var api = new RecordingAdminPortalApiClient();
+        api.EnqueueList(Page(IndexEntry("party-report-verified", "Report PII Name", PartyType.Person, true)));
+        api.EnqueueDetail(Detail("party-report-verified", "Report PII Name", PartyType.Person, isActive: true));
+        api.EnqueueGdprCapability(AdminPortalGdprCapability.Available());
+        api.EnqueueErasureStatus(ErasureStatus(
+            "party-report-verified",
+            "tenant-secret-report",
+            "Complete",
+            DateTimeOffset.Parse("2026-05-04T10:00:00Z"),
+            DateTimeOffset.Parse("2026-05-04T09:30:00Z")));
+        api.EnqueueErasureCertificate(Certificate(
+            "party-report-verified",
+            "tenant-secret-report",
+            DateTimeOffset.Parse("2026-05-04T10:01:00Z"),
+            ErasureVerificationStatus.Verified,
+            17,
+            42));
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+
+        IRenderedComponent<PartiesAdminPortal> cut = RenderAuthorized("scope-a");
+        cut.WaitForAssertion(() => cut.Markup.ShouldContain("Report PII Name"));
+        ClickFluentButton(cut, "Report PII Name");
+        cut.WaitForAssertion(() => FindFluentButton(cut, "Refresh erasure status").HasAttribute("disabled").ShouldBeFalse());
+
+        ClickFluentButton(cut, "Refresh erasure status");
+
+        cut.WaitForAssertion(() =>
+        {
+            api.ErasureCertificateRequests.Single().ShouldBe("party-report-verified");
+            IElement report = ErasureReportSection(cut);
+            report.QuerySelector("[role='status']")!.TextContent.ShouldContain("Verification confirmed");
+            report.TextContent.ShouldContain("Verification status");
+            report.TextContent.ShouldContain("Verified");
+            report.TextContent.ShouldContain("Report status");
+            report.TextContent.ShouldContain("Complete");
+            report.TextContent.ShouldContain("Verified across projections");
+            report.TextContent.ShouldContain("Yes");
+            report.TextContent.ShouldContain("Key versions destroyed");
+            report.TextContent.ShouldContain("2");
+            report.TextContent.ShouldNotContain("Report PII Name");
+            report.TextContent.ShouldNotContain("party-report-verified");
+            report.TextContent.ShouldNotContain("tenant-secret-report");
+            report.TextContent.ShouldNotContain("17");
+            report.TextContent.ShouldNotContain("42");
+            report.TextContent.ShouldNotContain("destroyed-key");
+            report.TextContent.ShouldNotContain("key-material");
+            report.TextContent.ShouldNotContain("stateKey");
+            report.TextContent.ShouldNotContain("ProblemDetails");
+            report.TextContent.ShouldNotContain("raw payload", Case.Insensitive);
+        });
+    }
+
+    [Fact]
+    public void PartiesAdminPortal_GdprOperations_CertificateUnavailableMapsToBoundedReportFallback()
+    {
+        var api = new RecordingAdminPortalApiClient();
+        api.EnqueueList(Page(IndexEntry("party-report-unavailable", "Unavailable Report", PartyType.Person, true)));
+        api.EnqueueDetail(Detail("party-report-unavailable", "Unavailable Report", PartyType.Person, isActive: true));
+        api.EnqueueGdprCapability(AdminPortalGdprCapability.Available());
+        api.EnqueueErasureStatus(ErasureStatus(
+            "party-report-unavailable",
+            "scope-a",
+            "Erased",
+            DateTimeOffset.Parse("2026-05-04T10:00:00Z"),
+            DateTimeOffset.Parse("2026-05-04T09:30:00Z")));
+        api.EnqueueErasureCertificateFailure(AdminPortalQueryFailureKind.ContractUnavailable);
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+
+        IRenderedComponent<PartiesAdminPortal> cut = RenderAuthorized("scope-a");
+        cut.WaitForAssertion(() => cut.Markup.ShouldContain("Unavailable Report"));
+        ClickFluentButton(cut, "Unavailable Report");
+        cut.WaitForAssertion(() => FindFluentButton(cut, "Refresh erasure status").HasAttribute("disabled").ShouldBeFalse());
+
+        ClickFluentButton(cut, "Refresh erasure status");
+
+        cut.WaitForAssertion(() =>
+        {
+            IElement report = ErasureReportSection(cut);
+            report.TextContent.ShouldContain("Verification not yet available");
+            report.TextContent.ShouldContain("The erasure status remains available");
+            report.TextContent.ShouldNotContain("ContractUnavailable");
+            report.TextContent.ShouldNotContain("501");
+            report.TextContent.ShouldNotContain("ProblemDetails");
+            cut.Find("[data-gdpr-operation-announcement]").TextContent.ShouldContain("GDPR operations are temporarily unavailable");
+            cut.Find("[data-gdpr-operation-announcement]").GetAttribute("role").ShouldBe("status");
+        });
+    }
+
+    [Fact]
+    public void PartiesAdminPortal_GdprOperations_CertificateFailureClearsPreviousReport()
+    {
+        var api = new RecordingAdminPortalApiClient();
+        api.EnqueueList(Page(IndexEntry("party-report-refresh", "Refresh Report", PartyType.Person, true)));
+        api.EnqueueDetail(Detail("party-report-refresh", "Refresh Report", PartyType.Person, isActive: true));
+        api.EnqueueGdprCapability(AdminPortalGdprCapability.Available());
+        api.EnqueueErasureStatus(ErasureStatus(
+            "party-report-refresh",
+            "scope-a",
+            "Complete",
+            DateTimeOffset.Parse("2026-05-04T10:00:00Z"),
+            DateTimeOffset.Parse("2026-05-04T09:30:00Z")));
+        api.EnqueueErasureCertificate(Certificate(
+            "party-report-refresh",
+            "scope-a",
+            DateTimeOffset.Parse("2026-05-04T10:01:00Z"),
+            ErasureVerificationStatus.Verified,
+            7));
+        api.EnqueueErasureStatus(ErasureStatus(
+            "party-report-refresh",
+            "scope-a",
+            "Complete",
+            DateTimeOffset.Parse("2026-05-04T10:05:00Z"),
+            DateTimeOffset.Parse("2026-05-04T09:30:00Z")));
+        api.EnqueueErasureCertificateFailure(AdminPortalQueryFailureKind.ContractUnavailable);
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+
+        IRenderedComponent<PartiesAdminPortal> cut = RenderAuthorized("scope-a");
+        cut.WaitForAssertion(() => cut.Markup.ShouldContain("Refresh Report"));
+        ClickFluentButton(cut, "Refresh Report");
+        cut.WaitForAssertion(() => FindFluentButton(cut, "Refresh erasure status").HasAttribute("disabled").ShouldBeFalse());
+
+        ClickFluentButton(cut, "Refresh erasure status");
+        cut.WaitForAssertion(() => ErasureReportSection(cut).TextContent.ShouldContain("Verification confirmed"));
+
+        ClickFluentButton(cut, "Refresh erasure status");
+        cut.WaitForAssertion(() =>
+        {
+            IElement report = ErasureReportSection(cut);
+            report.TextContent.ShouldContain("Verification not yet available");
+            report.TextContent.ShouldNotContain("Verification confirmed");
+            report.TextContent.ShouldNotContain("Key versions destroyed");
+        });
+    }
+
+    [Fact]
+    public void PartiesAdminPortal_GdprOperations_FailedCertificateDoesNotRenderConfirmedCopy()
+    {
+        var api = new RecordingAdminPortalApiClient();
+        api.EnqueueList(Page(IndexEntry("party-report-failed", "Failed Report", PartyType.Person, true)));
+        api.EnqueueDetail(Detail("party-report-failed", "Failed Report", PartyType.Person, isActive: true));
+        api.EnqueueGdprCapability(AdminPortalGdprCapability.Available());
+        api.EnqueueErasureStatus(ErasureStatus(
+            "party-report-failed",
+            "scope-a",
+            "Erased",
+            DateTimeOffset.Parse("2026-05-04T10:00:00Z"),
+            DateTimeOffset.Parse("2026-05-04T09:30:00Z")));
+        api.EnqueueErasureCertificate(Certificate(
+            "party-report-failed",
+            "scope-a",
+            DateTimeOffset.Parse("2026-05-04T10:01:00Z"),
+            ErasureVerificationStatus.Failed,
+            7));
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+
+        IRenderedComponent<PartiesAdminPortal> cut = RenderAuthorized("scope-a");
+        cut.WaitForAssertion(() => cut.Markup.ShouldContain("Failed Report"));
+        ClickFluentButton(cut, "Failed Report");
+        cut.WaitForAssertion(() => FindFluentButton(cut, "Refresh erasure status").HasAttribute("disabled").ShouldBeFalse());
+
+        ClickFluentButton(cut, "Refresh erasure status");
+
+        cut.WaitForAssertion(() =>
+        {
+            IElement report = ErasureReportSection(cut);
+            report.QuerySelector("[role='status']")!.TextContent.ShouldContain("Verification requires attention");
+            report.TextContent.ShouldContain("Failed");
+            report.TextContent.ShouldContain("Verified across projections");
+            report.TextContent.ShouldContain("No");
+            report.TextContent.ShouldNotContain("Verification confirmed");
+        });
+    }
+
+    [Fact]
+    public void PartiesAdminPortal_GdprOperations_StaleRefreshDoesNotWriteReportForNewParty()
+    {
+        var api = new RecordingAdminPortalApiClient();
+        var delayedStatus = new TaskCompletionSource<PartyErasureStatusRecord?>();
+        api.EnqueueList(Page(
+            IndexEntry("party-report-old", "Old Report Party", PartyType.Person, true),
+            IndexEntry("party-report-new", "New Report Party", PartyType.Person, true)));
+        api.EnqueueDetail(Detail("party-report-old", "Old Report Party", PartyType.Person, isActive: true));
+        api.EnqueueDetail(Detail("party-report-new", "New Report Party", PartyType.Person, isActive: true));
+        api.EnqueueGdprCapability(AdminPortalGdprCapability.Available());
+        api.EnqueueGdprCapability(AdminPortalGdprCapability.Available());
+        api.EnqueueErasureStatus(_ => delayedStatus.Task);
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+
+        IRenderedComponent<PartiesAdminPortal> cut = RenderAuthorized("scope-a");
+        cut.WaitForAssertion(() => cut.Markup.ShouldContain("Old Report Party"));
+        ClickFluentButton(cut, "Old Report Party");
+        cut.WaitForAssertion(() => FindFluentButton(cut, "Refresh erasure status").HasAttribute("disabled").ShouldBeFalse());
+        ClickFluentButton(cut, "Refresh erasure status");
+        cut.WaitForAssertion(() => api.ErasureStatusRequests.Single().ShouldBe("party-report-old"));
+
+        ClickFluentButton(cut, "New Report Party");
+        cut.WaitForAssertion(() => cut.Markup.ShouldContain("New Report Party"));
+        delayedStatus.SetResult(ErasureStatus(
+            "party-report-old",
+            "scope-a",
+            "Complete",
+            DateTimeOffset.Parse("2026-05-04T10:00:00Z"),
+            DateTimeOffset.Parse("2026-05-04T09:30:00Z")));
+
+        cut.WaitForAssertion(() =>
+        {
+            api.ErasureCertificateRequests.ShouldBeEmpty();
+            IElement report = ErasureReportSection(cut);
+            report.TextContent.ShouldContain("Verification not yet available");
+            report.TextContent.ShouldNotContain("Complete");
+            report.TextContent.ShouldNotContain("Verified");
         });
     }
 
@@ -2566,6 +2783,13 @@ public sealed class PartiesAdminPortalComponentTests : BunitContext
             Status = "Verified",
             UpdatedAt = DateTimeOffset.Parse("2026-05-03T00:05:00Z"),
         });
+        api.EnqueueErasureCertificate(Certificate(
+            "party-retry-erasure",
+            "scope-a",
+            DateTimeOffset.Parse("2026-05-03T00:06:00Z"),
+            ErasureVerificationStatus.Verified,
+            3));
+        api.EnqueueRetryVerificationResult(new AdminPortalGdprCommandResult(AdminPortalGdprOutcome.Completed, "corr-retry"));
         Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
 
         IRenderedComponent<PartiesAdminPortal> cut = RenderAuthorized("scope-a");
@@ -2591,7 +2815,12 @@ public sealed class PartiesAdminPortalComponentTests : BunitContext
         {
             api.RetryVerificationRequests.Single().ShouldBe("party-retry-erasure");
             api.ErasureStatusRequests.Count.ShouldBe(2);
+            api.ErasureCertificateRequests.Single().ShouldBe("party-retry-erasure");
             cut.Markup.ShouldContain("Verified");
+            cut.Markup.ShouldContain("Verification confirmed");
+            cut.FindAll("fluent-button")
+                .Any(button => button.TextContent.Contains("Retry verification", StringComparison.Ordinal))
+                .ShouldBeFalse();
         });
     }
 
@@ -3891,6 +4120,9 @@ public sealed class PartiesAdminPortalComponentTests : BunitContext
             .Single(button => button.TextContent.Contains(text, StringComparison.Ordinal));
     }
 
+    private static IElement ErasureReportSection(IRenderedComponent<PartiesAdminPortal> cut)
+        => cut.Find("section[aria-labelledby^='erasure-report-heading-']");
+
     private static void ClickFluentButton(IRenderedComponent<PartiesAdminPortal> cut, string text)
         => FindFluentButton(cut, text).Click();
 
@@ -3986,6 +4218,34 @@ public sealed class PartiesAdminPortalComponentTests : BunitContext
         CreatedAt = DateTimeOffset.Parse("2026-05-01T00:00:00Z"),
         LastModifiedAt = DateTimeOffset.Parse("2026-05-02T00:00:00Z"),
     };
+
+    private static PartyErasureStatusRecord ErasureStatus(
+        string partyId,
+        string tenantId,
+        string status,
+        DateTimeOffset updatedAt,
+        DateTimeOffset? erasedAt = null) => new()
+        {
+            PartyId = partyId,
+            TenantId = tenantId,
+            Status = status,
+            UpdatedAt = updatedAt,
+            ErasedAt = erasedAt,
+        };
+
+    private static ErasureCertificate Certificate(
+        string partyId,
+        string tenantId,
+        DateTimeOffset timestamp,
+        ErasureVerificationStatus verificationStatus,
+        params int[] keyVersionsDestroyed) => new()
+        {
+            PartyId = partyId,
+            TenantId = tenantId,
+            Timestamp = timestamp,
+            VerificationStatus = verificationStatus,
+            KeyVersionsDestroyed = keyVersionsDestroyed,
+        };
 
     private static PagedResult<T> Page<T>(params T[] items) => new()
     {

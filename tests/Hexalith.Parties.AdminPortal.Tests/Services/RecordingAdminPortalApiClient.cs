@@ -26,6 +26,7 @@ internal sealed class RecordingAdminPortalApiClient : IPartiesAdminPortalApiClie
     private readonly Queue<Func<CancellationToken, Task<AdminPortalGdprCommandResult>>> _liftRestrictionResponses = [];
     private readonly Queue<Func<CancellationToken, Task<AdminPortalGdprCommandResult>>> _addConsentResponses = [];
     private readonly Queue<Func<CancellationToken, Task<AdminPortalGdprCommandResult>>> _revokeConsentResponses = [];
+    private readonly Queue<Func<CancellationToken, Task<AdminPortalGdprCommandResult>>> _retryVerificationResponses = [];
 
     public List<AdminPortalListRequest> ListRequests { get; } = [];
 
@@ -105,6 +106,9 @@ internal sealed class RecordingAdminPortalApiClient : IPartiesAdminPortalApiClie
     public void EnqueueErasureStatus(PartyErasureStatusRecord status)
         => _erasureStatusResponses.Enqueue(_ => Task.FromResult<PartyErasureStatusRecord?>(status));
 
+    public void EnqueueErasureStatus(Func<CancellationToken, Task<PartyErasureStatusRecord?>> status)
+        => _erasureStatusResponses.Enqueue(status);
+
     public void EnqueueErasureResult(AdminPortalGdprCommandResult result)
         => _erasureResponses.Enqueue(_ => Task.FromResult(result));
 
@@ -122,6 +126,12 @@ internal sealed class RecordingAdminPortalApiClient : IPartiesAdminPortalApiClie
 
     public void EnqueueErasureCertificate(ErasureCertificate certificate)
         => _erasureCertificateResponses.Enqueue(_ => Task.FromResult<ErasureCertificate?>(certificate));
+
+    public void EnqueueErasureCertificateFailure(AdminPortalQueryFailureKind kind)
+        => _erasureCertificateResponses.Enqueue(_ => Task.FromException<ErasureCertificate?>(new AdminPortalQueryException(kind)));
+
+    public void EnqueueRetryVerificationResult(AdminPortalGdprCommandResult result)
+        => _retryVerificationResponses.Enqueue(_ => Task.FromResult(result));
 
     public void EnqueueConsent(params ConsentRecord[] consentRecords)
         => _consentResponses.Enqueue(_ => Task.FromResult<IReadOnlyList<ConsentRecord>>(consentRecords));
@@ -235,7 +245,9 @@ internal sealed class RecordingAdminPortalApiClient : IPartiesAdminPortalApiClie
     public Task<AdminPortalGdprCommandResult> RetryErasureVerificationAsync(string partyId, CancellationToken cancellationToken)
     {
         RetryVerificationRequests.Add(partyId);
-        return Task.FromResult(new AdminPortalGdprCommandResult(AdminPortalGdprOutcome.Accepted, "corr-retry"));
+        return _retryVerificationResponses.Count == 0
+            ? Task.FromResult(new AdminPortalGdprCommandResult(AdminPortalGdprOutcome.Accepted, "corr-retry"))
+            : _retryVerificationResponses.Dequeue()(cancellationToken);
     }
 
     public Task<AdminPortalGdprCommandResult> RestrictProcessingAsync(

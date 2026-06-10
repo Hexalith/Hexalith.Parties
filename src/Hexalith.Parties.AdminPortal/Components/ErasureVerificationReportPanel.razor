@@ -1,23 +1,46 @@
 @if (Certificate is null)
 {
-    <p>@Labels.GdprCertificateUnavailable</p>
+    <p role="status" aria-live="polite">@Labels.GdprVerificationUnavailable</p>
+    <p>@Labels.GdprVerificationUnavailableDetail</p>
 }
 else
 {
-    <dl>
-        <dt>@Labels.Status</dt>
+    <p role="status" aria-live="polite">@VerificationMessage</p>
+    <dl class="hx-parties-admin__erasure-report">
+        <dt>@Labels.GdprVerificationStatus</dt>
         <dd>@Certificate.VerificationStatus</dd>
-        <dt>@Labels.GdprUpdatedAt</dt>
+        @if (!string.IsNullOrWhiteSpace(Status?.Status))
+        {
+            <dt>@Labels.GdprReportStatus</dt>
+            <dd>@Status.Status</dd>
+        }
+        <dt>@Labels.GdprReportTimestamp</dt>
         <dd>@FormatDate(Certificate.Timestamp)</dd>
+        <dt>@Labels.GdprVerifiedAcrossProjections</dt>
+        <dd>@FormatBoolean(IsVerified)</dd>
+        <dt>@Labels.GdprKeyVersionCount</dt>
+        <dd>@Certificate.KeyVersionsDestroyed.Count</dd>
     </dl>
 }
 
 @code {
     [Parameter, EditorRequired]
+    public PartyErasureStatusRecord? Status { get; set; }
+
+    [Parameter, EditorRequired]
     public ErasureCertificate? Certificate { get; set; }
 
     [Parameter, EditorRequired]
     public AdminPortalLabels Labels { get; set; } = new();
+
+    private bool IsVerified
+        => Certificate?.VerificationStatus == ErasureVerificationStatus.Verified
+            && Status?.Status is null or "Verified" or "Complete" or "Erased";
+
+    private string VerificationMessage
+        => IsVerified ? Labels.GdprVerificationConfirmed : Labels.GdprVerificationNeedsAttention;
+
+    private string FormatBoolean(bool value) => value ? Labels.Yes : Labels.No;
 
     private static string FormatDate(DateTimeOffset date)
         => date == default

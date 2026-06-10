@@ -20,6 +20,7 @@ test.describe('Admin GDPR erasure verification contract', () => {
   });
 
   test('real contract mode reads a bounded certificate and retries verification without browser-visible gateway calls', async ({ page, request }) => {
+    await enableRealContractFixture(page.context());
     const browserVisibleDataRequests: string[] = [];
     page.on('request', routeRequest => {
       if (isBrowserVisiblePartiesDataRequest(routeRequest.url())) {
@@ -31,7 +32,7 @@ test.describe('Admin GDPR erasure verification contract', () => {
 
     const detail = page.getByLabel('Party detail');
     await expect(detail.getByRole('heading', { name: 'GDPR operations' })).toBeFocused();
-    await expect(detail.getByText('Certificate unavailable')).toBeVisible();
+    await expect(detail.getByText('Verification not yet available')).toBeVisible();
     await expect(detail.getByRole('button', { name: 'Retry verification' })).toHaveCount(0);
 
     await detail.getByRole('button', { name: 'Refresh erasure status' }).click();
@@ -44,8 +45,14 @@ test.describe('Admin GDPR erasure verification contract', () => {
 
     await expect(detail.getByRole('status').filter({ hasText: 'Operation completed' })).toBeVisible();
     await expect(detail.getByText('Correlation id: corr-retry-e2e')).toBeVisible();
-    await expect(detail.getByText('Complete')).toBeVisible();
-    await expect(detail.getByText('Verified')).toBeVisible();
+    const report = detail.locator('section[aria-labelledby^="erasure-report-heading-"]');
+    await expect(report.getByText('Verification confirmed')).toBeVisible();
+    await expect(report.getByText('Verification status')).toBeVisible();
+    await expect(report.getByText('Verified', { exact: true })).toBeVisible();
+    await expect(report.getByText('Report status')).toBeVisible();
+    await expect(report.getByText('Complete', { exact: true })).toBeVisible();
+    await expect(report.getByText('Verified across projections')).toBeVisible();
+    await expect(report.getByText('Key versions destroyed')).toBeVisible();
     await expect.poll(async () => (await latestRetryVerificationRequest(request))?.partyId).toBe('erasure-retry');
     await expect.poll(async () => (await latestErasureCertificateRequest(request))?.partyId).toBe('erasure-retry');
     await expect.poll(async () => (await gdprRequestCounts(request)).retryVerification).toBe(1);
@@ -55,7 +62,42 @@ test.describe('Admin GDPR erasure verification contract', () => {
     await expect(detail.getByText('destroyed-key', { exact: false })).toHaveCount(0);
     await expect(detail.getByText('stateKey', { exact: false })).toHaveCount(0);
     await expect(detail.getByText('ProblemDetails', { exact: false })).toHaveCount(0);
+    await expect(detail.getByText('erasure-retry', { exact: false })).toHaveCount(0);
     expect(JSON.stringify(await requestSnapshot(request))).not.toContain('key-material');
+    expect(browserVisibleDataRequests).toEqual([]);
+  });
+
+  test('provisional contract mode shows bounded fallback without blocking the GDPR page', async ({ page, request }) => {
+    const browserVisibleDataRequests: string[] = [];
+    page.on('request', routeRequest => {
+      if (isBrowserVisiblePartiesDataRequest(routeRequest.url())) {
+        browserVisibleDataRequests.push(routeRequest.url());
+      }
+    });
+    await page.setViewportSize({ width: 390, height: 844 });
+
+    await page.goto(`${ADMIN_ROUTE}/erasure-retry/gdpr`);
+
+    const detail = page.getByLabel('Party detail');
+    await expect(detail.getByRole('heading', { name: 'GDPR operations' })).toBeFocused();
+    const report = detail.locator('section[aria-labelledby^="erasure-report-heading-"]');
+    await expect(report.getByRole('status')).toContainText('Verification not yet available');
+    await expect(report.getByText('The erasure status remains available')).toBeVisible();
+    await expect(detail.getByText('EventStore GDPR client contract does not expose erasure certificate or retry verification yet.')).toBeVisible();
+    await expect(detail.getByRole('button', { name: 'Refresh erasure status' })).toBeEnabled();
+    await expect(detail.getByRole('button', { name: 'Request erasure' })).toBeEnabled();
+    await expect(detail.getByRole('button', { name: 'Processing records' })).toBeEnabled();
+    await expect(detail.getByRole('button', { name: 'Retry verification' })).toHaveCount(0);
+
+    await detail.getByRole('button', { name: 'Refresh erasure status' }).click();
+
+    await expect(report.getByRole('status')).toContainText('Verification not yet available');
+    await expect.poll(async () => (await gdprRequestCounts(request)).erasureCertificate).toBe(0);
+    await expect.poll(async () => (await gdprRequestCounts(request)).retryVerification).toBe(0);
+    await expect(detail.getByText('ContractUnavailable', { exact: false })).toHaveCount(0);
+    await expect(detail.getByText('ProblemDetails', { exact: false })).toHaveCount(0);
+    await expect(detail.getByText('destroyed-key', { exact: false })).toHaveCount(0);
+    await expect(detail.getByText('erasure-retry', { exact: false })).toHaveCount(0);
     expect(browserVisibleDataRequests).toEqual([]);
   });
 });
@@ -68,6 +110,11 @@ const enableAdminFixture = async (context: BrowserContext): Promise<void> => {
       url: BASE_URL,
       sameSite: 'Lax',
     },
+  ]);
+};
+
+const enableRealContractFixture = async (context: BrowserContext): Promise<void> => {
+  await context.addCookies([
     {
       name: STORY_35_REAL_CONTRACT_COOKIE,
       value: 'enabled',

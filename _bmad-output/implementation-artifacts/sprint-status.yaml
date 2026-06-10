@@ -72,7 +72,7 @@ development_status:
   3-3-restrict-lift-restriction-and-record-revoke-consent: done
   3-4-data-export-art-20-and-processing-records-art-30: done
   3-5-eventstore-erasure-verification-contract-backend-cross-submodule-approval-gated: done
-  3-6-admin-erasure-verification-report-ui-consumes-the-d7-contract: backlog
+  3-6-admin-erasure-verification-report-ui-consumes-the-d7-contract: done
   epic-3-retrospective: optional
 
   # ── Epic 4: Consumer — Identity Binding & My Profile ─────────────────────

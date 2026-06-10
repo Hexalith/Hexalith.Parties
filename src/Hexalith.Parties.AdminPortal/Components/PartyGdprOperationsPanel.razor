@@ -596,6 +596,7 @@
 
             bool shouldFetchCertificate = _gdprCapability.CanReadErasureCertificate
                 && status?.Status is "Verified" or "Complete" or "Erased";
+            _erasureCertificate = null;
             // Only fetch the certificate when the capability genuinely supports it. Against the
             // provisional bridge the certificate query is contract-unavailable, so refreshing an
             // erased party would otherwise surface a misleading failure outcome. When skipped,
@@ -603,7 +604,6 @@
             // "Certificate unavailable" fallback instead.
             if (!shouldFetchCertificate)
             {
-                _erasureCertificate = null;
                 return;
             }
 

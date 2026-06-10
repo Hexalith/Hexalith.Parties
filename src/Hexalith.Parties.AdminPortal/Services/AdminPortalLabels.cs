@@ -281,6 +281,27 @@ public record AdminPortalLabels
 
     public string GdprCertificateUnavailable { get; init; } = "Certificate unavailable";
 
+    public string GdprVerificationUnavailable { get; init; } = "Verification not yet available";
+
+    public string GdprVerificationUnavailableDetail { get; init; } =
+        "The erasure status remains available. Certificate verification will appear here when the backend contract is enabled.";
+
+    public string GdprVerificationConfirmed { get; init; } =
+        "Verification confirmed across projections.";
+
+    public string GdprVerificationNeedsAttention { get; init; } =
+        "Verification requires attention.";
+
+    public string GdprVerificationStatus { get; init; } = "Verification status";
+
+    public string GdprReportStatus { get; init; } = "Report status";
+
+    public string GdprReportTimestamp { get; init; } = "Report timestamp";
+
+    public string GdprVerifiedAcrossProjections { get; init; } = "Verified across projections";
+
+    public string GdprKeyVersionCount { get; init; } = "Key versions destroyed";
+
     public string GdprRetryVerification { get; init; } = "Retry verification";
 
     public string GdprExportPrepared { get; init; } = "Export prepared";

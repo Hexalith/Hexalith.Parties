@@ -1,0 +1,22 @@
+.hx-parties-admin__erasure-report {
+    display: grid;
+    grid-template-columns: max-content minmax(0, 1fr);
+    gap: var(--spacingVerticalXS, .25rem) var(--spacingHorizontalM, .75rem);
+    min-width: 0;
+    max-inline-size: 100%;
+}
+
+.hx-parties-admin__erasure-report dt {
+    font-weight: 600;
+}
+
+.hx-parties-admin__erasure-report dd {
+    margin-inline-start: 0;
+    overflow-wrap: anywhere;
+}
+
+@media (max-width: 480px) {
+    .hx-parties-admin__erasure-report {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
