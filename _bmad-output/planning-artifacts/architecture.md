@@ -454,6 +454,12 @@ The rules below target the **~10 UI-tier divergence points** these don't cover.
 - **Dates:** display via shell localization; never reformat wire dates by hand.
 - **Freshness:** always render `ProjectionFreshnessMetadata` through the shared
   **data-freshness indicator** (dot **+** word), never as raw status text.
+- **Implementation note from Epic 1 retrospective (2026-06-10):** the delivered
+  `StatusKind`, freshness, and shared domain components currently live in
+  `Hexalith.Parties.UI`. Before AdminPortal or ConsumerPortal RCL pages consume
+  them directly, decide whether to promote these primitives into a shared UI
+  package or keep mapping at the host composition boundary. Do not make an RCL
+  reference the UI host just to reach these types.
 
 ### Communication Patterns
 
@@ -480,6 +486,11 @@ The rules below target the **~10 UI-tier divergence points** these don't cover.
   Do **not** steal focus to a toast on routine optimistic saves — announce via aria-live.
 - **Live updates:** EventStore projection subscription over **SignalR**; **polling +
   freshness-metadata fallback** when degraded. No bespoke per-screen polling.
+- **Implementation note from Epic 1 retrospective (2026-06-10):** the
+  `DegradedResponseHeaderHandler` is a captured-when-present building block, but
+  it writes in the `IHttpClientFactory` handler scope, not the active Blazor circuit
+  scope. Treat `ProjectionFreshnessMetadata` as the primary degraded signal until a
+  circuit-safe bridge is designed and proven.
 - **Fluxor single-writer (ADR-007):** one dispatch source per action type; effects own
   gateway calls / JS interop / persistence; reducers stay pure.
 
@@ -726,6 +737,9 @@ decided path.
    contract + Parties wiring as an approved backend story; cross-submodule.
 3. **Production KMS (pre-existing prerequisite):** crypto-shredding is ON by default with
    only `LocalDevKeyStorageBackend`; provision a real KMS before any real EU PII.
+4. **RCL status/freshness boundary (discovered in Epic 1):** host-owned
+   `StatusKind`/freshness primitives need an explicit sharing or composition
+   decision before Epic 2 AdminPortal screens depend on them.
 
 **Nice-to-Have Gaps:** SignalR reconnect/dedupe specifics; tenant-switch state reset;
 async export-ready notification channel detail; Blazor Server circuit scaling

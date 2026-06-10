@@ -43,7 +43,7 @@ story_location: "{project-root}/_bmad-output/implementation-artifacts"
 
 development_status:
   # ── Epic 1: App Foundation & Secure Sign-In ──────────────────────────────
-  epic-1: in-progress
+  epic-1: done
   1-1-stand-up-the-hexalith-parties-ui-blazor-server-host: done
   1-2-host-owned-oidc-sign-in-server-side-tokens-never-reach-the-browser: done
   1-3-role-based-landing-and-policy-gated-navigation: done
@@ -54,7 +54,7 @@ development_status:
   1-8-shared-domain-components-party-state-badge-freshness-indicator-gdpr-destructive-button: done
   1-9-accessibility-foundation-and-ci-a11y-gate-wcag-2-2-aa: done
   1-10-deploy-parties-ui-container-k8s-with-production-kms-prerequisite-gate: done
-  epic-1-retrospective: optional
+  epic-1-retrospective: done
 
   # ── Epic 2: Admin — Party Records Management ─────────────────────────────
   epic-2: backlog

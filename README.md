@@ -1,19 +1,20 @@
 # Hexalith.Parties
 
-Hexalith.Parties is a ready-to-deploy party management domain service for people and organizations. Public command and query traffic goes through Hexalith.EventStore; the `parties` service runs the domain actor host behind that gateway, and consumers normally use the typed .NET client package.
+Hexalith.Parties is a ready-to-deploy party management domain service for people and organizations. Public command and query traffic goes through Hexalith.EventStore; the `parties` service runs the domain actor host behind that gateway, and consumers normally use the typed .NET client package. The solution also includes `parties-ui`, a Blazor Server browser UI/BFF for the Admin and Consumer experiences.
 
-> **GDPR Notice:** This MVP does **not** include GDPR compliance features (crypto-shredding, consent management, right to erasure). **Do not store regulated EU personal data.** The service logs this warning at startup and emits `X-Hexalith-Parties-Mvp-Compliance-Warning` until the explicit v1.1 activation switch is enabled. GDPR features are planned for v1.1 -- see the [roadmap](docs/getting-started.md#whats-next).
+> **GDPR Notice:** Some GDPR infrastructure exists, and crypto-shredding is enabled by default, but the default key store is `LocalDevKeyStorageBackend` (in-memory, dev-only). **Do not store regulated EU personal data** until a production KMS or secret-store-backed key provider is provisioned. The MVP warning switch is separate from the crypto feature; see the [deployment security checklist](docs/deployment-security-checklist.md).
 
 ## Key Features
 
 - **EventStore gateway** -- Public command/query ingress uses `POST /api/v1/commands` and `POST /api/v1/queries` with `Domain="party"`.
 - **Parties actor host** -- The `parties` resource owns domain execution, projections, and DAPR actor hosting behind EventStore.
 - **Typed client package** -- `IPartiesCommandClient` and `IPartiesQueryClient` hide EventStore envelope plumbing for .NET consumers.
+- **Parties UI/BFF** -- `parties-ui` is a Blazor Server host with FrontComposer, FluentUI, host-owned OIDC, role-gated Admin/Consumer areas, accessibility gates, and server-side token handling.
 - **Embeddable party picker** -- `Hexalith.Parties.Picker` provides a Blazor/custom-element selector that searches through `IPartiesQueryClient` and emits durable party-id selections.
 - **Separate MCP host** -- `parties-mcp` exposes `create_party`, `get_party`, `find_parties`, `update_party`, and `delete_party` through the typed client boundary.
 - **DAPR event subscription** -- Subscriber apps consume EventStore-published party events with their own idempotent handlers.
 - **EventStore Admin UI** -- Use `eventstore-admin-ui` for generic stream and event browsing.
-- **.NET Aspire** -- One-command local topology with EventStore, Parties, Tenants, DAPR sidecars, Redis, and optional Keycloak.
+- **.NET Aspire** -- One-command local topology with EventStore, Parties, Parties UI, Tenants, DAPR sidecars, Redis, and optional Keycloak.
 
 ## Quick Start
 
@@ -24,7 +25,7 @@ git submodule update --init Hexalith.EventStore Hexalith.Tenants
 dotnet aspire run --project src/Hexalith.Parties.AppHost
 ```
 
-Open the Aspire dashboard (URL shown in terminal output) and verify these resources are running: `eventstore`, `eventstore-admin`, `parties`, `tenants`, `redis`, the DAPR sidecars, `statestore`, and `pubsub`. The AppHost also declares `eventstore-admin-ui` and `parties-mcp` as explicit-start auxiliary resources; start them from the dashboard when you need stream browsing or MCP access. AI assistants connect to `parties-mcp` rather than the `parties` actor host.
+Open the Aspire dashboard (URL shown in terminal output) and verify these resources are running: `eventstore`, `eventstore-admin`, `parties`, `parties-ui`, `tenants`, `redis`, the DAPR sidecars, `statestore`, and `pubsub`. The AppHost also declares `eventstore-admin-ui` and `parties-mcp` as explicit-start auxiliary resources; start them from the dashboard when you need stream browsing or MCP access. AI assistants connect to `parties-mcp` rather than the `parties` actor host.
 
 The default local run path uses root-level submodules only. Do not initialize nested submodules unless a separate story or maintainer asks for that explicitly. Rich Memories-backed search is optional for local development; enable it separately with `EnableMemoriesSearch=true` after initializing the root-level `Hexalith.Memories` submodule.
 
@@ -35,6 +36,7 @@ See the [Getting Started Guide](docs/getting-started.md) for the full EventStore
 ## Documentation
 
 - [Getting Started Guide](docs/getting-started.md) -- Deploy and send your first EventStore-fronted command in under 30 minutes
+- [Accessibility Contract](docs/accessibility.md) -- Parties UI WCAG 2.2 AA guardrails and test expectations
 - [Tenants Access Projection](docs/tenant-access-projection.md) -- Event-driven local tenant access state, consistency window, and fail-closed rules
 - [Embeddable Party Picker](docs/frontend/party-picker.md) -- Blazor/custom-element picker integration for consuming applications
 - [Architecture Overview](_bmad-output/planning-artifacts/architecture.md) -- System topology and design decisions
@@ -52,6 +54,7 @@ Hexalith.Parties/
     Hexalith.Parties.Client/         # Typed EventStore gateway client (IPartiesCommandClient / IPartiesQueryClient)
     Hexalith.Parties.Contracts/      # Shared DTOs, commands, events, value objects
     Hexalith.Parties.Picker/         # Embeddable Blazor/custom-element party picker
+    Hexalith.Parties.UI/             # Blazor Server browser UI/BFF for Admin and Consumer experiences
     Hexalith.Parties.ServiceDefaults/# Shared service configuration helpers (optional)
     Hexalith.Parties.Mcp/            # Separate parties-mcp host over the typed client
     # Internal (actor host private — not adopter-facing dependencies)

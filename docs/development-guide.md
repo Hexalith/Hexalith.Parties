@@ -8,6 +8,7 @@
 |------|---------|
 | .NET SDK | **10.0.300+** (pinned in `global.json`, rollForward latestPatch) |
 | Docker Desktop | latest (must be running before Aspire) |
+| Node.js | **24+** for the Playwright accessibility workspace under `tests/e2e` |
 | Git | recent |
 | `jq` | optional (Bash examples) |
 | PowerShell `pwsh` 7+, `kubectl`, DAPR CLI, `aspirate` 9.1.0 | only for the optional Kubernetes path (`aspirate` is restored by `dotnet tool restore`) |
@@ -46,7 +47,7 @@ See [build-gate.md](build-gate.md) for the policy and escape valves (narrow `<No
 dotnet aspire run --project src/Hexalith.Parties.AppHost
 ```
 
-Open the Aspire dashboard URL and confirm `eventstore`, `eventstore-admin`, `parties`, `tenants`, `redis`, the DAPR sidecars, `statestore`, and `pubsub` are healthy. `eventstore-admin-ui` and `parties-mcp` are **explicit-start** — start them from the dashboard when needed. AppHost http profile: `http://localhost:15100` (OTLP `21100`).
+Open the Aspire dashboard URL and confirm `eventstore`, `eventstore-admin`, `parties`, `parties-ui`, `tenants`, `redis`, the DAPR sidecars, `statestore`, and `pubsub` are healthy. `eventstore-admin-ui` and `parties-mcp` are **explicit-start** — start them from the dashboard when needed. AppHost http profile: `http://localhost:15100` (OTLP `21100`).
 
 Treat the system as usable only after `eventstore`, `parties`, and `tenants` are healthy (public traffic enters through EventStore). Health endpoints per service: `/ready`, `/health`, `/alive`.
 
@@ -57,6 +58,7 @@ Treat the system as usable only after `eventstore`, `parties`, and `tenants` are
 | `EnableMemoriesSearch=true` | composes the `memories` service + injects `Parties__MemoriesSearch__Enabled=true` (requires the Memories submodule) |
 | `EnableEventStoreSampleUi=true` | composes `sample` + `sample-blazor-ui` |
 | `EnableKeycloak` | local Keycloak IdP (default true in run mode; publish uses the external `tache` realm) |
+| `PartiesAccessibilitySpecimen:Enabled=true` | exposes the `parties-ui` deterministic accessibility specimen in Development/Test |
 | `PUBLISH_TARGET` | `docker` / `k8s` / `aca` for Aspire-native publish (orthogonal to the aspirate deploy path) |
 
 ## 4. Test
@@ -70,14 +72,23 @@ Or use the **lane runner** (`scripts/test.ps1 -Lane <lane>`, default `unit`, Rel
 
 | Lane | Scope |
 |------|-------|
-| `unit` | Contracts, Client, Server, Projections, Security, AdminPortal, Picker, Mcp |
+| `unit` | Contracts, Client, Server, Projections, Security, AdminPortal, Picker, Mcp, UI |
 | `integration` | Hexalith.Parties.Tests + Sample.Tests |
 | `topology` | Hexalith.Parties.IntegrationTests (full Aspire topology — needs Docker/DAPR; skips gracefully if absent) |
 | `deploy` | Hexalith.Parties.DeployValidation.Tests (static `deploy/` validation) |
 | `all` | whole solution |
 | `coverage` | whole solution with `--collect "XPlat Code Coverage"` |
 
-**Frameworks:** xUnit v3 + Shouldly (assertions) + NSubstitute (mocking); bunit for Blazor components; `Aspire.Hosting.Testing` for the topology lane (it manages the real DAPR/Redis containers); YamlDotNet for manifest validation. Note: `Testcontainers` is in the package manifest but **not referenced by any test project** — don't reach for it. See [component-inventory.md](component-inventory.md) for per-project coverage.
+The UI accessibility workspace lives under `tests/e2e`:
+
+```bash
+cd tests/e2e
+npm ci
+npm run typecheck
+npm run test:a11y
+```
+
+**Frameworks:** xUnit v3 + Shouldly (assertions) + NSubstitute (mocking); bunit for Blazor components; Playwright + axe for the browser accessibility gate; `Aspire.Hosting.Testing` for the topology lane (it manages the real DAPR/Redis containers); YamlDotNet for manifest validation. Note: `Testcontainers` is in the package manifest but **not referenced by any test project** — don't reach for it. See [component-inventory.md](component-inventory.md) for per-project coverage.
 
 ## 5. Configuration & feature flags (runtime)
 
@@ -93,7 +104,17 @@ Read by the `parties` host (`appsettings*.json` / env, `__` nesting):
 | `Parties:MemoriesSearch` | rich search (Enabled, Endpoint, ApiToken, TenantId, CaseId, EnabledAxes) |
 | `EventStore:CommandStatus` / `EventStore:DomainServices` | EventStore server integration |
 
-> ⚠️ **GDPR toggles are independent.** `Parties:CryptoShredding:IsEnabled` (the feature) defaults **on**; `Parties:Compliance:GdprFeaturesActive` (the MVP warning) defaults **off**. The README's "GDPR not in MVP" notice refers to the *warning*, not the encryption feature, which is implemented and enabled. The default key store is in-memory/dev-only — provision a real KMS for production ([deployment-security-checklist.md](deployment-security-checklist.md)).
+Read by the `parties-ui` host:
+
+| Section / key | Purpose |
+|---------------|---------|
+| `Authentication:OpenIdConnect` | host-owned OIDC client configuration; browser receives only the server-side cookie |
+| `Parties:BaseUrl` | EventStore gateway base URL for typed Parties clients |
+| `EventStore:SignalR:HubUrl` | EventStore projection-change hub for live freshness |
+| `Parties:Freshness:PollingIntervalSeconds` | polling fallback cadence when live freshness is unavailable |
+| `PartiesAccessibilitySpecimen:Enabled` | Development/Test-only accessibility specimen routing |
+
+> ⚠️ **GDPR toggles are independent.** `Parties:CryptoShredding:IsEnabled` (the feature) defaults **on**; `Parties:Compliance:GdprFeaturesActive` (the MVP warning) defaults **off**. The default key store is in-memory/dev-only, so the README and deployment docs prohibit regulated EU personal data until a production KMS or secret-store-backed key provider is provisioned ([deployment-security-checklist.md](deployment-security-checklist.md)).
 
 ## 6. Conventions
 

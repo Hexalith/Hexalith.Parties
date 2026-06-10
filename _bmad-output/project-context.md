@@ -187,8 +187,9 @@ _This file contains critical rules and patterns that AI agents must follow when 
   - `Parties:CryptoShredding:IsEnabled` (the AES-256-GCM encryption/erasure **feature**) defaults **true** —
     it is implemented and ON.
   - `Parties:Compliance:GdprFeaturesActive` (the MVP **warning** suppressor) defaults **false**.
-  - The README's "GDPR not in MVP" note refers to the *warning*, **not** the crypto feature. Don't conflate
-    them, and don't disable crypto-shredding to "match the README."
+  - The README's GDPR notice forbids regulated EU personal data until a production KMS is provisioned; this is
+    because the default key store is dev-only, **not** because crypto-shredding is disabled. Don't conflate the
+    MVP warning switch with the crypto feature, and don't disable crypto-shredding to "match the README."
 - **The default key store is `LocalDevKeyStorageBackend` (in-memory, dev-only).** Never ship it to
   production — provision a real KMS/secret store (`docs/deployment-security-checklist.md`). Do **not** store
   regulated EU personal data in the MVP; evaluate with synthetic data.
