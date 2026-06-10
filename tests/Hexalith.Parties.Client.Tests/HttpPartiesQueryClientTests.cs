@@ -319,6 +319,8 @@ public sealed class HttpPartiesQueryClientTests
             CancellationToken.None,
             mode: "Lexical",
             caseId: "case-42",
+            type: PartyType.Organization,
+            active: false,
             requestCustomizer: (request, _) =>
             {
                 request.Headers.Authorization = new("Bearer", "host-token");
@@ -346,6 +348,8 @@ public sealed class HttpPartiesQueryClientTests
         payload.GetProperty("query").GetString().ShouldBe("acme");
         payload.GetProperty("page").GetInt32().ShouldBe(1);
         payload.GetProperty("pageSize").GetInt32().ShouldBe(20);
+        payload.GetProperty("type").GetString().ShouldBe("Organization");
+        payload.GetProperty("active").GetBoolean().ShouldBeFalse();
         payload.GetProperty("mode").GetString().ShouldBe("Lexical");
         payload.GetProperty("caseId").GetString().ShouldBe("case-42");
         handler.LastRequest.Headers.Authorization!.Scheme.ShouldBe("Bearer");
@@ -375,6 +379,8 @@ public sealed class HttpPartiesQueryClientTests
         payload.GetProperty("query").GetString().ShouldBe("acme");
         payload.GetProperty("page").GetInt32().ShouldBe(1);
         payload.GetProperty("pageSize").GetInt32().ShouldBe(10);
+        payload.TryGetProperty("type", out _).ShouldBeFalse();
+        payload.TryGetProperty("active", out _).ShouldBeFalse();
         payload.TryGetProperty("mode", out _).ShouldBeFalse();
         payload.TryGetProperty("caseId", out _).ShouldBeFalse();
     }

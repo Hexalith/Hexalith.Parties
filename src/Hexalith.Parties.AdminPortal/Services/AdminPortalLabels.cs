@@ -96,7 +96,7 @@ public record AdminPortalLabels
 
     public string NoParties { get; init; } = "No parties";
 
-    public string NoMatches { get; init; } = "No parties match the current filters";
+    public string NoMatches { get; init; } = "No parties match.";
 
     public string SignInRequired { get; init; } = "Sign-in is required";
 

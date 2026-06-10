@@ -73,13 +73,16 @@ public sealed class PartiesAdminPortalApiClientTests
             Options.Create(new PartiesAdminPortalOptions()));
 
         await client.SearchPartiesAsync(
-            new AdminPortalSearchRequest("ada@example.com", Page: 2, PageSize: 250, Type: null, Active: null),
+            new AdminPortalSearchRequest("ada@example.com", Page: 2, PageSize: 250, Type: PartyType.Person, Active: true),
             CancellationToken.None);
 
         partiesQueryClient.SearchCallCount.ShouldBe(1);
         partiesQueryClient.LastSearchRequest.ShouldNotBeNull().Query.ShouldBe("ada@example.com");
         partiesQueryClient.LastSearchRequest.ShouldNotBeNull().Page.ShouldBe(2);
         partiesQueryClient.LastSearchRequest.ShouldNotBeNull().PageSize.ShouldBe(100);
+        partiesQueryClient.LastSearchRequest.ShouldNotBeNull().Mode.ShouldBe("Lexical");
+        partiesQueryClient.LastSearchRequest.ShouldNotBeNull().Type.ShouldBe(PartyType.Person);
+        partiesQueryClient.LastSearchRequest.ShouldNotBeNull().Active.ShouldBe(true);
         queryService.CallCount.ShouldBe(0);
     }
 
@@ -268,7 +271,7 @@ public sealed class PartiesAdminPortalApiClientTests
     }
 
     [Fact]
-    public async Task SearchPartiesAsync_UsesSearchQueryWithoutForwardingUnsupportedFiltersAsync()
+    public async Task SearchPartiesAsync_UsesSearchQueryWithFilteredDisplayNameSearchAsync()
     {
         var queryService = new RecordingQueryService();
         queryService.Enqueue([
@@ -298,7 +301,9 @@ public sealed class PartiesAdminPortalApiClientTests
         request.ProjectionType.ShouldBe("PartySearch");
         request.QueryType.ShouldBe("SearchParties");
         request.SearchQuery.ShouldBe("ada@example.test");
-        request.ColumnFilters.ShouldBeNull();
+        request.ColumnFilters.ShouldNotBeNull()["type"].ShouldBe("Person");
+        request.ColumnFilters.ShouldNotBeNull()["active"].ShouldBe("true");
+        request.ColumnFilters.ShouldNotBeNull()["mode"].ShouldBe("Lexical");
         request.CacheDiscriminator.ShouldBe("parties-admin-search-v1");
         result.Payload.Items.ShouldHaveSingleItem();
     }
@@ -790,11 +795,13 @@ public sealed class PartiesAdminPortalApiClientTests
             CancellationToken ct,
             string? mode = null,
             string? caseId = null,
-            Func<HttpRequestMessage, CancellationToken, ValueTask>? requestCustomizer = null)
+            Func<HttpRequestMessage, CancellationToken, ValueTask>? requestCustomizer = null,
+            PartyType? type = null,
+            bool? active = null)
         {
             ct.ThrowIfCancellationRequested();
             SearchCallCount++;
-            LastSearchRequest = new(query, page, pageSize);
+            LastSearchRequest = new(query, page, pageSize, mode, type, active);
             if (ExceptionToThrow is not null)
             {
                 throw ExceptionToThrow;
@@ -814,7 +821,13 @@ public sealed class PartiesAdminPortalApiClientTests
         DateTimeOffset? ModifiedAfter,
         DateTimeOffset? ModifiedBefore);
 
-    private sealed record SearchRequestSnapshot(string Query, int Page, int PageSize);
+    private sealed record SearchRequestSnapshot(
+        string Query,
+        int Page,
+        int PageSize,
+        string? Mode,
+        PartyType? Type,
+        bool? Active);
 
     private sealed class MalformedGdprClient : IAdminPortalGdprClient
     {

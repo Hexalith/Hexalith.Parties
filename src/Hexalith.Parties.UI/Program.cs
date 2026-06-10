@@ -1,5 +1,6 @@
 using Hexalith.FrontComposer.Shell.Extensions;
 using Hexalith.Parties.AdminPortal.Extensions;
+using Hexalith.Parties.AdminPortal.Services;
 using Hexalith.Parties.Client.Abstractions;
 using Hexalith.Parties.Client.AdminPortal;
 using Hexalith.Parties.Client.Extensions;
@@ -10,7 +11,9 @@ using Hexalith.Parties.UI.Components;
 using Hexalith.Parties.UI.Services;
 
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
+using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.FluentUI.AspNetCore.Components;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 builder.AddServiceDefaults();
@@ -33,6 +36,15 @@ builder.Services.AddHexalithFrontComposerQuickstart(o => o.ScanAssemblies(typeof
 builder.Services.AddFrontComposerDevMode(builder.Environment);
 builder.Services.AddHexalithDomain<PartiesUiDomainMarker>();
 builder.Services.AddHexalithPartiesAdminPortal();
+
+bool adminPortalE2eFixtureEnabled = PartiesAdminPortalE2eFixture.IsEnabled(builder.Configuration, builder.Environment);
+if (adminPortalE2eFixtureEnabled)
+{
+    builder.Services.AddSingleton<PartiesAdminPortalE2eFixtureState>();
+    builder.Services.Replace(ServiceDescriptor.Scoped<AuthenticationStateProvider, PartiesAdminPortalE2eAuthenticationStateProvider>());
+    builder.Services.Replace(ServiceDescriptor.Scoped<IAdminPortalAuthorizationService, PartiesAdminPortalE2eAuthorizationService>());
+    builder.Services.Replace(ServiceDescriptor.Scoped<IPartiesAdminPortalApiClient, PartiesAdminPortalE2eApiClient>());
+}
 
 // Story 1.3 (AR-D2) — register the role-claim Admin + Consumer policies UNCONDITIONALLY (not gated
 // on authEnabled). <AuthorizeView Policy=…> on the nav entries and [Authorize(Policy = …)] on the
@@ -165,5 +177,19 @@ if (authEnabled)
 }
 
 app.MapDefaultEndpoints();
+
+if (adminPortalE2eFixtureEnabled)
+{
+    app.MapGet(
+        PartiesAdminPortalE2eFixture.RequestsRoute,
+        (PartiesAdminPortalE2eFixtureState state) => Results.Json(state.Snapshot()));
+    app.MapPost(
+        PartiesAdminPortalE2eFixture.ResetRoute,
+        (PartiesAdminPortalE2eFixtureState state) =>
+        {
+            state.Reset();
+            return Results.NoContent();
+        });
+}
 
 app.Run();

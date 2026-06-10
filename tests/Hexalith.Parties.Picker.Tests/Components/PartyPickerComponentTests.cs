@@ -1531,7 +1531,9 @@ public sealed class PartyPickerComponentTests : BunitContext
             CancellationToken ct,
             string? mode = null,
             string? caseId = null,
-            Func<HttpRequestMessage, CancellationToken, ValueTask>? requestCustomizer = null)
+            Func<HttpRequestMessage, CancellationToken, ValueTask>? requestCustomizer = null,
+            PartyType? type = null,
+            bool? active = null)
         {
             SearchCalls.Add(new SearchCall(query, page, pageSize));
             LastMode = mode;
@@ -1566,7 +1568,9 @@ public sealed class PartyPickerComponentTests : BunitContext
             CancellationToken ct,
             string? mode = null,
             string? caseId = null,
-            Func<HttpRequestMessage, CancellationToken, ValueTask>? requestCustomizer = null)
+            Func<HttpRequestMessage, CancellationToken, ValueTask>? requestCustomizer = null,
+            PartyType? type = null,
+            bool? active = null)
         {
             int index = SearchCalls.Count;
             EnsureSlot(index);

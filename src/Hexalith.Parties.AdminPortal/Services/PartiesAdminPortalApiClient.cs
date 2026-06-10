@@ -15,6 +15,7 @@ namespace Hexalith.Parties.AdminPortal.Services;
 
 public sealed class PartiesAdminPortalApiClient : IPartiesAdminPortalApiClient
 {
+    private const string DisplayNameSearchMode = "Lexical";
     private const string ListCacheDiscriminator = "parties-admin-list-v1";
     private const string SearchCacheDiscriminator = "parties-admin-search-v1";
     private const string DetailCacheDiscriminator = "parties-admin-detail-v1";
@@ -112,7 +113,14 @@ public sealed class PartiesAdminPortalApiClient : IPartiesAdminPortalApiClient
         if (_partiesQueryClient is not null)
         {
             PagedResult<PartySearchResult> typedResult = await ExecutePartiesQueryAsync(
-                (client, token) => client.SearchPartiesAsync(request.Query ?? string.Empty, page, pageSize, token),
+                (client, token) => client.SearchPartiesAsync(
+                    request.Query ?? string.Empty,
+                    page,
+                    pageSize,
+                    token,
+                    mode: DisplayNameSearchMode,
+                    type: request.Type,
+                    active: request.Active),
                 cancellationToken).ConfigureAwait(false);
             return new(typedResult ?? new PagedResult<PartySearchResult> { Items = [] }, AdminPortalQueryMetadata.Empty);
         }
@@ -122,6 +130,7 @@ public sealed class PartiesAdminPortalApiClient : IPartiesAdminPortalApiClient
             TenantId: null,
             Skip: skip,
             Take: pageSize,
+            ColumnFilters: BuildSearchFilters(request),
             SearchQuery: request.Query ?? string.Empty,
             Domain: Domain,
             QueryType: RequireContract(_options.SearchQueryType, nameof(_options.SearchQueryType)),
@@ -576,6 +585,28 @@ public sealed class PartiesAdminPortalApiClient : IPartiesAdminPortalApiClient
         AddDate(filters, "createdBefore", request.CreatedBefore);
         AddDate(filters, "modifiedAfter", request.ModifiedAfter);
         AddDate(filters, "modifiedBefore", request.ModifiedBefore);
+
+        return filters;
+    }
+
+    private static IReadOnlyDictionary<string, string>? BuildSearchFilters(AdminPortalSearchRequest request)
+    {
+        var filters = new Dictionary<string, string>(StringComparer.Ordinal)
+        {
+            ["page"] = AdminPortalQueryBounds.BoundPage(request.Page).ToString(System.Globalization.CultureInfo.InvariantCulture),
+            ["pageSize"] = AdminPortalQueryBounds.BoundPageSize(request.PageSize).ToString(System.Globalization.CultureInfo.InvariantCulture),
+            ["mode"] = DisplayNameSearchMode,
+        };
+
+        if (request.Type is not null)
+        {
+            filters["type"] = request.Type.Value.ToString();
+        }
+
+        if (request.Active is not null)
+        {
+            filters["active"] = request.Active.Value ? "true" : "false";
+        }
 
         return filters;
     }

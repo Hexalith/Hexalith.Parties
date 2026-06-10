@@ -21,7 +21,7 @@
 
     <div class="hx-parties-admin__toolbar" @onkeydown="OnToolbarKeyDownAsync">
         <FluentTextInput Value="@_filters.Query"
-                         ValueChanged="OnQueryChanged"
+                         ValueChanged="OnQueryChangedAsync"
                          TextInputType="TextInputType.Search"
                          Label="@EffectiveLabels.Search"
                          aria-label="@EffectiveLabels.SearchAriaLabel"
@@ -30,19 +30,17 @@
         <FluentSelect TOption="string" TValue="string"
                       Items="@_partyTypeOptions"
                       Value="@_filters.TypeValue"
-                      ValueChanged="OnTypeChanged"
+                      ValueChanged="OnTypeChangedAsync"
                       OptionText="PartyTypeOptionLabel"
                       Label="@EffectiveLabels.PartyType"
-                      aria-label="@EffectiveLabels.PartyType"
-                      Disabled="@FiltersDisabledInSearchMode" />
+                      aria-label="@EffectiveLabels.PartyType" />
         <FluentSelect TOption="string" TValue="string"
                       Items="@_activeStateOptions"
                       Value="@_filters.ActiveValue"
-                      ValueChanged="OnActiveChanged"
+                      ValueChanged="OnActiveChangedAsync"
                       OptionText="ActiveStateOptionLabel"
                       Label="@EffectiveLabels.ActiveState"
-                      aria-label="@EffectiveLabels.ActiveState"
-                      Disabled="@FiltersDisabledInSearchMode" />
+                      aria-label="@EffectiveLabels.ActiveState" />
         <FluentTextInput Value="@_filters.CreatedAfterValue"
                          ValueChanged="OnCreatedAfterChanged"
                          TextInputType="TextInputType.Text"
@@ -90,7 +88,15 @@
     </div>
 
     <div class="hx-parties-admin__layout">
-        <div class="hx-parties-admin__list">
+        <div class="hx-parties-admin__list"
+             tabindex="0"
+             data-focused-row-index="@_focusedRowIndex"
+             @onkeydown="OnGridKeyDownAsync">
+            @if (_isLoading && _rows.Count == 0)
+            {
+                <p class="hx-parties-admin__skeleton" role="status" aria-live="polite">@EffectiveLabels.Loading</p>
+            }
+
             <FluentDataGrid Items="@RowsQuery"
                             GridTemplateColumns="2fr 1fr 1fr 1fr 1fr"
                             DisplayMode="DataGridDisplayMode.Table"
@@ -122,7 +128,13 @@
 
             @if (!_isLoading && _rows.Count == 0)
             {
-                <p class="hx-parties-admin__empty" role="status" aria-live="polite">@EmptyText</p>
+                <div class="hx-parties-admin__empty" role="status" aria-live="polite">
+                    <p>@EmptyText</p>
+                    @if (HasActiveFilters)
+                    {
+                        <FluentButton Appearance="ButtonAppearance.Outline" OnClick="ClearFiltersAsync">@EffectiveLabels.Clear</FluentButton>
+                    }
+                </div>
             }
 
             <nav class="hx-parties-admin__paging" aria-label="@EffectiveLabels.PagingRegion">
@@ -330,6 +342,7 @@
     private long _authContextClaim;
     private CancellationTokenSource? _listCts;
     private CancellationTokenSource? _detailCts;
+    private CancellationTokenSource? _debounceCts;
     private PartyDetail? _detail;
     private AdminPortalQueryMetadata? _detailMetadata;
     private string? _selectedPartyId;
@@ -352,6 +365,7 @@
     private string? _richSearchCapabilityContextSignature;
     private FocusTarget _pendingFocus = FocusTarget.None;
     private FluentTextInput? _searchInputRef;
+    private int _focusedRowIndex;
 
     [Parameter]
     public string? ContextKey { get; set; }
@@ -365,13 +379,25 @@
     [Parameter]
     public AdminPortalLabels? Labels { get; set; }
 
+    [Parameter]
+    public TimeSpan SearchDebounceDelay { get; set; } = TimeSpan.FromMilliseconds(300);
+
     private AdminPortalLabels EffectiveLabels => Labels ?? new AdminPortalLabels();
 
     private bool IsRichSearchAvailable => _richSearchCapability.IsAvailable;
 
+    private IQueryable<PartyIndexEntry> RowsQuery => _rows.AsQueryable();
+
     private bool FiltersDisabledInSearchMode => !string.IsNullOrWhiteSpace(_filters.Query);
 
-    private IQueryable<PartyIndexEntry> RowsQuery => _rows.AsQueryable();
+    private bool HasActiveFilters
+        => !string.IsNullOrWhiteSpace(_filters.Query)
+            || _filters.Type is not null
+            || _filters.Active is not null
+            || !string.IsNullOrWhiteSpace(_filters.CreatedAfterValue)
+            || !string.IsNullOrWhiteSpace(_filters.CreatedBeforeValue)
+            || !string.IsNullOrWhiteSpace(_filters.ModifiedAfterValue)
+            || !string.IsNullOrWhiteSpace(_filters.ModifiedBeforeValue);
 
     private bool RetryAvailable
         => _lastFailure is AdminPortalQueryFailureKind.TransientFailure
@@ -403,9 +429,9 @@
         StatusKind.TenantUnavailable => EffectiveLabels.SelectTenant,
         StatusKind.AdminRequired => EffectiveLabels.AccessDenied,
         StatusKind.Forbidden => EffectiveLabels.AccessDenied,
-        _ => string.IsNullOrWhiteSpace(_filters.Query)
-            ? EffectiveLabels.NoParties
-            : EffectiveLabels.NoMatches,
+        _ => HasActiveFilters
+            ? EffectiveLabels.NoMatches
+            : EffectiveLabels.NoParties,
     };
 
     private string DetailEmptyText => _detailEmptyKind switch
@@ -545,16 +571,47 @@
 
     private async Task SubmitSearchAsync()
     {
+        CancelDebounce();
         _page = 1;
         _pendingFocus = FocusTarget.SearchInput;
         await LoadPageAsync().ConfigureAwait(false);
     }
 
-    private void OnQueryChanged(string value) => _filters.Query = value;
+    private Task OnQueryChangedAsync(string value)
+    {
+        if (string.Equals(_filters.Query, value, StringComparison.Ordinal))
+        {
+            return Task.CompletedTask;
+        }
 
-    private void OnTypeChanged(string value) => _filters.TypeValue = value;
+        _filters.Query = value;
+        _page = 1;
+        return ScheduleDebouncedLoadAsync();
+    }
 
-    private void OnActiveChanged(string value) => _filters.ActiveValue = value;
+    private Task OnTypeChangedAsync(string value)
+    {
+        if (string.Equals(_filters.TypeValue, value, StringComparison.Ordinal))
+        {
+            return Task.CompletedTask;
+        }
+
+        _filters.TypeValue = value;
+        _page = 1;
+        return string.IsNullOrWhiteSpace(_filters.Query) ? Task.CompletedTask : ScheduleDebouncedLoadAsync();
+    }
+
+    private Task OnActiveChangedAsync(string value)
+    {
+        if (string.Equals(_filters.ActiveValue, value, StringComparison.Ordinal))
+        {
+            return Task.CompletedTask;
+        }
+
+        _filters.ActiveValue = value;
+        _page = 1;
+        return string.IsNullOrWhiteSpace(_filters.Query) ? Task.CompletedTask : ScheduleDebouncedLoadAsync();
+    }
 
     private void OnCreatedAfterChanged(string value) => _filters.CreatedAfterValue = value;
 
@@ -566,6 +623,7 @@
 
     private async Task ClearFiltersAsync()
     {
+        CancelDebounce();
         _filters.Query = string.Empty;
         _filters.TypeValue = string.Empty;
         _filters.ActiveValue = string.Empty;
@@ -576,6 +634,29 @@
         _page = 1;
         _pendingFocus = FocusTarget.SearchInput;
         await LoadPageAsync().ConfigureAwait(false);
+    }
+
+    private Task ScheduleDebouncedLoadAsync()
+    {
+        CancellationToken token = SwapDebounceCts();
+        _ = RunDebouncedLoadAsync(token);
+        return Task.CompletedTask;
+    }
+
+    private async Task RunDebouncedLoadAsync(CancellationToken token)
+    {
+        try
+        {
+            if (SearchDebounceDelay > TimeSpan.Zero)
+            {
+                await Task.Delay(SearchDebounceDelay, token).ConfigureAwait(false);
+            }
+
+            await LoadPageAsync().ConfigureAwait(false);
+        }
+        catch (OperationCanceledException)
+        {
+        }
     }
 
     private async Task PreviousPageAsync()
@@ -610,7 +691,6 @@
         _statusKind = StatusKind.Loading;
         ListCoordinator.Transition(AdminPortalListState.Loading);
         _validationDetail = null;
-        _rows.Clear();
         _detail = null;
         _selectedPartyId = null;
         _detailMetadata = null;
@@ -629,6 +709,7 @@
             {
                 _validationDetail = validationDetail;
                 _statusKind = StatusKind.Validation;
+                _rows.Clear();
                 ListCoordinator.Transition(AdminPortalListState.TransientFailure);
                 return;
             }
@@ -684,13 +765,21 @@
             return;
         }
 
-        _rows.Clear();
-        // Backend already filters erased parties from list/search; trust server counts.
-        // No client-side IsErased filter — would otherwise leak an erased-count signal via
-        // total/displayed mismatch (P8).
-        _rows.AddRange(page.Items);
-        _totalPages = page.TotalPages;
-        _totalCount = page.TotalCount;
+        bool preserveLastKnownRows = _rows.Count > 0
+            && page.Items.Count == 0
+            && (metadata.IsDegraded || metadata.StaleDataAge is not null);
+        if (!preserveLastKnownRows)
+        {
+            _rows.Clear();
+            // Backend already filters erased parties from list/search; trust server counts.
+            // No client-side IsErased filter — would otherwise leak an erased-count signal via
+            // total/displayed mismatch (P8).
+            _rows.AddRange(page.Items);
+            _focusedRowIndex = _rows.Count == 0 ? 0 : Math.Min(_focusedRowIndex, _rows.Count - 1);
+        }
+
+        _totalPages = preserveLastKnownRows && page.TotalPages == 0 ? _totalPages : page.TotalPages;
+        _totalCount = preserveLastKnownRows && page.TotalCount == 0 ? _totalCount : page.TotalCount;
 
         // Canonicalize _page from the server response so subsequent Previous/Next navigate
         // from what the server actually served. When the server returns Page == 0 (e.g.,
@@ -701,7 +790,7 @@
             ? page.Page
             : page.TotalPages > 0 ? page.TotalPages : 1;
 
-        _hasNextPage = page.TotalPages > _page;
+        _hasNextPage = _totalPages > _page;
         bool degraded = _richSearchCapability.IsDegraded
             || metadata.IsLocalOnlySearch
             || metadata.IsDegraded;
@@ -1004,10 +1093,8 @@
             _filters.Query,
             AdminPortalQueryBounds.BoundPage(_page),
             AdminPortalQueryBounds.BoundPageSize(PageSize),
-            // Filter values are intentionally not forwarded to the rich-search query contract yet.
-            // UI disables the filter selects in search mode (D2.1).
-            null,
-            null);
+            _filters.Type,
+            _filters.Active);
 
     private void ResetVisibleState()
     {
@@ -1117,7 +1204,7 @@
     private long SwapListCts(out CancellationToken token)
     {
         long version = Interlocked.Increment(ref _listVersion);
-        var newCts = new CancellationTokenSource();
+        var newCts = CancellationTokenSource.CreateLinkedTokenSource(_lifetimeCts.Token);
         CancellationTokenSource? old = Interlocked.Exchange(ref _listCts, newCts);
         SafeCancel(old);
         token = newCts.Token;
@@ -1134,11 +1221,23 @@
         return version;
     }
 
+    private CancellationToken SwapDebounceCts()
+    {
+        var newCts = CancellationTokenSource.CreateLinkedTokenSource(_lifetimeCts.Token);
+        CancellationTokenSource? old = Interlocked.Exchange(ref _debounceCts, newCts);
+        SafeCancel(old);
+        return newCts.Token;
+    }
+
     private void CancelInFlight()
     {
+        CancelDebounce();
         SafeCancel(Interlocked.Exchange(ref _listCts, null));
         SafeCancel(Interlocked.Exchange(ref _detailCts, null));
     }
+
+    private void CancelDebounce()
+        => SafeCancel(Interlocked.Exchange(ref _debounceCts, null));
 
     private static void SafeCancel(CancellationTokenSource? cts)
     {
@@ -1187,6 +1286,40 @@
         }
 
         return row.IsActive ? EffectiveLabels.Active : EffectiveLabels.Inactive;
+    }
+
+    private async Task OnGridKeyDownAsync(KeyboardEventArgs e)
+    {
+        if (_rows.Count == 0)
+        {
+            return;
+        }
+
+        if (e.Key is "ArrowDown")
+        {
+            _focusedRowIndex = Math.Min(_focusedRowIndex + 1, _rows.Count - 1);
+            await SafeStateHasChangedAsync().ConfigureAwait(false);
+            return;
+        }
+
+        if (e.Key is "ArrowUp")
+        {
+            _focusedRowIndex = Math.Max(_focusedRowIndex - 1, 0);
+            await SafeStateHasChangedAsync().ConfigureAwait(false);
+            return;
+        }
+
+        if (e.Key is "Enter")
+        {
+            await SelectPartyAsync(_rows[_focusedRowIndex].Id).ConfigureAwait(false);
+            return;
+        }
+
+        if (e.Key.Length == 1 && !e.CtrlKey && !e.AltKey && !e.MetaKey)
+        {
+            _pendingFocus = FocusTarget.SearchInput;
+            await SafeStateHasChangedAsync().ConfigureAwait(false);
+        }
     }
 
     private string RowStatusId(PartyIndexEntry row)

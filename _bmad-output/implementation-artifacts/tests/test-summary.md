@@ -1,54 +1,46 @@
 # Test Automation Summary
 
-Story: 2.1 - Embed the Admin area behind the Admin policy
+Story: 2.2 - Parties list with search, filters, and paging (FR-Admin-1)
 
 ## Generated Tests
 
 ### API Tests
-- [x] Not applicable: story 2.1 adds host/RCL route discovery and authorization wiring only; no public API endpoints were added.
-
-### Unit / Component Tests
-- [x] `tests/Hexalith.Parties.AdminPortal.Tests/Services/PartiesAdminPortalServiceCollectionTests.cs` - covers lazy AdminPortal backend configuration so degraded/test host startup does not fail when no typed Parties client or FrontComposer `IQueryService` is registered.
-- [x] `tests/Hexalith.Parties.UI.Tests/PartiesUiAreaAuthorizationTests.cs` - covers route-aware forbidden copy so `/admin*` denials explain the Admin role requirement without mislabeling other denied areas.
+- [x] `src/Hexalith.Parties.UI/Services/PartiesAdminPortalE2eFixture.cs` - adds a Test-environment-only AdminPortal API fixture with captured list/search request summaries for browser-level assertions.
 
 ### E2E Tests
-- [x] `tests/e2e/specs/admin-area-authorization.spec.ts` - covers unauthenticated access to `/admin`, `/admin/parties`, `/admin/parties/party-123`, and `/admin/parties/party-123/gdpr`.
-- [x] `tests/e2e/playwright.config.ts` - supplies synthetic `Parties__BaseUrl` and `Parties__Tenant` values for browser-test host typed-client composition without requiring a live backend.
+- [x] `tests/e2e/specs/admin-parties-list.spec.ts` - covers debounced display-name search, combined type/active filters, server-side criteria capture, paging preservation, stale/degraded last-known rows, recoverable empty state, keyboard row activation, and type-ahead search focus.
+- [x] `tests/e2e/playwright.config.ts` - enables the deterministic AdminPortal E2E fixture for the Playwright-hosted `Test` environment.
 
 ## Coverage
 
-- Admin routes challenged unauthenticated: 4/4.
-- Admin route return URLs preserved: 4/4.
-- UI features covered: Admin landing compatibility route, AdminPortal list route, AdminPortal detail route, AdminPortal GDPR route.
-- Critical error cases covered: unauthenticated users are sent to the sign-in challenge; old `/admin` placeholder text and representative party data are not rendered before authorization.
-- Review regression covered: AdminPortal DI/options validation remains lazy when no data backend is configured.
-- API endpoints: not applicable for this story.
+- API request semantics covered: search query, page, page size, type filter, active filter.
+- UI workflows covered: 5/5 targeted FR-Admin-1 browser workflows.
+- Critical error/degraded cases covered: stale/degraded search preserving last-known rows; empty search with clear-filters recovery.
+- Authorization safety covered indirectly: the fixture requires an opt-in cookie, so existing unauthenticated Admin-route E2E tests remain anonymous.
 
 ## Validation
 
-- [x] `dotnet build src/Hexalith.Parties.UI/Hexalith.Parties.UI.csproj -c Release -m:1 -p:NuGetAudit=false -p:RestoreIgnoreFailedSources=true`
-- [x] `dotnet build tests/Hexalith.Parties.UI.Tests/Hexalith.Parties.UI.Tests.csproj -c Release -m:1 -p:NuGetAudit=false -p:RestoreIgnoreFailedSources=true`
-- [x] `dotnet build tests/Hexalith.Parties.AdminPortal.Tests/Hexalith.Parties.AdminPortal.Tests.csproj -c Release -m:1 -p:NuGetAudit=false -p:RestoreIgnoreFailedSources=true`
-- [x] `tests/Hexalith.Parties.UI.Tests/bin/Release/net10.0/Hexalith.Parties.UI.Tests` - 256 total, 0 failed.
-- [x] `tests/Hexalith.Parties.AdminPortal.Tests/bin/Release/net10.0/Hexalith.Parties.AdminPortal.Tests` - 112 total, 0 failed.
 - [x] `cd tests/e2e && npm run typecheck`
-- [x] `cd tests/e2e && npx playwright test specs/admin-area-authorization.spec.ts --project=chromium --list` - 4 tests discovered.
+- [x] `cd tests/e2e && npx playwright test specs/admin-parties-list.spec.ts --project=chromium --list` - 5 tests discovered.
 - [x] `bash scripts/check-no-warning-override.sh`
-- [ ] `cd tests/e2e && npm run test -- specs/admin-area-authorization.spec.ts --project=chromium` - attempted, but blocked by sandbox socket permission when Kestrel binds: `System.Net.Sockets.SocketException (13): Permission denied`.
+- [x] `dotnet build src/Hexalith.Parties.UI/Hexalith.Parties.UI.csproj -c Release -m:1 -p:NuGetAudit=false`
+- [x] `dotnet build tests/Hexalith.Parties.UI.Tests/Hexalith.Parties.UI.Tests.csproj -c Release -m:1 -p:NuGetAudit=false`
+- [x] `DiffEngine_Disabled=true tests/Hexalith.Parties.UI.Tests/bin/Release/net10.0/Hexalith.Parties.UI.Tests` - 258 tests passed.
+- [ ] `cd tests/e2e && npx playwright test specs/admin-parties-list.spec.ts --project=chromium` - not runnable in this sandbox because Kestrel socket binding fails with `System.Net.Sockets.SocketException (13): Permission denied`.
 
 ## Checklist Result
 
-- API tests generated if applicable: yes, not applicable.
+- API tests generated if applicable: yes, via fixture request-capture assertions for server-side criteria.
 - E2E tests generated if UI exists: yes.
-- Tests use standard test framework APIs: yes, Playwright `test`, semantic locators, and URL assertions.
-- Happy path covered: yes for the protected unauthenticated browser flow into the sign-in challenge.
-- Critical error cases covered: yes, unauthenticated access and no protected data/placeholder rendering before authorization.
-- Tests use proper locators: yes, `getByRole` and `getByText`.
+- Tests use standard test framework APIs: yes, Playwright `test`, `expect`, semantic locators, and `expect.poll`.
+- Happy path covered: yes.
+- Critical error cases covered: yes, degraded/stale and empty-state recovery.
+- Tests use proper locators: yes, labels, roles, and visible text; one scoped CSS locator targets the existing keyboard-focus grid wrapper.
 - Clear descriptions: yes.
 - No hardcoded waits or sleeps: yes.
-- Tests independent: yes.
+- Tests independent: yes, fixture state resets before each test and the spec is serial because it shares an in-memory fixture.
 - Summary created: yes.
 
 ## Next Steps
 
-- Run the focused Playwright command in an environment that permits local Kestrel socket binding.
+- Run the focused Playwright spec in an environment with NuGet audit access and local Kestrel socket binding.

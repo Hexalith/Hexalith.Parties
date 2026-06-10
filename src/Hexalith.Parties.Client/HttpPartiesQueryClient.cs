@@ -103,11 +103,13 @@ public sealed class HttpPartiesQueryClient : IPartiesQueryClient
         CancellationToken ct,
         string? mode = null,
         string? caseId = null,
-        Func<HttpRequestMessage, CancellationToken, ValueTask>? requestCustomizer = null)
+        Func<HttpRequestMessage, CancellationToken, ValueTask>? requestCustomizer = null,
+        PartyType? type = null,
+        bool? active = null)
     {
         ct.ThrowIfCancellationRequested();
 
-        var payload = new SearchPartiesQueryPayload(query, page, pageSize, mode, caseId);
+        var payload = new SearchPartiesQueryPayload(query, page, pageSize, type?.ToString(), active, mode, caseId);
         var request = new SubmitQueryRequest(
             Tenant: HttpPartiesCommandClient.GetValidatedTenant(_options),
             Domain: PartyDomain,
@@ -196,5 +198,12 @@ public sealed class HttpPartiesQueryClient : IPartiesQueryClient
         string? ModifiedAfter,
         string? ModifiedBefore);
 
-    private sealed record SearchPartiesQueryPayload(string Query, int Page, int PageSize, string? Mode, string? CaseId);
+    private sealed record SearchPartiesQueryPayload(
+        string Query,
+        int Page,
+        int PageSize,
+        string? Type,
+        bool? Active,
+        string? Mode,
+        string? CaseId);
 }

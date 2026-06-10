@@ -28,5 +28,7 @@ public interface IPartiesQueryClient
         CancellationToken ct,
         string? mode = null,
         string? caseId = null,
-        Func<HttpRequestMessage, CancellationToken, ValueTask>? requestCustomizer = null);
+        Func<HttpRequestMessage, CancellationToken, ValueTask>? requestCustomizer = null,
+        PartyType? type = null,
+        bool? active = null);
 }

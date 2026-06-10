@@ -18,6 +18,7 @@ using Hexalith.Tenants.Contracts.Enums;
 
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Web;
 using Microsoft.FluentUI.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -388,6 +389,8 @@ public sealed class PartiesAdminPortalComponentTests : BunitContext
         IRenderedComponent<PartiesAdminPortal> cut = RenderAuthorized("scope-a", pageSize: 250);
 
         cut.WaitForAssertion(() => api.ListRequests.Count.ShouldBe(1));
+        SetSelect(cut, "Party type", "Person");
+        SetSelect(cut, "Active state", "true");
         SetSearch(cut, "grace@example.test");
         ClickFluentButton(cut, "Search");
 
@@ -400,19 +403,148 @@ public sealed class PartiesAdminPortalComponentTests : BunitContext
         AdminPortalSearchRequest search = api.SearchRequests.Single();
         search.Query.ShouldBe("grace@example.test");
         search.PageSize.ShouldBe(100);
-        // Type/Active intentionally not forwarded to the rich-search query contract yet.
-        // UI disables the filter selects in search mode (D2.1) so the user
-        // sees the constraint rather than a silently-ignored selection.
-        search.Type.ShouldBeNull();
-        search.Active.ShouldBeNull();
-        // Filter selects must be disabled while the query is non-empty.
+        search.Type.ShouldBe(PartyType.Person);
+        search.Active.ShouldBe(true);
         IReadOnlyList<IRenderedComponent<FluentSelect<string, string>>> selects = cut.FindComponents<FluentSelect<string, string>>();
-        (selects[0].Instance.Disabled == true).ShouldBeTrue();
-        (selects[1].Instance.Disabled == true).ShouldBeTrue();
+        (selects[0].Instance.Disabled == true).ShouldBeFalse();
+        (selects[1].Instance.Disabled == true).ShouldBeFalse();
         (FindTextInput(cut, "Created after").Instance.Disabled == true).ShouldBeTrue();
         (FindTextInput(cut, "Created before").Instance.Disabled == true).ShouldBeTrue();
         (FindTextInput(cut, "Modified after").Instance.Disabled == true).ShouldBeTrue();
         (FindTextInput(cut, "Modified before").Instance.Disabled == true).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void PartiesAdminPortal_SearchInput_DebouncesWithoutSearchButton()
+    {
+        var api = new RecordingAdminPortalApiClient();
+        api.EnqueueList(Page<PartyIndexEntry>());
+        api.EnqueueSearch(Page(new PartySearchResult
+        {
+            Party = IndexEntry("party-debounced", "Debounced Row", PartyType.Person, true),
+            Matches = [],
+            RelevanceScore = 1.0,
+        }));
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+
+        IRenderedComponent<PartiesAdminPortal> cut = RenderAuthorized(
+            "scope-debounce",
+            searchDebounceDelay: TimeSpan.Zero);
+        cut.WaitForAssertion(() => api.ListRequests.Count.ShouldBe(1));
+
+        SetSearch(cut, "debounced");
+
+        cut.WaitForAssertion(() =>
+        {
+            api.SearchRequests.Single().Query.ShouldBe("debounced");
+            cut.Markup.ShouldContain("Debounced Row");
+        });
+    }
+
+    [Fact]
+    public void PartiesAdminPortal_SupersededSearch_DoesNotPaintStaleRows()
+    {
+        var api = new RecordingAdminPortalApiClient();
+        var first = new TaskCompletionSource<AdminPortalQueryResult<PagedResult<PartySearchResult>>>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var second = new TaskCompletionSource<AdminPortalQueryResult<PagedResult<PartySearchResult>>>(TaskCreationOptions.RunContinuationsAsynchronously);
+        api.EnqueueList(Page<PartyIndexEntry>());
+        api.EnqueueSearch(token => first.Task.WaitAsync(token));
+        api.EnqueueSearch(token => second.Task.WaitAsync(token));
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+
+        IRenderedComponent<PartiesAdminPortal> cut = RenderAuthorized(
+            "scope-superseded",
+            searchDebounceDelay: TimeSpan.Zero);
+        cut.WaitForAssertion(() => api.ListRequests.Count.ShouldBe(1));
+
+        SetSearch(cut, "old");
+        cut.WaitForAssertion(() => api.SearchRequests.Count.ShouldBe(1));
+        SetSearch(cut, "new");
+        cut.WaitForAssertion(() => api.SearchRequests.Count.ShouldBe(2));
+
+        second.SetResult(new AdminPortalQueryResult<PagedResult<PartySearchResult>>(
+            Page(new PartySearchResult
+            {
+                Party = IndexEntry("party-new", "New Row", PartyType.Person, true),
+                Matches = [],
+                RelevanceScore = 1.0,
+            }),
+            AdminPortalQueryMetadata.Empty));
+        first.SetResult(new AdminPortalQueryResult<PagedResult<PartySearchResult>>(
+            Page(new PartySearchResult
+            {
+                Party = IndexEntry("party-old", "Old Row", PartyType.Person, true),
+                Matches = [],
+                RelevanceScore = 1.0,
+            }),
+            AdminPortalQueryMetadata.Empty));
+
+        cut.WaitForAssertion(() =>
+        {
+            cut.Markup.ShouldContain("New Row");
+            cut.Markup.ShouldNotContain("Old Row");
+        });
+    }
+
+    [Fact]
+    public void PartiesAdminPortal_Paging_PreservesSearchTypeAndActiveCriteria()
+    {
+        var api = new RecordingAdminPortalApiClient();
+        api.EnqueueList(Page<PartyIndexEntry>());
+        api.EnqueueSearch(new PagedResult<PartySearchResult>
+        {
+            Items =
+            [
+                new PartySearchResult
+                {
+                    Party = IndexEntry("party-page-1", "Page One", PartyType.Organization, true),
+                    Matches = [],
+                    RelevanceScore = 1.0,
+                },
+            ],
+            Page = 1,
+            PageSize = 20,
+            TotalCount = 2,
+            TotalPages = 2,
+        });
+        api.EnqueueSearch(new PagedResult<PartySearchResult>
+        {
+            Items =
+            [
+                new PartySearchResult
+                {
+                    Party = IndexEntry("party-page-2", "Page Two", PartyType.Organization, true),
+                    Matches = [],
+                    RelevanceScore = 1.0,
+                },
+            ],
+            Page = 2,
+            PageSize = 20,
+            TotalCount = 2,
+            TotalPages = 2,
+        });
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+
+        IRenderedComponent<PartiesAdminPortal> cut = RenderAuthorized("scope-page");
+        cut.WaitForAssertion(() => api.ListRequests.Count.ShouldBe(1));
+        SetSelect(cut, "Party type", "Organization");
+        SetSelect(cut, "Active state", "true");
+        SetSearch(cut, "page");
+        ClickFluentButton(cut, "Search");
+        cut.WaitForAssertion(() => cut.Markup.ShouldContain("Page One"));
+
+        ClickFluentButton(cut, "Next");
+
+        cut.WaitForAssertion(() =>
+        {
+            api.SearchRequests.Count.ShouldBe(2);
+            cut.Markup.ShouldContain("Page Two");
+        });
+        api.SearchRequests[1].Query.ShouldBe("page");
+        api.SearchRequests[1].Type.ShouldBe(PartyType.Organization);
+        api.SearchRequests[1].Active.ShouldBe(true);
+        api.SearchRequests[1].Page.ShouldBe(2);
+        api.SearchRequests[1].PageSize.ShouldBe(20);
     }
 
     [Fact]
@@ -487,12 +619,69 @@ public sealed class PartiesAdminPortalComponentTests : BunitContext
         cut.WaitForAssertion(() =>
         {
             cut.Find(".hx-parties-admin__status").TextContent.ShouldContain("Parties loaded");
-            cut.Find(".hx-parties-admin__empty").TextContent.Trim().ShouldBe("No parties match the current filters");
+            cut.Find(".hx-parties-admin__empty").TextContent.ShouldContain("No parties match.");
+            FindFluentButton(cut, "Clear").TextContent.ShouldContain("Clear");
             cut.Markup.ShouldNotContain("Existing Row");
             cut.Markup.ShouldNotContain("another tenant", Case.Insensitive);
             cut.Markup.ShouldNotContain("scope-a");
         });
         api.SearchRequests.Single().Query.ShouldBe("missing@example.test");
+    }
+
+    [Fact]
+    public void PartiesAdminPortal_FilterOnlyEmptyResult_UsesRecoverableNoMatchesCopy()
+    {
+        var api = new RecordingAdminPortalApiClient();
+        api.EnqueueList(Page(IndexEntry("party-existing", "Existing Row", PartyType.Person, true)));
+        api.EnqueueList(Page<PartyIndexEntry>());
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+
+        IRenderedComponent<PartiesAdminPortal> cut = RenderAuthorized("scope-filter-empty");
+        cut.WaitForAssertion(() => cut.Markup.ShouldContain("Existing Row"));
+
+        SetSelect(cut, "Party type", "Organization");
+        SetSelect(cut, "Active state", "false");
+        ClickFluentButton(cut, "Search");
+
+        cut.WaitForAssertion(() =>
+        {
+            cut.Find(".hx-parties-admin__empty").TextContent.ShouldContain("No parties match.");
+            FindFluentButton(cut, "Clear").TextContent.ShouldContain("Clear");
+            cut.Markup.ShouldNotContain("Existing Row");
+        });
+        api.ListRequests.Count.ShouldBe(2);
+        api.ListRequests[1].Type.ShouldBe(PartyType.Organization);
+        api.ListRequests[1].Active.ShouldBe(false);
+    }
+
+    [Fact]
+    public void PartiesAdminPortal_ClearFiltersFromEmptyState_ResetsSearchTypeActiveAndPaging()
+    {
+        var api = new RecordingAdminPortalApiClient();
+        api.EnqueueList(Page(IndexEntry("party-existing", "Existing Row", PartyType.Person, true)));
+        api.EnqueueSearch(Page<PartySearchResult>());
+        api.EnqueueList(Page(IndexEntry("party-reset", "Reset Row", PartyType.Person, true)));
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+
+        IRenderedComponent<PartiesAdminPortal> cut = RenderAuthorized("scope-clear");
+        cut.WaitForAssertion(() => cut.Markup.ShouldContain("Existing Row"));
+        SetSelect(cut, "Party type", "Person");
+        SetSelect(cut, "Active state", "false");
+        SetSearch(cut, "missing");
+        ClickFluentButton(cut, "Search");
+        cut.WaitForAssertion(() => cut.Markup.ShouldContain("No parties match."));
+
+        ClickFluentButton(cut, "Clear");
+
+        cut.WaitForAssertion(() =>
+        {
+            cut.Markup.ShouldContain("Reset Row");
+            api.ListRequests.Count.ShouldBe(2);
+        });
+        AdminPortalListRequest reset = api.ListRequests[1];
+        reset.Page.ShouldBe(1);
+        reset.Type.ShouldBeNull();
+        reset.Active.ShouldBeNull();
     }
 
     [Fact]
@@ -557,6 +746,54 @@ public sealed class PartiesAdminPortalComponentTests : BunitContext
             cut.Find(".hx-parties-admin__status").TextContent.ShouldContain("Data may be stale or degraded");
             cut.Markup.ShouldNotContain("ada@example.test");
             cut.Markup.ShouldNotContain("scope-a failed");
+        });
+    }
+
+    [Fact]
+    public void PartiesAdminPortal_StaleListMetadata_PreservesLastKnownRows()
+    {
+        var api = new RecordingAdminPortalApiClient();
+        api.EnqueueList(Page(IndexEntry("party-last-known", "Last Known Row", PartyType.Person, true)));
+        api.EnqueueList(
+            Page<PartyIndexEntry>(),
+            new AdminPortalQueryMetadata(StaleDataAge: "not-modified"));
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+
+        IRenderedComponent<PartiesAdminPortal> cut = RenderAuthorized("scope-stale");
+        cut.WaitForAssertion(() => cut.Markup.ShouldContain("Last Known Row"));
+
+        ClickFluentButton(cut, "Search");
+
+        cut.WaitForAssertion(() =>
+        {
+            cut.Markup.ShouldContain("Last Known Row");
+            cut.Find(".hx-parties-admin__status").TextContent.ShouldContain("Data may be stale or degraded");
+            cut.Find(".hx-parties-admin__status").GetAttribute("aria-live").ShouldBe("polite");
+        });
+    }
+
+    [Fact]
+    public void PartiesAdminPortal_GridKeyboard_ArrowsAndEnterActivateFocusedRow()
+    {
+        var api = new RecordingAdminPortalApiClient();
+        api.EnqueueList(Page(
+            IndexEntry("party-key-1", "Keyboard One", PartyType.Person, true),
+            IndexEntry("party-key-2", "Keyboard Two", PartyType.Person, true)));
+        api.EnqueueDetail(Detail("party-key-2", "Keyboard Two", PartyType.Person, isActive: true));
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+
+        IRenderedComponent<PartiesAdminPortal> cut = RenderAuthorized("scope-keyboard");
+        cut.WaitForAssertion(() => cut.Markup.ShouldContain("Keyboard Two"));
+        IElement list = cut.Find(".hx-parties-admin__list");
+
+        list.TriggerEvent("onkeydown", new KeyboardEventArgs { Key = "ArrowDown" });
+        cut.WaitForAssertion(() => cut.Find(".hx-parties-admin__list").GetAttribute("data-focused-row-index").ShouldBe("1"));
+        cut.Find(".hx-parties-admin__list").TriggerEvent("onkeydown", new KeyboardEventArgs { Key = "Enter" });
+
+        cut.WaitForAssertion(() =>
+        {
+            api.DetailRequests.Single().ShouldBe("party-key-2");
+            cut.Find("aside.hx-parties-admin__detail").TextContent.ShouldContain("Keyboard Two");
         });
     }
 
@@ -2466,13 +2703,15 @@ public sealed class PartiesAdminPortalComponentTests : BunitContext
     private IRenderedComponent<PartiesAdminPortal> RenderAuthorized(
         string contextKey,
         int pageSize = AdminPortalQueryBounds.DefaultPageSize,
-        string? routePartyId = null)
+        string? routePartyId = null,
+        TimeSpan? searchDebounceDelay = null)
     {
         SeedTenant(contextKey, AdminUserId, TenantRole.TenantOwner);
         _authProvider.SetAuthenticated(AdminUserId, contextKey);
         return Render<PartiesAdminPortal>(p => p
             .Add(x => x.ContextKey, contextKey)
             .Add(x => x.PageSize, pageSize)
+            .Add(x => x.SearchDebounceDelay, searchDebounceDelay ?? TimeSpan.FromMilliseconds(300))
             .Add(x => x.RoutePartyId, routePartyId));
     }
 
@@ -2480,7 +2719,7 @@ public sealed class PartiesAdminPortalComponentTests : BunitContext
     {
         List<IElement> exact = [.. cut.FindAll("fluent-button")
             .Where(button => string.Equals(button.TextContent.Trim(), text, StringComparison.Ordinal))];
-        if (exact.Count == 1)
+        if (exact.Count > 0)
         {
             return exact[0];
         }
@@ -2496,6 +2735,13 @@ public sealed class PartiesAdminPortalComponentTests : BunitContext
     {
         IRenderedComponent<FluentTextInput> input = cut.FindComponent<FluentTextInput>();
         cut.InvokeAsync(() => input.Instance.ValueChanged.InvokeAsync(value)).GetAwaiter().GetResult();
+    }
+
+    private static void SetSelect(IRenderedComponent<PartiesAdminPortal> cut, string label, string value)
+    {
+        IRenderedComponent<FluentSelect<string, string>> select = cut.FindComponents<FluentSelect<string, string>>()
+            .Single(input => string.Equals(input.Instance.Label, label, StringComparison.Ordinal));
+        cut.InvokeAsync(() => select.Instance.ValueChanged.InvokeAsync(value)).GetAwaiter().GetResult();
     }
 
     private static IRenderedComponent<FluentTextInput> FindTextInput(IRenderedComponent<PartiesAdminPortal> cut, string label)

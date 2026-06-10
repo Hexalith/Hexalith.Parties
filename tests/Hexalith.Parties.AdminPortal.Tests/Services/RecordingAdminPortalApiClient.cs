@@ -63,6 +63,9 @@ internal sealed class RecordingAdminPortalApiClient : IPartiesAdminPortalApiClie
     public void EnqueueSearch(PagedResult<PartySearchResult> page, AdminPortalQueryMetadata? metadata = null)
         => _searchResponses.Enqueue(_ => Task.FromResult(new AdminPortalQueryResult<PagedResult<PartySearchResult>>(page, metadata ?? AdminPortalQueryMetadata.Empty)));
 
+    public void EnqueueSearch(Func<CancellationToken, Task<AdminPortalQueryResult<PagedResult<PartySearchResult>>>> response)
+        => _searchResponses.Enqueue(response);
+
     public void EnqueueRichSearchCapability(AdminPortalRichSearchCapability capability)
         => _richSearchCapabilities.Enqueue(_ => Task.FromResult(capability));
 
