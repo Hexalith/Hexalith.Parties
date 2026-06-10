@@ -54,6 +54,7 @@ public sealed class SelfScopedPartiesClientCompositionTests
         var services = new ServiceCollection();
         services.AddLogging();
         services.AddSingleton(Substitute.For<IPartiesQueryClient>());
+        services.AddSingleton(Substitute.For<IPartiesCommandClient>());
         services.AddSingleton(Substitute.For<IAdminPortalGdprClient>());
         services.AddSingleton<AuthenticationStateProvider>(
             new FakeAuthStateProvider(new ClaimsPrincipal(new ClaimsIdentity())));

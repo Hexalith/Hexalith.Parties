@@ -962,6 +962,15 @@ internal sealed class PartiesAdminPortalE2ePartiesQueryClient(PartiesAdminPortal
         ct.ThrowIfCancellationRequested();
         state.CapturePickerDetail(partyId);
 
+        PartyDetail? current = state.Detail(partyId);
+        if (current is not null)
+        {
+            return Task.FromResult(current with
+            {
+                Freshness = ProjectionFreshnessMetadata.Create(ProjectionFreshnessStatus.Current),
+            });
+        }
+
         PartyIndexEntry? entry = Entries.FirstOrDefault(item => string.Equals(item.Id, partyId, StringComparison.Ordinal));
         if (entry is null)
         {
@@ -1091,6 +1100,125 @@ internal sealed class PartiesAdminPortalE2ePartiesQueryClient(PartiesAdminPortal
             CreatedAt = BaseDate.AddDays(-dayOffset),
             LastModifiedAt = BaseDate.AddDays(-dayOffset).AddHours(1),
         };
+}
+
+internal sealed class PartiesAdminPortalE2ePartiesCommandClient(PartiesAdminPortalE2eFixtureState state) : IPartiesCommandClient
+{
+    public Task<string> CreatePartyAsync(CreateParty command, CancellationToken ct)
+        => Unsupported<string>();
+
+    public Task<PartiesCommandResult<PartyDetail>> CreatePartyWithResultAsync(CreateParty command, CancellationToken ct)
+        => Unsupported<PartiesCommandResult<PartyDetail>>();
+
+    public Task<string> UpdatePersonDetailsAsync(string partyId, UpdatePersonDetails command, CancellationToken ct)
+        => Unsupported<string>();
+
+    public Task<PartiesCommandResult<PartyDetail>> UpdatePersonDetailsWithResultAsync(
+        string partyId,
+        UpdatePersonDetails command,
+        CancellationToken ct)
+        => Unsupported<PartiesCommandResult<PartyDetail>>();
+
+    public Task<string> UpdateOrganizationDetailsAsync(string partyId, UpdateOrganizationDetails command, CancellationToken ct)
+        => Unsupported<string>();
+
+    public Task<PartiesCommandResult<PartyDetail>> UpdateOrganizationDetailsWithResultAsync(
+        string partyId,
+        UpdateOrganizationDetails command,
+        CancellationToken ct)
+        => Unsupported<PartiesCommandResult<PartyDetail>>();
+
+    public Task<string> AddContactChannelAsync(string partyId, AddContactChannel command, CancellationToken ct)
+        => Unsupported<string>();
+
+    public Task<PartiesCommandResult<PartyDetail>> AddContactChannelWithResultAsync(
+        string partyId,
+        AddContactChannel command,
+        CancellationToken ct)
+        => Unsupported<PartiesCommandResult<PartyDetail>>();
+
+    public Task<string> UpdateContactChannelAsync(string partyId, UpdateContactChannel command, CancellationToken ct)
+        => Unsupported<string>();
+
+    public Task<PartiesCommandResult<PartyDetail>> UpdateContactChannelWithResultAsync(
+        string partyId,
+        UpdateContactChannel command,
+        CancellationToken ct)
+        => Unsupported<PartiesCommandResult<PartyDetail>>();
+
+    public Task<string> RemoveContactChannelAsync(string partyId, RemoveContactChannel command, CancellationToken ct)
+        => Unsupported<string>();
+
+    public Task<PartiesCommandResult<PartyDetail>> RemoveContactChannelWithResultAsync(
+        string partyId,
+        RemoveContactChannel command,
+        CancellationToken ct)
+        => Unsupported<PartiesCommandResult<PartyDetail>>();
+
+    public Task<string> AddIdentifierAsync(string partyId, AddIdentifier command, CancellationToken ct)
+        => Unsupported<string>();
+
+    public Task<PartiesCommandResult<PartyDetail>> AddIdentifierWithResultAsync(
+        string partyId,
+        AddIdentifier command,
+        CancellationToken ct)
+        => Unsupported<PartiesCommandResult<PartyDetail>>();
+
+    public Task<string> RemoveIdentifierAsync(string partyId, RemoveIdentifier command, CancellationToken ct)
+        => Unsupported<string>();
+
+    public Task<PartiesCommandResult<PartyDetail>> RemoveIdentifierWithResultAsync(
+        string partyId,
+        RemoveIdentifier command,
+        CancellationToken ct)
+        => Unsupported<PartiesCommandResult<PartyDetail>>();
+
+    public Task<string> DeactivatePartyAsync(string partyId, CancellationToken ct)
+        => Unsupported<string>();
+
+    public Task<PartiesCommandResult<PartyDetail>> DeactivatePartyWithResultAsync(string partyId, CancellationToken ct)
+        => Unsupported<PartiesCommandResult<PartyDetail>>();
+
+    public Task<string> ReactivatePartyAsync(string partyId, CancellationToken ct)
+        => Unsupported<string>();
+
+    public Task<PartiesCommandResult<PartyDetail>> ReactivatePartyWithResultAsync(string partyId, CancellationToken ct)
+        => Unsupported<PartiesCommandResult<PartyDetail>>();
+
+    public Task<string> CreatePartyCompositeAsync(CreatePartyComposite command, CancellationToken ct)
+        => Unsupported<string>();
+
+    public Task<PartiesCommandResult<PartyDetail>> CreatePartyCompositeWithResultAsync(CreatePartyComposite command, CancellationToken ct)
+        => Unsupported<PartiesCommandResult<PartyDetail>>();
+
+    public Task<string> UpdatePartyCompositeAsync(string partyId, UpdatePartyComposite command, CancellationToken ct)
+    {
+        ct.ThrowIfCancellationRequested();
+        _ = state.CaptureUpdate(partyId, command);
+        return Task.FromResult("corr-consumer-update");
+    }
+
+    public Task<PartiesCommandResult<PartyDetail>> UpdatePartyCompositeWithResultAsync(
+        string partyId,
+        UpdatePartyComposite command,
+        CancellationToken ct)
+    {
+        ct.ThrowIfCancellationRequested();
+        PartyDetail detail = state.CaptureUpdate(partyId, command);
+        return Task.FromResult(new PartiesCommandResult<PartyDetail>("corr-consumer-update", detail));
+    }
+
+    public Task<string> SetIsNaturalPersonAsync(string partyId, SetIsNaturalPerson command, CancellationToken ct)
+        => Unsupported<string>();
+
+    public Task<PartiesCommandResult<PartyDetail>> SetIsNaturalPersonWithResultAsync(
+        string partyId,
+        SetIsNaturalPerson command,
+        CancellationToken ct)
+        => Unsupported<PartiesCommandResult<PartyDetail>>();
+
+    private static Task<T> Unsupported<T>()
+        => throw new NotSupportedException("The E2E fixture implements only the Consumer profile update path.");
 }
 
 internal sealed record AdminPortalE2eSnapshot(

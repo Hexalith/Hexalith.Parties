@@ -57,6 +57,23 @@ public sealed class SelfScopedPartiesClientSurfaceTests
             + string.Join(", ", offenders));
     }
 
+    [Fact]
+    public void Accessor_AcceptsNoParameterTypeWithPartyIdProperty()
+    {
+        string[] offenders = typeof(ISelfScopedPartiesClient).GetMethods()
+            .SelectMany(static method => method.GetParameters().Select(parameter => new { method.Name, ParameterType = parameter.ParameterType }))
+            .Where(static parameter => parameter.ParameterType
+                .GetProperties(BindingFlags.Public | BindingFlags.Instance)
+                .Any(static property => property.Name.Contains("PartyId", StringComparison.OrdinalIgnoreCase)))
+            .Select(static parameter => parameter.Name)
+            .Distinct()
+            .ToArray();
+
+        offenders.ShouldBeEmpty(
+            "Consumer self-scope accessor request types must not expose party id shaped properties. Offending members: "
+            + string.Join(", ", offenders));
+    }
+
     private static Type UnwrapTask(Type returnType)
         => returnType.IsGenericType && returnType.GetGenericTypeDefinition() == typeof(Task<>)
             ? returnType.GetGenericArguments()[0]

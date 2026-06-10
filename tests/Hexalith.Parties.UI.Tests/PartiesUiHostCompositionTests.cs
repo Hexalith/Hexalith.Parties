@@ -149,9 +149,14 @@ public sealed class PartiesUiHostCompositionTests
 
         source.ShouldContain("using Hexalith.Parties.ConsumerPortal.Services;");
         source.ShouldContain("builder.Services.AddScoped<IConsumerProfileDataClient, ConsumerProfileDataClient>();");
+        source.ShouldContain("builder.Services.AddScoped<IConsumerProfileEditClient, ConsumerProfileEditClient>();");
         source.IndexOf("builder.Services.AddSelfScopedPartiesClient();", StringComparison.Ordinal)
             .ShouldBeLessThan(source.IndexOf(
                 "builder.Services.AddScoped<IConsumerProfileDataClient, ConsumerProfileDataClient>();",
+                StringComparison.Ordinal));
+        source.IndexOf("builder.Services.AddSelfScopedPartiesClient();", StringComparison.Ordinal)
+            .ShouldBeLessThan(source.IndexOf(
+                "builder.Services.AddScoped<IConsumerProfileEditClient, ConsumerProfileEditClient>();",
                 StringComparison.Ordinal));
     }
 

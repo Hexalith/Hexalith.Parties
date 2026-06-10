@@ -11,7 +11,6 @@ namespace Hexalith.Parties.ConsumerPortal.Tests.Components;
 public sealed class ConsumerPortalPageTests : BunitContext
 {
     [Theory]
-    [InlineData(typeof(EditMyProfilePage), "Edit profile")]
     [InlineData(typeof(MyConsentPage), "Consent")]
     [InlineData(typeof(MyPrivacyPage), "Data privacy")]
     public void ConsumerPortalRouteShell_RendersPlainConsumerCopy(Type component, string expectedHeading)
@@ -27,7 +26,6 @@ public sealed class ConsumerPortalPageTests : BunitContext
     }
 
     [Theory]
-    [InlineData(typeof(EditMyProfilePage))]
     [InlineData(typeof(MyConsentPage))]
     [InlineData(typeof(MyPrivacyPage))]
     public void ConsumerPortalRouteShell_DoesNotRenderBannedRegulatedPromises(Type component)

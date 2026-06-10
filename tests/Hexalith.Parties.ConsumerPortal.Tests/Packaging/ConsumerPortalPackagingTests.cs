@@ -87,6 +87,8 @@ public sealed class ConsumerPortalPackagingTests
         allSource.ShouldNotContain("IPartiesQueryClient", Case.Sensitive);
         allSource.ShouldNotContain("IAdminPortalGdprClient", Case.Sensitive);
         allSource.ShouldNotContain("Hexalith.Parties.UI", Case.Sensitive);
+        allSource.ShouldContain("IConsumerProfileEditClient", Case.Sensitive);
+        allSource.ShouldNotContain("IPartiesCommandClient", Case.Sensitive);
     }
 
     [Fact]
@@ -101,16 +103,42 @@ public sealed class ConsumerPortalPackagingTests
     }
 
     [Fact]
-    public void MyProfilePage_DoesNotUseLoggingOrTelemetryApis()
+    public void ConsumerProfileEditPort_DoesNotAcceptCallerSuppliedPartyIds()
     {
         string sourceRoot = ProjectRoot("src/Hexalith.Parties.ConsumerPortal");
-        string profileSource = File.ReadAllText(Path.Combine(sourceRoot, "Components", "MyProfilePage.razor"));
+        string portSource = File.ReadAllText(Path.Combine(sourceRoot, "Services", "IConsumerProfileEditClient.cs"));
+        string requestSource = File.ReadAllText(Path.Combine(sourceRoot, "Services", "ConsumerProfileUpdateRequest.cs"));
+
+        portSource.ShouldContain("UpdateMyProfileAsync", Case.Sensitive);
+        (portSource + requestSource).ShouldNotContain("partyId", Case.Insensitive);
+        (portSource + requestSource).ShouldNotContain("UpdatePartyComposite", Case.Sensitive);
+    }
+
+    [Theory]
+    [InlineData("MyProfilePage.razor")]
+    [InlineData("EditMyProfilePage.razor")]
+    public void ConsumerProfilePages_DoNotUseLoggingOrTelemetryApis(string fileName)
+    {
+        string sourceRoot = ProjectRoot("src/Hexalith.Parties.ConsumerPortal");
+        string profileSource = File.ReadAllText(Path.Combine(sourceRoot, "Components", fileName));
 
         profileSource.ShouldNotContain("ILogger", Case.Sensitive);
         profileSource.ShouldNotContain("Console.", Case.Sensitive);
         profileSource.ShouldNotContain("Debug.", Case.Sensitive);
         profileSource.ShouldNotContain("ActivitySource", Case.Sensitive);
         profileSource.ShouldNotContain("Meter", Case.Sensitive);
+    }
+
+    [Fact]
+    public void EditMyProfilePage_UsesOneVisibleSaveStatusSource()
+    {
+        string sourceRoot = ProjectRoot("src/Hexalith.Parties.ConsumerPortal");
+        string editSource = File.ReadAllText(Path.Combine(sourceRoot, "Components", "EditMyProfilePage.razor"));
+
+        editSource.ShouldContain("_saveStatusMessage", Case.Sensitive);
+        editSource.ShouldContain("role=\"status\"", Case.Sensitive);
+        editSource.ShouldNotContain("Toast", Case.Sensitive);
+        editSource.ShouldNotContain("ConsumerRouteShell", Case.Sensitive);
     }
 
     [Fact]

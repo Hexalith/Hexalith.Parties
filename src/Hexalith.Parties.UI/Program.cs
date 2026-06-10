@@ -47,6 +47,7 @@ if (adminPortalE2eFixtureEnabled)
     builder.Services.Replace(ServiceDescriptor.Scoped<IAdminPortalAuthorizationService, PartiesAdminPortalE2eAuthorizationService>());
     builder.Services.Replace(ServiceDescriptor.Scoped<IPartiesAdminPortalApiClient, PartiesAdminPortalE2eApiClient>());
     builder.Services.Replace(ServiceDescriptor.Scoped<IPartiesQueryClient, PartiesAdminPortalE2ePartiesQueryClient>());
+    builder.Services.Replace(ServiceDescriptor.Scoped<IPartiesCommandClient, PartiesAdminPortalE2ePartiesCommandClient>());
 }
 
 // Story 1.3 (AR-D2) — register the role-claim Admin + Consumer policies UNCONDITIONALLY (not gated
@@ -73,6 +74,7 @@ builder.Services.AddPartiesUiClaimsResolution();
 // composes cleanly even in a no-Parties:BaseUrl (degraded/test) boot.
 builder.Services.AddSelfScopedPartiesClient();
 builder.Services.AddScoped<IConsumerProfileDataClient, ConsumerProfileDataClient>();
+builder.Services.AddScoped<IConsumerProfileEditClient, ConsumerProfileEditClient>();
 
 // Story 4.2 — host-owned admin-link identity binding provisioning. This stays outside the Parties
 // command/event/projection stream: the runtime source remains the IdP party_id claim, while this service
@@ -101,6 +103,11 @@ bool partiesClientEnabled = !string.IsNullOrWhiteSpace(builder.Configuration["Pa
 if (partiesClientEnabled)
 {
     builder.Services.AddPartiesClient(builder.Configuration);
+    if (adminPortalE2eFixtureEnabled)
+    {
+        builder.Services.Replace(ServiceDescriptor.Scoped<IPartiesQueryClient, PartiesAdminPortalE2ePartiesQueryClient>());
+        builder.Services.Replace(ServiceDescriptor.Scoped<IPartiesCommandClient, PartiesAdminPortalE2ePartiesCommandClient>());
+    }
 
     // Story 1.7 (AR-D6 / NFR8) — capture the Parties host's degradation headers
     // (X-Service-Degraded / X-Stale-Data-Age, set on GET responses by DegradedResponseMiddleware) into the

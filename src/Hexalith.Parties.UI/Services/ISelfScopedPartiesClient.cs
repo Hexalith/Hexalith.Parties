@@ -1,3 +1,4 @@
+using Hexalith.Parties.Client.Abstractions;
 using Hexalith.Parties.Client.AdminPortal;
 using Hexalith.Parties.Contracts.Models;
 using Hexalith.Parties.Contracts.Security;
@@ -21,15 +22,16 @@ namespace Hexalith.Parties.UI.Services;
 /// never reach <c>ListPartiesAsync</c>/<c>SearchPartiesAsync</c> (AC1, AC6).
 /// </para>
 /// <para>
-/// Surface scope is read + GDPR self-service only. Profile-WRITE
-/// (<c>UpdatePersonDetails…</c>) is Epic 4 / FR-Consumer-2 (Story 4.5) and is intentionally absent —
-/// it lands with the page that needs it.
+/// Surface scope is read + narrowly-scoped profile writes + GDPR self-service only.
 /// </para>
 /// </remarks>
 public interface ISelfScopedPartiesClient
 {
     /// <summary>Reads the current consumer's own party detail (→ <c>GetPartyAsync(myPartyId)</c>).</summary>
     Task<PartyDetail> GetMyPartyAsync(CancellationToken ct = default);
+
+    /// <summary>Updates editable details on the current consumer's own profile.</summary>
+    Task<PartiesCommandResult<PartyDetail>> UpdateMyProfileAsync(SelfScopedProfileUpdateRequest request, CancellationToken ct = default);
 
     /// <summary>Lists the current consumer's own consent records.</summary>
     Task<IReadOnlyList<ConsentRecord>> GetMyConsentAsync(CancellationToken ct = default);

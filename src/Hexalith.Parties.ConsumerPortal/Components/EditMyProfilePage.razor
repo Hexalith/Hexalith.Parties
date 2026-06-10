@@ -1,15 +1,672 @@
 @page "/me/edit"
 @attribute [Authorize(Policy = "Consumer")]
+@implements IDisposable
+@using System.Globalization
+@using Microsoft.AspNetCore.Components.Forms
+@using Hexalith.Parties.Contracts.Models
+@using Hexalith.Parties.Contracts.ValueObjects
 
-<ConsumerRouteShell Title="@ConsumerPortalLabels.EditProfileTitle"
-                    Summary="@ConsumerPortalLabels.EditProfileSummary"
-                    Status="@ConsumerPortalLabels.EditProfileStatus"
-                    Items="@_items" />
+@inject IConsumerProfileDataClient ProfileDataClient
+@inject IConsumerProfileEditClient ProfileEditClient
+@inject NavigationManager NavigationManager
+
+<section class="hx-parties-profile hx-parties-edit-profile" aria-labelledby="@_titleId">
+    <header class="hx-parties-profile__header">
+        <p class="hx-parties-profile__eyebrow">@ConsumerPortalLabels.AreaLabel</p>
+        <h1 id="@_titleId">@ConsumerPortalLabels.EditProfileTitle</h1>
+        <p class="hx-parties-profile__summary">@ConsumerPortalLabels.EditProfileSummary</p>
+        @if (!string.IsNullOrWhiteSpace(_saveStatusMessage))
+        {
+            <p class="hx-parties-profile__freshness" role="status" aria-live="polite">@_saveStatusMessage</p>
+        }
+        else if (_profile is not null)
+        {
+            <FreshnessStatus Freshness="@_profile.Freshness" />
+        }
+        else if (_isLoading)
+        {
+            <p class="hx-parties-profile__freshness" role="status" aria-live="polite">
+                @ConsumerPortalLabels.EditProfileLoadingStatus
+            </p>
+        }
+    </header>
+
+    @if (_isLoading)
+    {
+        <section class="hx-parties-profile__section hx-parties-profile__skeleton" aria-labelledby="@_loadingId" aria-busy="true">
+            <h2 id="@_loadingId">@ConsumerPortalLabels.EditProfileLoadingHeading</h2>
+            <span class="hx-parties-profile__loading-line hx-parties-profile__loading-line--long" aria-hidden="true"></span>
+            <span class="hx-parties-profile__loading-line hx-parties-profile__loading-line--short" aria-hidden="true"></span>
+        </section>
+    }
+    else if (_loadFailed)
+    {
+        <section class="hx-parties-profile__section hx-parties-profile__notice" role="alert" aria-labelledby="@_failureId">
+            <h2 id="@_failureId">@ConsumerPortalLabels.EditProfileFailureTitle</h2>
+            <p>@ConsumerPortalLabels.EditProfileFailureMessage</p>
+            <FluentButton Class="hx-parties-profile__retry"
+                          Appearance="ButtonAppearance.Outline"
+                          OnClick="RetryAsync">
+                @ConsumerPortalLabels.EditProfileRetry
+            </FluentButton>
+        </section>
+    }
+    else if (_profile is { IsErased: true })
+    {
+        <section class="hx-parties-profile__section hx-parties-profile__notice" aria-labelledby="@_deletedId">
+            <h2 id="@_deletedId">@ConsumerPortalLabels.EditProfileDeletedTitle</h2>
+            <p>@ConsumerPortalLabels.EditProfileDeletedMessage</p>
+        </section>
+    }
+    else if (_profile is { } profile && _editContext is not null)
+    {
+        <div class="hx-parties-profile__content">
+            <section class="hx-parties-profile__section" aria-labelledby="@_detailsId">
+                <h2 id="@_detailsId">@ConsumerPortalLabels.EditProfileDetailsTitle</h2>
+                <dl class="hx-parties-profile__field-list">
+                    <ProfileField Label="@ConsumerPortalLabels.MyProfileDisplayName" Value="@profile.DisplayName" />
+                    <ProfileField Label="@ConsumerPortalLabels.MyProfilePartyType" Value="@ConsumerPortalLabels.PartyTypeLabel(profile.Type)" />
+                </dl>
+            </section>
+
+            <EditForm EditContext="_editContext" FormName="@_formName" OnSubmit="SubmitAsync" class="hx-parties-edit-profile__form">
+                <fieldset class="hx-parties-profile__section hx-parties-edit-profile__fieldset" disabled="@_isSaving">
+                    <legend>@ConsumerPortalLabels.EditProfileEditableFieldsTitle</legend>
+
+                    @if (!string.IsNullOrWhiteSpace(_formAlert))
+                    {
+                        <div id="@_alertId" class="hx-parties-edit-profile__alert" role="alert" tabindex="-1" @ref="_alertRef">
+                            @_formAlert
+                        </div>
+                    }
+
+                    @if (profile.Type == PartyType.Person)
+                    {
+                        @TextField(nameof(EditProfileModel.PersonPrefix), ConsumerPortalLabels.MyProfilePrefix, _model.PersonPrefix, OnPersonPrefixChanged)
+                        @TextField(nameof(EditProfileModel.PersonFirstName), ConsumerPortalLabels.MyProfileFirstName, _model.PersonFirstName, OnPersonFirstNameChanged)
+                        @TextField(nameof(EditProfileModel.PersonLastName), ConsumerPortalLabels.MyProfileLastName, _model.PersonLastName, OnPersonLastNameChanged)
+                        @TextField(nameof(EditProfileModel.PersonDateOfBirth), ConsumerPortalLabels.MyProfileDateOfBirth, _model.PersonDateOfBirth, OnPersonDateOfBirthChanged)
+                        @TextField(nameof(EditProfileModel.PersonSuffix), ConsumerPortalLabels.MyProfileSuffix, _model.PersonSuffix, OnPersonSuffixChanged)
+                    }
+                    else if (profile.Type == PartyType.Organization)
+                    {
+                        @TextField(nameof(EditProfileModel.OrganizationLegalName), ConsumerPortalLabels.MyProfileLegalName, _model.OrganizationLegalName, OnOrganizationLegalNameChanged)
+                        @TextField(nameof(EditProfileModel.OrganizationTradingName), ConsumerPortalLabels.MyProfileTradingName, _model.OrganizationTradingName, OnOrganizationTradingNameChanged)
+                        @TextField(nameof(EditProfileModel.OrganizationLegalForm), ConsumerPortalLabels.MyProfileLegalForm, _model.OrganizationLegalForm, OnOrganizationLegalFormChanged)
+                        @TextField(nameof(EditProfileModel.OrganizationRegistrationNumber), ConsumerPortalLabels.MyProfileRegistrationNumber, _model.OrganizationRegistrationNumber, OnOrganizationRegistrationNumberChanged)
+                        <div class="hx-parties-edit-profile__field">
+                            <FluentCheckbox Value="@_model.OrganizationIsNaturalPerson"
+                                            ValueChanged="OnOrganizationIsNaturalPersonChanged"
+                                            Label="@ConsumerPortalLabels.MyProfileNaturalPerson"
+                                            AdditionalAttributes="FieldAttributes(nameof(EditProfileModel.OrganizationIsNaturalPerson))" />
+                            <p id="@HintId(nameof(EditProfileModel.OrganizationIsNaturalPerson))" class="hx-parties-edit-profile__hint">
+                                @ConsumerPortalLabels.EditProfileFieldHint
+                            </p>
+                            @FieldError(nameof(EditProfileModel.OrganizationIsNaturalPerson))
+                        </div>
+                    }
+
+                    <div class="hx-parties-edit-profile__actions">
+                        <FluentButton Appearance="ButtonAppearance.Primary"
+                                      Type="ButtonType.Submit"
+                                      Disabled="@_isSaving">
+                            @ConsumerPortalLabels.EditProfileSave
+                        </FluentButton>
+                        <FluentButton Appearance="ButtonAppearance.Outline"
+                                      Type="ButtonType.Button"
+                                      Disabled="@_isSaving"
+                                      OnClick="CancelAsync">
+                            @ConsumerPortalLabels.EditProfileCancel
+                        </FluentButton>
+                    </div>
+                </fieldset>
+            </EditForm>
+
+            <section class="hx-parties-profile__section" aria-labelledby="@_contactId">
+                <h2 id="@_contactId">@ConsumerPortalLabels.EditProfileReadOnlyContactTitle</h2>
+                <p class="hx-parties-profile__empty">@ConsumerPortalLabels.EditProfileReadOnlyHelp</p>
+                @if (profile.ContactChannels.Count == 0)
+                {
+                    <p class="hx-parties-profile__empty">@ConsumerPortalLabels.MyProfileEmptyContacts</p>
+                }
+                else
+                {
+                    <ul class="hx-parties-profile__collection">
+                        @foreach (ContactChannel channel in profile.ContactChannels)
+                        {
+                            <li class="hx-parties-profile__collection-item">
+                                <strong>@ConsumerPortalLabels.ContactChannelTypeLabel(channel.Type)</strong>
+                                <span>@channel.Value</span>
+                                @if (channel.IsPreferred)
+                                {
+                                    <span class="hx-parties-profile__label">@ConsumerPortalLabels.MyProfileContactPreferred</span>
+                                }
+                            </li>
+                        }
+                    </ul>
+                }
+            </section>
+
+            <section class="hx-parties-profile__section" aria-labelledby="@_identifierId">
+                <h2 id="@_identifierId">@ConsumerPortalLabels.EditProfileReadOnlyIdentifierTitle</h2>
+                <p class="hx-parties-profile__empty">@ConsumerPortalLabels.EditProfileReadOnlyHelp</p>
+                @if (profile.Identifiers.Count == 0)
+                {
+                    <p class="hx-parties-profile__empty">@ConsumerPortalLabels.MyProfileEmptyIdentifiers</p>
+                }
+                else
+                {
+                    <ul class="hx-parties-profile__collection">
+                        @foreach (PartyIdentifier identifier in profile.Identifiers)
+                        {
+                            <li class="hx-parties-profile__collection-item">
+                                <strong>@ConsumerPortalLabels.IdentifierTypeLabel(identifier.Type)</strong>
+                                <span>@identifier.Value</span>
+                                @if (!string.IsNullOrWhiteSpace(identifier.Jurisdiction))
+                                {
+                                    <span class="hx-parties-profile__label">@ConsumerPortalLabels.MyProfileIdentifierJurisdiction</span>
+                                    <span>@identifier.Jurisdiction</span>
+                                }
+                            </li>
+                        }
+                    </ul>
+                }
+            </section>
+        </div>
+    }
+</section>
 
 @code {
-    private static readonly IReadOnlyList<string> _items =
-    [
-        ConsumerPortalLabels.EditProfileNextReview,
-        ConsumerPortalLabels.EditProfileNextSubmit,
-    ];
+    private static int s_nextInstanceId;
+
+    private readonly int _instanceId = System.Threading.Interlocked.Increment(ref s_nextInstanceId);
+    private readonly EditProfileModel _model = new();
+    private CancellationTokenSource? _loadCts;
+    private CancellationTokenSource? _saveCts;
+    private EditContext? _editContext;
+    private ValidationMessageStore? _messages;
+    private ElementReference _alertRef;
+    private PartyDetail? _profile;
+    private bool _isLoading = true;
+    private bool _loadFailed;
+    private bool _isSaving;
+    private bool _pendingAlertFocus;
+    private string? _formAlert;
+    private string? _saveStatusMessage;
+
+    private string _titleId => $"hx-parties-edit-title-{_instanceId}";
+    private string _loadingId => $"hx-parties-edit-loading-{_instanceId}";
+    private string _failureId => $"hx-parties-edit-failure-{_instanceId}";
+    private string _deletedId => $"hx-parties-edit-deleted-{_instanceId}";
+    private string _detailsId => $"hx-parties-edit-details-{_instanceId}";
+    private string _contactId => $"hx-parties-edit-contact-{_instanceId}";
+    private string _identifierId => $"hx-parties-edit-identifiers-{_instanceId}";
+    private string _alertId => $"hx-parties-edit-alert-{_instanceId}";
+    private string _formName => $"edit-my-profile-{_instanceId}";
+
+    protected override void OnInitialized()
+    {
+        _editContext = new EditContext(_model);
+        _messages = new ValidationMessageStore(_editContext);
+        _editContext.OnFieldChanged += OnFieldChanged;
+    }
+
+    protected override Task OnInitializedAsync()
+        => LoadProfileAsync();
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!_pendingAlertFocus)
+        {
+            return;
+        }
+
+        _pendingAlertFocus = false;
+        try
+        {
+            await _alertRef.FocusAsync().ConfigureAwait(false);
+        }
+        catch (InvalidOperationException)
+        {
+        }
+    }
+
+    private Task RetryAsync()
+        => LoadProfileAsync();
+
+    private async Task LoadProfileAsync()
+    {
+        _loadCts?.Cancel();
+        _loadCts?.Dispose();
+        _loadCts = new CancellationTokenSource();
+        CancellationToken token = _loadCts.Token;
+
+        _isLoading = true;
+        _loadFailed = false;
+        _formAlert = null;
+        _saveStatusMessage = null;
+
+        try
+        {
+            PartyDetail profile = NormalizeDetail(await ProfileDataClient.GetMyPartyAsync(token).ConfigureAwait(false));
+            if (token.IsCancellationRequested)
+            {
+                return;
+            }
+
+            _profile = profile;
+            if (!profile.IsErased)
+            {
+                PopulateFromDetail(profile);
+            }
+        }
+        catch (OperationCanceledException) when (token.IsCancellationRequested)
+        {
+        }
+        catch
+        {
+            if (!token.IsCancellationRequested)
+            {
+                _loadFailed = true;
+            }
+        }
+        finally
+        {
+            if (!token.IsCancellationRequested)
+            {
+                _isLoading = false;
+            }
+        }
+    }
+
+    private async Task SubmitAsync()
+    {
+        if (_editContext is null || _messages is null || _profile is null)
+        {
+            return;
+        }
+
+        _isSaving = true;
+        _formAlert = null;
+        _saveStatusMessage = null;
+        _messages.Clear();
+
+        if (!ValidateClient(_profile.Type))
+        {
+            ApplyValidationFailure();
+            _isSaving = false;
+            return;
+        }
+
+        _saveStatusMessage = ConsumerPortalLabels.EditProfileSaving;
+        _saveCts?.Cancel();
+        _saveCts?.Dispose();
+        _saveCts = new CancellationTokenSource();
+        CancellationToken token = _saveCts.Token;
+        ConsumerProfileUpdateResult result;
+        try
+        {
+            result = await ProfileEditClient
+                .UpdateMyProfileAsync(BuildRequest(_profile.Type), token)
+                .ConfigureAwait(false);
+        }
+        catch (OperationCanceledException) when (token.IsCancellationRequested)
+        {
+            _isSaving = false;
+            return;
+        }
+        catch
+        {
+            _formAlert = ConsumerPortalLabels.EditProfileSaveFailure;
+            _saveStatusMessage = null;
+            _pendingAlertFocus = true;
+            _isSaving = false;
+            return;
+        }
+
+        if (result.Outcome == ConsumerProfileUpdateOutcome.Accepted)
+        {
+            _profile = NormalizeDetail(result.Detail ?? BuildOptimisticDetail(_profile));
+            PopulateFromDetail(_profile);
+            _saveStatusMessage = ConsumerPortalLabels.EditProfileSavedUpdating;
+            await ReconcileAsync().ConfigureAwait(false);
+        }
+        else if (result.Outcome == ConsumerProfileUpdateOutcome.ValidationRejected)
+        {
+            MapServerValidation(result.ValidationFailures ?? []);
+            ApplyValidationFailure();
+        }
+        else
+        {
+            _formAlert = ConsumerPortalLabels.EditProfileSaveFailure;
+            _saveStatusMessage = null;
+            _pendingAlertFocus = true;
+        }
+
+        _isSaving = false;
+    }
+
+    private async Task ReconcileAsync()
+    {
+        _saveCts?.Cancel();
+        _saveCts?.Dispose();
+        _saveCts = new CancellationTokenSource();
+        CancellationToken token = _saveCts.Token;
+
+        try
+        {
+            PartyDetail confirmed = NormalizeDetail(await ProfileDataClient.GetMyPartyAsync(token).ConfigureAwait(false));
+            if (token.IsCancellationRequested)
+            {
+                return;
+            }
+
+            _profile = confirmed;
+            PopulateFromDetail(confirmed);
+            _saveStatusMessage = confirmed.Freshness?.Status == ProjectionFreshnessStatus.Current
+                ? ConsumerPortalLabels.EditProfileSavedCurrent
+                : ConsumerPortalLabels.EditProfileDegradedAfterSave;
+        }
+        catch (OperationCanceledException) when (token.IsCancellationRequested)
+        {
+        }
+        catch
+        {
+            if (!token.IsCancellationRequested)
+            {
+                _saveStatusMessage = ConsumerPortalLabels.EditProfileDegradedAfterSave;
+            }
+        }
+    }
+
+    private bool ValidateClient(PartyType type)
+    {
+        if (_messages is null || _editContext is null)
+        {
+            return false;
+        }
+
+        bool valid = true;
+        if (type == PartyType.Person)
+        {
+            valid &= Required(nameof(EditProfileModel.PersonFirstName), _model.PersonFirstName);
+            valid &= Required(nameof(EditProfileModel.PersonLastName), _model.PersonLastName);
+            if (!string.IsNullOrWhiteSpace(_model.PersonDateOfBirth)
+                && !DateTimeOffset.TryParse(_model.PersonDateOfBirth, CultureInfo.CurrentCulture, DateTimeStyles.AssumeLocal, out _))
+            {
+                AddError(nameof(EditProfileModel.PersonDateOfBirth), ConsumerPortalLabels.EditProfileValidationDate);
+                valid = false;
+            }
+        }
+        else if (type == PartyType.Organization)
+        {
+            valid &= Required(nameof(EditProfileModel.OrganizationLegalName), _model.OrganizationLegalName);
+        }
+
+        _editContext.NotifyValidationStateChanged();
+        return valid;
+    }
+
+    private bool Required(string propertyName, string? value)
+    {
+        if (!string.IsNullOrWhiteSpace(value))
+        {
+            return true;
+        }
+
+        AddError(propertyName, ConsumerPortalLabels.EditProfileValidationRequired);
+        return false;
+    }
+
+    private void AddError(string propertyName, string message)
+        => _messages?.Add(_editContext!.Field(propertyName), message);
+
+    private void ApplyValidationFailure()
+    {
+        _formAlert = ConsumerPortalLabels.EditProfileValidationRetry;
+        _saveStatusMessage = null;
+        _pendingAlertFocus = true;
+    }
+
+    private void MapServerValidation(IReadOnlyList<ConsumerProfileValidationFailure> failures)
+    {
+        if (failures.Count == 0)
+        {
+            AddError(_profile?.Type == PartyType.Organization
+                ? nameof(EditProfileModel.OrganizationLegalName)
+                : nameof(EditProfileModel.PersonFirstName), ConsumerPortalLabels.EditProfileValidationRequired);
+            return;
+        }
+
+        foreach (ConsumerProfileValidationFailure failure in failures)
+        {
+            AddError(MapPropertyName(failure.PropertyName), ConsumerPortalLabels.EditProfileValidationRequired);
+        }
+    }
+
+    private string MapPropertyName(string propertyName)
+    {
+        if (propertyName.Contains("FirstName", StringComparison.Ordinal))
+        {
+            return nameof(EditProfileModel.PersonFirstName);
+        }
+
+        if (propertyName.Contains("LastName", StringComparison.Ordinal))
+        {
+            return nameof(EditProfileModel.PersonLastName);
+        }
+
+        if (propertyName.Contains("DateOfBirth", StringComparison.Ordinal))
+        {
+            return nameof(EditProfileModel.PersonDateOfBirth);
+        }
+
+        if (propertyName.Contains("LegalName", StringComparison.Ordinal))
+        {
+            return nameof(EditProfileModel.OrganizationLegalName);
+        }
+
+        return _profile?.Type == PartyType.Organization
+            ? nameof(EditProfileModel.OrganizationLegalName)
+            : nameof(EditProfileModel.PersonFirstName);
+    }
+
+    private ConsumerProfileUpdateRequest BuildRequest(PartyType type)
+        => new()
+        {
+            PersonDetails = type == PartyType.Person ? BuildPersonDetails() : null,
+            OrganizationDetails = type == PartyType.Organization ? BuildOrganizationDetails() : null,
+        };
+
+    private PersonDetails BuildPersonDetails()
+        => new()
+        {
+            FirstName = _model.PersonFirstName.Trim(),
+            LastName = _model.PersonLastName.Trim(),
+            Prefix = TrimToNull(_model.PersonPrefix),
+            Suffix = TrimToNull(_model.PersonSuffix),
+            DateOfBirth = DateTimeOffset.TryParse(_model.PersonDateOfBirth, CultureInfo.CurrentCulture, DateTimeStyles.AssumeLocal, out DateTimeOffset value)
+                ? value
+                : null,
+        };
+
+    private OrganizationDetails BuildOrganizationDetails()
+        => new()
+        {
+            LegalName = _model.OrganizationLegalName.Trim(),
+            TradingName = TrimToNull(_model.OrganizationTradingName),
+            LegalForm = TrimToNull(_model.OrganizationLegalForm),
+            RegistrationNumber = TrimToNull(_model.OrganizationRegistrationNumber),
+            IsNaturalPerson = _model.OrganizationIsNaturalPerson,
+        };
+
+    private PartyDetail BuildOptimisticDetail(PartyDetail current)
+        => current with
+        {
+            DisplayName = current.Type == PartyType.Person
+                ? $"{_model.PersonFirstName} {_model.PersonLastName}".Trim()
+                : _model.OrganizationLegalName.Trim(),
+            SortName = current.SortName,
+            PersonDetails = current.Type == PartyType.Person ? BuildPersonDetails() : null,
+            OrganizationDetails = current.Type == PartyType.Organization ? BuildOrganizationDetails() : null,
+            Freshness = ProjectionFreshnessMetadata.Create(ProjectionFreshnessStatus.Stale),
+        };
+
+    private void PopulateFromDetail(PartyDetail detail)
+    {
+        if (detail.PersonDetails is { } person)
+        {
+            _model.PersonFirstName = person.FirstName;
+            _model.PersonLastName = person.LastName;
+            _model.PersonPrefix = person.Prefix;
+            _model.PersonSuffix = person.Suffix;
+            _model.PersonDateOfBirth = FormatDate(person.DateOfBirth);
+        }
+
+        if (detail.OrganizationDetails is { } organization)
+        {
+            _model.OrganizationLegalName = organization.LegalName;
+            _model.OrganizationTradingName = organization.TradingName;
+            _model.OrganizationLegalForm = organization.LegalForm;
+            _model.OrganizationRegistrationNumber = organization.RegistrationNumber;
+            _model.OrganizationIsNaturalPerson = organization.IsNaturalPerson;
+        }
+    }
+
+    private void OnFieldChanged(object? sender, FieldChangedEventArgs e)
+    {
+        _messages?.Clear(e.FieldIdentifier);
+        _formAlert = null;
+        _editContext?.NotifyValidationStateChanged();
+    }
+
+    private void OnPersonPrefixChanged(string value) => Change(nameof(EditProfileModel.PersonPrefix), () => _model.PersonPrefix = value);
+
+    private void OnPersonFirstNameChanged(string value) => Change(nameof(EditProfileModel.PersonFirstName), () => _model.PersonFirstName = value);
+
+    private void OnPersonLastNameChanged(string value) => Change(nameof(EditProfileModel.PersonLastName), () => _model.PersonLastName = value);
+
+    private void OnPersonDateOfBirthChanged(string value) => Change(nameof(EditProfileModel.PersonDateOfBirth), () => _model.PersonDateOfBirth = value);
+
+    private void OnPersonSuffixChanged(string value) => Change(nameof(EditProfileModel.PersonSuffix), () => _model.PersonSuffix = value);
+
+    private void OnOrganizationLegalNameChanged(string value) => Change(nameof(EditProfileModel.OrganizationLegalName), () => _model.OrganizationLegalName = value);
+
+    private void OnOrganizationTradingNameChanged(string value) => Change(nameof(EditProfileModel.OrganizationTradingName), () => _model.OrganizationTradingName = value);
+
+    private void OnOrganizationLegalFormChanged(string value) => Change(nameof(EditProfileModel.OrganizationLegalForm), () => _model.OrganizationLegalForm = value);
+
+    private void OnOrganizationRegistrationNumberChanged(string value) => Change(nameof(EditProfileModel.OrganizationRegistrationNumber), () => _model.OrganizationRegistrationNumber = value);
+
+    private void OnOrganizationIsNaturalPersonChanged(bool value) => Change(nameof(EditProfileModel.OrganizationIsNaturalPerson), () => _model.OrganizationIsNaturalPerson = value);
+
+    private void Change(string propertyName, Action update)
+    {
+        update();
+        _editContext?.NotifyFieldChanged(_editContext.Field(propertyName));
+    }
+
+    private Task CancelAsync()
+    {
+        NavigationManager.NavigateTo("/me");
+        return Task.CompletedTask;
+    }
+
+    private RenderFragment TextField(string propertyName, string label, string? value, Action<string> changed)
+        => builder =>
+        {
+            builder.OpenElement(0, "div");
+            builder.AddAttribute(1, "class", "hx-parties-edit-profile__field");
+            builder.OpenComponent<FluentTextInput>(2);
+            builder.AddAttribute(3, "Value", value ?? string.Empty);
+            builder.AddAttribute(4, "ValueChanged", EventCallback.Factory.Create<string>(this, changed));
+            builder.AddAttribute(5, "TextInputType", TextInputType.Text);
+            builder.AddAttribute(6, "Label", label);
+            builder.AddAttribute(7, "AdditionalAttributes", FieldAttributes(propertyName));
+            builder.CloseComponent();
+            builder.OpenElement(8, "p");
+            builder.AddAttribute(9, "id", HintId(propertyName));
+            builder.AddAttribute(10, "class", "hx-parties-edit-profile__hint");
+            builder.AddContent(11, ConsumerPortalLabels.EditProfileFieldHint);
+            builder.CloseElement();
+            builder.AddContent(12, FieldError(propertyName));
+            builder.CloseElement();
+        };
+
+    private RenderFragment FieldError(string propertyName)
+        => builder =>
+        {
+            IReadOnlyList<string> messages = (_editContext?.GetValidationMessages(_editContext.Field(propertyName)) ?? []).ToArray();
+            builder.OpenElement(0, "div");
+            builder.AddAttribute(1, "id", ErrorId(propertyName));
+            builder.AddAttribute(2, "class", "hx-parties-edit-profile__field-error");
+            if (messages.Count > 0)
+            {
+                builder.AddContent(3, string.Join(" ", messages));
+            }
+
+            builder.CloseElement();
+        };
+
+    private IReadOnlyDictionary<string, object> FieldAttributes(string propertyName)
+        => new Dictionary<string, object>(StringComparer.Ordinal)
+        {
+            ["aria-describedby"] = $"{HintId(propertyName)} {ErrorId(propertyName)}",
+            ["aria-invalid"] = (_editContext?.GetValidationMessages(_editContext.Field(propertyName)).Any() == true).ToString().ToLowerInvariant(),
+        };
+
+    private string HintId(string propertyName) => $"hx-parties-edit-{_instanceId}-{propertyName}-hint";
+
+    private string ErrorId(string propertyName) => $"hx-parties-edit-{_instanceId}-{propertyName}-error";
+
+    private static PartyDetail NormalizeDetail(PartyDetail detail)
+        => detail with
+        {
+            ContactChannels = detail.ContactChannels ?? [],
+            Identifiers = detail.Identifiers ?? [],
+            ConsentRecords = detail.ConsentRecords ?? [],
+            NameHistory = detail.NameHistory ?? [],
+        };
+
+    private static string FormatDate(DateTimeOffset? value)
+        => value is { } date ? date.ToString("d", CultureInfo.CurrentCulture) : string.Empty;
+
+    private static string? TrimToNull(string? value)
+        => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+
+    public void Dispose()
+    {
+        if (_editContext is not null)
+        {
+            _editContext.OnFieldChanged -= OnFieldChanged;
+        }
+
+        _loadCts?.Cancel();
+        _loadCts?.Dispose();
+        _saveCts?.Cancel();
+        _saveCts?.Dispose();
+    }
+
+    private sealed class EditProfileModel
+    {
+        public string? PersonPrefix { get; set; }
+
+        public string PersonFirstName { get; set; } = string.Empty;
+
+        public string PersonLastName { get; set; } = string.Empty;
+
+        public string? PersonDateOfBirth { get; set; }
+
+        public string? PersonSuffix { get; set; }
+
+        public string OrganizationLegalName { get; set; } = string.Empty;
+
+        public string? OrganizationTradingName { get; set; }
+
+        public string? OrganizationLegalForm { get; set; }
+
+        public string? OrganizationRegistrationNumber { get; set; }
+
+        public bool OrganizationIsNaturalPerson { get; set; }
+    }
 }

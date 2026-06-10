@@ -123,6 +123,52 @@ public static class ConsumerPortalLabels
 
     public static string EditProfileNextSubmit => Get(nameof(EditProfileNextSubmit));
 
+    public static string EditProfileLoadingStatus => Get(nameof(EditProfileLoadingStatus));
+
+    public static string EditProfileLoadingHeading => Get(nameof(EditProfileLoadingHeading));
+
+    public static string EditProfileFailureTitle => Get(nameof(EditProfileFailureTitle));
+
+    public static string EditProfileFailureMessage => Get(nameof(EditProfileFailureMessage));
+
+    public static string EditProfileRetry => Get(nameof(EditProfileRetry));
+
+    public static string EditProfileDeletedTitle => Get(nameof(EditProfileDeletedTitle));
+
+    public static string EditProfileDeletedMessage => Get(nameof(EditProfileDeletedMessage));
+
+    public static string EditProfileDetailsTitle => Get(nameof(EditProfileDetailsTitle));
+
+    public static string EditProfileEditableFieldsTitle => Get(nameof(EditProfileEditableFieldsTitle));
+
+    public static string EditProfileReadOnlyContactTitle => Get(nameof(EditProfileReadOnlyContactTitle));
+
+    public static string EditProfileReadOnlyIdentifierTitle => Get(nameof(EditProfileReadOnlyIdentifierTitle));
+
+    public static string EditProfileReadOnlyHelp => Get(nameof(EditProfileReadOnlyHelp));
+
+    public static string EditProfileSave => Get(nameof(EditProfileSave));
+
+    public static string EditProfileCancel => Get(nameof(EditProfileCancel));
+
+    public static string EditProfileSaving => Get(nameof(EditProfileSaving));
+
+    public static string EditProfileSavedUpdating => Get(nameof(EditProfileSavedUpdating));
+
+    public static string EditProfileSavedCurrent => Get(nameof(EditProfileSavedCurrent));
+
+    public static string EditProfileDegradedAfterSave => Get(nameof(EditProfileDegradedAfterSave));
+
+    public static string EditProfileValidationRetry => Get(nameof(EditProfileValidationRetry));
+
+    public static string EditProfileSaveFailure => Get(nameof(EditProfileSaveFailure));
+
+    public static string EditProfileValidationRequired => Get(nameof(EditProfileValidationRequired));
+
+    public static string EditProfileValidationDate => Get(nameof(EditProfileValidationDate));
+
+    public static string EditProfileFieldHint => Get(nameof(EditProfileFieldHint));
+
     public static string ConsentTitle => Get(nameof(ConsentTitle));
 
     public static string ConsentSummary => Get(nameof(ConsentSummary));

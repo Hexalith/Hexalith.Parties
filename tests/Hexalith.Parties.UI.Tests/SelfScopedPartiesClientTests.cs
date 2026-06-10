@@ -2,6 +2,8 @@ using System.Security.Claims;
 
 using Hexalith.Parties.Client.Abstractions;
 using Hexalith.Parties.Client.AdminPortal;
+using Hexalith.Parties.Contracts.Commands;
+using Hexalith.Parties.Contracts.Models;
 using Hexalith.Parties.Contracts.Security;
 using Hexalith.Parties.Contracts.ValueObjects;
 using Hexalith.Parties.UI.Authentication;
@@ -241,6 +243,52 @@ public sealed class SelfScopedPartiesClientTests
         await queryClient.Received(1).GetPartyAsync(BoundPartyId, cts.Token);
     }
 
+    [Fact]
+    public async Task UpdateMyProfileAsync_BoundPrincipal_InjectsResolvedPartyIdIntoCommandClient()
+    {
+        using var cts = new CancellationTokenSource();
+        IPartiesQueryClient queryClient = Substitute.For<IPartiesQueryClient>();
+        IPartiesCommandClient commandClient = Substitute.For<IPartiesCommandClient>();
+        IAdminPortalGdprClient gdprClient = Substitute.For<IAdminPortalGdprClient>();
+        var expected = new PartiesCommandResult<PartyDetail>("corr-1", null);
+        commandClient.UpdatePartyCompositeWithResultAsync(BoundPartyId, Arg.Any<UpdatePartyComposite>(), cts.Token)
+            .Returns(expected);
+        SelfScopedPartiesClient sut = BuildSut(BoundPrincipal(BoundPartyId), queryClient, gdprClient, commandClient);
+        var request = new SelfScopedProfileUpdateRequest
+        {
+            PersonDetails = new PersonDetails
+            {
+                FirstName = "Ada",
+                LastName = "Lovelace",
+            },
+        };
+
+        PartiesCommandResult<PartyDetail> actual = await sut.UpdateMyProfileAsync(request, cts.Token);
+
+        actual.ShouldBeSameAs(expected);
+        await commandClient.Received(1).UpdatePartyCompositeWithResultAsync(
+            BoundPartyId,
+            Arg.Is<UpdatePartyComposite>(command =>
+                command != null
+                && command.PartyId == BoundPartyId
+                && command.PersonDetails == request.PersonDetails
+                && command.OrganizationDetails == null),
+            cts.Token);
+    }
+
+    [Fact]
+    public async Task UpdateMyProfileAsync_UnboundPrincipal_ThrowsAndNeverCallsCommandClient()
+    {
+        IPartiesQueryClient queryClient = Substitute.For<IPartiesQueryClient>();
+        IPartiesCommandClient commandClient = Substitute.For<IPartiesCommandClient>();
+        IAdminPortalGdprClient gdprClient = Substitute.For<IAdminPortalGdprClient>();
+        SelfScopedPartiesClient sut = BuildSut(UnboundPrincipal(), queryClient, gdprClient, commandClient);
+
+        await Should.ThrowAsync<InvalidOperationException>(() => sut.UpdateMyProfileAsync(new SelfScopedProfileUpdateRequest()));
+
+        await commandClient.DidNotReceiveWithAnyArgs().UpdatePartyCompositeWithResultAsync(default!, default!, default);
+    }
+
     public static TheoryData<string> AccessorMethodNames()
     {
         var data = new TheoryData<string>();
@@ -255,6 +303,7 @@ public sealed class SelfScopedPartiesClientTests
     private static readonly string[] AccessorMethodNameList =
     [
         nameof(ISelfScopedPartiesClient.GetMyPartyAsync),
+        nameof(ISelfScopedPartiesClient.UpdateMyProfileAsync),
         nameof(ISelfScopedPartiesClient.GetMyConsentAsync),
         nameof(ISelfScopedPartiesClient.GrantMyConsentAsync),
         nameof(ISelfScopedPartiesClient.RevokeMyConsentAsync),
@@ -273,6 +322,7 @@ public sealed class SelfScopedPartiesClientTests
         => methodName switch
         {
             nameof(ISelfScopedPartiesClient.GetMyPartyAsync) => sut.GetMyPartyAsync(),
+            nameof(ISelfScopedPartiesClient.UpdateMyProfileAsync) => sut.UpdateMyProfileAsync(new SelfScopedProfileUpdateRequest()),
             nameof(ISelfScopedPartiesClient.GetMyConsentAsync) => sut.GetMyConsentAsync(),
             nameof(ISelfScopedPartiesClient.GrantMyConsentAsync) => sut.GrantMyConsentAsync("channel-1", "marketing", LawfulBasis.Consent),
             nameof(ISelfScopedPartiesClient.RevokeMyConsentAsync) => sut.RevokeMyConsentAsync("c1"),
@@ -288,8 +338,14 @@ public sealed class SelfScopedPartiesClientTests
     private static SelfScopedPartiesClient BuildSut(
         ClaimsPrincipal user,
         IPartiesQueryClient queryClient,
-        IAdminPortalGdprClient gdprClient)
-        => new(new FakeAuthStateProvider(user), new PartyIdClaimResolver(), queryClient, gdprClient);
+        IAdminPortalGdprClient gdprClient,
+        IPartiesCommandClient? commandClient = null)
+        => new(
+            new FakeAuthStateProvider(user),
+            new PartyIdClaimResolver(),
+            queryClient,
+            commandClient ?? Substitute.For<IPartiesCommandClient>(),
+            gdprClient);
 
     private static ClaimsPrincipal BoundPrincipal(string partyId)
         => new(new ClaimsIdentity([new Claim(PartiesUiAuthorization.PartyIdClaimType, partyId)], authenticationType: "test"));

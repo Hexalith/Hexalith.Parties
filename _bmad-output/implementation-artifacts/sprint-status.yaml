@@ -81,7 +81,7 @@ development_status:
   4-2-implement-admin-link-party-id-binding-provisioning: done
   4-3-stand-up-the-consumerportal-rcl-and-consumer-area: done
   4-4-my-profile-fr-consumer-1: done
-  4-5-edit-my-profile-fr-consumer-2: backlog
+  4-5-edit-my-profile-fr-consumer-2: done
   epic-4-retrospective: optional
 
   # ── Epic 5: Consumer — Consent, Data Export & Erasure ────────────────────

@@ -208,16 +208,85 @@
     <value>Edit profile</value>
   </data>
   <data name="EditProfileSummary" xml:space="preserve">
-    <value>You will be able to request corrections to profile details that can be changed through self-service.</value>
+    <value>Correct the editable profile details linked to your signed-in account.</value>
   </data>
   <data name="EditProfileStatus" xml:space="preserve">
-    <value>Profile updates are not submitted in this setup screen.</value>
+    <value>Profile details are ready to review.</value>
   </data>
   <data name="EditProfileNextReview" xml:space="preserve">
     <value>Review editable fields before submitting a correction.</value>
   </data>
   <data name="EditProfileNextSubmit" xml:space="preserve">
     <value>Send changes through the protected host workflow.</value>
+  </data>
+  <data name="EditProfileLoadingStatus" xml:space="preserve">
+    <value>Loading editable profile details</value>
+  </data>
+  <data name="EditProfileLoadingHeading" xml:space="preserve">
+    <value>Loading your editable profile</value>
+  </data>
+  <data name="EditProfileFailureTitle" xml:space="preserve">
+    <value>Profile editing is unavailable</value>
+  </data>
+  <data name="EditProfileFailureMessage" xml:space="preserve">
+    <value>We couldn't load the editable profile details. Please try again.</value>
+  </data>
+  <data name="EditProfileRetry" xml:space="preserve">
+    <value>Try again</value>
+  </data>
+  <data name="EditProfileDeletedTitle" xml:space="preserve">
+    <value>This profile was deleted</value>
+  </data>
+  <data name="EditProfileDeletedMessage" xml:space="preserve">
+    <value>Profile changes are blocked because only status information is available.</value>
+  </data>
+  <data name="EditProfileDetailsTitle" xml:space="preserve">
+    <value>Current profile</value>
+  </data>
+  <data name="EditProfileEditableFieldsTitle" xml:space="preserve">
+    <value>Editable details</value>
+  </data>
+  <data name="EditProfileReadOnlyContactTitle" xml:space="preserve">
+    <value>Contact channels shown for review</value>
+  </data>
+  <data name="EditProfileReadOnlyIdentifierTitle" xml:space="preserve">
+    <value>Identifiers shown for review</value>
+  </data>
+  <data name="EditProfileReadOnlyHelp" xml:space="preserve">
+    <value>These values are shown here for review and are not changed by this form.</value>
+  </data>
+  <data name="EditProfileSave" xml:space="preserve">
+    <value>Save changes</value>
+  </data>
+  <data name="EditProfileCancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="EditProfileSaving" xml:space="preserve">
+    <value>Saving...</value>
+  </data>
+  <data name="EditProfileSavedUpdating" xml:space="preserve">
+    <value>Saved - updating</value>
+  </data>
+  <data name="EditProfileSavedCurrent" xml:space="preserve">
+    <value>Saved</value>
+  </data>
+  <data name="EditProfileDegradedAfterSave" xml:space="preserve">
+    <value>Saved - showing the latest available details</value>
+  </data>
+  <data name="EditProfileValidationRetry" xml:space="preserve">
+    <value>Check the highlighted fields and try again.</value>
+  </data>
+  <data name="EditProfileSaveFailure" xml:space="preserve">
+    <value>We couldn't save the changes. Please try again.</value>
+  </data>
+  <data name="EditProfileValidationRequired" xml:space="preserve">
+    <value>This field is required.</value>
+  </data>
+  <data name="EditProfileValidationDate" xml:space="preserve">
+    <value>Enter a valid date.</value>
+  </data>
+  <data name="EditProfileFieldHint" xml:space="preserve">
+    <value>Use the value that should be held on your profile.</value>
   </data>
   <data name="ConsentTitle" xml:space="preserve">
     <value>Consent</value>

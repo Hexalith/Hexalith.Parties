@@ -1,5 +1,6 @@
 using Hexalith.Parties.Client.Abstractions;
 using Hexalith.Parties.Client.AdminPortal;
+using Hexalith.Parties.Contracts.Commands;
 using Hexalith.Parties.Contracts.Models;
 using Hexalith.Parties.Contracts.Security;
 using Hexalith.Parties.Contracts.ValueObjects;
@@ -37,10 +38,28 @@ internal sealed class SelfScopedPartiesClient(
     AuthenticationStateProvider authStateProvider,
     PartyIdClaimResolver resolver,
     IPartiesQueryClient queryClient,
+    IPartiesCommandClient commandClient,
     IAdminPortalGdprClient gdprClient) : ISelfScopedPartiesClient
 {
     public async Task<PartyDetail> GetMyPartyAsync(CancellationToken ct = default)
         => await queryClient.GetPartyAsync(await ResolveMyPartyIdAsync().ConfigureAwait(false), ct).ConfigureAwait(false);
+
+    public async Task<PartiesCommandResult<PartyDetail>> UpdateMyProfileAsync(
+        SelfScopedProfileUpdateRequest request,
+        CancellationToken ct = default)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+
+        string resolvedId = await ResolveMyPartyIdAsync().ConfigureAwait(false);
+        var command = new UpdatePartyComposite
+        {
+            PartyId = resolvedId,
+            PersonDetails = request.PersonDetails,
+            OrganizationDetails = request.OrganizationDetails,
+        };
+
+        return await commandClient.UpdatePartyCompositeWithResultAsync(resolvedId, command, ct).ConfigureAwait(false);
+    }
 
     public async Task<IReadOnlyList<ConsentRecord>> GetMyConsentAsync(CancellationToken ct = default)
         => await gdprClient.GetConsentAsync(await ResolveMyPartyIdAsync().ConfigureAwait(false), ct).ConfigureAwait(false);

@@ -1,0 +1,62 @@
+.hx-parties-edit-profile__form,
+.hx-parties-edit-profile__fieldset,
+.hx-parties-edit-profile__field,
+.hx-parties-edit-profile__actions {
+    display: grid;
+}
+
+.hx-parties-edit-profile__form {
+    gap: var(--spacingVerticalL, 1rem);
+}
+
+.hx-parties-edit-profile__fieldset {
+    border: 0;
+    gap: var(--spacingVerticalM, .75rem);
+    margin: 0;
+    padding-inline: 0;
+}
+
+.hx-parties-edit-profile__fieldset > legend {
+    font-size: var(--type-ramp-plus-2-font-size, 1.5rem);
+    font-weight: 600;
+    line-height: var(--type-ramp-plus-2-line-height, 2rem);
+    padding: 0;
+}
+
+.hx-parties-edit-profile__field {
+    gap: var(--spacingVerticalXXS, .25rem);
+}
+
+.hx-parties-edit-profile__hint,
+.hx-parties-edit-profile__field-error,
+.hx-parties-edit-profile__alert {
+    margin: 0;
+}
+
+.hx-parties-edit-profile__hint {
+    color: var(--neutral-foreground-hint, var(--neutral-foreground-rest));
+    font-size: var(--type-ramp-minus-1-font-size, .875rem);
+}
+
+.hx-parties-edit-profile__field-error,
+.hx-parties-edit-profile__alert {
+    color: var(--colorStatusDangerForeground1, CanvasText);
+}
+
+.hx-parties-edit-profile__alert {
+    border-block-start: var(--strokeWidthThin, 1px) solid var(--colorStatusDangerForeground1, CanvasText);
+    padding-block-start: var(--spacingVerticalS, .5rem);
+}
+
+.hx-parties-edit-profile__actions {
+    gap: var(--spacingVerticalS, .5rem);
+    justify-items: start;
+    padding-block-start: var(--spacingVerticalS, .5rem);
+}
+
+@media (min-width: 520px) {
+    .hx-parties-edit-profile__actions {
+        align-items: center;
+        display: flex;
+    }
+}
