@@ -350,6 +350,30 @@ public sealed class PartyDetailProjectionQueryActorTests
     }
 
     [Fact]
+    public async Task QueryAsync_GetErasureStatus_ReturnsPersistedStatusWithoutDetailReadAsync()
+    {
+        IActorProxyFactory actorProxyFactory = Substitute.For<IActorProxyFactory>();
+        IPartyErasureRecordStore recordStore = Substitute.For<IPartyErasureRecordStore>();
+        recordStore.GetStatusAsync("tenant-a", "p-pending", Arg.Any<CancellationToken>())
+            .Returns(new PartyErasureStatusRecord
+            {
+                PartyId = "p-pending",
+                TenantId = "tenant-a",
+                Status = "ErasurePending",
+                UpdatedAt = DateTimeOffset.Parse("2026-06-10T10:00:00Z"),
+            });
+        PartyDetailProjectionQueryActor actor = CreateActor("party-detail:tenant-a:p-pending", actorProxyFactory, recordStore: recordStore);
+
+        QueryResult result = await actor.QueryAsync(CreateEnvelope("tenant-a", "p-pending", "GetErasureStatus"));
+
+        result.Success.ShouldBeTrue();
+        result.ProjectionType.ShouldBe("party-erasure-status");
+        PartyErasureStatusRecord status = result.GetPayload().Deserialize<PartyErasureStatusRecord>(new JsonSerializerOptions(JsonSerializerDefaults.Web))!;
+        status.Status.ShouldBe("ErasurePending");
+        actorProxyFactory.DidNotReceiveWithAnyArgs().CreateActorProxy<IPartyDetailProjectionActor>(default!, default!, default);
+    }
+
+    [Fact]
     public async Task QueryAsync_GetErasureCertificate_CrossTenantMismatchFailsBeforeStoreReadAsync()
     {
         IActorProxyFactory actorProxyFactory = Substitute.For<IActorProxyFactory>();

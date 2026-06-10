@@ -3,6 +3,7 @@ namespace Hexalith.Parties.Client.AdminPortal;
 public static class AdminPortalGdprRoutes
 {
     public const string EraseParty = "eventstore:command:party:EraseParty";
+    public const string CancelErasure = "eventstore:command:party:CancelPartyErasure";
     public const string ErasureStatus = "eventstore:query:party:GetErasureStatus";
     public const string ErasureCertificate = "eventstore:query:party:GetErasureCertificate";
     public const string RetryVerification = "eventstore:command:party:RetryErasureVerification";

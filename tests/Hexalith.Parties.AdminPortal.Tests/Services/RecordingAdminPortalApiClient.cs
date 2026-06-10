@@ -40,6 +40,8 @@ internal sealed class RecordingAdminPortalApiClient : IPartiesAdminPortalApiClie
 
     public List<string> ErasureRequests { get; } = [];
 
+    public List<string> CancelErasureRequests { get; } = [];
+
     public List<string> ErasureStatusRequests { get; } = [];
 
     public List<string> ErasureCertificateRequests { get; } = [];
@@ -224,6 +226,12 @@ internal sealed class RecordingAdminPortalApiClient : IPartiesAdminPortalApiClie
         return _erasureResponses.Count == 0
             ? Task.FromResult(new AdminPortalGdprCommandResult(AdminPortalGdprOutcome.Accepted, "corr-erasure"))
             : _erasureResponses.Dequeue()(cancellationToken);
+    }
+
+    public Task<AdminPortalGdprCommandResult> CancelErasureAsync(string partyId, CancellationToken cancellationToken)
+    {
+        CancelErasureRequests.Add(partyId);
+        return Task.FromResult(new AdminPortalGdprCommandResult(AdminPortalGdprOutcome.Accepted, "corr-cancel-erasure"));
     }
 
     public Task<PartyErasureStatusRecord?> GetErasureStatusAsync(string partyId, CancellationToken cancellationToken)

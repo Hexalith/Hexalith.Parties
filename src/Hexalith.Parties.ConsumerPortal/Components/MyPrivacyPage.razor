@@ -4,6 +4,7 @@
 @using Microsoft.JSInterop
 
 @inject IConsumerPrivacyExportClient ExportClient
+@inject IConsumerPrivacyErasureClient ErasureClient
 @inject IJSRuntime JsRuntime
 
 <section class="hx-parties-profile hx-parties-privacy" aria-labelledby="@_titleId">
@@ -51,9 +52,75 @@
             </div>
         </section>
 
-        <section class="hx-parties-profile__section" aria-labelledby="@_erasurePreviewId">
-            <h2 id="@_erasurePreviewId">@ConsumerPortalLabels.PrivacyErasurePreviewTitle</h2>
-            <p>@ConsumerPortalLabels.PrivacyErasurePreviewMessage</p>
+        <section class="hx-parties-profile__section hx-parties-privacy__erasure" aria-labelledby="@_erasureId">
+            <h2 id="@_erasureId">@ConsumerPortalLabels.PrivacyErasureTitle</h2>
+            <p>@ConsumerPortalLabels.PrivacyErasureDescription</p>
+
+            @if (_erasureAlertVisible)
+            {
+                <div class="hx-parties-profile__notice" role="alert" aria-labelledby="@_erasureFailureId">
+                    <h3 id="@_erasureFailureId">@ConsumerPortalLabels.PrivacyErasureFailureTitle</h3>
+                    <p>@ErasureAlertMessage</p>
+                </div>
+            }
+            else if (ShowErasureStatus)
+            {
+                <p class="hx-parties-profile__freshness" role="status" aria-live="polite">@ErasureStatusMessage</p>
+            }
+            else
+            {
+                <p class="hx-parties-profile__freshness">@ErasureStatusMessage</p>
+            }
+
+            @if (_confirmErasure)
+            {
+                <div class="hx-parties-profile__notice" role="dialog" aria-modal="true" aria-labelledby="@_erasureConfirmId">
+                    <h3 id="@_erasureConfirmId">@ConsumerPortalLabels.PrivacyErasureConfirmTitle</h3>
+                    <p>@ConsumerPortalLabels.PrivacyErasureConfirmMessage</p>
+                    <div class="hx-parties-privacy__actions">
+                        <FluentButton Appearance="ButtonAppearance.Outline"
+                                      Disabled="@_erasureBusy"
+                                      OnClick="DismissErasureConfirmation">
+                            @ConsumerPortalLabels.PrivacyErasureKeepData
+                        </FluentButton>
+                        <FluentButton Appearance="ButtonAppearance.Outline"
+                                      class="hx-parties-privacy__danger-action"
+                                      Disabled="@_erasureBusy"
+                                      OnClick="RequestErasureAsync">
+                            @ConsumerPortalLabels.PrivacyErasureConfirmAction
+                        </FluentButton>
+                    </div>
+                </div>
+            }
+
+            <div class="hx-parties-privacy__actions">
+                @if (CanRequestErasure)
+                {
+                    <FluentButton Appearance="ButtonAppearance.Outline"
+                                  class="hx-parties-privacy__danger-action"
+                                  Disabled="@_erasureBusy"
+                                  OnClick="BeginErasureConfirmation">
+                        @ConsumerPortalLabels.PrivacyErasureAction
+                    </FluentButton>
+                }
+                else if (CanCancelErasure)
+                {
+                    <FluentButton Appearance="ButtonAppearance.Outline"
+                                  Disabled="@_erasureBusy"
+                                  OnClick="CancelErasureAsync">
+                        @ConsumerPortalLabels.PrivacyErasureCancelAction
+                    </FluentButton>
+                }
+                else if (ShowDisabledCancel)
+                {
+                    <FluentButton Appearance="ButtonAppearance.Outline"
+                                  Disabled="true"
+                                  aria-disabled="true">
+                        @ConsumerPortalLabels.PrivacyErasureCancelAction
+                    </FluentButton>
+                    <p>@ConsumerPortalLabels.PrivacyErasureCancelUnavailable</p>
+                }
+            </div>
         </section>
     </div>
 </section>
@@ -63,15 +130,25 @@
 
     private readonly int _instanceId = System.Threading.Interlocked.Increment(ref s_nextInstanceId);
     private CancellationTokenSource? _exportCts;
+    private CancellationTokenSource? _erasureCts;
     private ConsumerPrivacyExportResult? _download;
+    private ConsumerPrivacyErasureResult _erasure = ConsumerPrivacyErasureResult.Active();
     private bool _isPreparing;
     private bool _isDownloading;
     private bool _failureVisible;
+    private bool _confirmErasure;
+    private bool _isLoadingErasure;
+    private bool _isRequestingErasure;
+    private bool _isCancellingErasure;
+    private bool _erasureAlertVisible;
+    private ConsumerPrivacyErasureOutcome? _lastErasureFailure;
 
     private string _titleId => $"hx-parties-privacy-title-{_instanceId}";
     private string _exportId => $"hx-parties-privacy-export-{_instanceId}";
     private string _failureId => $"hx-parties-privacy-failure-{_instanceId}";
-    private string _erasurePreviewId => $"hx-parties-privacy-erasure-preview-{_instanceId}";
+    private string _erasureId => $"hx-parties-privacy-erasure-{_instanceId}";
+    private string _erasureFailureId => $"hx-parties-privacy-erasure-failure-{_instanceId}";
+    private string _erasureConfirmId => $"hx-parties-privacy-erasure-confirm-{_instanceId}";
 
     private bool CanDownload
         => _download is { Payload.Length: > 0 }
@@ -92,6 +169,95 @@
                 ConsumerPrivacyExportOutcome.Ready => ConsumerPortalLabels.PrivacyExportReady,
                 _ => ConsumerPortalLabels.PrivacyExportIdleStatus,
             };
+
+    private bool _erasureBusy => _isLoadingErasure || _isRequestingErasure || _isCancellingErasure;
+
+    private bool CanRequestErasure
+        => !_confirmErasure
+            && !_erasureBusy
+            && _erasure.Outcome is ConsumerPrivacyErasureOutcome.Ready
+                or ConsumerPrivacyErasureOutcome.CancellationAccepted
+            && _erasure.State is ConsumerPrivacyErasureState.Active;
+
+    private bool CanCancelErasure
+        => !_erasureBusy && _erasure.CanCancel && _erasure.State is ConsumerPrivacyErasureState.ErasurePending;
+
+    private bool ShowDisabledCancel
+        => _erasure.State is ConsumerPrivacyErasureState.KeyDestroyed
+            or ConsumerPrivacyErasureState.VerificationInProgress
+            or ConsumerPrivacyErasureState.Verified;
+
+    private bool ShowErasureStatus
+        => _erasureBusy
+            || _erasure.Outcome is ConsumerPrivacyErasureOutcome.Pending
+                or ConsumerPrivacyErasureOutcome.CancellationAccepted
+                or ConsumerPrivacyErasureOutcome.Permanent
+            || _erasure.State is ConsumerPrivacyErasureState.ErasurePending
+                or ConsumerPrivacyErasureState.KeyDestroyed
+                or ConsumerPrivacyErasureState.VerificationInProgress
+                or ConsumerPrivacyErasureState.Verified
+                or ConsumerPrivacyErasureState.Erased;
+
+    private string ErasureStatusMessage
+        => _isLoadingErasure
+            ? ConsumerPortalLabels.PrivacyErasureLoadingStatus
+            : _isRequestingErasure
+                ? ConsumerPortalLabels.PrivacyErasureRequesting
+                : _isCancellingErasure
+                    ? ConsumerPortalLabels.PrivacyErasureCancelling
+                    : _erasure.Outcome is ConsumerPrivacyErasureOutcome.CancellationAccepted
+                        ? ConsumerPortalLabels.PrivacyErasureCancelled
+                        : _erasure.State switch
+                        {
+                            ConsumerPrivacyErasureState.ErasurePending => ConsumerPortalLabels.PrivacyErasurePendingCancellable,
+                            ConsumerPrivacyErasureState.KeyDestroyed
+                                or ConsumerPrivacyErasureState.VerificationInProgress
+                                or ConsumerPrivacyErasureState.Verified => ConsumerPortalLabels.PrivacyErasureStarted,
+                            ConsumerPrivacyErasureState.Erased => ConsumerPortalLabels.PrivacyErasurePermanent,
+                            _ => ConsumerPortalLabels.PrivacyErasureIdleStatus,
+                        };
+
+    private string ErasureAlertMessage
+        => _lastErasureFailure switch
+        {
+            ConsumerPrivacyErasureOutcome.Forbidden or ConsumerPrivacyErasureOutcome.AuthenticationRequired => ConsumerPortalLabels.PrivacyErasureForbiddenMessage,
+            ConsumerPrivacyErasureOutcome.Unavailable => ConsumerPortalLabels.PrivacyErasureUnavailableMessage,
+            ConsumerPrivacyErasureOutcome.Rejected => ConsumerPortalLabels.PrivacyErasureRejectedMessage,
+            _ => ConsumerPortalLabels.PrivacyErasureFailureMessage,
+        };
+
+    protected override async Task OnInitializedAsync()
+    {
+        _erasureCts = new CancellationTokenSource();
+        CancellationToken token = _erasureCts.Token;
+        _isLoadingErasure = true;
+
+        try
+        {
+            ConsumerPrivacyErasureResult result = await ErasureClient.GetMyErasureStatusAsync(token).ConfigureAwait(false);
+            if (!token.IsCancellationRequested)
+            {
+                ApplyErasureResult(result);
+            }
+        }
+        catch (OperationCanceledException) when (token.IsCancellationRequested)
+        {
+        }
+        catch
+        {
+            if (!token.IsCancellationRequested)
+            {
+                ApplyErasureResult(ConsumerPrivacyErasureResult.Failure(ConsumerPrivacyErasureOutcome.TransientFailure));
+            }
+        }
+        finally
+        {
+            if (!token.IsCancellationRequested)
+            {
+                _isLoadingErasure = false;
+            }
+        }
+    }
 
     private async Task PrepareExportAsync()
     {
@@ -175,9 +341,105 @@
         }
     }
 
+    private void BeginErasureConfirmation()
+    {
+        _erasureAlertVisible = false;
+        _confirmErasure = true;
+    }
+
+    private void DismissErasureConfirmation() => _confirmErasure = false;
+
+    private async Task RequestErasureAsync()
+    {
+        _erasureCts?.Cancel();
+        _erasureCts?.Dispose();
+        _erasureCts = new CancellationTokenSource();
+        CancellationToken token = _erasureCts.Token;
+
+        _isRequestingErasure = true;
+        _erasureAlertVisible = false;
+
+        try
+        {
+            ConsumerPrivacyErasureResult result = await ErasureClient.RequestMyErasureAsync(token).ConfigureAwait(false);
+            if (!token.IsCancellationRequested)
+            {
+                _confirmErasure = false;
+                ApplyErasureResult(result);
+            }
+        }
+        catch (OperationCanceledException) when (token.IsCancellationRequested)
+        {
+        }
+        catch
+        {
+            if (!token.IsCancellationRequested)
+            {
+                ApplyErasureResult(ConsumerPrivacyErasureResult.Failure(ConsumerPrivacyErasureOutcome.TransientFailure));
+            }
+        }
+        finally
+        {
+            if (!token.IsCancellationRequested)
+            {
+                _isRequestingErasure = false;
+            }
+        }
+    }
+
+    private async Task CancelErasureAsync()
+    {
+        _erasureCts?.Cancel();
+        _erasureCts?.Dispose();
+        _erasureCts = new CancellationTokenSource();
+        CancellationToken token = _erasureCts.Token;
+
+        _isCancellingErasure = true;
+        _erasureAlertVisible = false;
+
+        try
+        {
+            ConsumerPrivacyErasureResult result = await ErasureClient.CancelMyErasureAsync(token).ConfigureAwait(false);
+            if (!token.IsCancellationRequested)
+            {
+                ApplyErasureResult(result);
+            }
+        }
+        catch (OperationCanceledException) when (token.IsCancellationRequested)
+        {
+        }
+        catch
+        {
+            if (!token.IsCancellationRequested)
+            {
+                ApplyErasureResult(ConsumerPrivacyErasureResult.Failure(ConsumerPrivacyErasureOutcome.TransientFailure));
+            }
+        }
+        finally
+        {
+            if (!token.IsCancellationRequested)
+            {
+                _isCancellingErasure = false;
+            }
+        }
+    }
+
+    private void ApplyErasureResult(ConsumerPrivacyErasureResult result)
+    {
+        _erasure = result;
+        _lastErasureFailure = result.Outcome;
+        _erasureAlertVisible = result.Outcome is ConsumerPrivacyErasureOutcome.Forbidden
+            or ConsumerPrivacyErasureOutcome.AuthenticationRequired
+            or ConsumerPrivacyErasureOutcome.Rejected
+            or ConsumerPrivacyErasureOutcome.TransientFailure
+            or ConsumerPrivacyErasureOutcome.Unavailable;
+    }
+
     public void Dispose()
     {
         _exportCts?.Cancel();
         _exportCts?.Dispose();
+        _erasureCts?.Cancel();
+        _erasureCts?.Dispose();
     }
 }

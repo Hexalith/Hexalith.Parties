@@ -315,6 +315,9 @@ public sealed class PartyDomainServiceInvokerValidationTests
         await recordStore.Received(1).SaveStatusAsync(
             Arg.Is<PartyErasureStatusRecord>(saved => saved != null && saved.Status == ErasureStatus.Verified.ToString() && saved.ErrorMessage == null),
             Arg.Any<CancellationToken>());
+        await recordStore.Received(1).SaveStatusAsync(
+            Arg.Is<PartyErasureStatusRecord>(saved => saved != null && saved.Status == ErasureStatus.Erased.ToString() && saved.ErasedAt == DateTimeOffset.Parse("2026-05-21T20:50:00Z")),
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]

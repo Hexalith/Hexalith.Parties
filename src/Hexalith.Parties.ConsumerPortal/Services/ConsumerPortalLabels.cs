@@ -275,9 +275,49 @@ public static class ConsumerPortalLabels
 
     public static string PrivacyExportFailureMessage => Get(nameof(PrivacyExportFailureMessage));
 
-    public static string PrivacyErasurePreviewTitle => Get(nameof(PrivacyErasurePreviewTitle));
+    public static string PrivacyErasureTitle => Get(nameof(PrivacyErasureTitle));
 
-    public static string PrivacyErasurePreviewMessage => Get(nameof(PrivacyErasurePreviewMessage));
+    public static string PrivacyErasureDescription => Get(nameof(PrivacyErasureDescription));
+
+    public static string PrivacyErasureIdleStatus => Get(nameof(PrivacyErasureIdleStatus));
+
+    public static string PrivacyErasureLoadingStatus => Get(nameof(PrivacyErasureLoadingStatus));
+
+    public static string PrivacyErasureAction => Get(nameof(PrivacyErasureAction));
+
+    public static string PrivacyErasureConfirmTitle => Get(nameof(PrivacyErasureConfirmTitle));
+
+    public static string PrivacyErasureConfirmMessage => Get(nameof(PrivacyErasureConfirmMessage));
+
+    public static string PrivacyErasureConfirmAction => Get(nameof(PrivacyErasureConfirmAction));
+
+    public static string PrivacyErasureKeepData => Get(nameof(PrivacyErasureKeepData));
+
+    public static string PrivacyErasureRequesting => Get(nameof(PrivacyErasureRequesting));
+
+    public static string PrivacyErasurePendingCancellable => Get(nameof(PrivacyErasurePendingCancellable));
+
+    public static string PrivacyErasureCancelAction => Get(nameof(PrivacyErasureCancelAction));
+
+    public static string PrivacyErasureCancelling => Get(nameof(PrivacyErasureCancelling));
+
+    public static string PrivacyErasureCancelled => Get(nameof(PrivacyErasureCancelled));
+
+    public static string PrivacyErasureStarted => Get(nameof(PrivacyErasureStarted));
+
+    public static string PrivacyErasureCancelUnavailable => Get(nameof(PrivacyErasureCancelUnavailable));
+
+    public static string PrivacyErasurePermanent => Get(nameof(PrivacyErasurePermanent));
+
+    public static string PrivacyErasureFailureTitle => Get(nameof(PrivacyErasureFailureTitle));
+
+    public static string PrivacyErasureFailureMessage => Get(nameof(PrivacyErasureFailureMessage));
+
+    public static string PrivacyErasureRejectedMessage => Get(nameof(PrivacyErasureRejectedMessage));
+
+    public static string PrivacyErasureUnavailableMessage => Get(nameof(PrivacyErasureUnavailableMessage));
+
+    public static string PrivacyErasureForbiddenMessage => Get(nameof(PrivacyErasureForbiddenMessage));
 
     public static string ContactChannelTypeLabel(ContactChannelType type)
         => Get($"{nameof(ContactChannelTypeLabel)}{type}");

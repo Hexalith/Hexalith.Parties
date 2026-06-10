@@ -138,6 +138,18 @@ public sealed class SelfScopedPartiesClientTests
     }
 
     [Fact]
+    public async Task CancelMyErasureAsync_BoundPrincipal_InjectsResolvedPartyIdIntoGdprClient()
+    {
+        IPartiesQueryClient queryClient = Substitute.For<IPartiesQueryClient>();
+        IAdminPortalGdprClient gdprClient = Substitute.For<IAdminPortalGdprClient>();
+        SelfScopedPartiesClient sut = BuildSut(BoundPrincipal(BoundPartyId), queryClient, gdprClient);
+
+        await sut.CancelMyErasureAsync();
+
+        await gdprClient.Received(1).CancelErasureAsync(BoundPartyId, Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
     public async Task RestrictMyProcessingAsync_BoundPrincipal_InjectsResolvedPartyIdAndForwardsReason()
     {
         IPartiesQueryClient queryClient = Substitute.For<IPartiesQueryClient>();
@@ -308,6 +320,7 @@ public sealed class SelfScopedPartiesClientTests
         nameof(ISelfScopedPartiesClient.GrantMyConsentAsync),
         nameof(ISelfScopedPartiesClient.RevokeMyConsentAsync),
         nameof(ISelfScopedPartiesClient.RequestMyErasureAsync),
+        nameof(ISelfScopedPartiesClient.CancelMyErasureAsync),
         nameof(ISelfScopedPartiesClient.GetMyErasureStatusAsync),
         nameof(ISelfScopedPartiesClient.RestrictMyProcessingAsync),
         nameof(ISelfScopedPartiesClient.LiftMyRestrictionAsync),
@@ -327,6 +340,7 @@ public sealed class SelfScopedPartiesClientTests
             nameof(ISelfScopedPartiesClient.GrantMyConsentAsync) => sut.GrantMyConsentAsync("channel-1", "marketing", LawfulBasis.Consent),
             nameof(ISelfScopedPartiesClient.RevokeMyConsentAsync) => sut.RevokeMyConsentAsync("c1"),
             nameof(ISelfScopedPartiesClient.RequestMyErasureAsync) => sut.RequestMyErasureAsync(),
+            nameof(ISelfScopedPartiesClient.CancelMyErasureAsync) => sut.CancelMyErasureAsync(),
             nameof(ISelfScopedPartiesClient.GetMyErasureStatusAsync) => sut.GetMyErasureStatusAsync(),
             nameof(ISelfScopedPartiesClient.RestrictMyProcessingAsync) => sut.RestrictMyProcessingAsync("under-review"),
             nameof(ISelfScopedPartiesClient.LiftMyRestrictionAsync) => sut.LiftMyRestrictionAsync(),

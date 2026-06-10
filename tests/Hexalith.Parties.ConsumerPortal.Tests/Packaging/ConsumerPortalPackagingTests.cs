@@ -90,6 +90,7 @@ public sealed class ConsumerPortalPackagingTests
         allSource.ShouldContain("IConsumerProfileEditClient", Case.Sensitive);
         allSource.ShouldContain("IConsumerConsentClient", Case.Sensitive);
         allSource.ShouldContain("IConsumerPrivacyExportClient", Case.Sensitive);
+        allSource.ShouldContain("IConsumerPrivacyErasureClient", Case.Sensitive);
         allSource.ShouldNotContain("IPartiesCommandClient", Case.Sensitive);
     }
 
@@ -145,6 +146,28 @@ public sealed class ConsumerPortalPackagingTests
             .Select(File.ReadAllText));
 
         serviceSource.ShouldContain("ExportMyDataAsync", Case.Sensitive);
+        serviceSource.ShouldNotContain("partyId", Case.Insensitive);
+        serviceSource.ShouldNotContain("tenantId", Case.Insensitive);
+        serviceSource.ShouldNotContain("correlationId", Case.Insensitive);
+        serviceSource.ShouldNotContain("PagedResult", Case.Sensitive);
+        serviceSource.ShouldNotContain("ListParties", Case.Sensitive);
+        serviceSource.ShouldNotContain("SearchParties", Case.Sensitive);
+        serviceSource.ShouldNotContain("GetPartyAsync", Case.Sensitive);
+        serviceSource.ShouldNotContain("IPartiesQueryClient", Case.Sensitive);
+        serviceSource.ShouldNotContain("IAdminPortalGdprClient", Case.Sensitive);
+        serviceSource.ShouldNotContain("ISelfScopedPartiesClient", Case.Sensitive);
+    }
+
+    [Fact]
+    public void ConsumerPrivacyErasurePort_DoesNotExposeCallerSuppliedIdentityOrListSearch()
+    {
+        string sourceRoot = ProjectRoot("src/Hexalith.Parties.ConsumerPortal");
+        string serviceSource = string.Join(Environment.NewLine, Directory.GetFiles(Path.Combine(sourceRoot, "Services"), "*Privacy*Erasure*.cs")
+            .Select(File.ReadAllText));
+
+        serviceSource.ShouldContain("GetMyErasureStatusAsync", Case.Sensitive);
+        serviceSource.ShouldContain("RequestMyErasureAsync", Case.Sensitive);
+        serviceSource.ShouldContain("CancelMyErasureAsync", Case.Sensitive);
         serviceSource.ShouldNotContain("partyId", Case.Insensitive);
         serviceSource.ShouldNotContain("tenantId", Case.Insensitive);
         serviceSource.ShouldNotContain("correlationId", Case.Insensitive);

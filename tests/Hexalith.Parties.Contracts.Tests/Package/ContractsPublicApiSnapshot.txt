@@ -11,6 +11,10 @@ type class Hexalith.Parties.Contracts.Commands.AddIdentifier interfaces:System.I
   property System.String PartyId required getset
   property Hexalith.Parties.Contracts.ValueObjects.IdentifierType Type required getset
   property System.String Value required getset
+type class Hexalith.Parties.Contracts.Commands.CancelPartyErasure interfaces:System.IEquatable<Hexalith.Parties.Contracts.Commands.CancelPartyErasure>
+  ctor ()
+  property System.String PartyId required getset
+  property System.String TenantId required getset
 type class Hexalith.Parties.Contracts.Commands.CompletePartyErasure interfaces:System.IEquatable<Hexalith.Parties.Contracts.Commands.CompletePartyErasure>
   ctor ()
   property System.DateTimeOffset ErasedAt required getset
@@ -80,6 +84,10 @@ type class Hexalith.Parties.Contracts.Commands.RestrictProcessing interfaces:Sys
   property System.String CorrelationId getset
   property System.String PartyId required getset
   property System.String Reason getset
+  property System.String TenantId required getset
+type class Hexalith.Parties.Contracts.Commands.RetryErasureVerification interfaces:System.IEquatable<Hexalith.Parties.Contracts.Commands.RetryErasureVerification>
+  ctor ()
+  property System.String PartyId required getset
   property System.String TenantId required getset
 type class Hexalith.Parties.Contracts.Commands.RevokeConsent interfaces:System.IEquatable<Hexalith.Parties.Contracts.Commands.RevokeConsent>
   ctor ()
@@ -260,6 +268,12 @@ type class Hexalith.Parties.Contracts.Events.PartyErased interfaces:Hexalith.Eve
   property System.String PartyId required getset
   property System.String TenantId required getset
   property System.String VerificationStatus getset
+type class Hexalith.Parties.Contracts.Events.PartyErasureCancelled interfaces:Hexalith.EventStore.Contracts.Events.IEventPayload,System.IEquatable<Hexalith.Parties.Contracts.Events.PartyErasureCancelled>
+  ctor ()
+  property System.DateTimeOffset CancelledAt required getset
+  property System.String CancelledBy required getset
+  property System.String PartyId required getset
+  property System.String TenantId required getset
 type class Hexalith.Parties.Contracts.Events.PartyErasureInProgress interfaces:Hexalith.EventStore.Contracts.Events.IEventPayload,Hexalith.EventStore.Contracts.Events.IRejectionEvent,System.IEquatable<Hexalith.Parties.Contracts.Events.PartyErasureInProgress>
   ctor ()
   property System.String Message getset
@@ -668,6 +682,7 @@ type class Hexalith.Parties.Contracts.State.PartyState interfaces:
   method System.Void Apply(Hexalith.Parties.Contracts.Events.ProcessingRestricted e)
   method System.Void Apply(Hexalith.Parties.Contracts.Events.RestrictionLifted e)
   method System.Void Apply(Hexalith.Parties.Contracts.Events.ErasePartyRequested e)
+  method System.Void Apply(Hexalith.Parties.Contracts.Events.PartyErasureCancelled e)
   method System.Void Apply(Hexalith.Parties.Contracts.Events.PartyEncryptionKeyDeleted e)
   method System.Void Apply(Hexalith.Parties.Contracts.Events.PartyEncryptionKeyRotated e)
   method System.Void Apply(Hexalith.Parties.Contracts.Events.ErasureVerified e)

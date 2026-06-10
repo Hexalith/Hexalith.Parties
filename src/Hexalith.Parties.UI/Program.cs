@@ -46,6 +46,7 @@ if (adminPortalE2eFixtureEnabled)
     builder.Services.Replace(ServiceDescriptor.Scoped<AuthenticationStateProvider, PartiesAdminPortalE2eAuthenticationStateProvider>());
     builder.Services.Replace(ServiceDescriptor.Scoped<IAdminPortalAuthorizationService, PartiesAdminPortalE2eAuthorizationService>());
     builder.Services.Replace(ServiceDescriptor.Scoped<IPartiesAdminPortalApiClient, PartiesAdminPortalE2eApiClient>());
+    builder.Services.Replace(ServiceDescriptor.Scoped<IAdminPortalGdprClient, PartiesAdminPortalE2eApiClient>());
     builder.Services.Replace(ServiceDescriptor.Scoped<IPartiesQueryClient, PartiesAdminPortalE2ePartiesQueryClient>());
     builder.Services.Replace(ServiceDescriptor.Scoped<IPartiesCommandClient, PartiesAdminPortalE2ePartiesCommandClient>());
 }
@@ -77,6 +78,7 @@ builder.Services.AddScoped<IConsumerProfileDataClient, ConsumerProfileDataClient
 builder.Services.AddScoped<IConsumerProfileEditClient, ConsumerProfileEditClient>();
 builder.Services.AddScoped<IConsumerConsentClient, ConsumerConsentClient>();
 builder.Services.AddScoped<IConsumerPrivacyExportClient, ConsumerPrivacyExportClient>();
+builder.Services.AddScoped<IConsumerPrivacyErasureClient, ConsumerPrivacyErasureClient>();
 
 // Story 4.2 — host-owned admin-link identity binding provisioning. This stays outside the Parties
 // command/event/projection stream: the runtime source remains the IdP party_id claim, while this service
@@ -107,6 +109,7 @@ if (partiesClientEnabled)
     builder.Services.AddPartiesClient(builder.Configuration);
     if (adminPortalE2eFixtureEnabled)
     {
+        builder.Services.Replace(ServiceDescriptor.Scoped<IAdminPortalGdprClient, PartiesAdminPortalE2eApiClient>());
         builder.Services.Replace(ServiceDescriptor.Scoped<IPartiesQueryClient, PartiesAdminPortalE2ePartiesQueryClient>());
         builder.Services.Replace(ServiceDescriptor.Scoped<IPartiesCommandClient, PartiesAdminPortalE2ePartiesCommandClient>());
     }

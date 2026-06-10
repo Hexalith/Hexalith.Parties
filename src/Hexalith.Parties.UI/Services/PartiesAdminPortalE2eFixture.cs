@@ -22,6 +22,7 @@ internal static class PartiesAdminPortalE2eFixture
     public const string EnabledConfigurationKey = "Hexalith:Parties:AdminPortalE2E:Enabled";
     public const string AdminCookieName = "parties-admin-e2e";
     public const string ConsumerCookieName = "parties-consumer-e2e";
+    public const string ConsumerErasureStatusCookieName = "parties-consumer-erasure-e2e";
     public const string Story35RealContractCookieName = "parties-admin-e2e-story-3-5";
     public const string RequestsRoute = "/__parties/specimens/admin-portal/requests";
     public const string ResetRoute = "/__parties/specimens/admin-portal/reset";
@@ -49,6 +50,9 @@ internal static class PartiesAdminPortalE2eFixture
 
     public static string? ConsumerFixtureState(IHttpContextAccessor httpContextAccessor)
         => httpContextAccessor.HttpContext?.Request.Cookies[ConsumerCookieName];
+
+    public static string? ConsumerErasureStatusFixtureState(IHttpContextAccessor httpContextAccessor)
+        => httpContextAccessor.HttpContext?.Request.Cookies[ConsumerErasureStatusCookieName];
 }
 
 internal sealed class PartiesAdminPortalE2eAuthenticationStateProvider(IHttpContextAccessor httpContextAccessor) : AuthenticationStateProvider
@@ -144,6 +148,7 @@ internal sealed class PartiesAdminPortalE2eFixtureState
     private readonly List<AdminPortalRequestCapture> _createRequests = [];
     private readonly List<AdminPortalRequestCapture> _updateRequests = [];
     private readonly List<AdminPortalRequestCapture> _erasureRequests = [];
+    private readonly List<AdminPortalRequestCapture> _cancelErasureRequests = [];
     private readonly List<AdminPortalRequestCapture> _restrictionRequests = [];
     private readonly List<AdminPortalRequestCapture> _liftRestrictionRequests = [];
     private readonly List<AdminPortalRequestCapture> _addConsentRequests = [];
@@ -237,6 +242,14 @@ internal sealed class PartiesAdminPortalE2eFixtureState
         lock (_sync)
         {
             _erasureRequests.Add(AdminPortalRequestCapture.FromErasure(partyId));
+        }
+    }
+
+    public void CaptureCancelErasure(string partyId)
+    {
+        lock (_sync)
+        {
+            _cancelErasureRequests.Add(AdminPortalRequestCapture.FromCancelErasure(partyId));
         }
     }
 
@@ -398,6 +411,7 @@ internal sealed class PartiesAdminPortalE2eFixtureState
             _createRequests.Clear();
             _updateRequests.Clear();
             _erasureRequests.Clear();
+            _cancelErasureRequests.Clear();
             _restrictionRequests.Clear();
             _liftRestrictionRequests.Clear();
             _addConsentRequests.Clear();
@@ -427,6 +441,7 @@ internal sealed class PartiesAdminPortalE2eFixtureState
                 [.. _createRequests],
                 [.. _updateRequests],
                 [.. _erasureRequests],
+                [.. _cancelErasureRequests],
                 [.. _restrictionRequests],
                 [.. _liftRestrictionRequests],
                 [.. _addConsentRequests],
@@ -629,7 +644,7 @@ internal sealed class PartiesAdminPortalE2eFixtureState
 
 internal sealed class PartiesAdminPortalE2eApiClient(
     PartiesAdminPortalE2eFixtureState state,
-    IHttpContextAccessor httpContextAccessor) : IPartiesAdminPortalApiClient
+    IHttpContextAccessor httpContextAccessor) : IPartiesAdminPortalApiClient, IAdminPortalGdprClient
 {
     private static readonly DateTimeOffset BaseDate = new(2026, 06, 10, 10, 00, 00, TimeSpan.Zero);
     private static readonly IReadOnlyList<PartyIndexEntry> Entries = CreateEntries();
@@ -750,9 +765,31 @@ internal sealed class PartiesAdminPortalE2eApiClient(
         return Task.FromResult(new AdminPortalGdprCommandResult(AdminPortalGdprOutcome.Accepted, "corr-erasure"));
     }
 
+    public Task<AdminPortalGdprCommandResult> CancelErasureAsync(string partyId, CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        state.CaptureCancelErasure(partyId);
+        return Task.FromResult(new AdminPortalGdprCommandResult(AdminPortalGdprOutcome.Accepted, "corr-cancel-erasure"));
+    }
+
     public Task<PartyErasureStatusRecord?> GetErasureStatusAsync(string partyId, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
+        string? consumerFixtureStatus = ConsumerErasureStatusFor(partyId);
+        if (consumerFixtureStatus is not null)
+        {
+            return Task.FromResult<PartyErasureStatusRecord?>(new PartyErasureStatusRecord
+            {
+                PartyId = partyId,
+                TenantId = "test-tenant",
+                Status = consumerFixtureStatus,
+                UpdatedAt = BaseDate,
+                ErasedAt = string.Equals(consumerFixtureStatus, "Erased", StringComparison.Ordinal)
+                    ? BaseDate
+                    : null,
+            });
+        }
+
         if (PartiesAdminPortalE2eFixture.IsStory35RealContractCookiePresent(httpContextAccessor)
             && string.Equals(partyId, "erasure-retry", StringComparison.Ordinal))
         {
@@ -768,6 +805,24 @@ internal sealed class PartiesAdminPortalE2eApiClient(
         }
 
         return Task.FromResult<PartyErasureStatusRecord?>(null);
+    }
+
+    private string? ConsumerErasureStatusFor(string partyId)
+    {
+        if (!string.Equals(partyId, "party-bound-001", StringComparison.Ordinal))
+        {
+            return null;
+        }
+
+        return PartiesAdminPortalE2eFixture.ConsumerErasureStatusFixtureState(httpContextAccessor) switch
+        {
+            "pending" => "ErasurePending",
+            "key-destroyed" => "KeyDestroyed",
+            "verification-in-progress" => "VerificationInProgress",
+            "verified" => "Verified",
+            "erased" => "Erased",
+            _ => null,
+        };
     }
 
     public Task<ErasureCertificate?> GetErasureCertificateAsync(string partyId, CancellationToken cancellationToken)
@@ -1257,6 +1312,7 @@ internal sealed record AdminPortalE2eSnapshot(
     IReadOnlyList<AdminPortalRequestCapture> CreateRequests,
     IReadOnlyList<AdminPortalRequestCapture> UpdateRequests,
     IReadOnlyList<AdminPortalRequestCapture> ErasureRequests,
+    IReadOnlyList<AdminPortalRequestCapture> CancelErasureRequests,
     IReadOnlyList<AdminPortalRequestCapture> RestrictionRequests,
     IReadOnlyList<AdminPortalRequestCapture> LiftRestrictionRequests,
     IReadOnlyList<AdminPortalRequestCapture> AddConsentRequests,
@@ -1300,6 +1356,9 @@ internal sealed record AdminPortalRequestCapture(
 
     public static AdminPortalRequestCapture FromErasure(string partyId)
         => new("erasure", null, 0, 0, null, null, partyId);
+
+    public static AdminPortalRequestCapture FromCancelErasure(string partyId)
+        => new("cancel-erasure", null, 0, 0, null, null, partyId);
 
     public static AdminPortalRequestCapture FromRestriction(string partyId)
         => new("restriction", null, 0, 0, null, null, partyId);

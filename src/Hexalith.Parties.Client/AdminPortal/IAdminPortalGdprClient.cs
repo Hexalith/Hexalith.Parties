@@ -8,6 +8,8 @@ public interface IAdminPortalGdprClient
 {
     Task<AdminPortalGdprCommandResult> RequestErasureAsync(string partyId, CancellationToken cancellationToken);
 
+    Task<AdminPortalGdprCommandResult> CancelErasureAsync(string partyId, CancellationToken cancellationToken);
+
     Task<PartyErasureStatusRecord?> GetErasureStatusAsync(string partyId, CancellationToken cancellationToken);
 
     Task<ErasureCertificate?> GetErasureCertificateAsync(string partyId, CancellationToken cancellationToken);

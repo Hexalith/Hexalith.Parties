@@ -85,7 +85,9 @@ internal sealed partial class PartyDomainServiceInvoker(
                 .ConfigureAwait(false);
         }
 
-        return await aggregate.ProcessAsync(command, unprotectedState).ConfigureAwait(false);
+        DomainResult result = await aggregate.ProcessAsync(command, unprotectedState).ConfigureAwait(false);
+        await SaveErasureStatusUpdatesAsync(result, cancellationToken).ConfigureAwait(false);
+        return result;
     }
 
     private async Task<DomainResult> InvokeRetryErasureVerificationAsync(
@@ -150,25 +152,21 @@ internal sealed partial class PartyDomainServiceInvoker(
         await erasureRecordStore
             .SaveCertificateAsync(certificate with { Timestamp = report.Timestamp, VerificationStatus = certificateStatus }, cancellationToken)
             .ConfigureAwait(false);
-        await erasureRecordStore
-            .SaveStatusAsync(
-                new PartyErasureStatusRecord
-                {
-                    PartyId = command.PartyId,
-                    TenantId = command.TenantId,
-                    Status = report.OverallStatus == ErasureVerificationOverallStatus.Complete
-                        ? ErasureStatus.Verified.ToString()
-                        : report.OverallStatus.ToString(),
-                    UpdatedAt = report.Timestamp,
-                    ErrorMessage = report.OverallStatus == ErasureVerificationOverallStatus.Complete
-                        ? null
-                        : "Erasure verification did not complete.",
-                },
-                cancellationToken)
-            .ConfigureAwait(false);
-
         if (report.OverallStatus != ErasureVerificationOverallStatus.Complete)
         {
+            await erasureRecordStore
+                .SaveStatusAsync(
+                    new PartyErasureStatusRecord
+                    {
+                        PartyId = command.PartyId,
+                        TenantId = command.TenantId,
+                        Status = report.OverallStatus.ToString(),
+                        UpdatedAt = report.Timestamp,
+                        ErrorMessage = "Erasure verification did not complete.",
+                    },
+                    cancellationToken)
+                .ConfigureAwait(false);
+
             return DomainResult.NoOp();
         }
 
@@ -195,7 +193,66 @@ internal sealed partial class PartyDomainServiceInvoker(
             VerificationStatus = report.OverallStatus.ToString(),
         });
 
-        return DomainResult.Success(events);
+        DomainResult result = DomainResult.Success(events);
+        await SaveErasureStatusUpdatesAsync(result, cancellationToken).ConfigureAwait(false);
+        return result;
+    }
+
+    private async Task SaveErasureStatusUpdatesAsync(DomainResult result, CancellationToken cancellationToken)
+    {
+        if (erasureRecordStore is null || !result.IsSuccess)
+        {
+            return;
+        }
+
+        foreach (IEventPayload payload in result.Events)
+        {
+            PartyErasureStatusRecord? status = payload switch
+            {
+                ErasePartyRequested requested => new PartyErasureStatusRecord
+                {
+                    PartyId = requested.PartyId,
+                    TenantId = requested.TenantId,
+                    Status = ErasureStatus.ErasurePending.ToString(),
+                    UpdatedAt = requested.RequestedAt,
+                },
+                PartyErasureCancelled cancelled => new PartyErasureStatusRecord
+                {
+                    PartyId = cancelled.PartyId,
+                    TenantId = cancelled.TenantId,
+                    Status = ErasureStatus.Active.ToString(),
+                    UpdatedAt = cancelled.CancelledAt,
+                },
+                PartyEncryptionKeyDeleted deleted => new PartyErasureStatusRecord
+                {
+                    PartyId = deleted.PartyId,
+                    TenantId = deleted.TenantId,
+                    Status = ErasureStatus.KeyDestroyed.ToString(),
+                    UpdatedAt = deleted.DeletedAt,
+                },
+                ErasureVerified verified => new PartyErasureStatusRecord
+                {
+                    PartyId = verified.PartyId,
+                    TenantId = verified.TenantId,
+                    Status = ErasureStatus.Verified.ToString(),
+                    UpdatedAt = verified.VerifiedAt,
+                },
+                PartyErased erased => new PartyErasureStatusRecord
+                {
+                    PartyId = erased.PartyId,
+                    TenantId = erased.TenantId,
+                    Status = ErasureStatus.Erased.ToString(),
+                    UpdatedAt = erased.ErasedAt,
+                    ErasedAt = erased.ErasedAt,
+                },
+                _ => null,
+            };
+
+            if (status is not null)
+            {
+                await erasureRecordStore.SaveStatusAsync(status, cancellationToken).ConfigureAwait(false);
+            }
+        }
     }
 
     private static PartyState? RehydratePartyState(object? currentState)

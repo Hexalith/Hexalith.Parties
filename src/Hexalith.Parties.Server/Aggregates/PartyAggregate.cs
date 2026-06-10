@@ -786,6 +786,40 @@ public sealed class PartyAggregate : EventStoreAggregate<PartyState> {
         return DomainResult.Success([requested]);
     }
 
+    public static DomainResult Handle(CancelPartyErasure command, PartyState? state) {
+        ArgumentNullException.ThrowIfNull(command);
+
+        if (state is null) {
+            return DomainResult.Rejection([new PartyNotFound { Message = "Party does not exist." }]);
+        }
+
+        if (state.ErasureStatus is ErasureStatus.Active) {
+            return DomainResult.NoOp();
+        }
+
+        if (state.ErasureStatus is not ErasureStatus.ErasurePending) {
+            return DomainResult.Rejection([new PartyErasureInProgress
+            {
+                PartyId = command.PartyId,
+                TenantId = command.TenantId,
+                Status = state.ErasureStatus == ErasureStatus.Erased
+                    ? ErasureStatus.Erased.ToString()
+                    : "ErasureInProgress",
+                Message = "Deletion has already begun and cannot be cancelled.",
+            }]);
+        }
+
+        return DomainResult.Success([
+            new PartyErasureCancelled
+            {
+                PartyId = command.PartyId,
+                TenantId = command.TenantId,
+                CancelledAt = DateTimeOffset.UtcNow,
+                CancelledBy = "consumer",
+            },
+        ]);
+    }
+
     public static DomainResult Handle(MarkPartyEncryptionKeyDeleted command, PartyState? state) {
         ArgumentNullException.ThrowIfNull(command);
 

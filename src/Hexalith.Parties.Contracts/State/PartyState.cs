@@ -267,6 +267,13 @@ public sealed class PartyState
         ErasureStatus = ErasureStatus.ErasurePending;
     }
 
+    public void Apply(PartyErasureCancelled e)
+    {
+        ArgumentNullException.ThrowIfNull(e);
+        ErasureStatus = ErasureStatus.Active;
+        ErasedAt = null;
+    }
+
     public void Apply(PartyEncryptionKeyDeleted e)
     {
         ArgumentNullException.ThrowIfNull(e);

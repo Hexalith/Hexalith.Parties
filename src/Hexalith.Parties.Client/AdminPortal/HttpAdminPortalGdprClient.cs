@@ -42,8 +42,24 @@ public sealed class HttpAdminPortalGdprClient : IAdminPortalGdprClient
             AdminPortalGdprRoutes.EraseParty,
             cancellationToken);
 
+    public Task<AdminPortalGdprCommandResult> CancelErasureAsync(string partyId, CancellationToken cancellationToken)
+        => PostCommandAsync(
+            partyId,
+            new CancelPartyErasure { PartyId = partyId, TenantId = _options.Tenant },
+            AdminPortalGdprRoutes.CancelErasure,
+            cancellationToken);
+
     public Task<PartyErasureStatusRecord?> GetErasureStatusAsync(string partyId, CancellationToken cancellationToken)
-        => GetErasureStatusFromPartyDetailAsync(partyId, cancellationToken);
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(partyId);
+        return PostNullableQueryAsync<PartyErasureStatusRecord>(
+            partyId,
+            queryType: "GetErasureStatus",
+            projectionType: "PartyDetail",
+            projectionActorType: "PartyDetailProjectionQueryActor",
+            payload: new PartyQueryPayload(partyId),
+            cancellationToken);
+    }
 
     public Task<ErasureCertificate?> GetErasureCertificateAsync(string partyId, CancellationToken cancellationToken)
     {
@@ -269,23 +285,6 @@ public sealed class HttpAdminPortalGdprClient : IAdminPortalGdprClient
             projectionActorType: "PartyDetailProjectionActor",
             payload: null,
             cancellationToken).ConfigureAwait(false);
-
-    private async Task<PartyErasureStatusRecord?> GetErasureStatusFromPartyDetailAsync(
-        string partyId,
-        CancellationToken cancellationToken)
-    {
-        PartyDetail detail = await GetPartyDetailAsync(partyId, cancellationToken).ConfigureAwait(false);
-        return detail.IsErased
-            ? new PartyErasureStatusRecord
-            {
-                PartyId = detail.Id,
-                TenantId = _options.Tenant,
-                Status = "Erased",
-                UpdatedAt = detail.ErasedAt ?? detail.LastModifiedAt,
-                ErasedAt = detail.ErasedAt,
-            }
-            : null;
-    }
 
     private async Task<IReadOnlyList<ConsentRecord>> GetConsentFromPartyDetailAsync(
         string partyId,

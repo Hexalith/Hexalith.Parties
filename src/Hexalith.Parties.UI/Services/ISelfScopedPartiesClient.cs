@@ -45,6 +45,9 @@ public interface ISelfScopedPartiesClient
     /// <summary>Requests erasure of the current consumer's own data (GDPR Art. 17).</summary>
     Task<AdminPortalGdprCommandResult> RequestMyErasureAsync(CancellationToken ct = default);
 
+    /// <summary>Cancels the current consumer's pending erasure request before deletion begins.</summary>
+    Task<AdminPortalGdprCommandResult> CancelMyErasureAsync(CancellationToken ct = default);
+
     /// <summary>Reads the current consumer's own erasure status.</summary>
     Task<PartyErasureStatusRecord?> GetMyErasureStatusAsync(CancellationToken ct = default);
 

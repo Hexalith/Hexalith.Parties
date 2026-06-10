@@ -5,6 +5,7 @@ using Hexalith.Parties.ConsumerPortal.Services;
 using Hexalith.Parties.Contracts.Models;
 
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.FluentUI.AspNetCore.Components;
 using Microsoft.JSInterop;
 
@@ -17,6 +18,7 @@ public sealed class MyPrivacyPageTests : BunitContext
     public MyPrivacyPageTests()
     {
         Services.AddFluentUIComponents();
+        Services.TryAddSingleton<IConsumerPrivacyErasureClient>(new QueuePrivacyErasureClient());
         JSInterop.SetupVoid("HexalithPartiesConsumerPortal.downloadJson", _ => true);
     }
 
@@ -28,10 +30,146 @@ public sealed class MyPrivacyPageTests : BunitContext
         IRenderedComponent<MyPrivacyPage> cut = Render<MyPrivacyPage>();
 
         cut.Markup.ShouldContain("Export my data");
+        cut.Markup.ShouldContain("Delete my data");
+        cut.Markup.ShouldContain("right to erasure");
         cut.Markup.ShouldContain("Machine-readable JSON");
         cut.Markup.ShouldNotContain("ConsumerRouteShell");
         cut.FindAll("[role='status'][aria-live='polite']").Count.ShouldBe(1);
         cut.Find("[role='status'][aria-live='polite']").TextContent.ShouldContain("Ready to prepare your export.");
+    }
+
+    [Fact]
+    public void MyPrivacyPage_DeleteMyData_UsesInAppConfirmationWithoutTypedPii()
+    {
+        var erasure = new QueuePrivacyErasureClient();
+        Services.AddSingleton<IConsumerPrivacyExportClient>(new QueuePrivacyExportClient());
+        Services.Replace(ServiceDescriptor.Singleton<IConsumerPrivacyErasureClient>(erasure));
+        IRenderedComponent<MyPrivacyPage> cut = Render<MyPrivacyPage>();
+
+        ClickFluentButton(cut, "Delete my data");
+
+        cut.Find("[role='dialog']").TextContent.ShouldContain("Confirm deletion request");
+        cut.Find("[role='dialog']").TextContent.ShouldContain("You can cancel until deletion begins");
+        cut.Markup.ShouldNotContain("prompt", Case.Insensitive);
+        cut.Markup.ShouldNotContain("confirm(", Case.Insensitive);
+        cut.Markup.ShouldNotContain("display name", Case.Insensitive);
+        cut.Markup.ShouldNotContain("email", Case.Insensitive);
+        erasure.RequestCount.ShouldBe(0);
+    }
+
+    [Fact]
+    public void MyPrivacyPage_RequestAccepted_ShowsCancellableCopyAndCancelAction()
+    {
+        var erasure = new QueuePrivacyErasureClient(
+            status: _ => Task.FromResult(ConsumerPrivacyErasureResult.Active()),
+            request: _ => Task.FromResult(new ConsumerPrivacyErasureResult(
+                ConsumerPrivacyErasureOutcome.Pending,
+                ConsumerPrivacyErasureState.ErasurePending,
+                CanCancel: true)));
+        Services.AddSingleton<IConsumerPrivacyExportClient>(new QueuePrivacyExportClient());
+        Services.Replace(ServiceDescriptor.Singleton<IConsumerPrivacyErasureClient>(erasure));
+        IRenderedComponent<MyPrivacyPage> cut = Render<MyPrivacyPage>();
+
+        ClickFluentButton(cut, "Delete my data");
+        ClickFluentButton(cut, "Confirm delete my data");
+
+        cut.WaitForAssertion(() =>
+        {
+            erasure.RequestCount.ShouldBe(1);
+            cut.Markup.ShouldContain("You can cancel until deletion begins");
+            cut.FindAll("[role='status'][aria-live='polite']")
+                .Count(node => node.TextContent.Contains("Deletion requested.", StringComparison.Ordinal))
+                .ShouldBe(1);
+            cut.Markup.ShouldContain("Cancel deletion request");
+        });
+    }
+
+    [Fact]
+    public void MyPrivacyPage_CancelAccepted_ReconcilesToAuthoritativeStatus()
+    {
+        var erasure = new QueuePrivacyErasureClient(
+            status: _ => Task.FromResult(new ConsumerPrivacyErasureResult(
+                ConsumerPrivacyErasureOutcome.Pending,
+                ConsumerPrivacyErasureState.ErasurePending,
+                CanCancel: true)),
+            cancel: _ => Task.FromResult(ConsumerPrivacyErasureResult.Active()));
+        Services.AddSingleton<IConsumerPrivacyExportClient>(new QueuePrivacyExportClient());
+        Services.Replace(ServiceDescriptor.Singleton<IConsumerPrivacyErasureClient>(erasure));
+        IRenderedComponent<MyPrivacyPage> cut = Render<MyPrivacyPage>();
+        cut.WaitForAssertion(() => cut.Markup.ShouldContain("Cancel deletion request"));
+
+        ClickFluentButton(cut, "Cancel deletion request");
+
+        cut.WaitForAssertion(() =>
+        {
+            erasure.CancelCount.ShouldBe(1);
+            cut.Markup.ShouldContain("No deletion request is active.");
+            cut.Markup.ShouldContain("Delete my data");
+        });
+    }
+
+    [Theory]
+    [InlineData(ConsumerPrivacyErasureState.KeyDestroyed)]
+    [InlineData(ConsumerPrivacyErasureState.VerificationInProgress)]
+    [InlineData(ConsumerPrivacyErasureState.Verified)]
+    public void MyPrivacyPage_DeletionStarted_DisablesCancelWithNeutralCopy(ConsumerPrivacyErasureState state)
+    {
+        Services.AddSingleton<IConsumerPrivacyExportClient>(new QueuePrivacyExportClient());
+        Services.Replace(ServiceDescriptor.Singleton<IConsumerPrivacyErasureClient>(new QueuePrivacyErasureClient(
+            status: _ => Task.FromResult(new ConsumerPrivacyErasureResult(
+                ConsumerPrivacyErasureOutcome.Pending,
+                state,
+                CanCancel: false)))));
+
+        IRenderedComponent<MyPrivacyPage> cut = Render<MyPrivacyPage>();
+
+        cut.WaitForAssertion(() =>
+        {
+            cut.Markup.ShouldContain("Deletion has begun. Cancellation is no longer available.");
+            cut.Markup.ShouldContain("Cancellation is unavailable after deletion begins.");
+            cut.Markup.ShouldNotContain("succeeded", Case.Insensitive);
+        });
+    }
+
+    [Fact]
+    public void MyPrivacyPage_ErasedState_StatesPermanentAndDoesNotShowCancel()
+    {
+        Services.AddSingleton<IConsumerPrivacyExportClient>(new QueuePrivacyExportClient());
+        Services.Replace(ServiceDescriptor.Singleton<IConsumerPrivacyErasureClient>(new QueuePrivacyErasureClient(
+            status: _ => Task.FromResult(new ConsumerPrivacyErasureResult(
+                ConsumerPrivacyErasureOutcome.Permanent,
+                ConsumerPrivacyErasureState.Erased,
+                CanCancel: false)))));
+
+        IRenderedComponent<MyPrivacyPage> cut = Render<MyPrivacyPage>();
+
+        cut.WaitForAssertion(() =>
+        {
+            cut.Markup.ShouldContain("Once it's done, it's permanent - we can't undo it.");
+            cut.Markup.ShouldNotContain("Cancel deletion request");
+        });
+    }
+
+    [Fact]
+    public void MyPrivacyPage_ErasureFailures_UseBoundedPiiFreeAlertAndKeepExportVisible()
+    {
+        Services.AddSingleton<IConsumerPrivacyExportClient>(new QueuePrivacyExportClient());
+        Services.Replace(ServiceDescriptor.Singleton<IConsumerPrivacyErasureClient>(new QueuePrivacyErasureClient(
+            request: _ => Task.FromResult(ConsumerPrivacyErasureResult.Failure(ConsumerPrivacyErasureOutcome.Rejected)))));
+        IRenderedComponent<MyPrivacyPage> cut = Render<MyPrivacyPage>();
+
+        ClickFluentButton(cut, "Delete my data");
+        ClickFluentButton(cut, "Confirm delete my data");
+
+        cut.WaitForAssertion(() =>
+        {
+            cut.Find("[role='alert']").TextContent.ShouldContain("Deletion has already begun or cannot be changed right now.");
+            cut.Markup.ShouldContain("Export my data");
+            cut.Markup.ShouldNotContain("party-", Case.Sensitive);
+            cut.Markup.ShouldNotContain("tenant", Case.Insensitive);
+            cut.Markup.ShouldNotContain("correlation", Case.Insensitive);
+            cut.Markup.ShouldNotContain("within 30 days", Case.Insensitive);
+        });
     }
 
     [Fact]
@@ -199,6 +337,41 @@ public sealed class MyPrivacyPageTests : BunitContext
         {
             CallCount++;
             return _export(cancellationToken);
+        }
+    }
+
+    private sealed class QueuePrivacyErasureClient(
+        Func<CancellationToken, Task<ConsumerPrivacyErasureResult>>? status = null,
+        Func<CancellationToken, Task<ConsumerPrivacyErasureResult>>? request = null,
+        Func<CancellationToken, Task<ConsumerPrivacyErasureResult>>? cancel = null) : IConsumerPrivacyErasureClient
+    {
+        private readonly Func<CancellationToken, Task<ConsumerPrivacyErasureResult>> _status =
+            status ?? (_ => Task.FromResult(ConsumerPrivacyErasureResult.Active()));
+        private readonly Func<CancellationToken, Task<ConsumerPrivacyErasureResult>> _request =
+            request ?? (_ => Task.FromResult(new ConsumerPrivacyErasureResult(
+                ConsumerPrivacyErasureOutcome.Pending,
+                ConsumerPrivacyErasureState.ErasurePending,
+                CanCancel: true)));
+        private readonly Func<CancellationToken, Task<ConsumerPrivacyErasureResult>> _cancel =
+            cancel ?? (_ => Task.FromResult(ConsumerPrivacyErasureResult.Active()));
+
+        public int RequestCount { get; private set; }
+
+        public int CancelCount { get; private set; }
+
+        public Task<ConsumerPrivacyErasureResult> GetMyErasureStatusAsync(CancellationToken cancellationToken = default)
+            => _status(cancellationToken);
+
+        public Task<ConsumerPrivacyErasureResult> RequestMyErasureAsync(CancellationToken cancellationToken = default)
+        {
+            RequestCount++;
+            return _request(cancellationToken);
+        }
+
+        public Task<ConsumerPrivacyErasureResult> CancelMyErasureAsync(CancellationToken cancellationToken = default)
+        {
+            CancelCount++;
+            return _cancel(cancellationToken);
         }
     }
 }

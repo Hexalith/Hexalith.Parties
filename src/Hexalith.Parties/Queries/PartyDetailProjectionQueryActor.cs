@@ -31,6 +31,7 @@ public sealed partial class PartyDetailProjectionQueryActor(
     public const string PartyDetailQueryType = "PartyDetail";
     public const string ExportPartyDataQueryType = "ExportPartyData";
     public const string GetProcessingRecordsQueryType = "GetProcessingRecords";
+    public const string GetErasureStatusQueryType = "GetErasureStatus";
     public const string GetErasureCertificateQueryType = "GetErasureCertificate";
     public const string PartyDomain = "party";
     private static readonly JsonSerializerOptions s_jsonOptions = new(JsonSerializerDefaults.Web);
@@ -88,6 +89,20 @@ public sealed partial class PartyDetailProjectionQueryActor(
                 "party-erasure-certificate");
         }
 
+        if (string.Equals(envelope.QueryType, GetErasureStatusQueryType, StringComparison.Ordinal)
+            && erasureRecordStore is not null)
+        {
+            PartyErasureStatusRecord? status = await erasureRecordStore
+                .GetStatusAsync(envelope.TenantId, partyId, CancellationToken.None)
+                .ConfigureAwait(false);
+            if (status is not null)
+            {
+                return QueryResult.FromPayload(
+                    JsonSerializer.SerializeToElement(status, s_jsonOptions),
+                    "party-erasure-status");
+            }
+        }
+
         string detailActorId = $"{envelope.TenantId}:party-detail:{partyId}";
         Log.PartyDetailQueryRouting(logger, envelope.CorrelationId, envelope.TenantId, envelope.QueryType);
 
@@ -116,6 +131,24 @@ public sealed partial class PartyDetailProjectionQueryActor(
                     DataPortabilityProjectionType);
             }
 
+            if (string.Equals(envelope.QueryType, GetErasureStatusQueryType, StringComparison.Ordinal))
+            {
+                PartyErasureStatusRecord? status = detail.IsErased
+                    ? new PartyErasureStatusRecord
+                    {
+                        PartyId = detail.Id,
+                        TenantId = envelope.TenantId,
+                        Status = ErasureStatus.Erased.ToString(),
+                        UpdatedAt = detail.ErasedAt ?? detail.LastModifiedAt,
+                        ErasedAt = detail.ErasedAt,
+                    }
+                    : null;
+
+                return QueryResult.FromPayload(
+                    JsonSerializer.SerializeToElement(status, s_jsonOptions),
+                    "party-erasure-status");
+            }
+
             return QueryResult.FromPayload(JsonSerializer.SerializeToElement(detail, s_jsonOptions), ProjectionType);
         }
         catch (OperationCanceledException)
@@ -142,6 +175,7 @@ public sealed partial class PartyDetailProjectionQueryActor(
                 || string.Equals(envelope.QueryType, GetPartyQueryType, StringComparison.Ordinal)
                 || string.Equals(envelope.QueryType, ExportPartyDataQueryType, StringComparison.Ordinal)
                 || string.Equals(envelope.QueryType, GetProcessingRecordsQueryType, StringComparison.Ordinal)
+                || string.Equals(envelope.QueryType, GetErasureStatusQueryType, StringComparison.Ordinal)
                 || string.Equals(envelope.QueryType, GetErasureCertificateQueryType, StringComparison.Ordinal));
 
     private async Task<PartyDataPortabilityPackage> BuildPortabilityPackageAsync(

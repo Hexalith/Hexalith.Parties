@@ -447,10 +447,70 @@
   <data name="PrivacyExportFailureMessage" xml:space="preserve">
     <value>Wait a short time, then retry the export.</value>
   </data>
-  <data name="PrivacyErasurePreviewTitle" xml:space="preserve">
-    <value>Erasure requests</value>
+  <data name="PrivacyErasureTitle" xml:space="preserve">
+    <value>Delete my data</value>
   </data>
-  <data name="PrivacyErasurePreviewMessage" xml:space="preserve">
-    <value>Erasure request controls will appear here after the export experience is complete.</value>
+  <data name="PrivacyErasureDescription" xml:space="preserve">
+    <value>You have the right to erasure, also called the right to be forgotten. You can cancel until deletion begins. Once it's done, it's permanent - we can't undo it.</value>
+  </data>
+  <data name="PrivacyErasureIdleStatus" xml:space="preserve">
+    <value>No deletion request is active.</value>
+  </data>
+  <data name="PrivacyErasureLoadingStatus" xml:space="preserve">
+    <value>Checking deletion status.</value>
+  </data>
+  <data name="PrivacyErasureAction" xml:space="preserve">
+    <value>Delete my data</value>
+  </data>
+  <data name="PrivacyErasureConfirmTitle" xml:space="preserve">
+    <value>Confirm deletion request</value>
+  </data>
+  <data name="PrivacyErasureConfirmMessage" xml:space="preserve">
+    <value>This starts a deletion request for the data connected to your signed-in account. You can cancel until deletion begins.</value>
+  </data>
+  <data name="PrivacyErasureConfirmAction" xml:space="preserve">
+    <value>Confirm delete my data</value>
+  </data>
+  <data name="PrivacyErasureKeepData" xml:space="preserve">
+    <value>Keep my data</value>
+  </data>
+  <data name="PrivacyErasureRequesting" xml:space="preserve">
+    <value>Sending deletion request.</value>
+  </data>
+  <data name="PrivacyErasurePendingCancellable" xml:space="preserve">
+    <value>Deletion requested. You can cancel until deletion begins.</value>
+  </data>
+  <data name="PrivacyErasureCancelAction" xml:space="preserve">
+    <value>Cancel deletion request</value>
+  </data>
+  <data name="PrivacyErasureCancelling" xml:space="preserve">
+    <value>Cancelling deletion request.</value>
+  </data>
+  <data name="PrivacyErasureCancelled" xml:space="preserve">
+    <value>Deletion request cancelled.</value>
+  </data>
+  <data name="PrivacyErasureStarted" xml:space="preserve">
+    <value>Deletion has begun. Cancellation is no longer available.</value>
+  </data>
+  <data name="PrivacyErasureCancelUnavailable" xml:space="preserve">
+    <value>Cancellation is unavailable after deletion begins.</value>
+  </data>
+  <data name="PrivacyErasurePermanent" xml:space="preserve">
+    <value>Once it's done, it's permanent - we can't undo it.</value>
+  </data>
+  <data name="PrivacyErasureFailureTitle" xml:space="preserve">
+    <value>Deletion request was not updated.</value>
+  </data>
+  <data name="PrivacyErasureFailureMessage" xml:space="preserve">
+    <value>Try again in a moment. Your export tools remain available.</value>
+  </data>
+  <data name="PrivacyErasureRejectedMessage" xml:space="preserve">
+    <value>Deletion has already begun or cannot be changed right now.</value>
+  </data>
+  <data name="PrivacyErasureUnavailableMessage" xml:space="preserve">
+    <value>Deletion status is unavailable right now. Your export tools remain available where possible.</value>
+  </data>
+  <data name="PrivacyErasureForbiddenMessage" xml:space="preserve">
+    <value>We can't confirm your account binding for this privacy request.</value>
   </data>
 </root>

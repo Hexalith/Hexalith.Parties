@@ -84,6 +84,7 @@ public sealed class AdminPortalGdprOperationContractTests
         Type routes = LoadClientType(RouteMapTypeName);
 
         GetRoute(routes, "EraseParty").ShouldBe("eventstore:command:party:EraseParty");
+        GetRoute(routes, "CancelErasure").ShouldBe("eventstore:command:party:CancelPartyErasure");
         GetRoute(routes, "ErasureStatus").ShouldBe("eventstore:query:party:GetErasureStatus");
         GetRoute(routes, "ErasureCertificate").ShouldBe("eventstore:query:party:GetErasureCertificate");
         GetRoute(routes, "RetryVerification").ShouldBe("eventstore:command:party:RetryErasureVerification");
@@ -192,6 +193,29 @@ public sealed class AdminPortalGdprOperationContractTests
         using JsonDocument body = JsonDocument.Parse(handler.LastRequestBody.ShouldNotBeNull());
         JsonElement root = body.RootElement;
         root.GetProperty("commandType").GetString().ShouldBe(typeof(RetryErasureVerification).FullName);
+        root.GetProperty("aggregateId").GetString().ShouldBe("party-1");
+        root.GetProperty("payload").GetProperty("partyId").GetString().ShouldBe("party-1");
+        root.GetProperty("payload").GetProperty("tenantId").GetString().ShouldBe("tenant-a");
+    }
+
+    [Fact]
+    public async Task CancelErasureAsync_SubmitsCancelPartyErasureCommandContractAsync()
+    {
+        var handler = new RecordingHandler(
+            HttpStatusCode.Accepted,
+            JsonSerializer.Serialize(new { correlationId = "corr-cancel" }),
+            "application/json");
+        var client = CreateHttpClient(handler);
+
+        AdminPortalGdprCommandResult result = await client.CancelErasureAsync("party-1", CancellationToken.None);
+
+        result.Outcome.ShouldBe(AdminPortalGdprOutcome.Accepted);
+        result.CorrelationId.ShouldBe("corr-cancel");
+        handler.LastRequest.ShouldNotBeNull().RequestUri!.PathAndQuery.ShouldBe("/api/v1/commands");
+        using JsonDocument body = JsonDocument.Parse(handler.LastRequestBody.ShouldNotBeNull());
+        JsonElement root = body.RootElement;
+        root.GetProperty("domain").GetString().ShouldBe("party");
+        root.GetProperty("commandType").GetString().ShouldBe(typeof(CancelPartyErasure).FullName);
         root.GetProperty("aggregateId").GetString().ShouldBe("party-1");
         root.GetProperty("payload").GetProperty("partyId").GetString().ShouldBe("party-1");
         root.GetProperty("payload").GetProperty("tenantId").GetString().ShouldBe("tenant-a");
@@ -408,34 +432,34 @@ public sealed class AdminPortalGdprOperationContractTests
     }
 
     [Fact]
-    public async Task GetErasureStatusAsync_ErasedDetailReturnsStableErasedStatusAsync()
+    public async Task GetErasureStatusAsync_UsesAuthoritativeStatusQueryAsync()
     {
-        var detail = new PartyDetail
+        var expected = new PartyErasureStatusRecord
         {
-            Id = "party-erased",
-            Type = PartyType.Person,
-            IsActive = true,
-            DisplayName = string.Empty,
-            SortName = string.Empty,
-            CreatedAt = DateTimeOffset.Parse("2026-05-01T00:00:00Z"),
-            LastModifiedAt = DateTimeOffset.Parse("2026-05-02T00:00:00Z"),
-            IsErased = true,
-            ErasedAt = DateTimeOffset.Parse("2026-05-03T00:00:00Z"),
+            PartyId = "party-pending",
+            TenantId = "tenant-a",
+            Status = "ErasurePending",
+            UpdatedAt = DateTimeOffset.Parse("2026-05-03T00:00:00Z"),
         };
         var handler = new RecordingHandler(
             HttpStatusCode.OK,
-            JsonSerializer.Serialize(new { payload = detail }, s_jsonOptions),
+            JsonSerializer.Serialize(new { payload = expected }, s_jsonOptions),
             "application/json");
         var client = CreateHttpClient(handler);
 
-        PartyErasureStatusRecord? status = await client.GetErasureStatusAsync("party-erased", CancellationToken.None);
+        PartyErasureStatusRecord? status = await client.GetErasureStatusAsync("party-pending", CancellationToken.None);
 
         status.ShouldNotBeNull();
-        status.Status.ShouldBe("Erased");
-        status.PartyId.ShouldBe("party-erased");
+        status.Status.ShouldBe("ErasurePending");
+        status.PartyId.ShouldBe("party-pending");
         status.TenantId.ShouldBe("tenant-a");
-        status.ErasedAt.ShouldBe(DateTimeOffset.Parse("2026-05-03T00:00:00Z"));
         JsonSerializer.Serialize(status, s_jsonOptions).ShouldNotContain("decrypt", Case.Insensitive);
+        handler.LastRequest.ShouldNotBeNull().RequestUri!.PathAndQuery.ShouldBe("/api/v1/queries");
+        using JsonDocument body = JsonDocument.Parse(handler.LastRequestBody.ShouldNotBeNull());
+        JsonElement root = body.RootElement;
+        root.GetProperty("queryType").GetString().ShouldBe("GetErasureStatus");
+        root.GetProperty("projectionType").GetString().ShouldBe("PartyDetail");
+        root.GetProperty("projectionActorType").GetString().ShouldBe("PartyDetailProjectionQueryActor");
     }
 
     private static BindingFlags PublicInstance => BindingFlags.Public | BindingFlags.Instance;

@@ -73,6 +73,9 @@ internal sealed class SelfScopedPartiesClient(
     public async Task<AdminPortalGdprCommandResult> RequestMyErasureAsync(CancellationToken ct = default)
         => await gdprClient.RequestErasureAsync(await ResolveMyPartyIdAsync().ConfigureAwait(false), ct).ConfigureAwait(false);
 
+    public async Task<AdminPortalGdprCommandResult> CancelMyErasureAsync(CancellationToken ct = default)
+        => await gdprClient.CancelErasureAsync(await ResolveMyPartyIdAsync().ConfigureAwait(false), ct).ConfigureAwait(false);
+
     public async Task<PartyErasureStatusRecord?> GetMyErasureStatusAsync(CancellationToken ct = default)
         => await gdprClient.GetErasureStatusAsync(await ResolveMyPartyIdAsync().ConfigureAwait(false), ct).ConfigureAwait(false);
 

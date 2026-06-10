@@ -1055,6 +1055,9 @@ public sealed class PartiesAdminPortalApiClientTests
         public Task<AdminPortalGdprCommandResult> RequestErasureAsync(string partyId, CancellationToken cancellationToken)
             => throw new NotImplementedException();
 
+        public Task<AdminPortalGdprCommandResult> CancelErasureAsync(string partyId, CancellationToken cancellationToken)
+            => throw new NotImplementedException();
+
         public Task<PartyErasureStatusRecord?> GetErasureStatusAsync(string partyId, CancellationToken cancellationToken)
             => throw new NotImplementedException();
 
@@ -1094,6 +1097,9 @@ public sealed class PartiesAdminPortalApiClientTests
     private sealed class TransportFailingGdprClient : IAdminPortalGdprClient
     {
         public Task<AdminPortalGdprCommandResult> RequestErasureAsync(string partyId, CancellationToken cancellationToken)
+            => throw new HttpRequestException("transport down");
+
+        public Task<AdminPortalGdprCommandResult> CancelErasureAsync(string partyId, CancellationToken cancellationToken)
             => throw new HttpRequestException("transport down");
 
         public Task<PartyErasureStatusRecord?> GetErasureStatusAsync(string partyId, CancellationToken cancellationToken)
@@ -1138,6 +1144,9 @@ public sealed class PartiesAdminPortalApiClientTests
             => new(501, AdminPortalGdprOutcome.ContractUnavailable.ToString(), null, null, null);
 
         public Task<AdminPortalGdprCommandResult> RequestErasureAsync(string partyId, CancellationToken cancellationToken)
+            => throw Exception();
+
+        public Task<AdminPortalGdprCommandResult> CancelErasureAsync(string partyId, CancellationToken cancellationToken)
             => throw Exception();
 
         public Task<PartyErasureStatusRecord?> GetErasureStatusAsync(string partyId, CancellationToken cancellationToken)

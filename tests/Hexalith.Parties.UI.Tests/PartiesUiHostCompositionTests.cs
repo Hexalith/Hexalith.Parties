@@ -152,6 +152,7 @@ public sealed class PartiesUiHostCompositionTests
         source.ShouldContain("builder.Services.AddScoped<IConsumerProfileEditClient, ConsumerProfileEditClient>();");
         source.ShouldContain("builder.Services.AddScoped<IConsumerConsentClient, ConsumerConsentClient>();");
         source.ShouldContain("builder.Services.AddScoped<IConsumerPrivacyExportClient, ConsumerPrivacyExportClient>();");
+        source.ShouldContain("builder.Services.AddScoped<IConsumerPrivacyErasureClient, ConsumerPrivacyErasureClient>();");
         source.IndexOf("builder.Services.AddSelfScopedPartiesClient();", StringComparison.Ordinal)
             .ShouldBeLessThan(source.IndexOf(
                 "builder.Services.AddScoped<IConsumerProfileDataClient, ConsumerProfileDataClient>();",
@@ -167,6 +168,10 @@ public sealed class PartiesUiHostCompositionTests
         source.IndexOf("builder.Services.AddSelfScopedPartiesClient();", StringComparison.Ordinal)
             .ShouldBeLessThan(source.IndexOf(
                 "builder.Services.AddScoped<IConsumerPrivacyExportClient, ConsumerPrivacyExportClient>();",
+                StringComparison.Ordinal));
+        source.IndexOf("builder.Services.AddSelfScopedPartiesClient();", StringComparison.Ordinal)
+            .ShouldBeLessThan(source.IndexOf(
+                "builder.Services.AddScoped<IConsumerPrivacyErasureClient, ConsumerPrivacyErasureClient>();",
                 StringComparison.Ordinal));
     }
 

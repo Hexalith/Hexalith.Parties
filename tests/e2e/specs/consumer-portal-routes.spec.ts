@@ -2,6 +2,7 @@ import { expect, test, type APIRequestContext, type BrowserContext, type Locator
 
 const ADMIN_COOKIE = 'parties-admin-e2e';
 const CONSUMER_COOKIE = 'parties-consumer-e2e';
+const CONSUMER_ERASURE_STATUS_COOKIE = 'parties-consumer-erasure-e2e';
 const REQUESTS_ROUTE = '/__parties/specimens/admin-portal/requests';
 const RESET_ROUTE = '/__parties/specimens/admin-portal/reset';
 const BASE_URL = process.env.BASE_URL ?? 'http://127.0.0.1:5072';
@@ -47,8 +48,11 @@ test.describe('Consumer portal route shells', () => {
         await expect(page.getByRole('button', { name: 'Object (Art. 21)' })).toBeVisible();
       } else {
         await expect(page.getByRole('heading', { name: 'Export my data' })).toBeVisible();
+        await expect(page.getByRole('heading', { name: 'Delete my data' })).toBeVisible();
+        await expect(page.getByText('right to erasure')).toBeVisible();
         await expect(page.getByText('Machine-readable JSON')).toBeVisible();
         await expect(page.getByRole('button', { name: 'Export my data' })).toBeVisible();
+        await expect(page.getByRole('button', { name: 'Delete my data' })).toBeVisible();
         await expect(page.getByText('under one minute')).toHaveCount(0);
       }
       expect(new URL(page.url()).pathname).toBe(route.path);
@@ -98,7 +102,10 @@ test.describe('Consumer portal route shells', () => {
     await expect(page.getByText('You are not authorized to view this area.')).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Data privacy' })).toHaveCount(0);
     await expect(page.getByRole('button', { name: 'Export my data' })).toHaveCount(0);
+    await expect(page.getByRole('button', { name: 'Delete my data' })).toHaveCount(0);
     await expect.poll(async () => (await gdprRequestCounts(request)).exportData).toBe(0);
+    await expect.poll(async () => (await gdprRequestCounts(request)).erasure).toBe(0);
+    await expect.poll(async () => (await gdprRequestCounts(request)).cancelErasure).toBe(0);
     expect(browserVisibleDataRequests).toEqual([]);
   });
 
@@ -195,6 +202,8 @@ test.describe('Consumer portal route shells', () => {
       addConsent: 1,
       revokeConsent: 1,
       exportData: 0,
+      erasure: 0,
+      cancelErasure: 0,
     });
     expect(new URL(page.url()).pathname).toBe('/me/consent');
     expect(browserVisibleDataRequests).toEqual([]);
@@ -227,6 +236,91 @@ test.describe('Consumer portal route shells', () => {
       .toBe('application/json');
     await expect.poll(async () => await page.evaluate(() => window.__consumerPrivacyExportDownload?.fileName ?? null))
       .toContain('my-data-export-');
+    expect(new URL(page.url()).pathname).toBe('/me/privacy');
+    expect(browserVisibleDataRequests).toEqual([]);
+  });
+
+  test('bound Consumer requests and cancels erasure through the self-scoped path', async ({ context, page, request }) => {
+    await enableConsumerFixture(context);
+    const browserVisibleDataRequests = captureBrowserVisiblePartiesDataRequests(page);
+
+    await page.goto('/me/privacy');
+    await expect(page.getByRole('heading', { name: 'Delete my data' })).toBeVisible();
+    await expect(page.getByText('You can cancel until deletion begins')).toBeVisible();
+    await expect(page.getByText("Once it's done, it's permanent - we can't undo it.")).toBeVisible();
+
+    await page.getByRole('button', { name: 'Delete my data' }).click();
+    await expect(page.getByRole('dialog', { name: 'Confirm deletion request' })).toBeVisible();
+    await expect(page.getByRole('dialog')).toContainText('You can cancel until deletion begins');
+    await expect(page.getByRole('textbox')).toHaveCount(0);
+
+    await page.getByRole('button', { name: 'Confirm delete my data' }).click();
+
+    await expect.poll(async () => (await latestErasureRequest(request))?.partyId ?? null).toBe('party-bound-001');
+    await expect(page.getByRole('status').filter({ hasText: 'Deletion requested.' })).toContainText('You can cancel until deletion begins');
+    await expect(page.getByRole('button', { name: 'Cancel deletion request' })).toBeVisible();
+
+    await page.getByRole('button', { name: 'Cancel deletion request' }).click();
+
+    await expect.poll(async () => (await latestCancelErasureRequest(request))?.partyId ?? null).toBe('party-bound-001');
+    await expect(page.getByText('No deletion request is active.')).toBeVisible();
+    await expect(page.getByText('within 30 days')).toHaveCount(0);
+    await expect(page.getByText('successfully deleted')).toHaveCount(0);
+    expect(new URL(page.url()).pathname).toBe('/me/privacy');
+    expect(browserVisibleDataRequests).toEqual([]);
+  });
+
+  test('bound Consumer cannot cancel erasure once deletion has begun', async ({ context, page, request }) => {
+    await enableConsumerFixture(context);
+    await enableConsumerErasureStatusFixture(context, 'key-destroyed');
+    const browserVisibleDataRequests = captureBrowserVisiblePartiesDataRequests(page);
+
+    await page.goto('/me/privacy');
+
+    await expect(page.getByRole('heading', { name: 'Export my data' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Delete my data' })).toBeVisible();
+    await expect(page.getByRole('status').filter({ hasText: 'Deletion has begun.' })).toContainText(
+      'Cancellation is no longer available.',
+    );
+    await expect(page.getByRole('button', { name: 'Cancel deletion request' })).toBeDisabled();
+    await expect(page.getByText('Cancellation is unavailable after deletion begins.')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Delete my data' })).toHaveCount(0);
+    await expect(page.getByText('within 30 days')).toHaveCount(0);
+    await expect(page.getByText('successfully deleted')).toHaveCount(0);
+    await expect(page.getByText('party-bound-001')).toHaveCount(0);
+    await expect.poll(async () => await gdprRequestCounts(request)).toEqual({
+      addConsent: 0,
+      revokeConsent: 0,
+      exportData: 0,
+      erasure: 0,
+      cancelErasure: 0,
+    });
+    expect(new URL(page.url()).pathname).toBe('/me/privacy');
+    expect(browserVisibleDataRequests).toEqual([]);
+  });
+
+  test('bound Consumer sees permanent erasure copy without a cancel action after deletion completes', async ({ context, page, request }) => {
+    await enableConsumerFixture(context);
+    await enableConsumerErasureStatusFixture(context, 'erased');
+    const browserVisibleDataRequests = captureBrowserVisiblePartiesDataRequests(page);
+
+    await page.goto('/me/privacy');
+
+    await expect(page.getByRole('heading', { name: 'Export my data' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Delete my data' })).toBeVisible();
+    await expect(page.getByRole('status')).toContainText("Once it's done, it's permanent - we can't undo it.");
+    await expect(page.getByRole('button', { name: 'Cancel deletion request' })).toHaveCount(0);
+    await expect(page.getByRole('button', { name: 'Delete my data' })).toHaveCount(0);
+    await expect(page.getByText('reversible')).toHaveCount(0);
+    await expect(page.getByText('successfully deleted')).toHaveCount(0);
+    await expect(page.getByText('party-bound-001')).toHaveCount(0);
+    await expect.poll(async () => await gdprRequestCounts(request)).toEqual({
+      addConsent: 0,
+      revokeConsent: 0,
+      exportData: 0,
+      erasure: 0,
+      cancelErasure: 0,
+    });
     expect(new URL(page.url()).pathname).toBe('/me/privacy');
     expect(browserVisibleDataRequests).toEqual([]);
   });
@@ -283,6 +377,20 @@ const enableConsumerFixture = async (context: BrowserContext): Promise<void> => 
   ]);
 };
 
+const enableConsumerErasureStatusFixture = async (
+  context: BrowserContext,
+  status: 'pending' | 'key-destroyed' | 'verification-in-progress' | 'verified' | 'erased',
+): Promise<void> => {
+  await context.addCookies([
+    {
+      name: CONSUMER_ERASURE_STATUS_COOKIE,
+      value: status,
+      url: BASE_URL,
+      sameSite: 'Lax',
+    },
+  ]);
+};
+
 const captureBrowserVisiblePartiesDataRequests = (page: Page): string[] => {
   const requests: string[] = [];
   page.on('request', (request) => {
@@ -320,12 +428,24 @@ const latestExportRequest = async (request: APIRequestContext): Promise<AdminPor
   return snapshot.exportRequests.at(-1);
 };
 
+const latestErasureRequest = async (request: APIRequestContext): Promise<AdminPortalRequestCapture | undefined> => {
+  const snapshot = await requestSnapshot(request);
+  return snapshot.erasureRequests.at(-1);
+};
+
+const latestCancelErasureRequest = async (request: APIRequestContext): Promise<AdminPortalRequestCapture | undefined> => {
+  const snapshot = await requestSnapshot(request);
+  return snapshot.cancelErasureRequests.at(-1);
+};
+
 const gdprRequestCounts = async (request: APIRequestContext): Promise<GdprRequestCounts> => {
   const snapshot = await requestSnapshot(request);
   return {
     addConsent: snapshot.addConsentRequests.length,
     revokeConsent: snapshot.revokeConsentRequests.length,
     exportData: snapshot.exportRequests.length,
+    erasure: snapshot.erasureRequests.length,
+    cancelErasure: snapshot.cancelErasureRequests.length,
   };
 };
 
@@ -357,10 +477,12 @@ interface AdminPortalE2eSnapshot {
   addConsentRequests: AdminPortalRequestCapture[];
   revokeConsentRequests: AdminPortalRequestCapture[];
   exportRequests: AdminPortalRequestCapture[];
+  erasureRequests: AdminPortalRequestCapture[];
+  cancelErasureRequests: AdminPortalRequestCapture[];
 }
 
 interface AdminPortalRequestCapture {
-  kind: 'update' | 'add-consent' | 'revoke-consent' | 'export';
+  kind: 'update' | 'add-consent' | 'revoke-consent' | 'export' | 'erasure' | 'cancel-erasure';
   query: string | null;
   page: number;
   pageSize: number;
@@ -373,6 +495,8 @@ interface GdprRequestCounts {
   addConsent: number;
   revokeConsent: number;
   exportData: number;
+  erasure: number;
+  cancelErasure: number;
 }
 
 declare global {

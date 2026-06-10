@@ -99,6 +99,10 @@
     color: var(--colorStatusDangerForeground1, CanvasText);
 }
 
+.hx-parties-privacy__danger-action {
+    color: var(--colorStatusDangerForeground1, CanvasText);
+}
+
 @media (max-width: 480px) {
     .hx-parties-profile {
         padding-block: var(--spacingVerticalXL, 1.5rem);

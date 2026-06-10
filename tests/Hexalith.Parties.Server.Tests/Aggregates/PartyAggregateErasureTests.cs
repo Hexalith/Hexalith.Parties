@@ -1,3 +1,5 @@
+using Hexalith.EventStore.Contracts.Results;
+
 using Hexalith.Parties.Contracts.Commands;
 using Hexalith.Parties.Contracts.Events;
 using Hexalith.Parties.Contracts.Results;
@@ -68,6 +70,77 @@ public class PartyAggregateErasureTests {
     }
 
     [Fact]
+    public void Handle_CancelPartyErasure_WhenPending_EmitsCancelledEvent()
+    {
+        PartyState state = PartyTestData.CreateErasurePendingState();
+
+        DomainResult result = PartyAggregate.Handle(new CancelPartyErasure
+        {
+            PartyId = PartyTestData.DefaultPartyId,
+            TenantId = PartyTestData.DefaultTenantId,
+        }, state);
+
+        result.IsSuccess.ShouldBeTrue();
+        PartyErasureCancelled cancelled = result.Events[0].ShouldBeOfType<PartyErasureCancelled>();
+        cancelled.PartyId.ShouldBe(PartyTestData.DefaultPartyId);
+        cancelled.TenantId.ShouldBe(PartyTestData.DefaultTenantId);
+    }
+
+    [Fact]
+    public void Handle_CancelPartyErasure_WhenActive_ReturnsNoOp()
+    {
+        PartyState state = PartyTestData.CreatePersonState();
+
+        DomainResult result = PartyAggregate.Handle(new CancelPartyErasure
+        {
+            PartyId = PartyTestData.DefaultPartyId,
+            TenantId = PartyTestData.DefaultTenantId,
+        }, state);
+
+        result.IsNoOp.ShouldBeTrue();
+    }
+
+    [Theory]
+    [InlineData(ErasureStatus.KeyDestroyed)]
+    [InlineData(ErasureStatus.VerificationInProgress)]
+    [InlineData(ErasureStatus.Verified)]
+    [InlineData(ErasureStatus.Erased)]
+    public void Handle_CancelPartyErasure_WhenDeletionStarted_RejectsWithBoundedCopy(ErasureStatus status)
+    {
+        PartyState state = CreateStateWithErasureStatus(status);
+
+        DomainResult result = PartyAggregate.Handle(new CancelPartyErasure
+        {
+            PartyId = PartyTestData.DefaultPartyId,
+            TenantId = PartyTestData.DefaultTenantId,
+        }, state);
+
+        result.IsRejection.ShouldBeTrue();
+        PartyErasureInProgress rejection = result.Events[0].ShouldBeOfType<PartyErasureInProgress>();
+        rejection.Message.ShouldBe("Deletion has already begun and cannot be cancelled.");
+        string message = rejection.Message.ShouldNotBeNull();
+        message.ShouldNotContain("key", Case.Insensitive);
+        message.ShouldNotContain("decrypt", Case.Insensitive);
+    }
+
+    [Fact]
+    public void Apply_PartyErasureCancelled_ResetsStatusToActive()
+    {
+        PartyState state = PartyTestData.CreateErasurePendingState();
+
+        state.Apply(new PartyErasureCancelled
+        {
+            PartyId = PartyTestData.DefaultPartyId,
+            TenantId = PartyTestData.DefaultTenantId,
+            CancelledAt = DateTimeOffset.UtcNow,
+            CancelledBy = "consumer",
+        });
+
+        state.ErasureStatus.ShouldBe(ErasureStatus.Active);
+        state.ErasedAt.ShouldBeNull();
+    }
+
+    [Fact]
     public void Handle_AnyCommand_WhenErasurePending_RejectsWithErasureError() {
         // Arrange
         PartyState state = PartyTestData.CreateErasurePendingState();
@@ -81,6 +154,57 @@ public class PartyAggregateErasureTests {
         PartyErasureInProgress rejection = result.Events[0].ShouldBeOfType<PartyErasureInProgress>();
         rejection.Status.ShouldBe("ErasureInProgress");
         rejection.Message.ShouldBe("Party erasure in progress. No modifications allowed.");
+    }
+
+    private static PartyState CreateStateWithErasureStatus(ErasureStatus status)
+    {
+        PartyState state = PartyTestData.CreateErasurePendingState();
+        if (status is ErasureStatus.VerificationInProgress)
+        {
+            typeof(PartyState).GetProperty(nameof(PartyState.ErasureStatus))!.SetValue(state, status);
+            return state;
+        }
+
+        if (status is ErasureStatus.ErasurePending)
+        {
+            return state;
+        }
+
+        state.Apply(new PartyEncryptionKeyDeleted
+        {
+            PartyId = PartyTestData.DefaultPartyId,
+            TenantId = PartyTestData.DefaultTenantId,
+            DeletedAt = DateTimeOffset.UtcNow,
+        });
+
+        if (status is ErasureStatus.KeyDestroyed)
+        {
+            return state;
+        }
+
+        state.Apply(new ErasureVerified
+        {
+            PartyId = PartyTestData.DefaultPartyId,
+            TenantId = PartyTestData.DefaultTenantId,
+            VerifiedAt = DateTimeOffset.UtcNow,
+            VerificationReportId = "report-1",
+        });
+
+        if (status is ErasureStatus.Verified)
+        {
+            return state;
+        }
+
+        state.Apply(new PartyErased
+        {
+            PartyId = PartyTestData.DefaultPartyId,
+            TenantId = PartyTestData.DefaultTenantId,
+            ErasedAt = DateTimeOffset.UtcNow,
+            ErasureStatus = ErasureStatus.Erased.ToString(),
+            VerificationStatus = ErasureVerificationOverallStatus.Complete.ToString(),
+        });
+
+        return state;
     }
 
     [Fact]
