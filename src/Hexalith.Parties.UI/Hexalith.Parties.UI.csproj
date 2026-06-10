@@ -16,10 +16,26 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <!-- Story 1.5 — the consumer self-scope accessor (SelfScopedPartiesClient) is `internal sealed`
+         (it is wiring, not a public surface). The UI test project asserts its registered lifetime and
+         constructs it directly with substituted clients, so it needs internals visibility. -->
+    <InternalsVisibleTo Include="Hexalith.Parties.UI.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
     <!-- Microsoft.AspNetCore.App is IMPLICIT for Microsoft.NET.Sdk.Web; an explicit
          <FrameworkReference> here trips NETSDK1086 (error). Counter.Web and Hexalith.Parties.Mcp
          (the in-repo Web-SDK hosts) both omit it. -->
     <PackageReference Include="Microsoft.FluentUI.AspNetCore.Components" />
+    <!-- Story 1.5 (AR-D3) — the BFF self-scope accessor consumes the ADOPTER-FACING half of the
+         split: the typed gateway query client (IPartiesQueryClient) and GDPR client
+         (IAdminPortalGdprClient) live in Hexalith.Parties.Client, whose result/value types live in
+         Hexalith.Parties.Contracts. Referencing these is allowed (project-context "adopter-facing vs
+         internal"); the UI BFF is a consumer of them. NEVER reference an INTERNAL host project
+         (Hexalith.Parties, .Server, .Projections, .Security, .Testing) — that crosses the
+         fitness-pinned boundary. Same-repo siblings, so relative paths (not $(HexalithFrontComposerRoot)). -->
+    <ProjectReference Include="..\Hexalith.Parties.Client\Hexalith.Parties.Client.csproj" />
+    <ProjectReference Include="..\Hexalith.Parties.Contracts\Hexalith.Parties.Contracts.csproj" />
     <ProjectReference Include="$(HexalithFrontComposerRoot)\src\Hexalith.FrontComposer.Shell\Hexalith.FrontComposer.Shell.csproj" />
     <ProjectReference Include="$(HexalithFrontComposerRoot)\src\Hexalith.FrontComposer.Mcp\Hexalith.FrontComposer.Mcp.csproj" />
     <!-- SourceTools analyzer: discovers [Projection]/[Command]/[ProjectionTemplate] markers; emits

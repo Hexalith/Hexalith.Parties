@@ -67,6 +67,11 @@ public static class PartiesServiceCollectionExtensions {
         _ = services.AddAuthorization(options => {
             options.AddPolicy("Admin", policy =>
                 policy.RequireRole("admin", "Admin", "administrator", "Administrator"));
+
+            // Story 1.5 (AR-D3) — server-side Consumer policy, registered alongside Admin (same
+            // posture: registered + policy-resolvable, role-claim based). Const/role-names/helper live
+            // in ConsumerPolicy so the policy is testable in isolation.
+            ConsumerPolicy.Add(options);
         });
 
         // Claims transformation (tenant extraction from JWT)
@@ -97,6 +102,18 @@ public static class PartiesServiceCollectionExtensions {
         // implementation creates a captive dependency — any such replacement must register
         // the store as Singleton or change this lifetime to Scoped.
         _ = services.AddSingleton<ITenantAccessService, TenantAccessService>();
+
+        // Story 1.5 (AR-D3) — D3 defense-in-depth self-authorization decision service. Pure/stateless
+        // aggregateId == party_id check, fail-closed (deny on null/empty/mismatch). Singleton mirrors
+        // ITenantAccessService above (no captive-dependency concern). KEPT OFF THE REQUEST PATH: the
+        // parties actor host is machine-to-machine over DAPR at POST /process and carries no end-user
+        // principal there (DAPR strips the JWT), so there is no consumer party_id to check on the request
+        // path today — the EventStore gateway owns request-path RBAC and the active own-data-only
+        // enforcement is the BFF self-scope accessor (Story 1.5 AC1). This is the registered, unit-tested
+        // building block the deferred gateway self-principal will consume. The fitness test
+        // PartiesRequestPath_DoesNotUseDataSubjectAccessService pins it out of Program.cs and the domain
+        // invoker (AC4).
+        _ = services.AddSingleton<IDataSubjectAccessService, DataSubjectAccessService>();
 
         // Single concrete registration so both interfaces resolve to the same instance per scope.
         // Two separate AddTransient<TInterface, TImpl>() calls would create two parallel

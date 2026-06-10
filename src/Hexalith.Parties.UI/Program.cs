@@ -1,7 +1,9 @@
 using Hexalith.FrontComposer.Shell.Extensions;
+using Hexalith.Parties.Client.Extensions;
 using Hexalith.Parties.UI;
 using Hexalith.Parties.UI.Authentication;
 using Hexalith.Parties.UI.Components;
+using Hexalith.Parties.UI.Services;
 
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.FluentUI.AspNetCore.Components;
@@ -39,6 +41,30 @@ builder.Services.AddPartiesUiAuthorization();
 // UseAuthentication is wired, so unconditional registration is harmless. Both are Scoped (ADR-030):
 // ValidateScopes=true (line 13) fails the boot if a Singleton captures them.
 builder.Services.AddPartiesUiClaimsResolution();
+
+// Story 1.5 (AR-D3 / ADR-030) — register the consumer self-scope choke point UNCONDITIONALLY (not
+// gated on partiesClientEnabled), mirroring AddPartiesUiAuthorization / AddPartiesUiClaimsResolution
+// above. The Scoped ISelfScopedPartiesClient is the SINGLE own-data-only data path for a Consumer: it
+// resolves and injects the consumer's own party_id and, by the shape of its interface, can never issue
+// list/search. It is Scoped (claims/circuit-derived); ValidateScopes=true (line 13) fails the boot if a
+// Singleton captures it. Its gateway-client dependencies are resolved LAZILY — nothing resolves the
+// accessor until a consumer data page exists (today /me is an empty stub), so unconditional registration
+// composes cleanly even in a no-Parties:BaseUrl (degraded/test) boot.
+builder.Services.AddSelfScopedPartiesClient();
+
+// Register the UNDERLYING typed gateway clients (IPartiesQueryClient / IAdminPortalGdprClient) only when
+// configured. AddPartiesClient throws at REGISTRATION time when Parties:BaseUrl is absent
+// (GetValidatedBaseAddress), so gate it exactly like the authEnabled block below — calling it
+// unconditionally would break degraded/test boot. Story 1.5 deliberately does NOT wire the OIDC→gateway
+// token relay here: attaching the server-side access token to the consumer's gateway calls is the
+// deferred residual (lands with the first consumer screen that fetches data, Epic 4 / Story 1.7). 1.5's
+// deliverable is the structural choke point + fail-closed/Scoped guarantees, proven by tests.
+bool partiesClientEnabled = !string.IsNullOrWhiteSpace(builder.Configuration["Parties:BaseUrl"]);
+
+if (partiesClientEnabled)
+{
+    builder.Services.AddPartiesClient(builder.Configuration);
+}
 
 // AR-D5 — host-owned OIDC sign-in. When an OIDC provider is configured (the AppHost supplies the
 // Keycloak authority/client in run mode against the dev realm, the tache realm in publish), wire

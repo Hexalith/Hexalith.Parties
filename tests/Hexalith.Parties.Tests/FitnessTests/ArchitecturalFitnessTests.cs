@@ -406,6 +406,26 @@ public sealed class ArchitecturalFitnessTests
     }
 
     [Fact]
+    public void PartiesRequestPath_DoesNotUseDataSubjectAccessService()
+    {
+        string domainInvoker = ReadRepoFile("src", "Hexalith.Parties", "Domain", "PartyDomainServiceInvoker.cs");
+        string program = ReadRepoFile("src", "Hexalith.Parties", "Program.cs");
+
+        // Story 1.5 (AR-D3 / AC4): the fail-closed IDataSubjectAccessService is a registered,
+        // unit-tested defense-in-depth building block (mirroring ITenantAccessService) — it is NOT
+        // wired into the gateway request path. The parties actor host is machine-to-machine over DAPR
+        // at POST /process and carries no end-user principal there (DAPR strips the JWT), so there is no
+        // consumer party_id to check on the request path today; live invocation awaits the deferred
+        // gateway self-principal. Pin it out of Program.cs and the domain invoker forever. The
+        // ITenantAccessService-style registration in PartiesServiceCollectionExtensions.cs is permitted
+        // (see the comment beside it) and is intentionally NOT scanned here.
+        StripCommentsAndStringLiterals(domainInvoker).ShouldNotContain("IDataSubjectAccessService");
+        StripCommentsAndStringLiterals(domainInvoker).ShouldNotContain("DataSubjectAccessService");
+        StripCommentsAndStringLiterals(program).ShouldNotContain("IDataSubjectAccessService");
+        StripCommentsAndStringLiterals(program).ShouldNotContain("DataSubjectAccessService");
+    }
+
+    [Fact]
     public void EventStoreGateway_AuthorizationBehaviorRunsBeforeValidationBehavior()
     {
         string? eventStoreRegistration = TryReadEventStoreFile(
