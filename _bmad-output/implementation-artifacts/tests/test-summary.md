@@ -1,49 +1,46 @@
 # Test Automation Summary
 
-Story: 3.1 - GDPR operations page
+Story: 3.2 - Erase a party with typed-name confirmation
 
 ## Generated Tests
 
 ### API Tests
-- [x] `src/Hexalith.Parties.UI/Services/PartiesAdminPortalE2eFixture.cs` - aligns the gated Test-environment AdminPortal fixture with `AdminPortalGdprCapability.ProvisionalBridge()`, accepted provisional commands, non-empty export payloads, and bounded processing-record responses for browser assertions.
-- [x] No public API endpoints were added; browser-visible command/query calls remain forbidden by Playwright request capture.
+- [x] `src/Hexalith.Parties.UI/Services/PartiesAdminPortalE2eFixture.cs` - captures erasure requests by `partyId` only so browser tests can prove the typed confirmation value is not passed through the test API/request-capture boundary.
+- [x] No public API endpoint or browser-visible command/query transport was added; the Playwright request hook continues to fail the scenario if `/api/v1/commands` or `/api/v1/queries` appears in browser traffic.
 
 ### Component Tests
-- [x] `tests/Hexalith.Parties.AdminPortal.Tests/Components/PartiesAdminPortalComponentTests.cs` - adds review regression coverage for direct GDPR partial-detail routes rendering bounded no-PII state with no mutation controls, empty initial GDPR operation live-region behavior, and stale correlation cleanup after assertive GDPR command failures.
+- [x] `tests/Hexalith.Parties.AdminPortal.Tests/Components/PartiesAdminPortalComponentTests.cs` - covers the typed-confirm dialog semantics, disabled-until-exact-match behavior, no command on mismatch/cancel, typed value cleanup, accepted-processing status, outcome politeness split, and unavailable-state guardrails.
 
 ### E2E Tests
-- [x] `tests/e2e/specs/admin-parties-list.spec.ts` - extends direct `/admin/parties/{id}/gdpr` coverage for primary focus, provisional operation availability, D7 certificate/retry bounded fallback, processing-record completion, no browser-visible `/api/v1/commands` or `/api/v1/queries`, 320px plus 200% zoom overflow, missing-party bounded state, unsafe scoped-id no-fetch behavior, and detail action navigation.
-- [x] `tests/e2e/specs/admin-area-authorization.spec.ts` - existing coverage includes unauthenticated `/admin/parties/{id}/gdpr` challenge with return URL preservation and no data leakage.
+- [x] `tests/e2e/specs/admin-parties-list.spec.ts` - extends direct GDPR-route coverage for the erase dialog: `role="dialog"`, `aria-modal`, `aria-labelledby`, `aria-describedby`, focused typed-confirm input, disabled mismatch, no erasure request before exact match, safe cancel with typed value cleared from markup, polite enablement live region, accepted-processing status, no native dialogs, no display name in captured erasure request/URL, no browser-visible command/query calls, and 320px plus 200% zoom overflow.
+- [x] `tests/e2e/specs/admin-parties-list.spec.ts` - retains critical route error cases for missing parties and unsafe scoped ids with bounded no-mutation GDPR state.
 
 ## Coverage
 
-- API/client paths: AdminPortal fixture exercises direct party detail lookup and GDPR operations through `IPartiesAdminPortalApiClient`; no browser REST transport introduced.
-- UI features: 4/4 targeted Story 3.1 browser behaviors covered: direct GDPR route, detail entry action, auth challenge, and bounded non-happy direct routes.
-- Happy path: direct GDPR route loads the operations destination, focuses the GDPR heading, enables supported provisional controls, and completes processing-record refresh.
-- Critical cases: missing and partial party routes render bounded state with no mutation controls; unsafe scoped route id is rejected before fetch; unauthenticated route preserves return URL; D7 certificate/retry remains bounded unavailable.
-- Accessibility assertions: semantic roles/labels, focused primary heading, live status for operation completion, no hardcoded waits.
-- Privacy assertions: rejected GDPR command correlations and stale prior command correlations are not echoed beside assertive failure announcements.
+- API/request boundary: 1/1 Story 3.2 erase command path covered through the AdminPortal fixture request capture; typed names are not represented in the capture shape.
+- UI workflow: 1/1 typed-name erase workflow covered from direct GDPR route open through cancel, exact-match confirm, optimistic accepted-processing acknowledgement, and request capture.
+- Happy path: exact display-name match enables Erase, announces enablement politely, confirms through the UI fixture, and shows `Saved - updating...`.
+- Critical error cases: mismatch leaves Erase disabled and issues no request; cancel clears the typed value; missing and unsafe party routes expose no GDPR mutation controls.
+- Accessibility assertions: semantic locators, modal ARIA attributes, accessible title wiring, described typed input, focused input, polite live-region status, and no hardcoded waits.
+- Privacy assertions: typed mismatch is removed after cancel; exact display name is not serialized into the erasure request capture or route URL; browser-visible EventStore command/query calls remain forbidden.
 
 ## Validation
 
-- [x] `dotnet build src/Hexalith.Parties.UI/Hexalith.Parties.UI.csproj -c Release --no-restore -m:1`
-- [x] `dotnet build tests/Hexalith.Parties.AdminPortal.Tests/Hexalith.Parties.AdminPortal.Tests.csproj -c Release --no-restore -m:1`
-- [x] `DiffEngine_Disabled=true tests/Hexalith.Parties.AdminPortal.Tests/bin/Release/net10.0/Hexalith.Parties.AdminPortal.Tests` - 150 tests passed.
 - [x] `cd tests/e2e && npm run typecheck`
-- [x] `cd tests/e2e && npx playwright test specs/admin-parties-list.spec.ts --list`
-- [ ] `cd tests/e2e && npx playwright test specs/admin-parties-list.spec.ts --project=chromium --grep "direct GDPR|detail GDPR action"` - blocked before test execution in this sandbox because Kestrel cannot bind a local socket: `System.Net.Sockets.SocketException (13): Permission denied`.
+- [x] `cd tests/e2e && npx playwright test specs/admin-parties-list.spec.ts --list` - discovered 18 specs, including `direct GDPR route opens operations destination without browser-visible command/query calls or overflow`.
+- [ ] `cd tests/e2e && npx playwright test specs/admin-parties-list.spec.ts --project=chromium --grep "direct GDPR route opens operations"` - blocked before Playwright test execution because the sandbox denies local Kestrel socket binding: `System.Net.Sockets.SocketException (13): Permission denied`.
 
 ## Checklist Result
 
-- API tests generated if applicable: yes, via typed-client E2E fixture and request capture; no public endpoints added.
+- API tests generated if applicable: yes, via the gated AdminPortal e2e fixture and request capture.
 - E2E tests generated if UI exists: yes.
-- Tests use standard framework APIs: yes, Playwright `test`/`expect` and existing .NET fixture patterns.
+- Tests use standard framework APIs: yes, Playwright `test`/`expect` and existing fixture patterns.
 - Happy path covered: yes.
 - Critical error cases covered: yes.
-- Proper locators: yes, semantic roles and labels.
+- Proper locators: yes, roles, labels, dialog status, and text scoped to the dialog/detail surfaces.
 - Clear descriptions: yes.
 - No hardcoded waits or sleeps: yes.
-- Tests independent: yes, fixture state resets before each spec.
+- Tests independent: yes, fixture state resets in `beforeEach`.
 - Tests saved to appropriate directories: yes.
 - Summary includes coverage metrics: yes.
 

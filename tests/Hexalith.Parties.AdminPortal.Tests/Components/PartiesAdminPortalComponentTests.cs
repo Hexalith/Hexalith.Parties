@@ -1732,13 +1732,14 @@ public sealed class PartiesAdminPortalComponentTests : BunitContext
         cut.WaitForAssertion(() => FindFluentButton(cut, "Request erasure").HasAttribute("disabled").ShouldBeFalse());
 
         ClickFluentButton(cut, "Request erasure");
-        cut.WaitForAssertion(() => FindFluentButton(cut, "Confirm erasure").HasAttribute("disabled").ShouldBeFalse());
-        ClickFluentButton(cut, "Confirm erasure");
+        SetTextInput(cut, "Type the selected party display name", "GDPR Accepted");
+        cut.WaitForAssertion(() => FindFluentButton(cut, "Erase").HasAttribute("disabled").ShouldBeFalse());
+        ClickFluentButton(cut, "Erase");
 
         cut.WaitForAssertion(() =>
         {
             IElement region = cut.Find("[data-gdpr-operation-announcement]");
-            region.TextContent.Trim().ShouldBe("Operation accepted");
+            region.TextContent.Trim().ShouldBe("Saved - updating...");
             region.GetAttribute("role").ShouldBe("status");
             region.GetAttribute("aria-live").ShouldBe("polite");
             region.HasAttribute("tabindex").ShouldBeFalse();
@@ -1786,8 +1787,9 @@ public sealed class PartiesAdminPortalComponentTests : BunitContext
         cut.WaitForAssertion(() => FindFluentButton(cut, "Request erasure").HasAttribute("disabled").ShouldBeFalse());
 
         ClickFluentButton(cut, "Request erasure");
-        cut.WaitForAssertion(() => FindFluentButton(cut, "Confirm erasure").HasAttribute("disabled").ShouldBeFalse());
-        ClickFluentButton(cut, "Confirm erasure");
+        SetTextInput(cut, "Type the selected party display name", "GDPR Validation");
+        cut.WaitForAssertion(() => FindFluentButton(cut, "Erase").HasAttribute("disabled").ShouldBeFalse());
+        ClickFluentButton(cut, "Erase");
 
         cut.WaitForAssertion(() =>
         {
@@ -1824,8 +1826,9 @@ public sealed class PartiesAdminPortalComponentTests : BunitContext
         cut.WaitForAssertion(() => cut.Markup.ShouldContain("corr-restrict"));
 
         ClickFluentButton(cut, "Request erasure");
-        cut.WaitForAssertion(() => FindFluentButton(cut, "Confirm erasure").HasAttribute("disabled").ShouldBeFalse());
-        ClickFluentButton(cut, "Confirm erasure");
+        SetTextInput(cut, "Type the selected party display name", "GDPR Stale Correlation");
+        cut.WaitForAssertion(() => FindFluentButton(cut, "Erase").HasAttribute("disabled").ShouldBeFalse());
+        ClickFluentButton(cut, "Erase");
 
         cut.WaitForAssertion(() =>
         {
@@ -2068,7 +2071,7 @@ public sealed class PartiesAdminPortalComponentTests : BunitContext
     }
 
     [Fact]
-    public void PartiesAdminPortal_RequestErasure_RequiresConfirmationAndDisplaysCorrelation()
+    public void PartiesAdminPortal_RequestErasure_RequiresTypedConfirmationAndDisplaysCorrelation()
     {
         var api = new RecordingAdminPortalApiClient();
         api.EnqueueList(Page(IndexEntry("party-erase", "Erase Candidate", PartyType.Person, true)));
@@ -2106,13 +2109,35 @@ public sealed class PartiesAdminPortalComponentTests : BunitContext
         ClickFluentButton(cut, "Request erasure");
         cut.WaitForAssertion(() =>
         {
-            cut.Markup.ShouldContain("irreversible verification");
-            IElement erasureSection = cut.Find("section[aria-labelledby^='erasure-actions-heading-']");
-            erasureSection.TextContent.ShouldContain("Party id: party-erase");
-            erasureSection.TextContent.ShouldNotContain("Erase Candidate");
-            FindFluentButton(cut, "Confirm erasure").HasAttribute("disabled").ShouldBeFalse();
+            IElement dialog = cut.Find("[role='dialog'][aria-modal='true']");
+            string labelledBy = dialog.GetAttribute("aria-labelledby")!;
+            labelledBy.ShouldNotBeNullOrWhiteSpace();
+            cut.Find($"#{labelledBy}").TextContent.Trim().ShouldBe("Erase party");
+            cut.FindAll("[role='dialog'][aria-modal='true']").Count.ShouldBe(1);
+
+            FluentTextInput input = FindTextInput(cut, "Type the selected party display name").Instance;
+            input.AdditionalAttributes.ShouldNotBeNull();
+            input.AdditionalAttributes.ShouldContainKey("aria-describedby");
+            string descriptionId = input.AdditionalAttributes["aria-describedby"]?.ToString() ?? string.Empty;
+            cut.Find($"#{descriptionId}").TextContent.ShouldContain("irreversible verification");
+
+            IElement eraseButton = FindFluentButton(cut, "Erase");
+            eraseButton.HasAttribute("disabled").ShouldBeTrue();
+            (eraseButton.GetAttribute("aria-disabled") == "true" || eraseButton.HasAttribute("disabled")).ShouldBeTrue();
+            cut.Markup.ShouldNotContain("Party id: party-erase");
         });
-        ClickFluentButton(cut, "Confirm erasure");
+
+        SetTextInput(cut, "Type the selected party display name", "Erase candidate");
+        cut.WaitForAssertion(() => FindFluentButton(cut, "Erase").HasAttribute("disabled").ShouldBeTrue());
+        api.ErasureRequests.ShouldBeEmpty();
+
+        SetTextInput(cut, "Type the selected party display name", "Erase Candidate");
+        cut.WaitForAssertion(() =>
+        {
+            FindFluentButton(cut, "Erase").HasAttribute("disabled").ShouldBeFalse();
+            cut.Find("[data-erasure-confirmation-live]").TextContent.Trim().ShouldBe("Erase action enabled.");
+        });
+        ClickFluentButton(cut, "Erase");
 
         cut.WaitForAssertion(() =>
         {
@@ -2120,6 +2145,116 @@ public sealed class PartiesAdminPortalComponentTests : BunitContext
             api.ErasureStatusRequests.Single().ShouldBe("party-erase");
             cut.Markup.ShouldContain("corr-erasure");
             cut.Markup.ShouldContain("ErasurePending");
+            cut.FindAll("[role='dialog'][aria-modal='true']").ShouldBeEmpty();
+        });
+    }
+
+    [Fact]
+    public void PartiesAdminPortal_RequestErasure_CancelPartySwitchAndUnavailableStateClearTypedValue()
+    {
+        var api = new RecordingAdminPortalApiClient();
+        api.EnqueueList(Page(
+            IndexEntry("party-erase-clear", "Erase Clear", PartyType.Person, true),
+            IndexEntry("party-erase-next", "Erase Next", PartyType.Person, true)));
+        api.EnqueueDetail(Detail("party-erase-clear", "Erase Clear", PartyType.Person, isActive: true));
+        api.EnqueueDetail(Detail("party-erase-next", "Erase Next", PartyType.Person, isActive: true));
+        api.EnqueueGdprCapability(AdminPortalGdprCapability.Available());
+        api.EnqueueGdprCapability(AdminPortalGdprCapability.Unavailable());
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+
+        IRenderedComponent<PartiesAdminPortal> cut = RenderAuthorized("scope-a");
+        cut.WaitForAssertion(() => cut.Markup.ShouldContain("Erase Clear"));
+        ClickFluentButton(cut, "Erase Clear");
+        cut.WaitForAssertion(() => FindFluentButton(cut, "Request erasure").HasAttribute("disabled").ShouldBeFalse());
+
+        ClickFluentButton(cut, "Request erasure");
+        SetTextInput(cut, "Type the selected party display name", "typed-secret-cancel");
+        ClickFluentButton(cut, "Cancel");
+
+        cut.WaitForAssertion(() =>
+        {
+            cut.FindAll("[role='dialog'][aria-modal='true']").ShouldBeEmpty();
+            cut.Markup.ShouldNotContain("typed-secret-cancel");
+        });
+
+        ClickFluentButton(cut, "Request erasure");
+        SetTextInput(cut, "Type the selected party display name", "typed-secret-switch");
+        ClickFluentButton(cut, "Erase Next");
+
+        cut.WaitForAssertion(() =>
+        {
+            FindFluentButton(cut, "Request erasure").HasAttribute("disabled").ShouldBeTrue();
+            cut.Markup.ShouldNotContain("typed-secret-switch");
+            cut.FindAll("[role='dialog'][aria-modal='true']").ShouldBeEmpty();
+            api.ErasureRequests.ShouldBeEmpty();
+        });
+    }
+
+    [Fact]
+    public void PartiesAdminPortal_RequestErasure_StatusRefreshClosesDialogAndDisablesPendingMutations()
+    {
+        var api = new RecordingAdminPortalApiClient();
+        api.EnqueueList(Page(IndexEntry("party-erasure-pending", "Pending Lock", PartyType.Person, true)));
+        api.EnqueueDetail(new PartyDetail
+        {
+            Id = "party-erasure-pending",
+            Type = PartyType.Person,
+            IsActive = true,
+            IsRestricted = true,
+            DisplayName = "Pending Lock",
+            SortName = "Lock, Pending",
+            ContactChannels = [],
+            Identifiers = [],
+            ConsentRecords =
+            [
+                new ConsentRecord
+                {
+                    ConsentId = "consent-pending",
+                    ChannelId = "email",
+                    Purpose = "newsletter",
+                    LawfulBasis = LawfulBasis.Consent,
+                    GrantedAt = DateTimeOffset.Parse("2026-05-03T00:00:00Z"),
+                    GrantedBy = "admin-user",
+                },
+            ],
+            NameHistory = [],
+            CreatedAt = DateTimeOffset.Parse("2026-05-01T00:00:00Z"),
+            LastModifiedAt = DateTimeOffset.Parse("2026-05-03T00:00:00Z"),
+        });
+        api.EnqueueErasureStatus(new PartyErasureStatusRecord
+        {
+            PartyId = "party-erasure-pending",
+            TenantId = "scope-a",
+            Status = "ErasurePending",
+            UpdatedAt = DateTimeOffset.Parse("2026-05-04T00:00:00Z"),
+        });
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+
+        IRenderedComponent<PartiesAdminPortal> cut = RenderAuthorized("scope-a");
+        cut.WaitForAssertion(() => cut.Markup.ShouldContain("Pending Lock"));
+        ClickFluentButton(cut, "Pending Lock");
+        cut.WaitForAssertion(() =>
+        {
+            FindFluentButton(cut, "Request erasure").HasAttribute("disabled").ShouldBeFalse();
+            FindFluentButton(cut, "Lift restriction").HasAttribute("disabled").ShouldBeFalse();
+            FindFluentButton(cut, "Revoke consent").HasAttribute("disabled").ShouldBeFalse();
+        });
+
+        ClickFluentButton(cut, "Request erasure");
+        SetTextInput(cut, "Type the selected party display name", "typed-secret-pending");
+        ClickFluentButton(cut, "Refresh erasure status");
+
+        cut.WaitForAssertion(() =>
+        {
+            api.ErasureStatusRequests.Single().ShouldBe("party-erasure-pending");
+            api.ErasureRequests.ShouldBeEmpty();
+            cut.FindAll("[role='dialog'][aria-modal='true']").ShouldBeEmpty();
+            cut.Markup.ShouldNotContain("typed-secret-pending");
+            cut.Markup.ShouldContain("ErasurePending");
+            FindFluentButton(cut, "Request erasure").HasAttribute("disabled").ShouldBeTrue();
+            FindFluentButton(cut, "Lift restriction").HasAttribute("disabled").ShouldBeTrue();
+            FindFluentButton(cut, "Revoke consent").HasAttribute("disabled").ShouldBeTrue();
+            FindFluentButton(cut, "Export party data").HasAttribute("disabled").ShouldBeTrue();
         });
     }
 

@@ -1,0 +1,42 @@
+.hx-parties-admin__erasure-dialog {
+    display: grid;
+    gap: var(--spacingVerticalS, .5rem);
+    inline-size: min(100%, 32rem);
+    max-inline-size: calc(100vw - 2rem);
+    overflow-wrap: anywhere;
+}
+
+.hx-parties-admin__erasure-dialog fluent-text-input {
+    inline-size: 100%;
+}
+
+.hx-parties-admin__danger-action {
+    min-inline-size: 2.75rem;
+}
+
+.hx-parties-admin__danger-action:not([disabled]) {
+    background: var(--error-fill-rest, #b10e1c);
+    border-color: var(--error-fill-rest, #b10e1c);
+    color: var(--neutral-foreground-on-brand-rest, #fff);
+}
+
+.hx-parties-admin__danger-action:not([disabled]):hover {
+    background: var(--error-fill-hover, var(--error-fill-rest, #8f0b16));
+    border-color: var(--error-fill-hover, var(--error-fill-rest, #8f0b16));
+}
+
+.hx-parties-admin__danger-action:not([disabled]):active {
+    background: var(--error-fill-active, var(--error-fill-rest, #6f0811));
+    border-color: var(--error-fill-active, var(--error-fill-rest, #6f0811));
+}
+
+@media (forced-colors: active) {
+    .hx-parties-admin__danger-action {
+        border-color: CanvasText;
+    }
+
+    .hx-parties-admin__danger-action:not([disabled]) {
+        background: ButtonFace;
+        color: ButtonText;
+    }
+}

@@ -27,18 +27,50 @@
         <h4 id="@($"erasure-actions-heading-{_instanceId}")">@Labels.RequestErasure</h4>
         @if (_confirmErasure)
         {
-            <p>@Labels.GdprErasureWarning</p>
-            <p>@Labels.PartyId: <code>@Party.Id</code></p>
-            <FluentButton Appearance="ButtonAppearance.Primary"
-                          Disabled="@(!CanConfirmErasure)"
-                          OnClick="ConfirmErasureAsync">
-                @Labels.GdprConfirmErasure
-            </FluentButton>
-            <FluentButton Appearance="ButtonAppearance.Outline"
-                          Disabled="@_isBusy"
-                          OnClick="CancelErasure">
-                @Labels.GdprCancel
-            </FluentButton>
+            <FluentDialog Modal="true"
+                          role="dialog"
+                          aria-modal="true"
+                          aria-labelledby="@ErasureDialogTitleId"
+                          @onkeydown="HandleErasureDialogKeyDownAsync">
+                <FluentDialogBody>
+                    <TitleTemplate>
+                        <span id="@ErasureDialogTitleId">@Labels.GdprEraseDialogTitle</span>
+                    </TitleTemplate>
+                    <ChildContent>
+                        <div class="hx-parties-admin__erasure-dialog">
+                            <p id="@ErasureWarningId">@Labels.GdprErasureWarning</p>
+                            <FluentTextInput Id="@ErasureInputId"
+                                             Value="@_erasureTypedName"
+                                             ValueChanged="OnErasureTypedNameChanged"
+                                             TextInputType="TextInputType.Text"
+                                             Label="@Labels.GdprEraseConfirmationInputLabel"
+                                             aria-describedby="@ErasureWarningId"
+                                             autocomplete="off"
+                                             autofocus="true" />
+                            <p>@Labels.GdprEraseConfirmationHelp</p>
+                            <p role="status"
+                               aria-live="polite"
+                               data-erasure-confirmation-live>
+                                @_erasureEnablementAnnouncement
+                            </p>
+                        </div>
+                    </ChildContent>
+                    <ActionTemplate>
+                        <FluentButton Appearance="ButtonAppearance.Outline"
+                                      Disabled="@_isBusy"
+                                      OnClick="CancelErasure">
+                            @Labels.GdprCancel
+                        </FluentButton>
+                        <FluentButton Appearance="ButtonAppearance.Primary"
+                                      Class="hx-parties-admin__danger-action"
+                                      Disabled="@(!CanConfirmErasure)"
+                                      aria-disabled="@(!CanConfirmErasure)"
+                                      OnClick="ConfirmErasureAsync">
+                            @Labels.GdprConfirmErasure
+                        </FluentButton>
+                    </ActionTemplate>
+                </FluentDialogBody>
+            </FluentDialog>
         }
         else
         {
@@ -150,7 +182,10 @@
     private bool _focusedInitialOperations;
     private long _capabilityVersion;
     private bool _confirmErasure;
+    private bool _erasureMatchAnnounced;
     private bool _isBusy;
+    private string? _erasureEnablementAnnouncement;
+    private string? _erasureTypedName;
     private CancellationTokenSource? _cts;
     private ElementReference _operationsHeading;
     private ElementReference _operationAnnouncement;
@@ -201,13 +236,18 @@
         => IsAssertiveOutcome(_lastOutcome) ? "-1" : null;
 
     private bool IsErasurePending
-        => Party.IsErased || _erasureStatus?.Status is "ErasurePending" or "KeyDestroyed" or "VerificationInProgress" or "Verified";
+        => Party.IsErased
+            || _erasureStatus?.Status is "ErasurePending" or "KeyDestroyed" or "VerificationInProgress" or "Verified" or "Complete" or "Erased";
 
     private bool CanRequestErasure
         => _gdprCapability.CanRequestErasure && !_isBusy && !Party.IsErased && !IsErasurePending;
 
     private bool CanConfirmErasure
-        => _gdprCapability.CanRequestErasure && !_isBusy;
+        => CanRequestErasure && HasMatchingErasureConfirmation;
+
+    private bool HasMatchingErasureConfirmation
+        => !string.IsNullOrEmpty(Party.DisplayName)
+            && string.Equals(_erasureTypedName, Party.DisplayName, StringComparison.Ordinal);
 
     private bool CanRefreshErasureStatus
         => _gdprCapability.CanReadErasureStatus && !_isBusy;
@@ -216,7 +256,7 @@
         => _gdprCapability.CanRestrictProcessing && !_isBusy && !Party.IsRestricted && !Party.IsErased && !IsErasurePending;
 
     private bool CanLiftRestriction
-        => _gdprCapability.CanLiftRestriction && !_isBusy && Party.IsRestricted && !Party.IsErased;
+        => _gdprCapability.CanLiftRestriction && !_isBusy && Party.IsRestricted && !Party.IsErased && !IsErasurePending;
 
     private bool CanAddConsent
         => _gdprCapability.CanManageConsent
@@ -227,7 +267,7 @@
             && !string.IsNullOrWhiteSpace(_consentPurpose);
 
     private bool CanRevokeConsent
-        => _gdprCapability.CanManageConsent && !_isBusy;
+        => _gdprCapability.CanManageConsent && !_isBusy && !Party.IsErased && !IsErasurePending;
 
     private bool CanExport
         => _gdprCapability.CanExportData && !_isBusy && !Party.IsErased && !IsErasurePending;
@@ -264,6 +304,12 @@
         => _gdprCapability.Reason == AdminPortalGdprCapability.ContractUnavailableReason
             ? Labels.GdprOperationContractBlocked
             : Labels.GdprOperationContractUnavailable;
+
+    private string ErasureDialogTitleId => $"erasure-dialog-title-{_instanceId}";
+
+    private string ErasureInputId => $"erasure-confirm-input-{_instanceId}";
+
+    private string ErasureWarningId => $"erasure-warning-{_instanceId}";
 
     protected override void OnInitialized() => _cts = new CancellationTokenSource();
 
@@ -393,11 +439,15 @@
         {
             ClearSensitiveOperationState();
         }
+        else if (!capability.CanRequestErasure)
+        {
+            ClearErasureDialogState();
+        }
     }
 
     private void ClearSensitiveOperationState()
     {
-        _confirmErasure = false;
+        ClearErasureDialogState();
         _correlationId = null;
         _restrictionReason = null;
         _consentChannelId = null;
@@ -413,6 +463,7 @@
 
     public void Dispose()
     {
+        ClearErasureDialogState();
         CancelInFlight();
     }
 
@@ -439,11 +490,47 @@
             return;
         }
 
+        ClearErasureDialogState();
         _confirmErasure = true;
         _lastOutcome = null;
     }
 
-    private void CancelErasure() => _confirmErasure = false;
+    private void CancelErasure() => ClearErasureDialogState();
+
+    private void OnErasureTypedNameChanged(string? value)
+    {
+        bool wasMatching = HasMatchingErasureConfirmation;
+        _erasureTypedName = value;
+        bool isMatching = HasMatchingErasureConfirmation;
+        if (isMatching && !wasMatching && !_erasureMatchAnnounced)
+        {
+            _erasureEnablementAnnouncement = Labels.GdprEraseEnabledAnnouncement;
+            _erasureMatchAnnounced = true;
+        }
+        else if (!isMatching)
+        {
+            _erasureEnablementAnnouncement = null;
+            _erasureMatchAnnounced = false;
+        }
+    }
+
+    private Task HandleErasureDialogKeyDownAsync(KeyboardEventArgs e)
+    {
+        if (string.Equals(e.Key, "Escape", StringComparison.Ordinal))
+        {
+            ClearErasureDialogState();
+        }
+
+        return Task.CompletedTask;
+    }
+
+    private void ClearErasureDialogState()
+    {
+        _confirmErasure = false;
+        _erasureTypedName = null;
+        _erasureEnablementAnnouncement = null;
+        _erasureMatchAnnounced = false;
+    }
 
     private async Task ConfirmErasureAsync()
     {
@@ -466,7 +553,7 @@
                 return result;
             }
 
-            _confirmErasure = false;
+            ClearErasureDialogState();
             await RefreshErasureStatusAsync(allowWhileBusy: true).ConfigureAwait(false);
             return result;
         }).ConfigureAwait(false);
@@ -494,6 +581,11 @@
             }
 
             _erasureStatus = status;
+            if (IsErasurePending)
+            {
+                ClearErasureDialogState();
+            }
+
             bool shouldFetchCertificate = _gdprCapability.CanReadErasureCertificate
                 && status?.Status is "Verified" or "Complete" or "Erased";
             // Only fetch the certificate when the capability genuinely supports it. Against the

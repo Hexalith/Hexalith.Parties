@@ -91,6 +91,7 @@ internal sealed class PartiesAdminPortalE2eFixtureState
     private readonly List<AdminPortalRequestCapture> _detailRequests = [];
     private readonly List<AdminPortalRequestCapture> _createRequests = [];
     private readonly List<AdminPortalRequestCapture> _updateRequests = [];
+    private readonly List<AdminPortalRequestCapture> _erasureRequests = [];
     private readonly List<AdminPortalRequestCapture> _pickerSearchRequests = [];
     private readonly List<AdminPortalRequestCapture> _pickerDetailRequests = [];
     private readonly Dictionary<string, PartyDetail> _details = CreateInitialDetails();
@@ -171,6 +172,14 @@ internal sealed class PartiesAdminPortalE2eFixtureState
         }
     }
 
+    public void CaptureErasure(string partyId)
+    {
+        lock (_sync)
+        {
+            _erasureRequests.Add(AdminPortalRequestCapture.FromErasure(partyId));
+        }
+    }
+
     public PartyDetail? Detail(string partyId)
     {
         lock (_sync)
@@ -188,6 +197,7 @@ internal sealed class PartiesAdminPortalE2eFixtureState
             _detailRequests.Clear();
             _createRequests.Clear();
             _updateRequests.Clear();
+            _erasureRequests.Clear();
             _pickerSearchRequests.Clear();
             _pickerDetailRequests.Clear();
             _details.Clear();
@@ -208,6 +218,7 @@ internal sealed class PartiesAdminPortalE2eFixtureState
                 [.. _detailRequests],
                 [.. _createRequests],
                 [.. _updateRequests],
+                [.. _erasureRequests],
                 [.. _pickerSearchRequests],
                 [.. _pickerDetailRequests]);
         }
@@ -448,6 +459,7 @@ internal sealed class PartiesAdminPortalE2eApiClient(PartiesAdminPortalE2eFixtur
     public Task<AdminPortalGdprCommandResult> RequestErasureAsync(string partyId, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
+        state.CaptureErasure(partyId);
         return Task.FromResult(new AdminPortalGdprCommandResult(AdminPortalGdprOutcome.Accepted, "corr-erasure"));
     }
 
@@ -775,6 +787,7 @@ internal sealed record AdminPortalE2eSnapshot(
     IReadOnlyList<AdminPortalRequestCapture> DetailRequests,
     IReadOnlyList<AdminPortalRequestCapture> CreateRequests,
     IReadOnlyList<AdminPortalRequestCapture> UpdateRequests,
+    IReadOnlyList<AdminPortalRequestCapture> ErasureRequests,
     IReadOnlyList<AdminPortalRequestCapture> PickerSearchRequests,
     IReadOnlyList<AdminPortalRequestCapture> PickerDetailRequests);
 
@@ -807,4 +820,7 @@ internal sealed record AdminPortalRequestCapture(
 
     public static AdminPortalRequestCapture FromUpdate(string partyId, UpdatePartyComposite command)
         => new("update", null, 0, 0, command.OrganizationDetails is null ? "Person" : "Organization", null, partyId);
+
+    public static AdminPortalRequestCapture FromErasure(string partyId)
+        => new("erasure", null, 0, 0, null, null, partyId);
 }

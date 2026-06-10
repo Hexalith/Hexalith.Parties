@@ -236,12 +236,21 @@ public record AdminPortalLabels
 
     public string GdprRefreshStatus { get; init; } = "Refresh erasure status";
 
-    public string GdprConfirmErasure { get; init; } = "Confirm erasure";
+    public string GdprConfirmErasure { get; init; } = "Erase";
 
     public string GdprCancel { get; init; } = "Cancel";
 
+    public string GdprEraseDialogTitle { get; init; } = "Erase party";
+
+    public string GdprEraseConfirmationInputLabel { get; init; } = "Type the selected party display name";
+
     public string GdprErasureWarning { get; init; } =
         "Erasure destroys protected party data and starts irreversible verification.";
+
+    public string GdprEraseConfirmationHelp { get; init; } =
+        "The Erase action stays disabled until the typed value exactly matches the selected party display name.";
+
+    public string GdprEraseEnabledAnnouncement { get; init; } = "Erase action enabled.";
 
     public string GdprCorrelationId { get; init; } = "Correlation id";
 
@@ -261,7 +270,7 @@ public record AdminPortalLabels
 
     public string GdprNoProcessingRecords { get; init; } = "No processing activity records";
 
-    public string GdprOperationAccepted { get; init; } = "Operation accepted";
+    public string GdprOperationAccepted { get; init; } = "Saved - updating...";
 
     public string GdprOperationCompleted { get; init; } = "Operation completed";
 

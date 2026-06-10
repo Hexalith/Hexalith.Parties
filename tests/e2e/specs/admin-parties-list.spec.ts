@@ -120,10 +120,15 @@ test.describe('Admin parties list', () => {
 
   test('direct GDPR route opens operations destination without browser-visible command/query calls or overflow', async ({ page, request }) => {
     const browserVisibleDataRequests: string[] = [];
+    const nativeDialogs: string[] = [];
     page.on('request', (browserRequest) => {
       if (isBrowserVisiblePartiesDataRequest(browserRequest.url())) {
         browserVisibleDataRequests.push(browserRequest.url());
       }
+    });
+    page.on('dialog', async (dialog) => {
+      nativeDialogs.push(dialog.type());
+      await dialog.dismiss();
     });
 
     await page.setViewportSize({ width: 320, height: 640 });
@@ -155,8 +160,49 @@ test.describe('Admin parties list', () => {
     });
 
     await expect(detail.getByRole('button', { name: 'Request erasure' })).toBeVisible();
+    await detail.getByRole('button', { name: 'Request erasure' }).click();
+
+    const eraseDialog = page.getByRole('dialog', { name: 'Erase party' });
+    await expect(eraseDialog).toBeVisible();
+    await expect(eraseDialog).toHaveAttribute('aria-modal', 'true');
+    const labelledBy = await eraseDialog.getAttribute('aria-labelledby');
+    if (!labelledBy) {
+      throw new Error('Erase dialog must be labelled by its accessible title.');
+    }
+    await expect(page.locator(`#${labelledBy}`)).toHaveText('Erase party');
+    await expect(page.getByRole('dialog')).toHaveCount(1);
+    await expect(eraseDialog.getByText('irreversible verification')).toBeVisible();
+    const typedConfirmInput = eraseDialog.getByLabel('Type the selected party display name');
+    await expect(typedConfirmInput).toBeFocused();
+    const describedBy = await typedConfirmInput.getAttribute('aria-describedby');
+    if (!describedBy) {
+      throw new Error('Typed-confirm input must describe the irreversible warning.');
+    }
+    await expect(page.locator(`#${describedBy}`)).toContainText('irreversible verification');
+    await expect(eraseDialog.getByRole('button', { name: 'Erase' })).toBeDisabled();
+    await typedConfirmInput.fill('Grace hopper');
+    await expect(eraseDialog.getByRole('button', { name: 'Erase' })).toBeDisabled();
+    await expect.poll(async () => (await latestErasureRequest(request))?.partyId ?? null).toBe(null);
+    await eraseDialog.getByRole('button', { name: 'Cancel' }).click();
+    await expect(eraseDialog).toHaveCount(0);
+    await expect(page.getByText('Grace hopper')).toHaveCount(0);
+    await expect.poll(async () => (await latestErasureRequest(request))?.partyId ?? null).toBe(null);
+
+    await detail.getByRole('button', { name: 'Request erasure' }).click();
+    const reopenedEraseDialog = page.getByRole('dialog', { name: 'Erase party' });
+    await reopenedEraseDialog.getByLabel('Type the selected party display name').fill('Grace Hopper');
+    await expect(reopenedEraseDialog.getByRole('status').filter({ hasText: 'Erase action enabled.' })).toBeVisible();
+    await expect(reopenedEraseDialog.getByRole('button', { name: 'Erase' })).toBeEnabled();
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth);
     expect(overflow).toBe(false);
+    await reopenedEraseDialog.getByRole('button', { name: 'Erase' }).click();
+    await expect(detail.getByRole('status').filter({ hasText: 'Saved - updating...' })).toBeVisible();
+    await expect.poll(async () => (await latestErasureRequest(request))?.partyId).toBe('grace-hopper');
+    const erasureRequest = await latestErasureRequest(request);
+    expect(JSON.stringify(erasureRequest)).not.toContain('Grace Hopper');
+    expect(page.url()).not.toContain('Grace%20Hopper');
+    expect(page.url()).not.toContain('Grace+Hopper');
+    expect(nativeDialogs).toEqual([]);
     expect(browserVisibleDataRequests).toEqual([]);
   });
 
@@ -385,6 +431,11 @@ const latestUpdateRequest = async (request: APIRequestContext): Promise<AdminPor
   return snapshot.updateRequests.at(-1);
 };
 
+const latestErasureRequest = async (request: APIRequestContext): Promise<AdminPortalRequestCapture | undefined> => {
+  const snapshot = await requestSnapshot(request);
+  return snapshot.erasureRequests.at(-1);
+};
+
 const requestSnapshot = async (request: APIRequestContext): Promise<AdminPortalE2eSnapshot> => {
   const response = await request.get(REQUESTS_ROUTE);
   expect(response.ok()).toBe(true);
@@ -419,10 +470,11 @@ interface AdminPortalE2eSnapshot {
   detailRequests: AdminPortalRequestCapture[];
   createRequests: AdminPortalRequestCapture[];
   updateRequests: AdminPortalRequestCapture[];
+  erasureRequests: AdminPortalRequestCapture[];
 }
 
 interface AdminPortalRequestCapture {
-  kind: 'list' | 'search' | 'detail' | 'create' | 'update';
+  kind: 'list' | 'search' | 'detail' | 'create' | 'update' | 'erasure';
   query: string | null;
   page: number;
   pageSize: number;

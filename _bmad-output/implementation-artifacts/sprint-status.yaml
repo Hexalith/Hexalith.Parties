@@ -68,7 +68,7 @@ development_status:
   # ── Epic 3: Admin — GDPR / DPO Operations ────────────────────────────────
   epic-3: in-progress
   3-1-gdpr-operations-page: done
-  3-2-erase-a-party-with-typed-name-confirmation: backlog
+  3-2-erase-a-party-with-typed-name-confirmation: done
   3-3-restrict-lift-restriction-and-record-revoke-consent: backlog
   3-4-data-export-art-20-and-processing-records-art-30: backlog
   3-5-eventstore-erasure-verification-contract-backend-cross-submodule-approval-gated: backlog
