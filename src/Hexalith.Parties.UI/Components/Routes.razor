@@ -1,5 +1,8 @@
+@inject NavigationManager Nav
+
 <CascadingAuthenticationState>
-    <Router AppAssembly="typeof(Program).Assembly">
+    <Router AppAssembly="typeof(Program).Assembly"
+            AdditionalAssemblies="new[] { typeof(Hexalith.Parties.AdminPortal.Components.PartiesAdminPortal).Assembly }">
         <Found Context="routeData">
             @* Story 1.3 — AuthorizeRouteView (not plain RouteView) so [Authorize(Policy = …)] on the
                /admin and /me area pages is actually enforced; RouteView ignores those attributes. *@
@@ -11,8 +14,15 @@
                     }
                     else
                     {
-                        <h1>Access denied</h1>
-                        <p>You are not authorized to view this area.</p>
+                        <h1>Forbidden</h1>
+                        @if (IsAdminRoute)
+                        {
+                            <p>An Admin role is required to view this area.</p>
+                        }
+                        else
+                        {
+                            <p>You are not authorized to view this area.</p>
+                        }
                     }
                 </NotAuthorized>
                 <Authorizing>
@@ -23,3 +33,18 @@
         </Found>
     </Router>
 </CascadingAuthenticationState>
+
+@code {
+    private bool IsAdminRoute
+    {
+        get
+        {
+            string relativePath = Nav.ToBaseRelativePath(Nav.Uri);
+            int queryStart = relativePath.IndexOfAny(['?', '#']);
+            string path = queryStart >= 0 ? relativePath[..queryStart] : relativePath;
+            path = "/" + path.TrimStart('/');
+            return path.Equals("/admin", StringComparison.OrdinalIgnoreCase)
+                || path.StartsWith("/admin/", StringComparison.OrdinalIgnoreCase);
+        }
+    }
+}

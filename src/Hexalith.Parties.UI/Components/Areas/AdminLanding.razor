@@ -1,11 +1,17 @@
 @page "/admin"
 @attribute [Authorize(Policy = PartiesUiAuthorization.AdminPolicy)]
+@inject NavigationManager Nav
 
 @*
-    Story 1.3 — transitional Admin area entry point. Establishes the /admin route + the per-area
-    [Authorize(Policy = Admin)] pattern (enforced by AuthorizeRouteView in Routes.razor). Replaced by
-    the embedded AdminPortal pages (/admin/parties*) in Story 2.1.
+    Story 2.1 — protected compatibility entry point for /admin. Authorization is enforced by
+    AuthorizeRouteView before this component runs; authorized admins are sent to the embedded
+    AdminPortal entry point.
 *@
 
 <h1>Administration</h1>
-<p>The Parties administration area is coming soon.</p>
+<p><a href="@Hexalith.Parties.AdminPortal.Services.PartiesAdminPortalManifest.Route">Open Parties</a></p>
+
+@code {
+    protected override void OnInitialized()
+        => Nav.NavigateTo(Hexalith.Parties.AdminPortal.Services.PartiesAdminPortalManifest.Route);
+}

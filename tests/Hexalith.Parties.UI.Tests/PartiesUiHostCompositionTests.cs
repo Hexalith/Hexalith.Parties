@@ -1,11 +1,18 @@
 using System.Reflection;
+using System.Xml.Linq;
 
 using Hexalith.FrontComposer.Contracts.Attributes;
 using Hexalith.FrontComposer.Contracts.Registration;
 using Hexalith.FrontComposer.Shell.Extensions;
+using Hexalith.Parties.AdminPortal.Extensions;
+using Hexalith.Parties.AdminPortal.Services;
+using Hexalith.Parties.Client.Abstractions;
+using Hexalith.Parties.Client.AdminPortal;
 
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.FluentUI.AspNetCore.Components;
+
+using NSubstitute;
 
 using Shouldly;
 
@@ -86,5 +93,76 @@ public sealed class PartiesUiHostCompositionTests
 
         boundedContext.ShouldNotBeNull();
         boundedContext.Name.ShouldBe("Parties");
+    }
+
+    [Fact]
+    public void UiHostProject_ReferencesAdminPortalRcl()
+    {
+        XDocument project = XDocument.Load(ProjectRoot("src/Hexalith.Parties.UI/Hexalith.Parties.UI.csproj"));
+
+        project.Descendants("ProjectReference")
+            .Select(static reference => reference.Attribute("Include")?.Value)
+            .ShouldContain(@"..\Hexalith.Parties.AdminPortal\Hexalith.Parties.AdminPortal.csproj");
+    }
+
+    [Fact]
+    public void Program_RegistersAdminPortalServices()
+    {
+        string source = File.ReadAllText(ProjectRoot("src/Hexalith.Parties.UI/Program.cs"));
+
+        source.ShouldContain("using Hexalith.Parties.AdminPortal.Extensions;");
+        source.ShouldContain("builder.Services.AddHexalithPartiesAdminPortal();");
+    }
+
+    [Fact]
+    public void Program_AddsAdminPortalAssemblyToStaticRazorComponentDiscovery()
+    {
+        string source = File.ReadAllText(ProjectRoot("src/Hexalith.Parties.UI/Program.cs"));
+
+        source.ShouldContain(".AddAdditionalAssemblies(typeof(Hexalith.Parties.AdminPortal.Components.PartiesAdminPortal).Assembly)");
+    }
+
+    [Fact]
+    public void Routes_AddsAdminPortalAssemblyAndKeepsAuthorizeRouteView()
+    {
+        string source = File.ReadAllText(ProjectRoot("src/Hexalith.Parties.UI/Components/Routes.razor"));
+
+        source.ShouldContain("AdditionalAssemblies");
+        source.ShouldContain("typeof(Hexalith.Parties.AdminPortal.Components.PartiesAdminPortal).Assembly");
+        source.ShouldContain("<AuthorizeRouteView");
+        source.ShouldNotContain("<RouteView");
+    }
+
+    [Fact]
+    public void AdminPortalServiceChain_ComposesUnderValidateScopes()
+    {
+        var services = new ServiceCollection();
+        services.AddLogging();
+        services.AddFluentUIComponents();
+        services.AddHexalithFrontComposerQuickstart(o => o.ScanAssemblies(typeof(PartiesUiDomainMarker).Assembly));
+        services.AddHexalithDomain<PartiesUiDomainMarker>();
+        services.AddSingleton(Substitute.For<IPartiesQueryClient>());
+        services.AddSingleton(Substitute.For<IAdminPortalGdprClient>());
+        services.AddHexalithPartiesAdminPortal();
+
+        using ServiceProvider provider = services.BuildServiceProvider(
+            new ServiceProviderOptions { ValidateScopes = true });
+
+        using IServiceScope scope = provider.CreateScope();
+        scope.ServiceProvider.GetRequiredService<AdminPortalPartyQueryService>().ShouldNotBeNull();
+        scope.ServiceProvider.GetRequiredService<IPartiesAdminPortalApiClient>().ShouldNotBeNull();
+    }
+
+    private static string ProjectRoot(string relativePath)
+    {
+        string current = AppContext.BaseDirectory;
+        while (!File.Exists(Path.Combine(current, "Hexalith.Parties.slnx")))
+        {
+            DirectoryInfo? parent = Directory.GetParent(current);
+            parent.ShouldNotBeNull();
+            current = parent.FullName;
+        }
+
+        return Path.Combine(current, relativePath);
     }
 }

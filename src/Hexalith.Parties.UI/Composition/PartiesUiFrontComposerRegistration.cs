@@ -1,4 +1,5 @@
 using Hexalith.FrontComposer.Contracts.Registration;
+using Hexalith.Parties.AdminPortal.Services;
 using Hexalith.Parties.UI.Authentication;
 
 namespace Hexalith.Parties.UI.Composition;
@@ -28,7 +29,7 @@ public static class PartiesUiFrontComposerRegistration
     /// <summary>
     /// Registers the manifest and the two policy-gated area navigation entries. The shell renders each
     /// entry whose <see cref="FrontComposerNavEntry.RequiredPolicy"/> is set inside an
-    /// <c>&lt;AuthorizeView Policy=…&gt;</c>, so an Admin principal sees only the Administration entry
+    /// <c>&lt;AuthorizeView Policy=…&gt;</c>, so an Admin principal sees only the Parties entry
     /// and a Consumer only the My-space entry — they never cross-render (framework code, not modified
     /// here).
     /// </summary>
@@ -43,8 +44,8 @@ public static class PartiesUiFrontComposerRegistration
 
         registry.AddNavEntry(new FrontComposerNavEntry(
             "parties",
-            "Administration",
-            "/admin",
+            "Parties",
+            PartiesAdminPortalManifest.Route,
             Icon: "Regular.Size20.Settings",
             Order: 0,
             RequiredPolicy: PartiesUiAuthorization.AdminPolicy));

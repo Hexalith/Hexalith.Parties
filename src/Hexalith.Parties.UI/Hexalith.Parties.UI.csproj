@@ -36,6 +36,7 @@
          internal"); the UI BFF is a consumer of them. NEVER reference an INTERNAL host project
          (Hexalith.Parties, .Server, .Projections, .Security, .Testing) — that crosses the
          fitness-pinned boundary. Same-repo siblings, so relative paths (not $(HexalithFrontComposerRoot)). -->
+    <ProjectReference Include="..\Hexalith.Parties.AdminPortal\Hexalith.Parties.AdminPortal.csproj" />
     <ProjectReference Include="..\Hexalith.Parties.Client\Hexalith.Parties.Client.csproj" />
     <ProjectReference Include="..\Hexalith.Parties.Contracts\Hexalith.Parties.Contracts.csproj" />
     <ProjectReference Include="..\Hexalith.Parties.ServiceDefaults\Hexalith.Parties.ServiceDefaults.csproj" />

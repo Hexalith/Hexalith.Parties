@@ -1,4 +1,5 @@
 using Hexalith.FrontComposer.Shell.Extensions;
+using Hexalith.Parties.AdminPortal.Extensions;
 using Hexalith.Parties.Client.Abstractions;
 using Hexalith.Parties.Client.AdminPortal;
 using Hexalith.Parties.Client.Extensions;
@@ -31,6 +32,7 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddHexalithFrontComposerQuickstart(o => o.ScanAssemblies(typeof(Program).Assembly));
 builder.Services.AddFrontComposerDevMode(builder.Environment);
 builder.Services.AddHexalithDomain<PartiesUiDomainMarker>();
+builder.Services.AddHexalithPartiesAdminPortal();
 
 // Story 1.3 (AR-D2) — register the role-claim Admin + Consumer policies UNCONDITIONALLY (not gated
 // on authEnabled). <AuthorizeView Policy=…> on the nav entries and [Authorize(Policy = …)] on the
@@ -154,7 +156,8 @@ if (authEnabled)
 app.UseAntiforgery();
 
 app.MapRazorComponents<App>()
-    .AddInteractiveServerRenderMode();
+    .AddInteractiveServerRenderMode()
+    .AddAdditionalAssemblies(typeof(Hexalith.Parties.AdminPortal.Components.PartiesAdminPortal).Assembly);
 
 if (authEnabled)
 {

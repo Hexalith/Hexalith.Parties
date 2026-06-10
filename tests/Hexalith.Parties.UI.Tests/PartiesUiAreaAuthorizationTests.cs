@@ -1,11 +1,15 @@
 using System.Reflection;
 
+using Bunit;
+
+using Hexalith.Parties.AdminPortal.Services;
 using Hexalith.Parties.UI.Authentication;
 using Hexalith.Parties.UI.Components.Account;
 using Hexalith.Parties.UI.Components.Areas;
 
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components;
+using Microsoft.Extensions.DependencyInjection;
 
 using Shouldly;
 
@@ -24,13 +28,35 @@ namespace Hexalith.Parties.UI.Tests;
 /// the router's NotAuthorized → OIDC challenge path.</item>
 /// </list>
 /// </summary>
-public sealed class PartiesUiAreaAuthorizationTests
+public sealed class PartiesUiAreaAuthorizationTests : BunitContext
 {
     [Fact]
     public void AdminLanding_Routes_Admin_AndRequires_AdminPolicy()
     {
         RouteTemplates(typeof(AdminLanding)).ShouldContain("/admin");
         RequiredPolicy(typeof(AdminLanding)).ShouldBe(PartiesUiAuthorization.AdminPolicy);
+    }
+
+    [Fact]
+    public void AdminLanding_NavigatesToAdminPortalEntryPoint()
+    {
+        IRenderedComponent<AdminLanding> cut = Render<AdminLanding>();
+
+        Services.GetRequiredService<NavigationManager>().Uri.ShouldEndWith(PartiesAdminPortalManifest.Route);
+        cut.Markup.ShouldNotContain("coming soon");
+    }
+
+    [Fact]
+    public void Routes_ForbiddenCopyIsAdminRoleNeededAndPiiFree()
+    {
+        string source = File.ReadAllText(ProjectRoot("src/Hexalith.Parties.UI/Components/Routes.razor"));
+
+        source.ShouldContain("IsAdminRoute");
+        source.ShouldContain("Admin role");
+        source.ShouldContain("You are not authorized to view this area.");
+        source.ShouldNotContain("tenant", Case.Insensitive);
+        source.ShouldNotContain("user id", Case.Insensitive);
+        source.ShouldNotContain("party id", Case.Insensitive);
     }
 
     [Fact]
@@ -73,4 +99,17 @@ public sealed class PartiesUiAreaAuthorizationTests
             .ShouldHaveSingleItem()
             .Policy
             .ShouldNotBeNull();
+
+    private static string ProjectRoot(string relativePath)
+    {
+        string current = AppContext.BaseDirectory;
+        while (!File.Exists(Path.Combine(current, "Hexalith.Parties.slnx")))
+        {
+            DirectoryInfo? parent = Directory.GetParent(current);
+            parent.ShouldNotBeNull();
+            current = parent.FullName;
+        }
+
+        return Path.Combine(current, relativePath);
+    }
 }

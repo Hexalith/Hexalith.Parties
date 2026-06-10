@@ -1,4 +1,5 @@
 using Hexalith.FrontComposer.Contracts.Registration;
+using Hexalith.Parties.AdminPortal.Services;
 using Hexalith.Parties.UI.Authentication;
 using Hexalith.Parties.UI.Composition;
 
@@ -11,7 +12,7 @@ namespace Hexalith.Parties.UI.Tests;
 /// <summary>
 /// Story 1.3 AC3 — pins the gating inputs the shell's <c>&lt;AuthorizeView&gt;</c> consumes:
 /// <see cref="PartiesUiFrontComposerRegistration.RegisterDomain"/> must register the "parties" manifest
-/// and exactly two policy-gated area nav entries (Administration→/admin gated on <c>Admin</c>,
+/// and exactly two policy-gated area nav entries (Parties→/admin/parties gated on <c>Admin</c>,
 /// My space→/me gated on <c>Consumer</c>). The framework's actual hide/show rendering of a gated entry
 /// is covered upstream by FrontComposerNavigationNavEntryTests; here we lock the contract those tests
 /// rely on. The registry substitute also implements <see cref="IFrontComposerNavEntryRegistry"/> so the
@@ -35,9 +36,9 @@ public sealed class PartiesUiNavigationRegistrationTests
 
         entries.Count.ShouldBe(2);
 
-        FrontComposerNavEntry admin = entries.Single(e => e.Href == "/admin");
+        FrontComposerNavEntry admin = entries.Single(e => e.Href == PartiesAdminPortalManifest.Route);
         admin.BoundedContext.ShouldBe("parties");
-        admin.Title.ShouldBe("Administration");
+        admin.Title.ShouldBe("Parties");
         admin.RequiredPolicy.ShouldBe(PartiesUiAuthorization.AdminPolicy);
         admin.Order.ShouldBe(0);
 

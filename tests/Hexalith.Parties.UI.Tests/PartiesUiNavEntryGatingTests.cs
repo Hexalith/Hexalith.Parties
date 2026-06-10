@@ -2,6 +2,7 @@ using Bunit;
 using Bunit.TestDoubles;
 
 using Hexalith.FrontComposer.Contracts.Registration;
+using Hexalith.Parties.AdminPortal.Services;
 using Hexalith.Parties.UI.Authentication;
 using Hexalith.Parties.UI.Composition;
 
@@ -16,7 +17,7 @@ namespace Hexalith.Parties.UI.Tests;
 /// INPUTS (each entry's <see cref="FrontComposerNavEntry.RequiredPolicy"/>); this test renders the actual
 /// registered entries through the same <c>&lt;AuthorizeView Policy="@entry.RequiredPolicy"&gt;</c> gate the
 /// shell uses (FrontComposerNavigation.razor:51-55, reproduced in <see cref="NavEntryGatingHarness"/>) and
-/// asserts the OUTPUT: an Admin principal sees only the Administration entry, a Consumer principal sees only
+/// asserts the OUTPUT: an Admin principal sees only the Parties entry, a Consumer principal sees only
 /// the My-space entry, and an unauthenticated principal sees neither — they never cross-render. bUnit's fake
 /// authorization grants AuthorizeView policy checks via <c>SetPolicies(...)</c>, so this exercises the
 /// gating wiring independently of the real role→policy mapping (which
@@ -33,7 +34,8 @@ public sealed class PartiesUiNavEntryGatingTests : BunitContext
 
         IRenderedComponent<NavEntryGatingHarness> cut = RenderRegisteredEntries();
 
-        cut.WaitForAssertion(() => cut.Markup.ShouldContain("href=\"/admin\""));
+        cut.WaitForAssertion(() => cut.Markup.ShouldContain($"href=\"{PartiesAdminPortalManifest.Route}\""));
+        cut.WaitForAssertion(() => cut.Markup.ShouldContain(">Parties<"));
         cut.WaitForAssertion(() => cut.Markup.ShouldNotContain("href=\"/me\""));
     }
 
@@ -47,7 +49,7 @@ public sealed class PartiesUiNavEntryGatingTests : BunitContext
         IRenderedComponent<NavEntryGatingHarness> cut = RenderRegisteredEntries();
 
         cut.WaitForAssertion(() => cut.Markup.ShouldContain("href=\"/me\""));
-        cut.WaitForAssertion(() => cut.Markup.ShouldNotContain("href=\"/admin\""));
+        cut.WaitForAssertion(() => cut.Markup.ShouldNotContain($"href=\"{PartiesAdminPortalManifest.Route}\""));
     }
 
     [Fact]
@@ -58,7 +60,7 @@ public sealed class PartiesUiNavEntryGatingTests : BunitContext
 
         IRenderedComponent<NavEntryGatingHarness> cut = RenderRegisteredEntries();
 
-        cut.WaitForAssertion(() => cut.Markup.ShouldNotContain("href=\"/admin\""));
+        cut.WaitForAssertion(() => cut.Markup.ShouldNotContain($"href=\"{PartiesAdminPortalManifest.Route}\""));
         cut.WaitForAssertion(() => cut.Markup.ShouldNotContain("href=\"/me\""));
     }
 

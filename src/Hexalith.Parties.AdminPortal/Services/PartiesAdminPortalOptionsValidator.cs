@@ -17,12 +17,6 @@ internal sealed class PartiesAdminPortalOptionsValidator(IServiceScopeFactory sc
         bool hasTypedClient = scope.ServiceProvider.GetService<IPartiesQueryClient>() is not null;
         bool hasQueryService = scope.ServiceProvider.GetService<IQueryService>() is not null;
 
-        if (!hasTypedClient && !hasQueryService)
-        {
-            return ValidateOptionsResult.Fail(
-                "AdminPortal needs either an IPartiesQueryClient (typed) or an IQueryService (FrontComposer fallback) registration. Configure one before calling AddHexalithPartiesAdminPortal.");
-        }
-
         if (!hasTypedClient && hasQueryService)
         {
             List<string> missing = [];

@@ -22,7 +22,10 @@ public static class PartiesAdminPortalServiceCollectionExtensions
         services.AddHttpClient();
         services.AddOptions<PartiesAdminPortalOptions>().ValidateOnStart();
         services.TryAddSingleton<IValidateOptions<PartiesAdminPortalOptions>, PartiesAdminPortalOptionsValidator>();
-        services.AddScoped<IPartiesAdminPortalApiClient, PartiesAdminPortalApiClient>();
+        services.AddScoped<IPartiesAdminPortalApiClient>(static provider =>
+            new PartiesAdminPortalApiClient(
+                provider,
+                provider.GetRequiredService<IOptions<PartiesAdminPortalOptions>>()));
         services.AddScoped<PartiesAdminListCoordinator>();
         services.AddScoped<AdminPortalGdprStateCoordinator>();
         services.AddScoped<AdminPortalEventStoreAdminLinks>();

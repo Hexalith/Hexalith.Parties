@@ -45,6 +45,8 @@ export default defineConfig({
         env: {
           ASPNETCORE_ENVIRONMENT: 'Test',
           Hexalith__Parties__AccessibilitySpecimens__Enabled: 'true',
+          Parties__BaseUrl: 'http://127.0.0.1:59999',
+          Parties__Tenant: 'test-tenant',
         },
       },
 });

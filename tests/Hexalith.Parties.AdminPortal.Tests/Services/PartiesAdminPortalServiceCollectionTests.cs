@@ -9,6 +9,7 @@ using Hexalith.Parties.AdminPortal.Extensions;
 using Hexalith.Parties.AdminPortal.Services;
 
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 
 using Shouldly;
 
@@ -30,6 +31,25 @@ public sealed class PartiesAdminPortalServiceCollectionTests
         services.ShouldContain(static descriptor => descriptor.ServiceType == typeof(DataGridNavigationEffects));
         services.ShouldContain(static descriptor => descriptor.ServiceType == typeof(IPartiesAdminPortalApiClient));
         services.ShouldContain(static descriptor => descriptor.ServiceType == typeof(AdminPortalEventStoreAdminLinks));
+    }
+
+    [Fact]
+    public void AddHexalithPartiesAdminPortal_AllowsLazyBackendConfiguration()
+    {
+        var services = new ServiceCollection();
+        services.AddHexalithPartiesAdminPortal();
+
+        using ServiceProvider provider = services.BuildServiceProvider(
+            new ServiceProviderOptions { ValidateScopes = true });
+
+        using IServiceScope scope = provider.CreateScope();
+        ValidateOptionsResult result = scope.ServiceProvider
+            .GetServices<IValidateOptions<PartiesAdminPortalOptions>>()
+            .Select(static validator => validator.Validate(null, new PartiesAdminPortalOptions()))
+            .Single(static validation => validation is not null);
+
+        result.Succeeded.ShouldBeTrue(result.FailureMessage);
+        scope.ServiceProvider.GetRequiredService<IPartiesAdminPortalApiClient>().ShouldNotBeNull();
     }
 
     [Fact]
