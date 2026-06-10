@@ -934,7 +934,7 @@ public sealed class PartiesAdminPortalComponentTests : BunitContext
     }
 
     [Fact]
-    public void PartiesAdminPortal_SelectParty_RendersRestrictionsSystemMetadataNameHistoryAndStaleAge()
+    public void PartiesAdminPortal_SelectParty_RendersRestrictionsSystemMetadataNameHistoryAndFreshness()
     {
         var api = new RecordingAdminPortalApiClient();
         DateTimeOffset restrictedAt = DateTimeOffset.Parse("2026-05-03T10:15:00Z");
@@ -973,9 +973,12 @@ public sealed class PartiesAdminPortalComponentTests : BunitContext
 
         cut.WaitForAssertion(() =>
         {
-            cut.Markup.ShouldContain("Data age");
-            cut.Markup.ShouldContain("PT12S");
-            cut.Find("aside.hx-parties-admin__detail .hx-parties-admin__status").GetAttribute("aria-live").ShouldBe("polite");
+            IElement freshness = cut.Find("aside.hx-parties-admin__detail .data-freshness-indicator");
+            freshness.TextContent.ShouldContain("Showing what we last knew - refreshing");
+            freshness.GetAttribute("class")!.ShouldContain("data-freshness-indicator--degraded");
+            freshness.QuerySelector("[role='status']")!.GetAttribute("aria-live").ShouldBe("polite");
+            cut.Markup.ShouldNotContain("Data age");
+            cut.Markup.ShouldNotContain("PT12S");
             cut.Markup.ShouldContain("Restrictions");
             cut.Markup.ShouldContain("Restricted at");
             cut.Markup.ShouldContain("System metadata");
@@ -1018,13 +1021,171 @@ public sealed class PartiesAdminPortalComponentTests : BunitContext
         cut.WaitForAssertion(() => cut.Markup.ShouldContain("Active Detail"));
 
         ClickFluentButton(cut, "Active Detail");
-        cut.WaitForAssertion(() => cut.Find("aside.hx-parties-admin__detail").TextContent.ShouldContain("Active"));
+        cut.WaitForAssertion(() =>
+        {
+            IElement badge = cut.Find("aside.hx-parties-admin__detail .party-state-badge");
+            badge.TextContent.Trim().ShouldBe("Active");
+            badge.GetAttribute("class")!.ShouldContain("hx-parties-admin__badge--active");
+        });
 
         ClickFluentButton(cut, "Restricted Detail");
-        cut.WaitForAssertion(() => cut.Find("aside.hx-parties-admin__detail").TextContent.ShouldContain("Active, restricted"));
+        cut.WaitForAssertion(() =>
+        {
+            IElement badge = cut.Find("aside.hx-parties-admin__detail .party-state-badge");
+            badge.TextContent.Trim().ShouldBe("Restricted");
+            badge.GetAttribute("class")!.ShouldContain("hx-parties-admin__badge--restricted");
+        });
 
         ClickFluentButton(cut, "Inactive Detail");
-        cut.WaitForAssertion(() => cut.Find("aside.hx-parties-admin__detail").TextContent.ShouldContain("Inactive"));
+        cut.WaitForAssertion(() =>
+        {
+            IElement badge = cut.Find("aside.hx-parties-admin__detail .party-state-badge");
+            badge.TextContent.Trim().ShouldBe("Inactive");
+            badge.GetAttribute("class")!.ShouldContain("hx-parties-admin__badge--inactive");
+        });
+    }
+
+    [Fact]
+    public void PartiesAdminPortal_DetailBadges_StayAlignedWithSharedStateSemantics()
+    {
+        var api = new RecordingAdminPortalApiClient();
+        api.EnqueueList(new PagedResult<PartyIndexEntry>
+        {
+            Items =
+            [
+                IndexEntry("party-active", "Active Shared", PartyType.Person, true),
+                IndexEntry("party-restricted", "Restricted Shared", PartyType.Person, true),
+                IndexEntry("party-inactive", "Inactive Shared", PartyType.Organization, false),
+            ],
+            Page = 1,
+            PageSize = 20,
+            TotalCount = 3,
+            TotalPages = 1,
+        });
+        api.EnqueueDetail(Detail("party-active", "Active Shared", PartyType.Person, isActive: true));
+        api.EnqueueDetail(Detail("party-restricted", "Restricted Shared", PartyType.Person, isActive: true) with
+        {
+            IsRestricted = true,
+        });
+        api.EnqueueDetail(Detail("party-inactive", "Inactive Shared", PartyType.Organization, isActive: false));
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+
+        IRenderedComponent<PartiesAdminPortal> cut = RenderAuthorized("scope-shared-semantics");
+        cut.WaitForAssertion(() => cut.Markup.ShouldContain("Active Shared"));
+
+        Dictionary<string, string> expectedClasses = new(StringComparer.Ordinal)
+        {
+            ["Active Shared"] = "hx-parties-admin__badge--active",
+            ["Restricted Shared"] = "hx-parties-admin__badge--restricted",
+            ["Inactive Shared"] = "hx-parties-admin__badge--inactive",
+        };
+        Dictionary<string, string> expectedLabels = new(StringComparer.Ordinal)
+        {
+            ["Active Shared"] = "Active",
+            ["Restricted Shared"] = "Restricted",
+            ["Inactive Shared"] = "Inactive",
+        };
+
+        foreach ((string buttonText, string expectedClass) in expectedClasses)
+        {
+            ClickFluentButton(cut, buttonText);
+            cut.WaitForAssertion(() =>
+            {
+                IElement badge = cut.Find("aside.hx-parties-admin__detail .party-state-badge");
+                badge.TextContent.Trim().ShouldBe(expectedLabels[buttonText]);
+                badge.GetAttribute("aria-label").ShouldBe(expectedLabels[buttonText]);
+                badge.GetAttribute("class")!.ShouldContain(expectedClass);
+            });
+        }
+    }
+
+    [Fact]
+    public void PartiesAdminPortal_PartialDetail_ShowsDisplayNameAndStillLoadingSections()
+    {
+        var api = new RecordingAdminPortalApiClient();
+        api.EnqueueList(Page(IndexEntry("party-partial", "Partial Projection", PartyType.Person, true)));
+        api.EnqueueDetail(new PartyDetail
+        {
+            Id = "party-partial",
+            Type = PartyType.Person,
+            IsActive = true,
+            DisplayName = "Partial Projection",
+            SortName = string.Empty,
+            ContactChannels = [],
+            Identifiers = [],
+            ConsentRecords = [],
+            NameHistory = [],
+            CreatedAt = default,
+            LastModifiedAt = default,
+        });
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+
+        IRenderedComponent<PartiesAdminPortal> cut = RenderAuthorized("scope-partial");
+        cut.WaitForAssertion(() => cut.Markup.ShouldContain("Partial Projection"));
+        ClickFluentButton(cut, "Partial Projection");
+
+        cut.WaitForAssertion(() =>
+        {
+            IElement detail = cut.Find("aside.hx-parties-admin__detail");
+            detail.TextContent.ShouldContain("Partial Projection");
+            detail.TextContent.ShouldContain("Person details");
+            detail.TextContent.ShouldContain("System metadata");
+            detail.TextContent.ShouldContain("Still loading");
+            detail.TextContent.ShouldNotContain("No contact channels");
+            detail.TextContent.ShouldNotContain("No identifiers");
+            detail.TextContent.ShouldNotContain("No consent records");
+            detail.TextContent.ShouldNotContain("No name history");
+        });
+    }
+
+    [Fact]
+    public void PartiesAdminPortal_RefreshSelectedParty_DoesNotStealFocusFromRoutineDetailUpdates()
+    {
+        string root = LocateRepositoryRoot();
+        string componentPath = Path.Combine(
+            root,
+            "src",
+            "Hexalith.Parties.AdminPortal",
+            "Components",
+            "PartiesAdminPortal.razor");
+
+        string source = File.ReadAllText(componentPath);
+
+        source.ShouldContain("focusDetail = true");
+        source.ShouldContain("focusDetail: false");
+        source.ShouldContain("RefreshSelectedPartyAsync()");
+        source.ShouldContain("SelectPartyAsync(_selectedPartyId, updateRoute: false, trackOrigin: false, focusDetail: false)");
+    }
+
+    [Fact]
+    public void PartiesAdminPortal_DetailActions_RenderBackEditUnavailableAndActiveRowCue()
+    {
+        var api = new RecordingAdminPortalApiClient();
+        api.EnqueueList(Page(IndexEntry("party-actions", "Action Party", PartyType.Person, true)));
+        api.EnqueueDetail(Detail("party-actions", "Action Party", PartyType.Person, isActive: true));
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+
+        IRenderedComponent<PartiesAdminPortal> cut = RenderAuthorized("scope-actions");
+        cut.WaitForAssertion(() => cut.Markup.ShouldContain("Action Party"));
+        ClickFluentButton(cut, "Action Party");
+
+        cut.WaitForAssertion(() =>
+        {
+            IElement selected = FindFluentButton(cut, "Action Party");
+            selected.GetAttribute("aria-current").ShouldBe("page");
+            (selected.GetAttribute("class") ?? string.Empty).ShouldContain("hx-parties-admin__row-button--selected");
+            FindFluentButton(cut, "Back to list");
+            FindFluentButton(cut, "Edit").HasAttribute("disabled").ShouldBeTrue();
+            cut.Find("aside.hx-parties-admin__detail").TextContent.ShouldContain("Edit is unavailable");
+        });
+
+        ClickFluentButton(cut, "Back to list");
+
+        cut.WaitForAssertion(() =>
+        {
+            cut.Find("aside.hx-parties-admin__detail").TextContent.ShouldContain("Select a party");
+            FindFluentButton(cut, "Action Party").HasAttribute("autofocus").ShouldBeTrue();
+        });
     }
 
     [Fact]

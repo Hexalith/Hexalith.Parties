@@ -87,7 +87,7 @@
         <FluentButton Disabled="@(!IsRichSearchAvailable)">@EffectiveLabels.IdentifierMode</FluentButton>
     </div>
 
-    <div class="hx-parties-admin__layout">
+    <div class="hx-parties-admin__layout" data-detail-open="@DetailSurfaceOpen">
         <div class="hx-parties-admin__list"
              tabindex="0"
              data-focused-row-index="@_focusedRowIndex"
@@ -103,6 +103,9 @@
                             aria-label="@EffectiveLabels.PartiesGrid">
                 <TemplateColumn Title="@EffectiveLabels.DisplayNameColumn" Context="row">
                     <FluentButton Appearance="ButtonAppearance.Subtle"
+                                  Class="@RowButtonClass(row)"
+                                  AutoFocus="@ShouldAutoFocusRow(row)"
+                                  aria-current="@RowAriaCurrent(row)"
                                   aria-describedby="@RowStatusId(row)"
                                   OnClick="() => SelectPartyAsync(row.Id)">
                         @row.DisplayName
@@ -113,7 +116,7 @@
                 </TemplateColumn>
                 <TemplateColumn Title="@EffectiveLabels.StateColumn" Context="row">
                     <span id="@RowStatusId(row)"
-                          class="hx-parties-admin__badge"
+                          class="@PartyStateBadgeClass(row.IsActive, false, row.IsErased)"
                           aria-label="@StatusLabel(row)">
                         @StatusLabel(row)
                     </span>
@@ -144,7 +147,7 @@
             </nav>
         </div>
 
-        <aside class="hx-parties-admin__detail" aria-label="@EffectiveLabels.DetailRegion">
+        <aside class="hx-parties-admin__detail" aria-label="@EffectiveLabels.DetailRegion" data-sheet-open="@DetailSurfaceOpen">
             @if (_isDetailLoading)
             {
                 <p role="status" aria-live="polite">@EffectiveLabels.DetailLoading</p>
@@ -155,11 +158,16 @@
             }
             else
             {
-                <h2>@_detail.DisplayName</h2>
-                @if (_detailMetadata?.StaleDataAge is not null)
-                {
-                    <p class="hx-parties-admin__status" role="status" aria-live="polite">@EffectiveLabels.DataAge: @_detailMetadata.StaleDataAge</p>
-                }
+                <div class="hx-parties-admin__detail-header">
+                    <h2 tabindex="-1" @ref="_detailHeadingRef">@_detail.DisplayName</h2>
+                    <div class="hx-parties-admin__detail-actions">
+                        <FluentButton Appearance="ButtonAppearance.Outline" OnClick="CloseDetailAsync">@EffectiveLabels.DetailClose</FluentButton>
+                        <FluentButton Appearance="ButtonAppearance.Outline" Disabled="true">@EffectiveLabels.EditParty</FluentButton>
+                        <span class="hx-parties-admin__edit-unavailable">@EffectiveLabels.EditPartyUnavailable</span>
+                    </div>
+                </div>
+
+                @RenderFreshness()
 
                 <section aria-labelledby="@($"party-summary-heading-{_instanceId}")">
                     <h3 id="@($"party-summary-heading-{_instanceId}")">@EffectiveLabels.Summary</h3>
@@ -167,11 +175,16 @@
                         <dt>@EffectiveLabels.TypeColumn</dt>
                         <dd>@EffectiveLabels.PartyTypeLabel(_detail.Type.ToString())</dd>
                         <dt>@EffectiveLabels.Status</dt>
-                        <dd>@DetailStatus(_detail)</dd>
+                        <dd>
+                            <span class="@PartyStateBadgeClass(_detail.IsActive, _detail.IsRestricted, _detail.IsErased)"
+                                  aria-label="@DetailStatus(_detail)">
+                                @DetailStatus(_detail)
+                            </span>
+                        </dd>
                         <dt>@EffectiveLabels.CreatedColumn</dt>
-                        <dd>@FormatDate(_detail.CreatedAt)</dd>
+                        <dd>@(IsPartialDetail ? EffectiveLabels.DetailSectionStillLoading : FormatDate(_detail.CreatedAt))</dd>
                         <dt>@EffectiveLabels.ModifiedColumn</dt>
-                        <dd>@FormatDate(_detail.LastModifiedAt)</dd>
+                        <dd>@(IsPartialDetail ? EffectiveLabels.DetailSectionStillLoading : FormatDate(_detail.LastModifiedAt))</dd>
                     </dl>
                 </section>
 
@@ -185,6 +198,13 @@
                             <dt>@EffectiveLabels.LastName</dt>
                             <dd>@_detail.PersonDetails.LastName</dd>
                         </dl>
+                    </section>
+                }
+                else if (IsPartialDetail && _detail.Type == PartyType.Person)
+                {
+                    <section aria-labelledby="@($"person-details-heading-{_instanceId}")">
+                        <h3 id="@($"person-details-heading-{_instanceId}")">@EffectiveLabels.PersonDetails</h3>
+                        <p>@EffectiveLabels.DetailSectionStillLoading</p>
                     </section>
                 }
 
@@ -202,10 +222,21 @@
                         </dl>
                     </section>
                 }
+                else if (IsPartialDetail && _detail.Type == PartyType.Organization)
+                {
+                    <section aria-labelledby="@($"organization-details-heading-{_instanceId}")">
+                        <h3 id="@($"organization-details-heading-{_instanceId}")">@EffectiveLabels.OrganizationDetails</h3>
+                        <p>@EffectiveLabels.DetailSectionStillLoading</p>
+                    </section>
+                }
 
                 <section aria-labelledby="@($"contact-channels-heading-{_instanceId}")">
                     <h3 id="@($"contact-channels-heading-{_instanceId}")">@EffectiveLabels.ContactChannels</h3>
-                    @if (_detail.ContactChannels.Count == 0)
+                    @if (IsPartialDetail)
+                    {
+                        <p>@EffectiveLabels.DetailSectionStillLoading</p>
+                    }
+                    else if (_detail.ContactChannels.Count == 0)
                     {
                         <p>@EffectiveLabels.NoContactChannels</p>
                     }
@@ -222,7 +253,11 @@
 
                 <section aria-labelledby="@($"identifiers-heading-{_instanceId}")">
                     <h3 id="@($"identifiers-heading-{_instanceId}")">@EffectiveLabels.Identifiers</h3>
-                    @if (_detail.Identifiers.Count == 0)
+                    @if (IsPartialDetail)
+                    {
+                        <p>@EffectiveLabels.DetailSectionStillLoading</p>
+                    }
+                    else if (_detail.Identifiers.Count == 0)
                     {
                         <p>@EffectiveLabels.NoIdentifiers</p>
                     }
@@ -239,7 +274,11 @@
 
                 <section aria-labelledby="@($"consents-heading-{_instanceId}")">
                     <h3 id="@($"consents-heading-{_instanceId}")">@EffectiveLabels.ConsentRecords</h3>
-                    @if (_detail.ConsentRecords.Count == 0)
+                    @if (IsPartialDetail)
+                    {
+                        <p>@EffectiveLabels.DetailSectionStillLoading</p>
+                    }
+                    else if (_detail.ConsentRecords.Count == 0)
                     {
                         <p>@EffectiveLabels.NoConsentRecords</p>
                     }
@@ -256,22 +295,39 @@
 
                 <section aria-labelledby="@($"restrictions-heading-{_instanceId}")">
                     <h3 id="@($"restrictions-heading-{_instanceId}")">@EffectiveLabels.Restrictions</h3>
-                    <dl>
-                        <dt>@EffectiveLabels.Restricted</dt>
-                        <dd>@BooleanText(_detail.IsRestricted)</dd>
-                        <dt>@EffectiveLabels.RestrictedAt</dt>
-                        <dd>@FormatOptionalDate(_detail.RestrictedAt)</dd>
-                        <dt>@EffectiveLabels.Erased</dt>
-                        <dd>@BooleanText(_detail.IsErased)</dd>
-                        <dt>@EffectiveLabels.ErasedAt</dt>
-                        <dd>@FormatOptionalDate(_detail.ErasedAt)</dd>
-                    </dl>
+                    @if (IsPartialDetail)
+                    {
+                        <p>@EffectiveLabels.DetailSectionStillLoading</p>
+                    }
+                    else
+                    {
+                        <dl>
+                            <dt>@EffectiveLabels.Restricted</dt>
+                            <dd>@BooleanText(_detail.IsRestricted)</dd>
+                            <dt>@EffectiveLabels.RestrictedAt</dt>
+                            <dd>@FormatOptionalDate(_detail.RestrictedAt)</dd>
+                            <dt>@EffectiveLabels.Erased</dt>
+                            <dd>@BooleanText(_detail.IsErased)</dd>
+                            <dt>@EffectiveLabels.ErasedAt</dt>
+                            <dd>@FormatOptionalDate(_detail.ErasedAt)</dd>
+                        </dl>
+                    }
                 </section>
 
-                <PartyGdprOperationsPanel Party="_detail"
-                                          Labels="EffectiveLabels"
-                                          TenantContextSignature="_authorizationState.ContextSignature"
-                                          RefreshParty="RefreshSelectedPartyAsync" />
+                @if (IsPartialDetail)
+                {
+                    <section aria-labelledby="@($"gdpr-partial-heading-{_instanceId}")">
+                        <h3 id="@($"gdpr-partial-heading-{_instanceId}")">@EffectiveLabels.GdprOperations</h3>
+                        <p>@EffectiveLabels.DetailSectionStillLoading</p>
+                    </section>
+                }
+                else
+                {
+                    <PartyGdprOperationsPanel Party="_detail"
+                                              Labels="EffectiveLabels"
+                                              TenantContextSignature="_authorizationState.ContextSignature"
+                                              RefreshParty="RefreshSelectedPartyAsync" />
+                }
 
                 <section aria-labelledby="@($"eventstore-links-heading-{_instanceId}")">
                     <h3 id="@($"eventstore-links-heading-{_instanceId}")">@EffectiveLabels.EventStoreLinks</h3>
@@ -292,15 +348,26 @@
                     scoped ids as user-facing labels"). *@
                 <section aria-labelledby="@($"system-metadata-heading-{_instanceId}")">
                     <h3 id="@($"system-metadata-heading-{_instanceId}")">@EffectiveLabels.SystemMetadata</h3>
-                    <dl>
-                        <dt>@EffectiveLabels.SortName</dt>
-                        <dd>@_detail.SortName</dd>
-                    </dl>
+                    @if (IsPartialDetail)
+                    {
+                        <p>@EffectiveLabels.DetailSectionStillLoading</p>
+                    }
+                    else
+                    {
+                        <dl>
+                            <dt>@EffectiveLabels.SortName</dt>
+                            <dd>@_detail.SortName</dd>
+                        </dl>
+                    }
                 </section>
 
                 <section aria-labelledby="@($"name-history-heading-{_instanceId}")">
                     <h3 id="@($"name-history-heading-{_instanceId}")">@EffectiveLabels.NameHistory</h3>
-                    @if (_detail.NameHistory.Count == 0)
+                    @if (IsPartialDetail)
+                    {
+                        <p>@EffectiveLabels.DetailSectionStillLoading</p>
+                    }
+                    else if (_detail.NameHistory.Count == 0)
                     {
                         <p>@EffectiveLabels.NoNameHistory</p>
                     }
@@ -365,6 +432,9 @@
     private string? _richSearchCapabilityContextSignature;
     private FocusTarget _pendingFocus = FocusTarget.None;
     private FluentTextInput? _searchInputRef;
+    private ElementReference _detailHeadingRef;
+    private string? _originatingPartyId;
+    private string? _pendingRowFocusPartyId;
     private int _focusedRowIndex;
 
     [Parameter]
@@ -402,6 +472,20 @@
     private bool RetryAvailable
         => _lastFailure is AdminPortalQueryFailureKind.TransientFailure
             or AdminPortalQueryFailureKind.Unknown;
+
+    private bool DetailSurfaceOpen => _detail is not null || _isDetailLoading;
+
+    private bool IsPartialDetail
+        => _detail is { } detail
+            && !string.IsNullOrWhiteSpace(detail.DisplayName)
+            && detail.CreatedAt == default
+            && detail.LastModifiedAt == default
+            && detail.PersonDetails is null
+            && detail.OrganizationDetails is null
+            && detail.ContactChannels.Count == 0
+            && detail.Identifiers.Count == 0
+            && detail.ConsentRecords.Count == 0
+            && detail.NameHistory.Count == 0;
 
     private string StatusText => _statusKind switch
     {
@@ -824,7 +908,7 @@
         _richSearchCapabilityContextSignature = contextSignature;
     }
 
-    private async Task SelectPartyAsync(string partyId, bool updateRoute = true)
+    private async Task SelectPartyAsync(string partyId, bool updateRoute = true, bool trackOrigin = true, bool focusDetail = true)
     {
         if (Volatile.Read(ref _disposed) != 0)
         {
@@ -832,6 +916,11 @@
         }
 
         _selectedPartyId = partyId;
+        if (trackOrigin)
+        {
+            _originatingPartyId = partyId;
+        }
+
         if (updateRoute)
         {
             NavigateToPartyDetailRoute(partyId);
@@ -863,6 +952,10 @@
                     _detail = NormalizeDetail(result.Payload);
                     _detailMetadata = result.Metadata;
                     _detailEmptyKind = DetailEmptyKind.SelectParty;
+                    if (focusDetail)
+                    {
+                        _pendingFocus = FocusTarget.DetailHeading;
+                    }
                 }
             }
         }
@@ -923,7 +1016,7 @@
     private Task RefreshSelectedPartyAsync()
         => string.IsNullOrWhiteSpace(_selectedPartyId)
             ? Task.CompletedTask
-            : SelectPartyAsync(_selectedPartyId, updateRoute: false);
+            : SelectPartyAsync(_selectedPartyId, updateRoute: false, trackOrigin: false, focusDetail: false);
 
     private async Task ApplyRoutePartySelectionAsync()
     {
@@ -956,7 +1049,38 @@
             return;
         }
 
-        await SelectPartyAsync(routePartyId, updateRoute: false).ConfigureAwait(false);
+        await SelectPartyAsync(routePartyId, updateRoute: false, trackOrigin: false).ConfigureAwait(false);
+    }
+
+    private async Task CloseDetailAsync()
+    {
+        string? restorePartyId = _originatingPartyId;
+        _detail = null;
+        _detailMetadata = null;
+        _selectedPartyId = null;
+        _detailEmptyKind = DetailEmptyKind.SelectParty;
+        _isDetailLoading = false;
+        _originatingPartyId = null;
+
+        if (!string.IsNullOrWhiteSpace(restorePartyId)
+            && _rows.Any(row => string.Equals(row.Id, restorePartyId, StringComparison.Ordinal)))
+        {
+            _pendingRowFocusPartyId = restorePartyId;
+        }
+        else
+        {
+            _pendingFocus = FocusTarget.SearchInput;
+        }
+
+        string relative = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
+        int separator = relative.IndexOfAny(['?', '#']);
+        string currentPath = "/" + (separator >= 0 ? relative[..separator] : relative);
+        if (!string.Equals(currentPath, PartiesAdminPortalManifest.Route, StringComparison.Ordinal))
+        {
+            NavigationManager.NavigateTo(PartiesAdminPortalManifest.Route);
+        }
+
+        await SafeStateHasChangedAsync().ConfigureAwait(false);
     }
 
     private void NavigateToPartyDetailRoute(string partyId)
@@ -1054,6 +1178,9 @@
                         await searchElement.FocusAsync().ConfigureAwait(false);
                     }
 
+                    break;
+                case FocusTarget.DetailHeading:
+                    await _detailHeadingRef.FocusAsync().ConfigureAwait(false);
                     break;
                 case FocusTarget.RetryButton:
                     break;
@@ -1288,6 +1415,25 @@
         return row.IsActive ? EffectiveLabels.Active : EffectiveLabels.Inactive;
     }
 
+    private string RowButtonClass(PartyIndexEntry row)
+        => string.Equals(_selectedPartyId, row.Id, StringComparison.Ordinal)
+            ? "hx-parties-admin__row-button hx-parties-admin__row-button--selected"
+            : "hx-parties-admin__row-button";
+
+    private string? RowAriaCurrent(PartyIndexEntry row)
+        => string.Equals(_selectedPartyId, row.Id, StringComparison.Ordinal) ? "page" : null;
+
+    private bool ShouldAutoFocusRow(PartyIndexEntry row)
+    {
+        if (!string.Equals(_pendingRowFocusPartyId, row.Id, StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        _pendingRowFocusPartyId = null;
+        return true;
+    }
+
     private async Task OnGridKeyDownAsync(KeyboardEventArgs e)
     {
         if (_rows.Count == 0)
@@ -1348,13 +1494,48 @@
 
         if (detail.IsRestricted)
         {
-            return detail.IsActive
-                ? $"{EffectiveLabels.Active}, {EffectiveLabels.Restricted}"
-                : $"{EffectiveLabels.Inactive}, {EffectiveLabels.Restricted}";
+            return EffectiveLabels.RestrictedState;
         }
 
         return detail.IsActive ? EffectiveLabels.Active : EffectiveLabels.Inactive;
     }
+
+    private string PartyStateBadgeClass(bool isActive, bool isRestricted, bool isErased)
+    {
+        string state = isErased
+            ? "erased"
+            : isRestricted
+                ? "restricted"
+                : isActive
+                    ? "active"
+                    : "inactive";
+        return $"hx-parties-admin__badge party-state-badge hx-parties-admin__badge--{state}";
+    }
+
+    private RenderFragment RenderFreshness() => builder =>
+    {
+        string statusClass = _detailMetadata is null || !_detailMetadata.IsDegraded
+            ? "data-freshness-indicator--current"
+            : "data-freshness-indicator--degraded";
+        string message = _detailMetadata?.StaleDataAge is not null
+            ? EffectiveLabels.FreshnessStale
+            : _detailMetadata?.IsDegraded == true
+                ? EffectiveLabels.FreshnessLastKnown
+                : EffectiveLabels.FreshnessCurrent;
+
+        builder.OpenElement(0, "span");
+        builder.AddAttribute(1, "class", $"data-freshness-indicator hx-parties-admin__freshness {statusClass}");
+        builder.OpenElement(2, "span");
+        builder.AddAttribute(3, "class", "data-freshness-indicator__dot");
+        builder.AddAttribute(4, "aria-hidden", "true");
+        builder.CloseElement();
+        builder.OpenElement(5, "span");
+        builder.AddAttribute(6, "role", "status");
+        builder.AddAttribute(7, "aria-live", "polite");
+        builder.AddContent(8, message);
+        builder.CloseElement();
+        builder.CloseElement();
+    };
 
     private string BooleanText(bool value)
         => value ? EffectiveLabels.Yes : EffectiveLabels.No;
@@ -1437,6 +1618,7 @@
         None,
         SearchInput,
         RetryButton,
+        DetailHeading,
     }
 
     private sealed class PortalFilters

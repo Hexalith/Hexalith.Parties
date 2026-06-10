@@ -97,6 +97,91 @@ test.describe('Admin parties list', () => {
 
     await expect(page.getByLabel('Search parties')).toBeFocused();
   });
+
+  test('desktop row click and direct route render the existing party detail surface', async ({ page, request }) => {
+    await gotoAdmin(page);
+
+    await page.getByRole('button', { name: 'Ada Lovelace' }).click();
+    await page.waitForURL('**/admin/parties/ada-lovelace');
+
+    const detail = page.getByLabel('Party detail');
+    await expect(detail.getByRole('heading', { name: 'Ada Lovelace' })).toBeVisible();
+    await expect(detail.locator('.party-state-badge', { hasText: 'Active' })).toBeVisible();
+    await expect(detail.locator('.data-freshness-indicator [role="status"]')).toHaveText('Up to date');
+    await expect(detail.getByRole('button', { name: 'Edit' })).toBeDisabled();
+    await expect(detail.getByText('Edit is unavailable until party editing is enabled.')).toBeVisible();
+    await expect(detail.getByText('GDPR operations')).toBeVisible();
+    await expect.poll(async () => (await latestDetailRequest(request))?.partyId).toBe('ada-lovelace');
+
+    await page.goto(`${ADMIN_ROUTE}/grace-hopper`);
+    await expect(detail.getByRole('heading', { name: 'Grace Hopper' })).toBeVisible();
+    await expect(detail.getByRole('heading', { name: 'Grace Hopper' })).toBeFocused();
+    await expect.poll(async () => (await latestDetailRequest(request))?.partyId).toBe('grace-hopper');
+  });
+
+  test('phone detail behaves as a full-screen sheet and restores row focus on close', async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 640 });
+    await gotoAdmin(page);
+
+    const row = page.getByRole('button', { name: 'Ada Lovelace' });
+    await row.click();
+    await page.waitForURL('**/admin/parties/ada-lovelace');
+
+    const detail = page.getByLabel('Party detail');
+    await expect(detail.getByRole('heading', { name: 'Ada Lovelace' })).toBeVisible();
+    await expect(detail.getByRole('heading', { name: 'Ada Lovelace' })).toBeFocused();
+    await expect(page.getByRole('button', { name: 'Grace Hopper' })).toHaveCount(0);
+    await expect(detail.getByRole('button', { name: 'Back to list' })).toBeVisible();
+
+    const horizontalOverflow = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth);
+    expect(horizontalOverflow).toBe(false);
+
+    await detail.getByRole('button', { name: 'Back to list' }).click();
+    await page.waitForURL('**/admin/parties');
+    await expect(page.getByRole('button', { name: 'Ada Lovelace' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Ada Lovelace' })).toBeFocused();
+  });
+
+  test('phone detail remains readable under zoom-equivalent narrow emulation', async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 640 });
+    await gotoAdmin(page);
+
+    await page.getByRole('button', { name: 'Inactive Labs' }).click();
+    await page.waitForURL('**/admin/parties/inactive-labs');
+
+    await page.evaluate(() => {
+      document.documentElement.style.zoom = '2';
+    });
+
+    const detail = page.getByLabel('Party detail');
+    await expect(detail.getByRole('heading', { name: 'Inactive Labs' })).toBeVisible();
+    await expect(detail.getByRole('button', { name: 'Back to list' })).toBeVisible();
+    await expect(detail.locator('.party-state-badge', { hasText: 'Inactive' })).toBeVisible();
+
+    const overflow = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth);
+    expect(overflow).toBe(false);
+  });
+
+  test('phone direct route opens detail without an originating row and closes to search focus', async ({ page, request }) => {
+    await page.setViewportSize({ width: 320, height: 640 });
+
+    await page.goto(`${ADMIN_ROUTE}/grace-hopper`);
+
+    const detail = page.getByLabel('Party detail');
+    await expect(detail.getByRole('heading', { name: 'Grace Hopper' })).toBeVisible();
+    await expect(detail.getByRole('heading', { name: 'Grace Hopper' })).toBeFocused();
+    await expect(page.getByRole('button', { name: 'Ada Lovelace' })).toHaveCount(0);
+    await expect(detail.getByRole('button', { name: 'Back to list' })).toBeVisible();
+    await expect.poll(async () => (await latestDetailRequest(request))?.partyId).toBe('grace-hopper');
+
+    const horizontalOverflow = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth);
+    expect(horizontalOverflow).toBe(false);
+
+    await detail.getByRole('button', { name: 'Back to list' }).click();
+    await page.waitForURL('**/admin/parties');
+    await expect(page.getByRole('button', { name: 'Ada Lovelace' })).toBeVisible();
+    await expect(page.getByLabel('Search parties')).toBeFocused();
+  });
 });
 
 const enableAdminFixture = async (context: BrowserContext): Promise<void> => {
@@ -126,6 +211,11 @@ const latestSearchRequest = async (request: APIRequestContext): Promise<AdminPor
   return snapshot.searchRequests.at(-1);
 };
 
+const latestDetailRequest = async (request: APIRequestContext): Promise<AdminPortalRequestCapture | undefined> => {
+  const snapshot = await requestSnapshot(request);
+  return snapshot.detailRequests.at(-1);
+};
+
 const requestSnapshot = async (request: APIRequestContext): Promise<AdminPortalE2eSnapshot> => {
   const response = await request.get(REQUESTS_ROUTE);
   expect(response.ok()).toBe(true);
@@ -135,6 +225,7 @@ const requestSnapshot = async (request: APIRequestContext): Promise<AdminPortalE
 interface AdminPortalE2eSnapshot {
   listRequests: AdminPortalRequestCapture[];
   searchRequests: AdminPortalRequestCapture[];
+  detailRequests: AdminPortalRequestCapture[];
 }
 
 interface AdminPortalRequestCapture {
@@ -144,4 +235,5 @@ interface AdminPortalRequestCapture {
   pageSize: number;
   type: string | null;
   active: boolean | null;
+  partyId: string | null;
 }

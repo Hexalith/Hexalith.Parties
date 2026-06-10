@@ -84,6 +84,12 @@ public record AdminPortalLabels
 
     public string SelectParty { get; init; } = "Select a party";
 
+    public string DetailClose { get; init; } = "Back to list";
+
+    public string EditParty { get; init; } = "Edit";
+
+    public string EditPartyUnavailable { get; init; } = "Edit is unavailable until party editing is enabled.";
+
     public string Loading { get; init; } = "Loading parties";
 
     public string Loaded { get; init; } = "Parties loaded";
@@ -123,6 +129,8 @@ public record AdminPortalLabels
     public string Erased { get; init; } = "Erased";
 
     public string Restricted { get; init; } = "restricted";
+
+    public string RestrictedState { get; init; } = "Restricted";
 
     public string Summary { get; init; } = "Summary";
 
@@ -270,6 +278,14 @@ public record AdminPortalLabels
     public string TriggeredBy { get; init; } = "Triggered by";
 
     public string DataAge { get; init; } = "Data age";
+
+    public string FreshnessCurrent { get; init; } = "Up to date";
+
+    public string FreshnessStale { get; init; } = "Showing what we last knew - refreshing";
+
+    public string FreshnessLastKnown { get; init; } = "Showing last known";
+
+    public string DetailSectionStillLoading { get; init; } = "Still loading";
 
     public string DetailUnavailable { get; init; } = "The selected party is unavailable";
 

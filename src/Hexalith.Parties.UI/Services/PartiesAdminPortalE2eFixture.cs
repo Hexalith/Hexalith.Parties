@@ -83,6 +83,7 @@ internal sealed class PartiesAdminPortalE2eFixtureState
     private readonly object _sync = new();
     private readonly List<AdminPortalRequestCapture> _listRequests = [];
     private readonly List<AdminPortalRequestCapture> _searchRequests = [];
+    private readonly List<AdminPortalRequestCapture> _detailRequests = [];
 
     public void CaptureList(AdminPortalListRequest request)
     {
@@ -100,12 +101,21 @@ internal sealed class PartiesAdminPortalE2eFixtureState
         }
     }
 
+    public void CaptureDetail(string partyId)
+    {
+        lock (_sync)
+        {
+            _detailRequests.Add(AdminPortalRequestCapture.FromDetail(partyId));
+        }
+    }
+
     public void Reset()
     {
         lock (_sync)
         {
             _listRequests.Clear();
             _searchRequests.Clear();
+            _detailRequests.Clear();
         }
     }
 
@@ -113,7 +123,7 @@ internal sealed class PartiesAdminPortalE2eFixtureState
     {
         lock (_sync)
         {
-            return new AdminPortalE2eSnapshot([.. _listRequests], [.. _searchRequests]);
+            return new AdminPortalE2eSnapshot([.. _listRequests], [.. _searchRequests], [.. _detailRequests]);
         }
     }
 }
@@ -189,6 +199,7 @@ internal sealed class PartiesAdminPortalE2eApiClient(PartiesAdminPortalE2eFixtur
     public Task<AdminPortalQueryResult<PartyDetail>> GetPartyAsync(string partyId, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
+        state.CaptureDetail(partyId);
 
         PartyIndexEntry? entry = Entries.FirstOrDefault(row => string.Equals(row.Id, partyId, StringComparison.Ordinal));
         if (entry is null)
@@ -369,7 +380,8 @@ internal sealed class PartiesAdminPortalE2eApiClient(PartiesAdminPortalE2eFixtur
 
 internal sealed record AdminPortalE2eSnapshot(
     IReadOnlyList<AdminPortalRequestCapture> ListRequests,
-    IReadOnlyList<AdminPortalRequestCapture> SearchRequests);
+    IReadOnlyList<AdminPortalRequestCapture> SearchRequests,
+    IReadOnlyList<AdminPortalRequestCapture> DetailRequests);
 
 internal sealed record AdminPortalRequestCapture(
     string Kind,
@@ -377,11 +389,15 @@ internal sealed record AdminPortalRequestCapture(
     int Page,
     int PageSize,
     string? Type,
-    bool? Active)
+    bool? Active,
+    string? PartyId)
 {
     public static AdminPortalRequestCapture FromList(AdminPortalListRequest request)
-        => new("list", null, request.Page, request.PageSize, request.Type?.ToString(), request.Active);
+        => new("list", null, request.Page, request.PageSize, request.Type?.ToString(), request.Active, null);
 
     public static AdminPortalRequestCapture FromSearch(AdminPortalSearchRequest request)
-        => new("search", request.Query, request.Page, request.PageSize, request.Type?.ToString(), request.Active);
+        => new("search", request.Query, request.Page, request.PageSize, request.Type?.ToString(), request.Active, null);
+
+    public static AdminPortalRequestCapture FromDetail(string partyId)
+        => new("detail", null, 0, 0, null, null, partyId);
 }
