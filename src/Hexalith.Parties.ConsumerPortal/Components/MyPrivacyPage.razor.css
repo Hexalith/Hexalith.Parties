@@ -13,6 +13,9 @@
 .hx-parties-profile__section,
 .hx-parties-profile__notice,
 .hx-parties-privacy__export,
+.hx-parties-privacy__processing,
+.hx-parties-privacy__processing-list,
+.hx-parties-privacy__processing-item,
 .hx-parties-privacy__actions {
     display: grid;
 }
@@ -64,7 +67,10 @@
 .hx-parties-profile__content,
 .hx-parties-profile__section,
 .hx-parties-profile__notice,
-.hx-parties-privacy__export {
+.hx-parties-privacy__export,
+.hx-parties-privacy__processing,
+.hx-parties-privacy__processing-list,
+.hx-parties-privacy__processing-item {
     gap: var(--spacingVerticalM, .75rem);
 }
 
@@ -101,6 +107,31 @@
 
 .hx-parties-privacy__danger-action {
     color: var(--colorStatusDangerForeground1, CanvasText);
+}
+
+.hx-parties-privacy__processing-list {
+    padding: 0;
+    margin: 0;
+    list-style: none;
+}
+
+.hx-parties-privacy__processing-item {
+    padding-block: var(--spacingVerticalM, .75rem);
+    border-block-start: var(--strokeWidthThin, 1px) solid var(--neutral-stroke-subtle, var(--neutral-stroke-rest));
+}
+
+.hx-parties-privacy__processing-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacingHorizontalM, .75rem);
+    color: var(--neutral-foreground-hint, var(--neutral-foreground-rest));
+    font-weight: 600;
+}
+
+.hx-parties-privacy__consent-link {
+    justify-self: start;
+    color: var(--accent-foreground-rest, LinkText);
+    font-weight: 600;
 }
 
 @media (max-width: 480px) {

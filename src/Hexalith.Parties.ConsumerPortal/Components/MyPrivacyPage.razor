@@ -5,6 +5,7 @@
 
 @inject IConsumerPrivacyExportClient ExportClient
 @inject IConsumerPrivacyErasureClient ErasureClient
+@inject IConsumerPrivacyProcessingClient ProcessingClient
 @inject IJSRuntime JsRuntime
 
 <section class="hx-parties-profile hx-parties-privacy" aria-labelledby="@_titleId">
@@ -50,6 +51,46 @@
                     </FluentButton>
                 }
             </div>
+        </section>
+
+        <section class="hx-parties-profile__section hx-parties-privacy__processing" aria-labelledby="@_processingId">
+            <div class="hx-parties-privacy__section-header">
+                <h2 id="@_processingId">@ConsumerPortalLabels.PrivacyProcessingTitle</h2>
+            </div>
+            <p>@ConsumerPortalLabels.PrivacyProcessingDescription</p>
+            <p class="hx-parties-profile__freshness">@ConsumerPortalLabels.PrivacyProcessingBoundedMetadata</p>
+
+            @if (ShowProcessingAlert)
+            {
+                <div class="hx-parties-profile__notice" role="alert" aria-labelledby="@_processingFailureId">
+                    <h3 id="@_processingFailureId">@ConsumerPortalLabels.PrivacyProcessingFailureTitle</h3>
+                    <p>@ProcessingAlertMessage</p>
+                </div>
+            }
+            else
+            {
+                <p class="hx-parties-profile__freshness" role="status" aria-live="polite">@ProcessingStatusMessage</p>
+            }
+
+            @if (!_isLoadingProcessing && _processing.Records.Count > 0)
+            {
+                <ul class="hx-parties-privacy__processing-list">
+                    @foreach (ConsumerPrivacyProcessingRecord record in _processing.Records)
+                    {
+                        <li class="hx-parties-privacy__processing-item">
+                            <div class="hx-parties-privacy__processing-meta">
+                                <span>@ConsumerPortalLabels.PrivacyProcessingCategoryLabel(record.Category)</span>
+                                <span>@ConsumerPortalLabels.PrivacyProcessingOutcomeLabel(record.Outcome)</span>
+                            </div>
+                            <p>@SafeProcessingSummary(record)</p>
+                            <p class="hx-parties-profile__freshness">@ConsumerPortalLabels.FormatPrivacyProcessingTimestamp(record.Timestamp)</p>
+                        </li>
+                    }
+                </ul>
+            }
+
+            <p>@ConsumerPortalLabels.PrivacyProcessingConsentSummary</p>
+            <a class="hx-parties-privacy__consent-link" href="/me/consent">@ConsumerPortalLabels.PrivacyProcessingManageConsent</a>
         </section>
 
         <section class="hx-parties-profile__section hx-parties-privacy__erasure" aria-labelledby="@_erasureId">
@@ -131,13 +172,16 @@
     private readonly int _instanceId = System.Threading.Interlocked.Increment(ref s_nextInstanceId);
     private CancellationTokenSource? _exportCts;
     private CancellationTokenSource? _erasureCts;
+    private CancellationTokenSource? _processingCts;
     private ConsumerPrivacyExportResult? _download;
     private ConsumerPrivacyErasureResult _erasure = ConsumerPrivacyErasureResult.Active();
+    private ConsumerPrivacyProcessingResult _processing = ConsumerPrivacyProcessingResult.FromRecords([]);
     private bool _isPreparing;
     private bool _isDownloading;
     private bool _failureVisible;
     private bool _confirmErasure;
     private bool _isLoadingErasure;
+    private bool _isLoadingProcessing;
     private bool _isRequestingErasure;
     private bool _isCancellingErasure;
     private bool _erasureAlertVisible;
@@ -146,6 +190,8 @@
     private string _titleId => $"hx-parties-privacy-title-{_instanceId}";
     private string _exportId => $"hx-parties-privacy-export-{_instanceId}";
     private string _failureId => $"hx-parties-privacy-failure-{_instanceId}";
+    private string _processingId => $"hx-parties-privacy-processing-{_instanceId}";
+    private string _processingFailureId => $"hx-parties-privacy-processing-failure-{_instanceId}";
     private string _erasureId => $"hx-parties-privacy-erasure-{_instanceId}";
     private string _erasureFailureId => $"hx-parties-privacy-erasure-failure-{_instanceId}";
     private string _erasureConfirmId => $"hx-parties-privacy-erasure-confirm-{_instanceId}";
@@ -226,10 +272,48 @@
             _ => ConsumerPortalLabels.PrivacyErasureFailureMessage,
         };
 
+    private bool ShowProcessingAlert
+        => !_isLoadingProcessing
+            && _processing.Outcome is ConsumerPrivacyProcessingOutcome.Forbidden
+                or ConsumerPrivacyProcessingOutcome.AuthenticationRequired
+                or ConsumerPrivacyProcessingOutcome.Unavailable
+                or ConsumerPrivacyProcessingOutcome.Stale
+                or ConsumerPrivacyProcessingOutcome.TransientFailure
+                or ConsumerPrivacyProcessingOutcome.Erased;
+
+    private string ProcessingStatusMessage
+        => _isLoadingProcessing
+            ? ConsumerPortalLabels.PrivacyProcessingLoadingStatus
+            : _processing.Outcome switch
+            {
+                ConsumerPrivacyProcessingOutcome.Ready => ConsumerPortalLabels.PrivacyProcessingReadyStatus,
+                ConsumerPrivacyProcessingOutcome.Empty => ConsumerPortalLabels.PrivacyProcessingEmptyStatus,
+                _ => ConsumerPortalLabels.PrivacyProcessingFailureMessage,
+            };
+
+    private string ProcessingAlertMessage
+        => _processing.Outcome switch
+        {
+            ConsumerPrivacyProcessingOutcome.Forbidden or ConsumerPrivacyProcessingOutcome.AuthenticationRequired => ConsumerPortalLabels.PrivacyProcessingForbiddenMessage,
+            ConsumerPrivacyProcessingOutcome.Unavailable => ConsumerPortalLabels.PrivacyProcessingUnavailableMessage,
+            ConsumerPrivacyProcessingOutcome.Stale => ConsumerPortalLabels.PrivacyProcessingStaleMessage,
+            ConsumerPrivacyProcessingOutcome.Erased => ConsumerPortalLabels.PrivacyProcessingErasedMessage,
+            _ => ConsumerPortalLabels.PrivacyProcessingFailureMessage,
+        };
+
     protected override async Task OnInitializedAsync()
     {
         _erasureCts = new CancellationTokenSource();
-        CancellationToken token = _erasureCts.Token;
+        _processingCts = new CancellationTokenSource();
+
+        Task erasureLoad = LoadErasureStatusAsync(_erasureCts.Token);
+        Task processingLoad = LoadProcessingSummaryAsync(_processingCts.Token);
+
+        await Task.WhenAll(erasureLoad, processingLoad).ConfigureAwait(false);
+    }
+
+    private async Task LoadErasureStatusAsync(CancellationToken token)
+    {
         _isLoadingErasure = true;
 
         try
@@ -255,6 +339,37 @@
             if (!token.IsCancellationRequested)
             {
                 _isLoadingErasure = false;
+            }
+        }
+    }
+
+    private async Task LoadProcessingSummaryAsync(CancellationToken token)
+    {
+        _isLoadingProcessing = true;
+
+        try
+        {
+            ConsumerPrivacyProcessingResult result = await ProcessingClient.GetMyProcessingSummaryAsync(token).ConfigureAwait(false);
+            if (!token.IsCancellationRequested)
+            {
+                _processing = result;
+            }
+        }
+        catch (OperationCanceledException) when (token.IsCancellationRequested)
+        {
+        }
+        catch
+        {
+            if (!token.IsCancellationRequested)
+            {
+                _processing = ConsumerPrivacyProcessingResult.Failure(ConsumerPrivacyProcessingOutcome.TransientFailure);
+            }
+        }
+        finally
+        {
+            if (!token.IsCancellationRequested)
+            {
+                _isLoadingProcessing = false;
             }
         }
     }
@@ -435,11 +550,18 @@
             or ConsumerPrivacyErasureOutcome.Unavailable;
     }
 
+    private static string SafeProcessingSummary(ConsumerPrivacyProcessingRecord record)
+        => string.IsNullOrWhiteSpace(record.Summary)
+            ? ConsumerPortalLabels.PrivacyProcessingSummaryFallback
+            : record.Summary;
+
     public void Dispose()
     {
         _exportCts?.Cancel();
         _exportCts?.Dispose();
         _erasureCts?.Cancel();
         _erasureCts?.Dispose();
+        _processingCts?.Cancel();
+        _processingCts?.Dispose();
     }
 }

@@ -79,6 +79,7 @@ builder.Services.AddScoped<IConsumerProfileEditClient, ConsumerProfileEditClient
 builder.Services.AddScoped<IConsumerConsentClient, ConsumerConsentClient>();
 builder.Services.AddScoped<IConsumerPrivacyExportClient, ConsumerPrivacyExportClient>();
 builder.Services.AddScoped<IConsumerPrivacyErasureClient, ConsumerPrivacyErasureClient>();
+builder.Services.AddScoped<IConsumerPrivacyProcessingClient, ConsumerPrivacyProcessingClient>();
 
 // Story 4.2 — host-owned admin-link identity binding provisioning. This stays outside the Parties
 // command/event/projection stream: the runtime source remains the IdP party_id claim, while this service

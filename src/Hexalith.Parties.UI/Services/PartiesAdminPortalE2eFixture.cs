@@ -23,6 +23,7 @@ internal static class PartiesAdminPortalE2eFixture
     public const string AdminCookieName = "parties-admin-e2e";
     public const string ConsumerCookieName = "parties-consumer-e2e";
     public const string ConsumerErasureStatusCookieName = "parties-consumer-erasure-e2e";
+    public const string ConsumerProcessingStateCookieName = "parties-consumer-processing-e2e";
     public const string Story35RealContractCookieName = "parties-admin-e2e-story-3-5";
     public const string RequestsRoute = "/__parties/specimens/admin-portal/requests";
     public const string ResetRoute = "/__parties/specimens/admin-portal/reset";
@@ -53,6 +54,9 @@ internal static class PartiesAdminPortalE2eFixture
 
     public static string? ConsumerErasureStatusFixtureState(IHttpContextAccessor httpContextAccessor)
         => httpContextAccessor.HttpContext?.Request.Cookies[ConsumerErasureStatusCookieName];
+
+    public static string? ConsumerProcessingFixtureState(IHttpContextAccessor httpContextAccessor)
+        => httpContextAccessor.HttpContext?.Request.Cookies[ConsumerProcessingStateCookieName];
 }
 
 internal sealed class PartiesAdminPortalE2eAuthenticationStateProvider(IHttpContextAccessor httpContextAccessor) : AuthenticationStateProvider
@@ -913,6 +917,17 @@ internal sealed class PartiesAdminPortalE2eApiClient(
     {
         cancellationToken.ThrowIfCancellationRequested();
         state.CaptureProcessingRecords(partyId);
+        string? processingState = PartiesAdminPortalE2eFixture.ConsumerProcessingFixtureState(httpContextAccessor);
+        if (string.Equals(processingState, "empty", StringComparison.Ordinal))
+        {
+            return Task.FromResult<IReadOnlyList<ProcessingActivityRecord>>([]);
+        }
+
+        if (string.Equals(processingState, "transient-failure", StringComparison.Ordinal))
+        {
+            throw new TimeoutException("Processing records fixture timeout.");
+        }
+
         return Task.FromResult<IReadOnlyList<ProcessingActivityRecord>>(
         [
             new ProcessingActivityRecord

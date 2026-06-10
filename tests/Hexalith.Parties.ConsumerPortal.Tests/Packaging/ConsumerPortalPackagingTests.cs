@@ -91,6 +91,7 @@ public sealed class ConsumerPortalPackagingTests
         allSource.ShouldContain("IConsumerConsentClient", Case.Sensitive);
         allSource.ShouldContain("IConsumerPrivacyExportClient", Case.Sensitive);
         allSource.ShouldContain("IConsumerPrivacyErasureClient", Case.Sensitive);
+        allSource.ShouldContain("IConsumerPrivacyProcessingClient", Case.Sensitive);
         allSource.ShouldNotContain("IPartiesCommandClient", Case.Sensitive);
     }
 
@@ -180,6 +181,27 @@ public sealed class ConsumerPortalPackagingTests
         serviceSource.ShouldNotContain("ISelfScopedPartiesClient", Case.Sensitive);
     }
 
+    [Fact]
+    public void ConsumerPrivacyProcessingPort_DoesNotExposeCallerSuppliedIdentityOrListSearch()
+    {
+        string sourceRoot = ProjectRoot("src/Hexalith.Parties.ConsumerPortal");
+        string serviceSource = string.Join(Environment.NewLine, Directory.GetFiles(Path.Combine(sourceRoot, "Services"), "*Privacy*Processing*.cs")
+            .Select(File.ReadAllText));
+
+        serviceSource.ShouldContain("GetMyProcessingSummaryAsync", Case.Sensitive);
+        serviceSource.ShouldNotContain("partyId", Case.Insensitive);
+        serviceSource.ShouldNotContain("tenantId", Case.Insensitive);
+        serviceSource.ShouldNotContain("actorId", Case.Insensitive);
+        serviceSource.ShouldNotContain("correlationId", Case.Insensitive);
+        serviceSource.ShouldNotContain("PagedResult", Case.Sensitive);
+        serviceSource.ShouldNotContain("ListParties", Case.Sensitive);
+        serviceSource.ShouldNotContain("SearchParties", Case.Sensitive);
+        serviceSource.ShouldNotContain("GetPartyAsync", Case.Sensitive);
+        serviceSource.ShouldNotContain("IPartiesQueryClient", Case.Sensitive);
+        serviceSource.ShouldNotContain("IAdminPortalGdprClient", Case.Sensitive);
+        serviceSource.ShouldNotContain("ISelfScopedPartiesClient", Case.Sensitive);
+    }
+
     [Theory]
     [InlineData("MyProfilePage.razor")]
     [InlineData("EditMyProfilePage.razor")]
@@ -233,9 +255,11 @@ public sealed class ConsumerPortalPackagingTests
         string source = File.ReadAllText(Path.Combine(sourceRoot, "Components", "MyPrivacyPage.razor"));
 
         source.ShouldContain("StatusMessage", Case.Sensitive);
+        source.ShouldContain("ProcessingStatusMessage", Case.Sensitive);
         source.ShouldContain("role=\"status\"", Case.Sensitive);
         source.ShouldContain("role=\"alert\"", Case.Sensitive);
         source.ShouldContain("DotNetStreamReference", Case.Sensitive);
+        source.ShouldContain("href=\"/me/consent\"", Case.Sensitive);
         source.ShouldNotContain("Toast", Case.Sensitive);
         source.ShouldNotContain("ConsumerRouteShell", Case.Sensitive);
         source.ShouldNotContain("Console.", Case.Sensitive);

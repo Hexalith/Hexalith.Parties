@@ -319,6 +319,38 @@ public static class ConsumerPortalLabels
 
     public static string PrivacyErasureForbiddenMessage => Get(nameof(PrivacyErasureForbiddenMessage));
 
+    public static string PrivacyProcessingTitle => Get(nameof(PrivacyProcessingTitle));
+
+    public static string PrivacyProcessingDescription => Get(nameof(PrivacyProcessingDescription));
+
+    public static string PrivacyProcessingLoadingStatus => Get(nameof(PrivacyProcessingLoadingStatus));
+
+    public static string PrivacyProcessingReadyStatus => Get(nameof(PrivacyProcessingReadyStatus));
+
+    public static string PrivacyProcessingEmptyStatus => Get(nameof(PrivacyProcessingEmptyStatus));
+
+    public static string PrivacyProcessingFailureTitle => Get(nameof(PrivacyProcessingFailureTitle));
+
+    public static string PrivacyProcessingFailureMessage => Get(nameof(PrivacyProcessingFailureMessage));
+
+    public static string PrivacyProcessingForbiddenMessage => Get(nameof(PrivacyProcessingForbiddenMessage));
+
+    public static string PrivacyProcessingUnavailableMessage => Get(nameof(PrivacyProcessingUnavailableMessage));
+
+    public static string PrivacyProcessingStaleMessage => Get(nameof(PrivacyProcessingStaleMessage));
+
+    public static string PrivacyProcessingErasedMessage => Get(nameof(PrivacyProcessingErasedMessage));
+
+    public static string PrivacyProcessingSummaryFallback => Get(nameof(PrivacyProcessingSummaryFallback));
+
+    public static string PrivacyProcessingConsentSummary => Get(nameof(PrivacyProcessingConsentSummary));
+
+    public static string PrivacyProcessingManageConsent => Get(nameof(PrivacyProcessingManageConsent));
+
+    public static string PrivacyProcessingBoundedMetadata => Get(nameof(PrivacyProcessingBoundedMetadata));
+
+    public static string PrivacyProcessingTimestampFormat => Get(nameof(PrivacyProcessingTimestampFormat));
+
     public static string ContactChannelTypeLabel(ContactChannelType type)
         => Get($"{nameof(ContactChannelTypeLabel)}{type}");
 
@@ -327,6 +359,18 @@ public static class ConsumerPortalLabels
 
     public static string PartyTypeLabel(PartyType type)
         => Get($"{nameof(PartyTypeLabel)}{type}");
+
+    public static string PrivacyProcessingCategoryLabel(ConsumerPrivacyProcessingCategory category)
+        => Get($"{nameof(PrivacyProcessingCategoryLabel)}{category}");
+
+    public static string PrivacyProcessingOutcomeLabel(ConsumerPrivacyProcessingRecordOutcome outcome)
+        => Get($"{nameof(PrivacyProcessingOutcomeLabel)}{outcome}");
+
+    public static string FormatPrivacyProcessingTimestamp(DateTimeOffset timestamp)
+        => string.Format(
+            CultureInfo.CurrentCulture,
+            PrivacyProcessingTimestampFormat,
+            timestamp.ToLocalTime());
 
     private static string Get(string name)
         => Resources.GetString(name, CultureInfo.CurrentUICulture) ?? name;

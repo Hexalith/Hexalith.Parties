@@ -18,6 +18,8 @@ public sealed class ConsumerPortalPageTests : BunitContext
         JSInterop.Mode = JSRuntimeMode.Loose;
         Services.AddFluentUIComponents();
         Services.AddSingleton<IConsumerPrivacyExportClient>(new StubPrivacyExportClient());
+        Services.AddSingleton<IConsumerPrivacyErasureClient>(new StubPrivacyErasureClient());
+        Services.AddSingleton<IConsumerPrivacyProcessingClient>(new StubPrivacyProcessingClient());
     }
 
     [Fact]
@@ -70,5 +72,26 @@ public sealed class ConsumerPortalPageTests : BunitContext
                 """{"status":"Exported"}"""u8.ToArray(),
                 ConsumerPrivacyExportStatus.Exported,
                 null));
+    }
+
+    private sealed class StubPrivacyErasureClient : IConsumerPrivacyErasureClient
+    {
+        public Task<ConsumerPrivacyErasureResult> GetMyErasureStatusAsync(CancellationToken cancellationToken = default)
+            => Task.FromResult(ConsumerPrivacyErasureResult.Active());
+
+        public Task<ConsumerPrivacyErasureResult> RequestMyErasureAsync(CancellationToken cancellationToken = default)
+            => Task.FromResult(new ConsumerPrivacyErasureResult(
+                ConsumerPrivacyErasureOutcome.Pending,
+                ConsumerPrivacyErasureState.ErasurePending,
+                CanCancel: true));
+
+        public Task<ConsumerPrivacyErasureResult> CancelMyErasureAsync(CancellationToken cancellationToken = default)
+            => Task.FromResult(ConsumerPrivacyErasureResult.Active());
+    }
+
+    private sealed class StubPrivacyProcessingClient : IConsumerPrivacyProcessingClient
+    {
+        public Task<ConsumerPrivacyProcessingResult> GetMyProcessingSummaryAsync(CancellationToken cancellationToken = default)
+            => Task.FromResult(ConsumerPrivacyProcessingResult.FromRecords([]));
     }
 }

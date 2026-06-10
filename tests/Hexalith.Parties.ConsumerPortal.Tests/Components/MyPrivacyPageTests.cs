@@ -19,6 +19,7 @@ public sealed class MyPrivacyPageTests : BunitContext
     {
         Services.AddFluentUIComponents();
         Services.TryAddSingleton<IConsumerPrivacyErasureClient>(new QueuePrivacyErasureClient());
+        Services.TryAddSingleton<IConsumerPrivacyProcessingClient>(new QueuePrivacyProcessingClient());
         JSInterop.SetupVoid("HexalithPartiesConsumerPortal.downloadJson", _ => true);
     }
 
@@ -34,8 +35,110 @@ public sealed class MyPrivacyPageTests : BunitContext
         cut.Markup.ShouldContain("right to erasure");
         cut.Markup.ShouldContain("Machine-readable JSON");
         cut.Markup.ShouldNotContain("ConsumerRouteShell");
-        cut.FindAll("[role='status'][aria-live='polite']").Count.ShouldBe(1);
-        cut.Find("[role='status'][aria-live='polite']").TextContent.ShouldContain("Ready to prepare your export.");
+        cut.FindAll("[role='status'][aria-live='polite']")
+            .Count(node => node.TextContent.Contains("Ready to prepare your export.", StringComparison.Ordinal))
+            .ShouldBe(1);
+        cut.FindAll("[role='status'][aria-live='polite']")
+            .Count(node => node.TextContent.Contains("No processing records are available", StringComparison.Ordinal))
+            .ShouldBe(1);
+    }
+
+    [Fact]
+    public void MyPrivacyPage_ProcessingLoading_KeepsExportAndErasureSectionsVisible()
+    {
+        var pending = new TaskCompletionSource<ConsumerPrivacyProcessingResult>(TaskCreationOptions.RunContinuationsAsynchronously);
+        Services.AddSingleton<IConsumerPrivacyExportClient>(new QueuePrivacyExportClient());
+        Services.Replace(ServiceDescriptor.Singleton<IConsumerPrivacyProcessingClient>(
+            new QueuePrivacyProcessingClient(_ => pending.Task)));
+
+        IRenderedComponent<MyPrivacyPage> cut = Render<MyPrivacyPage>();
+
+        cut.Markup.ShouldContain("Loading processing summary.");
+        cut.Markup.ShouldContain("Export my data");
+        cut.Markup.ShouldContain("Delete my data");
+    }
+
+    [Fact]
+    public void MyPrivacyPage_ProcessingRecords_RenderSafeRowsAndConsentLink()
+    {
+        Services.AddSingleton<IConsumerPrivacyExportClient>(new QueuePrivacyExportClient());
+        Services.Replace(ServiceDescriptor.Singleton<IConsumerPrivacyProcessingClient>(new QueuePrivacyProcessingClient(_ =>
+            Task.FromResult(ConsumerPrivacyProcessingResult.FromRecords(
+            [
+                new ConsumerPrivacyProcessingRecord(
+                    ConsumerPrivacyProcessingCategory.DataRead,
+                    ConsumerPrivacyProcessingRecordOutcome.Completed,
+                    new DateTimeOffset(2026, 6, 10, 10, 0, 0, TimeSpan.Zero),
+                    "Bounded GDPR operation record"),
+            ])))));
+
+        IRenderedComponent<MyPrivacyPage> cut = Render<MyPrivacyPage>();
+
+        cut.WaitForAssertion(() =>
+        {
+            cut.Markup.ShouldContain("What we process about you");
+            cut.Markup.ShouldContain("Bounded GDPR operation record");
+            cut.Markup.ShouldContain("Data read");
+            cut.Markup.ShouldContain("Completed");
+            cut.Markup.ShouldContain("Processing summary is current.");
+            cut.Find("a[href='/me/consent']").TextContent.ShouldContain("Manage all consent");
+            cut.Markup.ShouldNotContain("party-bound-001", Case.Sensitive);
+            cut.Markup.ShouldNotContain("tenant-secret", Case.Sensitive);
+            cut.Markup.ShouldNotContain("admin-e2e", Case.Sensitive);
+            cut.Markup.ShouldNotContain("corr-gdpr-e2e", Case.Sensitive);
+        });
+    }
+
+    [Theory]
+    [InlineData(ConsumerPrivacyProcessingOutcome.TransientFailure, "Try again in a moment.")]
+    [InlineData(ConsumerPrivacyProcessingOutcome.Forbidden, "can't confirm your account binding")]
+    public void MyPrivacyPage_ProcessingFailure_UsesBoundedAlertAndKeepsOtherSectionsVisible(
+        ConsumerPrivacyProcessingOutcome outcome,
+        string expectedCopy)
+    {
+        Services.AddSingleton<IConsumerPrivacyExportClient>(new QueuePrivacyExportClient());
+        Services.Replace(ServiceDescriptor.Singleton<IConsumerPrivacyProcessingClient>(new QueuePrivacyProcessingClient(_ =>
+            Task.FromResult(ConsumerPrivacyProcessingResult.Failure(outcome)))));
+
+        IRenderedComponent<MyPrivacyPage> cut = Render<MyPrivacyPage>();
+
+        cut.WaitForAssertion(() =>
+        {
+            cut.Find("[role='alert']").TextContent.ShouldContain(expectedCopy);
+            cut.Markup.ShouldContain("Export my data");
+            cut.Markup.ShouldContain("Delete my data");
+            cut.Markup.ShouldNotContain("ProblemDetails", Case.Sensitive);
+            cut.Markup.ShouldNotContain("party-", Case.Sensitive);
+            cut.Markup.ShouldNotContain("correlation", Case.Insensitive);
+        });
+    }
+
+    [Fact]
+    public void MyPrivacyPage_ErasedSelfStillShowsProcessingRecords()
+    {
+        Services.AddSingleton<IConsumerPrivacyExportClient>(new QueuePrivacyExportClient());
+        Services.Replace(ServiceDescriptor.Singleton<IConsumerPrivacyErasureClient>(new QueuePrivacyErasureClient(
+            status: _ => Task.FromResult(new ConsumerPrivacyErasureResult(
+                ConsumerPrivacyErasureOutcome.Permanent,
+                ConsumerPrivacyErasureState.Erased,
+                CanCancel: false)))));
+        Services.Replace(ServiceDescriptor.Singleton<IConsumerPrivacyProcessingClient>(new QueuePrivacyProcessingClient(_ =>
+            Task.FromResult(ConsumerPrivacyProcessingResult.FromRecords(
+            [
+                new ConsumerPrivacyProcessingRecord(
+                    ConsumerPrivacyProcessingCategory.Erasure,
+                    ConsumerPrivacyProcessingRecordOutcome.Completed,
+                    new DateTimeOffset(2026, 6, 10, 10, 0, 0, TimeSpan.Zero),
+                    "Bounded GDPR operation record"),
+            ])))));
+
+        IRenderedComponent<MyPrivacyPage> cut = Render<MyPrivacyPage>();
+
+        cut.WaitForAssertion(() =>
+        {
+            cut.Markup.ShouldContain("Once it's done, it's permanent - we can't undo it.");
+            cut.Markup.ShouldContain("Bounded GDPR operation record");
+        });
     }
 
     [Fact]
@@ -184,9 +287,9 @@ public sealed class MyPrivacyPageTests : BunitContext
 
         cut.WaitForAssertion(() =>
         {
-            cut.FindAll("[role='status'][aria-live='polite']").Count.ShouldBe(1);
-            cut.Find("[role='status'][aria-live='polite']").TextContent
-                .ShouldContain("Preparing your export - this can take a little while. We'll show it here the moment it's ready.");
+            cut.FindAll("[role='status'][aria-live='polite']")
+                .Count(node => node.TextContent.Contains("Preparing your export - this can take a little while. We'll show it here the moment it's ready.", StringComparison.Ordinal))
+                .ShouldBe(1);
             cut.Markup.ShouldNotContain("under one minute", Case.Insensitive);
             cut.Markup.ShouldNotContain("within 30 days", Case.Insensitive);
             client.CallCount.ShouldBe(1);
@@ -262,7 +365,9 @@ public sealed class MyPrivacyPageTests : BunitContext
         {
             cut.FindAll("[role='alert']").Count.ShouldBe(1);
             cut.Find("[role='alert']").TextContent.ShouldContain("Your data is safe - try again.");
-            cut.FindAll("[role='status'][aria-live='polite']").Count.ShouldBe(0);
+            cut.FindAll("[role='status'][aria-live='polite']")
+                .Count(node => node.TextContent.Contains("Ready to prepare your export.", StringComparison.Ordinal))
+                .ShouldBe(0);
         });
     }
 
@@ -373,5 +478,15 @@ public sealed class MyPrivacyPageTests : BunitContext
             CancelCount++;
             return _cancel(cancellationToken);
         }
+    }
+
+    private sealed class QueuePrivacyProcessingClient(
+        Func<CancellationToken, Task<ConsumerPrivacyProcessingResult>>? summary = null) : IConsumerPrivacyProcessingClient
+    {
+        private readonly Func<CancellationToken, Task<ConsumerPrivacyProcessingResult>> _summary =
+            summary ?? (_ => Task.FromResult(ConsumerPrivacyProcessingResult.FromRecords([])));
+
+        public Task<ConsumerPrivacyProcessingResult> GetMyProcessingSummaryAsync(CancellationToken cancellationToken = default)
+            => _summary(cancellationToken);
     }
 }

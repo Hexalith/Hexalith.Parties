@@ -3,6 +3,7 @@ import { expect, test, type APIRequestContext, type BrowserContext, type Locator
 const ADMIN_COOKIE = 'parties-admin-e2e';
 const CONSUMER_COOKIE = 'parties-consumer-e2e';
 const CONSUMER_ERASURE_STATUS_COOKIE = 'parties-consumer-erasure-e2e';
+const CONSUMER_PROCESSING_STATE_COOKIE = 'parties-consumer-processing-e2e';
 const REQUESTS_ROUTE = '/__parties/specimens/admin-portal/requests';
 const RESET_ROUTE = '/__parties/specimens/admin-portal/reset';
 const BASE_URL = process.env.BASE_URL ?? 'http://127.0.0.1:5072';
@@ -33,7 +34,7 @@ test.describe('Consumer portal route shells', () => {
       await page.goto(route.path);
 
       await expect(page.getByRole('heading', { name: route.heading })).toBeVisible();
-      await expect(page.getByRole('status')).toContainText(route.status);
+      await expect(page.getByRole('status').filter({ hasText: route.status })).toBeVisible();
       if (route.path === '/me') {
         await expect(page.getByText('Consumer E2E')).toBeVisible();
         await expect(page.getByRole('heading', { name: 'Profile details' })).toBeVisible();
@@ -48,9 +49,11 @@ test.describe('Consumer portal route shells', () => {
         await expect(page.getByRole('button', { name: 'Object (Art. 21)' })).toBeVisible();
       } else {
         await expect(page.getByRole('heading', { name: 'Export my data' })).toBeVisible();
+        await expect(page.getByRole('heading', { name: 'What we process about you' })).toBeVisible();
         await expect(page.getByRole('heading', { name: 'Delete my data' })).toBeVisible();
         await expect(page.getByText('right to erasure')).toBeVisible();
         await expect(page.getByText('Machine-readable JSON')).toBeVisible();
+        await expect(page.getByRole('link', { name: 'Manage all consent' })).toHaveAttribute('href', '/me/consent');
         await expect(page.getByRole('button', { name: 'Export my data' })).toBeVisible();
         await expect(page.getByRole('button', { name: 'Delete my data' })).toBeVisible();
         await expect(page.getByText('under one minute')).toHaveCount(0);
@@ -240,6 +243,76 @@ test.describe('Consumer portal route shells', () => {
     expect(browserVisibleDataRequests).toEqual([]);
   });
 
+  test('bound Consumer sees processing summary through the self-scoped path', async ({ context, page, request }) => {
+    await enableConsumerFixture(context);
+    const browserVisibleDataRequests = captureBrowserVisiblePartiesDataRequests(page);
+
+    await page.goto('/me/privacy');
+
+    await expect(page.getByRole('heading', { name: 'What we process about you' })).toBeVisible();
+    await expect(page.getByText('Bounded GDPR operation record')).toBeVisible();
+    await expect(page.getByText('Data read')).toBeVisible();
+    await expect(page.getByText('Completed')).toBeVisible();
+    await expect(page.getByRole('status').filter({ hasText: 'Processing summary is current.' })).toBeVisible();
+    await expect.poll(async () => (await latestProcessingRecordRequest(request))?.partyId ?? null).toBe('party-bound-001');
+    await expect(page.getByText('party-bound-001')).toHaveCount(0);
+    await expect(page.getByText('test-tenant')).toHaveCount(0);
+    await expect(page.getByText('admin-e2e')).toHaveCount(0);
+    await expect(page.getByText('corr-gdpr-e2e')).toHaveCount(0);
+
+    await page.getByRole('link', { name: 'Manage all consent' }).click();
+
+    await expect(page.getByRole('heading', { name: 'Consent' })).toBeVisible();
+    expect(new URL(page.url()).pathname).toBe('/me/consent');
+    expect(browserVisibleDataRequests).toEqual([]);
+  });
+
+  test('bound Consumer sees bounded empty processing state with privacy actions still usable', async ({ context, page, request }) => {
+    await enableConsumerFixture(context);
+    await enableConsumerProcessingStateFixture(context, 'empty');
+    const browserVisibleDataRequests = captureBrowserVisiblePartiesDataRequests(page);
+
+    await page.goto('/me/privacy');
+
+    await expect(page.getByRole('heading', { name: 'What we process about you' })).toBeVisible();
+    await expect(page.getByRole('status').filter({ hasText: 'No processing records are available to show right now.' })).toBeVisible();
+    await expect(page.getByText('Bounded GDPR operation record')).toHaveCount(0);
+    await expect(page.getByRole('heading', { name: 'Export my data' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Delete my data' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Export my data' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Delete my data' })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Manage all consent' })).toHaveAttribute('href', '/me/consent');
+    await expect.poll(async () => (await latestProcessingRecordRequest(request))?.partyId ?? null).toBe('party-bound-001');
+    await expect(page.getByText('party-bound-001')).toHaveCount(0);
+    await expect(page.getByText('test-tenant')).toHaveCount(0);
+    expect(new URL(page.url()).pathname).toBe('/me/privacy');
+    expect(browserVisibleDataRequests).toEqual([]);
+  });
+
+  test('bound Consumer sees bounded processing retry guidance after transient load failure', async ({ context, page, request }) => {
+    await enableConsumerFixture(context);
+    await enableConsumerProcessingStateFixture(context, 'transient-failure');
+    const browserVisibleDataRequests = captureBrowserVisiblePartiesDataRequests(page);
+
+    await page.goto('/me/privacy');
+
+    await expect(page.getByRole('heading', { name: 'What we process about you' })).toBeVisible();
+    await expect(page.getByRole('alert')).toContainText('Processing summary is unavailable.');
+    await expect(page.getByRole('alert')).toContainText('Try again in a moment. Export and deletion tools remain available where possible.');
+    await expect(page.getByRole('heading', { name: 'Export my data' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Delete my data' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Export my data' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Delete my data' })).toBeVisible();
+    await expect.poll(async () => (await latestProcessingRecordRequest(request))?.partyId ?? null).toBe('party-bound-001');
+    await expect(page.getByText('Processing records fixture timeout.')).toHaveCount(0);
+    await expect(page.getByText('party-bound-001')).toHaveCount(0);
+    await expect(page.getByText('test-tenant')).toHaveCount(0);
+    await expect(page.getByText('admin-e2e')).toHaveCount(0);
+    await expect(page.getByText('corr-gdpr-e2e')).toHaveCount(0);
+    expect(new URL(page.url()).pathname).toBe('/me/privacy');
+    expect(browserVisibleDataRequests).toEqual([]);
+  });
+
   test('bound Consumer requests and cancels erasure through the self-scoped path', async ({ context, page, request }) => {
     await enableConsumerFixture(context);
     const browserVisibleDataRequests = captureBrowserVisiblePartiesDataRequests(page);
@@ -391,6 +464,20 @@ const enableConsumerErasureStatusFixture = async (
   ]);
 };
 
+const enableConsumerProcessingStateFixture = async (
+  context: BrowserContext,
+  status: 'empty' | 'transient-failure',
+): Promise<void> => {
+  await context.addCookies([
+    {
+      name: CONSUMER_PROCESSING_STATE_COOKIE,
+      value: status,
+      url: BASE_URL,
+      sameSite: 'Lax',
+    },
+  ]);
+};
+
 const captureBrowserVisiblePartiesDataRequests = (page: Page): string[] => {
   const requests: string[] = [];
   page.on('request', (request) => {
@@ -426,6 +513,11 @@ const latestRevokeConsentRequest = async (request: APIRequestContext): Promise<A
 const latestExportRequest = async (request: APIRequestContext): Promise<AdminPortalRequestCapture | undefined> => {
   const snapshot = await requestSnapshot(request);
   return snapshot.exportRequests.at(-1);
+};
+
+const latestProcessingRecordRequest = async (request: APIRequestContext): Promise<AdminPortalRequestCapture | undefined> => {
+  const snapshot = await requestSnapshot(request);
+  return snapshot.processingRecordRequests.at(-1);
 };
 
 const latestErasureRequest = async (request: APIRequestContext): Promise<AdminPortalRequestCapture | undefined> => {
@@ -477,12 +569,13 @@ interface AdminPortalE2eSnapshot {
   addConsentRequests: AdminPortalRequestCapture[];
   revokeConsentRequests: AdminPortalRequestCapture[];
   exportRequests: AdminPortalRequestCapture[];
+  processingRecordRequests: AdminPortalRequestCapture[];
   erasureRequests: AdminPortalRequestCapture[];
   cancelErasureRequests: AdminPortalRequestCapture[];
 }
 
 interface AdminPortalRequestCapture {
-  kind: 'update' | 'add-consent' | 'revoke-consent' | 'export' | 'erasure' | 'cancel-erasure';
+  kind: 'update' | 'add-consent' | 'revoke-consent' | 'export' | 'processing-records' | 'erasure' | 'cancel-erasure';
   query: string | null;
   page: number;
   pageSize: number;

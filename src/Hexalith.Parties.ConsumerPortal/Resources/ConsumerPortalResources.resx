@@ -513,4 +513,91 @@
   <data name="PrivacyErasureForbiddenMessage" xml:space="preserve">
     <value>We can't confirm your account binding for this privacy request.</value>
   </data>
+  <data name="PrivacyProcessingTitle" xml:space="preserve">
+    <value>What we process about you</value>
+  </data>
+  <data name="PrivacyProcessingDescription" xml:space="preserve">
+    <value>Review recent processing activity for your signed-in account. This summary shows bounded audit metadata, not raw payloads or account details.</value>
+  </data>
+  <data name="PrivacyProcessingLoadingStatus" xml:space="preserve">
+    <value>Loading processing summary.</value>
+  </data>
+  <data name="PrivacyProcessingReadyStatus" xml:space="preserve">
+    <value>Processing summary is current.</value>
+  </data>
+  <data name="PrivacyProcessingEmptyStatus" xml:space="preserve">
+    <value>No processing records are available to show right now.</value>
+  </data>
+  <data name="PrivacyProcessingFailureTitle" xml:space="preserve">
+    <value>Processing summary is unavailable.</value>
+  </data>
+  <data name="PrivacyProcessingFailureMessage" xml:space="preserve">
+    <value>Try again in a moment. Export and deletion tools remain available where possible.</value>
+  </data>
+  <data name="PrivacyProcessingForbiddenMessage" xml:space="preserve">
+    <value>We can't confirm your account binding for this processing summary.</value>
+  </data>
+  <data name="PrivacyProcessingUnavailableMessage" xml:space="preserve">
+    <value>Processing records are unavailable right now. Export and deletion tools remain available where possible.</value>
+  </data>
+  <data name="PrivacyProcessingStaleMessage" xml:space="preserve">
+    <value>Processing records may be delayed. Showing only bounded information.</value>
+  </data>
+  <data name="PrivacyProcessingErasedMessage" xml:space="preserve">
+    <value>Personal data is unavailable for this profile, but bounded processing records may remain.</value>
+  </data>
+  <data name="PrivacyProcessingSummaryFallback" xml:space="preserve">
+    <value>Processing activity recorded.</value>
+  </data>
+  <data name="PrivacyProcessingConsentSummary" xml:space="preserve">
+    <value>This page is a privacy summary. Consent changes are managed on the consent page.</value>
+  </data>
+  <data name="PrivacyProcessingManageConsent" xml:space="preserve">
+    <value>Manage all consent</value>
+  </data>
+  <data name="PrivacyProcessingBoundedMetadata" xml:space="preserve">
+    <value>Shows category, outcome, time, and a safe summary only.</value>
+  </data>
+  <data name="PrivacyProcessingTimestampFormat" xml:space="preserve">
+    <value>Recorded {0:g}</value>
+  </data>
+  <data name="PrivacyProcessingCategoryLabelActivity" xml:space="preserve">
+    <value>Activity</value>
+  </data>
+  <data name="PrivacyProcessingCategoryLabelDataRead" xml:space="preserve">
+    <value>Data read</value>
+  </data>
+  <data name="PrivacyProcessingCategoryLabelDataChanged" xml:space="preserve">
+    <value>Data changed</value>
+  </data>
+  <data name="PrivacyProcessingCategoryLabelDataExport" xml:space="preserve">
+    <value>Data export</value>
+  </data>
+  <data name="PrivacyProcessingCategoryLabelConsent" xml:space="preserve">
+    <value>Consent</value>
+  </data>
+  <data name="PrivacyProcessingCategoryLabelErasure" xml:space="preserve">
+    <value>Deletion</value>
+  </data>
+  <data name="PrivacyProcessingCategoryLabelRestriction" xml:space="preserve">
+    <value>Restriction</value>
+  </data>
+  <data name="PrivacyProcessingCategoryLabelUnknown" xml:space="preserve">
+    <value>Activity</value>
+  </data>
+  <data name="PrivacyProcessingOutcomeLabelCompleted" xml:space="preserve">
+    <value>Completed</value>
+  </data>
+  <data name="PrivacyProcessingOutcomeLabelAccepted" xml:space="preserve">
+    <value>Accepted</value>
+  </data>
+  <data name="PrivacyProcessingOutcomeLabelLimited" xml:space="preserve">
+    <value>Limited</value>
+  </data>
+  <data name="PrivacyProcessingOutcomeLabelFailed" xml:space="preserve">
+    <value>Not completed</value>
+  </data>
+  <data name="PrivacyProcessingOutcomeLabelUnknown" xml:space="preserve">
+    <value>Status unavailable</value>
+  </data>
 </root>
