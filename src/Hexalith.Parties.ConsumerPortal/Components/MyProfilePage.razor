@@ -1,15 +1,248 @@
 @page "/me"
 @attribute [Authorize(Policy = "Consumer")]
+@implements IDisposable
+@using System.Globalization
+@using Hexalith.Parties.Contracts.Models
+@using Hexalith.Parties.Contracts.ValueObjects
 
-<ConsumerRouteShell Title="@ConsumerPortalLabels.MyProfileTitle"
-                    Summary="@ConsumerPortalLabels.MyProfileSummary"
-                    Status="@ConsumerPortalLabels.MyProfileStatus"
-                    Items="@_items" />
+@inject IConsumerProfileDataClient ProfileDataClient
+
+<section class="hx-parties-profile" aria-labelledby="@_titleId">
+    <header class="hx-parties-profile__header">
+        <p class="hx-parties-profile__eyebrow">@ConsumerPortalLabels.AreaLabel</p>
+        <h1 id="@_titleId">@ConsumerPortalLabels.MyProfileTitle</h1>
+        <p class="hx-parties-profile__summary">@ConsumerPortalLabels.MyProfileSummary</p>
+        @if (_profile is not null)
+        {
+            <FreshnessStatus Freshness="@_profile.Freshness" />
+        }
+        else if (_isLoading)
+        {
+            <p class="hx-parties-profile__freshness" role="status" aria-live="polite">
+                @ConsumerPortalLabels.MyProfileLoadingStatus
+            </p>
+        }
+    </header>
+
+    @if (_isLoading)
+    {
+        <section class="hx-parties-profile__section hx-parties-profile__skeleton" aria-labelledby="@_loadingId" aria-busy="true">
+            <h2 id="@_loadingId">@ConsumerPortalLabels.MyProfileLoadingHeading</h2>
+            <span class="hx-parties-profile__loading-line hx-parties-profile__loading-line--long" aria-hidden="true"></span>
+            <span class="hx-parties-profile__loading-line hx-parties-profile__loading-line--short" aria-hidden="true"></span>
+        </section>
+    }
+    else if (_loadFailed)
+    {
+        <section class="hx-parties-profile__section hx-parties-profile__notice" role="alert" aria-labelledby="@_failureId">
+            <h2 id="@_failureId">@ConsumerPortalLabels.MyProfileFailureTitle</h2>
+            <p>@ConsumerPortalLabels.MyProfileFailureMessage</p>
+            <FluentButton Class="hx-parties-profile__retry"
+                          Appearance="ButtonAppearance.Outline"
+                          OnClick="RetryAsync">
+                @ConsumerPortalLabels.MyProfileRetry
+            </FluentButton>
+        </section>
+    }
+    else if (_profile is { IsErased: true })
+    {
+        <section class="hx-parties-profile__section hx-parties-profile__notice" aria-labelledby="@_deletedId">
+            <h2 id="@_deletedId">@ConsumerPortalLabels.MyProfileDeletedTitle</h2>
+            <p>@ConsumerPortalLabels.MyProfileDeletedMessage</p>
+        </section>
+    }
+    else if (_profile is { } profile)
+    {
+        <div class="hx-parties-profile__content">
+            <section class="hx-parties-profile__section" aria-labelledby="@_detailsId">
+                <h2 id="@_detailsId">@ConsumerPortalLabels.MyProfileDetailsTitle</h2>
+                <dl class="hx-parties-profile__field-list">
+                    <ProfileField Label="@ConsumerPortalLabels.MyProfileDisplayName" Value="@profile.DisplayName" />
+                    <ProfileField Label="@ConsumerPortalLabels.MyProfilePartyType" Value="@ConsumerPortalLabels.PartyTypeLabel(profile.Type)" />
+                </dl>
+            </section>
+
+            @if (profile.Type == PartyType.Person && profile.PersonDetails is { } person)
+            {
+                <section class="hx-parties-profile__section" aria-labelledby="@_personId">
+                    <h2 id="@_personId">@ConsumerPortalLabels.MyProfilePersonTitle</h2>
+                    <dl class="hx-parties-profile__field-list">
+                        <ProfileField Label="@ConsumerPortalLabels.MyProfileFirstName" Value="@person.FirstName" />
+                        <ProfileField Label="@ConsumerPortalLabels.MyProfileLastName" Value="@person.LastName" />
+                        <ProfileField Label="@ConsumerPortalLabels.MyProfileDateOfBirth" Value="@FormatDate(person.DateOfBirth)" />
+                        <ProfileField Label="@ConsumerPortalLabels.MyProfilePrefix" Value="@person.Prefix" />
+                        <ProfileField Label="@ConsumerPortalLabels.MyProfileSuffix" Value="@person.Suffix" />
+                    </dl>
+                </section>
+            }
+
+            @if (profile.Type == PartyType.Organization && profile.OrganizationDetails is { } organization)
+            {
+                <section class="hx-parties-profile__section" aria-labelledby="@_organizationId">
+                    <h2 id="@_organizationId">@ConsumerPortalLabels.MyProfileOrganizationTitle</h2>
+                    <dl class="hx-parties-profile__field-list">
+                        <ProfileField Label="@ConsumerPortalLabels.MyProfileLegalName" Value="@organization.LegalName" />
+                        <ProfileField Label="@ConsumerPortalLabels.MyProfileTradingName" Value="@organization.TradingName" />
+                        <ProfileField Label="@ConsumerPortalLabels.MyProfileLegalForm" Value="@organization.LegalForm" />
+                        <ProfileField Label="@ConsumerPortalLabels.MyProfileRegistrationNumber" Value="@organization.RegistrationNumber" />
+                        <ProfileField Label="@ConsumerPortalLabels.MyProfileNaturalPerson" Value="@FormatBoolean(organization.IsNaturalPerson)" />
+                    </dl>
+                </section>
+            }
+
+            <section class="hx-parties-profile__section" aria-labelledby="@_contactId">
+                <h2 id="@_contactId">@ConsumerPortalLabels.MyProfileContactTitle</h2>
+                @if (profile.ContactChannels.Count == 0)
+                {
+                    <p class="hx-parties-profile__empty">@ConsumerPortalLabels.MyProfileEmptyContacts</p>
+                }
+                else
+                {
+                    <ul class="hx-parties-profile__collection">
+                        @foreach (ContactChannel channel in profile.ContactChannels)
+                        {
+                            <li class="hx-parties-profile__collection-item">
+                                <strong>@ConsumerPortalLabels.ContactChannelTypeLabel(channel.Type)</strong>
+                                <span>@channel.Value</span>
+                                @if (channel.IsPreferred)
+                                {
+                                    <span class="hx-parties-profile__label">@ConsumerPortalLabels.MyProfileContactPreferred</span>
+                                }
+                            </li>
+                        }
+                    </ul>
+                }
+            </section>
+
+            <section class="hx-parties-profile__section" aria-labelledby="@_identifierId">
+                <h2 id="@_identifierId">@ConsumerPortalLabels.MyProfileIdentifiersTitle</h2>
+                @if (profile.Identifiers.Count == 0)
+                {
+                    <p class="hx-parties-profile__empty">@ConsumerPortalLabels.MyProfileEmptyIdentifiers</p>
+                }
+                else
+                {
+                    <ul class="hx-parties-profile__collection">
+                        @foreach (PartyIdentifier identifier in profile.Identifiers)
+                        {
+                            <li class="hx-parties-profile__collection-item">
+                                <strong>@ConsumerPortalLabels.IdentifierTypeLabel(identifier.Type)</strong>
+                                <span>@identifier.Value</span>
+                                @if (!string.IsNullOrWhiteSpace(identifier.Jurisdiction))
+                                {
+                                    <span class="hx-parties-profile__label">@ConsumerPortalLabels.MyProfileIdentifierJurisdiction</span>
+                                    <span>@identifier.Jurisdiction</span>
+                                }
+                            </li>
+                        }
+                    </ul>
+                }
+            </section>
+
+            <section class="hx-parties-profile__section" aria-labelledby="@_stateId">
+                <h2 id="@_stateId">@ConsumerPortalLabels.MyProfileStateTitle</h2>
+                <dl class="hx-parties-profile__field-list">
+                    <ProfileField Label="@ConsumerPortalLabels.MyProfileLifecycleState" Value="@FormatActive(profile.IsActive)" />
+                    <ProfileField Label="@ConsumerPortalLabels.MyProfileRestrictionState" Value="@FormatRestricted(profile.IsRestricted)" />
+                </dl>
+            </section>
+
+            <section class="hx-parties-profile__section" aria-labelledby="@_datesId">
+                <h2 id="@_datesId">@ConsumerPortalLabels.MyProfileDatesTitle</h2>
+                <dl class="hx-parties-profile__field-list">
+                    <ProfileField Label="@ConsumerPortalLabels.MyProfileCreatedAt" Value="@FormatDate(profile.CreatedAt)" />
+                    <ProfileField Label="@ConsumerPortalLabels.MyProfileLastModifiedAt" Value="@FormatDate(profile.LastModifiedAt)" />
+                </dl>
+            </section>
+        </div>
+    }
+</section>
 
 @code {
-    private static readonly IReadOnlyList<string> _items =
-    [
-        ConsumerPortalLabels.MyProfileNextIdentity,
-        ConsumerPortalLabels.MyProfileNextData,
-    ];
+    private static int s_nextInstanceId;
+
+    private readonly int _instanceId = System.Threading.Interlocked.Increment(ref s_nextInstanceId);
+    private CancellationTokenSource? _loadCts;
+    private PartyDetail? _profile;
+    private bool _isLoading = true;
+    private bool _loadFailed;
+
+    private string _titleId => $"hx-parties-profile-title-{_instanceId}";
+    private string _loadingId => $"hx-parties-profile-loading-{_instanceId}";
+    private string _failureId => $"hx-parties-profile-failure-{_instanceId}";
+    private string _deletedId => $"hx-parties-profile-deleted-{_instanceId}";
+    private string _detailsId => $"hx-parties-profile-details-{_instanceId}";
+    private string _personId => $"hx-parties-profile-person-{_instanceId}";
+    private string _organizationId => $"hx-parties-profile-organization-{_instanceId}";
+    private string _contactId => $"hx-parties-profile-contact-{_instanceId}";
+    private string _identifierId => $"hx-parties-profile-identifiers-{_instanceId}";
+    private string _stateId => $"hx-parties-profile-state-{_instanceId}";
+    private string _datesId => $"hx-parties-profile-dates-{_instanceId}";
+
+    protected override Task OnInitializedAsync()
+        => LoadProfileAsync();
+
+    private Task RetryAsync()
+        => LoadProfileAsync();
+
+    private async Task LoadProfileAsync()
+    {
+        _loadCts?.Cancel();
+        _loadCts?.Dispose();
+        _loadCts = new CancellationTokenSource();
+        CancellationToken token = _loadCts.Token;
+
+        _isLoading = true;
+        _loadFailed = false;
+
+        try
+        {
+            PartyDetail profile = await ProfileDataClient.GetMyPartyAsync(token);
+            if (token.IsCancellationRequested)
+            {
+                return;
+            }
+
+            _profile = profile;
+        }
+        catch (OperationCanceledException) when (token.IsCancellationRequested)
+        {
+        }
+        catch
+        {
+            if (!token.IsCancellationRequested)
+            {
+                _profile = null;
+                _loadFailed = true;
+            }
+        }
+        finally
+        {
+            if (!token.IsCancellationRequested)
+            {
+                _isLoading = false;
+            }
+        }
+    }
+
+    private static string FormatDate(DateTimeOffset value)
+        => value.ToString("d", CultureInfo.CurrentCulture);
+
+    private static string FormatDate(DateTimeOffset? value)
+        => value is { } date ? FormatDate(date) : ConsumerPortalLabels.MyProfileNotProvided;
+
+    private static string FormatBoolean(bool value)
+        => value ? ConsumerPortalLabels.MyProfileYes : ConsumerPortalLabels.MyProfileNo;
+
+    private static string FormatActive(bool isActive)
+        => isActive ? ConsumerPortalLabels.MyProfileActive : ConsumerPortalLabels.MyProfileInactive;
+
+    private static string FormatRestricted(bool isRestricted)
+        => isRestricted ? ConsumerPortalLabels.MyProfileRestricted : ConsumerPortalLabels.MyProfileNotRestricted;
+
+    public void Dispose()
+    {
+        _loadCts?.Cancel();
+        _loadCts?.Dispose();
+    }
 }

@@ -22,7 +22,7 @@
     <value>My profile</value>
   </data>
   <data name="MyProfileSummary" xml:space="preserve">
-    <value>You will be able to review the profile information linked to your signed-in account.</value>
+    <value>Review the profile information linked to your signed-in account.</value>
   </data>
   <data name="MyProfileStatus" xml:space="preserve">
     <value>Profile details are not loaded in this setup screen.</value>
@@ -32,6 +32,177 @@
   </data>
   <data name="MyProfileNextData" xml:space="preserve">
     <value>Keep personal data access scoped to your own party record.</value>
+  </data>
+  <data name="MyProfileLoadingStatus" xml:space="preserve">
+    <value>Loading profile details</value>
+  </data>
+  <data name="MyProfileLoadingHeading" xml:space="preserve">
+    <value>Loading your profile</value>
+  </data>
+  <data name="MyProfileFailureTitle" xml:space="preserve">
+    <value>Profile details are unavailable</value>
+  </data>
+  <data name="MyProfileFailureMessage" xml:space="preserve">
+    <value>We couldn't load your profile details. Please try again.</value>
+  </data>
+  <data name="MyProfileRetry" xml:space="preserve">
+    <value>Try again</value>
+  </data>
+  <data name="MyProfileDeletedTitle" xml:space="preserve">
+    <value>This profile was deleted</value>
+  </data>
+  <data name="MyProfileDeletedMessage" xml:space="preserve">
+    <value>Only status information is available for this profile.</value>
+  </data>
+  <data name="MyProfileFreshnessCurrent" xml:space="preserve">
+    <value>Up to date</value>
+  </data>
+  <data name="MyProfileFreshnessStale" xml:space="preserve">
+    <value>Showing what we last knew - refreshing</value>
+  </data>
+  <data name="MyProfileFreshnessLastKnown" xml:space="preserve">
+    <value>Showing last known</value>
+  </data>
+  <data name="MyProfileDetailsTitle" xml:space="preserve">
+    <value>Profile details</value>
+  </data>
+  <data name="MyProfilePersonTitle" xml:space="preserve">
+    <value>Person details</value>
+  </data>
+  <data name="MyProfileOrganizationTitle" xml:space="preserve">
+    <value>Organization details</value>
+  </data>
+  <data name="MyProfileContactTitle" xml:space="preserve">
+    <value>Contact channels</value>
+  </data>
+  <data name="MyProfileIdentifiersTitle" xml:space="preserve">
+    <value>Identifiers</value>
+  </data>
+  <data name="MyProfileStateTitle" xml:space="preserve">
+    <value>Status</value>
+  </data>
+  <data name="MyProfileDatesTitle" xml:space="preserve">
+    <value>Record dates</value>
+  </data>
+  <data name="MyProfileDisplayName" xml:space="preserve">
+    <value>Display name</value>
+  </data>
+  <data name="MyProfilePartyType" xml:space="preserve">
+    <value>Profile type</value>
+  </data>
+  <data name="MyProfileFirstName" xml:space="preserve">
+    <value>First name</value>
+  </data>
+  <data name="MyProfileLastName" xml:space="preserve">
+    <value>Last name</value>
+  </data>
+  <data name="MyProfileDateOfBirth" xml:space="preserve">
+    <value>Date of birth</value>
+  </data>
+  <data name="MyProfilePrefix" xml:space="preserve">
+    <value>Prefix</value>
+  </data>
+  <data name="MyProfileSuffix" xml:space="preserve">
+    <value>Suffix</value>
+  </data>
+  <data name="MyProfileLegalName" xml:space="preserve">
+    <value>Legal name</value>
+  </data>
+  <data name="MyProfileTradingName" xml:space="preserve">
+    <value>Trading name</value>
+  </data>
+  <data name="MyProfileLegalForm" xml:space="preserve">
+    <value>Legal form</value>
+  </data>
+  <data name="MyProfileRegistrationNumber" xml:space="preserve">
+    <value>Registration number</value>
+  </data>
+  <data name="MyProfileNaturalPerson" xml:space="preserve">
+    <value>Natural person</value>
+  </data>
+  <data name="MyProfileContactPreferred" xml:space="preserve">
+    <value>Preferred</value>
+  </data>
+  <data name="MyProfileIdentifierJurisdiction" xml:space="preserve">
+    <value>Jurisdiction</value>
+  </data>
+  <data name="MyProfileLifecycleState" xml:space="preserve">
+    <value>Lifecycle state</value>
+  </data>
+  <data name="MyProfileRestrictionState" xml:space="preserve">
+    <value>Restriction state</value>
+  </data>
+  <data name="MyProfileCreatedAt" xml:space="preserve">
+    <value>Created</value>
+  </data>
+  <data name="MyProfileLastModifiedAt" xml:space="preserve">
+    <value>Last updated</value>
+  </data>
+  <data name="MyProfileEmptyContacts" xml:space="preserve">
+    <value>No contact channels are shown.</value>
+  </data>
+  <data name="MyProfileEmptyIdentifiers" xml:space="preserve">
+    <value>No identifiers are shown.</value>
+  </data>
+  <data name="MyProfileActive" xml:space="preserve">
+    <value>Active</value>
+  </data>
+  <data name="MyProfileInactive" xml:space="preserve">
+    <value>Inactive</value>
+  </data>
+  <data name="MyProfileRestricted" xml:space="preserve">
+    <value>Restricted</value>
+  </data>
+  <data name="MyProfileNotRestricted" xml:space="preserve">
+    <value>Not restricted</value>
+  </data>
+  <data name="MyProfileYes" xml:space="preserve">
+    <value>Yes</value>
+  </data>
+  <data name="MyProfileNo" xml:space="preserve">
+    <value>No</value>
+  </data>
+  <data name="MyProfileNotProvided" xml:space="preserve">
+    <value>Not provided</value>
+  </data>
+  <data name="ContactChannelTypeLabelEmail" xml:space="preserve">
+    <value>Email</value>
+  </data>
+  <data name="ContactChannelTypeLabelPhone" xml:space="preserve">
+    <value>Phone</value>
+  </data>
+  <data name="ContactChannelTypeLabelPostalAddress" xml:space="preserve">
+    <value>Postal address</value>
+  </data>
+  <data name="ContactChannelTypeLabelSocialMedia" xml:space="preserve">
+    <value>Social media</value>
+  </data>
+  <data name="IdentifierTypeLabelVAT" xml:space="preserve">
+    <value>VAT</value>
+  </data>
+  <data name="IdentifierTypeLabelSIRET" xml:space="preserve">
+    <value>SIRET</value>
+  </data>
+  <data name="IdentifierTypeLabelNationalId" xml:space="preserve">
+    <value>National ID</value>
+  </data>
+  <data name="IdentifierTypeLabelCompanyRegistration" xml:space="preserve">
+    <value>Company registration</value>
+  </data>
+  <data name="IdentifierTypeLabelTaxId" xml:space="preserve">
+    <value>Tax ID</value>
+  </data>
+  <data name="IdentifierTypeLabelOther" xml:space="preserve">
+    <value>Other</value>
+  </data>
+  <data name="PartyTypeLabelUnknown" xml:space="preserve">
+    <value>Unknown</value>
+  </data>
+  <data name="PartyTypeLabelPerson" xml:space="preserve">
+    <value>Person</value>
+  </data>
+  <data name="PartyTypeLabelOrganization" xml:space="preserve">
+    <value>Organization</value>
   </data>
   <data name="EditProfileTitle" xml:space="preserve">
     <value>Edit profile</value>

@@ -1,0 +1,17 @@
+<div class="hx-parties-profile__field">
+    <dt class="hx-parties-profile__label">@Label</dt>
+    <dd>@DisplayValue</dd>
+</div>
+
+@code {
+    [Parameter]
+    public string Label { get; set; } = string.Empty;
+
+    [Parameter]
+    public string? Value { get; set; }
+
+    private string DisplayValue
+        => string.IsNullOrWhiteSpace(Value)
+            ? ConsumerPortalLabels.MyProfileNotProvided
+            : Value;
+}

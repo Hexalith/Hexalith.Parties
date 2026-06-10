@@ -5,7 +5,7 @@ const RESET_ROUTE = '/__parties/specimens/admin-portal/reset';
 const BASE_URL = process.env.BASE_URL ?? 'http://127.0.0.1:5072';
 
 const CONSUMER_ROUTES = [
-  { path: '/me', heading: 'My profile', status: 'Profile details are not loaded in this setup screen.' },
+  { path: '/me', heading: 'My profile', status: 'Up to date' },
   { path: '/me/edit', heading: 'Edit profile', status: 'Profile updates are not submitted in this setup screen.' },
   { path: '/me/consent', heading: 'Consent', status: 'Consent choices are not changed in this setup screen.' },
   { path: '/me/privacy', heading: 'Data privacy', status: 'Privacy requests are not started in this setup screen.' },
@@ -31,7 +31,12 @@ test.describe('Consumer portal route shells', () => {
 
       await expect(page.getByRole('heading', { name: route.heading })).toBeVisible();
       await expect(page.getByRole('status')).toContainText(route.status);
-      await expect(page.getByRole('heading', { name: 'What will be available here' })).toBeVisible();
+      if (route.path === '/me') {
+        await expect(page.getByText('Consumer E2E')).toBeVisible();
+        await expect(page.getByRole('heading', { name: 'Profile details' })).toBeVisible();
+      } else {
+        await expect(page.getByRole('heading', { name: 'What will be available here' })).toBeVisible();
+      }
       expect(new URL(page.url()).pathname).toBe(route.path);
       expect(browserVisibleDataRequests).toEqual([]);
     });

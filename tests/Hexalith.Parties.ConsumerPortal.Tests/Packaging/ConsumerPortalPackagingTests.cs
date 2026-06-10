@@ -82,8 +82,35 @@ public sealed class ConsumerPortalPackagingTests
         allSource.ShouldNotContain("ListPartiesAsync", Case.Sensitive);
         allSource.ShouldNotContain("SearchPartiesAsync", Case.Sensitive);
         allSource.ShouldNotContain("ISelfScopedPartiesClient", Case.Sensitive);
+        allSource.ShouldContain("IConsumerProfileDataClient", Case.Sensitive);
         allSource.ShouldNotContain("GetPartyAsync", Case.Sensitive);
+        allSource.ShouldNotContain("IPartiesQueryClient", Case.Sensitive);
         allSource.ShouldNotContain("IAdminPortalGdprClient", Case.Sensitive);
+        allSource.ShouldNotContain("Hexalith.Parties.UI", Case.Sensitive);
+    }
+
+    [Fact]
+    public void ConsumerProfileDataPort_DoesNotAcceptCallerSuppliedPartyIds()
+    {
+        string sourceRoot = ProjectRoot("src/Hexalith.Parties.ConsumerPortal");
+        string portSource = File.ReadAllText(Path.Combine(sourceRoot, "Services", "IConsumerProfileDataClient.cs"));
+
+        portSource.ShouldContain("GetMyPartyAsync", Case.Sensitive);
+        portSource.ShouldNotContain("partyId", Case.Insensitive);
+        portSource.ShouldNotContain("GetPartyAsync", Case.Sensitive);
+    }
+
+    [Fact]
+    public void MyProfilePage_DoesNotUseLoggingOrTelemetryApis()
+    {
+        string sourceRoot = ProjectRoot("src/Hexalith.Parties.ConsumerPortal");
+        string profileSource = File.ReadAllText(Path.Combine(sourceRoot, "Components", "MyProfilePage.razor"));
+
+        profileSource.ShouldNotContain("ILogger", Case.Sensitive);
+        profileSource.ShouldNotContain("Console.", Case.Sensitive);
+        profileSource.ShouldNotContain("Debug.", Case.Sensitive);
+        profileSource.ShouldNotContain("ActivitySource", Case.Sensitive);
+        profileSource.ShouldNotContain("Meter", Case.Sensitive);
     }
 
     [Fact]

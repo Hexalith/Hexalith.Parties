@@ -4,6 +4,7 @@ using Hexalith.Parties.AdminPortal.Services;
 using Hexalith.Parties.Client.Abstractions;
 using Hexalith.Parties.Client.AdminPortal;
 using Hexalith.Parties.Client.Extensions;
+using Hexalith.Parties.ConsumerPortal.Services;
 using Hexalith.Parties.ServiceDefaults;
 using Hexalith.Parties.UI;
 using Hexalith.Parties.UI.Authentication;
@@ -71,6 +72,7 @@ builder.Services.AddPartiesUiClaimsResolution();
 // accessor until a consumer data page exists (today /me is an empty stub), so unconditional registration
 // composes cleanly even in a no-Parties:BaseUrl (degraded/test) boot.
 builder.Services.AddSelfScopedPartiesClient();
+builder.Services.AddScoped<IConsumerProfileDataClient, ConsumerProfileDataClient>();
 
 // Story 4.2 — host-owned admin-link identity binding provisioning. This stays outside the Parties
 // command/event/projection stream: the runtime source remains the IdP party_id claim, while this service

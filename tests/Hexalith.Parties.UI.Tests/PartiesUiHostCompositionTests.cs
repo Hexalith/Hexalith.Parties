@@ -143,6 +143,19 @@ public sealed class PartiesUiHostCompositionTests
     }
 
     [Fact]
+    public void Program_RegistersConsumerProfileAdapterAfterSelfScopedClient()
+    {
+        string source = File.ReadAllText(ProjectRoot("src/Hexalith.Parties.UI/Program.cs"));
+
+        source.ShouldContain("using Hexalith.Parties.ConsumerPortal.Services;");
+        source.ShouldContain("builder.Services.AddScoped<IConsumerProfileDataClient, ConsumerProfileDataClient>();");
+        source.IndexOf("builder.Services.AddSelfScopedPartiesClient();", StringComparison.Ordinal)
+            .ShouldBeLessThan(source.IndexOf(
+                "builder.Services.AddScoped<IConsumerProfileDataClient, ConsumerProfileDataClient>();",
+                StringComparison.Ordinal));
+    }
+
+    [Fact]
     public void Routes_AddsPortalAssembliesAndKeepsAuthorizeRouteView()
     {
         string source = File.ReadAllText(ProjectRoot("src/Hexalith.Parties.UI/Components/Routes.razor"));

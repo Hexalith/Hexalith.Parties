@@ -23,6 +23,8 @@ test.describe('Consumer party binding landing', () => {
     await page.waitForURL('**/me');
 
     await expect(page.getByRole('heading', { name: 'My profile' })).toBeVisible();
+    await expect(page.getByRole('status')).toContainText('Up to date');
+    await expect(page.getByText('Consumer E2E')).toBeVisible();
     await expect(page.getByText("Your account isn't linked to a profile yet.")).toHaveCount(0);
     expect(browserVisibleDataRequests).toEqual([]);
   });

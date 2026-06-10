@@ -947,6 +947,7 @@ internal sealed class PartiesAdminPortalE2ePartiesQueryClient(PartiesAdminPortal
     private static readonly DateTimeOffset BaseDate = new(2026, 06, 10, 10, 00, 00, TimeSpan.Zero);
     private static readonly IReadOnlyList<PartyIndexEntry> Entries =
     [
+        Entry("party-bound-001", PartyType.Person, true, "Consumer E2E", "Consumer", 0),
         Entry("ada-lovelace", PartyType.Person, true, "Ada Lovelace", "Lovelace", 0),
         Entry("grace-hopper", PartyType.Person, true, "Grace Hopper", "Hopper", 1),
         Entry("local-only-partners", PartyType.Organization, true, "Local Only Partners", "Local Only Partners", 2),
@@ -1070,6 +1071,7 @@ internal sealed class PartiesAdminPortalE2ePartiesQueryClient(PartiesAdminPortal
                 : null,
             CreatedAt = entry.CreatedAt,
             LastModifiedAt = entry.LastModifiedAt,
+            Freshness = ProjectionFreshnessMetadata.Create(ProjectionFreshnessStatus.Current),
         };
 
     private static PartyIndexEntry Entry(

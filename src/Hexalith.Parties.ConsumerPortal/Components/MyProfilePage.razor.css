@@ -1,0 +1,168 @@
+.hx-parties-profile {
+    max-inline-size: 44rem;
+    margin-inline: auto;
+    padding: var(--spacingVerticalXXL, 2rem) var(--spacingHorizontalL, 1rem);
+    color: var(--neutral-foreground-rest, CanvasText);
+    font-size: 16px;
+    line-height: 1.5;
+}
+
+.hx-parties-profile,
+.hx-parties-profile__header,
+.hx-parties-profile__content,
+.hx-parties-profile__section,
+.hx-parties-profile__field-list,
+.hx-parties-profile__collection,
+.hx-parties-profile__notice,
+.hx-parties-profile__skeleton {
+    display: grid;
+}
+
+.hx-parties-profile__header {
+    gap: var(--spacingVerticalM, .75rem);
+    margin-block-end: var(--spacingVerticalXXL, 2rem);
+}
+
+.hx-parties-profile__eyebrow,
+.hx-parties-profile__summary,
+.hx-parties-profile__freshness,
+.hx-parties-profile__label,
+.hx-parties-profile__empty,
+.hx-parties-profile__loading-line {
+    color: var(--neutral-foreground-hint, var(--neutral-foreground-rest));
+}
+
+.hx-parties-profile__eyebrow {
+    margin: 0;
+    font-size: var(--type-ramp-minus-1-font-size, .875rem);
+    font-weight: 600;
+}
+
+.hx-parties-profile h1,
+.hx-parties-profile h2,
+.hx-parties-profile h3,
+.hx-parties-profile p,
+.hx-parties-profile dl,
+.hx-parties-profile dd {
+    margin: 0;
+}
+
+.hx-parties-profile h1 {
+    font-size: var(--type-ramp-plus-4-font-size, 2.5rem);
+    line-height: var(--type-ramp-plus-4-line-height, 3rem);
+}
+
+.hx-parties-profile h2 {
+    font-size: var(--type-ramp-plus-2-font-size, 1.5rem);
+    line-height: var(--type-ramp-plus-2-line-height, 2rem);
+}
+
+.hx-parties-profile h3 {
+    font-size: var(--type-ramp-plus-1-font-size, 1.25rem);
+    line-height: var(--type-ramp-plus-1-line-height, 1.75rem);
+}
+
+.hx-parties-profile__summary {
+    max-inline-size: 38rem;
+}
+
+.hx-parties-profile__content {
+    gap: var(--spacingVerticalXL, 1.5rem);
+}
+
+.hx-parties-profile__section {
+    gap: var(--spacingVerticalM, .75rem);
+    padding-block-start: var(--spacingVerticalL, 1rem);
+    border-block-start: var(--strokeWidthThin, 1px) solid var(--neutral-stroke-rest, CanvasText);
+}
+
+.hx-parties-profile__field-list {
+    gap: var(--spacingVerticalS, .5rem);
+}
+
+.hx-parties-profile__field {
+    display: grid;
+    gap: var(--spacingVerticalXXS, .25rem);
+}
+
+.hx-parties-profile__label {
+    font-size: var(--type-ramp-minus-1-font-size, .875rem);
+    font-weight: 600;
+}
+
+.hx-parties-profile__collection {
+    gap: var(--spacingVerticalM, .75rem);
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.hx-parties-profile__collection-item {
+    display: grid;
+    gap: var(--spacingVerticalXXS, .25rem);
+    padding-block: var(--spacingVerticalS, .5rem);
+}
+
+.hx-parties-profile__freshness {
+    align-items: center;
+    display: inline-flex;
+    gap: var(--spacingHorizontalXS, .25rem);
+}
+
+.hx-parties-profile__freshness-dot {
+    block-size: .625rem;
+    border-radius: var(--borderRadiusCircular, 9999px);
+    display: inline-block;
+    inline-size: .625rem;
+}
+
+.hx-parties-profile__freshness--current .hx-parties-profile__freshness-dot {
+    background: var(--colorStatusSuccessBackground1, Canvas);
+    border: var(--strokeWidthThin, 1px) solid var(--colorStatusSuccessForeground1, CanvasText);
+}
+
+.hx-parties-profile__freshness--last-known .hx-parties-profile__freshness-dot {
+    background: var(--colorStatusWarningBackground1, Canvas);
+    border: var(--strokeWidthThin, 1px) solid var(--colorStatusWarningForeground1, CanvasText);
+}
+
+.hx-parties-profile__notice {
+    gap: var(--spacingVerticalS, .5rem);
+    padding: var(--spacingVerticalM, .75rem) 0;
+}
+
+.hx-parties-profile__retry {
+    justify-self: start;
+}
+
+.hx-parties-profile__skeleton {
+    gap: var(--spacingVerticalS, .5rem);
+}
+
+.hx-parties-profile__loading-line {
+    background: var(--neutral-fill-stealth-rest, Canvas);
+    border: var(--strokeWidthThin, 1px) solid var(--neutral-stroke-rest, CanvasText);
+    border-radius: var(--borderRadiusMedium, .25rem);
+    block-size: 1.25rem;
+}
+
+.hx-parties-profile__loading-line--short {
+    inline-size: min(16rem, 70%);
+}
+
+.hx-parties-profile__loading-line--long {
+    inline-size: 100%;
+}
+
+@media (max-width: 480px) {
+    .hx-parties-profile {
+        padding-block: var(--spacingVerticalXL, 1.5rem);
+    }
+}
+
+@media (forced-colors: active) {
+    .hx-parties-profile__freshness-dot {
+        background: CanvasText;
+        border-color: CanvasText;
+    }
+}

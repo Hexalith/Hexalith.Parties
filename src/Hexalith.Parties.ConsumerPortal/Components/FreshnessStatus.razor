@@ -1,0 +1,24 @@
+@using Hexalith.Parties.Contracts.Models
+
+<p class="hx-parties-profile__freshness @StatusClass">
+    <span class="hx-parties-profile__freshness-dot" aria-hidden="true"></span>
+    <span role="status" aria-live="polite">@Message</span>
+</p>
+
+@code {
+    [Parameter]
+    public ProjectionFreshnessMetadata? Freshness { get; set; }
+
+    private string StatusClass
+        => Freshness?.Status == ProjectionFreshnessStatus.Current
+            ? "hx-parties-profile__freshness--current"
+            : "hx-parties-profile__freshness--last-known";
+
+    private string Message
+        => Freshness?.Status switch
+        {
+            ProjectionFreshnessStatus.Current => ConsumerPortalLabels.MyProfileFreshnessCurrent,
+            ProjectionFreshnessStatus.Stale => ConsumerPortalLabels.MyProfileFreshnessStale,
+            _ => ConsumerPortalLabels.MyProfileFreshnessLastKnown,
+        };
+}

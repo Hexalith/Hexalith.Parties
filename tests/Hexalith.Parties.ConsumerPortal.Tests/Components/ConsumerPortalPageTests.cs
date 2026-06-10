@@ -11,7 +11,6 @@ namespace Hexalith.Parties.ConsumerPortal.Tests.Components;
 public sealed class ConsumerPortalPageTests : BunitContext
 {
     [Theory]
-    [InlineData(typeof(MyProfilePage), "My profile")]
     [InlineData(typeof(EditMyProfilePage), "Edit profile")]
     [InlineData(typeof(MyConsentPage), "Consent")]
     [InlineData(typeof(MyPrivacyPage), "Data privacy")]
@@ -28,7 +27,6 @@ public sealed class ConsumerPortalPageTests : BunitContext
     }
 
     [Theory]
-    [InlineData(typeof(MyProfilePage))]
     [InlineData(typeof(EditMyProfilePage))]
     [InlineData(typeof(MyConsentPage))]
     [InlineData(typeof(MyPrivacyPage))]
@@ -47,7 +45,6 @@ public sealed class ConsumerPortalPageTests : BunitContext
     private RenderedConsumerPortalPage RenderConsumerPortalPage(Type component)
         => component.Name switch
         {
-            nameof(MyProfilePage) => Capture(Render<MyProfilePage>()),
             nameof(EditMyProfilePage) => Capture(Render<EditMyProfilePage>()),
             nameof(MyConsentPage) => Capture(Render<MyConsentPage>()),
             nameof(MyPrivacyPage) => Capture(Render<MyPrivacyPage>()),
