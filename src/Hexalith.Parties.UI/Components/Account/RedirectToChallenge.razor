@@ -1,0 +1,15 @@
+@inject NavigationManager Nav
+
+@*
+    Story 1.3 — force-navigate to Story 1.2's server-side OIDC challenge endpoint, preserving the
+    current URL as the return URL. forceLoad: true is required because /authentication/challenge is a
+    server endpoint (mapped by MapHexalithFrontComposerAuthenticationEndpoints) that 302s to Keycloak,
+    NOT a Blazor route — so it must be a full browser navigation, not client-side routing.
+*@
+
+@code {
+    protected override void OnInitialized()
+        => Nav.NavigateTo(
+            $"authentication/challenge?returnUrl={Uri.EscapeDataString(new Uri(Nav.Uri).PathAndQuery)}",
+            forceLoad: true);
+}

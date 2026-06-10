@@ -1,0 +1,13 @@
+@page "/me"
+@attribute [Authorize(Policy = PartiesUiAuthorization.ConsumerPolicy)]
+
+@*
+    Story 1.3 — transitional Consumer area entry point. Establishes the /me route + the per-area
+    [Authorize(Policy = Consumer)] pattern (enforced by AuthorizeRouteView in Routes.razor). This
+    host-local stub must be REMOVED when ConsumerPortal's MyProfilePage (also @page "/me") is embedded
+    (Story 4.3/4.4) to avoid a duplicate-route conflict. For 1.3 the RCL is not embedded, so this stub
+    is correct and unique.
+*@
+
+<h1>My space</h1>
+<p>Your personal space is coming soon.</p>

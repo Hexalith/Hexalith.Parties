@@ -1,0 +1,27 @@
+@using Hexalith.FrontComposer.Contracts.Registration
+@using Microsoft.AspNetCore.Components.Authorization
+
+@*
+    Story 1.3 QA harness — renders nav entries through the SAME gate the shell uses
+    (FrontComposerNavigation.razor:51-55 → <AuthorizeView Policy="@entry.RequiredPolicy">). Lets the
+    "never cross-render" test drive the REAL registered entries + the REAL AuthorizeView gate without
+    standing up the whole Fluxor-backed FrontComposerNavigation shell. Mirrors the framework snippet
+    exactly: a gated entry renders its link only inside <Authorized>.
+*@
+
+@foreach (FrontComposerNavEntry entry in Entries)
+{
+    @if (!string.IsNullOrWhiteSpace(entry.RequiredPolicy))
+    {
+        <AuthorizeView Policy="@entry.RequiredPolicy">
+            <Authorized>
+                <a href="@entry.Href">@entry.Title</a>
+            </Authorized>
+        </AuthorizeView>
+    }
+}
+
+@code {
+    [Parameter]
+    public IReadOnlyList<FrontComposerNavEntry> Entries { get; set; } = [];
+}

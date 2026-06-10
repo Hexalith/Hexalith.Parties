@@ -1,5 +1,6 @@
 using Hexalith.FrontComposer.Shell.Extensions;
 using Hexalith.Parties.UI;
+using Hexalith.Parties.UI.Authentication;
 using Hexalith.Parties.UI.Components;
 
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
@@ -24,6 +25,12 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddHexalithFrontComposerQuickstart(o => o.ScanAssemblies(typeof(Program).Assembly));
 builder.Services.AddFrontComposerDevMode(builder.Environment);
 builder.Services.AddHexalithDomain<PartiesUiDomainMarker>();
+
+// Story 1.3 (AR-D2) — register the role-claim Admin + Consumer policies UNCONDITIONALLY (not gated
+// on authEnabled). <AuthorizeView Policy=…> on the nav entries and [Authorize(Policy = …)] on the
+// /admin + /me areas must resolve these policies whether or not interactive OIDC is wired (tests,
+// degraded boot). Mirrors Hexalith.Tenants.UI's unconditional AddAuthorizationCore(AddPolicy(...)).
+builder.Services.AddPartiesUiAuthorization();
 
 // AR-D5 — host-owned OIDC sign-in. When an OIDC provider is configured (the AppHost supplies the
 // Keycloak authority/client in run mode against the dev realm, the tache realm in publish), wire
@@ -57,6 +64,20 @@ if (authEnabled && builder.Environment.IsDevelopment())
     builder.Services.PostConfigure<OpenIdConnectOptions>(
         "Hexalith.FrontComposer.Oidc",
         o => o.RequireHttpsMetadata = false);
+}
+
+// Story 1.3 (Task 6) — map the Keycloak realm-role claim to ASP.NET roles. The realm-roles-mapper on
+// the hexalith-parties-ui client emits roles flat under "roles"; pointing RoleClaimType at it makes
+// ClaimsPrincipal.IsInRole / RequireRole (the Admin + Consumer policies) evaluate against the signed-in
+// user's realm roles. Applied whenever auth is wired (the OIDC scheme exists only then).
+// VERIFY LIVE: the FrontComposer bridge may surface the claim differently (e.g. nested under
+// realm_access.roles) — if the observed claim path differs, align this RoleClaimType (or the mapper's
+// claim.name) to the live claim, exactly as Story 1.2 reconciled the http-metadata gotcha empirically.
+if (authEnabled)
+{
+    builder.Services.PostConfigure<OpenIdConnectOptions>(
+        "Hexalith.FrontComposer.Oidc",
+        o => o.TokenValidationParameters.RoleClaimType = "roles");
 }
 
 WebApplication app = builder.Build();

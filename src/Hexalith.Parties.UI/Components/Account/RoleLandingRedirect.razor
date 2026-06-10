@@ -1,0 +1,46 @@
+@page "/"
+@attribute [Authorize]
+@inject AuthenticationStateProvider AuthState
+@inject NavigationManager Nav
+
+@*
+    Story 1.3 — role-based landing. The app entry. [Authorize] (no policy = any authenticated user)
+    sends unauthenticated hits down the router's NotAuthorized path (OIDC challenge); an authenticated
+    user always renders here, then role-routes to its area or shows the fail-closed no-area state.
+    Roles come from the single source of truth in PartiesUiAuthorization — never re-hardcoded here.
+*@
+
+@if (_noArea)
+{
+    <h1>No area assigned</h1>
+    <p>
+        You are signed in, but your account is not assigned to an area yet. Please contact an
+        administrator.
+    </p>
+}
+
+@code {
+    private bool _noArea;
+
+    protected override async Task OnInitializedAsync()
+    {
+        AuthenticationState authState = await AuthState.GetAuthenticationStateAsync();
+
+        if (PartiesUiAuthorization.AdminRoleNames.Any(authState.User.IsInRole))
+        {
+            // Admin / TenantOwner → Admin area.
+            Nav.NavigateTo("/admin");
+        }
+        else if (PartiesUiAuthorization.ConsumerRoleNames.Any(authState.User.IsInRole))
+        {
+            // Consumer → Consumer area.
+            Nav.NavigateTo("/me");
+        }
+        else
+        {
+            // Fail closed: an authenticated user with NEITHER role is never routed into a data area;
+            // they see the no-area state. (Distinct from Story 1.4's party-binding NoPartyBinding.)
+            _noArea = true;
+        }
+    }
+}

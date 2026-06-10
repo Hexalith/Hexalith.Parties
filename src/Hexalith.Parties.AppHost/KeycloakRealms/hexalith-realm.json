@@ -9,6 +9,13 @@
   "editUsernameAllowed": false,
   "bruteForceProtected": false,
   "accessTokenLifespan": 3600,
+  "roles": {
+    "realm": [
+      { "name": "Admin", "description": "Parties administrators — land in the Admin area." },
+      { "name": "TenantOwner", "description": "Tenant owners — land in the Admin area." },
+      { "name": "Consumer", "description": "Self-service consumers — land in the Consumer area." }
+    ]
+  },
   "clients": [
     {
       "clientId": "hexalith-parties",
@@ -233,6 +240,20 @@
             "userinfo.token.claim": "true",
             "aggregate.attrs": "true"
           }
+        },
+        {
+          "name": "realm-roles-mapper",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-realm-role-mapper",
+          "consentRequired": false,
+          "config": {
+            "claim.name": "roles",
+            "jsonType.label": "String",
+            "multivalued": "true",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "true"
+          }
         }
       ]
     }
@@ -246,6 +267,7 @@
       "email": "admin@hexalith.io",
       "emailVerified": true,
       "requiredActions": [],
+      "realmRoles": ["Admin"],
       "credentials": [
         {
           "type": "password",
@@ -309,6 +331,7 @@
       "email": "readonly@hexalith.io",
       "emailVerified": true,
       "requiredActions": [],
+      "realmRoles": ["Consumer"],
       "credentials": [
         {
           "type": "password",
