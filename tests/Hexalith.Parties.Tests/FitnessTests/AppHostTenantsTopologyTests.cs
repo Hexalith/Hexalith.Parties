@@ -98,6 +98,7 @@ public sealed class AppHostTenantsTopologyTests
 
         program.ShouldContain("const string PublishModeJwtIssuer");
         program.ShouldContain("http://auth.tache.ai:8080/realms/tache");
+        program.ShouldContain("https://auth.tache.ai/realms/tache");
         program.ShouldContain(@"WithEnvironment(""Authentication__JwtBearer__Authority"", runModeAuthority)");
         program.ShouldContain(@"WithEnvironment(""Authentication__JwtBearer__Issuer"", runModeAuthority)");
         program.ShouldContain(@"WithEnvironment(""Authentication__JwtBearer__Authority"", publishModeAuthority ?? publishModeIssuer)");
@@ -159,8 +160,8 @@ public sealed class AppHostTenantsTopologyTests
         // leak into the dashboard wiring.
         string program = ReadAppHostProgram();
 
-        program.ShouldContain(@"WithEnvironment(""EventStore__Authentication__Authority"", PublishModeJwtAuthority)");
-        program.ShouldContain(@"WithEnvironment(""EventStore__Authentication__Issuer"", PublishModeJwtIssuer)");
+        program.ShouldContain(@"WithEnvironment(""EventStore__Authentication__Authority"", PublishModePublicKeycloakIssuer)");
+        program.ShouldContain(@"WithEnvironment(""EventStore__Authentication__Issuer"", PublishModePublicKeycloakIssuer)");
         program.ShouldContain(@"WithEnvironment(""EventStore__Authentication__Audience"", ""hexalith-eventstore"")");
         program.ShouldContain(@"WithEnvironment(""EventStore__Authentication__ClientId"", ""hexalith-eventstore"")");
     }

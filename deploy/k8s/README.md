@@ -184,12 +184,16 @@ Redis service.
 
 Keycloak is external to this kustomization. The platform-owned service is
 `keycloak/keycloak` on port `8080`, and the realm is `tache` with issuer
-`http://auth.tache.ai:8080/realms/tache`. `publish.ps1` reads the Keycloak service ClusterIP
-and patches `hostAliases` for `auth.tache.ai` into the generated Parties workloads so OIDC
-discovery and JWKS retrieval stay pod-reachable while issuer validation remains unchanged.
+`http://auth.tache.ai:8080/realms/tache` for the internal JWT workloads that still use the
+cluster service path. `eventstore-admin-ui` is the exception: it uses
+`https://auth.tache.ai/realms/tache` and must not carry an `auth.tache.ai` hostAlias, so
+Keycloak token acquisition goes through the public HTTPS endpoint. `publish.ps1` reads the
+Keycloak service ClusterIP and patches `hostAliases` for `auth.tache.ai` into the remaining
+generated Parties workloads so OIDC discovery and JWKS retrieval stay pod-reachable while
+issuer validation remains unchanged.
 
-`eventstore-admin-ui` and `sample-blazor-ui` use server-side Keycloak direct-access grants.
-Operators must pre-create Secret `hexalith-tache-ui-credentials` in namespace
+`eventstore-admin-ui` and `sample-blazor-ui` currently use server-side Keycloak direct-access
+grants. Operators must pre-create Secret `hexalith-tache-ui-credentials` in namespace
 `hexalith-parties` with keys `username` and `password`. `publish.ps1` validates those keys
 and patches them as `EventStore__Authentication__Username` and
 `EventStore__Authentication__Password` without printing values.
