@@ -45,6 +45,7 @@ $AppHostProject = 'Hexalith.Parties.AppHost.csproj'
 $Namespace = 'hexalith-parties'
 $Registry = 'registry.hexalith.com'
 $TacheIssuer = 'http://auth.tache.ai:8080/realms/tache'
+$TachePublicIssuer = 'https://auth.tache.ai/realms/tache'
 $TacheIssuerHost = 'auth.tache.ai'
 $KeycloakNamespace = 'keycloak'
 $KeycloakServiceName = 'keycloak'
@@ -820,6 +821,10 @@ function Patch-KeycloakHostAlias {
     $clusterIp = Resolve-KeycloakServiceClusterIp
 
     foreach ($name in $GeneratedServiceFolders) {
+        if ($name -eq 'eventstore-admin-ui') {
+            continue
+        }
+
         $tuple = Read-DeploymentFile $name
         $path = $tuple[0]
         $content = $tuple[1]
@@ -834,7 +839,30 @@ function Patch-KeycloakHostAlias {
         Set-Content -LiteralPath $path -Value $content -NoNewline
     }
 
-    Write-Host "[publish] Keycloak host alias: $TacheIssuerHost -> $KeycloakNamespace/$KeycloakServiceName ($clusterIp)"
+    Write-Host "[publish] Keycloak host alias: $TacheIssuerHost -> $KeycloakNamespace/$KeycloakServiceName ($clusterIp) except eventstore-admin-ui"
+}
+
+function Set-EventStoreAdminUiPublicKeycloakIssuer {
+    $path = Join-Path $K8sRoot 'eventstore-admin-ui/kustomization.yaml'
+    if (-not (Test-Path -LiteralPath $path)) {
+        Fail $ExitGeneral 'eventstore-admin-ui/kustomization.yaml missing after generation'
+    }
+
+    $content = Get-Content -Raw -LiteralPath $path
+    $content = $content -replace 'EventStore__Authentication__Authority=http://auth\.tache\.ai:8080/realms/tache', "EventStore__Authentication__Authority=$TachePublicIssuer"
+    $content = $content -replace 'EventStore__Authentication__Issuer=http://auth\.tache\.ai:8080/realms/tache', "EventStore__Authentication__Issuer=$TachePublicIssuer"
+
+    if ($content -match 'EventStore__Authentication__(Authority|Issuer)=http://auth\.tache\.ai:8080/realms/tache') {
+        Fail $ExitGeneral 'eventstore-admin-ui still contains HTTP Keycloak authority or issuer'
+    }
+
+    if ($content -notmatch "EventStore__Authentication__Authority=$([regex]::Escape($TachePublicIssuer))" -or
+        $content -notmatch "EventStore__Authentication__Issuer=$([regex]::Escape($TachePublicIssuer))") {
+        Fail $ExitGeneral 'eventstore-admin-ui public Keycloak authority postcondition failed'
+    }
+
+    Set-Content -LiteralPath $path -Value $content -NoNewline
+    Write-Host "[publish] eventstore-admin-ui Keycloak issuer: $TachePublicIssuer"
 }
 
 function Ensure-ImagePullSecrets {
@@ -1424,6 +1452,9 @@ Patch-DaprAnnotations
 
 Write-Step 'Patch Keycloak host alias'
 Patch-KeycloakHostAlias
+
+Write-Step 'Patch eventstore-admin-ui public Keycloak issuer'
+Set-EventStoreAdminUiPublicKeycloakIssuer
 
 Write-Step 'Patch UI credential secretKeyRefs'
 Remove-SigningKeyEnvEntries

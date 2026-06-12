@@ -94,6 +94,20 @@ public sealed class K8sManifestGenerationTests
     }
 
     [Fact]
+    public void EventStoreAdminUiUsesPublicHttpsKeycloakIssuerWithoutHostAlias()
+    {
+        string deployment = File.ReadAllText(Path.Combine(DeploymentTestPaths.K8sDirectory, "eventstore-admin-ui", "deployment.yaml"));
+        string kustomization = File.ReadAllText(Path.Combine(DeploymentTestPaths.K8sDirectory, "eventstore-admin-ui", "kustomization.yaml"));
+
+        deployment.ShouldNotContain("hostAliases:");
+        deployment.ShouldNotContain("auth.tache.ai");
+        kustomization.ShouldContain("EventStore__Authentication__Authority=https://auth.tache.ai/realms/tache");
+        kustomization.ShouldContain("EventStore__Authentication__Issuer=https://auth.tache.ai/realms/tache");
+        kustomization.ShouldNotContain("EventStore__Authentication__Authority=http://auth.tache.ai:8080/realms/tache");
+        kustomization.ShouldNotContain("EventStore__Authentication__Issuer=http://auth.tache.ai:8080/realms/tache");
+    }
+
+    [Fact]
     public void PartiesUiIsBrowserOnlyNonDaprWorkloadWithOidcSecretReference()
     {
         string deployment = File.ReadAllText(Path.Combine(DeploymentTestPaths.K8sDirectory, "parties-ui", "deployment.yaml"));

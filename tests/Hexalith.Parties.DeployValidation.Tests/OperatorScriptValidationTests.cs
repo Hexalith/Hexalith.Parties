@@ -194,6 +194,7 @@ public sealed class OperatorScriptValidationTests : IDisposable
         publish.ShouldContain("$DaprClientOnlyTargets = @('eventstore-admin-ui', 'sample-blazor-ui')");
         publish.ShouldContain("$ForbiddenDaprTargets = @('parties-mcp', 'parties-ui', 'redis', 'falkordb')");
         publish.ShouldContain("http://auth.tache.ai:8080/realms/tache");
+        publish.ShouldContain("https://auth.tache.ai/realms/tache");
         publish.ShouldContain("EventStore__Authentication__Username");
         publish.ShouldContain("EventStore__Authentication__Password");
         publish.ShouldContain("Authentication__OpenIdConnect__ClientSecret");
@@ -347,12 +348,17 @@ public sealed class OperatorScriptValidationTests : IDisposable
         adminUi.ShouldNotContain("dapr.io/app-port");
         adminUi.ShouldNotContain("dapr.io/config");
         adminUi.ShouldContain("imagePullSecrets:");
-        adminUi.ShouldContain("hostAliases:");
-        adminUi.ShouldContain("auth.tache.ai");
+        adminUi.ShouldNotContain("hostAliases:");
+        adminUi.ShouldNotContain("auth.tache.ai");
         adminUi.ShouldContain("EventStore__Authentication__Username");
         adminUi.ShouldContain("EventStore__Authentication__Password");
         adminUi.ShouldContain("secretKeyRef:");
         adminUi.ShouldContain("name: hexalith-tache-ui-credentials");
+        string adminUiKustomization = File.ReadAllText(Path.Combine(workspace.K8sRoot, "eventstore-admin-ui", "kustomization.yaml"));
+        adminUiKustomization.ShouldContain("EventStore__Authentication__Authority=https://auth.tache.ai/realms/tache");
+        adminUiKustomization.ShouldContain("EventStore__Authentication__Issuer=https://auth.tache.ai/realms/tache");
+        adminUiKustomization.ShouldNotContain("EventStore__Authentication__Authority=http://auth.tache.ai:8080/realms/tache");
+        adminUiKustomization.ShouldNotContain("EventStore__Authentication__Issuer=http://auth.tache.ai:8080/realms/tache");
 
         string partiesUi = File.ReadAllText(Path.Combine(workspace.K8sRoot, "parties-ui", "deployment.yaml"));
         partiesUi.ShouldNotContain("dapr.io/enabled");
@@ -435,11 +441,14 @@ public sealed class OperatorScriptValidationTests : IDisposable
         CountOccurrences(adminUi, "dapr.io/app-id: eventstore-admin-ui").ShouldBe(1);
         adminUi.ShouldNotContain("dapr.io/app-port");
         adminUi.ShouldNotContain("dapr.io/config");
-        CountOccurrences(adminUi, "hostAliases:").ShouldBe(1);
+        CountOccurrences(adminUi, "hostAliases:").ShouldBe(0);
         CountOccurrences(adminUi, "EventStore__Authentication__Username").ShouldBe(1);
         CountOccurrences(adminUi, "EventStore__Authentication__Password").ShouldBe(1);
         CountOccurrences(adminUi, "secretKeyRef:").ShouldBe(2);
         CountOccurrences(adminUi, "name: hexalith-tache-ui-credentials").ShouldBe(2);
+        string adminUiKustomization = File.ReadAllText(Path.Combine(workspace.K8sRoot, "eventstore-admin-ui", "kustomization.yaml"));
+        CountOccurrences(adminUiKustomization, "https://auth.tache.ai/realms/tache").ShouldBe(2);
+        adminUiKustomization.ShouldNotContain("http://auth.tache.ai:8080/realms/tache");
 
         string partiesUi = File.ReadAllText(Path.Combine(workspace.K8sRoot, "parties-ui", "deployment.yaml"));
         CountOccurrences(partiesUi, "Authentication__OpenIdConnect__ClientSecret").ShouldBe(1);
@@ -1109,7 +1118,7 @@ image = f"registry.hexalith.com/{name}:0.1.1-preview.0.7"
 annotations = "        dapr.io/enabled: 'true'\n        dapr.io/app-id: " + name + "\n" if include_dapr else "        example.com/placeholder: none\n"
 jwt = "        env:\n        - name: Authentication__JwtBearer__SigningKey\n          value: literal-secret\n" if literal_jwt else ""
 probe = "        readinessProbe:\n          tcpSocket:\n            port: 8080\n" if "{{(generatedReadinessOnlyProbe ? "1" : "0")}}" == "1" else ""
-host_aliases = "      hostAliases:\n      - ip: 127.0.0.1\n        hostnames:\n        - internal.example\n"
+host_aliases = "" if name == "eventstore-admin-ui" else "      hostAliases:\n      - ip: 127.0.0.1\n        hostnames:\n        - internal.example\n"
 open(path, "w", encoding="utf-8").write(f'''---
 apiVersion: apps/v1
 kind: Deployment
@@ -1133,7 +1142,11 @@ spec:
       terminationGracePeriodSeconds: 180
 ''')
 PY
-    printf 'resources:\n- deployment.yaml\n' > "$out/$name/kustomization.yaml"
+    if [ "$name" = "eventstore-admin-ui" ]; then
+      printf 'resources:\n- deployment.yaml\nconfigMapGenerator:\n- name: eventstore-admin-ui-env\n  literals:\n    - EventStore__Authentication__Authority=http://auth.tache.ai:8080/realms/tache\n    - EventStore__Authentication__Issuer=http://auth.tache.ai:8080/realms/tache\n' > "$out/$name/kustomization.yaml"
+    else
+      printf 'resources:\n- deployment.yaml\n' > "$out/$name/kustomization.yaml"
+    fi
   done
   if [ "{{(emitUnexpectedTopLevelFile ? "1" : "0")}}" = "1" ]; then
     printf 'unexpected\n' > "$out/surprise.txt"

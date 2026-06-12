@@ -13,6 +13,7 @@ string memoriesAccessControlConfigPath = ResolveDaprConfigPath("accesscontrol.me
 string resiliencyConfigPath = ResolveDaprConfigPath("resiliency.yaml");
 const string PublishModeJwtIssuer = "http://auth.tache.ai:8080/realms/tache";
 const string PublishModeJwtAuthority = PublishModeJwtIssuer;
+const string PublishModePublicKeycloakIssuer = "https://auth.tache.ai/realms/tache";
 
 // Registration dictionary key uses the Kubernetes-valid sanitized wildcard form `wildcard_party_v1`
 // (story 9.3 AC1 / ADR 9.3-1). ConfigMap data keys must match ^[A-Za-z0-9_.-]+$ and Pod container
@@ -301,8 +302,8 @@ else if (builder.ExecutionContext.IsPublishMode)
     _ = adminUI
         .WithEnvironment("ASPNETCORE_ENVIRONMENT", "Development")
         .WithEnvironment("DOTNET_ENVIRONMENT", "Development")
-        .WithEnvironment("EventStore__Authentication__Authority", PublishModeJwtAuthority)
-        .WithEnvironment("EventStore__Authentication__Issuer", PublishModeJwtIssuer)
+        .WithEnvironment("EventStore__Authentication__Authority", PublishModePublicKeycloakIssuer)
+        .WithEnvironment("EventStore__Authentication__Issuer", PublishModePublicKeycloakIssuer)
         .WithEnvironment("EventStore__Authentication__Audience", "hexalith-eventstore")
         .WithEnvironment("EventStore__Authentication__ClientId", "hexalith-eventstore");
 }

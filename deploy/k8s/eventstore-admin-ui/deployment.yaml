@@ -26,10 +26,6 @@ spec:
         dapr.io/app-id: eventstore-admin-ui
         dapr.io/enable-api-logging: 'true'
     spec:
-      hostAliases:
-      - ip: 10.233.41.235
-        hostnames:
-        - auth.tache.ai
       imagePullSecrets:
       - name: zot-pull-secret
       containers:

@@ -59,6 +59,7 @@ public sealed class K8sManifestPublishTests
         publish.ShouldContain("$DaprClientOnlyTargets = @('eventstore-admin-ui', 'sample-blazor-ui')");
         publish.ShouldContain("$ForbiddenDaprTargets = @('parties-mcp', 'parties-ui', 'redis', 'falkordb')");
         publish.ShouldContain("http://auth.tache.ai:8080/realms/tache");
+        publish.ShouldContain("https://auth.tache.ai/realms/tache");
         publish.ShouldContain("$UiCredentialsSecretName = 'hexalith-tache-ui-credentials'");
         publish.ShouldContain("$PartiesUiOidcSecretName = 'hexalith-parties-ui-oidc-client'");
         publish.ShouldContain("$PartiesUiOidcSecretKey = 'client-secret'");
@@ -66,6 +67,8 @@ public sealed class K8sManifestPublishTests
         publish.ShouldContain("EventStore__Authentication__Password");
         publish.ShouldContain("Authentication__OpenIdConnect__ClientSecret");
         publish.ShouldContain("Patch-KeycloakHostAlias");
+        publish.ShouldContain("except eventstore-admin-ui");
+        publish.ShouldContain("Set-EventStoreAdminUiPublicKeycloakIssuer");
         publish.ShouldContain("Test-KeycloakTacheRealmContract");
         publish.ShouldContain("Assert-KeycloakTokenContract");
         publish.ShouldContain("Reconcile-LegacyLocalKeycloakResources");

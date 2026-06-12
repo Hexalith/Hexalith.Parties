@@ -31,8 +31,8 @@ namespace: hexalith-parties
 │                                                                        │
 │  ┌──────────────┐                          ┌──────────────────────┐  │
 │  │ external Keycloak: keycloak/keycloak realm tache  │ eventstore-admin-ui  │
-│  │ issuer http://auth.tache.ai:8080/realms/tache     │       2/2 Pod        │
-│  │ reached through publish-time hostAliases          │ Dapr client-only     │
+│  │ admin-ui issuer https://auth.tache.ai/realms/tache│       2/2 Pod        │
+│  │ no auth.tache.ai hostAlias on eventstore-admin-ui │ Dapr client-only     │
 │  └──────────────────────────────────────────┬─────────┴────────────┘  │
 │                                             │ HTTP UI / OIDC          │
 │         │                                            │                │
