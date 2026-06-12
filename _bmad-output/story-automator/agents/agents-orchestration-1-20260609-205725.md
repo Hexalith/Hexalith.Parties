@@ -1,6 +1,6 @@
 ---
 stateFile: "/home/administrator/projects/hexalith/parties/_bmad-output/story-automator/orchestration-1-20260609-205725.md"
-createdAt: "2026-06-10T05:30:31Z"
+createdAt: "2026-06-12T06:31:23Z"
 ---
 
 # Agents Plan: parties - Epic Breakdown
@@ -11,7 +11,7 @@ createdAt: "2026-06-10T05:30:31Z"
   "stateFile": "/home/administrator/projects/hexalith/parties/_bmad-output/story-automator/orchestration-1-20260609-205725.md",
   "epic": "1",
   "epicName": "parties - Epic Breakdown",
-  "createdAt": "2026-06-10T05:30:31Z",
+  "createdAt": "2026-06-12T06:31:23Z",
   "stories": [
     {
       "storyId": "1.1",
@@ -31,8 +31,8 @@ createdAt: "2026-06-10T05:30:31Z"
           "fallback": "claude"
         },
         "review": {
-          "primary": "codex",
-          "fallback": "claude"
+          "primary": "claude",
+          "fallback": "codex"
         }
       }
     },
@@ -54,8 +54,8 @@ createdAt: "2026-06-10T05:30:31Z"
           "fallback": "claude"
         },
         "review": {
-          "primary": "codex",
-          "fallback": "claude"
+          "primary": "claude",
+          "fallback": "codex"
         }
       }
     },
@@ -77,8 +77,8 @@ createdAt: "2026-06-10T05:30:31Z"
           "fallback": "claude"
         },
         "review": {
-          "primary": "codex",
-          "fallback": "claude"
+          "primary": "claude",
+          "fallback": "codex"
         }
       }
     },
@@ -100,8 +100,8 @@ createdAt: "2026-06-10T05:30:31Z"
           "fallback": "claude"
         },
         "review": {
-          "primary": "codex",
-          "fallback": "claude"
+          "primary": "claude",
+          "fallback": "codex"
         }
       }
     },
@@ -123,8 +123,8 @@ createdAt: "2026-06-10T05:30:31Z"
           "fallback": "claude"
         },
         "review": {
-          "primary": "codex",
-          "fallback": "claude"
+          "primary": "claude",
+          "fallback": "codex"
         }
       }
     },
@@ -146,8 +146,8 @@ createdAt: "2026-06-10T05:30:31Z"
           "fallback": "claude"
         },
         "review": {
-          "primary": "codex",
-          "fallback": "claude"
+          "primary": "claude",
+          "fallback": "codex"
         }
       }
     },
@@ -169,8 +169,8 @@ createdAt: "2026-06-10T05:30:31Z"
           "fallback": "claude"
         },
         "review": {
-          "primary": "codex",
-          "fallback": "claude"
+          "primary": "claude",
+          "fallback": "codex"
         }
       }
     },
@@ -192,8 +192,8 @@ createdAt: "2026-06-10T05:30:31Z"
           "fallback": "claude"
         },
         "review": {
-          "primary": "codex",
-          "fallback": "claude"
+          "primary": "claude",
+          "fallback": "codex"
         }
       }
     },
@@ -215,8 +215,8 @@ createdAt: "2026-06-10T05:30:31Z"
           "fallback": "claude"
         },
         "review": {
-          "primary": "codex",
-          "fallback": "claude"
+          "primary": "claude",
+          "fallback": "codex"
         }
       }
     },
@@ -238,8 +238,8 @@ createdAt: "2026-06-10T05:30:31Z"
           "fallback": "claude"
         },
         "review": {
-          "primary": "codex",
-          "fallback": "claude"
+          "primary": "claude",
+          "fallback": "codex"
         }
       }
     },
@@ -261,8 +261,8 @@ createdAt: "2026-06-10T05:30:31Z"
           "fallback": "claude"
         },
         "review": {
-          "primary": "codex",
-          "fallback": "claude"
+          "primary": "claude",
+          "fallback": "codex"
         }
       }
     },
@@ -284,8 +284,8 @@ createdAt: "2026-06-10T05:30:31Z"
           "fallback": "claude"
         },
         "review": {
-          "primary": "codex",
-          "fallback": "claude"
+          "primary": "claude",
+          "fallback": "codex"
         }
       }
     },
@@ -307,8 +307,8 @@ createdAt: "2026-06-10T05:30:31Z"
           "fallback": "claude"
         },
         "review": {
-          "primary": "codex",
-          "fallback": "claude"
+          "primary": "claude",
+          "fallback": "codex"
         }
       }
     },
@@ -330,8 +330,8 @@ createdAt: "2026-06-10T05:30:31Z"
           "fallback": "claude"
         },
         "review": {
-          "primary": "codex",
-          "fallback": "claude"
+          "primary": "claude",
+          "fallback": "codex"
         }
       }
     },
@@ -353,8 +353,8 @@ createdAt: "2026-06-10T05:30:31Z"
           "fallback": "claude"
         },
         "review": {
-          "primary": "codex",
-          "fallback": "claude"
+          "primary": "claude",
+          "fallback": "codex"
         }
       }
     },
@@ -376,8 +376,8 @@ createdAt: "2026-06-10T05:30:31Z"
           "fallback": "claude"
         },
         "review": {
-          "primary": "codex",
-          "fallback": "claude"
+          "primary": "claude",
+          "fallback": "codex"
         }
       }
     },
@@ -399,8 +399,8 @@ createdAt: "2026-06-10T05:30:31Z"
           "fallback": "claude"
         },
         "review": {
-          "primary": "codex",
-          "fallback": "claude"
+          "primary": "claude",
+          "fallback": "codex"
         }
       }
     },
@@ -422,8 +422,8 @@ createdAt: "2026-06-10T05:30:31Z"
           "fallback": "claude"
         },
         "review": {
-          "primary": "codex",
-          "fallback": "claude"
+          "primary": "claude",
+          "fallback": "codex"
         }
       }
     },
@@ -445,8 +445,8 @@ createdAt: "2026-06-10T05:30:31Z"
           "fallback": "claude"
         },
         "review": {
-          "primary": "codex",
-          "fallback": "claude"
+          "primary": "claude",
+          "fallback": "codex"
         }
       }
     },
@@ -468,8 +468,8 @@ createdAt: "2026-06-10T05:30:31Z"
           "fallback": "claude"
         },
         "review": {
-          "primary": "codex",
-          "fallback": "claude"
+          "primary": "claude",
+          "fallback": "codex"
         }
       }
     },
@@ -491,8 +491,8 @@ createdAt: "2026-06-10T05:30:31Z"
           "fallback": "claude"
         },
         "review": {
-          "primary": "codex",
-          "fallback": "claude"
+          "primary": "claude",
+          "fallback": "codex"
         }
       }
     },
@@ -514,8 +514,8 @@ createdAt: "2026-06-10T05:30:31Z"
           "fallback": "claude"
         },
         "review": {
-          "primary": "codex",
-          "fallback": "claude"
+          "primary": "claude",
+          "fallback": "codex"
         }
       }
     },
@@ -537,8 +537,8 @@ createdAt: "2026-06-10T05:30:31Z"
           "fallback": "claude"
         },
         "review": {
-          "primary": "codex",
-          "fallback": "claude"
+          "primary": "claude",
+          "fallback": "codex"
         }
       }
     },
@@ -560,8 +560,8 @@ createdAt: "2026-06-10T05:30:31Z"
           "fallback": "claude"
         },
         "review": {
-          "primary": "codex",
-          "fallback": "claude"
+          "primary": "claude",
+          "fallback": "codex"
         }
       }
     },
@@ -583,8 +583,8 @@ createdAt: "2026-06-10T05:30:31Z"
           "fallback": "claude"
         },
         "review": {
-          "primary": "codex",
-          "fallback": "claude"
+          "primary": "claude",
+          "fallback": "codex"
         }
       }
     },
@@ -606,8 +606,8 @@ createdAt: "2026-06-10T05:30:31Z"
           "fallback": "claude"
         },
         "review": {
-          "primary": "codex",
-          "fallback": "claude"
+          "primary": "claude",
+          "fallback": "codex"
         }
       }
     },
@@ -629,8 +629,8 @@ createdAt: "2026-06-10T05:30:31Z"
           "fallback": "claude"
         },
         "review": {
-          "primary": "codex",
-          "fallback": "claude"
+          "primary": "claude",
+          "fallback": "codex"
         }
       }
     },
@@ -652,8 +652,8 @@ createdAt: "2026-06-10T05:30:31Z"
           "fallback": "claude"
         },
         "review": {
-          "primary": "codex",
-          "fallback": "claude"
+          "primary": "claude",
+          "fallback": "codex"
         }
       }
     },
@@ -675,8 +675,8 @@ createdAt: "2026-06-10T05:30:31Z"
           "fallback": "claude"
         },
         "review": {
-          "primary": "codex",
-          "fallback": "claude"
+          "primary": "claude",
+          "fallback": "codex"
         }
       }
     },
@@ -698,8 +698,8 @@ createdAt: "2026-06-10T05:30:31Z"
           "fallback": "claude"
         },
         "review": {
-          "primary": "codex",
-          "fallback": "claude"
+          "primary": "claude",
+          "fallback": "codex"
         }
       }
     }
