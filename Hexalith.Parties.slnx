@@ -19,13 +19,12 @@
     <Project Path="Hexalith.PolymorphicSerializations/src/libraries/Hexalith.PolymorphicSerializations/Hexalith.PolymorphicSerializations.csproj" />
   </Folder>
   <Folder Name="/src/">
-    <Project Path="src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj" />
     <Project Path="src/Hexalith.Parties.AdminPortal/Hexalith.Parties.AdminPortal.csproj" />
-    <Project Path="src/Hexalith.Parties.ConsumerPortal/Hexalith.Parties.ConsumerPortal.csproj" />
+    <Project Path="src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj" />
     <Project Path="src/Hexalith.Parties.Client/Hexalith.Parties.Client.csproj" />
-    <Project Path="src/Hexalith.Parties.Mcp/Hexalith.Parties.Mcp.csproj" />
-    <Project Path="src/Hexalith.Parties/Hexalith.Parties.csproj" />
+    <Project Path="src/Hexalith.Parties.ConsumerPortal/Hexalith.Parties.ConsumerPortal.csproj" />
     <Project Path="src/Hexalith.Parties.Contracts/Hexalith.Parties.Contracts.csproj" />
+    <Project Path="src/Hexalith.Parties.Mcp/Hexalith.Parties.Mcp.csproj" />
     <Project Path="src/Hexalith.Parties.Picker/Hexalith.Parties.Picker.csproj" />
     <Project Path="src/Hexalith.Parties.Projections/Hexalith.Parties.Projections.csproj" />
     <Project Path="src/Hexalith.Parties.Security/Hexalith.Parties.Security.csproj" />
@@ -33,12 +32,14 @@
     <Project Path="src/Hexalith.Parties.ServiceDefaults/Hexalith.Parties.ServiceDefaults.csproj" />
     <Project Path="src/Hexalith.Parties.Testing/Hexalith.Parties.Testing.csproj" />
     <Project Path="src/Hexalith.Parties.UI/Hexalith.Parties.UI.csproj" />
+    <Project Path="src/Hexalith.Parties/Hexalith.Parties.csproj" />
   </Folder>
   <Folder Name="/Hexalith.EventStore/">
-    <Project Path="Hexalith.EventStore/src/Hexalith.EventStore/Hexalith.EventStore.csproj" />
+    <File Path="Hexalith.EventStore/Directory.Build.props" />
+    <File Path="Hexalith.EventStore/Directory.Packages.props" />
     <Project Path="Hexalith.EventStore/src/Hexalith.EventStore.Admin.Abstractions/Hexalith.EventStore.Admin.Abstractions.csproj" />
-    <Project Path="Hexalith.EventStore/src/Hexalith.EventStore.Admin.Server/Hexalith.EventStore.Admin.Server.csproj" />
     <Project Path="Hexalith.EventStore/src/Hexalith.EventStore.Admin.Server.Host/Hexalith.EventStore.Admin.Server.Host.csproj" />
+    <Project Path="Hexalith.EventStore/src/Hexalith.EventStore.Admin.Server/Hexalith.EventStore.Admin.Server.csproj" />
     <Project Path="Hexalith.EventStore/src/Hexalith.EventStore.Admin.UI/Hexalith.EventStore.Admin.UI.csproj" />
     <Project Path="Hexalith.EventStore/src/Hexalith.EventStore.Aspire/Hexalith.EventStore.Aspire.csproj" />
     <Project Path="Hexalith.EventStore/src/Hexalith.EventStore.Client/Hexalith.EventStore.Client.csproj" />
@@ -48,6 +49,7 @@
     <Project Path="Hexalith.EventStore/src/Hexalith.EventStore.ServiceDefaults/Hexalith.EventStore.ServiceDefaults.csproj" />
     <Project Path="Hexalith.EventStore/src/Hexalith.EventStore.SignalR/Hexalith.EventStore.SignalR.csproj" />
     <Project Path="Hexalith.EventStore/src/Hexalith.EventStore.Testing/Hexalith.EventStore.Testing.csproj" />
+    <Project Path="Hexalith.EventStore/src/Hexalith.EventStore/Hexalith.EventStore.csproj" />
   </Folder>
   <Folder Name="/Hexalith.FrontComposer/">
     <Project Path="Hexalith.FrontComposer/src/Hexalith.FrontComposer.Contracts/Hexalith.FrontComposer.Contracts.csproj" />
@@ -58,26 +60,26 @@
     <Project Path="Hexalith.Memories/src/Hexalith.Memories.Contracts/Hexalith.Memories.Contracts.csproj" />
   </Folder>
   <Folder Name="/Hexalith.Tenants/">
-    <Project Path="Hexalith.Tenants/src/Hexalith.Tenants/Hexalith.Tenants.csproj" />
     <Project Path="Hexalith.Tenants/src/Hexalith.Tenants.Client/Hexalith.Tenants.Client.csproj" />
     <Project Path="Hexalith.Tenants/src/Hexalith.Tenants.Contracts/Hexalith.Tenants.Contracts.csproj" />
     <Project Path="Hexalith.Tenants/src/Hexalith.Tenants.Server/Hexalith.Tenants.Server.csproj" />
     <Project Path="Hexalith.Tenants/src/Hexalith.Tenants.Testing/Hexalith.Tenants.Testing.csproj" />
+    <Project Path="Hexalith.Tenants/src/Hexalith.Tenants/Hexalith.Tenants.csproj" />
   </Folder>
   <Folder Name="/tests/">
-    <Project Path="tests/Hexalith.Parties.Client.Tests/Hexalith.Parties.Client.Tests.csproj" />
     <Project Path="tests/Hexalith.Parties.AdminPortal.Tests/Hexalith.Parties.AdminPortal.Tests.csproj" />
+    <Project Path="tests/Hexalith.Parties.Client.Tests/Hexalith.Parties.Client.Tests.csproj" />
     <Project Path="tests/Hexalith.Parties.ConsumerPortal.Tests/Hexalith.Parties.ConsumerPortal.Tests.csproj" />
-    <Project Path="tests/Hexalith.Parties.Mcp.Tests/Hexalith.Parties.Mcp.Tests.csproj" />
-    <Project Path="tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj" />
     <Project Path="tests/Hexalith.Parties.Contracts.Tests/Hexalith.Parties.Contracts.Tests.csproj" />
-    <Project Path="tests/Hexalith.Parties.Picker.Tests/Hexalith.Parties.Picker.Tests.csproj" />
+    <Project Path="tests/Hexalith.Parties.DeployValidation.Tests/Hexalith.Parties.DeployValidation.Tests.csproj" />
     <Project Path="tests/Hexalith.Parties.IntegrationTests/Hexalith.Parties.IntegrationTests.csproj" />
+    <Project Path="tests/Hexalith.Parties.Mcp.Tests/Hexalith.Parties.Mcp.Tests.csproj" />
+    <Project Path="tests/Hexalith.Parties.Picker.Tests/Hexalith.Parties.Picker.Tests.csproj" />
     <Project Path="tests/Hexalith.Parties.Projections.Tests/Hexalith.Parties.Projections.Tests.csproj" />
+    <Project Path="tests/Hexalith.Parties.Sample.Tests/Hexalith.Parties.Sample.Tests.csproj" />
     <Project Path="tests/Hexalith.Parties.Security.Tests/Hexalith.Parties.Security.Tests.csproj" />
     <Project Path="tests/Hexalith.Parties.Server.Tests/Hexalith.Parties.Server.Tests.csproj" />
-    <Project Path="tests/Hexalith.Parties.Sample.Tests/Hexalith.Parties.Sample.Tests.csproj" />
-    <Project Path="tests/Hexalith.Parties.DeployValidation.Tests/Hexalith.Parties.DeployValidation.Tests.csproj" />
+    <Project Path="tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj" />
     <Project Path="tests/Hexalith.Parties.UI.Tests/Hexalith.Parties.UI.Tests.csproj" />
   </Folder>
 </Solution>
