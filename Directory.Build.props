@@ -13,6 +13,12 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <!-- In-tree pack noise from submodule generator/library packages: NU5118 fires because this
+         repo's README and a submodule's own README both pack to "\" when the submodule builds
+         under our Directory.Build.props chain; NU5128 is the expected "analyzer package has no
+         lib/ref assemblies" warning for source-generator packages. Both are benign here (the
+         submodules' standalone CI is unaffected) and would otherwise be fatal via warnings-as-errors. -->
+    <NoWarn>$(NoWarn);NU5118;NU5128</NoWarn>
 
     <!-- NuGet Package Defaults (overridden by host/test projects) -->
     <IsPackable>true</IsPackable>

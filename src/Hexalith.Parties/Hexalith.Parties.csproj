@@ -25,10 +25,27 @@
 
   <ItemGroup>
     <PackageReference Include="Dapr.AspNetCore" />
+    <!-- Microsoft.Extensions.Logging.Abstractions is framework-provided in this Web project
+         (via Microsoft.AspNetCore.App). A .NET 10 SDK interaction between package pruning and
+         analyzer conflict resolution drops the [LoggerMessage] source generator entirely (the
+         package and framework copies are both removed), causing CS8795 on every [LoggerMessage]
+         method. We restore the path to the package's analyzers and re-add the generator below. -->
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" GeneratePathProperty="true" ExcludeAssets="all" NoWarn="NU1510" />
     <PackageReference Include="FluentValidation" />
     <PackageReference Include="FluentValidation.DependencyInjectionExtensions" />
     <PackageReference Include="MediatR" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
   </ItemGroup>
+
+  <!-- Re-add the [LoggerMessage] source generator after package/framework analyzer conflict
+       resolution has run (it otherwise removes both copies in this Web project). Runs before
+       CoreCompile so the generator is present when csc invokes its source generators. -->
+  <Target Name="_RestoreLoggerMessageGenerator" BeforeTargets="CoreCompile">
+    <ItemGroup>
+      <Analyzer Include="$(PkgMicrosoft_Extensions_Logging_Abstractions)\analyzers\dotnet\roslyn4.4\cs\Microsoft.Extensions.Logging.Generators.dll"
+                Condition="Exists('$(PkgMicrosoft_Extensions_Logging_Abstractions)\analyzers\dotnet\roslyn4.4\cs\Microsoft.Extensions.Logging.Generators.dll')
+                           and !@(Analyzer->AnyHaveMetadataValue('Filename', 'Microsoft.Extensions.Logging.Generators'))" />
+    </ItemGroup>
+  </Target>
 
 </Project>

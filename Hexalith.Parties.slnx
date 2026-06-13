@@ -12,6 +12,7 @@
     <File Path="global.json" />
   </Folder>
   <Folder Name="/Hexalith.Commons/">
+    <Project Path="Hexalith.Commons/src/libraries/Hexalith.Commons.ServiceDefaults/Hexalith.Commons.ServiceDefaults.csproj" />
     <Project Path="Hexalith.Commons/src/libraries/Hexalith.Commons.UniqueIds/Hexalith.Commons.UniqueIds.csproj" />
   </Folder>
   <Folder Name="/Hexalith.PolymorphicSerializations/">
@@ -53,6 +54,9 @@
   </Folder>
   <Folder Name="/Hexalith.FrontComposer/">
     <Project Path="Hexalith.FrontComposer/src/Hexalith.FrontComposer.Contracts/Hexalith.FrontComposer.Contracts.csproj" />
+    <Project Path="Hexalith.FrontComposer/src/Hexalith.FrontComposer.Mcp/Hexalith.FrontComposer.Mcp.csproj" />
+    <Project Path="Hexalith.FrontComposer/src/Hexalith.FrontComposer.Schema/Hexalith.FrontComposer.Schema.csproj" />
+    <Project Path="Hexalith.FrontComposer/src/Hexalith.FrontComposer.SourceTools/Hexalith.FrontComposer.SourceTools.csproj" />
     <Project Path="Hexalith.FrontComposer/src/Hexalith.FrontComposer.Shell/Hexalith.FrontComposer.Shell.csproj" />
   </Folder>
   <Folder Name="/Hexalith.Memories/">
