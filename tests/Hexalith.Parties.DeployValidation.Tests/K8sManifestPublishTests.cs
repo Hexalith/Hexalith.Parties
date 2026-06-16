@@ -40,6 +40,9 @@ public sealed class K8sManifestPublishTests
     public void PublishScriptPatchesOnlyDocumentedDaprAndJwtTargets()
     {
         string publish = DeploymentTestPaths.ReadRepoFile("deploy/k8s/publish.ps1");
+        string legacyTacheIssuer = "http://auth." + "tache.ai:8080/realms/tache";
+        string legacyHostAliasPatch = "Patch-Keycloak" + "HostAlias";
+        string legacyAdminUiIssuerPatch = "Set-EventStoreAdminUi" + "PublicKeycloakIssuer";
 
         foreach (string app in s_daprApps)
         {
@@ -58,17 +61,18 @@ public sealed class K8sManifestPublishTests
 
         publish.ShouldContain("$DaprClientOnlyTargets = @('eventstore-admin-ui', 'sample-blazor-ui')");
         publish.ShouldContain("$ForbiddenDaprTargets = @('parties-mcp', 'parties-ui', 'redis', 'falkordb')");
-        publish.ShouldContain("http://auth.tache.ai:8080/realms/tache");
         publish.ShouldContain("https://auth.tache.ai/realms/tache");
+        publish.ShouldNotContain(legacyTacheIssuer);
+        publish.ShouldContain("Set-PublicKeycloakIssuerForGeneratedWorkloads");
+        publish.ShouldNotContain(legacyHostAliasPatch);
+        publish.ShouldNotContain(legacyAdminUiIssuerPatch);
         publish.ShouldContain("$UiCredentialsSecretName = 'hexalith-tache-ui-credentials'");
+        publish.ShouldContain("$UiClientCredentialsSecretName = 'hexalith-eventstore-ui-oidc-client'");
         publish.ShouldContain("$PartiesUiOidcSecretName = 'hexalith-parties-ui-oidc-client'");
         publish.ShouldContain("$PartiesUiOidcSecretKey = 'client-secret'");
         publish.ShouldContain("EventStore__Authentication__Username");
         publish.ShouldContain("EventStore__Authentication__Password");
         publish.ShouldContain("Authentication__OpenIdConnect__ClientSecret");
-        publish.ShouldContain("Patch-KeycloakHostAlias");
-        publish.ShouldContain("except eventstore-admin-ui");
-        publish.ShouldContain("Set-EventStoreAdminUiPublicKeycloakIssuer");
         publish.ShouldContain("Test-KeycloakTacheRealmContract");
         publish.ShouldContain("Assert-KeycloakTokenContract");
         publish.ShouldContain("Reconcile-LegacyLocalKeycloakResources");

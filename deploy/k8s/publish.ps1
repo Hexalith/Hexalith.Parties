@@ -44,16 +44,16 @@ $AppHostRoot = Join-Path $RepoRoot 'src/Hexalith.Parties.AppHost'
 $AppHostProject = 'Hexalith.Parties.AppHost.csproj'
 $Namespace = 'hexalith-parties'
 $Registry = 'registry.hexalith.com'
-$TacheIssuer = 'http://auth.tache.ai:8080/realms/tache'
-$TachePublicIssuer = 'https://auth.tache.ai/realms/tache'
-$TacheIssuerHost = 'auth.tache.ai'
-$KeycloakNamespace = 'keycloak'
-$KeycloakServiceName = 'keycloak'
+$IngressClassName = 'nginx-public'
+$PagesTlsSecretName = 'hexalith-pages-letsencrypt-tls'
+$ZotTlsSecretName = 'registry-hexalith-letsencrypt-tls'
+$TacheIssuer = 'https://auth.tache.ai/realms/tache'
+$LegacyTacheIssuerPattern = 'http://auth\.' + 'tache\.ai:8080/realms/tache'
 $UiCredentialsSecretName = 'hexalith-tache-ui-credentials'
+$UiClientCredentialsSecretName = 'hexalith-eventstore-ui-oidc-client'
 $PartiesUiOidcSecretName = 'hexalith-parties-ui-oidc-client'
 $PartiesUiOidcSecretKey = 'client-secret'
 $ZotSecretName = 'zot-pull-secret'
-$Script:KeycloakClusterIp = $null
 
 $GeneratedServiceFolders = @(
     'eventstore',
@@ -589,6 +589,12 @@ function Ensure-UiCredentialSecretRefs {
             secretKeyRef:
               name: $UiCredentialsSecretName
               key: password
+        - name: EventStore__Authentication__ClientSecret
+          valueFrom:
+            secretKeyRef:
+              name: $UiClientCredentialsSecretName
+              key: client-secret
+              optional: true
 "@
 
     foreach ($name in $names) {
@@ -598,6 +604,7 @@ function Ensure-UiCredentialSecretRefs {
         $content = Remove-EnvEntry $content 'EventStore__Authentication__SigningKey'
         $content = Remove-EnvEntry $content 'EventStore__Authentication__Username'
         $content = Remove-EnvEntry $content 'EventStore__Authentication__Password'
+        $content = Remove-EnvEntry $content 'EventStore__Authentication__ClientSecret'
         $content = $content -replace "(?m)^\s{8}env:\s*`r?`n\s{8}envFrom:", '        envFrom:'
 
         if ($content -match "(?m)^\s{8}envFrom:\s*$") {
@@ -612,8 +619,10 @@ function Ensure-UiCredentialSecretRefs {
 
         if ($content -notmatch "EventStore__Authentication__Username" -or
             $content -notmatch "EventStore__Authentication__Password" -or
+            $content -notmatch "EventStore__Authentication__ClientSecret" -or
             $content -notmatch "secretKeyRef:\s*`r?`n\s*name:\s*$UiCredentialsSecretName\s*`r?`n\s*key:\s*username" -or
-            $content -notmatch "secretKeyRef:\s*`r?`n\s*name:\s*$UiCredentialsSecretName\s*`r?`n\s*key:\s*password") {
+            $content -notmatch "secretKeyRef:\s*`r?`n\s*name:\s*$UiCredentialsSecretName\s*`r?`n\s*key:\s*password" -or
+            $content -notmatch "secretKeyRef:\s*`r?`n\s*name:\s*$UiClientCredentialsSecretName\s*`r?`n\s*key:\s*client-secret\s*`r?`n\s*optional:\s*true") {
             Fail $ExitGeneral "UI credential secretKeyRef postcondition failed in $name"
         }
 
@@ -698,171 +707,31 @@ function Assert-NoSigningKeyReferences {
     Write-Host '[publish] symmetric signing-key references absent from generated manifests'
 }
 
-function Resolve-KeycloakServiceClusterIp {
-    if (-not [string]::IsNullOrWhiteSpace($Script:KeycloakClusterIp)) {
-        return $Script:KeycloakClusterIp
-    }
-
-    $ip = Invoke-Checked 'kubectl' @('get', 'service', $KeycloakServiceName, '-n', $KeycloakNamespace, '-o', 'jsonpath={.spec.clusterIP}') $ExitGeneral "Keycloak service $KeycloakNamespace/$KeycloakServiceName read failed"
-    $normalized = ($ip | Out-String).Trim()
-    if ([string]::IsNullOrWhiteSpace($normalized) -or $normalized -eq 'None') {
-        Fail $ExitGeneral "Keycloak service $KeycloakNamespace/$KeycloakServiceName has no clusterIP"
-    }
-
-    $parsedIp = $null
-    if (-not [System.Net.IPAddress]::TryParse($normalized, [ref] $parsedIp)) {
-        Fail $ExitGeneral "Keycloak service $KeycloakNamespace/$KeycloakServiceName returned invalid clusterIP '$normalized'"
-    }
-
-    $Script:KeycloakClusterIp = $normalized
-    return $Script:KeycloakClusterIp
-}
-
-function Set-HostAliasEntry([string] $Content, [string] $HostName, [string] $IpAddress) {
-    $aliasLines = @(
-        "      - ip: $IpAddress",
-        "        hostnames:",
-        "        - $HostName"
-    )
-    $lines = [System.Collections.Generic.List[string]]::new()
-    foreach ($line in ($Content -split "`r?`n")) {
-        $lines.Add($line)
-    }
-
-    $hostAliasesIndex = -1
-    for ($index = 0; $index -lt $lines.Count; $index++) {
-        if ($lines[$index] -match '^\s+hostAliases:\s*$') {
-            $hostAliasesIndex = $index
-            break
-        }
-    }
-
-    if ($hostAliasesIndex -lt 0) {
-        for ($index = 0; $index -lt $lines.Count; $index++) {
-            if ($lines[$index] -match '^(\s+)(imagePullSecrets|containers):\s*$') {
-                $indent = $Matches[1]
-                $insertLines = @(
-                    "${indent}hostAliases:",
-                    "${indent}- ip: $IpAddress",
-                    "$indent  hostnames:",
-                    "$indent  - $HostName"
-                )
-                for ($aliasIndex = 0; $aliasIndex -lt $insertLines.Count; $aliasIndex++) {
-                    $lines.Insert($index + $aliasIndex, $insertLines[$aliasIndex])
-                }
-
-                return ($lines -join [Environment]::NewLine)
-            }
-        }
-
-        Fail $ExitGeneral "unable to locate pod spec insertion point for Keycloak host alias"
-    }
-
-    $blockEnd = $hostAliasesIndex + 1
-    while ($blockEnd -lt $lines.Count) {
-        $line = $lines[$blockEnd]
-        if ($line -match '^\s{6}\S' -and $line -notmatch '^\s{6}-\s+') {
-            break
-        }
-
-        if ($line -match '^\s{4}\S' -or $line -match '^\s{2}\S') {
-            break
-        }
-
-        $blockEnd++
-    }
-
-    $newBlock = [System.Collections.Generic.List[string]]::new()
-    $newBlock.Add($lines[$hostAliasesIndex])
-    foreach ($aliasLine in $aliasLines) {
-        $newBlock.Add($aliasLine)
-    }
-
-    $entry = [System.Collections.Generic.List[string]]::new()
-    for ($index = $hostAliasesIndex + 1; $index -lt $blockEnd; $index++) {
-        $line = $lines[$index]
-        if ($line -match '^\s{6}-\s+' -and $entry.Count -gt 0) {
-            if (-not (($entry -join [Environment]::NewLine) -match "(?m)^\s{8,}-\s*$([regex]::Escape($HostName))\s*$")) {
-                foreach ($entryLine in $entry) {
-                    $newBlock.Add($entryLine)
-                }
-            }
-
-            $entry.Clear()
-        }
-
-        $entry.Add($line)
-    }
-
-    if ($entry.Count -gt 0 -and
-        -not (($entry -join [Environment]::NewLine) -match "(?m)^\s{8,}-\s*$([regex]::Escape($HostName))\s*$")) {
-        foreach ($entryLine in $entry) {
-            $newBlock.Add($entryLine)
-        }
-    }
-
-    $rebuilt = [System.Collections.Generic.List[string]]::new()
-    for ($index = 0; $index -lt $hostAliasesIndex; $index++) {
-        $rebuilt.Add($lines[$index])
-    }
-
-    foreach ($blockLine in $newBlock) {
-        $rebuilt.Add($blockLine)
-    }
-
-    for ($index = $blockEnd; $index -lt $lines.Count; $index++) {
-        $rebuilt.Add($lines[$index])
-    }
-
-    return ($rebuilt -join [Environment]::NewLine)
-}
-
-function Patch-KeycloakHostAlias {
-    $clusterIp = Resolve-KeycloakServiceClusterIp
-
+function Set-PublicKeycloakIssuerForGeneratedWorkloads {
     foreach ($name in $GeneratedServiceFolders) {
-        if ($name -eq 'eventstore-admin-ui') {
-            continue
+        $kustomizationPath = Join-Path $K8sRoot "$name/kustomization.yaml"
+        if (Test-Path -LiteralPath $kustomizationPath) {
+            $content = Get-Content -Raw -LiteralPath $kustomizationPath
+            $content = $content -replace $LegacyTacheIssuerPattern, $TacheIssuer
+            $content = $content -replace 'Authentication__JwtBearer__RequireHttpsMetadata=false', 'Authentication__JwtBearer__RequireHttpsMetadata=true'
+
+            if ($content -match $LegacyTacheIssuerPattern -or
+                $content -match 'Authentication__JwtBearer__RequireHttpsMetadata=false') {
+                Fail $ExitGeneral "$name/kustomization.yaml still contains insecure Keycloak metadata"
+            }
+
+            Set-Content -LiteralPath $kustomizationPath -Value $content -NoNewline
         }
 
         $tuple = Read-DeploymentFile $name
         $path = $tuple[0]
-        $content = $tuple[1]
-        $content = Set-HostAliasEntry $content $TacheIssuerHost $clusterIp
-
-        if ($content -notmatch "hostAliases:" -or
-            $content -notmatch "ip:\s*$([regex]::Escape($clusterIp))" -or
-            $content -notmatch $TacheIssuerHost) {
-            Fail $ExitGeneral "Keycloak host alias postcondition failed in $name"
+        $deployment = $tuple[1]
+        if ($deployment -match 'auth\.tache\.ai' -or $deployment -match 'hostAliases:\s*') {
+            Fail $ExitGeneral "$name/deployment.yaml contains a Keycloak hostAlias; regenerate without hostAliases"
         }
-
-        Set-Content -LiteralPath $path -Value $content -NoNewline
     }
 
-    Write-Host "[publish] Keycloak host alias: $TacheIssuerHost -> $KeycloakNamespace/$KeycloakServiceName ($clusterIp) except eventstore-admin-ui"
-}
-
-function Set-EventStoreAdminUiPublicKeycloakIssuer {
-    $path = Join-Path $K8sRoot 'eventstore-admin-ui/kustomization.yaml'
-    if (-not (Test-Path -LiteralPath $path)) {
-        Fail $ExitGeneral 'eventstore-admin-ui/kustomization.yaml missing after generation'
-    }
-
-    $content = Get-Content -Raw -LiteralPath $path
-    $content = $content -replace 'EventStore__Authentication__Authority=http://auth\.tache\.ai:8080/realms/tache', "EventStore__Authentication__Authority=$TachePublicIssuer"
-    $content = $content -replace 'EventStore__Authentication__Issuer=http://auth\.tache\.ai:8080/realms/tache', "EventStore__Authentication__Issuer=$TachePublicIssuer"
-
-    if ($content -match 'EventStore__Authentication__(Authority|Issuer)=http://auth\.tache\.ai:8080/realms/tache') {
-        Fail $ExitGeneral 'eventstore-admin-ui still contains HTTP Keycloak authority or issuer'
-    }
-
-    if ($content -notmatch "EventStore__Authentication__Authority=$([regex]::Escape($TachePublicIssuer))" -or
-        $content -notmatch "EventStore__Authentication__Issuer=$([regex]::Escape($TachePublicIssuer))") {
-        Fail $ExitGeneral 'eventstore-admin-ui public Keycloak authority postcondition failed'
-    }
-
-    Set-Content -LiteralPath $path -Value $content -NoNewline
-    Write-Host "[publish] eventstore-admin-ui Keycloak issuer: $TachePublicIssuer"
+    Write-Host "[publish] generated Keycloak issuer enforced: $TacheIssuer"
 }
 
 function Ensure-ImagePullSecrets {
@@ -1023,6 +892,95 @@ metadata:
     Write-Host "[publish] namespace $Namespace exists"
 }
 
+function ConvertFrom-KubectlJson {
+    param(
+        [Parameter(Mandatory = $true)]
+        [object] $Output,
+
+        [Parameter(Mandatory = $true)]
+        [string] $Description
+    )
+
+    try {
+        return (($Output | Out-String).Trim() | ConvertFrom-Json -Depth 30)
+    }
+    catch {
+        Fail $ExitGeneral "$Description was not valid JSON"
+    }
+}
+
+function Assert-RegistryNginxIngress {
+    [void](Invoke-Checked 'kubectl' @('get', 'ingressclass', $IngressClassName, '-o', 'name') $ExitGeneral "required Kubernetes nginx IngressClass $IngressClassName is missing")
+    [void](Invoke-Checked 'kubectl' @('get', 'secret', $ZotTlsSecretName, '-n', 'zot', '-o', 'name') $ExitGeneral "required Zot TLS Secret $ZotTlsSecretName is missing")
+
+    $service = ConvertFrom-KubectlJson `
+        (Invoke-Checked 'kubectl' @('get', 'service', 'zot', '-n', 'zot', '-o', 'json') $ExitGeneral 'required Zot Service is missing') `
+        'Zot Service'
+
+    if ([string] $service.spec.type -ne 'ClusterIP') {
+        Fail $ExitGeneral 'Service/zot must be ClusterIP; NodePort/local registry publishing is not supported'
+    }
+
+    foreach ($port in @($service.spec.ports)) {
+        if ($null -ne $port.PSObject.Properties['nodePort']) {
+            Fail $ExitGeneral 'Service/zot must not expose nodePort; use registry.hexalith.com through Kubernetes nginx Ingress'
+        }
+    }
+
+    $ingress = ConvertFrom-KubectlJson `
+        (Invoke-Checked 'kubectl' @('get', 'ingress', 'zot-ingress', '-n', 'zot', '-o', 'json') $ExitGeneral 'required Zot nginx Ingress is missing') `
+        'Zot Ingress'
+
+    if ([string] $ingress.spec.ingressClassName -ne $IngressClassName) {
+        Fail $ExitGeneral "Ingress/zot-ingress must use ingressClassName $IngressClassName"
+    }
+
+    $hasTlsSecret = $false
+    foreach ($tls in @($ingress.spec.tls)) {
+        if ([string] $tls.secretName -eq $ZotTlsSecretName) {
+            $hasTlsSecret = $true
+            break
+        }
+    }
+
+    if (-not $hasTlsSecret) {
+        Fail $ExitGeneral "Ingress/zot-ingress must use TLS Secret $ZotTlsSecretName"
+    }
+
+    $hasRegistryRoute = $false
+    foreach ($rule in @($ingress.spec.rules)) {
+        if ([string] $rule.host -ne $Registry) {
+            continue
+        }
+
+        foreach ($path in @($rule.http.paths)) {
+            if ([string] $path.path -eq '/' -and
+                [string] $path.pathType -eq 'Prefix' -and
+                [string] $path.backend.service.name -eq 'zot' -and
+                [string] $path.backend.service.port.number -eq '5000') {
+                $hasRegistryRoute = $true
+                break
+            }
+        }
+    }
+
+    if (-not $hasRegistryRoute) {
+        Fail $ExitGeneral "Ingress/zot-ingress must route $Registry/ to Service/zot port 5000"
+    }
+
+    Write-Host "[publish] Zot registry ingress validated: $Registry -> zot:5000 via $IngressClassName"
+}
+
+function Assert-PublicUiNginxIngressPrerequisites {
+    [void](Invoke-Checked 'kubectl' @('get', 'secret', $PagesTlsSecretName, '-n', $Namespace, '-o', 'name') $ExitGeneral "required public UI TLS Secret $PagesTlsSecretName is missing")
+    Write-Host "[publish] public UI nginx ingress prerequisites validated: IngressClass $IngressClassName and Secret $PagesTlsSecretName"
+}
+
+function Assert-KubernetesNginxIngressPrerequisites {
+    Assert-RegistryNginxIngress
+    Assert-PublicUiNginxIngressPrerequisites
+}
+
 function ConvertFrom-Base64UrlJson([string] $Value) {
     $normalized = $Value.Replace('-', '+').Replace('_', '/')
     switch ($normalized.Length % 4) {
@@ -1105,7 +1063,6 @@ function Assert-KeycloakTokenContract([string] $TokenJson) {
 }
 
 function Invoke-KeycloakPreflightPod {
-    $clusterIp = Resolve-KeycloakServiceClusterIp
     $podName = "keycloak-tache-preflight-$([Guid]::NewGuid().ToString('N').Substring(0, 8))"
     $script = @"
 set -eu
@@ -1122,12 +1079,6 @@ curl -fsS -X POST "`$issuer/protocol/openid-connect/token" \
     $overrides = [ordered]@{
         spec = [ordered]@{
             restartPolicy = 'Never'
-            hostAliases = @(
-                [ordered]@{
-                    ip = $clusterIp
-                    hostnames = @($TacheIssuerHost)
-                }
-            )
             containers = @(
                 [ordered]@{
                     name = $podName
@@ -1431,6 +1382,7 @@ catch {
 
 Write-Step 'Ensure namespace and preflight external auth'
 Ensure-Namespace
+Assert-KubernetesNginxIngressPrerequisites
 Validate-UiCredentialsSecret
 Validate-PartiesUiOidcClientSecret
 Test-KeycloakTacheRealmContract
@@ -1450,11 +1402,8 @@ Remove-AspiratePlaceholders
 Write-Step 'Patch Dapr annotations'
 Patch-DaprAnnotations
 
-Write-Step 'Patch Keycloak host alias'
-Patch-KeycloakHostAlias
-
-Write-Step 'Patch eventstore-admin-ui public Keycloak issuer'
-Set-EventStoreAdminUiPublicKeycloakIssuer
+Write-Step 'Enforce public Keycloak issuer'
+Set-PublicKeycloakIssuerForGeneratedWorkloads
 
 Write-Step 'Patch UI credential secretKeyRefs'
 Remove-SigningKeyEnvEntries

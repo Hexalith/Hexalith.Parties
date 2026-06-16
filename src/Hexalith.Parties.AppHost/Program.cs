@@ -11,9 +11,8 @@ string tenantsAccessControlConfigPath = ResolveDaprConfigPath("accesscontrol.ten
 string partiesAccessControlConfigPath = ResolveDaprConfigPath("accesscontrol.parties.yaml");
 string memoriesAccessControlConfigPath = ResolveDaprConfigPath("accesscontrol.memories.yaml");
 string resiliencyConfigPath = ResolveDaprConfigPath("resiliency.yaml");
-const string PublishModeJwtIssuer = "http://auth.tache.ai:8080/realms/tache";
+const string PublishModeJwtIssuer = "https://auth.tache.ai/realms/tache";
 const string PublishModeJwtAuthority = PublishModeJwtIssuer;
-const string PublishModePublicKeycloakIssuer = "https://auth.tache.ai/realms/tache";
 
 // Registration dictionary key uses the Kubernetes-valid sanitized wildcard form `wildcard_party_v1`
 // (story 9.3 AC1 / ADR 9.3-1). ConfigMap data keys must match ^[A-Za-z0-9_.-]+$ and Pod container
@@ -212,6 +211,7 @@ if (builder.ExecutionContext.IsPublishMode
         .WithEnvironment("EventStore__SignalR__HubUrl", ReferenceExpression.Create($"{eventStore.GetEndpoint("http")}/hubs/projection-changes"))
         .WithEnvironment("EventStore__Authentication__Authority", PublishModeJwtAuthority)
         .WithEnvironment("EventStore__Authentication__ClientId", "hexalith-eventstore")
+        .WithEnvironment("EventStore__Authentication__ClientCredentialsClientId", "hexalith-eventstore-ui")
         .WithEnvironment("EventStore__Authentication__Subject", "sample-blazor-ui")
         .WithEnvironment("EventStore__Authentication__Issuer", PublishModeJwtIssuer)
         .WithEnvironment("EventStore__Authentication__Audience", "hexalith-eventstore")
@@ -251,15 +251,16 @@ if (keycloak is not null)
 string? publishModeAuthority = builder.ExecutionContext.IsPublishMode
     ? PublishModeJwtAuthority
     : null;
+string requireHttpsMetadata = builder.ExecutionContext.IsPublishMode ? "true" : "false";
 
 _ = WithJwtAuthentication(eventStore, realmUrl, publishModeAuthority, builder.ExecutionContext.IsPublishMode ? PublishModeJwtIssuer : null)
     .WithEnvironment("Authentication__JwtBearer__Audience", "hexalith-eventstore")
-    .WithEnvironment("Authentication__JwtBearer__RequireHttpsMetadata", "false")
+    .WithEnvironment("Authentication__JwtBearer__RequireHttpsMetadata", requireHttpsMetadata)
     .WithEnvironment("Authentication__JwtBearer__SigningKey", "");
 
 _ = WithJwtAuthentication(adminServer, realmUrl, publishModeAuthority, builder.ExecutionContext.IsPublishMode ? PublishModeJwtIssuer : null)
     .WithEnvironment("Authentication__JwtBearer__Audience", "hexalith-eventstore")
-    .WithEnvironment("Authentication__JwtBearer__RequireHttpsMetadata", "false")
+    .WithEnvironment("Authentication__JwtBearer__RequireHttpsMetadata", requireHttpsMetadata)
     .WithEnvironment("Authentication__JwtBearer__SigningKey", "");
 
 // Multi-audience tolerance: Parties accepts its own audience plus the
@@ -269,14 +270,14 @@ _ = WithJwtAuthentication(parties, realmUrl, publishModeAuthority, builder.Execu
     .WithEnvironment("Authentication__JwtBearer__Audience", "hexalith-parties")
     .WithEnvironment("Authentication__JwtBearer__TokenValidationParameters__ValidAudiences__0", "hexalith-parties")
     .WithEnvironment("Authentication__JwtBearer__TokenValidationParameters__ValidAudiences__1", "hexalith-eventstore")
-    .WithEnvironment("Authentication__JwtBearer__RequireHttpsMetadata", "false")
+    .WithEnvironment("Authentication__JwtBearer__RequireHttpsMetadata", requireHttpsMetadata)
     .WithEnvironment("Authentication__JwtBearer__SigningKey", "");
 
 _ = WithJwtAuthentication(partiesMcp, realmUrl, publishModeAuthority, builder.ExecutionContext.IsPublishMode ? PublishModeJwtIssuer : null)
     .WithEnvironment("Authentication__JwtBearer__Audience", "hexalith-parties-mcp")
     .WithEnvironment("Authentication__JwtBearer__TokenValidationParameters__ValidAudiences__0", "hexalith-parties-mcp")
     .WithEnvironment("Authentication__JwtBearer__TokenValidationParameters__ValidAudiences__1", "hexalith-eventstore")
-    .WithEnvironment("Authentication__JwtBearer__RequireHttpsMetadata", "false")
+    .WithEnvironment("Authentication__JwtBearer__RequireHttpsMetadata", requireHttpsMetadata)
     .WithEnvironment("Authentication__JwtBearer__SigningKey", "");
 
 // Multi-audience tolerance: Tenants validates its own audience and accepts
@@ -285,12 +286,13 @@ _ = WithJwtAuthentication(tenants, realmUrl, publishModeAuthority, builder.Execu
     .WithEnvironment("Authentication__JwtBearer__Audience", "hexalith-tenants")
     .WithEnvironment("Authentication__JwtBearer__TokenValidationParameters__ValidAudiences__0", "hexalith-tenants")
     .WithEnvironment("Authentication__JwtBearer__TokenValidationParameters__ValidAudiences__1", "hexalith-eventstore")
-    .WithEnvironment("Authentication__JwtBearer__RequireHttpsMetadata", "false")
+    .WithEnvironment("Authentication__JwtBearer__RequireHttpsMetadata", requireHttpsMetadata)
     .WithEnvironment("Authentication__JwtBearer__SigningKey", "");
 
 _ = adminUI
     .WithEnvironment("EventStore__AdminServer__BaseUrl", ReferenceExpression.Create($"{adminServer.GetEndpoint("http")}"))
-    .WithEnvironment("EventStore__AdminServer__SwaggerUrl", ReferenceExpression.Create($"{adminServer.GetEndpoint("http")}/swagger/index.html"));
+    .WithEnvironment("EventStore__AdminServer__SwaggerUrl", ReferenceExpression.Create($"{adminServer.GetEndpoint("http")}/swagger/index.html"))
+    .WithEnvironment("EventStore__SignalR__HubUrl", ReferenceExpression.Create($"{eventStore.GetEndpoint("http")}/hubs/projection-changes"));
 if (realmUrl is not null)
 {
     _ = adminUI
@@ -302,10 +304,11 @@ else if (builder.ExecutionContext.IsPublishMode)
     _ = adminUI
         .WithEnvironment("ASPNETCORE_ENVIRONMENT", "Development")
         .WithEnvironment("DOTNET_ENVIRONMENT", "Development")
-        .WithEnvironment("EventStore__Authentication__Authority", PublishModePublicKeycloakIssuer)
-        .WithEnvironment("EventStore__Authentication__Issuer", PublishModePublicKeycloakIssuer)
+        .WithEnvironment("EventStore__Authentication__Authority", PublishModeJwtAuthority)
+        .WithEnvironment("EventStore__Authentication__Issuer", PublishModeJwtIssuer)
         .WithEnvironment("EventStore__Authentication__Audience", "hexalith-eventstore")
-        .WithEnvironment("EventStore__Authentication__ClientId", "hexalith-eventstore");
+        .WithEnvironment("EventStore__Authentication__ClientId", "hexalith-eventstore")
+        .WithEnvironment("EventStore__Authentication__ClientCredentialsClientId", "hexalith-eventstore-ui");
 }
 else
 {

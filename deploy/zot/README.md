@@ -18,12 +18,12 @@ Hexalith.Parties images are published to (Story 9.5 `publish.ps1`) and pulled fr
 | `deployment.yaml` | `Deployment/zot` | Single-replica, `strategy: Recreate`. Image pinned to a digest-verified tag (see "Pinned tag rationale"). |
 | `pvc.yaml` | `PersistentVolumeClaim/zot-pvc` | `storageClassName: local`, `accessModes: ReadWriteOnce`, capacity pinned to the live-cluster value. |
 | `service.yaml` | `Service/zot` | `ClusterIP` — live-cluster `NodePort 30500` intentionally **not** propagated. |
-| `ingress.yaml` | `Ingress/zot-ingress` | nginx Ingress with TLS edge-termination for `host: registry.hexalith.com`. |
+| `ingress.yaml` | `Ingress/zot-ingress` | `nginx-public` Ingress with TLS edge-termination for `host: registry.hexalith.com`. |
 
 ## What this directory does NOT contain (and why)
 
 - `Secret/zot-auth-secret` — the htpasswd file. Infra-team managed; **never committed**.
-- `Secret/zot-tls` — the TLS cert/key for `registry.hexalith.com`. Infra-team / cert-manager managed; **never committed**.
+- `Secret/registry-hexalith-letsencrypt-tls` — the TLS cert/key for `registry.hexalith.com`. Cert-manager managed; **never committed**.
 
 See "Out-of-band Secret creation" below for the one-time bootstrap commands.
 
@@ -56,15 +56,9 @@ kubectl get svc zot -n zot -o jsonpath='{.spec.ports}'
 kubectl describe svc -n zot zot | grep -E 'NodePort|External'
 ```
 
-**If a NodePort 30500 consumer exists**, choose one of these two remediation paths
-**before** applying:
-
-1. **Patch the committed manifest temporarily** — add `nodePort: 30500` back into
-   `service.yaml` `ports[0]` and change `type` back to `NodePort`, then open a follow-up
-   story to migrate consumers to the Ingress host `registry.hexalith.com` and re-cut over
-   to `ClusterIP`.
-2. **Coordinate the cutover** with the consumer owners before applying — confirm consumers
-   have migrated to `registry.hexalith.com`, then apply the unmodified `service.yaml`.
+**If a NodePort 30500 consumer exists**, coordinate the cutover with the consumer owners
+before applying. Consumers must move to `https://registry.hexalith.com` through
+`Ingress/zot-ingress`; do not re-add `nodePort: 30500` or depend on a local nginx bridge.
 
 ### Apply
 
@@ -137,21 +131,21 @@ Verify presence (no contents echoed):
 kubectl get secret zot-auth-secret -n zot
 ```
 
-### `zot-tls` (TLS cert + key for `registry.hexalith.com`)
+### `registry-hexalith-letsencrypt-tls` (TLS cert + key for `registry.hexalith.com`)
 
-The `Ingress/zot-ingress` terminates TLS at the cluster edge using `secretName: zot-tls`.
-The cert + key are managed by cert-manager or the infra team's wildcard-cert practice — refer
-to the cluster's standard cert-rotation runbook.
+The `Ingress/zot-ingress` terminates TLS at the cluster edge using `secretName: registry-hexalith-letsencrypt-tls`.
+The cert + key are managed by cert-manager through `Certificate/registry-hexalith-letsencrypt`
+and `ClusterIssuer/letsencrypt-prod-http01`.
 
 ```bash
 # Manual create (one-off — prefer cert-manager for rotation):
-kubectl create secret tls zot-tls -n zot --cert=/path/to/registry.hexalith.com.crt --key=/path/to/registry.hexalith.com.key
+kubectl get certificate registry-hexalith-letsencrypt -n zot
 ```
 
 Verify presence:
 
 ```bash
-kubectl get secret zot-tls -n zot
+kubectl get secret registry-hexalith-letsencrypt-tls -n zot
 ```
 
 ---
@@ -267,6 +261,10 @@ annotations) is the **only** supported access path going forward; the NodePort i
 as a live-cluster artefact, out-of-scope for committed-manifest reproducibility.
 
 See "Pre-apply NodePort consumer audit" above before applying the `ClusterIP` cutover.
+`publish.ps1` now validates this contract before building images: `Service/zot` must be
+`ClusterIP`, must not expose `nodePort`, and `Ingress/zot-ingress` must route
+`registry.hexalith.com/` to `zot:5000` with `ingressClassName: nginx-public` and TLS Secret
+`registry-hexalith-letsencrypt-tls`.
 
 ---
 

@@ -10,7 +10,7 @@ metadata:
     nginx.ingress.kubernetes.io/proxy-send-timeout: "900"
     nginx.ingress.kubernetes.io/ssl-redirect: "true"
 spec:
-  ingressClassName: nginx
+  ingressClassName: nginx-public
   rules:
     - host: registry.hexalith.com
       http:
@@ -25,4 +25,4 @@ spec:
   tls:
     - hosts:
         - registry.hexalith.com
-      secretName: zot-tls
+      secretName: registry-hexalith-letsencrypt-tls

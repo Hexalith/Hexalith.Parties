@@ -12,6 +12,8 @@ $DaprAppIds = @('eventstore', 'eventstore-admin', 'sample', 'parties', 'tenants'
 $DaprClientOnlyAppIds = @('eventstore-admin-ui', 'sample-blazor-ui')
 $ForbiddenDaprAppIds = @('parties-mcp', 'parties-ui', 'redis', 'falkordb')
 $PublicIngressAllowedServices = @('eventstore-admin-ui', 'sample-blazor-ui', 'parties-ui')
+$PublicIngressClassName = 'nginx-public'
+$PublicIngressTlsSecretName = 'hexalith-pages-letsencrypt-tls'
 $SemVerPattern = '^[0-9]+\.[0-9]+\.[0-9]+(?:-[A-Za-z0-9.-]+)?$'
 
 function Get-RepoRoot {
@@ -814,11 +816,11 @@ function Find-K8sIngressFindings {
             if ($document.Text -cnotmatch '(?m)^\s*name:\s*hexalith-pages-ingress\s*$') {
                 $findings.Add((New-Finding -Severity 'BLOCKING' -Category 'K8sIngress-InvalidPublicRoute' -File $relative -JsonPath '$.metadata.name' -Reason 'public UI ingress must be named hexalith-pages-ingress'))
             }
-            if ($document.Text -cnotmatch '(?m)^\s*ingressClassName:\s*nginx\s*$') {
-                $findings.Add((New-Finding -Severity 'BLOCKING' -Category 'K8sIngress-InvalidPublicRoute' -File $relative -JsonPath '$.spec.ingressClassName' -Reason 'public UI ingress must use nginx ingress class'))
+            if ($document.Text -cnotmatch "(?m)^\s*ingressClassName:\s*$([regex]::Escape($PublicIngressClassName))\s*$") {
+                $findings.Add((New-Finding -Severity 'BLOCKING' -Category 'K8sIngress-InvalidPublicRoute' -File $relative -JsonPath '$.spec.ingressClassName' -Reason "public UI ingress must use $PublicIngressClassName ingress class"))
             }
-            if ($document.Text -cnotmatch '(?m)^\s*secretName:\s*hexalith-pages-tls\s*$') {
-                $findings.Add((New-Finding -Severity 'BLOCKING' -Category 'K8sIngress-InvalidPublicRoute' -File $relative -JsonPath '$.spec.tls[*].secretName' -Reason 'public UI ingress must use hexalith-pages-tls'))
+            if ($document.Text -cnotmatch "(?m)^\s*secretName:\s*$([regex]::Escape($PublicIngressTlsSecretName))\s*$") {
+                $findings.Add((New-Finding -Severity 'BLOCKING' -Category 'K8sIngress-InvalidPublicRoute' -File $relative -JsonPath '$.spec.tls[*].secretName' -Reason "public UI ingress must use $PublicIngressTlsSecretName"))
             }
 
             for ($i = 0; $i -lt $lines.Count; $i++) {

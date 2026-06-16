@@ -15,10 +15,10 @@ configMapGenerator:
     - services__eventstore__http__0=http://eventstore:8080
     - ASPNETCORE_ENVIRONMENT=Development
     - DOTNET_ENVIRONMENT=Development
-    - Authentication__JwtBearer__Authority=http://auth.tache.ai:8080/realms/tache
-    - Authentication__JwtBearer__Issuer=http://auth.tache.ai:8080/realms/tache
+    - Authentication__JwtBearer__Authority=https://auth.tache.ai/realms/tache
+    - Authentication__JwtBearer__Issuer=https://auth.tache.ai/realms/tache
     - Authentication__JwtBearer__Audience=hexalith-tenants
     - Authentication__JwtBearer__TokenValidationParameters__ValidAudiences__0=hexalith-tenants
     - Authentication__JwtBearer__TokenValidationParameters__ValidAudiences__1=hexalith-eventstore
-    - Authentication__JwtBearer__RequireHttpsMetadata=false
+    - Authentication__JwtBearer__RequireHttpsMetadata=true
     - ASPNETCORE_URLS=http://+:8080;

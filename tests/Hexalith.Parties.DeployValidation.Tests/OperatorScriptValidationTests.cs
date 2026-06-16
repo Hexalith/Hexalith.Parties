@@ -6,6 +6,9 @@ namespace Hexalith.Parties.DeployValidation.Tests;
 [Collection("DeployValidation")]
 public sealed class OperatorScriptValidationTests : IDisposable
 {
+    private static readonly string s_legacyTacheIssuer = "http://auth." + "tache.ai:8080/realms/tache";
+    private static readonly string s_legacyHostAliasPatch = "Patch-Keycloak" + "HostAlias";
+
     private readonly string _tempRoot = Path.Combine(Path.GetTempPath(), "hexalith-parties-script-tests-" + Guid.NewGuid().ToString("N"));
 
     public void Dispose()
@@ -146,7 +149,7 @@ public sealed class OperatorScriptValidationTests : IDisposable
             "Run dotnet aspirate generate",
             "Strip Aspirate placeholder files",
             "Patch Dapr annotations",
-            "Patch Keycloak host alias",
+            "Enforce public Keycloak issuer",
             "Patch UI credential secretKeyRefs",
             "Patch health probes",
             "Patch imagePullSecrets",
@@ -193,8 +196,10 @@ public sealed class OperatorScriptValidationTests : IDisposable
         publish.ShouldContain("'memories' = 'accesscontrol-memories'");
         publish.ShouldContain("$DaprClientOnlyTargets = @('eventstore-admin-ui', 'sample-blazor-ui')");
         publish.ShouldContain("$ForbiddenDaprTargets = @('parties-mcp', 'parties-ui', 'redis', 'falkordb')");
-        publish.ShouldContain("http://auth.tache.ai:8080/realms/tache");
         publish.ShouldContain("https://auth.tache.ai/realms/tache");
+        publish.ShouldNotContain(s_legacyTacheIssuer);
+        publish.ShouldContain("Set-PublicKeycloakIssuerForGeneratedWorkloads");
+        publish.ShouldNotContain(s_legacyHostAliasPatch);
         publish.ShouldContain("EventStore__Authentication__Username");
         publish.ShouldContain("EventStore__Authentication__Password");
         publish.ShouldContain("Authentication__OpenIdConnect__ClientSecret");
@@ -202,6 +207,10 @@ public sealed class OperatorScriptValidationTests : IDisposable
         publish.ShouldContain("imagePullSecrets");
         publish.ShouldContain("zot-pull-secret");
         publish.ShouldContain("Assert-ZotImageManifests");
+        publish.ShouldContain("Assert-KubernetesNginxIngressPrerequisites");
+        publish.ShouldContain("Ingress/zot-ingress must route");
+        publish.ShouldContain("Service/zot must be ClusterIP");
+        publish.ShouldContain("hexalith-pages-letsencrypt-tls");
         publish.ShouldContain("Invoke-DeploymentValidator");
         publish.ShouldContain("credsStore");
         publish.ShouldContain("credHelpers");
@@ -332,10 +341,9 @@ public sealed class OperatorScriptValidationTests : IDisposable
         eventstore.ShouldContain("port: http");
         CountOccurrences(eventstore, "timeoutSeconds: 10").ShouldBe(2);
         eventstore.ShouldContain("livenessProbe:");
-        eventstore.ShouldContain("hostAliases:");
-        eventstore.ShouldContain("ip: 10.96.42.17");
-        eventstore.ShouldContain("auth.tache.ai");
-        eventstore.ShouldContain("internal.example");
+        eventstore.ShouldNotContain("hostAliases:");
+        eventstore.ShouldNotContain("auth.tache.ai");
+        eventstore.ShouldNotContain("internal.example");
         eventstore.ShouldContain("envFrom:");
         eventstore.ShouldContain("terminationGracePeriodSeconds: 180");
         eventstore.ShouldNotContain("Authentication__JwtBearer__SigningKey");
@@ -352,13 +360,21 @@ public sealed class OperatorScriptValidationTests : IDisposable
         adminUi.ShouldNotContain("auth.tache.ai");
         adminUi.ShouldContain("EventStore__Authentication__Username");
         adminUi.ShouldContain("EventStore__Authentication__Password");
+        adminUi.ShouldContain("EventStore__Authentication__ClientSecret");
         adminUi.ShouldContain("secretKeyRef:");
         adminUi.ShouldContain("name: hexalith-tache-ui-credentials");
+        adminUi.ShouldContain("name: hexalith-eventstore-ui-oidc-client");
+        adminUi.ShouldContain("optional: true");
         string adminUiKustomization = File.ReadAllText(Path.Combine(workspace.K8sRoot, "eventstore-admin-ui", "kustomization.yaml"));
         adminUiKustomization.ShouldContain("EventStore__Authentication__Authority=https://auth.tache.ai/realms/tache");
         adminUiKustomization.ShouldContain("EventStore__Authentication__Issuer=https://auth.tache.ai/realms/tache");
-        adminUiKustomization.ShouldNotContain("EventStore__Authentication__Authority=http://auth.tache.ai:8080/realms/tache");
-        adminUiKustomization.ShouldNotContain("EventStore__Authentication__Issuer=http://auth.tache.ai:8080/realms/tache");
+        adminUiKustomization.ShouldNotContain(s_legacyTacheIssuer);
+        string eventstoreKustomization = File.ReadAllText(Path.Combine(workspace.K8sRoot, "eventstore", "kustomization.yaml"));
+        eventstoreKustomization.ShouldContain("Authentication__JwtBearer__Authority=https://auth.tache.ai/realms/tache");
+        eventstoreKustomization.ShouldContain("Authentication__JwtBearer__Issuer=https://auth.tache.ai/realms/tache");
+        eventstoreKustomization.ShouldContain("Authentication__JwtBearer__RequireHttpsMetadata=true");
+        eventstoreKustomization.ShouldNotContain(s_legacyTacheIssuer);
+        eventstoreKustomization.ShouldNotContain("Authentication__JwtBearer__RequireHttpsMetadata=false");
 
         string partiesUi = File.ReadAllText(Path.Combine(workspace.K8sRoot, "parties-ui", "deployment.yaml"));
         partiesUi.ShouldNotContain("dapr.io/enabled");
@@ -421,9 +437,9 @@ public sealed class OperatorScriptValidationTests : IDisposable
         CountOccurrences(eventstore, "dapr.io/config: accesscontrol").ShouldBe(1);
         CountOccurrences(eventstore, "imagePullSecrets:").ShouldBe(1);
         CountOccurrences(eventstore, "- name: zot-pull-secret").ShouldBe(1);
-        CountOccurrences(eventstore, "hostAliases:").ShouldBe(1);
-        CountOccurrences(eventstore, "auth.tache.ai").ShouldBe(1);
-        CountOccurrences(eventstore, "internal.example").ShouldBe(1);
+        CountOccurrences(eventstore, "hostAliases:").ShouldBe(0);
+        CountOccurrences(eventstore, "auth.tache.ai").ShouldBe(0);
+        CountOccurrences(eventstore, "internal.example").ShouldBe(0);
         eventstore.ShouldContain("envFrom:");
         eventstore.ShouldContain("terminationGracePeriodSeconds: 180");
         eventstore.ShouldNotContain("Authentication__JwtBearer__SigningKey");
@@ -444,11 +460,14 @@ public sealed class OperatorScriptValidationTests : IDisposable
         CountOccurrences(adminUi, "hostAliases:").ShouldBe(0);
         CountOccurrences(adminUi, "EventStore__Authentication__Username").ShouldBe(1);
         CountOccurrences(adminUi, "EventStore__Authentication__Password").ShouldBe(1);
-        CountOccurrences(adminUi, "secretKeyRef:").ShouldBe(2);
+        CountOccurrences(adminUi, "EventStore__Authentication__ClientSecret").ShouldBe(1);
+        CountOccurrences(adminUi, "secretKeyRef:").ShouldBe(3);
         CountOccurrences(adminUi, "name: hexalith-tache-ui-credentials").ShouldBe(2);
+        CountOccurrences(adminUi, "name: hexalith-eventstore-ui-oidc-client").ShouldBe(1);
+        CountOccurrences(adminUi, "optional: true").ShouldBe(1);
         string adminUiKustomization = File.ReadAllText(Path.Combine(workspace.K8sRoot, "eventstore-admin-ui", "kustomization.yaml"));
         CountOccurrences(adminUiKustomization, "https://auth.tache.ai/realms/tache").ShouldBe(2);
-        adminUiKustomization.ShouldNotContain("http://auth.tache.ai:8080/realms/tache");
+        adminUiKustomization.ShouldNotContain(s_legacyTacheIssuer);
 
         string partiesUi = File.ReadAllText(Path.Combine(workspace.K8sRoot, "parties-ui", "deployment.yaml"));
         CountOccurrences(partiesUi, "Authentication__OpenIdConnect__ClientSecret").ShouldBe(1);
@@ -522,13 +541,27 @@ public sealed class OperatorScriptValidationTests : IDisposable
         workspace.LogLines.ShouldNotContain(line => line.StartsWith("dotnet ", StringComparison.Ordinal));
     }
 
-    [Theory]
-    [InlineData(null, "read failed")]
-    [InlineData("None", "has no clusterIP")]
-    [InlineData("not-an-ip", "invalid clusterIP")]
-    public void PublishFailsBeforeGenerateWhenKeycloakServicePreflightFails(string? clusterIp, string expectedMessage)
+    [Fact]
+    public void PublishDoesNotResolveKeycloakServiceClusterIp()
     {
-        using ScriptWorkspace workspace = CreateScriptWorkspace(keycloakClusterIp: clusterIp);
+        using ScriptWorkspace workspace = CreateScriptWorkspace(keycloakClusterIp: null);
+
+        ProcessResult result = RunPwshScriptPath(
+            workspace.PublishScript,
+            workspace.BinDirectory,
+            workspace.Environment,
+            "-ConfirmContext",
+            "safe-context",
+            "-SkipDaprInit");
+
+        result.ExitCode.ShouldBe(0, result.Output);
+        workspace.LogLines.ShouldNotContain(line => line.Contains("get service keycloak", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void PublishFailsBeforeGenerateWhenZotServiceStillUsesNodePort()
+    {
+        using ScriptWorkspace workspace = CreateScriptWorkspace(zotServiceUsesNodePort: true);
 
         ProcessResult result = RunPwshScriptPath(
             workspace.PublishScript,
@@ -539,7 +572,8 @@ public sealed class OperatorScriptValidationTests : IDisposable
             "-SkipDaprInit");
 
         result.ExitCode.ShouldBe(1, result.Output);
-        result.Output.ShouldContain(expectedMessage);
+        result.Output.ShouldContain("Service/zot must be ClusterIP");
+        workspace.LogLines.ShouldContain(line => line.Contains("get service zot", StringComparison.Ordinal));
         workspace.LogLines.ShouldNotContain(line => line.StartsWith("dotnet ", StringComparison.Ordinal));
     }
 
@@ -779,6 +813,7 @@ public sealed class OperatorScriptValidationTests : IDisposable
         bool invalidKeycloakToken = false,
         string? inheritedPluralContainerImageTags = null,
         bool missingPartiesUiOidcSecret = false,
+        bool zotServiceUsesNodePort = false,
         string dockerConfigJson = """{"auths":{"registry.hexalith.com":{"auth":"dXNlcjpwYXNz"}}}""")
     {
         string root = Path.Combine(_tempRoot, Guid.NewGuid().ToString("N"));
@@ -849,7 +884,7 @@ resources:
         File.WriteAllText(Path.Combine(docker, "config.json"), dockerConfigJson);
 
         string logPath = Path.Combine(root, "commands.log");
-        WriteKubectlShim(bin, logPath, failNamespaceResourceEnumeration, daprStatusFailsExistingInstall, keycloakClusterIp, missingUiCredentialKey, invalidKeycloakToken, missingPartiesUiOidcSecret);
+        WriteKubectlShim(bin, logPath, failNamespaceResourceEnumeration, daprStatusFailsExistingInstall, keycloakClusterIp, missingUiCredentialKey, invalidKeycloakToken, missingPartiesUiOidcSecret, zotServiceUsesNodePort);
         WriteDotnetShim(bin, logPath, includeLiteralJwt, emitUnexpectedTopLevelFile, generatedReadinessOnlyProbe);
         WriteDaprShim(bin, logPath, daprStatusFailsExistingInstall);
 
@@ -918,17 +953,21 @@ exit 1
         string? keycloakClusterIp,
         string? missingUiCredentialKey,
         bool invalidKeycloakToken,
-        bool missingPartiesUiOidcSecret)
+        bool missingPartiesUiOidcSecret,
+        bool zotServiceUsesNodePort)
     {
         string kubectlPath = Path.Combine(binDirectory, RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "kubectl.cmd" : "kubectl");
-        string validPayload = "eyJpc3MiOiJodHRwOi8vYXV0aC50YWNoZS5haTo4MDgwL3JlYWxtcy90YWNoZSIsImF1ZCI6WyJoZXhhbGl0aC1ldmVudHN0b3JlIl0sImV2ZW50c3RvcmU6dGVuYW50IjpbInRlbmFudC1hIl0sImV2ZW50c3RvcmU6ZG9tYWluIjpbImNvdW50ZXIiXSwiZXZlbnRzdG9yZTpwZXJtaXNzaW9uIjpbImNvbW1hbmRzOioiXX0";
-        string invalidPayload = "eyJpc3MiOiJodHRwOi8vYXV0aC50YWNoZS5haTo4MDgwL3JlYWxtcy90YWNoZSIsImF1ZCI6WyJvdGhlciJdLCJldmVudHN0b3JlOnRlbmFudCI6WyJ0ZW5hbnQtYSJdLCJldmVudHN0b3JlOmRvbWFpbiI6WyJwYXJ0eSJdLCJldmVudHN0b3JlOnBlcm1pc3Npb24iOlsicXVlcnk6cmVhZCJdfQ";
+        string validPayload = "eyJpc3MiOiJodHRwczovL2F1dGgudGFjaGUuYWkvcmVhbG1zL3RhY2hlIiwiYXVkIjpbImhleGFsaXRoLWV2ZW50c3RvcmUiXSwiZXZlbnRzdG9yZTp0ZW5hbnQiOlsidGVuYW50LWEiXSwiZXZlbnRzdG9yZTpkb21haW4iOlsiY291bnRlciJdLCJldmVudHN0b3JlOnBlcm1pc3Npb24iOlsiY29tbWFuZHM6KiJdfQ";
+        string invalidPayload = "eyJpc3MiOiJodHRwczovL2F1dGgudGFjaGUuYWkvcmVhbG1zL3RhY2hlIiwiYXVkIjpbIm90aGVyIl0sImV2ZW50c3RvcmU6dGVuYW50IjpbInRlbmFudC1hIl0sImV2ZW50c3RvcmU6ZG9tYWluIjpbInBhcnR5Il0sImV2ZW50c3RvcmU6cGVybWlzc2lvbiI6WyJxdWVyeTpyZWFkIl19";
         string tokenPayload = invalidKeycloakToken ? invalidPayload : validPayload;
         string keycloakServiceExit = keycloakClusterIp is null ? "1" : "0";
         string keycloakServiceOutput = keycloakClusterIp ?? string.Empty;
         string usernameSecretExit = string.Equals(missingUiCredentialKey, "username", StringComparison.Ordinal) ? "1" : "0";
         string passwordSecretExit = string.Equals(missingUiCredentialKey, "password", StringComparison.Ordinal) ? "1" : "0";
         string partiesUiSecretExit = missingPartiesUiOidcSecret ? "1" : "0";
+        string zotServiceJson = zotServiceUsesNodePort
+            ? """{"spec":{"type":"NodePort","ports":[{"port":5000,"targetPort":"zot-http","nodePort":30500}]}}"""
+            : """{"spec":{"type":"ClusterIP","ports":[{"port":5000,"targetPort":"zot-http"}]}}""";
         string tokenJson = "{\"access_token\":\"eyJhbGciOiJub25lIn0." + tokenPayload + ".signature\"}";
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
@@ -944,9 +983,29 @@ if "%1 %2 %3"=="get namespace dapr-system" (
   echo namespace/dapr-system
   exit /b {(daprStatusFailsExistingInstall ? 0 : 1)}
 )
+if "%1 %2 %3 %4"=="get ingressclass nginx-public -o" (
+  echo ingressclass.networking.k8s.io/nginx-public
+  exit /b 0
+)
+if "%1 %2 %3"=="get service zot" (
+  echo {zotServiceJson}
+  exit /b 0
+)
+if "%1 %2 %3"=="get ingress zot-ingress" (
+  echo {{"spec":{{"ingressClassName":"nginx-public","rules":[{{"host":"registry.hexalith.com","http":{{"paths":[{{"path":"/","pathType":"Prefix","backend":{{"service":{{"name":"zot","port":{{"number":5000}}}}}}}}]}}}}],"tls":[{{"secretName":"registry-hexalith-letsencrypt-tls"}}]}}}}
+  exit /b 0
+)
 if "%1 %2 %3"=="get service keycloak" (
   echo {keycloakServiceOutput}
   exit /b {keycloakServiceExit}
+)
+if "%1 %2 %3"=="get secret hexalith-pages-letsencrypt-tls" (
+  echo secret/hexalith-pages-letsencrypt-tls
+  exit /b 0
+)
+if "%1 %2 %3"=="get secret registry-hexalith-letsencrypt-tls" (
+  echo secret/registry-hexalith-letsencrypt-tls
+  exit /b 0
 )
 if "%1 %2 %3"=="get secret hexalith-tache-ui-credentials" (
   echo %* | findstr username > nul
@@ -1006,9 +1065,29 @@ if [ "$1 $2 $3" = "get namespace dapr-system" ]; then
   printf '%s\n' namespace/dapr-system
   exit {(daprStatusFailsExistingInstall ? 0 : 1)}
 fi
+if [ "$1 $2 $3 $4" = "get ingressclass nginx-public -o" ]; then
+  printf '%s\n' ingressclass.networking.k8s.io/nginx-public
+  exit 0
+fi
+if [ "$1 $2 $3" = "get service zot" ]; then
+  printf '%s\n' '{zotServiceJson}'
+  exit 0
+fi
+if [ "$1 $2 $3" = "get ingress zot-ingress" ]; then
+  printf '%s\n' '{{"spec":{{"ingressClassName":"nginx-public","rules":[{{"host":"registry.hexalith.com","http":{{"paths":[{{"path":"/","pathType":"Prefix","backend":{{"service":{{"name":"zot","port":{{"number":5000}}}}}}}}]}}}}],"tls":[{{"secretName":"registry-hexalith-letsencrypt-tls"}}]}}}}'
+  exit 0
+fi
 if [ "$1 $2 $3" = "get service keycloak" ]; then
   printf '%s\n' "{keycloakServiceOutput}"
   exit {keycloakServiceExit}
+fi
+if [ "$1 $2 $3" = "get secret hexalith-pages-letsencrypt-tls" ]; then
+  printf '%s\n' secret/hexalith-pages-letsencrypt-tls
+  exit 0
+fi
+if [ "$1 $2 $3" = "get secret registry-hexalith-letsencrypt-tls" ]; then
+  printf '%s\n' secret/registry-hexalith-letsencrypt-tls
+  exit 0
 fi
 if [ "$1 $2 $3" = "get secret hexalith-tache-ui-credentials" ]; then
   case "$*" in
@@ -1118,7 +1197,7 @@ image = f"registry.hexalith.com/{name}:0.1.1-preview.0.7"
 annotations = "        dapr.io/enabled: 'true'\n        dapr.io/app-id: " + name + "\n" if include_dapr else "        example.com/placeholder: none\n"
 jwt = "        env:\n        - name: Authentication__JwtBearer__SigningKey\n          value: literal-secret\n" if literal_jwt else ""
 probe = "        readinessProbe:\n          tcpSocket:\n            port: 8080\n" if "{{(generatedReadinessOnlyProbe ? "1" : "0")}}" == "1" else ""
-host_aliases = "" if name == "eventstore-admin-ui" else "      hostAliases:\n      - ip: 127.0.0.1\n        hostnames:\n        - internal.example\n"
+host_aliases = ""
 open(path, "w", encoding="utf-8").write(f'''---
 apiVersion: apps/v1
 kind: Deployment
@@ -1142,11 +1221,26 @@ spec:
       terminationGracePeriodSeconds: 180
 ''')
 PY
-    if [ "$name" = "eventstore-admin-ui" ]; then
-      printf 'resources:\n- deployment.yaml\nconfigMapGenerator:\n- name: eventstore-admin-ui-env\n  literals:\n    - EventStore__Authentication__Authority=http://auth.tache.ai:8080/realms/tache\n    - EventStore__Authentication__Issuer=http://auth.tache.ai:8080/realms/tache\n' > "$out/$name/kustomization.yaml"
-    else
-      printf 'resources:\n- deployment.yaml\n' > "$out/$name/kustomization.yaml"
-    fi
+    legacy_host="auth.tache.ai"
+    legacy_port="8080"
+    legacy_issuer="http://${legacy_host}:${legacy_port}/realms/tache"
+    case "$name" in
+      eventstore-admin-ui)
+        printf 'resources:\n- deployment.yaml\nconfigMapGenerator:\n- name: eventstore-admin-ui-env\n  literals:\n    - EventStore__Authentication__Authority=%s\n    - EventStore__Authentication__Issuer=%s\n' "$legacy_issuer" "$legacy_issuer" > "$out/$name/kustomization.yaml"
+        ;;
+      sample-blazor-ui)
+        printf 'resources:\n- deployment.yaml\nconfigMapGenerator:\n- name: sample-blazor-ui-env\n  literals:\n    - EventStore__Authentication__Authority=%s\n    - EventStore__Authentication__Issuer=%s\n' "$legacy_issuer" "$legacy_issuer" > "$out/$name/kustomization.yaml"
+        ;;
+      parties-ui)
+        printf 'resources:\n- deployment.yaml\nconfigMapGenerator:\n- name: parties-ui-env\n  literals:\n    - Authentication__OpenIdConnect__Authority=%s\n' "$legacy_issuer" > "$out/$name/kustomization.yaml"
+        ;;
+      eventstore|eventstore-admin|parties|parties-mcp|tenants)
+        printf 'resources:\n- deployment.yaml\nconfigMapGenerator:\n- name: %s-env\n  literals:\n    - Authentication__JwtBearer__Authority=%s\n    - Authentication__JwtBearer__Issuer=%s\n    - Authentication__JwtBearer__RequireHttpsMetadata=false\n' "$name" "$legacy_issuer" "$legacy_issuer" > "$out/$name/kustomization.yaml"
+        ;;
+      *)
+        printf 'resources:\n- deployment.yaml\n' > "$out/$name/kustomization.yaml"
+        ;;
+    esac
   done
   if [ "{{(emitUnexpectedTopLevelFile ? "1" : "0")}}" = "1" ]; then
     printf 'unexpected\n' > "$out/surprise.txt"

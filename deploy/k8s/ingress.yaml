@@ -2,13 +2,14 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: hexalith-pages-ingress
+  namespace: hexalith-parties
   annotations:
     nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
     nginx.ingress.kubernetes.io/proxy-read-timeout: "900"
     nginx.ingress.kubernetes.io/proxy-send-timeout: "900"
     nginx.ingress.kubernetes.io/ssl-redirect: "true"
 spec:
-  ingressClassName: nginx
+  ingressClassName: nginx-public
   rules:
     - host: eventstore.hexalith.com
       http:
@@ -45,4 +46,4 @@ spec:
         - eventstore.hexalith.com
         - sample.hexalith.com
         - parties.hexalith.com
-      secretName: hexalith-pages-tls
+      secretName: hexalith-pages-letsencrypt-tls

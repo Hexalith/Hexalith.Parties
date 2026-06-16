@@ -17,7 +17,7 @@ configMapGenerator:
     - services__tenants__http__0=http://tenants:8080
     - EventStore__SignalR__HubUrl=http://eventstore:8080/hubs/projection-changes
     - ASPNETCORE_ENVIRONMENT=Development
-    - Authentication__OpenIdConnect__Authority=http://auth.tache.ai:8080/realms/tache
+    - Authentication__OpenIdConnect__Authority=https://auth.tache.ai/realms/tache
     - Authentication__OpenIdConnect__ClientId=hexalith-parties-ui
     - Authentication__OpenIdConnect__Audience=hexalith-eventstore
     - ASPNETCORE_URLS=http://+:8080;

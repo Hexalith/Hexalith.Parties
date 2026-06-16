@@ -15,10 +15,12 @@ configMapGenerator:
     - services__eventstore-admin__http__0=http://eventstore-admin:8080
     - EventStore__AdminServer__BaseUrl=http://eventstore-admin:8080
     - EventStore__AdminServer__SwaggerUrl=http://eventstore-admin:8080/swagger/index.html
+    - EventStore__SignalR__HubUrl=http://eventstore:8080/hubs/projection-changes
     - ASPNETCORE_ENVIRONMENT=Development
     - DOTNET_ENVIRONMENT=Development
     - EventStore__Authentication__Authority=https://auth.tache.ai/realms/tache
     - EventStore__Authentication__Issuer=https://auth.tache.ai/realms/tache
     - EventStore__Authentication__Audience=hexalith-eventstore
     - EventStore__Authentication__ClientId=hexalith-eventstore
+    - EventStore__Authentication__ClientCredentialsClientId=hexalith-eventstore-ui
     - ASPNETCORE_URLS=http://+:8080;

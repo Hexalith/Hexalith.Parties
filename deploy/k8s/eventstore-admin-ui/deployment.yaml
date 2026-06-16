@@ -64,6 +64,12 @@ spec:
             secretKeyRef:
               name: hexalith-tache-ui-credentials
               key: password
+        - name: EventStore__Authentication__ClientSecret
+          valueFrom:
+            secretKeyRef:
+              name: hexalith-eventstore-ui-oidc-client
+              key: client-secret
+              optional: true
         envFrom:
         - configMapRef:
             name: eventstore-admin-ui-env
