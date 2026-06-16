@@ -18,10 +18,6 @@ spec:
       labels:
         app: parties-mcp
     spec:
-      hostAliases:
-      - ip: 10.233.41.235
-        hostnames:
-        - auth.tache.ai
       imagePullSecrets:
       - name: zot-pull-secret
       containers:

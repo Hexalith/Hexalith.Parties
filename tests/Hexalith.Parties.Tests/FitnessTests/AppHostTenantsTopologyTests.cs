@@ -95,14 +95,16 @@ public sealed class AppHostTenantsTopologyTests
     public void AppHostProgramWiresKeycloakToEventStoreAdminPartiesAndTenants()
     {
         string program = ReadAppHostProgram();
+        string legacyTacheIssuer = "http://auth." + "tache.ai:8080/realms/tache";
 
-        program.ShouldContain("const string PublishModeJwtIssuer");
-        program.ShouldContain("http://auth.tache.ai:8080/realms/tache");
-        program.ShouldContain("https://auth.tache.ai/realms/tache");
+        program.ShouldContain(@"const string PublishModeJwtIssuer = ""https://auth.tache.ai/realms/tache"";");
+        program.ShouldNotContain(legacyTacheIssuer);
+        program.ShouldContain(@"string requireHttpsMetadata = builder.ExecutionContext.IsPublishMode ? ""true"" : ""false"";");
         program.ShouldContain(@"WithEnvironment(""Authentication__JwtBearer__Authority"", runModeAuthority)");
         program.ShouldContain(@"WithEnvironment(""Authentication__JwtBearer__Issuer"", runModeAuthority)");
         program.ShouldContain(@"WithEnvironment(""Authentication__JwtBearer__Authority"", publishModeAuthority ?? publishModeIssuer)");
         program.ShouldContain(@"WithEnvironment(""Authentication__JwtBearer__Issuer"", publishModeIssuer)");
+        program.ShouldContain(@"WithEnvironment(""Authentication__JwtBearer__RequireHttpsMetadata"", requireHttpsMetadata)");
         program.ShouldContain(@"WithEnvironment(""ASPNETCORE_ENVIRONMENT"", ""Development"")");
         program.ShouldContain(@"WithEnvironment(""DOTNET_ENVIRONMENT"", ""Development"")");
         program.ShouldContain("WithJwtAuthentication(eventStore, realmUrl, publishModeAuthority, builder.ExecutionContext.IsPublishMode ? PublishModeJwtIssuer : null)");
@@ -159,11 +161,15 @@ public sealed class AppHostTenantsTopologyTests
         // OIDC env values so a previous launch's Authority/ClientId cannot
         // leak into the dashboard wiring.
         string program = ReadAppHostProgram();
+        string legacyPublicIssuerConstant = "PublishModePublic" + "KeycloakIssuer";
 
-        program.ShouldContain(@"WithEnvironment(""EventStore__Authentication__Authority"", PublishModePublicKeycloakIssuer)");
-        program.ShouldContain(@"WithEnvironment(""EventStore__Authentication__Issuer"", PublishModePublicKeycloakIssuer)");
+        program.ShouldContain(@"WithEnvironment(""EventStore__Authentication__Authority"", PublishModeJwtAuthority)");
+        program.ShouldContain(@"WithEnvironment(""EventStore__Authentication__Issuer"", PublishModeJwtIssuer)");
+        program.ShouldNotContain(legacyPublicIssuerConstant);
         program.ShouldContain(@"WithEnvironment(""EventStore__Authentication__Audience"", ""hexalith-eventstore"")");
         program.ShouldContain(@"WithEnvironment(""EventStore__Authentication__ClientId"", ""hexalith-eventstore"")");
+        program.ShouldContain(@"WithEnvironment(""EventStore__Authentication__ClientCredentialsClientId"", ""hexalith-eventstore-ui"")");
+        program.ShouldContain(@"WithEnvironment(""EventStore__SignalR__HubUrl"", ReferenceExpression.Create($""{eventStore.GetEndpoint(""http"")}/hubs/projection-changes""))");
     }
 
     [Fact]

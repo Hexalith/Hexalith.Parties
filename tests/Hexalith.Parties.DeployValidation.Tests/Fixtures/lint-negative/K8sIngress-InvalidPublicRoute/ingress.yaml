@@ -3,7 +3,7 @@ kind: Ingress
 metadata:
   name: hexalith-pages-ingress
 spec:
-  ingressClassName: nginx
+  ingressClassName: nginx-public
   rules:
     - host: eventstore.hexalith.com
       http:

@@ -50,7 +50,7 @@ by the infra team — see [`../zot/README.md`](../zot/README.md) "Out-of-band Se
 
 `publish.ps1` confirms the active kubectl context, resolves the MinVer image tag, regenerates
 the ten Aspirate-owned application service folders, preserves Redis/FalkorDB carve-outs, patches Dapr
-annotations, Keycloak host aliases, UI credential Secret refs, health probes, and image pull
+annotations, public HTTPS Keycloak issuer enforcement, UI credential Secret refs, health probes, and image pull
 secrets, verifies Zot image manifests, runs the static deployment validator, initializes Dapr
 when needed, validates operator-managed Secrets, applies `deploy/dapr/` in dependency order, then applies this
 Kustomize tree.
@@ -111,7 +111,7 @@ epic text. Findings use exact category strings and redact credential-shaped valu
 backends allowed are `eventstore-admin-ui:8080` for `eventstore.hexalith.com` and
 `sample-blazor-ui:8080` for `sample.hexalith.com`, and `parties-ui:8080` for
 `parties.hexalith.com`, with class `nginx` and TLS Secret
-`hexalith-pages-tls`.
+`hexalith-pages-letsencrypt-tls`.
 
 ---
 
@@ -184,19 +184,20 @@ Redis service.
 
 Keycloak is external to this kustomization. The platform-owned service is
 `keycloak/keycloak` on port `8080`, and the realm is `tache` with issuer
-`http://auth.tache.ai:8080/realms/tache` for the internal JWT workloads that still use the
-cluster service path. `eventstore-admin-ui` is the exception: it uses
-`https://auth.tache.ai/realms/tache` and must not carry an `auth.tache.ai` hostAlias, so
-Keycloak token acquisition goes through the public HTTPS endpoint. `publish.ps1` reads the
-Keycloak service ClusterIP and patches `hostAliases` for `auth.tache.ai` into the remaining
-generated Parties workloads so OIDC discovery and JWKS retrieval stay pod-reachable while
-issuer validation remains unchanged.
+`https://auth.tache.ai/realms/tache`. Generated Parties workloads must not carry
+`auth.tache.ai` hostAliases; OIDC discovery, JWKS retrieval, and token acquisition go
+through the public HTTPS endpoint. `publish.ps1` enforces the HTTPS issuer in generated
+ConfigMaps and fails if insecure Keycloak metadata remains.
 
-`eventstore-admin-ui` and `sample-blazor-ui` currently use server-side Keycloak direct-access
-grants. Operators must pre-create Secret `hexalith-tache-ui-credentials` in namespace
-`hexalith-parties` with keys `username` and `password`. `publish.ps1` validates those keys
-and patches them as `EventStore__Authentication__Username` and
-`EventStore__Authentication__Password` without printing values.
+`eventstore-admin-ui` and `sample-blazor-ui` support server-side Keycloak
+`client_credentials` when a confidential client/service account is provisioned. Operators may
+pre-create Secret `hexalith-eventstore-ui-oidc-client` in namespace `hexalith-parties` with
+key `client-secret`; the deployment references it as optional
+`EventStore__Authentication__ClientSecret`, and the UI token provider automatically uses
+`client_credentials` when the secret is present. Until that client exists, operators must
+pre-create Secret `hexalith-tache-ui-credentials` with keys `username` and `password` for the
+direct-access fallback. `publish.ps1` validates the fallback keys and patches all SecretRefs
+without printing values.
 
 `parties-ui` is a confidential OIDC relying party. Operators must pre-create Secret
 `hexalith-parties-ui-oidc-client` in namespace `hexalith-parties` with key `client-secret`.
@@ -215,13 +216,10 @@ Do not put real values in docs, shell history, manifests, Kustomize generators, 
 - `parties.hexalith.com` -> `parties-ui` service port `8080`
 
 Before live HTTPS checks, DNS for all three hosts must point at the nginx ingress endpoint and
-Secret `hexalith-pages-tls` must exist in namespace `hexalith-parties`. If the cluster does
-not yet have an ingress controller, a host-level nginx bridge may temporarily proxy to
-`eventstore-admin-ui.hexalith-parties.svc.cluster.local:8080` and
-`sample-blazor-ui.hexalith-parties.svc.cluster.local:8080`, and
-`parties-ui.hexalith-parties.svc.cluster.local:8080`; the cluster operator owns that
-bridge, and it must be removed once the in-cluster nginx ingress controller serves the
-committed Ingress.
+Secret `hexalith-pages-letsencrypt-tls` must exist in namespace `hexalith-parties`. The live cluster
+IngressClass is `nginx-public`. A host-level or
+workstation-local nginx bridge is not a supported publish path; install the Kubernetes nginx
+Ingress controller and serve the committed `ingress.yaml` directly.
 
 The sample Blazor UI and `parties-ui` keep SignalR on the internal Kubernetes URL
 `http://eventstore:8080/hubs/projection-changes`. That path is not exposed through public

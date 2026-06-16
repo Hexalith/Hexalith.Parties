@@ -612,7 +612,7 @@ kind: Ingress
 metadata:
   name: hexalith-pages-ingress
 spec:
-  ingressClassName: nginx
+  ingressClassName: nginx-public
   rules:
     - host: eventstore.hexalith.com
       http:
@@ -633,7 +633,7 @@ kind: Ingress
 metadata:
   name: hexalith-pages-ingress
 spec:
-  ingressClassName: nginx
+  ingressClassName: nginx-public
   rules:
     - host: eventstore.hexalith.com
       http:
@@ -670,7 +670,7 @@ spec:
         - eventstore.hexalith.com
         - sample.hexalith.com
         - parties.hexalith.com
-      secretName: hexalith-pages-tls
+      secretName: hexalith-pages-letsencrypt-tls
 """;
 
     private static string IngressYaml(string host, string service, string path, string pathType, string port)
@@ -680,7 +680,7 @@ kind: Ingress
 metadata:
   name: hexalith-pages-ingress
 spec:
-  ingressClassName: nginx
+  ingressClassName: nginx-public
   rules:
     - host: {{host}}
       http:
@@ -697,7 +697,7 @@ spec:
         - eventstore.hexalith.com
         - sample.hexalith.com
         - parties.hexalith.com
-      secretName: hexalith-pages-tls
+      secretName: hexalith-pages-letsencrypt-tls
 """;
 
     private static string DaprAccessControlWithoutAppIdYaml(string operation)

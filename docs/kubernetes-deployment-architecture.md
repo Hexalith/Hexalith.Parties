@@ -31,8 +31,8 @@ namespace: hexalith-parties
 │                                                                        │
 │  ┌──────────────┐                          ┌──────────────────────┐  │
 │  │ external Keycloak: keycloak/keycloak realm tache  │ eventstore-admin-ui  │
-│  │ admin-ui issuer https://auth.tache.ai/realms/tache│       2/2 Pod        │
-│  │ no auth.tache.ai hostAlias on eventstore-admin-ui │ Dapr client-only     │
+│  │ issuer https://auth.tache.ai/realms/tache         │       2/2 Pod        │
+│  │ no auth.tache.ai hostAliases in Parties workloads │ Dapr client-only     │
 │  └──────────────────────────────────────────┬─────────┴────────────┘  │
 │                                             │ HTTP UI / OIDC          │
 │         │                                            │                │
@@ -161,15 +161,16 @@ A Secret `zot-pull-secret` (type `kubernetes.io/dockerconfigjson`) is bootstrapp
 
 ## 6. Operator-Managed Secrets
 
-Three Secrets sit outside the kustomization:
+Four Secrets sit outside the kustomization:
 
 | Secret | Type | Created from | Used by |
 |---|---|---|---|
 | `hexalith-tache-ui-credentials` | `Opaque` | Operator pre-created, keys `username` and `password` | `eventstore-admin-ui`, `sample-blazor-ui` Keycloak token acquisition |
+| `hexalith-eventstore-ui-oidc-client` | `Opaque` | Optional operator pre-created, key `client-secret` | Enables `client_credentials` token acquisition for `eventstore-admin-ui`, `sample-blazor-ui` |
 | `hexalith-parties-ui-oidc-client` | `Opaque` | Operator pre-created, key `client-secret` | `parties-ui` OIDC confidential-client secret |
 | `zot-pull-secret` | `dockerconfigjson` | `~/.docker/config.json` (parties-publisher entry) | Every consumer Deployment |
 
-`publish.ps1` validates `hexalith-tache-ui-credentials` and `hexalith-parties-ui-oidc-client` by Secret/key name only and creates/updates `zot-pull-secret`. It never echoes secret values to stdout, stderr, manifest YAML, or any other observable surface.
+`publish.ps1` validates `hexalith-tache-ui-credentials` and `hexalith-parties-ui-oidc-client` by Secret/key name only and creates/updates `zot-pull-secret`. The `hexalith-eventstore-ui-oidc-client` Secret is optional so existing clusters keep using the direct-access fallback until a service account client is provisioned. The script never echoes secret values to stdout, stderr, manifest YAML, or any other observable surface.
 
 ## 7. Configuration Sources
 
@@ -212,13 +213,13 @@ There are exactly three sources of truth for the deployed topology. Each one own
 | Step | Action | Failure mode |
 |---|---|---|
 | 0 | `-ConfirmContext` gate against `kubectl current-context` | Exit 2 on mismatch |
-| 1 | Ensure namespace and preflight external Keycloak auth: UI credential Secret keys, service ClusterIP, OIDC discovery, JWKS, token issuer/audience/claims | Exit 1 on missing or invalid external auth contract |
+| 1 | Ensure namespace, verify Kubernetes nginx ingress prerequisites for Zot/UI routing, and preflight external Keycloak auth: UI credential Secret keys, public HTTPS OIDC discovery, JWKS, token issuer/audience/claims | Exit 1 on missing or invalid ingress/auth contract |
 | 2 | Resolve MinVer version via `dotnet msbuild` | Exit 5 on empty / non-SemVer |
 | 3 | Clean `deploy/k8s/` (preserves carve-outs, scripts, README) | — |
 | 4 | `dotnet aspirate generate` builds + pushes 10 generated application container images to Zot | Propagates aspirate exit code |
 | 5 | Strip aspirate placeholder files | — |
 | 6 | Patch Dapr annotations: full services get `app-id`, `app-port`, and per-service config; UI services get client-only `enabled` + `app-id` | — |
-| 7 | Patch `auth.tache.ai` host aliases to the `keycloak/keycloak` service ClusterIP | Exit 1 on missing service |
+| 7 | Enforce public HTTPS Keycloak issuer in generated ConfigMaps and reject insecure metadata | Exit 1 on insecure generated auth metadata |
 | 8 | Patch UI credential `secretKeyRef` entries from `hexalith-tache-ui-credentials` and `hexalith-parties-ui-oidc-client`; assert symmetric signing-key refs are absent | Exit 1 on patch failure |
 | 9 | Patch `/health` readiness/liveness probes into generated app Deployments | Exit 1 on patch failure |
 | 10 | Inject `imagePullSecrets: [{name: zot-pull-secret}]` into Hexalith Deployments | — |
@@ -299,13 +300,13 @@ These are intentionally outside the current platform shape:
 
 | Host | Kubernetes backend | TLS |
 |---|---|---|
-| `eventstore.hexalith.com` | `service/eventstore-admin-ui:8080` | `hexalith-pages-tls` |
-| `sample.hexalith.com` | `service/sample-blazor-ui:8080` | `hexalith-pages-tls` |
-| `parties.hexalith.com` | `service/parties-ui:8080` | `hexalith-pages-tls` |
+| `eventstore.hexalith.com` | `service/eventstore-admin-ui:8080` | `hexalith-pages-letsencrypt-tls` |
+| `sample.hexalith.com` | `service/sample-blazor-ui:8080` | `hexalith-pages-letsencrypt-tls` |
+| `parties.hexalith.com` | `service/parties-ui:8080` | `hexalith-pages-letsencrypt-tls` |
 
 No backend service is public-routeable through this Ingress. `eventstore`, `eventstore-admin`, `parties`, `tenants`, `sample`, Dapr sidecars, Redis, FalkorDB, and Memories stay internal. `parties-ui` is a browser UI/BFF only, has no Dapr sidecar, and uses `EventStore__SignalR__HubUrl=http://eventstore:8080/hubs/projection-changes`; that is in-cluster service traffic and is not governed by Dapr ACLs or exposed through public Ingress.
 
-DNS must point all three hosts to the nginx ingress endpoint, and Secret `hexalith-pages-tls` must exist in namespace `hexalith-parties` before HTTPS validation. If no in-cluster ingress controller is installed yet, a host-level nginx bridge is allowed only as a temporary operator-owned bridge to `eventstore-admin-ui.hexalith-parties.svc.cluster.local:8080`, `sample-blazor-ui.hexalith-parties.svc.cluster.local:8080`, and `parties-ui.hexalith-parties.svc.cluster.local:8080`. The exit condition is installing the nginx ingress controller and serving this committed Ingress unchanged.
+DNS must point all three hosts to the `nginx-public` ingress endpoint, and Secret `hexalith-pages-letsencrypt-tls` must exist in namespace `hexalith-parties` before HTTPS validation. The publish path requires the in-cluster Kubernetes nginx Ingress controller; a host-level or workstation-local nginx bridge is not supported.
 
 Routing validation proves only the page shell and host mapping. Authenticated backend workflows remain dependent on Story 9.13 external Keycloak `tache` realm wiring and the `hexalith-tache-ui-credentials` Secret.
 

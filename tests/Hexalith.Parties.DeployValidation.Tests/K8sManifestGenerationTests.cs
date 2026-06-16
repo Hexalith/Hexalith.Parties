@@ -63,8 +63,8 @@ public sealed class K8sManifestGenerationTests
         string ingress = File.ReadAllText(Path.Combine(DeploymentTestPaths.K8sDirectory, "ingress.yaml"));
 
         ingress.ShouldContain("name: hexalith-pages-ingress");
-        ingress.ShouldContain("ingressClassName: nginx");
-        ingress.ShouldContain("secretName: hexalith-pages-tls");
+        ingress.ShouldContain("ingressClassName: nginx-public");
+        ingress.ShouldContain("secretName: hexalith-pages-letsencrypt-tls");
         ingress.ShouldContain("host: eventstore.hexalith.com");
         ingress.ShouldContain("name: eventstore-admin-ui");
         ingress.ShouldContain("host: sample.hexalith.com");
@@ -94,17 +94,55 @@ public sealed class K8sManifestGenerationTests
     }
 
     [Fact]
-    public void EventStoreAdminUiUsesPublicHttpsKeycloakIssuerWithoutHostAlias()
+    public void GeneratedWorkloadsUsePublicHttpsKeycloakIssuerWithoutHostAliases()
     {
-        string deployment = File.ReadAllText(Path.Combine(DeploymentTestPaths.K8sDirectory, "eventstore-admin-ui", "deployment.yaml"));
-        string kustomization = File.ReadAllText(Path.Combine(DeploymentTestPaths.K8sDirectory, "eventstore-admin-ui", "kustomization.yaml"));
+        string[] jwtBearerWorkloads = ["eventstore", "eventstore-admin", "parties", "parties-mcp", "tenants"];
+        string[] eventStoreClientWorkloads = ["eventstore-admin-ui", "sample-blazor-ui"];
+        string legacyTacheIssuer = "http://auth." + "tache.ai:8080/realms/tache";
+        string legacyClusterIp = "10.233." + "41.235";
 
-        deployment.ShouldNotContain("hostAliases:");
-        deployment.ShouldNotContain("auth.tache.ai");
-        kustomization.ShouldContain("EventStore__Authentication__Authority=https://auth.tache.ai/realms/tache");
-        kustomization.ShouldContain("EventStore__Authentication__Issuer=https://auth.tache.ai/realms/tache");
-        kustomization.ShouldNotContain("EventStore__Authentication__Authority=http://auth.tache.ai:8080/realms/tache");
-        kustomization.ShouldNotContain("EventStore__Authentication__Issuer=http://auth.tache.ai:8080/realms/tache");
+        foreach (string folder in s_expectedGeneratedFolders)
+        {
+            string deployment = File.ReadAllText(Path.Combine(DeploymentTestPaths.K8sDirectory, folder, "deployment.yaml"));
+            string kustomization = File.ReadAllText(Path.Combine(DeploymentTestPaths.K8sDirectory, folder, "kustomization.yaml"));
+
+            deployment.ShouldNotContain("hostAliases:");
+            deployment.ShouldNotContain("auth.tache.ai");
+            deployment.ShouldNotContain(legacyClusterIp);
+            kustomization.ShouldNotContain(legacyTacheIssuer);
+            kustomization.ShouldNotContain("Authentication__JwtBearer__RequireHttpsMetadata=false");
+        }
+
+        foreach (string folder in jwtBearerWorkloads)
+        {
+            string kustomization = File.ReadAllText(Path.Combine(DeploymentTestPaths.K8sDirectory, folder, "kustomization.yaml"));
+
+            kustomization.ShouldContain("Authentication__JwtBearer__Authority=https://auth.tache.ai/realms/tache");
+            kustomization.ShouldContain("Authentication__JwtBearer__Issuer=https://auth.tache.ai/realms/tache");
+            kustomization.ShouldContain("Authentication__JwtBearer__RequireHttpsMetadata=true");
+        }
+
+        foreach (string folder in eventStoreClientWorkloads)
+        {
+            string deployment = File.ReadAllText(Path.Combine(DeploymentTestPaths.K8sDirectory, folder, "deployment.yaml"));
+            string kustomization = File.ReadAllText(Path.Combine(DeploymentTestPaths.K8sDirectory, folder, "kustomization.yaml"));
+
+            deployment.ShouldContain("EventStore__Authentication__Username");
+            deployment.ShouldContain("EventStore__Authentication__Password");
+            deployment.ShouldContain("EventStore__Authentication__ClientSecret");
+            deployment.ShouldContain("name: hexalith-eventstore-ui-oidc-client");
+            deployment.ShouldContain("key: client-secret");
+            deployment.ShouldContain("optional: true");
+            kustomization.ShouldContain("EventStore__Authentication__Authority=https://auth.tache.ai/realms/tache");
+            kustomization.ShouldContain("EventStore__Authentication__Issuer=https://auth.tache.ai/realms/tache");
+            kustomization.ShouldContain("EventStore__Authentication__ClientCredentialsClientId=hexalith-eventstore-ui");
+        }
+
+        string adminUiKustomization = File.ReadAllText(Path.Combine(DeploymentTestPaths.K8sDirectory, "eventstore-admin-ui", "kustomization.yaml"));
+        adminUiKustomization.ShouldContain("EventStore__SignalR__HubUrl=http://eventstore:8080/hubs/projection-changes");
+
+        string partiesUiKustomization = File.ReadAllText(Path.Combine(DeploymentTestPaths.K8sDirectory, "parties-ui", "kustomization.yaml"));
+        partiesUiKustomization.ShouldContain("Authentication__OpenIdConnect__Authority=https://auth.tache.ai/realms/tache");
     }
 
     [Fact]
@@ -133,7 +171,7 @@ public sealed class K8sManifestGenerationTests
         service.ShouldContain("port: 8080");
         service.ShouldContain("targetPort: 8080");
 
-        kustomization.ShouldContain("Authentication__OpenIdConnect__Authority=http://auth.tache.ai:8080/realms/tache");
+        kustomization.ShouldContain("Authentication__OpenIdConnect__Authority=https://auth.tache.ai/realms/tache");
         kustomization.ShouldContain("Authentication__OpenIdConnect__ClientId=hexalith-parties-ui");
         kustomization.ShouldContain("Authentication__OpenIdConnect__Audience=hexalith-eventstore");
         kustomization.ShouldNotContain("Authentication__OpenIdConnect__ClientSecret=");
