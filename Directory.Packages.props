@@ -7,19 +7,19 @@
         <PackageVersion Include="MinVer" Version="8.0.0-rc.1" />
     </ItemGroup>
     <ItemGroup Label="Dapr">
-        <PackageVersion Include="Dapr.Client" Version="1.18.2" />
-        <PackageVersion Include="Dapr.AspNetCore" Version="1.18.2" />
-        <PackageVersion Include="Dapr.Actors" Version="1.18.2" />
-        <PackageVersion Include="Dapr.Actors.AspNetCore" Version="1.18.2" />
+        <PackageVersion Include="Dapr.Client" Version="1.18.4" />
+        <PackageVersion Include="Dapr.AspNetCore" Version="1.18.4" />
+        <PackageVersion Include="Dapr.Actors" Version="1.18.4" />
+        <PackageVersion Include="Dapr.Actors.AspNetCore" Version="1.18.4" />
     </ItemGroup>
     <ItemGroup Label="Aspire">
-        <PackageVersion Include="Aspire.Hosting" Version="13.4.3" />
-        <PackageVersion Include="Aspire.Hosting.Azure.AppContainers" Version="13.4.3" />
-        <PackageVersion Include="Aspire.Hosting.Docker" Version="13.4.3" />
-        <PackageVersion Include="Aspire.Hosting.Keycloak" Version="13.4.3-preview.1.26305.13" />
-        <PackageVersion Include="Aspire.Hosting.Kubernetes" Version="13.4.3-preview.1.26305.13" />
-        <PackageVersion Include="Aspire.Hosting.Redis" Version="13.4.3" />
-        <PackageVersion Include="Aspire.Hosting.Testing" Version="13.4.3" />
+        <PackageVersion Include="Aspire.Hosting" Version="13.4.5" />
+        <PackageVersion Include="Aspire.Hosting.Azure.AppContainers" Version="13.4.5" />
+        <PackageVersion Include="Aspire.Hosting.Docker" Version="13.4.5" />
+        <PackageVersion Include="Aspire.Hosting.Keycloak" Version="13.4.5-preview.1.26316.12" />
+        <PackageVersion Include="Aspire.Hosting.Kubernetes" Version="13.4.5-preview.1.26316.12" />
+        <PackageVersion Include="Aspire.Hosting.Redis" Version="13.4.5" />
+        <PackageVersion Include="Aspire.Hosting.Testing" Version="13.4.5" />
         <PackageVersion Include="CommunityToolkit.Aspire.Hosting.Dapr" Version="13.4.0-preview.1.260602-0230" />
     </ItemGroup>
     <ItemGroup Label="Aspire ServiceDefaults">
@@ -45,11 +45,11 @@
         <PackageVersion Include="MediatR" Version="14.1.0" />
         <PackageVersion Include="Microsoft.FluentUI.AspNetCore.Components" Version="5.0.0-rc.3-26138.1" />
         <PackageVersion Include="Microsoft.AspNetCore.Components.CustomElements" Version="10.0.9" />
-        <PackageVersion Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.8" />
+        <PackageVersion Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.9" />
         <!-- Align with Hexalith.EventStore (project-referenced) which pins 8.19.0; otherwise
              JwtBearer 10.0.8's transitive 8.14.0 conflicts with EventStore.dll's 8.19.0 (MSB3277). -->
-        <PackageVersion Include="Microsoft.IdentityModel.Tokens" Version="8.19.0" />
-        <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="10.0.8" />
+        <PackageVersion Include="Microsoft.IdentityModel.Tokens" Version="8.19.1" />
+        <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="10.0.9" />
         <PackageVersion Include="Swashbuckle.AspNetCore.SwaggerUI" Version="10.2.1" />
         <PackageVersion Include="FluentValidation" Version="12.1.1" />
         <PackageVersion Include="FluentValidation.DependencyInjectionExtensions" Version="12.1.1" />
