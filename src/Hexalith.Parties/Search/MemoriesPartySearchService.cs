@@ -100,7 +100,7 @@ internal sealed class MemoriesPartySearchService(
             {
                 case PartySearchMode.Lexical:
                     SearchResult lexical = await memoriesClient.SearchAsync(
-                        new SearchRequest(request.TenantId, SyntacticAxis, request.Query, request.CaseId, memoriesTopK, Explain: true),
+                        new SearchRequest(request.TenantId, SyntacticAxis, request.Query, request.CaseId, MaxResults: memoriesTopK, Explain: true),
                         cancellationToken).ConfigureAwait(false);
                     // P8: defend against `Results == null` from a misbehaving server; the
                     // traversal path already does this and the same defense applies here.
@@ -115,7 +115,7 @@ internal sealed class MemoriesPartySearchService(
 
                 case PartySearchMode.Semantic:
                     SearchResult semantic = await memoriesClient.SearchAsync(
-                        new SearchRequest(request.TenantId, SemanticAxis, request.Query, request.CaseId, memoriesTopK, Explain: true),
+                        new SearchRequest(request.TenantId, SemanticAxis, request.Query, request.CaseId, MaxResults: memoriesTopK, Explain: true),
                         cancellationToken).ConfigureAwait(false);
                     candidates = [.. (semantic.Results ?? []).Select(ToCandidate)];
                     if (semantic.Degraded)

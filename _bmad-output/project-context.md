@@ -1,11 +1,11 @@
 ---
 project_name: parties
 user_name: Administrator
-date: 2026-06-02
+date: 2026-06-21
 sections_completed:
   ['technology_stack', 'language_rules', 'framework_rules', 'testing_rules', 'quality_rules', 'workflow_rules', 'anti_patterns']
 status: 'complete'
-rule_count: 51
+rule_count: 58
 optimized_for_llm: true
 existing_patterns_found: 14
 ---
@@ -19,7 +19,9 @@ _This file contains critical rules and patterns that AI agents must follow when 
 ## Technology Stack & Versions
 
 **Runtime & build (pinned — do not bump casually):**
-- C# / **.NET 10** — `net10.0` TFM, SDK `10.0.300` pinned in `global.json` (`rollForward: latestPatch`).
+- C# / **.NET 10** — `net10.0` TFM, SDK `10.0.301` pinned in `global.json` (`rollForward: latestPatch`).
+  `global.json` also sets `test.runner: Microsoft.Testing.Platform` (MTP) — tests run under MTP, not the
+  classic VSTest host (affects how the test EXEs are invoked).
 - **Central Package Management is ON.** All versions live in `Directory.Packages.props`. Project
   `.csproj` files use `<PackageReference Include="..." />` with **NO `Version` attribute** — adding a
   `Version=` to a csproj is a build error. Add/upgrade versions in `Directory.Packages.props` only.
@@ -28,24 +30,27 @@ _This file contains critical rules and patterns that AI agents must follow when 
 **Core stack:**
 | Concern | Package | Version |
 |---|---|---|
-| Orchestration | .NET Aspire (packages / AppHost SDK) | `13.4.0` / SDK pinned `13.3.3` (skew) |
-| Actors & pub/sub | `Dapr.Actors` / `Dapr.Client` | `1.18.0-rc02` |
-| | `Dapr.AspNetCore` / `Dapr.Actors.AspNetCore` | `1.17.9` |
-| Validation | FluentValidation | `12.1.1` |
+| Orchestration | .NET Aspire (packages) / AppHost SDK | `13.4.6` / SDK `13.4.3` (patch skew; Keycloak·K8s hosting on `13.4.6-preview.1.26319.6`) |
+| Actors & pub/sub | `Dapr.Client` / `.AspNetCore` / `.Actors` / `.Actors.AspNetCore` | **`1.18.4` — all four unified** |
+| Validation | FluentValidation (+ DI extensions) | `12.1.1` |
 | Mediation | MediatR | `14.1.0` |
-| AuthN | Microsoft.AspNetCore.Authentication.JwtBearer | `10.0.8` |
-| MCP | ModelContextProtocol / .AspNetCore | `1.3.0` / `1.3.0` |
-| UI | FluentUI Blazor / CustomElements | `5.0.0-rc.3` / `10.0.8` |
-| Testing | xUnit **v3** / Shouldly / NSubstitute / bunit / Testcontainers | `3.2.2` / `4.3.0` / `5.3.0` / `2.7.2` / `4.12.0` (declared, unused) |
+| AuthN | Microsoft.AspNetCore.Authentication.JwtBearer | `10.0.9` |
+| Token model | Microsoft.IdentityModel.Tokens | `8.19.1` (pinned — see constraints) |
+| MCP | ModelContextProtocol / .AspNetCore | `1.4.0` / `1.4.0` |
+| UI | FluentUI Blazor / CustomElements | `5.0.0-rc.3-26138.1` / `10.0.9` |
+| Serialization | MessagePack | `3.1.7` |
+| Testing | xUnit **v3** / Shouldly / NSubstitute / bunit / Testcontainers / YamlDotNet | `3.2.2` / `4.3.0` / `6.0.0-rc.1` / `2.8.4-preview` / `4.12.0` / `18.0.0` |
 
 **Constraints agents must respect:**
 - **`Hexalith.EventStore` and `Hexalith.Tenants` are sibling submodules referenced by PROJECT path**,
   not NuGet packages — and are *not* checked out in a fresh clone. Initialise root-level only:
   `git submodule update --init Hexalith.EventStore Hexalith.Tenants`. **Never `--recursive`** (the build
   gate forbids nested-submodule init). `Hexalith.Memories` is optional (rich search).
-- DAPR versions are **intentionally mixed** (`1.18.0-rc02` Actors/Client vs `1.17.9` AspNetCore) — do
-  not "align" them.
-- Versioning is **MinVer from git tags** (prefix `v`); never hand-edit `<Version>` in a csproj.
+- **`Microsoft.IdentityModel.Tokens` is pinned to `8.19.1`** to align with `Hexalith.EventStore` (which
+  pins `8.19.0`); JwtBearer's transitive `8.x` otherwise conflicts with `EventStore.dll` (MSB3277). The four
+  `Dapr.*` packages are now **unified at one version** (`1.18.4`) — keep them in lockstep; they are no longer
+  intentionally mixed. Don't bump either independently.
+- Versioning is **MinVer from git tags** (prefix `v`, MinVer `8.0.0-rc.1`); never hand-edit `<Version>` in a csproj.
 
 ## Critical Implementation Rules
 
@@ -112,13 +117,51 @@ _This file contains critical rules and patterns that AI agents must follow when 
 - Host middleware order is **order-sensitive**:
   `CorrelationId → MvpComplianceWarning → ExceptionHandler → DegradedResponse → AuthN → AuthZ → CloudEvents`.
 - Blazor: Picker ships as custom element `<hexalith-party-picker>` (dispatches a `party-selected`
-  CustomEvent); AdminPortal is FluentUI + FrontComposer-hosted. Test Blazor with **bunit**.
+  CustomEvent); the `Hexalith.Parties.UI` host is FluentUI + FrontComposer-hosted and serves **both**
+  portals (see Consumer/GDPR rules below). Test Blazor with **bunit**.
+
+**Consumer portal, consent & GDPR rights (Epics 4–5):**
+- **Two RCL portals, one UI host, two policies — reuse them, don't invent.** `Hexalith.Parties.UI` hosts
+  *both* `AdminPortal` (route `/admin/parties*`, `[Authorize(Policy = "Admin")]` — roles incl. `TenantOwner`)
+  and `ConsumerPortal` (self-scoped `/me/*`, `[Authorize(Policy = "Consumer")]`). Policy names + role arrays
+  are defined once in `Hexalith.Parties.UI/Authentication/PartiesUiAuthorization.cs`.
+- **Consumer→Party binding is claim-based and fail-closed.** A consumer maps to their Party via the verified
+  IdP claim **`party_id`** (Keycloak `party-id-mapper`), resolved by **`PartyIdClaimResolver`** (Scoped):
+  zero/multiple claims → unbound → redirect `/no-party-binding`. Consumer self-service acts on "me" (the
+  resolved party) — **never trust a client-supplied party id** on the consumer surface.
+- **Consent ≠ lawful basis.** Consent: commands `RecordConsent` / `RevokeConsent` (events `ConsentRecorded` /
+  `ConsentRevoked`; rejections `InvalidConsentPurpose`, `ConsentNotFound`). **`LawfulBasis`**
+  (`Consent | LegitimateInterest | ContractualNecessity | LegalObligation`, in `Contracts/Security`) is a
+  separate enum — "has consent" is not "lawful to process."
+- **Restriction (Art.18) guards are subtle.** `RestrictProcessing` / `LiftRestriction` (events
+  `ProcessingRestricted` / `RestrictionLifted`). Consent edits stay **allowed while restricted** (Art.18(3))
+  — don't reject `RecordConsent` on `IsRestricted`; but consent commands **do** reject while erasure is in
+  progress. Preserve both guards.
+- **Erasure has two front doors + cross-submodule verification.** Admin: `EraseParty` (UI requires typed-name
+  confirmation) → `ErasePartyRequested`. Consumer: `IConsumerPrivacyErasureClient`
+  (`RequestMyErasureAsync` / `CancelMyErasureAsync` / `GetMyErasureStatusAsync`); cancel ⇒ `CancelPartyErasure`.
+  **Verification reaches into the EventStore submodule** — `IErasureVerificationService.VerifyErasureAsync`
+  → `ErasureVerificationReport` / `ErasureCertificate`; commands `MarkErasureVerified` /
+  `RetryErasureVerification`. Treat that contract as approval-gated; don't change it unilaterally.
+- **Export (Art.20) & processing records (Art.30) are reads, not commands.** `ExportPartyData` →
+  `PartyDataPortabilityPackage`; `GetProcessingRecords` → `ProcessingActivityRecord[]` — both in
+  **`PartyDetailProjectionQueryActor`**. Consumer clients self-scope (`IConsumerPrivacyExportClient`,
+  `…ProcessingClient`); admin (`IAdminPortalGdprClient`) takes an explicit party id. New privacy reads belong
+  on the projection/query side.
 
 ### Testing Rules
 
-- **xUnit v3** uniformly across all 12 test projects — use the v3 packages/API, not v2.
+- **xUnit v3** uniformly across all 15 test projects — use the v3 packages/API, not v2. A separate
+  **Playwright `tests/e2e`** suite covers a11y/e2e (`npm run test:a11y`), not an xUnit lane.
 - **Assertions: Shouldly** (`value.ShouldBe(...)`). **Mocking: NSubstitute** (`Substitute.For<T>()`).
   **Blazor: bunit.** Do not introduce Moq, FluentAssertions, or raw `Assert.*` — match the house style.
+- **Tests run under Microsoft.Testing.Platform** (`global.json` → `test.runner`), not VSTest. **`dotnet test
+  --filter` silently runs zero tests** — to filter, run the **test EXE directly** with single-dash xUnit v3
+  args (`-class <FQN>` / `-method <name>`). Assert AppHost topology without Docker via
+  `DistributedApplicationTestingBuilder` + copy `DaprComponents/**` to the test output dir.
+- **Async test/UI traps:** `await using` over a *sync* disposable trips CA2007 → use plain `using`; `await
+  <Task local>` in a `[Fact]` needs `ConfigureAwait(true)` (not `false`, which trips xUnit1030); async-only
+  DI scopes need `CreateAsyncScope()` + `await DisposeAsync()`.
 - **Architectural fitness tests pin the boundaries** (e.g. `Contracts` has zero infrastructure deps; the
   tenant-access service is never invoked on the gateway request path). If a fitness test fails, you crossed
   a boundary — **fix the dependency, not the test.**
@@ -140,14 +183,18 @@ _This file contains critical rules and patterns that AI agents must follow when 
   | MCP tools | `Hexalith.Parties.Mcp/Tools/` |
   | auth / tenancy / compliance | `Hexalith.Parties/{Authentication,Authorization,Compliance,Middleware}` |
   | GDPR encryption / erasure | `Hexalith.Parties.Security/` |
+  | Admin / Consumer Blazor UI (pages, areas) | `Hexalith.Parties.AdminPortal` (`/admin`) / `Hexalith.Parties.ConsumerPortal` (`/me`); host wiring + UI auth policies in `Hexalith.Parties.UI` |
 - **`Contracts` must stay infrastructure-free** — no DAPR, ASP.NET, EventStore-*server*, or persistence
   references; it depends only on `Hexalith.EventStore.Contracts`. This is the organizing principle, pinned
   by a fitness test.
-- **The adopter-facing vs internal split is real.** Adopter-facing packages — `Client`, `Contracts`,
-  `Picker`, `AdminPortal`, `Mcp`, `ServiceDefaults` — are referenced by consumers; **internal** projects
-  (host `Hexalith.Parties`, `Server`, `Projections`, `Security`, `Testing`) are private to the actor host.
-  Don't reference internal projects from consumer-facing code, and don't leak internal types through a
-  package's public API.
+- **The adopter-facing vs internal split is real and is *not* the same as `IsPackable`.** Consumer-referenced
+  surface: `Client` + `Contracts` (public shape pinned by `*.Tests/Package` PackageTests), the three UI RCLs
+  `Picker` / `AdminPortal` / `ConsumerPortal` (explicit `PackageId`), and `ServiceDefaults` (optional helpers).
+  `Mcp` is a **deployable host** (`parties-mcp`), not a referenced library. **Internal** (README-marked, even
+  though packable-by-default): `Server`, `Projections`, `Security`, `Testing`, plus the `Hexalith.Parties`
+  actor host and the `Hexalith.Parties.UI` host. Don't reference internal projects from consumer-facing code,
+  and don't leak internal types through a package's public API. (`IsPackable=true` is the
+  `Directory.Build.props` default — only hosts/tests set `false` — so packability alone ≠ "public".)
 - **Submodule project references are resolved by a computed root property** that probes sibling paths
   (e.g. `HexalithEventStoreRoot` → `..\..\Hexalith.EventStore`). That's why EventStore/Tenants must sit as
   **sibling checkouts** — don't convert them to NuGet `PackageReference`s.
@@ -169,8 +216,10 @@ _This file contains critical rules and patterns that AI agents must follow when 
   never `--recursive`** (CI checks out the same way; the build gate forbids nested-submodule init).
 - **Commits follow Conventional Commits** — `feat:`, `fix:`, `chore:`, `docs:`, with optional scope
   (`fix(deploy): …`, `docs(planning): …`). Work on a typed branch (`<type>/<slug>`) and merge via PR.
-- **CI** (`.github/workflows/test.yml`): `lint` (warnings-as-errors build + build-gate) → `test` (4 shards)
-  → `contract-test` → `report` (quality gate). All four must pass.
+- **CI** (`.github/workflows/test.yml`, the only workflow): `lint` (analyzers build + Story 9.8 build-gate)
+  → in parallel `test` (**4 named shards**: `contracts-client-security-mcp`, `domain-server`, `projections-ui`,
+  `integration-deploy`) **and `ui-a11y`** (UI accessibility gate, bUnit) → `contract-test` → `report` (quality
+  gate). **All five jobs must pass.**
 - **Deploy to K8s only via the guarded script:** `pwsh deploy/k8s/publish.ps1 -ConfirmContext <ctx>` (aspirate
   `9.1.0`, restored by `dotnet tool restore`). The `-ConfirmContext` guard prevents deploying to the wrong
   cluster — don't bypass it. Authoritative DAPR CRs live in `deploy/dapr/` (run-mode YAML is separate, under
@@ -201,6 +250,11 @@ _This file contains critical rules and patterns that AI agents must follow when 
 - **Tenant access fails closed and is eventually consistent** — after a restart the in-memory projection
   starts empty and denies `UnknownTenant` until tenant events replay. Use `ITenantAccessService`
   **projection-side only, never on the gateway request path** (fitness-pinned).
+- **Party search has a local fallback — don't make it hard-depend on `Hexalith.Memories`.** Defaults:
+  `IPartySearchProvider` → `LocalFuzzyPartySearchProvider`, `IPartySearchService` → `LocalPartySearchService`.
+  Rich search activates **only** when `Parties:MemoriesSearch` is configured (validated `PartyMemorySearchOptions`;
+  endpoint must be an absolute URI) → `MemoriesPartySearchService`. Keep search working when Memories is absent;
+  gate Memories-only paths behind the config and fail closed on misconfiguration.
 
 ---
 
@@ -220,4 +274,4 @@ _This file contains critical rules and patterns that AI agents must follow when 
 - Update it when the technology stack, the gateway boundary, or the GDPR posture changes.
 - Re-derive from `docs/` (regenerated by `/bmad-document-project`) when the architecture shifts materially.
 
-Last Updated: 2026-06-02
+Last Updated: 2026-06-21
