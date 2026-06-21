@@ -1,3 +1,15 @@
+---
+project_name: parties
+user_name: Administrator
+date: 2026-06-09
+scope_classification: Minor
+status: implemented
+status_detail: Implemented & build-verified
+supersedes: []
+relates_to: []
+frontmatter_added: 2026-06-21
+---
+
 # Sprint Change Proposal — Package Version Update
 
 - **Date:** 2026-06-09

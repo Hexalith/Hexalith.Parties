@@ -1,3 +1,17 @@
+---
+project_name: parties
+user_name: Administrator
+date: 2026-06-09
+scope_classification: Moderate
+status: implemented
+status_detail: Approved & applied to epics.md (2026-06-09)
+supersedes: []
+relates_to:
+  - implementation-readiness-report-2026-06-09.md
+  - epics.md
+frontmatter_added: 2026-06-21
+---
+
 # Sprint Change Proposal — Implementation-Readiness Course Correction
 
 - **Date:** 2026-06-09

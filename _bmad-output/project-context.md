@@ -30,7 +30,7 @@ _This file contains critical rules and patterns that AI agents must follow when 
 **Core stack:**
 | Concern | Package | Version |
 |---|---|---|
-| Orchestration | .NET Aspire (packages) / AppHost SDK | `13.4.6` / SDK `13.4.3` (patch skew; Keycloak·K8s hosting on `13.4.6-preview.1.26319.6`) |
+| Orchestration | .NET Aspire (packages) / AppHost SDK | `13.4.6` / SDK `13.4.6` (matched — AppHost SDK pin must equal `Aspire.Hosting`; Keycloak·K8s hosting on `13.4.6-preview.1.26319.6`) |
 | Actors & pub/sub | `Dapr.Client` / `.AspNetCore` / `.Actors` / `.Actors.AspNetCore` | **`1.18.4` — all four unified** |
 | Validation | FluentValidation (+ DI extensions) | `12.1.1` |
 | Mediation | MediatR | `14.1.0` |
