@@ -968,6 +968,7 @@ exit 1
         string zotServiceJson = zotServiceUsesNodePort
             ? """{"spec":{"type":"NodePort","ports":[{"port":5000,"targetPort":"zot-http","nodePort":30500}]}}"""
             : """{"spec":{"type":"ClusterIP","ports":[{"port":5000,"targetPort":"zot-http"}]}}""";
+        string zotIngressJson = """{"spec":{"ingressClassName":"nginx-public","rules":[{"host":"registry.hexalith.com","http":{"paths":[{"path":"/","pathType":"Prefix","backend":{"service":{"name":"zot","port":{"number":5000}}}}]}}],"tls":[{"secretName":"registry-hexalith-letsencrypt-tls"}]}}""";
         string tokenJson = "{\"access_token\":\"eyJhbGciOiJub25lIn0." + tokenPayload + ".signature\"}";
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
@@ -992,7 +993,7 @@ if "%1 %2 %3"=="get service zot" (
   exit /b 0
 )
 if "%1 %2 %3"=="get ingress zot-ingress" (
-  echo {{"spec":{{"ingressClassName":"nginx-public","rules":[{{"host":"registry.hexalith.com","http":{{"paths":[{{"path":"/","pathType":"Prefix","backend":{{"service":{{"name":"zot","port":{{"number":5000}}}}}}}}]}}}}],"tls":[{{"secretName":"registry-hexalith-letsencrypt-tls"}}]}}}}
+  echo {zotIngressJson}
   exit /b 0
 )
 if "%1 %2 %3"=="get service keycloak" (
@@ -1074,7 +1075,7 @@ if [ "$1 $2 $3" = "get service zot" ]; then
   exit 0
 fi
 if [ "$1 $2 $3" = "get ingress zot-ingress" ]; then
-  printf '%s\n' '{{"spec":{{"ingressClassName":"nginx-public","rules":[{{"host":"registry.hexalith.com","http":{{"paths":[{{"path":"/","pathType":"Prefix","backend":{{"service":{{"name":"zot","port":{{"number":5000}}}}}}}}]}}}}],"tls":[{{"secretName":"registry-hexalith-letsencrypt-tls"}}]}}}}'
+  printf '%s\n' '{zotIngressJson}'
   exit 0
 fi
 if [ "$1 $2 $3" = "get service keycloak" ]; then

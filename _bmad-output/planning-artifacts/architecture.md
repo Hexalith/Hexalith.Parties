@@ -387,6 +387,17 @@ wiring + the FrontComposer quickstart chain) should be the **first implementatio
 - **Containers/K8s:** .NET SDK container support (no Dockerfile),
   `EnableContainer=true` + `ContainerRepository=parties-ui`; aspirate publish grows the
   cluster **11 → 12 pods**.
+- **Ingress & TLS (live-cluster contract):** browser UI workloads publish **only** through
+  the Kubernetes **`nginx-public`** Ingress class (`deploy/k8s/ingress.yaml`) — no local /
+  host-level nginx bridge. Generated images push to `registry.hexalith.com`, served by
+  **Zot** behind its own `nginx-public` Ingress (`deploy/zot/ingress.yaml`:
+  `registry.hexalith.com/` → `Service/zot:5000`, `ClusterIP`, no NodePort). TLS is
+  **cert-manager Let's Encrypt HTTP-01**: pages use `hexalith-pages-letsencrypt-tls`, the
+  registry uses `registry-hexalith-letsencrypt-tls`. `deploy/k8s/publish.ps1` **preflights**
+  all of the above and fails *before* image build/apply if the `nginx-public` class, the Zot
+  Ingress, or either Let's Encrypt TLS Secret is missing. _(Folded back 2026-06-21 from the
+  2026-06-16 deployment-hardening change — see the kubernetes-nginx-deploy-path and
+  letsencrypt-certificate-deployment-alignment sprint-change-proposals.)_
 - **Cross-cutting:** `ServiceDefaults` (OpenTelemetry, health) on the UI host; CI gains
   the UI build + bUnit lane + the Playwright a11y gate; Central Package Management,
   `TreatWarningsAsErrors`, `.slnx`, Conventional Commits all apply.

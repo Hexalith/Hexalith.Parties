@@ -193,7 +193,12 @@ existing event-sourced / CQRS / EventStore-gateway-fronted Parties domain servic
 - **AR-D10 AppHost / deploy:** add `builder.AddProject<Projects.Hexalith_Parties_UI>("parties-ui")`
   referencing `eventstore` + `tenants`, **no DAPR sidecar** (BFF over HTTP + SignalR);
   .NET SDK container (`ContainerRepository=parties-ui`); aspirate publish grows the
-  cluster **11 → 12 pods**; CI gains the UI build + bUnit lane + Playwright gate.
+  cluster **11 → 12 pods**; CI gains the UI build + bUnit lane + Playwright gate. **Deploy
+  path is Kubernetes `nginx-public` Ingress only** (no local nginx bridge) with **cert-manager
+  Let's Encrypt** TLS — `hexalith-pages-letsencrypt-tls` for the UI pages,
+  `registry-hexalith-letsencrypt-tls` for the Zot image registry; `deploy/k8s/publish.ps1`
+  preflights the `nginx-public` class, the Zot Ingress, and both TLS Secrets, failing before
+  image build if any is missing _(folded back 2026-06-21 from the 2026-06-16 deployment-hardening change)_.
 - **AR-D11 Party-picker re-skin + ARIA:** re-skin `<hexalith-party-picker>` from legacy
   FAST tokens to **Fluent 2 tokens** **and** add the full **WAI-ARIA combobox**
   semantics — one combined design-debt story (`Hexalith.Parties.Picker`).
@@ -617,6 +622,10 @@ So that the app can ship, with the production-KMS prerequisite gated before real
 **Given** the UI host
 **When** it is published
 **Then** .NET SDK container support builds it (`EnableContainer=true`, `ContainerRepository=parties-ui`, **no Dockerfile**), `ServiceDefaults` (OpenTelemetry + health) are wired, and `deploy/k8s` gains the `parties-ui` Deployment/Service/ingress + OIDC config; aspirate publish grows the cluster **11 → 12 pods**.
+
+**Given** the live Kubernetes cluster
+**When** `deploy/k8s/publish.ps1` runs
+**Then** it preflights the **`nginx-public`** Ingress class, the Zot registry Ingress (`registry.hexalith.com/` → `Service/zot:5000`, `ClusterIP`, no NodePort), and both cert-manager **Let's Encrypt** TLS Secrets (`hexalith-pages-letsencrypt-tls`, `registry-hexalith-letsencrypt-tls`), and **fails before image build/apply** if any is missing — there is **no local / host-level nginx bridge fallback**. _(Tightened 2026-06-21 to fold back the 2026-06-16 deployment-hardening change.)_
 
 **Given** the deploy manifests
 **When** `DeployValidation.Tests` runs its credential-leak poison-sweep
