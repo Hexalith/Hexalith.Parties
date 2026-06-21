@@ -4,7 +4,7 @@ This guide starts the local EventStore-fronted topology, sends a Parties command
 
 **Time estimate:** Under 30 minutes from clone to first command/query round-trip.
 
-> **GDPR notice:** The service logs the current MVP GDPR limitation at startup and emits `X-Hexalith-Parties-Mvp-Compliance-Warning` while `Parties:Compliance:GdprFeaturesActive` is not enabled. Do not store regulated personal data in local examples.
+> **GDPR notice:** The service logs the current MVP GDPR limitation at startup and emits `X-Hexalith-Parties-Mvp-Compliance-Warning` while `Parties:Compliance:GdprFeaturesActive` is not enabled. The MVP is not approved for regulated EU personal data until v1.1 GDPR features are active; do not store regulated personal data in local examples.
 
 ---
 

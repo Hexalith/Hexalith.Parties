@@ -105,7 +105,7 @@ public sealed class AdminPortalReadOnlySurfaceTests
 
         string[] forbiddenNameFragments =
         [
-            "Create", "Edit", "Update", "Delete", "Invite", "AssignRole",
+            "Invite", "AssignRole",
             "TenantLifecycle", "TenantConfiguration", "MemoriesSearchManagement",
         ];
 

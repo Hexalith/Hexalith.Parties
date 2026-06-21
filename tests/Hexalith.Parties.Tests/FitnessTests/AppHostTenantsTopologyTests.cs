@@ -11,14 +11,15 @@ public sealed class AppHostTenantsTopologyTests
     {
         string project = ReadAppHostProject();
 
-        project.ShouldContain(@"Hexalith.EventStore\src\Hexalith.EventStore\Hexalith.EventStore.csproj");
-        project.ShouldContain(@"Hexalith.EventStore\src\Hexalith.EventStore.Admin.Server.Host\Hexalith.EventStore.Admin.Server.Host.csproj");
-        project.ShouldContain(@"Hexalith.EventStore\src\Hexalith.EventStore.Admin.UI\Hexalith.EventStore.Admin.UI.csproj");
-        project.ShouldContain(@"Hexalith.EventStore\src\Hexalith.EventStore.Aspire\Hexalith.EventStore.Aspire.csproj");
-        project.ShouldContain(@"Hexalith.Tenants\src\Hexalith.Tenants\Hexalith.Tenants.csproj");
+        project.ShouldContain(@"$(HexalithEventStoreRoot)\src\Hexalith.EventStore\Hexalith.EventStore.csproj");
+        project.ShouldContain(@"$(HexalithEventStoreRoot)\src\Hexalith.EventStore.Admin.Server.Host\Hexalith.EventStore.Admin.Server.Host.csproj");
+        project.ShouldContain(@"$(HexalithEventStoreRoot)\src\Hexalith.EventStore.Admin.UI\Hexalith.EventStore.Admin.UI.csproj");
+        project.ShouldContain(@"$(HexalithEventStoreRoot)\src\Hexalith.EventStore.Aspire\Hexalith.EventStore.Aspire.csproj");
+        project.ShouldContain(@"$(HexalithTenantsRoot)\src\Hexalith.Tenants\Hexalith.Tenants.csproj");
         project.ShouldContain(@"Hexalith.Parties.Mcp\Hexalith.Parties.Mcp.csproj");
+        project.ShouldContain(@"Hexalith.Parties.UI\Hexalith.Parties.UI.csproj");
         project.ShouldNotContain(@"Hexalith.Tenants\src\Hexalith.Tenants.Aspire\Hexalith.Tenants.Aspire.csproj");
-        project.ShouldContain(@"Hexalith.EventStore.Aspire\Hexalith.EventStore.Aspire.csproj"" IsAspireProjectResource=""false""");
+        project.ShouldContain(@"$(HexalithEventStoreRoot)\src\Hexalith.EventStore.Aspire\Hexalith.EventStore.Aspire.csproj"" IsAspireProjectResource=""false""");
         project.ShouldContain(@"IsAspireProjectResource=""false""");
     }
 

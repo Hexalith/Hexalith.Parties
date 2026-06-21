@@ -1,4 +1,6 @@
 using Hexalith.FrontComposer.Contracts.Registration;
+using Hexalith.Parties.AdminPortal.Services;
+using Hexalith.Parties.UI.Authentication;
 
 namespace Hexalith.Parties.UI.Composition;
 
@@ -36,5 +38,17 @@ public static class PartiesUiFrontComposerRegistration
         // making HasNavigation true, is what lights up <FrontComposerNavigation /> at all.
         registry.RegisterDomain(Manifest);
         registry.AddNavGroup(Manifest.Name, Manifest.BoundedContext);
+        registry.AddNavEntry(new FrontComposerNavEntry(
+            Manifest.BoundedContext,
+            "Parties",
+            PartiesAdminPortalManifest.Route,
+            Order: 0,
+            RequiredPolicy: PartiesUiAuthorization.AdminPolicy));
+        registry.AddNavEntry(new FrontComposerNavEntry(
+            Manifest.BoundedContext,
+            "My space",
+            "/me",
+            Order: 1,
+            RequiredPolicy: PartiesUiAuthorization.ConsumerPolicy));
     }
 }

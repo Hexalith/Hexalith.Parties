@@ -5,14 +5,16 @@ stepsCompleted: ['step-01-document-discovery', 'step-02-prd-analysis', 'step-03-
 status: complete
 overallReadiness: READY
 documentsIncluded:
-  prd_baseline: '_bmad-output/planning-artifacts/epics.md (de-facto; no formal PRD exists)'
-  prd_cross_check: '_bmad-output/../docs/project-overview.md'
-  architecture: '_bmad-output/planning-artifacts/architecture.md'
+  prd_baseline: '_bmad-output/planning-artifacts/epics.md (de-facto; no formal PRD exists, by user direction)'
+  prd_cross_check: 'docs/project-overview.md'
+  architecture: '_bmad-output/planning-artifacts/architecture.md (modified 2026-06-21 15:36)'
   architecture_adr: '_bmad-output/planning-artifacts/adr-consumer-party-id-binding.md'
-  epics: '_bmad-output/planning-artifacts/epics.md'
-  stories: '_bmad-output/implementation-artifacts/ (1-1 .. 5-4, 31 story specs)'
+  epics: '_bmad-output/planning-artifacts/epics.md (modified 2026-06-21 15:36; 5 epics / 30 stories)'
+  stories: '_bmad-output/implementation-artifacts/ (1-1 .. 5-4, 30 story specs)'
+  epic_retros: '_bmad-output/implementation-artifacts/epic-{1..5}-retro-2026-06-10.md'
   sprint_status: '_bmad-output/implementation-artifacts/sprint-status.yaml'
   ux: '_bmad-output/planning-artifacts/ux-designs/ux-parties-2026-06-09/'
+priorReportArchived: 'archive/implementation-readiness-report-2026-06-21-1506.md (was READY; superseded after 15:36 architecture/epics edits)'
 ---
 
 # Implementation Readiness Assessment Report
@@ -24,126 +26,127 @@ documentsIncluded:
 
 ## 1. Document Inventory (Step 1)
 
-**Assessment context:** This is a **re-run** of the readiness check on a **late-stage / largely-implemented** project. Full story specs (`1-1`..`5-4`), 5 completed epic retrospectives, and a `sprint-status.yaml` already exist, as do two prior readiness reports dated 2026-06-09.
+**Assessment context:** This is a **re-run** of the readiness check on a **late-stage / largely-implemented** project. Full story specs (`1-1`..`5-4`), 5 completed epic retrospectives, a `sprint-status.yaml`, and a `test-summary.md` already exist, as do three prior readiness reports (two dated 2026-06-09, one dated 2026-06-21 15:06).
 
-**Requirements baseline decision:** No formal PRD exists. By user direction, **`epics.md` is treated as the de-facto requirements source** (it embeds `FR-ADMIN-*` / `FR-CONSUMER-*` functional requirements), cross-checked against `docs/project-overview.md`.
+**Re-run trigger:** `architecture.md` and `epics.md` were both modified **2026-06-21 15:36** — *after* the prior 15:06 readiness report — and a new `sprint-change-proposal-2026-06-21-planning-artifact-deploy-alignment.md` landed at 15:37. The prior report is therefore stale and was archived to `archive/implementation-readiness-report-2026-06-21-1506.md`.
+
+**Requirements baseline decision (user-confirmed):** No formal PRD exists (intentional brownfield decision, declared in both `epics.md` and `architecture.md` frontmatter). By user direction, **`epics.md` is treated as the de-facto requirements source** — it embeds `FR-ADMIN-*` / `FR-CONSUMER-*` functional requirements — cross-checked against `docs/project-overview.md`.
 
 | Type | Status | Artifact(s) |
 |---|---|---|
-| PRD | 🛑 Missing (substituted) | None found; `epics.md` used as baseline |
-| Architecture | ✅ Present | `architecture.md` (51 KB) + `adr-consumer-party-id-binding.md` |
-| Epics & Stories | ✅ Present | `epics.md` (58 KB) + 31 story specs + 5 epic retros + `sprint-status.yaml` |
-| UX Design | ✅ Present | `ux-designs/ux-parties-2026-06-09/` (DESIGN, EXPERIENCE, 5 mockups, 4 reviews) |
+| PRD | ⚠️ None (substituted) | No formal PRD; `epics.md` used as baseline, cross-checked vs `docs/project-overview.md` |
+| Architecture | ✅ Present | `architecture.md` (53 KB, mod 15:36) + `adr-consumer-party-id-binding.md` (ADR) |
+| Epics & Stories | ✅ Present | `epics.md` (60 KB, mod 15:36; 5 epics / 30 stories) + 30 story specs + 5 epic retros + `sprint-status.yaml` + `test-summary.md` |
+| UX Design | ✅ Present | `ux-designs/ux-parties-2026-06-09/` (DESIGN, EXPERIENCE, 5 mockups, 4 reviews, validation-report) |
 
-**Duplicate-format conflicts:** None. No type has both a whole-file and sharded-folder version.
+**Sharded vs whole:** Architecture and Epics are whole files; UX is a sharded folder. **No duplicate-format conflicts** (no type has both whole + sharded). ✅
 
-**Issues raised:**
-- 🛑 **CRITICAL** — No PRD document; requirements baseline substituted with `epics.md`.
-- ℹ️ **CONTEXT** — Project is post-implementation; readiness is being re-validated, not gating greenfield work.
+**Supporting artifacts noted (not primary inputs):** 6 sprint-change-proposals (2026-06-09 → 2026-06-21), `adr-consumer-party-id-binding.md`, 5 submodule `project-context.md` files.
+
+**Issues raised in Step 1:**
+1. No formal PRD — resolved by user direction (use `epics.md`).
+2. Output-file conflict — resolved by archiving the 15:06 report and overwriting.
 
 ---
 
 ## 2. PRD Analysis (Step 2)
 
-**Source:** No formal PRD. Requirements extracted from `epics.md` "Requirements Inventory" (FR labels preserved from `architecture.md`, derived from UX `EXPERIENCE.md`), cross-checked against `docs/project-overview.md` (consistent — confirms `parties-ui`, AdminPortal, ConsumerPortal, GDPR crypto-shredding posture, 5 MCP tools).
+**Source:** `epics.md` "Requirements Inventory" (de-facto PRD; FRs preserved from `architecture.md`, derived from UX `EXPERIENCE.md`). **Cross-check:** `docs/project-overview.md` — *consistent*, no requirements drift (same surfaces & constraints).
 
-### Functional Requirements (9)
+### Functional Requirements (9 — extracted verbatim)
 
-- **FR-Shell:** One host-owned OIDC sign-in; route to landing area **by role** (`Admin`/`TenantOwner`→Admin, `Consumer`→Consumer); preserve return URL on `SignInRequired`; nav auto-populates from domain manifests, gated by `<AuthorizeView Policy=…>` (Admin/Consumer nav never cross-render); a Consumer with **no `party_id` claim** is routed fail-closed to onboarding/error, never a data screen.
-- **FR-Admin-1:** Parties **list** — server-driven debounced display-name search + Person/Org type filter + active filter (`FluentSelect`); row→detail; render last-known on staleness (never block on degraded read).
-- **FR-Admin-2:** Party **detail** — view full `PartyDetail`; entry points to Edit and GDPR ops; party-state badge reflects lifecycle.
-- **FR-Admin-3:** **Create / Edit** party — validated form → command (`CreateParty(Composite)`/`Update*`); in-form `<hexalith-party-picker>` to link a related party; Person/Org chooser as radiogroup.
-- **FR-Admin-4:** **GDPR/DPO operations** — erase (typed-name confirm) · restrict/lift · record/revoke consent · Art.20 export · Art.30 processing records · **erasure-verification report** (depends on the D7 EventStore contract).
+- **FR-Shell:** One sign-in (host-owned OIDC). Authenticate, then route to the landing area **by role** (`Admin`/`TenantOwner` → Admin; `Consumer` → Consumer); preserve the return URL on `SignInRequired`. Nav auto-populates from domain manifests, gated by `<AuthorizeView Policy=…>` — Admin and Consumer nav never cross-render. A Consumer with **no `party_id` claim** is routed to a fail-closed onboarding/error state, never to a data screen.
+- **FR-Admin-1:** **Parties list** — server-driven, debounced display-name search + Person/Organization type filter and active filter (`FluentSelect`); row → detail; render last-known on staleness (never block on a degraded read).
+- **FR-Admin-2:** **Party detail** — view the full `PartyDetail`; entry points to Edit and to GDPR operations; party-state badge reflects lifecycle.
+- **FR-Admin-3:** **Create / Edit party** — validated form → command (`CreateParty(Composite)` / `Update*`); in-form `<hexalith-party-picker>` to link a related party; Person/Organization chooser as a radiogroup.
+- **FR-Admin-4:** **GDPR operations (DPO)** — erase (typed-name confirm) · restrict / lift restriction · record / revoke consent · Art.20 data export · Art.30 processing records · **erasure-verification report** (last depends on the D7 EventStore contract).
 - **FR-Consumer-1:** **My profile** — view own personal data + freshness; no list/search.
 - **FR-Consumer-2:** **Edit my profile** — correct/update own data (validated → command).
-- **FR-Consumer-3:** **My consent** — grant/withdraw; opt-in **default Off**, never pre-checked; **Object (Art.21)** for legitimate-interest bases; optimistic flip → reconcile.
-- **FR-Consumer-4:** **My data & privacy** — export own data (async machine-readable JSON) · request erasure (cancellable-until-start, permanent-once-complete) · see what's processed about me ("things you control" vs "things we keep").
+- **FR-Consumer-3:** **My consent** — grant / withdraw consent; opt-in **default Off**, never pre-checked; **Object (Art.21)** for legitimate-interest bases (not a withdraw toggle); optimistic flip → reconcile on projection confirm.
+- **FR-Consumer-4:** **My data & privacy** — export own data (async, machine-readable JSON) · request erasure (cancellable-until-start, permanent-once-complete) · see what's processed about me, split into "things you control" vs "things we keep".
 
-**Total FRs: 9**
+**Total FRs: 9.**
 
-### Non-Functional Requirements (9)
+### Non-Functional Requirements (9 — extracted verbatim)
 
-- **NFR1 — Accessibility (WCAG 2.2 AA):** real ARIA semantics (combobox/switch/radiogroup/labeled typed-confirm); live-region politeness split (status/freshness=polite; validation/failure=`role=alert`); per-surface focus contract; forced-colors + reduced-motion product-wide; color-never-alone; ≥24px (≥44px touch) targets; AA contrast gate (`--colorBrandBackground`, never raw teal `#0097A7`).
-- **NFR2 — Eventual consistency is first-class UX:** surface `ProjectionFreshnessMetadata` (fresh/stale/degraded) + `StatusKind`/`PartyPickerSearchState` machines; optimistic echo + silent reconcile; render last-known cache, never blank/throw; fail-closed tenant warm-up reads as "still warming up." Acceptance is **not** read-your-write.
-- **NFR3 — Security / own-data privacy:** Consumer scoped to **own party only** (single self-scope choke point); no PII in logs/telemetry/copy/tombstones; admin typed-name erase compared **in-memory only**.
-- **NFR4 — GDPR honesty (copy):** consent opt-in default Off; erasure copy commits to the **start** of the obligation (Art.12(3)), states completed erasure is permanent; Art.21 Object for non-consent bases; Art.20 export machine-readable + async, no time promise.
-- **NFR5 — Responsive:** Admin desktop-first master-detail (degrades to sheet/full-screen with focus contract); Consumer phone-first single column; one codebase, two density postures.
+- **NFR1 — Accessibility (WCAG 2.2 AA, consumer-facing):** real ARIA semantics (combobox/switch/radiogroup/labeled typed-confirm); live-region politeness split (status/freshness = `polite`; validation/failure = `role=alert` assertive); per-surface focus contract; forced-colors + reduced-motion product-wide; color-never-alone; ≥24px (≥44px touch) targets; AA contrast gate (filled primary → `--colorBrandBackground`, never raw teal `#0097A7` @ 3.51:1).
+- **NFR2 — Eventual consistency is first-class UX:** surface `ProjectionFreshnessMetadata` (fresh/stale/degraded) and `StatusKind`/`PartyPickerSearchState` machines; optimistic echo + silent reconcile; render last-known cache, never blank/throw; fail-closed tenant warm-up reads as "still warming up," not "access denied." Acceptance is **not** read-your-write.
+- **NFR3 — Security / own-data privacy:** Consumer scoped to **own party only** (single self-scope choke point); no PII in logs/telemetry/copy/tombstones; admin typed-name erase confirmation compared **in-memory only**.
+- **NFR4 — GDPR honesty (copy):** consent opt-in (default Off, never pre-checked); erasure copy commits to the **start** of obligation (Art.12(3)), states completed erasure is permanent; Art.21 Object for non-consent bases; Art.20 export machine-readable + async, no time promise.
+- **NFR5 — Responsive:** Admin desktop-first master-detail (degrades to sheet/full-screen with focus contract); Consumer phone-first single column. One codebase, two density postures (Admin comfortable, Consumer roomy).
 - **NFR6 — Multi-tenancy:** Admin operates within tenant scope; tenant isolation preserved; tenant-access fails closed and is eventually consistent.
-- **NFR7 — Brand discipline:** inherit FluentUI V5 + FrontComposer shell wholesale; brand-delta only; theme via design-token API, never hard-coded hex.
-- **NFR8 — Observability:** OpenTelemetry + health on UI host; surface `X-Service-Degraded` / `X-Stale-Data-Age` into UI state.
-- **NFR9 — Build / quality gates:** .NET 10, Central Package Management (no `Version=`), solution-wide `TreatWarningsAsErrors`, `.slnx` only, root-level submodules only, Conventional Commits.
+- **NFR7 — Brand discipline:** inherit FluentUI V5 (Fluent 2) + FrontComposer shell wholesale; specify brand-delta only; theme via design-token API, never hard-coded hex.
+- **NFR8 — Observability:** OpenTelemetry + health on the UI host; surface `X-Service-Degraded`/`X-Stale-Data-Age` into UI state.
+- **NFR9 — Build / quality gates:** .NET 10, Central Package Management (no `Version=` in csproj), solution-wide `TreatWarningsAsErrors`, `.slnx` only, root-level submodules only, Conventional Commits.
 
-**Total NFRs: 9**
+**Total NFRs: 9.**
 
-### Additional Requirements (technical / infra / UX-DR)
+### Additional Requirements (technical/infra constraints, all enumerated)
 
-- **Foundation:** AR-Starter (stand up `Hexalith.Parties.UI` Blazor Server host on FrontComposer pattern).
-- **Architecture decisions (constraints):** AR-D1 (Interactive Server, `ValidateScopes=true`) · AR-D2 (consumer identity binding, fail-closed) · AR-D3 (own-data authz: `ISelfScopedPartiesClient` + `IDataSubjectAccessService` + `Consumer` policy) · AR-D4 (compose AdminPortal + new ConsumerPortal RCLs) · AR-D5 (host-owned OIDC, tokens never reach browser) · AR-D6 (live freshness over SignalR) · AR-D7 (GDPR erasure-verification contract) · AR-D8 (portability export delivery) · AR-D9 (a11y enforced by bUnit + Playwright gate) · AR-D10 (AppHost/deploy, 11→12 pods, no DAPR sidecar) · AR-D11 (party-picker re-skin + ARIA combobox).
-- **Canonical patterns:** AR-StatusMap (StatusKind→UI + aria-live split, defined once) · AR-Copy (localized resources, regulated microcopy centralized) · AR-Generated (no hand-editing generated output).
-- **GDPR backend behaviors:** AR-Gdpr-Export · AR-Gdpr-Erased · AR-Gdpr-Records · AR-Gdpr-Keys (production-KMS prerequisite).
+- **AR-Starter** (new standalone `Hexalith.Parties.UI` Blazor Server host on FrontComposer pattern).
+- **Architecture decisions AR-D1…AR-D11:** D1 render model (Interactive Server, `ValidateScopes=true`/ADR-030) · D2 consumer identity binding (fail-closed `party_id`) · D3 own-data authz (`ISelfScopedPartiesClient` + `IDataSubjectAccessService` + `Consumer` policy) · D4 composition (AdminPortal + new ConsumerPortal RCL) · D5 transport/auth (host-owned OIDC, tokens never reach browser) · D6 live freshness (SignalR) · D7 GDPR erasure-verification completion · D8 portability export delivery · D9 a11y enforcement (bUnit + Playwright gate) · D10 AppHost/deploy (`parties-ui`, no DAPR sidecar, 11→12 pods, K8s `nginx-public` + Let's Encrypt TLS) · D11 party-picker re-skin + ARIA combobox.
+- **Canonical patterns:** AR-StatusMap (StatusKind→UI + aria-live split) · AR-Copy (localized regulated microcopy) · AR-Generated (`[Projection]`/`[Command]` SourceTools, never hand-edit generated).
+- **GDPR backend behaviors:** AR-Gdpr-Export · AR-Gdpr-Erased · AR-Gdpr-Records · AR-Gdpr-Keys (KMS prerequisite, out of UI scope).
 - **Reuse:** AR-Client (existing `IPartiesCommandClient`/`IPartiesQueryClient`/`IAdminPortalGdprClient`).
-- **Known gaps→stories:** AR-Gap-Binding (Story 4.1 decision + 4.2 build) · AR-Gap-D7 (Story 3.5 backend) · AR-Gap-KMS (deploy prerequisite).
-- **UX Design Requirements (16):** UX-DR1–3 (tokens/brand) · UX-DR4–7 (four domain components: party-state badge, freshness indicator, GDPR destructive button, picker re-skin+ARIA) · UX-DR8–12 (a11y: politeness split, real semantics, focus contract, non-color cues/targets, forced-colors/reduced-motion) · UX-DR13–16 (regulated copy: erasure, lawful-basis honesty, export, plain verbs/single status source).
+- **Known gaps:** AR-Gap-Binding (Story 4.1/4.2) · AR-Gap-D7 (Story 3.5) · AR-Gap-KMS (deploy prerequisite).
+
+### UX Design Requirements (16 — UX-DR1…UX-DR16)
+
+Tokens/brand (UX-DR1 AA-safe brand fill · UX-DR2 status token pairs · UX-DR3 inheritance discipline); four domain components (UX-DR4 party-state badge · UX-DR5 freshness indicator · UX-DR6 GDPR destructive button · UX-DR7 picker re-skin+ARIA); a11y impl (UX-DR8 politeness split · UX-DR9 real semantics · UX-DR10 focus contract · UX-DR11 non-color cues/targets · UX-DR12 forced-colors/reduced-motion); regulated copy (UX-DR13 erasure · UX-DR14 lawful-basis honesty · UX-DR15 export · UX-DR16 plain verbs/single status source).
 
 ### PRD Completeness Assessment
 
 | Dimension | Verdict |
 |---|---|
-| Requirements catalog present | ✅ Yes — 9 FRs + 9 NFRs + AR-* + 16 UX-DRs, all labeled and individually testable |
-| Requirements traceable to source | ✅ Yes — FRs preserved from `architecture.md`/`EXPERIENCE.md`; NFRs from architecture NFR section |
-| Formal PRD artifact | 🛑 **Absent** — by design (brownfield); the FR/NFR catalog lives inside `epics.md`. Acceptable for a brownfield .NET service, but means there is no independent requirements document to detect epic over/under-reach against — the baseline and the decomposition share one file (mild circularity risk, addressed in Step 3 by validating against `architecture.md` + UX as the true upstream sources). |
-| Acceptance criteria style | ✅ Strong — Given/When/Then, with PII/a11y/consistency invariants baked in |
-| Ambiguity | ✅ Low — each requirement names concrete artifacts, policies, and ARIA roles |
+| FRs numbered & atomic | ✅ 9 FRs, role-scoped, each with a clear capability |
+| NFRs measurable/testable | ✅ 9 NFRs; a11y has explicit AA gate, contrast ratios, target sizes |
+| Requirements→Epic map present | ✅ "FR Coverage Map" maps all 9 FRs to epics 1–5 |
+| Cross-cutting constraints captured | ✅ AR-D1…D11, AR-Gdpr-*, AR-StatusMap/Copy/Generated, 16 UX-DRs |
+| Out-of-scope explicit | ✅ Production KMS, tenant key rotation tracked as non-stories |
+| Open design questions | ✅ None left — AR-Gap-Binding closed by ADR (Story 4.1), D7 scoped (Story 3.5) |
+| **Gap vs cross-check doc** | ✅ None — `docs/project-overview.md` adds no FR/NFR not already covered |
 
-**PRD verdict:** The requirements baseline is **complete and high-quality for a brownfield service**, with the single structural caveat that no standalone PRD exists; the FR/NFR set is the requirements contract and is carried by `epics.md` + `architecture.md`.
+**Step 2 verdict:** The de-facto PRD (`epics.md` Requirements Inventory) is **complete, well-numbered, and traceable** — strong substitute for a formal PRD. The only structural caveat is the absence of a standalone PRD artifact (acceptable for this brownfield project by user direction). Proceeding to coverage validation.
 
 ---
 
 ## 3. Epic Coverage Validation (Step 3)
 
-Validated the `epics.md` FR Coverage Map against (a) the FR baseline from Step 2 and (b) the **actual story files present on disk** (`implementation-artifacts/`), so coverage is verified, not merely claimed.
+Each FR validated against **specific stories**, and each story claim cross-checked against the **30 story-spec files** actually present in `_bmad-output/implementation-artifacts/`.
 
-### Coverage Matrix
+### FR Coverage Matrix
 
-| FR | Requirement (short) | Epic | Story file(s) on disk | Status |
-|---|---|---|---|---|
-| FR-Shell | OIDC sign-in + role landing + fail-closed `party_id` | Epic 1 | `1-2` (OIDC), `1-3` (role landing/nav), `1-4` (party_id resolution) | ✅ Covered |
-| FR-Admin-1 | Parties list (search/filter/paging) | Epic 2 | `2-2` | ✅ Covered |
-| FR-Admin-2 | Party detail | Epic 2 | `2-3` | ✅ Covered |
-| FR-Admin-3 | Create / Edit party (+picker, radiogroup) | Epic 2 | `2-4`, `2-5` (picker) | ✅ Covered |
-| FR-Admin-4 | GDPR/DPO ops (+ erasure-verification report) | Epic 3 | `3-1`…`3-6` (incl. `3-5` D7 backend, `3-6` report UI) | ✅ Covered |
-| FR-Consumer-1 | My profile | Epic 4 | `4-4` (+`4-1/4-2` binding, `4-3` RCL) | ✅ Covered |
-| FR-Consumer-2 | Edit my profile | Epic 4 | `4-5` | ✅ Covered |
-| FR-Consumer-3 | My consent (default-Off, Art.21 Object) | Epic 5 | `5-1` | ✅ Covered |
-| FR-Consumer-4 | My data & privacy (export / erasure / transparency) | Epic 5 | `5-2`, `5-3`, `5-4` | ✅ Covered |
+| FR | Requirement (short) | Epic | Story(ies) | Spec file(s) present? | Status |
+|---|---|---|---|---|---|
+| FR-Shell | One sign-in, role landing, fail-closed `party_id` | 1 | 1.2, 1.3, 1.4 (+1.1 foundation) | ✅ `1-2`,`1-3`,`1-4`,`1-1` | ✅ Covered |
+| FR-Admin-1 | Parties list (search/filter/paging) | 2 | 2.2 | ✅ `2-2-...-fr-admin-1` | ✅ Covered |
+| FR-Admin-2 | Party detail | 2 | 2.3 | ✅ `2-3-...-fr-admin-2` | ✅ Covered |
+| FR-Admin-3 | Create/Edit party (+ in-form picker) | 2 | 2.4, 2.5 (picker) | ✅ `2-4-...-fr-admin-3`,`2-5` | ✅ Covered |
+| FR-Admin-4 | GDPR/DPO ops (+ verification report) | 3 | 3.1, 3.2, 3.3, 3.4, 3.5, 3.6 | ✅ `3-1`…`3-6` | ✅ Covered |
+| FR-Consumer-1 | My profile | 4 | 4.4 | ✅ `4-4-...-fr-consumer-1` | ✅ Covered |
+| FR-Consumer-2 | Edit my profile | 4 | 4.5 | ✅ `4-5-...-fr-consumer-2` | ✅ Covered |
+| FR-Consumer-3 | My consent (default-Off, Art.21) | 5 | 5.1 | ✅ `5-1-...-fr-consumer-3` | ✅ Covered |
+| FR-Consumer-4 | My data & privacy (export/erasure/transparency) | 5 | 5.2, 5.3, 5.4 | ✅ `5-2`,`5-3`,`5-4` (all `fr-consumer-4`) | ✅ Covered |
 
-### NFR threading (informational — NFRs are cross-cutting, not single-epic)
-
-| NFR | Primary anchor stories |
-|---|---|
-| NFR1 Accessibility | `1-9` (a11y gate) + every UI story's ARIA ACs |
-| NFR2 Eventual consistency | `1-6` (StatusKind map), `1-7` (SignalR reconcile), `1-8` (freshness indicator) |
-| NFR3 Own-data security | `1-4`, `1-5` (self-scope + `IDataSubjectAccessService`) |
-| NFR4 GDPR honesty | `3-2`, `5-1`, `5-3` + UX-DR13/14/15/16 |
-| NFR5 Responsive | `2-3` (master-detail reflow AC), `4-3` (roomy density) |
-| NFR6 Multi-tenancy | `1-4` (tenant claim normalize), threaded via client |
-| NFR7 Brand discipline | `1-8`, `1-9`, `2-5` (token API, no hex) |
-| NFR8 Observability | `1-10` (ServiceDefaults/OTel), `1-7` (degraded headers) |
-| NFR9 Build/quality gates | `1-1`, `1-10` + solution-wide gate |
+**Enabler stories (no direct FR, support NFRs/ARs):** 1.5 (own-data self-authz / NFR3/AR-D3), 1.6 (StatusKind→UI map / AR-StatusMap), 1.7 (SignalR freshness / AR-D6/NFR2), 1.8 (3 domain components / UX-DR4/5/6), 1.9 (a11y CI gate / AR-D9/NFR1), 1.10 (deploy + KMS gate / AR-D10), 2.1 (admin area mount), 4.1 (binding ADR / AR-Gap-Binding), 4.2 (binding impl), 4.3 (ConsumerPortal stand-up). All 10 present on disk.
 
 ### Missing Requirements
 
-**None.** All 9 FRs trace to an epic *and* to concrete story file(s) on disk. No FR appears in the epics that is absent from the baseline (baseline and decomposition share `architecture.md`/UX as upstream sources, so there is no orphan-epic risk). All 9 NFRs have anchor stories.
+**None.** All 9 FRs have a traceable story with a matching spec file. No critical or high-priority FR is uncovered.
+
+### Reverse check (epics/stories ⟶ PRD, and cross-check doc ⟶ FRs)
+
+- **Stories not traceable to an FR or AR/NFR:** none — every story maps to an FR or a declared enabler (NFR/AR).
+- **Capabilities in `docs/project-overview.md` not in the FR set:** `parties-mcp` (5 tools), DAPR event subscription, typed client package — these are **pre-existing backend capabilities outside the `parties-ui` initiative scope**, correctly excluded (not gaps). Out-of-MVP items (production KMS, tenant key rotation) are explicitly tracked as non-stories.
 
 ### Coverage Statistics
 
-- **Total baseline FRs:** 9
-- **FRs covered in epics:** 9
-- **FR coverage:** **100%**
-- **NFRs with anchor stories:** 9 / 9 (100%)
-- **UX-DRs (16):** all referenced by ≥1 story AC (validated in detail in Step 4)
+- **Total PRD FRs:** 9
+- **FRs covered in epics with a present story spec:** 9
+- **Coverage:** **100%**
+- **Stories total:** 30 (10 + 5 + 6 + 5 + 4) — all spec files present; 5 epic retrospectives present (all epics report completed).
 
-> ⚠️ **Methodological caveat (carried forward):** because no independent PRD exists, "100% coverage" means *the epics cover their own declared FR set, which is faithfully derived from architecture + UX*. The residual risk is a requirement that exists in UX/architecture but was never lifted into an FR label — Step 4 (UX alignment) is the check that closes that gap.
+**Step 3 verdict:** ✅ Full FR traceability — every requirement has an implementation path, and every path has a written, on-disk story spec. No coverage gaps.
 
 ---
 
@@ -151,169 +154,184 @@ Validated the `epics.md` FR Coverage Map against (a) the FR baseline from Step 2
 
 ### UX Document Status
 
-✅ **Found** — `ux-designs/ux-parties-2026-06-09/` is a mature, self-validated UX set:
-- `EXPERIENCE.md` — the authoritative **behavioral spine** (IA, voice/tone, component patterns, state patterns, interaction primitives, accessibility floor, responsive matrix, 4 key flows).
-- `DESIGN.md` — visual identity / token layer.
-- `validation-report.md` + 3 review lenses (rubric / accessibility / regulated-language).
-- 5 HTML mockups (illustrative).
+**Found** — sharded folder `ux-designs/ux-parties-2026-06-09/` (`DESIGN.md` `status: final`, `EXPERIENCE.md` `status: final`, 5 mockups, `validation-report.md`, 3 review lenses). Validation totals: **3 critical · 7 high · 7 medium · 9 low — all critical + high resolved**, mediums/lows mostly resolved or accepted residuals.
 
-### UX ↔ Requirements Alignment
+### UX ↔ PRD (de-facto = epics) Alignment
 
-✅ **Strong, bidirectional.** Every IA surface in `EXPERIENCE.md` maps to an FR, and every FR maps to a surface:
+**Strong / by construction.** The FRs were *derived directly from* `EXPERIENCE.md` (architecture frontmatter and epics both state this). Spot-check of UX surfaces → FRs:
 
-| EXPERIENCE.md surface | FR |
-|---|---|
-| Sign in + role routing | FR-Shell |
-| Parties list | FR-Admin-1 |
-| Party detail | FR-Admin-2 |
-| Create / Edit party (+ picker) | FR-Admin-3 |
-| GDPR operations | FR-Admin-4 |
-| My profile / Edit my profile | FR-Consumer-1 / -2 |
-| My consent | FR-Consumer-3 |
-| My data & privacy | FR-Consumer-4 |
+| UX surface (EXPERIENCE.md IA) | FR | Aligned? |
+|---|---|---|
+| Sign in + role routing | FR-Shell | ✅ |
+| Parties list (search/filter) | FR-Admin-1 | ✅ |
+| Party detail | FR-Admin-2 | ✅ |
+| Create/Edit + inline picker | FR-Admin-3 | ✅ |
+| GDPR operations (DPO) | FR-Admin-4 | ✅ |
+| My profile / Edit | FR-Consumer-1/2 | ✅ |
+| My consent | FR-Consumer-3 | ✅ |
+| My data & privacy | FR-Consumer-4 | ✅ |
 
-The FR/NFR catalog was explicitly **derived from `EXPERIENCE.md`** (per `architecture.md` provenance), so there is no UX-surface-without-a-requirement and no orphan requirement. The Step 3 circularity caveat is **closed**: the upstream UX is the true source, and it is fully reflected.
+The UX **behavioral contracts** (politeness split, optimistic/reconcile, default-Off consent, two-state erasure, Art.21 Object, no time-promise export) are reproduced as **NFR1–4 + UX-DR1–16** in the PRD. No UX requirement is unrepresented; no FR lacks a UX surface.
 
 ### UX ↔ Architecture Alignment
 
-✅ **Strong.** `architecture.md` consolidated the FRs/NFRs from `EXPERIENCE.md` and answers every UX need with a concrete decision:
+**Strong.** Architecture.md was driven by the UX set (it is the primary `inputDocuments` driver) and explicitly supports each UX need:
 
-| UX need | Architecture decision |
-|---|---|
-| Eventual-consistency UX, freshness, optimistic reconcile (NFR2) | D6 (SignalR), Communication Patterns (StatusKind map), render-last-known rule |
-| Host-owned sign-in, tokens never in browser (FR-Shell) | D5 (OIDC Interactive Server), D1 |
-| Own-data-only Consumer (NFR3) | D3 (`ISelfScopedPartiesClient` + `IDataSubjectAccessService` + `Consumer` policy) |
-| Admin + Consumer areas one shell (FR-Admin/Consumer) | D4 (AdminPortal + new ConsumerPortal RCL) |
-| Erasure verification report (FR-Admin-4) | D7 (EventStore contract) |
-| Async portability export (FR-Consumer-4) | D8 |
-| WCAG 2.2 AA enforcement (NFR1) | D9 (bUnit + Playwright gate) |
-| Accessible picker combobox (UX-DR7) | D11 |
-| Deploy/observability (NFR8/9) | D10 |
+| UX / NFR need | Architecture support | Aligned? |
+|---|---|---|
+| Politeness split + StatusKind machine (UX-DR8/NFR1/NFR2) | "Communication Patterns" canonical `StatusKind→UI` table + pinned aria-live split | ✅ |
+| Eventual-consistency UX, optimistic reconcile (NFR2) | D6 SignalR + one shared optimistic-then-reconcile effect; render last-known | ✅ |
+| Own-data-only (NFR3) | D3 `ISelfScopedPartiesClient` choke point + `IDataSubjectAccessService` fail-closed | ✅ |
+| GDPR copy honesty (NFR4/UX-DR13-16) | "Copy register (pinned)" + localization + regulated-review fixes | ✅ |
+| 4 domain components (UX-DR4-7) | Frontend Architecture + concrete tree (`PartyStateBadge`, `DataFreshnessIndicator`, `GdprDestructiveButton`, Picker D11) | ✅ |
+| WCAG 2.2 AA enforcement (NFR1/UX-DR9-12) | D9 bUnit + Playwright a11y gate; AA brand-fill token rule | ✅ |
+| Responsive two-density (NFR5) | Frontend "Responsive" + master-detail→sheet focus contract | ✅ |
+| Brand/token discipline (NFR7/UX-DR1-3) | "Theming/tokens (pinned)" — `--colorBrandBackground`, `--colorStatus*` pairs, no hex | ✅ |
 
-`architecture.md` additionally contains its own **Requirements Coverage Validation**, **Gap Analysis**, and **Architecture Readiness Assessment** sections — and was updated post-implementation (it embeds an Epic 4 retrospective note on actual ConsumerPortal port shapes), confirming it is a living, in-sync document.
+Architecture's own "Requirements Coverage Validation" self-reports all FRs/NFRs covered ✅; "Architecture Readiness Assessment" = **READY WITH KNOWN IMPLEMENTATION DEPENDENCIES**.
 
-### Alignment Issues
+### Deploy-path re-alignment (the re-run trigger) — ✅ now consistent
 
-- **None blocking.** UX, requirements, and architecture are mutually consistent.
+The 15:36 edits folded the 2026-06-16 deployment-hardening change back into both artifacts. Verified consistent across architecture ↔ epics:
 
-### Warnings
+| Element | architecture.md §D10 / Infra | epics.md Story 1.10 / AR-D10 |
+|---|---|---|
+| Ingress class | `nginx-public` only, no local nginx bridge | `nginx-public` only, "no local/host-level nginx bridge fallback" |
+| Zot registry Ingress | `registry.hexalith.com/`→`zot:5000`, ClusterIP, no NodePort | same |
+| TLS (cert-manager Let's Encrypt) | `hexalith-pages-letsencrypt-tls`, `registry-hexalith-letsencrypt-tls` | same |
+| publish.ps1 preflight | fails before image build if class/Ingress/either TLS Secret missing | same |
+| Pod count | 11→12 | 11→12 |
 
-- ⚠️ **LOW — Mock-fidelity residuals (already governed).** The UX validation report lists medium/low residuals confined to the **illustrative HTML mockups** (unlabeled typed-confirm, non-semantic consent toggle, default-On marketing, sub-13px microcopy). These are explicitly **non-authoritative**: `epics.md` carries a normative "spine wins on conflict" rule and the Story 1.9 bUnit + Playwright WCAG 2.2 AA gate is the backstop that fails the build on any reintroduced defect. No action required beyond keeping the a11y gate green.
-- ⚠️ **LOW — Phone reflow of Admin master-detail** was specified in prose but not mocked. Closed in the plan by an explicit reflow acceptance criterion added to Story 2.3 (the highest-reflow-risk surface).
+Both are timestamped "folded back / Tightened **2026-06-21**" — the alignment that was the purpose of the re-run **holds**.
 
-**UX verdict:** UX is **complete, self-validated, and fully aligned** with both the requirement baseline and the architecture. All critical/high UX review findings were resolved at the spine level before story authoring; residuals are illustrative-only and gated.
+### Warnings / residuals (non-blocking)
+
+1. **Mockup fidelity (Low/Medium):** HTML mockups are illustrative and may retain pre-fix review violations (sub-13px microcopy, phone master-detail reflow not mocked). Mitigated: epics has a **normative mockup-fidelity rule** ("spine wins on conflict") + the Story 1.9 a11y gate as build-failing backstop. Story 2.3 carries the explicit phone-reflow AC. ✅ contained.
+2. **RCL status/freshness sharing boundary (architecture Gap #4, Epic 1 retro):** host-owned `StatusKind`/freshness primitives need an explicit "promote to shared package vs map at host boundary" decision; currently an *implementation note*, not a discrete story. Epic 4/5 retros show ConsumerPortal worked around it via owned ports/adapters. **Track as a small tech-debt item; not an FR/UX gap.**
+3. **Deferred (documented, out of MVP):** gateway data-subject self-principal, production KMS, Blazor Server scaling, FluentUI RC→GA. All explicitly deferred in architecture — not readiness blockers.
+
+**Step 4 verdict:** ✅ UX is present, mature (all critical/high resolved), and **tightly aligned** with both the PRD and the architecture. The deploy-path re-alignment that prompted this re-run is confirmed consistent across both artifacts. Residuals are tracked and non-blocking.
 
 ---
 
 ## 5. Epic Quality Review (Step 5)
 
-Validated all 5 epics / 30 stories against create-epics-and-stories standards: user value, epic independence, forward dependencies, story sizing, AC completeness, starter-template placement, and FR traceability.
+Applied the create-epics-and-stories standards rigorously to all 5 epics / 30 stories.
 
-### A. User-Value Focus — ✅ PASS (0 technical-milestone epics)
+### A. Epic user-value & independence
 
-| Epic | Goal (user outcome) | Verdict |
+| Epic | User-value framing | Verdict | Independence |
+|---|---|---|---|
+| 1 — App Foundation & Secure Sign-In | "Any authorized user signs in once and lands in the correct area; a consumer with no binding lands safely" | ✅ user outcome (not a bare "auth system") | Stands alone ✅ |
+| 2 — Admin Party Records Mgmt | "search, filter, view, create, edit, link records" | ✅ | Needs only Epic 1 ✅ |
+| 3 — Admin GDPR/DPO Ops | "fulfill data-subject obligations and prove erasure" | ✅ | Needs 1,2 (+internal 3.5) ✅ |
+| 4 — Consumer Identity Binding & My Profile | "bound fail-closed to own party, view/correct own data" | ✅ | Needs Epic 1 ✅ |
+| 5 — Consumer Consent/Export/Erasure | "control consent honestly, export, erase with honest copy" | ✅ | Needs Epic 4 ✅ |
+
+**Declared epic dependency graph:** `1 → {2,4}` · `2 → 3` · `4 → 5`. **All dependencies point backward** — no epic requires a *later* epic. ✅ No circular dependencies.
+
+### B. Forward-dependency scan (story level) — the critical check
+
+| Sequencing relationship | Direction | Verdict |
 |---|---|---|
-| 1 — App Foundation & Secure Sign-In | "Any authorized user signs in once and lands in the correct area; a consumer with no binding lands safely." | ✅ User-centric (sign-in + safe landing) |
-| 2 — Admin: Party Records Management | "An admin can search, filter, view, create, edit, link records." | ✅ User value |
-| 3 — Admin: GDPR / DPO Operations | "A DPO can fulfill data-subject obligations and prove erasure." | ✅ User value |
-| 4 — Consumer: Identity Binding & My Profile | "A consumer is bound to their own party and can view/correct own data." | ✅ User value (binding bundled with profile) |
-| 5 — Consumer: Consent, Data Export & Erasure | "A consumer controls consent, exports data, requests/cancels erasure." | ✅ User value |
+| 3.6 (verification report UI) → 3.5 (D7 backend) | backward, same epic, 3.5 before 3.6 | ✅ + 3.6 has explicit graceful-degrade AC if D7 not landed |
+| 4.2 (binding build) → 4.1 (binding ADR) | backward, same epic | ✅ decision-before-build |
+| 5.x → 4.2/4.3 | backward (Epic 5 after Epic 4) | ✅ |
+| **1.4 (party_id resolver, Epic 1) ↔ 4.2 (claim issuance, Epic 4)** | 1.4's *full E2E happy path* needs 4.2 | 🟡 **Minor** — see below |
 
-No "Setup Database / API Development / Infrastructure" epics. Even the foundation epic is framed around a user outcome (sign in + land safely).
+**No critical forward dependencies.** The single cross-epic note (1.4) is **explicitly disclosed and well-managed**: Story 1.4 is independently *implementable and unit-testable* (bUnit covers present-claim and absent-claim paths); only its end-to-end happy-path *verification* awaits 4.2 (the claim producer). Building the claim consumer before the producer and testing with synthetic claims is a legitimate, transparent pattern — not a blocking violation.
 
-### B. Epic Independence & Dependency Direction — ✅ PASS (no forward, no circular)
+### C. Story sizing & AC quality
 
-Declared graph: `1 → {2, 4}` · `2 → 3` · `4 → 5`. All dependencies point **backward** (Epic N depends only on predecessors). No cycle. Epic 3's cross-submodule D7 risk is **isolated into Story 3.5** with the explicit rule "the rest of Epic 3 ships without either [3.5/3.6]" — so a blocked cross-submodule approval cannot stall the epic. Strong risk isolation.
+- **AC format:** Given/When/Then BDD used **consistently** across all 30 stories; `And` clauses carry cross-cutting assertions (a11y semantics, PII hygiene, build-gate). ✅
+- **Error/edge coverage:** strong — stories systematically include failure paths (2.2 stale/empty/erased; 2.4 validation-rejected; 3.2 PII-free dialog; 4.4 stale/erased-self; 5.2 transient-failure; 5.3 cancellation). ✅
+- **Testable & specific:** ACs name concrete commands, routes, ARIA roles, and status codes — verifiable, not vague. ✅
+- **Just-in-time data:** no DB/ORM; the only new store (identity-binding) is created in 4.2 when first needed — no "create all tables upfront" anti-pattern. ✅
 
-### C. Acceptance Criteria Quality — ✅ EXEMPLARY
+### D. Starter-template & brownfield checks
 
-Every story uses Given/When/Then with concrete, independently testable outcomes **and explicit error/edge paths** — not just happy paths. Sampled rigor:
-- Story 2.2 (list): happy + stale/degraded (render last-known) + empty (clear-filters) + erased-exclusion + keyboard nav.
-- Story 2.4 (create/edit): happy + `PartyCommandValidationRejected` (inline `role=alert`, input preserved) + optimistic reconcile.
-- Story 5.3 (erasure): two honest states (cancellable / permanent) + cancel-before-start + PII-free + single status source.
-- Story 1.6 (StatusKind map): every HTTP status → UI state → politeness asserted.
+- Architecture specifies a starter (FrontComposer shell-host pattern). **Epic 1 Story 1.1** = "Stand up the Hexalith.Parties.UI host" with solution + AppHost + build-gate wiring — ✅ satisfies the "first story sets up project from starter" rule.
+- Brownfield integration points present: embeds existing `AdminPortal`, reuses `Hexalith.Parties.Client` + GDPR panels, cross-submodule EventStore D7 (3.5), deploy/CI gates (1.10). ✅
 
-PII-safety, ARIA semantics, and eventual-consistency invariants are baked into ACs product-wide. This is well above typical AC quality.
+### Findings by severity
 
-### D. Story Sizing & Starter Placement — ✅ PASS
+**🔴 Critical violations:** **None.** No technical-milestone-only epic, no blocking forward dependency, no epic-sized uncompletable story.
 
-- **Starter template correctly placed:** Architecture specifies the FrontComposer shell-host starter (AR-Starter); **Story 1.1** is exactly "Stand up the Hexalith.Parties.UI host" with solution/AppHost wiring and a green-build AC. Correct per the starter-template rule.
-- **Brownfield posture correct:** integration-point stories throughout (EventStore gateway, reuse of `IPartiesCommandClient`/`AdminPortal` RCL, picker re-skin, Keycloak/tache binding in 4.2). No "create all entities upfront" anti-pattern (event-sourced — no schema bootstrap story, correct).
-- **No epic-sized stories**; each story is a single surface/capability.
+**🟠 Major issues:** **None.**
 
-### Findings by Severity
+**🟡 Minor concerns (3):**
+1. **Story 1.4 cross-epic E2E-verification dependency on Story 4.2** — disclosed and managed (unit-testable in isolation). Recommendation: none required; the epics doc already annotates it. Already mitigated.
+2. **Epic 1 is enabler-heavy (10 stories)** — bundles pure-technical enablers (1.6 StatusKind map, 1.7 SignalR, 1.8 domain components, 1.9 a11y gate) alongside FR-Shell. Legitimate for a foundation epic establishing shared infrastructure consumed by all later epics; the epic is still framed around a user outcome. Acceptable; noted for awareness.
+3. **Story 4.2 is large** (mapper shape + bound/unbound/removed/ambiguous/duplicate/rotation/suspend/unauthorized/drift ACs) — meaty but one cohesive capability (binding provisioning). Acceptable; could have been split (provisioning vs lifecycle) but is internally coherent.
 
-#### 🔴 Critical Violations
-**None.**
+**Deliberate, sanctioned exception:** Story 4.1 is a **non-user-facing decision spike (ADR)**, intentionally isolated as the predecessor of 4.2 — this resolves prior readiness finding **M1** (don't bury a design decision inside an implementation story). Correct pattern, not a defect.
 
-#### 🟠 Major Issues
-**None.**
+### Best-practices compliance checklist (whole plan)
 
-#### 🟡 Minor Concerns
+- [x] Every epic delivers user value
+- [x] Every epic functions independently of later epics
+- [x] Stories appropriately sized (3 minor notes, 0 violations)
+- [x] No blocking forward dependencies
+- [x] Data/stores created when needed (no upfront-schema anti-pattern)
+- [x] Clear, testable Given/When/Then acceptance criteria with error paths
+- [x] Traceability to FRs maintained (Step 3 = 100%)
 
-1. **Story 1.4 → Story 4.2 documented forward-coupling (mitigated).** Story 1.4 (Epic 1, fail-closed `party_id` resolution) notes its *end-to-end happy path* is "verifiable once 4.2 lands" (Epic 4). This is a forward reference across epics. **Why it is not Major:** 1.4 is explicitly scoped to *consume an existing claim*, its actual deliverable (route an unbound consumer to `NoPartyBinding`) is fully functional and bUnit-tested for both present- and absent-claim paths without 4.2. Only the "real bound consumer reaches /me" verification waits on provisioning — which was a genuinely open design question deferred to the 4.1 spike. The coupling is acknowledged in-story and minimized. _Recommendation: none required; the team handled this correctly by making 1.4 independently testable._
-
-2. **Story 4.1 is a decision spike (non-user-value research story).** It produces an ADR, not shippable user value. **Why it is acceptable:** it resolves AR-Gap-Binding, the open design question that blocked Epic 4/5 estimation, and was the right way to de-risk an undecided mechanism; the ADR (`adr-consumer-party-id-binding.md`) exists on disk and Story 4.2's ACs are derived from it. A well-justified, well-scoped spike — not a disguised technical story.
-
-3. **Epic 1 is enabler-heavy (10 stories).** Beyond the user-facing sign-in (1.1–1.4), it front-loads shared enablers consumed by later epics (1.5 self-authz, 1.6 StatusKind map, 1.7 SignalR, 1.8 domain components, 1.9 a11y gate, 1.10 deploy). This is the standard "foundation epic establishes shared platform" pattern and is explicitly acknowledged, but it concentrates the most non-user-facing work. _Recommendation: none required; the bundling is deliberate and each enabler has clear downstream consumers._
-
-4. **Story 1.10 (deploy) is borderline-technical.** Mitigated by carrying operator value ("app can ship") plus the production-KMS release gate; placing it as the foundation-epic closer is reasonable.
-
-### Best-Practices Compliance Checklist
-
-| Check | Result |
-|---|---|
-| Epic delivers user value | ✅ 5/5 |
-| Epic functions independently (backward deps only) | ✅ |
-| Stories appropriately sized | ✅ |
-| No forward dependencies | ✅ 1 documented, mitigated cross-epic coupling (1.4→4.2); 0 unmitigated |
-| Entities created when needed (no upfront-schema anti-pattern) | ✅ N/A (event-sourced) |
-| Clear, testable, error-inclusive ACs | ✅ Exemplary |
-| Traceability to FRs maintained | ✅ 100% |
-
-**Epic-quality verdict:** **Strong pass.** Zero critical/major structural defects. The decomposition is user-value-driven, dependency-clean (one consciously-mitigated cross-epic coupling), and the acceptance criteria are unusually rigorous — error paths, PII-safety, ARIA, and eventual-consistency invariants are first-class.
+**Step 5 verdict:** ✅ **High-quality epic/story structure.** Zero critical or major violations; 3 minor, all already understood or mitigated. The plan reflects a prior readiness course-correction (split 4.1/3.5, added phone-reflow AC, mock-fidelity rule) — evidence the standards were already applied once.
 
 ---
 
-## 6. Summary and Recommendations
+## 6. Summary and Recommendations (Step 6)
 
 ### Overall Readiness Status
 
 # ✅ READY
 
-The planning artifacts (requirements baseline, architecture, UX, epics, stories) are **internally consistent, complete, and implementation-ready.** Across six validation lenses there are **zero blocking defects.** Requirements coverage is 100% (9/9 FRs, 9/9 NFRs traced to epics *and* to real story files), UX is self-validated and three-way aligned with requirements and architecture, and the epic decomposition is user-value-driven with rigorous, error-inclusive acceptance criteria.
+The planning artifacts (de-facto PRD via `epics.md`, architecture, UX, epics, 30 stories) are **complete, internally consistent, and mutually aligned**. The 2026-06-21 15:36 edits that triggered this re-run (folding the 2026-06-16 deployment-hardening change into both architecture and epics) are **verified consistent** — the deploy-path contract (`nginx-public` Ingress, cert-manager Let's Encrypt TLS, `publish.ps1` preflight, 11→12 pods) now reads identically in `architecture.md §D10` and `epics.md` Story 1.10 / AR-D10.
 
-> **Important context — this is a retrospective validation.** The plan has **already been implemented**: all 30 stories exist as completed specs in `implementation-artifacts/`, all 5 epics have retrospectives (2026-06-10), and `project-overview.md` was updated post-Epic 5. This assessment therefore *confirms* that the planning baseline was implementation-ready (and was in fact executed), rather than gating un-started work. Treat it as a planning-quality audit and a baseline for any future change-impact analysis.
+> **Context caveat:** this project is **already implemented** — 30 story specs are written, all 5 epics have retrospectives, `sprint-status.yaml` and `test-summary.md` exist. This assessment therefore validated **planning-artifact completeness and post-edit alignment**, not a true pre-coding gate. "READY" here means the artifacts are coherent and safe to implement *or* continue against.
 
-### Findings Tally
+### Step-by-step scorecard
 
-| Severity | Count | Items |
+| Step | Area | Result |
 |---|---|---|
-| 🔴 Blocking | **0** | — |
-| 🟠 Critical (by-design / mitigated) | **1** | No standalone PRD — substituted by the complete FR/NFR catalog embedded in `epics.md`/`architecture.md` (acceptable for a brownfield service) |
-| 🟡 Minor | **4** | (1.4→4.2 documented forward-coupling, mitigated · Story 4.1 decision-spike, justified · Epic 1 enabler-heavy, deliberate · Story 1.10 deploy borderline-technical, gated) |
-| ⚪ Low / governed | **2** | UX mock-fidelity residuals (gated by Story 1.9 a11y gate) · Admin phone-reflow not mocked (covered by Story 2.3 AC) |
-
-**Total: 7 findings across 4 categories — none blocking.**
+| 1 | Document discovery | ✅ All types present; no duplicate-format conflicts; PRD substituted by `epics.md` (user-confirmed) |
+| 2 | PRD analysis | ✅ 9 FRs + 9 NFRs + full AR/UX-DR set; complete & numbered; cross-check clean |
+| 3 | Epic coverage | ✅ **100%** FR→story traceability; all 30 specs on disk; no gaps |
+| 4 | UX alignment | ✅ UX mature (all critical/high resolved); tight UX↔PRD↔Architecture fit; deploy re-alignment confirmed |
+| 5 | Epic quality | ✅ 0 critical / 0 major; 3 minor (mitigated) |
 
 ### Critical Issues Requiring Immediate Action
 
-**None.** No issue blocks implementation. The single "critical"-tagged item (absence of a formal PRD) is a deliberate brownfield choice with a fully adequate substitute already in place.
+**None.** No blocking issues were found in any step.
+
+### Issues found (all non-blocking) — by category
+
+**Structural (1, accepted):**
+- No standalone PRD artifact — by user direction, `epics.md` Requirements Inventory serves as the de-facto PRD. Acceptable for this brownfield project.
+
+**Epic quality — minor (3):**
+1. Story 1.4 full E2E happy-path verification depends on Story 4.2 (cross-epic) — disclosed & unit-testable in isolation; already mitigated.
+2. Epic 1 is enabler-heavy (10 stories) — legitimate foundation epic; noted for awareness.
+3. Story 4.2 is large but internally cohesive — could split (provisioning vs lifecycle).
+
+**UX / architecture residuals (3, tracked):**
+4. Mockup fidelity — mockups illustrative; spine wins; Story 1.9 a11y gate is the build-failing backstop.
+5. RCL status/freshness sharing boundary (architecture Gap #4 / Epic 1 retro) — an implementation-note tech-debt decision, not a discrete story.
+6. Documented deferrals — gateway data-subject self-principal, production KMS, Blazor Server scaling, FluentUI RC→GA.
 
 ### Recommended Next Steps
 
-1. **(Process improvement, non-blocking) Formally bless the requirements-of-record.** Either promote `epics.md` §"Requirements Inventory" to a thin standalone `prd.md`, or add a one-line front-matter note in `architecture.md`/`epics.md` declaring it the canonical FR/NFR source. This gives future change-impact analysis an *independent* baseline and removes the mild baseline-equals-decomposition circularity noted in Step 3. Low effort, high long-term value.
-2. **Keep the Story 1.9 accessibility gate green.** It is the load-bearing backstop that neutralizes every UX mock-fidelity residual (unlabeled typed-confirm, non-semantic toggle, default-On marketing, sub-13px microcopy). Do not let it regress or be skipped.
-3. **Track the two named external prerequisites to closure** (both already captured as gates, not features): **production KMS** before any real EU PII (Story 1.10 release gate / AR-Gap-KMS), and **cross-submodule approval for the D7 EventStore contract** (Story 3.5, predecessor to 3.6). Confirm their real-world status in the next sprint review.
-4. **(Hygiene) Reconcile the prior readiness reports.** Two earlier reports exist (`2026-06-09`, `-v2`); this `2026-06-21` report supersedes them — consider archiving the older two to avoid future ambiguity about which is current.
+1. **No remediation required to proceed.** Implementation may continue against the aligned artifacts as-is.
+2. **Re-sync `sprint-status.yaml` / story specs to the 15:36 deploy-path edits** — confirm Story 1.10's spec (`1-10-...md`, last modified 2026-06-10) reflects the `nginx-public` + Let's Encrypt + preflight ACs now in epics.md, since the epics were tightened *after* the story spec was written. (The only place the re-run's edits could have left a downstream artifact stale.)
+3. **Convert residual #5 (RCL status/freshness boundary) into a tracked tech-debt item** if AdminPortal/ConsumerPortal pages will consume host-owned primitives directly — avoid an RCL→host reference.
+4. **Keep the production-KMS gate visible** as a release blocker before any real EU PII (Story 1.10 already gates it; `LocalDevKeyStorageBackend` is dev-only).
 
 ### Final Note
 
-This assessment identified **7 findings across 4 categories — 0 blocking, 1 by-design critical (mitigated), 4 minor, 2 low/governed.** The artifacts are implementation-ready as-is; the recommendations above are improvements and prerequisite-tracking, not gates. The planning quality here is notably high: complete traceability, a self-validated UX spine, an architecture that self-assesses its own readiness, and acceptance criteria that bake in PII-safety, accessibility, and eventual-consistency invariants from the first story.
+This assessment identified **0 critical** and **0 major** issues, plus **7 minor/residual items** across 3 categories — none blocking. The planning set is well-structured, fully traceable, and the post-edit deploy-path alignment that prompted the re-run holds. The single most valuable follow-up is verifying the Story 1.10 *spec file* matches the newly tightened epics deploy ACs (recommendation #2); everything else is awareness/tech-debt. You may proceed to (or continue) implementation as-is.
 
 ---
 
-**Assessment date:** 2026-06-21
-**Assessor:** Implementation Readiness workflow (PM lens) — Administrator
-**Artifacts assessed:** `epics.md` (baseline), `architecture.md` (+ ADR), `ux-parties-2026-06-09/`, 30 story specs, `project-overview.md`
-**Verdict:** ✅ READY — proceed (already implemented; treat as planning-quality audit + change-impact baseline)
+**Assessor:** Implementation Readiness workflow (BMAD) · acting PM
+**Date:** 2026-06-21
+**Prior report:** archived → `archive/implementation-readiness-report-2026-06-21-1506.md`

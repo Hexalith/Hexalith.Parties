@@ -255,6 +255,7 @@ public class PartyAggregateRestrictionTests {
             nameof(MarkPartyEncryptionKeyDeleted),
             nameof(MarkErasureVerified),
             nameof(CompletePartyErasure),
+            nameof(CancelPartyErasure),
         ];
 
         // Get all Handle methods from PartyAggregate

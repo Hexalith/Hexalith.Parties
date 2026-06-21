@@ -691,6 +691,7 @@ public sealed class PartyPayloadProtectionServiceTests
             [typeof(PartyEncryptionKeyDeleted)] = false,
             [typeof(PartyEncryptionKeyRotated)] = false,
             [typeof(ErasePartyRequested)] = false,
+            [typeof(PartyErasureCancelled)] = false,
             [typeof(PartyErased)] = false,
             [typeof(ProcessingRestricted)] = false,
             [typeof(RestrictionLifted)] = false,
@@ -801,6 +802,10 @@ public sealed class PartyPayloadProtectionServiceTests
             [typeof(ErasePartyRequested)] = new ErasePartyRequested
             {
                 PartyId = "p1", TenantId = "t1", RequestedAt = DateTimeOffset.UtcNow, RequestedBy = "admin",
+            },
+            [typeof(PartyErasureCancelled)] = new PartyErasureCancelled
+            {
+                PartyId = "p1", TenantId = "t1", CancelledAt = DateTimeOffset.UtcNow, CancelledBy = "admin",
             },
             [typeof(PartyErased)] = new PartyErased
             {

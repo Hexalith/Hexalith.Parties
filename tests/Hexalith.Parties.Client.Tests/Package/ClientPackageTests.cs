@@ -47,7 +47,10 @@ public sealed class ClientPackageTests : IDisposable
         [
             "Hexalith.EventStore.Contracts",
             "Hexalith.Parties.Contracts",
+            "Microsoft.Extensions.Configuration",
+            "Microsoft.Extensions.Configuration.Binder",
             "Microsoft.Extensions.Http",
+            "Microsoft.Extensions.Logging.Abstractions",
             "Microsoft.Extensions.Options",
         ]);
 
