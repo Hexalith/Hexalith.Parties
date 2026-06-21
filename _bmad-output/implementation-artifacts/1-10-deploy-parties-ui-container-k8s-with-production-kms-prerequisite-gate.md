@@ -26,9 +26,11 @@ This story completes the deployment surface for the already-created Blazor Serve
 
 4. **AC4 - Published OIDC configuration is secret-safe and operator-managed.** Given publish mode uses the external `tache` realm, when generated `parties-ui` manifests are patched, then nonsecret OIDC values (`Authentication__OpenIdConnect__Authority`, `ClientId`, `Audience`) remain environment/config values, but the client secret is sourced from an operator-managed Kubernetes Secret via `secretKeyRef`; no client secret, token, bearer value, docker auth, signing key, or PII-like payload is committed under `deploy/`.
 
-5. **AC5 - Public UI ingress exposes `parties-ui` only as a browser surface.** Given `deploy/k8s/ingress.yaml`, when static validation runs, then `parties.hexalith.com` routes `/` with `Prefix` path type to `service/parties-ui:8080`, `hexalith-pages-tls` includes the host, and public ingress still rejects backend/internal services. Existing `eventstore.hexalith.com` and `sample.hexalith.com` routes remain valid.
+5. **AC5 - Public UI ingress exposes `parties-ui` only as a browser surface.** Given `deploy/k8s/ingress.yaml`, when static validation runs, then `parties.hexalith.com` routes `/` with `Prefix` path type to `service/parties-ui:8080`, the `nginx-public` Ingress class is used, `hexalith-pages-letsencrypt-tls` includes the host, and public ingress still rejects backend/internal services. Existing `eventstore.hexalith.com` and `sample.hexalith.com` routes remain valid.
 
 6. **AC6 - Deploy validation and docs reflect the 12-pod contract and KMS gate.** Given `DeployValidation.Tests`, docs, and runbooks are updated, when local deploy validation runs, then generated-folder, image tag, Dapr/non-Dapr, ingress, probe, image-pull-secret, and credential-leak tests include `parties-ui`. Documentation states that production KMS/secret-store replacement for `LocalDevKeyStorageBackend` is a release prerequisite before any real EU PII is processed; until then, only synthetic data is acceptable.
+
+7. **AC7 - `publish.ps1` preflights the `nginx-public` / Let's Encrypt deploy path and fails closed.** _(Added 2026-06-21 to fold back the 2026-06-16 deployment-hardening change; mirrors `epics.md` Story 1.10.)_ Given the live Kubernetes cluster, when `deploy/k8s/publish.ps1` runs, then it preflights the **`nginx-public`** Ingress class (`$IngressClassName`), the Zot registry Ingress (`registry.hexalith.com/` → `Service/zot:5000`, `ClusterIP`, no NodePort), and both cert-manager **Let's Encrypt** TLS Secrets (`hexalith-pages-letsencrypt-tls` for the UI pages, `registry-hexalith-letsencrypt-tls` for the registry), and **fails before image build/apply** if any is missing — there is **no local / host-level nginx bridge fallback**. Already implemented and covered by `OperatorScriptValidationTests` / `K8sManifestGenerationTests`.
 
 ## Tasks / Subtasks
 
@@ -82,7 +84,7 @@ This story completes the deployment surface for the already-created Blazor Serve
 
 - [x] **Task 8 - Publish `parties-ui` through the browser-only ingress** (`deploy/k8s/ingress.yaml`, `deploy/validate-deployment.ps1`) (AC5)
   - [x] Add host `parties.hexalith.com` routing `/` with `Prefix` path type to `service/parties-ui` port `8080`.
-  - [x] Add `parties.hexalith.com` to the `hexalith-pages-tls` host list.
+  - [x] Add `parties.hexalith.com` to the `hexalith-pages-letsencrypt-tls` host list.
   - [x] Update `$PublicIngressAllowedServices` and required route validation to include `parties-ui`.
   - [x] Keep backend services (`eventstore`, `eventstore-admin`, `parties`, `tenants`, `sample`, `memories`, Dapr sidecars, Redis, FalkorDB) non-public.
 
@@ -99,7 +101,7 @@ This story completes the deployment surface for the already-created Blazor Serve
 - [x] **Task 10 - Update operator documentation for the 12-pod topology** (`docs/kubernetes-deployment-architecture.md`, `deploy/k8s/README.md`, `docs/getting-started.md`, `docs/deployment-guide.md`) (AC3, AC5, AC6)
   - [x] Change 11-pod language to 12-pod language and add `parties-ui` to workload tables/lists.
   - [x] Document that `parties-ui` is a browser UI/BFF workload, no Dapr sidecar, calling EventStore/SignalR over in-cluster HTTP.
-  - [x] Document `parties.hexalith.com` as a browser UI host with TLS via `hexalith-pages-tls`.
+  - [x] Document `parties.hexalith.com` as a browser UI host with TLS via `hexalith-pages-letsencrypt-tls` (cert-manager Let's Encrypt).
   - [x] Update publish-flow descriptions from nine generated application service folders/images to ten, while preserving Redis/FalkorDB carve-out language.
   - [x] Update operator-managed Secret docs to include the `parties-ui` OIDC client-secret Secret contract and verification commands that print only names/types.
 

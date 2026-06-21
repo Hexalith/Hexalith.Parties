@@ -1,8 +1,23 @@
+---
+project_name: parties
+user_name: Administrator
+date: 2026-06-12
+scope_classification: Minor
+status: implemented
+implementation_verified: 2026-06-21
+verification_evidence: >-
+  No `http://auth.tache.ai:8080` authority/issuer remains under deploy/ or AppHost;
+  `https://auth.tache.ai/realms/tache` is used in deploy/k8s/eventstore-admin-ui/kustomization.yaml,
+  AppHost Program.cs (PublishModeJwtIssuer), and publish.ps1 ($TacheIssuer); the eventstore-admin-ui
+  deployment carries no auth.tache.ai hostAlias.
+---
+
 # Sprint Change Proposal: eventstore-admin-ui Keycloak HTTPS Authority
 
 Date: 2026-06-12
 Project: parties
 Scope classification: Minor
+Status: implemented (verified 2026-06-21)
 
 ## 1. Issue Summary
 
