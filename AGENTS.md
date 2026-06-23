@@ -5,6 +5,9 @@
 Before starting any work in this repository, read and follow
 [`Hexalith.AI.Tools/hexalith-llm-instructions.md`](./Hexalith.AI.Tools/hexalith-llm-instructions.md).
 
+Before working on any module user interface or UX, also read and follow
+[`Hexalith.AI.Tools/hexalith-ux-instructions.md`](./Hexalith.AI.Tools/hexalith-ux-instructions.md).
+
 ## Git Submodules
 
 - Never initialize or update nested submodules recursively unless the user
