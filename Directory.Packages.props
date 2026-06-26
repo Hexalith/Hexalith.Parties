@@ -50,7 +50,7 @@
              JwtBearer 10.0.8's transitive 8.14.0 conflicts with EventStore.dll's 8.19.0 (MSB3277). -->
         <PackageVersion Include="Microsoft.IdentityModel.Tokens" Version="8.19.1" />
         <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="10.0.9" />
-        <PackageVersion Include="Swashbuckle.AspNetCore.SwaggerUI" Version="10.2.2" />
+        <PackageVersion Include="Swashbuckle.AspNetCore.SwaggerUI" Version="10.2.3" />
         <PackageVersion Include="FluentValidation" Version="12.1.1" />
         <PackageVersion Include="FluentValidation.DependencyInjectionExtensions" Version="12.1.1" />
     </ItemGroup>
