@@ -36,7 +36,8 @@ public sealed class AppHostTenantsTopologyTests
         resources["parties"].ShouldBe("Projects.Hexalith_Parties");
         resources["tenants"].ShouldBe("Projects.Hexalith_Tenants");
         resources["parties-mcp"].ShouldBe("Projects.Hexalith_Parties_Mcp");
-        program.ShouldContain(@"AddKeycloak(""keycloak"", 8180)");
+        program.ShouldContain("AddHexalithEventStoreSecurity()");
+        program.ShouldNotContain(@"AddKeycloak(""keycloak"", 8180)");
         program.ShouldMatch(@"adminUI\s*=\s*builder\.AddProject<Projects\.Hexalith_EventStore_Admin_UI>\(""eventstore-admin-ui""\)\s*\.WithExplicitStart\(\)");
         program.ShouldContain("AddHexalithEventStore");
         program.ShouldNotContain("AddHexalithParties(");
@@ -93,7 +94,7 @@ public sealed class AppHostTenantsTopologyTests
     }
 
     [Fact]
-    public void AppHostProgramWiresKeycloakToEventStoreAdminPartiesAndTenants()
+    public void AppHostProgramWiresSecurityToEventStoreAdminPartiesMcpUiAndTenants()
     {
         string program = ReadAppHostProgram();
         string legacyTacheIssuer = "http://auth." + "tache.ai:8080/realms/tache";
@@ -115,11 +116,13 @@ public sealed class AppHostTenantsTopologyTests
         program.ShouldContain("WithJwtAuthentication(tenants, realmUrl, publishModeAuthority, builder.ExecutionContext.IsPublishMode ? PublishModeJwtIssuer : null)");
         program.ShouldContain(@"WithEnvironment(""Authentication__JwtBearer__Audience"", ""hexalith-eventstore"")");
         program.ShouldContain(@"WithEnvironment(""Authentication__JwtBearer__Audience"", ""hexalith-parties"")");
-        program.ShouldContain("eventStore.WithReference(keycloak)");
-        program.ShouldContain("adminServer.WithReference(keycloak)");
-        program.ShouldContain("parties.WithReference(keycloak)");
-        program.ShouldContain("tenants.WithReference(keycloak)");
-        program.ShouldContain("adminUI.WithReference(keycloak)");
+        program.ShouldContain("eventStore.WithSecurityDependency(security)");
+        program.ShouldContain("adminServer.WithSecurityDependency(security)");
+        program.ShouldContain("parties.WithSecurityDependency(security)");
+        program.ShouldContain("partiesMcp.WithSecurityDependency(security)");
+        program.ShouldContain("tenants.WithSecurityDependency(security)");
+        program.ShouldContain("adminUI.WithSecurityDependency(security)");
+        program.ShouldContain("partiesUi.WithSecurityDependency(security)");
         Regex adminUiBaseUrl = new(@"adminUI[\s\S]*?WithEnvironment\(""EventStore__AdminServer__BaseUrl"",\s*ReferenceExpression\.Create\(\$""\{adminServer\.GetEndpoint\(""http""\)\}""\)\)");
         adminUiBaseUrl.Matches(program).Count.ShouldBe(
             1,

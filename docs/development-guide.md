@@ -47,7 +47,7 @@ See [build-gate.md](build-gate.md) for the policy and escape valves (narrow `<No
 dotnet aspire run --project src/Hexalith.Parties.AppHost
 ```
 
-Open the Aspire dashboard URL and confirm `eventstore`, `eventstore-admin`, `parties`, `parties-ui`, `tenants`, `redis`, the DAPR sidecars, `statestore`, and `pubsub` are healthy. `eventstore-admin-ui` and `parties-mcp` are **explicit-start** — start them from the dashboard when needed. AppHost http profile: `http://localhost:15100` (OTLP `21100`).
+Open the Aspire dashboard URL and confirm `security`, `eventstore`, `eventstore-admin`, `parties`, `parties-ui`, `tenants`, `redis`, the DAPR sidecars, `statestore`, and `pubsub` are healthy. `eventstore-admin-ui` and `parties-mcp` are **explicit-start** — start them from the dashboard when needed. AppHost http profile: `http://localhost:15100` (OTLP `21100`).
 
 Treat the system as usable only after `eventstore`, `parties`, and `tenants` are healthy (public traffic enters through EventStore). Health endpoints per service: `/ready`, `/health`, `/alive`.
 
@@ -57,7 +57,7 @@ Treat the system as usable only after `eventstore`, `parties`, and `tenants` are
 |------|--------|
 | `EnableMemoriesSearch=true` | composes the `memories` service + injects `Parties__MemoriesSearch__Enabled=true` (requires the Memories submodule) |
 | `EnableEventStoreSampleUi=true` | composes `sample` + `sample-blazor-ui` |
-| `EnableKeycloak` | local Keycloak IdP (default true in run mode; publish uses the external `tache` realm) |
+| `EnableKeycloak` | local Keycloak-backed `security` resource (default true in run mode; publish uses the external `tache` realm) |
 | `PartiesAccessibilitySpecimen:Enabled=true` | exposes the `parties-ui` deterministic accessibility specimen in Development/Test |
 | `PUBLISH_TARGET` | `docker` / `k8s` / `aca` for Aspire-native publish (orthogonal to the aspirate deploy path) |
 

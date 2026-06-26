@@ -22,7 +22,7 @@ This story completes the deployment surface for the already-created Blazor Serve
 
 2. **AC2 - UI host uses shared ServiceDefaults health and telemetry.** Given `parties-ui` boots locally or in Kubernetes, when `/health`, `/ready`, or `/alive` is requested, then endpoints are provided by `Hexalith.Parties.ServiceDefaults`; OpenTelemetry/logging/service-discovery defaults are reused; no bespoke health endpoint is created.
 
-3. **AC3 - AppHost and publish topology include a non-Dapr `parties-ui` workload.** Given `deploy/k8s/publish.ps1` runs, when aspirate generates manifests, then `parties-ui` is part of the generated service-folder set, image manifest verification, host-alias patching, health-probe patching, imagePullSecret patching, rollout restart, and readiness wait; `deploy/k8s/kustomization.yaml` includes `parties-ui`; the topology grows from 11 to 12 Parties-owned pods. `parties-ui` must remain a no-Dapr-sidecar BFF over HTTP/SignalR.
+3. **AC3 - AppHost and publish topology include a non-Dapr `parties-ui` workload.** Given `deploy/k8s/publish.ps1` runs, when aspirate generates manifests, then `parties-ui` is part of the generated service-folder set, image manifest verification, host-alias patching, health-probe patching, imagePullSecret patching, rollout restart, and readiness wait; `deploy/k8s/kustomization.yaml` includes `parties-ui`; the topology grows from 11 to 12 Parties-owned pods. `parties-ui` must remain a no-Dapr-sidecar BFF over HTTP/SignalR. Run-mode local security is initialized through `HexalithEventStoreSecurityExtensions.AddHexalithEventStoreSecurity()` rather than a hand-built `AddKeycloak(...)` block; publish mode continues to use the external `tache` realm.
 
 4. **AC4 - Published OIDC configuration is secret-safe and operator-managed.** Given publish mode uses the external `tache` realm, when generated `parties-ui` manifests are patched, then nonsecret OIDC values (`Authentication__OpenIdConnect__Authority`, `ClientId`, `Audience`) remain environment/config values, but the client secret is sourced from an operator-managed Kubernetes Secret via `secretKeyRef`; no client secret, token, bearer value, docker auth, signing key, or PII-like payload is committed under `deploy/`.
 
@@ -59,6 +59,7 @@ This story completes the deployment surface for the already-created Blazor Serve
   - [x] Keep `EventStore__SignalR__HubUrl` pointed at the EventStore projection hub.
   - [x] Keep `parties-ui` out of `WithDaprSidecar(...)`.
   - [x] In publish mode, keep nonsecret OIDC config values for the `tache` realm and avoid committing a literal production client secret.
+  - [x] 2026-06-26 correction: initialize the run-mode local Keycloak-backed `security` resource through `builder.AddHexalithEventStoreSecurity()` and use `WithSecurityDependency(security)` for dependent services, while preserving publish-mode `tache` wiring and custom receiver audiences.
 
 - [x] **Task 5 - Extend `deploy/k8s/publish.ps1` to own `parties-ui` generation** (AC3, AC4)
   - [x] Add `parties-ui` to `$GeneratedServiceFolders`.
@@ -141,7 +142,7 @@ This story completes the deployment surface for the already-created Blazor Serve
 
 - Reuse the existing `Hexalith.Parties.UI` Blazor Server host; do not create a second UI host.
 - Reuse `Hexalith.Parties.ServiceDefaults` for OpenTelemetry, JSON console logging, service discovery, resilience, and `/health`/`/alive`/`/ready`; do not create new health middleware.
-- Reuse the existing AppHost `parties-ui` resource. It already references `eventstore` and `tenants`, waits for them, injects `EventStore__SignalR__HubUrl`, and wires run/publish OIDC values.
+- Reuse the existing AppHost `parties-ui` resource. It already references `eventstore` and `tenants`, waits for them, injects `EventStore__SignalR__HubUrl`, wires run/publish OIDC values, and initializes run-mode local security through `HexalithEventStoreSecurityExtensions.AddHexalithEventStoreSecurity()`.
 - Reuse the existing `deploy/k8s/publish.ps1` phases and arrays instead of creating a second deployment script.
 - Reuse `deploy/validate-deployment.ps1` and `DeployValidation.Tests` as the guardrails for generated manifests, public ingress, secrets, probes, image tags, and Dapr annotations.
 - Reuse Story 1.9 UI/e2e gates; deploy changes must not bypass the accessibility gate or alter the specimen route semantics.
@@ -152,7 +153,7 @@ This story completes the deployment surface for the already-created Blazor Serve
 |---|---|---|---|
 | `src/Hexalith.Parties.UI/Hexalith.Parties.UI.csproj` | Web SDK host, publishable, no container metadata, no `ServiceDefaults` reference. | Add SDK container metadata and `ServiceDefaults` project reference. | CPM/no `Version=`, HFC1001 `NoWarn`, existing FrontComposer/EventStore refs. |
 | `src/Hexalith.Parties.UI/Program.cs` | FrontComposer/Fluent/OIDC/claims/self-scope/freshness wiring; no `AddServiceDefaults` or `MapDefaultEndpoints`. | Add shared service defaults and health endpoint mapping. | OIDC server-side token pattern, auth policies, route/component mapping, `ValidateScopes=true`. |
-| `src/Hexalith.Parties.AppHost/Program.cs` | `parties-ui` resource already exists, no Dapr sidecar, references `eventstore`/`tenants`, OIDC run/publish env wiring. | Keep shape; adjust only if needed for secret-safe publish config. | No `WithDaprSidecar` for `parties-ui`; no public actor-host APIs. |
+| `src/Hexalith.Parties.AppHost/Program.cs` | `parties-ui` resource already exists, no Dapr sidecar, references `eventstore`/`tenants`, OIDC run/publish env wiring, run-mode local security via `AddHexalithEventStoreSecurity()`. | Keep shape; adjust only if needed for secret-safe publish config or platform security-helper alignment. | No `WithDaprSidecar` for `parties-ui`; no public actor-host APIs; publish mode stays on external `tache`. |
 | `deploy/k8s/publish.ps1` | Owns nine generated folders plus Redis/FalkorDB carve-outs; patches Dapr, host aliases, UI credentials, probes, pull secrets, Zot verification. | Include `parties-ui` in generated workload flow and add secret-safe OIDC client-secret handling. | Existing exit codes, `-ConfirmContext`, bounded output, redaction, Dapr targets, carve-out preservation. |
 | `deploy/validate-deployment.ps1` | Validates current Dapr app sets, client-only UI sets, public routes, probes, image tags, secrets. | Include `parties-ui` as an allowed public UI route and non-Dapr workload. | Context-free/read-only behavior; no `kubectl`, no `-ConfirmContext`, JSON schema v1. |
 | `deploy/k8s/kustomization.yaml` | Lists nine generated services plus Redis/FalkorDB and ingress. | Add `parties-ui`. | Namespace and carve-outs. |
@@ -304,6 +305,7 @@ GPT-5 Codex
 - Updated operator docs and runbooks for 12 pods, `parties-ui` ingress, synthetic-data-only KMS gate, and `LocalDevKeyStorageBackend` production prohibition.
 - Senior review fixed two deployment-security/documentation gaps: `publish.ps1` now validates the `parties-ui` OIDC Secret key by emitting only a presence marker instead of capturing the base64 Secret value, and the validator now catches raw credential values adjacent to `secretKeyRef` blocks using indentation-aware context.
 - Senior review fixed stale topology summaries in `docs/index.md` and `docs/architecture.md` so durable docs consistently describe the 12-pod topology and non-Dapr `parties-ui` workload.
+- 2026-06-26 corrective update: aligned Parties AppHost run-mode local security initialization with `HexalithEventStoreSecurityExtensions.AddHexalithEventStoreSecurity()`, replacing direct `AddKeycloak(...)` setup while preserving publish-mode `tache`, custom JWT receiver audiences, and `parties-ui` as a no-Dapr OIDC BFF.
 - Verification was not complete in the first sandbox: restore-enabled exact build commands were blocked by NuGet audit network access, and Playwright a11y was blocked by socket binding denial.
 - Verification re-run (2026-06-10, second sandbox): the three restore-enabled Release builds, the direct xUnit runs (82 deploy-validation + 249 UI, 0 failed), the no-warning-override guard, both `validate-deployment.ps1` modes, and e2e `npm ci`/`npm run typecheck` all PASS. The implementation (Tasks 1–11) is therefore verified through clean builds, the deploy-validation suite (parties-ui generated-folder/non-Dapr/ingress/probe/image-tag/secret-ref contracts), the static validators, and the UI test suite.
 - The only verification not fully green here is the interactive Playwright a11y gate: 2/6 specs pass (incl. the blocking-axe specimen gate in real Chromium), 4 interactive specs fail solely because the Blazor Web framework script `_framework/blazor.web.js` is served as 0 bytes in this sandbox (interactive circuit cannot start). This is an environment/hosting limitation, not a Story 1.10 regression — 1.10 adds only `AddServiceDefaults()` + `MapDefaultEndpoints()` and touches no UI rendering. Component-level a11y is covered by the green `PartiesAccessibilitySpecimenTests`/`MainLayoutAccessibilityTests`/`AccessibilityStyleGuardTests` bUnit tests. The `ui-a11y` CI job (ubuntu-latest, Node 24) should confirm the interactive gate.
@@ -326,8 +328,14 @@ GPT-5 Codex
 - `docs/deployment-guide.md`
 - `docs/deployment-security-checklist.md`
 - `docs/getting-started.md`
+- `docs/development-guide.md`
+- `README.md`
 - `docs/index.md`
 - `docs/kubernetes-deployment-architecture.md`
+- `_bmad-output/planning-artifacts/architecture.md`
+- `_bmad-output/planning-artifacts/epics.md`
+- `_bmad-output/planning-artifacts/sprint-change-proposal-2026-06-26.md`
+- `src/Hexalith.Parties.AppHost/Program.cs`
 - `src/Hexalith.Parties.UI/Hexalith.Parties.UI.csproj`
 - `src/Hexalith.Parties.UI/Program.cs`
 - `tests/Hexalith.Parties.DeployValidation.Tests/Fixtures/lint-near-miss/deploy/k8s/ingress.yaml`
@@ -337,6 +345,7 @@ GPT-5 Codex
 - `tests/Hexalith.Parties.DeployValidation.Tests/OperatorScriptValidationTests.cs`
 - `tests/Hexalith.Parties.DeployValidation.Tests/ValidateDeploymentLintFitnessTests.cs`
 - `tests/Hexalith.Parties.DeployValidation.Tests/ValidateDeploymentLintToolingTests.cs`
+- `tests/Hexalith.Parties.Tests/FitnessTests/AppHostTenantsTopologyTests.cs`
 
 ### Senior Developer Review (AI)
 
@@ -349,6 +358,15 @@ Findings fixed:
 - HIGH: `deploy/k8s/publish.ps1` validated `hexalith-parties-ui-oidc-client/client-secret` by capturing the Secret data value through `jsonpath={.data...}`. This violated the story's name/key-only validation rule. Fixed by using a `go-template` presence marker and added source-level regression coverage in `K8sManifestPublishTests`.
 - HIGH: `deploy/validate-deployment.ps1` could skip a raw credential value placed near a previous `secretKeyRef` because the scanner used a fixed six-line `valueFrom` lookback. Fixed with indentation-aware `valueFrom` detection and added `deployment-secretref-near-secret.yaml` regression coverage in `ValidateDeploymentLintToolingTests`.
 - MEDIUM: `docs/index.md` and `docs/architecture.md` still described the production topology as 11 pods, while Story 1.10 requires 12 pods including non-Dapr `parties-ui`. Fixed both summaries and added the files to this story's File List.
+
+Corrective validation on 2026-06-26:
+
+- `dotnet build src/Hexalith.Parties.AppHost -c Release -m:1` PASS, 0 warnings.
+- `dotnet build tests/Hexalith.Parties.Tests -c Release -m:1` PASS with existing `MSB3277` `StackExchange.Redis` version-conflict warning from EventStore/test references.
+- `dotnet build tests/Hexalith.Parties.IntegrationTests -c Release -m:1` PASS, 0 warnings.
+- `tests/Hexalith.Parties.Tests/bin/Release/net10.0/Hexalith.Parties.Tests -class Hexalith.Parties.Tests.FitnessTests.AppHostTenantsTopologyTests` PASS: 16 total, 0 failed.
+- `tests/Hexalith.Parties.IntegrationTests/bin/Release/net10.0/Hexalith.Parties.IntegrationTests -class Hexalith.Parties.IntegrationTests.Topology.PartiesUiTopologyTests` PASS: 2 total, 0 failed.
+- `bash scripts/check-no-warning-override.sh` PASS.
 
 Validation:
 
@@ -365,3 +383,4 @@ Validation:
 - 2026-06-10 (verification re-run): Completed Task 12 builds (3× Release, 0/0), re-confirmed xUnit suites (82 deploy + 249 UI, 0 failed), no-warning-override guard, both `validate-deployment.ps1` modes, and e2e `npm ci`/`npm run typecheck` — all PASS. Interactive Playwright a11y remains environment-blocked (`_framework/blazor.web.js` served as 0 bytes → no Blazor interactivity in this sandbox); the SSR blocking-axe gate passes and component-level a11y bUnit tests are green. Deferred the interactive a11y gate to the `ui-a11y` CI job.
 - 2026-06-10: Task 12 marked complete and Status advanced `in-progress` → `review` (sprint-status synced). Interactive Playwright a11y gate deferred to the `ui-a11y` CI job per dev decision; all other verification green.
 - 2026-06-10: Senior Developer Review fixed Secret validation leakage risk, validator secret-scanner false negative, and stale 11-pod documentation summaries. Deploy-validation build/tests, static validator human/JSON modes, and warning-override guard pass. Status advanced `review` → `done` (sprint-status synced).
+- 2026-06-26: Corrective AppHost security alignment approved and implemented. Replaced hand-built run-mode Keycloak setup with `AddHexalithEventStoreSecurity()`, updated AppHost fitness tests and local docs for the `security` resource, and left story status `done`.

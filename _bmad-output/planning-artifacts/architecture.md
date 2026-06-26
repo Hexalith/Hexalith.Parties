@@ -381,8 +381,9 @@ wiring + the FrontComposer quickstart chain) should be the **first implementatio
 ### Infrastructure & Deployment
 
 - **D10 — Aspire:** add `builder.AddProject<Projects.Hexalith_Parties_UI>("parties-ui")`
-  referencing `eventstore` (gateway) + `tenants`, with OIDC config (Keycloak run /
-  `tache` publish). **No DAPR sidecar** — the UI is a BFF over HTTP + SignalR, like
+  referencing `eventstore` (gateway) + `tenants`, with OIDC config (local Keycloak-backed
+  `security` resource initialized by `HexalithEventStoreSecurityExtensions.AddHexalithEventStoreSecurity()` in run mode /
+  external `tache` realm in publish mode). **No DAPR sidecar** — the UI is a BFF over HTTP + SignalR, like
   `parties-mcp` / `eventstore-admin-ui`.
 - **Containers/K8s:** .NET SDK container support (no Dockerfile),
   `EnableContainer=true` + `ContainerRepository=parties-ui`; aspirate publish grows the

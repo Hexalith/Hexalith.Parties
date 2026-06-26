@@ -222,30 +222,20 @@ if (builder.ExecutionContext.IsPublishMode
         .WithEnvironment("EventStore__Authentication__Permissions__1", "query:read");
 }
 
-bool enableKeycloak = !bool.TryParse(builder.Configuration["EnableKeycloak"], out bool parsed) || parsed;
-IResourceBuilder<KeycloakResource>? keycloak = null;
-ReferenceExpression? realmUrl = null;
-if (enableKeycloak)
-{
-    if (builder.ExecutionContext.IsRunMode)
-    {
-        keycloak = builder.AddKeycloak("keycloak", 8180)
-            .WithRealmImport("./KeycloakRealms");
+HexalithEventStoreSecurityResources? security = builder.ExecutionContext.IsRunMode
+    ? builder.AddHexalithEventStoreSecurity()
+    : null;
+ReferenceExpression? realmUrl = security?.RealmUrl;
 
-        EndpointReference keycloakEndpoint = keycloak.GetEndpoint("http");
-        realmUrl = ReferenceExpression.Create($"{keycloakEndpoint}/realms/hexalith");
-    }
-}
-
-if (keycloak is not null)
+if (security is not null)
 {
-    _ = eventStore.WithReference(keycloak).WaitFor(keycloak);
-    _ = adminServer.WithReference(keycloak).WaitFor(keycloak);
-    _ = parties.WithReference(keycloak).WaitFor(keycloak);
-    _ = partiesMcp.WithReference(keycloak).WaitFor(keycloak);
-    _ = tenants.WithReference(keycloak).WaitFor(keycloak);
-    _ = adminUI.WithReference(keycloak).WaitFor(keycloak);
-    _ = partiesUi.WithReference(keycloak).WaitFor(keycloak);
+    _ = eventStore.WithSecurityDependency(security);
+    _ = adminServer.WithSecurityDependency(security);
+    _ = parties.WithSecurityDependency(security);
+    _ = partiesMcp.WithSecurityDependency(security);
+    _ = tenants.WithSecurityDependency(security);
+    _ = adminUI.WithSecurityDependency(security);
+    _ = partiesUi.WithSecurityDependency(security);
 }
 
 string? publishModeAuthority = builder.ExecutionContext.IsPublishMode
@@ -322,8 +312,8 @@ else
 // parties-ui is an OIDC relying party (Story 1.2 / AR-D5): authorization-code sign-in into a
 // server-side cookie session — NOT a JWT bearer resource server, so it uses
 // Authentication__OpenIdConnect__* and is deliberately NOT routed through WithJwtAuthentication.
-// Mirrors the adminUI realm/publish conditional above; parties-ui references and waits for keycloak
-// in the `if (keycloak is not null)` block.
+// Mirrors the adminUI realm/publish conditional above; parties-ui references and waits for the
+// local security resource when AddHexalithEventStoreSecurity returns one.
 if (realmUrl is not null)
 {
     // Run mode: interactive sign-in against the local dev Keycloak. The dev-only client secret

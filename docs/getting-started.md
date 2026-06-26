@@ -51,6 +51,7 @@ dotnet aspire run --project src/Hexalith.Parties.AppHost
 
 Open the Aspire dashboard URL printed by the command and verify these resources are running:
 
+- `security` - local Keycloak-backed security service for run-mode OIDC/JWT testing
 - `eventstore` - public command/query gateway
 - `eventstore-admin` - admin server used by the EventStore Admin UI
 - `parties` - Parties domain actor/projection host behind EventStore
@@ -177,11 +178,11 @@ $env:EVENTSTORE_URL = "https://localhost:<eventstore-port>"
 $env:TENANT_ID = "tenant-a"
 ```
 
-Fetch a bearer token from the local Keycloak realm. Replace `<keycloak-port>`, `<client-id>`, and `<client-secret>` with the values shown for the `keycloak` resource in the Aspire dashboard:
+Fetch a bearer token from the local Keycloak realm. Replace `<security-port>`, `<client-id>`, and `<client-secret>` with the values shown for the `security` resource in the Aspire dashboard:
 
 ```bash
 export TOKEN=$(curl -s -X POST \
-  "https://localhost:<keycloak-port>/realms/hexalith/protocol/openid-connect/token" \
+  "https://localhost:<security-port>/realms/hexalith/protocol/openid-connect/token" \
   -H "Content-Type: application/x-www-form-urlencoded" \
   -d "grant_type=client_credentials" \
   -d "client_id=<client-id>" \
@@ -191,7 +192,7 @@ export TOKEN=$(curl -s -X POST \
 
 ```powershell
 $tokenResponse = Invoke-RestMethod -Method Post `
-  -Uri "https://localhost:<keycloak-port>/realms/hexalith/protocol/openid-connect/token" `
+  -Uri "https://localhost:<security-port>/realms/hexalith/protocol/openid-connect/token" `
   -ContentType "application/x-www-form-urlencoded" `
   -Body @{
     grant_type    = "client_credentials"

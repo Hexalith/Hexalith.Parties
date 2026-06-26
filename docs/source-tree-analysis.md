@@ -16,7 +16,7 @@ Hexalith.Parties/
 │
 ├── src/
 │   ├── Hexalith.Parties.AppHost/      # ▶ Aspire orchestration — dev entry point (`dotnet aspire run`)
-│   │   ├── Program.cs                 #   composes eventstore, parties, tenants, mcp, memories, keycloak…
+│   │   ├── Program.cs                 #   composes eventstore, parties, tenants, mcp, memories, security…
 │   │   ├── DaprComponents/            #   run-mode DAPR YAML: statestore, pubsub, resiliency,
 │   │   │                              #     subscription-parties, accesscontrol.*.yaml (deny-by-default)
 │   │   ├── KeycloakRealms/            #   hexalith-realm.json (local IdP realm import)

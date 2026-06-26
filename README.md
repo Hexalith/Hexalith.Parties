@@ -27,7 +27,7 @@ git submodule update --init Hexalith.EventStore Hexalith.Tenants
 dotnet aspire run --project src/Hexalith.Parties.AppHost
 ```
 
-Open the Aspire dashboard (URL shown in terminal output) and verify these resources are running: `eventstore`, `eventstore-admin`, `parties`, `parties-ui`, `tenants`, `redis`, the DAPR sidecars, `statestore`, and `pubsub`. The AppHost also declares `eventstore-admin-ui` and `parties-mcp` as explicit-start auxiliary resources; start them from the dashboard when you need stream browsing or MCP access. AI assistants connect to `parties-mcp` rather than the `parties` actor host.
+Open the Aspire dashboard (URL shown in terminal output) and verify these resources are running: `security`, `eventstore`, `eventstore-admin`, `parties`, `parties-ui`, `tenants`, `redis`, the DAPR sidecars, `statestore`, and `pubsub`. The AppHost also declares `eventstore-admin-ui` and `parties-mcp` as explicit-start auxiliary resources; start them from the dashboard when you need stream browsing or MCP access. AI assistants connect to `parties-mcp` rather than the `parties` actor host.
 
 The default local run path uses root-level submodules only. Do not initialize nested submodules unless a separate story or maintainer asks for that explicitly. Rich Memories-backed search is optional for local development; enable it separately with `EnableMemoriesSearch=true` after initializing the root-level `Hexalith.Memories` submodule.
 

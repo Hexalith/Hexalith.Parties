@@ -191,7 +191,9 @@ existing event-sourced / CQRS / EventStore-gateway-fronted Parties domain servic
 - **AR-D9 Accessibility enforcement:** WCAG 2.2 AA enforced by **bUnit** component tests
   + a **Playwright a11y/visual gate** (FrontComposer e2e pattern) added to CI.
 - **AR-D10 AppHost / deploy:** add `builder.AddProject<Projects.Hexalith_Parties_UI>("parties-ui")`
-  referencing `eventstore` + `tenants`, **no DAPR sidecar** (BFF over HTTP + SignalR);
+  referencing `eventstore` + `tenants`, initialize the local Keycloak-backed security
+  service through `HexalithEventStoreSecurityExtensions.AddHexalithEventStoreSecurity()`,
+  **no DAPR sidecar** (BFF over HTTP + SignalR);
   .NET SDK container (`ContainerRepository=parties-ui`); aspirate publish grows the
   cluster **11 → 12 pods**; CI gains the UI build + bUnit lane + Playwright gate. **Deploy
   path is Kubernetes `nginx-public` Ingress only** (no local nginx bridge) with **cert-manager
@@ -621,7 +623,7 @@ So that the app can ship, with the production-KMS prerequisite gated before real
 
 **Given** the UI host
 **When** it is published
-**Then** .NET SDK container support builds it (`EnableContainer=true`, `ContainerRepository=parties-ui`, **no Dockerfile**), `ServiceDefaults` (OpenTelemetry + health) are wired, and `deploy/k8s` gains the `parties-ui` Deployment/Service/ingress + OIDC config; aspirate publish grows the cluster **11 → 12 pods**.
+**Then** .NET SDK container support builds it (`EnableContainer=true`, `ContainerRepository=parties-ui`, **no Dockerfile**), `ServiceDefaults` (OpenTelemetry + health) are wired, the AppHost initializes run-mode local security via `HexalithEventStoreSecurityExtensions.AddHexalithEventStoreSecurity()` while publish mode uses the external `tache` realm, and `deploy/k8s` gains the `parties-ui` Deployment/Service/ingress + OIDC config; aspirate publish grows the cluster **11 → 12 pods**.
 
 **Given** the live Kubernetes cluster
 **When** `deploy/k8s/publish.ps1` runs
