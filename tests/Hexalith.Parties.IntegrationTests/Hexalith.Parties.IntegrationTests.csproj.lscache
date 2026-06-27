@@ -74,12 +74,12 @@ obj/Debug/net10.0/
 Security/EncryptionPipelineIntegrationTests.cs
 
 [metadataReferences]
-../../Hexalith.EventStore/src/
+../../references/Hexalith.EventStore/src/
  Hexalith.EventStore.Aspire/obj/Debug/net10.0/ref/Hexalith.EventStore.Aspire.dll
  Hexalith.EventStore.Client/obj/Debug/net10.0/ref/Hexalith.EventStore.Client.dll
  Hexalith.EventStore.Contracts/obj/Debug/net10.0/ref/Hexalith.EventStore.Contracts.dll
  Hexalith.EventStore.Server/obj/Debug/net10.0/ref/Hexalith.EventStore.Server.dll
-../../Hexalith.Tenants/src/
+../../references/Hexalith.Tenants/src/
  Hexalith.Tenants.Client/obj/Debug/net10.0/ref/Hexalith.Tenants.Client.dll
  Hexalith.Tenants.Contracts/obj/Debug/net10.0/ref/Hexalith.Tenants.Contracts.dll
 ../../src/

@@ -288,8 +288,8 @@ claude-opus-4-8 (Claude Opus 4.8)
 - Host test EXE (full suite): **485 total, 484 passed, 1 failed**. The single failure —
   `FitnessTests.AppHostTenantsTopologyTests.AppHostProjectReferencesEventStoreTenantsAndAspireProjects` —
   is **pre-existing and unrelated to Story 1.5**: it asserts the literal substring
-  `Hexalith.EventStore\src\…` in `src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj`, but the
-  committed AppHost csproj uses the `$(HexalithEventStoreRoot)\src\…` property form (no `Hexalith.EventStore\src`
+  `references\Hexalith.EventStore\src\…` in `src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj`, but the
+  committed AppHost csproj uses the `$(HexalithEventStoreRoot)\src\…` property form (no `references\Hexalith.EventStore\src`
   literal). Neither the AppHost csproj nor that test file is touched by this story (`git status` confirms);
   the test was already red at baseline `e454663`. New host classes in isolation
   (`DataSubjectAccessServiceTests` + `PartiesConsumerPolicyTests`): **15 passed, 0 failed**;
@@ -358,7 +358,7 @@ Adversarial re-validation of every story claim against the actual implementation
 ### Build & test (re-verified, not trusted)
 - Per-project Release builds (`-m:1`): `Hexalith.Parties.UI`, `Hexalith.Parties`, both test projects — **0 Warning(s) / 0 Error(s)**.
 - UI test EXE: **109 passed, 0 failed** (self-scope classes in isolation: **40 passed**).
-- Host test EXE: **485 total, 484 passed, 1 failed**. The single failure — `FitnessTests.AppHostTenantsTopologyTests.AppHostProjectReferencesEventStoreTenantsAndAspireProjects` — is **pre-existing and unrelated**: `git diff e454663` shows the AppHost csproj and that test file are byte-identical to baseline (the test asserts a literal `Hexalith.EventStore\src\…` substring while the csproj uses the `$(HexalithEventStoreRoot)\…` property form). New host classes in isolation: **15 passed**; new fitness test: **1 passed**.
+- Host test EXE: **485 total, 484 passed, 1 failed**. The single failure — `FitnessTests.AppHostTenantsTopologyTests.AppHostProjectReferencesEventStoreTenantsAndAspireProjects` — is **pre-existing and unrelated**: `git diff e454663` shows the AppHost csproj and that test file are byte-identical to baseline (the test asserts a literal `references\Hexalith.EventStore\src\…` substring while the csproj uses the `$(HexalithEventStoreRoot)\…` property form). New host classes in isolation: **15 passed**; new fitness test: **1 passed**.
 - `scripts/check-no-warning-override.sh`: **OK**.
 - Git File List cross-check: every changed/new source & test file is documented; no undocumented changes, no phantom claims.
 

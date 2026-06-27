@@ -65,7 +65,7 @@ Program.cs
 
 [metadataReferences]
 ../../
- Hexalith.EventStore/src/Hexalith.EventStore.Contracts/obj/Debug/net10.0/ref/Hexalith.EventStore.Contracts.dll
+ references/Hexalith.EventStore/src/Hexalith.EventStore.Contracts/obj/Debug/net10.0/ref/Hexalith.EventStore.Contracts.dll
  src/
   Hexalith.Parties.Client/obj/Debug/net10.0/ref/Hexalith.Parties.Client.dll
   Hexalith.Parties.Contracts/obj/Debug/net10.0/ref/Hexalith.Parties.Contracts.dll

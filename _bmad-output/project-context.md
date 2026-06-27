@@ -42,9 +42,9 @@ _This file contains critical rules and patterns that AI agents must follow when 
 | Testing | xUnit **v3** / Shouldly / NSubstitute / bunit / Testcontainers / YamlDotNet | `3.2.2` / `4.3.0` / `6.0.0-rc.1` / `2.8.4-preview` / `4.12.0` / `18.0.0` |
 
 **Constraints agents must respect:**
-- **`Hexalith.EventStore` and `Hexalith.Tenants` are sibling submodules referenced by PROJECT path**,
-  not NuGet packages — and are *not* checked out in a fresh clone. Initialise root-level only:
-  `git submodule update --init Hexalith.EventStore Hexalith.Tenants`. **Never `--recursive`** (the build
+- **`references/Hexalith.EventStore` and `references/Hexalith.Tenants` are submodules referenced by PROJECT path**,
+  not NuGet packages — and are *not* checked out in a fresh clone. Initialise root-repository submodules only:
+  `git submodule update --init references/Hexalith.EventStore references/Hexalith.Tenants`. **Never `--recursive`** (the build
   gate forbids nested-submodule init). `Hexalith.Memories` is optional (rich search).
 - **`Microsoft.IdentityModel.Tokens` is pinned to `8.19.1`** to align with `Hexalith.EventStore` (which
   pins `8.19.0`); JwtBearer's transitive `8.x` otherwise conflicts with `EventStore.dll` (MSB3277). The four
@@ -195,9 +195,9 @@ _This file contains critical rules and patterns that AI agents must follow when 
   actor host and the `Hexalith.Parties.UI` host. Don't reference internal projects from consumer-facing code,
   and don't leak internal types through a package's public API. (`IsPackable=true` is the
   `Directory.Build.props` default — only hosts/tests set `false` — so packability alone ≠ "public".)
-- **Submodule project references are resolved by a computed root property** that probes sibling paths
-  (e.g. `HexalithEventStoreRoot` → `..\..\Hexalith.EventStore`). That's why EventStore/Tenants must sit as
-  **sibling checkouts** — don't convert them to NuGet `PackageReference`s.
+- **Submodule project references are resolved by a computed root property** that probes `references/` paths
+  (e.g. `HexalithEventStoreRoot` → `..\..\references\Hexalith.EventStore`). That's why EventStore/Tenants must sit under
+  **`references/` checkouts** — don't convert them to NuGet `PackageReference`s.
 - **XML doc comments are not mandatory** — `CS1591` is suppressed on `Contracts` (the docs file is generated
   for the package only). Match the surrounding file's documentation density; don't bulk-add `///` to satisfy
   a non-existent rule.
@@ -210,9 +210,9 @@ _This file contains critical rules and patterns that AI agents must follow when 
     must already be running). Treat the system as usable only once `eventstore`, `parties`, and `tenants`
     are healthy. `eventstore-admin-ui` and `parties-mcp` are **explicit-start** — launch from the dashboard.
   - Test lanes via `scripts/test.ps1 -Lane <lane>` (see Testing Rules).
-- **The build gate is the contract:** a fresh clone (root submodules only, no warnings override) must build
+- **The build gate is the contract:** a fresh clone (root-repository submodules under `references/` only, no warnings override) must build
   green. Verify parity locally with `bash scripts/check-no-warning-override.sh`. Never weaken it.
-- **Submodules: `git submodule update --init Hexalith.EventStore Hexalith.Tenants` — root-level only,
+- **Submodules: `git submodule update --init references/Hexalith.EventStore references/Hexalith.Tenants` — root-repository submodules only,
   never `--recursive`** (CI checks out the same way; the build gate forbids nested-submodule init).
 - **Commits follow Conventional Commits** — `feat:`, `fix:`, `chore:`, `docs:`, with optional scope
   (`fix(deploy): …`, `docs(planning): …`). Work on a typed branch (`<type>/<slug>`) and merge via PR.

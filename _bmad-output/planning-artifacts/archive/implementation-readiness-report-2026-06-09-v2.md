@@ -70,7 +70,7 @@ project: parties
 | **NFR6** | Multi-tenancy: Admin within tenant scope; isolation preserved; tenant-access fails closed + eventually consistent. |
 | **NFR7** | Brand discipline: inherit FluentUI V5 + FrontComposer shell wholesale; specify brand-delta only; theme via design-token API, never hard-coded hex. |
 | **NFR8** | Observability: OpenTelemetry + health on UI host; surface `X-Service-Degraded`/`X-Stale-Data-Age` into UI state. |
-| **NFR9** | Build/quality gates: .NET 10, CPM (no `Version=`), solution-wide `TreatWarningsAsErrors`, `.slnx` only, root-level submodules, Conventional Commits — all apply to the new tier. |
+| **NFR9** | Build/quality gates: .NET 10, CPM (no `Version=`), solution-wide `TreatWarningsAsErrors`, `.slnx` only, root-repository submodules under `references/`, Conventional Commits — all apply to the new tier. |
 
 **Total NFRs: 9.**
 

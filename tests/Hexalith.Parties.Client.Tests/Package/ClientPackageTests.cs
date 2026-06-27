@@ -167,11 +167,11 @@ public sealed class ClientPackageTests : IDisposable
 
         RunDotnet(
             "pack",
-            $"\"{Path.Combine(repoRoot, "Hexalith.Commons", "src", "libraries", "Hexalith.Commons.UniqueIds", "Hexalith.Commons.UniqueIds.csproj")}\" --configuration Release --output \"{feedDirectory}\" --artifacts-path \"{artifactsDirectory}\" {LocalPackVersionProperties}",
+            $"\"{Path.Combine(repoRoot, "references", "Hexalith.Commons", "src", "libraries", "Hexalith.Commons.UniqueIds", "Hexalith.Commons.UniqueIds.csproj")}\" --configuration Release --output \"{feedDirectory}\" --artifacts-path \"{artifactsDirectory}\" {LocalPackVersionProperties}",
             repoRoot);
         RunDotnet(
             "pack",
-            $"\"{Path.Combine(repoRoot, "Hexalith.EventStore", "src", "Hexalith.EventStore.Contracts", "Hexalith.EventStore.Contracts.csproj")}\" --configuration Release --output \"{feedDirectory}\" --artifacts-path \"{artifactsDirectory}\" {LocalPackVersionProperties}",
+            $"\"{Path.Combine(repoRoot, "references", "Hexalith.EventStore", "src", "Hexalith.EventStore.Contracts", "Hexalith.EventStore.Contracts.csproj")}\" --configuration Release --output \"{feedDirectory}\" --artifacts-path \"{artifactsDirectory}\" {LocalPackVersionProperties}",
             repoRoot);
         RunDotnet(
             "pack",

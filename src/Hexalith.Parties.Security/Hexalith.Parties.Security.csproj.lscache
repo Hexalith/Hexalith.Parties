@@ -82,7 +82,7 @@ PersonalDataGraphInspector.cs
 
 [metadataReferences]
 ../
- ../Hexalith.EventStore/src/Hexalith.EventStore.Contracts/obj/Debug/net10.0/ref/Hexalith.EventStore.Contracts.dll
+ ../references/Hexalith.EventStore/src/Hexalith.EventStore.Contracts/obj/Debug/net10.0/ref/Hexalith.EventStore.Contracts.dll
  Hexalith.Parties.Contracts/obj/Debug/net10.0/ref/Hexalith.Parties.Contracts.dll
 <DOTNET>/packs/Microsoft.NETCore.App.Ref/10.0.8/ref/net10.0/
  Microsoft.CSharp.dll

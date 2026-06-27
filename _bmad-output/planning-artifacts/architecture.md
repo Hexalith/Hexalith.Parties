@@ -18,10 +18,10 @@ inputDocuments:
   - _bmad-output/planning-artifacts/sprint-change-proposal-2026-06-09.md
   # Project context (persistent facts — AI agent rules)
   - _bmad-output/project-context.md
-  - Hexalith.EventStore/_bmad-output/project-context.md
-  - Hexalith.Tenants/_bmad-output/project-context.md
-  - Hexalith.FrontComposer/_bmad-output/project-context.md
-  - Hexalith.Memories/_bmad-output/project-context.md
+  - references/Hexalith.EventStore/_bmad-output/project-context.md
+  - references/Hexalith.Tenants/_bmad-output/project-context.md
+  - references/Hexalith.FrontComposer/_bmad-output/project-context.md
+  - references/Hexalith.Memories/_bmad-output/project-context.md
 referenceDocsAvailable:
   # Loaded on-demand during decision steps (not yet read in full)
   - docs/getting-started.md
@@ -202,7 +202,7 @@ fixed by the existing solution; versions are centrally pinned in
 |---|---|
 | Generic JS starter (Next.js/T3/Vite/SvelteKit) | **Rejected** — wrong ecosystem; violates the FluentUI/Blazor/FrontComposer brand & architecture discipline and the C#/.NET 10 stack. |
 | Plain `dotnet new blazor` host | **Rejected as-is** — would miss the FrontComposer shell wiring (nav/theme/density/command-palette/skip-links), Fluxor single-writer discipline, generated-component pipeline, and EventStore client integration. |
-| **FrontComposer shell host pattern (reference: `Hexalith.FrontComposer/samples/Counter/Counter.Web`)** | **Selected** — the canonical, in-repo way to stand up a standalone FrontComposer + FluentUI V5 app; gives the entire UX-required shell surface for free. |
+| **FrontComposer shell host pattern (reference: `references/Hexalith.FrontComposer/samples/Counter/Counter.Web`)** | **Selected** — the canonical, in-repo way to stand up a standalone FrontComposer + FluentUI V5 app; gives the entire UX-required shell surface for free. |
 | Promote `AdminPortal` RCL into a host | **Partial** — `AdminPortal` is an embeddable RCL and stays one; the new host **references/embeds** it for the Admin area rather than being replaced by it. |
 
 ### Selected Starter: FrontComposer shell-host pattern (`Counter.Web` reference)

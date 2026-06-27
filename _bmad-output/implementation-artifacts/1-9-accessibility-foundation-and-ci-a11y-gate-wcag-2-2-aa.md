@@ -147,7 +147,7 @@ This story hardens the `parties-ui` shell and quality gates. It does not add Adm
 - Loaded project persistent facts from `_bmad-output/project-context.md`.
 - Loaded previous story intelligence from `_bmad-output/implementation-artifacts/1-8-shared-domain-components-party-state-badge-freshness-indicator-gdpr-destructive-button.md`.
 - Reviewed current implementation files: `MainLayout.razor`, `App.razor`, `Routes.razor`, `Program.cs`, `Hexalith.Parties.UI.csproj`, `Hexalith.Parties.UI.Tests.csproj`, `StatusLiveRegionTests.cs`, `PartyStateBadgeTests.cs`, `.github/workflows/test.yml`, and `scripts/test.ps1`.
-- Reviewed FrontComposer e2e/accessibility pattern: `Hexalith.FrontComposer/tests/e2e/package.json`, `playwright.config.ts`, `helpers/a11y.ts`, `specs/specimen-accessibility.spec.ts`, `Story13AccessibilityPrimitivesTests.cs`, and `FrontComposerSpecimenRoutes.cs`.
+- Reviewed FrontComposer e2e/accessibility pattern: `references/Hexalith.FrontComposer/tests/e2e/package.json`, `playwright.config.ts`, `helpers/a11y.ts`, `specs/specimen-accessibility.spec.ts`, `Story13AccessibilityPrimitivesTests.cs`, and `FrontComposerSpecimenRoutes.cs`.
 
 ### Existing Code to Reuse
 
@@ -277,9 +277,9 @@ Do not modify `Hexalith.Parties.AdminPortal`, `Hexalith.Parties.ConsumerPortal`,
 - [Source: tests/Hexalith.Parties.UI.Tests/PartyStateBadgeTests.cs] - Story 1.8 component test style.
 - [Source: .github/workflows/test.yml] - CI workflow that must include UI tests and Playwright gate.
 - [Source: scripts/test.ps1] - local lane runner currently missing UI tests.
-- [Source: Hexalith.FrontComposer/src/Hexalith.FrontComposer.Shell/Components/Specimens/FrontComposerSpecimenRoutes.cs] - specimen enablement pattern.
-- [Source: Hexalith.FrontComposer/tests/e2e/helpers/a11y.ts] - axe helper and blocking/report-only impact partition pattern.
-- [Source: Hexalith.FrontComposer/tests/e2e/specs/specimen-accessibility.spec.ts] - browser-level a11y, forced-colors, keyboard, and visual baseline pattern.
+- [Source: references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.Shell/Components/Specimens/FrontComposerSpecimenRoutes.cs] - specimen enablement pattern.
+- [Source: references/Hexalith.FrontComposer/tests/e2e/helpers/a11y.ts] - axe helper and blocking/report-only impact partition pattern.
+- [Source: references/Hexalith.FrontComposer/tests/e2e/specs/specimen-accessibility.spec.ts] - browser-level a11y, forced-colors, keyboard, and visual baseline pattern.
 - [Source: https://playwright.dev/docs/accessibility-testing] - Playwright's official axe accessibility testing guidance and automated-testing limitation.
 - [Source: https://playwright.dev/docs/test-snapshots] - Playwright visual comparison and snapshot determinism guidance.
 

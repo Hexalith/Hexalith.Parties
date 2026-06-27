@@ -99,8 +99,8 @@ so that the Parties tier can prove a party was shredded across projections inste
 - The browser talks only to the UI host/BFF; the UI host talks to the EventStore gateway through typed clients. Do not add public actor-host APIs or browser-visible EventStore gateway calls. [Source: _bmad-output/planning-artifacts/architecture.md#Architectural-Boundaries]
 - Public command/query traffic enters EventStore through `POST /api/v1/commands` and `POST /api/v1/queries` with `Domain="party"`; the `parties` actor host remains internal. [Source: docs/api-contracts.md#The-boundary-in-one-picture]
 - EventStore generic query routing can invoke projection actors with `projectionActorType`, and Parties already uses `PartyDetailProjectionQueryActor` for `ExportPartyData` and `GetProcessingRecords`. This is the closest existing seam for certificate retrieval if approval chooses projection-query actor routing. [Source: src/Hexalith.Parties/Queries/PartyDetailProjectionQueryActor.cs] [Source: tests/Hexalith.Parties.Tests/Gateway/PartyDetailProjectionQueryActorTests.cs]
-- EventStore also has handler-aware domain query routing through `IDomainQueryHandler`, `DomainQueryDispatcher`, `DaprDomainQueryInvoker`, and `HandlerAwareQueryRouter`; this requires the domain service to expose `/query` and DAPR ACL to allow EventStore to call it. Parties currently maps only `/process` manually and its access-control permits only `eventstore -> POST /process`. [Source: Hexalith.EventStore/src/Hexalith.EventStore.DomainService/IDomainQueryHandler.cs] [Source: Hexalith.EventStore/src/Hexalith.EventStore/Queries/HandlerAwareQueryRouter.cs] [Source: src/Hexalith.Parties/Program.cs] [Source: src/Hexalith.Parties.AppHost/DaprComponents/accesscontrol.parties.yaml] [Source: deploy/dapr/accesscontrol-parties.yaml]
-- If the approved design changes the EventStore submodule, keep it scoped to the contract/routing needed for D7. Do not convert sibling submodules to NuGet packages and do not initialize nested submodules. [Source: _bmad-output/project-context.md#Technology-Stack--Versions]
+- EventStore also has handler-aware domain query routing through `IDomainQueryHandler`, `DomainQueryDispatcher`, `DaprDomainQueryInvoker`, and `HandlerAwareQueryRouter`; this requires the domain service to expose `/query` and DAPR ACL to allow EventStore to call it. Parties currently maps only `/process` manually and its access-control permits only `eventstore -> POST /process`. [Source: references/Hexalith.EventStore/src/Hexalith.EventStore.DomainService/IDomainQueryHandler.cs] [Source: references/Hexalith.EventStore/src/Hexalith.EventStore/Queries/HandlerAwareQueryRouter.cs] [Source: src/Hexalith.Parties/Program.cs] [Source: src/Hexalith.Parties.AppHost/DaprComponents/accesscontrol.parties.yaml] [Source: deploy/dapr/accesscontrol-parties.yaml]
+- If the approved design changes the EventStore submodule, keep it scoped to the contract/routing needed for D7. Do not convert reference submodules to NuGet packages and do not initialize nested submodules. [Source: _bmad-output/project-context.md#Technology-Stack--Versions]
 
 ### Previous Story Intelligence
 
@@ -124,7 +124,7 @@ so that the Parties tier can prove a party was shredded across projections inste
 - `src/Hexalith.Parties.Contracts/Commands/` and `src/Hexalith.Parties.Server/Aggregates/PartyAggregate.cs` - only if retry requires an additive command/event lifecycle change.
 - `src/Hexalith.Parties.Security/` and `src/Hexalith.Parties/Extensions/PartiesServiceCollectionExtensions.cs` - only if retry orchestration/persistence wiring is missing.
 - `src/Hexalith.Parties/Program.cs`, `src/Hexalith.Parties.AppHost/DaprComponents/accesscontrol.parties.yaml`, and `deploy/dapr/accesscontrol-parties.yaml` - only if approval uses the EventStore `/query` domain-handler route.
-- `Hexalith.EventStore/src/**` and `Hexalith.EventStore/tests/**` - only for the approved cross-submodule contract/routing changes.
+- `references/Hexalith.EventStore/src/**` and `references/Hexalith.EventStore/tests/**` - only for the approved cross-submodule contract/routing changes.
 - `tests/Hexalith.Parties.Client.Tests/AdminPortal/AdminPortalGdprOperationContractTests.cs`, `tests/Hexalith.Parties.AdminPortal.Tests/Services/PartiesAdminPortalApiClientTests.cs`, `tests/Hexalith.Parties.Tests/Gateway/PartyDetailProjectionQueryActorTests.cs`, `tests/Hexalith.Parties.Security.Tests/ErasureVerificationServiceTests.cs`, and deploy validation tests as needed.
 
 ### Testing Standards
@@ -146,8 +146,8 @@ so that the Parties tier can prove a party was shredded across projections inste
 - [Source: _bmad-output/planning-artifacts/architecture.md#D7-GDPR-stub-completion]
 - [Source: _bmad-output/planning-artifacts/architecture.md#Cross-submodule-D7-requires-explicit-approval]
 - [Source: docs/api-contracts.md#IAdminPortalGdprClient]
-- [Source: Hexalith.EventStore/docs/reference/query-api.md#POST-api-v1-queries]
-- [Source: Hexalith.EventStore/docs/reference/command-api.md#POST-api-v1-commands]
+- [Source: references/Hexalith.EventStore/docs/reference/query-api.md#POST-api-v1-queries]
+- [Source: references/Hexalith.EventStore/docs/reference/command-api.md#POST-api-v1-commands]
 - [Source: src/Hexalith.Parties.Client/AdminPortal/HttpAdminPortalGdprClient.cs]
 - [Source: src/Hexalith.Parties/Queries/PartyDetailProjectionQueryActor.cs]
 - [Source: src/Hexalith.Parties.Security/ErasureVerificationService.cs]
@@ -158,7 +158,7 @@ so that the Parties tier can prove a party was shredded across projections inste
 
 - Source discovery loaded project context, sprint status, `epics.md`, `architecture.md`, UX design/review docs, previous Story 3.4, API contracts, EventStore command/query docs, current GDPR client stubs, AdminPortal capability/panel seams, erasure security services/contracts, projection query actor code/tests, DAPR access-control files, AppHost registration, and recent git history.
 - Checklist fixes applied before finalizing: made the cross-submodule approval gate explicit, identified the exact stubs to replace, documented both approved routing choices and their consequences, required reuse of existing erasure services and stale guards, added DAPR ACL guardrails, excluded Story 3.6 UI scope, and tied tests to existing client/backend/EventStore seams.
-- Latest-technology review did not identify a dependency change needed for this story. The relevant stack is pinned locally (.NET 10, Dapr packages, EventStore sibling submodule, xUnit v3/Shouldly/NSubstitute), and no new packages or external APIs are required.
+- Latest-technology review did not identify a dependency change needed for this story. The relevant stack is pinned locally (.NET 10, Dapr packages, EventStore reference submodule, xUnit v3/Shouldly/NSubstitute), and no new packages or external APIs are required.
 
 ## Dev Agent Record
 

@@ -10,14 +10,14 @@ Hexalith.Parties uses GitHub Actions for the main quality pipeline in `.github/w
 
 ## Jobs
 
-- `lint`: checks out root-level submodules, restores the solution, runs a Release build with analyzers, and runs the Story 9.8 build-gate regression guard (`scripts/check-no-warning-override.sh`). See [`docs/build-gate.md`](build-gate.md) for the gate policy.
+- `lint`: checks out root-repository submodules under `references/`, restores the solution, runs a Release build with analyzers, and runs the Story 9.8 build-gate regression guard (`scripts/check-no-warning-override.sh`). See [`docs/build-gate.md`](build-gate.md) for the gate policy.
 - `test`: runs the .NET test projects in four matrix shards with `fail-fast: false`.
 - `contract-test`: runs Pact.js contract scripts when they exist. Until the Pact framework is scaffolded, the job records a readiness gap in the GitHub step summary.
 - `Quality Gate`: fails the workflow unless lint/build and test shards pass, and contract tests either pass or are intentionally skipped.
 
 ## Submodules
 
-The checkout step uses `submodules: true`, which initializes root-level submodules only. Do not change this to recursive checkout unless nested submodules are explicitly required.
+The checkout step uses `submodules: true`, which initializes root-repository submodules under `references/` only. Do not change this to recursive checkout unless nested submodules are explicitly required.
 
 ## Artifacts
 

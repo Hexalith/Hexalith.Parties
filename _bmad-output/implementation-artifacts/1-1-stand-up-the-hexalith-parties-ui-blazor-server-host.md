@@ -18,7 +18,7 @@ so that there is a running `parties-ui` app to build the experience on.
 
 **AC1 — Host project created on the FrontComposer shell-host pattern**
 
-**Given** the FrontComposer shell-host pattern (`Hexalith.FrontComposer/samples/Counter/Counter.Web`)
+**Given** the FrontComposer shell-host pattern (`references/Hexalith.FrontComposer/samples/Counter/Counter.Web`)
 **When** I create `src/Hexalith.Parties.UI` (`Microsoft.NET.Sdk.Web`, `net10.0`)
 **Then** it wires the FrontComposer Quickstart chain + `AddFluentUIComponents()` + `AddHexalithDomain<PartiesUiDomainMarker>()`, sets `ValidateScopes=true` (ADR-030), and is added to `Hexalith.Parties.slnx`
 **And** references resolve via the computed sibling-root properties (`$(HexalithFrontComposerRoot)`) — **no NuGet conversion** of EventStore/Tenants/FrontComposer project references.
@@ -77,13 +77,13 @@ so that there is a running `parties-ui` app to build the experience on.
 
 ### The canonical reference — copy it, don't invent
 
-`Hexalith.FrontComposer/samples/Counter/Counter.Web` **is** the selected starter (architecture.md "Selected Starter: FrontComposer shell-host pattern"). The dev agent should read these files and adapt them name-for-name to `Hexalith.Parties.UI`; do not hand-roll a `dotnet new blazor` host:
+`references/Hexalith.FrontComposer/samples/Counter/Counter.Web` **is** the selected starter (architecture.md "Selected Starter: FrontComposer shell-host pattern"). The dev agent should read these files and adapt them name-for-name to `Hexalith.Parties.UI`; do not hand-roll a `dotnet new blazor` host:
 
-- `Hexalith.FrontComposer/samples/Counter/Counter.Web/Counter.Web.csproj`
-- `Hexalith.FrontComposer/samples/Counter/Counter.Web/Program.cs`
-- `Hexalith.FrontComposer/samples/Counter/Counter.Web/Components/{App.razor, Routes.razor, _Imports.razor, Layout/MainLayout.razor}`
-- `Hexalith.FrontComposer/samples/Counter/Counter.Web/appsettings.Development.json`
-- `Hexalith.FrontComposer/samples/Counter/Counter.Web/Properties/launchSettings.json`
+- `references/Hexalith.FrontComposer/samples/Counter/Counter.Web/Counter.Web.csproj`
+- `references/Hexalith.FrontComposer/samples/Counter/Counter.Web/Program.cs`
+- `references/Hexalith.FrontComposer/samples/Counter/Counter.Web/Components/{App.razor, Routes.razor, _Imports.razor, Layout/MainLayout.razor}`
+- `references/Hexalith.FrontComposer/samples/Counter/Counter.Web/appsettings.Development.json`
+- `references/Hexalith.FrontComposer/samples/Counter/Counter.Web/Properties/launchSettings.json`
 
 ### csproj to author — `src/Hexalith.Parties.UI/Hexalith.Parties.UI.csproj`
 
@@ -115,7 +115,7 @@ so that there is a running `parties-ui` app to build the experience on.
 ```
 
 - `Microsoft.FluentUI.AspNetCore.Components` is centrally pinned at `5.0.0-rc.3-26138.1` (RC — do not bump; flagged as a version risk, not a blocker). [Source: Directory.Packages.props; architecture.md#Coherence-Validation]
-- `$(HexalithFrontComposerRoot)` is the computed sibling-root property (`Directory.Build.props:10-11`) that probes `Hexalith.FrontComposer\src\…` then `..\Hexalith.FrontComposer\src\…`. This is exactly how `Hexalith.Parties.AdminPortal.csproj` references the Shell — mirror it. This satisfies AC1's "references resolve via the computed sibling-root properties." [Source: src/Hexalith.Parties.AdminPortal/Hexalith.Parties.AdminPortal.csproj:13-16]
+- `$(HexalithFrontComposerRoot)` is the computed sibling-root property (`Directory.Build.props:10-11`) that probes `references\Hexalith.FrontComposer\src\…` then `..\references\Hexalith.FrontComposer\src\…`. This is exactly how `Hexalith.Parties.AdminPortal.csproj` references the Shell — mirror it. This satisfies AC1's "references resolve via the computed sibling-root properties." [Source: src/Hexalith.Parties.AdminPortal/Hexalith.Parties.AdminPortal.csproj:13-16]
 - **Contingency on `ASP0006`:** Counter.Web carries `<NoWarn>$(NoWarn);ASP0006</NoWarn>` because generated `RenderTreeBuilder` code uses the `seq++` pattern. With an empty domain marker (no `[Command]`/`[Projection]` in this host yet) the generator emits nothing, so `ASP0006` should not fire — leave `NoWarn` **off**. If `TreatWarningsAsErrors` trips `ASP0006` from generated code, add the **narrow** `<NoWarn>$(NoWarn);ASP0006</NoWarn>` (one rule, this project only) per the sanctioned escape valve, never a global override. [Source: project-context.md#Language-Specific-Rules; Counter.Web.csproj]
 
 ### Domain marker — `src/Hexalith.Parties.UI/PartiesUiDomainMarker.cs`
@@ -225,7 +225,7 @@ IResourceBuilder<ProjectResource> partiesUi = builder.AddProject<Projects.Hexali
 - **Central Package Management is ON** — `Directory.Packages.props` owns all versions; a `Version=` on any `PackageReference` in the new csproj is a build error and fails AC3. [Source: project-context.md#Technology-Stack]
 - **Clean parallel builds flake** with CS0006 (Rebuild race) / MSB4018 (StaticWebAssets file-lock) — these are not code bugs. Use **`-m:1`** for a reliable clean-build verdict. [Source: memory `parties-parallel-build-flake`]
 - **Build gate:** `bash scripts/check-no-warning-override.sh` must pass (no `-p:TreatWarningsAsErrors=false`, no global override). The only sanctioned warning suppression is a narrow per-csproj `<NoWarn>RuleId</NoWarn>`. [Source: project-context.md#Language-Specific-Rules; docs/build-gate.md]
-- **Submodules** must be present as **sibling checkouts**: `git submodule update --init Hexalith.EventStore Hexalith.Tenants` (root-level only, **never `--recursive`**). FrontComposer is also a sibling submodule resolved by `$(HexalithFrontComposerRoot)`. [Source: project-context.md#Technology-Stack]
+- **Submodules** must be present as **`references/` checkouts**: `git submodule update --init references/Hexalith.EventStore references/Hexalith.Tenants` (root-repository submodules only, **never `--recursive`**). FrontComposer is also a reference submodule resolved by `$(HexalithFrontComposerRoot)`. [Source: project-context.md#Technology-Stack]
 - **Do not "align" the `Microsoft.Extensions.Hosting.Abstractions` 11.0.0-preview pin down** — it is load-bearing for the `[LoggerMessage]` source generator. (Not expected to surface in this story, but don't touch it if tempted during restore.) [Source: memory `hosting-abstractions-preview-pin-load-bearing`]
 - **Run prerequisites:** Docker Desktop must be running for `aspire run`; the system is usable once `eventstore`, `parties`, and `tenants` are healthy. `parties-ui` should appear and reach Running after `eventstore`/`tenants`. [Source: project-context.md#Development-Workflow-Rules]
 
@@ -247,7 +247,7 @@ IResourceBuilder<ProjectResource> partiesUi = builder.AddProject<Projects.Hexali
 - [Source: _bmad-output/planning-artifacts/epics.md#Additional-Requirements] — AR-Starter (no external CLI starter; FrontComposer shell-host pattern), AR-D1 (Interactive Server, `ValidateScopes=true`), AR-D10 (AppHost `parties-ui`, no DAPR sidecar).
 - [Source: _bmad-output/planning-artifacts/architecture.md#Starter-Template-Evaluation] — selected starter rationale + `Program.cs` wiring sketch.
 - [Source: _bmad-output/planning-artifacts/architecture.md#Infrastructure-Deployment] — D10 Aspire resource (no sidecar, references eventstore + tenants).
-- [Source: Hexalith.FrontComposer/samples/Counter/Counter.Web/] — the canonical pattern (csproj, Program.cs, Components, appsettings, launchSettings).
+- [Source: references/Hexalith.FrontComposer/samples/Counter/Counter.Web/] — the canonical pattern (csproj, Program.cs, Components, appsettings, launchSettings).
 - [Source: src/Hexalith.Parties.AppHost/Program.cs:50-110] — `parties` (with sidecar), `parties-mcp` (no sidecar, lines 62-69), `tenants` registration patterns.
 - [Source: src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj] — `Aspire.AppHost.Sdk/13.4.3`; ProjectReference → `Projects.*` generation.
 - [Source: src/Hexalith.Parties.Mcp/Hexalith.Parties.Mcp.csproj] — closest in-repo host analog (`Sdk.Web`, `IsPackable=false`, `IsPublishable=true`).

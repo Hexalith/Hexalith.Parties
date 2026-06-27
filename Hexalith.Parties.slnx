@@ -11,13 +11,13 @@
     <File Path="Directory.Packages.props" />
     <File Path="global.json" />
   </Folder>
-  <Folder Name="/Hexalith.Commons/">
-    <Project Path="Hexalith.Commons/src/libraries/Hexalith.Commons.ServiceDefaults/Hexalith.Commons.ServiceDefaults.csproj" />
-    <Project Path="Hexalith.Commons/src/libraries/Hexalith.Commons.UniqueIds/Hexalith.Commons.UniqueIds.csproj" />
+  <Folder Name="/references/Hexalith.Commons/">
+    <Project Path="references/Hexalith.Commons/src/libraries/Hexalith.Commons.ServiceDefaults/Hexalith.Commons.ServiceDefaults.csproj" />
+    <Project Path="references/Hexalith.Commons/src/libraries/Hexalith.Commons.UniqueIds/Hexalith.Commons.UniqueIds.csproj" />
   </Folder>
-  <Folder Name="/Hexalith.PolymorphicSerializations/">
-    <Project Path="Hexalith.PolymorphicSerializations/src/libraries/Hexalith.PolymorphicSerializations.CodeGenerators/Hexalith.PolymorphicSerializations.CodeGenerators.csproj" />
-    <Project Path="Hexalith.PolymorphicSerializations/src/libraries/Hexalith.PolymorphicSerializations/Hexalith.PolymorphicSerializations.csproj" />
+  <Folder Name="/references/Hexalith.PolymorphicSerializations/">
+    <Project Path="references/Hexalith.PolymorphicSerializations/src/libraries/Hexalith.PolymorphicSerializations.CodeGenerators/Hexalith.PolymorphicSerializations.CodeGenerators.csproj" />
+    <Project Path="references/Hexalith.PolymorphicSerializations/src/libraries/Hexalith.PolymorphicSerializations/Hexalith.PolymorphicSerializations.csproj" />
   </Folder>
   <Folder Name="/src/">
     <Project Path="src/Hexalith.Parties.AdminPortal/Hexalith.Parties.AdminPortal.csproj" />
@@ -35,40 +35,40 @@
     <Project Path="src/Hexalith.Parties.UI/Hexalith.Parties.UI.csproj" />
     <Project Path="src/Hexalith.Parties/Hexalith.Parties.csproj" />
   </Folder>
-  <Folder Name="/Hexalith.EventStore/">
-    <File Path="Hexalith.EventStore/Directory.Build.props" />
-    <File Path="Hexalith.EventStore/Directory.Packages.props" />
-    <Project Path="Hexalith.EventStore/src/Hexalith.EventStore.Admin.Abstractions/Hexalith.EventStore.Admin.Abstractions.csproj" />
-    <Project Path="Hexalith.EventStore/src/Hexalith.EventStore.Admin.Server.Host/Hexalith.EventStore.Admin.Server.Host.csproj" />
-    <Project Path="Hexalith.EventStore/src/Hexalith.EventStore.Admin.Server/Hexalith.EventStore.Admin.Server.csproj" />
-    <Project Path="Hexalith.EventStore/src/Hexalith.EventStore.Admin.UI/Hexalith.EventStore.Admin.UI.csproj" />
-    <Project Path="Hexalith.EventStore/src/Hexalith.EventStore.Aspire/Hexalith.EventStore.Aspire.csproj" />
-    <Project Path="Hexalith.EventStore/src/Hexalith.EventStore.Client/Hexalith.EventStore.Client.csproj" />
-    <Project Path="Hexalith.EventStore/src/Hexalith.EventStore.Contracts/Hexalith.EventStore.Contracts.csproj" />
-    <Project Path="Hexalith.EventStore/src/Hexalith.EventStore.DomainService/Hexalith.EventStore.DomainService.csproj" />
-    <Project Path="Hexalith.EventStore/src/Hexalith.EventStore.Server/Hexalith.EventStore.Server.csproj" />
-    <Project Path="Hexalith.EventStore/src/Hexalith.EventStore.ServiceDefaults/Hexalith.EventStore.ServiceDefaults.csproj" />
-    <Project Path="Hexalith.EventStore/src/Hexalith.EventStore.SignalR/Hexalith.EventStore.SignalR.csproj" />
-    <Project Path="Hexalith.EventStore/src/Hexalith.EventStore.Testing/Hexalith.EventStore.Testing.csproj" />
-    <Project Path="Hexalith.EventStore/src/Hexalith.EventStore/Hexalith.EventStore.csproj" />
+  <Folder Name="/references/Hexalith.EventStore/">
+    <File Path="references/Hexalith.EventStore/Directory.Build.props" />
+    <File Path="references/Hexalith.EventStore/Directory.Packages.props" />
+    <Project Path="references/Hexalith.EventStore/src/Hexalith.EventStore.Admin.Abstractions/Hexalith.EventStore.Admin.Abstractions.csproj" />
+    <Project Path="references/Hexalith.EventStore/src/Hexalith.EventStore.Admin.Server.Host/Hexalith.EventStore.Admin.Server.Host.csproj" />
+    <Project Path="references/Hexalith.EventStore/src/Hexalith.EventStore.Admin.Server/Hexalith.EventStore.Admin.Server.csproj" />
+    <Project Path="references/Hexalith.EventStore/src/Hexalith.EventStore.Admin.UI/Hexalith.EventStore.Admin.UI.csproj" />
+    <Project Path="references/Hexalith.EventStore/src/Hexalith.EventStore.Aspire/Hexalith.EventStore.Aspire.csproj" />
+    <Project Path="references/Hexalith.EventStore/src/Hexalith.EventStore.Client/Hexalith.EventStore.Client.csproj" />
+    <Project Path="references/Hexalith.EventStore/src/Hexalith.EventStore.Contracts/Hexalith.EventStore.Contracts.csproj" />
+    <Project Path="references/Hexalith.EventStore/src/Hexalith.EventStore.DomainService/Hexalith.EventStore.DomainService.csproj" />
+    <Project Path="references/Hexalith.EventStore/src/Hexalith.EventStore.Server/Hexalith.EventStore.Server.csproj" />
+    <Project Path="references/Hexalith.EventStore/src/Hexalith.EventStore.ServiceDefaults/Hexalith.EventStore.ServiceDefaults.csproj" />
+    <Project Path="references/Hexalith.EventStore/src/Hexalith.EventStore.SignalR/Hexalith.EventStore.SignalR.csproj" />
+    <Project Path="references/Hexalith.EventStore/src/Hexalith.EventStore.Testing/Hexalith.EventStore.Testing.csproj" />
+    <Project Path="references/Hexalith.EventStore/src/Hexalith.EventStore/Hexalith.EventStore.csproj" />
   </Folder>
-  <Folder Name="/Hexalith.FrontComposer/">
-    <Project Path="Hexalith.FrontComposer/src/Hexalith.FrontComposer.Contracts/Hexalith.FrontComposer.Contracts.csproj" />
-    <Project Path="Hexalith.FrontComposer/src/Hexalith.FrontComposer.Mcp/Hexalith.FrontComposer.Mcp.csproj" />
-    <Project Path="Hexalith.FrontComposer/src/Hexalith.FrontComposer.Schema/Hexalith.FrontComposer.Schema.csproj" />
-    <Project Path="Hexalith.FrontComposer/src/Hexalith.FrontComposer.SourceTools/Hexalith.FrontComposer.SourceTools.csproj" />
-    <Project Path="Hexalith.FrontComposer/src/Hexalith.FrontComposer.Shell/Hexalith.FrontComposer.Shell.csproj" />
+  <Folder Name="/references/Hexalith.FrontComposer/">
+    <Project Path="references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.Contracts/Hexalith.FrontComposer.Contracts.csproj" />
+    <Project Path="references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.Mcp/Hexalith.FrontComposer.Mcp.csproj" />
+    <Project Path="references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.Schema/Hexalith.FrontComposer.Schema.csproj" />
+    <Project Path="references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.SourceTools/Hexalith.FrontComposer.SourceTools.csproj" />
+    <Project Path="references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.Shell/Hexalith.FrontComposer.Shell.csproj" />
   </Folder>
-  <Folder Name="/Hexalith.Memories/">
-    <Project Path="Hexalith.Memories/src/Hexalith.Memories.Client.Rest/Hexalith.Memories.Client.Rest.csproj" />
-    <Project Path="Hexalith.Memories/src/Hexalith.Memories.Contracts/Hexalith.Memories.Contracts.csproj" />
+  <Folder Name="/references/Hexalith.Memories/">
+    <Project Path="references/Hexalith.Memories/src/Hexalith.Memories.Client.Rest/Hexalith.Memories.Client.Rest.csproj" />
+    <Project Path="references/Hexalith.Memories/src/Hexalith.Memories.Contracts/Hexalith.Memories.Contracts.csproj" />
   </Folder>
-  <Folder Name="/Hexalith.Tenants/">
-    <Project Path="Hexalith.Tenants/src/Hexalith.Tenants.Client/Hexalith.Tenants.Client.csproj" />
-    <Project Path="Hexalith.Tenants/src/Hexalith.Tenants.Contracts/Hexalith.Tenants.Contracts.csproj" />
-    <Project Path="Hexalith.Tenants/src/Hexalith.Tenants.Server/Hexalith.Tenants.Server.csproj" />
-    <Project Path="Hexalith.Tenants/src/Hexalith.Tenants.Testing/Hexalith.Tenants.Testing.csproj" />
-    <Project Path="Hexalith.Tenants/src/Hexalith.Tenants/Hexalith.Tenants.csproj" />
+  <Folder Name="/references/Hexalith.Tenants/">
+    <Project Path="references/Hexalith.Tenants/src/Hexalith.Tenants.Client/Hexalith.Tenants.Client.csproj" />
+    <Project Path="references/Hexalith.Tenants/src/Hexalith.Tenants.Contracts/Hexalith.Tenants.Contracts.csproj" />
+    <Project Path="references/Hexalith.Tenants/src/Hexalith.Tenants.Server/Hexalith.Tenants.Server.csproj" />
+    <Project Path="references/Hexalith.Tenants/src/Hexalith.Tenants.Testing/Hexalith.Tenants.Testing.csproj" />
+    <Project Path="references/Hexalith.Tenants/src/Hexalith.Tenants/Hexalith.Tenants.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/Hexalith.Parties.AdminPortal.Tests/Hexalith.Parties.AdminPortal.Tests.csproj" />

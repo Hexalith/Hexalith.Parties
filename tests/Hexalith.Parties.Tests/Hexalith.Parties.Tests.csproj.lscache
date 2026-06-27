@@ -105,16 +105,16 @@ Search/
 Tenants/TenantEventInfrastructureTests.cs
 
 [metadataReferences]
-../../Hexalith.EventStore/src/
+../../references/Hexalith.EventStore/src/
  Hexalith.EventStore.Admin.Abstractions/obj/Debug/net10.0/ref/Hexalith.EventStore.Admin.Abstractions.dll
  Hexalith.EventStore.Client/obj/Debug/net10.0/ref/Hexalith.EventStore.Client.dll
  Hexalith.EventStore.Contracts/obj/Debug/net10.0/ref/Hexalith.EventStore.Contracts.dll
  Hexalith.EventStore.Server/obj/Debug/net10.0/ref/Hexalith.EventStore.Server.dll
  Hexalith.EventStore.ServiceDefaults/obj/Debug/net10.0/ref/Hexalith.EventStore.ServiceDefaults.dll
  Hexalith.EventStore.Testing/obj/Debug/net10.0/ref/Hexalith.EventStore.Testing.dll
- Hexalith.EventStore/obj/Debug/net10.0/ref/Hexalith.EventStore.dll
+ references/Hexalith.EventStore/obj/Debug/net10.0/ref/Hexalith.EventStore.dll
   @aliases=eventstore
-../../Hexalith.Tenants/src/
+../../references/Hexalith.Tenants/src/
  Hexalith.Tenants.Client/obj/Debug/net10.0/ref/Hexalith.Tenants.Client.dll
  Hexalith.Tenants.Contracts/obj/Debug/net10.0/ref/Hexalith.Tenants.Contracts.dll
  Hexalith.Tenants.Server/obj/Debug/net10.0/ref/Hexalith.Tenants.Server.dll

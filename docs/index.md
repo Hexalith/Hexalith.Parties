@@ -20,7 +20,7 @@
 | **Test** | `dotnet test Hexalith.Parties.slnx` or `scripts/test.ps1 -Lane {unit\|integration\|topology\|deploy}` |
 | **Entry points** | AppHost `Program.cs` (dev) · `Hexalith.Parties/Program.cs` → `/process` · `Hexalith.Parties.Mcp/Program.cs` → `/mcp` |
 | **Domain logic** | `src/Hexalith.Parties.Server/Aggregates/PartyAggregate.cs` |
-| **Prereqs** | .NET 10 SDK (10.0.300+), Docker Desktop; `git submodule update --init Hexalith.EventStore Hexalith.Tenants` |
+| **Prereqs** | .NET 10 SDK (10.0.300+), Docker Desktop; `git submodule update --init references/Hexalith.EventStore references/Hexalith.Tenants` |
 
 ## Generated documentation (this scan)
 
@@ -71,7 +71,7 @@
 
 ```bash
 git clone https://github.com/Hexalith/Hexalith.Parties.git && cd Hexalith.Parties
-git submodule update --init Hexalith.EventStore Hexalith.Tenants   # root-level only, NOT --recursive
+git submodule update --init references/Hexalith.EventStore references/Hexalith.Tenants   # root-repository submodules only, NOT --recursive
 dotnet aspire run --project src/Hexalith.Parties.AppHost           # Docker Desktop must be running
 ```
 Then follow [getting-started.md](./getting-started.md) for auth + first command/query. For .NET integration, add `Hexalith.Parties.Client` and call `AddPartiesClient(configuration)` ([api-contracts.md](./api-contracts.md)).
@@ -82,7 +82,7 @@ Then follow [getting-started.md](./getting-started.md) for auth + first command/
 2. **MCP exposes exactly 5 tools** (`create_party`, `get_party`, `find_parties`, `update_party`, `delete_party`). `get_party_name_at` does **not** exist — temporal name-as-of queries are reserved, not implemented. *(The README + `getting-started.md` previously listed a phantom 6th `get_party_name_at` tool; corrected in this pass.)*
 3. **Projection-index rebuild key mismatch (bug):** `PartyIndexProjectionActor` reads/writes `{tenant}:party-index:default` but `ProjectionRebuildService` uses `…:all` — a rebuild can diverge from the live index ([architecture.md §13](./architecture.md)).
 4. **Aspire SDK/package skew:** packages are `13.4.0` but the AppHost SDK is pinned `13.3.3`. `Testcontainers` is declared but unused.
-5. **Submodules are now checked out** as sibling directories in this working copy (`Hexalith.EventStore`, `Hexalith.Tenants`, `Hexalith.Commons`, `Hexalith.Memories`, `Hexalith.FrontComposer`), but a **fresh clone** still must `git submodule update --init Hexalith.EventStore Hexalith.Tenants` (root-level only, never `--recursive`).
+5. **Submodules are now checked out** under `references/` in this working copy (`references/Hexalith.EventStore`, `references/Hexalith.Tenants`, `references/Hexalith.Commons`, `references/Hexalith.Memories`, `references/Hexalith.FrontComposer`), but a **fresh clone** still must `git submodule update --init references/Hexalith.EventStore references/Hexalith.Tenants` (root-repository submodules only, never `--recursive`).
 
 ---
 

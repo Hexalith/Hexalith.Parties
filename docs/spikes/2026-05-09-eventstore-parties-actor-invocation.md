@@ -31,9 +31,9 @@ No EventStore submodule source change is indicated by this spike. The blockers a
   - Does not map `POST /process`.
 - `src/Hexalith.Parties/Extensions/PartiesServiceCollectionExtensions.cs`
   - Registers `IDomainServiceInvoker` as `PartyDomainServiceInvoker` before calling `AddEventStoreServer`.
-- `Hexalith.EventStore/src/Hexalith.EventStore.Server/Configuration/ServiceCollectionExtensions.cs`
+- `references/Hexalith.EventStore/src/Hexalith.EventStore.Server/Configuration/ServiceCollectionExtensions.cs`
   - Uses `TryAddTransient<IDomainServiceInvoker, DaprDomainServiceInvoker>()`, so it does not replace the already-registered Parties invoker.
-- `Hexalith.EventStore/src/Hexalith.EventStore.Server/Queries/QueryRouter.cs`
+- `references/Hexalith.EventStore/src/Hexalith.EventStore.Server/Queries/QueryRouter.cs`
   - Defaults to actor type `ProjectionActor`, with optional `ProjectionActorType`.
 - `src/Hexalith.Parties.Projections/Actors`
   - `PartyDetailProjectionActor` and `PartyIndexProjectionActor` do not implement EventStore's `IProjectionActor` contract.
@@ -165,11 +165,11 @@ rg -n "^" src/Hexalith.Parties.Aspire/HexalithPartiesExtensions.cs
 rg -n "^" src/Hexalith.Parties/Program.cs
 rg -n "DomainService|PartyDomainServiceInvoker|Add|Dapr|Projection|Controller|MCP|EventStore" src/Hexalith.Parties/Extensions/PartiesServiceCollectionExtensions.cs
 rg -n "^" src/Hexalith.Parties/Domain/PartyDomainServiceInvoker.cs
-rg -n "^" Hexalith.EventStore/src/Hexalith.EventStore.Server/DomainServices/DomainServiceResolver.cs
-rg -n "^" Hexalith.EventStore/src/Hexalith.EventStore.Server/DomainServices/DaprDomainServiceInvoker.cs
-rg -n "^" Hexalith.EventStore/src/Hexalith.EventStore.Server/Commands/CommandRouter.cs
-rg -n "^" Hexalith.EventStore/src/Hexalith.EventStore.Server/Queries/QueryRouter.cs
-rg -n "^" Hexalith.EventStore/samples/Hexalith.EventStore.Sample/DomainServiceRequestRouter.cs
+rg -n "^" references/Hexalith.EventStore/src/Hexalith.EventStore.Server/DomainServices/DomainServiceResolver.cs
+rg -n "^" references/Hexalith.EventStore/src/Hexalith.EventStore.Server/DomainServices/DaprDomainServiceInvoker.cs
+rg -n "^" references/Hexalith.EventStore/src/Hexalith.EventStore.Server/Commands/CommandRouter.cs
+rg -n "^" references/Hexalith.EventStore/src/Hexalith.EventStore.Server/Queries/QueryRouter.cs
+rg -n "^" references/Hexalith.EventStore/samples/Hexalith.EventStore.Sample/DomainServiceRequestRouter.cs
 dotnet test tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj --filter FullyQualifiedName~EventStorePartiesInvocationSpikeTests --no-restore
 git -C Hexalith.EventStore status --short
 ```

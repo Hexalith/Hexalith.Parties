@@ -23,13 +23,13 @@ Hexalith.Parties is a ready-to-deploy party management domain service for people
 ```bash
 git clone https://github.com/Hexalith/Hexalith.Parties.git
 cd Hexalith.Parties
-git submodule update --init Hexalith.EventStore Hexalith.Tenants
+git submodule update --init references/Hexalith.EventStore references/Hexalith.Tenants
 dotnet aspire run --project src/Hexalith.Parties.AppHost
 ```
 
 Open the Aspire dashboard (URL shown in terminal output) and verify these resources are running: `security`, `eventstore`, `eventstore-admin`, `parties`, `parties-ui`, `tenants`, `redis`, the DAPR sidecars, `statestore`, and `pubsub`. The AppHost also declares `eventstore-admin-ui` and `parties-mcp` as explicit-start auxiliary resources; start them from the dashboard when you need stream browsing or MCP access. AI assistants connect to `parties-mcp` rather than the `parties` actor host.
 
-The default local run path uses root-level submodules only. Do not initialize nested submodules unless a separate story or maintainer asks for that explicitly. Rich Memories-backed search is optional for local development; enable it separately with `EnableMemoriesSearch=true` after initializing the root-level `Hexalith.Memories` submodule.
+The default local run path uses repository-level submodules under `references/` only. Do not initialize nested submodules unless a separate story or maintainer asks for that explicitly. Rich Memories-backed search is optional for local development; enable it separately with `EnableMemoriesSearch=true` after initializing the `references/Hexalith.Memories` submodule.
 
 > **Prerequisite - tenant access state.** Provision or use an active Hexalith.Tenants tenant membership before the first Parties call. EventStore owns public authentication, tenant validation, RBAC, command/query routing, and generic response mapping. Parties consumes the authorized command/query behind the actor host and does not manage tenant lifecycle or roles itself.
 
@@ -71,6 +71,11 @@ Hexalith.Parties/
     Hexalith.Parties.Sample/         # Sample integration project
   docs/
     getting-started.md               # Step-by-step onboarding guide
+  references/
+    Hexalith.EventStore/             # Gateway/eventing submodule
+    Hexalith.Tenants/                # Tenancy submodule
+    Hexalith.FrontComposer/          # UI shell submodule
+    Hexalith.Memories/               # Optional rich-search submodule
 ```
 
 ## Positioning

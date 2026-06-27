@@ -71,7 +71,7 @@ documentsIncluded:
 - **NFR6 — Multi-tenancy:** Admin operates within tenant scope; tenant isolation preserved; tenant-access fails closed and is eventually consistent.
 - **NFR7 — Brand discipline:** inherit FluentUI V5 + FrontComposer shell wholesale; brand-delta only; theme via design-token API, never hard-coded hex.
 - **NFR8 — Observability:** OpenTelemetry + health on UI host; surface `X-Service-Degraded` / `X-Stale-Data-Age` into UI state.
-- **NFR9 — Build / quality gates:** .NET 10, Central Package Management (no `Version=`), solution-wide `TreatWarningsAsErrors`, `.slnx` only, root-level submodules only, Conventional Commits.
+- **NFR9 — Build / quality gates:** .NET 10, Central Package Management (no `Version=`), solution-wide `TreatWarningsAsErrors`, `.slnx` only, root-repository submodules under `references/` only, Conventional Commits.
 
 **Total NFRs: 9**
 

@@ -15,16 +15,16 @@
 
 ## 1. Clone & submodules
 
-The build resolves `Hexalith.EventStore` and `Hexalith.Tenants` as project references. They are **not** checked out in a fresh clone — initialise the root-level submodules:
+The build resolves `references/Hexalith.EventStore` and `references/Hexalith.Tenants` as project references. They are **not** checked out in a fresh clone — initialise the root-repository submodules:
 
 ```bash
 git clone https://github.com/Hexalith/Hexalith.Parties.git
 cd Hexalith.Parties
-git submodule update --init Hexalith.EventStore Hexalith.Tenants
+git submodule update --init references/Hexalith.EventStore references/Hexalith.Tenants
 # Do NOT use --recursive for the default local run (the build gate forbids nested-submodule init).
 ```
 
-Optional rich search adds the `Hexalith.Memories` submodule (run with `EnableMemoriesSearch=true`).
+Optional rich search adds the `references/Hexalith.Memories` submodule (run with `EnableMemoriesSearch=true`).
 
 ## 2. Build
 
@@ -33,7 +33,7 @@ dotnet restore Hexalith.Parties.slnx
 dotnet build Hexalith.Parties.slnx --configuration Release --no-restore
 ```
 
-`TreatWarningsAsErrors=true` is solution-wide. A green build on a fresh clone (root submodules only, no warnings override) is the **build gate** — verify parity locally with:
+`TreatWarningsAsErrors=true` is solution-wide. A green build on a fresh clone (root-repository submodules under `references/` only, no warnings override) is the **build gate** — verify parity locally with:
 
 ```bash
 bash scripts/check-no-warning-override.sh

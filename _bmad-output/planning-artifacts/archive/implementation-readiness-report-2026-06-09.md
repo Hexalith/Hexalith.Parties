@@ -93,7 +93,7 @@ documentsIncluded:
 - **Production KMS gap (pre-existing):** crypto-shredding is ON by default with only
   `LocalDevKeyStorageBackend` (in-memory) — must provision a real KMS before any real EU PII.
 - **Platform constraints:** .NET 10, Central Package Management (no `Version=` in csproj),
-  solution-wide `TreatWarningsAsErrors`, `.slnx` only, root-level submodules, Conventional Commits.
+  solution-wide `TreatWarningsAsErrors`, `.slnx` only, root-repository submodules under `references/`, Conventional Commits.
 
 ### PRD Completeness Assessment
 

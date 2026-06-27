@@ -118,7 +118,7 @@ This story embeds the existing `Hexalith.Parties.AdminPortal` Razor class librar
 - Loaded `architecture_content` from `_bmad-output/planning-artifacts/architecture.md`; it defines `Hexalith.Parties.UI` as the Blazor Server BFF host and `Hexalith.Parties.AdminPortal` as the embeddable Admin RCL.
 - Loaded UX source files under `_bmad-output/planning-artifacts/ux-designs/ux-parties-2026-06-09/`; for this story, the relevant constraints are Admin comfortable density, policy-gated nav, no marketing landing, WCAG route/focus baseline, and PII-free forbidden/tombstone copy.
 - No formal PRD file exists in `_bmad-output/planning-artifacts`; epics, architecture, UX spine, readiness reports, and brownfield docs are the source of truth.
-- Loaded persistent project facts from `_bmad-output/project-context.md` and sibling submodule project contexts.
+- Loaded persistent project facts from `_bmad-output/project-context.md` and reference submodule project contexts.
 - Reviewed existing code in `src/Hexalith.Parties.UI`, `src/Hexalith.Parties.AdminPortal`, `tests/Hexalith.Parties.UI.Tests`, and `tests/Hexalith.Parties.AdminPortal.Tests`.
 - Reviewed recent git history: Epic 1 completed host, OIDC, role routing, consumer self-scope, status mapping, SignalR freshness, shared domain components, accessibility gates, and deployment.
 

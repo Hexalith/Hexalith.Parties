@@ -56,8 +56,8 @@ It is **not** an auth provider, CRM, or identity server — it is the party/cont
 | Actors & pub/sub | `Dapr.Actors` / `Dapr.Client` | `1.18.0-rc02` |
 | | `Dapr.AspNetCore` / `Dapr.Actors.AspNetCore` | `1.17.9` |
 | | `CommunityToolkit.Aspire.Hosting.Dapr` | `13.4.0-preview` |
-| Gateway/eventing | Hexalith.EventStore (sibling submodule, project ref) | source |
-| Tenancy | Hexalith.Tenants (sibling submodule, project ref) | source |
+| Gateway/eventing | Hexalith.EventStore (`references/` submodule, project ref) | source |
+| Tenancy | Hexalith.Tenants (`references/` submodule, project ref) | source |
 | Validation | FluentValidation (+ DI ext.) | `12.1.1` |
 | Mediation | MediatR | `14.1.0` |
 | AuthN | Microsoft.AspNetCore.Authentication.JwtBearer | `10.0.8` |
@@ -214,7 +214,7 @@ deploy/   # k8s (kustomize), dapr (component CRs), zot (OCI registry)
 ## 11. Testing & CI
 
 - **14 .NET test projects plus the Playwright e2e workspace**, uniformly **xUnit v3** for .NET tests (Shouldly + NSubstitute; bunit for Blazor; YamlDotNet for manifest validation). Lanes via `scripts/test.ps1 -Lane {unit|integration|topology|deploy|all|coverage}`. `Hexalith.Parties.IntegrationTests` spins up the **full Aspire topology** (`Aspire.Hosting.Testing`), gracefully skipping when Docker/DAPR is absent; `Hexalith.Parties.DeployValidation.Tests` statically validates the real `deploy/` manifests (incl. a credential-leak poison-sweep). Architectural fitness tests pin contract/dependency boundaries.
-- **CI:** `.github/workflows/test.yml` — `lint` (build with warnings-as-errors + build-gate script) → `test` (4 parallel shards) → `contract-test` (Pact readiness) → `report` (quality gate). Submodules checked out **root-level only, never recursive**. See [ci.md](ci.md), [build-gate.md](build-gate.md), [ci-secrets-checklist.md](ci-secrets-checklist.md).
+- **CI:** `.github/workflows/test.yml` — `lint` (build with warnings-as-errors + build-gate script) → `test` (4 parallel shards) → `contract-test` (Pact readiness) → `report` (quality gate). Submodules checked out **root-repository submodules only, never recursive**. See [ci.md](ci.md), [build-gate.md](build-gate.md), [ci-secrets-checklist.md](ci-secrets-checklist.md).
 
 ---
 
@@ -231,7 +231,7 @@ Production shape is Kubernetes via **aspirate** (pinned `9.1.0`): `pwsh deploy/k
 - **Rejection events are persisted & replayed** — `PartyState` declares no-op `Apply` overloads, ordered before success Applies (suffix-match rehydration).
 - **Replay-from-zero on every delivery** — projections stay correct via per-actor sequence checkpoints + set-based apply.
 - **Type resolution is allowlisted to the contracts assembly** — never `Type.GetType` on wire input.
-- **Submodules referenced by path** (`Hexalith.EventStore`, `Hexalith.Tenants`) — now checked out as sibling directories in this working copy, but still resolved as **project references** (not NuGet), via a path-probing `HexalithEventStoreRoot` MSBuild property. A fresh clone must `git submodule update --init Hexalith.EventStore Hexalith.Tenants` (root-level only, **never** `--recursive`).
+- **Submodules referenced by path** (`references/Hexalith.EventStore`, `references/Hexalith.Tenants`) — checked out under `references/` and still resolved as **project references** (not NuGet), via a path-probing `HexalithEventStoreRoot` MSBuild property. A fresh clone must `git submodule update --init references/Hexalith.EventStore references/Hexalith.Tenants` (root-repository submodules only, **never** `--recursive`).
 - **Apply-method ordering is load-bearing** — `PartyState` declares rejection-event `Apply` no-ops *before* success Applies (suffix-match rehydration); pinned by a fitness test. An auto-formatter that alphabetises methods would silently corrupt rehydration.
 
 **Discrepancies & defects to reconcile (this rescan):**

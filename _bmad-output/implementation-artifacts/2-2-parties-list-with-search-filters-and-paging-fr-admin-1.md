@@ -118,7 +118,7 @@ This is a reuse-and-enhance story for the existing `Hexalith.Parties.AdminPortal
 - No formal PRD exists in `_bmad-output/planning-artifacts`; epics, architecture, UX, readiness reports, and brownfield docs are the source of truth.
 - Loaded UX files under `_bmad-output/planning-artifacts/ux-designs/ux-parties-2026-06-09/`; relevant constraints are Admin comfortable density, `FluentDataGrid`, `FluentSelect`, freshness indicator, stale last-known rendering, "No parties match." empty copy, keyboard parity, and no color-only state.
 - Loaded `_bmad-output/planning-artifacts/implementation-readiness-report-2026-06-09-v2.md`; it warns that Epic 2/3 Admin stories must reuse `PartiesAdminPortal.razor` rather than rebuild list/detail/GDPR pages.
-- Loaded persistent project context from `_bmad-output/project-context.md` and sibling submodule contexts.
+- Loaded persistent project context from `_bmad-output/project-context.md` and reference submodule contexts.
 - Reviewed previous story `_bmad-output/implementation-artifacts/2-1-embed-the-admin-area-behind-the-admin-policy.md`.
 - Reviewed current source and tests in `src/Hexalith.Parties.AdminPortal`, `src/Hexalith.Parties.Client`, `src/Hexalith.Parties.Contracts`, `src/Hexalith.Parties.UI/Components/Shared`, `tests/Hexalith.Parties.AdminPortal.Tests`, and relevant UI shared-component tests.
 - Reviewed recent git history: `ec2676b feat(story-2.1): Embed the Admin area behind the Admin policy`, then Epic 1 foundation commits.

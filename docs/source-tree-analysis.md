@@ -123,12 +123,12 @@ Hexalith.Parties/
 └── docs/                              # ← you are here (20 .md files + generated docs + this index)
 ```
 
-## Submodules (now checked out as sibling directories; resolved by project path)
+## Submodules (checked out under references; resolved by project path)
 
-`.gitmodules` declares root-level submodules. In this working copy `Hexalith.EventStore`, `Hexalith.Tenants`, `Hexalith.Commons`, `Hexalith.Memories`, and `Hexalith.FrontComposer` are **checked out** (each is a separate repo with its own docs). The build still resolves `Hexalith.EventStore` and `Hexalith.Tenants` as **project references** (via a path-probing `HexalithEventStoreRoot` MSBuild property), not NuGet; `Hexalith.Memories` is optional (rich search). A fresh clone must initialise them root-level before building/running:
+`.gitmodules` declares repository-level submodules under `references/`. In this working copy `references/Hexalith.EventStore`, `references/Hexalith.Tenants`, `references/Hexalith.Commons`, `references/Hexalith.Memories`, and `references/Hexalith.FrontComposer` are **checked out** (each is a separate repo with its own docs). The build still resolves `references/Hexalith.EventStore` and `references/Hexalith.Tenants` as **project references** (via a path-probing `HexalithEventStoreRoot` MSBuild property), not NuGet; `references/Hexalith.Memories` is optional (rich search). A fresh clone must initialise them before building/running:
 
 ```bash
-git submodule update --init Hexalith.EventStore Hexalith.Tenants
+git submodule update --init references/Hexalith.EventStore references/Hexalith.Tenants
 # never use --recursive for the default local run
 ```
 

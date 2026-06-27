@@ -129,7 +129,7 @@ This is a reuse-and-enhance story for the existing `Hexalith.Parties.AdminPortal
 - No formal PRD exists in `_bmad-output/planning-artifacts`; epics, architecture, UX, readiness reports, and brownfield docs are the source of truth.
 - Loaded UX files under `_bmad-output/planning-artifacts/ux-designs/ux-parties-2026-06-09/`; relevant constraints are Admin desktop master-detail, phone sheet/full-screen reflow, focus moves into the sheet and restores to the row, state is not color-only, freshness is polite, and 320px/200% zoom must not lose content.
 - Loaded `_bmad-output/planning-artifacts/implementation-readiness-report-2026-06-09-v2.md`; it explicitly warns that Story 2.3 must reuse and enhance `PartiesAdminPortal.razor` rather than rebuild detail pages.
-- Loaded persistent project context from `_bmad-output/project-context.md` and sibling submodule contexts.
+- Loaded persistent project context from `_bmad-output/project-context.md` and reference submodule contexts.
 - Reviewed previous story `_bmad-output/implementation-artifacts/2-2-parties-list-with-search-filters-and-paging-fr-admin-1.md`; Story 2.2 is done and established debounced search, filtered search, paging preservation, stale list rows, keyboard grid activation, Admin fixture E2E coverage, and direct xUnit executable fallback.
 - Reviewed current source and tests in `src/Hexalith.Parties.AdminPortal`, `src/Hexalith.Parties.UI/Components/Shared`, `tests/Hexalith.Parties.AdminPortal.Tests`, and `tests/e2e`.
 - Reviewed recent git history: `da6bfcf feat(story-2.2): Parties list with search, filters, and paging`, `ec2676b feat(story-2.1): Embed the Admin area behind the Admin policy`, then Epic 1 foundation commits.

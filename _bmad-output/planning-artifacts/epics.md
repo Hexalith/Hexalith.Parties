@@ -153,7 +153,7 @@ existing event-sourced / CQRS / EventStore-gateway-fronted Parties domain servic
 
 - **AR-Starter:** No external CLI starter. The first implementation story stands up a
   **new standalone Blazor Server host `Hexalith.Parties.UI`** modeled on the
-  **FrontComposer shell-host pattern** (`Hexalith.FrontComposer/samples/Counter/Counter.Web`):
+  **FrontComposer shell-host pattern** (`references/Hexalith.FrontComposer/samples/Counter/Counter.Web`):
   FrontComposer Quickstart chain + FluentUI V5 + `AddHexalithDomain<PartiesUiDomainMarker>`,
   added to `Hexalith.Parties.slnx` and the AppHost as Aspire resource `parties-ui`.
 

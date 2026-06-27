@@ -183,11 +183,11 @@ so that I see exactly what I am authorized to use.
 
 ### The canonical references — copy these, don't invent
 
-- **Nav registration + policy gating:** `Hexalith.Tenants/src/Hexalith.Tenants.UI/Composition/TenantsFrontComposerRegistration.cs` is the sibling that registers nav entries (incl. one gated by `RequiredPolicy`) and a manifest, discovered by `AddHexalithDomain<T>()`. Mirror its shape exactly. [Source: TenantsFrontComposerRegistration.cs:5-46]
+- **Nav registration + policy gating:** `references/Hexalith.Tenants/src/Hexalith.Tenants.UI/Composition/TenantsFrontComposerRegistration.cs` is the sibling that registers nav entries (incl. one gated by `RequiredPolicy`) and a manifest, discovered by `AddHexalithDomain<T>()`. Mirror its shape exactly. [Source: TenantsFrontComposerRegistration.cs:5-46]
 - **Policy registration:** `Hexalith.Tenants.UI/Program.cs:32-37` registers a policy via **unconditional** `AddAuthorizationCore(options => options.AddPolicy(...))`. Mirror the "unconditional so it resolves with or without sign-in" rationale.
 - **Framework nav gating (do not modify — just feed it):** `Hexalith.FrontComposer.Shell/Components/Layout/FrontComposerNavigation.razor:49-61` wraps each entry whose `RequiredPolicy` is set in `<AuthorizeView Policy="@entry.RequiredPolicy"><Authorized>…</Authorized></AuthorizeView>`. Entries render as `<FluentNavItem>` with `data-testid="fc-nav-entry-{boundedContext}-{slug(Title)}"` (e.g. `fc-nav-entry-parties-administration`, `fc-nav-entry-parties-my-space`). [Source: FrontComposerNavigation.razor; FrontComposerNavigation.razor.cs:111-114 `NavEntryTestId`]
 - **bUnit idiom in this repo:** `tests/Hexalith.Parties.Picker.Tests/Components/PartyPickerComponentTests.cs` — `sealed class … : BunitContext`, `Render<T>(…)`, `cut.Find/FindAll/Markup`, `WaitForAssertion`. [Source: PartyPickerComponentTests.cs]
-- **bUnit auth + policy/role faking:** `Hexalith.FrontComposer/tests/.../FrontComposerNavigationNavEntryTests.cs` — `AddTestAuthorization()` → `BunitAuthorizationContext` with `SetAuthorized("user")`, `SetRoles(...)`, `SetPolicies(...)`, `SetNotAuthorized()`. This is the exact pattern for asserting "gated entry hidden when policy not satisfied / shown when satisfied". [Source: FrontComposerNavigationNavEntryTests.cs:115-150]
+- **bUnit auth + policy/role faking:** `references/Hexalith.FrontComposer/tests/.../FrontComposerNavigationNavEntryTests.cs` — `AddTestAuthorization()` → `BunitAuthorizationContext` with `SetAuthorized("user")`, `SetRoles(...)`, `SetPolicies(...)`, `SetNotAuthorized()`. This is the exact pattern for asserting "gated entry hidden when policy not satisfied / shown when satisfied". [Source: FrontComposerNavigationNavEntryTests.cs:115-150]
 
 ### The role-claim gap (READ THIS — it shapes the whole story)
 
@@ -272,7 +272,7 @@ HEAD is `fdc83d0 feat(story-1.2): Host-owned OIDC sign-in …` (baseline for thi
 - **Clean parallel builds flake** (CS0006 / MSB4018) — use **`-m:1`** for a reliable verdict. [Source: memory `parties-parallel-build-flake`]
 - **`bash scripts/check-no-warning-override.sh` must pass.** [Source: project-context.md; docs/build-gate.md]
 - **Pre-existing, out-of-scope full-`.slnx` failures are NOT your regression** — `Hexalith.PolymorphicSerializations` pack (NU5118/NU5128) and the `*PackageTests`. Verify via per-project compile (`dotnet build src/Hexalith.Parties.UI` + the UI test project) and the unit lane, not the full-solution pack. [Source: memory `parties-pack-tests-preexisting-fail`; 1-2-*.md]
-- **Submodules must be sibling checkouts** (FrontComposer, EventStore, Tenants): `git submodule update --init Hexalith.EventStore Hexalith.Tenants` (root-level only, **never `--recursive`**). [Source: project-context.md]
+- **Submodules must be `references/` checkouts** (FrontComposer, EventStore, Tenants): `git submodule update --init references/Hexalith.EventStore references/Hexalith.Tenants` (root-repository submodules only, **never `--recursive`**). [Source: project-context.md]
 - **Do not touch** the Aspire SDK skew or `Microsoft.Extensions.Hosting.Abstractions` 11.0.0-preview pin (both load-bearing). [Source: memories `aspire-apphost-sdk-version-match`, `hosting-abstractions-preview-pin-load-bearing`]
 - **Aspire MCP can't see a sandbox `aspire run`** — verify the optional live flow via logs/docker/browser. [Source: memory `aspire-mcp-blind-to-sandbox-apphost`]
 
@@ -287,11 +287,11 @@ HEAD is `fdc83d0 feat(story-1.2): Host-owned OIDC sign-in …` (baseline for thi
 - [Source: _bmad-output/planning-artifacts/epics.md#Additional-Requirements] — AR-D2 (role routing + new `Consumer` policy), AR-Client, FR-Shell.
 - [Source: _bmad-output/planning-artifacts/architecture.md#Authentication-Security] — "Role routing. Existing `Admin` policy + a new `Consumer` policy … gated by `<AuthorizeView Policy>` — never cross-render."
 - [Source: _bmad-output/planning-artifacts/architecture.md#Naming-Patterns + #Complete-Project-Directory-Structure] — area routes, one `[Authorize(Policy)]` per area, `UI/Authentication` + `UI/Components/Account` layout.
-- [Source: Hexalith.Tenants/src/Hexalith.Tenants.UI/Composition/TenantsFrontComposerRegistration.cs] — nav-entry + manifest registration + `RequiredPolicy` gating to mirror.
-- [Source: Hexalith.Tenants/src/Hexalith.Tenants.UI/Program.cs:32-37] — unconditional `AddAuthorizationCore(AddPolicy)` precedent.
+- [Source: references/Hexalith.Tenants/src/Hexalith.Tenants.UI/Composition/TenantsFrontComposerRegistration.cs] — nav-entry + manifest registration + `RequiredPolicy` gating to mirror.
+- [Source: references/Hexalith.Tenants/src/Hexalith.Tenants.UI/Program.cs:32-37] — unconditional `AddAuthorizationCore(AddPolicy)` precedent.
 - [Source: Hexalith.FrontComposer.Shell/Components/Layout/FrontComposerNavigation.razor (+ .razor.cs:111-114) ] — the `RequiredPolicy → AuthorizeView` rendering + `data-testid` format the tests assert.
 - [Source: Hexalith.FrontComposer.Shell/Extensions/ServiceCollectionExtensions.cs:64-127] — `AddHexalithDomain` registration-class discovery contract.
-- [Source: Hexalith.FrontComposer/tests/.../FrontComposerNavigationNavEntryTests.cs] — `AddTestAuthorization` + `SetRoles`/`SetPolicies` bUnit gating idiom.
+- [Source: references/Hexalith.FrontComposer/tests/.../FrontComposerNavigationNavEntryTests.cs] — `AddTestAuthorization` + `SetRoles`/`SetPolicies` bUnit gating idiom.
 - [Source: tests/Hexalith.Parties.Picker.Tests/Components/PartyPickerComponentTests.cs] — repo bUnit idiom (`BunitContext`, `Render<T>`, `WaitForAssertion`).
 - [Source: Hexalith.Parties/Extensions/PartiesServiceCollectionExtensions.cs:67-70] — the existing actor-host `Admin` role set to align with.
 - [Source: src/Hexalith.Parties.AdminPortal/Services/AdminPortalAuthorizationService.cs:42-49] — the *other* (tenant-membership) admin notion — out of scope, do not conflate.

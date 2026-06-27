@@ -64,9 +64,9 @@ The `eventstore-admin-ui` and `parties-mcp` resources are explicit-start auxilia
 
 EventStore owns public authentication, tenant validation, RBAC, command/query routing, and generic response mapping. Parties owns domain execution and projection behavior behind the actor host. Do not call Parties internals to manage tenant lifecycle, RBAC, authorization, projection actors, or domain invocation.
 
-If startup fails before the dashboard appears, first check that Docker Desktop is running and that the two root-level submodules above exist on disk. A missing `Hexalith.EventStore` or `Hexalith.Tenants` directory is a setup problem, not a partial local topology that should be treated as ready.
+If startup fails before the dashboard appears, first check that Docker Desktop is running and that the two required submodules exist under `references/`. A missing `references/Hexalith.EventStore` or `references/Hexalith.Tenants` directory is a setup problem, not a partial local topology that should be treated as ready.
 
-Memories-backed rich search is optional for the default local Parties run. To include it, initialize the root-level `Hexalith.Memories` submodule and run the AppHost with `EnableMemoriesSearch=true`; leave it unset for the baseline one-command local topology.
+Memories-backed rich search is optional for the default local Parties run. To include it, initialize the `references/Hexalith.Memories` submodule and run the AppHost with `EnableMemoriesSearch=true`; leave it unset for the baseline one-command local topology.
 
 Readiness is confirmed by the Aspire dashboard health column and by the service-default endpoints exposed by each HTTP resource: `/ready` for readiness, `/health` for full health, and `/alive` for liveness. Treat the system as usable only after `eventstore`, `parties`, and `tenants` are healthy; a live `parties` actor host alone is not enough because public traffic enters through EventStore.
 
@@ -489,7 +489,7 @@ Check the Aspire dashboard for `eventstore`, `eventstore-admin`, `eventstore-adm
 
 ### Docker or Submodule Startup Failures
 
-If Redis, Keycloak, EventStore, or Tenants fail before the dashboard reaches healthy state, confirm Docker Desktop is running and rerun `git submodule update --init Hexalith.EventStore Hexalith.Tenants` from the repository root. Do not use --recursive for the default local run; missing nested submodules are not required by the baseline AppHost path.
+If Redis, Keycloak, EventStore, or Tenants fail before the dashboard reaches healthy state, confirm Docker Desktop is running and rerun `git submodule update --init references/Hexalith.EventStore references/Hexalith.Tenants` from the repository root. Do not use --recursive for the default local run; missing nested submodules are not required by the baseline AppHost path.
 
 ### Authentication Errors
 

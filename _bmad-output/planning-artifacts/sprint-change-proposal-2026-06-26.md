@@ -30,8 +30,8 @@ EventStore's own AppHost already uses `builder.AddHexalithEventStoreSecurity()` 
 Evidence:
 
 - Parties AppHost direct setup: `src/Hexalith.Parties.AppHost/Program.cs:225`
-- EventStore AppHost helper usage: `Hexalith.EventStore/src/Hexalith.EventStore.AppHost/Program.cs:67`
-- Security helper implementation: `Hexalith.EventStore/src/Hexalith.EventStore.Aspire/HexalithEventStoreSecurityExtensions.cs:24`
+- EventStore AppHost helper usage: `references/Hexalith.EventStore/src/Hexalith.EventStore.AppHost/Program.cs:67`
+- Security helper implementation: `references/Hexalith.EventStore/src/Hexalith.EventStore.Aspire/HexalithEventStoreSecurityExtensions.cs:24`
 - Parties fitness test pinning direct setup: `tests/Hexalith.Parties.Tests/FitnessTests/AppHostTenantsTopologyTests.cs:39`
 
 ## 2. Impact Analysis

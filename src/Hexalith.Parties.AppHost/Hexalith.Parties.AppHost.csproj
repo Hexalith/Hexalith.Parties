@@ -4,8 +4,8 @@
     <OutputType>Exe</OutputType>
     <IsPackable>false</IsPackable>
     <IsPublishable>true</IsPublishable>
-    <HexalithEventStoreBasePath>$(MSBuildThisFileDirectory)..\..\Hexalith.EventStore\src</HexalithEventStoreBasePath>
-    <HexalithTenantsBasePath>$(MSBuildThisFileDirectory)..\..\Hexalith.Tenants\src</HexalithTenantsBasePath>
+    <HexalithEventStoreBasePath>$(MSBuildThisFileDirectory)..\..\references\Hexalith.EventStore\src</HexalithEventStoreBasePath>
+    <HexalithTenantsBasePath>$(MSBuildThisFileDirectory)..\..\references\Hexalith.Tenants\src</HexalithTenantsBasePath>
   </PropertyGroup>
 
   <ItemGroup>
@@ -38,8 +38,8 @@
   </ItemGroup>
 
   <Target Name="ValidateHexalithTenantsBasePath" BeforeTargets="ResolveProjectReferences">
-    <Error Condition="!Exists('$(HexalithEventStoreBasePath)')" Text="HexalithEventStoreBasePath '$(HexalithEventStoreBasePath)' does not exist. Run 'git submodule update --init Hexalith.EventStore Hexalith.Tenants' from the repository root. Do not use recursive submodule initialization for the default local run." />
-    <Error Condition="!Exists('$(HexalithTenantsBasePath)')" Text="HexalithTenantsBasePath '$(HexalithTenantsBasePath)' does not exist. Run 'git submodule update --init Hexalith.EventStore Hexalith.Tenants' from the repository root. Do not use recursive submodule initialization for the default local run." />
+    <Error Condition="!Exists('$(HexalithEventStoreBasePath)')" Text="HexalithEventStoreBasePath '$(HexalithEventStoreBasePath)' does not exist. Run 'git submodule update --init references/Hexalith.EventStore references/Hexalith.Tenants' from the repository root. Do not use recursive submodule initialization for the default local run." />
+    <Error Condition="!Exists('$(HexalithTenantsBasePath)')" Text="HexalithTenantsBasePath '$(HexalithTenantsBasePath)' does not exist. Run 'git submodule update --init references/Hexalith.EventStore references/Hexalith.Tenants' from the repository root. Do not use recursive submodule initialization for the default local run." />
   </Target>
 
 </Project>

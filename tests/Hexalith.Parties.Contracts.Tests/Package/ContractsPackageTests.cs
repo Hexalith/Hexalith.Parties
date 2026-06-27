@@ -329,10 +329,10 @@ public sealed class ContractsPackageFixture : IDisposable
         Directory.CreateDirectory(feedDirectory);
 
         ContractsPackageTests.RunDotnet(
-            $"pack \"{Path.Combine(repoRoot, "Hexalith.Commons", "src", "libraries", "Hexalith.Commons.UniqueIds", "Hexalith.Commons.UniqueIds.csproj")}\" --configuration Release --output \"{feedDirectory}\" --artifacts-path \"{artifactsDirectory}\" {ContractsPackageTests.LocalPackVersionProperties}",
+            $"pack \"{Path.Combine(repoRoot, "references", "Hexalith.Commons", "src", "libraries", "Hexalith.Commons.UniqueIds", "Hexalith.Commons.UniqueIds.csproj")}\" --configuration Release --output \"{feedDirectory}\" --artifacts-path \"{artifactsDirectory}\" {ContractsPackageTests.LocalPackVersionProperties}",
             repoRoot);
         ContractsPackageTests.RunDotnet(
-            $"pack \"{Path.Combine(repoRoot, "Hexalith.EventStore", "src", "Hexalith.EventStore.Contracts", "Hexalith.EventStore.Contracts.csproj")}\" --configuration Release --output \"{feedDirectory}\" --artifacts-path \"{artifactsDirectory}\" {ContractsPackageTests.LocalPackVersionProperties}",
+            $"pack \"{Path.Combine(repoRoot, "references", "Hexalith.EventStore", "src", "Hexalith.EventStore.Contracts", "Hexalith.EventStore.Contracts.csproj")}\" --configuration Release --output \"{feedDirectory}\" --artifacts-path \"{artifactsDirectory}\" {ContractsPackageTests.LocalPackVersionProperties}",
             repoRoot);
         ContractsPackageTests.RunDotnet(
             $"pack \"{Path.Combine(repoRoot, "src", "Hexalith.Parties.Contracts", "Hexalith.Parties.Contracts.csproj")}\" --configuration Release --output \"{feedDirectory}\" --artifacts-path \"{artifactsDirectory}\" {ContractsPackageTests.LocalPackVersionProperties}",

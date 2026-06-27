@@ -76,7 +76,7 @@ PartyPersonalDataCommandGuardTests.cs
 
 [metadataReferences]
 ../../
- Hexalith.EventStore/src/Hexalith.EventStore.Contracts/obj/Debug/net10.0/ref/Hexalith.EventStore.Contracts.dll
+ references/Hexalith.EventStore/src/Hexalith.EventStore.Contracts/obj/Debug/net10.0/ref/Hexalith.EventStore.Contracts.dll
  src/
   Hexalith.Parties.Contracts/obj/Debug/net10.0/ref/Hexalith.Parties.Contracts.dll
   Hexalith.Parties.Security/obj/Debug/net10.0/ref/Hexalith.Parties.Security.dll

@@ -113,5 +113,5 @@ The `parties-ui` host registers scoped adapters for those ports and delegates to
 
 ## External dependencies (submodules / packages)
 
-- **Project-ref submodules** (root-level, now checked out as sibling dirs but still referenced by project path, not NuGet): `Hexalith.EventStore` (gateway, persistence, publishing, `AggregateActor`, `EventStoreAggregate<TState>`), `Hexalith.Tenants` (tenant authority + client subscription/projection), optional `Hexalith.Memories` (rich search), `Hexalith.FrontComposer` (AdminPortal shell host), `Hexalith.Commons`.
+- **Project-ref submodules** (repository-level, checked out under `references/` and still referenced by project path, not NuGet): `references/Hexalith.EventStore` (gateway, persistence, publishing, `AggregateActor`, `EventStoreAggregate<TState>`), `references/Hexalith.Tenants` (tenant authority + client subscription/projection), optional `references/Hexalith.Memories` (rich search), `references/Hexalith.FrontComposer` (AdminPortal shell host), `references/Hexalith.Commons`.
 - **NuGet** (key): Aspire 13.4 (AppHost SDK 13.3.3), DAPR 1.17.9/1.18.0-rc02, FluentValidation 12.1.1, MediatR 14.1.0, FluentUI 5.0-rc.3, ModelContextProtocol 1.3.0, `Hexalith.Memories.Client.Rest` 1.29.0. Full list with versions in [architecture.md §3](architecture.md).

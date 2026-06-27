@@ -2,12 +2,12 @@
 
 ## Policy
 
-The solution-level build must remain green on a fresh clone with root-level submodules only. Specifically:
+The solution-level build must remain green on a fresh clone with root-repository submodules under `references/` only. Specifically:
 
 ```
 git clone <repo> /path/to/clean
 cd /path/to/clean
-git submodule update --init            # root-level only - no --recursive
+git submodule update --init            # root-repository submodules only - no --recursive
 dotnet restore Hexalith.Parties.slnx
 dotnet build Hexalith.Parties.slnx --configuration Release
 ```
@@ -16,13 +16,13 @@ All four steps must exit zero with **no** command-line warnings-as-errors overri
 
 - `-p:TreatWarningsAsErrors=false` (and MSBuild-equivalent `/p:`, `-property:`, `--property` forms; matched case-insensitively).
 - `-p:WarningsAsErrors=` with an *empty* value (the full disable). The narrowing form `-p:WarningsAsErrors=<RuleId>` (which adds a single ID to the warnings-as-errors set) is intentionally allowed as a recommended escape valve.
-- `git submodule update ... --recursive` and `submodules: recursive` in GitHub Actions checkout — root-level submodules only is the default per Story 3.6.
+- `git submodule update ... --recursive` and `submodules: recursive` in GitHub Actions checkout — root-repository submodules under `references/` only is the default per Story 3.6.
 
 ## CI enforcement
 
 `.github/workflows/test.yml::lint` runs the following steps on every PR and push to `main` / `develop`:
 
-1. Checkout with `submodules: true` (root-level only, not recursive).
+1. Checkout with `submodules: true` (root-repository submodules only, not recursive).
 2. Setup .NET SDK via `actions/setup-dotnet`.
 3. Cache NuGet packages keyed by `global.json`, `Directory.Packages.props`, `Directory.Build.props`, and every `*.csproj`.
 4. `dotnet restore Hexalith.Parties.slnx`.
@@ -62,7 +62,7 @@ A submodule pointer bump may re-introduce a warning class:
 
 ### Case 4: the nested-submodule guard fails
 
-`scripts/check-no-warning-override.sh` found a `git submodule update --recursive` or `submodules: recursive` reference in an active CI or build script. Story 9.8 AC5 requires the default build path to use root-level submodules only (per Story 3.6). Remove `--recursive` and set the checkout `submodules:` option to `true` (root-level only). If a project genuinely needs nested submodules, make it opt-in following the `EnableMemoriesSearch=true` pattern (see `_bmad-output/implementation-artifacts/3-6-enable-one-command-local-run.md`).
+`scripts/check-no-warning-override.sh` found a `git submodule update --recursive` or `submodules: recursive` reference in an active CI or build script. Story 9.8 AC5 requires the default build path to use root-repository submodules under `references/` only (per Story 3.6). Remove `--recursive` and set the checkout `submodules:` option to `true` (root-repository submodules only). If a project genuinely needs nested submodules, make it opt-in following the `EnableMemoriesSearch=true` pattern (see `_bmad-output/implementation-artifacts/3-6-enable-one-command-local-run.md`).
 
 ## Local parity
 
@@ -82,7 +82,7 @@ The gate does **not** enforce:
 
 - Full test suite passing (covered by the `test` matrix and `Quality Gate` jobs in the same workflow).
 - `dotnet format --verify-no-changes` (deferred per `docs/ci.md`).
-- Recursive submodule build (intentionally excluded; root-level submodules only per Story 3.6).
+- Recursive submodule build (intentionally excluded; root-repository submodules under `references/` only per Story 3.6).
 
 ## Related artifacts
 

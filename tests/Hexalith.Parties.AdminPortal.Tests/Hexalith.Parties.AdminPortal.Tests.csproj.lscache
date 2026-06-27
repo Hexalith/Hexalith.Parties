@@ -72,11 +72,11 @@ Usings.cs
 
 [metadataReferences]
 ../../
- Hexalith.EventStore/src/Hexalith.EventStore.Contracts/obj/Debug/net10.0/ref/Hexalith.EventStore.Contracts.dll
- Hexalith.FrontComposer/src/
+ references/Hexalith.EventStore/src/Hexalith.EventStore.Contracts/obj/Debug/net10.0/ref/Hexalith.EventStore.Contracts.dll
+ references/Hexalith.FrontComposer/src/
   Hexalith.FrontComposer.Contracts/obj/Debug/net10.0/ref/Hexalith.FrontComposer.Contracts.dll
   Hexalith.FrontComposer.Shell/obj/Debug/net10.0/ref/Hexalith.FrontComposer.Shell.dll
- Hexalith.Tenants/src/
+ references/Hexalith.Tenants/src/
   Hexalith.Tenants.Client/obj/Debug/net10.0/ref/Hexalith.Tenants.Client.dll
   Hexalith.Tenants.Contracts/obj/Debug/net10.0/ref/Hexalith.Tenants.Contracts.dll
  src/

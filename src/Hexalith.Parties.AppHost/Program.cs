@@ -21,7 +21,7 @@ const string PublishModeJwtAuthority = PublishModeJwtIssuer;
 // AND survives aspirate emission into a ConfigMap and consumer Pod env vars. The EventStore
 // DomainServiceResolver was extended in parallel to recognize the "wildcard_<domain>_<version>"
 // shape in addition to the legacy "*|domain|version" pipe form (see
-// Hexalith.EventStore/src/Hexalith.EventStore.Server/DomainServices/DomainServiceResolver.cs).
+// references/Hexalith.EventStore/src/Hexalith.EventStore.Server/DomainServices/DomainServiceResolver.cs).
 // The dictionary VALUE's TenantId field stays "*" — that is a value, not a key, and is valid in
 // env-var values.
 IResourceBuilder<ProjectResource> eventStore = builder.AddProject<Projects.Hexalith_EventStore>("eventstore")
@@ -131,7 +131,7 @@ IResourceBuilder<ProjectResource> partiesUi = builder.AddProject<Projects.Hexali
         "EventStore__SignalR__HubUrl",
         ReferenceExpression.Create($"{eventStore.GetEndpoint("http")}/hubs/projection-changes"));
 
-// Memories.Server is an OPTIONAL sibling submodule. It is composed as a first-class DAPR resource
+// Memories.Server is an optional reference submodule. It is composed as a first-class DAPR resource
 // in publish mode (FR31a single-source-of-truth service graph) and on demand in run mode when
 // `EnableMemoriesSearch=true`; the default one-command local Parties run does not require the
 // Hexalith.Memories submodule to be initialized. The project is resolved by path (not a compile-time
@@ -139,8 +139,8 @@ IResourceBuilder<ProjectResource> partiesUi = builder.AddProject<Projects.Hexali
 if (builder.ExecutionContext.IsPublishMode
     || string.Equals(builder.Configuration["EnableMemoriesSearch"], "true", StringComparison.OrdinalIgnoreCase))
 {
-    string memoriesProjectPath = ResolveOptionalSiblingProjectPath(
-        "Hexalith.Memories",
+    string memoriesProjectPath = ResolveOptionalReferenceProjectPath(
+        Path.Combine("references", "Hexalith.Memories"),
         Path.Combine("src", "Hexalith.Memories.Server", "Hexalith.Memories.Server.csproj"),
         "EnableMemoriesSearch");
 
@@ -178,12 +178,12 @@ if (builder.ExecutionContext.IsPublishMode
 if (builder.ExecutionContext.IsPublishMode
     || string.Equals(builder.Configuration["EnableEventStoreSampleUi"], "true", StringComparison.OrdinalIgnoreCase))
 {
-    string sampleProjectPath = ResolveOptionalSiblingProjectPath(
-        "Hexalith.EventStore",
+    string sampleProjectPath = ResolveOptionalReferenceProjectPath(
+        Path.Combine("references", "Hexalith.EventStore"),
         Path.Combine("samples", "Hexalith.EventStore.Sample", "Hexalith.EventStore.Sample.csproj"),
         "EnableEventStoreSampleUi");
-    string sampleBlazorUiProjectPath = ResolveOptionalSiblingProjectPath(
-        "Hexalith.EventStore",
+    string sampleBlazorUiProjectPath = ResolveOptionalReferenceProjectPath(
+        Path.Combine("references", "Hexalith.EventStore"),
         Path.Combine("samples", "Hexalith.EventStore.Sample.BlazorUI", "Hexalith.EventStore.Sample.BlazorUI.csproj"),
         "EnableEventStoreSampleUi");
 
@@ -394,19 +394,20 @@ static string ResolveDaprConfigPath(string fileName)
         cwdPath);
 }
 
-// Resolves an optional sibling submodule project by path so the AppHost carries no compile-time
+// Resolves an optional reference submodule project by path so the AppHost carries no compile-time
 // ProjectReference to it. Used for Memories.Server, which is only needed when rich search is enabled.
-static string ResolveOptionalSiblingProjectPath(string submoduleName, string projectRelativePath, string enablingSettingName)
+static string ResolveOptionalReferenceProjectPath(string submodulePath, string projectRelativePath, string enablingSettingName)
 {
     string repositoryRoot = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", ".."));
-    string projectPath = Path.Combine(repositoryRoot, submoduleName, projectRelativePath);
+    string projectPath = Path.Combine(repositoryRoot, submodulePath, projectRelativePath);
     if (File.Exists(projectPath))
     {
         return projectPath;
     }
 
+    string normalizedSubmodulePath = submodulePath.Replace('\\', '/');
     throw new FileNotFoundException(
-        $"Optional project '{projectPath}' was not found. Run 'git submodule update --init {submoduleName}' before enabling '{enablingSettingName}' or publishing the Kubernetes topology. Do not use recursive submodule initialization for the default local run.",
+        $"Optional project '{projectPath}' was not found. Run 'git submodule update --init {normalizedSubmodulePath}' before enabling '{enablingSettingName}' or publishing the Kubernetes topology. Do not use recursive submodule initialization for the default local run.",
         projectPath);
 }
 
