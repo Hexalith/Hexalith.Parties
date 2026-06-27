@@ -764,17 +764,19 @@ process patterns with examples and enforcement.
 **Critical Gaps (block implementation):** None block *starting* implementation along the
 decided path.
 
-**Important Gaps (resolve before the dependent flow ships):**
-1. **D2 binding provisioning implementation (gates the Consumer area):** the mechanism is
-   now decided by `_bmad-output/planning-artifacts/adr-consumer-party-id-binding.md`:
-   admin-link provisioning writes the IdP `party_id` attribute/claim and records operator
-   audit/reconciliation in a small binding store outside the Parties event stream. Story
-   4.2 implements that flow. The Admin area, host-owned OIDC, fail-closed
-   `PartyIdClaimResolver`, `NoPartyBinding`, `ISelfScopedPartiesClient`, BFF self-scope,
-   Parties-side defense-in-depth, and the deferred gateway self-principal risk remain
-   unchanged.
-2. **D7 EventStore GDPR contract:** resolved through the existing projection-query
-   actor and command seams; no EventStore submodule route or DAPR ACL expansion was needed.
+**Important Gaps / Follow-up Constraints:**
+1. **D2 binding provisioning implementation:** implemented by Story 4.2 on 2026-06-10
+   from `_bmad-output/planning-artifacts/adr-consumer-party-id-binding.md`. Admin-link
+   provisioning writes the IdP `party_id` attribute/claim and records operator
+   audit/reconciliation in a small binding store outside the Parties event stream. The
+   Admin area, host-owned OIDC, fail-closed `PartyIdClaimResolver`, `NoPartyBinding`,
+   `ISelfScopedPartiesClient`, BFF self-scope, Parties-side defense-in-depth, and the
+   deferred gateway self-principal risk remain unchanged. Future provisioning
+   enhancements should split on the service/store/IdP adapter boundaries delivered by
+   Story 4.2.
+2. **D7 EventStore GDPR contract:** implemented by Story 3.5 and consumed by Story 3.6
+   on 2026-06-10. It was resolved through the existing projection-query actor and
+   command seams; no EventStore submodule route or DAPR ACL expansion was needed.
 3. **Production KMS (pre-existing prerequisite):** crypto-shredding is ON by default with
    only `LocalDevKeyStorageBackend`; provision a real KMS before any real EU PII.
 4. **RCL status/freshness boundary (discovered in Epic 1):** host-owned
@@ -790,8 +792,8 @@ async export-ready notification channel detail; Blazor Server circuit scaling
 - The gateway-RBAC residual (D3) is documented as a deferred decision with a clear path
   (minimal tenant role to clear the gateway; full removal needs the deferred gateway
   self-principal) rather than left implicit.
-- D7/D2 dependencies are explicitly sequenced as follow-up stories rather than assumed
-  complete.
+- D7/D2 dependencies were explicitly sequenced as follow-up stories and are complete
+  as of the 2026-06-10 implementation story records.
 
 ### Architecture Completeness Checklist
 
@@ -821,9 +823,11 @@ async export-ready notification channel detail; Blazor Server circuit scaling
 
 ### Architecture Readiness Assessment
 
-**Overall Status:** READY WITH KNOWN IMPLEMENTATION DEPENDENCIES — chosen deliberately
-(conservative). The foundation + Admin path are implementable now; the Consumer path
-needs Story 4.2 to implement the accepted D2 admin-link binding ADR.
+**Overall Status:** IMPLEMENTED FOR EPICS 1-5; PLANNING TRACEABILITY RECONCILIATION
+REQUIRED. The foundation, Admin path, Consumer binding, Consumer profile, and Consumer
+privacy stories are marked done in `sprint-status.yaml` as of 2026-06-27. For readiness
+checks after 2026-06-10, treat D2 and D7 as implemented and validate regressions against
+`sprint-status.yaml` and the implementation story records.
 
 **Confidence Level:** medium-high — strong fit to the existing system; the open items are
 scoped dependencies, not unknowns.
@@ -850,8 +854,8 @@ scoped dependencies, not unknowns.
 - Respect the project structure and boundaries; consumer data only via the self-scope accessor.
 - Refer to this document for all architectural questions.
 
-**First Implementation Priority:** Stand up the `Hexalith.Parties.UI` host (Sdk.Web,
-FrontComposer Quickstart chain + OIDC + `AddPartiesClient` + SignalR + self-scope DI),
-add it to `Hexalith.Parties.slnx` and the AppHost — then role routing + `party_id`
-resolution. Consumer implementation depends on Story 4.2 implementing the accepted
-admin-link binding ADR.
+**Implementation Status Note:** the first-priority host, role routing, `party_id`
+resolution, admin-link binding provisioning, ConsumerPortal, Admin GDPR D7 backend, and
+Admin erasure-verification report stories are complete in the implementation artifacts.
+Use this document for architectural invariants and validate current readiness against
+the PRD-shaped requirements source, `sprint-status.yaml`, and completed story records.

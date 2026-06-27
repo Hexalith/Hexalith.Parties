@@ -47,10 +47,12 @@ date: '2026-06-09'
 This document provides the complete epic and story breakdown for **parties** (the
 `parties-ui` initiative), decomposing the requirements from the **UX design set**
 (`ux-parties-2026-06-09`) and the **Architecture Decision Document** into
-implementable stories. **There is no formal PRD** — this is a brownfield .NET 10
-system; per the `docs/index.md` brownfield note the requirements basis is the
-`docs/` baseline plus the UX design, which `architecture.md` already consolidated
-into the FR/NFR set reproduced below.
+implementable stories. Canonical requirements source:
+`_bmad-output/planning-artifacts/parties-ui-prd.md`. This is a brownfield .NET 10
+system; the PRD-shaped source is extracted from the `docs/` baseline, the final UX
+design set, and `architecture.md`'s consolidated FR/NFR inventory. When tracing
+implementation readiness, use the PRD-shaped source plus this epics document and
+the current `sprint-status.yaml`.
 
 **Scope:** Realize the `parties-ui` experience — a single responsive Blazor Server
 app on the **FrontComposer shell + FluentUI Blazor V5**, with two role-gated areas
@@ -387,16 +389,19 @@ A DPO can fulfill data-subject obligations on any party — erase (typed confirm
 restrict / lift, record / revoke consent, export (Art.20), processing records (Art.30),
 and prove erasure via the verification report. Wraps the existing AdminPortal GDPR panels
 into `PartyGdprPage`; GDPR destructive button + typed-confirm; erased/restricted/export
-backend behaviors (AR-Gdpr-*); and the D7 EventStore-contract backend story
-(cross-submodule — gates the verification report).
+backend behaviors (AR-Gdpr-*); and the D7 EventStore-contract backend/report path.
+Status note: Story 3.5 and Story 3.6 completed this path on 2026-06-10; the
+implemented D7 route uses existing projection-query and command seams and did not
+require EventStore submodule, `/query`, or DAPR ACL changes.
 
 **FRs covered:** FR-Admin-4
 
 ### Epic 4: Consumer — Identity Binding & My Profile
 
 A consumer signs in, is bound fail-closed to exactly their own party, and can view and
-correct their own personal data. Includes the `party_id` binding-provisioning **decision
-(Story 4.1, ADR) + build (Story 4.2)** (AR-Gap-Binding) that gates the whole Consumer area;
+correct their own personal data. Includes the completed `party_id`
+binding-provisioning **decision (Story 4.1, ADR) + build (Story 4.2)**
+(AR-Gap-Binding), which now unblocks the Consumer area;
 `ConsumerPortal` RCL stand-up; My profile + Edit profile via the self-scoped accessor.
 
 **FRs covered:** FR-Consumer-1, FR-Consumer-2
@@ -414,12 +419,11 @@ two-state erasure panel (UX-DR13), plain-verbs / single-status (UX-DR16) — all
 ### Epic Dependencies
 
 `1 → {2, 4}` · `2 → 3` · `4 → 5`. Each epic is standalone once its predecessors ship.
-Epic 3 additionally depends on the D7 EventStore contract (cross-submodule, approval
-required); Epic 4 additionally depends on Story 4.2 implementing the accepted
-admin-link binding ADR.
-**Intra-epic sequencing:** Story 4.2 (binding build) depends on Story 4.1 (binding
-decision / ADR); Story 3.6 (verification report UI) depends on Story 3.5 (D7 backend
-contract, approval-gated).
+Current status note, 2026-06-27: `sprint-status.yaml` marks Epics 1-5 and all listed
+stories as `done`. Historical sequencing remains: Story 4.2 (binding build) followed
+Story 4.1 (binding decision / ADR), and Story 3.6 (verification report UI) followed
+Story 3.5 (D7 backend contract). Do not treat those dependencies as active blockers
+after the 2026-06-10 completed implementation story records.
 
 ### Out of MVP scope (tracked, not stories)
 
@@ -515,7 +519,7 @@ So that a consumer without a binding never reaches a data screen.
 **When** resolution runs
 **Then** the user is routed to a fail-closed `NoPartyBinding` onboarding/error state — **never** a data screen.
 
-**And** bUnit tests cover the present-claim and absent-claim paths. _(The mechanism that issues the claim is AR-Gap-Binding — **decided** in Story 4.1 and **implemented** in Story 4.2; this story only consumes an existing claim, and its happy path is end-to-end verifiable once 4.2 lands.)_
+**And** bUnit tests cover the present-claim and absent-claim paths. _(This story consumes an existing `party_id` claim and proves fail-closed resolver behavior with injected principals and DI tests. Story 4.1 selected the issuing mechanism through the accepted ADR, and Story 4.2 implemented admin-link claim provisioning. Do not treat Story 1.4 as blocked by future claim issuance work.)_
 
 ### Story 1.5: Consumer own-data self-authorization (defense-in-depth)
 
@@ -826,6 +830,10 @@ So that I can fulfill portability and accountability obligations.
 
 ### Story 3.5: EventStore erasure-verification contract (backend, cross-submodule — approval-gated)
 
+Status note: completed on 2026-06-10 after approval was recorded. The chosen
+implementation used existing projection-query and command seams; no EventStore
+submodule route, `/query` endpoint, or DAPR ACL expansion was required.
+
 As an EventStore maintainer,
 I want a defined contract for erasure certification and verification retry,
 So that the Parties tier can prove a party was shredded across projections instead of stubbing it.
@@ -840,9 +848,15 @@ So that the Parties tier can prove a party was shredded across projections inste
 **When** the certificate is produced
 **Then** it carries stable erased/verification state **without** exposing destroyed-key/cryptographic-exception text, stale display names, contact values, identifiers, or raw payloads.
 
-**And** this story is explicitly **gated on cross-submodule approval** and sequenced as a **predecessor to Story 3.6**; the rest of Epic 3 ships without either. _(AR-D7 / AR-Gap-D7.)_
+**And** this story was explicitly **gated on approval** and sequenced as a
+**predecessor to Story 3.6**. The approval gate is now satisfied and the completed
+story record is the implementation evidence. _(AR-D7 / AR-Gap-D7.)_
 
 ### Story 3.6: Admin erasure-verification report (UI — consumes the D7 contract)
+
+Status note: completed on 2026-06-10. The "verification not yet available" state
+below is defensive runtime behavior for capability-unavailable/provisional
+conditions, not an active dependency on an unlanded D7 contract.
 
 As a DPO,
 I want a verification report proving a party was shredded across projections,
@@ -872,6 +886,10 @@ own data. **Covers FR-Consumer-1, FR-Consumer-2**; resolves AR-Gap-Binding and s
 
 ### Story 4.1: Decide the Consumer identity → `party_id` binding mechanism (design spike → ADR)
 
+Status note: completed on 2026-06-10. The accepted ADR is
+`_bmad-output/planning-artifacts/adr-consumer-party-id-binding.md`. Retain this
+story for traceability, but do not count it as active Phase 4 implementation work.
+
 As a product owner / architect,
 I want a decided, recorded mechanism for binding a consumer's identity to their party,
 So that the Consumer area can be estimated and built against a known design.
@@ -889,6 +907,11 @@ So that the Consumer area can be estimated and built against a known design.
 **And** this is a **decision spike**, not an implementation story; it produces a decision artifact only and is the **predecessor of Story 4.2** and all of Epics 4–5. _(Resolves readiness finding M1.)_
 
 ### Story 4.2: Implement admin-link `party_id` binding provisioning
+
+Status note: completed on 2026-06-10. This story was an oversized implementation
+slice, but it is already complete and reviewed. Do not retroactively split it for
+readiness hygiene. Future identity-provisioning enhancements should be split into
+smaller stories using the service/store/IdP adapter boundaries introduced here.
 
 As a product owner,
 I want the admin-link binding mechanism from the accepted Consumer identity binding ADR implemented end-to-end,
@@ -908,7 +931,7 @@ So that consumers can be provisioned and the Consumer area becomes reachable.
 **When** files are changed
 **Then** likely changes are limited to Keycloak/tache realm configuration and topology tests, the identity-binding provisioning surface/service, operator authorization, and host/flow tests for bound and unbound Consumers; no Parties command, event, projection, actor, DAPR ACL expansion, public actor-host endpoint, browser token flow, or Parties event-stream mapping is introduced.
 
-**And** tests cover mapper shape, a bound Consumer (reaches `/me`), unbound/removed/ambiguous Consumers (fail closed to `NoPartyBinding`), duplicate active binding rejection, rotation, suspend/remove, unauthorized operator denial, and audit-store/IdP-attribute drift handling. _This story unblocks the rest of Epic 4 and Epic 5._
+**And** tests cover mapper shape, a bound Consumer (reaches `/me`), unbound/removed/ambiguous Consumers (fail closed to `NoPartyBinding`), duplicate active binding rejection, rotation, suspend/remove, unauthorized operator denial, and audit-store/IdP-attribute drift handling. _This completed story unblocks the rest of Epic 4 and Epic 5._
 
 ### Story 4.3: Stand up the ConsumerPortal RCL and Consumer area
 
