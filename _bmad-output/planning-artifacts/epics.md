@@ -6,7 +6,9 @@ epicCount: 5
 storyCount: 30
 correctCourse: '2026-06-09 — readiness course-correction: split Story 4.1 (decision spike + impl) and Story 3.5 (D7 backend + report UI); +phone-reflow AC on 2.3; +mock-fidelity rule'
 inputDocuments:
-  # Requirements basis (no formal PRD — brownfield; architecture + UX are the basis)
+  # Canonical requirements source (PRD-shaped; consolidates the brownfield basis below)
+  - _bmad-output/planning-artifacts/parties-ui-prd.md
+  # Requirements basis (brownfield; architecture + UX are the original basis, now consolidated in the canonical PRD)
   - _bmad-output/planning-artifacts/architecture.md
   # UX design set
   - _bmad-output/planning-artifacts/ux-designs/ux-parties-2026-06-09/EXPERIENCE.md
@@ -34,7 +36,7 @@ inputDocuments:
   - docs/gdpr-processing-activity-records.md
   # Project context (persistent facts — AI agent rules)
   - _bmad-output/project-context.md
-requirementsBasis: 'Brownfield docs/ + UX design set (no formal PRD — per docs/index.md brownfield note and architecture.md). Architecture.md consolidates FRs/NFRs derived from UX EXPERIENCE.md.'
+requirementsBasis: 'Canonical PRD: _bmad-output/planning-artifacts/parties-ui-prd.md (extracted 2026-06-27 from brownfield docs/, the ux-parties-2026-06-09 design set, and architecture.md''s consolidated FR/NFR inventory derived from UX EXPERIENCE.md).'
 project_name: parties
 user_name: Administrator
 date: '2026-06-09'
@@ -441,6 +443,12 @@ the shared security, freshness, accessibility, and shell foundation every later 
 consumes. **Covers FR-Shell** and establishes AR-Starter, D1, D2, D3, D5, D6, D10,
 AR-StatusMap, UX-DR1/2/3/4/5/6/8/10/12, and the D9 a11y gate.
 
+**User outcome (report this, not "infrastructure complete" — resolves readiness finding m1).**
+The epic is *done* when a user can sign in, land in the correct role area, be sent
+fail-closed to `NoPartyBinding` when unbound, operate only on their own scope, see
+freshness state, and pass the WCAG 2.2 AA a11y gate. Stories 1.1, 1.6, 1.8, 1.9, and
+1.10 are enablers of that outcome, not the outcome itself.
+
 ### Story 1.1: Stand up the Hexalith.Parties.UI Blazor Server host
 
 As a developer,
@@ -647,6 +655,18 @@ An admin/tenant-owner can search, filter, view, create, edit, and link Person &
 Organization records within their tenant. **Covers FR-Admin-1, FR-Admin-2, FR-Admin-3**;
 delivers D11/UX-DR7 and threads NFR1/NFR2/NFR5. All work lives in `AdminPortal` + `Picker`.
 
+**AC ownership & build order (resolves readiness finding M1 — forward-linked ACs).**
+Each story's acceptance is verified by the surface that story *owns*; a reference to
+another story's surface is a navigation/binding **affordance**, not acceptance of that
+target. Build order within this epic: **2.1 → 2.2 → 2.3 → 2.5 → 2.4**.
+- **2.2** owns the list and the row-activation **trigger** (route intent to
+  `/admin/parties/{id}`); the Party Detail surface it lands on is owned by **2.3**.
+- **2.3** owns Party Detail and exposes **Edit** and **GDPR** entry **affordances**;
+  the Edit form is owned by **2.4** and the GDPR page is owned by **Epic 3 / Story 3.1**.
+- **2.4** owns Create/Edit; its picker-backed **relationship linking** depends on the
+  accessible picker delivered by **2.5**, so 2.5 ships before 2.4 — or 2.4 ships
+  without relationship linking until 2.5 lands.
+
 ### Story 2.1: Embed the Admin area behind the Admin policy
 
 As an admin,
@@ -683,7 +703,7 @@ So that I can find a record quickly.
 **When** the list resolves empty
 **Then** it shows "No parties match." + a clear-filters action (never a dead end).
 
-**And** erased parties are excluded or shown only as an erased status; arrow-key row navigation + `Enter` opens detail; type-ahead focuses search.
+**And** erased parties are excluded or shown only as an erased status; arrow-key row navigation + `Enter` opens detail; type-ahead focuses search. _(Sequencing: this story owns the list and the row-activation trigger to `/admin/parties/{id}`; the Party Detail surface that route lands on is owned by Story 2.3. Acceptance here verifies that activation issues the correct navigation, not the rendered detail.)_
 
 ### Story 2.3: Party detail (FR-Admin-2)
 
@@ -695,7 +715,7 @@ So that I can review the record and decide what to do.
 
 **Given** a party id
 **When** I open `/admin/parties/{id}`
-**Then** the full `PartyDetail` renders with the party-state badge and freshness indicator, and entry buttons to **Edit** and **GDPR**.
+**Then** the full `PartyDetail` renders with the party-state badge and freshness indicator, and entry buttons to **Edit** and **GDPR**. _(Sequencing: the Edit/GDPR controls are navigation affordances owned here; the Edit form they open is owned by Story 2.4 and the GDPR page is owned by Epic 3 / Story 3.1. Acceptance here verifies the affordances route correctly, not the target surfaces.)_
 
 **Given** a partial projection (`DisplayNameOnly`)
 **When** detail renders
@@ -728,6 +748,8 @@ So that I can author correct records.
 **Given** a successful submit
 **When** the command is accepted
 **Then** the view reflects the change **optimistically** with a `role=status` "Saved — updating…" and reconciles silently on projection confirm.
+
+_(Sequencing: this story's core create/edit acceptance is self-contained. Picker-backed **relationship linking** embeds the accessible party picker delivered by Story 2.5, so build 2.5 before 2.4's linking — or narrow 2.4 to author/validation only until 2.5 lands. The route id stays authoritative on edit regardless of picker availability.)_
 
 ### Story 2.5: Party picker re-skin + full WAI-ARIA combobox (D11 / UX-DR7)
 
@@ -884,7 +906,7 @@ A consumer signs in, is bound fail-closed to their own party, and views/corrects
 own data. **Covers FR-Consumer-1, FR-Consumer-2**; resolves AR-Gap-Binding and stands up
 `ConsumerPortal`. All consumer data flows through `ISelfScopedPartiesClient`.
 
-### Story 4.1: Decide the Consumer identity → `party_id` binding mechanism (design spike → ADR)
+### Story 4.1: Decide the Consumer identity → `party_id` binding mechanism (completed discovery prerequisite)
 
 Status note: completed on 2026-06-10. The accepted ADR is
 `_bmad-output/planning-artifacts/adr-consumer-party-id-binding.md`. Retain this
@@ -904,7 +926,7 @@ So that the Consumer area can be estimated and built against a known design.
 **When** Story 4.2's acceptance criteria are written
 **Then** they are derived directly from the chosen option (no open design questions remain), and the ADR is referenced as the source.
 
-**And** this is a **decision spike**, not an implementation story; it produces a decision artifact only and is the **predecessor of Story 4.2** and all of Epics 4–5. _(Resolves readiness finding M1.)_
+**And** this is a **completed discovery prerequisite** (not Phase 4 implementation capacity); it produced the accepted ADR and is the **predecessor of Story 4.2** and all of Epics 4–5. List it separately from implementation stories in readiness/capacity views. _(Resolves readiness finding m3 — Story 4.1 classification; corrects a stale `M1` tag.)_
 
 ### Story 4.2: Implement admin-link `party_id` binding provisioning
 

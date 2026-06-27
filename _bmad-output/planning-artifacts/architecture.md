@@ -45,7 +45,7 @@ referenceDocsAvailable:
   - _bmad-output/planning-artifacts/ux-designs/ux-parties-2026-06-09/mockups/ (5 HTML mockups)
 workflowType: 'architecture'
 scope: 'Realize the parties-ui experience (ux-parties-2026-06-09): single Blazor app, two role-gated areas (Admin records management + Consumer GDPR self-service) on FrontComposer + FluentUI V5, extending the existing event-sourced / CQRS / EventStore-gateway-fronted Parties system.'
-requirementsBasis: 'Brownfield docs/ + UX design (no formal PRD exists — per docs/index.md brownfield note).'
+requirementsBasis: 'Canonical PRD: _bmad-output/planning-artifacts/parties-ui-prd.md (extracted 2026-06-27 from brownfield docs/, the ux-parties-2026-06-09 design set, and this architecture FR/NFR inventory).'
 project_name: 'parties'
 user_name: 'Administrator'
 date: '2026-06-09'
@@ -64,14 +64,17 @@ areas (**Admin** records management + **Consumer** GDPR self-service) on the
 FrontComposer shell + FluentUI Blazor V5 — extending the existing event-sourced,
 CQRS, EventStore-gateway-fronted Parties domain service.
 
-**Requirements basis:** brownfield `docs/` set + the UX design (no formal PRD;
-following the brownfield note in `docs/index.md`).
+**Requirements basis:** the canonical PRD
+`_bmad-output/planning-artifacts/parties-ui-prd.md` (extracted 2026-06-27 from the
+brownfield `docs/` set, the UX design, and this document's FR/NFR inventory). This
+architecture predates the PRD (architecture dated 2026-06-09); the PRD consolidates
+the same brownfield + UX basis into a canonical requirements source.
 
 ## Project Context Analysis
 
 ### Requirements Overview
 
-**Functional Requirements (derived from UX `EXPERIENCE.md` — no formal PRD):**
+**Functional Requirements (derived from UX `EXPERIENCE.md`; now consolidated in the canonical PRD `parties-ui-prd.md`):**
 
 A single responsive Blazor app, `parties-ui`, with one sign-in and two
 role-gated areas. Nav auto-populates from domain manifests, gated by
