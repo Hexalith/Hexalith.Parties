@@ -45,6 +45,7 @@ public sealed class ClientPackageTests : IDisposable
 
         dependencyIds.OrderBy(static value => value, StringComparer.OrdinalIgnoreCase).ShouldBe(
         [
+            "Hexalith.Commons.Http",
             "Hexalith.EventStore.Contracts",
             "Hexalith.Parties.Contracts",
             "Microsoft.Extensions.Configuration",
@@ -171,6 +172,10 @@ public sealed class ClientPackageTests : IDisposable
             repoRoot);
         RunDotnet(
             "pack",
+            $"\"{Path.Combine(repoRoot, "references", "Hexalith.Commons", "src", "libraries", "Hexalith.Commons.Http", "Hexalith.Commons.Http.csproj")}\" --configuration Release --output \"{feedDirectory}\" --artifacts-path \"{artifactsDirectory}\" {LocalPackVersionProperties}",
+            repoRoot);
+        RunDotnet(
+            "pack",
             $"\"{Path.Combine(repoRoot, "references", "Hexalith.EventStore", "src", "Hexalith.EventStore.Contracts", "Hexalith.EventStore.Contracts.csproj")}\" --configuration Release --output \"{feedDirectory}\" --artifacts-path \"{artifactsDirectory}\" {LocalPackVersionProperties}",
             repoRoot);
         RunDotnet(
@@ -239,10 +244,14 @@ public sealed class ClientPackageTests : IDisposable
     private static DotnetResult RunDotnet(string command, string arguments, string workingDirectory)
     {
         using var process = new Process();
+        string effectiveArguments = string.Equals(command, "pack", StringComparison.Ordinal)
+            ? $"-m:1 {arguments}"
+            : arguments;
+
         process.StartInfo = new ProcessStartInfo
         {
             FileName = "dotnet",
-            Arguments = $"{command} {arguments}",
+            Arguments = $"{command} {effectiveArguments}",
             WorkingDirectory = workingDirectory,
             RedirectStandardOutput = true,
             RedirectStandardError = true,

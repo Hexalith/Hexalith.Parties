@@ -1,3 +1,4 @@
+using Hexalith.Commons.Http;
 using Hexalith.Parties.Middleware;
 
 using Microsoft.AspNetCore.Diagnostics;
@@ -27,15 +28,13 @@ public sealed class PartiesGlobalExceptionHandler(ILogger<PartiesGlobalException
                 correlationId,
                 tenantId ?? "unknown");
 
-            var forbiddenDetails = new ProblemDetails
-            {
-                Status = StatusCodes.Status403Forbidden,
-                Title = "Forbidden",
-                Type = "urn:hexalith:parties:error:Forbidden",
-                Detail = detail,
-                Instance = httpContext.Request.Path,
-                Extensions = { ["correlationId"] = correlationId },
-            };
+            ProblemDetails forbiddenDetails = BoundedProblemDetailsFactory.Create(
+                StatusCodes.Status403Forbidden,
+                "Forbidden",
+                "urn:hexalith:parties:error:Forbidden",
+                detail,
+                httpContext.Request.Path,
+                correlationId);
 
             if (!string.IsNullOrWhiteSpace(tenantId))
             {
@@ -60,15 +59,13 @@ public sealed class PartiesGlobalExceptionHandler(ILogger<PartiesGlobalException
                 "Infrastructure dependency unavailable: CorrelationId={CorrelationId}",
                 correlationId);
 
-            var dependencyDetails = new ProblemDetails
-            {
-                Status = StatusCodes.Status503ServiceUnavailable,
-                Title = "Dependency Unavailable",
-                Type = "urn:hexalith:parties:error:DependencyUnavailable",
-                Detail = "A required infrastructure dependency is temporarily unavailable. Retry the request after recovery.",
-                Instance = httpContext.Request.Path,
-                Extensions = { ["correlationId"] = correlationId },
-            };
+            ProblemDetails dependencyDetails = BoundedProblemDetailsFactory.Create(
+                StatusCodes.Status503ServiceUnavailable,
+                "Dependency Unavailable",
+                "urn:hexalith:parties:error:DependencyUnavailable",
+                "A required infrastructure dependency is temporarily unavailable. Retry the request after recovery.",
+                httpContext.Request.Path,
+                correlationId);
 
             httpContext.Response.StatusCode = StatusCodes.Status503ServiceUnavailable;
             await httpContext.Response.WriteAsJsonAsync(
@@ -85,17 +82,15 @@ public sealed class PartiesGlobalExceptionHandler(ILogger<PartiesGlobalException
         bool isDevelopment = httpContext.RequestServices
             .GetService<IHostEnvironment>()?.IsDevelopment() == true;
 
-        var problemDetails = new ProblemDetails
-        {
-            Status = StatusCodes.Status500InternalServerError,
-            Title = "Internal Server Error",
-            Type = "https://tools.ietf.org/html/rfc9457#section-3",
-            Detail = isDevelopment
+        ProblemDetails problemDetails = BoundedProblemDetailsFactory.Create(
+            StatusCodes.Status500InternalServerError,
+            "Internal Server Error",
+            "https://tools.ietf.org/html/rfc9457#section-3",
+            isDevelopment
                 ? $"[{exception.GetType().Name}]"
                 : "An unexpected error occurred while processing your request.",
-            Instance = httpContext.Request.Path,
-            Extensions = { ["correlationId"] = correlationId },
-        };
+            httpContext.Request.Path,
+            correlationId);
 
         httpContext.Response.StatusCode = StatusCodes.Status500InternalServerError;
         await httpContext.Response.WriteAsJsonAsync(

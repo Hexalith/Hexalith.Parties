@@ -1,7 +1,8 @@
 using System.Net.Http.Json;
-using System.Text.RegularExpressions;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 
+using Hexalith.Commons.Http;
 using Hexalith.Parties.Client.Abstractions;
 using Hexalith.Parties.Contracts;
 using Hexalith.Parties.Contracts.Commands;
@@ -234,54 +235,17 @@ public sealed class HttpPartiesCommandClient : IPartiesCommandClient
 
     internal static async Task ThrowOnErrorAsync(HttpResponseMessage response, CancellationToken ct)
     {
-        string? correlationId = null;
-        string? title = null;
-        string? type = null;
-        string? detail = null;
-        int status = (int)response.StatusCode;
-
-        string contentType = response.Content.Headers.ContentType?.MediaType ?? string.Empty;
-        if (contentType.Contains("problem+json", StringComparison.OrdinalIgnoreCase)
-            || contentType.Contains("json", StringComparison.OrdinalIgnoreCase))
-        {
-            try
-            {
-                using JsonDocument doc = await JsonDocument.ParseAsync(
-                    await response.Content.ReadAsStreamAsync(ct).ConfigureAwait(false),
-                    cancellationToken: ct).ConfigureAwait(false);
-
-                JsonElement root = doc.RootElement;
-
-                if (root.TryGetProperty("status", out JsonElement statusElement)
-                    && statusElement.TryGetInt32(out int problemStatus))
-                {
-                    status = problemStatus;
-                }
-
-                title = TryGetString(root, "title");
-                type = TryGetString(root, "type");
-                detail = SanitizeDetail(TryGetString(root, "detail"));
-                correlationId = TryGetString(root, "correlationId");
-            }
-            catch (JsonException)
-            {
-                // If we can't parse the body, use HTTP status info only.
-            }
-        }
+        BoundedProblemDetails problem = await BoundedProblemDetailsReader
+            .ReadAsync(response, ct)
+            .ConfigureAwait(false);
 
         throw new PartiesClientException(
-            status,
-            title ?? response.ReasonPhrase ?? "Error",
-            type,
-            detail,
-            correlationId);
+            problem.Status,
+            problem.Title ?? response.ReasonPhrase ?? "Error",
+            problem.Type,
+            SanitizeDetail(problem.Detail),
+            problem.CorrelationId);
     }
-
-    private static string? TryGetString(JsonElement root, string propertyName)
-        => root.TryGetProperty(propertyName, out JsonElement element)
-            && element.ValueKind == JsonValueKind.String
-                ? element.GetString()
-                : null;
 
     private static string? SanitizeDetail(string? detail)
     {

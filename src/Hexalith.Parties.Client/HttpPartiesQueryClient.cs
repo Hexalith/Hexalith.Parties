@@ -3,6 +3,7 @@ using System.Text.Json;
 
 using Hexalith.EventStore.Contracts.Queries;
 using Hexalith.Parties.Client.Abstractions;
+using Hexalith.Parties.Client.Paging;
 using Hexalith.Parties.Contracts;
 using Hexalith.Parties.Contracts.Models;
 using Hexalith.Parties.Contracts.ValueObjects;
@@ -94,7 +95,7 @@ public sealed class HttpPartiesQueryClient : IPartiesQueryClient
             EntityId: ListAggregateId,
             ProjectionActorType: PartyIndexProjectionActorType);
 
-        return PostQueryAsync<PagedResult<PartyIndexEntry>>(request, ct);
+        return PostPagedQueryAsync<PartyIndexEntry>(request, ct);
     }
 
     public Task<PagedResult<PartySearchResult>> SearchPartiesAsync(
@@ -121,7 +122,18 @@ public sealed class HttpPartiesQueryClient : IPartiesQueryClient
             EntityId: ListAggregateId,
             ProjectionActorType: PartyIndexProjectionActorType);
 
-        return PostQueryAsync<PagedResult<PartySearchResult>>(request, ct, requestCustomizer);
+        return PostPagedQueryAsync<PartySearchResult>(request, ct, requestCustomizer);
+    }
+
+    private async Task<PagedResult<TItem>> PostPagedQueryAsync<TItem>(
+        SubmitQueryRequest request,
+        CancellationToken ct,
+        Func<HttpRequestMessage, CancellationToken, ValueTask>? requestCustomizer = null)
+    {
+        PagedResult<TItem> page = await PostQueryAsync<PagedResult<TItem>>(request, ct, requestCustomizer)
+            .ConfigureAwait(false);
+
+        return PartiesPagedResultAdapter.Normalize(page);
     }
 
     private async Task<T> PostQueryAsync<T>(

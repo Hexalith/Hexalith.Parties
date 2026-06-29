@@ -422,6 +422,8 @@ public sealed class HttpPartiesQueryClientTests
     [InlineData(HttpStatusCode.Unauthorized, 401, "urn:hexalith:eventstore:error:unauthorized")]
     [InlineData(HttpStatusCode.Forbidden, 403, "urn:hexalith:eventstore:error:forbidden")]
     [InlineData(HttpStatusCode.Conflict, 409, "urn:hexalith:eventstore:error:conflict")]
+    [InlineData(HttpStatusCode.Gone, 410, "urn:hexalith:eventstore:error:gone")]
+    [InlineData(HttpStatusCode.UnprocessableEntity, 422, "urn:hexalith:eventstore:error:domain-rejection")]
     [InlineData(HttpStatusCode.ServiceUnavailable, 503, "urn:hexalith:eventstore:error:degraded")]
     public async Task QueryErrorResponses_MapToPartiesClientExceptionAsync(
         HttpStatusCode httpStatusCode,
@@ -449,6 +451,78 @@ public sealed class HttpPartiesQueryClientTests
         exception.Type.ShouldBe(expectedType);
         exception.Detail.ShouldBe("Safe query failure detail.");
         exception.CorrelationId.ShouldBe("corr-query-error");
+    }
+
+    [Fact]
+    public async Task ListPartiesAsync_WhenItemsAreNull_NormalizesToEmptyPageAndPreservesFreshnessAsync()
+    {
+        string responseBody = """
+            {
+              "correlationId": "corr-query",
+              "payload": {
+                "items": null,
+                "page": 1,
+                "pageSize": 20,
+                "totalCount": 0,
+                "totalPages": 0,
+                "freshness": {
+                  "status": "Stale",
+                  "warningCodes": [ "projection-state-store-unavailable" ]
+                }
+              }
+            }
+            """;
+        (HttpPartiesQueryClient client, _) = CreateClient(HttpStatusCode.OK, responseBody);
+
+        PagedResult<PartyIndexEntry> result = await client.ListPartiesAsync(
+            1,
+            20,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            CancellationToken.None);
+
+        result.Items.ShouldBeEmpty();
+        result.Page.ShouldBe(1);
+        result.PageSize.ShouldBe(20);
+        result.TotalCount.ShouldBe(0);
+        result.TotalPages.ShouldBe(0);
+        result.Freshness.ShouldNotBeNull();
+        result.Freshness.Status.ShouldBe(ProjectionFreshnessStatus.Stale);
+        result.Freshness.WarningCodes.ShouldBe(["projection-state-store-unavailable"]);
+    }
+
+    [Fact]
+    public async Task SearchPartiesAsync_WhenItemsAreEmpty_PreservesPagingFieldsAsync()
+    {
+        string responseBody = """
+            {
+              "correlationId": "corr-query",
+              "payload": {
+                "items": [],
+                "page": 2,
+                "pageSize": 10,
+                "totalCount": 0,
+                "totalPages": 0
+              }
+            }
+            """;
+        (HttpPartiesQueryClient client, _) = CreateClient(HttpStatusCode.OK, responseBody);
+
+        PagedResult<PartySearchResult> result = await client.SearchPartiesAsync(
+            "none",
+            2,
+            10,
+            CancellationToken.None);
+
+        result.Items.ShouldBeEmpty();
+        result.Page.ShouldBe(2);
+        result.PageSize.ShouldBe(10);
+        result.TotalCount.ShouldBe(0);
+        result.TotalPages.ShouldBe(0);
     }
 
     [Fact]

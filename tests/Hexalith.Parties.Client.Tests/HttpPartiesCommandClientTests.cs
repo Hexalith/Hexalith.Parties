@@ -286,6 +286,8 @@ public sealed class HttpPartiesCommandClientTests
     [InlineData(HttpStatusCode.Unauthorized, 401, "urn:hexalith:eventstore:error:unauthorized")]
     [InlineData(HttpStatusCode.Forbidden, 403, "urn:hexalith:eventstore:error:forbidden")]
     [InlineData(HttpStatusCode.Conflict, 409, "urn:hexalith:eventstore:error:conflict")]
+    [InlineData(HttpStatusCode.Gone, 410, "urn:hexalith:eventstore:error:gone")]
+    [InlineData(HttpStatusCode.UnprocessableEntity, 422, "urn:hexalith:eventstore:error:domain-rejection")]
     [InlineData(HttpStatusCode.ServiceUnavailable, 503, "urn:hexalith:eventstore:error:degraded")]
     public async Task CommandErrorResponses_MapToPartiesClientExceptionAsync(
         HttpStatusCode httpStatusCode,
@@ -312,6 +314,22 @@ public sealed class HttpPartiesCommandClientTests
         exception.Type.ShouldBe(expectedType);
         exception.Detail.ShouldBe("Safe command failure detail.");
         exception.CorrelationId.ShouldBe("corr-command-error");
+    }
+
+    [Fact]
+    public async Task PostCommand_OnMalformedProblemJson_ThrowsStatusOnlyPartiesClientExceptionAsync()
+    {
+        var handler = new MockHandler(HttpStatusCode.BadGateway, "{", "application/problem+json");
+        var httpClient = new HttpClient(handler) { BaseAddress = new Uri("https://localhost") };
+        var client = new HttpPartiesCommandClient(httpClient, Options.Create(ClientOptions()));
+
+        PartiesClientException exception = await Should.ThrowAsync<PartiesClientException>(
+            () => client.DeactivatePartyAsync("p-bad-gateway", CancellationToken.None));
+
+        exception.Status.ShouldBe(502);
+        exception.Title.ShouldBe("Bad Gateway");
+        exception.Detail.ShouldBeNull();
+        exception.CorrelationId.ShouldBeNull();
     }
 
     [Fact]
