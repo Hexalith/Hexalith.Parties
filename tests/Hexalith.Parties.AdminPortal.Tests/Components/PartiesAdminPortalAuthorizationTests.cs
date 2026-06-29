@@ -2,6 +2,7 @@ using System.Reflection;
 using System.Xml.Linq;
 
 using Hexalith.Parties.AdminPortal.Components;
+using Hexalith.Parties.Contracts.Authorization;
 
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components;
@@ -44,7 +45,7 @@ public sealed class PartiesAdminPortalAuthorizationTests
             .GetCustomAttributes<AuthorizeAttribute>(inherit: false)
             .ShouldHaveSingleItem();
 
-        authorize.Policy.ShouldBe("Admin");
+        authorize.Policy.ShouldBe(PartiesRoles.AdminPolicy);
     }
 
     [Fact]
@@ -54,7 +55,7 @@ public sealed class PartiesAdminPortalAuthorizationTests
             .GetCustomAttributes<AuthorizeAttribute>(inherit: false)
             .ShouldHaveSingleItem();
 
-        authorize.Policy.ShouldBe("Admin");
+        authorize.Policy.ShouldBe(PartiesRoles.AdminPolicy);
     }
 
     [Fact]

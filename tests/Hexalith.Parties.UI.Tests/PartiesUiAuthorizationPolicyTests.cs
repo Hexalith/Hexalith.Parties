@@ -1,5 +1,6 @@
 using System.Security.Claims;
 
+using Hexalith.Parties.Contracts.Authorization;
 using Hexalith.Parties.UI.Authentication;
 
 using Microsoft.AspNetCore.Authorization;
@@ -21,11 +22,22 @@ namespace Hexalith.Parties.UI.Tests;
 public sealed class PartiesUiAuthorizationPolicyTests
 {
     [Fact]
+    public void UiPolicies_ComposeSharedRoleAnchorsWithoutChangingTenantOwnerAccess()
+    {
+        PartiesUiAuthorization.AdminPolicy.ShouldBe(PartiesRoles.AdminPolicy);
+        PartiesUiAuthorization.ConsumerPolicy.ShouldBe(PartiesRoles.ConsumerPolicy);
+        PartiesUiAuthorization.AdminRoleNames.ShouldBe(
+            [.. PartiesRoles.AdminRoleNames, .. PartiesRoles.TenantOwnerRoleNames],
+            ignoreOrder: false);
+        PartiesUiAuthorization.ConsumerRoleNames.ShouldBe(PartiesRoles.ConsumerRoleNames, ignoreOrder: false);
+    }
+
+    [Fact]
     public async Task AdminRolePrincipal_SatisfiesAdminPolicyOnly()
     {
         using ServiceProvider provider = BuildProvider();
         IAuthorizationService authz = provider.GetRequiredService<IAuthorizationService>();
-        ClaimsPrincipal admin = PrincipalWithRole("Admin");
+        ClaimsPrincipal admin = PrincipalWithRole(PartiesRoles.Admin);
 
         (await authz.AuthorizeAsync(admin, null, PartiesUiAuthorization.AdminPolicy)).Succeeded.ShouldBeTrue();
         (await authz.AuthorizeAsync(admin, null, PartiesUiAuthorization.ConsumerPolicy)).Succeeded.ShouldBeFalse();
@@ -36,7 +48,7 @@ public sealed class PartiesUiAuthorizationPolicyTests
     {
         using ServiceProvider provider = BuildProvider();
         IAuthorizationService authz = provider.GetRequiredService<IAuthorizationService>();
-        ClaimsPrincipal owner = PrincipalWithRole("TenantOwner");
+        ClaimsPrincipal owner = PrincipalWithRole(PartiesRoles.TenantOwner);
 
         (await authz.AuthorizeAsync(owner, null, PartiesUiAuthorization.AdminPolicy)).Succeeded.ShouldBeTrue();
         (await authz.AuthorizeAsync(owner, null, PartiesUiAuthorization.ConsumerPolicy)).Succeeded.ShouldBeFalse();
@@ -47,7 +59,7 @@ public sealed class PartiesUiAuthorizationPolicyTests
     {
         using ServiceProvider provider = BuildProvider();
         IAuthorizationService authz = provider.GetRequiredService<IAuthorizationService>();
-        ClaimsPrincipal consumer = PrincipalWithRole("Consumer");
+        ClaimsPrincipal consumer = PrincipalWithRole(PartiesRoles.Consumer);
 
         (await authz.AuthorizeAsync(consumer, null, PartiesUiAuthorization.ConsumerPolicy)).Succeeded.ShouldBeTrue();
         (await authz.AuthorizeAsync(consumer, null, PartiesUiAuthorization.AdminPolicy)).Succeeded.ShouldBeFalse();

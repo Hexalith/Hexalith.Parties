@@ -1,5 +1,7 @@
 using System.Text.Json;
 
+using Hexalith.Parties.Contracts.Authorization;
+
 using Shouldly;
 
 namespace Hexalith.Parties.IntegrationTests.Topology;
@@ -39,7 +41,7 @@ public sealed class ConsumerPartyIdBindingRealmTests
 
         JsonElement user = FindUser(realm, "readonly-user");
 
-        UserRealmRoles(user).ShouldContain("Consumer");
+        UserRealmRoles(user).ShouldContain(PartiesRoles.Consumer);
         UserAttributes(user, "party_id").ShouldBe(["party-readonly-001"]);
         UserAttributes(user, "tenants").ShouldContain("tenant-a");
     }
@@ -51,7 +53,7 @@ public sealed class ConsumerPartyIdBindingRealmTests
 
         foreach (JsonElement user in realm.RootElement.GetProperty("users").EnumerateArray())
         {
-            if (!UserRealmRoles(user).Contains("Consumer", StringComparer.Ordinal))
+            if (!UserRealmRoles(user).Contains(PartiesRoles.Consumer, StringComparer.Ordinal))
             {
                 continue;
             }

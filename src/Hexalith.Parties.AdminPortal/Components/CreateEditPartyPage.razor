@@ -1,8 +1,9 @@
 @page "/admin/parties/new"
 @page "/admin/parties/{RoutePartyId}/edit"
-@attribute [Authorize(Policy = "Admin")]
+@attribute [Authorize(Policy = PartiesRoles.AdminPolicy)]
 @using System.ComponentModel.DataAnnotations
 @using System.Globalization
+@using Hexalith.Parties.Contracts.Authorization
 @using Microsoft.AspNetCore.Authorization
 @using Hexalith.Parties.Contracts.Commands
 @inject AdminPortalPartyQueryService QueryService

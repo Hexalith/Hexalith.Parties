@@ -20,6 +20,7 @@ using Hexalith.Parties.Queries;
 using Hexalith.Parties.Validation;
 using Hexalith.Parties.Search;
 using Hexalith.Parties.Contracts;
+using Hexalith.Parties.Contracts.Authorization;
 using Hexalith.Parties.Contracts.Search;
 using Hexalith.Parties.Projections.Abstractions;
 using Hexalith.Parties.Projections.Actors;
@@ -63,8 +64,8 @@ public static class PartiesServiceCollectionExtensions {
             .AddJwtBearer();
 
         _ = services.AddAuthorization(options => {
-            options.AddPolicy("Admin", policy =>
-                policy.RequireRole("admin", "Admin", "administrator", "Administrator"));
+            options.AddPolicy(PartiesRoles.AdminPolicy, policy =>
+                policy.RequireRole(PartiesRoles.AdminRoleNames));
 
             // Story 1.5 (AR-D3) — server-side Consumer policy, registered alongside Admin (same
             // posture: registered + policy-resolvable, role-claim based). Const/role-names/helper live

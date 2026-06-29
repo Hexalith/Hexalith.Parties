@@ -38,10 +38,16 @@ internal static class PartiesAdminPortalE2eFixture
     }
 
     public static bool IsAdminFixtureCookiePresent(IHttpContextAccessor httpContextAccessor)
-        => string.Equals(
-            httpContextAccessor.HttpContext?.Request.Cookies[AdminCookieName],
-            "enabled",
-            StringComparison.Ordinal);
+        => AdminFixtureRole(httpContextAccessor) is not null;
+
+    public static string? AdminFixtureRole(IHttpContextAccessor httpContextAccessor)
+        => httpContextAccessor.HttpContext?.Request.Cookies[AdminCookieName] switch
+        {
+            "enabled" => PartiesRoles.Admin,
+            "tenant-owner" => PartiesRoles.TenantOwner,
+            "tenantowner" => PartiesRoles.TenantOwnerLower,
+            _ => null,
+        };
 
     public static bool IsStory35RealContractCookiePresent(IHttpContextAccessor httpContextAccessor)
         => string.Equals(
@@ -62,23 +68,12 @@ internal static class PartiesAdminPortalE2eFixture
 internal sealed class PartiesAdminPortalE2eAuthenticationStateProvider(IHttpContextAccessor httpContextAccessor) : AuthenticationStateProvider
 {
     private static readonly ClaimsPrincipal AnonymousPrincipal = new(new ClaimsIdentity());
-    private static readonly ClaimsPrincipal AdminPrincipal = new(new ClaimsIdentity(
-        [
-            new Claim(ClaimTypes.NameIdentifier, "admin-e2e"),
-            new Claim(ClaimTypes.Name, "Admin E2E"),
-            new Claim(PartiesClaimTypes.Subject, "admin-e2e"),
-            new Claim("roles", "Admin"),
-            new Claim(PartiesClaimTypes.EventStoreTenant, "test-tenant"),
-        ],
-        authenticationType: "PartiesAdminPortalE2E",
-        nameType: ClaimTypes.Name,
-        roleType: "roles"));
-
     public override Task<AuthenticationState> GetAuthenticationStateAsync()
     {
-        if (PartiesAdminPortalE2eFixture.IsAdminFixtureCookiePresent(httpContextAccessor))
+        string? adminRole = PartiesAdminPortalE2eFixture.AdminFixtureRole(httpContextAccessor);
+        if (adminRole is not null)
         {
-            return Task.FromResult(new AuthenticationState(AdminPrincipal));
+            return Task.FromResult(new AuthenticationState(CreateAdminPrincipal(adminRole)));
         }
 
         string? consumerState = PartiesAdminPortalE2eFixture.ConsumerFixtureState(httpContextAccessor);
@@ -90,6 +85,18 @@ internal sealed class PartiesAdminPortalE2eAuthenticationStateProvider(IHttpCont
         return Task.FromResult(new AuthenticationState(AnonymousPrincipal));
     }
 
+    private static ClaimsPrincipal CreateAdminPrincipal(string role) => new(new ClaimsIdentity(
+        [
+            new Claim(ClaimTypes.NameIdentifier, "admin-e2e"),
+            new Claim(ClaimTypes.Name, "Admin E2E"),
+            new Claim(PartiesClaimTypes.Subject, "admin-e2e"),
+            new Claim("roles", role),
+            new Claim(PartiesClaimTypes.EventStoreTenant, "test-tenant"),
+        ],
+        authenticationType: "PartiesAdminPortalE2E",
+        nameType: ClaimTypes.Name,
+        roleType: "roles"));
+
     private static ClaimsPrincipal CreateConsumerPrincipal(string consumerState)
     {
         List<Claim> claims =
@@ -97,7 +104,7 @@ internal sealed class PartiesAdminPortalE2eAuthenticationStateProvider(IHttpCont
             new(ClaimTypes.NameIdentifier, "consumer-e2e"),
             new(ClaimTypes.Name, "Consumer E2E"),
             new(PartiesClaimTypes.Subject, "consumer-e2e"),
-            new("roles", "Consumer"),
+            new("roles", PartiesRoles.Consumer),
         ];
 
         if (!string.Equals(consumerState, "no-tenant", StringComparison.Ordinal))

@@ -1,8 +1,9 @@
 @page "/admin/parties"
 @page "/admin/parties/{RoutePartyId}"
 @page "/admin/parties/{RoutePartyId}/gdpr"
-@attribute [Authorize(Policy = "Admin")]
+@attribute [Authorize(Policy = PartiesRoles.AdminPolicy)]
 @using System.Globalization
+@using Hexalith.Parties.Contracts.Authorization
 @using Microsoft.AspNetCore.Authorization
 @inject AdminPortalPartyQueryService QueryService
 @inject PartiesAdminListCoordinator ListCoordinator

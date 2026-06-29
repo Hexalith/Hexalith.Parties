@@ -16,7 +16,7 @@ namespace Hexalith.Parties.UI.Authentication;
 /// <para>
 /// The <c>Admin</c> policy mirrors the actor host's Admin role set
 /// (<c>Hexalith.Parties/Extensions/PartiesServiceCollectionExtensions.cs</c> →
-/// <c>RequireRole("admin","Admin","administrator","Administrator")</c>) PLUS <c>TenantOwner</c>, per
+/// <see cref="PartiesRoles.AdminRoleNames"/>) PLUS <c>TenantOwner</c>, per
 /// the epic's "Admin or TenantOwner" landing rule. The new <c>Consumer</c> policy accepts the
 /// <c>Consumer</c> role. Gating is role-claim based (not tenant-membership based — that is a deeper,
 /// out-of-scope concern Epic 2 reconciles).
@@ -30,20 +30,20 @@ namespace Hexalith.Parties.UI.Authentication;
 public static class PartiesUiAuthorization
 {
     /// <summary>The authorization policy name gating the Admin area and Admin navigation entry.</summary>
-    public const string AdminPolicy = "Admin";
+    public const string AdminPolicy = PartiesRoles.AdminPolicy;
 
     /// <summary>The authorization policy name gating the Consumer area and Consumer navigation entry.</summary>
-    public const string ConsumerPolicy = "Consumer";
+    public const string ConsumerPolicy = PartiesRoles.ConsumerPolicy;
 
     /// <summary>
     /// Role names that satisfy the <see cref="AdminPolicy"/>. Mirrors the actor host's Admin role set
     /// plus <c>TenantOwner</c> (case variants included to tolerate provider casing).
     /// </summary>
     public static readonly string[] AdminRoleNames =
-        ["Admin", "admin", "Administrator", "administrator", "TenantOwner", "tenantowner"];
+        [.. PartiesRoles.AdminRoleNames, .. PartiesRoles.TenantOwnerRoleNames];
 
     /// <summary>Role names that satisfy the <see cref="ConsumerPolicy"/>.</summary>
-    public static readonly string[] ConsumerRoleNames = ["Consumer", "consumer"];
+    public static readonly string[] ConsumerRoleNames = PartiesRoles.ConsumerRoleNames;
 
     /// <summary>
     /// The claim type carrying a Consumer's verified party binding (Story 1.4, AR-D2). Resolved

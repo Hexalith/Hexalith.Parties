@@ -20,6 +20,7 @@ type class Hexalith.Parties.Contracts.Authorization.PartiesClaimExtractionResult
   property System.String Value getset
   method Hexalith.Parties.Contracts.Authorization.PartiesClaimExtractionResult Success(System.String value)
 type class Hexalith.Parties.Contracts.Authorization.PartiesClaimTypes interfaces:
+type class Hexalith.Parties.Contracts.Authorization.PartiesRoles interfaces:
 type class Hexalith.Parties.Contracts.Commands.AddContactChannel interfaces:System.IEquatable<Hexalith.Parties.Contracts.Commands.AddContactChannel>
   ctor ()
   property System.String ContactChannelId required getset

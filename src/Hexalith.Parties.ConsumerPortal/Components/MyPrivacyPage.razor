@@ -1,6 +1,7 @@
 @page "/me/privacy"
-@attribute [Authorize(Policy = "Consumer")]
+@attribute [Authorize(Policy = PartiesRoles.ConsumerPolicy)]
 @implements IDisposable
+@using Hexalith.Parties.Contracts.Authorization
 @using Microsoft.JSInterop
 
 @inject IConsumerPrivacyExportClient ExportClient

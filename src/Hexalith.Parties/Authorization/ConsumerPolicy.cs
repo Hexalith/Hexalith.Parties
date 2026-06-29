@@ -1,3 +1,5 @@
+using Hexalith.Parties.Contracts.Authorization;
+
 using Microsoft.AspNetCore.Authorization;
 
 namespace Hexalith.Parties.Authorization;
@@ -6,12 +8,14 @@ namespace Hexalith.Parties.Authorization;
 // Consumer authorization policy. Registered alongside the existing Admin policy (same posture:
 // registered + policy-resolvable, role-claim based). Kept testable in isolation (Add can be exercised
 // through a minimal AddAuthorizationCore) rather than only via the monolithic AddParties.
-public static class ConsumerPolicy {
-    public const string Name = "Consumer";
+public static class ConsumerPolicy
+{
+    public const string Name = PartiesRoles.ConsumerPolicy;
 
-    public static readonly string[] RoleNames = ["Consumer", "consumer"];
+    public static readonly string[] RoleNames = PartiesRoles.ConsumerRoleNames;
 
-    public static void Add(AuthorizationOptions options) {
+    public static void Add(AuthorizationOptions options)
+    {
         ArgumentNullException.ThrowIfNull(options);
         options.AddPolicy(Name, policy => policy.RequireRole(RoleNames));
     }

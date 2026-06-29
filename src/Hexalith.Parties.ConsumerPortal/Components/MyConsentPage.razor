@@ -1,6 +1,7 @@
 @page "/me/consent"
-@attribute [Authorize(Policy = "Consumer")]
+@attribute [Authorize(Policy = PartiesRoles.ConsumerPolicy)]
 @implements IDisposable
+@using Hexalith.Parties.Contracts.Authorization
 @using Hexalith.Parties.Contracts.Models
 @using Hexalith.Parties.Contracts.Security
 @using Hexalith.Parties.Contracts.ValueObjects

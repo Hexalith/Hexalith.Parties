@@ -32,7 +32,7 @@ public sealed class NoPartyBindingRoutingTests : BunitContext
 
         BunitAuthorizationContext auth = AddAuthorization();
         auth.SetAuthorized("consumer");
-        auth.SetRoles("Consumer");
+        auth.SetRoles(PartiesRoles.Consumer);
         auth.SetClaims(
             new Claim(PartiesClaimTypes.EventStoreTenant, "tenant-a"),
             new Claim(PartiesClaimTypes.PartyId, "party-123"));
@@ -50,7 +50,7 @@ public sealed class NoPartyBindingRoutingTests : BunitContext
 
         BunitAuthorizationContext auth = AddAuthorization();
         auth.SetAuthorized("consumer");
-        auth.SetRoles("Consumer");
+        auth.SetRoles(PartiesRoles.Consumer);
         // No party_id claim → fail closed.
 
         IRenderedComponent<RoleLandingRedirect> cut = Render<RoleLandingRedirect>();
@@ -69,7 +69,7 @@ public sealed class NoPartyBindingRoutingTests : BunitContext
 
         BunitAuthorizationContext auth = AddAuthorization();
         auth.SetAuthorized("consumer");
-        auth.SetRoles("Consumer");
+        auth.SetRoles(PartiesRoles.Consumer);
         auth.SetClaims(
             new Claim(PartiesClaimTypes.EventStoreTenant, "tenant-a"),
             new Claim(PartiesClaimTypes.PartyId, "party-1"),
@@ -89,7 +89,7 @@ public sealed class NoPartyBindingRoutingTests : BunitContext
 
         BunitAuthorizationContext auth = AddAuthorization();
         auth.SetAuthorized("consumer");
-        auth.SetRoles("Consumer");
+        auth.SetRoles(PartiesRoles.Consumer);
         auth.SetClaims(
             new Claim(PartiesClaimTypes.EventStoreTenant, "tenant-a"),
             new Claim(PartiesClaimTypes.PartyId, " "));
@@ -108,7 +108,7 @@ public sealed class NoPartyBindingRoutingTests : BunitContext
 
         BunitAuthorizationContext auth = AddAuthorization();
         auth.SetAuthorized("consumer");
-        auth.SetRoles("Consumer");
+        auth.SetRoles(PartiesRoles.Consumer);
         auth.SetClaims(new Claim(PartiesClaimTypes.PartyId, "party-123"));
 
         IRenderedComponent<RoleLandingRedirect> cut = Render<RoleLandingRedirect>();

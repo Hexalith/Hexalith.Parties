@@ -1,5 +1,7 @@
 using System.Text.Json;
 
+using Hexalith.Parties.Contracts.Authorization;
+
 using Shouldly;
 
 namespace Hexalith.Parties.IntegrationTests.Topology;
@@ -30,9 +32,9 @@ public sealed class PartiesUiRealmRolesTests
             .Select(static name => name!)
             .ToList();
 
-        roleNames.ShouldContain("Admin");
-        roleNames.ShouldContain("TenantOwner");
-        roleNames.ShouldContain("Consumer");
+        roleNames.ShouldContain(PartiesRoles.Admin);
+        roleNames.ShouldContain(PartiesRoles.TenantOwner);
+        roleNames.ShouldContain(PartiesRoles.Consumer);
     }
 
     [Fact]
@@ -40,8 +42,8 @@ public sealed class PartiesUiRealmRolesTests
     {
         using JsonDocument realm = LoadRealm();
 
-        UserRealmRoles(realm, "admin-user").ShouldContain("Admin");
-        UserRealmRoles(realm, "readonly-user").ShouldContain("Consumer");
+        UserRealmRoles(realm, "admin-user").ShouldContain(PartiesRoles.Admin);
+        UserRealmRoles(realm, "readonly-user").ShouldContain(PartiesRoles.Consumer);
     }
 
     [Fact]

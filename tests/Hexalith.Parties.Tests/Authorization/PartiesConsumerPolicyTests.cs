@@ -1,6 +1,7 @@
 using System.Security.Claims;
 
 using Hexalith.Parties.Authorization;
+using Hexalith.Parties.Contracts.Authorization;
 
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.DependencyInjection;
@@ -17,13 +18,13 @@ namespace Hexalith.Parties.Tests.Authorization;
 /// satisfies neither (fail-closed).
 /// </summary>
 public sealed class PartiesConsumerPolicyTests {
-    private const string AdminPolicyName = "Admin";
+    private const string AdminPolicyName = PartiesRoles.AdminPolicy;
 
     [Fact]
     public async Task ConsumerRolePrincipalSatisfiesConsumerPolicyOnly() {
         using ServiceProvider provider = BuildProvider();
         IAuthorizationService authz = provider.GetRequiredService<IAuthorizationService>();
-        ClaimsPrincipal consumer = PrincipalWithRole("Consumer");
+        ClaimsPrincipal consumer = PrincipalWithRole(PartiesRoles.Consumer);
 
         (await authz.AuthorizeAsync(consumer, null, ConsumerPolicy.Name)).Succeeded.ShouldBeTrue();
         (await authz.AuthorizeAsync(consumer, null, AdminPolicyName)).Succeeded.ShouldBeFalse();
@@ -33,7 +34,7 @@ public sealed class PartiesConsumerPolicyTests {
     public async Task AdminRolePrincipalSatisfiesAdminPolicyOnly() {
         using ServiceProvider provider = BuildProvider();
         IAuthorizationService authz = provider.GetRequiredService<IAuthorizationService>();
-        ClaimsPrincipal admin = PrincipalWithRole("Admin");
+        ClaimsPrincipal admin = PrincipalWithRole(PartiesRoles.Admin);
 
         (await authz.AuthorizeAsync(admin, null, AdminPolicyName)).Succeeded.ShouldBeTrue();
         (await authz.AuthorizeAsync(admin, null, ConsumerPolicy.Name)).Succeeded.ShouldBeFalse();
@@ -75,7 +76,7 @@ public sealed class PartiesConsumerPolicyTests {
         services.AddAuthorizationCore(options => {
             ConsumerPolicy.Add(options);
             options.AddPolicy(AdminPolicyName, policy =>
-                policy.RequireRole("Admin", "admin", "administrator", "Administrator"));
+                policy.RequireRole(PartiesRoles.AdminRoleNames));
         });
 
         return services.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true });

@@ -35,7 +35,7 @@ public sealed class RoleLandingRedirectTests : BunitContext
     {
         BunitAuthorizationContext auth = AddAuthorization();
         auth.SetAuthorized("admin");
-        auth.SetRoles("Admin");
+        auth.SetRoles(PartiesRoles.Admin);
 
         IRenderedComponent<RoleLandingRedirect> cut = Render<RoleLandingRedirect>();
 
@@ -48,7 +48,7 @@ public sealed class RoleLandingRedirectTests : BunitContext
     {
         BunitAuthorizationContext auth = AddAuthorization();
         auth.SetAuthorized("owner");
-        auth.SetRoles("TenantOwner");
+        auth.SetRoles(PartiesRoles.TenantOwner);
 
         IRenderedComponent<RoleLandingRedirect> cut = Render<RoleLandingRedirect>();
 
@@ -61,7 +61,7 @@ public sealed class RoleLandingRedirectTests : BunitContext
     {
         BunitAuthorizationContext auth = AddAuthorization();
         auth.SetAuthorized("consumer");
-        auth.SetRoles("Consumer");
+        auth.SetRoles(PartiesRoles.Consumer);
         auth.SetClaims(
             new Claim(PartiesClaimTypes.EventStoreTenant, "tenant-a"),
             new Claim(PartiesClaimTypes.PartyId, "party-123"));
@@ -131,7 +131,7 @@ public sealed class RoleLandingRedirectTests : BunitContext
         auth.SetAuthorized("both");
 
         // Order asserts precedence, not luck: Consumer first, yet the Admin branch (checked first) wins.
-        auth.SetRoles("Consumer", "Admin");
+        auth.SetRoles(PartiesRoles.Consumer, PartiesRoles.Admin);
 
         IRenderedComponent<RoleLandingRedirect> cut = Render<RoleLandingRedirect>();
 

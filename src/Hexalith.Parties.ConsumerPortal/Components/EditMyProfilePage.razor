@@ -1,7 +1,8 @@
 @page "/me/edit"
-@attribute [Authorize(Policy = "Consumer")]
+@attribute [Authorize(Policy = PartiesRoles.ConsumerPolicy)]
 @implements IDisposable
 @using System.Globalization
+@using Hexalith.Parties.Contracts.Authorization
 @using Microsoft.AspNetCore.Components.Forms
 @using Hexalith.Parties.Contracts.Models
 @using Hexalith.Parties.Contracts.ValueObjects

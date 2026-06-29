@@ -1,5 +1,6 @@
 using System.Reflection;
 
+using Hexalith.Parties.Contracts.Authorization;
 using Hexalith.Parties.ConsumerPortal.Components;
 
 using Microsoft.AspNetCore.Authorization;
@@ -29,6 +30,6 @@ public sealed class ConsumerPortalAuthorizationTests
             .GetCustomAttributes<AuthorizeAttribute>(inherit: false)
             .ShouldHaveSingleItem();
 
-        authorize.Policy.ShouldBe("Consumer");
+        authorize.Policy.ShouldBe(PartiesRoles.ConsumerPolicy);
     }
 }
