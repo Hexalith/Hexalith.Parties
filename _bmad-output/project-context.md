@@ -184,6 +184,7 @@ _This file contains critical rules and patterns that AI agents must follow when 
   | auth / tenancy / compliance | `Hexalith.Parties/{Authentication,Authorization,Compliance,Middleware}` |
   | GDPR encryption / erasure | `Hexalith.Parties.Security/` |
   | Admin / Consumer Blazor UI (pages, areas) | `Hexalith.Parties.AdminPortal` (`/admin`) / `Hexalith.Parties.ConsumerPortal` (`/me`); host wiring + UI auth policies in `Hexalith.Parties.UI` |
+  | a value shared across projects (claim type, wire JSON options, projection name / actor-id, role array, policy name, text/format helper) | **define it once in `Hexalith.Parties.Contracts`** — `PartiesClaimTypes`, `PartiesJsonOptions.Default`, `PartyProjectionNames` / `PartyActorIds`, `PartiesRoles`, `PartyDisplayFormat` — never re-hardcode the literal/options in a second project (shared-anchor convention, sprint-change-proposal-2026-06-28). Exception: shared JWT `IClaimsTransformation` logic needs `Microsoft.AspNetCore.Authentication`, so it lives in `Hexalith.Parties.Authentication`, not Contracts. |
 - **`Contracts` must stay infrastructure-free** — no DAPR, ASP.NET, EventStore-*server*, or persistence
   references; it depends only on `Hexalith.EventStore.Contracts`. This is the organizing principle, pinned
   by a fitness test.

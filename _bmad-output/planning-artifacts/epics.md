@@ -2,9 +2,9 @@
 stepsCompleted: [1, 2, 3, 4]
 status: complete
 completedAt: '2026-06-09'
-epicCount: 5
-storyCount: 30
-correctCourse: '2026-06-09 — readiness course-correction: split Story 4.1 (decision spike + impl) and Story 3.5 (D7 backend + report UI); +phone-reflow AC on 2.3; +mock-fidelity rule'
+epicCount: 7
+storyCount: 37
+correctCourse: '2026-06-09 — readiness course-correction: split Story 4.1 (decision spike + impl) and Story 3.5 (D7 backend + report UI); +phone-reflow AC on 2.3; +mock-fidelity rule. 2026-06-28 — readiness remediation for sprint-change-proposal-2026-06-28: add Epic 6 implementation-ready Class A consolidation stories, add Epic 7 deferred architecture placeholder, and pin A3/A8 decisions.'
 inputDocuments:
   # Canonical requirements source (PRD-shaped; consolidates the brownfield basis below)
   - _bmad-output/planning-artifacts/parties-ui-prd.md
@@ -418,9 +418,32 @@ two-state erasure panel (UX-DR13), plain-verbs / single-status (UX-DR16) — all
 
 **FRs covered:** FR-Consumer-3, FR-Consumer-4
 
+### Epic 6: Internal Code Consolidation (Class A)
+
+A maintainer can remove in-repo duplication without changing user-visible behavior, so
+future features reuse one shared source for claim types, wire JSON, projection naming,
+role/policy names, GDPR helper mappings, export filenames, and display helpers. This is
+the approved Class A scope from `sprint-change-proposal-2026-06-28.md`.
+
+**FRs covered:** no new PRD FRs. Supports NFR9 build/quality gates, architecture
+maintainability, and the shared-anchor boundary in `architecture.md`.
+
+### Epic 7: Platform Alignment - adopt Commons/EventStore (Class B, deferred)
+
+Architects and product leadership have a visible placeholder for the cross-repository
+platform-alignment work, without handing it to development prematurely. This epic is
+deferred and architect-gated: no implementation story files should be created until the
+cross-submodule design, release sequencing, and generic-vs-domain split are approved.
+
+**FRs covered:** no new PRD FRs. Supports long-term maintainability and platform
+convergence only after PM/Architect approval.
+
 ### Epic Dependencies
 
-`1 → {2, 4}` · `2 → 3` · `4 → 5`. Each epic is standalone once its predecessors ship.
+`1 -> {2, 4}` · `2 -> 3` · `4 -> 5`. Epics 1-5 are complete and are prerequisites for
+the post-MVP consolidation sweep in Epic 6. Epic 7 is not a developer dependency for Epic
+6; it is a deferred platform-planning placeholder that requires PM/Architect approval
+before implementation stories are created.
 Current status note, 2026-06-27: `sprint-status.yaml` marks Epics 1-5 and all listed
 stories as `done`. Historical sequencing remains: Story 4.2 (binding build) followed
 Story 4.1 (binding decision / ADR), and Story 3.6 (verification report UI) followed
@@ -1094,5 +1117,221 @@ So that I have transparency over my data.
 **Then** it deep-links to the full `/me/consent` surface (the privacy card is a **summary**), where withdraw/grant parity exists.
 
 **And** an erased self retains its processing records (audit metadata needs no decrypted personal data).
+
+---
+
+## Epic 6: Internal Code Consolidation (Class A)
+
+Remove duplicated in-repo technical constants and helper logic by introducing shared
+anchors in the correct Parties projects. The work is intentionally scoped to
+`Hexalith.Parties.*` and must not move code into submodules. It is ready for developer
+execution after the two readiness decisions below:
+
+- **A3 decision:** shared JWT claims transformation logic lives in a new
+  `Hexalith.Parties.Authentication` library, not in `Contracts` and not in Commons.
+- **A8 decision:** `PartyExportFileName.Build` uses
+  `party-{tenant}-{yyyyMMddTHHmmssZ}.json` as the canonical format. This intentionally
+  changes the current AdminPortal `party-{tenant}-export-{yyyyMMddHHmmss}Z.json` output.
+
+**Epic 6 success criteria:** no behavior change except the approved A8 filename
+normalization; duplicated definitions are replaced by one shared source; `Contracts`
+stays infrastructure-free; boundary fitness tests remain green; `dotnet build
+Hexalith.Parties.slnx -c Release` and relevant test lanes pass.
+
+### Story 6.1: Shared claim types and extraction helpers (A1/A5)
+
+As a maintainer,
+I want claim type constants and principal extraction helpers defined once,
+So that tenant and user scope cannot drift across hosts, portals, and clients.
+
+**Acceptance Criteria:**
+
+**Given** duplicated claim literals exist for `eventstore:tenant`, `party_id`, `sub`, and
+`oid`
+**When** shared anchors are added
+**Then** `Hexalith.Parties.Contracts` exposes `PartiesClaimTypes` constants and all
+application projects use them instead of local copies or raw string literals.
+
+**Given** user and tenant extraction logic is repeated
+**When** extraction helpers are added
+**Then** callers use one shared BCL-only helper surface that handles `sub`/`oid` and
+normalized tenant claims consistently, returns fail-closed results for missing or
+ambiguous values, and does not introduce ASP.NET or infrastructure references into
+`Contracts`.
+
+**And** tests prove constant usage, extraction parity, and that the `Contracts`
+infrastructure-boundary fitness test remains green.
+
+### Story 6.2: Canonical wire JSON serializer options (A2)
+
+As a maintainer,
+I want one canonical Parties wire JSON options object,
+So that command, query, projection, and protection paths serialize the same contract
+shape.
+
+**Acceptance Criteria:**
+
+**Given** serializer options are hand-copied in multiple projects
+**When** `PartiesJsonOptions.Default` is introduced in `Contracts`
+**Then** all wire serialization callers use camelCase, `WhenWritingNull`, and
+`JsonStringEnumConverter` from the shared source.
+
+**Given** some replay/read paths need different permissive reader behavior
+**When** those paths are updated
+**Then** they use clearly named local reader options only where justified, and those
+options are not mistaken for the canonical wire serializer.
+
+**And** tests cover representative enum/null serialization, payload-protection parity,
+and projection rebuild reader intent.
+
+### Story 6.3: Shared claims transformation library (A3)
+
+As a maintainer,
+I want JWT claims transformation shared through a dedicated authentication library,
+So that the core host and UI host stop carrying parallel normalization logic.
+
+**Acceptance Criteria:**
+
+**Given** `PartiesClaimsTransformation` logic appears in more than one host
+**When** the shared implementation is created
+**Then** it lives in a new `Hexalith.Parties.Authentication` project that may reference
+`Microsoft.AspNetCore.Authentication`, while `Hexalith.Parties.Contracts` remains free of
+ASP.NET dependencies.
+
+**Given** both the actor host and UI host need tenant normalization
+**When** they register authentication services
+**Then** both consume the shared transformation library and keep host-specific DI,
+policy, and OIDC/JWT wiring in their own projects.
+
+**And** existing transformation tests move or are duplicated at the shared-library
+boundary, covering `tid`, `tenant_id`, JSON/space-delimited `tenants`, idempotency, and
+fail-closed null/empty cases.
+
+### Story 6.4: Projection names and actor id builders (A4)
+
+As a maintainer,
+I want projection names and actor id formats defined once,
+So that projection actors, rebuild code, tests, and clients cannot diverge silently.
+
+**Acceptance Criteria:**
+
+**Given** projection names and actor ids are hand-built in multiple places
+**When** shared anchors are added
+**Then** `Contracts` exposes `PartyProjectionNames` and `PartyActorIds` builders for
+detail and index projections, and all application code replaces local copies and string
+formatting.
+
+**Given** projection rebuild code and live actors must agree on names and ids
+**When** callers adopt the builders
+**Then** tests prove the live detail/index actor ids and rebuild keys use the same
+canonical formulas or explicitly documented compatibility formulas.
+
+**And** the change does not introduce Dapr, actor runtime, persistence, or EventStore
+server dependencies into `Contracts`.
+
+### Story 6.5: GDPR client mapping, tenant heuristic, and export filename (A6/A7/A8)
+
+As a maintainer,
+I want GDPR client helper behavior centralized,
+So that admin and consumer GDPR paths classify failures and export names consistently.
+
+**Acceptance Criteria:**
+
+**Given** GDPR HTTP status mapping is duplicated
+**When** the shared mapping is added
+**Then** `HttpAdminPortalGdprClient` owns one `AdminPortalGdprOutcome` mapping surface and
+AdminPortal uses it instead of maintaining a second mapping table.
+
+**Given** tenant-text detection is repeated
+**When** the text heuristic is centralized
+**Then** callers use `PartiesTextHeuristics.ContainsTenant` from `Contracts` and tests
+cover bounded tenant/unavailable classification without exposing raw problem details.
+
+**Given** export filename builders currently produce different formats
+**When** `PartyExportFileName.Build` is introduced
+**Then** all export callers use `party-{tenant}-{yyyyMMddTHHmmssZ}.json`, filenames remain
+PII-free and UTC-based, and tests explicitly acknowledge the approved AdminPortal output
+format change.
+
+### Story 6.6: Shared role arrays and policy names (A9)
+
+As a maintainer,
+I want role and policy names defined once,
+So that authorization checks, navigation, and tests cannot drift through duplicated
+strings.
+
+**Acceptance Criteria:**
+
+**Given** role and policy names are repeated across hosts and portals
+**When** shared anchors are added
+**Then** `Contracts` exposes `PartiesRoles` and policy-name constants used by the actor
+host, UI host, and portals.
+
+**Given** the UI intentionally grants Admin access to `TenantOwner` aliases
+**When** role arrays are centralized
+**Then** the shared base arrays are reused while the UI host still composes its
+documented `TenantOwner` additions without forcing identical arrays everywhere.
+
+**And** authorization/topology tests prove Admin, TenantOwner, and Consumer behavior is
+unchanged.
+
+### Story 6.7: Shared portal display formatters (A10)
+
+As a maintainer,
+I want pure display helpers shared without coupling portals to the UI host,
+So that date and boolean formatting rules do not drift across Admin and Consumer
+surfaces.
+
+**Acceptance Criteria:**
+
+**Given** date and boolean display helpers are duplicated
+**When** `PartyDisplayFormat` is introduced
+**Then** the helper lives in `Contracts`, accepts the culture/resource inputs it needs,
+and contains no UI host, FluentUI, ASP.NET, localization-service, or portal-specific
+dependencies.
+
+**Given** Admin and Consumer currently use different date density
+**When** callers adopt the helper
+**Then** Admin can preserve its compact `"g"` style and Consumer can preserve its plain
+date style unless a separate product decision changes that behavior.
+
+**And** component/unit tests cover culture-sensitive formatting, localized boolean text,
+and absence of circular references from portals to the UI host.
+
+---
+
+## Epic 7: Platform Alignment - adopt Commons/EventStore (Class B, deferred)
+
+Epic 7 is a deferred, architect-gated planning placeholder for moving generic technical
+infrastructure toward shared Hexalith platform libraries. It is not implementation-ready
+from this document alone, and no `7-*` implementation story files should be created until
+PM/Architect planning expands and approves the work.
+
+### Deferred Scope Clusters
+
+- Projection platform alignment: adopt or converge with EventStore checkpoint,
+  replay-from-zero rebuild, and freshness primitives (B1/B2/B9).
+- Crypto and key-management placement: decide which AES-GCM payload protection,
+  party-key management, circuit breaker, and event-type resolver pieces belong in
+  EventStore/shared security versus Parties-specific code (B3/B4/B11).
+- Commons/FrontComposer utility alignment: evaluate ServiceDefaults, correlation,
+  problem-details handling, paging, search/normalization, and UI orchestration primitives
+  for shared-library adoption (B5/B6/B7/B8/B10/B11).
+
+### Approval Criteria Before Story Creation
+
+**Given** Class B crosses git submodules and shared platform packages
+**When** Epic 7 planning starts
+**Then** PM/Architect must approve the target destinations, package/versioning plan,
+submodule sequencing, migration compatibility, and rollback plan before any developer
+story is created.
+
+**Given** crypto-shredding and projection replay are high-risk infrastructure seams
+**When** those areas are designed
+**Then** the architecture must preserve existing GDPR erasure guarantees, projection
+idempotency, at-least-once replay safety, and the EventStore gateway boundary.
+
+**And** until that approval exists, Epic 7 remains backlog/deferred and must not block
+Epic 6 delivery.
 </content>
 </invoke>

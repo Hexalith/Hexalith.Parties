@@ -1,5 +1,5 @@
 # generated: 2026-06-21T18:55:59+02:00
-# last_updated: 2026-06-27T20:56:35+02:00
+# last_updated: 2026-06-28T15:36:40+02:00
 # project: parties
 # project_key: NOKEY
 # tracking_system: file-system
@@ -41,7 +41,7 @@
 # - Retrospective appends its action items to action_items; sprint-status surfaces open ones
 
 generated: 2026-06-21T18:55:59+02:00
-last_updated: 2026-06-27T20:56:35+02:00
+last_updated: 2026-06-28T15:36:40+02:00
 project: parties
 project_key: NOKEY
 tracking_system: file-system
@@ -97,3 +97,23 @@ development_status:
   5-3-my-data-privacy-request-cancel-erasure-fr-consumer-4: done
   5-4-my-data-privacy-see-whats-processed-about-me-fr-consumer-4: done
   epic-5-retrospective: done
+
+  # ── Epic 6: Internal Code Consolidation (Class A) ────────────────────────
+  # Added by Correct Course 2026-06-28 (sprint-change-proposal-2026-06-28.md).
+  # In-repo deduplication; shared anchors land in Hexalith.Parties.Contracts
+  # (+ a new Hexalith.Parties.Authentication lib for A3). No cross-repo work.
+  # Readiness remediation 2026-06-28 added canonical epics.md detail and story files.
+  epic-6: backlog
+  6-1-shared-claim-types-and-extraction-helpers-a1-a5: ready-for-dev
+  6-2-canonical-wire-json-serializer-options-a2: ready-for-dev
+  6-3-shared-claims-transformation-library-a3: ready-for-dev
+  6-4-projection-names-and-actor-id-builders-a4: ready-for-dev
+  6-5-gdpr-client-mapping-tenant-heuristic-and-export-filename-a6-a7-a8: ready-for-dev
+  6-6-shared-role-arrays-and-policy-names-a9: ready-for-dev
+  6-7-shared-portal-display-formatters-a10: ready-for-dev
+
+  # ── Epic 7: Platform Alignment — adopt Commons/EventStore (Class B) ───────
+  # Deferred / Major / Architect-gated. Cross-repo moves into the technical
+  # submodules; no developer-executable story entries until PM/Architect planning
+  # expands and approves the work.
+  epic-7: backlog

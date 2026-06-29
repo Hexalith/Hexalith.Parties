@@ -685,6 +685,25 @@ deploy/k8s/                                        ◆ parties-ui Deployment/Ser
 - **Data boundary:** no DB/ORM; reads are projections via the gateway carrying freshness;
   the only new stored mapping is the identity→`party_id` binding (IdP claim / small
   binding store), never in the event stream.
+- **Shared-anchor boundary (Class A, sprint-change-proposal-2026-06-28):** cross-project
+  shared values are defined **once in `Hexalith.Parties.Contracts`** (the project on every
+  other application project's reference path) — claim types (`PartiesClaimTypes`), the
+  canonical wire `JsonSerializerOptions` (`PartiesJsonOptions.Default`), projection names +
+  actor-id builders (`PartyProjectionNames` / `PartyActorIds`), role-name base arrays +
+  policy names (`PartiesRoles`), text heuristics (`ContainsTenant`), the GDPR export
+  filename builder, and pure display formatters (`PartyDisplayFormat`). **Never re-hardcode
+  these literals/options in a second project.** Two exceptions cannot live in Contracts:
+  the shared JWT `IClaimsTransformation` logic (needs `Microsoft.AspNetCore.Authentication`
+  → new `Hexalith.Parties.Authentication` lib) and any UI-host-only composition. Contracts
+  stays infrastructure-free; only BCL types (`System.Security.Claims`, `System.Text.Json`)
+  are added — verify the boundary fitness test stays green.
+- **Platform-consumption boundary (Class B, deferred Epic 7):** generic technical
+  infrastructure belongs in the shared submodules, not the application. `Hexalith.Parties.*`
+  currently does **not** reference `Hexalith.Commons` and re-implements parts of the
+  `Hexalith.EventStore` projection platform (checkpointing/rebuild/freshness) and ships a
+  crypto-shredding engine + key-management subsystem in `Parties.Security` that implement an
+  EventStore seam. Target end-state: consume `Commons`/`EventStore`/`FrontComposer` primitives
+  rather than parallel re-implementations (Architect-gated; see proposal Section 4 Class B).
 
 ### Requirements → Structure Mapping
 
