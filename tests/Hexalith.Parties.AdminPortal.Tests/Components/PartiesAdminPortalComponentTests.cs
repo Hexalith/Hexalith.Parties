@@ -10,6 +10,7 @@ using Hexalith.Parties.AdminPortal.Components;
 using Hexalith.Parties.AdminPortal.Services;
 using Hexalith.Parties.AdminPortal.Tests.Services;
 using Hexalith.Parties.Client.AdminPortal;
+using Hexalith.Parties.Contracts.Authorization;
 using Hexalith.Parties.Contracts.Models;
 using Hexalith.Parties.Contracts.Security;
 using Hexalith.Parties.Contracts.ValueObjects;
@@ -4266,8 +4267,8 @@ public sealed class PartiesAdminPortalComponentTests : BunitContext
         {
             Claim[] claims =
             [
-                new Claim("sub", userId),
-                new Claim("eventstore:tenant", tenantId),
+                new Claim(PartiesClaimTypes.Subject, userId),
+                new Claim(PartiesClaimTypes.EventStoreTenant, tenantId),
             ];
             _state = new AuthenticationState(new ClaimsPrincipal(new ClaimsIdentity(claims, "Test")));
             NotifyAuthenticationStateChanged(GetAuthenticationStateAsync());

@@ -1,5 +1,7 @@
 using System.Security.Claims;
 
+using Hexalith.Parties.Contracts.Authorization;
+
 using Microsoft.Extensions.Primitives;
 
 namespace Hexalith.Parties.Mcp;
@@ -32,7 +34,7 @@ internal sealed class HttpPartiesMcpRequestContextAccessor(IHttpContextAccessor 
 
             string? userId = FirstNonEmpty(
                 httpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value,
-                httpContext.User.FindFirst("sub")?.Value,
+                httpContext.User.FindFirst(PartiesClaimTypes.Subject)?.Value,
                 httpContext.User.FindFirst("preferred_username")?.Value,
                 Header(httpContext, "X-User-Id"),
                 Header(httpContext, "X-User"));

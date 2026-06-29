@@ -5,6 +5,7 @@ using Hexalith.Parties.Client.Abstractions;
 using Hexalith.Parties.Client.AdminPortal;
 using Hexalith.Parties.Client.Extensions;
 using Hexalith.Parties.ConsumerPortal.Services;
+using Hexalith.Parties.Contracts.Authorization;
 using Hexalith.Parties.ServiceDefaults;
 using Hexalith.Parties.UI;
 using Hexalith.Parties.UI.Authentication;
@@ -146,7 +147,7 @@ if (authEnabled)
         builder.Configuration["Authentication:OpenIdConnect:ClientId"]!,
         builder.Configuration["Authentication:OpenIdConnect:ClientSecret"]!,
         tenantClaimType: PartiesUiAuthorization.TenantClaimType,
-        userClaimType: "sub"));
+        userClaimType: PartiesClaimTypes.Subject));
 }
 
 // Dev-only: the run-mode Keycloak authority is http (keycloak.GetEndpoint("http")), but the OIDC

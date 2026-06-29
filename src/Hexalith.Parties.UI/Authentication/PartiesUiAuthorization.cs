@@ -1,3 +1,5 @@
+using Hexalith.Parties.Contracts.Authorization;
+
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.DependencyInjection;
@@ -49,7 +51,7 @@ public static class PartiesUiAuthorization
     /// (Stories 4.1/4.2); this host only consumes it. Single source of truth — never re-hardcode the
     /// literal anywhere (resolver, transformation, page, tests all reference this const).
     /// </summary>
-    public const string PartyIdClaimType = "party_id";
+    public const string PartyIdClaimType = PartiesClaimTypes.PartyId;
 
     /// <summary>
     /// The normalized tenant claim type (Story 1.4, AR-D2). The <c>hexalith-parties-ui</c> Keycloak
@@ -58,7 +60,7 @@ public static class PartiesUiAuthorization
     /// Captured into a bound Consumer's effective scope <c>{tenant, party_id}</c>. Single source of
     /// truth — never re-hardcode the literal anywhere.
     /// </summary>
-    public const string TenantClaimType = "eventstore:tenant";
+    public const string TenantClaimType = PartiesClaimTypes.EventStoreTenant;
 
     /// <summary>
     /// Registers the <see cref="AdminPolicy"/> and <see cref="ConsumerPolicy"/> via

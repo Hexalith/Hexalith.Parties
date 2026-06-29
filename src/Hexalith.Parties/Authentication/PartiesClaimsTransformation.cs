@@ -1,13 +1,15 @@
 using System.Security.Claims;
 using System.Text.Json;
 
+using Hexalith.Parties.Contracts.Authorization;
+
 using Microsoft.AspNetCore.Authentication;
 
 namespace Hexalith.Parties.Authentication;
 
 public sealed class PartiesClaimsTransformation(ILogger<PartiesClaimsTransformation> logger) : IClaimsTransformation
 {
-    internal const string TenantClaimType = "eventstore:tenant";
+    internal const string TenantClaimType = PartiesClaimTypes.EventStoreTenant;
 
     public Task<ClaimsPrincipal> TransformAsync(ClaimsPrincipal principal)
     {
@@ -27,7 +29,7 @@ public sealed class PartiesClaimsTransformation(ILogger<PartiesClaimsTransformat
             principal.AddIdentity(identity);
         }
 
-        string subject = principal.FindFirst("sub")?.Value ?? "unknown";
+        string subject = principal.TryGetUserId().Value ?? "unknown";
         int tenantCount = identity.Claims.Count(c => c.Type == TenantClaimType);
 
         logger.LogDebug(

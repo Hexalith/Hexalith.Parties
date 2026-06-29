@@ -1,5 +1,6 @@
 using System.Security.Claims;
 
+using Hexalith.Parties.Contracts.Authorization;
 using Hexalith.Parties.UI.Authentication;
 
 using Microsoft.AspNetCore.Authentication;
@@ -60,7 +61,9 @@ public sealed class PartyIdClaimResolverTests
         using IServiceScope scope = provider.CreateScope();
         PartyIdClaimResolver resolver = scope.ServiceProvider.GetRequiredService<PartyIdClaimResolver>();
 
-        ClaimsPrincipal user = Principal(new Claim(PartiesUiAuthorization.PartyIdClaimType, partyId));
+        ClaimsPrincipal user = Principal(
+            new Claim(PartiesUiAuthorization.TenantClaimType, "tenant-a"),
+            new Claim(PartiesUiAuthorization.PartyIdClaimType, partyId));
 
         resolver.Resolve(user).IsBound.ShouldBeFalse();
     }
@@ -73,6 +76,7 @@ public sealed class PartyIdClaimResolverTests
         PartyIdClaimResolver resolver = scope.ServiceProvider.GetRequiredService<PartyIdClaimResolver>();
 
         ClaimsPrincipal user = Principal(
+            new Claim(PartiesUiAuthorization.TenantClaimType, "tenant-a"),
             new Claim(PartiesUiAuthorization.PartyIdClaimType, "party-1"),
             new Claim(PartiesUiAuthorization.PartyIdClaimType, "party-2"));
 
@@ -80,7 +84,7 @@ public sealed class PartyIdClaimResolverTests
     }
 
     [Fact]
-    public void BoundPartyId_WithoutTenantClaim_BindsWithEmptyTenant()
+    public void BoundPartyId_WithoutTenantClaim_ResolvesUnbound()
     {
         using ServiceProvider provider = BuildProvider();
         using IServiceScope scope = provider.CreateScope();
@@ -88,11 +92,22 @@ public sealed class PartyIdClaimResolverTests
 
         ClaimsPrincipal user = Principal(new Claim(PartiesUiAuthorization.PartyIdClaimType, "party-123"));
 
-        PartyBindingResult result = resolver.Resolve(user);
+        resolver.Resolve(user).IsBound.ShouldBeFalse();
+    }
 
-        result.IsBound.ShouldBeTrue();
-        result.PartyId.ShouldBe("party-123");
-        result.Tenant.ShouldBe(string.Empty);
+    [Fact]
+    public void BoundPartyId_WithAmbiguousTenantClaim_ResolvesUnbound()
+    {
+        using ServiceProvider provider = BuildProvider();
+        using IServiceScope scope = provider.CreateScope();
+        PartyIdClaimResolver resolver = scope.ServiceProvider.GetRequiredService<PartyIdClaimResolver>();
+
+        ClaimsPrincipal user = Principal(
+            new Claim(PartiesClaimTypes.PartyId, "party-123"),
+            new Claim(PartiesClaimTypes.EventStoreTenant, "tenant-a"),
+            new Claim(PartiesClaimTypes.EventStoreTenant, "tenant-b"));
+
+        resolver.Resolve(user).IsBound.ShouldBeFalse();
     }
 
     [Fact]

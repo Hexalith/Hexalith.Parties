@@ -5,6 +5,7 @@ using Bunit;
 using Hexalith.Parties.AdminPortal.Components;
 using Hexalith.Parties.AdminPortal.Services;
 using Hexalith.Parties.AdminPortal.Tests.Services;
+using Hexalith.Parties.Contracts.Authorization;
 using Hexalith.Parties.Contracts.Models;
 using Hexalith.Parties.Contracts.ValueObjects;
 using Hexalith.Tenants.Client.Projections;
@@ -391,8 +392,8 @@ public sealed class CreateEditPartyPageTests : BunitContext
         {
             Claim[] claims =
             [
-                new Claim("sub", userId),
-                new Claim("eventstore:tenant", tenantId),
+                new Claim(PartiesClaimTypes.Subject, userId),
+                new Claim(PartiesClaimTypes.EventStoreTenant, tenantId),
             ];
             _state = new AuthenticationState(new ClaimsPrincipal(new ClaimsIdentity(claims, "Test")));
             NotifyAuthenticationStateChanged(GetAuthenticationStateAsync());
@@ -400,7 +401,7 @@ public sealed class CreateEditPartyPageTests : BunitContext
 
         public void SetAuthenticatedWithoutTenant(string userId)
         {
-            Claim[] claims = [new Claim("sub", userId)];
+            Claim[] claims = [new Claim(PartiesClaimTypes.Subject, userId)];
             _state = new AuthenticationState(new ClaimsPrincipal(new ClaimsIdentity(claims, "Test")));
             NotifyAuthenticationStateChanged(GetAuthenticationStateAsync());
         }

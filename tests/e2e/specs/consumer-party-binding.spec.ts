@@ -29,7 +29,7 @@ test.describe('Consumer party binding landing', () => {
     expect(browserVisibleDataRequests).toEqual([]);
   });
 
-  for (const state of ['unbound', 'empty', 'ambiguous', 'suspended', 'removed'] as const) {
+  for (const state of ['unbound', 'empty', 'ambiguous', 'no-tenant', 'suspended', 'removed'] as const) {
     test(`${state} Consumer is sent to NoPartyBinding instead of /me`, async ({ context, page }) => {
       await enableConsumerFixture(context, state);
       const browserVisibleDataRequests = captureBrowserVisiblePartiesDataRequests(page);
@@ -48,7 +48,7 @@ test.describe('Consumer party binding landing', () => {
 
 const enableConsumerFixture = async (
   context: BrowserContext,
-  state: 'bound' | 'unbound' | 'empty' | 'ambiguous' | 'suspended' | 'removed',
+  state: 'bound' | 'unbound' | 'empty' | 'ambiguous' | 'no-tenant' | 'suspended' | 'removed',
 ): Promise<void> => {
   await context.addCookies([
     {

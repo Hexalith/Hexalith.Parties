@@ -25,6 +25,7 @@ using Hexalith.EventStore.Server.Pipeline.Queries;
 using Hexalith.EventStore.Server.Projections;
 using Hexalith.EventStore.Server.Queries;
 using Hexalith.EventStore.Testing.Fakes;
+using Hexalith.Parties.Contracts.Authorization;
 using Hexalith.Parties.Contracts.Commands;
 using Hexalith.Parties.Contracts.Events;
 using Hexalith.Parties.Contracts.ValueObjects;
@@ -1138,7 +1139,7 @@ public sealed class EventStoreGatewayRoutingTests
         {
             List<Claim> claims =
             [
-                new("sub", "story-12-4-user"),
+                new(PartiesClaimTypes.Subject, "story-12-4-user"),
                 new("tenants", JsonSerializer.Serialize(tenants)),
                 new("domains", JsonSerializer.Serialize(domains)),
             ];

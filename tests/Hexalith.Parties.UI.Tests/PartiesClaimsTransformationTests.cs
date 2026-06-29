@@ -1,5 +1,6 @@
 using System.Security.Claims;
 
+using Hexalith.Parties.Contracts.Authorization;
 using Hexalith.Parties.UI.Authentication;
 
 using Microsoft.Extensions.Logging.Abstractions;
@@ -66,7 +67,7 @@ public sealed class PartiesClaimsTransformationTests
     [Fact]
     public async Task NoTenantSource_AddsNoClaim_DoesNotThrow()
     {
-        ClaimsPrincipal principal = Principal(new Claim("sub", "user-1"));
+        ClaimsPrincipal principal = Principal(new Claim(PartiesClaimTypes.Subject, "user-1"));
         var sut = new PartiesClaimsTransformation(NullLogger<PartiesClaimsTransformation>.Instance);
 
         ClaimsPrincipal result = await sut.TransformAsync(principal);

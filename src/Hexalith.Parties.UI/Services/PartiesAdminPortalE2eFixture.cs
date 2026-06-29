@@ -4,11 +4,11 @@ using Hexalith.Parties.AdminPortal.Services;
 using Hexalith.Parties.Client;
 using Hexalith.Parties.Client.Abstractions;
 using Hexalith.Parties.Client.AdminPortal;
+using Hexalith.Parties.Contracts.Authorization;
 using Hexalith.Parties.Contracts.Commands;
 using Hexalith.Parties.Contracts.Models;
 using Hexalith.Parties.Contracts.Security;
 using Hexalith.Parties.Contracts.ValueObjects;
-using Hexalith.Parties.UI.Authentication;
 
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -66,9 +66,9 @@ internal sealed class PartiesAdminPortalE2eAuthenticationStateProvider(IHttpCont
         [
             new Claim(ClaimTypes.NameIdentifier, "admin-e2e"),
             new Claim(ClaimTypes.Name, "Admin E2E"),
-            new Claim("sub", "admin-e2e"),
+            new Claim(PartiesClaimTypes.Subject, "admin-e2e"),
             new Claim("roles", "Admin"),
-            new Claim("eventstore:tenant", "test-tenant"),
+            new Claim(PartiesClaimTypes.EventStoreTenant, "test-tenant"),
         ],
         authenticationType: "PartiesAdminPortalE2E",
         nameType: ClaimTypes.Name,
@@ -96,22 +96,27 @@ internal sealed class PartiesAdminPortalE2eAuthenticationStateProvider(IHttpCont
         [
             new(ClaimTypes.NameIdentifier, "consumer-e2e"),
             new(ClaimTypes.Name, "Consumer E2E"),
-            new("sub", "consumer-e2e"),
+            new(PartiesClaimTypes.Subject, "consumer-e2e"),
             new("roles", "Consumer"),
-            new(PartiesUiAuthorization.TenantClaimType, "test-tenant"),
         ];
+
+        if (!string.Equals(consumerState, "no-tenant", StringComparison.Ordinal))
+        {
+            claims.Add(new Claim(PartiesClaimTypes.EventStoreTenant, "test-tenant"));
+        }
 
         switch (consumerState)
         {
             case "bound":
-                claims.Add(new Claim(PartiesUiAuthorization.PartyIdClaimType, "party-bound-001"));
+            case "no-tenant":
+                claims.Add(new Claim(PartiesClaimTypes.PartyId, "party-bound-001"));
                 break;
             case "empty":
-                claims.Add(new Claim(PartiesUiAuthorization.PartyIdClaimType, " "));
+                claims.Add(new Claim(PartiesClaimTypes.PartyId, " "));
                 break;
             case "ambiguous":
-                claims.Add(new Claim(PartiesUiAuthorization.PartyIdClaimType, "party-bound-001"));
-                claims.Add(new Claim(PartiesUiAuthorization.PartyIdClaimType, "party-other-001"));
+                claims.Add(new Claim(PartiesClaimTypes.PartyId, "party-bound-001"));
+                claims.Add(new Claim(PartiesClaimTypes.PartyId, "party-other-001"));
                 break;
         }
 

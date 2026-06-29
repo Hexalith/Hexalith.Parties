@@ -1,3 +1,25 @@
+type class Hexalith.Parties.Contracts.Authorization.PartiesClaimExtraction interfaces:
+  method Hexalith.Parties.Contracts.Authorization.PartiesClaimExtractionResult TryGetPartyId(System.Security.Claims.ClaimsPrincipal principal)
+  method Hexalith.Parties.Contracts.Authorization.PartiesClaimExtractionResult TryGetPartyId(System.Security.Claims.ClaimsIdentity identity)
+  method Hexalith.Parties.Contracts.Authorization.PartiesClaimExtractionResult TryGetTenantId(System.Security.Claims.ClaimsPrincipal principal)
+  method Hexalith.Parties.Contracts.Authorization.PartiesClaimExtractionResult TryGetTenantId(System.Security.Claims.ClaimsIdentity identity)
+  method Hexalith.Parties.Contracts.Authorization.PartiesClaimExtractionResult TryGetUserId(System.Security.Claims.ClaimsPrincipal principal)
+  method Hexalith.Parties.Contracts.Authorization.PartiesClaimExtractionResult TryGetUserId(System.Security.Claims.ClaimsIdentity identity)
+type enum Hexalith.Parties.Contracts.Authorization.PartiesClaimExtractionFailure base:System.Enum interfaces:System.IComparable,System.IConvertible,System.IFormattable,System.ISpanFormattable
+  enum Ambiguous=3
+  enum Empty=2
+  enum Missing=1
+  enum None=0
+type class Hexalith.Parties.Contracts.Authorization.PartiesClaimExtractionResult interfaces:System.IEquatable<Hexalith.Parties.Contracts.Authorization.PartiesClaimExtractionResult>
+  ctor ()
+  property Hexalith.Parties.Contracts.Authorization.PartiesClaimExtractionResult Ambiguous get
+  property Hexalith.Parties.Contracts.Authorization.PartiesClaimExtractionResult Empty get
+  property Hexalith.Parties.Contracts.Authorization.PartiesClaimExtractionFailure Failure getset
+  property Hexalith.Parties.Contracts.Authorization.PartiesClaimExtractionResult Missing get
+  property System.Boolean Succeeded getset
+  property System.String Value getset
+  method Hexalith.Parties.Contracts.Authorization.PartiesClaimExtractionResult Success(System.String value)
+type class Hexalith.Parties.Contracts.Authorization.PartiesClaimTypes interfaces:
 type class Hexalith.Parties.Contracts.Commands.AddContactChannel interfaces:System.IEquatable<Hexalith.Parties.Contracts.Commands.AddContactChannel>
   ctor ()
   property System.String ContactChannelId required getset

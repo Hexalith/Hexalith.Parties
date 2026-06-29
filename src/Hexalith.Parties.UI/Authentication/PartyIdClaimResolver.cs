@@ -1,5 +1,7 @@
 using System.Security.Claims;
 
+using Hexalith.Parties.Contracts.Authorization;
+
 namespace Hexalith.Parties.UI.Authentication;
 
 /// <summary>
@@ -28,22 +30,17 @@ public sealed class PartyIdClaimResolver
     {
         ArgumentNullException.ThrowIfNull(user);
 
-        string[] partyIds = user.FindAll(PartiesUiAuthorization.PartyIdClaimType)
-            .Select(c => c.Value)
-            .Where(v => !string.IsNullOrWhiteSpace(v))
-            .ToArray();
+        PartiesClaimExtractionResult partyId = user.TryGetPartyId();
+        PartiesClaimExtractionResult tenant = user.TryGetTenantId();
 
-        // Fail closed: 0 (no binding) or >1 (ambiguous binding, AC3) ⇒ Unbound. A single bound party_id
-        // is required before a Consumer reaches a data screen.
-        if (partyIds.Length != 1)
+        // Fail closed: a single bound party_id and a single normalized tenant are required before a
+        // Consumer reaches a data screen.
+        if (!partyId.Succeeded || !tenant.Succeeded)
         {
             return PartyBindingResult.Unbound;
         }
 
-        // Capture the normalized tenant alongside the party so the effective scope is {tenant, party_id}
-        // for downstream self-scoping (Story 1.5).
-        string? tenant = user.FindFirst(PartiesUiAuthorization.TenantClaimType)?.Value;
-        return PartyBindingResult.Bound(tenant ?? string.Empty, partyIds[0]);
+        return PartyBindingResult.Bound(tenant.Value!, partyId.Value!);
     }
 }
 

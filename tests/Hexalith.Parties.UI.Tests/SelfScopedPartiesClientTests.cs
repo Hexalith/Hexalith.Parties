@@ -2,6 +2,7 @@ using System.Security.Claims;
 
 using Hexalith.Parties.Client.Abstractions;
 using Hexalith.Parties.Client.AdminPortal;
+using Hexalith.Parties.Contracts.Authorization;
 using Hexalith.Parties.Contracts.Commands;
 using Hexalith.Parties.Contracts.Models;
 using Hexalith.Parties.Contracts.Security;
@@ -362,7 +363,12 @@ public sealed class SelfScopedPartiesClientTests
             gdprClient);
 
     private static ClaimsPrincipal BoundPrincipal(string partyId)
-        => new(new ClaimsIdentity([new Claim(PartiesUiAuthorization.PartyIdClaimType, partyId)], authenticationType: "test"));
+        => new(new ClaimsIdentity(
+            [
+                new Claim(PartiesClaimTypes.EventStoreTenant, "tenant-a"),
+                new Claim(PartiesClaimTypes.PartyId, partyId),
+            ],
+            authenticationType: "test"));
 
     private static ClaimsPrincipal UnboundPrincipal()
         => new(new ClaimsIdentity(authenticationType: "test"));

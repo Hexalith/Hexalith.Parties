@@ -3,6 +3,7 @@ using System.Security.Claims;
 using Bunit;
 using Bunit.TestDoubles;
 
+using Hexalith.Parties.Contracts.Authorization;
 using Hexalith.Parties.UI.Authentication;
 using Hexalith.Parties.UI.Components.Account;
 
@@ -32,7 +33,9 @@ public sealed class NoPartyBindingRoutingTests : BunitContext
         BunitAuthorizationContext auth = AddAuthorization();
         auth.SetAuthorized("consumer");
         auth.SetRoles("Consumer");
-        auth.SetClaims(new Claim(PartiesUiAuthorization.PartyIdClaimType, "party-123"));
+        auth.SetClaims(
+            new Claim(PartiesClaimTypes.EventStoreTenant, "tenant-a"),
+            new Claim(PartiesClaimTypes.PartyId, "party-123"));
 
         IRenderedComponent<RoleLandingRedirect> cut = Render<RoleLandingRedirect>();
 
@@ -68,8 +71,9 @@ public sealed class NoPartyBindingRoutingTests : BunitContext
         auth.SetAuthorized("consumer");
         auth.SetRoles("Consumer");
         auth.SetClaims(
-            new Claim(PartiesUiAuthorization.PartyIdClaimType, "party-1"),
-            new Claim(PartiesUiAuthorization.PartyIdClaimType, "party-2"));
+            new Claim(PartiesClaimTypes.EventStoreTenant, "tenant-a"),
+            new Claim(PartiesClaimTypes.PartyId, "party-1"),
+            new Claim(PartiesClaimTypes.PartyId, "party-2"));
 
         IRenderedComponent<RoleLandingRedirect> cut = Render<RoleLandingRedirect>();
 
@@ -86,7 +90,26 @@ public sealed class NoPartyBindingRoutingTests : BunitContext
         BunitAuthorizationContext auth = AddAuthorization();
         auth.SetAuthorized("consumer");
         auth.SetRoles("Consumer");
-        auth.SetClaims(new Claim(PartiesUiAuthorization.PartyIdClaimType, " "));
+        auth.SetClaims(
+            new Claim(PartiesClaimTypes.EventStoreTenant, "tenant-a"),
+            new Claim(PartiesClaimTypes.PartyId, " "));
+
+        IRenderedComponent<RoleLandingRedirect> cut = Render<RoleLandingRedirect>();
+
+        NavigationManager nav = Services.GetRequiredService<NavigationManager>();
+        cut.WaitForAssertion(() => nav.Uri.ShouldEndWith("/no-party-binding"));
+        nav.Uri.ShouldNotEndWith("/me");
+    }
+
+    [Fact]
+    public void ConsumerWithoutTenant_IsRoutedToNoPartyBinding_NeverToMe()
+    {
+        Services.AddPartiesUiClaimsResolution();
+
+        BunitAuthorizationContext auth = AddAuthorization();
+        auth.SetAuthorized("consumer");
+        auth.SetRoles("Consumer");
+        auth.SetClaims(new Claim(PartiesClaimTypes.PartyId, "party-123"));
 
         IRenderedComponent<RoleLandingRedirect> cut = Render<RoleLandingRedirect>();
 

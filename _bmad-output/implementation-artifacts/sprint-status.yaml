@@ -1,5 +1,5 @@
 # generated: 2026-06-21T18:55:59+02:00
-# last_updated: 2026-06-29T08:36:52+02:00
+# last_updated: 2026-06-29T08:52:39+02:00
 # project: parties
 # project_key: NOKEY
 # tracking_system: file-system
@@ -41,7 +41,7 @@
 # - Retrospective appends its action items to action_items; sprint-status surfaces open ones
 
 generated: 2026-06-21T18:55:59+02:00
-last_updated: 2026-06-29T08:36:52+02:00
+last_updated: 2026-06-29T08:52:39+02:00
 project: parties
 project_key: NOKEY
 tracking_system: file-system
@@ -106,7 +106,7 @@ development_status:
   # no new PRD functional requirements.
   # Readiness remediation 2026-06-28 added canonical epics.md detail and story files.
   epic-6: backlog
-  6-1-shared-claim-types-and-extraction-helpers-a1-a5: ready-for-dev
+  6-1-shared-claim-types-and-extraction-helpers-a1-a5: done
   6-2-canonical-wire-json-serializer-options-a2: ready-for-dev
   6-3-shared-claims-transformation-library-a3: ready-for-dev
   6-4-projection-names-and-actor-id-builders-a4: ready-for-dev

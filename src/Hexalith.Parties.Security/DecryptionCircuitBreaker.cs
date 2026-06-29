@@ -1,6 +1,8 @@
 using System.Collections.Concurrent;
 using System.Diagnostics.Metrics;
 
+using Hexalith.Parties.Contracts.Authorization;
+
 using Microsoft.Extensions.Logging;
 
 namespace Hexalith.Parties.Security;
@@ -170,7 +172,7 @@ public sealed partial class DecryptionCircuitBreaker(
         LogCircuitOpened(tenantId, partyId, failureCount);
         s_circuitBreakerTrips.Add(1,
             new KeyValuePair<string, object?>("tenant", tenantId),
-            new KeyValuePair<string, object?>("party_id", partyId),
+            new KeyValuePair<string, object?>(PartiesClaimTypes.PartyId, partyId),
             new KeyValuePair<string, object?>("reason", reason));
     }
 

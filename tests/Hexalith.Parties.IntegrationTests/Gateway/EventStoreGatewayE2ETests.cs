@@ -6,6 +6,7 @@ using System.Security.Claims;
 using System.Text;
 using System.Text.Json;
 
+using Hexalith.Parties.Contracts.Authorization;
 using Hexalith.Parties.Contracts.Commands;
 using Hexalith.Parties.Contracts.ValueObjects;
 using Hexalith.Parties.IntegrationTests.HealthChecks;
@@ -133,7 +134,7 @@ public sealed class EventStoreGatewayE2ETests
             {
                 Subject = new ClaimsIdentity(
                 [
-                    new("sub", "story-12-4-e2e-user"),
+                    new(PartiesClaimTypes.Subject, "story-12-4-e2e-user"),
                     new("tenants", JsonSerializer.Serialize(new[] { "tenant-a" })),
                     new("domains", JsonSerializer.Serialize(new[] { "party" })),
                     new("permissions", JsonSerializer.Serialize(new[] { "commands:*", "query:read" })),

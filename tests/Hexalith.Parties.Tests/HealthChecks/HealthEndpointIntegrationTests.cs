@@ -13,9 +13,10 @@ using Dapr.Client;
 using Hexalith.EventStore.Server.Actors;
 using Hexalith.EventStore.Server.Commands;
 using Hexalith.EventStore.Server.Pipeline.Commands;
-using Hexalith.Parties.HealthChecks;
+using Hexalith.Parties.Contracts.Authorization;
 using Hexalith.Parties.Contracts.Models;
 using Hexalith.Parties.Contracts.ValueObjects;
+using Hexalith.Parties.HealthChecks;
 using Hexalith.Parties.Projections.Abstractions;
 
 using Microsoft.AspNetCore.Hosting;
@@ -288,12 +289,12 @@ internal static class JwtTokenHelper
 
         var claims = new List<Claim>
         {
-            new("sub", "integration-test-user"),
+            new(PartiesClaimTypes.Subject, "integration-test-user"),
         };
 
         if (includeTenantClaim)
         {
-            claims.Add(new Claim("eventstore:tenant", "tenant-a"));
+            claims.Add(new Claim(PartiesClaimTypes.EventStoreTenant, "tenant-a"));
         }
 
         var token = new JwtSecurityToken(

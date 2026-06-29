@@ -3,6 +3,7 @@ using Hexalith.FrontComposer.Contracts.Rendering;
 using Hexalith.FrontComposer.Shell.Extensions;
 using Hexalith.FrontComposer.Shell.Services;
 using Hexalith.FrontComposer.Shell.Services.Auth;
+using Hexalith.Parties.Contracts.Authorization;
 
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -44,8 +45,8 @@ public sealed class PartiesUiAuthenticationCompositionTests
             new Uri("https://idp.example/realms/hexalith"),
             "hexalith-parties-ui",
             "secret",
-            "eventstore:tenant",
-            "sub"));
+            PartiesClaimTypes.EventStoreTenant,
+            PartiesClaimTypes.Subject));
 
         using ServiceProvider provider = services.BuildServiceProvider(
             new ServiceProviderOptions { ValidateScopes = true });
@@ -157,8 +158,8 @@ public sealed class PartiesUiAuthenticationCompositionTests
             new Uri("https://idp.example/realms/hexalith"),
             "hexalith-parties-ui",
             "secret",
-            "eventstore:tenant",
-            "sub"));
+            PartiesClaimTypes.EventStoreTenant,
+            PartiesClaimTypes.Subject));
 
         return services.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true });
     }
