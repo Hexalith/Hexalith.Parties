@@ -612,8 +612,8 @@ public sealed class PartyPayloadProtectionServiceTests
                 PartyIdentity(), typeof(ContactChannelAdded).FullName!, corruptedBytes, "json+pdenc-v1"));
 
         ex.Message.ShouldContain("Corrupted encrypted field");
-        ex.Message.ShouldContain("acme");
-        ex.Message.ShouldContain("p1");
+        ex.Message.ShouldNotContain("acme");
+        ex.Message.ShouldNotContain("p1");
         ex.InnerException.ShouldBeOfType<FormatException>();
     }
 

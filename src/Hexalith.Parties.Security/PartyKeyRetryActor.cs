@@ -70,21 +70,22 @@ public sealed partial class PartyKeyRetryActor(
         }
         catch (Exception ex)
         {
+            // Protected-data no-leak: never persist or log the raw exception message. It can carry
+            // provider/connection/exception text that must not reach the state store or logs (AC4).
             CryptoPendingRecord updated = record with
             {
-                LastError = ex.Message,
+                LastError = "Key infrastructure unavailable.",
                 LastAttemptedAt = DateTimeOffset.UtcNow,
                 AttemptCount = record.AttemptCount + 1,
             };
 
             await StateManager.SetStateAsync(PendingStateKey, updated).ConfigureAwait(false);
             logger.LogWarning(
-                ex,
-                "Durable key retry attempt {AttemptCount} failed for party {TenantId}/{PartyId}: {Error}",
+                "Durable key retry attempt {AttemptCount} failed for party {TenantId}/{PartyId}: {FailureType}",
                 updated.AttemptCount,
                 record.TenantId,
                 record.PartyId,
-                ex.Message);
+                ex.GetType().Name);
         }
     }
 

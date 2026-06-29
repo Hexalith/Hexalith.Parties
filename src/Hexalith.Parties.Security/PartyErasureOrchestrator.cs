@@ -33,11 +33,11 @@ public sealed partial class PartyErasureOrchestrator(
             }
             catch (Exception ex) when (attempt < MaxRetries)
             {
-                LogKeyDestructionRetry(tenantId, partyId, attempt, MaxRetries, ex.Message);
+                LogKeyDestructionRetry(tenantId, partyId, attempt, MaxRetries, ex.GetType().Name);
             }
             catch (Exception ex)
             {
-                LogKeyDestructionExhausted(tenantId, partyId, MaxRetries, ex.Message);
+                LogKeyDestructionExhausted(tenantId, partyId, MaxRetries, ex.GetType().Name);
                 return null;
             }
         }
@@ -62,11 +62,11 @@ public sealed partial class PartyErasureOrchestrator(
     [LoggerMessage(Level = LogLevel.Information, Message = "Key destruction succeeded for party {TenantId}/{PartyId}: {VersionsDestroyed} versions destroyed")]
     private partial void LogKeyDestructionSucceeded(string tenantId, string partyId, int versionsDestroyed);
 
-    [LoggerMessage(Level = LogLevel.Warning, Message = "Key destruction attempt {Attempt}/{MaxRetries} failed for party {TenantId}/{PartyId}: {Error}")]
-    private partial void LogKeyDestructionRetry(string tenantId, string partyId, int attempt, int maxRetries, string error);
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Key destruction attempt {Attempt}/{MaxRetries} failed for party {TenantId}/{PartyId}: {FailureType}")]
+    private partial void LogKeyDestructionRetry(string tenantId, string partyId, int attempt, int maxRetries, string failureType);
 
-    [LoggerMessage(Level = LogLevel.Error, Message = "Key destruction exhausted all {MaxRetries} retries for party {TenantId}/{PartyId}: {Error}")]
-    private partial void LogKeyDestructionExhausted(string tenantId, string partyId, int maxRetries, string error);
+    [LoggerMessage(Level = LogLevel.Error, Message = "Key destruction exhausted all {MaxRetries} retries for party {TenantId}/{PartyId}: {FailureType}")]
+    private partial void LogKeyDestructionExhausted(string tenantId, string partyId, int maxRetries, string failureType);
 
     [LoggerMessage(Level = LogLevel.Information, Message = "Erasure verification started for party {TenantId}/{PartyId}")]
     private partial void LogVerificationStarted(string tenantId, string partyId);

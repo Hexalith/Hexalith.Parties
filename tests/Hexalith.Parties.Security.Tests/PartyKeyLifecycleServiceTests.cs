@@ -53,7 +53,11 @@ public class PartyKeyLifecycleServiceTests
         _retryScheduler.IsPendingAsync("acme", "p1", Arg.Any<CancellationToken>()).Returns(true);
         bool pending = await service.IsCryptoPendingAsync("acme", "p1");
         pending.ShouldBeTrue();
-        await _retryScheduler.Received(1).MarkPendingAsync("acme", "p1", "Backend unavailable", Arg.Any<CancellationToken>());
+
+        // Protected-data no-leak (AC4): the crypto-pending reason must be a generic message,
+        // never the raw provider/exception text.
+        await _retryScheduler.Received(1).MarkPendingAsync("acme", "p1", "Key infrastructure unavailable.", Arg.Any<CancellationToken>());
+        await _retryScheduler.DidNotReceive().MarkPendingAsync("acme", "p1", "Backend unavailable", Arg.Any<CancellationToken>());
     }
 
     [Fact]

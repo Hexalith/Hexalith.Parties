@@ -386,7 +386,7 @@ public sealed partial class PartyPayloadProtectionService(
                     }
                     catch (Exception markerEx)
                     {
-                        LogProtectionFailure(identity.TenantId, identity.AggregateId, $"Crypto-pending marker write failed: {markerEx.Message}");
+                        LogProtectionFailure(identity.TenantId, identity.AggregateId, $"Crypto-pending marker write failed: {markerEx.GetType().Name}");
                     }
 
                     throw new PartyEncryptionKeyDestroyedException(identity.TenantId, identity.AggregateId);
@@ -400,8 +400,8 @@ public sealed partial class PartyPayloadProtectionService(
         }
         catch (Exception ex)
         {
-            await cryptoLifecycleService.MarkCryptoPendingAsync(identity.TenantId, identity.AggregateId, ex.Message, cancellationToken).ConfigureAwait(false);
-            LogProtectionFailure(identity.TenantId, identity.AggregateId, ex.Message);
+            await cryptoLifecycleService.MarkCryptoPendingAsync(identity.TenantId, identity.AggregateId, "Protected payload key operation failed.", cancellationToken).ConfigureAwait(false);
+            LogProtectionFailure(identity.TenantId, identity.AggregateId, ex.GetType().Name);
             throw;
         }
     }
@@ -428,7 +428,7 @@ public sealed partial class PartyPayloadProtectionService(
                 }
                 catch (Exception ex)
                 {
-                    LogPropertyAccessFailure(identity.TenantId, identity.AggregateId, property.Name, ex.Message);
+                    LogPropertyAccessFailure(identity.TenantId, identity.AggregateId, property.Name, ex.GetType().Name);
                     continue;
                 }
 
@@ -558,9 +558,9 @@ public sealed partial class PartyPayloadProtectionService(
             }
             catch (FormatException ex)
             {
-                LogCorruptedEncryptedField(identity.TenantId, identity.AggregateId, eventTypeName, ex.Message);
+                LogCorruptedEncryptedField(identity.TenantId, identity.AggregateId, eventTypeName, ex.GetType().Name);
                 throw new InvalidOperationException(
-                    $"Corrupted encrypted field for {identity.TenantId}/{identity.AggregateId} in event {eventTypeName}: invalid base64 encoding.",
+                    "Corrupted encrypted field in protected event payload: invalid base64 encoding.",
                     ex);
             }
 

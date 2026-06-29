@@ -28,7 +28,8 @@ public sealed partial class PartyKeyLifecycleService(
         catch (Exception ex)
         {
             // Party creation MUST NEVER fail due to key infrastructure unavailability
-            await MarkCryptoPendingAsync(tenantId, partyId, ex.Message, cancellationToken).ConfigureAwait(false);
+            await MarkCryptoPendingAsync(tenantId, partyId, "Key infrastructure unavailable.", cancellationToken).ConfigureAwait(false);
+            LogKeyCreationFailureType(tenantId, partyId, ex.GetType().Name);
         }
     }
 
@@ -47,7 +48,7 @@ public sealed partial class PartyKeyLifecycleService(
         }
         catch (Exception ex)
         {
-            LogKeyRetryFailed(tenantId, partyId, ex.Message);
+            LogKeyRetryFailed(tenantId, partyId, ex.GetType().Name);
         }
     }
 
@@ -60,9 +61,12 @@ public sealed partial class PartyKeyLifecycleService(
     [LoggerMessage(Level = LogLevel.Warning, Message = "Encryption key creation failed for party {TenantId}/{PartyId}: {Error}. Party marked CryptoPending.")]
     private partial void LogKeyCreationFailed(string tenantId, string partyId, string error);
 
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Encryption key creation failure type for party {TenantId}/{PartyId}: {FailureType}")]
+    private partial void LogKeyCreationFailureType(string tenantId, string partyId, string failureType);
+
     [LoggerMessage(Level = LogLevel.Information, Message = "Encryption key created after retry for party {TenantId}/{PartyId} version {Version}")]
     private partial void LogKeyCreatedAfterRetry(string tenantId, string partyId, int version);
 
-    [LoggerMessage(Level = LogLevel.Warning, Message = "Encryption key retry failed for party {TenantId}/{PartyId}: {Error}")]
-    private partial void LogKeyRetryFailed(string tenantId, string partyId, string error);
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Encryption key retry failed for party {TenantId}/{PartyId}: {FailureType}")]
+    private partial void LogKeyRetryFailed(string tenantId, string partyId, string failureType);
 }
