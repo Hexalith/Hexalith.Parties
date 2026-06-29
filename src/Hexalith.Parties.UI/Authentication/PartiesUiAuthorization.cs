@@ -1,3 +1,4 @@
+using Hexalith.Parties.Authentication;
 using Hexalith.Parties.Contracts.Authorization;
 
 using Microsoft.AspNetCore.Authentication;

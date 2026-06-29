@@ -21,6 +21,7 @@ function Invoke-TestProject {
 
 $unitProjects = @(
     "tests/Hexalith.Parties.Contracts.Tests/Hexalith.Parties.Contracts.Tests.csproj",
+    "tests/Hexalith.Parties.Authentication.Tests/Hexalith.Parties.Authentication.Tests.csproj",
     "tests/Hexalith.Parties.Client.Tests/Hexalith.Parties.Client.Tests.csproj",
     "tests/Hexalith.Parties.Server.Tests/Hexalith.Parties.Server.Tests.csproj",
     "tests/Hexalith.Parties.Projections.Tests/Hexalith.Parties.Projections.Tests.csproj",

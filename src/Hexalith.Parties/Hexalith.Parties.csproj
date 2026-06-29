@@ -12,6 +12,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Hexalith.Parties.Authentication\Hexalith.Parties.Authentication.csproj" />
     <ProjectReference Include="..\Hexalith.Parties.Contracts\Hexalith.Parties.Contracts.csproj" />
     <ProjectReference Include="..\Hexalith.Parties.Server\Hexalith.Parties.Server.csproj" />
     <ProjectReference Include="..\Hexalith.Parties.Projections\Hexalith.Parties.Projections.csproj" />

@@ -32,11 +32,14 @@
     <!-- Story 1.5 (AR-D3) — the BFF self-scope accessor consumes the ADOPTER-FACING half of the
          split: the typed gateway query client (IPartiesQueryClient) and GDPR client
          (IAdminPortalGdprClient) live in Hexalith.Parties.Client, whose result/value types live in
-         Hexalith.Parties.Contracts. Referencing these is allowed (project-context "adopter-facing vs
-         internal"); the UI BFF is a consumer of them. NEVER reference an INTERNAL host project
+         Hexalith.Parties.Contracts. Story 6.3 adds the dedicated Hexalith.Parties.Authentication
+         library as the shared claims-normalization exception consumed by both hosts. Referencing
+         these is allowed (project-context "adopter-facing vs internal"); the UI BFF is a consumer
+         of them. NEVER reference an INTERNAL host project
          (Hexalith.Parties, .Server, .Projections, .Security, .Testing) — that crosses the
          fitness-pinned boundary. Same-repo siblings, so relative paths (not $(HexalithFrontComposerRoot)). -->
     <ProjectReference Include="..\Hexalith.Parties.AdminPortal\Hexalith.Parties.AdminPortal.csproj" />
+    <ProjectReference Include="..\Hexalith.Parties.Authentication\Hexalith.Parties.Authentication.csproj" />
     <ProjectReference Include="..\Hexalith.Parties.ConsumerPortal\Hexalith.Parties.ConsumerPortal.csproj" />
     <ProjectReference Include="..\Hexalith.Parties.Client\Hexalith.Parties.Client.csproj" />
     <ProjectReference Include="..\Hexalith.Parties.Contracts\Hexalith.Parties.Contracts.csproj" />

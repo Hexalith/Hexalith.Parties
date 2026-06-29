@@ -1,5 +1,6 @@
 using System.Security.Claims;
 
+using Hexalith.Parties.Authentication;
 using Hexalith.Parties.Contracts.Authorization;
 using Hexalith.Parties.UI.Authentication;
 

@@ -6,6 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\src\Hexalith.Parties.Authentication\Hexalith.Parties.Authentication.csproj" />
     <ProjectReference Include="..\..\src\Hexalith.Parties.UI\Hexalith.Parties.UI.csproj" />
     <ProjectReference Include="..\..\src\Hexalith.Parties.ConsumerPortal\Hexalith.Parties.ConsumerPortal.csproj" />
     <ProjectReference Include="$(HexalithFrontComposerRoot)\src\Hexalith.FrontComposer.Contracts\Hexalith.FrontComposer.Contracts.csproj" />
