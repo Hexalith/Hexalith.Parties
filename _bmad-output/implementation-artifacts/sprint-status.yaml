@@ -1,5 +1,5 @@
 # generated: 2026-06-21T18:55:59+02:00
-# last_updated: 2026-06-28T15:36:40+02:00
+# last_updated: 2026-06-29T07:41:07+02:00
 # project: parties
 # project_key: NOKEY
 # tracking_system: file-system
@@ -41,7 +41,7 @@
 # - Retrospective appends its action items to action_items; sprint-status surfaces open ones
 
 generated: 2026-06-21T18:55:59+02:00
-last_updated: 2026-06-28T15:36:40+02:00
+last_updated: 2026-06-29T07:41:07+02:00
 project: parties
 project_key: NOKEY
 tracking_system: file-system
@@ -67,8 +67,8 @@ development_status:
   2-1-embed-the-admin-area-behind-the-admin-policy: done
   2-2-parties-list-with-search-filters-and-paging-fr-admin-1: done
   2-3-party-detail-fr-admin-2: done
-  2-4-create-and-edit-a-party-with-validation-fr-admin-3: done
   2-5-party-picker-re-skin-full-wai-aria-combobox-d11-ux-dr7: done
+  2-4-create-and-edit-a-party-with-validation-fr-admin-3: done
   epic-2-retrospective: done
 
   # ── Epic 3: Admin — GDPR / DPO Operations ────────────────────────────────
@@ -102,6 +102,8 @@ development_status:
   # Added by Correct Course 2026-06-28 (sprint-change-proposal-2026-06-28.md).
   # In-repo deduplication; shared anchors land in Hexalith.Parties.Contracts
   # (+ a new Hexalith.Parties.Authentication lib for A3). No cross-repo work.
+  # Conditional maintenance scope only: supports NFR9/maintainability and covers
+  # no new PRD functional requirements.
   # Readiness remediation 2026-06-28 added canonical epics.md detail and story files.
   epic-6: backlog
   6-1-shared-claim-types-and-extraction-helpers-a1-a5: ready-for-dev
@@ -113,7 +115,16 @@ development_status:
   6-7-shared-portal-display-formatters-a10: ready-for-dev
 
   # ── Epic 7: Platform Alignment — adopt Commons/EventStore (Class B) ───────
-  # Deferred / Major / Architect-gated. Cross-repo moves into the technical
-  # submodules; no developer-executable story entries until PM/Architect planning
-  # expands and approves the work.
+  # PM/Architect implementation plan approved 2026-06-29:
+  # _bmad-output/planning-artifacts/epic-7-implementation-plan-2026-06-29.md.
+  # Post-MVP platform maintenance only; no new PRD functional requirements.
+  # Story files do not exist yet, so all Epic 7 entries remain backlog.
   epic-7: backlog
+  7-1-platform-target-destination-adr-and-release-rollback-plan: backlog
+  7-2-commons-service-defaults-correlation-problemdetails-and-paging: backlog
+  7-3-search-normalization-and-frontcomposer-ui-orchestration-convergence: backlog
+  7-4-projection-platform-compatibility-adapter: backlog
+  7-5-projection-checkpoint-rebuild-migration-and-local-code-removal: backlog
+  7-6-crypto-key-management-adr-and-compatibility-harness: backlog
+  7-7-crypto-key-management-migration-behind-eventstore-provider-contracts: backlog
+  7-8-release-rollback-cleanup-and-readiness-gate: backlog

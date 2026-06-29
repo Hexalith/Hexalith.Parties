@@ -3,6 +3,11 @@ date: 2026-06-29
 project: parties
 assessor: Codex / bmad-check-implementation-readiness
 overallReadinessStatus: NEEDS WORK
+disposition:
+  status: routed-to-correct-course-and-epic-7-plan
+  via: _bmad-output/planning-artifacts/sprint-change-proposal-2026-06-29.md
+  epic_7_plan: _bmad-output/planning-artifacts/epic-7-implementation-plan-2026-06-29.md
+  note: "Product scope remains ready for Epics 1-5. Correct course proposal addresses scope hygiene: Epic 6 is maintenance-only and Epic 2 Story 2.5 is ordered before Story 2.4. Epic 7 now has an approved PM/Architect implementation plan and is tracked as post-MVP platform-maintenance backlog, not PRD feature scope. Report verdict is preserved until readiness is re-run."
 stepsCompleted:
   - step-01-document-discovery
   - step-02-prd-analysis

@@ -3,8 +3,8 @@ stepsCompleted: [1, 2, 3, 4]
 status: complete
 completedAt: '2026-06-09'
 epicCount: 7
-storyCount: 37
-correctCourse: '2026-06-09 — readiness course-correction: split Story 4.1 (decision spike + impl) and Story 3.5 (D7 backend + report UI); +phone-reflow AC on 2.3; +mock-fidelity rule. 2026-06-28 — readiness remediation for sprint-change-proposal-2026-06-28: add Epic 6 implementation-ready Class A consolidation stories, add Epic 7 deferred architecture placeholder, and pin A3/A8 decisions.'
+storyCount: 45
+correctCourse: '2026-06-09 — readiness course-correction: split Story 4.1 (decision spike + impl) and Story 3.5 (D7 backend + report UI); +phone-reflow AC on 2.3; +mock-fidelity rule. 2026-06-28 — readiness remediation for sprint-change-proposal-2026-06-28: add Epic 6 implementation-ready Class A consolidation stories, add Epic 7 deferred architecture placeholder, and pin A3/A8 decisions. 2026-06-29 — readiness scope hygiene: classify Epics 1-5 as PRD feature scope, Epic 6 as conditional maintenance scope, Epic 7 as excluded/deferred planning scope, and normalize Epic 2 Story 2.5 before Story 2.4. 2026-06-29 — Epic 7 approved for PM/Architect planning only. 2026-06-29 — Epic 7 PM/Architect implementation plan approved: add story backlog 7.1-7.8 for platform alignment while preserving post-MVP maintenance classification.'
 inputDocuments:
   # Canonical requirements source (PRD-shaped; consolidates the brownfield basis below)
   - _bmad-output/planning-artifacts/parties-ui-prd.md
@@ -359,6 +359,19 @@ honesty) and the UX-DRs thread through every epic's stories; the shared enablers
 (domain components, a11y gate, StatusKind→UI map, SignalR freshness) are established
 once in Epic 1._
 
+### Implementation Scope Classification (2026-06-29 readiness)
+
+- **PRD feature scope:** Epics 1-5. These cover all 9 PRD FRs and are the only
+  product-feature epics used as MVP implementation-readiness evidence.
+- **Conditional maintenance scope:** Epic 6. This is approved Class A
+  in-repository consolidation supporting NFR9 and maintainability. It covers no new
+  PRD FRs and must not be reported as product feature delivery.
+- **Approved post-MVP platform maintenance scope:** Epic 7. This is a Class B
+  platform-alignment effort with PM/Architect implementation plan approved on
+  2026-06-29 in `_bmad-output/planning-artifacts/epic-7-implementation-plan-2026-06-29.md`.
+  It covers no new PRD FRs, is not a dependency for Epic 6, and remains backlog
+  until `7-*` implementation story files are created by the story workflow.
+
 ## Epic List
 
 ### Epic 1: App Foundation & Secure Sign-In
@@ -425,30 +438,39 @@ future features reuse one shared source for claim types, wire JSON, projection n
 role/policy names, GDPR helper mappings, export filenames, and display helpers. This is
 the approved Class A scope from `sprint-change-proposal-2026-06-28.md`.
 
+**Implementation classification:** conditional maintenance scope. Epic 6 is
+developer-executable only as approved in-repository consolidation; it is not PRD
+feature delivery and must not be used as evidence of additional functional coverage.
+
 **FRs covered:** no new PRD FRs. Supports NFR9 build/quality gates, architecture
 maintainability, and the shared-anchor boundary in `architecture.md`.
 
-### Epic 7: Platform Alignment - adopt Commons/EventStore (Class B, deferred)
+### Epic 7: Platform Alignment - adopt Commons/EventStore (Class B)
 
-Architects and product leadership have a visible placeholder for the cross-repository
-platform-alignment work, without handing it to development prematurely. This epic is
-deferred and architect-gated: no implementation story files should be created until the
-cross-submodule design, release sequencing, and generic-vs-domain split are approved.
+Architects and product leadership have an approved PM/Architect implementation plan
+for cross-repository platform alignment: adopt Commons/EventStore/FrontComposer
+primitives where Parties currently carries generic technical infrastructure. This is
+post-MVP platform maintenance, not PRD feature delivery. Developer execution starts
+only when the `7-*` story files are created from the approved plan.
 
 **FRs covered:** no new PRD FRs. Supports long-term maintainability and platform
 convergence only after PM/Architect approval.
 
 ### Epic Dependencies
 
-`1 -> {2, 4}` · `2 -> 3` · `4 -> 5`. Epics 1-5 are complete and are prerequisites for
-the post-MVP consolidation sweep in Epic 6. Epic 7 is not a developer dependency for Epic
-6; it is a deferred platform-planning placeholder that requires PM/Architect approval
-before implementation stories are created.
-Current status note, 2026-06-27: `sprint-status.yaml` marks Epics 1-5 and all listed
-stories as `done`. Historical sequencing remains: Story 4.2 (binding build) followed
-Story 4.1 (binding decision / ADR), and Story 3.6 (verification report UI) followed
-Story 3.5 (D7 backend contract). Do not treat those dependencies as active blockers
-after the 2026-06-10 completed implementation story records.
+`1 -> {2, 4}` · `2 -> 3` · `4 -> 5`. Epics 1-5 are complete PRD feature scope and are
+prerequisites for the post-MVP maintenance sweep in Epic 6. Epic 6 is conditional
+maintenance scope, not PRD feature delivery. Epic 7 is approved post-MVP platform
+maintenance scope with its own PM/Architect implementation plan; it is not a
+dependency for Epic 6 and remains backlog until detailed `7-*` story files are
+created.
+Current status note, 2026-06-29: `sprint-status.yaml` marks Epics 1-5 and all listed
+stories as `done`; Epic 6 story files are `ready-for-dev` as maintenance scope; Epic 7
+stories are backlog only. Historical sequencing remains:
+Story 4.2 (binding build) followed Story 4.1 (binding decision / ADR), and Story 3.6
+(verification report UI) followed Story 3.5 (D7 backend contract). Do not treat those
+dependencies as active blockers after the 2026-06-10 completed implementation story
+records.
 
 ### Out of MVP scope (tracked, not stories)
 
@@ -752,6 +774,26 @@ So that I can review the record and decide what to do.
 **When** I open a party from the list
 **Then** the desktop two-pane master-detail **collapses to a sheet / full-screen detail**, focus **moves into the sheet** on open and **returns to the originating row** on back/close (UX-DR10 focus contract); content reflows to a single column with no loss at 320px width / 200% zoom, and a non-color cue marks the active row.
 
+### Story 2.5: Party picker re-skin + full WAI-ARIA combobox (D11 / UX-DR7)
+
+As an admin,
+I want to link a related party via an accessible picker,
+So that I can capture relationships inline by keyboard or pointer.
+
+**Acceptance Criteria:**
+
+**Given** the existing `<hexalith-party-picker>` (legacy FAST tokens)
+**When** it is re-skinned
+**Then** its `--hx-picker-*` vars map onto Fluent 2 tokens (`--colorNeutralStroke1`, `--colorNeutralBackground1`, `--colorNeutralForeground1`, `{colors.accent}`, `--colorStatusDangerForeground1`) and the legacy `--*-fill-rest` tokens are gone.
+
+**Given** the picker combobox
+**When** a screen-reader user operates it
+**Then** the input has `role="combobox"` + `aria-controls` + `aria-expanded` + `aria-activedescendant`, the listbox has `role="listbox"`, options have `role="option"` + `id` + `aria-selected`, and a `role="status"` announces the result count; `↓/↑` move the active option, `Enter` selects, `Esc` closes, `Backspace` on empty clears.
+
+**Given** a selection in the Create/Edit form
+**When** the user picks a party (after the 300ms debounce)
+**Then** the picker emits `party-selected {partyId, partyType, status}` and the form binds the link; degraded/`LocalOnly`/`Gone` states are honored and never block, with a non-color active cue and forced-colors/reduced-motion support.
+
 ### Story 2.4: Create and edit a party with validation (FR-Admin-3)
 
 As an admin,
@@ -772,27 +814,7 @@ So that I can author correct records.
 **When** the command is accepted
 **Then** the view reflects the change **optimistically** with a `role=status` "Saved — updating…" and reconciles silently on projection confirm.
 
-_(Sequencing: this story's core create/edit acceptance is self-contained. Picker-backed **relationship linking** embeds the accessible party picker delivered by Story 2.5, so build 2.5 before 2.4's linking — or narrow 2.4 to author/validation only until 2.5 lands. The route id stays authoritative on edit regardless of picker availability.)_
-
-### Story 2.5: Party picker re-skin + full WAI-ARIA combobox (D11 / UX-DR7)
-
-As an admin,
-I want to link a related party via an accessible picker,
-So that I can capture relationships inline by keyboard or pointer.
-
-**Acceptance Criteria:**
-
-**Given** the existing `<hexalith-party-picker>` (legacy FAST tokens)
-**When** it is re-skinned
-**Then** its `--hx-picker-*` vars map onto Fluent 2 tokens (`--colorNeutralStroke1`, `--colorNeutralBackground1`, `--colorNeutralForeground1`, `{colors.accent}`, `--colorStatusDangerForeground1`) and the legacy `--*-fill-rest` tokens are gone.
-
-**Given** the picker combobox
-**When** a screen-reader user operates it
-**Then** the input has `role="combobox"` + `aria-controls` + `aria-expanded` + `aria-activedescendant`, the listbox has `role="listbox"`, options have `role="option"` + `id` + `aria-selected`, and a `role="status"` announces the result count; `↓/↑` move the active option, `Enter` selects, `Esc` closes, `Backspace` on empty clears.
-
-**Given** a selection in the Create/Edit form
-**When** the user picks a party (after the 300ms debounce)
-**Then** the picker emits `party-selected {partyId, partyType, status}` and the form binds the link; degraded/`LocalOnly`/`Gone` states are honored and never block, with a non-color active cue and forced-colors/reduced-motion support.
+_(Sequencing: this story's core create/edit acceptance is self-contained. Picker-backed **relationship linking** embeds the accessible party picker delivered by Story 2.5, which is intentionally listed immediately before this story. The route id stays authoritative on edit regardless of picker availability.)_
 
 ---
 
@@ -1300,38 +1322,174 @@ and absence of circular references from portals to the UI host.
 
 ---
 
-## Epic 7: Platform Alignment - adopt Commons/EventStore (Class B, deferred)
+## Epic 7: Platform Alignment - adopt Commons/EventStore (Class B)
 
-Epic 7 is a deferred, architect-gated planning placeholder for moving generic technical
-infrastructure toward shared Hexalith platform libraries. It is not implementation-ready
-from this document alone, and no `7-*` implementation story files should be created until
-PM/Architect planning expands and approves the work.
+Epic 7 is approved post-MVP platform maintenance for moving generic technical
+infrastructure toward shared Hexalith platform libraries. It is governed by:
 
-### Deferred Scope Clusters
+- `_bmad-output/planning-artifacts/epic-7-implementation-plan-2026-06-29.md`
+- `_bmad-output/planning-artifacts/architecture/epic-7-platform-alignment-2026-06-29/ARCHITECTURE-SPINE.md`
 
-- Projection platform alignment: adopt or converge with EventStore checkpoint,
-  replay-from-zero rebuild, and freshness primitives (B1/B2/B9).
-- Crypto and key-management placement: decide which AES-GCM payload protection,
-  party-key management, circuit breaker, and event-type resolver pieces belong in
-  EventStore/shared security versus Parties-specific code (B3/B4/B11).
-- Commons/FrontComposer utility alignment: evaluate ServiceDefaults, correlation,
-  problem-details handling, paging, search/normalization, and UI orchestration primitives
-  for shared-library adoption (B5/B6/B7/B8/B10/B11).
+**Implementation classification:** post-MVP platform maintenance. Epic 7 covers no
+new PRD functional requirements and must not be reported as MVP feature delivery.
+Developer execution starts only when detailed `7-*` story files are created from the
+backlog below.
 
-### Approval Criteria Before Story Creation
+**Approved by:** Administrator
+**Approval date:** 2026-06-29
+**Approved story scope:** 7.1 through 7.8 as backlog slices.
 
-**Given** Class B crosses git submodules and shared platform packages
-**When** Epic 7 planning starts
-**Then** PM/Architect must approve the target destinations, package/versioning plan,
-submodule sequencing, migration compatibility, and rollback plan before any developer
-story is created.
+### Epic 7 Sequencing
 
-**Given** crypto-shredding and projection replay are high-risk infrastructure seams
-**When** those areas are designed
-**Then** the architecture must preserve existing GDPR erasure guarantees, projection
-idempotency, at-least-once replay safety, and the EventStore gateway boundary.
+`7.1 -> 7.2 -> 7.3 -> 7.4 -> 7.5 -> 7.6 -> 7.7 -> 7.8`
 
-**And** until that approval exists, Epic 7 remains backlog/deferred and must not block
-Epic 6 delivery.
-</content>
-</invoke>
+Stories 7.2 and 7.3 may run after 7.1 in parallel if they do not require the same
+submodule release. Story 7.5 requires 7.4. Story 7.7 requires 7.6. Story 7.8 runs
+last.
+
+### Story 7.1: Platform target-destination ADR and release/rollback plan
+
+As a product manager and architect,
+I want every Class B item mapped to a target owner, package/reference path, release
+order, compatibility strategy, and rollback path,
+so that later developer stories do not make unowned cross-submodule changes.
+
+**Given** the Class B B1-B11 inventory
+**When** this story is complete
+**Then** an ADR maps every item to an owning repo/project, public API surface,
+package/reference path, release order, rollback path, and required test evidence.
+
+**And** the plan decides whether Parties adds a `HexalithCommonsRoot` project-reference
+path or consumes released Commons packages, while preserving Central Package Management
+and no `Version=` attributes in `.csproj` files.
+
+**And** any missing shared API is routed to an additive submodule story before Parties
+adopts it.
+
+### Story 7.2: Commons ServiceDefaults, correlation, ProblemDetails, and paging
+
+As a maintainer,
+I want low-risk cross-cutting utilities to come from Commons where appropriate,
+so that Parties no longer carries parallel service-defaults, correlation/error, or
+paging infrastructure.
+
+**Given** the existing Parties `ServiceDefaults`, correlation, ProblemDetails, and
+`PagedResult<T>` surfaces
+**When** the Commons adoption path is implemented
+**Then** Parties either replaces or wraps `Hexalith.Commons.ServiceDefaults` while
+preserving health endpoints, OpenTelemetry sources, JSON console logging expectations,
+and DAPR health hooks.
+
+**And** bounded correlation and ProblemDetails handling are centralized without logging
+PII or changing command/rejection semantics.
+
+**And** paging adopts a Commons-compatible shape behind an adapter so public Parties
+client/UI behavior remains compatible.
+
+### Story 7.3: Search normalization and FrontComposer UI orchestration convergence
+
+As a maintainer,
+I want shared text/search helpers and UI lifecycle primitives adopted where they fit,
+so that Parties does not duplicate generic search normalization or orchestration code.
+
+**Given** local fuzzy search remains the default and Memories search is optional
+**When** shared normalization/similarity helpers are adopted
+**Then** local search still works when Memories is absent and Memories-only behavior
+stays configuration gated.
+
+**And** pure text helpers live in Commons or an approved shared helper, while
+search-specific scoring lives in Memories only when that dependency is configured.
+
+**And** FrontComposer lifecycle/orchestration primitives are adopted only where they
+preserve existing `StatusKind`, aria-live, and optimistic reconciliation behavior.
+
+### Story 7.4: Projection platform compatibility adapter
+
+As an architect,
+I want Parties to consume EventStore projection primitives behind a compatibility
+adapter,
+so that checkpoint, rebuild, and freshness convergence can be tested before local
+projection infrastructure is removed.
+
+**Given** EventStore owns projection checkpoint/rebuild/freshness primitives
+**When** the compatibility adapter is added
+**Then** existing Parties read contracts, `ProjectionFreshnessMetadata`, and
+`StatusKind` UI mapping remain stable.
+
+**And** tests cover duplicate events, out-of-order delivery, replay from sequence zero,
+state-store unavailability, stale/degraded fallback, and erased-party exclusion.
+
+**And** rollback is a single adapter registration or package/submodule pointer reversal.
+
+### Story 7.5: Projection checkpoint/rebuild migration and local code removal
+
+As a maintainer,
+I want Parties-local projection checkpoint and rebuild code replaced after adapter
+parity,
+so that the EventStore projection platform becomes the single implementation.
+
+**Given** Story 7.4 has proved adapter parity
+**When** the migration is implemented
+**Then** Parties-local checkpoint/rebuild implementation is removed or reduced to
+thin adapters over EventStore primitives.
+
+**And** idempotent replay, at-least-once tolerance, rebuild resume/cancel behavior,
+and last-known read fallback are preserved.
+
+**And** integration or topology evidence verifies command -> publish -> projection ->
+query flow through the EventStore gateway.
+
+### Story 7.6: Crypto/key-management ADR and compatibility harness
+
+As an architect and security reviewer,
+I want the crypto-shredding and key-management split decided and proved before any
+migration,
+so that shared-platform adoption cannot weaken GDPR erasure guarantees.
+
+**Given** Parties currently owns party-specific GDPR policy and crypto-shredding behavior
+**When** this story is complete
+**Then** an ADR classifies payload protection, key storage, wrapping, rotation,
+crypto-shredding workflow, audit, circuit breaker, and event-type resolution into
+EventStore/shared security versus Parties policy.
+
+**And** a compatibility harness proves readable, unreadable, missing-key,
+provider-unavailable, erased, restricted, and legacy unprotected cases.
+
+**And** no PII, key alias, destroyed-key detail, raw payload, or decrypted value appears
+in logs, ProblemDetails, telemetry, processing records, exports, or erasure reports.
+
+### Story 7.7: Crypto/key-management migration behind EventStore provider contracts
+
+As a maintainer,
+I want approved generic crypto/provider pieces migrated behind EventStore contracts,
+so that Parties keeps legal policy while shared infrastructure owns reusable mechanics.
+
+**Given** Story 7.6 has approved the split and compatibility harness
+**When** migration is implemented
+**Then** the approved provider is registered through EventStore payload-protection
+contracts and Parties-specific commands, legal policy, user copy, tenant/party key
+semantics, and erasure orchestration stay in Parties unless the ADR explicitly moves
+them.
+
+**And** crypto-shredding irreversible completion, erasure certificate behavior,
+export/processing-record redaction, and key-unavailable UX states are preserved.
+
+**And** rollback restores the previous Parties provider without data loss or metadata
+incompatibility.
+
+### Story 7.8: Release, rollback, cleanup, and readiness gate
+
+As product leadership and architecture,
+I want the cross-submodule release closed with rollback and readiness evidence,
+so that Epic 7 remains controlled maintenance rather than an open-ended platform rewrite.
+
+**Given** Epic 7 adoption stories have completed
+**When** this story runs
+**Then** submodule commits or package versions are pinned and documented, deprecated
+Parties-local infrastructure is removed only where replacement evidence exists, and
+any unfinished removal is deferred explicitly.
+
+**And** the agreed build/test lanes pass for Parties and each touched submodule.
+
+**And** final readiness notes state Epic 7 remains post-MVP platform maintenance and
+does not change PRD FR coverage.
