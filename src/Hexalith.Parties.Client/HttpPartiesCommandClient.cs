@@ -1,9 +1,9 @@
 using System.Net.Http.Json;
 using System.Text.RegularExpressions;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 
 using Hexalith.Parties.Client.Abstractions;
+using Hexalith.Parties.Contracts;
 using Hexalith.Parties.Contracts.Commands;
 using Hexalith.Parties.Contracts.Models;
 
@@ -35,12 +35,7 @@ public sealed class HttpPartiesCommandClient : IPartiesCommandClient
         _options = options?.Value ?? throw new ArgumentNullException(nameof(options));
     }
 
-    internal static readonly JsonSerializerOptions JsonOptions = new()
-    {
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-        Converters = { new JsonStringEnumConverter() },
-    };
+    internal static readonly JsonSerializerOptions JsonOptions = PartiesJsonOptions.Default;
 
     public async Task<string> CreatePartyAsync(CreateParty command, CancellationToken ct)
         => (await CreatePartyWithResultAsync(command, ct).ConfigureAwait(false)).CorrelationId;

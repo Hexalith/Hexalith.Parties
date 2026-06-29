@@ -1,7 +1,7 @@
 using System.Net;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 
+using Hexalith.Parties.Contracts;
 using Hexalith.Parties.Contracts.Models;
 using Hexalith.Parties.Contracts.ValueObjects;
 
@@ -13,12 +13,7 @@ namespace Hexalith.Parties.Client.Tests;
 
 public sealed class HttpPartiesQueryClientTests
 {
-    private static readonly JsonSerializerOptions _jsonOptions = new()
-    {
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-        Converters = { new JsonStringEnumConverter() },
-    };
+    private static readonly JsonSerializerOptions _jsonOptions = PartiesJsonOptions.Default;
 
     [Fact]
     public async Task GetPartyAsync_SubmitsEventStoreQueryAndReturnsPartyDetailAsync()

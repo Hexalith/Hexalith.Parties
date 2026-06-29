@@ -1,6 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Nodes;
 
+using Hexalith.Parties.Contracts;
 using Hexalith.Parties.Contracts.Models;
 using Hexalith.Parties.Projections.Abstractions;
 
@@ -8,7 +9,7 @@ namespace Hexalith.Parties.Extensions;
 
 internal static class PartyDetailProjectionActorExtensions
 {
-    private static readonly JsonSerializerOptions s_jsonOptions = new(JsonSerializerDefaults.Web);
+    private static readonly JsonSerializerOptions s_jsonOptions = PartiesJsonOptions.Default;
 
     public static async Task<PartyDetailProjectionReadResult> ReadDetailWithFreshnessAsync(this IPartyDetailProjectionActor proxy)
     {

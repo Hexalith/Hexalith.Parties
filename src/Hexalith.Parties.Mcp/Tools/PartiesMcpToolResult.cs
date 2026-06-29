@@ -1,6 +1,8 @@
 using System.Text.Json.Serialization;
 using System.Text.Json;
 
+using Hexalith.Parties.Contracts;
+
 namespace Hexalith.Parties.Mcp.Tools;
 
 internal sealed record PartiesMcpToolResult(
@@ -16,12 +18,7 @@ internal sealed record PartiesMcpToolResult(
     [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     object? Data = null)
 {
-    private static readonly JsonSerializerOptions JsonOptions = new()
-    {
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-        Converters = { new JsonStringEnumConverter() },
-    };
+    private static readonly JsonSerializerOptions JsonOptions = PartiesJsonOptions.Default;
 
     public static PartiesMcpToolResult Accepted(string toolName, string correlationId)
         => new(

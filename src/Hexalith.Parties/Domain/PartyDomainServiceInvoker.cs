@@ -1,7 +1,6 @@
 using System.Collections.Concurrent;
 using System.Reflection;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 
 using FluentValidation;
 using FluentValidation.Results;
@@ -11,6 +10,7 @@ using Hexalith.EventStore.Contracts.Events;
 using Hexalith.EventStore.Contracts.Results;
 using Hexalith.EventStore.Contracts.Security;
 using Hexalith.EventStore.Server.DomainServices;
+using Hexalith.Parties.Contracts;
 using Hexalith.Parties.Contracts.Commands;
 using Hexalith.Parties.Contracts.Events;
 using Hexalith.Parties.Security;
@@ -36,13 +36,9 @@ internal sealed partial class PartyDomainServiceInvoker(
     // Prevents Type.GetType from loading arbitrary assemblies via assembly-qualified wire data.
     private static readonly Assembly ContractsAssembly = typeof(CreateParty).Assembly;
 
-    // Symmetric to envelope payload serialization. EventStore producers serialize with default
-    // System.Text.Json options + JsonStringEnumConverter; deserializing with anything else risks
+    // Symmetric to envelope payload serialization. Deserializing with anything else risks
     // silently dropping required fields, which would yield false-pass / false-fail validation.
-    private static readonly JsonSerializerOptions PayloadJsonOptions = new(JsonSerializerDefaults.General)
-    {
-        Converters = { new JsonStringEnumConverter() },
-    };
+    private static readonly JsonSerializerOptions PayloadJsonOptions = PartiesJsonOptions.Default;
 
     private static readonly ConcurrentDictionary<string, Type?> CommandTypeCache = new(StringComparer.Ordinal);
 

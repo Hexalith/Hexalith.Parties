@@ -20,6 +20,7 @@ using Hexalith.EventStore.Contracts.Security;
 using Hexalith.EventStore.Server.Commands;
 using Hexalith.EventStore.Server.Pipeline.Commands;
 using Hexalith.Parties;
+using Hexalith.Parties.Contracts;
 using Hexalith.Parties.Contracts.Events;
 using Hexalith.Parties.Contracts.Models;
 using Hexalith.Parties.Contracts.Security;
@@ -368,11 +369,7 @@ public sealed class EncryptionPipelineIntegrationTests : IClassFixture<Encryptio
 
 public sealed class EncryptionTestFactory : WebApplicationFactory<Program>
 {
-    internal static readonly JsonSerializerOptions SerializerOptions = new()
-    {
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-        DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull,
-    };
+    internal static readonly JsonSerializerOptions SerializerOptions = PartiesJsonOptions.Default;
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {

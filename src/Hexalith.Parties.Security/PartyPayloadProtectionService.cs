@@ -4,11 +4,11 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
-using System.Text.Json.Serialization;
 
 using Hexalith.EventStore.Contracts.Events;
 using Hexalith.EventStore.Contracts.Identity;
 using Hexalith.EventStore.Contracts.Security;
+using Hexalith.Parties.Contracts;
 using Hexalith.Parties.Contracts.Events;
 using Hexalith.Parties.Contracts.Security;
 
@@ -30,11 +30,7 @@ public sealed partial class PartyPayloadProtectionService(
     private const string ProtectedSnapshotMarker = "$protectedSnapshot";
     private const string EncryptedFieldMarker = "$enc";
 
-    private static readonly JsonSerializerOptions s_jsonOptions = new()
-    {
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-    };
+    private static readonly JsonSerializerOptions s_jsonOptions = PartiesJsonOptions.Default;
 
     public async Task<PayloadProtectionResult> ProtectEventPayloadAsync(
         AggregateIdentity identity,

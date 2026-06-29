@@ -1,6 +1,3 @@
-using System.Text.Json;
-using System.Text.Json.Serialization;
-
 using Dapr.Actors;
 using Dapr.Actors.Client;
 using Dapr.Client;
@@ -22,6 +19,7 @@ using Hexalith.Parties.HealthChecks;
 using Hexalith.Parties.Queries;
 using Hexalith.Parties.Validation;
 using Hexalith.Parties.Search;
+using Hexalith.Parties.Contracts;
 using Hexalith.Parties.Contracts.Search;
 using Hexalith.Parties.Projections.Abstractions;
 using Hexalith.Parties.Projections.Actors;
@@ -345,11 +343,7 @@ public static class PartiesServiceCollectionExtensions {
         // FluentValidation (assembly scanning — no explicit validator registration)
         _ = services.AddValidatorsFromAssemblyContaining<CreatePartyValidator>();
 
-        _ = services.ConfigureHttpJsonOptions(options => {
-            options.SerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
-            options.SerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
-            options.SerializerOptions.Converters.Add(new JsonStringEnumConverter());
-        });
+        _ = services.ConfigureHttpJsonOptions(options => PartiesJsonOptions.ApplyTo(options.SerializerOptions));
 
         return services;
     }

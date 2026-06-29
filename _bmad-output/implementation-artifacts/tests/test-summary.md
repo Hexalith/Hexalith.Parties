@@ -3,40 +3,38 @@
 ## Generated Tests
 
 ### API Tests
-- [x] No public API endpoint tests added. Story 6.1 consolidates BCL claim constants/extraction helpers and consumer binding behavior, with no new browser-callable or gateway endpoint.
-- [x] `tests/Hexalith.Parties.Contracts.Tests/Authorization/PartiesClaimExtractionTests.cs` - Added fail-closed extraction coverage for missing/empty tenant claims, ambiguous `sub` without `oid` fallback, ambiguous `oid` fallback, and duplicate same-value `party_id` claims.
-- [x] `tests/Hexalith.Parties.UI.Tests/PartyIdClaimResolverTests.cs` - Tightened resolver negatives so empty and multiple `party_id` cases include a valid tenant, isolating the party-binding failure path.
+- [x] `tests/Hexalith.Parties.Contracts.Tests/PartiesJsonOptionsTests.cs` - Covers canonical wire JSON options for commands, events, and read models, including camelCase names, null omission, string enum serialization, read-only immutability, mutable copies, and null-options failure behavior.
+- [x] `tests/Hexalith.Parties.Security.Tests/PartyPayloadProtectionServiceTests.cs` - Strengthened protected snapshot serialization assertions so service-owned JSON serialization preserves string enum values and omits null optional fields while encrypted personal data remains hidden.
+- [x] `tests/Hexalith.Parties.Tests/Projections/ProjectionRebuildServiceTests.cs` - Existing Story 6.2 coverage documents intentionally separate permissive projection replay reader behavior for PascalCase replay state.
 
 ### E2E Tests
-- [x] `tests/e2e/specs/consumer-party-binding.spec.ts` - Added the `no-tenant` Consumer state so a principal with a valid `party_id` but no normalized tenant claim is routed to `/no-party-binding`, never `/me`.
-- [x] `src/Hexalith.Parties.UI/Services/PartiesAdminPortalE2eFixture.cs` - Added the test-only `no-tenant` fixture state and moved fixture claim literals to `PartiesClaimTypes`.
+- [x] No browser E2E tests added. Story 6.2 is an internal wire-serialization contract consolidation with no new UI workflow or browser-callable endpoint.
 
 ## Coverage
 
 - API endpoints: 0/0 public endpoints applicable.
-- Claim extraction helpers: normalized tenant success, missing tenant, empty tenant, `sub` before `oid`, empty `sub` fallback, ambiguous `sub`, ambiguous `oid`, missing user id, empty `party_id`, ambiguous different `party_id`, duplicate same-value `party_id`, ambiguous tenant, and `ClaimsIdentity` parity.
-- Consumer binding UI: bound Consumer reaches `/me`; unbound, empty, ambiguous, missing-tenant, suspended, and removed Consumers route to `/no-party-binding` without browser-visible gateway calls.
+- Canonical wire serializer options: command shape, event shape, read-model shape, string enum serialization, null omission, read-only default options, independent mutable copies, and null argument handling.
+- Payload protection serialization: encrypted/protected snapshot payloads preserve canonical enum strings and omit null optional fields while keeping protected personal data encrypted.
+- Projection replay reads: permissive PascalCase reader behavior remains intentionally separate from canonical wire serialization.
 
 ## Validation
 
-- [x] `npm run typecheck` in `tests/e2e` passed.
 - [x] `git diff --check` passed.
-- [x] Raw claim literal scan reports only `PartiesClaimTypes.cs` and the intentional Keycloak mapper wire-value topology test.
-- [ ] `dotnet test tests/Hexalith.Parties.Contracts.Tests/Hexalith.Parties.Contracts.Tests.csproj -c Release --no-restore -v:minimal` could not compile tests in this environment. MSBuild exits during `_GetProjectReferenceTargetFrameworkProperties` with `Build FAILED. 0 Warning(s) 0 Error(s)`, matching the pre-existing Story 6.1 validation blocker.
-- [ ] `dotnet test tests/Hexalith.Parties.UI.Tests/Hexalith.Parties.UI.Tests.csproj -c Release --no-restore -v:minimal` hit the same pre-compilation MSBuild failure.
-- [ ] `npm run test -- specs/consumer-party-binding.spec.ts --project=chromium` could not start the Playwright web server in this sandbox: Kestrel failed to bind with `System.Net.Sockets.SocketException (13): Permission denied`.
+- [ ] `dotnet test tests/Hexalith.Parties.Contracts.Tests/Hexalith.Parties.Contracts.Tests.csproj -c Release --no-restore` could not run in this environment. MSBuild exited before compilation with `Build failed with exit code: 1.`
+- [ ] `dotnet build tests/Hexalith.Parties.Contracts.Tests/Hexalith.Parties.Contracts.Tests.csproj -c Release --no-restore -v:normal` confirmed the same pre-compilation failure: `Build FAILED. 0 Warning(s) 0 Error(s)`.
+- [ ] `dotnet test tests/Hexalith.Parties.Contracts.Tests/Hexalith.Parties.Contracts.Tests.csproj -c Release` also exited before diagnostics with `Build failed with exit code: 1.`
+- [ ] `dotnet test tests/Hexalith.Parties.Security.Tests/Hexalith.Parties.Security.Tests.csproj -c Release --no-restore` hit the same pre-diagnostic build failure: `Build failed with exit code: 1.`
 
 ## Checklist
 
 - [x] API tests generated if applicable.
-- [x] E2E tests generated for the Consumer binding UI.
-- [x] Tests use standard xUnit/Shouldly and Playwright APIs.
+- [x] E2E tests generated if UI exists; no UI workflow applies to Story 6.2.
+- [x] Tests use standard xUnit and Shouldly APIs.
 - [x] Tests cover happy paths.
-- [x] Tests cover critical fail-closed error cases.
-- [x] Tests use semantic, accessible locators.
-- [x] Tests have clear descriptions.
+- [x] Tests cover critical error cases.
+- [x] Tests use clear descriptions.
 - [x] No hardcoded waits or sleeps were added.
-- [x] Tests are independent and reset fixture state.
+- [x] Tests are independent and have no order dependency.
 - [x] Test summary created.
 - [x] Tests saved to the existing test directories.
 - [x] Summary includes coverage metrics.

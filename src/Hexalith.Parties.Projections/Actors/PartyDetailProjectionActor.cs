@@ -5,6 +5,7 @@ using System.Text.Json;
 using Dapr.Actors.Runtime;
 
 using Hexalith.EventStore.Contracts.Events;
+using Hexalith.Parties.Contracts;
 using Hexalith.Parties.Contracts.Events;
 using Hexalith.Parties.Contracts.Models;
 using Hexalith.Parties.Projections.Abstractions;
@@ -22,7 +23,7 @@ public sealed partial class PartyDetailProjectionActor : Actor, IPartyDetailProj
     private const string LastSequenceStateKeySuffix = "last-sequence";
     private const string RedactedFormat = "json-redacted";
     private const long UnloadedSequenceSentinel = long.MinValue;
-    private static readonly JsonSerializerOptions s_jsonOptions = new(JsonSerializerDefaults.Web);
+    private static readonly JsonSerializerOptions s_jsonOptions = PartiesJsonOptions.Default;
     private static readonly ConcurrentDictionary<string, PartyDetail> s_lastKnownDetails = new(StringComparer.Ordinal);
     private readonly ILogger<PartyDetailProjectionActor> _logger;
     private readonly IProjectionRebuildService _rebuildService;

@@ -4,6 +4,7 @@ using System.Text.Json;
 using Hexalith.EventStore.Contracts.Events;
 using Hexalith.EventStore.Contracts.Identity;
 using Hexalith.EventStore.Contracts.Security;
+using Hexalith.Parties.Contracts;
 using Hexalith.Parties.Contracts.Events;
 using Hexalith.Parties.Contracts.Models;
 using Hexalith.Parties.Contracts.Security;
@@ -312,6 +313,49 @@ public sealed class ProjectionRebuildServiceTests
     }
 
     [Fact]
+    public async Task ReadAggregateEventsAsync_PascalCaseReplayState_UsesSeparatePermissiveReaderOptionsAsync()
+    {
+        var metadata = new { CurrentSequence = 1L, LastModified = DateTimeOffset.UtcNow };
+        PartyCreated evt = new()
+        {
+            Type = PartyType.Person,
+            PersonDetails = new PersonDetails
+            {
+                FirstName = "Case",
+                LastName = "Compatible",
+            },
+        };
+        var envelope = new
+        {
+            AggregateId = "party-case",
+            TenantId = "test-tenant",
+            Domain = "party",
+            SequenceNumber = 1L,
+            EventTypeName = typeof(PartyCreated).FullName!,
+            SerializationFormat = "json",
+            Payload = JsonSerializer.SerializeToUtf8Bytes(evt, evt.GetType(), PartiesJsonOptions.Default),
+            UserId = "system",
+            CorrelationId = "corr-test",
+            CausationId = "corr-test",
+        };
+
+        MockHttpMessageHandler handler = new();
+        handler.AddResponse(
+            BuildActorStateUrl("AggregateActor", "test-tenant:party:party-case", "test-tenant:party:party-case:metadata"),
+            JsonSerializer.Serialize(metadata));
+        handler.AddResponse(
+            BuildActorStateUrl("AggregateActor", "test-tenant:party:party-case", "test-tenant:party:party-case:events:1"),
+            JsonSerializer.Serialize(envelope));
+
+        ProjectionRebuildService sut = CreateService(handler);
+
+        IReadOnlyList<IEventPayload> events = await sut.ReadAggregateEventsAsync("test-tenant", "party-case", CancellationToken.None);
+
+        events.Count.ShouldBe(1);
+        events[0].ShouldBeOfType<PartyCreated>();
+    }
+
+    [Fact]
     public async Task ReadAggregateEventsAsync_ErasedEncryptedPayload_SkipsPayloadAsync()
     {
         var metadata = new { currentSequence = 1L, lastModified = DateTimeOffset.UtcNow };
@@ -474,10 +518,7 @@ public sealed class ProjectionRebuildServiceTests
         string correlationId = "corr-test")
     {
         string typeName = payload.GetType().FullName!;
-        byte[] payloadBytes = JsonSerializer.SerializeToUtf8Bytes(payload, payload.GetType(), new JsonSerializerOptions
-        {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-        });
+        byte[] payloadBytes = JsonSerializer.SerializeToUtf8Bytes(payload, payload.GetType(), PartiesJsonOptions.Default);
 
         return new
         {

@@ -11,6 +11,7 @@ using Dapr.Actors.Client;
 using Dapr.Actors.Runtime;
 
 using Hexalith.EventStore.Contracts.Queries;
+using Hexalith.Parties.Contracts;
 using Hexalith.Parties.Contracts.Models;
 using Hexalith.Parties.Contracts.Search;
 using Hexalith.Parties.Contracts.ValueObjects;
@@ -336,7 +337,7 @@ public sealed class TenantSafeProjectionReadGuardrailsTests
 
         result.Success.ShouldBeTrue();
         PagedResult<PartyIndexEntry> page = result.GetPayload().Deserialize<PagedResult<PartyIndexEntry>>(
-            new JsonSerializerOptions(JsonSerializerDefaults.Web))!;
+            PartiesJsonOptions.Default)!;
         page.Items.Select(static i => i.Id).ShouldBe(["tenant-b-party-1"]);
         page.TotalCount.ShouldBe(1);
         page.TotalPages.ShouldBe(1);
@@ -424,7 +425,7 @@ public sealed class TenantSafeProjectionReadGuardrailsTests
 
         result.Success.ShouldBeTrue();
         PagedResult<PartySearchResult> page = result.GetPayload().Deserialize<PagedResult<PartySearchResult>>(
-            new JsonSerializerOptions(JsonSerializerDefaults.Web))!;
+            PartiesJsonOptions.Default)!;
         page.Items.ShouldBeEmpty();
         page.TotalCount.ShouldBe(0);
         // PartyMessenger paging convention reports `TotalPages == max(1, ceil(TotalCount/PageSize))`
@@ -466,7 +467,7 @@ public sealed class TenantSafeProjectionReadGuardrailsTests
 
         result.Success.ShouldBeTrue();
         PagedResult<PartySearchResult> page = result.GetPayload().Deserialize<PagedResult<PartySearchResult>>(
-            new JsonSerializerOptions(JsonSerializerDefaults.Web))!;
+            PartiesJsonOptions.Default)!;
         page.Items.Select(static i => i.Party.Id).ShouldNotContain("erased");
         page.TotalCount.ShouldBeLessThanOrEqualTo(1);
     }

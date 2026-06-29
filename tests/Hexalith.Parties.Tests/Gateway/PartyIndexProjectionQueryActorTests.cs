@@ -5,6 +5,7 @@ using Dapr.Actors.Client;
 using Dapr.Actors.Runtime;
 
 using Hexalith.EventStore.Contracts.Queries;
+using Hexalith.Parties.Contracts;
 using Hexalith.Parties.Contracts.Models;
 using Hexalith.Parties.Contracts.Search;
 using Hexalith.Parties.Contracts.ValueObjects;
@@ -884,9 +885,9 @@ public sealed class PartyIndexProjectionQueryActorTests
             LastModifiedAt = DateTimeOffset.Parse(modifiedAt, System.Globalization.CultureInfo.InvariantCulture),
         };
 
-    // P9: static readonly so System.Text.Json caches converter/metadata for the options
-    // instance across test cases instead of warming a fresh cache on every Payload(...) call.
-    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
+    // Mirror the real query client: results now serialize enums as strings via the canonical
+    // wire options, so the test must read them back with the same converter set.
+    private static readonly JsonSerializerOptions JsonOptions = PartiesJsonOptions.Default;
 
     private sealed class RecordingLogger<T> : ILogger<T>
     {

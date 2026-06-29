@@ -8,6 +8,7 @@ using Dapr.Actors.Client;
 using Dapr.Actors.Runtime;
 
 using Hexalith.EventStore.Contracts.Queries;
+using Hexalith.Parties.Contracts;
 using Hexalith.Parties.Contracts.Models;
 using Hexalith.Parties.Contracts.Search;
 using Hexalith.Parties.Contracts.ValueObjects;
@@ -36,7 +37,7 @@ public sealed partial class PartyIndexProjectionQueryActor(
 
     // Unknown fields fail closed so a future contributor cannot bypass tenant authority
     // by adding a payload field whose name is read by the actor.
-    private static readonly JsonSerializerOptions s_jsonOptions = new(JsonSerializerDefaults.Web)
+    private static readonly JsonSerializerOptions s_jsonOptions = new(PartiesJsonOptions.Default)
     {
         UnmappedMemberHandling = JsonUnmappedMemberHandling.Disallow,
     };

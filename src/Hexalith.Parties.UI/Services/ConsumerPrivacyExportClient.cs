@@ -1,8 +1,8 @@
 using System.Text.Json;
-using System.Text.Json.Serialization;
 
 using Hexalith.Parties.Client.AdminPortal;
 using Hexalith.Parties.ConsumerPortal.Services;
+using Hexalith.Parties.Contracts;
 using Hexalith.Parties.Contracts.Models;
 
 namespace Hexalith.Parties.UI.Services;
@@ -11,12 +11,7 @@ internal sealed class ConsumerPrivacyExportClient(ISelfScopedPartiesClient selfS
 {
     private const string JsonContentType = "application/json";
 
-    private static readonly JsonSerializerOptions JsonOptions = new()
-    {
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-        Converters = { new JsonStringEnumConverter() },
-    };
+    private static readonly JsonSerializerOptions JsonOptions = PartiesJsonOptions.Default;
 
     public async Task<ConsumerPrivacyExportResult> ExportMyDataAsync(CancellationToken cancellationToken = default)
     {

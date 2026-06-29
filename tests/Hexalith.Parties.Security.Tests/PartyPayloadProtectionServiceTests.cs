@@ -3,11 +3,11 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
-using System.Text.Json.Serialization;
 
 using Hexalith.EventStore.Contracts.Events;
 using Hexalith.EventStore.Contracts.Identity;
 using Hexalith.EventStore.Contracts.Security;
+using Hexalith.Parties.Contracts;
 using Hexalith.Parties.Contracts.Events;
 using Hexalith.Parties.Contracts.Security;
 using Hexalith.Parties.Contracts.ValueObjects;
@@ -25,11 +25,7 @@ namespace Hexalith.Parties.Security.Tests;
 public sealed class PartyPayloadProtectionServiceTests
 {
     // Use camelCase to match the service's s_jsonOptions
-    private static readonly JsonSerializerOptions s_serializerOptions = new()
-    {
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-    };
+    private static readonly JsonSerializerOptions s_serializerOptions = PartiesJsonOptions.Default;
 
     private readonly IPartyKeyManagementService _keyManagementService = Substitute.For<IPartyKeyManagementService>();
     private readonly IKeyStorageBackend _keyStorageBackend = Substitute.For<IKeyStorageBackend>();
@@ -429,6 +425,10 @@ public sealed class PartyPayloadProtectionServiceTests
         string decoded = Encoding.UTF8.GetString(Convert.FromBase64String(snapshot.Payload));
         decoded.ShouldNotContain("Alan");
         decoded.ShouldNotContain("Turing");
+        decoded.ShouldContain("\"type\":\"Person\"");
+        decoded.ShouldNotContain("\"type\":0");
+        decoded.ShouldNotContain("prefix", Case.Insensitive);
+        decoded.ShouldNotContain("suffix", Case.Insensitive);
     }
 
     // ─── Task 4.11: Snapshot roundtrip ───

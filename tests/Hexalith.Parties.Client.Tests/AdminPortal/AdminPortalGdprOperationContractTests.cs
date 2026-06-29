@@ -7,10 +7,10 @@ using System.Reflection;
 using System.Net;
 using System.Text;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 
 using Hexalith.Parties.Client;
 using Hexalith.Parties.Client.AdminPortal;
+using Hexalith.Parties.Contracts;
 using Hexalith.Parties.Contracts.Commands;
 using Hexalith.Parties.Contracts.Models;
 using Hexalith.Parties.Contracts.Security;
@@ -29,12 +29,7 @@ namespace Hexalith.Parties.Client.Tests.AdminPortal;
 /// </summary>
 public sealed class AdminPortalGdprOperationContractTests
 {
-    private static readonly JsonSerializerOptions s_jsonOptions = new()
-    {
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-        Converters = { new JsonStringEnumConverter() },
-    };
+    private static readonly JsonSerializerOptions s_jsonOptions = PartiesJsonOptions.Default;
 
     private const string AdapterTypeName = "Hexalith.Parties.Client.AdminPortal.IAdminPortalGdprClient";
     private const string RouteMapTypeName = "Hexalith.Parties.Client.AdminPortal.AdminPortalGdprRoutes";

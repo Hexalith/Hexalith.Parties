@@ -448,6 +448,10 @@ type class Hexalith.Parties.Contracts.Models.TemporalNameResult interfaces:Syste
   property System.String DisplayName required getset
   property System.String PartyId required getset
   property System.String SortName required getset
+type class Hexalith.Parties.Contracts.PartiesJsonOptions interfaces:
+  property System.Text.Json.JsonSerializerOptions Default get
+  method System.Void ApplyTo(System.Text.Json.JsonSerializerOptions options)
+  method System.Text.Json.JsonSerializerOptions CreateMutable()
 type class Hexalith.Parties.Contracts.PersonalDataAttribute base:System.Attribute interfaces:
   ctor ()
 type class Hexalith.Parties.Contracts.Results.CompositeCommandResult base:Hexalith.EventStore.Contracts.Results.DomainResult interfaces:System.IEquatable<Hexalith.EventStore.Contracts.Results.DomainResult>,System.IEquatable<Hexalith.Parties.Contracts.Results.CompositeCommandResult>

@@ -5,6 +5,7 @@ using Dapr.Actors.Client;
 using Dapr.Actors.Runtime;
 
 using Hexalith.EventStore.Contracts.Queries;
+using Hexalith.Parties.Contracts;
 using Hexalith.Parties.Contracts.Models;
 using Hexalith.Parties.Contracts.Security;
 using Hexalith.Parties.Contracts.ValueObjects;
@@ -199,7 +200,7 @@ public sealed class PartyDetailProjectionQueryActorTests
 
         result.Success.ShouldBeTrue();
         result.ProjectionType.ShouldBe("party-data-portability");
-        PartyDataPortabilityPackage package = result.GetPayload().Deserialize<PartyDataPortabilityPackage>(new JsonSerializerOptions(JsonSerializerDefaults.Web))!;
+        PartyDataPortabilityPackage package = result.GetPayload().Deserialize<PartyDataPortabilityPackage>(PartiesJsonOptions.Default)!;
         package.PartyId.ShouldBe("p-export");
         package.TenantId.ShouldBe("tenant-a");
         package.Status.ShouldBe("RestrictedExported");
@@ -235,7 +236,7 @@ public sealed class PartyDetailProjectionQueryActorTests
         string raw = result.GetPayload().GetRawText();
         raw.ShouldNotContain("Ada Lovelace");
         raw.ShouldNotContain("ada@example.test");
-        PartyDataPortabilityPackage package = result.GetPayload().Deserialize<PartyDataPortabilityPackage>(new JsonSerializerOptions(JsonSerializerDefaults.Web))!;
+        PartyDataPortabilityPackage package = result.GetPayload().Deserialize<PartyDataPortabilityPackage>(PartiesJsonOptions.Default)!;
         package.Status.ShouldBe("Erased");
         package.Party.ShouldBeNull();
     }
@@ -266,7 +267,7 @@ public sealed class PartyDetailProjectionQueryActorTests
         result.Success.ShouldBeTrue();
         string raw = result.GetPayload().GetRawText();
         raw.ShouldNotContain("ada@example.test");
-        PartyDataPortabilityPackage package = result.GetPayload().Deserialize<PartyDataPortabilityPackage>(new JsonSerializerOptions(JsonSerializerDefaults.Web))!;
+        PartyDataPortabilityPackage package = result.GetPayload().Deserialize<PartyDataPortabilityPackage>(PartiesJsonOptions.Default)!;
         package.Status.ShouldBe("PersonalDataUnavailable");
         package.Party.ShouldBeNull();
     }
@@ -298,7 +299,7 @@ public sealed class PartyDetailProjectionQueryActorTests
 
         result.Success.ShouldBeTrue();
         result.ProjectionType.ShouldBe("party-processing-records");
-        ProcessingActivityRecord[] records = result.GetPayload().Deserialize<ProcessingActivityRecord[]>(new JsonSerializerOptions(JsonSerializerDefaults.Web))!;
+        ProcessingActivityRecord[] records = result.GetPayload().Deserialize<ProcessingActivityRecord[]>(PartiesJsonOptions.Default)!;
         records.Single().CorrelationId.ShouldBe("corr-records");
         actorProxyFactory.DidNotReceiveWithAnyArgs().CreateActorProxy<IPartyDetailProjectionActor>(default!, default!, default);
     }
@@ -323,7 +324,7 @@ public sealed class PartyDetailProjectionQueryActorTests
 
         result.Success.ShouldBeTrue();
         result.ProjectionType.ShouldBe("party-erasure-certificate");
-        ErasureCertificate certificate = result.GetPayload().Deserialize<ErasureCertificate>(new JsonSerializerOptions(JsonSerializerDefaults.Web))!;
+        ErasureCertificate certificate = result.GetPayload().Deserialize<ErasureCertificate>(PartiesJsonOptions.Default)!;
         certificate.PartyId.ShouldBe("p-erased");
         certificate.TenantId.ShouldBe("tenant-a");
         certificate.VerificationStatus.ShouldBe(ErasureVerificationStatus.Verified);
@@ -368,7 +369,7 @@ public sealed class PartyDetailProjectionQueryActorTests
 
         result.Success.ShouldBeTrue();
         result.ProjectionType.ShouldBe("party-erasure-status");
-        PartyErasureStatusRecord status = result.GetPayload().Deserialize<PartyErasureStatusRecord>(new JsonSerializerOptions(JsonSerializerDefaults.Web))!;
+        PartyErasureStatusRecord status = result.GetPayload().Deserialize<PartyErasureStatusRecord>(PartiesJsonOptions.Default)!;
         status.Status.ShouldBe("ErasurePending");
         actorProxyFactory.DidNotReceiveWithAnyArgs().CreateActorProxy<IPartyDetailProjectionActor>(default!, default!, default);
     }
@@ -535,7 +536,15 @@ public sealed class PartyDetailProjectionQueryActorTests
         // silently miss new PII surfaces (phones, addresses, identifier values, name-history entries).
         payload.GetProperty("displayName").GetString().ShouldBeNullOrEmpty();
         payload.GetProperty("sortName").GetString().ShouldBeNullOrEmpty();
-        payload.GetProperty("personDetails").ValueKind.ShouldBe(JsonValueKind.Null);
+
+        // personDetails is null on an erased party. The canonical wire options omit null values
+        // (WhenWritingNull), so the property is absent rather than an explicit JSON null; accept
+        // either form — both carry no PII.
+        if (payload.TryGetProperty("personDetails", out JsonElement personDetails))
+        {
+            personDetails.ValueKind.ShouldBe(JsonValueKind.Null);
+        }
+
         payload.GetProperty("contactChannels").GetArrayLength().ShouldBe(0);
         payload.GetProperty("identifiers").GetArrayLength().ShouldBe(0);
         payload.GetProperty("nameHistory").GetArrayLength().ShouldBe(0);

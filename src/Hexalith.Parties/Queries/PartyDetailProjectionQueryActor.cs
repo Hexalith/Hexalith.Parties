@@ -6,6 +6,7 @@ using Dapr.Actors.Client;
 using Dapr.Actors.Runtime;
 
 using Hexalith.EventStore.Contracts.Queries;
+using Hexalith.Parties.Contracts;
 using Hexalith.Parties.Contracts.Models;
 using Hexalith.Parties.Contracts.Security;
 using Hexalith.Parties.Extensions;
@@ -34,7 +35,7 @@ public sealed partial class PartyDetailProjectionQueryActor(
     public const string GetErasureStatusQueryType = "GetErasureStatus";
     public const string GetErasureCertificateQueryType = "GetErasureCertificate";
     public const string PartyDomain = "party";
-    private static readonly JsonSerializerOptions s_jsonOptions = new(JsonSerializerDefaults.Web);
+    private static readonly JsonSerializerOptions s_jsonOptions = PartiesJsonOptions.Default;
 
     // P3 (Story 2.6, parity with PartyIndexProjectionQueryActor): tenant identifiers must
     // contain only letters, digits, underscore, hyphen, and dot. Defense-in-depth — reject

@@ -6,6 +6,7 @@ using System.Text.Json.Serialization;
 using Hexalith.EventStore.Contracts.Events;
 using Hexalith.EventStore.Contracts.Identity;
 using Hexalith.EventStore.Contracts.Security;
+using Hexalith.Parties.Contracts;
 using Hexalith.Parties.Contracts.Events;
 using Hexalith.Parties.Contracts.Models;
 using Hexalith.Parties.Projections.Handlers;
@@ -24,7 +25,7 @@ public sealed partial class ProjectionRebuildService : IProjectionRebuildService
     private const string IndexManifestStateKeySuffix = "manifest";
     private const string RebuildCheckpointPrefix = "rebuild-checkpoint";
 
-    private static readonly JsonSerializerOptions s_jsonOptions = new() {
+    private static readonly JsonSerializerOptions s_projectionRebuildReaderJsonOptions = new() {
         PropertyNameCaseInsensitive = true,
         Converters = { new JsonStringEnumConverter() },
     };
@@ -337,7 +338,7 @@ public sealed partial class ProjectionRebuildService : IProjectionRebuildService
 
         response.EnsureSuccessStatusCode();
 
-        return await response.Content.ReadFromJsonAsync<T>(s_jsonOptions, cancellationToken).ConfigureAwait(false);
+        return await response.Content.ReadFromJsonAsync<T>(s_projectionRebuildReaderJsonOptions, cancellationToken).ConfigureAwait(false);
     }
 
     private async Task WriteActorStateAsync<T>(
@@ -355,7 +356,7 @@ public sealed partial class ProjectionRebuildService : IProjectionRebuildService
         };
 
         HttpResponseMessage response = await _daprHttpClient.PutAsJsonAsync(
-            url, stateTransaction, s_jsonOptions, cancellationToken).ConfigureAwait(false);
+            url, stateTransaction, PartiesJsonOptions.Default, cancellationToken).ConfigureAwait(false);
         response.EnsureSuccessStatusCode();
     }
 
@@ -386,7 +387,7 @@ public sealed partial class ProjectionRebuildService : IProjectionRebuildService
         HttpResponseMessage response = await _daprHttpClient.PutAsJsonAsync(
             url,
             stateTransaction,
-            s_jsonOptions,
+            PartiesJsonOptions.Default,
             cancellationToken).ConfigureAwait(false);
         response.EnsureSuccessStatusCode();
     }
@@ -431,7 +432,7 @@ public sealed partial class ProjectionRebuildService : IProjectionRebuildService
         HttpResponseMessage response = await _daprHttpClient.PutAsJsonAsync(
             url,
             stateTransaction,
-            s_jsonOptions,
+            PartiesJsonOptions.Default,
             cancellationToken).ConfigureAwait(false);
         response.EnsureSuccessStatusCode();
     }
@@ -533,7 +534,7 @@ public sealed partial class ProjectionRebuildService : IProjectionRebuildService
                 .GetAwaiter()
                 .GetResult();
 
-            object? deserialized = JsonSerializer.Deserialize(protectionResult.PayloadBytes, eventType, s_jsonOptions);
+            object? deserialized = JsonSerializer.Deserialize(protectionResult.PayloadBytes, eventType, s_projectionRebuildReaderJsonOptions);
             return deserialized as IEventPayload;
         }
         catch (InvalidOperationException ex) when (

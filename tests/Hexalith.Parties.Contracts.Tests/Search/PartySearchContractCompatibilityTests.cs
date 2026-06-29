@@ -1,7 +1,7 @@
 using System.Reflection;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 
+using Hexalith.Parties.Contracts;
 using Hexalith.Parties.Contracts.Models;
 using Hexalith.Parties.Contracts.ValueObjects;
 
@@ -11,11 +11,7 @@ namespace Hexalith.Parties.Contracts.Tests.Search;
 
 public sealed class PartySearchContractCompatibilityTests
 {
-    private static readonly JsonSerializerOptions s_jsonOptions = new(JsonSerializerDefaults.Web)
-    {
-        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-        Converters = { new JsonStringEnumConverter() },
-    };
+    private static readonly JsonSerializerOptions s_jsonOptions = PartiesJsonOptions.Default;
 
     [Fact]
     public void PartySearchResult_DeserializesOlderPayloadWithoutScoreMetadata()

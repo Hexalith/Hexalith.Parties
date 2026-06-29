@@ -1,5 +1,4 @@
 using System.Text.Json;
-using System.Text.Json.Serialization;
 
 using Hexalith.EventStore.Contracts.Commands;
 using Hexalith.EventStore.Contracts.Events;
@@ -7,6 +6,7 @@ using Hexalith.EventStore.Contracts.Identity;
 using Hexalith.EventStore.Contracts.Results;
 using Hexalith.EventStore.Server.Events;
 using Hexalith.EventStore.Testing.Fakes;
+using Hexalith.Parties.Contracts;
 using Hexalith.Parties.Contracts.Commands;
 using Hexalith.Parties.Contracts.Events;
 using Hexalith.Parties.Contracts.Results;
@@ -23,10 +23,7 @@ namespace Hexalith.Parties.Tests.Domain;
 
 public sealed class PartyDomainEventPublicationContractTests
 {
-    private static readonly JsonSerializerOptions JsonOptions = new()
-    {
-        Converters = { new JsonStringEnumConverter() },
-    };
+    private static readonly JsonSerializerOptions JsonOptions = PartiesJsonOptions.Default;
 
     [Fact]
     public void CreateCompositeProducesStableConsumerEventsAndUpdatedPayload()
@@ -156,10 +153,6 @@ public sealed class PartyDomainEventPublicationContractTests
             }
         }
 
-        var tolerantOptions = new JsonSerializerOptions(JsonSerializerDefaults.Web)
-        {
-            Converters = { new JsonStringEnumConverter() },
-        };
         string json = """
             {
               "survivorPartyId": "party-survivor",
@@ -167,7 +160,7 @@ public sealed class PartyDomainEventPublicationContractTests
               "futureAdditiveField": "ignored"
             }
             """;
-        JsonSerializer.Deserialize<PartyMerged>(json, tolerantOptions)!.SurvivorPartyId.ShouldBe("party-survivor");
+        JsonSerializer.Deserialize<PartyMerged>(json, PartiesJsonOptions.Default)!.SurvivorPartyId.ShouldBe("party-survivor");
 
         string docsRoot = RepositoryRoot.Locate();
         string handlerPatterns = File.ReadAllText(Path.Combine(docsRoot, "docs", "event-handler-patterns.md"));
