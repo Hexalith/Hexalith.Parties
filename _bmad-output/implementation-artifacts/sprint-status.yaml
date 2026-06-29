@@ -1,5 +1,5 @@
 # generated: 2026-06-21T18:55:59+02:00
-# last_updated: 2026-06-29T07:41:07+02:00
+# last_updated: 2026-06-29T08:36:52+02:00
 # project: parties
 # project_key: NOKEY
 # tracking_system: file-system
@@ -41,7 +41,7 @@
 # - Retrospective appends its action items to action_items; sprint-status surfaces open ones
 
 generated: 2026-06-21T18:55:59+02:00
-last_updated: 2026-06-29T07:41:07+02:00
+last_updated: 2026-06-29T08:36:52+02:00
 project: parties
 project_key: NOKEY
 tracking_system: file-system
@@ -83,7 +83,7 @@ development_status:
 
   # ── Epic 4: Consumer — Identity Binding & My Profile ─────────────────────
   epic-4: done
-  4-1-decide-the-consumer-identity-party-id-binding-mechanism-design-spike-adr: done
+  4-1-decide-the-consumer-identity-party-id-binding-mechanism-completed-discovery-prerequisite: done
   4-2-implement-admin-link-party-id-binding-provisioning: done
   4-3-stand-up-the-consumerportal-rcl-and-consumer-area: done
   4-4-my-profile-fr-consumer-1: done
@@ -113,6 +113,7 @@ development_status:
   6-5-gdpr-client-mapping-tenant-heuristic-and-export-filename-a6-a7-a8: ready-for-dev
   6-6-shared-role-arrays-and-policy-names-a9: ready-for-dev
   6-7-shared-portal-display-formatters-a10: ready-for-dev
+  epic-6-retrospective: optional
 
   # ── Epic 7: Platform Alignment — adopt Commons/EventStore (Class B) ───────
   # PM/Architect implementation plan approved 2026-06-29:
@@ -128,3 +129,4 @@ development_status:
   7-6-crypto-key-management-adr-and-compatibility-harness: backlog
   7-7-crypto-key-management-migration-behind-eventstore-provider-contracts: backlog
   7-8-release-rollback-cleanup-and-readiness-gate: backlog
+  epic-7-retrospective: optional

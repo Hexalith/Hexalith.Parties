@@ -4,10 +4,10 @@ project: parties
 assessor: Codex / bmad-check-implementation-readiness
 overallReadinessStatus: NEEDS WORK
 disposition:
-  status: routed-to-correct-course-and-epic-7-plan
-  via: _bmad-output/planning-artifacts/sprint-change-proposal-2026-06-29.md
-  epic_7_plan: _bmad-output/planning-artifacts/epic-7-implementation-plan-2026-06-29.md
-  note: "Product scope remains ready for Epics 1-5. Correct course proposal addresses scope hygiene: Epic 6 is maintenance-only and Epic 2 Story 2.5 is ordered before Story 2.4. Epic 7 now has an approved PM/Architect implementation plan and is tracked as post-MVP platform-maintenance backlog, not PRD feature scope. Report verdict is preserved until readiness is re-run."
+  feature_scope: ready-complete
+  maintenance_scope_epic_6: ready-for-dev-with-maintenance-label
+  platform_scope_epic_7: backlog-not-developer-executable
+  note: "Epics 1-5 cover all PRD feature requirements and are marked done. Epic 6 is ready only as approved Class A maintenance. Epic 7 has an approved PM/Architect plan but requires detailed 7-* story files before developer execution."
 stepsCompleted:
   - step-01-document-discovery
   - step-02-prd-analysis
@@ -20,8 +20,11 @@ includedFiles:
     - _bmad-output/planning-artifacts/parties-ui-prd.md
   architecture:
     - _bmad-output/planning-artifacts/architecture.md
+    - _bmad-output/planning-artifacts/architecture/epic-7-platform-alignment-2026-06-29/ARCHITECTURE-SPINE.md
   epics:
     - _bmad-output/planning-artifacts/epics.md
+    - _bmad-output/planning-artifacts/epic-7-planning-approval-2026-06-29.md
+    - _bmad-output/planning-artifacts/epic-7-implementation-plan-2026-06-29.md
   ux:
     - _bmad-output/planning-artifacts/ux-designs/ux-parties-2026-06-09/index.md
     - _bmad-output/planning-artifacts/ux-designs/ux-parties-2026-06-09/DESIGN.md
@@ -30,7 +33,6 @@ includedFiles:
     - _bmad-output/planning-artifacts/ux-designs/ux-parties-2026-06-09/review-accessibility.md
     - _bmad-output/planning-artifacts/ux-designs/ux-parties-2026-06-09/review-regulated-language.md
     - _bmad-output/planning-artifacts/ux-designs/ux-parties-2026-06-09/review-rubric.md
-    - _bmad-output/planning-artifacts/ux-designs/ux-parties-2026-06-09/.decision-log.md
 matchedButExcluded:
   epics:
     - _bmad-output/planning-artifacts/sprint-change-proposal-2026-06-27-epic2-sequencing-and-readiness-followup.md
@@ -55,6 +57,7 @@ matchedButExcluded:
 
 **Whole Documents:**
 - `_bmad-output/planning-artifacts/architecture.md` (56,037 bytes, modified 2026-06-28 14:37)
+- `_bmad-output/planning-artifacts/architecture/epic-7-platform-alignment-2026-06-29/ARCHITECTURE-SPINE.md` (10,847 bytes, modified 2026-06-29 07:43) - related Epic 7 architecture context.
 
 **Sharded Documents:**
 - None found
@@ -62,7 +65,9 @@ matchedButExcluded:
 ### Epics & Stories Files Found
 
 **Whole Documents:**
-- `_bmad-output/planning-artifacts/epics.md` (76,423 bytes, modified 2026-06-28 15:37)
+- `_bmad-output/planning-artifacts/epics.md` (84,194 bytes, modified 2026-06-29 07:45)
+- `_bmad-output/planning-artifacts/epic-7-planning-approval-2026-06-29.md` (1,714 bytes, modified 2026-06-29 07:44)
+- `_bmad-output/planning-artifacts/epic-7-implementation-plan-2026-06-29.md` (10,063 bytes, modified 2026-06-29 07:46)
 - `_bmad-output/planning-artifacts/sprint-change-proposal-2026-06-27-epic2-sequencing-and-readiness-followup.md` (19,950 bytes, modified 2026-06-27 20:38) - matched `*epic*.md`; excluded from the selected assessment set.
 
 **Sharded Documents:**
@@ -79,20 +84,15 @@ matchedButExcluded:
   - `DESIGN.md` (12,864 bytes, modified 2026-06-09 19:30)
   - `EXPERIENCE.md` (20,906 bytes, modified 2026-06-09 19:30)
   - `validation-report.md` (7,828 bytes, modified 2026-06-09 19:30)
+  - `validation-report.html` (24,884 bytes, modified 2026-06-09 19:29)
+  - `review-rubric.md` (13,912 bytes, modified 2026-06-09 19:17)
   - `review-accessibility.md` (15,954 bytes, modified 2026-06-09 19:17)
   - `review-regulated-language.md` (8,818 bytes, modified 2026-06-09 19:17)
-  - `review-rubric.md` (13,912 bytes, modified 2026-06-09 19:17)
   - `mockups/admin-parties.html` (16,180 bytes, modified 2026-06-09 19:26)
   - `mockups/consumer-privacy.html` (9,100 bytes, modified 2026-06-09 19:24)
   - `mockups/consumer-profile.html` (5,510 bytes, modified 2026-06-09 19:26)
   - `mockups/create-edit-party.html` (8,215 bytes, modified 2026-06-09 19:26)
   - `mockups/signin.html` (5,547 bytes, modified 2026-06-09 19:25)
-  - `.decision-log.md` (14,165 bytes, modified 2026-06-27 13:40)
-  - `.working/key-admin-parties.html` (15,972 bytes, modified 2026-06-09 19:08)
-  - `.working/key-consumer-privacy.html` (9,304 bytes, modified 2026-06-09 19:07)
-  - `.working/key-consumer-profile.html` (5,435 bytes, modified 2026-06-09 19:14)
-  - `.working/key-create-edit-party.html` (7,639 bytes, modified 2026-06-09 19:13)
-  - `.working/key-signin.html` (5,471 bytes, modified 2026-06-09 19:14)
 
 ### Issues Found
 
@@ -103,113 +103,115 @@ matchedButExcluded:
 ### Selected Assessment Set
 
 - PRD: `_bmad-output/planning-artifacts/parties-ui-prd.md`
-- Architecture: `_bmad-output/planning-artifacts/architecture.md`
-- Epics/Stories: `_bmad-output/planning-artifacts/epics.md`
+- Architecture: `_bmad-output/planning-artifacts/architecture.md`, plus Epic 7 architecture spine as related context.
+- Epics/Stories: `_bmad-output/planning-artifacts/epics.md`, plus Epic 7 approval and implementation plan.
 - UX: `_bmad-output/planning-artifacts/ux-designs/ux-parties-2026-06-09/`
 
 ## Step 2: PRD Analysis
 
 ### Functional Requirements
 
-FR1 / FR-Shell: Authenticate users through host-owned OIDC, preserve return URLs, and route users to the correct area by role. Admin or TenantOwner users land in Admin; Consumer users land in Consumer. Navigation is policy-gated so Admin and Consumer entries do not cross-render. Consumers without exactly one verified `party_id` claim land in the fail-closed `NoPartyBinding` state, never on a data screen.
+FR-Shell: Authenticate users through host-owned OIDC, preserve return URLs, and route users to the correct area by role. Admin or TenantOwner users land in Admin; Consumer users land in Consumer. Navigation is policy-gated so Admin and Consumer entries do not cross-render. Consumers without exactly one verified `party_id` claim land in the fail-closed `NoPartyBinding` state, never on a data screen.
 
-FR2 / FR-Admin-1: Admins can search and filter parties server-side by display name, party type, and active state. The list supports paging, row-to-detail navigation, stale/degraded read handling, last-known rendering, and accessible keyboard navigation.
+FR-Admin-1: Admins can search and filter parties server-side by display name, party type, and active state. The list supports paging, row-to-detail navigation, stale/degraded read handling, last-known rendering, and accessible keyboard navigation.
 
-FR3 / FR-Admin-2: Admins can view the full `PartyDetail`, including lifecycle state and freshness. The detail view provides entry points to edit and GDPR operations. Missing or erased parties render PII-free tombstone states.
+FR-Admin-2: Admins can view the full `PartyDetail`, including lifecycle state and freshness. The detail view provides entry points to edit and GDPR operations. Missing or erased parties render PII-free tombstone states.
 
-FR4 / FR-Admin-3: Admins can create and edit Person and Organization parties through validated forms. Person/Organization selection uses a real radiogroup, route ids are authoritative on edit, validation errors are announced accessibly, and successful commands use optimistic UI plus projection reconciliation.
+FR-Admin-3: Admins can create and edit Person and Organization parties through validated forms. Person/Organization selection uses a real radiogroup, route ids are authoritative on edit, validation errors are announced accessibly, and successful commands use optimistic UI plus projection reconciliation.
 
-FR5 / FR-Admin-4: DPO/Admin users can erase a party with typed-name confirmation, restrict and lift processing restriction, record and revoke consent, export data under Art.20, view processing records under Art.30, and prove erasure with a bounded verification report. GDPR operations must avoid PII leakage and route through existing typed client/gateway seams.
+FR-Admin-4: DPO/Admin users can erase a party with typed-name confirmation, restrict and lift processing restriction, record and revoke consent, export data under Art.20, view processing records under Art.30, and prove erasure with a bounded verification report. GDPR operations must avoid PII leakage and route through existing typed client/gateway seams.
 
-FR6 / FR-Consumer-1: Bound Consumers can view their own personal data and projection freshness. They never see list/search surfaces. Stale/degraded reads show last-known data, and an erased self renders a PII-free tombstone.
+FR-Consumer-1: Bound Consumers can view their own personal data and projection freshness. They never see list/search surfaces. Stale/degraded reads show last-known data, and an erased self renders a PII-free tombstone.
 
-FR7 / FR-Consumer-2: Bound Consumers can correct their own data through validated, self-scoped update commands. Prefilled values match stored values, validation preserves input, and accepted commands reconcile through the shared optimistic/freshness pattern.
+FR-Consumer-2: Bound Consumers can correct their own data through validated, self-scoped update commands. Prefilled values match stored values, validation preserves input, and accepted commands reconcile through the shared optimistic/freshness pattern.
 
-FR8 / FR-Consumer-3: Bound Consumers can grant and withdraw consent honestly. Consent toggles default Off, are real switch controls, and distinguish consent-based items from contract, legal, and legitimate-interest bases. Legitimate-interest items provide Object under Art.21 rather than a withdraw toggle.
+FR-Consumer-3: Bound Consumers can grant and withdraw consent honestly. Consent toggles default Off, are real switch controls, and distinguish consent-based items from contract, legal, and legitimate-interest bases. Legitimate-interest items provide Object under Art.21 rather than a withdraw toggle.
 
-FR9 / FR-Consumer-4: Bound Consumers can export their own data as machine-readable JSON, request or cancel erasure while cancellation is still allowed, and view what is processed about them through bounded audit metadata. Copy must be plain, honest, and free of hard timing promises that the system cannot guarantee.
+FR-Consumer-4: Bound Consumers can export their own data as machine-readable JSON, request or cancel erasure while cancellation is still allowed, and view what is processed about them through bounded audit metadata. Copy must be plain, honest, and free of hard timing promises that the system cannot guarantee.
 
 Total FRs: 9
 
 ### Non-Functional Requirements
 
-NFR1 / Accessibility: Consumer-facing surfaces target WCAG 2.2 AA. Required patterns include real ARIA semantics, correct live-region politeness split, visible focus, forced-colors and reduced-motion support, non-color cues, keyboard operation, and usable target sizes.
+NFR1: Accessibility. Consumer-facing surfaces target WCAG 2.2 AA. Required patterns include real ARIA semantics, correct live-region politeness split, visible focus, forced-colors and reduced-motion support, non-color cues, keyboard operation, and usable target sizes.
 
-NFR2 / Eventual Consistency UX: Projection freshness is first-class. The UI renders last-known data on stale or degraded reads, uses optimistic echo for accepted commands, reconciles on projection confirmation, and never treats accepted commands as read-your-write.
+NFR2: Eventual Consistency UX. Projection freshness is first-class. The UI renders last-known data on stale or degraded reads, uses optimistic echo for accepted commands, reconciles on projection confirmation, and never treats accepted commands as read-your-write.
 
-NFR3 / Security and Own-Data Privacy: Consumer operations are own-data only. Consumer pages use the self-scoped accessor and must not accept caller-supplied party ids. Parties-side defense-in-depth asserts `aggregateId == party_id`. Logs, telemetry, tombstones, and error copy do not expose PII.
+NFR3: Security and Own-Data Privacy. Consumer operations are own-data only. Consumer pages use the self-scoped accessor and must not accept caller-supplied party ids. Parties-side defense-in-depth asserts `aggregateId == party_id`. Logs, telemetry, tombstones, and error copy do not expose PII.
 
-NFR4 / GDPR Honesty: Consent is opt-in and default Off. Erasure copy commits to starting the obligation and states completed erasure is permanent. Export copy promises machine-readable delivery but no fixed completion time. Legal bases are represented honestly.
+NFR4: GDPR Honesty. Consent is opt-in and default Off. Erasure copy commits to starting the obligation and states completed erasure is permanent. Export copy promises machine-readable delivery but no fixed completion time. Legal bases are represented honestly.
 
-NFR5 / Responsive Design: Admin is desktop-first but reflows to sheet/full-screen detail on small screens. Consumer is phone-first and single-column. Both areas share one responsive codebase with different density postures.
+NFR5: Responsive Design. Admin is desktop-first but reflows to sheet/full-screen detail on small screens. Consumer is phone-first and single-column. Both areas share one responsive codebase with different density postures.
 
-NFR6 / Multi-Tenancy: Admin operates within tenant scope. Tenant access fails closed and may be eventually consistent after restart. Tenant warm-up is communicated as a temporary state, not as misleading access denial.
+NFR6: Multi-Tenancy. Admin operates within tenant scope. Tenant access fails closed and may be eventually consistent after restart. Tenant warm-up is communicated as a temporary state, not as misleading access denial.
 
-NFR7 / Brand Discipline: The UI inherits FrontComposer and FluentUI V5/Fluent 2. New styling is limited to the agreed domain deltas. Do not hard-code raw accent colors for text-bearing controls or redeclare Fluent tokens in product CSS.
+NFR7: Brand Discipline. The UI inherits FrontComposer and FluentUI V5/Fluent 2. New styling is limited to the agreed domain deltas. Do not hard-code raw accent colors for text-bearing controls or redeclare Fluent tokens in product CSS.
 
-NFR8 / Observability: The UI host uses ServiceDefaults, OpenTelemetry, health checks, degraded headers, and freshness metadata without logging personal data or event payloads.
+NFR8: Observability. The UI host uses ServiceDefaults, OpenTelemetry, health checks, degraded headers, and freshness metadata without logging personal data or event payloads.
 
-NFR9 / Build and Quality Gates: The work stays on .NET 10, central package management, `.slnx`, warnings as errors, xUnit v3/Shouldly/NSubstitute/bUnit, Playwright accessibility checks, and root-level submodules under `references/` only.
+NFR9: Build and Quality Gates. The work stays on .NET 10, central package management, `.slnx`, warnings as errors, xUnit v3/Shouldly/NSubstitute/bUnit, Playwright accessibility checks, and root-level submodules under `references/` only.
 
 Total NFRs: 9
 
 ### Additional Requirements
 
-- Canonical source rule: this PRD is the canonical PRD-shaped requirements source for readiness checks. If it conflicts with source artifacts, architecture owns system decisions, UX spines own product experience, and implementation story records own completed-work evidence.
-- Product scope: realize `parties-ui` as a single responsive Blazor Server application on FrontComposer and FluentUI Blazor V5, with Admin records/GDPR-DPO operations under `/admin/parties*` and Consumer own-data GDPR self-service under `/me*`.
-- Integration boundary: the app extends the existing Hexalith.Parties event-sourced/CQRS service through the EventStore gateway. The browser talks only to the UI host/BFF. The UI host owns OIDC sign-in and keeps tokens server-side.
-- UX requirements: the final UX design set is authoritative and includes UX-DR1 through UX-DR16 covering AA-safe brand fill, status token pairs, Fluent inheritance, party-state badge, data-freshness indicator, GDPR destructive button, Fluent 2/WAI-ARIA party picker, live-region split, semantics, focus contracts, non-color cues, target sizing, forced-colors, reduced-motion, honest erasure/lawful-basis/export copy, plain verbs, and single-status-source copy.
+- Source artifact precedence: architecture owns system decisions, UX spines own product experience, and implementation story records own completed work evidence when this PRD conflicts with source artifacts.
+- Product scope: one responsive Blazor Server app on FrontComposer and FluentUI Blazor V5 with Admin records/GDPR operations under `/admin/parties*` and Consumer own-data GDPR self-service under `/me*`.
+- Integration boundary: the browser talks only to the UI host/BFF; the UI host owns OIDC sign-in, keeps tokens server-side, and extends the existing event-sourced/CQRS Parties service through the EventStore gateway.
+- UX requirements: UX-DR1 through UX-DR16 are binding, covering AA-safe brand fill, status token pairs, Fluent inheritance, party-state badge, freshness indicator, GDPR destructive button, Fluent 2/WAI-ARIA party picker, live-region split, semantic controls, focus contracts, non-color cues, target sizing, forced-colors, reduced-motion, honest erasure/lawful-basis/export copy, plain verbs, and single status source.
 - Traceability expectation: FR-Shell maps to Epic 1; FR-Admin-1 through FR-Admin-3 map to Epic 2; FR-Admin-4 maps to Epic 3; FR-Consumer-1 and FR-Consumer-2 map to Epic 4; FR-Consumer-3 and FR-Consumer-4 map to Epic 5.
-- Implementation evidence to reconcile: as of 2026-06-27, sprint status marks Epics 1-5 and their stories as done. Known completed dependency evidence includes Story 1.4 fail-closed `party_id` claim resolution, Story 3.5 erasure certificate and retry backend behavior, Story 3.6 bounded Admin erasure-verification report UI, Story 4.1 Consumer identity binding ADR, and Story 4.2 admin-link identity binding provisioning.
-- Out of MVP scope: production KMS provisioning before regulated EU personal data, gateway-level data-subject/self principal support, consumer self-registration, IdP federation, temporal name-as-of queries, and semantic/graph/hybrid search.
+- Current implementation evidence: as of 2026-06-27, sprint status marks Epics 1-5 and their stories as done; readiness validation after that date must reconcile this PRD and planning documents with implementation story records.
+- Out of MVP scope: production KMS provisioning before regulated EU personal data, gateway-level data-subject/self principal support, consumer self-registration and IdP federation, temporal name-as-of queries, and semantic/graph/hybrid search.
 
 ### PRD Completeness Assessment
 
-The PRD is fit for traceability analysis: it explicitly identifies 9 functional requirements and 9 non-functional requirements, names the source artifacts, defines conflict precedence, maps FRs to epics and surfaces, and calls out implementation evidence plus out-of-scope items. The main completeness risk is that several UX requirements are grouped as UX-DR ranges rather than expanded in the PRD itself, so detailed UX validation must rely on the selected UX sharded artifacts.
+The PRD is complete enough for implementation-readiness traceability. It consolidates the brownfield requirement sources into a canonical PRD, identifies source-of-truth precedence, provides explicit FR and NFR sections, maps every FR to a primary epic, and calls out current implementation evidence and MVP exclusions. The primary assessment risk is not missing PRD content; it is whether the epics and implementation plans remain aligned with this canonical scope after later change proposals and Epic 7 platform-planning additions.
 
 ## Step 3: Epic Coverage Validation
 
 ### Epic FR Coverage Extracted
 
-FR1 / FR-Shell: Covered in Epic 1 - App Foundation & Secure Sign-In.
+FR-Shell: Covered in Epic 1 - OIDC sign-in, role routing, policy-gated navigation, and fail-closed `party_id` binding.
 
-FR2 / FR-Admin-1: Covered in Epic 2 - Admin Party Records Management, specifically parties list search/filter/paging.
+FR-Admin-1: Covered in Epic 2 - Parties list with server-driven search, type/active filters, paging, stale/degraded handling, and accessible row activation.
 
-FR3 / FR-Admin-2: Covered in Epic 2 - Admin Party Records Management, specifically party detail.
+FR-Admin-2: Covered in Epic 2 - Party detail with full `PartyDetail`, lifecycle/freshness presentation, edit/GDPR entry points, phone reflow, and PII-free tombstones.
 
-FR4 / FR-Admin-3: Covered in Epic 2 - Admin Party Records Management, specifically create/edit party and party picker.
+FR-Admin-3: Covered in Epic 2 - Create/edit party form, validation, Person/Organization radiogroup, authoritative route id, optimistic reconciliation, and picker-backed relationship linking after Story 2.5.
 
-FR5 / FR-Admin-4: Covered in Epic 3 - Admin GDPR / DPO Operations.
+FR-Admin-4: Covered in Epic 3 - GDPR/DPO operations including erase, restrict/lift, consent, Art.20 export, Art.30 records, erasure-verification backend contract, and report UI.
 
-FR6 / FR-Consumer-1: Covered in Epic 4 - Consumer Identity Binding & My Profile.
+FR-Consumer-1: Covered in Epic 4 - Consumer own-profile view through self-scoped data access, freshness, stale/degraded handling, and erased-self tombstone.
 
-FR7 / FR-Consumer-2: Covered in Epic 4 - Consumer Identity Binding & My Profile.
+FR-Consumer-2: Covered in Epic 4 - Consumer own-profile edit through self-scoped update commands, validation, input preservation, and optimistic reconciliation.
 
-FR8 / FR-Consumer-3: Covered in Epic 5 - Consumer Consent, Data Export & Erasure.
+FR-Consumer-3: Covered in Epic 5 - My consent with opt-in default Off, switch semantics, lawful-basis split, Object under Art.21, and grant/withdraw parity.
 
-FR9 / FR-Consumer-4: Covered in Epic 5 - Consumer Consent, Data Export & Erasure.
+FR-Consumer-4: Covered in Epic 5 - My data and privacy with self-scoped JSON export, erasure request/cancel, processing-record transparency, bounded audit metadata, and honest copy.
 
 Total FRs in epics: 9
 
 ### Coverage Matrix
 
 | FR Number | PRD Requirement | Epic Coverage | Status |
-|---|---|---|---|
-| FR1 / FR-Shell | Authenticate users through host-owned OIDC, preserve return URLs, route by role, policy-gate navigation, and fail closed for Consumers without exactly one verified `party_id`. | Epic 1; Stories 1.2, 1.3, 1.4, with shared shell/security foundations. | Covered |
-| FR2 / FR-Admin-1 | Admin search/filter list by display name, party type, active state, paging, row navigation, stale/degraded read handling, last-known rendering, and keyboard navigation. | Epic 2; Story 2.2. | Covered |
-| FR3 / FR-Admin-2 | Admin full `PartyDetail`, lifecycle/freshness, edit/GDPR entry points, and PII-free missing/erased tombstones. | Epic 2; Story 2.3. | Covered |
-| FR4 / FR-Admin-3 | Admin create/edit Person and Organization parties through validated forms with radiogroup, authoritative route ids, accessible validation, optimistic UI, and reconciliation. | Epic 2; Stories 2.4 and 2.5. | Covered |
-| FR5 / FR-Admin-4 | DPO/Admin erase, restrict/lift, consent record/revoke, Art.20 export, Art.30 processing records, erasure verification, PII avoidance, and typed gateway/client seams. | Epic 3; Stories 3.1 through 3.6. | Covered |
-| FR6 / FR-Consumer-1 | Bound Consumers view own personal data and freshness, no list/search, last-known stale/degraded rendering, and erased-self tombstone. | Epic 4; Story 4.4, supported by Stories 4.1 through 4.3. | Covered |
-| FR7 / FR-Consumer-2 | Bound Consumers correct own data through validated self-scoped commands with preserved input and optimistic/freshness reconciliation. | Epic 4; Story 4.5, supported by self-scope stories. | Covered |
-| FR8 / FR-Consumer-3 | Bound Consumers grant/withdraw consent honestly, default Off switches, legal-basis distinction, and Art.21 Object for legitimate interest. | Epic 5; Story 5.1. | Covered |
-| FR9 / FR-Consumer-4 | Bound Consumers export data as machine-readable JSON, request/cancel erasure while allowed, and view bounded processing metadata with honest copy. | Epic 5; Stories 5.2, 5.3, and 5.4. | Covered |
+| --- | --- | --- | --- |
+| FR-Shell | Authenticate users through host-owned OIDC, preserve return URLs, route by role, gate navigation, and fail closed when Consumer `party_id` binding is absent or ambiguous. | Epic 1, Stories 1.2-1.5 plus shell/accessibility/freshness foundation. | Covered |
+| FR-Admin-1 | Admin parties list supports server-side search/filtering, paging, row-to-detail navigation, stale/degraded last-known rendering, and keyboard navigation. | Epic 2, Story 2.2. | Covered |
+| FR-Admin-2 | Admin party detail shows full `PartyDetail`, lifecycle/freshness, edit/GDPR entry points, and PII-free missing/erased tombstones. | Epic 2, Story 2.3. | Covered |
+| FR-Admin-3 | Admin create/edit supports Person/Organization parties, validated forms, radiogroup selection, authoritative route ids, accessible validation, optimistic UI, and projection reconciliation. | Epic 2, Stories 2.4 and 2.5. | Covered |
+| FR-Admin-4 | DPO/Admin can erase, restrict/lift, record/revoke consent, export, view processing records, and prove erasure via bounded verification. | Epic 3, Stories 3.1-3.6. | Covered |
+| FR-Consumer-1 | Bound Consumers can view their own data and freshness, never list/search, with stale/degraded and erased-self states. | Epic 4, Story 4.4. | Covered |
+| FR-Consumer-2 | Bound Consumers can correct their own data through validated, self-scoped update commands with input preservation and reconciliation. | Epic 4, Story 4.5. | Covered |
+| FR-Consumer-3 | Bound Consumers can grant/withdraw consent with default-Off switches, legal-basis distinction, and Art.21 object handling. | Epic 5, Story 5.1. | Covered |
+| FR-Consumer-4 | Bound Consumers can export JSON, request/cancel erasure, and view bounded processing metadata with honest copy. | Epic 5, Stories 5.2-5.4. | Covered |
 
 ### Missing Requirements
 
-No missing PRD functional requirements were found. All 9 PRD FRs have explicit epic coverage.
+No missing PRD functional requirements were found. All 9 PRD FRs are explicitly mapped in the epics document and have story-level coverage.
 
-No extra functional requirements were found in the epics outside the PRD set. Epic 6 and Epic 7 explicitly state that they cover no new PRD FRs: Epic 6 supports internal maintainability and NFR9, while Epic 7 is deferred architect-gated platform alignment.
+### FRs in Epics But Not in PRD
+
+No additional product FRs are claimed outside the PRD. Epic 6 is classified as conditional Class A maintenance and explicitly covers no new PRD FRs. Epic 7 is approved post-MVP platform maintenance and explicitly covers no new PRD FRs; its approved plan states it must not be used as product-feature readiness evidence.
 
 ### Coverage Statistics
 
@@ -221,217 +223,233 @@ No extra functional requirements were found in the epics outside the PRD set. Ep
 
 ### UX Document Status
 
-Found. The selected UX documentation is a sharded final design package:
+Found. The UX design set is present at `_bmad-output/planning-artifacts/ux-designs/ux-parties-2026-06-09/` and is marked final. The authoritative files are:
 
-- `_bmad-output/planning-artifacts/ux-designs/ux-parties-2026-06-09/index.md`
-- `_bmad-output/planning-artifacts/ux-designs/ux-parties-2026-06-09/DESIGN.md`
-- `_bmad-output/planning-artifacts/ux-designs/ux-parties-2026-06-09/EXPERIENCE.md`
-- `_bmad-output/planning-artifacts/ux-designs/ux-parties-2026-06-09/validation-report.md`
-- `_bmad-output/planning-artifacts/ux-designs/ux-parties-2026-06-09/review-accessibility.md`
-- `_bmad-output/planning-artifacts/ux-designs/ux-parties-2026-06-09/review-regulated-language.md`
-- `_bmad-output/planning-artifacts/ux-designs/ux-parties-2026-06-09/review-rubric.md`
-- `_bmad-output/planning-artifacts/ux-designs/ux-parties-2026-06-09/.decision-log.md`
+- `DESIGN.md`
+- `EXPERIENCE.md`
 
-The UX index and both spines state that `DESIGN.md` and `EXPERIENCE.md` are authoritative, with mockups illustrative and the spines winning on conflict. The UX decision log marks the spines as final.
+Supporting validation artifacts are also present:
+
+- `validation-report.md`
+- `review-accessibility.md`
+- `review-regulated-language.md`
+- `review-rubric.md`
+- `.decision-log.md`
+- Five illustrative HTML mockups
+
+The UX index and decision log state that the spines are authoritative and win over mockups on conflict.
 
 ### UX to PRD Alignment
 
-Aligned.
+The UX journeys align with the PRD functional scope:
 
-- UX information architecture maps directly to the PRD scope: one Blazor app, Admin area under `/admin/parties*`, Consumer own-data area under `/me*`, host-owned sign-in, and role-based landing.
-- UX Admin surfaces map to PRD FR-Admin-1 through FR-Admin-4: parties list, party detail, create/edit with picker, and GDPR/DPO operations.
-- UX Consumer surfaces map to PRD FR-Consumer-1 through FR-Consumer-4: My profile, Edit my profile, My consent, and My data/privacy.
-- UX behavior patterns map to PRD NFRs: WCAG 2.2 AA accessibility, eventual-consistency/freshness UX, security and own-data privacy, GDPR honesty, responsive design, multi-tenancy messaging, Fluent/FrontComposer brand discipline, and observability/degraded-state surfacing.
-- UX-DR1 through UX-DR16 are reflected in the PRD's UX Requirements section, though the PRD keeps them grouped by range and relies on the UX package for detailed implementation rules.
+- One sign-in, role-based landing, and policy-gated navigation align with FR-Shell.
+- Admin list, detail, create/edit, picker, and GDPR operations align with FR-Admin-1 through FR-Admin-4.
+- Consumer My profile, Edit my profile, My consent, and My data/privacy align with FR-Consumer-1 through FR-Consumer-4.
+- The UX state model directly supports the PRD's eventual-consistency requirements: cold load, stale/degraded reads, accepted-but-processing, validation rejection, transient failure, tenant warming, and erased/gone tombstones.
+- The UX copy rules align with PRD GDPR honesty: default-Off consent, lawful-basis distinction, Art.21 Object for legitimate interest, no hard erasure/export timing promises, and plain consumer verbs.
+- The UX accessibility floor aligns with PRD NFR1: WCAG 2.2 AA, real semantics, live-region politeness split, visible focus, forced-colors, reduced-motion, non-color cues, and target sizing.
 
-No UX requirement was found that contradicts the PRD. The UX package is more detailed than the PRD, but the PRD explicitly makes the final UX design set authoritative for product experience.
+No UX requirement was found that contradicts the PRD.
 
 ### UX to Architecture Alignment
 
-Aligned with documented follow-up constraints.
+The architecture supports the UX requirements:
 
-- Architecture supports the UX app shape with Blazor Interactive Server, `Hexalith.Parties.UI`, embedded AdminPortal and ConsumerPortal RCLs, FrontComposer shell, FluentUI V5, and policy-gated navigation.
-- Architecture supports host-owned OIDC and BFF security, with tokens kept server-side and Consumer own-data access routed through a single self-scoped accessor plus Parties-side defense-in-depth.
-- Architecture supports eventual-consistency UX through `ProjectionFreshnessMetadata`, last-known rendering, optimistic echo, SignalR projection confirmation, polling/freshness fallback, and the canonical `StatusKind` to UI-state map.
-- Architecture supports accessibility through real semantics, the aria-live politeness split, focus contracts, forced-colors and reduced-motion support, AA contrast gate, bUnit component tests, and a Playwright a11y gate.
-- Architecture supports the UX visual contract through Fluent 2 token discipline, FrontComposer inheritance, shared party-state badge, data-freshness indicator, GDPR destructive button, and the party-picker Fluent 2/WAI-ARIA design-debt story.
-- Architecture supports GDPR copy and behavior through localization resources, default-Off consent, lawful-basis honesty, erasure permanence/cancellation states, Art.20 export, Art.30 processing records, and PII-free tombstones/logging.
-- Architecture supports responsive behavior with Admin desktop-first master-detail reflowing to sheet/full-screen detail and Consumer phone-first single-column layout.
+- FrontComposer shell host plus FluentUI Blazor V5 implements the UX system inheritance model.
+- Blazor Interactive Server plus host-owned OIDC/BFF keeps tokens server-side, matching the UX and PRD security posture.
+- AdminPortal and ConsumerPortal RCL split maps directly to the role-gated UX information architecture.
+- `PartyIdClaimResolver`, `NoPartyBinding`, and `ISelfScopedPartiesClient` support Consumer own-data UX and fail-closed behavior.
+- EventStore SignalR plus polling/freshness fallback supports optimistic UI, projection reconciliation, and async export-ready signaling.
+- The canonical `StatusKind` mapping and aria-live split are explicitly architectural patterns, not per-screen inventions.
+- D9 defines bUnit and Playwright a11y gates for the WCAG 2.2 AA UX floor.
+- D11 assigns the picker re-skin and WAI-ARIA combobox work to a concrete implementation story.
+- AppHost/deploy architecture accounts for `parties-ui`, OIDC config, ServiceDefaults, health/telemetry, containerization, ingress, and TLS.
+
+No architectural contradiction was found against the final UX spines.
 
 ### Alignment Issues
 
-No blocking UX/PRD/architecture misalignment was found.
+No blocking UX alignment issues were found.
 
-Documented non-blocking constraints:
+Non-blocking constraints to preserve during implementation:
 
-- The UX validation report leaves a phone-reflow mock for Admin master-detail as residual, but the architecture and epics specify the required sheet/full-screen behavior and focus contract.
-- The party picker has explicit design debt: re-skin from legacy FAST tokens to Fluent 2 tokens and implement full WAI-ARIA combobox semantics. Architecture D11 and Epic 2 Story 2.5 cover this.
-- Architecture notes that `StatusKind`, freshness, and shared domain components currently live in the UI host and need an explicit sharing/composition decision before RCL pages consume them directly. This is an implementation-boundary concern, not a UX contradiction.
-- UX review residuals around small decorative controls and secondary text are classified as illustrative mockup residuals; the real implementation must enforce the documented target sizing and consumer secondary-text floor.
+- The UX validation report says all critical and high issues were resolved in the spines. Implementers must follow the spines over mockups to avoid reintroducing raw-teal button fills, blanket-polite error announcements, non-semantic controls, hard erasure/export timing promises, default-On consent, or success-green erasure acknowledgement.
+- Architecture notes the host-owned `StatusKind`, freshness, and shared domain components may need a sharing/composition decision before AdminPortal or ConsumerPortal RCLs consume them directly. Do not create RCL-to-UI-host references to reach these primitives.
+- The picker still carries explicit design debt: re-skin from legacy FAST tokens to Fluent 2 tokens and implement the full WAI-ARIA combobox pattern.
+- Production KMS remains a deployment prerequisite before processing real regulated EU PII; this is outside UX scope but affects release readiness.
+- Architecture lists nice-to-have follow-ups for SignalR reconnect/dedupe specifics, tenant-switch reset, async export notification detail, Blazor Server scaling, and FluentUI RC-to-GA tracking. These are not UX/PRD blockers but should not be lost.
 
 ### Warnings
 
-- UX is not missing; it is complete and final.
-- No warning for absent UX documentation is needed.
-- Keep the UX spines authoritative over mockups during implementation. Several historical critical/high review findings were resolved in the spines and mockups; reintroducing raw teal text-bearing button fills, blanket-polite errors, non-semantic controls, hard erasure/export timing promises, or consent defaults On would violate the accepted UX contract.
+- UX exists and is final; no missing-UX warning applies.
+- The static mockups are illustrative only. Any story acceptance or implementation decision must use `DESIGN.md`, `EXPERIENCE.md`, and architecture patterns as the source of truth.
 
 ## Step 5: Epic Quality Review
 
-### Review Scope
+### Scope Classification
 
-Reviewed `_bmad-output/planning-artifacts/epics.md`, including 7 epics and 37 listed implementation stories:
+The planning set now has three distinct scopes:
 
-- Epic 1: 10 stories
-- Epic 2: 5 stories
-- Epic 3: 6 stories
-- Epic 4: 5 stories
-- Epic 5: 4 stories
-- Epic 6: 7 stories
-- Epic 7: deferred placeholder, no implementation stories
+- Epics 1-5: PRD feature scope. These are user-facing and cover all 9 PRD FRs.
+- Epic 6: Conditional Class A maintenance scope. It is technical consolidation, supports NFR9/maintainability, and covers no new PRD FRs.
+- Epic 7: Post-MVP Class B platform maintenance scope. It is approved for backlog planning, covers no new PRD FRs, and has no executable `7-*` story files yet.
+
+This classification is essential. Epics 6 and 7 are not acceptable as product-feature epics, but they are acceptable as explicitly labeled maintenance tracks if they are not used as product FR readiness evidence.
 
 ### Epic Structure Validation
 
 | Epic | User Value Focus | Independence | Quality Result |
-|---|---|---|---|
-| Epic 1: App Foundation & Secure Sign-In | Mixed but acceptable: several enabler stories, but the epic explicitly defines the user outcome of sign-in, role landing, fail-closed binding, freshness, and accessibility. | Stands alone as the foundation; no later epic is required for its core outcome. | Pass with caution on technical enabler density. |
-| Epic 2: Admin - Party Records Management | Strong: Admin can search, view, create, edit, and link parties. | Depends only on Epic 1. Does not require Epic 3 to function; GDPR links are affordances, not acceptance of GDPR surfaces. | Pass with numbering/build-order issue. |
-| Epic 3: Admin - GDPR / DPO Operations | Strong: DPO can fulfill and prove data-subject obligations. | Depends on Epic 1 and Epic 2 detail navigation; no future epic dependency. Story 3.6 depends on prior Story 3.5 and is documented as complete. | Pass. |
-| Epic 4: Consumer - Identity Binding & My Profile | Strong: Consumer can be bound fail-closed, view, and correct own data. | Depends on Epic 1, not Epic 5. | Pass, with historical oversized Story 4.2 noted. |
-| Epic 5: Consumer - Consent, Data Export & Erasure | Strong: Consumer can manage consent, export, erase, and inspect processing metadata. | Depends on Epic 4 own-data foundation; no future dependency. | Pass. |
-| Epic 6: Internal Code Consolidation (Class A) | Weak as product epic: maintainer value and NFR9 support, but explicitly no user-visible behavior and no PRD FRs. | Depends on Epics 1-5 being complete; can be executed as post-MVP maintenance scope. | Major issue if treated as product epic; acceptable only as clearly labeled technical-debt/change-proposal scope. |
-| Epic 7: Platform Alignment - adopt Commons/EventStore (Class B, deferred) | Fails implementation-epic standard: technical platform alignment placeholder, no user-facing value, no implementation-ready stories. | Deferred and architect-gated; must not be a developer dependency. | Critical if included in implementation-ready scope; acceptable only as excluded/deferred planning placeholder. |
+| --- | --- | --- | --- |
+| Epic 1: App Foundation & Secure Sign-In | Pass. The epic outcome is user sign-in, role landing, fail-closed binding, own-scope protection, freshness, and a11y foundation. Some stories are enablers, but the epic is framed around a user-observable security and access outcome. | Pass. It stands up the app and can be validated independently. | Implementation-ready and marked done in sprint status. |
+| Epic 2: Admin - Party Records Management | Pass. Admin can search, filter, view, create, edit, and link parties. | Pass after remediation. Build order is explicitly `2.1 -> 2.2 -> 2.3 -> 2.5 -> 2.4`, so the picker dependency lands before relationship linking in create/edit. | Implementation-ready and marked done. |
+| Epic 3: Admin - GDPR / DPO Operations | Pass. DPO/Admin can fulfill GDPR operations and prove erasure. | Pass. Depends on Epic 2 detail/GDPR entry points and on Story 3.5 before 3.6; both are sequenced and completed. | Implementation-ready and marked done. |
+| Epic 4: Consumer - Identity Binding & My Profile | Pass. Consumer gets fail-closed binding plus own-profile view/edit. | Pass. Story 4.1 is correctly classified as a completed discovery prerequisite; Story 4.2 implements binding before the consumer data surfaces. | Implementation-ready and marked done. |
+| Epic 5: Consumer - Consent, Data Export & Erasure | Pass. Consumer controls consent, export, erasure, and processing transparency. | Pass. Requires Epic 4 self-scoping and binding, which are complete. | Implementation-ready and marked done. |
+| Epic 6: Internal Code Consolidation | Technical maintenance, not product user value. It must not be treated as feature delivery. | Conditional pass as maintenance. The seven story files are ready-for-dev and independently scoped around one consolidation anchor each. | Ready only as approved Class A maintenance; not PRD feature scope. |
+| Epic 7: Platform Alignment | Technical platform maintenance, not product user value. | Not executable yet. The backlog has ordering and gates, but no detailed `7-*` implementation story files exist. | Backlog only; not implementation-ready for developer execution. |
 
-### Critical Violations
+### Story Quality Assessment
 
-1. Epic 7 is not implementation-ready.
-   - Evidence: The epic states it is deferred, architect-gated, has no implementation stories, and no `7-*` story files should be created until PM/Architect approval.
-   - Best-practice violation: A technical platform-alignment placeholder is not an implementation-ready epic and does not deliver standalone user value.
-   - Impact: If Epic 7 is included in Phase 4 implementation scope, developers will be handed undefined cross-submodule work without approved design, sequencing, migration compatibility, or rollback plan.
-   - Recommendation: Exclude Epic 7 from implementation readiness. Track it as an architecture backlog item until a separate PM/Architect-approved design produces user/value framing, story slices, dependency sequencing, and acceptance criteria.
+Epics 1-5:
 
-### Major Issues
+- Stories generally use user-story form and include specific, testable Given/When/Then acceptance criteria.
+- Error and degraded states are covered: stale/degraded reads, validation rejection, forbidden/tenant-unavailable, erased/gone tombstones, transient failures, retry behavior, and accessibility announcements.
+- Security and privacy criteria are concrete: server-side tokens, no Consumer list/search, `aggregateId == party_id`, fail-closed claim resolution, in-memory typed-name comparison, and no PII in copy/logs/telemetry.
+- The brownfield starter requirement is satisfied: Epic 1 Story 1 stands up the `Hexalith.Parties.UI` host from the FrontComposer shell-host pattern and wires solution/AppHost integration.
 
-1. Epic 6 is a technical consolidation epic, not a product-value epic.
-   - Evidence: It states "no behavior change except the approved A8 filename normalization" and "no new PRD FRs."
-   - Best-practice concern: The epic is framed around maintainers removing duplication rather than a user achieving a product outcome.
-   - Impact: This can be implementation-ready as approved Class A maintenance work, but it should not be confused with PRD feature delivery.
-   - Recommendation: Keep Epic 6 explicitly labeled as post-MVP maintenance/change-proposal scope supporting NFR9 and architecture maintainability. Do not use its completion as evidence of additional PRD FR delivery. If the planning system requires product-value epics only, move Epic 6 to a technical-debt backlog with the same story-level ACs.
+Epic 6:
 
-2. Epic 2 story numbering conflicts with declared build order.
-   - Evidence: The document declares build order `2.1 -> 2.2 -> 2.3 -> 2.5 -> 2.4`, while Story 2.4 appears before Story 2.5 and references Story 2.5 for picker-backed relationship linking.
-   - Best-practice concern: Story 2.4 has a forward dependency by numbering, even though the text correctly mitigates it by requiring 2.5 before 2.4 or narrowing 2.4.
-   - Impact: Story execution tools or humans may pick Story 2.4 before Story 2.5 and either block or silently defer part of its acceptance.
-   - Recommendation: Renumber or reorder Story 2.5 before Story 2.4, or split Story 2.4 into a core create/edit story and a later relationship-linking story after the picker story.
+- Story files exist and are ready-for-dev.
+- Acceptance criteria are testable and mostly independent: each story consolidates one shared anchor category and names boundary tests.
+- The stories are intentionally technical. That is acceptable only because Epic 6 is explicitly Class A maintenance, not product feature scope.
 
-3. Story 4.2 is acknowledged as oversized.
-   - Evidence: The story itself says it was an oversized implementation slice, though already complete and reviewed.
-   - Best-practice concern: If this pattern is copied, future identity-provisioning stories could become too broad to verify independently.
-   - Impact: Not an active blocker because the story is complete, but it is a process risk.
-   - Recommendation: Preserve the note that future identity-provisioning enhancements must split along service, store, and IdP adapter boundaries.
+Epic 7:
 
-### Minor Concerns
-
-1. Historical status notes are mixed into story specifications.
-   - Evidence: Stories 3.5, 3.6, 4.1, and 4.2 contain completion/status notes in the story body.
-   - Impact: Useful for readiness reconciliation, but it blurs executable story spec vs implementation evidence.
-   - Recommendation: Keep the notes for this brownfield readiness run, but future story files should separate status/evidence from acceptance criteria.
-
-2. Epic 1 has high enabler density.
-   - Evidence: Stories include host setup, OIDC, self-authorization, status mapping, SignalR, shared components, a11y gate, and deploy.
-   - Impact: The epic remains acceptable because it includes a user-outcome statement and the starter-template story is required by architecture, but the risk is that developers report infrastructure progress without demonstrating role landing and fail-closed behavior.
-   - Recommendation: Preserve the user outcome gate in Epic 1 and require verification through bUnit/Playwright and role-routing tests before considering the epic done.
-
-3. Some deferred/non-MVP items remain near implementation content.
-   - Evidence: Production KMS, gateway self-principal, temporal queries, semantic/graph search, and Epic 7 platform alignment are documented near implementation material.
-   - Impact: Clear enough today, but a story generator could accidentally pull deferred items into the active sprint scope.
-   - Recommendation: Keep deferred items in explicitly marked "Out of MVP" or "Deferred" sections and exclude them from story creation until approved.
+- The approved implementation plan provides a coherent backlog and sequence.
+- The backlog slices are not yet executable implementation stories. Sprint status correctly keeps them as backlog.
+- Developer execution must wait for detailed `7-*` story files created by the story workflow.
 
 ### Dependency Analysis
 
-- Epic dependencies are structurally valid for Epics 1-5: `1 -> {2, 4}`, `2 -> 3`, `4 -> 5`.
-- Epic 6 is post-MVP maintenance and depends on Epics 1-5 being complete; this is acceptable if it remains outside PRD FR delivery.
-- Epic 7 is not a dependency for Epic 6 and is explicitly deferred; this is correct.
-- No circular dependencies were found.
-- Within-epic dependencies are mostly valid, except the Epic 2 numbering/build-order mismatch noted above.
-- Database/entity creation timing check: no database or ORM table-creation violation was found. The architecture explicitly avoids new Parties persistence for the UI tier; identity binding uses an IdP claim and small binding/audit store outside the Parties event stream.
+No active forward dependency was found in PRD feature scope:
 
-### Acceptance Criteria Review
+- Epic 2's previous picker/create-edit sequencing issue is resolved by ordering Story 2.5 before Story 2.4.
+- Story 3.6 depends on Story 3.5, and both are completed.
+- Story 4.2 depends on Story 4.1, and both are completed.
+- Epic 5 depends on Epic 4 binding/self-scope, and Epic 4 is completed.
 
-- Most stories use Given/When/Then acceptance criteria with testable outcomes.
-- Error and degraded states are well represented: stale/degraded reads, validation rejection, forbidden/tenant-unavailable, erased/gone tombstones, transient failures, and accessibility announcements are covered.
-- Security and privacy criteria are specific: tokens server-side only, no Consumer list/search, fail-closed claim resolution, `aggregateId == party_id`, typed-name comparison in memory, no PII in logs/copy.
-- Architecture-specific starter requirement is satisfied: Story 1.1 sets up the initial `Hexalith.Parties.UI` host from the FrontComposer shell-host pattern and wires it into the solution/AppHost.
-- Brownfield integration is adequately represented: stories reference the EventStore gateway, typed Parties clients, existing AdminPortal, ConsumerPortal RCL, picker custom element, AppHost, deploy manifests, and existing GDPR backend seams.
+Epic 7 contains planned internal dependencies:
+
+- `7.1 -> 7.2 -> 7.3 -> 7.4 -> 7.5 -> 7.6 -> 7.7 -> 7.8`
+- 7.5 requires 7.4; 7.7 requires 7.6; 7.8 runs last.
+
+Those dependencies are valid as a backlog plan, but they confirm Epic 7 is not a set of independent executable story files yet.
+
+### Database / Entity Creation Timing
+
+No database-table timing violation was found. This system is event-sourced/CQRS and does not introduce upfront relational table creation. The identity-binding audit store appears only where the binding story needs it and is explicitly outside the Parties event stream.
+
+### Special Implementation Checks
+
+Starter template requirement: Pass. Architecture selected the FrontComposer shell-host pattern, and Epic 1 Story 1 covers initial host setup, dependencies, solution wiring, AppHost wiring, no DAPR sidecar, and Release build gate.
+
+Brownfield integration: Pass. Stories reference existing EventStore gateway, typed Parties clients, AdminPortal RCL, ConsumerPortal RCL, picker custom element, AppHost, deploy manifests, D7 projection-query/command seams, and current sprint-status evidence.
 
 ### Best Practices Compliance Checklist
 
 | Check | Result |
-|---|---|
-| Epics deliver user value | Pass for Epics 1-5; conditional for Epic 6; fail/deferred for Epic 7. |
-| Epics can function independently in sequence | Pass for Epics 1-5; Epic 6 valid only as post-MVP maintenance; Epic 7 excluded. |
-| Stories appropriately sized | Mostly pass; Story 4.2 historical oversize noted. |
-| No forward dependencies | Mostly pass; Epic 2 Story 2.4/2.5 numbering issue. |
-| Database tables created when needed | Not applicable; no upfront database creation issue found. |
-| Clear acceptance criteria | Pass overall. |
-| Traceability to FRs maintained | Pass for Epics 1-5; Epic 6/7 correctly claim no new PRD FRs. |
+| --- | --- |
+| Epics deliver user value | Pass for Epics 1-5. Conditional/technical for Epic 6. Fail as product-feature epic for Epic 7, but explicitly allowed only as post-MVP maintenance backlog. |
+| Epics can function independently in sequence | Pass for Epics 1-5. Conditional pass for Epic 6 maintenance. Epic 7 backlog is sequenced but not executable yet. |
+| Stories appropriately sized | Mostly pass. Historical Story 4.2 was oversized but is completed; no retroactive split recommended. Epic 7 needs story files before execution. |
+| No forward dependencies | Pass in active PRD feature scope after Epic 2 sequence remediation. |
+| Database tables created when needed | Not applicable / pass; no upfront relational schema issue. |
+| Clear acceptance criteria | Pass for Epics 1-6. Epic 7 backlog acceptance exists at plan level, but detailed implementation story files are still required. |
+| Traceability to FRs maintained | Pass for Epics 1-5. Epic 6/7 correctly claim no new PRD FRs. |
+
+### Quality Findings by Severity
+
+#### Critical Violations
+
+No unresolved critical violation was found in the PRD feature scope for Epics 1-5.
+
+Contained critical rule: Epics 6 and 7 are technical epics. They would be critical violations if presented as product-feature epics or as evidence of additional PRD FR delivery. The current documents contain this risk by explicitly classifying Epic 6 as maintenance and Epic 7 as post-MVP platform maintenance with no new PRD FRs.
+
+#### Major Issues
+
+1. Epic 7 is not developer-executable yet.
+   - Evidence: sprint status keeps all 7.x entries as backlog and no `7-*` story files exist.
+   - Impact: running developer workflow directly from the plan would skip story-level context, acceptance detail, and implementation guardrails.
+   - Recommendation: create detailed `7-*` story files before any Epic 7 development.
+
+2. Epic 6 is technical maintenance, not user-value feature delivery.
+   - Evidence: Epic 6 covers no new PRD FRs and consolidates internal constants/helper logic.
+   - Impact: it should not be counted as product readiness or user-facing roadmap completion.
+   - Recommendation: execute only as approved Class A maintenance with build/test/boundary gates.
+
+3. Historical Story 4.2 was oversized.
+   - Evidence: epics document explicitly notes it was an oversized implementation slice but already complete and reviewed.
+   - Impact: no current implementation blocker, but future identity-provisioning enhancements should be split by service/store/IdP adapter boundaries.
+   - Recommendation: do not retroactively split completed work; apply the split rule to future enhancements.
+
+#### Minor Concerns
+
+1. Historical status notes are mixed into some story descriptions.
+   - Impact: useful for brownfield traceability, but noisy for future executable story files.
+   - Recommendation: keep status evidence in sprint status, retrospectives, or story Dev Notes rather than acceptance criteria.
+
+2. Epic 1 contains several enabler stories.
+   - Impact: acceptable because the epic outcome is user-observable, but individual enabler stories need strict acceptance evidence.
+   - Recommendation: keep tying enabler completion to user-facing sign-in, routing, scope, freshness, a11y, and deploy outcomes.
+
+3. Epic 7 backlog has technical sequencing dependencies by design.
+   - Impact: acceptable for platform migration planning, but not for a product-feature epic.
+   - Recommendation: preserve the adapter-first sequencing and do not parallelize 7.5 before 7.4 or 7.7 before 7.6.
 
 ### Epic Quality Summary
 
-Epics 1-5 are strong enough for implementation-readiness traceability: they deliver user-facing outcomes, have explicit FR coverage, and include concrete testable acceptance criteria. The document is honest about brownfield completion status and resolved dependencies.
+Epics 1-5 meet implementation-readiness quality standards and are already marked done in sprint status. They deliver user-visible outcomes, maintain FR traceability, handle error/degraded/privacy states, and have corrected known sequencing issues.
 
-The active readiness risk is scope hygiene: Epic 6 and Epic 7 must not be presented as ordinary PRD feature epics. Epic 6 can proceed as approved internal consolidation/maintenance work; Epic 7 must remain excluded until architect-gated planning is complete.
+Epic 6 is ready only as maintenance work. Its story files are present and testable, but the epic is technical by nature and must remain outside product-feature readiness.
+
+Epic 7 is not ready for developer execution. It has an approved PM/Architect plan and a sequenced backlog, but no detailed implementation story files. It is valid planning backlog, not an implementation-ready epic.
 
 ## Summary and Recommendations
 
 ### Overall Readiness Status
 
-NEEDS WORK.
+NEEDS WORK for the full planning set.
 
-Epics 1-5 are ready from a requirements-traceability perspective: the PRD has 9 FRs, all 9 are covered by the epics, UX documentation is final and aligned, and architecture supports the PRD/UX needs.
+The verdict is scoped:
 
-The full planning set is not cleanly implementation-ready because Epic 7 is explicitly deferred and not implementation-ready, Epic 6 is technical consolidation rather than PRD feature delivery, and Epic 2 has a story numbering/build-order mismatch.
+- READY / COMPLETE: PRD feature scope, Epics 1-5. All 9 PRD FRs are covered, UX and architecture are aligned, and sprint status marks the stories done.
+- READY WITH CONDITIONS: Epic 6. It has ready-for-dev story files, but it is maintenance work only and must not be counted as product-feature delivery.
+- NOT READY FOR DEVELOPMENT: Epic 7. It has an approved PM/Architect implementation plan and backlog, but no detailed `7-*` story files.
 
 ### Critical Issues Requiring Immediate Action
 
-1. Epic 7 must be excluded from implementation-ready scope.
-   - It is a deferred, architect-gated platform placeholder with no implementation stories.
-   - Do not create developer stories from Epic 7 until PM/Architect planning approves target destinations, package/versioning, migration compatibility, and rollback.
+No unresolved critical issue blocks the PRD feature scope for Epics 1-5.
 
-2. Epic 6 must be treated as maintenance/change-proposal scope, not product FR delivery.
-   - It supports NFR9 and maintainability, but it covers no new PRD FRs and has no user-visible behavior except the approved filename normalization.
-   - It can proceed only if stakeholders intentionally accept it as internal consolidation work.
+Immediate guardrails before additional implementation:
 
-3. Epic 2 story ordering should be corrected before automated story execution.
-   - Story 2.4 references picker-backed relationship linking that depends on Story 2.5.
-   - Reorder/renumber Story 2.5 before Story 2.4, or split Story 2.4 so the relationship-linking acceptance lands after the picker story.
+1. Do not treat Epic 7 as developer-executable until detailed `7-*` story files exist.
+2. Do not count Epic 6 or Epic 7 as PRD feature delivery; both cover no new PRD FRs.
+3. Keep the UX spines and architecture patterns authoritative over illustrative mockups during any remaining UI work.
 
 ### Recommended Next Steps
 
-1. Mark implementation scope explicitly:
-   - Ready: Epics 1-5 for PRD feature traceability.
-   - Conditional: Epic 6 as approved Class A maintenance.
-   - Excluded: Epic 7 until architect-gated planning is complete.
-
-2. Patch `epics.md` for execution hygiene:
-   - Move or renumber Story 2.5 before Story 2.4.
-   - Keep the Epic 6 "no new PRD FRs" warning prominent.
-   - Keep Epic 7 in a deferred/planning section separate from implementation-ready epics.
-
-3. Preserve UX contract during implementation:
-   - Use the UX spines over mockups when conflicts occur.
-   - Do not reintroduce resolved UX defects: raw teal text-bearing button fills, blanket-polite errors, non-semantic controls, hard erasure/export timing promises, or consent defaults On.
-
-4. Keep implementation evidence separate from story acceptance criteria in future story files:
-   - Historical status notes are useful for this brownfield readiness run, but future executable stories should separate status/evidence from Given/When/Then acceptance criteria.
-
-5. If Epic 6 proceeds next, run story creation/development only for Epic 6 after confirming it is maintenance scope, not a PRD feature epic.
+1. If the next work is Epic 6, proceed only under the Class A maintenance label and run the relevant build, unit, boundary, and fitness tests for each story.
+2. Before Epic 7 development, create story files for 7.1 through 7.8 from the approved plan, starting with 7.1 target-destination ADR and release/rollback plan.
+3. Keep sprint status explicit: Epics 1-5 done, Epic 6 ready-for-dev maintenance, Epic 7 backlog until story files are created.
+4. Preserve the UX contract in implementation: no raw-teal text-bearing button fills, no blanket-polite errors, no non-semantic controls, no hard erasure/export timing promises, no default-On consent, and no success-green erasure acknowledgement.
+5. Preserve architecture guardrails: Consumer self-scope only through the accessor, no browser tokens, EventStore gateway boundary, no public actor-host API, no RCL reference back to the UI host for shared status/freshness primitives, no recursive submodules.
 
 ### Final Note
 
-This assessment identified 7 issues across 3 severity categories:
+This assessment identified 6 actionable issues or constraints across 2 severity categories:
 
-- 1 critical violation: Epic 7 is not implementation-ready.
-- 3 major issues: Epic 6 technical-epic framing, Epic 2 story order mismatch, historical Story 4.2 oversizing.
-- 3 minor concerns: status notes mixed into story specs, Epic 1 enabler density, and deferred items near implementation content.
+- 3 major issues: Epic 7 lacks executable story files, Epic 6 is technical maintenance rather than feature delivery, and historical Story 4.2 was oversized.
+- 3 minor concerns: historical status notes are mixed into story text, Epic 1 contains dense enabler work that must stay tied to user outcomes, and Epic 7 has technical sequencing dependencies that are valid only as platform-maintenance backlog.
 
-The product requirements themselves are in good shape: all PRD FRs are covered, UX is present and aligned, and architecture supports the intended experience. Address the scope and story-order issues before proceeding with automated implementation planning.
+The product requirements are solid: PRD extraction found 9 FRs and 9 NFRs, epic coverage is 100%, UX is final and aligned, and architecture supports the intended experience. The remaining work is scope hygiene and execution gating, not requirements discovery.
