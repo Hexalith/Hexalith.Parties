@@ -1,5 +1,5 @@
 # generated: 2026-06-21T18:55:59+02:00
-# last_updated: 2026-06-29T12:38:53+02:00
+# last_updated: 2026-06-29T13:31:04+02:00
 # project: parties
 # project_key: NOKEY
 # tracking_system: file-system
@@ -41,7 +41,7 @@
 # - Retrospective appends its action items to action_items; sprint-status surfaces open ones
 
 generated: 2026-06-21T18:55:59+02:00
-last_updated: 2026-06-29T12:38:53+02:00
+last_updated: 2026-06-29T13:31:04+02:00
 project: parties
 project_key: NOKEY
 tracking_system: file-system
@@ -119,9 +119,9 @@ development_status:
   # PM/Architect implementation plan approved 2026-06-29:
   # _bmad-output/planning-artifacts/epic-7-implementation-plan-2026-06-29.md.
   # Post-MVP platform maintenance only; no new PRD functional requirements.
-  # Story files do not exist yet, so all Epic 7 entries remain backlog.
-  epic-7: backlog
-  7-1-platform-target-destination-adr-and-release-rollback-plan: backlog
+  # Story 7.1 is done (review complete); remaining Epic 7 entries remain backlog.
+  epic-7: in-progress
+  7-1-platform-target-destination-adr-and-release-rollback-plan: done
   7-2-commons-service-defaults-correlation-problemdetails-and-paging: backlog
   7-3-search-normalization-and-frontcomposer-ui-orchestration-convergence: backlog
   7-4-projection-platform-compatibility-adapter: backlog
