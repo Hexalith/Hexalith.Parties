@@ -2924,7 +2924,7 @@ public sealed class PartiesAdminPortalComponentTests : BunitContext
             LastModifiedAt = DateTimeOffset.Parse("2026-05-02T00:00:00Z"),
         });
         // Server-supplied FileName is intentionally an attacker-style PII-leaking name to prove
-        // the UI re-derives a safe non-PII filename via GdprExportFileNameBuilder (D2 defense-in-depth).
+        // the UI re-derives a safe non-PII filename via PartyExportFileName (D2 defense-in-depth).
         api.EnqueueExport(new AdminPortalExportDownload("attacker-Export Party-leak.json", "text/html", [0x7B, 0x7D]));
         Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
 
@@ -2939,7 +2939,8 @@ public sealed class PartiesAdminPortalComponentTests : BunitContext
         {
             api.ExportRequests.Single().ShouldBe("party-export");
             cut.Markup.ShouldContain("Export prepared");
-            cut.Markup.ShouldContain("party-party-export-export-");
+            cut.Markup.ShouldContain("party-party-export-");
+            cut.Markup.ShouldNotContain("party-party-export-export-");
             cut.Markup.ShouldContain("Z.json");
             // The transport-supplied attacker filename must never reach the UI.
             cut.Markup.ShouldNotContain("attacker-Export Party-leak.json");
@@ -2990,7 +2991,8 @@ public sealed class PartiesAdminPortalComponentTests : BunitContext
             JSInterop.Invocations.Count(invocation =>
                 invocation.Identifier == "HexalithPartiesAdminPortal.downloadJson").ShouldBe(3);
             cut.Markup.ShouldContain("Export prepared");
-            cut.Markup.ShouldContain("party-party-export-status-export-");
+            cut.Markup.ShouldContain("party-party-export-status-");
+            cut.Markup.ShouldNotContain("party-party-export-status-export-");
             cut.Markup.ShouldNotContain("RestrictedExported");
             cut.Markup.ShouldNotContain("PersonalDataUnavailable");
             cut.Markup.ShouldNotContain("Payload Secret");
@@ -3326,7 +3328,8 @@ public sealed class PartiesAdminPortalComponentTests : BunitContext
         {
             api.ExportRequests.Single().ShouldBe("party-erased-direct");
             cut.Markup.ShouldContain("Export prepared");
-            cut.Markup.ShouldContain("party-party-erased-direct-export-");
+            cut.Markup.ShouldContain("party-party-erased-direct-");
+            cut.Markup.ShouldNotContain("party-party-erased-direct-export-");
             cut.Markup.ShouldNotContain("server-Erased-Direct-Secret.json");
             cut.Markup.ShouldNotContain("Erased Direct Secret");
         });

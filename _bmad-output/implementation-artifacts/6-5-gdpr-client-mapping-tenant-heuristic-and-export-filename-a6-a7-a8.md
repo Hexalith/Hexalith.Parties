@@ -4,7 +4,7 @@ baseline_commit: 4a3b518
 
 # Story 6.5: GDPR client mapping, tenant heuristic, and export filename (A6/A7/A8)
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -22,28 +22,28 @@ so that admin and consumer GDPR paths classify failures and export names consist
 
 ## Tasks / Subtasks
 
-- [ ] Centralize GDPR outcome mapping (AC: 1, 5)
-  - [ ] Move or expose the single mapping surface from `Hexalith.Parties.Client`.
-  - [ ] Update AdminPortal callers to use the client-owned mapping.
-  - [ ] Remove duplicate status-code tables.
-- [ ] Centralize tenant text heuristic (AC: 2, 5)
-  - [ ] Add `PartiesTextHeuristics.ContainsTenant` in Contracts.
-  - [ ] Replace local heuristic copies.
-  - [ ] Keep heuristic behavior bounded and deterministic.
-- [ ] Centralize export filename building (AC: 3-5)
-  - [ ] Add `PartyExportFileName.Build` in Contracts.
-  - [ ] Use UTC timestamps and the canonical `yyyyMMddTHHmmssZ` shape.
-  - [ ] Sanitize tenant/party inputs according to existing safe filename behavior.
-  - [ ] Replace AdminPortal and Client builders.
-- [ ] Add tests (AC: 1-5)
-  - [ ] Cover representative HTTP status to GDPR outcome mapping.
-  - [ ] Cover tenant heuristic positives/negatives without raw detail leakage.
-  - [ ] Cover canonical filename format, UTC handling, invalid characters, and no PII.
-  - [ ] Update tests expecting the old AdminPortal `-export-` filename shape.
-- [ ] Validate (AC: 5)
-  - [ ] Run `git diff --check`.
-  - [ ] Run focused Client/AdminPortal/GDPR tests.
-  - [ ] Run solution build if available.
+- [x] Centralize GDPR outcome mapping (AC: 1, 5)
+  - [x] Move or expose the single mapping surface from `Hexalith.Parties.Client`.
+  - [x] Update AdminPortal callers to use the client-owned mapping.
+  - [x] Remove duplicate status-code tables.
+- [x] Centralize tenant text heuristic (AC: 2, 5)
+  - [x] Add `PartiesTextHeuristics.ContainsTenant` in Contracts.
+  - [x] Replace local heuristic copies.
+  - [x] Keep heuristic behavior bounded and deterministic.
+- [x] Centralize export filename building (AC: 3-5)
+  - [x] Add `PartyExportFileName.Build` in Contracts.
+  - [x] Use UTC timestamps and the canonical `yyyyMMddTHHmmssZ` shape.
+  - [x] Sanitize tenant/party inputs according to existing safe filename behavior.
+  - [x] Replace AdminPortal and Client builders.
+- [x] Add tests (AC: 1-5)
+  - [x] Cover representative HTTP status to GDPR outcome mapping.
+  - [x] Cover tenant heuristic positives/negatives without raw detail leakage.
+  - [x] Cover canonical filename format, UTC handling, invalid characters, and no PII.
+  - [x] Update tests expecting the old AdminPortal `-export-` filename shape.
+- [x] Validate (AC: 5)
+  - [x] Run `git diff --check`.
+  - [x] Run focused Client/AdminPortal/GDPR tests.
+  - [x] Run solution build if available.
 
 ## Dev Notes
 
@@ -68,3 +68,60 @@ so that admin and consumer GDPR paths classify failures and export names consist
 - `src/Hexalith.Parties.Client/AdminPortal/HttpAdminPortalGdprClient.cs`
 - `docs/gdpr-portability-export.md`
 
+## Dev Agent Record
+
+### Debug Log
+
+- 2026-06-29T11:33:49+02:00 - Preserved existing `baseline_commit: 4a3b518`; moved story and sprint status to `in-progress`.
+- 2026-06-29T11:40:00+02:00 - Added red-phase tests for Contracts helpers, client GDPR outcome mapping, and AdminPortal filename expectations.
+- 2026-06-29T11:45:03+02:00 - Validated with focused direct xUnit runs because `dotnet test`/`scripts/test.ps1` MTP build target emitted only generic build-failed output in this workspace.
+
+### Completion Notes
+
+- Exposed `HttpAdminPortalGdprClient.MapGdprOutcome` as the client-owned GDPR HTTP status mapping surface and updated AdminPortal GDPR exception handling to call it.
+- Added `PartiesTextHeuristics.ContainsTenant` in Contracts and replaced local tenant-text heuristic copies in Client/AdminPortal paths.
+- Added `PartyExportFileName.Build` in Contracts, removed the AdminPortal-specific filename builder, and updated AdminPortal and Client export paths to use the shared UTC `yyyyMMddTHHmmssZ` filename shape.
+- Updated tests to cover mapping, heuristic, filename canonicalization/sanitization, public API snapshot additions, and the approved AdminPortal filename shape change.
+- Full Contracts/Client direct test runs still hit package-test infrastructure failures around nested `dotnet pack --artifacts-path`; focused story tests pass and the solution builds with the explicit `HexalithCommonsRoot` property.
+
+### File List
+
+- `_bmad-output/implementation-artifacts/6-5-gdpr-client-mapping-tenant-heuristic-and-export-filename-a6-a7-a8.md`
+- `_bmad-output/implementation-artifacts/sprint-status.yaml`
+- `src/Hexalith.Parties.AdminPortal/Components/PartyGdprOperationsPanel.razor`
+- `src/Hexalith.Parties.AdminPortal/Services/GdprExportFileNameBuilder.cs` (deleted)
+- `src/Hexalith.Parties.AdminPortal/Services/PartiesAdminPortalApiClient.cs`
+- `src/Hexalith.Parties.AdminPortal/_Imports.razor`
+- `src/Hexalith.Parties.Client/AdminPortal/HttpAdminPortalGdprClient.cs`
+- `src/Hexalith.Parties.Contracts/PartiesTextHeuristics.cs`
+- `src/Hexalith.Parties.Contracts/PartyExportFileName.cs`
+- `tests/Hexalith.Parties.AdminPortal.Tests/Components/PartiesAdminPortalComponentTests.cs`
+- `tests/Hexalith.Parties.Client.Tests/AdminPortal/AdminPortalGdprOperationContractTests.cs`
+- `tests/Hexalith.Parties.Contracts.Tests/AdminPortal/AdminPortalGdprPrivacyGuardrailTests.cs`
+- `tests/Hexalith.Parties.Contracts.Tests/Package/ContractsPublicApiSnapshot.txt`
+- `tests/Hexalith.Parties.Contracts.Tests/PartiesTextHeuristicsTests.cs`
+- `tests/Hexalith.Parties.Contracts.Tests/PartyExportFileNameTests.cs`
+- `tests/e2e/specs/admin-parties-list.spec.ts`
+
+### Change Log
+
+- 2026-06-29: Centralized GDPR mapping, tenant heuristic, and export filename helpers for story 6.5; updated tests and validation evidence.
+- 2026-06-29: Senior Developer Review (AI) — auto-fixed File List gap (e2e spec) and strengthened `MapGdprOutcome` test coverage (title/globalErrors tenant detection, 400/408/429/unknown status codes).
+
+## Senior Developer Review (AI)
+
+**Reviewer:** Jérôme Piquot — 2026-06-29
+**Outcome:** Approve (all AC implemented; no CRITICAL/HIGH findings)
+
+### Validation evidence
+
+- Builds clean (`-m:1`): Contracts, Client, AdminPortal, and all three test projects — 0 warnings, 0 errors.
+- Focused tests pass via direct xUnit v3 runners: Contracts 16/16 (helpers + privacy guardrails), Contracts public-API snapshot 1/1, Client GDPR 33/33 (after coverage additions), AdminPortal components 111/111.
+- `git diff --check` clean. No lingering `GdprExportFileNameBuilder` / `BuildSafeExportFileName` / duplicate `ContainsTenant` references remain in `src/`.
+
+### Findings and resolutions
+
+- **[MEDIUM][fixed] File List gap.** `tests/e2e/specs/admin-parties-list.spec.ts` was modified (filename regex updated to canonical `T...Z` shape) but absent from the story File List. Added.
+- **[MEDIUM][fixed] Test coverage gap.** The consolidated `HttpAdminPortalGdprClient.MapGdprOutcome` added `title` and `globalErrors` tenant-detection branches, but the new theory only exercised the `detail` source. Added facts covering title-based and globalErrors-based `MissingTenant` detection plus a forbidden-without-signals case.
+- **[LOW][fixed] Status-code coverage.** Extended the mapping theory with `400`, `408`, `429`, and an unknown (`418`) status to pin the full switch surface.
+- **[LOW][noted] Client filename bound.** The shared `PartyExportFileName.Build` now truncates the token to 64 chars and trims dashes; the previous Client `BuildSafeExportFileName` did not truncate. This is within the story's "bounded and deterministic" guardrail and an improvement, not a regression — the canonical `yyyyMMddTHHmmssZ` format string is unchanged for the Client path.

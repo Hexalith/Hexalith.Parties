@@ -786,7 +786,7 @@
 
             // Defense-in-depth: re-derive the download filename from non-PII components
             // rather than trusting the transport-supplied FileName. Resolved 2026-05-10 (D2).
-            string safeFileName = GdprExportFileNameBuilder.Build(partyId, DateTimeOffset.UtcNow);
+            string safeFileName = PartyExportFileName.Build(partyId, DateTimeOffset.UtcNow);
             if (export.Payload.Length == 0)
             {
                 _exportFileName = null;

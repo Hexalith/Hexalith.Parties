@@ -133,6 +133,54 @@ public sealed class AdminPortalGdprOperationContractTests
         }
     }
 
+    [Theory]
+    [InlineData(401, null, AdminPortalGdprOutcome.AuthenticationRequired)]
+    [InlineData(403, "Tenant context is unavailable for this request.", AdminPortalGdprOutcome.MissingTenant)]
+    [InlineData(403, "Access denied.", AdminPortalGdprOutcome.Forbidden)]
+    [InlineData(404, null, AdminPortalGdprOutcome.NotFound)]
+    [InlineData(409, null, AdminPortalGdprOutcome.ErasureInProgress)]
+    [InlineData(410, null, AdminPortalGdprOutcome.Erased)]
+    [InlineData(400, null, AdminPortalGdprOutcome.ValidationRejected)]
+    [InlineData(422, null, AdminPortalGdprOutcome.ValidationRejected)]
+    [InlineData(501, null, AdminPortalGdprOutcome.ContractUnavailable)]
+    [InlineData(408, null, AdminPortalGdprOutcome.TransientFailure)]
+    [InlineData(429, null, AdminPortalGdprOutcome.TransientFailure)]
+    [InlineData(503, null, AdminPortalGdprOutcome.TransientFailure)]
+    [InlineData(418, null, AdminPortalGdprOutcome.Unknown)]
+    public void MapGdprOutcome_ProvidesSingleClientOwnedMappingSurface(
+        int status,
+        string? detail,
+        AdminPortalGdprOutcome expected)
+    {
+        HttpAdminPortalGdprClient.MapGdprOutcome(status, detail: detail).ShouldBe(expected);
+    }
+
+    [Fact]
+    public void MapGdprOutcome_DetectsMissingTenantFromTitle()
+    {
+        // The title tenant-detection branch is a distinct source from detail; pin it.
+        HttpAdminPortalGdprClient
+            .MapGdprOutcome(403, title: "Tenant membership required")
+            .ShouldBe(AdminPortalGdprOutcome.MissingTenant);
+    }
+
+    [Fact]
+    public void MapGdprOutcome_DetectsMissingTenantFromGlobalErrors()
+    {
+        // The globalErrors tenant-detection branch must also resolve to MissingTenant.
+        HttpAdminPortalGdprClient
+            .MapGdprOutcome(403, globalErrors: ["Access denied.", "eventstore:tenant claim is required"])
+            .ShouldBe(AdminPortalGdprOutcome.MissingTenant);
+    }
+
+    [Fact]
+    public void MapGdprOutcome_WhenForbiddenWithoutTenantSignals_ReturnsForbidden()
+    {
+        HttpAdminPortalGdprClient
+            .MapGdprOutcome(403, title: "Access denied.", detail: "Operation not permitted.", globalErrors: ["No access."])
+            .ShouldBe(AdminPortalGdprOutcome.Forbidden);
+    }
+
     [Fact]
     public void ExportPartyDataAsync_ReturnsDownloadEnvelopeWithoutPiiFilenameInputs()
     {

@@ -4,6 +4,7 @@ using Hexalith.FrontComposer.Contracts.Communication;
 using Hexalith.Parties.Client;
 using Hexalith.Parties.Client.Abstractions;
 using Hexalith.Parties.Client.AdminPortal;
+using Hexalith.Parties.Contracts;
 using Hexalith.Parties.Contracts.Commands;
 using Hexalith.Parties.Contracts.Models;
 using Hexalith.Parties.Contracts.Security;
@@ -588,15 +589,15 @@ public sealed class PartiesAdminPortalApiClient : IPartiesAdminPortalApiClient
         };
 
     private static bool IsTenantProblem(ProblemDetailsPayload problem)
-        => ContainsTenant(problem.Title)
-            || ContainsTenant(problem.Detail)
-            || problem.GlobalErrors.Any(ContainsTenant);
+        => PartiesTextHeuristics.ContainsTenant(problem.Title)
+            || PartiesTextHeuristics.ContainsTenant(problem.Detail)
+            || problem.GlobalErrors.Any(PartiesTextHeuristics.ContainsTenant);
 
     private static AdminPortalQueryFailureKind MapFailureKind(PartiesClientException ex)
         => ex.Status switch
         {
             401 => AdminPortalQueryFailureKind.AuthenticationRequired,
-            403 => ContainsTenant(ex.Title) || ContainsTenant(ex.Detail)
+            403 => PartiesTextHeuristics.ContainsTenant(ex.Title) || PartiesTextHeuristics.ContainsTenant(ex.Detail)
                 ? AdminPortalQueryFailureKind.TenantRequired
                 : AdminPortalQueryFailureKind.Forbidden,
             404 => AdminPortalQueryFailureKind.NotFound,
@@ -610,27 +611,13 @@ public sealed class PartiesAdminPortalApiClient : IPartiesAdminPortalApiClient
         };
 
     private static AdminPortalGdprOutcome MapGdprOutcome(PartiesClientException ex)
-        => ex.Status switch
-        {
-            401 => AdminPortalGdprOutcome.AuthenticationRequired,
-            403 => ContainsTenant(ex.Title) || ContainsTenant(ex.Detail)
-                ? AdminPortalGdprOutcome.MissingTenant
-                : AdminPortalGdprOutcome.Forbidden,
-            404 => AdminPortalGdprOutcome.NotFound,
-            409 => AdminPortalGdprOutcome.ErasureInProgress,
-            410 => AdminPortalGdprOutcome.Erased,
-            501 => AdminPortalGdprOutcome.ContractUnavailable,
-            400 or 422 => AdminPortalGdprOutcome.ValidationRejected,
-            408 or 429 => AdminPortalGdprOutcome.TransientFailure,
-            >= 500 => AdminPortalGdprOutcome.TransientFailure,
-            _ => AdminPortalGdprOutcome.Unknown,
-        };
+        => HttpAdminPortalGdprClient.MapGdprOutcome(ex.Status, ex.Title, ex.Detail);
 
     private static AdminPortalCommandOutcome MapCommandOutcome(PartiesClientException ex)
         => ex.Status switch
         {
             401 => AdminPortalCommandOutcome.AuthenticationRequired,
-            403 => ContainsTenant(ex.Title) || ContainsTenant(ex.Detail)
+            403 => PartiesTextHeuristics.ContainsTenant(ex.Title) || PartiesTextHeuristics.ContainsTenant(ex.Detail)
                 ? AdminPortalCommandOutcome.MissingTenant
                 : AdminPortalCommandOutcome.Forbidden,
             404 => AdminPortalCommandOutcome.NotFound,
@@ -642,9 +629,6 @@ public sealed class PartiesAdminPortalApiClient : IPartiesAdminPortalApiClient
             >= 500 => AdminPortalCommandOutcome.TransientFailure,
             _ => AdminPortalCommandOutcome.Unknown,
         };
-
-    private static bool ContainsTenant(string? value)
-        => value?.Contains("tenant", StringComparison.OrdinalIgnoreCase) == true;
 
     private static IReadOnlyDictionary<string, string>? BuildListFilters(AdminPortalListRequest request)
     {

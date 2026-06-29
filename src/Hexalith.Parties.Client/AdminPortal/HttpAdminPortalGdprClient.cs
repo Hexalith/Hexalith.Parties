@@ -1,4 +1,3 @@
-using System.Globalization;
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
@@ -140,10 +139,33 @@ public sealed class HttpAdminPortalGdprClient : IAdminPortalGdprClient
 
         byte[] payload = JsonSerializer.SerializeToUtf8Bytes(package, HttpPartiesCommandClient.JsonOptions);
         return new AdminPortalExportDownload(
-            BuildSafeExportFileName(package.PartyId, package.ExportedAt),
+            PartyExportFileName.Build(package.PartyId, package.ExportedAt),
             "application/json",
             payload);
     }
+
+    public static AdminPortalGdprOutcome MapGdprOutcome(
+        int status,
+        string? title = null,
+        string? detail = null,
+        IEnumerable<string>? globalErrors = null)
+        => status switch
+        {
+            401 => AdminPortalGdprOutcome.AuthenticationRequired,
+            403 => PartiesTextHeuristics.ContainsTenant(title)
+                || PartiesTextHeuristics.ContainsTenant(detail)
+                || (globalErrors?.Any(PartiesTextHeuristics.ContainsTenant) == true)
+                ? AdminPortalGdprOutcome.MissingTenant
+                : AdminPortalGdprOutcome.Forbidden,
+            404 => AdminPortalGdprOutcome.NotFound,
+            409 => AdminPortalGdprOutcome.ErasureInProgress,
+            410 => AdminPortalGdprOutcome.Erased,
+            501 => AdminPortalGdprOutcome.ContractUnavailable,
+            400 or 422 => AdminPortalGdprOutcome.ValidationRejected,
+            408 or 429 => AdminPortalGdprOutcome.TransientFailure,
+            >= 500 => AdminPortalGdprOutcome.TransientFailure,
+            _ => AdminPortalGdprOutcome.Unknown,
+        };
 
     public async Task<IReadOnlyList<ProcessingActivityRecord>> GetProcessingRecordsAsync(string partyId, CancellationToken cancellationToken)
     {
@@ -324,21 +346,7 @@ public sealed class HttpAdminPortalGdprClient : IAdminPortalGdprClient
         CancellationToken cancellationToken)
     {
         string? rawDetail = await TryReadDetailAsync(response, cancellationToken).ConfigureAwait(false);
-        AdminPortalGdprOutcome outcome = response.StatusCode switch
-        {
-            HttpStatusCode.Unauthorized => AdminPortalGdprOutcome.AuthenticationRequired,
-            HttpStatusCode.Forbidden => ContainsTenant(rawDetail)
-                ? AdminPortalGdprOutcome.MissingTenant
-                : AdminPortalGdprOutcome.Forbidden,
-            HttpStatusCode.NotFound => AdminPortalGdprOutcome.NotFound,
-            HttpStatusCode.Conflict => AdminPortalGdprOutcome.ErasureInProgress,
-            HttpStatusCode.Gone => AdminPortalGdprOutcome.Erased,
-            HttpStatusCode.BadRequest or HttpStatusCode.UnprocessableEntity => AdminPortalGdprOutcome.ValidationRejected,
-            HttpStatusCode.NotImplemented => AdminPortalGdprOutcome.ContractUnavailable,
-            HttpStatusCode.RequestTimeout or HttpStatusCode.TooManyRequests => AdminPortalGdprOutcome.TransientFailure,
-            >= HttpStatusCode.InternalServerError => AdminPortalGdprOutcome.TransientFailure,
-            _ => AdminPortalGdprOutcome.Unknown,
-        };
+        AdminPortalGdprOutcome outcome = MapGdprOutcome((int)response.StatusCode, detail: rawDetail);
 
         return new AdminPortalGdprCommandResult(outcome, null, SanitizeDetail(rawDetail));
     }
@@ -375,25 +383,10 @@ public sealed class HttpAdminPortalGdprClient : IAdminPortalGdprClient
         return null;
     }
 
-    private static bool ContainsTenant(string? value)
-        => value?.Contains("tenant", StringComparison.OrdinalIgnoreCase) == true;
-
     private static string? SanitizeDetail(string? detail)
         => string.IsNullOrWhiteSpace(detail)
             ? detail
             : "Operation details are available from the server audit trail.";
-
-    private static string SanitizeFileToken(string value)
-    {
-        char[] chars = value
-            .Select(static c => char.IsLetterOrDigit(c) || c is '-' or '_' ? c : '-')
-            .ToArray();
-        string sanitized = new(chars);
-        return string.IsNullOrWhiteSpace(sanitized) ? "party" : sanitized;
-    }
-
-    private static string BuildSafeExportFileName(string partyId, DateTimeOffset exportedAt)
-        => $"party-{SanitizeFileToken(partyId)}-{exportedAt.UtcDateTime.ToString("yyyyMMddTHHmmssZ", CultureInfo.InvariantCulture)}.json";
 
     private sealed record PartyQueryPayload(string PartyId);
 

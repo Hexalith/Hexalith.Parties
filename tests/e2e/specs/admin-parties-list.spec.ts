@@ -305,7 +305,8 @@ test.describe('Admin parties list', () => {
 
     await detail.getByRole('button', { name: 'Export party data' }).click();
     await expect(detail.getByRole('status').filter({ hasText: 'Export prepared' })).toBeVisible();
-    await expect(detail.getByText(/party-erased-route-export-.*Z\.json/)).toBeVisible();
+    await expect(detail.getByText(/party-erased-route-\d{8}T\d{6}Z\.json/)).toBeVisible();
+    await expect(detail.getByText(/party-erased-route-export-.*Z\.json/)).toHaveCount(0);
     await expect.poll(async () => {
       const snapshot = await requestSnapshot(request);
       return snapshot.exportRequests.at(-1)?.partyId ?? null;

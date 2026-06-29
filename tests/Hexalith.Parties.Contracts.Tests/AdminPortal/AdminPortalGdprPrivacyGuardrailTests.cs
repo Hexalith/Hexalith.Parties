@@ -6,6 +6,8 @@
 using System.Linq;
 using System.Reflection;
 
+using Hexalith.Parties.Contracts;
+
 using Shouldly;
 
 namespace Hexalith.Parties.Contracts.Tests.AdminPortal;
@@ -84,14 +86,12 @@ public sealed class AdminPortalGdprPrivacyGuardrailTests
     }
 
     [Fact]
-    public void GdprDownloadFilenameBuilder_UsesOnlyNonPiiIdentifiers()
+    public void GdprDownloadFilenameBuilder_UsesSharedNonPiiIdentifierBuilder()
     {
-        Type filenameBuilder = LoadPortalAssembly().GetTypes()
-            .FirstOrDefault(t => t.Name == "GdprExportFileNameBuilder")
-            ?? throw new InvalidOperationException("AdminPortal must expose GdprExportFileNameBuilder.");
+        Type filenameBuilder = typeof(PartyExportFileName);
 
         MethodInfo method = filenameBuilder.GetMethod("Build", BindingFlags.Public | BindingFlags.Static)
-            ?? throw new InvalidOperationException("GdprExportFileNameBuilder must expose static Build.");
+            ?? throw new InvalidOperationException("PartyExportFileName must expose static Build.");
 
         string[] parameterNames = method.GetParameters().Select(p => p.Name ?? string.Empty).ToArray();
         parameterNames.ShouldContain("partyId");
