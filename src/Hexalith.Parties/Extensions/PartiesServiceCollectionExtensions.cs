@@ -152,9 +152,11 @@ public static class PartiesServiceCollectionExtensions {
         _ = services.AddSingleton<ITenantKeyRotationService, TenantKeyRotationService>();
         _ = services.AddSingleton<ICryptoStatusProvider>(sp => sp.GetRequiredService<PartyKeyLifecycleService>());
         _ = services.AddSingleton<DecryptionCircuitBreaker>();
-        _ = services.AddSingleton<IEventPayloadProtectionService, PartyPayloadProtectionService>();
-        _ = services.AddSingleton<IPersonalDataCommandGuard, PartyPersonalDataCommandGuard>();
         _ = services.AddSingleton<IPartyErasureRecordStore, PartyErasureRecordStore>();
+        _ = services.AddSingleton<PartyPayloadProtectionService>();
+        _ = services.AddSingleton<EventStorePartyPayloadProtectionAdapter>();
+        _ = services.AddSingleton<IEventPayloadProtectionService>(sp => sp.GetRequiredService<EventStorePartyPayloadProtectionAdapter>());
+        _ = services.AddSingleton<IPersonalDataCommandGuard, PartyPersonalDataCommandGuard>();
         PartyMemorySearchOptions memorySearch = configuration
             .GetSection(PartyMemorySearchOptions.SectionName)
             .Get<PartyMemorySearchOptions>() ?? new PartyMemorySearchOptions();

@@ -42,11 +42,15 @@ public sealed class CryptoKeyManagementCompatibilityHarnessTests
             "json").ConfigureAwait(true);
 
         protectedResult.SerializationFormat.ShouldBe("json+pdenc-v1");
-        protectedResult.Metadata.State.ShouldBe(PayloadProtectionState.Unprotected);
+        protectedResult.Metadata.State.ShouldBe(PayloadProtectionState.Protected);
         protectedResult.Metadata.MetadataVersion.ShouldBe(EventStorePayloadProtectionMetadata.CurrentMetadataVersion);
+        protectedResult.Metadata.Scheme.ShouldBe("parties-aes-gcm-json-fields");
+        protectedResult.Metadata.KeyAlias.ShouldBeNull();
+        protectedResult.Metadata.CompatibilityFlags.ShouldNotBeNull();
+        protectedResult.Metadata.CompatibilityFlags["format"].ShouldBe("json+pdenc-v1");
         Encoding.UTF8.GetString(protectedResult.PayloadBytes).ShouldNotContain("readable@example.test");
 
-        PayloadUnprotectionOutcome outcome = await ((IEventPayloadProtectionService)harness.ProtectionService)
+        PayloadUnprotectionOutcome outcome = await harness.ProtectionService
             .TryUnprotectEventPayloadAsync(
                 identity,
                 typeof(ContactChannelAdded).FullName!,
@@ -60,6 +64,43 @@ public sealed class CryptoKeyManagementCompatibilityHarnessTests
         ContactChannelAdded? roundTrip = JsonSerializer.Deserialize<ContactChannelAdded>(outcome.PayloadBytes!, s_jsonOptions);
         roundTrip.ShouldNotBeNull();
         roundTrip.Value.ShouldBe("readable@example.test");
+    }
+
+    [Fact]
+    public async Task LargeProtectedField_TryUnprotect_RoundTripsWithoutStackExhaustionAsync()
+    {
+        // Regression: shape validation must not stackalloc a buffer sized to the (data-controlled)
+        // ciphertext length. A large [PersonalData] field produces a multi-megabyte base64 marker
+        // that would overflow the stack on the unprotection read path.
+        CryptoKeyManagementHarnessServices harness = CreateHarness();
+        AggregateIdentity identity = PartyIdentity();
+        await EnsurePartyKeyAsync(harness, identity).ConfigureAwait(true);
+        string largeValue = new('a', 1_500_000);
+        ContactChannelAdded payload = ContactPayload(largeValue);
+        byte[] serialized = JsonSerializer.SerializeToUtf8Bytes(payload, s_jsonOptions);
+
+        PayloadProtectionResult protectedResult = await harness.ProtectionService.ProtectEventPayloadAsync(
+            identity,
+            payload,
+            typeof(ContactChannelAdded).FullName!,
+            serialized,
+            "json").ConfigureAwait(true);
+
+        protectedResult.SerializationFormat.ShouldBe("json+pdenc-v1");
+
+        PayloadUnprotectionOutcome outcome = await harness.ProtectionService
+            .TryUnprotectEventPayloadAsync(
+                identity,
+                typeof(ContactChannelAdded).FullName!,
+                protectedResult.PayloadBytes,
+                protectedResult.SerializationFormat,
+                protectedResult.Metadata)
+            .ConfigureAwait(true);
+
+        outcome.IsReadable.ShouldBeTrue();
+        ContactChannelAdded? roundTrip = JsonSerializer.Deserialize<ContactChannelAdded>(outcome.PayloadBytes!, s_jsonOptions);
+        roundTrip.ShouldNotBeNull();
+        roundTrip.Value.ShouldBe(largeValue);
     }
 
     [Fact]
@@ -81,7 +122,7 @@ public sealed class CryptoKeyManagementCompatibilityHarnessTests
         protectedResult.SerializationFormat.ShouldBe("json");
         protectedResult.Metadata.State.ShouldBe(PayloadProtectionState.Unprotected);
 
-        PayloadUnprotectionOutcome outcome = await ((IEventPayloadProtectionService)harness.ProtectionService)
+        PayloadUnprotectionOutcome outcome = await harness.ProtectionService
             .TryUnprotectEventPayloadAsync(
                 identity,
                 typeof(PartyDeactivated).FullName!,
@@ -162,7 +203,16 @@ public sealed class CryptoKeyManagementCompatibilityHarnessTests
             identity.TenantId,
             identity.AggregateId).ConfigureAwait(true);
 
-        PayloadUnprotectionOutcome outcome = await ((IEventPayloadProtectionService)harness.ProtectionService)
+        await harness.ErasureRecordStore.SaveCertificateAsync(certificate).ConfigureAwait(true);
+        await harness.ErasureRecordStore.SaveStatusAsync(new PartyErasureStatusRecord
+        {
+            PartyId = identity.AggregateId,
+            TenantId = identity.TenantId,
+            Status = ErasureStatus.KeyDestroyed.ToString(),
+            UpdatedAt = DateTimeOffset.UtcNow,
+        }).ConfigureAwait(true);
+
+        PayloadUnprotectionOutcome outcome = await harness.ProtectionService
             .TryUnprotectEventPayloadAsync(
                 identity,
                 typeof(ContactChannelAdded).FullName!,
@@ -172,7 +222,7 @@ public sealed class CryptoKeyManagementCompatibilityHarnessTests
             .ConfigureAwait(true);
 
         outcome.IsUnreadable.ShouldBeTrue();
-        outcome.UnreadableReason.ShouldBe(UnreadableProtectedDataReason.ProviderUnavailable);
+        outcome.UnreadableReason.ShouldBe(UnreadableProtectedDataReason.KeyInvalidatedOrDeleted);
         certificate.VerificationStatus.ShouldBe(ErasureVerificationStatus.Verified);
 
         PayloadProtectionResult redacted = PartyPayloadProtectionService.RedactProtectedPayload(
@@ -204,7 +254,7 @@ public sealed class CryptoKeyManagementCompatibilityHarnessTests
             "json").ConfigureAwait(true);
 
         CryptoKeyManagementHarnessServices missingKeyHarness = CreateHarness();
-        PayloadUnprotectionOutcome outcome = await ((IEventPayloadProtectionService)missingKeyHarness.ProtectionService)
+        PayloadUnprotectionOutcome outcome = await missingKeyHarness.ProtectionService
             .TryUnprotectEventPayloadAsync(
                 identity,
                 typeof(ContactChannelAdded).FullName!,
@@ -215,7 +265,7 @@ public sealed class CryptoKeyManagementCompatibilityHarnessTests
 
         outcome.IsUnreadable.ShouldBeTrue();
         outcome.PayloadBytes.ShouldBeNull();
-        outcome.UnreadableReason.ShouldBe(UnreadableProtectedDataReason.ProviderUnavailable);
+        outcome.UnreadableReason.ShouldBe(UnreadableProtectedDataReason.MissingKey);
         ProtectedDataLeakSentinel.AssertNoLeak(protectingHarness.CapturedMessages);
         ProtectedDataLeakSentinel.AssertNoLeak(missingKeyHarness.CapturedMessages);
     }
@@ -243,7 +293,7 @@ public sealed class CryptoKeyManagementCompatibilityHarnessTests
         root["value"]!["c"] = Convert.ToBase64String(ciphertextBytes);
         byte[] tamperedBytes = JsonSerializer.SerializeToUtf8Bytes(root, s_jsonOptions);
 
-        PayloadUnprotectionOutcome outcome = await ((IEventPayloadProtectionService)harness.ProtectionService)
+        PayloadUnprotectionOutcome outcome = await harness.ProtectionService
             .TryUnprotectEventPayloadAsync(
                 identity,
                 typeof(ContactChannelAdded).FullName!,
@@ -254,7 +304,7 @@ public sealed class CryptoKeyManagementCompatibilityHarnessTests
 
         outcome.IsUnreadable.ShouldBeTrue();
         outcome.PayloadBytes.ShouldBeNull();
-        outcome.UnreadableReason.ShouldBe(UnreadableProtectedDataReason.ProviderUnavailable);
+        outcome.UnreadableReason.ShouldBe(UnreadableProtectedDataReason.BytesMetadataMismatch);
     }
 
     [Fact]
@@ -270,7 +320,141 @@ public sealed class CryptoKeyManagementCompatibilityHarnessTests
             {"value":{"$enc":true,"alg":"AES256GCM","kv":1,"n":"AAAAAAAAAAAAAAAA","t":"AAAAAAAAAAAAAAAAAAAAAA==","c":"AAAA"}}
             """);
 
-        PayloadUnprotectionOutcome outcome = await ((IEventPayloadProtectionService)harness.ProtectionService)
+        PayloadUnprotectionOutcome outcome = await harness.ProtectionService
+            .TryUnprotectEventPayloadAsync(
+                identity,
+                typeof(ContactChannelAdded).FullName!,
+                protectedBytes,
+                "json+pdenc-v1",
+                ProtectedMetadata())
+            .ConfigureAwait(true);
+
+        outcome.IsUnreadable.ShouldBeTrue();
+        outcome.UnreadableReason.ShouldBe(UnreadableProtectedDataReason.ProviderUnavailable);
+        ProtectedDataLeakSentinel.AssertNoLeak(harness.CapturedMessages);
+    }
+
+    [Fact]
+    public async Task ProviderDenied_IsTypedWithoutParsingProviderExceptionTextAsync()
+    {
+        IPartyKeyManagementService deniedKeyManagement = Substitute.For<IPartyKeyManagementService>();
+        deniedKeyManagement.GetKeyVersionAsync("tenant-harness", "party-harness", 1, Arg.Any<CancellationToken>())
+            .ThrowsAsync(new UnauthorizedAccessException(ProtectedDataLeakSentinel.ProtectedProviderExceptionText));
+        CryptoKeyManagementHarnessServices harness = CreateHarness(keyManagementService: deniedKeyManagement);
+        AggregateIdentity identity = PartyIdentity();
+        byte[] protectedBytes = Encoding.UTF8.GetBytes(
+            """
+            {"value":{"$enc":true,"alg":"AES256GCM","kv":1,"n":"AAAAAAAAAAAAAAAA","t":"AAAAAAAAAAAAAAAAAAAAAA==","c":"AAAA"}}
+            """);
+
+        PayloadUnprotectionOutcome outcome = await harness.ProtectionService
+            .TryUnprotectEventPayloadAsync(
+                identity,
+                typeof(ContactChannelAdded).FullName!,
+                protectedBytes,
+                "json+pdenc-v1",
+                ProtectedMetadata())
+            .ConfigureAwait(true);
+
+        outcome.IsUnreadable.ShouldBeTrue();
+        outcome.UnreadableReason.ShouldBe(UnreadableProtectedDataReason.ProviderDenied);
+        ProtectedDataLeakSentinel.AssertNoLeak(harness.CapturedMessages);
+    }
+
+    [Fact]
+    public async Task LegacyMissingMetadata_WithProtectedFormat_RemainsReadableAsync()
+    {
+        CryptoKeyManagementHarnessServices harness = CreateHarness();
+        AggregateIdentity identity = PartyIdentity();
+        await EnsurePartyKeyAsync(harness, identity).ConfigureAwait(true);
+        ContactChannelAdded payload = ContactPayload("legacy-missing@example.test");
+        byte[] serialized = JsonSerializer.SerializeToUtf8Bytes(payload, s_jsonOptions);
+
+        PayloadProtectionResult protectedResult = await harness.ProtectionService.ProtectEventPayloadAsync(
+            identity,
+            payload,
+            typeof(ContactChannelAdded).FullName!,
+            serialized,
+            "json").ConfigureAwait(true);
+
+        PayloadUnprotectionOutcome outcome = await harness.ProtectionService
+            .TryUnprotectEventPayloadAsync(
+                identity,
+                typeof(ContactChannelAdded).FullName!,
+                protectedResult.PayloadBytes,
+                protectedResult.SerializationFormat,
+                metadata: null)
+            .ConfigureAwait(true);
+
+        outcome.IsReadable.ShouldBeTrue();
+        ContactChannelAdded? roundTrip = JsonSerializer.Deserialize<ContactChannelAdded>(outcome.PayloadBytes!, s_jsonOptions);
+        roundTrip.ShouldNotBeNull();
+        roundTrip.Value.ShouldBe("legacy-missing@example.test");
+    }
+
+    [Fact]
+    public async Task LegacyUnprotectedMetadata_WithProtectedFormat_RemainsReadableAsync()
+    {
+        CryptoKeyManagementHarnessServices harness = CreateHarness();
+        AggregateIdentity identity = PartyIdentity();
+        await EnsurePartyKeyAsync(harness, identity).ConfigureAwait(true);
+        ContactChannelAdded payload = ContactPayload("legacy-unprotected@example.test");
+        byte[] serialized = JsonSerializer.SerializeToUtf8Bytes(payload, s_jsonOptions);
+
+        PayloadProtectionResult protectedResult = await harness.ProtectionService.ProtectEventPayloadAsync(
+            identity,
+            payload,
+            typeof(ContactChannelAdded).FullName!,
+            serialized,
+            "json").ConfigureAwait(true);
+
+        PayloadUnprotectionOutcome outcome = await harness.ProtectionService
+            .TryUnprotectEventPayloadAsync(
+                identity,
+                typeof(ContactChannelAdded).FullName!,
+                protectedResult.PayloadBytes,
+                protectedResult.SerializationFormat,
+                EventStorePayloadProtectionMetadata.Unprotected())
+            .ConfigureAwait(true);
+
+        outcome.IsReadable.ShouldBeTrue();
+        ContactChannelAdded? roundTrip = JsonSerializer.Deserialize<ContactChannelAdded>(outcome.PayloadBytes!, s_jsonOptions);
+        roundTrip.ShouldNotBeNull();
+        roundTrip.Value.ShouldBe("legacy-unprotected@example.test");
+    }
+
+    [Fact]
+    public async Task ProtectedMetadata_WithPlainBytes_IsBytesMetadataMismatchAsync()
+    {
+        CryptoKeyManagementHarnessServices harness = CreateHarness();
+        AggregateIdentity identity = PartyIdentity();
+        ContactChannelAdded payload = ContactPayload("plain@example.test");
+        byte[] serialized = JsonSerializer.SerializeToUtf8Bytes(payload, s_jsonOptions);
+
+        PayloadUnprotectionOutcome outcome = await harness.ProtectionService
+            .TryUnprotectEventPayloadAsync(
+                identity,
+                typeof(ContactChannelAdded).FullName!,
+                serialized,
+                "json",
+                ProtectedMetadata())
+            .ConfigureAwait(true);
+
+        outcome.IsUnreadable.ShouldBeTrue();
+        outcome.UnreadableReason.ShouldBe(UnreadableProtectedDataReason.BytesMetadataMismatch);
+    }
+
+    [Fact]
+    public async Task ProviderOpaqueMetadata_IsSafeUnreadableWithoutInspectingProviderPrivateReasonAsync()
+    {
+        CryptoKeyManagementHarnessServices harness = CreateHarness();
+        AggregateIdentity identity = PartyIdentity();
+        byte[] protectedBytes = Encoding.UTF8.GetBytes(
+            """
+            {"value":{"$enc":true,"alg":"AES256GCM","kv":1,"n":"AAAAAAAAAAAAAAAA","t":"AAAAAAAAAAAAAAAAAAAAAA==","c":"AAAA"}}
+            """);
+
+        PayloadUnprotectionOutcome outcome = await harness.ProtectionService
             .TryUnprotectEventPayloadAsync(
                 identity,
                 typeof(ContactChannelAdded).FullName!,
@@ -280,8 +464,131 @@ public sealed class CryptoKeyManagementCompatibilityHarnessTests
             .ConfigureAwait(true);
 
         outcome.IsUnreadable.ShouldBeTrue();
-        outcome.UnreadableReason.ShouldBe(UnreadableProtectedDataReason.ProviderUnavailable);
+        outcome.UnreadableReason.ShouldBe(UnreadableProtectedDataReason.ProviderOpaqueUnsupportedOperation);
+        outcome.PayloadBytes.ShouldBeNull();
+    }
+
+    [Fact]
+    public async Task MalformedEncryptedMarker_IsBytesMetadataMismatchAsync()
+    {
+        CryptoKeyManagementHarnessServices harness = CreateHarness();
+        AggregateIdentity identity = PartyIdentity();
+        byte[] malformedBytes = Encoding.UTF8.GetBytes(
+            """
+            {"value":{"$enc":true,"alg":"AES256GCM","kv":1,"n":"!!!not-base64!!!","t":"AAAAAAAAAAAAAAAAAAAAAA==","c":"AAAA"}}
+            """);
+
+        PayloadUnprotectionOutcome outcome = await harness.ProtectionService
+            .TryUnprotectEventPayloadAsync(
+                identity,
+                typeof(ContactChannelAdded).FullName!,
+                malformedBytes,
+                "json+pdenc-v1",
+                ProtectedMetadata())
+            .ConfigureAwait(true);
+
+        outcome.IsUnreadable.ShouldBeTrue();
+        outcome.UnreadableReason.ShouldBe(UnreadableProtectedDataReason.BytesMetadataMismatch);
+    }
+
+    [Fact]
+    public async Task ProtectedSnapshot_RoundTripsThroughEventStoreContractWithProtectedMetadataAsync()
+    {
+        CryptoKeyManagementHarnessServices harness = CreateHarness();
+        AggregateIdentity identity = PartyIdentity();
+        await EnsurePartyKeyAsync(harness, identity).ConfigureAwait(true);
+        PartyCreated state = PersonSnapshotState("snapshot-readable@example.test");
+
+        SnapshotProtectionResult protectedResult = await harness.ProtectionService
+            .ProtectSnapshotAsync(identity, state)
+            .ConfigureAwait(true);
+
+        protectedResult.State.ShouldBeOfType<PartyPayloadProtectionService.ProtectedSnapshotState>();
+        protectedResult.Metadata.State.ShouldBe(PayloadProtectionState.Protected);
+        protectedResult.Metadata.Scheme.ShouldBe("parties-aes-gcm-json-fields");
+        protectedResult.Metadata.KeyAlias.ShouldBeNull();
+
+        string serializedSnapshot = JsonSerializer.Serialize(protectedResult.State, s_jsonOptions);
+        serializedSnapshot.ShouldNotContain("snapshot-readable@example.test");
+
+        SnapshotUnprotectionOutcome outcome = await harness.ProtectionService
+            .TryUnprotectSnapshotAsync(identity, protectedResult.State, protectedResult.Metadata)
+            .ConfigureAwait(true);
+
+        outcome.IsReadable.ShouldBeTrue();
+        PartyCreated restored = outcome.State.ShouldBeOfType<PartyCreated>();
+        restored.PersonDetails.ShouldNotBeNull();
+        restored.PersonDetails.FirstName.ShouldBe("snapshot-readable@example.test");
+    }
+
+    [Fact]
+    public async Task ProtectedSnapshot_AfterDestroyedKey_BecomesTypedUnreadableWithoutRestoringPersonalFieldsAsync()
+    {
+        CryptoKeyManagementHarnessServices harness = CreateHarness();
+        AggregateIdentity identity = PartyIdentity();
+        await EnsurePartyKeyAsync(harness, identity).ConfigureAwait(true);
+        PartyCreated state = PersonSnapshotState("snapshot-erased@example.test");
+
+        SnapshotProtectionResult protectedResult = await harness.ProtectionService
+            .ProtectSnapshotAsync(identity, state)
+            .ConfigureAwait(true);
+
+        ErasureCertificate certificate = await harness.KeyManagementService.DeleteKeyAsync(
+            identity.TenantId,
+            identity.AggregateId).ConfigureAwait(true);
+        await harness.ErasureRecordStore.SaveCertificateAsync(certificate).ConfigureAwait(true);
+        await harness.ErasureRecordStore.SaveStatusAsync(new PartyErasureStatusRecord
+        {
+            PartyId = identity.AggregateId,
+            TenantId = identity.TenantId,
+            Status = ErasureStatus.Verified.ToString(),
+            UpdatedAt = DateTimeOffset.UtcNow,
+        }).ConfigureAwait(true);
+
+        SnapshotUnprotectionOutcome outcome = await harness.ProtectionService
+            .TryUnprotectSnapshotAsync(identity, protectedResult.State, protectedResult.Metadata)
+            .ConfigureAwait(true);
+
+        outcome.IsUnreadable.ShouldBeTrue();
+        outcome.State.ShouldBeNull();
+        outcome.UnreadableReason.ShouldBe(UnreadableProtectedDataReason.KeyInvalidatedOrDeleted);
+        JsonSerializer.Serialize(outcome, s_jsonOptions).ShouldNotContain("snapshot-erased@example.test");
         ProtectedDataLeakSentinel.AssertNoLeak(harness.CapturedMessages);
+    }
+
+    [Fact]
+    public async Task ProtectedSnapshotMetadata_WithPlainState_IsConsistencyMismatchAsync()
+    {
+        CryptoKeyManagementHarnessServices harness = CreateHarness();
+        AggregateIdentity identity = PartyIdentity();
+        PartyCreated state = PersonSnapshotState("snapshot-plain@example.test");
+
+        SnapshotUnprotectionOutcome outcome = await harness.ProtectionService
+            .TryUnprotectSnapshotAsync(identity, state, ProtectedMetadata())
+            .ConfigureAwait(true);
+
+        outcome.IsUnreadable.ShouldBeTrue();
+        outcome.State.ShouldBeNull();
+        outcome.UnreadableReason.ShouldBe(UnreadableProtectedDataReason.ConsistencyMismatch);
+    }
+
+    [Fact]
+    public async Task ProviderOpaqueSnapshotMetadata_IsSafeUnreadableWithoutProviderPrivateReasonAsync()
+    {
+        CryptoKeyManagementHarnessServices harness = CreateHarness();
+        AggregateIdentity identity = PartyIdentity();
+        PartyCreated state = PersonSnapshotState("snapshot-opaque@example.test");
+
+        SnapshotUnprotectionOutcome outcome = await harness.ProtectionService
+            .TryUnprotectSnapshotAsync(
+                identity,
+                state,
+                EventStorePayloadProtectionMetadata.ProviderOpaque(ProtectedDataLeakSentinel.ProtectedProviderPrivateBlob))
+            .ConfigureAwait(true);
+
+        outcome.IsUnreadable.ShouldBeTrue();
+        outcome.State.ShouldBeNull();
+        outcome.UnreadableReason.ShouldBe(UnreadableProtectedDataReason.ProviderOpaqueUnsupportedOperation);
     }
 
     [Fact]
@@ -410,6 +717,8 @@ public sealed class CryptoKeyManagementCompatibilityHarnessTests
             circuitBreaker,
             options,
             protectionLogger);
+        InMemoryPartyErasureRecordStore erasureRecordStore = new();
+        EventStorePartyPayloadProtectionAdapter adapter = new(protection, erasureRecordStore);
         CapturingLogger<ErasureVerificationService> verificationLogger = new();
 
         return new CryptoKeyManagementHarnessServices(
@@ -417,7 +726,8 @@ public sealed class CryptoKeyManagementCompatibilityHarnessTests
             keys,
             lifecycle,
             circuitBreaker,
-            protection,
+            adapter,
+            erasureRecordStore,
             lifecycleLogger,
             circuitLogger,
             protectionLogger,
@@ -436,6 +746,30 @@ public sealed class CryptoKeyManagementCompatibilityHarnessTests
             IsPreferred = true,
         };
 
+    private static PartyCreated PersonSnapshotState(string firstName) =>
+        new()
+        {
+            Type = PartyType.Person,
+            PersonDetails = new PersonDetails
+            {
+                FirstName = firstName,
+                LastName = "Snapshot",
+                DateOfBirth = new DateTimeOffset(1990, 1, 1, 0, 0, 0, TimeSpan.Zero),
+            },
+        };
+
     private static AggregateIdentity PartyIdentity() => new("tenant-harness", "party", "party-harness");
+
+    private static EventStorePayloadProtectionMetadata ProtectedMetadata() => new(
+        PayloadProtectionState.Protected,
+        EventStorePayloadProtectionMetadata.CurrentMetadataVersion,
+        "parties-aes-gcm-json-fields",
+        KeyAlias: null,
+        ContentHint: "application/json",
+        new ReadOnlyDictionary<string, string>(new Dictionary<string, string>(StringComparer.Ordinal)
+        {
+            ["format"] = "json+pdenc-v1",
+            ["field-envelope"] = "pdenc-v1",
+        }));
 
 }

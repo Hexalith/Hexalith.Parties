@@ -17,6 +17,7 @@ using Hexalith.Parties.Projections.Abstractions;
 using Hexalith.Parties.Projections.Actors;
 using Hexalith.Parties.Projections.Configuration;
 using Hexalith.Parties.Projections.Services;
+using Hexalith.Parties.Security;
 
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -51,6 +52,17 @@ public sealed class ProjectionPlatformAdapterTests
 
         provider.GetRequiredService<IPartyProjectionPlatformAdapter>()
             .ShouldBeOfType<LocalPartyProjectionPlatformAdapter>();
+    }
+
+    [Fact]
+    public void AddParties_RegistersEventStorePayloadProtectionAdapterWithRollbackProvider()
+    {
+        using ServiceProvider provider = CreatePartiesServiceProvider(new Dictionary<string, string?>());
+
+        provider.GetRequiredService<IEventPayloadProtectionService>()
+            .ShouldBeOfType<EventStorePartyPayloadProtectionAdapter>();
+        provider.GetRequiredService<PartyPayloadProtectionService>()
+            .ShouldNotBeNull();
     }
 
     [Theory]

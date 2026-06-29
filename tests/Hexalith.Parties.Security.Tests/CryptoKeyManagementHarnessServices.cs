@@ -1,3 +1,4 @@
+using Hexalith.EventStore.Contracts.Security;
 using Hexalith.Parties.Contracts.Security;
 using Hexalith.Parties.Security;
 
@@ -18,7 +19,8 @@ internal sealed class CryptoKeyManagementHarnessServices
         IPartyKeyManagementService keyManagementService,
         PartyKeyLifecycleService lifecycleService,
         DecryptionCircuitBreaker circuitBreaker,
-        PartyPayloadProtectionService protectionService,
+        IEventPayloadProtectionService protectionService,
+        IPartyErasureRecordStore erasureRecordStore,
         CapturingLogger<PartyKeyLifecycleService> lifecycleLogger,
         CapturingLogger<DecryptionCircuitBreaker> circuitLogger,
         CapturingLogger<PartyPayloadProtectionService> protectionLogger,
@@ -29,6 +31,7 @@ internal sealed class CryptoKeyManagementHarnessServices
         LifecycleService = lifecycleService;
         CircuitBreaker = circuitBreaker;
         ProtectionService = protectionService;
+        ErasureRecordStore = erasureRecordStore;
         VerificationLogger = verificationLogger;
         _lifecycleLogger = lifecycleLogger;
         _circuitLogger = circuitLogger;
@@ -44,7 +47,9 @@ internal sealed class CryptoKeyManagementHarnessServices
 
     public DecryptionCircuitBreaker CircuitBreaker { get; }
 
-    public PartyPayloadProtectionService ProtectionService { get; }
+    public IEventPayloadProtectionService ProtectionService { get; }
+
+    public IPartyErasureRecordStore ErasureRecordStore { get; }
 
     public CapturingLogger<ErasureVerificationService> VerificationLogger { get; }
 

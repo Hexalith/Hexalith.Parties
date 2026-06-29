@@ -131,13 +131,11 @@ internal sealed partial class PartyProjectionUpdateOrchestrator(
                 // key-version mismatches, or HSM permission errors propagate so projections
                 // don't silently corrupt with null personal-data fields on a recoverable
                 // failure.
-                logger.LogWarning(
-                    ex,
-                    "Falling back to redacted payload during projection delivery for {TenantId}/{AggregateId} event {EventTypeName} (sequence {SequenceNumber}). The party's encryption key is not available — proceeding with post-erasure tail only.",
-                    identity.TenantId,
-                    identity.AggregateId,
+                Log.ProjectionDeliveryFallbackToRedaction(
+                    logger,
                     envelope.EventTypeName,
-                    envelope.SequenceNumber);
+                    envelope.SequenceNumber,
+                    ex.GetType().Name);
                 protectionResult = PartyPayloadProtectionService.RedactProtectedPayload(envelope.Payload, envelope.SerializationFormat);
             }
 
@@ -324,6 +322,16 @@ internal sealed partial class PartyProjectionUpdateOrchestrator(
             Level = LogLevel.Warning,
             Message = "Memories search is enabled but no CaseId is configured (Parties:MemoriesSearch:CaseId). Skipping indexing for {TenantId}/{AggregateId}. Subsequent commands for this party will not log this warning again until the process restarts.")]
         public static partial void IndexingSkippedMissingCaseId(ILogger logger, string tenantId, string aggregateId);
+
+        [LoggerMessage(
+            EventId = 8405,
+            Level = LogLevel.Warning,
+            Message = "Falling back to redacted payload during projection delivery for event {EventTypeName} at sequence {SequenceNumber}: {ExceptionType}.")]
+        public static partial void ProjectionDeliveryFallbackToRedaction(
+            ILogger logger,
+            string eventTypeName,
+            long sequenceNumber,
+            string exceptionType);
 
         [LoggerMessage(
             EventId = 8402,

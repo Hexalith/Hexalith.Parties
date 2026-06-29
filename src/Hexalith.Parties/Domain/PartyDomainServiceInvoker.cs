@@ -572,11 +572,8 @@ internal sealed partial class PartyDomainServiceInvoker(
         catch (Exception ex) when (PartyEncryptionKeyDestroyedException.IsMatch(ex))
         {
             LogRehydrationFallbackToRedaction(
-                command.AggregateIdentity.TenantId,
-                command.AggregateIdentity.AggregateId,
                 envelope.Metadata.EventTypeName,
-                ex.GetType().Name,
-                ex.Message);
+                ex.GetType().Name);
             return PartyPayloadProtectionService.RedactProtectedPayload(envelope.Payload, envelope.Metadata.SerializationFormat);
         }
     }
@@ -595,19 +592,16 @@ internal sealed partial class PartyDomainServiceInvoker(
         catch (Exception ex) when (PartyEncryptionKeyDestroyedException.IsMatch(ex))
         {
             LogSnapshotRehydrationFallbackToRedaction(
-                command.AggregateIdentity.TenantId,
-                command.AggregateIdentity.AggregateId,
-                ex.GetType().Name,
-                ex.Message);
+                ex.GetType().Name);
             return null;
         }
     }
 
-    [LoggerMessage(Level = LogLevel.Warning, Message = "Falling back to redacted event payload during rehydration for {TenantId}/{PartyId} event {EventTypeName}: {ExceptionType}: {Error}")]
-    private partial void LogRehydrationFallbackToRedaction(string tenantId, string partyId, string eventTypeName, string exceptionType, string error);
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Falling back to redacted event payload during rehydration for event {EventTypeName}: {ExceptionType}")]
+    private partial void LogRehydrationFallbackToRedaction(string eventTypeName, string exceptionType);
 
-    [LoggerMessage(Level = LogLevel.Warning, Message = "Falling back to null snapshot during rehydration for {TenantId}/{PartyId}: {ExceptionType}: {Error}")]
-    private partial void LogSnapshotRehydrationFallbackToRedaction(string tenantId, string partyId, string exceptionType, string error);
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Falling back to null snapshot during rehydration: {ExceptionType}")]
+    private partial void LogSnapshotRehydrationFallbackToRedaction(string exceptionType);
 
     [LoggerMessage(Level = LogLevel.Warning, Message = "Rejecting Parties command with unresolved CommandType {CommandType}")]
     private partial void LogUnresolvedCommandType(string commandType);
