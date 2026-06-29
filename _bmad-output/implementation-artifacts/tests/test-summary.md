@@ -3,48 +3,26 @@
 ## Generated Tests
 
 ### API Tests
-
-- [x] `tests/Hexalith.Parties.Tests/Projections/ProjectionPlatformAdapterTests.cs` - DI rollback switch coverage for `Parties:Projections:PlatformAdapterMode`, default EventStore adapter resolution, and local rollback adapter resolution.
-- [x] `tests/Hexalith.Parties.Tests/Projections/ProjectionPlatformAdapterTests.cs` - EventStore rebuild checkpoint completion failure coverage proving local checkpoint cleanup is attempted and the EventStore completion failure is surfaced.
+- [x] `tests/Hexalith.Parties.Tests/Projections/ProjectionPlatformAdapterTests.cs` - Covers EventStore-authoritative rebuild checkpoint save/read/delete behavior, terminal rows, tenant-wide resume selection, and fail-loud completion policy.
+- [x] `tests/Hexalith.Parties.Tests/Projections/ProjectionRebuildAndHealthHardeningTests.cs` - Covers production read freshness mapper usage for detail and index projection actors.
 
 ### E2E Tests
-
-- [x] `tests/e2e/specs/story-7-4-projection-platform-compatibility.spec.ts` - Story 7.4 adapter-first evidence, rollback switch, blocked validation evidence, local compatibility boundary, EventStore-backed adapter, replay-from-zero delivery ordering, rebuild adapter routing, and focused parity test inventory.
+- [x] No E2E spec retained for Story 7.5. The generated static source-text spec was removed during review because behavioral xUnit coverage carries the migration proof.
 
 ## Coverage
-
-- API endpoints: N/A for story 7.4; the Parties host still has no public API, and public traffic remains through the EventStore gateway.
-- Projection adapter: default EventStore mode, local rollback mode, rebuild checkpoint save/delete scope mapping, EventStore completion failure surfacing, out-of-order delivery checkpoint order, and no checkpoint save after partial projection delivery.
-- Rebuild compatibility: adapter-routed read/save/delete evidence, local replay mechanics preservation, fail-closed trusted party id enumeration, allowlisted event type resolution, state-store write failure, and processing-record no-PII coverage.
-- UI behavior: no production UI workflow changed. Freshness UX stability remains covered by existing bUnit/contract tests and is pinned by story evidence; no new browser interaction was applicable.
+- Story 7.5 acceptance criteria: 7/7 covered by focused C# projection, gateway, freshness, erasure, and topology tests.
+- API gateway evidence: command and query gateway routes covered through existing focused gateway and integration test inventory.
+- UI freshness behavior: dot-plus-word freshness indicator and polite live-region contract covered through existing UI/E2E tests; Story 7.5 did not change UI rendering.
 
 ## Validation
-
-- [x] `git diff --check`.
-- [x] `dotnet build src/Hexalith.Parties.Projections/Hexalith.Parties.Projections.csproj -c Release --no-restore -m:1 -p:NuGetAudit=false`.
-- [x] `tests/Hexalith.Parties.Projections.Tests/bin/Release/net10.0/Hexalith.Parties.Projections.Tests` passed 139/139.
-- [x] `npm run typecheck` from `tests/e2e`.
-- [x] `PLAYWRIGHT_SKIP_WEBSERVER=1 npm run test -- specs/story-7-4-projection-platform-compatibility.spec.ts --project=chromium` passed 5/5.
-- [ ] `dotnet build tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj -c Release --no-restore -m:1 -p:NuGetAudit=false` remains blocked before test compilation by unrelated Tenants/package drift: `NU1102 Unable to find package Hexalith.Commons.UniqueIds with version (>= 3.19.0); nearest 2.18.0`.
-- [ ] `dotnet test tests/Hexalith.Parties.Projections.Tests/Hexalith.Parties.Projections.Tests.csproj -c Release --no-build --no-restore -v:minimal` is blocked by sandbox IPC restrictions: `System.Net.Sockets.SocketException (13): Permission denied` while the .NET test CLI creates its named pipe. The compiled test executable was used instead.
-- [ ] `npm run test -- specs/story-7-4-projection-platform-compatibility.spec.ts --project=chromium` without `PLAYWRIGHT_SKIP_WEBSERVER` is blocked by sandbox Kestrel socket binding restrictions. The file-only spec passes with the existing config escape hatch.
-
-## Checklist Validation
-
-- [x] API tests generated if applicable.
-- [x] E2E tests generated if UI exists: story-evidence E2E generated; no UI workflow changed.
-- [x] Tests use standard xUnit/Shouldly/NSubstitute and Playwright APIs.
-- [x] Tests cover happy path: default EventStore mode, local rollback mode, adapter-first story evidence, and rebuild adapter routing.
-- [x] Tests cover critical error cases: EventStore rebuild completion failure and partial projection delivery checkpoint suppression.
-- [ ] All generated tests run successfully: blocked for the new xUnit tests by unrelated main test project dependency drift; Playwright story spec passes.
-- [x] Tests use proper locators where applicable: the new Playwright test is filesystem/story evidence only and uses no DOM locators.
-- [x] Tests have clear descriptions.
-- [x] No hardcoded waits or sleeps.
-- [x] Tests are independent.
-- [x] Test summary created at the configured workflow output path.
-- [x] Tests saved to appropriate directories.
-- [x] Summary includes coverage metrics.
+- [x] `dotnet tests/Hexalith.Parties.Tests/bin/Release/net10.0/Hexalith.Parties.Tests.dll -class Hexalith.Parties.Tests.Projections.ProjectionPlatformAdapterTests`
+- [x] `dotnet tests/Hexalith.Parties.Tests/bin/Release/net10.0/Hexalith.Parties.Tests.dll -class Hexalith.Parties.Tests.Projections.ProjectionRebuildAndHealthHardeningTests`
+- [x] `dotnet tests/Hexalith.Parties.Tests/bin/Release/net10.0/Hexalith.Parties.Tests.dll -class Hexalith.Parties.Tests.Projections.ProjectionRebuildServiceTests`
+- [x] `dotnet tests/Hexalith.Parties.Tests/bin/Release/net10.0/Hexalith.Parties.Tests.dll`
+- [x] `dotnet tests/Hexalith.Parties.Projections.Tests/bin/Release/net10.0/Hexalith.Parties.Projections.Tests.dll`
+- [x] `git diff --check`
+- [x] `bash scripts/check-no-warning-override.sh`
+- [ ] `dotnet build Hexalith.Parties.slnx -c Release --no-restore -m:1 -p:NuGetAudit=false` remains blocked by unrelated submodule drift in EventStore/Tenants/PolymorphicSerializations.
 
 ## Next Steps
-
-- Re-run the main `Hexalith.Parties.Tests` build/test lane after the unrelated Tenants `Hexalith.Commons.UniqueIds >= 3.19.0` dependency drift is resolved.
+- Keep the existing C# focused projection and gateway lanes as the authoritative behavioral proof for checkpoint/rebuild semantics.

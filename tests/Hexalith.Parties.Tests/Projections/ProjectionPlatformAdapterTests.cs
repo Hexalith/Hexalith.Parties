@@ -21,6 +21,7 @@ using Hexalith.Parties.Projections.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
@@ -78,7 +79,7 @@ public sealed class ProjectionPlatformAdapterTests
     }
 
     [Fact]
-    public async Task EventStoreAdapter_SaveRebuildCheckpoint_MapsDetailScopeAndKeepsLocalCheckpointAsync()
+    public async Task EventStoreAdapter_SaveRebuildCheckpoint_MapsDetailScopeWithoutLocalCheckpointWriteAsync()
     {
         ProjectionRebuildCheckpointScope? savedScope = null;
         IProjectionCheckpointTracker checkpointTracker = Substitute.For<IProjectionCheckpointTracker>();
@@ -105,18 +106,9 @@ public sealed class ProjectionPlatformAdapterTests
                     ProjectionRebuildStatus.Running,
                     DateTimeOffset.UtcNow,
                     null)));
-        MockHttpMessageHandler handler = new();
-        handler.AddResponse(
-            "/v1.0/actors/PartyIndexProjectionActor/tenant-a%3Aparty-index/state",
-            null,
-            HttpStatusCode.NoContent,
-            HttpMethod.Put);
-        var local = new LocalPartyProjectionPlatformAdapter(new HttpClient(handler) { BaseAddress = new Uri("http://localhost:3500") });
         var sut = new EventStorePartyProjectionPlatformAdapter(
             checkpointTracker,
-            rebuildStore,
-            local,
-            Substitute.For<ILogger<EventStorePartyProjectionPlatformAdapter>>());
+            rebuildStore);
 
         await sut.SaveRebuildCheckpointAsync(
             PartyProjectionRebuildScope.Detail("tenant-a", "party-1"),
@@ -128,13 +120,65 @@ public sealed class ProjectionPlatformAdapterTests
         savedScope.Domain.ShouldBe("party");
         savedScope.ProjectionName.ShouldBe("party-detail");
         savedScope.AggregateId.ShouldBe("party-1");
-        handler.Requests.ShouldContain(request => request.Body?.Contains("tenant-a:rebuild-checkpoint:detail:party-1", StringComparison.Ordinal) == true);
     }
 
     [Fact]
-    public async Task EventStoreAdapter_DeleteRebuildCheckpoint_CompletionFailureSurfacesAfterLocalCleanupAsync()
+    public async Task EventStoreAdapter_ReadTenantRebuildCheckpoint_UsesLatestEventStorePerAggregateRowAsync()
     {
         IProjectionCheckpointTracker checkpointTracker = Substitute.For<IProjectionCheckpointTracker>();
+        checkpointTracker
+            .EnumerateTrackedIdentitiesAsync(Arg.Any<CancellationToken>())
+            .Returns(_ => EnumerateIdentities([
+                new AggregateIdentity("tenant-a", "party", "party-1"),
+                new AggregateIdentity("tenant-a", "party", "party-2"),
+                new AggregateIdentity("tenant-b", "party", "party-other"),
+            ]));
+        IProjectionRebuildCheckpointStore rebuildStore = Substitute.For<IProjectionRebuildCheckpointStore>();
+        rebuildStore
+            .ReadAsync(
+                Arg.Is<ProjectionRebuildCheckpointScope>(scope => scope != null && scope.AggregateId == "party-1"),
+                Arg.Any<CancellationToken>())
+            .Returns(CreateCheckpoint("tenant-a", "party-detail", "party-1", 5, ProjectionRebuildStatus.Running, DateTimeOffset.UtcNow.AddMinutes(-2)));
+        rebuildStore
+            .ReadAsync(
+                Arg.Is<ProjectionRebuildCheckpointScope>(scope => scope != null && scope.AggregateId == "party-2"),
+                Arg.Any<CancellationToken>())
+            .Returns(CreateCheckpoint("tenant-a", "party-detail", "party-2", 9, ProjectionRebuildStatus.Running, DateTimeOffset.UtcNow));
+        var sut = new EventStorePartyProjectionPlatformAdapter(checkpointTracker, rebuildStore);
+
+        PartyProjectionRebuildCheckpoint? checkpoint = await sut.ReadRebuildCheckpointAsync(
+            PartyProjectionRebuildScope.Detail("tenant-a"),
+            CancellationToken.None);
+
+        checkpoint.ShouldNotBeNull();
+        checkpoint.PartyId.ShouldBe("party-2");
+        checkpoint.SequenceNumber.ShouldBe(9);
+    }
+
+    [Fact]
+    public async Task EventStoreAdapter_ReadRebuildCheckpoint_TerminalRowDoesNotResumeAsync()
+    {
+        IProjectionCheckpointTracker checkpointTracker = Substitute.For<IProjectionCheckpointTracker>();
+        IProjectionRebuildCheckpointStore rebuildStore = Substitute.For<IProjectionRebuildCheckpointStore>();
+        rebuildStore
+            .ReadAsync(Arg.Any<ProjectionRebuildCheckpointScope>(), Arg.Any<CancellationToken>())
+            .Returns(CreateCheckpoint("tenant-a", "party-detail", "party-1", 9, ProjectionRebuildStatus.Canceled, DateTimeOffset.UtcNow));
+        var sut = new EventStorePartyProjectionPlatformAdapter(checkpointTracker, rebuildStore);
+
+        PartyProjectionRebuildCheckpoint? checkpoint = await sut.ReadRebuildCheckpointAsync(
+            PartyProjectionRebuildScope.Detail("tenant-a", "party-1"),
+            CancellationToken.None);
+
+        checkpoint.ShouldBeNull();
+    }
+
+    [Fact]
+    public async Task EventStoreAdapter_DeleteRebuildCheckpoint_CompletionFailureSurfacesWithoutLocalCleanupAsync()
+    {
+        IProjectionCheckpointTracker checkpointTracker = Substitute.For<IProjectionCheckpointTracker>();
+        checkpointTracker
+            .EnumerateTrackedIdentitiesAsync(Arg.Any<CancellationToken>())
+            .Returns(_ => EnumerateIdentities([new AggregateIdentity("tenant-a", "party", "party-1")]));
         IProjectionRebuildCheckpointStore rebuildStore = Substitute.For<IProjectionRebuildCheckpointStore>();
         rebuildStore
             .SaveAsync(
@@ -146,26 +190,14 @@ public sealed class ProjectionPlatformAdapterTests
                 null,
                 false)
             .Returns(new ProjectionRebuildCheckpointSaveResult(false, "write-conflict", null));
-        MockHttpMessageHandler handler = new();
-        handler.AddResponse(
-            "/v1.0/actors/PartyIndexProjectionActor/tenant-a%3Aparty-index/state",
-            null,
-            HttpStatusCode.NoContent,
-            HttpMethod.Put);
-        var local = new LocalPartyProjectionPlatformAdapter(new HttpClient(handler) { BaseAddress = new Uri("http://localhost:3500") });
         var sut = new EventStorePartyProjectionPlatformAdapter(
             checkpointTracker,
-            rebuildStore,
-            local,
-            Substitute.For<ILogger<EventStorePartyProjectionPlatformAdapter>>());
+            rebuildStore);
 
         InvalidOperationException exception = await Should.ThrowAsync<InvalidOperationException>(
             () => sut.DeleteRebuildCheckpointAsync(PartyProjectionRebuildScope.Index("tenant-a"), CancellationToken.None));
 
         exception.Message.ShouldBe("Projection rebuild checkpoint completion save failed.");
-        handler.Requests.ShouldContain(request => request.Method == HttpMethod.Put
-            && request.Body?.Contains("\"delete\"", StringComparison.Ordinal) == true
-            && request.Body.Contains("tenant-a:rebuild-checkpoint:index", StringComparison.Ordinal));
     }
 
     [Fact]
@@ -191,7 +223,8 @@ public sealed class ProjectionPlatformAdapterTests
         checkpoint.PartyId.ShouldBe("party-2");
         checkpoint.SequenceNumber.ShouldBe(5);
         handler.Requests.ShouldContain(request => request.Method == HttpMethod.Put
-            && request.Body?.Contains("\"delete\"", StringComparison.Ordinal) == true
+            && request.Body != null
+            && request.Body.Contains("\"delete\"", StringComparison.Ordinal)
             && request.Body.Contains("tenant-a:rebuild-checkpoint:index", StringComparison.Ordinal));
     }
 
@@ -265,9 +298,15 @@ public sealed class ProjectionPlatformAdapterTests
                 Arg.Any<byte[]>(),
                 Arg.Any<string>(),
                 Arg.Any<CancellationToken>())
-            .Returns(callInfo => Task.FromResult(new PayloadProtectionResult(
-                (byte[])callInfo[2],
-                (string)callInfo[3])));
+            .Returns(callInfo =>
+            {
+                if (callInfo[2] is not byte[] payloadBytes || callInfo[3] is not string serializationFormat)
+                {
+                    throw new InvalidOperationException("Expected serialized payload bytes and format.");
+                }
+
+                return Task.FromResult(new PayloadProtectionResult(payloadBytes, serializationFormat));
+            });
 
         IPartyProjectionPlatformAdapter adapter = Substitute.For<IPartyProjectionPlatformAdapter>();
         adapter.ReadDeliveredSequenceAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(0L);
@@ -280,7 +319,7 @@ public sealed class ProjectionPlatformAdapterTests
             protection,
             adapter,
             Substitute.For<IServiceProvider>(),
-            Substitute.For<ILogger<PartyProjectionUpdateOrchestrator>>());
+            NullLogger<PartyProjectionUpdateOrchestrator>.Instance);
         return (sut, adapter, aggregate, detail, index);
     }
 
@@ -331,6 +370,34 @@ public sealed class ProjectionPlatformAdapterTests
         services.AddSingleton(Substitute.For<IProjectionRebuildCheckpointStore>());
         return services.BuildServiceProvider();
     }
+
+    private static async IAsyncEnumerable<AggregateIdentity> EnumerateIdentities(IEnumerable<AggregateIdentity> identities)
+    {
+        foreach (AggregateIdentity identity in identities)
+        {
+            yield return identity;
+        }
+
+        await Task.CompletedTask.ConfigureAwait(false);
+    }
+
+    private static ProjectionRebuildCheckpoint CreateCheckpoint(
+        string tenantId,
+        string projectionName,
+        string partyId,
+        long sequenceNumber,
+        ProjectionRebuildStatus status,
+        DateTimeOffset updatedAt)
+        => new(
+            tenantId,
+            "party",
+            projectionName,
+            partyId,
+            null,
+            sequenceNumber,
+            status,
+            updatedAt,
+            null);
 
     private sealed class MockHttpMessageHandler : HttpMessageHandler
     {

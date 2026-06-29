@@ -128,6 +128,10 @@ public sealed class LocalPartyProjectionPlatformAdapter(HttpClient daprHttpClien
                 ProjectionFreshnessMetadata.Create(ProjectionFreshnessStatus.Current),
             PartyProjectionPlatformFreshness.Stale =>
                 ProjectionFreshnessMetadata.Create(ProjectionFreshnessStatus.Stale),
+            PartyProjectionPlatformFreshness.Degraded =>
+                ProjectionFreshnessMetadata.Create(
+                    ProjectionFreshnessStatus.Degraded,
+                    ProjectionFreshnessMetadata.WarningProjectionStateStoreUnavailable),
             _ => ProjectionFreshnessMetadata.Create(
                 ProjectionFreshnessStatus.Unavailable,
                 ProjectionFreshnessMetadata.WarningProjectionContextUnavailable),

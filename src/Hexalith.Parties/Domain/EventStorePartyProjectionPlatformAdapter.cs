@@ -5,15 +5,11 @@ using Hexalith.EventStore.Server.Projections;
 using Hexalith.Parties.Contracts.Models;
 using Hexalith.Parties.Projections.Services;
 
-using Microsoft.Extensions.Logging;
-
 namespace Hexalith.Parties.Domain;
 
-internal sealed partial class EventStorePartyProjectionPlatformAdapter(
+internal sealed class EventStorePartyProjectionPlatformAdapter(
     IProjectionCheckpointTracker checkpointTracker,
-    IProjectionRebuildCheckpointStore rebuildCheckpointStore,
-    LocalPartyProjectionPlatformAdapter localAdapter,
-    ILogger<EventStorePartyProjectionPlatformAdapter> logger) : IPartyProjectionPlatformAdapter
+    IProjectionRebuildCheckpointStore rebuildCheckpointStore) : IPartyProjectionPlatformAdapter
 {
     private const string Domain = "party";
 
@@ -43,22 +39,40 @@ internal sealed partial class EventStorePartyProjectionPlatformAdapter(
     {
         ArgumentNullException.ThrowIfNull(scope);
 
-        try
+        if (scope.PartyId is not null)
         {
-            _ = await rebuildCheckpointStore
+            ProjectionRebuildCheckpoint? checkpoint = await rebuildCheckpointStore
                 .ReadAsync(ToEventStoreScope(scope, scope.PartyId), cancellationToken)
                 .ConfigureAwait(false);
-        }
-        catch (OperationCanceledException)
-        {
-            throw;
-        }
-        catch (Exception ex)
-        {
-            Log.EventStoreRebuildCheckpointReadUnavailable(logger, ex, scope.ProjectionName);
+            return ToPartyCheckpoint(checkpoint);
         }
 
-        return await localAdapter.ReadRebuildCheckpointAsync(scope, cancellationToken).ConfigureAwait(false);
+        ProjectionRebuildCheckpoint? latest = null;
+        await foreach (AggregateIdentity identity in checkpointTracker
+            .EnumerateTrackedIdentitiesAsync(cancellationToken)
+            .ConfigureAwait(false))
+        {
+            if (!string.Equals(identity.TenantId, scope.TenantId, StringComparison.Ordinal)
+                || !string.Equals(identity.Domain, Domain, StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            ProjectionRebuildCheckpoint? checkpoint = await rebuildCheckpointStore
+                .ReadAsync(ToEventStoreScope(scope, identity.AggregateId), cancellationToken)
+                .ConfigureAwait(false);
+            if (checkpoint is null || IsTerminal(checkpoint.Status))
+            {
+                continue;
+            }
+
+            if (latest is null || checkpoint.UpdatedAt > latest.UpdatedAt)
+            {
+                latest = checkpoint;
+            }
+        }
+
+        return ToPartyCheckpoint(latest);
     }
 
     public async Task SaveRebuildCheckpointAsync(
@@ -68,8 +82,6 @@ internal sealed partial class EventStorePartyProjectionPlatformAdapter(
     {
         ArgumentNullException.ThrowIfNull(scope);
         ArgumentNullException.ThrowIfNull(checkpoint);
-
-        await localAdapter.SaveRebuildCheckpointAsync(scope, checkpoint, cancellationToken).ConfigureAwait(false);
 
         ProjectionRebuildCheckpointScope eventStoreScope = ToEventStoreScope(scope, checkpoint.PartyId);
         ProjectionRebuildCheckpointSaveResult result = await rebuildCheckpointStore
@@ -90,16 +102,26 @@ internal sealed partial class EventStorePartyProjectionPlatformAdapter(
     {
         ArgumentNullException.ThrowIfNull(scope);
 
-        await localAdapter.DeleteRebuildCheckpointAsync(scope, cancellationToken).ConfigureAwait(false);
-
-        ProjectionRebuildCheckpointScope eventStoreScope = ToEventStoreScope(scope, scope.PartyId);
-        ProjectionRebuildCheckpointSaveResult result = await rebuildCheckpointStore
-            .SaveAsync(eventStoreScope, 0, ProjectionRebuildStatus.Succeeded, cancellationToken: cancellationToken)
-            .ConfigureAwait(false);
-        if (!result.Succeeded)
+        if (scope.PartyId is not null)
         {
-            throw new InvalidOperationException("Projection rebuild checkpoint completion save failed.");
+            await SaveTerminalCheckpointAsync(ToEventStoreScope(scope, scope.PartyId), cancellationToken).ConfigureAwait(false);
+            return;
         }
+
+        await foreach (AggregateIdentity identity in checkpointTracker
+            .EnumerateTrackedIdentitiesAsync(cancellationToken)
+            .ConfigureAwait(false))
+        {
+            if (!string.Equals(identity.TenantId, scope.TenantId, StringComparison.Ordinal)
+                || !string.Equals(identity.Domain, Domain, StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            await SaveTerminalCheckpointAsync(ToEventStoreScope(scope, identity.AggregateId), cancellationToken).ConfigureAwait(false);
+        }
+
+        await SaveTerminalCheckpointAsync(ToEventStoreScope(scope, null), cancellationToken).ConfigureAwait(false);
     }
 
     public Task<bool> HasActiveRebuildAsync(string tenantId, CancellationToken cancellationToken)
@@ -113,7 +135,16 @@ internal sealed partial class EventStorePartyProjectionPlatformAdapter(
         bool isRebuilding = false,
         bool stateStoreUnavailable = false,
         bool hasSafeCachedData = false)
-        => MapFreshness(ToEventStoreFreshness(freshness), isRebuilding, stateStoreUnavailable, hasSafeCachedData);
+    {
+        if (freshness == PartyProjectionPlatformFreshness.Degraded && !isRebuilding)
+        {
+            return ProjectionFreshnessMetadata.Create(
+                ProjectionFreshnessStatus.Degraded,
+                ProjectionFreshnessMetadata.WarningProjectionStateStoreUnavailable);
+        }
+
+        return MapFreshness(ToEventStoreFreshness(freshness), isRebuilding, stateStoreUnavailable, hasSafeCachedData);
+    }
 
     internal static ProjectionFreshnessMetadata MapFreshness(
         ReadModelFreshnessState freshness,
@@ -168,24 +199,40 @@ internal sealed partial class EventStorePartyProjectionPlatformAdapter(
             aggregateId,
             scope.OperationId);
 
+    private static PartyProjectionRebuildCheckpoint? ToPartyCheckpoint(ProjectionRebuildCheckpoint? checkpoint)
+    {
+        if (checkpoint is null || IsTerminal(checkpoint.Status) || string.IsNullOrWhiteSpace(checkpoint.AggregateId))
+        {
+            return null;
+        }
+
+        return new PartyProjectionRebuildCheckpoint(checkpoint.AggregateId, checkpoint.LastAppliedSequence);
+    }
+
+    private async Task SaveTerminalCheckpointAsync(
+        ProjectionRebuildCheckpointScope scope,
+        CancellationToken cancellationToken)
+    {
+        ProjectionRebuildCheckpointSaveResult result = await rebuildCheckpointStore
+            .SaveAsync(scope, 0, ProjectionRebuildStatus.Succeeded, cancellationToken: cancellationToken)
+            .ConfigureAwait(false);
+        if (!result.Succeeded)
+        {
+            throw new InvalidOperationException("Projection rebuild checkpoint completion save failed.");
+        }
+    }
+
+    private static bool IsTerminal(ProjectionRebuildStatus status)
+        => status is ProjectionRebuildStatus.Succeeded
+            or ProjectionRebuildStatus.Failed
+            or ProjectionRebuildStatus.Canceled;
+
     private static ReadModelFreshnessState ToEventStoreFreshness(PartyProjectionPlatformFreshness freshness)
         => freshness switch
         {
             PartyProjectionPlatformFreshness.Current => ReadModelFreshnessState.Current,
             PartyProjectionPlatformFreshness.Aging => ReadModelFreshnessState.Aging,
-            PartyProjectionPlatformFreshness.Stale => ReadModelFreshnessState.Stale,
+            PartyProjectionPlatformFreshness.Stale or PartyProjectionPlatformFreshness.Degraded => ReadModelFreshnessState.Stale,
             _ => ReadModelFreshnessState.Unknown,
         };
-
-    private static partial class Log
-    {
-        [LoggerMessage(
-            EventId = 8420,
-            Level = LogLevel.Warning,
-            Message = "EventStore rebuild checkpoint read unavailable for projection {ProjectionName}; using Parties local checkpoint fallback.")]
-        public static partial void EventStoreRebuildCheckpointReadUnavailable(
-            ILogger logger,
-            Exception exception,
-            string projectionName);
-    }
 }

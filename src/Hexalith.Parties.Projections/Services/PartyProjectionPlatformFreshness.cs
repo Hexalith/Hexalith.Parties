@@ -6,4 +6,5 @@ public enum PartyProjectionPlatformFreshness
     Current,
     Aging,
     Stale,
+    Degraded,
 }

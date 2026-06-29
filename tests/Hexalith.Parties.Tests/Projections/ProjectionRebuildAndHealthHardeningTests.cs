@@ -194,6 +194,43 @@ public sealed class ProjectionRebuildAndHealthHardeningTests
     }
 
     [Fact]
+    public async Task DetailRead_UsesProjectionPlatformFreshnessMapperAsync()
+    {
+        IPartyProjectionPlatformAdapter adapter = Substitute.For<IPartyProjectionPlatformAdapter>();
+        adapter
+            .MapFreshness(PartyProjectionPlatformFreshness.Current, false, false, false)
+            .Returns(ProjectionFreshnessMetadata.Create(ProjectionFreshnessStatus.Current));
+        (PartyDetailProjectionActor actor, IActorStateManager stateManager, _) =
+            CreateDetailActor(projectionPlatformAdapter: adapter);
+        stateManager.TryGetStateAsync<PartyDetail>(
+                "test-tenant:party-detail:party-001",
+                Arg.Any<CancellationToken>())
+            .Returns(new ConditionalValue<PartyDetail>(true, CreateDetail("party-001")));
+
+        PartyDetailProjectionReadResult result = await actor.GetDetailReadAsync();
+
+        result.Freshness.Status.ShouldBe(ProjectionFreshnessStatus.Current);
+        adapter.Received(1).MapFreshness(PartyProjectionPlatformFreshness.Current, false, false, false);
+    }
+
+    [Fact]
+    public async Task IndexRead_UsesProjectionPlatformFreshnessMapperAsync()
+    {
+        IPartyProjectionPlatformAdapter adapter = Substitute.For<IPartyProjectionPlatformAdapter>();
+        adapter
+            .MapFreshness(PartyProjectionPlatformFreshness.Current, false, false, false)
+            .Returns(ProjectionFreshnessMetadata.Create(ProjectionFreshnessStatus.Current));
+        (PartyIndexProjectionActor actor, IActorStateManager stateManager, _) =
+            CreateIndexActor("test-tenant:party-index", projectionPlatformAdapter: adapter);
+        SetupEmptyIndexState(stateManager);
+
+        PartyIndexProjectionReadResult result = await actor.GetEntriesReadAsync();
+
+        result.Freshness.Status.ShouldBe(ProjectionFreshnessStatus.Current);
+        adapter.Received(1).MapFreshness(PartyProjectionPlatformFreshness.Current, false, false, false);
+    }
+
+    [Fact]
     public async Task RebuildDetailProjection_DuplicateReminder_KeepsRebuildingStateAuthoritativeAsync()
     {
         (PartyDetailProjectionActor actor, IActorStateManager stateManager, IProjectionRebuildService rebuildService) =
@@ -352,7 +389,9 @@ public sealed class ProjectionRebuildAndHealthHardeningTests
     }
 
     private static (PartyDetailProjectionActor Actor, IActorStateManager StateManager, IProjectionRebuildService RebuildService)
-        CreateDetailActor(string actorId = "test-tenant:party-detail:party-001")
+        CreateDetailActor(
+            string actorId = "test-tenant:party-detail:party-001",
+            IPartyProjectionPlatformAdapter? projectionPlatformAdapter = null)
     {
         IActorStateManager stateManager = Substitute.For<IActorStateManager>();
         IProjectionRebuildService rebuildService = Substitute.For<IProjectionRebuildService>();
@@ -361,13 +400,16 @@ public sealed class ProjectionRebuildAndHealthHardeningTests
         ActorTimerManager timerManager = Substitute.For<ActorTimerManager>();
         var host = ActorHost.CreateForTest<PartyDetailProjectionActor>(
             new ActorTestOptions { ActorId = new ActorId(actorId), TimerManager = timerManager });
-        var actor = new PartyDetailProjectionActor(host, rebuildService, logger);
+        var actor = new PartyDetailProjectionActor(host, rebuildService, logger, projectionPlatformAdapter);
         InjectStateManager(actor, stateManager);
         return (actor, stateManager, rebuildService);
     }
 
     private static (PartyIndexProjectionActor Actor, IActorStateManager StateManager, IProjectionRebuildService RebuildService)
-        CreateIndexActor(string actorId, ProjectionOptions? options = null)
+        CreateIndexActor(
+            string actorId,
+            ProjectionOptions? options = null,
+            IPartyProjectionPlatformAdapter? projectionPlatformAdapter = null)
     {
         IActorStateManager stateManager = Substitute.For<IActorStateManager>();
         IProjectionRebuildService rebuildService = Substitute.For<IProjectionRebuildService>();
@@ -381,7 +423,8 @@ public sealed class ProjectionRebuildAndHealthHardeningTests
             new SingleKeyPartitionStrategy(),
             Options.Create(options ?? new ProjectionOptions()),
             rebuildService,
-            logger);
+            logger,
+            projectionPlatformAdapter);
         InjectStateManager(actor, stateManager);
         return (actor, stateManager, rebuildService);
     }

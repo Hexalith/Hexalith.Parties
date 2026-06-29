@@ -32,6 +32,7 @@ public sealed partial class PartyIndexProjectionActor : Actor, IPartyIndexProjec
     private readonly IIndexPartitionStrategy _partitionStrategy;
     private readonly ProjectionOptions _options;
     private readonly ILogger<PartyIndexProjectionActor> _logger;
+    private readonly IPartyProjectionPlatformAdapter? _projectionPlatformAdapter;
     private readonly IProjectionRebuildService _rebuildService;
     private readonly SemaphoreSlim _rebuildGate = new(1, 1);
     private Dictionary<string, PartyIndexEntry>? _entries;
@@ -45,7 +46,8 @@ public sealed partial class PartyIndexProjectionActor : Actor, IPartyIndexProjec
         IIndexPartitionStrategy partitionStrategy,
         IOptions<ProjectionOptions> options,
         IProjectionRebuildService rebuildService,
-        ILogger<PartyIndexProjectionActor> logger)
+        ILogger<PartyIndexProjectionActor> logger,
+        IPartyProjectionPlatformAdapter? projectionPlatformAdapter = null)
         : base(host)
     {
         ArgumentNullException.ThrowIfNull(options);
@@ -53,6 +55,7 @@ public sealed partial class PartyIndexProjectionActor : Actor, IPartyIndexProjec
         _options = options.Value;
         _rebuildService = rebuildService;
         _logger = logger;
+        _projectionPlatformAdapter = projectionPlatformAdapter;
     }
 
     public async Task HandleEventAsync(string partyId, IEventPayload @event)
@@ -302,7 +305,7 @@ public sealed partial class PartyIndexProjectionActor : Actor, IPartyIndexProjec
                     return new PartyIndexProjectionReadResult
                     {
                         Entries = _entries,
-                        Freshness = ProjectionFreshnessMetadata.Create(ProjectionFreshnessStatus.Rebuilding, ProjectionFreshnessMetadata.WarningProjectionRebuilding),
+                        Freshness = MapFreshness(PartyProjectionPlatformFreshness.Current, isRebuilding: true),
                     };
                 }
 
@@ -311,7 +314,7 @@ public sealed partial class PartyIndexProjectionActor : Actor, IPartyIndexProjec
                     return new PartyIndexProjectionReadResult
                     {
                         Entries = cached,
-                        Freshness = ProjectionFreshnessMetadata.Create(ProjectionFreshnessStatus.Rebuilding, ProjectionFreshnessMetadata.WarningProjectionRebuilding),
+                        Freshness = MapFreshness(PartyProjectionPlatformFreshness.Current, isRebuilding: true),
                     };
                 }
             }
@@ -319,11 +322,11 @@ public sealed partial class PartyIndexProjectionActor : Actor, IPartyIndexProjec
             return new PartyIndexProjectionReadResult
             {
                 Entries = new Dictionary<string, PartyIndexEntry>(),
-                Freshness = ProjectionFreshnessMetadata.Create(ProjectionFreshnessStatus.Unavailable, ProjectionFreshnessMetadata.WarningProjectionContextUnavailable),
+                Freshness = MapFreshness(PartyProjectionPlatformFreshness.Unknown),
             };
         }
 
-        ProjectionFreshnessMetadata freshness = ProjectionFreshnessMetadata.Create(ProjectionFreshnessStatus.Current);
+        ProjectionFreshnessMetadata freshness = MapFreshness(PartyProjectionPlatformFreshness.Current);
         try
         {
             await FlushAsync().ConfigureAwait(false);
@@ -333,7 +336,7 @@ public sealed partial class PartyIndexProjectionActor : Actor, IPartyIndexProjec
         {
             // If the backing state store is unavailable, continue serving the
             // in-memory snapshot already loaded in this actor activation.
-            freshness = ProjectionFreshnessMetadata.Create(ProjectionFreshnessStatus.Degraded, ProjectionFreshnessMetadata.WarningProjectionStateStoreUnavailable);
+            freshness = MapFreshness(PartyProjectionPlatformFreshness.Degraded);
         }
 
         if (_entries is not null)
@@ -353,7 +356,7 @@ public sealed partial class PartyIndexProjectionActor : Actor, IPartyIndexProjec
             return new PartyIndexProjectionReadResult
             {
                 Entries = new Dictionary<string, PartyIndexEntry>(),
-                Freshness = ProjectionFreshnessMetadata.Create(ProjectionFreshnessStatus.Unavailable, ProjectionFreshnessMetadata.WarningProjectionContextUnavailable),
+                Freshness = MapFreshness(PartyProjectionPlatformFreshness.Unknown),
             };
         }
 
@@ -374,14 +377,20 @@ public sealed partial class PartyIndexProjectionActor : Actor, IPartyIndexProjec
             // serve the last successfully persisted snapshot from this process.
             _entries = cachedEntries;
             _activeStateKey = stateKey;
-            freshness = ProjectionFreshnessMetadata.Create(ProjectionFreshnessStatus.Stale, ProjectionFreshnessMetadata.WarningProjectionStateStoreUnavailable);
+            freshness = MapFreshness(
+                PartyProjectionPlatformFreshness.Stale,
+                stateStoreUnavailable: true,
+                hasSafeCachedData: true);
         }
 
         return new PartyIndexProjectionReadResult
         {
             Entries = _entries ?? new Dictionary<string, PartyIndexEntry>(),
             Freshness = _entries is null
-                ? ProjectionFreshnessMetadata.Create(ProjectionFreshnessStatus.Unavailable, ProjectionFreshnessMetadata.WarningProjectionStateUnavailable)
+                ? MapFreshness(
+                    PartyProjectionPlatformFreshness.Unknown,
+                    stateStoreUnavailable: true,
+                    hasSafeCachedData: false)
                 : freshness,
         };
     }
@@ -509,6 +518,54 @@ public sealed partial class PartyIndexProjectionActor : Actor, IPartyIndexProjec
             or FormatException
             or JsonException
             || (ex.InnerException is not null && IsDeserializationFailure(ex.InnerException));
+    }
+
+    private ProjectionFreshnessMetadata MapFreshness(
+        PartyProjectionPlatformFreshness freshness,
+        bool isRebuilding = false,
+        bool stateStoreUnavailable = false,
+        bool hasSafeCachedData = false)
+        => _projectionPlatformAdapter?.MapFreshness(freshness, isRebuilding, stateStoreUnavailable, hasSafeCachedData)
+            ?? LocalFreshness(freshness, isRebuilding, stateStoreUnavailable, hasSafeCachedData);
+
+    private static ProjectionFreshnessMetadata LocalFreshness(
+        PartyProjectionPlatformFreshness freshness,
+        bool isRebuilding,
+        bool stateStoreUnavailable,
+        bool hasSafeCachedData)
+    {
+        if (isRebuilding)
+        {
+            return ProjectionFreshnessMetadata.Create(
+                ProjectionFreshnessStatus.Rebuilding,
+                ProjectionFreshnessMetadata.WarningProjectionRebuilding);
+        }
+
+        if (stateStoreUnavailable)
+        {
+            return hasSafeCachedData
+                ? ProjectionFreshnessMetadata.Create(
+                    ProjectionFreshnessStatus.Stale,
+                    ProjectionFreshnessMetadata.WarningProjectionStateStoreUnavailable)
+                : ProjectionFreshnessMetadata.Create(
+                    ProjectionFreshnessStatus.Unavailable,
+                    ProjectionFreshnessMetadata.WarningProjectionStateUnavailable);
+        }
+
+        return freshness switch
+        {
+            PartyProjectionPlatformFreshness.Current or PartyProjectionPlatformFreshness.Aging =>
+                ProjectionFreshnessMetadata.Create(ProjectionFreshnessStatus.Current),
+            PartyProjectionPlatformFreshness.Stale =>
+                ProjectionFreshnessMetadata.Create(ProjectionFreshnessStatus.Stale),
+            PartyProjectionPlatformFreshness.Degraded =>
+                ProjectionFreshnessMetadata.Create(
+                    ProjectionFreshnessStatus.Degraded,
+                    ProjectionFreshnessMetadata.WarningProjectionStateStoreUnavailable),
+            _ => ProjectionFreshnessMetadata.Create(
+                ProjectionFreshnessStatus.Unavailable,
+                ProjectionFreshnessMetadata.WarningProjectionContextUnavailable),
+        };
     }
 
     private string ResolveStateKey(string partyId)

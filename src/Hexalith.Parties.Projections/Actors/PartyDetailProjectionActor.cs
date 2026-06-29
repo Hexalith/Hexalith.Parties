@@ -26,6 +26,7 @@ public sealed partial class PartyDetailProjectionActor : Actor, IPartyDetailProj
     private static readonly JsonSerializerOptions s_jsonOptions = PartiesJsonOptions.Default;
     private static readonly ConcurrentDictionary<string, PartyDetail> s_lastKnownDetails = new(StringComparer.Ordinal);
     private readonly ILogger<PartyDetailProjectionActor> _logger;
+    private readonly IPartyProjectionPlatformAdapter? _projectionPlatformAdapter;
     private readonly IProjectionRebuildService _rebuildService;
     private readonly SemaphoreSlim _rebuildGate = new(1, 1);
     private PartyDetail? _cachedDetail;
@@ -40,11 +41,13 @@ public sealed partial class PartyDetailProjectionActor : Actor, IPartyDetailProj
     public PartyDetailProjectionActor(
         ActorHost host,
         IProjectionRebuildService rebuildService,
-        ILogger<PartyDetailProjectionActor> logger)
+        ILogger<PartyDetailProjectionActor> logger,
+        IPartyProjectionPlatformAdapter? projectionPlatformAdapter = null)
         : base(host)
     {
         _rebuildService = rebuildService;
         _logger = logger;
+        _projectionPlatformAdapter = projectionPlatformAdapter;
     }
 
     public async Task HandleEventAsync(string partyId, IEventPayload @event)
@@ -254,7 +257,7 @@ public sealed partial class PartyDetailProjectionActor : Actor, IPartyDetailProj
             return new PartyDetailProjectionReadResult
             {
                 Detail = null,
-                Freshness = ProjectionFreshnessMetadata.Create(ProjectionFreshnessStatus.Unavailable, ProjectionFreshnessMetadata.WarningProjectionContextUnavailable),
+                Freshness = MapFreshness(PartyProjectionPlatformFreshness.Unknown),
             };
         }
 
@@ -263,7 +266,7 @@ public sealed partial class PartyDetailProjectionActor : Actor, IPartyDetailProj
             return new PartyDetailProjectionReadResult
             {
                 Detail = _cachedDetail ?? s_lastKnownDetails.GetValueOrDefault(stateKey),
-                Freshness = ProjectionFreshnessMetadata.Create(ProjectionFreshnessStatus.Rebuilding, ProjectionFreshnessMetadata.WarningProjectionRebuilding),
+                Freshness = MapFreshness(PartyProjectionPlatformFreshness.Current, isRebuilding: true),
             };
         }
 
@@ -280,7 +283,7 @@ public sealed partial class PartyDetailProjectionActor : Actor, IPartyDetailProj
             return new PartyDetailProjectionReadResult
             {
                 Detail = _cachedDetail,
-                Freshness = ProjectionFreshnessMetadata.Create(ProjectionFreshnessStatus.Current),
+                Freshness = MapFreshness(PartyProjectionPlatformFreshness.Current),
             };
         }
         // Cancellation is terminal per story 2.7 advanced elicitation: do not coerce a canceled
@@ -291,7 +294,10 @@ public sealed partial class PartyDetailProjectionActor : Actor, IPartyDetailProj
             return new PartyDetailProjectionReadResult
             {
                 Detail = _cachedDetail ?? s_lastKnownDetails.GetValueOrDefault(stateKey),
-                Freshness = ProjectionFreshnessMetadata.Create(ProjectionFreshnessStatus.Stale, ProjectionFreshnessMetadata.WarningProjectionStateStoreUnavailable),
+                Freshness = MapFreshness(
+                    PartyProjectionPlatformFreshness.Stale,
+                    stateStoreUnavailable: true,
+                    hasSafeCachedData: true),
             };
         }
     }
@@ -409,6 +415,54 @@ public sealed partial class PartyDetailProjectionActor : Actor, IPartyDetailProj
             or FormatException
             or JsonException
             || (ex.InnerException is not null && IsDeserializationFailure(ex.InnerException));
+    }
+
+    private ProjectionFreshnessMetadata MapFreshness(
+        PartyProjectionPlatformFreshness freshness,
+        bool isRebuilding = false,
+        bool stateStoreUnavailable = false,
+        bool hasSafeCachedData = false)
+        => _projectionPlatformAdapter?.MapFreshness(freshness, isRebuilding, stateStoreUnavailable, hasSafeCachedData)
+            ?? LocalFreshness(freshness, isRebuilding, stateStoreUnavailable, hasSafeCachedData);
+
+    private static ProjectionFreshnessMetadata LocalFreshness(
+        PartyProjectionPlatformFreshness freshness,
+        bool isRebuilding,
+        bool stateStoreUnavailable,
+        bool hasSafeCachedData)
+    {
+        if (isRebuilding)
+        {
+            return ProjectionFreshnessMetadata.Create(
+                ProjectionFreshnessStatus.Rebuilding,
+                ProjectionFreshnessMetadata.WarningProjectionRebuilding);
+        }
+
+        if (stateStoreUnavailable)
+        {
+            return hasSafeCachedData
+                ? ProjectionFreshnessMetadata.Create(
+                    ProjectionFreshnessStatus.Stale,
+                    ProjectionFreshnessMetadata.WarningProjectionStateStoreUnavailable)
+                : ProjectionFreshnessMetadata.Create(
+                    ProjectionFreshnessStatus.Unavailable,
+                    ProjectionFreshnessMetadata.WarningProjectionStateUnavailable);
+        }
+
+        return freshness switch
+        {
+            PartyProjectionPlatformFreshness.Current or PartyProjectionPlatformFreshness.Aging =>
+                ProjectionFreshnessMetadata.Create(ProjectionFreshnessStatus.Current),
+            PartyProjectionPlatformFreshness.Stale =>
+                ProjectionFreshnessMetadata.Create(ProjectionFreshnessStatus.Stale),
+            PartyProjectionPlatformFreshness.Degraded =>
+                ProjectionFreshnessMetadata.Create(
+                    ProjectionFreshnessStatus.Degraded,
+                    ProjectionFreshnessMetadata.WarningProjectionStateStoreUnavailable),
+            _ => ProjectionFreshnessMetadata.Create(
+                ProjectionFreshnessStatus.Unavailable,
+                ProjectionFreshnessMetadata.WarningProjectionContextUnavailable),
+        };
     }
 
     private (string PartyId, string StateKey) ResolveStateContext(string incomingPartyId)
