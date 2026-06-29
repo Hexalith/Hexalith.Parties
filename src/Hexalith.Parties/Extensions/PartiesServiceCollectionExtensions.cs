@@ -269,6 +269,17 @@ public static class PartiesServiceCollectionExtensions {
             .Validate(o => o.BatchSize > 0, "ProjectionOptions.BatchSize must be greater than 0.")
             .Validate(o => o.BatchTimeWindowMs > 0, "ProjectionOptions.BatchTimeWindowMs must be greater than 0.")
             .ValidateOnStart();
+        _ = services.AddHttpClient<LocalPartyProjectionPlatformAdapter>(client => {
+            string daprPort = configuration["DAPR_HTTP_PORT"] ?? "3500";
+            client.BaseAddress = new Uri($"http://127.0.0.1:{daprPort}");
+        });
+        _ = services.AddTransient<EventStorePartyProjectionPlatformAdapter>();
+        _ = services.AddTransient<IPartyProjectionPlatformAdapter>(sp =>
+            sp.GetRequiredService<IOptions<Hexalith.Parties.Projections.Configuration.ProjectionOptions>>()
+                .Value
+                .PlatformAdapterMode == PartyProjectionPlatformAdapterMode.Local
+                ? sp.GetRequiredService<LocalPartyProjectionPlatformAdapter>()
+                : sp.GetRequiredService<EventStorePartyProjectionPlatformAdapter>());
 
         services.AddActors(options => {
             options.Actors.RegisterActor<PartyIndexProjectionQueryActor>();

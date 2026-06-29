@@ -585,7 +585,8 @@ public sealed class ProjectionRebuildServiceTests
                 });
         }
 
-        return new ProjectionRebuildService(httpClient, protectionService, logger);
+        var adapter = new LocalPartyProjectionPlatformAdapter(httpClient);
+        return new ProjectionRebuildService(httpClient, protectionService, adapter, logger);
     }
 
     internal sealed class MockHttpMessageHandler : HttpMessageHandler

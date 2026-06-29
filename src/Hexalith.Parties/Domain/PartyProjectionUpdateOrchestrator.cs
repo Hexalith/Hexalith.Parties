@@ -9,6 +9,7 @@ using Hexalith.Parties.Contracts;
 using Hexalith.Parties.Contracts.Models;
 using Hexalith.Parties.Projections.Abstractions;
 using Hexalith.Parties.Projections.Actors;
+using Hexalith.Parties.Projections.Services;
 using Hexalith.Parties.Search;
 using Hexalith.Parties.Security;
 
@@ -22,6 +23,7 @@ namespace Hexalith.Parties.Domain;
 internal sealed partial class PartyProjectionUpdateOrchestrator(
     IActorProxyFactory actorProxyFactory,
     IEventPayloadProtectionService payloadProtectionService,
+    IPartyProjectionPlatformAdapter projectionPlatformAdapter,
     IServiceProvider serviceProvider,
     ILogger<PartyProjectionUpdateOrchestrator> logger) : IProjectionUpdateOrchestrator, IProjectionPollerDeliveryGateway
 {
@@ -72,6 +74,8 @@ internal sealed partial class PartyProjectionUpdateOrchestrator(
                 identity.AggregateId);
             return;
         }
+
+        _ = await TryReadDeliveredSequenceAsync(identity, cancellationToken).ConfigureAwait(false);
 
         IPartyDetailProjectionActor detailProjection = actorProxyFactory.CreateActorProxy<IPartyDetailProjectionActor>(
             new ActorId(PartyActorIds.Detail(identity.TenantId, identity.AggregateId)),
@@ -156,6 +160,8 @@ internal sealed partial class PartyProjectionUpdateOrchestrator(
                     cancellationToken)
                 .ConfigureAwait(false);
 
+            await TrySaveDeliveredSequenceAsync(identity, envelope.SequenceNumber, cancellationToken).ConfigureAwait(false);
+
             latestEnvelope = envelope;
 
             logger.LogDebug(
@@ -173,6 +179,50 @@ internal sealed partial class PartyProjectionUpdateOrchestrator(
         if (latestEnvelope is not null)
         {
             await TryIndexLatestEntryAsync(identity, indexProjection, latestEnvelope, cancellationToken).ConfigureAwait(false);
+        }
+    }
+
+    private async Task<long> TryReadDeliveredSequenceAsync(AggregateIdentity identity, CancellationToken cancellationToken)
+    {
+        try
+        {
+            return await projectionPlatformAdapter
+                .ReadDeliveredSequenceAsync(identity.TenantId, identity.AggregateId, cancellationToken)
+                .ConfigureAwait(false);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            Log.PlatformCheckpointReadUnavailable(logger, ex);
+            return 0;
+        }
+    }
+
+    private async Task TrySaveDeliveredSequenceAsync(
+        AggregateIdentity identity,
+        long sequenceNumber,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            bool saved = await projectionPlatformAdapter
+                .TrySaveDeliveredSequenceAsync(identity.TenantId, identity.AggregateId, sequenceNumber, cancellationToken)
+                .ConfigureAwait(false);
+            if (!saved)
+            {
+                Log.PlatformCheckpointSaveSkipped(logger);
+            }
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            Log.PlatformCheckpointSaveUnavailable(logger, ex);
         }
     }
 
@@ -274,5 +324,23 @@ internal sealed partial class PartyProjectionUpdateOrchestrator(
             Level = LogLevel.Warning,
             Message = "Memories search is enabled but no CaseId is configured (Parties:MemoriesSearch:CaseId). Skipping indexing for {TenantId}/{AggregateId}. Subsequent commands for this party will not log this warning again until the process restarts.")]
         public static partial void IndexingSkippedMissingCaseId(ILogger logger, string tenantId, string aggregateId);
+
+        [LoggerMessage(
+            EventId = 8402,
+            Level = LogLevel.Warning,
+            Message = "Projection platform checkpoint read unavailable; continuing full replay from sequence zero.")]
+        public static partial void PlatformCheckpointReadUnavailable(ILogger logger, Exception exception);
+
+        [LoggerMessage(
+            EventId = 8403,
+            Level = LogLevel.Warning,
+            Message = "Projection platform checkpoint save returned no progress; local actor companion checkpoints remain authoritative.")]
+        public static partial void PlatformCheckpointSaveSkipped(ILogger logger);
+
+        [LoggerMessage(
+            EventId = 8404,
+            Level = LogLevel.Warning,
+            Message = "Projection platform checkpoint save unavailable; local actor companion checkpoints remain authoritative.")]
+        public static partial void PlatformCheckpointSaveUnavailable(ILogger logger, Exception exception);
     }
 }

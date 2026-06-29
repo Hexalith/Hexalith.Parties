@@ -9,6 +9,7 @@ using Hexalith.EventStore.Contracts.Security;
 using Hexalith.Parties.Contracts;
 using Hexalith.Parties.Contracts.Events;
 using Hexalith.Parties.Contracts.Models;
+using Hexalith.Parties.Projections.Actors;
 using Hexalith.Parties.Projections.Handlers;
 
 using Microsoft.Extensions.Logging;
@@ -22,7 +23,6 @@ public sealed partial class ProjectionRebuildService : IProjectionRebuildService
     private const string IndexActorType = "PartyIndexProjectionActor";
     private const string IndexManifestStateKeySuffix = "manifest";
     private const string IndexStateKeySuffix = "default";
-    private const string RebuildCheckpointPrefix = "rebuild-checkpoint";
 
     private static readonly JsonSerializerOptions s_projectionRebuildReaderJsonOptions = new() {
         PropertyNameCaseInsensitive = true,
@@ -31,24 +31,26 @@ public sealed partial class ProjectionRebuildService : IProjectionRebuildService
 
     private readonly HttpClient _daprHttpClient;
     private readonly IEventPayloadProtectionService _payloadProtectionService;
+    private readonly IPartyProjectionPlatformAdapter _projectionPlatformAdapter;
     private readonly ILogger<ProjectionRebuildService> _logger;
 
     public ProjectionRebuildService(
         HttpClient daprHttpClient,
         IEventPayloadProtectionService payloadProtectionService,
+        IPartyProjectionPlatformAdapter projectionPlatformAdapter,
         ILogger<ProjectionRebuildService> logger) {
         _daprHttpClient = daprHttpClient;
         _payloadProtectionService = payloadProtectionService;
+        _projectionPlatformAdapter = projectionPlatformAdapter;
         _logger = logger;
     }
 
     public async Task RebuildDetailProjectionAsync(string tenantId, string? partyId, CancellationToken cancellationToken) {
         ArgumentException.ThrowIfNullOrWhiteSpace(tenantId);
 
-        string projectionKey = partyId is not null ? $"detail:{partyId}" : "detail";
+        PartyProjectionRebuildScope scope = PartyProjectionRebuildScope.Detail(tenantId, partyId);
         ProjectionRebuildCheckpoint? checkpoint = await ReadCheckpointAsync(
-            tenantId,
-            projectionKey,
+            scope,
             cancellationToken).ConfigureAwait(false);
 
         IReadOnlyList<string> partyIds = partyId is not null
@@ -74,11 +76,11 @@ public sealed partial class ProjectionRebuildService : IProjectionRebuildService
                 ? checkpoint.SequenceNumber
                 : 0;
 
-            await RebuildSingleDetailAsync(tenantId, id, projectionKey, resumeSequence, cancellationToken).ConfigureAwait(false);
+            await RebuildSingleDetailAsync(tenantId, id, scope, resumeSequence, cancellationToken).ConfigureAwait(false);
             checkpoint = null;
         }
 
-        await DeleteCheckpointAsync(tenantId, projectionKey, cancellationToken).ConfigureAwait(false);
+        await DeleteCheckpointAsync(scope, cancellationToken).ConfigureAwait(false);
 
         Log.RebuildCompleted(_logger, "detail", tenantId, partyIds.Count);
     }
@@ -86,10 +88,8 @@ public sealed partial class ProjectionRebuildService : IProjectionRebuildService
     public async Task RebuildIndexProjectionAsync(string tenantId, CancellationToken cancellationToken) {
         ArgumentException.ThrowIfNullOrWhiteSpace(tenantId);
 
-        ProjectionRebuildCheckpoint? checkpoint = await ReadCheckpointAsync(
-            tenantId,
-            "index",
-            cancellationToken).ConfigureAwait(false);
+        PartyProjectionRebuildScope scope = PartyProjectionRebuildScope.Index(tenantId);
+        ProjectionRebuildCheckpoint? checkpoint = await ReadCheckpointAsync(scope, cancellationToken).ConfigureAwait(false);
 
         IReadOnlyList<string> partyIds = await GetPartyIdsForTenantAsync(tenantId, cancellationToken).ConfigureAwait(false);
         EnsureTrustedPartyIdsAvailable(partyIds);
@@ -140,8 +140,7 @@ public sealed partial class ProjectionRebuildService : IProjectionRebuildService
 
                 await WriteIndexProjectionStateAsync(tenantId, rebuiltIndex, cancellationToken).ConfigureAwait(false);
                 await WriteCheckpointAsync(
-                    tenantId,
-                    "index",
+                    scope,
                     new ProjectionRebuildCheckpoint(id, evt.SequenceNumber),
                     cancellationToken).ConfigureAwait(false);
             }
@@ -150,7 +149,7 @@ public sealed partial class ProjectionRebuildService : IProjectionRebuildService
             checkpoint = null;
         }
 
-        await DeleteCheckpointAsync(tenantId, "index", cancellationToken).ConfigureAwait(false);
+        await DeleteCheckpointAsync(scope, cancellationToken).ConfigureAwait(false);
 
         Log.RebuildCompleted(_logger, "index", tenantId, partyIds.Count);
     }
@@ -255,7 +254,7 @@ public sealed partial class ProjectionRebuildService : IProjectionRebuildService
     private async Task RebuildSingleDetailAsync(
         string tenantId,
         string partyId,
-        string projectionKey,
+        PartyProjectionRebuildScope scope,
         long resumeSequence,
         CancellationToken cancellationToken) {
         string detailActorId = GetDetailActorId(tenantId, partyId);
@@ -281,8 +280,7 @@ public sealed partial class ProjectionRebuildService : IProjectionRebuildService
             }
 
             await WriteCheckpointAsync(
-                tenantId,
-                projectionKey,
+                scope,
                 new ProjectionRebuildCheckpoint(partyId, evt.SequenceNumber),
                 cancellationToken).ConfigureAwait(false);
         }
@@ -392,52 +390,31 @@ public sealed partial class ProjectionRebuildService : IProjectionRebuildService
     }
 
     private async Task<ProjectionRebuildCheckpoint?> ReadCheckpointAsync(
-        string tenantId,
-        string projectionKey,
+        PartyProjectionRebuildScope scope,
         CancellationToken cancellationToken)
-        => await ReadActorStateAsync<ProjectionRebuildCheckpoint>(
-            IndexActorType,
-            GetIndexActorId(tenantId),
-            GetCheckpointStateKey(tenantId, projectionKey),
-            cancellationToken).ConfigureAwait(false);
+    {
+        PartyProjectionRebuildCheckpoint? checkpoint = await _projectionPlatformAdapter
+            .ReadRebuildCheckpointAsync(scope, cancellationToken)
+            .ConfigureAwait(false);
 
-    private async Task WriteCheckpointAsync(
-        string tenantId,
-        string projectionKey,
-        ProjectionRebuildCheckpoint checkpoint,
-        CancellationToken cancellationToken)
-        => await WriteActorStateAsync(
-            IndexActorType,
-            GetIndexActorId(tenantId),
-            GetCheckpointStateKey(tenantId, projectionKey),
-            checkpoint,
-            cancellationToken).ConfigureAwait(false);
-
-    private async Task DeleteCheckpointAsync(
-        string tenantId,
-        string projectionKey,
-        CancellationToken cancellationToken) {
-        string actorId = GetIndexActorId(tenantId);
-        string url = $"/v1.0/actors/{IndexActorType}/{Uri.EscapeDataString(actorId)}/state";
-        var stateTransaction = new[]
-        {
-            new
-            {
-                operation = "delete",
-                request = new { key = GetCheckpointStateKey(tenantId, projectionKey) },
-            },
-        };
-
-        HttpResponseMessage response = await _daprHttpClient.PutAsJsonAsync(
-            url,
-            stateTransaction,
-            PartiesJsonOptions.Default,
-            cancellationToken).ConfigureAwait(false);
-        response.EnsureSuccessStatusCode();
+        return checkpoint is null
+            ? null
+            : new ProjectionRebuildCheckpoint(checkpoint.PartyId, checkpoint.SequenceNumber);
     }
 
-    private static string GetCheckpointStateKey(string tenantId, string projectionKey)
-        => $"{tenantId}:{RebuildCheckpointPrefix}:{projectionKey}";
+    private async Task WriteCheckpointAsync(
+        PartyProjectionRebuildScope scope,
+        ProjectionRebuildCheckpoint checkpoint,
+        CancellationToken cancellationToken)
+        => await _projectionPlatformAdapter
+            .SaveRebuildCheckpointAsync(
+                scope,
+                new PartyProjectionRebuildCheckpoint(checkpoint.PartyId, checkpoint.SequenceNumber),
+                cancellationToken)
+            .ConfigureAwait(false);
+
+    private async Task DeleteCheckpointAsync(PartyProjectionRebuildScope scope, CancellationToken cancellationToken)
+        => await _projectionPlatformAdapter.DeleteRebuildCheckpointAsync(scope, cancellationToken).ConfigureAwait(false);
 
     private static void EnsureTrustedPartyIdsAvailable(IReadOnlyCollection<string> partyIds)
     {
@@ -554,27 +531,7 @@ public sealed partial class ProjectionRebuildService : IProjectionRebuildService
             return null;
         }
 
-        // Try direct type resolution (assembly-qualified name)
-        Type? type = Type.GetType(eventTypeName);
-        if (type is not null) {
-            return type;
-        }
-
-        // Search in the Parties.Contracts assembly where all domain events live
-        type = typeof(PartyCreated).Assembly.GetType(eventTypeName);
-        if (type is not null) {
-            return type;
-        }
-
-        // Try short name match (just the class name without namespace)
-        string shortName = eventTypeName.Contains('.', StringComparison.Ordinal)
-            ? eventTypeName[(eventTypeName.LastIndexOf('.') + 1)..]
-            : eventTypeName;
-
-        return typeof(PartyCreated).Assembly
-            .GetTypes()
-            .FirstOrDefault(t => string.Equals(t.Name, shortName, StringComparison.Ordinal)
-                && typeof(IEventPayload).IsAssignableFrom(t));
+        return PartyEventTypeResolver.Resolve(eventTypeName);
     }
 
     internal sealed record AggregateMetadataDto {

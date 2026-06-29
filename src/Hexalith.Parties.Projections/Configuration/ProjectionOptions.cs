@@ -7,4 +7,6 @@ public sealed record ProjectionOptions
     public int BatchSize { get; init; } = 50;
 
     public int BatchTimeWindowMs { get; init; } = 500;
+
+    public PartyProjectionPlatformAdapterMode PlatformAdapterMode { get; init; } = PartyProjectionPlatformAdapterMode.EventStore;
 }

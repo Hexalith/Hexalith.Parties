@@ -343,7 +343,12 @@ public sealed class ProjectionRebuildAndHealthHardeningTests
     private static ProjectionRebuildService CreateService(MockHttpMessageHandler handler)
     {
         HttpClient httpClient = new(handler) { BaseAddress = new Uri("http://localhost:3500") };
-        return new ProjectionRebuildService(httpClient, new NoOpPayloadProtectionService(), Substitute.For<ILogger<ProjectionRebuildService>>());
+        var adapter = new LocalPartyProjectionPlatformAdapter(httpClient);
+        return new ProjectionRebuildService(
+            httpClient,
+            new NoOpPayloadProtectionService(),
+            adapter,
+            Substitute.For<ILogger<ProjectionRebuildService>>());
     }
 
     private static (PartyDetailProjectionActor Actor, IActorStateManager StateManager, IProjectionRebuildService RebuildService)
