@@ -142,10 +142,10 @@ public sealed class ProjectionRebuildServiceTests
 
         MockHttpMessageHandler handler = new();
         handler.AddResponse(
-            BuildActorStateUrl("PartyIndexProjectionActor", "test-tenant:party-index", "test-tenant:rebuild-checkpoint:detail:party-001"),
+            BuildActorStateUrl("PartyIndexProjectionActor", PartyActorIds.Index("test-tenant"), "test-tenant:rebuild-checkpoint:detail:party-001"),
             JsonSerializer.Serialize(new { partyId = "party-001", sequenceNumber = 1L }));
         handler.AddResponse(
-            BuildActorStateUrl("PartyDetailProjectionActor", "test-tenant:party-detail:party-001", "test-tenant:party-detail:party-001"),
+            BuildActorStateUrl("PartyDetailProjectionActor", PartyActorIds.Detail("test-tenant", "party-001"), PartyActorIds.Detail("test-tenant", "party-001")),
             JsonSerializer.Serialize(existingDetail));
         handler.AddResponse(
             BuildActorStateUrl("AggregateActor", "test-tenant:party:party-001", "test-tenant:party:party-001:metadata"),
@@ -154,12 +154,12 @@ public sealed class ProjectionRebuildServiceTests
             BuildActorStateUrl("AggregateActor", "test-tenant:party:party-001", "test-tenant:party:party-001:events:2"),
             JsonSerializer.Serialize(envelope2));
         handler.AddResponse(
-            BuildActorStateRootUrl("PartyDetailProjectionActor", "test-tenant:party-detail:party-001"),
+            BuildActorStateRootUrl("PartyDetailProjectionActor", PartyActorIds.Detail("test-tenant", "party-001")),
             null,
             HttpStatusCode.NoContent,
             HttpMethod.Put);
         handler.AddResponse(
-            BuildActorStateRootUrl("PartyIndexProjectionActor", "test-tenant:party-index"),
+            BuildActorStateRootUrl("PartyIndexProjectionActor", PartyActorIds.Index("test-tenant")),
             null,
             HttpStatusCode.NoContent,
             HttpMethod.Put);
@@ -195,15 +195,15 @@ public sealed class ProjectionRebuildServiceTests
 
         MockHttpMessageHandler handler = new();
         handler.AddResponse(
-            BuildActorStateUrl("PartyIndexProjectionActor", "test-tenant:party-index", "test-tenant:rebuild-checkpoint:index"),
+            BuildActorStateUrl("PartyIndexProjectionActor", PartyActorIds.Index("test-tenant"), "test-tenant:rebuild-checkpoint:index"),
             null,
             HttpStatusCode.NotFound);
         handler.AddResponse(
-            BuildActorStateUrl("PartyIndexProjectionActor", "test-tenant:party-index", "test-tenant:party-index:all"),
+            BuildActorStateUrl("PartyIndexProjectionActor", PartyActorIds.Index("test-tenant"), GetIndexStateKey("test-tenant")),
             null,
             HttpStatusCode.NotFound);
         handler.AddResponse(
-            BuildActorStateUrl("PartyIndexProjectionActor", "test-tenant:party-index", "test-tenant:party-index:manifest"),
+            BuildActorStateUrl("PartyIndexProjectionActor", PartyActorIds.Index("test-tenant"), GetIndexManifestStateKey("test-tenant")),
             JsonSerializer.Serialize(new[] { "party-002" }));
         handler.AddResponse(
             BuildActorStateUrl("AggregateActor", "test-tenant:party:party-002", "test-tenant:party:party-002:metadata"),
@@ -212,7 +212,7 @@ public sealed class ProjectionRebuildServiceTests
             BuildActorStateUrl("AggregateActor", "test-tenant:party:party-002", "test-tenant:party:party-002:events:1"),
             JsonSerializer.Serialize(envelope1));
         handler.AddResponse(
-            BuildActorStateRootUrl("PartyIndexProjectionActor", "test-tenant:party-index"),
+            BuildActorStateRootUrl("PartyIndexProjectionActor", PartyActorIds.Index("test-tenant")),
             null,
             HttpStatusCode.NoContent,
             HttpMethod.Put);
@@ -223,11 +223,19 @@ public sealed class ProjectionRebuildServiceTests
 
         handler.Requests.ShouldContain(request => request.Method == HttpMethod.Get && request.Path == BuildActorStateUrl(
             "PartyIndexProjectionActor",
-            "test-tenant:party-index",
-            "test-tenant:party-index:manifest"));
+            PartyActorIds.Index("test-tenant"),
+            GetIndexStateKey("test-tenant")));
+        handler.Requests.ShouldNotContain(request => request.Method == HttpMethod.Get && request.Path == BuildActorStateUrl(
+            "PartyIndexProjectionActor",
+            PartyActorIds.Index("test-tenant"),
+            $"{PartyActorIds.Index("test-tenant")}:all"));
+        handler.Requests.ShouldContain(request => request.Method == HttpMethod.Get && request.Path == BuildActorStateUrl(
+            "PartyIndexProjectionActor",
+            PartyActorIds.Index("test-tenant"),
+            GetIndexManifestStateKey("test-tenant")));
         handler.Requests.ShouldContain(request => request.Method == HttpMethod.Put && request.Path == BuildActorStateRootUrl(
             "PartyIndexProjectionActor",
-            "test-tenant:party-index"));
+            PartyActorIds.Index("test-tenant")));
     }
 
     [Fact]
@@ -235,15 +243,15 @@ public sealed class ProjectionRebuildServiceTests
     {
         MockHttpMessageHandler handler = new();
         handler.AddResponse(
-            BuildActorStateUrl("PartyIndexProjectionActor", "test-tenant:party-index", "test-tenant:rebuild-checkpoint:index"),
+            BuildActorStateUrl("PartyIndexProjectionActor", PartyActorIds.Index("test-tenant"), "test-tenant:rebuild-checkpoint:index"),
             null,
             HttpStatusCode.NotFound);
         handler.AddResponse(
-            BuildActorStateUrl("PartyIndexProjectionActor", "test-tenant:party-index", "test-tenant:party-index:all"),
+            BuildActorStateUrl("PartyIndexProjectionActor", PartyActorIds.Index("test-tenant"), GetIndexStateKey("test-tenant")),
             null,
             HttpStatusCode.NotFound);
         handler.AddResponse(
-            BuildActorStateUrl("PartyIndexProjectionActor", "test-tenant:party-index", "test-tenant:party-index:manifest"),
+            BuildActorStateUrl("PartyIndexProjectionActor", PartyActorIds.Index("test-tenant"), GetIndexManifestStateKey("test-tenant")),
             null,
             HttpStatusCode.NotFound);
 
@@ -261,15 +269,15 @@ public sealed class ProjectionRebuildServiceTests
     {
         MockHttpMessageHandler handler = new();
         handler.AddResponse(
-            BuildActorStateUrl("PartyIndexProjectionActor", "test-tenant:party-index", "test-tenant:rebuild-checkpoint:detail"),
+            BuildActorStateUrl("PartyIndexProjectionActor", PartyActorIds.Index("test-tenant"), "test-tenant:rebuild-checkpoint:detail"),
             null,
             HttpStatusCode.NotFound);
         handler.AddResponse(
-            BuildActorStateUrl("PartyIndexProjectionActor", "test-tenant:party-index", "test-tenant:party-index:all"),
+            BuildActorStateUrl("PartyIndexProjectionActor", PartyActorIds.Index("test-tenant"), GetIndexStateKey("test-tenant")),
             null,
             HttpStatusCode.NotFound);
         handler.AddResponse(
-            BuildActorStateUrl("PartyIndexProjectionActor", "test-tenant:party-index", "test-tenant:party-index:manifest"),
+            BuildActorStateUrl("PartyIndexProjectionActor", PartyActorIds.Index("test-tenant"), GetIndexManifestStateKey("test-tenant")),
             null,
             HttpStatusCode.NotFound);
 
@@ -484,7 +492,7 @@ public sealed class ProjectionRebuildServiceTests
 
         MockHttpMessageHandler handler = new();
         handler.AddResponse(
-            BuildActorStateUrl("PartyIndexProjectionActor", "test-tenant:party-index", "test-tenant:rebuild-checkpoint:detail:party-write-failure"),
+            BuildActorStateUrl("PartyIndexProjectionActor", PartyActorIds.Index("test-tenant"), "test-tenant:rebuild-checkpoint:detail:party-write-failure"),
             null,
             HttpStatusCode.NotFound);
         handler.AddResponse(
@@ -494,7 +502,7 @@ public sealed class ProjectionRebuildServiceTests
             BuildActorStateUrl("AggregateActor", "test-tenant:party:party-write-failure", "test-tenant:party:party-write-failure:events:1"),
             JsonSerializer.Serialize(envelope));
         handler.AddResponse(
-            BuildActorStateRootUrl("PartyDetailProjectionActor", "test-tenant:party-detail:party-write-failure"),
+            BuildActorStateRootUrl("PartyDetailProjectionActor", PartyActorIds.Detail("test-tenant", "party-write-failure")),
             null,
             HttpStatusCode.InternalServerError,
             HttpMethod.Put);
@@ -506,7 +514,7 @@ public sealed class ProjectionRebuildServiceTests
 
         handler.Requests.ShouldNotContain(request =>
             request.Method == HttpMethod.Put
-            && request.Path == BuildActorStateRootUrl("PartyIndexProjectionActor", "test-tenant:party-index"));
+            && request.Path == BuildActorStateRootUrl("PartyIndexProjectionActor", PartyActorIds.Index("test-tenant")));
     }
 
     private static object CreateEnvelope(
@@ -544,6 +552,12 @@ public sealed class ProjectionRebuildServiceTests
     {
         return $"/v1.0/actors/{actorType}/{Uri.EscapeDataString(actorId)}/state";
     }
+
+    private static string GetIndexStateKey(string tenantId)
+        => $"{PartyActorIds.Index(tenantId)}:default";
+
+    private static string GetIndexManifestStateKey(string tenantId)
+        => $"{PartyActorIds.Index(tenantId)}:manifest";
 
     private static ProjectionRebuildService CreateService(
         MockHttpMessageHandler handler,

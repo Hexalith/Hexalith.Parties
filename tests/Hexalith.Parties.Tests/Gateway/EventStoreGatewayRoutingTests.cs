@@ -652,6 +652,34 @@ public sealed class EventStoreGatewayRoutingTests
     }
 
     [Fact]
+    public async Task PostQueries_LegacyPascalCaseProjectionType_Returns400BeforeQueryRoutingAsync()
+    {
+        using var factory = new EventStoreGatewayTestFactory();
+        using HttpClient client = factory.CreateAuthenticatedClient(permissions: ["query:read"]);
+
+        var request = new
+        {
+            tenant = "tenant-a",
+            domain = PartyDetailProjectionQueryActor.PartyDomain,
+            aggregateId = "party-legacy-projection",
+            queryType = PartyDetailProjectionQueryActor.PartyDetailQueryType,
+            projectionType = "PartyDetail",
+            entityId = "party-legacy-projection",
+            projectionActorType = PartyDetailProjectionQueryActor.ActorTypeName,
+        };
+
+        using HttpResponseMessage response = await client.PostAsJsonAsync("/api/v1/queries", request);
+
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        response.Content.Headers.ContentType!.MediaType.ShouldBe("application/problem+json");
+        JsonElement body = await response.Content.ReadFromJsonAsync<JsonElement>();
+        body.GetProperty("type").GetString().ShouldBe("https://hexalith.io/problems/validation-error");
+        body.GetProperty("status").GetInt32().ShouldBe(400);
+        body.GetProperty("errors").ValueKind.ShouldBe(JsonValueKind.Object);
+        factory.QueryRouter.ReceivedQueries.ShouldBeEmpty();
+    }
+
+    [Fact]
     public async Task PostQueries_NotFound_Returns404ThroughEventStoreQueryGatewayAsync()
     {
         using var factory = new EventStoreGatewayTestFactory();

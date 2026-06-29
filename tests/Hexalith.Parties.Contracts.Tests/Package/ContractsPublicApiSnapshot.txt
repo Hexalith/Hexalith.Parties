@@ -452,6 +452,10 @@ type class Hexalith.Parties.Contracts.PartiesJsonOptions interfaces:
   property System.Text.Json.JsonSerializerOptions Default get
   method System.Void ApplyTo(System.Text.Json.JsonSerializerOptions options)
   method System.Text.Json.JsonSerializerOptions CreateMutable()
+type class Hexalith.Parties.Contracts.PartyActorIds interfaces:
+  method System.String Detail(System.String tenantId, System.String partyId)
+  method System.String Index(System.String tenantId)
+type class Hexalith.Parties.Contracts.PartyProjectionNames interfaces:
 type class Hexalith.Parties.Contracts.PersonalDataAttribute base:System.Attribute interfaces:
   ctor ()
 type class Hexalith.Parties.Contracts.Results.CompositeCommandResult base:Hexalith.EventStore.Contracts.Results.DomainResult interfaces:System.IEquatable<Hexalith.EventStore.Contracts.Results.DomainResult>,System.IEquatable<Hexalith.Parties.Contracts.Results.CompositeCommandResult>

@@ -30,7 +30,7 @@
 | Actor | Project | Actor id | Responsibility |
 |-------|---------|----------|----------------|
 | `PartyDetailProjectionActor` | Projections | `{tenant}:party-detail:{partyId}` | per-party `PartyDetail` read model (event apply + checkpoint) |
-| `PartyIndexProjectionActor` | Projections | `{tenant}:party-index` | per-tenant searchable index (batched writes, flush reminder) — ⚠️ live state key is `…:default`; `ProjectionRebuildService` uses `…:all` ([architecture.md §13](architecture.md)) |
+| `PartyIndexProjectionActor` | Projections | `{tenant}:party-index` | per-tenant searchable index (batched writes, flush reminder) — live and rebuild state key is `…:default` |
 | `PartyDetailProjectionQueryActor` | Hexalith.Parties | `party-detail:{tenant}:{partyId}` | query adapter — detail / export / processing records / erasure status / erasure certificate |
 | `PartyIndexProjectionQueryActor` | Hexalith.Parties | `party-index:{tenant}:parties` | query adapter — list / search |
 | `PartyKeyRetryActor` | Security | (key-retry id) | GDPR key-creation retry scheduling |

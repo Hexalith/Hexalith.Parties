@@ -18,7 +18,7 @@ namespace Hexalith.Parties.Projections.Actors;
 
 public sealed partial class PartyDetailProjectionActor : Actor, IPartyDetailProjectionActor, IRemindable
 {
-    private const string ProjectionName = "party-detail";
+    private const string ProjectionName = PartyProjectionNames.Detail;
     private const string RebuildReminderName = "auto-rebuild";
     private const string LastSequenceStateKeySuffix = "last-sequence";
     private const string RedactedFormat = "json-redacted";

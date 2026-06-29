@@ -26,7 +26,7 @@ public sealed partial class PartyDetailProjectionQueryActor(
     IPartyErasureRecordStore? erasureRecordStore = null) : Actor(host), IPartyProjectionQueryActor, IProjectionActor
 {
     public const string ActorTypeName = nameof(PartyDetailProjectionQueryActor);
-    public const string ProjectionType = "party-detail";
+    public const string ProjectionType = PartyProjectionNames.Detail;
     public const string DataPortabilityProjectionType = "party-data-portability";
     public const string GetPartyQueryType = "GetParty";
     public const string PartyDetailQueryType = "PartyDetail";
@@ -104,7 +104,7 @@ public sealed partial class PartyDetailProjectionQueryActor(
             }
         }
 
-        string detailActorId = $"{envelope.TenantId}:party-detail:{partyId}";
+        string detailActorId = PartyActorIds.Detail(envelope.TenantId, partyId);
         Log.PartyDetailQueryRouting(logger, envelope.CorrelationId, envelope.TenantId, envelope.QueryType);
 
         try

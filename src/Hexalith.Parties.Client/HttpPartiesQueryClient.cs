@@ -3,6 +3,7 @@ using System.Text.Json;
 
 using Hexalith.EventStore.Contracts.Queries;
 using Hexalith.Parties.Client.Abstractions;
+using Hexalith.Parties.Contracts;
 using Hexalith.Parties.Contracts.Models;
 using Hexalith.Parties.Contracts.ValueObjects;
 
@@ -17,10 +18,10 @@ public sealed class HttpPartiesQueryClient : IPartiesQueryClient
     private const string QueryGatewayPath = "api/v1/queries";
     private const string ListAggregateId = "parties";
     private const string PartyDetailProjectionActorType = "PartyDetailProjectionQueryActor";
-    private const string PartyDetailProjectionType = "party-detail";
+    private const string PartyDetailProjectionType = PartyProjectionNames.Detail;
     private const string PartyDetailQueryType = "PartyDetail";
     private const string PartyIndexProjectionActorType = "PartyIndexProjectionQueryActor";
-    private const string PartyIndexProjectionType = "party-index";
+    private const string PartyIndexProjectionType = PartyProjectionNames.Index;
     private const string PartyIndexQueryType = "PartyIndex";
     private const string PartySearchQueryType = "PartySearch";
 

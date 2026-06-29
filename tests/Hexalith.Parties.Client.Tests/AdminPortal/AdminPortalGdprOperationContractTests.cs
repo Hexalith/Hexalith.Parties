@@ -254,7 +254,7 @@ public sealed class AdminPortalGdprOperationContractTests
         using JsonDocument body = JsonDocument.Parse(handler.LastRequestBody.ShouldNotBeNull());
         JsonElement root = body.RootElement;
         root.GetProperty("queryType").GetString().ShouldBe("GetParty");
-        root.GetProperty("projectionType").GetString().ShouldBe("PartyDetail");
+        root.GetProperty("projectionType").GetString().ShouldBe(PartyProjectionNames.Detail);
         root.GetProperty("projectionActorType").GetString().ShouldBe("PartyDetailProjectionActor");
     }
 
@@ -299,7 +299,7 @@ public sealed class AdminPortalGdprOperationContractTests
         using JsonDocument body = JsonDocument.Parse(handler.LastRequestBody.ShouldNotBeNull());
         JsonElement root = body.RootElement;
         root.GetProperty("queryType").GetString().ShouldBe("ExportPartyData");
-        root.GetProperty("projectionType").GetString().ShouldBe("PartyDetail");
+        root.GetProperty("projectionType").GetString().ShouldBe(PartyProjectionNames.Detail);
         root.GetProperty("projectionActorType").GetString().ShouldBe("PartyDetailProjectionQueryActor");
     }
 
@@ -335,7 +335,7 @@ public sealed class AdminPortalGdprOperationContractTests
         using JsonDocument body = JsonDocument.Parse(handler.LastRequestBody.ShouldNotBeNull());
         JsonElement root = body.RootElement;
         root.GetProperty("queryType").GetString().ShouldBe("GetProcessingRecords");
-        root.GetProperty("projectionType").GetString().ShouldBe("PartyDetail");
+        root.GetProperty("projectionType").GetString().ShouldBe(PartyProjectionNames.Detail);
         root.GetProperty("projectionActorType").GetString().ShouldBe("PartyDetailProjectionQueryActor");
     }
 
@@ -366,7 +366,7 @@ public sealed class AdminPortalGdprOperationContractTests
         using JsonDocument body = JsonDocument.Parse(handler.LastRequestBody.ShouldNotBeNull());
         JsonElement root = body.RootElement;
         root.GetProperty("queryType").GetString().ShouldBe("GetErasureCertificate");
-        root.GetProperty("projectionType").GetString().ShouldBe("PartyDetail");
+        root.GetProperty("projectionType").GetString().ShouldBe(PartyProjectionNames.Detail);
         root.GetProperty("projectionActorType").GetString().ShouldBe("PartyDetailProjectionQueryActor");
 
         string serialized = JsonSerializer.Serialize(result, s_jsonOptions);
@@ -453,7 +453,7 @@ public sealed class AdminPortalGdprOperationContractTests
         using JsonDocument body = JsonDocument.Parse(handler.LastRequestBody.ShouldNotBeNull());
         JsonElement root = body.RootElement;
         root.GetProperty("queryType").GetString().ShouldBe("GetErasureStatus");
-        root.GetProperty("projectionType").GetString().ShouldBe("PartyDetail");
+        root.GetProperty("projectionType").GetString().ShouldBe(PartyProjectionNames.Detail);
         root.GetProperty("projectionActorType").GetString().ShouldBe("PartyDetailProjectionQueryActor");
     }
 

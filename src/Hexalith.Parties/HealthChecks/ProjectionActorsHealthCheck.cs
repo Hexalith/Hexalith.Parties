@@ -1,6 +1,7 @@
 using Dapr.Actors;
 using Dapr.Actors.Client;
 
+using Hexalith.Parties.Contracts;
 using Hexalith.Parties.Projections.Abstractions;
 using Hexalith.Parties.Projections.Actors;
 
@@ -18,8 +19,8 @@ public sealed class ProjectionActorsHealthCheck(
     IActorProxyFactory actorProxyFactory,
     ILogger<ProjectionActorsHealthCheck> logger) : IHealthCheck
 {
-    private static readonly ActorId s_indexActorId = new("health:party-index");
-    private static readonly ActorId s_detailActorId = new("health:party-detail:probe");
+    private static readonly ActorId s_indexActorId = new(PartyActorIds.Index("health"));
+    private static readonly ActorId s_detailActorId = new(PartyActorIds.Detail("health", "probe"));
     private readonly IActorProxyFactory _actorProxyFactory = actorProxyFactory
         ?? throw new ArgumentNullException(nameof(actorProxyFactory));
     private readonly ILogger<ProjectionActorsHealthCheck> _logger = logger

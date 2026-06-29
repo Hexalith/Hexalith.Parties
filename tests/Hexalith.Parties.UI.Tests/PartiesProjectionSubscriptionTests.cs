@@ -1,3 +1,5 @@
+using Hexalith.Parties.Contracts;
+
 using Hexalith.Parties.UI.Services;
 
 using Microsoft.Extensions.Logging.Abstractions;
@@ -13,7 +15,7 @@ namespace Hexalith.Parties.UI.Tests;
 /// </summary>
 public sealed class PartiesProjectionSubscriptionTests
 {
-    private const string ProjectionType = "party-detail";
+    private const string ProjectionType = PartyProjectionNames.Detail;
     private const string Tenant = "tenant-a";
 
     [Fact]
@@ -50,7 +52,7 @@ public sealed class PartiesProjectionSubscriptionTests
         var wrapper = new PartiesProjectionSubscription(stream, NullLogger<PartiesProjectionSubscription>.Instance);
 
         _ = wrapper.Subscribe(ProjectionType, Tenant, () => { });
-        _ = wrapper.Subscribe("party-index", Tenant, () => { });
+        _ = wrapper.Subscribe(PartyProjectionNames.Index, Tenant, () => { });
 
         await wrapper.DisposeAsync();
 

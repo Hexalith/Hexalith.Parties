@@ -1,5 +1,6 @@
 using Hexalith.Parties.Client;
 using Hexalith.Parties.Client.AdminPortal;
+using Hexalith.Parties.Contracts;
 using Hexalith.Parties.Contracts.Models;
 using Hexalith.Parties.UI.Services;
 using Hexalith.Parties.UI.Status;
@@ -18,7 +19,7 @@ namespace Hexalith.Parties.UI.Tests;
 /// </summary>
 public sealed class OptimisticReconcileTests
 {
-    private const string ProjectionType = "party-detail";
+    private const string ProjectionType = PartyProjectionNames.Detail;
     private const string Tenant = "tenant-a";
 
     [Fact]

@@ -4,6 +4,7 @@ using System.Net.Http.Json;
 using System.Text.Json;
 
 using Hexalith.EventStore.Contracts.Queries;
+using Hexalith.Parties.Contracts;
 using Hexalith.Parties.Contracts.Commands;
 using Hexalith.Parties.Contracts.Models;
 using Hexalith.Parties.Contracts.Security;
@@ -55,7 +56,7 @@ public sealed class HttpAdminPortalGdprClient : IAdminPortalGdprClient
         return PostNullableQueryAsync<PartyErasureStatusRecord>(
             partyId,
             queryType: "GetErasureStatus",
-            projectionType: "PartyDetail",
+            projectionType: PartyProjectionNames.Detail,
             projectionActorType: "PartyDetailProjectionQueryActor",
             payload: new PartyQueryPayload(partyId),
             cancellationToken);
@@ -67,7 +68,7 @@ public sealed class HttpAdminPortalGdprClient : IAdminPortalGdprClient
         return PostNullableQueryAsync<ErasureCertificate>(
             partyId,
             queryType: "GetErasureCertificate",
-            projectionType: "PartyDetail",
+            projectionType: PartyProjectionNames.Detail,
             projectionActorType: "PartyDetailProjectionQueryActor",
             payload: new PartyQueryPayload(partyId),
             cancellationToken);
@@ -132,7 +133,7 @@ public sealed class HttpAdminPortalGdprClient : IAdminPortalGdprClient
         PartyDataPortabilityPackage package = await PostQueryAsync<PartyDataPortabilityPackage>(
             partyId,
             queryType: "ExportPartyData",
-            projectionType: "PartyDetail",
+            projectionType: PartyProjectionNames.Detail,
             projectionActorType: "PartyDetailProjectionQueryActor",
             payload: new PartyQueryPayload(partyId),
             cancellationToken).ConfigureAwait(false);
@@ -150,7 +151,7 @@ public sealed class HttpAdminPortalGdprClient : IAdminPortalGdprClient
         ProcessingActivityRecord[] records = await PostQueryAsync<ProcessingActivityRecord[]>(
             partyId,
             queryType: "GetProcessingRecords",
-            projectionType: "PartyDetail",
+            projectionType: PartyProjectionNames.Detail,
             projectionActorType: "PartyDetailProjectionQueryActor",
             payload: new PartyQueryPayload(partyId),
             cancellationToken).ConfigureAwait(false);
@@ -281,7 +282,7 @@ public sealed class HttpAdminPortalGdprClient : IAdminPortalGdprClient
         => await PostQueryAsync<PartyDetail>(
             partyId,
             queryType: "GetParty",
-            projectionType: "PartyDetail",
+            projectionType: PartyProjectionNames.Detail,
             projectionActorType: "PartyDetailProjectionActor",
             payload: null,
             cancellationToken).ConfigureAwait(false);

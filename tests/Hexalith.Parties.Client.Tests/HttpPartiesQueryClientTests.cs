@@ -48,7 +48,7 @@ public sealed class HttpPartiesQueryClientTests
         root.GetProperty("aggregateId").GetString().ShouldBe("p-1");
         root.GetProperty("entityId").GetString().ShouldBe("p-1");
         root.GetProperty("queryType").GetString().ShouldBe("PartyDetail");
-        root.GetProperty("projectionType").GetString().ShouldBe("party-detail");
+        root.GetProperty("projectionType").GetString().ShouldBe(PartyProjectionNames.Detail);
         root.GetProperty("projectionActorType").GetString().ShouldBe("PartyDetailProjectionQueryActor");
     }
 
@@ -159,7 +159,7 @@ public sealed class HttpPartiesQueryClientTests
         using JsonDocument body = JsonDocument.Parse(handler.LastRequestBody!);
         JsonElement root = body.RootElement;
         root.GetProperty("queryType").GetString().ShouldBe("PartyIndex");
-        root.GetProperty("projectionType").GetString().ShouldBe("party-index");
+        root.GetProperty("projectionType").GetString().ShouldBe(PartyProjectionNames.Index);
         root.GetProperty("projectionActorType").GetString().ShouldBe("PartyIndexProjectionQueryActor");
 
         JsonElement payload = root.GetProperty("payload");
@@ -336,7 +336,7 @@ public sealed class HttpPartiesQueryClientTests
         using JsonDocument body = JsonDocument.Parse(handler.LastRequestBody!);
         JsonElement root = body.RootElement;
         root.GetProperty("queryType").GetString().ShouldBe("PartySearch");
-        root.GetProperty("projectionType").GetString().ShouldBe("party-index");
+        root.GetProperty("projectionType").GetString().ShouldBe(PartyProjectionNames.Index);
         root.GetProperty("projectionActorType").GetString().ShouldBe("PartyIndexProjectionQueryActor");
         root.GetProperty("entityId").GetString().ShouldBe("parties");
         JsonElement payload = root.GetProperty("payload");

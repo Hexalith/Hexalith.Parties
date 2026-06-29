@@ -164,7 +164,7 @@ public static class PartiesServiceCollectionExtensions {
                 async (tenantId, partyId, cancellationToken) =>
                 {
                     IPartyDetailProjectionActor detailProxy = actorProxyFactory.CreateActorProxy<IPartyDetailProjectionActor>(
-                        new ActorId($"{tenantId}:party-detail:{partyId}"),
+                        new ActorId(PartyActorIds.Detail(tenantId, partyId)),
                         nameof(PartyDetailProjectionActor));
 
                     await detailProxy.EraseAsync(partyId).ConfigureAwait(false);
@@ -178,7 +178,7 @@ public static class PartiesServiceCollectionExtensions {
                 async (tenantId, partyId, cancellationToken) =>
                 {
                     IPartyIndexProjectionActor indexProxy = actorProxyFactory.CreateActorProxy<IPartyIndexProjectionActor>(
-                        new ActorId($"{tenantId}:party-index"),
+                        new ActorId(PartyActorIds.Index(tenantId)),
                         nameof(PartyIndexProjectionActor));
 
                     await indexProxy.EraseAsync(partyId).ConfigureAwait(false);

@@ -5,10 +5,11 @@ using Hexalith.EventStore.Contracts.Identity;
 using Hexalith.EventStore.Contracts.Security;
 using Hexalith.EventStore.Server.Actors;
 using Hexalith.EventStore.Server.Projections;
-using Hexalith.Parties.Search;
+using Hexalith.Parties.Contracts;
 using Hexalith.Parties.Contracts.Models;
 using Hexalith.Parties.Projections.Abstractions;
 using Hexalith.Parties.Projections.Actors;
+using Hexalith.Parties.Search;
 using Hexalith.Parties.Security;
 
 using Microsoft.Extensions.Logging;
@@ -73,10 +74,10 @@ internal sealed partial class PartyProjectionUpdateOrchestrator(
         }
 
         IPartyDetailProjectionActor detailProjection = actorProxyFactory.CreateActorProxy<IPartyDetailProjectionActor>(
-            new ActorId($"{identity.TenantId}:party-detail:{identity.AggregateId}"),
+            new ActorId(PartyActorIds.Detail(identity.TenantId, identity.AggregateId)),
             nameof(PartyDetailProjectionActor));
         IPartyIndexProjectionActor indexProjection = actorProxyFactory.CreateActorProxy<IPartyIndexProjectionActor>(
-            new ActorId($"{identity.TenantId}:party-index"),
+            new ActorId(PartyActorIds.Index(identity.TenantId)),
             nameof(PartyIndexProjectionActor));
 
         ServerEventEnvelope? latestEnvelope = null;

@@ -20,7 +20,7 @@ namespace Hexalith.Parties.Projections.Actors;
 
 public sealed partial class PartyIndexProjectionActor : Actor, IPartyIndexProjectionActor, IRemindable
 {
-    private const string ProjectionName = "party-index";
+    private const string ProjectionName = PartyProjectionNames.Index;
     private const string FlushReminderName = "flush-batch";
     private const string RebuildReminderName = "auto-rebuild";
     private const string ManifestStateKeySuffix = "manifest";

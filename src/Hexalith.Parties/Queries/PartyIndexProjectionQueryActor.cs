@@ -33,7 +33,7 @@ public sealed partial class PartyIndexProjectionQueryActor(
     public const string PartyDomain = "party";
     public const string PartyIndexQueryType = "PartyIndex";
     public const string PartySearchQueryType = "PartySearch";
-    public const string ProjectionType = "party-index";
+    public const string ProjectionType = PartyProjectionNames.Index;
 
     // Unknown fields fail closed so a future contributor cannot bypass tenant authority
     // by adding a payload field whose name is read by the actor.
@@ -134,7 +134,7 @@ public sealed partial class PartyIndexProjectionQueryActor(
         QueryEnvelope envelope,
         Func<PartyIndexProjectionReadResult, QueryResult> createResult)
     {
-        string indexActorId = $"{envelope.TenantId}:party-index";
+        string indexActorId = PartyActorIds.Index(envelope.TenantId);
 
         // P14: Log templates intentionally omit the constructed actor id. The tenant id and
         // query type are sufficient diagnostics; the actor key is a derivable storage identifier

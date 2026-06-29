@@ -3,39 +3,33 @@
 ## Generated Tests
 
 ### API Tests
-- [x] `tests/Hexalith.Parties.Tests/Authentication/PartiesAuthenticationCompositionTests.cs` - Pins the actor host `AddParties` registration to the shared `PartiesClaimsTransformation` implementation.
-- [x] `tests/Hexalith.Parties.Tests/FitnessTests/ContractsArchitectureFitnessTests.cs` - Extends boundary coverage so `Contracts` stays free of ASP.NET authentication dependencies while `Authentication` owns the shared ASP.NET authentication dependency.
-- [x] `tests/Hexalith.Parties.Authentication.Tests/PartiesClaimsTransformationTests.cs` - Adds malformed JSON fallback coverage for the `tenants` claim parsing branch.
+- [x] `tests/Hexalith.Parties.Tests/Gateway/EventStoreGatewayRoutingTests.cs` - Added a gateway negative test proving legacy PascalCase `PartyDetail` projection routing is rejected with `400 BadRequest` before query routing.
+- [x] `tests/Hexalith.Parties.Client.Tests/AdminPortal/AdminPortalGdprOperationContractTests.cs` - Updated admin GDPR query contract assertions to require `PartyProjectionNames.Detail` for detail projection queries.
 
 ### E2E Tests
-- [x] `tests/Hexalith.Parties.UI.Tests/PartyIdClaimResolverTests.cs` - Existing UI host flow coverage was re-run to prove the UI claim-resolution path still resolves the shared `PartiesClaimsTransformation`.
-- [x] No Playwright browser test added. Story 6.3 is an internal authentication-library consolidation with no new browser workflow or public endpoint.
+- [x] Existing API/E2E-style gateway coverage exercises EventStore query gateway routing for detail, index, and search projection adapters.
+- [x] No Playwright UI test was added because story 6.4 changes projection names and actor id builders only; no UI workflow changed.
 
 ## Coverage
-
-- API endpoints: 0/0 public endpoints applicable.
-- Shared claims transformation: `tid`, `tenant_id`, JSON-array `tenants`, space-delimited `tenants`, malformed JSON fallback, idempotency, null principal, empty sources, and no-source cases.
-- Host composition: actor host and UI host both resolve the shared `PartiesClaimsTransformation`.
-- Architecture boundary: `Hexalith.Parties.Contracts` remains infrastructure-free; `Hexalith.Parties.Authentication` owns the ASP.NET authentication dependency.
+- API gateway projection-name validation: covered for canonical happy paths and legacy PascalCase rejection.
+- Admin GDPR client detail projection queries: 5/5 relevant query methods now assert the canonical detail projection name.
+- UI workflows: not applicable for this story.
 
 ## Validation
+- `dotnet build src/Hexalith.Parties.Contracts/Hexalith.Parties.Contracts.csproj -c Release --no-restore -p:DisableTransitiveProjectReferences=true` passed.
+- Existing Release test binaries passed for `AdminPortalGdprOperationContractTests` and `EventStoreGatewayRoutingTests`, but those binaries could not be refreshed because the focused project builds are blocked before compilation.
+- `git diff --check` passed.
 
-- [x] `dotnet build tests/Hexalith.Parties.Authentication.Tests/Hexalith.Parties.Authentication.Tests.csproj -c Release --no-restore /m:1` passed.
-- [x] `dotnet build tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj -c Release --no-restore /m:1` passed with the existing `StackExchange.Redis` MSB3277 conflict warning.
-- [x] `tests/Hexalith.Parties.Authentication.Tests/bin/Release/net10.0/Hexalith.Parties.Authentication.Tests -class Hexalith.Parties.Authentication.Tests.PartiesClaimsTransformationTests` passed: 12/12.
-- [x] `tests/Hexalith.Parties.Tests/bin/Release/net10.0/Hexalith.Parties.Tests -class Hexalith.Parties.Tests.Authentication.PartiesAuthenticationCompositionTests` passed: 1/1.
-- [x] `tests/Hexalith.Parties.Tests/bin/Release/net10.0/Hexalith.Parties.Tests -class Hexalith.Parties.Tests.FitnessTests.ContractsArchitectureFitnessTests` passed: 5/5.
-- [x] `tests/Hexalith.Parties.UI.Tests/bin/Release/net10.0/Hexalith.Parties.UI.Tests -class Hexalith.Parties.UI.Tests.PartyIdClaimResolverTests` passed: 11/11.
-- [x] `git diff --check` passed.
+## Notes
+- Direct `dotnet build` for `src/Hexalith.Parties.Client`, `tests/Hexalith.Parties.Client.Tests`, and `tests/Hexalith.Parties.Tests` remains blocked by a no-error MSBuild project-reference failure while resolving `Hexalith.EventStore.Contracts` as a project reference. The referenced EventStore contracts project builds successfully on its own, and `Hexalith.Parties.Contracts` builds with `DisableTransitiveProjectReferences=true`.
 
 ## Checklist
-
-- [x] API tests generated if applicable.
-- [x] E2E tests generated if UI exists; no new browser workflow applies to Story 6.3.
+- [x] API tests generated where applicable.
+- [x] E2E tests generated where UI exists; no UI/browser workflow applies to story 6.4.
 - [x] Tests use standard xUnit v3 and Shouldly APIs.
-- [x] Tests cover happy paths.
-- [x] Tests cover critical error cases.
-- [x] Tests use semantic/accessible locators where UI E2E applies; no Playwright locator changes were needed.
+- [x] Tests cover happy path through existing canonical projection gateway routing.
+- [x] Tests cover a critical error case for legacy PascalCase projection type rejection.
+- [x] Tests use semantic locators where UI E2E applies; no Playwright locator changes were needed.
 - [x] Tests have clear descriptions.
 - [x] No hardcoded waits or sleeps were added.
 - [x] Tests are independent and have no order dependency.

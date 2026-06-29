@@ -20,9 +20,8 @@ public sealed partial class ProjectionRebuildService : IProjectionRebuildService
     private const string AggregateActorType = "AggregateActor";
     private const string DetailActorType = "PartyDetailProjectionActor";
     private const string IndexActorType = "PartyIndexProjectionActor";
-    private const string DetailProjectionName = "party-detail";
-    private const string IndexProjectionName = "party-index";
     private const string IndexManifestStateKeySuffix = "manifest";
+    private const string IndexStateKeySuffix = "default";
     private const string RebuildCheckpointPrefix = "rebuild-checkpoint";
 
     private static readonly JsonSerializerOptions s_projectionRebuildReaderJsonOptions = new() {
@@ -449,19 +448,19 @@ public sealed partial class ProjectionRebuildService : IProjectionRebuildService
     }
 
     private static string GetDetailActorId(string tenantId, string partyId)
-        => $"{tenantId}:{DetailProjectionName}:{partyId}";
+        => PartyActorIds.Detail(tenantId, partyId);
 
     private static string GetDetailStateKey(string tenantId, string partyId)
-        => $"{tenantId}:{DetailProjectionName}:{partyId}";
+        => PartyActorIds.Detail(tenantId, partyId);
 
     private static string GetIndexActorId(string tenantId)
-        => $"{tenantId}:{IndexProjectionName}";
+        => PartyActorIds.Index(tenantId);
 
     private static string GetIndexStateKey(string tenantId)
-        => $"{tenantId}:{IndexProjectionName}:all";
+        => $"{PartyActorIds.Index(tenantId)}:{IndexStateKeySuffix}";
 
     private static string GetIndexManifestStateKey(string tenantId)
-        => $"{tenantId}:{IndexProjectionName}:{IndexManifestStateKeySuffix}";
+        => $"{PartyActorIds.Index(tenantId)}:{IndexManifestStateKeySuffix}";
 
     private static string GetShortEventTypeName(string? eventTypeName) {
         if (string.IsNullOrWhiteSpace(eventTypeName)) {
