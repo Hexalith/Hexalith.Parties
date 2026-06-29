@@ -458,6 +458,10 @@ type class Hexalith.Parties.Contracts.PartiesTextHeuristics interfaces:
 type class Hexalith.Parties.Contracts.PartyActorIds interfaces:
   method System.String Detail(System.String tenantId, System.String partyId)
   method System.String Index(System.String tenantId)
+type class Hexalith.Parties.Contracts.PartyDisplayFormat interfaces:
+  method System.String FormatBoolean(System.Boolean value, System.String trueLabel, System.String falseLabel)
+  method System.String FormatDate(System.DateTimeOffset value, System.Globalization.CultureInfo culture, System.String format)
+  method System.String FormatDate(System.Nullable<System.DateTimeOffset> value, System.Globalization.CultureInfo culture, System.String format, System.String missingLabel)
 type class Hexalith.Parties.Contracts.PartyExportFileName interfaces:
   method System.String Build(System.String partyId, System.DateTimeOffset exportedAt)
 type class Hexalith.Parties.Contracts.PartyProjectionNames interfaces:

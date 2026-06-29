@@ -2,9 +2,9 @@
     <h4 id="@($"dpo-summary-heading-{InstanceId}")">@Labels.GdprOperationalSummary</h4>
     <dl>
         <dt>@Labels.GdprDpoPendingErasure</dt>
-        <dd>@(IsErasurePending ? Labels.Yes : Labels.No)</dd>
+        <dd>@PartyDisplayFormat.FormatBoolean(IsErasurePending, Labels.Yes, Labels.No)</dd>
         <dt>@Labels.GdprDpoRestricted</dt>
-        <dd>@(Party.IsRestricted ? Labels.Yes : Labels.No)</dd>
+        <dd>@PartyDisplayFormat.FormatBoolean(Party.IsRestricted, Labels.Yes, Labels.No)</dd>
         <dt>@Labels.GdprDpoConsentOverview</dt>
         <dd>@(Party.ConsentRecords?.Count ?? 0)</dd>
         <dt>@Labels.GdprDpoAuditTrail</dt>

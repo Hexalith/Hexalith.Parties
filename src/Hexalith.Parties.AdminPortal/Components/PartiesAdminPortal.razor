@@ -1640,15 +1640,19 @@
     };
 
     private string BooleanText(bool value)
-        => value ? EffectiveLabels.Yes : EffectiveLabels.No;
+        => PartyDisplayFormat.FormatBoolean(value, EffectiveLabels.Yes, EffectiveLabels.No);
 
     private string FormatOptionalDate(DateTimeOffset? date)
-        => date is null ? EffectiveLabels.MissingDate : FormatDate(date.Value);
+        => PartyDisplayFormat.FormatDate(
+            date,
+            CultureInfo.CurrentCulture,
+            PartyDisplayFormat.CompactDateFormat,
+            EffectiveLabels.MissingDate);
 
     private string FormatDate(DateTimeOffset date)
         => date == default
             ? EffectiveLabels.MissingDate
-            : date.ToString("g", System.Globalization.CultureInfo.CurrentCulture);
+            : PartyDisplayFormat.FormatDate(date, CultureInfo.CurrentCulture, PartyDisplayFormat.CompactDateFormat);
 
     private string PartyTypeOptionLabel(string value) => value switch
     {

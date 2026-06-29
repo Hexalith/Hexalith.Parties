@@ -2,6 +2,7 @@
 @attribute [Authorize(Policy = PartiesRoles.ConsumerPolicy)]
 @implements IDisposable
 @using System.Globalization
+@using Hexalith.Parties.Contracts
 @using Hexalith.Parties.Contracts.Authorization
 @using Microsoft.AspNetCore.Components.Forms
 @using Hexalith.Parties.Contracts.Models
@@ -630,7 +631,11 @@
         };
 
     private static string FormatDate(DateTimeOffset? value)
-        => value is { } date ? date.ToString("d", CultureInfo.CurrentCulture) : string.Empty;
+        => PartyDisplayFormat.FormatDate(
+            value,
+            CultureInfo.CurrentCulture,
+            PartyDisplayFormat.PlainDateFormat,
+            string.Empty);
 
     private static string? TrimToNull(string? value)
         => string.IsNullOrWhiteSpace(value) ? null : value.Trim();

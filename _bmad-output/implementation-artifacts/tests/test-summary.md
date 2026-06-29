@@ -3,41 +3,37 @@
 ## Generated Tests
 
 ### API Tests
-- [x] Not applicable: Story 6.6 consolidates role and policy anchors; it exposes no new API endpoint.
+- [x] Not applicable: Story 6.7 introduces pure shared display helpers and portal call-site formatting; it exposes no API endpoint.
 
 ### E2E Tests
-- [x] `tests/e2e/specs/shared-role-policy-authorization.spec.ts` - Covers Admin, `TenantOwner`, lowercase `tenantowner`, Consumer, forbidden cross-area access, unauthenticated challenge return URLs, and no Admin/Consumer cross-rendering.
-
-### Test Fixture Support
-- [x] `src/Hexalith.Parties.UI/Services/PartiesAdminPortalE2eFixture.cs` - Extends the Test-environment E2E auth fixture so the existing admin cookie can select Admin, `TenantOwner`, or lowercase `tenantowner` role personas while preserving the existing `enabled` Admin behavior.
+- [x] `tests/e2e/specs/shared-portal-display-formatters.spec.ts` - Covers Admin compact `"g"` date display, Consumer plain `"d"` date display, caller-supplied boolean labels, and the Admin false-to-true restriction transition.
 
 ## Coverage
 - API endpoints: 0/0 applicable.
-- UI role-policy paths: Admin, TenantOwner, tenantowner alias, Consumer, forbidden Admin-to-Consumer, forbidden Consumer-to-Admin, and unauthenticated `/`, `/admin/parties`, `/me` covered.
-- Critical error/access cases: forbidden cross-area access and unauthenticated challenge paths covered.
-- Navigation drift guard: Admin/TenantOwner assertions reject Consumer profile rendering; Consumer assertions reject Admin list rendering.
+- E2E UI formatter paths: Admin list created/modified dates, Admin detail created/modified dates, Admin restrictions booleans, Admin operational-summary booleans, Consumer record-date fields, and Consumer edit date input density guard.
+- Happy paths: Admin list/detail rendering and Consumer `/me` profile rendering.
+- Critical error/state cases: Admin restriction state changes from `No` to `Yes`; Consumer assertions reject Admin compact time density on plain-date surfaces.
+- Dependency-boundary coverage remains in the existing Story 6.7 Contracts tests and project-reference guard tests.
 
 ## Validation
 - [x] `npm run typecheck` in `tests/e2e`.
 - [x] `git diff --check`.
-- [x] `dotnet build src/Hexalith.Parties.UI/Hexalith.Parties.UI.csproj -c Release --no-restore -m:1 -v:minimal`.
-- [x] `dotnet build tests/Hexalith.Parties.UI.Tests/Hexalith.Parties.UI.Tests.csproj -c Release --no-restore -m:1 -v:minimal`.
-- [x] `npx playwright test specs/shared-role-policy-authorization.spec.ts --list` discovered 7 Chromium tests.
+- [x] `npx playwright test specs/shared-portal-display-formatters.spec.ts --list` discovered 2 Chromium tests.
 
 ## Runtime Limits
-- [ ] `npx playwright test specs/shared-role-policy-authorization.spec.ts --project=chromium` could not start the configured web server because sandbox socket permissions blocked Kestrel from binding `127.0.0.1:5072`: `System.Net.Sockets.SocketException (13): Permission denied`.
-- [ ] `tests/Hexalith.Parties.UI.Tests/bin/Release/net10.0/Hexalith.Parties.UI.Tests` ran 324 tests with 1 unrelated failure in `MainLayoutAccessibilityTests.MainLayout_exposes_named_navigation_and_content_landmarks`; the failure asserted the shell navigation element was missing.
+- [ ] `npm run test -- specs/shared-portal-display-formatters.spec.ts --project=chromium` could not start the configured web server because sandbox socket permissions blocked Kestrel from binding `127.0.0.1:5072`: `System.Net.Sockets.SocketException (13): Permission denied`.
 
 ## Checklist
 - [x] API tests generated where applicable.
 - [x] E2E tests generated where UI exists.
 - [x] Tests use standard Playwright APIs.
 - [x] Tests cover happy paths.
-- [x] Tests cover critical forbidden and unauthenticated cases.
-- [x] Tests use semantic locators.
+- [x] Tests cover critical state/error cases applicable to this formatter story.
+- [ ] All generated tests run successfully: blocked by sandbox socket permission before Playwright execution.
+- [x] Tests use semantic locators where the UI exposes accessible names.
 - [x] Tests have clear descriptions.
 - [x] No hardcoded waits or sleeps were added.
-- [x] Tests are independent.
+- [x] Tests are independent and reset fixture state before each test.
 - [x] Test summary created.
 - [x] Tests saved to appropriate directories.
 - [x] Summary includes coverage metrics.

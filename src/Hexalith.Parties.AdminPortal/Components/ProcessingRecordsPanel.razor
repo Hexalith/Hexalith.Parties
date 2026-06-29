@@ -72,7 +72,10 @@
     private string FormatDate(DateTimeOffset date)
         => date == default
             ? Labels.MissingDate
-            : date.ToString("g", System.Globalization.CultureInfo.CurrentCulture);
+            : PartyDisplayFormat.FormatDate(
+                date,
+                System.Globalization.CultureInfo.CurrentCulture,
+                PartyDisplayFormat.CompactDateFormat);
 
     private static string FormatSummary(string? summary)
     {

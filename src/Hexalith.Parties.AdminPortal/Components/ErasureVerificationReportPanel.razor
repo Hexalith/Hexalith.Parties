@@ -40,10 +40,14 @@ else
     private string VerificationMessage
         => IsVerified ? Labels.GdprVerificationConfirmed : Labels.GdprVerificationNeedsAttention;
 
-    private string FormatBoolean(bool value) => value ? Labels.Yes : Labels.No;
+    private string FormatBoolean(bool value)
+        => PartyDisplayFormat.FormatBoolean(value, Labels.Yes, Labels.No);
 
     private static string FormatDate(DateTimeOffset date)
         => date == default
             ? string.Empty
-            : date.ToString("g", System.Globalization.CultureInfo.CurrentCulture);
+            : PartyDisplayFormat.FormatDate(
+                date,
+                System.Globalization.CultureInfo.CurrentCulture,
+                PartyDisplayFormat.CompactDateFormat);
 }

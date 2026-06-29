@@ -1,5 +1,5 @@
 # generated: 2026-06-21T18:55:59+02:00
-# last_updated: 2026-06-29T12:05:33+02:00
+# last_updated: 2026-06-29T12:38:53+02:00
 # project: parties
 # project_key: NOKEY
 # tracking_system: file-system
@@ -41,7 +41,7 @@
 # - Retrospective appends its action items to action_items; sprint-status surfaces open ones
 
 generated: 2026-06-21T18:55:59+02:00
-last_updated: 2026-06-29T12:05:33+02:00
+last_updated: 2026-06-29T12:38:53+02:00
 project: parties
 project_key: NOKEY
 tracking_system: file-system
@@ -112,7 +112,7 @@ development_status:
   6-4-projection-names-and-actor-id-builders-a4: done
   6-5-gdpr-client-mapping-tenant-heuristic-and-export-filename-a6-a7-a8: done
   6-6-shared-role-arrays-and-policy-names-a9: done
-  6-7-shared-portal-display-formatters-a10: ready-for-dev
+  6-7-shared-portal-display-formatters-a10: done
   epic-6-retrospective: optional
 
   # ── Epic 7: Platform Alignment — adopt Commons/EventStore (Class B) ───────

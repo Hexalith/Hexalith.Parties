@@ -36,10 +36,17 @@
     public string InstanceId { get; set; } = Guid.NewGuid().ToString("N");
 
     private string FormatOptionalDate(DateTimeOffset? date)
-        => date is null ? Labels.MissingDate : FormatDate(date.Value);
+        => PartyDisplayFormat.FormatDate(
+            date,
+            System.Globalization.CultureInfo.CurrentCulture,
+            PartyDisplayFormat.CompactDateFormat,
+            Labels.MissingDate);
 
     private string FormatDate(DateTimeOffset date)
         => date == default
             ? Labels.MissingDate
-            : date.ToString("g", System.Globalization.CultureInfo.CurrentCulture);
+            : PartyDisplayFormat.FormatDate(
+                date,
+                System.Globalization.CultureInfo.CurrentCulture,
+                PartyDisplayFormat.CompactDateFormat);
 }

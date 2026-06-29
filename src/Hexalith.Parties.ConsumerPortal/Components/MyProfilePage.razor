@@ -2,6 +2,7 @@
 @attribute [Authorize(Policy = PartiesRoles.ConsumerPolicy)]
 @implements IDisposable
 @using System.Globalization
+@using Hexalith.Parties.Contracts
 @using Hexalith.Parties.Contracts.Authorization
 @using Hexalith.Parties.Contracts.Models
 @using Hexalith.Parties.Contracts.ValueObjects
@@ -227,19 +228,23 @@
     }
 
     private static string FormatDate(DateTimeOffset value)
-        => value.ToString("d", CultureInfo.CurrentCulture);
+        => PartyDisplayFormat.FormatDate(value, CultureInfo.CurrentCulture, PartyDisplayFormat.PlainDateFormat);
 
     private static string FormatDate(DateTimeOffset? value)
-        => value is { } date ? FormatDate(date) : ConsumerPortalLabels.MyProfileNotProvided;
+        => PartyDisplayFormat.FormatDate(
+            value,
+            CultureInfo.CurrentCulture,
+            PartyDisplayFormat.PlainDateFormat,
+            ConsumerPortalLabels.MyProfileNotProvided);
 
     private static string FormatBoolean(bool value)
-        => value ? ConsumerPortalLabels.MyProfileYes : ConsumerPortalLabels.MyProfileNo;
+        => PartyDisplayFormat.FormatBoolean(value, ConsumerPortalLabels.MyProfileYes, ConsumerPortalLabels.MyProfileNo);
 
     private static string FormatActive(bool isActive)
-        => isActive ? ConsumerPortalLabels.MyProfileActive : ConsumerPortalLabels.MyProfileInactive;
+        => PartyDisplayFormat.FormatBoolean(isActive, ConsumerPortalLabels.MyProfileActive, ConsumerPortalLabels.MyProfileInactive);
 
     private static string FormatRestricted(bool isRestricted)
-        => isRestricted ? ConsumerPortalLabels.MyProfileRestricted : ConsumerPortalLabels.MyProfileNotRestricted;
+        => PartyDisplayFormat.FormatBoolean(isRestricted, ConsumerPortalLabels.MyProfileRestricted, ConsumerPortalLabels.MyProfileNotRestricted);
 
     public void Dispose()
     {
