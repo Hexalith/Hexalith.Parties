@@ -1,6 +1,4 @@
-using System.Globalization;
-using System.Text;
-
+using Hexalith.Commons.Strings;
 using Hexalith.Parties.Contracts.Models;
 using Hexalith.Parties.Contracts.Search;
 using Hexalith.Parties.Contracts.ValueObjects;
@@ -103,114 +101,10 @@ internal sealed class LocalFuzzyPartySearchProvider : IPartySearchProvider
     }
 
     internal static double JaroWinklerSimilarity(string s1, string s2)
-    {
-        if (string.Equals(s1, s2, StringComparison.Ordinal))
-        {
-            return 1.0;
-        }
-
-        if (s1.Length == 0 || s2.Length == 0)
-        {
-            return 0.0;
-        }
-
-        int matchWindow = Math.Max(0, (Math.Max(s1.Length, s2.Length) / 2) - 1);
-
-        bool[] s1Matched = new bool[s1.Length];
-        bool[] s2Matched = new bool[s2.Length];
-
-        int matches = 0;
-        int transpositions = 0;
-
-        // Find matching characters
-        for (int i = 0; i < s1.Length; i++)
-        {
-            int start = Math.Max(0, i - matchWindow);
-            int end = Math.Min(i + matchWindow + 1, s2.Length);
-
-            for (int j = start; j < end; j++)
-            {
-                if (s2Matched[j] || !char.Equals(char.ToLowerInvariant(s1[i]), char.ToLowerInvariant(s2[j])))
-                {
-                    continue;
-                }
-
-                s1Matched[i] = true;
-                s2Matched[j] = true;
-                matches++;
-                break;
-            }
-        }
-
-        if (matches == 0)
-        {
-            return 0.0;
-        }
-
-        // Count transpositions
-        int k = 0;
-        for (int i = 0; i < s1.Length; i++)
-        {
-            if (!s1Matched[i])
-            {
-                continue;
-            }
-
-            while (!s2Matched[k])
-            {
-                k++;
-            }
-
-            if (!char.Equals(char.ToLowerInvariant(s1[i]), char.ToLowerInvariant(s2[k])))
-            {
-                transpositions++;
-            }
-
-            k++;
-        }
-
-        double jaro = ((double)matches / s1.Length
-            + (double)matches / s2.Length
-            + (double)(matches - (transpositions / 2)) / matches)
-            / 3.0;
-
-        // Winkler prefix bonus (up to 4 characters)
-        int prefixLen = 0;
-        for (int i = 0; i < Math.Min(4, Math.Min(s1.Length, s2.Length)); i++)
-        {
-            if (char.Equals(char.ToLowerInvariant(s1[i]), char.ToLowerInvariant(s2[i])))
-            {
-                prefixLen++;
-            }
-            else
-            {
-                break;
-            }
-        }
-
-        return jaro + (prefixLen * 0.1 * (1.0 - jaro));
-    }
+        => StringHelper.JaroWinklerSimilarity(s1, s2);
 
     internal static string NormalizeDiacritics(string? input)
-    {
-        if (string.IsNullOrEmpty(input))
-        {
-            return string.Empty;
-        }
-
-        string normalized = input.Normalize(NormalizationForm.FormD);
-        StringBuilder sb = new(normalized.Length);
-
-        foreach (char c in normalized)
-        {
-            if (CharUnicodeInfo.GetUnicodeCategory(c) != UnicodeCategory.NonSpacingMark)
-            {
-                _ = sb.Append(c);
-            }
-        }
-
-        return sb.ToString();
-    }
+        => StringHelper.StripDiacritics(input);
 
     private static IEnumerable<PartyIndexEntry> ApplyFilters(
         IEnumerable<PartyIndexEntry> entries,

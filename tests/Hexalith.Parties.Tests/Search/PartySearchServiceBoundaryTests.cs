@@ -150,6 +150,36 @@ public class PartySearchServiceBoundaryTests
     }
 
     [Fact]
+    public async Task LocalPartySearchServiceUsesSharedTextNormalizationWithoutChangingFallbackMetadata()
+    {
+        var provider = new LocalFuzzyPartySearchProvider();
+        var service = new LocalPartySearchService(provider);
+        List<PartyIndexEntry> entries =
+        [
+            Entry("p-accented", "Société Exemple"),
+        ];
+
+        PartySearchResponse response = await service.SearchAsync(
+            new PartySearchRequest(
+                TenantId: "tenant-a",
+                Query: "Societe",
+                Mode: PartySearchMode.Lexical,
+                TypeFilter: null,
+                ActiveFilter: null,
+                Page: 1,
+                PageSize: 20,
+                AuthorizedPartyIds: new HashSet<string>(["p-accented"], StringComparer.Ordinal)),
+            entries,
+            CancellationToken.None);
+
+        response.Status.ShouldBe(PartySearchExecutionStatus.LocalOnly);
+        response.DegradedReason.ShouldBeNull();
+        response.Results.Items.Single().Party.Id.ShouldBe("p-accented");
+        response.ScoreMetadata.Single().PartyId.ShouldBe("p-accented");
+        response.SourceMetadata.Single().SourceSystem.ShouldBe("Hexalith.Parties.LocalFallback");
+    }
+
+    [Fact]
     public async Task LocalPartySearchServiceAppliesAuthorizedIdsBeforeMatchAndMetadata()
     {
         var provider = new LocalFuzzyPartySearchProvider();

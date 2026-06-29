@@ -195,12 +195,36 @@ public class LocalFuzzyPartySearchProviderTests
     [Theory]
     [InlineData("Dúpont", "Dupont")]
     [InlineData("résumé", "resume")]
+    [InlineData("re\u0301sume\u0301", "resume")]
     [InlineData("naïve", "naive")]
     public void NormalizeDiacritics_RemovesAccents(string input, string expected)
     {
         string result = LocalFuzzyPartySearchProvider.NormalizeDiacritics(input);
 
         result.ShouldBe(expected);
+    }
+
+    [Fact]
+    public void Search_DiacriticInsensitiveQuery_MatchesDisplayName()
+    {
+        List<PartyIndexEntry> entries =
+        [
+            new PartyIndexEntry
+            {
+                Id = "p-accented",
+                Type = PartyType.Person,
+                IsActive = true,
+                DisplayName = "Renée Faure",
+                SortName = "Faure, Renée",
+                CreatedAt = DateTimeOffset.Parse("2026-05-01T00:00:00Z", System.Globalization.CultureInfo.InvariantCulture),
+                LastModifiedAt = DateTimeOffset.Parse("2026-05-01T00:00:00Z", System.Globalization.CultureInfo.InvariantCulture),
+            },
+        ];
+
+        PagedResult<PartySearchResult> result = _provider.Search(entries, "Renee", null, null, 1, 20);
+
+        result.Items.Single().Party.Id.ShouldBe("p-accented");
+        result.Items.Single().Matches.ShouldContain(m => m.MatchType == "prefix");
     }
 
     [Fact]

@@ -1,5 +1,5 @@
 # generated: 2026-06-21T18:55:59+02:00
-# last_updated: 2026-06-29T14:22:29+02:00
+# last_updated: 2026-06-29T15:11:20+02:00
 # project: parties
 # project_key: NOKEY
 # tracking_system: file-system
@@ -41,7 +41,7 @@
 # - Retrospective appends its action items to action_items; sprint-status surfaces open ones
 
 generated: 2026-06-21T18:55:59+02:00
-last_updated: 2026-06-29T14:22:29+02:00
+last_updated: 2026-06-29T15:11:20+02:00
 project: parties
 project_key: NOKEY
 tracking_system: file-system
@@ -123,7 +123,7 @@ development_status:
   epic-7: in-progress
   7-1-platform-target-destination-adr-and-release-rollback-plan: done
   7-2-commons-service-defaults-correlation-problemdetails-and-paging: done
-  7-3-search-normalization-and-frontcomposer-ui-orchestration-convergence: backlog
+  7-3-search-normalization-and-frontcomposer-ui-orchestration-convergence: done
   7-4-projection-platform-compatibility-adapter: backlog
   7-5-projection-checkpoint-rebuild-migration-and-local-code-removal: backlog
   7-6-crypto-key-management-adr-and-compatibility-harness: backlog

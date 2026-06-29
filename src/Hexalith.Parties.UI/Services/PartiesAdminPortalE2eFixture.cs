@@ -1,4 +1,6 @@
+using System.Globalization;
 using System.Security.Claims;
+using System.Text;
 
 using Hexalith.Parties.AdminPortal.Services;
 using Hexalith.Parties.Client;
@@ -570,6 +572,9 @@ internal sealed class PartiesAdminPortalE2eFixtureState
             Entry("grace-hopper", PartyType.Person, true, "Grace Hopper", "Hopper", 1),
             Entry("marie-curie", PartyType.Person, false, "Marie Curie", "Curie", 2),
             Entry("inactive-labs", PartyType.Organization, false, "Inactive Labs", "Inactive Labs", 3),
+            Entry("jose-zeta", PartyType.Person, true, "José Zeta", "Zeta", 4),
+            Entry("jose-alpha", PartyType.Person, true, "Jose Alpha", "Alpha", 5),
+            Entry("elodie-brule", PartyType.Person, true, "Élodie Brûlé", "Brûlé", 6),
         ];
 
         for (int i = 1; i <= 25; i++)
@@ -693,7 +698,9 @@ internal sealed class PartiesAdminPortalE2eApiClient(
         }
 
         IReadOnlyList<PartyIndexEntry> filtered = ApplyTypeAndActiveFilters(Entries, request.Type, request.Active)
-            .Where(entry => entry.DisplayName.Contains(request.Query.Trim(), StringComparison.OrdinalIgnoreCase))
+            .Where(entry => DisplayNameMatches(entry, request.Query.Trim()))
+            .OrderBy(static entry => StripDiacritics(entry.DisplayName), StringComparer.OrdinalIgnoreCase)
+            .ThenBy(static entry => entry.Id, StringComparer.Ordinal)
             .ToArray();
 
         PartySearchResult[] results = [.. filtered.Select(static entry => new PartySearchResult
@@ -977,6 +984,36 @@ internal sealed class PartiesAdminPortalE2eApiClient(
         return query.ToArray();
     }
 
+    private static bool DisplayNameMatches(PartyIndexEntry entry, string query)
+    {
+        string normalizedQuery = StripDiacritics(query);
+        string normalizedDisplayName = StripDiacritics(entry.DisplayName);
+        return normalizedDisplayName.Contains(normalizedQuery, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static string StripDiacritics(string value)
+    {
+        if (string.IsNullOrEmpty(value))
+        {
+            return string.Empty;
+        }
+
+        string normalized = value.Normalize(NormalizationForm.FormD);
+        StringBuilder builder = new(value.Length);
+        foreach (char character in normalized)
+        {
+            UnicodeCategory category = CharUnicodeInfo.GetUnicodeCategory(character);
+            if (category is not UnicodeCategory.NonSpacingMark
+                and not UnicodeCategory.SpacingCombiningMark
+                and not UnicodeCategory.EnclosingMark)
+            {
+                builder.Append(character);
+            }
+        }
+
+        return builder.ToString().Normalize(NormalizationForm.FormC);
+    }
+
     private static PagedResult<T> Page<T>(IReadOnlyList<T> rows, int page, int pageSize)
     {
         int boundedPage = Math.Max(page, 1);
@@ -1018,6 +1055,9 @@ internal sealed class PartiesAdminPortalE2eApiClient(
             Entry("grace-hopper", PartyType.Person, true, "Grace Hopper", "Hopper", 1),
             Entry("marie-curie", PartyType.Person, false, "Marie Curie", "Curie", 2),
             Entry("inactive-labs", PartyType.Organization, false, "Inactive Labs", "Inactive Labs", 3),
+            Entry("jose-zeta", PartyType.Person, true, "José Zeta", "Zeta", 4),
+            Entry("jose-alpha", PartyType.Person, true, "Jose Alpha", "Alpha", 5),
+            Entry("elodie-brule", PartyType.Person, true, "Élodie Brûlé", "Brûlé", 6),
         ];
 
         for (int i = 1; i <= 25; i++)

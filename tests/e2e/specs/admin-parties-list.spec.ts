@@ -38,6 +38,49 @@ test.describe('Admin parties list', () => {
     }).toBe('Ada|Person|true|1');
   });
 
+  test('normalized display-name search matches diacritics and keeps local fallback status polite', async ({ page, request }) => {
+    await gotoAdmin(page);
+
+    await chooseOption(page, 'Party type', 'Person');
+    await chooseOption(page, 'Active state', 'Active');
+    await page.getByLabel('Search parties').fill('Elodie Brule');
+
+    await expect(page.getByRole('button', { name: 'Élodie Brûlé' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Ada Lovelace' })).toHaveCount(0);
+    await expect(page.getByRole('button', { name: 'Email' })).toBeDisabled();
+    await expect(page.getByRole('button', { name: 'Identifier' })).toBeDisabled();
+
+    const status = page.locator('.hx-parties-admin__status');
+    await expect(status).toHaveAttribute('role', 'status');
+    await expect(status).toHaveAttribute('aria-live', 'polite');
+    await expect(status).toHaveText('Display-name search only');
+
+    await expect.poll(async () => {
+      const latest = await latestSearchRequest(request);
+      return `${latest?.query}|${latest?.type}|${latest?.active}|${latest?.page}`;
+    }).toBe('Elodie Brule|Person|true|1');
+  });
+
+  test('normalized display-name search keeps deterministic row ordering', async ({ page, request }) => {
+    await gotoAdmin(page);
+
+    await page.getByLabel('Search parties').fill('Jose');
+
+    await expect(page.getByRole('button', { name: 'Jose Alpha' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'José Zeta' })).toBeVisible();
+    const joseRows = await page.locator('.hx-parties-admin__list')
+      .getByRole('button')
+      .evaluateAll((buttons) => buttons
+        .map((button) => (button.textContent ?? '').trim())
+        .filter((text) => text.includes('Jose') || text.includes('José')));
+    expect(joseRows).toEqual(['Jose Alpha', 'José Zeta']);
+
+    await expect.poll(async () => {
+      const latest = await latestSearchRequest(request);
+      return `${latest?.query}|${latest?.page}`;
+    }).toBe('Jose|1');
+  });
+
   test('next page preserves the current search criteria', async ({ page, request }) => {
     await gotoAdmin(page);
 

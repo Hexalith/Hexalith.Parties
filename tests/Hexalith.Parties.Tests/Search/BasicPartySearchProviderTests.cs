@@ -97,6 +97,21 @@ public class BasicPartySearchProviderTests
     }
 
     [Fact]
+    public void BuildPagedList_SortsBySharedDiacriticNormalizedDisplayName()
+    {
+        List<PartyIndexEntry> entries =
+        [
+            Entry("p-zulu", "Zulu Person", PartyType.Person, active: true, "2026-05-01T00:00:00Z", "2026-05-01T00:00:00Z"),
+            Entry("p-eclair", "Éclair Person", PartyType.Person, active: true, "2026-05-01T00:00:00Z", "2026-05-01T00:00:00Z"),
+            Entry("p-ecole", "E\u0301cole Person", PartyType.Person, active: true, "2026-05-01T00:00:00Z", "2026-05-01T00:00:00Z"),
+        ];
+
+        PagedResult<PartyIndexEntry> result = PartySearchResultsBuilder.BuildPagedList(entries, null, null, 1, 20);
+
+        result.Items.Select(static e => e.Id).ShouldBe(["p-eclair", "p-ecole", "p-zulu"]);
+    }
+
+    [Fact]
     public void BuildPagedList_FiltersErasedTypeActiveAndDateRangesBeforeMetadata()
     {
         List<PartyIndexEntry> entries =

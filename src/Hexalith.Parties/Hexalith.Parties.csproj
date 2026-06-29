@@ -18,6 +18,7 @@
     <ProjectReference Include="..\Hexalith.Parties.Projections\Hexalith.Parties.Projections.csproj" />
     <ProjectReference Include="..\Hexalith.Parties.Security\Hexalith.Parties.Security.csproj" />
     <ProjectReference Include="..\Hexalith.Parties.ServiceDefaults\Hexalith.Parties.ServiceDefaults.csproj" />
+    <ProjectReference Include="$(HexalithCommonsRoot)\src\libraries\Hexalith.Commons\Hexalith.Commons.csproj" />
     <ProjectReference Include="$(HexalithCommonsRoot)\src\libraries\Hexalith.Commons.Http\Hexalith.Commons.Http.csproj" />
     <ProjectReference Include="$(HexalithEventStoreRoot)\src\Hexalith.EventStore.DomainService\Hexalith.EventStore.DomainService.csproj" />
     <ProjectReference Include="$(HexalithEventStoreRoot)\src\Hexalith.EventStore.Server\Hexalith.EventStore.Server.csproj" />

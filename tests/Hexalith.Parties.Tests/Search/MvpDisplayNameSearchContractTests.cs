@@ -38,6 +38,19 @@ public sealed class MvpDisplayNameSearchContractTests
         exact.Matches.ShouldNotContain(m => reservedFields.Contains(m.MatchedField));
     }
 
+    [Fact]
+    public void Search_MvpAccentInsensitiveDisplayName_OnlyEmitsDisplayNameMatchedField()
+    {
+        var provider = new LocalFuzzyPartySearchProvider();
+        List<PartyIndexEntry> entries = [Entry("p-accented", "Renée Faure")];
+
+        PagedResult<PartySearchResult> result = provider.Search(entries, "Renee", null, null, 1, 20);
+
+        PartySearchResult match = result.Items.ShouldHaveSingleItem();
+        match.Party.Id.ShouldBe("p-accented");
+        match.Matches.ShouldAllBe(m => m.MatchedField == "displayName");
+    }
+
     // AC4 — MVP PartySearch must not emit contact-channel match metadata even when contact
     // values would match. The legacy LocalFuzzyPartySearchProvider currently broadens to contact
     // channels and identifiers; the MVP path must constrain that. Reference: 2.5-FIT-073.
