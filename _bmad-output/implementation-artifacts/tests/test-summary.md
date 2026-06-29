@@ -2,28 +2,29 @@
 
 ## Generated Tests
 
-### API / Contract Tests
-- [x] `tests/Hexalith.Parties.Security.Tests/CryptoKeyManagementCompatibilityHarnessTests.cs` - Added Story 7.7 EventStore snapshot protection contract coverage:
-  - protected snapshot metadata round trip through `IEventPayloadProtectionService`
-  - destroyed-key snapshot classification as `KeyInvalidatedOrDeleted`
-  - protected metadata with plain state classified as `ConsistencyMismatch`
-  - provider-opaque snapshot metadata classified without exposing provider-private details
+### API Tests
+- [x] Not applicable for Story 7.8; this story produced release/readiness evidence and did not add API endpoints.
 
 ### E2E Tests
-- [x] No UI E2E test was added because Story 7.7 has no intended UI workflow change. Existing Playwright E2E coverage remains unchanged.
+- [x] `tests/e2e/specs/story-7-8-release-readiness.spec.ts` - Story 7.8 release readiness artifact validation.
+- [x] `tests/e2e/specs/story-7-4-projection-platform-compatibility.spec.ts` - Updated stale Story 7.4 method-name assertions discovered by the artifact suite.
 
 ## Coverage
-- Event payload protection contract paths: covered for protected, unprotected, legacy metadata, missing key, destroyed key, tampered bytes, provider unavailable, provider denied, provider opaque metadata, malformed marker, and no-leak evidence.
-- Snapshot protection contract paths: covered for protected metadata round trip, destroyed key, metadata/state mismatch, and provider opaque metadata.
-- UI workflows: not applicable for this story.
+
+- Story 7.8 final readiness sections: 10/10 covered.
+- Root repository/package state rows: 8/8 covered.
+- Validation matrix commands: 11/11 covered.
+- Cleanup and rollback decisions: projection, crypto, UI fixture, gitlink drift, and KMS guardrails covered.
+- Existing Epic 7 artifact assertions: Story 7.4 projection compatibility spec updated to current method names.
 
 ## Validation
-- [x] `dotnet build tests/Hexalith.Parties.Security.Tests/Hexalith.Parties.Security.Tests.csproj -c Release --no-restore -m:1 -p:NuGetAudit=false`
-- [x] `./tests/Hexalith.Parties.Security.Tests/bin/Release/net10.0/Hexalith.Parties.Security.Tests -class Hexalith.Parties.Security.Tests.CryptoKeyManagementCompatibilityHarnessTests` - 18 passed, 0 failed, 0 skipped.
-- [x] `./tests/Hexalith.Parties.Security.Tests/bin/Release/net10.0/Hexalith.Parties.Security.Tests` - 164 passed, 0 failed, 0 skipped.
+
+- [x] `npm run typecheck`
+- [x] `PLAYWRIGHT_SKIP_WEBSERVER=1 npm run test -- specs/story-7-8-release-readiness.spec.ts --project=chromium` - 6 passed, 0 failed.
+- [x] `PLAYWRIGHT_SKIP_WEBSERVER=1 npm run test -- specs/story-7-1-platform-planning-artifacts.spec.ts specs/story-7-4-projection-platform-compatibility.spec.ts specs/story-7-8-release-readiness.spec.ts --project=chromium` - 16 passed, 0 failed.
 - [x] `git diff --check`
-- [x] `bash scripts/check-no-warning-override.sh`
 
 ## Next Steps
-- Keep the new snapshot contract tests with the Story 7.7 security harness.
-- Run broader domain/projection or full solution validation only after the documented unrelated submodule reference drift is resolved.
+
+- Run the new spec in CI with the existing Playwright lane.
+- Release remains blocked by documented implementation blockers until full solution build, package compatibility, UI accessibility, deploy validation assembly completion, and drifted gitlinks are resolved.

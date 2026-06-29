@@ -91,8 +91,8 @@ test.describe('Story 7.4 projection platform compatibility adapter', () => {
 
     expect(adapterTests).toContain('AddParties_DefaultProjectionPlatformMode_UsesEventStoreAdapter');
     expect(adapterTests).toContain('AddParties_LocalProjectionPlatformMode_UsesRollbackAdapter');
-    expect(adapterTests).toContain('EventStoreAdapter_SaveRebuildCheckpoint_MapsDetailScopeAndKeepsLocalCheckpointAsync');
-    expect(adapterTests).toContain('EventStoreAdapter_DeleteRebuildCheckpoint_CompletionFailureSurfacesAfterLocalCleanupAsync');
+    expect(adapterTests).toContain('EventStoreAdapter_SaveRebuildCheckpoint_MapsDetailScopeWithoutLocalCheckpointWriteAsync');
+    expect(adapterTests).toContain('EventStoreAdapter_DeleteRebuildCheckpoint_CompletionFailureSurfacesWithoutLocalCleanupAsync');
     expect(adapterTests).toContain('ProjectionDelivery_OutOfOrderEvents_SavesPlatformCheckpointAfterBothActorsAcceptInSequenceAsync');
     expect(adapterTests).toContain('ProjectionDelivery_IndexFailure_DoesNotSavePlatformCheckpointAfterDetailOnlyAsync');
 

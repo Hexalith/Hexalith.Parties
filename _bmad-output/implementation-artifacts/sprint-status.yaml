@@ -1,5 +1,5 @@
 # generated: 2026-06-21T18:55:59+02:00
-# last_updated: 2026-06-29T18:30:27+02:00
+# last_updated: 2026-06-29T19:13:46+02:00
 # project: parties
 # project_key: NOKEY
 # tracking_system: file-system
@@ -41,7 +41,7 @@
 # - Retrospective appends its action items to action_items; sprint-status surfaces open ones
 
 generated: 2026-06-21T18:55:59+02:00
-last_updated: 2026-06-29T18:30:27+02:00
+last_updated: 2026-06-29T19:13:46+02:00
 project: parties
 project_key: NOKEY
 tracking_system: file-system
@@ -128,5 +128,5 @@ development_status:
   7-5-projection-checkpoint-rebuild-migration-and-local-code-removal: done
   7-6-crypto-key-management-adr-and-compatibility-harness: done
   7-7-crypto-key-management-migration-behind-eventstore-provider-contracts: done
-  7-8-release-rollback-cleanup-and-readiness-gate: backlog
+  7-8-release-rollback-cleanup-and-readiness-gate: done
   epic-7-retrospective: optional
