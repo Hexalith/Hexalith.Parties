@@ -24,7 +24,8 @@ public static class PartiesUiFrontComposerRegistration
         "Parties",
         "parties",
         [],
-        []);
+        [],
+        Icon: "Regular.Size20.PersonBoard");
 
     /// <summary>
     /// Registers the manifest and the navigation group exposed by the current FrontComposer contract.

@@ -15,5 +15,6 @@ public static class PartiesAdminPortalManifest
         Name: "Parties",
         BoundedContext: "Parties",
         Projections: [typeof(PartiesAdminPortal).FullName!],
-        Commands: []);
+        Commands: [],
+        Icon: "Regular.Size20.PersonBoard");
 }

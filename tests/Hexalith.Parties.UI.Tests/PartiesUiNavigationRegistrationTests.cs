@@ -32,7 +32,11 @@ public sealed class PartiesUiNavigationRegistrationTests
 
         // Manifest registered under the lowercase "parties" bounded context the entries group on.
         registry.Received(1).RegisterDomain(
-            Arg.Is<DomainManifest>(m => m != null && m.BoundedContext == "parties" && m.Name == "Parties"));
+            Arg.Is<DomainManifest>(m =>
+                m != null
+                && m.BoundedContext == "parties"
+                && m.Name == "Parties"
+                && m.Icon == "Regular.Size20.PersonBoard"));
 
         entries.Count.ShouldBe(2);
 
@@ -54,6 +58,8 @@ public sealed class PartiesUiNavigationRegistrationTests
     {
         PartiesUiFrontComposerRegistration.Manifest.Name.ShouldBe("Parties");
         PartiesUiFrontComposerRegistration.Manifest.BoundedContext.ShouldBe("parties");
+        PartiesUiFrontComposerRegistration.Manifest.Icon.ShouldBe("Regular.Size20.PersonBoard");
+        PartiesAdminPortalManifest.Manifest.Icon.ShouldBe("Regular.Size20.PersonBoard");
     }
 
     [Fact]
