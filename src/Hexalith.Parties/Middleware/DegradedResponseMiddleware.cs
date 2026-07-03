@@ -28,11 +28,21 @@ public sealed class DegradedResponseMiddleware(RequestDelegate next, HealthCheck
         // - Health probes: middleware runs health checks → would recurse
         // - Actor invocations: projection-actors health check calls actors via DAPR
         //   sidecar → routed back to /actors/* → middleware runs health checks again → infinite loop
+        // - DAPR sidecar-internal callbacks: the sidecar invokes these during
+        //   startup, before its own health endpoint is guaranteed responsive.
         string path = context.Request.Path.Value ?? string.Empty;
         if (path.Equals("/health", StringComparison.OrdinalIgnoreCase)
             || path.Equals("/alive", StringComparison.OrdinalIgnoreCase)
             || path.Equals("/ready", StringComparison.OrdinalIgnoreCase)
-            || path.StartsWith("/actors/", StringComparison.OrdinalIgnoreCase))
+            || path.StartsWith("/actors/", StringComparison.OrdinalIgnoreCase)
+            || path.StartsWith("/dapr/", StringComparison.OrdinalIgnoreCase)
+            || path.Equals("/tenants/events", StringComparison.OrdinalIgnoreCase))
+        {
+            await next(context).ConfigureAwait(false);
+            return;
+        }
+
+        if (!HttpMethods.IsGet(context.Request.Method))
         {
             await next(context).ConfigureAwait(false);
             return;
@@ -50,29 +60,26 @@ public sealed class DegradedResponseMiddleware(RequestDelegate next, HealthCheck
         {
             _degradedSince ??= DateTimeOffset.UtcNow;
 
-            if (HttpMethods.IsGet(context.Request.Method))
+            context.Response.Headers["X-Service-Degraded"] = "true";
+            context.Response.Headers["X-Stale-Data-Age"] = "0";
+
+            context.Response.OnStarting(static state =>
             {
-                context.Response.Headers["X-Service-Degraded"] = "true";
-                context.Response.Headers["X-Stale-Data-Age"] = "0";
-
-                context.Response.OnStarting(static state =>
+                var (httpContext, degradedSince) = ((HttpContext, DateTimeOffset))state;
+                if (httpContext.Response.StatusCode < StatusCodes.Status500InternalServerError)
                 {
-                    var (httpContext, degradedSince) = ((HttpContext, DateTimeOffset))state;
-                    if (httpContext.Response.StatusCode < StatusCodes.Status500InternalServerError)
-                    {
-                        long staleSeconds = (long)(DateTimeOffset.UtcNow - degradedSince).TotalSeconds;
-                        httpContext.Response.Headers["X-Service-Degraded"] = "true";
-                        httpContext.Response.Headers["X-Stale-Data-Age"] = staleSeconds.ToString(System.Globalization.CultureInfo.InvariantCulture);
-                    }
-                    else
-                    {
-                        httpContext.Response.Headers.Remove("X-Service-Degraded");
-                        httpContext.Response.Headers.Remove("X-Stale-Data-Age");
-                    }
+                    long staleSeconds = (long)(DateTimeOffset.UtcNow - degradedSince).TotalSeconds;
+                    httpContext.Response.Headers["X-Service-Degraded"] = "true";
+                    httpContext.Response.Headers["X-Stale-Data-Age"] = staleSeconds.ToString(System.Globalization.CultureInfo.InvariantCulture);
+                }
+                else
+                {
+                    httpContext.Response.Headers.Remove("X-Service-Degraded");
+                    httpContext.Response.Headers.Remove("X-Stale-Data-Age");
+                }
 
-                    return Task.CompletedTask;
-                }, (context, _degradedSince.Value));
-            }
+                return Task.CompletedTask;
+            }, (context, _degradedSince.Value));
         }
         else
         {

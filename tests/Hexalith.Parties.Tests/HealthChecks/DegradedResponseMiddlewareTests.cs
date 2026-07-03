@@ -64,6 +64,45 @@ public sealed class DegradedResponseMiddlewareTests
     }
 
     [Fact]
+    public async Task InvokeAsync_PostRequest_DoesNotRunHealthChecksAsync()
+    {
+        HealthCheckService healthCheckService = Substitute.For<HealthCheckService>();
+
+        var middleware = new DegradedResponseMiddleware(
+            context => context.Response.WriteAsync("ok"),
+            healthCheckService);
+
+        HttpContext context = CreateHttpContext("POST");
+
+        await middleware.InvokeAsync(context);
+
+        _ = healthCheckService
+            .DidNotReceive()
+            .CheckHealthAsync(Arg.Any<Func<HealthCheckRegistration, bool>>(), Arg.Any<CancellationToken>());
+    }
+
+    [Theory]
+    [InlineData("/dapr/config")]
+    [InlineData("/dapr/subscribe")]
+    [InlineData("/tenants/events")]
+    public async Task InvokeAsync_DaprInternalPath_DoesNotRunHealthChecksAsync(string path)
+    {
+        HealthCheckService healthCheckService = Substitute.For<HealthCheckService>();
+
+        var middleware = new DegradedResponseMiddleware(
+            context => context.Response.WriteAsync("ok"),
+            healthCheckService);
+
+        HttpContext context = CreateHttpContext("GET", path);
+
+        await middleware.InvokeAsync(context);
+
+        _ = healthCheckService
+            .DidNotReceive()
+            .CheckHealthAsync(Arg.Any<Func<HealthCheckRegistration, bool>>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
     public async Task InvokeAsync_StateStoreUnavailable_GetRequest_HeadersAddedAsync()
     {
         HealthCheckService healthCheckService = CreateStateStoreUnavailableHealthCheckService();
@@ -144,10 +183,11 @@ public sealed class DegradedResponseMiddlewareTests
         context2.Response.Headers.ContainsKey("X-Service-Degraded").ShouldBeFalse();
     }
 
-    private static HttpContext CreateHttpContext(string method)
+    private static HttpContext CreateHttpContext(string method, string path = "/")
     {
         var context = new DefaultHttpContext();
         context.Request.Method = method;
+        context.Request.Path = path;
         return context;
     }
 
