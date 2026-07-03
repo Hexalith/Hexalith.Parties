@@ -6,16 +6,15 @@ using Microsoft.Extensions.Options;
 
 namespace Hexalith.Parties.AdminPortal.Services;
 
-internal sealed class PartiesAdminPortalOptionsValidator(IServiceScopeFactory scopeFactory)
+internal sealed class PartiesAdminPortalOptionsValidator(IServiceProviderIsService serviceProviderIsService)
     : IValidateOptions<PartiesAdminPortalOptions>
 {
     public ValidateOptionsResult Validate(string? name, PartiesAdminPortalOptions options)
     {
         ArgumentNullException.ThrowIfNull(options);
 
-        using IServiceScope scope = scopeFactory.CreateScope();
-        bool hasTypedClient = scope.ServiceProvider.GetService<IPartiesQueryClient>() is not null;
-        bool hasQueryService = scope.ServiceProvider.GetService<IQueryService>() is not null;
+        bool hasTypedClient = serviceProviderIsService.IsService(typeof(IPartiesQueryClient));
+        bool hasQueryService = serviceProviderIsService.IsService(typeof(IQueryService));
 
         if (!hasTypedClient && hasQueryService)
         {
