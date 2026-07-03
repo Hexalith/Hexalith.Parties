@@ -1,7 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
-    <IsPackable>false</IsPackable>
+    <IsPackable>true</IsPackable>
+    <PackageId>Hexalith.Parties.UI</PackageId>
     <IsPublishable>true</IsPublishable>
     <EnableContainer>true</EnableContainer>
     <ContainerRepository>parties-ui</ContainerRepository>
@@ -52,16 +53,23 @@
          through this ref (and through Hexalith.FrontComposer.Shell), so NO explicit PackageReference and
          NO Directory.Packages.props edit is needed. $(HexalithEventStoreRoot) is the same sibling-submodule
          root the AppHost uses (Directory.Build.props). -->
-    <ProjectReference Include="$(HexalithEventStoreRoot)\src\Hexalith.EventStore.SignalR\Hexalith.EventStore.SignalR.csproj" />
-    <ProjectReference Include="$(HexalithFrontComposerRoot)\src\Hexalith.FrontComposer.Shell\Hexalith.FrontComposer.Shell.csproj" />
-    <ProjectReference Include="$(HexalithFrontComposerRoot)\src\Hexalith.FrontComposer.Mcp\Hexalith.FrontComposer.Mcp.csproj" />
+    <ProjectReference Include="$(HexalithEventStoreRoot)\src\Hexalith.EventStore.SignalR\Hexalith.EventStore.SignalR.csproj" Condition="'$(HexalithEventStoreFromSource)' == 'true'" />
+    <PackageReference Include="Hexalith.EventStore.SignalR" Condition="'$(HexalithEventStoreFromSource)' != 'true'" />
+    <ProjectReference Include="$(HexalithFrontComposerRoot)\src\Hexalith.FrontComposer.Shell\Hexalith.FrontComposer.Shell.csproj" Condition="'$(HexalithFrontComposerFromSource)' == 'true'" />
+    <PackageReference Include="Hexalith.FrontComposer.Shell" Condition="'$(HexalithFrontComposerFromSource)' != 'true'" />
+    <ProjectReference Include="$(HexalithFrontComposerRoot)\src\Hexalith.FrontComposer.Mcp\Hexalith.FrontComposer.Mcp.csproj" Condition="'$(HexalithFrontComposerFromSource)' == 'true'" />
+    <PackageReference Include="Hexalith.FrontComposer.Mcp" Condition="'$(HexalithFrontComposerFromSource)' != 'true'" />
     <!-- SourceTools analyzer: discovers [Projection]/[Command]/[ProjectionTemplate] markers; emits
          the generated registration symbols. Analyzer-only reference (no compile-time assembly). -->
     <ProjectReference Include="$(HexalithFrontComposerRoot)\src\Hexalith.FrontComposer.SourceTools\Hexalith.FrontComposer.SourceTools.csproj"
+                      Condition="'$(HexalithFrontComposerFromSource)' == 'true'"
                       OutputItemType="Analyzer"
                       PrivateAssets="all"
                       ReferenceOutputAssembly="false"
                       SetTargetFramework="TargetFramework=netstandard2.0" />
+    <PackageReference Include="Hexalith.FrontComposer.SourceTools"
+                      Condition="'$(HexalithFrontComposerFromSource)' != 'true'"
+                      PrivateAssets="all" />
   </ItemGroup>
 
 </Project>
