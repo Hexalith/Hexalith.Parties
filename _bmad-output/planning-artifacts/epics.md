@@ -2,9 +2,9 @@
 stepsCompleted: [1, 2, 3, 4]
 status: complete
 completedAt: '2026-06-09'
-epicCount: 7
-storyCount: 45
-correctCourse: '2026-06-09 — readiness course-correction: split Story 4.1 (decision spike + impl) and Story 3.5 (D7 backend + report UI); +phone-reflow AC on 2.3; +mock-fidelity rule. 2026-06-28 — readiness remediation for sprint-change-proposal-2026-06-28: add Epic 6 implementation-ready Class A consolidation stories, add Epic 7 deferred architecture placeholder, and pin A3/A8 decisions. 2026-06-29 — readiness scope hygiene: classify Epics 1-5 as PRD feature scope, Epic 6 as conditional maintenance scope, Epic 7 as excluded/deferred planning scope, and normalize Epic 2 Story 2.5 before Story 2.4. 2026-06-29 — Epic 7 approved for PM/Architect planning only. 2026-06-29 — Epic 7 PM/Architect implementation plan approved: add story backlog 7.1-7.8 for platform alignment while preserving post-MVP maintenance classification.'
+epicCount: 8
+storyCount: 55
+correctCourse: '2026-06-09 — readiness course-correction: split Story 4.1 (decision spike + impl) and Story 3.5 (D7 backend + report UI); +phone-reflow AC on 2.3; +mock-fidelity rule. 2026-06-28 — readiness remediation for sprint-change-proposal-2026-06-28: add Epic 6 implementation-ready Class A consolidation stories, add Epic 7 deferred architecture placeholder, and pin A3/A8 decisions. 2026-06-29 — readiness scope hygiene: classify Epics 1-5 as PRD feature scope, Epic 6 as conditional maintenance scope, Epic 7 as excluded/deferred planning scope, and normalize Epic 2 Story 2.5 before Story 2.4. 2026-06-29 — Epic 7 approved for PM/Architect planning only. 2026-06-29 — Epic 7 PM/Architect implementation plan approved: add story backlog 7.1-7.8 for platform alignment while preserving post-MVP maintenance classification. 2026-07-06 — approved sprint-change-proposal-2026-07-06: close Epic 7 as completed partial platform alignment and add Epic 8 Class C domain-focus refactoring backlog.'
 inputDocuments:
   # Canonical requirements source (PRD-shaped; consolidates the brownfield basis below)
   - _bmad-output/planning-artifacts/parties-ui-prd.md
@@ -366,11 +366,19 @@ once in Epic 1._
 - **Conditional maintenance scope:** Epic 6. This is approved Class A
   in-repository consolidation supporting NFR9 and maintainability. It covers no new
   PRD FRs and must not be reported as product feature delivery.
-- **Approved post-MVP platform maintenance scope:** Epic 7. This is a Class B
+- **Completed post-MVP platform maintenance scope:** Epic 7. This is a Class B
   platform-alignment effort with PM/Architect implementation plan approved on
   2026-06-29 in `_bmad-output/planning-artifacts/epic-7-implementation-plan-2026-06-29.md`.
-  It covers no new PRD FRs, is not a dependency for Epic 6, and remains backlog
-  until `7-*` implementation story files are created by the story workflow.
+  Stories 7.1 through 7.8 are complete in sprint status. Epic 7 produced adapter,
+  compatibility, and readiness evidence, but its final readiness record preserved
+  several rollback paths and deferred deletion-safe cleanup. It covers no new PRD
+  FRs.
+- **Approved post-MVP domain-focus maintenance scope:** Epic 8. This is a Class C
+  domain-boundary correction approved by
+  `_bmad-output/planning-artifacts/sprint-change-proposal-2026-07-06.md`.
+  It covers no new PRD FRs, depends on Epic 7 evidence, and starts only after an
+  Epic 8 architecture spine and detailed `8-*` implementation story files are
+  created.
 
 ## Epic List
 
@@ -447,26 +455,40 @@ maintainability, and the shared-anchor boundary in `architecture.md`.
 
 ### Epic 7: Platform Alignment - adopt Commons/EventStore (Class B)
 
-Architects and product leadership have an approved PM/Architect implementation plan
-for cross-repository platform alignment: adopt Commons/EventStore/FrontComposer
-primitives where Parties currently carries generic technical infrastructure. This is
-post-MVP platform maintenance, not PRD feature delivery. Developer execution starts
-only when the `7-*` story files are created from the approved plan.
+Architects and product leadership approved and completed a PM/Architect implementation
+plan for cross-repository platform alignment: adopt Commons/EventStore/FrontComposer
+primitives where Parties currently carries generic technical infrastructure. Epic 7
+is post-MVP platform maintenance, not PRD feature delivery. Its final readiness
+artifact preserves rollback paths and deferred deletion-safe cleanup for Epic 8.
 
 **FRs covered:** no new PRD FRs. Supports long-term maintainability and platform
 convergence only after PM/Architect approval.
+
+### Epic 8: Domain-Focus Refactoring and Platform Extraction (Class C)
+
+Hexalith.Parties removes remaining generic platform infrastructure so the module
+converges on the Hexalith domain-module contract: domain aggregate, contracts,
+validators, domain projection/query handlers, Parties-specific GDPR policy, typed
+domain clients, domain UI, MCP tool definitions, sample, and a thin AppHost.
+
+**Implementation classification:** post-MVP maintenance. Epic 8 is approved by
+`sprint-change-proposal-2026-07-06.md`, covers no new PRD FRs, and must not be
+reported as MVP feature delivery.
+
+**FRs covered:** no new PRD FRs. Supports domain-boundary correctness, NFR7,
+NFR8, NFR9, and long-term maintainability.
 
 ### Epic Dependencies
 
 `1 -> {2, 4}` · `2 -> 3` · `4 -> 5`. Epics 1-5 are complete PRD feature scope and are
 prerequisites for the post-MVP maintenance sweep in Epic 6. Epic 6 is conditional
-maintenance scope, not PRD feature delivery. Epic 7 is approved post-MVP platform
-maintenance scope with its own PM/Architect implementation plan; it is not a
-dependency for Epic 6 and remains backlog until detailed `7-*` story files are
-created.
-Current status note, 2026-06-29: `sprint-status.yaml` marks Epics 1-5 and all listed
-stories as `done`; Epic 6 story files are `ready-for-dev` as maintenance scope; Epic 7
-stories are backlog only. Historical sequencing remains:
+maintenance scope, not PRD feature delivery. Epic 7 is completed post-MVP platform
+maintenance and is not a dependency for Epic 6. Epic 8 depends on the Epic 7
+readiness evidence and the approved 2026-07-06 sprint change proposal; implementation
+story files are created only after the Epic 8 architecture spine is approved.
+Current status note, 2026-07-06: `sprint-status.yaml` marks Epics 1-5 and all listed
+stories as `done`; Epic 6 story files are maintenance scope; Epic 7 stories are done;
+Epic 8 is backlog only. Historical sequencing remains:
 Story 4.2 (binding build) followed Story 4.1 (binding decision / ADR), and Story 3.6
 (verification report UI) followed Story 3.5 (D7 backend contract). Do not treat those
 dependencies as active blockers after the 2026-06-10 completed implementation story
@@ -1332,8 +1354,9 @@ infrastructure toward shared Hexalith platform libraries. It is governed by:
 
 **Implementation classification:** post-MVP platform maintenance. Epic 7 covers no
 new PRD functional requirements and must not be reported as MVP feature delivery.
-Developer execution starts only when detailed `7-*` story files are created from the
-backlog below.
+Stories 7.1 through 7.8 are complete in sprint status. Epic 7 remains the evidence
+base for Epic 8, but its final readiness record intentionally preserved rollback
+paths and deferred deletion-safe cleanup.
 
 **Approved by:** Administrator
 **Approval date:** 2026-06-29
@@ -1493,3 +1516,221 @@ any unfinished removal is deferred explicitly.
 
 **And** final readiness notes state Epic 7 remains post-MVP platform maintenance and
 does not change PRD FR coverage.
+
+---
+
+## Epic 8: Domain-Focus Refactoring and Platform Extraction (Class C)
+
+Epic 8 is approved post-MVP maintenance from
+`sprint-change-proposal-2026-07-06.md`. It removes remaining generic platform
+infrastructure from Hexalith.Parties only after platform ownership, compatibility,
+rollback, and validation evidence exist.
+
+**Implementation classification:** post-MVP maintenance. Epic 8 covers no new PRD
+functional requirements and must not be reported as MVP feature delivery.
+
+**Trigger:** `fable_changes.md`, 2026-07-06.
+
+**Approved by:** Administrator
+**Approval date:** 2026-07-06
+**Approved story scope:** 8.1 through 8.10 as backlog slices. Detailed story files
+must be created by the story workflow after the Epic 8 architecture spine is approved.
+
+### Epic 8 Sequencing
+
+`8.1 -> 8.2 -> 8.3 -> 8.4 -> 8.5 -> 8.6 -> 8.7 -> 8.8 -> 8.9 -> 8.10`
+
+Story 8.2 may begin after 8.1 if it does not require unresolved submodule release
+work. Stories 8.5 through 8.7 require the platform API readiness from 8.3. Story
+8.10 runs last.
+
+### Story 8.1: Baseline and release-blocker stabilization
+
+As product leadership and architecture,
+I want a trustworthy baseline before deletion-heavy refactoring begins,
+so that Epic 8 does not compound current submodule, package, or test-lane drift.
+
+**Given** the Epic 7 final readiness record
+**When** Story 8.1 runs
+**Then** it re-establishes the current build/test baseline, records exact blockers,
+and resolves or deliberately pins submodule drift before structural migration begins.
+
+**And** `scripts/test.ps1` is corrected so ConsumerPortal tests are not silently
+omitted and solution-level `dotnet test` lanes are not used as a false green signal.
+
+**And** direct xUnit v3 assembly guidance, `-m:1` build guidance, MinVer override
+guidance, and package-test/network limitations are recorded for later stories.
+
+### Story 8.2: Identifier correctness and zero-risk hygiene
+
+As a maintainer,
+I want identifier validation and dead references fixed before broad refactoring,
+so that existing correctness defects and noisy artifacts do not mask migration
+regressions.
+
+**Given** aggregate and command identifiers may be ULID-compatible or legacy
+GUID-shaped values
+**When** validators and aggregate guard clauses are updated
+**Then** production code no longer rejects valid ULID-compatible aggregate IDs and
+still accepts existing GUID-shaped IDs for replay compatibility.
+
+**And** command/message/correlation ID minting uses the approved Commons unique ID
+helper where identifier semantics require it.
+
+**And** dead package references, committed `*.csproj.lscache` files, and obsolete
+zero-risk artifacts are removed with focused validator, sample, client, and package
+fitness tests updated in the same story.
+
+### Story 8.3: Platform API prerequisites
+
+As architects and platform owners,
+I want missing shared APIs landed additively before Parties consumes them,
+so that domain cleanup does not depend on unowned local-only platform code.
+
+**Given** `fable_changes.md` identifies platform prerequisites
+**When** this story completes
+**Then** EventStore, Commons, FrontComposer, Builds, and platform/ops owners have
+approved additive APIs or explicit "already available" evidence for each required
+replacement.
+
+**And** the prerequisite matrix covers EventStore domain-service SDK projection/query
+support, DataProtection, client envelopes/freshness/error codes, tenant claims
+transformation, Aspire publish helpers, FrontComposer UI primitives, Commons HTTP
+helpers, and Builds shared props/targets.
+
+**And** no Parties source migration starts from an unapproved checked-out submodule
+API.
+
+### Story 8.4: Leaf-project retirement
+
+As a maintainer,
+I want no forbidden or obsolete wrapper projects in the domain module,
+so that project structure matches the Hexalith domain-module contract.
+
+**Given** replacement platform APIs are available
+**When** this story completes
+**Then** `Hexalith.Parties.ServiceDefaults`, `Hexalith.Parties.Authentication`, and
+the separate `Hexalith.Parties.Server` shell are deleted or merged as approved.
+
+**And** `PartyAggregate` lives in the domain library with namespace and test updates,
+and ServiceDefaults/auth transformation consumers reference the shared platform
+surfaces directly.
+
+**And** `.slnx`, project references, package/API tests, fitness tests, README/docs,
+and deploy-validation assumptions are updated in the same change.
+
+### Story 8.5: EventStore domain-service SDK host cutover
+
+As a maintainer,
+I want the Parties host to use the EventStore domain-service SDK,
+so that the domain module no longer ships a parallel `/process` platform.
+
+**Given** EventStore SDK host APIs are approved for Parties use
+**When** this story completes
+**Then** `src/Hexalith.Parties/Program.cs` uses the SDK host shape and domain
+registrations instead of hand-mapping `/process` through a Parties-specific invoker.
+
+**And** `PartyDomainServiceInvoker` behavior is either deleted or reduced to
+Parties-specific hooks that the SDK cannot own, such as domain policy and payload
+protection integration.
+
+**And** gateway routing, DAPR ACLs, command validation rejections, event publication,
+tenant isolation, crypto redaction, and rollback behavior are proven by focused and
+topology tests.
+
+### Story 8.6: Projection and query SDK migration
+
+As a maintainer,
+I want projection and query mechanics to use EventStore SDK abstractions,
+so that Parties keeps only domain folds, query semantics, and tenant guardrails.
+
+**Given** EventStore projection/query replacement APIs are ready
+**When** migration is implemented
+**Then** projection folds run as `IDomainProjectionHandler`, query paths run as
+`IDomainQueryHandler`, read-model writes use `IReadModelStore` and
+`ReadModelWritePolicy`, and pagination cursors use `IQueryCursorCodec`.
+
+**And** Dapr projection/query actors, actor companion sequence keys, rebuild service,
+platform adapters, and `catch (NotImplementedException)` remoting control flow are
+deleted only after parity proves duplicate/out-of-order delivery, replay-from-zero,
+stale/degraded fallback, erased-party exclusion, GDPR processing-record reads, and
+rollback safety.
+
+**And** a full projection rebuild is executed and verified against aggregate replay.
+
+### Story 8.7: Data-protection extraction
+
+As a security reviewer and maintainer,
+I want generic data-protection mechanics owned by EventStore/shared security,
+so that Parties keeps GDPR policy without owning reusable crypto infrastructure.
+
+**Given** a shared DataProtection package or approved EventStore provider exists
+**When** migration is implemented
+**Then** generic payload protection, key storage, wrapping, rotation, audit, retry,
+circuit-breaker, and typed unreadable mechanics move behind shared provider contracts.
+
+**And** Parties retains only party-specific commands, legal policy, erasure
+orchestration semantics, certificates/reports that are domain-specific, and UX/copy
+requirements unless an ADR explicitly moves them.
+
+**And** compatibility proves `json+pdenc-v1`, `json-redacted`, legacy unprotected
+reads, key zeroing, typed unreadable outcomes, no-leak diagnostics, exports,
+processing records, erasure reports, and rollback.
+
+### Story 8.8: Client, MCP, AppHost, build, and deploy cleanup
+
+As a maintainer,
+I want remaining non-domain plumbing to move to the appropriate shared surface,
+so that Parties packages and deployment assets describe only Parties-owned behavior.
+
+**Given** replacement shared APIs exist
+**When** this story completes
+**Then** command envelopes, paging/freshness models, ProblemDetails scrubbing,
+client registration validation, MCP context/result plumbing, AppHost security/module
+helpers, build-root probing, and platform-owned deployment assets are adopted from
+their owning modules.
+
+**And** `deploy/k8s` retains only Parties-owned assets while platform/ops assets and
+generic deploy-validation tooling are moved or explicitly deferred.
+
+**And** public package compatibility, MCP tool contracts, AppHost topology, and
+operator docs remain stable or intentionally versioned.
+
+### Story 8.9: UI FrontComposer and Fluent consolidation
+
+As a UI maintainer,
+I want Parties UI to consume FrontComposer and Fluent primitives instead of local
+parallel implementations,
+so that the UI conforms to its approved UX and platform contracts.
+
+**Given** FrontComposer/Fluent parity is available
+**When** migration is implemented
+**Then** local projection stream, freshness fallback, optimistic reconcile, status,
+result envelope, grid/list navigation, identity binding, picker internals, and E2E
+fixture/specimen primitives are replaced, moved, or deferred with proof.
+
+**And** legacy FAST/v4 tokens are purged from production UI styles and the approved
+Fluent 2, accessibility, forced-colors, reduced-motion, focus, state, and GDPR copy
+contracts remain intact.
+
+**And** bUnit and Playwright/SSR a11y evidence is recorded with sandbox limitations
+separated from release blockers.
+
+### Story 8.10: Final readiness, documentation, and retirement gate
+
+As product leadership and architecture,
+I want Epic 8 closed with evidence and updated docs,
+so that the domain-focus refactor is complete, releasable, and not open-ended.
+
+**Given** Stories 8.1 through 8.9 have completed or explicitly deferred remaining
+work
+**When** Story 8.10 runs
+**Then** final readiness records exact submodule/package pins, validation commands,
+public compatibility, rollback paths, and deferred work owners.
+
+**And** docs are regenerated or updated to the new project inventory, fitness tests
+pin the new invariants, `sprint-status.yaml` is current, and no PRD FR coverage is
+changed.
+
+**And** final verification confirms or blocks release using the agreed build,
+focused test, package/API, topology, deploy, and UI accessibility lanes.

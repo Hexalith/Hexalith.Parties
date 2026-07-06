@@ -198,6 +198,17 @@ As of 2026-06-27, `_bmad-output/implementation-artifacts/sprint-status.yaml`
 marks Epics 1-5 and their stories as `done`. Readiness validation after this date
 must reconcile this PRD and planning documents with implementation story records.
 
+Post-MVP maintenance status:
+
+- Epic 6 is in-repository consolidation scope. It supports NFR9 and carries no
+  new PRD functional requirement coverage.
+- Epic 7 is completed partial platform-alignment scope. Its final readiness
+  record preserves rollback paths and deferred deletion-safe cleanup. It carries
+  no new PRD functional requirement coverage.
+- Epic 8, approved by `sprint-change-proposal-2026-07-06.md`, is domain-focus
+  refactoring and platform extraction. It is post-MVP maintenance only and must
+  not be reported as product-feature coverage.
+
 Known completed dependency evidence:
 
 - Story 1.4 completed fail-closed `party_id` claim resolution with synthetic-claim

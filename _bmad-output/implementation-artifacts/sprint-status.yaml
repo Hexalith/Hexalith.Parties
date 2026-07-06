@@ -119,8 +119,8 @@ development_status:
   # PM/Architect implementation plan approved 2026-06-29:
   # _bmad-output/planning-artifacts/epic-7-implementation-plan-2026-06-29.md.
   # Post-MVP platform maintenance only; no new PRD functional requirements.
-  # Stories 7.1-7.6 are done; Story 7.7 is ready for dev.
-  epic-7: in-progress
+  # Stories 7.1-7.8 are done. Final readiness preserved deferred cleanup for Epic 8.
+  epic-7: done
   7-1-platform-target-destination-adr-and-release-rollback-plan: done
   7-2-commons-service-defaults-correlation-problemdetails-and-paging: done
   7-3-search-normalization-and-frontcomposer-ui-orchestration-convergence: done
@@ -130,3 +130,21 @@ development_status:
   7-7-crypto-key-management-migration-behind-eventstore-provider-contracts: done
   7-8-release-rollback-cleanup-and-readiness-gate: done
   epic-7-retrospective: optional
+
+  # ── Epic 8: Domain-Focus Refactoring and Platform Extraction (Class C) ───
+  # Added by Correct Course 2026-07-06:
+  # _bmad-output/planning-artifacts/sprint-change-proposal-2026-07-06.md.
+  # Post-MVP maintenance only; no new PRD functional requirements.
+  # Story files are created only after the Epic 8 architecture spine is approved.
+  epic-8: backlog
+  8-1-baseline-and-release-blocker-stabilization: backlog
+  8-2-identifier-correctness-and-zero-risk-hygiene: backlog
+  8-3-platform-api-prerequisites: backlog
+  8-4-leaf-project-retirement: backlog
+  8-5-eventstore-domain-service-sdk-host-cutover: backlog
+  8-6-projection-and-query-sdk-migration: backlog
+  8-7-data-protection-extraction: backlog
+  8-8-client-mcp-apphost-build-and-deploy-cleanup: backlog
+  8-9-ui-frontcomposer-and-fluent-consolidation: backlog
+  8-10-final-readiness-documentation-and-retirement-gate: backlog
+  epic-8-retrospective: optional

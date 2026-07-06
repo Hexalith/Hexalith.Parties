@@ -3,10 +3,12 @@ project_name: parties
 document_type: sprint-change-proposal
 date: 2026-07-06
 trigger_file: fable_changes.md
-status: draft-pending-approval
+status: approved
 mode: batch
 scope_classification: major
 recommended_route: PM/Architect -> PO/Developer
+approved_by: Administrator
+approved_at: 2026-07-06T21:11:33+02:00
 ---
 
 # Sprint Change Proposal - Domain-Focus Refactoring
@@ -244,8 +246,9 @@ Post-MVP maintenance status:
 - Epic 7 is completed partial platform-alignment scope. Its final readiness
   record preserves rollback paths and deferred deletion-safe cleanup. It carries
   no new PRD functional requirement coverage.
-- Epic 8, if approved, is domain-focus refactoring and platform extraction. It is
-  post-MVP maintenance only and must not be reported as product-feature coverage.
+- Epic 8, approved by `sprint-change-proposal-2026-07-06.md`, is domain-focus
+  refactoring and platform extraction. It is post-MVP maintenance only and must
+  not be reported as product-feature coverage.
 ```
 
 Rationale: The PRD remains the product requirements source. It only needs
@@ -277,10 +280,10 @@ NEW:
   Stories 7.1 through 7.8 are complete in sprint status. Epic 7 produced adapter,
   compatibility, and readiness evidence, but its final readiness record preserved
   several rollback paths and deferred deletion-safe cleanup.
-- **Proposed post-MVP domain-focus maintenance scope:** Epic 8. This is a
+- **Approved post-MVP domain-focus maintenance scope:** Epic 8. This is a
   Class C domain-boundary correction based on `fable_changes.md`. It covers no
-  new PRD FRs, depends on Epic 7 evidence, and starts only after this sprint
-  change proposal is approved and `8-*` story files are created.
+  new PRD FRs, depends on Epic 7 evidence, and starts only after an Epic 8
+  architecture spine and detailed `8-*` implementation story files are created.
 ```
 
 Section: after Epic 7
@@ -377,7 +380,7 @@ NEW:
   introduced adapters, compatibility harnesses, and readiness evidence for shared
   Commons/EventStore/FrontComposer adoption. It intentionally preserved rollback
   paths where deletion-safe parity was not proven.
-- **Domain-focus boundary (Class C, proposed Epic 8):** Hexalith.Parties must not
+- **Domain-focus boundary (Class C, approved Epic 8):** Hexalith.Parties must not
   ship generic platform implementations. The target state removes local
   ServiceDefaults, authentication transformation, domain-service invoker,
   projection/query actors, projection rebuild service, generic crypto engine,
@@ -424,8 +427,8 @@ Route:
 
 - Product Manager / Architect: approve Epic 8 scope, create/update architecture
   spine, confirm platform owners and sequencing.
-- Product Owner / Developer: after approval, update `epics.md`,
-  `sprint-status.yaml`, and create `8-*` story files in order.
+- Product Owner / Developer: create `8-*` implementation story files in order
+  after the Epic 8 architecture spine is approved.
 - Developer agents: implement only from approved story files, preserving
   rollback paths until each deletion has parity evidence.
 - Test Architect / Reviewer: define required focused and broad validation lanes
@@ -436,7 +439,7 @@ Success criteria:
 
 - Epics 1-5 FR coverage remains unchanged.
 - Epic 7 is closed as completed partial platform alignment.
-- Epic 8 exists with approved story files and status tracking.
+- Epic 8 exists with approved backlog and status tracking.
 - `Guid.TryParse` no longer rejects valid ULID-compatible aggregate IDs while
   existing GUID-shaped IDs remain accepted.
 - `AddEventStoreDomainService` / `UseEventStoreDomainService` are the host path
@@ -453,10 +456,21 @@ Success criteria:
 - Final validation records the build/test state and every remaining deferred
   item with owner, reason, and required proof.
 
-## 7. Approval Request
+## 7. Approval Record
 
-This proposal is ready for review.
+Approved by Administrator on 2026-07-06 after batch review.
 
-Approve it to proceed with artifact updates and Epic 8 story creation. Revise it
-if the intended route is instead to reopen Epic 7 or to implement only a smaller
-hygiene slice.
+Approved immediate actions:
+
+- Update planning traceability in the PRD and epics.
+- Close Epic 7 status as done.
+- Add Epic 8 backlog tracking.
+
+Handoff:
+
+- Route to PM/Architect for the Epic 8 architecture spine and platform-owner
+  sequencing.
+- Route to PO/Developer for `8-*` implementation story creation after the
+  architecture spine is approved.
+- Keep source implementation blocked until each `8-*` story exists with explicit
+  acceptance criteria and validation gates.
