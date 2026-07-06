@@ -6,6 +6,8 @@ namespace Hexalith.Parties.DeployValidation.Tests;
 [Collection("DeployValidation")]
 public sealed class OperatorScriptValidationTests : IDisposable
 {
+    private const int ProcessTimeoutMilliseconds = 60_000;
+
     private static readonly string s_legacyTacheIssuer = "http://auth." + "tache.ai:8080/realms/tache";
     private static readonly string s_legacyHostAliasPatch = "Patch-Keycloak" + "HostAlias";
 
@@ -745,11 +747,7 @@ public sealed class OperatorScriptValidationTests : IDisposable
         start.Environment["PATH"] = shimBinDirectory + Path.PathSeparator + start.Environment["PATH"];
 
         using Process process = Process.Start(start) ?? throw new InvalidOperationException("Failed to start pwsh.");
-        string stdout = process.StandardOutput.ReadToEnd();
-        string stderr = process.StandardError.ReadToEnd();
-        process.WaitForExit();
-
-        return new ProcessResult(process.ExitCode, stdout + stderr);
+        return WaitForProcess(process, start.FileName);
     }
 
     private static ProcessResult RunPwshScriptPath(
@@ -782,11 +780,20 @@ public sealed class OperatorScriptValidationTests : IDisposable
         }
 
         using Process process = Process.Start(start) ?? throw new InvalidOperationException("Failed to start pwsh.");
-        string stdout = process.StandardOutput.ReadToEnd();
-        string stderr = process.StandardError.ReadToEnd();
-        process.WaitForExit();
+        return WaitForProcess(process, start.FileName);
+    }
 
-        return new ProcessResult(process.ExitCode, stdout + stderr);
+    private static ProcessResult WaitForProcess(Process process, string fileName)
+    {
+        Task<string> stdout = process.StandardOutput.ReadToEndAsync();
+        Task<string> stderr = process.StandardError.ReadToEndAsync();
+        if (!process.WaitForExit(ProcessTimeoutMilliseconds))
+        {
+            process.Kill(entireProcessTree: true);
+            throw new TimeoutException($"{fileName} timed out after {ProcessTimeoutMilliseconds / 1000} seconds.");
+        }
+
+        return new ProcessResult(process.ExitCode, stdout.GetAwaiter().GetResult() + stderr.GetAwaiter().GetResult());
     }
 
     private static int CountOccurrences(string text, string value)

@@ -185,6 +185,8 @@ public sealed class ClientArchitecturalFitnessTests
 
         packageReferences.OrderBy(value => value).ShouldBe(
         [
+            "Hexalith.Commons.Http",
+            "Hexalith.EventStore.Contracts",
             "Microsoft.Extensions.Http",
             "Microsoft.Extensions.Options",
         ]);

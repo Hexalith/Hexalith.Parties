@@ -10,13 +10,12 @@ using System.Text.Json;
 
 using FluentValidation;
 
-using eventstore::Hexalith.EventStore.Configuration;
-using eventstore::Hexalith.EventStore.Indexes;
-using eventstore::Hexalith.EventStore.Models;
-
 using Hexalith.EventStore.Contracts.Commands;
 using Hexalith.EventStore.Contracts.Events;
 using Hexalith.EventStore.Contracts.Results;
+using Hexalith.EventStore.Configuration;
+using Hexalith.EventStore.Indexes;
+using Hexalith.EventStore.Models;
 using Hexalith.EventStore.Server.Actors;
 using Hexalith.EventStore.Server.Commands;
 using Hexalith.EventStore.Server.DomainServices;

@@ -61,3 +61,13 @@ dotnet_diagnostic.CA2007.severity = warning
 
 # Suppress specific analyzers that conflict with scaffolding
 dotnet_diagnostic.CA1014.severity = none
+
+# External submodule keeps its own inside-namespace using style. Do not make
+# Parties analyzer policy fail the parent solution build for that source.
+[references/Hexalith.PolymorphicSerializations/**/*.cs]
+csharp_using_directive_placement = inside_namespace:silent
+
+# Tenants currently shadows QueryResult.Metadata in this source-referenced
+# project; keep parent builds unblocked without editing submodule source.
+[references/Hexalith.Tenants/src/Hexalith.Tenants/Queries/TenantQueryResult.cs]
+dotnet_diagnostic.CS0108.severity = none

@@ -11,6 +11,8 @@ using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.FileProviders;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using Microsoft.FluentUI.AspNetCore.Components;
 
@@ -41,7 +43,8 @@ public sealed class PartiesUiAuthenticationCompositionTests
         var services = new ServiceCollection();
         services.AddLogging();
         services.AddHttpContextAccessor();
-        services.AddHexalithFrontComposerAuthentication(o => o.UseKeycloak(
+        AddTestHostEnvironment(services);
+        services.AddHexalithFrontComposerServerSecurity(o => o.UseKeycloak(
             new Uri("https://idp.example/realms/hexalith"),
             "hexalith-parties-ui",
             "secret",
@@ -57,11 +60,11 @@ public sealed class PartiesUiAuthenticationCompositionTests
         (await schemes.GetSchemeAsync(CookieSignInScheme)).ShouldNotBeNull();
 
         // The bridge swaps the framework seam from the fail-closed NullUserContextAccessor to the
-        // claims-backed accessor — proof interactive auth is actually wired. The accessor is scoped,
-        // so resolve it inside a scope (ValidateScopes=true forbids root-resolving scoped services).
+        // circuit-aware accessor — proof interactive server auth is actually wired. The accessor is
+        // scoped, so resolve it inside a scope (ValidateScopes=true forbids root-resolving scoped services).
         using IServiceScope scope = provider.CreateScope();
         scope.ServiceProvider.GetRequiredService<IUserContextAccessor>()
-            .ShouldBeOfType<ClaimsPrincipalUserContextAccessor>();
+            .ShouldBeOfType<ServerCircuitUserContextAccessor>();
 
         // AC1 tokens-stay-server-side guard: tokens are saved into the encrypted authentication
         // ticket and signed into the cookie scheme, so the browser only ever holds the HttpOnly
@@ -147,14 +150,15 @@ public sealed class PartiesUiAuthenticationCompositionTests
             .ShouldBeOfType<NullUserContextAccessor>();
     }
 
-    // Builds the same FrontComposer auth-bridge composition the host runs when authEnabled — the
-    // Keycloak OIDC recipe over a server-side cookie, under ValidateScopes=true (ADR-030).
+    // Builds the same FrontComposer Server security composition the host runs when authEnabled —
+    // the Keycloak OIDC recipe over a server-side cookie, under ValidateScopes=true (ADR-030).
     private static ServiceProvider BuildConfiguredAuthBridgeProvider()
     {
         var services = new ServiceCollection();
         services.AddLogging();
         services.AddHttpContextAccessor();
-        services.AddHexalithFrontComposerAuthentication(o => o.UseKeycloak(
+        AddTestHostEnvironment(services);
+        services.AddHexalithFrontComposerServerSecurity(o => o.UseKeycloak(
             new Uri("https://idp.example/realms/hexalith"),
             "hexalith-parties-ui",
             "secret",
@@ -162,6 +166,20 @@ public sealed class PartiesUiAuthenticationCompositionTests
             PartiesClaimTypes.Subject));
 
         return services.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true });
+    }
+
+    private static void AddTestHostEnvironment(IServiceCollection services)
+        => services.AddSingleton<IHostEnvironment>(new TestHostEnvironment());
+
+    private sealed class TestHostEnvironment : IHostEnvironment
+    {
+        public string EnvironmentName { get; set; } = Environments.Production;
+
+        public string ApplicationName { get; set; } = "Hexalith.Parties.UI.Tests";
+
+        public string ContentRootPath { get; set; } = Directory.GetCurrentDirectory();
+
+        public IFileProvider ContentRootFileProvider { get; set; } = new NullFileProvider();
     }
 
     private static IConfiguration BuildOidcConfiguration() =>

@@ -15,6 +15,8 @@ public sealed class ContractsPackageTests : IClassFixture<ContractsPackageFixtur
 {
     internal const string LocalVersionOverride = "0.0.0-local.0";
     internal const string LocalPackVersionProperties = $"-p:MinVerVersionOverride={LocalVersionOverride} -p:PackageVersion={LocalVersionOverride}";
+    internal const string CommonsPackVersionProperties = "-p:MinVerVersionOverride=2.26.0 -p:PackageVersion=2.26.0";
+    internal const string EventStorePackVersionProperties = "-p:MinVerVersionOverride=3.41.0 -p:PackageVersion=3.41.0";
 
     private readonly ContractsPackageFixture _fixture;
 
@@ -80,7 +82,7 @@ public sealed class ContractsPackageTests : IClassFixture<ContractsPackageFixtur
 
         string[] dependencies = ReadDependencyIds(package.PartiesPackagePath);
 
-        dependencies.ShouldBe(["Hexalith.EventStore.Contracts"]);
+        dependencies.ShouldBe(["ByteAether.Ulid", "Hexalith.Commons.UniqueIds", "Hexalith.EventStore.Contracts"]);
         AssertNoForbiddenDependencyIds(dependencies, package.PartiesPackagePath);
     }
 
@@ -179,53 +181,97 @@ public sealed class ContractsPackageTests : IClassFixture<ContractsPackageFixtur
     public void PersonalDataMetadata_IsVisibleFromPackagedContractsAssembly()
     {
         ContractsPackageArtifacts package = _fixture.Artifacts;
-        using ZipArchive archive = ZipFile.OpenRead(package.PartiesPackagePath);
-        ZipArchiveEntry assemblyEntry = archive.Entries.Single(entry => entry.FullName == "lib/net10.0/Hexalith.Parties.Contracts.dll");
+        ExtractPackageAssemblies(package.PackageFeed, package.WorkingDirectory);
+        CopyTestOutputDependencyAssemblies(package.WorkingDirectory);
 
-        string assemblyPath = Path.Combine(package.WorkingDirectory, "Hexalith.Parties.Contracts.dll");
-        assemblyEntry.ExtractToFile(assemblyPath, overwrite: true);
-        Assembly packagedAssembly = Assembly.LoadFile(assemblyPath);
+        ResolveEventHandler resolver = (_, args) =>
+        {
+            string dependencyPath = Path.Combine(package.WorkingDirectory, new AssemblyName(args.Name).Name + ".dll");
+            return File.Exists(dependencyPath) ? Assembly.LoadFile(dependencyPath) : null;
+        };
 
-        Type personalDataAttribute = packagedAssembly.GetType("Hexalith.Parties.Contracts.PersonalDataAttribute", throwOnError: true)!;
+        AppDomain.CurrentDomain.AssemblyResolve += resolver;
+        try
+        {
+            string assemblyPath = Path.Combine(package.WorkingDirectory, "Hexalith.Parties.Contracts.dll");
+            Assembly packagedAssembly = Assembly.LoadFile(assemblyPath);
 
-        // Cross-surface representative checks. Story 3.1 keeps personal-data classification
-        // for representative commands, events, models, state, and value objects; the packaged
-        // assembly must surface every one of them without help from the source build.
-        (string TypeName, string PropertyName)[] requiredMarkers =
+            Type personalDataAttribute = packagedAssembly.GetType("Hexalith.Parties.Contracts.PersonalDataAttribute", throwOnError: true)!;
+
+            // Cross-surface representative checks. Story 3.1 keeps personal-data classification
+            // for representative commands, events, models, state, and value objects; the packaged
+            // assembly must surface every one of them without help from the source build.
+            (string TypeName, string PropertyName)[] requiredMarkers =
+            [
+                ("Hexalith.Parties.Contracts.Commands.AddContactChannel", "Value"),
+                ("Hexalith.Parties.Contracts.Commands.AddIdentifier", "Value"),
+                ("Hexalith.Parties.Contracts.Commands.UpdateContactChannel", "Value"),
+                ("Hexalith.Parties.Contracts.Events.ContactChannelAdded", "Value"),
+                ("Hexalith.Parties.Contracts.Events.IdentifierAdded", "Value"),
+                ("Hexalith.Parties.Contracts.Events.PartyDisplayNameDerived", "DisplayName"),
+                ("Hexalith.Parties.Contracts.Models.PartyDetail", "DisplayName"),
+                ("Hexalith.Parties.Contracts.Models.PartyIndexEntry", "DisplayName"),
+                ("Hexalith.Parties.Contracts.Models.TemporalNameResult", "DisplayName"),
+                ("Hexalith.Parties.Contracts.State.PartyState", "DisplayName"),
+                ("Hexalith.Parties.Contracts.ValueObjects.PersonDetails", "FirstName"),
+                ("Hexalith.Parties.Contracts.ValueObjects.PersonDetails", "LastName"),
+                ("Hexalith.Parties.Contracts.ValueObjects.EmailAddress", "Address"),
+                ("Hexalith.Parties.Contracts.ValueObjects.PhoneNumber", "Number"),
+                ("Hexalith.Parties.Contracts.ValueObjects.PostalAddress", "Street"),
+                ("Hexalith.Parties.Contracts.ValueObjects.SocialMediaHandle", "Handle"),
+                ("Hexalith.Parties.Contracts.ValueObjects.PartyIdentifier", "Value"),
+                ("Hexalith.Parties.Contracts.ValueObjects.NameHistoryEntry", "DisplayName"),
+            ];
+
+            string[] missing = requiredMarkers
+                .Where(marker =>
+                {
+                    Type packagedType = packagedAssembly.GetType(marker.TypeName, throwOnError: true)!;
+                    PropertyInfo property = packagedType.GetProperty(marker.PropertyName, BindingFlags.Public | BindingFlags.Instance)
+                        ?? throw new InvalidOperationException($"Property {marker.TypeName}.{marker.PropertyName} not found in packaged assembly.");
+                    return !property.IsDefined(personalDataAttribute, inherit: true);
+                })
+                .Select(marker => $"{marker.TypeName}.{marker.PropertyName}")
+                .Order(StringComparer.Ordinal)
+                .ToArray();
+
+            missing.ShouldBeEmpty("Required personal-data markers must remain discoverable from the packaged Contracts assembly.");
+        }
+        finally
+        {
+            AppDomain.CurrentDomain.AssemblyResolve -= resolver;
+        }
+    }
+
+    private static void ExtractPackageAssemblies(string packageFeed, string outputDirectory)
+    {
+        foreach (string packagePath in Directory.GetFiles(packageFeed, "*.nupkg", SearchOption.TopDirectoryOnly))
+        {
+            using ZipArchive archive = ZipFile.OpenRead(packagePath);
+            foreach (ZipArchiveEntry entry in archive.Entries.Where(static item =>
+                item.FullName.StartsWith("lib/net10.0/", StringComparison.Ordinal)
+                && item.FullName.EndsWith(".dll", StringComparison.Ordinal)))
+            {
+                entry.ExtractToFile(Path.Combine(outputDirectory, Path.GetFileName(entry.FullName)), overwrite: true);
+            }
+        }
+    }
+
+    private static void CopyTestOutputDependencyAssemblies(string outputDirectory)
+    {
+        string[] dependencyNames =
         [
-            ("Hexalith.Parties.Contracts.Commands.AddContactChannel", "Value"),
-            ("Hexalith.Parties.Contracts.Commands.AddIdentifier", "Value"),
-            ("Hexalith.Parties.Contracts.Commands.UpdateContactChannel", "Value"),
-            ("Hexalith.Parties.Contracts.Events.ContactChannelAdded", "Value"),
-            ("Hexalith.Parties.Contracts.Events.IdentifierAdded", "Value"),
-            ("Hexalith.Parties.Contracts.Events.PartyDisplayNameDerived", "DisplayName"),
-            ("Hexalith.Parties.Contracts.Models.PartyDetail", "DisplayName"),
-            ("Hexalith.Parties.Contracts.Models.PartyIndexEntry", "DisplayName"),
-            ("Hexalith.Parties.Contracts.Models.TemporalNameResult", "DisplayName"),
-            ("Hexalith.Parties.Contracts.State.PartyState", "DisplayName"),
-            ("Hexalith.Parties.Contracts.ValueObjects.PersonDetails", "FirstName"),
-            ("Hexalith.Parties.Contracts.ValueObjects.PersonDetails", "LastName"),
-            ("Hexalith.Parties.Contracts.ValueObjects.EmailAddress", "Address"),
-            ("Hexalith.Parties.Contracts.ValueObjects.PhoneNumber", "Number"),
-            ("Hexalith.Parties.Contracts.ValueObjects.PostalAddress", "Street"),
-            ("Hexalith.Parties.Contracts.ValueObjects.SocialMediaHandle", "Handle"),
-            ("Hexalith.Parties.Contracts.ValueObjects.PartyIdentifier", "Value"),
-            ("Hexalith.Parties.Contracts.ValueObjects.NameHistoryEntry", "DisplayName"),
+            "ByteAether.Ulid.dll",
         ];
 
-        string[] missing = requiredMarkers
-            .Where(marker =>
+        foreach (string dependencyName in dependencyNames)
+        {
+            string source = Path.Combine(AppContext.BaseDirectory, dependencyName);
+            if (File.Exists(source))
             {
-                Type packagedType = packagedAssembly.GetType(marker.TypeName, throwOnError: true)!;
-                PropertyInfo property = packagedType.GetProperty(marker.PropertyName, BindingFlags.Public | BindingFlags.Instance)
-                    ?? throw new InvalidOperationException($"Property {marker.TypeName}.{marker.PropertyName} not found in packaged assembly.");
-                return !property.IsDefined(personalDataAttribute, inherit: true);
-            })
-            .Select(marker => $"{marker.TypeName}.{marker.PropertyName}")
-            .Order(StringComparer.Ordinal)
-            .ToArray();
-
-        missing.ShouldBeEmpty("Required personal-data markers must remain discoverable from the packaged Contracts assembly.");
+                File.Copy(source, Path.Combine(outputDirectory, dependencyName), overwrite: true);
+            }
+        }
     }
 
     private static string[] ReadDependencyIds(string packagePath)
@@ -325,17 +371,17 @@ public sealed class ContractsPackageFixture : IDisposable
         string repoRoot = FindRepoRoot();
         string workingDirectory = Path.Combine(Path.GetTempPath(), "hexalith-parties-contracts-package-tests", Guid.NewGuid().ToString("N"));
         string feedDirectory = Path.Combine(workingDirectory, "feed");
-        string artifactsDirectory = Path.Combine(workingDirectory, "artifacts");
         Directory.CreateDirectory(feedDirectory);
+        string restoreSources = $"--source \"{feedDirectory}\" --source \"https://api.nuget.org/v3/index.json\"";
 
         ContractsPackageTests.RunDotnet(
-            $"pack \"{Path.Combine(repoRoot, "references", "Hexalith.Commons", "src", "libraries", "Hexalith.Commons.UniqueIds", "Hexalith.Commons.UniqueIds.csproj")}\" --configuration Release --output \"{feedDirectory}\" --artifacts-path \"{artifactsDirectory}\" {ContractsPackageTests.LocalPackVersionProperties}",
+            $"pack \"{Path.Combine(repoRoot, "references", "Hexalith.Commons", "src", "libraries", "Hexalith.Commons.UniqueIds", "Hexalith.Commons.UniqueIds.csproj")}\" --configuration Release --output \"{feedDirectory}\" {restoreSources} {ContractsPackageTests.CommonsPackVersionProperties}",
             repoRoot);
         ContractsPackageTests.RunDotnet(
-            $"pack \"{Path.Combine(repoRoot, "references", "Hexalith.EventStore", "src", "Hexalith.EventStore.Contracts", "Hexalith.EventStore.Contracts.csproj")}\" --configuration Release --output \"{feedDirectory}\" --artifacts-path \"{artifactsDirectory}\" {ContractsPackageTests.LocalPackVersionProperties}",
+            $"pack \"{Path.Combine(repoRoot, "references", "Hexalith.EventStore", "src", "Hexalith.EventStore.Contracts", "Hexalith.EventStore.Contracts.csproj")}\" --configuration Release --output \"{feedDirectory}\" {restoreSources} {ContractsPackageTests.EventStorePackVersionProperties}",
             repoRoot);
         ContractsPackageTests.RunDotnet(
-            $"pack \"{Path.Combine(repoRoot, "src", "Hexalith.Parties.Contracts", "Hexalith.Parties.Contracts.csproj")}\" --configuration Release --output \"{feedDirectory}\" --artifacts-path \"{artifactsDirectory}\" {ContractsPackageTests.LocalPackVersionProperties}",
+            $"pack \"{Path.Combine(repoRoot, "src", "Hexalith.Parties.Contracts", "Hexalith.Parties.Contracts.csproj")}\" --configuration Release --output \"{feedDirectory}\" {restoreSources} {ContractsPackageTests.LocalPackVersionProperties}",
             repoRoot);
 
         string partiesPackage = Directory

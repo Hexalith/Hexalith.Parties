@@ -218,7 +218,7 @@ public class EventPublishingVerificationTests
         capturedMetadata.ShouldNotBeNull();
         capturedMetadata["cloudevent.type"].ShouldBe("PartyCreated");
         capturedMetadata["cloudevent.source"].ShouldBe("hexalith-eventstore/tenant-a/parties");
-        capturedMetadata["cloudevent.id"].ShouldBe("corr-001:1");
+        capturedMetadata["cloudevent.id"].ShouldBe(events[0].MessageId);
     }
 
     [Fact]

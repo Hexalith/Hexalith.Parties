@@ -130,11 +130,10 @@ if (partiesClientEnabled)
 
 // AR-D5 — host-owned OIDC sign-in. When an OIDC provider is configured (the AppHost supplies the
 // Keycloak authority/client in run mode against the dev realm, the tache realm in publish), wire
-// the FrontComposer auth bridge: authorization-code login into a server-side cookie session. The
-// OIDC tokens are stored in the encrypted authentication ticket (SaveTokens=true) and never reach
-// the browser — the browser holds only the HttpOnly auth cookie. Mirrors Hexalith.Tenants.UI; the
-// gateway client + token relay (AddTenantsTokenRelay equivalent), role landing, party_id and the
-// Admin/Consumer policies are later stories (1.3+) and are intentionally NOT wired here.
+// FrontComposer Server security: authorization-code login into a server-side cookie session,
+// server/circuit authentication state, and circuit-safe token relay. OIDC tokens are stored in the
+// encrypted authentication ticket (SaveTokens=true) and never reach the browser — the browser holds
+// only the HttpOnly auth cookie.
 bool authEnabled =
     Uri.TryCreate(builder.Configuration["Authentication:OpenIdConnect:Authority"], UriKind.Absolute, out Uri? oidcAuthority)
     && !string.IsNullOrWhiteSpace(builder.Configuration["Authentication:OpenIdConnect:ClientId"])
@@ -142,7 +141,7 @@ bool authEnabled =
 
 if (authEnabled)
 {
-    builder.Services.AddHexalithFrontComposerAuthentication(o => o.UseKeycloak(
+    builder.Services.AddHexalithFrontComposerServerSecurity(o => o.UseKeycloak(
         oidcAuthority!,
         builder.Configuration["Authentication:OpenIdConnect:ClientId"]!,
         builder.Configuration["Authentication:OpenIdConnect:ClientSecret"]!,
@@ -152,9 +151,8 @@ if (authEnabled)
 
 // Dev-only: the run-mode Keycloak authority is http (keycloak.GetEndpoint("http")), but the OIDC
 // handler defaults RequireHttpsMetadata=true and would reject an http metadata address. The auth
-// bridge does not set this (Tenants gets it for free via AddTenantsTokenRelay, which this story
-// does not wire), so relax it ONLY in Development, targeting the FrontComposer OIDC challenge
-// scheme (FrontComposerOpenIdConnectOptions default ChallengeScheme).
+// bridge does not set this, so relax it ONLY in Development, targeting the FrontComposer OIDC
+// challenge scheme (FrontComposerOpenIdConnectOptions default ChallengeScheme).
 if (authEnabled && builder.Environment.IsDevelopment())
 {
     builder.Services.PostConfigure<OpenIdConnectOptions>(

@@ -74,7 +74,7 @@ public sealed class MainLayoutAccessibilityTests : BunitContext
         IElement navigation = cut.Find("#parties-app-navigation");
         navigation.GetAttribute("role").ShouldBe("navigation");
         navigation.GetAttribute("aria-label").ShouldBe("Application navigation");
-        navigation.QuerySelector("[data-testid='fc-navigation-full'], [data-testid='fc-collapsed-rail']").ShouldNotBeNull();
+        navigation.QuerySelector("[data-testid='fc-navigation-rail']").ShouldNotBeNull();
 
         IElement content = cut.Find("#parties-main-content");
         content.GetAttribute("role").ShouldBe("main");

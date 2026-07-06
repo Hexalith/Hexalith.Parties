@@ -17,7 +17,7 @@
     <ProjectReference Include="..\Hexalith.Parties\Hexalith.Parties.csproj" />
     <ProjectReference Include="..\Hexalith.Parties.Mcp\Hexalith.Parties.Mcp.csproj" />
     <ProjectReference Include="..\Hexalith.Parties.UI\Hexalith.Parties.UI.csproj" />
-    <ProjectReference Include="$(HexalithTenantsRoot)\src\Hexalith.Tenants\Hexalith.Tenants.csproj" />
+    <ProjectReference Include="$(HexalithTenantsRoot)\src\Hexalith.Tenants\Hexalith.Tenants.csproj" AdditionalProperties="WarningsNotAsErrors=CS0108" />
   </ItemGroup>
 
   <ItemGroup>

@@ -8,6 +8,7 @@ namespace Hexalith.Parties.DeployValidation.Tests;
 public sealed class ValidateDeploymentLintToolingTests : IDisposable
 {
     private const string Poison = "DO-NOT-PRINT-THIS-SECRET-eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0ZXN0In0.signature";
+    private const int ProcessTimeoutMilliseconds = 60_000;
 
     private static readonly string[] s_expectedCategories =
     [
@@ -453,11 +454,15 @@ spec:
         }
 
         using Process process = Process.Start(start) ?? throw new InvalidOperationException("Failed to start pwsh.");
-        string stdout = process.StandardOutput.ReadToEnd();
-        string stderr = process.StandardError.ReadToEnd();
-        process.WaitForExit();
+        Task<string> stdout = process.StandardOutput.ReadToEndAsync();
+        Task<string> stderr = process.StandardError.ReadToEndAsync();
+        if (!process.WaitForExit(ProcessTimeoutMilliseconds))
+        {
+            process.Kill(entireProcessTree: true);
+            throw new TimeoutException($"{start.FileName} timed out after {ProcessTimeoutMilliseconds / 1000} seconds.");
+        }
 
-        return new ProcessResult(process.ExitCode, stdout, stderr);
+        return new ProcessResult(process.ExitCode, stdout.GetAwaiter().GetResult(), stderr.GetAwaiter().GetResult());
     }
 
     private static string[] CategoriesFrom(string json)

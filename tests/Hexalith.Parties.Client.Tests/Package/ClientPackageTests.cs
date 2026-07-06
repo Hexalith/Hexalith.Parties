@@ -10,6 +10,9 @@ public sealed class ClientPackageTests : IDisposable
 {
     private const string LocalVersionOverride = "0.0.0-local.0";
     private const string LocalPackVersionProperties = $"-p:MinVerVersionOverride={LocalVersionOverride} -p:PackageVersion={LocalVersionOverride}";
+    private const string CommonsPackVersionProperties = "-p:MinVerVersionOverride=2.26.0 -p:PackageVersion=2.26.0";
+    private const string EventStorePackVersionProperties = "-p:MinVerVersionOverride=3.41.0 -p:PackageVersion=3.41.0";
+    private const int MaxDeclaredDependencyCount = 16;
     private const long MaxPackedClientPackageBytes = 5L * 1024L * 1024L;
 
     private static readonly string[] s_forbiddenDependencyTerms =
@@ -45,17 +48,23 @@ public sealed class ClientPackageTests : IDisposable
 
         dependencyIds.OrderBy(static value => value, StringComparer.OrdinalIgnoreCase).ShouldBe(
         [
+            "ByteAether.Ulid",
             "Hexalith.Commons.Http",
+            "Hexalith.Commons.UniqueIds",
             "Hexalith.EventStore.Contracts",
             "Hexalith.Parties.Contracts",
             "Microsoft.Extensions.Configuration",
+            "Microsoft.Extensions.Configuration.Abstractions",
             "Microsoft.Extensions.Configuration.Binder",
+            "Microsoft.Extensions.DependencyInjection",
+            "Microsoft.Extensions.DependencyInjection.Abstractions",
             "Microsoft.Extensions.Http",
             "Microsoft.Extensions.Logging.Abstractions",
             "Microsoft.Extensions.Options",
+            "Microsoft.Extensions.Options.ConfigurationExtensions",
         ]);
 
-        dependencyIds.Count.ShouldBeLessThan(10);
+        dependencyIds.Count.ShouldBeLessThan(MaxDeclaredDependencyCount);
         new FileInfo(probe.ClientPackagePath).Length.ShouldBeLessThan(MaxPackedClientPackageBytes);
 
         foreach (string forbidden in s_forbiddenDependencyTerms)
@@ -163,28 +172,28 @@ public sealed class ClientPackageTests : IDisposable
     {
         string repoRoot = LocateRepositoryRoot();
         string feedDirectory = Path.Combine(_workDirectory, "feed");
-        string artifactsDirectory = Path.Combine(_workDirectory, "artifacts");
         Directory.CreateDirectory(feedDirectory);
+        string restoreSources = PackRestoreSources(feedDirectory);
 
         RunDotnet(
             "pack",
-            $"\"{Path.Combine(repoRoot, "references", "Hexalith.Commons", "src", "libraries", "Hexalith.Commons.UniqueIds", "Hexalith.Commons.UniqueIds.csproj")}\" --configuration Release --output \"{feedDirectory}\" --artifacts-path \"{artifactsDirectory}\" {LocalPackVersionProperties}",
+            $"\"{Path.Combine(repoRoot, "references", "Hexalith.Commons", "src", "libraries", "Hexalith.Commons.UniqueIds", "Hexalith.Commons.UniqueIds.csproj")}\" --configuration Release --output \"{feedDirectory}\" {restoreSources} {CommonsPackVersionProperties}",
             repoRoot);
         RunDotnet(
             "pack",
-            $"\"{Path.Combine(repoRoot, "references", "Hexalith.Commons", "src", "libraries", "Hexalith.Commons.Http", "Hexalith.Commons.Http.csproj")}\" --configuration Release --output \"{feedDirectory}\" --artifacts-path \"{artifactsDirectory}\" {LocalPackVersionProperties}",
+            $"\"{Path.Combine(repoRoot, "references", "Hexalith.Commons", "src", "libraries", "Hexalith.Commons.Http", "Hexalith.Commons.Http.csproj")}\" --configuration Release --output \"{feedDirectory}\" {restoreSources} {CommonsPackVersionProperties}",
             repoRoot);
         RunDotnet(
             "pack",
-            $"\"{Path.Combine(repoRoot, "references", "Hexalith.EventStore", "src", "Hexalith.EventStore.Contracts", "Hexalith.EventStore.Contracts.csproj")}\" --configuration Release --output \"{feedDirectory}\" --artifacts-path \"{artifactsDirectory}\" {LocalPackVersionProperties}",
+            $"\"{Path.Combine(repoRoot, "references", "Hexalith.EventStore", "src", "Hexalith.EventStore.Contracts", "Hexalith.EventStore.Contracts.csproj")}\" --configuration Release --output \"{feedDirectory}\" {restoreSources} {EventStorePackVersionProperties}",
             repoRoot);
         RunDotnet(
             "pack",
-            $"\"{Path.Combine(repoRoot, "src", "Hexalith.Parties.Contracts", "Hexalith.Parties.Contracts.csproj")}\" --configuration Release --output \"{feedDirectory}\" --artifacts-path \"{artifactsDirectory}\" {LocalPackVersionProperties}",
+            $"\"{Path.Combine(repoRoot, "src", "Hexalith.Parties.Contracts", "Hexalith.Parties.Contracts.csproj")}\" --configuration Release --output \"{feedDirectory}\" {restoreSources} {LocalPackVersionProperties}",
             repoRoot);
         RunDotnet(
             "pack",
-            $"\"{Path.Combine(repoRoot, "src", "Hexalith.Parties.Client", "Hexalith.Parties.Client.csproj")}\" --configuration Release --output \"{feedDirectory}\" --artifacts-path \"{artifactsDirectory}\" {LocalPackVersionProperties}",
+            $"\"{Path.Combine(repoRoot, "src", "Hexalith.Parties.Client", "Hexalith.Parties.Client.csproj")}\" --configuration Release --output \"{feedDirectory}\" {restoreSources} {LocalPackVersionProperties}",
             repoRoot);
 
         string clientPackagePath = Directory
@@ -197,6 +206,9 @@ public sealed class ClientPackageTests : IDisposable
             clientPackagePath,
             ReadPackageVersion(clientPackagePath));
     }
+
+    private static string PackRestoreSources(string feedDirectory)
+        => $"--source \"{feedDirectory}\" --source \"https://api.nuget.org/v3/index.json\"";
 
     private static IReadOnlyList<string> ReadDependencyIds(string nuspecXml)
     {

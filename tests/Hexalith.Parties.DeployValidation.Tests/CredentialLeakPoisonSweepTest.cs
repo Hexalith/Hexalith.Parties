@@ -6,6 +6,8 @@ namespace Hexalith.Parties.DeployValidation.Tests;
 [Collection("DeployValidation")]
 public sealed class CredentialLeakPoisonSweepTest : IDisposable
 {
+    private const int ProcessTimeoutMilliseconds = 60_000;
+
     private static readonly (string Descriptor, string Value)[] s_poisonValues =
     [
         ("jwt-shaped", "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJwb2lzb24ifQ.signature"),
@@ -165,10 +167,15 @@ public sealed class CredentialLeakPoisonSweepTest : IDisposable
     private static ProcessResult Run(ProcessStartInfo start)
     {
         using Process process = Process.Start(start) ?? throw new InvalidOperationException("Failed to start pwsh.");
-        string stdout = process.StandardOutput.ReadToEnd();
-        string stderr = process.StandardError.ReadToEnd();
-        process.WaitForExit();
-        return new ProcessResult(process.ExitCode, stdout, stderr);
+        Task<string> stdout = process.StandardOutput.ReadToEndAsync();
+        Task<string> stderr = process.StandardError.ReadToEndAsync();
+        if (!process.WaitForExit(ProcessTimeoutMilliseconds))
+        {
+            process.Kill(entireProcessTree: true);
+            throw new TimeoutException($"{start.FileName} timed out after {ProcessTimeoutMilliseconds / 1000} seconds.");
+        }
+
+        return new ProcessResult(process.ExitCode, stdout.GetAwaiter().GetResult(), stderr.GetAwaiter().GetResult());
     }
 
     private static void WriteKubectlShim(string binDirectory, string logPath, string currentContext)
