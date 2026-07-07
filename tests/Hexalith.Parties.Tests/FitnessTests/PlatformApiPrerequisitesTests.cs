@@ -79,22 +79,40 @@ public sealed class PlatformApiPrerequisitesTests
         ["platform AppHost owners"] = ["references/Hexalith.FrontComposer/"],
     };
 
+    private static readonly IReadOnlyDictionary<string, string[]> ExcludedOwnerPrefixes = new Dictionary<string, string[]>(StringComparer.Ordinal)
+    {
+        ["Hexalith.EventStore"] = ["references/Hexalith.EventStore/src/Hexalith.EventStore.Aspire/"],
+    };
+
     private static readonly string[] ForbiddenStoryMigrationPathPrefixes =
     [
         "src/Hexalith.Parties/",
-        "src/Hexalith.Parties.AppHost/",
-        "src/Hexalith.Parties.Projections/",
-        "src/Hexalith.Parties.Security/",
-        "src/Hexalith.Parties.UI/",
-        "src/Hexalith.Parties.AdminPortal/",
-        "src/Hexalith.Parties.ConsumerPortal/",
-        "src/Hexalith.Parties.Picker/",
+        "src/Hexalith.Parties.",
+        "src/Directory.",
+    ];
+
+    private static readonly string[] ForbiddenStoryMigrationFiles =
+    [
+        "Directory.Build.props",
+        "Directory.Build.targets",
+        "Directory.Packages.props",
+        "Directory.Solution.props",
+        "Directory.Solution.targets",
+        "Hexalith.Parties.slnx",
+        "MSBuild.rsp",
+        "NuGet.config",
+        "global.json",
+        "package.json",
+        "package-lock.json",
     ];
 
     private static readonly string[] AllowedContextEvidencePrefixes =
     [
         "_bmad-output/",
-        "src/Hexalith.Parties",
+        "src/Hexalith.Parties/",
+        "src/Hexalith.Parties.Authentication/",
+        "src/Hexalith.Parties.Mcp/",
+        "src/Hexalith.Parties.Security/",
         "references/Hexalith.Tenants/",
     ];
 
@@ -175,17 +193,22 @@ public sealed class PlatformApiPrerequisitesTests
             string[] expectedPrefixes = ExpectedOwnerPrefixes(row.Owner).ToArray();
             expectedPrefixes.ShouldNotBeEmpty($"{row.Surface}: {row.Owner}");
 
-            foreach (string expectedPrefix in expectedPrefixes)
+            foreach (string ownerSegment in OwnerSegments(row.Owner))
             {
-                evidencePaths.Any(path => path.StartsWith(expectedPrefix, StringComparison.Ordinal))
-                    .ShouldBeTrue($"{row.Surface} should cite owner evidence under {expectedPrefix}.");
+                string[] ownerPrefixes = OwnerPrefixes[ownerSegment];
+                string[] excludedPrefixes = ExcludedPrefixes(ownerSegment).ToArray();
+
+                evidencePaths.Any(path =>
+                        ownerPrefixes.Any(prefix => IsUnderPathPrefix(path, prefix)) &&
+                        !excludedPrefixes.Any(prefix => IsUnderPathPrefix(path, prefix)))
+                    .ShouldBeTrue($"{row.Surface} should cite owner evidence for {ownerSegment}.");
             }
 
             foreach (string evidencePath in evidencePaths)
             {
                 bool isOwnerOrContextEvidence =
-                    expectedPrefixes.Any(path => evidencePath.StartsWith(path, StringComparison.Ordinal)) ||
-                    AllowedContextEvidencePrefixes.Any(path => evidencePath.StartsWith(path, StringComparison.Ordinal));
+                    expectedPrefixes.Any(path => IsUnderPathPrefix(evidencePath, path)) ||
+                    AllowedContextEvidencePrefixes.Any(path => IsUnderPathPrefix(evidencePath, path));
 
                 isOwnerOrContextEvidence.ShouldBeTrue($"{row.Surface}: {evidencePath}");
             }
@@ -251,40 +274,53 @@ public sealed class PlatformApiPrerequisitesTests
         foreach (KeyValuePair<string, string[]> expected in RequiredEvidenceTokensBySurface)
         {
             rows.ContainsKey(expected.Key).ShouldBeTrue(expected.Key);
-            string rowText = ToSearchableText(rows[expected.Key]);
+            string validationEvidence = rows[expected.Key].ValidationEvidence;
 
             foreach (string token in expected.Value)
             {
-                rowText.Contains(token, StringComparison.Ordinal).ShouldBeTrue($"{expected.Key}: {token}");
+                validationEvidence.Contains(token, StringComparison.Ordinal).ShouldBeTrue($"{expected.Key}: {token}");
             }
 
-            rows[expected.Key].ValidationEvidence.ShouldNotBe("Inspected", expected.Key);
+            validationEvidence.Contains("Inspected", StringComparison.OrdinalIgnoreCase).ShouldBeFalse(expected.Key);
         }
     }
 
     [Fact]
-    public void StoryRange_DoesNotModifyProductionMigrationPaths()
+    public void Matrix_ValidationEvidenceCommandsAreReproducible()
+    {
+        string root = RepositoryRoot.Locate();
+
+        foreach (MatrixRow row in ReadRows().Values)
+        {
+            (string Pattern, string[] Paths)[] commands = ExtractRgCommands(row.ValidationEvidence).ToArray();
+            commands.ShouldNotBeEmpty(row.Surface);
+
+            foreach ((string pattern, string[] paths) in commands)
+            {
+                RunRg(root, pattern, paths);
+            }
+        }
+    }
+
+    [Fact]
+    public void CurrentStoryDiff_DoesNotModifyProductionMigrationPaths()
     {
         string root = RepositoryRoot.Locate();
         string spec = File.ReadAllText(Path.Combine(root, SpecRelativePath));
         string baselineRevision = ReadFrontmatterValue(spec, "baseline_revision");
-        string finalRevision = ReadFrontmatterValue(spec, "final_revision");
 
-        if (string.Equals(baselineRevision, "NO_VCS", StringComparison.Ordinal) ||
-            string.Equals(finalRevision, "NO_VCS", StringComparison.Ordinal))
+        if (string.Equals(baselineRevision, "NO_VCS", StringComparison.Ordinal))
         {
             return;
         }
 
-        if (!GitObjectExists(root, baselineRevision) || !GitObjectExists(root, finalRevision))
-        {
-            return;
-        }
+        GitObjectExists(root, baselineRevision).ShouldBeTrue(baselineRevision);
 
-        string diffNames = RunGit(root, "diff", "--name-only", baselineRevision, finalRevision, "--");
-        string[] forbiddenChanges = diffNames
+        string diffNames = RunGit(root, "diff", "--name-only", baselineRevision, "--");
+        string untrackedNames = RunGit(root, "ls-files", "--others", "--exclude-standard");
+        string[] forbiddenChanges = string.Concat(diffNames, "\n", untrackedNames)
             .Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-            .Where(path => ForbiddenStoryMigrationPathPrefixes.Any(prefix => path.StartsWith(prefix, StringComparison.Ordinal)))
+            .Where(IsForbiddenStoryMigrationPath)
             .ToArray();
 
         forbiddenChanges.ShouldBeEmpty();
@@ -422,6 +458,7 @@ public sealed class PlatformApiPrerequisitesTests
         row.Decision.ShouldContain("No Parties source migration starts in Story 8.3.");
 
         HashSet<string> dependentStories = ParseStoryIds(row.DependentStories);
+        dependentStories.SetEquals(required.Value).ShouldBeTrue(row.Surface);
         foreach (string expectedStory in required.Value)
         {
             dependentStories.Contains(expectedStory).ShouldBeTrue(row.Surface);
@@ -431,7 +468,7 @@ public sealed class PlatformApiPrerequisitesTests
     private static HashSet<string> ParseStoryIds(string dependentStories)
         => Regex.Matches(
                 dependentStories,
-                @"(?<![0-9])8\.(?:[4-9]|10)(?![0-9])",
+                @"(?<![A-Za-z0-9])8\.(?:[4-9]|10)(?![A-Za-z0-9])",
                 RegexOptions.CultureInvariant)
             .Select(static match => match.Value)
             .ToHashSet(StringComparer.Ordinal);
@@ -458,23 +495,72 @@ public sealed class PlatformApiPrerequisitesTests
     }
 
     private static IEnumerable<string> ExpectedOwnerPrefixes(string owner)
+        => OwnerSegments(owner).SelectMany(segment => OwnerPrefixes[segment]);
+
+    private static IEnumerable<string> OwnerSegments(string owner)
     {
         foreach (string segment in owner.Split(" and ", StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
         {
-            OwnerPrefixes.TryGetValue(segment, out string[]? prefixes).ShouldBeTrue($"Unknown owner segment: {segment}");
-
-            foreach (string prefix in prefixes)
-            {
-                yield return prefix;
-            }
+            OwnerPrefixes.ContainsKey(segment).ShouldBeTrue($"Unknown owner segment: {segment}");
+            yield return segment;
         }
     }
+
+    private static IEnumerable<string> ExcludedPrefixes(string ownerSegment)
+        => ExcludedOwnerPrefixes.TryGetValue(ownerSegment, out string[]? prefixes)
+            ? prefixes
+            : [];
+
+    private static bool IsUnderPathPrefix(string path, string prefix)
+    {
+        string normalizedPrefix = prefix.TrimEnd('/');
+        return string.Equals(path, normalizedPrefix, StringComparison.Ordinal) ||
+            path.StartsWith(normalizedPrefix + "/", StringComparison.Ordinal);
+    }
+
+    private static bool IsForbiddenStoryMigrationPath(string path)
+        => ForbiddenStoryMigrationFiles.Contains(path, StringComparer.Ordinal) ||
+            ForbiddenStoryMigrationPathPrefixes.Any(prefix => path.StartsWith(prefix, StringComparison.Ordinal));
 
     private static bool ContainsExactToken(string value, string token)
         => Regex.IsMatch(
             value,
             $@"(?<![A-Za-z0-9]){Regex.Escape(token)}(?![A-Za-z0-9])",
             RegexOptions.CultureInvariant);
+
+    private static IEnumerable<(string Pattern, string[] Paths)> ExtractRgCommands(string validationEvidence)
+    {
+        foreach (Match match in Regex.Matches(
+            validationEvidence,
+            @"`rg\s+-n\s+-F\s+'(?<pattern>[^']+)'\s+(?<paths>[^`]+)`",
+            RegexOptions.CultureInvariant))
+        {
+            string[] paths = match.Groups["paths"].Value
+                .Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+            yield return (match.Groups["pattern"].Value, paths);
+        }
+    }
+
+    private static void RunRg(string root, string pattern, string[] paths)
+    {
+        using var process = CreateProcess(root, "rg");
+        process.StartInfo.ArgumentList.Add("-n");
+        process.StartInfo.ArgumentList.Add("-F");
+        process.StartInfo.ArgumentList.Add(pattern);
+
+        foreach (string path in paths)
+        {
+            process.StartInfo.ArgumentList.Add(path);
+        }
+
+        process.Start().ShouldBeTrue();
+        string output = process.StandardOutput.ReadToEnd();
+        string error = process.StandardError.ReadToEnd();
+        process.WaitForExit();
+
+        process.ExitCode.ShouldBe(0, $"rg -n -F '{pattern}' {string.Join(' ', paths)}{Environment.NewLine}{output}{error}");
+    }
 
     private static string ToSearchableText(MatrixRow row)
         => string.Join(
@@ -524,20 +610,27 @@ public sealed class PlatformApiPrerequisitesTests
 
     private static Process CreateGitProcess(string root, params string[] arguments)
     {
+        Process process = CreateProcess(root, "git");
+
+        foreach (string argument in arguments)
+        {
+            process.StartInfo.ArgumentList.Add(argument);
+        }
+
+        return process;
+    }
+
+    private static Process CreateProcess(string root, string fileName)
+    {
         var process = new Process
         {
-            StartInfo = new ProcessStartInfo("git")
+            StartInfo = new ProcessStartInfo(fileName)
             {
                 WorkingDirectory = root,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
             },
         };
-
-        foreach (string argument in arguments)
-        {
-            process.StartInfo.ArgumentList.Add(argument);
-        }
 
         return process;
     }
