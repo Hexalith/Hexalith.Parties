@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using Shouldly;
 
 namespace Hexalith.Parties.Tests.FitnessTests;
@@ -21,6 +22,14 @@ public sealed class PlatformApiPrerequisitesTests
         ["Builds shared props/targets"] = ["8.8", "8.10"],
     };
 
+    private static readonly IReadOnlyDictionary<string, string[]> RequiredGapRows = new Dictionary<string, string[]>(StringComparer.Ordinal)
+    {
+        ["EventStore degraded response and DAPR health checks"] = ["8.5", "8.8", "8.10"],
+        ["Payload protection engine package"] = ["8.7", "8.10"],
+        ["MCP, deep-link, and search probes"] = ["8.8", "8.10"],
+        ["Package publishing/source-mode CI"] = ["8.8", "8.10"],
+    };
+
     private static readonly HashSet<string> ApprovedStatuses = new(StringComparer.Ordinal)
     {
         "available",
@@ -28,26 +37,44 @@ public sealed class PlatformApiPrerequisitesTests
         "blocked",
     };
 
+    private static readonly IReadOnlyDictionary<string, string[]> OwnerPrefixes = new Dictionary<string, string[]>(StringComparer.Ordinal)
+    {
+        ["Hexalith.EventStore"] = ["references/Hexalith.EventStore/"],
+        ["Hexalith.EventStore.Aspire"] = ["references/Hexalith.EventStore/"],
+        ["Hexalith.Commons"] = ["references/Hexalith.Commons/"],
+        ["Hexalith.FrontComposer"] = ["references/Hexalith.FrontComposer/"],
+        ["Hexalith.Builds"] = ["references/Hexalith.Builds/"],
+        ["Hexalith.Tenants"] = ["references/Hexalith.Tenants/"],
+        ["platform AppHost owners"] = ["references/Hexalith.FrontComposer/"],
+        ["Platform release owners"] = ["_bmad-output/", "references/Hexalith.Builds/"],
+    };
+
+    private static readonly string[] AllowedContextEvidencePrefixes =
+    [
+        "_bmad-output/",
+        "src/Hexalith.Parties",
+        "references/Hexalith.Tenants/",
+    ];
+
     [Fact]
-    public void Matrix_ContainsRequiredRowsAndAllowsAdditionalGapRows()
+    public void Matrix_ContainsRequiredRowsAndRequiredGapRows()
     {
         IReadOnlyDictionary<string, MatrixRow> rows = ReadRows();
 
-        rows.Count.ShouldBeGreaterThanOrEqualTo(RequiredRows.Count);
+        rows.Count.ShouldBeGreaterThanOrEqualTo(RequiredRows.Count + RequiredGapRows.Count);
         foreach (KeyValuePair<string, string[]> required in RequiredRows)
         {
-            rows.ContainsKey(required.Key).ShouldBeTrue(required.Key);
+            AssertRequiredRow(rows, required);
+        }
 
-            MatrixRow row = rows[required.Key];
-            row.Owner.ShouldNotBeNullOrWhiteSpace();
-            row.ProofRequired.ShouldNotBeNullOrWhiteSpace();
-            row.ValidationEvidence.ShouldNotBeNullOrWhiteSpace();
-            row.Decision.ShouldContain("No Parties source migration starts in Story 8.3.");
+        foreach (KeyValuePair<string, string[]> required in RequiredGapRows)
+        {
+            AssertRequiredRow(rows, required);
+        }
 
-            foreach (string expectedStory in required.Value)
-            {
-                row.DependentStories.Contains(expectedStory, StringComparison.Ordinal).ShouldBeTrue(row.Surface);
-            }
+        foreach (MatrixRow row in rows.Values)
+        {
+            ParseStoryIds(row.DependentStories).ShouldNotBeEmpty(row.Surface);
         }
     }
 
@@ -55,10 +82,16 @@ public sealed class PlatformApiPrerequisitesTests
     public void Matrix_CoversKnownFablePlatformGaps()
     {
         string text = ReadMatrix();
+        HashSet<string> actualGapIds = Regex.Matches(
+                text,
+                @"(?<![A-Za-z0-9])G(?:[1-9]|1[0-2])(?![A-Za-z0-9])",
+                RegexOptions.CultureInvariant)
+            .Select(static match => match.Value)
+            .ToHashSet(StringComparer.Ordinal);
 
         foreach (string gap in Enumerable.Range(1, 12).Select(static number => $"G{number}"))
         {
-            text.ShouldContain(gap);
+            actualGapIds.Contains(gap).ShouldBeTrue(gap);
         }
     }
 
@@ -75,22 +108,37 @@ public sealed class PlatformApiPrerequisitesTests
     public void Matrix_EvidencePathsExistAndMatchDeclaredOwner()
     {
         string root = RepositoryRoot.Locate();
+        string normalizedRoot = Path.GetFullPath(root);
 
         foreach (MatrixRow row in ReadRows().Values)
         {
-            string[] evidencePaths = SplitEvidencePaths(row.EvidencePaths);
+            string[] evidencePaths = SplitEvidencePaths(row.EvidencePaths)
+                .Select(path => NormalizeEvidencePath(normalizedRoot, path))
+                .ToArray();
             evidencePaths.ShouldNotBeEmpty(row.Surface);
 
             foreach (string evidencePath in evidencePaths)
             {
-                string fullPath = Path.Combine(root, evidencePath);
+                string fullPath = Path.Combine(normalizedRoot, evidencePath);
                 (File.Exists(fullPath) || Directory.Exists(fullPath)).ShouldBeTrue(evidencePath);
             }
 
-            foreach (string expectedPrefix in ExpectedOwnerPrefixes(row.Owner))
+            string[] expectedPrefixes = ExpectedOwnerPrefixes(row.Owner).ToArray();
+            expectedPrefixes.ShouldNotBeEmpty($"{row.Surface}: {row.Owner}");
+
+            foreach (string expectedPrefix in expectedPrefixes)
             {
                 evidencePaths.Any(path => path.StartsWith(expectedPrefix, StringComparison.Ordinal))
                     .ShouldBeTrue($"{row.Surface} should cite owner evidence under {expectedPrefix}.");
+            }
+
+            foreach (string evidencePath in evidencePaths)
+            {
+                bool isOwnerOrContextEvidence =
+                    expectedPrefixes.Any(path => evidencePath.StartsWith(path, StringComparison.Ordinal)) ||
+                    AllowedContextEvidencePrefixes.Any(path => evidencePath.StartsWith(path, StringComparison.Ordinal));
+
+                isOwnerOrContextEvidence.ShouldBeTrue($"{row.Surface}: {evidencePath}");
             }
         }
     }
@@ -102,8 +150,7 @@ public sealed class PlatformApiPrerequisitesTests
         {
             bool mentionsReleaseOrPin =
                 row.ProofRequired.Contains("release", StringComparison.OrdinalIgnoreCase) ||
-                row.ProofRequired.Contains("submodule-pin", StringComparison.OrdinalIgnoreCase) ||
-                row.ProofRequired.Contains("package/source", StringComparison.OrdinalIgnoreCase);
+                row.ProofRequired.Contains("submodule-pin", StringComparison.OrdinalIgnoreCase);
 
             mentionsReleaseOrPin.ShouldBeTrue(row.Surface);
         }
@@ -129,12 +176,12 @@ public sealed class PlatformApiPrerequisitesTests
     }
 
     [Fact]
-    public void Matrix_NonAvailableRowsNameProofAndRollbackPath()
+    public void Matrix_AllRowsNameProofAndRollbackPath()
     {
-        foreach (MatrixRow row in ReadRows().Values.Where(static row => row.Status != "available"))
+        foreach (MatrixRow row in ReadRows().Values)
         {
             row.ProofRequired.ShouldContain("Proof required:");
-            row.Decision.Contains("Keep local rollback path:", StringComparison.Ordinal).ShouldBeTrue(row.Surface);
+            row.Decision.Contains("rollback", StringComparison.OrdinalIgnoreCase).ShouldBeTrue(row.Surface);
         }
     }
 
@@ -149,12 +196,17 @@ public sealed class PlatformApiPrerequisitesTests
         foreach (string line in section.Split('\n', StringSplitOptions.RemoveEmptyEntries))
         {
             string trimmed = line.Trim();
-            if (!trimmed.StartsWith('|') || trimmed.Contains("---", StringComparison.Ordinal))
+            if (!trimmed.StartsWith('|'))
             {
                 continue;
             }
 
             string[] cells = SplitMarkdownTableRow(trimmed);
+            if (IsMarkdownSeparatorRow(cells))
+            {
+                continue;
+            }
+
             if (cells.Length == 8 && string.Equals(cells[0], "Surface", StringComparison.Ordinal))
             {
                 continue;
@@ -245,46 +297,64 @@ public sealed class PlatformApiPrerequisitesTests
             .Where(static path => path.Length > 0)
             .ToArray();
 
-    private static IEnumerable<string> ExpectedOwnerPrefixes(string owner)
+    private static void AssertRequiredRow(
+        IReadOnlyDictionary<string, MatrixRow> rows,
+        KeyValuePair<string, string[]> required)
     {
-        if (owner.Contains("Hexalith.EventStore", StringComparison.Ordinal))
-        {
-            yield return "references/Hexalith.EventStore/";
-        }
+        rows.ContainsKey(required.Key).ShouldBeTrue(required.Key);
 
-        if (owner.Contains("Hexalith.Commons", StringComparison.Ordinal))
-        {
-            yield return "references/Hexalith.Commons/";
-        }
+        MatrixRow row = rows[required.Key];
+        row.Owner.ShouldNotBeNullOrWhiteSpace();
+        row.ProofRequired.ShouldNotBeNullOrWhiteSpace();
+        row.ValidationEvidence.ShouldNotBeNullOrWhiteSpace();
+        row.Decision.ShouldContain("No Parties source migration starts in Story 8.3.");
 
-        if (owner.Contains("Hexalith.FrontComposer", StringComparison.Ordinal))
+        HashSet<string> dependentStories = ParseStoryIds(row.DependentStories);
+        foreach (string expectedStory in required.Value)
         {
-            yield return "references/Hexalith.FrontComposer/";
-        }
-
-        if (owner.Contains("Hexalith.Builds", StringComparison.Ordinal))
-        {
-            yield return "references/Hexalith.Builds/";
-        }
-
-        if (owner.Contains("Hexalith.Tenants", StringComparison.Ordinal))
-        {
-            yield return "references/Hexalith.Tenants/";
-        }
-
-        if (owner.Contains("Platform release owners", StringComparison.Ordinal))
-        {
-            yield return "_bmad-output/";
+            dependentStories.Contains(expectedStory).ShouldBeTrue(row.Surface);
         }
     }
 
-    private sealed record MatrixRow(
-        string Surface,
-        string Owner,
-        string Status,
-        string EvidencePaths,
-        string ProofRequired,
-        string DependentStories,
-        string Decision,
-        string ValidationEvidence);
+    private static HashSet<string> ParseStoryIds(string dependentStories)
+        => Regex.Matches(
+                dependentStories,
+                @"(?<![0-9])8\.(?:[4-9]|10)(?![0-9])",
+                RegexOptions.CultureInvariant)
+            .Select(static match => match.Value)
+            .ToHashSet(StringComparer.Ordinal);
+
+    private static bool IsMarkdownSeparatorRow(string[] cells)
+        => cells.All(static cell =>
+            cell.Length > 0 &&
+            cell.All(static character => character is '-' or ':' or ' '));
+
+    private static string NormalizeEvidencePath(string repositoryRoot, string evidencePath)
+    {
+        Path.IsPathFullyQualified(evidencePath).ShouldBeFalse(evidencePath);
+        evidencePath.Contains("..", StringComparison.Ordinal).ShouldBeFalse(evidencePath);
+
+        string fullPath = Path.GetFullPath(Path.Combine(repositoryRoot, evidencePath));
+        string rootWithSeparator = repositoryRoot.EndsWith(Path.DirectorySeparatorChar)
+            ? repositoryRoot
+            : repositoryRoot + Path.DirectorySeparatorChar;
+
+        fullPath.StartsWith(rootWithSeparator, StringComparison.Ordinal).ShouldBeTrue(evidencePath);
+
+        return Path.GetRelativePath(repositoryRoot, fullPath)
+            .Replace(Path.DirectorySeparatorChar, '/');
+    }
+
+    private static IEnumerable<string> ExpectedOwnerPrefixes(string owner)
+    {
+        foreach (string segment in owner.Split(" and ", StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+        {
+            OwnerPrefixes.TryGetValue(segment, out string[]? prefixes).ShouldBeTrue($"Unknown owner segment: {segment}");
+
+            foreach (string prefix in prefixes)
+            {
+                yield return prefix;
+            }
+        }
+    }
 }
