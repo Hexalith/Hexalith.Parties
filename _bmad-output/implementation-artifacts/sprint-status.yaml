@@ -1,5 +1,5 @@
 # generated: 2026-06-21T18:55:59+02:00
-# last_updated: 2026-07-07T14:07:16+02:00
+# last_updated: 2026-07-07T14:24:18+02:00
 # project: parties
 # project_key: NOKEY
 # tracking_system: file-system
@@ -41,7 +41,7 @@
 # - Retrospective appends its action items to action_items; sprint-status surfaces open ones
 
 generated: 2026-06-21T18:55:59+02:00
-last_updated: 2026-07-07T14:07:16+02:00
+last_updated: 2026-07-07T14:24:18+02:00
 project: parties
 project_key: NOKEY
 tracking_system: file-system
@@ -105,7 +105,7 @@ development_status:
   # Conditional maintenance scope only: supports NFR9/maintainability and covers
   # no new PRD functional requirements.
   # Readiness remediation 2026-06-28 added canonical epics.md detail and story files.
-  epic-6: backlog
+  epic-6: done
   6-1-shared-claim-types-and-extraction-helpers-a1-a5: done
   6-2-canonical-wire-json-serializer-options-a2: done
   6-3-shared-claims-transformation-library-a3: done
@@ -113,7 +113,7 @@ development_status:
   6-5-gdpr-client-mapping-tenant-heuristic-and-export-filename-a6-a7-a8: done
   6-6-shared-role-arrays-and-policy-names-a9: done
   6-7-shared-portal-display-formatters-a10: done
-  epic-6-retrospective: optional
+  epic-6-retrospective: done
 
   # ── Epic 7: Platform Alignment — adopt Commons/EventStore (Class B) ───────
   # PM/Architect implementation plan approved 2026-06-29:
@@ -150,3 +150,25 @@ development_status:
   8-9-ui-frontcomposer-and-fluent-consolidation: backlog
   8-10-final-readiness-documentation-and-retirement-gate: backlog
   epic-8-retrospective: optional
+
+action_items:
+  - epic: 6
+    action: "Add a pre-review File List check that compares git diff --name-only to the story File List before status moves to review or done."
+    owner: "Amelia (Developer)"
+    status: open
+  - epic: 6
+    action: "Document the standard fallback validation ladder for this repo: direct xUnit v3 assemblies, serialized -m:1 builds, and focused project builds when dotnet test or solution build is environment-blocked."
+    owner: "Murat (Test Architect)"
+    status: open
+  - epic: 6
+    action: "Require producer/consumer compatibility tests for serializer, projection, gateway, and shared-anchor migrations before marking stories done."
+    owner: "Winston (Architect) + Amelia (Developer)"
+    status: open
+  - epic: 6
+    action: "Add sprint-status hygiene to retrospective prep: if all story rows for an epic are done, update the epic row before or during retrospective completion."
+    owner: "Alice (Product Owner) + Amelia (Developer)"
+    status: open
+  - epic: 6
+    action: "Keep broad release blockers tracked outside story-local acceptance when they are caused by submodule drift, package validation network access, or unrelated UI/deploy gates."
+    owner: "Winston (Architect) + Murat (Test Architect)"
+    status: open
