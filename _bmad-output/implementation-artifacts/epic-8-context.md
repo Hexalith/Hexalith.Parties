@@ -29,6 +29,13 @@ Structural migration must be deletion-safe. Local rollback paths for projection,
 
 Identifier cleanup must stop rejecting valid ULID-compatible aggregate IDs while retaining replay compatibility for existing GUID-shaped IDs. Command, message, and correlation ID creation should use approved Commons unique ID helpers where identifier semantics require them.
 
+Epic 8 architecture spine (approved/reconciled 2026-07-07):
+`_bmad-output/planning-artifacts/architecture/epic-8-domain-focus-2026-07-06/ARCHITECTURE-SPINE.md`.
+Specs 8.6-8.10 MUST satisfy that spine's §4 per-spec readiness gate — prerequisites,
+touched repos/submodules, rollback path, validation lanes + parity evidence,
+non-goals, and a parity-evidence checklist — before a dev session. Broad stories
+8.6/8.7/8.8 are split or hard-gated at spec-creation time.
+
 ## Technical Decisions
 
 Hexalith.Parties should consume platform primitives instead of carrying parallel implementations. The target state replaces local service defaults, tenant-claim transformation, domain-service invoker, projection/query actors, projection rebuild service, generic crypto/key-management engine, command envelopes, paging/freshness models, ProblemDetails scrubbing, MCP plumbing, AppHost security/module helpers, build-root probing, and platform-owned deployment assets when approved shared surfaces exist.

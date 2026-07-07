@@ -1533,8 +1533,12 @@ functional requirements and must not be reported as MVP feature delivery.
 
 **Approved by:** Administrator
 **Approval date:** 2026-07-06
-**Approved story scope:** 8.1 through 8.10 as backlog slices. Detailed story files
-must be created by the story workflow after the Epic 8 architecture spine is approved.
+**Approved story scope:** 8.1 through 8.10 as backlog slices. Specs 8.1–8.5 are
+created and done. The Epic 8 architecture spine was approved (reconciled)
+2026-07-07 — see
+`architecture/epic-8-domain-focus-2026-07-06/ARCHITECTURE-SPINE.md`. Detailed
+specs 8.6–8.10 are created by the spec/story workflow and MUST satisfy the
+per-spec readiness gate in that spine (§4) before any dev session.
 
 ### Epic 8 Sequencing
 
@@ -1543,6 +1547,15 @@ must be created by the story workflow after the Epic 8 architecture spine is app
 Story 8.2 may begin after 8.1 if it does not require unresolved submodule release
 work. Stories 8.5 through 8.7 require the platform API readiness from 8.3. Story
 8.10 runs last.
+
+### Epic 8 Remaining-Work Readiness Gate
+
+Stories 8.6–8.10 are deletion-heavy. Each spec MUST declare, in the spec file,
+before it is dev-ready: (1) prerequisites, (2) touched repos/submodules,
+(3) rollback path, (4) validation lanes + required parity evidence, (5) non-goals,
+(6) parity-evidence checklist. Broad cross-module stories (8.6, 8.7, 8.8) must be
+split or hard-gated at spec-creation time. Authority:
+`architecture/epic-8-domain-focus-2026-07-06/ARCHITECTURE-SPINE.md` §4.
 
 ### Story 8.1: Baseline and release-blocker stabilization
 
