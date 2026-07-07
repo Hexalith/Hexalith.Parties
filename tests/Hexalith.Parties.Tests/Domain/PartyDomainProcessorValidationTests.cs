@@ -1,3 +1,4 @@
+using System.Text;
 using System.Text.Json;
 
 using FluentValidation;
@@ -5,6 +6,7 @@ using FluentValidation;
 using Hexalith.Commons.UniqueIds;
 using Hexalith.EventStore.Contracts.Commands;
 using Hexalith.EventStore.Contracts.Events;
+using Hexalith.EventStore.Contracts.Identity;
 using Hexalith.EventStore.Contracts.Results;
 using Hexalith.EventStore.Contracts.Security;
 using Hexalith.Parties.Contracts.Commands;
@@ -20,18 +22,19 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
 
 using NSubstitute;
+using NSubstitute.ExceptionExtensions;
 
 using Shouldly;
 
 namespace Hexalith.Parties.Tests.Domain;
 
-public sealed class PartyDomainServiceInvokerValidationTests
+public sealed class PartyDomainProcessorValidationTests
 {
     [Fact]
-    public async Task InvokeAsync_InvalidCreatePartyPayload_ReturnsRejectionResult()
+    public async Task ProcessAsync_InvalidCreatePartyPayload_ReturnsRejectionResult()
     {
         IEventPayloadProtectionService protection = Substitute.For<IEventPayloadProtectionService>();
-        PartyDomainServiceInvoker invoker = CreateInvoker(protection);
+        PartyDomainProcessor invoker = CreateInvoker(protection);
         CommandEnvelope command = CreateCommand(new CreateParty
         {
             PartyId = "party/unsafe",
@@ -40,7 +43,7 @@ public sealed class PartyDomainServiceInvokerValidationTests
         });
         DomainServiceCurrentState currentState = CreateCurrentStateWithProtectedSnapshot(command);
 
-        DomainResult result = await invoker.InvokeAsync(command, currentState, CancellationToken.None);
+        DomainResult result = await invoker.ProcessAsync(command, currentState, CancellationToken.None);
 
         result.IsRejection.ShouldBeTrue();
         PartyCommandValidationRejected rejection = result.Events
@@ -52,16 +55,16 @@ public sealed class PartyDomainServiceInvokerValidationTests
 
         // currentState carries a non-null snapshot AND a protected event. If validation had not
         // short-circuited before unprotect, both methods would have been invoked. The non-null
-        // snapshot is what makes this assertion meaningful — passing null would render it vacuous.
+        // snapshot is what makes this assertion meaningful - passing null would render it vacuous.
         await protection.DidNotReceiveWithAnyArgs().UnprotectSnapshotStateAsync(default!, default!, default);
         await protection.DidNotReceiveWithAnyArgs().UnprotectEventPayloadAsync(default!, default!, default!, default!, default);
     }
 
     [Fact]
-    public async Task InvokeAsync_InvalidCompositePayload_DoesNotProduceStateChangingEvents()
+    public async Task ProcessAsync_InvalidCompositePayload_DoesNotProduceStateChangingEvents()
     {
         IEventPayloadProtectionService protection = Substitute.For<IEventPayloadProtectionService>();
-        PartyDomainServiceInvoker invoker = CreateInvoker(protection);
+        PartyDomainProcessor invoker = CreateInvoker(protection);
         CommandEnvelope command = CreateCommand(new CreatePartyComposite
         {
             PartyId = "party/unsafe",
@@ -70,7 +73,7 @@ public sealed class PartyDomainServiceInvokerValidationTests
         });
         DomainServiceCurrentState currentState = CreateCurrentStateWithProtectedSnapshot(command);
 
-        DomainResult result = await invoker.InvokeAsync(command, currentState, CancellationToken.None);
+        DomainResult result = await invoker.ProcessAsync(command, currentState, CancellationToken.None);
 
         result.IsRejection.ShouldBeTrue();
         result.Events.ShouldAllBe(e => e is PartyCommandValidationRejected);
@@ -82,10 +85,10 @@ public sealed class PartyDomainServiceInvokerValidationTests
     }
 
     [Fact]
-    public async Task InvokeAsync_InvalidErasePartyPayload_ReturnsRejectionResultWithoutRehydration()
+    public async Task ProcessAsync_InvalidErasePartyPayload_ReturnsRejectionResultWithoutRehydration()
     {
         IEventPayloadProtectionService protection = Substitute.For<IEventPayloadProtectionService>();
-        PartyDomainServiceInvoker invoker = CreateInvoker(protection);
+        PartyDomainProcessor invoker = CreateInvoker(protection);
         CommandEnvelope command = CreateCommand(new EraseParty
         {
             PartyId = string.Empty,
@@ -93,7 +96,7 @@ public sealed class PartyDomainServiceInvokerValidationTests
         });
         DomainServiceCurrentState currentState = CreateCurrentStateWithProtectedSnapshot(command);
 
-        DomainResult result = await invoker.InvokeAsync(command, currentState, CancellationToken.None);
+        DomainResult result = await invoker.ProcessAsync(command, currentState, CancellationToken.None);
 
         result.IsRejection.ShouldBeTrue();
         PartyCommandValidationRejected rejection = result.Events
@@ -110,10 +113,10 @@ public sealed class PartyDomainServiceInvokerValidationTests
     }
 
     [Fact]
-    public async Task InvokeAsync_InvalidRestrictProcessingPayload_ReturnsBoundedRejectionWithoutRehydration()
+    public async Task ProcessAsync_InvalidRestrictProcessingPayload_ReturnsBoundedRejectionWithoutRehydration()
     {
         IEventPayloadProtectionService protection = Substitute.For<IEventPayloadProtectionService>();
-        PartyDomainServiceInvoker invoker = CreateInvoker(protection);
+        PartyDomainProcessor invoker = CreateInvoker(protection);
         CommandEnvelope command = CreateCommand(new RestrictProcessing
         {
             PartyId = string.Empty,
@@ -124,7 +127,7 @@ public sealed class PartyDomainServiceInvokerValidationTests
         });
         DomainServiceCurrentState currentState = CreateCurrentStateWithProtectedSnapshot(command);
 
-        DomainResult result = await invoker.InvokeAsync(command, currentState, CancellationToken.None);
+        DomainResult result = await invoker.ProcessAsync(command, currentState, CancellationToken.None);
 
         result.IsRejection.ShouldBeTrue();
         PartyCommandValidationRejected rejection = result.Events
@@ -142,9 +145,9 @@ public sealed class PartyDomainServiceInvokerValidationTests
     }
 
     [Fact]
-    public async Task InvokeAsync_ValidCreatePartyPayload_ProducesDomainEvents()
+    public async Task ProcessAsync_ValidCreatePartyPayload_ProducesDomainEvents()
     {
-        PartyDomainServiceInvoker invoker = CreateInvoker(Substitute.For<IEventPayloadProtectionService>());
+        PartyDomainProcessor invoker = CreateInvoker(Substitute.For<IEventPayloadProtectionService>());
         CommandEnvelope command = CreateCommand(new CreateParty
         {
             PartyId = Guid.NewGuid().ToString("D"),
@@ -156,7 +159,7 @@ public sealed class PartyDomainServiceInvokerValidationTests
             },
         });
 
-        DomainResult result = await invoker.InvokeAsync(command, currentState: null, CancellationToken.None);
+        DomainResult result = await invoker.ProcessAsync(command, currentState: null, CancellationToken.None);
 
         result.IsSuccess.ShouldBeTrue();
         result.Events.ShouldContain(e => e is PartyCreated);
@@ -164,14 +167,58 @@ public sealed class PartyDomainServiceInvokerValidationTests
     }
 
     [Fact]
-    public async Task InvokeAsync_UnknownCommandType_ReturnsUnresolvedCommandTypeRejection()
+    public async Task ProcessAsync_ProtectedHistoricalPayloadWithDestroyedKey_RedactsAndContinuesRehydration()
     {
-        PartyDomainServiceInvoker invoker = CreateInvoker(Substitute.For<IEventPayloadProtectionService>());
+        string partyId = Guid.NewGuid().ToString("D");
+        IEventPayloadProtectionService protection = Substitute.For<IEventPayloadProtectionService>();
+        protection
+            .UnprotectEventPayloadAsync(
+                Arg.Any<AggregateIdentity>(),
+                typeof(PartyCreated).FullName!,
+                Arg.Any<byte[]>(),
+                "json+pdenc-v1",
+                Arg.Any<CancellationToken>())
+            .ThrowsAsync(new PartyEncryptionKeyDestroyedException("tenant-a", partyId));
+        protection
+            .UnprotectEventPayloadAsync(
+                Arg.Any<AggregateIdentity>(),
+                typeof(ErasePartyRequested).FullName!,
+                Arg.Any<byte[]>(),
+                "json",
+                Arg.Any<CancellationToken>())
+            .Returns(callInfo => new PayloadProtectionResult((byte[])callInfo[2]!, "json"));
+
+        PartyDomainProcessor invoker = CreateInvoker(protection);
+        CommandEnvelope command = CreateCommand(new MarkPartyEncryptionKeyDeleted
+        {
+            PartyId = partyId,
+            TenantId = "tenant-a",
+            DeletedAt = DateTimeOffset.Parse("2026-05-21T20:45:00Z"),
+        });
+        DomainServiceCurrentState currentState = CreateErasurePendingStateWithProtectedCreatedEvent(command, partyId);
+
+        DomainResult result = await invoker.ProcessAsync(command, currentState, CancellationToken.None);
+
+        result.IsSuccess.ShouldBeTrue();
+        PartyEncryptionKeyDeleted deleted = result.Events.OfType<PartyEncryptionKeyDeleted>().ShouldHaveSingleItem();
+        deleted.PartyId.ShouldBe(partyId);
+        await protection.Received(1).UnprotectEventPayloadAsync(
+            Arg.Any<AggregateIdentity>(),
+            typeof(PartyCreated).FullName!,
+            Arg.Any<byte[]>(),
+            "json+pdenc-v1",
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ProcessAsync_UnknownCommandType_ReturnsUnresolvedCommandTypeRejection()
+    {
+        PartyDomainProcessor invoker = CreateInvoker(Substitute.For<IEventPayloadProtectionService>());
         CommandEnvelope command = CreateRawCommand(
             commandType: "Hexalith.Parties.Contracts.Commands.NoSuchCommand, Hexalith.Parties.Contracts",
             payload: JsonSerializer.SerializeToUtf8Bytes(new { foo = "bar" }));
 
-        DomainResult result = await invoker.InvokeAsync(command, currentState: null, CancellationToken.None);
+        DomainResult result = await invoker.ProcessAsync(command, currentState: null, CancellationToken.None);
 
         result.IsRejection.ShouldBeTrue();
         PartyCommandValidationRejected rejection = result.Events
@@ -182,9 +229,9 @@ public sealed class PartyDomainServiceInvokerValidationTests
     }
 
     [Fact]
-    public async Task InvokeAsync_AssemblyQualifiedCommandType_ResolvesAndValidates()
+    public async Task ProcessAsync_AssemblyQualifiedCommandType_ResolvesAndValidates()
     {
-        PartyDomainServiceInvoker invoker = CreateInvoker(Substitute.For<IEventPayloadProtectionService>());
+        PartyDomainProcessor invoker = CreateInvoker(Substitute.For<IEventPayloadProtectionService>());
         CommandEnvelope command = CreateRawCommand(
             commandType: typeof(CreateParty).AssemblyQualifiedName!,
             payload: JsonSerializer.SerializeToUtf8Bytes(new CreateParty
@@ -194,7 +241,7 @@ public sealed class PartyDomainServiceInvokerValidationTests
                 PersonDetails = null,
             }));
 
-        DomainResult result = await invoker.InvokeAsync(command, currentState: null, CancellationToken.None);
+        DomainResult result = await invoker.ProcessAsync(command, currentState: null, CancellationToken.None);
 
         result.IsRejection.ShouldBeTrue();
         PartyCommandValidationRejected rejection = result.Events.OfType<PartyCommandValidationRejected>().ShouldHaveSingleItem();
@@ -202,14 +249,14 @@ public sealed class PartyDomainServiceInvokerValidationTests
     }
 
     [Fact]
-    public async Task InvokeAsync_MalformedJsonPayload_ReturnsInvalidJsonRejection()
+    public async Task ProcessAsync_MalformedJsonPayload_ReturnsInvalidJsonRejection()
     {
-        PartyDomainServiceInvoker invoker = CreateInvoker(Substitute.For<IEventPayloadProtectionService>());
+        PartyDomainProcessor invoker = CreateInvoker(Substitute.For<IEventPayloadProtectionService>());
         CommandEnvelope command = CreateRawCommand(
             commandType: typeof(CreateParty).FullName!,
             payload: "{ this is not valid json"u8.ToArray());
 
-        DomainResult result = await invoker.InvokeAsync(command, currentState: null, CancellationToken.None);
+        DomainResult result = await invoker.ProcessAsync(command, currentState: null, CancellationToken.None);
 
         result.IsRejection.ShouldBeTrue();
         PartyCommandValidationRejected rejection = result.Events.OfType<PartyCommandValidationRejected>().ShouldHaveSingleItem();
@@ -226,14 +273,14 @@ public sealed class PartyDomainServiceInvokerValidationTests
     }
 
     [Fact]
-    public async Task InvokeAsync_EmptyPayload_ReturnsEmptyPayloadRejection()
+    public async Task ProcessAsync_EmptyPayload_ReturnsEmptyPayloadRejection()
     {
-        PartyDomainServiceInvoker invoker = CreateInvoker(Substitute.For<IEventPayloadProtectionService>());
+        PartyDomainProcessor invoker = CreateInvoker(Substitute.For<IEventPayloadProtectionService>());
         CommandEnvelope command = CreateRawCommand(
             commandType: typeof(CreateParty).FullName!,
             payload: []);
 
-        DomainResult result = await invoker.InvokeAsync(command, currentState: null, CancellationToken.None);
+        DomainResult result = await invoker.ProcessAsync(command, currentState: null, CancellationToken.None);
 
         result.IsRejection.ShouldBeTrue();
         PartyCommandValidationRejected rejection = result.Events.OfType<PartyCommandValidationRejected>().ShouldHaveSingleItem();
@@ -241,12 +288,12 @@ public sealed class PartyDomainServiceInvokerValidationTests
     }
 
     [Fact]
-    public async Task InvokeAsync_CommandTypeWithNoRegisteredValidator_ProceedsToAggregate()
+    public async Task ProcessAsync_CommandTypeWithNoRegisteredValidator_ProceedsToAggregate()
     {
         ServiceProvider provider = new ServiceCollection().BuildServiceProvider();
         IServiceScopeFactory scopeFactory = provider.GetRequiredService<IServiceScopeFactory>();
         IEventPayloadProtectionService protection = Substitute.For<IEventPayloadProtectionService>();
-        PartyDomainServiceInvoker invoker = new(protection, scopeFactory, NullLogger<PartyDomainServiceInvoker>.Instance);
+        PartyDomainProcessor invoker = new(protection, scopeFactory, NullLogger<PartyDomainProcessor>.Instance);
 
         CommandEnvelope command = CreateCommand(new CreateParty
         {
@@ -255,7 +302,7 @@ public sealed class PartyDomainServiceInvokerValidationTests
             PersonDetails = new PersonDetails { FirstName = "Ada", LastName = "Lovelace" },
         });
 
-        DomainResult result = await invoker.InvokeAsync(command, currentState: null, CancellationToken.None);
+        DomainResult result = await invoker.ProcessAsync(command, currentState: null, CancellationToken.None);
 
         // Without a validator the missing-validator branch must allow the command through to the
         // aggregate. The aggregate succeeds for a valid payload, producing PartyCreated.
@@ -264,7 +311,7 @@ public sealed class PartyDomainServiceInvokerValidationTests
     }
 
     [Fact]
-    public async Task InvokeAsync_RetryErasureVerification_KeyDestroyedRunsExistingOrchestratorAndPersistsBoundedRecords()
+    public async Task ProcessAsync_RetryErasureVerification_KeyDestroyedRunsExistingOrchestratorAndPersistsBoundedRecords()
     {
         string partyId = Guid.NewGuid().ToString("D");
         IEventPayloadProtectionService protection = Substitute.For<IEventPayloadProtectionService>();
@@ -297,11 +344,11 @@ public sealed class PartyDomainServiceInvokerValidationTests
                     },
                 ],
             });
-        PartyDomainServiceInvoker invoker = CreateInvoker(protection, recordStore, CreateOrchestrator(verificationService));
+        PartyDomainProcessor invoker = CreateInvoker(protection, recordStore, CreateOrchestrator(verificationService));
         PartyState state = PartyTestState(partyId, ErasureStatus.KeyDestroyed);
         CommandEnvelope command = CreateCommand(new RetryErasureVerification { PartyId = partyId, TenantId = "tenant-a" });
 
-        DomainResult result = await invoker.InvokeAsync(command, state, CancellationToken.None);
+        DomainResult result = await invoker.ProcessAsync(command, state, CancellationToken.None);
 
         result.IsSuccess.ShouldBeTrue();
         result.Events.OfType<ErasureVerified>().ShouldHaveSingleItem();
@@ -322,18 +369,18 @@ public sealed class PartyDomainServiceInvokerValidationTests
     }
 
     [Fact]
-    public async Task InvokeAsync_RetryErasureVerification_ActivePartyIsBoundedRejectionWithoutStoreMutation()
+    public async Task ProcessAsync_RetryErasureVerification_ActivePartyIsBoundedRejectionWithoutStoreMutation()
     {
         string partyId = Guid.NewGuid().ToString("D");
         IPartyErasureRecordStore recordStore = Substitute.For<IPartyErasureRecordStore>();
         IErasureVerificationService verificationService = Substitute.For<IErasureVerificationService>();
-        PartyDomainServiceInvoker invoker = CreateInvoker(
+        PartyDomainProcessor invoker = CreateInvoker(
             Substitute.For<IEventPayloadProtectionService>(),
             recordStore,
             CreateOrchestrator(verificationService));
         CommandEnvelope command = CreateCommand(new RetryErasureVerification { PartyId = partyId, TenantId = "tenant-a" });
 
-        DomainResult result = await invoker.InvokeAsync(command, PartyTestState(partyId, ErasureStatus.Active), CancellationToken.None);
+        DomainResult result = await invoker.ProcessAsync(command, PartyTestState(partyId, ErasureStatus.Active), CancellationToken.None);
 
         result.IsRejection.ShouldBeTrue();
         PartyErasureInProgress rejection = result.Events.OfType<PartyErasureInProgress>().ShouldHaveSingleItem();
@@ -346,7 +393,7 @@ public sealed class PartyDomainServiceInvokerValidationTests
         await verificationService.DidNotReceiveWithAnyArgs().VerifyErasureAsync(default!, default!, default!, default);
     }
 
-    private static PartyDomainServiceInvoker CreateInvoker(
+    private static PartyDomainProcessor CreateInvoker(
         IEventPayloadProtectionService protection,
         IPartyErasureRecordStore? erasureRecordStore = null,
         PartyErasureOrchestrator? erasureOrchestrator = null)
@@ -358,10 +405,10 @@ public sealed class PartyDomainServiceInvokerValidationTests
             .AddValidatorsFromAssemblyContaining<CreatePartyValidator>()
             .BuildServiceProvider();
 
-        return new PartyDomainServiceInvoker(
+        return new PartyDomainProcessor(
             protection,
             provider.GetRequiredService<IServiceScopeFactory>(),
-            NullLogger<PartyDomainServiceInvoker>.Instance,
+            NullLogger<PartyDomainProcessor>.Instance,
             erasureRecordStore,
             erasureOrchestrator);
     }
@@ -434,6 +481,7 @@ public sealed class PartyDomainServiceInvokerValidationTests
             CreatePartyComposite command => command.PartyId,
             UpdatePartyComposite command => command.PartyId,
             RetryErasureVerification command => command.PartyId,
+            MarkPartyEncryptionKeyDeleted command => command.PartyId,
             _ => UniqueIdHelper.GenerateSortableUniqueStringId(),
         };
 
@@ -490,4 +538,60 @@ public sealed class PartyDomainServiceInvokerValidationTests
             ],
             LastSnapshotSequence: 0,
             CurrentSequence: 1);
+
+    private static DomainServiceCurrentState CreateErasurePendingStateWithProtectedCreatedEvent(CommandEnvelope command, string partyId)
+        => new(
+            SnapshotState: null,
+            Events:
+            [
+                CreateEventEnvelope(
+                    command,
+                    sequenceNumber: 1,
+                    eventTypeName: typeof(PartyCreated).FullName!,
+                    payload: Encoding.UTF8.GetBytes(
+                        """
+                        {"type":1,"personDetails":{"$enc":true,"kid":"deleted-key","alg":"A256GCM","iv":"redacted","ct":"redacted"}}
+                        """),
+                    serializationFormat: "json+pdenc-v1"),
+                CreateEventEnvelope(
+                    command,
+                    sequenceNumber: 2,
+                    eventTypeName: typeof(ErasePartyRequested).FullName!,
+                    payload: JsonSerializer.SerializeToUtf8Bytes(new ErasePartyRequested
+                    {
+                        PartyId = partyId,
+                        TenantId = command.TenantId,
+                        RequestedAt = DateTimeOffset.Parse("2026-05-21T20:40:00Z"),
+                        RequestedBy = "admin",
+                    }),
+                    serializationFormat: "json"),
+            ],
+            LastSnapshotSequence: 0,
+            CurrentSequence: 2);
+
+    private static EventEnvelope CreateEventEnvelope(
+        CommandEnvelope command,
+        long sequenceNumber,
+        string eventTypeName,
+        byte[] payload,
+        string serializationFormat)
+        => new(
+            new EventMetadata(
+                MessageId: $"01HX0000000000000000000{sequenceNumber:00}",
+                AggregateId: command.AggregateId,
+                AggregateType: "Party",
+                TenantId: command.TenantId,
+                Domain: command.Domain,
+                SequenceNumber: sequenceNumber,
+                GlobalPosition: sequenceNumber,
+                Timestamp: DateTimeOffset.UtcNow,
+                CorrelationId: command.CorrelationId,
+                CausationId: command.CausationId ?? string.Empty,
+                UserId: command.UserId,
+                DomainServiceVersion: "v1",
+                EventTypeName: eventTypeName,
+                MetadataVersion: 1,
+                SerializationFormat: serializationFormat),
+            payload,
+            Extensions: null);
 }

@@ -1097,7 +1097,7 @@ public sealed class EventStoreGatewayRoutingTests
 
     private sealed class DirectPartiesCommandRouter : ICommandRouter
     {
-        private readonly PartyDomainServiceInvoker _invoker = CreateInvoker();
+        private readonly PartyDomainProcessor _invoker = CreateInvoker();
         private readonly ICommandStatusStore _statusStore;
         private readonly List<DomainResult> _domainResults = [];
 
@@ -1113,7 +1113,7 @@ public sealed class EventStoreGatewayRoutingTests
             ArgumentNullException.ThrowIfNull(command);
 
             CommandEnvelope envelope = command.ToCommandEnvelope();
-            DomainResult result = await _invoker.InvokeAsync(envelope, currentState: null, cancellationToken).ConfigureAwait(false);
+            DomainResult result = await _invoker.ProcessAsync(envelope, currentState: null, cancellationToken).ConfigureAwait(false);
             _domainResults.Add(result);
 
             string? rejectionEventType = result.IsRejection
@@ -1141,16 +1141,16 @@ public sealed class EventStoreGatewayRoutingTests
                 ResultPayload: result.ResultPayload);
         }
 
-        private static PartyDomainServiceInvoker CreateInvoker()
+        private static PartyDomainProcessor CreateInvoker()
         {
             ServiceProvider provider = new ServiceCollection()
                 .AddValidatorsFromAssemblyContaining<CreatePartyValidator>()
                 .BuildServiceProvider();
 
-            return new PartyDomainServiceInvoker(
+            return new PartyDomainProcessor(
                 Substitute.For<Hexalith.EventStore.Contracts.Security.IEventPayloadProtectionService>(),
                 provider.GetRequiredService<IServiceScopeFactory>(),
-                NullLogger<PartyDomainServiceInvoker>.Instance);
+                NullLogger<PartyDomainProcessor>.Instance);
         }
     }
 

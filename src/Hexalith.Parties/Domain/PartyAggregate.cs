@@ -1,6 +1,7 @@
 using System.Text.Json;
 
 using Hexalith.EventStore.Client.Aggregates;
+using Hexalith.EventStore.Client.Attributes;
 using Hexalith.EventStore.Contracts.Events;
 using Hexalith.EventStore.Contracts.Results;
 using Hexalith.Parties.Contracts.Commands;
@@ -15,6 +16,7 @@ using SemanticId = Hexalith.Parties.Contracts.ValueObjects.PartyIdentifier;
 
 namespace Hexalith.Parties.Domain;
 
+[EventStoreDomain("party")]
 public sealed class PartyAggregate : EventStoreAggregate<PartyState> {
     private const int DefaultMaxSubOperations = 100;
 

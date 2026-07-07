@@ -102,10 +102,11 @@ public sealed class ArchitecturalFitnessTests
             + string.Join(", ", violations));
 
         source.ShouldContain("app.MapActorsHandlers()");
-        source.ShouldContain("app.MapHexalithDefaultEndpoints(ConfigurePartiesServiceDefaults)");
+        source.ShouldContain("builder.AddEventStoreDomainService(typeof(PartyAggregate).Assembly)");
+        source.ShouldContain("app.UseEventStoreDomainService()");
         source.ShouldContain("app.MapSubscribeHandler()");
         source.ShouldContain("app.MapEventStoreDomainEvents()");
-        source.ShouldContain("app.MapPost(\"/process\"");
+        source.ShouldNotContain("app.MapPost(\"/process\"");
         source.ShouldContain("DAPR sidecar-internal");
         source.ShouldContain("accesscontrol.parties.yaml");
 
@@ -370,7 +371,7 @@ public sealed class ArchitecturalFitnessTests
     public void PartiesRequestPath_DoesNotUseTenantAccessServiceOrDenialTranslator()
     {
         string serviceRegistration = ReadRepoFile("src", "Hexalith.Parties", "Extensions", "PartiesServiceCollectionExtensions.cs");
-        string domainInvoker = ReadRepoFile("src", "Hexalith.Parties", "Domain", "PartyDomainServiceInvoker.cs");
+        string domainProcessor = ReadRepoFile("src", "Hexalith.Parties", "Domain", "PartyDomainProcessor.cs");
         string program = ReadRepoFile("src", "Hexalith.Parties", "Program.cs");
 
         // Gateway tenant/RBAC validators must never be wired by Parties; EventStore owns gateway
@@ -382,8 +383,8 @@ public sealed class ArchitecturalFitnessTests
         // ITenantAccessService registration in PartiesServiceCollectionExtensions.cs is permitted
         // and explicitly scoped to projection-side use (Story 12.3 AC4); see the comment beside
         // the registration. TenantAccessDenialTranslator was deleted as part of the same review.
-        StripCommentsAndStringLiterals(domainInvoker).ShouldNotContain("ITenantAccessService");
-        StripCommentsAndStringLiterals(domainInvoker).ShouldNotContain("TenantAccessDenialTranslator");
+        StripCommentsAndStringLiterals(domainProcessor).ShouldNotContain("ITenantAccessService");
+        StripCommentsAndStringLiterals(domainProcessor).ShouldNotContain("TenantAccessDenialTranslator");
         StripCommentsAndStringLiterals(program).ShouldNotContain("ITenantAccessService");
         StripCommentsAndStringLiterals(program).ShouldNotContain("TenantAccessDenialTranslator");
 
@@ -408,7 +409,7 @@ public sealed class ArchitecturalFitnessTests
     [Fact]
     public void PartiesRequestPath_DoesNotUseDataSubjectAccessService()
     {
-        string domainInvoker = ReadRepoFile("src", "Hexalith.Parties", "Domain", "PartyDomainServiceInvoker.cs");
+        string domainProcessor = ReadRepoFile("src", "Hexalith.Parties", "Domain", "PartyDomainProcessor.cs");
         string program = ReadRepoFile("src", "Hexalith.Parties", "Program.cs");
 
         // Story 1.5 (AR-D3 / AC4): the fail-closed IDataSubjectAccessService is a registered,
@@ -416,11 +417,11 @@ public sealed class ArchitecturalFitnessTests
         // wired into the gateway request path. The parties actor host is machine-to-machine over DAPR
         // at POST /process and carries no end-user principal there (DAPR strips the JWT), so there is no
         // consumer party_id to check on the request path today; live invocation awaits the deferred
-        // gateway self-principal. Pin it out of Program.cs and the domain invoker forever. The
+        // gateway self-principal. Pin it out of Program.cs and the domain processor forever. The
         // ITenantAccessService-style registration in PartiesServiceCollectionExtensions.cs is permitted
         // (see the comment beside it) and is intentionally NOT scanned here.
-        StripCommentsAndStringLiterals(domainInvoker).ShouldNotContain("IDataSubjectAccessService");
-        StripCommentsAndStringLiterals(domainInvoker).ShouldNotContain("DataSubjectAccessService");
+        StripCommentsAndStringLiterals(domainProcessor).ShouldNotContain("IDataSubjectAccessService");
+        StripCommentsAndStringLiterals(domainProcessor).ShouldNotContain("DataSubjectAccessService");
         StripCommentsAndStringLiterals(program).ShouldNotContain("IDataSubjectAccessService");
         StripCommentsAndStringLiterals(program).ShouldNotContain("DataSubjectAccessService");
     }

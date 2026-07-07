@@ -1,17 +1,25 @@
-using Hexalith.Commons.ServiceDefaults;
-using Hexalith.EventStore.Contracts.Commands;
-using Hexalith.EventStore.Contracts.Results;
 using Hexalith.EventStore.DomainService;
-using Hexalith.EventStore.Server.DomainServices;
 using Hexalith.Parties.Compliance;
+using Hexalith.Parties.Domain;
 using Hexalith.Parties.Extensions;
 using Hexalith.Parties.HealthChecks;
 using Hexalith.Parties.Middleware;
 
+using Microsoft.Extensions.Diagnostics.HealthChecks;
+
+using OpenTelemetry.Metrics;
+using OpenTelemetry.Trace;
+
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
-// Service defaults (OpenTelemetry, health checks, resilience, service discovery)
-builder.AddHexalithServiceDefaults(ConfigurePartiesServiceDefaults);
+// Domain-service SDK host surface: service defaults, EventStore discovery, domain telemetry,
+// and canonical DAPR-invoked endpoints are owned by Hexalith.EventStore.
+builder.AddEventStoreDomainService(typeof(PartyAggregate).Assembly);
+
+// Story 8.5 keeps the historical Hexalith.Parties telemetry source until the
+// platform degraded-response / DAPR-health parity row is resolved.
+builder.Services.ConfigureOpenTelemetryTracerProvider(static tracing => tracing.AddSource("Hexalith.Parties"));
+builder.Services.ConfigureOpenTelemetryMeterProvider(static metrics => metrics.AddMeter("Hexalith.Parties"));
 
 builder.Services.AddDaprClient();
 
@@ -21,6 +29,7 @@ builder.Services.AddDaprClient();
 builder.Services.AddHealthChecks().AddPartiesDaprHealthChecks();
 
 builder.Services.AddParties(builder.Configuration);
+builder.Services.Configure<HealthCheckServiceOptions>(RemoveEventStoreDefaultSelfCheck);
 
 WebApplication app = builder.Build();
 
@@ -54,28 +63,24 @@ app.UseCloudEvents();
 // EventStore is the public command/query gateway after Story 12.2.
 app.MapSubscribeHandler();
 app.MapEventStoreDomainEvents();
-app.MapPost("/process", static async (
-    DomainServiceRequest request,
-    IDomainServiceInvoker invoker,
-    CancellationToken cancellationToken) =>
-{
-    DomainResult result = await invoker
-        .InvokeAsync(request.Command, request.CurrentState, cancellationToken)
-        .ConfigureAwait(false);
-    return Results.Json(DomainServiceWireResult.FromDomainResult(result));
-}).ExcludeFromDescription();
+// Canonical SDK endpoints: /process, /replay-state, /query, /project, and
+// /admin/operational-index-metadata. DAPR service invocation remains ACL-limited
+// to only eventstore -> POST /process in accesscontrol.parties.yaml.
+app.UseEventStoreDomainService();
 app.MapActorsHandlers();
-app.MapHexalithDefaultEndpoints(ConfigurePartiesServiceDefaults); // Health checks: /health, /alive, /ready
 
 app.Run();
 
-static void ConfigurePartiesServiceDefaults(HexalithServiceDefaultsOptions options)
+static void RemoveEventStoreDefaultSelfCheck(HealthCheckServiceOptions options)
 {
-    options.HealthEndpointPath = "/health";
-    options.LivenessEndpointPath = "/alive";
-    options.ReadinessEndpointPath = "/ready";
-    options.RegisterDefaultSelfCheck = false;
-    options.ActivitySourceNames.Add("Hexalith.Parties");
+    ArgumentNullException.ThrowIfNull(options);
+
+    foreach (HealthCheckRegistration registration in options.Registrations
+        .Where(static registration => string.Equals(registration.Name, "self", StringComparison.Ordinal))
+        .ToArray())
+    {
+        _ = options.Registrations.Remove(registration);
+    }
 }
 
 /// <summary>

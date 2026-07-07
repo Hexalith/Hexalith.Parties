@@ -4,9 +4,12 @@ using Dapr.Client;
 
 using FluentValidation;
 
-using Hexalith.EventStore.Server.Configuration;
+using Hexalith.EventStore.Client.Handlers;
+using Hexalith.EventStore.Server.Actors;
 using Hexalith.EventStore.Server.Commands;
+using Hexalith.EventStore.Server.Configuration;
 using Hexalith.EventStore.Server.DomainServices;
+using Hexalith.EventStore.Server.Events;
 using Hexalith.EventStore.Server.Projections;
 using Hexalith.EventStore.Contracts.Security;
 using Hexalith.Memories.Client.Rest;
@@ -33,11 +36,14 @@ using Hexalith.Tenants.Client.Registration;
 
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
 
 namespace Hexalith.Parties.Extensions;
 
 public static class PartiesServiceCollectionExtensions {
+    private const string PartyDomain = "party";
+
     public static IServiceCollection AddParties(this IServiceCollection services, IConfiguration configuration) {
         ArgumentNullException.ThrowIfNull(services);
         ArgumentNullException.ThrowIfNull(configuration);
@@ -76,9 +82,18 @@ public static class PartiesServiceCollectionExtensions {
         // Claims transformation (tenant extraction from JWT)
         _ = services.AddTransient<IClaimsTransformation, PartiesClaimsTransformation>();
 
-        // EventStore server infrastructure (command routing, actors)
-        _ = services.AddTransient<IDomainServiceInvoker, PartyDomainServiceInvoker>();
-        _ = services.AddEventStoreServer(configuration);
+        // EventStore domain-service SDK invokes this keyed processor for POST /process.
+        // Keep the Parties-specific compatibility behavior here until EventStore owns
+        // validation, protected-state redaction, and erasure-status hooks.
+        _ = services.AddKeyedScoped<IDomainProcessor, PartyDomainProcessor>(PartyDomain);
+        foreach (string domainKey in PartyDomainCaseVariants())
+        {
+            if (!string.Equals(domainKey, PartyDomain, StringComparison.Ordinal))
+            {
+                _ = services.AddKeyedScoped<IDomainProcessor, PartyDomainProcessor>(domainKey);
+            }
+        }
+
         _ = services.AddHexalithTenants(options => configuration.GetSection("Tenants").Bind(options));
         _ = services.AddOptions<TenantIntegrationOptions>()
             .Bind(configuration.GetSection(TenantIntegrationOptions.SectionName))
@@ -93,7 +108,7 @@ public static class PartiesServiceCollectionExtensions {
         // Parties retains ITenantAccessService strictly for projection-side / internal actor-host
         // membership lookups against the local Tenants projection. The fitness test
         // PartiesRequestPath_DoesNotUseTenantAccessServiceOrDenialTranslator pins this boundary
-        // by asserting the request-path code paths (Program, Domain invoker, command/query
+        // by asserting the request-path code paths (Program, domain processor, command/query
         // controllers) do not consume this service.
         //
         // Singleton lifetime assumes ITenantProjectionStore is also Singleton (the default
@@ -111,7 +126,7 @@ public static class PartiesServiceCollectionExtensions {
         // enforcement is the BFF self-scope accessor (Story 1.5 AC1). This is the registered, unit-tested
         // building block the deferred gateway self-principal will consume. The fitness test
         // PartiesRequestPath_DoesNotUseDataSubjectAccessService pins it out of Program.cs and the domain
-        // invoker (AC4).
+        // processor (AC4).
         _ = services.AddSingleton<IDataSubjectAccessService, DataSubjectAccessService>();
 
         // Single concrete registration so both interfaces resolve to the same instance per scope.
@@ -275,6 +290,10 @@ public static class PartiesServiceCollectionExtensions {
             string daprPort = configuration["DAPR_HTTP_PORT"] ?? "3500";
             client.BaseAddress = new Uri($"http://127.0.0.1:{daprPort}");
         });
+        // Story 8.5 cuts the command host over to the EventStore DomainService SDK,
+        // but projection/rebuild actors still use the EventStore Server checkpoint
+        // stores until the later projection/query migration stories run.
+        AddEventStoreProjectionRuntimeCompatibility(services, configuration);
         _ = services.AddTransient<EventStorePartyProjectionPlatformAdapter>();
         _ = services.AddTransient<IPartyProjectionPlatformAdapter>(sp =>
             sp.GetRequiredService<IOptions<Hexalith.Parties.Projections.Configuration.ProjectionOptions>>()
@@ -284,6 +303,11 @@ public static class PartiesServiceCollectionExtensions {
                 : sp.GetRequiredService<EventStorePartyProjectionPlatformAdapter>());
 
         services.AddActors(options => {
+            string? aggregateActorTypeName = configuration["EventStore:Actors:AggregateActorTypeName"];
+            options.Actors.RegisterActor<AggregateActor>(
+                string.IsNullOrWhiteSpace(aggregateActorTypeName)
+                    ? nameof(AggregateActor)
+                    : aggregateActorTypeName);
             options.Actors.RegisterActor<PartyIndexProjectionQueryActor>();
             options.Actors.RegisterActor<PartyDetailProjectionQueryActor>();
             options.Actors.RegisterActor<PartyDetailProjectionActor>();
@@ -360,5 +384,70 @@ public static class PartiesServiceCollectionExtensions {
         _ = services.ConfigureHttpJsonOptions(options => PartiesJsonOptions.ApplyTo(options.SerializerOptions));
 
         return services;
+    }
+
+    private static void AddEventStoreProjectionRuntimeCompatibility(IServiceCollection services, IConfiguration configuration)
+    {
+        services.TryAddSingleton<IDomainServiceResolver, DomainServiceResolver>();
+        services.TryAddTransient<IDomainServiceInvoker, DaprDomainServiceInvoker>();
+        services.TryAddSingleton<ISnapshotManager, SnapshotManager>();
+        services.TryAddTransient<IEventPublisher, EventPublisher>();
+        services.TryAddTransient<IDeadLetterPublisher, DeadLetterPublisher>();
+        services.TryAddSingleton<ITopicNameValidator, TopicNameValidator>();
+        services.TryAddSingleton<IProjectionCheckpointTracker, ProjectionCheckpointTracker>();
+        services.TryAddSingleton<IProjectionRebuildCheckpointStore, ProjectionRebuildCheckpointStore>();
+        services.TryAddSingleton<IProjectionPollerTickSource, PeriodicProjectionPollerTickSource>();
+        services.TryAddSingleton(TimeProvider.System);
+
+        _ = services.AddHttpClient();
+        _ = services.Configure<DomainServiceOptions>(configuration.GetSection("EventStore:DomainServices"));
+        _ = services.AddOptions<EventPublisherOptions>()
+            .Bind(configuration.GetSection("EventStore:Publisher"));
+        _ = services.AddOptions<EventDrainOptions>()
+            .Bind(configuration.GetSection("EventStore:Drain"));
+        services.TryAddSingleton<IValidateOptions<BackpressureOptions>, ValidateBackpressureOptions>();
+        _ = services.AddOptions<BackpressureOptions>()
+            .Bind(configuration.GetSection("EventStore:Backpressure"))
+            .ValidateOnStart();
+        services.TryAddSingleton<IValidateOptions<CommandConcurrencyOptions>, ValidateCommandConcurrencyOptions>();
+        _ = services.AddOptions<CommandConcurrencyOptions>()
+            .Bind(configuration.GetSection("EventStore:CommandConcurrency"))
+            .ValidateOnStart();
+        _ = services.AddOptions<EventStoreActorOptions>()
+            .Bind(configuration.GetSection("EventStore:Actors"))
+            .Validate(
+                options => !string.IsNullOrWhiteSpace(options.AggregateActorTypeName),
+                "Aggregate actor type name must be configured.")
+            .ValidateOnStart();
+        _ = services.AddOptions<SnapshotOptions>()
+            .Bind(configuration.GetSection("EventStore:Snapshots"))
+            .Validate(options => { options.Validate(); return true; }, "Snapshot configuration is invalid. All intervals must be >= 10.")
+            .ValidateOnStart();
+        _ = services.AddOptions<Hexalith.EventStore.Server.Configuration.ProjectionOptions>()
+            .Bind(configuration.GetSection("EventStore:Projections"))
+            .Validate(options => { options.Validate(); return true; }, "Projection configuration is invalid. All intervals must be >= 0 and domain keys must be non-empty.")
+            .ValidateOnStart();
+
+        _ = services.AddHostedService<ProjectionDiscoveryHostedService>();
+        _ = services.AddHostedService<ActiveRebuildIndexCleanupService>();
+        _ = services.AddHostedService<ProjectionPollerService>();
+    }
+
+    private static IEnumerable<string> PartyDomainCaseVariants()
+    {
+        char[] source = PartyDomain.ToCharArray();
+        int variantCount = 1 << source.Length;
+        for (int mask = 0; mask < variantCount; mask++)
+        {
+            char[] value = new char[source.Length];
+            for (int index = 0; index < source.Length; index++)
+            {
+                value[index] = (mask & (1 << index)) == 0
+                    ? char.ToLowerInvariant(source[index])
+                    : char.ToUpperInvariant(source[index]);
+            }
+
+            yield return new string(value);
+        }
     }
 }

@@ -56,12 +56,11 @@ public sealed class RetiredLeafProjectFitnessTests
     }
 
     [Fact]
-    public void Hosts_UseCommonsServiceDefaultsDirectlyWithPartiesOptions()
+    public void UiAndMcpHosts_UseCommonsServiceDefaultsDirectlyWithPartiesOptions()
     {
         string root = RepositoryRoot.Locate();
         string[] hostPrograms =
         [
-            "src/Hexalith.Parties/Program.cs",
             "src/Hexalith.Parties.UI/Program.cs",
             "src/Hexalith.Parties.Mcp/Program.cs",
         ];
@@ -80,6 +79,23 @@ public sealed class RetiredLeafProjectFitnessTests
             source.ShouldContain("options.ActivitySourceNames.Add(\"Hexalith.Parties\");");
             source.ShouldNotContain("Hexalith.Parties.ServiceDefaults");
         }
+    }
+
+    [Fact]
+    public void PartiesHost_UsesEventStoreDomainServiceSdkAfterStory85Cutover()
+    {
+        string source = StripComments(File.ReadAllText(Path.Combine(
+            RepositoryRoot.Locate(),
+            "src/Hexalith.Parties/Program.cs")));
+
+        source.ShouldContain("AddEventStoreDomainService(typeof(PartyAggregate).Assembly)");
+        source.ShouldContain("UseEventStoreDomainService()");
+        source.ShouldContain("ConfigureOpenTelemetryTracerProvider");
+        source.ShouldContain("ConfigureOpenTelemetryMeterProvider");
+        source.ShouldContain("Hexalith.Parties");
+        source.ShouldNotContain("Hexalith.Parties.ServiceDefaults");
+        source.ShouldNotContain("AddHexalithServiceDefaults(ConfigurePartiesServiceDefaults)");
+        source.ShouldNotContain("MapHexalithDefaultEndpoints(ConfigurePartiesServiceDefaults)");
     }
 
     [Fact]

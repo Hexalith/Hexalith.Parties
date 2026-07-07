@@ -5,11 +5,13 @@ using System.Text.Json;
 using FluentValidation;
 using FluentValidation.Results;
 
+using Hexalith.EventStore.Client.Aggregates;
+using Hexalith.EventStore.Client.Handlers;
 using Hexalith.EventStore.Contracts.Commands;
 using Hexalith.EventStore.Contracts.Events;
+using Hexalith.EventStore.Contracts.Replay;
 using Hexalith.EventStore.Contracts.Results;
 using Hexalith.EventStore.Contracts.Security;
-using Hexalith.EventStore.Server.DomainServices;
 using Hexalith.Parties.Contracts;
 using Hexalith.Parties.Contracts.Commands;
 using Hexalith.Parties.Contracts.Events;
@@ -17,21 +19,23 @@ using Hexalith.Parties.Contracts.Security;
 using Hexalith.Parties.Contracts.State;
 using Hexalith.Parties.Security;
 
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 namespace Hexalith.Parties.Domain;
 
-internal sealed partial class PartyDomainServiceInvoker(
+internal sealed partial class PartyDomainProcessor(
     IEventPayloadProtectionService payloadProtectionService,
     IServiceScopeFactory serviceScopeFactory,
-    ILogger<PartyDomainServiceInvoker> logger,
+    ILogger<PartyDomainProcessor> logger,
     IPartyErasureRecordStore? erasureRecordStore = null,
-    PartyErasureOrchestrator? erasureOrchestrator = null) : IDomainServiceInvoker
+    PartyErasureOrchestrator? erasureOrchestrator = null,
+    IHttpContextAccessor? httpContextAccessor = null) : IDomainProcessor, IAggregateReplay
 {
     private const string PartyDomain = "party";
 
-    // Allowlist anchor — only types from this assembly may be resolved as command payload types.
+    // Allowlist anchor - only types from this assembly may be resolved as command payload types.
     // Prevents Type.GetType from loading arbitrary assemblies via assembly-qualified wire data.
     private static readonly Assembly ContractsAssembly = typeof(CreateParty).Assembly;
 
@@ -41,7 +45,17 @@ internal sealed partial class PartyDomainServiceInvoker(
 
     private static readonly ConcurrentDictionary<string, Type?> CommandTypeCache = new(StringComparer.Ordinal);
 
-    public async Task<DomainResult> InvokeAsync(
+    public Task<DomainResult> ProcessAsync(CommandEnvelope command, object? currentState)
+        => ProcessAsync(
+            command,
+            currentState,
+            httpContextAccessor?.HttpContext?.RequestAborted ?? CancellationToken.None);
+
+    public bool CanReplayAggregateType(string aggregateType) => new PartyAggregate().CanReplayAggregateType(aggregateType);
+
+    public AggregateReconstructionResult Replay(AggregateReconstructionRequest request) => new PartyAggregate().Replay(request);
+
+    internal async Task<DomainResult> ProcessAsync(
         CommandEnvelope command,
         object? currentState,
         CancellationToken cancellationToken = default)
@@ -51,7 +65,7 @@ internal sealed partial class PartyDomainServiceInvoker(
 
         if (!string.Equals(command.Domain, PartyDomain, StringComparison.OrdinalIgnoreCase))
         {
-            throw new DomainServiceNotFoundException(command.TenantId, command.Domain);
+            throw new InvalidOperationException("PartyDomainProcessor only handles the party domain.");
         }
 
         DomainResult? rejection = await TryRejectInvalidPayloadAsync(command, cancellationToken).ConfigureAwait(false);
@@ -68,7 +82,7 @@ internal sealed partial class PartyDomainServiceInvoker(
 
         // Allocate the aggregate per invocation so the framework's ProcessAsync cannot
         // accidentally retain transient state across concurrent calls. PartyAggregate.Handle
-        // methods are static — the allocation cost is negligible.
+        // methods are static - the allocation cost is negligible.
         PartyAggregate aggregate = new();
         // Re-check cancellation right before dispatch: the unprotect/replay loop above can be
         // long-running for parties with thousands of events, and the framework's ProcessAsync
@@ -418,7 +432,7 @@ internal sealed partial class PartyDomainServiceInvoker(
         }
         catch (Exception ex) when (ex is JsonException or NotSupportedException or ArgumentException)
         {
-            // Note: ex.Message is intentionally not surfaced to the rejection event — it can carry
+            // Note: ex.Message is intentionally not surfaced to the rejection event - it can carry
             // payload fragments (offset context, field excerpts) that would end up in persisted
             // events and operator logs. Log the underlying exception type at debug for diagnostics.
             LogPayloadDeserializationFailure(command.CommandType, ex.GetType().Name);
@@ -485,7 +499,7 @@ internal sealed partial class PartyDomainServiceInvoker(
             return null;
         }
 
-        // Restrict resolution to the contracts assembly — never call Type.GetType on raw wire
+        // Restrict resolution to the contracts assembly - never call Type.GetType on raw wire
         // input, which would happily load arbitrary assemblies from the probing path given an
         // assembly-qualified attacker-controlled name like "Foo, EvilAssembly".
         Type? exact = ContractsAssembly.GetType(typeName, throwOnError: false);

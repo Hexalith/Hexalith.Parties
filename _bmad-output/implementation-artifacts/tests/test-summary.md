@@ -177,3 +177,41 @@
 
 - `Hexalith.Parties.Authentication` remains intentionally unretired because the Story 8.3 tenant-claims transformation row is still `needs-additive-api`.
 - Existing Epic 8 residual blockers from Stories 8.1-8.3 remain unchanged unless explicitly closed by later stories.
+
+## Story 8.5 EventStore Domain-Service SDK Host Cutover - 2026-07-07
+
+### Focused Changes
+
+- Moved the production Parties host to the EventStore DomainService SDK shape with `builder.AddEventStoreDomainService(typeof(PartyAggregate).Assembly)` and `app.UseEventStoreDomainService()`.
+- Removed the hand-written production `MapPost("/process")` route and retired the production `PartyDomainServiceInvoker` registration; EventStore's `DaprDomainServiceInvoker` remains only inside the projection/rebuild compatibility set needed by the retained `AggregateActor`.
+- Replaced `PartyDomainServiceInvoker` with keyed `PartyDomainProcessor : IDomainProcessor, IAggregateReplay` for domain `party`.
+- Registered every casing variant of the `party` keyed processor because the SDK keyed lookup is exact-match and the retired invoker accepted case-insensitive domains.
+- Restored the narrow EventStore Server projection/rebuild compatibility registrations still required by local projection actors before Story 8.6: projection checkpoint stores, projection discovery, rebuild cleanup, projection polling, `AggregateActor`, and its activation dependencies.
+- Preserved Parties-specific validation rejection, protected current-state unprotection/redaction, erasure retry verification, and erasure-status persistence.
+- Kept local degraded-response middleware and DAPR health checks because the Story 8.3 platform row remains `needs-additive-api`.
+- Kept projection/query actors, AppHost publish helpers, DataProtection/cursor codecs, MCP/client/UI, payload protection engine, and `Hexalith.Parties.Authentication` out of scope.
+- Kept DAPR ACLs `/process`-only; SDK `/query`, `/project`, `/replay-state`, and metadata endpoints are not allowed through service invocation in Story 8.5.
+- Recorded the EventStore submodule pin proof: `references/Hexalith.EventStore` at `9f8b54dc161a4d5a9b2e6b1deacf331d1b80f1e0`.
+
+### Commands Attempted
+
+| Command | Result | Notes |
+| --- | --- | --- |
+| `git -C references/Hexalith.EventStore rev-parse HEAD` | Pass | Returned `9f8b54dc161a4d5a9b2e6b1deacf331d1b80f1e0`. |
+| `dotnet build tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj -c Debug -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0 --verbosity minimal` | Pass | 0 warnings, 0 errors. |
+| `dotnet ./tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -class Hexalith.Parties.Tests.Domain.PartyDomainProcessorValidationTests` | Pass | 13 passed; covers validation rejection, protected-payload redaction, retry verification, and erasure-status paths. |
+| `dotnet ./tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -class Hexalith.Parties.Tests.Gateway.PartiesProcessEndpointTests` | Fail before fix, pass after review fixes | Pre-fix DI validation failed because projection checkpoint services were no longer registered after removing `AddEventStoreServer`; final rerun passed with 8 passed after adding projection/rebuild compatibility registrations, SDK replay coverage, and all-case `party` keyed registrations. |
+| `dotnet ./tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -class Hexalith.Parties.Tests.Gateway.EventStoreGatewayRoutingTests` | Pass | 52 passed; output includes expected DAPR-sidecar connection warnings from EventStore gateway tests running without a sidecar. |
+| `dotnet ./tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -class Hexalith.Parties.Tests.FitnessTests.ArchitecturalFitnessTests` | Pass | 21 passed; validates SDK host shape, request-path boundaries, and architectural guardrails. |
+| `dotnet ./tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -class Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests` | Pass | 10 passed; validates the Story 8.5 diff shape, projection/rebuild compatibility registration guard, and prerequisite matrix proof. |
+| `dotnet ./tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -class Hexalith.Parties.Tests.FitnessTests.RetiredLeafProjectFitnessTests` | Pass | 4 passed; validates retired leaf project guardrails remain intact. |
+| `dotnet build tests/Hexalith.Parties.DeployValidation.Tests/Hexalith.Parties.DeployValidation.Tests.csproj -c Debug -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0 --verbosity minimal` | Pass | 0 warnings, 0 errors. |
+| `dotnet ./tests/Hexalith.Parties.DeployValidation.Tests/bin/Debug/net10.0/Hexalith.Parties.DeployValidation.Tests.dll -class Hexalith.Parties.DeployValidation.Tests.DaprAccessControlFitnessTests` | Pass | 5 passed; ACL remains deny-by-default with only `eventstore -> POST /process`. |
+| `git diff --check` | Pass | No whitespace or conflict-marker issues. |
+
+### Remaining Blockers
+
+- EventStore degraded-response and DAPR-health owner parity remains `needs-additive-api`; Parties keeps local degraded-response middleware and DAPR health checks.
+- EventStore projection/query SDK migration remains deferred to Story 8.6; Parties keeps projection/query actors, rebuild services, local adapters, and freshness fallback.
+- Aspire/AppHost publish helper cleanup remains deferred to Story 8.8; AppHost topology and publish helpers were not migrated in Story 8.5.
+- Existing Epic 8 residual release blockers from Stories 8.1-8.4 remain unchanged unless explicitly closed by later stories.

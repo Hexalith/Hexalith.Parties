@@ -125,6 +125,22 @@ public sealed class PlatformApiPrerequisitesTests
         "src/Hexalith.Parties/Validation/UpdatePartyCompositeValidator.cs",
     ];
 
+    private static readonly string[] ApprovedStory85SdkHostCutoverPaths =
+    [
+        "src/Hexalith.Parties/Domain/PartyAggregate.cs",
+        "src/Hexalith.Parties/Domain/PartyDomainProcessor.cs",
+        "src/Hexalith.Parties/Domain/PartyDomainServiceInvoker.cs",
+        "src/Hexalith.Parties/Extensions/PartiesServiceCollectionExtensions.cs",
+        "src/Hexalith.Parties/Hexalith.Parties.csproj",
+        "src/Hexalith.Parties/Program.cs",
+    ];
+
+    private static readonly string[] ApprovedEpic8MigrationPaths =
+    [
+        .. ApprovedStory84LeafRetirementPaths,
+        .. ApprovedStory85SdkHostCutoverPaths,
+    ];
+
     private static readonly IReadOnlyDictionary<string, string[]> ApprovedStory84ChangedLines = new Dictionary<string, string[]>(StringComparer.Ordinal)
     {
         ["Hexalith.Parties.slnx"] =
@@ -445,14 +461,14 @@ public sealed class PlatformApiPrerequisitesTests
 
         string[] forbiddenChanges = changedPaths
             .Where(IsForbiddenStoryMigrationPath)
-            .Where(static path => !ApprovedStory84LeafRetirementPaths.Contains(path, StringComparer.Ordinal))
+            .Where(static path => !ApprovedEpic8MigrationPaths.Contains(path, StringComparer.Ordinal))
             .ToArray();
 
         forbiddenChanges.ShouldBeEmpty();
 
-        foreach (string approvedPath in changedPaths.Where(static path => ApprovedStory84LeafRetirementPaths.Contains(path, StringComparer.Ordinal)))
+        foreach (string approvedPath in changedPaths.Where(static path => ApprovedEpic8MigrationPaths.Contains(path, StringComparer.Ordinal)))
         {
-            AssertApprovedStory84DiffIsNarrow(root, baselineRevision, approvedPath);
+            AssertApprovedEpic8DiffIsNarrow(root, baselineRevision, approvedPath);
         }
     }
 
@@ -651,6 +667,100 @@ public sealed class PlatformApiPrerequisitesTests
     private static bool IsForbiddenStoryMigrationPath(string path)
         => ForbiddenStoryMigrationFiles.Contains(path, StringComparer.Ordinal) ||
             ForbiddenStoryMigrationPathPrefixes.Any(prefix => path.StartsWith(prefix, StringComparison.Ordinal));
+
+    private static void AssertApprovedEpic8DiffIsNarrow(string root, string baselineRevision, string path)
+    {
+        if (ApprovedStory85SdkHostCutoverPaths.Contains(path, StringComparer.Ordinal))
+        {
+            AssertApprovedStory85DiffIsNarrow(root, baselineRevision, path);
+            return;
+        }
+
+        AssertApprovedStory84DiffIsNarrow(root, baselineRevision, path);
+    }
+
+    private static void AssertApprovedStory85DiffIsNarrow(string root, string baselineRevision, string path)
+    {
+        if (string.Equals(path, "src/Hexalith.Parties/Domain/PartyAggregate.cs", StringComparison.Ordinal))
+        {
+            string oldAggregate = RunGit(root, "show", $"{baselineRevision}:src/Hexalith.Parties.Server/Aggregates/PartyAggregate.cs")
+                .Replace("using Hexalith.EventStore.Client.Aggregates;\n", "using Hexalith.EventStore.Client.Aggregates;\nusing Hexalith.EventStore.Client.Attributes;\n", StringComparison.Ordinal)
+                .Replace("namespace Hexalith.Parties.Server.Aggregates;", "namespace Hexalith.Parties.Domain;", StringComparison.Ordinal)
+                .Replace("public sealed class PartyAggregate", "[EventStoreDomain(\"party\")]\npublic sealed class PartyAggregate", StringComparison.Ordinal);
+            string newAggregate = File.ReadAllText(Path.Combine(root, path));
+            newAggregate.ShouldBe(oldAggregate);
+            return;
+        }
+
+        if (string.Equals(path, "src/Hexalith.Parties/Domain/PartyDomainServiceInvoker.cs", StringComparison.Ordinal))
+        {
+            File.Exists(Path.Combine(root, path)).ShouldBeFalse(path);
+            return;
+        }
+
+        if (string.Equals(path, "src/Hexalith.Parties/Domain/PartyDomainProcessor.cs", StringComparison.Ordinal))
+        {
+            string source = File.ReadAllText(Path.Combine(root, path));
+            source.ShouldContain(": IDomainProcessor");
+            source.ShouldContain("IAggregateReplay");
+            source.ShouldContain("AggregateReconstructionResult Replay");
+            source.ShouldContain("TryRejectInvalidPayloadAsync");
+            source.ShouldContain("UnprotectCurrentStateAsync");
+            source.ShouldContain("SaveErasureStatusUpdatesAsync");
+            source.ShouldContain("InvokeRetryErasureVerificationAsync");
+            source.ShouldContain("PartyCommandValidationRejected");
+            source.ShouldContain("PartyPayloadProtectionService.RedactProtectedPayload");
+            source.ShouldNotContain("IDomainServiceInvoker");
+            source.ShouldNotContain("DomainServiceNotFoundException");
+            return;
+        }
+
+        if (string.Equals(path, "src/Hexalith.Parties/Extensions/PartiesServiceCollectionExtensions.cs", StringComparison.Ordinal))
+        {
+            string source = File.ReadAllText(Path.Combine(root, path));
+            source.ShouldContain("AddKeyedScoped<IDomainProcessor, PartyDomainProcessor>(PartyDomain)");
+            source.ShouldContain("PartyDomainCaseVariants()");
+            source.ShouldContain("RegisterActor<AggregateActor>");
+            source.ShouldContain("AddHostedService<ProjectionDiscoveryHostedService>");
+            source.ShouldContain("AddHostedService<ActiveRebuildIndexCleanupService>");
+            source.ShouldContain("AddHostedService<ProjectionPollerService>");
+            source.ShouldContain("TryAddTransient<IDomainServiceInvoker, DaprDomainServiceInvoker>");
+            source.ShouldNotContain("AddEventStoreServer(configuration)");
+            source.ShouldNotContain("PartyDomainServiceInvoker");
+            return;
+        }
+
+        if (string.Equals(path, "src/Hexalith.Parties/Program.cs", StringComparison.Ordinal))
+        {
+            string source = File.ReadAllText(Path.Combine(root, path));
+            source.ShouldContain("AddEventStoreDomainService(typeof(PartyAggregate).Assembly)");
+            source.ShouldContain("UseEventStoreDomainService()");
+            source.ShouldContain("ConfigureOpenTelemetryTracerProvider");
+            source.ShouldContain("ConfigureOpenTelemetryMeterProvider");
+            source.ShouldContain("AddPartiesDaprHealthChecks");
+            source.ShouldContain("UseMiddleware<DegradedResponseMiddleware>");
+            source.ShouldContain("MapSubscribeHandler()");
+            source.ShouldContain("MapEventStoreDomainEvents()");
+            source.ShouldContain("MapActorsHandlers()");
+            source.ShouldNotContain("MapPost(\"/process\"");
+            source.ShouldNotContain("MapHexalithDefaultEndpoints(ConfigurePartiesServiceDefaults)");
+            return;
+        }
+
+        if (string.Equals(path, "src/Hexalith.Parties/Hexalith.Parties.csproj", StringComparison.Ordinal))
+        {
+            string source = File.ReadAllText(Path.Combine(root, path));
+            source.ShouldContain("Hexalith.EventStore.DomainService");
+            source.ShouldContain("Hexalith.EventStore.Server");
+            source.ShouldNotContain("Hexalith.Parties.Server");
+            source.ShouldNotContain("Hexalith.Parties.ServiceDefaults");
+            source.ShouldNotContain("Hexalith.Commons.ServiceDefaults");
+            source.ShouldNotContain("Version=");
+            return;
+        }
+
+        throw new InvalidOperationException($"No Story 8.5 diff guard is defined for '{path}'.");
+    }
 
     private static void AssertApprovedStory84DiffIsNarrow(string root, string baselineRevision, string path)
     {
