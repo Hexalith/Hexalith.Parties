@@ -53,7 +53,7 @@ Full table with all packages: [architecture.md §3](architecture.md). Versioning
 
 ## Repository structure
 
-Single cohesive solution. **Adopter-facing** packages (`Client`, `Contracts`, `Picker`, `AdminPortal`, `ConsumerPortal`, `Mcp`, `ServiceDefaults`) are what consumers reference; `Hexalith.Parties.UI` is the browser UI/BFF host for this product experience. **Internal** projects (`Hexalith.Parties` host, `Server`, `Projections`, `Security`, `Testing`) are private to the actor host. Shared Hexalith repositories under `references/` provide build, platform, EventStore, FrontComposer, serialization, and tenancy source dependencies. Annotated tree: [source-tree-analysis.md](source-tree-analysis.md).
+Single cohesive solution. **Adopter-facing** packages (`Client`, `Contracts`, `Picker`, `AdminPortal`, `ConsumerPortal`, `Mcp`) are what consumers reference; `Hexalith.Parties.UI` is the browser UI/BFF host for this product experience. **Internal** projects (`Hexalith.Parties` host, `Projections`, `Security`, `Testing`) are private to the actor host. Story 8.4 retired the local `Hexalith.Parties.ServiceDefaults` wrapper; service-default consumers should use `Hexalith.Commons.ServiceDefaults` directly. Shared Hexalith repositories under `references/` provide build, platform, EventStore, FrontComposer, serialization, and tenancy source dependencies. Annotated tree: [source-tree-analysis.md](source-tree-analysis.md).
 
 ## Important notes
 

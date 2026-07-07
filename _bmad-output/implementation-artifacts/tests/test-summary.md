@@ -140,3 +140,40 @@
 - No Parties source migration starts in Story 8.3. Later migration stories remain gated by the matrix row status, proof requirements, rollback wording, and owner decisions.
 - Full `Hexalith.Parties.Tests` Release source-mode remains blocked by the Story 8.1 `Hexalith.Memories` Release guard.
 - Full `Hexalith.Parties.Tests` Debug source-mode still has the five pre-existing tenant-event failures recorded by Story 8.1 and Story 8.2.
+
+## Story 8.4 Leaf Project Retirement - 2026-07-07
+
+### Focused Changes
+
+- Moved `PartyAggregate` from the retired production `src/Hexalith.Parties.Server` shell into `src/Hexalith.Parties/Domain/PartyAggregate.cs` under `Hexalith.Parties.Domain`.
+- Deleted the empty `src/Hexalith.Parties.Server` production project shell and removed it from `Hexalith.Parties.slnx`.
+- Deleted `src/Hexalith.Parties.ServiceDefaults` and updated the `parties`, `parties-ui`, and `parties-mcp` hosts to consume `Hexalith.Commons.ServiceDefaults` directly.
+- Preserved service-default behavior: `/health`, `/alive`, `/ready`, `RegisterDefaultSelfCheck=false`, and `ActivitySourceNames.Add("Hexalith.Parties")`.
+- Updated aggregate tests, domain publication tests, service-default compatibility tests, MCP/deploy guards, docs, and project context for the retired paths.
+- Added `RetiredLeafProjectFitnessTests` to guard that retired production paths stay absent from `.slnx` and production project references.
+- Kept `Hexalith.Parties.Authentication` in place. The Story 8.3 tenant-claims transformation row remains `needs-additive-api`, so auth retirement stays gated.
+- Review follow-up hardened the no-unapproved-migration guard so approved Story 8.4 paths must match aggregate-move or service-default-retirement diff shapes, normalized retired path checks, parsed the tenant-claims matrix row directly, and documented the ServiceDefaults migration target.
+
+### Commands Attempted
+
+| Command | Result | Notes |
+| --- | --- | --- |
+| `dotnet build tests/Hexalith.Parties.Server.Tests/Hexalith.Parties.Server.Tests.csproj -c Debug -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0 --verbosity minimal` | Pass | Aggregate test project builds against moved aggregate; 0 warnings, 0 errors. |
+| `dotnet ./tests/Hexalith.Parties.Server.Tests/bin/Debug/net10.0/Hexalith.Parties.Server.Tests.dll` | Pass | 237 passed. |
+| `dotnet build tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj -c Debug -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0 --verbosity minimal` | Pass | Root test assembly builds cleanly; 0 warnings, 0 errors. |
+| `dotnet ./tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -class Hexalith.Parties.Tests.HealthChecks.ServiceDefaultsCompatibilityTests` | Pass | 8 passed; validates Commons direct defaults preserve Parties health and telemetry options. |
+| `dotnet ./tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -class Hexalith.Parties.Tests.FitnessTests.RetiredLeafProjectFitnessTests` | Pass | 3 passed; validates retired production paths are absent and Authentication remains gated. |
+| `dotnet build tests/Hexalith.Parties.DeployValidation.Tests/Hexalith.Parties.DeployValidation.Tests.csproj -c Debug -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0 --verbosity minimal` | Pass | Deploy validation test project builds cleanly; 0 warnings, 0 errors. |
+| `dotnet ./tests/Hexalith.Parties.DeployValidation.Tests/bin/Debug/net10.0/Hexalith.Parties.DeployValidation.Tests.dll -class Hexalith.Parties.DeployValidation.Tests.K8sManifestPublishTests` | Pass | 5 passed. |
+| `dotnet build tests/Hexalith.Parties.Mcp.Tests/Hexalith.Parties.Mcp.Tests.csproj -c Debug -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0 --verbosity minimal` | Pass | MCP test project builds cleanly; 0 warnings, 0 errors. |
+| `dotnet ./tests/Hexalith.Parties.Mcp.Tests/bin/Debug/net10.0/Hexalith.Parties.Mcp.Tests.dll -class Hexalith.Parties.Mcp.Tests.PartiesMcpProjectFitnessTests` | Pass | 5 passed. |
+| `dotnet ./tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -class Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests` | Pass | 10 passed after narrowing the no-unapproved-migration guard to allow only the approved Story 8.4 leaf-retirement paths. |
+| `dotnet build tests/Hexalith.Parties.Sample.Tests/Hexalith.Parties.Sample.Tests.csproj -c Debug -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0 --verbosity minimal` | Pass | Sample test project builds cleanly after retired project removal; 0 warnings, 0 errors. |
+| `dotnet ./tests/Hexalith.Parties.Sample.Tests/bin/Debug/net10.0/Hexalith.Parties.Sample.Tests.dll -class Hexalith.Parties.Sample.Tests.SampleOnboardingGuardrailTests` | Pass | 7 passed; sample production project stays within approved consumer references. |
+| `dotnet ./tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -class Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests` | Pass | 10 passed after review hardening changed the approved path list from a broad bypass into narrow diff-shape checks. |
+| `git diff --check` | Pass | No whitespace or conflict-marker issues. |
+
+### Remaining Blockers
+
+- `Hexalith.Parties.Authentication` remains intentionally unretired because the Story 8.3 tenant-claims transformation row is still `needs-additive-api`.
+- Existing Epic 8 residual blockers from Stories 8.1-8.3 remain unchanged unless explicitly closed by later stories.

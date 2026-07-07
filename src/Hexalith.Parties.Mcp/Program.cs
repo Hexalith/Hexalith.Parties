@@ -1,7 +1,7 @@
-using Hexalith.Parties.Mcp;
+using Hexalith.Commons.ServiceDefaults;
 using Hexalith.Parties.Client;
 using Hexalith.Parties.Client.Abstractions;
-using Hexalith.Parties.ServiceDefaults;
+using Hexalith.Parties.Mcp;
 
 using Microsoft.Extensions.Options;
 
@@ -9,7 +9,7 @@ using ModelContextProtocol.Server;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
-_ = builder.AddServiceDefaults();
+_ = builder.AddHexalithServiceDefaults(ConfigurePartiesServiceDefaults);
 
 _ = builder.Services
     .AddOptions<PartiesMcpOptions>()
@@ -65,8 +65,17 @@ _ = builder.Services.AddMcpServer()
 WebApplication app = builder.Build();
 
 _ = app.MapMcp();
-_ = app.MapDefaultEndpoints();
+_ = app.MapHexalithDefaultEndpoints(ConfigurePartiesServiceDefaults);
 
 app.Run();
+
+static void ConfigurePartiesServiceDefaults(HexalithServiceDefaultsOptions options)
+{
+    options.HealthEndpointPath = "/health";
+    options.LivenessEndpointPath = "/alive";
+    options.ReadinessEndpointPath = "/ready";
+    options.RegisterDefaultSelfCheck = false;
+    options.ActivitySourceNames.Add("Hexalith.Parties");
+}
 
 public partial class Program;

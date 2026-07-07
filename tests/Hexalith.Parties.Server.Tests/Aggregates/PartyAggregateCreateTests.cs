@@ -9,7 +9,7 @@ using Hexalith.Parties.Contracts.Models;
 using Hexalith.Parties.Contracts.Results;
 using Hexalith.Parties.Contracts.State;
 using Hexalith.Parties.Contracts.ValueObjects;
-using Hexalith.Parties.Server.Aggregates;
+using Hexalith.Parties.Domain;
 using Hexalith.Parties.Testing;
 
 using Shouldly;

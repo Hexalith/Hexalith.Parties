@@ -102,7 +102,7 @@ public sealed class ArchitecturalFitnessTests
             + string.Join(", ", violations));
 
         source.ShouldContain("app.MapActorsHandlers()");
-        source.ShouldContain("app.MapDefaultEndpoints()");
+        source.ShouldContain("app.MapHexalithDefaultEndpoints(ConfigurePartiesServiceDefaults)");
         source.ShouldContain("app.MapSubscribeHandler()");
         source.ShouldContain("app.MapEventStoreDomainEvents()");
         source.ShouldContain("app.MapPost(\"/process\"");

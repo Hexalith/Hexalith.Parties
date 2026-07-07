@@ -19,7 +19,7 @@
 | **Run** | `dotnet aspire run --project src/Hexalith.Parties.AppHost` |
 | **Test** | `pwsh -NoProfile -File scripts/test.ps1 -Lane {unit\|integration\|topology\|deploy\|all\|coverage}` or `dotnet test tests/<Project>/<Project>.csproj` |
 | **Entry points** | AppHost `Program.cs` (dev) · `Hexalith.Parties/Program.cs` → `/process` · `Hexalith.Parties.Mcp/Program.cs` → `/mcp` |
-| **Domain logic** | `src/Hexalith.Parties.Server/Aggregates/PartyAggregate.cs` |
+| **Domain logic** | `src/Hexalith.Parties/Domain/PartyAggregate.cs` |
 | **Prereqs** | .NET 10 SDK 10.0.301, Docker Desktop; root build submodules under `references/` |
 
 ## Generated documentation (this scan)

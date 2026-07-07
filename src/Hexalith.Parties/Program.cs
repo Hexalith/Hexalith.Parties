@@ -1,3 +1,4 @@
+using Hexalith.Commons.ServiceDefaults;
 using Hexalith.EventStore.Contracts.Commands;
 using Hexalith.EventStore.Contracts.Results;
 using Hexalith.EventStore.DomainService;
@@ -6,12 +7,11 @@ using Hexalith.Parties.Compliance;
 using Hexalith.Parties.Extensions;
 using Hexalith.Parties.HealthChecks;
 using Hexalith.Parties.Middleware;
-using Hexalith.Parties.ServiceDefaults;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
 // Service defaults (OpenTelemetry, health checks, resilience, service discovery)
-builder.AddServiceDefaults();
+builder.AddHexalithServiceDefaults(ConfigurePartiesServiceDefaults);
 
 builder.Services.AddDaprClient();
 
@@ -65,9 +65,18 @@ app.MapPost("/process", static async (
     return Results.Json(DomainServiceWireResult.FromDomainResult(result));
 }).ExcludeFromDescription();
 app.MapActorsHandlers();
-app.MapDefaultEndpoints();                    // Health checks: /health, /alive, /ready
+app.MapHexalithDefaultEndpoints(ConfigurePartiesServiceDefaults); // Health checks: /health, /alive, /ready
 
 app.Run();
+
+static void ConfigurePartiesServiceDefaults(HexalithServiceDefaultsOptions options)
+{
+    options.HealthEndpointPath = "/health";
+    options.LivenessEndpointPath = "/alive";
+    options.ReadinessEndpointPath = "/ready";
+    options.RegisterDefaultSelfCheck = false;
+    options.ActivitySourceNames.Add("Hexalith.Parties");
+}
 
 /// <summary>
 /// Entry point class, made partial for WebApplicationFactory test access.

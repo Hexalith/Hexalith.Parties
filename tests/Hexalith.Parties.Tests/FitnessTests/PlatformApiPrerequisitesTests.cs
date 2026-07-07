@@ -106,6 +106,127 @@ public sealed class PlatformApiPrerequisitesTests
         "package-lock.json",
     ];
 
+    private static readonly string[] ApprovedStory84LeafRetirementPaths =
+    [
+        "Hexalith.Parties.slnx",
+        "src/Hexalith.Parties.Mcp/Hexalith.Parties.Mcp.csproj",
+        "src/Hexalith.Parties.Mcp/Program.cs",
+        "src/Hexalith.Parties.Server/Aggregates/PartyAggregate.cs",
+        "src/Hexalith.Parties.Server/Hexalith.Parties.Server.csproj",
+        "src/Hexalith.Parties.ServiceDefaults/Extensions.cs",
+        "src/Hexalith.Parties.ServiceDefaults/Hexalith.Parties.ServiceDefaults.csproj",
+        "src/Hexalith.Parties.UI/Hexalith.Parties.UI.csproj",
+        "src/Hexalith.Parties.UI/Program.cs",
+        "src/Hexalith.Parties/Domain/PartyAggregate.cs",
+        "src/Hexalith.Parties/Domain/PartyDomainServiceInvoker.cs",
+        "src/Hexalith.Parties/Hexalith.Parties.csproj",
+        "src/Hexalith.Parties/Program.cs",
+        "src/Hexalith.Parties/Validation/CreatePartyCompositeValidator.cs",
+        "src/Hexalith.Parties/Validation/UpdatePartyCompositeValidator.cs",
+    ];
+
+    private static readonly IReadOnlyDictionary<string, string[]> ApprovedStory84ChangedLines = new Dictionary<string, string[]>(StringComparer.Ordinal)
+    {
+        ["Hexalith.Parties.slnx"] =
+        [
+            "    <Project Path=\"src/Hexalith.Parties.Server/Hexalith.Parties.Server.csproj\" />",
+            "    <Project Path=\"src/Hexalith.Parties.ServiceDefaults/Hexalith.Parties.ServiceDefaults.csproj\" />",
+        ],
+        ["src/Hexalith.Parties.Mcp/Hexalith.Parties.Mcp.csproj"] =
+        [
+            "    <ProjectReference Include=\"$(HexalithCommonsRoot)\\src\\libraries\\Hexalith.Commons.ServiceDefaults\\Hexalith.Commons.ServiceDefaults.csproj\" Condition=\"'$(HexalithCommonsFromSource)' == 'true'\" />",
+            "    <PackageReference Include=\"Hexalith.Commons.ServiceDefaults\" Condition=\"'$(HexalithCommonsFromSource)' != 'true'\" />",
+            "    <ProjectReference Include=\"..\\Hexalith.Parties.ServiceDefaults\\Hexalith.Parties.ServiceDefaults.csproj\" />",
+        ],
+        ["src/Hexalith.Parties.Mcp/Program.cs"] =
+        [
+            "using Hexalith.Commons.ServiceDefaults;",
+            "using Hexalith.Parties.Mcp;",
+            "using Hexalith.Parties.ServiceDefaults;",
+            "_ = builder.AddServiceDefaults();",
+            "_ = builder.AddHexalithServiceDefaults(ConfigurePartiesServiceDefaults);",
+            "_ = app.MapDefaultEndpoints();",
+            "_ = app.MapHexalithDefaultEndpoints(ConfigurePartiesServiceDefaults);",
+            string.Empty,
+            "static void ConfigurePartiesServiceDefaults(HexalithServiceDefaultsOptions options)",
+            "{",
+            "    options.HealthEndpointPath = \"/health\";",
+            "    options.LivenessEndpointPath = \"/alive\";",
+            "    options.ReadinessEndpointPath = \"/ready\";",
+            "    options.RegisterDefaultSelfCheck = false;",
+            "    options.ActivitySourceNames.Add(\"Hexalith.Parties\");",
+            "}",
+        ],
+        ["src/Hexalith.Parties.UI/Hexalith.Parties.UI.csproj"] =
+        [
+            "    <ProjectReference Include=\"..\\Hexalith.Parties.ServiceDefaults\\Hexalith.Parties.ServiceDefaults.csproj\" />",
+            "    <!-- Story 1.7 (AR-D6) — the low-level EventStore SignalR transport (EventStoreSignalRClient) the",
+            "    <ProjectReference Include=\"$(HexalithCommonsRoot)\\src\\libraries\\Hexalith.Commons.ServiceDefaults\\Hexalith.Commons.ServiceDefaults.csproj\" Condition=\"'$(HexalithCommonsFromSource)' == 'true'\" />",
+            "    <PackageReference Include=\"Hexalith.Commons.ServiceDefaults\" Condition=\"'$(HexalithCommonsFromSource)' != 'true'\" />",
+        ],
+        ["src/Hexalith.Parties.UI/Program.cs"] =
+        [
+            "using Hexalith.Commons.ServiceDefaults;",
+            "using Hexalith.Parties.ServiceDefaults;",
+            "WebApplicationBuilder builder = WebApplication.CreateBuilder(args);",
+            "builder.AddServiceDefaults();",
+            "builder.AddHexalithServiceDefaults(ConfigurePartiesServiceDefaults);",
+            "app.MapDefaultEndpoints();",
+            "app.MapHexalithDefaultEndpoints(ConfigurePartiesServiceDefaults);",
+            string.Empty,
+            "static void ConfigurePartiesServiceDefaults(HexalithServiceDefaultsOptions options)",
+            "{",
+            "    options.HealthEndpointPath = \"/health\";",
+            "    options.LivenessEndpointPath = \"/alive\";",
+            "    options.ReadinessEndpointPath = \"/ready\";",
+            "    options.RegisterDefaultSelfCheck = false;",
+            "    options.ActivitySourceNames.Add(\"Hexalith.Parties\");",
+            "}",
+        ],
+        ["src/Hexalith.Parties/Domain/PartyDomainServiceInvoker.cs"] =
+        [
+            "using Hexalith.Parties.Security;",
+            "using Hexalith.Parties.Server.Aggregates;",
+        ],
+        ["src/Hexalith.Parties/Hexalith.Parties.csproj"] =
+        [
+            "    <ProjectReference Include=\"..\\Hexalith.Parties.Server\\Hexalith.Parties.Server.csproj\" />",
+            "    <ProjectReference Include=\"..\\Hexalith.Parties.ServiceDefaults\\Hexalith.Parties.ServiceDefaults.csproj\" />",
+            "    <ProjectReference Include=\"$(HexalithCommonsRoot)\\src\\libraries\\Hexalith.Commons.ServiceDefaults\\Hexalith.Commons.ServiceDefaults.csproj\" Condition=\"'$(HexalithCommonsFromSource)' == 'true'\" />",
+            "    <PackageReference Include=\"Hexalith.Commons.ServiceDefaults\" Condition=\"'$(HexalithCommonsFromSource)' != 'true'\" />",
+            "    <ProjectReference Include=\"$(HexalithEventStoreRoot)\\src\\Hexalith.EventStore.Client\\Hexalith.EventStore.Client.csproj\" Condition=\"'$(HexalithEventStoreFromSource)' == 'true'\" />",
+            "    <PackageReference Include=\"Hexalith.EventStore.Client\" Condition=\"'$(HexalithEventStoreFromSource)' != 'true'\" />",
+        ],
+        ["src/Hexalith.Parties/Program.cs"] =
+        [
+            "using Hexalith.Commons.ServiceDefaults;",
+            "using Hexalith.Parties.ServiceDefaults;",
+            "builder.AddServiceDefaults();",
+            "builder.AddHexalithServiceDefaults(ConfigurePartiesServiceDefaults);",
+            "app.MapDefaultEndpoints();                    // Health checks: /health, /alive, /ready",
+            "app.MapHexalithDefaultEndpoints(ConfigurePartiesServiceDefaults); // Health checks: /health, /alive, /ready",
+            string.Empty,
+            "static void ConfigurePartiesServiceDefaults(HexalithServiceDefaultsOptions options)",
+            "{",
+            "    options.HealthEndpointPath = \"/health\";",
+            "    options.LivenessEndpointPath = \"/alive\";",
+            "    options.ReadinessEndpointPath = \"/ready\";",
+            "    options.RegisterDefaultSelfCheck = false;",
+            "    options.ActivitySourceNames.Add(\"Hexalith.Parties\");",
+            "}",
+        ],
+        ["src/Hexalith.Parties/Validation/CreatePartyCompositeValidator.cs"] =
+        [
+            "using Hexalith.Parties.Server.Aggregates;",
+            "using Hexalith.Parties.Domain;",
+        ],
+        ["src/Hexalith.Parties/Validation/UpdatePartyCompositeValidator.cs"] =
+        [
+            "using Hexalith.Parties.Server.Aggregates;",
+            "using Hexalith.Parties.Domain;",
+        ],
+    };
+
     private static readonly string[] AllowedContextEvidencePrefixes =
     [
         "_bmad-output/",
@@ -303,7 +424,7 @@ public sealed class PlatformApiPrerequisitesTests
     }
 
     [Fact]
-    public void CurrentStoryDiff_DoesNotModifyProductionMigrationPaths()
+    public void CurrentStoryDiff_DoesNotModifyUnapprovedProductionMigrationPaths()
     {
         string root = RepositoryRoot.Locate();
         string spec = File.ReadAllText(Path.Combine(root, SpecRelativePath));
@@ -318,12 +439,21 @@ public sealed class PlatformApiPrerequisitesTests
 
         string diffNames = RunGit(root, "diff", "--name-only", baselineRevision, "--");
         string untrackedNames = RunGit(root, "ls-files", "--others", "--exclude-standard");
-        string[] forbiddenChanges = string.Concat(diffNames, "\n", untrackedNames)
+        string[] changedPaths = string.Concat(diffNames, "\n", untrackedNames)
             .Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .ToArray();
+
+        string[] forbiddenChanges = changedPaths
             .Where(IsForbiddenStoryMigrationPath)
+            .Where(static path => !ApprovedStory84LeafRetirementPaths.Contains(path, StringComparer.Ordinal))
             .ToArray();
 
         forbiddenChanges.ShouldBeEmpty();
+
+        foreach (string approvedPath in changedPaths.Where(static path => ApprovedStory84LeafRetirementPaths.Contains(path, StringComparer.Ordinal)))
+        {
+            AssertApprovedStory84DiffIsNarrow(root, baselineRevision, approvedPath);
+        }
     }
 
     private static string ReadMatrix()
@@ -521,6 +651,52 @@ public sealed class PlatformApiPrerequisitesTests
     private static bool IsForbiddenStoryMigrationPath(string path)
         => ForbiddenStoryMigrationFiles.Contains(path, StringComparer.Ordinal) ||
             ForbiddenStoryMigrationPathPrefixes.Any(prefix => path.StartsWith(prefix, StringComparison.Ordinal));
+
+    private static void AssertApprovedStory84DiffIsNarrow(string root, string baselineRevision, string path)
+    {
+        if (string.Equals(path, "src/Hexalith.Parties/Domain/PartyAggregate.cs", StringComparison.Ordinal))
+        {
+            string oldAggregate = RunGit(root, "show", $"{baselineRevision}:src/Hexalith.Parties.Server/Aggregates/PartyAggregate.cs")
+                .Replace("namespace Hexalith.Parties.Server.Aggregates;", "namespace Hexalith.Parties.Domain;", StringComparison.Ordinal);
+            string newAggregate = File.ReadAllText(Path.Combine(root, path));
+            newAggregate.ShouldBe(oldAggregate);
+            return;
+        }
+
+        string[] deletedRetiredProjectPaths =
+        [
+            "src/Hexalith.Parties.Server/Aggregates/PartyAggregate.cs",
+            "src/Hexalith.Parties.Server/Hexalith.Parties.Server.csproj",
+            "src/Hexalith.Parties.ServiceDefaults/Extensions.cs",
+            "src/Hexalith.Parties.ServiceDefaults/Hexalith.Parties.ServiceDefaults.csproj",
+        ];
+        if (deletedRetiredProjectPaths.Contains(path, StringComparer.Ordinal))
+        {
+            File.Exists(Path.Combine(root, path)).ShouldBeFalse(path);
+            return;
+        }
+
+        string diff = RunGit(root, "diff", "--unified=0", baselineRevision, "--", path);
+        foreach (string line in diff.Split('\n', StringSplitOptions.RemoveEmptyEntries))
+        {
+            if (!IsChangedContentLine(line))
+            {
+                continue;
+            }
+
+            string content = line[1..].TrimEnd('\r');
+            IsAllowedStory84ChangedLine(path, content).ShouldBeTrue($"{path}: {line}");
+        }
+    }
+
+    private static bool IsChangedContentLine(string line)
+        => (line.StartsWith('+') || line.StartsWith('-'))
+            && !line.StartsWith("+++", StringComparison.Ordinal)
+            && !line.StartsWith("---", StringComparison.Ordinal);
+
+    private static bool IsAllowedStory84ChangedLine(string path, string line)
+        => ApprovedStory84ChangedLines.TryGetValue(path, out string[]? allowedLines) &&
+            allowedLines.Contains(line, StringComparer.Ordinal);
 
     private static bool ContainsExactToken(string value, string token)
         => Regex.IsMatch(

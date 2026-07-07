@@ -93,8 +93,7 @@ public sealed class SampleOnboardingGuardrailTests
         projectReferences.ShouldAllBe(
             static include =>
                 include.EndsWith("src/Hexalith.Parties.Client/Hexalith.Parties.Client.csproj", StringComparison.Ordinal)
-                || include.EndsWith("src/Hexalith.Parties.Contracts/Hexalith.Parties.Contracts.csproj", StringComparison.Ordinal)
-                || include.EndsWith("src/Hexalith.Parties.ServiceDefaults/Hexalith.Parties.ServiceDefaults.csproj", StringComparison.Ordinal),
+                || include.EndsWith("src/Hexalith.Parties.Contracts/Hexalith.Parties.Contracts.csproj", StringComparison.Ordinal),
             "Sample production project references must stay limited to approved consumer packages.");
 
         string[] packageReferences = project

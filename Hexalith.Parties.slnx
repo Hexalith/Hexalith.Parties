@@ -30,8 +30,6 @@
     <Project Path="src/Hexalith.Parties.Picker/Hexalith.Parties.Picker.csproj" />
     <Project Path="src/Hexalith.Parties.Projections/Hexalith.Parties.Projections.csproj" />
     <Project Path="src/Hexalith.Parties.Security/Hexalith.Parties.Security.csproj" />
-    <Project Path="src/Hexalith.Parties.Server/Hexalith.Parties.Server.csproj" />
-    <Project Path="src/Hexalith.Parties.ServiceDefaults/Hexalith.Parties.ServiceDefaults.csproj" />
     <Project Path="src/Hexalith.Parties.Testing/Hexalith.Parties.Testing.csproj" />
     <Project Path="src/Hexalith.Parties.UI/Hexalith.Parties.UI.csproj" />
     <Project Path="src/Hexalith.Parties/Hexalith.Parties.csproj" />

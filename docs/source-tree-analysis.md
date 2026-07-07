@@ -60,13 +60,11 @@ Hexalith.Parties/
 │   ├── Hexalith.Parties.Mcp/          # 📦 parties-mcp host (separate process; AI tool boundary)
 │   │   ├── Program.cs                 #   MapMcp() stateless; per-request typed clients; context forwarding
 │   │   └── Tools/                     #   PartiesMcpTools (5 tools), tool names, result envelope
-│   ├── Hexalith.Parties.ServiceDefaults/  # 📦 Aspire defaults: OTel, health, resilience, discovery
-│   │   └── Extensions.cs              #   AddServiceDefaults, MapDefaultEndpoints (/health /alive /ready)
 │   │
 │   │   # ───────── Internal (actor-host private) ─────────
 │   ├── Hexalith.Parties/              # 🔒 Domain service HOST (the `parties` resource)
 │   │   ├── Program.cs                 #   bootstrap, middleware pipeline, /process + subscription endpoints
-│   │   ├── Domain/                    #   PartyDomainServiceInvoker, PartyProjectionUpdateOrchestrator
+│   │   ├── Domain/                    #   PartyAggregate, PartyDomainServiceInvoker, PartyProjectionUpdateOrchestrator
 │   │   ├── Queries/                   #   PartyDetail/Index ProjectionQueryActor (read adapters)
 │   │   ├── Authentication/           #   JWT bearer options, claims transformation
 │   │   ├── Authorization/            #   ITenantAccessService / TenantAccessService (fail-closed)
@@ -77,8 +75,6 @@ Hexalith.Parties/
 │   │   ├── ErrorHandling/            #   global + validation exception handlers (RFC 9457)
 │   │   ├── HealthChecks/             #   AddPartiesDaprHealthChecks (sidecar/state/pubsub/actors/tenants)
 │   │   ├── Configuration/ Extensions/ #   PartiesServiceCollectionExtensions.AddParties(...)
-│   ├── Hexalith.Parties.Server/       # 🔒 Domain logic
-│   │   └── Aggregates/PartyAggregate.cs  # all static Handle(command, state) methods + display-name derivation
 │   ├── Hexalith.Parties.Projections/  # 🔒 Read-model projections
 │   │   ├── Actors/                    #   PartyDetail/Index ProjectionActor, event-type resolver
 │   │   ├── Handlers/                  #   pure Apply(event, state) projection logic
@@ -139,7 +135,7 @@ git submodule update --init references/Hexalith.Builds references/Hexalith.Commo
 | Local dev topology | `src/Hexalith.Parties.AppHost/Program.cs` (`dotnet aspire run --project src/Hexalith.Parties.AppHost`) |
 | Domain service host | `src/Hexalith.Parties/Program.cs` → `POST /process` |
 | MCP host | `src/Hexalith.Parties.Mcp/Program.cs` → `/mcp` |
-| Command handling | `src/Hexalith.Parties.Server/Aggregates/PartyAggregate.cs` (static `Handle`) |
+| Command handling | `src/Hexalith.Parties/Domain/PartyAggregate.cs` (static `Handle`) |
 | Projection apply | `src/Hexalith.Parties.Projections/Handlers/` + `Actors/` |
 | Subscriber reference | `samples/Hexalith.Parties.Sample/PartyEventHandler.cs` |
 
@@ -148,7 +144,7 @@ git submodule update --init references/Hexalith.Builds references/Hexalith.Commo
 | To change… | Look in… |
 |------------|----------|
 | A command/event/value-object shape | `src/Hexalith.Parties.Contracts/{Commands,Events,ValueObjects,Models}` |
-| Business rules / validation | `src/Hexalith.Parties.Server/Aggregates/PartyAggregate.cs` + `src/Hexalith.Parties/Validation/` |
+| Business rules / validation | `src/Hexalith.Parties/Domain/PartyAggregate.cs` + `src/Hexalith.Parties/Validation/` |
 | Read models / search | `src/Hexalith.Parties.Projections/` + `src/Hexalith.Parties/Queries/` |
 | Public client surface | `src/Hexalith.Parties.Client/` |
 | MCP tools | `src/Hexalith.Parties.Mcp/Tools/` |

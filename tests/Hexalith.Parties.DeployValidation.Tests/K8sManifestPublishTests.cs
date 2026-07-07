@@ -123,10 +123,14 @@ public sealed class K8sManifestPublishTests
         project.ShouldContain("<IsPublishable>true</IsPublishable>");
         project.ShouldContain("<EnableContainer>true</EnableContainer>");
         project.ShouldContain("<ContainerRepository>parties-ui</ContainerRepository>");
-        project.ShouldContain("..\\Hexalith.Parties.ServiceDefaults\\Hexalith.Parties.ServiceDefaults.csproj");
+        project.ShouldContain("$(HexalithCommonsRoot)\\src\\libraries\\Hexalith.Commons.ServiceDefaults\\Hexalith.Commons.ServiceDefaults.csproj");
+        project.ShouldContain("Hexalith.Commons.ServiceDefaults");
+        project.ShouldNotContain("Hexalith.Parties.ServiceDefaults");
         project.ShouldNotContain("Version=");
-        program.ShouldContain("using Hexalith.Parties.ServiceDefaults;");
-        program.ShouldContain("builder.AddServiceDefaults();");
-        program.ShouldContain("app.MapDefaultEndpoints();");
+        program.ShouldContain("using Hexalith.Commons.ServiceDefaults;");
+        program.ShouldContain("builder.AddHexalithServiceDefaults(ConfigurePartiesServiceDefaults);");
+        program.ShouldContain("app.MapHexalithDefaultEndpoints(ConfigurePartiesServiceDefaults);");
+        program.ShouldContain("RegisterDefaultSelfCheck = false");
+        program.ShouldContain("ActivitySourceNames.Add(\"Hexalith.Parties\")");
     }
 }

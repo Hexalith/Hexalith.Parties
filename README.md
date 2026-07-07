@@ -61,11 +61,9 @@ Hexalith.Parties/
     Hexalith.Parties.ConsumerPortal/ # Protected Consumer /me self-service RCL
     Hexalith.Parties.Picker/         # Embeddable Blazor/custom-element party picker
     Hexalith.Parties.UI/             # Blazor Server browser UI/BFF for Admin and Consumer experiences
-    Hexalith.Parties.ServiceDefaults/# Shared service configuration helpers (optional)
     Hexalith.Parties.Mcp/            # Separate parties-mcp host over the typed client
     # Internal (actor host private — not adopter-facing dependencies)
-    Hexalith.Parties/                # Domain actor host behind EventStore
-    Hexalith.Parties.Server/         # Domain logic and event store integration (internal)
+    Hexalith.Parties/                # Domain actor host and PartyAggregate behind EventStore
     Hexalith.Parties.Projections/    # Read model projections and actors (internal)
     Hexalith.Parties.Testing/        # Test utilities
   tests/                             # Unit, integration, and architectural tests

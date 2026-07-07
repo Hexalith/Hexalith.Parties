@@ -14,14 +14,16 @@
   <ItemGroup>
     <ProjectReference Include="..\Hexalith.Parties.Authentication\Hexalith.Parties.Authentication.csproj" />
     <ProjectReference Include="..\Hexalith.Parties.Contracts\Hexalith.Parties.Contracts.csproj" />
-    <ProjectReference Include="..\Hexalith.Parties.Server\Hexalith.Parties.Server.csproj" />
     <ProjectReference Include="..\Hexalith.Parties.Projections\Hexalith.Parties.Projections.csproj" />
     <ProjectReference Include="..\Hexalith.Parties.Security\Hexalith.Parties.Security.csproj" />
-    <ProjectReference Include="..\Hexalith.Parties.ServiceDefaults\Hexalith.Parties.ServiceDefaults.csproj" />
     <ProjectReference Include="$(HexalithCommonsRoot)\src\libraries\Hexalith.Commons\Hexalith.Commons.csproj" Condition="'$(HexalithCommonsFromSource)' == 'true'" />
     <PackageReference Include="Hexalith.Commons" Condition="'$(HexalithCommonsFromSource)' != 'true'" />
     <ProjectReference Include="$(HexalithCommonsRoot)\src\libraries\Hexalith.Commons.Http\Hexalith.Commons.Http.csproj" Condition="'$(HexalithCommonsFromSource)' == 'true'" />
     <PackageReference Include="Hexalith.Commons.Http" Condition="'$(HexalithCommonsFromSource)' != 'true'" />
+    <ProjectReference Include="$(HexalithCommonsRoot)\src\libraries\Hexalith.Commons.ServiceDefaults\Hexalith.Commons.ServiceDefaults.csproj" Condition="'$(HexalithCommonsFromSource)' == 'true'" />
+    <PackageReference Include="Hexalith.Commons.ServiceDefaults" Condition="'$(HexalithCommonsFromSource)' != 'true'" />
+    <ProjectReference Include="$(HexalithEventStoreRoot)\src\Hexalith.EventStore.Client\Hexalith.EventStore.Client.csproj" Condition="'$(HexalithEventStoreFromSource)' == 'true'" />
+    <PackageReference Include="Hexalith.EventStore.Client" Condition="'$(HexalithEventStoreFromSource)' != 'true'" />
     <ProjectReference Include="$(HexalithEventStoreRoot)\src\Hexalith.EventStore.DomainService\Hexalith.EventStore.DomainService.csproj" Condition="'$(HexalithEventStoreFromSource)' == 'true'" />
     <PackageReference Include="Hexalith.EventStore.DomainService" Condition="'$(HexalithEventStoreFromSource)' != 'true'" />
     <ProjectReference Include="$(HexalithEventStoreRoot)\src\Hexalith.EventStore.Server\Hexalith.EventStore.Server.csproj" Condition="'$(HexalithEventStoreFromSource)' == 'true'" />

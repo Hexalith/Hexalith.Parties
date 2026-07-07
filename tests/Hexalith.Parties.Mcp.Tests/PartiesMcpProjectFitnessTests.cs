@@ -38,11 +38,11 @@ public sealed class PartiesMcpProjectFitnessTests
             [
                 "..\\Hexalith.Parties.Client\\Hexalith.Parties.Client.csproj",
                 "..\\Hexalith.Parties.Contracts\\Hexalith.Parties.Contracts.csproj",
-                "..\\Hexalith.Parties.ServiceDefaults\\Hexalith.Parties.ServiceDefaults.csproj",
+                "$(HexalithCommonsRoot)\\src\\libraries\\Hexalith.Commons.ServiceDefaults\\Hexalith.Commons.ServiceDefaults.csproj",
                 "$(HexalithCommonsRoot)\\src\\libraries\\Hexalith.Commons.UniqueIds\\Hexalith.Commons.UniqueIds.csproj",
             ],
             ignoreOrder: true);
-        packageReferences.ShouldBe(["Hexalith.Commons.UniqueIds", "ModelContextProtocol.AspNetCore"], ignoreOrder: true);
+        packageReferences.ShouldBe(["Hexalith.Commons.ServiceDefaults", "Hexalith.Commons.UniqueIds", "ModelContextProtocol.AspNetCore"], ignoreOrder: true);
 
         string[] forbidden =
         [
@@ -70,12 +70,14 @@ public sealed class PartiesMcpProjectFitnessTests
             "Hexalith.Parties.Mcp",
             "Program.cs"));
 
-        program.ShouldContain("AddServiceDefaults()");
+        program.ShouldContain("AddHexalithServiceDefaults(ConfigurePartiesServiceDefaults)");
         program.ShouldContain("AddMcpServer()");
         program.ShouldContain("WithHttpTransport(options => options.Stateless = true)");
         program.ShouldContain("WithToolsFromAssembly()");
         program.ShouldContain("app.MapMcp()");
-        program.ShouldContain("app.MapDefaultEndpoints()");
+        program.ShouldContain("app.MapHexalithDefaultEndpoints(ConfigurePartiesServiceDefaults)");
+        program.ShouldContain("RegisterDefaultSelfCheck = false");
+        program.ShouldContain("ActivitySourceNames.Add(\"Hexalith.Parties\")");
     }
 
     [Fact]

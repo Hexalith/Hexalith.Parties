@@ -14,7 +14,7 @@ public sealed class IdentityBindingBoundaryTests
             "src/Hexalith.Parties.Contracts/Commands",
             "src/Hexalith.Parties.Contracts/Events",
             "src/Hexalith.Parties.Projections",
-            "src/Hexalith.Parties.Server",
+            "src/Hexalith.Parties/Domain",
             "src/Hexalith.Parties/Actors",
         ];
 

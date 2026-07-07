@@ -13,7 +13,7 @@ using Hexalith.Parties.Contracts.Results;
 using Hexalith.Parties.Contracts.Security;
 using Hexalith.Parties.Contracts.State;
 using Hexalith.Parties.Contracts.ValueObjects;
-using Hexalith.Parties.Server.Aggregates;
+using Hexalith.Parties.Domain;
 using Hexalith.Parties.Tests.FitnessTests;
 using Hexalith.Parties.Testing;
 

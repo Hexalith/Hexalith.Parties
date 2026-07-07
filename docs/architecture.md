@@ -106,7 +106,7 @@ Entry: `POST /process` (DAPR invocation from EventStore) → `Program.cs` maps i
 
 1. **`PartyDomainServiceInvoker`** (`src/Hexalith.Parties/Domain/`, registered *before* `AddEventStoreServer` so it overrides the default) rejects non-`party` domains, resolves the command type **restricted to the contracts assembly** (no `Type.GetType` on wire input; ambiguous short names fail closed), runs the **FluentValidation** validator (→ `PartyCommandValidationRejected` on failure), and **decrypts** the current-state snapshot + prior event payloads via the crypto-shredding `IEventPayloadProtectionService` (redaction fallback after key destruction).
 2. **`PartyAggregate.ProcessAsync`** (`EventStoreAggregate<PartyState>`) rehydrates `PartyState` by replaying events through `Apply(...)`, then dispatches the command to the matching static `Handle(cmd, state)`.
-3. **Handlers** (`src/Hexalith.Parties.Server/Aggregates/PartyAggregate.cs`) enforce business rules in a guard cascade (null → id validity → idempotency no-op → type/required checks → emit events), then return a `DomainResult` of `IEventPayload`s (or rejection events). Success results may carry an enriched `PartyDetail` (`PartyCommandResult` / `CompositeCommandResult`).
+3. **Handlers** (`src/Hexalith.Parties/Domain/PartyAggregate.cs`) enforce business rules in a guard cascade (null → id validity → idempotency no-op → type/required checks → emit events), then return a `DomainResult` of `IEventPayload`s (or rejection events). Success results may carry an enriched `PartyDetail` (`PartyCommandResult` / `CompositeCommandResult`).
 4. EventStore **persists** the events to the aggregate stream and **publishes** them as CloudEvents (persist-then-publish; drain/recovery guarantees at-least-once).
 
 Business-rule highlights: state-driven idempotency (`DomainResult.NoOp`), the erasure state machine (`ErasurePending → KeyDestroyed → Verified → Erased`), Art.18 restriction guards (with an Art.18(3) carve-out for consent ops), deterministic `ConsentId`, and the composite two-phase (validate-all-then-emit) with a `MaxSubOperations` cap.
@@ -176,7 +176,7 @@ EventStore owns public authn, tenant validation, and RBAC. Within `parties` (def
 
 ## 9. Cross-cutting concerns
 
-`Hexalith.Parties.ServiceDefaults` (Aspire service defaults) provides **OpenTelemetry** (logs/metrics/traces; OTLP exporter when `OTEL_EXPORTER_OTLP_ENDPOINT` is set; tracing source `"Hexalith.Parties"`), **structured JSON console logging**, **standard HTTP resilience**, **service discovery**, and the `/health` `/alive` `/ready` endpoints. The real DAPR health checks (`AddPartiesDaprHealthChecks` — sidecar, state store, pub/sub, projection actors, tenants, memories) are registered in `Program.cs`; readiness gates on sidecar + state store. `DegradedResponseMiddleware` surfaces `X-Service-Degraded` / `X-Stale-Data-Age` on degraded GETs.
+The hosts consume `Hexalith.Commons.ServiceDefaults` directly for **OpenTelemetry** (logs/metrics/traces; OTLP exporter when `OTEL_EXPORTER_OTLP_ENDPOINT` is set; tracing source `"Hexalith.Parties"`), **structured JSON console logging**, **standard HTTP resilience**, **service discovery**, and the `/health` `/alive` `/ready` endpoints. The real DAPR health checks (`AddPartiesDaprHealthChecks` — sidecar, state store, pub/sub, projection actors, tenants, memories) are registered in `Program.cs`; readiness gates on sidecar + state store. `DegradedResponseMiddleware` surfaces `X-Service-Degraded` / `X-Stale-Data-Age` on degraded GETs.
 
 **Logging discipline (privacy):** event payloads are never logged; projection logs carry only projection name + coarse counts, never party/tenant/actor ids (AC7). Personal data is `[PersonalData]`-tagged and kept out of logs.
 
@@ -197,10 +197,8 @@ src/
   Hexalith.Parties.ConsumerPortal/ # protected Consumer /me self-service RCL
   Hexalith.Parties.UI/             # Blazor Server browser UI/BFF (`parties-ui`)
   Hexalith.Parties.Mcp/            # parties-mcp host (5 tools)
-  Hexalith.Parties.ServiceDefaults/# shared Aspire defaults
   # Internal (actor host private)
-  Hexalith.Parties/                # domain service host (DI, ingress, actors, auth, projections-query)
-  Hexalith.Parties.Server/         # PartyAggregate + command handlers + validators
+  Hexalith.Parties/                # domain service host, PartyAggregate, DI, ingress, actors, auth, projections-query
   Hexalith.Parties.Projections/    # projection actors + handlers + rebuild
   Hexalith.Parties.Security/       # crypto-shredding / key management / erasure
   Hexalith.Parties.Testing/        # test utilities

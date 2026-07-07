@@ -4,7 +4,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Hexalith.Parties.Server\Hexalith.Parties.Server.csproj" />
+    <ProjectReference Include="..\..\src\Hexalith.Parties\Hexalith.Parties.csproj" />
     <ProjectReference Include="..\..\src\Hexalith.Parties.Testing\Hexalith.Parties.Testing.csproj" />
   </ItemGroup>
 

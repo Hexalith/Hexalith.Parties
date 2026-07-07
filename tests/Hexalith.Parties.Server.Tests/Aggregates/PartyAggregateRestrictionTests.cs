@@ -5,7 +5,7 @@ using Hexalith.Parties.Contracts.Commands;
 using Hexalith.Parties.Contracts.Events;
 using Hexalith.Parties.Contracts.State;
 using Hexalith.Parties.Contracts.ValueObjects;
-using Hexalith.Parties.Server.Aggregates;
+using Hexalith.Parties.Domain;
 using Hexalith.Parties.Testing;
 
 using Shouldly;

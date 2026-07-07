@@ -1,3 +1,4 @@
+using Hexalith.Commons.ServiceDefaults;
 using Hexalith.FrontComposer.Shell.Extensions;
 using Hexalith.Parties.AdminPortal.Extensions;
 using Hexalith.Parties.AdminPortal.Services;
@@ -6,7 +7,6 @@ using Hexalith.Parties.Client.AdminPortal;
 using Hexalith.Parties.Client.Extensions;
 using Hexalith.Parties.ConsumerPortal.Services;
 using Hexalith.Parties.Contracts.Authorization;
-using Hexalith.Parties.ServiceDefaults;
 using Hexalith.Parties.UI;
 using Hexalith.Parties.UI.Authentication;
 using Hexalith.Parties.UI.Components;
@@ -19,7 +19,7 @@ using Microsoft.FluentUI.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
-builder.AddServiceDefaults();
+builder.AddHexalithServiceDefaults(ConfigurePartiesServiceDefaults);
 
 // ADR-030 — ValidateScopes=true so a Singleton capturing a Scoped service fails at boot
 // (not silently leak across tenants). MUST sit on the host builder before service resolution.
@@ -199,7 +199,7 @@ if (authEnabled)
     _ = app.MapHexalithFrontComposerAuthenticationEndpoints();
 }
 
-app.MapDefaultEndpoints();
+app.MapHexalithDefaultEndpoints(ConfigurePartiesServiceDefaults);
 
 if (adminPortalE2eFixtureEnabled)
 {
@@ -216,3 +216,12 @@ if (adminPortalE2eFixtureEnabled)
 }
 
 app.Run();
+
+static void ConfigurePartiesServiceDefaults(HexalithServiceDefaultsOptions options)
+{
+    options.HealthEndpointPath = "/health";
+    options.LivenessEndpointPath = "/alive";
+    options.ReadinessEndpointPath = "/ready";
+    options.RegisterDefaultSelfCheck = false;
+    options.ActivitySourceNames.Add("Hexalith.Parties");
+}

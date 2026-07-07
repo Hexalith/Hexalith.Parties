@@ -13,10 +13,9 @@ using Hexalith.EventStore.Server.DomainServices;
 using Hexalith.Parties.Contracts;
 using Hexalith.Parties.Contracts.Commands;
 using Hexalith.Parties.Contracts.Events;
-using Hexalith.Parties.Security;
-using Hexalith.Parties.Server.Aggregates;
 using Hexalith.Parties.Contracts.Security;
 using Hexalith.Parties.Contracts.State;
+using Hexalith.Parties.Security;
 
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;

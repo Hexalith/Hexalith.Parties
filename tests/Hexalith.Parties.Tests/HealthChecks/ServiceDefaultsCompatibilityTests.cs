@@ -1,5 +1,4 @@
 using Hexalith.Commons.ServiceDefaults;
-using Hexalith.Parties.ServiceDefaults;
 
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -19,7 +18,7 @@ public sealed class ServiceDefaultsCompatibilityTests
     {
         WebApplicationBuilder builder = WebApplication.CreateBuilder();
 
-        _ = builder.AddDefaultHealthChecks();
+        _ = builder.AddHexalithDefaultHealthChecks(ConfigurePartiesServiceDefaults);
 
         using ServiceProvider provider = builder.Services.BuildServiceProvider();
         HealthCheckServiceOptions options = provider.GetRequiredService<IOptions<HealthCheckServiceOptions>>().Value;
@@ -30,10 +29,10 @@ public sealed class ServiceDefaultsCompatibilityTests
     public void MapDefaultEndpoints_MapsPartiesHealthPaths()
     {
         WebApplicationBuilder builder = WebApplication.CreateBuilder();
-        _ = builder.AddDefaultHealthChecks();
+        _ = builder.AddHexalithDefaultHealthChecks(ConfigurePartiesServiceDefaults);
         WebApplication app = builder.Build();
 
-        _ = app.MapDefaultEndpoints();
+        _ = app.MapHexalithDefaultEndpoints(ConfigurePartiesServiceDefaults);
 
         string[] routes = [.. ((IEndpointRouteBuilder)app).DataSources
             .SelectMany(static source => source.Endpoints)
@@ -68,13 +67,29 @@ public sealed class ServiceDefaultsCompatibilityTests
 
         bool traced = HexalithServiceDefaults.ShouldTraceHttpRequest(
             context,
-            static options =>
-            {
-                options.HealthEndpointPath = "/health";
-                options.LivenessEndpointPath = "/alive";
-                options.ReadinessEndpointPath = "/ready";
-            });
+            ConfigurePartiesServiceDefaults);
 
         traced.ShouldBe(expectedTraced);
+    }
+
+    [Fact]
+    public void PartiesDefaults_PreserveEndpointSelfCheckAndTelemetryOptions()
+    {
+        HexalithServiceDefaultsOptions options = HexalithServiceDefaultsOptions.Create(ConfigurePartiesServiceDefaults);
+
+        options.HealthEndpointPath.ShouldBe("/health");
+        options.LivenessEndpointPath.ShouldBe("/alive");
+        options.ReadinessEndpointPath.ShouldBe("/ready");
+        options.RegisterDefaultSelfCheck.ShouldBeFalse();
+        options.ActivitySourceNames.ShouldContain("Hexalith.Parties");
+    }
+
+    private static void ConfigurePartiesServiceDefaults(HexalithServiceDefaultsOptions options)
+    {
+        options.HealthEndpointPath = "/health";
+        options.LivenessEndpointPath = "/alive";
+        options.ReadinessEndpointPath = "/ready";
+        options.RegisterDefaultSelfCheck = false;
+        options.ActivitySourceNames.Add("Hexalith.Parties");
     }
 }

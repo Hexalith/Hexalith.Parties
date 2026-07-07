@@ -1,7 +1,7 @@
 using FluentValidation;
 
 using Hexalith.Parties.Contracts.Commands;
-using Hexalith.Parties.Server.Aggregates;
+using Hexalith.Parties.Domain;
 
 using SemanticId = Hexalith.Parties.Contracts.ValueObjects.PartyIdentifier;
 

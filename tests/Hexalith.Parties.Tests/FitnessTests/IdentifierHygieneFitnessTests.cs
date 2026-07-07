@@ -11,7 +11,7 @@ public sealed class IdentifierHygieneFitnessTests
     {
         string root = RepositoryRoot.Locate();
         string validationRoot = Path.Combine(root, "src", "Hexalith.Parties", "Validation");
-        string aggregatePath = Path.Combine(root, "src", "Hexalith.Parties.Server", "Aggregates", "PartyAggregate.cs");
+        string aggregatePath = Path.Combine(root, "src", "Hexalith.Parties", "Domain", "PartyAggregate.cs");
 
         string[] sourceFiles =
         [

@@ -13,7 +13,7 @@ using Hexalith.Parties.Contracts.ValueObjects;
 
 using SemanticId = Hexalith.Parties.Contracts.ValueObjects.PartyIdentifier;
 
-namespace Hexalith.Parties.Server.Aggregates;
+namespace Hexalith.Parties.Domain;
 
 public sealed class PartyAggregate : EventStoreAggregate<PartyState> {
     private const int DefaultMaxSubOperations = 100;

@@ -86,7 +86,7 @@ _This file contains critical rules and patterns that AI agents must follow when 
 - One discriminated aggregate: **`Party` with `PartyType` (Person | Organization)** — never a class
   hierarchy/subtype per kind.
 - Command handlers are **static `Handle(command, state)` methods** in
-  `Hexalith.Parties.Server/Aggregates/PartyAggregate.cs`. Follow the existing **guard cascade**:
+  `Hexalith.Parties/Domain/PartyAggregate.cs`. Follow the existing **guard cascade**:
   null → id validity → **idempotency no-op (`DomainResult.NoOp`)** → type/required checks → emit events.
   Return a `DomainResult` of `IEventPayload`s (or rejection events) — handlers never mutate state directly.
 - **Validation runs before the handler**: add a FluentValidation validator in `Hexalith.Parties/Validation/`;
@@ -177,7 +177,7 @@ _This file contains critical rules and patterns that AI agents must follow when 
   | To change… | Edit… |
   |---|---|
   | command / event / value-object / read-model shape | `Hexalith.Parties.Contracts/{Commands,Events,ValueObjects,Models}` |
-  | business rules & validation | `Hexalith.Parties.Server/Aggregates/PartyAggregate.cs` + `Hexalith.Parties/Validation/` |
+  | business rules & validation | `Hexalith.Parties/Domain/PartyAggregate.cs` + `Hexalith.Parties/Validation/` |
   | read models / projections / search | `Hexalith.Parties.Projections/` + `Hexalith.Parties/Queries/` |
   | public client surface | `Hexalith.Parties.Client/` |
   | MCP tools | `Hexalith.Parties.Mcp/Tools/` |
@@ -190,7 +190,9 @@ _This file contains critical rules and patterns that AI agents must follow when 
   by a fitness test.
 - **The adopter-facing vs internal split is real and is *not* the same as `IsPackable`.** Consumer-referenced
   surface: `Client` + `Contracts` (public shape pinned by `*.Tests/Package` PackageTests), the three UI RCLs
-  `Picker` / `AdminPortal` / `ConsumerPortal` (explicit `PackageId`), and `ServiceDefaults` (optional helpers).
+  `Picker` / `AdminPortal` / `ConsumerPortal` (explicit `PackageId`). Story 8.4 retired the
+  local `Hexalith.Parties.ServiceDefaults` wrapper; service-default consumers use
+  `Hexalith.Commons.ServiceDefaults` directly.
   `Mcp` is a **deployable host** (`parties-mcp`), not a referenced library. **Internal** (README-marked, even
   though packable-by-default): `Server`, `Projections`, `Security`, `Testing`, plus the `Hexalith.Parties`
   actor host and the `Hexalith.Parties.UI` host. Don't reference internal projects from consumer-facing code,
