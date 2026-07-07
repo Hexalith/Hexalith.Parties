@@ -49,7 +49,7 @@ validation-rules:
 
 ## 📝 Documentation & Tracking
 
-- [ ] **File List Complete:** File List includes EVERY new, modified, or deleted file (paths relative to repo root)
+- [ ] **File List Reconciled (gated):** `python3 {project-root}/_bmad/scripts/check_file_list.py --story <file> --require-file-list` exits 0 — every file changed since `baseline_commit` is listed (no UNDECLARED); phantom entries resolved or intentionally justified
 - [ ] **Dev Agent Record Updated:** Contains relevant Implementation Notes and/or Debug Log for this work
 - [ ] **Change Log Updated:** Change Log includes clear summary of what changed and why
 - [ ] **Review Follow-ups:** All review follow-up tasks (marked [AI-Review]) completed and corresponding review items marked resolved (if applicable)

@@ -35,6 +35,13 @@ Run the focused lane first, then broaden only when the changed surface justifies
 .\scripts\test.ps1 -Lane coverage
 ```
 
+When triaging a blocked lane, add `-ContinueOnFailure` so the run reports every failing project (with a PASS/FAIL summary and exit 1) instead of stopping at the first. Add `-ResultsDirectory TestResults` for inspectable per-project TRX output, and `-Properties <k=v>,<k=v>` to forward build/restore properties such as `MinVerVersionOverride=1.0.0` or `UseHexalithProjectReferences=true`. The default behavior (no `-ContinueOnFailure`) stays fail-fast. See [`docs/development-guide.md`](../docs/development-guide.md) for the full fallback validation ladder.
+
+```powershell
+# Run the whole lane, report every failing project, emit inspectable TRX
+.\scripts\test.ps1 -Lane all -ContinueOnFailure -ResultsDirectory TestResults
+```
+
 Direct `dotnet test` must target an individual test project:
 
 ```powershell

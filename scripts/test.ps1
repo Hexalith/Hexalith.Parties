@@ -2,12 +2,33 @@ param(
     [ValidateSet("unit", "integration", "topology", "deploy", "all", "coverage")]
     [string] $Lane = "unit",
 
-    [string] $Configuration = "Release"
+    [string] $Configuration = "Release",
+
+    # Continue running every project in the lane even after one fails, then report
+    # all failing projects in a single summary. Without this switch the lane keeps
+    # the historical fail-fast behavior (stops at the first failing project).
+    [switch] $ContinueOnFailure,
+
+    # Emit an inspectable TRX result file per project into this directory (local
+    # parity with the CI shards). Relative paths resolve against the repository root.
+    [string] $ResultsDirectory,
+
+    # MSBuild properties forwarded to each dotnet test invocation as -p:<value>,
+    # e.g. -Properties UseHexalithProjectReferences=true,UseNuGetDeps=false.
+    [string[]] $Properties = @()
 )
 
 $ErrorActionPreference = "Stop"
 
 $RepositoryRoot = Split-Path -Parent $PSScriptRoot
+
+if ($ResultsDirectory) {
+    if (-not [System.IO.Path]::IsPathRooted($ResultsDirectory)) {
+        $ResultsDirectory = Join-Path $RepositoryRoot $ResultsDirectory
+    }
+
+    New-Item -ItemType Directory -Force -Path $ResultsDirectory | Out-Null
+}
 
 function Invoke-TestProject {
     param(
@@ -27,10 +48,22 @@ function Invoke-TestProject {
         "minimal"
     ) + $AdditionalArguments
 
-    & dotnet @arguments
-    if ($LASTEXITCODE -ne 0) {
-        throw "dotnet test failed for $ProjectPath with exit code $LASTEXITCODE."
+    if ($ResultsDirectory) {
+        $projectName = [System.IO.Path]::GetFileNameWithoutExtension($ProjectPath)
+        $arguments += @(
+            "--logger",
+            "trx;LogFileName=$projectName.trx",
+            "--results-directory",
+            $ResultsDirectory
+        )
     }
+
+    foreach ($property in $Properties) {
+        $arguments += "-p:$property"
+    }
+
+    & dotnet @arguments
+    return $LASTEXITCODE
 }
 
 $unitProjects = @(
@@ -84,35 +117,49 @@ function Assert-TestProjectInventory {
 
 Assert-TestProjectInventory
 
-switch ($Lane) {
-    "unit" {
-        foreach ($project in $unitProjects) {
-            Invoke-TestProject -ProjectPath $project
-        }
+$laneProjects = switch ($Lane) {
+    "unit" { $unitProjects }
+    "integration" { $integrationProjects }
+    "topology" { $topologyProjects }
+    "deploy" { $deployProjects }
+    "all" { $allProjects }
+    "coverage" { $allProjects }
+}
+
+$additionalArguments = @()
+if ($Lane -eq "coverage") {
+    $additionalArguments = @("--collect", "XPlat Code Coverage")
+}
+
+$results = @()
+foreach ($project in $laneProjects) {
+    $exitCode = Invoke-TestProject -ProjectPath $project -AdditionalArguments $additionalArguments
+    $results += [pscustomobject]@{
+        Project  = $project
+        ExitCode = $exitCode
+        Passed   = ($exitCode -eq 0)
     }
-    "integration" {
-        foreach ($project in $integrationProjects) {
-            Invoke-TestProject -ProjectPath $project
-        }
+
+    if ($exitCode -ne 0 -and -not $ContinueOnFailure) {
+        throw "dotnet test failed for $project with exit code $exitCode."
     }
-    "topology" {
-        foreach ($project in $topologyProjects) {
-            Invoke-TestProject -ProjectPath $project
-        }
+}
+
+$failedResults = @($results | Where-Object { -not $_.Passed })
+
+if ($ContinueOnFailure) {
+    Write-Host ""
+    Write-Host "Lane '$Lane' result summary ($($results.Count) project(s)):"
+    foreach ($result in $results) {
+        $status = if ($result.Passed) { "PASS" } else { "FAIL ($($result.ExitCode))" }
+        Write-Host ("  {0,-9} {1}" -f $status, $result.Project)
     }
-    "deploy" {
-        foreach ($project in $deployProjects) {
-            Invoke-TestProject -ProjectPath $project
-        }
+    Write-Host ""
+
+    if ($failedResults.Count -gt 0) {
+        Write-Host "$($failedResults.Count) of $($results.Count) project(s) failed."
+        exit 1
     }
-    "all" {
-        foreach ($project in $allProjects) {
-            Invoke-TestProject -ProjectPath $project
-        }
-    }
-    "coverage" {
-        foreach ($project in $allProjects) {
-            Invoke-TestProject -ProjectPath $project -AdditionalArguments @("--collect", "XPlat Code Coverage")
-        }
-    }
+
+    Write-Host "All $($results.Count) project(s) passed."
 }

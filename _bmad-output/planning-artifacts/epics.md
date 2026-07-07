@@ -1666,10 +1666,12 @@ so that Parties keeps only domain folds, query semantics, and tenant guardrails.
 **And** Dapr projection/query actors, actor companion sequence keys, rebuild service,
 platform adapters, and `catch (NotImplementedException)` remoting control flow are
 deleted only after parity proves duplicate/out-of-order delivery, replay-from-zero,
-stale/degraded fallback, erased-party exclusion, GDPR processing-record reads, and
-rollback safety.
+stale/degraded fallback, erased-party exclusion, GDPR processing-record reads,
+rebuild behavior verified against aggregate replay, and a proven rollback replacement
+for the EventStore SDK path (not merely local rollback safety).
 
-**And** a full projection rebuild is executed and verified against aggregate replay.
+**And** a full projection rebuild is executed and verified against aggregate replay
+before any local projection/query/rebuild code is deleted.
 
 ### Story 8.7: Data-protection extraction
 

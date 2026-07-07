@@ -1,5 +1,5 @@
 # generated: 2026-06-21T18:55:59+02:00
-# last_updated: 2026-07-07T18:53:31+02:00
+# last_updated: 2026-07-07T20:15:00+02:00
 # project: parties
 # project_key: NOKEY
 # tracking_system: file-system
@@ -41,7 +41,7 @@
 # - Retrospective appends its action items to action_items; sprint-status surfaces open ones
 
 generated: 2026-06-21T18:55:59+02:00
-last_updated: 2026-07-07T18:53:31+02:00
+last_updated: 2026-07-07T22:52:52+02:00
 project: parties
 project_key: NOKEY
 tracking_system: file-system
@@ -151,6 +151,12 @@ development_status:
   8-8-client-mcp-apphost-build-and-deploy-cleanup: backlog
   8-9-ui-frontcomposer-and-fluent-consolidation: backlog
   8-10-final-readiness-documentation-and-retirement-gate: backlog
+  # Added by Correct Course 2026-07-07
+  # (sprint-change-proposal-2026-07-07-validation-ladder-runner.md).
+  # QA/tooling maintenance story; independent of the 8.6-8.10 deletion sequence
+  # and the Story 8.3 platform-prerequisite gate. Closes the two spec-8-1 runner
+  # deferred-work entries and the Epic 6/7 fallback-ladder action items.
+  8-11-validation-fallback-ladder-runner-and-guidance: done
   epic-8-retrospective: optional
 
 action_items:
@@ -161,7 +167,9 @@ action_items:
   - epic: 6
     action: "Document the standard fallback validation ladder for this repo: direct xUnit v3 assemblies, serialized -m:1 builds, and focused project builds when dotnet test or solution build is environment-blocked."
     owner: "Murat (Test Architect)"
-    status: in-progress
+    # Done 2026-07-07 via Story 8-11: the ladder is named in docs/development-guide.md
+    # and enforced by scripts/test.ps1 (-ContinueOnFailure/-ResultsDirectory/-Properties).
+    status: done
   - epic: 6
     action: "Require producer/consumer compatibility tests for serializer, projection, gateway, and shared-anchor migrations before marking stories done."
     owner: "Winston (Architect) + Amelia (Developer)"
@@ -185,12 +193,30 @@ action_items:
   - epic: 7
     action: "Turn the validation fallback ladder into durable tooling guidance and runner support, including continue-after-failure reporting and inspectable result output."
     owner: "Murat (Test Architect)"
-    status: open
+    # Done 2026-07-07 via Story 8-11
+    # (sprint-change-proposal-2026-07-07-validation-ladder-runner.md): runner
+    # continue-after-failure + summary, inspectable TRX output, property forwarding,
+    # and CI within-shard continue-after-failure. Two spec-8-1 deferred-work entries closed.
+    status: done
   - epic: 7
+    # Formalized 2026-07-07 as a governed deletion guardrail with exit criteria:
+    #   sprint-change-proposal-2026-07-07-projection-rollback-retention.md.
+    # Stays `open` until Story 8.6 records parity (I9), processing-record reads (I8),
+    # rebuild-vs-replay (I10), and proven rollback (I3) in the 8.3 matrix row.
+    # Verified 2026-07-07: all rollback-only projection/query files intact; 8.6 backlog.
     action: "Keep projection rollback-only paths until Epic 8 proves EventStore SDK projection/query parity, GDPR processing-record reads, rebuild behavior, and rollback replacement."
     owner: "Winston (Architect) + Amelia (Developer)"
     status: open
   - epic: 7
+    # Formalized 2026-07-07 as a governed deletion guardrail with exit criteria:
+    #   sprint-change-proposal-2026-07-07-crypto-key-management-retention.md.
+    # Stays `open` until the Story 8.7 parity harness records payload/format parity,
+    # typed-unreadable outcomes + no-leak diagnostics, Art.20 export + Art.30
+    # processing-record semantics, erasure certificate/report parity, and proven
+    # rollback (spine I8/I3) in the 8.3 matrix G5 row; routed to Hexalith.EventStore
+    # owners as G5. Verified 2026-07-07: all 18 spec-8-7 MOVE-listed
+    # src/Hexalith.Parties.Security crypto/key files (+ 5 KEEP domain files + the
+    # EventStorePartyPayloadProtectionAdapter seam) intact; spec-8-7 backlog + blocked-prerequisite.
     action: "Keep Parties crypto/key-management implementation until an approved shared provider proves payload compatibility, typed unreadable outcomes, no-leak diagnostics, exports, processing records, certificates, and rollback."
     owner: "Winston (Architect) + Amelia (Developer)"
     status: open
@@ -201,4 +227,35 @@ action_items:
   - epic: 7
     action: "Keep PRD, epics, and readiness docs explicit that Epics 7 and 8 are maintenance scope with no new PRD functional coverage."
     owner: "Paige (Technical Writer)"
+    status: open
+  # ── Epic 8 platform-API prerequisite routing to owners ───────────────────
+  # Added by Correct Course 2026-07-07
+  # (sprint-change-proposal-2026-07-07-platform-prerequisite-routing.md).
+  # Routes the Story 8.3 matrix prerequisites to their owner repos so 8.6-8.10
+  # dev stays blocked until each owner row is delivered and proof is recorded in
+  # story-8-3-platform-api-prerequisite-matrix.md. G12 is sequenced first: it is
+  # the only `blocked` matrix row and hard-blocks Stories 8.8 and 8.10.
+  - epic: 8
+    action: "PRIORITY (G12, only `blocked` 8.3 row): route to Commons + Tenants release owners a decision to publish Hexalith.Commons.Http, Hexalith.Commons.ServiceDefaults, Hexalith.Tenants.Client, Hexalith.Tenants.Testing, OR bless source-mode CI. Hard-blocks 8.8/8.10 and the Story 8.1 package-mode build. Sequence first."
+    owner: "Winston (Architect) + Hexalith.Commons & Hexalith.Tenants release owners"
+    status: open
+  - epic: 8
+    action: "Route EventStore additive-API prerequisites to Hexalith.EventStore owners: projection/query parity (G3 erasure hooks, G10 index batching, G6 freshness) for 8.6; additive shared payload-protection engine package (G5: pdenc-v2 + json+pdenc-v1 read, IPersonalDataPolicy, IErasureStateProvider, golden harness) for 8.7; client envelope/freshness/error-code adapter (G6) for 8.6/8.8; degraded-response + AddEventStoreDaprHealthChecks parity (G1/G2) for 8.8. Additive/approved before any Parties deletion."
+    owner: "Winston (Architect) + Hexalith.EventStore owners"
+    status: open
+  - epic: 8
+    action: "Route G8 Aspire publish helpers to Hexalith.EventStore.Aspire + AppHost owners: WithEventStoreJwtAuthentication(audience) (or documented WithJwtBearerSecurity(..., audience) replacement) + granular typed-client registration; confirm the Parties AppHost topology/deploy owner. Blocks 8.8."
+    owner: "Winston (Architect) + Hexalith.EventStore.Aspire & AppHost owners"
+    status: open
+  - epic: 8
+    action: "Confirm G7/G9 tenant-claims ownership (architecture-owner decision): EventStore owns the reusable claims transformation + public `eventstore:tenant` constant, plus additive AggregateIdentity.IsValid(string) (EventStore.Contracts) and UniqueIdHelper.IsValidUlid(string) (Commons) predicates — or an explicit redirect — before Parties deletes Hexalith.Parties.Authentication. Blocks 8.4-deletion/8.8."
+    owner: "Winston (Architect) + Hexalith.EventStore & Hexalith.Commons owners"
+    status: open
+  - epic: 8
+    action: "Route G4 + G11 to Hexalith.FrontComposer (+ Commons): additive FcEntityPicker<T>, per-record freshness indicator, live-region politeness, file/JSON download service, typed-name destructive dialog, skip links (G4, blocks 8.9); MCP auth + tenant header relay, EventStore Admin UI deep-link builder, search-capability health probe (G11, blocks 8.8)."
+    owner: "Sally (UX Designer) + Winston (Architect) + Hexalith.FrontComposer owners"
+    status: open
+  - epic: 8
+    action: "Validate the four `available` 8.3 rows at consumption (no additive API needed): EventStore domain-service host (8.5-proven), EventStore DataProtection, Commons HTTP helpers, Builds shared props/targets each need release or submodule-pin availability recorded in the matrix row before 8.6/8.8/8.10 consume them."
+    owner: "Murat (Test Architect) + respective owners"
     status: open

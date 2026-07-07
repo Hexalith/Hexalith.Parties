@@ -17,7 +17,7 @@
 |---|---|
 | **Build** | `dotnet build Hexalith.Parties.slnx -c Release` (warnings-as-errors) |
 | **Run** | `dotnet aspire run --project src/Hexalith.Parties.AppHost` |
-| **Test** | `pwsh -NoProfile -File scripts/test.ps1 -Lane {unit\|integration\|topology\|deploy\|all\|coverage}` or `dotnet test tests/<Project>/<Project>.csproj` |
+| **Test** | `pwsh -NoProfile -File scripts/test.ps1 -Lane {unit\|integration\|topology\|deploy\|all\|coverage}` or `dotnet test tests/<Project>/<Project>.csproj`. Blocked-lane triage: add `-ContinueOnFailure` (report every failing project) and `-ResultsDirectory TestResults` (inspectable TRX) — see the fallback validation ladder in [development-guide.md](./development-guide.md) |
 | **Entry points** | AppHost `Program.cs` (dev) · `Hexalith.Parties/Program.cs` → `/process` · `Hexalith.Parties.Mcp/Program.cs` → `/mcp` |
 | **Domain logic** | `src/Hexalith.Parties/Domain/PartyAggregate.cs` |
 | **Prereqs** | .NET 10 SDK 10.0.301, Docker Desktop; root build submodules under `references/` |

@@ -11,7 +11,7 @@ Hexalith.Parties uses GitHub Actions for the main quality pipeline in `.github/w
 ## Jobs
 
 - `lint`: checks out root-repository submodules under `references/`, restores the solution, runs a Release build with analyzers, and runs the Story 9.8 build-gate regression guard (`scripts/check-no-warning-override.sh`). See [`docs/build-gate.md`](build-gate.md) for the gate policy.
-- `test`: runs the 15 .NET test projects in four matrix shards with `fail-fast: false`; each project is executed by path with `dotnet test <projectPath>`.
+- `test`: runs the 15 .NET test projects in four matrix shards with `fail-fast: false`; each project is executed by path with `dotnet test <projectPath>`. Within a shard the loop continues after a failing project, records a PASS/FAIL row per project in the job step summary, and fails the step at the end if any project failed — so one run reports every failing project instead of stopping at the first blocker.
 - `ui-a11y`: builds the UI project and UI bUnit test project sequentially, runs the UI test project by path, then runs the Playwright accessibility workspace.
 - `contract-test`: runs Pact.js contract scripts when they exist. Until the Pact framework is scaffolded, the job records a readiness gap in the GitHub step summary.
 - `Quality Gate`: fails the workflow unless lint/build, test shards, and UI accessibility pass, and contract tests either pass or are intentionally skipped.
@@ -33,6 +33,12 @@ dotnet restore Hexalith.Parties.slnx
 dotnet build Hexalith.Parties.slnx --configuration Release --no-restore -m:1 -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0
 pwsh -NoProfile -File scripts/test.ps1 -Lane unit -Configuration Release
 pwsh -NoProfile -File scripts/test.ps1 -Lane all -Configuration Release
+```
+
+To reproduce the CI shard evidence locally — continue past a failing project and write inspectable TRX + coverage output — add `-ContinueOnFailure -ResultsDirectory TestResults`:
+
+```powershell
+pwsh -NoProfile -File scripts/test.ps1 -Lane all -ContinueOnFailure -ResultsDirectory TestResults
 ```
 
 CI installs .NET SDK `10.0.301` with `actions/setup-dotnet`, matching `global.json`.

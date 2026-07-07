@@ -71,13 +71,20 @@ story_key: '' # set at runtime when discovered from sprint status
 
 5. If `{review_mode}` = `"full"` and the file at `{spec_file}` has a `context` field in its frontmatter listing additional docs, load each referenced document. Warn the user about any docs that cannot be found.
 
-6. Sanity check: if `{diff_output}` exceeds approximately 3000 lines, warn the user and offer to chunk the review by file group.
+6. **File List reconciliation gate (pre-review).** If `{spec_file}` is set and its frontmatter has a `baseline_commit`, run:
+   `python3 {project-root}/_bmad/scripts/check_file_list.py --story {spec_file}`
+   (omit `--require-file-list` here — a missing File List downgrades to a warning, since the review can still proceed).
+   - **Exit 1 (UNDECLARED files — changed but not in the File List):** the diff under review is broader than the story claims. Surface the undeclared paths prominently in the CHECKPOINT and ask the user to confirm scope before proceeding — these files would otherwise be reviewed with no story traceability.
+   - **Phantom / missing-File-List warnings:** report in the CHECKPOINT summary, non-blocking.
+   - If version control is unavailable or `{review_mode}` = `"no-spec"`, skip this gate.
+
+7. Sanity check: if `{diff_output}` exceeds approximately 3000 lines, warn the user and offer to chunk the review by file group.
    - If the user opts to chunk: agree on the first group, narrow `{diff_output}` accordingly, and list the remaining groups for the user to note for follow-up runs.
    - If the user declines: proceed as-is with the full diff.
 
 ### CHECKPOINT
 
-Present a summary before proceeding: diff stats (files changed, lines added/removed), `{review_mode}`, and loaded spec/context docs (if any). HALT and wait for user confirmation to proceed.
+Present a summary before proceeding: diff stats (files changed, lines added/removed), `{review_mode}`, loaded spec/context docs (if any), and the **File List gate result** (reconciled / N undeclared / N phantom, or "skipped — no spec"). HALT and wait for user confirmation to proceed.
 
 
 ## NEXT

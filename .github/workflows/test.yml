@@ -233,6 +233,17 @@ jobs:
           set -euo pipefail
           mkdir -p "TestResults/$TEST_SHARD_NAME"
 
+          {
+            echo "## Test shard: $TEST_SHARD_NAME"
+            echo ""
+            echo "| Project | Result |"
+            echo "| --- | --- |"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          failed_projects=()
+
+          # Continue after a failing project so one run reports every failing
+          # project in the shard instead of stopping at the first blocker.
           while IFS= read -r project; do
             if [ -z "$project" ]; then
               continue
@@ -240,12 +251,23 @@ jobs:
 
             project_name="$(basename "$project" .csproj)"
             echo "Running $project_name"
-            dotnet test "$project" \
+            if dotnet test "$project" \
               --configuration Release \
               --logger "trx;LogFileName=$project_name.trx" \
               --results-directory "TestResults/$TEST_SHARD_NAME" \
-              --collect "XPlat Code Coverage"
+              --collect "XPlat Code Coverage"; then
+              echo "| $project_name | PASS |" >> "$GITHUB_STEP_SUMMARY"
+            else
+              echo "::error::Test project failed: $project_name"
+              echo "| $project_name | FAIL |" >> "$GITHUB_STEP_SUMMARY"
+              failed_projects+=("$project_name")
+            fi
           done <<< "$TEST_PROJECTS"
+
+          if [ "${#failed_projects[@]}" -gt 0 ]; then
+            echo "${#failed_projects[@]} test project(s) failed in shard ${TEST_SHARD_NAME}: ${failed_projects[*]}"
+            exit 1
+          fi
 
       - name: Upload test artifacts
         if: always()

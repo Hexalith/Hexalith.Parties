@@ -411,7 +411,12 @@ Activation is complete. If `activation_steps_prepend` or `activation_steps_appen
   <step n="9" goal="Story completion and mark for review" tag="sprint-status">
     <action>Verify ALL tasks and subtasks are marked [x] (re-scan the story document now)</action>
     <action>Run the full regression suite (do not skip)</action>
-    <action>Confirm File List includes every changed file</action>
+    <action>Run the File List reconciliation gate (fail-closed):
+      `python3 {project-root}/_bmad/scripts/check_file_list.py --story <story-file> --require-file-list`
+      This compares `git diff --name-only` (committed + working-tree + untracked, since the frontmatter
+      `baseline_commit`) against the story's `### File List`.
+      - Exit 1 with UNDECLARED files → HALT: add those files to the File List (or revert them if not story work).
+      - Phantom warnings (listed but not changed) → remove the stale entries unless intentionally documented.</action>
     <action>Execute enhanced definition-of-done validation</action>
     <action>Update the story Status to: "review"</action>
 
@@ -455,7 +460,7 @@ Activation is complete. If `activation_steps_prepend` or `activation_steps_appen
     <!-- Final validation gates -->
     <action if="any task is incomplete">HALT - Complete remaining tasks before marking ready for review</action>
     <action if="regression failures exist">HALT - Fix regression issues before completing</action>
-    <action if="File List is incomplete">HALT - Update File List with all changed files</action>
+    <action if="check_file_list.py exits non-zero">HALT - reconcile the File List with git diff (see gate output) before marking review</action>
     <action if="definition-of-done validation fails">HALT - Address DoD failures before completing</action>
   </step>
 

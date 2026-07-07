@@ -90,6 +90,31 @@ dotnet test tests/Hexalith.Parties.Server.Tests/Hexalith.Parties.Server.Tests.cs
 | `all` | all 15 .NET test projects, executed one project at a time |
 | `coverage` | all 15 .NET test projects, executed one project at a time with `--collect "XPlat Code Coverage"` |
 
+### Fallback validation ladder
+
+When the full solution build or `dotnet test` is environment-blocked, do not record validation as blocked until you have climbed this ladder. Each rung produces focused evidence; record which rung ran, which broader gate is still blocked, and the exact blocker.
+
+1. **Focused lane / per-project run** — `scripts/test.ps1 -Lane <lane>` (or `dotnet test <projectPath>`). Never solution-level `dotnet test`.
+2. **Direct xUnit v3 assembly filter** — build the target project, then run its built `.dll` directly with single-dash `-class`/`-method` (project-level `dotnet test --filter` silently runs zero tests under Microsoft.Testing.Platform; see below).
+3. **Serialized `-m:1` build for release-blocker triage** — makes the first failing project visible (`dotnet build … -m:1 -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0`).
+4. **Property pins for known environment blockers** — `-p:MinVerVersionOverride=1.0.0` (no git tags → version skew), `-p:NuGetAudit=false` (offline audit noise), and source-mode *diagnostic only* `-p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false` when unpublished Hexalith packages block a package-mode restore.
+5. **Record the exact broad-gate blocker** — package NuGet-network (`api.nuget.org:443`), submodule gitlink drift, UI accessibility, or deploy — with the command, observed result, and required owner/environment. Never weaken a gate to hide a blocker.
+
+The lane runner supports climbing rungs 1, 4, and 5 in one pass so a single run reports every failing project instead of stopping at the first:
+
+```bash
+# Continue past a failing project and print a PASS/FAIL summary for the whole lane (exit 1 if any failed)
+pwsh -NoProfile -File scripts/test.ps1 -Lane all -ContinueOnFailure
+
+# Emit an inspectable TRX per project (local parity with the CI shards)
+pwsh -NoProfile -File scripts/test.ps1 -Lane all -ContinueOnFailure -ResultsDirectory TestResults
+
+# Forward build/restore properties for a blocked lane (comma-separated; each becomes -p:<value>)
+pwsh -NoProfile -File scripts/test.ps1 -Lane unit -Properties MinVerVersionOverride=1.0.0,NuGetAudit=false
+```
+
+Without `-ContinueOnFailure` the lane keeps its fail-fast behavior and stops at the first failing project. `-ResultsDirectory` accepts a repo-relative path.
+
 xUnit v3 runs under Microsoft.Testing.Platform here. Project-level `dotnet test --filter` can silently run zero tests, so filter focused reruns by invoking the built test executable directly with xUnit v3 single-dash arguments:
 
 ```bash
