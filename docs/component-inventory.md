@@ -91,11 +91,12 @@ The `parties-ui` host registers scoped adapters for those ports and delegates to
 | `FreshnessStatus.razor` | Display | dot plus text freshness indicator with polite live-region semantics |
 | `ProfileField.razor` | Display | reusable profile label/value rendering |
 
-## Test projects (15 folders; 14 .NET test projects + Playwright e2e)
+## Test projects (15 .NET test projects + Playwright e2e)
 
 | Project | Type | Coverage |
 |---------|------|----------|
 | `Contracts.Tests` | unit + public-API snapshot | search/security/privacy contracts, GDPR & read-only surface, API snapshot, party state |
+| `Authentication.Tests` | unit | party-id claim resolution, claims transformation, and authentication boundary helpers |
 | `Client.Tests` | unit + fitness | HTTP command/query clients, DI, exceptions, AdminPortal client, packaging |
 | `Server.Tests` | unit | `PartyAggregate` create/update/lifecycle/erasure/consent/contact/composite/identifier |
 | `Projections.Tests` | unit | detail/index handlers, name-history, rejection fitness, event-type resolver |
@@ -113,5 +114,5 @@ The `parties-ui` host registers scoped adapters for those ports and delegates to
 
 ## External dependencies (submodules / packages)
 
-- **Project-ref submodules** (repository-level, checked out under `references/` and still referenced by project path, not NuGet): `references/Hexalith.EventStore` (gateway, persistence, publishing, `AggregateActor`, `EventStoreAggregate<TState>`), `references/Hexalith.Tenants` (tenant authority + client subscription/projection), optional `references/Hexalith.Memories` (rich search), `references/Hexalith.FrontComposer` (AdminPortal shell host), `references/Hexalith.Commons`.
+- **Root submodules** (repository-level, checked out under `references/`, never initialized recursively): `references/Hexalith.Builds` (shared build props/packages), `references/Hexalith.Commons` (shared service defaults and unique IDs), `references/Hexalith.EventStore` (gateway, persistence, publishing, `AggregateActor`, `EventStoreAggregate<TState>`), `references/Hexalith.FrontComposer` (AdminPortal shell host), `references/Hexalith.PolymorphicSerializations` (serialization/source-generator projects in the solution), and `references/Hexalith.Tenants` (tenant authority + client subscription/projection). `references/Hexalith.Memories` is optional for rich search.
 - **NuGet** (key): Aspire 13.4 (AppHost SDK 13.3.3), DAPR 1.17.9/1.18.0-rc02, FluentValidation 12.1.1, MediatR 14.1.0, FluentUI 5.0-rc.3, ModelContextProtocol 1.3.0, `Hexalith.Memories.Client.Rest` 1.29.0. Full list with versions in [architecture.md §3](architecture.md).

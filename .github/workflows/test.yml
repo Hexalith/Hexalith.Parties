@@ -33,10 +33,123 @@ jobs:
           fetch-depth: 0
           submodules: true
 
+      - name: Verify test project inventory
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          import sys
+
+          from collections import Counter
+
+          expected = sorted(str(path).replace("\\", "/") for path in Path("tests").rglob("*.csproj"))
+          pattern = "tests/" + r"""[A-Za-z0-9._/-]+\.csproj"""
+          failed = False
+
+          def test_matrix_projects(workflow_text):
+              projects = []
+              in_test_job = False
+              in_strategy = False
+              in_matrix = False
+              in_include = False
+              in_projects_block = False
+
+              for line in workflow_text.splitlines():
+                  stripped = line.strip()
+                  indent = len(line) - len(line.lstrip(" "))
+
+                  if line.startswith("  ") and not line.startswith("    ") and line.strip().endswith(":"):
+                      in_test_job = line.strip() == "test:"
+                      in_strategy = False
+                      in_matrix = False
+                      in_include = False
+                      in_projects_block = False
+                      continue
+
+                  if not in_test_job:
+                      continue
+
+                  if indent == 4 and stripped == "strategy:":
+                      in_strategy = True
+                      in_matrix = False
+                      in_include = False
+                      in_projects_block = False
+                      continue
+
+                  if indent <= 4 and stripped and stripped != "strategy:":
+                      in_strategy = False
+                      in_matrix = False
+                      in_include = False
+                      in_projects_block = False
+
+                  if in_strategy and indent == 6 and stripped == "matrix:":
+                      in_matrix = True
+                      in_include = False
+                      in_projects_block = False
+                      continue
+
+                  if in_matrix and indent == 8 and stripped == "include:":
+                      in_include = True
+                      in_projects_block = False
+                      continue
+
+                  if in_include and re.match(r"\s+projects:\s*\|\s*$", line):
+                      in_projects_block = True
+                      continue
+
+                  if in_projects_block:
+                      match = re.match(r"\s+(tests/[A-Za-z0-9._/-]+\.csproj)\s*$", line)
+                      if match:
+                          projects.append(match.group(1))
+                          continue
+
+                      if line.strip():
+                          in_projects_block = False
+
+              return projects
+
+          def powershell_lane_projects(script_text):
+              projects = []
+              for variable in ("unitProjects", "integrationProjects", "topologyProjects", "deployProjects"):
+                  match = re.search(rf"^\${variable}\s*=\s*@\((?P<body>.*?)^\)", script_text, re.MULTILINE | re.DOTALL)
+                  if not match:
+                      raise ValueError(f"could not find ${variable} array in scripts/test.ps1")
+                  body = re.sub(r"<#[\s\S]*?#>", "", match.group("body"))
+                  body = "\n".join(line.split("#", 1)[0] for line in body.splitlines())
+                  projects.extend(re.findall(pattern, body))
+              return projects
+
+          for source in ("scripts/test.ps1", ".github/workflows/test.yml"):
+              text = Path(source).read_text(encoding="utf-8")
+              try:
+                  paths = test_matrix_projects(text) if source == ".github/workflows/test.yml" else powershell_lane_projects(text)
+              except ValueError as error:
+                  failed = True
+                  print(str(error), file=sys.stderr)
+                  continue
+              actual = sorted(set(paths))
+              duplicates = sorted(path for path, count in Counter(paths).items() if count > 1)
+              if actual != expected or duplicates:
+                  failed = True
+                  missing = sorted(set(expected) - set(actual))
+                  extra = sorted(set(actual) - set(expected))
+                  print(f"{source} test project inventory mismatch", file=sys.stderr)
+                  if duplicates:
+                      print("  duplicate: " + ", ".join(duplicates), file=sys.stderr)
+                  if missing:
+                      print("  missing: " + ", ".join(missing), file=sys.stderr)
+                  if extra:
+                      print("  extra: " + ", ".join(extra), file=sys.stderr)
+
+          if failed:
+              sys.exit(1)
+          PY
+
       - name: Setup .NET
         uses: actions/setup-dotnet@v5
         with:
-          dotnet-version: 10.0.300
+          dotnet-version: 10.0.301
 
       - name: Cache NuGet packages
         uses: actions/cache@v5
@@ -68,6 +181,7 @@ jobs:
           - name: contracts-client-security-mcp
             projects: |
               tests/Hexalith.Parties.Contracts.Tests/Hexalith.Parties.Contracts.Tests.csproj
+              tests/Hexalith.Parties.Authentication.Tests/Hexalith.Parties.Authentication.Tests.csproj
               tests/Hexalith.Parties.Client.Tests/Hexalith.Parties.Client.Tests.csproj
               tests/Hexalith.Parties.Security.Tests/Hexalith.Parties.Security.Tests.csproj
               tests/Hexalith.Parties.Mcp.Tests/Hexalith.Parties.Mcp.Tests.csproj
@@ -79,6 +193,7 @@ jobs:
             projects: |
               tests/Hexalith.Parties.Projections.Tests/Hexalith.Parties.Projections.Tests.csproj
               tests/Hexalith.Parties.AdminPortal.Tests/Hexalith.Parties.AdminPortal.Tests.csproj
+              tests/Hexalith.Parties.ConsumerPortal.Tests/Hexalith.Parties.ConsumerPortal.Tests.csproj
               tests/Hexalith.Parties.UI.Tests/Hexalith.Parties.UI.Tests.csproj
               tests/Hexalith.Parties.Picker.Tests/Hexalith.Parties.Picker.Tests.csproj
           - name: integration-deploy
@@ -97,7 +212,7 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v5
         with:
-          dotnet-version: 10.0.300
+          dotnet-version: 10.0.301
 
       - name: Cache NuGet packages
         uses: actions/cache@v5
@@ -157,7 +272,7 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v5
         with:
-          dotnet-version: 10.0.300
+          dotnet-version: 10.0.301
 
       - name: Cache NuGet packages
         uses: actions/cache@v5

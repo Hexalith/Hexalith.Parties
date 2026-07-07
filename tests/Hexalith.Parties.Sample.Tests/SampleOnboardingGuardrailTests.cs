@@ -137,7 +137,7 @@ public sealed class SampleOnboardingGuardrailTests
         string gettingStarted = File.ReadAllText(GetRepositoryFilePath("docs/getting-started.md"));
 
         gettingStarted.ShouldContain("dotnet aspire run --project src/Hexalith.Parties.AppHost");
-        gettingStarted.ShouldContain("git submodule update --init references/Hexalith.EventStore references/Hexalith.Tenants");
+        gettingStarted.ShouldContain("git submodule update --init references/Hexalith.Builds references/Hexalith.Commons references/Hexalith.EventStore references/Hexalith.FrontComposer references/Hexalith.PolymorphicSerializations references/Hexalith.Tenants");
         gettingStarted.ShouldContain("Do not use --recursive");
         gettingStarted.ShouldContain("Aspire");
         gettingStarted.ShouldContain("DAPR");

@@ -270,7 +270,7 @@ public sealed class AppHostTenantsTopologyTests
         project.ShouldContain("HexalithEventStoreBasePath");
         project.ShouldContain("HexalithTenantsBasePath");
         project.ShouldNotContain("HexalithMemoriesBasePath");
-        project.ShouldContain("git submodule update --init references/Hexalith.EventStore references/Hexalith.Tenants");
+        project.ShouldContain("git submodule update --init references/Hexalith.Builds references/Hexalith.Commons references/Hexalith.EventStore references/Hexalith.FrontComposer references/Hexalith.PolymorphicSerializations references/Hexalith.Tenants");
         project.ShouldContain("Do not use recursive submodule initialization for the default local run.");
         project.ShouldNotContain("git -C Hexalith.Memories submodule update");
     }
@@ -285,7 +285,7 @@ public sealed class AppHostTenantsTopologyTests
         foreach (string document in new[] { readme, gettingStarted })
         {
             document.ShouldContain("dotnet aspire run --project src/Hexalith.Parties.AppHost");
-            document.ShouldContain("git submodule update --init references/Hexalith.EventStore references/Hexalith.Tenants");
+            document.ShouldContain("git submodule update --init references/Hexalith.Builds references/Hexalith.Commons references/Hexalith.EventStore references/Hexalith.FrontComposer references/Hexalith.PolymorphicSerializations references/Hexalith.Tenants");
             document.ShouldNotContain("git submodule update --init --recursive");
             document.ShouldNotContain("git submodule update --recursive");
             document.ShouldNotContain("git -C Hexalith.Memories submodule update");

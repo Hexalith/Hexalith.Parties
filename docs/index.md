@@ -9,7 +9,7 @@
 - **Architecture:** Event sourcing + CQRS + DAPR virtual actors, fronted by the **Hexalith.EventStore** gateway
 - **Orchestration:** .NET Aspire 13.4 (`dotnet aspire run --project src/Hexalith.Parties.AppHost`)
 - **Public surface:** EventStore `POST /api/v1/commands` & `/api/v1/queries` (`Domain="party"`); typed .NET client; `parties-mcp` (5 tools)
-- **Scale:** 14 source project folders (351 source C# files), 15 test/e2e folders (201 test C# files), 36 source Blazor `.razor` files
+- **Scale:** 15 source project folders (522 source C# files), 16 test/e2e folders (379 test C# files), 36 source Blazor `.razor` files
 
 ## Quick reference
 
@@ -17,10 +17,10 @@
 |---|---|
 | **Build** | `dotnet build Hexalith.Parties.slnx -c Release` (warnings-as-errors) |
 | **Run** | `dotnet aspire run --project src/Hexalith.Parties.AppHost` |
-| **Test** | `dotnet test Hexalith.Parties.slnx` or `scripts/test.ps1 -Lane {unit\|integration\|topology\|deploy}` |
+| **Test** | `pwsh -NoProfile -File scripts/test.ps1 -Lane {unit\|integration\|topology\|deploy\|all\|coverage}` or `dotnet test tests/<Project>/<Project>.csproj` |
 | **Entry points** | AppHost `Program.cs` (dev) · `Hexalith.Parties/Program.cs` → `/process` · `Hexalith.Parties.Mcp/Program.cs` → `/mcp` |
 | **Domain logic** | `src/Hexalith.Parties.Server/Aggregates/PartyAggregate.cs` |
-| **Prereqs** | .NET 10 SDK (10.0.300+), Docker Desktop; `git submodule update --init references/Hexalith.EventStore references/Hexalith.Tenants` |
+| **Prereqs** | .NET 10 SDK 10.0.301, Docker Desktop; root build submodules under `references/` |
 
 ## Generated documentation (this scan)
 
@@ -71,10 +71,17 @@
 
 ```bash
 git clone https://github.com/Hexalith/Hexalith.Parties.git && cd Hexalith.Parties
-git submodule update --init references/Hexalith.EventStore references/Hexalith.Tenants   # root-repository submodules only, NOT --recursive
+git submodule update --init references/Hexalith.Builds references/Hexalith.Commons references/Hexalith.EventStore references/Hexalith.FrontComposer references/Hexalith.PolymorphicSerializations references/Hexalith.Tenants   # root-repository submodules only, NOT --recursive
 dotnet aspire run --project src/Hexalith.Parties.AppHost           # Docker Desktop must be running
 ```
 Then follow [getting-started.md](./getting-started.md) for auth + first command/query. For .NET integration, add `Hexalith.Parties.Client` and call `AddPartiesClient(configuration)` ([api-contracts.md](./api-contracts.md)).
+
+## Build and test notes
+
+- Use the solution file for restore/build only. Run tests by lane or by individual project path.
+- For release-blocker diagnosis, use sequential builds with the MinVer override: `dotnet build Hexalith.Parties.slnx -c Release --no-restore -m:1 -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0`.
+- For focused xUnit v3 reruns, build the target test project and invoke its executable directly with single-dash filters such as `-class Fully.Qualified.TestClass` or `-method Fully.Qualified.TestClass.TestMethod`.
+- Package compatibility tests may need network access to NuGet signature metadata. A blocked `api.nuget.org:443` connection is a package-validation blocker, not a pass.
 
 ## Known discrepancies & defects (verify before relying on docs)
 
@@ -82,7 +89,7 @@ Then follow [getting-started.md](./getting-started.md) for auth + first command/
 2. **MCP exposes exactly 5 tools** (`create_party`, `get_party`, `find_parties`, `update_party`, `delete_party`). `get_party_name_at` does **not** exist — temporal name-as-of queries are reserved, not implemented. *(The README + `getting-started.md` previously listed a phantom 6th `get_party_name_at` tool; corrected in this pass.)*
 3. **Projection-index rebuild key mismatch was resolved on 2026-06-29:** `PartyIndexProjectionActor` and `ProjectionRebuildService` both use `{tenant}:party-index:default`; regression tests pin rebuild/live agreement ([architecture.md §13](./architecture.md)).
 4. **Aspire SDK/package skew:** packages are `13.4.0` but the AppHost SDK is pinned `13.3.3`. `Testcontainers` is declared but unused.
-5. **Submodules are now checked out** under `references/` in this working copy (`references/Hexalith.EventStore`, `references/Hexalith.Tenants`, `references/Hexalith.Commons`, `references/Hexalith.Memories`, `references/Hexalith.FrontComposer`), but a **fresh clone** still must `git submodule update --init references/Hexalith.EventStore references/Hexalith.Tenants` (root-repository submodules only, never `--recursive`).
+5. **Submodules are now checked out** under `references/` in this working copy. A **fresh clone** must initialize the root build submodules (`Hexalith.Builds`, `Hexalith.Commons`, `Hexalith.EventStore`, `Hexalith.FrontComposer`, `Hexalith.PolymorphicSerializations`, and `Hexalith.Tenants`) without `--recursive`; `Hexalith.Memories` remains optional for rich search.
 
 ---
 

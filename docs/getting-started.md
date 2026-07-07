@@ -12,7 +12,7 @@ This guide starts the local EventStore-fronted topology, sends a Parties command
 
 | Tool | Version | Download |
 |------|---------|----------|
-| .NET SDK | 10.0.300 or later (pinned in `global.json`) | [dot.net](https://dot.net) |
+| .NET SDK | 10.0.301 (pinned in `global.json`) | [dot.net](https://dot.net) |
 | Docker Desktop | Latest | [docker.com](https://www.docker.com/) |
 | Git | Any recent version | [git-scm.com](https://git-scm.com) |
 | `jq` | Latest, optional for Bash examples | [jqlang.org](https://jqlang.org) |
@@ -45,9 +45,11 @@ Docker Desktop must be running before you start the Aspire host.
 ```bash
 git clone https://github.com/Hexalith/Hexalith.Parties.git
 cd Hexalith.Parties
-
+git submodule update --init references/Hexalith.Builds references/Hexalith.Commons references/Hexalith.EventStore references/Hexalith.FrontComposer references/Hexalith.PolymorphicSerializations references/Hexalith.Tenants
 dotnet aspire run --project src/Hexalith.Parties.AppHost
 ```
+
+Default commands run in package mode. If restore fails because an unpublished Hexalith package such as `Hexalith.Tenants.Client` is unavailable, record that as a package-mode release blocker and use the source-mode properties in [development-guide.md](development-guide.md) only for diagnostic triage.
 
 Open the Aspire dashboard URL printed by the command and verify these resources are running:
 
@@ -64,7 +66,7 @@ The `eventstore-admin-ui` and `parties-mcp` resources are explicit-start auxilia
 
 EventStore owns public authentication, tenant validation, RBAC, command/query routing, and generic response mapping. Parties owns domain execution and projection behavior behind the actor host. Do not call Parties internals to manage tenant lifecycle, RBAC, authorization, projection actors, or domain invocation.
 
-If startup fails before the dashboard appears, first check that Docker Desktop is running and that the two required submodules exist under `references/`. A missing `references/Hexalith.EventStore` or `references/Hexalith.Tenants` directory is a setup problem, not a partial local topology that should be treated as ready.
+If startup fails before the dashboard appears, first check that Docker Desktop is running and that the baseline root submodules exist under `references/`. A missing build, Commons, EventStore, FrontComposer, PolymorphicSerializations, or Tenants checkout is a setup problem, not a partial local topology that should be treated as ready.
 
 Memories-backed rich search is optional for the default local Parties run. To include it, initialize the `references/Hexalith.Memories` submodule and run the AppHost with `EnableMemoriesSearch=true`; leave it unset for the baseline one-command local topology.
 
@@ -489,7 +491,7 @@ Check the Aspire dashboard for `eventstore`, `eventstore-admin`, `eventstore-adm
 
 ### Docker or Submodule Startup Failures
 
-If Redis, Keycloak, EventStore, or Tenants fail before the dashboard reaches healthy state, confirm Docker Desktop is running and rerun `git submodule update --init references/Hexalith.EventStore references/Hexalith.Tenants` from the repository root. Do not use --recursive for the default local run; missing nested submodules are not required by the baseline AppHost path.
+If Redis, Keycloak, EventStore, or Tenants fail before the dashboard reaches healthy state, confirm Docker Desktop is running and rerun the baseline root-submodule command from Step 1. Do not use --recursive for the default local run; missing nested submodules are not required by the baseline AppHost path.
 
 ### Authentication Errors
 

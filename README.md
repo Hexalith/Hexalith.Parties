@@ -23,9 +23,11 @@ Hexalith.Parties is a ready-to-deploy party management domain service for people
 ```bash
 git clone https://github.com/Hexalith/Hexalith.Parties.git
 cd Hexalith.Parties
-git submodule update --init references/Hexalith.EventStore references/Hexalith.Tenants
+git submodule update --init references/Hexalith.Builds references/Hexalith.Commons references/Hexalith.EventStore references/Hexalith.FrontComposer references/Hexalith.PolymorphicSerializations references/Hexalith.Tenants
 dotnet aspire run --project src/Hexalith.Parties.AppHost
 ```
+
+Default commands run in package mode. If restore fails because an unpublished Hexalith package such as `Hexalith.Tenants.Client` is unavailable, record that as a package-mode release blocker and use the source-mode properties in [docs/development-guide.md](docs/development-guide.md) only for diagnostic triage.
 
 Open the Aspire dashboard (URL shown in terminal output) and verify these resources are running: `security`, `eventstore`, `eventstore-admin`, `parties`, `parties-ui`, `tenants`, `redis`, the DAPR sidecars, `statestore`, and `pubsub`. The AppHost also declares `eventstore-admin-ui` and `parties-mcp` as explicit-start auxiliary resources; start them from the dashboard when you need stream browsing or MCP access. AI assistants connect to `parties-mcp` rather than the `parties` actor host.
 
@@ -72,9 +74,12 @@ Hexalith.Parties/
   docs/
     getting-started.md               # Step-by-step onboarding guide
   references/
+    Hexalith.Builds/                 # Shared build configuration
+    Hexalith.Commons/                # Shared platform helpers
     Hexalith.EventStore/             # Gateway/eventing submodule
-    Hexalith.Tenants/                # Tenancy submodule
     Hexalith.FrontComposer/          # UI shell submodule
+    Hexalith.PolymorphicSerializations/ # Source generators / serialization helpers
+    Hexalith.Tenants/                # Tenancy submodule
     Hexalith.Memories/               # Optional rich-search submodule
 ```
 
@@ -84,7 +89,7 @@ Hexalith.Parties manages **party records** -- people and organizations with cont
 
 ## Prerequisites
 
-- [.NET 10 SDK](https://dot.net) (10.0.300+)
+- [.NET 10 SDK](https://dot.net) (10.0.301)
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/)
 - Git
 

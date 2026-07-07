@@ -6,7 +6,7 @@
 
 | Tool | Version |
 |------|---------|
-| .NET SDK | **10.0.300+** (pinned in `global.json`, rollForward latestPatch) |
+| .NET SDK | **10.0.301** (pinned in `global.json`, rollForward latestPatch) |
 | Docker Desktop | latest (must be running before Aspire) |
 | Node.js | **24+** for the Playwright accessibility workspace under `tests/e2e` |
 | Git | recent |
@@ -15,22 +15,32 @@
 
 ## 1. Clone & submodules
 
-The build resolves `references/Hexalith.EventStore` and `references/Hexalith.Tenants` as project references. They are **not** checked out in a fresh clone — initialise the root-repository submodules:
+Root-level shared Hexalith repositories live under `references/`. They are
+**not** checked out in a fresh clone — initialise the root-repository submodules
+needed by the baseline solution and local topology:
 
 ```bash
 git clone https://github.com/Hexalith/Hexalith.Parties.git
 cd Hexalith.Parties
-git submodule update --init references/Hexalith.EventStore references/Hexalith.Tenants
+git submodule update --init references/Hexalith.Builds references/Hexalith.Commons references/Hexalith.EventStore references/Hexalith.FrontComposer references/Hexalith.PolymorphicSerializations references/Hexalith.Tenants
 # Do NOT use --recursive for the default local run (the build gate forbids nested-submodule init).
 ```
 
 Optional rich search adds the `references/Hexalith.Memories` submodule (run with `EnableMemoriesSearch=true`).
+
+The default build remains package mode (`UseNuGetDeps=true`, `UseHexalithProjectReferences=false`). If restore fails because a Hexalith package such as `Hexalith.Tenants.Client` is not available, record that as a package-mode release blocker. For source-mode triage with the checked-out submodules, rerun restore/build with `-p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false`; do not publish packages from source-mode output.
 
 ## 2. Build
 
 ```bash
 dotnet restore Hexalith.Parties.slnx
 dotnet build Hexalith.Parties.slnx --configuration Release --no-restore
+```
+
+For release-blocker triage, prefer a sequential build so the first failing project is visible:
+
+```bash
+dotnet build Hexalith.Parties.slnx --configuration Release --no-restore -m:1 -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0
 ```
 
 `TreatWarningsAsErrors=true` is solution-wide. A green build on a fresh clone (root-repository submodules under `references/` only, no warnings override) is the **build gate** — verify parity locally with:
@@ -63,21 +73,32 @@ Treat the system as usable only after `eventstore`, `parties`, and `tenants` are
 
 ## 4. Test
 
-```bash
-dotnet test Hexalith.Parties.slnx --configuration Release        # everything
-dotnet test tests/Hexalith.Parties.Server.Tests/Hexalith.Parties.Server.Tests.csproj   # one project
-```
+Use the **lane runner** (`scripts/test.ps1 -Lane <lane>`, default `unit`, Release) or run individual test projects by path. Do not use solution-level `dotnet test` for this repository; the `.slnx` is for restore/build only.
 
-Or use the **lane runner** (`scripts/test.ps1 -Lane <lane>`, default `unit`, Release):
+```bash
+pwsh -NoProfile -File scripts/test.ps1 -Lane unit -Configuration Release
+pwsh -NoProfile -File scripts/test.ps1 -Lane all -Configuration Release
+dotnet test tests/Hexalith.Parties.Server.Tests/Hexalith.Parties.Server.Tests.csproj --configuration Release
+```
 
 | Lane | Scope |
 |------|-------|
-| `unit` | Contracts, Client, Server, Projections, Security, AdminPortal, ConsumerPortal, Picker, Mcp, UI |
+| `unit` | Contracts, Authentication, Client, Server, Projections, Security, AdminPortal, ConsumerPortal, Picker, Mcp, UI |
 | `integration` | Hexalith.Parties.Tests + Sample.Tests |
 | `topology` | Hexalith.Parties.IntegrationTests (full Aspire topology — needs Docker/DAPR; skips gracefully if absent) |
 | `deploy` | Hexalith.Parties.DeployValidation.Tests (static `deploy/` validation) |
-| `all` | whole solution |
-| `coverage` | whole solution with `--collect "XPlat Code Coverage"` |
+| `all` | all 15 .NET test projects, executed one project at a time |
+| `coverage` | all 15 .NET test projects, executed one project at a time with `--collect "XPlat Code Coverage"` |
+
+xUnit v3 runs under Microsoft.Testing.Platform here. Project-level `dotnet test --filter` can silently run zero tests, so filter focused reruns by invoking the built test executable directly with xUnit v3 single-dash arguments:
+
+```bash
+dotnet build tests/Hexalith.Parties.Server.Tests/Hexalith.Parties.Server.Tests.csproj --configuration Release --no-restore -m:1 -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0
+dotnet tests/Hexalith.Parties.Server.Tests/bin/Release/net10.0/Hexalith.Parties.Server.Tests.dll -class Fully.Qualified.TestClass
+dotnet tests/Hexalith.Parties.Server.Tests/bin/Release/net10.0/Hexalith.Parties.Server.Tests.dll -method Fully.Qualified.TestClass.TestMethod
+```
+
+Package compatibility tests in `Hexalith.Parties.Client.Tests` and `Hexalith.Parties.Contracts.Tests` can require network access to NuGet repository signature metadata. A sandbox or CI environment that blocks `api.nuget.org:443` has not validated those package tests; rerun them in a network-enabled package-validation environment before release.
 
 The UI accessibility workspace lives under `tests/e2e`:
 

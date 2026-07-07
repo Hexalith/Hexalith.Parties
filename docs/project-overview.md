@@ -15,7 +15,7 @@ Public command and query traffic goes through **Hexalith.EventStore**; the `part
 | **Domain** | Party records (Person / Organization), contact channels, identifiers, GDPR consent & erasure |
 | **Style** | Event sourcing + CQRS + DAPR virtual actors, fronted by the EventStore gateway |
 | **Repository** | Monolith - single cohesive .NET solution (`Hexalith.Parties.slnx`), including the `parties-ui` host, UI tests, and Playwright e2e workspace |
-| **Language / runtime** | C# / **.NET 10** (SDK `10.0.300`) |
+| **Language / runtime** | C# / **.NET 10** (SDK `10.0.301`) |
 | **Orchestration** | .NET Aspire 13.4 (`dotnet aspire run`) |
 | **Eventing** | DAPR pub/sub — CloudEvents 1.0 on `{tenant}.parties.events` (Redis local; Kafka/RabbitMQ/Service Bus in prod) |
 | **Integration** | Typed .NET client · `parties-ui` Blazor Server BFF · `parties-mcp` (AI tools, 5) · DAPR event subscription · Blazor Picker, AdminPortal & ConsumerPortal |
@@ -38,7 +38,7 @@ Public command and query traffic goes through **Hexalith.EventStore**; the `part
 
 | Category | Technology | Version |
 |----------|-----------|---------|
-| Runtime | .NET | net10.0 (SDK 10.0.300) |
+| Runtime | .NET | net10.0 (SDK 10.0.301) |
 | Orchestration | .NET Aspire | 13.4.0 (AppHost SDK pinned 13.3.3) |
 | Actors / pub-sub | DAPR | 1.18.0-rc / 1.17.9 |
 | Validation | FluentValidation | 12.1.1 |
@@ -53,7 +53,7 @@ Full table with all packages: [architecture.md §3](architecture.md). Versioning
 
 ## Repository structure
 
-Single cohesive solution. **Adopter-facing** packages (`Client`, `Contracts`, `Picker`, `AdminPortal`, `ConsumerPortal`, `Mcp`, `ServiceDefaults`) are what consumers reference; `Hexalith.Parties.UI` is the browser UI/BFF host for this product experience. **Internal** projects (`Hexalith.Parties` host, `Server`, `Projections`, `Security`, `Testing`) are private to the actor host. Sibling submodules `Hexalith.EventStore` and `Hexalith.Tenants` are project references (initialise before building). Annotated tree: [source-tree-analysis.md](source-tree-analysis.md).
+Single cohesive solution. **Adopter-facing** packages (`Client`, `Contracts`, `Picker`, `AdminPortal`, `ConsumerPortal`, `Mcp`, `ServiceDefaults`) are what consumers reference; `Hexalith.Parties.UI` is the browser UI/BFF host for this product experience. **Internal** projects (`Hexalith.Parties` host, `Server`, `Projections`, `Security`, `Testing`) are private to the actor host. Shared Hexalith repositories under `references/` provide build, platform, EventStore, FrontComposer, serialization, and tenancy source dependencies. Annotated tree: [source-tree-analysis.md](source-tree-analysis.md).
 
 ## Important notes
 

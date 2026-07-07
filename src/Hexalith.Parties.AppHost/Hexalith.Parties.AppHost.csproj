@@ -39,8 +39,8 @@
   </ItemGroup>
 
   <Target Name="ValidateHexalithTenantsBasePath" BeforeTargets="ResolveProjectReferences">
-    <Error Condition="!Exists('$(HexalithEventStoreBasePath)')" Text="HexalithEventStoreBasePath '$(HexalithEventStoreBasePath)' does not exist. Run 'git submodule update --init references/Hexalith.EventStore references/Hexalith.Tenants' from the repository root. Do not use recursive submodule initialization for the default local run." />
-    <Error Condition="!Exists('$(HexalithTenantsBasePath)')" Text="HexalithTenantsBasePath '$(HexalithTenantsBasePath)' does not exist. Run 'git submodule update --init references/Hexalith.EventStore references/Hexalith.Tenants' from the repository root. Do not use recursive submodule initialization for the default local run." />
+    <Error Condition="!Exists('$(HexalithEventStoreBasePath)')" Text="HexalithEventStoreBasePath '$(HexalithEventStoreBasePath)' does not exist. Run 'git submodule update --init references/Hexalith.Builds references/Hexalith.Commons references/Hexalith.EventStore references/Hexalith.FrontComposer references/Hexalith.PolymorphicSerializations references/Hexalith.Tenants' from the repository root. Do not use recursive submodule initialization for the default local run." />
+    <Error Condition="!Exists('$(HexalithTenantsBasePath)')" Text="HexalithTenantsBasePath '$(HexalithTenantsBasePath)' does not exist. Run 'git submodule update --init references/Hexalith.Builds references/Hexalith.Commons references/Hexalith.EventStore references/Hexalith.FrontComposer references/Hexalith.PolymorphicSerializations references/Hexalith.Tenants' from the repository root. Do not use recursive submodule initialization for the default local run." />
   </Target>
 
 </Project>

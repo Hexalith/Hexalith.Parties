@@ -12,8 +12,8 @@ It is **not** an auth provider, CRM, or identity server — it is the party/cont
 
 | Attribute | Value |
 |-----------|-------|
-| Repository type | Monolith — single cohesive .NET solution (`Hexalith.Parties.slnx`), 14 source projects + 15 test/e2e project folders |
-| Primary language | C# / **.NET 10** (SDK pinned `10.0.300`) |
+| Repository type | Monolith — single cohesive .NET solution (`Hexalith.Parties.slnx`), 15 source projects + 16 test/e2e folders |
+| Primary language | C# / **.NET 10** (SDK pinned `10.0.301`) |
 | Architecture style | Event sourcing + CQRS + DAPR actors, gateway-fronted (EventStore) |
 | Orchestration | .NET Aspire 13.4 (`dotnet aspire run`) |
 | Eventing | DAPR pub/sub (Redis local; Kafka/RabbitMQ/Service Bus in prod) |
@@ -51,7 +51,7 @@ It is **not** an auth provider, CRM, or identity server — it is the party/cont
 
 | Category | Technology | Version |
 |----------|-----------|---------|
-| Runtime | .NET | `net10.0` (SDK `10.0.300`, rollForward latestPatch) |
+| Runtime | .NET | `net10.0` (SDK `10.0.301`, rollForward latestPatch) |
 | Orchestration | .NET Aspire (`Aspire.Hosting` + hosting integrations) | `13.4.0` (AppHost **SDK** still pinned `13.3.3` — skew, see note) |
 | Actors & pub/sub | `Dapr.Actors` / `Dapr.Client` | `1.18.0-rc02` |
 | | `Dapr.AspNetCore` / `Dapr.Actors.AspNetCore` | `1.17.9` |
@@ -204,7 +204,7 @@ src/
   Hexalith.Parties.Projections/    # projection actors + handlers + rebuild
   Hexalith.Parties.Security/       # crypto-shredding / key management / erasure
   Hexalith.Parties.Testing/        # test utilities
-tests/    # 12 xUnit v3 projects (unit, integration, topology, deploy-validation)
+tests/    # 15 xUnit v3 projects (unit, integration, topology, deploy-validation)
 samples/  # Hexalith.Parties.Sample — subscriber reference
 deploy/   # k8s (kustomize), dapr (component CRs), zot (OCI registry)
 ```
@@ -213,8 +213,8 @@ deploy/   # k8s (kustomize), dapr (component CRs), zot (OCI registry)
 
 ## 11. Testing & CI
 
-- **14 .NET test projects plus the Playwright e2e workspace**, uniformly **xUnit v3** for .NET tests (Shouldly + NSubstitute; bunit for Blazor; YamlDotNet for manifest validation). Lanes via `scripts/test.ps1 -Lane {unit|integration|topology|deploy|all|coverage}`. `Hexalith.Parties.IntegrationTests` spins up the **full Aspire topology** (`Aspire.Hosting.Testing`), gracefully skipping when Docker/DAPR is absent; `Hexalith.Parties.DeployValidation.Tests` statically validates the real `deploy/` manifests (incl. a credential-leak poison-sweep). Architectural fitness tests pin contract/dependency boundaries.
-- **CI:** `.github/workflows/test.yml` — `lint` (build with warnings-as-errors + build-gate script) → `test` (4 parallel shards) → `contract-test` (Pact readiness) → `report` (quality gate). Submodules checked out **root-repository submodules only, never recursive**. See [ci.md](ci.md), [build-gate.md](build-gate.md), [ci-secrets-checklist.md](ci-secrets-checklist.md).
+- **15 .NET test projects plus the Playwright e2e workspace**, uniformly **xUnit v3** for .NET tests (Shouldly + NSubstitute; bunit for Blazor; YamlDotNet for manifest validation). Lanes via `scripts/test.ps1 -Lane {unit|integration|topology|deploy|all|coverage}`. `Hexalith.Parties.IntegrationTests` spins up the **full Aspire topology** (`Aspire.Hosting.Testing`), gracefully skipping when Docker/DAPR is absent; `Hexalith.Parties.DeployValidation.Tests` statically validates the real `deploy/` manifests (incl. a credential-leak poison-sweep). Architectural fitness tests pin contract/dependency boundaries.
+- **CI:** `.github/workflows/test.yml` — `lint` (build with warnings-as-errors + build-gate script) → `test` (4 parallel shards) and `ui-a11y` → `contract-test` (Pact readiness) → `report` (quality gate). Submodules checked out **root-repository submodules only, never recursive**. See [ci.md](ci.md), [build-gate.md](build-gate.md), [ci-secrets-checklist.md](ci-secrets-checklist.md).
 
 ---
 
@@ -231,7 +231,7 @@ Production shape is Kubernetes via **aspirate** (pinned `9.1.0`): `pwsh deploy/k
 - **Rejection events are persisted & replayed** — `PartyState` declares no-op `Apply` overloads, ordered before success Applies (suffix-match rehydration).
 - **Replay-from-zero on every delivery** — projections stay correct via per-actor sequence checkpoints + set-based apply.
 - **Type resolution is allowlisted to the contracts assembly** — never `Type.GetType` on wire input.
-- **Submodules referenced by path** (`references/Hexalith.EventStore`, `references/Hexalith.Tenants`) — checked out under `references/` and still resolved as **project references** (not NuGet), via a path-probing `HexalithEventStoreRoot` MSBuild property. A fresh clone must `git submodule update --init references/Hexalith.EventStore references/Hexalith.Tenants` (root-repository submodules only, **never** `--recursive`).
+- **Submodules referenced by path** — root-declared source dependencies are checked out under `references/` and resolved by MSBuild root properties rather than nested recursive submodules. The baseline build needs `Hexalith.Builds`, `Hexalith.Commons`, `Hexalith.EventStore`, `Hexalith.FrontComposer`, `Hexalith.PolymorphicSerializations`, and `Hexalith.Tenants`; `Hexalith.Memories` is optional for rich search. A fresh clone must initialize root-repository submodules only, **never** `--recursive`.
 - **Apply-method ordering is load-bearing** — `PartyState` declares rejection-event `Apply` no-ops *before* success Applies (suffix-match rehydration); pinned by a fitness test. An auto-formatter that alphabetises methods would silently corrupt rehydration.
 
 **Discrepancies & defects to reconcile (this rescan):**

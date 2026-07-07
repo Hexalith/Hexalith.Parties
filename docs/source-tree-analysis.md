@@ -4,14 +4,14 @@
 
 ```
 Hexalith.Parties/
-├── Hexalith.Parties.slnx              # Solution (14 src projects + 15 test/e2e folders + EventStore/Tenants submodule refs)
+├── Hexalith.Parties.slnx              # Solution (15 src projects + 16 test/e2e folders + root references submodule refs)
 ├── Directory.Build.props              # net10.0, Nullable, ImplicitUsings, TreatWarningsAsErrors=true, MinVer
 ├── Directory.Build.targets            # shared MSBuild targets
 ├── Directory.Packages.props           # central package versions (ManagePackageVersionsCentrally)
-├── global.json                        # .NET SDK pin 10.0.300 (rollForward latestPatch)
+├── global.json                        # .NET SDK pin 10.0.301 (rollForward latestPatch)
 ├── aspire.config.json                 # points Aspire tooling at the AppHost csproj
 ├── .config/dotnet-tools.json          # local tools (aspirate 9.1.0)
-├── .gitmodules                        # EventStore, Tenants, Memories, FrontComposer, AI.Tools, Commons (root-level)
+├── .gitmodules                        # root-level Hexalith submodules under references/
 ├── README.md
 │
 ├── src/
@@ -89,7 +89,7 @@ Hexalith.Parties/
 │   │   │                              #   erasure verification, key-op audit, PartyKeyRetryActor
 │   └── Hexalith.Parties.Testing/      # 🔒 shared test utilities
 │
-├── tests/                             # 14 .NET test projects + Playwright e2e workspace (see component-inventory.md §Tests)
+├── tests/                             # 15 .NET test projects + Playwright e2e workspace (see component-inventory.md §Tests)
 │   ├── Hexalith.Parties.Tests/                 # largest — health, rebuild, search, architectural fitness
 │   ├── Hexalith.Parties.IntegrationTests/      # full Aspire topology E2E (Aspire.Hosting.Testing)
 │   ├── Hexalith.Parties.DeployValidation.Tests/# static validation of deploy/ manifests + leak sweep
@@ -119,16 +119,16 @@ Hexalith.Parties/
 │   ├── test.ps1                       # test-lane runner (unit|integration|topology|deploy|all|coverage)
 │   └── check-no-warning-override.sh   # build-gate regression guard (no warnings-as-errors override)
 │
-├── .github/workflows/test.yml         # CI: lint → test (4 shards) → contract-test → report (quality gate)
+├── .github/workflows/test.yml         # CI: lint → test (4 shards) + ui-a11y → contract-test → report
 └── docs/                              # ← you are here (20 .md files + generated docs + this index)
 ```
 
 ## Submodules (checked out under references; resolved by project path)
 
-`.gitmodules` declares repository-level submodules under `references/`. In this working copy `references/Hexalith.EventStore`, `references/Hexalith.Tenants`, `references/Hexalith.Commons`, `references/Hexalith.Memories`, and `references/Hexalith.FrontComposer` are **checked out** (each is a separate repo with its own docs). The build still resolves `references/Hexalith.EventStore` and `references/Hexalith.Tenants` as **project references** (via a path-probing `HexalithEventStoreRoot` MSBuild property), not NuGet; `references/Hexalith.Memories` is optional (rich search). A fresh clone must initialise them before building/running:
+`.gitmodules` declares repository-level submodules under `references/`. In this working copy the root submodules are checked out (including Builds, Commons, EventStore, FrontComposer, PolymorphicSerializations, Tenants, AI.Tools, and optional Memories). The baseline build/run path depends on the shared build, platform, gateway, UI, serialization, and tenancy source checkouts; `references/Hexalith.Memories` remains optional for rich search. A fresh clone must initialise the baseline root submodules before building/running:
 
 ```bash
-git submodule update --init references/Hexalith.EventStore references/Hexalith.Tenants
+git submodule update --init references/Hexalith.Builds references/Hexalith.Commons references/Hexalith.EventStore references/Hexalith.FrontComposer references/Hexalith.PolymorphicSerializations references/Hexalith.Tenants
 # never use --recursive for the default local run
 ```
 
