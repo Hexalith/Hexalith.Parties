@@ -564,6 +564,14 @@ The rules below target the **~10 UI-tier divergence points** these don't cover.
   success-green).
 - **PII hygiene (pinned):** no PII in logs / traces / telemetry / copy / tombstones;
   `[PersonalData]` respected end-to-end.
+- **Root gitlink governance (pinned, release-gated):** every root submodule
+  pointer that has drifted or been bumped must be **owner-validated**
+  (`validated-advance` in `.gitlink-signoff.tsv`, real owner handle) or
+  **deliberately reset** before a release tag. Enforced by
+  `scripts/gitlink-rc-gate.sh` (worktree + `--diff` CI modes) via the `Release
+  Candidate Gate` workflow. Never advance a gitlink into a tag without a ledger
+  sign-off; never recurse into nested submodules. The ledger is the source of
+  truth for release-time pointers.
 
 ### Enforcement Guidelines
 

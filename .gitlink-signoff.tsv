@@ -1,0 +1,24 @@
+# Release-candidate gitlink sign-off ledger.
+#
+# Authorises root submodule pointers for the next release tag. The RC gate
+# (scripts/gitlink-rc-gate.sh) FAILS on any drifted/bumped root gitlink that has
+# no matching validated-advance line here (a validated-advance line counts only
+# when <owner> is a real handle — not empty, not a <PLACEHOLDER>). To instead
+# discard a drift, `git submodule update --checkout <path>` (reset) — no entry
+# needed; a `reset` line may be recorded for audit but does not authorise a bump.
+#
+# Format: <path>|<sha>|<disposition>|<ref>|<owner>|<date>
+#   disposition: validated-advance | reset
+#
+# --- Current drift dispositions (recommended; ratify by replacing <OWNER-PENDING>
+#     with a real Hexalith release-owner handle). Clean forward moves onto release
+#     tags — low risk: ---
+references/Hexalith.Commons|20048e9b10a9ee691cf4b360ef3c409de5a88815|validated-advance|v2.27.0|<OWNER-PENDING>|2026-07-07
+references/Hexalith.PolymorphicSerializations|ca1086497c58d0e3ae3c4795655f853b6299b3db|validated-advance|v1.16.2|<OWNER-PENDING>|2026-07-07
+#
+# --- DECIDE (ahead-of-tag, carries unreleased submodule commits). Uncomment as
+#     validated-advance ONLY if the owner confirms those commits ship in this RC
+#     (ideally cut a submodule release tag first); otherwise RESET the pointer: ---
+# references/Hexalith.Builds|94989b04c91a0937fe04fe9819a5bde525ae6dd3|validated-advance|v4.16.3-28-g94989b0|<OWNER>|<DATE>
+# references/Hexalith.Tenants|8d1a5bd760310a724dd35649aea478d364a2c89a|validated-advance|v2.3.0-9-g8d1a5bd|<OWNER>|<DATE>
+# references/Hexalith.EventStore|963402c5ae09cb34f3dff560d2373d44f320a4a2|validated-advance|v3.43.0-16-g963402c5|<OWNER>|<DATE>

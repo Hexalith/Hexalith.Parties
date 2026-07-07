@@ -1,0 +1,65 @@
+name: Release Candidate Gate
+
+# Root gitlink RC gate: every root submodule pointer bumped into a release
+# candidate must be owner-validated in .gitlink-signoff.tsv (or reset). See
+# RELEASE-CHECKLIST.md and scripts/gitlink-rc-gate.sh.
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened, labeled]
+  push:
+    branches:
+      - 'rc/**'
+      - 'release/**'
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      base_ref:
+        description: Base ref to diff root gitlinks against
+        default: origin/main
+        required: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  gitlink-rc-gate:
+    name: Root gitlink RC gate
+    # On pull requests, only enforce when the PR is labelled a release candidate.
+    if: >-
+      github.event_name != 'pull_request' ||
+      contains(github.event.pull_request.labels.*.name, 'release-candidate')
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          # Full history so the base ref resolves; submodule contents are not
+          # needed (the gate reads gitlink SHAs from the tree via git ls-tree).
+          fetch-depth: 0
+          submodules: false
+
+      - name: Determine base ref
+        id: base
+        run: |
+          set -euo pipefail
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            base="origin/${{ github.base_ref }}"
+          elif [ -n "${{ github.event.inputs.base_ref || '' }}" ]; then
+            base="${{ github.event.inputs.base_ref }}"
+          else
+            base="$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo origin/main)"
+          fi
+          echo "ref=$base" >> "$GITHUB_OUTPUT"
+          echo "Diffing root gitlinks against: $base"
+
+      - name: Root gitlink RC gate
+        run: bash scripts/gitlink-rc-gate.sh --diff "${{ steps.base.outputs.ref }}"
