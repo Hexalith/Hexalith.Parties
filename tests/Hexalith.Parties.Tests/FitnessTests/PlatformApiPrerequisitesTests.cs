@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Text.RegularExpressions;
 using Shouldly;
 
@@ -6,6 +7,7 @@ namespace Hexalith.Parties.Tests.FitnessTests;
 public sealed class PlatformApiPrerequisitesTests
 {
     private const string MatrixRelativePath = "_bmad-output/implementation-artifacts/story-8-3-platform-api-prerequisite-matrix.md";
+    private const string SpecRelativePath = "_bmad-output/implementation-artifacts/spec-8-3-platform-api-prerequisites.md";
     private const string StartMarker = "<!-- platform-api-prerequisite-matrix:start -->";
     private const string EndMarker = "<!-- platform-api-prerequisite-matrix:end -->";
 
@@ -30,6 +32,35 @@ public sealed class PlatformApiPrerequisitesTests
         ["Package publishing/source-mode CI"] = ["8.8", "8.10"],
     };
 
+    private static readonly IReadOnlyDictionary<string, string[]> RequiredGapTokensBySurface = new Dictionary<string, string[]>(StringComparer.Ordinal)
+    {
+        ["EventStore degraded response and DAPR health checks"] = ["G1", "G2"],
+        ["EventStore projection/query SDK"] = ["G3", "G6", "G10"],
+        ["FrontComposer UI primitives"] = ["G4"],
+        ["Payload protection engine package"] = ["G5"],
+        ["EventStore client envelopes/freshness/error codes"] = ["G6"],
+        ["Tenant claims transformation"] = ["G7", "G9"],
+        ["Aspire publish helpers"] = ["G8"],
+        ["MCP, deep-link, and search probes"] = ["G11"],
+        ["Package publishing/source-mode CI"] = ["G12"],
+    };
+
+    private static readonly IReadOnlyDictionary<string, string[]> RequiredEvidenceTokensBySurface = new Dictionary<string, string[]>(StringComparer.Ordinal)
+    {
+        ["EventStore domain-service host"] = ["AddEventStoreDomainService", "UseEventStoreDomainService"],
+        ["EventStore projection/query SDK"] = ["IDomainProjectionHandler", "IDomainQueryHandler", "IReadModelStore", "IQueryCursorCodec"],
+        ["EventStore DataProtection"] = ["AddEventStoreDataProtection", "DaprXmlRepository", "AddEventStoreQueryCursorCodec"],
+        ["Payload protection engine package"] = ["IEventPayloadProtectionService", "CryptoShreddingWorkflowState", "PartyPayloadProtectionService", "pdenc-v2", "v1 read support", "IPersonalDataPolicy", "IErasureStateProvider"],
+        ["EventStore client envelopes/freshness/error codes"] = ["IEventStoreGatewayClient", "QueryResponseMetadata", "QueryProblemReasonCodes", "GatewayProblemDetailsExtensions"],
+        ["Tenant claims transformation"] = ["eventstore:tenant", "AggregateIdentity.IsValid(string)", "UniqueIdHelper.IsValidUlid(string)"],
+        ["Aspire publish helpers"] = ["AddEventStoreDomainModule", "WithJwtBearerSecurity", "WithEventStoreJwtAuthentication(audience)", "AddEventStoreGatewayClient"],
+        ["FrontComposer UI primitives"] = ["FcAggregateListPage", "FcDestructiveConfirmationDialog", "ProjectionSubscriptionService"],
+        ["Commons HTTP helpers"] = ["HttpClientRegistration", "BoundedProblemDetailsReader", "HttpCorrelation"],
+        ["MCP, deep-link, and search probes"] = ["FrontComposerMcpDescriptorRegistry", "FrontComposerMcpTool", "tenant header relay"],
+        ["Builds shared props/targets"] = ["TreatWarningsAsErrors", "Directory.Packages.props"],
+        ["Package publishing/source-mode CI"] = ["Hexalith.Commons.Http", "Hexalith.Commons.ServiceDefaults", "Hexalith.Tenants.Client", "Hexalith.Tenants.Testing"],
+    };
+
     private static readonly HashSet<string> ApprovedStatuses = new(StringComparer.Ordinal)
     {
         "available",
@@ -40,14 +71,25 @@ public sealed class PlatformApiPrerequisitesTests
     private static readonly IReadOnlyDictionary<string, string[]> OwnerPrefixes = new Dictionary<string, string[]>(StringComparer.Ordinal)
     {
         ["Hexalith.EventStore"] = ["references/Hexalith.EventStore/"],
-        ["Hexalith.EventStore.Aspire"] = ["references/Hexalith.EventStore/"],
+        ["Hexalith.EventStore.Aspire"] = ["references/Hexalith.EventStore/src/Hexalith.EventStore.Aspire/"],
         ["Hexalith.Commons"] = ["references/Hexalith.Commons/"],
         ["Hexalith.FrontComposer"] = ["references/Hexalith.FrontComposer/"],
         ["Hexalith.Builds"] = ["references/Hexalith.Builds/"],
         ["Hexalith.Tenants"] = ["references/Hexalith.Tenants/"],
         ["platform AppHost owners"] = ["references/Hexalith.FrontComposer/"],
-        ["Platform release owners"] = ["_bmad-output/", "references/Hexalith.Builds/"],
     };
+
+    private static readonly string[] ForbiddenStoryMigrationPathPrefixes =
+    [
+        "src/Hexalith.Parties/",
+        "src/Hexalith.Parties.AppHost/",
+        "src/Hexalith.Parties.Projections/",
+        "src/Hexalith.Parties.Security/",
+        "src/Hexalith.Parties.UI/",
+        "src/Hexalith.Parties.AdminPortal/",
+        "src/Hexalith.Parties.ConsumerPortal/",
+        "src/Hexalith.Parties.Picker/",
+    ];
 
     private static readonly string[] AllowedContextEvidencePrefixes =
     [
@@ -81,13 +123,20 @@ public sealed class PlatformApiPrerequisitesTests
     [Fact]
     public void Matrix_CoversKnownFablePlatformGaps()
     {
-        string text = ReadMatrix();
-        HashSet<string> actualGapIds = Regex.Matches(
-                text,
-                @"(?<![A-Za-z0-9])G(?:[1-9]|1[0-2])(?![A-Za-z0-9])",
-                RegexOptions.CultureInvariant)
-            .Select(static match => match.Value)
-            .ToHashSet(StringComparer.Ordinal);
+        IReadOnlyDictionary<string, MatrixRow> rows = ReadRows();
+        HashSet<string> actualGapIds = [];
+
+        foreach (KeyValuePair<string, string[]> expected in RequiredGapTokensBySurface)
+        {
+            rows.ContainsKey(expected.Key).ShouldBeTrue(expected.Key);
+            string rowText = ToSearchableText(rows[expected.Key]);
+
+            foreach (string gap in expected.Value)
+            {
+                ContainsExactToken(rowText, gap).ShouldBeTrue($"{expected.Key}: {gap}");
+                actualGapIds.Add(gap);
+            }
+        }
 
         foreach (string gap in Enumerable.Range(1, 12).Select(static number => $"G{number}"))
         {
@@ -148,11 +197,15 @@ public sealed class PlatformApiPrerequisitesTests
     {
         foreach (MatrixRow row in ReadRows().Values.Where(static row => row.Status == "available"))
         {
-            bool mentionsReleaseOrPin =
-                row.ProofRequired.Contains("release", StringComparison.OrdinalIgnoreCase) ||
-                row.ProofRequired.Contains("submodule-pin", StringComparison.OrdinalIgnoreCase);
+            bool explicitlyRequiresReleaseOrPin = Regex.IsMatch(
+                row.ProofRequired,
+                @"\bmust validate\b.*\b(release|submodule-pin)\b",
+                RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
 
-            mentionsReleaseOrPin.ShouldBeTrue(row.Surface);
+            explicitlyRequiresReleaseOrPin.ShouldBeTrue(row.Surface);
+            row.ProofRequired.Contains("no release", StringComparison.OrdinalIgnoreCase).ShouldBeFalse(row.Surface);
+            row.ProofRequired.Contains("without release", StringComparison.OrdinalIgnoreCase).ShouldBeFalse(row.Surface);
+            row.ProofRequired.Contains("without submodule-pin", StringComparison.OrdinalIgnoreCase).ShouldBeFalse(row.Surface);
         }
     }
 
@@ -172,6 +225,10 @@ public sealed class PlatformApiPrerequisitesTests
         foreach (MatrixRow row in ReadRows().Values)
         {
             row.Decision.ShouldContain("No Parties source migration starts in Story 8.3.");
+            Regex.IsMatch(row.Decision, @"\bKeep\b.*\brollback path\b", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)
+                .ShouldBeTrue(row.Surface);
+            row.Decision.Contains("remove rollback", StringComparison.OrdinalIgnoreCase).ShouldBeFalse(row.Surface);
+            row.Decision.Contains("without rollback", StringComparison.OrdinalIgnoreCase).ShouldBeFalse(row.Surface);
         }
     }
 
@@ -181,8 +238,56 @@ public sealed class PlatformApiPrerequisitesTests
         foreach (MatrixRow row in ReadRows().Values)
         {
             row.ProofRequired.ShouldContain("Proof required:");
-            row.Decision.Contains("rollback", StringComparison.OrdinalIgnoreCase).ShouldBeTrue(row.Surface);
+            Regex.IsMatch(row.Decision, @"\bKeep\b.*\brollback path\b", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)
+                .ShouldBeTrue(row.Surface);
         }
+    }
+
+    [Fact]
+    public void Matrix_ValidationEvidenceNamesExpectedSymbols()
+    {
+        IReadOnlyDictionary<string, MatrixRow> rows = ReadRows();
+
+        foreach (KeyValuePair<string, string[]> expected in RequiredEvidenceTokensBySurface)
+        {
+            rows.ContainsKey(expected.Key).ShouldBeTrue(expected.Key);
+            string rowText = ToSearchableText(rows[expected.Key]);
+
+            foreach (string token in expected.Value)
+            {
+                rowText.Contains(token, StringComparison.Ordinal).ShouldBeTrue($"{expected.Key}: {token}");
+            }
+
+            rows[expected.Key].ValidationEvidence.ShouldNotBe("Inspected", expected.Key);
+        }
+    }
+
+    [Fact]
+    public void StoryRange_DoesNotModifyProductionMigrationPaths()
+    {
+        string root = RepositoryRoot.Locate();
+        string spec = File.ReadAllText(Path.Combine(root, SpecRelativePath));
+        string baselineRevision = ReadFrontmatterValue(spec, "baseline_revision");
+        string finalRevision = ReadFrontmatterValue(spec, "final_revision");
+
+        if (string.Equals(baselineRevision, "NO_VCS", StringComparison.Ordinal) ||
+            string.Equals(finalRevision, "NO_VCS", StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        if (!GitObjectExists(root, baselineRevision) || !GitObjectExists(root, finalRevision))
+        {
+            return;
+        }
+
+        string diffNames = RunGit(root, "diff", "--name-only", baselineRevision, finalRevision, "--");
+        string[] forbiddenChanges = diffNames
+            .Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Where(path => ForbiddenStoryMigrationPathPrefixes.Any(prefix => path.StartsWith(prefix, StringComparison.Ordinal)))
+            .ToArray();
+
+        forbiddenChanges.ShouldBeEmpty();
     }
 
     private static string ReadMatrix()
@@ -232,6 +337,13 @@ public sealed class PlatformApiPrerequisitesTests
 
     private static string ReadMarkedSection(string text)
     {
+        Regex.Matches(text, Regex.Escape(StartMarker), RegexOptions.CultureInvariant)
+            .Count
+            .ShouldBe(1, StartMarker);
+        Regex.Matches(text, Regex.Escape(EndMarker), RegexOptions.CultureInvariant)
+            .Count
+            .ShouldBe(1, EndMarker);
+
         int start = text.IndexOf(StartMarker, StringComparison.Ordinal);
         if (start < 0)
         {
@@ -356,5 +468,77 @@ public sealed class PlatformApiPrerequisitesTests
                 yield return prefix;
             }
         }
+    }
+
+    private static bool ContainsExactToken(string value, string token)
+        => Regex.IsMatch(
+            value,
+            $@"(?<![A-Za-z0-9]){Regex.Escape(token)}(?![A-Za-z0-9])",
+            RegexOptions.CultureInvariant);
+
+    private static string ToSearchableText(MatrixRow row)
+        => string.Join(
+            " ",
+            row.Surface,
+            row.Owner,
+            row.Status,
+            row.EvidencePaths,
+            row.ProofRequired,
+            row.DependentStories,
+            row.Decision,
+            row.ValidationEvidence);
+
+    private static string ReadFrontmatterValue(string markdown, string key)
+    {
+        Match match = Regex.Match(
+            markdown,
+            $@"(?m)^{Regex.Escape(key)}:\s*['""]?(?<value>[^'""\r\n]+)['""]?\s*$",
+            RegexOptions.CultureInvariant);
+
+        match.Success.ShouldBeTrue(key);
+        return match.Groups["value"].Value.Trim();
+    }
+
+    private static bool GitObjectExists(string root, string revision)
+    {
+        using var process = CreateGitProcess(root, "cat-file", "-e", $"{revision}^{{commit}}");
+
+        process.Start().ShouldBeTrue();
+        process.WaitForExit();
+
+        return process.ExitCode == 0;
+    }
+
+    private static string RunGit(string root, params string[] arguments)
+    {
+        using var process = CreateGitProcess(root, arguments);
+
+        process.Start().ShouldBeTrue();
+        string output = process.StandardOutput.ReadToEnd();
+        string error = process.StandardError.ReadToEnd();
+        process.WaitForExit();
+
+        process.ExitCode.ShouldBe(0, error);
+        return output;
+    }
+
+    private static Process CreateGitProcess(string root, params string[] arguments)
+    {
+        var process = new Process
+        {
+            StartInfo = new ProcessStartInfo("git")
+            {
+                WorkingDirectory = root,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+            },
+        };
+
+        foreach (string argument in arguments)
+        {
+            process.StartInfo.ArgumentList.Add(argument);
+        }
+
+        return process;
     }
 }

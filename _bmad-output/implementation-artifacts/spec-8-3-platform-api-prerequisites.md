@@ -6,7 +6,7 @@ status: 'done'
 review_loop_iteration: 0
 followup_review_recommended: true
 baseline_revision: '12c56f78274f5acba6385594f40652c071890540'
-final_revision: 'cfaf15b25a817d5b5e8e27a3250b9990a159c30d'
+final_revision: '521ef6601d5fbf350dcc0b8586f53b6ca7ff3b89'
 context:
   - '{project-root}/_bmad-output/implementation-artifacts/epic-8-context.md'
   - '{project-root}/_bmad-output/implementation-artifacts/spec-8-2-identifier-correctness-and-zero-risk-hygiene.md'
@@ -106,6 +106,26 @@ warnings: []
   - `[low]` `[patch]` Replaced the multi-pattern required-surface `rg` verification with a fixed-string loop that checks each required surface independently.
   - `[low]` `[patch]` Moved the `MatrixRow` helper record into its own file to preserve the one-type-per-file rule.
 
+### 2026-07-07 — Review pass
+- intent_gap: 0
+- bad_spec: 0
+- patch: 12: (high 0, medium 12, low 0)
+- defer: 0
+- reject: 2: (high 0, medium 0, low 2)
+- addressed_findings:
+  - `[medium]` `[patch]` Narrowed `Hexalith.EventStore.Aspire` evidence-prefix validation to the Aspire package path so unrelated EventStore files cannot satisfy Aspire prerequisite proof.
+  - `[medium]` `[patch]` Changed fable-gap coverage from global token presence to row-specific exact token assertions, so `G10`, `G11`, and `G12` cannot satisfy earlier gap IDs and each required row owns its gaps.
+  - `[medium]` `[patch]` Tightened available-row proof checks to require explicit `must validate` release or submodule-pin wording and reject negated release/pin phrasing.
+  - `[medium]` `[patch]` Tightened rollback checks to require positive `Keep ... rollback path` wording and reject negated rollback phrasing.
+  - `[medium]` `[patch]` Added duplicate matrix marker detection so tests cannot silently validate a stale matrix section.
+  - `[medium]` `[patch]` Expanded the G7 row to require the public `eventstore:tenant` claim constant plus `AggregateIdentity.IsValid(string)` and `UniqueIdHelper.IsValidUlid(string)` predicate proof, with EventStore and Commons ownership.
+  - `[medium]` `[patch]` Downgraded the G8 Aspire helper row from `available` to `needs-additive-api` and required `WithEventStoreJwtAuthentication(audience)` or documented `WithJwtBearerSecurity(..., audience)` replacement plus granular typed-client registration proof.
+  - `[medium]` `[patch]` Expanded the G5 payload-protection row with AAD `pdenc-v2`, v1 read support, `IPersonalDataPolicy`, `IErasureStateProvider`, stable persisted format/state/actor/metric constraints, and golden harness migration proof.
+  - `[medium]` `[patch]` Replaced the generic G12 owner with actionable Commons and Tenants release ownership and evidence paths.
+  - `[medium]` `[patch]` Added validation-evidence token assertions so rows must name expected APIs, symbols, and missing-surface proof rather than only existing files.
+  - `[medium]` `[patch]` Added a Story 8.3 revision-range guard that checks the recorded baseline-to-final diff did not modify forbidden production migration paths.
+  - `[medium]` `[patch]` Replaced broad `Inspected ...` validation prose in the matrix with reproducible `rg -n -F` symbol checks or explicit missing-surface review notes.
+
 ## Design Notes
 
 Use a markdown artifact instead of production source changes because the story is an approval/evidence gate. The accompanying fitness test is intentionally about the artifact contract: it makes the prerequisite set executable without asserting that all platform work is complete today.
@@ -120,7 +140,7 @@ Use a markdown artifact instead of production source changes because the story i
 
 **Observed 2026-07-07:**
 - `dotnet build tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj -c Debug -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0 --verbosity minimal` -- pass; 0 warnings, 0 errors.
-- `dotnet ./tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -class Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests` -- pass; 7 passed.
+- `dotnet ./tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -class Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests` -- pass; 9 passed.
 - `for surface in 'EventStore domain-service host' 'EventStore projection/query SDK' 'EventStore DataProtection' 'EventStore client envelopes/freshness/error codes' 'Tenant claims transformation' 'Aspire publish helpers' 'FrontComposer UI primitives' 'Commons HTTP helpers' 'Builds shared props/targets'; do rg -n -F "$surface" _bmad-output/implementation-artifacts/story-8-3-platform-api-prerequisite-matrix.md >/dev/null || exit 1; done` -- pass; every required surface present.
 - `git diff --check` -- pass.
 
@@ -133,6 +153,7 @@ Summary:
 - Covered the approved prerequisite surfaces and review-hardened the matrix to explicitly map fable gaps G1-G12.
 - Added executable fitness coverage that preserves required rows, requires the added fable-gap rows, allows future status progress and extra rows, validates owner evidence, protects no-migration wording, and catches malformed markdown rows.
 - Follow-up review hardened exact gap matching, exact story-id parsing, owner evidence normalization, available-row proof requirements, and rollback wording.
+- Fresh follow-up review hardened G5/G7/G8/G12 prerequisite detail, reproducible validation evidence, duplicate marker detection, and the recorded no-production-migration diff guard.
 
 Files changed:
 - `_bmad-output/implementation-artifacts/spec-8-3-platform-api-prerequisites.md` -- new BMAD spec, review triage, verification, and run result.
@@ -145,14 +166,15 @@ Files changed:
 Review findings breakdown:
 - Initial review pass patches applied: 11 total: high 0, medium 7, low 4.
 - Follow-up review pass patches applied: 11 total: high 0, medium 9, low 2.
+- Fresh follow-up review pass patches applied: 12 total: high 0, medium 12, low 0.
 - Deferred: 0.
-- Rejected: 4 low-severity findings across both passes: two workflow-temporary status/finalization concerns, one story-status wording concern already covered by no-migration language, and one existing `RepositoryRoot` helper false positive.
+- Rejected: 6 low-severity findings across all passes: three workflow-temporary status/finalization concerns, two story-status or matrix-gate semantics concerns already covered by the intent-contract/no-migration language, and one existing `RepositoryRoot` helper false positive.
 
 Follow-up review recommendation: true. The final pass made broad guard-test changes across matrix parsing, owner evidence, story-id coverage, and migration-proof wording.
 
 Verification performed:
 - `dotnet build tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj -c Debug -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0 --verbosity minimal` -- pass; 0 warnings, 0 errors.
-- `dotnet ./tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -class Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests` -- pass; 7 passed.
+- `dotnet ./tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -class Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests` -- pass; 9 passed.
 - Required-surface fixed-string `rg` loop -- pass; every required matrix surface is checked independently.
 - Focused fitness tests cover exact G1-G12 tokens -- pass.
 - `git diff --check` -- pass.

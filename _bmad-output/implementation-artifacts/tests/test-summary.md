@@ -124,14 +124,14 @@
 - Created `_bmad-output/implementation-artifacts/story-8-3-platform-api-prerequisite-matrix.md` as a no-production-migration prerequisite matrix for Stories 8.4-8.10.
 - Covered all required platform surfaces: EventStore domain-service host, EventStore projection/query SDK, EventStore DataProtection, EventStore client envelopes/freshness/error codes, tenant claims transformation, Aspire publish helpers, FrontComposer UI primitives, Commons HTTP helpers, and Builds shared props/targets.
 - Preserved Story 8.1 and Story 8.2 residual blocker wording, including the Release source-mode guard and the five pre-existing tenant-event failures.
-- Added `tests/Hexalith.Parties.Tests/FitnessTests/PlatformApiPrerequisitesTests.cs` to verify required rows, required fable-gap rows, status vocabulary, normalized evidence paths, no-migration wording, exact dependent-story coverage, exact fable gap coverage, available-row release/submodule proof wording, and proof/rollback wording for every row.
+- Added `tests/Hexalith.Parties.Tests/FitnessTests/PlatformApiPrerequisitesTests.cs` to verify required rows, required fable-gap rows, status vocabulary, normalized evidence paths, no-migration wording, exact dependent-story coverage, exact per-row fable gap coverage, available-row release/submodule proof wording, proof/rollback wording for every row, validation-evidence symbols, duplicate matrix markers, and the recorded no-production-migration diff guard.
 
 ### Commands Attempted
 
 | Command | Result | Notes |
 | --- | --- | --- |
 | `dotnet build tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj -c Debug -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0 --verbosity minimal` | Pass | Debug source-mode root test assembly builds cleanly for the new fitness tests. |
-| `dotnet ./tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -class Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests` | Pass | 7 passed, 0 failed. |
+| `dotnet ./tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -class Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests` | Pass | 9 passed, 0 failed. |
 | `for surface in 'EventStore domain-service host' 'EventStore projection/query SDK' 'EventStore DataProtection' 'EventStore client envelopes/freshness/error codes' 'Tenant claims transformation' 'Aspire publish helpers' 'FrontComposer UI primitives' 'Commons HTTP helpers' 'Builds shared props/targets'; do rg -n -F "$surface" _bmad-output/implementation-artifacts/story-8-3-platform-api-prerequisite-matrix.md >/dev/null || exit 1; done` | Pass | Every required matrix surface name is checked independently. |
 | `git diff --check` | Pass | No whitespace or conflict-marker issues. |
 
