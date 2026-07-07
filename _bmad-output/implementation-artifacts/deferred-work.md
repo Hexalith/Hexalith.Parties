@@ -14,3 +14,10 @@ source_spec: `spec-8-2-identifier-correctness-and-zero-risk-hygiene.md`
 severity: low
 reason: Review budget (3 cycles) was exhausted with the story finalized (status: done, verify green) while the review pass kept recommending an independent follow-up. The work was committed by bmad-loop run 20260707-072046-c4fb; this entry preserves the lingering follow-up recommendation for a deliberate later review.
 status: open
+
+### DW-2: Follow-up review still recommended for 8-3-platform-api-prerequisites after the review budget was exhausted
+origin: review-budget-followup
+source_spec: `spec-8-3-platform-api-prerequisites.md`
+severity: low
+reason: Review budget (3 cycles) was exhausted with the story finalized (status: done, verify green) while the review pass kept recommending an independent follow-up. The work was committed by bmad-loop run 20260707-072046-c4fb; this entry preserves the lingering follow-up recommendation for a deliberate later review.
+status: open
