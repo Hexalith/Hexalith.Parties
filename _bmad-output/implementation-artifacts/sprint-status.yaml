@@ -1,5 +1,5 @@
 # generated: 2026-06-21T18:55:59+02:00
-# last_updated: 2026-07-07T14:24:18+02:00
+# last_updated: 2026-07-07T14:40:30+02:00
 # project: parties
 # project_key: NOKEY
 # tracking_system: file-system
@@ -41,7 +41,7 @@
 # - Retrospective appends its action items to action_items; sprint-status surfaces open ones
 
 generated: 2026-06-21T18:55:59+02:00
-last_updated: 2026-07-07T14:24:18+02:00
+last_updated: 2026-07-07T14:40:30+02:00
 project: parties
 project_key: NOKEY
 tracking_system: file-system
@@ -129,7 +129,7 @@ development_status:
   7-6-crypto-key-management-adr-and-compatibility-harness: done
   7-7-crypto-key-management-migration-behind-eventstore-provider-contracts: done
   7-8-release-rollback-cleanup-and-readiness-gate: done
-  epic-7-retrospective: optional
+  epic-7-retrospective: done
 
   # ── Epic 8: Domain-Focus Refactoring and Platform Extraction (Class C) ───
   # Added by Correct Course 2026-07-06:
@@ -159,16 +159,44 @@ action_items:
   - epic: 6
     action: "Document the standard fallback validation ladder for this repo: direct xUnit v3 assemblies, serialized -m:1 builds, and focused project builds when dotnet test or solution build is environment-blocked."
     owner: "Murat (Test Architect)"
-    status: open
+    status: in-progress
   - epic: 6
     action: "Require producer/consumer compatibility tests for serializer, projection, gateway, and shared-anchor migrations before marking stories done."
     owner: "Winston (Architect) + Amelia (Developer)"
-    status: open
+    status: done
   - epic: 6
     action: "Add sprint-status hygiene to retrospective prep: if all story rows for an epic are done, update the epic row before or during retrospective completion."
     owner: "Alice (Product Owner) + Amelia (Developer)"
-    status: open
+    status: done
   - epic: 6
     action: "Keep broad release blockers tracked outside story-local acceptance when they are caused by submodule drift, package validation network access, or unrelated UI/deploy gates."
     owner: "Winston (Architect) + Murat (Test Architect)"
+    status: done
+  - epic: 7
+    action: "Convert the File List check into an actual pre-review gate that compares git diff --name-only with the story File List."
+    owner: "Amelia (Developer)"
+    status: open
+  - epic: 7
+    action: "Create a release-candidate gate for root gitlinks: each drifted pointer is owner-validated or deliberately reset before tagging."
+    owner: "Winston (Architect) + Murat (Test Architect)"
+    status: open
+  - epic: 7
+    action: "Turn the validation fallback ladder into durable tooling guidance and runner support, including continue-after-failure reporting and inspectable result output."
+    owner: "Murat (Test Architect)"
+    status: open
+  - epic: 7
+    action: "Keep projection rollback-only paths until Epic 8 proves EventStore SDK projection/query parity, GDPR processing-record reads, rebuild behavior, and rollback replacement."
+    owner: "Winston (Architect) + Amelia (Developer)"
+    status: open
+  - epic: 7
+    action: "Keep Parties crypto/key-management implementation until an approved shared provider proves payload compatibility, typed unreadable outcomes, no-leak diagnostics, exports, processing records, certificates, and rollback."
+    owner: "Winston (Architect) + Amelia (Developer)"
+    status: open
+  - epic: 7
+    action: "Resolve the FrontComposer navigation accessibility blocker or validate/reset the FrontComposer pointer that caused the mismatch."
+    owner: "Sally (UX Designer) + Amelia (Developer)"
+    status: open
+  - epic: 7
+    action: "Keep PRD, epics, and readiness docs explicit that Epics 7 and 8 are maintenance scope with no new PRD functional coverage."
+    owner: "Paige (Technical Writer)"
     status: open
