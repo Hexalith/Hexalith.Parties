@@ -116,3 +116,27 @@
   - `Hexalith.Parties.Tests.Authorization.TenantAccessServiceTests.CheckAccessAsyncDeniesAfterUserRemovedFromTenantEventIsProcessed`
   - `Hexalith.Parties.Tests.Tenants.TenantEventInfrastructureTests.ProcessorRestartReprocessesSameMessageIdAgainstSharedStore`
   - `Hexalith.Parties.Tests.Tenants.TenantEventInfrastructureTests.TenantEventProcessorRemovesUsersAndFailsInvalidPayloadWithoutPoisoningMessageId`
+
+## Story 8.3 Platform API Prerequisites - 2026-07-07
+
+### Focused Artifacts
+
+- Created `_bmad-output/implementation-artifacts/story-8-3-platform-api-prerequisite-matrix.md` as a no-production-migration prerequisite matrix for Stories 8.4-8.10.
+- Covered all required platform surfaces: EventStore domain-service host, EventStore projection/query SDK, EventStore DataProtection, EventStore client envelopes/freshness/error codes, tenant claims transformation, Aspire publish helpers, FrontComposer UI primitives, Commons HTTP helpers, and Builds shared props/targets.
+- Preserved Story 8.1 and Story 8.2 residual blocker wording, including the Release source-mode guard and the five pre-existing tenant-event failures.
+- Added `tests/Hexalith.Parties.Tests/FitnessTests/PlatformApiPrerequisitesTests.cs` to verify required rows, status vocabulary, evidence paths, no-migration wording, dependent-story coverage, fable gap coverage, available-row proof wording, and proof/rollback wording for additive API gaps.
+
+### Commands Attempted
+
+| Command | Result | Notes |
+| --- | --- | --- |
+| `dotnet build tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj -c Debug -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0 --verbosity minimal` | Pass | Debug source-mode root test assembly builds cleanly for the new fitness tests. |
+| `dotnet ./tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -class Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests` | Pass | 7 passed, 0 failed. |
+| `rg -n -e 'EventStore domain-service host' -e 'EventStore projection/query SDK' -e 'EventStore DataProtection' -e 'EventStore client envelopes/freshness/error codes' -e 'Tenant claims transformation' -e 'Aspire publish helpers' -e 'FrontComposer UI primitives' -e 'Commons HTTP helpers' -e 'Builds shared props/targets' _bmad-output/implementation-artifacts/story-8-3-platform-api-prerequisite-matrix.md` | Pass | All required matrix surface names are present. |
+| `git diff --check` | Pass | No whitespace or conflict-marker issues. |
+
+### Remaining Blockers
+
+- No Parties source migration starts in Story 8.3. Later migration stories remain gated by the matrix row status, proof requirements, rollback wording, and owner decisions.
+- Full `Hexalith.Parties.Tests` Release source-mode remains blocked by the Story 8.1 `Hexalith.Memories` Release guard.
+- Full `Hexalith.Parties.Tests` Debug source-mode still has the five pre-existing tenant-event failures recorded by Story 8.1 and Story 8.2.
