@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.Globalization;
 
+using Hexalith.Commons.UniqueIds;
 using Hexalith.Parties.Client;
 using Hexalith.Parties.Client.Abstractions;
 using Hexalith.Parties.Contracts.Commands;
@@ -275,8 +276,8 @@ internal sealed class PartiesMcpTools(
                 string? effectiveFamilyName = FirstNonEmpty(familyName, lastName);
                 string? effectiveAddIdentifierType = FirstNonEmpty(addIdentifierType, !string.IsNullOrWhiteSpace(addVatNumber) ? "VAT" : null);
                 string? effectiveAddIdentifierValue = FirstNonEmpty(addIdentifierValue, addVatNumber);
-                string? effectiveRemoveContactIds = CombineCsv(removeContactChannelId, removeContactChannelIds);
-                string? effectiveRemoveIdentifierIds = CombineCsv(removeIdentifierId, removeIdentifierIds);
+                string[] effectiveRemoveContactIds = CombineIds(removeContactChannelId, removeContactChannelIds);
+                string[] effectiveRemoveIdentifierIds = CombineIds(removeIdentifierId, removeIdentifierIds);
                 if (ExceedsToolPayloadLimit(
                     partyId,
                     effectiveGivenName,
@@ -293,11 +294,13 @@ internal sealed class PartiesMcpTools(
                     updateContactChannelId,
                     updateContactChannelType,
                     updateContactChannelValue,
-                    effectiveRemoveContactIds,
+                    removeContactChannelId,
+                    removeContactChannelIds,
                     addVatNumber,
                     effectiveAddIdentifierType,
                     effectiveAddIdentifierValue,
-                    effectiveRemoveIdentifierIds))
+                    removeIdentifierId,
+                    removeIdentifierIds))
                 {
                     return PartiesMcpToolResult.Failed(
                         PartiesMcpToolNames.UpdateParty,
@@ -306,12 +309,23 @@ internal sealed class PartiesMcpTools(
                         "The update_party request exceeds the supported MCP payload size.");
                 }
 
+                PartiesMcpToolResult? semanticIdValidation =
+                    ValidateOptionalSemanticId(PartiesMcpToolNames.UpdateParty, nameof(updateContactChannelId), updateContactChannelId)
+                    ?? ValidateSemanticIds(PartiesMcpToolNames.UpdateParty, nameof(removeContactChannelIds), effectiveRemoveContactIds)
+                    ?? ValidateSemanticIds(PartiesMcpToolNames.UpdateParty, nameof(removeIdentifierIds), effectiveRemoveIdentifierIds);
+                if (semanticIdValidation is not null)
+                {
+                    return semanticIdValidation;
+                }
+
                 bool hasCompositeInput =
                     HasAny(effectiveGivenName, effectiveFamilyName, dateOfBirth, prefix, suffix, legalName, tradingName, legalForm, registrationNumber)
                     || HasAny(addEmail, addPhone)
                     || HasAny(updateContactChannelId, updateContactChannelType, updateContactChannelValue)
                     || updateContactChannelPreferred.HasValue
-                    || HasAny(effectiveRemoveContactIds, effectiveAddIdentifierType, effectiveAddIdentifierValue, effectiveRemoveIdentifierIds);
+                    || effectiveRemoveContactIds.Length > 0
+                    || HasAny(effectiveAddIdentifierType, effectiveAddIdentifierValue)
+                    || effectiveRemoveIdentifierIds.Length > 0;
                 bool needsCurrentParty = HasAny(effectiveGivenName, effectiveFamilyName, dateOfBirth, prefix, suffix, legalName, tradingName, legalForm, registrationNumber)
                     || HasAny(updateContactChannelId, updateContactChannelType, updateContactChannelValue)
                     || updateContactChannelPreferred.HasValue;
@@ -509,10 +523,28 @@ internal sealed class PartiesMcpTools(
         => ValidateContext(toolName) ?? (!IsSafePartyId(partyId) ? ValidationFailed(toolName, "partyId") : null);
 
     private static bool IsSafePartyId(string? partyId)
-        => !string.IsNullOrWhiteSpace(partyId)
-            && partyId.Length <= 128
-            && partyId.AsSpan().Trim().Length == partyId.Length
-            && partyId.All(static ch => char.IsLetterOrDigit(ch) || ch is '-' or '_' or '.' or ':');
+        => PartyIdentifier.IsValid(partyId);
+
+    private static PartiesMcpToolResult? ValidateOptionalSemanticId(string toolName, string field, string? value)
+        => string.IsNullOrWhiteSpace(value) || PartyIdentifier.IsValid(value.Trim())
+            ? null
+            : ValidationFailed(toolName, field);
+
+    private static PartiesMcpToolResult? ValidateSemanticIds(
+        string toolName,
+        string field,
+        IReadOnlyList<string> values)
+    {
+        foreach (string value in values)
+        {
+            if (!PartyIdentifier.IsValid(value))
+            {
+                return ValidationFailed(toolName, field);
+            }
+        }
+
+        return null;
+    }
 
     private PartiesMcpToolResult? ValidateContext(string toolName)
         => contextAccessor.Current is null
@@ -711,10 +743,10 @@ internal sealed class PartiesMcpTools(
         string? updateContactChannelType,
         string? updateContactChannelValue,
         bool? updateContactChannelPreferred,
-        string? removeContactChannelId,
+        IReadOnlyList<string> removeContactChannelIds,
         string? addIdentifierType,
         string? addIdentifierValue,
-        string? removeIdentifierId)
+        IReadOnlyList<string> removeIdentifierIds)
     {
         PersonDetails? person = HasAny(givenName, familyName, dateOfBirth, prefix, suffix)
             ? BuildPersonDetails(givenName, familyName, dateOfBirth, prefix, suffix, currentParty?.PersonDetails)
@@ -795,16 +827,13 @@ internal sealed class PartiesMcpTools(
             });
         }
 
-        string[] removeContacts = SplitCsv(removeContactChannelId);
-        string[] removeIdentifiers = SplitCsv(removeIdentifierId);
-
         return person is null
             && organization is null
             && addContacts.Count == 0
             && updateContacts.Count == 0
-            && removeContacts.Length == 0
+            && removeContactChannelIds.Count == 0
             && addIdentifiers.Count == 0
-            && removeIdentifiers.Length == 0
+            && removeIdentifierIds.Count == 0
             ? null
             : new UpdatePartyComposite
             {
@@ -813,9 +842,9 @@ internal sealed class PartiesMcpTools(
                 OrganizationDetails = organization,
                 AddContactChannels = addContacts,
                 UpdateContactChannels = updateContacts,
-                RemoveContactChannelIds = removeContacts,
+                RemoveContactChannelIds = removeContactChannelIds,
                 AddIdentifiers = addIdentifiers,
-                RemoveIdentifierIds = removeIdentifiers,
+                RemoveIdentifierIds = removeIdentifierIds,
             };
     }
 
@@ -903,14 +932,16 @@ internal sealed class PartiesMcpTools(
     private static string? FirstNonEmpty(params string?[] values)
         => values.FirstOrDefault(value => !string.IsNullOrWhiteSpace(value));
 
-    private static string? CombineCsv(params string?[] values)
+    private static string[] CombineIds(string? singleValue, string? csvValues)
     {
-        string[] parts = [.. values
-            .Where(value => !string.IsNullOrWhiteSpace(value))
-            .SelectMany(value => value!.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
-            .Where(value => !string.IsNullOrWhiteSpace(value))];
+        List<string> values = [];
+        if (!string.IsNullOrWhiteSpace(singleValue))
+        {
+            values.Add(singleValue.Trim());
+        }
 
-        return parts.Length == 0 ? null : string.Join(",", parts);
+        values.AddRange(SplitCsv(csvValues));
+        return [.. values];
     }
 
     private static string[] SplitCsv(string? value)
@@ -974,5 +1005,5 @@ internal sealed class PartiesMcpTools(
     }
 
     private static string NewId()
-        => Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture);
+        => UniqueIdHelper.GenerateSortableUniqueStringId();
 }

@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 
+using Hexalith.Commons.UniqueIds;
 using Hexalith.EventStore.Contracts.Queries;
 using Hexalith.Parties.Contracts;
 using Hexalith.Parties.Contracts.Commands;
@@ -11,6 +12,8 @@ using Hexalith.Parties.Contracts.ValueObjects;
 
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
+
+using SemanticId = Hexalith.Parties.Contracts.ValueObjects.PartyIdentifier;
 
 namespace Hexalith.Parties.Client.AdminPortal;
 
@@ -190,7 +193,12 @@ public sealed class HttpAdminPortalGdprClient : IAdminPortalGdprClient
         ArgumentException.ThrowIfNullOrWhiteSpace(aggregateId);
         ArgumentNullException.ThrowIfNull(command);
 
-        string messageId = Guid.NewGuid().ToString("N");
+        if (!SemanticId.IsValid(aggregateId))
+        {
+            throw new ArgumentException("AggregateId must be a support-safe identifier.", nameof(aggregateId));
+        }
+
+        string messageId = UniqueIdHelper.GenerateSortableUniqueStringId();
         var request = new EventStoreCommandRequest(
             MessageId: messageId,
             Tenant: _options.Tenant,
@@ -223,6 +231,7 @@ public sealed class HttpAdminPortalGdprClient : IAdminPortalGdprClient
         CancellationToken cancellationToken)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(aggregateId);
+        ValidateAggregateId(aggregateId);
 
         var request = new SubmitQueryRequest(
             Tenant: _options.Tenant,
@@ -266,6 +275,7 @@ public sealed class HttpAdminPortalGdprClient : IAdminPortalGdprClient
         CancellationToken cancellationToken)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(aggregateId);
+        ValidateAggregateId(aggregateId);
 
         var request = new SubmitQueryRequest(
             Tenant: _options.Tenant,
@@ -387,6 +397,14 @@ public sealed class HttpAdminPortalGdprClient : IAdminPortalGdprClient
         => string.IsNullOrWhiteSpace(detail)
             ? detail
             : "Operation details are available from the server audit trail.";
+
+    private static void ValidateAggregateId(string aggregateId)
+    {
+        if (!SemanticId.IsValid(aggregateId))
+        {
+            throw new ArgumentException("AggregateId must be a support-safe identifier.", nameof(aggregateId));
+        }
+    }
 
     private sealed record PartyQueryPayload(string PartyId);
 

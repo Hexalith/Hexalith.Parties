@@ -317,6 +317,53 @@ public sealed class PartiesAdminPortalApiClientTests
     }
 
     [Fact]
+    public async Task TypedClient_ArgumentException_MapsToValidationFailureAsync()
+    {
+        var partiesQueryClient = new RecordingPartiesQueryClient
+        {
+            ExceptionToThrow = new ArgumentException("unsafe party id party/unsafe"),
+        };
+        using ServiceProvider serviceProvider = new ServiceCollection()
+            .AddSingleton<IPartiesQueryClient>(partiesQueryClient)
+            .BuildServiceProvider();
+        PartiesAdminPortalApiClient client = new(
+            serviceProvider,
+            Options.Create(new PartiesAdminPortalOptions()));
+
+        AdminPortalQueryException ex = await Should.ThrowAsync<AdminPortalQueryException>(
+            () => client.GetPartyAsync("party/unsafe", CancellationToken.None));
+
+        ex.Kind.ShouldBe(AdminPortalQueryFailureKind.Validation);
+        ex.Message.ShouldNotContain("party/unsafe");
+    }
+
+    [Fact]
+    public async Task TypedCommandClient_ArgumentException_MapsToValidationRejectedOutcomeAsync()
+    {
+        var commandClient = new RecordingPartiesCommandClient
+        {
+            ExceptionToThrow = new ArgumentException("unsafe party id party/unsafe"),
+        };
+        using ServiceProvider serviceProvider = new ServiceCollection()
+            .AddSingleton<IPartiesCommandClient>(commandClient)
+            .BuildServiceProvider();
+        PartiesAdminPortalApiClient client = new(
+            serviceProvider,
+            Options.Create(new PartiesAdminPortalOptions()));
+        var command = new UpdatePartyComposite
+        {
+            PartyId = "party/unsafe",
+            PersonDetails = new PersonDetails { FirstName = "Ada", LastName = "Byron" },
+        };
+
+        AdminPortalCommandResult result = await client.UpdatePartyCompositeAsync("party/unsafe", command, CancellationToken.None);
+
+        result.Outcome.ShouldBe(AdminPortalCommandOutcome.ValidationRejected);
+        result.CorrelationId.ShouldBeNull();
+        result.Detail.ShouldBeNull();
+    }
+
+    [Fact]
     public async Task ListPartiesAsync_UsesFrontComposerQueryServiceWithPartyDomainAndBoundedPagingAsync()
     {
         var queryService = new RecordingQueryService();
@@ -624,6 +671,23 @@ public sealed class PartiesAdminPortalApiClientTests
     }
 
     [Fact]
+    public async Task GdprQuery_ArgumentException_MapsToValidationExceptionAsync()
+    {
+        using ServiceProvider serviceProvider = new ServiceCollection()
+            .AddSingleton<IAdminPortalGdprClient>(new ValidationFailingGdprClient())
+            .BuildServiceProvider();
+        PartiesAdminPortalApiClient client = new(
+            serviceProvider,
+            Options.Create(new PartiesAdminPortalOptions()));
+
+        AdminPortalQueryException ex = await Should.ThrowAsync<AdminPortalQueryException>(
+            () => client.GetErasureStatusAsync("party/unsafe", CancellationToken.None));
+
+        ex.Kind.ShouldBe(AdminPortalQueryFailureKind.Validation);
+        ex.Message.ShouldNotContain("party/unsafe");
+    }
+
+    [Fact]
     public async Task GdprCommand_ContractUnavailable_MapsToContractUnavailableOutcomeAsync()
     {
         using ServiceProvider serviceProvider = new ServiceCollection()
@@ -636,6 +700,23 @@ public sealed class PartiesAdminPortalApiClientTests
         AdminPortalGdprCommandResult result = await client.RetryErasureVerificationAsync("party-1", CancellationToken.None);
 
         result.Outcome.ShouldBe(AdminPortalGdprOutcome.ContractUnavailable);
+    }
+
+    [Fact]
+    public async Task GdprCommand_ArgumentException_MapsToValidationRejectedOutcomeAsync()
+    {
+        using ServiceProvider serviceProvider = new ServiceCollection()
+            .AddSingleton<IAdminPortalGdprClient>(new ValidationFailingGdprClient())
+            .BuildServiceProvider();
+        PartiesAdminPortalApiClient client = new(
+            serviceProvider,
+            Options.Create(new PartiesAdminPortalOptions()));
+
+        AdminPortalGdprCommandResult result = await client.RequestErasureAsync("party/unsafe", CancellationToken.None);
+
+        result.Outcome.ShouldBe(AdminPortalGdprOutcome.ValidationRejected);
+        result.CorrelationId.ShouldBeNull();
+        result.Detail.ShouldBeNull();
     }
 
     [Fact]
@@ -1136,6 +1217,50 @@ public sealed class PartiesAdminPortalApiClientTests
 
         public Task<IReadOnlyList<ProcessingActivityRecord>> GetProcessingRecordsAsync(string partyId, CancellationToken cancellationToken)
             => throw new HttpRequestException("transport down");
+    }
+
+    private sealed class ValidationFailingGdprClient : IAdminPortalGdprClient
+    {
+        public Task<AdminPortalGdprCommandResult> RequestErasureAsync(string partyId, CancellationToken cancellationToken)
+            => throw new ArgumentException("unsafe party id party/unsafe", nameof(partyId));
+
+        public Task<AdminPortalGdprCommandResult> CancelErasureAsync(string partyId, CancellationToken cancellationToken)
+            => throw new NotImplementedException();
+
+        public Task<PartyErasureStatusRecord?> GetErasureStatusAsync(string partyId, CancellationToken cancellationToken)
+            => throw new ArgumentException("unsafe party id party/unsafe", nameof(partyId));
+
+        public Task<ErasureCertificate?> GetErasureCertificateAsync(string partyId, CancellationToken cancellationToken)
+            => throw new NotImplementedException();
+
+        public Task<AdminPortalGdprCommandResult> RetryErasureVerificationAsync(string partyId, CancellationToken cancellationToken)
+            => throw new NotImplementedException();
+
+        public Task<AdminPortalGdprCommandResult> RestrictProcessingAsync(string partyId, string? reason, CancellationToken cancellationToken)
+            => throw new NotImplementedException();
+
+        public Task<AdminPortalGdprCommandResult> LiftRestrictionAsync(string partyId, CancellationToken cancellationToken)
+            => throw new NotImplementedException();
+
+        public Task<AdminPortalGdprCommandResult> AddConsentAsync(
+            string partyId,
+            string channelId,
+            string purpose,
+            LawfulBasis lawfulBasis,
+            CancellationToken cancellationToken)
+            => throw new NotImplementedException();
+
+        public Task<AdminPortalGdprCommandResult> RevokeConsentAsync(string partyId, string consentId, CancellationToken cancellationToken)
+            => throw new NotImplementedException();
+
+        public Task<IReadOnlyList<ConsentRecord>> GetConsentAsync(string partyId, CancellationToken cancellationToken)
+            => throw new NotImplementedException();
+
+        public Task<AdminPortalExportDownload> ExportPartyDataAsync(string partyId, CancellationToken cancellationToken)
+            => throw new NotImplementedException();
+
+        public Task<IReadOnlyList<ProcessingActivityRecord>> GetProcessingRecordsAsync(string partyId, CancellationToken cancellationToken)
+            => throw new NotImplementedException();
     }
 
     private sealed class ContractUnavailableGdprClient : IAdminPortalGdprClient

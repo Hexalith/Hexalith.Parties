@@ -8,6 +8,7 @@ using System.Net;
 using System.Text;
 using System.Text.Json;
 
+using Hexalith.Commons.UniqueIds;
 using Hexalith.Parties.Client;
 using Hexalith.Parties.Client.AdminPortal;
 using Hexalith.Parties.Contracts;
@@ -209,14 +210,40 @@ public sealed class AdminPortalGdprOperationContractTests
             "application/json");
         var client = CreateHttpClient(handler);
 
+        DateTimeOffset before = DateTimeOffset.UtcNow.AddSeconds(-1);
         await client.AddConsentAsync("party-1", "channel-1", "billing", LawfulBasis.Consent, CancellationToken.None);
+        DateTimeOffset after = DateTimeOffset.UtcNow.AddSeconds(1);
 
         handler.LastRequest.ShouldNotBeNull().RequestUri!.PathAndQuery.ShouldBe("/api/v1/commands");
         using JsonDocument body = JsonDocument.Parse(handler.LastRequestBody.ShouldNotBeNull());
         JsonElement root = body.RootElement;
         root.GetProperty("commandType").GetString().ShouldBe(typeof(RecordConsent).FullName);
         root.GetProperty("aggregateId").GetString().ShouldBe("party-1");
+        string messageId = root.GetProperty("messageId").GetString()
+            ?? throw new InvalidOperationException("messageId was not serialized.");
+        messageId.ShouldNotBeNullOrWhiteSpace();
+        DateTimeOffset timestamp = UniqueIdHelper.ExtractTimestamp(messageId);
+        timestamp.ShouldBeGreaterThanOrEqualTo(before);
+        timestamp.ShouldBeLessThanOrEqualTo(after);
+        Guid.TryParse(messageId, out _).ShouldBeFalse();
+        root.GetProperty("correlationId").GetString().ShouldBe(messageId);
         root.GetProperty("payload").GetProperty("purpose").GetString().ShouldBe("billing");
+    }
+
+    [Fact]
+    public async Task AddConsentAsync_WhenPartyIdIsUnsafe_DoesNotSendRequestAsync()
+    {
+        var handler = new RecordingHandler(
+            HttpStatusCode.Accepted,
+            JsonSerializer.Serialize(new { correlationId = "corr-consent" }),
+            "application/json");
+        var client = CreateHttpClient(handler);
+
+        ArgumentException exception = await Should.ThrowAsync<ArgumentException>(
+            () => client.AddConsentAsync("party/unsafe", "channel-1", "billing", LawfulBasis.Consent, CancellationToken.None));
+
+        exception.Message.ShouldContain("support-safe identifier");
+        handler.LastRequest.ShouldBeNull();
     }
 
     [Fact]
@@ -435,6 +462,22 @@ public sealed class AdminPortalGdprOperationContractTests
         ErasureCertificate? result = await client.GetErasureCertificateAsync("party-missing", CancellationToken.None);
 
         result.ShouldBeNull();
+    }
+
+    [Fact]
+    public async Task GetErasureCertificateAsync_WhenPartyIdIsUnsafe_DoesNotSendRequestAsync()
+    {
+        var handler = new RecordingHandler(
+            HttpStatusCode.OK,
+            JsonSerializer.Serialize(new { payload = (ErasureCertificate?)null }, s_jsonOptions),
+            "application/json");
+        var client = CreateHttpClient(handler);
+
+        ArgumentException exception = await Should.ThrowAsync<ArgumentException>(
+            () => client.GetErasureCertificateAsync("party/unsafe", CancellationToken.None));
+
+        exception.Message.ShouldContain("support-safe identifier");
+        handler.LastRequest.ShouldBeNull();
     }
 
     [Fact]

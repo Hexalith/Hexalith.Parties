@@ -1,5 +1,6 @@
 using System.Text.Json;
 
+using Hexalith.Commons.UniqueIds;
 using Hexalith.Parties.Client;
 using Hexalith.Parties.Client.Abstractions;
 using Hexalith.Parties.Contracts.Commands;
@@ -174,6 +175,33 @@ public sealed class PartiesMcpToolDispatchTests
     }
 
     [Fact]
+    public async Task CreatePartyWithoutCallerSuppliedIdsGeneratesSortableUniqueIds()
+    {
+        CreatePartyComposite? captured = null;
+        IPartiesCommandClient commandClient = Substitute.For<IPartiesCommandClient>();
+        commandClient.CreatePartyCompositeWithResultAsync(
+                Arg.Do<CreatePartyComposite>(command => captured = command),
+                Arg.Any<CancellationToken>())
+            .Returns(new PartiesCommandResult<PartyDetail>("corr-create", null));
+        var tools = new PartiesMcpTools(commandClient, Substitute.For<IPartiesQueryClient>(), AuthenticatedContext());
+
+        PartiesMcpToolResult result = await tools.CreateParty(
+            partyType: "person",
+            givenName: "Ada",
+            familyName: "Lovelace",
+            email: "ada@example.test",
+            identifierType: "TaxId",
+            identifierValue: "TAX-123",
+            cancellationToken: CancellationToken.None);
+
+        result.Status.ShouldBe("accepted");
+        captured.ShouldNotBeNull();
+        ShouldBeSortableUniqueId(captured.PartyId);
+        ShouldBeSortableUniqueId(captured.ContactChannels.Single().ContactChannelId);
+        ShouldBeSortableUniqueId(captured.Identifiers.Single().IdentifierId);
+    }
+
+    [Fact]
     public async Task CreatePartyReturnsSucceededWithUpdatedDetailWhenCommandPayloadIsAvailable()
     {
         var updatedDetail = new PartyDetail
@@ -330,14 +358,16 @@ public sealed class PartiesMcpToolDispatchTests
         await commandClient.DidNotReceiveWithAnyArgs().CreatePartyCompositeWithResultAsync(default!, default);
     }
 
-    [Fact]
-    public async Task CreatePartyRejectsUnsafeCallerSuppliedPartyIdBeforeCallingClient()
+    [Theory]
+    [InlineData("party/unsafe")]
+    [InlineData("tenant-a:parties:party-1")]
+    public async Task CreatePartyRejectsUnsafeCallerSuppliedPartyIdBeforeCallingClient(string partyId)
     {
         IPartiesCommandClient commandClient = Substitute.For<IPartiesCommandClient>();
         var tools = new PartiesMcpTools(commandClient, Substitute.For<IPartiesQueryClient>(), AuthenticatedContext());
 
         PartiesMcpToolResult result = await tools.CreateParty(
-            partyId: "party/unsafe",
+            partyId: partyId,
             partyType: "person",
             familyName: "Lovelace",
             cancellationToken: CancellationToken.None);
@@ -575,6 +605,98 @@ public sealed class PartiesMcpToolDispatchTests
                 && command.AddIdentifiers.Single().Type == IdentifierType.VAT
                 && command.RemoveIdentifierIds.Single() == "identifier-old"),
             Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task UpdatePartyPreservesLegacyXFormatSingleChildIds()
+    {
+        const string updateContactId = "{0x12345678,0x1234,0x5678,{0x90,0xab,0xcd,0xef,0x12,0x34,0x56,0x78}}";
+        const string removeContactId = "{0x22345678,0x1234,0x5678,{0x90,0xab,0xcd,0xef,0x12,0x34,0x56,0x78}}";
+        const string removeIdentifierId = "{0x32345678,0x1234,0x5678,{0x90,0xab,0xcd,0xef,0x12,0x34,0x56,0x78}}";
+        IPartiesCommandClient commandClient = Substitute.For<IPartiesCommandClient>();
+        IPartiesQueryClient queryClient = Substitute.For<IPartiesQueryClient>();
+        commandClient.UpdatePartyCompositeWithResultAsync(Arg.Any<string>(), Arg.Any<UpdatePartyComposite>(), Arg.Any<CancellationToken>())
+            .Returns(new PartiesCommandResult<PartyDetail>("corr-update", null));
+        queryClient.GetPartyAsync("party-1", Arg.Any<CancellationToken>())
+            .Returns(new PartyDetail
+            {
+                Id = "party-1",
+                Type = PartyType.Person,
+                IsActive = true,
+                DisplayName = "Ada Lovelace",
+                SortName = "Lovelace, Ada",
+                ContactChannels =
+                [
+                    new ContactChannel
+                    {
+                        Id = updateContactId,
+                        Type = ContactChannelType.Email,
+                        Value = "old@example.test",
+                    },
+                ],
+            });
+        var tools = new PartiesMcpTools(commandClient, queryClient, AuthenticatedContext());
+
+        PartiesMcpToolResult result = await tools.UpdateParty(
+            partyId: "party-1",
+            updateContactChannelId: updateContactId,
+            updateContactChannelValue: "new@example.test",
+            removeContactChannelId: removeContactId,
+            removeIdentifierId: removeIdentifierId,
+            cancellationToken: CancellationToken.None);
+
+        result.Status.ShouldBe("accepted");
+        await commandClient.Received(1).UpdatePartyCompositeWithResultAsync(
+            "party-1",
+            Arg.Is<UpdatePartyComposite>(command =>
+                command != null
+                && command.UpdateContactChannels.Single().ContactChannelId == updateContactId
+                && command.RemoveContactChannelIds.Single() == removeContactId
+                && command.RemoveIdentifierIds.Single() == removeIdentifierId),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task UpdatePartyRejectsUnsafeChildIdsBeforeClientAccess()
+    {
+        IPartiesCommandClient commandClient = Substitute.For<IPartiesCommandClient>();
+        IPartiesQueryClient queryClient = Substitute.For<IPartiesQueryClient>();
+        var tools = new PartiesMcpTools(commandClient, queryClient, AuthenticatedContext());
+
+        PartiesMcpToolResult result = await tools.UpdateParty(
+            partyId: "party-1",
+            updateContactChannelId: "contact/unsafe",
+            updateContactChannelValue: "+33123456789",
+            cancellationToken: CancellationToken.None);
+
+        result.Status.ShouldBe("failed");
+        result.Category.ShouldBe("validation_failed");
+        result.Code.ShouldBe("parties-mcp-validation-failed");
+        result.Message.ShouldContain("updateContactChannelId");
+        result.Message.ShouldNotContain("contact/unsafe");
+        await queryClient.DidNotReceiveWithAnyArgs().GetPartyAsync(default!, default);
+        await commandClient.DidNotReceiveWithAnyArgs().UpdatePartyCompositeWithResultAsync(default!, default!, default);
+    }
+
+    [Fact]
+    public async Task UpdatePartyRejectsUnsafeRemovalIdsBeforeClientAccess()
+    {
+        IPartiesCommandClient commandClient = Substitute.For<IPartiesCommandClient>();
+        IPartiesQueryClient queryClient = Substitute.For<IPartiesQueryClient>();
+        var tools = new PartiesMcpTools(commandClient, queryClient, AuthenticatedContext());
+
+        PartiesMcpToolResult result = await tools.UpdateParty(
+            partyId: "party-1",
+            removeContactChannelIds: "contact-1, contact/unsafe",
+            cancellationToken: CancellationToken.None);
+
+        result.Status.ShouldBe("failed");
+        result.Category.ShouldBe("validation_failed");
+        result.Code.ShouldBe("parties-mcp-validation-failed");
+        result.Message.ShouldContain("removeContactChannelIds");
+        result.Message.ShouldNotContain("contact/unsafe");
+        await queryClient.DidNotReceiveWithAnyArgs().GetPartyAsync(default!, default);
+        await commandClient.DidNotReceiveWithAnyArgs().UpdatePartyCompositeWithResultAsync(default!, default!, default);
     }
 
     [Fact]
@@ -1152,5 +1274,13 @@ public sealed class PartiesMcpToolDispatchTests
     private sealed class StubContextAccessor(PartiesMcpRequestContext? context) : IPartiesMcpRequestContextAccessor
     {
         public PartiesMcpRequestContext? Current => context;
+    }
+
+    private static void ShouldBeSortableUniqueId(string id)
+    {
+        DateTimeOffset timestamp = UniqueIdHelper.ExtractTimestamp(id);
+        timestamp.ShouldBeGreaterThanOrEqualTo(DateTimeOffset.UtcNow.AddMinutes(-1));
+        timestamp.ShouldBeLessThanOrEqualTo(DateTimeOffset.UtcNow.AddSeconds(1));
+        Guid.TryParse(id, out _).ShouldBeFalse();
     }
 }

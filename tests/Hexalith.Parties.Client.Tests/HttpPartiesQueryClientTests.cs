@@ -584,6 +584,20 @@ public sealed class HttpPartiesQueryClientTests
     }
 
     [Fact]
+    public async Task GetPartyAsync_WhenPartyIdIsUnsafe_DoesNotSendRequestAsync()
+    {
+        var handler = new HttpPartiesCommandClientTests.CountingHandler();
+        var httpClient = new HttpClient(handler) { BaseAddress = new Uri("https://localhost") };
+        var client = new HttpPartiesQueryClient(httpClient, Options.Create(ClientOptions()));
+
+        ArgumentException exception = await Should.ThrowAsync<ArgumentException>(
+            () => client.GetPartyAsync("party/unsafe", CancellationToken.None));
+
+        exception.Message.ShouldContain("support-safe identifier");
+        handler.SendCount.ShouldBe(0);
+    }
+
+    [Fact]
     public async Task GetPartyAsync_WhenTokenIsPreCanceled_DoesNotSendRequestAsync()
     {
         var handler = new HttpPartiesCommandClientTests.CountingHandler();

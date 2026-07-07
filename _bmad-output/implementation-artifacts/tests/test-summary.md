@@ -73,3 +73,46 @@
 | UI accessibility | Direct UI tests previously had a failing navigation/landmark assertion against the current UI/FrontComposer surface. | UI and FrontComposer owners must choose whether to fix the surface, update validated expectations, or reset/advance the FrontComposer pointer with evidence. |
 | Production KMS | `LocalDevKeyStorageBackend` remains dev-only and is not acceptable for regulated production personal data. | Security/platform/deployment owners must provide a production KMS or secret-store-backed key provider and deployment controls before regulated EU personal data is allowed. |
 | Epic 8 architecture spine | Sprint status still records that Epic 8 story files should be created only after the architecture spine is approved; no approved architecture spine was found in this implementation pass. | PM/architect owner must approve or publish the Epic 8 architecture spine before deletion-heavy Story 8 migrations proceed. |
+
+## Story 8.2 Identifier Correctness And Zero-Risk Hygiene - 2026-07-07
+
+### Focused Changes
+
+- Semantic identifier validation now accepts existing GUID-shaped IDs, ULID-compatible IDs, and bounded readable IDs while rejecting blank, whitespace, path-like, colon-containing, and control-character IDs with support-safe messages.
+- Generated command IDs, correlation IDs, admin/MCP semantic IDs, and security fallback correlation IDs now use `UniqueIdHelper.GenerateSortableUniqueStringId()` where caller-supplied IDs are not present.
+- The semantic-ID helper lives on the existing `Hexalith.Parties.Contracts.ValueObjects.PartyIdentifier` type to avoid root contract namespace shadowing.
+- Client/admin gateway paths now reject unsafe aggregate IDs before EventStore submission.
+- Typed command-client paths now reject unsafe child contact-channel and identifier IDs before EventStore submission.
+- MCP `update_party` now rejects unsafe update/removal child IDs before client access.
+- Legacy .NET `X`-format GUID strings remain accepted without reintroducing `Guid.TryParse`.
+- Composite aggregate validation now checks child party-ID equality and unsafe child IDs before conflict/not-found handling.
+- Tracked `*.csproj.lscache` / `*.lscache` artifacts were removed from the index, and `.gitignore` now excludes them.
+
+### Commands Attempted
+
+| Command | Result | Notes |
+| --- | --- | --- |
+| `git ls-files '*.csproj.lscache' '*.lscache'` | Pass | No tracked cache artifacts remain. |
+| `rg -n 'Guid\.TryParse\|Guid\.Parse\|new Guid\(' src/Hexalith.Parties/Validation src/Hexalith.Parties.Server/Aggregates/PartyAggregate.cs src/Hexalith.Parties.Contracts/ValueObjects/PartyIdentifier.cs` | Pass | No semantic validation, aggregate, or helper GUID parsing remains. |
+| `rg -n 'Guid\.NewGuid' src/Hexalith.Parties.Client/HttpPartiesCommandClient.cs src/Hexalith.Parties.Client/AdminPortal/HttpAdminPortalGdprClient.cs src/Hexalith.Parties.Mcp/Tools/PartiesMcpTools.cs src/Hexalith.Parties.Security/PartyKeyManagementService.cs src/Hexalith.Parties.Security/TenantKeyRotationService.cs` | Pass | No GUID generation remains in targeted new-ID sources. |
+| `git diff --check` | Pass | No whitespace/conflict-marker issues. |
+| `git diff --cached --check` | Pass | No staged whitespace/conflict-marker issues. |
+| `dotnet test tests/Hexalith.Parties.Contracts.Tests/Hexalith.Parties.Contracts.Tests.csproj -c Release -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0 --verbosity minimal` | Pass | 135 passed. |
+| `dotnet test tests/Hexalith.Parties.Client.Tests/Hexalith.Parties.Client.Tests.csproj -c Release -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0 --verbosity minimal` | Pass | 135 passed after follow-up child-ID guard tests. |
+| `dotnet test tests/Hexalith.Parties.Mcp.Tests/Hexalith.Parties.Mcp.Tests.csproj -c Release -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0 --verbosity minimal` | Pass | 56 passed after follow-up MCP child-ID guard tests. |
+| `dotnet test tests/Hexalith.Parties.Server.Tests/Hexalith.Parties.Server.Tests.csproj -c Release -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0 --verbosity minimal` | Pass | 232 passed. |
+| `dotnet test tests/Hexalith.Parties.AdminPortal.Tests/Hexalith.Parties.AdminPortal.Tests.csproj -c Release -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0 --verbosity minimal` | Pass | 179 passed. |
+| `dotnet test tests/Hexalith.Parties.Security.Tests/Hexalith.Parties.Security.Tests.csproj -c Release -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0 --verbosity minimal` | Pass | 169 passed. |
+| `dotnet build tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj -c Debug -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0 --verbosity minimal` | Pass | Debug source-mode root test assembly builds cleanly. |
+| `tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests -class Hexalith.Parties.Tests.Validation.IdentifierValidatorTests -class Hexalith.Parties.Tests.FitnessTests.IdentifierHygieneFitnessTests` | Pass | 20 passed after the follow-up `X`-format GUID compatibility patch. |
+| `dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -class Hexalith.Parties.Tests.Validation.IdentifierValidatorTests -class Hexalith.Parties.Tests.Validation.ContactChannelValidatorTests -class Hexalith.Parties.Tests.FitnessTests.IdentifierHygieneFitnessTests -class Hexalith.Parties.Tests.Domain.PartyDomainServiceInvokerValidationTests` | Pass | 44 passed. |
+
+### Remaining Blockers
+
+- The full `Hexalith.Parties.Tests` Release source-mode run is still blocked by the Story 8.1 `Hexalith.Memories` Release guard.
+- The full `Hexalith.Parties.Tests` Debug source-mode run still has the Story 8.1 tenant-event failures:
+  - `Hexalith.Parties.Tests.Authorization.TenantAccessServiceTests.CheckAccessAsyncDeniesAfterTenantDisabledEventIsProcessed`
+  - `Hexalith.Parties.Tests.Tenants.TenantEventInfrastructureTests.TenantEventProcessorAppliesSupportedEventsAndDeduplicatesByMessageId`
+  - `Hexalith.Parties.Tests.Authorization.TenantAccessServiceTests.CheckAccessAsyncDeniesAfterUserRemovedFromTenantEventIsProcessed`
+  - `Hexalith.Parties.Tests.Tenants.TenantEventInfrastructureTests.ProcessorRestartReprocessesSameMessageIdAgainstSharedStore`
+  - `Hexalith.Parties.Tests.Tenants.TenantEventInfrastructureTests.TenantEventProcessorRemovesUsersAndFailsInvalidPayloadWithoutPoisoningMessageId`

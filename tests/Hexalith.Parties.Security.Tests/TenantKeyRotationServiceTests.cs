@@ -3,6 +3,7 @@
 using Dapr.Client;
 using System.Text.Json;
 
+using Hexalith.Commons.UniqueIds;
 using Hexalith.Parties.Contracts.Security;
 using Hexalith.Parties.Security;
 
@@ -41,6 +42,48 @@ public sealed class TenantKeyRotationServiceTests
         PartyKeyWrappingMetadata metadata = (await backend.GetPartyKeyWrappingMetadataAsync("tenant-a", "p1", 1)).ShouldNotBeNull();
         metadata.RotationId.ShouldBe("rotation-1");
         metadata.TenantKeyVersion.ShouldBe(2);
+    }
+
+    [Fact]
+    public async Task RotateAsync_WithoutRequestOrAmbientCorrelationId_AuditsSortableFallbackCorrelationId()
+    {
+        LocalDevKeyStorageBackend backend = new();
+        await backend.CreateSecretAsync("tenant-a/parties/p1/v1", [1, 2, 3, 4]);
+        IKeyOperationAuditService auditService = Substitute.For<IKeyOperationAuditService>();
+        TenantKeyRotationService service = new(backend, ConfigureProgressStateStore(), auditService, [], new CorrelationContextAccessor());
+
+        TenantKeyRotationStatus status = await service.RotateAsync(new TenantKeyRotationRequest
+        {
+            TenantId = "tenant-a",
+            OperationId = "rotation-1",
+        });
+
+        ShouldBeSortableUniqueId(status.CorrelationId);
+        await auditService.Received(1).RecordOperationAsync(
+            Arg.Is<KeyOperationAuditEntry>(entry => entry != null && entry.CorrelationId == status.CorrelationId),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task RotateAsync_WithBlankRequestAndAmbientCorrelationId_AuditsSortableFallbackCorrelationId()
+    {
+        LocalDevKeyStorageBackend backend = new();
+        await backend.CreateSecretAsync("tenant-a/parties/p1/v1", [1, 2, 3, 4]);
+        IKeyOperationAuditService auditService = Substitute.For<IKeyOperationAuditService>();
+        var correlationContextAccessor = new CorrelationContextAccessor { CorrelationId = " " };
+        TenantKeyRotationService service = new(backend, ConfigureProgressStateStore(), auditService, [], correlationContextAccessor);
+
+        TenantKeyRotationStatus status = await service.RotateAsync(new TenantKeyRotationRequest
+        {
+            TenantId = "tenant-a",
+            OperationId = "rotation-1",
+            CorrelationId = string.Empty,
+        });
+
+        ShouldBeSortableUniqueId(status.CorrelationId);
+        await auditService.Received(1).RecordOperationAsync(
+            Arg.Is<KeyOperationAuditEntry>(entry => entry != null && entry.CorrelationId == status.CorrelationId),
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -389,6 +432,16 @@ public sealed class TenantKeyRotationServiceTests
             .Returns(call => realBackend.GetPartyKeyWrappingMetadataAsync(call.ArgAt<string>(0), call.ArgAt<string>(1), call.ArgAt<int>(2)));
         backend.SetPartyKeyWrappingMetadataAsync(Arg.Any<PartyKeyWrappingMetadata>(), Arg.Any<CancellationToken>())
             .Returns(call => realBackend.SetPartyKeyWrappingMetadataAsync(call.ArgAt<PartyKeyWrappingMetadata>(0)));
+    }
+
+    private static void ShouldBeSortableUniqueId(string? id)
+    {
+        string value = id ?? throw new InvalidOperationException("CorrelationId was not generated.");
+        value.ShouldNotBeNullOrWhiteSpace();
+        DateTimeOffset timestamp = UniqueIdHelper.ExtractTimestamp(value);
+        timestamp.ShouldBeGreaterThanOrEqualTo(DateTimeOffset.UtcNow.AddMinutes(-1));
+        timestamp.ShouldBeLessThanOrEqualTo(DateTimeOffset.UtcNow.AddSeconds(1));
+        Guid.TryParse(value, out _).ShouldBeFalse();
     }
 
     private static void WirePartyKeyReadPassthrough(IKeyStorageBackend backend, LocalDevKeyStorageBackend realBackend)

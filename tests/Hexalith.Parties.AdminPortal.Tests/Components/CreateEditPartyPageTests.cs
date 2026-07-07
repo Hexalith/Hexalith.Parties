@@ -2,10 +2,12 @@ using System.Security.Claims;
 
 using Bunit;
 
+using Hexalith.Commons.UniqueIds;
 using Hexalith.Parties.AdminPortal.Components;
 using Hexalith.Parties.AdminPortal.Services;
 using Hexalith.Parties.AdminPortal.Tests.Services;
 using Hexalith.Parties.Contracts.Authorization;
+using Hexalith.Parties.Contracts.Commands;
 using Hexalith.Parties.Contracts.Models;
 using Hexalith.Parties.Contracts.ValueObjects;
 using Hexalith.Tenants.Client.Projections;
@@ -111,13 +113,17 @@ public sealed class CreateEditPartyPageTests : BunitContext
         cut.WaitForAssertion(() =>
         {
             api.CreateRequests.Count.ShouldBe(1);
-            Guid.TryParse(api.CreateRequests[0].PartyId, out _).ShouldBeTrue();
+            ShouldBeSortableUniqueId(api.CreateRequests[0].PartyId);
         });
         api.CreateRequests[0].Type.ShouldBe(PartyType.Person);
         api.CreateRequests[0].PersonDetails.ShouldNotBeNull().FirstName.ShouldBe("Ada");
         api.CreateRequests[0].OrganizationDetails.ShouldBeNull();
-        api.CreateRequests[0].ContactChannels.ShouldHaveSingleItem().PartyId.ShouldBe(api.CreateRequests[0].PartyId);
-        api.CreateRequests[0].Identifiers.ShouldHaveSingleItem().PartyId.ShouldBe(api.CreateRequests[0].PartyId);
+        AddContactChannel contact = api.CreateRequests[0].ContactChannels.ShouldHaveSingleItem();
+        contact.PartyId.ShouldBe(api.CreateRequests[0].PartyId);
+        ShouldBeSortableUniqueId(contact.ContactChannelId);
+        AddIdentifier identifier = api.CreateRequests[0].Identifiers.ShouldHaveSingleItem();
+        identifier.PartyId.ShouldBe(api.CreateRequests[0].PartyId);
+        ShouldBeSortableUniqueId(identifier.IdentifierId);
         cut.Markup.ShouldNotContain("name=\"PartyId\"");
     }
 
@@ -380,6 +386,14 @@ public sealed class CreateEditPartyPageTests : BunitContext
         IRenderedComponent<FluentSelect<string, string>> select = cut.FindComponents<FluentSelect<string, string>>()
             .Single(input => string.Equals(input.Instance.Label, label, StringComparison.Ordinal));
         cut.InvokeAsync(() => select.Instance.ValueChanged.InvokeAsync(value)).GetAwaiter().GetResult();
+    }
+
+    private static void ShouldBeSortableUniqueId(string id)
+    {
+        DateTimeOffset timestamp = UniqueIdHelper.ExtractTimestamp(id);
+        timestamp.ShouldBeGreaterThanOrEqualTo(DateTimeOffset.UtcNow.AddMinutes(-1));
+        timestamp.ShouldBeLessThanOrEqualTo(DateTimeOffset.UtcNow.AddSeconds(1));
+        Guid.TryParse(id, out _).ShouldBeFalse();
     }
 
     private sealed class TestAuthenticationStateProvider : AuthenticationStateProvider

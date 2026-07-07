@@ -11,6 +11,8 @@ using Hexalith.Parties.Contracts.Security;
 using Hexalith.Parties.Contracts.State;
 using Hexalith.Parties.Contracts.ValueObjects;
 
+using SemanticId = Hexalith.Parties.Contracts.ValueObjects.PartyIdentifier;
+
 namespace Hexalith.Parties.Server.Aggregates;
 
 public sealed class PartyAggregate : EventStoreAggregate<PartyState> {
@@ -38,7 +40,7 @@ public sealed class PartyAggregate : EventStoreAggregate<PartyState> {
         }
 
         // PartyId validation
-        if (string.IsNullOrWhiteSpace(command.PartyId) || !Guid.TryParse(command.PartyId, out _)) {
+        if (!SemanticId.IsValid(command.PartyId)) {
             return new CompositeCommandResult(
                 [new PartyCannotBeCreatedWithInvalidId()],
                 applied: [],
@@ -82,22 +84,32 @@ public sealed class PartyAggregate : EventStoreAggregate<PartyState> {
         }
 
         for (int i = 0; i < command.ContactChannels.Count; i++) {
-            if (string.IsNullOrWhiteSpace(command.ContactChannels[i].ContactChannelId)) {
-                return new CompositeCommandResult(
-                    [new CompositeOperationConflict { Message = "Contact channel ID is required." }],
-                    applied: [],
-                    skipped: [],
-                    rejected: ["Contact channel ID is required."]);
+            AddContactChannel? channel = command.ContactChannels[i];
+            if (channel is null) {
+                return CompositeConflict("Contact channel operation is required.");
+            }
+
+            if (ValidateChildPartyId(channel.PartyId, command.PartyId) is { } invalidPartyId) {
+                return invalidPartyId;
+            }
+
+            if (ValidateSemanticId(channel.ContactChannelId, "Contact channel ID") is { } invalidChannelId) {
+                return invalidChannelId;
             }
         }
 
         for (int i = 0; i < command.Identifiers.Count; i++) {
-            if (string.IsNullOrWhiteSpace(command.Identifiers[i].IdentifierId)) {
-                return new CompositeCommandResult(
-                    [new CompositeOperationConflict { Message = "Identifier ID is required." }],
-                    applied: [],
-                    skipped: [],
-                    rejected: ["Identifier ID is required."]);
+            AddIdentifier? identifier = command.Identifiers[i];
+            if (identifier is null) {
+                return CompositeConflict("Identifier operation is required.");
+            }
+
+            if (ValidateChildPartyId(identifier.PartyId, command.PartyId) is { } invalidPartyId) {
+                return invalidPartyId;
+            }
+
+            if (ValidateSemanticId(identifier.IdentifierId, "Identifier ID") is { } invalidIdentifierId) {
+                return invalidIdentifierId;
             }
         }
 
@@ -195,6 +207,14 @@ public sealed class PartyAggregate : EventStoreAggregate<PartyState> {
                 rejected: [$"Payload size exceeded: {subOps} sub-operations (maximum {MaxSubOperations})."]);
         }
 
+        if (!SemanticId.IsValid(command.PartyId)) {
+            return new CompositeCommandResult(
+                [new PartyCannotBeCreatedWithInvalidId()],
+                applied: [],
+                skipped: [],
+                rejected: ["Party ID is invalid."]);
+        }
+
         // State null check — party must exist for update
         if (state is null) {
             return new CompositeCommandResult(
@@ -245,6 +265,10 @@ public sealed class PartyAggregate : EventStoreAggregate<PartyState> {
                 applied: [],
                 skipped: [],
                 rejected: []);
+        }
+
+        if (ValidateUpdateCompositeIds(command) is { } invalidIds) {
+            return invalidIds;
         }
 
         // Build lookup structures from state for O(1) lookups
@@ -555,10 +579,112 @@ public sealed class PartyAggregate : EventStoreAggregate<PartyState> {
         return new CompositeCommandResult(events, applied, skipped, [], updatedDetail);
     }
 
+    private static CompositeCommandResult? ValidateUpdateCompositeIds(UpdatePartyComposite command) {
+        for (int i = 0; i < command.AddContactChannels.Count; i++) {
+            AddContactChannel? channel = command.AddContactChannels[i];
+            if (channel is null) {
+                return CompositeConflict("Contact channel operation is required.");
+            }
+
+            if (ValidateChildPartyId(channel.PartyId, command.PartyId) is { } invalidPartyId) {
+                return invalidPartyId;
+            }
+
+            if (ValidateSemanticId(channel.ContactChannelId, "Contact channel ID") is { } invalidChannelId) {
+                return invalidChannelId;
+            }
+        }
+
+        for (int i = 0; i < command.UpdateContactChannels.Count; i++) {
+            UpdateContactChannel? channel = command.UpdateContactChannels[i];
+            if (channel is null) {
+                return CompositeConflict("Contact channel operation is required.");
+            }
+
+            if (ValidateChildPartyId(channel.PartyId, command.PartyId) is { } invalidPartyId) {
+                return invalidPartyId;
+            }
+
+            if (ValidateSemanticId(channel.ContactChannelId, "Contact channel ID") is { } invalidChannelId) {
+                return invalidChannelId;
+            }
+        }
+
+        for (int i = 0; i < command.RemoveContactChannelIds.Count; i++) {
+            if (ValidateSemanticId(command.RemoveContactChannelIds[i], "Contact channel ID") is { } invalidChannelId) {
+                return invalidChannelId;
+            }
+        }
+
+        for (int i = 0; i < command.AddIdentifiers.Count; i++) {
+            AddIdentifier? identifier = command.AddIdentifiers[i];
+            if (identifier is null) {
+                return CompositeConflict("Identifier operation is required.");
+            }
+
+            if (ValidateChildPartyId(identifier.PartyId, command.PartyId) is { } invalidPartyId) {
+                return invalidPartyId;
+            }
+
+            if (ValidateSemanticId(identifier.IdentifierId, "Identifier ID") is { } invalidIdentifierId) {
+                return invalidIdentifierId;
+            }
+        }
+
+        for (int i = 0; i < command.RemoveIdentifierIds.Count; i++) {
+            if (ValidateSemanticId(command.RemoveIdentifierIds[i], "Identifier ID") is { } invalidIdentifierId) {
+                return invalidIdentifierId;
+            }
+        }
+
+        return null;
+    }
+
+    private static CompositeCommandResult? ValidateChildPartyId(string? childPartyId, string parentPartyId) {
+        if (string.IsNullOrWhiteSpace(childPartyId)) {
+            return CompositeConflict("Party ID is required.");
+        }
+
+        if (!SemanticId.IsValid(childPartyId)) {
+            return CompositeConflict("Party ID is invalid.");
+        }
+
+        return string.Equals(childPartyId, parentPartyId, StringComparison.Ordinal)
+            ? null
+            : CompositeConflict("Child party ID must match composite party ID.");
+    }
+
+    private static CompositeCommandResult? ValidateSemanticId(string? value, string label) {
+        if (string.IsNullOrWhiteSpace(value)) {
+            return CompositeConflict($"{label} is required.");
+        }
+
+        return SemanticId.IsValid(value)
+            ? null
+            : CompositeConflict($"{label} is invalid.");
+    }
+
+    private static CompositeCommandResult CompositeConflict(string message)
+        => new(
+            [new CompositeOperationConflict { Message = message }],
+            applied: [],
+            skipped: [],
+            rejected: [message]);
+
+    private static DomainResult? ValidateStandaloneSemanticId(string? value, string label) {
+        if (string.IsNullOrWhiteSpace(value)) {
+            return DomainResult.Rejection([new CompositeOperationConflict { Message = $"{label} is required." }]);
+        }
+
+        return SemanticId.IsValid(value)
+            ? null
+            : DomainResult.Rejection([new CompositeOperationConflict { Message = $"{label} is invalid." }]);
+    }
+
     public static DomainResult Handle(CreateParty command, PartyState? state) {
         ArgumentNullException.ThrowIfNull(command);
 
-        if (string.IsNullOrWhiteSpace(command.PartyId) || !Guid.TryParse(command.PartyId, out _)) {
+        if (!SemanticId.IsValid(command.PartyId)) {
             return DomainResult.Rejection([new PartyCannotBeCreatedWithInvalidId()]);
         }
 
@@ -959,6 +1085,16 @@ public sealed class PartyAggregate : EventStoreAggregate<PartyState> {
     public static DomainResult Handle(AddContactChannel command, PartyState? state) {
         ArgumentNullException.ThrowIfNull(command);
 
+        DomainResult? partyIdRejection = ValidateStandaloneSemanticId(command.PartyId, "Party ID");
+        if (partyIdRejection is not null) {
+            return partyIdRejection;
+        }
+
+        DomainResult? contactChannelIdRejection = ValidateStandaloneSemanticId(command.ContactChannelId, "Contact channel ID");
+        if (contactChannelIdRejection is not null) {
+            return contactChannelIdRejection;
+        }
+
         if (state is null) {
             return DomainResult.Rejection([new PartyNotFound()]);
         }
@@ -998,6 +1134,16 @@ public sealed class PartyAggregate : EventStoreAggregate<PartyState> {
 
     public static DomainResult Handle(UpdateContactChannel command, PartyState? state) {
         ArgumentNullException.ThrowIfNull(command);
+
+        DomainResult? partyIdRejection = ValidateStandaloneSemanticId(command.PartyId, "Party ID");
+        if (partyIdRejection is not null) {
+            return partyIdRejection;
+        }
+
+        DomainResult? contactChannelIdRejection = ValidateStandaloneSemanticId(command.ContactChannelId, "Contact channel ID");
+        if (contactChannelIdRejection is not null) {
+            return contactChannelIdRejection;
+        }
 
         if (state is null) {
             return DomainResult.Rejection([new PartyNotFound()]);
@@ -1052,6 +1198,16 @@ public sealed class PartyAggregate : EventStoreAggregate<PartyState> {
     public static DomainResult Handle(RemoveContactChannel command, PartyState? state) {
         ArgumentNullException.ThrowIfNull(command);
 
+        DomainResult? partyIdRejection = ValidateStandaloneSemanticId(command.PartyId, "Party ID");
+        if (partyIdRejection is not null) {
+            return partyIdRejection;
+        }
+
+        DomainResult? contactChannelIdRejection = ValidateStandaloneSemanticId(command.ContactChannelId, "Contact channel ID");
+        if (contactChannelIdRejection is not null) {
+            return contactChannelIdRejection;
+        }
+
         if (state is null) {
             return DomainResult.Rejection([new PartyNotFound()]);
         }
@@ -1076,6 +1232,16 @@ public sealed class PartyAggregate : EventStoreAggregate<PartyState> {
 
     public static DomainResult Handle(AddIdentifier command, PartyState? state) {
         ArgumentNullException.ThrowIfNull(command);
+
+        DomainResult? partyIdRejection = ValidateStandaloneSemanticId(command.PartyId, "Party ID");
+        if (partyIdRejection is not null) {
+            return partyIdRejection;
+        }
+
+        DomainResult? identifierIdRejection = ValidateStandaloneSemanticId(command.IdentifierId, "Identifier ID");
+        if (identifierIdRejection is not null) {
+            return identifierIdRejection;
+        }
 
         if (state is null) {
             return DomainResult.Rejection([new PartyNotFound()]);
@@ -1107,6 +1273,16 @@ public sealed class PartyAggregate : EventStoreAggregate<PartyState> {
 
     public static DomainResult Handle(RemoveIdentifier command, PartyState? state) {
         ArgumentNullException.ThrowIfNull(command);
+
+        DomainResult? partyIdRejection = ValidateStandaloneSemanticId(command.PartyId, "Party ID");
+        if (partyIdRejection is not null) {
+            return partyIdRejection;
+        }
+
+        DomainResult? identifierIdRejection = ValidateStandaloneSemanticId(command.IdentifierId, "Identifier ID");
+        if (identifierIdRejection is not null) {
+            return identifierIdRejection;
+        }
 
         if (state is null) {
             return DomainResult.Rejection([new PartyNotFound()]);

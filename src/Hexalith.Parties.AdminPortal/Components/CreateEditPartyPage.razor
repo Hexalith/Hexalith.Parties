@@ -3,6 +3,7 @@
 @attribute [Authorize(Policy = PartiesRoles.AdminPolicy)]
 @using System.ComponentModel.DataAnnotations
 @using System.Globalization
+@using Hexalith.Commons.UniqueIds
 @using Hexalith.Parties.Contracts.Authorization
 @using Microsoft.AspNetCore.Authorization
 @using Hexalith.Parties.Contracts.Commands
@@ -382,7 +383,7 @@
 
         string commandPartyId = IsEdit
             ? _normalizedRoutePartyId!
-            : Guid.NewGuid().ToString("D", CultureInfo.InvariantCulture);
+            : UniqueIdHelper.GenerateSortableUniqueStringId();
         AdminPortalCommandResult result = IsEdit
             ? await QueryService.ApiClient.UpdatePartyCompositeAsync(commandPartyId, BuildUpdateCommand(commandPartyId), _lifetimeCts.Token).ConfigureAwait(false)
             : await QueryService.ApiClient.CreatePartyCompositeAsync(BuildCreateCommand(commandPartyId), _lifetimeCts.Token).ConfigureAwait(false);
@@ -599,7 +600,7 @@
             new AddContactChannel
             {
                 PartyId = partyId,
-                ContactChannelId = Guid.NewGuid().ToString("D", CultureInfo.InvariantCulture),
+                ContactChannelId = UniqueIdHelper.GenerateSortableUniqueStringId(),
                 Type = type,
                 Value = _model.ContactValue.Trim(),
                 IsPreferred = _model.ContactPreferred,
@@ -620,7 +621,7 @@
             new AddIdentifier
             {
                 PartyId = partyId,
-                IdentifierId = Guid.NewGuid().ToString("D", CultureInfo.InvariantCulture),
+                IdentifierId = UniqueIdHelper.GenerateSortableUniqueStringId(),
                 Type = type,
                 Value = _model.IdentifierValue.Trim(),
             },

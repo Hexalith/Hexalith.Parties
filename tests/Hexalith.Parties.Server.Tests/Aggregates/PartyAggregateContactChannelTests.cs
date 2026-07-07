@@ -81,6 +81,28 @@ public class PartyAggregateContactChannelTests
     }
 
     [Fact]
+    public void Handle_AddContactChannel_UnsafeContactChannelId_ReturnsSupportSafeRejection()
+    {
+        PartyState state = PartyTestData.CreatePersonState();
+        AddContactChannel command = new()
+        {
+            PartyId = PartyTestData.DefaultPartyId,
+            ContactChannelId = "contact/unsafe",
+            Type = ContactChannelType.Email,
+            Value = "john@example.com",
+        };
+
+        var result = PartyAggregate.Handle(command, state);
+
+        result.IsRejection.ShouldBeTrue();
+        result.Events.Count.ShouldBe(1);
+        CompositeOperationConflict rejection = result.Events[0].ShouldBeOfType<CompositeOperationConflict>();
+        rejection.Message.ShouldBe("Contact channel ID is invalid.");
+        rejection.Message.ShouldNotBeNull().ShouldNotContain(command.ContactChannelId);
+        result.Events.OfType<ContactChannelAdded>().ShouldBeEmpty();
+    }
+
+    [Fact]
     public void Handle_AddContactChannel_IsPreferred_EmitsAddedAndPreferredChanged()
     {
         PartyState state = PartyTestData.CreatePersonState();
@@ -135,6 +157,27 @@ public class PartyAggregateContactChannelTests
         result.IsRejection.ShouldBeTrue();
         result.Events.Count.ShouldBe(1);
         result.Events[0].ShouldBeOfType<ContactChannelNotFound>();
+    }
+
+    [Fact]
+    public void Handle_UpdateContactChannel_UnsafeContactChannelId_ReturnsSupportSafeRejectionBeforeNotFound()
+    {
+        PartyState state = PartyTestData.CreatePersonState();
+        UpdateContactChannel command = new()
+        {
+            PartyId = PartyTestData.DefaultPartyId,
+            ContactChannelId = "contact/unsafe",
+            Value = "new@example.com",
+        };
+
+        var result = PartyAggregate.Handle(command, state);
+
+        result.IsRejection.ShouldBeTrue();
+        result.Events.Count.ShouldBe(1);
+        CompositeOperationConflict rejection = result.Events[0].ShouldBeOfType<CompositeOperationConflict>();
+        rejection.Message.ShouldBe("Contact channel ID is invalid.");
+        rejection.Message.ShouldNotBeNull().ShouldNotContain(command.ContactChannelId);
+        result.Events.OfType<ContactChannelNotFound>().ShouldBeEmpty();
     }
 
     [Fact]
@@ -239,6 +282,26 @@ public class PartyAggregateContactChannelTests
         result.IsRejection.ShouldBeTrue();
         result.Events.Count.ShouldBe(1);
         result.Events[0].ShouldBeOfType<ContactChannelNotFound>();
+    }
+
+    [Fact]
+    public void Handle_RemoveContactChannel_UnsafeContactChannelId_ReturnsSupportSafeRejectionBeforeNotFound()
+    {
+        PartyState state = PartyTestData.CreatePersonState();
+        RemoveContactChannel command = new()
+        {
+            PartyId = PartyTestData.DefaultPartyId,
+            ContactChannelId = "contact/unsafe",
+        };
+
+        var result = PartyAggregate.Handle(command, state);
+
+        result.IsRejection.ShouldBeTrue();
+        result.Events.Count.ShouldBe(1);
+        CompositeOperationConflict rejection = result.Events[0].ShouldBeOfType<CompositeOperationConflict>();
+        rejection.Message.ShouldBe("Contact channel ID is invalid.");
+        rejection.Message.ShouldNotBeNull().ShouldNotContain(command.ContactChannelId);
+        result.Events.OfType<ContactChannelNotFound>().ShouldBeEmpty();
     }
 
     [Fact]

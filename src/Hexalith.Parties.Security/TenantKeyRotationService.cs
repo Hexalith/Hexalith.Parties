@@ -3,6 +3,7 @@ using System.Diagnostics.Metrics;
 
 using Dapr.Client;
 
+using Hexalith.Commons.UniqueIds;
 using Hexalith.Parties.Contracts.Security;
 
 namespace Hexalith.Parties.Security;
@@ -30,9 +31,8 @@ public sealed class TenantKeyRotationService(
         ArgumentException.ThrowIfNullOrWhiteSpace(request.TenantId);
         ArgumentException.ThrowIfNullOrWhiteSpace(request.OperationId);
 
-        string correlationId = request.CorrelationId
-            ?? correlationContextAccessor.CorrelationId
-            ?? Guid.NewGuid().ToString();
+        string correlationId = FirstNonBlank(request.CorrelationId, correlationContextAccessor.CorrelationId)
+            ?? UniqueIdHelper.GenerateSortableUniqueStringId();
         long startTicks = Stopwatch.GetTimestamp();
 
         try
@@ -278,7 +278,7 @@ public sealed class TenantKeyRotationService(
                 PartyId = "tenant-key-rotation",
                 KeyVersion = keyVersion,
                 Timestamp = status.CompletedAt ?? DateTimeOffset.UtcNow,
-                CorrelationId = status.CorrelationId ?? Guid.NewGuid().ToString(),
+                CorrelationId = FirstNonBlank(status.CorrelationId) ?? UniqueIdHelper.GenerateSortableUniqueStringId(),
                 OperationId = status.OperationId,
                 Outcome = status.Phase.ToString(),
                 ProcessedCount = status.ProcessedCount,
@@ -369,6 +369,19 @@ public sealed class TenantKeyRotationService(
         return ex is TenantKeyRotationProgressConflictException
             ? TenantKeyRotationFailureCategory.ConcurrencyConflict
             : TenantKeyRotationFailureCategory.BackendUnavailable;
+    }
+
+    private static string? FirstNonBlank(params string?[] values)
+    {
+        for (int i = 0; i < values.Length; i++)
+        {
+            if (!string.IsNullOrWhiteSpace(values[i]))
+            {
+                return values[i];
+            }
+        }
+
+        return null;
     }
 
     private static string BuildRecordKey(PartyKeyRecord record) => $"{record.TenantId}:{record.PartyId}:v{record.Version}";

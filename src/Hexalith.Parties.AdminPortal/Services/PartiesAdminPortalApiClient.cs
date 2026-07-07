@@ -411,6 +411,10 @@ public sealed class PartiesAdminPortalApiClient : IPartiesAdminPortalApiClient
         {
             throw new AdminPortalQueryException(MapFailureKind(ex), ex.Status, innerException: ex);
         }
+        catch (ArgumentException ex)
+        {
+            throw new AdminPortalQueryException(AdminPortalQueryFailureKind.Validation, innerException: ex);
+        }
         catch (HttpRequestException ex)
         {
             throw new AdminPortalQueryException(AdminPortalQueryFailureKind.TransientFailure, innerException: ex);
@@ -463,6 +467,10 @@ public sealed class PartiesAdminPortalApiClient : IPartiesAdminPortalApiClient
                 Detail: null,
                 ValidationFailures: []);
         }
+        catch (ArgumentException)
+        {
+            return new(AdminPortalCommandOutcome.ValidationRejected, CorrelationId: null, Detail: null, ValidationFailures: []);
+        }
         catch (Exception ex) when (ex is HttpRequestException
             or TimeoutException
             or JsonException
@@ -493,6 +501,10 @@ public sealed class PartiesAdminPortalApiClient : IPartiesAdminPortalApiClient
         {
             return new AdminPortalGdprCommandResult(MapGdprOutcome(ex), ex.CorrelationId, Detail: null);
         }
+        catch (ArgumentException)
+        {
+            return new AdminPortalGdprCommandResult(AdminPortalGdprOutcome.ValidationRejected, CorrelationId: null, Detail: null);
+        }
         catch (Exception ex) when (ex is HttpRequestException
             or TimeoutException
             or JsonException
@@ -522,6 +534,10 @@ public sealed class PartiesAdminPortalApiClient : IPartiesAdminPortalApiClient
         catch (PartiesClientException ex)
         {
             throw new AdminPortalQueryException(MapFailureKind(ex), ex.Status, innerException: ex);
+        }
+        catch (ArgumentException ex)
+        {
+            throw new AdminPortalQueryException(AdminPortalQueryFailureKind.Validation, innerException: ex);
         }
         catch (HttpRequestException ex)
         {

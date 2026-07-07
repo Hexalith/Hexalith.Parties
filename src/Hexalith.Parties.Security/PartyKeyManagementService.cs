@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Diagnostics.Metrics;
 using System.Security.Cryptography;
 
+using Hexalith.Commons.UniqueIds;
 using Hexalith.Parties.Contracts.Security;
 
 namespace Hexalith.Parties.Security;
@@ -221,7 +222,9 @@ public sealed class PartyKeyManagementService(
         int keyVersion,
         CancellationToken cancellationToken)
     {
-        string correlationId = correlationContextAccessor.CorrelationId ?? Guid.NewGuid().ToString();
+        string correlationId = string.IsNullOrWhiteSpace(correlationContextAccessor.CorrelationId)
+            ? UniqueIdHelper.GenerateSortableUniqueStringId()
+            : correlationContextAccessor.CorrelationId;
 
         await auditService.RecordOperationAsync(
             new KeyOperationAuditEntry

@@ -12,6 +12,8 @@ namespace Hexalith.Parties.Server.Tests.Aggregates;
 
 public class PartyAggregateCompositeTests
 {
+    private const string UlidPartyId = "01HYX7QS3NP8M4KQJR5A7CVWKM";
+
     [Fact]
     public void Handle_CreatePartyComposite_PersonWithTwoChannelsAndOneIdentifier_EmitsExpectedEvents()
     {
@@ -29,6 +31,42 @@ public class PartyAggregateCompositeTests
         result.Applied.Count.ShouldBe(5);
         result.Skipped.ShouldBeEmpty();
         result.Rejected.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void Handle_CreatePartyComposite_WithUlidPartyId_EmitsSuccessEvents()
+    {
+        CreatePartyComposite command = PartyTestData.ValidCreatePersonComposite() with
+        {
+            PartyId = UlidPartyId,
+            ContactChannels =
+            [
+                new AddContactChannel
+                {
+                    PartyId = UlidPartyId,
+                    ContactChannelId = "ch-email-1",
+                    Type = ContactChannelType.Email,
+                    Value = "john@example.com",
+                },
+            ],
+            Identifiers =
+            [
+                new AddIdentifier
+                {
+                    PartyId = UlidPartyId,
+                    IdentifierId = "id-vat-1",
+                    Type = IdentifierType.VAT,
+                    Value = "synthetic-vat-value",
+                },
+            ],
+        };
+
+        CompositeCommandResult result = PartyAggregate.Handle(command, null);
+
+        result.IsSuccess.ShouldBeTrue();
+        result.Events[0].ShouldBeOfType<PartyCreated>();
+        result.UpdatedPartyDetail.ShouldNotBeNull();
+        result.UpdatedPartyDetail.Id.ShouldBe(UlidPartyId);
     }
 
     [Fact]
@@ -123,6 +161,53 @@ public class PartyAggregateCompositeTests
         result.Applied.ShouldBeEmpty();
         result.Skipped.ShouldBeEmpty();
         result.Rejected.ShouldContain("Contact channel ID is required.");
+    }
+
+    [Fact]
+    public void Handle_CreatePartyComposite_MismatchedContactChannelPartyId_ReturnsMismatchRejection()
+    {
+        CreatePartyComposite command = PartyTestData.ValidCreatePersonComposite() with
+        {
+            ContactChannels =
+            [
+                new AddContactChannel
+                {
+                    PartyId = "01HYX7QS3NP8M4KQJR5A7CVWKX",
+                    ContactChannelId = "ch-email-1",
+                    Type = ContactChannelType.Email,
+                    Value = "john@example.com",
+                },
+            ],
+            Identifiers = [],
+        };
+
+        CompositeCommandResult result = PartyAggregate.Handle(command, null);
+
+        result.IsRejection.ShouldBeTrue();
+        result.Events.Count.ShouldBe(1);
+        result.Events[0].ShouldBeOfType<CompositeOperationConflict>();
+        result.Applied.ShouldBeEmpty();
+        result.Skipped.ShouldBeEmpty();
+        result.Rejected.ShouldContain("Child party ID must match composite party ID.");
+    }
+
+    [Fact]
+    public void Handle_CreatePartyComposite_NullContactChannelOperation_ReturnsRequiredRejection()
+    {
+        CreatePartyComposite command = PartyTestData.ValidCreatePersonComposite() with
+        {
+            ContactChannels = [null!],
+            Identifiers = [],
+        };
+
+        CompositeCommandResult result = PartyAggregate.Handle(command, null);
+
+        result.IsRejection.ShouldBeTrue();
+        result.Events.Count.ShouldBe(1);
+        result.Events[0].ShouldBeOfType<CompositeOperationConflict>();
+        result.Applied.ShouldBeEmpty();
+        result.Skipped.ShouldBeEmpty();
+        result.Rejected.ShouldContain("Contact channel operation is required.");
     }
 
     [Fact]
@@ -485,6 +570,59 @@ public class PartyAggregateCompositeTests
     }
 
     [Fact]
+    public void Handle_UpdatePartyComposite_UnsafeAddChannelId_ReturnsInvalidIdBeforeEchoingId()
+    {
+        PartyState state = PartyTestData.CreatePersonStateWithChannelsAndIdentifiers();
+        UpdatePartyComposite command = new()
+        {
+            PartyId = PartyTestData.DefaultPartyId,
+            AddContactChannels =
+            [
+                new AddContactChannel
+                {
+                    PartyId = PartyTestData.DefaultPartyId,
+                    ContactChannelId = "ch/unsafe",
+                    Type = ContactChannelType.Phone,
+                    Value = "+33111111111",
+                },
+            ],
+        };
+
+        CompositeCommandResult result = PartyAggregate.Handle(command, state);
+
+        result.IsRejection.ShouldBeTrue();
+        result.Events[0].ShouldBeOfType<CompositeOperationConflict>();
+        result.Rejected.ShouldContain("Contact channel ID is invalid.");
+        result.Rejected.ShouldAllBe(message => !message.Contains("ch/unsafe", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void Handle_UpdatePartyComposite_MismatchedChildPartyId_ReturnsMismatchRejection()
+    {
+        PartyState state = PartyTestData.CreatePersonStateWithChannelsAndIdentifiers();
+        UpdatePartyComposite command = new()
+        {
+            PartyId = PartyTestData.DefaultPartyId,
+            AddContactChannels =
+            [
+                new AddContactChannel
+                {
+                    PartyId = "01HYX7QS3NP8M4KQJR5A7CVWKX",
+                    ContactChannelId = "ch-phone-1",
+                    Type = ContactChannelType.Phone,
+                    Value = "+33111111111",
+                },
+            ],
+        };
+
+        CompositeCommandResult result = PartyAggregate.Handle(command, state);
+
+        result.IsRejection.ShouldBeTrue();
+        result.Events[0].ShouldBeOfType<CompositeOperationConflict>();
+        result.Rejected.ShouldContain("Child party ID must match composite party ID.");
+    }
+
+    [Fact]
     public void Handle_UpdatePartyComposite_UpdateChannelsOnly_EmitsContactChannelUpdatedEvents()
     {
         PartyState state = PartyTestData.CreatePersonStateWithChannelsAndIdentifiers();
@@ -538,6 +676,25 @@ public class PartyAggregateCompositeTests
 
         result.UpdatedPartyDetail.ShouldNotBeNull();
         result.UpdatedPartyDetail.ContactChannels.ShouldNotContain(c => c.Id == "ch-email-2");
+    }
+
+    [Fact]
+    public void Handle_UpdatePartyComposite_UnsafeRemoveIdentifierId_ReturnsInvalidIdBeforeNotFound()
+    {
+        PartyState state = PartyTestData.CreatePersonStateWithChannelsAndIdentifiers();
+        UpdatePartyComposite command = new()
+        {
+            PartyId = PartyTestData.DefaultPartyId,
+            RemoveIdentifierIds = ["id/unsafe"],
+        };
+
+        CompositeCommandResult result = PartyAggregate.Handle(command, state);
+
+        result.IsRejection.ShouldBeTrue();
+        result.Events[0].ShouldBeOfType<CompositeOperationConflict>();
+        result.Events.ShouldNotContain(e => e is IdentifierNotFound);
+        result.Rejected.ShouldContain("Identifier ID is invalid.");
+        result.Rejected.ShouldAllBe(message => !message.Contains("id/unsafe", StringComparison.Ordinal));
     }
 
     [Fact]

@@ -18,6 +18,8 @@ namespace Hexalith.Parties.Server.Tests.Aggregates;
 
 public class PartyAggregateCreateTests
 {
+    private const string UlidPartyId = "01HYX7QS3NP8M4KQJR5A7CVWKM";
+
     [Fact]
     public void Handle_CreatePersonParty_EmitsPartyCreatedAndDisplayNameDerived()
     {
@@ -37,6 +39,23 @@ public class PartyAggregateCreateTests
         created.PersonDetails.LastName.ShouldBe(command.PersonDetails.LastName);
         created.OrganizationDetails.ShouldBeNull();
         result.Events[1].ShouldBeOfType<PartyDisplayNameDerived>();
+    }
+
+    [Fact]
+    public void Handle_CreatePersonPartyWithUlidPartyId_EmitsSuccessEvents()
+    {
+        CreateParty command = PartyTestData.ValidCreatePerson() with
+        {
+            PartyId = UlidPartyId,
+        };
+
+        DomainResult result = PartyAggregate.Handle(command, null);
+
+        result.IsSuccess.ShouldBeTrue();
+        result.Events.Count.ShouldBe(2);
+        result.Events[0].ShouldBeOfType<PartyCreated>();
+        PartyCommandResult partyResult = result.ShouldBeOfType<PartyCommandResult>();
+        partyResult.UpdatedPartyDetail.Id.ShouldBe(UlidPartyId);
     }
 
     [Fact]
@@ -337,7 +356,8 @@ public class PartyAggregateCreateTests
     [Theory]
     [InlineData("")]
     [InlineData("   ")]
-    [InlineData("not-a-guid")]
+    [InlineData("party/unsafe")]
+    [InlineData("party:unsafe")]
     public void Handle_CreatePartyWithInvalidId_ReturnsRejection(string partyId)
     {
         // Arrange

@@ -3,6 +3,8 @@ using FluentValidation;
 using Hexalith.Parties.Contracts.Commands;
 using Hexalith.Parties.Server.Aggregates;
 
+using SemanticId = Hexalith.Parties.Contracts.ValueObjects.PartyIdentifier;
+
 namespace Hexalith.Parties.Validation;
 
 public sealed class UpdatePartyCompositeValidator : AbstractValidator<UpdatePartyComposite>
@@ -10,13 +12,19 @@ public sealed class UpdatePartyCompositeValidator : AbstractValidator<UpdatePart
     public UpdatePartyCompositeValidator()
     {
         RuleFor(x => x.PartyId)
+            .Cascade(CascadeMode.Stop)
             .NotEmpty()
-            .Must(id => Guid.TryParse(id, out _))
-            .WithMessage("PartyId must be a valid GUID.");
+            .WithMessage("PartyId is required.")
+            .Must(SemanticId.IsValid)
+            .WithMessage("PartyId must be a support-safe identifier.");
 
         RuleFor(x => x)
             .Must(x => CountSubOperations(x) <= PartyAggregate.GetEffectiveMaxSubOperations())
             .WithMessage(x => $"Total sub-operations ({CountSubOperations(x)}) exceeds maximum ({PartyAggregate.GetEffectiveMaxSubOperations()}).");
+
+        RuleFor(x => x)
+            .Must(HaveMatchingChildPartyIds)
+            .WithMessage("Child PartyId must match PartyId.");
 
         RuleForEach(x => x.AddContactChannels).ChildRules(channel =>
         {
@@ -24,15 +32,15 @@ public sealed class UpdatePartyCompositeValidator : AbstractValidator<UpdatePart
                 .Cascade(CascadeMode.Stop)
                 .NotEmpty()
                 .WithMessage("PartyId is required.")
-                .Must(id => Guid.TryParse(id, out _))
-                .WithMessage("PartyId must be a valid GUID.");
+                .Must(SemanticId.IsValid)
+                .WithMessage("PartyId must be a support-safe identifier.");
 
             channel.RuleFor(c => c.ContactChannelId)
                 .Cascade(CascadeMode.Stop)
                 .NotEmpty()
                 .WithMessage("ContactChannelId is required.")
-                .Must(id => Guid.TryParse(id, out _))
-                .WithMessage("ContactChannelId must be a valid GUID.");
+                .Must(SemanticId.IsValid)
+                .WithMessage("ContactChannelId must be a support-safe identifier.");
 
             channel.RuleFor(c => c.Type)
                 .IsInEnum()
@@ -49,29 +57,39 @@ public sealed class UpdatePartyCompositeValidator : AbstractValidator<UpdatePart
                 .Cascade(CascadeMode.Stop)
                 .NotEmpty()
                 .WithMessage("PartyId is required.")
-                .Must(id => Guid.TryParse(id, out _))
-                .WithMessage("PartyId must be a valid GUID.");
+                .Must(SemanticId.IsValid)
+                .WithMessage("PartyId must be a support-safe identifier.");
 
             channel.RuleFor(c => c.ContactChannelId)
+                .Cascade(CascadeMode.Stop)
                 .NotEmpty()
-                .WithMessage("ContactChannelId is required.");
+                .WithMessage("ContactChannelId is required.")
+                .Must(SemanticId.IsValid)
+                .WithMessage("ContactChannelId must be a support-safe identifier.");
         });
 
         RuleForEach(x => x.RemoveContactChannelIds)
+            .Cascade(CascadeMode.Stop)
             .NotEmpty()
-            .WithMessage("RemoveContactChannelId is required.");
+            .WithMessage("RemoveContactChannelId is required.")
+            .Must(SemanticId.IsValid)
+            .WithMessage("RemoveContactChannelId must be a support-safe identifier.");
 
         RuleForEach(x => x.AddIdentifiers).ChildRules(identifier =>
         {
             identifier.RuleFor(i => i.PartyId)
+                .Cascade(CascadeMode.Stop)
                 .NotEmpty()
-                .Must(id => Guid.TryParse(id, out _))
-                .WithMessage("PartyId must be a valid GUID.");
+                .WithMessage("PartyId is required.")
+                .Must(SemanticId.IsValid)
+                .WithMessage("PartyId must be a support-safe identifier.");
 
             identifier.RuleFor(i => i.IdentifierId)
+                .Cascade(CascadeMode.Stop)
                 .NotEmpty()
-                .Must(id => Guid.TryParse(id, out _))
-                .WithMessage("IdentifierId must be a valid GUID.");
+                .WithMessage("IdentifierId is required.")
+                .Must(SemanticId.IsValid)
+                .WithMessage("IdentifierId must be a support-safe identifier.");
 
             identifier.RuleFor(i => i.Type)
                 .IsInEnum()
@@ -82,13 +100,12 @@ public sealed class UpdatePartyCompositeValidator : AbstractValidator<UpdatePart
                 .WithMessage("Value is required.");
         });
 
-        // Message frames the rule by the scalar element ("RemoveIdentifierId" singular), not the
-        // collection property ("RemoveIdentifierIds[i]"); this asymmetry with the AddIdentifiers
-        // child rule ("IdentifierId must be a valid GUID.") is intentional and pinned by
-        // IdentifierValidatorTests.UpdatePartyComposite_ReadableIdentifierId_ReturnsGuidFailure.
         RuleForEach(x => x.RemoveIdentifierIds)
-            .Must(id => Guid.TryParse(id, out _))
-            .WithMessage("RemoveIdentifierId must be a valid GUID.");
+            .Cascade(CascadeMode.Stop)
+            .NotEmpty()
+            .WithMessage("RemoveIdentifierId is required.")
+            .Must(SemanticId.IsValid)
+            .WithMessage("RemoveIdentifierId must be a support-safe identifier.");
     }
 
     private static int CountSubOperations(UpdatePartyComposite command)
@@ -99,4 +116,9 @@ public sealed class UpdatePartyCompositeValidator : AbstractValidator<UpdatePart
             + command.RemoveContactChannelIds.Count
             + command.AddIdentifiers.Count
             + command.RemoveIdentifierIds.Count;
+
+    private static bool HaveMatchingChildPartyIds(UpdatePartyComposite command)
+        => command.AddContactChannels.All(channel => channel is not null && string.Equals(channel.PartyId, command.PartyId, StringComparison.Ordinal))
+            && command.UpdateContactChannels.All(channel => channel is not null && string.Equals(channel.PartyId, command.PartyId, StringComparison.Ordinal))
+            && command.AddIdentifiers.All(identifier => identifier is not null && string.Equals(identifier.PartyId, command.PartyId, StringComparison.Ordinal));
 }

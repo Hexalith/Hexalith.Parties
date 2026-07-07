@@ -2,6 +2,7 @@ using System.Text.Json;
 
 using FluentValidation;
 
+using Hexalith.Commons.UniqueIds;
 using Hexalith.EventStore.Contracts.Commands;
 using Hexalith.EventStore.Contracts.Events;
 using Hexalith.EventStore.Contracts.Results;
@@ -33,7 +34,7 @@ public sealed class PartyDomainServiceInvokerValidationTests
         PartyDomainServiceInvoker invoker = CreateInvoker(protection);
         CommandEnvelope command = CreateCommand(new CreateParty
         {
-            PartyId = "not-a-guid",
+            PartyId = "party/unsafe",
             Type = PartyType.Person,
             PersonDetails = null,
         });
@@ -63,7 +64,7 @@ public sealed class PartyDomainServiceInvokerValidationTests
         PartyDomainServiceInvoker invoker = CreateInvoker(protection);
         CommandEnvelope command = CreateCommand(new CreatePartyComposite
         {
-            PartyId = "not-a-guid",
+            PartyId = "party/unsafe",
             Type = PartyType.Organization,
             OrganizationDetails = null,
         });
@@ -188,7 +189,7 @@ public sealed class PartyDomainServiceInvokerValidationTests
             commandType: typeof(CreateParty).AssemblyQualifiedName!,
             payload: JsonSerializer.SerializeToUtf8Bytes(new CreateParty
             {
-                PartyId = "not-a-guid",
+                PartyId = "party/unsafe",
                 Type = PartyType.Person,
                 PersonDetails = null,
             }));
@@ -433,18 +434,15 @@ public sealed class PartyDomainServiceInvokerValidationTests
             CreatePartyComposite command => command.PartyId,
             UpdatePartyComposite command => command.PartyId,
             RetryErasureVerification command => command.PartyId,
-            _ => Guid.NewGuid().ToString("D"),
+            _ => UniqueIdHelper.GenerateSortableUniqueStringId(),
         };
-
-        if (!Guid.TryParse(partyId, out _))
-        {
-            partyId = Guid.NewGuid().ToString("D");
-        }
 
         return CreateRawCommand(
             commandType: typeof(TCommand).FullName!,
             payload: JsonSerializer.SerializeToUtf8Bytes(payload, payload.GetType()),
-            aggregateId: partyId);
+            aggregateId: PartyIdentifier.IsValid(partyId)
+                ? partyId
+                : UniqueIdHelper.GenerateSortableUniqueStringId());
     }
 
     private static CommandEnvelope CreateRawCommand(
@@ -456,7 +454,7 @@ public sealed class PartyDomainServiceInvokerValidationTests
             MessageId: "01HX00000000000000000000M1",
             TenantId: "tenant-a",
             Domain: "party",
-            AggregateId: aggregateId ?? Guid.NewGuid().ToString("D"),
+            AggregateId: aggregateId ?? UniqueIdHelper.GenerateSortableUniqueStringId(),
             CommandType: commandType,
             Payload: payload,
             CorrelationId: "01HX00000000000000000000C1",

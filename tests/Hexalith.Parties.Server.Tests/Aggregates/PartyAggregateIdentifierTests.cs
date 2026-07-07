@@ -66,6 +66,24 @@ public class PartyAggregateIdentifierTests {
     }
 
     [Fact]
+    public void Handle_AddIdentifier_UnsafeIdentifierId_ReturnsSupportSafeRejection() {
+        PartyState state = PartyTestData.CreatePersonState();
+        AddIdentifier command = PartyTestData.ValidAddVatIdentifier() with
+        {
+            IdentifierId = "identifier/unsafe",
+        };
+
+        DomainResult result = PartyAggregate.Handle(command, state);
+
+        result.IsRejection.ShouldBeTrue();
+        result.Events.Count.ShouldBe(1);
+        CompositeOperationConflict rejection = result.Events[0].ShouldBeOfType<CompositeOperationConflict>();
+        rejection.Message.ShouldBe("Identifier ID is invalid.");
+        rejection.Message.ShouldNotBeNull().ShouldNotContain(command.IdentifierId);
+        result.Events.OfType<IdentifierAdded>().ShouldBeEmpty();
+    }
+
+    [Fact]
     public void Handle_AddIdentifier_RestrictedParty_ReturnsRejectionWithoutIdentifierValue() {
         PartyState state = PartyTestData.CreateRestrictedState();
         AddIdentifier command = PartyTestData.ValidAddVatIdentifier();
@@ -163,6 +181,25 @@ public class PartyAggregateIdentifierTests {
         result.IsRejection.ShouldBeTrue();
         result.Events.Count.ShouldBe(1);
         _ = result.Events[0].ShouldBeOfType<IdentifierNotFound>();
+        result.Events.OfType<IdentifierRemoved>().ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void Handle_RemoveIdentifier_UnsafeIdentifierId_ReturnsSupportSafeRejectionBeforeNotFound() {
+        PartyState state = PartyTestData.CreatePersonState();
+        RemoveIdentifier command = PartyTestData.ValidRemoveIdentifier() with
+        {
+            IdentifierId = "identifier/unsafe",
+        };
+
+        DomainResult result = PartyAggregate.Handle(command, state);
+
+        result.IsRejection.ShouldBeTrue();
+        result.Events.Count.ShouldBe(1);
+        CompositeOperationConflict rejection = result.Events[0].ShouldBeOfType<CompositeOperationConflict>();
+        rejection.Message.ShouldBe("Identifier ID is invalid.");
+        rejection.Message.ShouldNotBeNull().ShouldNotContain(command.IdentifierId);
+        result.Events.OfType<IdentifierNotFound>().ShouldBeEmpty();
         result.Events.OfType<IdentifierRemoved>().ShouldBeEmpty();
     }
 

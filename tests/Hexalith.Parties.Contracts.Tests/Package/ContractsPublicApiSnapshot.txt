@@ -781,6 +781,7 @@ type class Hexalith.Parties.Contracts.ValueObjects.PartyIdentifier interfaces:Sy
   property System.String Jurisdiction getset
   property Hexalith.Parties.Contracts.ValueObjects.IdentifierType Type required getset
   property System.String Value required getset
+  method System.Boolean IsValid(System.String value)
 type enum Hexalith.Parties.Contracts.ValueObjects.PartyType base:System.Enum interfaces:System.IComparable,System.IConvertible,System.IFormattable,System.ISpanFormattable
   enum Organization=2
   enum Person=1

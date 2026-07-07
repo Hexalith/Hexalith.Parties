@@ -3,6 +3,7 @@ using System.Text.Json;
 using System.Text.RegularExpressions;
 
 using Hexalith.Commons.Http;
+using Hexalith.Commons.UniqueIds;
 using Hexalith.Parties.Client.Abstractions;
 using Hexalith.Parties.Contracts;
 using Hexalith.Parties.Contracts.Commands;
@@ -10,6 +11,8 @@ using Hexalith.Parties.Contracts.Models;
 
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
+
+using SemanticId = Hexalith.Parties.Contracts.ValueObjects.PartyIdentifier;
 
 namespace Hexalith.Parties.Client;
 
@@ -137,7 +140,7 @@ public sealed class HttpPartiesCommandClient : IPartiesCommandClient
     public Task<PartiesCommandResult<PartyDetail>> UpdatePartyCompositeWithResultAsync(string partyId, UpdatePartyComposite command, CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(command);
-        return PostCommandForResultAsync(partyId, command with { PartyId = partyId }, ct);
+        return PostCommandForResultAsync(partyId, NormalizeUpdatePartyCompositePartyIds(partyId, command), ct);
     }
 
     public async Task<string> SetIsNaturalPersonAsync(string partyId, SetIsNaturalPerson command, CancellationToken ct)
@@ -155,7 +158,14 @@ public sealed class HttpPartiesCommandClient : IPartiesCommandClient
         ArgumentNullException.ThrowIfNull(command);
         ct.ThrowIfCancellationRequested();
 
-        string messageId = Guid.NewGuid().ToString("N");
+        if (!SemanticId.IsValid(aggregateId))
+        {
+            throw new ArgumentException("AggregateId must be a support-safe identifier.", nameof(aggregateId));
+        }
+
+        ValidateCommandSemanticIds(aggregateId, command);
+
+        string messageId = UniqueIdHelper.GenerateSortableUniqueStringId();
         var request = new EventStoreCommandRequest(
             MessageId: messageId,
             Tenant: GetValidatedTenant(_options),
@@ -230,6 +240,159 @@ public sealed class HttpPartiesCommandClient : IPartiesCommandClient
             // Fail closed on malformed, unsupported, or non-Parties payloads — caller keeps
             // the existing correlationId-only contract rather than throwing.
             return null;
+        }
+    }
+
+    private static UpdatePartyComposite NormalizeUpdatePartyCompositePartyIds(string partyId, UpdatePartyComposite command)
+    {
+        ValidateCompositeList(command.AddContactChannels, nameof(UpdatePartyComposite.AddContactChannels));
+        ValidateCompositeList(command.UpdateContactChannels, nameof(UpdatePartyComposite.UpdateContactChannels));
+        ValidateCompositeList(command.AddIdentifiers, nameof(UpdatePartyComposite.AddIdentifiers));
+
+        return command with
+        {
+            PartyId = partyId,
+            AddContactChannels = command.AddContactChannels
+                .Select(channel => channel is null ? null! : channel with { PartyId = partyId })
+                .ToArray(),
+            UpdateContactChannels = command.UpdateContactChannels
+                .Select(channel => channel is null ? null! : channel with { PartyId = partyId })
+                .ToArray(),
+            AddIdentifiers = command.AddIdentifiers
+                .Select(identifier => identifier is null ? null! : identifier with { PartyId = partyId })
+                .ToArray(),
+        };
+    }
+
+    private static IReadOnlyList<TItem> ValidateCompositeList<TItem>(IReadOnlyList<TItem>? items, string propertyName)
+    {
+        if (items is null)
+        {
+            throw new ArgumentException($"{propertyName} is required.", propertyName);
+        }
+
+        return items;
+    }
+
+    private static void ValidateCommandSemanticIds<TCommand>(string aggregateId, TCommand command)
+    {
+        switch (command)
+        {
+            case AddContactChannel addContact:
+                ValidateChildPartyId(addContact.PartyId, aggregateId);
+                ValidateSemanticId(addContact.ContactChannelId, nameof(AddContactChannel.ContactChannelId));
+                break;
+            case UpdateContactChannel updateContact:
+                ValidateChildPartyId(updateContact.PartyId, aggregateId);
+                ValidateSemanticId(updateContact.ContactChannelId, nameof(UpdateContactChannel.ContactChannelId));
+                break;
+            case RemoveContactChannel removeContact:
+                ValidateChildPartyId(removeContact.PartyId, aggregateId);
+                ValidateSemanticId(removeContact.ContactChannelId, nameof(RemoveContactChannel.ContactChannelId));
+                break;
+            case AddIdentifier addIdentifier:
+                ValidateChildPartyId(addIdentifier.PartyId, aggregateId);
+                ValidateSemanticId(addIdentifier.IdentifierId, nameof(AddIdentifier.IdentifierId));
+                break;
+            case RemoveIdentifier removeIdentifier:
+                ValidateChildPartyId(removeIdentifier.PartyId, aggregateId);
+                ValidateSemanticId(removeIdentifier.IdentifierId, nameof(RemoveIdentifier.IdentifierId));
+                break;
+            case CreatePartyComposite createComposite:
+                ValidateCompositeContactChannels(createComposite.PartyId, createComposite.ContactChannels);
+                ValidateCompositeIdentifiers(createComposite.PartyId, createComposite.Identifiers);
+                break;
+            case UpdatePartyComposite updateComposite:
+                ValidateCompositeContactChannels(aggregateId, updateComposite.AddContactChannels);
+                ValidateUpdateContactChannels(aggregateId, updateComposite.UpdateContactChannels);
+                ValidateSemanticIds(updateComposite.RemoveContactChannelIds, nameof(UpdatePartyComposite.RemoveContactChannelIds));
+                ValidateCompositeIdentifiers(aggregateId, updateComposite.AddIdentifiers);
+                ValidateSemanticIds(updateComposite.RemoveIdentifierIds, nameof(UpdatePartyComposite.RemoveIdentifierIds));
+                break;
+        }
+    }
+
+    private static void ValidateCompositeContactChannels(
+        string aggregateId,
+        IReadOnlyList<AddContactChannel>? contactChannels)
+    {
+        contactChannels = ValidateCompositeList(contactChannels, nameof(CreatePartyComposite.ContactChannels));
+
+        for (int i = 0; i < contactChannels.Count; i++)
+        {
+            AddContactChannel? channel = contactChannels[i];
+            if (channel is null)
+            {
+                throw new ArgumentException("Contact channel operations are required.", nameof(contactChannels));
+            }
+
+            ValidateChildPartyId(channel.PartyId, aggregateId);
+            ValidateSemanticId(channel.ContactChannelId, nameof(AddContactChannel.ContactChannelId));
+        }
+    }
+
+    private static void ValidateUpdateContactChannels(
+        string aggregateId,
+        IReadOnlyList<UpdateContactChannel>? contactChannels)
+    {
+        contactChannels = ValidateCompositeList(contactChannels, nameof(UpdatePartyComposite.UpdateContactChannels));
+
+        for (int i = 0; i < contactChannels.Count; i++)
+        {
+            UpdateContactChannel? channel = contactChannels[i];
+            if (channel is null)
+            {
+                throw new ArgumentException("Contact channel operations are required.", nameof(contactChannels));
+            }
+
+            ValidateChildPartyId(channel.PartyId, aggregateId);
+            ValidateSemanticId(channel.ContactChannelId, nameof(UpdateContactChannel.ContactChannelId));
+        }
+    }
+
+    private static void ValidateCompositeIdentifiers(
+        string aggregateId,
+        IReadOnlyList<AddIdentifier>? identifiers)
+    {
+        identifiers = ValidateCompositeList(identifiers, nameof(CreatePartyComposite.Identifiers));
+
+        for (int i = 0; i < identifiers.Count; i++)
+        {
+            AddIdentifier? identifier = identifiers[i];
+            if (identifier is null)
+            {
+                throw new ArgumentException("Identifier operations are required.", nameof(identifiers));
+            }
+
+            ValidateChildPartyId(identifier.PartyId, aggregateId);
+            ValidateSemanticId(identifier.IdentifierId, nameof(AddIdentifier.IdentifierId));
+        }
+    }
+
+    private static void ValidateSemanticIds(IReadOnlyList<string>? values, string propertyName)
+    {
+        values = ValidateCompositeList(values, propertyName);
+
+        for (int i = 0; i < values.Count; i++)
+        {
+            ValidateSemanticId(values[i], propertyName);
+        }
+    }
+
+    private static void ValidateChildPartyId(string? childPartyId, string aggregateId)
+    {
+        ValidateSemanticId(childPartyId, "PartyId");
+        if (!string.Equals(childPartyId, aggregateId, StringComparison.Ordinal))
+        {
+            throw new ArgumentException("Child PartyId must match AggregateId.", "PartyId");
+        }
+    }
+
+    private static void ValidateSemanticId(string? value, string propertyName)
+    {
+        if (!SemanticId.IsValid(value))
+        {
+            throw new ArgumentException($"{propertyName} must be a support-safe identifier.", propertyName);
         }
     }
 

@@ -11,6 +11,8 @@ using Hexalith.Parties.Contracts.ValueObjects;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 
+using SemanticId = Hexalith.Parties.Contracts.ValueObjects.PartyIdentifier;
+
 namespace Hexalith.Parties.Client;
 
 public sealed class HttpPartiesQueryClient : IPartiesQueryClient
@@ -48,6 +50,8 @@ public sealed class HttpPartiesQueryClient : IPartiesQueryClient
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(partyId);
         ct.ThrowIfCancellationRequested();
+
+        ValidatePartyId(partyId);
 
         var request = new SubmitQueryRequest(
             Tenant: HttpPartiesCommandClient.GetValidatedTenant(_options),
@@ -200,6 +204,14 @@ public sealed class HttpPartiesQueryClient : IPartiesQueryClient
 
     private static string? FormatDate(DateTimeOffset? value)
         => value?.ToString("O", System.Globalization.CultureInfo.InvariantCulture);
+
+    private static void ValidatePartyId(string partyId)
+    {
+        if (!SemanticId.IsValid(partyId))
+        {
+            throw new ArgumentException("PartyId must be a support-safe identifier.", nameof(partyId));
+        }
+    }
 
     private sealed record ListPartiesQueryPayload(
         int Page,

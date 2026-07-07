@@ -10,13 +10,18 @@ namespace Hexalith.Parties.Tests.Validation;
 
 public sealed class ContactChannelValidatorTests
 {
-    [Fact]
-    public void AddContactChannel_ValidGuidContactChannelId_PassesValidation()
+    private const string UlidPartyId = "01HYX7QS3NP8M4KQJR5A7CVWKM";
+    private const string LegacyGuidContactChannelId = "a1b2c3d4-e5f6-7890-abcd-ef1234567890";
+
+    [Theory]
+    [InlineData("ch-email-1")]
+    [InlineData(LegacyGuidContactChannelId)]
+    public void AddContactChannel_SupportSafeContactChannelId_PassesValidation(string contactChannelId)
     {
         AddContactChannel command = new()
         {
-            PartyId = Guid.NewGuid().ToString("D"),
-            ContactChannelId = Guid.NewGuid().ToString("D"),
+            PartyId = UlidPartyId,
+            ContactChannelId = contactChannelId,
             Type = ContactChannelType.Email,
             Value = "person@example.com",
         };
@@ -27,12 +32,12 @@ public sealed class ContactChannelValidatorTests
     }
 
     [Fact]
-    public void AddContactChannel_InvalidContactChannelId_ReturnsSingleGuidFailure()
+    public void AddContactChannel_UnsafeContactChannelId_ReturnsSingleSupportSafeFailure()
     {
         AddContactChannel command = new()
         {
-            PartyId = Guid.NewGuid().ToString("D"),
-            ContactChannelId = "not-a-guid",
+            PartyId = UlidPartyId,
+            ContactChannelId = "contact/unsafe",
             Type = ContactChannelType.Email,
             Value = "person@example.com",
         };
@@ -44,7 +49,8 @@ public sealed class ContactChannelValidatorTests
             .Where(e => e.PropertyName == nameof(AddContactChannel.ContactChannelId))
             .ToArray();
         channelErrors.Length.ShouldBe(1);
-        channelErrors[0].ErrorMessage.ShouldBe("ContactChannelId must be a valid GUID.");
+        channelErrors[0].ErrorMessage.ShouldBe("ContactChannelId must be a support-safe identifier.");
+        channelErrors[0].ErrorMessage.ShouldNotContain("contact/unsafe");
     }
 
     [Theory]
@@ -54,7 +60,7 @@ public sealed class ContactChannelValidatorTests
     {
         AddContactChannel command = new()
         {
-            PartyId = Guid.NewGuid().ToString("D"),
+            PartyId = UlidPartyId,
             ContactChannelId = id!,
             Type = ContactChannelType.Email,
             Value = "person@example.com",
@@ -71,13 +77,13 @@ public sealed class ContactChannelValidatorTests
     }
 
     [Theory]
-    [InlineData("not-a-guid")]
     [InlineData("ch-email-1")]
-    public void UpdateContactChannel_NonGuidContactChannelId_PassesValidation(string id)
+    [InlineData(LegacyGuidContactChannelId)]
+    public void UpdateContactChannel_SupportSafeContactChannelId_PassesValidation(string id)
     {
         UpdateContactChannel command = new()
         {
-            PartyId = Guid.NewGuid().ToString("D"),
+            PartyId = UlidPartyId,
             ContactChannelId = id,
             Value = "person@example.com",
         };
@@ -87,6 +93,27 @@ public sealed class ContactChannelValidatorTests
         result.IsValid.ShouldBeTrue();
     }
 
+    [Fact]
+    public void UpdateContactChannel_UnsafeContactChannelId_ReturnsSingleSupportSafeFailure()
+    {
+        UpdateContactChannel command = new()
+        {
+            PartyId = UlidPartyId,
+            ContactChannelId = "contact:unsafe",
+            Value = "person@example.com",
+        };
+
+        ValidationResult result = new UpdateContactChannelValidator().Validate(command);
+
+        result.IsValid.ShouldBeFalse();
+        ValidationFailure[] channelErrors = result.Errors
+            .Where(e => e.PropertyName == nameof(UpdateContactChannel.ContactChannelId))
+            .ToArray();
+        channelErrors.Length.ShouldBe(1);
+        channelErrors[0].ErrorMessage.ShouldBe("ContactChannelId must be a support-safe identifier.");
+        channelErrors[0].ErrorMessage.ShouldNotContain("contact:unsafe");
+    }
+
     [Theory]
     [InlineData("")]
     [InlineData(null)]
@@ -94,7 +121,7 @@ public sealed class ContactChannelValidatorTests
     {
         UpdateContactChannel command = new()
         {
-            PartyId = Guid.NewGuid().ToString("D"),
+            PartyId = UlidPartyId,
             ContactChannelId = id!,
             Value = "person@example.com",
         };
@@ -110,19 +137,39 @@ public sealed class ContactChannelValidatorTests
     }
 
     [Theory]
-    [InlineData("not-a-guid")]
     [InlineData("ch-email-1")]
-    public void RemoveContactChannel_NonGuidContactChannelId_PassesValidation(string id)
+    [InlineData(LegacyGuidContactChannelId)]
+    public void RemoveContactChannel_SupportSafeContactChannelId_PassesValidation(string id)
     {
         RemoveContactChannel command = new()
         {
-            PartyId = Guid.NewGuid().ToString("D"),
+            PartyId = UlidPartyId,
             ContactChannelId = id,
         };
 
         ValidationResult result = new RemoveContactChannelValidator().Validate(command);
 
         result.IsValid.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void RemoveContactChannel_UnsafeContactChannelId_ReturnsSingleSupportSafeFailure()
+    {
+        RemoveContactChannel command = new()
+        {
+            PartyId = UlidPartyId,
+            ContactChannelId = "contact unsafe",
+        };
+
+        ValidationResult result = new RemoveContactChannelValidator().Validate(command);
+
+        result.IsValid.ShouldBeFalse();
+        ValidationFailure[] channelErrors = result.Errors
+            .Where(e => e.PropertyName == nameof(RemoveContactChannel.ContactChannelId))
+            .ToArray();
+        channelErrors.Length.ShouldBe(1);
+        channelErrors[0].ErrorMessage.ShouldBe("ContactChannelId must be a support-safe identifier.");
+        channelErrors[0].ErrorMessage.ShouldNotContain("contact unsafe");
     }
 
     [Theory]
@@ -132,7 +179,7 @@ public sealed class ContactChannelValidatorTests
     {
         RemoveContactChannel command = new()
         {
-            PartyId = Guid.NewGuid().ToString("D"),
+            PartyId = UlidPartyId,
             ContactChannelId = id!,
         };
 

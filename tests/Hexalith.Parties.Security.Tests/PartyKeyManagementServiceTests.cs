@@ -1,3 +1,4 @@
+using Hexalith.Commons.UniqueIds;
 using Hexalith.Parties.Contracts.Security;
 using Hexalith.Parties.Security;
 
@@ -76,6 +77,28 @@ public class PartyKeyManagementServiceTests
 
         await _auditService.Received(1).RecordOperationAsync(
             Arg.Is<KeyOperationAuditEntry>(e => e != null && e.CorrelationId == "corr-123"),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task CreateKeyAsync_WithoutAmbientCorrelationId_AuditsSortableFallbackCorrelationId()
+    {
+        await CreateService().CreateKeyAsync("acme", "p1");
+
+        await _auditService.Received(1).RecordOperationAsync(
+            Arg.Is<KeyOperationAuditEntry>(e => e != null && IsSortableUniqueId(e.CorrelationId)),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task CreateKeyAsync_WithBlankAmbientCorrelationId_AuditsSortableFallbackCorrelationId()
+    {
+        _correlationContextAccessor.CorrelationId = " ";
+
+        await CreateService().CreateKeyAsync("acme", "p1");
+
+        await _auditService.Received(1).RecordOperationAsync(
+            Arg.Is<KeyOperationAuditEntry>(e => e != null && IsSortableUniqueId(e.CorrelationId)),
             Arg.Any<CancellationToken>());
     }
 
@@ -340,5 +363,17 @@ public class PartyKeyManagementServiceTests
         // After the method returns, the key material should be zeroed
         capturedKey.ShouldNotBeNull();
         capturedKey.ShouldAllBe(b => b == 0);
+    }
+
+    private static bool IsSortableUniqueId(string? id)
+    {
+        if (string.IsNullOrWhiteSpace(id) || Guid.TryParse(id, out _))
+        {
+            return false;
+        }
+
+        DateTimeOffset timestamp = UniqueIdHelper.ExtractTimestamp(id);
+        return timestamp >= DateTimeOffset.UtcNow.AddMinutes(-1)
+            && timestamp <= DateTimeOffset.UtcNow.AddSeconds(1);
     }
 }

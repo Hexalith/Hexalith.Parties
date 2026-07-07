@@ -3,6 +3,8 @@ using FluentValidation;
 using Hexalith.Parties.Contracts.Commands;
 using Hexalith.Parties.Contracts.ValueObjects;
 
+using SemanticId = Hexalith.Parties.Contracts.ValueObjects.PartyIdentifier;
+
 namespace Hexalith.Parties.Validation;
 
 public sealed class CreatePartyValidator : AbstractValidator<CreateParty>
@@ -10,9 +12,11 @@ public sealed class CreatePartyValidator : AbstractValidator<CreateParty>
     public CreatePartyValidator()
     {
         RuleFor(x => x.PartyId)
+            .Cascade(CascadeMode.Stop)
             .NotEmpty()
-            .Must(id => Guid.TryParse(id, out _))
-            .WithMessage("PartyId must be a valid GUID.");
+            .WithMessage("PartyId is required.")
+            .Must(SemanticId.IsValid)
+            .WithMessage("PartyId must be a support-safe identifier.");
 
         RuleFor(x => x.Type)
             .IsInEnum()

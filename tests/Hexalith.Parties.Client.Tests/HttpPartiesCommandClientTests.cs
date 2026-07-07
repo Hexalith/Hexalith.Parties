@@ -2,6 +2,7 @@ using System.Net;
 using System.Text;
 using System.Text.Json;
 
+using Hexalith.Commons.UniqueIds;
 using Hexalith.Parties.Client.Abstractions;
 using Hexalith.Parties.Contracts.Commands;
 using Hexalith.Parties.Contracts.Models;
@@ -28,7 +29,9 @@ public sealed class HttpPartiesCommandClientTests
             PersonDetails = new PersonDetails { FirstName = "Ada", LastName = "Lovelace" },
         };
 
+        DateTimeOffset before = DateTimeOffset.UtcNow.AddSeconds(-1);
         string result = await client.CreatePartyAsync(command, CancellationToken.None);
+        DateTimeOffset after = DateTimeOffset.UtcNow.AddSeconds(1);
 
         result.ShouldBe(expectedCorrelationId);
         handler.LastRequest!.Method.ShouldBe(HttpMethod.Post);
@@ -40,8 +43,14 @@ public sealed class HttpPartiesCommandClientTests
         root.GetProperty("domain").GetString().ShouldBe("party");
         root.GetProperty("aggregateId").GetString().ShouldBe("p-1");
         root.GetProperty("commandType").GetString().ShouldBe(typeof(CreateParty).FullName);
-        root.GetProperty("messageId").GetString().ShouldNotBeNullOrWhiteSpace();
-        root.GetProperty("correlationId").GetString().ShouldBe(root.GetProperty("messageId").GetString());
+        string messageId = root.GetProperty("messageId").GetString()
+            ?? throw new InvalidOperationException("messageId was not serialized.");
+        messageId.ShouldNotBeNullOrWhiteSpace();
+        DateTimeOffset timestamp = UniqueIdHelper.ExtractTimestamp(messageId);
+        timestamp.ShouldBeGreaterThanOrEqualTo(before);
+        timestamp.ShouldBeLessThanOrEqualTo(after);
+        Guid.TryParse(messageId, out _).ShouldBeFalse();
+        root.GetProperty("correlationId").GetString().ShouldBe(messageId);
 
         JsonElement payload = root.GetProperty("payload");
         payload.GetProperty("partyId").GetString().ShouldBe("p-1");
@@ -201,6 +210,55 @@ public sealed class HttpPartiesCommandClientTests
         root.GetProperty("aggregateId").GetString().ShouldBe("p-route");
         root.GetProperty("commandType").GetString().ShouldBe(expectedCommandType.FullName);
         root.GetProperty("payload").GetProperty("partyId").GetString().ShouldBe("p-route");
+    }
+
+    [Fact]
+    public async Task UpdatePartyCompositeAsync_OverridesNestedChildPartyIdsAsync()
+    {
+        (HttpPartiesCommandClient client, MockHandler handler) = CreateClient("corr-composite-route");
+
+        await client.UpdatePartyCompositeAsync(
+            "p-route",
+            new UpdatePartyComposite
+            {
+                PartyId = "stale-id",
+                AddContactChannels =
+                [
+                    new AddContactChannel
+                    {
+                        PartyId = "stale-channel-party",
+                        ContactChannelId = "ch-email-1",
+                        Type = ContactChannelType.Email,
+                        Value = "person@example.test",
+                    },
+                ],
+                UpdateContactChannels =
+                [
+                    new UpdateContactChannel
+                    {
+                        PartyId = "stale-update-party",
+                        ContactChannelId = "ch-phone-1",
+                    },
+                ],
+                AddIdentifiers =
+                [
+                    new AddIdentifier
+                    {
+                        PartyId = "stale-identifier-party",
+                        IdentifierId = "id-vat-1",
+                        Type = IdentifierType.VAT,
+                        Value = "FR123456789",
+                    },
+                ],
+            },
+            CancellationToken.None);
+
+        using JsonDocument body = JsonDocument.Parse(handler.LastRequestBody!);
+        JsonElement payload = body.RootElement.GetProperty("payload");
+        payload.GetProperty("partyId").GetString().ShouldBe("p-route");
+        payload.GetProperty("addContactChannels")[0].GetProperty("partyId").GetString().ShouldBe("p-route");
+        payload.GetProperty("updateContactChannels")[0].GetProperty("partyId").GetString().ShouldBe("p-route");
+        payload.GetProperty("addIdentifiers")[0].GetProperty("partyId").GetString().ShouldBe("p-route");
     }
 
     [Fact]
@@ -392,6 +450,138 @@ public sealed class HttpPartiesCommandClientTests
             () => client.DeactivatePartyAsync("p-no-tenant", CancellationToken.None));
 
         exception.Message.ShouldBe("Parties:Tenant configuration is required.");
+        handler.SendCount.ShouldBe(0);
+    }
+
+    [Fact]
+    public async Task DeactivatePartyAsync_WhenPartyIdIsUnsafe_DoesNotSendRequestAsync()
+    {
+        var handler = new CountingHandler();
+        var httpClient = new HttpClient(handler) { BaseAddress = new Uri("https://localhost") };
+        var client = new HttpPartiesCommandClient(httpClient, Options.Create(ClientOptions()));
+
+        ArgumentException exception = await Should.ThrowAsync<ArgumentException>(
+            () => client.DeactivatePartyAsync("party/unsafe", CancellationToken.None));
+
+        exception.Message.ShouldContain("support-safe identifier");
+        handler.SendCount.ShouldBe(0);
+    }
+
+    [Fact]
+    public async Task AddContactChannelAsync_WhenContactChannelIdIsUnsafe_DoesNotSendRequestAsync()
+    {
+        var handler = new CountingHandler();
+        var httpClient = new HttpClient(handler) { BaseAddress = new Uri("https://localhost") };
+        var client = new HttpPartiesCommandClient(httpClient, Options.Create(ClientOptions()));
+
+        ArgumentException exception = await Should.ThrowAsync<ArgumentException>(
+            () => client.AddContactChannelAsync(
+                "party-1",
+                new AddContactChannel
+                {
+                    PartyId = "party-1",
+                    ContactChannelId = "contact/unsafe",
+                    Type = ContactChannelType.Email,
+                    Value = "person@example.test",
+                },
+                CancellationToken.None));
+
+        exception.Message.ShouldContain("support-safe identifier");
+        handler.SendCount.ShouldBe(0);
+    }
+
+    [Fact]
+    public async Task CreatePartyCompositeAsync_WhenNestedChildPartyIdDiffers_DoesNotSendRequestAsync()
+    {
+        var handler = new CountingHandler();
+        var httpClient = new HttpClient(handler) { BaseAddress = new Uri("https://localhost") };
+        var client = new HttpPartiesCommandClient(httpClient, Options.Create(ClientOptions()));
+
+        ArgumentException exception = await Should.ThrowAsync<ArgumentException>(
+            () => client.CreatePartyCompositeAsync(
+                new CreatePartyComposite
+                {
+                    PartyId = "party-1",
+                    Type = PartyType.Person,
+                    PersonDetails = new PersonDetails { FirstName = "Ada", LastName = "Lovelace" },
+                    ContactChannels =
+                    [
+                        new AddContactChannel
+                        {
+                            PartyId = "other-party",
+                            ContactChannelId = "contact-1",
+                            Type = ContactChannelType.Email,
+                            Value = "person@example.test",
+                        },
+                    ],
+                },
+                CancellationToken.None));
+
+        exception.Message.ShouldContain("Child PartyId must match AggregateId");
+        handler.SendCount.ShouldBe(0);
+    }
+
+    [Fact]
+    public async Task UpdatePartyCompositeAsync_WhenRemoveIdentifierIdIsUnsafe_DoesNotSendRequestAsync()
+    {
+        var handler = new CountingHandler();
+        var httpClient = new HttpClient(handler) { BaseAddress = new Uri("https://localhost") };
+        var client = new HttpPartiesCommandClient(httpClient, Options.Create(ClientOptions()));
+
+        ArgumentException exception = await Should.ThrowAsync<ArgumentException>(
+            () => client.UpdatePartyCompositeAsync(
+                "party-1",
+                new UpdatePartyComposite
+                {
+                    PartyId = "party-1",
+                    RemoveIdentifierIds = ["identifier/unsafe"],
+                },
+                CancellationToken.None));
+
+        exception.Message.ShouldContain("support-safe identifier");
+        handler.SendCount.ShouldBe(0);
+    }
+
+    [Fact]
+    public async Task CreatePartyCompositeAsync_WhenContactChannelListIsNull_DoesNotSendRequestAsync()
+    {
+        var handler = new CountingHandler();
+        var httpClient = new HttpClient(handler) { BaseAddress = new Uri("https://localhost") };
+        var client = new HttpPartiesCommandClient(httpClient, Options.Create(ClientOptions()));
+
+        ArgumentException exception = await Should.ThrowAsync<ArgumentException>(
+            () => client.CreatePartyCompositeAsync(
+                new CreatePartyComposite
+                {
+                    PartyId = "party-1",
+                    Type = PartyType.Person,
+                    PersonDetails = new PersonDetails { FirstName = "Ada", LastName = "Lovelace" },
+                    ContactChannels = null!,
+                },
+                CancellationToken.None));
+
+        exception.Message.ShouldContain("ContactChannels is required");
+        handler.SendCount.ShouldBe(0);
+    }
+
+    [Fact]
+    public async Task UpdatePartyCompositeAsync_WhenAddContactChannelListIsNull_DoesNotSendRequestAsync()
+    {
+        var handler = new CountingHandler();
+        var httpClient = new HttpClient(handler) { BaseAddress = new Uri("https://localhost") };
+        var client = new HttpPartiesCommandClient(httpClient, Options.Create(ClientOptions()));
+
+        ArgumentException exception = await Should.ThrowAsync<ArgumentException>(
+            () => client.UpdatePartyCompositeAsync(
+                "party-1",
+                new UpdatePartyComposite
+                {
+                    PartyId = "party-1",
+                    AddContactChannels = null!,
+                },
+                CancellationToken.None));
+
+        exception.Message.ShouldContain("AddContactChannels is required");
         handler.SendCount.ShouldBe(0);
     }
 

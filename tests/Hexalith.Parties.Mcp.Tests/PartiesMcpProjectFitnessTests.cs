@@ -39,9 +39,10 @@ public sealed class PartiesMcpProjectFitnessTests
                 "..\\Hexalith.Parties.Client\\Hexalith.Parties.Client.csproj",
                 "..\\Hexalith.Parties.Contracts\\Hexalith.Parties.Contracts.csproj",
                 "..\\Hexalith.Parties.ServiceDefaults\\Hexalith.Parties.ServiceDefaults.csproj",
+                "$(HexalithCommonsRoot)\\src\\libraries\\Hexalith.Commons.UniqueIds\\Hexalith.Commons.UniqueIds.csproj",
             ],
             ignoreOrder: true);
-        packageReferences.ShouldBe(["ModelContextProtocol.AspNetCore"]);
+        packageReferences.ShouldBe(["Hexalith.Commons.UniqueIds", "ModelContextProtocol.AspNetCore"], ignoreOrder: true);
 
         string[] forbidden =
         [

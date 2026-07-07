@@ -1,5 +1,5 @@
 # generated: 2026-06-21T18:55:59+02:00
-# last_updated: 2026-07-07T07:35:27+02:00
+# last_updated: 2026-07-07T09:36:12+02:00
 # project: parties
 # project_key: NOKEY
 # tracking_system: file-system
@@ -41,7 +41,7 @@
 # - Retrospective appends its action items to action_items; sprint-status surfaces open ones
 
 generated: 2026-06-21T18:55:59+02:00
-last_updated: 2026-07-07T07:35:27+02:00
+last_updated: 2026-07-07T09:36:12+02:00
 project: parties
 project_key: NOKEY
 tracking_system: file-system
@@ -140,7 +140,7 @@ development_status:
   # architecture spine is approved.
   epic-8: in-progress
   8-1-baseline-and-release-blocker-stabilization: done
-  8-2-identifier-correctness-and-zero-risk-hygiene: backlog
+  8-2-identifier-correctness-and-zero-risk-hygiene: done
   8-3-platform-api-prerequisites: backlog
   8-4-leaf-project-retirement: backlog
   8-5-eventstore-domain-service-sdk-host-cutover: backlog
