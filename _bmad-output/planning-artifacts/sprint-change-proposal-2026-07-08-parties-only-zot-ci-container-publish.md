@@ -3,7 +3,7 @@ project_name: parties
 user_name: Administrator
 date: 2026-07-08
 scope_classification: Moderate
-status: approved-implemented-pending-live-push
+status: approved-implemented-live-push-confirmed
 mode: Batch
 trigger: "Add CI/CD container publishing for Parties-only workloads to the modified Zot registry path at registry.hexalith.com, whose live auth now advertises Keycloak OIDC plus Zot API keys."
 ---
@@ -322,7 +322,7 @@ Success criteria:
 | 6.2 Proposal accuracy | [x] | Draft based on current repository artifacts. |
 | 6.3 User approval | [x] | Approved by operator on 2026-07-08; account rights confirmed and recommended approach selected. |
 | 6.4 Sprint status update | [x] | Story 8.12 added for implementation tracking. |
-| 6.5 Next steps/handoff | [x] | Developer implementation completed; live push remains to validate through GitHub Actions secrets. |
+| 6.5 Next steps/handoff | [x] | Developer implementation completed; GitHub Actions live push confirmed. |
 
 ## 7. Registry Verification Notes - 2026-07-08
 
@@ -352,3 +352,9 @@ Test credential note supplied by the operator:
 Production hardening note:
 
 - The temporary validation identity is accepted for this test. Before durable production use, prefer a dedicated non-human Keycloak/Zot service identity for GitHub Actions, then rotate the GitHub secret to that identity's Zot API key.
+
+Live validation result:
+
+- GitHub Actions run `28943231201` completed successfully on 2026-07-08.
+- Published tag: `0.0.0-preview.0.662`.
+- Zot manifest checks returned `200` for `parties`, `parties-mcp`, and `parties-ui`.

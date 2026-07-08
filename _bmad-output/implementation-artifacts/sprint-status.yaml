@@ -162,7 +162,7 @@ development_status:
   # Deployment automation maintenance story; publishes only parties, parties-mcp,
   # and parties-ui containers to Zot via GitHub Actions API-key auth. It does not
   # run the full Kubernetes publish/apply flow.
-  8-12-parties-only-zot-container-publish-ci: review
+  8-12-parties-only-zot-container-publish-ci: done
   epic-8-retrospective: optional
 
 action_items:

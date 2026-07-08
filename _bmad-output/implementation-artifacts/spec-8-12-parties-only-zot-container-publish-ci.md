@@ -1,6 +1,6 @@
 # Spec 8.12: Parties-only Zot Container Publish CI
 
-Status: implemented-pending-live-push
+Status: done
 Owner: Amelia (Developer)
 Created: 2026-07-08
 Source change proposal: `_bmad-output/planning-artifacts/sprint-change-proposal-2026-07-08-parties-only-zot-ci-container-publish.md`
@@ -31,4 +31,5 @@ Publish only the Parties-owned container images to `registry.hexalith.com` from 
 - Script dry-run validates repository selection and tag validation without pushing.
 - Direct deploy-validation test project run passes locally.
 - Live registry read checks for existing `0.0.0-preview.0.506` manifests return `200` for `parties`, `parties-mcp`, and `parties-ui`.
-- Live push validation requires the API key to be installed as `ZOT_REGISTRY_API_KEY` in the execution environment or GitHub repository secrets.
+- GitHub Actions run `28943231201` published tag `0.0.0-preview.0.662` to Zot on 2026-07-08.
+- Live registry manifest checks for `0.0.0-preview.0.662` return `200` for `parties`, `parties-mcp`, and `parties-ui`.
