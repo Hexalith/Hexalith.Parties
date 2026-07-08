@@ -48,9 +48,12 @@ public sealed class PartiesContainerPublishWorkflowTests
         script.ShouldContain("\"--arch\"");
         script.ShouldContain("\"x64\"");
         script.ShouldContain("\"msbuild\"");
+        script.ShouldContain("\"-m:1\"");
         script.ShouldContain("\"restore\"");
         script.ShouldContain("$AppHostProject");
         script.ShouldContain("-getProperty:Version");
+        script.ShouldContain("Where-Object { $_ -match $SemVerPattern }");
+        script.ShouldContain("Could not find a SemVer version in AppHost MinVer output.");
         script.ShouldContain("$normalized.Contains(\"+dirty\"");
         script.ShouldContain("staging-latest");
         script.ShouldContain("Invoke-WebRequest -Uri $uri -Method Head");

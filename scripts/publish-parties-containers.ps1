@@ -90,11 +90,12 @@ function Resolve-MinVerImageTag {
         "-p:UseHexalithProjectReferences=true",
         "-p:UseNuGetDeps=false",
         "-p:HexalithMemoriesFromSource=false"
-    )
+    ) | Out-Host
 
     $arguments = @(
         "msbuild",
         $AppHostProject,
+        "-m:1",
         "-t:Build",
         "-p:Configuration=Release",
         "-p:UseHexalithProjectReferences=true",
@@ -104,12 +105,29 @@ function Resolve-MinVerImageTag {
     )
 
     Write-Host "[publish-parties-containers] Resolving MinVer image tag from AppHost..."
-    $version = & dotnet @arguments
+    $versionOutput = & dotnet @arguments
     if ($LASTEXITCODE -ne 0) {
         Fail "Could not resolve MinVer image tag from AppHost."
     }
 
-    return Normalize-ImageTag ($version | Select-Object -Last 1)
+    $version = $versionOutput |
+        ForEach-Object {
+            $line = $_.ToString().Trim()
+            if ($line.StartsWith("v", [StringComparison]::OrdinalIgnoreCase)) {
+                $line.Substring(1)
+            }
+            else {
+                $line
+            }
+        } |
+        Where-Object { $_ -match $SemVerPattern } |
+        Select-Object -Last 1
+
+    if ([string]::IsNullOrWhiteSpace($version)) {
+        Fail "Could not find a SemVer version in AppHost MinVer output."
+    }
+
+    return Normalize-ImageTag $version
 }
 
 function New-ZotManifestHeaders {
