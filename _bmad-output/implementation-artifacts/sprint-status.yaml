@@ -1,5 +1,5 @@
 # generated: 2026-06-21T18:55:59+02:00
-# last_updated: 2026-07-07T20:15:00+02:00
+# last_updated: 2026-07-08T15:30:00+02:00
 # project: parties
 # project_key: NOKEY
 # tracking_system: file-system
@@ -41,7 +41,7 @@
 # - Retrospective appends its action items to action_items; sprint-status surfaces open ones
 
 generated: 2026-06-21T18:55:59+02:00
-last_updated: 2026-07-07T22:52:52+02:00
+last_updated: 2026-07-08T15:30:00+02:00
 project: parties
 project_key: NOKEY
 tracking_system: file-system
@@ -157,6 +157,12 @@ development_status:
   # and the Story 8.3 platform-prerequisite gate. Closes the two spec-8-1 runner
   # deferred-work entries and the Epic 6/7 fallback-ladder action items.
   8-11-validation-fallback-ladder-runner-and-guidance: done
+  # Added by Correct Course 2026-07-08
+  # (sprint-change-proposal-2026-07-08-parties-only-zot-ci-container-publish.md).
+  # Deployment automation maintenance story; publishes only parties, parties-mcp,
+  # and parties-ui containers to Zot via GitHub Actions API-key auth. It does not
+  # run the full Kubernetes publish/apply flow.
+  8-12-parties-only-zot-container-publish-ci: review
   epic-8-retrospective: optional
 
 action_items:

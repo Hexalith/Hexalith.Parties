@@ -133,14 +133,14 @@ Zot is deployed on the same cluster, in the `zot` namespace, fronted by an nginx
 
 ### 5.1 Access control
 
-```
-htpasswd file mounted from Secret zot-auth-secret
-accessControl.groups:
-  admins:    [jpiquot, qdassivignon]                       ← push + pull + delete
-  builders:  [kaniko, github-ci, parties-publisher]        ← push + pull
-```
+The live Zot registry at `registry.hexalith.com` uses Keycloak/OIDC for browser login and Zot API keys for automation. Docker-compatible clients still use Basic-auth-shaped credentials: the username is the mapped Zot/Keycloak identity, and the password value is the Zot API key.
 
-The `parties-publisher` account is a dedicated build identity. Human operators (`jpiquot`, `qdassivignon`) keep separate admin credentials but do NOT use them for `publish.ps1` — `publish.ps1` reads the `parties-publisher` token from `~/.docker/config.json` exclusively.
+GitHub Actions stores those values as:
+
+- `ZOT_REGISTRY_USERNAME`
+- `ZOT_REGISTRY_API_KEY`
+
+The CI identity must have push rights for `parties`, `parties-mcp`, and `parties-ui`. A dedicated CI identity is preferred for durable production use; temporary human-mapped API keys are only for short validation windows and must be deleted or rotated after confirmation.
 
 ### 5.2 Tagging policy
 
@@ -158,6 +158,16 @@ Each image is built once per commit, immutable thereafter (no re-tag, no overwri
 ### 5.3 Pull credentials in the cluster
 
 A Secret `zot-pull-secret` (type `kubernetes.io/dockerconfigjson`) is bootstrapped by `publish.ps1` from the operator's `~/.docker/config.json`. Every Deployment whose container image starts with `registry.hexalith.com/` carries an `imagePullSecrets: [{ name: zot-pull-secret }]` reference. Vendor-image carve-outs (`redis`, `falkordb`) do not need it.
+
+### 5.4 Parties-only CI container publish
+
+`.github/workflows/publish-parties-containers.yml` publishes only:
+
+- `registry.hexalith.com/parties:<semver>`
+- `registry.hexalith.com/parties-mcp:<semver>`
+- `registry.hexalith.com/parties-ui:<semver>`
+
+It does not deploy Kubernetes resources and does not call `deploy/k8s/publish.ps1`. The full operator path remains responsible for regenerating manifests, validating all generated images, creating/updating `zot-pull-secret`, and applying the cluster topology.
 
 ## 6. Operator-Managed Secrets
 

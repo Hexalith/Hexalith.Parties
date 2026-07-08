@@ -19,18 +19,16 @@ The image substrate (Zot OCI registry serving `registry.hexalith.com`) is delive
 
 ## Zot credentials
 
-The publish pipeline (Story 9.5 `publish.ps1`) and any developer running `docker pull` from
-`registry.hexalith.com` authenticate with the dedicated **`parties-publisher`** account in
-the Zot `builders` group. Human admin credentials (`jpiquot`, `qdassivignon`) are reserved
-for out-of-band emergency operations (repository deletion, dispute resolution) and are NOT
-used by `publish.ps1`, by CI runners, or by any developer in the normal flow.
+The live Zot registry at `registry.hexalith.com` authenticates users through Keycloak/OIDC
+and supports Zot API keys for Docker-compatible clients. Use the Zot username / mapped
+Keycloak identity as the username and the Zot API key as the password value.
 
 One-time login (writes the credential to `~/.docker/config.json` under the
 `auths["registry.hexalith.com"]` entry):
 
 ```bash
-docker login -u parties-publisher registry.hexalith.com
-# Password: <ask the infra team — cluster-side htpasswd entry is infra-managed>
+docker login registry.hexalith.com --username <zot-username>
+# Password: <Zot API key generated after Keycloak/OIDC login>
 ```
 
 Verify the credential landed in the expected shape (Path B emission — see ADR D-K8s-2):
@@ -41,8 +39,11 @@ jq '.auths["registry.hexalith.com"]' ~/.docker/config.json
 # Forbidden: an entry that delegates to "credsStore" or "credHelpers" — publish.ps1 exits 6.
 ```
 
-The cluster-side htpasswd file (adding new builders or rotating an admin password) is owned
-by the infra team — see [`../zot/README.md`](../zot/README.md) "Out-of-band Secret creation".
+GitHub Actions Parties-only container publication uses repository secrets
+`ZOT_REGISTRY_USERNAME` and `ZOT_REGISTRY_API_KEY`; see
+[`../../docs/ci-secrets-checklist.md`](../../docs/ci-secrets-checklist.md). That CI path
+publishes only `parties`, `parties-mcp`, and `parties-ui`; it does not run this folder's
+full Kubernetes publish/apply flow.
 
 ---
 

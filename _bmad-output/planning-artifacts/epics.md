@@ -1749,3 +1749,26 @@ changed.
 
 **And** final verification confirms or blocks release using the agreed build,
 focused test, package/API, topology, deploy, and UI accessibility lanes.
+
+### Story 8.12: Parties-only Zot container publish CI
+
+As a release operator,
+I want GitHub Actions to publish the `parties`, `parties-mcp`, and `parties-ui`
+container images to Zot at `registry.hexalith.com`,
+so that Parties images are available in the registry without running the full
+Kubernetes publish/apply flow.
+
+**Given** the workflow runs on a push to `main`, a `v*` tag, or manual dispatch
+**When** it publishes containers
+**Then** it publishes exactly `parties`, `parties-mcp`, and `parties-ui` to Zot
+using immutable SemVer/MinVer image tags and no `latest` tag.
+
+**And** it authenticates with `ZOT_REGISTRY_USERNAME` and
+`ZOT_REGISTRY_API_KEY`, where the API key is generated after Keycloak/OIDC login
+and replaces the password for Docker-compatible clients.
+
+**And** it does not run `deploy/k8s/publish.ps1`, does not apply Kubernetes
+manifests, and does not require non-Parties images to exist at the same tag.
+
+**And** deploy-validation tests pin the workflow/script repository list, tag
+policy, manifest verification, secret hygiene, and full-topology boundary.

@@ -15,16 +15,16 @@ This guide covers deploying the Hexalith.Parties service with DAPR in production
 
 ### Zot credentials
 
-`deploy/k8s/publish.ps1` builds and pushes container images to the Zot registry at `registry.hexalith.com` (ADR D-K8s-2). The cluster pulls those images via a Kubernetes `dockerconfigjson` Secret named `zot-pull-secret` that `publish.ps1` bootstraps from the operator's `~/.docker/config.json`. Operator-side setup is a one-time `docker login`:
+Zot at `registry.hexalith.com` authenticates users through Keycloak/OIDC and supports Zot API keys for non-browser clients. The API key is used as the password value for Docker-compatible clients:
 
 ```bash
-docker login -u parties-publisher registry.hexalith.com
-# password: captured from the infra-team secure store (Bitwarden / 1Password)
+docker login registry.hexalith.com --username <zot-username>
+# password: Zot API key generated after Keycloak/OIDC login
 ```
 
-- **`parties-publisher`** is the dedicated build account in the cluster-side Zot `builders` group (`accessControl.groups.builders`). Human operator accounts (`jpiquot`, `qdassivignon` in the `admins` group) **are not** used for image push — they retain admin rights for repository management but stay separate from the build account stamped into every pull-secret manifest.
-- After `docker login`, `~/.docker/config.json` must carry `auths["registry.hexalith.com"]` with a plain-text `auth` field (base64-encoded `parties-publisher:<password>`). Docker credential helpers (`credsStore`, `credHelpers["registry.hexalith.com"]`) are explicitly **not supported in MVP** — `publish.ps1` exits 6 with an actionable error if it sees either directive. Workarounds: remove the directive temporarily, set `$env:DOCKER_CONFIG` to point at a helper-free config, or pre-create `zot-pull-secret` manually.
-- Cluster-side Zot configuration (htpasswd entry + `accessControl.groups.builders` membership for `parties-publisher`) is owned by the infra team. CI runners use the `kaniko` or `github-ci` builder account; CI-side wiring is post-MVP. `validate-deployment.ps1` emits JSON output for CI consumption.
+- `deploy/k8s/publish.ps1` remains the full Kubernetes publish/apply path. It builds and pushes the full generated topology, verifies all generated image manifests, and bootstraps the cluster `zot-pull-secret` from the operator's `~/.docker/config.json`.
+- `.github/workflows/publish-parties-containers.yml` is the narrower CI path for Parties-only images. It publishes only `parties`, `parties-mcp`, and `parties-ui` using GitHub secrets `ZOT_REGISTRY_USERNAME` and `ZOT_REGISTRY_API_KEY`.
+- After operator `docker login`, `~/.docker/config.json` must carry `auths["registry.hexalith.com"]` with a plain-text `auth` field. Docker credential helpers (`credsStore`, `credHelpers["registry.hexalith.com"]`) are explicitly **not supported in MVP** for `publish.ps1` — the script exits 6 with an actionable error if it sees either directive. Workarounds: remove the directive temporarily, set `$env:DOCKER_CONFIG` to point at a helper-free config, or pre-create `zot-pull-secret` manually.
 - The operator's credential never appears in `publish.ps1` stdout, stderr, or any committed file. Step 11 of `publish.ps1` re-emits the `auths` block wholesale (Path B — never decoded) into the `zot-pull-secret` data field.
 
 ---
