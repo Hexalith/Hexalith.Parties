@@ -19,6 +19,7 @@ public sealed class PartiesContainerPublishWorkflowTests
         workflow.ShouldContain("src/Hexalith.Parties.UI/Hexalith.Parties.UI.csproj");
         workflow.ShouldContain("-p:UseHexalithProjectReferences=true");
         workflow.ShouldContain("-p:UseNuGetDeps=false");
+        workflow.ShouldContain("-p:HexalithMemoriesFromSource=false");
         workflow.ShouldNotContain("deploy/k8s/publish.ps1");
         workflow.ShouldNotContain("ZOT_REGISTRY_PASSWORD");
         workflow.ShouldNotContain(":latest");
@@ -40,6 +41,7 @@ public sealed class PartiesContainerPublishWorkflowTests
         script.ShouldContain("-p:ContainerImageTag=$ImageTag");
         script.ShouldContain("-p:UseHexalithProjectReferences=true");
         script.ShouldContain("-p:UseNuGetDeps=false");
+        script.ShouldContain("-p:HexalithMemoriesFromSource=false");
         script.ShouldContain("\"--os\"");
         script.ShouldContain("\"linux\"");
         script.ShouldContain("\"--arch\"");
@@ -55,7 +57,8 @@ public sealed class PartiesContainerPublishWorkflowTests
         script.ShouldNotContain("eventstore-admin");
         script.ShouldNotContain("sample-blazor-ui");
         script.ShouldNotContain("tenants");
-        script.ShouldNotContain("memories");
+        script.ShouldNotContain("Repository = \"memories\"");
+        script.ShouldNotContain("registry.hexalith.com/memories");
     }
 
     [Fact]
