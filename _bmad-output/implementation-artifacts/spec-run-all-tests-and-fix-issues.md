@@ -2,7 +2,7 @@
 title: 'Run all tests and fix issues'
 type: 'bugfix'
 created: '2026-07-08T00:00:00+02:00'
-status: 'in-progress'
+status: 'done'
 review_loop_iteration: 0
 baseline_revision: 'a46d453c8f4d0568519daa9611baecef461b4780'
 context:
@@ -50,10 +50,10 @@ warnings: []
 ## Tasks & Acceptance
 
 **Execution:**
-- [ ] `scripts/test.ps1` and `.github/workflows/test.yml` -- verify or repair MTP-compatible test arguments and result output -- ensures all lanes run tests instead of failing on obsolete VSTest switches.
-- [ ] `tests/Hexalith.Parties.Tests/**` -- fix focused compile/runtime failures found by targeted test runs -- restores the largest root test project.
-- [ ] `tests/Hexalith.Parties.*.Tests/**` -- fix additional root-owned failures from package/client/contracts/security/UI/integration/deploy suites -- keeps all configured projects aligned.
-- [ ] `_bmad-output/implementation-artifacts/tests/test-summary.md` and this spec -- record commands, pass/fail counts, fixed issues, and external blockers -- makes the outcome reviewable.
+- [x] `scripts/test.ps1` and `.github/workflows/test.yml` -- verify or repair MTP-compatible test arguments and result output -- ensures all lanes run tests instead of failing on obsolete VSTest switches.
+- [x] `tests/Hexalith.Parties.Tests/**` -- fix focused compile/runtime failures found by targeted test runs -- restores the largest root test project.
+- [x] `tests/Hexalith.Parties.*.Tests/**` -- fix additional root-owned failures from package/client/contracts/security/UI/integration/deploy suites -- keeps all configured projects aligned.
+- [x] `_bmad-output/implementation-artifacts/tests/test-summary.md` and this spec -- record commands, pass/fail counts, fixed issues, and external blockers -- makes the outcome reviewable.
 
 **Acceptance Criteria:**
 - Given the repository uses Microsoft.Testing.Platform, when `scripts/test.ps1` runs a lane, then each test project receives MTP-compatible result arguments and a nonzero failing exit code is preserved.
@@ -70,7 +70,8 @@ The validation ladder should separate package-mode from source-mode. Package-mod
 ## Verification
 
 **Commands:**
-- `pwsh -NoProfile -File scripts/test.ps1 -Lane all -Configuration Release -ContinueOnFailure` -- expected: all runnable projects execute; failures are either fixed or recorded with exact blockers.
-- `dotnet test <test-project>.csproj --configuration Debug --verbosity minimal --results-directory <dir> --report-xunit-trx --report-xunit-trx-filename <name>.trx` -- expected: focused reruns pass after fixes.
-- `bash scripts/check-no-warning-override.sh` -- expected: no warning-as-error bypass exists.
-- `git diff --check` -- expected: no whitespace errors.
+- `pwsh -NoProfile -File scripts/test.ps1 -Lane all -Configuration Debug -ContinueOnFailure -ResultsDirectory TestResults/bmad-source-debug-final -Properties UseHexalithProjectReferences=true,UseNuGetDeps=false,NuGetAudit=false,MinVerVersionOverride=1.0.0,GeneratePackageOnBuild=false,BuildInParallel=false` -- passed: all 15 projects passed.
+- `pwsh -NoProfile -File scripts/test.ps1 -Lane all -Configuration Release -ContinueOnFailure -ResultsDirectory TestResults/bmad-package-final-2 -Properties UseHexalithProjectReferences=false,UseNuGetDeps=true,NuGetAudit=false,MinVerVersionOverride=1.0.0` -- passed: all 15 projects passed.
+- Full working-tree search for the retired EventStore version literal -- passed: no matches.
+- `bash scripts/check-no-warning-override.sh` -- passed: no warning-as-error bypass or nested-submodule regressions.
+- `git diff --check && git -C references/Hexalith.Builds diff --check && git -C references/Hexalith.EventStore diff --check && git -C references/Hexalith.Tenants diff --check` -- passed: no whitespace errors.

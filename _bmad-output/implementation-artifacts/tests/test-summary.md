@@ -215,3 +215,21 @@
 - EventStore projection/query SDK migration remains deferred to Story 8.6; Parties keeps projection/query actors, rebuild services, local adapters, and freshness fallback.
 - Aspire/AppHost publish helper cleanup remains deferred to Story 8.8; AppHost topology and publish helpers were not migrated in Story 8.5.
 - Existing Epic 8 residual release blockers from Stories 8.1-8.4 remain unchanged unless explicitly closed by later stories.
+
+## Run All Tests And Fix Issues - 2026-07-08
+
+### Focused Changes
+
+- EventStore and Tenants source builds now evaluate against the same central package version values used by CPVM; regenerated outputs contain no retired EventStore version references.
+- Package-mode tests can consume the source-only `Hexalith.Commons.ServiceDefaults` project when it exists locally, without switching all Commons dependencies to source mode.
+- Client dependency fitness now treats `Hexalith.Commons.Http` and `Hexalith.EventStore.Contracts` as direct client package references instead of transitive violations.
+
+### Commands Attempted
+
+| Command | Result | Notes |
+| --- | --- | --- |
+| `pwsh -NoProfile -File scripts/test.ps1 -Lane all -Configuration Debug -ContinueOnFailure -ResultsDirectory TestResults/bmad-source-debug-final -Properties UseHexalithProjectReferences=true,UseNuGetDeps=false,NuGetAudit=false,MinVerVersionOverride=1.0.0,GeneratePackageOnBuild=false,BuildInParallel=false` | Pass | All 15 test projects passed in source-reference mode. Integration tests: 34 total, 28 succeeded, 6 expected skips. |
+| `pwsh -NoProfile -File scripts/test.ps1 -Lane all -Configuration Release -ContinueOnFailure -ResultsDirectory TestResults/bmad-package-final-2 -Properties UseHexalithProjectReferences=false,UseNuGetDeps=true,NuGetAudit=false,MinVerVersionOverride=1.0.0` | Pass | All 15 test projects passed in package mode. Integration tests: 34 total, 28 succeeded, 6 expected skips. |
+| Full working-tree search for the retired EventStore version literal | Pass | No remaining working-tree references, including ignored generated outputs. |
+| `bash scripts/check-no-warning-override.sh` | Pass | `OK: no warning-override or nested-submodule regressions detected in active CI/build scripts.` |
+| `git diff --check && git -C references/Hexalith.Builds diff --check && git -C references/Hexalith.EventStore diff --check && git -C references/Hexalith.Tenants diff --check` | Pass | No whitespace or conflict-marker issues in root or checked submodule diffs. |

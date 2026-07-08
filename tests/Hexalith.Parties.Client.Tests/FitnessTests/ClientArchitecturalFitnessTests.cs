@@ -404,6 +404,8 @@ public sealed class ClientArchitecturalFitnessTests
             "Microsoft.Extensions.Http",
             "Microsoft.Extensions.Options",
             "MinVer",
+            "Hexalith.Commons.Http",
+            "Hexalith.EventStore.Contracts",
         ];
 
         List<string> transitivePackageNames =

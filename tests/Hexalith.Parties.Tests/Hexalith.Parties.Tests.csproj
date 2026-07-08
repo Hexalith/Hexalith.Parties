@@ -20,6 +20,8 @@
     </ProjectReference>
     <ProjectReference Include="$(HexalithEventStoreRoot)\src\Hexalith.EventStore.Testing\Hexalith.EventStore.Testing.csproj" Condition="'$(HexalithEventStoreFromSource)' == 'true'" />
     <PackageReference Include="Hexalith.EventStore.Testing" Condition="'$(HexalithEventStoreFromSource)' != 'true'" />
+    <ProjectReference Include="$(HexalithCommonsRoot)\src\libraries\Hexalith.Commons.ServiceDefaults\Hexalith.Commons.ServiceDefaults.csproj" Condition="'$(HexalithCommonsServiceDefaultsFromSource)' == 'true'" />
+    <PackageReference Include="Hexalith.Commons.ServiceDefaults" Condition="'$(HexalithCommonsServiceDefaultsFromSource)' != 'true'" />
     <ProjectReference Include="$(HexalithTenantsRoot)\src\Hexalith.Tenants.Client\Hexalith.Tenants.Client.csproj" Condition="'$(HexalithTenantsFromSource)' == 'true'" />
     <PackageReference Include="Hexalith.Tenants.Client" Condition="'$(HexalithTenantsFromSource)' != 'true'" />
     <ProjectReference Include="$(HexalithTenantsRoot)\src\Hexalith.Tenants.Testing\Hexalith.Tenants.Testing.csproj" PrivateAssets="all" ExcludeAssets="analyzers" Condition="'$(HexalithTenantsFromSource)' == 'true'" />
