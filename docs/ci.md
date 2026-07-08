@@ -16,6 +16,22 @@ Hexalith.Parties uses GitHub Actions for the main quality pipeline in `.github/w
 - `contract-test`: runs Pact.js contract scripts when they exist. Until the Pact framework is scaffolded, the job records a readiness gap in the GitHub step summary.
 - `Quality Gate`: fails the workflow unless lint/build, test shards, and UI accessibility pass, and contract tests either pass or are intentionally skipped.
 
+## Parties Container Publish
+
+The `Publish Parties Containers` workflow in `.github/workflows/publish-parties-containers.yml` publishes only the Parties-owned container images to Zot:
+
+- `registry.hexalith.com/parties`
+- `registry.hexalith.com/parties-mcp`
+- `registry.hexalith.com/parties-ui`
+
+The workflow runs on pushes to `main`, `v*` tags, and manual dispatch. It restores the solution, builds the three container projects, authenticates to `registry.hexalith.com` with `ZOT_REGISTRY_USERNAME` and `ZOT_REGISTRY_API_KEY`, then calls `scripts/publish-parties-containers.ps1`.
+
+The workflow uses immutable SemVer/MinVer image tags only. Git tags may keep their leading `v`, but image tags omit it. Mutable tags such as `latest` are not allowed. The script verifies each pushed manifest through the Zot v2 API after publication.
+
+This workflow does not run deploy/k8s/publish.ps1, does not apply Kubernetes manifests, and does not publish EventStore, Tenants, Memories, Sample, Redis, or FalkorDB images. Full cluster publish/apply remains the operator-owned `deploy/k8s/publish.ps1` path.
+
+Required registry secrets are listed in [`docs/ci-secrets-checklist.md`](ci-secrets-checklist.md). Zot currently authenticates browser users through Keycloak/OIDC and supports Zot API keys for automation; GitHub Actions must use the API key as the password value and must not store a human SSO password.
+
 ## Submodules
 
 The checkout step uses `submodules: true`, which initializes root-repository submodules under `references/` only. Do not change this to recursive checkout unless nested submodules are explicitly required.
