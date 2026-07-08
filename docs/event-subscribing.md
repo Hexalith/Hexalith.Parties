@@ -181,7 +181,7 @@ Kafka guarantees ordering within a partition. To ensure causal ordering per aggr
 
 **Required**: Configure aggregate-ID-based key routing so all events for the same aggregate land on the same partition.
 
-The checked-in [deploy/dapr/pubsub-kafka.yaml](../deploy/dapr/pubsub-kafka.yaml) template only covers component scoping. Apply the broker-specific partition-key metadata supported by your DAPR Kafka component when rendering your environment-specific deployment manifests, and keep the publisher metadata aligned with that aggregate-based routing rule.
+Apply the broker-specific partition-key metadata supported by your Dapr Kafka component when rendering your environment-specific deployment manifests, and keep the publisher metadata aligned with that aggregate-based routing rule.
 
 Without key routing, events from different aggregates may interleave on the same partition, which is fine, but events from the **same** aggregate could land on different partitions and arrive out of order.
 
@@ -191,7 +191,7 @@ Azure Service Bus supports sessions for ordered delivery within a session group.
 
 **Required**: Use the aggregate-ID as the session key.
 
-The checked-in [deploy/dapr/pubsub-servicebus.yaml](../deploy/dapr/pubsub-servicebus.yaml) template assumes that operators provision session-enabled topics and subscriptions ahead of time. When rendering production manifests, add the Service Bus session metadata supported by your DAPR component and ensure every event for the same aggregate flows through the same session key.
+Provision session-enabled topics and subscriptions ahead of time. When rendering production manifests, add the Service Bus session metadata supported by your Dapr component and ensure every event for the same aggregate flows through the same session key.
 
 ## Handler Design When Ordering Cannot Be Guaranteed
 
@@ -244,11 +244,11 @@ The sample subscriber is configured via DAPR components in `src/Hexalith.Parties
 
 ### Production
 
-See [event-publishing.md](event-publishing.md) for production broker configuration templates in `deploy/dapr/`.
+See [event-publishing.md](event-publishing.md) for production broker configuration requirements.
 
 To subscribe your application:
 
-1. Copy `deploy/dapr/subscription-parties.yaml`
+1. Create an environment-owned Dapr subscription manifest for Parties events.
 2. Replace the tenant name in the topic
 3. Set your app-id in the `scopes` section
 4. Add your app-id to the pubsub component's `scopes` and `subscriptionScopes`

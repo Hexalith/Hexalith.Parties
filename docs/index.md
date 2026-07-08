@@ -17,7 +17,7 @@
 |---|---|
 | **Build** | `dotnet build Hexalith.Parties.slnx -c Release` (warnings-as-errors) |
 | **Run** | `dotnet aspire run --project src/Hexalith.Parties.AppHost` |
-| **Test** | `pwsh -NoProfile -File scripts/test.ps1 -Lane {unit\|integration\|topology\|deploy\|all\|coverage}` or `dotnet test tests/<Project>/<Project>.csproj`. Blocked-lane triage: add `-ContinueOnFailure` (report every failing project) and `-ResultsDirectory TestResults` (inspectable TRX) — see the fallback validation ladder in [development-guide.md](./development-guide.md) |
+| **Test** | `pwsh -NoProfile -File scripts/test.ps1 -Lane {unit\|integration\|topology\|ci\|all\|coverage}` or `dotnet test tests/<Project>/<Project>.csproj`. Blocked-lane triage: add `-ContinueOnFailure` (report every failing project) and `-ResultsDirectory TestResults` (inspectable TRX) — see the fallback validation ladder in [development-guide.md](./development-guide.md) |
 | **Entry points** | AppHost `Program.cs` (dev) · `Hexalith.Parties/Program.cs` → `/process` · `Hexalith.Parties.Mcp/Program.cs` → `/mcp` |
 | **Domain logic** | `src/Hexalith.Parties/Domain/PartyAggregate.cs` |
 | **Prereqs** | .NET 10 SDK 10.0.301, Docker Desktop; root build submodules under `references/` |
@@ -54,11 +54,9 @@
 - [GDPR — Key Rotation & Shredding](./gdpr-key-rotation-and-shredding.md)
 - [GDPR — Portability Export](./gdpr-portability-export.md)
 - [GDPR — Processing Activity Records](./gdpr-processing-activity-records.md)
-- [Deployment Security Checklist](./deployment-security-checklist.md)
 
 ### Deployment & CI
-- [Deployment Guide](./deployment-guide.md) — full Kubernetes/aspirate deployment (canonical)
-- [Kubernetes Deployment Architecture](./kubernetes-deployment-architecture.md) — 12-pod cluster topology & reproducibility contracts
+- [Deployment Guide](./deployment-guide.md) — current runtime ownership boundary
 - [CI](./ci.md) · [Build Gate](./build-gate.md) · [CI Secrets Checklist](./ci-secrets-checklist.md)
 
 ### Frontend

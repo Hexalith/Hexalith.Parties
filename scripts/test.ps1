@@ -1,5 +1,5 @@
 param(
-    [ValidateSet("unit", "integration", "topology", "deploy", "all", "coverage")]
+    [ValidateSet("unit", "integration", "topology", "ci", "all", "coverage")]
     [string] $Lane = "unit",
 
     [string] $Configuration = "Release",
@@ -62,8 +62,8 @@ function Invoke-TestProject {
         $arguments += "-p:$property"
     }
 
-    & dotnet @arguments
-    return $LASTEXITCODE
+    & dotnet @arguments | ForEach-Object { Write-Host $_ }
+    return [int]$LASTEXITCODE
 }
 
 $unitProjects = @(
@@ -89,11 +89,11 @@ $topologyProjects = @(
     "tests/Hexalith.Parties.IntegrationTests/Hexalith.Parties.IntegrationTests.csproj"
 )
 
-$deployProjects = @(
-    "tests/Hexalith.Parties.DeployValidation.Tests/Hexalith.Parties.DeployValidation.Tests.csproj"
+$ciProjects = @(
+    "tests/Hexalith.Parties.Ci.Tests/Hexalith.Parties.Ci.Tests.csproj"
 )
 
-$allProjects = $unitProjects + $integrationProjects + $topologyProjects + $deployProjects
+$allProjects = $unitProjects + $integrationProjects + $topologyProjects + $ciProjects
 
 function Assert-TestProjectInventory {
     $discoveredProjects = Get-ChildItem -Path (Join-Path $RepositoryRoot "tests") -Filter "*.csproj" -Recurse |
@@ -121,7 +121,7 @@ $laneProjects = switch ($Lane) {
     "unit" { $unitProjects }
     "integration" { $integrationProjects }
     "topology" { $topologyProjects }
-    "deploy" { $deployProjects }
+    "ci" { $ciProjects }
     "all" { $allProjects }
     "coverage" { $allProjects }
 }

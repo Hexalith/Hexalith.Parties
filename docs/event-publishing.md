@@ -17,7 +17,7 @@ Events are wrapped in CloudEvents 1.0 format by the EventStore publisher with th
 
 ## Production Broker Configuration
 
-Production DAPR component templates are in `deploy/dapr/`. Choose one broker per deployment:
+Production Dapr component templates are environment-owned deployment assets. Choose one broker per deployment:
 
 ### Kafka (`pubsub-kafka.yaml`)
 
@@ -30,7 +30,7 @@ Production DAPR component templates are in `deploy/dapr/`. Choose one broker per
 
 **Ordering guarantee (FR73):** Causal ordering per partition. Use aggregate-ID-based key routing to ensure all events for the same aggregate are processed in order.
 
-The checked-in template documents scoping and dead-letter topology. Add the Kafka partition-routing metadata required by your DAPR component when rendering deployment-specific manifests so aggregate events stay on the same partition.
+Add the Kafka partition-routing metadata required by your Dapr component when rendering deployment-specific manifests so aggregate events stay on the same partition.
 
 ### RabbitMQ (`pubsub-rabbitmq.yaml`)
 
@@ -52,13 +52,13 @@ The checked-in template documents scoping and dead-letter topology. Add the Kafk
 
 **Ordering guarantee (FR73):** Causal ordering per session. Use aggregate-ID as the session key.
 
-The checked-in template assumes session-enabled entities are pre-created. Add the Service Bus session metadata required by your DAPR component when rendering deployment-specific manifests so aggregate events stay in a single ordered session.
+Ensure session-enabled entities are pre-created. Add the Service Bus session metadata required by your Dapr component when rendering deployment-specific manifests so aggregate events stay in a single ordered session.
 
 **Note:** Topics must be pre-created in Azure Service Bus (no auto-creation).
 
 ## Subscription Configuration
 
-The [deploy/dapr/subscription-parties.yaml](deploy/dapr/subscription-parties.yaml) file is a concrete single-tenant example. Copy it once per tenant and replace `sample-tenant` in the resource name and topic values before deployment.
+Create one Dapr subscription per tenant and replace the sample tenant in the resource name and topic values before deployment.
 
 ```yaml
 apiVersion: dapr.io/v2alpha1
@@ -95,7 +95,7 @@ When event delivery fails and DAPR retry policies are exhausted, events are rout
 
 ## Retry and Circuit Breaker Policies
 
-The `deploy/dapr/resiliency.yaml` defines production retry and circuit breaker policies:
+Production resiliency policy should define retry and circuit breaker policies equivalent to:
 
 ### Retry Policies
 
@@ -125,7 +125,7 @@ Events are delivered with at-least-once semantics. A successful subscriber respo
 
 ## Access Control
 
-The `deploy/dapr/accesscontrol.yaml` defines service-to-service invocation policies:
+Production access-control policy should define service-to-service invocation rules equivalent to:
 
 - **Default action:** `deny` (secure by default)
 - **parties:** Allowed to invoke domain services via POST

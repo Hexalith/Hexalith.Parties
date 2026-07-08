@@ -194,17 +194,12 @@ existing event-sourced / CQRS / EventStore-gateway-fronted Parties domain servic
   "preparing → ready" with SignalR/poll signal + in-app download; **no time promise** in copy.
 - **AR-D9 Accessibility enforcement:** WCAG 2.2 AA enforced by **bUnit** component tests
   + a **Playwright a11y/visual gate** (FrontComposer e2e pattern) added to CI.
-- **AR-D10 AppHost / deploy:** add `builder.AddProject<Projects.Hexalith_Parties_UI>("parties-ui")`
+- **AR-D10 AppHost / runtime publication:** add `builder.AddProject<Projects.Hexalith_Parties_UI>("parties-ui")`
   referencing `eventstore` + `tenants`, initialize the local Keycloak-backed security
   service through `HexalithEventStoreSecurityExtensions.AddHexalithEventStoreSecurity()`,
   **no DAPR sidecar** (BFF over HTTP + SignalR);
-  .NET SDK container (`ContainerRepository=parties-ui`); aspirate publish grows the
-  cluster **11 → 12 pods**; CI gains the UI build + bUnit lane + Playwright gate. **Deploy
-  path is Kubernetes `nginx-public` Ingress only** (no local nginx bridge) with **cert-manager
-  Let's Encrypt** TLS — `hexalith-pages-letsencrypt-tls` for the UI pages,
-  `registry-hexalith-letsencrypt-tls` for the Zot image registry; `deploy/k8s/publish.ps1`
-  preflights the `nginx-public` class, the Zot Ingress, and both TLS Secrets, failing before
-  image build if any is missing _(folded back 2026-06-21 from the 2026-06-16 deployment-hardening change)_.
+  .NET SDK container (`ContainerRepository=parties-ui`); CI gains the UI build + bUnit lane
+  + Playwright gate. Runtime deployment orchestration is now external to this repository.
 - **AR-D11 Party-picker re-skin + ARIA:** re-skin `<hexalith-party-picker>` from legacy
   FAST tokens to **Fluent 2 tokens** **and** add the full **WAI-ARIA combobox**
   semantics — one combined design-debt story (`Hexalith.Parties.Picker`).
@@ -692,27 +687,27 @@ So that WCAG 2.2 AA holds from the first screen, not as an afterthought.
 **When** the pipeline runs
 **Then** it gains the UI build + a **bUnit** component lane and a **Playwright a11y/visual gate** (WCAG 2.2 AA, FrontComposer e2e pattern) that fails the build on a violation.
 
-### Story 1.10: Deploy parties-ui (container + K8s) with production-KMS prerequisite gate
+### Story 1.10: Containerize parties-ui with production-KMS prerequisite gate
 
 As an operator,
-I want `parties-ui` containerized and deployable to Kubernetes with OIDC config,
+I want `parties-ui` containerized with OIDC config,
 So that the app can ship, with the production-KMS prerequisite gated before real PII.
 
 **Acceptance Criteria:**
 
 **Given** the UI host
 **When** it is published
-**Then** .NET SDK container support builds it (`EnableContainer=true`, `ContainerRepository=parties-ui`, **no Dockerfile**), `ServiceDefaults` (OpenTelemetry + health) are wired, the AppHost initializes run-mode local security via `HexalithEventStoreSecurityExtensions.AddHexalithEventStoreSecurity()` while publish mode uses the external `tache` realm, and `deploy/k8s` gains the `parties-ui` Deployment/Service/ingress + OIDC config; aspirate publish grows the cluster **11 → 12 pods**.
+**Then** .NET SDK container support builds it (`EnableContainer=true`, `ContainerRepository=parties-ui`, **no Dockerfile**), `ServiceDefaults` (OpenTelemetry + health) are wired, and the AppHost initializes run-mode local security via `HexalithEventStoreSecurityExtensions.AddHexalithEventStoreSecurity()`.
 
-**Given** the live Kubernetes cluster
-**When** `deploy/k8s/publish.ps1` runs
-**Then** it preflights the **`nginx-public`** Ingress class, the Zot registry Ingress (`registry.hexalith.com/` → `Service/zot:5000`, `ClusterIP`, no NodePort), and both cert-manager **Let's Encrypt** TLS Secrets (`hexalith-pages-letsencrypt-tls`, `registry-hexalith-letsencrypt-tls`), and **fails before image build/apply** if any is missing — there is **no local / host-level nginx bridge fallback**. _(Tightened 2026-06-21 to fold back the 2026-06-16 deployment-hardening change.)_
+**Given** runtime deployment is orchestrated outside this repository
+**When** `parties-ui` is promoted
+**Then** the external orchestrator owns ingress, pull secrets, platform dependencies, Dapr production components, and promotion gates.
 
-**Given** the deploy manifests
-**When** `DeployValidation.Tests` runs its credential-leak poison-sweep
-**Then** it passes with **no secrets/tokens** committed under `deploy/`.
+**Given** repository validation runs
+**When** CI tests inspect the publication contract
+**Then** no secrets/tokens are committed and Parties-owned container publication remains scoped to the approved images.
 
-**And** the runbook documents that **production KMS** must replace `LocalDevKeyStorageBackend` before any real EU PII is processed (per `deployment-security-checklist.md`) — this is a release gate, not an MVP feature.
+**And** the runbook documents that **production KMS** must replace `LocalDevKeyStorageBackend` before any real EU PII is processed — this is a release gate, not an MVP feature.
 
 ---
 
@@ -1630,7 +1625,7 @@ and ServiceDefaults/auth transformation consumers reference the shared platform
 surfaces directly.
 
 **And** `.slnx`, project references, package/API tests, fitness tests, README/docs,
-and deploy-validation assumptions are updated in the same change.
+and CI publication assumptions are updated in the same change.
 
 ### Story 8.5: EventStore domain-service SDK host cutover
 
@@ -1692,21 +1687,22 @@ requirements unless an ADR explicitly moves them.
 reads, key zeroing, typed unreadable outcomes, no-leak diagnostics, exports,
 processing records, erasure reports, and rollback.
 
-### Story 8.8: Client, MCP, AppHost, build, and deploy cleanup
+### Story 8.8: Client, MCP, AppHost, build, and runtime-boundary cleanup
 
 As a maintainer,
 I want remaining non-domain plumbing to move to the appropriate shared surface,
-so that Parties packages and deployment assets describe only Parties-owned behavior.
+so that Parties packages and runtime-boundary assets describe only Parties-owned behavior.
 
 **Given** replacement shared APIs exist
 **When** this story completes
 **Then** command envelopes, paging/freshness models, ProblemDetails scrubbing,
 client registration validation, MCP context/result plumbing, AppHost security/module
-helpers, build-root probing, and platform-owned deployment assets are adopted from
+helpers, build-root probing, and platform-owned runtime concerns are adopted from
 their owning modules.
 
-**And** `deploy/k8s` retains only Parties-owned assets while platform/ops assets and
-generic deploy-validation tooling are moved or explicitly deferred.
+**And** runtime deployment orchestration remains outside this repository while this
+repository retains only source, local AppHost topology, GitHub Actions CI, and
+Parties-owned container publication support.
 
 **And** public package compatibility, MCP tool contracts, AppHost topology, and
 operator docs remain stable or intentionally versioned.
@@ -1767,8 +1763,26 @@ using immutable SemVer/MinVer image tags and no `latest` tag.
 `ZOT_REGISTRY_API_KEY`, where the API key is generated after Keycloak/OIDC login
 and replaces the password for Docker-compatible clients.
 
-**And** it does not run `deploy/k8s/publish.ps1`, does not apply Kubernetes
-manifests, and does not require non-Parties images to exist at the same tag.
+**And** it does not apply runtime deployment manifests and does not require
+non-Parties images to exist at the same tag.
 
-**And** deploy-validation tests pin the workflow/script repository list, tag
-policy, manifest verification, secret hygiene, and full-topology boundary.
+**And** CI tests pin the workflow/script repository list, tag policy, manifest
+verification, secret hygiene, and runtime-deployment boundary.
+
+### Story 8.13: Retire legacy in-repo deployment artifacts
+
+As a release maintainer,
+I want obsolete in-repo deployment manifests and validators removed,
+so that operators cannot accidentally follow a retired Kubernetes/Dapr/Zot path.
+
+**Given** Parties-owned containers are now published to Zot by GitHub Actions
+**When** the repository is updated
+**Then** the retired in-repo Kubernetes, Dapr, Zot, and static deployment-validation
+artifacts are deleted.
+
+**And** the remaining active docs state that this repository owns source, local
+development topology, CI, and Parties-owned container publication only.
+
+**And** runtime deployment manifests, platform dependencies, Dapr production
+components, ingress, pull secrets, scans, signatures, and promotion gates are
+owned by the external deployment orchestrator.

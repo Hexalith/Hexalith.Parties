@@ -94,9 +94,9 @@ Solution-wide build settings (`Directory.Build.props`): `Nullable=enable`, `Impl
 | `memories` | project | conditional | Rich search backend (publish mode or `EnableMemoriesSearch=true`). |
 | `sample` / `sample-blazor-ui` | project | conditional | EventStore subscriber sample (`EnableEventStoreSampleUi=true` or publish). |
 | `keycloak` | container | conditional | Local IdP (run mode only; publish uses external `tache` realm). |
-| `redis` | (DAPR backing) | — | **Not** an Aspire resource — provided by `dapr init` at `127.0.0.1:6379` (run) or `deploy/k8s/redis/` (publish). |
+| `redis` | (DAPR backing) | — | **Not** an Aspire resource — provided by `dapr init` at `127.0.0.1:6379` for local development. |
 
-`statestore` and `pubsub` DAPR components are created by `AddHexalithEventStore(...)` and wired into each sidecar. Run-mode DAPR component YAML lives in `src/Hexalith.Parties.AppHost/DaprComponents/`; the authoritative publish-mode CRs live in `deploy/dapr/`.
+`statestore` and `pubsub` DAPR components are created by `AddHexalithEventStore(...)` and wired into each sidecar. Local run-mode DAPR component YAML lives in `src/Hexalith.Parties.AppHost/DaprComponents/`; production Dapr components are owned by the external deployment orchestrator.
 
 ---
 
@@ -170,7 +170,7 @@ EventStore owns public authn, tenant validation, and RBAC. Within `parties` (def
 
 > ⚠️ **Discrepancy:** the README states GDPR features are "not in the MVP" (v1.1), but the crypto-shredding subsystem is implemented and **enabled by default** (`CryptoShredding:IsEnabled=true`). The README warning refers to the *compliance-warning* switch (`GdprFeaturesActive`), not the crypto feature.
 >
-> 🚨 **Production-data-loss risk (verify before any non-dev use):** `LocalDevKeyStorageBackend` (in-memory `ConcurrentDictionary`) is the **only** `IKeyStorageBackend` registered, and there is **no production-environment rejection guard and no startup "dev-only" warning**. Because crypto-shredding is ON by default, a production **restart silently destroys all key material** → all encrypted personal data becomes unrecoverable (effectively unintended mass erasure). The code anticipates an external KMS (it normalises a Vault-style `KeyNotFoundException`) but none ships. Provision a real KMS/secret store before storing any real personal data — see [deployment-security-checklist.md](deployment-security-checklist.md). (See also [data-models.md §6](data-models.md).)
+> 🚨 **Production-data-loss risk (verify before any non-dev use):** `LocalDevKeyStorageBackend` (in-memory `ConcurrentDictionary`) is the **only** `IKeyStorageBackend` registered, and there is **no production-environment rejection guard and no startup "dev-only" warning**. Because crypto-shredding is ON by default, a production **restart silently destroys all key material** -> all encrypted personal data becomes unrecoverable (effectively unintended mass erasure). The code anticipates an external KMS (it normalises a Vault-style `KeyNotFoundException`) but none ships. Provision a real KMS/secret store before storing any real personal data. (See also [data-models.md §6](data-models.md).)
 
 ---
 
@@ -202,23 +202,29 @@ src/
   Hexalith.Parties.Projections/    # projection actors + handlers + rebuild
   Hexalith.Parties.Security/       # crypto-shredding / key management / erasure
   Hexalith.Parties.Testing/        # test utilities
-tests/    # 15 xUnit v3 projects (unit, integration, topology, deploy-validation)
+tests/    # xUnit v3 projects (unit, integration, topology, CI)
 samples/  # Hexalith.Parties.Sample — subscriber reference
-deploy/   # k8s (kustomize), dapr (component CRs), zot (OCI registry)
+scripts/  # local test runner and Parties container publish helper
 ```
 
 ---
 
 ## 11. Testing & CI
 
-- **15 .NET test projects plus the Playwright e2e workspace**, uniformly **xUnit v3** for .NET tests (Shouldly + NSubstitute; bunit for Blazor; YamlDotNet for manifest validation). Lanes via `scripts/test.ps1 -Lane {unit|integration|topology|deploy|all|coverage}`. `Hexalith.Parties.IntegrationTests` spins up the **full Aspire topology** (`Aspire.Hosting.Testing`), gracefully skipping when Docker/DAPR is absent; `Hexalith.Parties.DeployValidation.Tests` statically validates the real `deploy/` manifests (incl. a credential-leak poison-sweep). Architectural fitness tests pin contract/dependency boundaries.
+- **.NET test projects plus the Playwright e2e workspace**, uniformly **xUnit v3** for .NET tests (Shouldly + NSubstitute; bunit for Blazor). Lanes via `scripts/test.ps1 -Lane {unit|integration|topology|ci|all|coverage}`. `Hexalith.Parties.IntegrationTests` spins up the **full Aspire topology** (`Aspire.Hosting.Testing`), gracefully skipping when Docker/DAPR is absent; `Hexalith.Parties.Ci.Tests` statically validates the current GitHub Actions container publication contract. Architectural fitness tests pin contract/dependency boundaries.
 - **CI:** `.github/workflows/test.yml` — `lint` (build with warnings-as-errors + build-gate script) → `test` (4 parallel shards) and `ui-a11y` → `contract-test` (Pact readiness) → `report` (quality gate). Submodules checked out **root-repository submodules only, never recursive**. See [ci.md](ci.md), [build-gate.md](build-gate.md), [ci-secrets-checklist.md](ci-secrets-checklist.md).
 
 ---
 
 ## 12. Deployment
 
-Production shape is Kubernetes via **aspirate** (pinned `9.1.0`): `pwsh deploy/k8s/publish.ps1 -ConfirmContext <ctx>`. Expect **12 pods** (`eventstore`, `eventstore-admin`, `eventstore-admin-ui`, `parties`, `parties-mcp`, `parties-ui`, `tenants`, `memories`, `sample`, `sample-blazor-ui`, `redis`, `falkordb`); 8 run a `daprd` sidecar. `parties-ui` is the browser UI/BFF workload and does not run Dapr. Authoritative DAPR CRs in `deploy/dapr/`; OCI registry in `deploy/zot/`. **Authoritative references** (not regenerated here): [deployment-guide.md](deployment-guide.md) and [kubernetes-deployment-architecture.md](kubernetes-deployment-architecture.md), plus [deployment-security-checklist.md](deployment-security-checklist.md).
+This repository publishes only the Parties-owned container images through GitHub Actions:
+
+- `registry.hexalith.com/parties`
+- `registry.hexalith.com/parties-mcp`
+- `registry.hexalith.com/parties-ui`
+
+Runtime deployment orchestration is owned outside this repository and must consume immutable image tags from Zot. See [deployment-guide.md](deployment-guide.md) and [ci.md](ci.md).
 
 ---
 

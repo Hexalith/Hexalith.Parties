@@ -11,7 +11,7 @@
 | Node.js | **24+** for the Playwright accessibility workspace under `tests/e2e` |
 | Git | recent |
 | `jq` | optional (Bash examples) |
-| PowerShell `pwsh` 7+, `kubectl`, DAPR CLI, `aspirate` 9.1.0 | only for the optional Kubernetes path (`aspirate` is restored by `dotnet tool restore`) |
+| PowerShell `pwsh` 7+ | local scripts and CI parity commands |
 
 ## 1. Clone & submodules
 
@@ -69,7 +69,7 @@ Treat the system as usable only after `eventstore`, `parties`, and `tenants` are
 | `EnableEventStoreSampleUi=true` | composes `sample` + `sample-blazor-ui` |
 | `EnableKeycloak` | local Keycloak-backed `security` resource (default true in run mode; publish uses the external `tache` realm) |
 | `PartiesAccessibilitySpecimen:Enabled=true` | exposes the `parties-ui` deterministic accessibility specimen in Development/Test |
-| `PUBLISH_TARGET` | `docker` / `k8s` / `aca` for Aspire-native publish (orthogonal to the aspirate deploy path) |
+| `PUBLISH_TARGET` | `docker` / `k8s` / `aca` for Aspire-native experimentation only; runtime deployment orchestration is external to this repository |
 
 ## 4. Test
 
@@ -86,9 +86,9 @@ dotnet test tests/Hexalith.Parties.Server.Tests/Hexalith.Parties.Server.Tests.cs
 | `unit` | Contracts, Authentication, Client, Server, Projections, Security, AdminPortal, ConsumerPortal, Picker, Mcp, UI |
 | `integration` | Hexalith.Parties.Tests + Sample.Tests |
 | `topology` | Hexalith.Parties.IntegrationTests (full Aspire topology — needs Docker/DAPR; skips gracefully if absent) |
-| `deploy` | Hexalith.Parties.DeployValidation.Tests (static `deploy/` validation) |
-| `all` | all 15 .NET test projects, executed one project at a time |
-| `coverage` | all 15 .NET test projects, executed one project at a time with `--collect "XPlat Code Coverage"` |
+| `ci` | Hexalith.Parties.Ci.Tests (GitHub Actions/Zot publish contract validation) |
+| `all` | all .NET test projects, executed one project at a time |
+| `coverage` | all .NET test projects, executed one project at a time with `--collect "XPlat Code Coverage"` |
 
 ### Fallback validation ladder
 
@@ -98,7 +98,7 @@ When the full solution build or `dotnet test` is environment-blocked, do not rec
 2. **Direct xUnit v3 assembly filter** — build the target project, then run its built `.dll` directly with single-dash `-class`/`-method` (project-level `dotnet test --filter` silently runs zero tests under Microsoft.Testing.Platform; see below).
 3. **Serialized `-m:1` build for release-blocker triage** — makes the first failing project visible (`dotnet build … -m:1 -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0`).
 4. **Property pins for known environment blockers** — `-p:MinVerVersionOverride=1.0.0` (no git tags → version skew), `-p:NuGetAudit=false` (offline audit noise), and source-mode *diagnostic only* `-p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false` when unpublished Hexalith packages block a package-mode restore.
-5. **Record the exact broad-gate blocker** — package NuGet-network (`api.nuget.org:443`), submodule gitlink drift, UI accessibility, or deploy — with the command, observed result, and required owner/environment. Never weaken a gate to hide a blocker.
+5. **Record the exact broad-gate blocker** — package NuGet-network (`api.nuget.org:443`), submodule gitlink drift, UI accessibility, or CI publish-contract validation — with the command, observed result, and required owner/environment. Never weaken a gate to hide a blocker.
 
 The lane runner supports climbing rungs 1, 4, and 5 in one pass so a single run reports every failing project instead of stopping at the first:
 
@@ -160,7 +160,7 @@ Read by the `parties-ui` host:
 | `Parties:Freshness:PollingIntervalSeconds` | polling fallback cadence when live freshness is unavailable |
 | `PartiesAccessibilitySpecimen:Enabled` | Development/Test-only accessibility specimen routing |
 
-> ⚠️ **GDPR toggles are independent.** `Parties:CryptoShredding:IsEnabled` (the feature) defaults **on**; `Parties:Compliance:GdprFeaturesActive` (the MVP warning) defaults **off**. The default key store is in-memory/dev-only, so the README and deployment docs prohibit regulated EU personal data until a production KMS or secret-store-backed key provider is provisioned ([deployment-security-checklist.md](deployment-security-checklist.md)).
+> ⚠️ **GDPR toggles are independent.** `Parties:CryptoShredding:IsEnabled` (the feature) defaults **on**; `Parties:Compliance:GdprFeaturesActive` (the MVP warning) defaults **off**. The default key store is in-memory/dev-only, so do not store regulated EU personal data until a production KMS or secret-store-backed key provider is provisioned.
 
 ## 6. Conventions
 
@@ -180,4 +180,4 @@ Read by the `parties-ui` host:
 | Add a read-model field | extend `PartyDetail`/`PartyIndexEntry`, update projection handler, surface via query/client |
 | Add an MCP tool | `Mcp/Tools/PartiesMcpTools.cs` + `PartiesMcpToolNames.cs` |
 | Change local DAPR/topology | `src/Hexalith.Parties.AppHost/` (`Program.cs` + `DaprComponents/`) |
-| Deploy to K8s | `pwsh deploy/k8s/publish.ps1 -ConfirmContext <ctx>` ([deployment-guide.md](deployment-guide.md)) |
+| Publish Parties containers | GitHub Actions `Publish Parties Containers` ([ci.md](ci.md)) |

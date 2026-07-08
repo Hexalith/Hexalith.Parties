@@ -70,7 +70,7 @@
     <Project Path="tests/Hexalith.Parties.Client.Tests/Hexalith.Parties.Client.Tests.csproj" />
     <Project Path="tests/Hexalith.Parties.ConsumerPortal.Tests/Hexalith.Parties.ConsumerPortal.Tests.csproj" />
     <Project Path="tests/Hexalith.Parties.Contracts.Tests/Hexalith.Parties.Contracts.Tests.csproj" />
-    <Project Path="tests/Hexalith.Parties.DeployValidation.Tests/Hexalith.Parties.DeployValidation.Tests.csproj" />
+    <Project Path="tests/Hexalith.Parties.Ci.Tests/Hexalith.Parties.Ci.Tests.csproj" />
     <Project Path="tests/Hexalith.Parties.IntegrationTests/Hexalith.Parties.IntegrationTests.csproj" />
     <Project Path="tests/Hexalith.Parties.Mcp.Tests/Hexalith.Parties.Mcp.Tests.csproj" />
     <Project Path="tests/Hexalith.Parties.Picker.Tests/Hexalith.Parties.Picker.Tests.csproj" />

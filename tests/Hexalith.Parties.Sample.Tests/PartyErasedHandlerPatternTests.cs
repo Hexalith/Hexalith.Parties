@@ -28,9 +28,7 @@ public sealed class PartyErasedHandlerPatternTests
         string documentation = File.ReadAllText(GetRepositoryFilePath(HandlerPatternsRelativePath));
 
         documentation.ShouldContain("PartyErased subscription is mandatory for ALL consuming applications");
-        documentation.ShouldContain("../deploy/dapr/pubsub-kafka.yaml");
-        documentation.ShouldContain("../deploy/dapr/pubsub-rabbitmq.yaml");
-        documentation.ShouldContain("../deploy/dapr/pubsub-servicebus.yaml");
+        documentation.ShouldContain("environment-owned deployment assets");
         documentation.ShouldContain("PartyErased handled: nullified party reference in {Count} invoices for {PartyId}");
     }
 

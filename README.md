@@ -2,7 +2,7 @@
 
 Hexalith.Parties is a ready-to-deploy party management domain service for people and organizations. Public command and query traffic goes through Hexalith.EventStore; the `parties` service runs the domain actor host behind that gateway, and consumers normally use the typed .NET client package. The solution also includes `parties-ui`, a Blazor Server browser UI/BFF for the Admin and Consumer experiences.
 
-> **GDPR Notice:** Some GDPR infrastructure exists, and crypto-shredding is enabled by default, but the default key store is `LocalDevKeyStorageBackend` (in-memory, dev-only). **Do not store regulated EU personal data** until a production KMS or secret-store-backed key provider is provisioned. The MVP warning switch is separate from the crypto feature; see the [deployment security checklist](docs/deployment-security-checklist.md).
+> **GDPR Notice:** Some GDPR infrastructure exists, and crypto-shredding is enabled by default, but the default key store is `LocalDevKeyStorageBackend` (in-memory, dev-only). **Do not store regulated EU personal data** until a production KMS or secret-store-backed key provider is provisioned. The MVP warning switch is separate from the crypto feature; see [deployment-guide.md](docs/deployment-guide.md) for the current runtime ownership boundary.
 
 ## Key Features
 

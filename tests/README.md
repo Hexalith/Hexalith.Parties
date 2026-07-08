@@ -9,7 +9,7 @@ Hexalith.Parties uses a .NET 10, xUnit v3, Shouldly, NSubstitute, bUnit, Testcon
 | Tier 1 unit and component | `Hexalith.Parties.Contracts.Tests`, `Hexalith.Parties.Authentication.Tests`, `Hexalith.Parties.Client.Tests`, `Hexalith.Parties.Server.Tests`, `Hexalith.Parties.Projections.Tests`, `Hexalith.Parties.Security.Tests`, `Hexalith.Parties.AdminPortal.Tests`, `Hexalith.Parties.ConsumerPortal.Tests`, `Hexalith.Parties.UI.Tests`, `Hexalith.Parties.Picker.Tests`, `Hexalith.Parties.Mcp.Tests` | Pure domain behavior, contract shape, bUnit components, client/package boundaries, projection handler logic, and architectural fitness checks that do not require a live topology. |
 | Tier 2 service integration | `Hexalith.Parties.Tests`, `Hexalith.Parties.Sample.Tests` | WebApplicationFactory flows, gateway routing, Dapr client substitutions, event subscriber behavior, and cross-component wiring that can run without a full external environment. |
 | Tier 3 topology integration | `Hexalith.Parties.IntegrationTests` | Aspire/Dapr topology, sidecar health, gateway E2E behavior, and tests that depend on Docker, Dapr, or full orchestration. |
-| Deployment validation | `Hexalith.Parties.DeployValidation.Tests` | Static deploy-time checks for Dapr components, access-control YAML, secret hygiene, and AppHost topology assumptions. |
+| CI publication validation | `Hexalith.Parties.Ci.Tests` | Static checks for the GitHub Actions Zot container publication contract. |
 
 ## Running Tests
 
@@ -25,8 +25,8 @@ Run the focused lane first, then broaden only when the changed surface justifies
 # Dapr/Aspire topology validation
 .\scripts\test.ps1 -Lane topology
 
-# Static deployment guardrails
-.\scripts\test.ps1 -Lane deploy
+# CI publication guardrails
+.\scripts\test.ps1 -Lane ci
 
 # Full solution test run
 .\scripts\test.ps1 -Lane all
@@ -60,7 +60,7 @@ Keep tests aligned with production ownership:
 - Projection tests cover tenant isolation, event ordering assumptions, and fail-closed read-side behavior.
 - Security tests cover GDPR, erasure, key-management, and audit paths without leaking personal data.
 - AdminPortal and Picker tests use bUnit and existing test doubles.
-- Integration and deploy-validation tests cover Dapr, Aspire, pub/sub, access-control components, and gateway behavior.
+- Integration and topology tests cover Dapr, Aspire, pub/sub, access-control components, and gateway behavior.
 
 Reusable test data and helpers belong in `src/Hexalith.Parties.Testing` when they are shared across assemblies. Prefer pure helper methods first, then framework fixtures only when setup or cleanup has real lifecycle needs.
 
@@ -70,7 +70,7 @@ Reusable test data and helpers belong in `src/Hexalith.Parties.Testing` when the
 - Prefer unique IDs for tests that can run in parallel; avoid shared mutable state.
 - Keep assertions visible in the test body. Helpers may arrange or extract data, but should not hide the behavioral claim.
 - New async tests should pass `TestContext.Current.CancellationToken` into touched async APIs when practical. The root xUnit1051 suppression covers existing debt, not new habits.
-- When a test depends on Dapr/Aspire, place it in the integration or deploy-validation lane and document the environmental assumption in the test or fixture.
+- When a test depends on Dapr/Aspire, place it in the integration or topology lane and document the environmental assumption in the test or fixture.
 
 ## Quality Gates
 

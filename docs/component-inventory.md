@@ -108,7 +108,7 @@ The `parties-ui` host registers scoped adapters for those ports and delegates to
 | `Sample.Tests` | integration | subscriber delivery, handler patterns, tolerant/selective deserialization |
 | `Hexalith.Parties.Tests` | integration + fitness | health checks, projection rebuild/corruption, search providers + perf, **architectural fitness** |
 | `IntegrationTests` | E2E / topology | **full Aspire topology** (health, tenant isolation, publishing, dead-letter, gateway E2E, encryption) |
-| `DeployValidation.Tests` | deploy validation | static guardrails over real `deploy/` files + credential-leak poison-sweep |
+| `Ci.Tests` | CI publication validation | static guardrails over GitHub Actions Zot container publication |
 | `tests/e2e` | Playwright | browser accessibility/route specs for `parties-ui`, AdminPortal, and ConsumerPortal |
 
 ## External dependencies (submodules / packages)

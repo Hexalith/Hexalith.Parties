@@ -26,7 +26,7 @@
     { "step": "step_3", "status": "completed", "timestamp": "2026-06-02T16:21:58Z", "summary": "Tech stack refreshed from Directory.Packages.props: Aspire 13.4.0 (AppHost SDK 13.3.3 skew), Dapr 1.18.0-rc02/1.17.9, MCP 1.3.0, Testcontainers 4.12.0 (unused), etc." },
     { "step": "step_4", "status": "completed", "timestamp": "2026-06-02T16:21:58Z", "summary": "Deep analysis via 6 parallel agents, cross-verified. Catalog: 22 commands, 43 events (24+19), 5 Parties actors + AggregateActor, 5 MCP tools. New defects found (see findings.new_discrepancies)." },
     { "step": "step_5", "status": "completed", "timestamp": "2026-06-02T16:30:05Z", "summary": "source-tree-analysis.md refreshed: exact counts (22 cmds / 24+19 events), submodules-now-checked-out section corrected." },
-    { "step": "step_6", "status": "completed", "timestamp": "2026-06-02T16:30:05Z", "summary": "development-guide.md refreshed (Testcontainers-unused correction). Deployment summarized in architecture.md §12 and linked to hand-maintained deployment-guide.md / kubernetes-deployment-architecture.md (not regenerated)." },
+    { "step": "step_6", "status": "completed", "timestamp": "2026-06-02T16:30:05Z", "summary": "development-guide.md refreshed (Testcontainers-unused correction). Runtime deployment ownership is summarized in deployment-guide.md." },
     { "step": "step_8", "status": "completed", "timestamp": "2026-06-02T16:30:05Z", "summary": "Single-part architecture.md regenerated: versions refreshed; §8 strengthened with LocalDevKeyStorageBackend production-data-loss risk; §13 gotchas expanded with index-rebuild key bug, README MCP-tools error, Aspire SDK skew, AdminPortal stubs, unenforced Pact gate. No per-part files (monolith)." },
     { "step": "step_9", "status": "completed", "timestamp": "2026-06-02T16:30:05Z", "summary": "Supporting docs refreshed: project-overview.md, data-models.md (22 cmds/43 events re-verified), api-contracts.md (5 MCP tools re-verified), component-inventory.md (index-bug pointer + version refresh). Also refreshed _bmad-output/project-context.md version table. No project-parts.json/integration-architecture.md (single-part)." },
     { "step": "step_10", "status": "completed", "timestamp": "2026-06-02T16:30:05Z", "summary": "index.md regenerated; Known discrepancies section expanded (5 items incl. LocalDev KMS risk, README MCP error, index-rebuild bug, Aspire skew, submodule status). Zero '(To be generated)' markers." },
@@ -68,7 +68,7 @@
     "README.md:13 + docs/getting-started.md:432 — removed phantom get_party_name_at; MCP tool list now correctly lists 5 tools."
   ],
   "recommended_source_fixes_not_applied": [
-    "docs/getting-started.md + docs/kubernetes-deployment-architecture.md: stale package versions (hand-maintained; left untouched).",
+    "docs/getting-started.md: stale package versions (hand-maintained; left untouched).",
     "src/Hexalith.Parties.Projections/Services/ProjectionRebuildService.cs:460: index rebuild key (:all) vs live actor key (:default).",
     "src/Hexalith.Parties.Security: add a production guard/warning for LocalDevKeyStorageBackend.",
     "README.md:5 GDPR notice still says crypto-shredding 'not in MVP' while it ships enabled-by-default (left as-is; scoped out of this fix)."

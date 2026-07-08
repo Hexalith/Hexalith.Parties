@@ -57,7 +57,7 @@ Single cohesive solution. **Adopter-facing** packages (`Client`, `Contracts`, `P
 
 ## Important notes
 
-- **GDPR posture:** the **crypto-shredding subsystem is implemented and enabled by default** (`Parties:CryptoShredding:IsEnabled=true`), distinct from the MVP-warning switch (`Parties:Compliance:GdprFeaturesActive`). The only key store registered by default is `LocalDevKeyStorageBackend` (in-memory, dev-only), so a production KMS or secret-store-backed key provider is required before real personal data is stored — see [architecture.md §8](architecture.md), [data-models.md §6](data-models.md), [deployment-security-checklist.md](deployment-security-checklist.md), and the README notice.
+- **GDPR posture:** the **crypto-shredding subsystem is implemented and enabled by default** (`Parties:CryptoShredding:IsEnabled=true`), distinct from the MVP-warning switch (`Parties:Compliance:GdprFeaturesActive`). The only key store registered by default is `LocalDevKeyStorageBackend` (in-memory, dev-only), so a production KMS or secret-store-backed key provider is required before real personal data is stored — see [architecture.md §8](architecture.md), [data-models.md §6](data-models.md), and the README notice.
 - **MCP exposes 5 tools** (`get_party_name_at` does **not** exist; temporal name queries are deferred — [api-contracts.md §3](api-contracts.md)).
 - Do **not** store regulated EU personal data in the MVP; use synthetic data for evaluation.
 

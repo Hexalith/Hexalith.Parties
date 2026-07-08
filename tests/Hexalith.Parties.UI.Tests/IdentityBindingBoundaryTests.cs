@@ -48,11 +48,9 @@ public sealed class IdentityBindingBoundaryTests
     [Fact]
     public void PartiesDaprAccessControl_DoesNotExpandForIdentityBinding()
     {
-        string accessControl = File.ReadAllText(ProjectRoot("deploy/dapr/accesscontrol-parties.yaml"));
         string appHostAccessControl = File.ReadAllText(
             ProjectRoot("src/Hexalith.Parties.AppHost/DaprComponents/accesscontrol.parties.yaml"));
 
-        accessControl.ShouldNotContain("identity", Case.Insensitive);
         appHostAccessControl.ShouldNotContain("identity", Case.Insensitive);
     }
 

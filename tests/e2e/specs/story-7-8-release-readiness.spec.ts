@@ -44,12 +44,10 @@ const REQUIRED_REPOSITORY_PATHS = [
 const REQUIRED_VALIDATION_RESULTS = new Map<string, string>([
   ['git diff --check', 'Pass'],
   ['bash scripts/check-no-warning-override.sh', 'Pass'],
-  ['pwsh deploy/validate-deployment.ps1 -ConfigPath deploy/dapr -K8sPath deploy/k8s/', 'Pass'],
   ['dotnet build Hexalith.Parties.slnx -c Release --no-restore -m:1 -p:NuGetAudit=false', 'Fail'],
   ['dotnet tests/Hexalith.Parties.Security.Tests/bin/Release/net10.0/Hexalith.Parties.Security.Tests.dll', 'Pass'],
   ['dotnet tests/Hexalith.Parties.Projections.Tests/bin/Release/net10.0/Hexalith.Parties.Projections.Tests.dll', 'Pass'],
   ['dotnet tests/Hexalith.Parties.Tests/bin/Release/net10.0/Hexalith.Parties.Tests.dll', 'Pass'],
-  ['dotnet tests/Hexalith.Parties.DeployValidation.Tests/bin/Release/net10.0/Hexalith.Parties.DeployValidation.Tests.dll', 'Blocked'],
   ['dotnet tests/Hexalith.Parties.UI.Tests/bin/Release/net10.0/Hexalith.Parties.UI.Tests.dll', 'Fail'],
   ['dotnet tests/Hexalith.Parties.Client.Tests/bin/Release/net10.0/Hexalith.Parties.Client.Tests.dll', 'Fail'],
   ['dotnet tests/Hexalith.Parties.Contracts.Tests/bin/Release/net10.0/Hexalith.Parties.Contracts.Tests.dll', 'Fail'],

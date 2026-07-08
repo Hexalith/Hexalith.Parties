@@ -16,7 +16,7 @@ Publish only the Parties-owned container images to `registry.hexalith.com` from 
 - Use `ZOT_REGISTRY_USERNAME` and `ZOT_REGISTRY_API_KEY` GitHub secrets.
 - Preserve immutable SemVer/MinVer tag policy and reject dirty/build-metadata tags.
 - Verify pushed Zot manifests after publish.
-- Document the CI secret contract and distinguish this Parties-only publish from the full cluster `deploy/k8s/publish.ps1` path.
+- Document the CI secret contract and distinguish this Parties-only publish from external runtime deployment orchestration.
 
 ## Non-goals
 
@@ -27,9 +27,9 @@ Publish only the Parties-owned container images to `registry.hexalith.com` from 
 
 ## Validation
 
-- Focused deploy-validation tests cover workflow, script, and documentation contracts.
+- Focused CI tests cover workflow, script, and documentation contracts.
 - Script dry-run validates repository selection and tag validation without pushing.
-- Direct deploy-validation test project run passes locally.
+- Direct CI test project run passes locally.
 - Live registry read checks for existing `0.0.0-preview.0.506` manifests return `200` for `parties`, `parties-mcp`, and `parties-ui`.
 - GitHub Actions run `28943231201` published tag `0.0.0-preview.0.662` to Zot on 2026-07-08.
 - Live registry manifest checks for `0.0.0-preview.0.662` return `200` for `parties`, `parties-mcp`, and `parties-ui`.

@@ -88,7 +88,7 @@ Hexalith.Parties/
 ├── tests/                             # 15 .NET test projects + Playwright e2e workspace (see component-inventory.md §Tests)
 │   ├── Hexalith.Parties.Tests/                 # largest — health, rebuild, search, architectural fitness
 │   ├── Hexalith.Parties.IntegrationTests/      # full Aspire topology E2E (Aspire.Hosting.Testing)
-│   ├── Hexalith.Parties.DeployValidation.Tests/# static validation of deploy/ manifests + leak sweep
+│   ├── Hexalith.Parties.Ci.Tests/              # GitHub Actions/Zot publication contract validation
 │   ├── Hexalith.Parties.{Contracts,Client,Server,Projections,Security,AdminPortal,ConsumerPortal,Picker,Mcp,UI}.Tests/
 │   ├── Hexalith.Parties.Sample.Tests/          # subscriber integration
 │   ├── e2e/                                     # Playwright route/a11y specs for parties-ui
@@ -97,22 +97,9 @@ Hexalith.Parties/
 ├── samples/
 │   └── Hexalith.Parties.Sample/       # reference DAPR subscriber (PartyEventHandler.cs at /events/parties)
 │
-├── deploy/
-│   ├── k8s/                           # Kustomize tree (namespace hexalith-parties) — generated services + backing-store carve-outs
-│   │   ├── kustomization.yaml · namespace.yaml · ingress.yaml
-│   │   ├── eventstore/ eventstore-admin/ eventstore-admin-ui/   # gateway + admin + UI
-│   │   ├── parties/ parties-mcp/ tenants/ memories/             # core services
-│   │   ├── sample/ sample-blazor-ui/                            # subscriber sample
-│   │   ├── redis/ falkordb/                                     # hand-authored backing stores
-│   │   ├── _lib/Confirm-KubeContext.ps1                         # context-guard helper
-│   │   ├── publish.ps1 / teardown.ps1                          # aspirate-based deploy/teardown (-ConfirmContext)
-│   │   └── README.md
-│   ├── dapr/                          # authoritative DAPR CRs (statestore, pubsub, accesscontrol.*, subscriptions)
-│   ├── zot/                           # OCI registry (registry.hexalith.com) manifests
-│   └── validate-deployment.ps1        # static deployment validator
-│
 ├── scripts/
-│   ├── test.ps1                       # test-lane runner (unit|integration|topology|deploy|all|coverage)
+│   ├── test.ps1                       # test-lane runner (unit|integration|topology|ci|all|coverage)
+│   ├── publish-parties-containers.ps1 # Parties-only Zot container publication helper
 │   └── check-no-warning-override.sh   # build-gate regression guard (no warnings-as-errors override)
 │
 ├── .github/workflows/test.yml         # CI: lint → test (4 shards) + ui-a11y → contract-test → report
@@ -151,4 +138,4 @@ git submodule update --init references/Hexalith.Builds references/Hexalith.Commo
 | Auth / tenancy / compliance | `src/Hexalith.Parties/{Authentication,Authorization,Compliance,Middleware}` |
 | GDPR encryption/erasure | `src/Hexalith.Parties.Security/` |
 | Local topology / DAPR wiring | `src/Hexalith.Parties.AppHost/` |
-| Deployment | `deploy/k8s`, `deploy/dapr`, `deploy/zot` |
+| Container publication | `.github/workflows/publish-parties-containers.yml`, `scripts/publish-parties-containers.ps1` |

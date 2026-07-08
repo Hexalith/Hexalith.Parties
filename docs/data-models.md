@@ -205,9 +205,9 @@ For projection actor mechanics (checkpointing, idempotency, rebuild, batching), 
   - `Parties:Compliance:GdprFeaturesActive` (default **false**) — controls only the **MVP compliance warning** (startup log + `X-Hexalith-Parties-Mvp-Compliance-Warning` response header).
   - `Parties:CryptoShredding:IsEnabled` (default **true**) — controls the **encryption-at-rest / erasure feature** itself.
 
-> ⚠️ **Discrepancy to be aware of.** The `README.md` "GDPR Notice" states crypto-shredding/consent/erasure are *not* in the MVP and arrive in v1.1. The **code already implements** consent, processing-restriction, and crypto-shredding erasure, wired into DI and **enabled by default** (`IsEnabled=true`). The MVP *warning* and the crypto *feature* are separate toggles. Validate intended production posture against `docs/deployment-security-checklist.md`; the default key store is `LocalDevKeyStorageBackend` (in-memory, dev-only) and a real KMS/secret store is required for production.
+> ⚠️ **Discrepancy to be aware of.** The `README.md` "GDPR Notice" states crypto-shredding/consent/erasure are *not* in the MVP and arrive in v1.1. The **code already implements** consent, processing-restriction, and crypto-shredding erasure, wired into DI and **enabled by default** (`IsEnabled=true`). The MVP *warning* and the crypto *feature* are separate toggles. The default key store is `LocalDevKeyStorageBackend` (in-memory, dev-only) and a real KMS/secret store is required for production.
 
-GDPR-related operational docs: [gdpr-erased-party-status.md](gdpr-erased-party-status.md), [gdpr-key-rotation-and-shredding.md](gdpr-key-rotation-and-shredding.md), [gdpr-portability-export.md](gdpr-portability-export.md), [gdpr-processing-activity-records.md](gdpr-processing-activity-records.md), [deployment-security-checklist.md](deployment-security-checklist.md).
+GDPR-related operational docs: [gdpr-erased-party-status.md](gdpr-erased-party-status.md), [gdpr-key-rotation-and-shredding.md](gdpr-key-rotation-and-shredding.md), [gdpr-portability-export.md](gdpr-portability-export.md), [gdpr-processing-activity-records.md](gdpr-processing-activity-records.md).
 
 ---
 

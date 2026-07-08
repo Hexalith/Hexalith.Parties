@@ -11,7 +11,7 @@ Hexalith.Parties uses GitHub Actions for the main quality pipeline in `.github/w
 ## Jobs
 
 - `lint`: checks out root-repository submodules under `references/`, restores the solution, runs a Release build with analyzers, and runs the Story 9.8 build-gate regression guard (`scripts/check-no-warning-override.sh`). See [`docs/build-gate.md`](build-gate.md) for the gate policy.
-- `test`: runs the 15 .NET test projects in four matrix shards with `fail-fast: false`; each project is executed by path with `dotnet test <projectPath>`. Within a shard the loop continues after a failing project, records a PASS/FAIL row per project in the job step summary, and fails the step at the end if any project failed — so one run reports every failing project instead of stopping at the first blocker.
+- `test`: runs the .NET test projects in four matrix shards with `fail-fast: false`; each project is executed by path with `dotnet test <projectPath>`. Within a shard the loop continues after a failing project, records a PASS/FAIL row per project in the job step summary, and fails the step at the end if any project failed — so one run reports every failing project instead of stopping at the first blocker.
 - `ui-a11y`: builds the UI project and UI bUnit test project sequentially, runs the UI test project by path, then runs the Playwright accessibility workspace.
 - `contract-test`: runs Pact.js contract scripts when they exist. Until the Pact framework is scaffolded, the job records a readiness gap in the GitHub step summary.
 - `Quality Gate`: fails the workflow unless lint/build, test shards, and UI accessibility pass, and contract tests either pass or are intentionally skipped.
@@ -28,7 +28,7 @@ The workflow runs on pushes to `main`, `v*` tags, and manual dispatch. It restor
 
 The workflow uses immutable SemVer/MinVer image tags only. Git tags may keep their leading `v`, but image tags omit it. Mutable tags such as `latest` are not allowed. The script verifies each pushed manifest through the Zot v2 API after publication.
 
-This workflow does not run deploy/k8s/publish.ps1, does not apply Kubernetes manifests, and does not publish EventStore, Tenants, Memories, Sample, Redis, or FalkorDB images. Full cluster publish/apply remains the operator-owned `deploy/k8s/publish.ps1` path.
+This workflow does not apply runtime deployment manifests and does not publish EventStore, Tenants, Memories, Sample, Redis, or FalkorDB images. Full runtime deployment orchestration is owned outside this repository and should consume the immutable image tags published to Zot.
 
 Required registry secrets are listed in [`docs/ci-secrets-checklist.md`](ci-secrets-checklist.md). Zot currently authenticates browser users through Keycloak/OIDC and supports Zot API keys for automation; GitHub Actions must use the API key as the password value and must not store a human SSO password.
 

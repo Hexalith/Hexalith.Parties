@@ -4,7 +4,7 @@ This guide provides handler patterns for every Hexalith.Parties event type. Use 
 
 For event wire format and subscription setup, see [event-subscribing.md](event-subscribing.md).
 For production broker configuration, see [event-publishing.md](event-publishing.md).
-For broker-specific deployment templates, see [Kafka pub/sub](../deploy/dapr/pubsub-kafka.yaml), [RabbitMQ pub/sub](../deploy/dapr/pubsub-rabbitmq.yaml), and [Azure Service Bus pub/sub](../deploy/dapr/pubsub-servicebus.yaml).
+Broker-specific production Dapr components are environment-owned deployment assets. Keep them outside this repository and align them with the event topics described in [event-publishing.md](event-publishing.md).
 
 ## Quick Reference
 

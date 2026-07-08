@@ -111,7 +111,7 @@ jobs:
 
           def powershell_lane_projects(script_text):
               projects = []
-              for variable in ("unitProjects", "integrationProjects", "topologyProjects", "deployProjects"):
+              for variable in ("unitProjects", "integrationProjects", "topologyProjects", "ciProjects"):
                   match = re.search(rf"^\${variable}\s*=\s*@\((?P<body>.*?)^\)", script_text, re.MULTILINE | re.DOTALL)
                   if not match:
                       raise ValueError(f"could not find ${variable} array in scripts/test.ps1")
@@ -196,11 +196,11 @@ jobs:
               tests/Hexalith.Parties.ConsumerPortal.Tests/Hexalith.Parties.ConsumerPortal.Tests.csproj
               tests/Hexalith.Parties.UI.Tests/Hexalith.Parties.UI.Tests.csproj
               tests/Hexalith.Parties.Picker.Tests/Hexalith.Parties.Picker.Tests.csproj
-          - name: integration-deploy
+          - name: integration-ci
             projects: |
               tests/Hexalith.Parties.Sample.Tests/Hexalith.Parties.Sample.Tests.csproj
               tests/Hexalith.Parties.IntegrationTests/Hexalith.Parties.IntegrationTests.csproj
-              tests/Hexalith.Parties.DeployValidation.Tests/Hexalith.Parties.DeployValidation.Tests.csproj
+              tests/Hexalith.Parties.Ci.Tests/Hexalith.Parties.Ci.Tests.csproj
 
     steps:
       - name: Checkout

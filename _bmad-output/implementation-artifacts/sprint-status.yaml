@@ -1,5 +1,5 @@
 # generated: 2026-06-21T18:55:59+02:00
-# last_updated: 2026-07-08T15:30:00+02:00
+# last_updated: 2026-07-08T16:45:00+02:00
 # project: parties
 # project_key: NOKEY
 # tracking_system: file-system
@@ -41,7 +41,7 @@
 # - Retrospective appends its action items to action_items; sprint-status surfaces open ones
 
 generated: 2026-06-21T18:55:59+02:00
-last_updated: 2026-07-08T15:30:00+02:00
+last_updated: 2026-07-08T16:45:00+02:00
 project: parties
 project_key: NOKEY
 tracking_system: file-system
@@ -163,6 +163,11 @@ development_status:
   # and parties-ui containers to Zot via GitHub Actions API-key auth. It does not
   # run the full Kubernetes publish/apply flow.
   8-12-parties-only-zot-container-publish-ci: done
+  # Added by Correct Course 2026-07-08
+  # (sprint-change-proposal-2026-07-08-retire-legacy-deployment-artifacts.md).
+  # Removes retired in-repo Kubernetes/Dapr/Zot deployment assets now that this
+  # repository owns container publication only and runtime deployment is external.
+  8-13-retire-legacy-deployment-artifacts: done
   epic-8-retrospective: optional
 
 action_items:

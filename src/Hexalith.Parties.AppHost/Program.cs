@@ -43,8 +43,8 @@ IResourceBuilder<ProjectResource> adminUI = builder.AddProject<Projects.Hexalith
 
 // Persistence is the DAPR state store / pub-sub layer. Redis is provided by `dapr init` at
 // 127.0.0.1:6379 and wired into the statestore/pubsub component metadata by AddHexalithEventStore —
-// it is not managed by Aspire. The AppHost intentionally does not compose an Aspire Redis resource;
-// in publish mode the hand-authored carve-out under deploy/k8s/redis/ (Story 9.3) provides Redis.
+// it is not managed by Aspire. Runtime deployment backing stores are owned by the external
+// deployment orchestrator, not by this AppHost.
 HexalithEventStoreResources eventStoreResources = builder.AddHexalithEventStore(
     eventStore,
     adminServer,
@@ -338,10 +338,8 @@ else if (builder.ExecutionContext.IsPublishMode)
 }
 
 // PUBLISH_TARGET registers an Aspire-native publish environment (`dotnet aspire publish`).
-// This is orthogonal to the aspirate-based Kubernetes deploy path documented in
-// `deploy/k8s/` (story 9-1). Aspirate reads the AppHost composition directly and
-// produces its own manifests under `deploy/k8s/`; the `k8s` branch below only
-// affects Aspire's own publish pipeline if a future story opts in.
+// Runtime deployment orchestration is external to this repository; the `k8s` branch below
+// only affects Aspire's own publish pipeline if a future story opts in.
 string? publishTarget = builder.Configuration["PUBLISH_TARGET"];
 if (string.IsNullOrWhiteSpace(publishTarget))
 {
