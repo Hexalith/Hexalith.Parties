@@ -22,7 +22,6 @@ using Hexalith.Parties.Projections.Abstractions;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.IdentityModel.Tokens;
@@ -34,13 +33,13 @@ using Shouldly;
 
 namespace Hexalith.Parties.Tests.HealthChecks;
 
-public sealed class HealthEndpointIntegrationTests : IClassFixture<HealthEndpointIntegrationTests.HealthTestFactory>
+public sealed class HealthEndpointIntegrationTests : IDisposable
 {
-    private readonly HealthTestFactory _factory;
+    private readonly HealthTestFactory _factory = new();
 
-    public HealthEndpointIntegrationTests(HealthTestFactory factory)
+    public void Dispose()
     {
-        _factory = factory;
+        _factory.Dispose();
     }
 
     [Fact]
@@ -240,16 +239,10 @@ public sealed class HealthEndpointIntegrationTests : IClassFixture<HealthEndpoin
             CommandRouter.RouteCommandAsync(Arg.Any<SubmitCommand>(), Arg.Any<CancellationToken>())
                 .Returns(Task.FromResult(new CommandProcessingResult(true)));
 
-            builder.ConfigureAppConfiguration((_, config) =>
-            {
-                config.AddInMemoryCollection(new Dictionary<string, string?>
-                {
-                    ["Authentication:JwtBearer:Issuer"] = JwtTokenHelper.Issuer,
-                    ["Authentication:JwtBearer:Audience"] = JwtTokenHelper.Audience,
-                    ["Authentication:JwtBearer:SigningKey"] = JwtTokenHelper.SigningKey,
-                    ["Authentication:JwtBearer:RequireHttpsMetadata"] = "false",
-                });
-            });
+            builder.UseSetting("Authentication:JwtBearer:Issuer", JwtTokenHelper.Issuer);
+            builder.UseSetting("Authentication:JwtBearer:Audience", JwtTokenHelper.Audience);
+            builder.UseSetting("Authentication:JwtBearer:SigningKey", JwtTokenHelper.SigningKey);
+            builder.UseSetting("Authentication:JwtBearer:RequireHttpsMetadata", "false");
 
             builder.ConfigureTestServices(services =>
             {

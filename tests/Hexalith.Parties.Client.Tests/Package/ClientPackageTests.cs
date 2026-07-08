@@ -10,8 +10,8 @@ public sealed class ClientPackageTests : IDisposable
 {
     private const string LocalVersionOverride = "0.0.0-local.0";
     private const string LocalPackVersionProperties = $"-p:MinVerVersionOverride={LocalVersionOverride} -p:PackageVersion={LocalVersionOverride}";
-    private const string CommonsPackVersionProperties = "-p:MinVerVersionOverride=2.26.0 -p:PackageVersion=2.26.0";
-    private const string EventStorePackVersionProperties = "-p:MinVerVersionOverride=3.41.0 -p:PackageVersion=3.41.0";
+    private const string CommonsPackVersionProperties = "-p:MinVerVersionOverride=2.27.0 -p:PackageVersion=2.27.0";
+    private const string EventStorePackVersionProperties = "-p:MinVerVersionOverride=3.47.0 -p:PackageVersion=3.47.0";
     private const int MaxDeclaredDependencyCount = 16;
     private const long MaxPackedClientPackageBytes = 5L * 1024L * 1024L;
 

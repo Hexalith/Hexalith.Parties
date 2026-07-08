@@ -253,9 +253,9 @@ jobs:
             echo "Running $project_name"
             if dotnet test "$project" \
               --configuration Release \
-              --logger "trx;LogFileName=$project_name.trx" \
               --results-directory "TestResults/$TEST_SHARD_NAME" \
-              --collect "XPlat Code Coverage"; then
+              --report-xunit-trx \
+              --report-xunit-trx-filename "$project_name.trx"; then
               echo "| $project_name | PASS |" >> "$GITHUB_STEP_SUMMARY"
             else
               echo "::error::Test project failed: $project_name"
@@ -314,7 +314,7 @@ jobs:
         run: dotnet build tests/Hexalith.Parties.UI.Tests/Hexalith.Parties.UI.Tests.csproj --configuration Release --no-restore -m:1
 
       - name: Run Parties UI bUnit tests
-        run: dotnet test tests/Hexalith.Parties.UI.Tests/Hexalith.Parties.UI.Tests.csproj --configuration Release --no-build --logger "trx;LogFileName=Hexalith.Parties.UI.Tests.trx" --results-directory TestResults/ui
+        run: dotnet test tests/Hexalith.Parties.UI.Tests/Hexalith.Parties.UI.Tests.csproj --configuration Release --no-build --results-directory TestResults/ui --report-xunit-trx --report-xunit-trx-filename Hexalith.Parties.UI.Tests.trx
 
       - name: Setup Node.js
         uses: actions/setup-node@v5
@@ -470,7 +470,7 @@ jobs:
             echo ""
             echo "Decision: $decision"
             echo ""
-            echo "Test and coverage artifacts are available from the workflow run artifacts when test jobs execute."
+            echo "Test artifacts are available from the workflow run artifacts when test jobs execute."
           } >> "$GITHUB_STEP_SUMMARY"
 
           if [ "$decision" != "PASS" ]; then

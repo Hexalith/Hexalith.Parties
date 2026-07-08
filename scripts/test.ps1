@@ -51,10 +51,11 @@ function Invoke-TestProject {
     if ($ResultsDirectory) {
         $projectName = [System.IO.Path]::GetFileNameWithoutExtension($ProjectPath)
         $arguments += @(
-            "--logger",
-            "trx;LogFileName=$projectName.trx",
             "--results-directory",
-            $ResultsDirectory
+            $ResultsDirectory,
+            "--report-xunit-trx",
+            "--report-xunit-trx-filename",
+            "$projectName.trx"
         )
     }
 
@@ -128,7 +129,7 @@ $laneProjects = switch ($Lane) {
 
 $additionalArguments = @()
 if ($Lane -eq "coverage") {
-    $additionalArguments = @("--collect", "XPlat Code Coverage")
+    throw "The coverage lane is not currently supported under Microsoft.Testing.Platform/xUnit v3. Use the test lanes for validation until an MTP-compatible coverage extension is configured."
 }
 
 $results = @()

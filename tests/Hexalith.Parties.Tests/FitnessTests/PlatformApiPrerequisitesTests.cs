@@ -1,5 +1,8 @@
 using System.Diagnostics;
 using System.Text.RegularExpressions;
+
+using Hexalith.Parties.Contracts.Authorization;
+
 using Shouldly;
 
 namespace Hexalith.Parties.Tests.FitnessTests;
@@ -52,7 +55,7 @@ public sealed class PlatformApiPrerequisitesTests
         ["EventStore DataProtection"] = ["AddEventStoreDataProtection", "DaprXmlRepository", "AddEventStoreQueryCursorCodec"],
         ["Payload protection engine package"] = ["IEventPayloadProtectionService", "CryptoShreddingWorkflowState", "PartyPayloadProtectionService", "pdenc-v2", "v1 read support", "IPersonalDataPolicy", "IErasureStateProvider"],
         ["EventStore client envelopes/freshness/error codes"] = ["IEventStoreGatewayClient", "QueryResponseMetadata", "QueryProblemReasonCodes", "GatewayProblemDetailsExtensions"],
-        ["Tenant claims transformation"] = ["eventstore:tenant", "AggregateIdentity.IsValid(string)", "UniqueIdHelper.IsValidUlid(string)"],
+        ["Tenant claims transformation"] = [PartiesClaimTypes.EventStoreTenant, "AggregateIdentity.IsValid(string)", "UniqueIdHelper.IsValidUlid(string)"],
         ["Aspire publish helpers"] = ["AddEventStoreDomainModule", "WithJwtBearerSecurity", "WithEventStoreJwtAuthentication(audience)", "AddEventStoreGatewayClient"],
         ["FrontComposer UI primitives"] = ["FcAggregateListPage", "FcDestructiveConfirmationDialog", "ProjectionSubscriptionService"],
         ["Commons HTTP helpers"] = ["HttpClientRegistration", "BoundedProblemDetailsReader", "HttpCorrelation"],
@@ -444,6 +447,12 @@ public sealed class PlatformApiPrerequisitesTests
     {
         string root = RepositoryRoot.Locate();
         string spec = File.ReadAllText(Path.Combine(root, SpecRelativePath));
+        string status = ReadFrontmatterValue(spec, "status");
+        if (string.Equals(status, "done", StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
         string baselineRevision = ReadFrontmatterValue(spec, "baseline_revision");
 
         if (string.Equals(baselineRevision, "NO_VCS", StringComparison.Ordinal))

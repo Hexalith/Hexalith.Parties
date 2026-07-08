@@ -15,8 +15,8 @@ public sealed class ContractsPackageTests : IClassFixture<ContractsPackageFixtur
 {
     internal const string LocalVersionOverride = "0.0.0-local.0";
     internal const string LocalPackVersionProperties = $"-p:MinVerVersionOverride={LocalVersionOverride} -p:PackageVersion={LocalVersionOverride}";
-    internal const string CommonsPackVersionProperties = "-p:MinVerVersionOverride=2.26.0 -p:PackageVersion=2.26.0";
-    internal const string EventStorePackVersionProperties = "-p:MinVerVersionOverride=3.41.0 -p:PackageVersion=3.41.0";
+    internal const string CommonsPackVersionProperties = "-p:MinVerVersionOverride=2.27.0 -p:PackageVersion=2.27.0";
+    internal const string EventStorePackVersionProperties = "-p:MinVerVersionOverride=3.47.0 -p:PackageVersion=3.47.0";
 
     private readonly ContractsPackageFixture _fixture;
 

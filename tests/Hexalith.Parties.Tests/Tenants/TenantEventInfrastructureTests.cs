@@ -24,6 +24,13 @@ using Shouldly;
 namespace Hexalith.Parties.Tests.Tenants;
 
 public class TenantEventInfrastructureTests {
+    private const string TenantCreatedMessageId = "01HYX7QS3NP8M4KQJR5A7CVWK1";
+    private const string TenantMembershipMessageId = "01HYX7QS3NP8M4KQJR5A7CVWK2";
+    private const string TenantDisabledMessageId = "01HYX7QS3NP8M4KQJR5A7CVWK3";
+    private const string TenantUserRemovedMessageId = "01HYX7QS3NP8M4KQJR5A7CVWK4";
+    private const string InvalidPayloadMessageId = "01HYX7QS3NP8M4KQJR5A7CVWK5";
+    private const string UnknownEventMessageId = "01HYX7QS3NP8M4KQJR5A7CVWK6";
+
     [Fact]
     public void AddPartiesRegistersTenantsProjectionPipelineAndAccessService() {
         IConfiguration configuration = new ConfigurationBuilder()
@@ -58,13 +65,13 @@ public class TenantEventInfrastructureTests {
         using ServiceProvider provider = services.BuildServiceProvider();
         EventStoreDomainEventProcessor processor = provider.GetRequiredService<EventStoreDomainEventProcessor>();
 
-        (await processor.ProcessAsync(Envelope("message-1", new TenantCreated("tenant-1", "Tenant One", null, DateTimeOffset.UtcNow))))
+        (await processor.ProcessAsync(Envelope(TenantCreatedMessageId, new TenantCreated("tenant-1", "Tenant One", null, DateTimeOffset.UtcNow))))
             .ShouldBe(EventStoreDomainEventProcessingResult.Processed);
-        (await processor.ProcessAsync(Envelope("message-2", new UserAddedToTenant("tenant-1", "user-1", TenantRole.TenantContributor))))
+        (await processor.ProcessAsync(Envelope(TenantMembershipMessageId, new UserAddedToTenant("tenant-1", "user-1", TenantRole.TenantContributor))))
             .ShouldBe(EventStoreDomainEventProcessingResult.Processed);
-        (await processor.ProcessAsync(Envelope("message-2", new UserAddedToTenant("tenant-1", "user-1", TenantRole.TenantReader))))
+        (await processor.ProcessAsync(Envelope(TenantMembershipMessageId, new UserAddedToTenant("tenant-1", "user-1", TenantRole.TenantReader))))
             .ShouldBe(EventStoreDomainEventProcessingResult.Duplicate);
-        (await processor.ProcessAsync(Envelope("message-3", new TenantDisabled("tenant-1", DateTimeOffset.UtcNow))))
+        (await processor.ProcessAsync(Envelope(TenantDisabledMessageId, new TenantDisabled("tenant-1", DateTimeOffset.UtcNow))))
             .ShouldBe(EventStoreDomainEventProcessingResult.Processed);
 
         TenantLocalState state = (await provider.GetRequiredService<ITenantProjectionStore>().GetAsync("tenant-1"))!;
@@ -80,12 +87,12 @@ public class TenantEventInfrastructureTests {
         using ServiceProvider provider = services.BuildServiceProvider();
         EventStoreDomainEventProcessor processor = provider.GetRequiredService<EventStoreDomainEventProcessor>();
 
-        _ = await processor.ProcessAsync(Envelope("message-1", new TenantCreated("tenant-1", "Tenant One", null, DateTimeOffset.UtcNow)));
-        _ = await processor.ProcessAsync(Envelope("message-2", new UserAddedToTenant("tenant-1", "user-1", TenantRole.TenantOwner)));
-        (await processor.ProcessAsync(Envelope("message-3", new UserRemovedFromTenant("tenant-1", "user-1"))))
+        _ = await processor.ProcessAsync(Envelope(TenantCreatedMessageId, new TenantCreated("tenant-1", "Tenant One", null, DateTimeOffset.UtcNow)));
+        _ = await processor.ProcessAsync(Envelope(TenantMembershipMessageId, new UserAddedToTenant("tenant-1", "user-1", TenantRole.TenantOwner)));
+        (await processor.ProcessAsync(Envelope(TenantUserRemovedMessageId, new UserRemovedFromTenant("tenant-1", "user-1"))))
             .ShouldBe(EventStoreDomainEventProcessingResult.Processed);
         (await processor.ProcessAsync(new EventStoreDomainEventEnvelope(
-            "bad-message",
+            InvalidPayloadMessageId,
             "tenant-1",
             "system",
             typeof(TenantCreated).FullName!,
@@ -95,7 +102,7 @@ public class TenantEventInfrastructureTests {
             "json",
             "{ not-json"u8.ToArray())))
             .ShouldBe(EventStoreDomainEventProcessingResult.FailedInvalidPayload);
-        (await processor.ProcessAsync(Envelope("unknown-message", "Hexalith.Tenants.Contracts.Events.DoesNotExist", "{}"u8.ToArray())))
+        (await processor.ProcessAsync(Envelope(UnknownEventMessageId, "Hexalith.Tenants.Contracts.Events.DoesNotExist", "{}"u8.ToArray())))
             .ShouldBe(EventStoreDomainEventProcessingResult.SkippedUnknownEventType);
 
         TenantLocalState state = (await provider.GetRequiredService<ITenantProjectionStore>().GetAsync("tenant-1"))!;
@@ -148,9 +155,9 @@ public class TenantEventInfrastructureTests {
         using ServiceProvider provider = services.BuildServiceProvider();
 
         EventStoreDomainEventProcessor first = provider.GetRequiredService<EventStoreDomainEventProcessor>();
-        (await first.ProcessAsync(Envelope("message-1", new TenantCreated("tenant-1", "Tenant One", null, DateTimeOffset.UtcNow))))
+        (await first.ProcessAsync(Envelope(TenantCreatedMessageId, new TenantCreated("tenant-1", "Tenant One", null, DateTimeOffset.UtcNow))))
             .ShouldBe(EventStoreDomainEventProcessingResult.Processed);
-        (await first.ProcessAsync(Envelope("message-1", new TenantCreated("tenant-1", "Tenant One", null, DateTimeOffset.UtcNow))))
+        (await first.ProcessAsync(Envelope(TenantCreatedMessageId, new TenantCreated("tenant-1", "Tenant One", null, DateTimeOffset.UtcNow))))
             .ShouldBe(EventStoreDomainEventProcessingResult.Duplicate);
 
         EventStoreDomainEventProcessor restarted = new(
@@ -158,7 +165,7 @@ public class TenantEventInfrastructureTests {
             BuildTenantEventTypeRegistry(),
             provider.GetRequiredService<ILogger<EventStoreDomainEventProcessor>>(),
             provider.GetRequiredService<IOptions<EventStoreDomainEventsOptions>>().Value.PayloadAggregateIdPropertyName);
-        (await restarted.ProcessAsync(Envelope("message-1", new TenantCreated("tenant-1", "Tenant One", null, DateTimeOffset.UtcNow))))
+        (await restarted.ProcessAsync(Envelope(TenantCreatedMessageId, new TenantCreated("tenant-1", "Tenant One", null, DateTimeOffset.UtcNow))))
             .ShouldBe(EventStoreDomainEventProcessingResult.Processed);
     }
 

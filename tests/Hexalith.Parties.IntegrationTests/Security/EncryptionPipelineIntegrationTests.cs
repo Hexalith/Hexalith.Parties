@@ -31,7 +31,6 @@ using Hexalith.Parties.Security;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.IdentityModel.Tokens;
@@ -381,17 +380,11 @@ public sealed class EncryptionTestFactory : WebApplicationFactory<Program>
     {
         builder.UseEnvironment("Development");
 
-        builder.ConfigureAppConfiguration((_, config) =>
-        {
-            config.AddInMemoryCollection(new Dictionary<string, string?>
-            {
-                ["Authentication:JwtBearer:Issuer"] = "hexalith-dev",
-                ["Authentication:JwtBearer:Audience"] = "hexalith-parties",
-                ["Authentication:JwtBearer:SigningKey"] = "DevOnlySigningKey-AtLeast32Chars-MustBeSecure!",
-                ["Authentication:JwtBearer:RequireHttpsMetadata"] = "false",
-                ["Parties:CryptoShredding:IsEnabled"] = cryptoEnabled.ToString(),
-            });
-        });
+        builder.UseSetting("Authentication:JwtBearer:Issuer", "hexalith-dev");
+        builder.UseSetting("Authentication:JwtBearer:Audience", "hexalith-parties");
+        builder.UseSetting("Authentication:JwtBearer:SigningKey", "DevOnlySigningKey-AtLeast32Chars-MustBeSecure!");
+        builder.UseSetting("Authentication:JwtBearer:RequireHttpsMetadata", "false");
+        builder.UseSetting("Parties:CryptoShredding:IsEnabled", cryptoEnabled.ToString());
 
         IActorProxyFactory proxyFactory = Substitute.For<IActorProxyFactory>();
         proxyFactory.CreateActorProxy<IPartyDetailProjectionActor>(

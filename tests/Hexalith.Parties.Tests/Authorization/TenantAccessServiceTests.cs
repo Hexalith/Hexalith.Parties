@@ -15,6 +15,11 @@ using System.Text.Json;
 namespace Hexalith.Parties.Tests.Authorization;
 
 public class TenantAccessServiceTests {
+    private const string TenantCreatedMessageId = "01HYX7QS3NP8M4KQJR5A7CVWK7";
+    private const string UserAddedMessageId = "01HYX7QS3NP8M4KQJR5A7CVWK8";
+    private const string TenantDisabledMessageId = "01HYX7QS3NP8M4KQJR5A7CVWK9";
+    private const string UserRemovedMessageId = "01HYX7QS3NP8M4KQJR5A7CVWKA";
+
     [Theory]
     [InlineData(TenantRole.TenantReader, TenantAccessRequirement.Read, true)]
     [InlineData(TenantRole.TenantReader, TenantAccessRequirement.Write, false)]
@@ -157,14 +162,14 @@ public class TenantAccessServiceTests {
         // then the same access check fails closed with DisabledTenant.
         (EventStoreDomainEventProcessor processor, ITenantProjectionStore store, ServiceProvider provider) = BuildTenantsPipeline();
         using (provider) {
-            await processor.ProcessAsync(Envelope("m-1", new TenantCreated("tenant-1", "Tenant One", null, DateTimeOffset.UtcNow)));
-            await processor.ProcessAsync(Envelope("m-2", new UserAddedToTenant("tenant-1", "user-1", TenantRole.TenantContributor)));
+            await processor.ProcessAsync(Envelope(TenantCreatedMessageId, new TenantCreated("tenant-1", "Tenant One", null, DateTimeOffset.UtcNow)));
+            await processor.ProcessAsync(Envelope(UserAddedMessageId, new UserAddedToTenant("tenant-1", "user-1", TenantRole.TenantContributor)));
             TenantAccessService service = new(store, NullLogger<TenantAccessService>.Instance);
 
             (await service.CheckAccessAsync("tenant-1", "user-1", TenantAccessRequirement.Read))
                 .IsAllowed.ShouldBeTrue();
 
-            await processor.ProcessAsync(Envelope("m-3", new TenantDisabled("tenant-1", DateTimeOffset.UtcNow)));
+            await processor.ProcessAsync(Envelope(TenantDisabledMessageId, new TenantDisabled("tenant-1", DateTimeOffset.UtcNow)));
 
             TenantAccessDecision decision = await service.CheckAccessAsync("tenant-1", "user-1", TenantAccessRequirement.Read);
             decision.IsAllowed.ShouldBeFalse();
@@ -178,14 +183,14 @@ public class TenantAccessServiceTests {
         // access check after removal fails closed with MissingMember.
         (EventStoreDomainEventProcessor processor, ITenantProjectionStore store, ServiceProvider provider) = BuildTenantsPipeline();
         using (provider) {
-            await processor.ProcessAsync(Envelope("m-1", new TenantCreated("tenant-1", "Tenant One", null, DateTimeOffset.UtcNow)));
-            await processor.ProcessAsync(Envelope("m-2", new UserAddedToTenant("tenant-1", "user-1", TenantRole.TenantContributor)));
+            await processor.ProcessAsync(Envelope(TenantCreatedMessageId, new TenantCreated("tenant-1", "Tenant One", null, DateTimeOffset.UtcNow)));
+            await processor.ProcessAsync(Envelope(UserAddedMessageId, new UserAddedToTenant("tenant-1", "user-1", TenantRole.TenantContributor)));
             TenantAccessService service = new(store, NullLogger<TenantAccessService>.Instance);
 
             (await service.CheckAccessAsync("tenant-1", "user-1", TenantAccessRequirement.Read))
                 .IsAllowed.ShouldBeTrue();
 
-            await processor.ProcessAsync(Envelope("m-3", new UserRemovedFromTenant("tenant-1", "user-1")));
+            await processor.ProcessAsync(Envelope(UserRemovedMessageId, new UserRemovedFromTenant("tenant-1", "user-1")));
 
             TenantAccessDecision decision = await service.CheckAccessAsync("tenant-1", "user-1", TenantAccessRequirement.Read);
             decision.IsAllowed.ShouldBeFalse();
