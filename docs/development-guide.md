@@ -88,7 +88,7 @@ dotnet test tests/Hexalith.Parties.Server.Tests/Hexalith.Parties.Server.Tests.cs
 | `topology` | Hexalith.Parties.IntegrationTests (full Aspire topology — needs Docker/DAPR; skips gracefully if absent) |
 | `ci` | Hexalith.Parties.Ci.Tests (GitHub Actions/Zot publish contract validation) |
 | `all` | all .NET test projects, executed one project at a time |
-| `coverage` | all .NET test projects, executed one project at a time with `--collect "XPlat Code Coverage"` |
+| `coverage` | currently blocked under Microsoft.Testing.Platform/xUnit v3 until an MTP-compatible coverage extension is configured |
 
 ### Fallback validation ladder
 

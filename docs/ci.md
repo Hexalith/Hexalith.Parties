@@ -38,7 +38,7 @@ The checkout step uses `submodules: true`, which initializes root-repository sub
 
 ## Artifacts
 
-Each test shard uploads `TestResults/` with TRX logs and XPlat Code Coverage output. Artifacts are retained for 30 days.
+Each test shard uploads `TestResults/` with TRX logs. XPlat Code Coverage is disabled under Microsoft.Testing.Platform/xUnit v3 until an MTP-compatible coverage extension is configured. Artifacts are retained for 30 days.
 
 ## Local Parity
 
