@@ -17,6 +17,8 @@ public sealed class PartiesContainerPublishWorkflowTests
         workflow.ShouldContain("src/Hexalith.Parties/Hexalith.Parties.csproj");
         workflow.ShouldContain("src/Hexalith.Parties.Mcp/Hexalith.Parties.Mcp.csproj");
         workflow.ShouldContain("src/Hexalith.Parties.UI/Hexalith.Parties.UI.csproj");
+        workflow.ShouldContain("-p:UseHexalithProjectReferences=true");
+        workflow.ShouldContain("-p:UseNuGetDeps=false");
         workflow.ShouldNotContain("deploy/k8s/publish.ps1");
         workflow.ShouldNotContain("ZOT_REGISTRY_PASSWORD");
         workflow.ShouldNotContain(":latest");
@@ -36,6 +38,8 @@ public sealed class PartiesContainerPublishWorkflowTests
         script.ShouldContain("-p:ContainerRegistry=$Registry");
         script.ShouldContain("-p:ContainerRepository=$($image.Repository)");
         script.ShouldContain("-p:ContainerImageTag=$ImageTag");
+        script.ShouldContain("-p:UseHexalithProjectReferences=true");
+        script.ShouldContain("-p:UseNuGetDeps=false");
         script.ShouldContain("\"--os\"");
         script.ShouldContain("\"linux\"");
         script.ShouldContain("\"--arch\"");
