@@ -123,8 +123,8 @@ def main():
           f"({len(changed)} changed, {len(declared)} declared)")
 
     # A story with no File List section cannot be reconciled. When the caller
-    # requires one (dev-story) that is a FAIL; otherwise (pre-review) it is a
-    # non-blocking warning and there is nothing further to compare.
+    # requires one that is a FAIL; otherwise it is a non-blocking warning and
+    # there is nothing further to compare.
     if not present:
         msg = "no `### File List` section found in story"
         if a.require_file_list:

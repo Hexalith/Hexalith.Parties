@@ -1,5 +1,5 @@
 # generated: 2026-06-21T18:55:59+02:00
-# last_updated: 2026-07-08T16:45:00+02:00
+# last_updated: 2026-07-08T18:26:13+02:00
 # project: parties
 # project_key: NOKEY
 # tracking_system: file-system
@@ -41,7 +41,7 @@
 # - Retrospective appends its action items to action_items; sprint-status surfaces open ones
 
 generated: 2026-06-21T18:55:59+02:00
-last_updated: 2026-07-08T16:45:00+02:00
+last_updated: 2026-07-08T18:26:13+02:00
 project: parties
 project_key: NOKEY
 tracking_system: file-system
@@ -146,7 +146,7 @@ development_status:
   8-3-platform-api-prerequisites: done
   8-4-leaf-project-retirement: done
   8-5-eventstore-domain-service-sdk-host-cutover: done
-  8-6-projection-and-query-sdk-migration: backlog
+  8-6-projection-and-query-sdk-migration: ready-for-dev
   8-7-data-protection-extraction: backlog
   8-8-client-mcp-apphost-build-and-deploy-cleanup: backlog
   8-9-ui-frontcomposer-and-fluent-consolidation: backlog
@@ -174,7 +174,7 @@ action_items:
   - epic: 6
     action: "Add a pre-review File List check that compares git diff --name-only to the story File List before status moves to review or done."
     owner: "Amelia (Developer)"
-    status: open
+    status: done
   - epic: 6
     action: "Document the standard fallback validation ladder for this repo: direct xUnit v3 assemblies, serialized -m:1 builds, and focused project builds when dotnet test or solution build is environment-blocked."
     owner: "Murat (Test Architect)"
@@ -196,7 +196,7 @@ action_items:
   - epic: 7
     action: "Convert the File List check into an actual pre-review gate that compares git diff --name-only with the story File List."
     owner: "Amelia (Developer)"
-    status: open
+    status: done
   - epic: 7
     action: "Create a release-candidate gate for root gitlinks: each drifted pointer is owner-validated or deliberately reset before tagging."
     owner: "Winston (Architect) + Murat (Test Architect)"

@@ -84,10 +84,22 @@ If `{spec_file}` is **not** set, present only options 1 and 2 (omit "Leave as ac
 
 Skip this section if `{spec_file}` is not set.
 
-#### Determine new status based on review outcome
+#### Determine candidate status based on review outcome
 
-- If all `decision-needed` and `patch` findings were resolved (fixed or dismissed) AND no unresolved `high`/`medium` findings remain: set `{new_status}` = `done`. Update the story file Status section to `done`.
-- If `patch` findings were left as action items, or unresolved issues remain: set `{new_status}` = `in-progress`. Update the story file Status section to `in-progress`.
+- If all `decision-needed` and `patch` findings were resolved (fixed or dismissed) AND no unresolved `high`/`medium` findings remain: set `{candidate_status}` = `done`.
+- If `patch` findings were left as action items, or unresolved issues remain: set `{candidate_status}` = `in-progress`.
+
+#### File List gate before Done
+
+If `{candidate_status}` = `done`, run `python3 {project-root}/_bmad/scripts/check_file_list.py --story {spec_file} --require-file-list` before changing either the story file Status section or `sprint-status.yaml`.
+
+- Exit `0`: set `{new_status}` = `done`. Phantom warnings may proceed, but include them in the completion summary so stale File List entries can be removed or justified.
+- Exit `1`: HALT before any status write. Report the File List gate output and require the story File List to be updated, or the undeclared files reverted, before the story can move to `done`.
+- Exit `2`: HALT before any status write. Report the gate execution error and do not move the story to `done`.
+
+If `{candidate_status}` = `in-progress`, set `{new_status}` = `in-progress` and skip this gate because the story is not moving to `done`.
+
+Update the story file Status section to `{new_status}`.
 
 Save the story file.
 

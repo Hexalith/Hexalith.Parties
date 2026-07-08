@@ -51,9 +51,9 @@ Two real-world wrinkles the gate must (and does) handle:
    file and `sprint-status.yaml`. The gate never faults excluded paths in either
    direction, and never faults a story for omitting itself.
 2. **Missing File List section.** Some Epic-8 spec files (`bmad-dev-auto` output, e.g.
-   `spec-8-5`) carry `baseline_commit` but have no `### File List` section. The gate
-   degrades gracefully: **fail** in dev-story (a File List is required before review),
-   **warn** in code-review (review can still proceed).
+   `spec-8-5`) carry `baseline_commit` but have no `### File List` section. The
+   gate fails before dev-story can move to review, and before code-review can begin,
+   because there is no story File List to reconcile.
 
 ## 3. Recommended Approach
 
@@ -84,7 +84,7 @@ set (committed ∪ working-tree ∪ untracked), parses the `### File List` block
 (CRLF-safe, backtick-wrapped bullets), applies `EXCLUDE`, and reports UNDECLARED
 (fail) / phantom (warn). Flags:
 `--story <path>` (required), `--base <commit>` (override), `--require-file-list`
-(missing File List section → fail; used by dev-story, omitted by code-review).
+(missing File List section → fail; used by dev-story and code-review gates).
 
 ### 4.2 EDIT — `bmad-dev-story/SKILL.md` step 9
 
@@ -105,12 +105,13 @@ entries resolved or intentionally justified`.
 ### 4.4 EDIT — `bmad-code-review/steps/step-01-gather-context.md`
 
 New instruction **6 (pre-review gate)**: when `{spec_file}` is set and has a
-`baseline_commit`, run `check_file_list.py --story {spec_file}` (no
-`--require-file-list`). Exit 1 (UNDECLARED) → surface the paths prominently in the
-CHECKPOINT and confirm scope before proceeding; phantom / missing-File-List →
-non-blocking CHECKPOINT note. Skipped when VCS is unavailable or `review_mode ==
-"no-spec"`. The original sanity-check step is renumbered to **7**, and the CHECKPOINT
-summary now includes the File List gate result.
+`baseline_commit`, run
+`check_file_list.py --story {spec_file} --require-file-list`. Exit 1
+(UNDECLARED or missing File List) → HALT before review and require the story File
+List to be updated, or the undeclared files reverted, before continuing. Phantom
+warnings remain non-blocking CHECKPOINT notes. Skipped when VCS is unavailable or
+`review_mode == "no-spec"`. The original sanity-check step is renumbered to **7**,
+and the CHECKPOINT summary now includes the File List gate result.
 
 ## 5. Implementation Handoff
 
@@ -127,8 +128,8 @@ git repo:
 
 | Scenario | Expected | Result |
 |---|---|---|
-| No File List, no `--require` (pre-review) | WARN, exit 0 | ✅ |
-| No File List, `--require` (dev-story) | FAIL, exit 1 | ✅ |
+| No File List, no `--require` (non-gate caller) | WARN, exit 0 | ✅ |
+| No File List, `--require` (dev-story/code-review gate) | FAIL, exit 1 | ✅ |
 | Changed file not in File List (undeclared) | FAIL, exit 1 | ✅ |
 | `references/*` + automator + story-file changed | not flagged | ✅ |
 | Listed-but-unchanged (phantom) | WARN, exit 0 | ✅ |

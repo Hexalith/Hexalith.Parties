@@ -5,7 +5,7 @@ validation-criticality: 'HIGHEST'
 required-inputs:
   - 'Story markdown file with enhanced Dev Notes containing comprehensive implementation context'
   - 'Completed Tasks/Subtasks section with all items marked [x]'
-  - 'Updated File List section with all changed files'
+  - 'Updated File List section reconciled by _bmad/scripts/check_file_list.py'
   - 'Updated Dev Agent Record with implementation notes'
 optional-inputs:
   - 'Test results output'
@@ -14,6 +14,7 @@ optional-inputs:
 validation-rules:
   - 'Only permitted story sections modified: Tasks/Subtasks checkboxes, Dev Agent Record, File List, Change Log, Status'
   - 'All implementation requirements from story Dev Notes must be satisfied'
+  - 'File List gate must pass before the story Status or sprint status moves to review'
   - 'Definition of Done checklist must pass completely'
   - 'Enhanced story context must contain sufficient technical guidance'
 ---
@@ -49,7 +50,7 @@ validation-rules:
 
 ## 📝 Documentation & Tracking
 
-- [ ] **File List Complete:** File List includes EVERY new, modified, or deleted file (paths relative to repo root)
+- [ ] **File List Reconciled (gated):** `_bmad/scripts/check_file_list.py --story <story-file> --require-file-list` exits 0; every file changed since `baseline_commit` is listed, and phantom entries are resolved or intentionally justified
 - [ ] **Dev Agent Record Updated:** Contains relevant Implementation Notes and/or Debug Log for this work
 - [ ] **Change Log Updated:** Change Log includes clear summary of what changed and why
 - [ ] **Review Follow-ups:** All review follow-up tasks (marked [AI-Review]) completed and corresponding review items marked resolved (if applicable)

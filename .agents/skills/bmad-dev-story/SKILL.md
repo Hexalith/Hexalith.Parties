@@ -411,7 +411,10 @@ Activation is complete. If `activation_steps_prepend` or `activation_steps_appen
   <step n="9" goal="Story completion and mark for review" tag="sprint-status">
     <action>Verify ALL tasks and subtasks are marked [x] (re-scan the story document now)</action>
     <action>Run the full regression suite (do not skip)</action>
-    <action>Confirm File List includes every changed file</action>
+    <action>Resolve {{file_list_gate_story_path}} to the active story file path used in this run (the explicit provided path, discovered path, or `{{story_path}}` if populated)</action>
+    <action>Run `python3 {project-root}/_bmad/scripts/check_file_list.py --story {{file_list_gate_story_path}} --require-file-list` after the final File List is saved and before any Status or sprint-status update.</action>
+    <action>Store the command exit code as {{file_list_gate_exit_code}} and output as {{file_list_gate_output}}</action>
+    <action if="{{file_list_gate_exit_code}} != 0">HALT - File List gate failed before review. Report {{file_list_gate_output}} and update the story File List or revert undeclared files before moving the story to review.</action>
     <action>Execute enhanced definition-of-done validation</action>
     <action>Update the story Status to: "review"</action>
 
@@ -424,7 +427,7 @@ Activation is complete. If `activation_steps_prepend` or `activation_steps_appen
       - End-to-end tests for critical flows added when story demands them
       - All tests pass (no regressions, new tests successful)
       - Code quality checks pass (linting, static analysis if configured)
-      - File List includes every new/modified/deleted file (relative paths)
+      - File List gate passes: `check_file_list.py --story <story-file> --require-file-list` exits 0
       - Dev Agent Record contains implementation notes
       - Change Log includes summary of changes
       - Only permitted story sections were modified
@@ -455,7 +458,7 @@ Activation is complete. If `activation_steps_prepend` or `activation_steps_appen
     <!-- Final validation gates -->
     <action if="any task is incomplete">HALT - Complete remaining tasks before marking ready for review</action>
     <action if="regression failures exist">HALT - Fix regression issues before completing</action>
-    <action if="File List is incomplete">HALT - Update File List with all changed files</action>
+    <action if="{{file_list_gate_exit_code}} != 0">HALT - File List gate failed; update File List with all changed files before marking ready for review</action>
     <action if="definition-of-done validation fails">HALT - Address DoD failures before completing</action>
   </step>
 

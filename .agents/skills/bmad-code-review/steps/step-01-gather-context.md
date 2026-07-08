@@ -3,6 +3,7 @@ diff_output: '' # set at runtime
 spec_file: '' # set at runtime (path or empty)
 review_mode: '' # set at runtime: "full" or "no-spec"
 story_key: '' # set at runtime when discovered from sprint status
+file_list_gate_result: '' # set at runtime by the pre-review File List gate
 ---
 
 # Step 1: Gather Context
@@ -71,13 +72,20 @@ story_key: '' # set at runtime when discovered from sprint status
 
 5. If `{review_mode}` = `"full"` and the file at `{spec_file}` has a `context` field in its frontmatter listing additional docs, load each referenced document. Warn the user about any docs that cannot be found.
 
-6. Sanity check: if `{diff_output}` exceeds approximately 3000 lines, warn the user and offer to chunk the review by file group.
+6. **Pre-review File List gate.** If `{review_mode}` = `"full"`, `{spec_file}` is set, version control is available, and the story frontmatter has `baseline_commit`, run `python3 {project-root}/_bmad/scripts/check_file_list.py --story {spec_file} --require-file-list` before proceeding to review.
+   - Store the command output and exit code in `{file_list_gate_result}`.
+   - Exit `0`: proceed. If output contains phantom warnings, include that warning in the CHECKPOINT.
+   - Exit `1`: changed files are missing from the story File List. HALT before review. Report the `UNDECLARED` paths and require the story File List to be updated, or the undeclared files reverted, before continuing.
+   - Exit `2`: the gate could not run. HALT before review and report the execution error.
+   - Skip this gate only for `"no-spec"` review mode, no `baseline_commit`, or unavailable version control; record the skip reason in `{file_list_gate_result}`.
+
+7. Sanity check: if `{diff_output}` exceeds approximately 3000 lines, warn the user and offer to chunk the review by file group.
    - If the user opts to chunk: agree on the first group, narrow `{diff_output}` accordingly, and list the remaining groups for the user to note for follow-up runs.
    - If the user declines: proceed as-is with the full diff.
 
 ### CHECKPOINT
 
-Present a summary before proceeding: diff stats (files changed, lines added/removed), `{review_mode}`, and loaded spec/context docs (if any). HALT and wait for user confirmation to proceed.
+Present a summary before proceeding: diff stats (files changed, lines added/removed), `{review_mode}`, loaded spec/context docs (if any), and `{file_list_gate_result}`. HALT and wait for user confirmation to proceed.
 
 
 ## NEXT
