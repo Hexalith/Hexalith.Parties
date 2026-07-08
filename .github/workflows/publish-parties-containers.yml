@@ -51,15 +51,19 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-nuget-
 
-      - name: Restore
-        run: dotnet restore "$SOLUTION_FILE"
+      - name: Restore Parties container projects
+        run: |
+          set -euo pipefail
+          dotnet restore src/Hexalith.Parties/Hexalith.Parties.csproj -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false
+          dotnet restore src/Hexalith.Parties.Mcp/Hexalith.Parties.Mcp.csproj -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false
+          dotnet restore src/Hexalith.Parties.UI/Hexalith.Parties.UI.csproj -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false
 
       - name: Build Parties container projects
         run: |
           set -euo pipefail
-          dotnet build src/Hexalith.Parties/Hexalith.Parties.csproj --configuration Release --no-restore
-          dotnet build src/Hexalith.Parties.Mcp/Hexalith.Parties.Mcp.csproj --configuration Release --no-restore
-          dotnet build src/Hexalith.Parties.UI/Hexalith.Parties.UI.csproj --configuration Release --no-restore
+          dotnet build src/Hexalith.Parties/Hexalith.Parties.csproj --configuration Release --no-restore -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false
+          dotnet build src/Hexalith.Parties.Mcp/Hexalith.Parties.Mcp.csproj --configuration Release --no-restore -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false
+          dotnet build src/Hexalith.Parties.UI/Hexalith.Parties.UI.csproj --configuration Release --no-restore -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false
 
       - name: Login to Zot
         uses: docker/login-action@v4

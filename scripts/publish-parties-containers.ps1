@@ -89,6 +89,8 @@ function Resolve-MinVerImageTag {
         $AppHostProject,
         "-t:Build",
         "-p:Configuration=Release",
+        "-p:UseHexalithProjectReferences=true",
+        "-p:UseNuGetDeps=false",
         "-getProperty:Version"
     )
 
@@ -162,7 +164,9 @@ foreach ($image in $PartiesImages) {
         "/t:PublishContainer",
         "-p:ContainerRegistry=$Registry",
         "-p:ContainerRepository=$($image.Repository)",
-        "-p:ContainerImageTag=$ImageTag"
+        "-p:ContainerImageTag=$ImageTag",
+        "-p:UseHexalithProjectReferences=true",
+        "-p:UseNuGetDeps=false"
     )
 }
 
