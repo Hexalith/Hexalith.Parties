@@ -91,6 +91,7 @@ function Resolve-MinVerImageTag {
         "-p:Configuration=Release",
         "-p:UseHexalithProjectReferences=true",
         "-p:UseNuGetDeps=false",
+        "-p:HexalithMemoriesFromSource=false",
         "-getProperty:Version"
     )
 
@@ -166,7 +167,8 @@ foreach ($image in $PartiesImages) {
         "-p:ContainerRepository=$($image.Repository)",
         "-p:ContainerImageTag=$ImageTag",
         "-p:UseHexalithProjectReferences=true",
-        "-p:UseNuGetDeps=false"
+        "-p:UseNuGetDeps=false",
+        "-p:HexalithMemoriesFromSource=false"
     )
 }
 
