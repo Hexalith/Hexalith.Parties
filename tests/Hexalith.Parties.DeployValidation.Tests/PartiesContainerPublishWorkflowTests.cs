@@ -17,6 +17,7 @@ public sealed class PartiesContainerPublishWorkflowTests
         workflow.ShouldContain("src/Hexalith.Parties/Hexalith.Parties.csproj");
         workflow.ShouldContain("src/Hexalith.Parties.Mcp/Hexalith.Parties.Mcp.csproj");
         workflow.ShouldContain("src/Hexalith.Parties.UI/Hexalith.Parties.UI.csproj");
+        workflow.ShouldContain("src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj");
         workflow.ShouldContain("-p:UseHexalithProjectReferences=true");
         workflow.ShouldContain("-p:UseNuGetDeps=false");
         workflow.ShouldContain("-p:HexalithMemoriesFromSource=false");
@@ -47,6 +48,8 @@ public sealed class PartiesContainerPublishWorkflowTests
         script.ShouldContain("\"--arch\"");
         script.ShouldContain("\"x64\"");
         script.ShouldContain("\"msbuild\"");
+        script.ShouldContain("\"restore\"");
+        script.ShouldContain("$AppHostProject");
         script.ShouldContain("-getProperty:Version");
         script.ShouldContain("$normalized.Contains(\"+dirty\"");
         script.ShouldContain("staging-latest");

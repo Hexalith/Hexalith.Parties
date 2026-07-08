@@ -84,6 +84,14 @@ function Resolve-MinVerImageTag {
         Fail "Cannot resolve image tag because AppHost project is missing: $AppHostProject"
     }
 
+    Invoke-Checked "dotnet" @(
+        "restore",
+        $AppHostProject,
+        "-p:UseHexalithProjectReferences=true",
+        "-p:UseNuGetDeps=false",
+        "-p:HexalithMemoriesFromSource=false"
+    )
+
     $arguments = @(
         "msbuild",
         $AppHostProject,
