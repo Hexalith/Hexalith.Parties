@@ -668,8 +668,8 @@ public class MemoriesPartySearchServiceTests
             int depth = 2,
             string? caseId = null,
             IReadOnlyList<EdgeType>? edgeTypes = null,
-            CancellationToken ct = default,
-            int? tokenBudget = null)
+            int? tokenBudget = null,
+            CancellationToken ct = default)
         {
             TraverseCalls++;
             LastStartNodeId = startNodeId;
@@ -698,8 +698,8 @@ public class MemoriesPartySearchServiceTests
             int depth = 2,
             string? caseId = null,
             IReadOnlyList<EdgeType>? edgeTypes = null,
-            CancellationToken ct = default,
-            int? tokenBudget = null)
+            int? tokenBudget = null,
+            CancellationToken ct = default)
             => Task.FromException<TraversalResult>(ex);
     }
 }
