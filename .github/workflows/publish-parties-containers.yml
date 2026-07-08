@@ -11,6 +11,16 @@ on:
     branches: [main]
     tags:
       - 'v*'
+    paths:
+      - '.github/workflows/publish-parties-containers.yml'
+      - 'scripts/publish-parties-containers.ps1'
+      - 'src/**'
+      - 'references/**'
+      - 'Directory.Build.props'
+      - 'Directory.Build.targets'
+      - 'Directory.Packages.props'
+      - 'global.json'
+      - '*.slnx'
 
 permissions:
   contents: read

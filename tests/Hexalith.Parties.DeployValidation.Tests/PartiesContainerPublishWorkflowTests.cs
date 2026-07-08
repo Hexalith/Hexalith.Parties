@@ -18,6 +18,11 @@ public sealed class PartiesContainerPublishWorkflowTests
         workflow.ShouldContain("src/Hexalith.Parties.Mcp/Hexalith.Parties.Mcp.csproj");
         workflow.ShouldContain("src/Hexalith.Parties.UI/Hexalith.Parties.UI.csproj");
         workflow.ShouldContain("src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj");
+        workflow.ShouldContain("paths:");
+        workflow.ShouldContain("'src/**'");
+        workflow.ShouldContain("'references/**'");
+        workflow.ShouldContain("'scripts/publish-parties-containers.ps1'");
+        workflow.ShouldContain("'*.slnx'");
         workflow.ShouldContain("-p:UseHexalithProjectReferences=true");
         workflow.ShouldContain("-p:UseNuGetDeps=false");
         workflow.ShouldContain("-p:HexalithMemoriesFromSource=false");
