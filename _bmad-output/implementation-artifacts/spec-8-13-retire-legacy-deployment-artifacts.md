@@ -31,3 +31,5 @@ Remove retired deployment artifacts that no longer match the current operating m
 - `pwsh -NoProfile -File scripts/test.ps1 -Lane ci -Configuration Release`.
 - `pwsh -NoProfile -File scripts/publish-parties-containers.ps1 -DryRun`.
 - Registry API-key prefix scan returns no matches.
+- GitHub Actions `Publish Parties Containers` run `28947711733` publishes tag `0.0.0-preview.0.667`.
+- Zot manifest HEAD checks for `parties`, `parties-mcp`, and `parties-ui` at `0.0.0-preview.0.667` return `HTTP 200`.

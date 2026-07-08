@@ -76,8 +76,20 @@ Validation should prove:
 - Artifact conflict review: complete.
 - Path forward: direct implementation approved.
 - Acceptance alignment: complete.
-- Final validation: pending until local commands and pushed GitHub Actions run complete.
+- Final validation: complete for local checks and Zot publication; GitHub Test Pipeline remains blocked by the pre-existing package-mode restore gap for unpublished Hexalith packages.
 
 ## 5. Resolution
 
 Approved and implemented as Story 8.13.
+
+Validation evidence:
+
+- Active-file sweep for retired deployment paths: no matches.
+- Registry API-key prefix scan: no matches.
+- `git diff --check`: passed.
+- `scripts/test.ps1 -Lane ci -Configuration Release`: passed, 3 tests.
+- `Hexalith.Parties.Sample.Tests`: passed in source-mode, 58 tests.
+- `Hexalith.Parties.UI.Tests`: passed in source-mode, 324 tests.
+- `scripts/publish-parties-containers.ps1 -DryRun`: passed after rebase, tag `0.0.0-preview.0.667`.
+- GitHub Actions `Publish Parties Containers` run `28947711733`: passed and published tag `0.0.0-preview.0.667`.
+- Zot manifest HEAD checks for `parties`, `parties-mcp`, and `parties-ui` at `0.0.0-preview.0.667`: all returned `HTTP 200`.
