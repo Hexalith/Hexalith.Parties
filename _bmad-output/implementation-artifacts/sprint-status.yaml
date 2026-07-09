@@ -1,5 +1,5 @@
 # generated: 2026-06-21T18:55:59+02:00
-# last_updated: 2026-07-08T18:26:13+02:00
+# last_updated: 2026-07-09T13:25:25+02:00
 # project: parties
 # project_key: NOKEY
 # tracking_system: file-system
@@ -41,7 +41,7 @@
 # - Retrospective appends its action items to action_items; sprint-status surfaces open ones
 
 generated: 2026-06-21T18:55:59+02:00
-last_updated: 2026-07-08T18:26:13+02:00
+last_updated: 2026-07-09T13:25:25+02:00
 project: parties
 project_key: NOKEY
 tracking_system: file-system
@@ -146,7 +146,7 @@ development_status:
   8-3-platform-api-prerequisites: done
   8-4-leaf-project-retirement: done
   8-5-eventstore-domain-service-sdk-host-cutover: done
-  8-6-projection-and-query-sdk-migration: ready-for-dev
+  8-6-projection-and-query-sdk-migration: blocked
   8-7-data-protection-extraction: backlog
   8-8-client-mcp-apphost-build-and-deploy-cleanup: backlog
   8-9-ui-frontcomposer-and-fluent-consolidation: backlog

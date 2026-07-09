@@ -11,7 +11,7 @@ eventstore_pin_at_creation: 0f428d0c914f2151aab15bb262f956a9630041dc
 
 # Story 8.6: Projection and query SDK migration
 
-Status: ready-for-dev
+Status: blocked
 
 <!-- Note: This story is ready for dev workflow intake, but production source migration is hard-gated by the Story 8.3 projection/query SDK matrix row. -->
 
@@ -38,9 +38,9 @@ so that Parties keeps only domain folds, query semantics, and tenant guardrails.
 
 - [ ] Establish the hard prerequisite gate before editing production source (AC: 1, 9, 10)
   - [ ] Read `_bmad-output/implementation-artifacts/story-8-3-platform-api-prerequisite-matrix.md` and confirm the "EventStore projection/query SDK" row is no longer `needs-additive-api`.
-  - [ ] Record the current `references/Hexalith.EventStore` commit in the matrix before migration; story creation observed `0f428d0c914f2151aab15bb262f956a9630041dc`, which is newer than the Story 8.5 proof pin.
-  - [ ] If owner proof is not locally available, mark this story blocked in the Dev Agent Record and sprint status; do not edit production source.
-  - [ ] Preserve root-declared submodule discipline: do not run recursive submodule commands or initialize nested submodules.
+  - [x] Record the current `references/Hexalith.EventStore` commit in the matrix before migration; story creation observed `0f428d0c914f2151aab15bb262f956a9630041dc`, which is newer than the Story 8.5 proof pin.
+  - [x] If owner proof is not locally available, mark this story blocked in the Dev Agent Record and sprint status; do not edit production source.
+  - [x] Preserve root-declared submodule discipline: do not run recursive submodule commands or initialize nested submodules.
 
 - [ ] Build the projection/query parity harness before deleting rollback paths (AC: 2, 3, 4, 5, 6, 7)
   - [ ] Add tests that compare current actor paths and SDK paths for replay-from-zero, duplicate delivery, out-of-order delivery, stale/degraded fallback, erased-party exclusion, cursor compatibility, and processing-record reads.
@@ -196,10 +196,30 @@ Add direct `-class` runs for the new SDK parity harness. If topology or Docker-b
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+GPT-5 Codex
 
 ### Debug Log References
 
+- 2026-07-09T13:25:25+02:00 - Loaded sprint status and selected requested story `8-6-projection-and-query-sdk-migration` from `_bmad-output/implementation-artifacts/sprint-status.yaml`.
+- 2026-07-09T13:25:25+02:00 - Read `_bmad-output/implementation-artifacts/story-8-3-platform-api-prerequisite-matrix.md`; the `EventStore projection/query SDK` row still has status `needs-additive-api`.
+- 2026-07-09T13:25:25+02:00 - Ran `git -C references/Hexalith.EventStore rev-parse HEAD`; current pin is `0f428d0c914f2151aab15bb262f956a9630041dc`, matching `eventstore_pin_at_creation`.
+- 2026-07-09T13:25:25+02:00 - Halted before production source edits per AC1 and the story block-if rule. No submodule update/init command was run.
+
 ### Completion Notes List
 
+- Source migration is blocked. The Story 8.3 `EventStore projection/query SDK` matrix row remains `needs-additive-api`, so owner-approved additive parity or explicit already-available proof is not locally recorded for the required G3 read-model erasure hooks, G10 index batching, G6 freshness mapping, duplicate/out-of-order replay, full rebuild verification, and cursor scope compatibility.
+- Recorded the current EventStore submodule pin in the Story 8.3 matrix and moved Story 8.6 tracking to `blocked`.
+- No production source files were edited and no tests were run because the story requires halting before source migration while the prerequisite row remains unresolved.
+
 ### File List
+
+**Modified**
+- `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
+- `_bmad-output/implementation-artifacts/story-8-3-platform-api-prerequisite-matrix.md`
+- `_bmad-output/implementation-artifacts/sprint-status.yaml`
+
+## Change Log
+
+| Date | Version | Description | Author |
+|------|---------|-------------|--------|
+| 2026-07-09 | 0.1 | Blocked Story 8.6 at the prerequisite gate because the Story 8.3 `EventStore projection/query SDK` row remains `needs-additive-api`; recorded the current EventStore pin and preserved all production source rollback paths. | GPT-5 Codex (dev-story) |
