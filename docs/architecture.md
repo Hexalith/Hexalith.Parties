@@ -204,7 +204,7 @@ src/
   Hexalith.Parties.Testing/        # test utilities
 tests/    # xUnit v3 projects (unit, integration, topology, CI)
 samples/  # Hexalith.Parties.Sample — subscriber reference
-scripts/  # local test runner and Parties container publish helper
+scripts/  # local test runner, package validation, and Parties container publish helper
 ```
 
 ---
@@ -212,7 +212,7 @@ scripts/  # local test runner and Parties container publish helper
 ## 11. Testing & CI
 
 - **.NET test projects plus the Playwright e2e workspace**, uniformly **xUnit v3** for .NET tests (Shouldly + NSubstitute; bunit for Blazor). Lanes via `scripts/test.ps1 -Lane {unit|integration|topology|ci|all|coverage}`. `Hexalith.Parties.IntegrationTests` spins up the **full Aspire topology** (`Aspire.Hosting.Testing`), gracefully skipping when Docker/DAPR is absent; `Hexalith.Parties.Ci.Tests` statically validates the current GitHub Actions container publication contract. Architectural fitness tests pin contract/dependency boundaries.
-- **CI:** `.github/workflows/test.yml` — `lint` (build with warnings-as-errors + build-gate script) → `test` (4 parallel shards) and `ui-a11y` → `contract-test` (Pact readiness) → `report` (quality gate). Submodules checked out **root-repository submodules only, never recursive**. See [ci.md](ci.md), [build-gate.md](build-gate.md), [ci-secrets-checklist.md](ci-secrets-checklist.md).
+- **CI/CD:** `.github/workflows/ci.yml` delegates restore/build/package-consumer validation and test tiers to `Hexalith/Hexalith.Builds/.github/workflows/domain-ci.yml@main`; `.github/workflows/release.yml` delegates semantic-release, NuGet publishing, and Parties-owned container publishing to `Hexalith/Hexalith.Builds/.github/workflows/domain-release.yml@main`. Submodules are checked out as **root-repository submodules only, never recursive**. See [ci.md](ci.md), [build-gate.md](build-gate.md), [ci-secrets-checklist.md](ci-secrets-checklist.md).
 
 ---
 

@@ -100,9 +100,18 @@ Hexalith.Parties/
 ├── scripts/
 │   ├── test.ps1                       # test-lane runner (unit|integration|topology|ci|all|coverage)
 │   ├── publish-parties-containers.ps1 # Parties-only Zot container publication helper
+│   ├── pack-release-packages.py       # semantic-release NuGet package packing
+│   ├── validate-nuget-packages.py     # package metadata/boundary validation
+│   ├── validate-consumer-package-references.py # package-only consumer smoke validation
+│   ├── validate-release-secrets.sh    # release secret preflight
 │   └── check-no-warning-override.sh   # build-gate regression guard (no warnings-as-errors override)
 │
-├── .github/workflows/test.yml         # CI: lint → test (4 shards) + ui-a11y → contract-test → report
+├── .github/workflows/ci.yml           # shared Hexalith domain CI
+├── .github/workflows/release.yml      # shared Hexalith domain release
+├── .github/workflows/codeql.yml       # shared CodeQL
+├── .github/workflows/commitlint.yml   # shared commitlint
+├── .github/workflows/dependency-review.yml # shared dependency review
+├── .github/workflows/rc-gate.yml      # root gitlink release-candidate gate
 └── docs/                              # ← you are here (20 .md files + generated docs + this index)
 ```
 
@@ -138,4 +147,4 @@ git submodule update --init references/Hexalith.Builds references/Hexalith.Commo
 | Auth / tenancy / compliance | `src/Hexalith.Parties/{Authentication,Authorization,Compliance,Middleware}` |
 | GDPR encryption/erasure | `src/Hexalith.Parties.Security/` |
 | Local topology / DAPR wiring | `src/Hexalith.Parties.AppHost/` |
-| Container publication | `.github/workflows/publish-parties-containers.yml`, `scripts/publish-parties-containers.ps1` |
+| Container publication | `.github/workflows/release.yml`, `scripts/publish-parties-containers.ps1` |

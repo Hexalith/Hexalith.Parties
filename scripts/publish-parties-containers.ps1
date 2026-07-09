@@ -135,8 +135,8 @@ function New-ZotManifestHeaders {
         Accept = "application/vnd.oci.image.manifest.v1+json, application/vnd.docker.distribution.manifest.v2+json"
     }
 
-    $username = $env:ZOT_REGISTRY_USERNAME
-    $apiKey = $env:ZOT_REGISTRY_API_KEY
+    $username = $env:HEXALITH_ZOT_USERNAME
+    $apiKey = $env:HEXALITH_ZOT_API_KEY
     if (-not [string]::IsNullOrWhiteSpace($username) -and -not [string]::IsNullOrWhiteSpace($apiKey)) {
         $bytes = [System.Text.Encoding]::UTF8.GetBytes("${username}:$apiKey")
         $headers.Authorization = "Basic " + [Convert]::ToBase64String($bytes)
@@ -151,7 +151,7 @@ function Assert-ZotManifest([string]$Repository, [string]$Tag) {
         Invoke-WebRequest -Uri $uri -Method Head -Headers (New-ZotManifestHeaders) -TimeoutSec 30 | Out-Null
     }
     catch {
-        Fail "Zot manifest verification failed for ${Repository}:$Tag at $uri. Check repository permissions and ZOT_REGISTRY_USERNAME/ZOT_REGISTRY_API_KEY."
+        Fail "Zot manifest verification failed for ${Repository}:$Tag at $uri. Check repository permissions and HEXALITH_ZOT_USERNAME/HEXALITH_ZOT_API_KEY."
     }
 }
 

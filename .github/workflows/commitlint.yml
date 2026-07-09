@@ -1,0 +1,16 @@
+name: Commitlint
+
+on:
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: commitlint-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  commitlint:
+    uses: Hexalith/Hexalith.Builds/.github/workflows/commitlint.yml@main

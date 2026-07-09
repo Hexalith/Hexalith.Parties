@@ -1,0 +1,44 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: '0 2 * * *'
+  repository_dispatch:
+    types: [contract_requiring_verification_published]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  ci:
+    uses: Hexalith/Hexalith.Builds/.github/workflows/domain-ci.yml@main
+    with:
+      solution: Hexalith.Parties.slnx
+      dapr-version: '1.18.0'
+      run-consumer-validation: true
+      run-coverage-gate: false
+      unit-test-projects: |
+        tests/Hexalith.Parties.Contracts.Tests
+        tests/Hexalith.Parties.Authentication.Tests
+        tests/Hexalith.Parties.Client.Tests
+        tests/Hexalith.Parties.Server.Tests
+        tests/Hexalith.Parties.Projections.Tests
+        tests/Hexalith.Parties.Security.Tests
+        tests/Hexalith.Parties.AdminPortal.Tests
+        tests/Hexalith.Parties.ConsumerPortal.Tests
+        tests/Hexalith.Parties.UI.Tests
+        tests/Hexalith.Parties.Picker.Tests
+        tests/Hexalith.Parties.Mcp.Tests
+      integration-test-projects: |
+        tests/Hexalith.Parties.Tests
+        tests/Hexalith.Parties.Sample.Tests
+        tests/Hexalith.Parties.Ci.Tests
+      aspire-test-project: tests/Hexalith.Parties.IntegrationTests

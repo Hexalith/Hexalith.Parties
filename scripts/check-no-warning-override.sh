@@ -25,7 +25,7 @@
 # scripts/ that re-introduces the override or nested-submodule init MUST be
 # detected.
 #
-# Invoked from .github/workflows/test.yml::lint and from local pre-push hooks.
+# Invoked from the shared CI workflow and from local pre-push hooks.
 # See docs/build-gate.md for the gate policy.
 set -euo pipefail
 

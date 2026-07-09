@@ -6,12 +6,13 @@ Configure these under GitHub repository settings: Secrets and variables, Actions
 
 No secrets are required for the current .NET build and test jobs.
 
-## Required For Parties-only Zot Container Publish
+## Required For Release
 
-Configure these before running `.github/workflows/publish-parties-containers.yml`:
+Configure these before running `.github/workflows/release.yml`:
 
-- `ZOT_REGISTRY_USERNAME`: Zot username / mapped Keycloak identity used by GitHub Actions. This is the username passed to `docker login registry.hexalith.com`.
-- `ZOT_REGISTRY_API_KEY`: Zot API key generated after Keycloak/OIDC login for that identity. The Zot API key replaces the password in Docker/.NET container publish authentication.
+- `NUGET_API_KEY`: NuGet API key used by semantic-release to publish Parties packages.
+- `HEXALITH_ZOT_USERNAME`: Zot username / mapped Keycloak identity used by GitHub Actions. This is the username passed to `docker login registry.hexalith.com`.
+- `HEXALITH_ZOT_API_KEY`: Zot API key generated after Keycloak/OIDC login for that identity. The Zot API key replaces the password in Docker/.NET container publish authentication.
 
 The publishing identity must have rights to create/update these repositories:
 

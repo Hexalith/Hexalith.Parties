@@ -1,48 +1,47 @@
-# CI Pipeline
+# CI/CD Pipeline
 
-Hexalith.Parties uses GitHub Actions for the main quality pipeline in `.github/workflows/test.yml`.
+Hexalith.Parties uses GitHub Actions with shared Hexalith.Builds reusable workflows.
 
-## Triggers
+## Workflows
 
-- Pull requests targeting `main` or `develop`.
-- Pushes to `main` or `develop`.
-- Pact Broker `repository_dispatch` events with type `contract_requiring_verification_published`.
+- `.github/workflows/ci.yml` delegates to `Hexalith/Hexalith.Builds/.github/workflows/domain-ci.yml@main`.
+- `.github/workflows/release.yml` delegates to `Hexalith/Hexalith.Builds/.github/workflows/domain-release.yml@main`.
+- `.github/workflows/commitlint.yml` delegates Conventional Commit validation for pull requests.
+- `.github/workflows/dependency-review.yml` delegates dependency review for pull requests.
+- `.github/workflows/codeql.yml` delegates C# CodeQL scanning.
+- `.github/workflows/rc-gate.yml` remains Parties-specific and validates root gitlink release-candidate signoff.
 
-## Jobs
+## CI
 
-- `lint`: checks out root-repository submodules under `references/`, restores the solution, runs a Release build with analyzers, and runs the Story 9.8 build-gate regression guard (`scripts/check-no-warning-override.sh`). See [`docs/build-gate.md`](build-gate.md) for the gate policy.
-- `test`: runs the .NET test projects in four matrix shards with `fail-fast: false`; each project is executed by path with `dotnet test <projectPath>`. Within a shard the loop continues after a failing project, records a PASS/FAIL row per project in the job step summary, and fails the step at the end if any project failed — so one run reports every failing project instead of stopping at the first blocker.
-- `ui-a11y`: builds the UI project and UI bUnit test project sequentially, runs the UI test project by path, then runs the Playwright accessibility workspace.
-- `contract-test`: runs Pact.js contract scripts when they exist. Until the Pact framework is scaffolded, the job records a readiness gap in the GitHub step summary.
-- `Quality Gate`: fails the workflow unless lint/build, test shards, and UI accessibility pass, and contract tests either pass or are intentionally skipped.
+CI runs on pushes and pull requests to `main`, scheduled nightly runs, and Pact Broker `repository_dispatch` events with type `contract_requiring_verification_published`.
 
-## Parties Container Publish
+The shared CI workflow restores and builds `Hexalith.Parties.slnx`, initializes only root-declared submodules, runs package consumer validation, and executes the configured test tiers:
 
-The `Publish Parties Containers` workflow in `.github/workflows/publish-parties-containers.yml` publishes only the Parties-owned container images to Zot:
+- Tier 1: unit, UI, package, and boundary tests.
+- Tier 2: integration and CI contract tests.
+- Tier 3: Aspire topology tests through `tests/Hexalith.Parties.IntegrationTests`.
 
-- `registry.hexalith.com/parties`
-- `registry.hexalith.com/parties-mcp`
-- `registry.hexalith.com/parties-ui`
+Coverage is intentionally not enabled yet in `ci.yml`; the local `coverage` lane is still blocked under the current Microsoft.Testing.Platform/xUnit v3 setup until an MTP-compatible coverage path is configured.
 
-The workflow runs on pushes to `main`, `v*` tags, and manual dispatch. It restores the solution, builds the three container projects, authenticates to `registry.hexalith.com` with `ZOT_REGISTRY_USERNAME` and `ZOT_REGISTRY_API_KEY`, then calls `scripts/publish-parties-containers.ps1`.
+## Release
 
-The workflow uses immutable SemVer/MinVer image tags only. Git tags may keep their leading `v`, but image tags omit it. Mutable tags such as `latest` are not allowed. The script verifies each pushed manifest through the Zot v2 API after publication.
+Release runs on pushes to `main` through semantic-release. The release workflow:
 
-This workflow does not apply runtime deployment manifests and does not publish EventStore, Tenants, Memories, Sample, Redis, or FalkorDB images. Full runtime deployment orchestration is owned outside this repository and should consume the immutable image tags published to Zot.
+- installs npm dependencies from `package-lock.json`;
+- restores and builds `Hexalith.Parties.slnx`;
+- runs the configured Tier 1 and Tier 2 test projects;
+- packs and validates Parties NuGet packages through `scripts/pack-release-packages.py`, `scripts/validate-nuget-packages.py`, and `scripts/validate-consumer-package-references.py`;
+- publishes NuGet packages with `NUGET_API_KEY`;
+- publishes exactly these Parties-owned containers to Zot through the shared release publisher:
+  - `registry.hexalith.com/parties`
+  - `registry.hexalith.com/parties-mcp`
+  - `registry.hexalith.com/parties-ui`
 
-Required registry secrets are listed in [`docs/ci-secrets-checklist.md`](ci-secrets-checklist.md). Zot currently authenticates browser users through Keycloak/OIDC and supports Zot API keys for automation; GitHub Actions must use the API key as the password value and must not store a human SSO password.
-
-## Submodules
-
-The checkout step uses `submodules: true`, which initializes root-repository submodules under `references/` only. Do not change this to recursive checkout unless nested submodules are explicitly required.
-
-## Artifacts
-
-Each test shard uploads `TestResults/` with TRX logs. XPlat Code Coverage is disabled under Microsoft.Testing.Platform/xUnit v3 until an MTP-compatible coverage extension is configured. Artifacts are retained for 30 days.
+The release workflow does not apply runtime deployment manifests and does not publish EventStore, Tenants, Memories, Sample, Redis, or FalkorDB images. Runtime deployment orchestration is owned outside this repository and consumes immutable release tags from Zot.
 
 ## Local Parity
 
-Use these commands before pushing CI changes:
+Use these commands before pushing CI/CD changes:
 
 ```powershell
 dotnet restore Hexalith.Parties.slnx
@@ -51,37 +50,23 @@ pwsh -NoProfile -File scripts/test.ps1 -Lane unit -Configuration Release
 pwsh -NoProfile -File scripts/test.ps1 -Lane all -Configuration Release
 ```
 
-To reproduce the CI shard evidence locally — continue past a failing project and write inspectable TRX + coverage output — add `-ContinueOnFailure -ResultsDirectory TestResults`:
+To reproduce local test-lane evidence and continue past a failing project:
 
 ```powershell
 pwsh -NoProfile -File scripts/test.ps1 -Lane all -ContinueOnFailure -ResultsDirectory TestResults
 ```
 
-CI installs .NET SDK `10.0.301` with `actions/setup-dotnet`, matching `global.json`.
+CI and default local commands run in package mode (`UseNuGetDeps=true`, `UseHexalithProjectReferences=false`). If unpublished Hexalith packages block restore, record the package-mode blocker and rerun source-mode triage with `-p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false` only as diagnostic evidence.
 
-The `.slnx` is used for restore/build only. Test lanes must run project paths explicitly, matching the local lane runner; do not replace them with solution-level `dotnet test`.
+## Secrets
 
-CI and the default local commands run in package mode (`UseNuGetDeps=true`, `UseHexalithProjectReferences=false`). If unpublished Hexalith packages block restore, record the package-mode blocker and rerun source-mode triage with `-p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false` only as diagnostic evidence; release/package validation must return to package mode.
-
-For focused xUnit v3 reruns, build the target project and invoke the test executable directly with single-dash filters:
-
-```powershell
-dotnet build tests/Hexalith.Parties.Server.Tests/Hexalith.Parties.Server.Tests.csproj --configuration Release --no-restore -m:1 -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0
-dotnet tests/Hexalith.Parties.Server.Tests/bin/Release/net10.0/Hexalith.Parties.Server.Tests.dll -class Fully.Qualified.TestClass
-dotnet tests/Hexalith.Parties.Server.Tests/bin/Release/net10.0/Hexalith.Parties.Server.Tests.dll -method Fully.Qualified.TestClass.TestMethod
-```
-
-Package compatibility tests in `Hexalith.Parties.Client.Tests` and `Hexalith.Parties.Contracts.Tests` may contact NuGet repository signature metadata. If the environment blocks `api.nuget.org:443`, record the package lane as blocked and rerun it in a network-enabled package-validation environment before release.
-
-`dotnet format --verify-no-changes` is not part of this initial gate because the current repository baseline has pre-existing whitespace drift in sample and test files.
+Required release secrets are listed in [ci-secrets-checklist.md](ci-secrets-checklist.md). Zot automation uses `HEXALITH_ZOT_USERNAME` and `HEXALITH_ZOT_API_KEY`; the API key is generated after Zot Keycloak/OIDC login and replaces the password for Docker-compatible clients.
 
 ## Pact Readiness
 
-The TEA configuration enables Pact.js utility guidance, but this repository does not currently expose the root package scripts expected by the contract stage. To make the gate enforce contracts, scaffold the Pact framework and add:
+Pact.js scripts are not currently exposed at the repository root. To make Pact contract gates enforceable later, scaffold the Pact framework and add:
 
 - `test:pact:consumer`
 - `publish:pact`
 - `test:pact:provider:remote:contract`
 - `can:i:deploy:provider`
-
-When enabled, configure the secrets listed in `docs/ci-secrets-checklist.md`.

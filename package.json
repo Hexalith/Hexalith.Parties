@@ -1,0 +1,15 @@
+{
+  "name": "hexalith-parties",
+  "version": "0.0.0",
+  "private": true,
+  "description": "semantic-release configuration for Hexalith.Parties",
+  "devDependencies": {
+    "@commitlint/cli": "^21.1.0",
+    "@commitlint/config-conventional": "^21.1.0",
+    "@semantic-release/commit-analyzer": "^13.0.1",
+    "@semantic-release/exec": "^7.1.0",
+    "@semantic-release/github": "^12.0.8",
+    "@semantic-release/release-notes-generator": "^14.1.1",
+    "semantic-release": "^25.0.5"
+  }
+}

@@ -20,16 +20,16 @@ All four steps must exit zero with **no** command-line warnings-as-errors overri
 
 ## CI enforcement
 
-`.github/workflows/test.yml::lint` runs the following steps on every PR and push to `main` / `develop`:
+`.github/workflows/ci.yml` delegates to the shared Hexalith domain CI workflow, which runs the following steps on every PR and push to `main`:
 
-1. Checkout with `submodules: true` (root-repository submodules only, not recursive).
+1. Checkout with root-repository submodules only, not recursive.
 2. Setup .NET SDK via `actions/setup-dotnet`.
 3. Cache NuGet packages keyed by `global.json`, `Directory.Packages.props`, `Directory.Build.props`, and every `*.csproj`.
 4. `dotnet restore Hexalith.Parties.slnx`.
 5. `dotnet build "$SOLUTION_FILE" --configuration Release --no-restore`.
-6. `bash scripts/check-no-warning-override.sh` (the regression guard).
+6. Package consumer validation and the configured test tiers.
 
-`scripts/check-no-warning-override.sh` greps active CI/build scripts (`.yml`, `.yaml`, `.ps1`, `.sh`, `.cmd`, `.bat`) outside `_bmad-output/`, `docs/`, `node_modules/`, `bin/`, and `obj/` for the override and nested-submodule patterns. Only the guard script itself is excluded by basename; the rest of `scripts/` is scanned so a future helper script that re-introduces a regression is still caught. The guard requires a git working tree (it refuses to run against an extracted tarball) and surfaces real grep errors (exit ≥ 2) instead of swallowing them. If any match is found, the lint job fails with a clear message and the entire workflow fails (downstream `test`, `contract-test`, and `Quality Gate` jobs depend on `lint`).
+`scripts/check-no-warning-override.sh` greps active CI/build scripts (`.yml`, `.yaml`, `.ps1`, `.sh`, `.cmd`, `.bat`) outside `_bmad-output/`, `docs/`, `node_modules/`, `bin/`, and `obj/` for the override and nested-submodule patterns. Only the guard script itself is excluded by basename; the rest of `scripts/` is scanned so a future helper script that re-introduces a regression is still caught. The guard requires a git working tree (it refuses to run against an extracted tarball) and surfaces real grep errors (exit >= 2) instead of swallowing them. If any match is found, the shared CI job fails with a clear message.
 
 ## Why this gate exists
 
