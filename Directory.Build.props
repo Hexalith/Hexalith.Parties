@@ -24,6 +24,8 @@
     <UseNuGetDeps Condition="'$(UseNuGetDeps)' == '' and '$(UseHexalithProjectReferences)' == 'true'">false</UseNuGetDeps>
     <UseNuGetDeps Condition="'$(UseNuGetDeps)' == ''">true</UseNuGetDeps>
     <HexalithCommonsFromSource Condition="'$(UseHexalithProjectReferences)' == 'true' and Exists('$(HexalithCommonsRoot)\src\libraries\Hexalith.Commons\Hexalith.Commons.csproj')">true</HexalithCommonsFromSource>
+    <HexalithCommonsHttpPackageVersion Condition="'$(HexalithCommonsHttpPackageVersion)' == ''">2.27.0</HexalithCommonsHttpPackageVersion>
+    <HexalithCommonsHttpFromSource Condition="'$(HexalithCommonsHttpFromSource)' == '' and Exists('$(HexalithCommonsRoot)\src\libraries\Hexalith.Commons.Http\Hexalith.Commons.Http.csproj')">true</HexalithCommonsHttpFromSource>
     <!-- Hexalith.Commons.ServiceDefaults is consumed from source when available because the
          corresponding package is not published to the public feed used by package-mode tests. -->
     <HexalithCommonsServiceDefaultsFromSource Condition="'$(HexalithCommonsServiceDefaultsFromSource)' == '' and Exists('$(HexalithCommonsRoot)\src\libraries\Hexalith.Commons.ServiceDefaults\Hexalith.Commons.ServiceDefaults.csproj')">true</HexalithCommonsServiceDefaultsFromSource>
@@ -56,6 +58,8 @@
     <Description>DAPR-native party management microservice for .NET</Description>
     <PackageTags>parties;crm;dapr;eventsourcing;cqrs;dotnet</PackageTags>
     <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageVersion Condition="'$(HexalithPartiesPackageVersion)' != ''">$(HexalithPartiesPackageVersion)</PackageVersion>
+    <MinVerVersionOverride Condition="'$(HexalithPartiesPackageVersion)' != ''">$(HexalithPartiesPackageVersion)</MinVerVersionOverride>
   </PropertyGroup>
 
   <!-- MinVer: Git tag-based SemVer versioning -->

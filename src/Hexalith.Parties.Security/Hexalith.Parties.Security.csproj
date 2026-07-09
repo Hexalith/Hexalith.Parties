@@ -6,8 +6,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Hexalith.Parties.Contracts\Hexalith.Parties.Contracts.csproj" />
-    <ProjectReference Include="$(HexalithCommonsRoot)\src\libraries\Hexalith.Commons.Http\Hexalith.Commons.Http.csproj" Condition="'$(HexalithCommonsFromSource)' == 'true'" />
-    <PackageReference Include="Hexalith.Commons.Http" Condition="'$(HexalithCommonsFromSource)' != 'true'" />
+    <ProjectReference Include="$(HexalithCommonsRoot)\src\libraries\Hexalith.Commons.Http\Hexalith.Commons.Http.csproj" Condition="'$(HexalithCommonsHttpFromSource)' == 'true'" />
+    <PackageReference Include="Hexalith.Commons.Http" Condition="'$(HexalithCommonsHttpFromSource)' != 'true'" />
     <ProjectReference Include="$(HexalithCommonsRoot)\src\libraries\Hexalith.Commons.UniqueIds\Hexalith.Commons.UniqueIds.csproj" Condition="'$(HexalithCommonsFromSource)' == 'true'" />
     <PackageReference Include="Hexalith.Commons.UniqueIds" Condition="'$(HexalithCommonsFromSource)' != 'true'" />
     <ProjectReference

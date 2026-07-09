@@ -42,6 +42,23 @@ FORBIDDEN_DEPENDENCY_FRAGMENTS = (
     ".AppHost",
 )
 
+EXPECTED_DEPENDENCY_VERSIONS = {
+    "Hexalith.Commons.Http": "2.27.0",
+}
+
+REQUIRED_COMMONS_HTTP_DEPENDENCY_PACKAGES = frozenset(
+    {
+        "Hexalith.Parties.Client",
+        "Hexalith.Parties.Security",
+    }
+)
+
+
+@dataclass(frozen=True)
+class DependencyMetadata:
+    package_id: str
+    version: str
+
 
 @dataclass(frozen=True)
 class PackageMetadata:
@@ -49,7 +66,7 @@ class PackageMetadata:
     version: str
     readme: str
     has_license: bool
-    dependencies: frozenset[str]
+    dependencies: frozenset[DependencyMetadata]
 
 
 def get_metadata(package_path: Path) -> PackageMetadata:
@@ -87,7 +104,10 @@ def get_metadata(package_path: Path) -> PackageMetadata:
             raise ValueError(f"{package_path.name}: readme file '{readme}' is not in the package")
 
         dependencies = frozenset(
-            dependency.attrib["id"].strip()
+            DependencyMetadata(
+                dependency.attrib["id"].strip(),
+                dependency.attrib.get("version", "").strip(),
+            )
             for dependency in find_elements(".//n:metadata/n:dependencies//n:dependency")
             if dependency.attrib.get("id", "").strip()
         )
@@ -98,16 +118,42 @@ def get_metadata(package_path: Path) -> PackageMetadata:
 def validate_dependency_boundaries(package_path: Path, metadata: PackageMetadata) -> None:
     """Validate package dependency metadata against the intended package boundaries."""
     forbidden_dependencies = sorted(
-        dependency
+        dependency.package_id
         for dependency in metadata.dependencies
-        if dependency in FORBIDDEN_DEPENDENCY_IDS
-        or any(fragment in dependency for fragment in FORBIDDEN_DEPENDENCY_FRAGMENTS)
+        if dependency.package_id in FORBIDDEN_DEPENDENCY_IDS
+        or any(fragment in dependency.package_id for fragment in FORBIDDEN_DEPENDENCY_FRAGMENTS)
     )
     if forbidden_dependencies:
         raise ValueError(
             f"{package_path.name}: dependency boundary includes host, samples, tests, or other forbidden projects: "
             f"{forbidden_dependencies}"
         )
+
+
+def validate_expected_dependency_versions(package_path: Path, metadata: PackageMetadata) -> None:
+    """Validate dependency versions that are coupled to source ProjectReference packaging."""
+    dependency_versions = {
+        dependency.package_id: sorted(
+            item.version for item in metadata.dependencies if item.package_id == dependency.package_id
+        )
+        for dependency in metadata.dependencies
+    }
+
+    for dependency_id, expected_version in EXPECTED_DEPENDENCY_VERSIONS.items():
+        versions = dependency_versions.get(dependency_id, [])
+        if versions and versions != [expected_version]:
+            raise ValueError(
+                f"{package_path.name}: expected {dependency_id} dependency version {expected_version}, found {versions}"
+            )
+
+    if metadata.package_id in REQUIRED_COMMONS_HTTP_DEPENDENCY_PACKAGES:
+        versions = dependency_versions.get("Hexalith.Commons.Http", [])
+        expected_version = EXPECTED_DEPENDENCY_VERSIONS["Hexalith.Commons.Http"]
+        if versions != [expected_version]:
+            raise ValueError(
+                f"{package_path.name}: expected Hexalith.Commons.Http dependency version {expected_version}, "
+                f"found {versions or '<missing>'}"
+            )
 
 
 def main() -> int:
@@ -135,6 +181,7 @@ def main() -> int:
         if not metadata.has_license:
             raise ValueError(f"{package.name}: missing license metadata")
         validate_dependency_boundaries(package, metadata)
+        validate_expected_dependency_versions(package, metadata)
 
     if package_ids != EXPECTED_PACKAGE_IDS:
         missing = sorted(EXPECTED_PACKAGE_IDS - package_ids)

@@ -5,7 +5,9 @@ author: Administrator
 workflow: bmad-correct-course
 mode: batch
 scope_classification: minor
-status: implemented
+status: approved
+implementation_status: implemented
+approved: 2026-07-09T13:21:55+02:00
 related:
   - references/Hexalith.AI.Tools/hexalith-llm-instructions.md
   - docs/development-guide.md
