@@ -2,7 +2,7 @@
 title: 'Fix CI restore for unpublished Commons Http dependency'
 type: 'bugfix'
 created: '2026-07-09'
-status: 'in-review'
+status: 'done'
 review_loop_iteration: 0
 baseline_commit: 'f22ebbb95af6b9ef9c80a10778290cb0d0b90cad'
 context:
@@ -74,3 +74,44 @@ Do not repurpose `HexalithCommonsFromSource` for this fix. That switch currently
 - `dotnet restore Hexalith.Parties.slnx -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0` -- expected: restore succeeds with no `NU1101` for `Hexalith.Commons.Http`.
 - `dotnet build Hexalith.Parties.slnx --configuration Release --no-restore -m:1 -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0` -- expected: build succeeds or reports only a pre-existing blocker unrelated to Commons Http routing.
 - `rm -rf ./nupkgs && python3 scripts/pack-release-packages.py ./nupkgs 0.0.0-ci-test && python3 scripts/validate-nuget-packages.py ./nupkgs && python3 scripts/validate-consumer-package-references.py ./nupkgs` -- expected: package metadata validates and consumer package smoke builds pass without `ProjectReference` leakage.
+
+## Suggested Review Order
+
+**Restore Routing**
+
+- Defaults target only the unpublished Commons.Http package when its source exists.
+  [Directory.Build.props:28](../../Directory.Build.props#L28)
+
+- The service host follows the dedicated Http source switch.
+  [Hexalith.Parties.csproj:21](../../src/Hexalith.Parties/Hexalith.Parties.csproj#L21)
+
+- The client package follows the same narrow Http switch.
+  [Hexalith.Parties.Client.csproj:9](../../src/Hexalith.Parties.Client/Hexalith.Parties.Client.csproj#L9)
+
+- The security package follows the same narrow Http switch.
+  [Hexalith.Parties.Security.csproj:9](../../src/Hexalith.Parties.Security/Hexalith.Parties.Security.csproj#L9)
+
+**Package Metadata**
+
+- Scoped Parties versioning avoids rewriting referenced project versions.
+  [Directory.Build.props:61](../../Directory.Build.props#L61)
+
+- Pack passes the Commons.Http support version separately from Parties versioning.
+  [pack-release-packages.py:50](../../scripts/pack-release-packages.py#L50)
+
+- Reference-level targets make Commons.Http report the published support version.
+  [Directory.Build.targets:2](../../references/Directory.Build.targets#L2)
+
+- Package validation checks the actual nuspec dependency version.
+  [validate-nuget-packages.py:133](../../scripts/validate-nuget-packages.py#L133)
+
+**CI Guards**
+
+- Static guard proves the fallback uses the same Commons root.
+  [CommonsHttpRestoreRoutingTests.cs:27](../../tests/Hexalith.Parties.Ci.Tests/CommonsHttpRestoreRoutingTests.cs#L27)
+
+- Project scanning covers src, samples, and tests.
+  [CommonsHttpRestoreRoutingTests.cs:113](../../tests/Hexalith.Parties.Ci.Tests/CommonsHttpRestoreRoutingTests.cs#L113)
+
+- Release guard ties pack and validation assertions to the shared version.
+  [CommonsHttpRestoreRoutingTests.cs:80](../../tests/Hexalith.Parties.Ci.Tests/CommonsHttpRestoreRoutingTests.cs#L80)
