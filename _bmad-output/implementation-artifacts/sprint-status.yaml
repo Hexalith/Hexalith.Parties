@@ -1,5 +1,5 @@
 # generated: 2026-06-21T18:55:59+02:00
-# last_updated: 2026-07-09T13:25:25+02:00
+# last_updated: 2026-07-09T16:02:17+02:00
 # project: parties
 # project_key: NOKEY
 # tracking_system: file-system
@@ -41,7 +41,7 @@
 # - Retrospective appends its action items to action_items; sprint-status surfaces open ones
 
 generated: 2026-06-21T18:55:59+02:00
-last_updated: 2026-07-09T13:25:25+02:00
+last_updated: 2026-07-09T16:02:17+02:00
 project: parties
 project_key: NOKEY
 tracking_system: file-system
@@ -249,7 +249,10 @@ action_items:
   - epic: 8
     action: "PRIORITY (G12, only `blocked` 8.3 row): route to Commons + Tenants release owners a decision to publish Hexalith.Commons.Http, Hexalith.Commons.ServiceDefaults, Hexalith.Tenants.Client, Hexalith.Tenants.Testing, OR bless source-mode CI. Hard-blocks 8.8/8.10 and the Story 8.1 package-mode build. Sequence first."
     owner: "Winston (Architect) + Hexalith.Commons & Hexalith.Tenants release owners"
-    status: open
+    # Routed 2026-07-09 via:
+    # _bmad-output/planning-artifacts/sprint-change-proposal-2026-07-09-g12-package-publishing-source-mode-ci.md.
+    # Still waiting on owner decision: publish the package set or bless source-mode CI.
+    status: in-progress
   - epic: 8
     action: "Route EventStore additive-API prerequisites to Hexalith.EventStore owners: projection/query parity (G3 erasure hooks, G10 index batching, G6 freshness) for 8.6; additive shared payload-protection engine package (G5: pdenc-v2 + json+pdenc-v1 read, IPersonalDataPolicy, IErasureStateProvider, golden harness) for 8.7; client envelope/freshness/error-code adapter (G6) for 8.6/8.8; degraded-response + AddEventStoreDaprHealthChecks parity (G1/G2) for 8.8. Additive/approved before any Parties deletion."
     owner: "Winston (Architect) + Hexalith.EventStore owners"
