@@ -453,3 +453,4 @@ src/Hexalith.Parties.AppHost/aspirate-state.json
 .claude/.story-automator-active
 .bmad-loop/runs/
 .bmad-loop/cache/
+.bmad-loop/policy.toml
