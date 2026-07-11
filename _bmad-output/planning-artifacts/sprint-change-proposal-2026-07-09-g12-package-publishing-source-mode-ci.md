@@ -5,8 +5,10 @@ author: Administrator
 workflow: bmad-correct-course
 mode: batch
 scope_classification: moderate
-status: routed
-approval_basis: "Administrator priority directive on 2026-07-09"
+status: complete
+approval_basis: "Administrator priority directives on 2026-07-09 and 2026-07-11"
+resolved: 2026-07-11
+resolution: package-publication
 related:
   - _bmad-output/planning-artifacts/sprint-change-proposal-2026-07-07-platform-prerequisite-routing.md
   - _bmad-output/implementation-artifacts/story-8-3-platform-api-prerequisite-matrix.md
@@ -16,6 +18,24 @@ related:
 ---
 
 # Sprint Change Proposal - G12 Package Publishing / Source-Mode CI Decision
+
+## Resolution Addendum - 2026-07-11
+
+The release-owner decision is resolved through the **package publication path**:
+
+- `Hexalith.Commons.Http` 2.28.0 and
+  `Hexalith.Commons.ServiceDefaults` 2.28.0 are published.
+- `Hexalith.Tenants.Client` 2.4.2 and `Hexalith.Tenants.Testing` 2.4.2 are
+  published at the repository pins; later 3.x releases are also present.
+- A restore with source references forced off resolved all four package identities.
+- The corresponding Release solution build succeeded with 0 warnings and 0
+  errors.
+
+The Story 8.3 G12 row is now `available`, and the sprint action is `done`.
+Source-mode CI blessing is not required for G12. This removes the G12 hard block
+from Story 8.8, Story 8.10, and the Story 8.1 package-mode baseline; it does not
+waive Story 8.8's remaining G6/G8/G11/G7-G9 prerequisites or Story 8.10's other
+closure gates. The routing analysis below is retained as the decision history.
 
 ## 1. Issue Summary
 
@@ -215,3 +235,5 @@ Success criteria:
 | Handoff recipients named | Done |
 | User approval | Done - priority directive on 2026-07-09 |
 | Sprint status updated | Done |
+| Resolution approval | Done - priority directive reconfirmed 2026-07-11 |
+| Package publication proof | Done - four packages resolved; Release build green |

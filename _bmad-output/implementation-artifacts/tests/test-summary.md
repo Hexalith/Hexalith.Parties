@@ -233,3 +233,31 @@
 | Full working-tree search for the retired EventStore version literal | Pass | No remaining working-tree references, including ignored generated outputs. |
 | `bash scripts/check-no-warning-override.sh` | Pass | `OK: no warning-override or nested-submodule regressions detected in active CI/build scripts.` |
 | `git diff --check && git -C references/Hexalith.Builds diff --check && git -C references/Hexalith.EventStore diff --check && git -C references/Hexalith.Tenants diff --check` | Pass | No whitespace or conflict-marker issues in root or checked submodule diffs. |
+
+## G12 Package Publication Resolution - 2026-07-11
+
+### Decision Evidence
+
+- The Commons and Tenants release paths selected package publication; source-mode
+  CI blessing is not required for G12.
+- NuGet serves `Hexalith.Commons.Http` 2.28.0 and
+  `Hexalith.Commons.ServiceDefaults` 2.28.0.
+- NuGet serves `Hexalith.Tenants.Client` and `Hexalith.Tenants.Testing` at the
+  repository pin 2.4.2; later 3.x versions are also published.
+- Parties consumer asset files resolved all four identities as packages when the
+  corresponding source-reference switches were forced off.
+
+### Commands Attempted
+
+| Command | Result | Notes |
+| --- | --- | --- |
+| `curl -fsS https://api.nuget.org/v3-flatcontainer/hexalith.commons.http/index.json` and the corresponding ServiceDefaults, Tenants.Client, and Tenants.Testing indexes | Pass | All four package IDs returned HTTP 200 with published versions. |
+| `dotnet restore Hexalith.Parties.slnx -m:1 -p:UseHexalithProjectReferences=false -p:UseNuGetDeps=true -p:HexalithCommonsHttpFromSource=false -p:HexalithCommonsServiceDefaultsFromSource=false -p:HexalithCommonsVersion=2.28.0 -p:HexalithTenantsVersion=2.4.2 -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0 --verbosity minimal` | Pass | Package-only restore resolved Commons.Http/ServiceDefaults 2.28.0 and Tenants.Client/Testing 2.4.2 in Parties consumer assets. |
+| `dotnet build Hexalith.Parties.slnx -c Release --no-restore -m:1 -p:UseHexalithProjectReferences=false -p:UseNuGetDeps=true -p:HexalithCommonsHttpFromSource=false -p:HexalithCommonsServiceDefaultsFromSource=false -p:HexalithCommonsVersion=2.28.0 -p:HexalithTenantsVersion=2.4.2 -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0 --verbosity minimal` | Pass | Build succeeded with 0 warnings and 0 errors. |
+
+### Remaining Gates
+
+- G12 no longer blocks Story 8.8, Story 8.10, or the Story 8.1 package-mode
+  baseline.
+- Story 8.8 remains gated by its G6, G8, G11, and G7/G9 owner proofs; Story 8.10
+  remains gated by incomplete or unowned Epic 8 work under its own Block If.

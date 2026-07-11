@@ -1,5 +1,5 @@
 # generated: 2026-06-21T18:55:59+02:00
-# last_updated: 2026-07-09T16:02:17+02:00
+# last_updated: 2026-07-11T12:16:01+02:00
 # project: parties
 # project_key: NOKEY
 # tracking_system: file-system
@@ -41,7 +41,7 @@
 # - Retrospective appends its action items to action_items; sprint-status surfaces open ones
 
 generated: 2026-06-21T18:55:59+02:00
-last_updated: 2026-07-09T16:02:17+02:00
+last_updated: 2026-07-11T12:16:01+02:00
 project: parties
 project_key: NOKEY
 tracking_system: file-system
@@ -214,7 +214,9 @@ action_items:
     #   sprint-change-proposal-2026-07-07-projection-rollback-retention.md.
     # Stays `open` until Story 8.6 records parity (I9), processing-record reads (I8),
     # rebuild-vs-replay (I10), and proven rollback (I3) in the 8.3 matrix row.
-    # Verified 2026-07-07: all rollback-only projection/query files intact; 8.6 backlog.
+    # Revalidated 2026-07-11: all rollback-only projection/query files and 10 fallback
+    # branches remain intact; Story 8.6 is blocked at the needs-additive-api gate,
+    # and no production projection/query migration has occurred.
     action: "Keep projection rollback-only paths until Epic 8 proves EventStore SDK projection/query parity, GDPR processing-record reads, rebuild behavior, and rollback replacement."
     owner: "Winston (Architect) + Amelia (Developer)"
     status: open
@@ -244,19 +246,24 @@ action_items:
   # (sprint-change-proposal-2026-07-07-platform-prerequisite-routing.md).
   # Routes the Story 8.3 matrix prerequisites to their owner repos so 8.6-8.10
   # dev stays blocked until each owner row is delivered and proof is recorded in
-  # story-8-3-platform-api-prerequisite-matrix.md. G12 is sequenced first: it is
-  # the only `blocked` matrix row and hard-blocks Stories 8.8 and 8.10.
+  # story-8-3-platform-api-prerequisite-matrix.md. G12 was sequenced first and
+  # resolved through package publication on 2026-07-11; other owner rows remain.
   - epic: 8
     action: "PRIORITY (G12, only `blocked` 8.3 row): route to Commons + Tenants release owners a decision to publish Hexalith.Commons.Http, Hexalith.Commons.ServiceDefaults, Hexalith.Tenants.Client, Hexalith.Tenants.Testing, OR bless source-mode CI. Hard-blocks 8.8/8.10 and the Story 8.1 package-mode build. Sequence first."
     owner: "Winston (Architect) + Hexalith.Commons & Hexalith.Tenants release owners"
     # Routed 2026-07-09 via:
     # _bmad-output/planning-artifacts/sprint-change-proposal-2026-07-09-g12-package-publishing-source-mode-ci.md.
-    # Still waiting on owner decision: publish the package set or bless source-mode CI.
-    status: in-progress
+    # Resolved 2026-07-11 through package publication: Commons.Http and
+    # Commons.ServiceDefaults 2.28.0; Tenants.Client and Tenants.Testing 2.4.2.
+    # Package-only restore and Release build: 0 warnings, 0 errors.
+    status: done
   - epic: 8
     action: "Route EventStore additive-API prerequisites to Hexalith.EventStore owners: projection/query parity (G3 erasure hooks, G10 index batching, G6 freshness) for 8.6; additive shared payload-protection engine package (G5: pdenc-v2 + json+pdenc-v1 read, IPersonalDataPolicy, IErasureStateProvider, golden harness) for 8.7; client envelope/freshness/error-code adapter (G6) for 8.6/8.8; degraded-response + AddEventStoreDaprHealthChecks parity (G1/G2) for 8.8. Additive/approved before any Parties deletion."
     owner: "Winston (Architect) + Hexalith.EventStore owners"
-    status: open
+    # Routed 2026-07-11 through the dedicated EventStore-owner prerequisite proposal.
+    # Remains in-progress until all four owner work packages are accepted and their
+    # approved release/submodule-pin and parity evidence are recorded in Story 8.3.
+    status: in-progress
   - epic: 8
     action: "Route G8 Aspire publish helpers to Hexalith.EventStore.Aspire + AppHost owners: WithEventStoreJwtAuthentication(audience) (or documented WithJwtBearerSecurity(..., audience) replacement) + granular typed-client registration; confirm the Parties AppHost topology/deploy owner. Blocks 8.8."
     owner: "Winston (Architect) + Hexalith.EventStore.Aspire & AppHost owners"
