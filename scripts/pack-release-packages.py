@@ -47,7 +47,7 @@ def main() -> int:
                 "--output",
                 str(output_directory),
                 f"-p:HexalithPartiesPackageVersion={args.version}",
-                "-p:HexalithCommonsHttpPackageVersion=2.27.0",
+                "-p:HexalithCommonsHttpPackageVersion=$(HexalithCommonsVersion)",
                 "/m:1",
                 "/nr:false",
             ],

@@ -386,13 +386,21 @@ public sealed class PartiesAdminPortalApiClientTests
 
         QueryRequest request = queryService.LastRequest.ShouldNotBeNull();
         request.Domain.ShouldBe("party");
+#if HEXALITH_FRONTCOMPOSER_CANONICAL_QUERY
+        request.Criteria.ProjectionType.ShouldBe("PartyIndex");
+        request.Criteria.Skip.ShouldBe(100);
+        request.Criteria.Take.ShouldBe(100);
+        request.Criteria.ColumnFilters.ShouldNotBeNull()["type"].ShouldBe("Person");
+        request.Criteria.ColumnFilters.ShouldNotBeNull()["active"].ShouldBe("true");
+#else
         request.ProjectionType.ShouldBe("PartyIndex");
-        request.QueryType.ShouldBe("ListParties");
         request.Skip.ShouldBe(100);
         request.Take.ShouldBe(100);
-        request.CacheDiscriminator.ShouldBe("parties-admin-list-v1");
         request.ColumnFilters.ShouldNotBeNull()["type"].ShouldBe("Person");
         request.ColumnFilters.ShouldNotBeNull()["active"].ShouldBe("true");
+#endif
+        request.QueryType.ShouldBe("ListParties");
+        request.CacheDiscriminator.ShouldBe("parties-admin-list-v1");
         result.Payload.Page.ShouldBe(2);
         result.Payload.PageSize.ShouldBe(100);
         result.Payload.TotalPages.ShouldBe(2);
@@ -459,12 +467,20 @@ public sealed class PartiesAdminPortalApiClientTests
 
         QueryRequest request = queryService.LastRequest.ShouldNotBeNull();
         request.Domain.ShouldBe("party");
+#if HEXALITH_FRONTCOMPOSER_CANONICAL_QUERY
+        request.Criteria.ProjectionType.ShouldBe("PartySearch");
+        request.Criteria.SearchQuery.ShouldBe("ada@example.test");
+        request.Criteria.ColumnFilters.ShouldNotBeNull()["type"].ShouldBe("Person");
+        request.Criteria.ColumnFilters.ShouldNotBeNull()["active"].ShouldBe("true");
+        request.Criteria.ColumnFilters.ShouldNotBeNull()["mode"].ShouldBe("Lexical");
+#else
         request.ProjectionType.ShouldBe("PartySearch");
-        request.QueryType.ShouldBe("SearchParties");
         request.SearchQuery.ShouldBe("ada@example.test");
         request.ColumnFilters.ShouldNotBeNull()["type"].ShouldBe("Person");
         request.ColumnFilters.ShouldNotBeNull()["active"].ShouldBe("true");
         request.ColumnFilters.ShouldNotBeNull()["mode"].ShouldBe("Lexical");
+#endif
+        request.QueryType.ShouldBe("SearchParties");
         request.CacheDiscriminator.ShouldBe("parties-admin-search-v1");
         result.Payload.Items.ShouldHaveSingleItem();
     }
@@ -481,8 +497,13 @@ public sealed class PartiesAdminPortalApiClientTests
             CancellationToken.None);
 
         QueryRequest request = queryService.LastRequest.ShouldNotBeNull();
+#if HEXALITH_FRONTCOMPOSER_CANONICAL_QUERY
+        request.Criteria.Skip.ShouldBe(50);
+        request.Criteria.Take.ShouldBe(25);
+#else
         request.Skip.ShouldBe(50);
         request.Take.ShouldBe(25);
+#endif
     }
 
     [Fact]
@@ -509,7 +530,11 @@ public sealed class PartiesAdminPortalApiClientTests
         request.Domain.ShouldBe("party");
         request.AggregateId.ShouldBe("p-1");
         request.EntityId.ShouldBe("p-1");
+#if HEXALITH_FRONTCOMPOSER_CANONICAL_QUERY
+        request.Criteria.ProjectionType.ShouldBe("PartyDetail");
+#else
         request.ProjectionType.ShouldBe("PartyDetail");
+#endif
         request.QueryType.ShouldBe("GetParty");
         request.ProjectionActorType.ShouldBe("PartyDetailProjectionActor");
         result.Payload.DisplayName.ShouldBe("Ada Lovelace");

@@ -381,6 +381,7 @@
         => new Dictionary<string, object>(StringComparer.Ordinal)
         {
             ["role"] = "switch",
+            ["aria-label"] = row.Purpose.Label,
             ["aria-checked"] = row.CurrentValue ? "true" : "false",
             ["aria-describedby"] = $"{PurposeId(row.Purpose.Key)} {BasisId(row.Purpose.Key)}",
         };

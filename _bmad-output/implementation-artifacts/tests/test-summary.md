@@ -261,3 +261,115 @@
   baseline.
 - Story 8.8 remains gated by its G6, G8, G11, and G7/G9 owner proofs; Story 8.10
   remains gated by incomplete or unowned Epic 8 work under its own Block If.
+
+## Revalidate All Tests And Fix Current Failures - 2026-07-12
+
+Full rerun of every configured .NET test project (both dependency shapes) plus
+the Playwright workspace against the current dependency, build-workflow, and
+package-routing changes (baseline commit `8d28a1b`). No product/test source was
+edited in this pass; the working tree already held the in-progress accessibility,
+E2E-auth-fixture, and FrontComposer canonical-query-shim changes.
+
+### Result Headline
+
+- **Package mode (Release, CI parity): ALL 15 projects PASS — 2321 tests, 0 failed,
+  6 expected integration skips.** This is the authoritative shippable configuration
+  (`hexalith-llm-instructions`: CI = NuGet package reference + Release).
+- **Root-owned fix applied:** installed `ripgrep` (`sudo apt-get install ripgrep`)
+  which cleared the only genuine environment failure —
+  `PlatformApiPrerequisitesTests.Matrix_ValidationEvidenceCommandsAreReproducible`
+  shells out to `rg` and threw `Win32Exception: process 'rg' … No such file`.
+- **Source mode (Debug, project references): BLOCKED by a governed dependency-mode
+  drift** (see Blockers). Product code compiles clean in source mode (first build:
+  0 warnings/0 errors, all 15 test projects); the block is a Commons assembly-version
+  skew / `CS1704` at the source/package boundary, not a code defect.
+- **e2e:** `tsc` typecheck passes; 16 artifact/SSR specs pass; interactive specs are
+  blocked locally by the documented `blazor.web.js` 500 (deferred to CI `ui-a11y`).
+
+### Package-Mode Release Per-Project Results
+
+| Project | Total | Failed | Skipped |
+| --- | --- | --- | --- |
+| Contracts.Tests | 135 | 0 | 0 |
+| Authentication.Tests | 12 | 0 | 0 |
+| Client.Tests | 137 | 0 | 0 |
+| Server.Tests | 237 | 0 | 0 |
+| Projections.Tests | 139 | 0 | 0 |
+| Security.Tests | 169 | 0 | 0 |
+| AdminPortal.Tests | 183 | 0 | 0 |
+| ConsumerPortal.Tests | 82 | 0 | 0 |
+| UI.Tests | 326 | 0 | 0 |
+| Picker.Tests | 171 | 0 | 0 |
+| Mcp.Tests | 57 | 0 | 0 |
+| Tests (domain/gateway/fitness) | 574 | 0 | 0 |
+| Sample.Tests | 58 | 0 | 0 |
+| IntegrationTests | 34 | 0 | 6 (Docker/DAPR graceful) |
+| Ci.Tests | 7 | 0 | 0 |
+| **Total** | **2321** | **0** | **6** |
+
+### Commands Attempted
+
+| Command | Result | Notes |
+| --- | --- | --- |
+| `dotnet build Hexalith.Parties.slnx -c Debug -m:1 -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0` (incremental, prebuilt submodules) | Build Pass, run Fail | 0 warn/0 err, all 15 built; at runtime 6 projects (AdminPortal, Client, Mcp, Security, Tests, IntegrationTests) failed with `FileNotFoundException: Hexalith.Commons.UniqueIds, Version=3.58.0.0` — deployed copy was `1.0.0.0`. Version skew, not a code defect. |
+| `dotnet build … -c Debug --no-incremental …` | Fail | `CS0006` submodule ref-assembly race (memory: use `-m:1`, avoid Rebuild). Reverted approach. |
+| clean root `bin/obj` + `dotnet build … -c Debug -m:1 …` | Fail | `CS1704`: `Hexalith.Commons.UniqueIds` imported twice in `EventStore.Contracts` (source project + transitive NuGet `2.28.0`) once the submodule recompiles from source under the leaked `HexalithCommonsFromSource=true`. |
+| `dotnet restore/build Hexalith.Parties.slnx -c Release -m:1 -p:UseHexalithProjectReferences=false -p:UseNuGetDeps=true -p:HexalithCommonsHttpFromSource=false -p:HexalithCommonsServiceDefaultsFromSource=false -p:HexalithCommonsVersion=2.28.0 -p:HexalithTenantsVersion=2.4.2 -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0` | Pass | Package mode 0 warn/0 err; `Commons.UniqueIds` deployed==referenced==`2.28.0.0` (no skew). |
+| Run all 15 built Release test assemblies directly (`dotnet <proj>.dll`, `~/.dotnet` first on PATH so nested `dotnet pack` resolves SDK `10.0.301`) | Pass | 2321 passed, 0 failed, 6 expected skips. Contracts/Client `*.Package` tests initially failed only when `/usr/bin/dotnet` (SDK 10.0.300) shadowed `~/.dotnet` (10.0.301) — a harness PATH artifact, fixed by PATH order. |
+| `sudo apt-get install -y ripgrep` | Pass | Installed `rg` 15.1.0; fixes `Matrix_ValidationEvidenceCommandsAreReproducible`. |
+| `cd tests/e2e && npm ci && npm run typecheck` | Pass | 9 packages, `tsc --noEmit` clean. |
+| `PLAYWRIGHT_SKIP_WEBSERVER=1 npx playwright test specs/story-7-1 specs/story-7-4 specs/story-7-8 --project=chromium` | Pass | 16 passed (artifact/SSR specs). |
+| UI host `dotnet run … -c Release --no-build` (ASPNETCORE_ENVIRONMENT=Test, `AdminPortalE2E__Enabled=true`) + `npx playwright test specs/admin-parties-list.spec.ts` | Host starts; interactive Fail | `/alive`,`/health`=200; `/`,`/admin/parties`=302→`/authentication/challenge` (E2E cookie-auth fixture works). Interactive rows never render — `blazor.web.js` returns 500. |
+
+### Unresolved Blockers And Owner Decisions
+
+| Blocker | Exact evidence | Owner decision / rerun path |
+| --- | --- | --- |
+| Source-mode Commons dependency-mode drift | Clean source-reference build hits `CS1704` (`Hexalith.Commons.UniqueIds` from source project **and** transitive NuGet `2.28.0`) inside `EventStore.Contracts`; with prebuilt submodules the runtime hits `FileNotFoundException Hexalith.Commons.UniqueIds Version=3.58.0.0`. Governed by Story 7.1's pinned `ProjectReference Include="$(HexalithCommonsRoot)…"` Commons strategy — "no project-reference change, submodule pointer change, or submodule source edit" without authorization. | Platform/submodule owner: reconcile the Commons submodule (`a3b4f88`) source-reference version so `Hexalith.Commons.UniqueIds` resolves to a single assembly version across parties source + submodule consumers, OR authorize a source/package strategy change. Not fixable inside this repo without crossing the Ask-First boundary. Package-mode Release is fully green and proves product correctness. |
+| Interactive Playwright (local) | `blazor.web.js` → HTTP 500: `FileNotFoundException … /src/Hexalith.Parties.UI/wwwroot/_framework/blazor.web.js` from `StaticAssetDevelopmentRuntimeHandler.AttachRuntimePatching` under `dotnet run --no-build` (non-Production env, un-published assets). Blazor never hydrates, so interactive rows/components don't render. | Deferred to CI `ui-a11y` gate (bUnit + published/served assets), per established local-sandbox limitation. SSR/artifact specs pass locally; typecheck passes. |
+
+### Source-Mode Resolution (owner-authorized strategy fix — 2026-07-12)
+
+The source-mode Commons dependency-mode drift was resolved (owner-authorized) by
+consuming **Commons as a package** in source mode — aligning with `CLAUDE.md`
+(only EventStore/Tenants/Memories are source-referenced) and matching the already-green
+package mode — while keeping EventStore, Tenants, FrontComposer, and Memories as source
+project references. The `HexalithCommons*FromSource=false` properties are **global**
+(command-line), so they also override the submodule projects' own auto-enable, which
+eliminates the `CS1704` double-import in `EventStore.Contracts`.
+
+Working source-mode build/run command (Commons → package; keeps the FrontComposer
+`#if HEXALITH_FRONTCOMPOSER_CANONICAL_QUERY` canonical-query branch active):
+
+```
+dotnet build Hexalith.Parties.slnx -c Debug -m:1 \
+  -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false \
+  -p:HexalithCommonsFromSource=false -p:HexalithCommonsHttpFromSource=false \
+  -p:HexalithCommonsServiceDefaultsFromSource=false \
+  -p:HexalithCommonsVersion=2.28.0 -p:HexalithTenantsVersion=2.4.2 \
+  -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0
+```
+
+Result: build 0 warnings / 0 errors; `Commons.UniqueIds` deployed==referenced==`2.28.0.0`
+(skew gone). Source-mode Debug tests: **14/15 projects green** (2679 executed, 6 expected
+integration skips). The only remainder is 2 `Hexalith.Parties.Client.Tests.Package.ClientPackageTests`
+(`PackedClientPackage_HasOnlyApprovedDeclaredDependenciesAndFitsSizeBudget`,
+`CleanPackageConsumer_RegistersTypedClientsWithoutForbiddenTransitivePackages`): their fixture
+runs `dotnet pack --configuration Release` on the **source** `Hexalith.Commons.Http` project
+and hits `NU5026` (no Release DLL under a Debug build). These are Release/package-oriented
+PackageTests and **pass in package-mode Release** (their correct context) — consistent with the
+documented `*PackageTests` build-state sensitivity; not product defects.
+
+**Durability:** the fix is the command above (global Commons→package properties). The residual
+trigger is the checked-out `references/Hexalith.Commons` submodule auto-enabling source Commons;
+`git submodule deinit -f references/Hexalith.Commons` would make source-mode consume Commons as a
+package with no extra flags (matching the `CLAUDE.md` "init only EventStore + Tenants" rule). Not
+applied automatically — left as an owner choice since it changes submodule checkout state.
+
+### Combined Verdict
+
+| Configuration | Projects green | Tests | Failed | Skipped |
+| --- | --- | --- | --- | --- |
+| Package mode (Release, CI parity) | 15 / 15 | 2321 | 0 | 6 (Docker/DAPR) |
+| Source mode (Debug, project refs, Commons→package) | 14 / 15 | 2679 exec | 2 (Client PackageTests — pass in package mode) | 6 |
+| e2e Playwright | typecheck + 16 SSR/artifact specs pass | — | interactive → CI `ui-a11y` | — |

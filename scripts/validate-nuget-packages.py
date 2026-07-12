@@ -43,7 +43,7 @@ FORBIDDEN_DEPENDENCY_FRAGMENTS = (
 )
 
 EXPECTED_DEPENDENCY_VERSIONS = {
-    "Hexalith.Commons.Http": "2.27.0",
+    "Hexalith.Commons.Http": "$(HexalithCommonsVersion)",
 }
 
 REQUIRED_COMMONS_HTTP_DEPENDENCY_PACKAGES = frozenset(

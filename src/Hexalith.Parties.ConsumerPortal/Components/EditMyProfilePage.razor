@@ -100,7 +100,7 @@
                             <FluentCheckbox Value="@_model.OrganizationIsNaturalPerson"
                                             ValueChanged="OnOrganizationIsNaturalPersonChanged"
                                             Label="@ConsumerPortalLabels.MyProfileNaturalPerson"
-                                            AdditionalAttributes="FieldAttributes(nameof(EditProfileModel.OrganizationIsNaturalPerson))" />
+                                            AdditionalAttributes="FieldAttributes(nameof(EditProfileModel.OrganizationIsNaturalPerson), ConsumerPortalLabels.MyProfileNaturalPerson)" />
                             <p id="@HintId(nameof(EditProfileModel.OrganizationIsNaturalPerson))" class="hx-parties-edit-profile__hint">
                                 @ConsumerPortalLabels.EditProfileFieldHint
                             </p>
@@ -584,7 +584,7 @@
             builder.AddAttribute(4, "ValueChanged", EventCallback.Factory.Create<string>(this, changed));
             builder.AddAttribute(5, "TextInputType", TextInputType.Text);
             builder.AddAttribute(6, "Label", label);
-            builder.AddAttribute(7, "AdditionalAttributes", FieldAttributes(propertyName));
+            builder.AddAttribute(7, "AdditionalAttributes", FieldAttributes(propertyName, label));
             builder.CloseComponent();
             builder.OpenElement(8, "p");
             builder.AddAttribute(9, "id", HintId(propertyName));
@@ -610,9 +610,10 @@
             builder.CloseElement();
         };
 
-    private IReadOnlyDictionary<string, object> FieldAttributes(string propertyName)
+    private IReadOnlyDictionary<string, object> FieldAttributes(string propertyName, string accessibleName)
         => new Dictionary<string, object>(StringComparer.Ordinal)
         {
+            ["aria-label"] = accessibleName,
             ["aria-describedby"] = $"{HintId(propertyName)} {ErrorId(propertyName)}",
             ["aria-invalid"] = (_editContext?.GetValidationMessages(_editContext.Field(propertyName)).Any() == true).ToString().ToLowerInvariant(),
         };

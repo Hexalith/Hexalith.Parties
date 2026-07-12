@@ -2,10 +2,13 @@ using System.Text.Json;
 
 using Hexalith.Parties.AdminPortal.Services;
 using Hexalith.Parties.Client.AdminPortal;
+using Hexalith.Parties.Contracts.Authorization;
 using Hexalith.Parties.Contracts.Models;
 using Hexalith.Parties.UI.Services;
 
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.DependencyInjection;
 
 using Shouldly;
 
@@ -13,6 +16,41 @@ namespace Hexalith.Parties.UI.Tests;
 
 public sealed class PartiesAdminPortalE2eFixtureTests
 {
+    [Fact]
+    public async Task AuthenticationHandler_WithAdminFixtureCookie_AuthenticatesRequestAsync()
+    {
+        var accessor = new HttpContextAccessor();
+        using ServiceProvider provider = BuildAuthenticationProvider(accessor);
+        var context = new DefaultHttpContext { RequestServices = provider };
+        context.Request.Headers.Cookie = $"{PartiesAdminPortalE2eFixture.AdminCookieName}=enabled";
+        accessor.HttpContext = context;
+
+        AuthenticateResult result = await context
+            .AuthenticateAsync(PartiesAdminPortalE2eAuthenticationHandler.AuthenticationScheme)
+            .ConfigureAwait(true);
+
+        result.Succeeded.ShouldBeTrue();
+        result.Principal.ShouldNotBeNull().IsInRole(PartiesRoles.Admin).ShouldBeTrue();
+    }
+
+    [Fact]
+    public async Task AuthenticationHandler_WithoutFixtureCookie_PreservesChallengeReturnUrlAsync()
+    {
+        var accessor = new HttpContextAccessor();
+        using ServiceProvider provider = BuildAuthenticationProvider(accessor);
+        var context = new DefaultHttpContext { RequestServices = provider };
+        context.Request.Path = "/admin/parties";
+        accessor.HttpContext = context;
+
+        await context
+            .ChallengeAsync(PartiesAdminPortalE2eAuthenticationHandler.AuthenticationScheme)
+            .ConfigureAwait(true);
+
+        context.Response.StatusCode.ShouldBe(StatusCodes.Status302Found);
+        context.Response.Headers.Location.ToString()
+            .ShouldBe("/authentication/challenge?returnUrl=%2Fadmin%2Fparties");
+    }
+
     [Fact]
     public async Task AuthorizationService_ReturnsUnauthenticatedWithoutFixtureCookieAsync()
     {
@@ -66,5 +104,18 @@ public sealed class PartiesAdminPortalE2eFixtureTests
         package.ExportedBy.ShouldBe("consumer-e2e");
         package.CorrelationId.ShouldBe("corr-export-e2e");
         fixtureState.Snapshot().ExportRequests.Single().PartyId.ShouldBe("party-bound-001");
+    }
+
+    private static ServiceProvider BuildAuthenticationProvider(IHttpContextAccessor accessor)
+    {
+        var services = new ServiceCollection();
+        services.AddLogging();
+        services.AddSingleton(accessor);
+        services
+            .AddAuthentication(PartiesAdminPortalE2eAuthenticationHandler.AuthenticationScheme)
+            .AddScheme<AuthenticationSchemeOptions, PartiesAdminPortalE2eAuthenticationHandler>(
+                PartiesAdminPortalE2eAuthenticationHandler.AuthenticationScheme,
+                _ => { });
+        return services.BuildServiceProvider();
     }
 }

@@ -815,8 +815,8 @@ public sealed class EventStoreGatewayRoutingTests
         using var factory = new EventStoreGatewayTestFactory(usePartiesDomainRouter: true);
         using HttpClient client = factory.CreateAuthenticatedClient(permissions: ["commands:*"]);
         string partyId = Guid.NewGuid().ToString("D");
-        const string syntheticFirstName = "Ada";
-        const string syntheticLastName = "Lovelace";
+        const string syntheticFirstName = "SyntheticPrivateFirstName8472";
+        const string syntheticLastName = "SyntheticPrivateLastName6391";
 
         var request = CreateCommandRequest(
             messageId: "cmd-1-9-privacy-status",
@@ -848,8 +848,8 @@ public sealed class EventStoreGatewayRoutingTests
         using var factory = new EventStoreGatewayTestFactory(usePartiesDomainRouter: true);
         using HttpClient client = factory.CreateAuthenticatedClient(permissions: ["commands:*"]);
         string partyId = Guid.NewGuid().ToString("D");
-        const string syntheticFirstName = "Ada";
-        const string syntheticLastName = "Lovelace";
+        const string syntheticFirstName = "SyntheticPrivateFirstName8472";
+        const string syntheticLastName = "SyntheticPrivateLastName6391";
 
         var request = CreateCommandRequest(
             messageId: "cmd-1-9-retry-status",

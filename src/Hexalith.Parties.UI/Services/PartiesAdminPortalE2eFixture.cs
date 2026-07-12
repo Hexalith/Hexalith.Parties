@@ -65,26 +65,19 @@ internal static class PartiesAdminPortalE2eFixture
 
     public static string? ConsumerProcessingFixtureState(IHttpContextAccessor httpContextAccessor)
         => httpContextAccessor.HttpContext?.Request.Cookies[ConsumerProcessingStateCookieName];
-}
 
-internal sealed class PartiesAdminPortalE2eAuthenticationStateProvider(IHttpContextAccessor httpContextAccessor) : AuthenticationStateProvider
-{
-    private static readonly ClaimsPrincipal AnonymousPrincipal = new(new ClaimsIdentity());
-    public override Task<AuthenticationState> GetAuthenticationStateAsync()
+    public static ClaimsPrincipal? CreatePrincipal(IHttpContextAccessor httpContextAccessor)
     {
-        string? adminRole = PartiesAdminPortalE2eFixture.AdminFixtureRole(httpContextAccessor);
+        string? adminRole = AdminFixtureRole(httpContextAccessor);
         if (adminRole is not null)
         {
-            return Task.FromResult(new AuthenticationState(CreateAdminPrincipal(adminRole)));
+            return CreateAdminPrincipal(adminRole);
         }
 
-        string? consumerState = PartiesAdminPortalE2eFixture.ConsumerFixtureState(httpContextAccessor);
-        if (!string.IsNullOrWhiteSpace(consumerState))
-        {
-            return Task.FromResult(new AuthenticationState(CreateConsumerPrincipal(consumerState)));
-        }
-
-        return Task.FromResult(new AuthenticationState(AnonymousPrincipal));
+        string? consumerState = ConsumerFixtureState(httpContextAccessor);
+        return string.IsNullOrWhiteSpace(consumerState)
+            ? null
+            : CreateConsumerPrincipal(consumerState);
     }
 
     private static ClaimsPrincipal CreateAdminPrincipal(string role) => new(new ClaimsIdentity(
@@ -134,6 +127,17 @@ internal sealed class PartiesAdminPortalE2eAuthenticationStateProvider(IHttpCont
             authenticationType: "PartiesConsumerE2E",
             nameType: ClaimTypes.Name,
             roleType: "roles"));
+    }
+}
+
+internal sealed class PartiesAdminPortalE2eAuthenticationStateProvider(IHttpContextAccessor httpContextAccessor) : AuthenticationStateProvider
+{
+    private static readonly ClaimsPrincipal AnonymousPrincipal = new(new ClaimsIdentity());
+    public override Task<AuthenticationState> GetAuthenticationStateAsync()
+    {
+        ClaimsPrincipal principal = PartiesAdminPortalE2eFixture.CreatePrincipal(httpContextAccessor)
+            ?? AnonymousPrincipal;
+        return Task.FromResult(new AuthenticationState(principal));
     }
 }
 

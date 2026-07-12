@@ -38,7 +38,12 @@ public sealed class AdminPortalQueryContractTests
             new AdminPortalListRequest(1, 200, null, null),
             CancellationToken.None);
 
-        queryService.LastRequest.ShouldNotBeNull().Take.ShouldBe(100);
+        QueryRequest request = queryService.LastRequest.ShouldNotBeNull();
+#if HEXALITH_FRONTCOMPOSER_CANONICAL_QUERY
+        request.Criteria.Take.ShouldBe(100);
+#else
+        request.Take.ShouldBe(100);
+#endif
     }
 
     [Fact]
@@ -54,7 +59,11 @@ public sealed class AdminPortalQueryContractTests
         QueryRequest request = queryService.LastRequest.ShouldNotBeNull();
         request.Domain.ShouldBe("party");
         request.QueryType.ShouldBe("SearchParties");
+#if HEXALITH_FRONTCOMPOSER_CANONICAL_QUERY
+        request.Criteria.SearchQuery.ShouldBe("anna@example.com");
+#else
         request.SearchQuery.ShouldBe("anna@example.com");
+#endif
         request.CacheDiscriminator.ShouldBe("parties-admin-search-v1");
     }
 

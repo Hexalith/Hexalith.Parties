@@ -13,6 +13,7 @@ using Hexalith.Parties.UI.Components;
 using Hexalith.Parties.UI.IdentityBinding;
 using Hexalith.Parties.UI.Services;
 
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.FluentUI.AspNetCore.Components;
@@ -43,6 +44,15 @@ builder.Services.AddHexalithPartiesAdminPortal();
 bool adminPortalE2eFixtureEnabled = PartiesAdminPortalE2eFixture.IsEnabled(builder.Configuration, builder.Environment);
 if (adminPortalE2eFixtureEnabled)
 {
+    builder.Services
+        .AddAuthentication(options =>
+        {
+            options.DefaultAuthenticateScheme = PartiesAdminPortalE2eAuthenticationHandler.AuthenticationScheme;
+            options.DefaultChallengeScheme = PartiesAdminPortalE2eAuthenticationHandler.AuthenticationScheme;
+        })
+        .AddScheme<AuthenticationSchemeOptions, PartiesAdminPortalE2eAuthenticationHandler>(
+            PartiesAdminPortalE2eAuthenticationHandler.AuthenticationScheme,
+            _ => { });
     builder.Services.AddSingleton<PartiesAdminPortalE2eFixtureState>();
     builder.Services.Replace(ServiceDescriptor.Scoped<AuthenticationStateProvider, PartiesAdminPortalE2eAuthenticationStateProvider>());
     builder.Services.Replace(ServiceDescriptor.Scoped<IAdminPortalAuthorizationService, PartiesAdminPortalE2eAuthorizationService>());
@@ -180,7 +190,7 @@ app.MapStaticAssets();
 app.UseStaticFiles();
 app.UseRequestLocalization();
 
-if (authEnabled)
+if (authEnabled || adminPortalE2eFixtureEnabled)
 {
     app.UseAuthentication();
     app.UseAuthorization();
@@ -197,6 +207,10 @@ app.MapRazorComponents<App>()
 if (authEnabled)
 {
     _ = app.MapHexalithFrontComposerAuthenticationEndpoints();
+}
+else if (adminPortalE2eFixtureEnabled)
+{
+    app.MapGet("/authentication/challenge", () => Results.Unauthorized()).AllowAnonymous();
 }
 
 app.MapHexalithDefaultEndpoints(ConfigurePartiesServiceDefaults);

@@ -93,6 +93,18 @@ public sealed class PartiesAdminPortalApiClient : IPartiesAdminPortalApiClient
             return new(typedResult ?? new PagedResult<PartyIndexEntry> { Items = [] }, AdminPortalQueryMetadata.Empty);
         }
 
+#if HEXALITH_FRONTCOMPOSER_CANONICAL_QUERY
+        QueryRequest query = QueryRequest.Create(
+            new ProjectionQuery(
+                ProjectionType: RequireContract(_options.ListProjectionType, nameof(_options.ListProjectionType)),
+                Skip: skip,
+                Take: pageSize,
+                ColumnFilters: BuildListFilters(request)),
+            TenantId: null,
+            Domain: Domain,
+            QueryType: RequireContract(_options.ListQueryType, nameof(_options.ListQueryType)),
+            CacheDiscriminator: ListCacheDiscriminator);
+#else
         QueryRequest query = new(
             ProjectionType: RequireContract(_options.ListProjectionType, nameof(_options.ListProjectionType)),
             TenantId: null,
@@ -102,6 +114,7 @@ public sealed class PartiesAdminPortalApiClient : IPartiesAdminPortalApiClient
             Domain: Domain,
             QueryType: RequireContract(_options.ListQueryType, nameof(_options.ListQueryType)),
             CacheDiscriminator: ListCacheDiscriminator);
+#endif
 
         QueryResult<PartyIndexEntry> result = await ExecuteAsync<PartyIndexEntry>(query, cancellationToken).ConfigureAwait(false);
         return new(ToPage(result, page, pageSize), MetadataFrom(result));
@@ -131,6 +144,19 @@ public sealed class PartiesAdminPortalApiClient : IPartiesAdminPortalApiClient
             return new(typedResult ?? new PagedResult<PartySearchResult> { Items = [] }, AdminPortalQueryMetadata.Empty);
         }
 
+#if HEXALITH_FRONTCOMPOSER_CANONICAL_QUERY
+        QueryRequest query = QueryRequest.Create(
+            new ProjectionQuery(
+                ProjectionType: RequireContract(_options.SearchProjectionType, nameof(_options.SearchProjectionType)),
+                Skip: skip,
+                Take: pageSize,
+                ColumnFilters: BuildSearchFilters(request),
+                SearchQuery: request.Query ?? string.Empty),
+            TenantId: null,
+            Domain: Domain,
+            QueryType: RequireContract(_options.SearchQueryType, nameof(_options.SearchQueryType)),
+            CacheDiscriminator: SearchCacheDiscriminator);
+#else
         QueryRequest query = new(
             ProjectionType: RequireContract(_options.SearchProjectionType, nameof(_options.SearchProjectionType)),
             TenantId: null,
@@ -141,6 +167,7 @@ public sealed class PartiesAdminPortalApiClient : IPartiesAdminPortalApiClient
             Domain: Domain,
             QueryType: RequireContract(_options.SearchQueryType, nameof(_options.SearchQueryType)),
             CacheDiscriminator: SearchCacheDiscriminator);
+#endif
 
         QueryResult<PartySearchResult> result = await ExecuteAsync<PartySearchResult>(query, cancellationToken).ConfigureAwait(false);
         return new(ToPage(result, page, pageSize), MetadataFrom(result));
@@ -219,6 +246,19 @@ public sealed class PartiesAdminPortalApiClient : IPartiesAdminPortalApiClient
             return new(NormalizeDetail(typedDetail), AdminPortalQueryMetadata.Empty);
         }
 
+#if HEXALITH_FRONTCOMPOSER_CANONICAL_QUERY
+        QueryRequest query = QueryRequest.Create(
+            new ProjectionQuery(
+                ProjectionType: RequireContract(_options.DetailProjectionType, nameof(_options.DetailProjectionType)),
+                Take: 1),
+            TenantId: null,
+            Domain: Domain,
+            AggregateId: partyId,
+            QueryType: RequireContract(_options.DetailQueryType, nameof(_options.DetailQueryType)),
+            EntityId: partyId,
+            ProjectionActorType: _options.DetailProjectionActorType,
+            CacheDiscriminator: DetailCacheDiscriminator);
+#else
         QueryRequest query = new(
             ProjectionType: RequireContract(_options.DetailProjectionType, nameof(_options.DetailProjectionType)),
             TenantId: null,
@@ -229,6 +269,7 @@ public sealed class PartiesAdminPortalApiClient : IPartiesAdminPortalApiClient
             EntityId: partyId,
             ProjectionActorType: _options.DetailProjectionActorType,
             CacheDiscriminator: DetailCacheDiscriminator);
+#endif
 
         QueryResult<PartyDetail> result = await ExecuteAsync<PartyDetail>(query, cancellationToken).ConfigureAwait(false);
         if (result.Items.Count > 1)

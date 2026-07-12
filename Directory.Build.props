@@ -24,13 +24,14 @@
     <UseNuGetDeps Condition="'$(UseNuGetDeps)' == '' and '$(UseHexalithProjectReferences)' == 'true'">false</UseNuGetDeps>
     <UseNuGetDeps Condition="'$(UseNuGetDeps)' == ''">true</UseNuGetDeps>
     <HexalithCommonsFromSource Condition="'$(UseHexalithProjectReferences)' == 'true' and Exists('$(HexalithCommonsRoot)\src\libraries\Hexalith.Commons\Hexalith.Commons.csproj')">true</HexalithCommonsFromSource>
-    <HexalithCommonsHttpPackageVersion Condition="'$(HexalithCommonsHttpPackageVersion)' == ''">2.27.0</HexalithCommonsHttpPackageVersion>
+    <HexalithCommonsHttpPackageVersion Condition="'$(HexalithCommonsHttpPackageVersion)' == ''">$(HexalithCommonsVersion)</HexalithCommonsHttpPackageVersion>
     <HexalithCommonsHttpFromSource Condition="'$(HexalithCommonsHttpFromSource)' == '' and Exists('$(HexalithCommonsRoot)\src\libraries\Hexalith.Commons.Http\Hexalith.Commons.Http.csproj')">true</HexalithCommonsHttpFromSource>
     <!-- Hexalith.Commons.ServiceDefaults is consumed from source when available because the
          corresponding package is not published to the public feed used by package-mode tests. -->
     <HexalithCommonsServiceDefaultsFromSource Condition="'$(HexalithCommonsServiceDefaultsFromSource)' == '' and Exists('$(HexalithCommonsRoot)\src\libraries\Hexalith.Commons.ServiceDefaults\Hexalith.Commons.ServiceDefaults.csproj')">true</HexalithCommonsServiceDefaultsFromSource>
     <HexalithEventStoreFromSource Condition="'$(UseHexalithProjectReferences)' == 'true' and Exists('$(HexalithEventStoreRoot)\src\Hexalith.EventStore.Contracts\Hexalith.EventStore.Contracts.csproj')">true</HexalithEventStoreFromSource>
     <HexalithFrontComposerFromSource Condition="'$(UseHexalithProjectReferences)' == 'true' and Exists('$(HexalithFrontComposerRoot)\src\Hexalith.FrontComposer.Contracts\Hexalith.FrontComposer.Contracts.csproj')">true</HexalithFrontComposerFromSource>
+    <DefineConstants Condition="'$(HexalithFrontComposerFromSource)' == 'true'">$(DefineConstants);HEXALITH_FRONTCOMPOSER_CANONICAL_QUERY</DefineConstants>
     <HexalithMemoriesFromSource Condition="'$(UseHexalithProjectReferences)' == 'true' and Exists('$(HexalithMemoriesRoot)\src\Hexalith.Memories.Contracts\Hexalith.Memories.Contracts.csproj')">true</HexalithMemoriesFromSource>
     <HexalithTenantsFromSource Condition="'$(UseHexalithProjectReferences)' == 'true' and Exists('$(HexalithTenantsRoot)\src\Hexalith.Tenants.Contracts\Hexalith.Tenants.Contracts.csproj')">true</HexalithTenantsFromSource>
     <TargetFramework>net10.0</TargetFramework>
