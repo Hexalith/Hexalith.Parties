@@ -19,6 +19,14 @@ references/Hexalith.PolymorphicSerializations|ca1086497c58d0e3ae3c4795655f853b62
 # --- DECIDE (ahead-of-tag, carries unreleased submodule commits). Owner-confirmed
 #     on 2026-07-07 (jpiquot) to ship these commits in this RC; ratified below as
 #     validated-advance. EventStore now sits on the clean v3.45.0 release tag: ---
-references/Hexalith.Builds|94989b04c91a0937fe04fe9819a5bde525ae6dd3|validated-advance|v4.16.3-28-g94989b0|jpiquot|2026-07-07
+#
+# --- 2026-07-12 reconciliation (bmad-correct-course): the working tree drifted
+#     Builds forward again after root commit 2047d44 recorded b6d1111. Owner
+#     disposition (jpiquot): validate-advance to 2b7aec1 = "fix: update
+#     HexalithEventStoreVersion to 3.60.0" — a clean +2 forward move (1 past tag
+#     v4.17.5), already on origin/main and consistent with the tree (EventStore
+#     submodule already on the v3.60.0 line). Supersedes the 2026-07-07 Builds
+#     entry (94989b0, v4.16.3-28). ---
+references/Hexalith.Builds|2b7aec1fd1ba254900ccf715bd8fec5d54f0c37e|validated-advance|v4.17.5-1-g2b7aec1|jpiquot|2026-07-12
 references/Hexalith.Tenants|8d1a5bd760310a724dd35649aea478d364a2c89a|validated-advance|v2.3.0-9-g8d1a5bd|jpiquot|2026-07-07
 references/Hexalith.EventStore|1627190e515c1189a48acf3c5b599500fa6c8ba1|validated-advance|v3.45.0|jpiquot|2026-07-07
