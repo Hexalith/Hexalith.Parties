@@ -198,9 +198,20 @@ action_items:
     owner: "Amelia (Developer)"
     status: done
   - epic: 7
+    # Done 2026-07-07: gate created, approved, and committed
+    # (sprint-change-proposal-2026-07-07-gitlink-rc-gate.md; commit 5198c78 +
+    # ratification 23e48d4). Delivered: scripts/gitlink-rc-gate.sh (--worktree +
+    # --diff CI modes, fail-closed), .gitlink-signoff.tsv owner ledger,
+    # RELEASE-CHECKLIST.md, .github/workflows/rc-gate.yml, and the architecture
+    # Process-Patterns "Root gitlink governance" invariant.
+    # Reconciled 2026-07-12 (bmad-correct-course): this row was left stale-open
+    # though the gate shipped. Gate verified working — it fails closed on the live
+    # Hexalith.Builds drift. That single live drift dispositioned validate-advance
+    # to 2b7aec1 in the ledger and staged. No new SCP authored (would duplicate the
+    # approved 2026-07-07 gate SCP); creation task is complete.
     action: "Create a release-candidate gate for root gitlinks: each drifted pointer is owner-validated or deliberately reset before tagging."
     owner: "Winston (Architect) + Murat (Test Architect)"
-    status: open
+    status: done
   - epic: 7
     action: "Turn the validation fallback ladder into durable tooling guidance and runner support, including continue-after-failure reporting and inspectable result output."
     owner: "Murat (Test Architect)"
