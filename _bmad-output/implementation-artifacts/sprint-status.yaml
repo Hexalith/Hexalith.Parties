@@ -22,6 +22,7 @@
 #   - in-progress: Developer actively working on implementation
 #   - review: Ready for code review (via Dev's code-review workflow)
 #   - done: Story completed
+#   - blocked: Story context exists, but an explicit prerequisite prevents implementation
 #
 # Retrospective Status:
 #   - optional: Can be completed but not required
@@ -147,7 +148,9 @@ development_status:
   8-4-leaf-project-retirement: done
   8-5-eventstore-domain-service-sdk-host-cutover: done
   8-6-projection-and-query-sdk-migration: blocked
-  8-7-data-protection-extraction: backlog
+  # Story context created 2026-07-16; production migration remains blocked by
+  # the unproven G5 shared payload engine and authoritative 8.6 -> 8.7 sequence.
+  8-7-data-protection-extraction: blocked
   8-8-client-mcp-apphost-build-and-deploy-cleanup: backlog
   8-9-ui-frontcomposer-and-fluent-consolidation: backlog
   8-10-final-readiness-documentation-and-retirement-gate: backlog
@@ -243,9 +246,10 @@ action_items:
     # typed-unreadable outcomes + no-leak diagnostics, Art.20 export + Art.30
     # processing-record semantics, erasure certificate/report parity, and proven
     # rollback (spine I8/I3) in the 8.3 matrix G5 row; routed to Hexalith.EventStore
-    # owners as G5. Verified 2026-07-07: all 18 spec-8-7 MOVE-listed
+    # owners as G5. Revalidated 2026-07-16: both root-pinned EventStore v3.61.0
+    # and the user-owned v3.67.0 checkout lack the G5 engine; all 18 spec-8-7 MOVE-listed
     # src/Hexalith.Parties.Security crypto/key files (+ 5 KEEP domain files + the
-    # EventStorePartyPayloadProtectionAdapter seam) intact; spec-8-7 backlog + blocked-prerequisite.
+    # EventStorePartyPayloadProtectionAdapter seam) remain intact; Story 8.7 is blocked.
     action: "Keep Parties crypto/key-management implementation until an approved shared provider proves payload compatibility, typed unreadable outcomes, no-leak diagnostics, exports, processing records, certificates, and rollback."
     owner: "Winston (Architect) + Amelia (Developer)"
     status: open
