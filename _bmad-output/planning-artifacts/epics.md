@@ -468,7 +468,10 @@ convergence only after PM/Architect approval.
 Hexalith.Parties removes remaining generic platform infrastructure so the module
 converges on the Hexalith domain-module contract: domain aggregate, contracts,
 validators, domain projection/query handlers, Parties-specific GDPR policy, typed
-domain clients, domain UI, MCP tool definitions, sample, and a thin AppHost.
+domain clients, domain UI, MCP tool definitions, and domain samples. Reusable
+Aspire helpers belong to EventStore.Aspire, canonical integrated local topology
+belongs to FrontComposer.AppHost or an approved platform AppHost owner, and
+runtime deployment orchestration belongs to external platform operations.
 
 **Implementation classification:** post-MVP maintenance. Epic 8 is approved by
 `sprint-change-proposal-2026-07-06.md`, covers no new PRD FRs, and must not be
@@ -1610,8 +1613,12 @@ support, DataProtection, client envelopes/freshness/error codes, tenant claims
 transformation, Aspire publish helpers, FrontComposer UI primitives, Commons HTTP
 helpers, and Builds shared props/targets.
 
-**And** no Parties source migration starts from an unapproved checked-out submodule
-API.
+**And** every row marked `available` records a released package version or exact
+root-declared submodule gitlink SHA before a dependent story consumes it; source-path
+or checkout evidence alone is not consumable availability.
+
+**And** no Parties source migration starts from an unapproved or unidentified
+dependency.
 
 ### Story 8.4: Leaf-project retirement
 
@@ -1662,6 +1669,10 @@ so that Parties keeps only domain folds, query semantics, and tenant guardrails.
 `IDomainQueryHandler`, read-model writes use `IReadModelStore` and
 `ReadModelWritePolicy`, and pagination cursors use `IQueryCursorCodec`.
 
+**And** before `AddEventStoreDataProtection`, `DaprXmlRepository`, or the query
+cursor codec path is consumed, the EventStore DataProtection row records and
+matches the selected EventStore release or root gitlink.
+
 **And** Dapr projection/query actors, actor companion sequence keys, rebuild service,
 platform adapters, and `catch (NotImplementedException)` remoting control flow are
 deleted only after parity proves duplicate/out-of-order delivery, replay-from-zero,
@@ -1704,9 +1715,24 @@ client registration validation, MCP context/result plumbing, AppHost security/mo
 helpers, build-root probing, and platform-owned runtime concerns are adopted from
 their owning modules.
 
+**And** before Parties-local HTTP or build-root helpers are replaced, the Commons
+HTTP and Builds shared props/targets rows record and match the exact package releases
+or root gitlinks being consumed.
+
 **And** runtime deployment orchestration remains outside this repository while this
-repository retains only source, local AppHost topology, GitHub Actions CI, and
-Parties-owned container publication support.
+repository retains workload source, GitHub Actions CI, and Parties-owned container
+publication support. The current Parties AppHost remains only as a migration and
+rollback surface until canonical integrated topology is proven in
+FrontComposer.AppHost or an approved platform AppHost; it is then retired.
+
+**And** the G8 AppHost/client slice does not start until EventStore.Aspire owns an
+approved audience-aware JWT surface or documented
+`WithJwtBearerSecurity(..., audience)` replacement, EventStore.Client owns granular
+typed-client registration that preserves module clients, and the platform AppHost
+owner records exact reusable-library and FrontComposer source/host identities,
+producer/consumer evidence, rollback, and an explicit disposition for
+`parties-mcp`, standalone `parties-ui` versus `frontcomposer-ui`, and
+Docker/Kubernetes/ACA publish-target behavior.
 
 **And** public package compatibility, MCP tool contracts, AppHost topology, and
 operator docs remain stable or intentionally versioned.
@@ -1742,6 +1768,11 @@ work
 **When** Story 8.10 runs
 **Then** final readiness records exact submodule/package pins, validation commands,
 public compatibility, rollback paths, and deferred work owners.
+
+**And** final readiness reconciles the four available-row consumption identities —
+EventStore domain-service host, EventStore DataProtection, Commons HTTP helpers, and
+Builds shared props/targets — against the releases/root gitlinks actually consumed or
+the explicit deferral record.
 
 **And** docs are regenerated or updated to the new project inventory, fitness tests
 pin the new invariants, `sprint-status.yaml` is current, and no PRD FR coverage is

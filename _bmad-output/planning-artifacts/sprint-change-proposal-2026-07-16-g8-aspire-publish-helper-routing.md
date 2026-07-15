@@ -5,8 +5,11 @@ author: Administrator
 workflow: bmad-correct-course
 mode: batch
 scope_classification: moderate
-status: proposed
-approval_required: true
+status: approved
+approval_required: false
+approved_at: 2026-07-16T00:42:32+02:00
+applied_at: 2026-07-16T00:44:50+02:00
+handoff_status: routed
 trigger: >
   Route G8 Aspire publish helpers to Hexalith.EventStore.Aspire and the
   AppHost owners, provide audience-aware JWT and granular typed-client
@@ -91,6 +94,13 @@ of `src/Hexalith.Parties.AppHost/` or the Parties client registrations.
   Parties and uses `AddEventStoreDomainModule` and
   `WithJwtBearerSecurity`. The Parties G8 fitness-test owner mapping also points
   “platform AppHost owners” to the FrontComposer repository.
+- That FrontComposer composition is an owner candidate and target foundation,
+  not current parity evidence: it currently includes `eventstore`, `tenants`,
+  `parties`, and `frontcomposer-ui`, but not `parties-mcp` or the standalone
+  `parties-ui`. Its AppHost is publishable but currently declares no
+  `PUBLISH_TARGET` Docker/Kubernetes/ACA environment selection. By contrast,
+  `aspire ls` in the Parties workspace finds only the current Parties AppHost,
+  whose own `aspire.config.json` remains the active local entry point.
 - Parties deployment documentation already says this repository owns its three
   workload images and GitHub Actions publication, while an external deployment
   orchestrator owns environment-specific Dapr, ingress, secrets, image pull,
@@ -101,13 +111,13 @@ of `src/Hexalith.Parties.AppHost/` or the Parties client registrations.
 
 ## 2. Ownership Decision
 
-The proposed owner split is:
+The approved owner split is:
 
 | Concern | Accountable owner | Parties responsibility |
 |---|---|---|
 | Reusable Aspire domain-module and JWT/publish helpers | `Hexalith.EventStore.Aspire` owners | Consume only after owner proof and parity |
 | Shared EventStore transport and granular registration primitives | `Hexalith.EventStore.Client` owners, coordinated with FrontComposer consumers | Retain domain-typed interfaces and validate coexistence |
-| Canonical integrated local topology containing EventStore, Tenants, and Parties | `Hexalith.FrontComposer.AppHost` / approved platform AppHost owners | Supply Parties resource requirements and topology tests |
+| Target canonical integrated local topology containing EventStore, Tenants, and Parties | `Hexalith.FrontComposer.AppHost` / approved platform AppHost owners | Supply Parties resource requirements and consumer parity tests; retain the current AppHost until handoff acceptance |
 | Parties workload source and immutable image publication | Parties repository owners | Continue owning `parties`, `parties-mcp`, and `parties-ui` CI publication |
 | Runtime deployment manifests, apply, ingress, Dapr production resources, secrets, pull credentials, signing/scanning, promotion | External platform deployment orchestrator / platform operations | Document the workload contract; do not reclaim deployment orchestration |
 
@@ -217,21 +227,36 @@ pattern; the behavioral contract matters more than the method name.
 Owners: `Hexalith.FrontComposer.AppHost` for canonical integrated local
 topology; external platform operations for runtime deployment.
 
-The owner proof must show that the canonical AppHost preserves:
+The owner must first close the known composition gap, then prove that the
+canonical AppHost preserves or intentionally versions:
 
 - resource names and dependencies for EventStore, Parties, Parties MCP,
-  Parties UI, and Tenants;
+  Parties UI, and Tenants, or an explicit replacement map where
+  `frontcomposer-ui` supersedes the standalone Parties UI without losing its
+  routes, policies, OIDC/BFF behavior, health contract, or published workload
+  obligations;
 - `AddEventStoreDomainModule` use for domain hosts;
 - Dapr sidecars/components and deny-by-default ACL with only the required
   EventStore-to-Parties `/process` path;
 - run-mode and publish-mode security environment parity;
-- source-mode and package-mode consumption expectations;
+- Docker, Kubernetes, and ACA publish-environment selection or an explicit
+  owner-approved reduction of that surface;
+- source-mode and package-mode consumption expectations for reusable libraries;
 - health/resource references and the approved container identities;
 - the external deployment handoff without restoring production manifests to
   the Parties repository.
 
+Because `Hexalith.FrontComposer.AppHost` is non-packable, its consumption proof
+must name an exact FrontComposer source commit/root gitlink or a separately
+approved host artifact identity. It must also name the exact
+`Hexalith.EventStore.Aspire` package/submodule identity it consumes; a generic
+“latest platform AppHost” reference is not acceptable.
+
 The Parties AppHost is deleted only after this proof is accepted and the
-Parties topology lane passes against the platform-owned host.
+Parties topology lane passes against the platform-owned host. Current
+source-reading fitness tests that are hard-coded to
+`src/Hexalith.Parties.AppHost/` must be re-homed to the owner repository or
+adapted into consumer parity tests before that directory is removed.
 
 ### Alternatives considered
 
@@ -241,16 +266,20 @@ Parties topology lane passes against the platform-owned host.
 - **Make EventStore.AppHost the integrated Parties topology owner:** not selected.
   EventStore owns its canonical service/sample host and reusable Aspire helpers,
   while FrontComposer.AppHost is the existing cross-domain composition that
-  explicitly includes Parties and Tenants.
+  explicitly includes Parties and Tenants. FrontComposer must still add or
+  explicitly disposition Parties MCP, standalone Parties UI, and publish-target
+  parity before handoff.
 - **Move runtime deployment back into Parties:** rejected. The approved boundary
   is immutable image publication here and environment orchestration in platform
   operations.
 - **Proceed with Story 8.8 using local adapters only:** rejected because it would
   hide the platform API/ownership gap and weaken the deletion gate.
 
-## 5. Detailed Planning Edits After Approval
+## 5. Approved Planning Edits
 
-No edit in this section is applied until the proposal is approved.
+Administrator approved this proposal on 2026-07-16. The planning, tracking,
+and project-documentation edits in this section have been applied; no production
+code or submodule content was changed.
 
 ### 5.1 Epic 8 architecture spine
 
@@ -300,6 +329,9 @@ Artifact:
   registration owner as `Hexalith.EventStore.Client`, the integrated topology
   owner as `Hexalith.FrontComposer.AppHost`, and runtime deploy owner as external
   platform operations.
+- Record that FrontComposer ownership is the target decision, while current
+  execution remains rooted at `src/Hexalith.Parties.AppHost/` until the missing
+  MCP/UI and publish-target parity is accepted.
 - Record Packages A-C and their proof criteria from Section 4.
 - Keep the current Parties AppHost and typed-client registration as rollback.
 - Change to `available` only after named owner approval, exact release/submodule
@@ -363,9 +395,12 @@ G8 is `available` only when all of the following are recorded:
 4. Producer and consumer tests prove module-typed clients coexist without
    replacement, duplication, or handler-order regression.
 5. FrontComposer/platform AppHost owner approval for the integrated Parties
-   topology and an exact consumable source/package identity.
+   topology and an exact FrontComposer source/host-artifact identity plus the
+   exact EventStore.Aspire package/submodule identity.
 6. The Parties topology lane proves resource, health, security, Dapr ACL, and
-   publish behavior parity against that identity.
+   publish behavior parity against that identity, including an explicit
+   disposition for `parties-mcp`, standalone `parties-ui` versus
+   `frontcomposer-ui`, and Docker/Kubernetes/ACA publish targets.
 7. Runtime deployment ownership remains external and no production manifests
    are reintroduced into Parties.
 8. The current Parties AppHost and client registrations remain available as
@@ -390,16 +425,16 @@ Story 8.8 implementation record.
 | Triggering story and issue | Complete — Story 8.8, technical/API and owner gap |
 | Epic/story impact | Complete — Epic 8 viable; no resequencing or new epic |
 | PRD/UX impact | No change |
-| Architecture impact | Action required — remove permanent thin-AppHost target |
+| Architecture impact | Applied — permanent thin-AppHost target removed from planning |
 | Technical path | Viable — direct adjustment with three owner packages |
 | Rollback | Current Parties AppHost and client registrations retained until parity |
 | Handoff | Architect routes; EventStore/FrontComposer/platform owners deliver; Parties validates |
-| Approval | Pending |
+| Approval | Approved by Administrator on 2026-07-16; planning edits applied |
 
 ## 8. Handoff
 
-- **Winston / architecture owner:** approve and route the three packages; keep
-  the G8 matrix row fail-closed.
+- **Winston / architecture owner:** track the three routed packages and keep the
+  G8 matrix row fail-closed.
 - **EventStore.Aspire owner:** deliver/approve Package A.
 - **EventStore.Client owner:** deliver/approve Package B with FrontComposer and
   Parties coexistence evidence.
@@ -407,10 +442,11 @@ Story 8.8 implementation record.
   publish the exact consumable identity.
 - **Platform operations:** confirm runtime deployment ownership and workload
   contract; no Parties-repository manifest work is requested.
-- **Parties owner/developer:** apply the planning edits only after approval;
-  implement Story 8.8 only after G8 is `available` and retain rollback until
-  consumer parity is green.
+- **Parties owner/developer:** planning edits are applied; implement Story 8.8
+  only after G8 is `available` and retain rollback until consumer parity is
+  green.
 
-No production code, submodule content, sprint status, epics, architecture, or
-Story 8.8 implementation artifact has been changed by this proposed course
-correction.
+Following Administrator approval, the planning, prerequisite, sprint-routing,
+and current-versus-target documentation edits in Section 5 were applied. No
+production code or submodule content was changed; delivery of Packages A-C
+remains owner-repository work and G8 remains `needs-additive-api`.

@@ -19,6 +19,8 @@ namespace Hexalith.Parties.AdminPortal.Tests.Services;
 
 public sealed class PartiesAdminPortalApiClientTests
 {
+    private static readonly JsonSerializerOptions WebJson = new(JsonSerializerDefaults.Web);
+
     [Fact]
     public async Task ListPartiesAsync_WhenPartiesQueryClientIsRegistered_PrefersTypedClientBoundaryAsync()
     {
@@ -386,24 +388,43 @@ public sealed class PartiesAdminPortalApiClientTests
 
         QueryRequest request = queryService.LastRequest.ShouldNotBeNull();
         request.Domain.ShouldBe("party");
-#if HEXALITH_FRONTCOMPOSER_CANONICAL_QUERY
         request.Criteria.ProjectionType.ShouldBe("PartyIndex");
         request.Criteria.Skip.ShouldBe(100);
         request.Criteria.Take.ShouldBe(100);
         request.Criteria.ColumnFilters.ShouldNotBeNull()["type"].ShouldBe("Person");
         request.Criteria.ColumnFilters.ShouldNotBeNull()["active"].ShouldBe("true");
-#else
-        request.ProjectionType.ShouldBe("PartyIndex");
-        request.Skip.ShouldBe(100);
-        request.Take.ShouldBe(100);
-        request.ColumnFilters.ShouldNotBeNull()["type"].ShouldBe("Person");
-        request.ColumnFilters.ShouldNotBeNull()["active"].ShouldBe("true");
-#endif
         request.QueryType.ShouldBe("ListParties");
         request.CacheDiscriminator.ShouldBe("parties-admin-list-v1");
         result.Payload.Page.ShouldBe(2);
         result.Payload.PageSize.ShouldBe(100);
         result.Payload.TotalPages.ShouldBe(2);
+    }
+
+    [Fact]
+    public async Task ListPartiesAsync_CanonicalQueryRequestSerializesWithFlatCriteriaAsync()
+    {
+        var queryService = new RecordingQueryService();
+        queryService.Enqueue(Array.Empty<PartyIndexEntry>(), totalCount: 0);
+        PartiesAdminPortalApiClient client = CreateClient(queryService);
+
+        await client.ListPartiesAsync(
+            new AdminPortalListRequest(Page: 2, PageSize: 20, Type: PartyType.Person, Active: true),
+            CancellationToken.None);
+
+        QueryRequest request = queryService.LastRequest.ShouldNotBeNull();
+        string json = JsonSerializer.Serialize(request, WebJson);
+        using JsonDocument document = JsonDocument.Parse(json);
+        JsonElement root = document.RootElement;
+
+        root.TryGetProperty("criteria", out _).ShouldBeFalse();
+        root.GetProperty("projectionType").GetString().ShouldBe("PartyIndex");
+        root.GetProperty("skip").GetInt32().ShouldBe(20);
+        root.GetProperty("take").GetInt32().ShouldBe(20);
+        root.GetProperty("columnFilters").GetProperty("type").GetString().ShouldBe("Person");
+        root.GetProperty("columnFilters").GetProperty("active").GetString().ShouldBe("true");
+        root.GetProperty("domain").GetString().ShouldBe("party");
+        root.GetProperty("queryType").GetString().ShouldBe("ListParties");
+        root.GetProperty("cacheDiscriminator").GetString().ShouldBe("parties-admin-list-v1");
     }
 
     [Fact]
@@ -467,19 +488,11 @@ public sealed class PartiesAdminPortalApiClientTests
 
         QueryRequest request = queryService.LastRequest.ShouldNotBeNull();
         request.Domain.ShouldBe("party");
-#if HEXALITH_FRONTCOMPOSER_CANONICAL_QUERY
         request.Criteria.ProjectionType.ShouldBe("PartySearch");
         request.Criteria.SearchQuery.ShouldBe("ada@example.test");
         request.Criteria.ColumnFilters.ShouldNotBeNull()["type"].ShouldBe("Person");
         request.Criteria.ColumnFilters.ShouldNotBeNull()["active"].ShouldBe("true");
         request.Criteria.ColumnFilters.ShouldNotBeNull()["mode"].ShouldBe("Lexical");
-#else
-        request.ProjectionType.ShouldBe("PartySearch");
-        request.SearchQuery.ShouldBe("ada@example.test");
-        request.ColumnFilters.ShouldNotBeNull()["type"].ShouldBe("Person");
-        request.ColumnFilters.ShouldNotBeNull()["active"].ShouldBe("true");
-        request.ColumnFilters.ShouldNotBeNull()["mode"].ShouldBe("Lexical");
-#endif
         request.QueryType.ShouldBe("SearchParties");
         request.CacheDiscriminator.ShouldBe("parties-admin-search-v1");
         result.Payload.Items.ShouldHaveSingleItem();
@@ -497,13 +510,8 @@ public sealed class PartiesAdminPortalApiClientTests
             CancellationToken.None);
 
         QueryRequest request = queryService.LastRequest.ShouldNotBeNull();
-#if HEXALITH_FRONTCOMPOSER_CANONICAL_QUERY
         request.Criteria.Skip.ShouldBe(50);
         request.Criteria.Take.ShouldBe(25);
-#else
-        request.Skip.ShouldBe(50);
-        request.Take.ShouldBe(25);
-#endif
     }
 
     [Fact]
@@ -530,11 +538,7 @@ public sealed class PartiesAdminPortalApiClientTests
         request.Domain.ShouldBe("party");
         request.AggregateId.ShouldBe("p-1");
         request.EntityId.ShouldBe("p-1");
-#if HEXALITH_FRONTCOMPOSER_CANONICAL_QUERY
         request.Criteria.ProjectionType.ShouldBe("PartyDetail");
-#else
-        request.ProjectionType.ShouldBe("PartyDetail");
-#endif
         request.QueryType.ShouldBe("GetParty");
         request.ProjectionActorType.ShouldBe("PartyDetailProjectionActor");
         result.Payload.DisplayName.ShouldBe("Ada Lovelace");

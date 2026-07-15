@@ -27,6 +27,8 @@ warnings:
 
 **Block If:** Any of Stories 8.6–8.9 is incomplete AND lacks an explicit deferral record (owner + proof + rollback + evidence); a fitness test cannot pin a claimed new invariant; or final release verification fails without a recorded, owner-assigned blocker. HALT and record the blocker rather than marking Epic 8 done.
 
+**Block If — available-row identities:** HALT final closure if any of the four named `available` rows — EventStore domain-service host, EventStore DataProtection, Commons HTTP helpers, or Builds shared props/targets — lacks a recorded release/root-gitlink identity for an actually consumed surface, if that identity differs from the dependency used by Parties, or if an unconsumed surface lacks an explicit owner/proof/rollback deferral.
+
 **Never:** Do not change PRD FR coverage or Epics 1–5. Do not mark Epic 8 `done` while blockers lack an owner/deferral. Do not relax the build gate, warnings-as-errors, or the deploy poison-sweep to force a green. Do not delete rollback paths whose parity was never proven — record them as deferred instead.
 
 ## I/O & Edge-Case Matrix
@@ -52,19 +54,21 @@ warnings:
 
 **Execution:** (gated — run only after 8.6–8.9 are done or explicitly deferred)
 - [ ] Reconcile each 8.6–8.9 outcome: done-with-evidence OR deferred-with-owner/proof/rollback in `deferred-work.md` + the 8.3 matrix.
+- [ ] Reconcile the Story 8.5 historical host pin, the Story 8.6 DataProtection identity, and the Story 8.8 Commons HTTP/Builds identities against the final package/root-gitlink dependency graph; record an explicit deferral instead for any unconsumed surface.
 - [ ] Regenerate/update `docs/` + component inventory; make `DocumentationFitnessTest` green.
 - [ ] Update fitness tests to pin the new inventory + invariants; update `sprint-status.yaml` (Epic 8 + retrospective).
 - [ ] Run the full lane set; record exact commands/results + pins in `test-summary.md`; confirm or block release.
 
 **Acceptance Criteria:**
 - Given any 8.6–8.9 item is incomplete without a deferral record, when 8.10 runs, then it HALTs `blocked` naming the item + owner gap.
+- Given any of the four named `available` rows, when final readiness runs, then its release/root gitlink matches the dependency actually consumed or its explicit deferral records owner, proof, rollback, and evidence; otherwise 8.10 HALTS.
 - Given closure, when Epic 8 is marked done, then final readiness records pins, validation commands, public compatibility, rollback paths, and deferred-work owners, and PRD FR coverage is unchanged.
 - Given the docs + fitness tests, when validated, then they reflect the new project inventory and pin the I1–I15 invariants.
 - Given final verification, when the lanes run, then each either passes or blocks with a recorded, owner-assigned reason.
 
 ## Design Notes
 
-- **§4 gate mapping:** (1) Prereq: 8.6–8.9 done or explicitly deferred. (2) Repos: `Parties` (+ pins recorded for all touched submodules). (3) Rollback: unproven-parity paths recorded as deferred, not deleted. (4) Lanes: build, focused xUnit v3 EXEs, package/API tests, topology, deploy, `ui-a11y`. (5) Non-goals: no PRD/feature change; no new migration. (6) Parity checklist: confirms I1–I15 pinned by fitness tests.
+- **§4 gate mapping:** (1) Prereq: 8.6–8.9 done or explicitly deferred, with the four named available-row identities reconciled to actual consumption or explicit deferral. (2) Repos: `Parties` (+ pins recorded for all touched submodules). (3) Rollback: unproven-parity paths recorded as deferred, not deleted. (4) Lanes: build, focused xUnit v3 EXEs, package/API tests, topology, deploy, `ui-a11y`. (5) Non-goals: no PRD/feature change; no new migration. (6) Parity checklist: confirms I1–I15 pinned by fitness tests.
 
 ## Verification
 

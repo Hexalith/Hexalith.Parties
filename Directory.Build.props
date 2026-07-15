@@ -31,7 +31,6 @@
     <HexalithCommonsServiceDefaultsFromSource Condition="'$(HexalithCommonsServiceDefaultsFromSource)' == '' and Exists('$(HexalithCommonsRoot)\src\libraries\Hexalith.Commons.ServiceDefaults\Hexalith.Commons.ServiceDefaults.csproj')">true</HexalithCommonsServiceDefaultsFromSource>
     <HexalithEventStoreFromSource Condition="'$(UseHexalithProjectReferences)' == 'true' and Exists('$(HexalithEventStoreRoot)\src\Hexalith.EventStore.Contracts\Hexalith.EventStore.Contracts.csproj')">true</HexalithEventStoreFromSource>
     <HexalithFrontComposerFromSource Condition="'$(UseHexalithProjectReferences)' == 'true' and Exists('$(HexalithFrontComposerRoot)\src\Hexalith.FrontComposer.Contracts\Hexalith.FrontComposer.Contracts.csproj')">true</HexalithFrontComposerFromSource>
-    <DefineConstants Condition="'$(HexalithFrontComposerFromSource)' == 'true'">$(DefineConstants);HEXALITH_FRONTCOMPOSER_CANONICAL_QUERY</DefineConstants>
     <HexalithMemoriesFromSource Condition="'$(UseHexalithProjectReferences)' == 'true' and Exists('$(HexalithMemoriesRoot)\src\Hexalith.Memories.Contracts\Hexalith.Memories.Contracts.csproj')">true</HexalithMemoriesFromSource>
     <HexalithTenantsFromSource Condition="'$(UseHexalithProjectReferences)' == 'true' and Exists('$(HexalithTenantsRoot)\src\Hexalith.Tenants.Contracts\Hexalith.Tenants.Contracts.csproj')">true</HexalithTenantsFromSource>
     <TargetFramework>net10.0</TargetFramework>

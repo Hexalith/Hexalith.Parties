@@ -204,12 +204,16 @@ GPT-5 Codex
 - 2026-07-09T13:25:25+02:00 - Read `_bmad-output/implementation-artifacts/story-8-3-platform-api-prerequisite-matrix.md`; the `EventStore projection/query SDK` row still has status `needs-additive-api`.
 - 2026-07-09T13:25:25+02:00 - Ran `git -C references/Hexalith.EventStore rev-parse HEAD`; current pin is `0f428d0c914f2151aab15bb262f956a9630041dc`, matching `eventstore_pin_at_creation`.
 - 2026-07-09T13:25:25+02:00 - Halted before production source edits per AC1 and the story block-if rule. No submodule update/init command was run.
+- 2026-07-16T01:04:55+02:00 - Re-read the complete prerequisite matrix; the `EventStore projection/query SDK` row remains `needs-additive-api` and explicitly records that no Story 1.20 owner-approved `available` decision exists.
+- 2026-07-16T01:04:55+02:00 - Re-read the EventStore sprint status and Story 1.20: Story 1.19 remains `review`, Story 1.20 remains `ready-for-dev`, and the required `1-20-owner-approved-parity-closure-proof-packet.md` is absent.
+- 2026-07-16T01:04:55+02:00 - Verified the root EventStore gitlink is `82ed167c1c78d4ff50d3f8eab43850bb6abd0fe7` while the pre-existing checkout is `97c335cc5685928166914e6b7725502b8017de8b`; the mismatch is not approved consumption identity proof. Halted without production source edits, tests, or submodule commands.
 
 ### Completion Notes List
 
 - Source migration is blocked. The Story 8.3 `EventStore projection/query SDK` matrix row remains `needs-additive-api`, so owner-approved additive parity or explicit already-available proof is not locally recorded for the required G3 read-model erasure hooks, G10 index batching, G6 freshness mapping, duplicate/out-of-order replay, full rebuild verification, and cursor scope compatibility.
 - Recorded the current EventStore submodule pin in the Story 8.3 matrix and moved Story 8.6 tracking to `blocked`.
 - No production source files were edited and no tests were run because the story requires halting before source migration while the prerequisite row remains unresolved.
+- Revalidated the gate on 2026-07-16: the active EventStore closure story has not started, its predecessor is still in review, no owner-approved closure packet exists, and the checked-out EventStore SHA does not match the root gitlink. Story 8.6 therefore remains blocked.
 
 ### File List
 
@@ -223,3 +227,4 @@ GPT-5 Codex
 | Date | Version | Description | Author |
 |------|---------|-------------|--------|
 | 2026-07-09 | 0.1 | Blocked Story 8.6 at the prerequisite gate because the Story 8.3 `EventStore projection/query SDK` row remains `needs-additive-api`; recorded the current EventStore pin and preserved all production source rollback paths. | GPT-5 Codex (dev-story) |
+| 2026-07-16 | 0.2 | Revalidated the prerequisite gate; Story 1.20 remains unstarted with no owner-approved closure packet, and the EventStore checkout does not match the root gitlink. Preserved all production source rollback paths. | GPT-5 Codex (dev-story) |

@@ -81,7 +81,17 @@ Solution-wide build settings (`Directory.Build.props`): `Nullable=enable`, `Impl
 
 ## 4. System topology (Aspire)
 
-`src/Hexalith.Parties.AppHost/Program.cs` composes the local/dev topology (`dotnet aspire run`). EventStore-fronted: public traffic enters EventStore; Parties is the domain host behind it.
+`src/Hexalith.Parties.AppHost/Program.cs` currently composes the local/dev topology
+(`dotnet aspire run`) and remains the G8 migration rollback entry point.
+EventStore-fronted: public traffic enters EventStore; Parties is the domain host
+behind it. The approved target is for `Hexalith.FrontComposer.AppHost` (or an
+explicitly approved platform AppHost) to own the canonical integrated
+EventStore/Tenants/Parties local topology after security, typed-client, publish,
+and topology parity are proven; the domain-owned Parties AppHost is then retired.
+FrontComposer is the target owner, not current parity evidence: its present host
+does not yet compose `parties-mcp` or standalone `parties-ui` and does not expose
+the Parties Docker/Kubernetes/ACA `PUBLISH_TARGET` selection. Those gaps require
+an owner-approved preserve-or-replace map and consumer proof before handoff.
 
 | Resource | Kind | Start | Role |
 |----------|------|-------|------|
@@ -188,7 +198,7 @@ The annotated tree is in **[source-tree-analysis.md](source-tree-analysis.md)**;
 
 ```
 src/
-  Hexalith.Parties.AppHost/        # Aspire orchestration (dev entry point)
+  Hexalith.Parties.AppHost/        # Current Aspire dev/rollback entry point; retire after G8 platform-host parity
   # Adopter-facing
   Hexalith.Parties.Client/         # typed EventStore gateway client
   Hexalith.Parties.Contracts/      # commands, events, value objects, read models (no infra deps)

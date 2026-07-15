@@ -5,8 +5,22 @@ Hexalith.Parties no longer keeps runtime deployment manifests or cluster apply s
 This repository owns:
 
 - Source code for the `parties`, `parties-mcp`, and `parties-ui` workloads.
-- Local Aspire/Dapr topology for development in `src/Hexalith.Parties.AppHost/`.
+- Current local Aspire/Dapr topology and G8 rollback entry point in
+  `src/Hexalith.Parties.AppHost/`.
 - GitHub Actions publication of Parties-owned container images to Zot.
+
+The approved target ownership after G8 parity is:
+
+- `Hexalith.EventStore.Aspire` owns reusable security and domain-module helpers.
+- `Hexalith.FrontComposer.AppHost` or an explicitly approved platform AppHost
+  owns the canonical integrated EventStore/Tenants/Parties local topology.
+- The Parties AppHost is retired only after topology, security, publish, and
+  typed-client parity are accepted; until then it remains the rollback surface.
+
+FrontComposer ownership is the approved target rather than proof that migration
+is already complete. Its owner must explicitly preserve or replace
+`parties-mcp`, standalone `parties-ui`, and the Parties Docker/Kubernetes/ACA
+publish-target behavior before the current AppHost can be retired.
 
 Runtime deployment orchestration is owned outside this repository. The orchestrator must consume immutable image tags from:
 
@@ -25,6 +39,10 @@ dotnet aspire run --project src/Hexalith.Parties.AppHost
 ```
 
 Local Dapr component YAML remains under `src/Hexalith.Parties.AppHost/DaprComponents/` and is scoped to local development only. Do not treat those files as production deployment manifests.
+
+This command and path describe the current compatibility topology. After the G8
+owner proof and consumer parity gate complete, use the approved platform AppHost
+entry point documented by its owner instead.
 
 ## Runtime Requirements
 

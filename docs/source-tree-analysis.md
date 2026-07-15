@@ -15,7 +15,7 @@ Hexalith.Parties/
 ├── README.md
 │
 ├── src/
-│   ├── Hexalith.Parties.AppHost/      # ▶ Aspire orchestration — dev entry point (`dotnet aspire run`)
+│   ├── Hexalith.Parties.AppHost/      # ▶ Current Aspire dev/rollback entry point; retire after G8 platform-host parity
 │   │   ├── Program.cs                 #   composes eventstore, parties, tenants, mcp, memories, security…
 │   │   ├── DaprComponents/            #   run-mode DAPR YAML: statestore, pubsub, resiliency,
 │   │   │                              #     subscription-parties, accesscontrol.*.yaml (deny-by-default)
@@ -128,7 +128,8 @@ git submodule update --init references/Hexalith.Builds references/Hexalith.Commo
 
 | Purpose | Entry point |
 |---------|-------------|
-| Local dev topology | `src/Hexalith.Parties.AppHost/Program.cs` (`dotnet aspire run --project src/Hexalith.Parties.AppHost`) |
+| Current local dev / G8 rollback topology | `src/Hexalith.Parties.AppHost/Program.cs` (`dotnet aspire run --project src/Hexalith.Parties.AppHost`) |
+| Target integrated local topology after G8 parity | `references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.AppHost/Program.cs` or an explicitly approved platform AppHost |
 | Domain service host | `src/Hexalith.Parties/Program.cs` → `POST /process` |
 | MCP host | `src/Hexalith.Parties.Mcp/Program.cs` → `/mcp` |
 | Command handling | `src/Hexalith.Parties/Domain/PartyAggregate.cs` (static `Handle`) |
@@ -146,5 +147,5 @@ git submodule update --init references/Hexalith.Builds references/Hexalith.Commo
 | MCP tools | `src/Hexalith.Parties.Mcp/Tools/` |
 | Auth / tenancy / compliance | `src/Hexalith.Parties/{Authentication,Authorization,Compliance,Middleware}` |
 | GDPR encryption/erasure | `src/Hexalith.Parties.Security/` |
-| Local topology / DAPR wiring | `src/Hexalith.Parties.AppHost/` |
+| Current local topology / DAPR rollback wiring | `src/Hexalith.Parties.AppHost/` (retire only after approved platform AppHost parity) |
 | Container publication | `.github/workflows/release.yml`, `scripts/publish-parties-containers.ps1` |

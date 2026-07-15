@@ -373,3 +373,40 @@ applied automatically — left as an owner choice since it changes submodule che
 | Package mode (Release, CI parity) | 15 / 15 | 2321 | 0 | 6 (Docker/DAPR) |
 | Source mode (Debug, project refs, Commons→package) | 14 / 15 | 2679 exec | 2 (Client PackageTests — pass in package mode) | 6 |
 | e2e Playwright | typecheck + 16 SSR/artifact specs pass | — | interactive → CI `ui-a11y` | — |
+
+## Story 8.3 Available-Row Consumption Identities — 2026-07-16
+
+The four named `available` matrix rows now record immutable consumption
+identities without requesting additive APIs:
+
+| Surface | Recorded identity |
+| --- | --- |
+| EventStore domain-service host | Historical Story 8.5 root gitlink `9f8b54dc161a4d5a9b2e6b1deacf331d1b80f1e0` at Parties commit `bff30c1182e95af1a922d74777a6611e788a53ee` |
+| EventStore DataProtection | Current root gitlink `82ed167c1c78d4ff50d3f8eab43850bb6abd0fe7` |
+| Commons HTTP helpers | `Hexalith.Commons.Http` `2.28.1` / `v2.28.1`, root gitlink `b03469b13408530bb757d3d02279c2d772ee4848` |
+| Builds shared props/targets | `4.18.5` / `v4.18.5`, root gitlink `ed75ae3c45425b9610d5e75e6c5ec3e8d5283fe1` |
+
+Validation results:
+
+- The initial Release package-mode build using Commons `2.28.0` failed with
+  `NU1109` because the concurrently updated EventStore dependency requires
+  `Hexalith.Commons.UniqueIds >= 2.28.1`; rerunning with Commons `2.28.1`
+  passed with 0 warnings and 0 errors.
+- A later `--no-restore` rerun observed concurrent central-version requests for
+  unpublished EventStore `3.67.1` and Memories `2.6.17` (`NU1102`). The final
+  Release validation invocation overrode only the command line to published
+  EventStore `3.67.0`, Memories `2.6.16`, Commons `2.28.1`, and Tenants `2.4.2`;
+  it passed with 0 warnings and 0 errors. No repository dependency file was
+  changed by this correction.
+- Focused xUnit v3 execution of
+  `Matrix_NamedAvailableRowsRecordImmutableConsumptionIdentities` and
+  `AvailableRowConsumersFailClosedOnMissingOrMismatchedIdentity`: 2 passed,
+  0 failed.
+- Exact-object inspections for the three EventStore DataProtection/cursor files
+  passed; Commons `v2.28.1^{}` and Builds `v4.18.5^{}` resolve to their recorded
+  root gitlinks; the historical Story 8.5 `git ls-tree` resolves to `9f8b54dc…`.
+- Targeted `git diff --check` passed.
+
+The concurrently advanced EventStore checkout is not treated as consumption
+proof. Stories 8.6, 8.8, and 8.10 now fail closed and refresh the matrix if their
+selected release or root gitlink differs from the recorded identity.

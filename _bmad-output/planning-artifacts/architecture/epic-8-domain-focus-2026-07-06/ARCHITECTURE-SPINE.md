@@ -53,7 +53,7 @@ substance and sheds reusable platform mechanics.
 | Projection/query **semantics** (folds, tenant guardrails) | Projection/query **mechanics** (actors, rebuild, cursor codec) → EventStore SDK |
 | GDPR **policy** + legal semantics | Generic crypto/key-management engine → EventStore/shared DataProtection |
 | Typed domain clients, domain UI, MCP tool **definitions** | Command envelopes, paging/freshness models, MCP plumbing → owning modules |
-| Domain samples, **thin** AppHost | Build-root probing, AppHost security/module helpers, platform deploy assets → Builds / platform-ops |
+| Domain samples; no domain-owned AppHost in the target state | Build-root probing → Builds; reusable security/module helpers → EventStore.Aspire; canonical integrated local topology → FrontComposer.AppHost / approved platform AppHost owner; runtime deploy orchestration → platform-ops |
 
 ## 3. Invariants — must hold across every remaining migration (8.6–8.10)
 
@@ -61,6 +61,10 @@ substance and sheds reusable platform mechanics.
 - I1. No public API on the actor host. Traffic enters via the EventStore
   gateway → `POST /process` over DAPR; ACL stays deny-by-default. Migration
   must never add public controllers/endpoints.
+- I1a. A domain-owned AppHost may remain only as a migration rollback surface.
+  The target integrated local topology is owned by FrontComposer.AppHost or an
+  explicitly approved platform AppHost owner, and the domain AppHost is retired
+  only after topology, security, publish, and rollback parity are proven.
 - I2. Host target is the EventStore SDK shape (`AddEventStoreDomainService` /
   `UseEventStoreDomainService`); Parties retains only domain registrations,
   Parties-specific policy, and payload-protection hooks the SDK cannot own.
@@ -70,9 +74,12 @@ substance and sheds reusable platform mechanics.
   in place until the replacement API has **parity evidence** and proven
   rollback. `catch (NotImplementedException)` remoting control flow is deleted
   only after parity.
-- I4. No Parties source migration starts from an unapproved/checked-out
-  submodule API. Every prerequisite is additive or proven-already-available
-  (the 8.3 matrix).
+- I4. No Parties source migration starts from an unapproved or unidentified
+  dependency. Every prerequisite is either an owner-approved additive API or an
+  already-available surface whose Story 8.3 row records the exact released
+  package version or root-declared submodule gitlink SHA selected by the
+  consumer. A checked-out source file or `available` status alone is not
+  consumption evidence.
 
 **Behavior preservation (stable or intentionally versioned)**
 - I5. Public package contracts: `Client` + `Contracts` public shape and the
@@ -118,7 +125,9 @@ Each `spec-8-x` (8.6–8.10) is **not** ready for a dev session until its spec
 file declares all six, in the spec itself:
 
 1. **Prerequisites** — which 8.3 platform APIs must be landed + owner-approved,
-   and which prior stories must be done.
+   which prior stories must be done, and, for every `available` surface, the
+   release or root gitlink recorded in the matrix that must match the consuming
+   story's actual dependency mode and identity before source changes begin.
 2. **Touched repos/submodules** — Parties + each of EventStore / Commons /
    FrontComposer / Builds / `deploy` that the change edits.
 3. **Rollback path** — which local code stays until parity, and how to revert.

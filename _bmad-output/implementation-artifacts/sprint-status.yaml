@@ -1,5 +1,5 @@
 # generated: 2026-06-21T18:55:59+02:00
-# last_updated: 2026-07-16T00:34:27+02:00
+# last_updated: 2026-07-16T00:44:50+02:00
 # project: parties
 # project_key: NOKEY
 # tracking_system: file-system
@@ -42,7 +42,7 @@
 # - Retrospective appends its action items to action_items; sprint-status surfaces open ones
 
 generated: 2026-06-21T18:55:59+02:00
-last_updated: 2026-07-16T00:34:27+02:00
+last_updated: 2026-07-16T00:44:50+02:00
 project: parties
 project_key: NOKEY
 tracking_system: file-system
@@ -294,17 +294,36 @@ action_items:
     # approved release/submodule-pin and parity evidence are recorded in Story 8.3.
     status: in-progress
   - epic: 8
-    action: "Route G8 Aspire publish helpers to Hexalith.EventStore.Aspire + AppHost owners: WithEventStoreJwtAuthentication(audience) (or documented WithJwtBearerSecurity(..., audience) replacement) + granular typed-client registration; confirm the Parties AppHost topology/deploy owner. Blocks 8.8."
-    owner: "Winston (Architect) + Hexalith.EventStore.Aspire & AppHost owners"
+    # Routed and ownership-confirmed 2026-07-16 through:
+    # _bmad-output/planning-artifacts/sprint-change-proposal-2026-07-16-g8-aspire-publish-helper-routing.md.
+    # Package A: EventStore.Aspire audience-aware run/publish JWT surface.
+    # Package B: EventStore.Client granular registration preserving module clients.
+    # Package C: FrontComposer.AppHost / approved platform AppHost owns integrated
+    # local topology; external platform operations owns runtime deployment.
+    # Parties AppHost and typed clients remain rollback until consumer parity.
+    action: "Deliver G8 owner proof: EventStore.Aspire audience-aware JWT run/publish parity; EventStore.Client granular typed-client registration with Parties/FrontComposer coexistence; FrontComposer.AppHost or approved platform AppHost integrated topology parity; external platform-operations deploy handoff. Blocks the Story 8.8 G8 slice until exact identities, producer/consumer evidence, and rollback are recorded."
+    owner: "Winston (Architect) + Hexalith.EventStore.Aspire + Hexalith.EventStore.Client + Hexalith.FrontComposer.AppHost + platform-operations owners"
+    status: in-progress
+  - epic: 8
+    action: "G7/G9 tenant-claims ownership confirmed on 2026-07-16 with no redirect: EventStore owns the public `eventstore:tenant` constant, reusable lightweight tenant-claims transformation, and AggregateIdentity.IsValid(string); Commons owns UniqueIdHelper.IsValidUlid(string). Decision: _bmad-output/planning-artifacts/sprint-change-proposal-2026-07-16-g7-g9-tenant-claims-ownership.md."
+    owner: "Winston (Architect) + Administrator"
+    status: done
+  - epic: 8
+    action: "Deliver G7/G9 owner APIs before Parties migration: EventStore.Contracts public `eventstore:tenant` constant plus AggregateIdentity.IsValid(string); lightweight Hexalith.EventStore.Authentication reusable tenant transformation; Commons UniqueIdHelper.IsValidUlid(string). Record named approvals, exact release or root-submodule pins, producer-consumer parity, and rollback in Story 8.3 before deleting Hexalith.Parties.Authentication. Blocks deferred 8.4 deletion/8.8."
+    owner: "Hexalith.EventStore & Hexalith.Commons owners + Amelia (Developer) + Murat (Test Architect)"
     status: open
   - epic: 8
-    action: "Confirm G7/G9 tenant-claims ownership (architecture-owner decision): EventStore owns the reusable claims transformation + public `eventstore:tenant` constant, plus additive AggregateIdentity.IsValid(string) (EventStore.Contracts) and UniqueIdHelper.IsValidUlid(string) (Commons) predicates — or an explicit redirect — before Parties deletes Hexalith.Parties.Authentication. Blocks 8.4-deletion/8.8."
-    owner: "Winston (Architect) + Hexalith.EventStore & Hexalith.Commons owners"
-    status: open
-  - epic: 8
-    action: "Route G4 + G11 to Hexalith.FrontComposer (+ Commons): additive FcEntityPicker<T>, per-record freshness indicator, live-region politeness, file/JSON download service, typed-name destructive dialog, skip links (G4, blocks 8.9); MCP auth + tenant header relay, EventStore Admin UI deep-link builder, search-capability health probe (G11, blocks 8.8)."
-    owner: "Sally (UX Designer) + Winston (Architect) + Hexalith.FrontComposer owners"
-    status: open
+    # Routed and ownership-split 2026-07-16 through:
+    # _bmad-output/planning-artifacts/sprint-change-proposal-2026-07-16-g4-g11-frontcomposer-shared-primitives-routing.md.
+    # G4: five additive Contracts.UI/Shell capabilities plus certification of the
+    # existing shell skip links; blocks the Story 8.9 UI-migration slice.
+    # G11: FrontComposer.Mcp relay policy, FrontComposer link/capability contracts,
+    # and domain-neutral Commons.Http header/URI/bounded-health mechanics; blocks
+    # the Story 8.8 MCP/integration slice. Routing is not delivery: both Story 8.3
+    # rows remain needs-additive-api and all Parties-local rollback paths remain.
+    action: "Deliver G4 + G11 owner proof: FrontComposer Contracts.UI/Shell `FcEntityPicker<T>`, per-record freshness, public live-region politeness, safe file/JSON download, typed-name destructive mode, and existing skip-link parity (G4, blocks 8.9); FrontComposer.Mcp server-authoritative auth/tenant relay, FrontComposer EventStore Admin UI links/capability result, and Commons.Http safe header/URI/bounded named-health mechanics (G11, blocks 8.8). Record exact identities, producer/consumer evidence, and rollback in Story 8.3."
+    owner: "Sally (UX Designer) + Winston (Architect) + Hexalith.FrontComposer.Contracts.UI/Shell/Mcp + Hexalith.Commons.Http owners"
+    status: in-progress
   - epic: 8
     action: "Validate the four `available` 8.3 rows at consumption (no additive API needed): EventStore domain-service host (8.5-proven), EventStore DataProtection, Commons HTTP helpers, Builds shared props/targets each need release or submodule-pin availability recorded in the matrix row before 8.6/8.8/8.10 consume them."
     owner: "Murat (Test Architect) + respective owners"

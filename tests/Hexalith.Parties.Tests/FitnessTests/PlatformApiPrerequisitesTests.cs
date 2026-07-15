@@ -64,6 +64,14 @@ public sealed class PlatformApiPrerequisitesTests
         ["Package publishing/source-mode CI"] = ["Hexalith.Commons.Http", "Hexalith.Commons.ServiceDefaults", "Hexalith.Tenants.Client", "Hexalith.Tenants.Testing"],
     };
 
+    private static readonly IReadOnlyDictionary<string, string[]> RequiredAvailableConsumptionIdentities = new Dictionary<string, string[]>(StringComparer.Ordinal)
+    {
+        ["EventStore domain-service host"] = ["Consumption availability validated", "9f8b54dc161a4d5a9b2e6b1deacf331d1b80f1e0"],
+        ["EventStore DataProtection"] = ["Consumption availability recorded", "82ed167c1c78d4ff50d3f8eab43850bb6abd0fe7"],
+        ["Commons HTTP helpers"] = ["Consumption availability recorded", "2.28.1", "b03469b13408530bb757d3d02279c2d772ee4848"],
+        ["Builds shared props/targets"] = ["Consumption availability recorded", "4.18.5", "ed75ae3c45425b9610d5e75e6c5ec3e8d5283fe1"],
+    };
+
     private static readonly HashSet<string> ApprovedStatuses = new(StringComparer.Ordinal)
     {
         "available",
@@ -373,6 +381,59 @@ public sealed class PlatformApiPrerequisitesTests
     }
 
     [Fact]
+    public void Matrix_NamedAvailableRowsRecordImmutableConsumptionIdentities()
+    {
+        IReadOnlyDictionary<string, MatrixRow> rows = ReadRows();
+
+        foreach (KeyValuePair<string, string[]> expected in RequiredAvailableConsumptionIdentities)
+        {
+            rows.ContainsKey(expected.Key).ShouldBeTrue(expected.Key);
+            MatrixRow row = rows[expected.Key];
+
+            row.Status.ShouldBe("available", expected.Key);
+            foreach (string token in expected.Value)
+            {
+                row.ProofRequired.Contains(token, StringComparison.Ordinal)
+                    .ShouldBeTrue($"{expected.Key}: {token}");
+            }
+
+            Regex.IsMatch(
+                    row.ProofRequired,
+                    @"(?<![0-9a-f])[0-9a-f]{40}(?![0-9a-f])|(?<![0-9])\d+\.\d+\.\d+(?![0-9])",
+                    RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)
+                .ShouldBeTrue(expected.Key);
+            row.ValidationEvidence.Contains("git ls-tree", StringComparison.Ordinal)
+                .ShouldBeTrue(expected.Key);
+        }
+    }
+
+    [Fact]
+    public void AvailableRowConsumersFailClosedOnMissingOrMismatchedIdentity()
+    {
+        string root = RepositoryRoot.Locate();
+        string story86 = File.ReadAllText(Path.Combine(root, "_bmad-output/implementation-artifacts/spec-8-6-projection-and-query-sdk-migration.md"));
+        string story88 = File.ReadAllText(Path.Combine(root, "_bmad-output/implementation-artifacts/spec-8-8-client-mcp-apphost-build-and-deploy-cleanup.md"));
+        string story810 = File.ReadAllText(Path.Combine(root, "_bmad-output/implementation-artifacts/spec-8-10-final-readiness-documentation-and-retirement-gate.md"));
+
+        story86.ShouldContain("Block If — available-row identity");
+        story86.ShouldContain("EventStore DataProtection");
+        story86.ShouldContain("availability-identity gate, not an additive-API request");
+
+        story88.ShouldContain("Block If — available-row identities");
+        story88.ShouldContain("Commons HTTP helpers");
+        story88.ShouldContain("Builds shared props/targets");
+        story88.ShouldContain("identity validation, not additive APIs");
+
+        story810.ShouldContain("Block If — available-row identities");
+        foreach (string surface in RequiredAvailableConsumptionIdentities.Keys)
+        {
+            story810.ShouldContain(surface);
+        }
+
+        story810.ShouldContain("release/root-gitlink identity");
+    }
+
+    [Fact]
     public void Matrix_KeepsNoMigrationGateAndResidualBlockers()
     {
         string text = ReadMatrix();
@@ -557,6 +618,7 @@ public sealed class PlatformApiPrerequisitesTests
         int endIndex = row.EndsWith('|') ? row.Length - 1 : row.Length;
         var current = new System.Text.StringBuilder();
         bool escaped = false;
+        bool inCodeSpan = false;
 
         for (int i = startIndex; i < endIndex; i++)
         {
@@ -574,7 +636,14 @@ public sealed class PlatformApiPrerequisitesTests
                 continue;
             }
 
-            if (currentChar == '|')
+            if (currentChar == '`')
+            {
+                inCodeSpan = !inCodeSpan;
+                _ = current.Append(currentChar);
+                continue;
+            }
+
+            if (currentChar == '|' && !inCodeSpan)
             {
                 cells.Add(current.ToString().Trim());
                 _ = current.Clear();
