@@ -356,6 +356,10 @@ once in Epic 1._
 
 ### Implementation Scope Classification (2026-06-29 readiness)
 
+**Scope invariant:** Epics 7 and 8 are post-MVP maintenance scope. Neither epic
+introduces or covers a new PRD functional requirement, and neither may be used
+as MVP or product-feature functional-coverage evidence.
+
 - **PRD feature scope:** Epics 1-5. These cover all 9 PRD FRs and are the only
   product-feature epics used as MVP implementation-readiness evidence.
 - **Conditional maintenance scope:** Epic 6. This is approved Class A

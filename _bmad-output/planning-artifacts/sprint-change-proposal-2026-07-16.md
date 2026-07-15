@@ -68,14 +68,13 @@ the separate Parties deletion gate.
 - No `1-20-owner-approved-parity-closure-proof-packet.md` exists. Therefore no
   named owner has approved a final `available` decision or exact source/package/
   container identity for Parties consumption.
-- The Parties superproject gitlink for `references/Hexalith.EventStore` is
-  `1fb4be1acd6e57df0ce276f3db9c8d1d867eda1f`; the checked-out EventStore commit
-  is `54949fa91148c728b64fc8994322b95d53a550cf`. They do not match each other,
-  and neither is a not-yet-issued Story 1.20 approved runtime SHA.
+- The Parties superproject gitlink and checked-out EventStore commit now both
+  equal `54949fa91148c728b64fc8994322b95d53a550cf`. Checkout consistency is
+  necessary but not sufficient: no Story 1.20 approved runtime identity exists,
+  so this current SHA is not approved migration evidence.
 - All 18 grouped rollback-only artifacts listed below are present.
 - All 10 governed `catch (NotImplementedException)` fallback branches remain.
-- The root diff contains submodule pointer/worktree differences only; there is
-  no Parties `src/` or `tests/` projection/query migration in progress.
+- There is no Parties `src/` or `tests/` projection/query migration in progress.
 
 ### Existing governance remains authoritative
 
@@ -229,26 +228,27 @@ Revalidated 2026-07-16. The historical EventStore Story 1.8 packet remains
 (`ready-for-dev`), superseding historical Story 1.15; predecessor Story 1.19 is
 in `review`, EventStore Epic 1 remains `in-progress`, and no Story 1.20 closure
 packet exists. No named owner-approved `available` decision or approved runtime
-identity is available. The Parties gitlink is 1fb4be1..., while its checked-out
-EventStore commit is 54949fa...; the mismatch and absence of a Story 1.20
-approved identity independently keep Story 8.6 blocked. Status remains
-`needs-additive-api`.
+identity is available. The Parties gitlink and checked-out EventStore commit
+both equal 54949fa..., but that SHA has not been approved by a Story 1.20
+closure packet. The absence of an approved identity keeps Story 8.6 blocked.
+Status remains `needs-additive-api`.
 ```
 
 Replace the validation-cell hard-coded old pin result with both current checks:
 
 ```text
-git ls-tree HEAD references/Hexalith.EventStore -> 1fb4be1...
+git ls-tree HEAD references/Hexalith.EventStore -> 54949fa...
 git -C references/Hexalith.EventStore rev-parse HEAD -> 54949fa...
-Result: mismatch; neither is an approved Story 1.20 runtime identity.
+Result: gitlink and checkout match, but no Story 1.20 packet has approved this
+SHA as the migration runtime identity.
 ```
 
 Keep the row status `needs-additive-api`, its rollback column, required proof
 items, and review gate unchanged.
 
 **Rationale:** owner work has progressed, but progress is not approval. The
-matrix must cite the active closure identity and current consumption mismatch
-without converting `ready-for-dev` into `available`.
+matrix must cite the active closure identity and lack of an approved consumption
+identity without converting `ready-for-dev` into `available`.
 
 ### 4.3 Sprint rollback-retention action — revalidation only
 
@@ -271,8 +271,9 @@ Section: open Epic 7 projection-retention action.
 # 10 fallback branches remain intact. Story 8.6 is blocked; the 8.3 row remains
 # needs-additive-api. EventStore active closure Story 1.20 is ready-for-dev,
 # predecessor 1.19 is in review, and no owner-approved available packet exists.
-# Parties gitlink 1fb4be1... and checkout 54949fa... do not match, so no source
-# migration or rollback-only deletion is authorized.
+# Parties gitlink and checkout both equal 54949fa..., but no Story 1.20 packet
+# has approved that SHA, so no source migration or rollback-only deletion is
+# authorized.
 ```
 
 Keep the action text, owner, and `status: open` unchanged.
@@ -355,7 +356,7 @@ and consumer work.
 | --- | --- | --- |
 | 1.1 Triggering story | [x] Done | Story 8.6 is the blocked deletion-heavy migration. |
 | 1.2 Core problem | [x] Done | Owner parity closure and exact runtime approval are incomplete. |
-| 1.3 Evidence | [x] Done | 8.6 blocked; matrix `needs-additive-api`; no 1.20 packet; pins mismatch; retention set intact. |
+| 1.3 Evidence | [x] Done | 8.6 blocked; matrix `needs-additive-api`; no 1.20 packet or approved runtime identity; retention set intact. |
 | 2.1 Current epic viability | [x] Done | Epic 8 remains viable after the two gates. |
 | 2.2 Epic-level change | [N/A] Skip | No epic scope change. |
 | 2.3 Remaining epics/stories | [x] Done | 8.10 must observe the gate; other stories retain independent prerequisites. |

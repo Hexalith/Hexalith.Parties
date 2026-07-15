@@ -44,6 +44,11 @@ selectedDocuments:
 **Date:** 2026-07-07
 **Project:** parties
 
+**Scope boundary:** Epics 7 and 8 are maintenance scope only. Neither epic adds
+or covers a new PRD functional requirement. Readiness totals must exclude both
+from MVP and product-feature functional coverage and assess them only on the
+maintenance/platform track.
+
 ## Step 1: Document Discovery
 
 ### PRD Files Found
@@ -166,8 +171,8 @@ Total NFRs: 9
 - The PRD traceability matrix maps FR-Shell to Epic 1, Admin requirements to Epics 2-3, and Consumer requirements to Epics 4-5.
 - Readiness validation after 2026-06-27 must reconcile the PRD and planning documents with implementation story records because `_bmad-output/implementation-artifacts/sprint-status.yaml` marks Epics 1-5 and their stories as `done`.
 - Epic 6 supports NFR9 only and carries no new PRD functional requirement coverage.
-- Epic 7 is completed partial platform-alignment scope and carries no new PRD functional requirement coverage.
-- Epic 8 is post-MVP domain-focus refactoring and platform extraction, and must not be reported as product-feature coverage.
+- Epic 7 is completed post-MVP platform-alignment maintenance and carries no new PRD functional requirement coverage.
+- Epic 8 is post-MVP domain-focus refactoring and platform-extraction maintenance, carries no new PRD functional requirement coverage, and must not be reported as product-feature delivery.
 - Known completed dependency evidence includes Story 1.4 fail-closed `party_id` claim resolution, Story 3.5 erasure certificate and retry backend behavior, Story 3.6 Admin erasure-verification report UI, Story 4.1 Consumer identity binding ADR, and Story 4.2 admin-link identity binding provisioning.
 - Out-of-MVP scope: production KMS provisioning, gateway-level data-subject/self principal support, consumer self-registration and IdP federation, temporal name-as-of queries, and semantic/graph/hybrid search.
 
