@@ -1,5 +1,5 @@
 # generated: 2026-06-21T18:55:59+02:00
-# last_updated: 2026-07-11T12:16:01+02:00
+# last_updated: 2026-07-16T00:29:58+02:00
 # project: parties
 # project_key: NOKEY
 # tracking_system: file-system
@@ -41,7 +41,7 @@
 # - Retrospective appends its action items to action_items; sprint-status surfaces open ones
 
 generated: 2026-06-21T18:55:59+02:00
-last_updated: 2026-07-11T12:16:01+02:00
+last_updated: 2026-07-16T00:29:58+02:00
 project: parties
 project_key: NOKEY
 tracking_system: file-system
@@ -225,9 +225,14 @@ action_items:
     #   sprint-change-proposal-2026-07-07-projection-rollback-retention.md.
     # Stays `open` until Story 8.6 records parity (I9), processing-record reads (I8),
     # rebuild-vs-replay (I10), and proven rollback (I3) in the 8.3 matrix row.
-    # Revalidated 2026-07-11: all rollback-only projection/query files and 10 fallback
-    # branches remain intact; Story 8.6 is blocked at the needs-additive-api gate,
-    # and no production projection/query migration has occurred.
+    # Revalidated 2026-07-16: all governed projection/query/rebuild/adapter files
+    # and 10 fallback branches remain intact. Story 8.6 is blocked; the 8.3 row
+    # remains needs-additive-api. EventStore active closure Story 1.20 is
+    # ready-for-dev, predecessor 1.19 is in review, and no owner-approved
+    # available packet exists. Parties gitlink and checkout both equal
+    # 82ed167c1c78d4ff50d3f8eab43850bb6abd0fe7, but no Story 1.20 packet has
+    # approved that SHA, so no source migration or rollback-only deletion is
+    # authorized.
     action: "Keep projection rollback-only paths until Epic 8 proves EventStore SDK projection/query parity, GDPR processing-record reads, rebuild behavior, and rollback replacement."
     owner: "Winston (Architect) + Amelia (Developer)"
     status: open
@@ -272,7 +277,13 @@ action_items:
     # Package-only restore and Release build: 0 warnings, 0 errors.
     status: done
   - epic: 8
-    action: "Route EventStore additive-API prerequisites to Hexalith.EventStore owners: projection/query parity (G3 erasure hooks, G10 index batching, G6 freshness) for 8.6; additive shared payload-protection engine package (G5: pdenc-v2 + json+pdenc-v1 read, IPersonalDataPolicy, IErasureStateProvider, golden harness) for 8.7; client envelope/freshness/error-code adapter (G6) for 8.6/8.8; degraded-response + AddEventStoreDaprHealthChecks parity (G1/G2) for 8.8. Additive/approved before any Parties deletion."
+    # Active owner closure: EventStore Story 1.20. Its ready-for-dev status is
+    # not proof-result approval. Gate 1 opens only when a named owner approves
+    # a packet with final decision `available` and exact source/package/container
+    # identities. Gate 2 remains Parties-owned: after identity verification,
+    # Story 8.6 must prove SDK parity, GDPR reads/no-leak behavior,
+    # rebuild-vs-replay, and rollback before deleting any rollback-only path.
+    action: "EventStore owners must complete Story 1.20 with an owner-approved `available` parity-closure packet and exact approved runtime identities before Parties Story 8.6 resumes; Parties must then pass its consumer parity and rollback gates before deleting any rollback-only path."
     owner: "Winston (Architect) + Hexalith.EventStore owners"
     # Routed 2026-07-11 through the dedicated EventStore-owner prerequisite proposal.
     # Remains in-progress until all four owner work packages are accepted and their
